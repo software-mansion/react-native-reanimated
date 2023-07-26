@@ -34,9 +34,9 @@ using namespace facebook;
 namespace reanimated {
 
 NativeReanimatedModule::NativeReanimatedModule(
+    jsi::Runtime &rnRuntime,
     const std::shared_ptr<CallInvoker> &jsInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
-    const std::shared_ptr<jsi::Runtime> &rt,
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
@@ -45,11 +45,10 @@ NativeReanimatedModule::NativeReanimatedModule(
 #endif
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
-      runtimeManager_(std::make_shared<RuntimeManager>(
-          rt,
-          uiScheduler,
-          std::make_shared<JSScheduler>(jsInvoker),
-          RuntimeType::UI)),
+      jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsInvoker)),
+      uiScheduler_(uiScheduler),
+      uiWorkletRuntime_(
+          std::make_shared<WorkletRuntime>("Reanimated UI runtime")),
       eventHandlerRegistry(std::make_unique<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -118,7 +117,7 @@ NativeReanimatedModule::NativeReanimatedModule(
 #endif
 
   RuntimeDecorator::decorateUIRuntime(
-      *runtimeManager_->runtime,
+      *uiWorkletRuntime_->getRuntime(),
 #ifdef RCT_NEW_ARCH_ENABLED
       updateProps,
       removeFromPropsRegistry,
@@ -139,6 +138,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.progressLayoutAnimation,
       platformDepMethodsHolder.endLayoutAnimation,
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction);
+
   onRenderCallback = [this](double timestampMs) {
     this->renderRequested = false;
     this->onRender(timestampMs);
@@ -158,42 +158,27 @@ NativeReanimatedModule::NativeReanimatedModule(
 void NativeReanimatedModule::installCoreFunctions(
     jsi::Runtime &rt,
     const jsi::Value &valueUnpackerCode) {
-  if (!runtimeHelper) {
-    // initialize runtimeHelper here if not already present. We expect only one
-    // instace of the helper to exists.
-    runtimeHelper = std::make_shared<JSRuntimeHelper>(
-        &rt, runtimeManager_->uiScheduler_, runtimeManager_->jsScheduler_);
-  }
+  auto valueUnpackerCodeString = valueUnpackerCode.asString(rt).utf8(rt);
+  uiWorkletRuntime_->installValueUnpacker(valueUnpackerCodeString);
 
 #ifdef DEBUG
   // We initialize jsLogger_ here because we need runtimeHelper
   // to be initialized already
-  jsLogger_ = std::make_shared<JSLogger>(runtimeHelper);
+  // TODO: move somewhere else
+  jsLogger_ = std::make_shared<JSLogger>(jsScheduler_);
   layoutAnimationsManager_.setJSLogger(jsLogger_);
 #endif // DEBUG
-
-  // initialize value unpacker on the UI runtime synchronously on the JS thread
-  jsi::Runtime &uiRuntime = *runtimeManager_->runtime;
-
-  auto valueUnpackerCodeString = valueUnpackerCode.asString(rt).utf8(rt);
-  auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
-      "(" + valueUnpackerCodeString + "\n)");
-  auto valueUnpacker = uiRuntime.evaluateJavaScript(codeBuffer, "nowhere")
-                           .asObject(uiRuntime)
-                           .asFunction(uiRuntime);
-  uiRuntime.global().setProperty(uiRuntime, "__valueUnpacker", valueUnpacker);
 }
 
 NativeReanimatedModule::~NativeReanimatedModule() {
-  if (runtimeHelper) {
-    // event handler registry and frame callbacks store some JSI values from UI
-    // runtime, so they have to go away before we tear down the runtime
-    eventHandlerRegistry.reset();
-    frameCallbacks.clear();
-    runtimeManager_->runtime.reset();
-    // make sure uiRuntimeDestroyed is set after the runtime is deallocated
-    runtimeHelper->uiRuntimeDestroyed = true;
-  }
+  // event handler registry and frame callbacks store some JSI values from UI
+  // runtime, so they have to go away before we tear down the runtime
+  eventHandlerRegistry.reset();
+  frameCallbacks.clear();
+  uiWorkletRuntime_.reset();
+  // make sure uiRuntimeDestroyed is set after the runtime is deallocated
+  // TODO: mark UI runtime as destroyed
+  // animatedSensorModule.uiRuntimeDestroyed_ = true;
 }
 
 void NativeReanimatedModule::scheduleOnUI(
@@ -203,8 +188,8 @@ void NativeReanimatedModule::scheduleOnUI(
   assert(
       shareableWorklet->valueType() == Shareable::WorkletType &&
       "only worklets can be scheduled to run on UI");
-  runtimeManager_->uiScheduler_->scheduleOnUI([=] {
-    jsi::Runtime &uiRuntime = *runtimeManager_->runtime;
+  uiScheduler_->scheduleOnUI([=] {
+    jsi::Runtime &uiRuntime = *uiWorkletRuntime_->getRuntime();
     auto workletValue = shareableWorklet->getJSValue(uiRuntime);
     runOnRuntimeGuarded(uiRuntime, workletValue);
   });
@@ -221,9 +206,7 @@ void NativeReanimatedModule::scheduleOnJS(
   auto shareableArgs = argsValue.isUndefined()
       ? nullptr
       : extractShareableOrThrow(rt, argsValue);
-  auto jsRuntime = this->runtimeHelper->rnRuntime();
-  runtimeManager_->jsScheduler_->scheduleOnJS([=] {
-    jsi::Runtime &rt = *jsRuntime;
+  jsScheduler_->scheduleOnJS([=](jsi::Runtime &rt) {
     auto remoteFun = shareableRemoteFun->getJSValue(rt);
     if (shareableArgs == nullptr) {
       // fast path for remote function w/o arguments
@@ -284,14 +267,11 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
   auto eventName = eventHash.asString(rt).utf8(rt);
   auto handlerShareable = extractShareableOrThrow(rt, worklet);
 
-  runtimeManager_->uiScheduler_->scheduleOnUI([=] {
-    jsi::Runtime &rt = *runtimeManager_->runtime;
+  uiScheduler_->scheduleOnUI([=] {
+    jsi::Runtime &rt = *uiWorkletRuntime_->getRuntime();
     auto handlerFunction = handlerShareable->getJSValue(rt);
     auto handler = std::make_shared<WorkletEventHandler>(
-        runtimeHelper,
-        newRegistrationId,
-        eventName,
-        std::move(handlerFunction));
+        newRegistrationId, eventName, std::move(handlerFunction));
     eventHandlerRegistry->registerEventHandler(std::move(handler));
   });
 
@@ -302,7 +282,7 @@ void NativeReanimatedModule::unregisterEventHandler(
     jsi::Runtime &,
     const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
-  runtimeManager_->uiScheduler_->scheduleOnUI(
+  uiScheduler_->scheduleOnUI(
       [=] { eventHandlerRegistry->unregisterEventHandler(id); });
 }
 
@@ -317,19 +297,19 @@ jsi::Value NativeReanimatedModule::getViewProp(
   std::shared_ptr<jsi::Function> funPtr =
       std::make_shared<jsi::Function>(std::move(fun));
 
-  runtimeManager_->uiScheduler_->scheduleOnUI(
-      [&rt, viewTagInt, funPtr, this, propNameStr]() {
-        const jsi::String propNameValue =
-            jsi::String::createFromUtf8(rt, propNameStr);
-        jsi::Value result = propObtainer(rt, viewTagInt, propNameValue);
-        std::string resultStr = result.asString(rt).utf8(rt);
+  uiScheduler_->scheduleOnUI([&rt, viewTagInt, funPtr, this, propNameStr]() {
+    // TODO: fix incorrect runtime reference?
+    const jsi::String propNameValue =
+        jsi::String::createFromUtf8(rt, propNameStr);
+    jsi::Value result = propObtainer(rt, viewTagInt, propNameValue);
+    std::string resultStr = result.asString(rt).utf8(rt);
 
-        runtimeManager_->jsScheduler_->scheduleOnJS([&rt, resultStr, funPtr]() {
-          const jsi::String resultValue =
-              jsi::String::createFromUtf8(rt, resultStr);
-          funPtr->call(rt, resultValue);
-        });
-      });
+    jsScheduler_->scheduleOnJS([resultStr, funPtr](jsi::Runtime &rt) {
+      const jsi::String resultValue =
+          jsi::String::createFromUtf8(rt, resultStr);
+      funPtr->call(rt, resultValue);
+    });
+  });
 
   return jsi::Value::undefined();
 }
@@ -381,7 +361,8 @@ bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
 void NativeReanimatedModule::maybeRequestRender() {
   if (!renderRequested) {
     renderRequested = true;
-    requestRender(onRenderCallback, *runtimeManager_->runtime);
+    jsi::Runtime &uiRuntime = *uiWorkletRuntime_->getRuntime();
+    requestRender(onRenderCallback, uiRuntime);
   }
 }
 
@@ -401,8 +382,7 @@ jsi::Value NativeReanimatedModule::registerSensor(
     const jsi::Value &sensorDataHandler) {
   return animatedSensorModule.registerSensor(
       rt,
-      runtimeHelper,
-      runtimeManager_,
+      uiWorkletRuntime_,
       sensorType,
       interval,
       iosReferenceFrame,
@@ -442,12 +422,9 @@ bool NativeReanimatedModule::handleEvent(
     const int emitterReactTag,
     const jsi::Value &payload,
     double currentTime) {
+  jsi::Runtime &uiRuntime = *uiWorkletRuntime_->getRuntime();
   eventHandlerRegistry->processEvent(
-      *runtimeManager_->runtime,
-      currentTime,
-      eventName,
-      emitterReactTag,
-      payload);
+      uiRuntime, currentTime, eventName, emitterReactTag, payload);
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript
@@ -688,7 +665,7 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
   auto shareableHandler = extractShareableOrThrow(rt, handlerWorklet);
   return subscribeForKeyboardEventsFunction(
       [=](int keyboardState, int height) {
-        jsi::Runtime &rt = *runtimeManager_->runtime;
+        jsi::Runtime &rt = *uiWorkletRuntime_->getRuntime();
         auto handler = shareableHandler->getJSValue(rt);
         runOnRuntimeGuarded(
             rt, handler, jsi::Value(keyboardState), jsi::Value(height));

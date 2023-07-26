@@ -20,6 +20,7 @@ using MakeShareableCloneFunction =
 using UpdateDataSynchronouslyFunction =
     std::function<void(jsi::Runtime &, const jsi::Value &, const jsi::Value &)>;
 
+// TODO: remove RuntimeType and RuntimeRegistry
 enum RuntimeType {
   /**
    Represents any runtime that supports the concept of workletization

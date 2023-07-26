@@ -20,11 +20,12 @@ class WorkletRuntime : public jsi::HostObject {
   std::string name_;
 
  public:
-  explicit WorkletRuntime(
-      const std::string &name,
-      const std::string &valueUnpackerCode);
+  explicit WorkletRuntime(const std::string &name);
+
+  void installValueUnpacker(const std::string &valueUnpackerCode);
 
   std::shared_ptr<jsi::Runtime> getRuntime() const {
+    // TODO: return `jsi::Runtime &` instead
     return runtime_;
   }
 

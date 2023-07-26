@@ -199,6 +199,7 @@ export function initializeUIRuntime() {
     'worklet';
     setupConsole();
     setupCallGuard();
+    // TODO: setupPerformanceNow();
     if (IS_NATIVE) {
       setupMicrotasks();
       setupRequestAnimationFrame();

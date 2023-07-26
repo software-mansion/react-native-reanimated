@@ -110,14 +110,10 @@ void NativeProxy::installJSIBindings(
     /**/) {
   WorkletRuntimeCollector::install(*rnRuntime_);
 
-  std::shared_ptr<jsi::Runtime> uiRuntime =
-      ReanimatedRuntime::make("Reanimated UI runtime");
-  WorkletRuntimeCollector::install(*uiRuntime);
-
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
+      *rnRuntime_,
       jsCallInvoker_,
       uiScheduler_,
-      uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
@@ -125,7 +121,6 @@ void NativeProxy::installJSIBindings(
 #endif
       getPlatformDependentMethods());
 
-  uiScheduler_->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
   nativeReanimatedModule_ = nativeReanimatedModule;
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -146,6 +141,8 @@ void NativeProxy::installJSIBindings(
 #endif
   auto &rnRuntime = *rnRuntime_;
   auto isReducedMotion = getIsReducedMotion();
+
+  auto uiRuntime = nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
   RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
 
   registerEventHandler();
@@ -162,7 +159,8 @@ void NativeProxy::installJSIBindings(
                                  size_t count) -> jsi::Value {
     auto name = args[0].asString(rt).utf8(rt);
     auto valueUnpackerCode = args[1].asString(rt).utf8(rt);
-    auto ho = std::make_shared<WorkletRuntime>(name, valueUnpackerCode);
+    auto ho = std::make_shared<WorkletRuntime>(name);
+    ho->installValueUnpacker(valueUnpackerCode);
     return jsi::Object::createFromHostObject(rt, ho);
   };
   rnRuntime.global().setProperty(
@@ -467,7 +465,7 @@ void NativeProxy::handleEvent(
     return;
   }
 
-  jsi::Runtime &rt = *nativeReanimatedModule_->runtimeManager_->runtime;
+  jsi::Runtime &rt = *nativeReanimatedModule_->uiWorkletRuntime_->getRuntime();
   jsi::Value payload;
   try {
     payload = jsi::Value::createFromJsonUtf8(
@@ -482,10 +480,10 @@ void NativeProxy::handleEvent(
 }
 
 void NativeProxy::progressLayoutAnimation(
+    jsi::Runtime &rt,
     int tag,
     const jsi::Object &newProps,
     bool isSharedTransition) {
-  auto &rt = *nativeReanimatedModule_->runtimeManager_->runtime;
   auto newPropsJNI = JNIHelper::ConvertToPropsMap(rt, newProps);
   layoutAnimations_->cthis()->progressLayoutAnimation(
       tag, newPropsJNI, isSharedTransition);
@@ -570,7 +568,7 @@ void NativeProxy::setupLayoutAnimations() {
         if (nativeReanimatedModule == nullptr) {
           return;
         }
-        auto &rt = *nativeReanimatedModule->runtimeManager_->runtime;
+        auto &rt = *nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
 
         jsi::Object yogaValues(rt);
         for (const auto &entry : *values) {
@@ -634,7 +632,8 @@ void NativeProxy::setupLayoutAnimations() {
   layoutAnimations_->cthis()->setCancelAnimationForTag(
       [weakNativeReanimatedModule](int tag) {
         if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-          jsi::Runtime &rt = *nativeReanimatedModule->runtimeManager_->runtime;
+          jsi::Runtime &rt =
+              *nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
           nativeReanimatedModule->layoutAnimationsManager()
               .cancelLayoutAnimation(rt, tag);
         }

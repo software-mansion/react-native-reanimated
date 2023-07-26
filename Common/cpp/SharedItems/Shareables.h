@@ -6,9 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include "JSRuntimeHelper.h"
 #include "ReanimatedRuntime.h"
-#include "RuntimeManager.h"
 #include "UIScheduler.h"
 #include "WorkletRuntimeRegistry.h"
 

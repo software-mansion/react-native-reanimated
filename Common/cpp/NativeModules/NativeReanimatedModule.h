@@ -11,11 +11,11 @@
 #include <vector>
 
 #include "AnimatedSensorModule.h"
+#include "JSScheduler.h"
 #include "LayoutAnimationsManager.h"
 #include "NativeReanimatedModuleSpec.h"
 #include "PlatformDepMethodsHolder.h"
 #include "RuntimeDecorator.h"
-#include "RuntimeManager.h"
 #include "SingleInstanceChecker.h"
 #include "UIScheduler.h"
 
@@ -32,9 +32,9 @@ class EventHandlerRegistry;
 class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  public:
   NativeReanimatedModule(
+      jsi::Runtime &rnRuntime,
       const std::shared_ptr<CallInvoker> &jsInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      const std::shared_ptr<jsi::Runtime> &rt,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
@@ -45,8 +45,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   ~NativeReanimatedModule();
 
-  std::shared_ptr<RuntimeManager> runtimeManager_;
-  std::shared_ptr<JSRuntimeHelper> runtimeHelper;
+  std::shared_ptr<JSScheduler> jsScheduler_;
+  std::shared_ptr<UIScheduler> uiScheduler_;
+  std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
 
   void installCoreFunctions(
       jsi::Runtime &rt,

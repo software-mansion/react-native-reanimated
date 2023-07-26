@@ -1,12 +1,13 @@
 #include "WorkletRuntime.h"
+#include "RuntimeDecorator.h"
+#include "WorkletRuntimeCollector.h"
 
 namespace reanimated {
 
-WorkletRuntime::WorkletRuntime(
-    const std::string &name,
-    const std::string &valueUnpackerCode)
-    : name_(name) {
+WorkletRuntime::WorkletRuntime(const std::string &name) : name_(name) {
   runtime_ = ReanimatedRuntime::make(name);
+
+  WorkletRuntimeCollector::install(*runtime_);
 
   jsi::Runtime &rt = *runtime_;
 
@@ -14,7 +15,11 @@ WorkletRuntime::WorkletRuntime(
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
 
   RuntimeDecorator::decorateRuntime(rt, name_);
+}
 
+void WorkletRuntime::installValueUnpacker(
+    const std::string &valueUnpackerCode) {
+  jsi::Runtime &rt = *runtime_;
   auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
       "(" + valueUnpackerCode + "\n)");
   auto valueUnpacker =

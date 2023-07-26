@@ -10,6 +10,7 @@ namespace reanimated {
 
 class WorkletRuntimeCollector : public jsi::HostObject {
  private:
+  // TODO: use `jsi::Runtime &` instead?
   jsi::Runtime *runtime_;
 
  public:

@@ -242,6 +242,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jni::alias_ref<react::WritableMap> event);
 
   void progressLayoutAnimation(
+      jsi::Runtime &rt,
       int tag,
       const jsi::Object &newProps,
       bool isSharedTransition);

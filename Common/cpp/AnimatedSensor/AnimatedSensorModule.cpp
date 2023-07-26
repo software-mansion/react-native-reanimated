@@ -1,9 +1,6 @@
 #include "AnimatedSensorModule.h"
 
-#include <memory>
 #include <utility>
-
-#include "Shareables.h"
 
 namespace reanimated {
 
@@ -19,8 +16,7 @@ AnimatedSensorModule::~AnimatedSensorModule() {
 
 jsi::Value AnimatedSensorModule::registerSensor(
     jsi::Runtime &rt,
-    const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
-    const std::shared_ptr<RuntimeManager> &runtimeManager,
+    const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,
     const jsi::Value &sensorTypeValue,
     const jsi::Value &interval,
     const jsi::Value &iosReferenceFrame,
@@ -35,19 +31,18 @@ jsi::Value AnimatedSensorModule::registerSensor(
       iosReferenceFrame.asNumber(),
       [sensorType,
        shareableHandler,
-       weakRuntimeHelper = std::weak_ptr<JSRuntimeHelper>(runtimeHelper),
-       weakRuntimeManager = std::weak_ptr<RuntimeManager>(runtimeManager)](
+       weakUiWorkletRuntime = std::weak_ptr<WorkletRuntime>(uiWorkletRuntime)](
           double newValues[], int orientationDegrees) {
-        auto runtimeHelper = weakRuntimeHelper.lock();
-        if (runtimeHelper == nullptr || runtimeHelper->uiRuntimeDestroyed) {
-          return;
-        }
+        // TODO: check if runtime is destroyed
+        // if (uiRuntimeDestroyed_) {
+        //   return;
+        // }
 
-        auto runtimeManager = weakRuntimeManager.lock();
-        if (runtimeManager == nullptr) {
+        auto uiWorkletRuntime = weakUiWorkletRuntime.lock();
+        if (uiWorkletRuntime == nullptr) {
           return;
         }
-        auto &uiRuntime = *runtimeManager->runtime;
+        auto &uiRuntime = *uiWorkletRuntime->getRuntime();
 
         jsi::Object value(uiRuntime);
         if (sensorType == SensorType::ROTATION_VECTOR) {

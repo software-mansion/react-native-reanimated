@@ -17,18 +17,14 @@ void UIScheduler::triggerUI() {
   // JSI objects and hence it allows for such objects to be garbage collected
   // much sooner.
   // Apparently the scope API is only supported on Hermes at the moment.
-  const auto runtimeManager = weakRuntimeManager_.lock();
-  const auto scope = jsi::Scope(*runtimeManager->runtime);
+// TODO: restore jsi::Scope
+//  const auto runtimeManager = weakRuntimeManager_.lock();
+//  const auto scope = jsi::Scope(*runtimeManager->runtime);
 #endif
   while (uiJobs_.getSize()) {
     const auto job = uiJobs_.pop();
     job();
   }
-}
-
-void UIScheduler::setRuntimeManager(
-    const std::shared_ptr<RuntimeManager> &runtimeManager) {
-  weakRuntimeManager_ = runtimeManager;
 }
 
 UIScheduler::~UIScheduler() {}

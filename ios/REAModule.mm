@@ -272,7 +272,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     auto nativeReanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
 
     jsi::Runtime &rnRuntime = *jsiRuntime;
-    auto uiRuntime = nativeReanimatedModule->runtimeManager_->runtime;
+    auto uiRuntime = nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
 
     auto isReducedMotion = UIAccessibilityIsReduceMotionEnabled();
     RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
@@ -286,7 +286,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
       auto name = args[0].asString(rt).utf8(rt);
       auto valueUnpackerCode = args[1].asString(rt).utf8(rt);
-      auto ho = std::make_shared<WorkletRuntime>(name, valueUnpackerCode);
+      auto ho = std::make_shared<WorkletRuntime>(name);
+      ho->installValueUnpacker(valueUnpackerCode);
       return jsi::Object::createFromHostObject(rt, ho);
     };
     rnRuntime.global().setProperty(
