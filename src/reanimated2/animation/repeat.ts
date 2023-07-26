@@ -36,14 +36,7 @@ export const withRepeat = function <T extends AnimationObject>(
           ? _nextAnimation()
           : _nextAnimation;
 
-      const isEvenNumberOfReps =
-        reverse && (numberOfReps <= 0 || numberOfReps % 2 === 0);
-
       function repeat(animation: RepeatAnimation, now: Timestamp): boolean {
-        if (animation.reduceMotion && isEvenNumberOfReps) {
-          return true;
-        }
-
         const finished = nextAnimation.onFrame(nextAnimation, now);
         animation.current = nextAnimation.current;
         if (finished) {
@@ -103,8 +96,17 @@ export const withRepeat = function <T extends AnimationObject>(
           nextAnimation.reduceMotion = animation.reduceMotion;
         }
 
-        if (animation.reduceMotion && isEvenNumberOfReps) {
+        // don't start the animation if reduced motion is enabled and
+        // the animation would end at its starting point
+        if (
+          animation.reduceMotion &&
+          reverse &&
+          (numberOfReps <= 0 || numberOfReps % 2 === 0)
+        ) {
           animation.current = animation.startValue;
+          animation.onFrame = () => {
+            return true;
+          };
         } else {
           nextAnimation.onStart(nextAnimation, value, now, previousAnimation);
         }
