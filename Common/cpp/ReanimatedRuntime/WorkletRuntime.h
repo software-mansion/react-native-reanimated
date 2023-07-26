@@ -33,10 +33,9 @@ class WorkletRuntime : public jsi::HostObject {
   inline void runGuarded(
       const std::shared_ptr<ShareableWorklet> &shareableWorklet,
       Args &&...args) {
+    jsi::Runtime &rt = *runtime_;
     runOnRuntimeGuarded(
-        *runtime_,
-        shareableWorklet->getJSValue(*runtime_),
-        std::forward<Args>(args)...);
+        rt, shareableWorklet->getJSValue(rt), std::forward<Args>(args)...);
   }
 
   std::string toString() const {

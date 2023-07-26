@@ -17,6 +17,7 @@
 #import <RNReanimated/ReanimatedCommitHook.h>
 #endif
 
+#import <RNReanimated/JsiUtils.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/ReanimatedVersion.h>
@@ -331,6 +332,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         "_runOnRuntime",
         jsi::Function::createFromHostFunction(
             rnRuntime, jsi::PropNameID::forAscii(rnRuntime, "_runOnRuntime"), 2, runOnRuntime));
+
+    // TODO: use jsi_utils::installJsiFunction
 
 #ifdef RCT_NEW_ARCH_ENABLED
     weakNativeReanimatedModule_ = nativeReanimatedModule;

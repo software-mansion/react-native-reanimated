@@ -112,8 +112,6 @@ void RuntimeDecorator::decorateUIRuntime(
 #endif // RCT_NEW_ARCH_ENABLED
 
   jsi_utils::installJsiFunction(rt, "requestAnimationFrame", requestFrame);
-  jsi_utils::installJsiFunction(rt, "_scheduleOnJS", scheduleOnJS);
-  jsi_utils::installJsiFunction(rt, "_makeShareableClone", makeShareableClone);
   jsi_utils::installJsiFunction(
       rt, "_updateDataSynchronously", updateDataSynchronously);
 

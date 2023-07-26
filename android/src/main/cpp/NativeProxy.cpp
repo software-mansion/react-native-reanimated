@@ -224,6 +224,9 @@ void NativeProxy::installJSIBindings(
           jsi::PropNameID::forAscii(rnRuntime, "_runOnRuntime"),
           2,
           runOnRuntime));
+
+  // TODO: use jsi_utils::installJsiFunction
+  // TODO: unify with REAModule.mm
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {

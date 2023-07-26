@@ -1,5 +1,10 @@
 import type { ComplexWorkletFunction } from './commonTypes';
-import { setupCallGuard, setupConsole, valueUnpacker } from './initializers';
+import {
+  setupCallGuard,
+  setupConsole,
+  setupRunOnJS,
+  valueUnpacker,
+} from './initializers';
 import { makeShareableCloneRecursive } from './shareables';
 
 export type WorkletRuntime = {
@@ -11,17 +16,9 @@ export function createWorkletRuntime(name: string) {
   const valueUnpackerCode = valueUnpacker.__initData.code;
   const runtime = global._createWorkletRuntime(name, valueUnpackerCode);
 
-  // we need to use different names because `_scheduleOnJS` and `_makeShareableClone` are whitelisted
-  const {
-    _makeShareableClone: makeShareableClone,
-    _scheduleOnJS: scheduleOnJS,
-  } = global;
-
   runOnRuntimeSync(runtime, () => {
     'worklet';
-    global._scheduleOnJS = scheduleOnJS;
-    global._makeShareableClone = makeShareableClone;
-
+    setupRunOnJS();
     setupConsole();
     setupCallGuard();
 
