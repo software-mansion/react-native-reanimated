@@ -7,7 +7,12 @@ import type {
   Ref,
 } from 'react';
 import React from 'react';
-import { findNodeHandle, Platform, StyleSheet } from 'react-native';
+import {
+  findNodeHandle,
+  NativeEventEmitter,
+  Platform,
+  StyleSheet,
+} from 'react-native';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
 import './reanimated2/layoutReanimation/animationsManager';
@@ -53,10 +58,25 @@ import NativeReanimatedModule from './reanimated2/NativeReanimated';
 import { isSharedValue } from './reanimated2';
 import type { AnimateProps } from './reanimated2/helperTypes';
 import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
+import ReanimatedModule from './ReanimatedModule';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
   // event is used.
+}
+
+const NODE_MAPPING = new Map();
+
+const ReanimatedEventEmitter = new NativeEventEmitter(ReanimatedModule);
+
+interface ListenerData {
+  viewTag: number;
+  props: StyleProps;
+}
+
+function listener(data: ListenerData) {
+  const component = NODE_MAPPING.get(data.viewTag);
+  component && component._updateFromNative(data.props);
 }
 
 function maybeBuild(
@@ -297,6 +317,7 @@ export default function createAnimatedComponent(
 
     componentWillUnmount() {
       this._detachNativeEvents();
+      this._detachPropUpdater();
       this._detachStyles();
       this._detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
@@ -304,6 +325,7 @@ export default function createAnimatedComponent(
 
     componentDidMount() {
       this._attachNativeEvents();
+      this._attachPropUpdater();
       this._attachAnimatedStyles();
       this._attachInlineProps();
     }
@@ -406,6 +428,22 @@ export default function createAnimatedComponent(
       } else {
         // eslint-disable-next-line no-unused-expressions
         this._component?.setNativeProps?.(props);
+      }
+    }
+
+    _attachPropUpdater() {
+      const viewTag = findNodeHandle(this);
+      NODE_MAPPING.set(viewTag, this);
+      if (NODE_MAPPING.size === 1) {
+        ReanimatedEventEmitter.addListener('onReanimatedPropsChange', listener);
+      }
+    }
+
+    _detachPropUpdater() {
+      const viewTag = findNodeHandle(this);
+      NODE_MAPPING.delete(viewTag);
+      if (NODE_MAPPING.size === 0) {
+        ReanimatedEventEmitter.removeAllListeners('onReanimatedPropsChange');
       }
     }
 
