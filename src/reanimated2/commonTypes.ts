@@ -134,12 +134,6 @@ export type WorkletFunction<A extends unknown[], T> =
   | WorkletFunctionRelease<A, T>
   | WorkletFunctionDev<A, T>;
 
-export type NativeEvent<Payload extends object> = Payload;
-
-export type WebEvent<Payload extends object> = {
-  nativeEvent: Payload;
-};
-
 /**
  * @deprecated
  */

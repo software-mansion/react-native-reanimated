@@ -1,5 +1,4 @@
-import type { WebEvent, NativeEvent } from '../commonTypes';
-import type { DependencyList } from './commonTypes';
+import type { DependencyList, WebEvent, NativeEvent } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
 import { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 

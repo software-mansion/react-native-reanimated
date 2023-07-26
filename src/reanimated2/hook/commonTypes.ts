@@ -21,4 +21,10 @@ export interface RefObjectFunction<T> {
     | HTMLElement; // web
 }
 
+export type NativeEvent<Payload extends object> = Payload;
+
+export type WebEvent<Payload extends object> = {
+  nativeEvent: Payload;
+};
+
 export type AnimatedRef<T> = RefObjectFunction<T>;
