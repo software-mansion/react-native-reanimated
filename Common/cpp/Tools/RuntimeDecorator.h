@@ -60,7 +60,7 @@ class RuntimeDecorator {
       const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction);
   static void decorateRNRuntime(
       jsi::Runtime &rnRuntime,
-      const std::shared_ptr<jsi::Runtime> &uiRuntime,
+      jsi::Runtime &uiRuntime,
       bool isReducedMotion);
 
   /**

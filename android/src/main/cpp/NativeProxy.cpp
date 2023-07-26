@@ -139,10 +139,10 @@ void NativeProxy::installJSIBindings(
   //  reactScheduler_ = binding->getScheduler();
   //  reactScheduler_->addEventListener(eventListener_);
 #endif
-  auto &rnRuntime = *rnRuntime_;
+  jsi::Runtime &rnRuntime = *rnRuntime_;
+  jsi::Runtime &uiRuntime =
+      nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
   auto isReducedMotion = getIsReducedMotion();
-
-  auto uiRuntime = nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
   RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
 
   registerEventHandler();
@@ -466,7 +466,7 @@ void NativeProxy::handleEvent(
     return;
   }
 
-  jsi::Runtime &rt = *nativeReanimatedModule_->uiWorkletRuntime_->getRuntime();
+  jsi::Runtime &rt = nativeReanimatedModule_->uiWorkletRuntime_->getRuntime();
   jsi::Value payload;
   try {
     payload = jsi::Value::createFromJsonUtf8(
@@ -569,7 +569,7 @@ void NativeProxy::setupLayoutAnimations() {
         if (nativeReanimatedModule == nullptr) {
           return;
         }
-        auto &rt = *nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
+        auto &rt = nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
 
         jsi::Object yogaValues(rt);
         for (const auto &entry : *values) {
@@ -634,7 +634,7 @@ void NativeProxy::setupLayoutAnimations() {
       [weakNativeReanimatedModule](int tag) {
         if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
           jsi::Runtime &rt =
-              *nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
+              nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
           nativeReanimatedModule->layoutAnimationsManager()
               .cancelLayoutAnimation(rt, tag);
         }

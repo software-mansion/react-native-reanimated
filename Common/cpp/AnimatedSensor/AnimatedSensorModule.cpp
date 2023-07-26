@@ -43,7 +43,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
         if (uiWorkletRuntime == nullptr) {
           return;
         }
-        auto &uiRuntime = *uiWorkletRuntime->getRuntime();
+        jsi::Runtime &uiRuntime = uiWorkletRuntime->getRuntime();
 
         jsi::Object value(uiRuntime);
         if (sensorType == SensorType::ROTATION_VECTOR) {

@@ -272,7 +272,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     auto nativeReanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
 
     jsi::Runtime &rnRuntime = *jsiRuntime;
-    auto uiRuntime = nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
+    jsi::Runtime &uiRuntime = nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
 
     auto isReducedMotion = UIAccessibilityIsReduceMotionEnabled();
     RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);

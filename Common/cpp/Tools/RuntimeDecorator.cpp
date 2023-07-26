@@ -157,7 +157,7 @@ void RuntimeDecorator::decorateUIRuntime(
 
 void RuntimeDecorator::decorateRNRuntime(
     jsi::Runtime &rnRuntime,
-    const std::shared_ptr<jsi::Runtime> &uiRuntime,
+    jsi::Runtime &uiRuntime,
     bool isReducedMotion) {
   auto workletRuntimeValue =
       rnRuntime.global()
@@ -167,7 +167,7 @@ void RuntimeDecorator::decorateRNRuntime(
   uintptr_t *workletRuntimeData = reinterpret_cast<uintptr_t *>(
       workletRuntimeValue.getObject(rnRuntime).getArrayBuffer(rnRuntime).data(
           rnRuntime));
-  workletRuntimeData[0] = reinterpret_cast<uintptr_t>(uiRuntime.get());
+  workletRuntimeData[0] = reinterpret_cast<uintptr_t>(&uiRuntime);
 
   rnRuntime.global().setProperty(
       rnRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);

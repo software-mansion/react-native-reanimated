@@ -25,9 +25,8 @@ class WorkletRuntime : public jsi::HostObject {
 
   void installValueUnpacker(const std::string &valueUnpackerCode);
 
-  std::shared_ptr<jsi::Runtime> getRuntime() const {
-    // TODO: return `jsi::Runtime &` instead
-    return runtime_;
+  jsi::Runtime &getRuntime() const {
+    return *runtime_;
   }
 
   template <typename... Args>

@@ -116,8 +116,9 @@ NativeReanimatedModule::NativeReanimatedModule(
   };
 #endif
 
+  jsi::Runtime &uiRuntime = uiWorkletRuntime_->getRuntime();
   RuntimeDecorator::decorateUIRuntime(
-      *uiWorkletRuntime_->getRuntime(),
+      uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
       updateProps,
       removeFromPropsRegistry,
@@ -266,8 +267,8 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
   auto handlerShareable = extractShareableOrThrow(rt, worklet);
 
   uiScheduler_->scheduleOnUI([=] {
-    jsi::Runtime &rt = *uiWorkletRuntime_->getRuntime();
-    auto handlerFunction = handlerShareable->getJSValue(rt);
+    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getRuntime();
+    auto handlerFunction = handlerShareable->getJSValue(uiRuntime);
     auto handler = std::make_shared<WorkletEventHandler>(
         newRegistrationId, eventName, std::move(handlerFunction));
     eventHandlerRegistry->registerEventHandler(std::move(handler));
@@ -359,7 +360,7 @@ bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
 void NativeReanimatedModule::maybeRequestRender() {
   if (!renderRequested) {
     renderRequested = true;
-    jsi::Runtime &uiRuntime = *uiWorkletRuntime_->getRuntime();
+    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getRuntime();
     requestRender(onRenderCallback, uiRuntime);
   }
 }
@@ -420,7 +421,7 @@ bool NativeReanimatedModule::handleEvent(
     const int emitterReactTag,
     const jsi::Value &payload,
     double currentTime) {
-  jsi::Runtime &uiRuntime = *uiWorkletRuntime_->getRuntime();
+  jsi::Runtime &uiRuntime = uiWorkletRuntime_->getRuntime();
   eventHandlerRegistry->processEvent(
       uiRuntime, currentTime, eventName, emitterReactTag, payload);
 
