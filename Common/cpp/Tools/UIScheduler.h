@@ -11,7 +11,6 @@ namespace reanimated {
 class UIScheduler {
  public:
   virtual void scheduleOnUI(std::function<void()> job);
-  // TODO: add scheduleOnUIRuntime
   virtual void triggerUI();
   virtual ~UIScheduler();
 

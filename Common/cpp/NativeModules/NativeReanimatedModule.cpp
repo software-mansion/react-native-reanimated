@@ -66,10 +66,7 @@ NativeReanimatedModule::NativeReanimatedModule(
 #endif
 {
   auto requestAnimationFrame = [=](jsi::Runtime &rt, const jsi::Value &fn) {
-    auto jsFunction = std::make_shared<jsi::Value>(rt, fn);
-    frameCallbacks.push_back([=, &rt](double timestamp) {
-      runOnRuntimeGuarded(rt, *jsFunction, jsi::Value(timestamp));
-    });
+    frameCallbacks_.push_back(std::make_shared<jsi::Value>(rt, fn));
     maybeRequestRender();
   };
 
@@ -175,7 +172,7 @@ NativeReanimatedModule::~NativeReanimatedModule() {
   // event handler registry and frame callbacks store some JSI values from UI
   // runtime, so they have to go away before we tear down the runtime
   eventHandlerRegistry.reset();
-  frameCallbacks.clear();
+  frameCallbacks_.clear();
   uiWorkletRuntime_.reset();
   // make sure uiRuntimeDestroyed is set after the runtime is deallocated
   // TODO: mark UI runtime as destroyed
@@ -366,10 +363,12 @@ void NativeReanimatedModule::maybeRequestRender() {
 }
 
 void NativeReanimatedModule::onRender(double timestampMs) {
-  std::vector<FrameCallback> callbacks = frameCallbacks;
-  frameCallbacks.clear();
-  for (auto &callback : callbacks) {
-    callback(timestampMs);
+  auto callbacks = frameCallbacks_;
+  frameCallbacks_.clear();
+  jsi::Runtime &uiRuntime = uiWorkletRuntime_->getRuntime();
+  jsi::Value timestamp{timestampMs};
+  for (const auto &callback : callbacks) {
+    runOnRuntimeGuarded(uiRuntime, *callback, timestamp);
   }
 }
 

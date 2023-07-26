@@ -25,8 +25,6 @@
 
 namespace reanimated {
 
-using FrameCallback = std::function<void(double)>;
-
 class EventHandlerRegistry;
 
 class NativeReanimatedModule : public NativeReanimatedModuleSpec {
@@ -165,8 +163,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 #endif // RCT_NEW_ARCH_ENABLED
 
   std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry;
-  std::function<void(FrameCallback &, jsi::Runtime &)> requestRender;
-  std::vector<FrameCallback> frameCallbacks;
+  std::function<void(std::function<void(double)> &, jsi::Runtime &)>
+      requestRender;
+  std::vector<std::shared_ptr<jsi::Value>> frameCallbacks_;
   bool renderRequested = false;
   std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
       propObtainer;
