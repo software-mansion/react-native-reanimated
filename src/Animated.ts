@@ -4,6 +4,7 @@ export {
   addWhitelistedUIProps,
 } from './ConfigHelper';
 
+export { LayoutConfig } from './reanimated2/component/LayoutConfig';
 export { AnimatedText as Text } from './reanimated2/component/Text';
 export { AnimatedView as View } from './reanimated2/component/View';
 export { AnimatedScrollView as ScrollView } from './reanimated2/component/ScrollView';

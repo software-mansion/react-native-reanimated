@@ -53,6 +53,7 @@ import NativeReanimatedModule from './reanimated2/NativeReanimated';
 import { isSharedValue } from './reanimated2';
 import type { AnimateProps } from './reanimated2/helperTypes';
 import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
+import { ReducedMotionContext } from './reanimated2/component/LayoutConfig';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -287,6 +288,8 @@ export default function createAnimatedComponent(
     _inlineProps: StyleProps = {};
     _sharedElementTransition: SharedTransition | null = null;
     static displayName: string;
+    static contextType = ReducedMotionContext;
+    context!: React.ContextType<typeof ReducedMotionContext>;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
@@ -608,12 +611,13 @@ export default function createAnimatedComponent(
           Component<Record<string, unknown>, Record<string, unknown>, unknown>
         >,
       setLocalRef: (ref) => {
-        // TODO update config
+        const reduceMotion = this.context;
         const tag = findNodeHandle(ref);
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (
           (layout || entering || exiting || sharedTransitionTag) &&
-          tag != null
+          tag != null &&
+          !reduceMotion
         ) {
           if (!shouldBeUseWeb()) {
             enableLayoutAnimations(true, false);
