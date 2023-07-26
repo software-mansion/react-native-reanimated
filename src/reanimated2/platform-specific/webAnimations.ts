@@ -1,442 +1,418 @@
+import {
+  AnimationData,
+  FadeInData,
+  FadeOutData,
+  BounceInData,
+  BounceOutData,
+  FlipInData,
+  FlipOutData,
+  StretchInData,
+  StretchOutData,
+  ZoomInData,
+  ZoomOutData,
+  SlideInData,
+  SlideOutData,
+  LightSpeedInData,
+  LightSpeedOutData,
+  PinwheelData,
+  RotateInData,
+  RotateOutData,
+  RollData,
+} from './webAnimationsData';
+
+function parseObjectStyleToString(object: AnimationData): string {
+  let styleStr = `@keyframes ${object.name} { `;
+
+  for (const [timestamp, style] of Object.entries(object.style)) {
+    styleStr += `${timestamp}% { `;
+
+    for (const [property, value] of Object.entries(style)) {
+      if (property !== 'transform') {
+        styleStr += `${property}: ${value}; `;
+        continue;
+      }
+
+      styleStr += `transform:`;
+
+      for (const [transformProperty, transformPropertyValue] of Object.entries(
+        value
+      )) {
+        styleStr += ` ${transformProperty}(${transformPropertyValue})`;
+      }
+      styleStr += `; `;
+    }
+    styleStr += `} `;
+  }
+
+  styleStr += `} `;
+  console.log(styleStr);
+
+  return styleStr;
+}
+
 const FadeIn = {
   FadeIn: {
-    style: '@keyframes FadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FadeInData.FadeIn),
+    duration: FadeInData.FadeIn.duration,
   },
   FadeInRight: {
-    style:
-      '@keyframes FadeInRight { 0% { opacity: 0; transform: translateX(20%); } 100% { opacity: 1; transform: translateX(0); } }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FadeInData.FadeInRight),
+    duration: FadeInData.FadeInRight.duration,
   },
   FadeInLeft: {
-    style:
-      '@keyframes FadeInLeft { 0% { opacity: 0; transform: translateX(-20%); } 100% { opacity: 1; transform: translateX(0); } }',
-    duration: 0.35,
-  },
-  FadeInDown: {
-    style:
-      '@keyframes FadeInDown { 0% { opacity: 0; transform: translateY(20%); } 100% { opacity: 1; transform: translateY(0); } }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FadeInData.FadeInLeft),
+    duration: FadeInData.FadeInLeft.duration,
   },
   FadeInUp: {
-    style:
-      '@keyframes FadeInUp { 0% { opacity: 0; transform: translateY(-20%); } 100% { opacity: 1; transform: translateY(0); } }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FadeInData.FadeInUp),
+    duration: FadeInData.FadeInUp.duration,
+  },
+  FadeInDown: {
+    style: parseObjectStyleToString(FadeInData.FadeInDown),
+    duration: FadeInData.FadeInDown.duration,
   },
 };
 
 const FadeOut = {
   FadeOut: {
-    style: '@keyframes FadeOut { 0% { opacity: 1; } 100% { opacity: 0; } }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FadeOutData.FadeOut),
+    duration: FadeOutData.FadeOut.duration,
   },
   FadeOutRight: {
-    style:
-      '@keyframes FadeOutRight { 0% { opacity: 1; transform: translateX(0%); } 100% { opacity: 0; transform: translateX(20%); } }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FadeOutData.FadeOutRight),
+    duration: FadeOutData.FadeOutRight.duration,
   },
   FadeOutLeft: {
-    style:
-      '@keyframes FadeOutLeft { 0% { opacity: 1; transform: translateX(0%); } 100% { opacity: 0; transform: translateX(-20%); } }',
-    duration: 0.35,
-  },
-  FadeOutDown: {
-    style:
-      '@keyframes FadeOutDown { 0% { opacity: 1; transform: translateY(0%); } 100% { opacity: 0; transform: translateY(20%); } }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FadeOutData.FadeOutLeft),
+    duration: FadeOutData.FadeOutLeft.duration,
   },
   FadeOutUp: {
-    style:
-      '@keyframes FadeOutUp { 0% { opacity: 1; transform: translateY(0%); } 100% { opacity: 0; transform: translateY(-20%); } }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FadeOutData.FadeOutUp),
+    duration: FadeOutData.FadeOutUp.duration,
+  },
+  FadeOutDown: {
+    style: parseObjectStyleToString(FadeOutData.FadeOutDown),
+    duration: FadeOutData.FadeOutDown.duration,
   },
 };
 
 const BounceIn = {
   BounceIn: {
-    style:
-      '@keyframes BounceIn {0% {transform: scale(0.1);} 50% {transform: scale(1);} 70% {transform: scale(1.3);} 90% {transform: scale(0.9);} 100% {transform: scale(1);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(BounceInData.BounceIn),
+    duration: BounceInData.BounceIn.duration,
   },
   BounceInRight: {
-    style:
-      '@keyframes BounceInRight {0% {transform: translateX(1000%);} 50% {transform: translateX(0%);} 70% {transform: translateX(-5%);} 90% {transform: translateX(5%);} 100% {transform: translateX(0%);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(BounceInData.BounceInRight),
+    duration: BounceInData.BounceInRight.duration,
   },
   BounceInLeft: {
-    style:
-      '@keyframes BounceInLeft {0% {transform: translateX(-1000%);} 50% {transform: translateX(0%);} 70% {transform: translateX(5%);} 90% {transform: translateX(-5%);} 100% {transform: translateX(0%);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(BounceInData.BounceInLeft),
+    duration: BounceInData.BounceInLeft.duration,
   },
   BounceInUp: {
-    style:
-      '@keyframes BounceInUp {0% {transform: translateY(-10000%);} 50% {transform: translateY(0%);} 80% {transform: translateY(20%);} 90% {transform: translateY(-20%);} 100% {transform: translateY(0%);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(BounceInData.BounceInUp),
+    duration: BounceInData.BounceInUp.duration,
   },
   BounceInDown: {
-    style:
-      '@keyframes BounceInDown {0% {transform: translateY(10000%);} 50% {transform: translateY(0%);} 80% {transform: translateY(-20%);} 90% {transform: translateY(20%);} 100% {transform: translateY(0%);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(BounceInData.BounceInDown),
+    duration: BounceInData.BounceInDown.duration,
   },
 };
 
 const BounceOut = {
   BounceOut: {
-    style:
-      '@keyframes BounceOut {0% {transform: scale(1);} 10% {transform: scale(0.9);} 30% {transform: scale(1.3);} 50% {transform: scale(1);} 100% {transform: scale(0.1);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(BounceOutData.BounceOut),
+    duration: BounceOutData.BounceOut.duration,
   },
   BounceOutRight: {
-    style:
-      '@keyframes BounceOutRight {0% {transform: translateX(0%);} 10% {transform: translateX(5%);} 30% {transform: translateX(-5%);} 50% {transform: translateX(0%);} 100% {transform: translateX(1000%);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(BounceOutData.BounceOutRight),
+    duration: BounceOutData.BounceOutRight.duration,
   },
   BounceOutLeft: {
-    style:
-      '@keyframes BounceOutLeft {0% {transform: translateX(0%);} 10% {transform: translateX(-5%);} 30% {transform: translateX(5%);} 50% {transform: translateX(0%);} 100% {transform: translateX(-1000%);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(BounceOutData.BounceOutLeft),
+    duration: BounceOutData.BounceOutLeft.duration,
   },
   BounceOutUp: {
-    style:
-      '@keyframes BounceOutUp {0% {transform: translateY(0%);} 10% {transform: translateY(-20%);} 30% {transform: translateY(20%);} 50% {transform: translateY(0%);} 100% {transform: translateY(-10000%);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(BounceOutData.BounceOutUp),
+    duration: BounceOutData.BounceOutUp.duration,
   },
   BounceOutDown: {
-    style:
-      '@keyframes BounceOutDown {0% {transform: translateY(0%);} 10% {transform: translateY(20%);} 30% {transform: translateY(-20%);} 50% {transform: translateY(0%);} 100% {transform: translateY(10000%);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(BounceOutData.BounceOutDown),
+    duration: BounceOutData.BounceOutDown.duration,
   },
 };
 
 const FlipIn = {
   FlipInYRight: {
-    style:
-      '@keyframes FlipInYRight { 0% { transform: rotateY(90deg) translateX(100%); opacity: 0;} 50% {opacity: 1;} 100% { transform: rotateY(0) translateX(0);} }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FlipInData.FlipInYRight),
+    duration: FlipInData.FlipInYRight.duration,
   },
   FlipInYLeft: {
-    style:
-      '@keyframes FlipInYLeft { 0% { transform: rotateY(-90deg) translateX(-100%); opacity: 0;} 50% {opacity: 1;} 100% { transform: rotateY(0) translateX(0);} }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FlipInData.FlipInYLeft),
+    duration: FlipInData.FlipInYLeft.duration,
   },
   FlipInXUp: {
-    style:
-      '@keyframes FlipInXUp { 0% { transform: rotateX(90deg) translateY(-100%); opacity: 0;} 50% {opacity: 1;} 100% { transform: rotateX(0) translateY(0);} }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FlipInData.FlipInXUp),
+    duration: FlipInData.FlipInXUp.duration,
   },
   FlipInXDown: {
-    style:
-      '@keyframes FlipInXDown { 0% { transform: rotateX(-90deg) translateY(100%); opacity: 0;} 50% {opacity: 1;} 100% { transform: rotateX(0) translateY(0);} }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FlipInData.FlipInXDown),
+    duration: FlipInData.FlipInXDown.duration,
   },
   FlipInEasyX: {
-    style:
-      '@keyframes FlipInEasyX { 0% { transform: perspective(200px) rotateX(90deg)} 100% { transform: rotateX(0); } }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FlipInData.FlipInEasyX),
+    duration: FlipInData.FlipInEasyX.duration,
   },
   FlipInEasyY: {
-    style:
-      '@keyframes FlipInEasyY { 0% { transform: rotateY(-90deg);} 100% { transform: rotateY(0deg));} }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FlipInData.FlipInEasyY),
+    duration: FlipInData.FlipInEasyY.duration,
   },
 };
 
 const FlipOut = {
   FlipOutYRight: {
-    style:
-      '@keyframes FlipOutYRight { 0% { transform: rotateY(0deg) translateX(0%); opacity: 1;} 50% {opacity: 0;} 100% { transform: rotateY(-90deg) translateX(100%);} }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FlipOutData.FlipOutYRight),
+    duration: FlipOutData.FlipOutYRight.duration,
   },
   FlipOutYLeft: {
-    style:
-      '@keyframes FlipOutYLeft { 0% { transform: rotateY(0deg) translateX(0%); opacity: 1;} 50% {opacity: 0;} 100% { transform: rotateY(-90deg) translateX(-100%);} }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FlipOutData.FlipOutYLeft),
+    duration: FlipOutData.FlipOutYLeft.duration,
   },
   FlipOutXUp: {
-    style:
-      '@keyframes FlipOutXUp { 0% { transform: rotateX(0deg) translateY(0%); opacity: 1;} 50% {opacity: 0;} 100% { transform: rotateX(90deg) translateY(-100%);} }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FlipOutData.FlipOutXUp),
+    duration: FlipOutData.FlipOutXUp.duration,
   },
   FlipOutXDown: {
-    style:
-      '@keyframes FlipOutXDown { 0% { transform: rotateX(0deg) translateY(0%); opacity: 1;} 50% {opacity: 0;} 100% { transform: rotateX(90deg) translateY(100%);} }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FlipOutData.FlipOutXDown),
+    duration: FlipOutData.FlipOutXDown.duration,
   },
   FlipOutEasyX: {
-    style:
-      '@keyframes FlipOutEasyX { 0% { transform: perspective(200px) rotateX(0deg)} 100% { transform: rotateX(90deg); } }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FlipOutData.FlipOutEasyX),
+    duration: FlipOutData.FlipOutEasyX.duration,
   },
   FlipOutEasyY: {
-    style:
-      '@keyframes FlipOutEasyY { 0% { transform: rotateY(0deg);} 100% { transform: rotateY(-90deg);} }',
-    duration: 0.35,
+    style: parseObjectStyleToString(FlipOutData.FlipOutEasyY),
+    duration: FlipOutData.FlipOutEasyY.duration,
   },
 };
 
 const StretchIn = {
   StretchInX: {
-    style:
-      '@keyframes StretchInX { 0% { transform: scaleX(0);} 100% { transform: scaleX(1); } }',
-    duration: 0.35,
+    style: parseObjectStyleToString(StretchInData.StretchInX),
+    duration: StretchInData.StretchInX.duration,
   },
   StretchInY: {
-    style:
-      '@keyframes StretchInY { 0% { transform: scaleY(0);} 100% { transform: scaleY(1); } }',
-    duration: 0.35,
+    style: parseObjectStyleToString(StretchInData.StretchInY),
+    duration: StretchInData.StretchInY.duration,
   },
 };
 
 const StretchOut = {
   StretchOutX: {
-    style:
-      '@keyframes StretchOutX { 0% { transform: scaleX(1);} 100% { transform: scaleX(0); } }',
-    duration: 0.35,
+    style: parseObjectStyleToString(StretchOutData.StretchOutX),
+    duration: StretchOutData.StretchOutX.duration,
   },
   StretchOutY: {
-    style:
-      '@keyframes StretchOutY { 0% { transform: scaleY(1);} 100% { transform: scaleY(0); } }',
-    duration: 0.35,
+    style: parseObjectStyleToString(StretchOutData.StretchOutY),
+    duration: StretchOutData.StretchOutY.duration,
   },
 };
 
 const ZoomIn = {
   ZoomIn: {
-    style:
-      '@keyframes ZoomIn {0% {transform: scale(0);} 100% {transform: scale(1);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(ZoomInData.ZoomIn),
+    duration: ZoomInData.ZoomIn.duration,
   },
   ZoomInRotate: {
-    style:
-      '@keyframes ZoomInRotate {0% {transform: scale(0) rotate(45deg);} 100% {transform: scale(1) rotate(0deg);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(ZoomInData.ZoomInRotate),
+    duration: ZoomInData.ZoomInRotate.duration,
   },
   ZoomInRight: {
-    style:
-      '@keyframes ZoomInRight {0% {transform: translateX(100%) scale(0);} 100% {transform: translateX(0%) scale(1);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(ZoomInData.ZoomInRight),
+    duration: ZoomInData.ZoomInRight.duration,
   },
   ZoomInLeft: {
-    style:
-      '@keyframes ZoomInLeft {0% {transform: translateX(-100%) scale(0);} 100% {transform: translateX(0%) scale(1);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(ZoomInData.ZoomInLeft),
+    duration: ZoomInData.ZoomInLeft.duration,
   },
   ZoomInUp: {
-    style:
-      '@keyframes ZoomInUp {0% {transform: translateY(-10000%) scale(0);} 100% {transform: translateY(0%) scale(1);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(ZoomInData.ZoomInUp),
+    duration: ZoomInData.ZoomInUp.duration,
   },
   ZoomInDown: {
-    style:
-      '@keyframes ZoomInDown {0% {transform: translateY(10000%) scale(0);} 100% {transform: translateY(0%) scale(1);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(ZoomInData.ZoomInDown),
+    duration: ZoomInData.ZoomInDown.duration,
   },
   ZoomInEasyUp: {
-    style:
-      '@keyframes ZoomInEasyUp {0% {transform: translateY(-100%) scale(0);} 100% {transform:  translateY(0%) scale(1);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(ZoomInData.ZoomInEasyUp),
+    duration: ZoomInData.ZoomInEasyUp.duration,
   },
   ZoomInEasyDown: {
-    style:
-      '@keyframes ZoomInEasyDown {0% {transform: translateY(100%) scale(0);} 100% {transform:  translateY(0%) scale(1);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(ZoomInData.ZoomInEasyDown),
+    duration: ZoomInData.ZoomInEasyDown.duration,
   },
 };
 
 const ZoomOut = {
   ZoomOut: {
-    style:
-      '@keyframes ZoomOut {0% {transform: scale(1);} 100% {transform: scale(0);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(ZoomOutData.ZoomOut),
+    duration: ZoomOutData.ZoomOut.duration,
   },
   ZoomOutRotate: {
-    style:
-      '@keyframes ZoomOutRotate {0% {transform: scale(1) rotate(0deg);} 100% {transform: scale(0) rotate(45deg);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(ZoomOutData.ZoomOutRotate),
+    duration: ZoomOutData.ZoomOutRotate.duration,
   },
   ZoomOutRight: {
-    style:
-      '@keyframes ZoomOutRight {0% {transform: translateX(0%) scale(1);} 100% {transform: translateX(1000%) scale(0);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(ZoomOutData.ZoomOutRight),
+    duration: ZoomOutData.ZoomOutRight.duration,
   },
   ZoomOutLeft: {
-    style:
-      '@keyframes ZoomOutLeft {0% {transform: translateX(0%) scale(1);} 100% {transform: translateX(-1000%) scale(0);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(ZoomOutData.ZoomOutLeft),
+    duration: ZoomOutData.ZoomOutLeft.duration,
   },
   ZoomOutUp: {
-    style:
-      '@keyframes ZoomOutUp {0% {transform: translateY(0%) scale(1);} 100% {transform: translateY(-10000%) scale(0);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(ZoomOutData.ZoomOutUp),
+    duration: ZoomOutData.ZoomOutUp.duration,
   },
   ZoomOutDown: {
-    style:
-      '@keyframes ZoomOutDown {0% {transform: translateY(0%) scale(1);} 100% {transform: translateY(10000%) scale(0);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(ZoomOutData.ZoomOutDown),
+    duration: ZoomOutData.ZoomOutDown.duration,
   },
   ZoomOutEasyUp: {
-    style:
-      '@keyframes ZoomOutEasyUp {0% {transform: translateY(0%) scale(1);} 100% {transform:  translateY(-100%) scale(0);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(ZoomOutData.ZoomOutEasyUp),
+    duration: ZoomOutData.ZoomOutEasyUp.duration,
   },
   ZoomOutEasyDown: {
-    style:
-      '@keyframes ZoomOutEasyDown {0% {transform: translateY(0%) scale(1);} 100% {transform:  translateY(100%) scale(0);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(ZoomOutData.ZoomOutEasyDown),
+    duration: ZoomOutData.ZoomOutEasyDown.duration,
   },
 };
 
 const SlideIn = {
   SlideInRight: {
-    style:
-      '@keyframes SlideInRight {0% {transform: translateX(1000%);} 100% {transform: translateX(0%);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(SlideInData.SlideInRight),
+    duration: SlideInData.SlideInRight.duration,
   },
   SlideInLeft: {
-    style:
-      '@keyframes SlideInLeft {0% {transform: translateX(-1000%);} 100% {transform: translateX(0%);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(SlideInData.SlideInLeft),
+    duration: SlideInData.SlideInLeft.duration,
   },
   SlideInUp: {
-    style:
-      '@keyframes SlideInUp {0% {transform: translateY(-10000%);} 100% {transform: translateY(0%);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(SlideInData.SlideInUp),
+    duration: SlideInData.SlideInUp.duration,
   },
   SlideInDown: {
-    style:
-      '@keyframes SlideInDown {0% {transform: translateY(10000%);} 100% {transform: translateY(0%);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(SlideInData.SlideInDown),
+    duration: SlideInData.SlideInDown.duration,
   },
 };
 
 const SlideOut = {
   SlideOutRight: {
-    style:
-      '@keyframes SlideOutRight {0% {transform: translateX(0%);} 100% {transform: translateX(1000%);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(SlideOutData.SlideOutRight),
+    duration: SlideOutData.SlideOutRight.duration,
   },
   SlideOutLeft: {
-    style:
-      '@keyframes SlideOutLeft {0% {transform: translateX(0%);} 100% {transform: translateX(-1000%);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(SlideOutData.SlideOutLeft),
+    duration: SlideOutData.SlideOutLeft.duration,
   },
   SlideOutUp: {
-    style:
-      '@keyframes SlideOutUp {0% {transform: translateY(0%);} 100% {transform: translateY(-10000%);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(SlideOutData.SlideOutUp),
+    duration: SlideOutData.SlideOutUp.duration,
   },
   SlideOutDown: {
-    style:
-      '@keyframes SlideOutDown {0% {transform: translateY(0%);} 100% {transform: translateY(10000%);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(SlideOutData.SlideOutDown),
+    duration: SlideOutData.SlideOutDown.duration,
   },
 };
 
 const LightSpeedIn = {
   LightSpeedInRight: {
-    style:
-      '@keyframes LightSpeedInRight {0% {transform: translateX(100%) perspective(200px) rotateY(-10deg) rotateX(10deg); opacity: 0.2}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(LightSpeedInData.LightSpeedInRight),
+    duration: LightSpeedInData.LightSpeedInRight.duration,
   },
   LightSpeedInLeft: {
-    style:
-      '@keyframes LightSpeedInLeft {0% {transform: translateX(-100%) perspective(200px) rotateY(10deg) rotateX(-10deg); opacity: 0.2}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(LightSpeedInData.LightSpeedInLeft),
+    duration: LightSpeedInData.LightSpeedInLeft.duration,
   },
 };
 
 const LightSpeedOut = {
   LightSpeedOutRight: {
-    style:
-      '@keyframes LightSpeedOutRight {100% {transform: translateX(100%) perspective(200px) rotateY(-10deg) rotateX(-10deg); opacity: 0.2}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(LightSpeedOutData.LightSpeedOutRight),
+    duration: LightSpeedOutData.LightSpeedOutRight.duration,
   },
   LightSpeedOutLeft: {
-    style:
-      '@keyframes LightSpeedOutLeft {100% {transform: translateX(-100%) perspective(200px) rotateY(10deg) rotateX(10deg); opacity: 0.2}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(LightSpeedOutData.LightSpeedOutLeft),
+    duration: LightSpeedOutData.LightSpeedOutLeft.duration,
   },
 };
 
 const Pinwheel = {
   PinwheelIn: {
-    style:
-      '@keyframes PinwheelIn {0% {transform: rotate(360deg) scale(0); opacity: 0;} 100% {transform: rotate(0) scale(1); opacity: 1;}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(PinwheelData.PinwheelIn),
+    duration: PinwheelData.PinwheelIn.duration,
   },
   PinwheelOut: {
-    style:
-      '@keyframes PinwheelOut {0% {transform: rotate(0deg) scale(1); opacity: 1;} 100% {transform: rotate(360deg) scale(0); opacity: 0;}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(PinwheelData.PinwheelOut),
+    duration: PinwheelData.PinwheelOut.duration,
   },
 };
 
 const RotateIn = {
   RotateInDownLeft: {
-    style:
-      '@keyframes RotateInDownLeft {0% {transform: translateX(-40%) translateY(-250%) rotate(-90deg); opacity: 0;} 100% {transform: rotate(0); opacity: 1;}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(RotateInData.RotateInDownLeft),
+    duration: RotateInData.RotateInDownLeft.duration,
   },
   RotateInDownRight: {
-    style:
-      '@keyframes RotateInDownRight {0% {transform: translateX(40%) translateY(-250%) rotate(90deg); opacity: 0;} 100% {transform: rotate(0); opacity: 1;}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(RotateInData.RotateInDownRight),
+    duration: RotateInData.RotateInDownRight.duration,
   },
   RotateInUpLeft: {
-    style:
-      '@keyframes RotateInUpLeft {0% {transform: translateX(-40%) translateY(250%) rotate(90deg); opacity: 0;} 100% {transform: rotate(0); opacity: 1;}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(RotateInData.RotateInUpLeft),
+    duration: RotateInData.RotateInUpLeft.duration,
   },
   RotateInUpRight: {
-    style:
-      '@keyframes RotateInUpRight {0% {transform: translateX(40%) translateY(250%) rotate(-90deg); opacity: 0;} 100% {transform: rotate(0); opacity: 1;}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(RotateInData.RotateInUpRight),
+    duration: RotateInData.RotateInUpRight.duration,
   },
 };
 
 const RotateOut = {
   RotateOutDownLeft: {
-    style:
-      '@keyframes RotateOutDownLeft {0% {transform: rotate(0); opacity: 1;} 100% {transform: translateX(-40%) translateY(250%) rotate(90deg); opacity: 0;}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(RotateOutData.RotateOutDownLeft),
+    duration: RotateOutData.RotateOutDownLeft.duration,
   },
   RotateOutDownRight: {
-    style:
-      '@keyframes RotateOutDownRight {0% {transform: rotate(0); opacity: 1;} 100% {transform: translateX(40%) translateY(250%) rotate(-90deg); opacity: 0;}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(RotateOutData.RotateOutDownRight),
+    duration: RotateOutData.RotateOutDownRight.duration,
   },
   RotateOutUpLeft: {
-    style:
-      '@keyframes RotateOutUpLeft {0% {transform: rotate(0); opacity: 1;} 100% {transform: translateX(-40%) translateY(-250%) rotate(-90deg); opacity: 0;}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(RotateOutData.RotateOutUpLeft),
+    duration: RotateOutData.RotateOutUpLeft.duration,
   },
   RotateOutUpRight: {
-    style:
-      '@keyframes RotateOutUpRight {0% {transform: rotate(0); opacity: 1;} 100% {transform: translateX(40%) translateY(-250%) rotate(90deg); opacity: 0;}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(RotateOutData.RotateOutUpRight),
+    duration: RotateOutData.RotateOutUpRight.duration,
   },
 };
 
 const Roll = {
   RollInLeft: {
-    style:
-      '@keyframes RollInLeft {0% {transform: translateX(-100%) rotate(-180deg);} 100% {transform: translateY(0%);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(RollData.RollInLeft),
+    duration: RollData.RollInLeft.duration,
   },
   RollInRight: {
-    style:
-      '@keyframes RollInRight {0% {transform: translateX(100%) rotate(180deg);} 100% {transform: translateY(0%);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(RollData.RollInRight),
+    duration: RollData.RollInRight.duration,
   },
   RollOutLeft: {
-    style:
-      '@keyframes RollOutLeft {0% {transform: translateY(0%);} 100% {transform: translateX(-100%) rotate(-180deg);} }',
-    duration: 0.35,
+    style: parseObjectStyleToString(RollData.RollOutLeft),
+    duration: RollData.RollOutLeft.duration,
   },
   RollOutRight: {
-    style:
-      '@keyframes RollOutRight {0% {transform: translateY(0%);} 100% {transform: translateX(100%) rotate(180deg);}}',
-    duration: 0.35,
+    style: parseObjectStyleToString(RollData.RollOutRight),
+    duration: RollData.RollOutRight.duration,
   },
 };
 
