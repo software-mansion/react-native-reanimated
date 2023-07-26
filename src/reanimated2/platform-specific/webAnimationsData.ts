@@ -8,6 +8,7 @@ export interface TransformProperties {
   scaleX?: number;
   scaleY?: number;
   perspective?: string;
+  skew?: string;
 }
 
 export interface AnimationStyle {
@@ -863,9 +864,7 @@ export const LightSpeedInData: Record<string, AnimationData> = {
       0: {
         transform: {
           translateX: '100%',
-          perspective: '200px',
-          rotateY: '-10deg',
-          rotateX: '10deg',
+          skew: '-15deg',
         },
         opacity: 0.2,
       },
@@ -878,9 +877,7 @@ export const LightSpeedInData: Record<string, AnimationData> = {
       0: {
         transform: {
           translateX: '-100%',
-          perspective: '200px',
-          rotateY: '10deg',
-          rotateX: '-10deg',
+          skew: '15deg',
         },
         opacity: 0.2,
       },
@@ -896,9 +893,7 @@ export const LightSpeedOutData: Record<string, AnimationData> = {
       100: {
         transform: {
           translateX: '100%',
-          perspective: '200px',
-          rotateY: '-10deg',
-          rotateX: '-10deg',
+          skew: '-15deg',
         },
         opacity: 0.2,
       },
@@ -911,9 +906,7 @@ export const LightSpeedOutData: Record<string, AnimationData> = {
       100: {
         transform: {
           translateX: '-100%',
-          perspective: '200px',
-          rotateY: '10deg',
-          rotateX: '10deg',
+          skew: '15deg',
         },
         opacity: 0.2,
       },
