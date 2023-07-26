@@ -162,7 +162,7 @@ export const BounceInData: Record<string, AnimationData> = {
   BounceInRight: {
     name: 'BounceInRight',
     style: {
-      0: { transform: { translateX: '1000%' } },
+      0: { transform: { translateX: '100vw' } },
       50: { transform: { translateX: '0%' } },
       70: { transform: { translateX: '-5%' } },
       90: { transform: { translateX: '5%' } },
@@ -173,7 +173,7 @@ export const BounceInData: Record<string, AnimationData> = {
   BounceInLeft: {
     name: 'BounceInLeft',
     style: {
-      0: { transform: { translateX: '-1000%' } },
+      0: { transform: { translateX: '-100vw' } },
       50: { transform: { translateX: '0%' } },
       70: { transform: { translateX: '5%' } },
       90: { transform: { translateX: '-5%' } },
@@ -184,7 +184,7 @@ export const BounceInData: Record<string, AnimationData> = {
   BounceInUp: {
     name: 'BounceInUp',
     style: {
-      0: { transform: { translateY: '-10000%' } },
+      0: { transform: { translateY: '-100vh' } },
       50: { transform: { translateY: '0%' } },
       80: { transform: { translateY: '20%' } },
       90: { transform: { translateY: '-20%' } },
@@ -195,7 +195,7 @@ export const BounceInData: Record<string, AnimationData> = {
   BounceInDown: {
     name: 'BounceInDown',
     style: {
-      0: { transform: { translateY: '10000%' } },
+      0: { transform: { translateY: '100vh' } },
       50: { transform: { translateY: '0%' } },
       80: { transform: { translateY: '-20%' } },
       90: { transform: { translateY: '20%' } },
@@ -224,7 +224,7 @@ export const BounceOutData: Record<string, AnimationData> = {
       10: { transform: { translateX: '5%' } },
       30: { transform: { translateX: '-5%' } },
       50: { transform: { translateX: '0%' } },
-      100: { transform: { translateX: '1000%' } },
+      100: { transform: { translateX: '100vw' } },
     },
     duration: 0.35,
   },
@@ -232,10 +232,10 @@ export const BounceOutData: Record<string, AnimationData> = {
     name: 'BounceOutLeft',
     style: {
       0: { transform: { translateX: '0%' } },
-      10: { transform: { translateX: '5%' } },
+      10: { transform: { translateX: '-5%' } },
       30: { transform: { translateX: '5%' } },
       50: { transform: { translateX: '0%' } },
-      100: { transform: { translateX: '-1000%' } },
+      100: { transform: { translateX: '-100vw' } },
     },
     duration: 0.35,
   },
@@ -246,7 +246,7 @@ export const BounceOutData: Record<string, AnimationData> = {
       10: { transform: { translateY: '-20%' } },
       30: { transform: { translateY: '20%' } },
       50: { transform: { translateY: '0%' } },
-      100: { transform: { translateY: '-10000%' } },
+      100: { transform: { translateY: '-100vh' } },
     },
     duration: 0.35,
   },
@@ -257,7 +257,7 @@ export const BounceOutData: Record<string, AnimationData> = {
       10: { transform: { translateY: '20%' } },
       30: { transform: { translateY: '-20%' } },
       50: { transform: { translateY: '0%' } },
-      100: { transform: { translateY: '10000%' } },
+      100: { transform: { translateY: '100vh' } },
     },
     duration: 0.35,
   },
@@ -545,7 +545,7 @@ export const ZoomInData: Record<string, AnimationData> = {
     style: {
       0: {
         transform: {
-          translateX: '100%',
+          translateX: '100vw',
           scale: 0,
         },
       },
@@ -563,7 +563,7 @@ export const ZoomInData: Record<string, AnimationData> = {
     style: {
       0: {
         transform: {
-          translateX: '-100%',
+          translateX: '-100vw',
           scale: 0,
         },
       },
@@ -581,7 +581,7 @@ export const ZoomInData: Record<string, AnimationData> = {
     style: {
       0: {
         transform: {
-          translateY: '-10000%',
+          translateY: '-100vh',
           scale: 0,
         },
       },
@@ -592,14 +592,14 @@ export const ZoomInData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 3.35,
   },
   ZoomInDown: {
     name: 'ZoomInDown',
     style: {
       0: {
         transform: {
-          translateY: '10000%',
+          translateY: '100vh',
           scale: 0,
         },
       },
@@ -688,7 +688,7 @@ export const ZoomOutData: Record<string, AnimationData> = {
       },
       100: {
         transform: {
-          translateX: '1000%',
+          translateX: '100vw',
           scale: 0,
         },
       },
@@ -706,7 +706,7 @@ export const ZoomOutData: Record<string, AnimationData> = {
       },
       100: {
         transform: {
-          translateX: '-1000%',
+          translateX: '-100vw',
           scale: 1,
         },
       },
@@ -724,7 +724,7 @@ export const ZoomOutData: Record<string, AnimationData> = {
       },
       100: {
         transform: {
-          translateY: '-10000%',
+          translateY: '-100vh',
           scale: 0,
         },
       },
@@ -742,7 +742,7 @@ export const ZoomOutData: Record<string, AnimationData> = {
       },
       100: {
         transform: {
-          translateY: '10000%',
+          translateY: '100vh',
           scale: 0,
         },
       },
@@ -791,7 +791,7 @@ export const SlideInData: Record<string, AnimationData> = {
   SlideInRight: {
     name: 'SlideInRight',
     style: {
-      0: { transform: { translateX: '1000%' } },
+      0: { transform: { translateX: '100vh' } },
       100: { transform: { translateX: '0%' } },
     },
     duration: 0.35,
@@ -799,7 +799,7 @@ export const SlideInData: Record<string, AnimationData> = {
   SlideInLeft: {
     name: 'SlideInLeft',
     style: {
-      0: { transform: { translateX: '-1000%' } },
+      0: { transform: { translateX: '-100vh' } },
       100: { transform: { translateX: '0%' } },
     },
     duration: 0.35,
@@ -807,7 +807,7 @@ export const SlideInData: Record<string, AnimationData> = {
   SlideInUp: {
     name: 'SlideInUp',
     style: {
-      0: { transform: { translateY: '-10000%' } },
+      0: { transform: { translateY: '-100vh' } },
       100: { transform: { translateY: '0%' } },
     },
     duration: 0.35,
@@ -815,7 +815,7 @@ export const SlideInData: Record<string, AnimationData> = {
   SlideInDown: {
     name: 'SlideInDown',
     style: {
-      0: { transform: { translateY: '10000%' } },
+      0: { transform: { translateY: '100vh' } },
       100: { transform: { translateY: '0%' } },
     },
     duration: 0.35,
@@ -827,7 +827,7 @@ export const SlideOutData: Record<string, AnimationData> = {
     name: 'SlideOutRight',
     style: {
       0: { transform: { translateX: '0%' } },
-      100: { transform: { translateX: '1000%' } },
+      100: { transform: { translateX: '100vw' } },
     },
     duration: 0.35,
   },
@@ -835,7 +835,7 @@ export const SlideOutData: Record<string, AnimationData> = {
     name: 'SlideOutLeft',
     style: {
       0: { transform: { translateX: '0%' } },
-      100: { transform: { translateX: '-1000%' } },
+      100: { transform: { translateX: '-100vw' } },
     },
     duration: 0.35,
   },
@@ -843,7 +843,7 @@ export const SlideOutData: Record<string, AnimationData> = {
     name: 'SlideOutUp',
     style: {
       0: { transform: { translateY: '0%' } },
-      100: { transform: { translateY: '-10000%' } },
+      100: { transform: { translateY: '-100vh' } },
     },
     duration: 0.35,
   },
@@ -851,7 +851,7 @@ export const SlideOutData: Record<string, AnimationData> = {
     name: 'SlideOutDown',
     style: {
       0: { transform: { translateY: '0%' } },
-      100: { transform: { translateY: '10000%' } },
+      100: { transform: { translateY: '100vh' } },
     },
     duration: 0.35,
   },
@@ -863,7 +863,7 @@ export const LightSpeedInData: Record<string, AnimationData> = {
     style: {
       0: {
         transform: {
-          translateX: '100%',
+          translateX: '100vw',
           skew: '-15deg',
         },
         opacity: 0.2,
@@ -876,7 +876,7 @@ export const LightSpeedInData: Record<string, AnimationData> = {
     style: {
       0: {
         transform: {
-          translateX: '-100%',
+          translateX: '-100vw',
           skew: '15deg',
         },
         opacity: 0.2,
@@ -892,7 +892,7 @@ export const LightSpeedOutData: Record<string, AnimationData> = {
     style: {
       100: {
         transform: {
-          translateX: '100%',
+          translateX: '100vw',
           skew: '-15deg',
         },
         opacity: 0.2,
@@ -905,7 +905,7 @@ export const LightSpeedOutData: Record<string, AnimationData> = {
     style: {
       100: {
         transform: {
-          translateX: '-100%',
+          translateX: '-100vw',
           skew: '15deg',
         },
         opacity: 0.2,

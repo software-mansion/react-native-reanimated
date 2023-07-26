@@ -43,9 +43,7 @@ function parseObjectStyleToString(object: AnimationData): string {
     }
     styleStr += `} `;
   }
-
   styleStr += `} `;
-  console.log(styleStr);
 
   return styleStr;
 }
