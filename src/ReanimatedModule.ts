@@ -1,4 +1,7 @@
-export default {
+import { NativeModules } from 'react-native';
+import { nativeShouldBeMock } from './reanimated2/PlatformChecker';
+
+const ReanimatedModuleMock = {
   async disconnectNodeFromView(): Promise<void> {
     // noop
   },
@@ -49,3 +52,13 @@ export default {
     );
   },
 };
+
+let exportedModule: typeof ReanimatedModuleMock;
+if (nativeShouldBeMock()) {
+  exportedModule = ReanimatedModuleMock;
+} else {
+  const { ReanimatedModule } = NativeModules;
+  exportedModule = ReanimatedModule;
+}
+
+export default exportedModule;

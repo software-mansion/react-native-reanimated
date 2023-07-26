@@ -177,7 +177,7 @@ export default function App() {
         Change code in the editor and watch it change on your phone! Save to get
         a shareable url.
       </Text>
-      <Speedometer score={80} types={[]} />
+      <Speedometer score={140} types={[]} />
     </View>
   );
 }
