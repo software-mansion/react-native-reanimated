@@ -296,8 +296,8 @@ jsi::Value NativeReanimatedModule::getViewProp(
   std::shared_ptr<jsi::Function> funPtr =
       std::make_shared<jsi::Function>(std::move(fun));
 
-  uiScheduler_->scheduleOnUI([&rt, viewTagInt, funPtr, this, propNameStr]() {
-    // TODO: fix incorrect runtime reference?
+  uiScheduler_->scheduleOnUI([viewTagInt, funPtr, this, propNameStr]() {
+    jsi::Runtime &rt = uiWorkletRuntime_->getRuntime();
     const jsi::String propNameValue =
         jsi::String::createFromUtf8(rt, propNameStr);
     jsi::Value result = propObtainer(rt, viewTagInt, propNameValue);
