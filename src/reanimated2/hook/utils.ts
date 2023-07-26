@@ -4,10 +4,10 @@ import { processColor } from '../Colors';
 import type {
   AnimatedStyle,
   __Context,
-  NativeEvent,
   NestedObjectValues,
   __WorkletFunction,
   AnimationObject,
+  __NativeEvent,
 } from '../commonTypes';
 import { makeRemote } from '../core';
 import { isWeb, isJest } from '../PlatformChecker';
@@ -36,7 +36,7 @@ type useEventType = <T extends object>(
   rebuild?: boolean
 ) => (e: NativeSyntheticEvent<T>) => void;
 
-export const useEvent = function <T extends NativeEvent<T>>(
+export const useEvent = function <T extends __NativeEvent<T>>(
   handler: (event: T) => void,
   eventNames: string[] = [],
   rebuild = false

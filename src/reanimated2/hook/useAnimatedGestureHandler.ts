@@ -1,22 +1,9 @@
-import type { __Context, __WorkletFunction, NativeEvent } from '../commonTypes';
+import type { WebEvent, NativeEvent } from '../commonTypes';
 import type { DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
+import { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 
-interface Handler<T, TContext extends __Context> extends __WorkletFunction {
-  (event: T, context: TContext, isCanceledOrFailed?: boolean): void;
-}
-
-export interface GestureHandlers<T, TContext extends __Context> {
-  [key: string]: Handler<T, TContext> | undefined;
-  onStart?: Handler<T, TContext>;
-  onActive?: Handler<T, TContext>;
-  onEnd?: Handler<T, TContext>;
-  onFail?: Handler<T, TContext>;
-  onCancel?: Handler<T, TContext>;
-  onFinish?: Handler<T, TContext>;
-}
-
-export const EventType = {
+const EventType = {
   UNDETERMINED: 0,
   FAILED: 1,
   BEGAN: 2,
@@ -25,38 +12,87 @@ export const EventType = {
   END: 5,
 };
 
-export interface GestureHandlerNativeEvent {
-  handlerTag: number;
-  numberOfPointers: number;
-  state: (typeof EventType)[keyof typeof EventType];
+type StateType = (typeof EventType)[keyof typeof EventType];
+interface PropsUsedInUseAnimatedGestureHandler {
+  handlerTag?: number;
+  numberOfPointers?: number;
+  state?: StateType;
+  oldState?: StateType;
 }
 
-export interface GestureHandlerEvent<T> extends NativeEvent<T> {
-  nativeEvent: T;
+export type GestureHandlerEvent<Payload extends object> =
+  | WebEvent<Payload>
+  | NativeEvent<Payload>;
+
+type HandlerArguments<
+  Payload extends PropsUsedInUseAnimatedGestureHandler,
+  Context extends Record<string, unknown>
+> = [event: Payload, context: Context, isCanceledOrFailed?: boolean];
+
+type Handler<
+  Payload extends PropsUsedInUseAnimatedGestureHandler,
+  Context extends Record<string, unknown>
+> = (...args: HandlerArguments<Payload, Context>) => void;
+
+export interface GestureHandlers<
+  Payload extends PropsUsedInUseAnimatedGestureHandler,
+  Context extends Record<string, unknown>
+> {
+  [key: string]: Handler<Payload, Context> | undefined;
+  onStart?: Handler<Payload, Context>;
+  onActive?: Handler<Payload, Context>;
+  onEnd?: Handler<Payload, Context>;
+  onFail?: Handler<Payload, Context>;
+  onCancel?: Handler<Payload, Context>;
+  onFinish?: Handler<Payload, Context>;
 }
 
-type InferArgument<T> = T extends GestureHandlerEvent<infer E>
-  ? E extends GestureHandlerNativeEvent
-    ? E
-    : never
+// useAnimatedGestureHandler is generized by event types coming from RNGH
+// and they all have those events defined as having nativeEvent field
+// therefore we use this type to signify that
+type RNGHProvidedType<Payload extends object> = {
+  nativeEvent: Payload;
+};
+
+// we have to get to event's Payload
+type InferPayload<EventType extends object> = EventType extends {
+  nativeEvent: infer Payload extends object;
+}
+  ? Payload
   : never;
 
-export function useAnimatedGestureHandler<
-  T extends GestureHandlerEvent<any>,
-  TContext extends __Context = __Context,
-  Payload = InferArgument<T>
->(
-  handlers: GestureHandlers<Payload, TContext>,
-  dependencies?: DependencyList
-): (e: T) => void {
-  const { context, doDependenciesDiffer, useWeb } = useHandler<
-    Payload,
-    TContext
-  >(handlers, dependencies);
+// and then we have to mark it that events we get
+// contain all the necessary fields for us
+type GestureHandlersPayload<
+  EventType extends RNGHProvidedType<InferPayload<EventType>>
+> = InferPayload<EventType> & PropsUsedInUseAnimatedGestureHandler;
 
-  const handler = (e: T) => {
+/**
+ * @deprecated useAnimatedGestureHandler is an old API which is no longer supported.
+ *
+ * Please check https://docs.swmansion.com/react-native-gesture-handler/docs/guides/upgrading-to-2/
+ * for information about how to migrate to `react-native-gesture-handler` v2
+ */
+export function useAnimatedGestureHandler<
+  EventType extends RNGHProvidedType<
+    InferPayload<EventType>
+  > = PanGestureHandlerGestureEvent,
+  HandlerContext extends Record<string, unknown> = Record<string, unknown>
+>(
+  handlers: GestureHandlers<GestureHandlersPayload<EventType>, HandlerContext>,
+  dependencies?: DependencyList
+) {
+  const { context, doDependenciesDiffer, useWeb } = useHandler<
+    GestureHandlersPayload<EventType>,
+    HandlerContext
+  >(handlers, dependencies);
+  const handler = (
+    e: GestureHandlerEvent<GestureHandlersPayload<EventType>>
+  ) => {
     'worklet';
-    const event = useWeb ? e.nativeEvent : e;
+    const event = useWeb
+      ? (e as WebEvent<GestureHandlersPayload<EventType>>).nativeEvent
+      : (e as NativeEvent<GestureHandlersPayload<EventType>>);
 
     if (event.state === EventType.BEGAN && handlers.onStart) {
       handlers.onStart(event, context);
@@ -104,9 +140,11 @@ export function useAnimatedGestureHandler<
     return handler;
   }
 
-  return useEvent<T>(
+  return useEvent<GestureHandlerEvent<GestureHandlersPayload<EventType>>>(
     handler,
     ['onGestureHandlerStateChange', 'onGestureHandlerEvent'],
     doDependenciesDiffer
-  ) as unknown as (e: T) => void; // this is not correct but we want to make GH think it receives a function
+  ) as unknown as (e: EventType) => void;
+  // This cast is necessary since RNGH expects to get a function
+  // and useEvent returns a ref that is casted to something else x_x
 }

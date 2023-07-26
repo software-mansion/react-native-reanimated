@@ -134,6 +134,12 @@ export type WorkletFunction<A extends unknown[], T> =
   | WorkletFunctionRelease<A, T>
   | WorkletFunctionDev<A, T>;
 
+export type NativeEvent<Payload extends object> = Payload;
+
+export type WebEvent<Payload extends object> = {
+  nativeEvent: Payload;
+};
+
 /**
  * @deprecated
  */
@@ -177,7 +183,10 @@ export interface __AdapterWorkletFunction extends __WorkletFunction {
   (value: NestedObject<string | number | AnimationObject>): void;
 }
 
-export interface NativeEvent<T> {
+/**
+ * @deprecated
+ */
+export interface __NativeEvent<T> {
   nativeEvent: T;
 }
 
