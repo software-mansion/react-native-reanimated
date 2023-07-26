@@ -25,7 +25,7 @@ interface MapperRegistry<T> {
   updateOrder(): void;
 }
 
-export interface JSReanimated {
+interface JSReanimated {
   _valueSetter?: <T>(value: T) => void;
   _renderRequested: boolean;
   _mapperRegistry: MapperRegistry<any>;
