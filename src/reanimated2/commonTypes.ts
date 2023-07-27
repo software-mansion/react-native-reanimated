@@ -94,7 +94,7 @@ export type MapperRegistry = {
   stop: (mapperID: number) => void;
 };
 
-export type WorkletClosure = Record<string, unknown>;
+type WorkletClosure = Record<string, unknown>;
 
 interface WorkletInitDataRelease {
   code: string;
@@ -108,13 +108,13 @@ interface WorkletInitDataDev {
 }
 
 interface WorkletBaseRelease {
-  _closure: WorkletClosure;
+  __closure: WorkletClosure;
   __initData: WorkletInitDataRelease;
   __workletHash: number;
 }
 
 interface WorkletBaseDev {
-  _closure: WorkletClosure;
+  __closure: WorkletClosure;
   __initData: WorkletInitDataDev;
   __workletHash: number;
   __stackDetails: Error;
@@ -143,7 +143,7 @@ export type __Context = Record<string, unknown>;
  * @deprecated
  */
 export interface __WorkletFunction {
-  _closure?: __Context;
+  __closure?: __Context;
   __workletHash?: number;
 }
 

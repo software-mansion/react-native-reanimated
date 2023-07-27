@@ -9,12 +9,7 @@
 #include "JSRuntimeHelper.h"
 #include "ReanimatedRuntime.h"
 #include "RuntimeManager.h"
-
-#ifdef __APPLE__
-#include <RNReanimated/Scheduler.h>
-#else
-#include "Scheduler.h"
-#endif
+#include "UIScheduler.h"
 
 using namespace facebook;
 

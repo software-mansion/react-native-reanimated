@@ -419,7 +419,7 @@ export const useAnimatedStyle = function <T extends AnimatedStyle>(
 ): AnimatedStyleResult {
   const viewsRef: ViewRefSet<any> = makeViewsRefSet();
   const initRef = useRef<AnimationRef>();
-  let inputs = Object.values(updater._closure ?? {});
+  let inputs = Object.values(updater.__closure ?? {});
   if (shouldBeUseWeb()) {
     if (!inputs.length && dependencies?.length) {
       // let web work without a Babel/SWC plugin

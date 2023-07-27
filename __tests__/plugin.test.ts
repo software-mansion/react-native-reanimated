@@ -213,7 +213,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).not.toContain('_f._closure = {};');
+      expect(code).not.toContain('_f.__closure = {};');
       expect(code).toMatchSnapshot();
     });
 
@@ -234,7 +234,7 @@ describe('babel plugin', () => {
             'property' in path.node.left &&
             'name' in path.node.left.property &&
             'properties' in path.node.right &&
-            path.node.left.property.name === '_closure'
+            path.node.left.property.name === '__closure'
           ) {
             closureBindings = path.node.right.properties;
           }
@@ -943,7 +943,7 @@ describe('babel plugin', () => {
             'property' in path.node.left &&
             'name' in path.node.left.property &&
             'properties' in path.node.right &&
-            path.node.left.property.name === '_closure'
+            path.node.left.property.name === '__closure'
           ) {
             closureBindings = path.node.right.properties;
           }
