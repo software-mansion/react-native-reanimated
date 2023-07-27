@@ -751,6 +751,16 @@ export default function createAnimatedComponent(
     }
 
     handleEnteringAnimationsWeb(): void {
+      const toggleElement = (element: HTMLElement, show: boolean) => {
+        if (show) {
+          element.style.visibility = 'visible';
+          element.style.position = 'initial';
+        } else {
+          element.style.visibility = 'hidden';
+          element.style.position = 'absolute';
+        }
+      };
+
       const entering = this.props.entering;
       if (!entering) {
         return;
@@ -773,16 +783,13 @@ export default function createAnimatedComponent(
 
       const element = findNodeHandle(this) as unknown as HTMLElement;
 
-      element.style.visibility = 'hidden';
-      element.style.position = 'absolute';
+      toggleElement(element, false);
 
       if (delay === 0) {
-        element.style.visibility = 'visible';
-        element.style.position = 'initial';
+        toggleElement(element, true);
       } else {
         setTimeout(() => {
-          element.style.visibility = 'visible';
-          element.style.position = 'initial';
+          toggleElement(element, true);
         }, delay);
       }
 

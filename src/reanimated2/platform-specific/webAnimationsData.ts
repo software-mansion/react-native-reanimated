@@ -592,7 +592,7 @@ export const ZoomInData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 3.35,
+    duration: 0.35,
   },
   ZoomInDown: {
     name: 'ZoomInDown',
@@ -791,7 +791,7 @@ export const SlideInData: Record<string, AnimationData> = {
   SlideInRight: {
     name: 'SlideInRight',
     style: {
-      0: { transform: { translateX: '100vh' } },
+      0: { transform: { translateX: '100vw' } },
       100: { transform: { translateX: '0%' } },
     },
     duration: 0.35,
@@ -799,7 +799,7 @@ export const SlideInData: Record<string, AnimationData> = {
   SlideInLeft: {
     name: 'SlideInLeft',
     style: {
-      0: { transform: { translateX: '-100vh' } },
+      0: { transform: { translateX: '-100vw' } },
       100: { transform: { translateX: '0%' } },
     },
     duration: 0.35,
