@@ -10,25 +10,29 @@ const command = process.argv[2];
 
 if (command === 'setBundleIdentifier') {
   patchFile(
-    'app.json',
+    'app/app.json',
     '"ios": {',
     '"ios": {"bundleIdentifier":"com.swmansion.app",'
   );
 
   patchFile(
-    'app.json',
+    'app/app.json',
     '"android": {',
     '"android": {"package": "com.swmansion.app",'
   );
 }
 
 if (command === 'setupFabricIOS') {
-  patchFile('ios/Podfile.properties.json', '{', '{"newArchEnabled":"true",');
+  patchFile(
+    'app/ios/Podfile.properties.json',
+    '{',
+    '{"newArchEnabled":"true",'
+  );
 }
 
 if (command === 'setupFabricAndroid') {
   patchFile(
-    'android/gradle.properties',
+    'app/android/gradle.properties',
     'newArchEnabled=false',
     'newArchEnabled=true'
   );

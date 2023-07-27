@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  SCRIPT_PATH: node_modules/react-native-reanimated/.github/workflows/helper/configureDevClient.js
+  SCRIPT_PATH: reanimated_repo/.github/workflows/helper/configureDevClient.js
 
 jobs:
   build_ios:
@@ -21,13 +21,16 @@ jobs:
       group: ios-expo-dev-client-${{ matrix.react-native-architecture }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
+      - name: Check out reanimated repository
+        uses: actions/checkout@v3
+        with:
+          path: 'reanimated_repo'
       - name: Create Expo app
         run: npx create-expo-app app
       - name: Install expo-dev-client
         working-directory: app
         run: npx expo install expo-dev-client
       - name: Setup configuration
-        working-directory: app
         run: node ${{ env.SCRIPT_PATH }} setBundleIdentifier
       - name: Expo prebuild
         working-directory: app
@@ -37,7 +40,6 @@ jobs:
         run: npm install github:software-mansion/react-native-reanimated
       - name: Set Fabric
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
-        working-directory: app
         run: node ${{ env.SCRIPT_PATH }} setupFabricIOS
       - name: Install Pods
         working-directory: app/ios
@@ -62,7 +64,6 @@ jobs:
         working-directory: app
         run: npx expo install expo-dev-client
       - name: Setup configuration
-        working-directory: app
         run: node ${{ env.SCRIPT_PATH }} setBundleIdentifier
       - name: Expo prebuild
         working-directory: app
@@ -72,7 +73,6 @@ jobs:
         run: npm install github:software-mansion/react-native-reanimated
       - name: Set Fabric
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
-        working-directory: app
         run: node ${{ env.SCRIPT_PATH }} setupFabricAndroid
       - name: Build app
         working-directory: app
