@@ -11,7 +11,7 @@ void EventHandlerRegistry::registerEventHandler(
   const auto &eventName = eventHandler->getEventName();
   auto handlerId = eventHandler->getHandlerId();
 
-  if (eventHandler->ignoreEmitterReactTag()) {
+  if (eventHandler->shouldIgnoreEmitterReactTag()) {
     eventMappings[eventName][handlerId] = eventHandler;
   } else {
     const auto emitterReactTag = eventHandler->getEmitterReactTag();
@@ -28,7 +28,7 @@ void EventHandlerRegistry::unregisterEventHandler(uint64_t id) {
     const auto eventHandler = handlerIt->second;
     const auto &eventName = eventHandler->getEventName();
 
-    if (eventHandler->ignoreEmitterReactTag()) {
+    if (eventHandler->shouldIgnoreEmitterReactTag()) {
       auto eventMappingIt = eventMappings.find(eventName);
       auto &handlersMap = eventMappingIt->second;
       handlersMap.erase(id);

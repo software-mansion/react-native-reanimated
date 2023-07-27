@@ -21,7 +21,7 @@ uint64_t WorkletEventHandler::getEmitterReactTag() const {
   return emitterReactTag_;
 }
 
-bool WorkletEventHandler::ignoreEmitterReactTag() const {
+bool WorkletEventHandler::shouldIgnoreEmitterReactTag() const {
   return emitterReactTag_ == -1;
 }
 

@@ -34,7 +34,7 @@ class WorkletEventHandler {
   uint64_t getHandlerId() const;
   const std::string &getEventName() const;
   uint64_t getEmitterReactTag() const;
-  bool ignoreEmitterReactTag() const;
+  bool shouldIgnoreEmitterReactTag() const;
 };
 
 } // namespace reanimated
