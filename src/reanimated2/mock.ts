@@ -164,6 +164,7 @@ const ReanimatedV2 = {
   'ZoomOutEasyUp',
   'ZoomOutEasyDown',
 
+  'BounceIn',
   'BounceInDown',
   'BounceInUp',
   'BounceInLeft',

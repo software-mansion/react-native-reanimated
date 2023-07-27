@@ -22,7 +22,7 @@ import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.RootView;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
-import com.swmansion.reanimated.Scheduler;
+import com.swmansion.reanimated.AndroidUIScheduler;
 import com.swmansion.reanimated.Utils;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 public class AnimationsManager implements ViewHierarchyObserver {
-  private WeakReference<Scheduler> mScheduler;
+  private WeakReference<AndroidUIScheduler> mWeakAndroidUIScheduler;
   private ReactContext mContext;
   private UIManagerModule mUIManager;
   private NativeMethodsHolder mNativeMethodsHolder;
@@ -56,8 +56,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     return mReanimatedNativeHierarchyManager;
   }
 
-  public void setScheduler(Scheduler scheduler) {
-    mScheduler = new WeakReference<>(scheduler);
+  public void setAndroidUIScheduler(AndroidUIScheduler androidUIScheduler) {
+    mWeakAndroidUIScheduler = new WeakReference<>(androidUIScheduler);
   }
 
   public AnimationsManager(ReactContext context, UIManagerModule uiManagerModule) {
@@ -102,9 +102,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
       return;
     }
 
-    Scheduler strongScheduler = mScheduler.get();
-    if (strongScheduler != null) {
-      strongScheduler.triggerUI();
+    AndroidUIScheduler androidUIScheduler = mWeakAndroidUIScheduler.get();
+    if (androidUIScheduler != null) {
+      androidUIScheduler.triggerUI();
     }
     int tag = view.getId();
     HashMap<String, Object> targetValues = after.toTargetMap();
@@ -500,9 +500,15 @@ public class AnimationsManager implements ViewHierarchyObserver {
     int tag = view.getId();
     ViewManager viewManager = resolveViewManager(tag);
 
-    if (viewManager != null && viewManager.getName().equals("RNSScreenStack")) {
-      cancelAnimationsRecursive(view);
-      return false;
+    if (viewManager != null) {
+      String viewManagerName = viewManager.getName();
+      if (viewManagerName.equals("RCTModalHostView")
+          || viewManagerName.equals("RNSScreen")
+          || viewManagerName.equals("RNSScreenStack")) {
+        // don't run exiting animation when ScreenStack, Screen, or Modal are removing
+        cancelAnimationsRecursive(view);
+        return false;
+      }
     }
 
     boolean hasExitAnimation =

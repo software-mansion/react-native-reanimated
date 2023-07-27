@@ -30,12 +30,10 @@ global._makeShareableClone = () => {
   );
 };
 
-global._scheduleOnJS = (func, args) => {
-  if (args) {
-    queueMicrotask(() => func(...args));
-  } else {
-    queueMicrotask(func);
-  }
+global._scheduleOnJS = () => {
+  throw new Error(
+    '[Reanimated] _scheduleOnJS should never be called in JSReanimated.'
+  );
 };
 
 interface JSReanimatedComponent {

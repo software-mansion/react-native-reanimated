@@ -2,7 +2,7 @@
 #import <RNReanimated/NativeMethods.h>
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAAnimationsManager.h>
-#import <RNReanimated/REAIOSScheduler.h>
+#import <RNReanimated/REAIOSUIScheduler.h>
 #import <RNReanimated/REAJSIUtils.h>
 #import <RNReanimated/REAKeyboardEventObserver.h>
 #import <RNReanimated/REAMessageThread.h>
@@ -97,7 +97,7 @@ static NSSet *convertProps(jsi::Runtime &rt, const jsi::Value &props)
 
 std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     RCTBridge *bridge,
-    std::shared_ptr<CallInvoker> jsInvoker)
+    const std::shared_ptr<CallInvoker> &jsInvoker)
 {
   REAModule *reaModule = [bridge moduleForClass:[REAModule class]];
 
@@ -171,8 +171,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto rnRuntime = reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
   std::shared_ptr<jsi::Runtime> uiRuntime = ReanimatedRuntime::make(rnRuntime, jsQueue);
 
-  std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>(jsInvoker);
-  std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule;
+  std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
 
   auto nodesManager = reaModule.nodesManager;
 
@@ -202,7 +201,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
 #else
   // Layout Animations start
-  __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
   REAAnimationsManager *animationsManager = reaModule.animationsManager;
   __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
   std::weak_ptr<jsi::Runtime> weakUiRuntime = uiRuntime;
@@ -286,9 +284,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       maybeFlushUIUpdatesQueueFunction,
   };
 
-  nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
+  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsInvoker,
-      scheduler,
+      uiScheduler,
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
@@ -297,7 +295,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #endif
       platformDepMethodsHolder);
 
-  scheduler->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
+  uiScheduler->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
 
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
