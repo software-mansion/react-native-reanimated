@@ -30,7 +30,7 @@ void EventHandlerRegistry::unregisterEventHandler(uint64_t id) {
 
     if (eventHandler->shouldIgnoreEmitterReactTag()) {
       const auto eventMappingIt = eventMappings.find(eventName);
-      const auto &handlersMap = eventMappingIt->second;
+      auto &handlersMap = eventMappingIt->second;
       handlersMap.erase(id);
       if (handlersMap.empty()) {
         eventMappings.erase(eventMappingIt);
@@ -39,7 +39,7 @@ void EventHandlerRegistry::unregisterEventHandler(uint64_t id) {
       const auto emitterReactTag = eventHandler->getEmitterReactTag();
       const auto eventHash = std::make_pair(emitterReactTag, eventName);
       const auto eventMappingIt = eventMappingsWithTag.find(eventHash);
-      const auto &handlersMap = eventMappingIt->second;
+      auto &handlersMap = eventMappingIt->second;
       handlersMap.erase(id);
       if (handlersMap.empty()) {
         eventMappingsWithTag.erase(eventMappingIt);
