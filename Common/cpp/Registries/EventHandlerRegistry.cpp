@@ -29,8 +29,8 @@ void EventHandlerRegistry::unregisterEventHandler(uint64_t id) {
     const auto &eventName = eventHandler->getEventName();
 
     if (eventHandler->shouldIgnoreEmitterReactTag()) {
-      auto eventMappingIt = eventMappings.find(eventName);
-      auto &handlersMap = eventMappingIt->second;
+      const auto eventMappingIt = eventMappings.find(eventName);
+      const auto &handlersMap = eventMappingIt->second;
       handlersMap.erase(id);
       if (handlersMap.empty()) {
         eventMappings.erase(eventMappingIt);
@@ -38,8 +38,8 @@ void EventHandlerRegistry::unregisterEventHandler(uint64_t id) {
     } else {
       const auto emitterReactTag = eventHandler->getEmitterReactTag();
       const auto eventHash = std::make_pair(emitterReactTag, eventName);
-      auto eventMappingIt = eventMappingsWithTag.find(eventHash);
-      auto &handlersMap = eventMappingIt->second;
+      const auto eventMappingIt = eventMappingsWithTag.find(eventHash);
+      const auto &handlersMap = eventMappingIt->second;
       handlersMap.erase(id);
       if (handlersMap.empty()) {
         eventMappingsWithTag.erase(eventMappingIt);
@@ -64,7 +64,7 @@ void EventHandlerRegistry::processEvent(
         handlersForEvent.push_back(handler.second);
       }
     }
-    auto eventHash = std::make_pair(emitterReactTag, eventName);
+    const auto eventHash = std::make_pair(emitterReactTag, eventName);
     auto handlersWithTagIt = eventMappingsWithTag.find(eventHash);
     if (handlersWithTagIt != eventMappingsWithTag.end()) {
       for (auto handler : handlersWithTagIt->second) {
@@ -84,7 +84,7 @@ bool EventHandlerRegistry::isAnyHandlerWaitingForEvent(
     const std::string &eventName,
     const int emitterReactTag) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
-  auto eventHash = std::make_pair(emitterReactTag, eventName);
+  const auto eventHash = std::make_pair(emitterReactTag, eventName);
   auto it = eventMappingsWithTag.find(eventHash);
   return (it != eventMappingsWithTag.end()) && (!(it->second).empty());
 }
