@@ -413,6 +413,35 @@ PODS:
     - React-jsi (= 0.71.12)
     - React-logger (= 0.71.12)
     - React-perflogger (= 0.71.12)
+  - RNReanimated (3.3.0):
+    - DoubleConversion
+    - FBLazyVector
+    - FBReactNativeSpec
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCTRequired
+    - RCTTypeSafety
+    - React-callinvoker
+    - React-Core
+    - React-Core/DevSupport
+    - React-Core/RCTWebSocket
+    - React-CoreModules
+    - React-cxxreact
+    - React-hermes
+    - React-jsi
+    - React-jsiexecutor
+    - React-jsinspector
+    - React-RCTActionSheet
+    - React-RCTAnimation
+    - React-RCTBlob
+    - React-RCTImage
+    - React-RCTLinking
+    - React-RCTNetwork
+    - React-RCTSettings
+    - React-RCTText
+    - ReactCommon/turbomodule/core
+    - Yoga
   - SocketRocket (0.6.1)
   - Yoga (1.14.0)
   - YogaKit (1.18.1):
@@ -477,6 +506,7 @@ DEPENDENCIES:
   - React-RCTVibration (from `../node_modules/react-native/Libraries/Vibration`)
   - React-runtimeexecutor (from `../node_modules/react-native/ReactCommon/runtimeexecutor`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
+  - RNReanimated (from `../node_modules/react-native-reanimated`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -564,6 +594,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/runtimeexecutor"
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
+  RNReanimated:
+    :path: "../node_modules/react-native-reanimated"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -614,6 +646,7 @@ SPEC CHECKSUMS:
   React-RCTVibration: a283fefb8cc29d9740a7ff2e87f72ad10f25a433
   React-runtimeexecutor: 7902246857a4ead4166869e6c42d4df329ff721d
   ReactCommon: a6d1c76b9e10b439e41db225263341240e1cda9f
+  RNReanimated: 9976fbaaeb8a188c36026154c844bf374b3b7eeb
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: 39310a10944fc864a7550700de349183450f8aaa
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
