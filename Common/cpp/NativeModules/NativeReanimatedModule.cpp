@@ -525,7 +525,8 @@ void NativeReanimatedModule::performOperations() {
     ReanimatedCommitMarker commitMarker;
 
     shadowTree.commit(
-        [&](RootShadowNode const &oldRootShadowNode) {
+        [&](RootShadowNode const &oldRootShadowNode)
+            -> RootShadowNode::Unshared {
           auto rootNode =
               oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
@@ -534,6 +535,10 @@ void NativeReanimatedModule::performOperations() {
           for (const auto &[shadowNode, props] : copiedOperationsQueue) {
             const ShadowNodeFamily &family = shadowNode->getFamily();
             react_native_assert(family.getSurfaceId() == surfaceId_);
+
+            if (propsRegistry_->shouldSkipCommit()) {
+              return nullptr;
+            }
 
             auto newRootNode = shadowTreeCloner.cloneWithNewProps(
                 rootNode, family, RawProps(rt, *props));
@@ -551,7 +556,9 @@ void NativeReanimatedModule::performOperations() {
 
           return newRoot;
         },
-        {/* default commit options */});
+        {.shouldYield = [this]() {
+          return propsRegistry_->shouldSkipCommit();
+        }});
   });
 }
 
