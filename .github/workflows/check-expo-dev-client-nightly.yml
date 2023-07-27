@@ -58,6 +58,10 @@ jobs:
       group: android-expo-dev-client-${{ matrix.react-native-architecture }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
+      - name: Check out reanimated repository
+        uses: actions/checkout@v3
+        with:
+          path: 'reanimated_repo'
       - name: Create Expo app
         run: npx create-expo-app app
       - name: Install expo-dev-client
