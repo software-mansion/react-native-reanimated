@@ -191,8 +191,6 @@ function runWorkletOnJS<A extends any[], R>(
   worklet(...args);
 }
 
-// runOnJS could get a plain JS function, JS function with __remoteFunction in dev
-// or a worklet
 /**
  * Returns a function that can be called to be executed asynchronously on both
  * UI and JS threads.
@@ -205,7 +203,6 @@ export function runOnJS<A extends unknown[], R>(
     // If `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
     // and pass the worklet as a first argument followed by original arguments.
 
-    // Weirdly TypeScript cannot infer that fun is `WorkletFunction<A, R>` here so I had to cast
     return (...args) =>
       runOnJS(runWorkletOnJS<A, R>)(fun as WorkletFunction<A, R>, ...args);
   }
@@ -213,16 +210,12 @@ export function runOnJS<A extends unknown[], R>(
     // In development mode the function provided as `fun` throws an error message
     // such that when someone accidentally calls it directly on the UI runtime, they
     // see that they should use `runOnJS` instead. To facilitate that we put the
-    // reference to the original remote function in the `__functionInDEV` property
-    // but only in DEV.
+    // reference to the original remote function in the `__functionInDEV` property.
     fun = fun.__remoteFunction;
   }
   return (...args) => {
     _scheduleOnJS(
-      // TypeScript cannot infer that now fun cannot have __remoteFunction property
-      // TODO TYPESCRIPT cast for any will be removed when _scheduleOnJS is properly typed
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      fun as unknown as RemoteFunction<A, R> as any,
+      fun as ((...args: A) => R) | WorkletFunction<A, R>,
       args.length > 0
         ? // TODO TYPESCRIPT this cast is terrible but will be fixed
           (makeShareableCloneOnUIRecursive(args) as unknown as unknown[])
