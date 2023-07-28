@@ -199,7 +199,7 @@ export function makeWorklet(
         memberExpression(privateFunctionId, identifier('__closure'), false),
         objectExpression(
           variables.map((variable) =>
-            objectProperty(identifier(variable.name), variable, false, true)
+            objectProperty(identifier(variable.name), variable, false, false)
           )
         )
       )

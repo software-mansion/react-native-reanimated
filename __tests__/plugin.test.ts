@@ -301,6 +301,27 @@ describe('babel plugin', () => {
       expect(code).not.toContain("'worklet';");
       expect(code).toMatchSnapshot();
     });
+
+    it('retains property shorthand for locally declared variables', () => {
+      const input = `
+      function mockWorkletFunction() {
+        'worklet';
+        if (__DEV__) {
+        }
+      }`;
+      const { code } = runPlugin(input, {
+        presets: [
+          [
+            'module:metro-react-native-babel-preset',
+            {
+              // opts out of @babel/plugin-transform-shorthand-properties
+              unstable_transformProfile: 'hermes-stable',
+            },
+          ],
+        ],
+      });
+      expect(code).toContain(`__DEV__: __DEV__`);
+    });
   });
 
   describe('for class worklets', () => {
