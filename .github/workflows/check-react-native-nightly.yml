@@ -29,7 +29,7 @@ jobs:
         run: pod install
       - name: Install Fabric Pods
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
-        working-directory: app
+        working-directory: app/ios
         run: export RCT_NEW_ARCH_ENABLED=1 && pod install
       - name: Build app
         working-directory: app
