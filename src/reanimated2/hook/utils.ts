@@ -32,6 +32,10 @@ export const useEvent = function <T extends NativeEvent<T>>(
   eventNames: string[] = [],
   rebuild = false
 ): MutableRefObject<WorkletEventHandler<T> | null> {
+  // For Fabric:
+  // ensure that this return type will pass checks for getting ActionType REANIMATED_WORKLET
+  // in react-native-gesture-handler attachGestureHandler method
+  // to send event directly to Reanimated through reanimatedEventDispatcher
   const initRef = useRef<WorkletEventHandler<T> | null>(null);
   if (initRef.current === null) {
     initRef.current = new WorkletEventHandler(handler, eventNames);
