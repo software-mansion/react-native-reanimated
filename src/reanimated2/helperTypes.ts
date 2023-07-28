@@ -115,6 +115,9 @@ type AnimatedPropsProp<P extends object> = NonStyleAnimatedProps<P> &
   LayoutProps &
   SharedTransitionProps;
 
+/**
+ * @deprecated Please use `AnimatedProps` instead.
+ */
 export type AnimateProps<P extends object> = NonStyleAnimatedProps<P> &
   JustStyleAnimatedProp<P> &
   StyleAnimatedProps<P> &

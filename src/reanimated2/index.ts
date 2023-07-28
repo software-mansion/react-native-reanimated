@@ -218,4 +218,4 @@ export {
   setUpTests,
   getAnimatedStyle,
 } from './jestUtils';
-export type { AnimateProps } from './helperTypes';
+export type { AnimateProps, AnimatedProps } from './helperTypes';
