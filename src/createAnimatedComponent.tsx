@@ -59,6 +59,7 @@ import {
   AnimationsTypes,
   WEB_ANIMATIONS_ID,
 } from './reanimated2/platform-specific/webAnimations';
+import { WebEasings } from './reanimated2/platform-specific/webAnimationsData';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -776,10 +777,28 @@ export default function createAnimatedComponent(
         return;
       }
 
+      console.log(entering);
+      console.log(this.props);
+
       const delay = Object.prototype.hasOwnProperty.call(entering, 'delayV')
         ? // @ts-ignore already checked if property exists
-          entering.delayV
+          entering.delayV / 1000
         : 0;
+
+      const duration = Object.prototype.hasOwnProperty.call(
+        entering,
+        'durationV'
+      )
+        ? // @ts-ignore already checked if property exists
+          entering.durationV / 1000
+        : Animations[animationName].duration;
+
+      const easing = Object.prototype.hasOwnProperty.call(entering, 'easingV')
+        ? // @ts-ignore already checked if property exists
+          entering.easingV.name
+        : 'linear';
+
+      console.log(easing, WebEasings[easing]);
 
       const element = findNodeHandle(this) as unknown as HTMLElement;
 
@@ -790,13 +809,14 @@ export default function createAnimatedComponent(
       } else {
         setTimeout(() => {
           toggleElement(element, true);
-        }, delay);
+        }, delay * 1000);
       }
 
-      element.style.transition = `margin ${Animations[animationName].duration}s`;
+      element.style.transition = `margin ${duration}s`;
       element.style.animationName = animationName;
-      element.style.animationDuration = `${Animations[animationName].duration}s`;
-      element.style.animationDelay = `${delay / 1000}s`;
+      element.style.animationDuration = `${duration}s`;
+      element.style.animationDelay = `${delay}s`;
+      // element.style.animationTimingFunction =
     }
 
     handleExitingAnimationsWeb(): void {
@@ -819,14 +839,28 @@ export default function createAnimatedComponent(
         return;
       }
 
-      tmpElement.style.transition = `margin ${Animations[animationName].duration}s`;
+      const delay = Object.prototype.hasOwnProperty.call(exiting, 'delayV')
+        ? // @ts-ignore already checked if property exists
+          exiting.delayV / 1000
+        : 0;
+
+      const duration = Object.prototype.hasOwnProperty.call(
+        exiting,
+        'durationV'
+      )
+        ? // @ts-ignore already checked if property exists
+          exiting.durationV / 1000
+        : Animations[animationName].duration;
+
+      tmpElement.style.transition = `margin ${duration}s`;
       tmpElement.style.animationName = animationName;
-      tmpElement.style.animationDuration = `${Animations[animationName].duration}s`;
+      tmpElement.style.animationDuration = `${duration}s`;
+      tmpElement.style.animationDelay = `${delay}s`;
       tmpElement.style.animationFillMode = 'forwards'; // Prevents returning to base state after animation finishes
 
       parent?.appendChild(tmpElement);
 
-      const animationTimeMs = Animations[animationName].duration * 1000;
+      const animationTimeMs = duration * 1000;
 
       setTimeout(() => {
         parent?.removeChild(tmpElement);
