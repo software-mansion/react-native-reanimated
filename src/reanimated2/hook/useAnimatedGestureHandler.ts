@@ -1,6 +1,8 @@
+import { MutableRefObject } from 'react';
 import type { Context, WorkletFunction, NativeEvent } from '../commonTypes';
 import type { DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
+import WorkletEventHandler from '../WorkletEventHandler';
 
 interface Handler<T, TContext extends Context> extends WorkletFunction {
   (event: T, context: TContext, isCanceledOrFailed?: boolean): void;
@@ -48,7 +50,7 @@ export function useAnimatedGestureHandler<
 >(
   handlers: GestureHandlers<Payload, TContext>,
   dependencies?: DependencyList
-): (e: T) => void {
+): MutableRefObject<WorkletEventHandler<T> | null> | ((e: T) => void) {
   const { context, doDependenciesDiffer, useWeb } = useHandler<
     Payload,
     TContext
@@ -108,5 +110,5 @@ export function useAnimatedGestureHandler<
     handler,
     ['onGestureHandlerStateChange', 'onGestureHandlerEvent'],
     doDependenciesDiffer
-  ) as unknown as (e: T) => void; // this is not correct but we want to make GH think it receives a function
+  );
 }

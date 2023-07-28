@@ -12,7 +12,7 @@ import { makeRemote } from '../core';
 import { isWeb, isJest } from '../PlatformChecker';
 import WorkletEventHandler from '../WorkletEventHandler';
 import type { ContextWithDependencies, DependencyList } from './commonTypes';
-import type { NativeSyntheticEvent } from 'react-native';
+
 interface Handler<T, TContext extends Context> extends WorkletFunction {
   (event: T, context: TContext): void;
 }
@@ -27,13 +27,6 @@ interface UseHandlerContext<TContext extends Context> {
   useWeb: boolean;
 }
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type useEventType = <T extends object>(
-  handler: (e: T) => void,
-  eventNames?: string[],
-  rebuild?: boolean
-) => (e: NativeSyntheticEvent<T>) => void;
-
 export const useEvent = function <T extends NativeEvent<T>>(
   handler: (event: T) => void,
   eventNames: string[] = [],
@@ -47,8 +40,7 @@ export const useEvent = function <T extends NativeEvent<T>>(
   }
 
   return initRef;
-  // TODO TYPESCRIPT This cast is to get rid of .d.ts file.
-} as unknown as useEventType;
+};
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type useHandlerType = <T, TContext extends Context = Record<string, never>>(
