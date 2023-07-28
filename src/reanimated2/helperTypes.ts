@@ -31,12 +31,8 @@ type AdaptTransforms<T> = {
 
 type TransformsStyle = Pick<RNTransformsStyle, 'transform'>;
 
-type TransformStyleTypes = TransformsStyle['transform'] extends
-  | readonly (infer T)[]
-  | undefined
-  ? T
-  : never;
-type AnimatedTransform = AdaptTransforms<TransformStyleTypes>[];
+type TransformStyleTypes = Extract<TransformsStyle['transform'], any[]>[number];
+type AnimatedTransform = AdaptTransforms<TransformStyleTypes>[] | string;
 
 export type AnimateStyle<S> = {
   [K in keyof S]: K extends 'transform'
