@@ -25,7 +25,7 @@ jobs:
         run: npm install github:software-mansion/react-native-reanimated
       - name: Install Paper Pods
         if: ${{ matrix.react-native-architecture == 'Paper' }}
-        working-directory: app
+        working-directory: app/ios
         run: pod install
       - name: Install Fabric Pods
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
@@ -51,7 +51,8 @@ jobs:
           distribution: 'zulu'
           java-version: '18'
       - name: Create app
-        run: npx react-native init app --version nightly
+        run: npx react-native init app
+        # run: npx react-native init app --version nightly
       - name: Install Reanimated
         working-directory: app
         run: npm install github:software-mansion/react-native-reanimated
