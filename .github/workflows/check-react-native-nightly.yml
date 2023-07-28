@@ -58,7 +58,7 @@ jobs:
       - name: Setup Fabric
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
         working-directory: app/android
-        run: sed -i 's/newArchEnabled=false/newArchEnabled=true' gradle.properties
+        run: sed -i 's/newArchEnabled=false/newArchEnabled=true/' gradle.properties
       - name: Build app
         working-directory: app/android
         run: ./gradlew assembleDebug --console=plain
