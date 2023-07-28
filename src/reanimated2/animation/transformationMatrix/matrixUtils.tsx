@@ -11,7 +11,7 @@ export type AffineMatrix = FixedLengthArray<FixedLengthArray<number, 4>, 4>;
 
 export type AffineMatrixFlat = FixedLengthArray<number, 16>;
 
-export type TransformMatrixDecomposition = Record<
+type TransformMatrixDecomposition = Record<
   'translationMatrix' | 'scaleMatrix' | 'rotationMatrix' | 'skewMatrix',
   AffineMatrix
 >;

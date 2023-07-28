@@ -34,7 +34,7 @@ export interface DecayAnimation extends Animation<DecayAnimation> {
   current: AnimatableValue;
 }
 
-export interface InnerDecayAnimation
+interface InnerDecayAnimation
   extends Omit<DecayAnimation, 'current'>,
     AnimationObject {
   current: number;

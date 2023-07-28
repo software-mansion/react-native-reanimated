@@ -8,12 +8,12 @@ import type {
   KeyframeProps,
 } from './commonTypes';
 import type { TransformProperty, StyleProps } from '../../commonTypes';
-export interface KeyframePoint {
+interface KeyframePoint {
   duration: number;
   value: number | string;
   easing?: EasingFunction;
 }
-export interface ParsedKeyframesDefinition {
+interface ParsedKeyframesDefinition {
   initialValues: StyleProps;
   keyframes: Record<string, KeyframePoint[]>;
 }

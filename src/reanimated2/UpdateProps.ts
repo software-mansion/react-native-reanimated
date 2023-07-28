@@ -10,7 +10,7 @@ import type { ViewRefSet } from './ViewDescriptorsSet';
 import { runOnUIImmediately } from './threads';
 
 // copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
-export const colorProps = [
+const colorProps = [
   'backgroundColor',
   'borderBottomColor',
   'borderColor',
@@ -29,7 +29,7 @@ export const colorProps = [
 
 export const ColorProperties = makeShareable(colorProps);
 
-export let updateProps: (
+let updateProps: (
   viewDescriptor: SharedValue<Descriptor[]>,
   updates: StyleProps | AnimatedStyle<any>,
   maybeViewRef: ViewRefSet<any> | undefined
