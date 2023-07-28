@@ -20,7 +20,6 @@ import type {
   AnimationObject,
   Timestamp,
   AdapterWorkletFunction,
-  AnimatedStyle,
   BasicWorkletFunction,
   BasicWorkletFunctionOptional,
   NestedObjectValues,
@@ -33,26 +32,26 @@ import type {
   TextStyle,
   ViewStyle,
 } from 'react-native';
-import type { AnimateStyle } from '../helperTypes';
+import type { AnimatedStyle } from '../helperTypes';
 
 export interface AnimatedStyleResult {
   viewDescriptors: ViewDescriptorsSet;
-  initial: AnimatedStyle;
+  initial: AnimatedStyle<any>;
   viewsRef: ViewRefSet<any>;
-  animatedStyle?: MutableRefObject<AnimatedStyle>;
+  animatedStyle?: MutableRefObject<AnimatedStyle<any>>;
 }
 
 interface AnimatedState {
-  last: AnimatedStyle;
-  animations: AnimatedStyle;
+  last: AnimatedStyle<any>;
+  animations: AnimatedStyle<any>;
   isAnimationRunning: boolean;
   isAnimationCancelled: boolean;
 }
 
 interface AnimationRef {
   initial: {
-    value: AnimatedStyle;
-    updater: () => AnimatedStyle;
+    value: AnimatedStyle<any>;
+    updater: () => AnimatedStyle<any>;
   };
   remoteState: AnimatedState;
   viewDescriptors: ViewDescriptorsSet;
@@ -60,9 +59,9 @@ interface AnimationRef {
 
 function prepareAnimation(
   frameTimestamp: number,
-  animatedProp: AnimatedStyle,
-  lastAnimation: AnimatedStyle,
-  lastValue: AnimatedStyle
+  animatedProp: AnimatedStyle<any>,
+  lastAnimation: AnimatedStyle<any>,
+  lastValue: AnimatedStyle<any>
 ): void {
   'worklet';
   if (Array.isArray(animatedProp)) {
@@ -119,10 +118,10 @@ function prepareAnimation(
 }
 
 function runAnimations(
-  animation: AnimatedStyle,
+  animation: AnimatedStyle<any>,
   timestamp: Timestamp,
   key: number | string,
-  result: AnimatedStyle,
+  result: AnimatedStyle<any>,
   animationsActive: SharedValue<boolean>
 ): boolean {
   'worklet';
@@ -181,7 +180,7 @@ function runAnimations(
 
 function styleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: BasicWorkletFunction<AnimatedStyle>,
+  updater: BasicWorkletFunction<AnimatedStyle<any>>,
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>
@@ -217,7 +216,7 @@ function styleUpdater(
         return;
       }
 
-      const updates: AnimatedStyle = {};
+      const updates: AnimatedStyle<any> = {};
       let allFinished = true;
       for (const propName in animations) {
         const finished = runAnimations(
@@ -269,15 +268,15 @@ function styleUpdater(
 
 function jestStyleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: BasicWorkletFunction<AnimatedStyle>,
+  updater: BasicWorkletFunction<AnimatedStyle<any>>,
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
-  animatedStyle: MutableRefObject<AnimatedStyle>,
+  animatedStyle: MutableRefObject<AnimatedStyle<any>>,
   adapters: AdapterWorkletFunction[] = []
 ): void {
   'worklet';
-  const animations: AnimatedStyle = state.animations ?? {};
+  const animations: AnimatedStyle<any> = state.animations ?? {};
   const newValues = updater() ?? {};
   const oldValues = state.last;
 
@@ -307,7 +306,7 @@ function jestStyleUpdater(
       return;
     }
 
-    const updates: AnimatedStyle = {};
+    const updates: AnimatedStyle<any> = {};
     let allFinished = true;
     Object.keys(animations).forEach((propName) => {
       const finished = runAnimations(
@@ -401,7 +400,10 @@ function checkSharedValueUsage(
 }
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type AnimatedStyleProp<T> = AnimateStyle<T> | RegisteredStyle<AnimateStyle<T>>;
+// deprecated ??
+export type AnimatedStyleProp<T> =
+  | AnimatedStyle<T>
+  | RegisteredStyle<AnimatedStyle<T>>;
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type useAnimatedStyleType = <
@@ -411,7 +413,7 @@ type useAnimatedStyleType = <
   deps?: DependencyList | null
 ) => T;
 
-export const useAnimatedStyle = function <T extends AnimatedStyle>(
+export const useAnimatedStyle = function <T extends AnimatedStyle<any>>(
   // animated style cannot be an array
   updater: BasicWorkletFunction<T extends Array<unknown> ? never : T>,
   dependencies?: DependencyList,
@@ -440,9 +442,9 @@ For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/
     : [];
   const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
   const animationsActive = useSharedValue<boolean>(true);
-  const animatedStyle: MutableRefObject<AnimatedStyle> = useRef<AnimatedStyle>(
-    {}
-  );
+  const animatedStyle: MutableRefObject<AnimatedStyle<any>> = useRef<
+    AnimatedStyle<any>
+  >({});
 
   // build dependencies
   if (!dependencies) {
@@ -453,7 +455,7 @@ For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/
   adaptersHash && dependencies.push(adaptersHash);
 
   if (!initRef.current) {
-    const initialStyle: AnimatedStyle = initialUpdaterRun(updater);
+    const initialStyle: AnimatedStyle<any> = initialUpdaterRun(updater);
     validateAnimatedStyles(initialStyle);
     initRef.current = {
       initial: {

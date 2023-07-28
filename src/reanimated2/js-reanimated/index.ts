@@ -1,6 +1,7 @@
 import JSReanimated from './JSReanimated';
-import type { AnimatedStyle, StyleProps } from '../commonTypes';
+import type { StyleProps } from '../commonTypes';
 import { isWeb } from '../PlatformChecker';
+import type { AnimatedStyle } from '../helperTypes';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let createReactDOMStyle: (style: any) => any;
@@ -47,13 +48,13 @@ interface JSReanimatedComponent {
 }
 
 export const _updatePropsJS = (
-  updates: StyleProps | AnimatedStyle,
+  updates: StyleProps | AnimatedStyle<any>,
   viewRef: { _component?: JSReanimatedComponent }
 ): void => {
   if (viewRef._component) {
     const component = viewRef._component;
     const [rawStyles] = Object.keys(updates).reduce(
-      (acc: [StyleProps, AnimatedStyle], key) => {
+      (acc: [StyleProps, AnimatedStyle<any>], key) => {
         const value = updates[key];
         const index = typeof value === 'function' ? 1 : 0;
         acc[index][key] = value;

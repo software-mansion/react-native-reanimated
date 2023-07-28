@@ -111,7 +111,7 @@ const interpolateColorsRGB = (
   );
 };
 
-interface InterpolateRGB {
+export interface InterpolateRGB {
   r: number[];
   g: number[];
   b: number[];
@@ -141,7 +141,7 @@ const getInterpolateRGB = (
   return { r, g, b, a };
 };
 
-interface InterpolateHSV {
+export interface InterpolateHSV {
   h: number[];
   s: number[];
   v: number[];

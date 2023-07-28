@@ -15,29 +15,39 @@ import type {
 import type {
   AnimatableValue,
   BaseAnimationBuilder,
+  EasingFactoryFn,
+  EasingFn,
   EntryExitAnimationFunction,
   LayoutAnimationFunction,
   SharedValue,
+  Value3D,
+  ValueRotation,
 } from '.';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 import type { DependencyList } from './hook/commonTypes';
 
-type Adaptable<T> = T | ReadonlyArray<T | ReadonlyArray<T>> | SharedValue<T>;
+export type Adaptable<T> =
+  | T
+  | ReadonlyArray<T | ReadonlyArray<T>>
+  | SharedValue<T>;
 
-type AdaptTransforms<T> = {
+export type AdaptTransforms<T> = {
   [P in keyof T]: Adaptable<T[P]>;
 };
 
 type TransformsStyle = Pick<RNTransformsStyle, 'transform'>;
 
-type TransformStyleTypes = TransformsStyle['transform'] extends
+export type TransformStyleTypes = TransformsStyle['transform'] extends
   | readonly (infer T)[]
   | undefined
   ? T
   : never;
-type AnimatedTransform = AdaptTransforms<TransformStyleTypes>[];
+export type AnimatedTransform = AdaptTransforms<TransformStyleTypes>[];
 
+/**
+ * @deprecated Please use `AnimatedStyle` instead.
+ */
 export type AnimateStyle<S> = {
   [K in keyof S]: K extends 'transform'
     ? AnimatedTransform
@@ -50,13 +60,15 @@ export type AnimateStyle<S> = {
     : S[K] | SharedValue<AnimatableValue>;
 };
 
+export type AnimatedStyle<S> = AnimateStyle<S>;
+
 // provided types can either be their original types (like backgroundColor: pink)
 // or inline shared values/derived values
 type MaybeSharedValue<S> = {
   [K in keyof S]: S[K] | Readonly<SharedValue<Extract<S[K], AnimatableValue>>>;
 };
 
-type StylesOrDefault<T> = 'style' extends keyof T
+export type StylesOrDefault<T> = 'style' extends keyof T
   ? MaybeSharedValue<T['style']>
   : Record<string, unknown>;
 
@@ -137,3 +149,20 @@ export type useAnimatedPropsType = <T extends object>(
     | AnimatedPropsAdapterFunction[]
     | null
 ) => Partial<T>;
+
+// should one of them be deprecated?
+export type EasingFunction = EasingFn;
+export type EasingFunctionFactory = EasingFactoryFn;
+
+// deprecated?
+export type SensorValue3D = SharedValue<Value3D>;
+
+// deprecated?
+export type SensorValueRotation = SharedValue<ValueRotation>;
+
+// deprecated?
+export interface InterpolatedNode {
+  __nodeId: number;
+}
+
+//

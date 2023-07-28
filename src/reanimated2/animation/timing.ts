@@ -13,6 +13,8 @@ interface TimingConfig {
   easing?: EasingFn | EasingFactoryFn;
 }
 
+export type WithTimingConfig = TimingConfig;
+
 export interface TimingAnimation extends Animation<TimingAnimation> {
   type: string;
   easing: EasingFn;
