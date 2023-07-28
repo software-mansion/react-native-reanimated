@@ -46,7 +46,7 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Create app
-        run: npx react-native init nts --version nightly
+        run: npx react-native init app --version nightly
       - name: Install Reanimated
         working-directory: app
         run: npm install github:software-mansion/react-native-reanimated
