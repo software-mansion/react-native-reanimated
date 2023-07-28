@@ -32,6 +32,8 @@ export default function MatrixTransform() {
   });
 
   const handlePress = React.useCallback(() => {
+    currentTransformIndex.current++;
+    currentTransformIndex.current %= TRANSFORM_MATRICES.length;
     matrix.value = withSpring(
       TRANSFORM_MATRICES[currentTransformIndex.current],
       springConfig
@@ -41,9 +43,6 @@ export default function MatrixTransform() {
       [...TRANSFORM_MATRICES[currentTransformIndex.current], 0],
       springConfig
     );
-
-    currentTransformIndex.current += 1;
-    currentTransformIndex.current %= TRANSFORM_MATRICES.length;
   }, [matrix, matrix2, currentTransformIndex]);
 
   return (

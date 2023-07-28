@@ -18,16 +18,11 @@
 #include <utility>
 #include <vector>
 
-#include "AndroidScheduler.h"
+#include "AndroidUIScheduler.h"
 #include "JNIHelper.h"
 #include "LayoutAnimations.h"
 #include "NativeReanimatedModule.h"
-
-#ifdef __APPLE__
-#include <RNReanimated/Scheduler.h>
-#else
-#include "Scheduler.h"
-#endif
+#include "UIScheduler.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "PropsRegistry.h"
@@ -161,7 +156,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jlong jsContext,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
           jsCallInvokerHolder,
-      jni::alias_ref<AndroidScheduler::javaobject> scheduler,
+      jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
       jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
@@ -180,7 +175,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
-  std::shared_ptr<Scheduler> scheduler_;
+  std::shared_ptr<UIScheduler> uiScheduler_;
 #ifdef RCT_NEW_ARCH_ENABLED
   std::shared_ptr<PropsRegistry> propsRegistry_;
   std::shared_ptr<UIManager> uiManager_;
@@ -275,8 +270,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,
       jsi::Runtime *rnRuntime,
-      std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
-      std::shared_ptr<Scheduler> scheduler,
+      const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
+      const std::shared_ptr<UIScheduler> &uiScheduler,
       jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations
 #ifdef RCT_NEW_ARCH_ENABLED
       ,

@@ -16,11 +16,8 @@ export function setupMicrotasks() {
 
   let microtasksQueue: Array<() => void> = [];
   let isExecutingMicrotasksQueue = false;
-
-  // @ts-ignore – typescript expects this to conform to NodeJS definition and expects the return value to be NodeJS.Immediate which is an object and not a number
-  global.queueMicrotask = (callback: () => void): number => {
+  global.queueMicrotask = (callback: () => void) => {
     microtasksQueue.push(callback);
-    return -1;
   };
 
   global.__callMicrotasks = () => {
@@ -165,6 +162,10 @@ export function runOnJS<A extends any[], R>(
   fun: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   'worklet';
+  if (!IS_NATIVE || !_WORKLET) {
+    // if we are already on the JS thread, we just schedule the worklet on the JS queue
+    return (...args) => queueMicrotask(args.length ? () => fun(...args) : fun);
+  }
   if (fun.__workletHash) {
     // if `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
     // and pass the worklet as a first argument followed by original arguments

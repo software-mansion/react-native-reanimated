@@ -1,8 +1,4 @@
-import type {
-  HigherOrderAnimation,
-  NextAnimation,
-  StyleLayoutAnimation,
-} from './commonTypes';
+import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type { ParsedColorArray } from '../Colors';
 import {
   isColor,
@@ -11,9 +7,7 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-
 import type {
-  AnimatedStyle,
   SharedValue,
   AnimatableValue,
   Animation,
@@ -36,8 +30,6 @@ import {
 } from './transformationMatrix/matrixUtils';
 
 let IN_STYLE_UPDATER = false;
-
-export type UserUpdater = () => AnimatedStyle;
 
 export function initialUpdaterRun<T>(updater: () => T): T {
   IN_STYLE_UPDATER = true;
@@ -448,20 +440,4 @@ export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running
   sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
-}
-
-// TODO it should work only if there was no animation before.
-export function withStartValue(
-  startValue: AnimatableValue,
-  animation: NextAnimation<AnimationObject>
-): Animation<AnimationObject> {
-  'worklet';
-  return defineAnimation(startValue, () => {
-    'worklet';
-    if (!_WORKLET && typeof animation === 'function') {
-      animation = animation();
-    }
-    (animation as Animation<AnimationObject>).current = startValue;
-    return animation as Animation<AnimationObject>;
-  });
 }

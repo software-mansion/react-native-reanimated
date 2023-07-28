@@ -1,12 +1,8 @@
 #pragma once
 
-#include <ReactCommon/CallInvoker.h>
 #include <condition_variable>
-#include <functional>
-#include <memory>
 #include <mutex>
 #include <queue>
-#include <thread>
 #include <utility>
 
 namespace reanimated {
@@ -17,7 +13,7 @@ namespace reanimated {
 // - see < http://opensource.org/licenses/BSD-2-Clause>
 //
 template <typename T>
-class Queue {
+class ThreadSafeQueue {
  public:
   T pop() {
     std::unique_lock<std::mutex> mlock(mutex_);
@@ -64,26 +60,6 @@ class Queue {
   std::queue<T> queue_;
   std::mutex mutex_;
   std::condition_variable cond_;
-};
-
-class RuntimeManager;
-
-class Scheduler {
- public:
-  Scheduler();
-  void scheduleOnJS(std::function<void()> job);
-  void setJSCallInvoker(
-      std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker);
-  void setRuntimeManager(std::shared_ptr<RuntimeManager> runtimeManager);
-  virtual void scheduleOnUI(std::function<void()> job);
-  virtual void triggerUI();
-  virtual ~Scheduler();
-
- protected:
-  std::atomic<bool> scheduledOnUI{};
-  Queue<std::function<void()>> uiJobs;
-  std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
-  std::weak_ptr<RuntimeManager> weakRuntimeManager_;
 };
 
 } // namespace reanimated
