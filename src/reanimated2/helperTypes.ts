@@ -14,11 +14,11 @@ import type {
 } from 'react-native';
 import type {
   AnimatableValue,
-  BaseAnimationBuilder,
   EntryExitAnimationFunction,
   LayoutAnimationFunction,
   SharedValue,
 } from '.';
+import { BaseAnimationBuilder } from './layoutReanimation';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 import type { DependencyList } from './hook/commonTypes';

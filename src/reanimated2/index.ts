@@ -1,18 +1,221 @@
 import './publicGlobals';
 
-export * from './core';
-export * from './hook';
-export * from './animation';
-export * from './interpolation';
-export * from './interpolateColor';
-export * from './Easing';
-export * from './NativeMethods';
-export * from './Colors';
-export * from './PropAdapters';
-export * from './layoutReanimation';
-export * from './utils';
-export * from './commonTypes';
-export * from './frameCallback';
-export * from './pluginUtils';
-export * from './jestUtils';
+export {
+  runOnJS,
+  runOnUI,
+  makeMutable,
+  isReanimated3,
+  isConfigured,
+  enableLayoutAnimations,
+} from './core';
+export {
+  useAnimatedProps,
+  useEvent,
+  useHandler,
+  useWorkletCallback,
+  useSharedValue,
+  useReducedMotion,
+  useAnimatedStyle,
+  useAnimatedGestureHandler,
+  GestureHandlers,
+  useAnimatedReaction,
+  AnimatedRef,
+  useAnimatedRef,
+  useAnimatedScrollHandler,
+  ScrollHandler,
+  ScrollHandlers,
+  useDerivedValue,
+  DerivedValue,
+  useAnimatedSensor,
+  useFrameCallback,
+  FrameCallback,
+  useAnimatedKeyboard,
+  useScrollViewOffset,
+} from './hook';
+export {
+  DelayAnimation,
+  RepeatAnimation,
+  SequenceAnimation,
+  StyleLayoutAnimation,
+  cancelAnimation,
+  defineAnimation,
+  withTiming,
+  TimingAnimation,
+  withSpring,
+  SpringAnimation,
+  withDecay,
+  DecayAnimation,
+  withDelay,
+  withRepeat,
+  withSequence,
+} from './animation';
+export {
+  Extrapolation,
+  ExtrapolationConfig,
+  ExtrapolationType,
+  interpolate,
+} from './interpolation';
+export {
+  Extrapolate,
+  InterpolationOptions,
+  interpolateColor,
+  ColorSpace,
+  InterpolateConfig,
+  useInterpolateConfig,
+} from './interpolateColor';
+export { EasingFn, Easing } from './Easing';
+export { measure, dispatchCommand, scrollTo } from './NativeMethods';
+export {
+  isColor,
+  processColor,
+  ParsedColorArray,
+  convertToRGBA,
+} from './Colors';
+export { createAnimatedPropAdapter } from './PropAdapters';
+export {
+  BaseAnimationBuilder,
+  ComplexAnimationBuilder,
+  Keyframe,
+  LayoutAnimation,
+  EntryAnimationsValues,
+  ExitAnimationsValues,
+  EntryExitAnimationFunction,
+  LayoutAnimationsValues,
+  LayoutAnimationFunction,
+  ILayoutAnimationBuilder,
+  IEntryExitAnimationBuilder,
+  // Flip
+  FlipInXUp,
+  FlipInYLeft,
+  FlipInXDown,
+  FlipInYRight,
+  FlipInEasyX,
+  FlipInEasyY,
+  FlipOutXUp,
+  FlipOutYLeft,
+  FlipOutXDown,
+  FlipOutYRight,
+  FlipOutEasyX,
+  FlipOutEasyY,
+  // Stretch
+  StretchInX,
+  StretchInY,
+  StretchOutX,
+  StretchOutY,
+  // Fade
+  FadeIn,
+  FadeInRight,
+  FadeInLeft,
+  FadeInUp,
+  FadeInDown,
+  FadeOut,
+  FadeOutRight,
+  FadeOutLeft,
+  FadeOutUp,
+  FadeOutDown,
+  // Slide
+  SlideInRight,
+  SlideInLeft,
+  SlideOutRight,
+  SlideOutLeft,
+  SlideInUp,
+  SlideInDown,
+  SlideOutUp,
+  SlideOutDown,
+  // Zoom
+  ZoomIn,
+  ZoomInRotate,
+  ZoomInLeft,
+  ZoomInRight,
+  ZoomInUp,
+  ZoomInDown,
+  ZoomInEasyUp,
+  ZoomInEasyDown,
+  ZoomOut,
+  ZoomOutRotate,
+  ZoomOutLeft,
+  ZoomOutRight,
+  ZoomOutUp,
+  ZoomOutDown,
+  ZoomOutEasyUp,
+  ZoomOutEasyDown,
+  // Bounce
+  BounceIn,
+  BounceInDown,
+  BounceInUp,
+  BounceInLeft,
+  BounceInRight,
+  BounceOut,
+  BounceOutDown,
+  BounceOutUp,
+  BounceOutLeft,
+  BounceOutRight,
+  // Lightspeed
+  LightSpeedInRight,
+  LightSpeedInLeft,
+  LightSpeedOutRight,
+  LightSpeedOutLeft,
+  // Pinwheel
+  PinwheelIn,
+  PinwheelOut,
+  // Rotate
+  RotateInDownLeft,
+  RotateInDownRight,
+  RotateInUpLeft,
+  RotateInUpRight,
+  RotateOutDownLeft,
+  RotateOutDownRight,
+  RotateOutUpLeft,
+  RotateOutUpRight,
+  // Roll
+  RollInLeft,
+  RollInRight,
+  RollOutLeft,
+  RollOutRight,
+  // Transitions
+  // Layout should get deprecated?
+  Layout,
+  FadingTransition,
+  SequencedTransition,
+  JumpingTransition,
+  CurvedTransition,
+  EntryExitTransition,
+  combineTransition,
+  // SET
+  SharedTransition,
+  SharedTransitionType,
+} from './layoutReanimation';
+export { getRelativeCoords } from './utils';
+export {
+  StyleProps,
+  SharedValue,
+  Context,
+  AnimatableValueObject,
+  AnimatableValue,
+  AnimationObject,
+  Animation,
+  SensorType,
+  IOSReferenceFrame,
+  SensorConfig,
+  AnimatedSensor,
+  AnimationCallback,
+  Value3D,
+  ValueRotation,
+  InterfaceOrientation,
+  KeyboardState,
+  AnimatedKeyboardInfo,
+  MeasuredDimensions,
+  AnimatedKeyboardOptions,
+} from './commonTypes';
+export { FrameInfo } from './frameCallback';
+// This should be refactored so there is no require injected actually and instead
+// we pop the log simply from plugin's function
+export { getUseOfValueInStyleWarning } from './pluginUtils';
+export {
+  withReanimatedTimer,
+  advanceAnimationByTime,
+  advanceAnimationByFrame,
+  setUpTests,
+  getAnimatedStyle,
+} from './jestUtils';
 export type { AnimateProps } from './helperTypes';
