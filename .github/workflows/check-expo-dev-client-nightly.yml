@@ -79,5 +79,5 @@ jobs:
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
         run: node ${{ env.SCRIPT_PATH }} setupFabricAndroid
       - name: Build app
-        working-directory: app
-        run: npx expo run:android
+        working-directory: app/android
+        run: ./gradlew assembleDebug --console=plain
