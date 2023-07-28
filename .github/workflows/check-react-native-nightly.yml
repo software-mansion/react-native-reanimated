@@ -55,5 +55,5 @@ jobs:
         working-directory: app/android
         run: sed -i 's/newArchEnabled=false/newArchEnabled=true' gradle.properties
       - name: Build app
-        working-directory: app
-        run: npx react-native run-android
+        working-directory: app/android
+        run: ./gradlew assembleDebug --console=plain
