@@ -1156,6 +1156,6 @@ export const WebEasings: Record<string, number[]> = {
   circle: [0.55, 0, 1, 0.45],
   exp: [0.7, 0, 0.84, 0],
   elastic: [0.42, 0, 0.58, 1], // gpt
-  back: [0.175, 0.885, 0.32, 1.275], // gpt
+  back: [0.44, -0.03, 0.79, -1], // Kacper <3
   bounce: [0.755, 0.05, 0.855, 0.06], // gpt
 };
