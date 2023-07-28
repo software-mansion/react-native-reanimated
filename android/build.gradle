@@ -151,6 +151,7 @@ def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
 def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.startsWith("0.0.0-") ? 1000 : REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
 def REANIMATED_VERSION = getReanimatedVersion()
 def REANIMATED_MAJOR_VERSION = getReanimatedMajorVersion()
+def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 
 // for React Native <= 0.70
 def BOOST_VERSION = reactProperties.getProperty("BOOST_VERSION")
@@ -259,7 +260,7 @@ android {
         targetSdkVersion safeExtGet("targetSdkVersion", 30)
         versionCode 1
         versionName "1.0"
-        buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
+        buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString()
         externalNativeBuild {
             cmake {
                 arguments "-DANDROID_STL=c++_shared",
@@ -269,7 +270,7 @@ android {
                         "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
                         "-DJS_RUNTIME=${JS_RUNTIME}",
                         "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
-                        "-DIS_NEW_ARCHITECTURE_ENABLED=${isNewArchitectureEnabled()}",
+                        "-DIS_NEW_ARCHITECTURE_ENABLED=${IS_NEW_ARCHITECTURE_ENABLED}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${isReanimatedExampleApp()}",
                         "-DPLAYGROUND_APP_NAME=${getPlaygroundAppName()}",
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}"
@@ -354,7 +355,7 @@ android {
     }
     sourceSets.main {
         java {
-            if (isNewArchitectureEnabled()) {
+            if (IS_NEW_ARCHITECTURE_ENABLED) {
                 srcDirs += "src/fabric/java"
             } else {
                 srcDirs += "src/paper/java"
@@ -447,10 +448,8 @@ tasks.register('assertNoMultipleInstances', NoMultipleInstancesAssertionTask) {
     projectDirFile = projectDir
 }
 
-def NEW_ARCH_ENABLED = isNewArchitectureEnabled()
-
 def assertLatestReactNativeWithNewArchitecture = task assertLatestReactNativeWithNewArchitectureTask {
-    onlyIf { NEW_ARCH_ENABLED && REANIMATED_MAJOR_VERSION == 3 && REACT_NATIVE_MINOR_VERSION < 72 }
+    onlyIf { IS_NEW_ARCHITECTURE_ENABLED && REANIMATED_MAJOR_VERSION == 3 && REACT_NATIVE_MINOR_VERSION < 72 }
     doFirst {
         throw new GradleException(
             "\n[react-native-reanimated] Reanimated " + REANIMATED_VERSION + " supports the New Architecture " +
@@ -513,7 +512,7 @@ as well as unzip Hermes AAR in order to obtain `libhermes.so` shared library.
 For more details, see https://reactnative.dev/architecture/bundled-hermes
 or https://github.com/reactwg/react-native-new-architecture/discussions/4
 */
-if (REACT_NATIVE_MINOR_VERSION in [69, 70] && !isNewArchitectureEnabled()) {
+if (REACT_NATIVE_MINOR_VERSION in [69, 70] && !IS_NEW_ARCHITECTURE_ENABLED) {
     // copied from `react-native/ReactAndroid/hermes-engine/build.gradle`
 
     def downloadDir = customDownloadsDir ? new File(customDownloadsDir) : new File(reactNativeRootDir, "sdks/download")
@@ -580,7 +579,7 @@ if (REACT_NATIVE_MINOR_VERSION < 71) {
     Task resolveFolly = resolveTaskFactory("resolveFolly", "folly-${FOLLY_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
     Task resolveGlog = resolveTaskFactory("resolveGlog", "glog-${GLOG_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
 
-    if (isNewArchitectureEnabled()) {
+    if (IS_NEW_ARCHITECTURE_ENABLED) {
         def reactNativeAndroidProject = findProject(":ReactAndroid")
         if (reactNativeAndroidProject != null) {
             reactNativeAndroidProject.afterEvaluate {
@@ -708,7 +707,7 @@ if (REACT_NATIVE_MINOR_VERSION < 71) {
 
     task prepareHermes {
         if (REACT_NATIVE_MINOR_VERSION >= 69) {
-            if (!isNewArchitectureEnabled()) {
+            if (!IS_NEW_ARCHITECTURE_ENABLED) {
                 dependsOn(unzipHermes)
             }
 
