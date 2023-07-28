@@ -435,9 +435,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
         baseOnStart(animation, value, timestamp, previousAnimation);
       }
       animation.startTime = 0;
-      animation.onFrame = () => {
-        return true;
-      };
+      animation.onFrame = () => true;
       return;
     }
     if (isColor(value)) {

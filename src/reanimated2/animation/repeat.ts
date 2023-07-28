@@ -104,9 +104,7 @@ export const withRepeat = function <T extends AnimationObject>(
           (numberOfReps <= 0 || numberOfReps % 2 === 0)
         ) {
           animation.current = animation.startValue;
-          animation.onFrame = () => {
-            return true;
-          };
+          animation.onFrame = () => true;
         } else {
           nextAnimation.onStart(nextAnimation, value, now, previousAnimation);
         }

@@ -106,6 +106,7 @@ const EXAMPLES = [
 
 export default function ReducedMotionExample() {
   const [currentExample, setCurrentExample] = useState(0);
+
   const { component, exampleList } = EXAMPLES[currentExample];
 
   return (

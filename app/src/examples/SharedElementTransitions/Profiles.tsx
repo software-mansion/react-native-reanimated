@@ -512,16 +512,12 @@ export default function ProfilesExample() {
       <Stack.Screen
         name="Profiles"
         component={ProfilesScreen}
-        options={{
-          animation: shouldReduceMotion ? 'fade' : 'default',
-        }}
+        options={{ animation: shouldReduceMotion ? 'fade' : 'default' }}
       />
       <Stack.Screen
         name="Home"
         component={HomeScreen}
-        options={{
-          animation: shouldReduceMotion ? 'fade' : 'default',
-        }}
+        options={{ animation: shouldReduceMotion ? 'fade' : 'default' }}
       />
       <Stack.Screen
         name="Details"
