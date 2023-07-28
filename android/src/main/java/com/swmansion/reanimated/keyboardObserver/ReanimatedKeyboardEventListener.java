@@ -14,8 +14,8 @@ import com.facebook.react.uimanager.PixelUtil;
 import com.swmansion.reanimated.BuildConfig;
 import com.swmansion.reanimated.nativeProxy.KeyboardEventDataUpdater;
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ReanimatedKeyboardEventListener {
   enum KeyboardState {
@@ -39,7 +39,8 @@ public class ReanimatedKeyboardEventListener {
   private final WeakReference<ReactApplicationContext> reactContext;
   private int nextListenerId = 0;
   private KeyboardState state;
-  private final HashMap<Integer, KeyboardEventDataUpdater> listeners = new HashMap<>();
+  private final ConcurrentHashMap<Integer, KeyboardEventDataUpdater> listeners = 
+      new ConcurrentHashMap<>();
   private boolean isStatusBarTranslucent = false;
 
   public ReanimatedKeyboardEventListener(WeakReference<ReactApplicationContext> reactContext) {
@@ -144,6 +145,10 @@ public class ReanimatedKeyboardEventListener {
   }
 
   private void bringBackWindowInsets() {
+    if (reactContext.get() == null || reactContext.get().getCurrentActivity() == null) {
+      return;
+    }
+
     WindowCompat.setDecorFitsSystemWindows(
         reactContext.get().getCurrentActivity().getWindow(), !isStatusBarTranslucent);
     ViewCompat.setOnApplyWindowInsetsListener(getRootView(), null);
