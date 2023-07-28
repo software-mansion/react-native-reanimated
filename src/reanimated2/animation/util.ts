@@ -1,6 +1,5 @@
 import type {
   HigherOrderAnimation,
-  NextAnimation,
   ReducedMotionConfig,
   StyleLayoutAnimation,
 } from './commonTypes';
@@ -12,9 +11,7 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-
 import type {
-  AnimatedStyle,
   SharedValue,
   AnimatableValue,
   Animation,
@@ -39,8 +36,6 @@ import { isReducedMotion } from '../PlatformChecker';
 
 let IN_STYLE_UPDATER = false;
 const IS_REDUCED_MOTION = isReducedMotion();
-
-export type UserUpdater = () => AnimatedStyle;
 
 export function initialUpdaterRun<T>(updater: () => T): T {
   IN_STYLE_UPDATER = true;
@@ -80,9 +75,7 @@ function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
  * Returns whether the motion should be reduced for a specified config.
  * By default returns the system setting.
  */
-export function getReduceMotionFromConfig(
-  config: ReducedMotionConfig = 'system'
-) {
+function getReduceMotionFromConfig(config: ReducedMotionConfig = 'system') {
   'worklet';
   return config === 'system' ? IS_REDUCED_MOTION : config === 'always';
 }
@@ -503,20 +496,4 @@ export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running
   sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
-}
-
-// TODO it should work only if there was no animation before.
-export function withStartValue(
-  startValue: AnimatableValue,
-  animation: NextAnimation<AnimationObject>
-): Animation<AnimationObject> {
-  'worklet';
-  return defineAnimation(startValue, () => {
-    'worklet';
-    if (!_WORKLET && typeof animation === 'function') {
-      animation = animation();
-    }
-    (animation as Animation<AnimationObject>).current = startValue;
-    return animation as Animation<AnimationObject>;
-  });
 }
