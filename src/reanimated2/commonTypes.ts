@@ -97,7 +97,7 @@ export type MapperRegistry = {
 export type Context = Record<string, unknown>;
 
 export interface WorkletFunction {
-  _closure?: Context;
+  __closure?: Context;
   __workletHash?: number;
 }
 
