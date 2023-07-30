@@ -18,6 +18,7 @@ export interface TimingAnimation extends Animation<TimingAnimation> {
   easing: EasingFn;
   startValue: AnimatableValue;
   startTime: Timestamp;
+  prevTimestamp: Timestamp;
   progress: number;
   toValue: AnimatableValue;
   current: AnimatableValue;
@@ -57,18 +58,21 @@ export const withTiming = function (
     }
 
     function timing(animation: InnerTimingAnimation, now: Timestamp): boolean {
-      const { toValue, startTime, startValue } = animation;
-      const runtime = now - startTime;
+      const { toValue, startTime, startValue, prevTimestamp } = animation;
+      const currTimestamp = Math.max(prevTimestamp, now);
+      const runtime = currTimestamp - startTime;
 
       if (runtime >= config.duration) {
         // reset startTime to avoid reusing finished animation config in `start` method
         animation.startTime = 0;
+        animation.prevTimestamp = 0;
         animation.current = toValue;
         return true;
       }
       const progress = animation.easing(runtime / config.duration);
       animation.current =
         (startValue as number) + (toValue - (startValue as number)) * progress;
+      animation.prevTimestamp = currTimestamp;
       return false;
     }
 
@@ -88,11 +92,13 @@ export const withTiming = function (
         // new timing over the old one with the same parameters. If so, we want
         // to copy animation timeline properties
         animation.startTime = (previousAnimation as TimingAnimation).startTime;
+        animation.prevTimestamp = animation.startTime;
         animation.startValue = (
           previousAnimation as TimingAnimation
         ).startValue;
       } else {
         animation.startTime = now;
+        animation.prevTimestamp = now;
         animation.startValue = value;
       }
       animation.current = value;
@@ -107,6 +113,7 @@ export const withTiming = function (
       type: 'timing',
       onFrame: timing,
       onStart: onStart as (animation: TimingAnimation, now: number) => boolean,
+      prevTimestamp: 0,
       progress: 0,
       toValue,
       startValue: 0,
