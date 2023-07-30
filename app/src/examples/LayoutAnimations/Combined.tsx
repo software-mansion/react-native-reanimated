@@ -1,5 +1,5 @@
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
-import { Button, View } from 'react-native';
+import { Button, View, StyleSheet } from 'react-native';
 import React, { useState } from 'react';
 
 const style = {
@@ -29,18 +29,9 @@ export default function CombinedTest() {
   }, [timeout]);
 
   return (
-    <View
-      style={{
-        flex: 1,
-        flexDirection: 'column',
-        marginTop: 60,
-      }}>
+    <View style={styles.container}>
       <Button title="toggle" onPress={() => setToggle((current) => !current)} />
-      <View
-        style={{
-          height,
-          flexWrap: 'wrap',
-        }}>
+      <View style={[{ height }, styles.flexWrap]}>
         {toggle && (
           <View collapsable={false}>
             <Animated.View
@@ -99,3 +90,14 @@ export default function CombinedTest() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexDirection: 'column',
+    marginTop: 60,
+  },
+  flexWrap: {
+    flexWrap: 'wrap',
+  },
+});

@@ -18,11 +18,9 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
       const std::shared_ptr<UIManager> &uiManager)
       : propsRegistry_(propsRegistry), uiManager_(uiManager) {}
 
-  void commitHookWasRegistered(
-      UIManager const &uiManager) const noexcept override {}
+  void commitHookWasRegistered(UIManager const &) const noexcept override {}
 
-  void commitHookWasUnregistered(
-      UIManager const &uiManager) const noexcept override {}
+  void commitHookWasUnregistered(UIManager const &) const noexcept override {}
 
   RootShadowNode::Unshared shadowTreeWillCommit(
       ShadowTree const &shadowTree,

@@ -34,7 +34,7 @@ import type {
   LayoutAnimationFunction,
 } from './reanimated2/layoutReanimation';
 import {
-  DefaultSharedTransition,
+  SharedTransition,
   LayoutAnimationType,
 } from './reanimated2/layoutReanimation';
 import type {
@@ -214,7 +214,7 @@ interface AnimatedProps extends Record<string, unknown> {
   initial?: SharedValue<StyleProps>;
 }
 
-export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
+type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
   forwardedRef?: Ref<Component>;
   style?: NestedArray<StyleProps>;
   animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
@@ -234,7 +234,7 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
     | EntryExitAnimationFunction
     | Keyframe;
   sharedTransitionTag?: string;
-  sharedTransitionStyle?: ILayoutAnimationBuilder;
+  sharedTransitionStyle?: SharedTransition;
 };
 
 type Options<P> = {
@@ -247,7 +247,7 @@ interface ComponentRef extends Component {
   getAnimatableRef?: () => ComponentRef;
 }
 
-export interface InitialComponentProps extends Record<string, unknown> {
+interface InitialComponentProps extends Record<string, unknown> {
   ref?: Ref<Component>;
   collapsable?: boolean;
 }
@@ -285,6 +285,7 @@ export default function createAnimatedComponent(
     _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
     _inlinePropsMapperId: number | null = null;
     _inlineProps: StyleProps = {};
+    _sharedElementTransition: SharedTransition | null = null;
     static displayName: string;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
@@ -298,6 +299,7 @@ export default function createAnimatedComponent(
       this._detachNativeEvents();
       this._detachStyles();
       this._detachInlineProps();
+      this._sharedElementTransition?.unregisterTransition(this._viewTag);
     }
 
     componentDidMount() {
@@ -639,13 +641,12 @@ export default function createAnimatedComponent(
           }
           if (sharedTransitionTag) {
             const sharedElementTransition =
-              this.props.sharedTransitionStyle ?? DefaultSharedTransition;
-            configureLayoutAnimations(
+              this.props.sharedTransitionStyle ?? new SharedTransition();
+            sharedElementTransition.registerTransition(
               tag,
-              LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
-              maybeBuild(sharedElementTransition),
               sharedTransitionTag
             );
+            this._sharedElementTransition = sharedElementTransition;
           }
         }
 
@@ -671,6 +672,7 @@ export default function createAnimatedComponent(
               if (this._isFirstRender) {
                 this.initialStyle = {
                   ...style.initial.value,
+                  ...this.initialStyle,
                   ...initialUpdaterRun<StyleProps>(style.initial.updater),
                 };
               }

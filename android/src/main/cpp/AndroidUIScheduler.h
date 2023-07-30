@@ -5,37 +5,39 @@
 #include <jsi/jsi.h>
 #include <react/jni/CxxModuleWrapper.h>
 #include <react/jni/JMessageQueueThread.h>
+
 #include <memory>
-#include "Scheduler.h"
+
+#include "UIScheduler.h"
 
 namespace reanimated {
 
 using namespace facebook;
 
-class AndroidScheduler : public jni::HybridClass<AndroidScheduler> {
+class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/Scheduler;";
+      "Lcom/swmansion/reanimated/AndroidUIScheduler;";
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis);
   static void registerNatives();
 
-  std::shared_ptr<Scheduler> getScheduler() {
-    return scheduler_;
+  std::shared_ptr<UIScheduler> getUIScheduler() {
+    return uiScheduler_;
   }
 
-  void scheduleOnUI();
+  void scheduleTriggerOnUI();
 
  private:
   friend HybridBase;
 
   void triggerUI();
 
-  jni::global_ref<AndroidScheduler::javaobject> javaPart_;
-  std::shared_ptr<Scheduler> scheduler_;
+  jni::global_ref<AndroidUIScheduler::javaobject> javaPart_;
+  std::shared_ptr<UIScheduler> uiScheduler_;
 
-  explicit AndroidScheduler(
-      jni::alias_ref<AndroidScheduler::jhybridobject> jThis);
+  explicit AndroidUIScheduler(
+      jni::alias_ref<AndroidUIScheduler::jhybridobject> jThis);
 };
 
 } // namespace reanimated

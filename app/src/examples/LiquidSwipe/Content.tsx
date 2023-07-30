@@ -2,6 +2,11 @@ import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 const styles = StyleSheet.create({
+  container: {
+    padding: 32,
+    alignItems: 'center',
+    justifyContent: 'space-around',
+  },
   title1: {
     fontSize: 48,
     fontWeight: '300',
@@ -33,13 +38,11 @@ export default function Content({
 }: ContentProps) {
   return (
     <View
-      style={{
-        ...StyleSheet.absoluteFillObject,
-        padding: 32,
-        backgroundColor,
-        alignItems: 'center',
-        justifyContent: 'space-around',
-      }}>
+      style={[
+        StyleSheet.absoluteFillObject,
+        { backgroundColor },
+        styles.container,
+      ]}>
       <Image {...{ source }} />
       <View>
         <Text style={[styles.title1, { color }]}>{title1}</Text>

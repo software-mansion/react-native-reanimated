@@ -79,6 +79,10 @@ const styles = StyleSheet.create({
     height: 64,
     zIndex: 2,
   },
+  tabs: {
+    position: 'absolute',
+    left: -tabWidth,
+  },
   activeIcon: {
     backgroundColor: 'white',
     width: 40,
@@ -86,6 +90,16 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  circleIcon: {
+    position: 'absolute',
+    width: tabWidth,
+    top: -8,
+    left: tabWidth / 2,
+    height: 64,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 5,
   },
 });
 
@@ -140,7 +154,7 @@ type ActiveIconProps = {
   activeIndex: Animated.SharedValue<number>;
   width: number;
 };
-function ActiveIcon({ item, index, activeIndex, width }: ActiveIconProps) {
+function ActiveIcon({ item, index, activeIndex }: ActiveIconProps) {
   const circleIconStyle = useAnimatedStyle(() => {
     const isActive = index === activeIndex.value;
     const yOffset = isActive ? 0 : 80;
@@ -154,20 +168,7 @@ function ActiveIcon({ item, index, activeIndex, width }: ActiveIconProps) {
   });
 
   return (
-    <Animated.View
-      style={[
-        {
-          position: 'absolute',
-          width: width,
-          top: -8,
-          left: width / 2,
-          height: 64,
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 5,
-        },
-        circleIconStyle,
-      ]}>
+    <Animated.View style={[styles.circleIcon, circleIconStyle]}>
       <View style={styles.activeIcon}>
         <FontAwesomeIcon icon={item} color="black" size={25} />
       </View>
@@ -192,8 +193,7 @@ function Bar() {
 
   return (
     <View style={styles.container}>
-      <Animated.View
-        style={[{ position: 'absolute', left: -tabWidth }, indicatorStyle]}>
+      <Animated.View style={[styles.tabs, indicatorStyle]}>
         {tabs.map((tab, index) => (
           <ActiveIcon
             index={index}

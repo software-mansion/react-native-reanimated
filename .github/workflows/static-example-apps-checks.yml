@@ -20,7 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        working-directory: [app, Example, FabricExample, WebExample, TVOSExample]
+        working-directory:
+          [app, Example, FabricExample, WebExample, TVOSExample]
     concurrency:
       group: typescript-${{ matrix.working-directory }}-${{ github.ref }}
       cancel-in-progress: true
@@ -32,6 +33,9 @@ jobs:
         with:
           node-version: 16
           cache: 'yarn'
+      - name: Clear annotations
+        run: scripts/clear-annotations.sh
+
       - name: Install root node dependencies
         run: yarn
       - name: Install ${{ matrix.working-directory }} app node dependencies

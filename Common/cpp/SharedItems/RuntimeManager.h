@@ -2,9 +2,10 @@
 
 #include <jsi/jsi.h>
 #include <memory>
-#include "ErrorHandler.h"
 #include "RuntimeDecorator.h"
-#include "Scheduler.h"
+
+#include "JSScheduler.h"
+#include "UIScheduler.h"
 
 namespace reanimated {
 
@@ -17,10 +18,10 @@ class RuntimeManager {
  public:
   RuntimeManager(
       std::shared_ptr<jsi::Runtime> runtime,
-      std::shared_ptr<ErrorHandler> errorHandler,
-      std::shared_ptr<Scheduler> scheduler,
+      const std::shared_ptr<UIScheduler> &uiScheduler,
+      const std::shared_ptr<JSScheduler> &jsScheduler,
       RuntimeType runtimeType = RuntimeType::Worklet)
-      : runtime(runtime), errorHandler(errorHandler), scheduler(scheduler) {
+      : runtime(runtime), uiScheduler_(uiScheduler), jsScheduler_(jsScheduler) {
     RuntimeDecorator::registerRuntime(this->runtime.get(), runtimeType);
   }
 
@@ -29,14 +30,14 @@ class RuntimeManager {
    */
   std::shared_ptr<jsi::Runtime> runtime;
   /**
-   Holds the error handler that will be invoked when any kind of error occurs.
+   Holds the Scheduler that is responsible for scheduling work on the UI Thread.
    */
-  std::shared_ptr<ErrorHandler> errorHandler;
+  std::shared_ptr<UIScheduler> uiScheduler_;
   /**
-   Holds the Scheduler that is responsible for scheduling work on the UI- or
-   React-JS Thread.
+   Holds the Scheduler that is responsible for scheduling work on the React-JS
+   Thread.
    */
-  std::shared_ptr<Scheduler> scheduler;
+  std::shared_ptr<JSScheduler> jsScheduler_;
 };
 
 } // namespace reanimated

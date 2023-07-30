@@ -43,6 +43,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   REAHasAnimationBlock _hasAnimationForTag;
   REAAnimationRemovingBlock _clearAnimationConfigForTag;
   REASharedTransitionManager *_sharedTransitionManager;
+#ifdef DEBUG
+  REACheckDuplicateSharedTagBlock _checkDuplicateSharedTag;
+#endif
 }
 
 + (NSArray *)layoutKeys
@@ -103,6 +106,13 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   _clearAnimationConfigForTag = clearAnimation;
 }
 
+#ifdef DEBUG
+- (void)setCheckDuplicateSharedTagBlock:(REACheckDuplicateSharedTagBlock)checkDuplicateSharedTag
+{
+  _checkDuplicateSharedTag = checkDuplicateSharedTag;
+}
+#endif
+
 - (UIView *)viewForTag:(NSNumber *)tag
 {
   UIView *view;
@@ -111,7 +121,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   return view;
 }
 
-- (void)endLayoutAnimationForTag:(NSNumber *)tag cancelled:(BOOL)cancelled removeView:(BOOL)removeView
+- (void)endLayoutAnimationForTag:(NSNumber *)tag removeView:(BOOL)removeView
 {
   UIView *view = [self viewForTag:tag];
 
@@ -131,7 +141,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     [self endAnimationsRecursive:view];
     [view removeFromSuperview];
   }
-  [_sharedTransitionManager finishSharedAnimation:[self viewForTag:tag]];
+  [_sharedTransitionManager finishSharedAnimation:[self viewForTag:tag] removeView:removeView];
 }
 
 - (void)endAnimationsRecursive:(UIView *)view
@@ -533,6 +543,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   if (_hasAnimationForTag(viewTag, SHARED_ELEMENT_TRANSITION)) {
     if (type == ENTERING) {
       [_sharedTransitionManager notifyAboutNewView:view];
+#ifdef DEBUG
+      _checkDuplicateSharedTag(view, viewTag);
+#endif
     } else {
       [_sharedTransitionManager notifyAboutViewLayout:view withViewFrame:frame];
     }
@@ -572,6 +585,11 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)startAnimationForTag:(NSNumber *)tag type:(LayoutAnimationType)type yogaValues:(NSDictionary *)yogaValues
 {
   _startAnimationForTag(tag, type, yogaValues);
+}
+
+- (void)onScreenRemoval:(UIView *)screen stack:(UIView *)stack
+{
+  [_sharedTransitionManager onScreenRemoval:screen stack:stack];
 }
 
 @end

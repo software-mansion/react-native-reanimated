@@ -1,4 +1,3 @@
-/* global _updatePropsPaper _updatePropsFabric */
 import type { MutableRefObject } from 'react';
 import { processColor } from './Colors';
 import type {
@@ -7,7 +6,7 @@ import type {
   SharedValue,
   StyleProps,
 } from './commonTypes';
-import { makeShareable, isConfigured } from './core';
+import { makeShareable } from './core';
 import type { Descriptor } from './hook/commonTypes';
 import { _updatePropsJS } from './js-reanimated';
 import { shouldBeUseWeb } from './PlatformChecker';
@@ -15,7 +14,7 @@ import type { ViewRefSet } from './ViewDescriptorsSet';
 import { runOnUIImmediately } from './threads';
 
 // copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
-export const colorProps = [
+const colorProps = [
   'backgroundColor',
   'borderBottomColor',
   'borderColor',
@@ -32,9 +31,9 @@ export const colorProps = [
   'overlayColor',
 ];
 
-export const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
+export const ColorProperties = makeShareable(colorProps);
 
-export let updateProps: (
+let updateProps: (
   viewDescriptor: SharedValue<Descriptor[]>,
   updates: StyleProps | AnimatedStyle,
   maybeViewRef: ViewRefSet<any> | undefined

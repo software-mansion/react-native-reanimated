@@ -9,7 +9,7 @@ import type {
 import Sensor from './Sensor';
 
 export class SensorContainer {
-  private nativeSensors: Map<number, Sensor<any>> = new Map();
+  private nativeSensors: Map<number, Sensor> = new Map();
 
   getSensorId(sensorType: SensorType, config: SensorConfig) {
     return (
@@ -34,10 +34,10 @@ export class SensorContainer {
     return sensor!.getSharedValue();
   }
 
-  registerSensor<T>(
+  registerSensor(
     sensorType: SensorType,
     config: SensorConfig,
-    handler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
+    handler: ShareableRef<(data: Value3D | ValueRotation) => void>
   ): number {
     const sensorId = this.getSensorId(sensorType, config);
 

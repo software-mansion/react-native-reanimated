@@ -10,7 +10,7 @@ function First({ navigation }: { navigation: any }) {
   return (
     <>
       <Button title="Navigate" onPress={() => navigation.navigate('Second')} />
-      <View style={{ ...styles.container, backgroundColor: 'red' }} />
+      <View style={styles.container} />
     </>
   );
 }
@@ -20,11 +20,11 @@ function Second() {
   return (
     <>
       <Button title="Toggle" onPress={() => setState((prev) => !prev)} />
-      <View style={{ ...styles.container, backgroundColor: 'red' }}>
+      <View style={styles.container}>
         {state && (
           <Animated.View
             exiting={SlideOutLeft.duration(3000)}
-            style={{ ...styles.box, backgroundColor: 'blue' }}
+            style={[styles.box, styles.blue]}
           />
         )}
       </View>
@@ -42,7 +42,7 @@ export default function NestedNativeStacksWithLayout() {
         <>
           <Animated.View
             exiting={SlideOutRight.duration(5000)}
-            style={[styles.box, { backgroundColor: 'green' }]}
+            style={[styles.box, styles.green]}
           />
           <Stack.Navigator initialRouteName="First">
             <Stack.Screen name="First" component={First} />
@@ -59,9 +59,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     marginTop: 300,
+    backgroundColor: 'red',
   },
   box: {
     width: 100,
     height: 100,
   },
+  blue: { backgroundColor: 'blue' },
+  green: { backgroundColor: 'green' },
 });

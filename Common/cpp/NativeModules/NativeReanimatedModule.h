@@ -11,14 +11,13 @@
 #include <vector>
 
 #include "AnimatedSensorModule.h"
-#include "ErrorHandler.h"
 #include "LayoutAnimationsManager.h"
 #include "NativeReanimatedModuleSpec.h"
 #include "PlatformDepMethodsHolder.h"
 #include "RuntimeDecorator.h"
 #include "RuntimeManager.h"
-#include "Scheduler.h"
 #include "SingleInstanceChecker.h"
+#include "UIScheduler.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "PropsRegistry.h"
@@ -34,9 +33,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  public:
   NativeReanimatedModule(
       const std::shared_ptr<CallInvoker> &jsInvoker,
-      const std::shared_ptr<Scheduler> &scheduler,
+      const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<jsi::Runtime> &rt,
-      const std::shared_ptr<ErrorHandler> &errorHandler,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
@@ -200,6 +198,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;
 
 #ifdef DEBUG
+  std::shared_ptr<JSLogger> jsLogger_;
   SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;
 #endif
 };

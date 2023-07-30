@@ -1,4 +1,3 @@
-/* global _WORKLET */
 import Animated, {
   runOnJS,
   runOnUI,
@@ -11,7 +10,7 @@ import Animated, {
   useScrollViewOffset,
   useSharedValue,
 } from 'react-native-reanimated';
-import { Button, Text, View } from 'react-native';
+import { Button, Text, View, StyleSheet } from 'react-native';
 import {
   Gesture,
   GestureDetector,
@@ -179,7 +178,7 @@ function ThrowErrorFromGestureDetectorDemo() {
   return (
     <GestureHandlerRootView>
       <GestureDetector gesture={gesture}>
-        <View style={{ width: 100, height: 100, backgroundColor: 'tomato' }}>
+        <View style={styles.tomatoBox}>
           <Text>GestureDetector</Text>
         </View>
       </GestureDetector>
@@ -197,8 +196,7 @@ function ThrowErrorFromUseAnimatedGestureHandlerDemo() {
   return (
     <GestureHandlerRootView>
       <PanGestureHandler onGestureEvent={gestureHandler}>
-        <Animated.View
-          style={{ width: 100, height: 100, backgroundColor: 'gold' }}>
+        <Animated.View style={styles.goldBox}>
           <Text>PanGestureHandler + useAnimatedGestureHandler</Text>
         </Animated.View>
       </PanGestureHandler>
@@ -212,14 +210,9 @@ function ThrowErrorFromUseAnimatedScrollHandlerDemo() {
   });
 
   return (
-    <View style={{ height: 100 }}>
+    <View style={styles.height100}>
       <Animated.ScrollView onScroll={scrollHandler}>
-        <View
-          style={{
-            width: 100,
-            height: 500,
-            backgroundColor: 'lime',
-          }}>
+        <View style={styles.limeBox}>
           <Text>useAnimatedScrollHandler</Text>
         </View>
       </Animated.ScrollView>
@@ -240,14 +233,9 @@ function ThrowErrorFromUseScrollViewOffsetDemo() {
   });
 
   return (
-    <View style={{ height: 100 }}>
+    <View style={styles.height100}>
       <Animated.ScrollView ref={aref}>
-        <View
-          style={{
-            width: 100,
-            height: 500,
-            backgroundColor: 'cyan',
-          }}>
+        <View style={styles.cyanBox}>
           <Text>useScrollViewOffset + useAnimatedStyle</Text>
         </View>
       </Animated.ScrollView>
@@ -257,7 +245,7 @@ function ThrowErrorFromUseScrollViewOffsetDemo() {
 
 export default function WorkletExample() {
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={styles.container}>
       <RunOnUIDemo />
       <RunOnUIRunOnJSDemo />
       <UseDerivedValueRunOnJSDemo />
@@ -274,3 +262,33 @@ export default function WorkletExample() {
     </View>
   );
 }
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  height100: {
+    height: 100,
+  },
+  tomatoBox: {
+    width: 100,
+    height: 100,
+    backgroundColor: 'tomato',
+  },
+  limeBox: {
+    width: 100,
+    height: 500,
+    backgroundColor: 'lime',
+  },
+  cyanBox: {
+    width: 100,
+    height: 500,
+    backgroundColor: 'cyan',
+  },
+  goldBox: {
+    width: 100,
+    height: 100,
+    backgroundColor: 'gold',
+  },
+});

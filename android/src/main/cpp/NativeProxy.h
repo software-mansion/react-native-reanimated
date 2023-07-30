@@ -18,11 +18,11 @@
 #include <utility>
 #include <vector>
 
-#include "AndroidScheduler.h"
+#include "AndroidUIScheduler.h"
 #include "JNIHelper.h"
 #include "LayoutAnimations.h"
 #include "NativeReanimatedModule.h"
-#include "Scheduler.h"
+#include "UIScheduler.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "PropsRegistry.h"
@@ -100,7 +100,7 @@ class SensorSetter : public HybridClass<SensorSetter> {
     size_t size = value->size();
     auto elements = value->getRegion(0, size);
     double array[7];
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
       array[i] = elements[i];
     }
     callback_(array, orientationDegrees);
@@ -156,7 +156,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jlong jsContext,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
           jsCallInvokerHolder,
-      jni::alias_ref<AndroidScheduler::javaobject> scheduler,
+      jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
       jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
@@ -171,11 +171,11 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
  private:
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
-  jsi::Runtime *runtime_;
+  jsi::Runtime *rnRuntime_;
   std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
-  std::shared_ptr<Scheduler> scheduler_;
+  std::shared_ptr<UIScheduler> uiScheduler_;
 #ifdef RCT_NEW_ARCH_ENABLED
   std::shared_ptr<PropsRegistry> propsRegistry_;
   std::shared_ptr<UIManager> uiManager_;
@@ -198,14 +198,12 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread);
 #endif
   PlatformDepMethodsHolder getPlatformDependentMethods();
-  void setGlobalProperties(
-      jsi::Runtime &jsRuntime,
-      const std::shared_ptr<jsi::Runtime> &reanimatedRuntime);
   void setupLayoutAnimations();
 
   double getCurrentTime();
   bool isAnyHandlerWaitingForEvent(std::string);
   void performOperations();
+  bool getIsReducedMotion();
   void requestRender(std::function<void(double)> onRender, jsi::Runtime &rt);
   void registerEventHandler();
   void maybeFlushUIUpdatesQueue();
@@ -231,6 +229,11 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       const jsi::Value &nativeProps);
   void updateProps(jsi::Runtime &rt, const jsi::Value &operations);
   void scrollTo(int viewTag, double x, double y, bool animated);
+  void dispatchCommand(
+      jsi::Runtime &rt,
+      const int viewTag,
+      const jsi::Value &commandNameValue,
+      const jsi::Value &argsValue);
   std::vector<std::pair<std::string, double>> measure(int viewTag);
 #endif
   void handleEvent(
@@ -266,9 +269,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,
-      jsi::Runtime *rt,
-      std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
-      std::shared_ptr<Scheduler> scheduler,
+      jsi::Runtime *rnRuntime,
+      const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
+      const std::shared_ptr<UIScheduler> &uiScheduler,
       jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations
 #ifdef RCT_NEW_ARCH_ENABLED
       ,

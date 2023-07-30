@@ -1,11 +1,11 @@
 #import <RNReanimated/FeaturesConfig.h>
 #import <RNReanimated/REASwizzledUIManager.h>
+#import <RNReanimated/REAUtils.h>
 #import <React/RCTLayoutAnimation.h>
 #import <React/RCTLayoutAnimationGroup.h>
 #import <React/RCTRootShadowView.h>
 #import <React/RCTRootViewInternal.h>
 #import <React/RCTUIManager.h>
-#import <objc/runtime.h>
 
 @interface RCTUIManager (Reanimated)
 @property REAAnimationsManager *animationsManager;
@@ -41,33 +41,20 @@
 {
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
-    [self swizzleMethod:@selector(uiBlockWithLayoutUpdateForRootView:)
-               forClass:[RCTUIManager class]
-                   with:@selector(reanimated_uiBlockWithLayoutUpdateForRootView:)
-              fromClass:[self class]];
+    [REAUtils swizzleMethod:@selector(uiBlockWithLayoutUpdateForRootView:)
+                   forClass:[RCTUIManager class]
+                       with:@selector(reanimated_uiBlockWithLayoutUpdateForRootView:)
+                  fromClass:[self class]];
     SEL manageChildrenOriginal = @selector
         (_manageChildren:moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
     SEL manageChildrenReanimated =
         @selector(reanimated_manageChildren:
                             moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
-    [self swizzleMethod:manageChildrenOriginal
-               forClass:[RCTUIManager class]
-                   with:manageChildrenReanimated
-              fromClass:[self class]];
+    [REAUtils swizzleMethod:manageChildrenOriginal
+                   forClass:[RCTUIManager class]
+                       with:manageChildrenReanimated
+                  fromClass:[self class]];
   });
-}
-
-- (void)swizzleMethod:(SEL)originalSelector
-             forClass:(Class)originalClass
-                 with:(SEL)newSelector
-            fromClass:(Class)newClass
-{
-  Method originalMethod = class_getInstanceMethod(originalClass, originalSelector);
-  Method newMethod = class_getInstanceMethod(newClass, newSelector);
-  IMP originalImplementation = method_getImplementation(originalMethod);
-  IMP newImplementation = method_getImplementation(newMethod);
-  class_replaceMethod(originalClass, newSelector, originalImplementation, method_getTypeEncoding(originalMethod));
-  class_replaceMethod(originalClass, originalSelector, newImplementation, method_getTypeEncoding(newMethod));
 }
 
 - (void)reanimated_manageChildren:(NSNumber *)containerTag
@@ -103,6 +90,8 @@
         [originalSelf.animationsManager endAnimationsRecursive:view];
       }
       [originalSelf.animationsManager removeAnimationsFromSubtree:(UIView *)container];
+      [originalSelf.animationsManager onScreenRemoval:(UIView *)permanentlyRemovedChildren[0]
+                                                stack:(UIView *)container];
     }
   }
 
