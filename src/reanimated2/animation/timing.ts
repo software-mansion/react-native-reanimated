@@ -23,7 +23,7 @@ export interface TimingAnimation extends Animation<TimingAnimation> {
   current: AnimatableValue;
 }
 
-export interface InnerTimingAnimation
+interface InnerTimingAnimation
   extends Omit<TimingAnimation, 'toValue' | 'current'> {
   toValue: number;
   current: number;

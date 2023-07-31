@@ -35,7 +35,7 @@ import type { MutableRefObject } from 'react';
  *   module.exports = MyViewWithRef;
  */
 
-export type ForwardedRef<T> = () => MutableRefObject<T> | ((ref: T) => void);
+type ForwardedRef<T> = () => MutableRefObject<T> | ((ref: T) => void);
 
 function setAndForwardRef<T>({
   getForwardedRef,
