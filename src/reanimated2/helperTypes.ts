@@ -134,7 +134,6 @@ export type AnimateProps<P extends object> = NonStyleAnimatedProps<P> &
     animatedProps?: Partial<AnimatedPropsProp<P>>;
   };
 
-// ts-prune-ignore-next This will be used soon
 export type AnimatedProps<P extends object> = AnimateProps<P>;
 
 export type AnimatedPropsAdapterFunction = (
