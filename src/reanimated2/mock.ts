@@ -43,6 +43,10 @@ class BaseAnimationMock {
   build() {
     return () => ({ initialValues: {}, animations: {} });
   }
+
+  isReanimatedMock() {
+    return true;
+  }
 }
 
 const ReanimatedV2 = {
