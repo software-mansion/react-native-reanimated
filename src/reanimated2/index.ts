@@ -220,8 +220,6 @@ export {
   AnimatedKeyboardOptions,
 } from './commonTypes';
 export { FrameInfo } from './frameCallback';
-// This should be refactored so there is no require injected actually and instead
-// we pop the log simply from plugin's function
 export { getUseOfValueInStyleWarning } from './pluginUtils';
 export {
   withReanimatedTimer,
