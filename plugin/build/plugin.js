@@ -224,7 +224,7 @@ var require_buildWorkletString = __commonJS({
     }
     function prependClosureVariablesIfNecessary(closureVariables) {
       const closureDeclaration = (0, types_1.variableDeclaration)("const", [
-        (0, types_1.variableDeclarator)((0, types_1.objectPattern)(closureVariables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), (0, types_1.identifier)(variable.name), false, true))), (0, types_1.memberExpression)((0, types_1.thisExpression)(), (0, types_1.identifier)("_closure")))
+        (0, types_1.variableDeclarator)((0, types_1.objectPattern)(closureVariables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), (0, types_1.identifier)(variable.name), false, true))), (0, types_1.memberExpression)((0, types_1.thisExpression)(), (0, types_1.identifier)("__closure")))
       ]);
       return {
         visitor: {
@@ -328,7 +328,7 @@ var require_makeWorklet = __commonJS({
         (0, types_1.variableDeclaration)("const", [
           (0, types_1.variableDeclarator)(privateFunctionId, funExpression)
         ]),
-        (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("_closure"), false), (0, types_1.objectExpression)(variables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), variable, false, true))))),
+        (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__closure"), false), (0, types_1.objectExpression)(variables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), variable, false, true))))),
         (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__initData"), false), initDataId)),
         (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__workletHash"), false), (0, types_1.numericLiteral)(workletHash)))
       ];
