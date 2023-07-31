@@ -4,12 +4,12 @@ import type {
   BaseBuilderAnimationConfig,
   LayoutAnimationAndConfig,
 } from './commonTypes';
-import type { EasingFn } from '../../Easing';
+import type { EasingFunction } from '../../Easing';
 import { BaseAnimationBuilder } from './BaseAnimationBuilder';
 import type { StyleProps } from '../../commonTypes';
 
 export class ComplexAnimationBuilder extends BaseAnimationBuilder {
-  easingV?: EasingFn;
+  easingV?: EasingFunction;
   rotateV?: string;
   type?: AnimationFunction;
   dampingV?: number;
@@ -27,13 +27,13 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
 
   static easing<T extends typeof ComplexAnimationBuilder>(
     this: T,
-    easingFunction: EasingFn
+    easingFunction: EasingFunction
   ) {
     const instance = this.createInstance();
     return instance.easing(easingFunction);
   }
 
-  easing(easingFunction: EasingFn): this {
+  easing(easingFunction: EasingFunction): this {
     this.easingV = easingFunction;
     return this;
   }

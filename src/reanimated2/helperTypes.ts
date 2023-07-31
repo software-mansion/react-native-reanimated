@@ -15,13 +15,9 @@ import type {
 import type {
   AnimatableValue,
   BaseAnimationBuilder,
-  EasingFactoryFn,
-  EasingFn,
   EntryExitAnimationFunction,
   LayoutAnimationFunction,
   SharedValue,
-  Value3D,
-  ValueRotation,
 } from '.';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
@@ -150,20 +146,3 @@ export type useAnimatedPropsType = <T extends object>(
     | AnimatedPropsAdapterFunction[]
     | null
 ) => Partial<T>;
-
-// should one of them be deprecated?
-export type EasingFunction = EasingFn;
-export type EasingFunctionFactory = EasingFactoryFn;
-
-// deprecated?
-export type SensorValue3D = SharedValue<Value3D>;
-
-// deprecated?
-export type SensorValueRotation = SharedValue<ValueRotation>;
-
-// deprecated?
-export interface InterpolatedNode {
-  __nodeId: number;
-}
-
-//
