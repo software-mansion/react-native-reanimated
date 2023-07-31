@@ -11,15 +11,8 @@ namespace reanimated {
 
 static const std::function<void(jsi::Runtime &, jsi::Value const &)> logValue =
     [](jsi::Runtime &rt, jsi::Value const &value) {
-      if (value.isString()) {
-        Logger::log(value.getString(rt).utf8(rt).c_str());
-      } else if (value.isNumber()) {
-        Logger::log(value.getNumber());
-      } else if (value.isUndefined()) {
-        Logger::log("undefined");
-      } else {
-        Logger::log("unsupported value type");
-      }
+      std::string parsedValue = parseValue(rt, value);
+      Logger::log(parsedValue.c_str());
     };
 
 std::unordered_map<RuntimePointer, RuntimeType>
@@ -186,6 +179,52 @@ void RuntimeDecorator::decorateRNRuntime(
 
   rnRuntime.global().setProperty(
       rnRuntime, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);
+}
+
+std::string parseValue(jsi::Runtime &rt, jsi::Value const &value) {
+  if (value.isString()) {
+    return value.getString(rt).utf8(rt).c_str();
+  } else if (value.isNumber()) {
+    return std::to_string(value.getNumber());
+  } else if (value.isUndefined()) {
+    return "undefined";
+  } else if (value.isObject()) {
+    return parseComplexValue(rt, value.getObject(rt));
+  } else {
+    return "unsupported value type";
+  }
+}
+
+std::string parseComplexValue(jsi::Runtime &rt, jsi::Object const &object) {
+  if (object.isArray(rt)) {
+    jsi::Array arr = object.getArray(rt);
+    size_t length = arr.size(rt);
+    std::string parsed = "[";
+
+    for (size_t i = 0; i < length; i++) {
+      jsi::Value element = arr.getValueAtIndex(rt, i);
+      parsed = parsed + parseValue(rt, element) + ", ";
+    }
+
+    parsed.replace(parsed.rfind(", "), 2, "]");
+    return parsed;
+  } else if (object.isFunction(rt)) {
+    return "function - not implemented yet";
+  } else if (object.isHostObject(rt)) {
+    return "host object - not implemented yet";
+  }
+  /// just iterate through properties
+  jsi::Array props = object.getPropertyNames(rt);
+  size_t propsLen = props.size(rt);
+  for (size_t i = 0; i < propsLen; i++) {
+    Logger::log(props.getValueAtIndex(rt, i).getString(rt).utf8(rt).c_str());
+    Logger::log(
+        object.getProperty(rt, props.getValueAtIndex(rt, i).getString(rt))
+            .getString(rt)
+            .utf8(rt)
+            .c_str());
+  }
+  return "not implemented yet for objects";
 }
 
 } // namespace reanimated
