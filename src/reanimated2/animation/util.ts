@@ -203,7 +203,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       animation[i].current = RGBACurrent[index];
       const result = animation[i].onFrame(animation[i], timestamp);
       // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
-      finished &&= result;
+      finished = finished && result;
       res.push(animation[i].current);
     });
 
@@ -248,7 +248,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     let finished = true;
     const result = animation[0].onFrame(animation[0], timestamp);
     // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
-    finished &&= result;
+    finished = finished && result;
 
     const progress = animation[0].current / 100;
 
@@ -330,7 +330,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     (animation.current as Array<number>).forEach((_, i) => {
       const result = animation[i].onFrame(animation[i], timestamp);
       // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
-      finished &&= result;
+      finished = finished && result;
       (animation.current as Array<number>)[i] = animation[i].current;
     });
 
@@ -370,7 +370,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     for (const key in animation.current as AnimatableValueObject) {
       const result = animation[key].onFrame(animation[key], timestamp);
       // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
-      finished &&= result;
+      finished = finished && result;
       newObject[key] = animation[key].current;
     }
     animation.current = newObject;
