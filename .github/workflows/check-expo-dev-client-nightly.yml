@@ -12,7 +12,7 @@ env:
 
 jobs:
   build_ios:
-    runs-on: macos-12
+    runs-on: macos-13
     strategy:
       matrix:
         react-native-architecture: ['Paper', 'Fabric']
@@ -46,7 +46,7 @@ jobs:
         run: pod install
       - name: Build app
         working-directory: app
-        run: npx expo run:ios
+        run: yarn react-native run-ios --simulator='iPhone 14'
 
   build_android:
     runs-on: ubuntu-latest
