@@ -32,7 +32,7 @@ jobs:
       #   if: ${{ matrix.react-native-architecture == 'Fabric' }}
       #   working-directory: app/ios
       #   run: export RCT_NEW_ARCH_ENABLED=1 && pod install
-      # - name: Build app
+      - name: Build app
         working-directory: app
         run: yarn react-native run-ios
 
