@@ -51,8 +51,7 @@ jobs:
           distribution: 'zulu'
           java-version: '18'
       - name: Create app
-        run: npx react-native init app
-        # run: npx react-native init app --skip-install --version nightly
+        run: npx react-native init app --skip-install --version nightly
       - name: Install Reanimated
         working-directory: app
         run: yarn add github:software-mansion/react-native-reanimated
