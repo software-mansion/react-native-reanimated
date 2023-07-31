@@ -1,5 +1,4 @@
 #include "RuntimeDecorator.h"
-#include <cxxabi.h>
 #include <jsi/instrumentation.h>
 #include <chrono>
 #include <memory>
@@ -12,7 +11,7 @@ namespace reanimated {
 
 static const std::function<void(jsi::Runtime &, jsi::Value const &)> logValue =
     [](jsi::Runtime &rt, jsi::Value const &value) {
-      std::string parsedValue = parseValue(rt, value);
+      std::string parsedValue = jsi_utils::JSIParser::parseValue(rt, value);
       Logger::log(parsedValue.c_str());
     };
 
@@ -181,84 +180,4 @@ void RuntimeDecorator::decorateRNRuntime(
   rnRuntime.global().setProperty(
       rnRuntime, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);
 }
-
-std::string parseValue(jsi::Runtime &rt, jsi::Value const &value) {
-  if (value.isBool() || value.isNumber()) {
-    return value.toString(rt).utf8(rt);
-  } else if (value.isString()) {
-    return "\"" + value.getString(rt).utf8(rt) + "\"";
-  } else if (value.isUndefined()) {
-    return "undefined";
-  } else if (value.isObject()) {
-    return parseComplexValue(rt, value.getObject(rt));
-  } else {
-    return "unsupported value type";
-  }
-}
-
-std::string parseComplexValue(jsi::Runtime &rt, jsi::Object const &object) {
-  std::stringstream parsed;
-
-  if (object.isArray(rt)) {
-    parsed << "[";
-
-    jsi::Array arr = object.getArray(rt);
-    size_t length = arr.size(rt);
-
-    for (size_t i = 0; i < length; i++) {
-      jsi::Value element = arr.getValueAtIndex(rt, i);
-      parsed << parseValue(rt, element) << ", ";
-    }
-
-    if (length > 0) {
-      parsed.seekp(-2, parsed.cur);
-    }
-    parsed << "] ";
-  } else if (object.isFunction(rt)) {
-    parsed << "[Function "
-           << object.getProperty(rt, "name").toString(rt).utf8(rt) << "]";
-  } else if (object.isHostObject(rt)) {
-    int status;
-    jsi::HostObject *hostObject = object.asHostObject(rt).get();
-    const char *hostObjClassName =
-        abi::__cxa_demangle(typeid(*hostObject).name(), NULL, NULL, &status);
-    if (status == 0) {
-      // create a plain jsi::Object
-      facebook::jsi::Object obj(rt);
-
-      // copy properties from hostObject to obj
-      for (auto &key : hostObject->getPropertyNames(rt)) {
-        facebook::jsi::Value value = hostObject->get(rt, key);
-        obj.setProperty(rt, key, value);
-      }
-
-      parsed << "{\"class\": "
-             << "\"" << hostObjClassName << "\""
-             << ", \"props\": " << parseComplexValue(rt, obj) << "}";
-    } else {
-      parsed << "[jsi::HostObject] - error parsing class name";
-    }
-  } else {
-    // just iterate through properties
-    parsed << "{";
-
-    jsi::Array props = object.getPropertyNames(rt);
-    size_t propsCount = props.size(rt);
-
-    for (size_t i = 0; i < propsCount; i++) {
-      jsi::String propName = props.getValueAtIndex(rt, i).toString(rt);
-      parsed << "\"" << propName.utf8(rt)
-             << "\": " << parseValue(rt, object.getProperty(rt, propName))
-             << ", ";
-    }
-
-    if (propsCount > 0) {
-      parsed.seekp(-2, parsed.cur);
-    }
-    parsed << "} ";
-  }
-
-  return parsed.str();
-}
-
 } // namespace reanimated

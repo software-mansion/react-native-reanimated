@@ -106,8 +106,4 @@ inline bool RuntimeDecorator::isReactRuntime(jsi::Runtime &rt) {
     return true;
   return false;
 }
-
-std::string parseValue(jsi::Runtime &rt, jsi::Value const &value);
-std::string parseComplexValue(jsi::Runtime &rt, jsi::Object const &value);
-
 } // namespace reanimated
