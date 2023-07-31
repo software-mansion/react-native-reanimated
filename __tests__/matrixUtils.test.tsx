@@ -9,7 +9,7 @@ import {
   multiplyMatrices,
   subtractMatrices,
   unflatten,
-} from '../matrixUtils';
+} from '../src/reanimated2/animation/transformationMatrix/matrixUtils';
 
 const identityMatrix: AffineMatrix = [
   [1, 0, 0, 0],
@@ -60,7 +60,7 @@ describe('Matrix util functions', () => {
 
   it('Test flatten & unflatten functions', () => {
     expect(flatten(identityMatrix)).toEqual(flatIdentityMatrix);
-    // @ts-ignore I know this is not the correct way to call this function, but I'm testing that it still works
+    // @ts-expect-error I know this is not the correct way to call this function, but I'm testing that it still works
     expect(flatten(flatten(identityMatrix))).toEqual(flatIdentityMatrix);
     expect(unflatten(flatIdentityMatrix)).toEqual(identityMatrix);
     expect(unflatten(flatten(identityMatrix))).toEqual(identityMatrix);
