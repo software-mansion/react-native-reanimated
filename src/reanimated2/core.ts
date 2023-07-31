@@ -25,6 +25,11 @@ export { runOnJS, runOnUI } from './threads';
 export { makeShareable } from './shareables';
 export { makeMutable, makeRemote } from './mutables';
 
+/**
+ * @deprecated
+ */
+// Is it still used? Not present in .d.ts...
+// ts-prune-ignore-next
 export type ReanimatedConsole = Pick<
   Console,
   'debug' | 'log' | 'warn' | 'info' | 'error'
@@ -52,6 +57,10 @@ global._log = function (s: string) {
   console.log(s);
 };
 
+/**
+ * @deprecated Is it still used? Not present in .d.ts...
+ */
+// ts-prune-ignore-next
 export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
   if (global._IS_FABRIC) {
     throw new Error(
@@ -74,7 +83,7 @@ export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
   });
 }
 
-export function getSensorContainer(): SensorContainer {
+function getSensorContainer() {
   if (!global.__sensorContainer) {
     global.__sensorContainer = new SensorContainer();
   }

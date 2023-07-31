@@ -76,7 +76,12 @@ export {
   EasingFactoryFn,
   Easing,
 } from './Easing';
-export { measure, dispatchCommand, scrollTo } from './NativeMethods';
+export {
+  measure,
+  dispatchCommand,
+  scrollTo,
+  setGestureState,
+} from './NativeMethods';
 export {
   isColor,
   processColor,

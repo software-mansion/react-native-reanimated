@@ -247,7 +247,12 @@ export function useInterpolateConfig(
   });
 }
 
-export const interpolateSharableColor = (
+/**
+ * @deprecated
+ */
+// Is it still used? Not present in .d.ts...
+// ts-prune-ignore-next
+export const interpolateShareableColor = (
   value: number,
   interpolateConfig: SharedValue<InterpolateConfig>
 ): string | number => {

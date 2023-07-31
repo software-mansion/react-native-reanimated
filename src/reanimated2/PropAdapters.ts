@@ -3,7 +3,7 @@ import type { AdapterWorkletFunction } from './commonTypes';
 import type { AnimatedPropsAdapterFunction } from './helperTypes';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-export type createAnimatedPropAdapterType = (
+type createAnimatedPropAdapterType = (
   adapter: AnimatedPropsAdapterFunction,
   nativeProps?: string[]
 ) => AnimatedPropsAdapterFunction;
@@ -23,6 +23,11 @@ export const createAnimatedPropAdapter = ((
 
 // ADAPTERS
 
+/**
+ * @deprecated
+ */
+// Is it still used? Not present in .d.ts...
+// ts-prune-ignore-next
 export const SVGAdapter: AdapterWorkletFunction = createAnimatedPropAdapter(
   (props) => {
     'worklet';
@@ -61,6 +66,11 @@ export const SVGAdapter: AdapterWorkletFunction = createAnimatedPropAdapter(
   }
 );
 
+/**
+ * @deprecated
+ */
+// Is it still used? Not present in .d.ts...
+// ts-prune-ignore-next
 export const TextInputAdapter = createAnimatedPropAdapter(
   (props) => {
     'worklet';
