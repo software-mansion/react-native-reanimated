@@ -22,7 +22,7 @@ jobs:
         run: npx react-native init app --version nightly
       - name: Install Reanimated
         working-directory: app
-        run: npm install github:software-mansion/react-native-reanimated
+        run: yarn install github:software-mansion/react-native-reanimated
       - name: Install Paper Pods
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         working-directory: app/ios
@@ -33,7 +33,7 @@ jobs:
         run: export RCT_NEW_ARCH_ENABLED=1 && pod install
       - name: Build app
         working-directory: app
-        run: npx react-native run-ios
+        run: yarn react-native run-ios
 
   build_android:
     runs-on: ubuntu-latest
@@ -55,7 +55,7 @@ jobs:
         # run: npx react-native init app --version nightly
       - name: Install Reanimated
         working-directory: app
-        run: npm install github:software-mansion/react-native-reanimated
+        run: yarn install github:software-mansion/react-native-reanimated
       - name: Setup Fabric
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
         working-directory: app/android
