@@ -399,9 +399,7 @@ function checkSharedValueUsage(
   }
 }
 
-/**
- * @deprecated should be deprecated?
- */
+// What is this type???
 export type AnimatedStyleProp<T> =
   | AnimatedStyle<T>
   | RegisteredStyle<AnimatedStyle<T>>;
