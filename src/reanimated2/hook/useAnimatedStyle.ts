@@ -399,8 +399,9 @@ function checkSharedValueUsage(
   }
 }
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-// deprecated ??
+/**
+ * @deprecated should be deprecated?
+ */
 export type AnimatedStyleProp<T> =
   | AnimatedStyle<T>
   | RegisteredStyle<AnimatedStyle<T>>;

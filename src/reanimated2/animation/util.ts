@@ -1,8 +1,4 @@
-import type {
-  HigherOrderAnimation,
-  NextAnimation,
-  StyleLayoutAnimation,
-} from './commonTypes';
+import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type { ParsedColorArray } from '../Colors';
 import {
   isColor,
@@ -11,7 +7,6 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-
 import type {
   SharedValue,
   AnimatableValue,
@@ -33,11 +28,8 @@ import {
   subtractMatrices,
   getRotationMatrix,
 } from './transformationMatrix/matrixUtils';
-import type { AnimatedStyle } from '../helperTypes';
 
 let IN_STYLE_UPDATER = false;
-
-export type UserUpdater = () => AnimatedStyle<any>;
 
 export function initialUpdaterRun<T>(updater: () => T): T {
   IN_STYLE_UPDATER = true;
@@ -203,7 +195,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       animation[i].current = RGBACurrent[index];
       const result = animation[i].onFrame(animation[i], timestamp);
       // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
-      finished &&= result;
+      finished = finished && result;
       res.push(animation[i].current);
     });
 
@@ -248,7 +240,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     let finished = true;
     const result = animation[0].onFrame(animation[0], timestamp);
     // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
-    finished &&= result;
+    finished = finished && result;
 
     const progress = animation[0].current / 100;
 
@@ -330,7 +322,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     (animation.current as Array<number>).forEach((_, i) => {
       const result = animation[i].onFrame(animation[i], timestamp);
       // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
-      finished &&= result;
+      finished = finished && result;
       (animation.current as Array<number>)[i] = animation[i].current;
     });
 
@@ -370,7 +362,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     for (const key in animation.current as AnimatableValueObject) {
       const result = animation[key].onFrame(animation[key], timestamp);
       // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
-      finished &&= result;
+      finished = finished && result;
       newObject[key] = animation[key].current;
     }
     animation.current = newObject;
@@ -448,20 +440,4 @@ export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running
   sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
-}
-
-// TODO it should work only if there was no animation before.
-export function withStartValue(
-  startValue: AnimatableValue,
-  animation: NextAnimation<AnimationObject>
-): Animation<AnimationObject> {
-  'worklet';
-  return defineAnimation(startValue, () => {
-    'worklet';
-    if (!_WORKLET && typeof animation === 'function') {
-      animation = animation();
-    }
-    (animation as Animation<AnimationObject>).current = startValue;
-    return animation as Animation<AnimationObject>;
-  });
 }
