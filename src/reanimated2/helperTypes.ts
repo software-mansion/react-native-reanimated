@@ -53,17 +53,7 @@ export type AnimateStyle<S> = {
     : S[K] | SharedValue<AnimatableValue>;
 };
 
-export type AnimatedStyle<S> = {
-  [K in keyof S]: K extends 'transform'
-    ? AnimatedTransform
-    : S[K] extends ReadonlyArray<any>
-    ? ReadonlyArray<AnimatedStyle<S[K][0]>>
-    : S[K] extends object
-    ? AnimatedStyle<S[K]>
-    : S[K] extends ColorValue | undefined
-    ? S[K] | number
-    : S[K] | SharedValue<AnimatableValue>;
-};
+export type AnimatedStyle<S> = AnimateStyle<S>;
 
 // provided types can either be their original types (like backgroundColor: pink)
 // or inline shared values/derived values
