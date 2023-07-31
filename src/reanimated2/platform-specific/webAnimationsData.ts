@@ -28,7 +28,7 @@ export const FadeInData: Record<string, AnimationData> = {
       0: { opacity: 0 },
       100: { opacity: 1 },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 
   FadeInRight: {
@@ -39,7 +39,7 @@ export const FadeInData: Record<string, AnimationData> = {
         transform: { translateX: '20%' },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 
   FadeInLeft: {
@@ -50,7 +50,7 @@ export const FadeInData: Record<string, AnimationData> = {
         transform: { translateX: '-20%' },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 
   FadeInUp: {
@@ -61,7 +61,7 @@ export const FadeInData: Record<string, AnimationData> = {
         transform: { translateY: '-20%' },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 
   FadeInDown: {
@@ -72,7 +72,7 @@ export const FadeInData: Record<string, AnimationData> = {
         transform: { translateY: '20%' },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 };
 
@@ -83,7 +83,7 @@ export const FadeOutData: Record<string, AnimationData> = {
       0: { opacity: 1 },
       100: { opacity: 0 },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 
   FadeOutRight: {
@@ -98,7 +98,7 @@ export const FadeOutData: Record<string, AnimationData> = {
         transform: { translateX: '20%' },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 
   FadeOutLeft: {
@@ -113,7 +113,7 @@ export const FadeOutData: Record<string, AnimationData> = {
         transform: { translateX: '-20%' },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 
   FadeOutUp: {
@@ -128,7 +128,7 @@ export const FadeOutData: Record<string, AnimationData> = {
         transform: { translateY: '-20%' },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 
   FadeOutDown: {
@@ -143,7 +143,7 @@ export const FadeOutData: Record<string, AnimationData> = {
         transform: { translateY: '20%' },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 };
 
@@ -157,7 +157,7 @@ export const BounceInData: Record<string, AnimationData> = {
       90: { transform: { scale: 0.9 } },
       100: { transform: { scale: 1 } },
     },
-    duration: 0.35,
+    duration: 0.25,
   },
   BounceInRight: {
     name: 'BounceInRight',
@@ -168,7 +168,7 @@ export const BounceInData: Record<string, AnimationData> = {
       90: { transform: { translateX: '5%' } },
       100: { transform: { translateX: '0%' } },
     },
-    duration: 0.35,
+    duration: 0.25,
   },
   BounceInLeft: {
     name: 'BounceInLeft',
@@ -179,7 +179,7 @@ export const BounceInData: Record<string, AnimationData> = {
       90: { transform: { translateX: '-5%' } },
       100: { transform: { translateX: '0%' } },
     },
-    duration: 0.35,
+    duration: 0.25,
   },
   BounceInUp: {
     name: 'BounceInUp',
@@ -190,7 +190,7 @@ export const BounceInData: Record<string, AnimationData> = {
       90: { transform: { translateY: '-20%' } },
       100: { transform: { translateY: '0%' } },
     },
-    duration: 0.35,
+    duration: 0.25,
   },
   BounceInDown: {
     name: 'BounceInDown',
@@ -201,7 +201,7 @@ export const BounceInData: Record<string, AnimationData> = {
       90: { transform: { translateY: '20%' } },
       100: { transform: { translateY: '0%' } },
     },
-    duration: 0.35,
+    duration: 0.25,
   },
 };
 
@@ -215,7 +215,7 @@ export const BounceOutData: Record<string, AnimationData> = {
       50: { transform: { scale: 1 } },
       100: { transform: { scale: 0.1 } },
     },
-    duration: 0.35,
+    duration: 0.25,
   },
   BounceOutRight: {
     name: 'BounceOutRight',
@@ -226,7 +226,7 @@ export const BounceOutData: Record<string, AnimationData> = {
       50: { transform: { translateX: '0%' } },
       100: { transform: { translateX: '100vw' } },
     },
-    duration: 0.35,
+    duration: 0.25,
   },
   BounceOutLeft: {
     name: 'BounceOutLeft',
@@ -237,7 +237,7 @@ export const BounceOutData: Record<string, AnimationData> = {
       50: { transform: { translateX: '0%' } },
       100: { transform: { translateX: '-100vw' } },
     },
-    duration: 0.35,
+    duration: 0.25,
   },
   BounceOutUp: {
     name: 'BounceOutUp',
@@ -248,7 +248,7 @@ export const BounceOutData: Record<string, AnimationData> = {
       50: { transform: { translateY: '0%' } },
       100: { transform: { translateY: '-100vh' } },
     },
-    duration: 0.35,
+    duration: 0.25,
   },
   BounceOutDown: {
     name: 'BounceOutDown',
@@ -259,7 +259,7 @@ export const BounceOutData: Record<string, AnimationData> = {
       50: { transform: { translateY: '0%' } },
       100: { transform: { translateY: '100vh' } },
     },
-    duration: 0.35,
+    duration: 0.25,
   },
 };
 
@@ -282,7 +282,7 @@ export const FlipInData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   FlipInYLeft: {
     name: 'FlipInYLeft',
@@ -302,7 +302,7 @@ export const FlipInData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   FlipInXUp: {
     name: 'FlipInXUp',
@@ -322,7 +322,7 @@ export const FlipInData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   FlipInXDown: {
     name: 'FlipInXDown',
@@ -342,7 +342,7 @@ export const FlipInData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   FlipInEasyX: {
     name: 'FlipInEasyX',
@@ -355,7 +355,7 @@ export const FlipInData: Record<string, AnimationData> = {
       },
       100: { transform: { rotateX: '0deg' } },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   FlipInEasyY: {
     name: 'FlipInEasyY',
@@ -363,7 +363,7 @@ export const FlipInData: Record<string, AnimationData> = {
       0: { transform: { rotateY: '-90deg' } },
       100: { transform: { rotateY: '0deg' } },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 };
 
@@ -386,7 +386,7 @@ export const FlipOutData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   FlipOutYLeft: {
     name: 'FlipOutYLeft',
@@ -406,7 +406,7 @@ export const FlipOutData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   FlipOutXUp: {
     name: 'FlipOutXUp',
@@ -426,7 +426,7 @@ export const FlipOutData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   FlipOutXDown: {
     name: 'FlipOutXDown',
@@ -446,7 +446,7 @@ export const FlipOutData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   FlipOutEasyX: {
     name: 'FlipOutEasyX',
@@ -460,7 +460,7 @@ export const FlipOutData: Record<string, AnimationData> = {
       },
       100: { transform: { rotateX: '90deg' } },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   FlipOutEasyY: {
     name: 'FlipOutEasyY',
@@ -471,7 +471,7 @@ export const FlipOutData: Record<string, AnimationData> = {
       },
       100: { transform: { rotateY: '-90deg' } },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 };
 
@@ -482,7 +482,7 @@ export const StretchInData: Record<string, AnimationData> = {
       0: { transform: { scaleX: 0 } },
       100: { transform: { scaleX: 1 } },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   StretchInY: {
     name: 'StretchInY',
@@ -490,7 +490,7 @@ export const StretchInData: Record<string, AnimationData> = {
       0: { transform: { scaleY: 0 } },
       100: { transform: { scaleY: 1 } },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 };
 
@@ -501,7 +501,7 @@ export const StretchOutData: Record<string, AnimationData> = {
       0: { transform: { scaleX: 1 } },
       100: { transform: { scaleX: 0 } },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   StretchOutY: {
     name: 'StretchOutY',
@@ -509,7 +509,7 @@ export const StretchOutData: Record<string, AnimationData> = {
       0: { transform: { scaleY: 1 } },
       100: { transform: { scaleY: 0 } },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 };
 
@@ -520,7 +520,7 @@ export const ZoomInData: Record<string, AnimationData> = {
       0: { transform: { scale: 0 } },
       100: { transform: { scale: 1 } },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   ZoomInRotate: {
     name: 'ZoomInRotate',
@@ -538,7 +538,7 @@ export const ZoomInData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   ZoomInRight: {
     name: 'ZoomInRight',
@@ -556,7 +556,7 @@ export const ZoomInData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   ZoomInLeft: {
     name: 'ZoomInLeft',
@@ -574,7 +574,7 @@ export const ZoomInData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   ZoomInUp: {
     name: 'ZoomInUp',
@@ -592,7 +592,7 @@ export const ZoomInData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   ZoomInDown: {
     name: 'ZoomInDown',
@@ -610,7 +610,7 @@ export const ZoomInData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   ZoomInEasyUp: {
     name: 'ZoomInEasyUp',
@@ -628,7 +628,7 @@ export const ZoomInData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   ZoomInEasyDown: {
     name: 'ZoomInEasyDown',
@@ -646,7 +646,7 @@ export const ZoomInData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 };
 
@@ -657,7 +657,7 @@ export const ZoomOutData: Record<string, AnimationData> = {
       0: { transform: { scale: 1 } },
       100: { transform: { scale: 0 } },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   ZoomOutRotate: {
     name: 'ZoomOutRotate',
@@ -675,7 +675,7 @@ export const ZoomOutData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   ZoomOutRight: {
     name: 'ZoomOutRight',
@@ -693,7 +693,7 @@ export const ZoomOutData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   ZoomOutLeft: {
     name: 'ZoomOutLeft',
@@ -711,7 +711,7 @@ export const ZoomOutData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   ZoomOutUp: {
     name: 'ZoomOutUp',
@@ -729,7 +729,7 @@ export const ZoomOutData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   ZoomOutDown: {
     name: 'ZoomOutDown',
@@ -747,7 +747,7 @@ export const ZoomOutData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   ZoomOutEasyUp: {
     name: 'ZoomOutEasyUp',
@@ -765,7 +765,7 @@ export const ZoomOutData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   ZoomOutEasyDown: {
     name: 'ZoomOutEasyDown',
@@ -783,7 +783,7 @@ export const ZoomOutData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 };
 
@@ -794,7 +794,7 @@ export const SlideInData: Record<string, AnimationData> = {
       0: { transform: { translateX: '100vw' } },
       100: { transform: { translateX: '0%' } },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   SlideInLeft: {
     name: 'SlideInLeft',
@@ -802,7 +802,7 @@ export const SlideInData: Record<string, AnimationData> = {
       0: { transform: { translateX: '-100vw' } },
       100: { transform: { translateX: '0%' } },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   SlideInUp: {
     name: 'SlideInUp',
@@ -810,7 +810,7 @@ export const SlideInData: Record<string, AnimationData> = {
       0: { transform: { translateY: '-100vh' } },
       100: { transform: { translateY: '0%' } },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   SlideInDown: {
     name: 'SlideInDown',
@@ -818,7 +818,7 @@ export const SlideInData: Record<string, AnimationData> = {
       0: { transform: { translateY: '100vh' } },
       100: { transform: { translateY: '0%' } },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 };
 
@@ -829,7 +829,7 @@ export const SlideOutData: Record<string, AnimationData> = {
       0: { transform: { translateX: '0%' } },
       100: { transform: { translateX: '100vw' } },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   SlideOutLeft: {
     name: 'SlideOutLeft',
@@ -837,7 +837,7 @@ export const SlideOutData: Record<string, AnimationData> = {
       0: { transform: { translateX: '0%' } },
       100: { transform: { translateX: '-100vw' } },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   SlideOutUp: {
     name: 'SlideOutUp',
@@ -845,7 +845,7 @@ export const SlideOutData: Record<string, AnimationData> = {
       0: { transform: { translateY: '0%' } },
       100: { transform: { translateY: '-100vh' } },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   SlideOutDown: {
     name: 'SlideOutDown',
@@ -853,7 +853,7 @@ export const SlideOutData: Record<string, AnimationData> = {
       0: { transform: { translateY: '0%' } },
       100: { transform: { translateY: '100vh' } },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 };
 
@@ -869,7 +869,7 @@ export const LightSpeedInData: Record<string, AnimationData> = {
         opacity: 0.2,
       },
     },
-    duration: 0.35,
+    duration: 0.25,
   },
   LightSpeedInLeft: {
     name: 'LightSpeedInLeft',
@@ -882,7 +882,7 @@ export const LightSpeedInData: Record<string, AnimationData> = {
         opacity: 0.2,
       },
     },
-    duration: 0.35,
+    duration: 0.25,
   },
 };
 
@@ -898,7 +898,7 @@ export const LightSpeedOutData: Record<string, AnimationData> = {
         opacity: 0.2,
       },
     },
-    duration: 0.35,
+    duration: 0.25,
   },
   LightSpeedOutLeft: {
     name: 'LightSpeedOutLeft',
@@ -911,7 +911,7 @@ export const LightSpeedOutData: Record<string, AnimationData> = {
         opacity: 0.2,
       },
     },
-    duration: 0.35,
+    duration: 0.25,
   },
 };
 
@@ -934,7 +934,7 @@ export const PinwheelData: Record<string, AnimationData> = {
         opacity: 1,
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   PinwheelOut: {
     name: 'PinwheelOut',
@@ -954,7 +954,7 @@ export const PinwheelData: Record<string, AnimationData> = {
         opacity: 0,
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 };
 
@@ -976,7 +976,7 @@ export const RotateInData: Record<string, AnimationData> = {
         opacity: 1,
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   RotateInDownRight: {
     name: 'RotateInDownRight',
@@ -995,7 +995,7 @@ export const RotateInData: Record<string, AnimationData> = {
         opacity: 1,
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   RotateInUpLeft: {
     name: 'RotateInUpLeft',
@@ -1008,13 +1008,12 @@ export const RotateInData: Record<string, AnimationData> = {
         },
         opacity: 0,
       },
-
       100: {
         transform: { rotate: '0deg' },
         opacity: 1,
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   RotateInUpRight: {
     name: 'RotateInUpRight',
@@ -1033,7 +1032,7 @@ export const RotateInData: Record<string, AnimationData> = {
         opacity: 1,
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 };
 
@@ -1050,7 +1049,7 @@ export const RotateOutData: Record<string, AnimationData> = {
         opacity: 0,
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   RotateOutDownRight: {
     name: 'RotateOutDownRight',
@@ -1064,7 +1063,7 @@ export const RotateOutData: Record<string, AnimationData> = {
         opacity: 0,
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   RotateOutUpLeft: {
     name: 'RotateOutUpLeft',
@@ -1078,7 +1077,7 @@ export const RotateOutData: Record<string, AnimationData> = {
         opacity: 0,
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   RotateOutUpRight: {
     name: 'RotateOutUpRight',
@@ -1092,7 +1091,7 @@ export const RotateOutData: Record<string, AnimationData> = {
         opacity: 0,
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 };
 
@@ -1107,7 +1106,7 @@ export const RollData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   RollInRight: {
     name: 'RollInRight',
@@ -1119,7 +1118,7 @@ export const RollData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   RollOutLeft: {
     name: 'RollOutLeft',
@@ -1131,7 +1130,7 @@ export const RollData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
   RollOutRight: {
     name: 'RollOutRight',
@@ -1143,7 +1142,7 @@ export const RollData: Record<string, AnimationData> = {
         },
       },
     },
-    duration: 0.35,
+    duration: 0.3,
   },
 };
 
