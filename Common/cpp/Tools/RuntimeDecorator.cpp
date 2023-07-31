@@ -182,12 +182,10 @@ void RuntimeDecorator::decorateRNRuntime(
 }
 
 std::string parseValue(jsi::Runtime &rt, jsi::Value const &value) {
-  if (value.isBool()) {
-    return value.toString(rt).utf8(rt).c_str();
+  if (value.isBool() || value.isNumber()) {
+    return value.toString(rt).utf8(rt);
   } else if (value.isString()) {
     return "\"" + value.getString(rt).utf8(rt) + "\"";
-  } else if (value.isNumber()) {
-    return std::to_string(value.getNumber());
   } else if (value.isUndefined()) {
     return "undefined";
   } else if (value.isObject()) {
@@ -199,7 +197,10 @@ std::string parseValue(jsi::Runtime &rt, jsi::Value const &value) {
 
 std::string parseComplexValue(jsi::Runtime &rt, jsi::Object const &object) {
   std::string parsed = "";
+
   if (object.isArray(rt)) {
+    parsed += "[";
+
     jsi::Array arr = object.getArray(rt);
     size_t length = arr.size(rt);
 
@@ -208,16 +209,16 @@ std::string parseComplexValue(jsi::Runtime &rt, jsi::Object const &object) {
       parsed += parseValue(rt, element) + ", ";
     }
 
-    parsed.insert(0, "[");
     auto pos = parsed.rfind(", ");
     if (pos != std::string::npos) {
       parsed.replace(parsed.rfind(", "), 2, "]");
     } else {
-      parsed.append("]");
+      parsed += "]";
     }
-    return parsed;
   } else {
     /// just iterate through properties
+    parsed += "{";
+
     jsi::Array props = object.getPropertyNames(rt);
     size_t propsCount = props.size(rt);
 
@@ -227,12 +228,11 @@ std::string parseComplexValue(jsi::Runtime &rt, jsi::Object const &object) {
           "\": " + parseValue(rt, object.getProperty(rt, propName)) + ", ";
     }
 
-    parsed.insert(0, "{");
     auto pos = parsed.rfind(", ");
     if (pos != std::string::npos) {
       parsed.replace(parsed.rfind(", "), 2, "}");
     } else {
-      parsed.append("}");
+      parsed += "}";
     }
   }
   return parsed;
