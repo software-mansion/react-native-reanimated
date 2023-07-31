@@ -213,7 +213,11 @@ std::string parseComplexValue(jsi::Runtime &rt, jsi::Object const &object) {
       parsed.seekp(-2, parsed.cur);
     }
     parsed << "] ";
-
+  } else if (object.isFunction(rt)) {
+    parsed << "[Function "
+           << object.getProperty(rt, "name").toString(rt).utf8(rt) << "]";
+  } else if (object.isHostObject(rt)) {
+    parsed << "HostObject - not implemented yet";
   } else {
     /// just iterate through properties
     parsed << "{";
@@ -222,7 +226,7 @@ std::string parseComplexValue(jsi::Runtime &rt, jsi::Object const &object) {
     size_t propsCount = props.size(rt);
 
     for (size_t i = 0; i < propsCount; i++) {
-      jsi::String propName = props.getValueAtIndex(rt, i).getString(rt);
+      jsi::String propName = props.getValueAtIndex(rt, i).toString(rt);
       parsed << "\"" << propName.utf8(rt)
              << "\": " << parseValue(rt, object.getProperty(rt, propName))
              << ", ";
