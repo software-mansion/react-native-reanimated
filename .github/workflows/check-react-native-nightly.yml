@@ -21,18 +21,18 @@ jobs:
       - name: Create app
         run: npx react-native init app
         # run: npx react-native init app --version nightly
-      - name: Install Reanimated
-        working-directory: app
-        run: yarn install github:software-mansion/react-native-reanimated
-      - name: Install Paper Pods
-        if: ${{ matrix.react-native-architecture == 'Paper' }}
-        working-directory: app/ios
-        run: pod install
-      - name: Install Fabric Pods
-        if: ${{ matrix.react-native-architecture == 'Fabric' }}
-        working-directory: app/ios
-        run: export RCT_NEW_ARCH_ENABLED=1 && pod install
-      - name: Build app
+      # - name: Install Reanimated
+      #   working-directory: app
+      #   run: yarn add github:software-mansion/react-native-reanimated
+      # - name: Install Paper Pods
+      #   if: ${{ matrix.react-native-architecture == 'Paper' }}
+      #   working-directory: app/ios
+      #   run: pod install
+      # - name: Install Fabric Pods
+      #   if: ${{ matrix.react-native-architecture == 'Fabric' }}
+      #   working-directory: app/ios
+      #   run: export RCT_NEW_ARCH_ENABLED=1 && pod install
+      # - name: Build app
         working-directory: app
         run: yarn react-native run-ios
 
@@ -56,7 +56,7 @@ jobs:
   #       # run: npx react-native init app --version nightly
   #     - name: Install Reanimated
   #       working-directory: app
-  #       run: yarn install github:software-mansion/react-native-reanimated
+  #       run: yarn add github:software-mansion/react-native-reanimated
   #     - name: Setup Fabric
   #       if: ${{ matrix.react-native-architecture == 'Fabric' }}
   #       working-directory: app/android
