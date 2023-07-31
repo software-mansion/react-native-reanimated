@@ -1,4 +1,5 @@
 #include "RuntimeDecorator.h"
+#include <cxxabi.h>
 #include <jsi/instrumentation.h>
 #include <chrono>
 #include <memory>
@@ -217,9 +218,28 @@ std::string parseComplexValue(jsi::Runtime &rt, jsi::Object const &object) {
     parsed << "[Function "
            << object.getProperty(rt, "name").toString(rt).utf8(rt) << "]";
   } else if (object.isHostObject(rt)) {
-    parsed << "HostObject - not implemented yet";
+    int status;
+    jsi::HostObject *hostObject = object.asHostObject(rt).get();
+    const char *hostObjClassName =
+        abi::__cxa_demangle(typeid(*hostObject).name(), NULL, NULL, &status);
+    if (status == 0) {
+      // create a plain jsi::Object
+      facebook::jsi::Object obj(rt);
+
+      // copy properties from hostObject to obj
+      for (auto &key : hostObject->getPropertyNames(rt)) {
+        facebook::jsi::Value value = hostObject->get(rt, key);
+        obj.setProperty(rt, key, value);
+      }
+
+      parsed << "{\"class\": "
+             << "\"" << hostObjClassName << "\""
+             << ", \"props\": " << parseComplexValue(rt, obj) << "}";
+    } else {
+      parsed << "[jsi::HostObject] - error parsing class name";
+    }
   } else {
-    /// just iterate through properties
+    // just iterate through properties
     parsed << "{";
 
     jsi::Array props = object.getPropertyNames(rt);
