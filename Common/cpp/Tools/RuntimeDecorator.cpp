@@ -182,8 +182,10 @@ void RuntimeDecorator::decorateRNRuntime(
 }
 
 std::string parseValue(jsi::Runtime &rt, jsi::Value const &value) {
-  if (value.isString()) {
-    return value.getString(rt).utf8(rt).c_str();
+  if (value.isBool()) {
+    return value.toString(rt).utf8(rt).c_str();
+  } else if (value.isString()) {
+    return "\"" + value.getString(rt).utf8(rt) + "\"";
   } else if (value.isNumber()) {
     return std::to_string(value.getNumber());
   } else if (value.isUndefined()) {
@@ -214,10 +216,6 @@ std::string parseComplexValue(jsi::Runtime &rt, jsi::Object const &object) {
       parsed.append("]");
     }
     return parsed;
-  } else if (object.isFunction(rt)) {
-    return "function - not implemented yet";
-  } else if (object.isHostObject(rt)) {
-    return "host object - not implemented yet";
   } else {
     /// just iterate through properties
     jsi::Array props = object.getPropertyNames(rt);
