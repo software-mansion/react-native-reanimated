@@ -20,23 +20,44 @@ body:
     attributes:
       value: |
         ## Required information
+
   - type: textarea
     id: description
     attributes:
       label: Description
-      description: Please provide a clear, concise and descriptive explanation of what the bug is. Include screenshots or a video if needed. Tell us what were you expecting to happen instead of what is happening now.
+      description: | 
+        Please provide a clear, concise and descriptive explanation of what the bug is. 
+        Make sure you tell us:
+        - [ ] What is the **actual** behavior
+        - [ ] What is the **expected** behavior
+      value: |
+        ### What happens? 
+
+        ___
+        <details>
+        ```
+        If you have long snippets of code or logs, place them HERE
+        ```
+        </details>
     validations:
       required: true
+    id: screenshot
+    attributes:
+      label: Screenshot/Recording
+      description: If possible, please add screenshots or recording. 🙏
 
   - type: textarea
     id: steps-to-reproduce
     attributes:
       label: Steps to reproduce
-      description: Provide a detailed list of steps that reproduce the issue.
+      description: |
+       How to reproduce your issue? 
+       > **Warn**
+       > It's a common mistake to provide instructions how to run the provided repository, without telling us what to do with the app once we run it.
       placeholder: |
-        1.
-        2.
-        3.
+        1. Clone my repo & run the app
+        2. Press the red button two times
+        3. ...
     validations:
       required: true
 
@@ -133,6 +154,7 @@ body:
     attributes:
       label: Device
       description: How are you running your application?
+      multiple: true
       options:
         - iOS simulator
         - Android emulator
@@ -145,7 +167,7 @@ body:
       description: What device you are experiencing this problem on? Specify full device name along with the version of the operating system it's running.
       placeholder: ex. Samsung Galaxy A22 (Android 12)
 
-  - type: dropdown
+  - type: checkboxes
     id: acknowledgements
     attributes:
       label: Acknowledgements
