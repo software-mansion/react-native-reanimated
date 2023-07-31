@@ -1,11 +1,7 @@
 import type { MutableRefObject } from 'react';
 import { processColor } from './Colors';
-import type {
-  AnimatedStyle,
-  ShadowNodeWrapper,
-  SharedValue,
-  StyleProps,
-} from './commonTypes';
+import type { ShadowNodeWrapper, SharedValue, StyleProps } from './commonTypes';
+import type { AnimatedStyle } from './helperTypes';
 import { makeShareable } from './core';
 import type { Descriptor } from './hook/commonTypes';
 import { _updatePropsJS } from './js-reanimated';
@@ -14,7 +10,7 @@ import type { ViewRefSet } from './ViewDescriptorsSet';
 import { runOnUIImmediately } from './threads';
 
 // copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
-export const colorProps = [
+const colorProps = [
   'backgroundColor',
   'borderBottomColor',
   'borderColor',
@@ -33,9 +29,9 @@ export const colorProps = [
 
 export const ColorProperties = makeShareable(colorProps);
 
-export let updateProps: (
+let updateProps: (
   viewDescriptor: SharedValue<Descriptor[]>,
-  updates: StyleProps | AnimatedStyle,
+  updates: StyleProps | AnimatedStyle<any>,
   maybeViewRef: ViewRefSet<any> | undefined
 ) => void;
 
@@ -63,10 +59,10 @@ if (shouldBeUseWeb()) {
 
 export const updatePropsJestWrapper = (
   viewDescriptors: SharedValue<Descriptor[]>,
-  updates: AnimatedStyle,
+  updates: AnimatedStyle<any>,
   maybeViewRef: ViewRefSet<any> | undefined,
-  animatedStyle: MutableRefObject<AnimatedStyle>,
-  adapters: ((updates: AnimatedStyle) => void)[]
+  animatedStyle: MutableRefObject<AnimatedStyle<any>>,
+  adapters: ((updates: AnimatedStyle<any>) => void)[]
 ): void => {
   adapters.forEach((adapter) => {
     adapter(updates);
@@ -87,12 +83,12 @@ const createUpdatePropsManager = global._IS_FABRIC
       // Fabric
       const operations: {
         shadowNodeWrapper: ShadowNodeWrapper;
-        updates: StyleProps | AnimatedStyle;
+        updates: StyleProps | AnimatedStyle<any>;
       }[] = [];
       return {
         update(
           viewDescriptors: SharedValue<Descriptor[]>,
-          updates: StyleProps | AnimatedStyle
+          updates: StyleProps | AnimatedStyle<any>
         ) {
           viewDescriptors.value.forEach((viewDescriptor) => {
             operations.push({
@@ -117,12 +113,12 @@ const createUpdatePropsManager = global._IS_FABRIC
       const operations: {
         tag: number;
         name: string;
-        updates: StyleProps | AnimatedStyle;
+        updates: StyleProps | AnimatedStyle<any>;
       }[] = [];
       return {
         update(
           viewDescriptors: SharedValue<Descriptor[]>,
-          updates: StyleProps | AnimatedStyle
+          updates: StyleProps | AnimatedStyle<any>
         ) {
           viewDescriptors.value.forEach((viewDescriptor) => {
             operations.push({
@@ -151,7 +147,7 @@ runOnUIImmediately(() => {
 export interface UpdatePropsManager {
   update(
     viewDescriptors: SharedValue<Descriptor[]>,
-    updates: StyleProps | AnimatedStyle
+    updates: StyleProps | AnimatedStyle<any>
   ): void;
   flush(): void;
 }

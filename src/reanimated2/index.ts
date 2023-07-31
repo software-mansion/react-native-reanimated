@@ -31,6 +31,7 @@ export {
   FrameCallback,
   useAnimatedKeyboard,
   useScrollViewOffset,
+  AnimatedStyleProp,
 } from './hook';
 export {
   DelayAnimation,
@@ -40,10 +41,13 @@ export {
   cancelAnimation,
   defineAnimation,
   withTiming,
+  WithTimingConfig,
   TimingAnimation,
   withSpring,
+  WithSpringConfig,
   SpringAnimation,
   withDecay,
+  WithDecayConfig,
   DecayAnimation,
   withDelay,
   withRepeat,
@@ -62,8 +66,16 @@ export {
   ColorSpace,
   InterpolateConfig,
   useInterpolateConfig,
+  InterpolateRGB,
+  InterpolateHSV,
 } from './interpolateColor';
-export { EasingFn, Easing } from './Easing';
+export {
+  EasingFunction,
+  EasingFn,
+  EasingFunctionFactory,
+  EasingFactoryFn,
+  Easing,
+} from './Easing';
 export { measure, dispatchCommand, scrollTo } from './NativeMethods';
 export {
   isColor,
@@ -173,8 +185,8 @@ export {
   RollOutLeft,
   RollOutRight,
   // Transitions
-  // Layout should get deprecated?
   Layout,
+  LinearTransition,
   FadingTransition,
   SequencedTransition,
   JumpingTransition,
@@ -218,4 +230,16 @@ export {
   setUpTests,
   getAnimatedStyle,
 } from './jestUtils';
-export type { AnimateProps, AnimatedProps } from './helperTypes';
+export type {
+  Adaptable,
+  AdaptTransforms,
+  AnimateProps,
+  AnimatedProps,
+  AnimatedTransform,
+  TransformStyleTypes,
+  AnimateStyle,
+  AnimatedStyle,
+  StylesOrDefault,
+} from './helperTypes';
+export type { AnimatedScrollViewProps } from './component/ScrollView';
+export type { FlatListPropsWithLayout } from './component/FlatList';
