@@ -18,6 +18,7 @@ import {
   RotateInData,
   RotateOutData,
   RollData,
+  TransformProperties,
 } from './webAnimationsData';
 
 function parseObjectStyleToString(object: AnimationData): string {
@@ -26,24 +27,29 @@ function parseObjectStyleToString(object: AnimationData): string {
   for (const [timestamp, style] of Object.entries(object.style)) {
     styleStr += `${timestamp}% { `;
 
-    for (const [property, value] of Object.entries(style)) {
+    for (const [property, values] of Object.entries(style)) {
       if (property !== 'transform') {
-        styleStr += `${property}: ${value}; `;
+        styleStr += `${property}: ${values}; `;
         continue;
       }
 
       styleStr += `transform:`;
 
-      for (const [transformProperty, transformPropertyValue] of Object.entries(
-        value
-      )) {
-        styleStr += ` ${transformProperty}(${transformPropertyValue})`;
-      }
+      values.forEach((value: TransformProperties) => {
+        for (const [
+          transformProperty,
+          transformPropertyValue,
+        ] of Object.entries(value)) {
+          styleStr += ` ${transformProperty}(${transformPropertyValue})`;
+        }
+      });
       styleStr += `; `;
     }
     styleStr += `} `;
   }
   styleStr += `} `;
+
+  console.log(styleStr);
 
   return styleStr;
 }
