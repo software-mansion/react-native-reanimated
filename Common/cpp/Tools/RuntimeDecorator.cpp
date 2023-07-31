@@ -196,46 +196,45 @@ std::string parseValue(jsi::Runtime &rt, jsi::Value const &value) {
 }
 
 std::string parseComplexValue(jsi::Runtime &rt, jsi::Object const &object) {
-  std::string parsed = "";
+  std::stringstream parsed;
 
   if (object.isArray(rt)) {
-    parsed += "[";
+    parsed << "[";
 
     jsi::Array arr = object.getArray(rt);
     size_t length = arr.size(rt);
 
     for (size_t i = 0; i < length; i++) {
       jsi::Value element = arr.getValueAtIndex(rt, i);
-      parsed += parseValue(rt, element) + ", ";
+      parsed << parseValue(rt, element) << ", ";
     }
 
-    auto pos = parsed.rfind(", ");
-    if (pos != std::string::npos) {
-      parsed.replace(parsed.rfind(", "), 2, "]");
-    } else {
-      parsed += "]";
+    if (length > 0) {
+      parsed.seekp(-2, parsed.cur);
     }
+    parsed << "] ";
+
   } else {
     /// just iterate through properties
-    parsed += "{";
+    parsed << "{";
 
     jsi::Array props = object.getPropertyNames(rt);
     size_t propsCount = props.size(rt);
 
     for (size_t i = 0; i < propsCount; i++) {
       jsi::String propName = props.getValueAtIndex(rt, i).getString(rt);
-      parsed += "\"" + propName.utf8(rt) +
-          "\": " + parseValue(rt, object.getProperty(rt, propName)) + ", ";
+      parsed << "\"" << propName.utf8(rt)
+             << "\": " << parseValue(rt, object.getProperty(rt, propName))
+             << ", ";
     }
 
-    auto pos = parsed.rfind(", ");
-    if (pos != std::string::npos) {
-      parsed.replace(parsed.rfind(", "), 2, "}");
-    } else {
-      parsed += "}";
+    if (propsCount > 0) {
+      parsed.seekp(-2, parsed.cur);
     }
+    parsed << "} ";
   }
-  return parsed;
+
+  return parsed.str();
 }
 
 } // namespace reanimated
