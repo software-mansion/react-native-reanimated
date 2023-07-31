@@ -140,8 +140,6 @@ static def toPlatformFileString(String path) {
   return path
 }
 
-configurations.maybeCreate("default")
-
 def reactNativeRootDir = resolveReactNativeDirectory()
 
 def reactProperties = new Properties()
@@ -944,10 +942,3 @@ afterEvaluate {
       throw GradleScriptException("Unknown JS runtime ${JS_RUNTIME}.")
     }
 }
-
-def aarDir = "${buildDir}/outputs"
-def aar = file("${aarDir}/android-${resolveBuildType()}.aar") // e.g. android-debug.aar
-if (aar == null) {
-    throw GradleScriptException("AAR build failed. No AAR found in ${aarDir}.")
-}
-artifacts.add("default", aar)
