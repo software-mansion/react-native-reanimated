@@ -2,13 +2,13 @@ import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
 import { processColor } from '../Colors';
 import type {
-  AnimatedStyle,
   Context,
   NativeEvent,
   NestedObjectValues,
   WorkletFunction,
   AnimationObject,
 } from '../commonTypes';
+import type { AnimatedStyle } from '../helperTypes';
 import { makeRemote } from '../core';
 import { isWeb, isJest } from '../PlatformChecker';
 import { colorProps } from '../UpdateProps';
@@ -156,7 +156,7 @@ export function areDependenciesEqual(
   return areHookInputsEqual(nextDeps, prevDeps);
 }
 
-export function hasColorProps(updates: AnimatedStyle): boolean {
+export function hasColorProps(updates: AnimatedStyle<any>): boolean {
   const colorPropsSet = new Set(colorProps);
   for (const key in updates) {
     if (colorPropsSet.has(key)) {
@@ -166,7 +166,7 @@ export function hasColorProps(updates: AnimatedStyle): boolean {
   return false;
 }
 
-export function parseColors(updates: AnimatedStyle): void {
+export function parseColors(updates: AnimatedStyle<any>): void {
   'worklet';
   for (const key in updates) {
     if (colorProps.indexOf(key) !== -1) {
@@ -209,7 +209,7 @@ export function shallowEqual(a: any, b: any) {
   return true;
 }
 
-export const validateAnimatedStyles = (styles: AnimatedStyle): void => {
+export const validateAnimatedStyles = (styles: AnimatedStyle<any>): void => {
   'worklet';
   if (typeof styles !== 'object') {
     throw new Error(

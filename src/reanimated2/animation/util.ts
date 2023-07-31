@@ -13,7 +13,6 @@ import {
 } from '../Colors';
 
 import type {
-  AnimatedStyle,
   SharedValue,
   AnimatableValue,
   Animation,
@@ -21,6 +20,7 @@ import type {
   Timestamp,
   AnimatableValueObject,
 } from '../commonTypes';
+import type { AnimatedStyle } from '../helperTypes';
 import NativeReanimatedModule from '../NativeReanimated';
 import {
   AffineMatrixFlat,
@@ -37,7 +37,7 @@ import {
 
 let IN_STYLE_UPDATER = false;
 
-export type UserUpdater = () => AnimatedStyle;
+export type UserUpdater = () => AnimatedStyle<any>;
 
 export function initialUpdaterRun<T>(updater: () => T): T {
   IN_STYLE_UPDATER = true;

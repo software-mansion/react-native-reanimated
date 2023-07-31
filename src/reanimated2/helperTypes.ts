@@ -38,6 +38,9 @@ type TransformStyleTypes = TransformsStyle['transform'] extends
   : never;
 type AnimatedTransform = AdaptTransforms<TransformStyleTypes>[];
 
+/**
+ * @deprecated Please use `AnimatedStyle` type instead.
+ */
 export type AnimateStyle<S> = {
   [K in keyof S]: K extends 'transform'
     ? AnimatedTransform
@@ -45,6 +48,18 @@ export type AnimateStyle<S> = {
     ? ReadonlyArray<AnimateStyle<S[K][0]>>
     : S[K] extends object
     ? AnimateStyle<S[K]>
+    : S[K] extends ColorValue | undefined
+    ? S[K] | number
+    : S[K] | SharedValue<AnimatableValue>;
+};
+
+export type AnimatedStyle<S> = {
+  [K in keyof S]: K extends 'transform'
+    ? AnimatedTransform
+    : S[K] extends ReadonlyArray<any>
+    ? ReadonlyArray<AnimatedStyle<S[K][0]>>
+    : S[K] extends object
+    ? AnimatedStyle<S[K]>
     : S[K] extends ColorValue | undefined
     ? S[K] | number
     : S[K] | SharedValue<AnimatableValue>;
@@ -81,12 +96,12 @@ type PickStyleProps<T> = Pick<
 
 type StyleAnimatedProps<P extends object> = {
   [K in keyof PickStyleProps<P>]: StyleProp<
-    AnimateStyle<P[K] | MaybeSharedValue<P[K]>>
+    AnimatedStyle<P[K] | MaybeSharedValue<P[K]>>
   >;
 };
 
 type JustStyleAnimatedProp<P extends object> = {
-  style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
+  style?: StyleProp<AnimatedStyle<StylesOrDefault<P>>>;
 };
 
 type NonStyleAnimatedProps<P extends object> = {
