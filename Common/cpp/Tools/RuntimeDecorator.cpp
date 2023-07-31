@@ -196,35 +196,38 @@ std::string parseValue(jsi::Runtime &rt, jsi::Value const &value) {
 }
 
 std::string parseComplexValue(jsi::Runtime &rt, jsi::Object const &object) {
+  std::string parsed = "";
   if (object.isArray(rt)) {
     jsi::Array arr = object.getArray(rt);
     size_t length = arr.size(rt);
-    std::string parsed = "[";
 
     for (size_t i = 0; i < length; i++) {
       jsi::Value element = arr.getValueAtIndex(rt, i);
-      parsed = parsed + parseValue(rt, element) + ", ";
+      parsed += parseValue(rt, element) + ", ";
     }
 
+    parsed.insert(0, "[");
     parsed.replace(parsed.rfind(", "), 2, "]");
     return parsed;
   } else if (object.isFunction(rt)) {
     return "function - not implemented yet";
   } else if (object.isHostObject(rt)) {
     return "host object - not implemented yet";
+  } else {
+    /// just iterate through properties
+    jsi::Array props = object.getPropertyNames(rt);
+    size_t propsCount = props.size(rt);
+
+    for (size_t i = 0; i < propsCount; i++) {
+      jsi::String propName = props.getValueAtIndex(rt, i).getString(rt);
+      parsed += propName.utf8(rt) + ": " +
+          parseValue(rt, object.getProperty(rt, propName)) + ", ";
+    }
+
+    parsed.insert(0, "{");
+    parsed.replace(parsed.rfind(", "), 2, "}");
   }
-  /// just iterate through properties
-  jsi::Array props = object.getPropertyNames(rt);
-  size_t propsLen = props.size(rt);
-  for (size_t i = 0; i < propsLen; i++) {
-    Logger::log(props.getValueAtIndex(rt, i).getString(rt).utf8(rt).c_str());
-    Logger::log(
-        object.getProperty(rt, props.getValueAtIndex(rt, i).getString(rt))
-            .getString(rt)
-            .utf8(rt)
-            .c_str());
-  }
-  return "not implemented yet for objects";
+  return parsed;
 }
 
 } // namespace reanimated
