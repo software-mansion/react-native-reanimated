@@ -207,7 +207,12 @@ std::string parseComplexValue(jsi::Runtime &rt, jsi::Object const &object) {
     }
 
     parsed.insert(0, "[");
-    parsed.replace(parsed.rfind(", "), 2, "]");
+    auto pos = parsed.rfind(", ");
+    if (pos != std::string::npos) {
+      parsed.replace(parsed.rfind(", "), 2, "]");
+    } else {
+      parsed.append("]");
+    }
     return parsed;
   } else if (object.isFunction(rt)) {
     return "function - not implemented yet";
@@ -220,12 +225,17 @@ std::string parseComplexValue(jsi::Runtime &rt, jsi::Object const &object) {
 
     for (size_t i = 0; i < propsCount; i++) {
       jsi::String propName = props.getValueAtIndex(rt, i).getString(rt);
-      parsed += propName.utf8(rt) + ": " +
-          parseValue(rt, object.getProperty(rt, propName)) + ", ";
+      parsed += "\"" + propName.utf8(rt) +
+          "\": " + parseValue(rt, object.getProperty(rt, propName)) + ", ";
     }
 
     parsed.insert(0, "{");
-    parsed.replace(parsed.rfind(", "), 2, "}");
+    auto pos = parsed.rfind(", ");
+    if (pos != std::string::npos) {
+      parsed.replace(parsed.rfind(", "), 2, "}");
+    } else {
+      parsed.append("}");
+    }
   }
   return parsed;
 }
