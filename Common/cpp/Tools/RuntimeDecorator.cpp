@@ -11,7 +11,7 @@ namespace reanimated {
 
 static const std::function<void(jsi::Runtime &, jsi::Value const &)> logValue =
     [](jsi::Runtime &rt, jsi::Value const &value) {
-      std::string parsedValue = jsi_utils::JSIParser::parseValue(rt, value);
+      std::string parsedValue = jsi_utils::JSIParser::stringifyValue(rt, value);
       Logger::log(parsedValue.c_str());
     };
 

@@ -24,66 +24,72 @@ jsi::Array convertStringToArray(
   return matrix;
 }
 
-std::string JSIParser::parseValue(jsi::Runtime &rt, jsi::Value const &value) {
+std::string JSIParser::stringifyValue(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
   if (value.isBool() || value.isNumber()) {
     return value.toString(rt).utf8(rt);
   } else if (value.isString()) {
-    return "\"" + value.getString(rt).utf8(rt) + "\"";
+    return '"' + value.getString(rt).utf8(rt) + '"';
   } else if (value.isUndefined()) {
     return "undefined";
+  } else if (value.isNull()) {
+    return "null";
   } else if (value.isObject()) {
-    return parseComplexValue(rt, value.getObject(rt));
+    return stringifyComplexValue(rt, value.getObject(rt));
   } else {
-    return "unsupported value type";
+    return "[jsi::Value]";
   }
 }
 
-std::string JSIParser::parseComplexValue(
+std::string JSIParser::stringifyComplexValue(
     jsi::Runtime &rt,
-    jsi::Object const &object) {
+    const jsi::Object &object) {
   if (object.isArray(rt)) {
-    return parseJSIArray(rt, object.getArray(rt));
+    return stringifyJSIArray(rt, object.getArray(rt));
   } else if (object.isFunction(rt)) {
-    return parseJSIFunction(rt, object.getFunction(rt));
+    return stringifyJSIFunction(rt, object.getFunction(rt));
   } else if (object.isHostObject(rt)) {
-    return parseJSIHostObject(rt, *object.asHostObject(rt).get());
+    return stringifyJSIHostObject(rt, *object.asHostObject(rt).get());
   } else {
-    return parseJSIObject(rt, object);
+    return stringifyJSIObject(rt, object);
   }
 }
 
-std::string JSIParser::parseJSIArray(jsi::Runtime &rt, jsi::Array const &arr) {
-  std::stringstream parsed;
-  parsed << "[";
+std::string JSIParser::stringifyJSIArray(
+    jsi::Runtime &rt,
+    const jsi::Array &arr) {
+  std::stringstream ss;
+  ss << "[";
 
-  size_t length = arr.size(rt);
+  auto length = arr.size(rt);
 
   for (size_t i = 0; i < length; i++) {
     jsi::Value element = arr.getValueAtIndex(rt, i);
-    parsed << parseValue(rt, element) << ", ";
+    ss << stringifyValue(rt, element) << ", ";
   }
 
   if (length > 0) {
-    parsed.seekp(-2, parsed.cur);
+    ss.seekp(-2, ss.cur);
   }
-  parsed << "] ";
+  ss << "] ";
 
-  return parsed.str();
+  return ss.str();
 }
 
-std::string JSIParser::parseJSIFunction(
+std::string JSIParser::stringifyJSIFunction(
     jsi::Runtime &rt,
-    jsi::Function const &func) {
-  std::stringstream parsed;
-  parsed << "[Function " << func.getProperty(rt, "name").toString(rt).utf8(rt)
-         << "]";
-  return parsed.str();
+    const jsi::Function &func) {
+  std::stringstream ss;
+  auto name = func.getProperty(rt, "name").toString(rt).utf8(rt);
+  ss << "[Function " << name << "]";
+  return ss.str();
 }
 
-std::string JSIParser::parseJSIHostObject(
+std::string JSIParser::stringifyJSIHostObject(
     jsi::Runtime &rt,
     jsi::HostObject &hostObject) {
-  std::stringstream parsed;
+  std::stringstream ss;
   int status;
   const char *hostObjClassName =
       abi::__cxa_demangle(typeid(hostObject).name(), NULL, NULL, &status);
@@ -97,39 +103,38 @@ std::string JSIParser::parseJSIHostObject(
       obj.setProperty(rt, key, value);
     }
 
-    parsed << "{\"class\": "
-           << "\"" << hostObjClassName << "\""
-           << ", \"props\": " << parseComplexValue(rt, obj) << "}";
+    ss << '{' << '"' << "class" << '"' << ": " << '"' << hostObjClassName << '"'
+       << ", " << '"' << "props" << '"' << ": "
+       << stringifyComplexValue(rt, obj) << '}';
   } else {
-    parsed << "[jsi::HostObject] - error parsing class name";
+    ss << "[jsi::HostObject]";
   }
-  return parsed.str();
+  return ss.str();
 }
 
-std::string JSIParser::parseJSIObject(
+std::string JSIParser::stringifyJSIObject(
     jsi::Runtime &rt,
-    jsi::Object const &object) {
-  std::stringstream parsed;
+    const jsi::Object &object) {
+  std::stringstream ss;
 
   // just iterate through properties
-  parsed << "{";
+  ss << "{";
 
-  jsi::Array props = object.getPropertyNames(rt);
-  size_t propsCount = props.size(rt);
+  auto props = object.getPropertyNames(rt);
+  auto propsCount = props.size(rt);
 
   for (size_t i = 0; i < propsCount; i++) {
     jsi::String propName = props.getValueAtIndex(rt, i).toString(rt);
-    parsed << "\"" << propName.utf8(rt)
-           << "\": " << parseValue(rt, object.getProperty(rt, propName))
-           << ", ";
+    ss << '"' << propName.utf8(rt) << '"' << ": "
+       << stringifyValue(rt, object.getProperty(rt, propName)) << ", ";
   }
 
   if (propsCount > 0) {
-    parsed.seekp(-2, parsed.cur);
+    ss.seekp(-2, ss.cur);
   }
-  parsed << "} ";
+  ss << "} ";
 
-  return parsed.str();
+  return ss.str();
 }
 
 } // namespace reanimated::jsi_utils
