@@ -187,8 +187,17 @@ void NativeReanimatedModule::scheduleOnUI(
   assert(
       shareableWorklet->valueType() == Shareable::WorkletType &&
       "only worklets can be scheduled to run on UI");
-  uiScheduler_->scheduleOnUI(
-      [=] { uiWorkletRuntime_->runGuarded(shareableWorklet); });
+  uiScheduler_->scheduleOnUI([=] {
+#if JS_RUNTIME_HERMES
+    // JSI's scope defined here allows for JSI-objects to be cleared up after
+    // each runtime loop. Within these loops we typically create some temporary
+    // JSI objects and hence it allows for such objects to be garbage collected
+    // much sooner.
+    // Apparently the scope API is only supported on Hermes at the moment.
+    const auto scope = jsi::Scope(uiWorkletRuntime_->getRuntime());
+#endif
+    uiWorkletRuntime_->runGuarded(shareableWorklet);
+  });
 }
 
 void NativeReanimatedModule::scheduleOnJS(
