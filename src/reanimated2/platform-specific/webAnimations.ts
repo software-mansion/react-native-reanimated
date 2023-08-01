@@ -56,28 +56,18 @@ function parseObjectStyleToString(object: AnimationData): string {
   return styleStr;
 }
 
-function getFunctionBodyAsString(fn: () => void): string {
-  const fnStr: string = fn.toString();
-  return fnStr.substring(fnStr.indexOf('{') + 1, fnStr.lastIndexOf('}')).trim();
-}
-
 export function getEasing(easing: any): string {
   if (!easing) {
     return `cubic-bezier(${WebEasings.linear.toString()})`;
   }
 
-  const easingStrBody = getFunctionBodyAsString(easing);
-
-  for (const [easingName, easingFn] of Object.entries(Easing)) {
-    // @ts-ignore There has to be better way to do this
-    const easingFnBodyStr = getFunctionBodyAsString(easingFn.__initData.code);
-    if (easingStrBody !== easingFnBodyStr) {
+  for (const easingName of Object.keys(Easing)) {
+    if (easing.name !== easingName) {
       continue;
     }
 
     return `cubic-bezier(${WebEasings[easingName].toString()})`;
   }
-
   return `cubic-bezier(${WebEasings.linear.toString()})`;
 }
 
