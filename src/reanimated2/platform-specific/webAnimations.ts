@@ -57,18 +57,8 @@ function parseObjectStyleToString(object: AnimationData): string {
 }
 
 export function getEasing(easing: any): string {
-  if (!easing) {
-    return `cubic-bezier(${WebEasings.linear.toString()})`;
-  }
-
-  for (const easingName of Object.keys(Easing)) {
-    if (easing.name !== easingName) {
-      continue;
-    }
-
-    return `cubic-bezier(${WebEasings[easingName].toString()})`;
-  }
-  return `cubic-bezier(${WebEasings.linear.toString()})`;
+  const easingName = easing.name in Easing ? easing.name : 'linear';
+  return `cubic-bezier(${WebEasings[easingName].toString()})`;
 }
 
 const FadeIn = {
