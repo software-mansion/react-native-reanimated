@@ -1,5 +1,4 @@
 #include "JsiUtils.h"
-#include <cxxabi.h>
 #include <vector>
 
 using namespace facebook;
