@@ -272,6 +272,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   if (jsiRuntime) {
     auto nativeReanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
 
+    // TODO: remove this along with scheduleOnJS and makeShareableClone
+    std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule = nativeReanimatedModule;
+
     jsi::Runtime &rnRuntime = *jsiRuntime;
     jsi::Runtime &uiRuntime = nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
 
@@ -298,9 +301,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
             rnRuntime, jsi::PropNameID::forAscii(rnRuntime, "_createWorkletRuntime"), 2, createWorkletRuntime));
 
     auto scheduleOnJS =
-        [nativeReanimatedModule](
+        [weakNativeReanimatedModule](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
-      nativeReanimatedModule->scheduleOnJS(rt, args[0], args[1]);
+      if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+        nativeReanimatedModule->scheduleOnJS(rt, args[0], args[1]);
+      }
       return jsi::Value::undefined();
     };
     rnRuntime.global().setProperty(
@@ -310,9 +315,12 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
             rnRuntime, jsi::PropNameID::forAscii(rnRuntime, "_scheduleOnJS"), 2, scheduleOnJS));
 
     auto makeShareableClone =
-        [nativeReanimatedModule](
+        [weakNativeReanimatedModule](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
-      return nativeReanimatedModule->makeShareableClone(rt, args[0], jsi::Value::undefined());
+      if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+        return nativeReanimatedModule->makeShareableClone(rt, args[0], jsi::Value::undefined());
+      }
+      return jsi::Value::undefined();
     };
     rnRuntime.global().setProperty(
         rnRuntime,
