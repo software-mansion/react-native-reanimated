@@ -420,7 +420,8 @@ export default function createAnimatedComponent(
         ? this._component.getAnimatableRef()
         : this;
       if (isWeb()) {
-        viewTag = findNodeHandle(component);
+        // At this point I assume, that _setComponentRef was already called and _component is set
+        viewTag = this._component as unknown as number; // Casting to avoid type conflicts
         viewName = null;
         shadowNodeWrapper = null;
         viewConfig = null;
@@ -608,8 +609,20 @@ export default function createAnimatedComponent(
           Component<Record<string, unknown>, Record<string, unknown>, unknown>
         >,
       setLocalRef: (ref) => {
-        // TODO update config
-        const tag = findNodeHandle(ref);
+        // TODO update config)
+        let tag;
+
+        if (isWeb()) {
+          tag =
+            ref instanceof HTMLElement
+              ? (ref as unknown as number)
+              : (this._viewTag as any) instanceof HTMLElement
+              ? this._viewTag
+              : findNodeHandle(ref); // This should never be called on web, but syntax requires :
+        } else {
+          tag = findNodeHandle(ref);
+        }
+
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (
           (layout || entering || exiting || sharedTransitionTag) &&
