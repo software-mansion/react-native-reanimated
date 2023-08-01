@@ -29,11 +29,11 @@ Pod::Spec.new do |s|
   s.license      = "MIT"
   # s.license    = { :type => "MIT", :file => "FILE_LICENSE" }
   s.author       = { "author" => "author@domain.cn" }
-  s.platforms    = { :ios => "9.0", :tvos => "9.0" }
+  s.platforms    = { :ios => "9.0", :tvos => "9.0", :osx => "10.14" }
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
   s.source_files = [
-    "ios/**/*.{mm,h,m}",
+    "apple/**/*.{mm,h,m}",
     "Common/cpp/**/*.{cpp,h}"
   ]
 

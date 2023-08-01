@@ -329,6 +329,33 @@ PODS:
     - React-jsi (= 0.71.24)
     - React-logger (= 0.71.24)
     - React-perflogger (= 0.71.24)
+  - RNReanimated (3.4.0):
+    - DoubleConversion
+    - FBLazyVector
+    - FBReactNativeSpec
+    - glog
+    - RCT-Folly
+    - RCTRequired
+    - RCTTypeSafety
+    - React-callinvoker
+    - React-Core
+    - React-Core/DevSupport
+    - React-Core/RCTWebSocket
+    - React-CoreModules
+    - React-cxxreact
+    - React-jsi
+    - React-jsiexecutor
+    - React-jsinspector
+    - React-RCTActionSheet
+    - React-RCTAnimation
+    - React-RCTBlob
+    - React-RCTImage
+    - React-RCTLinking
+    - React-RCTNetwork
+    - React-RCTSettings
+    - React-RCTText
+    - ReactCommon/turbomodule/core
+    - Yoga
   - SocketRocket (0.6.0)
   - Yoga (1.14.0)
 
@@ -366,6 +393,7 @@ DEPENDENCIES:
   - React-RCTVibration (from `../node_modules/react-native-macos/Libraries/Vibration`)
   - React-runtimeexecutor (from `../node_modules/react-native-macos/ReactCommon/runtimeexecutor`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native-macos/ReactCommon`)
+  - RNReanimated (from `../node_modules/react-native-reanimated`)
   - Yoga (from `../node_modules/react-native-macos/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -438,6 +466,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-macos/ReactCommon/runtimeexecutor"
   ReactCommon:
     :path: "../node_modules/react-native-macos/ReactCommon"
+  RNReanimated:
+    :path: "../node_modules/react-native-reanimated"
   Yoga:
     :path: "../node_modules/react-native-macos/ReactCommon/yoga"
 
@@ -475,6 +505,7 @@ SPEC CHECKSUMS:
   React-RCTVibration: d2f0bffdea53a3595172551629a27d45249298bb
   React-runtimeexecutor: dd9b4d59ae2fef10e2c891a321a5b4966c154635
   ReactCommon: a4efa4516ee4362d8ecc4e9d81673c6b156394bc
+  RNReanimated: 5e384173986c0c7ffe4f7875f580d47821380da9
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Yoga: 80fcb58c8392eba6d41aa2869fccfbf71bdf8d3a
 
