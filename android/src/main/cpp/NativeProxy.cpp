@@ -569,7 +569,8 @@ void NativeProxy::setupLayoutAnimations() {
       [weakNativeReanimatedModule](
           int tag, int type, alias_ref<JMap<jstring, jstring>> values) {
         if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-          auto &rt = nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
+          jsi::Runtime &rt =
+              nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
           jsi::Object yogaValues(rt);
           for (const auto &entry : *values) {
             try {
