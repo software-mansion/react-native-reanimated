@@ -308,45 +308,39 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   // Layout Animation callbacks setup
   [animationsManager
       setAnimationStartingBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values) {
-        auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
-        if (nativeReanimatedModule == nullptr) {
-          return;
-        }
-        jsi::Runtime &rt = nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
-        jsi::Object yogaValues(rt);
-        for (NSString *key in values.allKeys) {
-          NSObject *value = values[key];
-          if ([values[key] isKindOfClass:[NSArray class]]) {
-            NSArray *transformArray = (NSArray *)value;
-            jsi::Array matrix(rt, 9);
-            for (int i = 0; i < 9; i++) {
-              matrix.setValueAtIndex(rt, i, [(NSNumber *)transformArray[i] doubleValue]);
+        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+          jsi::Runtime &rt = nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
+          jsi::Object yogaValues(rt);
+          for (NSString *key in values.allKeys) {
+            NSObject *value = values[key];
+            if ([values[key] isKindOfClass:[NSArray class]]) {
+              NSArray *transformArray = (NSArray *)value;
+              jsi::Array matrix(rt, 9);
+              for (int i = 0; i < 9; i++) {
+                matrix.setValueAtIndex(rt, i, [(NSNumber *)transformArray[i] doubleValue]);
+              }
+              yogaValues.setProperty(rt, [key UTF8String], matrix);
+            } else {
+              yogaValues.setProperty(rt, [key UTF8String], [(NSNumber *)value doubleValue]);
             }
-            yogaValues.setProperty(rt, [key UTF8String], matrix);
-          } else {
-            yogaValues.setProperty(rt, [key UTF8String], [(NSNumber *)value doubleValue]);
           }
+          nativeReanimatedModule->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
         }
-
-        nativeReanimatedModule->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
       }];
 
   [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type) {
-    auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
-    if (nativeReanimatedModule == nullptr) {
-      return NO;
+    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+      bool hasLayoutAnimation =
+          nativeReanimatedModule->layoutAnimationsManager().hasLayoutAnimation([tag intValue], type);
+      return hasLayoutAnimation ? YES : NO;
     }
-    bool hasLayoutAnimation =
-        nativeReanimatedModule->layoutAnimationsManager().hasLayoutAnimation([tag intValue], type);
-    return hasLayoutAnimation ? YES : NO;
+    return NO;
   }];
 
   [animationsManager setAnimationRemovingBlock:^(NSNumber *_Nonnull tag) {
-    auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
-    if (nativeReanimatedModule == nullptr) {
-      return;
+    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+      nativeReanimatedModule->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
     }
-    nativeReanimatedModule->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
   }];
 
   [animationsManager setCancelAnimationBlock:^(NSNumber *_Nonnull tag) {
