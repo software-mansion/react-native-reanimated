@@ -56,9 +56,18 @@ function parseObjectStyleToString(object: AnimationData): string {
   return styleStr;
 }
 
+function getFunctionBodyAsString(fn): string {
+  const fnStr: string = fn.toString();
+  return fnStr.substring(fnStr.indexOf('{') + 1, fnStr.lastIndexOf('}')).trim();
+}
+
 export function getEasing(easing: any): string {
+  const easingStrBody = getFunctionBodyAsString(easing);
+
   for (const [easingName, easingFn] of Object.entries(Easing)) {
-    if (easing !== easingFn) {
+    // @ts-ignore There has to be better way to do this
+    const easingFnBodyStr = getFunctionBodyAsString(easingFn.__initData.code);
+    if (easingStrBody !== easingFnBodyStr) {
       continue;
     }
 

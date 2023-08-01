@@ -780,6 +780,8 @@ export default function createAnimatedComponent(
       const delay = Object.prototype.hasOwnProperty.call(entering, 'delayV')
         ? // @ts-ignore already checked if property exists
           entering.delayV / 1000
+        : Object.prototype.hasOwnProperty.call(entering, 'randomizeDelay')
+        ? Math.random()
         : 0;
 
       const duration = Object.prototype.hasOwnProperty.call(
@@ -837,6 +839,8 @@ export default function createAnimatedComponent(
       const delay = Object.prototype.hasOwnProperty.call(exiting, 'delayV')
         ? // @ts-ignore already checked if property exists
           exiting.delayV / 1000
+        : Object.prototype.hasOwnProperty.call(exiting, 'randomizeDelay')
+        ? Math.random()
         : 0;
 
       const duration = Object.prototype.hasOwnProperty.call(
