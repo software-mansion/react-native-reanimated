@@ -612,7 +612,7 @@ export default function createAnimatedComponent(
         // TODO update config)
         let tag;
 
-        if (isWeb()) {
+        if (isWeb() && ref != null) {
           tag =
             ref instanceof HTMLElement
               ? (ref as unknown as number)
