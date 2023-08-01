@@ -1,3 +1,4 @@
+import { Easing } from '../Easing';
 import {
   AnimationData,
   FadeInData,
@@ -19,6 +20,7 @@ import {
   RotateOutData,
   RollData,
   TransformProperties,
+  WebEasings,
 } from './webAnimationsData';
 
 function parseObjectStyleToString(object: AnimationData): string {
@@ -49,9 +51,21 @@ function parseObjectStyleToString(object: AnimationData): string {
   }
   styleStr += `} `;
 
-  console.log(styleStr);
+  // console.log(styleStr);
 
   return styleStr;
+}
+
+export function getEasing(easing: any): string {
+  for (const [easingName, easingFn] of Object.entries(Easing)) {
+    if (easing !== easingFn) {
+      continue;
+    }
+
+    return `cubic-bezier(${WebEasings[easingName].toString()})`;
+  }
+
+  return `cubic-bezier(${WebEasings.linear.toString()})`;
 }
 
 const FadeIn = {

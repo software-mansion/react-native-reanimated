@@ -58,8 +58,8 @@ import {
   Animations,
   AnimationsTypes,
   WEB_ANIMATIONS_ID,
+  getEasing,
 } from './reanimated2/platform-specific/webAnimations';
-import { WebEasings } from './reanimated2/platform-specific/webAnimationsData';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -777,9 +777,6 @@ export default function createAnimatedComponent(
         return;
       }
 
-      console.log(entering);
-      console.log(this.props);
-
       const delay = Object.prototype.hasOwnProperty.call(entering, 'delayV')
         ? // @ts-ignore already checked if property exists
           entering.delayV / 1000
@@ -793,12 +790,10 @@ export default function createAnimatedComponent(
           entering.durationV / 1000
         : Animations[animationName].duration;
 
-      const easing = Object.prototype.hasOwnProperty.call(entering, 'easingV')
-        ? // @ts-ignore already checked if property exists
-          entering.easingV.name
-        : 'linear';
+      // @ts-ignore Property does exist
+      const easing = getEasing(entering.easingV);
 
-      console.log(easing, WebEasings[easing]);
+      console.log(easing);
 
       const element = findNodeHandle(this) as unknown as HTMLElement;
 
@@ -816,7 +811,7 @@ export default function createAnimatedComponent(
       element.style.animationName = animationName;
       element.style.animationDuration = `${duration}s`;
       element.style.animationDelay = `${delay}s`;
-      // element.style.animationTimingFunction =
+      element.style.animationTimingFunction = easing;
     }
 
     handleExitingAnimationsWeb(): void {
