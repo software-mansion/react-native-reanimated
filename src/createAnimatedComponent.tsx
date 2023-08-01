@@ -615,7 +615,7 @@ export default function createAnimatedComponent(
         if (isWeb() && ref != null) {
           tag =
             ref instanceof HTMLElement
-              ? (ref as unknown as number)
+              ? (ref as unknown as number) // Casting to avoid type confilicts
               : (this._viewTag as any) instanceof HTMLElement
               ? this._viewTag
               : findNodeHandle(ref); // This should never be called on web, but syntax requires :
