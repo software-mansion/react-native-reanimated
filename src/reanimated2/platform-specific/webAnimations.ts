@@ -56,12 +56,16 @@ function parseObjectStyleToString(object: AnimationData): string {
   return styleStr;
 }
 
-function getFunctionBodyAsString(fn): string {
+function getFunctionBodyAsString(fn: () => void): string {
   const fnStr: string = fn.toString();
   return fnStr.substring(fnStr.indexOf('{') + 1, fnStr.lastIndexOf('}')).trim();
 }
 
 export function getEasing(easing: any): string {
+  if (!easing) {
+    return `cubic-bezier(${WebEasings.linear.toString()})`;
+  }
+
   const easingStrBody = getFunctionBodyAsString(easing);
 
   for (const [easingName, easingFn] of Object.entries(Easing)) {

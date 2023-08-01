@@ -780,7 +780,9 @@ export default function createAnimatedComponent(
       const delay = Object.prototype.hasOwnProperty.call(entering, 'delayV')
         ? // @ts-ignore already checked if property exists
           entering.delayV / 1000
-        : Object.prototype.hasOwnProperty.call(entering, 'randomizeDelay')
+        : Object.prototype.hasOwnProperty.call(entering, 'randomizeDelay') &&
+          // @ts-ignore already checked if property exists
+          entering.randomizeDelay
         ? Math.random()
         : 0;
 
@@ -808,6 +810,8 @@ export default function createAnimatedComponent(
           toggleElement(element, true);
         }, delay * 1000);
       }
+
+      console.log(delay);
 
       element.style.transition = `margin ${duration}s`;
       element.style.animationName = animationName;
@@ -839,7 +843,9 @@ export default function createAnimatedComponent(
       const delay = Object.prototype.hasOwnProperty.call(exiting, 'delayV')
         ? // @ts-ignore already checked if property exists
           exiting.delayV / 1000
-        : Object.prototype.hasOwnProperty.call(exiting, 'randomizeDelay')
+        : Object.prototype.hasOwnProperty.call(exiting, 'randomizeDelay') &&
+          // @ts-ignore already checked if property exists
+          exiting.randomizeDelay
         ? Math.random()
         : 0;
 
