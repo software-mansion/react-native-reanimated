@@ -110,7 +110,8 @@ void NativeProxy::installJSIBindings(
     /**/) {
   WorkletRuntimeCollector::install(*rnRuntime_);
 
-  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
+  // TODO: move to constructor
+  nativeReanimatedModule_ = std::make_shared<NativeReanimatedModule>(
       *rnRuntime_,
       jsCallInvoker_,
       uiScheduler_,
@@ -121,7 +122,8 @@ void NativeProxy::installJSIBindings(
 #endif
       getPlatformDependentMethods());
 
-  nativeReanimatedModule_ = nativeReanimatedModule;
+  std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule =
+      nativeReanimatedModule_;
 
 #ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
@@ -139,9 +141,10 @@ void NativeProxy::installJSIBindings(
   //  reactScheduler_ = binding->getScheduler();
   //  reactScheduler_->addEventListener(eventListener_);
 #endif
+
   jsi::Runtime &rnRuntime = *rnRuntime_;
   jsi::Runtime &uiRuntime =
-      nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
+      nativeReanimatedModule_->uiWorkletRuntime_->getRuntime();
   auto isReducedMotion = getIsReducedMotion();
   RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
 
@@ -151,7 +154,7 @@ void NativeProxy::installJSIBindings(
   rnRuntime.global().setProperty(
       rnRuntime,
       jsi::PropNameID::forAscii(rnRuntime, "__reanimatedModuleProxy"),
-      jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule));
+      jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule_));
 
   auto createWorkletRuntime = [](jsi::Runtime &rt,
                                  const jsi::Value &thisValue,
@@ -172,12 +175,14 @@ void NativeProxy::installJSIBindings(
           2,
           createWorkletRuntime));
 
-  auto scheduleOnJS = [nativeReanimatedModule](
+  auto scheduleOnJS = [weakNativeReanimatedModule](
                           jsi::Runtime &rt,
                           const jsi::Value &thisValue,
                           const jsi::Value *args,
                           size_t count) -> jsi::Value {
-    nativeReanimatedModule->scheduleOnJS(rt, args[0], args[1]);
+    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+      nativeReanimatedModule->scheduleOnJS(rt, args[0], args[1]);
+    }
     return jsi::Value::undefined();
   };
   rnRuntime.global().setProperty(
@@ -189,13 +194,16 @@ void NativeProxy::installJSIBindings(
           2,
           scheduleOnJS));
 
-  auto makeShareableClone = [nativeReanimatedModule](
+  auto makeShareableClone = [weakNativeReanimatedModule](
                                 jsi::Runtime &rt,
                                 const jsi::Value &thisValue,
                                 const jsi::Value *args,
                                 size_t count) -> jsi::Value {
-    return nativeReanimatedModule->makeShareableClone(
-        rt, args[0], jsi::Value::undefined());
+    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+      return nativeReanimatedModule->makeShareableClone(
+          rt, args[0], jsi::Value::undefined());
+    }
+    return jsi::Value::undefined();
   };
   rnRuntime.global().setProperty(
       rnRuntime,
