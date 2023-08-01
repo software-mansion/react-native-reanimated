@@ -106,4 +106,5 @@ inline bool RuntimeDecorator::isReactRuntime(jsi::Runtime &rt) {
     return true;
   return false;
 }
+
 } // namespace reanimated

@@ -172,25 +172,5 @@ jsi::Array convertStringToArray(
     const std::string &value,
     const unsigned int expectedSize);
 
-class JSIParser {
- public:
-  static std::string stringifyValue(jsi::Runtime &rt, const jsi::Value &value);
-  static std::string stringifyComplexValue(
-      jsi::Runtime &rt,
-      const jsi::Object &object);
-
- private:
-  static std::string stringifyJSIArray(jsi::Runtime &rt, const jsi::Array &arr);
-  static std::string stringifyJSIFunction(
-      jsi::Runtime &rt,
-      const jsi::Function &func);
-  static std::string stringifyJSIHostObject(
-      jsi::Runtime &rt,
-      jsi::HostObject &hostObject);
-  static std::string stringifyJSIObject(
-      jsi::Runtime &rt,
-      const jsi::Object &object);
-};
-
 } // namespace jsi_utils
 } // namespace reanimated

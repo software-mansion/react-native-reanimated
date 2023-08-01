@@ -4,6 +4,7 @@
 #include <memory>
 #include <unordered_map>
 #include <utility>
+#include "JSISerializer.h"
 #include "JsiUtils.h"
 #include "ReanimatedHiddenHeaders.h"
 
@@ -11,8 +12,8 @@ namespace reanimated {
 
 static const std::function<void(jsi::Runtime &, jsi::Value const &)> logValue =
     [](jsi::Runtime &rt, jsi::Value const &value) {
-      std::string parsedValue = jsi_utils::JSIParser::stringifyValue(rt, value);
-      Logger::log(parsedValue.c_str());
+      std::string serializedValue = stringifyValue(rt, value);
+      Logger::log(serializedValue.c_str());
     };
 
 std::unordered_map<RuntimePointer, RuntimeType>
@@ -180,4 +181,5 @@ void RuntimeDecorator::decorateRNRuntime(
   rnRuntime.global().setProperty(
       rnRuntime, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);
 }
+
 } // namespace reanimated
