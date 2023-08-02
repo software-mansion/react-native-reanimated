@@ -7,7 +7,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.UiThreadUtil;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class Scheduler {
+public class AndroidUIScheduler {
 
   @DoNotStrip
   @SuppressWarnings("unused")
@@ -26,7 +26,7 @@ public class Scheduler {
         }
       };
 
-  public Scheduler(ReactApplicationContext context) {
+  public AndroidUIScheduler(ReactApplicationContext context) {
     mHybridData = initHybrid();
     mContext = context;
   }
@@ -36,7 +36,7 @@ public class Scheduler {
   public native void triggerUI();
 
   @DoNotStrip
-  private void scheduleOnUI() {
+  private void scheduleTriggerOnUI() {
     UiThreadUtil.runOnUiThread(
         new GuardedRunnable(mContext.getExceptionHandler()) {
           public void runGuarded() {

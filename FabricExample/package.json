@@ -25,7 +25,7 @@
     "react-native-pager-view": "5.4.24",
     "react-native-reanimated": "link:../",
     "react-native-safe-area-context": "^4.6.3",
-    "react-native-screens": "^3.22.0",
+    "react-native-screens": "^3.23.0",
     "react-native-svg": "^13.9.0"
   },
   "devDependencies": {

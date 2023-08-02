@@ -1,30 +1,35 @@
 import { html } from 'code-tag';
 import plugin from '../plugin';
-import { transform } from '@babel/core';
+import { TransformOptions, transformSync } from '@babel/core';
 import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
 import '../plugin/jestUtils';
 import { version as packageVersion } from '../package.json';
+import { ReanimatedPluginOptions } from '../plugin/src/types';
 
 const MOCK_LOCATION = '/dev/null';
 
-function runPlugin(input: string, opts = {}) {
-  const transformed = transform(input.replace(/<\/?script[^>]*>/g, ''), {
+function runPlugin(
+  input: string,
+  transformOpts: TransformOptions = {},
+  pluginOpts: ReanimatedPluginOptions = {}
+) {
+  const transformed = transformSync(input.replace(/<\/?script[^>]*>/g, ''), {
     // Our babel presets require us to specify a filename here
     // but it is never used so we put in '/dev/null'
     // as a safe fallback.
     filename: MOCK_LOCATION,
     compact: false,
-    plugins: [plugin],
-    ...opts,
+    plugins: [[plugin, pluginOpts]],
+    ...transformOpts,
   });
   assert(transformed);
   return transformed;
 }
 describe('babel plugin', () => {
   beforeEach(() => {
-    process.env.REANIMATED_JEST_DISABLE_SOURCEMAP = 'jest';
-    process.env.REANIMATED_JEST_DISABLE_VERSION = 'jest';
+    process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '1';
+    process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION = '1';
   });
 
   describe('generally', () => {
@@ -62,8 +67,7 @@ describe('babel plugin', () => {
     });
 
     it('injects its version', () => {
-      delete process.env.REANIMATED_JEST_DISABLE_VERSION;
-
+      process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION = '0'; // don't mock version
       const input = html`<script>
         function foo() {
           'worklet';
@@ -71,8 +75,25 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input, {});
-      expect(code).toContain(`f.__version = "${packageVersion}";`);
+      const { code } = runPlugin(input);
+      expect(code).toContain(`version: "${packageVersion}"`);
+    });
+
+    it('injects source maps', () => {
+      process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '0'; // don't mock source maps
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var foo = 'bar';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('sourceMap: "{');
+      // this non-mocked source map is hard-coded, feel free to update it accordingly
+      expect(code).toContain(
+        '\\"mappings\\":\\"AACQ,SAAAA,GAASA,CAAA,CAAG,CAEV,GAAI,CAAAA,GAAG,CAAG,KAAK,CACjB\\"'
+      );
     });
 
     it('removes comments from worklets', () => {
@@ -119,7 +140,7 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input, {});
+      const { code } = runPlugin(input);
       expect(code).toContain('foobar');
       expect(code).toMatchSnapshot();
     });
@@ -178,41 +199,6 @@ describe('babel plugin', () => {
     });
   });
 
-  describe('for worklet nesting', () => {
-    it("doesn't nest worklets for other threads", () => {
-      const input = html`<script>
-        function foo(x) {
-          'worklet';
-          function bar(x) {
-            'worklet';
-            return x + 2;
-          }
-          return bar(x) + 1;
-        }
-      </script>`;
-      const { code } = runPlugin(input);
-      expect(code).toContain("'worklet';");
-      expect(code).toMatchSnapshot();
-    });
-
-    it('transforms nested worklets for JS thread', () => {
-      const input = html`<script>
-        function foo(x) {
-          'worklet';
-          function bar(x) {
-            'worklet';
-            return x + 2;
-          }
-          return bar(x) + 1;
-        }
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData(2);
-      expect(code).toMatchSnapshot();
-    });
-  });
-
   describe('for closure capturing', () => {
     it('captures worklets environment', () => {
       const input = html`<script>
@@ -227,7 +213,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).not.toContain('_f._closure = {};');
+      expect(code).not.toContain('_f.__closure = {};');
       expect(code).toMatchSnapshot();
     });
 
@@ -248,7 +234,7 @@ describe('babel plugin', () => {
             'property' in path.node.left &&
             'name' in path.node.left.property &&
             'properties' in path.node.right &&
-            path.node.left.property.name === '_closure'
+            path.node.left.property.name === '__closure'
           ) {
             closureBindings = path.node.right.properties;
           }
@@ -957,7 +943,7 @@ describe('babel plugin', () => {
             'property' in path.node.left &&
             'name' in path.node.left.property &&
             'properties' in path.node.right &&
-            path.node.left.property.name === '_closure'
+            path.node.left.property.name === '__closure'
           ) {
             closureBindings = path.node.right.properties;
           }
@@ -1405,9 +1391,138 @@ describe('babel plugin', () => {
 
       const current = process.env.BABEL_ENV;
       process.env.BABEL_ENV = 'production';
-      const { code } = runPlugin(input, {});
+      const { code } = runPlugin(input);
       process.env.BABEL_ENV = current;
       expect(code).not.toHaveLocation(MOCK_LOCATION);
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't inject version for worklets in production builds", () => {
+      const input = html`<script>
+        const foo = useAnimatedStyle(() => {
+          const x = 1;
+        });
+      </script>`;
+
+      const current = process.env.BABEL_ENV;
+      process.env.BABEL_ENV = 'production';
+      const { code } = runPlugin(input);
+      process.env.BABEL_ENV = current;
+      expect(code).not.toContain('version: ');
+      expect(code).toMatchSnapshot();
+    });
+  });
+
+  describe('for worklet nesting', () => {
+    it("doesn't process nested worklets when disabled", () => {
+      const input = html`<script>
+        function foo(x) {
+          'worklet';
+          function bar(x) {
+            'worklet';
+            return x + 2;
+          }
+          return bar(x) + 1;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(2);
+      expect(code).toContain("'worklet';");
+      expect(code).toMatchSnapshot();
+    });
+
+    it('transpiles nested worklets when enabled', () => {
+      const input = html`<script>
+        const foo = () => {
+          'worklet';
+          const bar = () => {
+            'worklet';
+            console.log('bar');
+          };
+          bar();
+        };
+      </script>`;
+
+      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      expect(code).toHaveWorkletData(2);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('transpiles nested worklets when enabled with depth 3', () => {
+      const input = html`<script>
+        const foo = () => {
+          'worklet';
+          const bar = () => {
+            'worklet';
+            const foobar = () => {
+              'worklet';
+              console.log('foobar');
+            };
+          };
+          bar();
+        };
+      </script>`;
+
+      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+
+      expect(code).toHaveWorkletData(3);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('transpiles nested worklets embedded in runOnJS in runOnUI', () => {
+      const input = html`<script>
+        runOnUI(() => {
+          console.log('Hello from UI thread');
+          runOnJS(() => {
+            'worklet';
+            console.log('Hello from JS thread');
+          })();
+        })();
+      </script>`;
+      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+
+      expect(code).toHaveWorkletData(2);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('transpiles nested worklets embedded in runOnUI in runOnJS in runOnUI', () => {
+      const input = html`<script>
+        runOnUI(() => {
+          console.log('Hello from UI thread');
+          runOnJS(() => {
+            'worklet';
+            console.log('Hello from JS thread');
+            runOnUI(() => {
+              console.log('Hello from UI thread again');
+            })();
+          })();
+        })();
+      </script>`;
+      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+
+      expect(code).toHaveWorkletData(3);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('transpiles worklets with functions defined on UI thread to run them on JS', () => {
+      const input = html`<script>
+        runOnUI(() => {
+          const a = () => {
+            'worklet';
+            console.log('Good morning from JS thread!');
+          };
+          const b = () => {
+            'worklet';
+            console.log('Good afternoon from JS thread');
+          };
+          const func = Math.random() < 0.5 ? a : b;
+          runOnJS(func)();
+        })();
+      </script>`;
+      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+
+      expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
     });
   });

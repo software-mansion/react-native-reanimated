@@ -38,7 +38,7 @@ public class NativeProxy extends NativeProxyCommon {
                 initHybrid(
                         context.getJavaScriptContextHolder().get(),
                         holder,
-                        mScheduler,
+                        mAndroidUIScheduler,
                         LayoutAnimations,
                         fabricUIManager);
         prepareLayoutAnimations(LayoutAnimations);
@@ -49,7 +49,7 @@ public class NativeProxy extends NativeProxyCommon {
     private native HybridData initHybrid(
             long jsContext,
             CallInvokerHolderImpl jsCallInvokerHolder,
-            Scheduler scheduler,
+            AndroidUIScheduler androidUIScheduler,
             LayoutAnimations LayoutAnimations,
             FabricUIManager fabricUIManager);
 
@@ -90,7 +90,7 @@ public class NativeProxy extends NativeProxyCommon {
             public void clearAnimationConfig(int tag) {}
 
             @Override
-            public void cancelAnimation(int tag, int type, boolean cancelled, boolean removeView) {}
+            public void cancelAnimation(int tag) {}
 
             @Override
             public void checkDuplicateSharedTag(int viewTag, int screenTag) {}

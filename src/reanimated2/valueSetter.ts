@@ -1,6 +1,5 @@
 import type { AnimationObject, AnimatableValue } from './commonTypes';
 import type { Descriptor } from './hook/commonTypes';
-export { stopMapper } from './mappers';
 
 export function valueSetter(sv: any, value: any): void {
   'worklet';

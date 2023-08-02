@@ -24,13 +24,16 @@ if (isWeb()) {
 
 const reanimatedJS = new JSReanimated();
 
-global._makeShareableClone = (c) => c;
-global._scheduleOnJS = (func, args) => {
-  if (args) {
-    queueMicrotask(() => func(...args));
-  } else {
-    queueMicrotask(func);
-  }
+global._makeShareableClone = () => {
+  throw new Error(
+    '[Reanimated] _makeShareableClone should never be called in JSReanimated.'
+  );
+};
+
+global._scheduleOnJS = () => {
+  throw new Error(
+    '[Reanimated] _scheduleOnJS should never be called in JSReanimated.'
+  );
 };
 
 interface JSReanimatedComponent {

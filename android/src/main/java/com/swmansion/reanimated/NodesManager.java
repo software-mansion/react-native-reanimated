@@ -54,6 +54,18 @@ public class NodesManager implements EventDispatcherListener {
     NativeMethodsHelper.scrollTo(view, x, y, animated);
   }
 
+  public void dispatchCommand(int viewTag, String commandId, ReadableArray commandArgs) {
+    // mUIManager.dispatchCommand must be called from native modules queue thread
+    // because of an assert in ShadowNodeRegistry.getNode
+    mContext.runOnNativeModulesQueueThread(
+        new GuardedRunnable(mContext.getExceptionHandler()) {
+          @Override
+          public void runGuarded() {
+            mUIManager.dispatchCommand(viewTag, commandId, commandArgs);
+          }
+        });
+  }
+
   public float[] measure(int viewTag) {
     View view;
     try {
@@ -111,7 +123,7 @@ public class NodesManager implements EventDispatcherListener {
   public void initWithContext(ReactApplicationContext reactApplicationContext) {
     mReactApplicationContext = reactApplicationContext;
     mNativeProxy = new NativeProxy(reactApplicationContext);
-    mAnimationManager.setScheduler(getNativeProxy().getScheduler());
+    mAnimationManager.setAndroidUIScheduler(getNativeProxy().getAndroidUIScheduler());
     compatibility = new ReaCompatibility(reactApplicationContext);
     compatibility.registerFabricEventListener(this);
   }

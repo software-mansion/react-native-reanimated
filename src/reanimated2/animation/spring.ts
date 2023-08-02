@@ -13,7 +13,7 @@ import type {
 } from './springUtils';
 import {
   initialCalculations,
-  calcuateNewMassToMatchDuration,
+  calculateNewMassToMatchDuration,
   underDampedSpringCalculations,
   criticallyDampedSpringCalculations,
   isAnimationTerminatingCalculation,
@@ -149,6 +149,7 @@ export const withSpring = ((
       animation: SpringAnimation
     ) {
       return (
+        previousAnimation?.lastTimestamp &&
         previousAnimation?.startTimestamp &&
         previousAnimation?.toValue === animation.toValue &&
         previousAnimation?.duration === animation.duration &&
@@ -191,7 +192,7 @@ export const withSpring = ((
         animation.omega1 = previousAnimation?.omega1 || 0;
       } else {
         if (config.useDuration) {
-          const acutalDuration = triggeredTwice
+          const actualDuration = triggeredTwice
             ? // If animation is triggered twice we want to continue the previous animation
               // so we need to include the time that already elapsed
               duration -
@@ -199,8 +200,8 @@ export const withSpring = ((
                 (previousAnimation?.startTimestamp || 0))
             : duration;
 
-          config.duration = acutalDuration;
-          mass = calcuateNewMassToMatchDuration(
+          config.duration = actualDuration;
+          mass = calculateNewMassToMatchDuration(
             x0 as number,
             config,
             animation.velocity

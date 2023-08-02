@@ -214,7 +214,7 @@ interface AnimatedProps extends Record<string, unknown> {
   initial?: SharedValue<StyleProps>;
 }
 
-export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
+type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
   forwardedRef?: Ref<Component>;
   style?: NestedArray<StyleProps>;
   animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
@@ -247,7 +247,7 @@ interface ComponentRef extends Component {
   getAnimatableRef?: () => ComponentRef;
 }
 
-export interface InitialComponentProps extends Record<string, unknown> {
+interface InitialComponentProps extends Record<string, unknown> {
   ref?: Ref<Component>;
   collapsable?: boolean;
 }

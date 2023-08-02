@@ -86,6 +86,7 @@ var require_commonObjects = __commonJS({
       "_measurePaper",
       "_measureFabric",
       "_scrollToPaper",
+      "_dispatchCommandPaper",
       "_dispatchCommandFabric",
       "_setGestureState",
       "isNaN",
@@ -104,7 +105,8 @@ var require_utils = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.isRelease = void 0;
     function isRelease() {
-      return process.env.BABEL_ENV && ["production", "release"].includes(process.env.BABEL_ENV);
+      var _a;
+      return !!((_a = process.env.BABEL_ENV) === null || _a === void 0 ? void 0 : _a.match(/(prod|release|stag[ei])/i));
     }
     exports2.isRelease = isRelease;
   }
@@ -158,6 +160,7 @@ var require_buildWorkletString = __commonJS({
     var convertSourceMap = __importStar(require("convert-source-map"));
     var fs = __importStar(require("fs"));
     var utils_1 = require_utils();
+    var MOCK_SOURCE_MAP = "mock source map";
     function buildWorkletString(fun, closureVariables, name, inputMap) {
       const draftExpression = fun.program.body.find((obj) => (0, types_1.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_1.isExpressionStatement)(obj)) || void 0;
       (0, assert_1.strict)(draftExpression, "'draftExpression' is undefined");
@@ -167,7 +170,7 @@ var require_buildWorkletString = __commonJS({
       const workletFunction = (0, types_1.functionExpression)((0, types_1.identifier)(name), expression.params, expression.body);
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "'inputMap' is undefined");
-      const includeSourceMap = shouldGenerateSourceMap();
+      const includeSourceMap = !(0, utils_1.isRelease)();
       if (includeSourceMap) {
         inputMap.sourcesContent = [];
         for (const sourceFile of inputMap.sources) {
@@ -176,7 +179,7 @@ var require_buildWorkletString = __commonJS({
       }
       const transformed = (0, core_1.transformSync)(code, {
         plugins: [prependClosureVariablesIfNecessary(closureVariables)],
-        compact: !includeSourceMap,
+        compact: true,
         sourceMaps: includeSourceMap,
         inputSourceMap: inputMap,
         ast: false,
@@ -187,20 +190,18 @@ var require_buildWorkletString = __commonJS({
       (0, assert_1.strict)(transformed, "'transformed' is null");
       let sourceMap;
       if (includeSourceMap) {
-        sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
-        delete sourceMap.sourcesContent;
+        if (shouldMockSourceMap()) {
+          sourceMap = MOCK_SOURCE_MAP;
+        } else {
+          sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
+          delete sourceMap.sourcesContent;
+        }
       }
       return [transformed.code, JSON.stringify(sourceMap)];
     }
     exports2.buildWorkletString = buildWorkletString;
-    function shouldGenerateSourceMap() {
-      if ((0, utils_1.isRelease)()) {
-        return false;
-      }
-      if (process.env.REANIMATED_JEST_DISABLE_SOURCEMAP === "jest") {
-        return false;
-      }
-      return true;
+    function shouldMockSourceMap() {
+      return process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP === "1";
     }
     function prependClosure(path, closureVariables, closureDeclaration) {
       if (closureVariables.length === 0 || !(0, types_1.isProgram)(path.parent)) {
@@ -223,7 +224,7 @@ var require_buildWorkletString = __commonJS({
     }
     function prependClosureVariablesIfNecessary(closureVariables) {
       const closureDeclaration = (0, types_1.variableDeclaration)("const", [
-        (0, types_1.variableDeclarator)((0, types_1.objectPattern)(closureVariables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), (0, types_1.identifier)(variable.name), false, true))), (0, types_1.memberExpression)((0, types_1.thisExpression)(), (0, types_1.identifier)("_closure")))
+        (0, types_1.variableDeclarator)((0, types_1.objectPattern)(closureVariables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), (0, types_1.identifier)(variable.name), false, true))), (0, types_1.memberExpression)((0, types_1.thisExpression)(), (0, types_1.identifier)("__closure")))
       ]);
       return {
         visitor: {
@@ -254,7 +255,8 @@ var require_makeWorklet = __commonJS({
     var buildWorkletString_1 = require_buildWorkletString();
     var commonObjects_12 = require_commonObjects();
     var utils_1 = require_utils();
-    var version = require("../../package.json").version;
+    var REAL_VERSION = require("../../package.json").version;
+    var MOCK_VERSION = "x.y.z";
     function makeWorklet(fun, state) {
       const functionName = makeWorkletName(fun);
       removeWorkletDirective(fun);
@@ -313,6 +315,10 @@ var require_makeWorklet = __commonJS({
       if (sourceMapString) {
         initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("sourceMap"), (0, types_1.stringLiteral)(sourceMapString)));
       }
+      const shouldInjectVersion = !(0, utils_1.isRelease)();
+      if (shouldInjectVersion) {
+        initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("version"), (0, types_1.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)));
+      }
       pathForStringDefinitions.insertBefore((0, types_1.variableDeclaration)("const", [
         (0, types_1.variableDeclarator)(initDataId, initDataObjectExpression)
       ]));
@@ -322,7 +328,7 @@ var require_makeWorklet = __commonJS({
         (0, types_1.variableDeclaration)("const", [
           (0, types_1.variableDeclarator)(privateFunctionId, funExpression)
         ]),
-        (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("_closure"), false), (0, types_1.objectExpression)(variables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), variable, false, true))))),
+        (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__closure"), false), (0, types_1.objectExpression)(variables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), variable, false, true))))),
         (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__initData"), false), initDataId)),
         (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__workletHash"), false), (0, types_1.numericLiteral)(workletHash)))
       ];
@@ -335,9 +341,6 @@ var require_makeWorklet = __commonJS({
           ]))
         ]));
         statements.push((0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__stackDetails"), false), (0, types_1.identifier)("_e"))));
-        if (shouldInjectVersion()) {
-          statements.push((0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__version"), false), (0, types_1.stringLiteral)(version))));
-        }
       }
       statements.push((0, types_1.returnStatement)(privateFunctionId));
       const newFun = (0, types_1.functionExpression)(void 0, [], (0, types_1.blockStatement)(statements));
@@ -353,14 +356,8 @@ var require_makeWorklet = __commonJS({
         }
       });
     }
-    function shouldInjectVersion() {
-      if ((0, utils_1.isRelease)()) {
-        return false;
-      }
-      if (process.env.REANIMATED_JEST_DISABLE_VERSION === "jest") {
-        return false;
-      }
-      return true;
+    function shouldMockVersion() {
+      return process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION === "1";
     }
     function hash(str) {
       let i = str.length;
@@ -552,18 +549,28 @@ var require_processIfWorkletNode = __commonJS({
     exports2.processIfWorkletNode = void 0;
     var types_1 = require("@babel/types");
     var processIfWorkletFunction_1 = require_processIfWorkletFunction();
+    function hasWorkletDirective(directives) {
+      return directives && directives.length > 0 && directives.some((directive) => (0, types_1.isDirectiveLiteral)(directive.value) && directive.value.value === "worklet");
+    }
     function processIfWorkletNode(fun, state) {
+      let shouldBeProcessed = false;
       fun.traverse({
         DirectiveLiteral(path) {
           const value = path.node.value;
-          if (value === "worklet" && path.getFunctionParent() === fun && (0, types_1.isBlockStatement)(fun.node.body)) {
-            const directives = fun.node.body.directives;
-            if (directives && directives.length > 0 && directives.some((directive) => (0, types_1.isDirectiveLiteral)(directive.value) && directive.value.value === "worklet")) {
-              (0, processIfWorkletFunction_1.processIfWorkletFunction)(fun, state);
+          if (value === "worklet" && (0, types_1.isBlockStatement)(fun.node.body)) {
+            const parent = path.getFunctionParent();
+            if (parent === fun) {
+              const directives = fun.node.body.directives;
+              shouldBeProcessed = hasWorkletDirective(directives);
+            } else if (state.opts.processNestedWorklets && ((parent === null || parent === void 0 ? void 0 : parent.isFunctionDeclaration()) || (parent === null || parent === void 0 ? void 0 : parent.isFunctionExpression()) || (parent === null || parent === void 0 ? void 0 : parent.isArrowFunctionExpression()))) {
+              processIfWorkletNode(parent, state);
             }
           }
         }
       });
+      if (shouldBeProcessed) {
+        (0, processIfWorkletFunction_1.processIfWorkletFunction)(fun, state);
+      }
     }
     exports2.processIfWorkletNode = processIfWorkletNode;
   }
