@@ -1,6 +1,8 @@
 #include "JSISerializer.h"
 
+#if __APPLE__
 #import <TargetConditionals.h>
+#endif
 
 #include <cxxabi.h>
 #include <sstream>
