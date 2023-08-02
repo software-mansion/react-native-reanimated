@@ -6,14 +6,12 @@ namespace {
 static inline std::string getPrototypeName(
     jsi::Runtime &rt,
     const jsi::Object &obj) {
-  const jsi::Function &getPrototype =
-      rt.global()
-          .getPropertyAsObject(rt, "Object")
-          .getPropertyAsFunction(rt, "getPrototypeOf");
-
-  auto result = getPrototype.call(rt, obj).toString(rt).utf8(rt);
-
-  return result;
+  return rt.global()
+      .getPropertyAsObject(rt, "Object")
+      .getPropertyAsFunction(rt, "getPrototypeOf")
+      .call(rt, obj)
+      .toString(rt)
+      .utf8(rt);
 }
 } // namespace
 
@@ -53,39 +51,38 @@ std::string stringifyJSIFunction(jsi::Runtime &rt, const jsi::Function &func) {
 std::string stringifyJSIHostObject(
     jsi::Runtime &rt,
     jsi::HostObject &hostObject) {
-  std::stringstream ss;
   int status = -1;
   const char *hostObjClassName =
       abi::__cxa_demangle(typeid(hostObject).name(), NULL, NULL, &status);
-  if (status == 0) {
-    auto props = hostObject.getPropertyNames(rt);
-    auto propsCount = props.size();
-    auto lastKey = props.back().utf8(rt);
-
-    ss << '[' << hostObjClassName << ' ';
-    if (propsCount > 0) {
-      ss << '{';
-      for (auto &key : props) {
-        auto formattedKey = key.utf8(rt);
-        facebook::jsi::Value value = hostObject.get(rt, key);
-        ss << '"' << formattedKey << '"' << ": "
-           << reanimated::stringifyJSIValue(rt, value);
-        if (formattedKey != lastKey)
-          ss << ", ";
-      }
-      ss << '}';
-    }
-    ss << ']';
-  } else {
-    ss << "[jsi::HostObject]";
+  if (status != 0) {
+    return "[jsi::HostObject]";
   }
+
+  std::stringstream ss;
+  auto props = hostObject.getPropertyNames(rt);
+  auto propsCount = props.size();
+  auto lastKey = props.back().utf8(rt);
+
+  ss << '[' << hostObjClassName << ' ';
+  if (propsCount > 0) {
+    ss << '{';
+    for (auto &key : props) {
+      auto formattedKey = key.utf8(rt);
+      facebook::jsi::Value value = hostObject.get(rt, key);
+      ss << '"' << formattedKey << '"' << ": "
+         << reanimated::stringifyJSIValue(rt, value);
+      if (formattedKey != lastKey) {
+        ss << ", ";
+      }
+    }
+    ss << '}';
+  }
+  ss << ']';
   return ss.str();
 }
 
 std::string stringifyJSIObject(jsi::Runtime &rt, const jsi::Object &object) {
   std::stringstream ss;
-
-  // just iterate through properties
   ss << '{';
 
   auto props = object.getPropertyNames(rt);
@@ -95,8 +92,9 @@ std::string stringifyJSIObject(jsi::Runtime &rt, const jsi::Object &object) {
     jsi::String propName = props.getValueAtIndex(rt, i).toString(rt);
     ss << '"' << propName.utf8(rt) << '"' << ": "
        << reanimated::stringifyJSIValue(rt, object.getProperty(rt, propName));
-    if (i != propsCount - 1)
+    if (i != propsCount - 1) {
       ss << ", ";
+    }
   }
 
   ss << '}';
@@ -148,10 +146,11 @@ std::string stringifyJSMap(jsi::Runtime &rt, const jsi::Object &object) {
     auto pair = arr.getValueAtIndex(rt, i).asObject(rt).getArray(rt);
     auto key = pair.getValueAtIndex(rt, 0);
     auto value = pair.getValueAtIndex(rt, 1);
-    ss << reanimated::stringifyJSIValue(rt, key) << " => "
+    ss << reanimated::stringifyJSIValue(rt, key) << ": "
        << reanimated::stringifyJSIValue(rt, value);
-    if (i != length - 1)
+    if (i != length - 1) {
       ss << ", ";
+    }
   }
 
   ss << '}';

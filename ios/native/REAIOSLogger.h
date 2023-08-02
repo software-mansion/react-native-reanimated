@@ -9,7 +9,7 @@ class REAIOSLogger : public LoggerInterface {
   void log(double d) override;
   void log(int i) override;
   void log(bool b) override;
-  void log(std::string str) override;
+  void log(const std::string &str) override;
   virtual ~REAIOSLogger() {}
 };
 
