@@ -793,10 +793,8 @@ export default function createAnimatedComponent(
           ? getRandomDelay()
           : 0;
 
-      const duration = Object.prototype.hasOwnProperty.call(
-        entering,
-        'durationV'
-      )
+      // @ts-ignore This property can exist with value of undefined - in that case animation doesn't start
+      const duration = entering.durationV
         ? // @ts-ignore already checked if property exists
           entering.durationV / 1000
         : Animations[animationName].duration;
@@ -858,10 +856,8 @@ export default function createAnimatedComponent(
           ? getRandomDelay()
           : 0;
 
-      const duration = Object.prototype.hasOwnProperty.call(
-        exiting,
-        'durationV'
-      )
+      // @ts-ignore This property can exist with value of undefined - in that case animation doesn't start
+      const duration = exiting.durationV
         ? // @ts-ignore already checked if property exists
           exiting.durationV / 1000
         : Animations[animationName].duration;
