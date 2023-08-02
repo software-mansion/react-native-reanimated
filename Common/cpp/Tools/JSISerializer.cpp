@@ -3,19 +3,17 @@
 #include <sstream>
 
 namespace {
-bool checkJSCollectionType(
+static inline std::string getPrototypeName(
     jsi::Runtime &rt,
-    const jsi::Object &obj,
-    const std::string &expectedType) {
+    const jsi::Object &obj) {
   const jsi::Function &getPrototype =
       rt.global()
           .getPropertyAsObject(rt, "Object")
           .getPropertyAsFunction(rt, "getPrototypeOf");
 
   auto result = getPrototype.call(rt, obj).toString(rt).utf8(rt);
-  auto pattern = "[object " + expectedType + "]";
 
-  return result == pattern;
+  return result;
 }
 } // namespace
 
@@ -187,9 +185,9 @@ std::string reanimated::stringifyJSIValue(
       return stringifyJSIFunction(rt, object.getFunction(rt));
     } else if (object.isHostObject(rt)) {
       return stringifyJSIHostObject(rt, *object.asHostObject(rt).get());
-    } else if (checkJSCollectionType(rt, object, "Map")) {
+    } else if (getPrototypeName(rt, object) == "[object Map]") {
       return stringifyJSMap(rt, object);
-    } else if (checkJSCollectionType(rt, object, "Set")) {
+    } else if (getPrototypeName(rt, object) == "[object Set]") {
       return stringifyJSSet(rt, object);
     } else if (object.instanceOf(
                    rt, rt.global().getPropertyAsFunction(rt, "Error"))) {

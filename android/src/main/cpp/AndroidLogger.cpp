@@ -27,4 +27,8 @@ void AndroidLogger::log(bool b) {
   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "%s", b ? "true" : "false");
 }
 
+void AndroidLogger::log(std::string str) {
+  __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "%s", str);
+}
+
 } // namespace reanimated

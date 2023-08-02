@@ -13,7 +13,7 @@ namespace reanimated {
 static const std::function<void(jsi::Runtime &, jsi::Value const &)> logValue =
     [](jsi::Runtime &rt, jsi::Value const &value) {
       auto serializedValue = stringifyJSIValue(rt, value);
-      Logger::log(serializedValue.c_str());
+      Logger::log(serializedValue);
     };
 
 std::unordered_map<RuntimePointer, RuntimeType>
