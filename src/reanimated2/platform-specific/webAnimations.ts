@@ -1,4 +1,3 @@
-import { Easing } from '../Easing';
 import {
   AnimationData,
   FadeInData,
@@ -57,7 +56,8 @@ function parseObjectStyleToString(object: AnimationData): string {
 }
 
 export function getEasing(easing: any): string {
-  const easingName = easing.name in Easing ? easing.name : 'linear';
+  const easingName =
+    easing && easing.name in WebEasings ? easing.name : 'linear';
   return `cubic-bezier(${WebEasings[easingName].toString()})`;
 }
 
