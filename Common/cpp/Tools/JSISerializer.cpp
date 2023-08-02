@@ -4,14 +4,14 @@
 bool checkJSCollectionType(
     jsi::Runtime &rt,
     const jsi::Object &obj,
-    std::string expectedType) {
+    const std::string& expectedType) {
   const jsi::Function &getPrototype =
       rt.global()
           .getPropertyAsObject(rt, "Object")
           .getPropertyAsFunction(rt, "getPrototypeOf");
 
-  std::string result = getPrototype.call(rt, obj).toString(rt).utf8(rt);
-  std::string pattern = "[object " + expectedType + "]";
+  auto result = getPrototype.call(rt, obj).toString(rt).utf8(rt);
+  auto pattern = "[object " + expectedType + "]";
 
   return result == pattern;
 }
@@ -104,7 +104,7 @@ std::string reanimated::stringifyJSIHostObject(
     jsi::Runtime &rt,
     jsi::HostObject &hostObject) {
   std::stringstream ss;
-  int status;
+  int status = -1;
   const char *hostObjClassName =
       abi::__cxa_demangle(typeid(hostObject).name(), NULL, NULL, &status);
   if (status == 0) {
