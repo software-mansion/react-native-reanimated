@@ -133,7 +133,7 @@ def getReanimatedMajorVersion() {
     return major.toInteger()
 }
 
-static def toPlatformFileString(String path) {
+def toPlatformFileString(String path) {
   if (Os.isFamily(Os.FAMILY_WINDOWS)) {
       path = path.replace(File.separatorChar, '/' as char)
   }
