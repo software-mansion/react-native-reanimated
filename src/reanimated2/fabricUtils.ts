@@ -10,10 +10,13 @@ interface HostInstance {
   };
 }
 
-let findHostInstance_DEPRECATED: (ref: React.Component) => HostInstance;
+let findHostInstance_DEPRECATED: (
+  ref: React.Component | undefined | null
+) => HostInstance;
 if (global._IS_FABRIC) {
   try {
     findHostInstance_DEPRECATED =
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       require('react-native/Libraries/Renderer/shims/ReactFabric').findHostInstance_DEPRECATED;
   } catch (e) {
     throw new Error(
@@ -23,7 +26,7 @@ if (global._IS_FABRIC) {
 }
 
 export function getShadowNodeWrapperFromRef(
-  ref: React.Component
+  ref: React.Component | undefined | null
 ): ShadowNodeWrapper {
   return findHostInstance_DEPRECATED(ref)._internalInstanceHandle.stateNode
     .node;

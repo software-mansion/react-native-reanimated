@@ -10,14 +10,15 @@ import {
 } from '../shareables';
 import { findNodeHandle } from 'react-native';
 
+type Nullable<T> = T | undefined | null;
 interface MaybeScrollableComponent extends Component {
-  getNativeScrollRef?: () => MaybeScrollableComponent;
-  getScrollableNode?: () => MaybeScrollableComponent;
+  getNativeScrollRef?: () => Nullable<MaybeScrollableComponent>;
+  getScrollableNode?: () => Nullable<MaybeScrollableComponent>;
 }
 
 function getComponentOrScrollable(
   component: MaybeScrollableComponent
-): MaybeScrollableComponent {
+): Nullable<MaybeScrollableComponent> {
   if (global._IS_FABRIC && component.getNativeScrollRef) {
     return component.getNativeScrollRef();
   } else if (!global._IS_FABRIC && component.getScrollableNode) {
