@@ -1,10 +1,12 @@
 #include "JSISerializer.h"
 #include <cxxabi.h>
+#include <sstream>
 
+namespace {
 bool checkJSCollectionType(
     jsi::Runtime &rt,
     const jsi::Object &obj,
-    const std::string& expectedType) {
+    const std::string &expectedType) {
   const jsi::Function &getPrototype =
       rt.global()
           .getPropertyAsObject(rt, "Object")
@@ -15,14 +17,151 @@ bool checkJSCollectionType(
 
   return result == pattern;
 }
+} // namespace
 
-std::string reanimated::stringifyValue(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  return stringifyValueRecursively(rt, value);
+std::string stringifyJSIArray(jsi::Runtime &rt, const jsi::Array &arr) {
+  std::stringstream ss;
+  ss << '[';
+
+  auto length = arr.size(rt);
+
+  for (size_t i = 0; i < length; i++) {
+    jsi::Value element = arr.getValueAtIndex(rt, i);
+    ss << reanimated::stringifyJSIValue(rt, element);
+    if (i != length - 1) {
+      ss << ", ";
+    }
+  }
+
+  ss << ']';
+
+  return ss.str();
 }
 
-std::string reanimated::stringifyValueRecursively(
+std::string stringifyJSIArrayBuffer(
+    jsi::Runtime &rt,
+    const jsi::ArrayBuffer &buf) {
+  // TODO: consider logging size or contents
+  return "[ArrayBuffer]";
+}
+
+std::string stringifyJSIFunction(jsi::Runtime &rt, const jsi::Function &func) {
+  std::stringstream ss;
+  auto name = func.getProperty(rt, "name").toString(rt).utf8(rt);
+  ss << "[Function " << name << ']';
+  return ss.str();
+}
+
+std::string stringifyJSIHostObject(
+    jsi::Runtime &rt,
+    jsi::HostObject &hostObject) {
+  std::stringstream ss;
+  int status = -1;
+  const char *hostObjClassName =
+      abi::__cxa_demangle(typeid(hostObject).name(), NULL, NULL, &status);
+  if (status == 0) {
+    auto props = hostObject.getPropertyNames(rt);
+    auto propsCount = props.size();
+    auto lastKey = props.back().utf8(rt);
+
+    ss << '[' << hostObjClassName << ' ';
+    if (propsCount > 0) {
+      ss << '{';
+      for (auto &key : props) {
+        auto formattedKey = key.utf8(rt);
+        facebook::jsi::Value value = hostObject.get(rt, key);
+        ss << '"' << formattedKey << '"' << ": "
+           << reanimated::stringifyJSIValue(rt, value);
+        if (formattedKey != lastKey)
+          ss << ", ";
+      }
+      ss << '}';
+    }
+    ss << ']';
+  } else {
+    ss << "[jsi::HostObject]";
+  }
+  return ss.str();
+}
+
+std::string stringifyJSIObject(jsi::Runtime &rt, const jsi::Object &object) {
+  std::stringstream ss;
+
+  // just iterate through properties
+  ss << '{';
+
+  auto props = object.getPropertyNames(rt);
+  auto propsCount = props.size(rt);
+
+  for (size_t i = 0; i < propsCount; i++) {
+    jsi::String propName = props.getValueAtIndex(rt, i).toString(rt);
+    ss << '"' << propName.utf8(rt) << '"' << ": "
+       << reanimated::stringifyJSIValue(rt, object.getProperty(rt, propName));
+    if (i != propsCount - 1)
+      ss << ", ";
+  }
+
+  ss << '}';
+
+  return ss.str();
+}
+
+std::string stringifyJSError(jsi::Runtime &rt, const jsi::Object &object) {
+  std::stringstream ss;
+  ss << '[' << object.getProperty(rt, "name").toString(rt).utf8(rt) << ": "
+     << object.getProperty(rt, "message").toString(rt).utf8(rt) << ']';
+
+  return ss.str();
+}
+
+std::string stringifyJSSet(jsi::Runtime &rt, const jsi::Object &object) {
+  std::stringstream ss;
+  jsi::Function arrayFrom = rt.global()
+                                .getPropertyAsObject(rt, "Array")
+                                .getPropertyAsFunction(rt, "from");
+  jsi::Object result = arrayFrom.call(rt, object).asObject(rt);
+
+  if (!result.isArray(rt)) {
+    return "[Set]";
+  }
+
+  ss << "Set {" << reanimated::stringifyJSIValue(rt, result.asArray(rt)) << '}';
+
+  return ss.str();
+}
+
+std::string stringifyJSMap(jsi::Runtime &rt, const jsi::Object &object) {
+  std::stringstream ss;
+  jsi::Function arrayFrom = rt.global()
+                                .getPropertyAsObject(rt, "Array")
+                                .getPropertyAsFunction(rt, "from");
+  jsi::Object result = arrayFrom.call(rt, object).asObject(rt);
+
+  if (!result.isArray(rt)) {
+    return "[Map]";
+  }
+
+  auto arr = result.asArray(rt);
+  auto length = arr.size(rt);
+
+  ss << "Map {";
+
+  for (size_t i = 0; i < length; i++) {
+    auto pair = arr.getValueAtIndex(rt, i).asObject(rt).getArray(rt);
+    auto key = pair.getValueAtIndex(rt, 0);
+    auto value = pair.getValueAtIndex(rt, 1);
+    ss << reanimated::stringifyJSIValue(rt, key) << " => "
+       << reanimated::stringifyJSIValue(rt, value);
+    if (i != length - 1)
+      ss << ", ";
+  }
+
+  ss << '}';
+
+  return ss.str();
+}
+
+std::string reanimated::stringifyJSIValue(
     jsi::Runtime &rt,
     const jsi::Value &value) {
   if (value.isBool() || value.isNumber()) {
@@ -61,171 +200,4 @@ std::string reanimated::stringifyValueRecursively(
   } else {
     return "[jsi::Value]";
   }
-}
-
-std::string reanimated::stringifyJSIArray(
-    jsi::Runtime &rt,
-    const jsi::Array &arr) {
-  std::stringstream ss;
-  ss << "[";
-
-  auto length = arr.size(rt);
-
-  for (size_t i = 0; i < length; i++) {
-    jsi::Value element = arr.getValueAtIndex(rt, i);
-    ss << stringifyValueRecursively(rt, element) << ", ";
-  }
-
-  if (length > 0) {
-    ss.seekp(-2, ss.cur);
-  }
-  ss << "] ";
-
-  return ss.str();
-}
-
-std::string reanimated::stringifyJSIArrayBuffer(
-    jsi::Runtime &rt,
-    const jsi::ArrayBuffer &buf) {
-  // consider logging size or contents
-  return "[ArrayBuffer]";
-}
-
-std::string reanimated::stringifyJSIFunction(
-    jsi::Runtime &rt,
-    const jsi::Function &func) {
-  std::stringstream ss;
-  auto name = func.getProperty(rt, "name").toString(rt).utf8(rt);
-  ss << "[Function " << name << "]";
-  return ss.str();
-}
-
-std::string reanimated::stringifyJSIHostObject(
-    jsi::Runtime &rt,
-    jsi::HostObject &hostObject) {
-  std::stringstream ss;
-  int status = -1;
-  const char *hostObjClassName =
-      abi::__cxa_demangle(typeid(hostObject).name(), NULL, NULL, &status);
-  if (status == 0) {
-    auto props = hostObject.getPropertyNames(rt);
-    auto propsCount = props.size();
-
-    ss << '[' << hostObjClassName << ' ';
-    if (propsCount > 0) {
-      ss << "{";
-      for (auto &key : props) {
-        facebook::jsi::Value value = hostObject.get(rt, key);
-        ss << '"' << key.utf8(rt) << '"' << ": "
-           << stringifyValueRecursively(rt, value) << ", ";
-      }
-      ss.seekp(-2, ss.cur);
-      ss << "}";
-    }
-    ss << ']';
-  } else {
-    ss << "[jsi::HostObject]";
-  }
-  return ss.str();
-}
-
-std::string reanimated::stringifyJSIObject(
-    jsi::Runtime &rt,
-    const jsi::Object &object) {
-  std::stringstream ss;
-
-  // just iterate through properties
-  ss << "{";
-
-  auto props = object.getPropertyNames(rt);
-  auto propsCount = props.size(rt);
-
-  for (size_t i = 0; i < propsCount; i++) {
-    jsi::String propName = props.getValueAtIndex(rt, i).toString(rt);
-    ss << '"' << propName.utf8(rt) << '"' << ": "
-       << stringifyValueRecursively(rt, object.getProperty(rt, propName))
-       << ", ";
-  }
-
-  if (propsCount > 0) {
-    ss.seekp(-2, ss.cur);
-  }
-  ss << "} ";
-
-  return ss.str();
-}
-
-std::string reanimated::stringifyJSError(
-    jsi::Runtime &rt,
-    const jsi::Object &object) {
-  std::stringstream ss;
-  ss << '[' << object.getProperty(rt, "name").toString(rt).utf8(rt) << ": "
-     << object.getProperty(rt, "message").toString(rt).utf8(rt) << ']';
-
-  return ss.str();
-}
-
-std::string reanimated::stringifyJSSet(
-    jsi::Runtime &rt,
-    const jsi::Object &object) {
-  std::stringstream ss;
-  jsi::Function arrayFrom = rt.global()
-                                .getPropertyAsObject(rt, "Array")
-                                .getPropertyAsFunction(rt, "from");
-  jsi::Object result = arrayFrom.call(rt, object).asObject(rt);
-
-  if (!result.isArray(rt)) {
-    return "[Set]";
-  }
-
-  auto arr = result.asArray(rt);
-  auto length = arr.size(rt);
-
-  ss << "Set {";
-
-  for (size_t i = 0; i < length; i++) {
-    jsi::Value element = arr.getValueAtIndex(rt, i);
-    ss << stringifyValueRecursively(rt, element) << ", ";
-  }
-
-  if (length > 0) {
-    ss.seekp(-2, ss.cur);
-  }
-  ss << "} ";
-
-  return ss.str();
-}
-
-std::string reanimated::stringifyJSMap(
-    jsi::Runtime &rt,
-    const jsi::Object &object) {
-  std::stringstream ss;
-  jsi::Function arrayFrom = rt.global()
-                                .getPropertyAsObject(rt, "Array")
-                                .getPropertyAsFunction(rt, "from");
-  jsi::Object result = arrayFrom.call(rt, object).asObject(rt);
-
-  if (!result.isArray(rt)) {
-    return "[Map]";
-  }
-
-  auto arr = result.asArray(rt);
-  auto length = arr.size(rt);
-
-  ss << "Map {";
-
-  for (size_t i = 0; i < length; i++) {
-    auto pair = arr.getValueAtIndex(rt, i).asObject(rt).getArray(rt);
-    auto key = pair.getValueAtIndex(rt, 0);
-    auto value = pair.getValueAtIndex(rt, 1);
-    ss << stringifyValueRecursively(rt, key) << " => "
-       << stringifyValueRecursively(rt, value) << ", ";
-  }
-
-  if (length > 0) {
-    ss.seekp(-2, ss.cur);
-  }
-  ss << "} ";
-
-  return ss.str();
 }

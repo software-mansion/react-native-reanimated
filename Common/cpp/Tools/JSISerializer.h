@@ -7,6 +7,6 @@ using namespace facebook;
 
 namespace reanimated {
 
-std::string stringifyValue(jsi::Runtime &rt, const jsi::Value &value);
+std::string stringifyJSIValue(jsi::Runtime &rt, const jsi::Value &value);
 
 } // namespace reanimated
