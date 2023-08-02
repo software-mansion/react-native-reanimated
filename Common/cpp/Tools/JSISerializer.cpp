@@ -30,9 +30,9 @@ std::string reanimated::stringifyValueRecursively(
   } else if (value.isString()) {
     return '"' + value.getString(rt).utf8(rt) + '"';
   } else if (value.isSymbol()) {
-    return '[' + value.getSymbol(rt).toString(rt) + ']';
+    return value.getSymbol(rt).toString(rt);
   } else if (value.isBigInt()) {
-    return "[BigInt " + value.getBigInt(rt).toString(rt).utf8(rt) + "]";
+    return value.getBigInt(rt).toString(rt).utf8(rt) + 'n';
   } else if (value.isUndefined()) {
     return "undefined";
   } else if (value.isNull()) {
@@ -159,7 +159,7 @@ std::string reanimated::stringifyJSError(
     jsi::Runtime &rt,
     const jsi::Object &object) {
   std::stringstream ss;
-  ss << '[' << object.getProperty(rt, "name").toString(rt).utf8(rt) << ' '
+  ss << '[' << object.getProperty(rt, "name").toString(rt).utf8(rt) << ": "
      << object.getProperty(rt, "message").toString(rt).utf8(rt) << ']';
 
   return ss.str();
@@ -181,7 +181,7 @@ std::string reanimated::stringifyJSSet(
   auto arr = result.asArray(rt);
   auto length = arr.size(rt);
 
-  ss << "[Set (" << length << ") {";
+  ss << "Set {";
 
   for (size_t i = 0; i < length; i++) {
     jsi::Value element = arr.getValueAtIndex(rt, i);
@@ -191,7 +191,7 @@ std::string reanimated::stringifyJSSet(
   if (length > 0) {
     ss.seekp(-2, ss.cur);
   }
-  ss << "}]";
+  ss << "} ";
 
   return ss.str();
 }
@@ -212,7 +212,7 @@ std::string reanimated::stringifyJSMap(
   auto arr = result.asArray(rt);
   auto length = arr.size(rt);
 
-  ss << "[Map (" << length << ") {";
+  ss << "Map {";
 
   for (size_t i = 0; i < length; i++) {
     auto pair = arr.getValueAtIndex(rt, i).asObject(rt).getArray(rt);
@@ -225,7 +225,7 @@ std::string reanimated::stringifyJSMap(
   if (length > 0) {
     ss.seekp(-2, ss.cur);
   }
-  ss << "}]";
+  ss << "} ";
 
   return ss.str();
 }
