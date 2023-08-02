@@ -80,7 +80,9 @@ type PickStyleProps<T> = Pick<
 >;
 
 type StyleAnimatedProps<P extends object> = {
-  [K in keyof PickStyleProps<P>]: StyleProp<AnimateStyle<P[K]>>;
+  [K in keyof PickStyleProps<P>]: StyleProp<
+    AnimateStyle<P[K] | MaybeSharedValue<P[K]>>
+  >;
 };
 
 type JustStyleAnimatedProp<P extends object> = {
@@ -121,6 +123,7 @@ export type AnimateProps<P extends object> = NonStyleAnimatedProps<P> &
     animatedProps?: Partial<AnimatedPropsProp<P>>;
   };
 
+// ts-prune-ignore-next This will be used soon
 export type AnimatedProps<P extends object> = AnimateProps<P>;
 
 export type AnimatedPropsAdapterFunction = (

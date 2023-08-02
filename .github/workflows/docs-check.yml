@@ -22,6 +22,9 @@ jobs:
         with:
           node-version: 16
           cache: 'yarn'
+      - name: Clear annotations
+        run: scripts/clear-annotations.sh
+
       - name: Install node dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn

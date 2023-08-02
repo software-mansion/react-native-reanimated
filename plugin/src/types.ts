@@ -6,13 +6,16 @@ import {
   ArrowFunctionExpression,
 } from '@babel/types';
 
+export interface ReanimatedPluginOptions {
+  relativeSourceLocation?: boolean;
+  disableInlineStylesWarning?: boolean;
+  processNestedWorklets?: boolean;
+}
+
 export interface ReanimatedPluginPass {
   file: BabelFile;
   key: string;
-  opts: {
-    relativeSourceLocation?: boolean;
-    disableInlineStylesWarning?: boolean;
-  };
+  opts: ReanimatedPluginOptions;
   cwd: string;
   filename: string | undefined;
   get(key: unknown): unknown;
