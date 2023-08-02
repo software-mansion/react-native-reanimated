@@ -1,8 +1,15 @@
 #include "JSISerializer.h"
+
+#import <TargetConditionals.h>
+
 #include <cxxabi.h>
 #include <sstream>
 
-#include <iostream>
+static inline bool
+isInstanceOf(jsi::Runtime &rt, jsi::Object &object, const std::string &type) {
+  return object.instanceOf(
+      rt, rt.global().getPropertyAsFunction(rt, type.c_str()));
+}
 
 std::string stringifyJSIArray(jsi::Runtime &rt, const jsi::Array &arr) {
   std::stringstream ss;
@@ -48,11 +55,13 @@ std::string stringifyJSIHostObject(
   }
 
   std::stringstream ss;
+  ss << '[' << hostObjClassName << ' ';
+  std::free(hostObjClassName);
+
   auto props = hostObject.getPropertyNames(rt);
   auto propsCount = props.size();
   auto lastKey = props.back().utf8(rt);
 
-  ss << '[' << hostObjClassName << ' ';
   if (propsCount > 0) {
     ss << '{';
     for (auto &key : props) {
@@ -67,7 +76,6 @@ std::string stringifyJSIHostObject(
   }
   ss << ']';
 
-  std::free(hostObjClassName);
   return ss.str();
 }
 
@@ -150,40 +158,50 @@ std::string stringifyJSMap(jsi::Runtime &rt, const jsi::Object &object) {
 std::string stringifyJSIValue(jsi::Runtime &rt, const jsi::Value &value) {
   if (value.isBool() || value.isNumber()) {
     return value.toString(rt).utf8(rt);
-  } else if (value.isString()) {
+  }
+  if (value.isString()) {
     return '"' + value.getString(rt).utf8(rt) + '"';
-  } else if (value.isSymbol()) {
+  }
+  if (value.isSymbol()) {
     return value.getSymbol(rt).toString(rt);
-  } else if (value.isBigInt()) {
+  }
+#if !TARGET_OS_TV
+  if (value.isBigInt()) {
     return value.getBigInt(rt).toString(rt).utf8(rt) + 'n';
-  } else if (value.isUndefined()) {
+  }
+#endif
+  if (value.isUndefined()) {
     return "undefined";
-  } else if (value.isNull()) {
+  }
+  if (value.isNull()) {
     return "null";
-  } else if (value.isObject()) {
+  }
+  if (value.isObject()) {
     jsi::Object object = value.asObject(rt);
 
     if (object.isArray(rt)) {
       return stringifyJSIArray(rt, object.getArray(rt));
-    } else if (object.isArrayBuffer(rt)) {
-      return stringifyJSIArrayBuffer(rt, object.getArrayBuffer(rt));
-    } else if (object.isFunction(rt)) {
-      return stringifyJSIFunction(rt, object.getFunction(rt));
-    } else if (object.isHostObject(rt)) {
-      return stringifyJSIHostObject(rt, *object.asHostObject(rt).get());
-    } else if (object.instanceOf(
-                   rt, rt.global().getPropertyAsFunction(rt, "Map"))) {
-      return stringifyJSMap(rt, object);
-    } else if (object.instanceOf(
-                   rt, rt.global().getPropertyAsFunction(rt, "Set"))) {
-      return stringifyJSSet(rt, object);
-    } else if (object.instanceOf(
-                   rt, rt.global().getPropertyAsFunction(rt, "Error"))) {
-      return stringifyJSError(rt, object);
-    } else {
-      return stringifyJSIObject(rt, object);
     }
-  } else {
-    return "[jsi::Value]";
+    if (object.isArrayBuffer(rt)) {
+      return stringifyJSIArrayBuffer(rt, object.getArrayBuffer(rt));
+    }
+    if (object.isFunction(rt)) {
+      return stringifyJSIFunction(rt, object.getFunction(rt));
+    }
+    if (object.isHostObject(rt)) {
+      return stringifyJSIHostObject(rt, *object.asHostObject(rt).get());
+    }
+    if (isInstanceOf(rt, object, "Map")) {
+      return stringifyJSMap(rt, object);
+    }
+    if (isInstanceOf(rt, object, "Set")) {
+      return stringifyJSSet(rt, object);
+    }
+    if (isInstanceOf(rt, object, "Error")) {
+      return stringifyJSError(rt, object);
+    }
+    return stringifyJSIObject(rt, object);
   }
+
+  return "[jsi::Value]";
 }
