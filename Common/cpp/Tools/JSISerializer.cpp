@@ -2,18 +2,7 @@
 #include <cxxabi.h>
 #include <sstream>
 
-namespace {
-static inline std::string getPrototypeName(
-    jsi::Runtime &rt,
-    const jsi::Object &obj) {
-  return rt.global()
-      .getPropertyAsObject(rt, "Object")
-      .getPropertyAsFunction(rt, "getPrototypeOf")
-      .call(rt, obj)
-      .toString(rt)
-      .utf8(rt);
-}
-} // namespace
+#include <iostream>
 
 std::string stringifyJSIArray(jsi::Runtime &rt, const jsi::Array &arr) {
   std::stringstream ss;
@@ -23,7 +12,7 @@ std::string stringifyJSIArray(jsi::Runtime &rt, const jsi::Array &arr) {
 
   for (size_t i = 0; i < length; i++) {
     jsi::Value element = arr.getValueAtIndex(rt, i);
-    ss << reanimated::stringifyJSIValue(rt, element);
+    ss << stringifyJSIValue(rt, element);
     if (i != length - 1) {
       ss << ", ";
     }
@@ -52,7 +41,7 @@ std::string stringifyJSIHostObject(
     jsi::Runtime &rt,
     jsi::HostObject &hostObject) {
   int status = -1;
-  const char *hostObjClassName =
+  char *hostObjClassName =
       abi::__cxa_demangle(typeid(hostObject).name(), NULL, NULL, &status);
   if (status != 0) {
     return "[jsi::HostObject]";
@@ -68,9 +57,8 @@ std::string stringifyJSIHostObject(
     ss << '{';
     for (auto &key : props) {
       auto formattedKey = key.utf8(rt);
-      facebook::jsi::Value value = hostObject.get(rt, key);
-      ss << '"' << formattedKey << '"' << ": "
-         << reanimated::stringifyJSIValue(rt, value);
+      auto value = hostObject.get(rt, key);
+      ss << '"' << formattedKey << '"' << ": " << stringifyJSIValue(rt, value);
       if (formattedKey != lastKey) {
         ss << ", ";
       }
@@ -78,6 +66,8 @@ std::string stringifyJSIHostObject(
     ss << '}';
   }
   ss << ']';
+
+  std::free(hostObjClassName);
   return ss.str();
 }
 
@@ -91,7 +81,7 @@ std::string stringifyJSIObject(jsi::Runtime &rt, const jsi::Object &object) {
   for (size_t i = 0; i < propsCount; i++) {
     jsi::String propName = props.getValueAtIndex(rt, i).toString(rt);
     ss << '"' << propName.utf8(rt) << '"' << ": "
-       << reanimated::stringifyJSIValue(rt, object.getProperty(rt, propName));
+       << stringifyJSIValue(rt, object.getProperty(rt, propName));
     if (i != propsCount - 1) {
       ss << ", ";
     }
@@ -121,7 +111,7 @@ std::string stringifyJSSet(jsi::Runtime &rt, const jsi::Object &object) {
     return "[Set]";
   }
 
-  ss << "Set {" << reanimated::stringifyJSIValue(rt, result.asArray(rt)) << '}';
+  ss << "Set {" << stringifyJSIValue(rt, result.asArray(rt)) << '}';
 
   return ss.str();
 }
@@ -146,8 +136,7 @@ std::string stringifyJSMap(jsi::Runtime &rt, const jsi::Object &object) {
     auto pair = arr.getValueAtIndex(rt, i).asObject(rt).getArray(rt);
     auto key = pair.getValueAtIndex(rt, 0);
     auto value = pair.getValueAtIndex(rt, 1);
-    ss << reanimated::stringifyJSIValue(rt, key) << ": "
-       << reanimated::stringifyJSIValue(rt, value);
+    ss << stringifyJSIValue(rt, key) << ": " << stringifyJSIValue(rt, value);
     if (i != length - 1) {
       ss << ", ";
     }
@@ -158,9 +147,7 @@ std::string stringifyJSMap(jsi::Runtime &rt, const jsi::Object &object) {
   return ss.str();
 }
 
-std::string reanimated::stringifyJSIValue(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
+std::string stringifyJSIValue(jsi::Runtime &rt, const jsi::Value &value) {
   if (value.isBool() || value.isNumber()) {
     return value.toString(rt).utf8(rt);
   } else if (value.isString()) {
@@ -184,9 +171,11 @@ std::string reanimated::stringifyJSIValue(
       return stringifyJSIFunction(rt, object.getFunction(rt));
     } else if (object.isHostObject(rt)) {
       return stringifyJSIHostObject(rt, *object.asHostObject(rt).get());
-    } else if (getPrototypeName(rt, object) == "[object Map]") {
+    } else if (object.instanceOf(
+                   rt, rt.global().getPropertyAsFunction(rt, "Map"))) {
       return stringifyJSMap(rt, object);
-    } else if (getPrototypeName(rt, object) == "[object Set]") {
+    } else if (object.instanceOf(
+                   rt, rt.global().getPropertyAsFunction(rt, "Set"))) {
       return stringifyJSSet(rt, object);
     } else if (object.instanceOf(
                    rt, rt.global().getPropertyAsFunction(rt, "Error"))) {
