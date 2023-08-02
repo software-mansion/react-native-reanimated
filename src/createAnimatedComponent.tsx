@@ -870,11 +870,7 @@ export default function createAnimatedComponent(
 
       parent?.appendChild(tmpElement);
 
-      const animationTimeMs = duration * 1000;
-
-      setTimeout(() => {
-        parent?.removeChild(tmpElement);
-      }, animationTimeMs);
+      tmpElement.onanimationend = () => parent?.removeChild(tmpElement);
     }
 
     insertWebAnimations(): void {
