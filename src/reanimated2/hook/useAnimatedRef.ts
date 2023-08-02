@@ -8,7 +8,6 @@ import {
   makeShareableCloneRecursive,
   registerShareableMapping,
 } from '../shareables';
-import { findNodeHandle } from 'react-native';
 
 type Nullable<T> = T | undefined | null;
 interface MaybeScrollableComponent extends Component {
@@ -27,9 +26,11 @@ function getComponentOrScrollable(
   return component;
 }
 
-const getTagValueFunction = global._IS_FABRIC
-  ? getShadowNodeWrapperFromRef
-  : findNodeHandle;
+// const getTagValueFunction = global._IS_FABRIC
+//   ? getShadowNodeWrapperFromRef
+//   : findNodeHandle;
+
+const getTagValueFunction = getShadowNodeWrapperFromRef;
 
 export function useAnimatedRef<
   T extends MaybeScrollableComponent
