@@ -215,7 +215,8 @@ void NativeReanimatedModule::scheduleOnJS(
       "Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
   auto shareableArgs = argsValue.isUndefined()
       ? nullptr
-      : extractShareableOrThrow(rt, argsValue);
+      : extractShareableOrThrow<ShareableArray>(
+            rt, argsValue, "args must be an array");
   auto jsRuntime = this->runtimeHelper->rnRuntime();
   runtimeManager_->jsScheduler_->scheduleOnJS([=] {
     jsi::Runtime &rt = *jsRuntime;
@@ -331,7 +332,8 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
 
   uint64_t newRegistrationId = EVENT_HANDLER_ID++;
   auto eventName = eventHash.asString(rt).utf8(rt);
-  auto handlerShareable = extractShareableOrThrow(rt, worklet);
+  auto handlerShareable = extractShareableOrThrow<ShareableWorklet>(
+      rt, worklet, "event handler must be a worklet");
 
   runtimeManager_->uiScheduler_->scheduleOnUI([=] {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime();
@@ -418,7 +420,8 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
       viewTag.asNumber(),
       static_cast<LayoutAnimationType>(type.asNumber()),
       sharedTransitionTag.asString(rt).utf8(rt),
-      extractShareableOrThrow(rt, config));
+      extractShareableOrThrow<ShareableObject>(
+          rt, config, "layout animation config must be an object"));
   return jsi::Value::undefined();
 }
 
