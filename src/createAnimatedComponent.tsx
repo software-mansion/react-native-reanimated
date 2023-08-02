@@ -59,6 +59,7 @@ import {
   AnimationsTypes,
   WEB_ANIMATIONS_ID,
   getEasing,
+  getRandomDelay,
 } from './reanimated2/platform-specific/webAnimations';
 
 function dummyListener() {
@@ -777,14 +778,20 @@ export default function createAnimatedComponent(
         return;
       }
 
-      const delay = Object.prototype.hasOwnProperty.call(entering, 'delayV')
-        ? // @ts-ignore already checked if property exists
-          entering.delayV / 1000
-        : Object.prototype.hasOwnProperty.call(entering, 'randomizeDelay') &&
-          // @ts-ignore already checked if property exists
-          entering.randomizeDelay
-        ? Math.random()
-        : 0;
+      const hasDelay = Object.prototype.hasOwnProperty.call(entering, 'delayV');
+      // @ts-ignore If property doesn't exist, delay won't be randomized
+      const shouldRandomizeDelay = entering.randomizeDelay;
+
+      const delay =
+        hasDelay && shouldRandomizeDelay
+          ? // @ts-ignore Already checked
+            getRandomDelay(entering.delayV)
+          : hasDelay
+          ? // @ts-ignore Already checked
+            entering.delayV / 1000
+          : shouldRandomizeDelay
+          ? getRandomDelay()
+          : 0;
 
       const duration = Object.prototype.hasOwnProperty.call(
         entering,
@@ -797,8 +804,6 @@ export default function createAnimatedComponent(
       // @ts-ignore Property does exist
       const easing = getEasing(entering.easingV);
 
-      console.log(easing);
-
       const element = findNodeHandle(this) as unknown as HTMLElement;
 
       toggleElement(element, false);
@@ -810,8 +815,6 @@ export default function createAnimatedComponent(
           toggleElement(element, true);
         }, delay * 1000);
       }
-
-      console.log(delay);
 
       element.style.transition = `margin ${duration}s`;
       element.style.animationName = animationName;
@@ -840,14 +843,20 @@ export default function createAnimatedComponent(
         return;
       }
 
-      const delay = Object.prototype.hasOwnProperty.call(exiting, 'delayV')
-        ? // @ts-ignore already checked if property exists
-          exiting.delayV / 1000
-        : Object.prototype.hasOwnProperty.call(exiting, 'randomizeDelay') &&
-          // @ts-ignore already checked if property exists
-          exiting.randomizeDelay
-        ? Math.random()
-        : 0;
+      const hasDelay = Object.prototype.hasOwnProperty.call(exiting, 'delayV');
+      // @ts-ignore If property doesn't exist, delay won't be randomized
+      const shouldRandomizeDelay = exiting.randomizeDelay;
+
+      const delay =
+        hasDelay && shouldRandomizeDelay
+          ? // @ts-ignore Already checked
+            getRandomDelay(exiting.delayV)
+          : hasDelay
+          ? // @ts-ignore Already checked
+            exiting.delayV / 1000
+          : shouldRandomizeDelay
+          ? getRandomDelay()
+          : 0;
 
       const duration = Object.prototype.hasOwnProperty.call(
         exiting,

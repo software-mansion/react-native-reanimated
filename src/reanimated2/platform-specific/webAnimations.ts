@@ -50,8 +50,6 @@ function parseObjectStyleToString(object: AnimationData): string {
   }
   styleStr += `} `;
 
-  // console.log(styleStr);
-
   return styleStr;
 }
 
@@ -59,6 +57,10 @@ export function getEasing(easing: any): string {
   const easingName =
     easing && easing.name in WebEasings ? easing.name : 'linear';
   return `cubic-bezier(${WebEasings[easingName].toString()})`;
+}
+
+export function getRandomDelay(maxDelay = 1000): number {
+  return Math.floor(Math.random() * (maxDelay + 1)) / 1000;
 }
 
 const FadeIn = {
