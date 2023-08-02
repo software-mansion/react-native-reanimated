@@ -3,7 +3,6 @@ import { useRef } from 'react';
 import { useSharedValue } from './useSharedValue';
 import type { AnimatedRef } from './commonTypes';
 import type { ShadowNodeWrapper } from '../commonTypes';
-import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import {
   makeShareableCloneRecursive,
   registerShareableMapping,
@@ -27,9 +26,11 @@ function getComponentOrScrollable(
   return component;
 }
 
-const getTagValueFunction = global._IS_FABRIC
-  ? getShadowNodeWrapperFromRef
-  : findNodeHandle;
+// const getTagValueFunction = global._IS_FABRIC
+//   ? getShadowNodeWrapperFromRef
+//   : findNodeHandle;
+
+const getTagValueFunction = findNodeHandle;
 
 export function useAnimatedRef<
   T extends MaybeScrollableComponent
