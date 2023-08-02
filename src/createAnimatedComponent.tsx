@@ -610,18 +610,8 @@ export default function createAnimatedComponent(
         >,
       setLocalRef: (ref) => {
         // TODO update config)
-        let tag;
 
-        if (isWeb() && ref != null) {
-          tag =
-            ref instanceof HTMLElement
-              ? (ref as unknown as number) // Casting to avoid type confilicts
-              : (this._viewTag as any) instanceof HTMLElement
-              ? this._viewTag
-              : findNodeHandle(ref); // This should never be called on web, but syntax requires :
-        } else {
-          tag = findNodeHandle(ref);
-        }
+        const tag = isWeb() ? (ref as unknown as number) : findNodeHandle(ref);
 
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (
