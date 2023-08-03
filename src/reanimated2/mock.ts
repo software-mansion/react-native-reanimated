@@ -7,6 +7,14 @@ const NOOP = () => {
 const ID = (t) => t;
 const IMMEDIATE_CB_INVOCATION = (cb: () => unknown) => cb();
 
+const enum SensorType {
+  ACCELEROMETER = 1,
+  GYROSCOPE = 2,
+  GRAVITY = 3,
+  MAGNETIC_FIELD = 4,
+  ROTATION = 5,
+}
+
 class BaseAnimationMock {
   duration(_: number) {
     return this;
@@ -54,6 +62,29 @@ const ReanimatedV2 = {
   useAnimatedRef: () => ({ current: null }),
   useAnimatedReaction: NOOP,
   useAnimatedProps: IMMEDIATE_CB_INVOCATION,
+  SensorType: SensorType,
+  useAnimatedSensor: () => ({
+    sensor: {
+      x: 0,
+      y: 0,
+      z: 0,
+      interfaceOrientation: 0,
+      qw: 0,
+      qx: 0,
+      qy: 0,
+      qz: 0,
+      yaw: 0,
+      pitch: 0,
+      roll: 0,
+    },
+    unregister: NOOP,
+    isAvailable: false,
+    config: {
+      interval: 0,
+      adjustToInterfaceOrientation: false,
+      iosReferenceFrame: 0,
+    },
+  }),
 
   withTiming: (toValue, _, cb) => {
     cb && cb(true);
