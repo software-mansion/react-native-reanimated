@@ -645,7 +645,7 @@ export default function createAnimatedComponent(
               maybeBuild(exiting)
             );
           }
-          if (sharedTransitionTag) {
+          if (sharedTransitionTag && !isWeb()) {
             const sharedElementTransition =
               this.props.sharedTransitionStyle ?? new SharedTransition();
             sharedElementTransition.registerTransition(
