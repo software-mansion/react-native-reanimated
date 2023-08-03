@@ -7,13 +7,15 @@
 #import <RNScreens/RNSScreenStack.h>
 #endif
 
+#import <React/RCTUIKit.h>
+
 @interface REAScreensHelper : NSObject
 
-+ (UIView *)getScreenForView:(UIView *)view;
-+ (UIView *)getStackForView:(UIView *)view;
-+ (bool)isScreenModal:(UIView *)screen;
-+ (UIView *)getScreenWrapper:(UIView *)view;
-+ (int)getScreenType:(UIView *)screen;
-+ (bool)isRNSScreenType:(UIView *)screen;
++ (RCTUIView *)getScreenForView:(RCTUIView *)view;
++ (RCTUIView *)getStackForView:(RCTUIView *)view;
++ (bool)isScreenModal:(RCTUIView *)screen;
++ (RCTUIView *)getScreenWrapper:(RCTUIView *)view;
++ (int)getScreenType:(RCTUIView *)screen;
++ (bool)isRNSScreenType:(RCTUIView *)screen;
 
 @end

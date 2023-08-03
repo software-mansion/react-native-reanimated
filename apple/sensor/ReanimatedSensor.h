@@ -1,4 +1,4 @@
-#if __has_include(<CoreMotion/CoreMotion.h>)
+#if __has_include(<CoreMotion/CoreMotion.h>) && !TARGET_OS_OSX
 #import <CoreMotion/CoreMotion.h>
 #endif
 #import <RNReanimated/ReanimatedSensorType.h>
@@ -8,7 +8,7 @@
   double _interval;
   double _lastTimestamp;
   int _referenceFrame;
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_OSX
   CMMotionManager *_motionManager;
 #endif
   void (^_setter)(double[], int);

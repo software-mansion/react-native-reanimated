@@ -1,9 +1,11 @@
 #import <RNReanimated/REASharedElement.h>
 
+#import <React/RCTUIKit.h>
+
 @implementation REASharedElement
-- (instancetype)initWithSourceView:(UIView *)sourceView
+- (instancetype)initWithSourceView:(RCTUIView *)sourceView
                 sourceViewSnapshot:(REASnapshot *)sourceViewSnapshot
-                        targetView:(UIView *)targetView
+                        targetView:(RCTUIView *)targetView
                 targetViewSnapshot:(REASnapshot *)targetViewSnapshot
 {
   self = [super init];

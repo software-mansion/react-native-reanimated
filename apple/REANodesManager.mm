@@ -20,6 +20,9 @@
 using namespace facebook::react;
 #endif
 
+#import <React/RCTPlatformDisplayLink.h>
+#import <React/RCTUIKit.h>
+
 // Interface below has been added in order to use private methods of RCTUIManager,
 // RCTUIManager#UpdateView is a React Method which is exported to JS but in
 // Objective-C it stays private
@@ -155,13 +158,13 @@ using namespace facebook::react;
 #endif
 
 @implementation REANodesManager {
-  CADisplayLink *_displayLink;
+  RCTPlatformDisplayLink *_displayLink;
   BOOL _wantRunUpdates;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   BOOL _tryRunBatchUpdatesSynchronously;
   REAEventHandler _eventHandler;
   NSMutableDictionary<NSNumber *, ComponentUpdate *> *_componentUpdateBuffer;
-  NSMutableDictionary<NSNumber *, UIView *> *_viewRegistry;
+  NSMutableDictionary<NSNumber *, RCTUIView *> *_viewRegistry;
 #ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTBridge *_bridge;
   REAPerformOperations _performOperations;
@@ -173,13 +176,15 @@ using namespace facebook::react;
 #endif
 }
 
-- (CADisplayLink *)getDisplayLink
+- (RCTPlatformDisplayLink *)getDisplayLink
 {
   RCTAssertMainQueue();
 
   if (!_displayLink) {
-    _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
+    _displayLink = [RCTPlatformDisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
+#if !TARGET_OS_OSX
     _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
+#endif
     [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
   }
   return _displayLink;
@@ -229,7 +234,7 @@ using namespace facebook::react;
     _shouldFlushUpdateBuffer = false;
   }
 #endif
-  [self useDisplayLinkOnMainQueue:^(CADisplayLink *displayLink) {
+  [self useDisplayLinkOnMainQueue:^(RCTPlatformDisplayLink *displayLink) {
     [displayLink setPaused:YES];
   }];
 
@@ -239,7 +244,7 @@ using namespace facebook::react;
 - (void)invalidate
 {
   _eventHandler = nil;
-  [self useDisplayLinkOnMainQueue:^(CADisplayLink *displayLink) {
+  [self useDisplayLinkOnMainQueue:^(RCTPlatformDisplayLink *displayLink) {
     [displayLink invalidate];
   }];
 }
@@ -293,7 +298,7 @@ using namespace facebook::react;
   [[self getDisplayLink] setPaused:YES];
 }
 
-- (void)onAnimationFrame:(CADisplayLink *)displayLink
+- (void)onAnimationFrame:(RCTPlatformDisplayLink *)displayLink
 {
   NSArray<REAOnAnimationCallback> *callbacks = _onAnimationCallbacks;
   _onAnimationCallbacks = [NSMutableArray new];
@@ -409,7 +414,7 @@ using namespace facebook::react;
 
 - (BOOL)isNativeViewMounted:(NSNumber *)viewTag
 {
-  UIView *view = _viewRegistry[viewTag];
+  RCTUIView *view = _viewRegistry[viewTag];
   if (view.superview != nil) {
     return YES;
   }
@@ -515,13 +520,17 @@ using namespace facebook::react;
 
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName
 {
-  UIView *view = [self.uiManager viewForReactTag:viewTag];
+  RCTUIView *view = [self.uiManager viewForReactTag:viewTag];
 
   NSString *result =
       [NSString stringWithFormat:@"error: unknown propName %@, currently supported: opacity, zIndex", propName];
 
   if ([propName isEqualToString:@"opacity"]) {
+#if !TARGET_OS_OSX
     CGFloat alpha = view.alpha;
+#else
+    CGFloat alpha = view.alphaValue;
+#endif
     result = [@(alpha) stringValue];
   } else if ([propName isEqualToString:@"zIndex"]) {
     NSInteger zIndex = view.reactZIndex;
@@ -540,25 +549,26 @@ using namespace facebook::react;
   }
 
   __weak __typeof__(self) weakSelf = self;
-  [_uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-    __typeof__(self) strongSelf = weakSelf;
-    if (strongSelf == nil) {
-      return;
-    }
-    atomic_store(&strongSelf->_shouldFlushUpdateBuffer, false);
-    NSMutableDictionary *componentUpdateBuffer = [strongSelf->_componentUpdateBuffer copy];
-    strongSelf->_componentUpdateBuffer = [NSMutableDictionary new];
-    for (NSNumber *tag in componentUpdateBuffer) {
-      ComponentUpdate *componentUpdate = componentUpdateBuffer[tag];
-      if (componentUpdate == Nil) {
-        continue;
-      }
-      [strongSelf updateProps:componentUpdate.props
-                ofViewWithTag:componentUpdate.viewTag
-                     withName:componentUpdate.viewName];
-    }
-    [strongSelf performOperations];
-  }];
+  [_uiManager
+      addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, RCTUIView *> *viewRegistry) {
+        __typeof__(self) strongSelf = weakSelf;
+        if (strongSelf == nil) {
+          return;
+        }
+        atomic_store(&strongSelf->_shouldFlushUpdateBuffer, false);
+        NSMutableDictionary *componentUpdateBuffer = [strongSelf->_componentUpdateBuffer copy];
+        strongSelf->_componentUpdateBuffer = [NSMutableDictionary new];
+        for (NSNumber *tag in componentUpdateBuffer) {
+          ComponentUpdate *componentUpdate = componentUpdateBuffer[tag];
+          if (componentUpdate == Nil) {
+            continue;
+          }
+          [strongSelf updateProps:componentUpdate.props
+                    ofViewWithTag:componentUpdate.viewTag
+                         withName:componentUpdate.viewName];
+        }
+        [strongSelf performOperations];
+      }];
 }
 
 #endif // RCT_NEW_ARCH_ENABLED

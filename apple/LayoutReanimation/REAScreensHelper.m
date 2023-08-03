@@ -1,12 +1,14 @@
 #import <RNReanimated/REAScreensHelper.h>
 
+#import <React/RCTUIKit.h>
+
 @implementation REAScreensHelper
 
 #if LOAD_SCREENS_HEADERS
 
-+ (UIView *)getScreenForView:(UIView *)view
++ (RCTUIView *)getScreenForView:(RCTUIView *)view
 {
-  UIView *screen = view;
+  RCTUIView *screen = view;
   while (![screen isKindOfClass:[RNSScreenView class]] && screen.superview != nil) {
     screen = screen.superview;
   }
@@ -16,7 +18,7 @@
   return nil;
 }
 
-+ (UIView *)getStackForView:(UIView *)view
++ (RCTUIView *)getStackForView:(RCTUIView *)view
 {
   if ([view isKindOfClass:[RNSScreenView class]]) {
     if (view.reactSuperview != nil) {
@@ -34,7 +36,7 @@
   return nil;
 }
 
-+ (bool)isScreenModal:(UIView *)uiViewScreen
++ (bool)isScreenModal:(RCTUIView *)uiViewScreen
 {
   if ([uiViewScreen isKindOfClass:[RNSScreenView class]]) {
     RNSScreenView *screen = (RNSScreenView *)uiViewScreen;
@@ -51,52 +53,52 @@
   return false;
 }
 
-+ (UIView *)getScreenWrapper:(UIView *)view
++ (RCTUIView *)getScreenWrapper:(RCTUIView *)view
 {
-  UIView *screen = [REAScreensHelper getScreenForView:view];
-  UIView *stack = [REAScreensHelper getStackForView:screen];
-  UIView *screenWrapper = [REAScreensHelper getScreenForView:stack];
+  RCTUIView *screen = [REAScreensHelper getScreenForView:view];
+  RCTUIView *stack = [REAScreensHelper getStackForView:screen];
+  RCTUIView *screenWrapper = [REAScreensHelper getScreenForView:stack];
   return screenWrapper;
 }
 
-+ (int)getScreenType:(UIView *)screen;
++ (int)getScreenType:(RCTUIView *)screen;
 {
   return [[screen valueForKey:@"stackPresentation"] intValue];
 }
 
-+ (bool)isRNSScreenType:(UIView *)view
++ (bool)isRNSScreenType:(RCTUIView *)view
 {
   return [view isKindOfClass:[RNSScreen class]] == YES;
 }
 
 #else
 
-+ (UIView *)getScreenForView:(UIView *)view
++ (RCTUIView *)getScreenForView:(RCTUIView *)view
 {
   return nil;
 }
 
-+ (UIView *)getStackForView:(UIView *)view
++ (RCTUIView *)getStackForView:(RCTUIView *)view
 {
   return nil;
 }
 
-+ (bool)isScreenModal:(UIView *)screen
++ (bool)isScreenModal:(RCTUIView *)screen
 {
   return false;
 }
 
-+ (UIView *)getScreenWrapper:(UIView *)view
++ (RCTUIView *)getScreenWrapper:(RCTUIView *)view
 {
   return nil;
 }
 
-+ (int)getScreenType:(UIView *)screen;
++ (int)getScreenType:(RCTUIView *)screen;
 {
   return 0;
 }
 
-+ (bool)isRNSScreenType:(UIView *)screen
++ (bool)isRNSScreenType:(RCTUIView *)screen
 {
   return false;
 }

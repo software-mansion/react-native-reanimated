@@ -1,13 +1,15 @@
 #import <Foundation/Foundation.h>
 
+#import <React/RCTUIKit.h>
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface REASnapshot : NSObject
 
 @property NSMutableDictionary *values;
 
-- (instancetype)init:(UIView *)view;
-- (instancetype)initWithAbsolutePosition:(UIView *)view;
+- (instancetype)init:(RCTUIView *)view;
+- (instancetype)initWithAbsolutePosition:(RCTUIView *)view;
 
 @end
 

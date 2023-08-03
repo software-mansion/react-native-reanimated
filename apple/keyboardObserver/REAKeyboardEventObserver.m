@@ -3,6 +3,9 @@
 #import <React/RCTDefines.h>
 #import <React/RCTUIManager.h>
 
+#import <React/RCTPlatformDisplayLink.h>
+#import <React/RCTUIKit.h>
+
 typedef NS_ENUM(NSUInteger, KeyboardState) {
   UNKNOWN = 0,
   OPENING = 1,
@@ -12,10 +15,10 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 };
 
 @implementation REAKeyboardEventObserver {
-  UIView *_measuringView;
+  RCTUIView *_measuringView;
   NSNumber *_nextListenerId;
   NSMutableDictionary *_listeners;
-  CADisplayLink *_displayLink;
+  RCTPlatformDisplayLink *_displayLink;
   KeyboardState _state;
 }
 
@@ -35,19 +38,21 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   return self;
 }
 
-- (CADisplayLink *)getDisplayLink
+- (RCTPlatformDisplayLink *)getDisplayLink
 {
   RCTAssertMainQueue();
 
   if (!_displayLink) {
-    _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(updateKeyboardFrame)];
+    _displayLink = [RCTPlatformDisplayLink displayLinkWithTarget:self selector:@selector(updateKeyboardFrame)];
+#if !TARGET_OS_OSX
     _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
+#endif
     [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
   }
   return _displayLink;
 }
 
-#if TARGET_OS_TV
+#if TARGET_OS_TV || TARGET_OS_OSX
 - (int)subscribeForKeyboardEvents:(KeyboardEventListenerBlock)listener
 {
   NSLog(@"Keyboard handling is not supported on tvOS");
