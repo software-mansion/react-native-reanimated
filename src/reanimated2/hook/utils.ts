@@ -2,13 +2,13 @@ import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
 import { processColor } from '../Colors';
 import type {
-  AnimatedStyle,
   Context,
   NativeEvent,
   NestedObjectValues,
   WorkletFunction,
   AnimationObject,
 } from '../commonTypes';
+import type { AnimatedStyle } from '../helperTypes';
 import { makeRemote } from '../core';
 import { isWeb, isJest } from '../PlatformChecker';
 import { colorProps } from '../UpdateProps';
@@ -209,7 +209,7 @@ export function shallowEqual(a: any, b: any) {
   return true;
 }
 
-export const validateAnimatedStyles = (styles: AnimatedStyle): void => {
+export const validateAnimatedStyles = (styles: AnimatedStyle<any>): void => {
   'worklet';
   if (typeof styles !== 'object') {
     throw new Error(
