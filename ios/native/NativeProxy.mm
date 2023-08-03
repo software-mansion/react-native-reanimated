@@ -188,7 +188,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
 
-  auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle, bool isSharedTransition) {
+  auto progressLayoutAnimation = [=](jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool isSharedTransition) {
     // noop
   };
 
@@ -202,14 +202,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
   std::weak_ptr<jsi::Runtime> weakUiRuntime = uiRuntime;
 
-  auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle, bool isSharedTransition) {
-    if (auto uiRuntime = weakUiRuntime.lock()) {
-      jsi::Runtime &rt = *uiRuntime;
-      NSDictionary *propsDict = convertJSIObjectToNSDictionary(rt, newStyle);
-      [weakAnimationsManager progressLayoutAnimationWithStyle:propsDict
-                                                       forTag:@(tag)
-                                           isSharedTransition:isSharedTransition];
-    }
+  auto progressLayoutAnimation = [=](jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool isSharedTransition) {
+    NSDictionary *propsDict = convertJSIObjectToNSDictionary(rt, newStyle);
+    [weakAnimationsManager progressLayoutAnimationWithStyle:propsDict
+                                                     forTag:@(tag)
+                                         isSharedTransition:isSharedTransition];
   };
 
   auto endLayoutAnimation = [=](int tag, bool removeView) {
@@ -316,49 +313,43 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   // Layout Animation callbacks setup
   [animationsManager
       setAnimationStartingBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values) {
-        auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
-        if (nativeReanimatedModule == nullptr) {
-          return;
-        }
-        auto uiRuntime = weakUiRuntime.lock();
-        if (uiRuntime == nullptr) {
-          return;
-        }
-        jsi::Runtime &rt = *uiRuntime;
-        jsi::Object yogaValues(rt);
-        for (NSString *key in values.allKeys) {
-          NSObject *value = values[key];
-          if ([values[key] isKindOfClass:[NSArray class]]) {
-            NSArray *transformArray = (NSArray *)value;
-            jsi::Array matrix(rt, 9);
-            for (int i = 0; i < 9; i++) {
-              matrix.setValueAtIndex(rt, i, [(NSNumber *)transformArray[i] doubleValue]);
-            }
-            yogaValues.setProperty(rt, [key UTF8String], matrix);
-          } else {
-            yogaValues.setProperty(rt, [key UTF8String], [(NSNumber *)value doubleValue]);
+        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+          auto uiRuntime = weakUiRuntime.lock();
+          if (uiRuntime == nullptr) {
+            return;
           }
+          jsi::Runtime &rt = *uiRuntime;
+          jsi::Object yogaValues(rt);
+          for (NSString *key in values.allKeys) {
+            NSObject *value = values[key];
+            if ([values[key] isKindOfClass:[NSArray class]]) {
+              NSArray *transformArray = (NSArray *)value;
+              jsi::Array matrix(rt, 9);
+              for (int i = 0; i < 9; i++) {
+                matrix.setValueAtIndex(rt, i, [(NSNumber *)transformArray[i] doubleValue]);
+              }
+              yogaValues.setProperty(rt, [key UTF8String], matrix);
+            } else {
+              yogaValues.setProperty(rt, [key UTF8String], [(NSNumber *)value doubleValue]);
+            }
+          }
+          nativeReanimatedModule->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
         }
-
-        nativeReanimatedModule->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
       }];
 
   [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type) {
-    auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
-    if (nativeReanimatedModule == nullptr) {
-      return NO;
+    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+      bool hasLayoutAnimation =
+          nativeReanimatedModule->layoutAnimationsManager().hasLayoutAnimation([tag intValue], type);
+      return hasLayoutAnimation ? YES : NO;
     }
-    bool hasLayoutAnimation =
-        nativeReanimatedModule->layoutAnimationsManager().hasLayoutAnimation([tag intValue], type);
-    return hasLayoutAnimation ? YES : NO;
+    return NO;
   }];
 
   [animationsManager setAnimationRemovingBlock:^(NSNumber *_Nonnull tag) {
-    auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
-    if (nativeReanimatedModule == nullptr) {
-      return;
+    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+      nativeReanimatedModule->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
     }
-    nativeReanimatedModule->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
   }];
 
   [animationsManager setCancelAnimationBlock:^(NSNumber *_Nonnull tag) {
