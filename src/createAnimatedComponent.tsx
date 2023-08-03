@@ -788,11 +788,11 @@ export default function createAnimatedComponent(
 
       // @ts-ignore This property can exist with value of undefined - in that case animation doesn't start
       const duration = config.durationV
-        ? // @ts-ignore already checked if property exists
+        ? // @ts-ignore Already checked
           config.durationV / 1000
         : Animations[animationName].duration;
 
-      // @ts-ignore Property does exist
+      // @ts-ignore Property does exist (and even if in some case it doesn't, getEasing will return linear easing, so we are safe)
       const easing = getEasing(config.easingV);
 
       const element = this._component as unknown as HTMLElement;
