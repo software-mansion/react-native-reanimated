@@ -81,6 +81,8 @@ export default function LogExample() {
         set.add(3);
         test(set, 'Set {1, 2, 3}');
       }
+      test(new WeakMap(), '[WeakMap]');
+      test(new WeakSet(), '[WeakSet]');
 
       test(Symbol('foo'), 'Symbol(foo)');
       test(BigInt(123456), '123456n');
@@ -90,12 +92,10 @@ export default function LogExample() {
       test(new Promise(() => {}), '[Promise]');
       test(new Uint8Array(), '[Uint8Array]');
       test(new Int32Array(), '[Int32Array]');
-      test(new Date(), '[Date]');
+      test(new Date(0), 'Thu Jan 01 1970 01:00:00 GMT+0100');
       test(new Error('foo'), '[Error: foo]');
       test(new TypeError('bar'), '[TypeError: bar]');
-      test(new RegExp('foo'), '[RegExp]');
-      test(new WeakMap(), '[WeakMap]');
-      test(new WeakSet(), '[WeakSet]');
+      test(new RegExp('foo'), '/foo/');
       test(String('foo'), 'foo');
 
       _log('Tests passed'); // TODO: Cleanup tests after fixing all

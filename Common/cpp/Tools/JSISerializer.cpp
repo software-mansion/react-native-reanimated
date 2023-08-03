@@ -135,7 +135,9 @@ std::string JSISerializer::stringifyJSError(const jsi::Object &object) {
   return ss.str();
 }
 
-std::string JSISerializer::stringifyJSSet(const jsi::Object &object) {
+std::string JSISerializer::stringifyJSSet(
+    const jsi::Object &object,
+    bool weak) {
   std::stringstream ss;
   jsi::Function arrayFrom = rt_.global()
                                 .getPropertyAsObject(rt_, "Array")
@@ -148,6 +150,9 @@ std::string JSISerializer::stringifyJSSet(const jsi::Object &object) {
 
   auto arr = result.asArray(rt_);
   auto length = arr.size(rt_);
+  if (weak) {
+    ss << "Weak";
+  }
   ss << "Set {";
 
   for (size_t i = 0; i < length; i++) {
@@ -162,7 +167,9 @@ std::string JSISerializer::stringifyJSSet(const jsi::Object &object) {
   return ss.str();
 }
 
-std::string JSISerializer::stringifyJSMap(const jsi::Object &object) {
+std::string JSISerializer::stringifyJSMap(
+    const jsi::Object &object,
+    bool weak) {
   std::stringstream ss;
   jsi::Function arrayFrom = rt_.global()
                                 .getPropertyAsObject(rt_, "Array")
@@ -175,7 +182,9 @@ std::string JSISerializer::stringifyJSMap(const jsi::Object &object) {
 
   auto arr = result.asArray(rt_);
   auto length = arr.size(rt_);
-
+  if (weak) {
+    ss << "Weak";
+  }
   ss << "Map {";
 
   for (size_t i = 0; i < length; i++) {
@@ -206,6 +215,20 @@ std::string JSISerializer::stringifyRecursiveType(const jsi::Object &object) {
     return "{...}";
   }
   return "...";
+}
+
+std::string JSISerializer::stringifyDate(const jsi::Object &object) {
+  return object.getPropertyAsFunction(rt_, "toString")
+      .callWithThis(rt_, object)
+      .toString(rt_)
+      .utf8(rt_);
+}
+
+std::string JSISerializer::stringifyRegExp(const jsi::Object &object) {
+  return object.getPropertyAsFunction(rt_, "toString")
+      .callWithThis(rt_, object)
+      .toString(rt_)
+      .utf8(rt_);
 }
 
 std::string JSISerializer::stringifyJSIValueRecursively(
@@ -279,12 +302,10 @@ std::string JSISerializer::stringifyJSIValueRecursively(
       return baseStringify(object);
     }
     if (isInstanceOf(rt_, object, "Date")) {
-      // TODO: Consider extending this log info
-      return baseStringify(object);
+      return stringifyDate(object);
     }
     if (isInstanceOf(rt_, object, "RegExp")) {
-      // TODO: Consider extending this log info
-      return baseStringify(object);
+      return stringifyRegExp(object);
     }
     if (isInstanceOf(rt_, object, "Map")) {
       return stringifyJSMap(object);

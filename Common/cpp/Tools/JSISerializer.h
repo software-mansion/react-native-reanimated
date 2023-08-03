@@ -81,8 +81,10 @@ class JSISerializer {
   std::string stringifyJSIHostObject(jsi::HostObject &hostObject);
   std::string stringifyJSIObject(const jsi::Object &object);
   std::string stringifyJSError(const jsi::Object &object);
-  std::string stringifyJSSet(const jsi::Object &object);
-  std::string stringifyJSMap(const jsi::Object &object);
+  std::string stringifyJSSet(const jsi::Object &object, bool weak = false);
+  std::string stringifyJSMap(const jsi::Object &object, bool weak = false);
+  std::string stringifyDate(const jsi::Object &object);
+  std::string stringifyRegExp(const jsi::Object &object);
   std::string stringifyRecursiveType(const jsi::Object &object);
 
   bool wasVisited(const jsi::Object &object) {
