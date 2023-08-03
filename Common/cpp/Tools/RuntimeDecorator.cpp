@@ -10,6 +10,11 @@
 
 namespace reanimated {
 
+static const std::function<jsi::String(jsi::Runtime &, jsi::Value const &)>
+    stringifyValue = [](jsi::Runtime &rt, jsi::Value const &value) {
+      return jsi::String::createFromUtf8(rt, stringifyJSIValue(rt, value));
+    };
+
 static const std::function<void(jsi::Runtime &, jsi::Value const &)> logValue =
     [](jsi::Runtime &rt, jsi::Value const &value) {
       Logger::log(stringifyJSIValue(rt, value));
@@ -65,6 +70,7 @@ void RuntimeDecorator::decorateRuntime(
 #endif // DEBUG
 
   jsi_utils::installJsiFunction(rt, "_log", logValue);
+  jsi_utils::installJsiFunction(rt, "_stringify", stringifyValue);
 }
 
 void RuntimeDecorator::decorateUIRuntime(

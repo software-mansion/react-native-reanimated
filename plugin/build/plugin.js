@@ -72,6 +72,7 @@ var require_commonObjects = __commonJS({
       "Set",
       "Intl",
       "_log",
+      "_stringify",
       "_scheduleOnJS",
       "_makeShareableClone",
       "_updateDataSynchronously",
