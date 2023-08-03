@@ -41,10 +41,9 @@ export function useAnimatedRef<
     const fun: AnimatedRef<T> = <AnimatedRef<T>>((component) => {
       // enters when ref is set by attaching to a component
       if (component) {
-        // On Fabric we use getNativeScrollRef which can return undefined
-        // but on Paper getTagValueFunction is 'findNodeHandle' which cannot
-        // get undefined. It's hard to solve this in TypeScript so we can just
-        // use !.
+        // On Fabric we use `getNativeScrollRef` which can return undefined but
+        // on Paper getTagValueFunction is `findNodeHandle` which cannot get
+        // undefined as an argument. It's hard to solve this in TypeScript so we can just use !.
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         tag.value = getTagValueFunction(getComponentOrScrollable(component)!);
         fun.current = component;
