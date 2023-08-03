@@ -1,19 +1,13 @@
 /* eslint-disable node/no-callback-literal */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
+import { SensorType } from './commonTypes';
+
 const NOOP = () => {
   // noop
 };
 const ID = (t) => t;
 const IMMEDIATE_CB_INVOCATION = (cb: () => unknown) => cb();
-
-const enum SensorType {
-  ACCELEROMETER = 1,
-  GYROSCOPE = 2,
-  GRAVITY = 3,
-  MAGNETIC_FIELD = 4,
-  ROTATION = 5,
-}
 
 class BaseAnimationMock {
   duration(_: number) {
