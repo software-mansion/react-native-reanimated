@@ -1288,5 +1288,4 @@ export const WebEasings: Record<string, number[]> = {
   sin: [0.12, 0, 0.39, 0],
   circle: [0.55, 0, 1, 0.45],
   exp: [0.7, 0, 0.84, 0],
-  back: [0.44, -0.03, 0.79, -1], // Kacper <3
 };
