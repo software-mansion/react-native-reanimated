@@ -408,10 +408,10 @@ void NativeProxy::handleEvent(
 }
 
 void NativeProxy::progressLayoutAnimation(
+    jsi::Runtime &rt,
     int tag,
     const jsi::Object &newProps,
     bool isSharedTransition) {
-  auto &rt = *nativeReanimatedModule_->runtimeManager_->runtime;
   auto newPropsJNI = JNIHelper::ConvertToPropsMap(rt, newProps);
   layoutAnimations_->cthis()->progressLayoutAnimation(
       tag, newPropsJNI, isSharedTransition);
