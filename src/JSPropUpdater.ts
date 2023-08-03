@@ -41,7 +41,9 @@ export class JSPropUpdater {
     this.reanimatedEventEmitter = new NativeEventEmitter(this.reanimatedModule);
   }
 
-  _attachPropUpdater(animatedComponent: React.Component<unknown, unknown>) {
+  addOnJSPropsChangeListener(
+    animatedComponent: React.Component<unknown, unknown>
+  ) {
     const viewTag = findNodeHandle(animatedComponent);
     TAG_TO_COMPONENT_MAPPING.set(viewTag, animatedComponent);
     if (TAG_TO_COMPONENT_MAPPING.size === 1) {
@@ -52,7 +54,9 @@ export class JSPropUpdater {
     }
   }
 
-  _detachPropUpdater(animatedComponent: React.Component<unknown, unknown>) {
+  removeOnJSPropsChangeListener(
+    animatedComponent: React.Component<unknown, unknown>
+  ) {
     const viewTag = findNodeHandle(animatedComponent);
     TAG_TO_COMPONENT_MAPPING.delete(viewTag);
     if (TAG_TO_COMPONENT_MAPPING.size === 0) {
