@@ -281,7 +281,7 @@ export default function createAnimatedComponent(
     _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
     initialStyle = {};
-    _component: ComponentRef | null = null;
+    _component: ComponentRef | HTMLElement | null = null;
     _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
     _inlinePropsMapperId: number | null = null;
     _inlineProps: StyleProps = {};
@@ -311,13 +311,13 @@ export default function createAnimatedComponent(
     _getEventViewRef() {
       // Make sure to get the scrollable node for components that implement
       // `ScrollResponder.Mixin`.
-      return this._component?.getScrollableNode
-        ? this._component.getScrollableNode()
+      return (this._component as ComponentRef)?.getScrollableNode
+        ? (this._component as ComponentRef).getScrollableNode!()
         : this._component;
     }
 
     _attachNativeEvents() {
-      const node = this._getEventViewRef();
+      const node = this._getEventViewRef() as ComponentRef;
       let viewTag = null; // We set it only if needed
 
       for (const key in this.props) {
@@ -390,7 +390,7 @@ export default function createAnimatedComponent(
           prop.current.reattachNeeded
         ) {
           if (viewTag === null) {
-            const node = this._getEventViewRef();
+            const node = this._getEventViewRef() as ComponentRef;
             viewTag = findNodeHandle(options?.setNativeProps ? this : node);
           }
           prop.current.registerForEvents(viewTag as number, key);
@@ -402,10 +402,10 @@ export default function createAnimatedComponent(
     _updateFromNative(props: StyleProps) {
       if (options?.setNativeProps) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        options.setNativeProps(this._component!, props);
+        options.setNativeProps(this._component as ComponentRef, props);
       } else {
         // eslint-disable-next-line no-unused-expressions
-        this._component?.setNativeProps?.(props);
+        (this._component as ComponentRef)?.setNativeProps?.(props);
       }
     }
 
@@ -416,12 +416,13 @@ export default function createAnimatedComponent(
       let viewConfig;
       // Component can specify ref which should be animated when animated version of the component is created.
       // Otherwise, we animate the component itself.
-      const component = this._component?.getAnimatableRef
-        ? this._component.getAnimatableRef()
-        : this;
+      const component =
+        'getAnimatableRef' in this._component!
+          ? this._component.getAnimatableRef!()
+          : this;
       if (isWeb()) {
         // At this point I assume, that _setComponentRef was already called and _component is set
-        viewTag = this._component as unknown as HTMLElement; // Casting to avoid type conflicts
+        viewTag = this._component as HTMLElement;
         viewName = null;
         shadowNodeWrapper = null;
         viewConfig = null;
@@ -526,7 +527,7 @@ export default function createAnimatedComponent(
       if (this.props.animatedProps?.viewDescriptors) {
         this.props.animatedProps.viewDescriptors.add({
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          tag: viewTag! as number,
+          tag: viewTag as number,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           name: viewName!,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -556,7 +557,7 @@ export default function createAnimatedComponent(
 
           this._inlinePropsViewDescriptors.add({
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            tag: viewTag! as number,
+            tag: viewTag as number,
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             name: viewName!,
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -603,7 +604,7 @@ export default function createAnimatedComponent(
       this._attachInlineProps();
     }
 
-    _setComponentRef = setAndForwardRef<Component>({
+    _setComponentRef = setAndForwardRef<Component | HTMLElement>({
       getForwardedRef: () =>
         this.props.forwardedRef as MutableRefObject<
           Component<Record<string, unknown>, Record<string, unknown>, unknown>
@@ -612,8 +613,8 @@ export default function createAnimatedComponent(
         // TODO update config)
 
         const tag = isWeb()
-          ? (ref as unknown as HTMLElement)
-          : findNodeHandle(ref);
+          ? (ref as HTMLElement)
+          : findNodeHandle(ref as Component);
 
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (
@@ -754,8 +755,15 @@ export default function createAnimatedComponent(
         web: {},
         default: { collapsable: false },
       });
+
       return (
-        <Component {...props} ref={this._setComponentRef} {...platformProps} />
+        <Component
+          {...props}
+          // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
+          // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
+          ref={this._setComponentRef as (ref: Component) => void}
+          {...platformProps}
+        />
       );
     }
   }
