@@ -156,11 +156,16 @@ If you still want to use Chrome DevTools then follow these steps:
 1. Add the `patch-package` to your project and set it up to run as a `post-install` task.
 More details can be found [here](https://www.npmjs.com/package/patch-package).
 
-2. Add the necessary patches to the `patches/` folder:
+2. Add the necessary patch for `metro-inspector-proxy` to the `patches/` folder:
 
-- [this](/content/metro-inspector-proxy+0.72.1.patch) patch for `metro-inspector-proxy`,
-- [this](/content/react-native-gesture-handler+2.5.0.patch) one for `react-native-gesture-handler`
-(not necessary for `react-native-gesture-handler` 2.7.0 or newer).
+- `0.76.7` &rarr; [here](/content/metro-inspector-proxy+0.76.7.patch)
+- `0.76.5` &rarr; [here](/content/metro-inspector-proxy+0.76.5.patch)
+- `0.76.4` &rarr; [here](/content/metro-inspector-proxy+0.76.4.patch)
+- `0.76.0` &rarr; [here](/content/metro-inspector-proxy+0.76.0.patch)
+- `0.73.7` &rarr; [here](/content/metro-inspector-proxy+0.73.7.patch)
+- `0.73.5` &rarr; [here](/content/metro-inspector-proxy+0.73.5.patch)
+- `0.72.3` &rarr; [here](/content/metro-inspector-proxy+0.72.3.patch)
+- `0.72.1` &rarr; [here](/content/metro-inspector-proxy+0.72.1.patch)
 
 *Warnings about mismatched patch versions can be safely ignored if the patch was successfully applied.*
 
