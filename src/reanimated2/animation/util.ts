@@ -427,7 +427,11 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
         baseOnStart(animation, value, timestamp, previousAnimation);
       }
       animation.startTime = 0;
-      animation.onFrame = () => true;
+      // onFrame is defined in this way to force it to not return true on the first call in valueSetter
+      // this is done because otherwise if such animation was used as an exit layout animation
+      // the exiting component wouldn't get removed
+      // this is because the removal algorithm works only under the assumption that the exit animation is longer than one frame
+      animation.onFrame = (_, _timestamp) => _timestamp > timestamp;
       return;
     }
     if (isColor(value)) {

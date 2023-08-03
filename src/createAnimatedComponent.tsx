@@ -655,11 +655,13 @@ export default function createAnimatedComponent(
           if (sharedTransitionTag && !IS_WEB) {
             const sharedElementTransition =
               this.props.sharedTransitionStyle ?? new SharedTransition();
-            sharedElementTransition.registerTransition(
-              tag as number,
-              sharedTransitionTag
-            );
-            this._sharedElementTransition = sharedElementTransition;
+            if (!sharedElementTransition.getReduceMotion()) {
+              sharedElementTransition.registerTransition(
+                tag as number,
+                sharedTransitionTag
+              );
+              this._sharedElementTransition = sharedElementTransition;
+            }
           }
         }
 
