@@ -79,14 +79,18 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     _reaSwizzledUIManager = [[REASwizzledUIManager alloc] initWithUIManager:uiManager withAnimationManager:self];
 
     _startAnimationForTag = ^(NSNumber *tag, LayoutAnimationType type, NSDictionary *yogaValues) {
+      // default implementation, this block will be replaced by a setter
     };
     _hasAnimationForTag = ^(NSNumber *tag, LayoutAnimationType type) {
+      // default implementation, this block will be replaced by a setter
       return NO;
     };
     _clearAnimationConfigForTag = ^(NSNumber *tag) {
+      // default implementation, this block will be replaced by a setter
     };
 #ifdef DEBUG
     _checkDuplicateSharedTag = ^(UIView *view, NSNumber *viewTag) {
+      // default implementation, this block will be replaced by a setter
     };
 #endif
   }
