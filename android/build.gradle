@@ -109,7 +109,7 @@ def getPlaygroundAppName() { // only for the development
             }
         })
     } catch (_) {
-        throw GradleScriptException("Couldn't determine playground app name.")
+        throw new GradleException("Couldn't determine playground app name.")
     }
     return playgroundAppName
 }
@@ -133,7 +133,7 @@ def getReanimatedMajorVersion() {
     return major.toInteger()
 }
 
-static def toPlatformFileString(String path) {
+def toPlatformFileString(String path) {
   if (Os.isFamily(Os.FAMILY_WINDOWS)) {
       path = path.replace(File.separatorChar, '/' as char)
   }
@@ -270,7 +270,6 @@ android {
                         "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${IS_NEW_ARCHITECTURE_ENABLED}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${isReanimatedExampleApp()}",
-                        "-DPLAYGROUND_APP_NAME=${getPlaygroundAppName()}",
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}"
                 abiFilters (*reactNativeArchitectures())
             }

@@ -333,5 +333,4 @@ endif()
 # Resolves "CMake Warning: Manually-specified variables were not used by the project"
 # when any of the following variables is not used in some build configuration.
 set (ignoreMe "${JS_RUNTIME_DIR}")
-set (ignoreMe "${PLAYGROUND_APP_NAME}")
 set (ignoreMe "${BOOST_VERSION}")
