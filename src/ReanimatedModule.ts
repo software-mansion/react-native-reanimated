@@ -1,5 +1,18 @@
-import { NativeModules } from 'react-native';
+import { NativeEventEmitter, NativeModules } from 'react-native';
 import { nativeShouldBeMock } from './reanimated2/PlatformChecker';
+import { StyleProps } from './reanimated2';
+
+export const NODE_MAPPING = new Map();
+
+interface ListenerData {
+  viewTag: number;
+  props: StyleProps;
+}
+
+export function listener(data: ListenerData) {
+  const component = NODE_MAPPING.get(data.viewTag);
+  component && component._updateFromNative(data.props);
+}
 
 const ReanimatedModuleMock = {
   async addListener(): Promise<void> {
@@ -10,12 +23,12 @@ const ReanimatedModuleMock = {
   },
 };
 
-let exportedModule: typeof ReanimatedModuleMock;
+let reanimatedModule: typeof ReanimatedModuleMock;
 if (nativeShouldBeMock()) {
-  exportedModule = ReanimatedModuleMock;
+  reanimatedModule = ReanimatedModuleMock;
 } else {
   const { ReanimatedModule } = NativeModules;
-  exportedModule = ReanimatedModule;
+  reanimatedModule = ReanimatedModule;
 }
 
-export default exportedModule;
+export const ReanimatedEventEmitter = new NativeEventEmitter(reanimatedModule);
