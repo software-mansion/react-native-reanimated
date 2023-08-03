@@ -53,11 +53,7 @@ import NativeReanimatedModule from './reanimated2/NativeReanimated';
 import { isSharedValue } from './reanimated2';
 import type { AnimateProps } from './reanimated2/helperTypes';
 import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
-import {
-  NODE_MAPPING,
-  ReanimatedEventEmitter,
-  listener,
-} from './ReanimatedModule';
+import { JSPropUpdater } from './JSPropUpdater';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -291,6 +287,7 @@ export default function createAnimatedComponent(
     _inlinePropsMapperId: number | null = null;
     _inlineProps: StyleProps = {};
     _sharedElementTransition: SharedTransition | null = null;
+    _JSPropUpdater = new JSPropUpdater();
     static displayName: string;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
@@ -302,7 +299,7 @@ export default function createAnimatedComponent(
 
     componentWillUnmount() {
       this._detachNativeEvents();
-      this._detachPropUpdater();
+      this._JSPropUpdater._detachPropUpdater(this);
       this._detachStyles();
       this._detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
@@ -310,7 +307,7 @@ export default function createAnimatedComponent(
 
     componentDidMount() {
       this._attachNativeEvents();
-      this._attachPropUpdater();
+      this._JSPropUpdater._attachPropUpdater(this);
       this._attachAnimatedStyles();
       this._attachInlineProps();
     }
@@ -413,22 +410,6 @@ export default function createAnimatedComponent(
       } else {
         // eslint-disable-next-line no-unused-expressions
         this._component?.setNativeProps?.(props);
-      }
-    }
-
-    _attachPropUpdater() {
-      const viewTag = findNodeHandle(this);
-      NODE_MAPPING.set(viewTag, this);
-      if (NODE_MAPPING.size === 1) {
-        ReanimatedEventEmitter.addListener('onReanimatedPropsChange', listener);
-      }
-    }
-
-    _detachPropUpdater() {
-      const viewTag = findNodeHandle(this);
-      NODE_MAPPING.delete(viewTag);
-      if (NODE_MAPPING.size === 0) {
-        ReanimatedEventEmitter.removeAllListeners('onReanimatedPropsChange');
       }
     }
 
