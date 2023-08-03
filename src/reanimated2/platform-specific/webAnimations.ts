@@ -63,6 +63,26 @@ export function getRandomDelay(maxDelay = 1000): number {
   return Math.floor(Math.random() * (maxDelay + 1)) / 1000;
 }
 
+export function toggleElement(element: HTMLElement, show: boolean): void {
+  element.style.visibility = show ? 'visible' : 'hidden';
+  element.style.position = show ? 'initial' : 'absolute';
+}
+
+export function setElementAnimation(
+  element: HTMLElement,
+  duration: number,
+  delay: number,
+  animationName: string,
+  easing: string
+) {
+  element.style.transition = `margin ${duration}s`;
+  element.style.animationName = animationName;
+  element.style.animationDuration = `${duration}s`;
+  element.style.animationDelay = `${delay}s`;
+  element.style.animationTimingFunction = easing;
+  element.style.animationFillMode = 'forwards'; // Prevents returning to base state after animation finishes
+}
+
 const FadeIn = {
   FadeIn: {
     style: parseObjectStyleToString(FadeInData.FadeIn),

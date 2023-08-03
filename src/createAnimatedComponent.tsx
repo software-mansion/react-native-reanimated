@@ -60,6 +60,8 @@ import {
   WEB_ANIMATIONS_ID,
   getEasing,
   getRandomDelay,
+  toggleElement,
+  setElementAnimation,
 } from './reanimated2/platform-specific/webAnimations';
 
 function dummyListener() {
@@ -310,7 +312,7 @@ export default function createAnimatedComponent(
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
 
       if (isWeb()) {
-        this.handleExitingAnimationsWeb();
+        this.handleWebAnimation(LayoutAnimationType.EXITING);
       }
     }
 
@@ -321,7 +323,7 @@ export default function createAnimatedComponent(
 
       if (isWeb()) {
         this.insertWebAnimations();
-        this.handleEnteringAnimationsWeb();
+        this.handleWebAnimation(LayoutAnimationType.ENTERING);
       }
     }
 
@@ -752,125 +754,70 @@ export default function createAnimatedComponent(
       return props;
     }
 
-    handleEnteringAnimationsWeb(): void {
-      const toggleElement = (element: HTMLElement, show: boolean) => {
-        if (show) {
-          element.style.visibility = 'visible';
-          element.style.position = 'initial';
-        } else {
-          element.style.visibility = 'hidden';
-          element.style.position = 'absolute';
-        }
-      };
+    handleWebAnimation(animationType: LayoutAnimationType) {
+      const config =
+        animationType === LayoutAnimationType.ENTERING
+          ? this.props.entering
+          : animationType === LayoutAnimationType.EXITING
+          ? this.props.exiting
+          : null;
 
-      const entering = this.props.entering;
-      if (!entering) {
+      if (!config) {
         return;
       }
 
       const animationName =
-        typeof entering === 'function'
-          ? (entering.name as AnimationsTypes)
-          : (entering.constructor.name as AnimationsTypes);
+        typeof config === 'function'
+          ? (config.name as AnimationsTypes)
+          : (config.constructor.name as AnimationsTypes);
 
-      // Prevents crashes if animationName doesn't exist in Animation
-      if (!Object.prototype.hasOwnProperty.call(Animations, animationName)) {
-        return;
-      }
-
-      const hasDelay = Object.prototype.hasOwnProperty.call(entering, 'delayV');
+      const hasDelay = Object.prototype.hasOwnProperty.call(config, 'delayV');
       // @ts-ignore If property doesn't exist, delay won't be randomized
-      const shouldRandomizeDelay = entering.randomizeDelay;
+      const shouldRandomizeDelay = config.randomizeDelay;
 
       const delay =
         hasDelay && shouldRandomizeDelay
           ? // @ts-ignore Already checked
-            getRandomDelay(entering.delayV)
+            getRandomDelay(config.delayV)
           : hasDelay
           ? // @ts-ignore Already checked
-            entering.delayV / 1000
+            config.delayV / 1000
           : shouldRandomizeDelay
           ? getRandomDelay()
           : 0;
 
       // @ts-ignore This property can exist with value of undefined - in that case animation doesn't start
-      const duration = entering.durationV
+      const duration = config.durationV
         ? // @ts-ignore already checked if property exists
-          entering.durationV / 1000
+          config.durationV / 1000
         : Animations[animationName].duration;
 
       // @ts-ignore Property does exist
-      const easing = getEasing(entering.easingV);
+      const easing = getEasing(config.easingV);
 
-      const element = findNodeHandle(this) as unknown as HTMLElement;
+      const element = this._component as unknown as HTMLElement;
 
-      toggleElement(element, false);
+      if (animationType === LayoutAnimationType.ENTERING) {
+        toggleElement(element, false);
 
-      if (delay === 0) {
-        toggleElement(element, true);
-      } else {
-        setTimeout(() => {
+        if (delay === 0) {
           toggleElement(element, true);
-        }, delay * 1000);
+        } else {
+          setTimeout(() => {
+            toggleElement(element, true);
+          }, delay * 1000);
+        }
+
+        setElementAnimation(element, duration, delay, animationName, easing);
+      } else if (animationType === LayoutAnimationType.EXITING) {
+        const parent = element.parentElement;
+        const tmpElement = element.cloneNode(true) as HTMLElement;
+
+        setElementAnimation(tmpElement, duration, delay, animationName, easing);
+
+        parent?.appendChild(tmpElement);
+        tmpElement.onanimationend = () => parent?.removeChild(tmpElement);
       }
-
-      element.style.transition = `margin ${duration}s`;
-      element.style.animationName = animationName;
-      element.style.animationDuration = `${duration}s`;
-      element.style.animationDelay = `${delay}s`;
-      element.style.animationTimingFunction = easing;
-    }
-
-    handleExitingAnimationsWeb(): void {
-      const exiting = this.props.exiting;
-
-      if (!exiting) {
-        return;
-      }
-
-      const element = findNodeHandle(this) as unknown as HTMLElement;
-      const parent = element.parentElement;
-      const tmpElement = element.cloneNode(true) as HTMLElement;
-
-      const animationName =
-        typeof exiting === 'function'
-          ? (exiting.name as AnimationsTypes)
-          : (exiting.constructor.name as AnimationsTypes);
-
-      if (!Object.prototype.hasOwnProperty.call(Animations, animationName)) {
-        return;
-      }
-
-      const hasDelay = Object.prototype.hasOwnProperty.call(exiting, 'delayV');
-      // @ts-ignore If property doesn't exist, delay won't be randomized
-      const shouldRandomizeDelay = exiting.randomizeDelay;
-
-      const delay =
-        hasDelay && shouldRandomizeDelay
-          ? // @ts-ignore Already checked
-            getRandomDelay(exiting.delayV)
-          : hasDelay
-          ? // @ts-ignore Already checked
-            exiting.delayV / 1000
-          : shouldRandomizeDelay
-          ? getRandomDelay()
-          : 0;
-
-      // @ts-ignore This property can exist with value of undefined - in that case animation doesn't start
-      const duration = exiting.durationV
-        ? // @ts-ignore already checked if property exists
-          exiting.durationV / 1000
-        : Animations[animationName].duration;
-
-      tmpElement.style.transition = `margin ${duration}s`;
-      tmpElement.style.animationName = animationName;
-      tmpElement.style.animationDuration = `${duration}s`;
-      tmpElement.style.animationDelay = `${delay}s`;
-      tmpElement.style.animationFillMode = 'forwards'; // Prevents returning to base state after animation finishes
-
-      parent?.appendChild(tmpElement);
-
-      tmpElement.onanimationend = () => parent?.removeChild(tmpElement);
     }
 
     insertWebAnimations(): void {
