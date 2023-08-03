@@ -14,13 +14,9 @@ isInstanceOf(jsi::Runtime &rt, jsi::Object &object, const std::string &type) {
       rt, rt.global().getPropertyAsFunction(rt, type.c_str()));
 }
 
-std::string stringifyJSIValueRecursively(
+std::string JSISerializer::stringifyJSIArray(
     jsi::Runtime &rt,
-    const jsi::Value &value,
-    int depth);
-
-std::string
-stringifyJSIArray(jsi::Runtime &rt, const jsi::Array &arr, int depth) {
+    const jsi::Array &arr) {
   std::stringstream ss;
   ss << '[';
 
@@ -28,7 +24,7 @@ stringifyJSIArray(jsi::Runtime &rt, const jsi::Array &arr, int depth) {
 
   for (size_t i = 0; i < length; i++) {
     jsi::Value element = arr.getValueAtIndex(rt, i);
-    ss << stringifyJSIValueRecursively(rt, element, depth + 1);
+    ss << stringifyJSIValueRecursively(rt, element);
     if (i != length - 1) {
       ss << ", ";
     }
@@ -39,14 +35,16 @@ stringifyJSIArray(jsi::Runtime &rt, const jsi::Array &arr, int depth) {
   return ss.str();
 }
 
-std::string stringifyJSIArrayBuffer(
+std::string JSISerializer::stringifyJSIArrayBuffer(
     jsi::Runtime &rt,
     const jsi::ArrayBuffer &buf) {
   // TODO: consider logging size or contents
   return "[ArrayBuffer]";
 }
 
-std::string stringifyJSIFunction(jsi::Runtime &rt, const jsi::Function &func) {
+std::string JSISerializer::stringifyJSIFunction(
+    jsi::Runtime &rt,
+    const jsi::Function &func) {
   std::stringstream ss;
   auto name = func.getProperty(rt, "name").toString(rt).utf8(rt);
 
@@ -56,10 +54,9 @@ std::string stringifyJSIFunction(jsi::Runtime &rt, const jsi::Function &func) {
   return ss.str();
 }
 
-std::string stringifyJSIHostObject(
+std::string JSISerializer::stringifyJSIHostObject(
     jsi::Runtime &rt,
-    jsi::HostObject &hostObject,
-    int depth) {
+    jsi::HostObject &hostObject) {
   int status = -1;
   char *hostObjClassName =
       abi::__cxa_demangle(typeid(hostObject).name(), NULL, NULL, &status);
@@ -81,7 +78,7 @@ std::string stringifyJSIHostObject(
       auto formattedKey = key.utf8(rt);
       auto value = hostObject.get(rt, key);
       ss << '"' << formattedKey << '"' << ": "
-         << stringifyJSIValueRecursively(rt, value, depth + 1);
+         << stringifyJSIValueRecursively(rt, value);
       if (formattedKey != lastKey) {
         ss << ", ";
       }
@@ -93,8 +90,9 @@ std::string stringifyJSIHostObject(
   return ss.str();
 }
 
-std::string
-stringifyJSIObject(jsi::Runtime &rt, const jsi::Object &object, int depth) {
+std::string JSISerializer::stringifyJSIObject(
+    jsi::Runtime &rt,
+    const jsi::Object &object) {
   std::stringstream ss;
   ss << '{';
 
@@ -104,8 +102,7 @@ stringifyJSIObject(jsi::Runtime &rt, const jsi::Object &object, int depth) {
   for (size_t i = 0; i < propsCount; i++) {
     jsi::String propName = props.getValueAtIndex(rt, i).toString(rt);
     ss << '"' << propName.utf8(rt) << '"' << ": "
-       << stringifyJSIValueRecursively(
-              rt, object.getProperty(rt, propName), depth + 1);
+       << stringifyJSIValueRecursively(rt, object.getProperty(rt, propName));
     if (i != propsCount - 1) {
       ss << ", ";
     }
@@ -116,7 +113,9 @@ stringifyJSIObject(jsi::Runtime &rt, const jsi::Object &object, int depth) {
   return ss.str();
 }
 
-std::string stringifyJSError(jsi::Runtime &rt, const jsi::Object &object) {
+std::string JSISerializer::stringifyJSError(
+    jsi::Runtime &rt,
+    const jsi::Object &object) {
   std::stringstream ss;
   ss << '[' << object.getProperty(rt, "name").toString(rt).utf8(rt) << ": "
      << object.getProperty(rt, "message").toString(rt).utf8(rt) << ']';
@@ -124,8 +123,9 @@ std::string stringifyJSError(jsi::Runtime &rt, const jsi::Object &object) {
   return ss.str();
 }
 
-std::string
-stringifyJSSet(jsi::Runtime &rt, const jsi::Object &object, int depth) {
+std::string JSISerializer::stringifyJSSet(
+    jsi::Runtime &rt,
+    const jsi::Object &object) {
   std::stringstream ss;
   jsi::Function arrayFrom = rt.global()
                                 .getPropertyAsObject(rt, "Array")
@@ -136,14 +136,14 @@ stringifyJSSet(jsi::Runtime &rt, const jsi::Object &object, int depth) {
     return "[Set]";
   }
 
-  ss << "Set {"
-     << stringifyJSIValueRecursively(rt, result.asArray(rt), depth + 1) << '}';
+  ss << "Set {" << stringifyJSIValueRecursively(rt, result.asArray(rt)) << '}';
 
   return ss.str();
 }
 
-std::string
-stringifyJSMap(jsi::Runtime &rt, const jsi::Object &object, int depth) {
+std::string JSISerializer::stringifyJSMap(
+    jsi::Runtime &rt,
+    const jsi::Object &object) {
   std::stringstream ss;
   jsi::Function arrayFrom = rt.global()
                                 .getPropertyAsObject(rt, "Array")
@@ -163,8 +163,8 @@ stringifyJSMap(jsi::Runtime &rt, const jsi::Object &object, int depth) {
     auto pair = arr.getValueAtIndex(rt, i).asObject(rt).getArray(rt);
     auto key = pair.getValueAtIndex(rt, 0);
     auto value = pair.getValueAtIndex(rt, 1);
-    ss << stringifyJSIValueRecursively(rt, key, depth + 1) << ": "
-       << stringifyJSIValueRecursively(rt, value, depth + 1);
+    ss << stringifyJSIValueRecursively(rt, key) << ": "
+       << stringifyJSIValueRecursively(rt, value);
     if (i != length - 1) {
       ss << ", ";
     }
@@ -175,16 +175,16 @@ stringifyJSMap(jsi::Runtime &rt, const jsi::Object &object, int depth) {
   return ss.str();
 }
 
-std::string stringifyJSIValueRecursively(
+std::string JSISerializer::stringifyJSIValueRecursively(
     jsi::Runtime &rt,
     const jsi::Value &value,
-    int depth) {
+    bool topLevel) {
   if (value.isBool() || value.isNumber()) {
     return value.toString(rt).utf8(rt);
   }
   if (value.isString()) {
-    return depth == 0 ? value.getString(rt).utf8(rt)
-                      : '"' + value.getString(rt).utf8(rt) + '"';
+    return topLevel ? value.getString(rt).utf8(rt)
+                    : '"' + value.getString(rt).utf8(rt) + '"';
   }
   if (value.isSymbol()) {
     return value.getSymbol(rt).toString(rt);
@@ -203,8 +203,13 @@ std::string stringifyJSIValueRecursively(
   if (value.isObject()) {
     jsi::Object object = value.asObject(rt);
 
+    if (this->wasVisited(object)) {
+      return "[Recursive object]";
+    }
+    this->visit(object);
+
     if (object.isArray(rt)) {
-      return stringifyJSIArray(rt, object.getArray(rt), depth);
+      return stringifyJSIArray(rt, object.getArray(rt));
     }
     if (object.isArrayBuffer(rt)) {
       return stringifyJSIArrayBuffer(rt, object.getArrayBuffer(rt));
@@ -213,23 +218,25 @@ std::string stringifyJSIValueRecursively(
       return stringifyJSIFunction(rt, object.getFunction(rt));
     }
     if (object.isHostObject(rt)) {
-      return stringifyJSIHostObject(rt, *object.asHostObject(rt).get(), depth);
+      return stringifyJSIHostObject(rt, *object.asHostObject(rt).get());
     }
     if (isInstanceOf(rt, object, "Map")) {
-      return stringifyJSMap(rt, object, depth);
+      return stringifyJSMap(rt, object);
     }
     if (isInstanceOf(rt, object, "Set")) {
-      return stringifyJSSet(rt, object, depth);
+      return stringifyJSSet(rt, object);
     }
     if (isInstanceOf(rt, object, "Error")) {
       return stringifyJSError(rt, object);
     }
-    return stringifyJSIObject(rt, object, depth);
+    return stringifyJSIObject(rt, object);
   }
 
   throw std::runtime_error("unsupported value type");
 }
 
 std::string stringifyJSIValue(jsi::Runtime &rt, const jsi::Value &value) {
-  return stringifyJSIValueRecursively(rt, value, 0);
+  JSISerializer serializer(rt);
+
+  return serializer.stringifyJSIValueRecursively(rt, value, true);
 }
