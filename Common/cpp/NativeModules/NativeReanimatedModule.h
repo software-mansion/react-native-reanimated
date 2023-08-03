@@ -17,12 +17,7 @@
 #include "RuntimeDecorator.h"
 #include "RuntimeManager.h"
 #include "SingleInstanceChecker.h"
-
-#ifdef __APPLE__
-#include <RNReanimated/Scheduler.h>
-#else
-#include "Scheduler.h"
-#endif
+#include "UIScheduler.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "PropsRegistry.h"
@@ -38,7 +33,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  public:
   NativeReanimatedModule(
       const std::shared_ptr<CallInvoker> &jsInvoker,
-      const std::shared_ptr<Scheduler> &scheduler,
+      const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<jsi::Runtime> &rt,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing

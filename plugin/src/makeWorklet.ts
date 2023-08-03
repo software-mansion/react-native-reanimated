@@ -196,7 +196,7 @@ export function makeWorklet(
     expressionStatement(
       assignmentExpression(
         '=',
-        memberExpression(privateFunctionId, identifier('_closure'), false),
+        memberExpression(privateFunctionId, identifier('__closure'), false),
         objectExpression(
           variables.map((variable) =>
             objectProperty(identifier(variable.name), variable, false, true)

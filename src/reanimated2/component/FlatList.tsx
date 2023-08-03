@@ -48,7 +48,7 @@ declare class ReanimatedFlatListClass<T> extends Component<
   getNode(): FlatList;
 }
 
-export interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
+interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
 }
 
