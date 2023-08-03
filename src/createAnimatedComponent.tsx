@@ -299,7 +299,7 @@ export default function createAnimatedComponent(
 
     componentWillUnmount() {
       this._detachNativeEvents();
-      this._JSPropUpdater._detachPropUpdater(this);
+      this._JSPropUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
       this._detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
@@ -307,7 +307,7 @@ export default function createAnimatedComponent(
 
     componentDidMount() {
       this._attachNativeEvents();
-      this._JSPropUpdater._attachPropUpdater(this);
+      this._JSPropUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
       this._attachInlineProps();
     }
