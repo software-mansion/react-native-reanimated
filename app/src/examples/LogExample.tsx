@@ -4,7 +4,7 @@ import React from 'react';
 
 export default function LogExample() {
   useSharedValue(42); // force Reanimated initialization
-  const testHostObject = global.__blobCollectorProvider; // TODO: find some host object
+  // const testHostObject = global.__reanimatedModuleProxy; // TODO: find simpler HostObject (that would not crash the app)
   // TODO: assert(testHostObject !== undefined);
 
   const handlePress = () => {
@@ -32,22 +32,22 @@ export default function LogExample() {
       test(Symbol('foo'), 'Symbol(foo)');
       test(123456n, '123456n'); // TODO: change to BigInt after including it in babel plugin
       test({}, '{}');
-      test({ foo: 'foo' }, "{ foo: 'foo' }");
+      test({ foo: 'foo' }, '{"foo": "foo"}');
       test(
         { foo: 'foo', bar: 'bar', baz: 'baz' },
-        "{ foo: 'foo', bar: 'bar', baz: 'baz' }"
+        '{"foo": "foo", "bar": "bar", "baz": "baz"}'
       );
       test([], '[]');
       test([1], '[1]');
-      test([1, 2, 3], '[1,2,3]');
+      test([1, 2, 3], '[1, 2, 3]');
       test(() => {}, '[Function anonymous]');
       test(function () {}, '[Function anonymous]');
       test(function foo() {}, '[Function foo]');
-      // test(eval, 'null');
-      test(Object, '{}');
-      test(Math, '[Math]');
-      test(_log, '?'); // TODO: Set proper values for examples below after handling cyclic objects and updating babel plugin
-      test(testHostObject, '[jsi::HostObject(HostObjectClassName)]');
+      test(Object, '[Function Object]');
+      // test(Math, '[Math]'); // TODO: how to detect the Math object?
+      test(_log, '[jsi::HostFunction _log]');
+      // test(testHostObject, '[jsi::HostObject(<ClassName>) <props>]'); // TODO: Add a test for jsi::HostObject
+
       {
         let a = {};
         a.foo = a;
@@ -75,8 +75,9 @@ export default function LogExample() {
         set.add(3);
         test(set, '');
       }
-      test(new ArrayBuffer(42), 'null');
-      test(new DataView(new ArrayBuffer(42)), 'null');
+
+      test(new ArrayBuffer(42), '[ArrayBuffer]');
+      test(new DataView(new ArrayBuffer(42)), 'null'); // wait for PR
       test(new Promise(() => {}), 'null');
       test(new Uint8Array(), 'null');
       test(new Int32Array(), 'null');
@@ -87,7 +88,6 @@ export default function LogExample() {
       test(new WeakMap(), 'null');
       test(new WeakSet(), 'null');
       _log('Tests passed'); // TODO: Cleanup tests after fixing all
-      console.log('Tests passed');
     })();
   };
 
