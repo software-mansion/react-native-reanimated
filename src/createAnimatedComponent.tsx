@@ -410,7 +410,7 @@ export default function createAnimatedComponent(
     }
 
     _getViewInfo() {
-      let viewTag: number | null;
+      let viewTag: number | HTMLElement | null;
       let viewName: string | null;
       let shadowNodeWrapper: ShadowNodeWrapper | null = null;
       let viewConfig;
@@ -421,7 +421,7 @@ export default function createAnimatedComponent(
         : this;
       if (isWeb()) {
         // At this point I assume, that _setComponentRef was already called and _component is set
-        viewTag = this._component as unknown as number; // Casting to avoid type conflicts
+        viewTag = this._component as unknown as HTMLElement; // Casting to avoid type conflicts
         viewName = null;
         shadowNodeWrapper = null;
         viewConfig = null;
@@ -526,7 +526,7 @@ export default function createAnimatedComponent(
       if (this.props.animatedProps?.viewDescriptors) {
         this.props.animatedProps.viewDescriptors.add({
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          tag: viewTag!,
+          tag: viewTag! as number,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           name: viewName!,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -556,7 +556,7 @@ export default function createAnimatedComponent(
 
           this._inlinePropsViewDescriptors.add({
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            tag: viewTag!,
+            tag: viewTag! as number,
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             name: viewName!,
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -611,7 +611,9 @@ export default function createAnimatedComponent(
       setLocalRef: (ref) => {
         // TODO update config)
 
-        const tag = isWeb() ? (ref as unknown as number) : findNodeHandle(ref);
+        const tag = isWeb()
+          ? (ref as unknown as HTMLElement)
+          : findNodeHandle(ref);
 
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (
@@ -646,7 +648,7 @@ export default function createAnimatedComponent(
             const sharedElementTransition =
               this.props.sharedTransitionStyle ?? new SharedTransition();
             sharedElementTransition.registerTransition(
-              tag,
+              tag as number,
               sharedTransitionTag
             );
             this._sharedElementTransition = sharedElementTransition;
