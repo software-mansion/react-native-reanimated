@@ -2,30 +2,29 @@
 #import <RNReanimated/NativeMethods.h>
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAAnimationsManager.h>
-#import <RNReanimated/REAIOSErrorHandler.h>
-#import <RNReanimated/REAIOSScheduler.h>
+#import <RNReanimated/REAIOSUIScheduler.h>
 #import <RNReanimated/REAJSIUtils.h>
 #import <RNReanimated/REAKeyboardEventObserver.h>
 #import <RNReanimated/REAMessageThread.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
-#import <RNReanimated/REAUIManager.h>
+#import <RNReanimated/REASwizzledUIManager.h>
 #import <RNReanimated/RNGestureHandlerStateManager.h>
 #import <RNReanimated/ReanimatedRuntime.h>
 #import <RNReanimated/ReanimatedSensorContainer.h>
 
+#ifdef DEBUG
+#import <RNReanimated/REAScreensHelper.h>
+#endif
+
 #ifdef RCT_NEW_ARCH_ENABLED
-#import <RNReanimated/ReanimatedUIManagerBinding.h>
-#import <React-Fabric/react/renderer/core/ShadowNode.h>
-#import <React-Fabric/react/renderer/uimanager/primitives.h>
 #import <React/RCTBridge+Private.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurfacePresenter.h>
-#else
-#import <folly/json.h>
+#import <react/renderer/core/ShadowNode.h>
+#import <react/renderer/uimanager/primitives.h>
 #endif
 
-#import <React/RCTFollyConvert.h>
 #import <React/RCTUIManager.h>
 
 #if TARGET_IPHONE_SIMULATOR
@@ -34,6 +33,12 @@
 
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
+@end
+
+@interface RCTUIManager (DispatchCommand)
+- (void)dispatchViewManagerCommand:(nonnull NSNumber *)reactTag
+                         commandID:(id /*(NSString or NSNumber) */)commandID
+                       commandArgs:(NSArray<id> *)commandArgs;
 @end
 
 namespace reanimated {
@@ -89,23 +94,29 @@ static NSSet *convertProps(jsi::Runtime &rt, const jsi::Value &props)
 
 std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     RCTBridge *bridge,
-    std::shared_ptr<CallInvoker> jsInvoker)
+    const std::shared_ptr<CallInvoker> &jsInvoker)
 {
-  REAModule *reanimatedModule = [bridge moduleForClass:[REAModule class]];
+  REAModule *reaModule = [bridge moduleForClass:[REAModule class]];
 
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
-  RCTUIManager *uiManager = reanimatedModule.nodesManager.uiManager;
-  auto updatePropsFunction =
-      [reanimatedModule](jsi::Runtime &rt, int viewTag, const jsi::Value &viewName, const jsi::Object &props) -> void {
-    NSString *nsViewName = [NSString stringWithCString:viewName.asString(rt).utf8(rt).c_str()
-                                              encoding:[NSString defaultCStringEncoding]];
+  RCTUIManager *uiManager = reaModule.nodesManager.uiManager;
+  auto updatePropsFunction = [reaModule](jsi::Runtime &rt, const jsi::Value &operations) -> void {
+    auto array = operations.asObject(rt).asArray(rt);
+    size_t length = array.size(rt);
+    for (size_t i = 0; i < length; ++i) {
+      auto item = array.getValueAtIndex(rt, i).asObject(rt);
+      int viewTag = item.getProperty(rt, "tag").asNumber();
+      const jsi::Value &viewName = item.getProperty(rt, "name");
+      const jsi::Object &props = item.getProperty(rt, "updates").asObject(rt);
 
-    NSDictionary *propsDict = convertJSIObjectToNSDictionary(rt, props);
-    [reanimatedModule.nodesManager updateProps:propsDict
-                                 ofViewWithTag:[NSNumber numberWithInt:viewTag]
-                                      withName:nsViewName];
+      NSString *nsViewName = [NSString stringWithCString:viewName.asString(rt).utf8(rt).c_str()
+                                                encoding:[NSString defaultCStringEncoding]];
+
+      NSDictionary *propsDict = convertJSIObjectToNSDictionary(rt, props);
+      [reaModule.nodesManager updateProps:propsDict ofViewWithTag:[NSNumber numberWithInt:viewTag] withName:nsViewName];
+    }
   };
 
   auto measureFunction = [uiManager](int viewTag) -> std::vector<std::pair<std::string, double>> {
@@ -115,6 +126,19 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto scrollToFunction = [uiManager](int viewTag, double x, double y, bool animated) {
     scrollTo(viewTag, uiManager, x, y, animated);
   };
+
+  auto dispatchCommandFunction =
+      [uiManager](
+          jsi::Runtime &rt, const int tag, const jsi::Value &commandNameValue, const jsi::Value &argsValue) -> void {
+    NSNumber *viewTag = [NSNumber numberWithInt:tag];
+    NSString *commandID = [NSString stringWithCString:commandNameValue.asString(rt).utf8(rt).c_str()
+                                             encoding:[NSString defaultCStringEncoding]];
+    NSArray *commandArgs = convertJSIArrayToNSArray(rt, argsValue.asObject(rt).asArray(rt));
+    RCTExecuteOnUIManagerQueue(^{
+      [uiManager dispatchViewManagerCommand:viewTag commandID:commandID commandArgs:commandArgs];
+    });
+  };
+
 #endif
 
   id<RNGestureHandlerStateManager> gestureHandlerStateManager = nil;
@@ -129,11 +153,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
-  auto propObtainer = [reanimatedModule](
-                          jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
+  auto propObtainer = [reaModule](jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
     NSString *propNameConverted = [NSString stringWithFormat:@"%s", propName.utf8(rt).c_str()];
-    std::string resultStr = std::string([[reanimatedModule.nodesManager obtainProp:[NSNumber numberWithInt:viewTag]
-                                                                          propName:propNameConverted] UTF8String]);
+    std::string resultStr = std::string([[reaModule.nodesManager obtainProp:[NSNumber numberWithInt:viewTag]
+                                                                   propName:propNameConverted] UTF8String]);
     jsi::Value val = jsi::String::createFromUtf8(rt, resultStr);
     return val;
   };
@@ -142,18 +165,16 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
     throw error;
   });
-  auto rnRuntime = reinterpret_cast<facebook::jsi::Runtime *>(reanimatedModule.bridge.runtime);
-  std::shared_ptr<jsi::Runtime> animatedRuntime = ReanimatedRuntime::make(rnRuntime, jsQueue);
+  auto rnRuntime = reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
+  std::shared_ptr<jsi::Runtime> uiRuntime = ReanimatedRuntime::make(rnRuntime, jsQueue);
 
-  std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>(jsInvoker);
-  std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<REAIOSErrorHandler>(scheduler);
-  std::shared_ptr<NativeReanimatedModule> module;
+  std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
 
-  auto nodesManager = reanimatedModule.nodesManager;
+  auto nodesManager = reaModule.nodesManager;
 
   auto maybeFlushUIUpdatesQueueFunction = [nodesManager]() { [nodesManager maybeFlushUIUpdatesQueue]; };
 
-  auto requestRender = [nodesManager, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
+  auto requestRender = [nodesManager](std::function<void(double)> onRender, jsi::Runtime &rt) {
     [nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
       double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.targetTimestamp) * 1000;
       onRender(frameTimestamp);
@@ -161,9 +182,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  auto synchronouslyUpdateUIPropsFunction = [nodesManager](jsi::Runtime &rt, Tag tag, const jsi::Value &props) {
+  auto synchronouslyUpdateUIPropsFunction = [nodesManager](jsi::Runtime &rt, Tag tag, const jsi::Object &props) {
     NSNumber *viewTag = @(tag);
-    NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt, props.asObject(rt));
+    NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt, props);
     [nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
 
@@ -171,44 +192,35 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     // noop
   };
 
-  auto endLayoutAnimation = [=](int tag, bool isCancelled, bool removeView) {
+  auto endLayoutAnimation = [=](int tag, bool removeView) {
     // noop
   };
 
 #else
   // Layout Animations start
-  __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
-  ((REAUIManager *)uiManager).flushUiOperations = ^void() {
-    std::shared_ptr<Scheduler> scheduler = weakScheduler.lock();
-    if (scheduler != nullptr) {
-      scheduler->triggerUI();
+  REAAnimationsManager *animationsManager = reaModule.animationsManager;
+  __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
+  std::weak_ptr<jsi::Runtime> weakUiRuntime = uiRuntime;
+
+  auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle, bool isSharedTransition) {
+    if (auto uiRuntime = weakUiRuntime.lock()) {
+      jsi::Runtime &rt = *uiRuntime;
+      NSDictionary *propsDict = convertJSIObjectToNSDictionary(rt, newStyle);
+      [weakAnimationsManager progressLayoutAnimationWithStyle:propsDict
+                                                       forTag:@(tag)
+                                           isSharedTransition:isSharedTransition];
     }
   };
 
-  REAUIManager *reaUiManagerNoCast = [bridge moduleForClass:[REAUIManager class]];
-  RCTUIManager *reaUiManager = reaUiManagerNoCast;
-  REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
-  [reaUiManagerNoCast setUp:animationsManager];
-
-  __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
-  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
-
-  auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle, bool isSharedTransition) {
-    NSDictionary *propsDict = convertJSIObjectToNSDictionary(*wrt.lock(), newStyle);
-    [weakAnimationsManager progressLayoutAnimationWithStyle:propsDict
-                                                     forTag:@(tag)
-                                         isSharedTransition:isSharedTransition];
+  auto endLayoutAnimation = [=](int tag, bool removeView) {
+    [weakAnimationsManager endLayoutAnimationForTag:@(tag) removeView:removeView];
   };
 
-  auto endLayoutAnimation = [=](int tag, bool isCancelled, bool removeView) {
-    [weakAnimationsManager endLayoutAnimationForTag:@(tag) cancelled:isCancelled removeView:removeView];
-  };
-
-  auto configurePropsFunction = [reanimatedModule](
+  auto configurePropsFunction = [reaModule](
                                     jsi::Runtime &rt, const jsi::Value &uiProps, const jsi::Value &nativeProps) {
     NSSet *uiPropsSet = convertProps(rt, uiProps);
     NSSet *nativePropsSet = convertProps(rt, nativeProps);
-    [reanimatedModule.nodesManager configureUiProps:uiPropsSet andNativeProps:nativePropsSet];
+    [reaModule.nodesManager configureUiProps:uiPropsSet andNativeProps:nativePropsSet];
   };
 
   // Layout Animations end
@@ -254,6 +266,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #else
       updatePropsFunction,
       scrollToFunction,
+      dispatchCommandFunction,
       measureFunction,
       configurePropsFunction,
 #endif
@@ -268,11 +281,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       maybeFlushUIUpdatesQueueFunction,
   };
 
-  module = std::make_shared<NativeReanimatedModule>(
+  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsInvoker,
-      scheduler,
-      animatedRuntime,
-      errorHandler,
+      uiScheduler,
+      uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
@@ -280,36 +292,39 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #endif
       platformDepMethodsHolder);
 
-  scheduler->setRuntimeManager(module);
+  uiScheduler->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
 
-  [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventNameNSString, id<RCTEvent> event) {
+  [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
-    std::string eventName = [eventNameNSString UTF8String];
+    std::string eventName = [event.eventName UTF8String];
+    int emitterReactTag = [event.viewTag intValue];
     id eventData = [event arguments][2];
-    jsi::Runtime &rt = *module->runtime;
+    jsi::Runtime &rt = *nativeReanimatedModule->runtimeManager_->runtime;
     jsi::Value payload = convertObjCObjectToJSIValue(rt, eventData);
     double currentTime = CACurrentMediaTime() * 1000;
-    module->handleEvent(eventName, payload, currentTime);
+    nativeReanimatedModule->handleEvent(eventName, emitterReactTag, payload, currentTime);
   }];
 
-  std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle
+  std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule = nativeReanimatedModule; // to avoid retain cycle
 #ifdef RCT_NEW_ARCH_ENABLED
-  [reanimatedModule.nodesManager registerPerformOperations:^() {
-    if (auto module = weakModule.lock()) {
-      module->performOperations();
+  [reaModule.nodesManager registerPerformOperations:^() {
+    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+      nativeReanimatedModule->performOperations();
     }
   }];
 #else
   // Layout Animation callbacks setup
   [animationsManager
-      setAnimationStartingBlock:^(
-          NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values, NSNumber *depth) {
-        auto reaModule = weakModule.lock();
-        if (reaModule == nullptr) {
+      setAnimationStartingBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values) {
+        auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
+        if (nativeReanimatedModule == nullptr) {
           return;
         }
-
-        jsi::Runtime &rt = *wrt.lock();
+        auto uiRuntime = weakUiRuntime.lock();
+        if (uiRuntime == nullptr) {
+          return;
+        }
+        jsi::Runtime &rt = *uiRuntime;
         jsi::Object yogaValues(rt);
         for (NSString *key in values.allKeys) {
           NSObject *value = values[key];
@@ -325,47 +340,58 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
           }
         }
 
-        reaModule->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
+        nativeReanimatedModule->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
       }];
 
   [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type) {
-    auto reaModule = weakModule.lock();
-    if (reaModule == nullptr) {
+    auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
+    if (nativeReanimatedModule == nullptr) {
       return NO;
     }
-    bool hasLayoutAnimation = reaModule->layoutAnimationsManager().hasLayoutAnimation([tag intValue], type);
+    bool hasLayoutAnimation =
+        nativeReanimatedModule->layoutAnimationsManager().hasLayoutAnimation([tag intValue], type);
     return hasLayoutAnimation ? YES : NO;
   }];
 
   [animationsManager setAnimationRemovingBlock:^(NSNumber *_Nonnull tag) {
-    auto reaModule = weakModule.lock();
-    if (reaModule == nullptr) {
+    auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
+    if (nativeReanimatedModule == nullptr) {
       return;
     }
-    reaModule->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
+    nativeReanimatedModule->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
   }];
 
-  [animationsManager
-      setCancelAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, BOOL cancelled, BOOL removeView) {
-        if (auto reaModule = weakModule.lock()) {
-          if (auto runtime = wrt.lock()) {
-            jsi::Runtime &rt = *runtime;
-            reaModule->layoutAnimationsManager().cancelLayoutAnimation(
-                rt, [tag intValue], type, cancelled == YES, removeView == YES);
-          }
-        }
-      }];
+  [animationsManager setCancelAnimationBlock:^(NSNumber *_Nonnull tag) {
+    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+      if (auto uiRuntime = weakUiRuntime.lock()) {
+        jsi::Runtime &rt = *uiRuntime;
+        nativeReanimatedModule->layoutAnimationsManager().cancelLayoutAnimation(rt, [tag intValue]);
+      }
+    }
+  }];
 
   [animationsManager setFindPrecedingViewTagForTransitionBlock:^NSNumber *_Nullable(NSNumber *_Nonnull tag) {
-    if (auto reaModule = weakModule.lock()) {
-      int resultTag = reaModule->layoutAnimationsManager().findPrecedingViewTagForTransition([tag intValue]);
+    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+      int resultTag =
+          nativeReanimatedModule->layoutAnimationsManager().findPrecedingViewTagForTransition([tag intValue]);
       return resultTag == -1 ? nil : @(resultTag);
     }
     return nil;
   }];
+#ifdef DEBUG
+  [animationsManager setCheckDuplicateSharedTagBlock:^(UIView *view, NSNumber *_Nonnull viewTag) {
+    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+      UIView *screen = [REAScreensHelper getScreenForView:(UIView *)view];
+      auto screenTag = [screen.reactTag intValue];
+      // Here we check if there are duplicate tags (we don't use return bool value currently)
+      nativeReanimatedModule->layoutAnimationsManager().checkDuplicateSharedTag([viewTag intValue], screenTag);
+    }
+  }];
+#endif // DEBUG
+
 #endif
 
-  return module;
+  return nativeReanimatedModule;
 }
 
 } // namespace reanimated

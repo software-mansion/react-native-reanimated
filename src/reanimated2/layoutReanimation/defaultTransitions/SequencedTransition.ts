@@ -1,5 +1,5 @@
 import { withSequence, withTiming } from '../../animation';
-import {
+import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
 } from '../animationBuilder/commonTypes';
@@ -11,8 +11,10 @@ export class SequencedTransition
 {
   reversed = false;
 
-  static createInstance(): SequencedTransition {
-    return new SequencedTransition();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new SequencedTransition() as InstanceType<T>;
   }
 
   static reverse(): SequencedTransition {

@@ -9,19 +9,16 @@
 #include <memory>
 #include <string>
 
-#include "AndroidErrorHandler.h"
-#include "AndroidScheduler.h"
+#include "AndroidUIScheduler.h"
 #include "JsiUtils.h"
 #include "LayoutAnimationsManager.h"
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
 #include "ReanimatedRuntime.h"
-#include "ReanimatedVersion.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
-#include "NewestShadowNodesRegistry.h"
-#include "ReanimatedUIManagerBinding.h"
+#include "ReanimatedCommitHook.h"
 #endif
 
 namespace reanimated {
@@ -31,9 +28,9 @@ using namespace react;
 
 NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
-    jsi::Runtime *rt,
-    std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
-    std::shared_ptr<Scheduler> scheduler,
+    jsi::Runtime *rnRuntime,
+    const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
+    const std::shared_ptr<UIScheduler> &uiScheduler,
     jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations
 #ifdef RCT_NEW_ARCH_ENABLED
     ,
@@ -42,22 +39,21 @@ NativeProxy::NativeProxy(
 #endif
     )
     : javaPart_(jni::make_global(jThis)),
-      runtime_(rt),
+      rnRuntime_(rnRuntime),
       jsCallInvoker_(jsCallInvoker),
       layoutAnimations_(std::move(_layoutAnimations)),
-      scheduler_(scheduler)
+      uiScheduler_(uiScheduler)
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
-      newestShadowNodesRegistry_(std::make_shared<NewestShadowNodesRegistry>())
+      propsRegistry_(std::make_shared<PropsRegistry>())
 #endif
 {
 #ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
-  RuntimeExecutor runtimeExecutor = getRuntimeExecutorFromBinding(binding);
-  std::shared_ptr<UIManager> uiManager =
-      binding->getScheduler()->getUIManager();
-  ReanimatedUIManagerBinding::createAndInstallIfNeeded(
-      *rt, runtimeExecutor, uiManager, newestShadowNodesRegistry_);
+  uiManager_ = binding->getScheduler()->getUIManager();
+  commitHook_ =
+      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
+  uiManager_->registerCommitHook(*commitHook_);
 #endif
 }
 
@@ -69,6 +65,9 @@ NativeProxy::~NativeProxy() {
   // has already been destroyed when AnimatedSensorModule's
   // destructor is ran
   nativeReanimatedModule_->cleanupSensors();
+#ifdef RCT_NEW_ARCH_ENABLED
+  uiManager_->unregisterCommitHook(*commitHook_);
+#endif // RCT_NEW_ARCH_ENABLED
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
@@ -76,7 +75,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jlong jsContext,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
-    jni::alias_ref<AndroidScheduler::javaobject> androidScheduler,
+    jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
     jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations
 #ifdef RCT_NEW_ARCH_ENABLED
     ,
@@ -85,13 +84,12 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 #endif
 ) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
-  auto scheduler = androidScheduler->cthis()->getScheduler();
-  scheduler->setJSCallInvoker(jsCallInvoker);
+  auto uiScheduler = androidUiScheduler->cthis()->getUIScheduler();
   return makeCxxInstance(
       jThis,
       (jsi::Runtime *)jsContext,
       jsCallInvoker,
-      scheduler,
+      uiScheduler,
       make_global(layoutAnimations)
 #ifdef RCT_NEW_ARCH_ENABLED
           ,
@@ -109,17 +107,13 @@ void NativeProxy::installJSIBindings(
 #endif
     /**/) {
   auto jsQueue = std::make_shared<JMessageQueueThread>(messageQueueThread);
-  std::shared_ptr<jsi::Runtime> animatedRuntime =
-      ReanimatedRuntime::make(runtime_, jsQueue);
+  std::shared_ptr<jsi::Runtime> uiRuntime =
+      ReanimatedRuntime::make(rnRuntime_, jsQueue);
 
-  std::shared_ptr<ErrorHandler> errorHandler =
-      std::make_shared<AndroidErrorHandler>(scheduler_);
-
-  auto module = std::make_shared<NativeReanimatedModule>(
+  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
-      scheduler_,
-      animatedRuntime,
-      errorHandler,
+      uiScheduler_,
+      uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
@@ -127,34 +121,36 @@ void NativeProxy::installJSIBindings(
 #endif
       getPlatformDependentMethods());
 
-  scheduler_->setRuntimeManager(module);
-  nativeReanimatedModule_ = module;
+  uiScheduler_->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
+  nativeReanimatedModule_ = nativeReanimatedModule;
 
 #ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
   std::shared_ptr<UIManager> uiManager =
       binding->getScheduler()->getUIManager();
-  module->setUIManager(uiManager);
-  module->setNewestShadowNodesRegistry(newestShadowNodesRegistry_);
-  newestShadowNodesRegistry_ = nullptr;
-//  removed temporary, new event listener mechanism need fix on the RN side
-//  eventListener_ = std::make_shared<EventListener>(
-//      [module, getCurrentTime](const RawEvent &rawEvent) {
-//        return module->handleRawEvent(rawEvent, getCurrentTime());
-//      });
-//  reactScheduler_ = binding->getScheduler();
-//  reactScheduler_->addEventListener(eventListener_);
+  nativeReanimatedModule->setUIManager(uiManager);
+  nativeReanimatedModule->setPropsRegistry(propsRegistry_);
+  propsRegistry_ = nullptr;
+  //  removed temporary, new event listener mechanism need fix on the RN side
+  //  eventListener_ = std::make_shared<EventListener>(
+  //      [nativeReanimatedModule, getCurrentTime](const RawEvent &rawEvent) {
+  //        return nativeReanimatedModule->handleRawEvent(rawEvent,
+  //        getCurrentTime());
+  //      });
+  //  reactScheduler_ = binding->getScheduler();
+  //  reactScheduler_->addEventListener(eventListener_);
 #endif
+  auto &rnRuntime = *rnRuntime_;
+  auto isReducedMotion = getIsReducedMotion();
+  RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
 
-  auto &rt = *runtime_;
-  setGlobalProperties(rt, animatedRuntime);
   registerEventHandler();
   setupLayoutAnimations();
 
-  rt.global().setProperty(
-      rt,
-      jsi::PropNameID::forAscii(rt, "__reanimatedModuleProxy"),
-      jsi::Object::createFromHostObject(rt, module));
+  rnRuntime.global().setProperty(
+      rnRuntime,
+      jsi::PropNameID::forAscii(rnRuntime, "__reanimatedModuleProxy"),
+      jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule));
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
@@ -165,6 +161,11 @@ void NativeProxy::performOperations() {
 #ifdef RCT_NEW_ARCH_ENABLED
   nativeReanimatedModule_->performOperations();
 #endif
+}
+
+bool NativeProxy::getIsReducedMotion() {
+  static const auto method = getJniMethod<jboolean()>("getIsReducedMotion");
+  return method(javaPart_.get());
 }
 
 void NativeProxy::registerNatives() {
@@ -179,7 +180,7 @@ void NativeProxy::registerNatives() {
 
 void NativeProxy::requestRender(
     std::function<void(double)> onRender,
-    jsi::Runtime &rt) {
+    jsi::Runtime &) {
   static const auto method =
       getJniMethod<void(AnimationFrameCallback::javaobject)>("requestRender");
   method(
@@ -234,22 +235,49 @@ void NativeProxy::configureProps(
           .get());
 }
 
-void NativeProxy::updateProps(
-    jsi::Runtime &rt,
-    int viewTag,
-    const jsi::Value &viewName,
-    const jsi::Object &props) {
+void NativeProxy::updateProps(jsi::Runtime &rt, const jsi::Value &operations) {
   static const auto method =
       getJniMethod<void(int, JMap<JString, JObject>::javaobject)>(
           "updateProps");
-  method(
-      javaPart_.get(), viewTag, JNIHelper::ConvertToPropsMap(rt, props).get());
+  auto array = operations.asObject(rt).asArray(rt);
+  size_t length = array.size(rt);
+  for (size_t i = 0; i < length; ++i) {
+    auto item = array.getValueAtIndex(rt, i).asObject(rt);
+    int viewTag = item.getProperty(rt, "tag").asNumber();
+    const jsi::Object &props = item.getProperty(rt, "updates").asObject(rt);
+    method(
+        javaPart_.get(),
+        viewTag,
+        JNIHelper::ConvertToPropsMap(rt, props).get());
+  }
 }
 
 void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
   static const auto method =
       getJniMethod<void(int, double, double, bool)>("scrollTo");
   method(javaPart_.get(), viewTag, x, y, animated);
+}
+
+inline jni::local_ref<ReadableArray::javaobject> castReadableArray(
+    jni::local_ref<ReadableNativeArray::javaobject> const &nativeArray) {
+  return make_local(
+      reinterpret_cast<ReadableArray::javaobject>(nativeArray.get()));
+}
+
+void NativeProxy::dispatchCommand(
+    jsi::Runtime &rt,
+    const int viewTag,
+    const jsi::Value &commandNameValue,
+    const jsi::Value &argsValue) {
+  static const auto method = getJniMethod<void(
+      int, jni::local_ref<JString>, jni::local_ref<ReadableArray::javaobject>)>(
+      "dispatchCommand");
+  local_ref<JString> commandId =
+      jni::make_jstring(commandNameValue.asString(rt).utf8(rt).c_str());
+  jni::local_ref<ReadableArray::javaobject> commandArgs =
+      castReadableArray(ReadableNativeArray::newObjectCxxArgs(
+          jsi::dynamicFromValue(rt, argsValue)));
+  method(javaPart_.get(), viewTag, commandId, commandArgs);
 }
 
 std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
@@ -279,12 +307,13 @@ inline jni::local_ref<ReadableMap::javaobject> castReadableMap(
 void NativeProxy::synchronouslyUpdateUIProps(
     jsi::Runtime &rt,
     Tag tag,
-    const jsi::Value &props) {
+    const jsi::Object &props) {
   static const auto method =
       getJniMethod<void(int, jni::local_ref<ReadableMap::javaobject>)>(
           "synchronouslyUpdateUIProps");
-  jni::local_ref<ReadableMap::javaobject> uiProps = castReadableMap(
-      ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, props)));
+  jni::local_ref<ReadableMap::javaobject> uiProps =
+      castReadableMap(ReadableNativeMap::newObjectCxxArgs(
+          jsi::dynamicFromValue(rt, jsi::Value(rt, props))));
   method(javaPart_.get(), tag, uiProps);
 }
 #endif
@@ -292,7 +321,7 @@ void NativeProxy::synchronouslyUpdateUIProps(
 int NativeProxy::registerSensor(
     int sensorType,
     int interval,
-    int iosReferenceFrame,
+    int,
     std::function<void(double[], int)> setter) {
   static const auto method =
       getJniMethod<int(int, int, SensorSetter::javaobject)>("registerSensor");
@@ -339,11 +368,10 @@ double NativeProxy::getCurrentTime() {
 }
 
 void NativeProxy::handleEvent(
-    jni::alias_ref<JString> eventKey,
+    jni::alias_ref<JString> eventName,
+    jint emitterReactTag,
     jni::alias_ref<react::WritableMap> event) {
   // handles RCTEvents from RNGestureHandler
-  auto eventName = eventKey->toString();
-
   // TODO: convert event directly to jsi::Value without JSON serialization
   std::string eventAsString;
   try {
@@ -365,7 +393,7 @@ void NativeProxy::handleEvent(
     return;
   }
 
-  jsi::Runtime &rt = *nativeReanimatedModule_->runtime;
+  jsi::Runtime &rt = *nativeReanimatedModule_->runtimeManager_->runtime;
   jsi::Value payload;
   try {
     payload = jsi::Value::createFromJsonUtf8(
@@ -376,14 +404,14 @@ void NativeProxy::handleEvent(
   }
 
   nativeReanimatedModule_->handleEvent(
-      eventName, payload, this->getCurrentTime());
+      eventName->toString(), emitterReactTag, payload, this->getCurrentTime());
 }
 
 void NativeProxy::progressLayoutAnimation(
     int tag,
     const jsi::Object &newProps,
     bool isSharedTransition) {
-  auto &rt = *nativeReanimatedModule_->runtime;
+  auto &rt = *nativeReanimatedModule_->runtimeManager_->runtime;
   auto newPropsJNI = JNIHelper::ConvertToPropsMap(rt, newProps);
   layoutAnimations_->cthis()->progressLayoutAnimation(
       tag, newPropsJNI, isSharedTransition);
@@ -398,6 +426,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto measureFunction = bindThis(&NativeProxy::measure);
 
   auto scrollToFunction = bindThis(&NativeProxy::scrollTo);
+
+  auto dispatchCommandFunction = bindThis(&NativeProxy::dispatchCommand);
 #endif
 
   auto getCurrentTime = bindThis(&NativeProxy::getCurrentTime);
@@ -425,9 +455,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto progressLayoutAnimation =
       bindThis(&NativeProxy::progressLayoutAnimation);
 
-  auto endLayoutAnimation = [this](int tag, bool isCancelled, bool removeView) {
-    this->layoutAnimations_->cthis()->endLayoutAnimation(
-        tag, isCancelled, removeView);
+  auto endLayoutAnimation = [this](int tag, bool removeView) {
+    this->layoutAnimations_->cthis()->endLayoutAnimation(tag, removeView);
   };
 
   auto maybeFlushUiUpdatesQueueFunction =
@@ -440,6 +469,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 #else
       updatePropsFunction,
       scrollToFunction,
+      dispatchCommandFunction,
       measureFunction,
       configurePropsFunction,
 #endif
@@ -455,47 +485,18 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   };
 }
 
-void NativeProxy::setGlobalProperties(
-    jsi::Runtime &jsRuntime,
-    const std::shared_ptr<jsi::Runtime> &reanimatedRuntime) {
-  auto workletRuntimeValue =
-      jsRuntime.global()
-          .getPropertyAsObject(jsRuntime, "ArrayBuffer")
-          .asFunction(jsRuntime)
-          .callAsConstructor(jsRuntime, {static_cast<double>(sizeof(void *))});
-  uintptr_t *workletRuntimeData = reinterpret_cast<uintptr_t *>(
-      workletRuntimeValue.getObject(jsRuntime).getArrayBuffer(jsRuntime).data(
-          jsRuntime));
-  workletRuntimeData[0] = reinterpret_cast<uintptr_t>(reanimatedRuntime.get());
-
-  jsRuntime.global().setProperty(
-      jsRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);
-
-  jsRuntime.global().setProperty(jsRuntime, "_WORKLET", false);
-
-#ifdef RCT_NEW_ARCH_ENABLED
-  jsRuntime.global().setProperty(jsRuntime, "_IS_FABRIC", true);
-#else
-  jsRuntime.global().setProperty(jsRuntime, "_IS_FABRIC", false);
-#endif
-
-  auto version = getReanimatedVersionString(jsRuntime);
-  jsRuntime.global().setProperty(jsRuntime, "_REANIMATED_VERSION_CPP", version);
-}
-
 void NativeProxy::setupLayoutAnimations() {
-  auto weakModule =
+  auto weakNativeReanimatedModule =
       std::weak_ptr<NativeReanimatedModule>(nativeReanimatedModule_);
 
   layoutAnimations_->cthis()->setAnimationStartingBlock(
-      [weakModule](
+      [weakNativeReanimatedModule](
           int tag, int type, alias_ref<JMap<jstring, jstring>> values) {
-        auto module = weakModule.lock();
-        if (module == nullptr) {
+        auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
+        if (nativeReanimatedModule == nullptr) {
           return;
         }
-        auto &rt = *module->runtime;
-        auto errorHandler = module->errorHandler;
+        auto &rt = *nativeReanimatedModule->runtimeManager_->runtime;
 
         jsi::Object yogaValues(rt);
         for (const auto &entry : *values) {
@@ -513,53 +514,62 @@ void NativeProxy::setupLayoutAnimations() {
               yogaValues.setProperty(rt, key, value);
             }
           } catch (std::invalid_argument e) {
-            errorHandler->setError("Failed to convert value to number");
-            errorHandler->raise();
+            throw std::runtime_error("Failed to convert value to number");
           }
         }
 
-        module->layoutAnimationsManager().startLayoutAnimation(
+        nativeReanimatedModule->layoutAnimationsManager().startLayoutAnimation(
             rt, tag, static_cast<LayoutAnimationType>(type), yogaValues);
       });
 
-  layoutAnimations_->cthis()->setHasAnimationBlock(
-      [weakModule](int tag, int type) {
-        auto module = weakModule.lock();
-        if (module == nullptr) {
-          return false;
-        }
+  layoutAnimations_->cthis()->setHasAnimationBlock([weakNativeReanimatedModule](
+                                                       int tag, int type) {
+    auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
+    if (nativeReanimatedModule == nullptr) {
+      return false;
+    }
 
-        return module->layoutAnimationsManager().hasLayoutAnimation(
-            tag, static_cast<LayoutAnimationType>(type));
-      });
+    return nativeReanimatedModule->layoutAnimationsManager().hasLayoutAnimation(
+        tag, static_cast<LayoutAnimationType>(type));
+  });
 
-  layoutAnimations_->cthis()->setClearAnimationConfigBlock(
-      [weakModule](int tag) {
-        auto module = weakModule.lock();
-        if (module == nullptr) {
+#ifdef DEBUG
+  layoutAnimations_->cthis()->setCheckDuplicateSharedTag(
+      [weakNativeReanimatedModule](int viewTag, int screenTag) {
+        auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
+        if (nativeReanimatedModule == nullptr) {
           return;
         }
 
-        module->layoutAnimationsManager().clearLayoutAnimationConfig(tag);
+        nativeReanimatedModule->layoutAnimationsManager()
+            .checkDuplicateSharedTag(viewTag, screenTag);
+      });
+#endif
+
+  layoutAnimations_->cthis()->setClearAnimationConfigBlock(
+      [weakNativeReanimatedModule](int tag) {
+        auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
+        if (nativeReanimatedModule == nullptr) {
+          return;
+        }
+
+        nativeReanimatedModule->layoutAnimationsManager()
+            .clearLayoutAnimationConfig(tag);
       });
 
   layoutAnimations_->cthis()->setCancelAnimationForTag(
-      [weakModule](int tag, int type, jboolean cancelled, jboolean removeView) {
-        if (auto module = weakModule.lock()) {
-          jsi::Runtime &rt = *module->runtime;
-          module->layoutAnimationsManager().cancelLayoutAnimation(
-              rt,
-              tag,
-              static_cast<LayoutAnimationType>(type),
-              cancelled,
-              removeView);
+      [weakNativeReanimatedModule](int tag) {
+        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+          jsi::Runtime &rt = *nativeReanimatedModule->runtimeManager_->runtime;
+          nativeReanimatedModule->layoutAnimationsManager()
+              .cancelLayoutAnimation(rt, tag);
         }
       });
 
   layoutAnimations_->cthis()->setFindPrecedingViewTagForTransition(
-      [weakModule](int tag) {
-        if (auto module = weakModule.lock()) {
-          return module->layoutAnimationsManager()
+      [weakNativeReanimatedModule](int tag) {
+        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+          return nativeReanimatedModule->layoutAnimationsManager()
               .findPrecedingViewTagForTransition(tag);
         } else {
           return -1;

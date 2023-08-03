@@ -1,23 +1,13 @@
+import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
+import type { ParsedColorArray } from '../Colors';
 import {
-  HigherOrderAnimation,
-  NextAnimation,
-  DelayAnimation,
-  RepeatAnimation,
-  SequenceAnimation,
-  StyleLayoutAnimation,
-} from './commonTypes';
-/* global _WORKLET */
-import {
-  ParsedColorArray,
   isColor,
   convertToRGBA,
   rgbaArrayToRGBAColor,
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-
-import {
-  AnimatedStyle,
+import type {
   SharedValue,
   AnimatableValue,
   Animation,
@@ -26,10 +16,20 @@ import {
   AnimatableValueObject,
 } from '../commonTypes';
 import NativeReanimatedModule from '../NativeReanimated';
+import {
+  AffineMatrixFlat,
+  AffineMatrix,
+  flatten,
+  multiplyMatrices,
+  scaleMatrix,
+  addMatrices,
+  decomposeMatrixIntoMatricesAndAngles,
+  isAffineMatrixFlat,
+  subtractMatrices,
+  getRotationMatrix,
+} from './transformationMatrix/matrixUtils';
 
 let IN_STYLE_UPDATER = false;
-
-export type UserUpdater = () => AnimatedStyle;
 
 export function initialUpdaterRun<T>(updater: () => T): T {
   IN_STYLE_UPDATER = true;
@@ -63,6 +63,20 @@ function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
   } else {
     return { strippedValue: value };
   }
+}
+
+function applyProgressToMatrix(
+  progress: number,
+  a: AffineMatrix,
+  b: AffineMatrix
+) {
+  'worklet';
+  return addMatrices(a, scaleMatrix(subtractMatrices(b, a), progress));
+}
+
+function applyProgressToNumber(progress: number, a: number, b: number) {
+  'worklet';
+  return a + progress * (b - a);
 }
 
 function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
@@ -179,14 +193,103 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     let finished = true;
     tab.forEach((i, index) => {
       animation[i].current = RGBACurrent[index];
-      // @ts-ignore: disable-next-line
-      finished &= animation[i].onFrame(animation[i], timestamp);
+      const result = animation[i].onFrame(animation[i], timestamp);
+      // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
+      finished = finished && result;
       res.push(animation[i].current);
     });
 
     animation.current = rgbaArrayToRGBAColor(
       toGammaSpace(res as ParsedColorArray)
     );
+    return finished;
+  };
+
+  const transformationMatrixOnStart = (
+    animation: Animation<AnimationObject>,
+    value: AffineMatrixFlat,
+    timestamp: Timestamp,
+    previousAnimation: Animation<AnimationObject>
+  ): void => {
+    const toValue = animation.toValue as AffineMatrixFlat;
+
+    animation.startMatrices = decomposeMatrixIntoMatricesAndAngles(value);
+    animation.stopMatrices = decomposeMatrixIntoMatricesAndAngles(toValue);
+
+    // We create an animation copy to animate single value between 0 and 100
+    // We set limits from 0 to 100 (instead of 0-1) to make spring look good
+    // with default thresholds.
+
+    animation[0] = Object.assign({}, animationCopy);
+    animation[0].current = 0;
+    animation[0].toValue = 100;
+    animation[0].onStart(
+      animation[0],
+      0,
+      timestamp,
+      previousAnimation ? previousAnimation[0] : undefined
+    );
+
+    animation.current = value;
+  };
+
+  const transformationMatrixOnFrame = (
+    animation: Animation<AnimationObject>,
+    timestamp: Timestamp
+  ): boolean => {
+    let finished = true;
+    const result = animation[0].onFrame(animation[0], timestamp);
+    // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
+    finished = finished && result;
+
+    const progress = animation[0].current / 100;
+
+    const transforms = ['translationMatrix', 'scaleMatrix', 'skewMatrix'];
+    const mappedTransforms: Array<AffineMatrix> = [];
+
+    transforms.forEach((key, _) =>
+      mappedTransforms.push(
+        applyProgressToMatrix(
+          progress,
+          animation.startMatrices[key],
+          animation.stopMatrices[key]
+        )
+      )
+    );
+
+    const [currentTranslation, currentScale, skewMatrix] = mappedTransforms;
+
+    const rotations: Array<'x' | 'y' | 'z'> = ['x', 'y', 'z'];
+    const mappedRotations: Array<AffineMatrix> = [];
+
+    rotations.forEach((key, _) => {
+      const angle = applyProgressToNumber(
+        progress,
+        animation.startMatrices['r' + key],
+        animation.stopMatrices['r' + key]
+      );
+      mappedRotations.push(getRotationMatrix(angle, key));
+    });
+
+    const [rotationMatrixX, rotationMatrixY, rotationMatrixZ] = mappedRotations;
+
+    const rotationMatrix = multiplyMatrices(
+      rotationMatrixX,
+      multiplyMatrices(rotationMatrixY, rotationMatrixZ)
+    );
+
+    const updated = flatten(
+      multiplyMatrices(
+        multiplyMatrices(
+          currentScale,
+          multiplyMatrices(skewMatrix, rotationMatrix)
+        ),
+        currentTranslation
+      )
+    );
+
+    animation.current = updated;
+
     return finished;
   };
 
@@ -216,9 +319,10 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     timestamp: Timestamp
   ): boolean => {
     let finished = true;
-    (animation.current as Array<number>).forEach((v, i) => {
-      // @ts-ignore: disable-next-line
-      finished &= animation[i].onFrame(animation[i], timestamp);
+    (animation.current as Array<number>).forEach((_, i) => {
+      const result = animation[i].onFrame(animation[i], timestamp);
+      // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
+      finished = finished && result;
       (animation.current as Array<number>)[i] = animation[i].current;
     });
 
@@ -256,8 +360,9 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     let finished = true;
     const newObject: AnimatableValueObject = {};
     for (const key in animation.current as AnimatableValueObject) {
-      // @ts-ignore: disable-next-line
-      finished &= animation[key].onFrame(animation[key], timestamp);
+      const result = animation[key].onFrame(animation[key], timestamp);
+      // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
+      finished = finished && result;
       newObject[key] = animation[key].current;
     }
     animation.current = newObject;
@@ -273,6 +378,15 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     if (isColor(value)) {
       colorOnStart(animation, value, timestamp, previousAnimation);
       animation.onFrame = colorOnFrame;
+      return;
+    } else if (isAffineMatrixFlat(value)) {
+      transformationMatrixOnStart(
+        animation,
+        value,
+        timestamp,
+        previousAnimation
+      );
+      animation.onFrame = transformationMatrixOnFrame;
       return;
     } else if (Array.isArray(value)) {
       arrayOnStart(animation, value, timestamp, previousAnimation);
@@ -291,30 +405,27 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
   };
 }
 
-type AnimationToDecoration<T extends AnimationObject | StyleLayoutAnimation> =
-  T extends StyleLayoutAnimation
-    ? Record<string, unknown>
-    : T extends DelayAnimation
-    ? NextAnimation<DelayAnimation>
-    : T extends RepeatAnimation
-    ? NextAnimation<RepeatAnimation>
-    : T extends SequenceAnimation
-    ? NextAnimation<SequenceAnimation>
-    : AnimatableValue | T;
+type AnimationToDecoration<
+  T extends AnimationObject | StyleLayoutAnimation,
+  U extends AnimationObject | StyleLayoutAnimation
+> = T extends StyleLayoutAnimation
+  ? Record<string, unknown>
+  : U | (() => U) | AnimatableValue;
 
 const IS_NATIVE = NativeReanimatedModule.native;
 
 export function defineAnimation<
-  T extends AnimationObject | StyleLayoutAnimation
->(starting: AnimationToDecoration<T>, factory: () => T): T {
+  T extends AnimationObject | StyleLayoutAnimation, // type that's supposed to be returned
+  U extends AnimationObject | StyleLayoutAnimation = T // type that's received
+>(starting: AnimationToDecoration<T, U>, factory: () => T): T {
   'worklet';
   if (IN_STYLE_UPDATER) {
-    return starting as T;
+    return starting as unknown as T;
   }
   const create = () => {
     'worklet';
     const animation = factory();
-    decorateAnimation<T>(animation);
+    decorateAnimation<U>(animation as unknown as U);
     return animation;
   };
 
@@ -329,20 +440,4 @@ export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running
   sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
-}
-
-// TODO it should work only if there was no animation before.
-export function withStartValue(
-  startValue: AnimatableValue,
-  animation: NextAnimation<AnimationObject>
-): Animation<AnimationObject> {
-  'worklet';
-  return defineAnimation(startValue, () => {
-    'worklet';
-    if (!_WORKLET && typeof animation === 'function') {
-      animation = animation();
-    }
-    (animation as Animation<AnimationObject>).current = startValue;
-    return animation as Animation<AnimationObject>;
-  });
 }

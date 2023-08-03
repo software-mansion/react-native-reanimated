@@ -34,16 +34,16 @@
   return nil;
 }
 
-+ (bool)isScreenModal:(UIView *)screen
++ (bool)isScreenModal:(UIView *)uiViewScreen
 {
-  if ([screen isKindOfClass:[RNSScreenView class]]) {
-    NSNumber *presentationMode = [screen valueForKey:@"stackPresentation"];
-    bool isModal = ![presentationMode isEqual:@(0)];
+  if ([uiViewScreen isKindOfClass:[RNSScreenView class]]) {
+    RNSScreenView *screen = (RNSScreenView *)uiViewScreen;
+    bool isModal = [screen isModal];
     if (!isModal) {
       // case for modal with header
-      UIView *parentScreen = [REAScreensHelper getScreenForView:screen.reactSuperview];
+      RNSScreenView *parentScreen = (RNSScreenView *)[REAScreensHelper getScreenForView:screen.reactSuperview];
       if (parentScreen != nil) {
-        isModal = [parentScreen valueForKey:@"stackPresentation"];
+        isModal = [parentScreen isModal];
       }
     }
     return isModal;

@@ -1,4 +1,4 @@
-import {
+import type {
   IEntryExitAnimationBuilder,
   EntryExitAnimationFunction,
   EntryAnimationsValues,
@@ -7,14 +7,17 @@ import {
   IEntryAnimationBuilder,
   IExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
+import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 
 export class FlipInXUp
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static createInstance(): FlipInXUp {
-    return new FlipInXUp();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FlipInXUp() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
@@ -52,8 +55,10 @@ export class FlipInYLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static createInstance(): FlipInYLeft {
-    return new FlipInYLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FlipInYLeft() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
@@ -91,8 +96,10 @@ export class FlipInXDown
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static createInstance(): FlipInXDown {
-    return new FlipInXDown();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FlipInXDown() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
@@ -130,8 +137,10 @@ export class FlipInYRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static createInstance(): FlipInYRight {
-    return new FlipInYRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FlipInYRight() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
@@ -169,8 +178,10 @@ export class FlipInEasyX
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FlipInEasyX {
-    return new FlipInEasyX();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FlipInEasyX() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -203,8 +214,10 @@ export class FlipInEasyY
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FlipInEasyY {
-    return new FlipInEasyY();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FlipInEasyY() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -237,8 +250,10 @@ export class FlipOutXUp
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static createInstance(): FlipOutXUp {
-    return new FlipOutXUp();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FlipOutXUp() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
@@ -281,8 +296,10 @@ export class FlipOutYLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static createInstance(): FlipOutYLeft {
-    return new FlipOutYLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FlipOutYLeft() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
@@ -325,8 +342,10 @@ export class FlipOutXDown
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static createInstance(): FlipOutXDown {
-    return new FlipOutXDown();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FlipOutXDown() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
@@ -369,8 +388,10 @@ export class FlipOutYRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static createInstance(): FlipOutYRight {
-    return new FlipOutYRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FlipOutYRight() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
@@ -413,8 +434,10 @@ export class FlipOutEasyX
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FlipOutEasyX {
-    return new FlipOutEasyX();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FlipOutEasyX() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -447,8 +470,10 @@ export class FlipOutEasyY
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FlipOutEasyY {
-    return new FlipOutEasyY();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FlipOutEasyY() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {

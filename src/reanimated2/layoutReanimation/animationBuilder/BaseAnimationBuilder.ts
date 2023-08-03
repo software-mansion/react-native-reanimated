@@ -1,5 +1,5 @@
 import { withDelay } from '../../animation';
-import {
+import type {
   EntryExitAnimationFunction,
   AnimationFunction,
   LayoutAnimationFunction,
@@ -11,39 +11,49 @@ export class BaseAnimationBuilder {
   randomizeDelay = false;
   callbackV?: (finished: boolean) => void;
 
-  static createInstance: () => BaseAnimationBuilder;
+  static createInstance: <T extends typeof BaseAnimationBuilder>(
+    this: T
+  ) => InstanceType<T>;
+
   build = (): EntryExitAnimationFunction | LayoutAnimationFunction => {
     throw Error('Unimplemented method in child class.');
   };
 
-  static duration(durationMs: number): BaseAnimationBuilder {
+  static duration<T extends typeof BaseAnimationBuilder>(
+    this: T,
+    durationMs: number
+  ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.duration(durationMs);
   }
 
-  duration(durationMs: number): BaseAnimationBuilder {
+  duration(durationMs: number): this {
     this.durationV = durationMs;
     return this;
   }
 
-  static delay(delayMs: number): BaseAnimationBuilder {
+  static delay<T extends typeof BaseAnimationBuilder>(
+    this: T,
+    delayMs: number
+  ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.delay(delayMs);
   }
 
-  delay(delayMs: number): BaseAnimationBuilder {
+  delay(delayMs: number): this {
     this.delayV = delayMs;
     return this;
   }
 
-  static withCallback(
+  static withCallback<T extends typeof BaseAnimationBuilder>(
+    this: T,
     callback: (finished: boolean) => void
-  ): BaseAnimationBuilder {
+  ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.withCallback(callback);
   }
 
-  withCallback(callback: (finsihed: boolean) => void): BaseAnimationBuilder {
+  withCallback(callback: (finsihed: boolean) => void): this {
     this.callbackV = callback;
     return this;
   }
@@ -57,12 +67,14 @@ export class BaseAnimationBuilder {
     return this.durationV ?? 300;
   }
 
-  static randomDelay(): BaseAnimationBuilder {
+  static randomDelay<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.randomDelay();
   }
 
-  randomDelay(): BaseAnimationBuilder {
+  randomDelay(): this {
     this.randomizeDelay = true;
     return this;
   }
@@ -84,7 +96,9 @@ export class BaseAnimationBuilder {
         };
   }
 
-  static build(): EntryExitAnimationFunction | LayoutAnimationFunction {
+  static build<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): EntryExitAnimationFunction | LayoutAnimationFunction {
     const instance = this.createInstance();
     return instance.build();
   }

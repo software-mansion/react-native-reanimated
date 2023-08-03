@@ -1,6 +1,7 @@
-import { Easing, EasingFn, EasingFactoryFn } from '../Easing';
+import type { EasingFn, EasingFactoryFn } from '../Easing';
+import { Easing } from '../Easing';
 import { defineAnimation } from './util';
-import {
+import type {
   Animation,
   AnimationCallback,
   Timestamp,
@@ -22,13 +23,20 @@ export interface TimingAnimation extends Animation<TimingAnimation> {
   current: AnimatableValue;
 }
 
-export interface InnerTimingAnimation
+interface InnerTimingAnimation
   extends Omit<TimingAnimation, 'toValue' | 'current'> {
   toValue: number;
   current: number;
 }
 
-export function withTiming(
+// TODO TYPESCRIPT This is temporary type put in here to get rid of our .d.ts file
+type withTimingType = <T extends AnimatableValue>(
+  toValue: T,
+  userConfig?: TimingConfig,
+  callback?: AnimationCallback
+) => T;
+
+export const withTiming = function (
   toValue: AnimatableValue,
   userConfig?: TimingConfig,
   callback?: AnimationCallback
@@ -108,4 +116,4 @@ export function withTiming(
       callback,
     } as TimingAnimation;
   });
-}
+} as withTimingType;

@@ -11,6 +11,7 @@ import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.views.view.ReactViewGroup;
+import com.swmansion.reanimated.Utils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,6 +35,8 @@ public class SharedTransitionManager {
   private final Set<Integer> mViewTagsToHide = new HashSet<>();
   private final Map<Integer, Integer> mDisableCleaningForViewTag = new HashMap<>();
   private List<SharedElement> mSharedElements = new ArrayList<>();
+  private final List<SharedElement> mSharedElementsWithProgress = new ArrayList<>();
+  private final List<SharedElement> mSharedElementsWithAnimation = new ArrayList<>();
   private final Map<Integer, View> mViewsWithCanceledAnimation = new HashMap<>();
 
   public SharedTransitionManager(AnimationsManager animationsManager) {
@@ -73,14 +76,8 @@ public class SharedTransitionManager {
       boolean animationStarted = tryStartSharedTransitionForViews(mRemovedSharedViews, false);
       if (!animationStarted) {
         mRemovedSharedViews.clear();
-        return;
       }
-      ConfigCleanerTreeVisitor configCleanerTreeVisitor = new ConfigCleanerTreeVisitor();
-      for (View removedSharedView : mRemovedSharedViews) {
-        visitTree(removedSharedView, configCleanerTreeVisitor);
-      }
-      mRemovedSharedViews.clear();
-      visitTreeForTags(tagsToDelete, configCleanerTreeVisitor);
+      visitTreeForTags(tagsToDelete, new ConfigCleanerTreeVisitor());
     } else if (mCurrentSharedTransitionViews.size() > 0) {
       // this happens when navigation goes back and previous shared animation is still running
       List<View> viewsWithNewTransition = new ArrayList<>();
@@ -185,7 +182,8 @@ public class SharedTransitionManager {
         disableCleaningForViewTag(targetView.getId());
       }
     }
-    startSharedTransition(sharedElementsToRestart);
+    startSharedTransition(
+        sharedElementsToRestart, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION);
   }
 
   private boolean tryStartSharedTransitionForViews(
@@ -201,7 +199,11 @@ public class SharedTransitionManager {
     }
     setupTransitionContainer();
     reparentSharedViewsForCurrentTransition(sharedElements);
-    startSharedTransition(sharedElements);
+    orderByAnimationTypes(sharedElements);
+    startSharedTransition(
+        mSharedElementsWithAnimation, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION);
+    startSharedTransition(
+        mSharedElementsWithProgress, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION_PROGRESS);
     return true;
   }
 
@@ -378,20 +380,22 @@ public class SharedTransitionManager {
     }
   }
 
-  private void startSharedTransition(List<SharedElement> sharedElements) {
+  private void startSharedTransition(List<SharedElement> sharedElements, int type) {
     for (SharedElement sharedElement : sharedElements) {
       startSharedAnimationForView(
           sharedElement.sourceView,
           sharedElement.sourceViewSnapshot,
-          sharedElement.targetViewSnapshot);
+          sharedElement.targetViewSnapshot,
+          type);
       startSharedAnimationForView(
           sharedElement.targetView,
           sharedElement.sourceViewSnapshot,
-          sharedElement.targetViewSnapshot);
+          sharedElement.targetViewSnapshot,
+          type);
     }
   }
 
-  private void startSharedAnimationForView(View view, Snapshot before, Snapshot after) {
+  private void startSharedAnimationForView(View view, Snapshot before, Snapshot after, int type) {
     HashMap<String, Object> targetValues = after.toTargetMap();
     HashMap<String, Object> startValues = before.toCurrentMap();
 
@@ -402,8 +406,7 @@ public class SharedTransitionManager {
     HashMap<String, Object> preparedValues = new HashMap<>(preparedTargetValues);
     preparedValues.putAll(preparedStartValues);
 
-    mNativeMethodsHolder.startAnimation(
-        view.getId(), LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION, preparedValues);
+    mNativeMethodsHolder.startAnimation(view.getId(), type, preparedValues);
   }
 
   protected void finishSharedAnimation(int tag) {
@@ -442,7 +445,9 @@ public class SharedTransitionManager {
           if (key.equals(Snapshot.TRANSFORM_MATRIX)) {
             preparedValues.put(key, value);
           } else {
-            preparedValues.put(key, (double) PixelUtil.toDIPFromPixel((int) value));
+            float pixelsValue = Utils.convertToFloat(value);
+            double dipValue = PixelUtil.toDIPFromPixel(pixelsValue);
+            preparedValues.put(key, dipValue);
           }
         }
         mAnimationsManager.progressLayoutAnimation(viewTag, preparedValues, true);
@@ -454,15 +459,32 @@ public class SharedTransitionManager {
       mCurrentSharedTransitionViews.remove(viewTag);
       mSharedTransitionParent.remove(viewTag);
       mSharedTransitionInParentIndex.remove(viewTag);
+
+      if (mRemovedSharedViews.contains(view)) {
+        mNativeMethodsHolder.clearAnimationConfig(view.getId());
+        mRemovedSharedViews.remove(view);
+      }
     }
     if (mCurrentSharedTransitionViews.isEmpty()) {
       if (mTransitionContainer != null) {
         ViewParent transitionContainerParent = mTransitionContainer.getParent();
         if (transitionContainerParent != null) {
-          ((ViewGroup) transitionContainerParent).removeView(mTransitionContainer);
+          mTransitionContainer.setVisibility(View.INVISIBLE);
+          // To prevent modifications of the views tree while Android is iterating
+          // over them, we can schedule the modification for the next frame. This
+          // approach is safe. The transparent transition container will remain on
+          // the screen for one additional frame before being removed.
+          mTransitionContainer.post(
+              () -> {
+                ((ViewGroup) transitionContainerParent).removeView(mTransitionContainer);
+                mTransitionContainer.setVisibility(View.VISIBLE);
+              });
         }
       }
       mSharedElements.clear();
+      mSharedElementsWithProgress.clear();
+      mSharedElementsWithAnimation.clear();
+      mRemovedSharedViews.clear();
       mIsSharedTransitionActive = false;
     }
   }
@@ -583,8 +605,7 @@ public class SharedTransitionManager {
 
   private void cancelAnimation(View view) {
     int viewTag = view.getId();
-    mNativeMethodsHolder.cancelAnimation(
-        viewTag, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION, true, true);
+    mNativeMethodsHolder.cancelAnimation(viewTag);
   }
 
   private void disableCleaningForViewTag(int viewTag) {
@@ -605,6 +626,22 @@ public class SharedTransitionManager {
       mDisableCleaningForViewTag.remove(viewTag);
     } else {
       mDisableCleaningForViewTag.put(viewTag, counter - 1);
+    }
+  }
+
+  void orderByAnimationTypes(List<SharedElement> sharedElements) {
+    mSharedElementsWithProgress.clear();
+    mSharedElementsWithAnimation.clear();
+    for (SharedElement sharedElement : sharedElements) {
+      int viewTag = sharedElement.sourceView.getId();
+      boolean viewHasProgressAnimation =
+          mAnimationsManager.hasAnimationForTag(
+              viewTag, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION_PROGRESS);
+      if (viewHasProgressAnimation) {
+        mSharedElementsWithProgress.add(sharedElement);
+      } else {
+        mSharedElementsWithAnimation.add(sharedElement);
+      }
     }
   }
 }

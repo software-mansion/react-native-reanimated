@@ -12,6 +12,10 @@ export function isWeb(): boolean {
   return Platform.OS === 'web';
 }
 
+export function isAndroid(): boolean {
+  return Platform.OS === 'android';
+}
+
 export function shouldBeUseWeb() {
   return isJest() || isChromeDebugger() || isWeb();
 }

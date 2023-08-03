@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
-import { BasicWorkletFunction, WorkletFunction } from '../commonTypes';
+import { useEffect } from 'react';
+import type { BasicWorkletFunction, WorkletFunction } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
-import { DependencyList } from './commonTypes';
+import type { DependencyList } from './commonTypes';
+import { useSharedValue } from './useSharedValue';
 import { shouldBeUseWeb } from '../PlatformChecker';
 
 export interface AnimatedReactionWorkletFunction<T> extends WorkletFunction {
@@ -16,11 +17,11 @@ export interface AnimatedReactionWorkletFunction<T> extends WorkletFunction {
 export function useAnimatedReaction<T>(
   prepare: BasicWorkletFunction<T>,
   react: AnimatedReactionWorkletFunction<T>,
-  dependencies: DependencyList
+  dependencies?: DependencyList
 ): void {
-  const previous = useRef({ value: null as T | null }).current;
+  const previous = useSharedValue<T | null>(null, true);
 
-  let inputs = Object.values(prepare._closure ?? {});
+  let inputs = Object.values(prepare.__closure ?? {});
 
   if (shouldBeUseWeb()) {
     if (!inputs.length && dependencies?.length) {
@@ -31,8 +32,8 @@ export function useAnimatedReaction<T>(
 
   if (dependencies === undefined) {
     dependencies = [
-      ...Object.values(prepare._closure ?? {}),
-      ...Object.values(react._closure ?? {}),
+      ...Object.values(prepare.__closure ?? {}),
+      ...Object.values(react.__closure ?? {}),
       prepare.__workletHash,
       react.__workletHash,
     ];

@@ -1,4 +1,5 @@
-import { MutableRefObject, useEffect, useRef } from 'react';
+import type { MutableRefObject } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { startMapper, stopMapper, makeRemote } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
@@ -11,15 +12,11 @@ import {
   shallowEqual,
   validateAnimatedStyles,
 } from './utils';
-import { DependencyList, Descriptor } from './commonTypes';
-import {
-  makeViewDescriptorsSet,
-  makeViewsRefSet,
-  ViewDescriptorsSet,
-  ViewRefSet,
-} from '../ViewDescriptorsSet';
+import type { DependencyList, Descriptor } from './commonTypes';
+import type { ViewDescriptorsSet, ViewRefSet } from '../ViewDescriptorsSet';
+import { makeViewDescriptorsSet, makeViewsRefSet } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
-import {
+import type {
   AnimationObject,
   Timestamp,
   AdapterWorkletFunction,
@@ -30,6 +27,14 @@ import {
   SharedValue,
   StyleProps,
 } from '../commonTypes';
+import type {
+  ImageStyle,
+  RegisteredStyle,
+  TextStyle,
+  ViewStyle,
+} from 'react-native';
+import type { AnimateStyle } from '../helperTypes';
+
 export interface AnimatedStyleResult {
   viewDescriptors: ViewDescriptorsSet;
   initial: AnimatedStyle;
@@ -395,14 +400,26 @@ function checkSharedValueUsage(
   }
 }
 
-export function useAnimatedStyle<T extends AnimatedStyle>(
-  updater: BasicWorkletFunction<T>,
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+type AnimatedStyleProp<T> = AnimateStyle<T> | RegisteredStyle<AnimateStyle<T>>;
+
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+type useAnimatedStyleType = <
+  T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
+>(
+  updater: () => T,
+  deps?: DependencyList | null
+) => T;
+
+export const useAnimatedStyle = function <T extends AnimatedStyle>(
+  // animated style cannot be an array
+  updater: BasicWorkletFunction<T extends Array<unknown> ? never : T>,
   dependencies?: DependencyList,
   adapters?: AdapterWorkletFunction | AdapterWorkletFunction[]
 ): AnimatedStyleResult {
   const viewsRef: ViewRefSet<any> = makeViewsRefSet();
   const initRef = useRef<AnimationRef>();
-  let inputs = Object.values(updater._closure ?? {});
+  let inputs = Object.values(updater.__closure ?? {});
   if (shouldBeUseWeb()) {
     if (!inputs.length && dependencies?.length) {
       // let web work without a Babel/SWC plugin
@@ -514,9 +531,10 @@ For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/
 
   checkSharedValueUsage(initial.value);
 
-  if (process.env.JEST_WORKER_ID) {
-    return { viewDescriptors, initial: initial, viewsRef, animatedStyle };
+  if (isJest()) {
+    return { viewDescriptors, initial, viewsRef, animatedStyle };
   } else {
-    return { viewDescriptors, initial: initial, viewsRef };
+    return { viewDescriptors, initial, viewsRef };
   }
-}
+  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
+} as useAnimatedStyleType;

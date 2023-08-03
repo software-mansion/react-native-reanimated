@@ -9,7 +9,8 @@
 
 typedef void (^REAOnAnimationCallback)(CADisplayLink *displayLink);
 typedef void (^REANativeAnimationOp)(RCTUIManager *uiManager);
-typedef void (^REAEventHandler)(NSString *eventName, id<RCTEvent> event);
+typedef void (^REAEventHandler)(id<RCTEvent> event);
+typedef void (^CADisplayLinkOperation)(CADisplayLink *displayLink);
 
 #ifdef RCT_NEW_ARCH_ENABLED
 typedef void (^REAPerformOperations)();

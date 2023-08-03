@@ -1,3 +1,5 @@
+import './publicGlobals';
+
 export * from './core';
 export * from './hook';
 export * from './animation';
@@ -10,5 +12,7 @@ export * from './PropAdapters';
 export * from './layoutReanimation';
 export * from './utils';
 export * from './commonTypes';
+export * from './frameCallback';
 export * from './pluginUtils';
 export * from './jestUtils';
+export type { AnimateProps } from './helperTypes';

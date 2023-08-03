@@ -1,5 +1,5 @@
 import NativeReanimatedModule from './NativeReanimated';
-import { SharedValue, ShareableSyncDataHolderRef } from './commonTypes';
+import type { SharedValue, ShareableSyncDataHolderRef } from './commonTypes';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -7,7 +7,6 @@ import {
 } from './shareables';
 import { runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
-export { stopMapper } from './mappers';
 
 export function makeUIMutable<T>(
   initial: T,

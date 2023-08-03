@@ -1,13 +1,605 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`babel plugin captures worklets environment 1`] = `
+exports[`babel plugin doesn't capture arguments 1`] = `
+"var _worklet_17093819837059_init_data = {
+  code: "function f(a,b,c){console.log(arguments);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var f = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f(a, b, c) {
+    console.log(arguments);
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_17093819837059_init_data;
+  _f.__workletHash = 17093819837059;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin doesn't capture objects' properties 1`] = `
+"var foo = {
+  bar: 42
+};
+var _worklet_3750134465664_init_data = {
+  code: "function f(){const{foo}=this.__closure;console.log(foo.bar);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var f = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _f = function _f() {
+    console.log(foo.bar);
+  };
+  _f.__closure = {
+    foo: foo
+  };
+  _f.__initData = _worklet_3750134465664_init_data;
+  _f.__workletHash = 3750134465664;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin for DirectiveLiterals doesn't bother other Directive Literals 1`] = `
+"function foo() {
+  'foobar';
+
+  var foo = 'bar';
+}"
+`;
+
+exports[`babel plugin for DirectiveLiterals doesn't transform functions without 'worklet' directive 1`] = `
+"function f(x) {
+  return x + 2;
+}"
+`;
+
+exports[`babel plugin for DirectiveLiterals doesn't transform string literals 1`] = `
+"var _worklet_9810417751380_init_data = {
+  code: "function foo(x){const bar='worklet';const baz=\\"worklet\\";}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f(x) {
+    var bar = 'worklet';
+    var baz = "worklet";
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_9810417751380_init_data;
+  _f.__workletHash = 9810417751380;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin for DirectiveLiterals removes "worklet"; directive from worklets 1`] = `
+"var _worklet_4679479961836_init_data = {
+  code: "function foo(x){return x+2;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f(x) {
+    return x + 2;
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_4679479961836_init_data;
+  _f.__workletHash = 4679479961836;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin for DirectiveLiterals removes 'worklet'; directive from worklets 1`] = `
+"var _worklet_4679479961836_init_data = {
+  code: "function foo(x){return x+2;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f(x) {
+    return x + 2;
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_4679479961836_init_data;
+  _f.__workletHash = 4679479961836;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown chained methods before 1`] = `
+"FadeIn.AmogusIn().withCallback(function () {
+  console.log('FadeIn with AmogusIn before');
+});"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown chained methods before with new keyword 1`] = `
+"new FadeIn().AmogusIn().withCallback(function () {
+  console.log('FadeIn with AmogusIn before');
+});"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown objects 1`] = `
+"AmogusIn.withCallback(function () {
+  console.log('AmogusIn');
+});"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown objects chained with known objects 1`] = `
+"AmogusIn.FadeIn().withCallback(function () {
+  console.log('AmogusIn with FadeIn after');
+});"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown objects chained with known objects with new keyword 1`] = `
+"new AmogusIn().FadeIn().withCallback(function () {
+  console.log('AmogusIn with FadeIn after');
+});"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown objects on known chained methods before 1`] = `
+"AmogusIn.build().withCallback(function () {
+  console.log('AmogusIn with build before');
+});"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown objects on known chained methods before with new keyword 1`] = `
+"new AmogusIn().build().withCallback(function () {
+  console.log('AmogusIn with build before');
+});"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown objects with known object chained after 1`] = `
+"AmogusIn.withCallback(function () {
+  console.log('AmogusIn with FadeIn before');
+}).FadeIn();"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown objects with known object chained after with new keyword 1`] = `
+"new AmogusIn().withCallback(function () {
+  console.log('AmogusIn with FadeIn before');
+}).FadeIn();"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown objects with new keyword 1`] = `
+"new AmogusIn().withCallback(function () {
+  console.log('AmogusIn');
+});"
+`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after 1`] = `
+"var _worklet_9297685979719_init_data = {
+  code: "function anonymous(){console.log('FadeIn with build after');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+FadeIn.withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn with build after');
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_9297685979719_init_data;
+  _f.__workletHash = 9297685979719;
+  _f.__stackDetails = _e;
+  return _f;
+}()).build();"
+`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after with new keyword 1`] = `
+"var _worklet_9297685979719_init_data = {
+  code: "function anonymous(){console.log('FadeIn with build after');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+new FadeIn().withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn with build after');
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_9297685979719_init_data;
+  _f.__workletHash = 9297685979719;
+  _f.__stackDetails = _e;
+  return _f;
+}()).build();"
+`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before 1`] = `
+"var _worklet_7455148134810_init_data = {
+  code: "function anonymous(){console.log('FadeIn with build before');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+FadeIn.build().withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn with build before');
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_7455148134810_init_data;
+  _f.__workletHash = 7455148134810;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before with new keyword 1`] = `
+"var _worklet_7455148134810_init_data = {
+  code: "function anonymous(){console.log('FadeIn with build before');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+new FadeIn().build().withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn with build before');
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_7455148134810_init_data;
+  _f.__workletHash = 7455148134810;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects 1`] = `
+"var _worklet_1134777276323_init_data = {
+  code: "function anonymous(){console.log('FadeIn with build');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+FadeIn.build().duration().withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn with build');
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_1134777276323_init_data;
+  _f.__workletHash = 1134777276323;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects with new keyword 1`] = `
+"var _worklet_1134777276323_init_data = {
+  code: "function anonymous(){console.log('FadeIn with build');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+new FadeIn().build().duration().withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn with build');
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_1134777276323_init_data;
+  _f.__workletHash = 1134777276323;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after 1`] = `
+"var _worklet_5878665076948_init_data = {
+  code: "function anonymous(){console.log('FadeIn with AmogusIn after');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+FadeIn.withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn with AmogusIn after');
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_5878665076948_init_data;
+  _f.__workletHash = 5878665076948;
+  _f.__stackDetails = _e;
+  return _f;
+}()).AmogusIn();"
+`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after with new keyword 1`] = `
+"var _worklet_5878665076948_init_data = {
+  code: "function anonymous(){console.log('FadeIn with AmogusIn after');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+new FadeIn().withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn with AmogusIn after');
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_5878665076948_init_data;
+  _f.__workletHash = 5878665076948;
+  _f.__stackDetails = _e;
+  return _f;
+}()).AmogusIn();"
+`;
+
+exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically 1`] = `
+"var _worklet_7606417127287_init_data = {
+  code: "function anonymous(){console.log('FadeIn');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+FadeIn.withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn');
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_7606417127287_init_data;
+  _f.__workletHash = 7606417127287;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically with new keyword 1`] = `
+"var _worklet_7606417127287_init_data = {
+  code: "function anonymous(){console.log('FadeIn');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+new FadeIn().withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn');
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_7606417127287_init_data;
+  _f.__workletHash = 7606417127287;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin for class worklets workletizes class field 1`] = `
+"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
+var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
+var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
+var _worklet_16347365292089_init_data = {
+  code: "function anonymous(x){return x+2;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var Foo = (0, _createClass2.default)(function Foo() {
+  (0, _classCallCheck2.default)(this, Foo);
+  (0, _defineProperty2.default)(this, "bar", function () {
+    var _e = [new global.Error(), 1, -27];
+    var _f = function _f(x) {
+      return x + 2;
+    };
+    _f.__closure = {};
+    _f.__initData = _worklet_16347365292089_init_data;
+    _f.__workletHash = 16347365292089;
+    _f.__stackDetails = _e;
+    return _f;
+  }());
+});"
+`;
+
+exports[`babel plugin for class worklets workletizes constructor 1`] = `
+"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
+var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
+var _worklet_11052941891417_init_data = {
+  code: "function Foo(x){const Foo=this._recur;const{_classCallCheck}=this.__closure;_classCallCheck(this,Foo);this.x=x;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var Foo = (0, _createClass2.default)(function () {
+  var _e = [new global.Error(), -2, -27];
+  var _f = function _f(x) {
+    (0, _classCallCheck2.default)(this, Foo);
+    this.x = x;
+  };
+  _f.__closure = {
+    _classCallCheck: _classCallCheck2.default
+  };
+  _f.__initData = _worklet_11052941891417_init_data;
+  _f.__workletHash = 11052941891417;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin for class worklets workletizes getter 1`] = `
+"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
+var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
+var _worklet_13932542455552_init_data = {
+  code: "function get(){const{x}=this.__closure;return x+2;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var Foo = function () {
+  function Foo() {
+    (0, _classCallCheck2.default)(this, Foo);
+  }
+  (0, _createClass2.default)(Foo, [{
+    key: "bar",
+    get: function () {
+      var _e = [new global.Error(), -2, -27];
+      var _f = function _f() {
+        return x + 2;
+      };
+      _f.__closure = {
+        x: x
+      };
+      _f.__initData = _worklet_13932542455552_init_data;
+      _f.__workletHash = 13932542455552;
+      _f.__stackDetails = _e;
+      return _f;
+    }()
+  }]);
+  return Foo;
+}();"
+`;
+
+exports[`babel plugin for class worklets workletizes instance method 1`] = `
+"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
+var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
+var _worklet_16974800582491_init_data = {
+  code: "function bar(x){return x+2;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var Foo = function () {
+  function Foo() {
+    (0, _classCallCheck2.default)(this, Foo);
+  }
+  (0, _createClass2.default)(Foo, [{
+    key: "bar",
+    value: function () {
+      var _e = [new global.Error(), 1, -27];
+      var _f = function _f(x) {
+        return x + 2;
+      };
+      _f.__closure = {};
+      _f.__initData = _worklet_16974800582491_init_data;
+      _f.__workletHash = 16974800582491;
+      _f.__stackDetails = _e;
+      return _f;
+    }()
+  }]);
+  return Foo;
+}();"
+`;
+
+exports[`babel plugin for class worklets workletizes setter 1`] = `
+"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
+var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
+var _worklet_6451428689423_init_data = {
+  code: "function set(x){this.x=x+2;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var Foo = function () {
+  function Foo() {
+    (0, _classCallCheck2.default)(this, Foo);
+  }
+  (0, _createClass2.default)(Foo, [{
+    key: "bar",
+    set: function () {
+      var _e = [new global.Error(), 1, -27];
+      var _f = function _f(x) {
+        this.x = x + 2;
+      };
+      _f.__closure = {};
+      _f.__initData = _worklet_6451428689423_init_data;
+      _f.__workletHash = 6451428689423;
+      _f.__stackDetails = _e;
+      return _f;
+    }()
+  }]);
+  return Foo;
+}();"
+`;
+
+exports[`babel plugin for class worklets workletizes static class field 1`] = `
+"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
+var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
+var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
+var Foo = (0, _createClass2.default)(function Foo() {
+  (0, _classCallCheck2.default)(this, Foo);
+});
+var _worklet_16347365292089_init_data = {
+  code: "function anonymous(x){return x+2;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+(0, _defineProperty2.default)(Foo, "bar", function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f(x) {
+    return x + 2;
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_16347365292089_init_data;
+  _f.__workletHash = 16347365292089;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin for class worklets workletizes static method 1`] = `
+"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
+var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
+var _worklet_16974800582491_init_data = {
+  code: "function bar(x){return x+2;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var Foo = function () {
+  function Foo() {
+    (0, _classCallCheck2.default)(this, Foo);
+  }
+  (0, _createClass2.default)(Foo, null, [{
+    key: "bar",
+    value: function () {
+      var _e = [new global.Error(), 1, -27];
+      var _f = function _f(x) {
+        return x + 2;
+      };
+      _f.__closure = {};
+      _f.__initData = _worklet_16974800582491_init_data;
+      _f.__workletHash = 16974800582491;
+      _f.__stackDetails = _e;
+      return _f;
+    }()
+  }]);
+  return Foo;
+}();"
+`;
+
+exports[`babel plugin for closure capturing captures worklets environment 1`] = `
 "var x = 5;
 var objX = {
   x: x
 };
-var _worklet_5359970077727_init_data = {
-  code: "function f(){const{x,objX}=this._closure;return{res:x+objX.x};}",
-  location: "/dev/null"
+var _worklet_3447562087488_init_data = {
+  code: "function f(){const{x,objX}=this.__closure;return{res:x+objX.x};}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 var f = function () {
   var _e = [new global.Error(), -3, -27];
@@ -16,36 +608,30 @@ var f = function () {
       res: x + objX.x
     };
   };
-  _f._closure = {
+  _f.__closure = {
     x: x,
     objX: objX
   };
-  _f.__initData = _worklet_5359970077727_init_data;
-  _f.__workletHash = 5359970077727;
+  _f.__initData = _worklet_3447562087488_init_data;
+  _f.__workletHash = 3447562087488;
   _f.__stackDetails = _e;
   return _f;
 }();"
 `;
 
-exports[`babel plugin doesn't bother other Directive Literals 1`] = `
-"function foo() {
-  'foobar';
-
-  var foo = 'bar';
-}"
-`;
-
-exports[`babel plugin doesn't capture globals 1`] = `
+exports[`babel plugin for closure capturing doesn't capture globals 1`] = `
 "var _worklet_13298016111221_init_data = {
   code: "function f(){console.log('test');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 var f = function () {
   var _e = [new global.Error(), 1, -27];
   var _f = function _f() {
     console.log('test');
   };
-  _f._closure = {};
+  _f.__closure = {};
   _f.__initData = _worklet_13298016111221_init_data;
   _f.__workletHash = 13298016111221;
   _f.__stackDetails = _e;
@@ -53,40 +639,203 @@ var f = function () {
 }();"
 `;
 
-exports[`babel plugin doesn't nest worklets for other threads 1`] = `
-"var _worklet_1678749606628_init_data = {
-  code: "function foo(x){function bar(x){'worklet';return x+2;}return bar(x)+1;}",
-  location: "/dev/null"
+exports[`babel plugin for debugging does inject location for worklets in dev builds 1`] = `
+"var _worklet_1852213185147_init_data = {
+  code: "function anonymous(){const x=1;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
-var _worklet_16974800582491_init_data = {
-  code: "function bar(x){return x+2;}",
-  location: "/dev/null"
+var foo = useAnimatedStyle(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    var x = 1;
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_1852213185147_init_data;
+  _f.__workletHash = 1852213185147;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin for debugging doesn't inject location for worklets in production builds 1`] = `
+"var _worklet_1852213185147_init_data = {
+  code: "function anonymous(){const x=1;}"
+};
+var foo = useAnimatedStyle(function () {
+  var _f = function _f() {
+    var x = 1;
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_1852213185147_init_data;
+  _f.__workletHash = 1852213185147;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin for debugging doesn't inject version for worklets in production builds 1`] = `
+"var _worklet_1852213185147_init_data = {
+  code: "function anonymous(){const x=1;}"
+};
+var foo = useAnimatedStyle(function () {
+  var _f = function _f() {
+    var x = 1;
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_1852213185147_init_data;
+  _f.__workletHash = 1852213185147;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin for explicit worklets workletizes ArrowFunctionExpression 1`] = `
+"var _worklet_16347365292089_init_data = {
+  code: "function anonymous(x){return x+2;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
   var _f = function _f(x) {
-    var bar = function () {
-      var _e = [new global.Error(), 1, -27];
-      var _f = function _f(x) {
-        return x + 2;
-      };
-      _f._closure = {};
-      _f.__initData = _worklet_16974800582491_init_data;
-      _f.__workletHash = 16974800582491;
-      _f.__stackDetails = _e;
-      return _f;
-    }();
-    return bar(x) + 1;
+    return x + 2;
   };
-  _f._closure = {};
-  _f.__initData = _worklet_1678749606628_init_data;
-  _f.__workletHash = 1678749606628;
+  _f.__closure = {};
+  _f.__initData = _worklet_16347365292089_init_data;
+  _f.__workletHash = 16347365292089;
   _f.__stackDetails = _e;
   return _f;
 }();"
 `;
 
-exports[`babel plugin doesn't show a warning if user writes something like style={styles.value} 1`] = `
+exports[`babel plugin for explicit worklets workletizes FunctionDeclaration 1`] = `
+"var _worklet_4679479961836_init_data = {
+  code: "function foo(x){return x+2;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f(x) {
+    return x + 2;
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_4679479961836_init_data;
+  _f.__workletHash = 4679479961836;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin for explicit worklets workletizes named FunctionExpression 1`] = `
+"var _worklet_4679479961836_init_data = {
+  code: "function foo(x){return x+2;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f(x) {
+    return x + 2;
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_4679479961836_init_data;
+  _f.__workletHash = 4679479961836;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin for explicit worklets workletizes unnamed FunctionExpression 1`] = `
+"var _worklet_16347365292089_init_data = {
+  code: "function anonymous(x){return x+2;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f(x) {
+    return x + 2;
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_16347365292089_init_data;
+  _f.__workletHash = 16347365292089;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped ArrowFunctionExpression automatically 1`] = `
+"var _worklet_9645206935615_init_data = {
+  code: "function anonymous(){return{width:50};}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var animatedStyle = useAnimatedStyle(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    return {
+      width: 50
+    };
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_9645206935615_init_data;
+  _f.__workletHash = 9645206935615;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped named FunctionExpression automatically 1`] = `
+"var _worklet_6275510763626_init_data = {
+  code: "function foo(){return{width:50};}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var animatedStyle = useAnimatedStyle(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    return {
+      width: 50
+    };
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_6275510763626_init_data;
+  _f.__workletHash = 6275510763626;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped unnamed FunctionExpression automatically 1`] = `
+"var _worklet_9645206935615_init_data = {
+  code: "function anonymous(){return{width:50};}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var animatedStyle = useAnimatedStyle(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    return {
+      width: 50
+    };
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_9645206935615_init_data;
+  _f.__workletHash = 9645206935615;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin for inline styles doesn't show a warning if user writes something like style={styles.value} 1`] = `
 "function App() {
   return React.createElement(Animated.View, {
     style: styles.value
@@ -94,106 +843,7 @@ exports[`babel plugin doesn't show a warning if user writes something like style
 }"
 `;
 
-exports[`babel plugin doesn't transform ArrowFunctionExpression as argument of useAnimatedGestureHandler 1`] = `"useAnimatedGestureHandler(function () {});"`;
-
-exports[`babel plugin doesn't transform chained methods of objects containing Gesture property 1`] = `
-"var foo = Something.Gesture.Tap().onEnd(function () {
-  console.log('onEnd');
-});"
-`;
-
-exports[`babel plugin doesn't transform functions without 'worklet' directive 1`] = `
-"function f(x) {
-  return x + 2;
-}"
-`;
-
-exports[`babel plugin doesn't transform named FunctionExpression as argument of useAnimatedGestureHandler 1`] = `"useAnimatedGestureHandler(function foo() {});"`;
-
-exports[`babel plugin doesn't transform standard callback functions 1`] = `
-"var foo = Something.Tap().onEnd(function (_event, _success) {
-  console.log('onEnd');
-});"
-`;
-
-exports[`babel plugin doesn't transform string literals 1`] = `
-"var _worklet_9810417751380_init_data = {
-  code: "function foo(x){const bar='worklet';const baz=\\"worklet\\";}",
-  location: "/dev/null"
-};
-var foo = function () {
-  var _e = [new global.Error(), 1, -27];
-  var _f = function _f(x) {
-    var bar = 'worklet';
-    var baz = "worklet";
-  };
-  _f._closure = {};
-  _f.__initData = _worklet_9810417751380_init_data;
-  _f.__workletHash = 9810417751380;
-  _f.__stackDetails = _e;
-  return _f;
-}();"
-`;
-
-exports[`babel plugin doesn't transform unnamed FunctionExpression as argument of useAnimatedGestureHandler 1`] = `"useAnimatedGestureHandler(function () {});"`;
-
-exports[`babel plugin doesn't workletize irrelevant chained gesture object callback functions 1`] = `"var foo = Gesture.Tap().toString();"`;
-
-exports[`babel plugin removes "worklet"; directive from worklets 1`] = `
-"var _worklet_4679479961836_init_data = {
-  code: "function foo(x){return x+2;}",
-  location: "/dev/null"
-};
-var foo = function () {
-  var _e = [new global.Error(), 1, -27];
-  var _f = function _f(x) {
-    return x + 2;
-  };
-  _f._closure = {};
-  _f.__initData = _worklet_4679479961836_init_data;
-  _f.__workletHash = 4679479961836;
-  _f.__stackDetails = _e;
-  return _f;
-}();"
-`;
-
-exports[`babel plugin removes 'worklet'; directive from worklets 1`] = `
-"var _worklet_4679479961836_init_data = {
-  code: "function foo(x){return x+2;}",
-  location: "/dev/null"
-};
-var foo = function () {
-  var _e = [new global.Error(), 1, -27];
-  var _f = function _f(x) {
-    return x + 2;
-  };
-  _f._closure = {};
-  _f.__initData = _worklet_4679479961836_init_data;
-  _f.__workletHash = 4679479961836;
-  _f.__stackDetails = _e;
-  return _f;
-}();"
-`;
-
-exports[`babel plugin removes comments from worklets 1`] = `
-"var _worklet_235615426006_init_data = {
-  code: "function anonymous(){return true;}",
-  location: "/dev/null"
-};
-var f = function () {
-  var _e = [new global.Error(), 1, -27];
-  var _f = function _f() {
-    return true;
-  };
-  _f._closure = {};
-  _f.__initData = _worklet_235615426006_init_data;
-  _f.__workletHash = 235615426006;
-  _f.__stackDetails = _e;
-  return _f;
-}();"
-`;
-
-exports[`babel plugin shows a warning if user uses .value inside inline style 1`] = `
+exports[`babel plugin for inline styles shows a warning if user uses .value inside inline style 1`] = `
 "function App() {
   return React.createElement(Animated.View, {
     style: {
@@ -206,7 +856,7 @@ exports[`babel plugin shows a warning if user uses .value inside inline style 1`
 }"
 `;
 
-exports[`babel plugin shows a warning if user uses .value inside inline style, style array 1`] = `
+exports[`babel plugin for inline styles shows a warning if user uses .value inside inline style, style array 1`] = `
 "function App() {
   return React.createElement(Animated.View, {
     style: [style, {
@@ -219,7 +869,7 @@ exports[`babel plugin shows a warning if user uses .value inside inline style, s
 }"
 `;
 
-exports[`babel plugin shows a warning if user uses .value inside inline style, transforms 1`] = `
+exports[`babel plugin for inline styles shows a warning if user uses .value inside inline style, transforms 1`] = `
 "function App() {
   return React.createElement(Animated.View, {
     style: {
@@ -234,178 +884,29 @@ exports[`babel plugin shows a warning if user uses .value inside inline style, t
 }"
 `;
 
-exports[`babel plugin supports SequenceExpression 1`] = `
-"function App() {
-  (0, fun)({
-    onStart: function onStart() {}
-  }, []);
-}"
-`;
+exports[`babel plugin for object hooks doesn't transform ArrowFunctionExpression as argument of useAnimatedGestureHandler 1`] = `"useAnimatedGestureHandler(function () {});"`;
 
-exports[`babel plugin supports SequenceExpression, many arguments 1`] = `
-"var _worklet_4434179069699_init_data = {
-  code: "function onStart(){}",
-  location: "/dev/null"
-};
-function App() {
-  (0, 3, fun)({
-    onStart: function () {
-      var _e = [new global.Error(), 1, -27];
-      var _f = function _f() {};
-      _f._closure = {};
-      _f.__initData = _worklet_4434179069699_init_data;
-      _f.__workletHash = 4434179069699;
-      _f.__stackDetails = _e;
-      return _f;
-    }()
-  }, []);
-}"
-`;
+exports[`babel plugin for object hooks doesn't transform named FunctionExpression as argument of useAnimatedGestureHandler 1`] = `"useAnimatedGestureHandler(function foo() {});"`;
 
-exports[`babel plugin supports SequenceExpression, with objectHook 1`] = `
-"var _worklet_4434179069699_init_data = {
-  code: "function onStart(){}",
-  location: "/dev/null"
-};
-function App() {
-  (0, useAnimatedGestureHandler)({
-    onStart: function () {
-      var _e = [new global.Error(), 1, -27];
-      var _f = function _f() {};
-      _f._closure = {};
-      _f.__initData = _worklet_4434179069699_init_data;
-      _f.__workletHash = 4434179069699;
-      _f.__stackDetails = _e;
-      return _f;
-    }()
-  }, []);
-}"
-`;
+exports[`babel plugin for object hooks doesn't transform unnamed FunctionExpression as argument of useAnimatedGestureHandler 1`] = `"useAnimatedGestureHandler(function () {});"`;
 
-exports[`babel plugin supports SequenceExpression, with worklet 1`] = `
-"var _worklet_4434179069699_init_data = {
-  code: "function onStart(){}",
-  location: "/dev/null"
-};
-function App() {
-  (0, fun)({
-    onStart: function () {
-      var _e = [new global.Error(), 1, -27];
-      var _f = function _f() {};
-      _f._closure = {};
-      _f.__initData = _worklet_4434179069699_init_data;
-      _f.__workletHash = 4434179069699;
-      _f.__stackDetails = _e;
-      return _f;
-    }()
-  }, []);
-}"
-`;
+exports[`babel plugin for object hooks supports empty object in useAnimatedGestureHandler 1`] = `"useAnimatedGestureHandler({});"`;
 
-exports[`babel plugin supports SequenceExpression, with worklet closure 1`] = `
-"var _worklet_16676723780973_init_data = {
-  code: "function onStart(){const{obj}=this._closure;const a=obj.a;}",
-  location: "/dev/null"
-};
-function App() {
-  var obj = {
-    a: 1,
-    b: 2
-  };
-  (0, fun)({
-    onStart: function () {
-      var _e = [new global.Error(), -2, -27];
-      var _f = function _f() {
-        var a = obj.a;
-      };
-      _f._closure = {
-        obj: obj
-      };
-      _f.__initData = _worklet_16676723780973_init_data;
-      _f.__workletHash = 16676723780973;
-      _f.__stackDetails = _e;
-      return _f;
-    }()
-  }, []);
-}"
-`;
+exports[`babel plugin for object hooks supports empty object in useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler({});"`;
 
-exports[`babel plugin supports empty object in useAnimatedGestureHandler 1`] = `"useAnimatedGestureHandler({});"`;
-
-exports[`babel plugin supports empty object in useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler({});"`;
-
-exports[`babel plugin supports recursive calls 1`] = `
-"var a = 1;
-var _worklet_2022702330805_init_data = {
-  code: "function foo(t){const foo=this._recur;const{a}=this._closure;if(t>0){return a+foo(t-1);}}",
-  location: "/dev/null"
-};
-var foo = function () {
-  var _e = [new global.Error(), -2, -27];
-  var _f = function _f(t) {
-    if (t > 0) {
-      return a + foo(t - 1);
-    }
-  };
-  _f._closure = {
-    a: a
-  };
-  _f.__initData = _worklet_2022702330805_init_data;
-  _f.__workletHash = 2022702330805;
-  _f.__stackDetails = _e;
-  return _f;
-}();"
-`;
-
-exports[`babel plugin transforms 1`] = `
-"var _reactNativeReanimated = _interopRequireWildcard(require("react-native-reanimated"));
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-var _worklet_16669311443114_init_data = {
-  code: "function anonymous(){const{offset}=this._closure;return{transform:[{translateX:offset.value*255}]};}",
-  location: "/dev/null"
-};
-function Box() {
-  var offset = (0, _reactNativeReanimated.useSharedValue)(0);
-  var animatedStyles = (0, _reactNativeReanimated.useAnimatedStyle)(function () {
-    var _e = [new global.Error(), -2, -27];
-    var _f = function _f() {
-      return {
-        transform: [{
-          translateX: offset.value * 255
-        }]
-      };
-    };
-    _f._closure = {
-      offset: offset
-    };
-    _f.__initData = _worklet_16669311443114_init_data;
-    _f.__workletHash = 16669311443114;
-    _f.__stackDetails = _e;
-    return _f;
-  }());
-  return React.createElement(React.Fragment, null, React.createElement(_reactNativeReanimated.default.View, {
-    style: [styles.box, animatedStyles]
-  }), React.createElement(Button, {
-    onPress: function onPress() {
-      return offset.value = Math.random();
-    },
-    title: "Move"
-  }));
-}"
-`;
-
-exports[`babel plugin transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler 1`] = `
+exports[`babel plugin for object hooks transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler 1`] = `
 "var _worklet_1022605193782_init_data = {
   code: "function anonymous(event){console.log(event);}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 useAnimatedScrollHandler(function () {
   var _e = [new global.Error(), 1, -27];
   var _f = function _f(event) {
     console.log(event);
   };
-  _f._closure = {};
+  _f.__closure = {};
   _f.__initData = _worklet_1022605193782_init_data;
   _f.__workletHash = 1022605193782;
   _f.__stackDetails = _e;
@@ -413,24 +914,30 @@ useAnimatedScrollHandler(function () {
 }());"
 `;
 
-exports[`babel plugin transforms each object property in useAnimatedGestureHandler 1`] = `
+exports[`babel plugin for object hooks transforms each object property in useAnimatedGestureHandler 1`] = `
 "var _worklet_14892326408241_init_data = {
   code: "function anonymous(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 var _worklet_14892326408241_init_data2 = {
   code: "function anonymous(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 var _worklet_14892326408241_init_data3 = {
   code: "function anonymous(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 useAnimatedGestureHandler({
   onStart: function () {
     var _e = [new global.Error(), 1, -27];
     var _f = function _f() {};
-    _f._closure = {};
+    _f.__closure = {};
     _f.__initData = _worklet_14892326408241_init_data;
     _f.__workletHash = 14892326408241;
     _f.__stackDetails = _e;
@@ -439,7 +946,7 @@ useAnimatedGestureHandler({
   onUpdate: function () {
     var _e = [new global.Error(), 1, -27];
     var _f = function _f() {};
-    _f._closure = {};
+    _f.__closure = {};
     _f.__initData = _worklet_14892326408241_init_data2;
     _f.__workletHash = 14892326408241;
     _f.__stackDetails = _e;
@@ -448,7 +955,7 @@ useAnimatedGestureHandler({
   onEnd: function () {
     var _e = [new global.Error(), 1, -27];
     var _f = function _f() {};
-    _f._closure = {};
+    _f.__closure = {};
     _f.__initData = _worklet_14892326408241_init_data3;
     _f.__workletHash = 14892326408241;
     _f.__stackDetails = _e;
@@ -457,32 +964,42 @@ useAnimatedGestureHandler({
 });"
 `;
 
-exports[`babel plugin transforms each object property in useAnimatedScrollHandler 1`] = `
+exports[`babel plugin for object hooks transforms each object property in useAnimatedScrollHandler 1`] = `
 "var _worklet_14892326408241_init_data = {
   code: "function anonymous(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 var _worklet_14892326408241_init_data2 = {
   code: "function anonymous(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 var _worklet_14892326408241_init_data3 = {
   code: "function anonymous(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 var _worklet_14892326408241_init_data4 = {
   code: "function anonymous(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 var _worklet_14892326408241_init_data5 = {
   code: "function anonymous(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 useAnimatedScrollHandler({
   onScroll: function () {
     var _e = [new global.Error(), 1, -27];
     var _f = function _f() {};
-    _f._closure = {};
+    _f.__closure = {};
     _f.__initData = _worklet_14892326408241_init_data;
     _f.__workletHash = 14892326408241;
     _f.__stackDetails = _e;
@@ -491,7 +1008,7 @@ useAnimatedScrollHandler({
   onBeginDrag: function () {
     var _e = [new global.Error(), 1, -27];
     var _f = function _f() {};
-    _f._closure = {};
+    _f.__closure = {};
     _f.__initData = _worklet_14892326408241_init_data2;
     _f.__workletHash = 14892326408241;
     _f.__stackDetails = _e;
@@ -500,7 +1017,7 @@ useAnimatedScrollHandler({
   onEndDrag: function () {
     var _e = [new global.Error(), 1, -27];
     var _f = function _f() {};
-    _f._closure = {};
+    _f.__closure = {};
     _f.__initData = _worklet_14892326408241_init_data3;
     _f.__workletHash = 14892326408241;
     _f.__stackDetails = _e;
@@ -509,7 +1026,7 @@ useAnimatedScrollHandler({
   onMomentumBegin: function () {
     var _e = [new global.Error(), 1, -27];
     var _f = function _f() {};
-    _f._closure = {};
+    _f.__closure = {};
     _f.__initData = _worklet_14892326408241_init_data4;
     _f.__workletHash = 14892326408241;
     _f.__stackDetails = _e;
@@ -518,7 +1035,7 @@ useAnimatedScrollHandler({
   onMomentumEnd: function () {
     var _e = [new global.Error(), 1, -27];
     var _f = function _f() {};
-    _f._closure = {};
+    _f.__closure = {};
     _f.__initData = _worklet_14892326408241_init_data5;
     _f.__workletHash = 14892326408241;
     _f.__stackDetails = _e;
@@ -527,17 +1044,19 @@ useAnimatedScrollHandler({
 });"
 `;
 
-exports[`babel plugin transforms named FunctionExpression as argument of useAnimatedScrollHandler 1`] = `
+exports[`babel plugin for object hooks transforms named FunctionExpression as argument of useAnimatedScrollHandler 1`] = `
 "var _worklet_14540236792163_init_data = {
   code: "function foo(event){console.log(event);}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 useAnimatedScrollHandler(function () {
   var _e = [new global.Error(), 1, -27];
   var _f = function _f(event) {
     console.log(event);
   };
-  _f._closure = {};
+  _f.__closure = {};
   _f.__initData = _worklet_14540236792163_init_data;
   _f.__workletHash = 14540236792163;
   _f.__stackDetails = _e;
@@ -545,40 +1064,217 @@ useAnimatedScrollHandler(function () {
 }());"
 `;
 
-exports[`babel plugin transforms nested worklets for JS thread 1`] = `
-"var _worklet_1678749606628_init_data = {
-  code: "function foo(x){function bar(x){'worklet';return x+2;}return bar(x)+1;}",
-  location: "/dev/null"
+exports[`babel plugin for object hooks transforms unnamed FunctionExpression as argument of useAnimatedScrollHandler 1`] = `
+"var _worklet_1022605193782_init_data = {
+  code: "function anonymous(event){console.log(event);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
-var _worklet_16974800582491_init_data = {
-  code: "function bar(x){return x+2;}",
-  location: "/dev/null"
-};
-var foo = function () {
+useAnimatedScrollHandler(function () {
   var _e = [new global.Error(), 1, -27];
-  var _f = function _f(x) {
-    var bar = function () {
-      var _e = [new global.Error(), 1, -27];
-      var _f = function _f(x) {
-        return x + 2;
-      };
-      _f._closure = {};
-      _f.__initData = _worklet_16974800582491_init_data;
-      _f.__workletHash = 16974800582491;
-      _f.__stackDetails = _e;
-      return _f;
-    }();
-    return bar(x) + 1;
+  var _f = function _f(event) {
+    console.log(event);
   };
-  _f._closure = {};
-  _f.__initData = _worklet_1678749606628_init_data;
-  _f.__workletHash = 1678749606628;
+  _f.__closure = {};
+  _f.__initData = _worklet_1022605193782_init_data;
+  _f.__workletHash = 1022605193782;
   _f.__stackDetails = _e;
   return _f;
-}();"
+}());"
 `;
 
-exports[`babel plugin transforms spread operator in Animated component 1`] = `
+exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wrapped ArrowFunctionExpression automatically 1`] = `
+"var _worklet_1022605193782_init_data = {
+  code: "function anonymous(event){console.log(event);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+useAnimatedGestureHandler({
+  onStart: function () {
+    var _e = [new global.Error(), 1, -27];
+    var _f = function _f(event) {
+      console.log(event);
+    };
+    _f.__closure = {};
+    _f.__initData = _worklet_1022605193782_init_data;
+    _f.__workletHash = 1022605193782;
+    _f.__stackDetails = _e;
+    return _f;
+  }()
+});"
+`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wrapped ObjectMethod automatically 1`] = `
+"var _worklet_338158776260_init_data = {
+  code: "function onStart(event){console.log(event);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+useAnimatedGestureHandler({
+  onStart: function () {
+    var _e = [new global.Error(), 1, -27];
+    var _f = function _f(event) {
+      console.log(event);
+    };
+    _f.__closure = {};
+    _f.__initData = _worklet_338158776260_init_data;
+    _f.__workletHash = 338158776260;
+    _f.__stackDetails = _e;
+    return _f;
+  }()
+});"
+`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wrapped named FunctionExpression automatically 1`] = `
+"var _worklet_338158776260_init_data = {
+  code: "function onStart(event){console.log(event);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+useAnimatedGestureHandler({
+  onStart: function () {
+    var _e = [new global.Error(), 1, -27];
+    var _f = function _f(event) {
+      console.log(event);
+    };
+    _f.__closure = {};
+    _f.__initData = _worklet_338158776260_init_data;
+    _f.__workletHash = 338158776260;
+    _f.__stackDetails = _e;
+    return _f;
+  }()
+});"
+`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wrapped unnamed FunctionExpression automatically 1`] = `
+"var _worklet_1022605193782_init_data = {
+  code: "function anonymous(event){console.log(event);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+useAnimatedGestureHandler({
+  onStart: function () {
+    var _e = [new global.Error(), 1, -27];
+    var _f = function _f(event) {
+      console.log(event);
+    };
+    _f.__closure = {};
+    _f.__initData = _worklet_1022605193782_init_data;
+    _f.__workletHash = 1022605193782;
+    _f.__stackDetails = _e;
+    return _f;
+  }()
+});"
+`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped ArrowFunctionExpression automatically 1`] = `
+"var _worklet_1022605193782_init_data = {
+  code: "function anonymous(event){console.log(event);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+useAnimatedScrollHandler({
+  onScroll: function () {
+    var _e = [new global.Error(), 1, -27];
+    var _f = function _f(event) {
+      console.log(event);
+    };
+    _f.__closure = {};
+    _f.__initData = _worklet_1022605193782_init_data;
+    _f.__workletHash = 1022605193782;
+    _f.__stackDetails = _e;
+    return _f;
+  }()
+});"
+`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped ObjectMethod automatically 1`] = `
+"var _worklet_947458829673_init_data = {
+  code: "function onScroll(event){console.log(event);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+useAnimatedGestureHandler({
+  onScroll: function () {
+    var _e = [new global.Error(), 1, -27];
+    var _f = function _f(event) {
+      console.log(event);
+    };
+    _f.__closure = {};
+    _f.__initData = _worklet_947458829673_init_data;
+    _f.__workletHash = 947458829673;
+    _f.__stackDetails = _e;
+    return _f;
+  }()
+});"
+`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped named FunctionExpression automatically 1`] = `
+"var _worklet_947458829673_init_data = {
+  code: "function onScroll(event){console.log(event);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+useAnimatedScrollHandler({
+  onScroll: function () {
+    var _e = [new global.Error(), 1, -27];
+    var _f = function _f(event) {
+      console.log(event);
+    };
+    _f.__closure = {};
+    _f.__initData = _worklet_947458829673_init_data;
+    _f.__workletHash = 947458829673;
+    _f.__stackDetails = _e;
+    return _f;
+  }()
+});"
+`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped unnamed FunctionExpression automatically 1`] = `
+"var _worklet_1022605193782_init_data = {
+  code: "function anonymous(event){console.log(event);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+useAnimatedScrollHandler({
+  onScroll: function () {
+    var _e = [new global.Error(), 1, -27];
+    var _f = function _f(event) {
+      console.log(event);
+    };
+    _f.__closure = {};
+    _f.__initData = _worklet_1022605193782_init_data;
+    _f.__workletHash = 1022605193782;
+    _f.__stackDetails = _e;
+    return _f;
+  }()
+});"
+`;
+
+exports[`babel plugin for react-native-gesture-handler doesn't transform chained methods of objects containing Gesture property 1`] = `
+"var foo = Something.Gesture.Tap().onEnd(function () {
+  console.log('onEnd');
+});"
+`;
+
+exports[`babel plugin for react-native-gesture-handler doesn't transform standard callback functions 1`] = `
+"var foo = Something.Tap().onEnd(function (_event, _success) {
+  console.log('onEnd');
+});"
+`;
+
+exports[`babel plugin for react-native-gesture-handler doesn't workletize irrelevant chained gesture object callback functions 1`] = `"var foo = Gesture.Tap().toString();"`;
+
+exports[`babel plugin for react-native-gesture-handler transforms spread operator in Animated component 1`] = `
 "function App() {
   return React.createElement(Animated.View, {
     style: [style, Object.assign({}, styles.container, {
@@ -591,10 +1287,12 @@ exports[`babel plugin transforms spread operator in Animated component 1`] = `
 }"
 `;
 
-exports[`babel plugin transforms spread operator in worklets for arrays 1`] = `
+exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for arrays 1`] = `
 "var _worklet_3161057533258_init_data = {
   code: "function foo(){const bar=[4,5];const baz=[1,...[2,3],...bar];}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -602,7 +1300,7 @@ var foo = function () {
     var bar = [4, 5];
     var baz = [1].concat([2, 3], bar);
   };
-  _f._closure = {};
+  _f.__closure = {};
   _f.__initData = _worklet_3161057533258_init_data;
   _f.__workletHash = 3161057533258;
   _f.__stackDetails = _e;
@@ -610,10 +1308,12 @@ var foo = function () {
 }();"
 `;
 
-exports[`babel plugin transforms spread operator in worklets for function arguments 1`] = `
+exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for function arguments 1`] = `
 "var _worklet_9866931756941_init_data = {
   code: "function foo(...args){console.log(args);}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -623,7 +1323,7 @@ var foo = function () {
     }
     console.log(args);
   };
-  _f._closure = {};
+  _f.__closure = {};
   _f.__initData = _worklet_9866931756941_init_data;
   _f.__workletHash = 9866931756941;
   _f.__stackDetails = _e;
@@ -631,12 +1331,14 @@ var foo = function () {
 }();"
 `;
 
-exports[`babel plugin transforms spread operator in worklets for function calls 1`] = `
+exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for function calls 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _toConsumableArray2 = _interopRequireDefault(require("@babel/runtime/helpers/toConsumableArray"));
 var _worklet_2015887751437_init_data = {
   code: "function foo(arg){console.log(...arg);}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -644,7 +1346,7 @@ var foo = function () {
     var _console;
     (_console = console).log.apply(_console, (0, _toConsumableArray2.default)(arg));
   };
-  _f._closure = {};
+  _f.__closure = {};
   _f.__initData = _worklet_2015887751437_init_data;
   _f.__workletHash = 2015887751437;
   _f.__stackDetails = _e;
@@ -652,10 +1354,12 @@ var foo = function () {
 }();"
 `;
 
-exports[`babel plugin transforms spread operator in worklets for objects 1`] = `
+exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for objects 1`] = `
 "var _worklet_792186851025_init_data = {
   code: "function foo(){const bar={d:4,e:5};const baz={a:1,...{b:2,c:3},...bar};}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -671,7 +1375,7 @@ var foo = function () {
       c: 3
     }, bar);
   };
-  _f._closure = {};
+  _f.__closure = {};
   _f.__initData = _worklet_792186851025_init_data;
   _f.__workletHash = 792186851025;
   _f.__stackDetails = _e;
@@ -679,304 +1383,31 @@ var foo = function () {
 }();"
 `;
 
-exports[`babel plugin transforms unnamed FunctionExpression as argument of useAnimatedScrollHandler 1`] = `
-"var _worklet_1022605193782_init_data = {
-  code: "function anonymous(event){console.log(event);}",
-  location: "/dev/null"
-};
-useAnimatedScrollHandler(function () {
-  var _e = [new global.Error(), 1, -27];
-  var _f = function _f(event) {
-    console.log(event);
-  };
-  _f._closure = {};
-  _f.__initData = _worklet_1022605193782_init_data;
-  _f.__workletHash = 1022605193782;
-  _f.__stackDetails = _e;
-  return _f;
-}());"
-`;
-
-exports[`babel plugin workletizes ArrowFunctionExpression 1`] = `
-"var _worklet_16347365292089_init_data = {
-  code: "function anonymous(x){return x+2;}",
-  location: "/dev/null"
-};
-var foo = function () {
-  var _e = [new global.Error(), 1, -27];
-  var _f = function _f(x) {
-    return x + 2;
-  };
-  _f._closure = {};
-  _f.__initData = _worklet_16347365292089_init_data;
-  _f.__workletHash = 16347365292089;
-  _f.__stackDetails = _e;
-  return _f;
-}();"
-`;
-
-exports[`babel plugin workletizes ArrowFunctionExpression inside runOnUI automatically 1`] = `
-"var _worklet_15854903236968_init_data = {
-  code: "function anonymous(){console.log('Hello from the UI thread!');}",
-  location: "/dev/null"
-};
-runOnUI(function () {
-  var _e = [new global.Error(), 1, -27];
-  var _f = function _f() {
-    console.log('Hello from the UI thread!');
-  };
-  _f._closure = {};
-  _f.__initData = _worklet_15854903236968_init_data;
-  _f.__workletHash = 15854903236968;
-  _f.__stackDetails = _e;
-  return _f;
-}())();"
-`;
-
-exports[`babel plugin workletizes FunctionDeclaration 1`] = `
-"var _worklet_4679479961836_init_data = {
-  code: "function foo(x){return x+2;}",
-  location: "/dev/null"
-};
-var foo = function () {
-  var _e = [new global.Error(), 1, -27];
-  var _f = function _f(x) {
-    return x + 2;
-  };
-  _f._closure = {};
-  _f.__initData = _worklet_4679479961836_init_data;
-  _f.__workletHash = 4679479961836;
-  _f.__stackDetails = _e;
-  return _f;
-}();"
-`;
-
-exports[`babel plugin workletizes class field 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
-var _worklet_16347365292089_init_data = {
-  code: "function anonymous(x){return x+2;}",
-  location: "/dev/null"
-};
-var Foo = (0, _createClass2.default)(function Foo() {
-  (0, _classCallCheck2.default)(this, Foo);
-  (0, _defineProperty2.default)(this, "bar", function () {
-    var _e = [new global.Error(), 1, -27];
-    var _f = function _f(x) {
-      return x + 2;
-    };
-    _f._closure = {};
-    _f.__initData = _worklet_16347365292089_init_data;
-    _f.__workletHash = 16347365292089;
-    _f.__stackDetails = _e;
-    return _f;
-  }());
-});"
-`;
-
-exports[`babel plugin workletizes constructor 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var _worklet_14658848071366_init_data = {
-  code: "function Foo(x){const Foo=this._recur;const{_classCallCheck}=this._closure;_classCallCheck(this,Foo);this.x=x;}",
-  location: "/dev/null"
-};
-var Foo = (0, _createClass2.default)(function () {
-  var _e = [new global.Error(), -2, -27];
-  var _f = function _f(x) {
-    (0, _classCallCheck2.default)(this, Foo);
-    this.x = x;
-  };
-  _f._closure = {
-    _classCallCheck: _classCallCheck2.default
-  };
-  _f.__initData = _worklet_14658848071366_init_data;
-  _f.__workletHash = 14658848071366;
-  _f.__stackDetails = _e;
-  return _f;
-}());"
-`;
-
-exports[`babel plugin workletizes getter 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var _worklet_10436985806815_init_data = {
-  code: "function get(){const{x}=this._closure;return x+2;}",
-  location: "/dev/null"
-};
-var Foo = function () {
-  function Foo() {
-    (0, _classCallCheck2.default)(this, Foo);
-  }
-  (0, _createClass2.default)(Foo, [{
-    key: "bar",
-    get: function () {
-      var _e = [new global.Error(), -2, -27];
-      var _f = function _f() {
-        return x + 2;
-      };
-      _f._closure = {
-        x: x
-      };
-      _f.__initData = _worklet_10436985806815_init_data;
-      _f.__workletHash = 10436985806815;
-      _f.__stackDetails = _e;
-      return _f;
-    }()
-  }]);
-  return Foo;
-}();"
-`;
-
-exports[`babel plugin workletizes hook wrapped ArrowFunctionExpression automatically 1`] = `
-"var _worklet_9645206935615_init_data = {
-  code: "function anonymous(){return{width:50};}",
-  location: "/dev/null"
-};
-var animatedStyle = useAnimatedStyle(function () {
-  var _e = [new global.Error(), 1, -27];
-  var _f = function _f() {
-    return {
-      width: 50
-    };
-  };
-  _f._closure = {};
-  _f.__initData = _worklet_9645206935615_init_data;
-  _f.__workletHash = 9645206935615;
-  _f.__stackDetails = _e;
-  return _f;
-}());"
-`;
-
-exports[`babel plugin workletizes hook wrapped named FunctionExpression automatically 1`] = `
-"var _worklet_6275510763626_init_data = {
-  code: "function foo(){return{width:50};}",
-  location: "/dev/null"
-};
-var animatedStyle = useAnimatedStyle(function () {
-  var _e = [new global.Error(), 1, -27];
-  var _f = function _f() {
-    return {
-      width: 50
-    };
-  };
-  _f._closure = {};
-  _f.__initData = _worklet_6275510763626_init_data;
-  _f.__workletHash = 6275510763626;
-  _f.__stackDetails = _e;
-  return _f;
-}());"
-`;
-
-exports[`babel plugin workletizes hook wrapped unnamed FunctionExpression automatically 1`] = `
-"var _worklet_9645206935615_init_data = {
-  code: "function anonymous(){return{width:50};}",
-  location: "/dev/null"
-};
-var animatedStyle = useAnimatedStyle(function () {
-  var _e = [new global.Error(), 1, -27];
-  var _f = function _f() {
-    return {
-      width: 50
-    };
-  };
-  _f._closure = {};
-  _f.__initData = _worklet_9645206935615_init_data;
-  _f.__workletHash = 9645206935615;
-  _f.__stackDetails = _e;
-  return _f;
-}());"
-`;
-
-exports[`babel plugin workletizes instance method 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var _worklet_16974800582491_init_data = {
-  code: "function bar(x){return x+2;}",
-  location: "/dev/null"
-};
-var Foo = function () {
-  function Foo() {
-    (0, _classCallCheck2.default)(this, Foo);
-  }
-  (0, _createClass2.default)(Foo, [{
-    key: "bar",
-    value: function () {
-      var _e = [new global.Error(), 1, -27];
-      var _f = function _f(x) {
-        return x + 2;
-      };
-      _f._closure = {};
-      _f.__initData = _worklet_16974800582491_init_data;
-      _f.__workletHash = 16974800582491;
-      _f.__stackDetails = _e;
-      return _f;
-    }()
-  }]);
-  return Foo;
-}();"
-`;
-
-exports[`babel plugin workletizes named FunctionExpression 1`] = `
-"var _worklet_4679479961836_init_data = {
-  code: "function foo(x){return x+2;}",
-  location: "/dev/null"
-};
-var foo = function () {
-  var _e = [new global.Error(), 1, -27];
-  var _f = function _f(x) {
-    return x + 2;
-  };
-  _f._closure = {};
-  _f.__initData = _worklet_4679479961836_init_data;
-  _f.__workletHash = 4679479961836;
-  _f.__stackDetails = _e;
-  return _f;
-}();"
-`;
-
-exports[`babel plugin workletizes named FunctionExpression inside runOnUI automatically 1`] = `
-"var _worklet_5662051517689_init_data = {
-  code: "function hello(){console.log('Hello from the UI thread!');}",
-  location: "/dev/null"
-};
-runOnUI(function () {
-  var _e = [new global.Error(), 1, -27];
-  var _f = function _f() {
-    console.log('Hello from the UI thread!');
-  };
-  _f._closure = {};
-  _f.__initData = _worklet_5662051517689_init_data;
-  _f.__workletHash = 5662051517689;
-  _f.__stackDetails = _e;
-  return _f;
-}())();"
-`;
-
-exports[`babel plugin workletizes possibly chained gesture object callback functions automatically 1`] = `
+exports[`babel plugin for react-native-gesture-handler workletizes possibly chained gesture object callback functions automatically 1`] = `
 "var _worklet_15393478329680_init_data = {
   code: "function anonymous(){console.log('onBegin');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 var _worklet_12748187344900_init_data = {
   code: "function anonymous(_event){console.log('onStart');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 var _worklet_232586479291_init_data = {
   code: "function anonymous(_event,_success){console.log('onEnd');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
   var _e = [new global.Error(), 1, -27];
   var _f = function _f() {
     console.log('onBegin');
   };
-  _f._closure = {};
+  _f.__closure = {};
   _f.__initData = _worklet_15393478329680_init_data;
   _f.__workletHash = 15393478329680;
   _f.__stackDetails = _e;
@@ -986,7 +1417,7 @@ var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
   var _f = function _f(_event) {
     console.log('onStart');
   };
-  _f._closure = {};
+  _f.__closure = {};
   _f.__initData = _worklet_12748187344900_init_data;
   _f.__workletHash = 12748187344900;
   _f.__stackDetails = _e;
@@ -996,7 +1427,7 @@ var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
   var _f = function _f(_event, _success) {
     console.log('onEnd');
   };
-  _f._closure = {};
+  _f.__closure = {};
   _f.__initData = _worklet_232586479291_init_data;
   _f.__workletHash = 232586479291;
   _f.__stackDetails = _e;
@@ -1004,120 +1435,19 @@ var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
 }());"
 `;
 
-exports[`babel plugin workletizes setter 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var _worklet_6451428689423_init_data = {
-  code: "function set(x){this.x=x+2;}",
-  location: "/dev/null"
-};
-var Foo = function () {
-  function Foo() {
-    (0, _classCallCheck2.default)(this, Foo);
-  }
-  (0, _createClass2.default)(Foo, [{
-    key: "bar",
-    set: function () {
-      var _e = [new global.Error(), 1, -27];
-      var _f = function _f(x) {
-        this.x = x + 2;
-      };
-      _f._closure = {};
-      _f.__initData = _worklet_6451428689423_init_data;
-      _f.__workletHash = 6451428689423;
-      _f.__stackDetails = _e;
-      return _f;
-    }()
-  }]);
-  return Foo;
-}();"
-`;
-
-exports[`babel plugin workletizes static class field 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
-var Foo = (0, _createClass2.default)(function Foo() {
-  (0, _classCallCheck2.default)(this, Foo);
-});
-var _worklet_16347365292089_init_data = {
-  code: "function anonymous(x){return x+2;}",
-  location: "/dev/null"
-};
-(0, _defineProperty2.default)(Foo, "bar", function () {
-  var _e = [new global.Error(), 1, -27];
-  var _f = function _f(x) {
-    return x + 2;
-  };
-  _f._closure = {};
-  _f.__initData = _worklet_16347365292089_init_data;
-  _f.__workletHash = 16347365292089;
-  _f.__stackDetails = _e;
-  return _f;
-}());"
-`;
-
-exports[`babel plugin workletizes static method 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var _worklet_16974800582491_init_data = {
-  code: "function bar(x){return x+2;}",
-  location: "/dev/null"
-};
-var Foo = function () {
-  function Foo() {
-    (0, _classCallCheck2.default)(this, Foo);
-  }
-  (0, _createClass2.default)(Foo, null, [{
-    key: "bar",
-    value: function () {
-      var _e = [new global.Error(), 1, -27];
-      var _f = function _f(x) {
-        return x + 2;
-      };
-      _f._closure = {};
-      _f.__initData = _worklet_16974800582491_init_data;
-      _f.__workletHash = 16974800582491;
-      _f.__stackDetails = _e;
-      return _f;
-    }()
-  }]);
-  return Foo;
-}();"
-`;
-
-exports[`babel plugin workletizes unnamed FunctionExpression 1`] = `
-"var _worklet_16347365292089_init_data = {
-  code: "function anonymous(x){return x+2;}",
-  location: "/dev/null"
-};
-var foo = function () {
-  var _e = [new global.Error(), 1, -27];
-  var _f = function _f(x) {
-    return x + 2;
-  };
-  _f._closure = {};
-  _f.__initData = _worklet_16347365292089_init_data;
-  _f.__workletHash = 16347365292089;
-  _f.__stackDetails = _e;
-  return _f;
-}();"
-`;
-
-exports[`babel plugin workletizes unnamed FunctionExpression inside runOnUI automatically 1`] = `
+exports[`babel plugin for runOnUI workletizes ArrowFunctionExpression inside runOnUI automatically 1`] = `
 "var _worklet_15854903236968_init_data = {
   code: "function anonymous(){console.log('Hello from the UI thread!');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
 runOnUI(function () {
   var _e = [new global.Error(), 1, -27];
   var _f = function _f() {
     console.log('Hello from the UI thread!');
   };
-  _f._closure = {};
+  _f.__closure = {};
   _f.__initData = _worklet_15854903236968_init_data;
   _f.__workletHash = 15854903236968;
   _f.__stackDetails = _e;
@@ -1125,162 +1455,520 @@ runOnUI(function () {
 }())();"
 `;
 
-exports[`babel plugin workletizes useAnimatedGestureHandler wrapped ArrowFunctionExpression automatically 1`] = `
-"var _worklet_1022605193782_init_data = {
-  code: "function anonymous(event){console.log(event);}",
-  location: "/dev/null"
+exports[`babel plugin for runOnUI workletizes named FunctionExpression inside runOnUI automatically 1`] = `
+"var _worklet_5662051517689_init_data = {
+  code: "function hello(){console.log('Hello from the UI thread!');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
-useAnimatedGestureHandler({
-  onStart: function () {
-    var _e = [new global.Error(), 1, -27];
-    var _f = function _f(event) {
-      console.log(event);
-    };
-    _f._closure = {};
-    _f.__initData = _worklet_1022605193782_init_data;
-    _f.__workletHash = 1022605193782;
-    _f.__stackDetails = _e;
-    return _f;
-  }()
-});"
+runOnUI(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('Hello from the UI thread!');
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_5662051517689_init_data;
+  _f.__workletHash = 5662051517689;
+  _f.__stackDetails = _e;
+  return _f;
+}())();"
 `;
 
-exports[`babel plugin workletizes useAnimatedGestureHandler wrapped ObjectMethod automatically 1`] = `
-"var _worklet_338158776260_init_data = {
-  code: "function onStart(event){console.log(event);}",
-  location: "/dev/null"
+exports[`babel plugin for runOnUI workletizes unnamed FunctionExpression inside runOnUI automatically 1`] = `
+"var _worklet_15854903236968_init_data = {
+  code: "function anonymous(){console.log('Hello from the UI thread!');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
-useAnimatedGestureHandler({
-  onStart: function () {
-    var _e = [new global.Error(), 1, -27];
-    var _f = function _f(event) {
-      console.log(event);
-    };
-    _f._closure = {};
-    _f.__initData = _worklet_338158776260_init_data;
-    _f.__workletHash = 338158776260;
-    _f.__stackDetails = _e;
-    return _f;
-  }()
-});"
+runOnUI(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('Hello from the UI thread!');
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_15854903236968_init_data;
+  _f.__workletHash = 15854903236968;
+  _f.__stackDetails = _e;
+  return _f;
+}())();"
 `;
 
-exports[`babel plugin workletizes useAnimatedGestureHandler wrapped named FunctionExpression automatically 1`] = `
-"var _worklet_338158776260_init_data = {
-  code: "function onStart(event){console.log(event);}",
-  location: "/dev/null"
-};
-useAnimatedGestureHandler({
-  onStart: function () {
-    var _e = [new global.Error(), 1, -27];
-    var _f = function _f(event) {
-      console.log(event);
-    };
-    _f._closure = {};
-    _f.__initData = _worklet_338158776260_init_data;
-    _f.__workletHash = 338158776260;
-    _f.__stackDetails = _e;
-    return _f;
-  }()
-});"
+exports[`babel plugin for sequence expressions supports SequenceExpression 1`] = `
+"function App() {
+  (0, fun)({
+    onStart: function onStart() {}
+  }, []);
+}"
 `;
 
-exports[`babel plugin workletizes useAnimatedGestureHandler wrapped unnamed FunctionExpression automatically 1`] = `
-"var _worklet_1022605193782_init_data = {
-  code: "function anonymous(event){console.log(event);}",
-  location: "/dev/null"
+exports[`babel plugin for sequence expressions supports SequenceExpression, many arguments 1`] = `
+"var _worklet_4434179069699_init_data = {
+  code: "function onStart(){}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
-useAnimatedGestureHandler({
-  onStart: function () {
-    var _e = [new global.Error(), 1, -27];
-    var _f = function _f(event) {
-      console.log(event);
-    };
-    _f._closure = {};
-    _f.__initData = _worklet_1022605193782_init_data;
-    _f.__workletHash = 1022605193782;
-    _f.__stackDetails = _e;
-    return _f;
-  }()
-});"
+function App() {
+  (0, 3, fun)({
+    onStart: function () {
+      var _e = [new global.Error(), 1, -27];
+      var _f = function _f() {};
+      _f.__closure = {};
+      _f.__initData = _worklet_4434179069699_init_data;
+      _f.__workletHash = 4434179069699;
+      _f.__stackDetails = _e;
+      return _f;
+    }()
+  }, []);
+}"
 `;
 
-exports[`babel plugin workletizes useAnimatedScrollHandler wrapped ArrowFunctionExpression automatically 1`] = `
-"var _worklet_1022605193782_init_data = {
-  code: "function anonymous(event){console.log(event);}",
-  location: "/dev/null"
+exports[`babel plugin for sequence expressions supports SequenceExpression, with objectHook 1`] = `
+"var _worklet_4434179069699_init_data = {
+  code: "function onStart(){}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
-useAnimatedScrollHandler({
-  onScroll: function () {
-    var _e = [new global.Error(), 1, -27];
-    var _f = function _f(event) {
-      console.log(event);
-    };
-    _f._closure = {};
-    _f.__initData = _worklet_1022605193782_init_data;
-    _f.__workletHash = 1022605193782;
-    _f.__stackDetails = _e;
-    return _f;
-  }()
-});"
+function App() {
+  (0, useAnimatedGestureHandler)({
+    onStart: function () {
+      var _e = [new global.Error(), 1, -27];
+      var _f = function _f() {};
+      _f.__closure = {};
+      _f.__initData = _worklet_4434179069699_init_data;
+      _f.__workletHash = 4434179069699;
+      _f.__stackDetails = _e;
+      return _f;
+    }()
+  }, []);
+}"
 `;
 
-exports[`babel plugin workletizes useAnimatedScrollHandler wrapped ObjectMethod automatically 1`] = `
-"var _worklet_947458829673_init_data = {
-  code: "function onScroll(event){console.log(event);}",
-  location: "/dev/null"
+exports[`babel plugin for sequence expressions supports SequenceExpression, with worklet 1`] = `
+"var _worklet_4434179069699_init_data = {
+  code: "function onStart(){}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
-useAnimatedGestureHandler({
-  onScroll: function () {
-    var _e = [new global.Error(), 1, -27];
-    var _f = function _f(event) {
-      console.log(event);
-    };
-    _f._closure = {};
-    _f.__initData = _worklet_947458829673_init_data;
-    _f.__workletHash = 947458829673;
-    _f.__stackDetails = _e;
-    return _f;
-  }()
-});"
+function App() {
+  (0, fun)({
+    onStart: function () {
+      var _e = [new global.Error(), 1, -27];
+      var _f = function _f() {};
+      _f.__closure = {};
+      _f.__initData = _worklet_4434179069699_init_data;
+      _f.__workletHash = 4434179069699;
+      _f.__stackDetails = _e;
+      return _f;
+    }()
+  }, []);
+}"
 `;
 
-exports[`babel plugin workletizes useAnimatedScrollHandler wrapped named FunctionExpression automatically 1`] = `
-"var _worklet_947458829673_init_data = {
-  code: "function onScroll(event){console.log(event);}",
-  location: "/dev/null"
+exports[`babel plugin for sequence expressions supports SequenceExpression, with worklet closure 1`] = `
+"var _worklet_5519800181618_init_data = {
+  code: "function onStart(){const{obj}=this.__closure;const a=obj.a;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
-useAnimatedScrollHandler({
-  onScroll: function () {
-    var _e = [new global.Error(), 1, -27];
-    var _f = function _f(event) {
-      console.log(event);
-    };
-    _f._closure = {};
-    _f.__initData = _worklet_947458829673_init_data;
-    _f.__workletHash = 947458829673;
-    _f.__stackDetails = _e;
-    return _f;
-  }()
-});"
+function App() {
+  var obj = {
+    a: 1,
+    b: 2
+  };
+  (0, fun)({
+    onStart: function () {
+      var _e = [new global.Error(), -2, -27];
+      var _f = function _f() {
+        var a = obj.a;
+      };
+      _f.__closure = {
+        obj: obj
+      };
+      _f.__initData = _worklet_5519800181618_init_data;
+      _f.__workletHash = 5519800181618;
+      _f.__stackDetails = _e;
+      return _f;
+    }()
+  }, []);
+}"
 `;
 
-exports[`babel plugin workletizes useAnimatedScrollHandler wrapped unnamed FunctionExpression automatically 1`] = `
-"var _worklet_1022605193782_init_data = {
-  code: "function anonymous(event){console.log(event);}",
-  location: "/dev/null"
+exports[`babel plugin for worklet nesting doesn't process nested worklets when disabled 1`] = `
+"var _worklet_1678749606628_init_data = {
+  code: "function foo(x){function bar(x){'worklet';return x+2;}return bar(x)+1;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
 };
-useAnimatedScrollHandler({
-  onScroll: function () {
-    var _e = [new global.Error(), 1, -27];
-    var _f = function _f(event) {
-      console.log(event);
+var _worklet_16974800582491_init_data = {
+  code: "function bar(x){return x+2;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f(x) {
+    var bar = function () {
+      var _e = [new global.Error(), 1, -27];
+      var _f = function _f(x) {
+        return x + 2;
+      };
+      _f.__closure = {};
+      _f.__initData = _worklet_16974800582491_init_data;
+      _f.__workletHash = 16974800582491;
+      _f.__stackDetails = _e;
+      return _f;
+    }();
+    return bar(x) + 1;
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_1678749606628_init_data;
+  _f.__workletHash = 1678749606628;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnJS in runOnUI 1`] = `
+"var _worklet_16739363980177_init_data = {
+  code: "function anonymous(){const{runOnJS}=this.__closure;console.log('Hello from UI thread');runOnJS(function(){'worklet';console.log('Hello from JS thread');})();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _worklet_13427774179957_init_data = {
+  code: "function anonymous(){console.log('Hello from JS thread');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+runOnUI(function () {
+  var _e = [new global.Error(), -2, -27];
+  var _f = function _f() {
+    console.log('Hello from UI thread');
+    runOnJS(function () {
+      var _e = [new global.Error(), 1, -27];
+      var _f = function _f() {
+        console.log('Hello from JS thread');
+      };
+      _f.__closure = {};
+      _f.__initData = _worklet_13427774179957_init_data;
+      _f.__workletHash = 13427774179957;
+      _f.__stackDetails = _e;
+      return _f;
+    }())();
+  };
+  _f.__closure = {
+    runOnJS: runOnJS
+  };
+  _f.__initData = _worklet_16739363980177_init_data;
+  _f.__workletHash = 16739363980177;
+  _f.__stackDetails = _e;
+  return _f;
+}())();"
+`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnUI in runOnJS in runOnUI 1`] = `
+"var _worklet_15024386663586_init_data = {
+  code: "function anonymous(){const{runOnJS,runOnUI}=this.__closure;console.log('Hello from UI thread');runOnJS(function(){'worklet';console.log('Hello from JS thread');runOnUI(function(){console.log('Hello from UI thread again');})();})();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _worklet_15780567630262_init_data = {
+  code: "function anonymous(){const{runOnUI}=this.__closure;console.log('Hello from JS thread');runOnUI(function(){console.log('Hello from UI thread again');})();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _worklet_12364489264272_init_data = {
+  code: "function anonymous(){console.log('Hello from UI thread again');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+runOnUI(function () {
+  var _e = [new global.Error(), -3, -27];
+  var _f = function _f() {
+    console.log('Hello from UI thread');
+    runOnJS(function () {
+      var _e = [new global.Error(), -2, -27];
+      var _f = function _f() {
+        console.log('Hello from JS thread');
+        runOnUI(function () {
+          var _e = [new global.Error(), 1, -27];
+          var _f = function _f() {
+            console.log('Hello from UI thread again');
+          };
+          _f.__closure = {};
+          _f.__initData = _worklet_12364489264272_init_data;
+          _f.__workletHash = 12364489264272;
+          _f.__stackDetails = _e;
+          return _f;
+        }())();
+      };
+      _f.__closure = {
+        runOnUI: runOnUI
+      };
+      _f.__initData = _worklet_15780567630262_init_data;
+      _f.__workletHash = 15780567630262;
+      _f.__stackDetails = _e;
+      return _f;
+    }())();
+  };
+  _f.__closure = {
+    runOnJS: runOnJS,
+    runOnUI: runOnUI
+  };
+  _f.__initData = _worklet_15024386663586_init_data;
+  _f.__workletHash = 15024386663586;
+  _f.__stackDetails = _e;
+  return _f;
+}())();"
+`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets when enabled 1`] = `
+"var _worklet_14052814262791_init_data = {
+  code: "function anonymous(){console.log('bar');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _worklet_9560640572308_init_data = {
+  code: "function anonymous(){const{_worklet_14052814262791_init_data}=this.__closure;const bar=function(){const _e=[new global.Error(),1,-27];const _f=function(){console.log('bar');};_f.__closure={};_f.__initData=_worklet_14052814262791_init_data;_f.__workletHash=14052814262791;_f.__stackDetails=_e;return _f;}();bar();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _f = function _f() {
+    var bar = function () {
+      var _e = [new global.Error(), 1, -27];
+      var _f = function _f() {
+        console.log('bar');
+      };
+      _f.__closure = {};
+      _f.__initData = _worklet_14052814262791_init_data;
+      _f.__workletHash = 14052814262791;
+      _f.__stackDetails = _e;
+      return _f;
+    }();
+    bar();
+  };
+  _f.__closure = {
+    _worklet_14052814262791_init_data: _worklet_14052814262791_init_data
+  };
+  _f.__initData = _worklet_9560640572308_init_data;
+  _f.__workletHash = 9560640572308;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets when enabled with depth 3 1`] = `
+"var _worklet_744555119489_init_data = {
+  code: "function anonymous(){console.log('foobar');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _worklet_7973274967511_init_data = {
+  code: "function anonymous(){const{_worklet_744555119489_init_data}=this.__closure;const foobar=function(){const _e=[new global.Error(),1,-27];const _f=function(){console.log('foobar');};_f.__closure={};_f.__initData=_worklet_744555119489_init_data;_f.__workletHash=744555119489;_f.__stackDetails=_e;return _f;}();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _worklet_15865696218672_init_data = {
+  code: "function anonymous(){const{_worklet_744555119489_init_data,_worklet_7973274967511_init_data}=this.__closure;const bar=function(){const _e=[new global.Error(),-2,-27];const _f=function(){const foobar=function(){const _e=[new global.Error(),1,-27];const _f=function(){console.log('foobar');};_f.__closure={};_f.__initData=_worklet_744555119489_init_data;_f.__workletHash=744555119489;_f.__stackDetails=_e;return _f;}();};_f.__closure={_worklet_744555119489_init_data:_worklet_744555119489_init_data};_f.__initData=_worklet_7973274967511_init_data;_f.__workletHash=7973274967511;_f.__stackDetails=_e;return _f;}();bar();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), -3, -27];
+  var _f = function _f() {
+    var bar = function () {
+      var _e = [new global.Error(), -2, -27];
+      var _f = function _f() {
+        var foobar = function () {
+          var _e = [new global.Error(), 1, -27];
+          var _f = function _f() {
+            console.log('foobar');
+          };
+          _f.__closure = {};
+          _f.__initData = _worklet_744555119489_init_data;
+          _f.__workletHash = 744555119489;
+          _f.__stackDetails = _e;
+          return _f;
+        }();
+      };
+      _f.__closure = {
+        _worklet_744555119489_init_data: _worklet_744555119489_init_data
+      };
+      _f.__initData = _worklet_7973274967511_init_data;
+      _f.__workletHash = 7973274967511;
+      _f.__stackDetails = _e;
+      return _f;
+    }();
+    bar();
+  };
+  _f.__closure = {
+    _worklet_744555119489_init_data: _worklet_744555119489_init_data,
+    _worklet_7973274967511_init_data: _worklet_7973274967511_init_data
+  };
+  _f.__initData = _worklet_15865696218672_init_data;
+  _f.__workletHash = 15865696218672;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin for worklet nesting transpiles worklets with functions defined on UI thread to run them on JS 1`] = `
+"var _worklet_4484193487608_init_data = {
+  code: "function anonymous(){const{runOnJS}=this.__closure;const a=function(){'worklet';console.log('Good morning from JS thread!');};const b=function(){'worklet';console.log('Good afternoon from JS thread');};const func=Math.random()<0.5?a:b;runOnJS(func)();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _worklet_2310082662475_init_data = {
+  code: "function anonymous(){console.log('Good morning from JS thread!');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _worklet_9108102051728_init_data = {
+  code: "function anonymous(){console.log('Good afternoon from JS thread');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+runOnUI(function () {
+  var _e = [new global.Error(), -2, -27];
+  var _f = function _f() {
+    var a = function () {
+      var _e = [new global.Error(), 1, -27];
+      var _f = function _f() {
+        console.log('Good morning from JS thread!');
+      };
+      _f.__closure = {};
+      _f.__initData = _worklet_2310082662475_init_data;
+      _f.__workletHash = 2310082662475;
+      _f.__stackDetails = _e;
+      return _f;
+    }();
+    var b = function () {
+      var _e = [new global.Error(), 1, -27];
+      var _f = function _f() {
+        console.log('Good afternoon from JS thread');
+      };
+      _f.__closure = {};
+      _f.__initData = _worklet_9108102051728_init_data;
+      _f.__workletHash = 9108102051728;
+      _f.__stackDetails = _e;
+      return _f;
+    }();
+    var func = Math.random() < 0.5 ? a : b;
+    runOnJS(func)();
+  };
+  _f.__closure = {
+    runOnJS: runOnJS
+  };
+  _f.__initData = _worklet_4484193487608_init_data;
+  _f.__workletHash = 4484193487608;
+  _f.__stackDetails = _e;
+  return _f;
+}())();"
+`;
+
+exports[`babel plugin generally removes comments from worklets 1`] = `
+"var _worklet_235615426006_init_data = {
+  code: "function anonymous(){return true;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var f = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    return true;
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_235615426006_init_data;
+  _f.__workletHash = 235615426006;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin generally supports recursive calls 1`] = `
+"var a = 1;
+var _worklet_210900050506_init_data = {
+  code: "function foo(t){const foo=this._recur;const{a}=this.__closure;if(t>0){return a+foo(t-1);}}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _f = function _f(t) {
+    if (t > 0) {
+      return a + foo(t - 1);
+    }
+  };
+  _f.__closure = {
+    a: a
+  };
+  _f.__initData = _worklet_210900050506_init_data;
+  _f.__workletHash = 210900050506;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin generally transforms 1`] = `
+"var _reactNativeReanimated = _interopRequireWildcard(require("react-native-reanimated"));
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+var _worklet_13769858944821_init_data = {
+  code: "function anonymous(){const{offset}=this.__closure;return{transform:[{translateX:offset.value*255}]};}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+function Box() {
+  var offset = (0, _reactNativeReanimated.useSharedValue)(0);
+  var animatedStyles = (0, _reactNativeReanimated.useAnimatedStyle)(function () {
+    var _e = [new global.Error(), -2, -27];
+    var _f = function _f() {
+      return {
+        transform: [{
+          translateX: offset.value * 255
+        }]
+      };
     };
-    _f._closure = {};
-    _f.__initData = _worklet_1022605193782_init_data;
-    _f.__workletHash = 1022605193782;
+    _f.__closure = {
+      offset: offset
+    };
+    _f.__initData = _worklet_13769858944821_init_data;
+    _f.__workletHash = 13769858944821;
     _f.__stackDetails = _e;
     return _f;
-  }()
-});"
+  }());
+  return React.createElement(React.Fragment, null, React.createElement(_reactNativeReanimated.default.View, {
+    style: [styles.box, animatedStyles]
+  }), React.createElement(Button, {
+    onPress: function onPress() {
+      return offset.value = Math.random();
+    },
+    title: "Move"
+  }));
+}"
 `;

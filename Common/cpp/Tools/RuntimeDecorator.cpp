@@ -77,13 +77,16 @@ void RuntimeDecorator::decorateRuntime(
 void RuntimeDecorator::decorateUIRuntime(
     jsi::Runtime &rt,
     const UpdatePropsFunction updateProps,
+#ifdef RCT_NEW_ARCH_ENABLED
+    const RemoveFromPropsRegistryFunction removeFromPropsRegistry,
+#endif
     const MeasureFunction measure,
 #ifdef RCT_NEW_ARCH_ENABLED
-    const RemoveShadowNodeFromRegistryFunction removeShadowNodeFromRegistry,
-    const DispatchCommandFunction dispatchCommand,
+// nothing
 #else
     const ScrollToFunction scrollTo,
 #endif
+    const DispatchCommandFunction dispatchCommand,
     const RequestFrameFunction requestFrame,
     const ScheduleOnJSFunction scheduleOnJS,
     const MakeShareableCloneFunction makeShareableClone,
@@ -99,11 +102,12 @@ void RuntimeDecorator::decorateUIRuntime(
 #ifdef RCT_NEW_ARCH_ENABLED
   jsi_utils::installJsiFunction(rt, "_updatePropsFabric", updateProps);
   jsi_utils::installJsiFunction(
-      rt, "_removeShadowNodeFromRegistry", removeShadowNodeFromRegistry);
+      rt, "_removeFromPropsRegistry", removeFromPropsRegistry);
   jsi_utils::installJsiFunction(rt, "_dispatchCommandFabric", dispatchCommand);
   jsi_utils::installJsiFunction(rt, "_measureFabric", measure);
 #else
   jsi_utils::installJsiFunction(rt, "_updatePropsPaper", updateProps);
+  jsi_utils::installJsiFunction(rt, "_dispatchCommandPaper", dispatchCommand);
   jsi_utils::installJsiFunction(rt, "_scrollToPaper", scrollTo);
 
   std::function<jsi::Value(jsi::Runtime &, int)> _measure =
@@ -126,10 +130,10 @@ void RuntimeDecorator::decorateUIRuntime(
       rt, "_updateDataSynchronously", updateDataSynchronously);
 
   auto performanceNow = [getCurrentTime](
-                            jsi::Runtime &rt,
-                            const jsi::Value &thisValue,
-                            const jsi::Value *args,
-                            size_t count) -> jsi::Value {
+                            jsi::Runtime &,
+                            const jsi::Value &,
+                            const jsi::Value *,
+                            size_t) -> jsi::Value {
     return jsi::Value(getCurrentTime());
   };
   jsi::Object performance(rt);
@@ -149,6 +153,39 @@ void RuntimeDecorator::decorateUIRuntime(
   jsi_utils::installJsiFunction(rt, "_setGestureState", setGestureState);
   jsi_utils::installJsiFunction(
       rt, "_maybeFlushUIUpdatesQueue", maybeFlushUIUpdatesQueueFunction);
+}
+
+void RuntimeDecorator::decorateRNRuntime(
+    jsi::Runtime &rnRuntime,
+    const std::shared_ptr<jsi::Runtime> &uiRuntime,
+    bool isReducedMotion) {
+  auto workletRuntimeValue =
+      rnRuntime.global()
+          .getPropertyAsObject(rnRuntime, "ArrayBuffer")
+          .asFunction(rnRuntime)
+          .callAsConstructor(rnRuntime, {static_cast<double>(sizeof(void *))});
+  uintptr_t *workletRuntimeData = reinterpret_cast<uintptr_t *>(
+      workletRuntimeValue.getObject(rnRuntime).getArrayBuffer(rnRuntime).data(
+          rnRuntime));
+  workletRuntimeData[0] = reinterpret_cast<uintptr_t>(uiRuntime.get());
+
+  rnRuntime.global().setProperty(
+      rnRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);
+
+  rnRuntime.global().setProperty(rnRuntime, "_WORKLET", false);
+
+#ifdef RCT_NEW_ARCH_ENABLED
+  constexpr auto isFabric = true;
+#else
+  constexpr auto isFabric = false;
+#endif // RCT_NEW_ARCH_ENABLED
+  rnRuntime.global().setProperty(rnRuntime, "_IS_FABRIC", isFabric);
+
+  auto version = getReanimatedVersionString(rnRuntime);
+  rnRuntime.global().setProperty(rnRuntime, "_REANIMATED_VERSION_CPP", version);
+
+  rnRuntime.global().setProperty(
+      rnRuntime, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);
 }
 
 } // namespace reanimated

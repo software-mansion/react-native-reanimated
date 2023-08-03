@@ -406,6 +406,14 @@ android {
     if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
         namespace "com.swmansion.reanimated"
     }
+
+    if (rootProject.hasProperty("ndkPath")) {
+        ndkPath rootProject.ext.ndkPath
+    }
+    if (rootProject.hasProperty("ndkVersion")) {
+        ndkVersion rootProject.ext.ndkVersion
+    }
+
     if (REACT_NATIVE_MINOR_VERSION >= 71) {
         buildFeatures {
             prefab true
@@ -774,9 +782,9 @@ if (REACT_NATIVE_MINOR_VERSION < 71) {
     task downloadBoost(dependsOn: resolveBoost, type: Download) {
         def transformedVersion = BOOST_VERSION.replace("_", ".")
         def artifactLocalName = "boost_${BOOST_VERSION}.tar.gz"
-        def srcUrl = "https://boostorg.jfrog.io/artifactory/main/release/${transformedVersion}/source/boost_${BOOST_VERSION}.tar.gz"
+        def srcUrl = "https://boostorg.jfrog.io/artifactory/main/release/${transformedVersion}/source/${artifactLocalName}"
         if (REACT_NATIVE_MINOR_VERSION < 69) {
-            srcUrl = "https://github.com/react-native-community/boost-for-react-native/releases/download/v${transformedVersion}-0/boost_${BOOST_VERSION}.tar.gz"
+            srcUrl = "https://github.com/react-native-community/boost-for-react-native/releases/download/v${transformedVersion}-0/${artifactLocalName}"
         }
         src(srcUrl)
         onlyIfNewer(true)

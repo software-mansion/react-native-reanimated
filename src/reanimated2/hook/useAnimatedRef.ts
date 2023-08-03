@@ -1,7 +1,8 @@
-import { Component, useRef } from 'react';
+import type { Component } from 'react';
+import { useRef } from 'react';
 import { useSharedValue } from './useSharedValue';
-import { RefObjectFunction } from './commonTypes';
-import { ShadowNodeWrapper } from '../commonTypes';
+import type { AnimatedRef } from './commonTypes';
+import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import {
   makeShareableCloneRecursive,
@@ -9,15 +10,17 @@ import {
 } from '../shareables';
 import { Platform, findNodeHandle } from 'react-native';
 
-interface ComponentRef extends Component {
-  getNativeScrollRef?: () => ComponentRef;
-  getScrollableNode?: () => ComponentRef;
+interface MaybeScrollableComponent extends Component {
+  getNativeScrollRef?: () => MaybeScrollableComponent;
+  getScrollableNode?: () => MaybeScrollableComponent;
   viewConfig?: {
     uiViewClassName?: string;
   };
 }
 
-function getComponentOrScrollableRef(component: ComponentRef): ComponentRef {
+function getComponentOrScrollable(
+  component: MaybeScrollableComponent
+): MaybeScrollableComponent {
   if (global._IS_FABRIC && component.getNativeScrollRef) {
     return component.getNativeScrollRef();
   } else if (!global._IS_FABRIC && component.getScrollableNode) {
@@ -30,17 +33,19 @@ const getTagValueFunction = global._IS_FABRIC
   ? getShadowNodeWrapperFromRef
   : findNodeHandle;
 
-export function useAnimatedRef<T extends ComponentRef>(): RefObjectFunction<T> {
+export function useAnimatedRef<
+  T extends MaybeScrollableComponent
+>(): AnimatedRef<T> {
   const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
   const viewName = useSharedValue<string | null>(null);
 
-  const ref = useRef<RefObjectFunction<T>>();
+  const ref = useRef<AnimatedRef<T>>();
 
   if (!ref.current) {
-    const fun: RefObjectFunction<T> = <RefObjectFunction<T>>((component) => {
+    const fun: AnimatedRef<T> = <AnimatedRef<T>>((component) => {
       // enters when ref is set by attaching to a component
       if (component) {
-        tag.value = getTagValueFunction(getComponentOrScrollableRef(component));
+        tag.value = getTagValueFunction(getComponentOrScrollable(component));
         fun.current = component;
         // viewName is required only on iOS with Paper
         if (Platform.OS === 'ios' && !global._IS_FABRIC) {

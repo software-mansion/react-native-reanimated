@@ -1,7 +1,7 @@
-import { Component } from 'react';
+import type { Component } from 'react';
 import { measure } from './NativeMethods';
-import { RefObjectFunction } from './hook/commonTypes';
-import { SharedValue } from './commonTypes';
+import type { AnimatedRef } from './hook/commonTypes';
+import type { SharedValue } from './commonTypes';
 
 export interface ComponentCoords {
   x: number;
@@ -13,12 +13,12 @@ export interface ComponentCoords {
  * position in the component's local coordinate space.
  */
 export function getRelativeCoords(
-  parentRef: RefObjectFunction<Component>,
+  parentAnimatedRef: AnimatedRef<Component>,
   absoluteX: number,
   absoluteY: number
 ): ComponentCoords | null {
   'worklet';
-  const parentCoords = measure(parentRef);
+  const parentCoords = measure(parentAnimatedRef);
   if (parentCoords === null) {
     return null;
   }

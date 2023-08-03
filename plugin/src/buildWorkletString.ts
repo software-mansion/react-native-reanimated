@@ -1,39 +1,37 @@
-import {
-  BabelFileResult,
-  NodePath,
-  transformSync,
-  PluginItem,
-} from '@babel/core';
+import type { BabelFileResult, NodePath, PluginItem } from '@babel/core';
+import { transformSync } from '@babel/core';
 import generate from '@babel/generator';
-import {
-  ObjectMethod,
-  isObjectMethod,
-  FunctionDeclaration,
-  FunctionExpression,
-  ArrowFunctionExpression,
-  identifier,
-  Identifier,
-  objectProperty,
-  isArrowFunctionExpression,
-  variableDeclaration,
-  variableDeclarator,
-  isBlockStatement,
-  functionExpression,
-  isFunctionDeclaration,
-  VariableDeclaration,
-  ExpressionStatement,
-  isProgram,
-  memberExpression,
+import type {
   File as BabelFile,
-  objectPattern,
-  thisExpression,
+  ExpressionStatement,
+  FunctionDeclaration,
+  Identifier,
+  VariableDeclaration,
+} from '@babel/types';
+import {
+  functionExpression,
+  identifier,
+  isArrowFunctionExpression,
+  isBlockStatement,
   isExpression,
   isExpressionStatement,
+  isFunctionDeclaration,
+  isObjectMethod,
+  isProgram,
+  memberExpression,
+  objectPattern,
+  objectProperty,
+  thisExpression,
+  variableDeclaration,
+  variableDeclarator,
 } from '@babel/types';
-import * as fs from 'fs';
-import * as convertSourceMap from 'convert-source-map';
 import { strict as assert } from 'assert';
+import * as convertSourceMap from 'convert-source-map';
+import * as fs from 'fs';
 import { isRelease } from './utils';
+import { WorkletizableFunction } from './types';
+
+const MOCK_SOURCE_MAP = 'mock source map';
 
 export function buildWorkletString(
   fun: BabelFile,
@@ -72,7 +70,7 @@ export function buildWorkletString(
 
   assert(inputMap, "'inputMap' is undefined");
 
-  const includeSourceMap = shouldGenerateSourceMap();
+  const includeSourceMap = !isRelease();
 
   if (includeSourceMap) {
     // Clear contents array (should be empty anyways)
@@ -88,7 +86,7 @@ export function buildWorkletString(
 
   const transformed = transformSync(code, {
     plugins: [prependClosureVariablesIfNecessary(closureVariables)],
-    compact: !includeSourceMap,
+    compact: true,
     sourceMaps: includeSourceMap,
     inputSourceMap: inputMap,
     ast: false,
@@ -101,38 +99,29 @@ export function buildWorkletString(
 
   let sourceMap;
   if (includeSourceMap) {
-    sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
-    // sourcesContent field contains a full source code of the file which contains the worklet
-    // and is not needed by the source map interpreter in order to symbolicate a stack trace.
-    // Therefore, we remove it to reduce the bandwith and avoid sending it potentially multiple times
-    // in files that contain multiple worklets. Along with sourcesContent.
-    delete sourceMap.sourcesContent;
+    if (shouldMockSourceMap()) {
+      sourceMap = MOCK_SOURCE_MAP;
+    } else {
+      sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
+      // sourcesContent field contains a full source code of the file which contains the worklet
+      // and is not needed by the source map interpreter in order to symbolicate a stack trace.
+      // Therefore, we remove it to reduce the bandwith and avoid sending it potentially multiple times
+      // in files that contain multiple worklets. Along with sourcesContent.
+      delete sourceMap.sourcesContent;
+    }
   }
 
   return [transformed.code, JSON.stringify(sourceMap)];
 }
 
-function shouldGenerateSourceMap() {
-  if (isRelease()) {
-    return false;
-  }
-
-  // We want to detect this, so we can disable source maps (because they break
-  // snapshot tests with jest).
-  if (process.env.REANIMATED_JEST_DISABLE_SOURCEMAP === 'jest') {
-    return false;
-  }
-
-  return true;
+function shouldMockSourceMap() {
+  // We don't want to pollute tests with source maps so we mock it
+  // for all tests (except one)
+  return process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP === '1';
 }
 
 function prependClosure(
-  path: NodePath<
-    | FunctionDeclaration
-    | FunctionExpression
-    | ArrowFunctionExpression
-    | ObjectMethod
-  >,
+  path: NodePath<WorkletizableFunction>,
   closureVariables: Array<Identifier>,
   closureDeclaration: VariableDeclaration
 ) {
@@ -145,14 +134,7 @@ function prependClosure(
   }
 }
 
-function prependRecursiveDeclaration(
-  path: NodePath<
-    | FunctionDeclaration
-    | FunctionExpression
-    | ArrowFunctionExpression
-    | ObjectMethod
-  >
-) {
+function prependRecursiveDeclaration(path: NodePath<WorkletizableFunction>) {
   if (
     isProgram(path.parent) &&
     !isArrowFunctionExpression(path.node) &&
@@ -190,21 +172,14 @@ function prependClosureVariablesIfNecessary(
           )
         )
       ),
-      memberExpression(thisExpression(), identifier('_closure'))
+      memberExpression(thisExpression(), identifier('__closure'))
     ),
   ]);
 
   return {
     visitor: {
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod':
-        (
-          path: NodePath<
-            | FunctionDeclaration
-            | FunctionExpression
-            | ArrowFunctionExpression
-            | ObjectMethod
-          >
-        ) => {
+        (path: NodePath<WorkletizableFunction>) => {
           prependClosure(path, closureVariables, closureDeclaration);
           prependRecursiveDeclaration(path);
         },

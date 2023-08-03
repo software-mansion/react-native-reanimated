@@ -21,13 +21,11 @@ namespace reanimated {
 #ifdef RCT_NEW_ARCH_ENABLED
 
 using SynchronouslyUpdateUIPropsFunction =
-    std::function<void(jsi::Runtime &rt, Tag tag, const jsi::Value &props)>;
-using UpdatePropsFunction = std::function<void(
-    jsi::Runtime &rt,
-    const jsi::Value &shadowNodeValue,
-    const jsi::Value &props)>;
-using RemoveShadowNodeFromRegistryFunction =
-    std::function<void(jsi::Runtime &rt, const jsi::Value &tag)>;
+    std::function<void(jsi::Runtime &rt, Tag tag, const jsi::Object &props)>;
+using UpdatePropsFunction =
+    std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
+using RemoveFromPropsRegistryFunction =
+    std::function<void(jsi::Runtime &rt, const jsi::Value &viewTags)>;
 using DispatchCommandFunction = std::function<void(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,
@@ -38,12 +36,14 @@ using MeasureFunction = std::function<
 
 #else
 
-using UpdatePropsFunction = std::function<void(
-    jsi::Runtime &rt,
-    int viewTag,
-    const jsi::Value &viewName,
-    jsi::Object object)>;
+using UpdatePropsFunction =
+    std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
 using ScrollToFunction = std::function<void(int, double, double, bool)>;
+using DispatchCommandFunction = std::function<void(
+    jsi::Runtime &rt,
+    const int viewTag,
+    const jsi::Value &commandNameValue,
+    const jsi::Value &argsValue)>;
 using MeasureFunction =
     std::function<std::vector<std::pair<std::string, double>>(int)>;
 
@@ -55,7 +55,7 @@ using TimeProviderFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction =
     std::function<void(int, jsi::Object newProps, bool isSharedTransition)>;
-using EndLayoutAnimationFunction = std::function<void(int, bool, bool)>;
+using EndLayoutAnimationFunction = std::function<void(int, bool)>;
 
 using RegisterSensorFunction =
     std::function<int(int, int, int, std::function<void(double[], int)>)>;
@@ -77,6 +77,7 @@ struct PlatformDepMethodsHolder {
 #else
   UpdatePropsFunction updatePropsFunction;
   ScrollToFunction scrollToFunction;
+  DispatchCommandFunction dispatchCommandFunction;
   MeasureFunction measureFunction;
   ConfigurePropsFunction configurePropsFunction;
 #endif

@@ -30,7 +30,7 @@ export default function PinExample(): React.ReactElement {
 
   return (
     <SafeAreaView>
-      <View style={{ alignItems: 'center' }}>
+      <View style={styles.center}>
         <NumberDisplay number={number} />
         <Text>move dot</Text>
         <View>
@@ -50,13 +50,8 @@ function getDigit(number: Animated.SharedValue<number>, i: number) {
 
 function NumberDisplay({ number }: { number: Animated.SharedValue<number> }) {
   return (
-    <View style={{ height: 400, width: 200 }}>
-      <View
-        style={{
-          flexDirection: 'row-reverse',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}>
+    <View style={styles.numberContainerOuter}>
+      <View style={styles.numberContainerInner}>
         {indices.map((i) => {
           return <Digit digit={getDigit(number, i)} key={i} />;
         })}
@@ -80,19 +75,12 @@ function Digit({ digit }: { digit: Animated.SharedValue<number> }) {
   });
 
   return (
-    <View
-      style={{ height: 200, width: Platform.OS === 'web' ? 50 : undefined }}>
+    <View style={styles.scrollContainer}>
       <Animated.ScrollView ref={aref}>
         {digits.map((i) => {
           return (
-            <View
-              style={{
-                height: 200,
-                alignItems: 'center',
-                flexDirection: 'row',
-              }}
-              key={i}>
-              <Text style={{ fontSize: 30 }}>{i}</Text>
+            <View style={styles.digitContainer} key={i}>
+              <Text style={styles.font30}>{i}</Text>
             </View>
           );
         })}
@@ -135,18 +123,15 @@ function ProgressBar({ progress }: { progress: Animated.SharedValue<number> }) {
     };
   });
   return (
-    <View
-      style={{ height: 100, paddingRight: 80, paddingLeft: 40, width: 300 }}>
+    <View style={styles.container}>
       <View
         onLayout={(e) => {
           max.value = e.nativeEvent.layout.width;
         }}>
         <Animated.View
           style={[
+            styles.bar,
             {
-              backgroundColor: 'black',
-              height: 2,
-              marginRight: 20,
               transform: [
                 { translateY: dotSize / 2 + 1 },
                 { translateX: dotSize / 2 },
@@ -164,10 +149,45 @@ function ProgressBar({ progress }: { progress: Animated.SharedValue<number> }) {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    height: 100,
+    paddingRight: 80,
+    paddingLeft: 40,
+    width: 300,
+  },
+  center: {
+    alignItems: 'center',
+  },
+  bar: {
+    backgroundColor: 'black',
+    height: 2,
+    marginRight: 20,
+  },
   dot: {
     borderRadius: 100,
     backgroundColor: 'black',
     width: dotSize,
     height: dotSize,
+  },
+  numberContainerInner: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  numberContainerOuter: {
+    height: 400,
+    width: 200,
+  },
+  scrollContainer: {
+    height: 200,
+    width: Platform.OS === 'web' ? 50 : undefined,
+  },
+  font30: {
+    fontSize: 30,
+  },
+  digitContainer: {
+    height: 200,
+    alignItems: 'center',
+    flexDirection: 'row',
   },
 });

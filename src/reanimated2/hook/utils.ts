@@ -1,6 +1,6 @@
-import { MutableRefObject, useEffect, useRef } from 'react';
-import { processColor } from '../Colors';
-import {
+import type { MutableRefObject } from 'react';
+import { useEffect, useRef } from 'react';
+import type {
   AnimatedStyle,
   Context,
   NativeEvent,
@@ -10,10 +10,9 @@ import {
 } from '../commonTypes';
 import { makeRemote } from '../core';
 import { isWeb, isJest } from '../PlatformChecker';
-import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
-import { ContextWithDependencies, DependencyList } from './commonTypes';
-
+import type { ContextWithDependencies, DependencyList } from './commonTypes';
+import type { NativeSyntheticEvent } from 'react-native';
 interface Handler<T, TContext extends Context> extends WorkletFunction {
   (event: T, context: TContext): void;
 }
@@ -22,13 +21,20 @@ interface Handlers<T, TContext extends Context> {
   [key: string]: Handler<T, TContext> | undefined;
 }
 
-export interface UseHandlerContext<TContext extends Context> {
+interface UseHandlerContext<TContext extends Context> {
   context: TContext;
   doDependenciesDiffer: boolean;
   useWeb: boolean;
 }
 
-export function useEvent<T extends NativeEvent<T>>(
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+type useEventType = <T extends object>(
+  handler: (e: T) => void,
+  eventNames?: string[],
+  rebuild?: boolean
+) => (e: NativeSyntheticEvent<T>) => void;
+
+export const useEvent = function <T extends NativeEvent<T>>(
   handler: (event: T) => void,
   eventNames: string[] = [],
   rebuild = false
@@ -41,9 +47,16 @@ export function useEvent<T extends NativeEvent<T>>(
   }
 
   return initRef;
-}
+  // TODO TYPESCRIPT This cast is to get rid of .d.ts file.
+} as unknown as useEventType;
 
-export function useHandler<T, TContext extends Context>(
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+type useHandlerType = <T, TContext extends Context = Record<string, never>>(
+  handlers: Handlers<T, TContext>,
+  deps?: DependencyList
+) => { context: TContext; doDependenciesDiffer: boolean; useWeb: boolean };
+
+export const useHandler = function <T, TContext extends Context>(
   handlers: Handlers<T, TContext>,
   dependencies?: DependencyList
 ): UseHandlerContext<TContext> {
@@ -73,7 +86,8 @@ export function useHandler<T, TContext extends Context>(
   const useWeb = isWeb() || isJest();
 
   return { context, doDependenciesDiffer, useWeb };
-}
+  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
+} as useHandlerType;
 
 // builds one big hash from multiple worklets' hashes
 export function buildWorkletsHash(
@@ -88,7 +102,7 @@ export function buildWorkletsHash(
 }
 
 // builds dependencies array for gesture handlers
-export function buildDependencies(
+function buildDependencies(
   dependencies: DependencyList,
   handlers: Record<string, WorkletFunction | undefined>
 ): Array<unknown> {
@@ -99,17 +113,18 @@ export function buildDependencies(
     dependencies = handlersList.map((handler) => {
       return {
         workletHash: handler.__workletHash,
-        closure: handler._closure,
+        closure: handler.__closure,
       };
     });
   } else {
     dependencies.push(buildWorkletsHash(handlersList));
   }
+
   return dependencies;
 }
 
 // this is supposed to work as useEffect comparison
-export function areDependenciesEqual(
+function areDependenciesEqual(
   nextDeps: DependencyList,
   prevDeps: DependencyList
 ): boolean {
@@ -137,30 +152,6 @@ export function areDependenciesEqual(
   }
 
   return areHookInputsEqual(nextDeps, prevDeps);
-}
-
-export function hasColorProps(updates: AnimatedStyle): boolean {
-  const colorPropsSet = new Set(colorProps);
-  for (const key in updates) {
-    if (colorPropsSet.has(key)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-export function parseColors(updates: AnimatedStyle): void {
-  'worklet';
-  for (const key in updates) {
-    if (colorProps.indexOf(key) !== -1) {
-      // value could be an animation in which case processColor will recognize it and will return undefined
-      // -> in such a case we don't want to override style of that key
-      const processedColor = processColor(updates[key]);
-      if (processedColor !== undefined) {
-        updates[key] = processedColor;
-      }
-    }
-  }
 }
 
 export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
