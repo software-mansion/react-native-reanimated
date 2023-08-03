@@ -8,10 +8,39 @@
 #include <iostream>
 #include <sstream>
 
-static inline bool
-isInstanceOf(jsi::Runtime &rt, jsi::Object &object, const std::string &type) {
-  return object.instanceOf(
-      rt, rt.global().getPropertyAsFunction(rt, type.c_str()));
+static inline std::string getObjectTypeName(
+    jsi::Runtime &rt,
+    const jsi::Object &object) {
+  return object.getPropertyAsObject(rt, "constructor")
+      .getProperty(rt, "name")
+      .toString(rt)
+      .utf8(rt);
+}
+
+static inline bool isInstanceOf(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const std::string &type) {
+  return getObjectTypeName(rt, object) == type;
+}
+
+static inline bool isOneOfSupportedTypes(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    std::vector<std::string> supportedTypes) {
+  std::string instanceType = getObjectTypeName(rt, object);
+
+  return std::find(
+             supportedTypes.begin(), supportedTypes.end(), instanceType) !=
+      supportedTypes.end();
+}
+
+std::string JSISerializer::baseStringify(const jsi::Object &object) {
+  std::stringstream ss;
+
+  ss << '[' << getObjectTypeName(rt_, object) << ']';
+
+  return ss.str();
 }
 
 std::string JSISerializer::stringifyJSIArray(const jsi::Array &arr) {
@@ -31,12 +60,6 @@ std::string JSISerializer::stringifyJSIArray(const jsi::Array &arr) {
   ss << ']';
 
   return ss.str();
-}
-
-std::string JSISerializer::stringifyJSIArrayBuffer(
-    const jsi::ArrayBuffer &buf) {
-  // TODO: consider logging size or contents
-  return "[ArrayBuffer]";
 }
 
 std::string JSISerializer::stringifyJSIFunction(const jsi::Function &func) {
@@ -174,10 +197,7 @@ std::string JSISerializer::stringifyJSMap(const jsi::Object &object) {
 std::string JSISerializer::stringifyRecursiveType(const jsi::Object &object) {
   std::stringstream ss;
 
-  auto type = object.getPropertyAsObject(rt_, "constructor")
-                  .getProperty(rt_, "name")
-                  .toString(rt_)
-                  .utf8(rt_);
+  auto type = getObjectTypeName(rt_, object);
 
   if (type == "Array") {
     return "[...]";
@@ -223,14 +243,48 @@ std::string JSISerializer::stringifyJSIValueRecursively(
     if (object.isArray(rt_)) {
       return stringifyJSIArray(object.getArray(rt_));
     }
-    if (object.isArrayBuffer(rt_)) {
-      return stringifyJSIArrayBuffer(object.getArrayBuffer(rt_));
-    }
     if (object.isFunction(rt_)) {
       return stringifyJSIFunction(object.getFunction(rt_));
     }
     if (object.isHostObject(rt_)) {
       return stringifyJSIHostObject(*object.asHostObject(rt_).get());
+    }
+    if (isOneOfSupportedTypes(rt_, object, SUPPORTED_ERROR_TYPES)) {
+      return stringifyJSError(object);
+    }
+    if (isOneOfSupportedTypes(
+            rt_, object, SUPPORTED_INDEXED_COLLECTION_TYPES)) {
+      // TODO: Consider extending this log info
+      return baseStringify(object);
+    }
+    if (isOneOfSupportedTypes(rt_, object, SUPPORTED_STRUCTURED_DATA_TYPES)) {
+      // TODO: Consider extending this log info
+      return baseStringify(object);
+    }
+    if (isOneOfSupportedTypes(rt_, object, SUPPORTED_MANAGING_MEMORY_TYPES)) {
+      // TODO: Consider extending this log info
+      return baseStringify(object);
+    }
+    if (isOneOfSupportedTypes(
+            rt_, object, SUPPORTED_ABSTRACTION_OBJECT_TYPES)) {
+      // TODO: Consider extending this log info
+      return baseStringify(object);
+    }
+    if (isOneOfSupportedTypes(rt_, object, SUPPORTED_REFLECTION_TYPES)) {
+      // TODO: Consider extending this log info
+      return baseStringify(object);
+    }
+    if (isInstanceOf(rt_, object, "Intl")) {
+      // TODO: Consider extending this log info
+      return baseStringify(object);
+    }
+    if (isInstanceOf(rt_, object, "Date")) {
+      // TODO: Consider extending this log info
+      return baseStringify(object);
+    }
+    if (isInstanceOf(rt_, object, "RegExp")) {
+      // TODO: Consider extending this log info
+      return baseStringify(object);
     }
     if (isInstanceOf(rt_, object, "Map")) {
       return stringifyJSMap(object);
@@ -238,8 +292,13 @@ std::string JSISerializer::stringifyJSIValueRecursively(
     if (isInstanceOf(rt_, object, "Set")) {
       return stringifyJSSet(object);
     }
-    if (isInstanceOf(rt_, object, "Error")) {
-      return stringifyJSError(object);
+    if (isInstanceOf(rt_, object, "WeakMap")) {
+      // TODO: Consider extending this log info
+      return baseStringify(object);
+    }
+    if (isInstanceOf(rt_, object, "WeakSet")) {
+      // TODO: Consider extending this log info
+      return baseStringify(object);
     }
     return stringifyJSIObject(object);
   }

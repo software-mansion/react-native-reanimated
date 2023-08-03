@@ -1,4 +1,4 @@
-import { Button, StyleSheet, View } from 'react-native';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import { runOnUI, useSharedValue } from 'react-native-reanimated';
 import React from 'react';
 
@@ -20,33 +20,37 @@ export default function LogExample() {
     runOnUI(() => {
       'worklet';
       _log('==============================================');
+
       test(42, '42');
       test(3.14, '3.14');
-      test(NaN, 'NaN');
-      test(Infinity, 'Infinity');
       test(true, 'true');
       test(false, 'false');
-      test(null, 'null');
-      test(undefined, 'undefined');
       test('foo', 'foo');
-      test(Symbol('foo'), 'Symbol(foo)');
-      test(123456n, '123456n'); // TODO: change to BigInt after including it in babel plugin
+
+      test(Infinity, 'Infinity');
+      test(NaN, 'NaN');
+      test(undefined, 'undefined');
+      test(null, 'null');
+
+      test([], '[]');
+      test([1], '[1]');
+      test([1, 2, 3], '[1, 2, 3]');
+
       test({}, '{}');
       test({ foo: 'foo' }, '{"foo": "foo"}');
       test(
         { foo: 'foo', bar: 'bar', baz: 'baz' },
         '{"foo": "foo", "bar": "bar", "baz": "baz"}'
       );
-      test([], '[]');
-      test([1], '[1]');
-      test([1, 2, 3], '[1, 2, 3]');
+      // test(testHostObject, '[jsi::HostObject(<ClassName>) <props>]'); // TODO: Add a test for jsi::HostObject
+
       test(() => {}, '[Function anonymous]');
       test(function () {}, '[Function anonymous]');
       test(function foo() {}, '[Function foo]');
+      test(isFinite, '[Function isFinite]');
       test(Object, '[Function Object]');
-      // test(Math, '[Math]'); // TODO: how to detect the Math object?
       test(_log, '[jsi::HostFunction _log]');
-      // test(testHostObject, '[jsi::HostObject(<ClassName>) <props>]'); // TODO: Add a test for jsi::HostObject
+      // test(Math, '[Math]'); // TODO: how to detect the Math object?
 
       {
         let a = {};
@@ -78,23 +82,29 @@ export default function LogExample() {
         test(set, 'Set {1, 2, 3}');
       }
 
+      test(Symbol('foo'), 'Symbol(foo)');
+      test(BigInt(123456), '123456n');
+
       test(new ArrayBuffer(42), '[ArrayBuffer]');
-      test(new DataView(new ArrayBuffer(42)), 'null'); // wait for PR
-      test(new Promise(() => {}), 'null');
-      test(new Uint8Array(), 'null');
-      test(new Int32Array(), 'null');
-      test(new Date(), 'null');
-      test(String('foo'), 'null');
-      test(new RegExp('foo'), 'null');
-      test(new Error('foo'), 'null');
-      test(new WeakMap(), 'null');
-      test(new WeakSet(), 'null');
+      test(new DataView(new ArrayBuffer(42)), '[DataView]'); // wait for PR
+      test(new Promise(() => {}), '[Promise]');
+      test(new Uint8Array(), '[Uint8Array]');
+      test(new Int32Array(), '[Int32Array]');
+      test(new Date(), '[Date]');
+      test(new Error('foo'), '[Error: foo]');
+      test(new TypeError('bar'), '[TypeError: bar]');
+      test(new RegExp('foo'), '[RegExp]');
+      test(new WeakMap(), '[WeakMap]');
+      test(new WeakSet(), '[WeakSet]');
+      test(String('foo'), 'foo');
+
       _log('Tests passed'); // TODO: Cleanup tests after fixing all
     })();
   };
 
   return (
     <View style={styles.container}>
+      <Text style={styles.text}>Analyze the output in the console</Text>
       <Button title="Run tests" onPress={handlePress} />
     </View>
   );
@@ -104,5 +114,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  text: {
+    fontSize: 20,
+    color: 'black',
   },
 });

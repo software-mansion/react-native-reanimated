@@ -2,10 +2,65 @@
 
 #include <jsi/jsi.h>
 #include <string>
+#include <vector>
 
 using namespace facebook;
 
 namespace {
+const std::vector<std::string> SUPPORTED_ERROR_TYPES = {
+    "Error",
+    "AggregateError",
+    "EvalError",
+    "RangeError",
+    "ReferenceError",
+    "SyntaxError",
+    "TypeError",
+    "URIError",
+    "InternalError"};
+
+const std::vector<std::string> SUPPORTED_INDEXED_COLLECTION_TYPES = {
+    "Int8Array",
+    "Uint8Array",
+    "Uint8ClampedArray",
+    "Int16Array",
+    "Uint16Array",
+    "Int32Array",
+    "Uint32Array",
+    "BigInt64Array",
+    "BigUint64Array",
+    "Float32Array",
+    "Float64Array",
+};
+
+const std::vector<std::string> SUPPORTED_STRUCTURED_DATA_TYPES = {
+    "ArrayBuffer",
+    "SharedArrayBuffer",
+    "DataView",
+    "Atomics",
+    "JSON",
+};
+
+const std::vector<std::string> SUPPORTED_MANAGING_MEMORY_TYPES = {
+    "WeakRef",
+    "FinalizationRegistry",
+};
+
+const std::vector<std::string> SUPPORTED_ABSTRACTION_OBJECT_TYPES = {
+    "Iterator",
+    "AsyncIterator",
+    "Promise",
+    "GeneratorFunction",
+    "AsyncGeneratorFunction",
+    "Generator",
+    "AsyncGenerator",
+    "AsyncFunction",
+};
+
+const std::vector<std::string> SUPPORTED_REFLECTION_TYPES = {
+    "Reflect",
+    "Proxy",
+};
+
 class JSISerializer {
  public:
   explicit JSISerializer(jsi::Runtime &rt)
@@ -20,8 +75,8 @@ class JSISerializer {
       bool topLevel = false);
 
  private:
+  std::string baseStringify(const jsi::Object &object);
   std::string stringifyJSIArray(const jsi::Array &arr);
-  std::string stringifyJSIArrayBuffer(const jsi::ArrayBuffer &buf);
   std::string stringifyJSIFunction(const jsi::Function &func);
   std::string stringifyJSIHostObject(jsi::HostObject &hostObject);
   std::string stringifyJSIObject(const jsi::Object &object);
