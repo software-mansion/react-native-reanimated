@@ -245,6 +245,34 @@ describe('babel plugin', () => {
     });
   });
 
+  it("doesn't capture arguments", () => {
+    const input = html`<script>
+      function f(a, b, c) {
+        'worklet';
+        console.log(arguments);
+      }
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toContain('_f.__closure = {};');
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't capture objects' properties", () => {
+    const input = html`<script>
+      const foo = { bar: 42 };
+
+      function f() {
+        'worklet';
+        console.log(foo.bar);
+      }
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toContain('foo: foo');
+    expect(code).toMatchSnapshot();
+  });
+
   describe('for explicit worklets', () => {
     it('workletizes FunctionDeclaration', () => {
       const input = html`<script>
