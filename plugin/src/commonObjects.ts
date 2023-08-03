@@ -1,5 +1,8 @@
 export const globals = new Set([
-  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
+  // Based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
+
+  // Note that objects' properties don't need to be listed since we always only capture the whole object,
+  // e.g. `global.__ErrorUtils` or `Intl.DateTimeFormat`.
 
   // Value properties
   'globalThis',
@@ -114,12 +117,10 @@ export const globals = new Set([
   'queueMicrotask',
   'requestAnimationFrame',
   'setImmediate',
+  'arguments', // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
 
   // Hermes
   'HermesInternal',
-
-  // Babel
-  'arguments', // from spreading `...args` (see PR #882)
 
   // Reanimated
   '_WORKLET',
