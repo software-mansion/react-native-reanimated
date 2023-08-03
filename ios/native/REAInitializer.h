@@ -18,6 +18,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 namespace reanimated {
 
+[[deprecated(
+    "REAInitializer method is no longer required, you can just remove invocation.")]] void
+REAInitializer(RCTBridge *bridge);
+
 #if REACT_NATIVE_MINOR_VERSION <= 71
 [[deprecated(
     "REAJSIExecutorRuntimeInstaller method is no longer required, you can just remove invocation.")]] JSIExecutor::
