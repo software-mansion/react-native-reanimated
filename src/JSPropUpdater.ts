@@ -29,7 +29,7 @@ export class JSPropUpdater {
   };
 
   reanimatedModule: typeof JSPropUpdater.ReanimatedModuleMock;
-  ReanimatedEventEmitter: NativeEventEmitter;
+  reanimatedEventEmitter: NativeEventEmitter;
 
   constructor() {
     if (nativeShouldBeMock()) {
@@ -38,14 +38,14 @@ export class JSPropUpdater {
       const { ReanimatedModule } = NativeModules;
       this.reanimatedModule = ReanimatedModule;
     }
-    this.ReanimatedEventEmitter = new NativeEventEmitter(this.reanimatedModule);
+    this.reanimatedEventEmitter = new NativeEventEmitter(this.reanimatedModule);
   }
 
   _attachPropUpdater(animatedComponent: React.Component<unknown, unknown>) {
     const viewTag = findNodeHandle(animatedComponent);
     TAG_TO_COMPONENT_MAPPING.set(viewTag, animatedComponent);
     if (TAG_TO_COMPONENT_MAPPING.size === 1) {
-      this.ReanimatedEventEmitter.addListener(
+      this.reanimatedEventEmitter.addListener(
         'onReanimatedPropsChange',
         listener
       );
@@ -56,7 +56,7 @@ export class JSPropUpdater {
     const viewTag = findNodeHandle(animatedComponent);
     TAG_TO_COMPONENT_MAPPING.delete(viewTag);
     if (TAG_TO_COMPONENT_MAPPING.size === 0) {
-      this.ReanimatedEventEmitter.removeAllListeners('onReanimatedPropsChange');
+      this.reanimatedEventEmitter.removeAllListeners('onReanimatedPropsChange');
     }
   }
 }
