@@ -51,29 +51,31 @@ export default function LogExample() {
       {
         let a = {};
         a.foo = a;
-        test(a, '');
+        a.bar = 'bar';
+        test(a, '{"foo": {...}, "bar": "bar"}');
       }
       {
         let b = [];
+        b.push(1);
         b.push(b);
-        test(b, '');
+        test(b, '[1, [...]]');
       }
-      test(global, '');
-      test(new Map(), '');
+
+      test(new Map(), 'Map {}');
       {
         const map = new Map();
         map.set('foo', 'foo');
         map.set('bar', 'bar');
         map.set('baz', 'baz');
-        test(map, '');
+        test(map, 'Map {"foo": "foo", "bar": "bar", "baz": "baz"}');
       }
-      test(new Set(), '');
+      test(new Set(), 'Set {}');
       {
         const set = new Set();
         set.add(1);
         set.add(2);
         set.add(3);
-        test(set, '');
+        test(set, 'Set {1, 2, 3}');
       }
 
       test(new ArrayBuffer(42), '[ArrayBuffer]');

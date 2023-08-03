@@ -28,6 +28,7 @@ class JSISerializer {
   std::string stringifyJSError(const jsi::Object &object);
   std::string stringifyJSSet(const jsi::Object &object);
   std::string stringifyJSMap(const jsi::Object &object);
+  std::string stringifyRecursiveType(const jsi::Object &object);
 
   bool wasVisited(const jsi::Object &object) {
     return visitedNodes_.getPropertyAsFunction(rt_, "has")

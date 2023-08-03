@@ -123,7 +123,18 @@ std::string JSISerializer::stringifyJSSet(const jsi::Object &object) {
     return "[Set]";
   }
 
-  ss << "Set {" << stringifyJSIValueRecursively(result.asArray(rt_)) << '}';
+  auto arr = result.asArray(rt_);
+  auto length = arr.size(rt_);
+  ss << "Set {";
+
+  for (size_t i = 0; i < length; i++) {
+    ss << stringifyJSIValueRecursively(arr.getValueAtIndex(rt_, i));
+    if (i != length - 1) {
+      ss << ", ";
+    }
+  }
+
+  ss << '}';
 
   return ss.str();
 }
@@ -160,6 +171,23 @@ std::string JSISerializer::stringifyJSMap(const jsi::Object &object) {
   return ss.str();
 }
 
+std::string JSISerializer::stringifyRecursiveType(const jsi::Object &object) {
+  std::stringstream ss;
+
+  auto type = object.getPropertyAsObject(rt_, "constructor")
+                  .getProperty(rt_, "name")
+                  .toString(rt_)
+                  .utf8(rt_);
+
+  if (type == "Array") {
+    return "[...]";
+  }
+  if (type == "Object") {
+    return "{...}";
+  }
+  return "...";
+}
+
 std::string JSISerializer::stringifyJSIValueRecursively(
     const jsi::Value &value,
     bool topLevel) {
@@ -188,7 +216,7 @@ std::string JSISerializer::stringifyJSIValueRecursively(
     jsi::Object object = value.asObject(rt_);
 
     if (this->wasVisited(object)) {
-      return "[Recursive object]";
+      return stringifyRecursiveType(object);
     }
     this->visit(object);
 
