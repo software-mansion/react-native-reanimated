@@ -311,7 +311,7 @@ export default function createAnimatedComponent(
     _getEventViewRef() {
       // Make sure to get the scrollable node for components that implement
       // `ScrollResponder.Mixin`.
-      return (this._component as ComponentRef)?.getScrollableNode
+      return (this._component as ComponentRef)?.getScrollableNode // Because this_.component can also be HTMLElement, we cast it to ComponentRef
         ? (this._component as ComponentRef).getScrollableNode!()
         : this._component;
     }
@@ -400,12 +400,13 @@ export default function createAnimatedComponent(
     }
 
     _updateFromNative(props: StyleProps) {
+      console.log('chujjj');
       if (options?.setNativeProps) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        options.setNativeProps(this._component as ComponentRef, props);
+        options.setNativeProps(this._component as ComponentRef, props); // Because this_.component can also be HTMLElement and that method is not called on web, we cast it to ComponentRef
       } else {
         // eslint-disable-next-line no-unused-expressions
-        (this._component as ComponentRef)?.setNativeProps?.(props);
+        (this._component as ComponentRef)?.setNativeProps?.(props); // Same as above
       }
     }
 
@@ -421,7 +422,8 @@ export default function createAnimatedComponent(
           ? this._component.getAnimatableRef!()
           : this;
       if (isWeb()) {
-        // At this point I assume, that _setComponentRef was already called and _component is set
+        // At this point I assume, that _setComponentRef was already called and _component is set.
+        // this._component on web represents HTMLElement of our component, that's why we use casting
         viewTag = this._component as HTMLElement;
         viewName = null;
         shadowNodeWrapper = null;
@@ -471,7 +473,7 @@ export default function createAnimatedComponent(
         adaptViewConfig(viewConfig);
       }
 
-      this._viewTag = viewTag as number;
+      this._viewTag = viewTag as number; // Since viewTag can also be HTMLElement (and what's important - it doesn't cause any problems), we use type casting
 
       // remove old styles
       if (prevStyles) {
@@ -527,7 +529,7 @@ export default function createAnimatedComponent(
       if (this.props.animatedProps?.viewDescriptors) {
         this.props.animatedProps.viewDescriptors.add({
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          tag: viewTag as number,
+          tag: viewTag as number, // Type casting is used here, because Descriptor expects viewTag to be number
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           name: viewName!,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -557,7 +559,7 @@ export default function createAnimatedComponent(
 
           this._inlinePropsViewDescriptors.add({
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            tag: viewTag as number,
+            tag: viewTag as number, // Same as in _attachAnimatedStyles
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             name: viewName!,
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -610,10 +612,10 @@ export default function createAnimatedComponent(
           Component<Record<string, unknown>, Record<string, unknown>, unknown>
         >,
       setLocalRef: (ref) => {
-        // TODO update config)
+        // TODO update config
 
         const tag = isWeb()
-          ? (ref as HTMLElement)
+          ? (ref as HTMLElement) // On web version, ref is actually HTMLElement (i.e. div that we are looking for), so we can cast it to HTMLElement
           : findNodeHandle(ref as Component);
 
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
