@@ -33,7 +33,7 @@ export class JSPropUpdater {
     if (nativeShouldBeMock()) {
       reanimatedModule = JSPropUpdater._reanimatedModuleMock;
     } else {
-      reanimatedModule = NativeModules._reanimatedModule;
+      reanimatedModule = NativeModules.ReanimatedModule;
     }
     this._reanimatedEventEmitter = new NativeEventEmitter(reanimatedModule);
   }
