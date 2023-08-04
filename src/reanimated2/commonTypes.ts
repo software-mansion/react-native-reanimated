@@ -120,19 +120,10 @@ interface WorkletBaseDev {
   __stackDetails: Error;
 }
 
-// `A` stands for Arguments, `R` stands for Return value
-
-type WorkletFunctionRelease<A extends unknown[], R> = WorkletBaseRelease & {
-  (...args: A): R;
-};
-
-type WorkletFunctionDev<A extends unknown[], R> = WorkletBaseDev & {
-  (...args: A): R;
-};
-
-export type WorkletFunction<A extends unknown[], T> =
-  | WorkletFunctionRelease<A, T>
-  | WorkletFunctionDev<A, T>;
+export type WorkletFunction<Args extends unknown[], ReturnValue> = ((
+  ...args: Args
+) => ReturnValue) &
+  (WorkletBaseRelease | WorkletBaseDev);
 
 /**
  * @deprecated

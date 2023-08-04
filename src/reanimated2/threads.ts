@@ -12,12 +12,7 @@ const IS_NATIVE = !shouldBeUseWeb();
 /**
  * An array of [worklet, args] pairs.
  * */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _runOnUIQueue: Array<[WorkletFunction<any, unknown>, any[]]> = [];
-// TODO TYPESCRIPT
-// above line should be:
-// let _runOnUIQueue: Array<[WorkletFunction<any[], unknown>, any[]]> = [];
-// but for some reason TypeScript gives CLI error on that
+let _runOnUIQueue: Array<[WorkletFunction<unknown[], unknown>, unknown[]]> = [];
 
 export function setupMicrotasks() {
   'worklet';
@@ -111,7 +106,8 @@ export const runOnUI = (<A extends unknown[], R>(
       makeShareableCloneRecursive(worklet);
       makeShareableCloneRecursive(args);
     }
-    _runOnUIQueue.push([worklet, args]);
+    //
+    _runOnUIQueue.push([worklet as WorkletFunction<unknown[], unknown>, args]);
     if (_runOnUIQueue.length === 1) {
       queueMicrotask(() => {
         const queue = _runOnUIQueue;
