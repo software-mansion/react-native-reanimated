@@ -14,7 +14,6 @@ interface ListenerData {
 export class JSPropUpdater {
   private static _tagToComponentMapping = new Map();
   private _reanimatedEventEmitter: NativeEventEmitter;
-  private _reanimatedModule: typeof JSPropUpdater._reanimatedModuleMock;
   private static _reanimatedModuleMock = {
     async addListener(): Promise<void> {
       // noop
@@ -30,15 +29,13 @@ export class JSPropUpdater {
   }
 
   constructor() {
+    let _reanimatedModule: typeof JSPropUpdater._reanimatedModuleMock;
     if (nativeShouldBeMock()) {
-      this._reanimatedModule = JSPropUpdater._reanimatedModuleMock;
+      _reanimatedModule = JSPropUpdater._reanimatedModuleMock;
     } else {
-      const { _reanimatedModule } = NativeModules;
-      this._reanimatedModule = _reanimatedModule;
+      _reanimatedModule = NativeModules._reanimatedModule;
     }
-    this._reanimatedEventEmitter = new NativeEventEmitter(
-      this._reanimatedModule
-    );
+    this._reanimatedEventEmitter = new NativeEventEmitter(_reanimatedModule);
   }
 
   public addOnJSPropsChangeListener(
