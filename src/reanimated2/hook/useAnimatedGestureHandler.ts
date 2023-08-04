@@ -46,14 +46,19 @@ export interface GestureHandlers<
   onFinish?: Handler<Payload, Context>;
 }
 
-// useAnimatedGestureHandler is generized by event types coming from RNGH
-// and they all have those events defined as having nativeEvent field
-// therefore we use this type to signify that
+/**
+ * useAnimatedGestureHandler is generized by event types coming from
+ * `react-native-gesture-handler`
+ * and they all have those events defined as having `nativeEvent` field
+ * therefore we use this type to signify that,
+ * this by no means is the actual received type in runtime.
+ */
 type RNGHProvidedType<Payload extends object> = {
   nativeEvent: Payload;
 };
 
-// we have to get to event's Payload
+// we have to get to event's Payload to construct
+// a valid type later on
 type InferPayload<EventType extends object> = EventType extends {
   nativeEvent: infer Payload extends object;
 }
@@ -61,7 +66,8 @@ type InferPayload<EventType extends object> = EventType extends {
   : never;
 
 // and then we have to mark it that events we get
-// contain all the necessary fields for us
+// contain all the necessary fields we use
+// in `useAnimatedGestureHandler`
 type GestureHandlersPayload<
   EventType extends RNGHProvidedType<InferPayload<EventType>>
 > = InferPayload<EventType> & PropsUsedInUseAnimatedGestureHandler;
@@ -81,13 +87,15 @@ export function useAnimatedGestureHandler<
   handlers: GestureHandlers<GestureHandlersPayload<EventType>, HandlerContext>,
   dependencies?: DependencyList
 ) {
+  type RealWebEvent = WebEvent<GestureHandlersPayload<EventType>>;
+  type RealNativeEvent = NativeEvent<GestureHandlersPayload<EventType>>;
+  type RealEvent = RealWebEvent | RealNativeEvent;
+
   const { context, doDependenciesDiffer, useWeb } = useHandler<
     GestureHandlersPayload<EventType>,
     HandlerContext
   >(handlers, dependencies);
-  const handler = (
-    e: GestureHandlerEvent<GestureHandlersPayload<EventType>>
-  ) => {
+  const handler = (e: RealEvent) => {
     'worklet';
     const event = useWeb
       ? (e as WebEvent<GestureHandlersPayload<EventType>>).nativeEvent
@@ -139,11 +147,12 @@ export function useAnimatedGestureHandler<
     return handler;
   }
 
-  return useEvent<GestureHandlerEvent<GestureHandlersPayload<EventType>>>(
+  return useEvent<RealEvent>(
     handler,
     ['onGestureHandlerStateChange', 'onGestureHandlerEvent'],
     doDependenciesDiffer
   ) as unknown as (e: EventType) => void;
-  // This cast is necessary since RNGH expects to get a function
+  // This cast is necessary since `react-native-gesture-handler`
+  // expects to get a function
   // and useEvent returns a ref that is casted to something else x_x
 }
