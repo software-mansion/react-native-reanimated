@@ -37,31 +37,6 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
-export interface AnimatedStyle extends Record<string, AnimationObject> {
-  [key: string]: any;
-  transform?: Array<
-    | Record<'matrix', number[] | AnimationObject>
-    | Partial<
-        Record<
-          | 'perspective'
-          | 'scale'
-          | 'scaleX'
-          | 'scaleY'
-          | 'translateX'
-          | 'translateY',
-          number | AnimationObject
-        >
-      >
-    | Partial<
-        Record<
-          'rotate' | 'rotateX' | 'rotateY' | 'rotateZ' | 'skewX' | 'skewY',
-          string | AnimationObject
-        >
-      >
-    | Record<string, AnimationObject>
-  >;
-}
-
 export interface SharedValue<T> {
   value: T;
   addListener: (listenerID: number, listener: (value: T) => void) => void;

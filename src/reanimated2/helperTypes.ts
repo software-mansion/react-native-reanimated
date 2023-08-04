@@ -33,11 +33,15 @@ type TransformsStyle = Pick<RNTransformsStyle, 'transform'>;
 
 type TransformStyleTypes = TransformsStyle['transform'] extends
   | readonly (infer T)[]
+  | string
   | undefined
   ? T
   : never;
 type AnimatedTransform = AdaptTransforms<TransformStyleTypes>[];
 
+/**
+ * @deprecated Please use `AnimatedStyle` type instead.
+ */
 export type AnimateStyle<S> = {
   [K in keyof S]: K extends 'transform'
     ? AnimatedTransform
@@ -49,6 +53,8 @@ export type AnimateStyle<S> = {
     ? S[K] | number
     : S[K] | SharedValue<AnimatableValue>;
 };
+
+export type AnimatedStyle<S> = AnimateStyle<S>;
 
 // provided types can either be their original types (like backgroundColor: pink)
 // or inline shared values/derived values
@@ -81,12 +87,12 @@ type PickStyleProps<T> = Pick<
 
 type StyleAnimatedProps<P extends object> = {
   [K in keyof PickStyleProps<P>]: StyleProp<
-    AnimateStyle<P[K] | MaybeSharedValue<P[K]>>
+    AnimatedStyle<P[K] | MaybeSharedValue<P[K]>>
   >;
 };
 
 type JustStyleAnimatedProp<P extends object> = {
-  style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
+  style?: StyleProp<AnimatedStyle<StylesOrDefault<P>>>;
 };
 
 type NonStyleAnimatedProps<P extends object> = {
