@@ -17,6 +17,8 @@ interface DecayConfig {
   reduceMotion?: ReduceMotion;
 }
 
+export type WithDecayConfig = DecayConfig;
+
 interface DefaultDecayConfig {
   deceleration: number;
   velocityFactor: number;

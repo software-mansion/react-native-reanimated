@@ -27,6 +27,8 @@ export type SpringConfig = {
     }
 );
 
+export type WithSpringConfig = SpringConfig;
+
 export interface SpringConfigInner {
   useDuration: boolean;
   configIsInvalid: boolean;
