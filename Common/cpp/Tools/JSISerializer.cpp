@@ -27,13 +27,20 @@ static inline bool isInstanceOf(
 static inline bool isOneOfSupportedTypes(
     jsi::Runtime &rt,
     const jsi::Object &object,
-    std::vector<std::string> supportedTypes) {
-  std::string instanceType = getObjectTypeName(rt, object);
+    const std::vector<std::string> &supportedTypes) {
+  auto instanceType = getObjectTypeName(rt, object);
 
   return std::find(
              supportedTypes.begin(), supportedTypes.end(), instanceType) !=
       supportedTypes.end();
 }
+
+JSISerializer::JSISerializer(jsi::Runtime &rt)
+    : rt_(rt),
+      visitedNodes_(rt_.global()
+                        .getPropertyAsFunction(rt_, "Set")
+                        .callAsConstructor(rt_)
+                        .asObject(rt_)) {}
 
 std::string JSISerializer::baseStringify(const jsi::Object &object) {
   std::stringstream ss;
@@ -135,9 +142,7 @@ std::string JSISerializer::stringifyJSError(const jsi::Object &object) {
   return ss.str();
 }
 
-std::string JSISerializer::stringifyJSSet(
-    const jsi::Object &object,
-    bool weak) {
+std::string JSISerializer::stringifyJSSet(const jsi::Object &object) {
   std::stringstream ss;
   jsi::Function arrayFrom = rt_.global()
                                 .getPropertyAsObject(rt_, "Array")
@@ -150,9 +155,6 @@ std::string JSISerializer::stringifyJSSet(
 
   auto arr = result.asArray(rt_);
   auto length = arr.size(rt_);
-  if (weak) {
-    ss << "Weak";
-  }
   ss << "Set {";
 
   for (size_t i = 0; i < length; i++) {
@@ -167,9 +169,7 @@ std::string JSISerializer::stringifyJSSet(
   return ss.str();
 }
 
-std::string JSISerializer::stringifyJSMap(
-    const jsi::Object &object,
-    bool weak) {
+std::string JSISerializer::stringifyJSMap(const jsi::Object &object) {
   std::stringstream ss;
   jsi::Function arrayFrom = rt_.global()
                                 .getPropertyAsObject(rt_, "Array")
@@ -182,9 +182,6 @@ std::string JSISerializer::stringifyJSMap(
 
   auto arr = result.asArray(rt_);
   auto length = arr.size(rt_);
-  if (weak) {
-    ss << "Weak";
-  }
   ss << "Map {";
 
   for (size_t i = 0; i < length; i++) {
@@ -204,8 +201,6 @@ std::string JSISerializer::stringifyJSMap(
 }
 
 std::string JSISerializer::stringifyRecursiveType(const jsi::Object &object) {
-  std::stringstream ss;
-
   auto type = getObjectTypeName(rt_, object);
 
   if (type == "Array") {

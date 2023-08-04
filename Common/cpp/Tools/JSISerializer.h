@@ -6,7 +6,6 @@
 
 using namespace facebook;
 
-namespace {
 const std::vector<std::string> SUPPORTED_ERROR_TYPES = {
     "Error",
     "AggregateError",
@@ -61,15 +60,10 @@ const std::vector<std::string> SUPPORTED_REFLECTION_TYPES = {
     "Proxy",
 };
 
+namespace {
 class JSISerializer {
  public:
-  explicit JSISerializer(jsi::Runtime &rt)
-      : rt_(rt),
-        visitedNodes_(rt_.global()
-                          .getPropertyAsFunction(rt_, "Set")
-                          .callAsConstructor(rt_)
-                          .asObject(rt_)) {}
-
+  explicit JSISerializer(jsi::Runtime &rt);
   std::string stringifyJSIValueRecursively(
       const jsi::Value &value,
       bool topLevel = false);
@@ -81,8 +75,8 @@ class JSISerializer {
   std::string stringifyJSIHostObject(jsi::HostObject &hostObject);
   std::string stringifyJSIObject(const jsi::Object &object);
   std::string stringifyJSError(const jsi::Object &object);
-  std::string stringifyJSSet(const jsi::Object &object, bool weak = false);
-  std::string stringifyJSMap(const jsi::Object &object, bool weak = false);
+  std::string stringifyJSSet(const jsi::Object &object);
+  std::string stringifyJSMap(const jsi::Object &object);
   std::string stringifyDate(const jsi::Object &object);
   std::string stringifyRegExp(const jsi::Object &object);
   std::string stringifyRecursiveType(const jsi::Object &object);

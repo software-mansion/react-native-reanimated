@@ -10,15 +10,13 @@
 
 namespace reanimated {
 
-static const std::function<jsi::String(jsi::Runtime &, jsi::Value const &)>
-    stringifyValue = [](jsi::Runtime &rt, jsi::Value const &value) {
-      return jsi::String::createFromUtf8(rt, stringifyJSIValue(rt, value));
-    };
+static jsi::String stringifyValue(jsi::Runtime &rt, jsi::Value const &value) {
+  return jsi::String::createFromUtf8(rt, stringifyJSIValue(rt, value));
+}
 
-static const std::function<void(jsi::Runtime &, jsi::Value const &)> logValue =
-    [](jsi::Runtime &rt, jsi::Value const &value) {
-      Logger::log(stringifyJSIValue(rt, value));
-    };
+static void logValue(jsi::Runtime &rt, jsi::Value const &value) {
+  Logger::log(stringifyJSIValue(rt, value));
+}
 
 std::unordered_map<RuntimePointer, RuntimeType>
     &RuntimeDecorator::runtimeRegistry() {

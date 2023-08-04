@@ -88,7 +88,7 @@ export default function LogExample() {
       test(BigInt(123456), '123456n');
 
       test(new ArrayBuffer(42), '[ArrayBuffer]');
-      test(new DataView(new ArrayBuffer(42)), '[DataView]'); // wait for PR
+      test(new DataView(new ArrayBuffer(42)), '[DataView]');
       test(new Promise(() => {}), '[Promise]');
       test(new Uint8Array(), '[Uint8Array]');
       test(new Int32Array(), '[Int32Array]');
@@ -98,7 +98,7 @@ export default function LogExample() {
       test(new RegExp('foo'), '/foo/');
       test(String('foo'), 'foo');
 
-      _log('Tests passed'); // TODO: Cleanup tests after fixing all
+      _log('Tests passed');
     })();
   };
 
