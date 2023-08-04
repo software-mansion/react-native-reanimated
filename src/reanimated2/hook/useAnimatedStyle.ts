@@ -399,8 +399,8 @@ function checkSharedValueUsage(
   }
 }
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type AnimatedStyleProp<T> =
+// This type is kept for backward compatibility.
+export type AnimatedStyleProp<T> =
   | AnimatedStyle<T>
   | RegisteredStyle<AnimatedStyle<T>>;
 

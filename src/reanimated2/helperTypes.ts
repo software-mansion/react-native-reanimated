@@ -23,20 +23,23 @@ import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Ke
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 import type { DependencyList } from './hook/commonTypes';
 
-type Adaptable<T> = T | ReadonlyArray<T | ReadonlyArray<T>> | SharedValue<T>;
+export type Adaptable<T> =
+  | T
+  | ReadonlyArray<T | ReadonlyArray<T>>
+  | SharedValue<T>;
 
-type AdaptTransforms<T> = {
+export type AdaptTransforms<T> = {
   [P in keyof T]: Adaptable<T[P]>;
 };
 
 type TransformsStyle = Pick<RNTransformsStyle, 'transform'>;
 
-type TransformStyleTypes = TransformsStyle['transform'] extends
+export type TransformStyleTypes = TransformsStyle['transform'] extends
   | readonly (infer T)[]
   | undefined
   ? T
   : never;
-type AnimatedTransform = AdaptTransforms<TransformStyleTypes>[];
+export type AnimatedTransform = AdaptTransforms<TransformStyleTypes>[];
 
 /**
  * @deprecated Please use `AnimatedStyle` type instead.
@@ -61,7 +64,7 @@ type MaybeSharedValue<S> = {
   [K in keyof S]: S[K] | Readonly<SharedValue<Extract<S[K], AnimatableValue>>>;
 };
 
-type StylesOrDefault<T> = 'style' extends keyof T
+export type StylesOrDefault<T> = 'style' extends keyof T
   ? MaybeSharedValue<T['style']>
   : Record<string, unknown>;
 

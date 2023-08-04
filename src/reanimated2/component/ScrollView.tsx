@@ -7,7 +7,7 @@ import type { SharedValue } from '../commonTypes';
 import type { AnimateProps } from '../helperTypes';
 import { useAnimatedRef, useScrollViewOffset } from '../hook';
 
-interface AnimatedScrollViewProps extends ScrollViewProps {
+export interface AnimatedScrollViewProps extends ScrollViewProps {
   scrollViewOffset?: SharedValue<number>;
 }
 

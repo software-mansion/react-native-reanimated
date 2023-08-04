@@ -1,4 +1,4 @@
-import type { EasingFn, EasingFactoryFn } from '../Easing';
+import type { EasingFunction, EasingFunctionFactory } from '../Easing';
 import { Easing } from '../Easing';
 import { defineAnimation } from './util';
 import type {
@@ -10,12 +10,14 @@ import type {
 
 interface TimingConfig {
   duration?: number;
-  easing?: EasingFn | EasingFactoryFn;
+  easing?: EasingFunction | EasingFunctionFactory;
 }
+
+export type WithTimingConfig = TimingConfig;
 
 export interface TimingAnimation extends Animation<TimingAnimation> {
   type: string;
-  easing: EasingFn;
+  easing: EasingFunction;
   startValue: AnimatableValue;
   startTime: Timestamp;
   progress: number;
