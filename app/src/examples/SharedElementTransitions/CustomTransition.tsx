@@ -44,14 +44,14 @@ const transition = SharedTransition.duration(1000)
 function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <Animated.ScrollView style={styles.flexOne}>
-      <Button
-        onPress={() => navigation.navigate('Screen2')}
-        title="go to screen2"
-      />
       <Animated.View
         style={styles.greenBoxScreenOne}
         sharedTransitionTag="tag"
         sharedTransitionStyle={transition}
+      />
+      <Button
+        onPress={() => navigation.navigate('Screen2')}
+        title="go to screen2"
       />
     </Animated.ScrollView>
   );
@@ -60,12 +60,12 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
 function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.flexOne}>
-      <Button title="go back" onPress={() => navigation.navigate('Screen1')} />
       <Animated.View
         style={styles.greenBoxScreenTwo}
         sharedTransitionTag="tag"
         sharedTransitionStyle={transition}
       />
+      <Button title="go back" onPress={() => navigation.navigate('Screen1')} />
     </View>
   );
 }
@@ -76,12 +76,12 @@ export default function CustomTransitionExample() {
       <Stack.Screen
         name="Screen1"
         component={Screen1}
-        options={{ headerShown: false, animation: 'fade' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="Screen2"
         component={Screen2}
-        options={{ headerShown: false, animation: 'fade' }}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
@@ -101,6 +101,6 @@ const styles = StyleSheet.create({
     height: 300,
     marginLeft: 60,
     marginTop: 100,
-    backgroundColor: 'red',
+    backgroundColor: 'green',
   },
 });
