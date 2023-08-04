@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-var */
 import type {
-  AnimatedStyle,
   StyleProps,
   MeasuredDimensions,
   MapperRegistry,
@@ -10,6 +9,7 @@ import type {
   ShadowNodeWrapper,
   ComplexWorkletFunction,
 } from './commonTypes';
+import type { AnimatedStyle } from './helperTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
 import type { NativeReanimatedModule } from './NativeReanimated/NativeReanimated';
 import type { SensorContainer } from './SensorContainer';
@@ -49,7 +49,7 @@ declare global {
         operations: {
           tag: number;
           name: string;
-          updates: StyleProps | AnimatedStyle;
+          updates: StyleProps | AnimatedStyle<any>;
         }[]
       ) => void)
     | undefined;
@@ -57,7 +57,7 @@ declare global {
     | ((
         operations: {
           shadowNodeWrapper: ShadowNodeWrapper;
-          updates: StyleProps | AnimatedStyle;
+          updates: StyleProps | AnimatedStyle<any>;
         }[]
       ) => void)
     | undefined;

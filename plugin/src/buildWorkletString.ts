@@ -172,7 +172,7 @@ function prependClosureVariablesIfNecessary(
           )
         )
       ),
-      memberExpression(thisExpression(), identifier('_closure'))
+      memberExpression(thisExpression(), identifier('__closure'))
     ),
   ]);
 

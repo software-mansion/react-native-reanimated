@@ -34,7 +34,7 @@ namespace reanimated {
 
 NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<CallInvoker> &jsInvoker,
-    const std::shared_ptr<Scheduler> &scheduler,
+    const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::shared_ptr<jsi::Runtime> &rt,
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
@@ -44,8 +44,11 @@ NativeReanimatedModule::NativeReanimatedModule(
 #endif
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
-      runtimeManager_(
-          std::make_shared<RuntimeManager>(rt, scheduler, RuntimeType::UI)),
+      runtimeManager_(std::make_shared<RuntimeManager>(
+          rt,
+          uiScheduler,
+          std::make_shared<JSScheduler>(jsInvoker),
+          RuntimeType::UI)),
       eventHandlerRegistry(std::make_unique<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -159,7 +162,10 @@ void NativeReanimatedModule::installCoreFunctions(
     // initialize runtimeHelper here if not already present. We expect only one
     // instace of the helper to exists.
     runtimeHelper = std::make_shared<JSRuntimeHelper>(
-        &rt, runtimeManager_->runtime.get(), runtimeManager_->scheduler);
+        &rt,
+        runtimeManager_->runtime.get(),
+        runtimeManager_->uiScheduler_,
+        runtimeManager_->jsScheduler_);
   }
   runtimeHelper->callGuard =
       std::make_unique<CoreFunction>(runtimeHelper.get(), callGuard);
@@ -190,11 +196,9 @@ NativeReanimatedModule::~NativeReanimatedModule() {
 void NativeReanimatedModule::scheduleOnUI(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {
-  auto shareableWorklet = extractShareableOrThrow(rt, worklet);
-  assert(
-      shareableWorklet->valueType() == Shareable::WorkletType &&
-      "only worklets can be scheduled to run on UI");
-  runtimeManager_->scheduler->scheduleOnUI([=] {
+  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
+      rt, worklet, "only worklets can be scheduled to run on UI");
+  runtimeManager_->uiScheduler_->scheduleOnUI([=] {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime();
     auto workletValue = shareableWorklet->getJSValue(rt);
     runtimeHelper->runOnUIGuarded(workletValue);
@@ -211,9 +215,10 @@ void NativeReanimatedModule::scheduleOnJS(
       "Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
   auto shareableArgs = argsValue.isUndefined()
       ? nullptr
-      : extractShareableOrThrow(rt, argsValue);
+      : extractShareableOrThrow<ShareableArray>(
+            rt, argsValue, "args must be an array");
   auto jsRuntime = this->runtimeHelper->rnRuntime();
-  runtimeManager_->scheduler->scheduleOnJS([=] {
+  runtimeManager_->jsScheduler_->scheduleOnJS([=] {
     jsi::Runtime &rt = *jsRuntime;
     auto remoteFun = shareableRemoteFun->getJSValue(rt);
     if (shareableArgs == nullptr) {
@@ -327,9 +332,10 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
 
   uint64_t newRegistrationId = EVENT_HANDLER_ID++;
   auto eventName = eventHash.asString(rt).utf8(rt);
-  auto handlerShareable = extractShareableOrThrow(rt, worklet);
+  auto handlerShareable = extractShareableOrThrow<ShareableWorklet>(
+      rt, worklet, "event handler must be a worklet");
 
-  runtimeManager_->scheduler->scheduleOnUI([=] {
+  runtimeManager_->uiScheduler_->scheduleOnUI([=] {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime();
     auto handlerFunction = handlerShareable->getJSValue(rt);
     auto handler = std::make_shared<WorkletEventHandler>(
@@ -347,7 +353,7 @@ void NativeReanimatedModule::unregisterEventHandler(
     jsi::Runtime &,
     const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
-  runtimeManager_->scheduler->scheduleOnUI(
+  runtimeManager_->uiScheduler_->scheduleOnUI(
       [=] { eventHandlerRegistry->unregisterEventHandler(id); });
 }
 
@@ -362,14 +368,14 @@ jsi::Value NativeReanimatedModule::getViewProp(
   std::shared_ptr<jsi::Function> funPtr =
       std::make_shared<jsi::Function>(std::move(fun));
 
-  runtimeManager_->scheduler->scheduleOnUI(
+  runtimeManager_->uiScheduler_->scheduleOnUI(
       [&rt, viewTagInt, funPtr, this, propNameStr]() {
         const jsi::String propNameValue =
             jsi::String::createFromUtf8(rt, propNameStr);
         jsi::Value result = propObtainer(rt, viewTagInt, propNameValue);
         std::string resultStr = result.asString(rt).utf8(rt);
 
-        runtimeManager_->scheduler->scheduleOnJS([&rt, resultStr, funPtr]() {
+        runtimeManager_->jsScheduler_->scheduleOnJS([&rt, resultStr, funPtr]() {
           const jsi::String resultValue =
               jsi::String::createFromUtf8(rt, resultStr);
           funPtr->call(rt, resultValue);
@@ -414,7 +420,8 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
       viewTag.asNumber(),
       static_cast<LayoutAnimationType>(type.asNumber()),
       sharedTransitionTag.asString(rt).utf8(rt),
-      extractShareableOrThrow(rt, config));
+      extractShareableOrThrow<ShareableObject>(
+          rt, config, "layout animation config must be an object"));
   return jsi::Value::undefined();
 }
 
@@ -729,7 +736,8 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     jsi::Runtime &rt,
     const jsi::Value &handlerWorklet,
     const jsi::Value &isStatusBarTranslucent) {
-  auto shareableHandler = extractShareableOrThrow(rt, handlerWorklet);
+  auto shareableHandler = extractShareableOrThrow<ShareableWorklet>(
+      rt, handlerWorklet, "keyboard event handler must be a worklet");
   return subscribeForKeyboardEventsFunction(
       [=](int keyboardState, int height) {
         jsi::Runtime &rt = *runtimeHelper->uiRuntime();

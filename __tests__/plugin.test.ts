@@ -213,7 +213,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).not.toContain('_f._closure = {};');
+      expect(code).not.toContain('_f.__closure = {};');
       expect(code).toMatchSnapshot();
     });
 
@@ -234,7 +234,7 @@ describe('babel plugin', () => {
             'property' in path.node.left &&
             'name' in path.node.left.property &&
             'properties' in path.node.right &&
-            path.node.left.property.name === '_closure'
+            path.node.left.property.name === '__closure'
           ) {
             closureBindings = path.node.right.properties;
           }
@@ -243,6 +243,34 @@ describe('babel plugin', () => {
       expect(closureBindings).toEqual([]);
       expect(code).toMatchSnapshot();
     });
+  });
+
+  it("doesn't capture arguments", () => {
+    const input = html`<script>
+      function f(a, b, c) {
+        'worklet';
+        console.log(arguments);
+      }
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toContain('_f.__closure = {};');
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't capture objects' properties", () => {
+    const input = html`<script>
+      const foo = { bar: 42 };
+
+      function f() {
+        'worklet';
+        console.log(foo.bar);
+      }
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toContain('foo: foo');
+    expect(code).toMatchSnapshot();
   });
 
   describe('for explicit worklets', () => {
@@ -943,7 +971,7 @@ describe('babel plugin', () => {
             'property' in path.node.left &&
             'name' in path.node.left.property &&
             'properties' in path.node.right &&
-            path.node.left.property.name === '_closure'
+            path.node.left.property.name === '__closure'
           ) {
             closureBindings = path.node.right.properties;
           }
