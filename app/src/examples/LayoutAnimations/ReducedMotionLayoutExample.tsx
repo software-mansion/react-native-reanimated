@@ -1,13 +1,17 @@
 import Animated, {
   PinwheelIn,
   PinwheelOut,
-  ReducedMotionConfig,
+  ReduceMotion,
 } from 'react-native-reanimated';
 import { Button, StyleSheet, View, Text } from 'react-native';
 
 import React from 'react';
 
-function Box(props: { config: ReducedMotionConfig }) {
+interface BoxProps {
+  config: ReduceMotion;
+}
+
+function Box({ config }: BoxProps) {
   const [show, setShow] = React.useState(false);
 
   return (
@@ -18,12 +22,12 @@ function Box(props: { config: ReducedMotionConfig }) {
         }}
         title={show ? 'hide' : 'show'}
       />
-      <Text style={styles.text}>{props.config} reduce</Text>
+      <Text style={styles.text}>{config} reduce</Text>
       {show && (
         <Animated.View
           style={styles.box}
-          entering={PinwheelIn.duration(2000).reduceMotion(props.config)}
-          exiting={PinwheelOut.duration(2000).reduceMotion(props.config)}
+          entering={PinwheelIn.duration(2000).reduceMotion(config)}
+          exiting={PinwheelOut.duration(2000).reduceMotion(config)}
         />
       )}
     </View>
@@ -33,9 +37,9 @@ function Box(props: { config: ReducedMotionConfig }) {
 export default function ReducedMotionLayoutExample() {
   return (
     <View style={styles.container}>
-      <Box config="always" />
-      <Box config="system" />
-      <Box config="never" />
+      <Box config={ReduceMotion.Always} />
+      <Box config={ReduceMotion.System} />
+      <Box config={ReduceMotion.Never} />
     </View>
   );
 }

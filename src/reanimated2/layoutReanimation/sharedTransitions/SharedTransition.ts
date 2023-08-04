@@ -9,10 +9,9 @@ import {
   LayoutAnimationType,
   SharedTransitionType,
 } from '../animationBuilder/commonTypes';
-import type { StyleProps } from '../../commonTypes';
+import { ReduceMotion, StyleProps } from '../../commonTypes';
 import { configureLayoutAnimations } from '../../core';
 import { ProgressTransitionManager } from './ProgressTransitionManager';
-import { ReducedMotionConfig } from '../../commonTypes';
 import { getReduceMotionFromConfig } from '../../animation/util';
 
 const supportedProps = [
@@ -32,7 +31,7 @@ export class SharedTransition {
   private _customAnimationFactory: AnimationFactory | null = null;
   private _animation: SharedTransitionAnimationsFunction | null = null;
   private _transitionDuration = 500;
-  private _reduceMotion: ReducedMotionConfig = 'system';
+  private _reduceMotion: ReduceMotion = ReduceMotion.System;
   private _customProgressAnimation?: ProgressAnimation = undefined;
   private _progressAnimation?: ProgressAnimation = undefined;
   private _defaultTransitionType?: SharedTransitionType = undefined;
@@ -59,7 +58,7 @@ export class SharedTransition {
     return this;
   }
 
-  public reduceMotion(_reduceMotion: ReducedMotionConfig): this {
+  public reduceMotion(_reduceMotion: ReduceMotion): this {
     this._reduceMotion = _reduceMotion;
     return this;
   }
@@ -236,9 +235,7 @@ export class SharedTransition {
     return new SharedTransition().defaultTransitionType(transitionType);
   }
 
-  public static reduceMotion(
-    _reduceMotion: ReducedMotionConfig
-  ): SharedTransition {
+  public static reduceMotion(_reduceMotion: ReduceMotion): SharedTransition {
     return new SharedTransition().reduceMotion(_reduceMotion);
   }
 }

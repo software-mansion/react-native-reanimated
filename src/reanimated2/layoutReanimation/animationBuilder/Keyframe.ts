@@ -7,11 +7,7 @@ import type {
   IEntryExitAnimationBuilder,
   KeyframeProps,
 } from './commonTypes';
-import type {
-  TransformProperty,
-  StyleProps,
-  ReducedMotionConfig,
-} from '../../commonTypes';
+import { TransformProperty, StyleProps, ReduceMotion } from '../../commonTypes';
 import { getReduceMotionFromConfig } from '../../animation/util';
 
 interface KeyframePoint {
@@ -26,7 +22,7 @@ interface ParsedKeyframesDefinition {
 class InnerKeyframe implements IEntryExitAnimationBuilder {
   durationV?: number;
   delayV?: number;
-  reduceMotionV: ReducedMotionConfig = 'system';
+  reduceMotionV: ReduceMotion = ReduceMotion.System;
   callbackV?: (finished: boolean) => void;
   definitions: Record<string, KeyframeProps>;
 
@@ -185,7 +181,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     return this;
   }
 
-  reduceMotion(reduceMotionV: ReducedMotionConfig): this {
+  reduceMotion(reduceMotionV: ReduceMotion): this {
     this.reduceMotionV = reduceMotionV;
     return this;
   }
@@ -284,7 +280,7 @@ export declare class ReanimatedKeyframe {
   constructor(definitions: Record<string, KeyframeProps>);
   duration(durationMs: number): ReanimatedKeyframe;
   delay(delayMs: number): ReanimatedKeyframe;
-  reduceMotion(reduceMotionV: ReducedMotionConfig): ReanimatedKeyframe;
+  reduceMotion(reduceMotionV: ReduceMotion): ReanimatedKeyframe;
   withCallback(callback: (finished: boolean) => void): ReanimatedKeyframe;
 }
 

@@ -4,13 +4,14 @@ import type {
   AnimationFunction,
   LayoutAnimationFunction,
 } from './commonTypes';
-import type { ReducedMotionConfig } from '../../commonTypes';
+
+import { ReduceMotion } from '../../commonTypes';
 import { getReduceMotionFromConfig } from '../../animation/util';
 
 export class BaseAnimationBuilder {
   durationV?: number;
   delayV?: number;
-  reduceMotionV: ReducedMotionConfig = 'system';
+  reduceMotionV: ReduceMotion = ReduceMotion.System;
   randomizeDelay = false;
   callbackV?: (finished: boolean) => void;
 
@@ -63,13 +64,13 @@ export class BaseAnimationBuilder {
 
   static reduceMotion<T extends typeof BaseAnimationBuilder>(
     this: T,
-    reduceMotionV: ReducedMotionConfig
+    reduceMotionV: ReduceMotion
   ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.reduceMotion(reduceMotionV);
   }
 
-  reduceMotion(reduceMotionV: ReducedMotionConfig): this {
+  reduceMotion(reduceMotionV: ReduceMotion): this {
     this.reduceMotionV = reduceMotionV;
     return this;
   }
@@ -102,7 +103,7 @@ export class BaseAnimationBuilder {
       : this.delayV ?? 0;
   }
 
-  getReduceMotion(): ReducedMotionConfig {
+  getReduceMotion(): ReduceMotion {
     return this.reduceMotionV;
   }
 

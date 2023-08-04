@@ -86,6 +86,7 @@ import ModalsExample from './SharedElementTransitions/Modals';
 import NestedStacksExample from './SharedElementTransitions/NestedStacks';
 import ProfilesExample from './SharedElementTransitions/Profiles';
 import ProgressTransitionExample from './SharedElementTransitions/ProgressTransition';
+import ReducedMotionSharedExample from './SharedElementTransitions/ReducedMotionSharedExample';
 import RestoreStateExample from './SharedElementTransitions/RestoreState';
 import SharedStyleExample from './SharedStyleExample';
 import SvgExample from './SvgExample';
@@ -570,5 +571,9 @@ export const EXAMPLES: Record<string, Example> = {
   DuplicateTagsExample: {
     title: '[SET] Duplicate Tags',
     screen: DuplicateTagsExample,
+  },
+  ReducedMotionSharedExample: {
+    title: '[SET] Reduced Motion',
+    screen: ReducedMotionSharedExample,
   },
 } as const;
