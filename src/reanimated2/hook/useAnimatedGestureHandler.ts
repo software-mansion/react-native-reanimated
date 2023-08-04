@@ -16,7 +16,7 @@ export interface GestureHandlers<T, TContext extends __Context> {
   onFinish?: Handler<T, TContext>;
 }
 
-export const EventType = {
+const EventType = {
   UNDETERMINED: 0,
   FAILED: 1,
   BEGAN: 2,
@@ -25,7 +25,7 @@ export const EventType = {
   END: 5,
 };
 
-export interface GestureHandlerNativeEvent {
+interface GestureHandlerNativeEvent {
   handlerTag: number;
   numberOfPointers: number;
   state: (typeof EventType)[keyof typeof EventType];
