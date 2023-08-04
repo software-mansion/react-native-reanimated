@@ -37,31 +37,6 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
-export interface AnimatedStyle extends Record<string, AnimationObject> {
-  [key: string]: any;
-  transform?: Array<
-    | Record<'matrix', number[] | AnimationObject>
-    | Partial<
-        Record<
-          | 'perspective'
-          | 'scale'
-          | 'scaleX'
-          | 'scaleY'
-          | 'translateX'
-          | 'translateY',
-          number | AnimationObject
-        >
-      >
-    | Partial<
-        Record<
-          'rotate' | 'rotateX' | 'rotateY' | 'rotateZ' | 'skewX' | 'skewY',
-          string | AnimationObject
-        >
-      >
-    | Record<string, AnimationObject>
-  >;
-}
-
 export interface SharedValue<T> {
   value: T;
   addListener: (listenerID: number, listener: (value: T) => void) => void;
@@ -94,7 +69,7 @@ export type MapperRegistry = {
   stop: (mapperID: number) => void;
 };
 
-export type WorkletClosure = Record<string, unknown>;
+type WorkletClosure = Record<string, unknown>;
 
 interface WorkletInitDataRelease {
   code: string;
@@ -108,31 +83,22 @@ interface WorkletInitDataDev {
 }
 
 interface WorkletBaseRelease {
-  _closure: WorkletClosure;
+  __closure: WorkletClosure;
   __initData: WorkletInitDataRelease;
   __workletHash: number;
 }
 
 interface WorkletBaseDev {
-  _closure: WorkletClosure;
+  __closure: WorkletClosure;
   __initData: WorkletInitDataDev;
   __workletHash: number;
   __stackDetails: Error;
 }
 
-// `A` stands for Arguments, `R` stands for Return value
-
-type WorkletFunctionRelease<A extends unknown[], R> = WorkletBaseRelease & {
-  (...args: A): R;
-};
-
-type WorkletFunctionDev<A extends unknown[], R> = WorkletBaseDev & {
-  (...args: A): R;
-};
-
-export type WorkletFunction<A extends unknown[], T> =
-  | WorkletFunctionRelease<A, T>
-  | WorkletFunctionDev<A, T>;
+export type WorkletFunction<Args extends unknown[], ReturnValue> = ((
+  ...args: Args
+) => ReturnValue) &
+  (WorkletBaseRelease | WorkletBaseDev);
 
 /**
  * @deprecated
@@ -143,7 +109,7 @@ export type __Context = Record<string, unknown>;
  * @deprecated
  */
 export interface __WorkletFunction {
-  _closure?: __Context;
+  __closure?: __Context;
   __workletHash?: number;
 }
 

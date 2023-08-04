@@ -9,12 +9,7 @@
 #include "JSRuntimeHelper.h"
 #include "ReanimatedRuntime.h"
 #include "RuntimeManager.h"
-
-#ifdef __APPLE__
-#include <RNReanimated/Scheduler.h>
-#else
-#include "Scheduler.h"
-#endif
+#include "UIScheduler.h"
 
 using namespace facebook;
 
@@ -144,7 +139,7 @@ std::shared_ptr<T> extractShareableOrThrow(
   auto res = std::dynamic_pointer_cast<T>(
       extractShareableOrThrow(rt, shareableRef, errorMessage));
   if (!res) {
-    throw new std::runtime_error(
+    throw std::runtime_error(
         errorMessage != nullptr
             ? errorMessage
             : "provided shareable object is of an incompatible type");

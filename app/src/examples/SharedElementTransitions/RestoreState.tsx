@@ -61,7 +61,7 @@ export default function RestoreStateExample() {
   return (
     <Stack.Navigator
       screenOptions={{
-        animation: 'none',
+        animation: 'fade',
       }}>
       <Stack.Screen
         name="Screen1"
