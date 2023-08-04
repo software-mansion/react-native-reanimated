@@ -6,20 +6,16 @@ import {
 import { nativeShouldBeMock } from './reanimated2/PlatformChecker';
 import { StyleProps } from './reanimated2';
 
-const TAG_TO_COMPONENT_MAPPING = new Map();
-
 interface ListenerData {
   viewTag: number;
   props: StyleProps;
 }
 
-function listener(data: ListenerData) {
-  const component = TAG_TO_COMPONENT_MAPPING.get(data.viewTag);
-  component && component._updateFromNative(data.props);
-}
-
 export class JSPropUpdater {
-  static ReanimatedModuleMock = {
+  private static _TAG_TO_COMPONENT_MAPPING = new Map();
+  private _reanimatedEventEmitter: NativeEventEmitter;
+  private _reanimatedModule: typeof JSPropUpdater._reanimatedModuleMock;
+  private static _reanimatedModuleMock = {
     async addListener(): Promise<void> {
       // noop
     },
@@ -28,28 +24,32 @@ export class JSPropUpdater {
     },
   };
 
-  reanimatedModule: typeof JSPropUpdater.ReanimatedModuleMock;
-  reanimatedEventEmitter: NativeEventEmitter;
+  private static _listener(data: ListenerData) {
+    const component = JSPropUpdater._TAG_TO_COMPONENT_MAPPING.get(data.viewTag);
+    component && component._updateFromNative(data.props);
+  }
 
   constructor() {
     if (nativeShouldBeMock()) {
-      this.reanimatedModule = JSPropUpdater.ReanimatedModuleMock;
+      this._reanimatedModule = JSPropUpdater._reanimatedModuleMock;
     } else {
-      const { ReanimatedModule } = NativeModules;
-      this.reanimatedModule = ReanimatedModule;
+      const { _reanimatedModule } = NativeModules;
+      this._reanimatedModule = _reanimatedModule;
     }
-    this.reanimatedEventEmitter = new NativeEventEmitter(this.reanimatedModule);
+    this._reanimatedEventEmitter = new NativeEventEmitter(
+      this._reanimatedModule
+    );
   }
 
   addOnJSPropsChangeListener(
     animatedComponent: React.Component<unknown, unknown>
   ) {
     const viewTag = findNodeHandle(animatedComponent);
-    TAG_TO_COMPONENT_MAPPING.set(viewTag, animatedComponent);
-    if (TAG_TO_COMPONENT_MAPPING.size === 1) {
-      this.reanimatedEventEmitter.addListener(
+    JSPropUpdater._TAG_TO_COMPONENT_MAPPING.set(viewTag, animatedComponent);
+    if (JSPropUpdater._TAG_TO_COMPONENT_MAPPING.size === 1) {
+      this._reanimatedEventEmitter.addListener(
         'onReanimatedPropsChange',
-        listener
+        JSPropUpdater._listener
       );
     }
   }
@@ -58,9 +58,11 @@ export class JSPropUpdater {
     animatedComponent: React.Component<unknown, unknown>
   ) {
     const viewTag = findNodeHandle(animatedComponent);
-    TAG_TO_COMPONENT_MAPPING.delete(viewTag);
-    if (TAG_TO_COMPONENT_MAPPING.size === 0) {
-      this.reanimatedEventEmitter.removeAllListeners('onReanimatedPropsChange');
+    JSPropUpdater._TAG_TO_COMPONENT_MAPPING.delete(viewTag);
+    if (JSPropUpdater._TAG_TO_COMPONENT_MAPPING.size === 0) {
+      this._reanimatedEventEmitter.removeAllListeners(
+        'onReanimatedPropsChange'
+      );
     }
   }
 }
