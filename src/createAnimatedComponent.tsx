@@ -400,7 +400,6 @@ export default function createAnimatedComponent(
     }
 
     _updateFromNative(props: StyleProps) {
-      console.log('chujjj');
       if (options?.setNativeProps) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         options.setNativeProps(this._component as ComponentRef, props); // Because this_.component can also be HTMLElement and that method is not called on web, we cast it to ComponentRef
@@ -615,7 +614,7 @@ export default function createAnimatedComponent(
         // TODO update config
 
         const tag = isWeb()
-          ? (ref as HTMLElement) // On web version, ref is actually HTMLElement (i.e. div that we are looking for), so we can cast it to HTMLElement
+          ? (ref as HTMLElement) // On web version, ref is HTMLElement (i.e. div that we are looking for), so we can cast it to HTMLElement
           : findNodeHandle(ref as Component);
 
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
