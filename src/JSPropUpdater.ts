@@ -41,7 +41,7 @@ export class JSPropUpdater {
     );
   }
 
-  addOnJSPropsChangeListener(
+  public addOnJSPropsChangeListener(
     animatedComponent: React.Component<unknown, unknown>
   ) {
     const viewTag = findNodeHandle(animatedComponent);
@@ -54,7 +54,7 @@ export class JSPropUpdater {
     }
   }
 
-  removeOnJSPropsChangeListener(
+  public removeOnJSPropsChangeListener(
     animatedComponent: React.Component<unknown, unknown>
   ) {
     const viewTag = findNodeHandle(animatedComponent);
