@@ -25,8 +25,8 @@ if (command === 'setBundleIdentifier') {
 if (command === 'setupFabricIOS') {
   patchFile(
     'app/ios/Podfile.properties.json',
-    '{',
-    '{"newArchEnabled":"true",'
+    '"expo.jsEngine"',
+    '"newArchEnabled":"true","expo.jsEngine"'
   );
 }
 
