@@ -9,13 +9,11 @@ import {
   registerShareableMapping,
 } from '../shareables';
 import { findNodeHandle } from 'react-native';
-import type { FlatList, ScrollView, SectionList } from 'react-native';
 interface MaybeScrollableComponent extends Component {
-  getNativeScrollRef?: FlatList['getNativeScrollRef'];
-  getScrollableNode?:
-    | FlatList['getScrollableNode']
-    | ScrollView['getScrollableNode']
-    | SectionList['getScrollableNode'];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getNativeScrollRef?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getScrollableNode?: any;
 }
 
 function getComponentOrScrollable(component: MaybeScrollableComponent) {
