@@ -10,15 +10,20 @@ import {
 import { findNodeHandle } from 'react-native';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 
-type Nullable<T> = T | undefined | null;
+import type {
+  FlatList, // here
+  ScrollView, // here
+  SectionList, // here
+} from 'react-native';
 interface MaybeScrollableComponent extends Component {
-  getNativeScrollRef?: () => Nullable<MaybeScrollableComponent>;
-  getScrollableNode?: () => Nullable<MaybeScrollableComponent>;
+  getNativeScrollRef?: FlatList['getNativeScrollRef'];
+  getScrollableNode?:
+    | FlatList['getScrollableNode']
+    | ScrollView['getScrollableNode']
+    | SectionList['getScrollableNode'];
 }
 
-function getComponentOrScrollable(
-  component: MaybeScrollableComponent
-): Nullable<MaybeScrollableComponent> {
+function getComponentOrScrollable(component: MaybeScrollableComponent) {
   if (global._IS_FABRIC && component.getNativeScrollRef) {
     return component.getNativeScrollRef();
   } else if (!global._IS_FABRIC && component.getScrollableNode) {
@@ -41,11 +46,7 @@ export function useAnimatedRef<
     const fun: AnimatedRef<T> = <AnimatedRef<T>>((component) => {
       // enters when ref is set by attaching to a component
       if (component) {
-        // On Fabric we use `getNativeScrollRef` which can return undefined but
-        // on Paper getTagValueFunction is `findNodeHandle` which cannot get
-        // undefined as an argument. It's hard to solve this in TypeScript so we can just use !.
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        tag.value = getTagValueFunction(getComponentOrScrollable(component)!);
+        tag.value = getTagValueFunction(getComponentOrScrollable(component));
         fun.current = component;
       }
       return tag.value;
