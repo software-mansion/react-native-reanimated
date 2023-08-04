@@ -12,7 +12,7 @@ interface ListenerData {
 }
 
 export class JSPropUpdater {
-  private static _TAG_TO_COMPONENT_MAPPING = new Map();
+  private static _tagToComponentMapping = new Map();
   private _reanimatedEventEmitter: NativeEventEmitter;
   private _reanimatedModule: typeof JSPropUpdater._reanimatedModuleMock;
   private static _reanimatedModuleMock = {
@@ -25,7 +25,7 @@ export class JSPropUpdater {
   };
 
   private static _listener(data: ListenerData) {
-    const component = JSPropUpdater._TAG_TO_COMPONENT_MAPPING.get(data.viewTag);
+    const component = JSPropUpdater._tagToComponentMapping.get(data.viewTag);
     component && component._updateFromNative(data.props);
   }
 
@@ -45,8 +45,8 @@ export class JSPropUpdater {
     animatedComponent: React.Component<unknown, unknown>
   ) {
     const viewTag = findNodeHandle(animatedComponent);
-    JSPropUpdater._TAG_TO_COMPONENT_MAPPING.set(viewTag, animatedComponent);
-    if (JSPropUpdater._TAG_TO_COMPONENT_MAPPING.size === 1) {
+    JSPropUpdater._tagToComponentMapping.set(viewTag, animatedComponent);
+    if (JSPropUpdater._tagToComponentMapping.size === 1) {
       this._reanimatedEventEmitter.addListener(
         'onReanimatedPropsChange',
         JSPropUpdater._listener
@@ -58,8 +58,8 @@ export class JSPropUpdater {
     animatedComponent: React.Component<unknown, unknown>
   ) {
     const viewTag = findNodeHandle(animatedComponent);
-    JSPropUpdater._TAG_TO_COMPONENT_MAPPING.delete(viewTag);
-    if (JSPropUpdater._TAG_TO_COMPONENT_MAPPING.size === 0) {
+    JSPropUpdater._tagToComponentMapping.delete(viewTag);
+    if (JSPropUpdater._tagToComponentMapping.size === 0) {
       this._reanimatedEventEmitter.removeAllListeners(
         'onReanimatedPropsChange'
       );
