@@ -311,7 +311,7 @@ export default function createAnimatedComponent(
     _getEventViewRef() {
       // Make sure to get the scrollable node for components that implement
       // `ScrollResponder.Mixin`.
-      return (this._component as ComponentRef)?.getScrollableNode // Because this_.component can also be HTMLElement, we cast it to ComponentRef
+      return (this._component as ComponentRef)?.getScrollableNode
         ? (this._component as ComponentRef).getScrollableNode!()
         : this._component;
     }
@@ -402,10 +402,10 @@ export default function createAnimatedComponent(
     _updateFromNative(props: StyleProps) {
       if (options?.setNativeProps) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        options.setNativeProps(this._component as ComponentRef, props); // Because this_.component can also be HTMLElement and that method is not called on web, we cast it to ComponentRef
+        options.setNativeProps(this._component as ComponentRef, props);
       } else {
         // eslint-disable-next-line no-unused-expressions
-        (this._component as ComponentRef)?.setNativeProps?.(props); // Same as above
+        (this._component as ComponentRef)?.setNativeProps?.(props);
       }
     }
 
@@ -472,7 +472,7 @@ export default function createAnimatedComponent(
         adaptViewConfig(viewConfig);
       }
 
-      this._viewTag = viewTag as number; // Since viewTag can also be HTMLElement (and what's important - it doesn't cause any problems), we use type casting
+      this._viewTag = viewTag as number;
 
       // remove old styles
       if (prevStyles) {
@@ -528,7 +528,7 @@ export default function createAnimatedComponent(
       if (this.props.animatedProps?.viewDescriptors) {
         this.props.animatedProps.viewDescriptors.add({
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          tag: viewTag as number, // Type casting is used here, because Descriptor expects viewTag to be number
+          tag: viewTag as number,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           name: viewName!,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -558,7 +558,7 @@ export default function createAnimatedComponent(
 
           this._inlinePropsViewDescriptors.add({
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            tag: viewTag as number, // Same as in _attachAnimatedStyles
+            tag: viewTag as number,
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             name: viewName!,
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -614,7 +614,7 @@ export default function createAnimatedComponent(
         // TODO update config
 
         const tag = isWeb()
-          ? (ref as HTMLElement) // On web version, ref is HTMLElement (i.e. div that we are looking for), so we can cast it to HTMLElement
+          ? (ref as HTMLElement)
           : findNodeHandle(ref as Component);
 
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
