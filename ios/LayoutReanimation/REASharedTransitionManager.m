@@ -155,7 +155,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
     sharedElement.sourceViewSnapshot = newSourceViewSnapshot;
 
     [self disableCleaningForViewTag:sourceView.reactTag];
-    // mleko
     [self disableCleaningForViewTag:targetView.reactTag];
   }
   [self startSharedTransition:sharedElementToRestart];
@@ -288,7 +287,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
     }
 
     [newTransitionViews addObject:viewSource];
-    //mleko
     [newTransitionViews addObject:viewTarget];
 
     REASharedElement *sharedElement = [[REASharedElement alloc] initWithSourceView:viewSource
@@ -393,7 +391,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
     } else {
       [self makeSnapshotForScreenViews:screen];
     }
-    [self restoreViewsVisibility];
   } else {
     // removed stack
     if (![self isInteractiveScreenChange:screen]) {
@@ -422,15 +419,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
     }
     return false;
   });
-}
-
-- (void)restoreViewsVisibility
-{
-  for (NSNumber *viewTag in _viewsToHide) {
-    UIView *view = [_animationManager viewForTag:viewTag];
-    view.hidden = NO;
-  }
-  [_viewsToHide removeAllObjects];
 }
 
 - (void)clearConfigForStackNow:(UIView *)stack
@@ -527,21 +515,12 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   for (REASharedElement *sharedElement in sharedElements) {
     UIView *viewSource = sharedElement.sourceView;
-    UIView *viewTarget = sharedElement.targetView;
     if (_sharedTransitionParent[viewSource.reactTag] == nil) {
       _sharedTransitionParent[viewSource.reactTag] = viewSource.superview;
       _sharedTransitionInParentIndex[viewSource.reactTag] = @([viewSource.superview.subviews indexOfObject:viewSource]);
       [viewSource removeFromSuperview];
       [_transitionContainer addSubview:viewSource];
     }
-
-// mleko
-//    if (_sharedTransitionParent[viewTarget.reactTag] == nil) {
-//      _sharedTransitionParent[viewTarget.reactTag] = viewTarget.superview;
-//      _sharedTransitionInParentIndex[viewTarget.reactTag] = @([viewTarget.superview.subviews indexOfObject:viewTarget]);
-//      [viewTarget removeFromSuperview];
-//      [_transitionContainer addSubview:viewTarget];
-//    }
   }
 }
 
@@ -553,12 +532,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
                     before:sharedElement.sourceViewSnapshot
                      after:sharedElement.targetViewSnapshot
                       type:type];
-//    sharedElement.targetView.hidden = YES;
-// mleko
-//    [self onViewTransition:sharedElement.targetView
-//                    before:sharedElement.sourceViewSnapshot
-//                     after:sharedElement.targetViewSnapshot
-//                      type:type];
+    sharedElement.targetView.hidden = YES;
   }
 }
 
@@ -604,14 +578,16 @@ static REASharedTransitionManager *_sharedTransitionManager;
     if ([_viewsToHide containsObject:viewTag]) {
       view.hidden = YES;
     }
-    
+
     for (REASharedElement *sharedElement in _sharedElements) {
       if (sharedElement.sourceView.reactTag == viewTag) {
-        [_currentSharedTransitionViews removeObjectForKey:sharedElement.targetView.reactTag];
-        [_viewsWithCanceledAnimation removeObject:sharedElement.targetView];
+        UIView *targetView = sharedElement.targetView;
+        [_currentSharedTransitionViews removeObjectForKey:targetView.reactTag];
+        [_viewsWithCanceledAnimation removeObject:targetView];
+        targetView.hidden = NO;
       }
     }
-    
+
     [_currentSharedTransitionViews removeObjectForKey:viewTag];
     [_sharedTransitionParent removeObjectForKey:viewTag];
     [_sharedTransitionInParentIndex removeObjectForKey:viewTag];
@@ -627,6 +603,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     [_transitionContainer removeFromSuperview];
     [_removedViews removeAllObjects];
     [_sharedElements removeAllObjects];
+    [_viewsToHide removeAllObjects];
     _isSharedTransitionActive = NO;
   }
 }
