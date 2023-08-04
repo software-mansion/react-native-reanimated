@@ -3,12 +3,12 @@ import { useRef } from 'react';
 import { useSharedValue } from './useSharedValue';
 import type { AnimatedRef } from './commonTypes';
 import type { ShadowNodeWrapper } from '../commonTypes';
+import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import {
   makeShareableCloneRecursive,
   registerShareableMapping,
 } from '../shareables';
 import { findNodeHandle } from 'react-native';
-import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import type { FlatList, ScrollView, SectionList } from 'react-native';
 interface MaybeScrollableComponent extends Component {
   getNativeScrollRef?: FlatList['getNativeScrollRef'];
