@@ -4,6 +4,11 @@
 
 namespace reanimated {
 
+void REAInitializer(RCTBridge *bridge)
+{
+  // do nothing, just for backward compatibility
+}
+
 #if REACT_NATIVE_MINOR_VERSION <= 71
 
 JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(

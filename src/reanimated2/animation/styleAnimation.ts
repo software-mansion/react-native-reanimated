@@ -4,10 +4,10 @@ import type {
   AnimatableValue,
   AnimationObject,
   Animation,
-  AnimatedStyle,
   NestedObject,
   NestedObjectValues,
 } from '../commonTypes';
+import type { AnimatedStyle } from '../helperTypes';
 import type { StyleLayoutAnimation } from './commonTypes';
 import { withTiming } from './timing';
 import { ColorProperties } from '../UpdateProps';
@@ -71,7 +71,7 @@ interface NestedObjectEntry<T> {
 }
 
 export function withStyleAnimation(
-  styleAnimations: AnimatedStyle
+  styleAnimations: AnimatedStyle<any>
 ): StyleLayoutAnimation {
   'worklet';
   return defineAnimation<StyleLayoutAnimation>({}, () => {
@@ -143,7 +143,7 @@ export function withStyleAnimation(
 
     const onStart = (
       animation: StyleLayoutAnimation,
-      value: AnimatedStyle,
+      value: AnimatedStyle<any>,
       now: Timestamp,
       previousAnimation: StyleLayoutAnimation
     ): void => {
