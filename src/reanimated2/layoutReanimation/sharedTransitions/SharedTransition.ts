@@ -127,6 +127,7 @@ export class SharedTransition {
   private buildAnimation() {
     const animationFactory = this._customAnimationFactory;
     const transitionDuration = this._transitionDuration;
+    const reduceMotion = this._reduceMotion;
     this._animation = (values: SharedTransitionAnimationsValues) => {
       'worklet';
       let animations: {
@@ -148,12 +149,14 @@ export class SharedTransition {
           if (propName === 'transform') {
             const matrix = values.targetTransformMatrix;
             animations.transformMatrix = withTiming(matrix, {
+              reduceMotion,
               duration: transitionDuration,
             });
           } else {
             const keyToTargetValue =
               'target' + propName.charAt(0).toUpperCase() + propName.slice(1);
             animations[propName] = withTiming(values[keyToTargetValue], {
+              reduceMotion,
               duration: transitionDuration,
             });
           }
