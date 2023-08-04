@@ -9,15 +9,14 @@ import {
   registerShareableMapping,
 } from '../shareables';
 import { findNodeHandle } from 'react-native';
-
 interface MaybeScrollableComponent extends Component {
-  getNativeScrollRef?: () => MaybeScrollableComponent;
-  getScrollableNode?: () => MaybeScrollableComponent;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getNativeScrollRef?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getScrollableNode?: any;
 }
 
-function getComponentOrScrollable(
-  component: MaybeScrollableComponent
-): MaybeScrollableComponent {
+function getComponentOrScrollable(component: MaybeScrollableComponent) {
   if (global._IS_FABRIC && component.getNativeScrollRef) {
     return component.getNativeScrollRef();
   } else if (!global._IS_FABRIC && component.getScrollableNode) {

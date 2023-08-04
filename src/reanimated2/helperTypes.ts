@@ -36,6 +36,7 @@ type TransformsStyle = Pick<RNTransformsStyle, 'transform'>;
 
 export type TransformStyleTypes = TransformsStyle['transform'] extends
   | readonly (infer T)[]
+  | string
   | undefined
   ? T
   : never;

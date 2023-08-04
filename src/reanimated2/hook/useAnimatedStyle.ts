@@ -400,6 +400,7 @@ function checkSharedValueUsage(
 }
 
 // What is this type???
+// Well we exported it before so let's keep it for now.
 export type AnimatedStyleProp<T> =
   | AnimatedStyle<T>
   | RegisteredStyle<AnimatedStyle<T>>;
