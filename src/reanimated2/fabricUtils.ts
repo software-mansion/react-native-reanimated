@@ -10,9 +10,7 @@ interface HostInstance {
   };
 }
 
-let findHostInstance_DEPRECATED: (
-  ref: React.Component | undefined | null
-) => HostInstance;
+let findHostInstance_DEPRECATED: (ref: React.Component) => HostInstance;
 if (global._IS_FABRIC) {
   try {
     findHostInstance_DEPRECATED =
@@ -26,7 +24,7 @@ if (global._IS_FABRIC) {
 }
 
 export function getShadowNodeWrapperFromRef(
-  ref: React.Component | undefined | null
+  ref: React.Component
 ): ShadowNodeWrapper {
   return findHostInstance_DEPRECATED(ref)._internalInstanceHandle.stateNode
     .node;
