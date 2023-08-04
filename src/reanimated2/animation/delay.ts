@@ -4,20 +4,21 @@ import type {
   Timestamp,
   AnimatableValue,
   AnimationObject,
+  ReduceMotion,
 } from '../commonTypes';
-import type { DelayAnimation, ReducedMotionConfig } from './commonTypes';
+import type { DelayAnimation } from './commonTypes';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withDelayType = <T extends AnimatableValue>(
   delayMs: number,
   delayedAnimation: T,
-  reduceMotion?: ReducedMotionConfig
+  reduceMotion?: ReduceMotion
 ) => T;
 
 export const withDelay = function <T extends AnimationObject>(
   delayMs: number,
   _nextAnimation: T | (() => T),
-  reduceMotion?: ReducedMotionConfig
+  reduceMotion?: ReduceMotion
 ): Animation<DelayAnimation> {
   'worklet';
   return defineAnimation<DelayAnimation, T>(

@@ -10,6 +10,7 @@ import Animated, {
   withDelay,
   withSpring,
   withSequence,
+  ReduceMotion,
 } from 'react-native-reanimated';
 import {
   Gesture,
@@ -58,28 +59,47 @@ const REPEAT_EXAMPLES = [
 
 const CONFIG_EXAMPLES = [
   {
-    animation: withTiming(toValue, { reduceMotion: 'always', duration }),
+    animation: withTiming(toValue, {
+      reduceMotion: ReduceMotion.Always,
+      duration,
+    }),
     text: 'always\nreduce',
   },
   {
-    animation: withTiming(toValue, { reduceMotion: 'never', duration }),
+    animation: withTiming(toValue, {
+      reduceMotion: ReduceMotion.Never,
+      duration,
+    }),
     text: 'never\nreduce',
   },
   {
-    animation: withTiming(toValue, { reduceMotion: 'system', duration }),
+    animation: withTiming(toValue, {
+      reduceMotion: ReduceMotion.System,
+      duration,
+    }),
     text: 'system\nreduce',
   },
   {
     animation: withSequence(
-      'always',
+      ReduceMotion.Always,
       withTiming(initialValue + (toValue - initialValue) / 3, { duration }),
       withTiming(initialValue + (2 * (toValue - initialValue)) / 3, {
-        reduceMotion: 'system',
+        reduceMotion: ReduceMotion.System,
         duration,
       }),
-      withTiming(toValue, { reduceMotion: 'never', duration })
+      withTiming(toValue, { reduceMotion: ReduceMotion.Never, duration })
     ),
-    text: 'nested',
+    text: 'nested sequence',
+  },
+  {
+    animation: withRepeat(
+      withTiming(toValue, { duration }),
+      3,
+      true,
+      undefined,
+      ReduceMotion.Always
+    ),
+    text: 'nested repeat',
   },
 ];
 

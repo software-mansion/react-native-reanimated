@@ -6,13 +6,13 @@ import type {
   AnimationCallback,
   Timestamp,
   AnimatableValue,
+  ReduceMotion,
 } from '../commonTypes';
-import { ReducedMotionConfig } from './commonTypes';
 
 interface TimingConfig {
   duration?: number;
   easing?: EasingFn | EasingFactoryFn;
-  reduceMotion?: ReducedMotionConfig;
+  reduceMotion?: ReduceMotion;
 }
 
 export interface TimingAnimation extends Animation<TimingAnimation> {

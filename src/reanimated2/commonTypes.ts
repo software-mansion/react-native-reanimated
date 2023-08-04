@@ -235,3 +235,14 @@ export interface MeasuredDimensions {
 export interface AnimatedKeyboardOptions {
   isStatusBarTranslucentAndroid?: boolean;
 }
+
+/**
+ * - `System` - If the `Reduce motion` accessibility setting is enabled on the device, disable the animation. Otherwise, enable the animation.
+ * - `Always` - Disable the animation.
+ * - `Never` - Enable the animation.
+ */
+export enum ReduceMotion {
+  System = 'system',
+  Always = 'always',
+  Never = 'never',
+}

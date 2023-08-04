@@ -1,31 +1,26 @@
 import { defineAnimation, getReduceMotionForAnimation } from './util';
-import type {
-  NextAnimation,
-  ReducedMotionConfig,
-  SequenceAnimation,
-} from './commonTypes';
+import type { NextAnimation, SequenceAnimation } from './commonTypes';
 import type {
   Animation,
   AnimatableValue,
   AnimationObject,
+  ReduceMotion,
   Timestamp,
 } from '../commonTypes';
 
 export function withSequence<T extends AnimatableValue>(
-  _reduceMotion: ReducedMotionConfig,
+  _reduceMotion: ReduceMotion,
   ...animations: T[]
 ): T;
 
 export function withSequence<T extends AnimatableValue>(...animations: T[]): T;
 
 export function withSequence(
-  _reduceMotionOrFirstAnimation?:
-    | ReducedMotionConfig
-    | NextAnimation<AnimationObject>,
+  _reduceMotionOrFirstAnimation?: ReduceMotion | NextAnimation<AnimationObject>,
   ..._animations: NextAnimation<AnimationObject>[]
 ): Animation<SequenceAnimation> {
   'worklet';
-  let reduceMotion: ReducedMotionConfig | undefined;
+  let reduceMotion: ReduceMotion | undefined;
 
   // the first argument is either a config or an animation
   // this is done to allow the reduce motion config prop to be optional
@@ -35,7 +30,7 @@ export function withSequence(
         _reduceMotionOrFirstAnimation as NextAnimation<AnimationObject>
       );
     } else {
-      reduceMotion = _reduceMotionOrFirstAnimation as ReducedMotionConfig;
+      reduceMotion = _reduceMotionOrFirstAnimation as ReduceMotion;
     }
   }
 

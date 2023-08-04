@@ -1,8 +1,4 @@
-import type {
-  HigherOrderAnimation,
-  ReducedMotionConfig,
-  StyleLayoutAnimation,
-} from './commonTypes';
+import { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type { ParsedColorArray } from '../Colors';
 import {
   isColor,
@@ -11,13 +7,14 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-import type {
-  SharedValue,
-  AnimatableValue,
-  Animation,
-  AnimationObject,
-  Timestamp,
-  AnimatableValueObject,
+import {
+  type SharedValue,
+  type AnimatableValue,
+  type Animation,
+  type AnimationObject,
+  type Timestamp,
+  type AnimatableValueObject,
+  ReduceMotion,
 } from '../commonTypes';
 import NativeReanimatedModule from '../NativeReanimated';
 import {
@@ -75,20 +72,22 @@ function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
  * Returns whether the motion should be reduced for a specified config.
  * By default returns the system setting.
  */
-function getReduceMotionFromConfig(config: ReducedMotionConfig = 'system') {
+function getReduceMotionFromConfig(config?: ReduceMotion) {
   'worklet';
-  return config === 'system' ? IS_REDUCED_MOTION : config === 'always';
+  return !config || config === ReduceMotion.System
+    ? IS_REDUCED_MOTION
+    : config === ReduceMotion.Always;
 }
 
 /**
  * Returns the value that should be assigned to `animation.reduceMotion`
  * for a given config. If the config is not defined, `undefined` is returned.
  */
-export function getReduceMotionForAnimation(config?: ReducedMotionConfig) {
+export function getReduceMotionForAnimation(config?: ReduceMotion) {
   'worklet';
   // if the config is not defined, we want `reduceMotion` to be undefined,
   // so the parent animation knows if it should overwrite it
-  if (config === undefined) {
+  if (!config) {
     return undefined;
   }
 

@@ -5,16 +5,16 @@ import type {
   AnimationObject,
   AnimatableValue,
   Timestamp,
+  ReduceMotion,
 } from '../commonTypes';
 import { isWeb } from '../PlatformChecker';
-import { ReducedMotionConfig } from './commonTypes';
 
 interface DecayConfig {
   deceleration?: number;
   velocityFactor?: number;
   clamp?: number[];
   velocity?: number;
-  reduceMotion?: ReducedMotionConfig;
+  reduceMotion?: ReduceMotion;
 }
 
 interface DefaultDecayConfig {
@@ -22,7 +22,7 @@ interface DefaultDecayConfig {
   velocityFactor: number;
   clamp?: number[];
   velocity: number;
-  reduceMotion?: ReducedMotionConfig;
+  reduceMotion?: ReduceMotion;
   rubberBandEffect?: boolean;
   rubberBandFactor: number;
 }
@@ -185,14 +185,12 @@ export const withDecay = function (
       animation.initialVelocity = config.velocity;
       validateConfig();
 
-      if (!animation.reduceMotion || !config.clamp) {
-        return;
-      }
-
-      if (value < config.clamp[0]) {
-        animation.current = config.clamp[0];
-      } else if (value > config.clamp[1]) {
-        animation.current = config.clamp[1];
+      if (animation.reduceMotion && config.clamp) {
+        if (value < config.clamp[0]) {
+          animation.current = config.clamp[0];
+        } else if (value > config.clamp[1]) {
+          animation.current = config.clamp[1];
+        }
       }
     }
 

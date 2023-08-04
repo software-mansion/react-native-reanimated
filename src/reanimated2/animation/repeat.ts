@@ -5,24 +5,25 @@ import type {
   AnimatableValue,
   Timestamp,
   AnimationObject,
+  ReduceMotion,
 } from '../commonTypes';
-import type { ReducedMotionConfig, RepeatAnimation } from './commonTypes';
+import type { RepeatAnimation } from './commonTypes';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withRepeatType = <T extends AnimatableValue>(
   animation: T,
   numberOfReps?: number,
   reverse?: boolean,
-  reduceMotion?: ReducedMotionConfig,
-  callback?: AnimationCallback
+  callback?: AnimationCallback,
+  reduceMotion?: ReduceMotion
 ) => T;
 
 export const withRepeat = function <T extends AnimationObject>(
   _nextAnimation: T | (() => T),
   numberOfReps = 2,
   reverse = false,
-  reduceMotion?: ReducedMotionConfig,
-  callback?: AnimationCallback
+  callback?: AnimationCallback,
+  reduceMotion?: ReduceMotion
 ): Animation<RepeatAnimation> {
   'worklet';
 
