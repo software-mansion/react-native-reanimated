@@ -1,53 +1,44 @@
-import type { RefObject } from 'react';
-import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import type {
-  __Context,
-  __NativeEvent,
-  __WorkletFunction,
-} from '../commonTypes';
-import type WorkletEventHandler from '../WorkletEventHandler';
+import type { NativeScrollEvent } from 'react-native';
+import type {} from '../commonTypes';
 import type { DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
+import { NativeSyntheticEvent } from 'react-native';
 
-export interface ScrollHandler<TContext extends __Context>
-  extends __WorkletFunction {
-  (event: NativeScrollEvent, context?: TContext): void;
-}
-
-export interface ScrollEvent
-  extends NativeScrollEvent,
-    __NativeEvent<ScrollEvent> {
+export interface ScrollEvent extends NativeScrollEvent {
   eventName: string;
 }
-export interface ScrollHandlers<TContext extends __Context> {
-  [key: string]: ScrollHandler<TContext> | undefined;
-  onScroll?: ScrollHandler<TContext>;
-  onBeginDrag?: ScrollHandler<TContext>;
-  onEndDrag?: ScrollHandler<TContext>;
-  onMomentumBegin?: ScrollHandler<TContext>;
-  onMomentumEnd?: ScrollHandler<TContext>;
+
+type ScrollHandlerArguments<Context extends Record<string, unknown>> = [
+  event: ScrollEvent,
+  context: Context
+];
+
+export type ScrollHandler<Context extends Record<string, unknown>> = (
+  ...args: ScrollHandlerArguments<Context>
+) => void;
+export interface ScrollHandlers<Context extends Record<string, unknown>> {
+  onScroll?: ScrollHandler<Context>;
+  onBeginDrag?: ScrollHandler<Context>;
+  onEndDrag?: ScrollHandler<Context>;
+  onMomentumBegin?: ScrollHandler<Context>;
+  onMomentumEnd?: ScrollHandler<Context>;
 }
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type OnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
-
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-export type useAnimatedScrollHandler = <
-  TContext extends __Context = Record<string, never>
+export function useAnimatedScrollHandler<
+  Context extends Record<string, unknown>
 >(
-  handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
-  deps?: DependencyList
-) => OnScroll;
-
-export const useAnimatedScrollHandler = function <TContext extends __Context>(
-  handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
+  handlers: ScrollHandlers<Context> | ScrollHandler<Context>,
   dependencies?: DependencyList
-): RefObject<WorkletEventHandler<ScrollEvent>> {
+) {
   // case when handlers is a function
-  const scrollHandlers: ScrollHandlers<TContext> =
+  const scrollHandlers: ScrollHandlers<Context> =
     typeof handlers === 'function' ? { onScroll: handlers } : handlers;
-  const { context, doDependenciesDiffer } = useHandler<ScrollEvent, TContext>(
-    scrollHandlers,
+  const { context, doDependenciesDiffer } = useHandler<ScrollEvent, Context>(
+    // This cast is only to signify the problem of [key: string] usage
+    // and will be eliminated in the future when types of
+    // `useHandler` will be corrected.
+    scrollHandlers as typeof scrollHandlers &
+      Record<string, ScrollHandler<Context>>,
     dependencies
   );
 
@@ -96,7 +87,9 @@ export const useAnimatedScrollHandler = function <TContext extends __Context>(
     },
     subscribeForEvents,
     doDependenciesDiffer
-    // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
-  ) as any;
-  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
-} as unknown as useAnimatedScrollHandler;
+    // This casts stems from `react-native-reanimated` pretending that
+    // our event hooks use `react-native` wrapper event objects
+    // for easier assignment to `onScroll` prop in components.
+    // This will be fixed in the future.
+  ) as (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+}
