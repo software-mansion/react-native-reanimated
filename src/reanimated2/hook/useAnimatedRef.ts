@@ -9,12 +9,7 @@ import {
 } from '../shareables';
 import { findNodeHandle } from 'react-native';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-
-import type {
-  FlatList, // here
-  ScrollView, // here
-  SectionList, // here
-} from 'react-native';
+import type { FlatList, ScrollView, SectionList } from 'react-native';
 interface MaybeScrollableComponent extends Component {
   getNativeScrollRef?: FlatList['getNativeScrollRef'];
   getScrollableNode?:
