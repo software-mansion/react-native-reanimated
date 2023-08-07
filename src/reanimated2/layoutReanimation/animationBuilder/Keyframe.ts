@@ -1,4 +1,4 @@
-import type { EasingFn } from '../../Easing';
+import type { EasingFunction } from '../../Easing';
 import { Easing } from '../../Easing';
 import { withDelay, withSequence, withTiming } from '../../animation';
 import type {
@@ -8,12 +8,12 @@ import type {
   KeyframeProps,
 } from './commonTypes';
 import type { TransformProperty, StyleProps } from '../../commonTypes';
-export interface KeyframePoint {
+interface KeyframePoint {
   duration: number;
   value: number | string;
-  easing?: EasingFn;
+  easing?: EasingFunction;
 }
-export interface ParsedKeyframesDefinition {
+interface ParsedKeyframesDefinition {
   initialValues: StyleProps;
   keyframes: Record<string, KeyframePoint[]>;
 }
@@ -113,7 +113,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       key: string;
       value: string | number;
       currentKeyPoint: number;
-      easing?: EasingFn;
+      easing?: EasingFunction;
     }): void => {
       if (!(key in parsedKeyframes)) {
         throw Error(

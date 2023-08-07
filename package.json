@@ -20,6 +20,7 @@
     "format:ios": "find ios/ -iname *.h -o -iname *.m -o -iname *.mm -o -iname *.cpp | xargs clang-format -i --Werror",
     "format:android": "find android/src/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
     "format:common": "find Common/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
+    "find-unused-code:js": "yarn ts-prune --ignore \"index|.web.\" --error  ",
     "type:check": "yarn tsc --noEmit && cd plugin && yarn type:check && cd ..",
     "type:check-api": "yarn tsc --noEmit --target es6 --module ESNext --jsx react-native --skipLibCheck true --allowSyntheticDefaultImports true --moduleResolution node --esModuleInterop true --strict true --forceConsistentCasingInFileNames true --resolveJsonModule true app/src/App.tsx",
     "prepare": "yarn plugin && bob build && husky install && yarn app",
@@ -141,12 +142,13 @@
     "madge": "^5.0.1",
     "prettier": "^2.5.1",
     "react": "17.0.2",
-    "react-native": "0.72.1",
+    "react-native": "0.72.3",
     "react-native-builder-bob": "^0.18.3",
     "react-native-gesture-handler": "^2.12.0",
     "react-native-web": "~0.18.12",
     "react-test-renderer": "17.0.2",
     "shelljs": "^0.8.5",
+    "ts-prune": "^0.10.3",
     "typescript": "^4.1.3"
   },
   "lint-staged": {

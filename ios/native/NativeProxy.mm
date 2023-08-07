@@ -23,11 +23,8 @@
 #import <React/RCTSurfacePresenter.h>
 #import <react/renderer/core/ShadowNode.h>
 #import <react/renderer/uimanager/primitives.h>
-#else
-#import <folly/json.h>
 #endif
 
-#import <React/RCTFollyConvert.h>
 #import <React/RCTUIManager.h>
 
 #if TARGET_IPHONE_SIMULATOR

@@ -15,4 +15,16 @@ export * from './commonTypes';
 export * from './frameCallback';
 export * from './pluginUtils';
 export * from './jestUtils';
-export type { AnimateProps } from './helperTypes';
+export type {
+  Adaptable,
+  AdaptTransforms,
+  AnimateProps,
+  AnimatedProps,
+  AnimatedTransform,
+  TransformStyleTypes,
+  AnimateStyle,
+  AnimatedStyle,
+  StylesOrDefault,
+} from './helperTypes';
+export type { AnimatedScrollViewProps } from './component/ScrollView';
+export type { FlatListPropsWithLayout } from './component/FlatList';
