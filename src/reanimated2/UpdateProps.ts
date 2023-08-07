@@ -1,5 +1,5 @@
 import type { MutableRefObject } from 'react';
-import { ColorProperties, processColor } from './Colors';
+import { processColorsInProps } from './Colors';
 import type { ShadowNodeWrapper, SharedValue, StyleProps } from './commonTypes';
 import type { AnimatedStyle } from './helperTypes';
 import type { Descriptor } from './hook/commonTypes';
@@ -26,11 +26,7 @@ if (shouldBeUseWeb()) {
 } else {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
-    for (const key in updates) {
-      if (ColorProperties.includes(key)) {
-        updates[key] = processColor(updates[key]);
-      }
-    }
+    processColorsInProps(updates);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     global.UpdatePropsManager!.update(viewDescriptors, updates);
   };

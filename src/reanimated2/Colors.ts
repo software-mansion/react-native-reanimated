@@ -6,6 +6,7 @@
  */
 
 /* eslint no-bitwise: 0 */
+import { StyleProps } from './commonTypes';
 import { makeShareable } from './core';
 import { isAndroid, isWeb } from './PlatformChecker';
 
@@ -616,6 +617,14 @@ export function processColor(color: unknown): number | null | undefined {
   }
 
   return normalizedColor;
+}
+
+export function processColorsInProps(props: StyleProps) {
+  for (const key in props) {
+    if (ColorProperties.includes(key)) {
+      props[key] = processColor(props[key]);
+    }
+  }
 }
 
 export type ParsedColorArray = [number, number, number, number];

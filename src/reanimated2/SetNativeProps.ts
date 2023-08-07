@@ -9,7 +9,7 @@ import {
 import type { AnimatedRef } from './hook/commonTypes';
 import type { Component } from 'react';
 import { _updatePropsJS } from './js-reanimated';
-import { ColorProperties, processColor } from './Colors';
+import { processColorsInProps } from './Colors';
 
 const IS_NATIVE = !shouldBeUseWeb();
 
@@ -27,11 +27,7 @@ if (isWeb()) {
   setNativeProps = (animatedRef, updates) => {
     'worklet';
     const shadowNodeWrapper = (animatedRef as any)() as ShadowNodeWrapper;
-    for (const key in updates) {
-      if (ColorProperties.includes(key)) {
-        updates[key] = processColor(updates[key]);
-      }
-    }
+    processColorsInProps(updates);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     _updatePropsFabric!([{ shadowNodeWrapper, updates }]);
   };
@@ -40,11 +36,7 @@ if (isWeb()) {
     'worklet';
     const tag = (animatedRef as any)() as number;
     const name = (animatedRef as any).viewName.value;
-    for (const key in updates) {
-      if (ColorProperties.includes(key)) {
-        updates[key] = processColor(updates[key]);
-      }
-    }
+    processColorsInProps(updates);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     _updatePropsPaper!([{ tag, name, updates }]);
   };
