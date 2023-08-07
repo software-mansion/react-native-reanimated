@@ -102,6 +102,14 @@ interface Example {
 }
 
 export const EXAMPLES: Record<string, Example> = {
+  // Empty example for test purposes
+
+  EmptyExample: {
+    icon: '👻',
+    title: 'Empty',
+    screen: EmptyExample,
+  },
+
   // About
 
   AboutExample: {
@@ -329,11 +337,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '☕',
     title: 'Progress transition',
     screen: ProgressTransitionExample,
-  },
-  EmptyExample: {
-    icon: '👻',
-    title: 'Empty',
-    screen: EmptyExample,
   },
   MatrixExample: {
     icon: '🧮',
