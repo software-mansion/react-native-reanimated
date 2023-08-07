@@ -24,7 +24,7 @@ class EventHandlerRegistry {
   std::map<
       std::string,
       std::unordered_map<uint64_t, std::shared_ptr<WorkletEventHandler>>>
-      eventMappings;
+      eventMappingsWithoutTag;
   std::map<uint64_t, std::shared_ptr<WorkletEventHandler>> eventHandlers;
   std::mutex instanceMutex;
 
