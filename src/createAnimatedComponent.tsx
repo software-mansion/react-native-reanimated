@@ -60,7 +60,6 @@ import {
   WEB_ANIMATIONS_ID,
   getEasing,
   getRandomDelay,
-  toggleElement,
   setElementAnimation,
 } from './reanimated2/platform-specific/webAnimations';
 
@@ -800,18 +799,27 @@ export default function createAnimatedComponent(
       if (animationType === LayoutAnimationType.ENTERING) {
         // If `delay` === 0, value passed to `setTimeout` will be 0. However, `setTimeout` executes after given amount of time, not exactly after that time
         // Because of that, we have to immediately toggle on the component when the delay is 0.
-        delay === 0
-          ? toggleElement(element, true)
-          : setTimeout(() => toggleElement(element, true), delay * 1000);
+        if (delay === 0) {
+          element.style.visibility = 'initial';
+        } else {
+          setTimeout(() => {
+            element.style.visibility = 'initial';
+          }, delay * 1000);
+        }
 
         setElementAnimation(element, duration, delay, animationName, easing);
       } else if (animationType === LayoutAnimationType.EXITING) {
-        const parent = element.parentElement;
+        const parent = element.offsetParent;
         const tmpElement = element.cloneNode(true) as HTMLElement;
 
         setElementAnimation(tmpElement, duration, delay, animationName, easing);
 
         parent?.appendChild(tmpElement);
+
+        tmpElement.style.position = 'absolute';
+        tmpElement.style.top = `${element.offsetTop}px`;
+        tmpElement.style.left = `${element.offsetLeft}px`;
+
         tmpElement.onanimationend = () => parent?.removeChild(tmpElement);
       }
     }
@@ -847,7 +855,7 @@ export default function createAnimatedComponent(
       // Layout animations on web are set inside `componentDidMount` method, which is called after first render.
       // Because of that we can encounter a situation in which component is visible for a short amount of time, and later on animation triggers.
       // I've tested that on various browsers and devices and it did not happen to me. To be sure that it won't happen to someone else,
-      // I've decided to hide component at first render. Its visibility is reset in `componentDidMount`, when `toggleComponent(..., true)` is called
+      // I've decided to hide component at first render. Its visibility is reset in `componentDidMount`.
       if (isWeb() && props.entering) {
         props.style = {
           ...(props.style ?? {}),

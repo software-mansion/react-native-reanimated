@@ -63,11 +63,6 @@ export function getRandomDelay(maxDelay = 1000): number {
   return Math.floor(Math.random() * (maxDelay + 1)) / 1000;
 }
 
-export function toggleElement(element: HTMLElement, show: boolean): void {
-  element.style.visibility = show ? 'visible' : 'hidden';
-  element.style.position = show ? 'initial' : 'absolute';
-}
-
 export function setElementAnimation(
   element: HTMLElement,
   duration: number,
