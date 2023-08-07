@@ -61,7 +61,7 @@ const App = () => {
 The hook returns a handler object that can be attached to one of the gesture handler components provided by the `react-native-gesture-handler` library.
 The handler should be passed under `onGestureEvent` parameter regardless of what gesture states we are interested in processing.
 
-Note: Since version `2.10.0` of `react-native-gesture-handler`, to use this hook on web, you have to pass returned handler object to both `onGestureEvent` and `onHandlerStateChange` parameters.
+Note: Since version 2.10.0 of `react-native-gesture-handler`, to use this hook on web, you have to pass returned handler object to both `onGestureEvent` and `onHandlerStateChange` parameters.
 
 ## Example
 
