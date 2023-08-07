@@ -33,6 +33,7 @@ import type {
   ViewStyle,
 } from 'react-native';
 import type { AnimatedStyle } from '../helperTypes';
+import { isWorklet } from '../utils';
 
 export interface AnimatedStyleResult {
   viewDescriptors: ViewDescriptorsSet;
@@ -426,7 +427,7 @@ export const useAnimatedStyle = function <T extends AnimatedStyle<any>>(
       // let web work without a Babel/SWC plugin
       inputs = dependencies;
     }
-    if (__DEV__ && !inputs.length && !dependencies && !updater.__workletHash) {
+    if (__DEV__ && !inputs.length && !dependencies && !isWorklet(updater)) {
       throw new Error(
         `useAnimatedStyle was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel/SWC plugin.
 

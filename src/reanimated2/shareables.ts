@@ -3,6 +3,7 @@ import type { ShareableRef, WorkletFunction } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
 import { registerWorkletStackDetails } from './errors';
 import { jsVersion } from './platform-specific/jsVersion';
+import { isWorklet } from './utils';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
@@ -127,7 +128,7 @@ export function makeShareableCloneRecursive<T>(
         toAdapt = value.map((element) =>
           makeShareableCloneRecursive(element, shouldPersistRemote, depth + 1)
         );
-      } else if (isTypeFunction && value.__workletHash === undefined) {
+      } else if (isTypeFunction && !isWorklet(value)) {
         // this is a remote function
         toAdapt = value;
       } else if (isHostObject(value)) {
@@ -137,8 +138,7 @@ export function makeShareableCloneRecursive<T>(
         toAdapt = value;
       } else if (isPlainJSObject(value) || isTypeFunction) {
         toAdapt = {};
-        if (value.__workletHash !== undefined) {
-          // we are converting a worklet
+        if (isWorklet(value)) {
           if (__DEV__) {
             const babelVersion = value.__initData.version;
             if (babelVersion === undefined) {
