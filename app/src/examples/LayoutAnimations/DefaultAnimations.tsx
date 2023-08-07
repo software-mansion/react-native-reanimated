@@ -537,6 +537,7 @@ const styles = StyleSheet.create({
   animatedText: {
     color: '#ffffff',
     fontSize: 20,
+    userSelect: 'none',
   },
   animatedBox: {
     padding: 5,
