@@ -25,7 +25,7 @@ void EventHandlerRegistry::unregisterEventHandler(uint64_t id) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   auto handlerIt = eventHandlers.find(id);
   if (handlerIt != eventHandlers.end()) {
-    const auto eventHandler = handlerIt->second;
+    const auto &eventHandler = handlerIt->second;
     const auto &eventName = eventHandler->getEventName();
 
     if (eventHandler->shouldIgnoreEmitterReactTag()) {
