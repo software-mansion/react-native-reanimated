@@ -35,6 +35,7 @@ public class SharedTransitionManager {
   private final Set<Integer> mViewTagsToHide = new HashSet<>();
   private final Map<Integer, Integer> mDisableCleaningForViewTag = new HashMap<>();
   private List<SharedElement> mSharedElements = new ArrayList<>();
+  private Map<Integer, SharedElement> mSharedElementsLookup = new HashMap<>();
   private final List<SharedElement> mSharedElementsWithProgress = new ArrayList<>();
   private final List<SharedElement> mSharedElementsWithAnimation = new ArrayList<>();
   private final Map<Integer, View> mViewsWithCanceledAnimation = new HashMap<>();
@@ -69,7 +70,6 @@ public class SharedTransitionManager {
     if (tagsToDelete == null) {
       return;
     }
-    restoreVisibility();
     visitTreeForTags(tagsToDelete, new SnapshotTreeVisitor());
     if (mRemovedSharedViews.size() > 0) {
       // this happens when navigation goes back
@@ -93,18 +93,6 @@ public class SharedTransitionManager {
         clearAllSharedConfigsForView(view);
       }
     }
-  }
-
-  private void restoreVisibility() {
-    ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager =
-        mAnimationsManager.getReanimatedNativeHierarchyManager();
-    for (int viewTag : mViewTagsToHide) {
-      View view = reanimatedNativeHierarchyManager.resolveView(viewTag);
-      if (view != null) {
-        view.setVisibility(View.VISIBLE);
-      }
-    }
-    mViewTagsToHide.clear();
   }
 
   private boolean isViewChildParentWithTag(View view, int parentTag) {
@@ -337,6 +325,9 @@ public class SharedTransitionManager {
     }
 
     mSharedElements = sharedElements;
+    for (SharedElement sharedElement : sharedElements) {
+      mSharedElementsLookup.put(sharedElement.sourceView.getId(), sharedElement);
+    }
     return sharedElements;
   }
 
@@ -360,22 +351,12 @@ public class SharedTransitionManager {
   private void reparentSharedViewsForCurrentTransition(List<SharedElement> sharedElements) {
     for (SharedElement sharedElement : sharedElements) {
       View viewSource = sharedElement.sourceView;
-      View viewTarget = sharedElement.targetView;
-
       if (!mSharedTransitionParent.containsKey(viewSource.getId())) {
         mSharedTransitionParent.put(viewSource.getId(), (View) viewSource.getParent());
         mSharedTransitionInParentIndex.put(
             viewSource.getId(), ((ViewGroup) viewSource.getParent()).indexOfChild(viewSource));
         ((ViewGroup) viewSource.getParent()).removeView(viewSource);
         ((ViewGroup) mTransitionContainer).addView(viewSource);
-      }
-
-      if (!mSharedTransitionParent.containsKey(viewTarget.getId())) {
-        mSharedTransitionParent.put(viewTarget.getId(), (View) viewTarget.getParent());
-        mSharedTransitionInParentIndex.put(
-            viewTarget.getId(), ((ViewGroup) viewTarget.getParent()).indexOfChild(viewTarget));
-        ((ViewGroup) viewTarget.getParent()).removeView(viewTarget);
-        ((ViewGroup) mTransitionContainer).addView(viewTarget);
       }
     }
   }
@@ -387,11 +368,7 @@ public class SharedTransitionManager {
           sharedElement.sourceViewSnapshot,
           sharedElement.targetViewSnapshot,
           type);
-      startSharedAnimationForView(
-          sharedElement.targetView,
-          sharedElement.sourceViewSnapshot,
-          sharedElement.targetViewSnapshot,
-          type);
+      sharedElement.targetView.setVisibility(View.INVISIBLE);
     }
   }
 
@@ -456,6 +433,16 @@ public class SharedTransitionManager {
       if (mViewTagsToHide.contains(tag)) {
         view.setVisibility(View.INVISIBLE);
       }
+
+      SharedElement sharedElement = mSharedElementsLookup.get(viewTag);
+      if (sharedElement != null) {
+        View targetView = sharedElement.targetView;
+        Integer targetViewTag = targetView.getId();
+        targetView.setVisibility(View.VISIBLE);
+        mCurrentSharedTransitionViews.remove(targetViewTag);
+        mViewsWithCanceledAnimation.remove(targetViewTag);
+      }
+
       mCurrentSharedTransitionViews.remove(viewTag);
       mSharedTransitionParent.remove(viewTag);
       mSharedTransitionInParentIndex.remove(viewTag);
