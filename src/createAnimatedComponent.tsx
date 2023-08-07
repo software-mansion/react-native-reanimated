@@ -54,6 +54,8 @@ import { isSharedValue } from './reanimated2';
 import type { AnimateProps } from './reanimated2/helperTypes';
 import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
 
+const IS_WEB = isWeb();
+
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
   // event is used.
@@ -347,7 +349,7 @@ export default function createAnimatedComponent(
     }
 
     _detachStyles() {
-      if (isWeb() && this._styles !== null) {
+      if (IS_WEB && this._styles !== null) {
         for (const style of this._styles) {
           if (style?.viewsRef) {
             style.viewsRef.remove(this);
@@ -420,9 +422,9 @@ export default function createAnimatedComponent(
         'getAnimatableRef' in this._component!
           ? this._component.getAnimatableRef!()
           : this;
-      if (isWeb()) {
-        // At this point I assume, that _setComponentRef was already called and _component is set.
-        // this._component on web represents HTMLElement of our component, that's why we use casting
+      if (IS_WEB) {
+        // At this point I assume that `_setComponentRef` was already called and `_component` is set.
+        // `this._component` on web represents HTMLElement of our component, that's why we use casting
         viewTag = this._component as HTMLElement;
         viewName = null;
         shadowNodeWrapper = null;
@@ -613,7 +615,7 @@ export default function createAnimatedComponent(
       setLocalRef: (ref) => {
         // TODO update config
 
-        const tag = isWeb()
+        const tag = IS_WEB
           ? (ref as HTMLElement)
           : findNodeHandle(ref as Component);
 
@@ -646,7 +648,7 @@ export default function createAnimatedComponent(
               maybeBuild(exiting)
             );
           }
-          if (sharedTransitionTag && !isWeb()) {
+          if (sharedTransitionTag && !IS_WEB) {
             const sharedElementTransition =
               this.props.sharedTransitionStyle ?? new SharedTransition();
             sharedElementTransition.registerTransition(
