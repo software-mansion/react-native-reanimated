@@ -274,6 +274,27 @@ const names: any = makeShareable({
   yellowgreen: 0x9acd32ff,
 });
 
+// copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
+export const ColorProperties = makeShareable([
+  'backgroundColor',
+  'borderBottomColor',
+  'borderColor',
+  'borderLeftColor',
+  'borderRightColor',
+  'borderTopColor',
+  'borderStartColor',
+  'borderEndColor',
+  'borderBlockColor',
+  'borderBlockEndColor',
+  'borderBlockStartColor',
+  'color',
+  'shadowColor',
+  'textDecorationColor',
+  'tintColor',
+  'textShadowColor',
+  'overlayColor',
+]);
+
 function normalizeColor(color: unknown): number | null {
   'worklet';
 

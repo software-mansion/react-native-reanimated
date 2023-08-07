@@ -1,45 +1,12 @@
 import type { MutableRefObject } from 'react';
-import { processColor } from './Colors';
+import { ColorProperties, processColor } from './Colors';
 import type { ShadowNodeWrapper, SharedValue, StyleProps } from './commonTypes';
 import type { AnimatedStyle } from './helperTypes';
-import { makeShareable } from './core';
 import type { Descriptor } from './hook/commonTypes';
 import { _updatePropsJS } from './js-reanimated';
 import { shouldBeUseWeb } from './PlatformChecker';
 import type { ViewRefSet } from './ViewDescriptorsSet';
 import { runOnUIImmediately } from './threads';
-
-// copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
-const colorProps = [
-  'backgroundColor',
-  'borderBottomColor',
-  'borderColor',
-  'borderLeftColor',
-  'borderRightColor',
-  'borderTopColor',
-  'borderStartColor',
-  'borderEndColor',
-  'borderBlockColor',
-  'borderBlockEndColor',
-  'borderBlockStartColor',
-  'color',
-  'shadowColor',
-  'textDecorationColor',
-  'tintColor',
-  'textShadowColor',
-  'overlayColor',
-];
-
-export const ColorProperties = makeShareable(colorProps);
-
-export function processColorsInProps(props: StyleProps) {
-  'worklet';
-  for (const key in props) {
-    if (ColorProperties.indexOf(key) !== -1) {
-      props[key] = processColor(props[key]);
-    }
-  }
-}
 
 let updateProps: (
   viewDescriptor: SharedValue<Descriptor[]>,
@@ -59,7 +26,11 @@ if (shouldBeUseWeb()) {
 } else {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
-    processColorsInProps(updates);
+    for (const key in updates) {
+      if (ColorProperties.includes(key)) {
+        updates[key] = processColor(updates[key]);
+      }
+    }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     global.UpdatePropsManager!.update(viewDescriptors, updates);
   };
