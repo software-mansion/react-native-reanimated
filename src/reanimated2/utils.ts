@@ -32,3 +32,8 @@ export function isSharedValue<T>(value: any): value is SharedValue<T> {
   'worklet';
   return value?._isReanimatedSharedValue === true;
 }
+
+export function isWorklet(value: unknown) {
+  // TODO: mark value as worklet
+  return typeof value === 'function' && '__workletHash' in value;
+}
