@@ -53,6 +53,7 @@ import NativeReanimatedModule from './reanimated2/NativeReanimated';
 import { isSharedValue } from './reanimated2';
 import type { AnimateProps } from './reanimated2/helperTypes';
 import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
+import { JSPropUpdater } from './JSPropUpdater';
 
 const IS_WEB = isWeb();
 
@@ -288,6 +289,7 @@ export default function createAnimatedComponent(
     _inlinePropsMapperId: number | null = null;
     _inlineProps: StyleProps = {};
     _sharedElementTransition: SharedTransition | null = null;
+    _JSPropUpdater = new JSPropUpdater();
     static displayName: string;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
@@ -299,6 +301,7 @@ export default function createAnimatedComponent(
 
     componentWillUnmount() {
       this._detachNativeEvents();
+      this._JSPropUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
       this._detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
@@ -306,6 +309,7 @@ export default function createAnimatedComponent(
 
     componentDidMount() {
       this._attachNativeEvents();
+      this._JSPropUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
       this._attachInlineProps();
     }
