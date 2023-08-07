@@ -251,17 +251,17 @@ if (isWeb()) {
     _updatePropsPaper!([{ tag, name, updates }]);
   };
 } else if (isChromeDebugger()) {
-  scrollTo = () => {
+  setNativeProps = () => {
     console.warn(
       '[Reanimated] setNativeProps() is not supported with Chrome Debugger.'
     );
   };
 } else if (isJest()) {
-  scrollTo = () => {
+  setNativeProps = () => {
     console.warn('[Reanimated] setNativeProps() is not supported with Jest.');
   };
 } else {
-  scrollTo = () => {
+  setNativeProps = () => {
     console.warn(
       '[Reanimated] setNativeProps() is not supported on this configuration.'
     );
