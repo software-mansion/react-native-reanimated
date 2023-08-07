@@ -15,6 +15,7 @@
   NSMutableArray<UIView *> *_addedSharedViews;
   BOOL _isSharedTransitionActive;
   NSMutableArray<REASharedElement *> *_sharedElements;
+  NSMutableDictionary<NSNumber *, REASharedElement *> *_sharedElementsLookup;
   REAAnimationsManager *_animationManager;
   NSMutableSet<NSNumber *> *_viewsToHide;
   NSMutableArray<UIView *> *_removedViews;
@@ -45,6 +46,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _sharedTransitionInParentIndex = [NSMutableDictionary new];
     _isSharedTransitionActive = NO;
     _sharedElements = [NSMutableArray new];
+    _sharedElementsLookup = [NSMutableDictionary new];
     _animationManager = animationManager;
     _viewsToHide = [NSMutableSet new];
     _sharedTransitionManager = self;
@@ -315,6 +317,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
   if ([sharedElements count] != 0) {
     _sharedElements = sharedElements;
+    for (REASharedElement *sharedElement in sharedElements) {
+      _sharedElementsLookup[sharedElement.sourceView.reactTag] = sharedElement;
+    }
   }
   return sharedElements;
 }
@@ -391,7 +396,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
     } else {
       [self makeSnapshotForScreenViews:screen];
     }
-    [self restoreViewsVisibility];
   } else {
     // removed stack
     if (![self isInteractiveScreenChange:screen]) {
@@ -420,15 +424,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
     }
     return false;
   });
-}
-
-- (void)restoreViewsVisibility
-{
-  for (NSNumber *viewTag in _viewsToHide) {
-    UIView *view = [_animationManager viewForTag:viewTag];
-    view.hidden = NO;
-  }
-  [_viewsToHide removeAllObjects];
 }
 
 - (void)clearConfigForStackNow:(UIView *)stack
@@ -525,19 +520,11 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   for (REASharedElement *sharedElement in sharedElements) {
     UIView *viewSource = sharedElement.sourceView;
-    UIView *viewTarget = sharedElement.targetView;
     if (_sharedTransitionParent[viewSource.reactTag] == nil) {
       _sharedTransitionParent[viewSource.reactTag] = viewSource.superview;
       _sharedTransitionInParentIndex[viewSource.reactTag] = @([viewSource.superview.subviews indexOfObject:viewSource]);
       [viewSource removeFromSuperview];
       [_transitionContainer addSubview:viewSource];
-    }
-
-    if (_sharedTransitionParent[viewTarget.reactTag] == nil) {
-      _sharedTransitionParent[viewTarget.reactTag] = viewTarget.superview;
-      _sharedTransitionInParentIndex[viewTarget.reactTag] = @([viewTarget.superview.subviews indexOfObject:viewTarget]);
-      [viewTarget removeFromSuperview];
-      [_transitionContainer addSubview:viewTarget];
     }
   }
 }
@@ -550,10 +537,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
                     before:sharedElement.sourceViewSnapshot
                      after:sharedElement.targetViewSnapshot
                       type:type];
-    [self onViewTransition:sharedElement.targetView
-                    before:sharedElement.sourceViewSnapshot
-                     after:sharedElement.targetViewSnapshot
-                      type:type];
+    sharedElement.targetView.hidden = YES;
   }
 }
 
@@ -599,6 +583,13 @@ static REASharedTransitionManager *_sharedTransitionManager;
     if ([_viewsToHide containsObject:viewTag]) {
       view.hidden = YES;
     }
+
+    REASharedElement *sharedElement = _sharedElementsLookup[viewTag];
+    UIView *targetView = sharedElement.targetView;
+    targetView.hidden = NO;
+    [_currentSharedTransitionViews removeObjectForKey:targetView.reactTag];
+    [_viewsWithCanceledAnimation removeObject:targetView];
+
     [_currentSharedTransitionViews removeObjectForKey:viewTag];
     [_sharedTransitionParent removeObjectForKey:viewTag];
     [_sharedTransitionInParentIndex removeObjectForKey:viewTag];
@@ -614,6 +605,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
     [_transitionContainer removeFromSuperview];
     [_removedViews removeAllObjects];
     [_sharedElements removeAllObjects];
+    [_sharedElementsLookup removeAllObjects];
+    [_viewsToHide removeAllObjects];
     _isSharedTransitionActive = NO;
   }
 }
