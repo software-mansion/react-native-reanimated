@@ -8,6 +8,7 @@
 using namespace facebook::react;
 
 namespace reanimated {
+
 ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<PropsRegistry> &propsRegistry,
     const std::shared_ptr<UIManager> &uiManager)
