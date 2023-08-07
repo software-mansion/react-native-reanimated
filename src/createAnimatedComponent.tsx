@@ -798,15 +798,11 @@ export default function createAnimatedComponent(
       const element = this._component as unknown as HTMLElement;
 
       if (animationType === LayoutAnimationType.ENTERING) {
-        toggleElement(element, false);
-
-        if (delay === 0) {
-          toggleElement(element, true);
-        } else {
-          setTimeout(() => {
-            toggleElement(element, true);
-          }, delay * 1000);
-        }
+        // If `delay` === 0, value passed to `setTimeout` will be 0. However, `setTimeout` executes after given amount of time, not exactly after that time
+        // Because of that, we have to immediately toggle on the component when the delay is 0.
+        delay === 0
+          ? toggleElement(element, true)
+          : setTimeout(() => toggleElement(element, true), delay * 1000);
 
         setElementAnimation(element, duration, delay, animationName, easing);
       } else if (animationType === LayoutAnimationType.EXITING) {
@@ -846,6 +842,17 @@ export default function createAnimatedComponent(
 
       if (this._isFirstRender) {
         this._isFirstRender = false;
+      }
+
+      // Layout animations on web are set inside `componentDidMount` method, which is called after first render.
+      // Because of that we can encounter a situation in which component is visible for a short amount of time, and later on animation triggers.
+      // I've tested that on various browsers and devices and it did not happen to me. To be sure that it won't happen to someone else,
+      // I've decided to hide component at first render. Its visibility is reset in `componentDidMount`, when `toggleComponent(..., true)` is called
+      if (isWeb() && props.entering) {
+        props.style = {
+          ...(props.style ?? {}),
+          visibility: 'hidden', // Hide component until `componentDidMount` triggers
+        };
       }
 
       const platformProps = Platform.select({
