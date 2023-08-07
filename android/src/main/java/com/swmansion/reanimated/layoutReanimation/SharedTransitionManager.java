@@ -469,6 +469,7 @@ public class SharedTransitionManager {
         }
       }
       mSharedElements.clear();
+      mSharedElementsLookup.clear();
       mSharedElementsWithProgress.clear();
       mSharedElementsWithAnimation.clear();
       mRemovedSharedViews.clear();
