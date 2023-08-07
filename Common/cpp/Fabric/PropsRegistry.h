@@ -27,14 +27,12 @@ class PropsRegistry {
 
   void setLastReanimatedRoot(
       RootShadowNode::Shared const &lastReanimatedRoot) noexcept {
-    // TODO: synchronize with mutex?
-    lastReanimatedRoot_ = lastReanimatedRoot;
+    lastReanimatedRoot_.store(lastReanimatedRoot.get());
   }
 
   bool isLastReanimatedRoot(
       RootShadowNode::Shared const &newRootShadowNode) const noexcept {
-    // TODO: synchronize with mutex?
-    return newRootShadowNode == lastReanimatedRoot_;
+    return newRootShadowNode.get() == lastReanimatedRoot_.load();
   }
 
   void pleaseSkipCommit() {
@@ -50,7 +48,7 @@ class PropsRegistry {
 
   mutable std::mutex mutex_; // Protects `map_`.
 
-  RootShadowNode::Shared lastReanimatedRoot_;
+  std::atomic<const RootShadowNode *> lastReanimatedRoot_;
 
   std::atomic<bool> letMeIn_;
 };
