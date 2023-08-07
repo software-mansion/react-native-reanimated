@@ -12,6 +12,7 @@ import {
 
 import type { AnimatedRef } from './hook/commonTypes';
 import type { Component } from 'react';
+import { _updatePropsJS } from './js-reanimated';
 
 const IS_NATIVE = !shouldBeUseWeb();
 
@@ -231,9 +232,8 @@ export let setNativeProps: <T extends Component>(
 
 if (isWeb()) {
   setNativeProps = (_animatedRef, _updates) => {
-    throw new Error(
-      '[Reanimated] setNativeProps() is not supported on web yet.'
-    );
+    const component = (_animatedRef as any)();
+    _updatePropsJS(_updates, { _component: component });
   };
 } else if (IS_NATIVE && global._IS_FABRIC) {
   setNativeProps = (animatedRef, updates) => {

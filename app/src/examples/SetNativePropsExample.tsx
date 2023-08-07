@@ -33,7 +33,10 @@ export default function SetNativePropsExample() {
 
   const tap = Gesture.Tap().onEnd(() => {
     'worklet';
-    setNativeProps(animatedRef, { text: '' });
+    setNativeProps(animatedRef, {
+      text: '',
+      backgroundColor: `hsl(${Math.random() * 360}, 100%, 50%)`,
+    });
     runOnJS(send)();
   });
 
