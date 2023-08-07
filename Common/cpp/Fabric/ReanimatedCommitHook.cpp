@@ -25,7 +25,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   auto rootNode = newRootShadowNode->ShadowNode::clone(ShadowNodeFragment{});
 
-  ShadowTreeCloner shadowTreeCloner{uiManager_, surfaceId};
+  ShadowTreeCloner shadowTreeCloner{*uiManager_, surfaceId};
 
   {
     auto lock = propsRegistry_->createLock();
