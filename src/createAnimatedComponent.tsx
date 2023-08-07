@@ -314,7 +314,7 @@ export default function createAnimatedComponent(
       // Make sure to get the scrollable node for components that implement
       // `ScrollResponder.Mixin`.
       return (this._component as ComponentRef)?.getScrollableNode
-        ? (this._component as ComponentRef).getScrollableNode!()
+        ? (this._component as ComponentRef).getScrollableNode?.()
         : this._component;
     }
 
@@ -418,10 +418,10 @@ export default function createAnimatedComponent(
       let viewConfig;
       // Component can specify ref which should be animated when animated version of the component is created.
       // Otherwise, we animate the component itself.
-      const component =
-        'getAnimatableRef' in this._component!
-          ? this._component.getAnimatableRef!()
-          : this;
+      const component = (this._component as ComponentRef)?.getAnimatableRef
+        ? (this._component as ComponentRef).getAnimatableRef?.()
+        : this;
+
       if (IS_WEB) {
         // At this point I assume that `_setComponentRef` was already called and `_component` is set.
         // `this._component` on web represents HTMLElement of our component, that's why we use casting
