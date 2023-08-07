@@ -129,6 +129,7 @@ declare module 'react-native-reanimated' {
     export type TransformStyleTypes = TransformsStyle['transform'] extends
       | readonly (infer T)[]
       | undefined
+      | string
       ? T
       : never;
     export type AdaptTransforms<T> = {
