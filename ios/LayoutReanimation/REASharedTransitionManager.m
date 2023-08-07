@@ -15,6 +15,7 @@
   NSMutableArray<UIView *> *_addedSharedViews;
   BOOL _isSharedTransitionActive;
   NSMutableArray<REASharedElement *> *_sharedElements;
+  NSMutableDictionary<NSNumber *, REASharedElement *> *_sharedElementsLookup;
   REAAnimationsManager *_animationManager;
   NSMutableSet<NSNumber *> *_viewsToHide;
   NSMutableArray<UIView *> *_removedViews;
@@ -45,6 +46,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _sharedTransitionInParentIndex = [NSMutableDictionary new];
     _isSharedTransitionActive = NO;
     _sharedElements = [NSMutableArray new];
+    _sharedElementsLookup = [NSMutableDictionary new];
     _animationManager = animationManager;
     _viewsToHide = [NSMutableSet new];
     _sharedTransitionManager = self;
@@ -315,6 +317,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
   if ([sharedElements count] != 0) {
     _sharedElements = sharedElements;
+    for (REASharedElement *sharedElement in sharedElements) {
+      _sharedElementsLookup[sharedElement.sourceView.reactTag] = sharedElement;
+    }
   }
   return sharedElements;
 }
@@ -579,14 +584,11 @@ static REASharedTransitionManager *_sharedTransitionManager;
       view.hidden = YES;
     }
 
-    for (REASharedElement *sharedElement in _sharedElements) {
-      if (sharedElement.sourceView.reactTag == viewTag) {
-        UIView *targetView = sharedElement.targetView;
-        [_currentSharedTransitionViews removeObjectForKey:targetView.reactTag];
-        [_viewsWithCanceledAnimation removeObject:targetView];
-        targetView.hidden = NO;
-      }
-    }
+    REASharedElement *sharedElement = _sharedElementsLookup[viewTag];
+    UIView *targetView = sharedElement.targetView;
+    targetView.hidden = NO;
+    [_currentSharedTransitionViews removeObjectForKey:targetView.reactTag];
+    [_viewsWithCanceledAnimation removeObject:targetView];
 
     [_currentSharedTransitionViews removeObjectForKey:viewTag];
     [_sharedTransitionParent removeObjectForKey:viewTag];
@@ -603,6 +605,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     [_transitionContainer removeFromSuperview];
     [_removedViews removeAllObjects];
     [_sharedElements removeAllObjects];
+    [_sharedElementsLookup removeAllObjects];
     [_viewsToHide removeAllObjects];
     _isSharedTransitionActive = NO;
   }
