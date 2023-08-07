@@ -1,8 +1,4 @@
-import {
-  MeasuredDimensions,
-  ShadowNodeWrapper,
-  StyleProps,
-} from './commonTypes';
+import { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
 import {
   isChromeDebugger,
   isJest,
@@ -12,8 +8,6 @@ import {
 
 import type { AnimatedRef } from './hook/commonTypes';
 import type { Component } from 'react';
-import { _updatePropsJS } from './js-reanimated';
-import { ColorProperties, processColor } from './Colors';
 
 const IS_NATIVE = !shouldBeUseWeb();
 
@@ -222,59 +216,6 @@ if (IS_NATIVE) {
   setGestureState = () => {
     console.warn(
       '[Reanimated] setGestureState() is not supported on this configuration.'
-    );
-  };
-}
-
-export let setNativeProps: <T extends Component>(
-  animatedRef: AnimatedRef<T>,
-  updates: StyleProps
-) => void;
-
-if (isWeb()) {
-  setNativeProps = (_animatedRef, _updates) => {
-    const component = (_animatedRef as any)();
-    _updatePropsJS(_updates, { _component: component });
-  };
-} else if (IS_NATIVE && global._IS_FABRIC) {
-  setNativeProps = (animatedRef, updates) => {
-    'worklet';
-    const shadowNodeWrapper = (animatedRef as any)() as ShadowNodeWrapper;
-    for (const key in updates) {
-      if (ColorProperties.includes(key)) {
-        updates[key] = processColor(updates[key]);
-      }
-    }
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    _updatePropsFabric!([{ shadowNodeWrapper, updates }]);
-  };
-} else if (IS_NATIVE) {
-  setNativeProps = (animatedRef, updates) => {
-    'worklet';
-    const tag = (animatedRef as any)() as number;
-    const name = (animatedRef as any).viewName.value;
-    for (const key in updates) {
-      if (ColorProperties.includes(key)) {
-        updates[key] = processColor(updates[key]);
-      }
-    }
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    _updatePropsPaper!([{ tag, name, updates }]);
-  };
-} else if (isChromeDebugger()) {
-  setNativeProps = () => {
-    console.warn(
-      '[Reanimated] setNativeProps() is not supported with Chrome Debugger.'
-    );
-  };
-} else if (isJest()) {
-  setNativeProps = () => {
-    console.warn('[Reanimated] setNativeProps() is not supported with Jest.');
-  };
-} else {
-  setNativeProps = () => {
-    console.warn(
-      '[Reanimated] setNativeProps() is not supported on this configuration.'
     );
   };
 }
