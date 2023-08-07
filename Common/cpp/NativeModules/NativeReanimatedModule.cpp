@@ -329,9 +329,9 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
     const jsi::Value &worklet,
     const jsi::Value &eventName,
     const jsi::Value &emitterReactTag) {
-  static uint64_t EVENT_HANDLER_ID = 1;
+  static uint64_t NEXT_EVENT_HANDLER_ID = 1;
 
-  uint64_t newRegistrationId = EVENT_HANDLER_ID++;
+  uint64_t newRegistrationId = NEXT_EVENT_HANDLER_ID++;
   auto eventNameStr = eventName.asString(rt).utf8(rt);
   auto handlerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, worklet, "event handler must be a worklet");
