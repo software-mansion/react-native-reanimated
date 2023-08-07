@@ -19,6 +19,9 @@ const colorProps = [
   'borderTopColor',
   'borderStartColor',
   'borderEndColor',
+  'borderBlockColor',
+  'borderBlockEndColor',
+  'borderBlockStartColor',
   'color',
   'shadowColor',
   'textDecorationColor',
@@ -28,6 +31,15 @@ const colorProps = [
 ];
 
 export const ColorProperties = makeShareable(colorProps);
+
+export function processColorsInProps(props: StyleProps) {
+  'worklet';
+  for (const key in props) {
+    if (ColorProperties.indexOf(key) !== -1) {
+      props[key] = processColor(props[key]);
+    }
+  }
+}
 
 let updateProps: (
   viewDescriptor: SharedValue<Descriptor[]>,
@@ -47,11 +59,7 @@ if (shouldBeUseWeb()) {
 } else {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
-    for (const key in updates) {
-      if (ColorProperties.indexOf(key) !== -1) {
-        updates[key] = processColor(updates[key]);
-      }
-    }
+    processColorsInProps(updates);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     global.UpdatePropsManager!.update(viewDescriptors, updates);
   };
