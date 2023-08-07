@@ -86,7 +86,7 @@ bool EventHandlerRegistry::isAnyHandlerWaitingForEvent(
   const std::lock_guard<std::mutex> lock(instanceMutex);
   const auto eventHash = std::make_pair(emitterReactTag, eventName);
   auto it = eventMappingsWithTag.find(eventHash);
-  return (it != eventMappingsWithTag.end()) && (!(it->second).empty());
+  return it != eventMappingsWithTag.end() && !it->second.empty();
 }
 
 } // namespace reanimated
