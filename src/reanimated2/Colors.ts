@@ -620,6 +620,7 @@ export function processColor(color: unknown): number | null | undefined {
 }
 
 export function processColorsInProps(props: StyleProps) {
+  'worklet';
   for (const key in props) {
     if (ColorProperties.includes(key)) {
       props[key] = processColor(props[key]);
