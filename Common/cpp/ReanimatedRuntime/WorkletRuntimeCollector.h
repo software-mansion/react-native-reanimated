@@ -10,20 +10,19 @@ namespace reanimated {
 
 class WorkletRuntimeCollector : public jsi::HostObject {
  private:
-  // TODO: use `jsi::Runtime &` instead?
-  jsi::Runtime *runtime_;
+  jsi::Runtime &runtime_;
 
  public:
-  explicit WorkletRuntimeCollector(jsi::Runtime *runtime) : runtime_(runtime) {
-    WorkletRuntimeRegistry::registerRuntime(runtime_);
+  explicit WorkletRuntimeCollector(jsi::Runtime &runtime) : runtime_(runtime) {
+    WorkletRuntimeRegistry::registerRuntime(&runtime_);
   }
 
   ~WorkletRuntimeCollector() {
-    WorkletRuntimeRegistry::unregisterRuntime(runtime_);
+    WorkletRuntimeRegistry::unregisterRuntime(&runtime_);
   }
 
   static void install(jsi::Runtime &rt) {
-    auto collector = std::make_shared<WorkletRuntimeCollector>(&rt);
+    auto collector = std::make_shared<WorkletRuntimeCollector>(rt);
     auto object = jsi::Object::createFromHostObject(rt, collector);
     rt.global().setProperty(rt, "__reanimatedRuntimeCollector", object);
   }
