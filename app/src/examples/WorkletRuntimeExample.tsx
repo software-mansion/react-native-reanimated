@@ -8,12 +8,25 @@ import Animated, {
   createWorkletRuntime,
   runOnRuntimeSync,
 } from 'react-native-reanimated';
-import { View, Button, StyleSheet, Alert } from 'react-native';
+import { View, Button, StyleSheet } from 'react-native';
 import React from 'react';
 import { makeShareableCloneRecursive } from 'react-native-reanimated/src/reanimated2/shareables';
 
 export default function WorkletRuntimeExample() {
-  const randomWidth = useSharedValue(10);
+  return (
+    <View style={styles.container}>
+      <AnimationDemo />
+      <RunOnUIRunOnJSDemo />
+      <ScheduleOnJSDemo />
+      <CreateWorkletRuntimeDemo />
+      <RunOnRuntimeSyncDemo />
+      <ThrowErrorDemo />
+    </View>
+  );
+}
+
+function AnimationDemo() {
+  const sv = useSharedValue(10);
 
   const config = {
     duration: 500,
@@ -22,55 +35,74 @@ export default function WorkletRuntimeExample() {
 
   const style = useAnimatedStyle(() => {
     return {
-      width: withTiming(randomWidth.value, config),
+      width: sv.value,
+      backgroundColor: `hsl(${sv.value}, 100%, 50%)`,
     };
   });
 
-  const handlePress1 = () => {
-    const func = () => console.log('xd1');
+  const handlePress = () => {
+    sv.value = withTiming(Math.random() * 360, config);
+  };
+
+  return (
+    <>
+      <Button title="Run animation" onPress={handlePress} />
+      <Animated.View style={[styles.box, style]} />
+    </>
+  );
+}
+
+function RunOnUIRunOnJSDemo() {
+  const handlePress = () => {
+    const func = () => console.log('Hello from JS thread!');
     runOnUI(() => {
       'worklet';
+      console.log('Hello from UI thread!');
       runOnJS(func)();
     })();
   };
 
-  const handlePress2 = () => {
+  return <Button title="runOnUI / runOnJS" onPress={handlePress} />;
+}
+
+function ScheduleOnJSDemo() {
+  const handlePress = () => {
     global._scheduleOnJS(
       makeShareableCloneRecursive(console.log),
-      makeShareableCloneRecursive(['xd2'])
+      makeShareableCloneRecursive(['Hello from JS thread!'])
     );
   };
 
-  const handlePress3 = () => {
+  return <Button title="_scheduleOnJS" onPress={handlePress} />;
+}
+
+function CreateWorkletRuntimeDemo() {
+  const handlePress = () => {
     const runtime = createWorkletRuntime('foo');
     console.log(runtime);
     console.log(`${runtime}`);
     console.log(String(runtime));
+    // keep runtime alive
+    global._runtime = runtime;
   };
 
-  const handlePress4 = () => {
+  return <Button title="createWorkletRuntime" onPress={handlePress} />;
+}
+
+function RunOnRuntimeSyncDemo() {
+  const handlePress = () => {
     const runtime = createWorkletRuntime('foo');
     runOnRuntimeSync(runtime, () => {
       'worklet';
-      console.log('Hello from runtime');
+      console.log('Hello from worklet runtime!');
     });
   };
 
-  const handlePress5 = () => {
-    function bar() {
-      'worklet';
-      throw new Error('Hello world!');
-    }
-    function foo() {
-      'worklet';
-      bar();
-    }
-    runOnUI(() => {
-      foo();
-    })();
-  };
+  return <Button title="runOnRuntimeSync" onPress={handlePress} />;
+}
 
-  const handlePress6 = () => {
+function ThrowErrorDemo() {
+  const handlePress = () => {
     const runtime = createWorkletRuntime('foo');
     function bar() {
       'worklet';
@@ -86,49 +118,16 @@ export default function WorkletRuntimeExample() {
     });
   };
 
-  const handlePress7 = () => {
-    Alert.prompt('Enter label of runtime', '', (label) => {
-      global.runtime = createWorkletRuntime(label);
-    });
-  };
-
-  const handlePress8 = () => {
-    runOnRuntimeSync(global.runtime, () => {
-      'worklet';
-      console.log('xd');
-    });
-  };
-
-  return (
-    <View style={styles.container}>
-      <Animated.View style={[styles.box, style]} />
-      <Button
-        title="toggle"
-        onPress={() => {
-          randomWidth.value = Math.random() * 350;
-        }}
-      />
-      <Button title="runOnUI / runOnJS" onPress={handlePress1} />
-      <Button title="_scheduleOnJS" onPress={handlePress2} />
-      <Button title="createWorkletRuntime" onPress={handlePress3} />
-      <Button title="runOnRuntimeSync" onPress={handlePress4} />
-      <Button title="throw new Error UI" onPress={handlePress5} />
-      <Button title="throw new Error new" onPress={handlePress6} />
-      <Button title="spawn new runtime" onPress={handlePress7} />
-      <Button title="invoke new runtime" onPress={handlePress8} />
-    </View>
-  );
+  return <Button title="Throw error" onPress={handlePress} />;
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   box: {
-    width: 100,
-    height: 80,
-    backgroundColor: 'black',
-    margin: 30,
+    height: 40,
   },
 });
