@@ -172,10 +172,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
-  std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
-  std::shared_ptr<UIScheduler> uiScheduler_;
 #ifdef RCT_NEW_ARCH_ENABLED
   std::shared_ptr<PropsRegistry> propsRegistry_;
   std::shared_ptr<UIManager> uiManager_;
@@ -273,7 +271,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations
+      jni::global_ref<LayoutAnimations::javaobject> layoutAnimations
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>

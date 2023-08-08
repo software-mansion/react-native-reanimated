@@ -33,7 +33,7 @@ NativeProxy::NativeProxy(
     jsi::Runtime *rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
-    jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations
+    jni::global_ref<LayoutAnimations::javaobject> layoutAnimations
 #ifdef RCT_NEW_ARCH_ENABLED
     ,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
@@ -42,9 +42,17 @@ NativeProxy::NativeProxy(
     )
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
-      jsCallInvoker_(jsCallInvoker),
-      layoutAnimations_(std::move(_layoutAnimations)),
-      uiScheduler_(uiScheduler)
+      nativeReanimatedModule_(std::make_shared<NativeReanimatedModule>(
+          *rnRuntime,
+          jsCallInvoker,
+          uiScheduler,
+#ifdef RCT_NEW_ARCH_ENABLED
+// nothing
+#else
+          bindThis(&NativeProxy::obtainProp),
+#endif
+          getPlatformDependentMethods())),
+      layoutAnimations_(std::move(layoutAnimations))
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
       propsRegistry_(std::make_shared<PropsRegistry>())
@@ -105,18 +113,6 @@ void NativeProxy::installJSIBindings(
 #endif
     /**/) {
   WorkletRuntimeCollector::install(*rnRuntime_);
-
-  // TODO: move to constructor
-  nativeReanimatedModule_ = std::make_shared<NativeReanimatedModule>(
-      *rnRuntime_,
-      jsCallInvoker_,
-      uiScheduler_,
-#ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
-#else
-      bindThis(&NativeProxy::obtainProp),
-#endif
-      getPlatformDependentMethods());
 
   std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule =
       nativeReanimatedModule_;
