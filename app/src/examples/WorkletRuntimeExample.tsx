@@ -82,8 +82,6 @@ function CreateWorkletRuntimeDemo() {
     console.log(runtime);
     console.log(`${runtime}`);
     console.log(String(runtime));
-    // keep runtime alive
-    global._runtime = runtime;
   };
 
   return <Button title="createWorkletRuntime" onPress={handlePress} />;
@@ -91,7 +89,10 @@ function CreateWorkletRuntimeDemo() {
 
 function RunOnRuntimeSyncDemo() {
   const handlePress = () => {
-    const runtime = createWorkletRuntime('foo');
+    const runtime = createWorkletRuntime('foo', () => {
+      'worklet';
+      console.log('Worklet runtime created successfully!');
+    });
     runOnRuntimeSync(runtime, () => {
       'worklet';
       console.log('Hello from worklet runtime!');

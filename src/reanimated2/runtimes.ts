@@ -11,7 +11,10 @@ export type WorkletRuntime = {
   __hostObjectWorkletRuntime: never;
 };
 
-export function createWorkletRuntime(name: string) {
+export function createWorkletRuntime(
+  name: string,
+  initializer?: ComplexWorkletFunction<[], void>
+) {
   // @ts-ignore valueUnpacker is a worklet
   const valueUnpackerCode = valueUnpacker.__initData.code;
   const runtime = global._createWorkletRuntime(name, valueUnpackerCode);
@@ -21,9 +24,11 @@ export function createWorkletRuntime(name: string) {
     setupRunOnJS();
     setupConsole();
     setupCallGuard();
-
-    // TODO: call user-defined initializer worklet
   });
+
+  if (initializer !== undefined) {
+    runOnRuntimeSync(runtime, initializer);
+  }
 
   return runtime;
 }
@@ -32,6 +37,5 @@ export function runOnRuntimeSync(
   runtime: WorkletRuntime,
   worklet: ComplexWorkletFunction<[], void>
 ) {
-  // TODO: fix error when function is not a worklet
   global._runOnRuntime(runtime, makeShareableCloneRecursive(worklet));
 }
