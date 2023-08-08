@@ -120,7 +120,7 @@ std::string JSISerializer::stringifyJSIFunction(const jsi::Function &func) {
   std::stringstream ss;
   auto kind = (func.isHostFunction(rt_) ? "jsi::HostFunction" : "Function");
   auto name = func.getProperty(rt_, "name").toString(rt_).utf8(rt_);
-  name = name != "" ? name : "anonymous";
+  name = name.empty() ? "anonymous" : name;
 
   ss << '[' << kind << ' ' << name << ']';
   return ss.str();
