@@ -350,8 +350,8 @@ class ShareableSynchronizedDataHolder
       jsi::Runtime &rt,
       const jsi::Value &initialValue)
       : Shareable(SynchronizedDataHolder),
-        rnRuntime_(&rt),
-        data_(extractShareableOrThrow(rt, initialValue)) {}
+        data_(extractShareableOrThrow(rt, initialValue)),
+        rnRuntime_(&rt) {}
 
   ~ShareableSynchronizedDataHolder() {
     if (!WorkletRuntimeRegistry::isRuntimeAlive(rnRuntime_)) {

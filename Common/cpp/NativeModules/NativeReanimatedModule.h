@@ -171,7 +171,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       propObtainer;
   std::function<void(double)> onRenderCallback;
   AnimatedSensorModule animatedSensorModule;
-  ConfigurePropsFunction configurePropsPlatformFunction;
+  LayoutAnimationsManager layoutAnimationsManager_;
 
 #ifdef RCT_NEW_ARCH_ENABLED
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
@@ -188,10 +188,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   std::shared_ptr<PropsRegistry> propsRegistry_;
 
   std::vector<Tag> tagsToRemove_; // from `propsRegistry_`
+#else
+  ConfigurePropsFunction configurePropsPlatformFunction;
 #endif
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
-  LayoutAnimationsManager layoutAnimationsManager_;
 
   KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;

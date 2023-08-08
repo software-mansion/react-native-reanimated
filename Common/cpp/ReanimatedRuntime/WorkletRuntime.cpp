@@ -22,8 +22,9 @@ void WorkletRuntime::installValueUnpacker(
   jsi::Runtime &rt = *runtime_;
   auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
       "(" + valueUnpackerCode + "\n)");
-  auto valueUnpacker =
-      rt.evaluateJavaScript(codeBuffer, "nowhere").asObject(rt).asFunction(rt);
+  auto valueUnpacker = rt.evaluateJavaScript(codeBuffer, "installValueUnpacker")
+                           .asObject(rt)
+                           .asFunction(rt);
   rt.global().setProperty(rt, "__valueUnpacker", valueUnpacker);
 }
 

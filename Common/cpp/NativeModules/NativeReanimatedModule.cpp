@@ -46,9 +46,6 @@ NativeReanimatedModule::NativeReanimatedModule(
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
       jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsInvoker)),
-#ifdef DEBUG
-      layoutAnimationsManager_(std::make_shared<JSLogger>(jsScheduler_)),
-#endif
       uiScheduler_(uiScheduler),
       uiWorkletRuntime_(
           std::make_shared<WorkletRuntime>("Reanimated UI runtime")),
@@ -60,6 +57,9 @@ NativeReanimatedModule::NativeReanimatedModule(
       propObtainer(propObtainer),
 #endif
       animatedSensorModule(platformDepMethodsHolder),
+#ifdef DEBUG
+      layoutAnimationsManager_(std::make_shared<JSLogger>(jsScheduler_)),
+#endif
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction)
@@ -159,8 +159,8 @@ NativeReanimatedModule::NativeReanimatedModule(
 void NativeReanimatedModule::installCoreFunctions(
     jsi::Runtime &rt,
     const jsi::Value &valueUnpackerCode) {
-  auto valueUnpackerCodeString = valueUnpackerCode.asString(rt).utf8(rt);
-  uiWorkletRuntime_->installValueUnpacker(valueUnpackerCodeString);
+  uiWorkletRuntime_->installValueUnpacker(
+      valueUnpackerCode.asString(rt).utf8(rt));
 }
 
 NativeReanimatedModule::~NativeReanimatedModule() {
