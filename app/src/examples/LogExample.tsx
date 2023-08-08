@@ -4,14 +4,16 @@ import React from 'react';
 
 export default function LogExample() {
   useSharedValue(42); // force Reanimated initialization
-  // const testHostObject = global.__reanimatedModuleProxy; // TODO: find simpler HostObject (that would not crash the app)
+  // const testHostObject = __reanimatedModuleProxy; // TODO: find simpler HostObject (that would not crash the app)
   // TODO: assert(testHostObject !== undefined);
 
   const handlePress = () => {
     function test(value: any, expected: string) {
       'worklet';
-      const actual = global._toString(value);
-      global._log(actual);
+      // @ts-ignore _toString function is registered for UI runtime
+      const actual = _toString(value);
+      // @ts-ignore _log function is registered for UI runtime
+      _log(actual);
       if (actual !== expected) {
         throw new Error(`Test failed, expected "${expected}", "got ${actual}"`);
       }
@@ -19,7 +21,8 @@ export default function LogExample() {
 
     runOnUI(() => {
       'worklet';
-      global._log('==============================================');
+      // @ts-ignore _log function is registered for UI runtime
+      _log('==============================================');
 
       test(42, '42');
       test(3.14, '3.14');
@@ -49,7 +52,8 @@ export default function LogExample() {
       test(function foo() {}, '[Function foo]');
       test(isFinite, '[Function isFinite]');
       test(Object, '[Function Object]');
-      test(global._log, '[jsi::HostFunction _log]');
+      // @ts-ignore _log function is registered for UI runtime
+      test(_log, '[jsi::HostFunction _log]');
       // test(Math, '[Math]'); // TODO: how to detect the Math object?
 
       {
@@ -105,7 +109,8 @@ export default function LogExample() {
       test(new RegExp('foo'), '/foo/');
       test(String('foo'), 'foo');
 
-      global._log('Tests passed');
+      // @ts-ignore _log function is registered for UI runtime
+      _log('Tests passed');
     })();
   };
 
