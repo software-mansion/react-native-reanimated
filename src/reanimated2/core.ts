@@ -24,7 +24,11 @@ export { startMapper, stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
 export { makeShareable } from './shareables';
 export { makeMutable, makeRemote } from './mutables';
-export { createWorkletRuntime, WorkletRuntime } from './runtimes';
+export {
+  createWorkletRuntime,
+  runOnRuntimeSync,
+  WorkletRuntime,
+} from './runtimes';
 
 export type ReanimatedConsole = Pick<
   Console,

@@ -6,11 +6,11 @@ import Animated, {
   runOnUI,
   runOnJS,
   createWorkletRuntime,
+  runOnRuntimeSync,
 } from 'react-native-reanimated';
 import { View, Button, StyleSheet, Alert } from 'react-native';
 import React from 'react';
 import { makeShareableCloneRecursive } from 'react-native-reanimated/src/reanimated2/shareables';
-import { runOnRuntimeSync } from 'react-native-reanimated/src/reanimated2/runtimes';
 
 export default function AnimatedStyleUpdateExample(): React.ReactElement {
   const randomWidth = useSharedValue(10);
