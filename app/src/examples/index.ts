@@ -95,6 +95,7 @@ import WidthExample from './WidthExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
+import WorkletRuntimeExample from './WorkletRuntimeExample';
 
 interface Example {
   icon?: string;
@@ -109,6 +110,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
+  },
+  WorkletRuntimeExample: {
+    icon: '🏃‍♂️',
+    title: 'Worklet runtime',
+    screen: WorkletRuntimeExample,
   },
 
   // About
