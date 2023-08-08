@@ -135,17 +135,13 @@ export function setupConsole() {
 }
 
 // we need to use different names because `_scheduleOnJS` and `_makeShareableClone` are whitelisted
-const {
-  _scheduleOnJS: scheduleOnJS,
-  _makeShareableClone: makeShareableClone,
-  _runOnRuntime: runOnRuntime,
-} = global;
+const { _scheduleOnJS: scheduleOnJS, _makeShareableClone: makeShareableClone } =
+  global;
 
 export function setupCoreFunctions() {
   'worklet';
   global._scheduleOnJS = scheduleOnJS;
   global._makeShareableClone = makeShareableClone;
-  global._runOnRuntime = runOnRuntime;
 }
 
 function setupRequestAnimationFrame() {
