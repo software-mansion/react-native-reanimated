@@ -55,11 +55,12 @@ or build and run directly from the command line:
 yarn react-native run-macos
 ```
 
-### Troubleshoot
+### Troubleshooting
 
-If you have trouble with building the app, try running 
+If you have trouble with building the app, try running
+
 ```
-rm -rf Pods build Podfile.lock
+rm -rf Pods Podfile.lock build
 ```
 
 in `macos/` directory.
