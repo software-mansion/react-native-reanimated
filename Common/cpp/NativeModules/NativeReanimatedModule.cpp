@@ -46,6 +46,9 @@ NativeReanimatedModule::NativeReanimatedModule(
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
       jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsInvoker)),
+#ifdef DEBUG
+      layoutAnimationsManager_(std::make_shared<JSLogger>(jsScheduler_)),
+#endif
       uiScheduler_(uiScheduler),
       uiWorkletRuntime_(
           std::make_shared<WorkletRuntime>("Reanimated UI runtime")),
@@ -158,14 +161,6 @@ void NativeReanimatedModule::installCoreFunctions(
     const jsi::Value &valueUnpackerCode) {
   auto valueUnpackerCodeString = valueUnpackerCode.asString(rt).utf8(rt);
   uiWorkletRuntime_->installValueUnpacker(valueUnpackerCodeString);
-
-#ifdef DEBUG
-  // We initialize jsLogger_ here because we need runtimeHelper
-  // to be initialized already
-  // TODO: move somewhere else
-  jsLogger_ = std::make_shared<JSLogger>(jsScheduler_);
-  layoutAnimationsManager_.setJSLogger(jsLogger_);
-#endif // DEBUG
 }
 
 NativeReanimatedModule::~NativeReanimatedModule() {
@@ -174,9 +169,6 @@ NativeReanimatedModule::~NativeReanimatedModule() {
   eventHandlerRegistry.reset();
   frameCallbacks_.clear();
   uiWorkletRuntime_.reset();
-  // make sure uiRuntimeDestroyed is set after the runtime is deallocated
-  // TODO: mark UI runtime as destroyed
-  // animatedSensorModule.uiRuntimeDestroyed_ = true;
 }
 
 void NativeReanimatedModule::scheduleOnUI(
@@ -291,27 +283,26 @@ void NativeReanimatedModule::unregisterEventHandler(
 }
 
 jsi::Value NativeReanimatedModule::getViewProp(
-    jsi::Runtime &rt,
+    jsi::Runtime &rnRuntime,
     const jsi::Value &viewTag,
     const jsi::Value &propName,
     const jsi::Value &callback) {
-  const int viewTagInt = static_cast<int>(viewTag.asNumber());
-  std::string propNameStr = propName.asString(rt).utf8(rt);
-  jsi::Function fun = callback.getObject(rt).asFunction(rt);
-  std::shared_ptr<jsi::Function> funPtr =
-      std::make_shared<jsi::Function>(std::move(fun));
+  const int viewTagInt = viewTag.asNumber();
+  const auto propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
+  const auto funPtr = std::make_shared<jsi::Function>(
+      callback.getObject(rnRuntime).asFunction(rnRuntime));
 
-  uiScheduler_->scheduleOnUI([viewTagInt, funPtr, this, propNameStr]() {
-    jsi::Runtime &rt = uiWorkletRuntime_->getRuntime();
-    const jsi::String propNameValue =
-        jsi::String::createFromUtf8(rt, propNameStr);
-    jsi::Value result = propObtainer(rt, viewTagInt, propNameValue);
-    std::string resultStr = result.asString(rt).utf8(rt);
+  uiScheduler_->scheduleOnUI([=]() {
+    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getRuntime();
+    const auto propNameValue =
+        jsi::String::createFromUtf8(uiRuntime, propNameStr);
+    const auto resultValue = propObtainer(uiRuntime, viewTagInt, propNameValue);
+    const auto resultStr = resultValue.asString(uiRuntime).utf8(uiRuntime);
 
-    jsScheduler_->scheduleOnJS([resultStr, funPtr](jsi::Runtime &rt) {
-      const jsi::String resultValue =
-          jsi::String::createFromUtf8(rt, resultStr);
-      funPtr->call(rt, resultValue);
+    jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
+      const auto resultValue =
+          jsi::String::createFromUtf8(rnRuntime, resultStr);
+      funPtr->call(rnRuntime, resultValue);
     });
   });
 

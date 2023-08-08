@@ -24,7 +24,6 @@ class AnimatedSensorModule {
   std::unordered_set<int> sensorsIds_;
   RegisterSensorFunction platformRegisterSensorFunction_;
   UnregisterSensorFunction platformUnregisterSensorFunction_;
-  // volatile bool uiRuntimeDestroyed_{false};
 
  public:
   AnimatedSensorModule(
