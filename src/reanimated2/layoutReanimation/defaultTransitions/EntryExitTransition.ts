@@ -68,13 +68,18 @@ export class EntryExitTransition
       'worklet';
       const enteringValues = enteringAnimation(values);
       const exitingValues = exitingAnimation(values);
-      const animations: StyleProps = {
+      const animations: StyleProps & {
+        transform?: Exclude<StyleProps, string>;
+      } = {
         transform: [],
       };
 
       for (const prop of Object.keys(exitingValues.animations)) {
-        if (prop === 'transform') {
-          exitingValues.animations[prop]?.forEach((value, index) => {
+        if (
+          prop === 'transform' &&
+          Array.isArray(exitingValues.animations.transform)
+        ) {
+          exitingValues.animations.transform?.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
               animations.transform?.push({
                 [transformProp]: delayFunction(
@@ -118,8 +123,11 @@ export class EntryExitTransition
         }
       }
       for (const prop of Object.keys(enteringValues.animations)) {
-        if (prop === 'transform') {
-          enteringValues.animations[prop]?.forEach((value, index) => {
+        if (
+          prop === 'transform' &&
+          Array.isArray(enteringValues.animations.transform)
+        ) {
+          enteringValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
               animations.transform?.push({
                 [transformProp]: delayFunction(
@@ -154,9 +162,14 @@ export class EntryExitTransition
       }
 
       const mergedTransform = (
-        exitingValues.initialValues.transform ?? []
+        Array.isArray(exitingValues.initialValues.transform)
+          ? exitingValues.initialValues.transform
+          : []
       ).concat(
-        (enteringValues.animations.transform ?? []).map((value) => {
+        (Array.isArray(enteringValues.animations.transform)
+          ? enteringValues.animations.transform
+          : []
+        ).map((value) => {
           const objectKeys = Object.keys(value);
           if (objectKeys?.length < 1) {
             console.error(

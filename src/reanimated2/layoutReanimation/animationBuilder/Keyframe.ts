@@ -72,8 +72,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       Initialize parsedKeyframes for properties provided in initial keyframe
     */
     Object.keys(initialValues).forEach((styleProp: string) => {
-      if (styleProp === 'transform') {
-        initialValues[styleProp]?.forEach((transformStyle, index) => {
+      if (styleProp === 'transform' && Array.isArray(initialValues.transform)) {
+        initialValues.transform.forEach((transformStyle, index) => {
           Object.keys(transformStyle).forEach((transformProp: string) => {
             parsedKeyframes[index.toString() + '_transform:' + transformProp] =
               [];
@@ -144,8 +144,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
             easing,
           });
         Object.keys(keyframe).forEach((key: string) => {
-          if (key === 'transform') {
-            keyframe[key]?.forEach(
+          if (key === 'transform' && Array.isArray(keyframe.transform)) {
+            keyframe.transform.forEach(
               (transformStyle: { [key: string]: any }, index) => {
                 Object.keys(transformStyle).forEach((transformProp: string) => {
                   addKeyPointWith(
@@ -196,7 +196,9 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
 
     return () => {
       'worklet';
-      const animations: StyleProps = {};
+      const animations: StyleProps & {
+        transform?: Exclude<StyleProps, string>;
+      } = {};
 
       /* 
             For each style property, an animations sequence is created that corresponds with its key points.
