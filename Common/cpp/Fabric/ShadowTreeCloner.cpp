@@ -6,11 +6,11 @@
 namespace reanimated {
 
 ShadowTreeCloner::ShadowTreeCloner(
-    std::shared_ptr<UIManager> uiManager,
+    const UIManager &uiManager,
     SurfaceId surfaceId)
     : propsParserContext_{
           surfaceId,
-          *getContextContainerFromUIManager(&*uiManager)} {}
+          getContextContainerFromUIManager(uiManager)} {}
 
 ShadowNode::Unshared ShadowTreeCloner::cloneWithNewProps(
     const ShadowNode::Shared &oldRootNode,
