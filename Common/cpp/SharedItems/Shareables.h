@@ -63,6 +63,7 @@ class Shareable {
   };
 
   explicit Shareable(ValueType valueType) : valueType_(valueType) {}
+
   virtual jsi::Value getJSValue(jsi::Runtime &rt) {
     return toJSValue(rt);
   }
@@ -88,6 +89,7 @@ class RetainingShareable : virtual public BaseClass {
   template <typename... Args>
   explicit RetainingShareable(jsi::Runtime &rt, Args &&...args)
       : BaseClass(rt, std::forward<Args>(args)...), originalRuntime_(&rt) {}
+
   jsi::Value getJSValue(jsi::Runtime &rt) {
     if (&rt == originalRuntime_) {
       // TODO: it is suboptimal to generate new object every time getJS is
@@ -109,8 +111,8 @@ class RetainingShareable : virtual public BaseClass {
     }
     return BaseClass::toJSValue(rt);
   }
+
   ~RetainingShareable() {
-    // TODO: check if runtime destroyed
     if (!WorkletRuntimeRegistry::isRuntimeAlive(retainingRuntime_)) {
       // The below use of unique_ptr.release prevents the smart pointer from
       // calling the destructor of the kept object. This effectively results in
@@ -141,6 +143,7 @@ class ShareableJSRef : public jsi::HostObject {
 
  public:
   explicit ShareableJSRef(std::shared_ptr<Shareable> value) : value_(value) {}
+
   std::shared_ptr<Shareable> value() const {
     return value_;
   }
@@ -199,6 +202,7 @@ class ShareableArray : public Shareable {
 class ShareableObject : public Shareable {
  public:
   ShareableObject(jsi::Runtime &rt, const jsi::Object &object);
+
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     auto obj = jsi::Object(rt);
     for (size_t i = 0, size = data_.size(); i < size; i++) {
@@ -218,6 +222,7 @@ class ShareableHostObject : public Shareable {
       jsi::Runtime &,
       const std::shared_ptr<jsi::HostObject> &hostObject)
       : Shareable(HostObjectType), hostObject_(hostObject) {}
+
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     return jsi::Object::createFromHostObject(rt, hostObject_);
   }
@@ -251,8 +256,10 @@ class ShareableWorklet : public ShareableObject {
  public:
   ShareableWorklet(jsi::Runtime &rt, const jsi::Object &worklet)
       : ShareableObject(rt, worklet) {
+    // TODO: remove `valueType_` field
     valueType_ = WorkletType;
   }
+
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     assert(
         std::any_of(
@@ -277,6 +284,7 @@ class ShareableRemoteFunction
       : Shareable(RemoteFunctionType),
         runtime_(&rt),
         function_(std::move(function)) {}
+
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     if (&rt == runtime_) {
       return jsi::Value(rt, function_);
@@ -301,10 +309,11 @@ class ShareableHandle : public Shareable {
 
  public:
   ShareableHandle(jsi::Runtime &rt, const jsi::Object &initializerObject)
-      : Shareable(HandleType) {
-    initializer_ = std::make_unique<ShareableObject>(rt, initializerObject);
-    runtime_ = &rt;
+      : Shareable(HandleType),
+        runtime_(&rt),
+        initializer_(std::make_unique<ShareableObject>(rt, initializerObject)) {
   }
+
   ~ShareableHandle() {
     // TODO: check if runtime destroyed
     if (!WorkletRuntimeRegistry::isRuntimeAlive(runtime_)) {
@@ -329,6 +338,7 @@ class ShareableHandle : public Shareable {
       remoteValue_.release();
     }
   }
+
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     if (initializer_ != nullptr) {
       auto initObj = initializer_->getJSValue(rt);
@@ -396,6 +406,7 @@ class ShareableString : public Shareable {
  public:
   explicit ShareableString(const std::string &string)
       : Shareable(StringType), data_(string) {}
+
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     return jsi::String::createFromUtf8(rt, data_);
   }
