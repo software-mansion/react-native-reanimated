@@ -40,7 +40,10 @@ export type TransformStyleTypes = TransformsStyle['transform'] extends
   | undefined
   ? T
   : never;
-export type AnimatedTransform = AdaptTransforms<TransformStyleTypes>[];
+
+export type AnimatedTransform =
+  | AdaptTransforms<TransformStyleTypes>[]
+  | TransformsStyle['transform'];
 
 /**
  * @deprecated Please use `AnimatedStyle` type instead.
