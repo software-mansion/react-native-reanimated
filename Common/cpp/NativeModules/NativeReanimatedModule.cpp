@@ -556,9 +556,11 @@ void NativeReanimatedModule::performOperations() {
 
           return newRoot;
         },
-        {.shouldYield = [this]() {
-          return propsRegistry_->shouldSkipCommit();
-        }});
+        {/* .enableStateReconciliation = */ false,
+         /* .mountSynchronously = */ true,
+         /* .shouldYield = */ [this]() {
+           return propsRegistry_->shouldSkipCommit();
+         }});
   });
 }
 
