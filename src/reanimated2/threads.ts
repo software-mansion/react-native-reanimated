@@ -1,6 +1,7 @@
 import NativeReanimatedModule from './NativeReanimated';
 import { isJest, shouldBeUseWeb } from './PlatformChecker';
 import type { ComplexWorkletFunction } from './commonTypes';
+import { createWorkletRuntime } from './runtimes';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -136,6 +137,42 @@ export function runOnUIImmediately<A extends any[], R>(
       })
     );
   };
+}
+
+/**
+ * Schedule a worklet to execute on a new thread.
+ */
+export function runOnBackground<A extends any[], R>(
+  worklet: ComplexWorkletFunction<A, R>
+): (...args: A) => void {
+  if (__DEV__ && IS_NATIVE && worklet.__workletHash === undefined) {
+    throw new Error('runOnBackground() can only be used on worklets');
+  }
+  return (...args) => {
+    NativeReanimatedModule.scheduleOnBackground(
+      createWorkletRuntime('Background'),
+      makeShareableCloneRecursive(() => {
+        'worklet';
+        worklet(...args);
+      })
+    );
+  };
+}
+
+export function backgroundTask<T>(
+  func: ComplexWorkletFunction<[], T>
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    runOnBackground(() => {
+      'worklet';
+      try {
+        const result = func();
+        runOnJS(resolve)(result);
+      } catch (error) {
+        runOnJS(reject)(error);
+      }
+    })();
+  });
 }
 
 if (__DEV__ && IS_NATIVE) {

@@ -6,11 +6,11 @@ import Animated, {
   runOnUI,
   runOnJS,
   createWorkletRuntime,
-  runOnRuntimeSync,
 } from 'react-native-reanimated';
-import { View, Button, StyleSheet } from 'react-native';
-import React from 'react';
+import { Text, View, Button, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
 import { makeShareableCloneRecursive } from 'react-native-reanimated/src/reanimated2/shareables';
+import { backgroundTask } from 'react-native-reanimated';
 
 export default function WorkletRuntimeExample() {
   return (
@@ -21,6 +21,7 @@ export default function WorkletRuntimeExample() {
       <CreateWorkletRuntimeDemo />
       <RunOnRuntimeSyncDemo />
       <ThrowErrorDemo />
+      <BackgroundTaskDemo />
     </View>
   );
 }
@@ -120,6 +121,43 @@ function ThrowErrorDemo() {
   };
 
   return <Button title="Throw error" onPress={handlePress} />;
+}
+
+function BackgroundTaskDemo() {
+  const [count, setCount] = React.useState(0);
+  const [result, setResult] = React.useState(' ');
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCount((prev) => prev + 1);
+    }, 10);
+    return () => clearInterval(id);
+  });
+
+  function fib(n: number): number {
+    'worklet';
+    if (n < 2) {
+      return 1;
+    }
+    return fib(n - 1) + fib(n - 2);
+  }
+
+  const handlePress = async () => {
+    setResult('Work in progress...');
+    const result = await backgroundTask(() => {
+      'worklet';
+      return fib(35);
+    });
+    setResult(String(result));
+  };
+
+  return (
+    <>
+      <Button title="Background task" onPress={handlePress} />
+      <Text>{count}</Text>
+      <Text>{result}</Text>
+    </>
+  );
 }
 
 const styles = StyleSheet.create({

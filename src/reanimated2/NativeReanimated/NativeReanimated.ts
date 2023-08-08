@@ -10,6 +10,7 @@ import type {
   LayoutAnimationType,
 } from '../layoutReanimation';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
+import { WorkletRuntime } from '../runtimes';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
@@ -23,6 +24,10 @@ export interface NativeReanimatedModule {
   ): ShareableSyncDataHolderRef<T>;
   getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>): T;
   scheduleOnUI<T>(shareable: ShareableRef<T>): void;
+  scheduleOnBackground<T>(
+    runtime: WorkletRuntime,
+    shareable: ShareableRef<T>
+  ): void;
   registerEventHandler<T>(
     eventHash: string,
     eventHandler: ShareableRef<T>
@@ -97,6 +102,10 @@ export class NativeReanimated {
 
   scheduleOnUI<T>(shareable: ShareableRef<T>) {
     return this.InnerNativeModule.scheduleOnUI(shareable);
+  }
+
+  scheduleOnBackground<T>(runtime: WorkletRuntime, worklet: ShareableRef<T>) {
+    return this.InnerNativeModule.scheduleOnBackground(runtime, worklet);
   }
 
   registerSensor(

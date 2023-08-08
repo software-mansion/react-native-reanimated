@@ -15,8 +15,6 @@ export function createWorkletRuntime(
   name: string,
   initializer?: ComplexWorkletFunction<[], void>
 ) {
-  'worklet';
-
   // @ts-ignore valueUnpacker is a worklet
   const valueUnpackerCode = valueUnpacker.__initData.code;
   const runtime = global._createWorkletRuntime(name, valueUnpackerCode);

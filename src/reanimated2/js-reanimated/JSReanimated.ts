@@ -6,6 +6,7 @@ import type {
   ValueRotation,
 } from '../commonTypes';
 import { SensorType } from '../commonTypes';
+import { WorkletRuntime } from '../runtimes';
 import type { WebSensor } from './WebSensor';
 
 export default class JSReanimated {
@@ -27,6 +28,12 @@ export default class JSReanimated {
   scheduleOnUI<T>(worklet: ShareableRef<T>) {
     // @ts-ignore web implementation has still not been updated after the rewrite, this will be addressed once the web implementation updates are ready
     requestAnimationFrame(worklet);
+  }
+
+  scheduleOnBackground<T>(_runtime: WorkletRuntime, _worklet: ShareableRef<T>) {
+    throw new Error(
+      '[Reanimated] scheduleOnBackground is not implemented in JSReanimated yet'
+    );
   }
 
   registerEventHandler<T>(

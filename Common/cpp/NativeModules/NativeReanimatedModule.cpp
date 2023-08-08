@@ -189,6 +189,17 @@ void NativeReanimatedModule::scheduleOnUI(
   });
 }
 
+void NativeReanimatedModule::scheduleOnBackground(
+    jsi::Runtime &rt,
+    const jsi::Value &runtime,
+    const jsi::Value &worklet) {
+  auto workletRuntime = extractWorkletRuntime(rt, runtime);
+  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
+      rt, worklet, "only worklets can be scheduled to run on background");
+  std::thread job([=] { workletRuntime->runGuarded(shareableWorklet); });
+  job.detach();
+}
+
 void NativeReanimatedModule::scheduleOnJS(
     jsi::Runtime &rt,
     const jsi::Value &remoteFun,

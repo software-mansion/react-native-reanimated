@@ -59,6 +59,16 @@ static jsi::Value SPEC_PREFIX(scheduleOnUI)(
   return jsi::Value::undefined();
 }
 
+static jsi::Value SPEC_PREFIX(scheduleOnBackground)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->scheduleOnBackground(rt, std::move(args[0]), std::move(args[1]));
+  return jsi::Value::undefined();
+}
+
 static jsi::Value SPEC_PREFIX(registerEventHandler)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -181,6 +191,8 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
       MethodMetadata{1, SPEC_PREFIX(getDataSynchronously)};
 
   methodMap_["scheduleOnUI"] = MethodMetadata{1, SPEC_PREFIX(scheduleOnUI)};
+  methodMap_["scheduleOnBackground"] =
+      MethodMetadata{1, SPEC_PREFIX(scheduleOnBackground)};
 
   methodMap_["registerEventHandler"] =
       MethodMetadata{2, SPEC_PREFIX(registerEventHandler)};
