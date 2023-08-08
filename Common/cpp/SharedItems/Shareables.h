@@ -256,7 +256,6 @@ class ShareableWorklet : public ShareableObject {
  public:
   ShareableWorklet(jsi::Runtime &rt, const jsi::Object &worklet)
       : ShareableObject(rt, worklet) {
-    // TODO: remove `valueType_` field
     valueType_ = WorkletType;
   }
 
