@@ -47,7 +47,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   std::shared_ptr<UIScheduler> uiScheduler_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
 
-  void installCoreFunctions(
+  void installValueUnpacker(
       jsi::Runtime &rt,
       const jsi::Value &valueUnpackerCode) override;
 

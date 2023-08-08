@@ -2,7 +2,7 @@ import type { ComplexWorkletFunction } from './commonTypes';
 import {
   setupCallGuard,
   setupConsole,
-  setupRunOnJS,
+  setupCoreFunctions,
   valueUnpacker,
 } from './initializers';
 import { makeShareableCloneRecursive } from './shareables';
@@ -15,15 +15,17 @@ export function createWorkletRuntime(
   name: string,
   initializer?: ComplexWorkletFunction<[], void>
 ) {
+  'worklet';
+
   // @ts-ignore valueUnpacker is a worklet
   const valueUnpackerCode = valueUnpacker.__initData.code;
   const runtime = global._createWorkletRuntime(name, valueUnpackerCode);
 
   runOnRuntimeSync(runtime, () => {
     'worklet';
-    setupRunOnJS();
-    setupConsole();
+    setupCoreFunctions();
     setupCallGuard();
+    setupConsole();
   });
 
   if (initializer !== undefined) {
@@ -37,5 +39,6 @@ export function runOnRuntimeSync(
   runtime: WorkletRuntime,
   worklet: ComplexWorkletFunction<[], void>
 ) {
+  'worklet';
   global._runOnRuntime(runtime, makeShareableCloneRecursive(worklet));
 }

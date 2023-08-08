@@ -135,13 +135,17 @@ export function setupConsole() {
 }
 
 // we need to use different names because `_scheduleOnJS` and `_makeShareableClone` are whitelisted
-const { _scheduleOnJS: scheduleOnJS, _makeShareableClone: makeShareableClone } =
-  global;
+const {
+  _scheduleOnJS: scheduleOnJS,
+  _makeShareableClone: makeShareableClone,
+  _runOnRuntime: runOnRuntime,
+} = global;
 
-export function setupRunOnJS() {
+export function setupCoreFunctions() {
   'worklet';
   global._scheduleOnJS = scheduleOnJS;
   global._makeShareableClone = makeShareableClone;
+  global._runOnRuntime = runOnRuntime;
 }
 
 function setupRequestAnimationFrame() {
@@ -191,7 +195,7 @@ function setupRequestAnimationFrame() {
 export function initializeUIRuntime() {
   // @ts-ignore valueUnpacker is a worklet
   const valueUnpackerCode = valueUnpacker.__initData.code;
-  NativeReanimatedModule.installCoreFunctions(valueUnpackerCode);
+  NativeReanimatedModule.installValueUnpacker(valueUnpackerCode);
 
   if (IS_JEST) {
     // requestAnimationFrame react-native jest's setup is incorrect as it polyfills
@@ -207,9 +211,9 @@ export function initializeUIRuntime() {
 
   runOnUIImmediately(() => {
     'worklet';
-    setupRunOnJS();
-    setupConsole();
+    setupCoreFunctions();
     setupCallGuard();
+    setupConsole();
     // TODO: setupPerformanceNow();
     if (IS_NATIVE) {
       setupMicrotasks();

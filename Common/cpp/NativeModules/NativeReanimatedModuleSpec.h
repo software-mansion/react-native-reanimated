@@ -22,7 +22,7 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   explicit NativeReanimatedModuleSpec(std::shared_ptr<CallInvoker> jsInvoker);
 
  public:
-  virtual void installCoreFunctions(
+  virtual void installValueUnpacker(
       jsi::Runtime &rt,
       const jsi::Value &valueUnpackerCode) = 0;
 

@@ -6,13 +6,13 @@
 
 namespace reanimated {
 
-static jsi::Value SPEC_PREFIX(installCoreFunctions)(
+static jsi::Value SPEC_PREFIX(installValueUnpacker)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->installCoreFunctions(rt, std::move(args[0]));
+      ->installValueUnpacker(rt, std::move(args[0]));
   return jsi::Value::undefined();
 }
 
@@ -169,8 +169,8 @@ static jsi::Value SPEC_PREFIX(configureLayoutAnimation)(
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
     std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
-  methodMap_["installCoreFunctions"] =
-      MethodMetadata{1, SPEC_PREFIX(installCoreFunctions)};
+  methodMap_["installValueUnpacker"] =
+      MethodMetadata{1, SPEC_PREFIX(installValueUnpacker)};
 
   methodMap_["makeShareableClone"] =
       MethodMetadata{2, SPEC_PREFIX(makeShareableClone)};

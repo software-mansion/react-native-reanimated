@@ -13,7 +13,7 @@ import { checkCppVersion } from '../platform-specific/checkCppVersion';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
-  installCoreFunctions(valueUnpackerCode: string): void;
+  installValueUnpacker(valueUnpackerCode: string): void;
   makeShareableClone<T>(
     value: T,
     shouldPersistRemote: boolean
@@ -76,8 +76,8 @@ export class NativeReanimated {
     this.InnerNativeModule = global.__reanimatedModuleProxy;
   }
 
-  installCoreFunctions(valueUnpackerCode: string): void {
-    return this.InnerNativeModule.installCoreFunctions(valueUnpackerCode);
+  installValueUnpacker(valueUnpackerCode: string): void {
+    return this.InnerNativeModule.installValueUnpacker(valueUnpackerCode);
   }
 
   makeShareableClone<T>(value: T, shouldPersistRemote: boolean) {

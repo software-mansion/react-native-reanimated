@@ -156,7 +156,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.unsubscribeFromKeyboardEvents;
 }
 
-void NativeReanimatedModule::installCoreFunctions(
+void NativeReanimatedModule::installValueUnpacker(
     jsi::Runtime &rt,
     const jsi::Value &valueUnpackerCode) {
   uiWorkletRuntime_->installValueUnpacker(

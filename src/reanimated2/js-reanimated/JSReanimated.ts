@@ -20,7 +20,7 @@ export default class JSReanimated {
     );
   }
 
-  installCoreFunctions(_valueUnpackerCode: string): void {
+  installValueUnpacker(_valueUnpackerCode: string): void {
     // noop
   }
 
