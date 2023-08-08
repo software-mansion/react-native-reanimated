@@ -68,7 +68,7 @@ void RuntimeDecorator::decorateRuntime(
 #endif // DEBUG
 
   jsi_utils::installJsiFunction(rt, "_log", logValue);
-  jsi_utils::installJsiFunction(rt, "_stringify", stringifyValue);
+  jsi_utils::installJsiFunction(rt, "_toString", stringifyValue);
 }
 
 void RuntimeDecorator::decorateUIRuntime(

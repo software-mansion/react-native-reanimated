@@ -23,12 +23,12 @@ void REAIOSLogger::log(int i)
 void REAIOSLogger::log(bool b)
 {
   const char *str = (b) ? "true" : "false";
-  NSLog(@"%@", [NSString stringWithCString:str encoding:[NSString defaultCStringEncoding]]);
+  log(str);
 }
 
 void REAIOSLogger::log(const std::string &str)
 {
-  NSLog(@"%@", [NSString stringWithCString:str.c_str() encoding:[NSString defaultCStringEncoding]]);
+  log(str.c_str());
 }
 
 } // namespace reanimated

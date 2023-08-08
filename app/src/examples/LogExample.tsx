@@ -10,8 +10,8 @@ export default function LogExample() {
   const handlePress = () => {
     function test(value: any, expected: string) {
       'worklet';
-      const actual = _stringify(value);
-      _log(actual);
+      const actual = global._toString(value);
+      global._log(actual);
       if (actual !== expected) {
         throw new Error(`Test failed, expected "${expected}", "got ${actual}"`);
       }
@@ -19,7 +19,7 @@ export default function LogExample() {
 
     runOnUI(() => {
       'worklet';
-      _log('==============================================');
+      global._log('==============================================');
 
       test(42, '42');
       test(3.14, '3.14');
@@ -49,17 +49,24 @@ export default function LogExample() {
       test(function foo() {}, '[Function foo]');
       test(isFinite, '[Function isFinite]');
       test(Object, '[Function Object]');
-      test(_log, '[jsi::HostFunction _log]');
+      test(global._log, '[jsi::HostFunction _log]');
       // test(Math, '[Math]'); // TODO: how to detect the Math object?
 
       {
-        let a = {};
+        type RecursiveObject = {
+          foo?: RecursiveObject;
+          bar?: string;
+        };
+
+        let a: RecursiveObject = {};
         a.foo = a;
         a.bar = 'bar';
         test(a, '{"foo": {...}, "bar": "bar"}');
       }
       {
-        let b = [];
+        type RecursiveArray = (number | RecursiveArray)[];
+
+        let b: RecursiveArray = [];
         b.push(1);
         b.push(b);
         test(b, '[1, [...]]');
@@ -98,7 +105,7 @@ export default function LogExample() {
       test(new RegExp('foo'), '/foo/');
       test(String('foo'), 'foo');
 
-      _log('Tests passed');
+      global._log('Tests passed');
     })();
   };
 
