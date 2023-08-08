@@ -34,16 +34,16 @@ jsi::Value AnimatedSensorModule::registerSensor(
        shareableHandler,
        weakUiWorkletRuntime = std::weak_ptr<WorkletRuntime>(uiWorkletRuntime)](
           double newValues[], int orientationDegrees) {
-        // TODO: check if runtime is destroyed
-        // if (uiRuntimeDestroyed_) {
-        //   return;
-        // }
-
         auto uiWorkletRuntime = weakUiWorkletRuntime.lock();
         if (uiWorkletRuntime == nullptr) {
           return;
         }
+
         jsi::Runtime &uiRuntime = uiWorkletRuntime->getRuntime();
+        // TODO: check if runtime is still alive
+        // if (!WorkletRuntimeRegistry::isRuntimeAlive(uiRuntime)) {
+        //   return;
+        // }
 
         jsi::Object value(uiRuntime);
         if (sensorType == SensorType::ROTATION_VECTOR) {
