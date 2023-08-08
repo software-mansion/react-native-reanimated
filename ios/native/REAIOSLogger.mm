@@ -27,8 +27,7 @@ void REAIOSLogger::log(int i)
 
 void REAIOSLogger::log(bool b)
 {
-  const char *str = (b) ? "true" : "false";
-  log(str);
+  log(b ? "true" : "false");
 }
 
 } // namespace reanimated
