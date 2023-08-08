@@ -289,9 +289,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
       auto name = args[0].asString(rt).utf8(rt);
       auto valueUnpackerCode = args[1].asString(rt).utf8(rt);
-      auto ho = std::make_shared<WorkletRuntime>(name);
-      ho->installValueUnpacker(valueUnpackerCode);
-      return jsi::Object::createFromHostObject(rt, ho);
+      auto workletRuntime = std::make_shared<WorkletRuntime>(name);
+      workletRuntime->installValueUnpacker(valueUnpackerCode);
+      return jsi::Object::createFromHostObject(rt, workletRuntime);
     };
     rnRuntime.global().setProperty(
         rnRuntime,
