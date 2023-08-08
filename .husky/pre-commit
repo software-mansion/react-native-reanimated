@@ -3,6 +3,7 @@
 
 yarn lint-staged
 yarn type:check
+yarn find-unused-code:js
 
 # This automatically builds Reanimated Babel plugin JavaScript files if their
 # TypeScript counterparts were changed. It also adds those files to the commit

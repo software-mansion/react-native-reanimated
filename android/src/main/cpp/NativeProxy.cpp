@@ -55,7 +55,6 @@ NativeProxy::NativeProxy(
   uiManager_ = binding->getScheduler()->getUIManager();
   commitHook_ =
       std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
-  uiManager_->registerCommitHook(*commitHook_);
 #endif
 }
 
@@ -67,9 +66,6 @@ NativeProxy::~NativeProxy() {
   // has already been destroyed when AnimatedSensorModule's
   // destructor is ran
   nativeReanimatedModule_->cleanupSensors();
-#ifdef RCT_NEW_ARCH_ENABLED
-  uiManager_->unregisterCommitHook(*commitHook_);
-#endif // RCT_NEW_ARCH_ENABLED
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
