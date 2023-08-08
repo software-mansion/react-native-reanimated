@@ -15,14 +15,14 @@ class JSISerializer {
       bool isTopLevel = false);
 
  private:
-  std::string stringifyObjectType(const jsi::Object &object);
-  std::string stringifyJSIArray(const jsi::Array &arr);
-  std::string stringifyJSIFunction(const jsi::Function &func);
-  std::string stringifyJSIHostObject(jsi::HostObject &hostObject);
-  std::string stringifyJSIObject(const jsi::Object &object);
-  std::string stringifyJSError(const jsi::Object &object);
-  std::string stringifyJSSet(const jsi::Object &object);
-  std::string stringifyJSMap(const jsi::Object &object);
+  std::string stringifyArray(const jsi::Array &arr);
+  std::string stringifyFunction(const jsi::Function &func);
+  std::string stringifyHostObject(jsi::HostObject &hostObject);
+  std::string stringifyObject(const jsi::Object &object);
+  std::string stringifyError(const jsi::Object &object);
+  std::string stringifySet(const jsi::Object &object);
+  std::string stringifyMap(const jsi::Object &object);
+  std::string stringifyWithName(const jsi::Object &object);
   std::string stringifyWithToString(const jsi::Object &object);
   std::string stringifyRecursiveType(const jsi::Object &object);
 

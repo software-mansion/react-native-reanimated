@@ -10,7 +10,7 @@
 
 namespace reanimated {
 
-static jsi::String stringifyValue(jsi::Runtime &rt, jsi::Value const &value) {
+static jsi::String toStringValue(jsi::Runtime &rt, jsi::Value const &value) {
   return jsi::String::createFromUtf8(rt, stringifyJSIValue(rt, value));
 }
 
@@ -67,8 +67,8 @@ void RuntimeDecorator::decorateRuntime(
           evalWithSourceUrl));
 #endif // DEBUG
 
+  jsi_utils::installJsiFunction(rt, "_toString", toStringValue);
   jsi_utils::installJsiFunction(rt, "_log", logValue);
-  jsi_utils::installJsiFunction(rt, "_toString", stringifyValue);
 }
 
 void RuntimeDecorator::decorateUIRuntime(

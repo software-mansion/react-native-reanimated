@@ -15,6 +15,10 @@ void AndroidLogger::log(const char *str) {
   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "%s", str);
 }
 
+void AndroidLogger::log(const std::string &str) {
+  log(str.c_str());
+}
+
 void AndroidLogger::log(double d) {
   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "%f", d);
 }
@@ -25,10 +29,6 @@ void AndroidLogger::log(int i) {
 
 void AndroidLogger::log(bool b) {
   log(b ? "true" : "false");
-}
-
-void AndroidLogger::log(const std::string &str) {
-  log(str.c_str());
 }
 
 } // namespace reanimated

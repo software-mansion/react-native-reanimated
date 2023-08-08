@@ -92,14 +92,14 @@ JSISerializer::JSISerializer(jsi::Runtime &rt)
                         .callAsConstructor(rt_)
                         .asObject(rt_)) {}
 
-std::string JSISerializer::stringifyObjectType(const jsi::Object &object) {
+std::string JSISerializer::stringifyWithName(const jsi::Object &object) {
   std::stringstream ss;
   ss << '[' << getObjectTypeName(rt_, object) << ']';
 
   return ss.str();
 }
 
-std::string JSISerializer::stringifyJSIArray(const jsi::Array &arr) {
+std::string JSISerializer::stringifyArray(const jsi::Array &arr) {
   std::stringstream ss;
   ss << '[';
 
@@ -116,7 +116,7 @@ std::string JSISerializer::stringifyJSIArray(const jsi::Array &arr) {
   return ss.str();
 }
 
-std::string JSISerializer::stringifyJSIFunction(const jsi::Function &func) {
+std::string JSISerializer::stringifyFunction(const jsi::Function &func) {
   std::stringstream ss;
   auto kind = (func.isHostFunction(rt_) ? "jsi::HostFunction" : "Function");
   auto name = func.getProperty(rt_, "name").toString(rt_).utf8(rt_);
@@ -126,7 +126,7 @@ std::string JSISerializer::stringifyJSIFunction(const jsi::Function &func) {
   return ss.str();
 }
 
-std::string JSISerializer::stringifyJSIHostObject(jsi::HostObject &hostObject) {
+std::string JSISerializer::stringifyHostObject(jsi::HostObject &hostObject) {
   int status = -1;
   char *hostObjClassName =
       abi::__cxa_demangle(typeid(hostObject).name(), NULL, NULL, &status);
@@ -160,7 +160,7 @@ std::string JSISerializer::stringifyJSIHostObject(jsi::HostObject &hostObject) {
   return ss.str();
 }
 
-std::string JSISerializer::stringifyJSIObject(const jsi::Object &object) {
+std::string JSISerializer::stringifyObject(const jsi::Object &object) {
   std::stringstream ss;
   ss << '{';
 
@@ -180,14 +180,14 @@ std::string JSISerializer::stringifyJSIObject(const jsi::Object &object) {
   return ss.str();
 }
 
-std::string JSISerializer::stringifyJSError(const jsi::Object &object) {
+std::string JSISerializer::stringifyError(const jsi::Object &object) {
   std::stringstream ss;
   ss << '[' << object.getProperty(rt_, "name").toString(rt_).utf8(rt_) << ": "
      << object.getProperty(rt_, "message").toString(rt_).utf8(rt_) << ']';
   return ss.str();
 }
 
-std::string JSISerializer::stringifyJSSet(const jsi::Object &object) {
+std::string JSISerializer::stringifySet(const jsi::Object &object) {
   std::stringstream ss;
   jsi::Function arrayFrom = rt_.global()
                                 .getPropertyAsObject(rt_, "Array")
@@ -213,7 +213,7 @@ std::string JSISerializer::stringifyJSSet(const jsi::Object &object) {
   return ss.str();
 }
 
-std::string JSISerializer::stringifyJSMap(const jsi::Object &object) {
+std::string JSISerializer::stringifyMap(const jsi::Object &object) {
   std::stringstream ss;
   jsi::Function arrayFrom = rt_.global()
                                 .getPropertyAsObject(rt_, "Array")
@@ -295,16 +295,16 @@ std::string JSISerializer::stringifyJSIValueRecursively(
     markAsVisited(object);
 
     if (object.isArray(rt_)) {
-      return stringifyJSIArray(object.getArray(rt_));
+      return stringifyArray(object.getArray(rt_));
     }
     if (object.isFunction(rt_)) {
-      return stringifyJSIFunction(object.getFunction(rt_));
+      return stringifyFunction(object.getFunction(rt_));
     }
     if (object.isHostObject(rt_)) {
-      return stringifyJSIHostObject(*object.getHostObject(rt_));
+      return stringifyHostObject(*object.getHostObject(rt_));
     }
     if (isInstanceOfAny(rt_, object, SUPPORTED_ERROR_TYPES)) {
-      return stringifyJSError(object);
+      return stringifyError(object);
     }
     if (isInstanceOfAny(rt_, object, SUPPORTED_INDEXED_COLLECTION_TYPES) ||
         isInstanceOfAny(rt_, object, SUPPORTED_STRUCTURED_DATA_TYPES) ||
@@ -315,19 +315,19 @@ std::string JSISerializer::stringifyJSIValueRecursively(
         isInstanceOf(rt_, object, "WeakMap") ||
         isInstanceOf(rt_, object, "WeakSet")) {
       // TODO: Consider extending this log info
-      return stringifyObjectType(object);
+      return stringifyWithName(object);
     }
     if (isInstanceOf(rt_, object, "Date") ||
         isInstanceOf(rt_, object, "RegExp")) {
       return stringifyWithToString(object);
     }
     if (isInstanceOf(rt_, object, "Map")) {
-      return stringifyJSMap(object);
+      return stringifyMap(object);
     }
     if (isInstanceOf(rt_, object, "Set")) {
-      return stringifyJSSet(object);
+      return stringifySet(object);
     }
-    return stringifyJSIObject(object);
+    return stringifyObject(object);
   }
 
   throw std::runtime_error("unsupported value type");

@@ -10,6 +10,11 @@ void REAIOSLogger::log(const char *str)
   NSLog(@"%@", [NSString stringWithCString:str encoding:[NSString defaultCStringEncoding]]);
 }
 
+void REAIOSLogger::log(const std::string &str)
+{
+  log(str.c_str());
+}
+
 void REAIOSLogger::log(double d)
 {
   NSLog(@"%lf", d);
@@ -24,11 +29,6 @@ void REAIOSLogger::log(bool b)
 {
   const char *str = (b) ? "true" : "false";
   log(str);
-}
-
-void REAIOSLogger::log(const std::string &str)
-{
-  log(str.c_str());
 }
 
 } // namespace reanimated
