@@ -1,4 +1,4 @@
-name: Check TypeScript with different react-native versions
+name: Check TypeScript with different React Native versions
 on:
   pull_request:
     paths:
