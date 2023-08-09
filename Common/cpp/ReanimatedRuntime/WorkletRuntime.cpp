@@ -4,8 +4,9 @@
 
 namespace reanimated {
 
-WorkletRuntime::WorkletRuntime(const std::string &name) : name_(name) {
-  runtime_ = ReanimatedRuntime::make(name);
+WorkletRuntime::WorkletRuntime(jsi::Runtime &rnRuntime, const std::string &name)
+    : name_(name) {
+  runtime_ = ReanimatedRuntime::make(rnRuntime, name);
 
   WorkletRuntimeCollector::install(*runtime_);
 

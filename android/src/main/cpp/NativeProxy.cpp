@@ -154,7 +154,7 @@ void NativeProxy::installJSIBindings(
                                  size_t count) -> jsi::Value {
     auto name = args[0].asString(rt).utf8(rt);
     auto valueUnpackerCode = args[1].asString(rt).utf8(rt);
-    auto workletRuntime = std::make_shared<WorkletRuntime>(name);
+    auto workletRuntime = std::make_shared<WorkletRuntime>(rt, name);
     workletRuntime->installValueUnpacker(valueUnpackerCode);
     return jsi::Object::createFromHostObject(rt, workletRuntime);
   };

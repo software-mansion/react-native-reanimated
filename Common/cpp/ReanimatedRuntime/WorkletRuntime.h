@@ -1,6 +1,5 @@
 #pragma once
 
-#include <hermes/hermes.h>
 #include <jsi/jsi.h>
 
 #include "Shareables.h"
@@ -21,7 +20,7 @@ class WorkletRuntime : public jsi::HostObject {
   std::string name_;
 
  public:
-  explicit WorkletRuntime(const std::string &name);
+  explicit WorkletRuntime(jsi::Runtime &rnRuntime, const std::string &name);
 
   void installValueUnpacker(const std::string &valueUnpackerCode);
 

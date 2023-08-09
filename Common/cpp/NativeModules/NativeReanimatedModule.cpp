@@ -52,7 +52,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsInvoker)),
       uiScheduler_(uiScheduler),
       uiWorkletRuntime_(
-          std::make_shared<WorkletRuntime>("Reanimated UI runtime")),
+          std::make_shared<WorkletRuntime>(rnRuntime, "Reanimated UI runtime")),
       eventHandlerRegistry(std::make_unique<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
 #ifdef RCT_NEW_ARCH_ENABLED
