@@ -2,16 +2,12 @@ import type {
   ILayoutAnimationBuilder,
   LayoutAnimationsValues,
   LayoutAnimationFunction,
+  StylePropsWithArrayTransform,
 } from '../animationBuilder/commonTypes';
 import { BaseAnimationBuilder } from '../animationBuilder';
 import { withSequence, withTiming } from '../../animation';
 import { FadeIn, FadeOut } from '../defaultAnimations/Fade';
-import type {
-  StyleProps,
-  TransformProperty,
-  AnimationObject,
-} from '../../commonTypes';
-import { ExtractArrayType } from '../../helperTypes';
+import type { TransformProperty, AnimationObject } from '../../commonTypes';
 
 export class EntryExitTransition
   extends BaseAnimationBuilder
@@ -69,9 +65,7 @@ export class EntryExitTransition
       'worklet';
       const enteringValues = enteringAnimation(values);
       const exitingValues = exitingAnimation(values);
-      const animations: StyleProps & {
-        transform: ExtractArrayType<StyleProps['transform']>[];
-      } = {
+      const animations: StylePropsWithArrayTransform = {
         transform: [],
       };
 
@@ -82,7 +76,8 @@ export class EntryExitTransition
         ) {
           exitingValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
-              animations.transform.push({
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              animations.transform!.push({
                 [transformProp]: delayFunction(
                   delay,
                   withSequence(
@@ -130,7 +125,8 @@ export class EntryExitTransition
         ) {
           enteringValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
-              animations.transform.push({
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              animations.transform!.push({
                 [transformProp]: delayFunction(
                   delay + exitingDuration,
                   withSequence(

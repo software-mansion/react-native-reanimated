@@ -775,7 +775,7 @@ function testPartialAnimatedProps() {
     const animatedRef = useAnimatedRef<Animated.View>();
     measure(animatedRef);
     const plainRef = useRef<Animated.View>();
-    // @ts-expect-error should only work for Animated refs?
+    // @ts-expect-error should only work for Animated refs
     measure(plainRef);
   }
 
@@ -785,7 +785,7 @@ function testPartialAnimatedProps() {
     // TODO I don't know how to fix it at the moment
     dispatchCommand(animatedRef, 'command', [1, 2, 3]);
     const plainRef = useRef<Animated.View>();
-    // @ts-expect-error should only work for Animated refs?
+    // @ts-expect-error should only work for Animated refs
     dispatchCommand(plainRef, 'command', [1, 2, 3]);
     // it should work without arguments
     dispatchCommand(animatedRef, 'command');

@@ -12,19 +12,18 @@ import type {
   StyleProp,
   TransformsStyle as RNTransformsStyle,
 } from 'react-native';
+import type { AnimatableValue, SharedValue } from './commonTypes';
+import type { BaseAnimationBuilder } from './layoutReanimation/animationBuilder/BaseAnimationBuilder';
 import type {
-  AnimatableValue,
-  BaseAnimationBuilder,
   EntryExitAnimationFunction,
   LayoutAnimationFunction,
-  SharedValue,
-} from '.';
+} from './layoutReanimation/animationBuilder/commonTypes';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 import type { DependencyList } from './hook/commonTypes';
 
 /**
- * @deprecated
+ * @deprecated This type is no longer relevant.
  */
 export type Adaptable<T> =
   | T
@@ -32,32 +31,32 @@ export type Adaptable<T> =
   | SharedValue<T>;
 
 /**
- * @deprecated
+ * @deprecated This type is no longer relevant.
  */
 export type AdaptTransforms<T> = {
   [P in keyof T]: Adaptable<T[P]>;
 };
 
-type TransformStyle = RNTransformsStyle['transform'];
+type RNTransformType = RNTransformsStyle['transform'];
 
-export type ExtractArrayType<Arr> = Arr extends readonly (infer Element)[]
-  ? Element
+export type ExtractArrayItemType<Arr> = Arr extends readonly (infer Item)[]
+  ? Item
   : never;
 
 /**
- * @deprecated Please use `TransformArrayType` type instead.
+ * @deprecated Please use `TransformArrayItemType` type instead.
  */
-export type TransformStyleTypes = ExtractArrayType<TransformStyle>;
+export type TransformStyleTypes = ExtractArrayItemType<RNTransformType>;
 
-export type TransformArrayType = TransformStyleTypes;
+export type TransformArrayItemType = TransformStyleTypes;
 
 // Note: why is `readonly` here? For safety.
-// In TS ReadonlyArray is a supertype of Array,
-// therefore Array can be assigned to ReadonlyArray but
-// ReadonlyArray cannot be assigned to Array.
+// In TS `ReadonlyArray` is a supertype of `Array`,
+// therefore `Array` can be assigned to `ReadonlyArray` but
+// `ReadonlyArray` cannot be assigned to `Array`.
 export type AnimatedTransform =
-  | readonly (TransformArrayType | SharedValue<TransformArrayType>)[]
-  | TransformStyle;
+  | readonly (TransformArrayItemType | SharedValue<TransformArrayItemType>)[]
+  | RNTransformType;
 
 /**
  * @deprecated Please use `AnimatedStyle` type instead.

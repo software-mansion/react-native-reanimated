@@ -6,9 +6,9 @@ import type {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
   KeyframeProps,
+  StylePropsWithArrayTransform,
 } from './commonTypes';
 import type { TransformProperty, StyleProps } from '../../commonTypes';
-import { ExtractArrayType } from '../../helperTypes';
 interface KeyframePoint {
   duration: number;
   value: number | string;
@@ -73,7 +73,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       Initialize parsedKeyframes for properties provided in initial keyframe
     */
     Object.keys(initialValues).forEach((styleProp: string) => {
-      if (styleProp === 'transform' && Array.isArray(initialValues.transform)) {
+      if (styleProp === 'transform') {
+        if (!Array.isArray(initialValues.transform)) return;
         initialValues.transform.forEach((transformStyle, index) => {
           Object.keys(transformStyle).forEach((transformProp: string) => {
             parsedKeyframes[index.toString() + '_transform:' + transformProp] =
@@ -145,7 +146,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
             easing,
           });
         Object.keys(keyframe).forEach((key: string) => {
-          if (key === 'transform' && Array.isArray(keyframe.transform)) {
+          if (key === 'transform') {
+            if (!Array.isArray(keyframe.transform)) return;
             keyframe.transform.forEach(
               (transformStyle: { [key: string]: any }, index) => {
                 Object.keys(transformStyle).forEach((transformProp: string) => {
@@ -197,11 +199,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
 
     return () => {
       'worklet';
-      const animations: StyleProps & {
-        transform?: ExtractArrayType<StyleProps['transform']>[];
-      } = {
-        transform: [],
-      };
+      const animations: StylePropsWithArrayTransform = {};
 
       /* 
             For each style property, an animations sequence is created that corresponds with its key points.
@@ -233,6 +231,9 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
               )
         );
         if (key.includes('transform')) {
+          if (!('transform' in animations)) {
+            animations.transform = [];
+          }
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           animations.transform!.push(<TransformProperty>{
             [key.split(':')[1]]: animation,
@@ -256,11 +257,6 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
           addAnimation(key);
         }
       });
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      if (animations.transform!.length === 0) {
-        //
-        delete animations.transform;
-      }
       return {
         animations: animations,
         initialValues: initialValues,
