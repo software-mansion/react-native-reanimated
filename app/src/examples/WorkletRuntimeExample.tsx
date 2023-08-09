@@ -105,7 +105,6 @@ function RunOnRuntimeSyncDemo() {
 
 function ThrowErrorDemo() {
   const handlePress = () => {
-    const runtime = createWorkletRuntime('foo');
     function bar() {
       'worklet';
       throw new Error('Hello world!');
@@ -114,7 +113,7 @@ function ThrowErrorDemo() {
       'worklet';
       bar();
     }
-    runOnRuntimeSync(runtime, () => {
+    createWorkletRuntime('foo', () => {
       'worklet';
       foo();
     });
