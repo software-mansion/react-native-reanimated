@@ -149,8 +149,9 @@ export function runOnBackground<A extends any[], R>(
     throw new Error('runOnBackground() can only be used on worklets');
   }
   return (...args) => {
+    const runtime = createWorkletRuntime('Background');
     NativeReanimatedModule.scheduleOnBackground(
-      createWorkletRuntime('Background'),
+      runtime,
       makeShareableCloneRecursive(() => {
         'worklet';
         worklet(...args);

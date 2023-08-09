@@ -25,6 +25,10 @@
 #include "Shareables.h"
 #include "WorkletEventHandler.h"
 
+#ifdef __ANDROID__
+#include <fbjni/fbjni.h>
+#endif
+
 #ifdef DEBUG
 #include "JSLogger.h"
 #endif
@@ -196,7 +200,15 @@ void NativeReanimatedModule::scheduleOnBackground(
   auto workletRuntime = extractWorkletRuntime(rt, runtime);
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
       rt, worklet, "only worklets can be scheduled to run on background");
-  std::thread job([=] { workletRuntime->runGuarded(shareableWorklet); });
+  std::thread job([=] {
+#ifdef __ANDROID__
+    jni::ThreadScope::WithClassLoader([=] { // thread attached to JVM
+#endif
+      workletRuntime->runGuarded(shareableWorklet);
+#ifdef __ANDROID__
+    });
+#endif
+  });
   job.detach();
 }
 

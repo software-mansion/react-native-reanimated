@@ -6,6 +6,7 @@ import Animated, {
   runOnUI,
   runOnJS,
   createWorkletRuntime,
+  runOnRuntimeSync,
 } from 'react-native-reanimated';
 import { Text, View, Button, StyleSheet } from 'react-native';
 import React, { useEffect } from 'react';
