@@ -114,9 +114,6 @@ void NativeProxy::installJSIBindings(
     /**/) {
   WorkletRuntimeCollector::install(*rnRuntime_);
 
-  std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule =
-      nativeReanimatedModule_;
-
 #ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
   std::shared_ptr<UIManager> uiManager =
@@ -147,6 +144,9 @@ void NativeProxy::installJSIBindings(
       rnRuntime,
       jsi::PropNameID::forAscii(rnRuntime, "__reanimatedModuleProxy"),
       jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule_));
+
+  std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule =
+      nativeReanimatedModule_;
 
   auto createWorkletRuntime = [](jsi::Runtime &rt,
                                  const jsi::Value &thisValue,

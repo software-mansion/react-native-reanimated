@@ -271,9 +271,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   if (jsiRuntime) {
     auto nativeReanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
 
-    // TODO: remove this along with scheduleOnJS and makeShareableClone
-    std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule = nativeReanimatedModule;
-
     jsi::Runtime &rnRuntime = *jsiRuntime;
     jsi::Runtime &uiRuntime = nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
 
@@ -284,6 +281,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         rnRuntime,
         jsi::PropNameID::forAscii(rnRuntime, "__reanimatedModuleProxy"),
         jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule));
+
+    // TODO: remove this along with scheduleOnJS and makeShareableClone
+    std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule = nativeReanimatedModule;
 
     auto createWorkletRuntime =
         [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
