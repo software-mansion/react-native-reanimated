@@ -48,8 +48,8 @@ struct SchedulerPublic : public UIManagerDelegate {
 };
 #endif
 
-std::shared_ptr<const ContextContainer> getContextContainerFromUIManager(
-    const UIManager *uiManager);
+const ContextContainer &getContextContainerFromUIManager(
+    const UIManager &uiManager);
 
 } // namespace reanimated
 

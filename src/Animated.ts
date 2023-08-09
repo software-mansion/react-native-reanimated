@@ -15,6 +15,8 @@ import {
   addWhitelistedNativeProps as _addWhitelistedNativeProps,
   addWhitelistedUIProps as _addWhitelistedUIProps,
 } from './ConfigHelper';
+import type { AnimatedScrollViewProps as _AnimatedScrollViewProps } from './reanimated2/component/ScrollView';
+import type { FlatListPropsWithLayout as _FlatListPropsWithLayout } from './reanimated2/component/FlatList';
 export { default as createAnimatedComponent } from './createAnimatedComponent';
 
 export { AnimatedText as Text } from './reanimated2/component/Text';
@@ -75,3 +77,11 @@ export const addWhitelistedNativeProps = _addWhitelistedNativeProps;
  * @deprecated Please import `addWhitelistedUIProps` directly from `react-native-reanimated` instead of `Animated` namespace.
  * */
 export const addWhitelistedUIProps = _addWhitelistedUIProps;
+/**
+ * @deprecated Please import `AnimatedScrollViewProps` directly from `react-native-reanimated` instead of `Animated` namespace.
+ * */
+export type AnimatedScrollViewProps = _AnimatedScrollViewProps;
+/**
+ * @deprecated Please import `FlatListPropsWithLayout` directly from `react-native-reanimated` instead of `Animated` namespace.
+ * */
+export type FlatListPropsWithLayout<T> = _FlatListPropsWithLayout<T>;

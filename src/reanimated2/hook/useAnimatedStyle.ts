@@ -399,7 +399,7 @@ function checkSharedValueUsage(
   }
 }
 
-// What is this type???
+// This type is kept for backward compatibility.
 export type AnimatedStyleProp<T> =
   | AnimatedStyle<T>
   | RegisteredStyle<AnimatedStyle<T>>;

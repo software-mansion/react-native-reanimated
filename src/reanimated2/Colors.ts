@@ -6,6 +6,7 @@
  */
 
 /* eslint no-bitwise: 0 */
+import { StyleProps } from './commonTypes';
 import { makeShareable } from './core';
 import { isAndroid, isWeb } from './PlatformChecker';
 
@@ -273,6 +274,27 @@ const names: any = makeShareable({
   yellow: 0xffff00ff,
   yellowgreen: 0x9acd32ff,
 });
+
+// copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
+export const ColorProperties = makeShareable([
+  'backgroundColor',
+  'borderBottomColor',
+  'borderColor',
+  'borderLeftColor',
+  'borderRightColor',
+  'borderTopColor',
+  'borderStartColor',
+  'borderEndColor',
+  'borderBlockColor',
+  'borderBlockEndColor',
+  'borderBlockStartColor',
+  'color',
+  'shadowColor',
+  'textDecorationColor',
+  'tintColor',
+  'textShadowColor',
+  'overlayColor',
+]);
 
 function normalizeColor(color: unknown): number | null {
   'worklet';
@@ -593,6 +615,15 @@ export function processColor(color: unknown): number | null | undefined {
   }
 
   return normalizedColor;
+}
+
+export function processColorsInProps(props: StyleProps) {
+  'worklet';
+  for (const key in props) {
+    if (ColorProperties.includes(key)) {
+      props[key] = processColor(props[key]);
+    }
+  }
 }
 
 export type ParsedColorArray = [number, number, number, number];

@@ -53,7 +53,6 @@ NativeProxy::NativeProxy(
   uiManager_ = binding->getScheduler()->getUIManager();
   commitHook_ =
       std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
-  uiManager_->registerCommitHook(*commitHook_);
 #endif
 }
 
@@ -65,9 +64,6 @@ NativeProxy::~NativeProxy() {
   // has already been destroyed when AnimatedSensorModule's
   // destructor is ran
   nativeReanimatedModule_->cleanupSensors();
-#ifdef RCT_NEW_ARCH_ENABLED
-  uiManager_->unregisterCommitHook(*commitHook_);
-#endif // RCT_NEW_ARCH_ENABLED
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
@@ -408,10 +404,10 @@ void NativeProxy::handleEvent(
 }
 
 void NativeProxy::progressLayoutAnimation(
+    jsi::Runtime &rt,
     int tag,
     const jsi::Object &newProps,
     bool isSharedTransition) {
-  auto &rt = *nativeReanimatedModule_->runtimeManager_->runtime;
   auto newPropsJNI = JNIHelper::ConvertToPropsMap(rt, newProps);
   layoutAnimations_->cthis()->progressLayoutAnimation(
       tag, newPropsJNI, isSharedTransition);
@@ -492,69 +488,58 @@ void NativeProxy::setupLayoutAnimations() {
   layoutAnimations_->cthis()->setAnimationStartingBlock(
       [weakNativeReanimatedModule](
           int tag, int type, alias_ref<JMap<jstring, jstring>> values) {
-        auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
-        if (nativeReanimatedModule == nullptr) {
-          return;
-        }
-        auto &rt = *nativeReanimatedModule->runtimeManager_->runtime;
-
-        jsi::Object yogaValues(rt);
-        for (const auto &entry : *values) {
-          try {
-            std::string keyString = entry.first->toStdString();
-            std::string valueString = entry.second->toStdString();
-            auto key = jsi::String::createFromAscii(rt, keyString);
-            if (keyString == "currentTransformMatrix" ||
-                keyString == "targetTransformMatrix") {
-              jsi::Array matrix =
-                  jsi_utils::convertStringToArray(rt, valueString, 9);
-              yogaValues.setProperty(rt, key, matrix);
-            } else {
-              auto value = stod(valueString);
-              yogaValues.setProperty(rt, key, value);
+        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+          jsi::Runtime &rt = *nativeReanimatedModule->runtimeManager_->runtime;
+          jsi::Object yogaValues(rt);
+          for (const auto &entry : *values) {
+            try {
+              std::string keyString = entry.first->toStdString();
+              std::string valueString = entry.second->toStdString();
+              auto key = jsi::String::createFromAscii(rt, keyString);
+              if (keyString == "currentTransformMatrix" ||
+                  keyString == "targetTransformMatrix") {
+                jsi::Array matrix =
+                    jsi_utils::convertStringToArray(rt, valueString, 9);
+                yogaValues.setProperty(rt, key, matrix);
+              } else {
+                auto value = stod(valueString);
+                yogaValues.setProperty(rt, key, value);
+              }
+            } catch (std::invalid_argument e) {
+              throw std::runtime_error("Failed to convert value to number");
             }
-          } catch (std::invalid_argument e) {
-            throw std::runtime_error("Failed to convert value to number");
           }
+          nativeReanimatedModule->layoutAnimationsManager()
+              .startLayoutAnimation(
+                  rt, tag, static_cast<LayoutAnimationType>(type), yogaValues);
         }
-
-        nativeReanimatedModule->layoutAnimationsManager().startLayoutAnimation(
-            rt, tag, static_cast<LayoutAnimationType>(type), yogaValues);
       });
 
-  layoutAnimations_->cthis()->setHasAnimationBlock([weakNativeReanimatedModule](
-                                                       int tag, int type) {
-    auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
-    if (nativeReanimatedModule == nullptr) {
-      return false;
-    }
-
-    return nativeReanimatedModule->layoutAnimationsManager().hasLayoutAnimation(
-        tag, static_cast<LayoutAnimationType>(type));
-  });
+  layoutAnimations_->cthis()->setHasAnimationBlock(
+      [weakNativeReanimatedModule](int tag, int type) {
+        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+          return nativeReanimatedModule->layoutAnimationsManager()
+              .hasLayoutAnimation(tag, static_cast<LayoutAnimationType>(type));
+        }
+        return false;
+      });
 
 #ifdef DEBUG
   layoutAnimations_->cthis()->setCheckDuplicateSharedTag(
       [weakNativeReanimatedModule](int viewTag, int screenTag) {
-        auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
-        if (nativeReanimatedModule == nullptr) {
-          return;
+        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+          nativeReanimatedModule->layoutAnimationsManager()
+              .checkDuplicateSharedTag(viewTag, screenTag);
         }
-
-        nativeReanimatedModule->layoutAnimationsManager()
-            .checkDuplicateSharedTag(viewTag, screenTag);
       });
 #endif
 
   layoutAnimations_->cthis()->setClearAnimationConfigBlock(
       [weakNativeReanimatedModule](int tag) {
-        auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
-        if (nativeReanimatedModule == nullptr) {
-          return;
+        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+          nativeReanimatedModule->layoutAnimationsManager()
+              .clearLayoutAnimationConfig(tag);
         }
-
-        nativeReanimatedModule->layoutAnimationsManager()
-            .clearLayoutAnimationConfig(tag);
       });
 
   layoutAnimations_->cthis()->setCancelAnimationForTag(

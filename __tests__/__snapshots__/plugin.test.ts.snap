@@ -1,5 +1,50 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`babel plugin doesn't capture arguments 1`] = `
+"var _worklet_17093819837059_init_data = {
+  code: "function f(a,b,c){console.log(arguments);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var f = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f(a, b, c) {
+    console.log(arguments);
+  };
+  _f.__closure = {};
+  _f.__initData = _worklet_17093819837059_init_data;
+  _f.__workletHash = 17093819837059;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin doesn't capture objects' properties 1`] = `
+"var foo = {
+  bar: 42
+};
+var _worklet_3750134465664_init_data = {
+  code: "function f(){const{foo}=this.__closure;console.log(foo.bar);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var f = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _f = function _f() {
+    console.log(foo.bar);
+  };
+  _f.__closure = {
+    foo: foo
+  };
+  _f.__initData = _worklet_3750134465664_init_data;
+  _f.__workletHash = 3750134465664;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
 exports[`babel plugin for DirectiveLiterals doesn't bother other Directive Literals 1`] = `
 "function foo() {
   'foobar';
