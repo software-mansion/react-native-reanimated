@@ -19,7 +19,7 @@ comes to gesture based interactions.
 
 ## Installation
 
-Check out the [installation](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation) section of our docs for the detailed installation instructions.
+Check out the [installation](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#installation) section of our docs for the detailed installation instructions.
 
 ## Fabric
 
@@ -27,7 +27,7 @@ To learn how to use `react-native-reanimated` with Fabric architecture, head ove
 
 ## Documentation
 
-Check out our dedicated documentation page for info about this library, API reference and more: [https://docs.swmansion.com/react-native-reanimated/docs/](https://docs.swmansion.com/react-native-reanimated/docs/)
+Check out our dedicated documentation page for info about this library, API reference and more: [https://docs.swmansion.com/react-native-reanimated/](https://docs.swmansion.com/react-native-reanimated/)
 
 ## Examples
 
