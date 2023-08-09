@@ -4,7 +4,7 @@
 
 ## What's in the docs
 
-The docs come with a [Fundamentals](https://reanimated-beta-docs.swmansion.com/docs/fundamentals/getting-started) section which step-by-step introduction into the world of Reanimated.
+The docs come with a [Fundamentals](https://reanimated-beta-docs.swmansion.com/docs/fundamentals/getting-started) section which is a step-by-step introduction into the world of Reanimated.
 
 All sections are sprinkled with interactive examples, playground and code snippets designed to be easily copyable to be run in your projects.
 
