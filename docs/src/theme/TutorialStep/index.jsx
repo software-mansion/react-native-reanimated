@@ -10,12 +10,16 @@ const TutorialStep = ({ children, title }) => {
   const handleScroll = () => {
     const height = window.innerHeight;
     const position = window.pageYOffset;
-    const minScroll = componentRef.current.offsetTop - height/3;
-    const maxScroll = componentRef.current.offsetTop + componentRef.current.scrollHeight + MARGIN_BOTTOM - height/3;
+    const minScroll = componentRef.current.offsetTop - height / 3;
+    const maxScroll =
+      componentRef.current.offsetTop +
+      componentRef.current.scrollHeight +
+      MARGIN_BOTTOM -
+      height / 3;
     if (position > minScroll && position < maxScroll) {
-        setIsActive(true);
+      setIsActive(true);
     } else {
-        setIsActive(false);
+      setIsActive(false);
     }
   };
 
@@ -28,14 +32,21 @@ const TutorialStep = ({ children, title }) => {
   }, []);
 
   return (
-    <div className={clsx(styles.container)} ref={componentRef} >
+    <div className={clsx(styles.container)} ref={componentRef}>
       <div className={clsx(styles.description)}>
-        <div className={clsx(styles.roundedStep)} style={isActive ? {'borderColor': '#001a72'} : {}}>
+        <div
+          className={clsx(styles.roundedStep)}
+          style={isActive ? { borderColor: '#001a72' } : {}}>
           <div className={clsx(styles.stepTitle)}>{title}</div>
           {children[0]}
         </div>
       </div>
-      <div className={clsx(isActive ? styles.code : [styles.code, styles.codeInactive])}>{children[1]}</div>
+      <div
+        className={clsx(
+          isActive ? styles.code : [styles.code, styles.codeInactive]
+        )}>
+        {children[1]}
+      </div>
     </div>
   );
 };

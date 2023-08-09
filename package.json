@@ -20,6 +20,7 @@
     "format:ios": "find ios/ -iname *.h -o -iname *.m -o -iname *.mm -o -iname *.cpp | xargs clang-format -i --Werror",
     "format:android": "find android/src/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
     "format:common": "find Common/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
+    "format:docs": "cd docs && yarn format && cd ..",
     "find-unused-code:js": "yarn ts-prune --ignore \"index|.web.\" --error  ",
     "type:check": "yarn tsc --noEmit && cd plugin && yarn type:check && cd ..",
     "type:check-api": "yarn tsc --noEmit --target es6 --module ESNext --jsx react-native --skipLibCheck true --allowSyntheticDefaultImports true --moduleResolution node --esModuleInterop true --strict true --forceConsistentCasingInFileNames true --resolveJsonModule true app/src/App.tsx",
