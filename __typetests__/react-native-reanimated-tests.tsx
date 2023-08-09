@@ -40,13 +40,11 @@ import Animated, {
   createAnimatedPropAdapter,
   useAnimatedProps,
   useAnimatedRef,
-} from '..';
-import {
   dispatchCommand,
   measure,
   scrollTo,
   setGestureState,
-} from '../src/reanimated2/NativeMethods';
+} from '..';
 
 class Path extends React.Component<{ fill?: string }> {
   render() {

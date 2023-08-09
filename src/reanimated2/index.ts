@@ -23,6 +23,7 @@ export type {
   AnimatedProps,
   AnimatedTransform,
   TransformStyleTypes,
+  TransformArrayType,
   AnimateStyle,
   AnimatedStyle,
   StylesOrDefault,
