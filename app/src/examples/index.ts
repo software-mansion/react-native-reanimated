@@ -46,6 +46,7 @@ import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
 import LettersExample from './LettersExample';
 import LightBoxExample from './LightBoxExample';
 import LiquidSwipe from './LiquidSwipe/LiquidSwipe';
+import LogExample from './LogExample';
 import ManyScreensExample from './SharedElementTransitions/ManyScreens';
 import ManyTagsExample from './SharedElementTransitions/ManyTags';
 import MatrixTransform from './MatrixTransform';
@@ -358,6 +359,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⏸️',
     title: 'Reduced Motion',
     screen: ReducedMotionExample,
+  },
+  LogExample: {
+    icon: '⌨',
+    title: 'Log test',
+    screen: LogExample,
   },
 
   // Old examples
