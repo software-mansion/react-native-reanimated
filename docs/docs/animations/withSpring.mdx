@@ -51,7 +51,7 @@ function withSpring<T extends AnimatableValue>(
 
 #### `toValue`
 
-The value on which the animation will come at rest.
+The value at which the animation will come to rest.
 
 #### `config` <Optional />
 
@@ -83,7 +83,7 @@ When used together `duration` and `dampingRatio` overrides `mass` and `damping` 
 
 #### `callback` <Optional />
 
-A function called on animation complete. In case the animation is cancelled, the callback will receive `false` as the argument, otherwise it will receive `true`.
+A function called upon animation completion. If the animation is cancelled, the callback will receive `false` as the argument; otherwise, it will receive `true`.
 
 ### Returns
 
