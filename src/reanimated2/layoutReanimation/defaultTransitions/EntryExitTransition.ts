@@ -79,7 +79,7 @@ export class EntryExitTransition
           prop === 'transform' &&
           Array.isArray(exitingValues.animations.transform)
         ) {
-          exitingValues.animations.transform?.forEach((value, index) => {
+          exitingValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
               animations.transform?.push({
                 [transformProp]: delayFunction(
