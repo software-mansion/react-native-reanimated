@@ -629,26 +629,22 @@ void NativeReanimatedModule::performOperations() {
           auto rootNode =
               oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
-          ShadowTreeCloner shadowTreeCloner{uiManager_, surfaceId_};
+          ShadowTreeCloner shadowTreeCloner{*uiManager_, surfaceId_};
 
-          {
-            auto lock = propsRegistry_->createLock();
+          for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+            const ShadowNodeFamily &family = shadowNode->getFamily();
+            react_native_assert(family.getSurfaceId() == surfaceId_);
 
-            for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-              const ShadowNodeFamily &family = shadowNode->getFamily();
-              react_native_assert(family.getSurfaceId() == surfaceId_);
+            auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+                rootNode, family, RawProps(rt, *props));
 
-              auto newRootNode = shadowTreeCloner.cloneWithNewProps(
-                  rootNode, family, RawProps(rt, *props));
-
-              if (newRootNode == nullptr) {
-                // this happens when React removed the component but Reanimated
-                // still tries to animate it, let's skip update for this
-                // specific component
-                continue;
-              }
-              rootNode = newRootNode;
+            if (newRootNode == nullptr) {
+              // this happens when React removed the component but Reanimated
+              // still tries to animate it, let's skip update for this
+              // specific component
+              continue;
             }
+            rootNode = newRootNode;
           }
 
           auto newRoot = std::static_pointer_cast<RootShadowNode>(rootNode);

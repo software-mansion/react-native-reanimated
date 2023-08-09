@@ -10,8 +10,7 @@ import type {
 import type { AnimatedStyle } from '../helperTypes';
 import type { StyleLayoutAnimation } from './commonTypes';
 import { withTiming } from './timing';
-import { ColorProperties } from '../UpdateProps';
-import { processColor } from '../Colors';
+import { ColorProperties, processColor } from '../Colors';
 
 // resolves path to value for nested objects
 // if path cannot be resolved returns undefined
