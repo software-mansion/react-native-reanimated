@@ -2,15 +2,15 @@
 #import <React/RCTEventDispatcher.h>
 #import <React/RCTScrollView.h>
 
-#import <React/RCTUIKit.h>
+#import <RNReanimated/REAUIKit.h>
 
 namespace reanimated {
 
 std::vector<std::pair<std::string, double>> measure(int viewTag, RCTUIManager *uiManager)
 {
-  RCTUIView *view = [uiManager viewForReactTag:@(viewTag)];
+  RNAUIView *view = [uiManager viewForReactTag:@(viewTag)];
 
-  RCTUIView *rootView = view;
+  RNAUIView *rootView = view;
 
   if (view == nil) {
     return std::vector<std::pair<std::string, double>>(1, std::make_pair("x", -1234567.0));
@@ -39,7 +39,7 @@ std::vector<std::pair<std::string, double>> measure(int viewTag, RCTUIManager *u
 
 void scrollTo(int scrollViewTag, RCTUIManager *uiManager, double x, double y, bool animated)
 {
-  RCTUIView *view = [uiManager viewForReactTag:@(scrollViewTag)];
+  RNAUIView *view = [uiManager viewForReactTag:@(scrollViewTag)];
   RCTScrollView *scrollView = (RCTScrollView *)view;
   [scrollView scrollToOffset:(CGPoint){(CGFloat)x, (CGFloat)y} animated:animated];
 }
