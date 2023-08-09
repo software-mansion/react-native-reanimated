@@ -4,7 +4,7 @@ namespace reanimated {
 
 void WorkletEventHandler::process(
     jsi::Runtime &uiRuntime,
-    double eventTimestamp,
+    const double eventTimestamp,
     const jsi::Value &eventValue) const {
   runOnRuntimeGuarded(
       uiRuntime, handlerFunction_, jsi::Value(eventTimestamp), eventValue);
