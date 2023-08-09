@@ -253,6 +253,7 @@ type RemoteFunction<T> = {
 
 function isRemoteFunction<T>(value: object): value is RemoteFunction<T> {
   return '__remoteFunction' in value;
+}
 
 export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
   'worklet';
@@ -262,8 +263,10 @@ export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
     return value;
   }
   function cloneRecursive<T>(value: T): ShareableRef<T> {
-    const type = typeof value;
-    if ((type === 'object' && value !== null) || type === 'function') {
+    if (
+      (typeof value === 'object' && value !== null) ||
+      typeof value === 'function'
+    ) {
       if (isRemoteFunction<T>(value)) {
         return value.__remoteFunction;
       }
@@ -271,13 +274,15 @@ export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
         return value as unknown as ShareableRef<T>;
       }
       if (Array.isArray(value)) {
-        return _makeShareableClone(value.map(cloneRecursive));
+        return _makeShareableClone(
+          value.map(cloneRecursive)
+        ) as ShareableRef<T>;
       }
       const toAdapt: Record<string, ShareableRef<T>> = {};
       for (const [key, element] of Object.entries(value)) {
         toAdapt[key] = cloneRecursive(element);
       }
-      return _makeShareableClone(toAdapt);
+      return _makeShareableClone(toAdapt) as ShareableRef<T>;
     }
     return _makeShareableClone(value);
   }
