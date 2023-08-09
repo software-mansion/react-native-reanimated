@@ -45,14 +45,18 @@ export type ExtractArrayType<Arr> = Arr extends readonly (infer Element)[]
   : never;
 
 /**
- * @deprecated Please use `TransformArrayElementsType` type instead.
+ * @deprecated Please use `TransformArrayType` type instead.
  */
 export type TransformStyleTypes = ExtractArrayType<TransformStyle>;
 
 export type TransformArrayType = TransformStyleTypes;
 
+// Note: why is `readonly` here? For safety.
+// In TS ReadonlyArray is a supertype of Array,
+// therefore Array can be assigned to ReadonlyArray but
+// ReadonlyArray cannot be assigned to Array.
 export type AnimatedTransform =
-  | (TransformArrayType | SharedValue<TransformArrayType>)[]
+  | readonly (TransformArrayType | SharedValue<TransformArrayType>)[]
   | TransformStyle;
 
 /**
