@@ -1,6 +1,6 @@
 #if !TARGET_OS_OSX
 
-#import <UIKit/UIKit.h>
+#import <QuartzCore/CADisplayLink.h>
 
 #define RNADisplayLink CADisplayLink
 
