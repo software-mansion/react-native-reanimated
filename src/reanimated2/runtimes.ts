@@ -1,9 +1,9 @@
 import type { ComplexWorkletFunction } from './commonTypes';
 import {
+  getValueUnpackerCode,
   setupCallGuard,
   setupConsole,
   setupCoreFunctions,
-  valueUnpacker,
 } from './initializers';
 import { makeShareableCloneRecursive } from './shareables';
 
@@ -16,9 +16,7 @@ export function createWorkletRuntime(
   name: string,
   initializer?: ComplexWorkletFunction<[], void>
 ) {
-  // @ts-ignore valueUnpacker is a worklet
-  const valueUnpackerCode = valueUnpacker.__initData.code;
-  const runtime = global._createWorkletRuntime(name, valueUnpackerCode);
+  const runtime = global._createWorkletRuntime(name, getValueUnpackerCode());
 
   runOnRuntimeSync(runtime, () => {
     'worklet';

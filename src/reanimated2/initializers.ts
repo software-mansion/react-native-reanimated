@@ -96,10 +96,21 @@ Possible solutions are:
   }
 }
 
-// @ts-ignore TODO TYPESCRIPT
-// if (__DEV__ && Object.keys(valueUnpacker._closure).length !== 0) {
-//   throw new Error('[Reanimated] `valueUnpacker` must have empty closure');
-// }
+if (__DEV__ && IS_NATIVE) {
+  if (!('__workletHash' in valueUnpacker)) {
+    throw new Error('[Reanimated] `valueUnpacker` is not a worklet');
+  }
+  // @ts-ignore TODO TYPESCRIPTa
+  const closure = valueUnpacker.__closure;
+  if (closure !== undefined && Object.keys(closure).length !== 0) {
+    throw new Error('[Reanimated] `vlueUnpacker` must have empty closure');
+  }
+}
+
+export function getValueUnpackerCode() {
+  // @ts-ignore TODO TYPESCRIPT
+  return valueUnpacker.__initData.code as string;
+}
 
 export function setupCallGuard() {
   'worklet';
@@ -189,9 +200,7 @@ function setupRequestAnimationFrame() {
 }
 
 export function initializeUIRuntime() {
-  // @ts-ignore valueUnpacker is a worklet
-  const valueUnpackerCode = valueUnpacker.__initData.code;
-  NativeReanimatedModule.installValueUnpacker(valueUnpackerCode);
+  NativeReanimatedModule.installValueUnpacker(getValueUnpackerCode());
 
   if (IS_JEST) {
     // requestAnimationFrame react-native jest's setup is incorrect as it polyfills
