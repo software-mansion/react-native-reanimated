@@ -1,7 +1,7 @@
 ---
 id: debugging
-title: "Debugging worklets"
-sidebar_label: "Debugging worklets"
+title: 'Debugging worklets'
+sidebar_label: 'Debugging worklets'
 ---
 
 import {
@@ -11,7 +11,7 @@ import {
   FlipperTable,
   SafariDevToolsTable,
   ReactDeveloperToolsTable,
-} from "./debugging_tables/tables";
+} from './debugging_tables/tables';
 
 Due to Reanimated's unique architecture and usage of a second JS runtime, debugging
 can be problematic, and some common solutions might not work as expected.
@@ -95,8 +95,8 @@ means that this piece of code:
 
 ```js
 function runWorklet() {
-  "worklet";
-  console.log("worklet:", _WORKLET);
+  'worklet';
+  console.log('worklet:', _WORKLET);
 }
 runOnUI(runWorklet)();
 ```

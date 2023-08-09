@@ -1,5 +1,5 @@
-import React from "react";
-import styles from "./styles.module.css";
+import React from 'react';
+import styles from './styles.module.css';
 
 /*
   Testing setup:
@@ -106,7 +106,7 @@ export function SummaryTable() {
         </tbody>
       </table>
       ¹ - Works, but uses web implementations of functions and runs worklets on
-      the JS thread. This means that{" "}
+      the JS thread. This means that{' '}
       <a href="../../api/nativeMethods/measure">measure</a> and Layout
       Animations will not be available.
       <br />² - Experimental feature (see description).

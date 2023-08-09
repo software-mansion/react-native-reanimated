@@ -1,8 +1,8 @@
-import React from "react";
-import styles from "./styles.module.css";
+import React from 'react';
+import styles from './styles.module.css';
 
-import NavbarSearch from "@theme/Navbar/Search";
-import SearchBar from "@theme/SearchBar";
+import NavbarSearch from '@theme/Navbar/Search';
+import SearchBar from '@theme/SearchBar';
 
 const AlgoliaSearchBar = () => {
   return (

@@ -1,9 +1,9 @@
-import React from "react";
-import styles from "./styles.module.css";
-import Arrow from "@site/static/img/Arrow.svg";
-import ArrowDark from "@site/static/img/Arrow-dark.svg";
-import { useColorMode } from "@docusaurus/theme-common";
-import clsx from "clsx";
+import React from 'react';
+import styles from './styles.module.css';
+import Arrow from '@site/static/img/Arrow.svg';
+import ArrowDark from '@site/static/img/Arrow-dark.svg';
+import { useColorMode } from '@docusaurus/theme-common';
+import clsx from 'clsx';
 
 const CollapseButton: React.FC<{
   label: string;
@@ -18,9 +18,8 @@ const CollapseButton: React.FC<{
     <div
       className={clsx(styles.collapseButton, className)}
       data-collapsed={collapsed}
-      onClick={() => onCollapse()}
-    >
-      {colorMode === "light" ? (
+      onClick={() => onCollapse()}>
+      {colorMode === 'light' ? (
         <Arrow className={styles.arrow} />
       ) : (
         <ArrowDark className={styles.arrow} />

@@ -1,7 +1,7 @@
 ---
 id: testing
-title: "Testing with Jest"
-sidebar_label: "Testing with Jest"
+title: 'Testing with Jest'
+sidebar_label: 'Testing with Jest'
 ---
 
 Reanimated test mocks use web implementation of Reanimated2. Before you begin using Reanimated mocks you need some setup actions.
@@ -11,7 +11,7 @@ Reanimated test mocks use web implementation of Reanimated2. Before you begin us
 Add the following line to your `jest-setup.js` file:
 
 ```js
-require("react-native-reanimated").setUpTests();
+require('react-native-reanimated').setUpTests();
 ```
 
 `setUpTests()` can take optional config argument. Default config is `{ fps: 60 }`, setting framerate to 60fps.
@@ -84,13 +84,13 @@ Inside of `withReanimatedTimer` you can use `advanceAnimationByTime(timeInMs)` o
 Timer:
 
 ```js
-test("stop in a middle of animation", () => {
+test('stop in a middle of animation', () => {
   withReanimatedTimer(() => {
     const style = { width: 0 };
 
     const { getByTestId } = render(<AnimatedComponent />);
-    const view = getByTestId("view");
-    const button = getByTestId("button");
+    const view = getByTestId('view');
+    const button = getByTestId('button');
 
     expect(view.props.style.width).toBe(0);
     expect(view).toHaveAnimatedStyle(style);

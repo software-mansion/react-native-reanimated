@@ -1,10 +1,10 @@
-import React from "react";
-import { StyleSheet, View } from "react-native";
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useFrameCallback,
   useSharedValue,
   useAnimatedStyle,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 export default function App() {
   const t = useSharedValue(0);
@@ -35,15 +35,15 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     height: 150,
   },
   dot: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#b58df1",
-    position: "absolute",
+    backgroundColor: '#b58df1',
+    position: 'absolute',
   },
 });

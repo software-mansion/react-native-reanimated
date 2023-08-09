@@ -54,8 +54,8 @@ We calculate `width`'s value in the `useDerivedValue` worklet as a product of `p
 As a result `width`'s value will always stay in sync with changes made to `progress` shared value and will be equal to the `progress`s value times 250.
 
 ```js {6}
-import { Button } from "react-native";
-import { useSharedValue, useDerivedValue } from "react-native-reanimated";
+import { Button } from 'react-native';
+import { useSharedValue, useDerivedValue } from 'react-native-reanimated';
 
 function App() {
   const progress = useSharedValue(0);

@@ -2,17 +2,17 @@ import {
   useCollapsible,
   useColorMode,
   Collapsible,
-} from "@docusaurus/theme-common";
+} from '@docusaurus/theme-common';
 
-import clsx from "clsx";
-import React from "react";
-import { useRef, useState } from "react";
+import clsx from 'clsx';
+import React from 'react';
+import { useRef, useState } from 'react';
 
-import styles from "./styles.module.css";
-import useIsBrowser from "@docusaurus/useIsBrowser";
+import styles from './styles.module.css';
+import useIsBrowser from '@docusaurus/useIsBrowser';
 
-import Arrow from "@site/static/img/Arrow.svg";
-import ArrowDark from "@site/static/img/Arrow-dark.svg";
+import Arrow from '@site/static/img/Arrow.svg';
+import ArrowDark from '@site/static/img/Arrow-dark.svg';
 
 const DetailsStyling = ({ summary, children, ...props }): JSX.Element => {
   const isBrowser = useIsBrowser();
@@ -63,10 +63,9 @@ const DetailsStyling = ({ summary, children, ...props }): JSX.Element => {
           // Don't do this, it breaks close animation!
           // setOpen(false);
         }
-      }}
-    >
+      }}>
       <summary>
-        {colorMode === "light" ? (
+        {colorMode === 'light' ? (
           <Arrow className={styles.arrow} />
         ) : (
           <ArrowDark className={styles.arrow} />
@@ -82,8 +81,7 @@ const DetailsStyling = ({ summary, children, ...props }): JSX.Element => {
         onCollapseTransitionEnd={(newCollapsed) => {
           setCollapsed(newCollapsed);
           setOpen(!newCollapsed);
-        }}
-      >
+        }}>
         <div className={styles.collapsibleContent}>{children}</div>
       </Collapsible>
     </details>
@@ -94,7 +92,7 @@ function isInSummary(node: HTMLElement | null): boolean {
   if (!node) {
     return false;
   }
-  return node.tagName === "SUMMARY" || isInSummary(node.parentElement);
+  return node.tagName === 'SUMMARY' || isInSummary(node.parentElement);
 }
 
 function hasParent(node: HTMLElement | null, parent: HTMLElement): boolean {

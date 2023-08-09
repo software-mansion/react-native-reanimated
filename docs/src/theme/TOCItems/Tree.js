@@ -1,6 +1,6 @@
-import React from "react";
-import styles from "./styles.module.css";
-import clsx from "clsx";
+import React from 'react';
+import styles from './styles.module.css';
+import clsx from 'clsx';
 // Recursive component rendering the toc tree
 function TOCItemTree({ toc, className, linkClassName, isChild }) {
   if (!toc.length) {

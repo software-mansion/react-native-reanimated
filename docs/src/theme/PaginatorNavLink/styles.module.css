@@ -9,7 +9,7 @@
 }
 
 /* Main class for sublabel, used by Docusaurus. */
-[class*="pagination-nav__sublabel"] {
+[class*='pagination-nav__sublabel'] {
   margin-bottom: 0;
   color: var(--swm-paginator-sublabel);
 
@@ -47,7 +47,7 @@
 }
 
 /* Main class for label, used by Docusaurus. */
-[class*="pagination-nav__label"] {
+[class*='pagination-nav__label'] {
   color: var(--swm-paginator-label);
   transition: color 0.25s;
 
@@ -55,12 +55,12 @@
   font-weight: var(--swm-paginator-label-font-weight);
 }
 
-.pagination:hover [class*="pagination-nav__label"] {
+.pagination:hover [class*='pagination-nav__label'] {
   color: var(--swm-paginator-label-hover);
 }
 
 /* Remove arrows from labels that are being added by default by Docusaurus. */
-[class*="pagination-nav__label"]:before,
-[class*="pagination-nav__label"]:after {
+[class*='pagination-nav__label']:before,
+[class*='pagination-nav__label']:after {
   content: none !important;
 }

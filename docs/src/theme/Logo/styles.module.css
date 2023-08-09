@@ -21,13 +21,13 @@
 }
 
 /* Hide logo on mobile sidebar */
-[class*="navbar-sidebar"] [class*="navbar__logo"] {
+[class*='navbar-sidebar'] [class*='navbar__logo'] {
   display: none;
 }
 
 /* Logo shown on the sidebar after scrolling down the page. */
 @media (min-width: 996px) {
-  [class*="sidebar"] [class*="navbar__logo"] {
+  [class*='sidebar'] [class*='navbar__logo'] {
     width: 100%;
     display: flex;
     justify-content: center;

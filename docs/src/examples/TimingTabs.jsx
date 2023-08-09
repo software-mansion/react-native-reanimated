@@ -1,13 +1,13 @@
-import React from "react";
-import { StyleSheet, View, Text, Pressable } from "react-native";
+import React from 'react';
+import { StyleSheet, View, Text, Pressable } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 const TAB_WIDTH = 150;
-const TABS = ["Home", "Search", "Profile"];
+const TABS = ['Home', 'Search', 'Profile'];
 
 export default function App() {
   const offset = useSharedValue(-TAB_WIDTH);
@@ -19,11 +19,11 @@ export default function App() {
   const handlePress = (tab) => {
     const newOffset = (() => {
       switch (tab) {
-        case "Home":
+        case 'Home':
           return -TAB_WIDTH;
-        case "Search":
+        case 'Search':
           return 0;
-        case "Profile":
+        case 'Profile':
           return TAB_WIDTH;
         default:
           return -TAB_WIDTH;
@@ -42,8 +42,7 @@ export default function App() {
             style={
               i !== TABS.length - 1 ? [styles.tab, styles.divider] : styles.tab
             }
-            onPress={() => handlePress(tab)}
-          >
+            onPress={() => handlePress(tab)}>
             <Text style={styles.tabLabel}>{tab}</Text>
           </Pressable>
         ))}
@@ -56,12 +55,12 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
   },
   tabs: {
-    flexDirection: "row",
+    flexDirection: 'row',
   },
   tab: {
     paddingHorizontal: 20,
@@ -70,17 +69,17 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 20,
-    textAlign: "center",
-    fontWeight: "bold",
+    textAlign: 'center',
+    fontWeight: 'bold',
   },
   divider: {
     borderRightWidth: 1,
-    borderRightColor: "#ddd",
+    borderRightColor: '#ddd',
   },
   animatedBorder: {
     height: 8,
     width: 64,
-    backgroundColor: "tomato",
+    backgroundColor: 'tomato',
     borderRadius: 20,
   },
 });

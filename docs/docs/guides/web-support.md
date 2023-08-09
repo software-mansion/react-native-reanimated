@@ -54,15 +54,15 @@ If you want to use Reanimated in a `webpack` app you should adjust your `webpack
 Example webpack config file with Reanimated support:
 
 ```js {6,14,15,34}
-const HtmlWebpackPlugin = require("html-webpack-plugin");
-const webpack = require("webpack");
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack');
 
 module.exports = {
-  entry: ["babel-polyfill", "./index.js"],
+  entry: ['babel-polyfill', './index.js'],
   plugins: [
     new HtmlWebpackPlugin({
-      filename: "index.html",
-      template: "./index.html",
+      filename: 'index.html',
+      template: './index.html',
     }),
     new webpack.EnvironmentPlugin({ JEST_WORKER_ID: null }),
     new webpack.DefinePlugin({ process: { env: {} } }),
@@ -72,11 +72,11 @@ module.exports = {
       {
         test: /\.(js|jsx)$/,
         use: {
-          loader: "babel-loader",
+          loader: 'babel-loader',
           options: {
             presets: [
-              "@babel/preset-react",
-              { plugins: ["@babel/plugin-proposal-class-properties"] },
+              '@babel/preset-react',
+              { plugins: ['@babel/plugin-proposal-class-properties'] },
             ],
           },
         },
@@ -84,8 +84,8 @@ module.exports = {
     ],
   },
   resolve: {
-    alias: { "react-native$": "react-native-web" },
-    extensions: [".web.js", ".js"],
+    alias: { 'react-native$': 'react-native-web' },
+    extensions: ['.web.js', '.js'],
   },
 };
 ```
@@ -167,5 +167,5 @@ yarn add raf
 Add the following to the top of your `_app.tsx`:
 
 ```ts
-import "raf/polyfill";
+import 'raf/polyfill';
 ```

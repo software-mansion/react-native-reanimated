@@ -5,7 +5,7 @@
 Animated components are components which Reanimated can animate. Reanimated comes with just a handful of built-in components like `Animated.View`, `Animated.ScrollView`, or `Animated.ScrollView`.
 
 ```jsx
-import Animated from "react-native-reanimated";
+import Animated from 'react-native-reanimated';
 
 function App() {
   return (
@@ -13,7 +13,7 @@ function App() {
       style={{
         width: 100,
         height: 100,
-        backgroundColor: "violet",
+        backgroundColor: 'violet',
       }}
     />
   );
@@ -23,8 +23,8 @@ function App() {
 For components which aren't a part of Reanimated, to make their props and styles animatable, you have to wrap them with [`createAnimatedComponent`](/docs/core/createAnimatedComponent):
 
 ```jsx
-import Animated from "react-native-reanimated";
-import { Circle } from "react-native-svg";
+import Animated from 'react-native-reanimated';
+import { Circle } from 'react-native-svg';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 ```
@@ -36,7 +36,7 @@ Shared values are a driving factor of all your animations in Reanimated.
 They are defined using `useSharedValue` hook:
 
 ```javascript
-import { useSharedValue } from "react-native-reanimated";
+import { useSharedValue } from 'react-native-reanimated';
 ```
 
 and accessed and modified by their `.value` property:
@@ -119,7 +119,7 @@ Most of the time when working with Reanimated the code is automatically [worklet
 
 ```javascript
 const style = useAnimatedStyle(() => {
-  console.log("Running on the UI thread");
+  console.log('Running on the UI thread');
   return { opacity: 0.5 };
 });
 ```
@@ -128,8 +128,8 @@ You can create your own worklets using the `"worklet";` directive at the top of 
 
 ```javascript
 function myWorklet() {
-  "worklet";
-  console.log("Running on the UI thread");
+  'worklet';
+  console.log('Running on the UI thread');
 }
 ```
 
@@ -137,13 +137,13 @@ function myWorklet() {
 
 ```javascript
 function myWorklet(greeting) {
-  "worklet";
+  'worklet';
   console.log(`${greeting} from the UI thread`);
 }
 
 function onPress() {
   // highlight-next-line
-  runOnUI(myWorklet)("Howdy");
+  runOnUI(myWorklet)('Howdy');
 }
 ```
 

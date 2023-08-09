@@ -86,7 +86,7 @@
      * Using variable --docusaurus-announcement-bar-height is not possible here, as the height
      * of announcement bar is being calculated automatically there.
      */
-  .hero[data-announcement-bar="true"] {
+  .hero[data-announcement-bar='true'] {
     height: calc(100vh - var(--ifm-navbar-height) - 2.5em);
   }
 

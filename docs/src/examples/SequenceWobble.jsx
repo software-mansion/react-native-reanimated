@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Button, StyleSheet } from "react-native";
+import React from 'react';
+import { View, Button, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   withTiming,
@@ -7,7 +7,7 @@ import Animated, {
   useAnimatedStyle,
   withRepeat,
   withSequence,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 const ANGLE = 10;
 const TIME = 100;
@@ -51,14 +51,14 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
   },
   box: {
     height: 120,
     width: 120,
-    backgroundColor: "#b58df1",
+    backgroundColor: '#b58df1',
     borderRadius: 20,
     marginBottom: 30,
   },

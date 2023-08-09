@@ -63,10 +63,9 @@ function AnimatedKeyboardExample() {
     <ScrollView
       contentContainerStyle={{
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>
       <Animated.View style={translateStyle}>
         <TextInput />
       </Animated.View>

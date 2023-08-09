@@ -1,10 +1,10 @@
-import React from "react";
-import { Button, View, StyleSheet } from "react-native";
+import React from 'react';
+import { Button, View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   withSpring,
   useAnimatedStyle,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 export default function App() {
   const translateX = useSharedValue(0);
@@ -33,13 +33,13 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   box: {
     height: 120,
     width: 120,
-    backgroundColor: "#b58df1",
+    backgroundColor: '#b58df1',
     borderRadius: 20,
     marginVertical: 50,
   },

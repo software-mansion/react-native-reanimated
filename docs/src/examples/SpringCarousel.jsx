@@ -1,10 +1,10 @@
-import React from "react";
-import { Pressable, StyleSheet, View, Text } from "react-native";
+import React from 'react';
+import { Pressable, StyleSheet, View, Text } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 const INITIAL_OFFSET = 110;
 const SIZE = 160;
@@ -13,10 +13,10 @@ const LEFT_BOUNDARY = 330;
 const RIGHT_BOUNDARY = -330;
 
 const items = [
-  { color: "#FFE780" },
-  { color: "#87CCE8" },
-  { color: "#FFA3A1" },
-  { color: "#B1DFD0" },
+  { color: '#FFE780' },
+  { color: '#87CCE8' },
+  { color: '#FFA3A1' },
+  { color: '#B1DFD0' },
 ];
 
 export default function App() {
@@ -47,15 +47,13 @@ export default function App() {
       <View style={styles.buttonWrapper}>
         <Pressable
           style={[styles.button, styles.previous]}
-          onPress={() => advanceBy(-1)}
-        >
-          <Text style={styles.buttonItem}>{"<"}</Text>
+          onPress={() => advanceBy(-1)}>
+          <Text style={styles.buttonItem}>{'<'}</Text>
         </Pressable>
         <Pressable
           style={[styles.button, styles.next]}
-          onPress={() => advanceBy(1)}
-        >
-          <Text style={styles.buttonItem}>{">"}</Text>
+          onPress={() => advanceBy(1)}>
+          <Text style={styles.buttonItem}>{'>'}</Text>
         </Pressable>
       </View>
       <Animated.View style={[styles.row, animatedStyles]}>
@@ -73,13 +71,13 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    position: "relative",
+    alignItems: 'center',
+    position: 'relative',
     marginVertical: 64,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   buttonWrapper: {
-    position: "absolute",
+    position: 'absolute',
     width: SIZE,
     zIndex: 1,
   },
@@ -90,27 +88,27 @@ const styles = StyleSheet.create({
     marginHorizontal: MARGIN,
   },
   row: {
-    flexDirection: "row",
+    flexDirection: 'row',
   },
   button: {
-    position: "absolute",
+    position: 'absolute',
     width: SIZE / 3,
     height: SIZE / 3,
     borderRadius: SIZE,
-    backgroundColor: "#ccc",
-    borderColor: "#fff",
+    backgroundColor: '#ccc',
+    borderColor: '#fff',
     borderWidth: 4,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    userSelect: "none",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    userSelect: 'none',
     top: 58,
   },
   buttonItem: {
-    color: "#666",
+    color: '#666',
     fontSize: 30,
-    fontWeight: "bold",
-    fontFamily: "monospace",
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
     paddingBottom: 2,
   },
   previous: {

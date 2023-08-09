@@ -1,6 +1,6 @@
-import clsx from "clsx";
-import React from "react";
-import styles from "./styles.module.css";
+import clsx from 'clsx';
+import React from 'react';
+import styles from './styles.module.css';
 
 const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -9,25 +9,29 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
     <span className={clsx(styles.headingLabel, styles.selection)}>
       <div className={styles.selectionContainer}>
         <div
-          className={clsx(styles.selectionBox, styles.boxUpper, styles.boxLeft)}
-        ></div>
+          className={clsx(
+            styles.selectionBox,
+            styles.boxUpper,
+            styles.boxLeft
+          )}></div>
         <div
           className={clsx(
             styles.selectionBox,
             styles.boxUpper,
             styles.boxRight
-          )}
-        ></div>
+          )}></div>
         <div
-          className={clsx(styles.selectionBox, styles.boxLower, styles.boxLeft)}
-        ></div>
+          className={clsx(
+            styles.selectionBox,
+            styles.boxLower,
+            styles.boxLeft
+          )}></div>
         <div
           className={clsx(
             styles.selectionBox,
             styles.boxLower,
             styles.boxRight
-          )}
-        ></div>
+          )}></div>
         {children}
       </div>
     </span>

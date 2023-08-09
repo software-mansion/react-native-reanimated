@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { Button, StyleSheet, View } from "react-native";
+import React, { useEffect } from 'react';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -7,11 +7,11 @@ import Animated, {
   cancelAnimation,
   withTiming,
   InterpolationOptions,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 interface InterpolateColorProps {
   outputRange: any[];
-  colorSpace: "RGB" | "HSV";
+  colorSpace: 'RGB' | 'HSV';
   options: InterpolationOptions;
 }
 
@@ -57,7 +57,7 @@ export default function App({
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: "center",
+    alignItems: 'center',
   },
   box: {
     height: 100,

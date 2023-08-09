@@ -1,18 +1,18 @@
-import React from "react";
+import React from 'react';
 
-import clsx from "clsx";
-import { useCopyToClipboard } from "usehooks-ts";
+import clsx from 'clsx';
+import { useCopyToClipboard } from 'usehooks-ts';
 
-import BrowserOnly from "@docusaurus/BrowserOnly";
-import CodeBlock from "@theme/CodeBlock";
-import AnimableIcon, { Animation } from "@site/src/components/AnimableIcon";
+import BrowserOnly from '@docusaurus/BrowserOnly';
+import CodeBlock from '@theme/CodeBlock';
+import AnimableIcon, { Animation } from '@site/src/components/AnimableIcon';
 
-import Copy from "@site/static/img/copy.svg";
-import CopyDark from "@site/static/img/copy-dark.svg";
-import Reset from "@site/static/img/reset.svg";
-import ResetDark from "@site/static/img/reset-dark.svg";
+import Copy from '@site/static/img/copy.svg';
+import CopyDark from '@site/static/img/copy-dark.svg';
+import Reset from '@site/static/img/reset.svg';
+import ResetDark from '@site/static/img/reset-dark.svg';
 
-import styles from "./styles.module.css";
+import styles from './styles.module.css';
 
 interface Props {
   src: string;
@@ -42,32 +42,28 @@ export default function InteractiveExample({
       {() => (
         <div
           className={`${styles.container} ${larger && styles.largerContainer} 
-          ${!showPreview ? styles.code : ""}`}
-          data-ispreview={showPreview}
-        >
+          ${!showPreview ? styles.code : ''}`}
+          data-ispreview={showPreview}>
           <div
             className={clsx(
               styles.buttonsContainer,
               styles.upperButtonsContainer
-            )}
-          >
+            )}>
             <div className={styles.actionButtonsContainer}>
               <button
                 className={clsx(
                   styles.actionButton,
-                  showPreview ? styles.actionButtonActive : ""
+                  showPreview ? styles.actionButtonActive : ''
                 )}
-                onClick={() => setShowPreview(true)}
-              >
+                onClick={() => setShowPreview(true)}>
                 Preview
               </button>
               <button
                 className={clsx(
                   styles.actionButton,
-                  !showPreview ? styles.actionButtonActive : ""
+                  !showPreview ? styles.actionButtonActive : ''
                 )}
-                onClick={() => setShowPreview(false)}
-              >
+                onClick={() => setShowPreview(false)}>
                 Code
               </button>
             </div>
@@ -92,8 +88,7 @@ export default function InteractiveExample({
                   className={clsx(
                     styles.buttonsContainer,
                     styles.lowerButtonsContainer
-                  )}
-                >
+                  )}>
                   <div className={styles.iconStub} />
                   {label && <div className={styles.label}>{label}</div>}
                   <AnimableIcon

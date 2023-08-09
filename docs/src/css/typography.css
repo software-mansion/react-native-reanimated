@@ -1,44 +1,44 @@
 @font-face {
-  font-family: "Aeonik";
-  src: url("/static/font/Aeonik-Regular.otf") format("opentype");
+  font-family: 'Aeonik';
+  src: url('/static/font/Aeonik-Regular.otf') format('opentype');
   font-weight: 400;
 }
 
 @font-face {
-  font-family: "Aeonik";
-  src: url("/static/font/Aeonik-Medium.otf") format("opentype");
+  font-family: 'Aeonik';
+  src: url('/static/font/Aeonik-Medium.otf') format('opentype');
   font-weight: 500;
 }
 
 @font-face {
-  font-family: "Aeonik";
-  src: url("/static/font/Aeonik-Bold.otf") format("opentype");
+  font-family: 'Aeonik';
+  src: url('/static/font/Aeonik-Bold.otf') format('opentype');
   font-weight: 600;
 }
 
 @font-face {
-  font-family: "Lexend";
-  src: url("/static/font/Lexend-SemiBold.ttf") format("truetype");
+  font-family: 'Lexend';
+  src: url('/static/font/Lexend-SemiBold.ttf') format('truetype');
   font-weight: 600;
 }
 
 @font-face {
-  font-family: "Lexend";
-  src: url("/static/font/Lexend-Bold.ttf") format("truetype");
+  font-family: 'Lexend';
+  src: url('/static/font/Lexend-Bold.ttf') format('truetype');
   font-weight: 700;
 }
 
 @font-face {
-  font-family: "DM Mono";
-  src: url("/static/font/DMMono-Regular.ttf") format("truetype");
+  font-family: 'DM Mono';
+  src: url('/static/font/DMMono-Regular.ttf') format('truetype');
   font-weight: 400;
 }
 
 :root {
-  --swm-title-landing-font: "Lexend";
-  --swm-title-font: "Aeonik";
-  --swm-body-font: "Aeonik";
-  --swm-code-font: "DM Mono";
+  --swm-title-landing-font: 'Lexend';
+  --swm-title-font: 'Aeonik';
+  --swm-body-font: 'Aeonik';
+  --swm-code-font: 'DM Mono';
 
   --ifm-font-family-base: var(--swm-body-font);
   --ifm-font-family-bold: var(--swm-body-font);
@@ -161,7 +161,7 @@ p {
   line-height: 1.6;
 }
 
-ul[role="tablist"] {
+ul[role='tablist'] {
   font-family: var(--swm-title-font);
 }
 
@@ -184,7 +184,7 @@ code {
 }
 
 /* Sidebar */
-[class*="menu__list-item-collapsible"] a {
+[class*='menu__list-item-collapsible'] a {
   font-family: var(--swm-title-font);
   font-weight: 600;
   font-size: 18px;

@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from 'react';
 
-import styles from "./styles.module.css";
-import clsx from "clsx";
+import styles from './styles.module.css';
+import clsx from 'clsx';
 
 const MARGIN_BOTTOM = 60;
 const TutorialStep = ({ children, title }) => {
@@ -25,9 +25,9 @@ const TutorialStep = ({ children, title }) => {
 
   useEffect(() => {
     handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
@@ -36,8 +36,7 @@ const TutorialStep = ({ children, title }) => {
       <div className={clsx(styles.description)}>
         <div
           className={clsx(styles.roundedStep)}
-          style={isActive ? { borderColor: "#001a72" } : {}}
-        >
+          style={isActive ? { borderColor: '#001a72' } : {}}>
           <div className={clsx(styles.stepTitle)}>{title}</div>
           {children[0]}
         </div>
@@ -45,8 +44,7 @@ const TutorialStep = ({ children, title }) => {
       <div
         className={clsx(
           isActive ? styles.code : [styles.code, styles.codeInactive]
-        )}
-      >
+        )}>
         {children[1]}
       </div>
     </div>

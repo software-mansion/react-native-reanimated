@@ -39,7 +39,7 @@ This can be any primitive or nested data like object, array, number, string or b
 In order to update a Shared Value from the React Native thread or from a worklet running on the UI thread, you should set a new value onto the `.value` property.
 
 ```js {4,7}
-import { useSharedValue } from "react-native-reanimated";
+import { useSharedValue } from 'react-native-reanimated';
 
 function SomeComponent() {
   const sharedVal = useSharedValue(0);
@@ -59,7 +59,7 @@ Updates can be done synchronously when making them from within a worklet, like s
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 function SomeComponent({ children }) {
   const scrollOffset = useSharedValue(0);
@@ -102,7 +102,7 @@ Let us now look at a code example:
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 function Box() {
   const offset = useSharedValue(0);
@@ -144,7 +144,7 @@ One of the ways for animations to be launched is by starting an animated transit
 This can be done by wrapping the target value with one of the animation utility methods from reanimated library (e.g. [`withTiming`](../api/animations/withTiming) or [`withSpring`](../api/animations/withSpring)):
 
 ```js
-import { withTiming } from "react-native-reanimated";
+import { withTiming } from 'react-native-reanimated';
 
 someSharedValue.value = withTiming(50);
 ```
@@ -155,7 +155,7 @@ Below is a complete code example which is the modified version of the example fr
 Here, instead of updating the `offset` value immediately, we perform an animated transition with a timing curve.
 
 ```js {17}
-import Animated, { withSpring } from "react-native-reanimated";
+import Animated, { withSpring } from 'react-native-reanimated';
 
 function Box() {
   const offset = useSharedValue(0);
@@ -212,7 +212,7 @@ There are cases in which we want to stop the currently running animation without
 In reanimated, this can be done using the [`cancelAnimation`](../api/animations/cancelAnimation) method:
 
 ```js
-import { cancelAnimation } from "react-native-reanimated";
+import { cancelAnimation } from 'react-native-reanimated';
 
 cancelAnimation(someSharedValue);
 ```

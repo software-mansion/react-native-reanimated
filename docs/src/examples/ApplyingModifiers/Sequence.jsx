@@ -5,9 +5,9 @@ import Animated, {
   useAnimatedStyle,
   withRepeat,
   withSequence,
-} from "react-native-reanimated";
-import { View, Button, StyleSheet } from "react-native";
-import React from "react";
+} from 'react-native-reanimated';
+import { View, Button, StyleSheet } from 'react-native';
+import React from 'react';
 
 export default function App() {
   const offset = useSharedValue(0);
@@ -43,14 +43,14 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: "column",
-    alignItems: "center",
+    flexDirection: 'column',
+    alignItems: 'center',
   },
   box: {
     width: 100,
     height: 100,
     margin: 50,
     borderRadius: 15,
-    backgroundColor: "#b58df1",
+    backgroundColor: '#b58df1',
   },
 });

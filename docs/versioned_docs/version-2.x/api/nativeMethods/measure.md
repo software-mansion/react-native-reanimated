@@ -66,7 +66,7 @@ const Comp = () => {
       const { x, y, width, height, pageX, pageY } = measured;
       console.log({ x, y, width, height, pageX, pageY });
     } else {
-      console.warn("measure: could not measure view");
+      console.warn('measure: could not measure view');
     }
   });
 

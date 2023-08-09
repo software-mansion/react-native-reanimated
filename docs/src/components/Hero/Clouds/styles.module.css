@@ -3,7 +3,7 @@
   z-index: 1;
 }
 
-[data-theme="dark"] .clouds {
+[data-theme='dark'] .clouds {
   opacity: 0.25;
 }
 

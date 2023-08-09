@@ -58,16 +58,16 @@ Available extrapolation string values:
 ## Example
 
 ```jsx
-import React from "react";
-import { View, StyleSheet, Dimensions } from "react-native";
+import React from 'react';
+import { View, StyleSheet, Dimensions } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   interpolate,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
-export const HEADER_IMAGE_HEIGHT = Dimensions.get("window").width / 3;
+export const HEADER_IMAGE_HEIGHT = Dimensions.get('window').width / 3;
 
 export default function Test() {
   const scrollY = useSharedValue(0);
@@ -87,16 +87,16 @@ export default function Test() {
   });
 
   return (
-    <View style={{ flex: 1, alignItems: "center" }}>
+    <View style={{ flex: 1, alignItems: 'center' }}>
       <Animated.View
         style={[
           {
-            position: "absolute",
+            position: 'absolute',
             top: 20,
             left: 0,
             width: 20,
             height: 20,
-            backgroundColor: "blue",
+            backgroundColor: 'blue',
           },
           animatedStyles,
         ]}
@@ -105,8 +105,7 @@ export default function Test() {
       <Animated.ScrollView
         scrollEventThrottle={1}
         style={StyleSheet.absoluteFill}
-        onScroll={scrollHandler}
-      ></Animated.ScrollView>
+        onScroll={scrollHandler}></Animated.ScrollView>
     </View>
   );
 }

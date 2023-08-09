@@ -47,17 +47,17 @@ One more example with callbacks:
 sharedValue.value = withRepeat(
   withTiming(70, undefined, (finished, currentValue) => {
     if (finished) {
-      console.log("current withRepeat value is " + currentValue);
+      console.log('current withRepeat value is ' + currentValue);
     } else {
-      console.log("inner animation cancelled");
+      console.log('inner animation cancelled');
     }
   }),
   10,
   true,
   (finished) => {
     const resultStr = finished
-      ? "All repeats are completed"
-      : "withRepeat cancelled";
+      ? 'All repeats are completed'
+      : 'withRepeat cancelled';
     console.log(resultStr);
   }
 );

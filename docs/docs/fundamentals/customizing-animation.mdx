@@ -15,7 +15,7 @@ It's very easy to customize the behavior of animation functions in Reanimated. Y
 The `config` parameter of `withTiming` comes with two properties: `duration` and `easing`.
 
 ```jsx
-import { withTiming, Easing } from "react-native-reanimated";
+import { withTiming, Easing } from 'react-native-reanimated';
 
 withTiming(sv.value, {
   duration: 300,
@@ -29,8 +29,8 @@ The `easing` parameter lets you fine-tune the animation over the specified time.
 
 It all will start to make sense when you compare side by side a `linear` easing with the default easing.
 
-import TimingEasingCompare from "@site/src/examples/TimingEasingCompare";
-import TimingEasingCompareSrc from "!!raw-loader!@site/src/examples/TimingEasingCompare";
+import TimingEasingCompare from '@site/src/examples/TimingEasingCompare';
+import TimingEasingCompareSrc from '!!raw-loader!@site/src/examples/TimingEasingCompare';
 
 <InteractiveExample
   src={TimingEasingCompareSrc}
@@ -42,7 +42,7 @@ Reanimated comes with a handful of predefined easing functions. You can play aro
 <details open>
 <summary><code>withTiming</code> interactive playground</summary>
 
-import { useTimingPlayground } from "@site/src/components/InteractivePlayground";
+import { useTimingPlayground } from '@site/src/components/InteractivePlayground';
 
 <InteractivePlayground usePlayground={useTimingPlayground} />
 
@@ -55,7 +55,7 @@ import { useTimingPlayground } from "@site/src/components/InteractivePlayground"
 Most of the time when tinkering with springs you'll be adjusting one of these three properties: `mass`, `stiffness` (also known as _tension_), and `damping` (also known as _friction_).
 
 ```jsx
-import { withSpring } from "react-native-reanimated";
+import { withSpring } from 'react-native-reanimated';
 
 withSpring(sv.value, {
   mass: 1,
@@ -66,8 +66,8 @@ withSpring(sv.value, {
 
 The mass of a spring influences how hard is it to make an object move and to bring it to a stop. Mass adds a feeling of [_inertia_](https://youtu.be/qBjmO8w-QqU?t=22) to the object you're trying to move. You can see in the playground that the spring with greater mass moves more "sluggish" compared to the default configuration.
 
-import SpringMassCompare from "@site/src/examples/SpringMassCompare";
-import SpringMassCompareSrc from "!!raw-loader!@site/src/examples/SpringMassCompare";
+import SpringMassCompare from '@site/src/examples/SpringMassCompare';
+import SpringMassCompareSrc from '!!raw-loader!@site/src/examples/SpringMassCompare';
 
 <InteractiveExample
   src={SpringMassCompareSrc}
@@ -83,7 +83,7 @@ Reanimated comes with a handful of other properties used to customize your sprin
 <details open>
 <summary><code>withSpring</code> interactive playground</summary>
 
-import { useSpringPlayground } from "@site/src/components/InteractivePlayground";
+import { useSpringPlayground } from '@site/src/components/InteractivePlayground';
 
 <InteractivePlayground usePlayground={useSpringPlayground} />
 

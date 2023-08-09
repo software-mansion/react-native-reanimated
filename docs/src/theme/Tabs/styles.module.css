@@ -1,11 +1,11 @@
 .tabs__wrapper {
 }
 
-[class*="tabs__item"]:hover {
+[class*='tabs__item']:hover {
   background-color: inherit;
 }
 
-ul[role="tablist"] li {
+ul[role='tablist'] li {
   padding: 4px 16px;
 
   color: var(--swm-tab);
@@ -15,12 +15,12 @@ ul[role="tablist"] li {
   border-radius: 0;
 }
 
-ul[role="tablist"] li:hover {
+ul[role='tablist'] li:hover {
   color: var(--swm-tab-hover);
   border-bottom-color: var(--swm-tab-hover);
 }
 
-ul[role="tablist"] li[class*="active"] {
+ul[role='tablist'] li[class*='active'] {
   color: var(--swm-tab-active);
   border-bottom-color: var(--swm-tab-active);
 }

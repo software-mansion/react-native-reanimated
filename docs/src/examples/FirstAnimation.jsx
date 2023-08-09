@@ -1,6 +1,6 @@
-import React from "react";
-import { Button, StyleSheet, View } from "react-native";
-import Animated, { useSharedValue, withSpring } from "react-native-reanimated";
+import React from 'react';
+import { Button, StyleSheet, View } from 'react-native';
+import Animated, { useSharedValue, withSpring } from 'react-native-reanimated';
 
 export default function App() {
   const width = useSharedValue(100);
@@ -20,11 +20,11 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
   },
   box: {
     height: 100,
-    backgroundColor: "#b58df1",
+    backgroundColor: '#b58df1',
     borderRadius: 20,
     marginVertical: 64,
   },

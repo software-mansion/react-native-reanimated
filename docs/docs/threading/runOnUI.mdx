@@ -7,7 +7,7 @@ Most commonly used either with an `useEffect` to start an animation on component
 ## Reference
 
 ```javascript
-import { runOnUI } from "react-native-reanimated";
+import { runOnUI } from 'react-native-reanimated';
 
 function App() {
   // E.g. in event handler or in an effect
@@ -15,7 +15,7 @@ function App() {
   runOnUI((greeting) => {
     console.log(`${greeting} from the UI thread`);
     // highlight-next-line
-  })("Howdy");
+  })('Howdy');
 
   // ...
 }
@@ -48,8 +48,8 @@ Don't forget to call the function returned from `runOnUI`.
 
 ## Example
 
-import RunOnUI from "@site/src/examples/RunOnUI";
-import RunOnUISrc from "!!raw-loader!@site/src/examples/RunOnUI";
+import RunOnUI from '@site/src/examples/RunOnUI';
+import RunOnUISrc from '!!raw-loader!@site/src/examples/RunOnUI';
 
 <InteractiveExample
   src={RunOnUISrc}

@@ -62,12 +62,12 @@ To work around this you can generate multiple useAnimatedStyle in top-level loop
 ## Example
 
 ```js {11-15}
-import { StyleSheet } from "react-native";
+import { StyleSheet } from 'react-native';
 import {
   Animated,
   useSharedValue,
   useAnimatedStyle,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 function App() {
   const width = useSharedValue(50);
@@ -85,7 +85,7 @@ function App() {
 const styles = StyleSheet.create({
   box: {
     height: 50,
-    backgroundColor: "blue",
+    backgroundColor: 'blue',
   },
 });
 ```

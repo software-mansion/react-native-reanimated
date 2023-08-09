@@ -37,14 +37,14 @@ Indicates whether the scroll should be smooth (`true`) or instant (`false`).
 ### Example
 
 ```jsx
-import React from "react";
-import { TouchableOpacity, View, Text, ScrollView } from "react-native";
+import React from 'react';
+import { TouchableOpacity, View, Text, ScrollView } from 'react-native';
 import {
   useAnimatedRef,
   useDerivedValue,
   useSharedValue,
   scrollTo,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 const ITEM_COUNT = 10;
 const ITEM_SIZE = 100;
@@ -61,7 +61,7 @@ export const Comp = () => {
   const items = Array.from(Array(ITEM_COUNT).keys());
 
   const Incrementor = ({ increment }) => (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <TouchableOpacity
         onPress={() => {
           scroll.value =
@@ -70,35 +70,32 @@ export const Comp = () => {
               : ITEM_COUNT - 1 + increment;
 
           if (scroll.value >= ITEM_COUNT - 2) scroll.value = 0;
-        }}
-      >
+        }}>
         <Text>{`Scroll ${Math.abs(increment)} ${
-          increment > 0 ? "down" : "up"
+          increment > 0 ? 'down' : 'up'
         }`}</Text>
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <View style={{ flex: 1, flexDirection: "column" }}>
+    <View style={{ flex: 1, flexDirection: 'column' }}>
       <Incrementor increment={1} />
       <View
-        style={{ width: "100%", height: (ITEM_SIZE + 2 * ITEM_MARGIN) * 2 }}
-      >
-        <ScrollView ref={aref} style={{ backgroundColor: "orange" }}>
+        style={{ width: '100%', height: (ITEM_SIZE + 2 * ITEM_MARGIN) * 2 }}>
+        <ScrollView ref={aref} style={{ backgroundColor: 'orange' }}>
           {items.map((_, i) => (
             <View
               key={i}
               style={{
-                backgroundColor: "white",
+                backgroundColor: 'white',
                 aspectRatio: 1,
                 width: ITEM_SIZE,
                 margin: ITEM_MARGIN,
-                justifyContent: "center",
-                alignContent: "center",
-              }}
-            >
-              <Text style={{ textAlign: "center" }}>{i}</Text>
+                justifyContent: 'center',
+                alignContent: 'center',
+              }}>
+              <Text style={{ textAlign: 'center' }}>{i}</Text>
             </View>
           ))}
         </ScrollView>

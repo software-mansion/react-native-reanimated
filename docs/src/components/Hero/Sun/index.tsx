@@ -1,6 +1,6 @@
-import React from "react";
-import styles from "./styles.module.css";
-import { useColorMode } from "@docusaurus/theme-common";
+import React from 'react';
+import styles from './styles.module.css';
+import { useColorMode } from '@docusaurus/theme-common';
 
 const sunLightDefs = (
   <linearGradient
@@ -9,8 +9,7 @@ const sunLightDefs = (
     y1="0.0175629"
     x2="318.282"
     y2="364.671"
-    gradientUnits="userSpaceOnUse"
-  >
+    gradientUnits="userSpaceOnUse">
     <stop stopColor="#FFD61E" />
     <stop offset="0.0001" stopColor="#FFE04B" />
     <stop offset="1" stopColor="#FF6259" />
@@ -24,8 +23,7 @@ const sunDarkDefs = (
     y1="0.642563"
     x2="172.322"
     y2="343.415"
-    gradientUnits="userSpaceOnUse"
-  >
+    gradientUnits="userSpaceOnUse">
     <stop stopColor="#E9DBFF" />
     <stop offset="1" stopColor="#B07EFF" />
   </linearGradient>
@@ -41,8 +39,7 @@ const HeroSun = () => {
           height="343"
           viewBox="0 0 344 343"
           fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
+          xmlns="http://www.w3.org/2000/svg">
           <circle
             cx="172.015"
             cy="171.404"
@@ -51,8 +48,8 @@ const HeroSun = () => {
             fill="url(#sunGradient)"
           />
           <defs>
-            {colorMode === "light" && sunLightDefs}
-            {colorMode === "dark" && sunDarkDefs}
+            {colorMode === 'light' && sunLightDefs}
+            {colorMode === 'dark' && sunDarkDefs}
           </defs>
         </svg>
       </div>

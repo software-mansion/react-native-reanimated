@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import styles from "./styles.module.css";
-import Draggable, { DraggableEvent } from "react-draggable";
+import React, { useEffect, useState } from 'react';
+import styles from './styles.module.css';
+import Draggable, { DraggableEvent } from 'react-draggable';
 
-import { bezierEasingValues } from "@site/src/components/InteractivePlayground/PlaygroundChart";
+import { bezierEasingValues } from '@site/src/components/InteractivePlayground/PlaygroundChart';
 
 interface Point {
   x: number;
@@ -50,8 +50,7 @@ const PlaygroundChartPoint: React.FC<{
           // Limit bound to the borders
           right: bounds.x - bezierEasingValues.handleSize,
           bottom: bounds.y - bezierEasingValues.handleSize,
-        }}
-      >
+        }}>
         <button className={styles.handle}>{label}</button>
       </Draggable>
     </>

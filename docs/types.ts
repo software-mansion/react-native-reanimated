@@ -1,1 +1,1 @@
-declare module "*.otf";
+declare module '*.otf';

@@ -66,12 +66,12 @@
   font-size: var(--swm-h3-font-size);
 }
 
-.searchResultItem [class*="breadcrumbs__item"] {
+.searchResultItem [class*='breadcrumbs__item'] {
   color: var(--ifm-font-color-base);
   font-size: 16px;
 }
 
-.searchResultItem [class*="breadcrumbs__item"]::after {
+.searchResultItem [class*='breadcrumbs__item']::after {
   display: none;
 }
 
@@ -157,8 +157,8 @@
 }
 
 /* Larger underline offset in headings */
-[class*="searchResultItemHeading"] [class*="search-result-match"],
-[class*="searchResultItemHeading"]:hover {
+[class*='searchResultItemHeading'] [class*='search-result-match'],
+[class*='searchResultItemHeading']:hover {
   text-underline-offset: 4px;
   text-decoration-skip-ink: none;
 }

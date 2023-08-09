@@ -266,7 +266,7 @@
   --swm-version-badge-background: var(--swm-navy-light-10);
 }
 
-:root[data-theme="dark"] {
+:root[data-theme='dark'] {
   /* Infima main colors */
   --ifm-color-primary: var(--swm-navy-light-10);
 

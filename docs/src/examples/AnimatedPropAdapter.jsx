@@ -1,5 +1,5 @@
-import React from "react";
-import { Svg, Ellipse } from "react-native-svg";
+import React from 'react';
+import { Svg, Ellipse } from 'react-native-svg';
 import Animated, {
   createAnimatedPropAdapter,
   processColor,
@@ -7,21 +7,21 @@ import Animated, {
   useSharedValue,
   withRepeat,
   withTiming,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 const AnimatedEllipse = Animated.createAnimatedComponent(Ellipse);
 
 // highlight-next-line
 const adapter = createAnimatedPropAdapter(
   (props) => {
-    if (Object.keys(props).includes("fill")) {
+    if (Object.keys(props).includes('fill')) {
       props.fill = { type: 0, payload: processColor(props.fill) };
     }
-    if (Object.keys(props).includes("stroke")) {
+    if (Object.keys(props).includes('stroke')) {
       props.stroke = { type: 0, payload: processColor(props.stroke) };
     }
   },
-  ["fill", "stroke"]
+  ['fill', 'stroke']
   // highlight-next-line
 );
 
@@ -41,8 +41,8 @@ export default function App() {
         cy: coordinates.cy,
         rx: coordinates.rx,
         ry: coordinates.ry,
-        stroke: "rgb(255,0,0)",
-        fill: "yellow",
+        stroke: 'rgb(255,0,0)',
+        fill: 'yellow',
         opacity: opacity.value,
         strokeWidth: 2,
       };

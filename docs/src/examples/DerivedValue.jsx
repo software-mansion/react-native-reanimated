@@ -1,12 +1,12 @@
-import React from "react";
-import { StyleSheet, View } from "react-native";
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   withRepeat,
   useDerivedValue,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 export default function App() {
   const scale = useSharedValue(1);
@@ -44,22 +44,22 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
-    flexDirection: "row",
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+    flexDirection: 'row',
   },
   ball: {
     height: 50,
     width: 50,
-    backgroundColor: "#b58df1",
+    backgroundColor: '#b58df1',
     borderRadius: 50,
     marginRight: 80,
   },
   box: {
     height: 100,
     width: 100,
-    backgroundColor: "#b58df1",
+    backgroundColor: '#b58df1',
     borderRadius: 15,
   },
 });

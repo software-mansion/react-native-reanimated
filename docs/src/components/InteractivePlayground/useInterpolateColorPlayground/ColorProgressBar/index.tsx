@@ -1,5 +1,5 @@
-import React from "react";
-import styles from "./styles.module.css";
+import React from 'react';
+import styles from './styles.module.css';
 
 const ColorProgressBar = ({
   color1,
@@ -17,7 +17,7 @@ const ColorProgressBar = ({
         .map((_, i) => i / 10)
         .map((p) => (
           <div
-            key={"" + p}
+            key={'' + p}
             className={styles.smallBox}
             style={{
               backgroundColor: interpolateFunction(color1, color2, p),

@@ -1,21 +1,21 @@
-import React, { useEffect, useState } from "react";
-import styles from "./styles.module.css";
-import { HexColorPicker } from "react-colorful";
-import { InputAdornment, TextField } from "@mui/material";
+import React, { useEffect, useState } from 'react';
+import styles from './styles.module.css';
+import { HexColorPicker } from 'react-colorful';
+import { InputAdornment, TextField } from '@mui/material';
 
 const TextFieldStyling = {
   minWidth: 88,
   maxWidth: 150,
   maxHeight: 32,
-  "& .MuiInputBase-input": {
+  '& .MuiInputBase-input': {
     fontSize: 14,
-    backgroundColor: "background.default",
-    color: "text.secondary",
-    padding: "6px 14px 6px 0",
+    backgroundColor: 'background.default',
+    color: 'text.secondary',
+    padding: '6px 14px 6px 0',
   },
-  "& fieldset": {
+  '& fieldset': {
     borderRadius: 0,
-    borderColor: "text.secondary",
+    borderColor: 'text.secondary',
   },
 };
 
@@ -46,7 +46,7 @@ const ColorPicker = ({ color, setColor, defaultValue, refreshKey }) => {
         hiddenLabel
         size="small"
         sx={TextFieldStyling}
-        value={inputColor.replace("#", "").toUpperCase()}
+        value={inputColor.replace('#', '').toUpperCase()}
         inputProps={{ maxLength: 6 }}
         InputProps={{
           startAdornment: <InputAdornment position="start">#</InputAdornment>,

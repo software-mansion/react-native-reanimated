@@ -1,11 +1,11 @@
-import React, { memo } from "react";
-import { DocSidebarItemsExpandedStateProvider } from "@docusaurus/theme-common/internal";
-import DocSidebarItem from "@theme/DocSidebarItem";
-import SidebarLabel from "@site/src/components/SidebarLabel";
-import styles from "./styles.module.css";
+import React, { memo } from 'react';
+import { DocSidebarItemsExpandedStateProvider } from '@docusaurus/theme-common/internal';
+import DocSidebarItem from '@theme/DocSidebarItem';
+import SidebarLabel from '@site/src/components/SidebarLabel';
+import styles from './styles.module.css';
 
-const EXPERIMENTAL_APIs = ["shared-element-transitions/overview"];
-const NEW_APIS = ["advanced/dispatchCommand"];
+const EXPERIMENTAL_APIs = ['shared-element-transitions/overview'];
+const NEW_APIS = ['advanced/dispatchCommand'];
 // TODO this item should probably not receive the "activePath" props
 // TODO this triggers whole sidebar re-renders on navigation
 function DocSidebarItems({ items, ...props }) {

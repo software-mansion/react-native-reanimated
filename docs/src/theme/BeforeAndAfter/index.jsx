@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
-import styles from "./styles.module.css";
-import clsx from "clsx";
+import styles from './styles.module.css';
+import clsx from 'clsx';
 
 const BeforeAndAfter = ({ before, after }) => {
   const [currentWidth, setCurrentWidth] = useState(null);
@@ -13,8 +13,8 @@ const BeforeAndAfter = ({ before, after }) => {
     }
 
     handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   return (

@@ -1,17 +1,17 @@
-import React from "react";
-import LogoStyling from "@site/src/theme/Logo/LogoStyling";
-import useBaseUrl from "@docusaurus/useBaseUrl";
-import styles from "./styles.module.css";
+import React from 'react';
+import LogoStyling from '@site/src/theme/Logo/LogoStyling';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import styles from './styles.module.css';
 
 export default function LogoWrapper(props) {
   const titleImages = {
-    light: useBaseUrl("/img/title.svg"),
-    dark: useBaseUrl("/img/title-dark.svg"),
+    light: useBaseUrl('/img/title.svg'),
+    dark: useBaseUrl('/img/title-dark.svg'),
   };
 
   const heroImages = {
-    logo: useBaseUrl("/img/logo-hero.svg"),
-    title: useBaseUrl("/img/title-hero.svg"),
+    logo: useBaseUrl('/img/logo-hero.svg'),
+    title: useBaseUrl('/img/title-hero.svg'),
   };
 
   return (

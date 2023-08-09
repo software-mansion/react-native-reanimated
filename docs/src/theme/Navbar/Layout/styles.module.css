@@ -6,7 +6,7 @@
   transform: translate3d(0, calc(-100% - 2px), 0);
 }
 
-[class*="navbar-sidebar__backdrop"] {
+[class*='navbar-sidebar__backdrop'] {
   background-color: var(--swm-sidebar-backdrop);
 }
 
@@ -37,7 +37,7 @@
   z-index: -100;
 }
 
-[data-theme="dark"] .heroBackground {
+[data-theme='dark'] .heroBackground {
   background: linear-gradient(
     180deg,
     var(--swm-purple-dark-100) 0%,
@@ -45,7 +45,7 @@
   );
 }
 
-.heroBackground[data-announcement-bar="true"] {
+.heroBackground[data-announcement-bar='true'] {
   top: var(--docusaurus-announcement-bar-height);
 }
 

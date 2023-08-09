@@ -6,15 +6,15 @@ sidebar_position: 5
 
 `withRepeat` is an [animation modifier](/docs/fundamentals/glossary#animation-modifier) that lets you repeat an animation given number of times or run it indefinitely.
 
-import RepeatBasic from "@site/src/examples/RepeatBasic";
-import RepeatBasicSrc from "!!raw-loader!@site/src/examples/RepeatBasic";
+import RepeatBasic from '@site/src/examples/RepeatBasic';
+import RepeatBasicSrc from '!!raw-loader!@site/src/examples/RepeatBasic';
 
 <InteractiveExample src={RepeatBasicSrc} component={<RepeatBasic />} />
 
 ## Reference
 
 ```javascript
-import { withRepeat } from "react-native-reanimated";
+import { withRepeat } from 'react-native-reanimated';
 
 function App() {
   sv.value = withRepeat(withSpring(0), 5);
@@ -66,8 +66,8 @@ A function called on animation complete. In case the animation is cancelled, the
 
 ## Example
 
-import SequenceWobble from "@site/src/examples/SequenceWobble";
-import SequenceWobbleSrc from "!!raw-loader!@site/src/examples/SequenceWobble";
+import SequenceWobble from '@site/src/examples/SequenceWobble';
+import SequenceWobbleSrc from '!!raw-loader!@site/src/examples/SequenceWobble';
 
 <InteractiveExample src={SequenceWobbleSrc} component={<SequenceWobble />} />
 

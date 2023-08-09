@@ -1,44 +1,44 @@
-import { experimental_extendTheme as extendTheme } from "@mui/material/styles";
+import { experimental_extendTheme as extendTheme } from '@mui/material/styles';
 
-import Aeonik from "/static/font/Aeonik-Regular.otf";
+import Aeonik from '/static/font/Aeonik-Regular.otf';
 
 // General MUI theme
 const extTheme = extendTheme({
   typography: {
-    fontFamily: "Aeonik, Arial",
+    fontFamily: 'Aeonik, Arial',
   },
   colorSchemes: {
     light: {
       palette: {
         text: {
-          secondary: "#6676aa",
+          secondary: '#6676aa',
         },
         primary: {
-          main: "#001a72", //--swm-navy-light-100
+          main: '#001a72', //--swm-navy-light-100
         },
         secondary: {
-          main: "#782aeb", //--swm-purple-light-100
+          main: '#782aeb', //--swm-purple-light-100
         },
         background: {
-          default: "#fcfcff",
-          paper: "#f8f9ff",
+          default: '#fcfcff',
+          paper: '#f8f9ff',
         },
       },
     },
     dark: {
       palette: {
         text: {
-          secondary: "#919fcf",
+          secondary: '#919fcf',
         },
         primary: {
-          main: "#eef0ff", //--swm-navy-light-10
+          main: '#eef0ff', //--swm-navy-light-10
         },
         secondary: {
-          main: "#b58df1", //--swm-purple-light-80
+          main: '#b58df1', //--swm-purple-light-80
         },
         background: {
-          default: "#232736",
-          paper: "#272b3c",
+          default: '#232736',
+          paper: '#272b3c',
         },
       },
     },

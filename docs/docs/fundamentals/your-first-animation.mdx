@@ -11,7 +11,7 @@ In this section, we'll guide you through the basic concepts of Reanimated. If yo
 Let's start by having something that we could see on the screen. First, to create an animatable component you need to import an `Animated` object:
 
 ```jsx
-import Animated from "react-native-reanimated";
+import Animated from 'react-native-reanimated';
 ```
 
 This `Animated` object wraps React Native built-ins such as `View`, `ScrollView` or `FlatList`.
@@ -19,7 +19,7 @@ This `Animated` object wraps React Native built-ins such as `View`, `ScrollView`
 You use these components as any other JSX components:
 
 ```jsx {5}
-import Animated from "react-native-reanimated";
+import Animated from 'react-native-reanimated';
 
 export default function App() {
   return (
@@ -27,7 +27,7 @@ export default function App() {
       style={{
         width: 100,
         height: 100,
-        backgroundColor: "violet",
+        backgroundColor: 'violet',
       }}
     />
   );
@@ -45,7 +45,7 @@ You can create your own custom Animated components with [`createAnimatedComponen
 A [shared value](/docs/fundamentals/glossary#shared-value) is a driving factor of all your animations. You can think of it as a React state which is automagically kept in sync between the “JavaScript” and the “native” side of your app (hence the name). You create shared values using a `useSharedValue` hook:
 
 ```jsx
-import { useSharedValue } from "react-native-reanimated";
+import { useSharedValue } from 'react-native-reanimated';
 ```
 
 As with any other [React hook](https://reactjs.org/docs/hooks-rules.html), you need to define it in your component's body. In a shared value, you can store any JS value like `number`, `string` or `boolean` but also data structures such as `array` and `object`.
@@ -53,7 +53,7 @@ As with any other [React hook](https://reactjs.org/docs/hooks-rules.html), you n
 For now, let's use `100` as the default value of the `useSharedValue` hook and pass the returned value as an inline style of the `Animated.View`:
 
 ```jsx {4,9}
-import Animated, { useSharedValue } from "react-native-reanimated";
+import Animated, { useSharedValue } from 'react-native-reanimated';
 
 export default function App() {
   const width = useSharedValue(100);
@@ -63,7 +63,7 @@ export default function App() {
       style={{
         width,
         height: 100,
-        backgroundColor: "violet",
+        backgroundColor: 'violet',
       }}
     />
   );
@@ -81,8 +81,8 @@ There's no setter or anything - you simply mutate the `.value` property like the
 Let's define a `handlePress` function inside of which we'll modify the shared value:
 
 ```jsx {8,20}
-import { Button, View } from "react-native";
-import Animated, { useSharedValue } from "react-native-reanimated";
+import { Button, View } from 'react-native';
+import Animated, { useSharedValue } from 'react-native-reanimated';
 
 export default function App() {
   const width = useSharedValue(100);
@@ -92,12 +92,12 @@ export default function App() {
   };
 
   return (
-    <View style={{ flex: 1, alignItems: "center" }}>
+    <View style={{ flex: 1, alignItems: 'center' }}>
       <Animated.View
         style={{
           width,
           height: 100,
-          backgroundColor: "violet",
+          backgroundColor: 'violet',
         }}
       />
       <Button onPress={handlePress} title="Click me" />
@@ -119,8 +119,8 @@ It's a common mistake to modify a shared value directly like this: ~~`sv = sv + 
 Finally, import `withSpring` function and wrap around `width.value + 50` in the `handlePress` function so that the value which `withSpring` returns modifies the shared value. This will create a bouncy spring animation that transitions the width of the element from its current value (here `width.value`) to the new one (here `width.value + 50`).
 
 ```jsx {2,8}
-import { Button, View } from "react-native";
-import Animated, { useSharedValue, withSpring } from "react-native-reanimated";
+import { Button, View } from 'react-native';
+import Animated, { useSharedValue, withSpring } from 'react-native-reanimated';
 
 export default function App() {
   const width = useSharedValue(100);
@@ -130,12 +130,12 @@ export default function App() {
   };
 
   return (
-    <View style={{ flex: 1, alignItems: "center" }}>
+    <View style={{ flex: 1, alignItems: 'center' }}>
       <Animated.View
         style={{
           width,
           height: 100,
-          backgroundColor: "violet",
+          backgroundColor: 'violet',
         }}
       />
       <Button onPress={handlePress} title="Click me" />
@@ -146,8 +146,8 @@ export default function App() {
 
 And voilà, we've made our first animation using Reanimated! You can see how it works in its full glory in a preview below:
 
-import FirstAnimation from "@site/src/examples/FirstAnimation";
-import FirstAnimationSrc from "!!raw-loader!@site/src/examples/FirstAnimation";
+import FirstAnimation from '@site/src/examples/FirstAnimation';
+import FirstAnimationSrc from '!!raw-loader!@site/src/examples/FirstAnimation';
 
 <InteractiveExample src={FirstAnimationSrc} component={<FirstAnimation />} />
 

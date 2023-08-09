@@ -6,15 +6,15 @@ sidebar_position: 4
 
 `withSequence` is an [animation modifier](/docs/fundamentals/glossary#animation-modifier) that lets you run animations in a sequence.
 
-import SequenceBasic from "@site/src/examples/SequenceBasic";
-import SequenceBasicSrc from "!!raw-loader!@site/src/examples/SequenceBasic";
+import SequenceBasic from '@site/src/examples/SequenceBasic';
+import SequenceBasicSrc from '!!raw-loader!@site/src/examples/SequenceBasic';
 
 <InteractiveExample src={SequenceBasicSrc} component={<SequenceBasic />} />
 
 ## Reference
 
 ```javascript
-import { withSequence } from "react-native-reanimated";
+import { withSequence } from 'react-native-reanimated';
 
 function App() {
   sv.value = withSequence(withTiming(50), withTiming(0));
@@ -45,8 +45,8 @@ Any number of [animation objects](docs/fundamentals/glossary#animation-object) t
 
 ## Example
 
-import SequenceWobble from "@site/src/examples/SequenceWobble";
-import SequenceWobbleSrc from "!!raw-loader!@site/src/examples/SequenceWobble";
+import SequenceWobble from '@site/src/examples/SequenceWobble';
+import SequenceWobbleSrc from '!!raw-loader!@site/src/examples/SequenceWobble';
 
 <InteractiveExample src={SequenceWobbleSrc} component={<SequenceWobble />} />
 

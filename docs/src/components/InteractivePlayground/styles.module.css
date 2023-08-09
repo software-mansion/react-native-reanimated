@@ -76,8 +76,8 @@
   margin-bottom: 0.5rem;
 }
 
-.row input[type="range"],
-.row input[type="checkbox"] {
+.row input[type='range'],
+.row input[type='checkbox'] {
   flex: 1;
   margin: 0 0.5rem;
 }
@@ -100,23 +100,23 @@
 }
 
 /* Prevent lines from overflowing from the code block */
-[class*="codeBlockLines"] {
+[class*='codeBlockLines'] {
   width: 0;
 }
 
-.codeWrapper [class*="codeBlockContent"] {
+.codeWrapper [class*='codeBlockContent'] {
   flex: 1 1 auto;
 
   background-color: var(--swm-background);
 }
 
-.codeWrapper [class*="codeBlockContent"] pre {
+.codeWrapper [class*='codeBlockContent'] pre {
   background-color: inherit;
 }
 
 /* Special case, where every code block should be formatted,
  * except the code block in modifier playground. */
-.codeWrapper [class*="codeBlockContent"] pre code {
+.codeWrapper [class*='codeBlockContent'] pre code {
   background-color: inherit;
 }
 

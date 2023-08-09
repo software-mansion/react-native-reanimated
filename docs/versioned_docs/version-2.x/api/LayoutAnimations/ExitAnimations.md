@@ -22,7 +22,7 @@ Reanimated listen on changes in tree of views and if detect that some of compone
 
 ```js
 // AnimationName is just an example and should be replaced by real animation. For Instance FadeOut
-import { AnimationName } from "react-native-reanimated";
+import { AnimationName } from 'react-native-reanimated';
 ```
 
 ### 2. Choose Animated Component which exiting you want to animate

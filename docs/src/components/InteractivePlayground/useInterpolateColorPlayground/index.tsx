@@ -1,28 +1,28 @@
-import React, { useState } from "react";
-import { CheckboxOption, Range, SelectOption } from "../";
-import Example from "./Example";
-import styles from "./styles.module.css";
-import ColorPicker from "./ColorPicker";
-import ProgressBarSection from "./ColorProgressBar/ProgressBarSection";
-import { Collapsible } from "@docusaurus/theme-common";
-import CollapseButton from "@site/src/components/CollapseButton";
-import useScreenSize from "@site/src/hooks/useScreenSize";
-import ExecutionEnvironment from "@docusaurus/ExecutionEnvironment";
+import React, { useState } from 'react';
+import { CheckboxOption, Range, SelectOption } from '../';
+import Example from './Example';
+import styles from './styles.module.css';
+import ColorPicker from './ColorPicker';
+import ProgressBarSection from './ColorProgressBar/ProgressBarSection';
+import { Collapsible } from '@docusaurus/theme-common';
+import CollapseButton from '@site/src/components/CollapseButton';
+import useScreenSize from '@site/src/hooks/useScreenSize';
+import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
 
 export const ColorSpace = {
-  RGB: "RGB",
-  HSV: "HSV",
+  RGB: 'RGB',
+  HSV: 'HSV',
 };
 
 const initialState = {
-  colorSpace: "RGB",
+  colorSpace: 'RGB',
   gamma: 2.2,
   correction: true,
   color: {
     /* --swm-blue-light-100 */
-    leftBoundary: "#38ACDD",
+    leftBoundary: '#38ACDD',
     /* --swm-yellow-light-100 */
-    rightBoundary: "#FFD61E",
+    rightBoundary: '#FFD61E',
   },
 };
 
@@ -35,7 +35,7 @@ export default function useInterpolateColorPlayground() {
 
   const [colorBarsSectionCollapsed, setColorBarsSectionCollapsed] =
     useState(true);
-  const [colorSpace, setColorSpace] = useState<"RGB" | "HSV">(
+  const [colorSpace, setColorSpace] = useState<'RGB' | 'HSV'>(
     ColorSpace[initialState.colorSpace]
   );
   const [gamma, setGamma] = useState(initialState.gamma);
@@ -79,7 +79,7 @@ export default function useInterpolateColorPlayground() {
         label="Colorspace"
         value={colorSpace}
         onChange={(changedString) => setColorSpace(ColorSpace[changedString])}
-        options={["RGB", "HSV"]}
+        options={['RGB', 'HSV']}
       />
       {colorSpace === ColorSpace.RGB && (
         <Range
@@ -146,8 +146,7 @@ export default function useInterpolateColorPlayground() {
         lazy={false}
         collapsed={colorBarsSectionCollapsed}
         disableSSRStyle
-        onCollapseTransitionEnd={setColorBarsSectionCollapsed}
-      >
+        onCollapseTransitionEnd={setColorBarsSectionCollapsed}>
         <ProgressBarSection
           color1={colorLeftBoundary}
           color2={colorRightBoundary}

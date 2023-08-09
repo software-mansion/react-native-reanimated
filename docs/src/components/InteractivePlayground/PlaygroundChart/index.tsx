@@ -1,8 +1,8 @@
-import React, { useEffect, useRef } from "react";
-import styles from "./styles.module.css";
-import useScreenSize from "@site/src/hooks/useScreenSize";
-import PlaygroundChartPoint from "@site/src/components/InteractivePlayground/PlaygroundChart/PlaygroundChartPoint";
-import ExecutionEnvironment from "@docusaurus/ExecutionEnvironment";
+import React, { useEffect, useRef } from 'react';
+import styles from './styles.module.css';
+import useScreenSize from '@site/src/hooks/useScreenSize';
+import PlaygroundChartPoint from '@site/src/components/InteractivePlayground/PlaygroundChart/PlaygroundChartPoint';
+import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
 
 export interface HandleMoveHandlerProps {
   x: number;
@@ -38,7 +38,7 @@ const PlaygroundChart: React.FC<{
   const isMobile = ExecutionEnvironment.canUseViewport && windowWidth < 768;
 
   const initializeCanvas = () => {
-    const ctx = canvasRef.current.getContext("2d");
+    const ctx = canvasRef.current.getContext('2d');
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.save();
 
@@ -47,7 +47,7 @@ const PlaygroundChart: React.FC<{
 
     // Draw lines to points only if current easing is a cubic bezier function
     if (
-      (easingFunctionName === "bezier" || easingFunctionName === "bezierFn") &&
+      (easingFunctionName === 'bezier' || easingFunctionName === 'bezierFn') &&
       !isMobile
     )
       bezierDrawLineToPoints(ctx);
@@ -56,7 +56,7 @@ const PlaygroundChart: React.FC<{
   const additionalSpaceValues = {
     lineWidth: 1,
     // var(--swm-navy-light-20)
-    strokeStyle: "#c1c6e5",
+    strokeStyle: '#c1c6e5',
     rect: {
       x: !isMobile ? 50 : 25,
       y: !isMobile ? 50 : 25,
@@ -113,11 +113,11 @@ const PlaygroundChart: React.FC<{
     }
 
     ctx.restore();
-    ctx.lineJoin = "round";
+    ctx.lineJoin = 'round';
     ctx.lineWidth = 3;
 
     // var(--swm-navy-light-80)
-    ctx.strokeStyle = "#b58df1";
+    ctx.strokeStyle = '#b58df1';
     ctx.stroke();
     ctx.restore();
   };
@@ -155,7 +155,7 @@ const PlaygroundChart: React.FC<{
 
     ctx.lineWidth = 1;
     // var(--swm-navy-light-60) in rgba
-    ctx.strokeStyle = "rgba(102, 118, 170, 0.4)";
+    ctx.strokeStyle = 'rgba(102, 118, 170, 0.4)';
     ctx.stroke();
   };
 
@@ -169,8 +169,8 @@ const PlaygroundChart: React.FC<{
     <div className={styles.graph}>
       <div style={{ width: canvasSize + 2, height: canvasSize + 2 }}>
         {!isMobile &&
-          (easingFunctionName === "bezier" ||
-            easingFunctionName === "bezierFn") && (
+          (easingFunctionName === 'bezier' ||
+            easingFunctionName === 'bezierFn') && (
             <>
               <PlaygroundChartPoint
                 label="L"
@@ -244,7 +244,7 @@ const prepareChartValues = ({
   /* For elastic easing, it would be better to decrease the scaling
    * of the Y-axis, as the bouncing segments could overflow beyond the canvas.
    */
-  if (easingFunctionName === "elastic") {
+  if (easingFunctionName === 'elastic') {
     let elasticEasingTranslate = {
       x: 0,
       y: canvas.height,
@@ -252,11 +252,11 @@ const prepareChartValues = ({
       scaleY: 1,
     };
 
-    if (easingNestType === "inOut")
+    if (easingNestType === 'inOut')
       /* The midpoint between numbers 1.25 and 1.5 that represents starting points
        * on the y-axis of the left and right side of the elastic easing function. */
       elasticEasingTranslate.y = canvas.height / 1.375;
-    else if (easingNestType === "out")
+    else if (easingNestType === 'out')
       elasticEasingTranslate.y = canvas.height / 2;
 
     translate = elasticEasingTranslate;

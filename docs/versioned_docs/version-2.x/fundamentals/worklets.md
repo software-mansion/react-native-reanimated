@@ -8,7 +8,7 @@ The ultimate goal of worklets was for them to define small pieces of JavaScript 
 
 ```js
 function someWorklet(greeting) {
-  "worklet";
+  'worklet';
   console.log("Hey I'm running on the UI thread");
 }
 ```
@@ -17,12 +17,12 @@ Functions are a great construct for our needs because you can communicate with t
 
 ```js
 function someWorklet(greeting) {
-  "worklet";
-  console.log(greeting, "From the UI thread");
+  'worklet';
+  console.log(greeting, 'From the UI thread');
 }
 
 function onPress() {
-  runOnUI(someWorklet)("Howdy");
+  runOnUI(someWorklet)('Howdy');
 }
 ```
 
@@ -32,8 +32,8 @@ In addition to arguments, functions also capture the context where they are defi
 const width = 135.5;
 
 function otherWorklet() {
-  "worklet";
-  console.log("Captured width is", width);
+  'worklet';
+  console.log('Captured width is', width);
 }
 ```
 
@@ -41,14 +41,14 @@ Worklets can capture (or take as arguments) from other worklets, in which case w
 
 ```js
 function returningWorklet() {
-  "worklet";
+  'worklet';
   return "I'm back";
 }
 
 function someWorklet() {
-  "worklet";
+  'worklet';
   let what = returningWorklet();
-  console.log("On the UI thread, other worklet says", what);
+  console.log('On the UI thread, other worklet says', what);
 }
 ```
 
@@ -56,13 +56,13 @@ And hey – this works for regular methods too. In fact, console.log is not defi
 
 ```js
 function callback(text) {
-  console.log("Running on the RN thread", text);
+  console.log('Running on the RN thread', text);
 }
 
 function someWorklet() {
-  "worklet";
+  'worklet';
   console.log("I'm on UI but can call methods from the RN thread");
-  runOnJS(callback)("can pass arguments too");
+  runOnJS(callback)('can pass arguments too');
 }
 ```
 
@@ -75,7 +75,7 @@ The method provided to the hook will be turned into a worklet and executed on th
 
 ```js
 const style = useAnimatedStyle(() => {
-  console.log("Running on the UI thread");
+  console.log('Running on the UI thread');
   return {
     opacity: 0.5,
   };

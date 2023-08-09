@@ -43,8 +43,8 @@ import Animated, {
   withSpring,
   useAnimatedStyle,
   useAnimatedGestureHandler,
-} from "react-native-reanimated";
-import { PanGestureHandler } from "react-native-gesture-handler";
+} from 'react-native-reanimated';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 
 function App() {
   const x = useSharedValue(0);

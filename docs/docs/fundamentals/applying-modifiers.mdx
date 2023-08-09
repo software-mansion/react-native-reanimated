@@ -16,8 +16,8 @@ Let's start by having an `Animated.View` and a `Button` which moves the view to 
 
 If this sounds new to you, no worries! Start by going through the basics in [Your First Animation](/docs/fundamentals/your-first-animation) and come back here when you're ready.
 
-import Timing from "@site/src/examples/ApplyingModifiers/Timing";
-import TimingSrc from "!!raw-loader!@site/src/examples/ApplyingModifiers/Timing";
+import Timing from '@site/src/examples/ApplyingModifiers/Timing';
+import TimingSrc from '!!raw-loader!@site/src/examples/ApplyingModifiers/Timing';
 
 <CollapsibleCode showLines={[8, 32]} src={TimingSrc} />
 
@@ -28,7 +28,7 @@ import TimingSrc from "!!raw-loader!@site/src/examples/ApplyingModifiers/Timing"
 To implement our desired shake animation we can use [`withRepeat`](/docs/animations/withRepeat) modifier. This modifier lets you repeat a provided animation.
 
 ```javascript
-import { withRepeat } from "react-native-reanimated";
+import { withRepeat } from 'react-native-reanimated';
 
 function App() {
   sv.value = withRepeat(withTiming(50), 5);
@@ -42,8 +42,8 @@ To learn more about it you can check out the full [`withRepeat` API reference](/
 
 Let's use this function in our example:
 
-import Repeat from "@site/src/examples/ApplyingModifiers/Repeat";
-import RepeatSrc from "!!raw-loader!@site/src/examples/ApplyingModifiers/Repeat";
+import Repeat from '@site/src/examples/ApplyingModifiers/Repeat';
+import RepeatSrc from '!!raw-loader!@site/src/examples/ApplyingModifiers/Repeat';
 
 <CollapsibleCode showLines={[9, 29]} src={RepeatSrc} />
 
@@ -56,7 +56,7 @@ When we run this code we can see that the box jiggles left to right between the 
 One way to improve our animation is to start it with a left offset and reset it back to starting position after the animation ends. That's a perfect use case for the `withSequence` modifier.
 
 ```javascript
-import { withSequence } from "react-native-reanimated";
+import { withSequence } from 'react-native-reanimated';
 
 function App() {
   sv.value = withSequence(withTiming(50), withTiming(0));
@@ -70,8 +70,8 @@ To learn more about it you can check out the full [`withSequence` API reference]
 
 Coming back to our example - we can utilize `withSequence` to improve our animation. First, we'll sway the box to the left which we'll make it to take half of the duration of one swing. Then, we'll shake the box 5 times and finish up the animation by bringing it to starting position also with half of the animation duration.
 
-import Sequence from "@site/src/examples/ApplyingModifiers/Sequence";
-import SequenceSrc from "!!raw-loader!@site/src/examples/ApplyingModifiers/Sequence";
+import Sequence from '@site/src/examples/ApplyingModifiers/Sequence';
+import SequenceSrc from '!!raw-loader!@site/src/examples/ApplyingModifiers/Sequence';
 
 <CollapsibleCode showLines={[18, 32]} src={SequenceSrc} />
 
@@ -82,7 +82,7 @@ import SequenceSrc from "!!raw-loader!@site/src/examples/ApplyingModifiers/Seque
 As a cherry on top, we'll add a little bit of suspense by adding a slight delay before the animation begins. For this exact purpose, Reanimated comes with a `withDelay` modifier.
 
 ```javascript
-import { withDelay } from "react-native-reanimated";
+import { withDelay } from 'react-native-reanimated';
 
 function App() {
   sv.value = withDelay(500, withTiming(0));
@@ -94,11 +94,11 @@ This function as a first parameter takes the duration in milliseconds before the
 
 To learn more about it you can check out the full [`withDelay` API reference](/docs/animations/withDelay).
 
-import DelaySrc from "!!raw-loader!@site/src/examples/ApplyingModifiers/Delay";
+import DelaySrc from '!!raw-loader!@site/src/examples/ApplyingModifiers/Delay';
 
 <CollapsibleCode showLines={[19, 38]} src={DelaySrc} />
 
-import Delay from "@site/src/examples/ApplyingModifiers/Delay";
+import Delay from '@site/src/examples/ApplyingModifiers/Delay';
 
 <InteractiveExample src={DelaySrc} component={<Delay />} />
 

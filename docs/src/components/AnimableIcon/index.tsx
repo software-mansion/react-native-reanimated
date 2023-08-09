@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
-import styles from "./styles.module.css";
-import clsx from "clsx";
-import { useColorMode } from "@docusaurus/theme-common";
+import React, { useEffect } from 'react';
+import styles from './styles.module.css';
+import clsx from 'clsx';
+import { useColorMode } from '@docusaurus/theme-common';
 
 export const Animation = {
   FADE_IN_OUT: styles.iconClicked,
@@ -31,9 +31,8 @@ const AnimableIcon = ({
   return (
     <div
       onClick={() => onClick(actionPerformed, setActionPerformed)}
-      className={clsx(styles.actionIcon, actionPerformed && animation)}
-    >
-      {colorMode === "light" ? icon : iconDark || icon}
+      className={clsx(styles.actionIcon, actionPerformed && animation)}>
+      {colorMode === 'light' ? icon : iconDark || icon}
     </div>
   );
 };

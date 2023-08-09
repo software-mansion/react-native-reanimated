@@ -127,8 +127,8 @@ function UseAnimatedSensorExample() {
   });
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Animated.View style={[{ backgroundColor: "black" }, style]} />
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Animated.View style={[{ backgroundColor: 'black' }, style]} />
     </View>
   );
 }

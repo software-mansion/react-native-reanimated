@@ -17,7 +17,7 @@ Reanimated 2 integrates tightly with the [react-native-gesture-handler](https://
 For Android OS, be sure to wrap your app entry point with `<GestureHandlerRootView>` component from `react-native-gesture-handler` library to capture events properly.
 
 ```js
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function App() {
   return (
@@ -71,7 +71,7 @@ Now all we have to do is to use the _useAnimatedStyle_ hook in order to map the 
 ```js
 const uas = useAnimatedStyle(() => {
   return {
-    backgroundColor: pressed.value ? "#FEEF86" : "#001972",
+    backgroundColor: pressed.value ? '#FEEF86' : '#001972',
     transform: [{ scale: pressed.value ? 1.2 : 1 }],
   };
 });
@@ -147,7 +147,7 @@ The only thing left to do is to update _useAnimatedStyle_ body such that x and y
 ```js
 const uas = useAnimatedStyle(() => {
   return {
-    backgroundColor: pressed.value ? "#FEEF86" : "#001972",
+    backgroundColor: pressed.value ? '#FEEF86' : '#001972',
     transform: [{ translateX: x.value }, { translateY: y.value }],
   };
 });

@@ -1,8 +1,8 @@
-import React from "react";
-import styles from "./styles.module.css";
+import React from 'react';
+import styles from './styles.module.css';
 
-import ArrowRight from "@site/static/img/arrow-right-hero.svg";
-import clsx from "clsx";
+import ArrowRight from '@site/static/img/arrow-right-hero.svg';
+import clsx from 'clsx';
 
 export const ButtonStyling = {
   TO_PURPLE: styles.buttonTransparentStyling,
@@ -17,14 +17,14 @@ export const BorderStyling = {
 const HomepageButton: React.FC<{
   title: string;
   href: string;
-  target?: "_blank" | "_parent" | "_self" | "_top";
+  target?: '_blank' | '_parent' | '_self' | '_top';
   backgroundStyling?: string;
   borderStyling?: string;
   enlarged?: boolean;
 }> = ({
   title,
   href,
-  target = "_self",
+  target = '_self',
   backgroundStyling = ButtonStyling.TO_TRANSPARENT,
   borderStyling = BorderStyling.PURPLE,
   enlarged = false,
@@ -36,8 +36,7 @@ const HomepageButton: React.FC<{
           styles.homepageButton,
           backgroundStyling,
           borderStyling
-        )}
-      >
+        )}>
         {title}
 
         <div className={styles.arrow}>

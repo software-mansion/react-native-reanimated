@@ -1,9 +1,9 @@
-import React from "react";
-import styles from "./styles.module.css";
-import ReanimatedFeatureList from "@site/src/components/ReanimatedFeatures/ReanimatedFeatureList";
+import React from 'react';
+import styles from './styles.module.css';
+import ReanimatedFeatureList from '@site/src/components/ReanimatedFeatures/ReanimatedFeatureList';
 import HomepageButton, {
   ButtonStyling,
-} from "@site/src/components/HomepageButton";
+} from '@site/src/components/HomepageButton';
 
 const ReanimatedFeatures = () => {
   return (

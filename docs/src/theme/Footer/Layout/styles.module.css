@@ -8,7 +8,7 @@ footer {
 }
 
 @media (min-width: 996px) and (max-width: 1280px) {
-  .footerLanding [class*="footer__copyright"] {
+  .footerLanding [class*='footer__copyright'] {
     padding: 0 2rem;
   }
 }
@@ -34,7 +34,7 @@ footer {
   z-index: -100;
 }
 
-[data-theme="dark"] .sponsorsBackground {
+[data-theme='dark'] .sponsorsBackground {
   background: linear-gradient(
     180deg,
     var(--swm-navy) 0%,

@@ -49,8 +49,8 @@ Luckily, the `useAnimatedStyle` hook comes to the rescue. It adds additional con
 
 Let's see it in action:
 
-import AnimatingStyles from "@site/src/examples/AnimatingStyles";
-import AnimatingStylesSrc from "!!raw-loader!@site/src/examples/AnimatingStyles";
+import AnimatingStyles from '@site/src/examples/AnimatingStyles';
+import AnimatingStylesSrc from '!!raw-loader!@site/src/examples/AnimatingStyles';
 
 <CollapsibleCode showLines={[8, 29]} src={AnimatingStylesSrc} />
 
@@ -75,8 +75,8 @@ For example, let's say we would like to animate SVG elements. Instead of passing
 Reanimated comes with just a handful of built-in components like `Animated.View` or `Animated.ScrollView`. For components which aren't a part of Reanimated, to make their props animatable, we need to wrap them with [`createAnimatedComponent`](/docs/core/createAnimatedComponent):
 
 ```jsx
-import Animated from "react-native-reanimated";
-import { Circle } from "react-native-svg";
+import Animated from 'react-native-reanimated';
+import { Circle } from 'react-native-svg';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 ```
@@ -99,8 +99,8 @@ This approach works just fine but same as `useAnimatedStyle` for animating style
 
 So if we'd like to smoothly increase the radius of a circle by `10px` on each button press we could use `useAnimatedProps`:
 
-import AnimatingProps from "@site/src/examples/AnimatingProps";
-import AnimatingPropsSrc from "!!raw-loader!@site/src/examples/AnimatingProps";
+import AnimatingProps from '@site/src/examples/AnimatingProps';
+import AnimatingPropsSrc from '!!raw-loader!@site/src/examples/AnimatingProps';
 
 <CollapsibleCode showLines={[9, 39]} src={AnimatingPropsSrc} />
 

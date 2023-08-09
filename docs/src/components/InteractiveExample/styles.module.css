@@ -14,20 +14,20 @@
 }
 
 /* Preferred height in code section of container. */
-.container[data-ispreview="false"] {
+.container[data-ispreview='false'] {
   height: 400px;
 }
 
 /* Classes used to omit default docusaurus styling. */
-[class*="codeBlockContainer"] {
+[class*='codeBlockContainer'] {
   box-shadow: none;
 }
 
-.interactiveCodeBlock [class*="codeBlockContent"] pre {
+.interactiveCodeBlock [class*='codeBlockContent'] pre {
   border: none;
 }
 
-.interactiveCodeBlock [class*="codeBlockContent"] code {
+.interactiveCodeBlock [class*='codeBlockContent'] code {
   background-color: var(--swm-off-background);
   width: 100%;
   padding: 0;
@@ -35,7 +35,7 @@
 }
 
 /* Hide default action buttons, displayed by Docusaurus */
-.interactiveCodeBlock [class*="buttonGroup"] {
+.interactiveCodeBlock [class*='buttonGroup'] {
   display: none;
 }
 
@@ -74,7 +74,7 @@
   height: 30px;
 }
 
-.container[data-ispreview="false"] .buttonsContainer {
+.container[data-ispreview='false'] .buttonsContainer {
   position: absolute;
   right: 0;
   top: 0;
@@ -86,7 +86,7 @@
 }
 
 @media (max-width: 996px) {
-  .container[data-ispreview="false"] .buttonsContainer {
+  .container[data-ispreview='false'] .buttonsContainer {
     position: relative;
     width: fit-content;
     margin: 1.5em auto;
@@ -98,7 +98,7 @@
 }
 
 /* Style preview only when user is in the 'code' section. */
-.container[data-ispreview="false"] .previewContainer {
+.container[data-ispreview='false'] .previewContainer {
   flex: 1 1 auto;
   overflow-y: auto;
 
@@ -107,7 +107,7 @@
 }
 
 @media (max-width: 996px) {
-  .container[data-ispreview="false"] .previewContainer {
+  .container[data-ispreview='false'] .previewContainer {
     margin-top: 0;
   }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "reanimated-3-docs",
+  "name": "react-native-reanimated-docs",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -13,8 +13,8 @@
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc --noEmit",
-    "lint": "prettier --check .",
-    "format": "prettier --write --list-different ."
+    "lint": "prettier --check docs src versioned_docs versioned_docs",
+    "format": "prettier --write --list-different docs src versioned_docs versioned_docs"
   },
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.18.6",

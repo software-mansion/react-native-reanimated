@@ -1,12 +1,12 @@
-import React, { useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import React, { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   WithTimingConfig,
   cancelAnimation,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 const initialOffset = -200;
 
@@ -53,18 +53,18 @@ export default function App({ options }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
   },
   box: {
     height: 100,
     width: 100,
-    backgroundColor: "#b58df1",
+    backgroundColor: '#b58df1',
     borderRadius: 20,
     marginVertical: 64,
   },
   ghost: {
     opacity: 0.3,
-    position: "absolute",
+    position: 'absolute',
     transform: [{ translateX: initialOffset }],
   },
 });

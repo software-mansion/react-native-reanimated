@@ -1,6 +1,6 @@
-import React from "react";
-import styles from "./styles.module.css";
-import ReanimatedFeatureItem from "@site/src/components/ReanimatedFeatures/ReanimatedFeatureItem";
+import React from 'react';
+import styles from './styles.module.css';
+import ReanimatedFeatureItem from '@site/src/components/ReanimatedFeatures/ReanimatedFeatureItem';
 
 const ReanimatedFeatureList = () => {
   return (

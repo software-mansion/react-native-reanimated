@@ -19,7 +19,7 @@ To be precise how to animate positions and dimensions of components. What's impo
 
 ```js
 // Transition is just an example and should be replaced by real animation. For Instance Layout
-import { Transition } from "react-native-reanimated";
+import { Transition } from 'react-native-reanimated';
 ```
 
 ### 2. Choose Animated Component which layout you want to animate

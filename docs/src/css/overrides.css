@@ -35,7 +35,7 @@ table thead tr {
 
   mask: url(/static/img/github.svg) no-repeat 100% 100%;
   mask-size: cover;
-  content: "";
+  content: '';
 
   background-color: var(--ifm-navbar-link-color);
 }
@@ -51,23 +51,23 @@ table thead tr {
   background-color: var(--ifm-navbar-link-hover-color);
 }
 
-[class*="navbarLanding"] .header-github:before,
-[class*="navbarLanding"] .header-github:hover:before {
+[class*='navbarLanding'] .header-github:before,
+[class*='navbarLanding'] .header-github:hover:before {
   background-color: var(--swm-off-white);
 }
 
-[class*="codeBlockContent"] pre {
+[class*='codeBlockContent'] pre {
   border: 1px solid var(--swm-border);
 }
 
-[class*="codeBlockContent"] pre,
-[class*="codeBlockContent"] code {
+[class*='codeBlockContent'] pre,
+[class*='codeBlockContent'] code {
   border-radius: 0;
   background-color: var(--swm-off-background);
 }
 
 /* Add small padding, when some of the lines are too long in a code block */
-[class*="codeBlockLines"] span:last-of-type {
+[class*='codeBlockLines'] span:last-of-type {
   margin-right: 1em;
 }
 

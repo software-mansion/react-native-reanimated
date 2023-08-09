@@ -22,7 +22,7 @@ If you want to create more complex animation you can use [Keyframes](keyframeAni
 
 ```js
 // AnimationName is just an example and should be replaced by real animation. For Instance FadeIn
-import { AnimationName } from "react-native-reanimated";
+import { AnimationName } from 'react-native-reanimated';
 ```
 
 ### 2. Choose Animated Component which entering you want to animate

@@ -1,15 +1,15 @@
-import React, { useState } from "react";
-import { Button, StyleSheet, View } from "react-native";
+import React, { useState } from 'react';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   useSharedValue,
   withDelay,
   withTiming,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 const DURATION = 1000;
 const DELAY = 500;
 
-const text = ["React", "Native", "Reanimated"];
+const text = ['React', 'Native', 'Reanimated'];
 
 export default function App() {
   const [isShown, setShown] = useState(false);
@@ -46,7 +46,7 @@ export default function App() {
           {text[2]}
         </Animated.Text>
       </View>
-      <Button title={isShown ? "Hide" : "Show"} onPress={show} />
+      <Button title={isShown ? 'Hide' : 'Show'} onPress={show} />
     </View>
   );
 }
@@ -54,12 +54,12 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
   },
   text: {
-    flexDirection: "row",
+    flexDirection: 'row',
   },
   tab: {
     paddingHorizontal: 20,
@@ -67,18 +67,18 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 42,
-    textAlign: "center",
-    fontWeight: "bold",
+    textAlign: 'center',
+    fontWeight: 'bold',
     marginRight: 8,
   },
   divider: {
     borderRightWidth: 1,
-    borderRightColor: "#ddd",
+    borderRightColor: '#ddd',
   },
   animatedBorder: {
     height: 8,
     width: 64,
-    backgroundColor: "tomato",
+    backgroundColor: 'tomato',
     borderRadius: 20,
   },
 });

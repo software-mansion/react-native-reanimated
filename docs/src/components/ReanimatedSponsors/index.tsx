@@ -1,18 +1,18 @@
-import React from "react";
-import styles from "./styles.module.css";
+import React from 'react';
+import styles from './styles.module.css';
 
-import ThemedImage from "@theme/ThemedImage";
-import useBaseUrl from "@docusaurus/useBaseUrl";
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 
 const ReanimatedSponsors = () => {
   const sponsorsLogos = {
     expo: {
-      light: useBaseUrl("/img/expo.svg"),
-      dark: useBaseUrl("/img/expo-dark.svg"),
+      light: useBaseUrl('/img/expo.svg'),
+      dark: useBaseUrl('/img/expo-dark.svg'),
     },
     shopify: {
-      light: useBaseUrl("/img/shopify.svg"),
-      dark: useBaseUrl("/img/shopify-dark.svg"),
+      light: useBaseUrl('/img/shopify.svg'),
+      dark: useBaseUrl('/img/shopify-dark.svg'),
     },
   };
 

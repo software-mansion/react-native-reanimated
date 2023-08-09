@@ -27,13 +27,13 @@ In the example below we use [`react-native-svg`](https://github.com/react-native
 ## Example
 
 ```js {12-16}
-import React from "react";
-import { StyleSheet } from "react-native";
+import React from 'react';
+import { StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedProps,
-} from "react-native-reanimated";
-import Svg, { Path } from "react-native-svg";
+} from 'react-native-reanimated';
+import Svg, { Path } from 'react-native-svg';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
@@ -91,12 +91,12 @@ const AnimatedHello = Animated.createAnimatedComponent(Hello);
 
 const adapter = createAnimatedPropAdapter(
   (props) => {
-    if (Object.keys(props).includes("helloSize")) {
+    if (Object.keys(props).includes('helloSize')) {
       props.fontSize = props.helloSize;
       delete props.helloSize;
     }
   },
-  ["fontSize"]
+  ['fontSize']
 );
 
 export default function Component() {

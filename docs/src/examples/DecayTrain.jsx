@@ -1,15 +1,15 @@
-import React from "react";
-import { StyleSheet, View } from "react-native";
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withDecay,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
-} from "react-native-gesture-handler";
+} from 'react-native-gesture-handler';
 
 const SIZE = 180;
 
@@ -53,9 +53,9 @@ export default function App() {
 
 function TrainTracks() {
   return (
-    <View style={{ flexDirection: "column" }}>
+    <View style={{ flexDirection: 'column' }}>
       <View style={styles.rail} />
-      <View style={{ flexDirection: "row" }}>
+      <View style={{ flexDirection: 'row' }}>
         {Array.from({ length: 20 }).map((_, i) => {
           return <View key={i} style={styles.track} />;
         })}
@@ -89,84 +89,84 @@ function Train() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
   },
   wrapper: {
     flex: 1,
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   grab: {
-    cursor: "grab",
+    cursor: 'grab',
   },
   text: {
-    color: "white",
-    textTransform: "uppercase",
-    fontWeight: "bold",
+    color: 'white',
+    textTransform: 'uppercase',
+    fontWeight: 'bold',
   },
   row: {
-    flexDirection: "row",
+    flexDirection: 'row',
   },
   column: {
-    flexDirection: "column",
+    flexDirection: 'column',
   },
   wheel: {
     height: 50,
     width: 50,
-    backgroundColor: "#537FE7",
+    backgroundColor: '#537FE7',
     borderRadius: 50,
     marginHorizontal: 5,
   },
   underbody: {
     width: SIZE,
     height: 30,
-    backgroundColor: "black",
+    backgroundColor: 'black',
     top: 30,
   },
   stripe: {
     width: SIZE,
     height: 10,
-    backgroundColor: "red",
+    backgroundColor: 'red',
     top: 30,
   },
   front: {
     width: 50,
     height: 50,
-    backgroundColor: "black",
+    backgroundColor: 'black',
     top: 30,
   },
   body: {
     width: 130,
     height: 50,
-    backgroundColor: "#537FE7",
+    backgroundColor: '#537FE7',
     top: 30,
   },
   chimney: {
     width: 20,
     height: 30,
-    backgroundColor: "black",
+    backgroundColor: 'black',
     top: 30,
     right: 15,
-    marginLeft: "auto",
+    marginLeft: 'auto',
   },
   back: {
     width: 50,
     height: 15,
-    backgroundColor: "#537FE7",
+    backgroundColor: '#537FE7',
     top: 30 + 15,
   },
   track: {
     height: 10,
     width: 20,
-    backgroundColor: "#B8621B",
+    backgroundColor: '#B8621B',
     marginHorizontal: 15,
   },
   rail: {
-    width: "100%",
+    width: '100%',
     height: 10,
-    backgroundColor: "gray",
+    backgroundColor: 'gray',
   },
 });

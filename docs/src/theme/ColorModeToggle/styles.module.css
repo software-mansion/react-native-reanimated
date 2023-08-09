@@ -64,14 +64,14 @@
   transform: scaleX(-1);
 }
 
-[data-theme="dark"] .darkToggleIcon,
-[data-theme="light"] .lightToggleIcon {
+[data-theme='dark'] .darkToggleIcon,
+[data-theme='light'] .lightToggleIcon {
   color: var(--ifm-font-color-base);
   background-color: var(--swm-color-mode-enabled);
 }
 
-[data-theme="dark"] .iconLandingContainer.darkToggleIcon,
-[data-theme="light"] .iconLandingContainer.lightToggleIcon {
+[data-theme='dark'] .iconLandingContainer.darkToggleIcon,
+[data-theme='light'] .iconLandingContainer.lightToggleIcon {
   color: var(--swm-color-mode-enabled-color-landing);
   background-color: var(--swm-color-mode-enabled-landing);
 }

@@ -6,15 +6,15 @@ sidebar_position: 1
 
 `withTiming` lets you create an animation based on duration and [easing](https://easings.net/).
 
-import TimingBasic from "@site/src/examples/TimingBasic";
-import TimingBasicSrc from "!!raw-loader!@site/src/examples/TimingBasic";
+import TimingBasic from '@site/src/examples/TimingBasic';
+import TimingBasicSrc from '!!raw-loader!@site/src/examples/TimingBasic';
 
 <InteractiveExample src={TimingBasicSrc} component={<TimingBasic />} />
 
 ## Reference
 
 ```javascript
-import { withTiming } from "react-native-reanimated";
+import { withTiming } from 'react-native-reanimated';
 
 function App() {
   sv.value = withTiming(0);
@@ -52,7 +52,7 @@ The value on which the animation will come at rest.
 
 The timing animation configuration.
 
-import { useTimingPlayground } from "@site/src/components/InteractivePlayground";
+import { useTimingPlayground } from '@site/src/components/InteractivePlayground';
 
 <InteractivePlayground usePlayground={useTimingPlayground} />
 
@@ -69,8 +69,8 @@ The `easing` parameter lets you fine-tine the animation over the specified time 
 
 It all will start to make sense when you compare side by side a `linear` easing with the default `Easing.inOut(Easing.quad)` easing.
 
-import TimingEasingCompare from "@site/src/examples/TimingEasingCompare";
-import TimingEasingCompareSrc from "!!raw-loader!@site/src/examples/TimingEasingCompare";
+import TimingEasingCompare from '@site/src/examples/TimingEasingCompare';
+import TimingEasingCompareSrc from '!!raw-loader!@site/src/examples/TimingEasingCompare';
 
 <InteractiveExample
   src={TimingEasingCompareSrc}
@@ -82,7 +82,7 @@ Reanimated provides a handful of ready-to-use easing functions in the `Easing` m
 You use our built-in easings by passing them as `easing` property to `withTiming` config:
 
 ```javascript
-import { Easing } from "react-native-reanimated";
+import { Easing } from 'react-native-reanimated';
 
 withTiming(sv.value, {
   easing: Easing.bounce,
@@ -120,8 +120,8 @@ A function called on animation complete. In case the animation is cancelled, the
 
 ## Example
 
-import TimingTabs from "@site/src/examples/TimingTabs";
-import TimingTabsSrc from "!!raw-loader!@site/src/examples/TimingTabs";
+import TimingTabs from '@site/src/examples/TimingTabs';
+import TimingTabsSrc from '!!raw-loader!@site/src/examples/TimingTabs';
 
 <InteractiveExample src={TimingTabsSrc} component={<TimingTabs />} />
 

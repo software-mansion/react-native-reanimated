@@ -1,7 +1,7 @@
-import React from "react";
-import styles from "./styles.module.css";
-import useBaseUrl from "@docusaurus/useBaseUrl";
-import clsx from "clsx";
+import React from 'react';
+import styles from './styles.module.css';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import clsx from 'clsx';
 
 interface Props {
   sources: {
@@ -20,8 +20,7 @@ export default function ThemedVideo(props: Props) {
         autoPlay
         muted
         loop
-        className={clsx(styles.themedVideo, styles[`themedVideo--dark`])}
-      >
+        className={clsx(styles.themedVideo, styles[`themedVideo--dark`])}>
         <source src={useBaseUrl(sources.dark)} />
       </video>
       <video
@@ -29,8 +28,7 @@ export default function ThemedVideo(props: Props) {
         autoPlay
         muted
         loop
-        className={clsx(styles.themedVideo, styles[`themedVideo--light`])}
-      >
+        className={clsx(styles.themedVideo, styles[`themedVideo--light`])}>
         <source src={useBaseUrl(sources.light)} />
       </video>
     </div>

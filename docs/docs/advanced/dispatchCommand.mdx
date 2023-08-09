@@ -32,11 +32,11 @@ The array of command arguments. Defaults to an empty array.
 import Animated, {
   dispatchCommand,
   useAnimatedRef,
-} from "react-native-reanimated";
-import { Button, StyleSheet, TextInput, View } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
+} from 'react-native-reanimated';
+import { Button, StyleSheet, TextInput, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
-import React from "react";
+import React from 'react';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -44,7 +44,7 @@ export default function DispatchCommandExample() {
   const aref = useAnimatedRef<TextInput>();
 
   const gesture = Gesture.Tap().onStart(() => {
-    dispatchCommand(aref, "focus");
+    dispatchCommand(aref, 'focus');
   });
 
   return (
@@ -60,8 +60,8 @@ export default function DispatchCommandExample() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   input: {
     borderWidth: 1,

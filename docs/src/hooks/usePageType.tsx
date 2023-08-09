@@ -1,9 +1,9 @@
-import { useLocation } from "@docusaurus/router";
-import useBaseUrl from "@docusaurus/useBaseUrl";
+import { useLocation } from '@docusaurus/router';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 
 const usePageType = () => {
   const location = useLocation();
-  const baseUrl = useBaseUrl("/");
+  const baseUrl = useBaseUrl('/');
 
   return {
     isDocumentation: location.pathname.startsWith(`${baseUrl}docs`),

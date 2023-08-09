@@ -1,11 +1,11 @@
-import React from "react";
-import { View, StyleSheet, Text } from "react-native";
+import React from 'react';
+import { View, StyleSheet, Text } from 'react-native';
 import {
   runOnJS,
   measure,
   useAnimatedRef,
   runOnUI,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 function MeasurableText(props) {
   const { children, onPress } = props;
@@ -36,7 +36,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      {["React", "Native", "Reanimated"].map((word) => (
+      {['React', 'Native', 'Reanimated'].map((word) => (
         <MeasurableText key={word} onPress={handlePress}>
           {word}
         </MeasurableText>
@@ -49,25 +49,25 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
   },
   box: {
     height: 100,
     width: 100,
-    backgroundColor: "#b58df1",
+    backgroundColor: '#b58df1',
     borderRadius: 20,
     marginVertical: 64,
-    alignSelf: "center",
+    alignSelf: 'center',
   },
   title: {
     fontSize: 42,
-    textAlign: "center",
-    fontWeight: "bold",
+    textAlign: 'center',
+    fontWeight: 'bold',
     marginRight: 8,
   },
   label: {
     fontSize: 24,
     marginVertical: 16,
-    color: "#b58df1",
+    color: '#b58df1',
   },
 });

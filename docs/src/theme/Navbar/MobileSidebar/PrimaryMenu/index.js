@@ -1,14 +1,14 @@
-import React from "react";
-import { useThemeConfig } from "@docusaurus/theme-common";
-import { useNavbarMobileSidebar } from "@docusaurus/theme-common/internal";
-import NavbarItem from "@theme/NavbarItem";
+import React from 'react';
+import { useThemeConfig } from '@docusaurus/theme-common';
+import { useNavbarMobileSidebar } from '@docusaurus/theme-common/internal';
+import NavbarItem from '@theme/NavbarItem';
 
 function useNavbarItems() {
   // TODO temporary casting until ThemeConfig type is improved
   return useThemeConfig().navbar.items;
 }
 
-const ignoredClassNames = ["header-github"];
+const ignoredClassNames = ['header-github'];
 
 // Filter items on mobile sidebar (such as GitHub icon) that contains specified className
 function filterIgnoredItems(items) {

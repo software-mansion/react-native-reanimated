@@ -1,12 +1,12 @@
-import React from "react";
-import { StyleSheet, View, Text } from "react-native";
+import React from 'react';
+import { StyleSheet, View, Text } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   Easing,
   withRepeat,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 const duration = 2000;
 
@@ -56,23 +56,23 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
   },
   box: {
     height: 80,
     width: 80,
     margin: 20,
     borderWidth: 1,
-    borderColor: "#b58df1",
+    borderColor: '#b58df1',
     borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   text: {
-    color: "#b58df1",
-    textTransform: "uppercase",
-    fontWeight: "bold",
+    color: '#b58df1',
+    textTransform: 'uppercase',
+    fontWeight: 'bold',
   },
 });

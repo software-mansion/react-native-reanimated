@@ -5,9 +5,9 @@ import Animated, {
   withSequence,
   withTiming,
   Easing,
-} from "react-native-reanimated";
-import { View, StyleSheet, Pressable, Text } from "react-native";
-import React from "react";
+} from 'react-native-reanimated';
+import { View, StyleSheet, Pressable, Text } from 'react-native';
+import React from 'react';
 
 const HEIGHT = 200;
 const DEFAULT_VELOCITY = 0.6;
@@ -75,7 +75,7 @@ export default function FrameCallbackDino() {
     transform: [
       { translateX: DEFAULT_HORSE.x },
       { translateY: horseY.value },
-      { rotateY: "180deg" },
+      { rotateY: '180deg' },
     ],
   }));
 
@@ -114,8 +114,7 @@ export default function FrameCallbackDino() {
       <Pressable
         style={styles.container}
         onLayout={getDimensions}
-        onPressIn={handleTap}
-      >
+        onPressIn={handleTap}>
         <Animated.View style={[styles.overlay, overlayStyles]}>
           <Text style={styles.text}>Game Over</Text>
         </Animated.View>
@@ -135,38 +134,38 @@ const styles = StyleSheet.create({
     height: 200,
   },
   horse: {
-    position: "absolute",
+    position: 'absolute',
     fontSize: 80,
   },
   ground: {
-    position: "absolute",
+    position: 'absolute',
     right: 0,
     bottom: GROUND_LEVEL - 10,
-    width: "100%",
+    width: '100%',
     height: 2,
-    backgroundColor: "#000",
+    backgroundColor: '#000',
   },
   obstacle: {
-    position: "absolute",
+    position: 'absolute',
     fontSize: 80,
   },
   text: {
     fontSize: 40,
-    color: "white",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    color: 'white',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     paddingHorizontal: 8,
   },
   overlay: {
-    justifyContent: "center",
-    alignItems: "center",
-    position: "absolute",
-    width: "100%",
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    width: '100%',
     zIndex: 1,
   },
 });
 
 function isColliding(obj1, obj2) {
-  "worklet";
+  'worklet';
   return (
     obj1.x < obj2.x + obj2.width &&
     obj1.x + obj1.width > obj2.x &&

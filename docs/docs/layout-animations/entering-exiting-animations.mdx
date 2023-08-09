@@ -14,8 +14,8 @@ Reanimated comes with a bunch of predefined animations you can customize. For mo
 
 <ThemedVideo
   sources={{
-    light: "/recordings/layout-animations/fade_light.mov",
-    dark: "/recordings/layout-animations/fade_dark.mov",
+    light: '/recordings/layout-animations/fade_light.mov',
+    dark: '/recordings/layout-animations/fade_dark.mov',
   }}
 />
 
@@ -24,7 +24,7 @@ Reanimated comes with a bunch of predefined animations you can customize. For mo
 `FadeX` lets you create a fading animation.
 
 ```jsx
-import { FadeIn, FadeOut } from "react-native-reanimated";
+import { FadeIn, FadeOut } from 'react-native-reanimated';
 
 function App() {
   return <Animated.View entering={FadeIn} exiting={FadeOut} />;
@@ -155,8 +155,8 @@ FadeInDown.delay(500)
 
 <ThemedVideo
   sources={{
-    light: "/recordings/layout-animations/bounce_light.mov",
-    dark: "/recordings/layout-animations/bounce_dark.mov",
+    light: '/recordings/layout-animations/bounce_light.mov',
+    dark: '/recordings/layout-animations/bounce_dark.mov',
   }}
 />
 
@@ -165,7 +165,7 @@ FadeInDown.delay(500)
 `BounceX` lets you create a bouncing animation.
 
 ```jsx
-import { BounceIn, BounceOut } from "react-native-reanimated";
+import { BounceIn, BounceOut } from 'react-native-reanimated';
 
 function App() {
   return <Animated.View entering={BounceIn} exiting={BounceOut} />;
@@ -259,8 +259,8 @@ BounceInDown.duration(500)
 
 <ThemedVideo
   sources={{
-    light: "/recordings/layout-animations/flip_light.mov",
-    dark: "/recordings/layout-animations/flip_dark.mov",
+    light: '/recordings/layout-animations/flip_light.mov',
+    dark: '/recordings/layout-animations/flip_dark.mov',
   }}
 />
 
@@ -269,7 +269,7 @@ BounceInDown.duration(500)
 `FlipX` lets you create animation based on rotation over specific axis.
 
 ```jsx
-import { FlipInEasyX, FlipOutEasyX } from "react-native-reanimated";
+import { FlipInEasyX, FlipOutEasyX } from 'react-native-reanimated';
 
 function App() {
   return <Animated.View entering={FlipInEasyX} exiting={FlipOutEasyX} />;
@@ -390,7 +390,7 @@ FlipInXUp.springify()
 FlipInEasyY.delay(500)
   .randomDelay()
   .withInitialValues({
-    transform: [{ perspective: 100 }, { rotateY: "123deg" }],
+    transform: [{ perspective: 100 }, { rotateY: '123deg' }],
   })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
@@ -408,8 +408,8 @@ FlipInEasyY.delay(500)
 
 <ThemedVideo
   sources={{
-    light: "/recordings/layout-animations/lightspeed_light.mov",
-    dark: "/recordings/layout-animations/lightspeed_dark.mov",
+    light: '/recordings/layout-animations/lightspeed_light.mov',
+    dark: '/recordings/layout-animations/lightspeed_dark.mov',
   }}
 />
 
@@ -418,7 +418,7 @@ FlipInEasyY.delay(500)
 `LightSpeedX` lets you create an animation of a horizontally moving object with a change of opacity and skew.
 
 ```jsx
-import { LightSpeedInRight, LightSpeedOutLeft } from "react-native-reanimated";
+import { LightSpeedInRight, LightSpeedOutLeft } from 'react-native-reanimated';
 
 function App() {
   return (
@@ -517,7 +517,7 @@ LightSpeedInLeft.springify()
 LightSpeedInRight.delay(500)
   .randomDelay()
   .withInitialValues({
-    transform: [{ translateX: -100 }, { skewX: "-10deg" }],
+    transform: [{ translateX: -100 }, { skewX: '-10deg' }],
   })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
@@ -535,8 +535,8 @@ LightSpeedInRight.delay(500)
 
 <ThemedVideo
   sources={{
-    light: "/recordings/layout-animations/pinwheel_light.mov",
-    dark: "/recordings/layout-animations/pinwheel_dark.mov",
+    light: '/recordings/layout-animations/pinwheel_light.mov',
+    dark: '/recordings/layout-animations/pinwheel_dark.mov',
   }}
 />
 
@@ -545,7 +545,7 @@ LightSpeedInRight.delay(500)
 `PinwheelX` lets you create an animation based on rotation, scale, and opacity.
 
 ```jsx
-import { PinwheelIn, PinwheelOut } from "react-native-reanimated";
+import { PinwheelIn, PinwheelOut } from 'react-native-reanimated';
 
 function App() {
   return <Animated.View entering={PinwheelIn} exiting={PinwheelOut} />;
@@ -636,7 +636,7 @@ PinwheelIn.springify()
 PinwheelIn.delay(500)
   .randomDelay()
   .withInitialValues({
-    transform: [{ scale: 0.8 }, { rotate: "3" }],
+    transform: [{ scale: 0.8 }, { rotate: '3' }],
   })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
@@ -654,8 +654,8 @@ PinwheelIn.delay(500)
 
 <ThemedVideo
   sources={{
-    light: "/recordings/layout-animations/roll_light.mov",
-    dark: "/recordings/layout-animations/roll_dark.mov",
+    light: '/recordings/layout-animations/roll_light.mov',
+    dark: '/recordings/layout-animations/roll_dark.mov',
   }}
 />
 
@@ -664,7 +664,7 @@ PinwheelIn.delay(500)
 `RollX` lets you create an animation of a horizontally moving object with a rotation.
 
 ```jsx
-import { RollInRight, RollOutLeft } from "react-native-reanimated";
+import { RollInRight, RollOutLeft } from 'react-native-reanimated';
 
 function App() {
   return <Animated.View entering={RollInRight} exiting={RollOutLeft} />;
@@ -760,7 +760,7 @@ RollInLeft.springify()
 ```javascript
 RollInRight.delay(500)
   .randomDelay()
-  .withInitialValues({ transform: [{ translateX: 100 }, { rotate: "-45deg" }] })
+  .withInitialValues({ transform: [{ translateX: 100 }, { rotate: '-45deg' }] })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
   });
@@ -777,8 +777,8 @@ RollInRight.delay(500)
 
 <ThemedVideo
   sources={{
-    light: "/recordings/layout-animations/rotate_light.mov",
-    dark: "/recordings/layout-animations/rotate_dark.mov",
+    light: '/recordings/layout-animations/rotate_light.mov',
+    dark: '/recordings/layout-animations/rotate_dark.mov',
   }}
 />
 
@@ -787,7 +787,7 @@ RollInRight.delay(500)
 `RotateX` lets you create a rotation animation.
 
 ```jsx
-import { RotateInDownLeft, RotateOutDownLeft } from "react-native-reanimated";
+import { RotateInDownLeft, RotateOutDownLeft } from 'react-native-reanimated';
 
 function App() {
   return (
@@ -898,7 +898,7 @@ RotateInUpLeft.springify()
 RotateInDownLeft.delay(500)
   .randomDelay()
   .withInitialValues({
-    transform: [{ rotate: "-90deg" }, { translateX: 100 }, { translateY: 100 }],
+    transform: [{ rotate: '-90deg' }, { translateX: 100 }, { translateY: 100 }],
   })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
@@ -916,8 +916,8 @@ RotateInDownLeft.delay(500)
 
 <ThemedVideo
   sources={{
-    light: "/recordings/layout-animations/slide_light.mov",
-    dark: "/recordings/layout-animations/slide_dark.mov",
+    light: '/recordings/layout-animations/slide_light.mov',
+    dark: '/recordings/layout-animations/slide_dark.mov',
   }}
 />
 
@@ -926,7 +926,7 @@ RotateInDownLeft.delay(500)
 `SlideX` lets you create an animation of horizontal or vertical moving object.
 
 ```jsx
-import { SlideInRight, SlideOutLeft } from "react-native-reanimated";
+import { SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 
 function App() {
   return <Animated.View entering={SlideInRight} exiting={SlideOutLeft} />;
@@ -1051,8 +1051,8 @@ SlideInDown.delay(500)
 
 <ThemedVideo
   sources={{
-    light: "/recordings/layout-animations/stretch_light.mov",
-    dark: "/recordings/layout-animations/stretch_dark.mov",
+    light: '/recordings/layout-animations/stretch_light.mov',
+    dark: '/recordings/layout-animations/stretch_dark.mov',
   }}
 />
 
@@ -1061,7 +1061,7 @@ SlideInDown.delay(500)
 `StretchX` lets you create an animation based on scaling in X or Y axis.
 
 ```jsx
-import { StretchInX, StretchOutY } from "react-native-reanimated";
+import { StretchInX, StretchOutY } from 'react-native-reanimated';
 
 function App() {
   return <Animated.View entering={StretchInX} exiting={StretchOutY} />;
@@ -1175,8 +1175,8 @@ StretchInY.delay(500)
 
 <ThemedVideo
   sources={{
-    light: "/recordings/layout-animations/zoom_light.mov",
-    dark: "/recordings/layout-animations/zoom_dark.mov",
+    light: '/recordings/layout-animations/zoom_light.mov',
+    dark: '/recordings/layout-animations/zoom_dark.mov',
   }}
 />
 
@@ -1185,7 +1185,7 @@ StretchInY.delay(500)
 `ZoomX` lets you create an animation based on scale.
 
 ```jsx
-import { ZoomIn, ZoomOut } from "react-native-reanimated";
+import { ZoomIn, ZoomOut } from 'react-native-reanimated';
 
 function App() {
   return <Animated.View entering={ZoomIn} exiting={ZoomOut} />;

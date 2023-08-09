@@ -1,10 +1,10 @@
-import React from "react";
-import styles from "./styles.module.css";
+import React from 'react';
+import styles from './styles.module.css';
 
-import UpperCloud from "@site/static/img/cloud-1.svg";
-import RightCloud from "@site/static/img/cloud-2.svg";
-import LowerCloud from "@site/static/img/cloud-3.svg";
-import clsx from "clsx";
+import UpperCloud from '@site/static/img/cloud-1.svg';
+import RightCloud from '@site/static/img/cloud-2.svg';
+import LowerCloud from '@site/static/img/cloud-3.svg';
+import clsx from 'clsx';
 
 const HeroClouds = () => {
   return (

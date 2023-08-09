@@ -1,7 +1,7 @@
-import React from "react";
-import styles from "./styles.module.css";
+import React from 'react';
+import styles from './styles.module.css';
 
-import Stars from "@site/static/img/stars.svg";
+import Stars from '@site/static/img/stars.svg';
 
 const HeroStars = () => {
   return (

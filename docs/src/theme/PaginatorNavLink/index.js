@@ -1,14 +1,14 @@
-import React from "react";
-import clsx from "clsx";
-import Link from "@docusaurus/Link";
-import styles from "./styles.module.css";
+import React from 'react';
+import clsx from 'clsx';
+import Link from '@docusaurus/Link';
+import styles from './styles.module.css';
 
-import ArrowLeft from "@site/static/img/arrow-left.svg";
-import ArrowRight from "@site/static/img/arrow-right.svg";
+import ArrowLeft from '@site/static/img/arrow-left.svg';
+import ArrowRight from '@site/static/img/arrow-right.svg';
 
-import ArrowLeftDark from "@site/static/img/arrow-left-dark.svg";
-import ArrowRightDark from "@site/static/img/arrow-right-dark.svg";
-import { useColorMode } from "@docusaurus/theme-common";
+import ArrowLeftDark from '@site/static/img/arrow-left-dark.svg';
+import ArrowRightDark from '@site/static/img/arrow-right-dark.svg';
+import { useColorMode } from '@docusaurus/theme-common';
 
 const arrows = {
   left: {
@@ -27,25 +27,23 @@ export default function PaginatorNavLink(props) {
   const { colorMode } = useColorMode();
 
   const matchDirectedArrow = (isNextPaginator) => {
-    return isNextPaginator ? arrows["right"] : arrows["left"];
+    return isNextPaginator ? arrows['right'] : arrows['left'];
   };
 
   return (
     <Link
       className={clsx(
         styles.pagination,
-        "pagination-nav__link",
-        isNext ? "pagination-nav__link--next" : "pagination-nav__link--prev"
+        'pagination-nav__link',
+        isNext ? 'pagination-nav__link--next' : 'pagination-nav__link--prev'
       )}
-      to={permalink}
-    >
+      to={permalink}>
       {subLabel && (
         <div
           className={clsx(
             styles.paginationSublabel,
             isNext ? styles.paginationNext : styles.paginationPrevious
-          )}
-        >
+          )}>
           <div className={styles.paginationArrow}>
             {matchDirectedArrow(isNext)[colorMode]}
           </div>

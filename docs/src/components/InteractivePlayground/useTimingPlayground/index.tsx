@@ -1,23 +1,23 @@
-import React, { useEffect, useState } from "react";
-import Example from "./Example";
-import styles from "./styles.module.css";
+import React, { useEffect, useState } from 'react';
+import Example from './Example';
+import styles from './styles.module.css';
 
-import { Range, SelectOption } from "..";
+import { Range, SelectOption } from '..';
 
-import { Easing } from "react-native-reanimated";
+import { Easing } from 'react-native-reanimated';
 import PlaygroundChart, {
   bezierEasingValues,
   HandleMoveHandlerProps,
-} from "@site/src/components/InteractivePlayground/PlaygroundChart";
-import { Collapsible } from "@docusaurus/theme-common";
-import CollapseButton from "@site/src/components/CollapseButton";
-import useScreenSize from "@site/src/hooks/useScreenSize";
-import ExecutionEnvironment from "@docusaurus/ExecutionEnvironment";
+} from '@site/src/components/InteractivePlayground/PlaygroundChart';
+import { Collapsible } from '@docusaurus/theme-common';
+import CollapseButton from '@site/src/components/CollapseButton';
+import useScreenSize from '@site/src/hooks/useScreenSize';
+import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
 
 const initialState = {
   duration: 1000,
-  easing: "inOut",
-  nestedEasing: "quad",
+  easing: 'inOut',
+  nestedEasing: 'quad',
 
   x1: 0.25,
   y1: 0.1,
@@ -87,7 +87,7 @@ export default function useTimingPlayground() {
   };
 
   const canNestEasing = (easing: string) => {
-    return easing === "inOut" || easing === "in" || easing === "out";
+    return easing === 'inOut' || easing === 'in' || easing === 'out';
   };
 
   const formatEasing = (easing: string) => {
@@ -103,12 +103,12 @@ export default function useTimingPlayground() {
     const nomalizedY2 = y2 || 0;
 
     switch (easing) {
-      case "back":
+      case 'back':
         return {
           fn: Easing.back(stepToBack),
           code: `Easing.back(${stepToBack})`,
         };
-      case "bezierFn":
+      case 'bezierFn':
         return {
           fn: Easing.bezierFn(
             nomalizedX1,
@@ -118,22 +118,22 @@ export default function useTimingPlayground() {
           ),
           code: `Easing.bezierFn(${nomalizedX1}, ${nomalizedY1}, ${nomalizedX2}, ${nomalizedY2})`,
         };
-      case "bezier":
+      case 'bezier':
         return {
           fn: Easing.bezier(nomalizedX1, nomalizedY1, nomalizedX2, nomalizedY2),
           code: `Easing.bezier(${nomalizedX1}, ${nomalizedY1}, ${nomalizedX2}, ${nomalizedY2})`,
         };
-      case "poly":
+      case 'poly':
         return {
           fn: Easing.poly(power),
           code: `Easing.poly(${power})`,
         };
-      case "elastic":
+      case 'elastic':
         return {
           fn: Easing.elastic(bounciness),
           code: `Easing.elastic(${bounciness})`,
         };
-      case "steps":
+      case 'steps':
         return {
           fn: Easing.steps(steps, roundToNextStep),
           code: `Easing.steps(${steps}, ${roundToNextStep})`,
@@ -167,22 +167,22 @@ export default function useTimingPlayground() {
         value={easing}
         onChange={setEasing}
         options={[
-          "back",
-          "bezier",
-          "bounce",
-          "circle",
-          "cubic",
-          "ease",
-          "elastic",
-          "exp",
-          "linear",
-          "poly",
-          "quad",
-          "sin",
-          "steps",
-          "in",
-          "inOut",
-          "out",
+          'back',
+          'bezier',
+          'bounce',
+          'circle',
+          'cubic',
+          'ease',
+          'elastic',
+          'exp',
+          'linear',
+          'poly',
+          'quad',
+          'sin',
+          'steps',
+          'in',
+          'inOut',
+          'out',
         ]}
       />
       {canNestEasing(easing) && (
@@ -192,23 +192,23 @@ export default function useTimingPlayground() {
           onChange={setNestedEasing}
           disabled={!canNestEasing(easing)}
           options={[
-            "back",
-            "bezierFn",
-            "bounce",
-            "circle",
-            "cubic",
-            "ease",
-            "elastic",
-            "exp",
-            "linear",
-            "poly",
-            "quad",
-            "sin",
-            "steps",
+            'back',
+            'bezierFn',
+            'bounce',
+            'circle',
+            'cubic',
+            'ease',
+            'elastic',
+            'exp',
+            'linear',
+            'poly',
+            'quad',
+            'sin',
+            'steps',
           ]}
         />
       )}
-      {(easing === "back" || nestedEasing === "back") && (
+      {(easing === 'back' || nestedEasing === 'back') && (
         <Range
           label="Step to back"
           min={0}
@@ -218,8 +218,8 @@ export default function useTimingPlayground() {
           onChange={setStepToBack}
         />
       )}
-      {(easing === "bezier" ||
-        (nestedEasing === "bezierFn" && canNestEasing(easing))) && (
+      {(easing === 'bezier' ||
+        (nestedEasing === 'bezierFn' && canNestEasing(easing))) && (
         <>
           {!isMobile && (
             <CollapseButton
@@ -238,8 +238,7 @@ export default function useTimingPlayground() {
             }}
             /* As range sliders may hide their overflow on the boundaries during the collapse animation,
              * we need to shorten the duration of the animation to 1ms (as 0ms will just not show it). */
-            animation={{ duration: 1 }}
-          >
+            animation={{ duration: 1 }}>
             <Range
               label="x1"
               min={0}
@@ -275,7 +274,7 @@ export default function useTimingPlayground() {
           </Collapsible>
         </>
       )}
-      {(easing === "poly" || nestedEasing === "poly") && (
+      {(easing === 'poly' || nestedEasing === 'poly') && (
         <Range
           label="Power"
           min={1}
@@ -285,7 +284,7 @@ export default function useTimingPlayground() {
           onChange={setPower}
         />
       )}
-      {(easing === "elastic" || nestedEasing === "elastic") && (
+      {(easing === 'elastic' || nestedEasing === 'elastic') && (
         <Range
           label="Bounciness"
           min={0}
@@ -295,7 +294,7 @@ export default function useTimingPlayground() {
           onChange={setBounciness}
         />
       )}
-      {(easing === "steps" || nestedEasing === "steps") && (
+      {(easing === 'steps' || nestedEasing === 'steps') && (
         <>
           <Range
             label="Steps"
@@ -308,8 +307,8 @@ export default function useTimingPlayground() {
           <SelectOption
             label="Round to next step"
             value={String(roundToNextStep)}
-            onChange={(option) => setRoundToNextStep(option === "true")}
-            options={["true", "false"]}
+            onChange={(option) => setRoundToNextStep(option === 'true')}
+            options={['true', 'false']}
           />
         </>
       )}
@@ -359,13 +358,13 @@ export default function useTimingPlayground() {
   );
 
   const functionName = canNestEasing(easing) ? nestedEasing : easing;
-  const overflowingEasings = ["back", "bezier", "bezierFn"];
+  const overflowingEasings = ['back', 'bezier', 'bezierFn'];
 
   const chart = (
     <PlaygroundChart
       easingFunctionName={functionName}
       easingFunction={
-        easing !== "bezier"
+        easing !== 'bezier'
           ? formatEasing(easing).fn
           : formatEasing(easing).fn.factory()
       }

@@ -1,28 +1,28 @@
 /* eslint-disable jsx-a11y/no-autofocus */
-import React, { useEffect, useReducer, useRef, useState } from "react";
-import clsx from "clsx";
-import algoliaSearchHelper from "algoliasearch-helper";
-import algoliaSearch from "algoliasearch/lite";
-import ExecutionEnvironment from "@docusaurus/ExecutionEnvironment";
-import Head from "@docusaurus/Head";
-import Link from "@docusaurus/Link";
-import { useAllDocsData } from "@docusaurus/plugin-content-docs/client";
+import React, { useEffect, useReducer, useRef, useState } from 'react';
+import clsx from 'clsx';
+import algoliaSearchHelper from 'algoliasearch-helper';
+import algoliaSearch from 'algoliasearch/lite';
+import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
+import Head from '@docusaurus/Head';
+import Link from '@docusaurus/Link';
+import { useAllDocsData } from '@docusaurus/plugin-content-docs/client';
 import {
   HtmlClassNameProvider,
   useEvent,
   usePluralForm,
   useSearchQueryString,
-} from "@docusaurus/theme-common";
-import { useTitleFormatter } from "@docusaurus/theme-common/internal";
-import Translate, { translate } from "@docusaurus/Translate";
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+} from '@docusaurus/theme-common';
+import { useTitleFormatter } from '@docusaurus/theme-common/internal';
+import Translate, { translate } from '@docusaurus/Translate';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import {
   useAlgoliaThemeConfig,
   useSearchResultUrlProcessor,
-} from "@docusaurus/theme-search-algolia/client";
-import Layout from "@theme/Layout";
-import ThemedImage from "@theme/ThemedImage";
-import styles from "./styles.module.css";
+} from '@docusaurus/theme-search-algolia/client';
+import Layout from '@theme/Layout';
+import ThemedImage from '@theme/ThemedImage';
+import styles from './styles.module.css';
 // Very simple pluralization: probably good enough for now
 function useDocumentsFoundPlural() {
   const { selectMessage } = usePluralForm();
@@ -31,10 +31,10 @@ function useDocumentsFoundPlural() {
       count,
       translate(
         {
-          id: "theme.SearchPage.documentsFound.plurals",
+          id: 'theme.SearchPage.documentsFound.plurals',
           description:
             'Pluralized label for "{count} documents found". Use as much plural forms (separated by "|") as your language support (see https://www.unicode.org/cldr/cldr-aux/charts/34/supplemental/language_plural_rules.html)',
-          message: "One document found|{count} documents found",
+          message: 'One document found|{count} documents found',
         },
         { count }
       )
@@ -76,15 +76,14 @@ function SearchVersionSelectList({ docsSearchVersionsHelpers }) {
   return (
     <div
       className={clsx(
-        "col",
-        "col--3",
-        "padding-left--none",
+        'col',
+        'col--3',
+        'padding-left--none',
         styles.searchVersionColumn
-      )}
-    >
+      )}>
       {versionedPluginEntries.map(([pluginId, docsData]) => {
         const labelPrefix =
-          versionedPluginEntries.length > 1 ? `${pluginId}: ` : "";
+          versionedPluginEntries.length > 1 ? `${pluginId}: ` : '';
         return (
           <select
             key={pluginId}
@@ -95,8 +94,7 @@ function SearchVersionSelectList({ docsSearchVersionsHelpers }) {
               )
             }
             defaultValue={docsSearchVersionsHelpers.searchVersions[pluginId]}
-            className={styles.searchVersionInput}
-          >
+            className={styles.searchVersionInput}>
             {docsData.versions.map((version, i) => (
               <option
                 key={i}
@@ -112,8 +110,8 @@ function SearchVersionSelectList({ docsSearchVersionsHelpers }) {
 }
 
 const breadcrumbsArrows = {
-  light: "/img/breadcrumb-arrow-light.svg",
-  dark: "/img/breadcrumb-arrow-dark.svg",
+  light: '/img/breadcrumb-arrow-light.svg',
+  dark: '/img/breadcrumb-arrow-dark.svg',
 };
 
 function SearchPageContent() {
@@ -139,13 +137,13 @@ function SearchPageContent() {
   const [searchResultState, searchResultStateDispatcher] = useReducer(
     (prevState, data) => {
       switch (data.type) {
-        case "reset": {
+        case 'reset': {
           return initialSearchResultState;
         }
-        case "loading": {
+        case 'loading': {
           return { ...prevState, loading: true };
         }
-        case "update": {
+        case 'update': {
           if (searchQuery !== data.value.query) {
             return prevState;
           }
@@ -157,7 +155,7 @@ function SearchPageContent() {
                 : prevState.items.concat(data.value.items),
           };
         }
-        case "advance": {
+        case 'advance': {
           const hasMore = prevState.totalPages > prevState.lastPage + 1;
           return {
             ...prevState,
@@ -175,19 +173,19 @@ function SearchPageContent() {
   const algoliaHelper = algoliaSearchHelper(algoliaClient, indexName, {
     hitsPerPage: 15,
     advancedSyntax: true,
-    disjunctiveFacets: ["language", "docusaurus_tag"],
+    disjunctiveFacets: ['language', 'docusaurus_tag'],
   });
   algoliaHelper.on(
-    "result",
+    'result',
     ({ results: { query, hits, page, nbHits, nbPages } }) => {
-      if (query === "" || !Array.isArray(hits)) {
-        searchResultStateDispatcher({ type: "reset" });
+      if (query === '' || !Array.isArray(hits)) {
+        searchResultStateDispatcher({ type: 'reset' });
         return;
       }
       const sanitizeValue = (value) =>
         value.replace(
           /algolia-docsearch-suggestion--highlight/g,
-          "search-result-match"
+          'search-result-match'
         );
       const items = hits.map(
         ({
@@ -203,13 +201,13 @@ function SearchPageContent() {
             url: processSearchResultUrl(url),
             summary: snippet.content
               ? `${sanitizeValue(snippet.content.value)}...`
-              : "",
+              : '',
             breadcrumbs: titles,
           };
         }
       );
       searchResultStateDispatcher({
-        type: "update",
+        type: 'update',
         value: {
           items,
           query,
@@ -233,7 +231,7 @@ function SearchPageContent() {
             boundingClientRect: { y: currentY },
           } = entries[0];
           if (isIntersecting && prevY.current > currentY) {
-            searchResultStateDispatcher({ type: "advance" });
+            searchResultStateDispatcher({ type: 'advance' });
           }
           prevY.current = currentY;
         },
@@ -244,26 +242,26 @@ function SearchPageContent() {
     searchQuery
       ? translate(
           {
-            id: "theme.SearchPage.existingResultsTitle",
+            id: 'theme.SearchPage.existingResultsTitle',
             message: 'Search results for "{query}"',
-            description: "The search page title for non-empty query",
+            description: 'The search page title for non-empty query',
           },
           {
             query: searchQuery,
           }
         )
       : translate({
-          id: "theme.SearchPage.emptyResultsTitle",
-          message: "Search the documentation",
-          description: "The search page title for empty query",
+          id: 'theme.SearchPage.emptyResultsTitle',
+          message: 'Search the documentation',
+          description: 'The search page title for empty query',
         });
   const makeSearch = useEvent((page = 0) => {
-    algoliaHelper.addDisjunctiveFacetRefinement("docusaurus_tag", "default");
-    algoliaHelper.addDisjunctiveFacetRefinement("language", currentLocale);
+    algoliaHelper.addDisjunctiveFacetRefinement('docusaurus_tag', 'default');
+    algoliaHelper.addDisjunctiveFacetRefinement('language', currentLocale);
     Object.entries(docsSearchVersionsHelpers.searchVersions).forEach(
       ([pluginId, searchVersion]) => {
         algoliaHelper.addDisjunctiveFacetRefinement(
-          "docusaurus_tag",
+          'docusaurus_tag',
           `docs-${pluginId}-${searchVersion}`
         );
       }
@@ -282,9 +280,9 @@ function SearchPageContent() {
     return () => true;
   }, [loaderRef]);
   useEffect(() => {
-    searchResultStateDispatcher({ type: "reset" });
+    searchResultStateDispatcher({ type: 'reset' });
     if (searchQuery) {
-      searchResultStateDispatcher({ type: "loading" });
+      searchResultStateDispatcher({ type: 'loading' });
       setTimeout(() => {
         makeSearch();
       }, 300);
@@ -308,30 +306,28 @@ function SearchPageContent() {
       </Head>
 
       <div
-        className={clsx("container margin-vert--lg", styles.searchContainer)}
-      >
+        className={clsx('container margin-vert--lg', styles.searchContainer)}>
         <h1 className={styles.searchQueryLabel}>{getTitle()}</h1>
 
         <form className="row" onSubmit={(e) => e.preventDefault()}>
           <div
-            className={clsx("col", styles.searchQueryColumn, {
-              "col--9": docsSearchVersionsHelpers.versioningEnabled,
-              "col--12": !docsSearchVersionsHelpers.versioningEnabled,
-            })}
-          >
+            className={clsx('col', styles.searchQueryColumn, {
+              'col--9': docsSearchVersionsHelpers.versioningEnabled,
+              'col--12': !docsSearchVersionsHelpers.versioningEnabled,
+            })}>
             <input
               type="search"
               name="q"
               className={styles.searchQueryInput}
               placeholder={translate({
-                id: "theme.SearchPage.inputPlaceholder",
-                message: "Type your search here",
-                description: "The placeholder for search page input",
+                id: 'theme.SearchPage.inputPlaceholder',
+                message: 'Type your search here',
+                description: 'The placeholder for search page input',
               })}
               aria-label={translate({
-                id: "theme.SearchPage.inputLabel",
-                message: "Search",
-                description: "The ARIA label for search page input",
+                id: 'theme.SearchPage.inputLabel',
+                message: 'Search',
+                description: 'The ARIA label for search page input',
               })}
               onChange={(e) => setSearchQuery(e.target.value)}
               value={searchQuery}
@@ -347,30 +343,28 @@ function SearchPageContent() {
           )}
         </form>
 
-        <div className={clsx("row", styles.searchResultsRow)}>
-          <div className={clsx("col", "col--8", styles.searchResultsColumn)}>
+        <div className={clsx('row', styles.searchResultsRow)}>
+          <div className={clsx('col', 'col--8', styles.searchResultsColumn)}>
             {!!searchResultState.totalResults &&
               documentsFoundPlural(searchResultState.totalResults)}
           </div>
 
           <div
             className={clsx(
-              "col",
-              "col--4",
-              "text--right",
+              'col',
+              'col--4',
+              'text--right',
               styles.searchLogoColumn
-            )}
-          >
+            )}>
             <a
               target="_blank"
               rel="noopener noreferrer"
               href="https://www.algolia.com/"
               aria-label={translate({
-                id: "theme.SearchPage.algoliaLabel",
-                message: "Search by Algolia",
-                description: "The ARIA label for Algolia mention",
-              })}
-            >
+                id: 'theme.SearchPage.algoliaLabel',
+                message: 'Search by Algolia',
+                description: 'The ARIA label for Algolia mention',
+              })}>
               <svg viewBox="0 0 168 24" className={styles.algoliaLogo}>
                 <g fill="none">
                   <path
@@ -407,10 +401,9 @@ function SearchPageContent() {
                     <nav aria-label="breadcrumbs">
                       <ul
                         className={clsx(
-                          "breadcrumbs",
+                          'breadcrumbs',
                           styles.searchResultItemPath
-                        )}
-                      >
+                        )}>
                         {breadcrumbs.map((html, index) => (
                           <>
                             <li
@@ -453,8 +446,7 @@ function SearchPageContent() {
               <p key="no-results">
                 <Translate
                   id="theme.SearchPage.noResultsText"
-                  description="The paragraph for empty search result"
-                >
+                  description="The paragraph for empty search result">
                   No results were found
                 </Translate>
               </p>
@@ -469,8 +461,7 @@ function SearchPageContent() {
           <div className={styles.loader} ref={setLoaderRef}>
             <Translate
               id="theme.SearchPage.fetchingNewResults"
-              description="The paragraph for fetching new search results"
-            >
+              description="The paragraph for fetching new search results">
               Fetching new results...
             </Translate>
           </div>

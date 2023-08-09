@@ -1,7 +1,7 @@
 ---
 id: testing
-title: "Testing with Jest"
-sidebar_label: "Testing with Jest"
+title: 'Testing with Jest'
+sidebar_label: 'Testing with Jest'
 ---
 
 :::info
@@ -19,7 +19,7 @@ First, make sure that your tests run with Node version 16 or newer.
 Add the following line to your `jest-setup.js` file:
 
 ```js
-require("react-native-reanimated").setUpTests();
+require('react-native-reanimated').setUpTests();
 ```
 
 `setUpTests()` can take optional config argument. Default config is `{ fps: 60 }`, setting framerate to 60fps.
@@ -88,12 +88,12 @@ The below code shows an example of test that runs a 250ms of animation and verif
 // Setup fake timers – this can be done before the tests are run
 jest.useFakeTimers();
 
-test("stop in the middle of animation", () => {
+test('stop in the middle of animation', () => {
   const style = { width: 0 };
 
   const { getByTestId } = render(<AnimatedComponent />);
-  const view = getByTestId("view");
-  const button = getByTestId("button");
+  const view = getByTestId('view');
+  const button = getByTestId('button');
 
   expect(view.props.style.width).toBe(0);
   expect(view).toHaveAnimatedStyle(style);

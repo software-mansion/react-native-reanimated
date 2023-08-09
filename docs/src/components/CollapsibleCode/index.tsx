@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import CodeBlock from "@theme/CodeBlock";
-import styles from "./styles.module.css";
+import React, { useState } from 'react';
+import CodeBlock from '@theme/CodeBlock';
+import styles from './styles.module.css';
 
-import CollapseButton from "@site/src/components/CollapseButton";
+import CollapseButton from '@site/src/components/CollapseButton';
 
 interface Props {
   src: string;
@@ -18,8 +18,8 @@ export default function CollapsibleCode({ src, showLines }: Props) {
 
   const [start, end] = showLines;
 
-  const codeLines = src.split("\n");
-  const linesToShow = codeLines.slice(start, end + 1).join("\n");
+  const codeLines = src.split('\n');
+  const linesToShow = codeLines.slice(start, end + 1).join('\n');
 
   return (
     <div className={styles.container}>

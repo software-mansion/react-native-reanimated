@@ -1,11 +1,11 @@
-import React from "react";
-import { StyleSheet, View } from "react-native";
-import Animated, { useSharedValue } from "react-native-reanimated";
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import Animated, { useSharedValue } from 'react-native-reanimated';
 import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
-} from "react-native-gesture-handler";
+} from 'react-native-gesture-handler';
 
 export default function App() {
   const offset = useSharedValue(0);
@@ -40,12 +40,12 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
   },
   box: {
     height: 64,
     width: 64,
-    backgroundColor: "#b58df1",
+    backgroundColor: '#b58df1',
     borderRadius: 20,
     marginVertical: 64,
   },

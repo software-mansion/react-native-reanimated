@@ -1,11 +1,11 @@
-import React from "react";
-import { Button, View, StyleSheet } from "react-native";
+import React from 'react';
+import { Button, View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedProps,
   withTiming,
-} from "react-native-reanimated";
-import { Svg, Circle } from "react-native-svg";
+} from 'react-native-reanimated';
+import { Svg, Circle } from 'react-native-svg';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -41,10 +41,10 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
   },
   svg: {
     height: 250,
-    width: "100%",
+    width: '100%',
   },
 });

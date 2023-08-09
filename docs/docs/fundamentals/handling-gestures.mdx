@@ -19,7 +19,7 @@ In this example, we'll create a circle which will grow and change color on touch
 First, let's wrap our app with [`GestureHandlerRootView`](https://docs.swmansion.com/react-native-gesture-handler/docs/installation/#js). Make sure to keep the `GestureHandlerRootView` as close to the actual root view as possible. That'll ensure that our gestures will work as expected with each other.
 
 ```jsx
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 function App() {
   return (
@@ -32,8 +32,8 @@ function App() {
 
 New tap gestures are defined with `Gesture.Tap()` in your component's body. You can define the behavior of the gesture by chaining methods like [`onBegin`](https://docs.swmansion.com/react-native-gesture-handler/docs/api/gestures/tap-gesture/#onbegincallback), [`onStart`](https://docs.swmansion.com/react-native-gesture-handler/docs/api/gestures/tap-gesture/#onstartcallback), [`onEnd`](https://docs.swmansion.com/react-native-gesture-handler/docs/api/gestures/tap-gesture/#onendcallback), or [`onFinalize`](https://docs.swmansion.com/react-native-gesture-handler/docs/api/gestures/tap-gesture/#onfinalizecallback) on the gesture. We'll use them to update a shared value just after the gesture begins and return to the initial value when the gesture finishes.
 
-import TapGesture from "@site/src/examples/HandlingGestures/TapGesture";
-import TapGestureSrc from "!!raw-loader!@site/src/examples/HandlingGestures/TapGesture";
+import TapGesture from '@site/src/examples/HandlingGestures/TapGesture';
+import TapGestureSrc from '!!raw-loader!@site/src/examples/HandlingGestures/TapGesture';
 
 <CollapsibleCode showLines={[16, 25]} src={TapGestureSrc} />
 
@@ -63,8 +63,8 @@ Let's spice things a bit by making the circle draggable and have it bounce back 
 
 Luckily, all the gestures share a similar API so implementing this is nearly as easy as renaming the `Tap` gesture to `Pan` and chaining an additional `onChange` method.
 
-import PanGesture from "@site/src/examples/HandlingGestures/PanGesture";
-import PanGestureSrc from "!!raw-loader!@site/src/examples/HandlingGestures/PanGesture";
+import PanGesture from '@site/src/examples/HandlingGestures/PanGesture';
+import PanGestureSrc from '!!raw-loader!@site/src/examples/HandlingGestures/PanGesture';
 
 <CollapsibleCode showLines={[17, 33]} src={PanGestureSrc} />
 
@@ -90,8 +90,8 @@ Remember when some time ago we said that we'll come back to `withDecay`? Now thi
 
 Simply pass the final velocity in `onFinalize` method to the `velocity` property of `withDecay` function and let Reanimated handle it for you. To retain the new position of an object update the change on the X axis in `onChange` method like so:
 
-import DecayBasic from "@site/src/examples/DecayBasic";
-import DecayBasicSrc from "!!raw-loader!@site/src/examples/DecayBasic";
+import DecayBasic from '@site/src/examples/DecayBasic';
+import DecayBasicSrc from '!!raw-loader!@site/src/examples/DecayBasic';
 
 <CollapsibleCode showLines={[23, 36]} src={DecayBasicSrc} />
 

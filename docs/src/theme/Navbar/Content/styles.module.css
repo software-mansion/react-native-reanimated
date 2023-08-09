@@ -34,12 +34,12 @@ nav {
 /* In other pages than documentation, Docusaurus disables margin-right for the last element on the right side.
  * This block disables this behavior.
  */
-[class*="navbar__items--right"] > :last-child {
+[class*='navbar__items--right'] > :last-child {
   padding: var(--ifm-navbar-item-padding-vertical)
     var(--ifm-navbar-item-padding-horizontal);
 }
 
-[class*="dropdown__menu"] {
+[class*='dropdown__menu'] {
   background-color: var(--swm-dropdown-versions-background);
   border-radius: 4px;
   margin-top: 0;
@@ -47,34 +47,34 @@ nav {
   width: 100%;
 }
 
-.navbarItemsLanding [class*="dropdown--right"] a {
+.navbarItemsLanding [class*='dropdown--right'] a {
   color: var(--swm-off-white);
 }
 
-.navbarItemsLanding [class*="dropdown__menu"] a,
-[class*="dropdown__menu"] a {
+.navbarItemsLanding [class*='dropdown__menu'] a,
+[class*='dropdown__menu'] a {
   color: var(--swm-dropdown-versions-item);
   border: 1px solid transparent;
 }
 
-.navbarItemsLanding [class*="dropdown__menu"] a:hover,
-[class*="dropdown__menu"] a:hover {
+.navbarItemsLanding [class*='dropdown__menu'] a:hover,
+[class*='dropdown__menu'] a:hover {
   color: var(--swm-dropdown-versions-item-hover);
   border: 1px solid var(--swm-dropdown-versions-item-border);
   background-color: var(--swm-dropdown-versions-item-background);
 }
 
-[class*="dropdown__link--active"] {
+[class*='dropdown__link--active'] {
   color: var(--swm-dropdown-versions-item-active) !important;
   background-color: var(--swm-dropdown-versions-item-background-active);
 }
 
-[class*="dropdown__link--active"]:hover {
+[class*='dropdown__link--active']:hover {
   color: var(--swm-dropdown-versions-item-active-hover) !important;
 }
 
 @media (min-width: 996px) {
-  [class*="navbar__items--left"] {
+  [class*='navbar__items--left'] {
     flex: 1;
     width: 100%;
   }

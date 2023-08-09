@@ -23,7 +23,7 @@ Let us recall the example from the previous article, where we'd update a Shared 
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 function Box() {
   const offset = useSharedValue(0);
@@ -134,9 +134,9 @@ The callback is run with a single argument – a boolean indicating whether the 
   onPress={() => {
     offset.value = withSpring(Math.random(), {}, (finished) => {
       if (finished) {
-        console.log("ANIMATION ENDED");
+        console.log('ANIMATION ENDED');
       } else {
-        console.log("ANIMATION GOT CANCELLED");
+        console.log('ANIMATION GOT CANCELLED');
       }
     });
   }}
@@ -159,7 +159,7 @@ The default duration for the timing animation is 300ms, and the default easing i
 Here is how to start a timing animation with a custom configuration:
 
 ```js {4-5}
-import { Easing, withTiming } from "react-native-reanimated";
+import { Easing, withTiming } from 'react-native-reanimated';
 
 offset.value = withTiming(0, {
   duration: 500,
@@ -182,7 +182,7 @@ import Animated, {
   withSpring,
   useAnimatedStyle,
   useSharedValue,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 function Box() {
   const offset = useSharedValue(0);
@@ -239,7 +239,7 @@ We start by rendering the actual view and defining the rotation Shared Value tha
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 function WobbleExample(props) {
   const rotation = useSharedValue(0);

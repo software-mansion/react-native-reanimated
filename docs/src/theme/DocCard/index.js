@@ -1,29 +1,28 @@
-import React from "react";
-import clsx from "clsx";
-import Link from "@docusaurus/Link";
+import React from 'react';
+import clsx from 'clsx';
+import Link from '@docusaurus/Link';
 import {
   findFirstCategoryLink,
   useDocById,
-} from "@docusaurus/theme-common/internal";
-import ThemedImage from "@theme/ThemedImage";
-import { translate } from "@docusaurus/Translate";
-import styles from "./styles.module.css";
-import useBaseUrl from "@docusaurus/useBaseUrl";
+} from '@docusaurus/theme-common/internal';
+import ThemedImage from '@theme/ThemedImage';
+import { translate } from '@docusaurus/Translate';
+import styles from './styles.module.css';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 
 function CardContainer({ href, children }) {
   return (
     <Link
       href={href}
-      className={clsx("card padding--lg", styles.cardContainer)}
-    >
+      className={clsx('card padding--lg', styles.cardContainer)}>
       {children}
     </Link>
   );
 }
 function CardLayout({ href, title, description }) {
   const cardIcons = {
-    light: useBaseUrl("/img/card-icon.svg"),
-    dark: useBaseUrl("/img/card-icon-dark.svg"),
+    light: useBaseUrl('/img/card-icon.svg'),
+    dark: useBaseUrl('/img/card-icon-dark.svg'),
   };
 
   return (
@@ -32,14 +31,13 @@ function CardLayout({ href, title, description }) {
         <ThemedImage sources={cardIcons} className={styles.cardIcon} />
       </div>
       <div className={styles.cardLabels}>
-        <h2 className={clsx("text--truncate", styles.cardTitle)} title={title}>
+        <h2 className={clsx('text--truncate', styles.cardTitle)} title={title}>
           {title}
         </h2>
         {description && (
           <p
-            className={clsx("text--truncate", styles.cardDescription)}
-            title={description}
-          >
+            className={clsx('text--truncate', styles.cardDescription)}
+            title={description}>
             {description}
           </p>
         )}
@@ -61,10 +59,10 @@ function CardCategory({ item }) {
         item.description ??
         translate(
           {
-            message: "{count} items",
-            id: "theme.docs.DocCard.categoryDescription",
+            message: '{count} items',
+            id: 'theme.docs.DocCard.categoryDescription',
             description:
-              "The default description for a category card in the generated index about how many items this category includes",
+              'The default description for a category card in the generated index about how many items this category includes',
           },
           { count: item.items.length }
         )
@@ -84,9 +82,9 @@ function CardLink({ item }) {
 }
 export default function DocCard({ item }) {
   switch (item.type) {
-    case "link":
+    case 'link':
       return <CardLink item={item} />;
-    case "category":
+    case 'category':
       return <CardCategory item={item} />;
     default:
       throw new Error(`unknown item type ${JSON.stringify(item)}`);

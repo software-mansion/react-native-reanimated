@@ -70,7 +70,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   useAnimatedScrollHandler,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 function ScrollExample() {
   const translationY = useSharedValue(0);
@@ -95,8 +95,7 @@ function ScrollExample() {
       <Animated.ScrollView
         style={styles.scroll}
         onScroll={scrollHandler}
-        scrollEventThrottle={16}
-      >
+        scrollEventThrottle={16}>
         <Content />
       </Animated.ScrollView>
     </View>

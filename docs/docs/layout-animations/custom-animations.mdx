@@ -19,7 +19,7 @@ The high level template looks like this:
 
 ```js
 function CustomExitingAnimation(values) {
-  "worklet";
+  'worklet';
   const animations = {
     // your animations
   };
@@ -50,7 +50,7 @@ function CustomExitingAnimation(values) {
 ```js
 function CardView() {
   const exiting = (values) => {
-    "worklet";
+    'worklet';
     const animations = {
       originX: withTiming(width, { duration: 3000 }),
       opacity: withTiming(0.5, { duration: 2000 }),
@@ -80,7 +80,7 @@ The high level template looks like this:
 
 ```js
 function CustomEnteringAnimation(values) {
-  "worklet";
+  'worklet';
   const animations = {
     // your animations
   };
@@ -111,13 +111,13 @@ function CustomEnteringAnimation(values) {
 ```js
 function CardView() {
   const entering = (targetValues) => {
-    "worklet";
+    'worklet';
     const animations = {
       originX: withTiming(targetValues.originX, { duration: 3000 }),
       opacity: withTiming(1, { duration: 2000 }),
       borderRadius: withDelay(4000, withTiming(30, { duration: 3000 })),
       transform: [
-        { rotate: withTiming("0deg", { duration: 4000 }) },
+        { rotate: withTiming('0deg', { duration: 4000 }) },
         { scale: withTiming(1, { duration: 3500 }) },
       ],
     };
@@ -125,7 +125,7 @@ function CardView() {
       originX: -width,
       opacity: 0,
       borderRadius: 10,
-      transform: [{ rotate: "90deg" }, { scale: 0.5 }],
+      transform: [{ rotate: '90deg' }, { scale: 0.5 }],
     };
     return {
       initialValues,
@@ -148,7 +148,7 @@ The high level template looks like this:
 
 ```js
 function CustomLayoutTransition(values) {
-  "worklet";
+  'worklet';
   const animations = {
     // your animations
   };
@@ -186,12 +186,11 @@ function CustomLayoutTransition(values) {
   src="https://user-images.githubusercontent.com/12784455/120450759-09fa3980-c391-11eb-9b64-65ec8e6c2509.mp4"
   controls="controls"
   muted="muted"
-  width="45%"
-></video>
+  width="45%"></video>
 
 ```js
 function CustomLayoutTransition(values) {
-  "worklet";
+  'worklet';
   return {
     animations: {
       originX: withTiming(values.targetOriginX, { duration: 1000 }),
@@ -212,7 +211,7 @@ function CustomLayoutTransition(values) {
 }
 
 function Box({ label, state }: { label: string, state: boolean }) {
-  const ind = label.charCodeAt(0) - "A".charCodeAt(0);
+  const ind = label.charCodeAt(0) - 'A'.charCodeAt(0);
   const delay = 300 * ind;
   return (
     <Animated.View
@@ -220,11 +219,10 @@ function Box({ label, state }: { label: string, state: boolean }) {
       style={[
         styles.box,
         {
-          flexDirection: state ? "row" : "row-reverse",
+          flexDirection: state ? 'row' : 'row-reverse',
           height: state ? 30 : 60,
         },
-      ]}
-    >
+      ]}>
       <Text> {label} </Text>
     </Animated.View>
   );
@@ -235,7 +233,7 @@ export function CustomLayoutTransitionExample(): React.ReactElement {
   return (
     <View style={{ marginTop: 30 }}>
       <View style={{ height: 300 }}>
-        <View style={{ flexDirection: state ? "row" : "column" }}>
+        <View style={{ flexDirection: state ? 'row' : 'column' }}>
           {state && <Box key="a" label="A" state={state} />}
           <Box key="b" label="B" state={state} />
           {!state && <Box key="a" label="A" state={state} />}

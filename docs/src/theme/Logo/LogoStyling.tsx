@@ -1,11 +1,11 @@
-import React from "react";
-import Link from "@docusaurus/Link";
-import useBaseUrl from "@docusaurus/useBaseUrl";
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
-import { useThemeConfig, type NavbarLogo } from "@docusaurus/theme-common";
-import ThemedImage from "@theme/ThemedImage";
-import type { Props } from "@theme/Logo";
-import usePageType from "@site/src/hooks/usePageType";
+import React from 'react';
+import Link from '@docusaurus/Link';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import { useThemeConfig, type NavbarLogo } from '@docusaurus/theme-common';
+import ThemedImage from '@theme/ThemedImage';
+import type { Props } from '@theme/Logo';
+import usePageType from '@site/src/hooks/usePageType';
 
 interface LogoProps extends Props {
   readonly titleImages?: { light: string; dark: string };
@@ -63,11 +63,11 @@ const LogoStyling = (props: LogoProps): JSX.Element => {
     titleClassName,
     ...propsRest
   } = props;
-  const logoLink = useBaseUrl(logo?.href || "/");
+  const logoLink = useBaseUrl(logo?.href || '/');
 
   // If visible title is shown, fallback alt text should be
   // an empty string to mark the logo as decorative.
-  const fallbackAlt = navbarTitle ? "" : title;
+  const fallbackAlt = navbarTitle ? '' : title;
 
   // Use logo alt text if provided (including empty string),
   // and provide a sensible fallback otherwise.
@@ -93,8 +93,7 @@ const LogoStyling = (props: LogoProps): JSX.Element => {
     <Link
       to={logoLink}
       {...propsRest}
-      {...(logo?.target && { target: logo.target })}
-    >
+      {...(logo?.target && { target: logo.target })}>
       {logo && !isLanding ? (
         <LogoThemedImage
           logo={logo}

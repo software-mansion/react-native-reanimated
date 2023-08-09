@@ -24,7 +24,7 @@ Maps an input value within a range to an output value within a range. Also suppo
 ```js
 concat(
   interpolate(node, { inputRange: [0, 360], outputRange: [0, 360] }),
-  "deg"
+  'deg'
 );
 ```
 

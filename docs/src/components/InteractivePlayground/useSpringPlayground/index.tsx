@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import Example from "./Example";
+import React, { useState } from 'react';
+import Example from './Example';
 
-import { Range, CheckboxOption } from "..";
-import { WithSpringConfig } from "react-native-reanimated";
+import { Range, CheckboxOption } from '..';
+import { WithSpringConfig } from 'react-native-reanimated';
 
 const defaultConfig = {
   damping: 10,
@@ -71,19 +71,17 @@ export default function useSpringPlayground() {
         <li
           role="tab"
           className={`tabs__item tabItem_node_modules-@docusaurus-theme-classic-lib-theme-Tabs-styles-module ${
-            isPhysicsBased && "tabs__item--active"
+            isPhysicsBased && 'tabs__item--active'
           }`}
-          onClick={() => setPhysicsBased(true)}
-        >
+          onClick={() => setPhysicsBased(true)}>
           Physics-based
         </li>
         <li
           className={`tabs__item tabItem_node_modules-@docusaurus-theme-classic-lib-theme-Tabs-styles-module ${
-            !isPhysicsBased && "tabs__item--active"
+            !isPhysicsBased && 'tabs__item--active'
           }`}
           role="tab"
-          onClick={() => setPhysicsBased(false)}
-        >
+          onClick={() => setPhysicsBased(false)}>
           Duration-based
         </li>
       </ul>

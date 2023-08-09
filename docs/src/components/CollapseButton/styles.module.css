@@ -24,6 +24,6 @@
   transition: var(--swm-expandable-transition);
 }
 
-.collapseButton[data-collapsed="false"] .arrow {
+.collapseButton[data-collapsed='false'] .arrow {
   transform: rotate(180deg);
 }

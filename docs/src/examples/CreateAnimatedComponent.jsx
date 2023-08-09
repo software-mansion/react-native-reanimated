@@ -1,6 +1,6 @@
-import React from "react";
-import { StyleSheet, View, Button } from "react-native";
-import Animated, { useSharedValue, withSpring } from "react-native-reanimated";
+import React from 'react';
+import { StyleSheet, View, Button } from 'react-native';
+import Animated, { useSharedValue, withSpring } from 'react-native-reanimated';
 
 const MyView = React.forwardRef((props, ref) => {
   // some additional logic
@@ -28,11 +28,11 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
   },
   box: {
     height: 100,
-    backgroundColor: "#b58df1",
+    backgroundColor: '#b58df1',
     borderRadius: 20,
     marginVertical: 64,
   },

@@ -1,17 +1,17 @@
-import "react-native-gesture-handler";
-import React from "react";
-import { StyleSheet, View } from "react-native";
+import 'react-native-gesture-handler';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 // highlight-start
 import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
-} from "react-native-gesture-handler";
+} from 'react-native-gesture-handler';
 // highlight-end
 
 export default function App() {
@@ -26,7 +26,7 @@ export default function App() {
     });
 
   const animatedStyles = useAnimatedStyle(() => ({
-    backgroundColor: pressed.value ? "#FFE04B" : "#B58DF1",
+    backgroundColor: pressed.value ? '#FFE04B' : '#B58DF1',
     transform: [{ scale: withTiming(pressed.value ? 1.2 : 1) }],
   }));
 
@@ -46,9 +46,9 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
   },
   circle: {
     height: 120,

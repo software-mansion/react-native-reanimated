@@ -6,15 +6,15 @@ sidebar_position: 2
 
 `withSpring` lets you create spring-based animations.
 
-import SpringBasic from "@site/src/examples/SpringBasic";
-import SpringBasicSrc from "!!raw-loader!@site/src/examples/SpringBasic";
+import SpringBasic from '@site/src/examples/SpringBasic';
+import SpringBasicSrc from '!!raw-loader!@site/src/examples/SpringBasic';
 
 <InteractiveExample src={SpringBasicSrc} component={<SpringBasic />} />
 
 ## Reference
 
 ```javascript
-import { withSpring } from "react-native-reanimated";
+import { withSpring } from 'react-native-reanimated';
 
 function App() {
   sv.value = withSpring(0);
@@ -57,7 +57,7 @@ The value on which the animation will come at rest.
 
 The spring animation configuration.
 
-import { useSpringPlayground } from "@site/src/components/InteractivePlayground";
+import { useSpringPlayground } from '@site/src/components/InteractivePlayground';
 
 <InteractivePlayground usePlayground={useSpringPlayground} />
 
@@ -91,8 +91,8 @@ A function called on animation complete. In case the animation is cancelled, the
 
 ## Example
 
-import SpringCarousel from "@site/src/examples/SpringCarousel";
-import SpringCarouselSrc from "!!raw-loader!@site/src/examples/SpringCarousel";
+import SpringCarousel from '@site/src/examples/SpringCarousel';
+import SpringCarouselSrc from '!!raw-loader!@site/src/examples/SpringCarousel';
 
 <InteractiveExample src={SpringCarouselSrc} component={<SpringCarousel />} />
 

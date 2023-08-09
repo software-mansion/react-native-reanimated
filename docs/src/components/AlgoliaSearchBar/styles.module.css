@@ -41,7 +41,7 @@
   }
 }
 
-button[class*="DocSearch-Button"] {
+button[class*='DocSearch-Button'] {
   flex: 1;
   width: 100%;
   padding-left: 16px;
@@ -50,7 +50,7 @@ button[class*="DocSearch-Button"] {
   font-family: var(--swm-title-font);
 }
 
-[class*="DocSearch-Search-Icon"] {
+[class*='DocSearch-Search-Icon'] {
   margin-right: 6px;
   color: var(--swm-searchbar-text-color) !important;
 }
@@ -64,13 +64,13 @@ button[class*="DocSearch-Button"] {
 }
 
 @media (max-width: 768px) {
-  [class*="DocSearch-Button-Placeholder"] {
+  [class*='DocSearch-Button-Placeholder'] {
     display: flex !important;
   }
 }
 
 @media (max-width: 996px) {
-  [class*="DocSearch-Button-Keys"] {
+  [class*='DocSearch-Button-Keys'] {
     display: none !important;
   }
 }

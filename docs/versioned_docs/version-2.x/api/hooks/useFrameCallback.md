@@ -62,17 +62,17 @@ import Animated, {
   useAnimatedStyle,
   useFrameCallback,
   useSharedValue,
-} from "react-native-reanimated";
-import { Button, StyleSheet, View } from "react-native";
+} from 'react-native-reanimated';
+import { Button, StyleSheet, View } from 'react-native';
 
-import React from "react";
+import React from 'react';
 
 export default function FrameCallbackExample() {
   const x = useSharedValue(0);
 
   const frameCallback = useFrameCallback((frameInfo) => {
     if (frameInfo.timeSincePreviousFrame === null) {
-      console.log("First frame!");
+      console.log('First frame!');
     } else {
       console.log(
         `${frameInfo.timeSincePreviousFrame} ms have passed since the previous frame`
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   box: {
     width: 100,
     height: 100,
-    backgroundColor: "red",
+    backgroundColor: 'red',
   },
 });
 ```

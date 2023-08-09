@@ -1,9 +1,9 @@
-import React from "react";
-import styles from "./styles.module.css";
-import SelectedLabel from "@site/src/components/Hero/SelectedLabel";
-import HomepageButton from "@site/src/components/HomepageButton";
-import Horse from "@site/src/components/Hero/Horse";
-import { useAnnouncementBar } from "@docusaurus/theme-common/internal";
+import React from 'react';
+import styles from './styles.module.css';
+import SelectedLabel from '@site/src/components/Hero/SelectedLabel';
+import HomepageButton from '@site/src/components/HomepageButton';
+import Horse from '@site/src/components/Hero/Horse';
+import { useAnnouncementBar } from '@docusaurus/theme-common/internal';
 
 const StartScreen = () => {
   const { isActive } = useAnnouncementBar();

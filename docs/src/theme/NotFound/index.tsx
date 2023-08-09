@@ -1,8 +1,8 @@
-import React from "react";
-import NotFound from "@theme-original/NotFound";
-import { Redirect, useLocation } from "@docusaurus/router";
-import { mapLegacyUrl } from "./mapLegacyUrl";
-import { mapOldDocsToNewUrl } from "./mapOldDocsToNewUrl";
+import React from 'react';
+import NotFound from '@theme-original/NotFound';
+import { Redirect, useLocation } from '@docusaurus/router';
+import { mapLegacyUrl } from './mapLegacyUrl';
+import { mapOldDocsToNewUrl } from './mapOldDocsToNewUrl';
 
 export default function NotFoundWrapper(props) {
   const location = useLocation();

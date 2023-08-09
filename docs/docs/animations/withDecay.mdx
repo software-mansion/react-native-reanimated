@@ -6,8 +6,8 @@ sidebar_position: 3
 
 `withDecay` lets you create animations that mimic objects in motion. The animation will start with the provided velocity and slow down over time according to the given deceleration rate until it reaches a stop.
 
-import DecayBasic from "@site/src/examples/DecayBasic";
-import DecayBasicSrc from "!!raw-loader!@site/src/examples/DecayBasic";
+import DecayBasic from '@site/src/examples/DecayBasic';
+import DecayBasicSrc from '!!raw-loader!@site/src/examples/DecayBasic';
 
 <InteractiveExample
   src={DecayBasicSrc}
@@ -18,7 +18,7 @@ import DecayBasicSrc from "!!raw-loader!@site/src/examples/DecayBasic";
 ## Reference
 
 ```javascript
-import { withDecay } from "react-native-reanimated";
+import { withDecay } from 'react-native-reanimated';
 
 function App() {
   sv.value = withDecay({ velocity: 1 });
@@ -76,8 +76,8 @@ A function called on animation complete. In case the animation is cancelled, the
 
 ## Example
 
-import DecayTrain from "@site/src/examples/DecayTrain";
-import DecayTrainSrc from "!!raw-loader!@site/src/examples/DecayTrain";
+import DecayTrain from '@site/src/examples/DecayTrain';
+import DecayTrainSrc from '!!raw-loader!@site/src/examples/DecayTrain';
 
 <InteractiveExample
   src={DecayTrainSrc}
