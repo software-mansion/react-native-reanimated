@@ -77,7 +77,7 @@ import MeasureBasicSrc from '!!raw-loader!@site/src/examples/MeasureBasic';
 
 ## Remarks
 
-- `measure` has an implementation only on the [UI thread](/docs/fundamentals/glossary#ui-thread). When using `measure` inside [event handlers](https://react.dev/learn/responding-to-events#adding-event-handlers) it has to be wrapped with [`runOnUI`](/) function.
+- `measure` has an implementation only on the [UI thread](/docs/fundamentals/glossary#ui-thread). When using `measure` inside [event handlers](https://react.dev/learn/responding-to-events#adding-event-handlers) it has to be wrapped with [`runOnUI`](/docs/threading/runOnUI) function.
 
 - The `useAnimatedStyle` function is first evaluated in the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) just before the views are attached on the native side. For this reason, in order to safely use the measure within `useAnimatedStyle`, a condition similar to the one below has to be added to the code:
 

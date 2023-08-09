@@ -71,7 +71,7 @@ import AnimatingStylesSrc from '!!raw-loader!@site/src/examples/AnimatingStyles'
 
 ## Remarks
 
-- The callback passed to the `useAnimatedStyle` is first run on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) and immediately after on the [UI thread](/docs/fundamentals/glossary#ui-thread). Some functions like [`measure`](/docs/advanced/measure) and [`scrollTo`](/) have implementations only on the UI thread. To safely use them inside of `useAnimatedStyle` callback add a check to your code:
+- The callback passed to the `useAnimatedStyle` is first run on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) and immediately after on the [UI thread](/docs/fundamentals/glossary#ui-thread). Some functions like [`measure`](/docs/advanced/measure) and [`scrollTo`](/docs/scroll/scrollTo) have implementations only on the UI thread. To safely use them inside of `useAnimatedStyle` callback add a check to your code:
 
 <Indent>
 
