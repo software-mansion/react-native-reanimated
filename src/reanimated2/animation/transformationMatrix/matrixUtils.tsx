@@ -11,7 +11,7 @@ export type AffineMatrix = FixedLengthArray<FixedLengthArray<number, 4>, 4>;
 
 export type AffineMatrixFlat = FixedLengthArray<number, 16>;
 
-export type TransformMatrixDecomposition = Record<
+type TransformMatrixDecomposition = Record<
   'translationMatrix' | 'scaleMatrix' | 'rotationMatrix' | 'skewMatrix',
   AffineMatrix
 >;
@@ -34,6 +34,7 @@ export function isAffineMatrixFlat(x: unknown): x is AffineMatrixFlat {
   );
 }
 
+// ts-prune-ignore-next This function is exported to be tested
 export function isAffineMatrix(x: unknown): x is AffineMatrix {
   'worklet';
   return (
@@ -53,6 +54,7 @@ export function flatten(matrix: AffineMatrix): AffineMatrixFlat {
   return matrix.flat() as AffineMatrixFlat;
 }
 
+// ts-prune-ignore-next This function is exported to be tested
 export function unflatten(m: AffineMatrixFlat): AffineMatrix {
   'worklet';
   return [
@@ -250,9 +252,10 @@ function transposeMatrix(matrix: AffineMatrix): AffineMatrix {
 }
 
 function assertVectorsHaveEqualLengths(a: number[], b: number[]) {
+  'worklet';
   if (__DEV__ && a.length !== b.length) {
     throw new Error(
-      `Cannot calculate inner product of two vectors of cerent length. Length of ${a} is ${a.length} and length of ${b} is ${b.length}.`
+      `Cannot calculate inner product of two vectors of different lengths. Length of ${a} is ${a.length} and length of ${b} is ${b.length}.`
     );
   }
 }
@@ -333,6 +336,7 @@ function gramSchmidtAlgorithm(matrix: AffineMatrix): {
   };
 }
 
+// ts-prune-ignore-next This function is exported to be tested
 export function decomposeMatrix(
   unknownTypeMatrix: AffineMatrixFlat | AffineMatrix
 ): TransformMatrixDecomposition {

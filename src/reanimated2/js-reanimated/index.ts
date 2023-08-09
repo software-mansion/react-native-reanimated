@@ -1,5 +1,6 @@
 import JSReanimated from './JSReanimated';
-import type { AnimatedStyle, StyleProps } from '../commonTypes';
+import type { StyleProps } from '../commonTypes';
+import type { AnimatedStyle } from '../helperTypes';
 import { isWeb } from '../PlatformChecker';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,13 +25,16 @@ if (isWeb()) {
 
 const reanimatedJS = new JSReanimated();
 
-global._makeShareableClone = (c) => c;
-global._scheduleOnJS = (func, args) => {
-  if (args) {
-    queueMicrotask(() => func(...args));
-  } else {
-    queueMicrotask(func);
-  }
+global._makeShareableClone = () => {
+  throw new Error(
+    '[Reanimated] _makeShareableClone should never be called in JSReanimated.'
+  );
+};
+
+global._scheduleOnJS = () => {
+  throw new Error(
+    '[Reanimated] _scheduleOnJS should never be called in JSReanimated.'
+  );
 };
 
 interface JSReanimatedComponent {
@@ -44,13 +48,13 @@ interface JSReanimatedComponent {
 }
 
 export const _updatePropsJS = (
-  updates: StyleProps | AnimatedStyle,
+  updates: StyleProps | AnimatedStyle<any>,
   viewRef: { _component?: JSReanimatedComponent }
 ): void => {
   if (viewRef._component) {
     const component = viewRef._component;
     const [rawStyles] = Object.keys(updates).reduce(
-      (acc: [StyleProps, AnimatedStyle], key) => {
+      (acc: [StyleProps, AnimatedStyle<any>], key) => {
         const value = updates[key];
         const index = typeof value === 'function' ? 1 : 0;
         acc[index][key] = value;

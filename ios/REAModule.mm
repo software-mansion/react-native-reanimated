@@ -104,7 +104,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   react_native_assert(uiManager.get() != nil);
   propsRegistry_ = std::make_shared<PropsRegistry>();
   commitHook_ = std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager);
-  uiManager->registerCommitHook(*commitHook_);
   [self setUpNativeReanimatedModule:uiManager];
 }
 
@@ -267,45 +266,24 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
       : nullptr;
 
   if (jsiRuntime) {
-    jsi::Runtime &runtime = *jsiRuntime;
-
     auto nativeReanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
 
-    auto workletRuntimeValue = runtime.global()
-                                   .getProperty(runtime, "ArrayBuffer")
-                                   .asObject(runtime)
-                                   .asFunction(runtime)
-                                   .callAsConstructor(runtime, {static_cast<double>(sizeof(void *))});
-    uintptr_t *workletRuntimeData =
-        reinterpret_cast<uintptr_t *>(workletRuntimeValue.getObject(runtime).getArrayBuffer(runtime).data(runtime));
-    workletRuntimeData[0] = reinterpret_cast<uintptr_t>(nativeReanimatedModule->runtimeManager_->runtime.get());
-
-    runtime.global().setProperty(runtime, "_WORKLET_RUNTIME", workletRuntimeValue);
-
-    runtime.global().setProperty(runtime, "_WORKLET", false);
-
-#ifdef RCT_NEW_ARCH_ENABLED
-    runtime.global().setProperty(runtime, "_IS_FABRIC", true);
-#else
-    runtime.global().setProperty(runtime, "_IS_FABRIC", false);
-#endif // RCT_NEW_ARCH_ENABLED
-
-    auto version = getReanimatedVersionString(runtime);
-    runtime.global().setProperty(runtime, "_REANIMATED_VERSION_CPP", version);
+    jsi::Runtime &rnRuntime = *jsiRuntime;
+    auto uiRuntime = nativeReanimatedModule->runtimeManager_->runtime;
 
     auto isReducedMotion = UIAccessibilityIsReduceMotionEnabled();
-    runtime.global().setProperty(runtime, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);
+    RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
 
-    runtime.global().setProperty(
-        runtime,
-        jsi::PropNameID::forAscii(runtime, "__reanimatedModuleProxy"),
-        jsi::Object::createFromHostObject(runtime, nativeReanimatedModule));
+    rnRuntime.global().setProperty(
+        rnRuntime,
+        jsi::PropNameID::forAscii(rnRuntime, "__reanimatedModuleProxy"),
+        jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule));
 
 #ifdef RCT_NEW_ARCH_ENABLED
     weakNativeReanimatedModule_ = nativeReanimatedModule;
     if (_surfacePresenter != nil) {
       // reload, uiManager is null right now, we need to wait for `installReanimatedAfterReload`
-      [self injectDependencies:runtime];
+      [self injectDependencies:rnRuntime];
     }
 #endif // RCT_NEW_ARCH_ENABLED
   }

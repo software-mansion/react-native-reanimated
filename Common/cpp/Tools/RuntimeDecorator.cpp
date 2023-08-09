@@ -4,23 +4,19 @@
 #include <memory>
 #include <unordered_map>
 #include <utility>
+#include "JSISerializer.h"
 #include "JsiUtils.h"
 #include "ReanimatedHiddenHeaders.h"
 
 namespace reanimated {
 
-static const std::function<void(jsi::Runtime &, jsi::Value const &)> logValue =
-    [](jsi::Runtime &rt, jsi::Value const &value) {
-      if (value.isString()) {
-        Logger::log(value.getString(rt).utf8(rt).c_str());
-      } else if (value.isNumber()) {
-        Logger::log(value.getNumber());
-      } else if (value.isUndefined()) {
-        Logger::log("undefined");
-      } else {
-        Logger::log("unsupported value type");
-      }
-    };
+static jsi::String toStringValue(jsi::Runtime &rt, jsi::Value const &value) {
+  return jsi::String::createFromUtf8(rt, stringifyJSIValue(rt, value));
+}
+
+static void logValue(jsi::Runtime &rt, jsi::Value const &value) {
+  Logger::log(stringifyJSIValue(rt, value));
+}
 
 std::unordered_map<RuntimePointer, RuntimeType>
     &RuntimeDecorator::runtimeRegistry() {
@@ -71,6 +67,7 @@ void RuntimeDecorator::decorateRuntime(
           evalWithSourceUrl));
 #endif // DEBUG
 
+  jsi_utils::installJsiFunction(rt, "_toString", toStringValue);
   jsi_utils::installJsiFunction(rt, "_log", logValue);
 }
 
@@ -82,10 +79,11 @@ void RuntimeDecorator::decorateUIRuntime(
 #endif
     const MeasureFunction measure,
 #ifdef RCT_NEW_ARCH_ENABLED
-    const DispatchCommandFunction dispatchCommand,
+// nothing
 #else
     const ScrollToFunction scrollTo,
 #endif
+    const DispatchCommandFunction dispatchCommand,
     const RequestFrameFunction requestFrame,
     const ScheduleOnJSFunction scheduleOnJS,
     const MakeShareableCloneFunction makeShareableClone,
@@ -106,6 +104,7 @@ void RuntimeDecorator::decorateUIRuntime(
   jsi_utils::installJsiFunction(rt, "_measureFabric", measure);
 #else
   jsi_utils::installJsiFunction(rt, "_updatePropsPaper", updateProps);
+  jsi_utils::installJsiFunction(rt, "_dispatchCommandPaper", dispatchCommand);
   jsi_utils::installJsiFunction(rt, "_scrollToPaper", scrollTo);
 
   std::function<jsi::Value(jsi::Runtime &, int)> _measure =
@@ -151,6 +150,39 @@ void RuntimeDecorator::decorateUIRuntime(
   jsi_utils::installJsiFunction(rt, "_setGestureState", setGestureState);
   jsi_utils::installJsiFunction(
       rt, "_maybeFlushUIUpdatesQueue", maybeFlushUIUpdatesQueueFunction);
+}
+
+void RuntimeDecorator::decorateRNRuntime(
+    jsi::Runtime &rnRuntime,
+    const std::shared_ptr<jsi::Runtime> &uiRuntime,
+    bool isReducedMotion) {
+  auto workletRuntimeValue =
+      rnRuntime.global()
+          .getPropertyAsObject(rnRuntime, "ArrayBuffer")
+          .asFunction(rnRuntime)
+          .callAsConstructor(rnRuntime, {static_cast<double>(sizeof(void *))});
+  uintptr_t *workletRuntimeData = reinterpret_cast<uintptr_t *>(
+      workletRuntimeValue.getObject(rnRuntime).getArrayBuffer(rnRuntime).data(
+          rnRuntime));
+  workletRuntimeData[0] = reinterpret_cast<uintptr_t>(uiRuntime.get());
+
+  rnRuntime.global().setProperty(
+      rnRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);
+
+  rnRuntime.global().setProperty(rnRuntime, "_WORKLET", false);
+
+#ifdef RCT_NEW_ARCH_ENABLED
+  constexpr auto isFabric = true;
+#else
+  constexpr auto isFabric = false;
+#endif // RCT_NEW_ARCH_ENABLED
+  rnRuntime.global().setProperty(rnRuntime, "_IS_FABRIC", isFabric);
+
+  auto version = getReanimatedVersionString(rnRuntime);
+  rnRuntime.global().setProperty(rnRuntime, "_REANIMATED_VERSION_CPP", version);
+
+  rnRuntime.global().setProperty(
+      rnRuntime, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);
 }
 
 } // namespace reanimated

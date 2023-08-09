@@ -37,31 +37,6 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
-export interface AnimatedStyle extends Record<string, AnimationObject> {
-  [key: string]: any;
-  transform?: Array<
-    | Record<'matrix', number[] | AnimationObject>
-    | Partial<
-        Record<
-          | 'perspective'
-          | 'scale'
-          | 'scaleX'
-          | 'scaleY'
-          | 'translateX'
-          | 'translateY',
-          number | AnimationObject
-        >
-      >
-    | Partial<
-        Record<
-          'rotate' | 'rotateX' | 'rotateY' | 'rotateZ' | 'skewX' | 'skewY',
-          string | AnimationObject
-        >
-      >
-    | Record<string, AnimationObject>
-  >;
-}
-
 export interface SharedValue<T> {
   value: T;
   addListener: (listenerID: number, listener: (value: T) => void) => void;
@@ -69,8 +44,8 @@ export interface SharedValue<T> {
   modify: (modifier: (value: T) => T) => void;
 }
 
-// The below type is used for HostObjects retured by the JSI API that don't have
-// any accessable fields or methods but can carry data that is accessed from the
+// The below type is used for HostObjects returned by the JSI API that don't have
+// any accessible fields or methods but can carry data that is accessed from the
 // c++ side. We add a field to the type to make it possible for typescript to recognize
 // which JSI methods accept those types as arguments and to be able to correctly type
 // check other methods that may use them. However, this field is not actually defined
@@ -97,7 +72,7 @@ export type MapperRegistry = {
 export type Context = Record<string, unknown>;
 
 export interface WorkletFunction {
-  _closure?: Context;
+  __closure?: Context;
   __workletHash?: number;
 }
 

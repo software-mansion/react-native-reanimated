@@ -1,10 +1,11 @@
-import type { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
+import { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
 import {
   isChromeDebugger,
   isJest,
   isWeb,
   shouldBeUseWeb,
 } from './PlatformChecker';
+
 import type { AnimatedRef } from './hook/commonTypes';
 import type { Component } from 'react';
 
@@ -88,26 +89,30 @@ if (isWeb()) {
 export let dispatchCommand: <T extends Component>(
   animatedRef: AnimatedRef<T>,
   commandName: string,
-  args: Array<unknown>
+  args?: Array<unknown>
 ) => void;
 
 if (IS_NATIVE && global._IS_FABRIC) {
-  dispatchCommand = (animatedRef, commandName, args) => {
+  dispatchCommand = (animatedRef, commandName, args = []) => {
     'worklet';
     if (!_WORKLET) {
       return;
     }
 
-    // dispatchCommand works only on Fabric where animatedRef returns
-    // an object (ShadowNodeWrapper) and not a number
     const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     _dispatchCommandFabric!(shadowNodeWrapper, commandName, args);
   };
 } else if (IS_NATIVE) {
-  dispatchCommand = () => {
+  dispatchCommand = (animatedRef, commandName, args = []) => {
     'worklet';
-    console.warn('[Reanimated] dispatchCommand() is not supported on Paper.');
+    if (!_WORKLET) {
+      return;
+    }
+
+    const viewTag = animatedRef() as number;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    _dispatchCommandPaper!(viewTag, commandName, args);
   };
 } else if (isWeb()) {
   dispatchCommand = () => {

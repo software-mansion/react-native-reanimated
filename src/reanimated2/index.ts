@@ -7,6 +7,7 @@ export * from './interpolation';
 export * from './interpolateColor';
 export * from './Easing';
 export * from './NativeMethods';
+export { setNativeProps } from './SetNativeProps';
 export * from './Colors';
 export * from './PropAdapters';
 export * from './layoutReanimation';
@@ -15,4 +16,16 @@ export * from './commonTypes';
 export * from './frameCallback';
 export * from './pluginUtils';
 export * from './jestUtils';
-export type { AnimateProps } from './helperTypes';
+export type {
+  Adaptable,
+  AdaptTransforms,
+  AnimateProps,
+  AnimatedProps,
+  AnimatedTransform,
+  TransformStyleTypes,
+  AnimateStyle,
+  AnimatedStyle,
+  StylesOrDefault,
+} from './helperTypes';
+export type { AnimatedScrollViewProps } from './component/ScrollView';
+export type { FlatListPropsWithLayout } from './component/FlatList';
