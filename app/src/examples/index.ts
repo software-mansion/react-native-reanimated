@@ -38,6 +38,7 @@ import FlatListExample from './SharedElementTransitions/FlatList';
 import FrameCallbackExample from './FrameCallbackExample';
 import GalleryExample from './SharedElementTransitions/Gallery';
 import GestureHandlerExample from './GestureHandlerExample';
+import GetViewPropExample from './GetViewPropExample';
 import IPodExample from './IPodExample';
 import ImageStackExample from './SharedElementTransitions/ImageStack';
 import InvertedFlatListExample from './InvertedFlatListExample';
@@ -364,6 +365,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⏸️',
     title: 'Reduced Motion',
     screen: ReducedMotionExample,
+  },
+  GetViewPropExample: {
+    icon: '🔎',
+    title: 'getViewProp',
+    screen: GetViewPropExample,
   },
 
   // Old examples
