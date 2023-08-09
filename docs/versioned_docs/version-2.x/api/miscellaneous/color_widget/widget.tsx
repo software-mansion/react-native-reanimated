@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { HexColorPicker, HexColorInput } from 'react-colorful';
-import styles from './styles.module.css';
+import React, { useEffect, useState, useRef } from "react";
+import { HexColorPicker, HexColorInput } from "react-colorful";
+import styles from "./styles.module.css";
 
 type RGB = {
   r: number;
@@ -15,7 +15,7 @@ type HSV = {
 };
 
 const hexToRgb = (hex: string): RGB => {
-  if (hex[0] === '#') hex = hex.substring(1);
+  if (hex[0] === "#") hex = hex.substring(1);
 
   if (hex.length < 6) {
     return {
@@ -193,7 +193,7 @@ const ColorProgressBar = ({
         .map((_, i) => i / 10)
         .map((p) => (
           <div
-            key={'' + p}
+            key={"" + p}
             className={styles.smallBox}
             style={{
               backgroundColor: rgbToString(
@@ -280,9 +280,9 @@ const AnimationWidget = ({
 };
 
 export const ColorWidgets = () => {
-  const [colorspace, setColorspace] = useState('RGB');
-  const [color1, setColor1] = useState('#00ff00');
-  const [color2, setColor2] = useState('#ffc0cb');
+  const [colorspace, setColorspace] = useState("RGB");
+  const [color1, setColor1] = useState("#00ff00");
+  const [color2, setColor2] = useState("#ffc0cb");
   const [gamma, setGamma] = useState(2.2);
 
   const handleOnGammaChange = (event) => {
@@ -380,13 +380,14 @@ export const ColorWidgets = () => {
           <select
             value={colorspace}
             onChange={handleColorspaceChange}
-            className={styles.marginLeft}>
+            className={styles.marginLeft}
+          >
             <option value="RGB">RGB</option>
             <option value="HSV">HSV</option>
           </select>
         </label>
 
-        {colorspace === 'RGB' && (
+        {colorspace === "RGB" && (
           <label>
             Gamma:
             <input
@@ -401,7 +402,7 @@ export const ColorWidgets = () => {
           </label>
         )}
 
-        {colorspace === 'HSV' && (
+        {colorspace === "HSV" && (
           <label>
             <input
               type="checkbox"
@@ -416,7 +417,7 @@ export const ColorWidgets = () => {
           color1={hexToRgb(color1)}
           color2={hexToRgb(color2)}
           interpolateFunction={(c1, c2, p) => {
-            if (colorspace === 'RGB') return rgbInterpolation(p, c1, c2, gamma);
+            if (colorspace === "RGB") return rgbInterpolation(p, c1, c2, gamma);
             return hsvInterpolation(p, c1, c2, useCorrectedHSV);
           }}
         />

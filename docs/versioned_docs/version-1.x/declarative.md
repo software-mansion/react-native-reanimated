@@ -11,7 +11,7 @@ In order to map an animation into a value, we will make the value to be assigned
 The example below shows a component that renders:
 
 ```js
-import Animated, { Easing } from 'react-native-reanimated';
+import Animated, { Easing } from "react-native-reanimated";
 
 const {
   Clock,
@@ -60,7 +60,7 @@ function runTiming(clock, value, dest) {
     // we run the step here that is going to update position
     timing(clock, state, config),
     // if the animation is over we stop the clock
-    cond(state.finished, debug('stop clock', stopClock(clock))),
+    cond(state.finished, debug("stop clock", stopClock(clock))),
     // we made the block return the updated position
     state.position,
   ]);

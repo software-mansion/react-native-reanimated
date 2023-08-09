@@ -43,7 +43,7 @@ class A {
 const a = new A();
 const ob = {};
 // We do something like this in runOnJS
-Object.defineProperty(ob, 'foo', { enumerable: false, value: a.foo });
+Object.defineProperty(ob, "foo", { enumerable: false, value: a.foo });
 
 a.foo(5); // Normal [this] access
 ob.foo(5); // [this] is not correct
@@ -71,9 +71,9 @@ import {
   runOnJS,
   useDerivedValue,
   useAnimatedReaction,
-} from 'react-native-reanimated';
-import { View, Button } from 'react-native';
-import React from 'react';
+} from "react-native-reanimated";
+import { View, Button } from "react-native";
+import React from "react";
 
 export default function App() {
   const randomWidth = useSharedValue(10);

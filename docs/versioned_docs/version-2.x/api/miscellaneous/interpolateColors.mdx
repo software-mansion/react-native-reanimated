@@ -1,10 +1,10 @@
 ---
 id: interpolateColors
-title: 'interpolateColor'
-sidebar_label: 'interpolateColor'
+title: "interpolateColor"
+sidebar_label: "interpolateColor"
 ---
 
-import { ColorWidgets } from './color_widget/widget';
+import { ColorWidgets } from "./color_widget/widget";
 
 Maps input range to output colors using linear interpolation. It works just like `interpolate` function but the output is color string in `rgba(r, g, b, a)` notation.
 
@@ -62,7 +62,7 @@ const Component = () => {
       backgroundColor: interpolateColor(
         progress.value,
         [0, 1],
-        ['red', 'green']
+        ["red", "green"]
       ),
     };
   });

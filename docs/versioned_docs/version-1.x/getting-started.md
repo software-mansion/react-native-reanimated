@@ -28,13 +28,13 @@ II. For iOS, go to `ios` folder and run `pod install`:
 III. When you want to use "reanimated" in your project import it from the `react-native-reanimated` package:
 
 ```js
-import Animated from 'react-native-reanimated';
+import Animated from "react-native-reanimated";
 ```
 
 Similarly when you need `Easing` import it from the `react-native-reanimated` package instead of `react-native`:
 
 ```js
-import Animated, { Easing } from 'react-native-reanimated';
+import Animated, { Easing } from "react-native-reanimated";
 ```
 
 ## Testing
@@ -42,7 +42,7 @@ import Animated, { Easing } from 'react-native-reanimated';
 In order to use `react-native-reanimated` with Jest, you need to add the following mock implementation at the top of your test:
 
 ```js
-jest.mock('react-native-reanimated', () =>
-  require('react-native-reanimated/mock')
+jest.mock("react-native-reanimated", () =>
+  require("react-native-reanimated/mock")
 );
 ```

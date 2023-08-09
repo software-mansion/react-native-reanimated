@@ -49,13 +49,13 @@ This method returns an animation object. It can be either assigned directly to a
 ## Example
 
 ```js
-import { Button } from 'react-native';
+import { Button } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   Easing,
-} from 'react-native-reanimated';
+} from "react-native-reanimated";
 
 function App() {
   const width = useSharedValue(50);

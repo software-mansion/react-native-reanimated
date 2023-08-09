@@ -35,7 +35,7 @@ Next, we create a custom handler hook to listen for native events from the pager
 ```js
 const scrollHandler = useAnimatedPagerScrollHandler({
   onPageScroll: (e) => {
-    'worklet';
+    "worklet";
     scrollPosition.value = e.offset + e.position;
   },
 });
@@ -51,14 +51,14 @@ function useAnimatedPagerScrollHandler(handlers, dependencies) {
 
   return useEvent(
     (event) => {
-      'worklet';
+      "worklet";
       const { onPageScroll } = handlers;
 
-      if (onPageScroll && event.eventName.endsWith('onPageScroll')) {
+      if (onPageScroll && event.eventName.endsWith("onPageScroll")) {
         onPageScroll(event, context);
       }
     },
-    ['onPageScroll'],
+    ["onPageScroll"],
     doDependenciesDiffer
   );
 }

@@ -1,0 +1,141 @@
+---
+sidebar_position: 2
+---
+
+# useAnimatedReaction
+
+`useAnimatedReaction` lets you react to a change of a [shared value](/docs/fundamentals/glossary#shared-value). Especially useful when comparing values previously stored in shared value with the current one.
+
+## Reference
+
+```javascript
+import { useAnimatedReaction } from "react-native-reanimated";
+
+function App() {
+  useAnimatedReaction(
+    () => {
+      return sv.value;
+    },
+    (currentValue, previousValue) => {
+      if (currentValue !== previousValue) {
+        // do something ✨
+      }
+    }
+  );
+
+  // ...
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type DependencyList = ReadonlyArray<any>;
+
+function useAnimatedReaction<T>(
+  prepare: () => T,
+  react: (prepareResult: T, preparePreviousResult: T | null) => void,
+  dependencies?: DependencyList
+): void;
+```
+
+</details>
+
+### Arguments
+
+#### `prepare`
+
+A function that has to return a value you'd like to react to the changes of. A value returned from this function is used as a first parameter of the `react` argument.
+
+```jsx
+function App() {
+  useAnimatedReaction(
+    // highlight-start
+    () => {
+      return Math.floor(sv.value);
+    },
+    // highlight-end
+    (currentValue, previousValue) => {
+      // ...
+    }
+  );
+}
+```
+
+#### `react`
+
+A function that reacts to the change of a value returned by the `prepare` function. The `react` function comes with 2 parameters: the current value returned from the `prepare` function and the previous value which is initially set to `null`.
+
+```jsx
+function App() {
+  useAnimatedReaction(
+    () => {
+      return Math.floor(sv.value);
+    },
+    // highlight-next-line
+    (currentValue, previousValue) => {
+      // ...
+      // highlight-next-line
+    }
+  );
+}
+```
+
+#### `dependencies` <Optional/>
+
+An optional array of dependencies.
+
+Only relevant when using Reanimated [without the Babel plugin on the Web](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/web-support#web-without-a-babel-plugin).
+
+### Returns
+
+`useAnimatedReaction` returns `undefined`.
+
+## Example
+
+import AnimatedReactionMeasure from "@site/src/examples/AnimatedReactionMeasure";
+import AnimatedReactionMeasureSrc from "!!raw-loader!@site/src/examples/AnimatedReactionMeasure";
+
+<InteractiveExample
+  src={AnimatedReactionMeasureSrc}
+  component={<AnimatedReactionMeasure />}
+/>
+
+## Remarks
+
+- Make sure not to mutate the same shared value in the `result` function that you've used in the `prepare` function as this will cause an infinite loop.
+
+<Indent>
+
+```jsx
+function App() {
+  useAnimatedReaction(
+    () => {
+      // highlight-next-line
+      return width.value;
+    },
+    (currentValue) => {
+      // 🚨 An infinite loop!
+      // highlight-next-line
+      width.value += currentValue;
+    }
+  );
+}
+```
+
+</Indent>
+
+- Callbacks passed to `prepare` and `result` arguments are automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+
+- You can technically react to any stateful React value using `useAnimatedReaction` but you should most probably use a `useEffect` for that instead.
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>

@@ -1,33 +1,31 @@
-# Website
+# New Reanimated Documentation
 
-This website is built using [Docusaurus 2](https://v2.docusaurus.io/), a modern static website generator.
+👉 [reanimated-beta-docs.swmansion.com](https://reanimated-beta-docs.swmansion.com/)
 
-## Installation
+https://github.com/software-mansion-labs/reanimated-beta-docs/assets/39658211/d2c0d8a9-bb90-4394-b250-f70d8296f321
 
-```console
-yarn install
-```
+This project aims to supersede the current stable Reanimated documentation which is hosted on [https://docs.swmansion.com/react-native-reanimated/](https://docs.swmansion.com/react-native-reanimated/).
 
-## Local Development
+## What's in the docs
 
-```console
-yarn start
-```
+The new docs comes with a [Fundamentals](https://reanimated-beta-docs.swmansion.com/docs/fundamentals/getting-started) section which step-by-step introduction into the world of Reanimated.
 
-This command starts a local development server and open up a browser window. Most changes are reflected live without having to restart the server.
+All sections are sprinkled with interactive examples, playground and code snippets designed to be easily copyable to be run in your projects.
 
-## Build
+## How can I help?
 
-```console
-yarn build
-```
+Glad you asked! You can help the project in many ways e.g. by:
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
+- _Reading and sharing_ the docs with friends and co-workers
+- _Sending feedback_ in the discussion or issues on GitHub
+- _Submitting PRs_ with fixes and improvements to the docs content and styles
 
-## Deployment
+All feedback in all forms ranging from general to tiny fixes is highly appreciated!
 
-```console
-GIT_USER=<Your GitHub username> USE_SSH=true yarn deploy
-```
+## Meet the team
 
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+- [Aleksandra Niewiadomksa-Ptak](https://dribbble.com/aleksandranie): design
+- [Tymoteusz Boba](https://twitter.com/IceMeltt): site development
+- [Kacper Kapuściak](https://twitter.com/kacperkapusciak): content, interactive examples
+
+Special thanks to the whole React Native Open Source team at [Software Mansion](https://swmansion.com/community/open-source/) for a constant flow of feedback and ideas.

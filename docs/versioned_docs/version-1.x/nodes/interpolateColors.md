@@ -21,7 +21,7 @@ Example:
 ```js
 const color = Animated.interpolateColors(node, {
   inputRange: [0, 1],
-  outputColorRange: ['red', 'blue'],
+  outputColorRange: ["red", "blue"],
 });
 
 return <Animated.View style={{ backgroundColor: color }} />;

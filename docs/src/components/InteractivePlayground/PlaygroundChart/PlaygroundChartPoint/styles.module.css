@@ -1,0 +1,19 @@
+.handle {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 24px;
+  height: 24px;
+  padding: 0 0 2px 0;
+
+  border: 2px solid var(--swm-navy-light-60);
+  border-radius: 50%;
+  box-shadow: none;
+
+  background-color: var(--swm-off-background);
+
+  font-family: var(--swm-body-font);
+  cursor: pointer;
+}

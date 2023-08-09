@@ -30,24 +30,26 @@ Can be either an object or a string. If an object is passed it should specify ex
 
 ```js
 const extrapolation = {
-    extrapolateLeft: Extrapolation.CLAMP,
-    extrapolateRight: Extrapolation.IDENTITY
-}
+  extrapolateLeft: Extrapolation.CLAMP,
+  extrapolateRight: Extrapolation.IDENTITY,
+};
 ```
 
 If a string is provided, the provided extrapolation type is applied to both sides.
 
 :::info
 Available extrapolation types:
-* `Extrapolation.CLAMP` - clamps the value to the edge of the output range
-* `Extrapolation.IDENTITY` - returns the value that is being interpolated
-* `Extrapolation.EXTEND` - approximates the value even outside of the range
+
+- `Extrapolation.CLAMP` - clamps the value to the edge of the output range
+- `Extrapolation.IDENTITY` - returns the value that is being interpolated
+- `Extrapolation.EXTEND` - approximates the value even outside of the range
 
 Available extrapolation string values:
-* `clamp`
-* `identity`
-* `extend`
-:::
+
+- `clamp`
+- `identity`
+- `extend`
+  :::
 
 ### Returns
 
@@ -56,16 +58,16 @@ Available extrapolation string values:
 ## Example
 
 ```jsx
-import React from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import React from "react";
+import { View, StyleSheet, Dimensions } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   interpolate,
-} from 'react-native-reanimated';
+} from "react-native-reanimated";
 
-export const HEADER_IMAGE_HEIGHT = Dimensions.get('window').width / 3;
+export const HEADER_IMAGE_HEIGHT = Dimensions.get("window").width / 3;
 
 export default function Test() {
   const scrollY = useSharedValue(0);
@@ -75,7 +77,9 @@ export default function Test() {
     },
   });
   const animatedStyles = useAnimatedStyle(() => {
-    const scale = interpolate(scrollY.value, [-100, 0], [2, 1], { extrapolateRight: Extrapolation.CLAMP });
+    const scale = interpolate(scrollY.value, [-100, 0], [2, 1], {
+      extrapolateRight: Extrapolation.CLAMP,
+    });
 
     return {
       transform: [{ scale: scale }],
@@ -83,16 +87,16 @@ export default function Test() {
   });
 
   return (
-    <View style={{ flex: 1, alignItems: 'center' }}>
+    <View style={{ flex: 1, alignItems: "center" }}>
       <Animated.View
         style={[
           {
-            position: 'absolute',
+            position: "absolute",
             top: 20,
             left: 0,
             width: 20,
             height: 20,
-            backgroundColor: 'blue',
+            backgroundColor: "blue",
           },
           animatedStyles,
         ]}
@@ -101,7 +105,8 @@ export default function Test() {
       <Animated.ScrollView
         scrollEventThrottle={1}
         style={StyleSheet.absoluteFill}
-        onScroll={scrollHandler}></Animated.ScrollView>
+        onScroll={scrollHandler}
+      ></Animated.ScrollView>
     </View>
   );
 }
