@@ -43,7 +43,7 @@ export default function NavbarMobileSidebarLayout({ header, secondaryMenu }) {
                 }
                 className={clsx(
                   styles.sidebarVersion,
-                  activeVersion.label === version.label && styles.active
+                  activeVersion?.label === version.label && styles.active
                 )}>
                 {version.label}
               </a>
