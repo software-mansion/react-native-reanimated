@@ -20,6 +20,7 @@ import {
   RollData,
   TransformProperties,
   WebEasings,
+  LayoutTransitionsData,
 } from './webAnimationsData';
 
 function parseObjectStyleToString(object: AnimationData): string {
@@ -444,6 +445,17 @@ const Roll = {
   },
 };
 
+export const LayoutTransitions = {
+  LinearTransition: {
+    style: 'margin 1s, top 1s, left 1s, right 1s, bottom 1s',
+    duration: LayoutTransitionsData.LinearTransition.duration,
+  },
+  SequencedTransition: {
+    style: 'margin 1s, top 1s, left 1s, right 1s, bottom 1s',
+    duration: LayoutTransitionsData.SequencedTransition.duration,
+  },
+};
+
 export const Animations = {
   ...FadeIn,
   ...FadeOut,
@@ -468,3 +480,4 @@ export const Animations = {
 export const WEB_ANIMATIONS_ID = 'webAnimationsStyle';
 
 export type AnimationsTypes = keyof typeof Animations;
+export type LayoutTransitionsTypes = keyof typeof LayoutTransitions;

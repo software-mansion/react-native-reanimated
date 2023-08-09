@@ -58,6 +58,7 @@ import { JSPropUpdater } from './JSPropUpdater';
 import {
   Animations,
   AnimationsTypes,
+  LayoutTransitions,
   WEB_ANIMATIONS_ID,
   getEasing,
   getRandomDelay,
@@ -757,12 +758,22 @@ export default function createAnimatedComponent(
       return props;
     }
 
+    getSnapshotBeforeUpdate() {
+      // prevState: Readonly<{}> // prevProps: Readonly<AnimatedComponentProps<InitialComponentProps>>,
+      if (isWeb()) {
+        this.handleWebAnimation(LayoutAnimationType.LAYOUT);
+      }
+      return null;
+    }
+
     handleWebAnimation(animationType: LayoutAnimationType) {
       const config =
         animationType === LayoutAnimationType.ENTERING
           ? this.props.entering
           : animationType === LayoutAnimationType.EXITING
           ? this.props.exiting
+          : animationType === LayoutAnimationType.LAYOUT
+          ? this.props.layout
           : null;
 
       if (!config) {
@@ -770,9 +781,7 @@ export default function createAnimatedComponent(
       }
 
       const animationName =
-        typeof config === 'function'
-          ? (config.name as AnimationsTypes)
-          : (config.constructor.name as AnimationsTypes);
+        typeof config === 'function' ? config.name : config.constructor.name;
 
       const hasDelay = Object.prototype.hasOwnProperty.call(config, 'delayV');
       // @ts-ignore If property doesn't exist, delay won't be randomized
@@ -793,7 +802,9 @@ export default function createAnimatedComponent(
       const duration = config.durationV
         ? // @ts-ignore Already checked
           config.durationV / 1000
-        : Animations[animationName].duration;
+        : animationType === LayoutAnimationType.LAYOUT
+        ? LayoutTransitions.LinearTransition.duration
+        : Animations[animationName as AnimationsTypes].duration;
 
       // @ts-ignore Property does exist (and even if in some case it doesn't, getEasing will return linear easing, so we are safe)
       const easing = getEasing(config.easingV);
@@ -812,6 +823,9 @@ export default function createAnimatedComponent(
         }
 
         setElementAnimation(element, duration, delay, animationName, easing);
+      } else if (animationType === LayoutAnimationType.LAYOUT) {
+        // this._component.style.transition =
+        //   LayoutTransitions['SequencedTransition'].style;
       } else if (animationType === LayoutAnimationType.EXITING) {
         const parent = element.offsetParent;
         const tmpElement = element.cloneNode(true) as HTMLElement;

@@ -1278,6 +1278,19 @@ export const RollData: Record<string, AnimationData> = {
   },
 };
 
+export const LayoutTransitionsData = {
+  LinearTransition: {
+    name: 'LinearTransition',
+    style: {},
+    duration: 300,
+  },
+  SequencedTransition: {
+    name: 'SequencedTransition',
+    style: {},
+    duration: 300,
+  },
+};
+
 // Those are the easings that can be implemented using Bezier curves.
 // Others should be done as CSS animations
 export const WebEasings: Record<string, number[]> = {
