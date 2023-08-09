@@ -6,6 +6,7 @@ import type {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
   KeyframeProps,
+  StylePropsWithArrayTransform,
 } from './commonTypes';
 import type { TransformProperty, StyleProps } from '../../commonTypes';
 interface KeyframePoint {
@@ -73,7 +74,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     */
     Object.keys(initialValues).forEach((styleProp: string) => {
       if (styleProp === 'transform') {
-        initialValues[styleProp]?.forEach((transformStyle, index) => {
+        if (!Array.isArray(initialValues.transform)) return;
+        initialValues.transform.forEach((transformStyle, index) => {
           Object.keys(transformStyle).forEach((transformProp: string) => {
             parsedKeyframes[index.toString() + '_transform:' + transformProp] =
               [];
@@ -145,7 +147,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
           });
         Object.keys(keyframe).forEach((key: string) => {
           if (key === 'transform') {
-            keyframe[key]?.forEach(
+            if (!Array.isArray(keyframe.transform)) return;
+            keyframe.transform.forEach(
               (transformStyle: { [key: string]: any }, index) => {
                 Object.keys(transformStyle).forEach((transformProp: string) => {
                   addKeyPointWith(
@@ -196,7 +199,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
 
     return () => {
       'worklet';
-      const animations: StyleProps = {};
+      const animations: StylePropsWithArrayTransform = {};
 
       /* 
             For each style property, an animations sequence is created that corresponds with its key points.
@@ -231,7 +234,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
           if (!('transform' in animations)) {
             animations.transform = [];
           }
-          animations.transform?.push(<TransformProperty>{
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          animations.transform!.push(<TransformProperty>{
             [key.split(':')[1]]: animation,
           });
         } else {
