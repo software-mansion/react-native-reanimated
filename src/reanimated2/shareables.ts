@@ -248,7 +248,6 @@ export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
   function cloneRecursive<T>(value: T): ShareableRef<T> {
     const type = typeof value;
     if ((type === 'object' && value !== null) || type === 'function') {
-    ) {
       if (isRemoteFunction<T>(value)) {
         return value.__remoteFunction;
       }
