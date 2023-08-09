@@ -27,7 +27,9 @@
     "react-native-reanimated": "link:../",
     "react-native-safe-area-context": "^4.6.3",
     "react-native-screens": "^3.23.0",
-    "react-native-svg": "^13.9.0"
+    "react-native-svg": "^13.9.0",
+    "react-native-v8": "^2.2.2",
+    "v8-android-jit": "^11.1000.3"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
