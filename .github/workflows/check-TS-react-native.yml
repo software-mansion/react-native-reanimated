@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        react-native-version: ['0.70', '0.71', '0.72', nightly]
+        react-native-version: ['0.71', '0.72', nightly]
       fail-fast: false
     concurrency:
       group: TS-react-native-nightly-${{ matrix.react-native-version }}-${{ github.ref }}
