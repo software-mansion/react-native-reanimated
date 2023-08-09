@@ -2,8 +2,13 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useCallback, forwardRef, useRef } from 'react';
-import type { FlatListProps, ViewProps, ImageProps } from 'react-native';
-import { StyleSheet, Button, View, Image } from 'react-native';
+import type {
+  FlatListProps,
+  ViewProps,
+  ImageProps,
+  ViewStyle,
+} from 'react-native';
+import { StyleSheet, Button, View, Image, ScrollView } from 'react-native';
 import type {
   PanGestureHandlerGestureEvent,
   PinchGestureHandlerGestureEvent,
@@ -784,7 +789,7 @@ function testPartialAnimatedProps() {
     const plainRef = useRef<Animated.View>();
     // @ts-expect-error should only work for Animated refs?
     dispatchCommand(plainRef, 'command', [1, 2, 3]);
-    // @ts-expect-error args are not optional
+    // it should work without arguments
     dispatchCommand(animatedRef, 'command');
   }
 
@@ -833,4 +838,31 @@ function testPartialAnimatedProps() {
       }}
     />;
   }
+}
+
+declare const RNStyle: ViewStyle;
+// test style prop of Animated components
+function testStyleProps() {
+  const MyAnimatedView = Animated.createAnimatedComponent(View);
+  const MyAnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
+  const MyAnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+
+  return (
+    <View>
+      <Animated.View style={RNStyle} />
+      <MyAnimatedView style={RNStyle} />
+      <Animated.ScrollView style={RNStyle} />
+      <MyAnimatedScrollView style={RNStyle} />
+      <Animated.FlatList
+        style={RNStyle}
+        data={[]}
+        renderItem={() => <View />}
+      />
+      <MyAnimatedFlatList
+        style={RNStyle}
+        data={[]}
+        renderItem={() => <View />}
+      />
+    </View>
+  );
 }

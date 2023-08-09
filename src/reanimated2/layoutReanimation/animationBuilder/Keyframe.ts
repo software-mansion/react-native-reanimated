@@ -8,6 +8,7 @@ import type {
   KeyframeProps,
 } from './commonTypes';
 import type { TransformProperty, StyleProps } from '../../commonTypes';
+import { ExtractArrayType } from '../../helperTypes';
 interface KeyframePoint {
   duration: number;
   value: number | string;
@@ -197,8 +198,10 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     return () => {
       'worklet';
       const animations: StyleProps & {
-        transform?: Exclude<StyleProps, string>;
-      } = {};
+        transform?: ExtractArrayType<StyleProps['transform']>[];
+      } = {
+        transform: [],
+      };
 
       /* 
             For each style property, an animations sequence is created that corresponds with its key points.
@@ -230,10 +233,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
               )
         );
         if (key.includes('transform')) {
-          if (!('transform' in animations)) {
-            animations.transform = [];
-          }
-          animations.transform?.push(<TransformProperty>{
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          animations.transform!.push(<TransformProperty>{
             [key.split(':')[1]]: animation,
           });
         } else {
@@ -255,6 +256,11 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
           addAnimation(key);
         }
       });
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      if (animations.transform!.length === 0) {
+        //
+        delete animations.transform;
+      }
       return {
         animations: animations,
         initialValues: initialValues,

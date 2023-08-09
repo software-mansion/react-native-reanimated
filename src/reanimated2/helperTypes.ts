@@ -23,27 +23,37 @@ import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Ke
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 import type { DependencyList } from './hook/commonTypes';
 
+/**
+ * @deprecated
+ */
 export type Adaptable<T> =
   | T
   | ReadonlyArray<T | ReadonlyArray<T>>
   | SharedValue<T>;
 
+/**
+ * @deprecated
+ */
 export type AdaptTransforms<T> = {
   [P in keyof T]: Adaptable<T[P]>;
 };
 
-type TransformsStyle = Pick<RNTransformsStyle, 'transform'>;
+type TransformStyle = RNTransformsStyle['transform'];
 
-export type TransformStyleTypes = TransformsStyle['transform'] extends
-  | readonly (infer T)[]
-  | string
-  | undefined
-  ? T
+export type ExtractArrayType<Arr> = Arr extends readonly (infer Element)[]
+  ? Element
   : never;
 
+/**
+ * @deprecated Please use `TransformArrayElementsType` type instead.
+ */
+export type TransformStyleTypes = ExtractArrayType<TransformStyle>;
+
+export type TransformArrayType = TransformStyleTypes;
+
 export type AnimatedTransform =
-  | AdaptTransforms<TransformStyleTypes>[]
-  | TransformsStyle['transform'];
+  | (TransformArrayType | SharedValue<TransformArrayType>)[]
+  | TransformStyle;
 
 /**
  * @deprecated Please use `AnimatedStyle` type instead.

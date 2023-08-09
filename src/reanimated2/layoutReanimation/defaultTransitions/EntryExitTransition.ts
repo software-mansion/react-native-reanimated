@@ -11,6 +11,7 @@ import type {
   TransformProperty,
   AnimationObject,
 } from '../../commonTypes';
+import { ExtractArrayType } from '../../helperTypes';
 
 export class EntryExitTransition
   extends BaseAnimationBuilder
@@ -69,7 +70,7 @@ export class EntryExitTransition
       const enteringValues = enteringAnimation(values);
       const exitingValues = exitingAnimation(values);
       const animations: StyleProps & {
-        transform?: Exclude<StyleProps, string>;
+        transform: ExtractArrayType<StyleProps['transform']>[];
       } = {
         transform: [],
       };
@@ -81,7 +82,7 @@ export class EntryExitTransition
         ) {
           exitingValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
-              animations.transform?.push({
+              animations.transform.push({
                 [transformProp]: delayFunction(
                   delay,
                   withSequence(
@@ -129,7 +130,7 @@ export class EntryExitTransition
         ) {
           enteringValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
-              animations.transform?.push({
+              animations.transform.push({
                 [transformProp]: delayFunction(
                   delay + exitingDuration,
                   withSequence(
