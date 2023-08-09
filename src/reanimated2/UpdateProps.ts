@@ -1,7 +1,7 @@
 import type { MutableRefObject } from 'react';
+import { processColorsInProps } from './Colors';
 import type { ShadowNodeWrapper, SharedValue, StyleProps } from './commonTypes';
 import type { AnimatedStyle } from './helperTypes';
-import { processColorsInProps } from './Colors';
 import type { Descriptor } from './hook/commonTypes';
 import { _updatePropsJS } from './js-reanimated';
 import { shouldBeUseWeb } from './PlatformChecker';

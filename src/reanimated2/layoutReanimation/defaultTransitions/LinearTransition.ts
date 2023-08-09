@@ -48,7 +48,7 @@ export class LinearTransition
   };
 }
 
-/**
- * @deprecated Please use `LinearTransition` instead.
- */
+// This export is unofficially deprecated because it's
+// name makes little sense - should be something among the lines of
+// `DefaultLayoutTransition` but it's so long!
 export const Layout = LinearTransition;

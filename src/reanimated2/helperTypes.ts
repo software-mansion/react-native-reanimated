@@ -12,13 +12,12 @@ import type {
   StyleProp,
   TransformsStyle as RNTransformsStyle,
 } from 'react-native';
-import type {
-  AnimatableValue,
+import type { AnimatableValue, SharedValue } from './commonTypes';
+import {
+  BaseAnimationBuilder,
   EntryExitAnimationFunction,
   LayoutAnimationFunction,
-  SharedValue,
-} from '.';
-import { BaseAnimationBuilder } from './layoutReanimation';
+} from './layoutReanimation';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 import type { DependencyList } from './hook/commonTypes';

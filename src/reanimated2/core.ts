@@ -26,16 +26,6 @@ export { makeShareable } from './shareables';
 export { makeMutable, makeRemote } from './mutables';
 
 /**
- * @deprecated
- */
-// Is it still used? Not present in .d.ts...
-// ts-prune-ignore-next
-export type ReanimatedConsole = Pick<
-  Console,
-  'debug' | 'log' | 'warn' | 'info' | 'error'
->;
-
-/**
  * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1
  */
 export const isReanimated3 = () => true;
@@ -56,32 +46,6 @@ global._WORKLET = false;
 global._log = function (s: string) {
   console.log(s);
 };
-
-/**
- * @deprecated Is it still used? Not present in .d.ts...
- */
-// ts-prune-ignore-next
-export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
-  if (global._IS_FABRIC) {
-    throw new Error(
-      '[react-native-reanimated] `getViewProp` is not supported on Fabric yet'
-    );
-  }
-
-  return new Promise((resolve, reject) => {
-    return NativeReanimatedModule.getViewProp(
-      viewTag,
-      propName,
-      (result: T) => {
-        if (typeof result === 'string' && result.substr(0, 6) === 'error:') {
-          reject(result);
-        } else {
-          resolve(result);
-        }
-      }
-    );
-  });
-}
 
 function getSensorContainer() {
   if (!global.__sensorContainer) {

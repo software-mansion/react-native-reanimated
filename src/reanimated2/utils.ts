@@ -3,7 +3,7 @@ import { measure } from './NativeMethods';
 import type { AnimatedRef } from './hook/commonTypes';
 import type { SharedValue } from './commonTypes';
 
-interface ComponentCoords {
+export interface ComponentCoords {
   x: number;
   y: number;
 }

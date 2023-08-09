@@ -202,7 +202,7 @@ export {
   SharedTransition,
   SharedTransitionType,
 } from './layoutReanimation';
-export { getRelativeCoords } from './utils';
+export { getRelativeCoords, ComponentCoords } from './utils';
 export {
   StyleProps,
   SharedValue,
