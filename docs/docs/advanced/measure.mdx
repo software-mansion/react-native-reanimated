@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # measure
 
-`measure` lets you synchronously get the dimensions and the position of a view on the screen on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+`measure` lets you synchronously get the dimensions and position of a view on the screen, all on the [UI thread](/docs/fundamentals/glossary#ui-thread).
 
 ## Reference
 
@@ -77,9 +77,9 @@ import MeasureBasicSrc from '!!raw-loader!@site/src/examples/MeasureBasic';
 
 ## Remarks
 
-- `measure` has an implementation only on the [UI thread](/docs/fundamentals/glossary#ui-thread). When using `measure` inside [event handlers](https://react.dev/learn/responding-to-events#adding-event-handlers) it has to be wrapped with [`runOnUI`](/docs/threading/runOnUI) function.
+- `measure` is implemented only on the [UI thread](/docs/fundamentals/glossary#ui-thread). When using `measure` inside [event handlers](https://react.dev/learn/responding-to-events#adding-event-handlers), it has to be wrapped with the [`runOnUI`](/docs/threading/runOnUI) function.
 
-- The `useAnimatedStyle` function is first evaluated in the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) just before the views are attached on the native side. For this reason, in order to safely use the measure within `useAnimatedStyle`, a condition similar to the one below has to be added to the code:
+- The `useAnimatedStyle` function is first evaluated on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) just before the views are attached to the native side. For this reason, to safely use the measure within `useAnimatedStyle`, a condition similar to the one below must be added to the code:
 
 <Indent>
 
@@ -99,9 +99,9 @@ Consecutive runs of `useAnimatedStyle` are executed on the UI thread.
 
 </Indent>
 
-- When you only need the dimensions of the component and you won't use the measurements during the animation consider using [`onLayout`](https://reactnative.dev/docs/view#onlayout) property instead.
+- When you only need the dimensions of the component and won't use the measurements during animation, consider using the [`onLayout`](https://reactnative.dev/docs/view#onlayout) property instead.
 
-- Sometimes `measure` returns `null` (e.g. when `ref` still hasn't attached to the view). It's best to add a `null` check after the measurement for additional safety:
+- Sometimes, `measure` returns `null` (e.g., when the `ref` hasn't yet attached to the view). It's best to add a `null` check after the measurement for added safety.
 
 <Indent>
 
@@ -124,9 +124,9 @@ const handlePress = () => {
 
 </Indent>
 
-- `measure` can be used only on rendered components. For example, trying to `measure` off-screen items in a `FlatList` results in a `null` value.
+- `measure` can be used only on rendered components. For instance, attempting to `measure` off-screen items in a `FlatList` will return a `null` value.
 
-- `measure` isn't available with Remote JS Debugger. We highly recommend using Chrome DevTools (aka `chrome://inspect`) instead for debugging React Native apps,
+- `measure` isn't available with the Remote JS Debugger. We highly recommend using Chrome DevTools (also known as `chrome://inspect`) for debugging React Native apps.
 
 ## Platform compatibility
 
