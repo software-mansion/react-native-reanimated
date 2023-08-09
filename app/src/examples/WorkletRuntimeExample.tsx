@@ -82,6 +82,7 @@ function CreateWorkletRuntimeDemo() {
   const handlePress = () => {
     const runtime = createWorkletRuntime('foo');
     console.log(runtime);
+    console.log(runtime.name);
     console.log(`${runtime}`);
     console.log(String(runtime));
   };

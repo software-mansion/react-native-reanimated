@@ -9,6 +9,7 @@ import { makeShareableCloneRecursive } from './shareables';
 
 export type WorkletRuntime = {
   __hostObjectWorkletRuntime: never;
+  readonly name: string;
 };
 
 export function createWorkletRuntime(

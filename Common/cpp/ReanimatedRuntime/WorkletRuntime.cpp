@@ -43,6 +43,9 @@ jsi::Value WorkletRuntime::get(
           return jsi::String::createFromUtf8(rt, toString());
         });
   }
+  if (name == "name") {
+    return jsi::String::createFromUtf8(rt, name_);
+  }
   return jsi::Value::undefined();
 }
 
