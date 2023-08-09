@@ -1,0 +1,35 @@
+name: Check TypeScript with different react-native versions
+on:
+  pull_request:
+    paths:
+      - .github/workflows/check-TS-react-native.yml
+  schedule:
+    - cron: '37 19 * * *'
+  workflow_dispatch:
+
+jobs:
+  only-one-job:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        react-native-version: ['0.70', '0.71', '0.72', nightly]
+      fail-fast: false
+    concurrency:
+      group: TS-react-native-nightly-${{ matrix.react-native-version }}-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Use Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'yarn'
+      - name: Clear annotations
+        run: scripts/clear-annotations.sh
+      - name: Install react-native version
+        run: yarn add react-native@${{ matrix.react-native-version }}
+      - name: Check types
+        run: yarn type:check
+      - name: Check API
+        run: yarn type:check-api
