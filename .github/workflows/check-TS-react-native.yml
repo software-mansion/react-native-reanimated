@@ -29,6 +29,9 @@ jobs:
         run: scripts/clear-annotations.sh
       - name: Install react-native version
         run: yarn add react-native@${{ matrix.react-native-version }}
+      - name: Install @types/react-native version
+        if: ${{ matrix.react-native-version == '0.70' }}
+        run: yarn add @types/react-native@${{ matrix.react-native-version }}
       - name: Check types
         run: yarn type:check
       - name: Check API
