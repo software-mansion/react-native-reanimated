@@ -41,6 +41,7 @@ declare global {
     | undefined;
   var evalWithSourceUrl: ((js: string, sourceURL: string) => any) | undefined;
   var _log: (s: string) => void;
+  var _toString: (value: unknown) => string;
   var _notifyAboutProgress: (
     tag: number,
     value: Record<string, unknown>,
