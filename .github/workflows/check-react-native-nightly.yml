@@ -45,22 +45,20 @@ jobs:
       group: android-react-native-nightly-${{ matrix.react-native-architecture }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - name: Set up JDK 18
+      - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: '18'
-      - name: "test"
-        run: echo github:software-mansion/react-native-reanimated#${{ github.ref }}
-      # - name: Create app
-      #   run: npx react-native init app --skip-install --version nightly
-      # - name: Install Reanimated
-      #   working-directory: app
-      #   run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
-      # - name: Setup Fabric
-      #   if: ${{ matrix.react-native-architecture == 'Fabric' }}
-      #   working-directory: app/android
-      #   run: sed -i 's/newArchEnabled=false/newArchEnabled=true/' gradle.properties
-      # - name: Build app
-      #   working-directory: app/android
-      #   run: ./gradlew assembleDebug --console=plain
+          java-version: '17'
+      - name: Create app
+        run: npx react-native init app --skip-install --version nightly
+      - name: Install Reanimated
+        working-directory: app
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
+      - name: Setup Fabric
+        if: ${{ matrix.react-native-architecture == 'Fabric' }}
+        working-directory: app/android
+        run: sed -i 's/newArchEnabled=false/newArchEnabled=true/' gradle.properties
+      - name: Build app
+        working-directory: app/android
+        run: ./gradlew assembleDebug --console=plain
