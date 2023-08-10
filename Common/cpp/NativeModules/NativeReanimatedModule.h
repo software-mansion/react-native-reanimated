@@ -26,11 +26,6 @@
 
 namespace reanimated {
 
-using PropObtainerFunction =
-    std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>;
-using RequestRenderFunction =
-    std::function<void(std::function<void(double)> &, jsi::Runtime &)>;
-
 class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  public:
   NativeReanimatedModule(

@@ -147,7 +147,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.endLayoutAnimation,
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction);
 
-  onRenderCallback_ = [this](double timestampMs) {
+  onRenderCallback_ = [this](const double timestampMs) {
     renderRequested_ = false;
     onRender(timestampMs);
   };
