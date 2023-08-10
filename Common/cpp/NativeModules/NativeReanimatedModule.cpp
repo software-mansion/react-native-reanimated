@@ -4,7 +4,7 @@
 #include <react/renderer/core/TraitCast.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
-#include <react/utils/CoreFeatures.cpp>
+#include <react/utils/CoreFeatures.h>
 #endif
 
 #include <functional>
@@ -31,6 +31,7 @@
 #endif
 
 using namespace facebook;
+bool CoreFeatures::useNativeState;
 
 namespace reanimated {
 
