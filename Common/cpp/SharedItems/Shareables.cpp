@@ -53,10 +53,7 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
   } else if (maybeShareableValue.isUndefined()) {
     return Shareable::undefined();
   }
-  throw std::runtime_error(
-      "[Reanimated] " + errorMessage != nullptr
-          ? errorMessage
-          : "expecting the object to be of type ShareableJSRef.");
+  throw std::runtime_error(std::string("[Reanimated] ") + errorMessage);
 }
 
 Shareable::~Shareable() {}
