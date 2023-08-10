@@ -26,7 +26,7 @@
 #import <UIKit/UIAccessibility.h>
 #endif
 
-#import <React/RCTUIKit.h>
+#import <RNReanimated/REAUIKit.h>
 
 using namespace facebook::react;
 using namespace reanimated;
@@ -225,7 +225,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   REANodesManager *nodesManager = _nodesManager;
 
   [uiManager
-      addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, RCTUIView *> *viewRegistry) {
+      addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, RNAUIView *> *viewRegistry) {
         for (AnimatedOperation operation in operations) {
           operation(nodesManager);
         }

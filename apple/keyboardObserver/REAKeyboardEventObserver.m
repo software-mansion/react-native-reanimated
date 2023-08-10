@@ -3,8 +3,8 @@
 #import <React/RCTDefines.h>
 #import <React/RCTUIManager.h>
 
-#import <React/RCTPlatformDisplayLink.h>
-#import <React/RCTUIKit.h>
+#import <RNReanimated/READisplayLink.h>
+#import <RNReanimated/REAUIKit.h>
 
 typedef NS_ENUM(NSUInteger, KeyboardState) {
   UNKNOWN = 0,
@@ -15,10 +15,10 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 };
 
 @implementation REAKeyboardEventObserver {
-  RCTUIView *_measuringView;
+  RNAUIView *_measuringView;
   NSNumber *_nextListenerId;
   NSMutableDictionary *_listeners;
-  RCTPlatformDisplayLink *_displayLink;
+  RNADisplayLink *_displayLink;
   KeyboardState _state;
 }
 
@@ -38,12 +38,12 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   return self;
 }
 
-- (RCTPlatformDisplayLink *)getDisplayLink
+- (RNADisplayLink *)getDisplayLink
 {
   RCTAssertMainQueue();
 
   if (!_displayLink) {
-    _displayLink = [RCTPlatformDisplayLink displayLinkWithTarget:self selector:@selector(updateKeyboardFrame)];
+    _displayLink = [RNADisplayLink displayLinkWithTarget:self selector:@selector(updateKeyboardFrame)];
 #if !TARGET_OS_OSX
     _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
 #endif

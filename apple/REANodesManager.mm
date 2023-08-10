@@ -20,8 +20,8 @@
 using namespace facebook::react;
 #endif
 
-#import <React/RCTPlatformDisplayLink.h>
-#import <React/RCTUIKit.h>
+#import <RNReanimated/READisplayLink.h>
+#import <RNReanimated/REAUIKit.h>
 
 // Interface below has been added in order to use private methods of RCTUIManager,
 // RCTUIManager#UpdateView is a React Method which is exported to JS but in
@@ -158,13 +158,13 @@ using namespace facebook::react;
 #endif
 
 @implementation REANodesManager {
-  RCTPlatformDisplayLink *_displayLink;
+  RNADisplayLink *_displayLink;
   BOOL _wantRunUpdates;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   BOOL _tryRunBatchUpdatesSynchronously;
   REAEventHandler _eventHandler;
   NSMutableDictionary<NSNumber *, ComponentUpdate *> *_componentUpdateBuffer;
-  NSMutableDictionary<NSNumber *, RCTUIView *> *_viewRegistry;
+  NSMutableDictionary<NSNumber *, RNAUIView *> *_viewRegistry;
 #ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTBridge *_bridge;
   REAPerformOperations _performOperations;
@@ -176,12 +176,12 @@ using namespace facebook::react;
 #endif
 }
 
-- (RCTPlatformDisplayLink *)getDisplayLink
+- (RNADisplayLink *)getDisplayLink
 {
   RCTAssertMainQueue();
 
   if (!_displayLink) {
-    _displayLink = [RCTPlatformDisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
+    _displayLink = [RNADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
 #if !TARGET_OS_OSX
     _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
 #endif
@@ -234,7 +234,7 @@ using namespace facebook::react;
     _shouldFlushUpdateBuffer = false;
   }
 #endif
-  [self useDisplayLinkOnMainQueue:^(RCTPlatformDisplayLink *displayLink) {
+  [self useDisplayLinkOnMainQueue:^(RNADisplayLink *displayLink) {
     [displayLink setPaused:YES];
   }];
 
@@ -244,7 +244,7 @@ using namespace facebook::react;
 - (void)invalidate
 {
   _eventHandler = nil;
-  [self useDisplayLinkOnMainQueue:^(RCTPlatformDisplayLink *displayLink) {
+  [self useDisplayLinkOnMainQueue:^(RNADisplayLink *displayLink) {
     [displayLink invalidate];
   }];
 }
@@ -298,7 +298,7 @@ using namespace facebook::react;
   [[self getDisplayLink] setPaused:YES];
 }
 
-- (void)onAnimationFrame:(RCTPlatformDisplayLink *)displayLink
+- (void)onAnimationFrame:(RNADisplayLink *)displayLink
 {
   NSArray<REAOnAnimationCallback> *callbacks = _onAnimationCallbacks;
   _onAnimationCallbacks = [NSMutableArray new];
@@ -414,7 +414,7 @@ using namespace facebook::react;
 
 - (BOOL)isNativeViewMounted:(NSNumber *)viewTag
 {
-  RCTUIView *view = _viewRegistry[viewTag];
+  RNAUIView *view = _viewRegistry[viewTag];
   if (view.superview != nil) {
     return YES;
   }
@@ -520,7 +520,7 @@ using namespace facebook::react;
 
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName
 {
-  RCTUIView *view = [self.uiManager viewForReactTag:viewTag];
+  RNAUIView *view = [self.uiManager viewForReactTag:viewTag];
 
   NSString *result =
       [NSString stringWithFormat:@"error: unknown propName %@, currently supported: opacity, zIndex", propName];
@@ -550,7 +550,7 @@ using namespace facebook::react;
 
   __weak __typeof__(self) weakSelf = self;
   [_uiManager
-      addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, RCTUIView *> *viewRegistry) {
+      addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, RNAUIView *> *viewRegistry) {
         __typeof__(self) strongSelf = weakSelf;
         if (strongSelf == nil) {
           return;

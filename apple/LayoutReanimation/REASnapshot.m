@@ -4,7 +4,7 @@
 #import <React/RCTView.h>
 #import <React/UIView+React.h>
 
-#import <React/RCTUIKit.h>
+#import <RNReanimated/REAUIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -15,23 +15,23 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
 
 #if !TARGET_OS_OSX
 
-- (instancetype)init:(RCTUIView *)view
+- (instancetype)init:(RNAUIView *)view
 {
   self = [super init];
   [self makeSnapshotForView:view useAbsolutePositionOnly:NO];
   return self;
 }
 
-- (instancetype)initWithAbsolutePosition:(RCTUIView *)view
+- (instancetype)initWithAbsolutePosition:(RNAUIView *)view
 {
   self = [super init];
   [self makeSnapshotForView:view useAbsolutePositionOnly:YES];
   return self;
 }
 
-- (void)makeSnapshotForView:(RCTUIView *)view useAbsolutePositionOnly:(BOOL)useAbsolutePositionOnly
+- (void)makeSnapshotForView:(RNAUIView *)view useAbsolutePositionOnly:(BOOL)useAbsolutePositionOnly
 {
-  RCTUIView *mainWindow = UIApplication.sharedApplication.keyWindow;
+  RNAUIView *mainWindow = UIApplication.sharedApplication.keyWindow;
   CGPoint absolutePosition = [[view superview] convertPoint:view.center toView:mainWindow];
   _values = [NSMutableDictionary new];
   _values[@"windowWidth"] = [NSNumber numberWithDouble:mainWindow.bounds.size.width];
@@ -46,8 +46,8 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
     _values[@"originXByParent"] = [NSNumber numberWithDouble:view.center.x - view.bounds.size.width / 2.0];
     _values[@"originYByParent"] = [NSNumber numberWithDouble:view.center.y - view.bounds.size.height / 2.0];
 
-    RCTUIView *navigationContainer = view.reactViewController.navigationController.view;
-    RCTUIView *header = [navigationContainer.subviews count] > 1 ? navigationContainer.subviews[1] : nil;
+    RNAUIView *navigationContainer = view.reactViewController.navigationController.view;
+    RNAUIView *header = [navigationContainer.subviews count] > 1 ? navigationContainer.subviews[1] : nil;
     if (header != nil) {
       CGFloat headerHeight = header.frame.size.height;
       CGFloat headerOriginY = header.frame.origin.y;
@@ -100,9 +100,9 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
   }
 }
 
-- (RCTUIView *)findTransformedView:(RCTUIView *)view
+- (RNAUIView *)findTransformedView:(RNAUIView *)view
 {
-  RCTUIView *transformedView;
+  RNAUIView *transformedView;
   bool isTransformed = false;
   do {
     if (transformedView == nil) {
@@ -127,13 +127,13 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
 #else // TARGET_OS_OSX [
       // TODO: macOS implementation
 
-- (instancetype)init:(RCTUIView *)view
+- (instancetype)init:(RNAUIView *)view
 {
   self = [super init];
   return self;
 }
 
-- (instancetype)initWithAbsolutePosition:(RCTUIView *)view
+- (instancetype)initWithAbsolutePosition:(RNAUIView *)view
 {
   self = [super init];
   return self;

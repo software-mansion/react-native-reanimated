@@ -7,7 +7,7 @@
 #import <React/RCTRootViewInternal.h>
 #import <React/RCTUIManager.h>
 
-#import <React/RCTUIKit.h>
+#import <RNReanimated/REAUIKit.h>
 
 @interface RCTUIManager (Reanimated)
 @property REAAnimationsManager *animationsManager;
@@ -76,9 +76,9 @@
     container = registry[containerTag];
     permanentlyRemovedChildren = [originalSelf _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
 
-    if ([container isKindOfClass:[RCTUIView class]]) {
-      UIViewController *controller = ((RCTUIView *)container).reactViewController;
-      UIViewController *parentController = ((RCTUIView *)container).superview.reactViewController;
+    if ([container isKindOfClass:[RNAUIView class]]) {
+      UIViewController *controller = ((RNAUIView *)container).reactViewController;
+      UIViewController *parentController = ((RNAUIView *)container).superview.reactViewController;
       containerIsRootOfViewController = controller != parentController;
     }
 
@@ -88,12 +88,12 @@
     if (containerIsRootOfViewController) {
       NSArray<id<RCTComponent>> *permanentlyRemovedChildren =
           [originalSelf _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
-      for (RCTUIView *view in permanentlyRemovedChildren) {
+      for (RNAUIView *view in permanentlyRemovedChildren) {
         [originalSelf.animationsManager endAnimationsRecursive:view];
       }
-      [originalSelf.animationsManager removeAnimationsFromSubtree:(RCTUIView *)container];
-      [originalSelf.animationsManager onScreenRemoval:(RCTUIView *)permanentlyRemovedChildren[0]
-                                                stack:(RCTUIView *)container];
+      [originalSelf.animationsManager removeAnimationsFromSubtree:(RNAUIView *)container];
+      [originalSelf.animationsManager onScreenRemoval:(RNAUIView *)permanentlyRemovedChildren[0]
+                                                stack:(RNAUIView *)container];
     }
   }
 
@@ -193,8 +193,8 @@
       CGSize contentSize = shadowView.layoutMetrics.frame.size;
 
       RCTExecuteOnMainQueue(^{
-        NSMutableDictionary<NSNumber *, RCTUIView *> *viewRegistry = [self valueForKey:@"_viewRegistry"];
-        RCTUIView *view = viewRegistry[reactTag];
+        NSMutableDictionary<NSNumber *, RNAUIView *> *viewRegistry = [self valueForKey:@"_viewRegistry"];
+        RNAUIView *view = viewRegistry[reactTag];
         RCTAssert(view != nil, @"view (for ID %@) not found", reactTag);
 
         RCTRootView *rootView = (RCTRootView *)[view superview];
@@ -206,7 +206,7 @@
   }
 
   // Perform layout (possibly animated)
-  return ^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTUIView *> *viewRegistry) {
+  return ^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RNAUIView *> *viewRegistry) {
     const RCTFrameData *frameDataArray = (const RCTFrameData *)framesData.bytes;
     RCTLayoutAnimationGroup *layoutAnimationGroup = [uiManager valueForKey:@"_layoutAnimationGroup"];
 
@@ -218,7 +218,7 @@
     for (NSNumber *reactTag in reactTags) {
       RCTFrameData frameData = frameDataArray[index++];
 
-      RCTUIView *view = viewRegistry[reactTag];
+      RNAUIView *view = viewRegistry[reactTag];
       CGRect frame = frameData.frame;
 
       UIUserInterfaceLayoutDirection layoutDirection = frameData.layoutDirection;
@@ -304,7 +304,7 @@
     index = 0;
     for (NSNumber *reactTag in reactTags) {
       RCTFrameData frameData = frameDataArray[index++];
-      RCTUIView *view = viewRegistry[reactTag];
+      RNAUIView *view = viewRegistry[reactTag];
       BOOL isNew = frameData.isNew;
       CGRect frame = frameData.frame;
 
