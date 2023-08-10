@@ -832,9 +832,10 @@ export default function createAnimatedComponent(
         const parent = element.offsetParent;
         const tmpElement = element.cloneNode() as HTMLElement;
 
-        while (element.firstChild) {
-          tmpElement.appendChild(element.firstChild);
-        }
+        Array.from(element.childNodes).forEach((child) => {
+          element.removeChild(child);
+          tmpElement.appendChild(child);
+        });
 
         setElementAnimation(tmpElement, duration, delay, animationName, easing);
         parent?.appendChild(tmpElement);
