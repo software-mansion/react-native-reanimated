@@ -75,10 +75,10 @@ NativeReanimatedModule::NativeReanimatedModule(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
           platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
-  auto requestAnimationFrame = [=](jsi::Runtime &rt, const jsi::Value &fn) {
-    frameCallbacks_.push_back(std::make_shared<jsi::Value>(rt, fn));
-    maybeRequestRender();
-  };
+  auto requestAnimationFrame =
+      [this](jsi::Runtime &rt, const jsi::Value &callback) {
+        this->requestAnimationFrame(rt, callback);
+      };
 
   auto scheduleOnJS = [this](
                           jsi::Runtime &rt,
@@ -371,6 +371,13 @@ bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
     const int emitterReactTag) {
   return eventHandlerRegistry_->isAnyHandlerWaitingForEvent(
       eventName, emitterReactTag);
+}
+
+void NativeReanimatedModule::requestAnimationFrame(
+    jsi::Runtime &rt,
+    const jsi::Value &callback) {
+  frameCallbacks_.push_back(std::make_shared<jsi::Value>(rt, callback));
+  maybeRequestRender();
 }
 
 void NativeReanimatedModule::maybeRequestRender() {

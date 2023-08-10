@@ -110,6 +110,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const std::string &eventName,
       const int emitterReactTag);
 
+  void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
   void maybeRequestRender();
 
   bool handleEvent(
