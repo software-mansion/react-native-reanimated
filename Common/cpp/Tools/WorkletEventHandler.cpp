@@ -3,11 +3,11 @@
 namespace reanimated {
 
 void WorkletEventHandler::process(
-    jsi::Runtime &uiRuntime,
+    const WorkletRuntime &workletRuntime,
     const double eventTimestamp,
     const jsi::Value &eventValue) const {
-  runOnRuntimeGuarded(
-      uiRuntime, handlerFunction_, jsi::Value(eventTimestamp), eventValue);
+  workletRuntime.runGuarded(
+      handlerFunction_, jsi::Value(eventTimestamp), eventValue);
 }
 
 uint64_t WorkletEventHandler::getHandlerId() const {

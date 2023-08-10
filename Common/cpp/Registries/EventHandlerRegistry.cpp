@@ -50,8 +50,8 @@ void EventHandlerRegistry::unregisterEventHandler(uint64_t id) {
 }
 
 void EventHandlerRegistry::processEvent(
-    jsi::Runtime &rt,
-    double eventTimestamp,
+    const WorkletRuntime &uiWorkletRuntime,
+    const double eventTimestamp,
     const std::string &eventName,
     const int emitterReactTag,
     const jsi::Value &eventPayload) {
@@ -73,10 +73,11 @@ void EventHandlerRegistry::processEvent(
     }
   }
 
+  jsi::Runtime &rt = uiWorkletRuntime.getRuntime();
   eventPayload.asObject(rt).setProperty(
       rt, "eventName", jsi::String::createFromUtf8(rt, eventName));
   for (auto handler : handlersForEvent) {
-    handler->process(rt, eventTimestamp, eventPayload);
+    handler->process(uiWorkletRuntime, eventTimestamp, eventPayload);
   }
 }
 

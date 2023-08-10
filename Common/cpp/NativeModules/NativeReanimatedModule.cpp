@@ -290,12 +290,8 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
 
   uiScheduler_->scheduleOnUI([=] {
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getRuntime();
-    auto handlerFunction = handlerShareable->getJSValue(uiRuntime);
     auto handler = std::make_shared<WorkletEventHandler>(
-        newRegistrationId,
-        eventNameStr,
-        emitterReactTagInt,
-        std::move(handlerFunction));
+        newRegistrationId, eventNameStr, emitterReactTagInt, handlerShareable);
     eventHandlerRegistry->registerEventHandler(std::move(handler));
   });
 
@@ -450,9 +446,8 @@ bool NativeReanimatedModule::handleEvent(
     const int emitterReactTag,
     const jsi::Value &payload,
     double currentTime) {
-  jsi::Runtime &uiRuntime = uiWorkletRuntime_->getRuntime();
   eventHandlerRegistry->processEvent(
-      uiRuntime, currentTime, eventName, emitterReactTag, payload);
+      *uiWorkletRuntime_, currentTime, eventName, emitterReactTag, payload);
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript

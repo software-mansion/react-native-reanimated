@@ -27,7 +27,7 @@ class WorkletRuntime : public jsi::HostObject {
   template <typename... Args>
   inline void runGuarded(
       const std::shared_ptr<ShareableWorklet> &shareableWorklet,
-      Args &&...args) {
+      Args &&...args) const {
     jsi::Runtime &rt = *runtime_;
     runOnRuntimeGuarded(
         rt, shareableWorklet->getJSValue(rt), std::forward<Args>(args)...);

@@ -6,29 +6,30 @@
 #include <utility>
 
 #include "Shareables.h"
+#include "WorkletRuntime.h"
 
 using namespace facebook;
 
 namespace reanimated {
 
 class WorkletEventHandler {
-  const jsi::Value handlerFunction_;
   const uint64_t handlerId_;
-  const std::string eventName_;
   const uint64_t emitterReactTag_;
+  const std::string eventName_;
+  const std::shared_ptr<ShareableWorklet> handlerFunction_;
 
  public:
   WorkletEventHandler(
       const uint64_t handlerId,
       const std::string &eventName,
       const uint64_t emitterReactTag,
-      jsi::Value &&handlerFunction)
-      : handlerFunction_(std::move(handlerFunction)),
+      const std::shared_ptr<ShareableWorklet> &handlerFunction)
+      : handlerFunction_(handlerFunction),
         handlerId_(handlerId),
         eventName_(eventName),
         emitterReactTag_(emitterReactTag) {}
   void process(
-      jsi::Runtime &uiRuntime,
+      const WorkletRuntime &workletRuntime,
       double eventTimestamp,
       const jsi::Value &eventValue) const;
   uint64_t getHandlerId() const;
