@@ -11,6 +11,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - '.github/workflows/validate-java.yml'
+      - 'android/src/main/java/**'
+      - 'android/build.gradle'
 jobs:
   check:
     runs-on: ubuntu-latest

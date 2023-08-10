@@ -1,10 +1,6 @@
 name: Test TypeScript and Lint
 on:
   pull_request:
-    paths:
-      - '.github/workflows/static-root-checks.yml'
-      - 'src/**'
-      - '*'
   merge_group:
     branches:
       - main

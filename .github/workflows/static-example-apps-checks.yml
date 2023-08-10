@@ -1,14 +1,6 @@
 name: Test TypeScript and Lint
 on:
   pull_request:
-    paths:
-      - '.github/workflows/static-example-apps-checks.yml'
-      - 'app/**'
-      - 'Example/**'
-      - 'FabricExample/**'
-      - 'WebExample/**'
-      - 'TVOSExample/**'
-      - '*'
   merge_group:
     branches:
       - main
