@@ -5,12 +5,10 @@
 namespace reanimated {
 
 WorkletRuntime::WorkletRuntime(jsi::Runtime &rnRuntime, const std::string &name)
-    : name_(name) {
-  runtime_ = ReanimatedRuntime::make(rnRuntime, name);
-
-  WorkletRuntimeCollector::install(*runtime_);
-
+    : runtime_(ReanimatedRuntime::make(rnRuntime, name)), name_(name) {
   jsi::Runtime &rt = *runtime_;
+
+  WorkletRuntimeCollector::install(rt);
 
   rt.global().setProperty(rt, "global", rt.global());
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."

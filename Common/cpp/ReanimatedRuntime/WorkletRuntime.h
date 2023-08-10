@@ -15,10 +15,6 @@ using namespace facebook;
 namespace reanimated {
 
 class WorkletRuntime : public jsi::HostObject {
- private:
-  std::shared_ptr<jsi::Runtime> runtime_;
-  std::string name_;
-
  public:
   explicit WorkletRuntime(jsi::Runtime &rnRuntime, const std::string &name);
 
@@ -44,6 +40,10 @@ class WorkletRuntime : public jsi::HostObject {
   jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override;
 
   std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
+
+ private:
+  const std::shared_ptr<jsi::Runtime> runtime_;
+  const std::string name_;
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on
