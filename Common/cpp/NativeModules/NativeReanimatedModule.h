@@ -176,8 +176,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   RequestRenderFunction requestRender_;
   std::vector<std::shared_ptr<jsi::Value>> frameCallbacks_;
   volatile bool renderRequested_{false};
-  PropObtainerFunction propObtainer_;
-  std::function<void(double)> onRenderCallback_;
+  const PropObtainerFunction propObtainer_;
+  std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
   LayoutAnimationsManager layoutAnimationsManager_;
 
@@ -197,14 +197,15 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   std::vector<Tag> tagsToRemove_; // from `propsRegistry_`
 #else
-  ConfigurePropsFunction configurePropsPlatformFunction_;
-  UpdatePropsFunction updatePropsFunction_;
+  const ConfigurePropsFunction configurePropsPlatformFunction_;
+  const UpdatePropsFunction updatePropsFunction_;
 #endif
 
-  std::unordered_set<std::string> nativePropNames_; // filled by configureProps
+  const std::unordered_set<std::string>
+      nativePropNames_; // filled by configureProps
 
-  KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
-  KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;
+  const KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
+  const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;
 
 #ifdef DEBUG
   SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;
