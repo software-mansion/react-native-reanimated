@@ -72,7 +72,8 @@ function checkReanimatedInstance() {
   if (!shouldBeUseNotDebug) {
     if (global._REANIMATED_VERSION_JS !== undefined) {
       throw new Error(
-        '[Reanimated] Another instance of `react-native-reanimated` was detected. Aborting.'
+        `[Reanimated] Another instance of \`react-native-reanimated\` was detected.
+See \`http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-another-instance-of-react-native-reanimated-was-detected\` for more details.`
       );
     }
     global._REANIMATED_VERSION_JS = jsVersion;
@@ -93,10 +94,8 @@ export class NativeReanimated {
 
     if (global.__reanimatedModuleProxy === undefined) {
       throw new Error(
-        `[Reanimated] The native part of Reanimated doesn't seem to be initialized. This could be caused by\n\
-- not rebuilding the app after installing or upgrading Reanimated\n\
-- trying to run Reanimated on an unsupported platform\n\
-- running in a brownfield app without manually initializing the native library`
+        `[Reanimated] The native part of Reanimated doesn't seem to be initialized.
+See http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-the-native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
     if (!shouldBeUseNotDebug) {

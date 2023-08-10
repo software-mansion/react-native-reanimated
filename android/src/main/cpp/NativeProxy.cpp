@@ -96,20 +96,30 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 
 #ifdef DEBUG
 void NativeProxy::checkVersion(jsi::Runtime &rnRuntime) {
-  auto androidVersion =
-      getJniMethod<jstring()>("getReanimatedJavaVersion")(javaPart_.get())
-          ->toStdString();
+  std::string androidVersion;
+  try {
+    androidVersion =
+        getJniMethod<jstring()>("getReanimatedJavaVersion")(javaPart_.get())
+            ->toStdString();
+  } catch {
+    throw std::runtime_error(
+        "[Reanimated] Native side failed to resolve Java code version.\n" +
+        "See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-native-side-failed-to-resolve-java-code-version` for more details.")
+  }
   auto maybeJSVersion =
       rnRuntime.global().getProperty(rnRuntime, "_REANIMATED_VERSION_JS");
   if (maybeJSVersion.isUndefined()) {
     throw std::runtime_error(
-        "[Reanimated] JS version of `react-native-reanimated` is undefined");
+        "[Reanimated] Native side (Java) failed to resolve JS version of `react-native-reanimated`.\n" +
+        "See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-native-side-java-failed-to-resolve-js-version-of-react-native-reanimated` for more details.");
   }
   auto JSVersion = maybeJSVersion.asString(rnRuntime).utf8(rnRuntime);
   if (androidVersion != JSVersion) {
     auto errorMessage =
-        "[Reanimated] Mismatch between JS version of `react-native-reanimated` [" +
-        JSVersion + "] and Android version [" + androidVersion + "]";
+        "[Reanimated] Native mismatch between JS version of `react-native-reanimated` and Java version ( " +
+        JSVersion + " vs " + androidVersion + ").\n" +
+        "See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-native-mismatch-between-js-version-of-react-native-reanimated-and-java-version` for more details."
+            .;
     throw std::runtime_error(errorMessage);
   }
   rnRuntime.global().setProperty(
@@ -534,7 +544,8 @@ void NativeProxy::setupLayoutAnimations() {
                 yogaValues.setProperty(rt, key, value);
               }
             } catch (std::invalid_argument e) {
-              throw std::runtime_error("Failed to convert value to number");
+              throw std::runtime_error(
+                  "[Reanimated] Failed to convert value to number");
             }
           }
           nativeReanimatedModule->layoutAnimationsManager()

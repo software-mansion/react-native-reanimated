@@ -79,16 +79,13 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
     return value;
   } else if (category === 'RemoteFunction') {
     const fun = () => {
-      throw new Error(`Tried to synchronously call a non-worklet function on the UI thread.
-
-Possible solutions are:
-  a) If you want to synchronously execute this method, mark it as a worklet
-  b) If you want to execute this function on the JS thread, wrap it using \`runOnJS\``);
+      throw new Error(`[Reanimated] Tried to synchronously call a non-worklet function on the UI thread.
+See \`http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread\` for more details.`);
     };
     fun.__remoteFunction = objectToUnpack;
     return fun;
   } else {
-    throw new Error('data type not recognized by unpack method');
+    throw new Error('[Reanimated] Data type not recognized by unpack method.');
   }
 }
 

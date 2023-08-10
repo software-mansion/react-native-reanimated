@@ -187,11 +187,11 @@ export const validateAnimatedStyles = (styles: AnimatedStyle<any>): void => {
   'worklet';
   if (typeof styles !== 'object') {
     throw new Error(
-      `useAnimatedStyle has to return an object, found ${typeof styles} instead`
+      `[Reanimated] \`useAnimatedStyle\` has to return an object, found ${typeof styles} instead.`
     );
   } else if (Array.isArray(styles)) {
     throw new Error(
-      'useAnimatedStyle has to return an object and cannot return static styles combined with dynamic ones. Please do merging where a component receives props.'
+      '[Reanimated] `useAnimatedStyle` has to return an object and cannot return static styles combined with dynamic ones. Please do merging where a component receives props.'
     );
   }
 };

@@ -1,0 +1,103 @@
+---
+id: Troubleshooting
+title: Troubleshooting
+sidebar_label: Troubleshooting
+sidebar_position: 1
+---
+
+# Troubleshooting
+
+Reanimated is known for its stability and compatibility so it's extremely unlikely you will ever have to visit this page. If you had to, please contact us at `contact@swmansion.com`.
+
+## Version mismatching
+
+Reanimated has four core components that compose its code:
+
+- C++,
+- Java,
+- JavaScript,
+- Reanimated Babel Plugin.
+
+All of them are supposed to work correctly only within the same version. Therefore, having any of those pieces in your code - directly or indirectly - separate from `react-native-reanimated`, especially having your code transpiled with a different version of the plugin, will result in undefined behavior and errors. Especially having code transpiled with an outdated version of `Reanimated Babel Plguin` is a common source of errors.
+
+### [Reanimated] Unknown version of Reanimated Babel plugin
+
+1. Try resetting your Metro bundler cache with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
+2. Make sure that none of your dependencies contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin.
+3. Using release bundle with debug build of the app is not supported.
+
+### [Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version
+
+1. Try resetting your Metro bundler cache with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
+2. Make sure that none of your dependencies contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin.
+
+### [Reanimated] Using dev bundle in a release app build is not supported
+
+Visit https://github.com/software-mansion/react-native-reanimated/issues/4737 to find more information on how to fix this issue.
+
+### [Reanimated] Tried to synchronously call a non-worklet function on the UI thread
+
+Possible solutions are:
+
+1. If you want to synchronously execute this method, mark it as a worklet.
+2. If you want to execute this function on the JS thread, wrap it using `runOnJS`.
+
+### [Reanimated] Failed to create a worklet
+
+Did you forget to add Reanimated Babel plugin in babel.config.js? See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation#babel-plugin.
+
+### [Reanimated] Another instance of `react-native-reanimated` was detected
+
+Very bad!!!
+
+### [Reanimated] The native part of Reanimated doesn't seem to be initialized
+
+This could be caused by:
+
+- not rebuilding the app after installing or upgrading Reanimated,
+- trying to run Reanimated on an unsupported platform,
+- running in a brownfield app without manually initializing the native library.
+
+### [Reanimated] Couldn't determine the version of the native part of Reanimated
+
+Did you forget to re-build the app after upgrading react-native-reanimated? If you use Expo Go, you must use the exact version which is bundled into Expo SDK.
+
+### [Reanimated] Mismatch between JavaScript part and native part of Reanimated
+
+Did you forget to re-build the app after upgrading react-native-reanimated? If you use Expo Go, you must downgrade to ${cppVersion} which is bundled into Expo SDK.
+
+### [Reanimated] Couldn't determine the version of the native part of Reanimated
+
+Did you forget to re-build the app after upgrading react-native-reanimated? If you use Expo Go, you must use the exact version which is bundled into Expo SDK.
+
+### [Reanimated] Mismatch between JavaScript part and native part of Reanimated
+
+TBD
+
+### [Reanimated] Native side failed to resolved JS version of `react-native-reanimated`
+
+TBD
+
+### [Reanimated] Native mismatch between JS version of `react-native-reanimated` and C++ version
+
+TBD
+
+### [Reanimated] Multiple versions of Reanimated were detected in `build.gradle`
+
+Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting#multiple-versions-of-reanimated-were-detected\n\n
+
+### [Reanimated] Outdated version of `react-native` for New Architecture
+
+Reanimated supports only on the latest minor release of React Native. Please upgrade to React Native 0.72.0 or downgrade to an older version of Reanimated v3."
+
+### [Reanimated] Native side failed to resolve Java code version
+
+TBD
+
+### [Reanimated] Native side (Java) failed to resolve JS version of `react-native-reanimated`
+
+TBD
+
+### [Reanimated] Native mismatch between JS version of `react-native-reanimated` and Java version
+
+TBD
