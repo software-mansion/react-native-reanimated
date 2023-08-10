@@ -242,16 +242,6 @@ export default class JSReanimated {
     );
   }
 
-  getViewProp<T>(
-    _viewTag: string,
-    _propName: string,
-    _callback?: (result: T) => void
-  ): Promise<T> {
-    throw new Error(
-      '[Reanimated] getViewProp is not available in JSReanimated.'
-    );
-  }
-
   configureProps() {
     throw new Error(
       '[Reanimated] configureProps is not available in JSReanimated.'

@@ -83,12 +83,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       jsi::Runtime &rt,
       const jsi::Value &registrationId) override;
 
-  jsi::Value getViewProp(
-      jsi::Runtime &rt,
-      const jsi::Value &viewTag,
-      const jsi::Value &propName,
-      const jsi::Value &callback) override;
-
   jsi::Value enableLayoutAnimations(jsi::Runtime &rt, const jsi::Value &config)
       override;
   jsi::Value configureProps(

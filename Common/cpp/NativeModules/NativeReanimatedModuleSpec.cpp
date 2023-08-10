@@ -78,17 +78,6 @@ static jsi::Value SPEC_PREFIX(unregisterEventHandler)(
   return jsi::Value::undefined();
 }
 
-static jsi::Value SPEC_PREFIX(getViewProp)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->getViewProp(
-          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
-  return jsi::Value::undefined();
-}
-
 static jsi::Value SPEC_PREFIX(enableLayoutAnimations)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -187,7 +176,6 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
   methodMap_["unregisterEventHandler"] =
       MethodMetadata{1, SPEC_PREFIX(unregisterEventHandler)};
 
-  methodMap_["getViewProp"] = MethodMetadata{3, SPEC_PREFIX(getViewProp)};
   methodMap_["enableLayoutAnimations"] =
       MethodMetadata{2, SPEC_PREFIX(enableLayoutAnimations)};
   methodMap_["registerSensor"] = MethodMetadata{4, SPEC_PREFIX(registerSensor)};

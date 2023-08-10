@@ -357,34 +357,6 @@ void NativeReanimatedModule::unregisterEventHandler(
       [=] { eventHandlerRegistry->unregisterEventHandler(id); });
 }
 
-jsi::Value NativeReanimatedModule::getViewProp(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTag,
-    const jsi::Value &propName,
-    const jsi::Value &callback) {
-  const int viewTagInt = static_cast<int>(viewTag.asNumber());
-  std::string propNameStr = propName.asString(rt).utf8(rt);
-  jsi::Function fun = callback.getObject(rt).asFunction(rt);
-  std::shared_ptr<jsi::Function> funPtr =
-      std::make_shared<jsi::Function>(std::move(fun));
-
-  runtimeManager_->uiScheduler_->scheduleOnUI(
-      [&rt, viewTagInt, funPtr, this, propNameStr]() {
-        const jsi::String propNameValue =
-            jsi::String::createFromUtf8(rt, propNameStr);
-        jsi::Value result = propObtainer(rt, viewTagInt, propNameValue);
-        std::string resultStr = result.asString(rt).utf8(rt);
-
-        runtimeManager_->jsScheduler_->scheduleOnJS([&rt, resultStr, funPtr]() {
-          const jsi::String resultValue =
-              jsi::String::createFromUtf8(rt, resultStr);
-          funPtr->call(rt, resultValue);
-        });
-      });
-
-  return jsi::Value::undefined();
-}
-
 jsi::Value NativeReanimatedModule::enableLayoutAnimations(
     jsi::Runtime &,
     const jsi::Value &config) {

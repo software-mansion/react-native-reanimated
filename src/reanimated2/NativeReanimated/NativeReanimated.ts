@@ -34,11 +34,6 @@ export interface NativeReanimatedModule {
     eventHandler: ShareableRef<T>
   ): number;
   unregisterEventHandler(id: number): void;
-  getViewProp<T>(
-    viewTag: string,
-    propName: string,
-    callback?: (result: T) => void
-  ): Promise<T>;
   enableLayoutAnimations(flag: boolean): void;
   registerSensor(
     sensorType: number,
@@ -138,14 +133,6 @@ export class NativeReanimated {
 
   unregisterEventHandler(id: number) {
     return this.InnerNativeModule.unregisterEventHandler(id);
-  }
-
-  getViewProp<T>(
-    viewTag: string,
-    propName: string,
-    callback?: (result: T) => void
-  ) {
-    return this.InnerNativeModule.getViewProp(viewTag, propName, callback);
   }
 
   configureLayoutAnimation(
