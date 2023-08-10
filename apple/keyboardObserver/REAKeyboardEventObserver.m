@@ -52,7 +52,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   return _displayLink;
 }
 
-#if TARGET_OS_TV || TARGET_OS_OSX
+#if TARGET_OS_TV
 - (int)subscribeForKeyboardEvents:(KeyboardEventListenerBlock)listener
 {
   NSLog(@"Keyboard handling is not supported on tvOS");
@@ -63,6 +63,19 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 {
   NSLog(@"Keyboard handling is not supported on tvOS");
 }
+
+#elif TARGET_OS_OSX
+- (int)subscribeForKeyboardEvents:(KeyboardEventListenerBlock)listener
+{
+  NSLog(@"Keyboard handling is not supported on macOS");
+  return 0;
+}
+
+- (void)unsubscribeFromKeyboardEvents:(int)listenerId
+{
+  NSLog(@"Keyboard handling is not supported on macOS");
+}
+
 #else
 
 - (void)runUpdater
