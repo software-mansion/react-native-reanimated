@@ -425,7 +425,7 @@ abstract class NoMultipleInstancesAssertionTask extends DefaultTask {
                 String parsedLocation = files.stream().map({
                     File file -> "- " + file.toString().replace("/package.json", "")
                 }).collect().join("\n")
-                String exceptionMessage = "\n[Reanimated] Multiple versions of Reanimated were detected in `build.gradle`. See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-multiple-versions-of-reanimated-were-detected-in-buildgradle` for more details.\n\nConflict between: \n" + parsedLocation + "\n"
+                String exceptionMessage = "\n[Reanimated] Multiple versions of Reanimated were detected in `build.gradle`. See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#multiple-versions-of-reanimated-were-detected-in-buildgradle` for more details.\n\nConflict between: \n" + parsedLocation + "\n"
                 throw new GradleException(exceptionMessage)
             }
         }
