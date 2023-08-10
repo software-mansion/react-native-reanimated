@@ -20,10 +20,9 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
-      - name: Use Node.js 18
+      - name: Use Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
           cache: 'yarn'
       - name: Clear annotations
         run: scripts/clear-annotations.sh
