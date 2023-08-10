@@ -152,6 +152,28 @@ void RuntimeDecorator::decorateUIRuntime(
       rt, "_maybeFlushUIUpdatesQueue", maybeFlushUIUpdatesQueueFunction);
 }
 
+#ifdef DEBUG
+void versionCheck(jsi::Runtime &rnRuntime) {
+  auto version = getReanimatedVersionString(rnRuntime);
+
+  auto JSVersion =
+      rnRuntime.global().getProperty(rnRuntime, "_REANIMATED_VERSION_JS");
+  if (JSVersion.isUndefined()) {
+    throw std::runtime_error(
+        "[Reanimated] JS version of `react-native-reanimated` is undefined");
+  }
+  auto CPPVersionReadable = version.utf8(rnRuntime);
+  auto JSVersionReadable = JSVersion.asString(rnRuntime).utf8(rnRuntime);
+  if (JSVersionReadable != CPPVersionReadable) {
+    auto errorMessage =
+        "[Reanimated] Mismatch between JS version of `react-native-reanimated` [" +
+        JSVersionReadable + "] and CPP version [" + CPPVersionReadable + "]";
+    throw std::runtime_error(errorMessage);
+  }
+  rnRuntime.global().setProperty(rnRuntime, "_REANIMATED_VERSION_CPP", version);
+}
+#endif // DEBUG
+
 void RuntimeDecorator::decorateRNRuntime(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<jsi::Runtime> &uiRuntime,
@@ -178,8 +200,9 @@ void RuntimeDecorator::decorateRNRuntime(
 #endif // RCT_NEW_ARCH_ENABLED
   rnRuntime.global().setProperty(rnRuntime, "_IS_FABRIC", isFabric);
 
-  auto version = getReanimatedVersionString(rnRuntime);
-  rnRuntime.global().setProperty(rnRuntime, "_REANIMATED_VERSION_CPP", version);
+#ifdef DEBUG
+  versionCheck(rnRuntime);
+#endif // DEBUG
 
   rnRuntime.global().setProperty(
       rnRuntime, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);

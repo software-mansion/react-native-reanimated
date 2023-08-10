@@ -138,8 +138,23 @@ void NativeProxy::installJSIBindings(
 #endif
   auto &rnRuntime = *rnRuntime_;
   auto isReducedMotion = getIsReducedMotion();
+  auto androidVersion = "3.4.0";
+  auto JSVersion =
+      rnRuntime.global().getProperty(rnRuntime, "_REANIMATED_VERSION_JS");
+  if (JSVersion.isUndefined()) {
+    throw std::runtime_error(
+        "[Reanimated] JS version of `react-native-reanimated` is undefined");
+  }
+  auto JSVersionReadable = JSVersion.asString(rnRuntime).utf8(rnRuntime);
+  if (androidVersion != JSVersionReadable) {
+    auto errorMessage =
+        "[Reanimated] Mismatch between JS version of `react-native-reanimated` [" +
+        JSVersionReadable + "] and Android version [" + androidVersion + "]";
+    throw std::runtime_error(errorMessage);
+  }
+  rnRuntime.global().setProperty(
+      rnRuntime, "_REANIMATED_VERSION_ANDROID", androidVersion);
   RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
-
   registerEventHandler();
   setupLayoutAnimations();
 

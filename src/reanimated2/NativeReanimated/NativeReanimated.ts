@@ -10,6 +10,8 @@ import type {
   LayoutAnimationType,
 } from '../layoutReanimation';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
+import { jsVersion } from '../platform-specific/jsVersion';
+import { isAndroid } from '../PlatformChecker';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
@@ -67,6 +69,13 @@ export class NativeReanimated {
   private InnerNativeModule: NativeReanimatedModule;
 
   constructor() {
+    if (global._REANIMATED_VERSION_JS === undefined) {
+      global._REANIMATED_VERSION_JS = jsVersion;
+    } else {
+      throw new Error(
+        '[Reanimated] Another instance of `react-native-reanimated` was detected. Aborting.'
+      );
+    }
     if (global.__reanimatedModuleProxy === undefined) {
       const { ReanimatedModule } = NativeModules;
       ReanimatedModule?.installTurboModule();
@@ -80,6 +89,20 @@ export class NativeReanimated {
       );
     }
     checkCppVersion();
+    if (isAndroid()) {
+      const androidVersion = global._REANIMATED_VERSION_ANDROID;
+      if (androidVersion === undefined) {
+        throw new Error(
+          '[Reanimated] Android native part of Reanimated is not initialized'
+        );
+      }
+      if (androidVersion !== jsVersion) {
+        throw new Error(
+          `[Reanimated] Mismatch between android version [${androidVersion}] and JS version ${jsVersion}`
+        );
+      }
+    }
+
     this.InnerNativeModule = global.__reanimatedModuleProxy;
   }
 
