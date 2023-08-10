@@ -75,7 +75,8 @@ static jsi::Value SPEC_PREFIX(registerEventHandler)(
     const jsi::Value *args,
     size_t) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->registerEventHandler(rt, std::move(args[0]), std::move(args[1]));
+      ->registerEventHandler(
+          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
 }
 
 static jsi::Value SPEC_PREFIX(unregisterEventHandler)(
@@ -195,7 +196,7 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
       MethodMetadata{1, SPEC_PREFIX(scheduleOnBackground)};
 
   methodMap_["registerEventHandler"] =
-      MethodMetadata{2, SPEC_PREFIX(registerEventHandler)};
+      MethodMetadata{3, SPEC_PREFIX(registerEventHandler)};
   methodMap_["unregisterEventHandler"] =
       MethodMetadata{1, SPEC_PREFIX(unregisterEventHandler)};
 

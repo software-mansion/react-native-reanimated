@@ -229,8 +229,11 @@ void NativeProxy::installJSIBindings(
   // TODO: unify with REAModule.mm
 }
 
-bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
-  return nativeReanimatedModule_->isAnyHandlerWaitingForEvent(s);
+bool NativeProxy::isAnyHandlerWaitingForEvent(
+    const std::string &eventName,
+    const int emitterReactTag) {
+  return nativeReanimatedModule_->isAnyHandlerWaitingForEvent(
+      eventName, emitterReactTag);
 }
 
 void NativeProxy::performOperations() {
