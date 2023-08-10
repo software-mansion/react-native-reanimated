@@ -59,6 +59,10 @@ NativeReanimatedModule::NativeReanimatedModule(
 #else
       propObtainer_(propObtainer),
 #endif
+      onRenderCallback_([this](const double timestampMs) {
+        renderRequested_ = false;
+        onRender(timestampMs);
+      }),
       animatedSensorModule_(platformDepMethodsHolder),
 #ifdef DEBUG
       layoutAnimationsManager_(std::make_shared<JSLogger>(jsScheduler_)),
@@ -146,11 +150,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.progressLayoutAnimation,
       platformDepMethodsHolder.endLayoutAnimation,
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction);
-
-  onRenderCallback_ = [this](const double timestampMs) {
-    renderRequested_ = false;
-    onRender(timestampMs);
-  };
 }
 
 void NativeReanimatedModule::installValueUnpacker(
