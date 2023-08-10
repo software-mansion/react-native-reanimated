@@ -537,12 +537,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 - (void)reparentSharedViewsForCurrentTransition:(NSArray *)sharedElements
 {
   for (REASharedElement *sharedElement in sharedElements) {
-<<<<<<< HEAD
-    RCTUIView *viewSource = sharedElement.sourceView;
-=======
     RNAUIView *viewSource = sharedElement.sourceView;
-    RNAUIView *viewTarget = sharedElement.targetView;
->>>>>>> @jfedak/macOS-example-app
     if (_sharedTransitionParent[viewSource.reactTag] == nil) {
       _sharedTransitionParent[viewSource.reactTag] = viewSource.superview;
       _sharedTransitionInParentIndex[viewSource.reactTag] = @([viewSource.superview.subviews indexOfObject:viewSource]);
@@ -611,7 +606,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     }
 
     REASharedElement *sharedElement = _sharedElementsLookup[viewTag];
-    UIView *targetView = sharedElement.targetView;
+    RNAUIView *targetView = sharedElement.targetView;
     targetView.hidden = NO;
     [_currentSharedTransitionViews removeObjectForKey:targetView.reactTag];
     [_viewsWithCanceledAnimation removeObject:targetView];

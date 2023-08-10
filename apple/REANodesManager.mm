@@ -437,7 +437,7 @@ using namespace facebook::react;
   // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
   // so that's why we need to call `finalizeUpdates` here.
   RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
-  UIView<RCTComponentViewProtocol> *componentView =
+  RNAUIView<RCTComponentViewProtocol> *componentView =
       [componentViewRegistry findComponentViewWithTag:[viewTag integerValue]];
   [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
 }

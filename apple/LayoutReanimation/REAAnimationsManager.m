@@ -91,7 +91,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       // default implementation, this block will be replaced by a setter
     };
 #ifdef DEBUG
-    _checkDuplicateSharedTag = ^(UIView *view, NSNumber *viewTag) {
+    _checkDuplicateSharedTag = ^(RNAUIView *view, NSNumber *viewTag) {
       // default implementation, this block will be replaced by a setter
     };
 #endif
