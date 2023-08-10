@@ -4,6 +4,7 @@
 #include <react/renderer/core/TraitCast.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
+#include <react/utils/CoreFeatures.cpp>
 #endif
 
 #include <functional>
@@ -523,7 +524,7 @@ bool NativeReanimatedModule::handleRawEvent(
     return false;
   }
   const std::string &type = rawEvent.type;
-  const ValueFactory &payloadFactory = rawEvent.payloadFactory;
+  const SharedEventPayload &eventPayload = rawEvent.eventPayload;
 
   int tag = eventTarget->getTag();
   std::string eventType = type;
@@ -531,7 +532,7 @@ bool NativeReanimatedModule::handleRawEvent(
     eventType = "on" + eventType.substr(3);
   }
   jsi::Runtime &rt = *runtimeManager_->runtime.get();
-  jsi::Value payload = payloadFactory(rt);
+  jsi::Value payload = eventPayload->asJSIValue(rt);
 
   auto res = handleEvent(eventType, tag, std::move(payload), currentTime);
   // TODO: we should call performOperations conditionally if event is handled

@@ -2,6 +2,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/fabric/JFabricUIManager.h>
+#include <react/renderer/scheduler/Scheduler.h>
 #endif
 
 #include <ReactCommon/CallInvokerHolder.h>
