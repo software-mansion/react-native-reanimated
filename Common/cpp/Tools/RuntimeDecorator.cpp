@@ -154,22 +154,25 @@ void RuntimeDecorator::decorateUIRuntime(
 
 #ifdef DEBUG
 void versionCheck(jsi::Runtime &rnRuntime) {
-  auto version = getReanimatedVersionString(rnRuntime);
+  auto rawCppVersion = getReanimatedVersionString(rnRuntime);
 
-  auto JSVersion =
+  auto maybeJSVersion =
       rnRuntime.global().getProperty(rnRuntime, "_REANIMATED_VERSION_JS");
   if (JSVersion.isUndefined()) {
     throw std::runtime_error(
         "[Reanimated] JS version of `react-native-reanimated` is undefined");
   }
-  auto CPPVersionReadable = version.utf8(rnRuntime);
-  auto JSVersionReadable = JSVersion.asString(rnRuntime).utf8(rnRuntime);
-  if (JSVersionReadable != CPPVersionReadable) {
+
+  auto cppVersion = rawCppVersion.utf8(rnRuntime);
+  auto JSVersion = maybeJSVersion.asString(rnRuntime).utf8(rnRuntime);
+
+  if (JSVersion != cppVersion) {
     auto errorMessage =
         "[Reanimated] Mismatch between JS version of `react-native-reanimated` [" +
-        JSVersionReadable + "] and CPP version [" + CPPVersionReadable + "]";
+        JSVersion + "] and CPP version [" + cppVersion + "]";
     throw std::runtime_error(errorMessage);
   }
+
   rnRuntime.global().setProperty(rnRuntime, "_REANIMATED_VERSION_CPP", version);
 }
 #endif // DEBUG
