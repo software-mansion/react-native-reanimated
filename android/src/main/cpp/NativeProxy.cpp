@@ -94,6 +94,29 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       /**/);
 }
 
+#ifdef DEBUG
+void NativeProxy::checkVersion(jsi::Runtime &rnRuntime) {
+  auto androidVersion =
+      getJniMethod<jstring()>("getReanimatedJavaVersion")(javaPart_.get())
+          ->toStdString();
+  auto maybeJSVersion =
+      rnRuntime.global().getProperty(rnRuntime, "_REANIMATED_VERSION_JS");
+  if (maybeJSVersion.isUndefined()) {
+    throw std::runtime_error(
+        "[Reanimated] JS version of `react-native-reanimated` is undefined");
+  }
+  auto JSVersion = maybeJSVersion.asString(rnRuntime).utf8(rnRuntime);
+  if (androidVersion != JSVersion) {
+    auto errorMessage =
+        "[Reanimated] Mismatch between JS version of `react-native-reanimated` [" +
+        JSVersion + "] and Android version [" + androidVersion + "]";
+    throw std::runtime_error(errorMessage);
+  }
+  rnRuntime.global().setProperty(
+      rnRuntime, "_REANIMATED_VERSION_JAVA", androidVersion);
+}
+#endif // DEBUG
+
 void NativeProxy::installJSIBindings(
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -138,22 +161,9 @@ void NativeProxy::installJSIBindings(
 #endif
   auto &rnRuntime = *rnRuntime_;
   auto isReducedMotion = getIsReducedMotion();
-  auto androidVersion = "3.4.0";
-  auto JSVersion =
-      rnRuntime.global().getProperty(rnRuntime, "_REANIMATED_VERSION_JS");
-  if (JSVersion.isUndefined()) {
-    throw std::runtime_error(
-        "[Reanimated] JS version of `react-native-reanimated` is undefined");
-  }
-  auto JSVersionReadable = JSVersion.asString(rnRuntime).utf8(rnRuntime);
-  if (androidVersion != JSVersionReadable) {
-    auto errorMessage =
-        "[Reanimated] Mismatch between JS version of `react-native-reanimated` [" +
-        JSVersionReadable + "] and Android version [" + androidVersion + "]";
-    throw std::runtime_error(errorMessage);
-  }
-  rnRuntime.global().setProperty(
-      rnRuntime, "_REANIMATED_VERSION_ANDROID", androidVersion);
+#ifdef DEBUG
+  checkVersion(rnRuntime);
+#endif // DEBUG
   RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
   registerEventHandler();
   setupLayoutAnimations();

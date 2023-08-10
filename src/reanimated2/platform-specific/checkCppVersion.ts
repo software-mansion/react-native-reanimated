@@ -15,6 +15,21 @@ export function checkCppVersion() {
   }
 }
 
+export function maybeCheckJavaVersion() {
+  const javaVersion = global._REANIMATED_VERSION_JAVA;
+  if (javaVersion === undefined) {
+    throw new Error(
+      `[Reanimated] Couldn't determine the version of the native part of Reanimated. Did you forget to re-build the app after upgrading react-native-reanimated? If you use Expo Go, you must use the exact version which is bundled into Expo SDK.`
+    );
+  }
+  const ok = matchVersion(jsVersion, javaVersion);
+  if (!ok) {
+    throw new Error(
+      `[Reanimated] Mismatch between JavaScript part (${jsVersion}) and native part of Reanimated (${javaVersion}). Did you forget to re-build the app after upgrading react-native-reanimated? If you use Expo Go, you must downgrade to ${javaVersion} which is bundled into Expo SDK.`
+    );
+  }
+}
+
 // This is used only in test files, therefore it is reported by ts-prune (which is desired)
 // ts-prune-ignore-next
 export function matchVersion(version1: string, version2: string) {

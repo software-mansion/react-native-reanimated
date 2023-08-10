@@ -16,6 +16,7 @@ import com.facebook.react.devsupport.interfaces.DevSupportManager;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
 import com.swmansion.reanimated.AndroidUIScheduler;
+import com.swmansion.reanimated.BuildConfig;
 import com.swmansion.reanimated.NativeProxy;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.ReanimatedModule;
@@ -93,6 +94,11 @@ public abstract class NativeProxyCommon {
   @DoNotStrip
   public void requestRender(AnimationFrameCallback callback) {
     mNodesManager.postOnAnimation(callback);
+  }
+
+  @DoNotStrip
+  public String getReanimatedJavaVersion() {
+    return BuildConfig._REANIMATED_VERSION_JAVA;
   }
 
   @DoNotStrip

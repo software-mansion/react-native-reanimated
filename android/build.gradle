@@ -258,7 +258,8 @@ android {
         targetSdkVersion safeExtGet("targetSdkVersion", 30)
         versionCode 1
         versionName "1.0"
-        buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString()
+        buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString())
+        buildConfigField("String", "_REANIMATED_VERSION_JAVA", "\"${getReanimatedVersion()}\"")
         externalNativeBuild {
             cmake {
                 arguments "-DANDROID_STL=c++_shared",

@@ -9,9 +9,11 @@ import type {
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from '../layoutReanimation';
-import { checkCppVersion } from '../platform-specific/checkCppVersion';
+import {
+  checkCppVersion,
+  maybeCheckJavaVersion,
+} from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
-import { isAndroid } from '../PlatformChecker';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
@@ -64,11 +66,10 @@ export interface NativeReanimatedModule {
   ): void;
 }
 
-export class NativeReanimated {
-  native = true;
-  private InnerNativeModule: NativeReanimatedModule;
+const shouldBeUseNotDebug = !__DEV__;
 
-  constructor() {
+function checkReanimatedInstance() {
+  if (!shouldBeUseNotDebug) {
     if (global._REANIMATED_VERSION_JS === undefined) {
       global._REANIMATED_VERSION_JS = jsVersion;
     } else {
@@ -76,10 +77,21 @@ export class NativeReanimated {
         '[Reanimated] Another instance of `react-native-reanimated` was detected. Aborting.'
       );
     }
+  }
+}
+
+export class NativeReanimated {
+  native = true;
+  private InnerNativeModule: NativeReanimatedModule;
+
+  constructor() {
+    checkReanimatedInstance();
+
     if (global.__reanimatedModuleProxy === undefined) {
       const { ReanimatedModule } = NativeModules;
       ReanimatedModule?.installTurboModule();
     }
+
     if (global.__reanimatedModuleProxy === undefined) {
       throw new Error(
         `[Reanimated] The native part of Reanimated doesn't seem to be initialized. This could be caused by\n\
@@ -88,19 +100,9 @@ export class NativeReanimated {
 - running in a brownfield app without manually initializing the native library`
       );
     }
-    checkCppVersion();
-    if (isAndroid()) {
-      const androidVersion = global._REANIMATED_VERSION_ANDROID;
-      if (androidVersion === undefined) {
-        throw new Error(
-          '[Reanimated] Android native part of Reanimated is not initialized'
-        );
-      }
-      if (androidVersion !== jsVersion) {
-        throw new Error(
-          `[Reanimated] Mismatch between android version [${androidVersion}] and JS version ${jsVersion}`
-        );
-      }
+    if (!shouldBeUseNotDebug) {
+      checkCppVersion();
+      maybeCheckJavaVersion();
     }
 
     this.InnerNativeModule = global.__reanimatedModuleProxy;
