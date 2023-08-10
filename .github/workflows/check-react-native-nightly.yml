@@ -54,7 +54,7 @@ jobs:
         run: npx react-native init app --skip-install --version nightly
       - name: Install Reanimated
         working-directory: app
-        run: yarn add github:software-mansion/react-native-reanimated${{ github.ref }}
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
       - name: Setup Fabric
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
         working-directory: app/android
