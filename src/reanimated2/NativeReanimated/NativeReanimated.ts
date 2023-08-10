@@ -70,13 +70,12 @@ const shouldBeUseNotDebug = !__DEV__;
 
 function checkReanimatedInstance() {
   if (!shouldBeUseNotDebug) {
-    if (global._REANIMATED_VERSION_JS === undefined) {
-      global._REANIMATED_VERSION_JS = jsVersion;
-    } else {
+    if (global._REANIMATED_VERSION_JS !== undefined) {
       throw new Error(
         '[Reanimated] Another instance of `react-native-reanimated` was detected. Aborting.'
       );
     }
+    global._REANIMATED_VERSION_JS = jsVersion;
   }
 }
 
