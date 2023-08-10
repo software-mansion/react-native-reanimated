@@ -410,7 +410,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     } else if (value instanceof ReadableMap) {
       propMap.putMap(key, (ReadableMap) value);
     } else {
-      throw new IllegalStateException("Unknown type of animated value [Layout Animations]");
+      throw new IllegalStateException(
+          "[Reanimated] Unknown type of animated value [Layout Animations].");
     }
   }
 
@@ -469,9 +470,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
         parentViewManagerWithChildren = (IViewManagerWithChildren) parentViewManager;
       } else {
         throw new IllegalViewOperationException(
-            "Trying to use view with tag "
+            "[Reanimated] Trying to use view with tag "
                 + parentTag
-                + " as a parent, but its Manager doesn't implement IViewManagerWithChildren");
+                + " as a parent, but its Manager doesn't implement IViewManagerWithChildren.");
       }
       if (!parentViewManagerWithChildren.needsCustomLayoutForChildren()) {
         viewToUpdate.layout(x, y, x + width, y + height);

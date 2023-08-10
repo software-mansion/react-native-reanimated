@@ -33,7 +33,7 @@ export const SVGAdapter: AdapterWorkletFunction = createAnimatedPropAdapter(
         // case of array with 6 values => https://github.com/react-native-svg/react-native-svg/blob/b2e2c355204ff4b10973d3afce1495f7e4167ff7/src/elements/Shape.tsx#L200
         if (props.transform.length !== 6) {
           throw new Error(
-            `invalid transform length of ${props.transform.length}, should be 6`
+            `[Reanimated] Invalid transform length of ${props.transform.length}, should be 6.`
           );
         }
         const transform: number[] = props.transform as number[];

@@ -67,14 +67,14 @@ const INACCESSIBLE_OBJECT = {
             return false;
           }
           throw new Error(
-            `Trying to access property \`${String(
+            `[Reanimated] Trying to access property \`${String(
               prop
             )}\` of an object which cannot be sent to the UI runtime.`
           );
         },
         set: () => {
           throw new Error(
-            'Trying to write to an object which cannot be sent to the UI runtime.'
+            '[Reanimated] Trying to write to an object which cannot be sent to the UI runtime.'
           );
         },
       }
@@ -105,7 +105,7 @@ export function makeShareableCloneRecursive<T>(
       processedObjectAtThresholdDepth = value;
     } else if (value === processedObjectAtThresholdDepth) {
       throw new Error(
-        'Trying to convert a cyclic object to a shareable. This is not supported.'
+        '[Reanimated] Trying to convert a cyclic object to a shareable. This is not supported.'
       );
     }
   } else {
@@ -143,14 +143,11 @@ export function makeShareableCloneRecursive<T>(
             const babelVersion = value.__initData.version;
             if (babelVersion === undefined) {
               throw new Error(`[Reanimated] Unknown version of Reanimated Babel plugin.
-1. Try resetting your Metro bundler cache with \`yarn start --reset-cache\`, \`npm start -- --reset-cache\` or \`expo start -c\` and run the app again.
-2. Make sure that none of your dependencies contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin.
-3. Using release bundle with debug build of the app is not supported.
+See \`http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-unknown-version-of-reanimated-babel-plugin\` for more details. 
 Offending code was: \`${getWorkletCode(value)}\``);
             } else if (babelVersion !== jsVersion) {
               throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}).        
-1. Try resetting your Metro bundler cache with \`yarn start --reset-cache\`, \`npm start -- --reset-cache\` or \`expo start -c\` and run the app again.
-2. Make sure that none of your dependencies contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin.
+See \`http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version\` for more details.
 Offending code was: \`${getWorkletCode(value)}\``);
             }
             registerWorkletStackDetails(
@@ -164,7 +161,8 @@ Offending code was: \`${getWorkletCode(value)}\``);
             // dependencies provided transpiled code with debug version of the
             // Reanimated plugin.
             throw new Error(
-              '[Reanimated] Using dev bundle in a release app build is not supported. Visit https://github.com/software-mansion/react-native-reanimated/issues/4737 to find more information on how to fix this issue.'
+              `[Reanimated] Using dev bundle in a release app build is not supported.
+See \`http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-using-dev-bundle-in-a-release-app-build-is-not-supported\` for more details.`
             );
           }
           // to save on transferring static __initData field of worklet structure

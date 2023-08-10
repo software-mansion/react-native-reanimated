@@ -52,7 +52,7 @@ function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
     );
     if (!match) {
       throw Error(
-        "Couldn't parse animation value. Check if there isn't any typo."
+        "[Reanimated] Couldn't parse animation value. Check if there isn't any typo."
       );
     }
     const prefix = match[1];

@@ -140,9 +140,9 @@ std::shared_ptr<T> extractShareableOrThrow(
       extractShareableOrThrow(rt, shareableRef, errorMessage));
   if (!res) {
     throw std::runtime_error(
-        errorMessage != nullptr
+        ["Reanimated "] + errorMessage != nullptr
             ? errorMessage
-            : "provided shareable object is of an incompatible type");
+            : "provided shareable object is of an incompatible type.");
   }
   return res;
 }
@@ -308,7 +308,7 @@ class ShareableHandle : public Shareable {
       remoteValue_ = std::make_unique<jsi::Value>(
           runtimeHelper_->valueUnpacker->call(rt, initObj));
       initializer_ = nullptr; // we can release ref to initializer as this
-                              // method should be called at most once
+      // method should be called at most once
     }
     return jsi::Value(rt, *remoteValue_);
   }
@@ -401,7 +401,7 @@ class ShareableScalar : public Shareable {
         return jsi::Value(data_.number);
       default:
         throw std::runtime_error(
-            "attempted to convert object that's not of a scalar type");
+            "[Reanimated] Attempted to convert object that's not of a scalar type.");
     }
   }
 
