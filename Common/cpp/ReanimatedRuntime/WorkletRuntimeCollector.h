@@ -14,11 +14,11 @@ class WorkletRuntimeCollector : public jsi::HostObject {
 
  public:
   explicit WorkletRuntimeCollector(jsi::Runtime &runtime) : runtime_(runtime) {
-    WorkletRuntimeRegistry::registerRuntime(&runtime_);
+    WorkletRuntimeRegistry::registerRuntime(runtime_);
   }
 
   ~WorkletRuntimeCollector() {
-    WorkletRuntimeRegistry::unregisterRuntime(&runtime_);
+    WorkletRuntimeRegistry::unregisterRuntime(runtime_);
   }
 
   static void install(jsi::Runtime &rt) {

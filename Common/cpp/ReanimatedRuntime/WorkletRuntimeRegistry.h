@@ -16,16 +16,14 @@ class WorkletRuntimeRegistry {
 
   WorkletRuntimeRegistry() {} // private ctor
 
-  static void registerRuntime(jsi::Runtime *runtime) {
-    assert(runtime != nullptr);
+  static void registerRuntime(jsi::Runtime &runtime) {
     std::lock_guard<std::mutex> lock(mutex_);
-    registry_.insert(runtime);
+    registry_.insert(&runtime);
   }
 
-  static void unregisterRuntime(jsi::Runtime *runtime) {
-    assert(runtime != nullptr);
+  static void unregisterRuntime(jsi::Runtime &runtime) {
     std::lock_guard<std::mutex> lock(mutex_);
-    registry_.erase(runtime);
+    registry_.erase(&runtime);
   }
 
   friend class WorkletRuntimeCollector;
