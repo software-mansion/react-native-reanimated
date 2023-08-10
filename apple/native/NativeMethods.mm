@@ -8,9 +8,9 @@ namespace reanimated {
 
 std::vector<std::pair<std::string, double>> measure(int viewTag, RCTUIManager *uiManager)
 {
-  RNAUIView *view = [uiManager viewForReactTag:@(viewTag)];
+  REAUIView *view = [uiManager viewForReactTag:@(viewTag)];
 
-  RNAUIView *rootView = view;
+  REAUIView *rootView = view;
 
   if (view == nil) {
     return std::vector<std::pair<std::string, double>>(1, std::make_pair("x", -1234567.0));
@@ -39,7 +39,7 @@ std::vector<std::pair<std::string, double>> measure(int viewTag, RCTUIManager *u
 
 void scrollTo(int scrollViewTag, RCTUIManager *uiManager, double x, double y, bool animated)
 {
-  RNAUIView *view = [uiManager viewForReactTag:@(scrollViewTag)];
+  REAUIView *view = [uiManager viewForReactTag:@(scrollViewTag)];
   RCTScrollView *scrollView = (RCTScrollView *)view;
   [scrollView scrollToOffset:(CGPoint){(CGFloat)x, (CGFloat)y} animated:animated];
 }

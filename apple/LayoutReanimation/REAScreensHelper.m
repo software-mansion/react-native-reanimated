@@ -6,9 +6,9 @@
 
 #if LOAD_SCREENS_HEADERS
 
-+ (RNAUIView *)getScreenForView:(RNAUIView *)view
++ (REAUIView *)getScreenForView:(REAUIView *)view
 {
-  RNAUIView *screen = view;
+  REAUIView *screen = view;
   while (![screen isKindOfClass:[RNSScreenView class]] && screen.superview != nil) {
     screen = screen.superview;
   }
@@ -18,7 +18,7 @@
   return nil;
 }
 
-+ (RNAUIView *)getStackForView:(RNAUIView *)view
++ (REAUIView *)getStackForView:(REAUIView *)view
 {
   if ([view isKindOfClass:[RNSScreenView class]]) {
     if (view.reactSuperview != nil) {
@@ -36,7 +36,7 @@
   return nil;
 }
 
-+ (bool)isScreenModal:(RNAUIView *)uiViewScreen
++ (bool)isScreenModal:(REAUIView *)uiViewScreen
 {
   if ([uiViewScreen isKindOfClass:[RNSScreenView class]]) {
     RNSScreenView *screen = (RNSScreenView *)uiViewScreen;
@@ -53,52 +53,52 @@
   return false;
 }
 
-+ (RNAUIView *)getScreenWrapper:(RNAUIView *)view
++ (REAUIView *)getScreenWrapper:(REAUIView *)view
 {
-  RNAUIView *screen = [REAScreensHelper getScreenForView:view];
-  RNAUIView *stack = [REAScreensHelper getStackForView:screen];
-  RNAUIView *screenWrapper = [REAScreensHelper getScreenForView:stack];
+  REAUIView *screen = [REAScreensHelper getScreenForView:view];
+  REAUIView *stack = [REAScreensHelper getStackForView:screen];
+  REAUIView *screenWrapper = [REAScreensHelper getScreenForView:stack];
   return screenWrapper;
 }
 
-+ (int)getScreenType:(RNAUIView *)screen;
++ (int)getScreenType:(REAUIView *)screen;
 {
   return [[screen valueForKey:@"stackPresentation"] intValue];
 }
 
-+ (bool)isRNSScreenType:(RNAUIView *)view
++ (bool)isRNSScreenType:(REAUIView *)view
 {
   return [view isKindOfClass:[RNSScreen class]] == YES;
 }
 
 #else
 
-+ (RNAUIView *)getScreenForView:(RNAUIView *)view
++ (REAUIView *)getScreenForView:(REAUIView *)view
 {
   return nil;
 }
 
-+ (RNAUIView *)getStackForView:(RNAUIView *)view
++ (REAUIView *)getStackForView:(REAUIView *)view
 {
   return nil;
 }
 
-+ (bool)isScreenModal:(RNAUIView *)screen
++ (bool)isScreenModal:(REAUIView *)screen
 {
   return false;
 }
 
-+ (RNAUIView *)getScreenWrapper:(RNAUIView *)view
++ (REAUIView *)getScreenWrapper:(REAUIView *)view
 {
   return nil;
 }
 
-+ (int)getScreenType:(RNAUIView *)screen;
++ (int)getScreenType:(REAUIView *)screen;
 {
   return 0;
 }
 
-+ (bool)isRNSScreenType:(RNAUIView *)screen
++ (bool)isRNSScreenType:(REAUIView *)screen
 {
   return false;
 }

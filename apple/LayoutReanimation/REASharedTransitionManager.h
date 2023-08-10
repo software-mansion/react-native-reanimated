@@ -3,17 +3,17 @@
 
 @interface REASharedTransitionManager : NSObject
 
-- (void)notifyAboutNewView:(RNAUIView *)view;
-- (void)notifyAboutViewLayout:(RNAUIView *)view withViewFrame:(CGRect)frame;
+- (void)notifyAboutNewView:(REAUIView *)view;
+- (void)notifyAboutViewLayout:(REAUIView *)view withViewFrame:(CGRect)frame;
 - (void)viewsDidLayout;
-- (void)finishSharedAnimation:(RNAUIView *)view removeView:(BOOL)removeView;
+- (void)finishSharedAnimation:(REAUIView *)view removeView:(BOOL)removeView;
 - (void)setFindPrecedingViewTagForTransitionBlock:
     (REAFindPrecedingViewTagForTransitionBlock)findPrecedingViewTagForTransition;
 - (void)setCancelAnimationBlock:(REACancelAnimationBlock)cancelAnimationBlock;
 - (instancetype)initWithAnimationsManager:(REAAnimationsManager *)animationManager;
-- (RNAUIView *)getTransitioningView:(NSNumber *)tag;
+- (REAUIView *)getTransitioningView:(NSNumber *)tag;
 - (NSDictionary *)prepareDataForWorklet:(NSMutableDictionary *)currentValues
                            targetValues:(NSMutableDictionary *)targetValues;
-- (void)onScreenRemoval:(RNAUIView *)screen stack:(RNAUIView *)stack;
+- (void)onScreenRemoval:(REAUIView *)screen stack:(REAUIView *)stack;
 
 @end

@@ -15,10 +15,10 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 };
 
 @implementation REAKeyboardEventObserver {
-  RNAUIView *_measuringView;
+  REAUIView *_measuringView;
   NSNumber *_nextListenerId;
   NSMutableDictionary *_listeners;
-  RNADisplayLink *_displayLink;
+  READisplayLink *_displayLink;
   KeyboardState _state;
 }
 
@@ -38,12 +38,12 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   return self;
 }
 
-- (RNADisplayLink *)getDisplayLink
+- (READisplayLink *)getDisplayLink
 {
   RCTAssertMainQueue();
 
   if (!_displayLink) {
-    _displayLink = [RNADisplayLink displayLinkWithTarget:self selector:@selector(updateKeyboardFrame)];
+    _displayLink = [READisplayLink displayLinkWithTarget:self selector:@selector(updateKeyboardFrame)];
 #if !TARGET_OS_OSX
     _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
 #endif

@@ -177,7 +177,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto maybeFlushUIUpdatesQueueFunction = [nodesManager]() { [nodesManager maybeFlushUIUpdatesQueue]; };
 
   auto requestRender = [nodesManager](std::function<void(double)> onRender, jsi::Runtime &rt) {
-    [nodesManager postOnAnimation:^(RNADisplayLink *displayLink) {
+    [nodesManager postOnAnimation:^(READisplayLink *displayLink) {
 #if !TARGET_OS_OSX
       double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.targetTimestamp) * 1000;
 #else
@@ -377,9 +377,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     return nil;
   }];
 #ifdef DEBUG
-  [animationsManager setCheckDuplicateSharedTagBlock:^(RNAUIView *view, NSNumber *_Nonnull viewTag) {
+  [animationsManager setCheckDuplicateSharedTagBlock:^(REAUIView *view, NSNumber *_Nonnull viewTag) {
     if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      RNAUIView *screen = [REAScreensHelper getScreenForView:(RNAUIView *)view];
+      REAUIView *screen = [REAScreensHelper getScreenForView:(REAUIView *)view];
       auto screenTag = [screen.reactTag intValue];
       // Here we check if there are duplicate tags (we don't use return bool value currently)
       nativeReanimatedModule->layoutAnimationsManager().checkDuplicateSharedTag([viewTag intValue], screenTag);

@@ -5,14 +5,14 @@
 
 @interface REASharedElement : NSObject
 
-- (instancetype)initWithSourceView:(RNAUIView *)sourceView
+- (instancetype)initWithSourceView:(REAUIView *)sourceView
                 sourceViewSnapshot:(REASnapshot *)sourceViewSnapshot
-                        targetView:(RNAUIView *)targetView
+                        targetView:(REAUIView *)targetView
                 targetViewSnapshot:(REASnapshot *)targetViewSnapshot;
 
-@property RNAUIView *sourceView;
+@property REAUIView *sourceView;
 @property REASnapshot *sourceViewSnapshot;
-@property RNAUIView *targetView;
+@property REAUIView *targetView;
 @property REASnapshot *targetViewSnapshot;
 @property LayoutAnimationType animationType;
 

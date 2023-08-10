@@ -11,11 +11,11 @@
 
 @interface REAScreensHelper : NSObject
 
-+ (RNAUIView *)getScreenForView:(RNAUIView *)view;
-+ (RNAUIView *)getStackForView:(RNAUIView *)view;
-+ (bool)isScreenModal:(RNAUIView *)screen;
-+ (RNAUIView *)getScreenWrapper:(RNAUIView *)view;
-+ (int)getScreenType:(RNAUIView *)screen;
-+ (bool)isRNSScreenType:(RNAUIView *)screen;
++ (REAUIView *)getScreenForView:(REAUIView *)view;
++ (REAUIView *)getStackForView:(REAUIView *)view;
++ (bool)isScreenModal:(REAUIView *)screen;
++ (REAUIView *)getScreenWrapper:(REAUIView *)view;
++ (int)getScreenType:(REAUIView *)screen;
++ (bool)isRNSScreenType:(REAUIView *)screen;
 
 @end

@@ -158,13 +158,13 @@ using namespace facebook::react;
 #endif
 
 @implementation REANodesManager {
-  RNADisplayLink *_displayLink;
+  READisplayLink *_displayLink;
   BOOL _wantRunUpdates;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   BOOL _tryRunBatchUpdatesSynchronously;
   REAEventHandler _eventHandler;
   NSMutableDictionary<NSNumber *, ComponentUpdate *> *_componentUpdateBuffer;
-  NSMutableDictionary<NSNumber *, RNAUIView *> *_viewRegistry;
+  NSMutableDictionary<NSNumber *, REAUIView *> *_viewRegistry;
 #ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTBridge *_bridge;
   REAPerformOperations _performOperations;
@@ -176,12 +176,12 @@ using namespace facebook::react;
 #endif
 }
 
-- (RNADisplayLink *)getDisplayLink
+- (READisplayLink *)getDisplayLink
 {
   RCTAssertMainQueue();
 
   if (!_displayLink) {
-    _displayLink = [RNADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
+    _displayLink = [READisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
 #if !TARGET_OS_OSX
     _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
 #endif
@@ -234,7 +234,7 @@ using namespace facebook::react;
     _shouldFlushUpdateBuffer = false;
   }
 #endif
-  [self useDisplayLinkOnMainQueue:^(RNADisplayLink *displayLink) {
+  [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) {
     [displayLink setPaused:YES];
   }];
 
@@ -244,7 +244,7 @@ using namespace facebook::react;
 - (void)invalidate
 {
   _eventHandler = nil;
-  [self useDisplayLinkOnMainQueue:^(RNADisplayLink *displayLink) {
+  [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) {
     [displayLink invalidate];
   }];
 }
@@ -298,7 +298,7 @@ using namespace facebook::react;
   [[self getDisplayLink] setPaused:YES];
 }
 
-- (void)onAnimationFrame:(RNADisplayLink *)displayLink
+- (void)onAnimationFrame:(READisplayLink *)displayLink
 {
   NSArray<REAOnAnimationCallback> *callbacks = _onAnimationCallbacks;
   _onAnimationCallbacks = [NSMutableArray new];
@@ -414,7 +414,7 @@ using namespace facebook::react;
 
 - (BOOL)isNativeViewMounted:(NSNumber *)viewTag
 {
-  RNAUIView *view = _viewRegistry[viewTag];
+  REAUIView *view = _viewRegistry[viewTag];
   if (view.superview != nil) {
     return YES;
   }
@@ -437,7 +437,7 @@ using namespace facebook::react;
   // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
   // so that's why we need to call `finalizeUpdates` here.
   RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
-  RNAUIView<RCTComponentViewProtocol> *componentView =
+  REAUIView<RCTComponentViewProtocol> *componentView =
       [componentViewRegistry findComponentViewWithTag:[viewTag integerValue]];
   [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
 }
@@ -520,7 +520,7 @@ using namespace facebook::react;
 
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName
 {
-  RNAUIView *view = [self.uiManager viewForReactTag:viewTag];
+  REAUIView *view = [self.uiManager viewForReactTag:viewTag];
 
   NSString *result =
       [NSString stringWithFormat:@"error: unknown propName %@, currently supported: opacity, zIndex", propName];
@@ -550,7 +550,7 @@ using namespace facebook::react;
 
   __weak __typeof__(self) weakSelf = self;
   [_uiManager
-      addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, RNAUIView *> *viewRegistry) {
+      addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, REAUIView *> *viewRegistry) {
         __typeof__(self) strongSelf = weakSelf;
         if (strongSelf == nil) {
           return;

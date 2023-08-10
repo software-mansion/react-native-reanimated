@@ -8,8 +8,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property NSMutableDictionary *values;
 
-- (instancetype)init:(RNAUIView *)view;
-- (instancetype)initWithAbsolutePosition:(RNAUIView *)view;
+- (instancetype)init:(REAUIView *)view;
+- (instancetype)initWithAbsolutePosition:(REAUIView *)view;
 
 @end
 

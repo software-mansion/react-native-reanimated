@@ -9,10 +9,10 @@
 
 @class REAModule;
 
-typedef void (^REAOnAnimationCallback)(RNADisplayLink *displayLink);
+typedef void (^REAOnAnimationCallback)(READisplayLink *displayLink);
 typedef void (^REANativeAnimationOp)(RCTUIManager *uiManager);
 typedef void (^REAEventHandler)(id<RCTEvent> event);
-typedef void (^CADisplayLinkOperation)(RNADisplayLink *displayLink);
+typedef void (^CADisplayLinkOperation)(READisplayLink *displayLink);
 
 #ifdef RCT_NEW_ARCH_ENABLED
 typedef void (^REAPerformOperations)();

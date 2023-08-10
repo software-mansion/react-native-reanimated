@@ -2,7 +2,7 @@
 
 #import <UIKit/UIKit.h>
 
-#define RNAUIView UIView
+#define REAUIView UIView
 
 #else // TARGET_OS_OSX [
 
@@ -16,6 +16,6 @@ extern "C" {
 }
 #endif
 
-#define RNAUIView RCTUIView
+#define REAUIView RCTUIView
 
 #endif // ] TARGET_OS_OSX

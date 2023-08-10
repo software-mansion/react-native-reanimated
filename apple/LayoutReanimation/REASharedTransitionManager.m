@@ -7,21 +7,21 @@
 #import <RNReanimated/REAUIKit.h>
 
 @implementation REASharedTransitionManager {
-  NSMutableDictionary<NSNumber *, RNAUIView *> *_sharedTransitionParent;
+  NSMutableDictionary<NSNumber *, REAUIView *> *_sharedTransitionParent;
   NSMutableDictionary<NSNumber *, NSNumber *> *_sharedTransitionInParentIndex;
   NSMutableDictionary<NSNumber *, REASnapshot *> *_snapshotRegistry;
-  NSMutableDictionary<NSNumber *, RNAUIView *> *_currentSharedTransitionViews;
+  NSMutableDictionary<NSNumber *, REAUIView *> *_currentSharedTransitionViews;
   REAFindPrecedingViewTagForTransitionBlock _findPrecedingViewTagForTransition;
   REACancelAnimationBlock _cancelLayoutAnimation;
-  RNAUIView *_transitionContainer;
-  NSMutableArray<RNAUIView *> *_addedSharedViews;
+  REAUIView *_transitionContainer;
+  NSMutableArray<REAUIView *> *_addedSharedViews;
   BOOL _isSharedTransitionActive;
   NSMutableArray<REASharedElement *> *_sharedElements;
   NSMutableDictionary<NSNumber *, REASharedElement *> *_sharedElementsLookup;
   REAAnimationsManager *_animationManager;
   NSMutableSet<NSNumber *> *_viewsToHide;
-  NSMutableArray<RNAUIView *> *_removedViews;
-  NSMutableSet<RNAUIView *> *_viewsWithCanceledAnimation;
+  NSMutableArray<REAUIView *> *_removedViews;
+  NSMutableSet<REAUIView *> *_viewsWithCanceledAnimation;
   NSMutableDictionary<NSNumber *, NSNumber *> *_disableCleaningForView;
   NSMutableSet<NSNumber *> *_layoutedSharedViewsTags;
   NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
@@ -74,12 +74,12 @@ static REASharedTransitionManager *_sharedTransitionManager;
   _animationManager = nil;
 }
 
-- (RNAUIView *)getTransitioningView:(NSNumber *)tag
+- (REAUIView *)getTransitioningView:(NSNumber *)tag
 {
   return _currentSharedTransitionViews[tag];
 }
 
-- (void)notifyAboutNewView:(RNAUIView *)view
+- (void)notifyAboutNewView:(REAUIView *)view
 {
   if (!_isConfigured) {
     return;
@@ -87,7 +87,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   [_addedSharedViews addObject:view];
 }
 
-- (void)notifyAboutViewLayout:(RNAUIView *)view withViewFrame:(CGRect)frame
+- (void)notifyAboutViewLayout:(REAUIView *)view withViewFrame:(CGRect)frame
 {
   if (!_isConfigured) {
     return;
@@ -112,7 +112,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   [_layoutedSharedViewsFrame removeAllObjects];
 }
 
-- (void)configureAsyncSharedTransitionForViews:(NSArray<RNAUIView *> *)views
+- (void)configureAsyncSharedTransitionForViews:(NSArray<REAUIView *> *)views
 {
   if ([views count] > 0) {
     NSArray *sharedViews = [self sortViewsByTags:views];
@@ -136,8 +136,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
 
   for (REASharedElement *sharedElement in sharedElementToRestart) {
-    RNAUIView *sourceView = sharedElement.sourceView;
-    RNAUIView *targetView = sharedElement.targetView;
+    REAUIView *sourceView = sharedElement.sourceView;
+    REAUIView *targetView = sharedElement.targetView;
 
     REASnapshot *newSourceViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:sourceView];
     REASnapshot *currentTargetViewSnapshot = _snapshotRegistry[targetView.reactTag];
@@ -164,7 +164,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   [self startSharedTransition:sharedElementToRestart];
 }
 
-- (BOOL)configureAndStartSharedTransitionForViews:(NSArray<RNAUIView *> *)views isInteractive:(BOOL)isInteractive
+- (BOOL)configureAndStartSharedTransitionForViews:(NSArray<REAUIView *> *)views isInteractive:(BOOL)isInteractive
 {
   NSArray *sharedViews = [self sortViewsByTags:views];
   NSArray<REASharedElement *> *sharedElements = [self getSharedElementForCurrentTransition:sharedViews
@@ -186,7 +186,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     view and their children are in the same transition. To keep the valid order in the z-axis,
     we need to sort views by tags. Parent tag is lower than children tags.
   */
-  return [views sortedArrayUsingComparator:^NSComparisonResult(RNAUIView *view1, RNAUIView *view2) {
+  return [views sortedArrayUsingComparator:^NSComparisonResult(REAUIView *view1, REAUIView *view2) {
     return [view2.reactTag compare:view1.reactTag];
   }];
 }
@@ -194,20 +194,20 @@ static REASharedTransitionManager *_sharedTransitionManager;
 - (NSMutableArray<REASharedElement *> *)getSharedElementForCurrentTransition:(NSArray *)sharedViews
                                                              withNewElements:(BOOL)addedNewScreen
 {
-  NSMutableArray<RNAUIView *> *newTransitionViews = [NSMutableArray new];
+  NSMutableArray<REAUIView *> *newTransitionViews = [NSMutableArray new];
   NSMutableArray<REASharedElement *> *sharedElements = [NSMutableArray new];
   NSMutableSet<NSNumber *> *currentSharedViewsTags = [NSMutableSet new];
-  for (RNAUIView *sharedView in sharedViews) {
+  for (REAUIView *sharedView in sharedViews) {
     [currentSharedViewsTags addObject:sharedView.reactTag];
   }
-  for (RNAUIView *sharedView in sharedViews) {
+  for (REAUIView *sharedView in sharedViews) {
     // add observers
-    RNAUIView *sharedViewScreen = [REAScreensHelper getScreenForView:sharedView];
-    RNAUIView *stack = [REAScreensHelper getStackForView:sharedViewScreen];
+    REAUIView *sharedViewScreen = [REAScreensHelper getScreenForView:sharedView];
+    REAUIView *stack = [REAScreensHelper getStackForView:sharedViewScreen];
 
     // find sibling for shared view
     NSNumber *siblingViewTag = _findPrecedingViewTagForTransition(sharedView.reactTag);
-    RNAUIView *siblingView = nil;
+    REAUIView *siblingView = nil;
     do {
       siblingView = [_animationManager viewForTag:siblingViewTag];
       if (siblingView == nil) {
@@ -221,8 +221,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
       continue;
     }
 
-    RNAUIView *viewSource;
-    RNAUIView *viewTarget;
+    REAUIView *viewSource;
+    REAUIView *viewTarget;
     if (addedNewScreen) {
       viewSource = siblingView;
       viewTarget = sharedView;
@@ -256,17 +256,17 @@ static REASharedTransitionManager *_sharedTransitionManager;
       if (screensCount < 2) {
         continue;
       }
-      RNAUIView *viewSourceParentScreen = [REAScreensHelper getScreenForView:viewSource];
-      RNAUIView *screenUnderStackTop = stack.reactSubviews[screensCount - 2];
+      REAUIView *viewSourceParentScreen = [REAScreensHelper getScreenForView:viewSource];
+      REAUIView *screenUnderStackTop = stack.reactSubviews[screensCount - 2];
       if (![screenUnderStackTop.reactTag isEqual:viewSourceParentScreen.reactTag] && !isInCurrentTransition) {
         continue;
       }
     } else if (!addedNewScreen) {
       // is on top
-      RNAUIView *viewTargetParentScreen = [REAScreensHelper getScreenForView:viewTarget];
+      REAUIView *viewTargetParentScreen = [REAScreensHelper getScreenForView:viewTarget];
       // TODO: get navigationController on macOS
 #if !TARGET_OS_OSX
-      RNAUIView *stackTarget = viewTargetParentScreen.reactViewController.navigationController.topViewController.view;
+      REAUIView *stackTarget = viewTargetParentScreen.reactViewController.navigationController.topViewController.view;
       if (stackTarget != viewTargetParentScreen) {
         continue;
       }
@@ -304,7 +304,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
   if ([newTransitionViews count] > 0) {
     for (NSNumber *viewTag in _currentSharedTransitionViews) {
-      RNAUIView *view = _currentSharedTransitionViews[viewTag];
+      REAUIView *view = _currentSharedTransitionViews[viewTag];
       if ([newTransitionViews containsObject:view]) {
         [self disableCleaningForViewTag:viewTag];
       } else {
@@ -312,10 +312,10 @@ static REASharedTransitionManager *_sharedTransitionManager;
       }
     }
     [_currentSharedTransitionViews removeAllObjects];
-    for (RNAUIView *view in newTransitionViews) {
+    for (REAUIView *view in newTransitionViews) {
       _currentSharedTransitionViews[view.reactTag] = view;
     }
-    for (RNAUIView *view in [_viewsWithCanceledAnimation copy]) {
+    for (REAUIView *view in [_viewsWithCanceledAnimation copy]) {
       [self cancelAnimation:view.reactTag];
       [self finishSharedAnimation:view removeView:YES];
     }
@@ -364,7 +364,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   // call original method from react-native-screens, self == RNScreen
   [self reanimated_viewDidLayoutSubviews];
-  RNAUIView *screen = [self valueForKey:@"screenView"];
+  REAUIView *screen = [self valueForKey:@"screenView"];
   [_sharedTransitionManager screenAddedToStack:screen];
 }
 
@@ -372,20 +372,20 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   // call original method from react-native-screens, self == RNSScreenView
   [self reanimated_notifyWillDisappear];
-  [_sharedTransitionManager screenRemovedFromStack:(RNAUIView *)self];
+  [_sharedTransitionManager screenRemovedFromStack:(REAUIView *)self];
 }
 
-- (void)screenAddedToStack:(RNAUIView *)screen
+- (void)screenAddedToStack:(REAUIView *)screen
 {
   if (screen.superview != nil) {
     [self runAsyncSharedTransition];
   }
 }
 
-- (void)screenRemovedFromStack:(RNAUIView *)screen
+- (void)screenRemovedFromStack:(REAUIView *)screen
 {
   _isStackDropped = NO;
-  RNAUIView *stack = [REAScreensHelper getStackForView:screen];
+  REAUIView *stack = [REAScreensHelper getStackForView:screen];
   bool isModal = [REAScreensHelper isScreenModal:screen];
   bool isRemovedInParentStack = [self isRemovedFromHigherStack:screen];
   if ((stack != nil || isModal) && !isRemovedInParentStack) {
@@ -411,7 +411,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
 }
 
-- (bool)isInteractiveScreenChange:(RNAUIView *)screen
+- (bool)isInteractiveScreenChange:(REAUIView *)screen
 {
 #if !TARGET_OS_OSX
   return screen.reactViewController.transitionCoordinator.interactive;
@@ -421,7 +421,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 #endif
 }
 
-- (void)makeSnapshotForScreenViews:(RNAUIView *)screen
+- (void)makeSnapshotForScreenViews:(REAUIView *)screen
 {
   REANodeFind(screen, ^int(id<RCTComponent> view) {
     NSNumber *viewTag = view.reactTag;
@@ -429,23 +429,23 @@ static REASharedTransitionManager *_sharedTransitionManager;
       return false;
     }
     if ([self->_animationManager hasAnimationForTag:viewTag type:SHARED_ELEMENT_TRANSITION]) {
-      REASnapshot *snapshot = [[REASnapshot alloc] initWithAbsolutePosition:(RNAUIView *)view];
+      REASnapshot *snapshot = [[REASnapshot alloc] initWithAbsolutePosition:(REAUIView *)view];
       self->_snapshotRegistry[viewTag] = snapshot;
     }
     return false;
   });
 }
 
-- (void)clearConfigForStackNow:(RNAUIView *)stack
+- (void)clearConfigForStackNow:(REAUIView *)stack
 {
-  for (RNAUIView *screen in stack.reactSubviews) {
+  for (REAUIView *screen in stack.reactSubviews) {
     [self clearConfigForScreen:screen];
   }
 }
 
-- (BOOL)isScreen:(RNAUIView *)screen outsideStack:(RNAUIView *)stack
+- (BOOL)isScreen:(REAUIView *)screen outsideStack:(REAUIView *)stack
 {
-  for (RNAUIView *child in stack.reactSubviews) {
+  for (REAUIView *child in stack.reactSubviews) {
     if ([child.reactTag isEqual:screen.reactTag]) {
       return NO;
     }
@@ -453,15 +453,15 @@ static REASharedTransitionManager *_sharedTransitionManager;
   return YES;
 }
 
-- (BOOL)isScreen:(RNAUIView *)screen onTopOfStack:(RNAUIView *)stack
+- (BOOL)isScreen:(REAUIView *)screen onTopOfStack:(REAUIView *)stack
 {
   int screenCount = stack.reactSubviews.count;
   return screenCount > 0 && screen == stack.reactSubviews.lastObject;
 }
 
-- (BOOL)isRemovedFromHigherStack:(RNAUIView *)screen
+- (BOOL)isRemovedFromHigherStack:(REAUIView *)screen
 {
-  RNAUIView *stack = screen.reactSuperview;
+  REAUIView *stack = screen.reactSuperview;
   while (stack != nil) {
 #if !TARGET_OS_OSX
     screen = stack.reactViewController.navigationController.topViewController.view;
@@ -480,12 +480,12 @@ static REASharedTransitionManager *_sharedTransitionManager;
   return NO;
 }
 
-- (void)runSharedTransitionForSharedViewsOnScreen:(RNAUIView *)screen isInteractive:(BOOL)isInteractive
+- (void)runSharedTransitionForSharedViewsOnScreen:(REAUIView *)screen isInteractive:(BOOL)isInteractive
 {
-  NSMutableArray<RNAUIView *> *removedViews = [NSMutableArray new];
+  NSMutableArray<REAUIView *> *removedViews = [NSMutableArray new];
   REANodeFind(screen, ^int(id<RCTComponent> view) {
     if ([self->_animationManager hasAnimationForTag:view.reactTag type:SHARED_ELEMENT_TRANSITION]) {
-      [removedViews addObject:(RNAUIView *)view];
+      [removedViews addObject:(REAUIView *)view];
     }
     return false;
   });
@@ -505,7 +505,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     return;
   }
   for (REASharedElement *sharedElement in _sharedElements) {
-    RNAUIView *viewTarget = sharedElement.targetView;
+    REAUIView *viewTarget = sharedElement.targetView;
     REASnapshot *targetViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewTarget];
     _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
     sharedElement.targetViewSnapshot = targetViewSnapshot;
@@ -522,9 +522,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   if (!_isSharedTransitionActive) {
     _isSharedTransitionActive = YES;
-    RNAUIView *mainWindow = UIApplication.sharedApplication.keyWindow;
+    REAUIView *mainWindow = UIApplication.sharedApplication.keyWindow;
     if (_transitionContainer == nil) {
-      _transitionContainer = [RNAUIView new];
+      _transitionContainer = [REAUIView new];
     }
     [mainWindow addSubview:_transitionContainer];
     // TODO: bringSubviewToFront on macOS
@@ -537,7 +537,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 - (void)reparentSharedViewsForCurrentTransition:(NSArray *)sharedElements
 {
   for (REASharedElement *sharedElement in sharedElements) {
-    RNAUIView *viewSource = sharedElement.sourceView;
+    REAUIView *viewSource = sharedElement.sourceView;
     if (_sharedTransitionParent[viewSource.reactTag] == nil) {
       _sharedTransitionParent[viewSource.reactTag] = viewSource.superview;
       _sharedTransitionInParentIndex[viewSource.reactTag] = @([viewSource.superview.subviews indexOfObject:viewSource]);
@@ -559,7 +559,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
 }
 
-- (void)onViewTransition:(RNAUIView *)view
+- (void)onViewTransition:(REAUIView *)view
                   before:(REASnapshot *)before
                    after:(REASnapshot *)after
                     type:(LayoutAnimationType)type
@@ -574,7 +574,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   [_animationManager startAnimationForTag:view.reactTag type:type yogaValues:preparedValues];
 }
 
-- (void)finishSharedAnimation:(RNAUIView *)view removeView:(BOOL)removeView
+- (void)finishSharedAnimation:(REAUIView *)view removeView:(BOOL)removeView
 {
   if (!_isConfigured) {
     return;
@@ -586,9 +586,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
   if (_currentSharedTransitionViews[viewTag] || [_viewsWithCanceledAnimation containsObject:view]) {
     [view removeFromSuperview];
-    RNAUIView *parent = _sharedTransitionParent[viewTag];
+    REAUIView *parent = _sharedTransitionParent[viewTag];
     int childIndex = [_sharedTransitionInParentIndex[viewTag] intValue];
-    RNAUIView *screen = [REAScreensHelper getScreenForView:parent];
+    REAUIView *screen = [REAScreensHelper getScreenForView:parent];
     bool isScreenInReactTree = screen.reactSuperview != nil;
     if (isScreenInReactTree) {
       [parent insertSubview:view atIndex:childIndex];
@@ -606,7 +606,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     }
 
     REASharedElement *sharedElement = _sharedElementsLookup[viewTag];
-    RNAUIView *targetView = sharedElement.targetView;
+    REAUIView *targetView = sharedElement.targetView;
     targetView.hidden = NO;
     [_currentSharedTransitionViews removeObjectForKey:targetView.reactTag];
     [_viewsWithCanceledAnimation removeObject:targetView];
@@ -706,7 +706,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   return workletValues;
 }
 
-- (void)onScreenRemoval:(RNAUIView *)screen stack:(RNAUIView *)stack
+- (void)onScreenRemoval:(REAUIView *)screen stack:(REAUIView *)stack
 {
   if (_isStackDropped && screen != nil) {
     // to clear config from stack after swipe back
@@ -719,7 +719,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
 }
 
-- (void)clearConfigForScreen:(RNAUIView *)screen
+- (void)clearConfigForScreen:(REAUIView *)screen
 {
   REANodeFind(screen, ^int(id<RCTComponent> _Nonnull view) {
     [self clearAllSharedConfigsForViewTag:view.reactTag];
