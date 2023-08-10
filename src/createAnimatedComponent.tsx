@@ -62,6 +62,7 @@ import {
   WEB_ANIMATIONS_ID,
   getEasing,
   getRandomDelay,
+  saveStyleAfterAnimation,
   setElementAnimation,
 } from './reanimated2/platform-specific/webAnimations';
 
@@ -823,22 +824,32 @@ export default function createAnimatedComponent(
         }
 
         setElementAnimation(element, duration, delay, animationName, easing);
+        element.onanimationend = () => saveStyleAfterAnimation(element);
       } else if (animationType === LayoutAnimationType.LAYOUT) {
         // this._component.style.transition =
         //   LayoutTransitions['SequencedTransition'].style;
       } else if (animationType === LayoutAnimationType.EXITING) {
         const parent = element.offsetParent;
-        const tmpElement = element.cloneNode(true) as HTMLElement;
+        const tmpElement = element.cloneNode() as HTMLElement;
+
+        while (element.firstChild) {
+          tmpElement.appendChild(element.firstChild);
+        }
 
         setElementAnimation(tmpElement, duration, delay, animationName, easing);
-
         parent?.appendChild(tmpElement);
+
+        element.style.visibility = 'hidden';
 
         tmpElement.style.position = 'absolute';
         tmpElement.style.top = `${element.offsetTop}px`;
         tmpElement.style.left = `${element.offsetLeft}px`;
 
-        tmpElement.onanimationend = () => parent?.removeChild(tmpElement);
+        tmpElement.onanimationend = () => {
+          try {
+            parent?.removeChild(tmpElement);
+          } catch {}
+        };
       }
     }
 

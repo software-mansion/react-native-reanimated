@@ -71,12 +71,43 @@ export function setElementAnimation(
   animationName: string,
   easing: string
 ) {
-  element.style.transition = `margin ${duration}s`;
+  // element.style.transition = `margin ${duration}s`;
   element.style.animationName = animationName;
   element.style.animationDuration = `${duration}s`;
   element.style.animationDelay = `${delay}s`;
   element.style.animationTimingFunction = easing;
   element.style.animationFillMode = 'forwards'; // Prevents returning to base state after animation finishes
+}
+
+export function saveStyleAfterAnimation(element: HTMLElement): void {
+  const elementStyle = window.getComputedStyle(element);
+
+  const elementTransform = elementStyle.transform;
+  const elementTranslate = elementStyle.translate;
+
+  const numberPattern = /-\d+/g;
+
+  const matrixValues = elementTransform.match(numberPattern);
+  const translateValues = elementTranslate.match(numberPattern);
+
+  let dx = 0;
+  let dy = 0;
+
+  if (matrixValues) {
+    const matrixValuesArray = matrixValues.map(Number);
+
+    dx += matrixValuesArray[matrixValuesArray.length - 2];
+    dy += matrixValuesArray[matrixValuesArray.length - 1];
+  }
+
+  if (translateValues) {
+    const translateValuesArray = translateValues.map(Number);
+
+    dx += translateValuesArray[0];
+    dy += translateValuesArray[1];
+  }
+
+  element.style.translate = `${dx}px ${dy}px`;
 }
 
 const FadeIn = {
