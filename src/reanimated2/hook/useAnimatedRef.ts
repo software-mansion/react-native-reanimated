@@ -8,16 +8,19 @@ import {
   makeShareableCloneRecursive,
   registerShareableMapping,
 } from '../shareables';
-import { findNodeHandle } from 'react-native';
+import { Platform, findNodeHandle } from 'react-native';
 
 interface MaybeScrollableComponent extends Component {
-  getNativeScrollRef?: () => MaybeScrollableComponent;
-  getScrollableNode?: () => MaybeScrollableComponent;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getNativeScrollRef?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getScrollableNode?: any;
+  viewConfig?: {
+    uiViewClassName?: string;
+  };
 }
 
-function getComponentOrScrollable(
-  component: MaybeScrollableComponent
-): MaybeScrollableComponent {
+function getComponentOrScrollable(component: MaybeScrollableComponent) {
   if (global._IS_FABRIC && component.getNativeScrollRef) {
     return component.getNativeScrollRef();
   } else if (!global._IS_FABRIC && component.getScrollableNode) {
@@ -34,6 +37,8 @@ export function useAnimatedRef<
   T extends MaybeScrollableComponent
 >(): AnimatedRef<T> {
   const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
+  const viewName = useSharedValue<string | null>(null);
+
   const ref = useRef<AnimatedRef<T>>();
 
   if (!ref.current) {
@@ -42,6 +47,10 @@ export function useAnimatedRef<
       if (component) {
         tag.value = getTagValueFunction(getComponentOrScrollable(component));
         fun.current = component;
+        // viewName is required only on iOS with Paper
+        if (Platform.OS === 'ios' && !global._IS_FABRIC) {
+          viewName.value = component?.viewConfig?.uiViewClassName || 'RCTView';
+        }
       }
       return tag.value;
     });
@@ -51,7 +60,9 @@ export function useAnimatedRef<
     const remoteRef = makeShareableCloneRecursive({
       __init: () => {
         'worklet';
-        return () => tag.value;
+        const f = () => tag.value;
+        f.viewName = viewName;
+        return f;
       },
     });
     registerShareableMapping(fun, remoteRef);

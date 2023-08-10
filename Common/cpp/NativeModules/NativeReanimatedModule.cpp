@@ -196,10 +196,8 @@ NativeReanimatedModule::~NativeReanimatedModule() {
 void NativeReanimatedModule::scheduleOnUI(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {
-  auto shareableWorklet = extractShareableOrThrow(rt, worklet);
-  assert(
-      shareableWorklet->valueType() == Shareable::WorkletType &&
-      "only worklets can be scheduled to run on UI");
+  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
+      rt, worklet, "only worklets can be scheduled to run on UI");
   runtimeManager_->uiScheduler_->scheduleOnUI([=] {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime();
     auto workletValue = shareableWorklet->getJSValue(rt);
@@ -217,7 +215,8 @@ void NativeReanimatedModule::scheduleOnJS(
       "Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
   auto shareableArgs = argsValue.isUndefined()
       ? nullptr
-      : extractShareableOrThrow(rt, argsValue);
+      : extractShareableOrThrow<ShareableArray>(
+            rt, argsValue, "args must be an array");
   auto jsRuntime = this->runtimeHelper->rnRuntime();
   runtimeManager_->jsScheduler_->scheduleOnJS([=] {
     jsi::Runtime &rt = *jsRuntime;
@@ -327,13 +326,16 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
 
 jsi::Value NativeReanimatedModule::registerEventHandler(
     jsi::Runtime &rt,
-    const jsi::Value &eventHash,
-    const jsi::Value &worklet) {
-  static uint64_t EVENT_HANDLER_ID = 1;
+    const jsi::Value &worklet,
+    const jsi::Value &eventName,
+    const jsi::Value &emitterReactTag) {
+  static uint64_t NEXT_EVENT_HANDLER_ID = 1;
 
-  uint64_t newRegistrationId = EVENT_HANDLER_ID++;
-  auto eventName = eventHash.asString(rt).utf8(rt);
-  auto handlerShareable = extractShareableOrThrow(rt, worklet);
+  uint64_t newRegistrationId = NEXT_EVENT_HANDLER_ID++;
+  auto eventNameStr = eventName.asString(rt).utf8(rt);
+  auto handlerShareable = extractShareableOrThrow<ShareableWorklet>(
+      rt, worklet, "event handler must be a worklet");
+  int emitterReactTagInt = emitterReactTag.asNumber();
 
   runtimeManager_->uiScheduler_->scheduleOnUI([=] {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime();
@@ -341,7 +343,8 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
     auto handler = std::make_shared<WorkletEventHandler>(
         runtimeHelper,
         newRegistrationId,
-        eventName,
+        eventNameStr,
+        emitterReactTagInt,
         std::move(handlerFunction));
     eventHandlerRegistry->registerEventHandler(std::move(handler));
   });
@@ -420,13 +423,16 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
       viewTag.asNumber(),
       static_cast<LayoutAnimationType>(type.asNumber()),
       sharedTransitionTag.asString(rt).utf8(rt),
-      extractShareableOrThrow(rt, config));
+      extractShareableOrThrow<ShareableObject>(
+          rt, config, "layout animation config must be an object"));
   return jsi::Value::undefined();
 }
 
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
-    std::string eventName) {
-  return eventHandlerRegistry->isAnyHandlerWaitingForEvent(eventName);
+    const std::string &eventName,
+    const int emitterReactTag) {
+  return eventHandlerRegistry->isAnyHandlerWaitingForEvent(
+      eventName, emitterReactTag);
 }
 
 void NativeReanimatedModule::maybeRequestRender() {
@@ -623,26 +629,22 @@ void NativeReanimatedModule::performOperations() {
           auto rootNode =
               oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
-          ShadowTreeCloner shadowTreeCloner{uiManager_, surfaceId_};
+          ShadowTreeCloner shadowTreeCloner{*uiManager_, surfaceId_};
 
-          {
-            auto lock = propsRegistry_->createLock();
+          for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+            const ShadowNodeFamily &family = shadowNode->getFamily();
+            react_native_assert(family.getSurfaceId() == surfaceId_);
 
-            for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-              const ShadowNodeFamily &family = shadowNode->getFamily();
-              react_native_assert(family.getSurfaceId() == surfaceId_);
+            auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+                rootNode, family, RawProps(rt, *props));
 
-              auto newRootNode = shadowTreeCloner.cloneWithNewProps(
-                  rootNode, family, RawProps(rt, *props));
-
-              if (newRootNode == nullptr) {
-                // this happens when React removed the component but Reanimated
-                // still tries to animate it, let's skip update for this
-                // specific component
-                continue;
-              }
-              rootNode = newRootNode;
+            if (newRootNode == nullptr) {
+              // this happens when React removed the component but Reanimated
+              // still tries to animate it, let's skip update for this
+              // specific component
+              continue;
             }
+            rootNode = newRootNode;
           }
 
           auto newRoot = std::static_pointer_cast<RootShadowNode>(rootNode);
@@ -735,7 +737,8 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     jsi::Runtime &rt,
     const jsi::Value &handlerWorklet,
     const jsi::Value &isStatusBarTranslucent) {
-  auto shareableHandler = extractShareableOrThrow(rt, handlerWorklet);
+  auto shareableHandler = extractShareableOrThrow<ShareableWorklet>(
+      rt, handlerWorklet, "keyboard event handler must be a worklet");
   return subscribeForKeyboardEventsFunction(
       [=](int keyboardState, int height) {
         jsi::Runtime &rt = *runtimeHelper->uiRuntime();

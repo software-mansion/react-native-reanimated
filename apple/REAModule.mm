@@ -109,7 +109,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   react_native_assert(uiManager.get() != nil);
   propsRegistry_ = std::make_shared<PropsRegistry>();
   commitHook_ = std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager);
-  uiManager->registerCommitHook(*commitHook_);
   [self setUpNativeReanimatedModule:uiManager];
 }
 

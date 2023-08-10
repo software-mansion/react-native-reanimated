@@ -1,6 +1,8 @@
 /* eslint-disable node/no-callback-literal */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
+import { SensorType } from './commonTypes';
+
 const NOOP = () => {
   // noop
 };
@@ -54,6 +56,31 @@ const ReanimatedV2 = {
   useAnimatedRef: () => ({ current: null }),
   useAnimatedReaction: NOOP,
   useAnimatedProps: IMMEDIATE_CB_INVOCATION,
+  SensorType: SensorType,
+  useAnimatedSensor: () => ({
+    sensor: {
+      value: {
+        x: 0,
+        y: 0,
+        z: 0,
+        interfaceOrientation: 0,
+        qw: 0,
+        qx: 0,
+        qy: 0,
+        qz: 0,
+        yaw: 0,
+        pitch: 0,
+        roll: 0,
+      },
+    },
+    unregister: NOOP,
+    isAvailable: false,
+    config: {
+      interval: 0,
+      adjustToInterfaceOrientation: false,
+      iosReferenceFrame: 0,
+    },
+  }),
 
   withTiming: (toValue, _, cb) => {
     cb && cb(true);

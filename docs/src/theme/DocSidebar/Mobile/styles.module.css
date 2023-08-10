@@ -1,0 +1,8 @@
+[class*='navbar-sidebar'] {
+  --ifm-navbar-background-color: var(--swm-sidebar-background);
+  --ifm-navbar-sidebar-width: 70vw;
+}
+
+[class*='navbar-sidebar__item'] [class*='navbar-sidebar__back'] {
+  display: none;
+}

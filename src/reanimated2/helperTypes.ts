@@ -23,21 +23,28 @@ import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Ke
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 import type { DependencyList } from './hook/commonTypes';
 
-type Adaptable<T> = T | ReadonlyArray<T | ReadonlyArray<T>> | SharedValue<T>;
+export type Adaptable<T> =
+  | T
+  | ReadonlyArray<T | ReadonlyArray<T>>
+  | SharedValue<T>;
 
-type AdaptTransforms<T> = {
+export type AdaptTransforms<T> = {
   [P in keyof T]: Adaptable<T[P]>;
 };
 
 type TransformsStyle = Pick<RNTransformsStyle, 'transform'>;
 
-type TransformStyleTypes = TransformsStyle['transform'] extends
+export type TransformStyleTypes = TransformsStyle['transform'] extends
   | readonly (infer T)[]
+  | string
   | undefined
   ? T
   : never;
-type AnimatedTransform = AdaptTransforms<TransformStyleTypes>[];
+export type AnimatedTransform = AdaptTransforms<TransformStyleTypes>[];
 
+/**
+ * @deprecated Please use `AnimatedStyle` type instead.
+ */
 export type AnimateStyle<S> = {
   [K in keyof S]: K extends 'transform'
     ? AnimatedTransform
@@ -50,13 +57,15 @@ export type AnimateStyle<S> = {
     : S[K] | SharedValue<AnimatableValue>;
 };
 
+export type AnimatedStyle<S> = AnimateStyle<S>;
+
 // provided types can either be their original types (like backgroundColor: pink)
 // or inline shared values/derived values
 type MaybeSharedValue<S> = {
   [K in keyof S]: S[K] | Readonly<SharedValue<Extract<S[K], AnimatableValue>>>;
 };
 
-type StylesOrDefault<T> = 'style' extends keyof T
+export type StylesOrDefault<T> = 'style' extends keyof T
   ? MaybeSharedValue<T['style']>
   : Record<string, unknown>;
 
@@ -81,12 +90,12 @@ type PickStyleProps<T> = Pick<
 
 type StyleAnimatedProps<P extends object> = {
   [K in keyof PickStyleProps<P>]: StyleProp<
-    AnimateStyle<P[K] | MaybeSharedValue<P[K]>>
+    AnimatedStyle<P[K] | MaybeSharedValue<P[K]>>
   >;
 };
 
 type JustStyleAnimatedProp<P extends object> = {
-  style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
+  style?: StyleProp<AnimatedStyle<StylesOrDefault<P>>>;
 };
 
 type NonStyleAnimatedProps<P extends object> = {
