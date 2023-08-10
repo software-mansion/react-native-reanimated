@@ -74,7 +74,9 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     */
     Object.keys(initialValues).forEach((styleProp: string) => {
       if (styleProp === 'transform') {
-        if (!Array.isArray(initialValues.transform)) return;
+        if (!Array.isArray(initialValues.transform)) {
+          return;
+        }
         initialValues.transform.forEach((transformStyle, index) => {
           Object.keys(transformStyle).forEach((transformProp: string) => {
             parsedKeyframes[index.toString() + '_transform:' + transformProp] =
@@ -147,7 +149,9 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
           });
         Object.keys(keyframe).forEach((key: string) => {
           if (key === 'transform') {
-            if (!Array.isArray(keyframe.transform)) return;
+            if (!Array.isArray(keyframe.transform)) {
+              return;
+            }
             keyframe.transform.forEach(
               (transformStyle: { [key: string]: any }, index) => {
                 Object.keys(transformStyle).forEach((transformProp: string) => {
@@ -208,7 +212,9 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       const addAnimation = (key: string) => {
         const keyframePoints = keyframes[key];
         // in case if property was only passed as initial value
-        if (keyframePoints.length === 0) return;
+        if (keyframePoints.length === 0) {
+          return;
+        }
         const animation = delayFunction(
           delay,
           keyframePoints.length === 1
