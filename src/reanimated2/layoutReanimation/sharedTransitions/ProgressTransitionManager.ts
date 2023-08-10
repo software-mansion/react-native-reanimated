@@ -128,11 +128,9 @@ function createProgressTransitionRegister() {
       viewTag: number,
       progressAnimation: ProgressAnimation
     ) => {
-      console.log('addProgressAnimation', viewTag);
       progressAnimations.set(viewTag, progressAnimation);
     },
     removeProgressAnimation: (viewTag: number) => {
-      console.log('removeProgressAnimation', viewTag);
       if (progressAnimations.size > 1) {
         // Remove the animation config after the transition is finished
         toRemove.add(viewTag);
@@ -141,7 +139,6 @@ function createProgressTransitionRegister() {
       }
     },
     onTransitionStart: (viewTag: number, snapshot: any) => {
-      console.log('onTransitionStart', viewTag);
       snapshots.set(viewTag, snapshot);
       currentTransitions.add(viewTag);
       // set initial style for re-parented components
@@ -150,23 +147,17 @@ function createProgressTransitionRegister() {
     frame: (progress: number) => {
       for (const viewTag of currentTransitions) {
         const progressAnimation = progressAnimations.get(viewTag);
-        if (!progressAnimation) {
-          console.log(progressAnimations, viewTag)
-          continue;
-        }
         const snapshot = snapshots.get(viewTag);
         progressAnimation!(viewTag, snapshot, progress);
       }
     },
     onAndroidFinishTransitioning: () => {
-      console.log('onAndroidFinishTransitioning');
       if (toRemove.size > 0) {
         // it should be ran only on modal closing
         progressTransitionManager.onTransitionEnd();
       }
     },
     onTransitionEnd: (removeViews = false) => {
-      console.log('onTransitionEnd', removeViews);
       for (const viewTag of currentTransitions) {
         _notifyAboutEnd(viewTag, removeViews);
       }
