@@ -15,6 +15,14 @@ on:
   push:
     branches:
       - main
+    paths:
+      - .github/workflows/android-build.yml
+      - android/**
+      - Common/**
+      - Example/package.json
+      - Example/android/**
+      - FabricExample/package.json
+      - FabricExample/android/**
 
 jobs:
   build:
