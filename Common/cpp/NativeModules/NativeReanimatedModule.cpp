@@ -44,8 +44,7 @@ NativeReanimatedModule::NativeReanimatedModule(
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
-    std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
-        propObtainer,
+    PropObtainerFunction propObtainer,
 #endif
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
@@ -53,25 +52,29 @@ NativeReanimatedModule::NativeReanimatedModule(
       uiScheduler_(uiScheduler),
       uiWorkletRuntime_(
           std::make_shared<WorkletRuntime>(rnRuntime, "Reanimated UI runtime")),
-      eventHandlerRegistry(std::make_unique<EventHandlerRegistry>()),
-      requestRender(platformDepMethodsHolder.requestRender),
+      eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
+      requestRender_(platformDepMethodsHolder.requestRender),
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
-      propObtainer(propObtainer),
+      propObtainer_(propObtainer),
 #endif
-      animatedSensorModule(platformDepMethodsHolder),
+      animatedSensorModule_(platformDepMethodsHolder),
 #ifdef DEBUG
       layoutAnimationsManager_(std::make_shared<JSLogger>(jsScheduler_)),
 #endif
 #ifdef RCT_NEW_ARCH_ENABLED
-      synchronouslyUpdateUIPropsFunction(
-          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction)
+      synchronouslyUpdateUIPropsFunction_(
+          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #else
-      configurePropsPlatformFunction(
-          platformDepMethodsHolder.configurePropsFunction)
+      configurePropsPlatformFunction_(
+          platformDepMethodsHolder.configurePropsFunction),
+      updatePropsFunction_(platformDepMethodsHolder.updatePropsFunction),
 #endif
-{
+      subscribeForKeyboardEventsFunction_(
+          platformDepMethodsHolder.subscribeForKeyboardEvents),
+      unsubscribeFromKeyboardEventsFunction_(
+          platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
   auto requestAnimationFrame = [=](jsi::Runtime &rt, const jsi::Value &fn) {
     frameCallbacks_.push_back(std::make_shared<jsi::Value>(rt, fn));
     maybeRequestRender();
@@ -144,20 +147,10 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.endLayoutAnimation,
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction);
 
-  onRenderCallback = [this](double timestampMs) {
-    this->renderRequested = false;
-    this->onRender(timestampMs);
+  onRenderCallback_ = [this](double timestampMs) {
+    renderRequested_ = false;
+    onRender(timestampMs);
   };
-
-#ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
-#else
-  updatePropsFunction = platformDepMethodsHolder.updatePropsFunction;
-#endif
-  subscribeForKeyboardEventsFunction =
-      platformDepMethodsHolder.subscribeForKeyboardEvents;
-  unsubscribeFromKeyboardEventsFunction =
-      platformDepMethodsHolder.unsubscribeFromKeyboardEvents;
 }
 
 void NativeReanimatedModule::installValueUnpacker(
@@ -170,7 +163,7 @@ void NativeReanimatedModule::installValueUnpacker(
 NativeReanimatedModule::~NativeReanimatedModule() {
   // event handler registry and frame callbacks store some JSI values from UI
   // runtime, so they have to go away before we tear down the runtime
-  eventHandlerRegistry.reset();
+  eventHandlerRegistry_.reset();
   frameCallbacks_.clear();
   uiWorkletRuntime_.reset();
 }
@@ -289,10 +282,9 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
   int emitterReactTagInt = emitterReactTag.asNumber();
 
   uiScheduler_->scheduleOnUI([=] {
-    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getRuntime();
     auto handler = std::make_shared<WorkletEventHandler>(
         newRegistrationId, eventNameStr, emitterReactTagInt, handlerShareable);
-    eventHandlerRegistry->registerEventHandler(std::move(handler));
+    eventHandlerRegistry_->registerEventHandler(std::move(handler));
   });
 
   return jsi::Value(static_cast<double>(newRegistrationId));
@@ -303,7 +295,7 @@ void NativeReanimatedModule::unregisterEventHandler(
     const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
   uiScheduler_->scheduleOnUI(
-      [=] { eventHandlerRegistry->unregisterEventHandler(id); });
+      [=] { eventHandlerRegistry_->unregisterEventHandler(id); });
 }
 
 jsi::Value NativeReanimatedModule::getViewProp(
@@ -320,7 +312,8 @@ jsi::Value NativeReanimatedModule::getViewProp(
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getRuntime();
     const auto propNameValue =
         jsi::String::createFromUtf8(uiRuntime, propNameStr);
-    const auto resultValue = propObtainer(uiRuntime, viewTagInt, propNameValue);
+    const auto resultValue =
+        propObtainer_(uiRuntime, viewTagInt, propNameValue);
     const auto resultStr = resultValue.asString(uiRuntime).utf8(uiRuntime);
 
     jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
@@ -352,7 +345,7 @@ jsi::Value NativeReanimatedModule::configureProps(
     nativePropNames_.insert(name);
   }
 #else
-  configurePropsPlatformFunction(rt, uiProps, nativeProps);
+  configurePropsPlatformFunction_(rt, uiProps, nativeProps);
 #endif // RCT_NEW_ARCH_ENABLED
 
   return jsi::Value::undefined();
@@ -376,15 +369,15 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
     const std::string &eventName,
     const int emitterReactTag) {
-  return eventHandlerRegistry->isAnyHandlerWaitingForEvent(
+  return eventHandlerRegistry_->isAnyHandlerWaitingForEvent(
       eventName, emitterReactTag);
 }
 
 void NativeReanimatedModule::maybeRequestRender() {
-  if (!renderRequested) {
-    renderRequested = true;
+  if (!renderRequested_) {
+    renderRequested_ = true;
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getRuntime();
-    requestRender(onRenderCallback, uiRuntime);
+    requestRender_(onRenderCallback_, uiRuntime);
   }
 }
 
@@ -404,7 +397,7 @@ jsi::Value NativeReanimatedModule::registerSensor(
     const jsi::Value &interval,
     const jsi::Value &iosReferenceFrame,
     const jsi::Value &sensorDataHandler) {
-  return animatedSensorModule.registerSensor(
+  return animatedSensorModule_.registerSensor(
       rt,
       uiWorkletRuntime_,
       sensorType,
@@ -416,11 +409,11 @@ jsi::Value NativeReanimatedModule::registerSensor(
 void NativeReanimatedModule::unregisterSensor(
     jsi::Runtime &,
     const jsi::Value &sensorId) {
-  animatedSensorModule.unregisterSensor(sensorId);
+  animatedSensorModule_.unregisterSensor(sensorId);
 }
 
 void NativeReanimatedModule::cleanupSensors() {
-  animatedSensorModule.unregisterAllSensors();
+  animatedSensorModule_.unregisterAllSensors();
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -446,7 +439,7 @@ bool NativeReanimatedModule::handleEvent(
     const int emitterReactTag,
     const jsi::Value &payload,
     double currentTime) {
-  eventHandlerRegistry->processEvent(
+  eventHandlerRegistry_->processEvent(
       *uiWorkletRuntime_, currentTime, eventName, emitterReactTag, payload);
 
   // TODO: return true if Reanimated successfully handled the event
@@ -550,7 +543,7 @@ void NativeReanimatedModule::performOperations() {
     // directly onto the components and skip the commit.
     for (const auto &[shadowNode, props] : copiedOperationsQueue) {
       Tag tag = shadowNode->getTag();
-      synchronouslyUpdateUIPropsFunction(rt, tag, props->asObject(rt));
+      synchronouslyUpdateUIPropsFunction_(rt, tag, props->asObject(rt));
     }
     return;
   }
@@ -683,7 +676,7 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     const jsi::Value &isStatusBarTranslucent) {
   auto shareableHandler = extractShareableOrThrow<ShareableWorklet>(
       rt, handlerWorklet, "keyboard event handler must be a worklet");
-  return subscribeForKeyboardEventsFunction(
+  return subscribeForKeyboardEventsFunction_(
       [=](int keyboardState, int height) {
         uiWorkletRuntime_->runGuarded(
             shareableHandler, jsi::Value(keyboardState), jsi::Value(height));
@@ -694,7 +687,7 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
 void NativeReanimatedModule::unsubscribeFromKeyboardEvents(
     jsi::Runtime &,
     const jsi::Value &listenerId) {
-  unsubscribeFromKeyboardEventsFunction(listenerId.asNumber());
+  unsubscribeFromKeyboardEventsFunction_(listenerId.asNumber());
 }
 
 } // namespace reanimated

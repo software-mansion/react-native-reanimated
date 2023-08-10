@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "AnimatedSensorModule.h"
+#include "EventHandlerRegistry.h"
 #include "JSScheduler.h"
 #include "LayoutAnimationsManager.h"
 #include "NativeReanimatedModuleSpec.h"
@@ -25,7 +26,10 @@
 
 namespace reanimated {
 
-class EventHandlerRegistry;
+using PropObtainerFunction =
+    std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>;
+using RequestRenderFunction =
+    std::function<void(std::function<void(double)> &, jsi::Runtime &)>;
 
 class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  public:
@@ -36,16 +40,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
-      std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
-          propObtainer,
+      PropObtainerFunction propObtainer,
 #endif
       PlatformDepMethodsHolder platformDepMethodsHolder);
 
   ~NativeReanimatedModule();
-
-  std::shared_ptr<JSScheduler> jsScheduler_;
-  std::shared_ptr<UIScheduler> uiScheduler_;
-  std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
 
   void installValueUnpacker(
       jsi::Runtime &rt,
@@ -112,7 +111,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const int emitterReactTag);
 
   void maybeRequestRender();
-  UpdatePropsFunction updatePropsFunction;
 
   bool handleEvent(
       const std::string &eventName,
@@ -164,24 +162,31 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     return layoutAnimationsManager_;
   }
 
+  inline jsi::Runtime &getUIRuntime() {
+    return uiWorkletRuntime_->getRuntime();
+  }
+
  private:
 #ifdef RCT_NEW_ARCH_ENABLED
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Object &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
-  std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry;
-  std::function<void(std::function<void(double)> &, jsi::Runtime &)>
-      requestRender;
+  const std::shared_ptr<JSScheduler> jsScheduler_;
+  const std::shared_ptr<UIScheduler> uiScheduler_;
+
+  std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
+
+  std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;
+  RequestRenderFunction requestRender_;
   std::vector<std::shared_ptr<jsi::Value>> frameCallbacks_;
-  bool renderRequested = false;
-  std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
-      propObtainer;
-  std::function<void(double)> onRenderCallback;
-  AnimatedSensorModule animatedSensorModule;
+  volatile bool renderRequested_{false};
+  PropObtainerFunction propObtainer_;
+  std::function<void(double)> onRenderCallback_;
+  AnimatedSensorModule animatedSensorModule_;
   LayoutAnimationsManager layoutAnimationsManager_;
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
+  SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
 
   std::shared_ptr<UIManager> uiManager_;
 
@@ -196,13 +201,14 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   std::vector<Tag> tagsToRemove_; // from `propsRegistry_`
 #else
-  ConfigurePropsFunction configurePropsPlatformFunction;
+  ConfigurePropsFunction configurePropsPlatformFunction_;
+  UpdatePropsFunction updatePropsFunction_;
 #endif
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
 
-  KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction;
-  KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;
+  KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
+  KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;
 
 #ifdef DEBUG
   SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;

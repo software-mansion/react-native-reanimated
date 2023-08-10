@@ -132,8 +132,7 @@ void NativeProxy::installJSIBindings(
 #endif
 
   jsi::Runtime &rnRuntime = *rnRuntime_;
-  jsi::Runtime &uiRuntime =
-      nativeReanimatedModule_->uiWorkletRuntime_->getRuntime();
+  jsi::Runtime &uiRuntime = nativeReanimatedModule_->getUIRuntime();
   auto isReducedMotion = getIsReducedMotion();
   RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
 
@@ -472,7 +471,7 @@ void NativeProxy::handleEvent(
     return;
   }
 
-  jsi::Runtime &rt = nativeReanimatedModule_->uiWorkletRuntime_->getRuntime();
+  jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
   jsi::Value payload;
   try {
     payload = jsi::Value::createFromJsonUtf8(
@@ -572,8 +571,7 @@ void NativeProxy::setupLayoutAnimations() {
       [weakNativeReanimatedModule](
           int tag, int type, alias_ref<JMap<jstring, jstring>> values) {
         if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-          jsi::Runtime &rt =
-              nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
+          jsi::Runtime &rt = nativeReanimatedModule->getUIRuntime();
           jsi::Object yogaValues(rt);
           for (const auto &entry : *values) {
             try {
@@ -629,8 +627,7 @@ void NativeProxy::setupLayoutAnimations() {
   layoutAnimations_->cthis()->setCancelAnimationForTag(
       [weakNativeReanimatedModule](int tag) {
         if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-          jsi::Runtime &rt =
-              nativeReanimatedModule->uiWorkletRuntime_->getRuntime();
+          jsi::Runtime &rt = nativeReanimatedModule->getUIRuntime();
           nativeReanimatedModule->layoutAnimationsManager()
               .cancelLayoutAnimation(rt, tag);
         }

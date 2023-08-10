@@ -24,10 +24,10 @@ class WorkletEventHandler {
       const std::string &eventName,
       const uint64_t emitterReactTag,
       const std::shared_ptr<ShareableWorklet> &handlerFunction)
-      : handlerFunction_(handlerFunction),
-        handlerId_(handlerId),
+      : handlerId_(handlerId),
+        emitterReactTag_(emitterReactTag),
         eventName_(eventName),
-        emitterReactTag_(emitterReactTag) {}
+        handlerFunction_(handlerFunction) {}
   void process(
       const WorkletRuntime &workletRuntime,
       double eventTimestamp,
