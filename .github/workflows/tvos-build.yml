@@ -4,7 +4,7 @@ on:
     paths:
       - '.github/workflows/tvos-build.yml'
       - 'RNReanimated.podspec'
-      - 'ios/**'
+      - 'apple/**'
       - 'Common/**'
       - 'TVOSExample/package.json'
       - 'TVOSExample/ios/**'
