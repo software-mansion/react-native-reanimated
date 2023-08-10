@@ -249,6 +249,7 @@ android {
     if (REACT_NATIVE_MINOR_VERSION >= 71) {
         buildFeatures {
             prefab true
+            buildConfig true
         }
     }
     defaultConfig {
