@@ -19,15 +19,15 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
 
   ~ReanimatedCommitHook() noexcept override;
 
-  void commitHookWasRegistered(UIManager const &) const noexcept override {}
+  void commitHookWasRegistered(UIManager const &) noexcept override {}
 
-  void commitHookWasUnregistered(UIManager const &) const noexcept override {}
+  void commitHookWasUnregistered(UIManager const &) noexcept override {}
 
   RootShadowNode::Unshared shadowTreeWillCommit(
       ShadowTree const &shadowTree,
       RootShadowNode::Shared const &oldRootShadowNode,
       RootShadowNode::Unshared const &newRootShadowNode)
-      const noexcept override;
+      noexcept override;
 
  private:
   std::shared_ptr<PropsRegistry> propsRegistry_;
