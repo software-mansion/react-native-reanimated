@@ -832,6 +832,9 @@ export default function createAnimatedComponent(
         const parent = element.offsetParent;
         const tmpElement = element.cloneNode() as HTMLElement;
 
+        // After cloning the element, we want to move all children from original element to its clone. This is because original element
+        // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
+        // Using element.cloneNode(true) doesn't solve the problem, because it creates copy of children and we won't be able to set their animations
         while (element.firstChild) {
           tmpElement.appendChild(element.firstChild);
         }
@@ -839,17 +842,15 @@ export default function createAnimatedComponent(
         setElementAnimation(tmpElement, duration, delay, animationName, easing);
         parent?.appendChild(tmpElement);
 
+        // We hide current element so only its copy with proper animation will be displayed
         element.style.visibility = 'hidden';
 
         tmpElement.style.position = 'absolute';
         tmpElement.style.top = `${element.offsetTop}px`;
         tmpElement.style.left = `${element.offsetLeft}px`;
 
-        tmpElement.onanimationend = () => {
-          try {
-            parent?.removeChild(tmpElement);
-          } catch {}
-        };
+        tmpElement.onanimationend = () =>
+          parent?.contains(tmpElement) ? parent.removeChild(tmpElement) : null;
       }
     }
 
