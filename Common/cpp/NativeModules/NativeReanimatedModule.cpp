@@ -30,7 +30,10 @@
 #endif
 
 using namespace facebook;
+
+#if REACT_NATIVE_MINOR_VERSION >= 73
 bool CoreFeatures::useNativeState;
+#endif
 
 namespace reanimated {
 
