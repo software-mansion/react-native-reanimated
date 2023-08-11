@@ -526,16 +526,20 @@ bool NativeReanimatedModule::handleRawEvent(
     // just ignore this event, because it's an event on unmounted component
     return false;
   }
-  const std::string &type = rawEvent.type;
-  const SharedEventPayload &eventPayload = rawEvent.eventPayload;
 
   int tag = eventTarget->getTag();
-  std::string eventType = type;
+  std::string eventType = rawEvent.type;
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
   }
   jsi::Runtime &rt = *runtimeManager_->runtime.get();
+#if REACT_NATIVE_MINOR_VERSION >= 73
+  const SharedEventPayload &eventPayload = rawEvent.eventPayload;
   jsi::Value payload = eventPayload->asJSIValue(rt);
+#else
+  const ValueFactory &payloadFactory = rawEvent.payloadFactory;
+  jsi::Value payload = payloadFactory(rt);
+#endif
 
   auto res = handleEvent(eventType, tag, std::move(payload), currentTime);
   // TODO: we should call performOperations conditionally if event is handled
