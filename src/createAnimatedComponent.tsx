@@ -835,6 +835,8 @@ export default function createAnimatedComponent(
         // After cloning the element, we want to move all children from original element to its clone. This is because original element
         // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
         // Using element.cloneNode(true) doesn't solve the problem, because it creates copy of children and we won't be able to set their animations
+        //
+        // This loop works because appendChild() moves element into its new parent instead of copying it and then inserting copy into new parent
         while (element.firstChild) {
           tmpElement.appendChild(element.firstChild);
         }
