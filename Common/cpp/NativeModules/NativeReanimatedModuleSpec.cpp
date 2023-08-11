@@ -78,6 +78,17 @@ static jsi::Value SPEC_PREFIX(createWorkletRuntime)(
       ->createWorkletRuntime(rt, std::move(args[0]), std::move(args[1]));
 }
 
+static jsi::Value SPEC_PREFIX(runOnWorkletRuntimeSyncUnsafe)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->runOnWorkletRuntimeSyncUnsafe(
+          rt, std::move(args[0]), std::move(args[1]));
+  return jsi::Value::undefined();
+}
+
 static jsi::Value SPEC_PREFIX(registerEventHandler)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -205,6 +216,8 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
       MethodMetadata{1, SPEC_PREFIX(scheduleOnBackground)};
   methodMap_["createWorkletRuntime"] =
       MethodMetadata{2, SPEC_PREFIX(createWorkletRuntime)};
+  methodMap_["runOnWorkletRuntimeSyncUnsafe"] =
+      MethodMetadata{2, SPEC_PREFIX(runOnWorkletRuntimeSyncUnsafe)};
 
   methodMap_["registerEventHandler"] =
       MethodMetadata{3, SPEC_PREFIX(registerEventHandler)};

@@ -1,5 +1,6 @@
 import { isChromeDebugger, isJest, isWeb } from '../PlatformChecker';
 import type {
+  ComplexWorkletFunction,
   ShareableRef,
   ShareableSyncDataHolderRef,
   Value3D,
@@ -36,9 +37,21 @@ export default class JSReanimated {
     );
   }
 
-  createWorkletRuntime(): WorkletRuntime {
+  createWorkletRuntime(
+    _name: string,
+    _valueUnpackerCode: string
+  ): WorkletRuntime {
     throw new Error(
       '[Reanimated] createWorkletRuntime is not available in JSReanimated.'
+    );
+  }
+
+  runOnWorkletRuntimeSyncUnsafe(
+    _runtime: WorkletRuntime,
+    _worklet: ShareableRef<ComplexWorkletFunction<[], void>>
+  ) {
+    throw new Error(
+      '[Reanimated] runOnWorkletRuntimeSyncUnsafe is not available in JSReanimated.'
     );
   }
 

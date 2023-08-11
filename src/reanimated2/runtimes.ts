@@ -41,5 +41,8 @@ export function runOnRuntimeSync(
   worklet: ComplexWorkletFunction<[], void>
 ) {
   'worklet';
-  global._runOnRuntime(runtime, makeShareableCloneRecursive(worklet));
+  NativeReanimatedModule.runOnWorkletRuntimeSyncUnsafe(
+    runtime,
+    makeShareableCloneRecursive(worklet)
+  );
 }

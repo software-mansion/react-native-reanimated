@@ -1,5 +1,6 @@
 import { NativeModules } from 'react-native';
 import type {
+  ComplexWorkletFunction,
   ShareableRef,
   ShareableSyncDataHolderRef,
   Value3D,
@@ -29,6 +30,10 @@ export interface NativeReanimatedModule {
     shareable: ShareableRef<T>
   ): void;
   createWorkletRuntime(name: string, valueUnpackerCode: string): WorkletRuntime;
+  runOnWorkletRuntimeSyncUnsafe(
+    runtime: WorkletRuntime,
+    worklet: ShareableRef<ComplexWorkletFunction<[], void>>
+  ): void;
   registerEventHandler<T>(
     eventHandler: ShareableRef<T>,
     eventName: string,
@@ -112,6 +117,16 @@ export class NativeReanimated {
 
   createWorkletRuntime(name: string, valueUnpackerCode: string) {
     return this.InnerNativeModule.createWorkletRuntime(name, valueUnpackerCode);
+  }
+
+  runOnWorkletRuntimeSyncUnsafe(
+    runtime: WorkletRuntime,
+    worklet: ShareableRef<ComplexWorkletFunction<[], void>>
+  ) {
+    return this.InnerNativeModule.runOnWorkletRuntimeSyncUnsafe(
+      runtime,
+      worklet
+    );
   }
 
   registerSensor(

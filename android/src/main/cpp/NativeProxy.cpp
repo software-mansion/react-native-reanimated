@@ -47,6 +47,7 @@ NativeProxy::NativeProxy(
           jsCallInvoker,
           uiScheduler,
           getPlatformDependentMethods())),
+      jsCallInvoker_(jsCallInvoker), // only for _scheduleOnJS, to be removed
       layoutAnimations_(std::move(layoutAnimations))
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
@@ -139,19 +140,101 @@ void NativeProxy::installJSIBindings(
       jsi::PropNameID::forAscii(rnRuntime, "__reanimatedModuleProxy"),
       jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule_));
 
+  // TODO: remove this along with scheduleOnJS and makeShareableClone
   std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule =
       nativeReanimatedModule_;
 
-  auto scheduleOnJS = [weakNativeReanimatedModule](
-                          jsi::Runtime &rt,
-                          const jsi::Value &thisValue,
-                          const jsi::Value *args,
-                          size_t count) -> jsi::Value {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      nativeReanimatedModule->scheduleOnJS(rt, args[0], args[1]);
-    }
-    return jsi::Value::undefined();
-  };
+  // TODO: use same instance as NativeReanimatedModule
+  auto jsScheduler = std::make_shared<JSScheduler>(rnRuntime, jsCallInvoker_);
+  jsCallInvoker_ = nullptr; // no longer necessary
+
+  auto scheduleOnJS =
+      [jsScheduler](
+          jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::
+                                                                                                   Value {
+                                                                                                     const jsi::Value
+                                                                                                         &remoteFun = args
+                                                                                                             [0];
+                                                                                                     const jsi::Value
+                                                                                                         &argsValue = args
+                                                                                                             [1];
+
+                                                                                                     // TODO: move to some helper function
+                                                                                                     auto shareableRemoteFun =
+                                                                                                         extractShareableOrThrow<
+                                                                                                             ShareableRemoteFunction>(
+                                                                                                             rt,
+                                                                                                             remoteFun,
+                                                                                                             "Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
+                                                                                                     auto shareableArgs =
+                                                                                                         argsValue
+                                                                                                             .isUndefined()
+                                                                                                         ? nullptr
+                                                                                                         : extractShareableOrThrow<
+                                                                                                               ShareableArray>(
+                                                                                                               rt,
+                                                                                                               argsValue,
+                                                                                                               "args must be an array");
+                                                                                                     jsScheduler
+                                                                                                         ->scheduleOnJS([=](jsi::Runtime
+                                                                                                                                &rt) {
+                                                                                                           auto remoteFun =
+                                                                                                               shareableRemoteFun
+                                                                                                                   ->getJSValue(
+                                                                                                                       rt);
+                                                                                                           if (shareableArgs ==
+                                                                                                               nullptr) {
+                                                                                                             // fast path for remote function w/o arguments
+                                                                                                             remoteFun
+                                                                                                                 .asObject(
+                                                                                                                     rt)
+                                                                                                                 .asFunction(
+                                                                                                                     rt)
+                                                                                                                 .call(
+                                                                                                                     rt);
+                                                                                                           } else {
+                                                                                                             auto argsArray =
+                                                                                                                 shareableArgs
+                                                                                                                     ->getJSValue(
+                                                                                                                         rt)
+                                                                                                                     .asObject(
+                                                                                                                         rt)
+                                                                                                                     .asArray(
+                                                                                                                         rt);
+                                                                                                             auto argsSize =
+                                                                                                                 argsArray
+                                                                                                                     .size(
+                                                                                                                         rt);
+                                                                                                             // number of arguments is typically relatively small so it is ok to
+                                                                                                             // to use VLAs here, hence disabling the lint rule
+                                                                                                             jsi::Value args
+                                                                                                                 [argsSize]; // NOLINT(runtime/arrays)
+                                                                                                             for (
+                                                                                                                 size_t i =
+                                                                                                                     0;
+                                                                                                                 i <
+                                                                                                                 argsSize;
+                                                                                                                 i++) {
+                                                                                                               args[i] =
+                                                                                                                   argsArray
+                                                                                                                       .getValueAtIndex(
+                                                                                                                           rt,
+                                                                                                                           i);
+                                                                                                             }
+                                                                                                             remoteFun
+                                                                                                                 .asObject(
+                                                                                                                     rt)
+                                                                                                                 .asFunction(
+                                                                                                                     rt)
+                                                                                                                 .call(
+                                                                                                                     rt,
+                                                                                                                     args,
+                                                                                                                     argsSize);
+                                                                                                           }
+                                                                                                         });
+                                                                                                     return jsi::Value::
+                                                                                                         undefined();
+                                                                                                   };
   rnRuntime.global().setProperty(
       rnRuntime,
       "_scheduleOnJS",
@@ -166,11 +249,7 @@ void NativeProxy::installJSIBindings(
                                 const jsi::Value &thisValue,
                                 const jsi::Value *args,
                                 size_t count) -> jsi::Value {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      return nativeReanimatedModule->makeShareableClone(
-          rt, args[0], jsi::Value::undefined());
-    }
-    return jsi::Value::undefined();
+    return reanimated::makeShareableClone(rt, args[0], jsi::Value::undefined());
   };
   rnRuntime.global().setProperty(
       rnRuntime,
@@ -180,25 +259,6 @@ void NativeProxy::installJSIBindings(
           jsi::PropNameID::forAscii(rnRuntime, "_makeShareableClone"),
           1,
           makeShareableClone));
-
-  auto runOnRuntime = [](jsi::Runtime &rt,
-                         const jsi::Value &thisValue,
-                         const jsi::Value *args,
-                         size_t count) -> jsi::Value {
-    auto workletRuntime = extractWorkletRuntime(rt, args[0]);
-    auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
-        rt, args[1], "only worklets can be scheduled");
-    workletRuntime->runGuarded(shareableWorklet);
-    return jsi::Value::undefined();
-  };
-  rnRuntime.global().setProperty(
-      rnRuntime,
-      "_runOnRuntime",
-      jsi::Function::createFromHostFunction(
-          rnRuntime,
-          jsi::PropNameID::forAscii(rnRuntime, "_runOnRuntime"),
-          2,
-          runOnRuntime));
 
   // TODO: use jsi_utils::installJsiFunction
   // TODO: unify with REAModule.mm
