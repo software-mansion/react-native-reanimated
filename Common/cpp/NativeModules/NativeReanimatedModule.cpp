@@ -4,7 +4,9 @@
 #include <react/renderer/core/TraitCast.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
+#if REACT_NATIVE_MINOR_VERSION >= 73
 #include <react/utils/CoreFeatures.h>
+#endif
 #endif
 
 #include <functional>
