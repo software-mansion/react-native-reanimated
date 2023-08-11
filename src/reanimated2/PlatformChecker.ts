@@ -16,10 +16,14 @@ export function isAndroid(): boolean {
   return Platform.OS === 'android';
 }
 
+function isWindows(): boolean {
+  return Platform.OS === 'windows';
+}
+
 export function shouldBeUseWeb() {
-  return isJest() || isChromeDebugger() || isWeb();
+  return isJest() || isChromeDebugger() || isWeb() || isWindows();
 }
 
 export function nativeShouldBeMock() {
-  return isJest() || isChromeDebugger();
+  return isJest() || isChromeDebugger() || isWindows();
 }
