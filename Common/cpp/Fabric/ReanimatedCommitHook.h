@@ -29,9 +29,9 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
       RootShadowNode::Shared const &oldRootShadowNode,
       RootShadowNode::Unshared const &newRootShadowNode) noexcept override;
 #else
-  void commitHookWasRegistered() const noexcept override {}
+  void commitHookWasRegistered(UIManager const &) const noexcept override {}
 
-  void commitHookWasUnregistered() const noexcept override {}
+  void commitHookWasUnregistered(UIManager const &) const noexcept override {}
 
   RootShadowNode::Unshared shadowTreeWillCommit(
       ShadowTree const &shadowTree,
