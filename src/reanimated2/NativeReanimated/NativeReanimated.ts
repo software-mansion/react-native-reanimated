@@ -110,6 +110,10 @@ export class NativeReanimated {
     return this.InnerNativeModule.scheduleOnBackground(runtime, worklet);
   }
 
+  createWorkletRuntime(name: string, valueUnpackerCode: string) {
+    return this.InnerNativeModule.createWorkletRuntime(name, valueUnpackerCode);
+  }
+
   registerSensor(
     sensorType: number,
     interval: number,
@@ -186,9 +190,5 @@ export class NativeReanimated {
 
   unsubscribeFromKeyboardEvents(listenerId: number) {
     this.InnerNativeModule.unsubscribeFromKeyboardEvents(listenerId);
-  }
-
-  createWorkletRuntime(name: string, valueUnpackerCode: string) {
-    return this.InnerNativeModule.createWorkletRuntime(name, valueUnpackerCode);
   }
 }
