@@ -41,11 +41,6 @@ NativeReanimatedModule::NativeReanimatedModule(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<CallInvoker> &jsInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
-#ifdef RCT_NEW_ARCH_ENABLED
-// nothing
-#else
-    PropObtainerFunction propObtainer,
-#endif
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
       jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsInvoker)),
@@ -54,11 +49,6 @@ NativeReanimatedModule::NativeReanimatedModule(
           std::make_shared<WorkletRuntime>(rnRuntime, "Reanimated UI runtime")),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
-#ifdef RCT_NEW_ARCH_ENABLED
-// nothing
-#else
-      propObtainer_(propObtainer),
-#endif
       onRenderCallback_([this](const double timestampMs) {
         renderRequested_ = false;
         onRender(timestampMs);

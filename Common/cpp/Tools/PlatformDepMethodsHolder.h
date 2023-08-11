@@ -83,6 +83,7 @@ struct PlatformDepMethodsHolder {
   DispatchCommandFunction dispatchCommandFunction;
   MeasureFunction measureFunction;
   ConfigurePropsFunction configurePropsFunction;
+  PropObtainerFunction propObtainerFunction;
 #endif
   TimeProviderFunction getCurrentTime;
   ProgressLayoutAnimationFunction progressLayoutAnimation;

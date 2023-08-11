@@ -32,11 +32,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<CallInvoker> &jsInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-#ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
-#else
-      PropObtainerFunction propObtainer,
-#endif
       PlatformDepMethodsHolder platformDepMethodsHolder);
 
   ~NativeReanimatedModule();

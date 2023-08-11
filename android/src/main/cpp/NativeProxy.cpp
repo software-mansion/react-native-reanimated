@@ -46,11 +46,6 @@ NativeProxy::NativeProxy(
           *rnRuntime,
           jsCallInvoker,
           uiScheduler,
-#ifdef RCT_NEW_ARCH_ENABLED
-// nothing
-#else
-          bindThis(&NativeProxy::obtainProp),
-#endif
           getPlatformDependentMethods())),
       layoutAnimations_(std::move(layoutAnimations))
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -506,6 +501,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto scrollToFunction = bindThis(&NativeProxy::scrollTo);
 
   auto dispatchCommandFunction = bindThis(&NativeProxy::dispatchCommand);
+
+  auto propObtainer = bindThis(&NativeProxy::obtainProp);
 #endif
 
   auto getCurrentTime = bindThis(&NativeProxy::getCurrentTime);
@@ -550,6 +547,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       dispatchCommandFunction,
       measureFunction,
       configurePropsFunction,
+      propObtainer,
 #endif
       getCurrentTime,
       progressLayoutAnimation,

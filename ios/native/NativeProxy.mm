@@ -263,6 +263,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       dispatchCommandFunction,
       measureFunction,
       configurePropsFunction,
+      propObtainer,
 #endif
       getCurrentTime,
       progressLayoutAnimation,
@@ -275,16 +276,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       maybeFlushUIUpdatesQueueFunction,
   };
 
-  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
-      rnRuntime,
-      jsInvoker,
-      uiScheduler,
-#ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
-#else
-      propObtainer,
-#endif
-      platformDepMethodsHolder);
+  auto nativeReanimatedModule =
+      std::make_shared<NativeReanimatedModule>(rnRuntime, jsInvoker, uiScheduler, platformDepMethodsHolder);
 
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
