@@ -7,6 +7,7 @@
 #include <set>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 using namespace facebook;
@@ -17,9 +18,13 @@ class WorkletEventHandler;
 
 class EventHandlerRegistry {
   std::map<
+      std::pair<int, std::string>,
+      std::unordered_map<uint64_t, std::shared_ptr<WorkletEventHandler>>>
+      eventMappingsWithTag;
+  std::map<
       std::string,
       std::unordered_map<uint64_t, std::shared_ptr<WorkletEventHandler>>>
-      eventMappings;
+      eventMappingsWithoutTag;
   std::map<uint64_t, std::shared_ptr<WorkletEventHandler>> eventHandlers;
   std::mutex instanceMutex;
 
@@ -34,7 +39,9 @@ class EventHandlerRegistry {
       const int emitterReactTag,
       const jsi::Value &eventPayload);
 
-  bool isAnyHandlerWaitingForEvent(const std::string &eventName);
+  bool isAnyHandlerWaitingForEvent(
+      const std::string &eventName,
+      const int emitterReactTag);
 };
 
 } // namespace reanimated

@@ -1,0 +1,23 @@
+.featureItem {
+  background-color: var(--swm-landing-feature-item);
+  box-shadow: -12px 12px 0px var(--swm-landing-feature-item-shadow);
+
+  padding: 1.5em;
+}
+
+.featureItem:not(:last-of-type) {
+  margin-right: 3em;
+}
+
+@media (max-width: 996px) {
+  .featureItem:not(:last-of-type) {
+    margin-right: 0;
+    margin-bottom: 3em;
+  }
+}
+
+.featureItem h3 {
+  margin-bottom: 40px;
+  font-weight: 600;
+  text-transform: uppercase;
+}

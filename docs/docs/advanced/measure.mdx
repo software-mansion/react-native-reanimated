@@ -1,0 +1,139 @@
+---
+sidebar_position: 1
+---
+
+# measure
+
+`measure` lets you synchronously get the dimensions and position of a view on the screen, all on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+
+## Reference
+
+```jsx
+import { measure } from 'react-native-reanimated';
+
+function App() {
+  const animatedRef = useAnimatedRef();
+
+  const handlePress = () => {
+    runOnUI(() => {
+      // highlight-next-line
+      const measurement = measure(animatedRef);
+      if (measurement === null) {
+        return;
+      }
+      // ...
+    })();
+  };
+
+  return <Animated.View ref={animatedRef} />;
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+interface MeasuredDimensions {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  pageX: number;
+  pageY: number;
+}
+
+function measure<T extends Component>(
+  animatedRef: AnimatedRef<T>
+): MeasuredDimensions | null;
+```
+
+</details>
+
+### Arguments
+
+#### `animatedRef`
+
+An [animated ref](/docs/core/useAnimatedRef#returns) connected to the component you'd want to get the measurements from. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
+
+### Returns
+
+`measure` returns an object containing these fields:
+
+- `x` a number representing X coordinate relative to the parent component,
+- `y` a number representing Y coordinate relative to the parent component,
+- `width` a number representing the width of the component,
+- `height` a number representing the height of the component,
+- `pageX` a number representing X coordinate relative to the screen,
+- `pageY` a number representing Y coordinate relative to the screen,
+
+or returns `null` when the measurement couldn't be performed.
+
+## Example
+
+import MeasureBasic from '@site/src/examples/MeasureBasic';
+import MeasureBasicSrc from '!!raw-loader!@site/src/examples/MeasureBasic';
+
+<InteractiveExample src={MeasureBasicSrc} component={<MeasureBasic />} />
+
+## Remarks
+
+- `measure` is implemented only on the [UI thread](/docs/fundamentals/glossary#ui-thread). When using `measure` inside [event handlers](https://react.dev/learn/responding-to-events#adding-event-handlers), it has to be wrapped with the [`runOnUI`](/docs/threading/runOnUI) function.
+
+- The `useAnimatedStyle` function is first evaluated on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) just before the views are attached to the native side. For this reason, to safely use the measure within `useAnimatedStyle`, a condition similar to the one below must be added to the code:
+
+<Indent>
+
+```jsx
+function App() {
+  const animatedStyles = useAnimatedStyle(() => {
+    // highlight-next-line
+    if (_WORKLET) {
+      // safely use measure
+      const measurement = measure(animatedRef);
+    }
+  });
+}
+```
+
+Consecutive runs of `useAnimatedStyle` are executed on the UI thread.
+
+</Indent>
+
+- When you only need the dimensions of the component and won't use the measurements during animation, consider using the [`onLayout`](https://reactnative.dev/docs/view#onlayout) property instead.
+
+- Sometimes, `measure` returns `null` (e.g., when the `ref` hasn't yet attached to the view). It's best to add a `null` check after the measurement for added safety.
+
+<Indent>
+
+```jsx
+const animatedRef = useAnimatedRef();
+
+const handlePress = () => {
+  runOnUI(() => {
+    const measurement = measure(animatedRef);
+
+    // highlight-start
+    if (measurement === null) {
+      return;
+    }
+    // highlight-end
+    // ...
+  })();
+};
+```
+
+</Indent>
+
+- `measure` can be used only on rendered components. For instance, attempting to `measure` off-screen items in a `FlatList` will return a `null` value.
+
+- `measure` isn't available with the Remote JS Debugger. We highly recommend using Chrome DevTools (also known as `chrome://inspect`) for debugging React Native apps.
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>

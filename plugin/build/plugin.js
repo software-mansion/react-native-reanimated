@@ -112,6 +112,7 @@ var require_commonObjects = __commonJS({
       "HermesInternal",
       "_WORKLET",
       "_log",
+      "_toString",
       "_scheduleOnJS",
       "_makeShareableClone",
       "_updateDataSynchronously",

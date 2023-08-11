@@ -1,6 +1,6 @@
 ```jsx {3,17}
 import Animated, {
-  LightSpeedInLeft, 
+  LightSpeedInLeft,
   LightSpeedOutRight
   Layout
 } from 'react-native-reanimated';

@@ -36,14 +36,16 @@ const Comp = () => {
 
   const gestureHandler = useAnimatedGestureHandler({
     onEnd: (event) => {
-      getRelativeCoords(aref, event.absoluteX, event.absoluteY)
+      getRelativeCoords(aref, event.absoluteX, event.absoluteY);
     },
   });
 
-  return <View ref={aref}>
-    <PanGestureHandler onGestureEvent={gestureHandler}>
-      <Animated.View style={[styles.box]} />
-    </PanGestureHandler>
-  </View>;
+  return (
+    <View ref={aref}>
+      <PanGestureHandler onGestureEvent={gestureHandler}>
+        <Animated.View style={[styles.box]} />
+      </PanGestureHandler>
+    </View>
+  );
 };
 ```

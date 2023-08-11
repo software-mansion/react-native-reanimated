@@ -4,9 +4,10 @@ title: Community
 sidebar_label: Community
 ---
 
-Reanimated community is the best! 🎉  We want to say thank you to all community users, and we really appreciate all your activity and commitment. Yours PR, reported issues and many discussions help us in our daily work and it motivates us to develop Reanimated!
+Reanimated community is the best! 🎉 We want to say thank you to all community users, and we really appreciate all your activity and commitment. Yours PR, reported issues and many discussions help us in our daily work and it motivates us to develop Reanimated!
 
 ## Reanimated Team 🚀
+
 <div class="community-holder-container">
 
   <div class="community-holder-container-item">
@@ -36,7 +37,9 @@ Reanimated community is the best! 🎉  We want to say thank you to all communit
 </div>
 
 ## Sponsors
+
 We really appreciate our sponsors! Thanks to them we can develop our library and make the react-native world a better place. Special thanks for:
+
 <div class="community-holder-container">
 
   <div class="community-holder-container-item">
@@ -60,13 +63,17 @@ We really appreciate our sponsors! Thanks to them we can develop our library and
 </div>
 
 ## Special thanks
+
 In our community we have really smart and talented peoples who helped us many times, we want to say thank you again 🙌
+
 - William Candillon <a href="https://twitter.com/wcandillon">@wcandillon</a>
 - Terry Sahaidak <a href="https://twitter.com/terrysahaidak">@terrysahaidak</a>
 - Marc Rousavy <a href="https://twitter.com/mrousavy">@mrousavy</a>
 - and many others!
 
 ## Community projects
+
 We want to appreciate also great initiatives managed by our reanimated community - great job!
+
 - [Can it be done in React Native?](https://www.youtube.com/user/wcandill) - William Candillon's YouTube channel where you can find many awesome examples of animation in React Native provided by Reanimated
 - https://reanimated.funcs.io/ - nice interactive playground to test Reanimated API in user friendly way, created by [Pranshu Chittora](https://github.com/pranshuchittora)
