@@ -326,14 +326,16 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
 
 jsi::Value NativeReanimatedModule::registerEventHandler(
     jsi::Runtime &rt,
-    const jsi::Value &eventHash,
-    const jsi::Value &worklet) {
-  static uint64_t EVENT_HANDLER_ID = 1;
+    const jsi::Value &worklet,
+    const jsi::Value &eventName,
+    const jsi::Value &emitterReactTag) {
+  static uint64_t NEXT_EVENT_HANDLER_ID = 1;
 
-  uint64_t newRegistrationId = EVENT_HANDLER_ID++;
-  auto eventName = eventHash.asString(rt).utf8(rt);
+  uint64_t newRegistrationId = NEXT_EVENT_HANDLER_ID++;
+  auto eventNameStr = eventName.asString(rt).utf8(rt);
   auto handlerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, worklet, "event handler must be a worklet");
+  int emitterReactTagInt = emitterReactTag.asNumber();
 
   runtimeManager_->uiScheduler_->scheduleOnUI([=] {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime();
@@ -341,7 +343,8 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
     auto handler = std::make_shared<WorkletEventHandler>(
         runtimeHelper,
         newRegistrationId,
-        eventName,
+        eventNameStr,
+        emitterReactTagInt,
         std::move(handlerFunction));
     eventHandlerRegistry->registerEventHandler(std::move(handler));
   });
@@ -426,8 +429,10 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
 }
 
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
-    std::string eventName) {
-  return eventHandlerRegistry->isAnyHandlerWaitingForEvent(eventName);
+    const std::string &eventName,
+    const int emitterReactTag) {
+  return eventHandlerRegistry->isAnyHandlerWaitingForEvent(
+      eventName, emitterReactTag);
 }
 
 void NativeReanimatedModule::maybeRequestRender() {

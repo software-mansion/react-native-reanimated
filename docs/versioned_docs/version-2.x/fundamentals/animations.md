@@ -20,7 +20,10 @@ Animated Shared Value updates require just a tiny change compared to immediate u
 Let us recall the example from the previous article, where we'd update a Shared Value with some random number on every button tap:
 
 ```js {15}
-import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 
 function Box() {
   const offset = useSharedValue(0);
@@ -131,9 +134,9 @@ The callback is run with a single argument – a boolean indicating whether the 
   onPress={() => {
     offset.value = withSpring(Math.random(), {}, (finished) => {
       if (finished) {
-        console.log("ANIMATION ENDED");
+        console.log('ANIMATION ENDED');
       } else {
-        console.log("ANIMATION GOT CANCELLED");
+        console.log('ANIMATION GOT CANCELLED');
       }
     });
   }}
@@ -233,7 +236,10 @@ Let us now exercise the use of modifiers in practice and build an animation that
 We start by rendering the actual view and defining the rotation Shared Value that we then use to run the animation:
 
 ```js
-import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 
 function WobbleExample(props) {
   const rotation = useSharedValue(0);
@@ -263,7 +269,7 @@ Then, in `useAnimatedStyle` we map that variable to the rotation attribute by ad
 Let us see how we can now make the rotation animate back and forth using modifiers, here is what we can put in the button's `onPress` handler:
 
 ```js
-rotation.value = withRepeat(withTiming(10), 6, true)
+rotation.value = withRepeat(withTiming(10), 6, true);
 ```
 
 The above code will cause the view to run six repetitions of timing animation between the initial state of the `rotation` value (that is `0`) and value `10`.
@@ -311,7 +317,7 @@ Such a change will cause each of the items to reposition and also change their d
 The change of the dimensions for each of the views may trigger further layout recalculations of the nested views down to the leaf nodes.
 As you can see, a single property change can trigger a lot of recomputation.
 It may perform just fine when we need to fire it once, but if we decided to run such computation during animation for every frame, the outcome may not be satisfactory especially on low-end devices.
-As we work to improve performance of complex layout updates in Reanimated 2, when you experience  issues that are the effects of heavy layout computation on every frame, we recommend that you try Reanimated's [Transition API](/react-native-reanimated/docs/1.x/transitions) or React Native's [LayoutAnimation API](https://reactnative.dev/docs/layoutanimation).
+As we work to improve performance of complex layout updates in Reanimated 2, when you experience issues that are the effects of heavy layout computation on every frame, we recommend that you try Reanimated's [Transition API](/docs/1.x/transitions) or React Native's [LayoutAnimation API](https://reactnative.dev/docs/layoutanimation).
 
 ## Animating Non-Style Properties
 

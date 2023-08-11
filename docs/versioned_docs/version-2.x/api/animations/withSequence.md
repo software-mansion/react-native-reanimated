@@ -25,6 +25,5 @@ We start a sequence of timing animations: first from 0 to 70 and then back to 0.
 The sequence will will result in the value returning to the original position.
 
 ```js
-sharedValue.value = withSequence(withTiming(70), withTiming(0))
+sharedValue.value = withSequence(withTiming(70), withTiming(0));
 ```
-
