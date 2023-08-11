@@ -70,10 +70,10 @@ export class EntryExitTransition
       };
 
       for (const prop of Object.keys(exitingValues.animations)) {
-        if (
-          prop === 'transform' &&
-          Array.isArray(exitingValues.animations.transform)
-        ) {
+        if (prop === 'transform') {
+          if (!Array.isArray(exitingValues.animations.transform)) {
+            continue;
+          }
           exitingValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -119,10 +119,10 @@ export class EntryExitTransition
         }
       }
       for (const prop of Object.keys(enteringValues.animations)) {
-        if (
-          prop === 'transform' &&
-          Array.isArray(enteringValues.animations.transform)
-        ) {
+        if (prop === 'transform') {
+          if (!Array.isArray(enteringValues.animations.transform)) {
+            continue;
+          }
           enteringValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
