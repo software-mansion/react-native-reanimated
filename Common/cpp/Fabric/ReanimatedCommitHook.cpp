@@ -23,7 +23,11 @@ ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
 RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &,
     RootShadowNode::Shared const &,
+#if REACT_NATIVE_MINOR_VERSION >= 73
     RootShadowNode::Unshared const &newRootShadowNode) noexcept {
+#else
+    RootShadowNode::Unshared const &newRootShadowNode) const noexcept {
+#endif
   if (propsRegistry_->isLastReanimatedRoot(newRootShadowNode)) {
     // ShadowTree commited by Reanimated, no need to apply updates from
     // PropsRegistry
