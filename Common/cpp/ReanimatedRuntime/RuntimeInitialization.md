@@ -5,12 +5,10 @@ _Last updated_: 13/09/2022 by @Kwasow
 This document describes the current way of initializing Hermes and connecting
 it to the debugger. The work I did was mainly based on
 
-<!-- THIS WEBSITE IS NO LONGER AVAILABLE -->
-
-[HermesExecutorFactory.cpp](https://github.com/facebook/react-native/blob/main/ReactCommon/hermes/executor/HermesExecutorFactory.cpp)
+[HermesExecutorFactory.cpp](https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/hermes/executor/HermesExecutorFactory.cpp)
 from React Native.
 
-## Runtime initalization
+## Runtime initialization
 
 If you take a look at `NativeProxy` (both on Android and iOS) you'll find
 that it only makes a call to `ReanimatedRuntime::make(jsQueue)`. This
