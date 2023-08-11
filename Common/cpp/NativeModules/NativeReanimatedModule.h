@@ -77,8 +77,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
-      const jsi::Value &eventHash,
-      const jsi::Value &worklet) override;
+      const jsi::Value &worklet,
+      const jsi::Value &eventName,
+      const jsi::Value &emitterReactTag) override;
   void unregisterEventHandler(
       jsi::Runtime &rt,
       const jsi::Value &registrationId) override;
@@ -104,7 +105,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void onRender(double timestampMs);
 
-  bool isAnyHandlerWaitingForEvent(std::string eventName);
+  bool isAnyHandlerWaitingForEvent(
+      const std::string &eventName,
+      const int emitterReactTag);
 
   void maybeRequestRender();
   UpdatePropsFunction updatePropsFunction;
