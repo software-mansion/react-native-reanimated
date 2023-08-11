@@ -46,6 +46,10 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &runtime,
       const jsi::Value &worklet) = 0;
+  virtual jsi::Value createWorkletRuntime(
+      jsi::Runtime &rt,
+      const jsi::Value &name,
+      const jsi::Value &valueUnpackerCode) = 0;
 
   // events
   virtual jsi::Value registerEventHandler(

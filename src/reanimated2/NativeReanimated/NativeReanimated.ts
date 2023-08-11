@@ -28,6 +28,7 @@ export interface NativeReanimatedModule {
     runtime: WorkletRuntime,
     shareable: ShareableRef<T>
   ): void;
+  createWorkletRuntime(name: string, valueUnpackerCode: string): WorkletRuntime;
   registerEventHandler<T>(
     eventHandler: ShareableRef<T>,
     eventName: string,
@@ -185,5 +186,9 @@ export class NativeReanimated {
 
   unsubscribeFromKeyboardEvents(listenerId: number) {
     this.InnerNativeModule.unsubscribeFromKeyboardEvents(listenerId);
+  }
+
+  createWorkletRuntime(name: string, valueUnpackerCode: string) {
+    return this.InnerNativeModule.createWorkletRuntime(name, valueUnpackerCode);
   }
 }

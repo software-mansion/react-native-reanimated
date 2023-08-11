@@ -225,6 +225,17 @@ void NativeReanimatedModule::scheduleOnJS(
   });
 }
 
+jsi::Value NativeReanimatedModule::createWorkletRuntime(
+    jsi::Runtime &rt,
+    const jsi::Value &name,
+    const jsi::Value &valueUnpackerCode) {
+  auto nameString = name.asString(rt).utf8(rt);
+  auto valueUnpackerCodeString = valueUnpackerCode.asString(rt).utf8(rt);
+  auto workletRuntime = std::make_shared<WorkletRuntime>(rt, nameString);
+  workletRuntime->installValueUnpacker(valueUnpackerCodeString);
+  return jsi::Object::createFromHostObject(rt, workletRuntime);
+}
+
 jsi::Value NativeReanimatedModule::makeSynchronizedDataHolder(
     jsi::Runtime &rt,
     const jsi::Value &initialShareable) {

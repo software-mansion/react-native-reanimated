@@ -36,6 +36,12 @@ export default class JSReanimated {
     );
   }
 
+  createWorkletRuntime(): WorkletRuntime {
+    throw new Error(
+      '[Reanimated] createWorkletRuntime is not available in JSReanimated.'
+    );
+  }
+
   registerEventHandler<T>(
     _eventHandler: ShareableRef<T>,
     _eventName: string,

@@ -1,4 +1,5 @@
 import type { ComplexWorkletFunction } from './commonTypes';
+import NativeReanimatedModule from './NativeReanimated';
 import {
   getValueUnpackerCode,
   setupCallGuard,
@@ -16,7 +17,10 @@ export function createWorkletRuntime(
   name: string,
   initializer?: ComplexWorkletFunction<[], void>
 ) {
-  const runtime = global._createWorkletRuntime(name, getValueUnpackerCode());
+  const runtime = NativeReanimatedModule.createWorkletRuntime(
+    name,
+    getValueUnpackerCode()
+  );
 
   runOnRuntimeSync(runtime, () => {
     'worklet';

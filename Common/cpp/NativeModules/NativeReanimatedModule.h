@@ -61,6 +61,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       jsi::Runtime &rt,
       const jsi::Value &runtime,
       const jsi::Value &worklet) override;
+  jsi::Value createWorkletRuntime(
+      jsi::Runtime &rt,
+      const jsi::Value &name,
+      const jsi::Value &valueUnpackerCode) override;
   void scheduleOnJS(
       jsi::Runtime &rt,
       const jsi::Value &remoteFun,
