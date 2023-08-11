@@ -39,23 +39,23 @@ export type AdaptTransforms<T> = {
 
 type RNTransformType = RNTransformsStyle['transform'];
 
-export type ExtractArrayItemType<Arr> = Arr extends readonly (infer Item)[]
+export type ExtractArrayItem<Arr> = Arr extends readonly (infer Item)[]
   ? Item
   : never;
 
 /**
- * @deprecated Please use `TransformArrayItemType` type instead.
+ * @deprecated Please use `TransformArrayItem` type instead.
  */
-export type TransformStyleTypes = ExtractArrayItemType<RNTransformType>;
+export type TransformStyleTypes = ExtractArrayItem<RNTransformType>;
 
-export type TransformArrayItemType = TransformStyleTypes;
+export type TransformArrayItem = TransformStyleTypes;
 
 // Note: why is `readonly` here? For safety.
 // In TS `ReadonlyArray` is a supertype of `Array`,
 // therefore `Array` can be assigned to `ReadonlyArray` but
 // `ReadonlyArray` cannot be assigned to `Array`.
 export type AnimatedTransform =
-  | readonly (TransformArrayItemType | SharedValue<TransformArrayItemType>)[]
+  | readonly (TransformArrayItem | SharedValue<TransformArrayItem>)[]
   | RNTransformType;
 
 /**
