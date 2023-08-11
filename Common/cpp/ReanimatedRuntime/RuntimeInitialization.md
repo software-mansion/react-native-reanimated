@@ -4,6 +4,9 @@ _Last updated_: 13/09/2022 by @Kwasow
 
 This document describes the current way of initializing Hermes and connecting
 it to the debugger. The work I did was mainly based on
+
+<!-- THIS WEBSITE IS NO LONGER AVAILABLE -->
+
 [HermesExecutorFactory.cpp](https://github.com/facebook/react-native/blob/main/ReactCommon/hermes/executor/HermesExecutorFactory.cpp)
 from React Native.
 
@@ -35,6 +38,7 @@ appended to the source code. The generated source map will be a base64 encoded
 json.
 
 A workletized function would look like this (after formattings):
+
 ```js
 function _f(number) {
   console.log(_WORKLET, number);
@@ -48,12 +52,7 @@ And the base64 string after decoding is:
 {
   "version": 3,
   "mappings": "AAasB,SAACA,EAAD,CAACA,MAAD,EAAoB;AAEtCC,SAAO,CAACC,GAARD,CAAYE,QAAZF,EAAsBD,MAAtBC;AAFkB",
-  "names": [
-    "number",
-    "console",
-    "log",
-    "_WORKLET"
-  ],
+  "names": ["number", "console", "log", "_WORKLET"],
   "sources": [
     "/Users/karol/Git/react-native-reanimated/FabricExample/src/WorkletExample.tsx"
   ],

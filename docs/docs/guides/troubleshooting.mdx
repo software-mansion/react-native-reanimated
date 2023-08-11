@@ -16,35 +16,78 @@ Reanimated has four core components that compose its code:
 - C++,
 - Java,
 - JavaScript,
-- Reanimated Babel Plugin.
+- Reanimated Babel plugin.
 
-All of them are supposed to work correctly only within the same minor version. Therefore, having any of those pieces in your code - directly or indirectly - separate from `react-native-reanimated`, especially having any code transpiled with a different version of the aforementioned Plugin will result in undefined behavior and errors.
+All of them are supposed to work correctly only within the same minor version. Therefore, having any of those pieces in your code - directly or indirectly - separate from `react-native-reanimated`, especially having any code transpiled with a different version of the aforementioned plugin will result in undefined behavior and errors.
+
+---
 
 ### Unknown version of Reanimated Babel plugin
 
-1. Try resetting your Metro bundler cache with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
-2. Make sure that none of your dependencies contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin.
-3. Using release bundle with debug build of the app is not supported.
+This can happen when:
+
+1. Part of your code is transpiled with Reanimated Babel plugin that wasn't injecting its version yet. See [Mismatch between JavaScript code version and Reanimated Babel plugin version](http://localhost:3000/react-native-reanimated/docs/guides/Troubleshooting#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version).
+2. You use release bundle with debug build of the app. This is not supported. See this [post](https://github.com/software-mansion/react-native-reanimated/issues/4737) for more information about it.
 
 ### Mismatch between JavaScript code version and Reanimated Babel plugin version
 
+This can happen when:
+
+1. You use code that was transpiled with an outdated version of Reanimated Babel plugin.
+
+Usual solution:
+
 1. Try resetting your Metro bundler cache with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
-2. Make sure that none of your dependencies contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin.
+
+If this didn't help, you probably have a dependency that contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin. You can find the offending code that was given alongside the error to find that dependency.
 
 ### Using dev bundle in a release app build is not supported
 
-Visit https://github.com/software-mansion/react-native-reanimated/issues/4737 to find more information on how to fix this issue.
+See this [post](https://github.com/software-mansion/react-native-reanimated/issues/4737) for more information.
 
 ### Tried to synchronously call a non-worklet function on the UI thread
 
+This can happen when you try to call a function that is not marked as a worklet from a worklet. E.g.:
+
+```typescript
+function callee() {
+  console.log('hello');
+}
+function caller() {
+  'worklet';
+  callee(); // <- this will throw in `runOnUI`
+}
+runOnUI(caller)();
+```
+
+In this example, `callee` cannot be called from a worklet ran on UI thread because there is no corresponding UI function for `callee`.
+
 Possible solutions are:
 
-1. If you want to synchronously execute this method, mark it as a worklet.
-2. If you want to execute this function on the JS thread, wrap it using `runOnJS`.
+1. If you want to synchronously execute this method, mark it as a worklet using `worklet` directive:
+
+```diff
+function callee(){
++   'worklet';
+    console.log("hello");
+  }
+```
+
+2. If you want to execute this function on the JS thread, wrap it using `runOnJS`:
+
+```diff
+function caller(){
+  'worklet';
+-   callee();
++   runOnJS(callee)();
+}
+```
+
+Check [this page](http://localhost:3000/react-native-reanimated/docs/fundamentals/glossary#worklet) to learn more about Reanimated and its worklets.
 
 ### Failed to create a worklet
 
-Did you forget to add Reanimated Babel plugin in babel.config.js? See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation#babel-plugin.
+This usually happens when Reanimated is not properly installed, e.g. forgetting to include the Reanimated Babel plugin in `babel.config.js`. See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation#babel-plugin for more information.
 
 ### Native part of Reanimated doesn't seem to be initialized
 

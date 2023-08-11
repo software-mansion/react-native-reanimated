@@ -36,10 +36,11 @@ using namespace react;
 
 // ReentrancyCheck is copied from React Native
 // from ReactCommon/hermes/executor/HermesExecutorFactory.cpp
+// THIS WEBSITE IS NO LONGER AVAILABLE
 // https://github.com/facebook/react-native/blob/main/ReactCommon/hermes/executor/HermesExecutorFactory.cpp
 struct ReanimatedReentrancyCheck {
-// This is effectively a very subtle and complex assert, so only
-// include it in builds which would include asserts.
+  // This is effectively a very subtle and complex assert, so only
+  // include it in builds which would include asserts.
 #ifndef NDEBUG
   ReanimatedReentrancyCheck() : tid(std::thread::id()), depth(0) {}
 
@@ -110,6 +111,7 @@ struct ReanimatedReentrancyCheck {
 // jsi::Runtime. So the inheritance is: ReanimatedHermesRuntime ->
 // WithRuntimeDecorator -> DecoratedRuntime -> jsi::Runtime You can find out
 // more about this in ReactCommon/jsi/jsi/Decorator.h or by following this link:
+// THIS WEBSITE IS NO LONGER AVAILABLE
 // https://github.com/facebook/react-native/blob/main/ReactCommon/jsi/jsi/decorator.h
 class ReanimatedHermesRuntime
     : public jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck> {
