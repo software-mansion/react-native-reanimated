@@ -66,18 +66,16 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
     UIView *transformedView = [self findTransformedView:view];
     if (transformedView != nil) {
       // iOS affine matrix: https://developer.apple.com/documentation/corefoundation/cgaffinetransform?language=objc
-      CGAffineTransform transform = transformedView.transform;
-      NSNumber *a = @(transform.a);
-      NSNumber *b = @(transform.b);
-      NSNumber *c = @(transform.c);
-      NSNumber *d = @(transform.d);
-      NSNumber *tx = @(transform.tx);
-      NSNumber *ty = @(transform.tx);
-      _values[@"transformMatrix"] = @[ a, b, @(0), c, d, @(0), tx, ty, @(1) ];
+      NSNumber *tx = @(transformedView.transform.tx);
+      NSNumber *ty = @(transformedView.transform.tx);
+
+      _values[@"transformMatrix"] = [self translateCGArrayToShareable:transformedView.transform];
+      _values[@"transformToRestore"] = [self translateCGArrayToShareable:view.transform];
+
       _values[@"originX"] = @([_values[@"originX"] doubleValue] - [tx doubleValue]);
       _values[@"originY"] = @([_values[@"originY"] doubleValue] - [ty doubleValue]);
     } else {
-      // Identity matrix is an default value
+      // Identity matrix is a default value
       _values[@"transformMatrix"] = @[ @(1), @(0), @(0), @(0), @(1), @(0), @(0), @(0), @(1) ];
     }
 #if defined(RCT_NEW_ARCH_ENABLED) || TARGET_OS_TV
@@ -94,6 +92,17 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
     _values[@"originX"] = @(view.center.x - view.bounds.size.width / 2.0);
     _values[@"originY"] = @(view.center.y - view.bounds.size.height / 2.0);
   }
+}
+
+- (NSArray *)translateCGArrayToShareable:(CGAffineTransform)transform
+{
+  NSNumber *a = @(transform.a);
+  NSNumber *b = @(transform.b);
+  NSNumber *c = @(transform.c);
+  NSNumber *d = @(transform.d);
+  NSNumber *tx = @(transform.tx);
+  NSNumber *ty = @(transform.tx);
+  return @[ a, b, @(0), c, d, @(0), tx, ty, @(1) ];
 }
 
 - (UIView *)findTransformedView:(UIView *)view
