@@ -35,16 +35,15 @@ type MaybeSharedValue<Value> = Value | Value extends AnimatableValue
   ? SharedValue<Value>
   : never;
 
-export type MaybeSharedValueRecursive<Value> =
-  Value extends (infer InnerValue)[]
-    ?
-        | SharedValue<InnerValue[]>
-        | (MaybeSharedValueRecursive<InnerValue> | InnerValue)[]
-    : Value extends object
-    ?
-        | SharedValue<Value>
-        | { [K in keyof Value]: MaybeSharedValueRecursive<Value[K]> | Value[K] }
-    : MaybeSharedValue<Value>;
+type MaybeSharedValueRecursive<Value> = Value extends (infer InnerValue)[]
+  ?
+      | SharedValue<InnerValue[]>
+      | (MaybeSharedValueRecursive<InnerValue> | InnerValue)[]
+  : Value extends object
+  ?
+      | SharedValue<Value>
+      | { [K in keyof Value]: MaybeSharedValueRecursive<Value[K]> | Value[K] }
+  : MaybeSharedValue<Value>;
 
 type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
 
