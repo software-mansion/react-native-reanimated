@@ -26,12 +26,7 @@ import type {
   SharedValue,
   StyleProps,
 } from '../commonTypes';
-import type {
-  ImageStyle,
-  RegisteredStyle,
-  TextStyle,
-  ViewStyle,
-} from 'react-native';
+import type { RegisteredStyle } from 'react-native';
 import type { AnimatedStyle } from '../helperTypes';
 
 export interface AnimatedStyleResult {
@@ -198,7 +193,12 @@ function styleUpdater(
     const value = newValues[key];
     if (isAnimated(value)) {
       frameTimestamp = global.__frameTimestamp || performance.now();
-      prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
+      prepareAnimation(
+        frameTimestamp as any,
+        value,
+        animations[key],
+        oldValues[key]
+      );
       animations[key] = value;
       hasAnimations = true;
     } else {
@@ -405,9 +405,7 @@ export type AnimatedStyleProp<T> =
   | RegisteredStyle<AnimatedStyle<T>>;
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type useAnimatedStyleType = <
-  T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
->(
+type useAnimatedStyleType = <T extends AnimatedStyle>(
   updater: () => T,
   deps?: DependencyList | null
 ) => T;
@@ -486,7 +484,7 @@ For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/
         'worklet';
         const newValues = updater();
         adaptersArray.forEach((adapter) => {
-          adapter(newValues);
+          adapter(newValues as any);
         });
         return newValues;
       };

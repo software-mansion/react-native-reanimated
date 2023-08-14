@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /*
 This file is a legacy remainder of manual types from react-native-reanimated.d.ts file. 
 I wasn't able to get rid of all of them from the code. 
@@ -8,9 +7,11 @@ This will not be easy though!
 */
 
 import type {
-  ColorValue,
+  ImageStyle,
   StyleProp,
-  TransformsStyle as RNTransformsStyle,
+  TextStyle,
+  TransformsStyle,
+  ViewStyle,
 } from 'react-native';
 import type { AnimatableValue, SharedValue } from './commonTypes';
 import type { BaseAnimationBuilder } from './layoutReanimation/animationBuilder/BaseAnimationBuilder';
@@ -22,68 +23,34 @@ import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Ke
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 import type { DependencyList } from './hook/commonTypes';
 
-/**
- * @deprecated This type is no longer relevant.
- */
-export type Adaptable<T> =
-  | T
-  | ReadonlyArray<T | ReadonlyArray<T>>
-  | SharedValue<T>;
+export type TransformArrayItem = NonNullable<
+  TransformsStyle['transform']
+>[number];
 
-/**
- * @deprecated This type is no longer relevant.
- */
-export type AdaptTransforms<T> = {
-  [P in keyof T]: Adaptable<T[P]>;
-};
+export type AnimatedTransform = MaybeSharedValueRecursive<
+  TransformsStyle['transform']
+>;
 
-type RNTransformType = RNTransformsStyle['transform'];
-
-export type ExtractArrayItem<Arr> = Arr extends readonly (infer Item)[]
-  ? Item
+type MaybeSharedValue<Value> = Value | Value extends AnimatableValue
+  ? SharedValue<Value>
   : never;
 
-/**
- * @deprecated Please use `TransformArrayItem` type instead.
- */
-export type TransformStyleTypes = ExtractArrayItem<RNTransformType>;
+export type MaybeSharedValueRecursive<Value> =
+  Value extends (infer InnerValue)[]
+    ?
+        | SharedValue<InnerValue[]>
+        | (MaybeSharedValueRecursive<InnerValue> | InnerValue)[]
+    : Value extends object
+    ?
+        | SharedValue<Value>
+        | { [K in keyof Value]: MaybeSharedValueRecursive<Value[K]> | Value[K] }
+    : MaybeSharedValue<Value>;
 
-export type TransformArrayItem = TransformStyleTypes;
+type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
 
-// Note: why is `readonly` here? For safety.
-// In TS `ReadonlyArray` is a supertype of `Array`,
-// therefore `Array` can be assigned to `ReadonlyArray` but
-// `ReadonlyArray` cannot be assigned to `Array`.
-export type AnimatedTransform =
-  | readonly (TransformArrayItem | SharedValue<TransformArrayItem>)[]
-  | RNTransformType;
-
-/**
- * @deprecated Please use `AnimatedStyle` type instead.
- */
-export type AnimateStyle<S> = {
-  [K in keyof S]: K extends 'transform'
-    ? AnimatedTransform
-    : S[K] extends ReadonlyArray<any>
-    ? ReadonlyArray<AnimateStyle<S[K][0]>>
-    : S[K] extends object
-    ? AnimateStyle<S[K]>
-    : S[K] extends ColorValue | undefined
-    ? S[K] | number
-    : S[K] | SharedValue<AnimatableValue>;
-};
-
-export type AnimatedStyle<S> = AnimateStyle<S>;
-
-// provided types can either be their original types (like backgroundColor: pink)
-// or inline shared values/derived values
-type MaybeSharedValue<S> = {
-  [K in keyof S]: S[K] | Readonly<SharedValue<Extract<S[K], AnimatableValue>>>;
-};
-
-export type StylesOrDefault<T> = 'style' extends keyof T
-  ? MaybeSharedValue<T['style']>
-  : Record<string, unknown>;
+export type AnimatedStyle<Style = DefaultStyle> =
+  | Style
+  | MaybeSharedValueRecursive<Style>;
 
 type EntryOrExitLayoutType =
   | BaseAnimationBuilder
@@ -91,7 +58,7 @@ type EntryOrExitLayoutType =
   | EntryExitAnimationFunction
   | ReanimatedKeyframe;
 
-/* 
+/*
   Style type properties (properties that extends StyleProp<ViewStyle>)
   can be defined with other property names than "style". For example `contentContainerStyle` in FlatList.
   Type definition for all style type properties should act similarly, hence we
@@ -100,18 +67,14 @@ type EntryOrExitLayoutType =
 type PickStyleProps<T> = Pick<
   T,
   {
-    [Key in keyof T]-?: Key extends `${string}Style` ? Key : never;
+    [Key in keyof T]-?: Key extends `${string}Style` | 'style' ? Key : never;
   }[keyof T]
 >;
 
-type StyleAnimatedProps<P extends object> = {
+type StyleProps<P extends object> = {
   [K in keyof PickStyleProps<P>]: StyleProp<
-    AnimatedStyle<P[K] | MaybeSharedValue<P[K]>>
+    AnimatedStyle<PickStyleProps<P>[K]>
   >;
-};
-
-type JustStyleAnimatedProp<P extends object> = {
-  style?: StyleProp<AnimatedStyle<StylesOrDefault<P>>>;
 };
 
 type NonStyleAnimatedProps<P extends object> = {
@@ -134,22 +97,19 @@ type SharedTransitionProps = {
   sharedTransitionStyle?: SharedTransition;
 };
 
-type AnimatedPropsProp<P extends object> = NonStyleAnimatedProps<P> &
-  JustStyleAnimatedProp<P> &
-  StyleAnimatedProps<P> &
+type AnimatedPropsProp<Props extends object> = NonStyleAnimatedProps<Props> &
+  StyleProps<Props> &
   LayoutProps &
   SharedTransitionProps;
 
-export type AnimateProps<P extends object> = NonStyleAnimatedProps<P> &
-  JustStyleAnimatedProp<P> &
-  StyleAnimatedProps<P> &
+export type AnimateProps<Props extends object> = NonStyleAnimatedProps<Props> &
+  StyleProps<Props> &
   LayoutProps &
   SharedTransitionProps & {
-    animatedProps?: Partial<AnimatedPropsProp<P>>;
+    animatedProps?: Partial<AnimatedPropsProp<Props>>;
   };
 
-// ts-prune-ignore-next This will be used soon
-export type AnimatedProps<P extends object> = AnimateProps<P>;
+export type AnimatedProps<Props extends object> = AnimateProps<Props>;
 
 export type AnimatedPropsAdapterFunction = (
   props: Record<string, unknown>
@@ -163,3 +123,37 @@ export type useAnimatedPropsType = <T extends object>(
     | AnimatedPropsAdapterFunction[]
     | null
 ) => Partial<T>;
+
+// THE LAND OF THE DEPRECATED
+
+/**
+ * @deprecated This type is no longer relevant.
+ */
+export type Adaptable<T> =
+  | T
+  | ReadonlyArray<T | ReadonlyArray<T>>
+  | SharedValue<T>;
+
+/**
+ * @deprecated This type is no longer relevant.
+ */
+export type AdaptTransforms<T> = {
+  [P in keyof T]: Adaptable<T[P]>;
+};
+
+/**
+ * @deprecated Please use `TransformArrayItem` type instead.
+ */
+export type TransformStyleTypes = TransformArrayItem;
+
+/**
+ * @deprecated Please use `AnimatedStyle` type instead.
+ */
+export type AnimateStyle<Style = DefaultStyle> = AnimatedStyle<Style>;
+
+/**
+ * @deprecated This type is no longer relevant.
+ */
+export type StylesOrDefault<T> = 'style' extends keyof T
+  ? MaybeSharedValueRecursive<T['style']>
+  : Record<string, unknown>;

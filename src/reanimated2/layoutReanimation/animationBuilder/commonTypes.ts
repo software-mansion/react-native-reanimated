@@ -1,4 +1,4 @@
-import type { ExtractArrayItem } from '../../helperTypes';
+import { TransformArrayItem } from '../../helperTypes';
 import type { EasingFunction } from '../../Easing';
 import type { StyleProps } from '../../commonTypes';
 
@@ -155,5 +155,5 @@ export type EntryExitAnimationsValues =
   | ExitAnimationsValues;
 
 export type StylePropsWithArrayTransform = StyleProps & {
-  transform?: ExtractArrayItem<StyleProps['transform']>[];
+  transform?: TransformArrayItem[];
 };

@@ -39,9 +39,9 @@ export interface StyleProps extends ViewStyle, TextStyle {
 
 export interface SharedValue<T> {
   value: T;
-  addListener: (listenerID: number, listener: (value: T) => void) => void;
+  addListener: (listenerID: number, listener: (value: any) => void) => void;
   removeListener: (listenerID: number) => void;
-  modify: (modifier: (value: T) => T) => void;
+  modify: (modifier: (value: any) => any) => void;
 }
 
 // The below type is used for HostObjects returned by the JSI API that don't have

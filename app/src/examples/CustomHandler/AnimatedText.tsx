@@ -6,7 +6,11 @@ import {
   TextInputProps,
   TextStyle,
 } from 'react-native';
-import Animated, { useAnimatedProps } from 'react-native-reanimated';
+import Animated, {
+  SharedValue,
+  useAnimatedProps,
+} from 'react-native-reanimated';
+import type { AnimatedStyle } from 'react-native-reanimated';
 
 Animated.addWhitelistedNativeProps({ text: true });
 
@@ -16,9 +20,9 @@ export function AnimatedText({
   style,
   text,
 }: {
-  style?: StyleProp<Animated.AnimateStyle<StyleProp<TextStyle>>>;
-  text: Animated.SharedValue<string>;
-}): React.ReactElement {
+  style?: StyleProp<AnimatedStyle<TextStyle>>;
+  text: SharedValue<string>;
+}) {
   const animatedProps = useAnimatedProps(() => {
     return { text: text.value } as unknown as TextInputProps;
   });
