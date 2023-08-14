@@ -16,7 +16,7 @@ You can use `measure()` only on rendered components. For example, calling `measu
 If you call `measure` inside [`useAnimatedStyle`](../hooks/useAnimatedStyle), you may get the following warning:
 
 > [Reanimated] measure() was called from the main JS context. Measure is only available
-in the UI runtime. (...)
+> in the UI runtime. (...)
 
 That's because in React Native apps, `useAnimatedStyle` worklet is first evaluated on the JS context during the first render, thus before rendering has been completed in native. This is safe to ignore, but if you don't want this warning to appear then wrap the call like this:
 
@@ -28,11 +28,12 @@ if (_WORKLET || isWeb) {
   }
 }
 ```
+
 :::
 
 :::info
 `measure` is not available when Chrome Developer Tools (remote JS debugger) is attached. However, the recommended tool for debugging React Native apps is Flipper (Chrome DevTools) which supports `measure`. Check out more details [here](../../guide/debugging).
-::: 
+:::
 
 ### Arguments
 

@@ -9,6 +9,17 @@ using namespace facebook::react;
 
 namespace reanimated {
 
+ReanimatedCommitHook::ReanimatedCommitHook(
+    const std::shared_ptr<PropsRegistry> &propsRegistry,
+    const std::shared_ptr<UIManager> &uiManager)
+    : propsRegistry_(propsRegistry), uiManager_(uiManager) {
+  uiManager_->registerCommitHook(*this);
+}
+
+ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
+  uiManager_->unregisterCommitHook(*this);
+}
+
 RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &,
     RootShadowNode::Shared const &,
@@ -25,7 +36,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   auto rootNode = newRootShadowNode->ShadowNode::clone(ShadowNodeFragment{});
 
-  ShadowTreeCloner shadowTreeCloner{uiManager_, surfaceId};
+  ShadowTreeCloner shadowTreeCloner{*uiManager_, surfaceId};
 
   {
     auto lock = propsRegistry_->createLock();

@@ -7,6 +7,7 @@ export * from './interpolation';
 export * from './interpolateColor';
 export * from './Easing';
 export * from './NativeMethods';
+export { setNativeProps } from './SetNativeProps';
 export * from './Colors';
 export * from './PropAdapters';
 export * from './layoutReanimation';
