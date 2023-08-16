@@ -27,3 +27,9 @@ export function shouldBeUseWeb() {
 export function nativeShouldBeMock() {
   return isJest() || isChromeDebugger() || isWindows();
 }
+
+export function isReducedMotion() {
+  return isWeb()
+    ? !window.matchMedia('(prefers-reduced-motion: no-preference)').matches
+    : global._REANIMATED_IS_REDUCED_MOTION ?? false;
+}
