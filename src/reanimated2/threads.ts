@@ -1,7 +1,7 @@
 import NativeReanimatedModule from './NativeReanimated';
 import { isJest, shouldBeUseWeb } from './PlatformChecker';
 import type { ComplexWorkletFunction } from './commonTypes';
-import { createWorkletRuntime } from './runtimes';
+import { WorkletRuntime, createWorkletRuntime } from './runtimes';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -142,14 +142,14 @@ export function runOnUIImmediately<A extends any[], R>(
 /**
  * Schedule a worklet to execute on a new thread.
  */
-export function runOnBackground<A extends any[], R>(
+export function runOnRuntime<A extends any[], R>(
+  runtime: WorkletRuntime,
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   if (__DEV__ && IS_NATIVE && worklet.__workletHash === undefined) {
-    throw new Error('runOnBackground() can only be used on worklets');
+    throw new Error('runOnRuntime() can only be used on worklets');
   }
   return (...args) => {
-    const runtime = createWorkletRuntime('Background');
     NativeReanimatedModule.scheduleOnBackground(
       runtime,
       makeShareableCloneRecursive(() => {
@@ -160,14 +160,20 @@ export function runOnBackground<A extends any[], R>(
   };
 }
 
+export interface BackgroundTaskConfig {
+  runtime?: WorkletRuntime;
+}
+
 export function backgroundTask<T>(
-  func: ComplexWorkletFunction<[], T>
+  worklet: ComplexWorkletFunction<[], T>,
+  config?: BackgroundTaskConfig
 ): Promise<T> {
+  const runtime = config?.runtime ?? createWorkletRuntime('Background');
   return new Promise((resolve, reject) => {
-    runOnBackground(() => {
+    runOnRuntime(runtime, () => {
       'worklet';
       try {
-        const result = func();
+        const result = worklet();
         runOnJS(resolve)(result);
       } catch (error) {
         runOnJS(reject)(error);

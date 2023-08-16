@@ -21,7 +21,8 @@ import type {
 import { SensorContainer } from './SensorContainer';
 
 export { startMapper, stopMapper } from './mappers';
-export { runOnJS, runOnUI, runOnBackground, backgroundTask } from './threads';
+export { runOnJS, runOnUI, runOnRuntime, backgroundTask } from './threads';
+export type { BackgroundTaskConfig } from './threads';
 export { makeShareable } from './shareables';
 export { makeMutable, makeRemote } from './mutables';
 export {
