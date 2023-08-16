@@ -1,15 +1,17 @@
 import * as React from 'react';
-import { View, Button, StyleSheet } from 'react-native';
-import { ParamListBase } from '@react-navigation/native';
-import {
-  createNativeStackNavigator,
-  NativeStackScreenProps,
-} from '@react-navigation/native-stack';
+
 import Animated, {
   ReduceMotion,
   SharedTransition,
   withSpring,
 } from 'react-native-reanimated';
+import { Button, StyleSheet, View } from 'react-native';
+import {
+  NativeStackScreenProps,
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
+
+import { ParamListBase } from '@react-navigation/native';
 
 const Stack = createNativeStackNavigator();
 
@@ -119,7 +121,7 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
   );
 }
 
-export default function CustomTransitionExample() {
+export default function ReducedMotionSharedExample() {
   return (
     <Stack.Navigator>
       <Stack.Screen
