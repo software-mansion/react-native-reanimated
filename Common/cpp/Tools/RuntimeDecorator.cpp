@@ -160,7 +160,8 @@ void versionCheck(jsi::Runtime &rnRuntime) {
       rnRuntime.global().getProperty(rnRuntime, "_REANIMATED_VERSION_JS");
   if (maybeJSVersion.isUndefined()) {
     throw std::runtime_error(
-        "[Reanimated] Native side failed to resolved JS version of `react-native-reanimated`\n" +
+        std::string(
+            "[Reanimated] Native side failed to resolved JS version of `react-native-reanimated`\n") +
         "See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-native-side-failed-to-resolved-js-version-of-react-native-reanimated` for more details.");
   }
 
@@ -169,7 +170,8 @@ void versionCheck(jsi::Runtime &rnRuntime) {
 
   if (JSVersion != cppVersion) {
     throw std::runtime_error(
-        "[Reanimated] Native mismatch between JS version of `react-native-reanimated` and C++ version (" +
+        std::string(
+            "[Reanimated] Native mismatch between JS version of `react-native-reanimated` and C++ version (") +
         cppVersion + " vs " + "JSVersion" + ")\n" +
         "See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-native-mismatch-between-js-version-of-react-native-reanimated-and-c-version` for more details.");
   }

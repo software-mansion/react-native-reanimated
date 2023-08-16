@@ -257,6 +257,7 @@ android {
         versionCode 1
         versionName "1.0"
         buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString())
+        buildConfigField("String", "_REANIMATED_VERSION_JAVA", "\"${REANIMATED_VERSION}\"")
         externalNativeBuild {
             cmake {
                 arguments "-DANDROID_STL=c++_shared",
