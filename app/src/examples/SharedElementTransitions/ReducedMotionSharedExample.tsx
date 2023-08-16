@@ -80,7 +80,7 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
       {EXAMPLES.map(({ text, transition }, i) => (
         <Animated.View
           key={i}
-          style={styles.greenBoxScreenOne}
+          style={styles.boxScreenOne}
           sharedTransitionTag={'tag1' + text}
           sharedTransitionStyle={transition}>
           <Animated.Text
@@ -105,7 +105,7 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
       {EXAMPLES.map(({ text, transition }, i) => (
         <Animated.View
           key={i}
-          style={styles.greenBoxScreenTwo}
+          style={styles.boxScreenTwo}
           sharedTransitionTag={'tag1' + text}
           sharedTransitionStyle={transition}>
           <Animated.Text
@@ -140,7 +140,7 @@ export default function ReducedMotionSharedExample() {
 
 const styles = StyleSheet.create({
   flexOne: { flex: 1 },
-  greenBoxScreenOne: {
+  boxScreenOne: {
     height: 70,
     width: 150,
     margin: 20,
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderColor: '#b58df1',
   },
-  greenBoxScreenTwo: {
+  boxScreenTwo: {
     height: 70,
     width: 300,
     margin: 20,
