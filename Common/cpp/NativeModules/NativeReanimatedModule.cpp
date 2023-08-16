@@ -452,7 +452,7 @@ bool NativeReanimatedModule::handleEvent(
     const jsi::Value &payload,
     double currentTime) {
   eventHandlerRegistry_->processEvent(
-      *uiWorkletRuntime_, currentTime, eventName, emitterReactTag, payload);
+      uiWorkletRuntime_, currentTime, eventName, emitterReactTag, payload);
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript

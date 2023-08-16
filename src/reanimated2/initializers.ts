@@ -29,7 +29,7 @@ export function callGuardDEV<T extends Array<unknown>, U>(
   }
 }
 
-export function valueUnpacker(objectToUnpack: any, category?: string): any {
+function valueUnpacker(objectToUnpack: any, category?: string): any {
   'worklet';
   let workletsCache = global.__workletsCache;
   let handleCache = global.__handleCache;
@@ -100,7 +100,7 @@ if (__DEV__ && IS_NATIVE) {
   if (!('__workletHash' in valueUnpacker)) {
     throw new Error('[Reanimated] `valueUnpacker` is not a worklet');
   }
-  // @ts-ignore TODO TYPESCRIPTa
+  // @ts-ignore TODO TYPESCRIPT
   const closure = valueUnpacker.__closure;
   if (closure !== undefined && Object.keys(closure).length !== 0) {
     throw new Error('[Reanimated] `vlueUnpacker` must have empty closure');

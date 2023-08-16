@@ -16,8 +16,7 @@ import type { SensorContainer } from './SensorContainer';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
 import type { ProgressTransitionRegister } from './layoutReanimation/sharedTransitions';
 import type { UpdatePropsManager } from './UpdateProps';
-import type { WorkletRuntime } from './runtimes';
-import type { callGuardDEV, valueUnpacker } from './initializers';
+import type { callGuardDEV } from './initializers';
 
 declare global {
   var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
@@ -25,17 +24,7 @@ declare global {
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
   var __reanimatedModuleProxy: NativeReanimatedModule | undefined;
-  var __valueUnpacker: typeof valueUnpacker | undefined;
   var __callGuardDEV: typeof callGuardDEV | undefined;
-  // TODO: move to NativeReanimatedModule?
-  var _createWorkletRuntime: (
-    name: string,
-    valueUnpackerCode: string
-  ) => WorkletRuntime;
-  var _runOnRuntime: (
-    runtime: WorkletRuntime,
-    worklet: ShareableRef<ComplexWorkletFunction<[], void>>
-  ) => void;
   var evalWithSourceMap:
     | ((js: string, sourceURL: string, sourceMap: string) => any)
     | undefined;

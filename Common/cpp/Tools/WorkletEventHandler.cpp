@@ -3,10 +3,10 @@
 namespace reanimated {
 
 void WorkletEventHandler::process(
-    const WorkletRuntime &workletRuntime,
+    const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const double eventTimestamp,
     const jsi::Value &eventValue) const {
-  workletRuntime.runGuarded(
+  workletRuntime->runGuarded(
       handlerFunction_, jsi::Value(eventTimestamp), eventValue);
 }
 

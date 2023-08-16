@@ -29,7 +29,7 @@ class WorkletEventHandler {
         eventName_(eventName),
         handlerFunction_(handlerFunction) {}
   void process(
-      const WorkletRuntime &workletRuntime,
+      const std::shared_ptr<WorkletRuntime> &workletRuntime,
       double eventTimestamp,
       const jsi::Value &eventValue) const;
   uint64_t getHandlerId() const;

@@ -51,6 +51,7 @@ std::vector<jsi::PropNameID> WorkletRuntime::getPropertyNames(
     jsi::Runtime &rt) {
   std::vector<jsi::PropNameID> result;
   result.push_back(jsi::PropNameID::forUtf8(rt, "toString"));
+  result.push_back(jsi::PropNameID::forUtf8(rt, "name"));
   return result;
 }
 
