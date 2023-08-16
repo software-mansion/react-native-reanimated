@@ -23,6 +23,21 @@ import {
   LayoutTransitionsData,
 } from './webAnimationsData';
 
+export function insertWebAnimations(): void {
+  if (document.getElementById(WEB_ANIMATIONS_ID) !== null) {
+    return;
+  }
+
+  const style = document.createElement('style');
+  style.id = WEB_ANIMATIONS_ID;
+
+  document.head.appendChild(style);
+
+  for (const animationName in Animations) {
+    style.sheet?.insertRule(Animations[animationName as AnimationsTypes].style);
+  }
+}
+
 function parseObjectStyleToString(object: AnimationData): string {
   let styleStr = `@keyframes ${object.name} { `;
 
@@ -77,6 +92,10 @@ export function setElementAnimation(
   element.style.animationDelay = `${delay}s`;
   element.style.animationTimingFunction = easing;
   element.style.animationFillMode = 'forwards'; // Prevents returning to base state after animation finishes
+}
+
+export function areDOMRectsEqual(r1: DOMRect, r2: DOMRect): boolean {
+  return JSON.stringify(r1) === JSON.stringify(r2);
 }
 
 export function saveStyleAfterAnimation(element: HTMLElement): void {
@@ -507,6 +526,120 @@ export const Animations = {
   ...RotateOut,
   ...Roll,
 };
+
+// Transitions
+
+function generateRandomKeyframeName() {
+  const characters =
+    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const length = 50;
+  let keyframeName = '';
+
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    keyframeName += characters[randomIndex];
+  }
+
+  return keyframeName;
+}
+
+function LinearTransition(
+  name: string,
+  dx: string,
+  dy: string,
+  scaleX: number,
+  scaleY: number
+) {
+  return `@keyframes ${name} {
+                  100% {
+                    transform: translateX(${dx}) translateY(${dy}) scale(${scaleX},${scaleY});
+                  }
+                }`;
+}
+
+function SequencedTransition(
+  name: string,
+  dx: string,
+  dy: string,
+  scaleX: number,
+  scaleY: number,
+  reversed: boolean
+) {
+  const translate = `translate${reversed ? 'Y' : 'X'}(${reversed ? dy : dx})`;
+
+  const scaleValue = reversed
+    ? `1, ${scaleY.toString()}`
+    : `${scaleX.toString()}, 1`;
+
+  return `@keyframes ${name} {
+                50% {
+                  transform: ${translate} scale(${scaleValue});
+                }
+                100% {
+                  transform: translateX(${dx}) translateY(${dy}) scale(${scaleX}, ${scaleY});
+                }
+              }`;
+}
+
+function FadingTransition(
+  name: string,
+  dx: string,
+  dy: string,
+  scaleX: number,
+  scaleY: number
+) {
+  return `@keyframes ${name} {
+                20% {
+                  opacity: 0;
+                  transform: translateX(0) translateY(0);
+                }
+                80% {
+                  opacity: 0;
+                  transform: translateX(${dx}) translateY(${dy}) scale(${scaleX}, ${scaleY});
+                }
+                100% {
+                  opacity: 1;
+                  transform: translateX(${dx}) translateY(${dy}) scale(${scaleX}, ${scaleY});
+                }
+              }`;
+}
+
+export enum TransitionType {
+  LINEAR,
+  SEQUENCED,
+  FADING,
+}
+
+export function TransitionGenerator(
+  transitionType: TransitionType,
+  dx: string,
+  dy: string,
+  scaleX: number,
+  scaleY: number,
+  reversed = false
+) {
+  const name = generateRandomKeyframeName();
+  let transition;
+
+  switch (transitionType) {
+    case TransitionType.LINEAR:
+      transition = LinearTransition(name, dx, dy, scaleX, scaleY);
+      break;
+    case TransitionType.SEQUENCED:
+      transition = SequencedTransition(name, dx, dy, scaleX, scaleY, reversed);
+      break;
+    case TransitionType.FADING:
+      transition = FadingTransition(name, dx, dy, scaleX, scaleY);
+      break;
+  }
+
+  const styleTag = document.getElementById(
+    WEB_ANIMATIONS_ID
+  ) as HTMLStyleElement;
+  styleTag.sheet?.insertRule(transition);
+
+  return name;
+}
 
 export const WEB_ANIMATIONS_ID = 'webAnimationsStyle';
 

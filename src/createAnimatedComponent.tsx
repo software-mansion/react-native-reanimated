@@ -59,9 +59,10 @@ import {
   Animations,
   AnimationsTypes,
   LayoutTransitions,
-  WEB_ANIMATIONS_ID,
+  areDOMRectsEqual,
   getEasing,
   getRandomDelay,
+  insertWebAnimations,
   saveStyleAfterAnimation,
   setElementAnimation,
 } from './reanimated2/platform-specific/webAnimations';
@@ -328,7 +329,7 @@ export default function createAnimatedComponent(
       this._attachInlineProps();
 
       if (isWeb()) {
-        this.insertWebAnimations();
+        insertWebAnimations();
         this.handleWebAnimation(LayoutAnimationType.ENTERING);
       }
     }
@@ -623,11 +624,19 @@ export default function createAnimatedComponent(
     }
 
     componentDidUpdate(
-      prevProps: AnimatedComponentProps<InitialComponentProps>
-    ) {
+      prevProps: AnimatedComponentProps<InitialComponentProps>,
+      prevState: Readonly<unknown>,
+      snapshot?: any
+    ): void {
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
       this._attachInlineProps();
+
+      if (IS_WEB) {
+        const rect = (this._component as HTMLElement).getBoundingClientRect();
+
+        console.log(areDOMRectsEqual(rect, snapshot));
+      }
     }
 
     _setComponentRef = setAndForwardRef<Component | HTMLElement>({
@@ -770,7 +779,8 @@ export default function createAnimatedComponent(
     getSnapshotBeforeUpdate() {
       // prevState: Readonly<{}> // prevProps: Readonly<AnimatedComponentProps<InitialComponentProps>>,
       if (isWeb()) {
-        this.handleWebAnimation(LayoutAnimationType.LAYOUT);
+        // return this._component.getBoundingClientRect();
+        // this.handleWebAnimation(LayoutAnimationType.LAYOUT);
       }
       return null;
     }
@@ -861,23 +871,6 @@ export default function createAnimatedComponent(
 
         tmpElement.onanimationend = () =>
           parent?.contains(tmpElement) ? parent.removeChild(tmpElement) : null;
-      }
-    }
-
-    insertWebAnimations(): void {
-      if (document.getElementById(WEB_ANIMATIONS_ID) !== null) {
-        return;
-      }
-
-      const style = document.createElement('style');
-      style.id = WEB_ANIMATIONS_ID;
-
-      document.head.appendChild(style);
-
-      for (const animationName in Animations) {
-        style.sheet?.insertRule(
-          Animations[animationName as AnimationsTypes].style
-        );
       }
     }
 
