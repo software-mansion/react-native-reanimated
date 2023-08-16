@@ -36,13 +36,7 @@ NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<CallInvoker> &jsInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::shared_ptr<jsi::Runtime> &rt,
-#ifdef RCT_NEW_ARCH_ENABLED
-// nothing
-#else
-    std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
-        propObtainer,
-#endif
-    PlatformDepMethodsHolder platformDepMethodsHolder)
+    const PlatformDepMethodsHolder &platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
       runtimeManager_(std::make_shared<RuntimeManager>(
           rt,
@@ -54,7 +48,7 @@ NativeReanimatedModule::NativeReanimatedModule(
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
-      propObtainer(propObtainer),
+      obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
 #endif
       animatedSensorModule(platformDepMethodsHolder),
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -376,7 +370,8 @@ jsi::Value NativeReanimatedModule::getViewProp(
         jsi::Runtime &uiRuntime = *runtimeManager_->runtime;
         const jsi::String propNameValue =
             jsi::String::createFromUtf8(uiRuntime, propNameStr);
-        jsi::Value result = propObtainer(uiRuntime, viewTagInt, propNameValue);
+        jsi::Value result =
+            obtainPropFunction_(uiRuntime, viewTagInt, propNameValue);
         std::string resultStr = result.asString(uiRuntime).utf8(uiRuntime);
 
         runtimeManager_->jsScheduler_->scheduleOnJS(

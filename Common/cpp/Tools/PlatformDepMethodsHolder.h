@@ -51,7 +51,7 @@ using MeasureFunction =
 
 using RequestRenderFunction =
     std::function<void(std::function<void(double)>, jsi::Runtime &rt)>;
-using PropObtainerFunction =
+using ObtainPropFunction =
     std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>;
 using TimeProviderFunction = std::function<double(void)>;
 
@@ -82,7 +82,7 @@ struct PlatformDepMethodsHolder {
   DispatchCommandFunction dispatchCommandFunction;
   MeasureFunction measureFunction;
   ConfigurePropsFunction configurePropsFunction;
-  PropObtainerFunction propObtainerFunction;
+  ObtainPropFunction obtainPropFunction;
 #endif
   TimeProviderFunction getCurrentTime;
   ProgressLayoutAnimationFunction progressLayoutAnimation;

@@ -35,13 +35,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const std::shared_ptr<CallInvoker> &jsInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<jsi::Runtime> &rt,
-#ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
-#else
-      std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
-          propObtainer,
-#endif
-      PlatformDepMethodsHolder platformDepMethodsHolder);
+      const PlatformDepMethodsHolder &platformDepMethodsHolder);
 
   ~NativeReanimatedModule();
 
@@ -171,8 +165,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   const RequestRenderFunction requestRender;
   std::vector<FrameCallback> frameCallbacks;
   bool renderRequested = false;
-  std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
-      propObtainer;
+  const ObtainPropFunction obtainPropFunction_;
   std::function<void(double)> onRenderCallback;
   AnimatedSensorModule animatedSensorModule;
   ConfigurePropsFunction configurePropsPlatformFunction;
