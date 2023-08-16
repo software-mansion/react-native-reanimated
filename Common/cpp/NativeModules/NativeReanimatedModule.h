@@ -68,8 +68,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &worklet) override;
   void runOnRuntimeSync(
       jsi::Runtime &rt,
-      const jsi::Value &workletRuntimeValue,
-      const jsi::Value &shareableWorkletValue) override;
+      const jsi::Value &runtime,
+      const jsi::Value &worklet) override;
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
