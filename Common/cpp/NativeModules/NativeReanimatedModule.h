@@ -168,7 +168,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 #endif // RCT_NEW_ARCH_ENABLED
 
   std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry;
-  std::function<void(FrameCallback &, jsi::Runtime &)> requestRender;
+  const RequestRenderFunction requestRender;
   std::vector<FrameCallback> frameCallbacks;
   bool renderRequested = false;
   std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>

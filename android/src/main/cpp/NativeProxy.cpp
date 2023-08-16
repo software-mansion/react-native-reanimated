@@ -427,6 +427,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto scrollToFunction = bindThis(&NativeProxy::scrollTo);
 
   auto dispatchCommandFunction = bindThis(&NativeProxy::dispatchCommand);
+
+  auto propObtainer = bindThis(&NativeProxy::obtainProp);
 #endif
 
   auto getCurrentTime = bindThis(&NativeProxy::getCurrentTime);
@@ -471,6 +473,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       dispatchCommandFunction,
       measureFunction,
       configurePropsFunction,
+      propObtainer,
 #endif
       getCurrentTime,
       progressLayoutAnimation,

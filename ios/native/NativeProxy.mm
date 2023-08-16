@@ -266,6 +266,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       dispatchCommandFunction,
       measureFunction,
       configurePropsFunction,
+      propObtainer,
 #endif
       getCurrentTime,
       progressLayoutAnimation,
