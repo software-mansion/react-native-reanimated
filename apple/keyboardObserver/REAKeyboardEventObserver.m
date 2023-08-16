@@ -65,6 +65,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 }
 
 #elif TARGET_OS_OSX
+
 - (int)subscribeForKeyboardEvents:(KeyboardEventListenerBlock)listener
 {
   NSLog(@"Keyboard handling is not supported on macOS");
