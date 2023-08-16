@@ -372,7 +372,7 @@ void NativeProxy::handleEvent(
     jni::alias_ref<react::WritableMap> event) {
   // handles RCTEvents from RNGestureHandler
   if (event.get() == nullptr) {
-    // Ignore events with empty payload.
+    // Ignore events with null payload.
     return;
   }
   // TODO: convert event directly to jsi::Value without JSON serialization
