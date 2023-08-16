@@ -105,7 +105,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const std::string &eventName,
       const int emitterReactTag);
 
-  void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
   void maybeRequestRender();
 
   bool handleEvent(
@@ -163,6 +162,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   }
 
  private:
+  void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
+
 #ifdef RCT_NEW_ARCH_ENABLED
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Object &props);
 #endif // RCT_NEW_ARCH_ENABLED
