@@ -181,7 +181,7 @@ describe('Matrix util functions', () => {
         [1, 1, 1, 0],
       ];
       expect(() => decomposeMatrix(incorrectMatrix)).toThrowError(
-        new Error('Invalid transform matrix!')
+        new Error('[Reanimated] Invalid transform matrix!')
       );
     });
 

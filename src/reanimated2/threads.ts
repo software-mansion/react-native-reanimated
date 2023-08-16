@@ -147,7 +147,7 @@ if (__DEV__ && IS_NATIVE) {
   // @ts-ignore plugin
   if (f.__workletHash === undefined) {
     throw new Error(
-      `[Reanimated] Failed to create a worklet. See \`http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-failed-to-create-a-worklet\` for more details.`
+      `[Reanimated] Failed to create a worklet. See \`http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet\` for more details.`
     );
   }
 }

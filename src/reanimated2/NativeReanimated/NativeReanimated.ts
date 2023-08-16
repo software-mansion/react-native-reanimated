@@ -94,8 +94,8 @@ export class NativeReanimated {
 
     if (global.__reanimatedModuleProxy === undefined) {
       throw new Error(
-        `[Reanimated] The native part of Reanimated doesn't seem to be initialized.
-See http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-the-native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
+        `[Reanimated] Native part of Reanimated doesn't seem to be initialized.
+See http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#Native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
     if (!shouldBeUseNotDebug) {
