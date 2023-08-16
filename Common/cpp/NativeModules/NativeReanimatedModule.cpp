@@ -201,13 +201,24 @@ void NativeReanimatedModule::scheduleOnUI(
   });
 }
 
-void NativeReanimatedModule::scheduleOnBackground(
+jsi::Value NativeReanimatedModule::createWorkletRuntime(
+    jsi::Runtime &rt,
+    const jsi::Value &name,
+    const jsi::Value &valueUnpackerCode) {
+  auto nameString = name.asString(rt).utf8(rt);
+  auto valueUnpackerCodeString = valueUnpackerCode.asString(rt).utf8(rt);
+  auto workletRuntime = std::make_shared<WorkletRuntime>(rt, nameString);
+  workletRuntime->installValueUnpacker(valueUnpackerCodeString);
+  return jsi::Object::createFromHostObject(rt, workletRuntime);
+}
+
+void NativeReanimatedModule::runOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &runtime,
     const jsi::Value &worklet) {
   auto workletRuntime = extractWorkletRuntime(rt, runtime);
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
-      rt, worklet, "only worklets can be scheduled to run on background");
+      rt, worklet, "only worklets can be scheduled to run on worklet runtime");
   std::thread job([=] {
 #ifdef __ANDROID__
     jni::ThreadScope::WithClassLoader([=] { // thread attached to JVM
@@ -220,24 +231,13 @@ void NativeReanimatedModule::scheduleOnBackground(
   job.detach();
 }
 
-jsi::Value NativeReanimatedModule::createWorkletRuntime(
+void NativeReanimatedModule::runOnRuntimeSync(
     jsi::Runtime &rt,
-    const jsi::Value &name,
-    const jsi::Value &valueUnpackerCode) {
-  auto nameString = name.asString(rt).utf8(rt);
-  auto valueUnpackerCodeString = valueUnpackerCode.asString(rt).utf8(rt);
-  auto workletRuntime = std::make_shared<WorkletRuntime>(rt, nameString);
-  workletRuntime->installValueUnpacker(valueUnpackerCodeString);
-  return jsi::Object::createFromHostObject(rt, workletRuntime);
-}
-
-void NativeReanimatedModule::runOnWorkletRuntimeSyncUnsafe(
-    jsi::Runtime &rt,
-    const jsi::Value &workletRuntimeValue,
-    const jsi::Value &shareableWorkletValue) {
-  auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
+    const jsi::Value &runtime,
+    const jsi::Value &worklet) {
+  auto workletRuntime = extractWorkletRuntime(rt, runtime);
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
-      rt, shareableWorkletValue, "only worklets can be scheduled");
+      rt, worklet, "only worklets can be run on worklet runtime");
   workletRuntime->runGuarded(shareableWorklet);
 }
 

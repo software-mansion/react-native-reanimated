@@ -25,12 +25,12 @@ export interface NativeReanimatedModule {
   ): ShareableSyncDataHolderRef<T>;
   getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>): T;
   scheduleOnUI<T>(shareable: ShareableRef<T>): void;
-  scheduleOnBackground<T>(
-    runtime: WorkletRuntime,
-    shareable: ShareableRef<T>
-  ): void;
   createWorkletRuntime(name: string, valueUnpackerCode: string): WorkletRuntime;
-  runOnWorkletRuntimeSyncUnsafe(
+  runOnRuntime(
+    runtime: WorkletRuntime,
+    shareable: ShareableRef<ComplexWorkletFunction<[], void>>
+  ): void;
+  runOnRuntimeSync(
     runtime: WorkletRuntime,
     worklet: ShareableRef<ComplexWorkletFunction<[], void>>
   ): void;
@@ -111,22 +111,22 @@ export class NativeReanimated {
     return this.InnerNativeModule.scheduleOnUI(shareable);
   }
 
-  scheduleOnBackground<T>(runtime: WorkletRuntime, worklet: ShareableRef<T>) {
-    return this.InnerNativeModule.scheduleOnBackground(runtime, worklet);
-  }
-
   createWorkletRuntime(name: string, valueUnpackerCode: string) {
     return this.InnerNativeModule.createWorkletRuntime(name, valueUnpackerCode);
   }
 
-  runOnWorkletRuntimeSyncUnsafe(
+  runOnRuntime(
     runtime: WorkletRuntime,
     worklet: ShareableRef<ComplexWorkletFunction<[], void>>
   ) {
-    return this.InnerNativeModule.runOnWorkletRuntimeSyncUnsafe(
-      runtime,
-      worklet
-    );
+    return this.InnerNativeModule.runOnRuntime(runtime, worklet);
+  }
+
+  runOnRuntimeSync(
+    runtime: WorkletRuntime,
+    worklet: ShareableRef<ComplexWorkletFunction<[], void>>
+  ) {
+    return this.InnerNativeModule.runOnRuntimeSync(runtime, worklet);
   }
 
   registerSensor(

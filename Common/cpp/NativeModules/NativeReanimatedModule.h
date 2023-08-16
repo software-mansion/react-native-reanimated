@@ -57,15 +57,16 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &newData);
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
-  void scheduleOnBackground(
-      jsi::Runtime &rt,
-      const jsi::Value &runtime,
-      const jsi::Value &worklet) override;
+
   jsi::Value createWorkletRuntime(
       jsi::Runtime &rt,
       const jsi::Value &name,
       const jsi::Value &valueUnpackerCode) override;
-  void runOnWorkletRuntimeSyncUnsafe(
+  void runOnRuntime(
+      jsi::Runtime &rt,
+      const jsi::Value &runtime,
+      const jsi::Value &worklet) override;
+  void runOnRuntimeSync(
       jsi::Runtime &rt,
       const jsi::Value &workletRuntimeValue,
       const jsi::Value &shareableWorkletValue) override;

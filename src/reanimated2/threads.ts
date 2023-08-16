@@ -1,7 +1,8 @@
 import NativeReanimatedModule from './NativeReanimated';
 import { isJest, shouldBeUseWeb } from './PlatformChecker';
 import type { ComplexWorkletFunction } from './commonTypes';
-import { WorkletRuntime, createWorkletRuntime } from './runtimes';
+import { createWorkletRuntime } from './runtimes';
+import type { WorkletRuntime } from './runtimes';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -140,7 +141,7 @@ export function runOnUIImmediately<A extends any[], R>(
 }
 
 /**
- * Schedule a worklet to execute on a new thread.
+ * Schedule a worklet to execute on the provided runtime on a new thread.
  */
 export function runOnRuntime<A extends any[], R>(
   runtime: WorkletRuntime,
@@ -150,7 +151,28 @@ export function runOnRuntime<A extends any[], R>(
     throw new Error('runOnRuntime() can only be used on worklets');
   }
   return (...args) => {
-    NativeReanimatedModule.scheduleOnBackground(
+    NativeReanimatedModule.runOnRuntime(
+      runtime,
+      makeShareableCloneRecursive(() => {
+        'worklet';
+        worklet(...args);
+      })
+    );
+  };
+}
+
+/**
+ * Execute a worklet on the provided runtime synchronously on the current thread.
+ */
+export function runOnRuntimeSync<A extends any[], R>(
+  runtime: WorkletRuntime,
+  worklet: ComplexWorkletFunction<A, R>
+): (...args: A) => void {
+  if (__DEV__ && IS_NATIVE && worklet.__workletHash === undefined) {
+    throw new Error('runOnRuntimeSync() can only be used on worklets');
+  }
+  return (...args) => {
+    NativeReanimatedModule.runOnRuntimeSync(
       runtime,
       makeShareableCloneRecursive(() => {
         'worklet';

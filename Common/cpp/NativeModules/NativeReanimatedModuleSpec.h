@@ -42,18 +42,18 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
 
   // Scheduling
   virtual void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) = 0;
-  virtual void scheduleOnBackground(
-      jsi::Runtime &rt,
-      const jsi::Value &runtime,
-      const jsi::Value &worklet) = 0;
   virtual jsi::Value createWorkletRuntime(
       jsi::Runtime &rt,
       const jsi::Value &name,
       const jsi::Value &valueUnpackerCode) = 0;
-  virtual void runOnWorkletRuntimeSyncUnsafe(
+  virtual void runOnRuntime(
       jsi::Runtime &rt,
-      const jsi::Value &workletRuntimeValue,
-      const jsi::Value &shareableWorkletValue) = 0;
+      const jsi::Value &runtime,
+      const jsi::Value &worklet) = 0;
+  virtual void runOnRuntimeSync(
+      jsi::Runtime &rt,
+      const jsi::Value &runtime,
+      const jsi::Value &worklet) = 0;
 
   // events
   virtual jsi::Value registerEventHandler(

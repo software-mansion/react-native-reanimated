@@ -21,15 +21,18 @@ import type {
 import { SensorContainer } from './SensorContainer';
 
 export { startMapper, stopMapper } from './mappers';
-export { runOnJS, runOnUI, runOnRuntime, backgroundTask } from './threads';
+export {
+  backgroundTask,
+  runOnJS,
+  runOnUI,
+  runOnRuntime,
+  runOnRuntimeSync,
+} from './threads';
 export type { BackgroundTaskConfig } from './threads';
 export { makeShareable } from './shareables';
 export { makeMutable, makeRemote } from './mutables';
-export {
-  createWorkletRuntime,
-  runOnRuntimeSync,
-  WorkletRuntime,
-} from './runtimes';
+export { createWorkletRuntime } from './runtimes';
+export type { WorkletRuntime } from './runtimes';
 
 export type ReanimatedConsole = Pick<
   Console,

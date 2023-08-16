@@ -6,7 +6,7 @@ import {
   setupConsole,
   setupCoreFunctions,
 } from './initializers';
-import { makeShareableCloneRecursive } from './shareables';
+import { runOnRuntimeSync } from './threads';
 
 export type WorkletRuntime = {
   __hostObjectWorkletRuntime: never;
@@ -27,22 +27,11 @@ export function createWorkletRuntime(
     setupCoreFunctions();
     setupCallGuard();
     setupConsole();
-  });
+  })();
 
   if (initializer !== undefined) {
-    runOnRuntimeSync(runtime, initializer);
+    runOnRuntimeSync(runtime, initializer)();
   }
 
   return runtime;
-}
-
-export function runOnRuntimeSync(
-  runtime: WorkletRuntime,
-  worklet: ComplexWorkletFunction<[], void>
-) {
-  'worklet';
-  NativeReanimatedModule.runOnWorkletRuntimeSyncUnsafe(
-    runtime,
-    makeShareableCloneRecursive(worklet)
-  );
 }

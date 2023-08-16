@@ -31,12 +31,6 @@ export default class JSReanimated {
     requestAnimationFrame(worklet);
   }
 
-  scheduleOnBackground<T>(_runtime: WorkletRuntime, _worklet: ShareableRef<T>) {
-    throw new Error(
-      '[Reanimated] scheduleOnBackground is not implemented in JSReanimated yet'
-    );
-  }
-
   createWorkletRuntime(
     _name: string,
     _valueUnpackerCode: string
@@ -46,12 +40,21 @@ export default class JSReanimated {
     );
   }
 
-  runOnWorkletRuntimeSyncUnsafe(
+  runOnRuntime(
     _runtime: WorkletRuntime,
     _worklet: ShareableRef<ComplexWorkletFunction<[], void>>
   ) {
     throw new Error(
-      '[Reanimated] runOnWorkletRuntimeSyncUnsafe is not available in JSReanimated.'
+      '[Reanimated] runOnRuntime is not implemented in JSReanimated yet'
+    );
+  }
+
+  runOnRuntimeSync(
+    _runtime: WorkletRuntime,
+    _worklet: ShareableRef<ComplexWorkletFunction<[], void>>
+  ) {
+    throw new Error(
+      '[Reanimated] runOnRuntimeSync is not implemented in JSReanimated yet'
     );
   }
 

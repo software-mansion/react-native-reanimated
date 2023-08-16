@@ -7,6 +7,7 @@ import Animated, {
   runOnJS,
   createWorkletRuntime,
   runOnRuntimeSync,
+  runOnRuntime,
 } from 'react-native-reanimated';
 import { Text, View, Button, StyleSheet } from 'react-native';
 import React, { useEffect } from 'react';
@@ -20,6 +21,8 @@ export default function WorkletRuntimeExample() {
       <RunOnUIRunOnJSDemo />
       <ScheduleOnJSDemo />
       <CreateWorkletRuntimeDemo />
+      <InitializerDemo />
+      <RunOnRuntimeAsyncDemo />
       <RunOnRuntimeSyncDemo />
       <ThrowErrorDemo />
       <BackgroundTaskDemo />
@@ -90,16 +93,36 @@ function CreateWorkletRuntimeDemo() {
   return <Button title="createWorkletRuntime" onPress={handlePress} />;
 }
 
+function InitializerDemo() {
+  const handlePress = () => {
+    createWorkletRuntime('foo', () => {
+      'worklet';
+      console.log('Hello from initializer!');
+    });
+  };
+
+  return <Button title="initializer" onPress={handlePress} />;
+}
+
+function RunOnRuntimeAsyncDemo() {
+  const handlePress = () => {
+    const runtime = createWorkletRuntime('foo');
+    runOnRuntime(runtime, () => {
+      'worklet';
+      console.log('Hello from worklet runtime async!');
+    })();
+  };
+
+  return <Button title="runOnRuntimeAsync" onPress={handlePress} />;
+}
+
 function RunOnRuntimeSyncDemo() {
   const handlePress = () => {
-    const runtime = createWorkletRuntime('foo', () => {
-      'worklet';
-      console.log('Worklet runtime created successfully!');
-    });
+    const runtime = createWorkletRuntime('foo');
     runOnRuntimeSync(runtime, () => {
       'worklet';
-      console.log('Hello from worklet runtime!');
-    });
+      console.log('Hello from worklet runtime sync!');
+    })();
   };
 
   return <Button title="runOnRuntimeSync" onPress={handlePress} />;
