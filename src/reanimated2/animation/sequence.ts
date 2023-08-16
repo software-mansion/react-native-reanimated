@@ -25,17 +25,17 @@ export function withSequence(
   // the first argument is either a config or an animation
   // this is done to allow the reduce motion config prop to be optional
   if (_reduceMotionOrFirstAnimation) {
-    if (typeof _reduceMotionOrFirstAnimation !== 'string') {
+    if (typeof _reduceMotionOrFirstAnimation === 'string') {
+      reduceMotion = _reduceMotionOrFirstAnimation as ReduceMotion;
+    } else {
       _animations.unshift(
         _reduceMotionOrFirstAnimation as NextAnimation<AnimationObject>
       );
-    } else {
-      reduceMotion = _reduceMotionOrFirstAnimation as ReduceMotion;
     }
   }
 
   if (_animations.length === 0) {
-    console.warn('No animation was provided for the sequence');
+    console.warn('[Reanimated] No animation was provided for the sequence');
 
     return defineAnimation<SequenceAnimation>(0, () => {
       'worklet';
