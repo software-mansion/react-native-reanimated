@@ -282,9 +282,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         jsi::PropNameID::forAscii(rnRuntime, "__reanimatedModuleProxy"),
         jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule));
 
-    // TODO: remove this along with scheduleOnJS and makeShareableClone
-    std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule = nativeReanimatedModule;
-
     // TODO: use same instance as NativeReanimatedModule
     auto jsScheduler = std::make_shared<JSScheduler>(rnRuntime, self.bridge.jsCallInvoker);
 

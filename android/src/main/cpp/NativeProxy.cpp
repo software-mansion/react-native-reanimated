@@ -140,10 +140,6 @@ void NativeProxy::installJSIBindings(
       jsi::PropNameID::forAscii(rnRuntime, "__reanimatedModuleProxy"),
       jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule_));
 
-  // TODO: remove this along with scheduleOnJS and makeShareableClone
-  std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule =
-      nativeReanimatedModule_;
-
   // TODO: use same instance as NativeReanimatedModule
   auto jsScheduler = std::make_shared<JSScheduler>(rnRuntime, jsCallInvoker_);
   jsCallInvoker_ = nullptr; // no longer necessary
@@ -193,11 +189,10 @@ void NativeProxy::installJSIBindings(
           2,
           scheduleOnJS));
 
-  auto makeShareableClone = [weakNativeReanimatedModule](
-                                jsi::Runtime &rt,
-                                const jsi::Value &thisValue,
-                                const jsi::Value *args,
-                                size_t count) -> jsi::Value {
+  auto makeShareableClone = [](jsi::Runtime &rt,
+                               const jsi::Value &thisValue,
+                               const jsi::Value *args,
+                               size_t count) -> jsi::Value {
     return reanimated::makeShareableClone(rt, args[0], jsi::Value::undefined());
   };
   rnRuntime.global().setProperty(
