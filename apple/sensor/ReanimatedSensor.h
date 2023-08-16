@@ -1,4 +1,4 @@
-#if __has_include(<CoreMotion/CoreMotion.h>) && !TARGET_OS_OSX
+#if !TARGET_OS_TV && !TARGET_OS_OSX
 #import <CoreMotion/CoreMotion.h>
 #endif
 #import <RNReanimated/ReanimatedSensorType.h>
