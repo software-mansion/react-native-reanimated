@@ -62,7 +62,7 @@ function Participant({
 }: {
   name: string;
   onRemove: () => void;
-}): React.ReactElement {
+}) {
   return (
     <Animated.View
       entering={LightSpeedInLeft}
@@ -75,7 +75,7 @@ function Participant({
   );
 }
 
-export default function AnimatedListExample(): React.ReactElement {
+export default function AnimatedListExample() {
   const [inputValue, setInputValue] = useState('');
   const [participantList, setParticipantList] = useState<EventParticipant[]>(
     []

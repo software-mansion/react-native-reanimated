@@ -14,10 +14,7 @@ type ButtonProps = {
   y: Animated.SharedValue<number>;
 };
 
-export default function Button({
-  progress,
-  y,
-}: ButtonProps): React.ReactElement {
+export default function Button({ progress, y }: ButtonProps) {
   const style = useAnimatedStyle(() => {
     return {
       opacity: interpolate(progress.value, [0, 0.1], [1, 0], Extrapolate.CLAMP),
