@@ -1,6 +1,7 @@
 import Animated, {
   Easing,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
@@ -35,6 +36,8 @@ function Circle() {
   const top = useSharedValue(getRandomHeight());
   const hue = useSharedValue(getRandomHue());
 
+  const shouldReduceMotion = useReducedMotion();
+
   const duration = 2000 + Math.random() * 1000;
   const power = Math.random();
   const config = { duration, easing: Easing.linear };
@@ -47,6 +50,9 @@ function Circle() {
 
   React.useEffect(() => {
     update();
+    if (shouldReduceMotion) {
+      return;
+    }
     const id = setInterval(update, duration);
     return () => clearInterval(id);
   });

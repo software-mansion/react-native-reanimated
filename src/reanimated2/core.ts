@@ -196,7 +196,7 @@ export function enableLayoutAnimations(
 }
 
 export function configureLayoutAnimations(
-  viewTag: number,
+  viewTag: number | HTMLElement,
   type: LayoutAnimationType,
   config:
     | LayoutAnimationFunction
@@ -206,7 +206,7 @@ export function configureLayoutAnimations(
   sharedTransitionTag = ''
 ): void {
   NativeReanimatedModule.configureLayoutAnimation(
-    viewTag,
+    viewTag as number, // On web this function is no-op, therefore we can cast viewTag to number
     type,
     sharedTransitionTag,
     makeShareableCloneRecursive(config)
