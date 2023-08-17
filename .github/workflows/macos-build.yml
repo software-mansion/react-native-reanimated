@@ -32,8 +32,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-modules-reanimated-${{ hashFiles('yarn.lock') }}
-          restore-keys: ${{ runner.os }}-node-modules-reanimated-
+          key: ${{ runner.os }}-macos-node-modules-reanimated-${{ hashFiles('yarn.lock') }}
+          restore-keys: ${{ runner.os }}-macos-node-modules-reanimated-
 
       - name: Install Reanimated node_modules
         run: yarn install --frozen-lockfile
@@ -42,8 +42,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ env.WORKING_DIRECTORY }}/node_modules
-          key: ${{ runner.os }}-node-modules-${{ env.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/yarn.lock', env.WORKING_DIRECTORY)) }}
-          restore-keys: ${{ runner.os }}-node-modules-${{ env.WORKING_DIRECTORY }}-
+          key: ${{ runner.os }}-macos-node-modules-${{ env.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/yarn.lock', env.WORKING_DIRECTORY)) }}
+          restore-keys: ${{ runner.os }}-macos-node-modules-${{ env.WORKING_DIRECTORY }}-
 
       - name: Install app node_modules
         working-directory: ${{ env.WORKING_DIRECTORY }}
@@ -56,7 +56,7 @@ jobs:
             ${{ env.WORKING_DIRECTORY }}/macos/Pods
             ~/Library/Caches/CocoaPods
             ~/.cocoapods
-          key: ${{ runner.os }}-pods-${{ env.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/macos/Podfile.lock', env.WORKING_DIRECTORY)) }}
+          key: ${{ runner.os }}-macos-pods-${{ env.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/macos/Podfile.lock', env.WORKING_DIRECTORY)) }}
 
       - name: Install Pods
         working-directory: ${{ env.WORKING_DIRECTORY }}/macos
