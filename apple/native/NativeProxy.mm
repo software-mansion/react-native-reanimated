@@ -31,6 +31,8 @@
 #import <dlfcn.h>
 #endif
 
+#import <RNReanimated/READisplayLink.h>
+
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
 @end
@@ -176,8 +178,14 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto maybeFlushUIUpdatesQueueFunction = [nodesManager]() { [nodesManager maybeFlushUIUpdatesQueue]; };
 
   auto requestRender = [nodesManager](std::function<void(double)> onRender, jsi::Runtime &rt) {
-    [nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
-      double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.targetTimestamp) * 1000;
+    [nodesManager postOnAnimation:^(READisplayLink *displayLink) {
+#if !TARGET_OS_OSX
+      auto targetTimestamp = displayLink.targetTimestamp;
+#else
+      // TODO macOS targetTimestamp isn't available on macOS
+      auto targetTimestamp = displayLink.timestamp + displayLink.duration;
+#endif
+      double frameTimestamp = calculateTimestampWithSlowAnimations(targetTimestamp) * 1000;
       onRender(frameTimestamp);
     }];
   };
@@ -364,9 +372,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     return nil;
   }];
 #ifdef DEBUG
-  [animationsManager setCheckDuplicateSharedTagBlock:^(UIView *view, NSNumber *_Nonnull viewTag) {
+  [animationsManager setCheckDuplicateSharedTagBlock:^(REAUIView *view, NSNumber *_Nonnull viewTag) {
     if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      UIView *screen = [REAScreensHelper getScreenForView:(UIView *)view];
+      REAUIView *screen = [REAScreensHelper getScreenForView:(REAUIView *)view];
       auto screenTag = [screen.reactTag intValue];
       // Here we check if there are duplicate tags (we don't use return bool value currently)
       nativeReanimatedModule->layoutAnimationsManager().checkDuplicateSharedTag([viewTag intValue], screenTag);
