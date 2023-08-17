@@ -1,5 +1,7 @@
+#import <RNReanimated/READisplayLink.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
+#import <RNReanimated/REAUIKit.h>
 #import <React/RCTConvert.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -19,9 +21,6 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 using namespace facebook::react;
 #endif
-
-#import <RNReanimated/READisplayLink.h>
-#import <RNReanimated/REAUIKit.h>
 
 // Interface below has been added in order to use private methods of RCTUIManager,
 // RCTUIManager#UpdateView is a React Method which is exported to JS but in

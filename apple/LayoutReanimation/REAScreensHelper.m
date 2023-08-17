@@ -1,7 +1,5 @@
 #import <RNReanimated/REAScreensHelper.h>
 
-#import <RNReanimated/REAUIKit.h>
-
 @implementation REAScreensHelper
 
 #if LOAD_SCREENS_HEADERS

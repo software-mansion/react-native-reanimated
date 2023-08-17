@@ -1,10 +1,9 @@
 #import <Foundation/Foundation.h>
+#import <RNReanimated/READisplayLink.h>
 #import <RNReanimated/REAKeyboardEventObserver.h>
+#import <RNReanimated/REAUIKit.h>
 #import <React/RCTDefines.h>
 #import <React/RCTUIManager.h>
-
-#import <RNReanimated/READisplayLink.h>
-#import <RNReanimated/REAUIKit.h>
 
 typedef NS_ENUM(NSUInteger, KeyboardState) {
   UNKNOWN = 0,

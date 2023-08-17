@@ -4,8 +4,6 @@
 #import <React/RCTView.h>
 #import <React/UIView+React.h>
 
-#import <RNReanimated/REAUIKit.h>
-
 NS_ASSUME_NONNULL_BEGIN
 
 @implementation REASnapshot

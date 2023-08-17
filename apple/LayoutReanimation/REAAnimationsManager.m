@@ -7,8 +7,6 @@
 #import <React/UIView+Private.h>
 #import <React/UIView+React.h>
 
-#import <RNReanimated/REAUIKit.h>
-
 typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
 BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))

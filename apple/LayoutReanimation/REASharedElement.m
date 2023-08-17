@@ -1,7 +1,5 @@
 #import <RNReanimated/REASharedElement.h>
 
-#import <RNReanimated/REAUIKit.h>
-
 @implementation REASharedElement
 - (instancetype)initWithSourceView:(REAUIView *)sourceView
                 sourceViewSnapshot:(REASnapshot *)sourceViewSnapshot

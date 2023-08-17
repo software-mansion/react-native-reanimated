@@ -4,8 +4,6 @@
 #import <RNReanimated/REASharedTransitionManager.h>
 #import <RNReanimated/REAUtils.h>
 
-#import <RNReanimated/REAUIKit.h>
-
 @implementation REASharedTransitionManager {
   NSMutableDictionary<NSNumber *, REAUIView *> *_sharedTransitionParent;
   NSMutableDictionary<NSNumber *, NSNumber *> *_sharedTransitionInParentIndex;

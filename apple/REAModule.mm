@@ -19,14 +19,13 @@
 
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
+#import <RNReanimated/REAUIKit.h>
 #import <RNReanimated/ReanimatedVersion.h>
 #import <RNReanimated/SingleInstanceChecker.h>
 
 #if __has_include(<UIKit/UIAccessibility.h>)
 #import <UIKit/UIAccessibility.h>
 #endif
-
-#import <RNReanimated/REAUIKit.h>
 
 using namespace facebook::react;
 using namespace reanimated;
