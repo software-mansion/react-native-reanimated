@@ -7,8 +7,6 @@ sidebar_position: 1
 
 # Troubleshooting
 
-Reanimated is known for its stability and compatibility so it's extremely unlikely you will ever have to visit this page. If you had to, please contact us at `contact@swmansion.com`.
-
 ## Version mismatching
 
 Reanimated has four core components that compose its code:
@@ -20,8 +18,6 @@ Reanimated has four core components that compose its code:
 
 All of them are supposed to work correctly only within the same minor version. Therefore, having any of those pieces in your code - directly or indirectly - separate from `react-native-reanimated`, especially having any code transpiled with a different version of the aforementioned plugin will result in undefined behavior and errors.
 
----
-
 ### Unknown version of Reanimated Babel plugin
 
 This can happen when:
@@ -31,19 +27,33 @@ This can happen when:
 
 ### Mismatch between JavaScript code version and Reanimated Babel plugin version
 
-This can happen when:
+This can happen when you use code that was transpiled with an outdated version of Reanimated Babel plugin.
 
-1. You use code that was transpiled with an outdated version of Reanimated Babel plugin.
-
-Usual solution:
-
-1. Try resetting your Metro bundler cache with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
+Usual solution is to try resetting your Metro bundler cache with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
 
 If this didn't help, you probably have a dependency that contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin. You can find the offending code that was given alongside the error to find that dependency.
 
 ### Using dev bundle in a release app build is not supported
 
 See this [post](https://github.com/software-mansion/react-native-reanimated/issues/4737) for more information.
+
+### Couldn't determine the version of the native part of Reanimated
+
+Did you forget to re-build the app after upgrading `react-native-reanimated`? If you use Expo Go, you must use the exact version which is bundled into Expo SDK.
+
+### Mismatch between JavaScript part and native part of Reanimated
+
+Did you forget to re-build the app after upgrading `react-native-reanimated`? If you use Expo Go, you must downgrade to latest version which is bundled into Expo SDK.
+
+### Multiple versions of Reanimated were detected in `build.gradle`
+
+Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting#multiple-versions-of-reanimated-were-detected\n\n
+
+### Outdated version of `react-native` for New Architecture
+
+Reanimated supports only on the latest minor release of React Native. Please upgrade to React Native 0.72.0 or downgrade to an older version of Reanimated v3."
+
+## Threading issues
 
 ### Tried to synchronously call a non-worklet function on the UI thread
 
@@ -85,6 +95,8 @@ function caller(){
 
 Check [this page](http://localhost:3000/react-native-reanimated/docs/fundamentals/glossary#worklet) to learn more about Reanimated and its worklets.
 
+## Initialization issues
+
 ### Failed to create a worklet
 
 This usually happens when Reanimated is not properly installed, e.g. forgetting to include the Reanimated Babel plugin in `babel.config.js`. See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation#babel-plugin for more information.
@@ -96,19 +108,3 @@ This could be caused by:
 - not rebuilding the app after installing or upgrading Reanimated,
 - trying to run Reanimated on an unsupported platform,
 - running in a brownfield app without manually initializing the native library.
-
-### Couldn't determine the version of the native part of Reanimated
-
-Did you forget to re-build the app after upgrading react-native-reanimated? If you use Expo Go, you must use the exact version which is bundled into Expo SDK.
-
-### Mismatch between JavaScript part and native part of Reanimated
-
-Did you forget to re-build the app after upgrading react-native-reanimated? If you use Expo Go, you must downgrade to ${cppVersion} which is bundled into Expo SDK.
-
-### Multiple versions of Reanimated were detected in `build.gradle`
-
-Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting#multiple-versions-of-reanimated-were-detected\n\n
-
-### Outdated version of `react-native` for New Architecture
-
-Reanimated supports only on the latest minor release of React Native. Please upgrade to React Native 0.72.0 or downgrade to an older version of Reanimated v3."
