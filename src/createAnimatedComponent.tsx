@@ -663,7 +663,10 @@ export default function createAnimatedComponent(
           if (sharedTransitionTag && !IS_WEB) {
             const sharedElementTransition =
               this.props.sharedTransitionStyle ?? new SharedTransition();
-            if (!sharedElementTransition.getReduceMotion()) {
+            const reduceMotionInTransition = getReduceMotionFromConfig(
+              sharedElementTransition.getReduceMotion()
+            );
+            if (!reduceMotionInTransition) {
               sharedElementTransition.registerTransition(
                 tag as number,
                 sharedTransitionTag

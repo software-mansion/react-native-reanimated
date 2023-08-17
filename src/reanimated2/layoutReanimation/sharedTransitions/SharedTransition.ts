@@ -12,7 +12,6 @@ import {
 import { ReduceMotion, StyleProps } from '../../commonTypes';
 import { configureLayoutAnimations } from '../../core';
 import { ProgressTransitionManager } from './ProgressTransitionManager';
-import { getReduceMotionFromConfig } from '../../animation/util';
 
 const supportedProps = [
   'width',
@@ -105,8 +104,8 @@ export class SharedTransition {
     );
   }
 
-  public getReduceMotion(): boolean {
-    return getReduceMotionFromConfig(this._reduceMotion);
+  public getReduceMotion(): ReduceMotion {
+    return this._reduceMotion;
   }
 
   private getTransitionAnimation(): SharedTransitionAnimationsFunction {
