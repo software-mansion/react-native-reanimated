@@ -184,12 +184,7 @@ function styleUpdater(
     const value = newValues[key];
     if (isAnimated(value)) {
       frameTimestamp = global.__frameTimestamp || performance.now();
-      prepareAnimation(
-        frameTimestamp as any,
-        value,
-        animations[key],
-        oldValues[key]
-      );
+      prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
     } else {
