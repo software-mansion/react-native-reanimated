@@ -572,11 +572,14 @@ function LinearTransition(name: string, transitionConfig: TransitionConfig) {
 function SequencedTransition(name: string, transitionConfig: TransitionConfig) {
   const { dx, dy, scaleX, scaleY, reversed } = transitionConfig;
 
-  const translate = `translate${reversed ? 'Y' : 'X'}(${reversed ? dy : dx}px)`;
+  // const denominator = dx + dy;
+  // const numerator = reversed ? dy : dx;
 
-  const scaleValue = reversed
-    ? `1, ${scaleY.toString()}`
-    : `${scaleX.toString()}, 1`;
+  // const timestamp = Math.round((numerator / denominator) * 100);
+
+  const translate = `translate${reversed ? 'X' : 'Y'}(${reversed ? dx : dy}px)`;
+
+  const scaleValue = reversed ? `1, ${scaleX}` : `${scaleY}, 1`;
 
   // TODO: Change proportions
   return `@keyframes ${name} {

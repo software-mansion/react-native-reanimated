@@ -875,8 +875,30 @@ export default function createAnimatedComponent(
         );
         // element.onanimationend = () => saveStyleAfterAnimation(element);
       } else if (animationType === LayoutAnimationType.LAYOUT) {
+        console.log(config, animationName);
+        let animationType;
+
+        switch (animationName) {
+          case 'LinearTransition':
+            animationType = TransitionType.LINEAR;
+            break;
+          case 'SequencedTransition':
+            animationType = TransitionType.SEQUENCED;
+            // @ts-ignore reversed exists in Sequenced transition
+            animationConfig!.reversed = config.reversed;
+            break;
+          case 'FadingTransition':
+            animationType = TransitionType.FADING;
+            break;
+          default:
+            animationType = TransitionType.LINEAR;
+            break;
+        }
+
+        console.log(config);
+
         const transition = TransitionGenerator(
-          TransitionType.FADING,
+          animationType,
           animationConfig as TransitionConfig
         );
 
