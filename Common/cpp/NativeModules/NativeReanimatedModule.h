@@ -177,12 +177,12 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   const RequestRenderFunction requestRender_;
   std::vector<std::shared_ptr<jsi::Value>> frameCallbacks_;
   volatile bool renderRequested_{false};
-  std::function<void(const double)> onRenderCallback_;
+  const std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
   LayoutAnimationsManager layoutAnimationsManager_;
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
+  const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
 
   std::shared_ptr<UIManager> uiManager_;
 
