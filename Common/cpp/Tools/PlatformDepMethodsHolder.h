@@ -50,10 +50,9 @@ using MeasureFunction =
 #endif // RCT_NEW_ARCH_ENABLED
 
 using RequestRenderFunction =
-    std::function<void(std::function<void(const double)> &, jsi::Runtime &)>;
-using PropObtainerFunction =
+    std::function<void(std::function<void(const double)>, jsi::Runtime &)>;
+using ObtainPropFunction =
     std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>;
-
 using TimeProviderFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction =
@@ -83,7 +82,7 @@ struct PlatformDepMethodsHolder {
   DispatchCommandFunction dispatchCommandFunction;
   MeasureFunction measureFunction;
   ConfigurePropsFunction configurePropsFunction;
-  PropObtainerFunction propObtainerFunction;
+  ObtainPropFunction obtainPropFunction;
 #endif
   TimeProviderFunction getCurrentTime;
   ProgressLayoutAnimationFunction progressLayoutAnimation;

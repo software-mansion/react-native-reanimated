@@ -41,7 +41,7 @@ NativeReanimatedModule::NativeReanimatedModule(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<CallInvoker> &jsInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
-    PlatformDepMethodsHolder platformDepMethodsHolder)
+    const PlatformDepMethodsHolder &platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
       jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsInvoker)),
       uiScheduler_(uiScheduler),
@@ -61,6 +61,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #else
+      obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
       configurePropsPlatformFunction_(
           platformDepMethodsHolder.configurePropsFunction),
       updatePropsFunction_(platformDepMethodsHolder.updatePropsFunction),
@@ -318,7 +319,7 @@ jsi::Value NativeReanimatedModule::getViewProp(
     const auto propNameValue =
         jsi::String::createFromUtf8(uiRuntime, propNameStr);
     const auto resultValue =
-        propObtainer_(uiRuntime, viewTagInt, propNameValue);
+        obtainPropFunction_(uiRuntime, viewTagInt, propNameValue);
     const auto resultStr = resultValue.asString(uiRuntime).utf8(uiRuntime);
 
     jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {

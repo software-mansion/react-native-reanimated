@@ -156,7 +156,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
-  auto propObtainer = [reaModule](jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
+  auto obtainPropFunction = [reaModule](
+                                jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
     NSString *propNameConverted = [NSString stringWithFormat:@"%s", propName.utf8(rt).c_str()];
     std::string resultStr = std::string([[reaModule.nodesManager obtainProp:[NSNumber numberWithInt:viewTag]
                                                                    propName:propNameConverted] UTF8String]);
@@ -271,7 +272,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       dispatchCommandFunction,
       measureFunction,
       configurePropsFunction,
-      propObtainer,
+      obtainPropFunction,
 #endif
       getCurrentTime,
       progressLayoutAnimation,

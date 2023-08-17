@@ -32,7 +32,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<CallInvoker> &jsInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      PlatformDepMethodsHolder platformDepMethodsHolder);
+      const PlatformDepMethodsHolder &platformDepMethodsHolder);
 
   ~NativeReanimatedModule();
 
@@ -174,10 +174,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
 
   std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;
-  RequestRenderFunction requestRender_;
+  const RequestRenderFunction requestRender_;
   std::vector<std::shared_ptr<jsi::Value>> frameCallbacks_;
   volatile bool renderRequested_{false};
-  const PropObtainerFunction propObtainer_;
   std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
   LayoutAnimationsManager layoutAnimationsManager_;
@@ -198,6 +197,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   std::vector<Tag> tagsToRemove_; // from `propsRegistry_`
 #else
+  const ObtainPropFunction obtainPropFunction_;
   const ConfigurePropsFunction configurePropsPlatformFunction_;
   const UpdatePropsFunction updatePropsFunction_;
 #endif
