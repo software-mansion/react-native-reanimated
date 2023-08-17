@@ -637,8 +637,8 @@ export default function createAnimatedComponent(
         const rect = (this._component as HTMLElement).getBoundingClientRect();
 
         const transitionConfig: TransitionConfig = {
-          dx: rect.x - snapshot.x,
-          dy: rect.y - snapshot.y,
+          dx: snapshot.x - rect.x,
+          dy: snapshot.y - rect.y,
           scaleX: rect.width / snapshot.width,
           scaleY: rect.height / snapshot.height,
           reversed: false,
@@ -856,7 +856,7 @@ export default function createAnimatedComponent(
         // element.onanimationend = () => saveStyleAfterAnimation(element);
       } else if (animationType === LayoutAnimationType.LAYOUT) {
         const transition = TransitionGenerator(
-          TransitionType.LINEAR,
+          TransitionType.FADING,
           animationConfig as TransitionConfig
         );
 
@@ -883,6 +883,7 @@ export default function createAnimatedComponent(
         tmpElement.style.position = 'absolute';
         tmpElement.style.top = `${element.offsetTop}px`;
         tmpElement.style.left = `${element.offsetLeft}px`;
+        tmpElement.style.margin = '0px';
 
         tmpElement.onanimationend = () =>
           parent?.contains(tmpElement) ? parent.removeChild(tmpElement) : null;
