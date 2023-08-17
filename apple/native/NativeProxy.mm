@@ -179,11 +179,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto requestRender = [nodesManager](std::function<void(double)> onRender, jsi::Runtime &rt) {
     [nodesManager postOnAnimation:^(READisplayLink *displayLink) {
 #if !TARGET_OS_OSX
-      double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.targetTimestamp) * 1000;
+      auto targetTimestamp = displayLink.targetTimestamp;
 #else
       // TODO macOS targetTimestamp isn't available on macOS
-      double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.timestamp + displayLink.duration) * 1000;
+      auto targetTimestamp = displayLink.timestamp + displayLink.duration;
 #endif
+      double frameTimestamp = calculateTimestampWithSlowAnimations(targetTimestamp) * 1000;
       onRender(frameTimestamp);
     }];
   };
