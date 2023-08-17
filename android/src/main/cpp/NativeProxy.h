@@ -201,7 +201,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void setupLayoutAnimations();
 
   double getCurrentTime();
-  bool isAnyHandlerWaitingForEvent(std::string);
+  bool isAnyHandlerWaitingForEvent(
+      const std::string &eventName,
+      const int emitterReactTag);
   void performOperations();
   bool getIsReducedMotion();
   void requestRender(std::function<void(double)> onRender, jsi::Runtime &rt);

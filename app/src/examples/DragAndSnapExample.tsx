@@ -13,7 +13,7 @@ import {
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 
-export default function DragAndSnapExample(): React.ReactElement {
+export default function DragAndSnapExample() {
   const translation = {
     x: useSharedValue(0),
     y: useSharedValue(0),

@@ -76,7 +76,7 @@ function AnimatedView() {
   );
 }
 
-export default function Modal(): React.ReactElement {
+export default function Modal() {
   const [show, setShow] = useState(true);
   return (
     <View style={styles.container}>

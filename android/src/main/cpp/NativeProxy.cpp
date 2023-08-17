@@ -149,8 +149,11 @@ void NativeProxy::installJSIBindings(
       jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule));
 }
 
-bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
-  return nativeReanimatedModule_->isAnyHandlerWaitingForEvent(s);
+bool NativeProxy::isAnyHandlerWaitingForEvent(
+    const std::string &eventName,
+    const int emitterReactTag) {
+  return nativeReanimatedModule_->isAnyHandlerWaitingForEvent(
+      eventName, emitterReactTag);
 }
 
 void NativeProxy::performOperations() {
@@ -368,6 +371,10 @@ void NativeProxy::handleEvent(
     jint emitterReactTag,
     jni::alias_ref<react::WritableMap> event) {
   // handles RCTEvents from RNGestureHandler
+  if (event.get() == nullptr) {
+    // Ignore events with null payload.
+    return;
+  }
   // TODO: convert event directly to jsi::Value without JSON serialization
   std::string eventAsString;
   try {

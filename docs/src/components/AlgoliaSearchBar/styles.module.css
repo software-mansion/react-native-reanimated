@@ -1,0 +1,76 @@
+.navbarSearchWrapper {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 996px) {
+  .navbarSearchWrapper {
+    display: block;
+    justify-content: flex-start;
+    max-width: unset;
+  }
+}
+
+@media (min-width: 996px) {
+  .navbarSearch {
+    max-width: 360px;
+  }
+}
+
+.navbarSearch button {
+  border-radius: 0;
+  color: var(--swm-searchbar-text-color);
+  border: 1px solid var(--swm-searchbar-border);
+  background: var(--swm-searchbar-background);
+  height: 37px; /* should be --swm-logo-height but optical illusion makes the search bar smaller then the theme picker*/
+}
+
+.navbarSearch button:hover {
+  color: var(--swm-searchbar-text-color);
+  border: 1px solid var(--swm-searchbar-border-hover);
+  background: var(--swm-searchbar-background);
+  box-shadow: none;
+}
+
+@media (min-width: 996px) {
+  .navbarSearch {
+    width: 100%;
+    justify-self: flex-end;
+  }
+}
+
+button[class*='DocSearch-Button'] {
+  flex: 1;
+  width: 100%;
+  padding-left: 16px;
+
+  font-weight: 400;
+  font-family: var(--swm-title-font);
+}
+
+[class*='DocSearch-Search-Icon'] {
+  margin-right: 6px;
+  color: var(--swm-searchbar-text-color) !important;
+}
+
+@media (max-width: 996px) {
+  .navbarSearch {
+    position: static !important;
+    margin: 8px 20px 6px 20px;
+    padding: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  [class*='DocSearch-Button-Placeholder'] {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 996px) {
+  [class*='DocSearch-Button-Keys'] {
+    display: none !important;
+  }
+}

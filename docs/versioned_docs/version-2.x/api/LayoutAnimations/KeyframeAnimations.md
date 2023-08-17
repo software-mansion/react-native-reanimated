@@ -29,13 +29,13 @@ so to `0` assign the style, you want for your object at the beginning of the ani
 import { Keyframe } from 'react-native-reanimated';
 
 const keyframe = new Keyframe({
-    0: {
-      transform: [{ rotate: '0deg' }],
-    },
-    100: {
-      transform: [{ rotate: '45deg' }],
-    },
-  })
+  0: {
+    transform: [{ rotate: '0deg' }],
+  },
+  100: {
+    transform: [{ rotate: '45deg' }],
+  },
+});
 ```
 
 Instead of using `0` and `100`, you can define edge points using `from` and `to` keywords. The result will be the same.
@@ -44,16 +44,16 @@ Instead of using `0` and `100`, you can define edge points using `from` and `to`
 import { Keyframe } from 'react-native-reanimated';
 
 const keyframe = new Keyframe({
-    from: {
-      transform: [{ rotate: '0deg' }],
-    },
-    to: {
-      transform: [{ rotate: '45deg' }],
-    },
-  })
+  from: {
+    transform: [{ rotate: '0deg' }],
+  },
+  to: {
+    transform: [{ rotate: '45deg' }],
+  },
+});
 ```
 
-Providing keyframe `0` or `from` is required as it contains the initial state of the object you want to animate. 
+Providing keyframe `0` or `from` is required as it contains the initial state of the object you want to animate.
 Make sure you provided the initial value for all style properties you want to animate in other keyframes.
 Remember not to provide both `0` and `from`, or `100` and `to` keyframe as it will result in parsing conflict.
 
@@ -67,16 +67,16 @@ If you want to animate transform style, make sure that all properties in the tra
 import { Keyframe } from 'react-native-reanimated';
 
 const keyframe = new Keyframe({
-    0: {
-      transform: [{ rotate: '0deg' }],
-    },
-    45: {
-      transform: [{ rotate: '100deg' }]
-    },
-    100: {
-      transform: [{ rotate: '45deg' }],
-    },
-  })
+  0: {
+    transform: [{ rotate: '0deg' }],
+  },
+  45: {
+    transform: [{ rotate: '100deg' }],
+  },
+  100: {
+    transform: [{ rotate: '45deg' }],
+  },
+});
 ```
 
 ### 4. Customize transitions using an easing function
@@ -87,51 +87,59 @@ If easing property is not provided, it defaults to linear easing function.
 import { Keyframe, Easing } from 'react-native-reanimated';
 
 const keyframe = new Keyframe({
-    0: {
-      transform: [{ rotate: '0deg' }],
-    },
-    45: {
-      transform: [{ rotate: '100deg' }],
-      easing: Easing.exp,
-    },
-    100: {
-      transform: [{ rotate: '45deg' }],
-    },
-  })
+  0: {
+    transform: [{ rotate: '0deg' }],
+  },
+  45: {
+    transform: [{ rotate: '100deg' }],
+    easing: Easing.exp,
+  },
+  100: {
+    transform: [{ rotate: '45deg' }],
+  },
+});
 ```
 
 ## How to use keyframe animations?
 
-Currently, you can define animations using keyframes only for entry and exit animations. 
+Currently, you can define animations using keyframes only for entry and exit animations.
 
 ### 1. Choose Animated Component which entering or exiting you want to animate
+
 ```js
-    // AnimatedComponent - component created by createAnimatedComponent or imported from Reanimated
-    // keyframe - Keyframe object
-    <AnimatedComponent exiting={keyframe} />
+// AnimatedComponent - component created by createAnimatedComponent or imported from Reanimated
+// keyframe - Keyframe object
+<AnimatedComponent exiting={keyframe} />
 ```
+
 ### 2. Customize the animation
+
 ```js
-    <AnimatedComponent exiting={keyframe.duration(3000).delay(200)} />
+<AnimatedComponent exiting={keyframe.duration(3000).delay(200)} />
 ```
 
 ## Available modifiers
+
 The order of modifiers doesn't matter.
 
 ### duration
+
 default: 500
 How long the animation should last.
 
 ### delay
+
 default: 0
 Allows to start with a specified delay.
 
 ### withCallback
+
 Allows to execute code when keyframe animation ends.
+
 ## Example
 
 ```js
-export function KeyframeAnimation(): React.ReactElement {
+export function KeyframeAnimation() {
   const [show, setShow] = useState(false);
 
   const enteringAnimation = new Keyframe({
@@ -165,7 +173,7 @@ export function KeyframeAnimation(): React.ReactElement {
       transform: [{ skewX: '-10deg' }],
     },
   }).duration(2000);
-  
+
   return (
     <View style={{ flexDirection: 'column-reverse' }}>
       <Button
@@ -177,17 +185,17 @@ export function KeyframeAnimation(): React.ReactElement {
       <View
         style={{ height: 400, alignItems: 'center', justifyContent: 'center' }}>
         {show && (
-            <Animated.View
-              entering={enteringAnimation}
-              exiting={exitingAnimation}
-              style={{
-                height: 100,
-                width: 200,
-                backgroundColor: 'blue',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            />
+          <Animated.View
+            entering={enteringAnimation}
+            exiting={exitingAnimation}
+            style={{
+              height: 100,
+              width: 200,
+              backgroundColor: 'blue',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          />
         )}
       </View>
     </View>

@@ -6,13 +6,13 @@ on:
       - main
     paths:
       - '.github/workflows/validate-ios.yml'
-      - 'ios/**'
+      - 'apple/**'
       - 'package.json'
       - 'scripts/validate-ios.sh'
   pull_request:
     paths:
       - '.github/workflows/validate-ios.yml'
-      - 'ios/**'
+      - 'apple/**'
       - 'package.json'
       - 'scripts/validate-ios.sh'
   merge_group:
