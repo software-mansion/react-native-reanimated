@@ -395,7 +395,7 @@ void NativeReanimatedModule::maybeRequestRender() {
 }
 
 void NativeReanimatedModule::onRender(double timestampMs) {
-  auto callbacks = frameCallbacks_;
+  auto callbacks = std::move(frameCallbacks_);
   frameCallbacks_.clear();
   jsi::Runtime &uiRuntime = uiWorkletRuntime_->getRuntime();
   jsi::Value timestamp{timestampMs};
