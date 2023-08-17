@@ -5,12 +5,14 @@
 #import <React/RCTSurfacePresenterStub.h>
 #endif
 
+#import <RNReanimated/READisplayLink.h>
+
 @class REAModule;
 
-typedef void (^REAOnAnimationCallback)(CADisplayLink *displayLink);
+typedef void (^REAOnAnimationCallback)(READisplayLink *displayLink);
 typedef void (^REANativeAnimationOp)(RCTUIManager *uiManager);
 typedef void (^REAEventHandler)(id<RCTEvent> event);
-typedef void (^CADisplayLinkOperation)(CADisplayLink *displayLink);
+typedef void (^CADisplayLinkOperation)(READisplayLink *displayLink);
 
 #ifdef RCT_NEW_ARCH_ENABLED
 typedef void (^REAPerformOperations)();

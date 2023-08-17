@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#import <RNReanimated/REAUIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -6,8 +7,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property NSMutableDictionary *values;
 
-- (instancetype)init:(UIView *)view;
-- (instancetype)initWithAbsolutePosition:(UIView *)view;
+- (instancetype)init:(REAUIView *)view;
+- (instancetype)initWithAbsolutePosition:(REAUIView *)view;
 
 @end
 

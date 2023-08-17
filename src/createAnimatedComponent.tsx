@@ -25,6 +25,7 @@ import {
   isChromeDebugger,
   shouldBeUseWeb,
   isWeb,
+  isMacOS,
 } from './reanimated2/PlatformChecker';
 import { initialUpdaterRun } from './reanimated2/animation';
 import type {
@@ -662,6 +663,7 @@ export default function createAnimatedComponent(
 
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (
+          !isMacOS() &&
           (layout || entering || exiting || sharedTransitionTag) &&
           tag != null
         ) {

@@ -1,16 +1,17 @@
 #import <RNReanimated/LayoutAnimationType.h>
 #import <RNReanimated/REASnapshot.h>
+#import <RNReanimated/REAUIKit.h>
 
 @interface REASharedElement : NSObject
 
-- (instancetype)initWithSourceView:(UIView *)sourceView
+- (instancetype)initWithSourceView:(REAUIView *)sourceView
                 sourceViewSnapshot:(REASnapshot *)sourceViewSnapshot
-                        targetView:(UIView *)targetView
+                        targetView:(REAUIView *)targetView
                 targetViewSnapshot:(REASnapshot *)targetViewSnapshot;
 
-@property UIView *sourceView;
+@property REAUIView *sourceView;
 @property REASnapshot *sourceViewSnapshot;
-@property UIView *targetView;
+@property REAUIView *targetView;
 @property REASnapshot *targetViewSnapshot;
 @property LayoutAnimationType animationType;
 
