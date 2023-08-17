@@ -58,10 +58,10 @@ import { JSPropUpdater } from './JSPropUpdater';
 import {
   Animations,
   AnimationsTypes,
-  LayoutTransitions,
   TransitionConfig,
   TransitionGenerator,
   TransitionType,
+  createAnimationWithTransform,
   getEasing,
   getRandomDelay,
   insertWebAnimations,
@@ -813,6 +813,13 @@ export default function createAnimatedComponent(
       const animationName =
         typeof config === 'function' ? config.name : config.constructor.name;
 
+      // @ts-ignore Property does exist
+      const transform = this.props.style?.transform;
+
+      const customAnimationName = transform
+        ? createAnimationWithTransform(animationName, transform)
+        : animationName;
+
       const hasDelay = Object.prototype.hasOwnProperty.call(config, 'delayV');
       // @ts-ignore If property doesn't exist, delay won't be randomized
       const shouldRandomizeDelay = config.randomizeDelay;
@@ -833,7 +840,7 @@ export default function createAnimatedComponent(
         ? // @ts-ignore Already checked
           config.durationV / 1000
         : animationType === LayoutAnimationType.LAYOUT
-        ? LayoutTransitions.LinearTransition.duration
+        ? 300
         : Animations[animationName as AnimationsTypes].duration;
 
       // @ts-ignore Property does exist (and even if in some case it doesn't, getEasing will return linear easing, so we are safe)
@@ -852,7 +859,13 @@ export default function createAnimatedComponent(
           }, delay * 1000);
         }
 
-        setElementAnimation(element, duration, delay, animationName, easing);
+        setElementAnimation(
+          element,
+          duration,
+          delay,
+          customAnimationName,
+          easing
+        );
         // element.onanimationend = () => saveStyleAfterAnimation(element);
       } else if (animationType === LayoutAnimationType.LAYOUT) {
         const transition = TransitionGenerator(
@@ -874,7 +887,13 @@ export default function createAnimatedComponent(
           tmpElement.appendChild(element.firstChild);
         }
 
-        setElementAnimation(tmpElement, duration, delay, animationName, easing);
+        setElementAnimation(
+          tmpElement,
+          duration,
+          delay,
+          customAnimationName,
+          easing
+        );
         parent?.appendChild(tmpElement);
 
         // We hide current element so only its copy with proper animation will be displayed
@@ -883,7 +902,7 @@ export default function createAnimatedComponent(
         tmpElement.style.position = 'absolute';
         tmpElement.style.top = `${element.offsetTop}px`;
         tmpElement.style.left = `${element.offsetLeft}px`;
-        tmpElement.style.margin = '0px';
+        tmpElement.style.margin = '0px'; // tmpElement has absolute position, so margin is not necessary
 
         tmpElement.onanimationend = () =>
           parent?.contains(tmpElement) ? parent.removeChild(tmpElement) : null;

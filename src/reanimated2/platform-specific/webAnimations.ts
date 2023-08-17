@@ -1,26 +1,8 @@
 import {
   AnimationData,
-  FadeInData,
-  FadeOutData,
-  BounceInData,
-  BounceOutData,
-  FlipInData,
-  FlipOutData,
-  StretchInData,
-  StretchOutData,
-  ZoomInData,
-  ZoomOutData,
-  SlideInData,
-  SlideOutData,
-  LightSpeedInData,
-  LightSpeedOutData,
-  PinwheelData,
-  RotateInData,
-  RotateOutData,
-  RollData,
+  AnimationsData,
   TransformProperties,
   WebEasings,
-  LayoutTransitionsData,
 } from './webAnimationsData';
 
 export function insertWebAnimations(): void {
@@ -67,6 +49,49 @@ function parseObjectStyleToString(object: AnimationData): string {
   styleStr += `} `;
 
   return styleStr;
+}
+
+export function createAnimationWithTransform(
+  animationName: string,
+  transform: any
+): string {
+  const name = generateRandomKeyframeName();
+  const newAnimationData = structuredClone(AnimationsData[animationName]);
+
+  newAnimationData.name = name;
+
+  transform = transform.map((transformProp: TransformProperties) => {
+    const transformedObj: TransformProperties = {};
+    for (const [key, value] of Object.entries(transformProp)) {
+      if (key.includes('translate')) {
+        // @ts-ignore After many trials we decided to ignore this error - it says that we cannot use 'key' to index this object.
+        // Sadly it doesn't go away after using cast `key as keyof TransformProperties`
+        transformedObj[key] = `${value}px`;
+      } else {
+        // @ts-ignore same as above
+        transformedObj[key] = value;
+      }
+    }
+    return transformedObj;
+  });
+
+  for (const value of Object.values(newAnimationData.style)) {
+    if (!value.transform) {
+      value.transform = transform;
+    } else {
+      Array.prototype.unshift.apply(value.transform, transform);
+    }
+  }
+
+  const keyFrame = parseObjectStyleToString(newAnimationData);
+
+  const styleTag = document.getElementById(
+    WEB_ANIMATIONS_ID
+  ) as HTMLStyleElement;
+  styleTag.sheet?.insertRule(keyFrame);
+
+  console.log(keyFrame);
+  return name;
 }
 
 export function getEasing(easing: any): string {
@@ -131,378 +156,367 @@ export function saveStyleAfterAnimation(element: HTMLElement): void {
 
 const FadeIn = {
   FadeIn: {
-    style: parseObjectStyleToString(FadeInData.FadeIn),
-    duration: FadeInData.FadeIn.duration,
+    style: parseObjectStyleToString(AnimationsData.FadeIn),
+    duration: AnimationsData.FadeIn.duration,
   },
   FadeInRight: {
-    style: parseObjectStyleToString(FadeInData.FadeInRight),
-    duration: FadeInData.FadeInRight.duration,
+    style: parseObjectStyleToString(AnimationsData.FadeInRight),
+    duration: AnimationsData.FadeInRight.duration,
   },
   FadeInLeft: {
-    style: parseObjectStyleToString(FadeInData.FadeInLeft),
-    duration: FadeInData.FadeInLeft.duration,
+    style: parseObjectStyleToString(AnimationsData.FadeInLeft),
+    duration: AnimationsData.FadeInLeft.duration,
   },
   FadeInUp: {
-    style: parseObjectStyleToString(FadeInData.FadeInUp),
-    duration: FadeInData.FadeInUp.duration,
+    style: parseObjectStyleToString(AnimationsData.FadeInUp),
+    duration: AnimationsData.FadeInUp.duration,
   },
   FadeInDown: {
-    style: parseObjectStyleToString(FadeInData.FadeInDown),
-    duration: FadeInData.FadeInDown.duration,
+    style: parseObjectStyleToString(AnimationsData.FadeInDown),
+    duration: AnimationsData.FadeInDown.duration,
   },
 };
 
 const FadeOut = {
   FadeOut: {
-    style: parseObjectStyleToString(FadeOutData.FadeOut),
-    duration: FadeOutData.FadeOut.duration,
+    style: parseObjectStyleToString(AnimationsData.FadeOut),
+    duration: AnimationsData.FadeOut.duration,
   },
   FadeOutRight: {
-    style: parseObjectStyleToString(FadeOutData.FadeOutRight),
-    duration: FadeOutData.FadeOutRight.duration,
+    style: parseObjectStyleToString(AnimationsData.FadeOutRight),
+    duration: AnimationsData.FadeOutRight.duration,
   },
   FadeOutLeft: {
-    style: parseObjectStyleToString(FadeOutData.FadeOutLeft),
-    duration: FadeOutData.FadeOutLeft.duration,
+    style: parseObjectStyleToString(AnimationsData.FadeOutLeft),
+    duration: AnimationsData.FadeOutLeft.duration,
   },
   FadeOutUp: {
-    style: parseObjectStyleToString(FadeOutData.FadeOutUp),
-    duration: FadeOutData.FadeOutUp.duration,
+    style: parseObjectStyleToString(AnimationsData.FadeOutUp),
+    duration: AnimationsData.FadeOutUp.duration,
   },
   FadeOutDown: {
-    style: parseObjectStyleToString(FadeOutData.FadeOutDown),
-    duration: FadeOutData.FadeOutDown.duration,
+    style: parseObjectStyleToString(AnimationsData.FadeOutDown),
+    duration: AnimationsData.FadeOutDown.duration,
   },
 };
 
 const BounceIn = {
   BounceIn: {
-    style: parseObjectStyleToString(BounceInData.BounceIn),
-    duration: BounceInData.BounceIn.duration,
+    style: parseObjectStyleToString(AnimationsData.BounceIn),
+    duration: AnimationsData.BounceIn.duration,
   },
   BounceInRight: {
-    style: parseObjectStyleToString(BounceInData.BounceInRight),
-    duration: BounceInData.BounceInRight.duration,
+    style: parseObjectStyleToString(AnimationsData.BounceInRight),
+    duration: AnimationsData.BounceInRight.duration,
   },
   BounceInLeft: {
-    style: parseObjectStyleToString(BounceInData.BounceInLeft),
-    duration: BounceInData.BounceInLeft.duration,
+    style: parseObjectStyleToString(AnimationsData.BounceInLeft),
+    duration: AnimationsData.BounceInLeft.duration,
   },
   BounceInUp: {
-    style: parseObjectStyleToString(BounceInData.BounceInUp),
-    duration: BounceInData.BounceInUp.duration,
+    style: parseObjectStyleToString(AnimationsData.BounceInUp),
+    duration: AnimationsData.BounceInUp.duration,
   },
   BounceInDown: {
-    style: parseObjectStyleToString(BounceInData.BounceInDown),
-    duration: BounceInData.BounceInDown.duration,
+    style: parseObjectStyleToString(AnimationsData.BounceInDown),
+    duration: AnimationsData.BounceInDown.duration,
   },
 };
 
 const BounceOut = {
   BounceOut: {
-    style: parseObjectStyleToString(BounceOutData.BounceOut),
-    duration: BounceOutData.BounceOut.duration,
+    style: parseObjectStyleToString(AnimationsData.BounceOut),
+    duration: AnimationsData.BounceOut.duration,
   },
   BounceOutRight: {
-    style: parseObjectStyleToString(BounceOutData.BounceOutRight),
-    duration: BounceOutData.BounceOutRight.duration,
+    style: parseObjectStyleToString(AnimationsData.BounceOutRight),
+    duration: AnimationsData.BounceOutRight.duration,
   },
   BounceOutLeft: {
-    style: parseObjectStyleToString(BounceOutData.BounceOutLeft),
-    duration: BounceOutData.BounceOutLeft.duration,
+    style: parseObjectStyleToString(AnimationsData.BounceOutLeft),
+    duration: AnimationsData.BounceOutLeft.duration,
   },
   BounceOutUp: {
-    style: parseObjectStyleToString(BounceOutData.BounceOutUp),
-    duration: BounceOutData.BounceOutUp.duration,
+    style: parseObjectStyleToString(AnimationsData.BounceOutUp),
+    duration: AnimationsData.BounceOutUp.duration,
   },
   BounceOutDown: {
-    style: parseObjectStyleToString(BounceOutData.BounceOutDown),
-    duration: BounceOutData.BounceOutDown.duration,
+    style: parseObjectStyleToString(AnimationsData.BounceOutDown),
+    duration: AnimationsData.BounceOutDown.duration,
   },
 };
 
 const FlipIn = {
   FlipInYRight: {
-    style: parseObjectStyleToString(FlipInData.FlipInYRight),
-    duration: FlipInData.FlipInYRight.duration,
+    style: parseObjectStyleToString(AnimationsData.FlipInYRight),
+    duration: AnimationsData.FlipInYRight.duration,
   },
   FlipInYLeft: {
-    style: parseObjectStyleToString(FlipInData.FlipInYLeft),
-    duration: FlipInData.FlipInYLeft.duration,
+    style: parseObjectStyleToString(AnimationsData.FlipInYLeft),
+    duration: AnimationsData.FlipInYLeft.duration,
   },
   FlipInXUp: {
-    style: parseObjectStyleToString(FlipInData.FlipInXUp),
-    duration: FlipInData.FlipInXUp.duration,
+    style: parseObjectStyleToString(AnimationsData.FlipInXUp),
+    duration: AnimationsData.FlipInXUp.duration,
   },
   FlipInXDown: {
-    style: parseObjectStyleToString(FlipInData.FlipInXDown),
-    duration: FlipInData.FlipInXDown.duration,
+    style: parseObjectStyleToString(AnimationsData.FlipInXDown),
+    duration: AnimationsData.FlipInXDown.duration,
   },
   FlipInEasyX: {
-    style: parseObjectStyleToString(FlipInData.FlipInEasyX),
-    duration: FlipInData.FlipInEasyX.duration,
+    style: parseObjectStyleToString(AnimationsData.FlipInEasyX),
+    duration: AnimationsData.FlipInEasyX.duration,
   },
   FlipInEasyY: {
-    style: parseObjectStyleToString(FlipInData.FlipInEasyY),
-    duration: FlipInData.FlipInEasyY.duration,
+    style: parseObjectStyleToString(AnimationsData.FlipInEasyY),
+    duration: AnimationsData.FlipInEasyY.duration,
   },
 };
 
 const FlipOut = {
   FlipOutYRight: {
-    style: parseObjectStyleToString(FlipOutData.FlipOutYRight),
-    duration: FlipOutData.FlipOutYRight.duration,
+    style: parseObjectStyleToString(AnimationsData.FlipOutYRight),
+    duration: AnimationsData.FlipOutYRight.duration,
   },
   FlipOutYLeft: {
-    style: parseObjectStyleToString(FlipOutData.FlipOutYLeft),
-    duration: FlipOutData.FlipOutYLeft.duration,
+    style: parseObjectStyleToString(AnimationsData.FlipOutYLeft),
+    duration: AnimationsData.FlipOutYLeft.duration,
   },
   FlipOutXUp: {
-    style: parseObjectStyleToString(FlipOutData.FlipOutXUp),
-    duration: FlipOutData.FlipOutXUp.duration,
+    style: parseObjectStyleToString(AnimationsData.FlipOutXUp),
+    duration: AnimationsData.FlipOutXUp.duration,
   },
   FlipOutXDown: {
-    style: parseObjectStyleToString(FlipOutData.FlipOutXDown),
-    duration: FlipOutData.FlipOutXDown.duration,
+    style: parseObjectStyleToString(AnimationsData.FlipOutXDown),
+    duration: AnimationsData.FlipOutXDown.duration,
   },
   FlipOutEasyX: {
-    style: parseObjectStyleToString(FlipOutData.FlipOutEasyX),
-    duration: FlipOutData.FlipOutEasyX.duration,
+    style: parseObjectStyleToString(AnimationsData.FlipOutEasyX),
+    duration: AnimationsData.FlipOutEasyX.duration,
   },
   FlipOutEasyY: {
-    style: parseObjectStyleToString(FlipOutData.FlipOutEasyY),
-    duration: FlipOutData.FlipOutEasyY.duration,
+    style: parseObjectStyleToString(AnimationsData.FlipOutEasyY),
+    duration: AnimationsData.FlipOutEasyY.duration,
   },
 };
 
 const StretchIn = {
   StretchInX: {
-    style: parseObjectStyleToString(StretchInData.StretchInX),
-    duration: StretchInData.StretchInX.duration,
+    style: parseObjectStyleToString(AnimationsData.StretchInX),
+    duration: AnimationsData.StretchInX.duration,
   },
   StretchInY: {
-    style: parseObjectStyleToString(StretchInData.StretchInY),
-    duration: StretchInData.StretchInY.duration,
+    style: parseObjectStyleToString(AnimationsData.StretchInY),
+    duration: AnimationsData.StretchInY.duration,
   },
 };
 
 const StretchOut = {
   StretchOutX: {
-    style: parseObjectStyleToString(StretchOutData.StretchOutX),
-    duration: StretchOutData.StretchOutX.duration,
+    style: parseObjectStyleToString(AnimationsData.StretchOutX),
+    duration: AnimationsData.StretchOutX.duration,
   },
   StretchOutY: {
-    style: parseObjectStyleToString(StretchOutData.StretchOutY),
-    duration: StretchOutData.StretchOutY.duration,
+    style: parseObjectStyleToString(AnimationsData.StretchOutY),
+    duration: AnimationsData.StretchOutY.duration,
   },
 };
 
 const ZoomIn = {
   ZoomIn: {
-    style: parseObjectStyleToString(ZoomInData.ZoomIn),
-    duration: ZoomInData.ZoomIn.duration,
+    style: parseObjectStyleToString(AnimationsData.ZoomIn),
+    duration: AnimationsData.ZoomIn.duration,
   },
   ZoomInRotate: {
-    style: parseObjectStyleToString(ZoomInData.ZoomInRotate),
-    duration: ZoomInData.ZoomInRotate.duration,
+    style: parseObjectStyleToString(AnimationsData.ZoomInRotate),
+    duration: AnimationsData.ZoomInRotate.duration,
   },
   ZoomInRight: {
-    style: parseObjectStyleToString(ZoomInData.ZoomInRight),
-    duration: ZoomInData.ZoomInRight.duration,
+    style: parseObjectStyleToString(AnimationsData.ZoomInRight),
+    duration: AnimationsData.ZoomInRight.duration,
   },
   ZoomInLeft: {
-    style: parseObjectStyleToString(ZoomInData.ZoomInLeft),
-    duration: ZoomInData.ZoomInLeft.duration,
+    style: parseObjectStyleToString(AnimationsData.ZoomInLeft),
+    duration: AnimationsData.ZoomInLeft.duration,
   },
   ZoomInUp: {
-    style: parseObjectStyleToString(ZoomInData.ZoomInUp),
-    duration: ZoomInData.ZoomInUp.duration,
+    style: parseObjectStyleToString(AnimationsData.ZoomInUp),
+    duration: AnimationsData.ZoomInUp.duration,
   },
   ZoomInDown: {
-    style: parseObjectStyleToString(ZoomInData.ZoomInDown),
-    duration: ZoomInData.ZoomInDown.duration,
+    style: parseObjectStyleToString(AnimationsData.ZoomInDown),
+    duration: AnimationsData.ZoomInDown.duration,
   },
   ZoomInEasyUp: {
-    style: parseObjectStyleToString(ZoomInData.ZoomInEasyUp),
-    duration: ZoomInData.ZoomInEasyUp.duration,
+    style: parseObjectStyleToString(AnimationsData.ZoomInEasyUp),
+    duration: AnimationsData.ZoomInEasyUp.duration,
   },
   ZoomInEasyDown: {
-    style: parseObjectStyleToString(ZoomInData.ZoomInEasyDown),
-    duration: ZoomInData.ZoomInEasyDown.duration,
+    style: parseObjectStyleToString(AnimationsData.ZoomInEasyDown),
+    duration: AnimationsData.ZoomInEasyDown.duration,
   },
 };
 
 const ZoomOut = {
   ZoomOut: {
-    style: parseObjectStyleToString(ZoomOutData.ZoomOut),
-    duration: ZoomOutData.ZoomOut.duration,
+    style: parseObjectStyleToString(AnimationsData.ZoomOut),
+    duration: AnimationsData.ZoomOut.duration,
   },
   ZoomOutRotate: {
-    style: parseObjectStyleToString(ZoomOutData.ZoomOutRotate),
-    duration: ZoomOutData.ZoomOutRotate.duration,
+    style: parseObjectStyleToString(AnimationsData.ZoomOutRotate),
+    duration: AnimationsData.ZoomOutRotate.duration,
   },
   ZoomOutRight: {
-    style: parseObjectStyleToString(ZoomOutData.ZoomOutRight),
-    duration: ZoomOutData.ZoomOutRight.duration,
+    style: parseObjectStyleToString(AnimationsData.ZoomOutRight),
+    duration: AnimationsData.ZoomOutRight.duration,
   },
   ZoomOutLeft: {
-    style: parseObjectStyleToString(ZoomOutData.ZoomOutLeft),
-    duration: ZoomOutData.ZoomOutLeft.duration,
+    style: parseObjectStyleToString(AnimationsData.ZoomOutLeft),
+    duration: AnimationsData.ZoomOutLeft.duration,
   },
   ZoomOutUp: {
-    style: parseObjectStyleToString(ZoomOutData.ZoomOutUp),
-    duration: ZoomOutData.ZoomOutUp.duration,
+    style: parseObjectStyleToString(AnimationsData.ZoomOutUp),
+    duration: AnimationsData.ZoomOutUp.duration,
   },
   ZoomOutDown: {
-    style: parseObjectStyleToString(ZoomOutData.ZoomOutDown),
-    duration: ZoomOutData.ZoomOutDown.duration,
+    style: parseObjectStyleToString(AnimationsData.ZoomOutDown),
+    duration: AnimationsData.ZoomOutDown.duration,
   },
   ZoomOutEasyUp: {
-    style: parseObjectStyleToString(ZoomOutData.ZoomOutEasyUp),
-    duration: ZoomOutData.ZoomOutEasyUp.duration,
+    style: parseObjectStyleToString(AnimationsData.ZoomOutEasyUp),
+    duration: AnimationsData.ZoomOutEasyUp.duration,
   },
   ZoomOutEasyDown: {
-    style: parseObjectStyleToString(ZoomOutData.ZoomOutEasyDown),
-    duration: ZoomOutData.ZoomOutEasyDown.duration,
+    style: parseObjectStyleToString(AnimationsData.ZoomOutEasyDown),
+    duration: AnimationsData.ZoomOutEasyDown.duration,
   },
 };
 
 const SlideIn = {
   SlideInRight: {
-    style: parseObjectStyleToString(SlideInData.SlideInRight),
-    duration: SlideInData.SlideInRight.duration,
+    style: parseObjectStyleToString(AnimationsData.SlideInRight),
+    duration: AnimationsData.SlideInRight.duration,
   },
   SlideInLeft: {
-    style: parseObjectStyleToString(SlideInData.SlideInLeft),
-    duration: SlideInData.SlideInLeft.duration,
+    style: parseObjectStyleToString(AnimationsData.SlideInLeft),
+    duration: AnimationsData.SlideInLeft.duration,
   },
   SlideInUp: {
-    style: parseObjectStyleToString(SlideInData.SlideInUp),
-    duration: SlideInData.SlideInUp.duration,
+    style: parseObjectStyleToString(AnimationsData.SlideInUp),
+    duration: AnimationsData.SlideInUp.duration,
   },
   SlideInDown: {
-    style: parseObjectStyleToString(SlideInData.SlideInDown),
-    duration: SlideInData.SlideInDown.duration,
+    style: parseObjectStyleToString(AnimationsData.SlideInDown),
+    duration: AnimationsData.SlideInDown.duration,
   },
 };
 
 const SlideOut = {
   SlideOutRight: {
-    style: parseObjectStyleToString(SlideOutData.SlideOutRight),
-    duration: SlideOutData.SlideOutRight.duration,
+    style: parseObjectStyleToString(AnimationsData.SlideOutRight),
+    duration: AnimationsData.SlideOutRight.duration,
   },
   SlideOutLeft: {
-    style: parseObjectStyleToString(SlideOutData.SlideOutLeft),
-    duration: SlideOutData.SlideOutLeft.duration,
+    style: parseObjectStyleToString(AnimationsData.SlideOutLeft),
+    duration: AnimationsData.SlideOutLeft.duration,
   },
   SlideOutUp: {
-    style: parseObjectStyleToString(SlideOutData.SlideOutUp),
-    duration: SlideOutData.SlideOutUp.duration,
+    style: parseObjectStyleToString(AnimationsData.SlideOutUp),
+    duration: AnimationsData.SlideOutUp.duration,
   },
   SlideOutDown: {
-    style: parseObjectStyleToString(SlideOutData.SlideOutDown),
-    duration: SlideOutData.SlideOutDown.duration,
+    style: parseObjectStyleToString(AnimationsData.SlideOutDown),
+    duration: AnimationsData.SlideOutDown.duration,
   },
 };
 
 const LightSpeedIn = {
   LightSpeedInRight: {
-    style: parseObjectStyleToString(LightSpeedInData.LightSpeedInRight),
-    duration: LightSpeedInData.LightSpeedInRight.duration,
+    style: parseObjectStyleToString(AnimationsData.LightSpeedInRight),
+    duration: AnimationsData.LightSpeedInRight.duration,
   },
   LightSpeedInLeft: {
-    style: parseObjectStyleToString(LightSpeedInData.LightSpeedInLeft),
-    duration: LightSpeedInData.LightSpeedInLeft.duration,
+    style: parseObjectStyleToString(AnimationsData.LightSpeedInLeft),
+    duration: AnimationsData.LightSpeedInLeft.duration,
   },
 };
 
 const LightSpeedOut = {
   LightSpeedOutRight: {
-    style: parseObjectStyleToString(LightSpeedOutData.LightSpeedOutRight),
-    duration: LightSpeedOutData.LightSpeedOutRight.duration,
+    style: parseObjectStyleToString(AnimationsData.LightSpeedOutRight),
+    duration: AnimationsData.LightSpeedOutRight.duration,
   },
   LightSpeedOutLeft: {
-    style: parseObjectStyleToString(LightSpeedOutData.LightSpeedOutLeft),
-    duration: LightSpeedOutData.LightSpeedOutLeft.duration,
+    style: parseObjectStyleToString(AnimationsData.LightSpeedOutLeft),
+    duration: AnimationsData.LightSpeedOutLeft.duration,
   },
 };
 
 const Pinwheel = {
   PinwheelIn: {
-    style: parseObjectStyleToString(PinwheelData.PinwheelIn),
-    duration: PinwheelData.PinwheelIn.duration,
+    style: parseObjectStyleToString(AnimationsData.PinwheelIn),
+    duration: AnimationsData.PinwheelIn.duration,
   },
   PinwheelOut: {
-    style: parseObjectStyleToString(PinwheelData.PinwheelOut),
-    duration: PinwheelData.PinwheelOut.duration,
+    style: parseObjectStyleToString(AnimationsData.PinwheelOut),
+    duration: AnimationsData.PinwheelOut.duration,
   },
 };
 
 const RotateIn = {
   RotateInDownLeft: {
-    style: parseObjectStyleToString(RotateInData.RotateInDownLeft),
-    duration: RotateInData.RotateInDownLeft.duration,
+    style: parseObjectStyleToString(AnimationsData.RotateInDownLeft),
+    duration: AnimationsData.RotateInDownLeft.duration,
   },
   RotateInDownRight: {
-    style: parseObjectStyleToString(RotateInData.RotateInDownRight),
-    duration: RotateInData.RotateInDownRight.duration,
+    style: parseObjectStyleToString(AnimationsData.RotateInDownRight),
+    duration: AnimationsData.RotateInDownRight.duration,
   },
   RotateInUpLeft: {
-    style: parseObjectStyleToString(RotateInData.RotateInUpLeft),
-    duration: RotateInData.RotateInUpLeft.duration,
+    style: parseObjectStyleToString(AnimationsData.RotateInUpLeft),
+    duration: AnimationsData.RotateInUpLeft.duration,
   },
   RotateInUpRight: {
-    style: parseObjectStyleToString(RotateInData.RotateInUpRight),
-    duration: RotateInData.RotateInUpRight.duration,
+    style: parseObjectStyleToString(AnimationsData.RotateInUpRight),
+    duration: AnimationsData.RotateInUpRight.duration,
   },
 };
 
 const RotateOut = {
   RotateOutDownLeft: {
-    style: parseObjectStyleToString(RotateOutData.RotateOutDownLeft),
-    duration: RotateOutData.RotateOutDownLeft.duration,
+    style: parseObjectStyleToString(AnimationsData.RotateOutDownLeft),
+    duration: AnimationsData.RotateOutDownLeft.duration,
   },
   RotateOutDownRight: {
-    style: parseObjectStyleToString(RotateOutData.RotateOutDownRight),
-    duration: RotateOutData.RotateOutDownRight.duration,
+    style: parseObjectStyleToString(AnimationsData.RotateOutDownRight),
+    duration: AnimationsData.RotateOutDownRight.duration,
   },
   RotateOutUpLeft: {
-    style: parseObjectStyleToString(RotateOutData.RotateOutUpLeft),
-    duration: RotateOutData.RotateOutUpLeft.duration,
+    style: parseObjectStyleToString(AnimationsData.RotateOutUpLeft),
+    duration: AnimationsData.RotateOutUpLeft.duration,
   },
   RotateOutUpRight: {
-    style: parseObjectStyleToString(RotateOutData.RotateOutUpRight),
-    duration: RotateOutData.RotateOutUpRight.duration,
+    style: parseObjectStyleToString(AnimationsData.RotateOutUpRight),
+    duration: AnimationsData.RotateOutUpRight.duration,
   },
 };
 
 const Roll = {
   RollInLeft: {
-    style: parseObjectStyleToString(RollData.RollInLeft),
-    duration: RollData.RollInLeft.duration,
+    style: parseObjectStyleToString(AnimationsData.RollInLeft),
+    duration: AnimationsData.RollInLeft.duration,
   },
   RollInRight: {
-    style: parseObjectStyleToString(RollData.RollInRight),
-    duration: RollData.RollInRight.duration,
+    style: parseObjectStyleToString(AnimationsData.RollInRight),
+    duration: AnimationsData.RollInRight.duration,
   },
   RollOutLeft: {
-    style: parseObjectStyleToString(RollData.RollOutLeft),
-    duration: RollData.RollOutLeft.duration,
+    style: parseObjectStyleToString(AnimationsData.RollOutLeft),
+    duration: AnimationsData.RollOutLeft.duration,
   },
   RollOutRight: {
-    style: parseObjectStyleToString(RollData.RollOutRight),
-    duration: RollData.RollOutRight.duration,
-  },
-};
-
-export const LayoutTransitions = {
-  LinearTransition: {
-    style: 'margin 1s, top 1s, left 1s, right 1s, bottom 1s',
-    duration: LayoutTransitionsData.LinearTransition.duration,
-  },
-  SequencedTransition: {
-    style: 'margin 1s, top 1s, left 1s, right 1s, bottom 1s',
-    duration: LayoutTransitionsData.SequencedTransition.duration,
+    style: parseObjectStyleToString(AnimationsData.RollOutRight),
+    duration: AnimationsData.RollOutRight.duration,
   },
 };
 
@@ -642,4 +656,4 @@ export function TransitionGenerator(
 export const WEB_ANIMATIONS_ID = 'webAnimationsStyle';
 
 export type AnimationsTypes = keyof typeof Animations;
-export type LayoutTransitionsTypes = keyof typeof LayoutTransitions;
+export type LayoutTransitionsTypes = keyof typeof AnimationsData;

@@ -21,7 +21,7 @@ export interface AnimationData {
   duration: number;
 }
 
-export const FadeInData: Record<string, AnimationData> = {
+export const AnimationsData: Record<string, AnimationData> = {
   FadeIn: {
     name: 'FadeIn',
     style: {
@@ -74,9 +74,7 @@ export const FadeInData: Record<string, AnimationData> = {
     },
     duration: 0.3,
   },
-};
 
-export const FadeOutData: Record<string, AnimationData> = {
   FadeOut: {
     name: 'FadeOut',
     style: {
@@ -145,9 +143,7 @@ export const FadeOutData: Record<string, AnimationData> = {
     },
     duration: 0.3,
   },
-};
 
-export const BounceInData: Record<string, AnimationData> = {
   BounceIn: {
     name: 'BounceIn',
     style: {
@@ -203,9 +199,7 @@ export const BounceInData: Record<string, AnimationData> = {
     },
     duration: 0.25,
   },
-};
 
-export const BounceOutData: Record<string, AnimationData> = {
   BounceOut: {
     name: 'BounceOut',
     style: {
@@ -261,9 +255,7 @@ export const BounceOutData: Record<string, AnimationData> = {
     },
     duration: 0.25,
   },
-};
 
-export const FlipInData: Record<string, AnimationData> = {
   FlipInYRight: {
     name: 'FlipInYRight',
     style: {
@@ -383,9 +375,7 @@ export const FlipInData: Record<string, AnimationData> = {
     },
     duration: 0.3,
   },
-};
 
-export const FlipOutData: Record<string, AnimationData> = {
   FlipOutYRight: {
     name: 'FlipOutYRight',
     style: {
@@ -509,9 +499,7 @@ export const FlipOutData: Record<string, AnimationData> = {
     },
     duration: 0.3,
   },
-};
 
-export const StretchInData: Record<string, AnimationData> = {
   StretchInX: {
     name: 'StretchInX',
     style: {
@@ -528,9 +516,7 @@ export const StretchInData: Record<string, AnimationData> = {
     },
     duration: 0.3,
   },
-};
 
-export const StretchOutData: Record<string, AnimationData> = {
   StretchOutX: {
     name: 'StretchOutX',
     style: {
@@ -547,9 +533,7 @@ export const StretchOutData: Record<string, AnimationData> = {
     },
     duration: 0.3,
   },
-};
 
-export const ZoomInData: Record<string, AnimationData> = {
   ZoomIn: {
     name: 'ZoomIn',
     style: {
@@ -712,9 +696,7 @@ export const ZoomInData: Record<string, AnimationData> = {
     },
     duration: 0.3,
   },
-};
 
-export const ZoomOutData: Record<string, AnimationData> = {
   ZoomOut: {
     name: 'ZoomOut',
     style: {
@@ -877,9 +859,7 @@ export const ZoomOutData: Record<string, AnimationData> = {
     },
     duration: 0.3,
   },
-};
 
-export const SlideInData: Record<string, AnimationData> = {
   SlideInRight: {
     name: 'SlideInRight',
     style: {
@@ -912,9 +892,7 @@ export const SlideInData: Record<string, AnimationData> = {
     },
     duration: 0.3,
   },
-};
 
-export const SlideOutData: Record<string, AnimationData> = {
   SlideOutRight: {
     name: 'SlideOutRight',
     style: {
@@ -947,9 +925,7 @@ export const SlideOutData: Record<string, AnimationData> = {
     },
     duration: 0.3,
   },
-};
 
-export const LightSpeedInData: Record<string, AnimationData> = {
   LightSpeedInRight: {
     name: 'LightSpeedInRight',
     style: {
@@ -980,9 +956,7 @@ export const LightSpeedInData: Record<string, AnimationData> = {
     },
     duration: 0.25,
   },
-};
 
-export const LightSpeedOutData: Record<string, AnimationData> = {
   LightSpeedOutRight: {
     name: 'LightSpeedOutRight',
     style: {
@@ -1013,9 +987,7 @@ export const LightSpeedOutData: Record<string, AnimationData> = {
     },
     duration: 0.25,
   },
-};
 
-export const PinwheelData: Record<string, AnimationData> = {
   PinwheelIn: {
     name: 'PinwheelIn',
     style: {
@@ -1064,9 +1036,7 @@ export const PinwheelData: Record<string, AnimationData> = {
     },
     duration: 0.3,
   },
-};
 
-export const RotateInData: Record<string, AnimationData> = {
   RotateInDownLeft: {
     name: 'RotateInDownLeft',
     style: {
@@ -1150,9 +1120,7 @@ export const RotateInData: Record<string, AnimationData> = {
     },
     duration: 0.3,
   },
-};
 
-export const RotateOutData: Record<string, AnimationData> = {
   RotateOutDownLeft: {
     name: 'RotateOutDownLeft',
     style: {
@@ -1217,9 +1185,7 @@ export const RotateOutData: Record<string, AnimationData> = {
     },
     duration: 0.3,
   },
-};
 
-export const RollData: Record<string, AnimationData> = {
   RollInLeft: {
     name: 'RollInLeft',
     style: {
@@ -1275,19 +1241,6 @@ export const RollData: Record<string, AnimationData> = {
       },
     },
     duration: 0.3,
-  },
-};
-
-export const LayoutTransitionsData = {
-  LinearTransition: {
-    name: 'LinearTransition',
-    style: {},
-    duration: 300,
-  },
-  SequencedTransition: {
-    name: 'SequencedTransition',
-    style: {},
-    duration: 300,
   },
 };
 
