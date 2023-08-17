@@ -203,6 +203,8 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   [self setNewProps:newProps forView:view convertFromAbsolute:NO];
 }
 
+#if !TARGET_OS_OSX
+
 - (void)setNewProps:(NSMutableDictionary *)newProps
                 forView:(REAUIView *)view
     convertFromAbsolute:(BOOL)convertFromAbsolute
@@ -211,30 +213,20 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     double height = [self getDoubleOrZero:newProps[@"height"]];
     double oldHeight = view.bounds.size.height;
     view.bounds = CGRectMake(0, 0, view.bounds.size.width, height);
-#if !TARGET_OS_OSX
     view.center = CGPointMake(view.center.x, view.center.y - oldHeight / 2.0 + view.bounds.size.height / 2.0);
-#endif
     [newProps removeObjectForKey:@"height"];
   }
   if (newProps[@"width"]) {
     double width = [self getDoubleOrZero:newProps[@"width"]];
     double oldWidth = view.bounds.size.width;
     view.bounds = CGRectMake(0, 0, width, view.bounds.size.height);
-#if !TARGET_OS_OSX
     view.center = CGPointMake(view.center.x + view.bounds.size.width / 2.0 - oldWidth / 2.0, view.center.y);
-#endif
     [newProps removeObjectForKey:@"width"];
   }
 
   bool needsViewPositionUpdate = false;
-#if !TARGET_OS_OSX
   double centerX = view.center.x;
   double centerY = view.center.y;
-#else
-  // TODO macOS view does not have center property
-  double centerX = 0;
-  double centerY = 0;
-#endif
   if (newProps[@"originX"]) {
     needsViewPositionUpdate = true;
     double originX = [self getDoubleOrZero:newProps[@"originX"]];
@@ -252,13 +244,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     if (convertFromAbsolute) {
       REAUIView *window = UIApplication.sharedApplication.keyWindow;
       CGPoint convertedCenter = [window convertPoint:newCenter toView:view.superview];
-#if !TARGET_OS_OSX
       view.center = convertedCenter;
-#endif
     } else {
-#if !TARGET_OS_OSX
       view.center = newCenter;
-#endif
     }
   }
 
@@ -278,6 +266,17 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   RCTComponentData *componentData = componentDataByName[@"RCTView"];
   [componentData setProps:newProps forView:view];
 }
+
+#else
+
+// TODO macOS view does not have center property
+- (void)setNewProps:(NSMutableDictionary *)newProps
+                forView:(REAUIView *)view
+    convertFromAbsolute:(BOOL)convertFromAbsolute
+{
+}
+
+#endif
 
 - (NSDictionary *)prepareDataForAnimatingWorklet:(NSMutableDictionary *)values frameConfig:(FrameConfigType)frameConfig
 {
