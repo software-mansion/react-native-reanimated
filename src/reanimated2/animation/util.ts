@@ -31,7 +31,7 @@ import {
 
 let IN_STYLE_UPDATER = false;
 
-export function initialUpdaterRun<T>(updater: () => T): T {
+export function initialUpdaterRun<T>(updater: () => T) {
   IN_STYLE_UPDATER = true;
   const result = updater();
   IN_STYLE_UPDATER = false;

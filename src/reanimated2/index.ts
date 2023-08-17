@@ -26,6 +26,7 @@ export type {
   TransformArrayItem,
   AnimateStyle,
   AnimatedStyle,
+  AnimatedStyleProp,
   StylesOrDefault,
 } from './helperTypes';
 export type { AnimatedScrollViewProps } from './component/ScrollView';

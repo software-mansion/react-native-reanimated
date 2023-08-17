@@ -8,6 +8,7 @@ This will not be easy though!
 
 import type {
   ImageStyle,
+  RegisteredStyle,
   StyleProp,
   TextStyle,
   TransformsStyle,
@@ -156,3 +157,10 @@ export type AnimateStyle<Style = DefaultStyle> = AnimatedStyle<Style>;
 export type StylesOrDefault<T> = 'style' extends keyof T
   ? MaybeSharedValueRecursive<T['style']>
   : Record<string, unknown>;
+
+/**
+ * @deprecated This type is no longer relevant.
+ */
+export type AnimatedStyleProp<T> =
+  | AnimatedStyle<T>
+  | RegisteredStyle<AnimatedStyle<T>>;
