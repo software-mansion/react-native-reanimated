@@ -181,7 +181,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #if !TARGET_OS_OSX
       double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.targetTimestamp) * 1000;
 #else
-      // TODO: get targetTimestamp on macOS
+      // TODO macOS targetTimestamp isn't available on macOS
       double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.timestamp + displayLink.duration) * 1000;
 #endif
       onRender(frameTimestamp);

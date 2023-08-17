@@ -233,7 +233,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   double centerX = view.center.x;
   double centerY = view.center.y;
 #else
-  // TODO: add center property to macOS view
+  // TODO macOS view does not have center property
   double centerX = 0;
   double centerY = 0;
 #endif

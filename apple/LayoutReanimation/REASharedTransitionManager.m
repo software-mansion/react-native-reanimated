@@ -264,7 +264,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     } else if (!addedNewScreen) {
       // is on top
       REAUIView *viewTargetParentScreen = [REAScreensHelper getScreenForView:viewTarget];
-      // TODO: get navigationController on macOS
+      // TODO macOS navigationController isn't available on macOS
 #if !TARGET_OS_OSX
       REAUIView *stackTarget = viewTargetParentScreen.reactViewController.navigationController.topViewController.view;
       if (stackTarget != viewTargetParentScreen) {
@@ -416,7 +416,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 #if !TARGET_OS_OSX
   return screen.reactViewController.transitionCoordinator.interactive;
 #else
-  // TODO: get transitionCoordinator on macOS
+  // TODO macOS transitionCoordinator isn't available on macOS
   return false;
 #endif
 }
@@ -466,7 +466,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 #if !TARGET_OS_OSX
     screen = stack.reactViewController.navigationController.topViewController.view;
 #else
-    // TODO: get navigationController on macOS
+    // TODO macOS navigationController isn't available on macOS
     screen = nil;
 #endif
     if (screen == nil) {
@@ -527,7 +527,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
       _transitionContainer = [REAUIView new];
     }
     [mainWindow addSubview:_transitionContainer];
-    // TODO: bringSubviewToFront on macOS
+    // TODO macOS bringSubviewToFront isn't available on macOS
 #if !TARGET_OS_OSX
     [mainWindow bringSubviewToFront:_transitionContainer];
 #endif
@@ -566,7 +566,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   NSMutableDictionary *targetValues = after.values;
   NSMutableDictionary *currentValues = before.values;
-  // TODO: bringSubviewToFront on macOS
+  // TODO macOS bringSubviewToFront isn't available on macOS
 #if !TARGET_OS_OSX
   [view.superview bringSubviewToFront:view];
 #endif
