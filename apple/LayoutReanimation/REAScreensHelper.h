@@ -7,13 +7,15 @@
 #import <RNScreens/RNSScreenStack.h>
 #endif
 
+#import <RNReanimated/REAUIKit.h>
+
 @interface REAScreensHelper : NSObject
 
-+ (UIView *)getScreenForView:(UIView *)view;
-+ (UIView *)getStackForView:(UIView *)view;
-+ (bool)isScreenModal:(UIView *)screen;
-+ (UIView *)getScreenWrapper:(UIView *)view;
-+ (int)getScreenType:(UIView *)screen;
-+ (bool)isRNSScreenType:(UIView *)screen;
++ (REAUIView *)getScreenForView:(REAUIView *)view;
++ (REAUIView *)getStackForView:(REAUIView *)view;
++ (bool)isScreenModal:(REAUIView *)screen;
++ (REAUIView *)getScreenWrapper:(REAUIView *)view;
++ (int)getScreenType:(REAUIView *)screen;
++ (bool)isRNSScreenType:(REAUIView *)screen;
 
 @end

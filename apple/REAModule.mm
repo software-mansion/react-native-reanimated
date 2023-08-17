@@ -10,21 +10,23 @@
 #import <React/RCTSurfaceView.h>
 #endif
 
-#import <RNReanimated/NativeProxy.h>
-
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <RNReanimated/REAInitializerRCTFabricSurface.h>
 #import <RNReanimated/ReanimatedCommitHook.h>
 #endif
 
 #import <RNReanimated/JsiUtils.h>
+#import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
+#import <RNReanimated/REAUIKit.h>
 #import <RNReanimated/ReanimatedVersion.h>
 #import <RNReanimated/SingleInstanceChecker.h>
 #import <RNReanimated/WorkletRuntime.h>
 
+#if __has_include(<UIKit/UIAccessibility.h>)
 #import <UIKit/UIAccessibility.h>
+#endif
 
 using namespace facebook::react;
 using namespace reanimated;
@@ -222,12 +224,13 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
   REANodesManager *nodesManager = _nodesManager;
 
-  [uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-    for (AnimatedOperation operation in operations) {
-      operation(nodesManager);
-    }
-    [nodesManager operationsBatchDidComplete];
-  }];
+  [uiManager
+      addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, REAUIView *> *viewRegistry) {
+        for (AnimatedOperation operation in operations) {
+          operation(nodesManager);
+        }
+        [nodesManager operationsBatchDidComplete];
+      }];
 }
 
 #endif // RCT_NEW_ARCH_ENABLED
@@ -274,7 +277,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     jsi::Runtime &rnRuntime = *jsiRuntime;
     jsi::Runtime &uiRuntime = nativeReanimatedModule->getUIRuntime();
 
+#if __has_include(<UIKit/UIAccessibility.h>)
     auto isReducedMotion = UIAccessibilityIsReduceMotionEnabled();
+#else
+    auto isReducedMotion = false;
+#endif
     RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
 
     rnRuntime.global().setProperty(

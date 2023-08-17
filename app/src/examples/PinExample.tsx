@@ -21,7 +21,7 @@ const range = [0, 9999];
 
 const dotSize = 40;
 
-export default function PinExample(): React.ReactElement {
+export default function PinExample() {
   const progress = useSharedValue(0);
   const number = useDerivedValue(() => {
     const val = range[0] + Math.round(progress.value * (range[1] - range[0]));

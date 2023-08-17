@@ -8,6 +8,7 @@ import type {
   ShareableSyncDataHolderRef,
   ShadowNodeWrapper,
   ComplexWorkletFunction,
+  FlatShareableRef,
 } from './commonTypes';
 import type { AnimatedStyle } from './helperTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
@@ -38,7 +39,7 @@ declare global {
   ) => void;
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
-  var _makeShareableClone: <T>(value: T) => ShareableRef<T>;
+  var _makeShareableClone: <T>(value: T) => FlatShareableRef<T>;
   var _updateDataSynchronously: (
     dataHolder: ShareableSyncDataHolderRef<any>,
     data: ShareableRef<any>

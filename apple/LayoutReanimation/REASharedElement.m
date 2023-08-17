@@ -1,9 +1,9 @@
 #import <RNReanimated/REASharedElement.h>
 
 @implementation REASharedElement
-- (instancetype)initWithSourceView:(UIView *)sourceView
+- (instancetype)initWithSourceView:(REAUIView *)sourceView
                 sourceViewSnapshot:(REASnapshot *)sourceViewSnapshot
-                        targetView:(UIView *)targetView
+                        targetView:(REAUIView *)targetView
                 targetViewSnapshot:(REASnapshot *)targetViewSnapshot
 {
   self = [super init];

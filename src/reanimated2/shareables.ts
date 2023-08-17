@@ -1,5 +1,9 @@
 import NativeReanimatedModule from './NativeReanimated';
-import type { ShareableRef, WorkletFunction } from './commonTypes';
+import type {
+  FlatShareableRef,
+  ShareableRef,
+  WorkletFunction,
+} from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
 import { registerWorkletStackDetails } from './errors';
 import { jsVersion } from './platform-specific/jsVersion';
@@ -20,7 +24,8 @@ const _shareableFlag = Symbol('shareable flag');
 
 const MAGIC_KEY = 'REANIMATED_MAGIC_KEY';
 
-function isHostObject(value: NonNullable<object>): boolean {
+function isHostObject(value: NonNullable<object>) {
+  'worklet';
   // We could use JSI to determine whether an object is a host object, however
   // the below workaround works well and is way faster than an additional JSI call.
   // We use the fact that host objects have broken implementation of `hasOwnProperty`
@@ -246,28 +251,45 @@ function getWorkletCode(value: WorkletFunction) {
   return code;
 }
 
-export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
+type RemoteFunction<T> = {
+  __remoteFunction: FlatShareableRef<T>;
+};
+
+function isRemoteFunction<T>(value: object): value is RemoteFunction<T> {
+  'worklet';
+  return '__remoteFunction' in value;
+}
+
+export function makeShareableCloneOnUIRecursive<T>(
+  value: T
+): FlatShareableRef<T> {
   'worklet';
   if (USE_STUB_IMPLEMENTATION) {
     // @ts-ignore web is an interesting place where we don't run a secondary VM on the UI thread
     // see more details in the comment where USE_STUB_IMPLEMENTATION is defined.
     return value;
   }
-  function cloneRecursive<T>(value: T): ShareableRef<T> {
-    const type = typeof value;
-    if ((type === 'object' || type === 'function') && value !== null) {
-      let toAdapt: any;
-      if (Array.isArray(value)) {
-        toAdapt = value.map((element) => cloneRecursive(element));
-      } else if (value !== undefined) {
-        toAdapt = {};
-        for (const [key, element] of Object.entries(
-          value as Record<string, unknown>
-        )) {
-          toAdapt[key] = cloneRecursive(element);
-        }
+  function cloneRecursive<T>(value: T): FlatShareableRef<T> {
+    if (
+      (typeof value === 'object' && value !== null) ||
+      typeof value === 'function'
+    ) {
+      if (isHostObject(value)) {
+        return value as FlatShareableRef<T>;
       }
-      return _makeShareableClone(toAdapt);
+      if (isRemoteFunction<T>(value)) {
+        return value.__remoteFunction;
+      }
+      if (Array.isArray(value)) {
+        return _makeShareableClone(
+          value.map(cloneRecursive)
+        ) as FlatShareableRef<T>;
+      }
+      const toAdapt: Record<string, FlatShareableRef<T>> = {};
+      for (const [key, element] of Object.entries(value)) {
+        toAdapt[key] = cloneRecursive<T>(element);
+      }
+      return _makeShareableClone(toAdapt) as FlatShareableRef<T>;
     }
     return _makeShareableClone(value);
   }
