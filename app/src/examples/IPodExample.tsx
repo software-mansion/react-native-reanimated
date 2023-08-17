@@ -40,7 +40,7 @@ const BIG_BALL_SIZE = 200;
 const SMALL_BALL_SIZE = 50;
 const INNER_BALL_SIZE = BIG_BALL_SIZE - SMALL_BALL_SIZE * 2;
 
-export default function IPodExample(): React.ReactElement {
+export default function IPodExample() {
   const position = useSharedValue(0);
   const animatedRef = useAnimatedRef<Animated.ScrollView>();
 

@@ -224,7 +224,7 @@ function Box({ label, state }: { label: string, state: boolean }) {
   );
 }
 
-export function CustomLayoutTransitionExample(): React.ReactElement {
+export function CustomLayoutTransitionExample() {
   const [state, setState] = useState(true);
   return (
     <View style={{ marginTop: 30 }}>
