@@ -7,13 +7,17 @@ import { StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
-export default function AnimatedSensorExample() {
-  const gravity = useAnimatedSensor(SensorType.GRAVITY, { interval: 16 });
+export default function AnimatedSensorRotationExample() {
+  const gravity = useAnimatedSensor(SensorType.ROTATION);
 
   const animatedStyle = useAnimatedStyle(() => {
+    const { pitch, roll, yaw } = gravity.sensor.value;
     return {
-      top: -gravity.sensor.value.y * 300,
-      left: gravity.sensor.value.x * 200,
+      transform: [
+        { rotateX: `${pitch}rad` },
+        { rotateY: `${roll}rad` },
+        { rotateZ: `${yaw}rad` },
+      ],
     };
   });
 
@@ -33,6 +37,9 @@ const styles = StyleSheet.create({
   box: {
     width: 150,
     height: 150,
+    borderWidth: 10,
     backgroundColor: 'navy',
+    borderTopColor: 'red',
+    borderBottomColor: 'green',
   },
 });

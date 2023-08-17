@@ -2,7 +2,11 @@ import AboutExample from './AboutExample';
 import AnimatableRefExample from './AnimatableRefExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import AnimatedListExample from './LayoutAnimations/AnimatedList';
-import AnimatedSensorExample from './AnimatedSensorExample';
+import AnimatedSensorAccelerometerExample from './AnimatedSensorAccelerometerExample';
+import AnimatedSensorGravityExample from './AnimatedSensorGravityExample';
+import AnimatedSensorGyroscopeExample from './AnimatedSensorGyroscopeExample';
+import AnimatedSensorMagneticFieldExample from './AnimatedSensorMagneticFieldExample';
+import AnimatedSensorRotationExample from './AnimatedSensorRotationExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 import AnimatedTextInputExample from './AnimatedTextInputExample';
@@ -235,10 +239,30 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'useAnimatedKeyboard',
     screen: AnimatedKeyboardExample,
   },
-  AnimatedSensorExample: {
-    icon: '📡',
-    title: 'useAnimatedSensor',
-    screen: AnimatedSensorExample,
+  AnimatedSensorAccelerometerExample: {
+    icon: '🚀',
+    title: 'useAnimatedSensor - accelerometer',
+    screen: AnimatedSensorAccelerometerExample,
+  },
+  AnimatedSensorGyroscopeExample: {
+    icon: '⚖️',
+    title: 'useAnimatedSensor - gyroscope',
+    screen: AnimatedSensorGyroscopeExample,
+  },
+  AnimatedSensorGravityExample: {
+    icon: '🌎',
+    title: 'useAnimatedSensor - gravity',
+    screen: AnimatedSensorGravityExample,
+  },
+  AnimatedSensorMagneticFieldExample: {
+    icon: '🧲',
+    title: 'useAnimatedSensor - magnetic filed',
+    screen: AnimatedSensorMagneticFieldExample,
+  },
+  AnimatedSensorRotationExample: {
+    icon: '🔄',
+    title: 'useAnimatedSensor - rotation',
+    screen: AnimatedSensorRotationExample,
   },
   FrameCallbackExample: {
     icon: '🗣',
