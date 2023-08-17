@@ -59,11 +59,12 @@ import {
   Animations,
   AnimationsTypes,
   LayoutTransitions,
-  areDOMRectsEqual,
+  TransitionConfig,
+  TransitionGenerator,
+  TransitionType,
   getEasing,
   getRandomDelay,
   insertWebAnimations,
-  saveStyleAfterAnimation,
   setElementAnimation,
 } from './reanimated2/platform-specific/webAnimations';
 const IS_WEB = isWeb();
@@ -635,7 +636,15 @@ export default function createAnimatedComponent(
       if (IS_WEB) {
         const rect = (this._component as HTMLElement).getBoundingClientRect();
 
-        console.log(areDOMRectsEqual(rect, snapshot));
+        const transitionConfig: TransitionConfig = {
+          dx: rect.x - snapshot.x,
+          dy: rect.y - snapshot.y,
+          scaleX: rect.width / snapshot.width,
+          scaleY: rect.height / snapshot.height,
+          reversed: false,
+        };
+
+        this.handleWebAnimation(LayoutAnimationType.LAYOUT, transitionConfig);
       }
     }
 
@@ -779,13 +788,15 @@ export default function createAnimatedComponent(
     getSnapshotBeforeUpdate() {
       // prevState: Readonly<{}> // prevProps: Readonly<AnimatedComponentProps<InitialComponentProps>>,
       if (isWeb()) {
-        // return this._component.getBoundingClientRect();
-        // this.handleWebAnimation(LayoutAnimationType.LAYOUT);
+        return (this._component as HTMLElement).getBoundingClientRect();
       }
       return null;
     }
 
-    handleWebAnimation(animationType: LayoutAnimationType) {
+    handleWebAnimation(
+      animationType: LayoutAnimationType,
+      animationConfig?: TransitionConfig
+    ) {
       const config =
         animationType === LayoutAnimationType.ENTERING
           ? this.props.entering
@@ -842,10 +853,14 @@ export default function createAnimatedComponent(
         }
 
         setElementAnimation(element, duration, delay, animationName, easing);
-        element.onanimationend = () => saveStyleAfterAnimation(element);
+        // element.onanimationend = () => saveStyleAfterAnimation(element);
       } else if (animationType === LayoutAnimationType.LAYOUT) {
-        // this._component.style.transition =
-        //   LayoutTransitions['SequencedTransition'].style;
+        const transition = TransitionGenerator(
+          TransitionType.LINEAR,
+          animationConfig as TransitionConfig
+        );
+
+        setElementAnimation(element, 1, delay, transition, easing);
       } else if (animationType === LayoutAnimationType.EXITING) {
         const parent = element.offsetParent;
         const tmpElement = element.cloneNode() as HTMLElement;

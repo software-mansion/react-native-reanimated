@@ -104,7 +104,7 @@ export function saveStyleAfterAnimation(element: HTMLElement): void {
   const elementTransform = elementStyle.transform;
   const elementTranslate = elementStyle.translate;
 
-  const numberPattern = /-\d+/g;
+  const numberPattern = /-?\d+/g;
 
   const matrixValues = elementTransform.match(numberPattern);
   const translateValues = elementTranslate.match(numberPattern);
@@ -122,8 +122,8 @@ export function saveStyleAfterAnimation(element: HTMLElement): void {
   if (translateValues) {
     const translateValuesArray = translateValues.map(Number);
 
-    dx += translateValuesArray[0];
-    dy += translateValuesArray[1];
+    dx = translateValuesArray[0] ? dx + translateValuesArray[0] : dx;
+    dy = translateValuesArray[1] ? dy + translateValuesArray[1] : dy;
   }
 
   element.style.translate = `${dx}px ${dy}px`;
@@ -530,8 +530,7 @@ export const Animations = {
 // Transitions
 
 function generateRandomKeyframeName() {
-  const characters =
-    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const length = 50;
   let keyframeName = '';
 
@@ -543,29 +542,20 @@ function generateRandomKeyframeName() {
   return keyframeName;
 }
 
-function LinearTransition(
-  name: string,
-  dx: string,
-  dy: string,
-  scaleX: number,
-  scaleY: number
-) {
+function LinearTransition(name: string, transitionConfig: TransitionConfig) {
+  const { dx, dy, scaleX, scaleY } = transitionConfig;
+
   return `@keyframes ${name} {
                   100% {
-                    transform: translateX(${dx}) translateY(${dy}) scale(${scaleX},${scaleY});
+                    transform: translateX(${dx}px) translateY(${dy}px) scale(${scaleX},${scaleY});
                   }
                 }`;
 }
 
-function SequencedTransition(
-  name: string,
-  dx: string,
-  dy: string,
-  scaleX: number,
-  scaleY: number,
-  reversed: boolean
-) {
-  const translate = `translate${reversed ? 'Y' : 'X'}(${reversed ? dy : dx})`;
+function SequencedTransition(name: string, transitionConfig: TransitionConfig) {
+  const { dx, dy, scaleX, scaleY, reversed } = transitionConfig;
+
+  const translate = `translate${reversed ? 'Y' : 'X'}(${reversed ? dy : dx}px)`;
 
   const scaleValue = reversed
     ? `1, ${scaleY.toString()}`
@@ -576,18 +566,14 @@ function SequencedTransition(
                   transform: ${translate} scale(${scaleValue});
                 }
                 100% {
-                  transform: translateX(${dx}) translateY(${dy}) scale(${scaleX}, ${scaleY});
+                  transform: translateX(${dx}px) translateY(${dy}px) scale(${scaleX}, ${scaleY});
                 }
               }`;
 }
 
-function FadingTransition(
-  name: string,
-  dx: string,
-  dy: string,
-  scaleX: number,
-  scaleY: number
-) {
+function FadingTransition(name: string, transitionConfig: TransitionConfig) {
+  const { dx, dy, scaleX, scaleY } = transitionConfig;
+
   return `@keyframes ${name} {
                 20% {
                   opacity: 0;
@@ -595,11 +581,11 @@ function FadingTransition(
                 }
                 80% {
                   opacity: 0;
-                  transform: translateX(${dx}) translateY(${dy}) scale(${scaleX}, ${scaleY});
+                  transform: translateX(${dx}px) translateY(${dy}px) scale(${scaleX}, ${scaleY});
                 }
                 100% {
                   opacity: 1;
-                  transform: translateX(${dx}) translateY(${dy}) scale(${scaleX}, ${scaleY});
+                  transform: translateX(${dx}px) translateY(${dy}px) scale(${scaleX}, ${scaleY});
                 }
               }`;
 }
@@ -610,26 +596,30 @@ export enum TransitionType {
   FADING,
 }
 
+export interface TransitionConfig {
+  dx: number;
+  dy: number;
+  scaleX: number;
+  scaleY: number;
+  reversed?: boolean;
+}
+
 export function TransitionGenerator(
   transitionType: TransitionType,
-  dx: string,
-  dy: string,
-  scaleX: number,
-  scaleY: number,
-  reversed = false
+  transitionConfig: TransitionConfig
 ) {
   const name = generateRandomKeyframeName();
   let transition;
 
   switch (transitionType) {
     case TransitionType.LINEAR:
-      transition = LinearTransition(name, dx, dy, scaleX, scaleY);
+      transition = LinearTransition(name, transitionConfig);
       break;
     case TransitionType.SEQUENCED:
-      transition = SequencedTransition(name, dx, dy, scaleX, scaleY, reversed);
+      transition = SequencedTransition(name, transitionConfig);
       break;
     case TransitionType.FADING:
-      transition = FadingTransition(name, dx, dy, scaleX, scaleY);
+      transition = FadingTransition(name, transitionConfig);
       break;
   }
 
