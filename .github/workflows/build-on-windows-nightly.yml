@@ -1,17 +1,11 @@
-name: Test build on Windows
+name: Test build on Windows nightly
 on:
   pull_request:
     paths:
-      - '.github/workflows/build-on-windows.yml'
-      - 'android/**'
-      - 'Common/**'
-      - package.json
-  merge_group:
-    branches:
-      - main
-  push:
-    branches:
-      - main
+      - .github/workflows/build-on-windows-nightly.yml
+  schedule:
+    - cron: '37 19 * * *'
+  workflow_dispatch:
 
 jobs:
   build:

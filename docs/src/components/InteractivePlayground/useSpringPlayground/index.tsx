@@ -53,9 +53,9 @@ export default function useSpringPlayground() {
       ${
         isPhysicsBased
           ? `mass: ${mass},
-      damping: ${damping}`
+      damping: ${damping},`
           : `duration: ${duration},
-      dampingRatio: ${dampingRatio}`
+      dampingRatio: ${dampingRatio},`
       }
       stiffness: ${stiffness},
       overshootClamping: ${overshootClamping},

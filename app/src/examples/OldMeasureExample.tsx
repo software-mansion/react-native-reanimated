@@ -53,7 +53,7 @@ function createSharedVariables() {
   };
 }
 
-export default function OldMeasureExample(): React.ReactElement {
+export default function OldMeasureExample() {
   const { heights, contentHeights } = createSharedVariables();
 
   return (

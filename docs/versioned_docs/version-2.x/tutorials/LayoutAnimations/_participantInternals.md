@@ -6,7 +6,7 @@ function Participant({
 }: {
   name: string;
   onRemove: () => void;
-}): React.ReactElement {
+}) {
   return (
     <View
       style={[styles.participantView]}>
