@@ -40,14 +40,7 @@ export function withSequence(
     return defineAnimation<SequenceAnimation>(0, () => {
       'worklet';
       return {
-        onStart: (animation, value, now) => {
-          animation.current = value;
-          // onFrame is defined in this way to force it to not return true on the first call in valueSetter
-          // this is done because otherwise if such animation was used as an exit layout animation
-          // the exiting component wouldn't get removed
-          // this is because the removal algorithm works only under the assumption that the exit animation is longer than one frame
-          animation.onFrame = (_, timestamp) => timestamp > now;
-        },
+        onStart: (animation, value) => (animation.current = value),
         onFrame: () => true,
         current: 0,
         animationIndex: 0,

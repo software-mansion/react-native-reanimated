@@ -141,7 +141,7 @@ export default function ReducedMotionSharedExample() {
 const styles = StyleSheet.create({
   flexOne: { flex: 1 },
   boxScreenOne: {
-    height: 70,
+    height: 60,
     width: 150,
     margin: 20,
     borderRadius: 10,
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     borderColor: '#b58df1',
   },
   boxScreenTwo: {
-    height: 70,
+    height: 60,
     width: 300,
     margin: 20,
     borderRadius: 10,

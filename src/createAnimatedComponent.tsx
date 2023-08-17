@@ -54,6 +54,7 @@ import { isSharedValue } from './reanimated2';
 import type { AnimateProps } from './reanimated2/helperTypes';
 import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
 import { JSPropUpdater } from './JSPropUpdater';
+import { getReduceMotionFromConfig } from './reanimated2/animation/util';
 
 const IS_WEB = isWeb();
 
@@ -646,11 +647,18 @@ export default function createAnimatedComponent(
             );
           }
           if (exiting) {
-            configureLayoutAnimations(
-              tag,
-              LayoutAnimationType.EXITING,
-              maybeBuild(exiting)
-            );
+            const reduceMotionInExiting =
+              'getReduceMotion' in exiting &&
+              typeof exiting.getReduceMotion === 'function'
+                ? getReduceMotionFromConfig(exiting.getReduceMotion())
+                : getReduceMotionFromConfig();
+            if (!reduceMotionInExiting) {
+              configureLayoutAnimations(
+                tag,
+                LayoutAnimationType.EXITING,
+                maybeBuild(exiting)
+              );
+            }
           }
           if (sharedTransitionTag && !IS_WEB) {
             const sharedElementTransition =

@@ -105,11 +105,7 @@ export const withRepeat = function <T extends AnimationObject>(
           (numberOfReps <= 0 || numberOfReps % 2 === 0)
         ) {
           animation.current = animation.startValue;
-          // onFrame is defined in this way to force it to not return true on the first call in valueSetter
-          // this is done because otherwise if such animation was used as an exit layout animation
-          // the exiting component wouldn't get removed
-          // this is because the removal algorithm works only under the assumption that the exit animation is longer than one frame
-          animation.onFrame = (_, timestamp) => timestamp > now;
+          animation.onFrame = () => true;
         } else {
           nextAnimation.onStart(nextAnimation, value, now, previousAnimation);
         }
