@@ -2,7 +2,7 @@
 
 #import <QuartzCore/CADisplayLink.h>
 
-#define READisplayLink CADisplayLink
+typedef CADisplayLink READisplayLink;
 
 #else // TARGET_OS_OSX [
 
@@ -16,6 +16,6 @@ extern "C" {
 }
 #endif
 
-#define READisplayLink RCTPlatformDisplayLink
+typedef RCTPlatformDisplayLink READisplayLink;
 
 #endif // ] TARGET_OS_OSX

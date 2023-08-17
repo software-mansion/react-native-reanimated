@@ -2,7 +2,7 @@
 
 #import <UIKit/UIKit.h>
 
-#define REAUIView UIView
+typedef UIView REAUIView;
 
 #else // TARGET_OS_OSX [
 
@@ -16,6 +16,6 @@ extern "C" {
 }
 #endif
 
-#define REAUIView RCTUIView
+typedef RCTUIView REAUIView;
 
 #endif // ] TARGET_OS_OSX
