@@ -546,7 +546,7 @@ function LinearTransition(name: string, transitionConfig: TransitionConfig) {
   const { dx, dy, scaleX, scaleY } = transitionConfig;
 
   return `@keyframes ${name} {
-                  100% {
+                  0% {
                     transform: translateX(${dx}px) translateY(${dy}px) scale(${scaleX},${scaleY});
                   }
                 }`;
@@ -561,12 +561,16 @@ function SequencedTransition(name: string, transitionConfig: TransitionConfig) {
     ? `1, ${scaleY.toString()}`
     : `${scaleX.toString()}, 1`;
 
+  // TODO: Change proportions
   return `@keyframes ${name} {
+                0% {
+                  transform: translateX(${dx}px) translateY(${dy}px) scale(${scaleX}, ${scaleY});
+                }
                 50% {
                   transform: ${translate} scale(${scaleValue});
                 }
                 100% {
-                  transform: translateX(${dx}px) translateY(${dy}px) scale(${scaleX}, ${scaleY});
+                  transform: translateX(0) translateY(0) scale(1,1);
                 }
               }`;
 }
@@ -575,17 +579,21 @@ function FadingTransition(name: string, transitionConfig: TransitionConfig) {
   const { dx, dy, scaleX, scaleY } = transitionConfig;
 
   return `@keyframes ${name} {
-                20% {
-                  opacity: 0;
-                  transform: translateX(0) translateY(0);
+                0% {
+                  opacity: 1;
+                  transform: translateX(${dx}px) translateY(${dy}px) scale(${scaleX}, ${scaleY});
                 }
-                80% {
+                20%{
                   opacity: 0;
                   transform: translateX(${dx}px) translateY(${dy}px) scale(${scaleX}, ${scaleY});
+                }
+                60% {
+                  opacity: 0;
+                  transform: translateX(0) translateY(0) scale(1,1);
                 }
                 100% {
                   opacity: 1;
-                  transform: translateX(${dx}px) translateY(${dy}px) scale(${scaleX}, ${scaleY});
+                  transform: translateX(0) translateY(0) scale(1,1);
                 }
               }`;
 }
