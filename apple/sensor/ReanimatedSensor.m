@@ -1,6 +1,6 @@
 #import <RNReanimated/ReanimatedSensor.h>
 
-#if __has_include(<CoreMotion/CoreMotion.h>)
+#if !TARGET_OS_TV && !TARGET_OS_OSX
 @implementation ReanimatedSensor
 
 - (instancetype)init:(ReanimatedSensorType)sensorType

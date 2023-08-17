@@ -1,5 +1,7 @@
 #import <Foundation/Foundation.h>
+#import <RNReanimated/READisplayLink.h>
 #import <RNReanimated/REAKeyboardEventObserver.h>
+#import <RNReanimated/REAUIKit.h>
 #import <React/RCTDefines.h>
 #import <React/RCTUIManager.h>
 
@@ -12,10 +14,10 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 };
 
 @implementation REAKeyboardEventObserver {
-  UIView *_measuringView;
+  REAUIView *_measuringView;
   NSNumber *_nextListenerId;
   NSMutableDictionary *_listeners;
-  CADisplayLink *_displayLink;
+  READisplayLink *_displayLink;
   KeyboardState _state;
 }
 
@@ -35,13 +37,15 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   return self;
 }
 
-- (CADisplayLink *)getDisplayLink
+- (READisplayLink *)getDisplayLink
 {
   RCTAssertMainQueue();
 
   if (!_displayLink) {
-    _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(updateKeyboardFrame)];
+    _displayLink = [READisplayLink displayLinkWithTarget:self selector:@selector(updateKeyboardFrame)];
+#if !TARGET_OS_OSX
     _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
+#endif
     [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
   }
   return _displayLink;
@@ -58,6 +62,20 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 {
   NSLog(@"Keyboard handling is not supported on tvOS");
 }
+
+#elif TARGET_OS_OSX
+
+- (int)subscribeForKeyboardEvents:(KeyboardEventListenerBlock)listener
+{
+  NSLog(@"Keyboard handling is not supported on macOS");
+  return 0;
+}
+
+- (void)unsubscribeFromKeyboardEvents:(int)listenerId
+{
+  NSLog(@"Keyboard handling is not supported on macOS");
+}
+
 #else
 
 - (void)runUpdater
