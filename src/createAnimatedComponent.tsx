@@ -788,6 +788,7 @@ export default function createAnimatedComponent(
     getSnapshotBeforeUpdate() {
       // prevState: Readonly<{}> // prevProps: Readonly<AnimatedComponentProps<InitialComponentProps>>,
       if (isWeb()) {
+        // TODO: Sometimes this component is not HTMLElement - it needs further investigation
         return (this._component as HTMLElement).getBoundingClientRect();
       }
       return null;
@@ -841,7 +842,9 @@ export default function createAnimatedComponent(
           config.durationV / 1000
         : animationType === LayoutAnimationType.LAYOUT
         ? 300
-        : Animations[animationName as AnimationsTypes].duration;
+        : animationName in Animations
+        ? Animations[animationName as AnimationsTypes].duration
+        : 300;
 
       // @ts-ignore Property does exist (and even if in some case it doesn't, getEasing will return linear easing, so we are safe)
       const easing = getEasing(config.easingV);
@@ -849,6 +852,10 @@ export default function createAnimatedComponent(
       const element = this._component as unknown as HTMLElement;
 
       if (animationType === LayoutAnimationType.ENTERING) {
+        if (!(animationName in Animations)) {
+          return;
+        }
+
         // If `delay` === 0, value passed to `setTimeout` will be 0. However, `setTimeout` executes after given amount of time, not exactly after that time
         // Because of that, we have to immediately toggle on the component when the delay is 0.
         if (delay === 0) {
@@ -875,6 +882,10 @@ export default function createAnimatedComponent(
 
         setElementAnimation(element, 1, delay, transition, easing);
       } else if (animationType === LayoutAnimationType.EXITING) {
+        if (!(animationName in Animations)) {
+          return;
+        }
+
         const parent = element.offsetParent;
         const tmpElement = element.cloneNode() as HTMLElement;
 

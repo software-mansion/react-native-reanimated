@@ -55,6 +55,10 @@ export function createAnimationWithTransform(
   animationName: string,
   transform: any
 ): string {
+  if (!(animationName in Animations)) {
+    return '';
+  }
+
   const name = generateRandomKeyframeName();
   const newAnimationData = structuredClone(AnimationsData[animationName]);
 
@@ -90,7 +94,6 @@ export function createAnimationWithTransform(
   ) as HTMLStyleElement;
   styleTag.sheet?.insertRule(keyFrame);
 
-  console.log(keyFrame);
   return name;
 }
 
