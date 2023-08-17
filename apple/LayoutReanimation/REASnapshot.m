@@ -122,7 +122,7 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
   return nil;
 }
 
-#else // TARGET_OS_OSX [
+#else // TARGET_OS_OSX
       // TODO macOS
 
 - (instancetype)init:(REAUIView *)view
