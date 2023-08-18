@@ -41,6 +41,16 @@ void WorkletRuntimeDecorator::decorate(
 #endif
 
   jsi_utils::installJsiFunction(
+      rt, "_toString", [](jsi::Runtime &rt, const jsi::Value &value) {
+        return jsi::String::createFromUtf8(rt, stringifyJSIValue(rt, value));
+      });
+
+  jsi_utils::installJsiFunction(
+      rt, "_log", [](jsi::Runtime &rt, const jsi::Value &value) {
+        Logger::log(stringifyJSIValue(rt, value));
+      });
+
+  jsi_utils::installJsiFunction(
       rt, "_makeShareableClone", [](jsi::Runtime &rt, const jsi::Value &value) {
         auto shouldRetainRemote = jsi::Value::undefined();
         return reanimated::makeShareableClone(rt, value, shouldRetainRemote);
@@ -80,16 +90,6 @@ void WorkletRuntimeDecorator::decorate(
             remoteFun.asObject(rt).asFunction(rt).call(rt, args, argsSize);
           }
         });
-      });
-
-  jsi_utils::installJsiFunction(
-      rt, "_toString", [](jsi::Runtime &rt, const jsi::Value &value) {
-        return jsi::String::createFromUtf8(rt, stringifyJSIValue(rt, value));
-      });
-
-  jsi_utils::installJsiFunction(
-      rt, "_log", [](jsi::Runtime &rt, const jsi::Value &value) {
-        Logger::log(stringifyJSIValue(rt, value));
       });
 }
 
