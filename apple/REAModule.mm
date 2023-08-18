@@ -20,7 +20,7 @@
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REAUIKit.h>
-#import <RNReanimated/ReanimatedVersion.h>
+#import <RNReanimated/RNRuntimeDecorator.h>
 #import <RNReanimated/SingleInstanceChecker.h>
 #import <RNReanimated/WorkletRuntime.h>
 
@@ -282,7 +282,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 #else
     auto isReducedMotion = false;
 #endif
-    RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
+    RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, isReducedMotion);
 
     rnRuntime.global().setProperty(
         rnRuntime,

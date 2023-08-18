@@ -2,8 +2,12 @@
 
 #include "JSScheduler.h"
 
+#include <jsi/jsi.h>
+
 #include <memory>
 #include <string>
+
+using namespace facebook;
 
 namespace reanimated {
 

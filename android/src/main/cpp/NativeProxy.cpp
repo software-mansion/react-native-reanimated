@@ -14,6 +14,7 @@
 #include "LayoutAnimationsManager.h"
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
+#include "RNRuntimeDecorator.h"
 #include "ReanimatedRuntime.h"
 #include "WorkletRuntime.h"
 #include "WorkletRuntimeCollector.h"
@@ -129,7 +130,7 @@ void NativeProxy::installJSIBindings(
   jsi::Runtime &rnRuntime = *rnRuntime_;
   jsi::Runtime &uiRuntime = nativeReanimatedModule_->getUIRuntime();
   auto isReducedMotion = getIsReducedMotion();
-  RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
+  RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, isReducedMotion);
 
   registerEventHandler();
   setupLayoutAnimations();

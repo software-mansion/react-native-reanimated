@@ -38,10 +38,6 @@ class RuntimeDecorator {
       const ProgressLayoutAnimationFunction progressLayoutAnimationFunction,
       const EndLayoutAnimationFunction endLayoutAnimationFunction,
       const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction);
-  static void decorateRNRuntime(
-      jsi::Runtime &rnRuntime,
-      jsi::Runtime &uiRuntime,
-      bool isReducedMotion);
 };
 
 } // namespace reanimated
