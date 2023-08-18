@@ -19,10 +19,13 @@
   REAAnimationsManager *_animationManager;
   NSMutableSet<NSNumber *> *_viewsToHide;
   NSMutableArray<UIView *> *_removedViews;
-  NSMutableSet<UIView *> *_viewsWithCanceledAnimation;
   NSMutableDictionary<NSNumber *, NSNumber *> *_disableCleaningForView;
+  NSMutableDictionary<NSNumber *, UIView *> *_temopraryViewRegistry;
   NSMutableSet<NSNumber *> *_layoutedSharedViewsTags;
   NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
+  
+  NSMutableSet<UIView *> *_reparentedViews;
+  
   BOOL _isStackDropped;
   BOOL _isAsyncSharedTransitionConfigured;
   BOOL _isConfigured;
@@ -50,10 +53,13 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _animationManager = animationManager;
     _viewsToHide = [NSMutableSet new];
     _sharedTransitionManager = self;
-    _viewsWithCanceledAnimation = [NSMutableSet new];
     _disableCleaningForView = [NSMutableDictionary new];
+    _temopraryViewRegistry = [NSMutableDictionary new];
     _layoutedSharedViewsTags = [NSMutableSet new];
     _layoutedSharedViewsFrame = [NSMutableDictionary new];
+    
+    _reparentedViews = [NSMutableSet new];
+    
     _isAsyncSharedTransitionConfigured = NO;
     _isConfigured = NO;
     [self swizzleScreensMethods];
@@ -74,7 +80,11 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (UIView *)getTransitioningView:(NSNumber *)tag
 {
-  return _currentSharedTransitionViews[tag];
+  UIView *view = _currentSharedTransitionViews[tag];
+  if (view == nil) {
+    return _temopraryViewRegistry[tag];
+  }
+  return view;
 }
 
 - (void)notifyAboutNewView:(UIView *)view
@@ -298,21 +308,24 @@ static REASharedTransitionManager *_sharedTransitionManager;
     [sharedElements addObject:sharedElement];
   }
   if ([newTransitionViews count] > 0) {
-    for (NSNumber *viewTag in _currentSharedTransitionViews) {
-      UIView *view = _currentSharedTransitionViews[viewTag];
-      if ([newTransitionViews containsObject:view]) {
-        [self disableCleaningForViewTag:viewTag];
-      } else {
-        [_viewsWithCanceledAnimation addObject:view];
+    NSMutableSet *currentSoureViews = [NSMutableSet new];
+    for (REASharedElement *sharedElement in _sharedElements) {
+      [currentSoureViews addObject:sharedElement.sourceView];
+    }
+    NSMutableSet *newSoureViews = [NSMutableSet new];
+    for (REASharedElement *sharedElement in sharedElements) {
+      [newSoureViews addObject:sharedElement.sourceView];
+    }
+    for (UIView *view in currentSoureViews) {
+      if (![newSoureViews containsObject:view]) {
+        _temopraryViewRegistry[view.reactTag] = view;
+        [self finishSharedAnimation:view removeView:YES];
+        [self cancelAnimation:view.reactTag];
       }
     }
     [_currentSharedTransitionViews removeAllObjects];
     for (UIView *view in newTransitionViews) {
       _currentSharedTransitionViews[view.reactTag] = view;
-    }
-    for (UIView *view in [_viewsWithCanceledAnimation copy]) {
-      [self cancelAnimation:view.reactTag];
-      [self finishSharedAnimation:view removeView:YES];
     }
   }
   if ([sharedElements count] != 0) {
@@ -520,6 +533,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   for (REASharedElement *sharedElement in sharedElements) {
     UIView *viewSource = sharedElement.sourceView;
+    [_reparentedViews addObject:viewSource];
     if (_sharedTransitionParent[viewSource.reactTag] == nil) {
       _sharedTransitionParent[viewSource.reactTag] = viewSource.superview;
       _sharedTransitionInParentIndex[viewSource.reactTag] = @([viewSource.superview.subviews indexOfObject:viewSource]);
@@ -532,12 +546,12 @@ static REASharedTransitionManager *_sharedTransitionManager;
 - (void)startSharedTransition:(NSArray *)sharedElements
 {
   for (REASharedElement *sharedElement in sharedElements) {
+    sharedElement.targetView.hidden = YES;
     LayoutAnimationType type = sharedElement.animationType;
     [self onViewTransition:sharedElement.sourceView
                     before:sharedElement.sourceViewSnapshot
                      after:sharedElement.targetViewSnapshot
                       type:type];
-    sharedElement.targetView.hidden = YES;
   }
 }
 
@@ -558,12 +572,19 @@ static REASharedTransitionManager *_sharedTransitionManager;
   if (!_isConfigured) {
     return;
   }
+  
   NSNumber *viewTag = view.reactTag;
   if (_disableCleaningForView[viewTag]) {
     [self enableCleaningForViewTag:viewTag];
     return;
   }
-  if (_currentSharedTransitionViews[viewTag] || [_viewsWithCanceledAnimation containsObject:view]) {
+  REASharedElement *sharedElement = _sharedElementsLookup[viewTag];
+  if (sharedElement == nil) {
+    return;
+  }
+  [_sharedElementsLookup removeObjectForKey:viewTag];
+  if ([_reparentedViews containsObject:view]) {
+    [_reparentedViews removeObject:view];
     [view removeFromSuperview];
     UIView *parent = _sharedTransitionParent[viewTag];
     int childIndex = [_sharedTransitionInParentIndex[viewTag] intValue];
@@ -580,29 +601,26 @@ static REASharedTransitionManager *_sharedTransitionManager;
       CGRect frame = CGRectMake(originXByParent, originYByParent, view.frame.size.width, view.frame.size.height);
       [view setFrame:frame];
     }
-    if ([_viewsToHide containsObject:viewTag]) {
-      view.hidden = YES;
-    }
-
-    REASharedElement *sharedElement = _sharedElementsLookup[viewTag];
-    UIView *targetView = sharedElement.targetView;
-    targetView.hidden = NO;
-    [_currentSharedTransitionViews removeObjectForKey:targetView.reactTag];
-    [_viewsWithCanceledAnimation removeObject:targetView];
-
-    [_currentSharedTransitionViews removeObjectForKey:viewTag];
     [_sharedTransitionParent removeObjectForKey:viewTag];
     [_sharedTransitionInParentIndex removeObjectForKey:viewTag];
-    [_viewsWithCanceledAnimation removeObject:view];
-    if (!removeView) {
-      [_removedViews removeObject:view];
-    }
-    if ([_removedViews containsObject:view]) {
-      [_animationManager clearAnimationConfigForTag:viewTag];
-    }
   }
-  if ([_currentSharedTransitionViews count] == 0) {
+
+  UIView *targetView = sharedElement.targetView;
+  targetView.hidden = NO;  
+  if ([_viewsToHide containsObject:viewTag]) {
+    view.hidden = YES;
+  }
+          
+  if (!removeView) {
+    [_removedViews removeObject:view];
+  }
+  if ([_removedViews containsObject:view]) {
+    [_animationManager clearAnimationConfigForTag:viewTag];
+  }
+  
+  if ([_reparentedViews count] == 0) {
     [_transitionContainer removeFromSuperview];
+    [_currentSharedTransitionViews removeAllObjects];
     [_removedViews removeAllObjects];
     [_sharedElements removeAllObjects];
     [_sharedElementsLookup removeAllObjects];
