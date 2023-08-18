@@ -11,7 +11,7 @@ import type {
   LayoutAnimationType,
 } from '../layoutReanimation';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
-import { WorkletRuntime } from '../runtimes';
+import type { WorkletRuntime } from '../runtimes';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {

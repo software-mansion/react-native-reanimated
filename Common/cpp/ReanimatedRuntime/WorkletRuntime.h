@@ -2,6 +2,7 @@
 
 #include <jsi/jsi.h>
 
+#include "JSScheduler.h"
 #include "Shareables.h"
 
 #include <memory>
@@ -16,7 +17,10 @@ namespace reanimated {
 
 class WorkletRuntime : public jsi::HostObject {
  public:
-  explicit WorkletRuntime(jsi::Runtime &rnRuntime, const std::string &name);
+  explicit WorkletRuntime(
+      jsi::Runtime &rnRuntime,
+      const std::shared_ptr<JSScheduler> &jsScheduler,
+      const std::string &name);
 
   void installValueUnpacker(const std::string &valueUnpackerCode);
 
@@ -42,6 +46,10 @@ class WorkletRuntime : public jsi::HostObject {
   std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
 
  private:
+  void bindGlobal();
+  void bindScheduleOnJS(const std::shared_ptr<JSScheduler> &jsScheduler);
+  void bindMakeShareableClone();
+
   const std::shared_ptr<jsi::Runtime> runtime_;
   const std::string name_;
 };

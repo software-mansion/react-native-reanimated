@@ -13,10 +13,6 @@ namespace reanimated {
 
 using RequestFrameFunction =
     std::function<void(jsi::Runtime &, const jsi::Value &)>;
-using ScheduleOnJSFunction =
-    std::function<void(jsi::Runtime &, const jsi::Value &, const jsi::Value &)>;
-using MakeShareableCloneFunction =
-    std::function<jsi::Value(jsi::Runtime &, const jsi::Value &)>;
 using UpdateDataSynchronouslyFunction =
     std::function<void(jsi::Runtime &, const jsi::Value &, const jsi::Value &)>;
 
@@ -37,8 +33,6 @@ class RuntimeDecorator {
 #endif
       const DispatchCommandFunction dispatchCommand,
       const RequestFrameFunction requestFrame,
-      const ScheduleOnJSFunction scheduleOnJS,
-      const MakeShareableCloneFunction makeShareableClone,
       const UpdateDataSynchronouslyFunction updateDataSynchronously,
       const TimeProviderFunction getCurrentTime,
       const SetGestureStateFunction setGestureState,

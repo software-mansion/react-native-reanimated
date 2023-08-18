@@ -145,16 +145,6 @@ export function setupConsole() {
   }
 }
 
-// we need to use different names because `_scheduleOnJS` and `_makeShareableClone` are whitelisted
-const { _scheduleOnJS: scheduleOnJS, _makeShareableClone: makeShareableClone } =
-  global;
-
-export function setupCoreFunctions() {
-  'worklet';
-  global._scheduleOnJS = scheduleOnJS;
-  global._makeShareableClone = makeShareableClone;
-}
-
 function setupRequestAnimationFrame() {
   'worklet';
 
@@ -216,7 +206,6 @@ export function initializeUIRuntime() {
 
   runOnUIImmediately(() => {
     'worklet';
-    setupCoreFunctions();
     setupCallGuard();
     setupConsole();
     // TODO: setupPerformanceNow();

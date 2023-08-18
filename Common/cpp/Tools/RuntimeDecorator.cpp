@@ -73,8 +73,6 @@ void RuntimeDecorator::decorateUIRuntime(
 #endif
     const DispatchCommandFunction dispatchCommand,
     const RequestFrameFunction requestFrame,
-    const ScheduleOnJSFunction scheduleOnJS,
-    const MakeShareableCloneFunction makeShareableClone,
     const UpdateDataSynchronouslyFunction updateDataSynchronously,
     const TimeProviderFunction getCurrentTime,
     const SetGestureStateFunction setGestureState,

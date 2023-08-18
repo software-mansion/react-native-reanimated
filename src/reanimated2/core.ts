@@ -21,18 +21,13 @@ import type {
 import { SensorContainer } from './SensorContainer';
 
 export { startMapper, stopMapper } from './mappers';
-export {
-  backgroundTask,
-  runOnJS,
-  runOnUI,
-  runOnRuntime,
-  runOnRuntimeSync,
-} from './threads';
-export type { BackgroundTaskConfig } from './threads';
-export { makeShareable } from './shareables';
-export { makeMutable, makeRemote } from './mutables';
+export { runOnJS, runOnUI, runOnRuntime, runOnRuntimeSync } from './threads';
 export { createWorkletRuntime } from './runtimes';
 export type { WorkletRuntime } from './runtimes';
+export { backgroundTask } from './background';
+export type { BackgroundTaskConfig } from './background';
+export { makeShareable } from './shareables';
+export { makeMutable, makeRemote } from './mutables';
 
 /**
  * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1

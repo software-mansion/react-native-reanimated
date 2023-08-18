@@ -45,8 +45,10 @@ NativeReanimatedModule::NativeReanimatedModule(
     : NativeReanimatedModuleSpec(jsInvoker),
       jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsInvoker)),
       uiScheduler_(uiScheduler),
-      uiWorkletRuntime_(
-          std::make_shared<WorkletRuntime>(rnRuntime, "Reanimated UI runtime")),
+      uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
+          rnRuntime,
+          jsScheduler_,
+          "Reanimated UI runtime")),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       onRenderCallback_([this](const double timestampMs) {
@@ -74,43 +76,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       [this](jsi::Runtime &rt, const jsi::Value &callback) {
         this->requestAnimationFrame(rt, callback);
       };
-
-  auto scheduleOnJS = [jsScheduler = this->jsScheduler_](
-                          jsi::Runtime &rt,
-                          const jsi::Value &remoteFun,
-                          const jsi::Value &argsValue) {
-    // TODO: move to some helper function
-    auto shareableRemoteFun = extractShareableOrThrow<ShareableRemoteFunction>(
-        rt,
-        remoteFun,
-        "Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
-    auto shareableArgs = argsValue.isUndefined()
-        ? nullptr
-        : extractShareableOrThrow<ShareableArray>(
-              rt, argsValue, "args must be an array");
-    jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
-      auto remoteFun = shareableRemoteFun->getJSValue(rt);
-      if (shareableArgs == nullptr) {
-        // fast path for remote function w/o arguments
-        remoteFun.asObject(rt).asFunction(rt).call(rt);
-      } else {
-        auto argsArray = shareableArgs->getJSValue(rt).asObject(rt).asArray(rt);
-        auto argsSize = argsArray.size(rt);
-        // number of arguments is typically relatively small so it is ok to
-        // to use VLAs here, hence disabling the lint rule
-        jsi::Value args[argsSize]; // NOLINT(runtime/arrays)
-        for (size_t i = 0; i < argsSize; i++) {
-          args[i] = argsArray.getValueAtIndex(rt, i);
-        }
-        remoteFun.asObject(rt).asFunction(rt).call(rt, args, argsSize);
-      }
-    });
-  };
-
-  auto makeShareableClone = [](jsi::Runtime &rt, const jsi::Value &value) {
-    auto shouldRetainRemote = jsi::Value::undefined();
-    return reanimated::makeShareableClone(rt, value, shouldRetainRemote);
-  };
 
   auto updateDataSynchronously =
       [this](
@@ -159,8 +124,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.dispatchCommandFunction,
 #endif
       requestAnimationFrame,
-      scheduleOnJS,
-      makeShareableClone,
       updateDataSynchronously,
       platformDepMethodsHolder.getCurrentTime,
       platformDepMethodsHolder.setGestureStateFunction,
@@ -208,7 +171,8 @@ jsi::Value NativeReanimatedModule::createWorkletRuntime(
     const jsi::Value &valueUnpackerCode) {
   auto nameString = name.asString(rt).utf8(rt);
   auto valueUnpackerCodeString = valueUnpackerCode.asString(rt).utf8(rt);
-  auto workletRuntime = std::make_shared<WorkletRuntime>(rt, nameString);
+  auto workletRuntime =
+      std::make_shared<WorkletRuntime>(rt, jsScheduler_, nameString);
   workletRuntime->installValueUnpacker(valueUnpackerCodeString);
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }

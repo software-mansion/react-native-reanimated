@@ -173,7 +173,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule_;
-  std::shared_ptr<CallInvoker> jsCallInvoker_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
 #ifdef RCT_NEW_ARCH_ENABLED
   std::shared_ptr<PropsRegistry> propsRegistry_;

@@ -1,25 +1,23 @@
+import React, { useEffect } from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, {
+  Easing,
+  backgroundTask,
+  createWorkletRuntime,
+  runOnJS,
+  runOnRuntime,
+  runOnRuntimeSync,
+  runOnUI,
+  useAnimatedStyle,
   useSharedValue,
   withTiming,
-  useAnimatedStyle,
-  Easing,
-  runOnUI,
-  runOnJS,
-  createWorkletRuntime,
-  runOnRuntimeSync,
-  runOnRuntime,
 } from 'react-native-reanimated';
-import { Text, View, Button, StyleSheet } from 'react-native';
-import React, { useEffect } from 'react';
-import { makeShareableCloneRecursive } from 'react-native-reanimated/src/reanimated2/shareables';
-import { backgroundTask } from 'react-native-reanimated';
 
 export default function WorkletRuntimeExample() {
   return (
     <View style={styles.container}>
       <AnimationDemo />
       <RunOnUIRunOnJSDemo />
-      <ScheduleOnJSDemo />
       <CreateWorkletRuntimeDemo />
       <InitializerDemo />
       <RunOnRuntimeAsyncDemo />
@@ -68,17 +66,6 @@ function RunOnUIRunOnJSDemo() {
   };
 
   return <Button title="runOnUI / runOnJS" onPress={handlePress} />;
-}
-
-function ScheduleOnJSDemo() {
-  const handlePress = () => {
-    global._scheduleOnJS(
-      makeShareableCloneRecursive(console.log),
-      makeShareableCloneRecursive(['Hello from JS thread!'])
-    );
-  };
-
-  return <Button title="_scheduleOnJS" onPress={handlePress} />;
 }
 
 function CreateWorkletRuntimeDemo() {

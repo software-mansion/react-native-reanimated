@@ -7,7 +7,7 @@ import type {
   ValueRotation,
 } from '../commonTypes';
 import { SensorType } from '../commonTypes';
-import { WorkletRuntime } from '../runtimes';
+import type { WorkletRuntime } from '../runtimes';
 import type { WebSensor } from './WebSensor';
 
 export default class JSReanimated {
