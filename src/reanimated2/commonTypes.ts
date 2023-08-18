@@ -55,6 +55,12 @@ export type ShareableRef<T> = {
   __hostObjectShareableJSRef: T;
 };
 
+// In case of objects with depth or arrays of objects or arrays of arrays etc.
+// we add this utility type that makes it a SharaebleRef of the outermost type.
+export type FlatShareableRef<T> = T extends ShareableRef<infer U>
+  ? ShareableRef<U>
+  : ShareableRef<T>;
+
 export type ShareableSyncDataHolderRef<T> = {
   __hostObjectShareableJSRefSyncDataHolder: T;
 };
@@ -171,6 +177,7 @@ export interface AnimationObject {
   finished?: boolean;
   strippedCurrent?: number;
   cancelled?: boolean;
+  reduceMotion?: boolean;
 
   __prefix?: string;
   __suffix?: string;
@@ -220,10 +227,6 @@ export type AnimatedSensor<T extends Value3D | ValueRotation> = {
   isAvailable: boolean;
   config: SensorConfig;
 };
-
-export interface NumericAnimation {
-  current?: number;
-}
 
 export type AnimationCallback = (
   finished?: boolean,
@@ -283,4 +286,15 @@ export interface MeasuredDimensions {
 
 export interface AnimatedKeyboardOptions {
   isStatusBarTranslucentAndroid?: boolean;
+}
+
+/**
+ * - `System` - If the `Reduce motion` accessibility setting is enabled on the device, disable the animation. Otherwise, enable the animation.
+ * - `Always` - Disable the animation.
+ * - `Never` - Enable the animation.
+ */
+export enum ReduceMotion {
+  System = 'system',
+  Always = 'always',
+  Never = 'never',
 }

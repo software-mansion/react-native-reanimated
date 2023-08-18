@@ -30,12 +30,13 @@ export interface NativeReanimatedModule {
   getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>): T;
   scheduleOnUI<T>(shareable: ShareableRef<T>): void;
   registerEventHandler<T>(
-    eventHash: string,
-    eventHandler: ShareableRef<T>
+    eventHandler: ShareableRef<T>,
+    eventName: string,
+    emitterReactTag: number
   ): number;
   unregisterEventHandler(id: number): void;
   getViewProp<T>(
-    viewTag: string,
+    viewTag: number,
     propName: string,
     callback?: (result: T) => void
   ): Promise<T>;
@@ -132,8 +133,16 @@ export class NativeReanimated {
     return this.InnerNativeModule.unregisterSensor(sensorId);
   }
 
-  registerEventHandler<T>(eventHash: string, eventHandler: ShareableRef<T>) {
-    return this.InnerNativeModule.registerEventHandler(eventHash, eventHandler);
+  registerEventHandler<T>(
+    eventHandler: ShareableRef<T>,
+    eventName: string,
+    emitterReactTag: number
+  ) {
+    return this.InnerNativeModule.registerEventHandler(
+      eventHandler,
+      eventName,
+      emitterReactTag
+    );
   }
 
   unregisterEventHandler(id: number) {
@@ -141,7 +150,7 @@ export class NativeReanimated {
   }
 
   getViewProp<T>(
-    viewTag: string,
+    viewTag: number,
     propName: string,
     callback?: (result: T) => void
   ) {

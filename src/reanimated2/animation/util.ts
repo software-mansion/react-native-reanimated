@@ -7,18 +7,21 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-import type {
-  SharedValue,
-  AnimatableValue,
-  Animation,
-  AnimationObject,
-  Timestamp,
-  AnimatableValueObject,
+import {
+  type SharedValue,
+  type AnimatableValue,
+  type Animation,
+  type AnimationObject,
+  type Timestamp,
+  type AnimatableValueObject,
+  ReduceMotion,
 } from '../commonTypes';
 import NativeReanimatedModule from '../NativeReanimated';
-import {
+import type {
   AffineMatrixFlat,
   AffineMatrix,
+} from './transformationMatrix/matrixUtils';
+import {
   flatten,
   multiplyMatrices,
   scaleMatrix,
@@ -28,8 +31,10 @@ import {
   subtractMatrices,
   getRotationMatrix,
 } from './transformationMatrix/matrixUtils';
+import { isReducedMotion } from '../PlatformChecker';
 
 let IN_STYLE_UPDATER = false;
+const IS_REDUCED_MOTION = isReducedMotion();
 
 export function initialUpdaterRun<T>(updater: () => T): T {
   IN_STYLE_UPDATER = true;
@@ -65,6 +70,32 @@ function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
   }
 }
 
+/**
+ * Returns whether the motion should be reduced for a specified config.
+ * By default returns the system setting.
+ */
+function getReduceMotionFromConfig(config?: ReduceMotion) {
+  'worklet';
+  return !config || config === ReduceMotion.System
+    ? IS_REDUCED_MOTION
+    : config === ReduceMotion.Always;
+}
+
+/**
+ * Returns the value that should be assigned to `animation.reduceMotion`
+ * for a given config. If the config is not defined, `undefined` is returned.
+ */
+export function getReduceMotionForAnimation(config?: ReduceMotion) {
+  'worklet';
+  // if the config is not defined, we want `reduceMotion` to be undefined,
+  // so the parent animation knows if it should overwrite it
+  if (!config) {
+    return undefined;
+  }
+
+  return getReduceMotionFromConfig(config);
+}
+
 function applyProgressToMatrix(
   progress: number,
   a: AffineMatrix,
@@ -83,12 +114,24 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
   animation: T
 ): void {
   'worklet';
+  const baseOnStart = (animation as Animation<AnimationObject>).onStart;
+  const baseOnFrame = (animation as Animation<AnimationObject>).onFrame;
+
   if ((animation as HigherOrderAnimation).isHigherOrder) {
+    animation.onStart = (
+      animation: Animation<AnimationObject>,
+      value: number,
+      timestamp: Timestamp,
+      previousAnimation: Animation<AnimationObject>
+    ) => {
+      if (animation.reduceMotion === undefined) {
+        animation.reduceMotion = getReduceMotionFromConfig();
+      }
+      return baseOnStart(animation, value, timestamp, previousAnimation);
+    };
     return;
   }
 
-  const baseOnStart = (animation as Animation<AnimationObject>).onStart;
-  const baseOnFrame = (animation as Animation<AnimationObject>).onFrame;
   const animationCopy = Object.assign({}, animation);
   delete animationCopy.callback;
 
@@ -375,6 +418,20 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     timestamp: Timestamp,
     previousAnimation: Animation<AnimationObject>
   ) => {
+    if (animation.reduceMotion === undefined) {
+      animation.reduceMotion = getReduceMotionFromConfig();
+    }
+    if (animation.reduceMotion) {
+      if (animation.toValue !== undefined) {
+        animation.current = animation.toValue;
+      } else {
+        // if there is no `toValue`, then the base function is responsible for setting the current value
+        baseOnStart(animation, value, timestamp, previousAnimation);
+      }
+      animation.startTime = 0;
+      animation.onFrame = () => true;
+      return;
+    }
     if (isColor(value)) {
       colorOnStart(animation, value, timestamp, previousAnimation);
       animation.onFrame = colorOnFrame;

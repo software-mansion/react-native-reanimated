@@ -125,6 +125,7 @@ export const globals = new Set([
   // Reanimated
   '_WORKLET',
   '_log',
+  '_toString',
   '_scheduleOnJS',
   '_makeShareableClone',
   '_updateDataSynchronously',

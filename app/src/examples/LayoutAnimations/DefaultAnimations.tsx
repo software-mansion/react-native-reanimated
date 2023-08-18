@@ -125,7 +125,7 @@ const AnimatedBlock = ({
   );
 };
 
-export default function DefaultAnimations(): React.ReactElement {
+export default function DefaultAnimations() {
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.groupText}>Fade in</Text>
@@ -537,6 +537,7 @@ const styles = StyleSheet.create({
   animatedText: {
     color: '#ffffff',
     fontSize: 20,
+    userSelect: 'none',
   },
   animatedBox: {
     padding: 5,

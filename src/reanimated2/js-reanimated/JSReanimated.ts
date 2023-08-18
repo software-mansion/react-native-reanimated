@@ -36,8 +36,9 @@ export default class JSReanimated {
   }
 
   registerEventHandler<T>(
-    _eventHash: string,
-    _eventHandler: ShareableRef<T>
+    _eventHandler: ShareableRef<T>,
+    _eventName: string,
+    _emitterReactTag: number
   ): number {
     // noop
     return -1;
@@ -243,7 +244,7 @@ export default class JSReanimated {
   }
 
   getViewProp<T>(
-    _viewTag: string,
+    _viewTag: number,
     _propName: string,
     _callback?: (result: T) => void
   ): Promise<T> {

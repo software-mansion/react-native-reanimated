@@ -37,5 +37,9 @@ module.exports = {
     // '@typescript-eslint/no-duplicate-type-constituents': 'error', // TODO this currently breaks ESLint for VSCode in plugin
     eqeqeq: 'error',
     'no-unreachable': 'error',
+    '@typescript-eslint/consistent-type-imports': [
+      'error',
+      { prefer: 'type-imports' },
+    ],
   },
 };

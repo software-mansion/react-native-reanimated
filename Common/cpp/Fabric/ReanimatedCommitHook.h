@@ -15,8 +15,9 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
  public:
   ReanimatedCommitHook(
       const std::shared_ptr<PropsRegistry> &propsRegistry,
-      const std::shared_ptr<UIManager> &uiManager)
-      : propsRegistry_(propsRegistry), uiManager_(uiManager) {}
+      const std::shared_ptr<UIManager> &uiManager);
+
+  ~ReanimatedCommitHook() noexcept override;
 
   void commitHookWasRegistered(UIManager const &) const noexcept override {}
 
@@ -27,8 +28,6 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
       RootShadowNode::Shared const &oldRootShadowNode,
       RootShadowNode::Unshared const &newRootShadowNode)
       const noexcept override;
-
-  virtual ~ReanimatedCommitHook() noexcept = default;
 
  private:
   std::shared_ptr<PropsRegistry> propsRegistry_;

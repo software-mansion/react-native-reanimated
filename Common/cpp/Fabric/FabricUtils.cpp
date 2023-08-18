@@ -9,10 +9,10 @@ using namespace facebook::react;
 
 namespace reanimated {
 
-std::shared_ptr<const ContextContainer> getContextContainerFromUIManager(
-    const UIManager *uiManager) {
-  return reinterpret_cast<const UIManagerPublic *>(uiManager)
-      ->contextContainer_;
+const ContextContainer &getContextContainerFromUIManager(
+    const UIManager &uiManager) {
+  return *reinterpret_cast<const UIManagerPublic *>(&uiManager)
+              ->contextContainer_;
 }
 
 } // namespace reanimated

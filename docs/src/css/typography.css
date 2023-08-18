@@ -1,0 +1,191 @@
+@font-face {
+  font-family: 'Aeonik';
+  src: url('/static/font/Aeonik-Regular.otf') format('opentype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Aeonik';
+  src: url('/static/font/Aeonik-Medium.otf') format('opentype');
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: 'Aeonik';
+  src: url('/static/font/Aeonik-Bold.otf') format('opentype');
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: 'Lexend';
+  src: url('/static/font/Lexend-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: 'Lexend';
+  src: url('/static/font/Lexend-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: 'DM Mono';
+  src: url('/static/font/DMMono-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+:root {
+  --swm-title-landing-font: 'Lexend';
+  --swm-title-font: 'Aeonik';
+  --swm-body-font: 'Aeonik';
+  --swm-code-font: 'DM Mono';
+
+  --ifm-font-family-base: var(--swm-body-font);
+  --ifm-font-family-bold: var(--swm-body-font);
+
+  /* Heading */
+  --swm-h1-font-size: 42px;
+  --swm-h2-font-size: 32px;
+  --swm-h3-font-size: 22px;
+  --swm-heading-font-size-smaller: 18px;
+  --ifm-code-font-size: 90%;
+
+  --ifm-heading-font-family: var(--swm-title-font);
+  --ifm-heading-margin-bottom: 0;
+
+  --swm-heading-font-weight: 600;
+  --swm-h1-line-height: 1.15;
+  --swm-h2-line-height: 1.2;
+  --swm-heading-line-height-default: 1.3;
+
+  --swm-heading-letter-spacing-bigger: 0.02em;
+  --swm-heading-letter-spacing-smaller: 0.01em;
+
+  /* Admonitions */
+  --swm-admonition-heading-font-family: var(--swm-body-font);
+  --swm-admonition-heading-font-weight: 500;
+
+  /* Paginator */
+  --swm-paginator-sublabel-font-size: 14px;
+  --swm-paginator-sublabel-text-transform: uppercase;
+
+  --swm-paginator-label-font-size: 20px;
+  --swm-paginator-label-font-weight: 500;
+
+  /* Search page */
+  --swm-search-page-heading-font-weight: 600;
+  --swm-search-page-summary-font-size: 14px;
+}
+
+/* Remove all heading rules, prioritized by Docusaurus */
+:root,
+.markdown h1:first-child,
+.markdown > h1,
+.markdown > h2,
+.markdown > h3,
+.markdown > h4,
+.markdown > h5,
+.markdown > h6 {
+  --ifm-h1-font-size: var(--swm-h1-font-size);
+  --ifm-h2-font-size: var(--swm-h2-font-size);
+  --ifm-h3-font-size: var(--swm-h3-font-size);
+  --ifm-h4-font-size: var(--swm-heading-font-size-smaller);
+  --ifm-h5-font-size: var(--swm-heading-font-size-smaller);
+  --ifm-h6-font-size: var(--swm-heading-font-size-smaller);
+
+  --ifm-h1-vertical-rhythm-top: 3.75;
+  --ifm-h2-vertical-rhythm-top: 2.5;
+  --ifm-h3-vertical-rhythm-top: 1.75;
+  --ifm-heading-vertical-rhythm-top: 1.5;
+  --ifm-h1-vertical-rhythm-bottom: 1.5;
+  --ifm-heading-vertical-rhythm-bottom: 1.25;
+}
+
+@media (max-width: 996px) {
+  :root,
+  .markdown h1:first-child,
+  .markdown > h1,
+  .markdown > h2,
+  .markdown > h3,
+  .markdown > h4,
+  .markdown > h5,
+  .markdown > h6 {
+    --swm-heading-font-size-smaller-mobile: 16px;
+
+    /* Decrease the font size on mobile devices */
+    --ifm-h1-font-size: var(--swm-h2-font-size);
+    --ifm-h2-font-size: var(--swm-h3-font-size);
+    --ifm-h3-font-size: var(--swm-heading-font-size-smaller);
+    --ifm-h4-font-size: var(--swm-heading-font-size-smaller-mobile);
+    --ifm-h5-font-size: var(--swm-heading-font-size-smaller-mobile);
+    --ifm-h6-font-size: var(--swm-heading-font-size-smaller-mobile);
+  }
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: var(--swm-heading-font-weight);
+  letter-spacing: var(--swm-heading-letter-spacing-smaller);
+}
+
+h1 {
+  line-height: var(--swm-h1-line-height);
+  letter-spacing: var(--swm-heading-letter-spacing-bigger);
+}
+
+@media (max-width: 996px) {
+  h1 {
+    letter-spacing: var(--swm-heading-letter-spacing-smaller);
+  }
+}
+
+h2 {
+  line-height: var(--swm-h2-line-height);
+}
+
+h3,
+h4,
+h5 {
+  line-height: var(--swm-heading-line-height-default);
+}
+
+h6 {
+  font-family: var(--swm-code-font);
+}
+
+p {
+  line-height: 1.6;
+}
+
+ul[role='tablist'] {
+  font-family: var(--swm-title-font);
+}
+
+code {
+  font-family: var(--swm-code-font);
+  font-weight: 400;
+  padding: 0.25rem;
+}
+
+.markdown a code {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.markdown a {
+  font-weight: 500;
+  text-decoration: none;
+
+  border-bottom: 1px solid var(--ifm-font-color-base);
+}
+
+/* Sidebar */
+[class*='menu__list-item-collapsible'] a {
+  font-family: var(--swm-title-font);
+  font-weight: 600;
+  font-size: 18px;
+}

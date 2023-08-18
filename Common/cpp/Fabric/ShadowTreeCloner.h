@@ -14,7 +14,7 @@ namespace reanimated {
 
 class ShadowTreeCloner {
  public:
-  ShadowTreeCloner(std::shared_ptr<UIManager> uiManager, SurfaceId surfaceId);
+  ShadowTreeCloner(const UIManager &uiManager, SurfaceId surfaceId);
 
   ShadowNode::Unshared cloneWithNewProps(
       const ShadowNode::Shared &oldRootNode,

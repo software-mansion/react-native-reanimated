@@ -49,12 +49,14 @@ using MeasureFunction =
 
 #endif // RCT_NEW_ARCH_ENABLED
 
-using RequestRender =
+using RequestRenderFunction =
     std::function<void(std::function<void(double)>, jsi::Runtime &rt)>;
+using ObtainPropFunction =
+    std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>;
 using TimeProviderFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction =
-    std::function<void(int, jsi::Object newProps, bool isSharedTransition)>;
+    std::function<void(jsi::Runtime &, int, jsi::Object, bool)>;
 using EndLayoutAnimationFunction = std::function<void(int, bool)>;
 
 using RegisterSensorFunction =
@@ -71,7 +73,7 @@ using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
 struct PlatformDepMethodsHolder {
-  RequestRender requestRender;
+  RequestRenderFunction requestRender;
 #ifdef RCT_NEW_ARCH_ENABLED
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
 #else
@@ -80,6 +82,7 @@ struct PlatformDepMethodsHolder {
   DispatchCommandFunction dispatchCommandFunction;
   MeasureFunction measureFunction;
   ConfigurePropsFunction configurePropsFunction;
+  ObtainPropFunction obtainPropFunction;
 #endif
   TimeProviderFunction getCurrentTime;
   ProgressLayoutAnimationFunction progressLayoutAnimation;

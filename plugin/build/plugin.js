@@ -112,6 +112,7 @@ var require_commonObjects = __commonJS({
       "HermesInternal",
       "_WORKLET",
       "_log",
+      "_toString",
       "_scheduleOnJS",
       "_makeShareableClone",
       "_updateDataSynchronously",
@@ -834,6 +835,7 @@ var require_isLayoutAnimationCallback = __commonJS({
     ]);
     var LayoutTransitions = /* @__PURE__ */ new Set([
       "Layout",
+      "LinearTransition",
       "SequencedTransition",
       "FadingTransition",
       "JumpingTransition",

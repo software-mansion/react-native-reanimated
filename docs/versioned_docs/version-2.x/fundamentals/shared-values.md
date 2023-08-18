@@ -116,7 +116,10 @@ function Box() {
   return (
     <>
       <Animated.View style={[styles.box, animatedStyles]} />
-      <Button onPress={() => (offset.value = Math.random() * 255)} title="Move" />
+      <Button
+        onPress={() => (offset.value = Math.random() * 255)}
+        title="Move"
+      />
     </>
   );
 }
