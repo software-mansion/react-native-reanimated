@@ -21,8 +21,8 @@
 #include "FeaturesConfig.h"
 #include "JSScheduler.h"
 #include "ReanimatedHiddenHeaders.h"
-#include "RuntimeDecorator.h"
 #include "Shareables.h"
+#include "UIRuntimeDecorator.h"
 #include "WorkletEventHandler.h"
 
 #ifdef __ANDROID__
@@ -110,7 +110,7 @@ NativeReanimatedModule::NativeReanimatedModule(
 #endif
 
   jsi::Runtime &uiRuntime = uiWorkletRuntime_->getRuntime();
-  RuntimeDecorator::decorateUIRuntime(
+  UIRuntimeDecorator::decorate(
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
       updateProps,

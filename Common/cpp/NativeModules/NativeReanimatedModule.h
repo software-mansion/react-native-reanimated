@@ -16,7 +16,6 @@
 #include "LayoutAnimationsManager.h"
 #include "NativeReanimatedModuleSpec.h"
 #include "PlatformDepMethodsHolder.h"
-#include "RuntimeDecorator.h"
 #include "SingleInstanceChecker.h"
 #include "UIScheduler.h"
 

@@ -1,14 +1,9 @@
-#include "RuntimeDecorator.h"
-#include <jsi/instrumentation.h>
-#include <chrono>
-#include <memory>
-#include <unordered_map>
-#include <utility>
+#include "UIRuntimeDecorator.h"
 #include "JsiUtils.h"
 
 namespace reanimated {
 
-void RuntimeDecorator::decorateUIRuntime(
+void UIRuntimeDecorator::decorate(
     jsi::Runtime &rt,
     const UpdatePropsFunction updateProps,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -28,7 +23,7 @@ void RuntimeDecorator::decorateUIRuntime(
     const ProgressLayoutAnimationFunction progressLayoutAnimationFunction,
     const EndLayoutAnimationFunction endLayoutAnimationFunction,
     const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction) {
-  rt.global().setProperty(rt, "_UI", jsi::Value(true));
+  rt.global().setProperty(rt, "_UI", true);
 
 #ifdef RCT_NEW_ARCH_ENABLED
   jsi_utils::installJsiFunction(rt, "_updatePropsFabric", updateProps);
