@@ -10,12 +10,11 @@ import Animated, {
 
 function clampWorklet(num: number, min: number, max: number) {
   'worklet';
-
   return Math.min(Math.max(num, min), max);
 }
 
-const OFFSET_X = 100; //in px
-const OFFSET_Y = 100; //in px
+const OFFSET_X = 100; // in px
+const OFFSET_Y = 100; // in px
 
 export default function AnimatedSensorAccelerometerExample() {
   const animatedSensor = useAnimatedSensor(SensorType.ACCELEROMETER);

@@ -12,7 +12,7 @@ export default function AnimatedSensorMagneticFieldExample() {
 
   const animatedStyle = useAnimatedStyle(() => {
     const { x, y } = gravity.sensor.value;
-    const angle = (Math.atan2(y, x) * 180) / Math.PI;
+    const angle = Math.atan2(y, x) * 180 / Math.PI;
     return {
       transform: [{ rotateZ: `${angle}deg` }, { translateY: 75 }],
     };

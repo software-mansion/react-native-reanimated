@@ -256,7 +256,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   AnimatedSensorMagneticFieldExample: {
     icon: '🧲',
-    title: 'useAnimatedSensor - magnetic filed',
+    title: 'useAnimatedSensor - magnetic field',
     screen: AnimatedSensorMagneticFieldExample,
   },
   AnimatedSensorRotationExample: {
