@@ -208,7 +208,6 @@ export { getRelativeCoords, ComponentCoords } from './utils';
 export {
   StyleProps,
   SharedValue,
-  Context,
   AnimatableValueObject,
   AnimatableValue,
   AnimationObject,
