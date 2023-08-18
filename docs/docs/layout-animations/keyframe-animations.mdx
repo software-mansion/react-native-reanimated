@@ -139,7 +139,7 @@ Allows to execute code when keyframe animation ends.
 ## Example
 
 ```js
-export function KeyframeAnimation(): React.ReactElement {
+export function KeyframeAnimation() {
   const [show, setShow] = useState(false);
 
   const enteringAnimation = new Keyframe({

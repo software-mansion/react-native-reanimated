@@ -125,7 +125,7 @@ const AnimatedBlock = ({
   );
 };
 
-export default function DefaultAnimations(): React.ReactElement {
+export default function DefaultAnimations() {
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.groupText}>Fade in</Text>

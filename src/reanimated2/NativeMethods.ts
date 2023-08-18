@@ -1,4 +1,4 @@
-import { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
+import type { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
 import {
   isChromeDebugger,
   isJest,

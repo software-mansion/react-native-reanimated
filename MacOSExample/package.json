@@ -5,6 +5,7 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
+    "macos": "react-native run-macos",
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest"
@@ -12,7 +13,8 @@
   "dependencies": {
     "react": "18.2.0",
     "react-native": "0.71.12",
-    "react-native-macos": "^0.71.0-0"
+    "react-native-macos": "^0.71.0-0",
+    "react-native-reanimated": "link:../"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

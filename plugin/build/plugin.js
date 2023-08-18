@@ -835,6 +835,7 @@ var require_isLayoutAnimationCallback = __commonJS({
     ]);
     var LayoutTransitions = /* @__PURE__ */ new Set([
       "Layout",
+      "LinearTransition",
       "SequencedTransition",
       "FadingTransition",
       "JumpingTransition",

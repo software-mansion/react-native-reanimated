@@ -25,6 +25,7 @@ import {
   isChromeDebugger,
   shouldBeUseWeb,
   isWeb,
+  isMacOS,
 } from './reanimated2/PlatformChecker';
 import { initialUpdaterRun } from './reanimated2/animation';
 import type {
@@ -50,7 +51,7 @@ import { makeViewDescriptorsSet } from './reanimated2/ViewDescriptorsSet';
 import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
 import updateProps from './reanimated2/UpdateProps';
 import NativeReanimatedModule from './reanimated2/NativeReanimated';
-import { isSharedValue } from './reanimated2';
+import { isSharedValue } from './reanimated2/utils';
 import type { AnimateProps } from './reanimated2/helperTypes';
 import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
 import { JSPropUpdater } from './JSPropUpdater';
@@ -626,6 +627,7 @@ export default function createAnimatedComponent(
 
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (
+          !isMacOS() &&
           (layout || entering || exiting || sharedTransitionTag) &&
           tag != null
         ) {

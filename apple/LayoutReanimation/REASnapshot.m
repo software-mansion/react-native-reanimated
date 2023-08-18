@@ -11,23 +11,25 @@ NS_ASSUME_NONNULL_BEGIN
 const int ScreenStackPresentationModal = 1; // RNSScreenStackPresentationModal
 const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from screen top edge by 69px
 
-- (instancetype)init:(UIView *)view
+#if !TARGET_OS_OSX
+
+- (instancetype)init:(REAUIView *)view
 {
   self = [super init];
   [self makeSnapshotForView:view useAbsolutePositionOnly:NO];
   return self;
 }
 
-- (instancetype)initWithAbsolutePosition:(UIView *)view
+- (instancetype)initWithAbsolutePosition:(REAUIView *)view
 {
   self = [super init];
   [self makeSnapshotForView:view useAbsolutePositionOnly:YES];
   return self;
 }
 
-- (void)makeSnapshotForView:(UIView *)view useAbsolutePositionOnly:(BOOL)useAbsolutePositionOnly
+- (void)makeSnapshotForView:(REAUIView *)view useAbsolutePositionOnly:(BOOL)useAbsolutePositionOnly
 {
-  UIView *mainWindow = UIApplication.sharedApplication.keyWindow;
+  REAUIView *mainWindow = UIApplication.sharedApplication.keyWindow;
   CGPoint absolutePosition = [[view superview] convertPoint:view.center toView:mainWindow];
   _values = [NSMutableDictionary new];
   _values[@"windowWidth"] = [NSNumber numberWithDouble:mainWindow.bounds.size.width];
@@ -42,8 +44,8 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
     _values[@"originXByParent"] = [NSNumber numberWithDouble:view.center.x - view.bounds.size.width / 2.0];
     _values[@"originYByParent"] = [NSNumber numberWithDouble:view.center.y - view.bounds.size.height / 2.0];
 
-    UIView *navigationContainer = view.reactViewController.navigationController.view;
-    UIView *header = [navigationContainer.subviews count] > 1 ? navigationContainer.subviews[1] : nil;
+    REAUIView *navigationContainer = view.reactViewController.navigationController.view;
+    REAUIView *header = [navigationContainer.subviews count] > 1 ? navigationContainer.subviews[1] : nil;
     if (header != nil) {
       CGFloat headerHeight = header.frame.size.height;
       CGFloat headerOriginY = header.frame.origin.y;
@@ -96,9 +98,9 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
   }
 }
 
-- (UIView *)findTransformedView:(UIView *)view
+- (REAUIView *)findTransformedView:(REAUIView *)view
 {
-  UIView *transformedView;
+  REAUIView *transformedView;
   bool isTransformed = false;
   do {
     if (transformedView == nil) {
@@ -119,6 +121,23 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
   }
   return nil;
 }
+
+#else // TARGET_OS_OSX
+      // TODO macOS
+
+- (instancetype)init:(REAUIView *)view
+{
+  self = [super init];
+  return self;
+}
+
+- (instancetype)initWithAbsolutePosition:(REAUIView *)view
+{
+  self = [super init];
+  return self;
+}
+
+#endif
 
 @end
 
