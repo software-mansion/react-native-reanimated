@@ -69,7 +69,7 @@ export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
   });
 }
 
-export function getSensorContainer(): SensorContainer {
+function getSensorContainer(): SensorContainer {
   if (!global.__sensorContainer) {
     global.__sensorContainer = new SensorContainer();
   }

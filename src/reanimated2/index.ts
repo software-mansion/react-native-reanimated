@@ -7,6 +7,7 @@ export {
   isReanimated3,
   isConfigured,
   enableLayoutAnimations,
+  getViewProp,
 } from './core';
 export {
   useAnimatedProps,
