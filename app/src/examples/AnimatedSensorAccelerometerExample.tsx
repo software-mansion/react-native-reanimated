@@ -8,7 +8,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
-function clampWorklet(num: number, min: number, max: number) {
+function clamp(num: number, min: number, max: number) {
   'worklet';
   return Math.min(Math.max(num, min), max);
 }
@@ -17,22 +17,17 @@ const OFFSET_X = 100; // in px
 const OFFSET_Y = 100; // in px
 
 export default function AnimatedSensorAccelerometerExample() {
-  const animatedSensor = useAnimatedSensor(SensorType.ACCELEROMETER);
+  const accelerometer = useAnimatedSensor(SensorType.ACCELEROMETER);
 
   const xOffset = useSharedValue(-OFFSET_X);
   const yOffset = useSharedValue(0);
   const zOffset = useSharedValue(0);
 
-  const animatedStyles = useAnimatedStyle(() => {
-    const { x, y, z } = animatedSensor.sensor.value;
-    // The x vs y here seems wrong but is the way to make it feel right to the user
-    xOffset.value = clampWorklet(
-      xOffset.value - x,
-      -OFFSET_X * 2,
-      OFFSET_X / 4
-    );
-    yOffset.value = clampWorklet(yOffset.value - y, -OFFSET_Y, OFFSET_Y);
-    zOffset.value = clampWorklet(zOffset.value + z * 0.1, 0.5, 2);
+  const animatedStyle = useAnimatedStyle(() => {
+    const { x, y, z } = accelerometer.sensor.value;
+    xOffset.value = clamp(xOffset.value - x, -OFFSET_X * 2, OFFSET_X / 4);
+    yOffset.value = clamp(yOffset.value - y, -OFFSET_Y, OFFSET_Y);
+    zOffset.value = clamp(zOffset.value + z * 0.1, 0.5, 2);
     return {
       transform: [
         { translateX: withSpring(-OFFSET_X - xOffset.value) },
@@ -55,7 +50,7 @@ export default function AnimatedSensorAccelerometerExample() {
         <Text>Reset</Text>
       </Pressable>
       <View style={styles.wrapper}>
-        <Animated.View style={[styles.box, animatedStyles]} />
+        <Animated.View style={[styles.box, animatedStyle]} />
       </View>
     </SafeAreaView>
   );

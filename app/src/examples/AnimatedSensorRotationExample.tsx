@@ -8,10 +8,10 @@ import { StyleSheet, View } from 'react-native';
 import React from 'react';
 
 export default function AnimatedSensorRotationExample() {
-  const gravity = useAnimatedSensor(SensorType.ROTATION);
+  const rotation = useAnimatedSensor(SensorType.ROTATION);
 
   const animatedStyle = useAnimatedStyle(() => {
-    const { pitch, roll, yaw } = gravity.sensor.value;
+    const { pitch, roll, yaw } = rotation.sensor.value;
     return {
       transform: [
         { rotateX: `${pitch}rad` },

@@ -8,11 +8,11 @@ import { StyleSheet, View } from 'react-native';
 import React from 'react';
 
 export default function AnimatedSensorMagneticFieldExample() {
-  const gravity = useAnimatedSensor(SensorType.MAGNETIC_FIELD);
+  const magneticField = useAnimatedSensor(SensorType.MAGNETIC_FIELD);
 
   const animatedStyle = useAnimatedStyle(() => {
-    const { x, y } = gravity.sensor.value;
-    const angle = Math.atan2(y, x) * 180 / Math.PI;
+    const { x, y } = magneticField.sensor.value;
+    const angle = (Math.atan2(y, x) * 180) / Math.PI;
     return {
       transform: [{ rotateZ: `${angle}deg` }, { translateY: 75 }],
     };
