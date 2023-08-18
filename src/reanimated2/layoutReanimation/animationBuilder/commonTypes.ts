@@ -1,3 +1,4 @@
+import type { ExtractArrayItemType } from '../../helperTypes';
 import type { EasingFunction } from '../../Easing';
 import type { StyleProps } from '../../commonTypes';
 
@@ -152,3 +153,7 @@ export enum SharedTransitionType {
 export type EntryExitAnimationsValues =
   | EntryAnimationsValues
   | ExitAnimationsValues;
+
+export type StylePropsWithArrayTransform = StyleProps & {
+  transform?: ExtractArrayItemType<StyleProps['transform']>[];
+};

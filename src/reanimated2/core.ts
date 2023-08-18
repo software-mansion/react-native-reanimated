@@ -25,11 +25,6 @@ export { runOnJS, runOnUI } from './threads';
 export { makeShareable } from './shareables';
 export { makeMutable, makeRemote } from './mutables';
 
-export type ReanimatedConsole = Pick<
-  Console,
-  'debug' | 'log' | 'warn' | 'info' | 'error'
->;
-
 /**
  * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1
  */
@@ -52,7 +47,7 @@ global._log = function (s: string) {
   console.log(s);
 };
 
-export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
+export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
   if (global._IS_FABRIC) {
     throw new Error(
       '[Reanimated] `getViewProp` is not supported on Fabric yet'
@@ -74,7 +69,7 @@ export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
   });
 }
 
-export function getSensorContainer(): SensorContainer {
+function getSensorContainer(): SensorContainer {
   if (!global.__sensorContainer) {
     global.__sensorContainer = new SensorContainer();
   }
@@ -191,7 +186,7 @@ export function enableLayoutAnimations(
 }
 
 export function configureLayoutAnimations(
-  viewTag: number,
+  viewTag: number | HTMLElement,
   type: LayoutAnimationType,
   config:
     | LayoutAnimationFunction
@@ -201,7 +196,7 @@ export function configureLayoutAnimations(
   sharedTransitionTag = ''
 ): void {
   NativeReanimatedModule.configureLayoutAnimation(
-    viewTag,
+    viewTag as number, // On web this function is no-op, therefore we can cast viewTag to number
     type,
     sharedTransitionTag,
     makeShareableCloneRecursive(config)

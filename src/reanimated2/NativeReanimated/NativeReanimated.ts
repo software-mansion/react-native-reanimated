@@ -36,7 +36,7 @@ export interface NativeReanimatedModule {
   ): number;
   unregisterEventHandler(id: number): void;
   getViewProp<T>(
-    viewTag: string,
+    viewTag: number,
     propName: string,
     callback?: (result: T) => void
   ): Promise<T>;
@@ -149,7 +149,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 
   getViewProp<T>(
-    viewTag: string,
+    viewTag: number,
     propName: string,
     callback?: (result: T) => void
   ) {

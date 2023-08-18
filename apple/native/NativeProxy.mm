@@ -31,6 +31,8 @@
 #import <dlfcn.h>
 #endif
 
+#import <RNReanimated/READisplayLink.h>
+
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
 @end
@@ -153,7 +155,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
-  auto propObtainer = [reaModule](jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
+  auto obtainPropFunction = [reaModule](
+                                jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
     NSString *propNameConverted = [NSString stringWithFormat:@"%s", propName.utf8(rt).c_str()];
     std::string resultStr = std::string([[reaModule.nodesManager obtainProp:[NSNumber numberWithInt:viewTag]
                                                                    propName:propNameConverted] UTF8String]);
@@ -175,8 +178,14 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto maybeFlushUIUpdatesQueueFunction = [nodesManager]() { [nodesManager maybeFlushUIUpdatesQueue]; };
 
   auto requestRender = [nodesManager](std::function<void(double)> onRender, jsi::Runtime &rt) {
-    [nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
-      double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.targetTimestamp) * 1000;
+    [nodesManager postOnAnimation:^(READisplayLink *displayLink) {
+#if !TARGET_OS_OSX
+      auto targetTimestamp = displayLink.targetTimestamp;
+#else
+      // TODO macOS targetTimestamp isn't available on macOS
+      auto targetTimestamp = displayLink.timestamp + displayLink.duration;
+#endif
+      double frameTimestamp = calculateTimestampWithSlowAnimations(targetTimestamp) * 1000;
       onRender(frameTimestamp);
     }];
   };
@@ -266,6 +275,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       dispatchCommandFunction,
       measureFunction,
       configurePropsFunction,
+      obtainPropFunction,
 #endif
       getCurrentTime,
       progressLayoutAnimation,
@@ -278,16 +288,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       maybeFlushUIUpdatesQueueFunction,
   };
 
-  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
-      jsInvoker,
-      uiScheduler,
-      uiRuntime,
-#ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
-#else
-      propObtainer,
-#endif
-      platformDepMethodsHolder);
+  auto nativeReanimatedModule =
+      std::make_shared<NativeReanimatedModule>(jsInvoker, uiScheduler, uiRuntime, platformDepMethodsHolder);
 
   uiScheduler->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
 
@@ -370,9 +372,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     return nil;
   }];
 #ifdef DEBUG
-  [animationsManager setCheckDuplicateSharedTagBlock:^(UIView *view, NSNumber *_Nonnull viewTag) {
+  [animationsManager setCheckDuplicateSharedTagBlock:^(REAUIView *view, NSNumber *_Nonnull viewTag) {
     if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      UIView *screen = [REAScreensHelper getScreenForView:(UIView *)view];
+      REAUIView *screen = [REAScreensHelper getScreenForView:(REAUIView *)view];
       auto screenTag = [screen.reactTag intValue];
       // Here we check if there are duplicate tags (we don't use return bool value currently)
       nativeReanimatedModule->layoutAnimationsManager().checkDuplicateSharedTag([viewTag intValue], screenTag);
