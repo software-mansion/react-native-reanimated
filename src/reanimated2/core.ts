@@ -25,11 +25,6 @@ export { runOnJS, runOnUI } from './threads';
 export { makeShareable } from './shareables';
 export { makeMutable, makeRemote } from './mutables';
 
-export type ReanimatedConsole = Pick<
-  Console,
-  'debug' | 'log' | 'warn' | 'info' | 'error'
->;
-
 /**
  * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1
  */
@@ -74,7 +69,7 @@ export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
   });
 }
 
-export function getSensorContainer(): SensorContainer {
+function getSensorContainer(): SensorContainer {
   if (!global.__sensorContainer) {
     global.__sensorContainer = new SensorContainer();
   }
