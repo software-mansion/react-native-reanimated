@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView, StyleSheet, View, Text } from 'react-native';
 import Animated, {
   SensorType,
   useAnimatedSensor,
@@ -21,7 +21,7 @@ export default function AnimatedSensorAccelerometerExample() {
 
   const xOffset = useSharedValue(-OFFSET_X);
   const yOffset = useSharedValue(0);
-  const zOffset = useSharedValue(0);
+  const zOffset = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => {
     const { x, y, z } = accelerometer.sensor.value;
@@ -40,18 +40,23 @@ export default function AnimatedSensorAccelerometerExample() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Pressable
-        style={styles.button}
-        onPress={() => {
-          xOffset.value = -OFFSET_X;
-          yOffset.value = 0;
-          zOffset.value = 0;
-        }}>
-        <Text>Reset</Text>
-      </Pressable>
-      <View style={styles.wrapper}>
-        <Animated.View style={[styles.box, animatedStyle]} />
+      <View style={styles.textContainer}>
+        <Text>
+          Device must be parallel to the ground with screen facing up and top
+          edge of the screen facing forward
+        </Text>
+        <Text>
+          On acceleration to the right, the box should move to the left
+        </Text>
+        <Text>
+          On acceleration to the left, the box should move to the right
+        </Text>
+        <Text>On acceleration forward, the box should move backward</Text>
+        <Text>On acceleration backward, the box should move forward</Text>
+        <Text>On acceleration up, the box should get smaller</Text>
+        <Text>On acceleration down, the box should get bigger</Text>
       </View>
+      <Animated.View style={[styles.box, animatedStyle]} />
     </SafeAreaView>
   );
 }
@@ -60,25 +65,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  wrapper: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  textContainer: {
+    position: 'absolute',
+    margin: 16,
+    top: 0,
   },
   box: {
     backgroundColor: 'navy',
     height: 100,
     width: 100,
-  },
-  button: {
-    flex: 1,
-    maxHeight: 40,
-    marginTop: 16,
-    backgroundColor: 'red',
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 10,
   },
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView, StyleSheet, View } from 'react-native';
 import Animated, {
   SensorType,
   useAnimatedSensor,
@@ -41,15 +41,6 @@ export default function AnimatedSensorGyroscopeExample() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Pressable
-        style={styles.button}
-        onPress={() => {
-          xOffset.value = -OFFSET_X;
-          yOffset.value = 0;
-          zOffset.value = 0;
-        }}>
-        <Text>Reset</Text>
-      </Pressable>
       <View style={styles.wrapper}>
         <Animated.View style={[styles.box, animatedStyle]} />
       </View>
@@ -71,15 +62,5 @@ const styles = StyleSheet.create({
     backgroundColor: 'navy',
     height: 100,
     width: 100,
-  },
-  button: {
-    flex: 1,
-    maxHeight: 40,
-    marginTop: 16,
-    backgroundColor: 'red',
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 10,
   },
 });
