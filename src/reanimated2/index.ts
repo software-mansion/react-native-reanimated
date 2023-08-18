@@ -83,6 +83,7 @@ export {
   scrollTo,
   setGestureState,
 } from './NativeMethods';
+export { setNativeProps } from './SetNativeProps';
 export {
   isColor,
   processColor,
@@ -247,6 +248,5 @@ export type {
   AnimatedStyle,
   StylesOrDefault,
 } from './helperTypes';
-export { setNativeProps } from './SetNativeProps';
 export type { AnimatedScrollViewProps } from './component/ScrollView';
 export type { FlatListPropsWithLayout } from './component/FlatList';
