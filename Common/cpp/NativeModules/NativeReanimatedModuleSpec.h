@@ -54,6 +54,13 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &registrationId) = 0;
 
+  // views
+  virtual jsi::Value getViewProp(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag,
+      const jsi::Value &propName,
+      const jsi::Value &callback) = 0;
+
   // sensors
   virtual jsi::Value registerSensor(
       jsi::Runtime &rt,
