@@ -6,7 +6,7 @@
  */
 
 /* eslint no-bitwise: 0 */
-import { StyleProps } from './commonTypes';
+import type { StyleProps } from './commonTypes';
 import { makeShareable } from './core';
 import { isAndroid, isWeb } from './PlatformChecker';
 
@@ -567,9 +567,7 @@ export const hsvToColor = (
   return rgbaColor(r, g, b, a);
 };
 
-export function processColorInitially(
-  color: unknown
-): number | null | undefined {
+function processColorInitially(color: unknown): number | null | undefined {
   'worklet';
   if (color === null || color === undefined || typeof color === 'number') {
     return color;
