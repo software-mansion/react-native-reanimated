@@ -59,19 +59,19 @@ import { JSPropUpdater } from './JSPropUpdater';
 import {
   AnimationConfig,
   Animations,
-  AnimationsTypes,
   areDOMRectsEqual,
   createAnimationWithExistingTransform,
-  getEasing,
-  getRandomDelay,
+  getDelayFromConfig,
+  getDurationFromConfig,
+  getEasingFromConfig,
+  handleEnteringAnimation,
+  handleExitingAnimation,
   insertWebAnimations,
-  setElementAnimation,
 } from './reanimated2/platform-specific/webAnimations';
 
 import {
   TransitionConfig,
-  TransitionGenerator,
-  TransitionType,
+  handleLayoutTransition,
 } from './reanimated2/platform-specific/webTransitions';
 
 const IS_WEB = isWeb();
@@ -650,9 +650,9 @@ export default function createAnimatedComponent(
         const transitionConfig: TransitionConfig = {
           dx: snapshot.x - rect.x,
           dy: snapshot.y - rect.y,
-          scaleX: rect.width / snapshot.width,
-          scaleY: rect.height / snapshot.height,
-          reversed: false,
+          scaleX: snapshot.width / rect.width,
+          scaleY: snapshot.height / rect.height,
+          reversed: false, // This field is used only in `SequencedTransition`, so by default it will by false
         };
 
         this.handleWebAnimation(LayoutAnimationType.LAYOUT, transitionConfig);
@@ -798,11 +798,10 @@ export default function createAnimatedComponent(
     }
 
     getSnapshotBeforeUpdate() {
-      // prevState: Readonly<{}> // prevProps: Readonly<AnimatedComponentProps<InitialComponentProps>>,
-      if (isWeb()) {
-        // TODO: Sometimes this component is not HTMLElement - it needs further investigation
-        return (this._component as HTMLElement).getBoundingClientRect();
+      if (this._component instanceof HTMLElement) {
+        return this._component.getBoundingClientRect();
       }
+
       return null;
     }
 
@@ -823,127 +822,53 @@ export default function createAnimatedComponent(
         return;
       }
 
-      const animationName =
+      const initialAnimationName =
         typeof config === 'function' ? config.name : config.constructor.name;
 
-      // @ts-ignore Property does exist
-      const transform = this.props.style?.transform;
+      // This prevents crashes if we try to set animations that are not defined.
+      // We don't care about layout transitions since they're created dynamically
+      if (
+        !(initialAnimationName in Animations) &&
+        animationType !== LayoutAnimationType.LAYOUT
+      ) {
+        return;
+      }
 
-      const customAnimationName = transform
-        ? createAnimationWithExistingTransform(animationName, transform)
-        : animationName;
+      const transform = (this.props.style as StyleProps)?.transform;
 
-      const hasDelay = Object.prototype.hasOwnProperty.call(config, 'delayV');
-      // @ts-ignore If property doesn't exist, delay won't be randomized
-      const shouldRandomizeDelay = config.randomizeDelay;
-
-      const delay =
-        hasDelay && shouldRandomizeDelay
-          ? // @ts-ignore Already checked
-            getRandomDelay(config.delayV)
-          : hasDelay
-          ? // @ts-ignore Already checked
-            config.delayV / 1000
-          : shouldRandomizeDelay
-          ? getRandomDelay()
-          : 0;
-
-      // @ts-ignore This property can exist with value of undefined - in that case animation doesn't start
-      const duration = config.durationV
-        ? // @ts-ignore Already checked
-          config.durationV / 1000
-        : animationType === LayoutAnimationType.LAYOUT
-        ? 300
-        : animationName in Animations
-        ? Animations[animationName as AnimationsTypes].duration
-        : 300;
-
-      // @ts-ignore Property does exist (and even if in some case it doesn't, getEasing will return linear easing, so we are safe)
-      const easing = getEasing(config.easingV);
+      const animationName = transform
+        ? createAnimationWithExistingTransform(initialAnimationName, transform)
+        : initialAnimationName;
 
       const animationConfig: AnimationConfig = {
-        animationName: customAnimationName,
-        duration: duration,
-        delay: delay,
-        easing: easing,
+        animationName: animationName,
+        duration: getDurationFromConfig(config),
+        delay: getDelayFromConfig(config),
+        easing: getEasingFromConfig(config),
       };
 
-      const element = this._component as unknown as HTMLElement;
+      const element = this._component as HTMLElement;
 
-      if (animationType === LayoutAnimationType.ENTERING) {
-        if (!(animationName in Animations)) {
-          return;
-        }
+      switch (animationType) {
+        case LayoutAnimationType.ENTERING:
+          handleEnteringAnimation(element, animationConfig);
+          break;
+        case LayoutAnimationType.LAYOUT:
+          // @ts-ignore This property exists in SequencedTransition
+          (transitionConfig as TransitionConfig).reversed = config.reversed
+            ? // @ts-ignore This property exists in SequencedTransition
+              config.reversed
+            : false;
 
-        // If `delay` === 0, value passed to `setTimeout` will be 0. However, `setTimeout` executes after given amount of time, not exactly after that time
-        // Because of that, we have to immediately toggle on the component when the delay is 0.
-        if (delay === 0) {
-          element.style.visibility = 'initial';
-        } else {
-          setTimeout(() => {
-            element.style.visibility = 'initial';
-          }, delay * 1000);
-        }
-
-        setElementAnimation(element, animationConfig);
-      } else if (animationType === LayoutAnimationType.LAYOUT) {
-        let animationType;
-
-        switch (animationName) {
-          case 'LinearTransition':
-            animationType = TransitionType.LINEAR;
-            break;
-          case 'SequencedTransition':
-            animationType = TransitionType.SEQUENCED;
-            // @ts-ignore reversed exists in Sequenced transition
-            transitionConfig!.reversed = config.reversed;
-            break;
-          case 'FadingTransition':
-            animationType = TransitionType.FADING;
-            break;
-          default:
-            animationType = TransitionType.LINEAR;
-            break;
-        }
-
-        animationConfig.animationName = TransitionGenerator(
-          animationType,
-          transitionConfig as TransitionConfig
-        );
-
-        animationConfig.duration = 1;
-
-        setElementAnimation(element, animationConfig);
-      } else if (animationType === LayoutAnimationType.EXITING) {
-        if (!(animationName in Animations)) {
-          return;
-        }
-
-        const parent = element.offsetParent;
-        const tmpElement = element.cloneNode() as HTMLElement;
-
-        // After cloning the element, we want to move all children from original element to its clone. This is because original element
-        // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
-        // Using element.cloneNode(true) doesn't solve the problem, because it creates copy of children and we won't be able to set their animations
-        //
-        // This loop works because appendChild() moves element into its new parent instead of copying it and then inserting copy into new parent
-        while (element.firstChild) {
-          tmpElement.appendChild(element.firstChild);
-        }
-
-        setElementAnimation(tmpElement, animationConfig);
-        parent?.appendChild(tmpElement);
-
-        // We hide current element so only its copy with proper animation will be displayed
-        element.style.visibility = 'hidden';
-
-        tmpElement.style.position = 'absolute';
-        tmpElement.style.top = `${element.offsetTop}px`;
-        tmpElement.style.left = `${element.offsetLeft}px`;
-        tmpElement.style.margin = '0px'; // tmpElement has absolute position, so margin is not necessary
-
-        tmpElement.onanimationend = () =>
-          parent?.contains(tmpElement) ? parent.removeChild(tmpElement) : null;
+          handleLayoutTransition(
+            element,
+            animationConfig,
+            transitionConfig as TransitionConfig
+          );
+          break;
+        case LayoutAnimationType.EXITING:
+          handleExitingAnimation(element, animationConfig);
+          break;
       }
     }
 

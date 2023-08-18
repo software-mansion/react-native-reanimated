@@ -1,4 +1,9 @@
-import { WEB_ANIMATIONS_ID, generateRandomKeyframeName } from './webAnimations';
+import {
+  AnimationConfig,
+  WEB_ANIMATIONS_ID,
+  generateRandomKeyframeName,
+  setElementAnimation,
+} from './webAnimations';
 
 export enum TransitionType {
   LINEAR,
@@ -100,4 +105,38 @@ export function TransitionGenerator(
   styleTag.sheet?.insertRule(transition);
 
   return keyframe;
+}
+
+export function handleLayoutTransition(
+  element: HTMLElement,
+  animationConfig: AnimationConfig,
+  transitionConfig: TransitionConfig
+): void {
+  const { animationName } = animationConfig;
+
+  let animationType;
+
+  switch (animationName) {
+    case 'LinearTransition':
+      animationType = TransitionType.LINEAR;
+      break;
+    case 'SequencedTransition':
+      animationType = TransitionType.SEQUENCED;
+      break;
+    case 'FadingTransition':
+      animationType = TransitionType.FADING;
+      break;
+    default:
+      animationType = TransitionType.LINEAR;
+      break;
+  }
+
+  animationConfig.animationName = TransitionGenerator(
+    animationType,
+    transitionConfig as TransitionConfig
+  );
+
+  animationConfig.duration = 1;
+
+  setElementAnimation(element, animationConfig);
 }

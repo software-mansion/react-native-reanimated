@@ -138,15 +138,44 @@ export function generateRandomKeyframeName() {
   return keyframeName;
 }
 
-export function getEasing(easing: any): string {
+export function getEasingFromConfig(config: any): string {
+  const hasEasing = Object.prototype.hasOwnProperty.call(config, 'easingV');
+
   const easingName =
-    easing && easing.name in WebEasings ? easing.name : 'linear';
+    hasEasing && config.easingV.name in WebEasings
+      ? config.easingV.name
+      : 'linear';
 
   return `cubic-bezier(${WebEasings[easingName].toString()})`;
 }
 
+export function getDelayFromConfig(config: any): number {
+  const hasDelay = Object.prototype.hasOwnProperty.call(config, 'delayV');
+  const shouldRandomizeDelay = config.randomizeDelay;
+
+  let delay = shouldRandomizeDelay ? getRandomDelay() : 0;
+
+  if (hasDelay) {
+    delay = shouldRandomizeDelay
+      ? getRandomDelay(config.delayV)
+      : config.delayV / 1000;
+  }
+
+  return delay;
+}
+
+export function getDurationFromConfig(config: any): number {
+  const hasDuration = Object.prototype.hasOwnProperty.call(config, 'durationV');
+
+  return hasDuration ? config.durationV / 1000 : 0.3;
+}
+
 export function getRandomDelay(maxDelay = 1000): number {
   return Math.floor(Math.random() * (maxDelay + 1)) / 1000;
+}
+
+export function areDOMRectsEqual(r1: DOMRect, r2: DOMRect): boolean {
+  return JSON.stringify(r1) === JSON.stringify(r2);
 }
 
 export function setElementAnimation(
@@ -162,8 +191,54 @@ export function setElementAnimation(
   element.style.animationFillMode = 'forwards'; // Prevents returning to base state after animation finishes.
 }
 
-export function areDOMRectsEqual(r1: DOMRect, r2: DOMRect): boolean {
-  return JSON.stringify(r1) === JSON.stringify(r2);
+export function handleEnteringAnimation(
+  element: HTMLElement,
+  animationConfig: AnimationConfig
+): void {
+  const { delay } = animationConfig;
+
+  // If `delay` === 0, value passed to `setTimeout` will be 0. However, `setTimeout` executes after given amount of time, not exactly after that time
+  // Because of that, we have to immediately toggle on the component when the delay is 0.
+  if (delay === 0) {
+    element.style.visibility = 'initial';
+  } else {
+    setTimeout(() => {
+      element.style.visibility = 'initial';
+    }, delay * 1000);
+  }
+
+  setElementAnimation(element, animationConfig);
+}
+
+export function handleExitingAnimation(
+  element: HTMLElement,
+  animationConfig: AnimationConfig
+): void {
+  const parent = element.offsetParent;
+  const tmpElement = element.cloneNode() as HTMLElement;
+
+  // After cloning the element, we want to move all children from original element to its clone. This is because original element
+  // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
+  // Using element.cloneNode(true) doesn't solve the problem, because it creates copy of children and we won't be able to set their animations
+  //
+  // This loop works because appendChild() moves element into its new parent instead of copying it and then inserting copy into new parent
+  while (element.firstChild) {
+    tmpElement.appendChild(element.firstChild);
+  }
+
+  setElementAnimation(tmpElement, animationConfig);
+  parent?.appendChild(tmpElement);
+
+  // We hide current element so only its copy with proper animation will be displayed
+  element.style.visibility = 'hidden';
+
+  tmpElement.style.position = 'absolute';
+  tmpElement.style.top = `${element.offsetTop}px`;
+  tmpElement.style.left = `${element.offsetLeft}px`;
+  tmpElement.style.margin = '0px'; // tmpElement has absolute position, so margin is not necessary
+
+  tmpElement.onanimationend = () =>
+    parent?.contains(tmpElement) ? parent.removeChild(tmpElement) : null;
 }
 
 const FadeIn = {
