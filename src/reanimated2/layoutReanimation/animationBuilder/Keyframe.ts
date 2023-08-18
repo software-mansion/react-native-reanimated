@@ -7,7 +7,8 @@ import type {
   IEntryExitAnimationBuilder,
   KeyframeProps,
 } from './commonTypes';
-import { TransformProperty, StyleProps, ReduceMotion } from '../../commonTypes';
+import type { TransformProperty, StyleProps } from '../../commonTypes';
+import { ReduceMotion } from '../../commonTypes';
 import { getReduceMotionFromConfig } from '../../animation/util';
 
 interface KeyframePoint {

@@ -9,7 +9,8 @@ import {
   LayoutAnimationType,
   SharedTransitionType,
 } from '../animationBuilder/commonTypes';
-import { ReduceMotion, StyleProps } from '../../commonTypes';
+import type { StyleProps } from '../../commonTypes';
+import { ReduceMotion } from '../../commonTypes';
 import { configureLayoutAnimations } from '../../core';
 import { ProgressTransitionManager } from './ProgressTransitionManager';
 

@@ -16,7 +16,10 @@ import { ParamListBase } from '@react-navigation/native';
 const Stack = createNativeStackNavigator();
 
 const EXAMPLES = [
-  { text: 'default', transition: SharedTransition.duration(1000) },
+  {
+    text: 'default',
+    transition: SharedTransition.duration(1000),
+  },
   {
     text: ReduceMotion.Always,
     transition: SharedTransition.duration(1000).reduceMotion(

@@ -16,12 +16,7 @@ function Box({ config }: BoxProps) {
 
   return (
     <View style={styles.outerBox}>
-      <Button
-        onPress={() => {
-          setShow(!show);
-        }}
-        title={show ? 'hide' : 'show'}
-      />
+      <Button onPress={() => setShow(!show)} title={show ? 'hide' : 'show'} />
       <Text style={styles.text}>{config} reduce</Text>
       {show && (
         <Animated.View
