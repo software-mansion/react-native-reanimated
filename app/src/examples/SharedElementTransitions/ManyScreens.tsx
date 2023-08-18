@@ -5,16 +5,32 @@ import {
   createNativeStackNavigator,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
-import Animated from 'react-native-reanimated';
+import Animated, { SharedTransition, SharedTransitionType } from 'react-native-reanimated';
 
 const Stack = createNativeStackNavigator();
-// const a = 0;
+const transition = SharedTransition.defaultTransitionType(SharedTransitionType.ANIMATION).duration(1000);
+let index = 0;
+
 function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
-  // const a = 0;
+  // setTimeout(() => {
+  //   console.log('go Screen2')
+  //   navigation.navigate('Screen2')
+  // }, 0)
+
   return (
     <View style={styles.flexOne}>
-      {/* <Text>Screen2</Text> */}
-      <Animated.View style={styles.redBox} sharedTransitionTag="tag1" />
+      <Animated.View 
+        style={styles.redBox} 
+        sharedTransitionTag="tag1" 
+        sharedTransitionStyle={transition}
+      />
+      <Button title="2 -> 1" onPress={() => {
+        navigation.navigate('Screen2')
+        setTimeout(() => {
+          console.log('go back')
+          navigation.navigate('Screen1')
+        }, 150)
+      }} />
       <Button title="Screen2" onPress={() => navigation.navigate('Screen2')} />
       <Button title="Screen3" onPress={() => navigation.navigate('Screen3')} />
     </View>
@@ -24,8 +40,20 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
 function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.container}>
-      <Text>Screen2</Text>
-      <Animated.View style={styles.greenBox} sharedTransitionTag="tag1" />
+      <Animated.View 
+        style={styles.greenBox} 
+        sharedTransitionTag="tag1" 
+        sharedTransitionStyle={transition}
+      >
+        <Text>{index++}</Text>
+      </Animated.View>
+      <Button title="1 -> 2" onPress={() => {
+        navigation.navigate('Screen1')
+        setTimeout(() => {
+          console.log('go Screen2')
+          navigation.navigate('Screen2')
+        }, 150)
+      }} />
       <Button title="Screen1" onPress={() => navigation.navigate('Screen1')} />
       <Button title="Screen3" onPress={() => navigation.navigate('Screen3')} />
     </View>
