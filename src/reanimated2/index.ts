@@ -224,6 +224,7 @@ export {
   AnimatedKeyboardInfo,
   MeasuredDimensions,
   AnimatedKeyboardOptions,
+  ReduceMotion,
 } from './commonTypes';
 export { FrameInfo } from './frameCallback';
 export { getUseOfValueInStyleWarning } from './pluginUtils';
