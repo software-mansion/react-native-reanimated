@@ -4,60 +4,9 @@
 #include <memory>
 #include <unordered_map>
 #include <utility>
-#include "JSISerializer.h"
 #include "JsiUtils.h"
-#include "ReanimatedHiddenHeaders.h"
 
 namespace reanimated {
-
-static jsi::String toStringValue(jsi::Runtime &rt, jsi::Value const &value) {
-  return jsi::String::createFromUtf8(rt, stringifyJSIValue(rt, value));
-}
-
-static void logValue(jsi::Runtime &rt, jsi::Value const &value) {
-  Logger::log(stringifyJSIValue(rt, value));
-}
-
-void RuntimeDecorator::decorateRuntime(
-    jsi::Runtime &rt,
-    const std::string &label) {
-  // This property will be used to find out if a runtime is a custom worklet
-  // runtime (e.g. UI, VisionCamera frame processor, ...)
-  rt.global().setProperty(rt, "_WORKLET", jsi::Value(true));
-  // This property will be used for debugging
-  rt.global().setProperty(
-      rt, "_LABEL", jsi::String::createFromAscii(rt, label));
-
-  rt.global().setProperty(rt, "global", rt.global());
-
-#ifdef DEBUG
-  auto evalWithSourceUrl = [](jsi::Runtime &rt,
-                              const jsi::Value &thisValue,
-                              const jsi::Value *args,
-                              size_t count) -> jsi::Value {
-    auto code = std::make_shared<const jsi::StringBuffer>(
-        args[0].asString(rt).utf8(rt));
-    std::string url;
-    if (count > 1 && args[1].isString()) {
-      url = args[1].asString(rt).utf8(rt);
-    }
-
-    return rt.evaluateJavaScript(code, url);
-  };
-
-  rt.global().setProperty(
-      rt,
-      "evalWithSourceUrl",
-      jsi::Function::createFromHostFunction(
-          rt,
-          jsi::PropNameID::forAscii(rt, "evalWithSourceUrl"),
-          1,
-          evalWithSourceUrl));
-#endif // DEBUG
-
-  jsi_utils::installJsiFunction(rt, "_toString", toStringValue);
-  jsi_utils::installJsiFunction(rt, "_log", logValue);
-}
 
 void RuntimeDecorator::decorateUIRuntime(
     jsi::Runtime &rt,
@@ -79,7 +28,6 @@ void RuntimeDecorator::decorateUIRuntime(
     const ProgressLayoutAnimationFunction progressLayoutAnimationFunction,
     const EndLayoutAnimationFunction endLayoutAnimationFunction,
     const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction) {
-  RuntimeDecorator::decorateRuntime(rt, "UI");
   rt.global().setProperty(rt, "_UI", jsi::Value(true));
 
 #ifdef RCT_NEW_ARCH_ENABLED

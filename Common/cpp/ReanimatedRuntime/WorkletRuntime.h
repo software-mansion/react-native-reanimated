@@ -46,9 +46,16 @@ class WorkletRuntime : public jsi::HostObject {
   std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
 
  private:
+  void setWorklet();
+  void setLabel();
   void bindGlobal();
   void bindScheduleOnJS(const std::shared_ptr<JSScheduler> &jsScheduler);
   void bindMakeShareableClone();
+#ifdef DEBUG
+  void bindEvalWithSourceUrl();
+#endif
+  void bindToString();
+  void bindLog();
 
   const std::shared_ptr<jsi::Runtime> runtime_;
   const std::string name_;

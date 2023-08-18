@@ -1,5 +1,7 @@
 #include "WorkletRuntime.h"
+#include "JSISerializer.h"
 #include "JsiUtils.h"
+#include "Logger.h"
 #include "RuntimeDecorator.h"
 #include "WorkletRuntimeCollector.h"
 
@@ -12,10 +14,25 @@ WorkletRuntime::WorkletRuntime(
     : runtime_(ReanimatedRuntime::make(rnRuntime, name)), name_(name) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
+  setWorklet();
+  setLabel();
   bindGlobal();
+#ifdef DEBUG
+  bindEvalWithSourceUrl();
+#endif
   bindScheduleOnJS(jsScheduler);
   bindMakeShareableClone();
-  RuntimeDecorator::decorateRuntime(rt, name_);
+}
+
+void WorkletRuntime::setWorklet() {
+  jsi::Runtime &rt = *runtime_;
+  rt.global().setProperty(rt, "_WORKLET", true);
+}
+
+void WorkletRuntime::setLabel() {
+  jsi::Runtime &rt = *runtime_;
+  rt.global().setProperty(
+      rt, "_LABEL", jsi::String::createFromAscii(rt, name_));
 }
 
 void WorkletRuntime::bindGlobal() {
@@ -70,6 +87,46 @@ void WorkletRuntime::bindMakeShareableClone() {
       [](jsi::Runtime &rt, const jsi::Value &value) {
         auto shouldRetainRemote = jsi::Value::undefined();
         return reanimated::makeShareableClone(rt, value, shouldRetainRemote);
+      });
+}
+
+#ifdef DEBUG
+void WorkletRuntime::bindEvalWithSourceUrl() {
+  auto evalWithSourceUrl = [](jsi::Runtime &rt,
+                              const jsi::Value &thisValue,
+                              const jsi::Value *args,
+                              size_t count) -> jsi::Value {
+    auto code = std::make_shared<const jsi::StringBuffer>(
+        args[0].asString(rt).utf8(rt));
+    std::string url;
+    if (count > 1 && args[1].isString()) {
+      url = args[1].asString(rt).utf8(rt);
+    }
+    return rt.evaluateJavaScript(code, url);
+  };
+  jsi::Runtime &rt = *runtime_;
+  rt.global().setProperty(
+      rt,
+      "evalWithSourceUrl",
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, "evalWithSourceUrl"),
+          1,
+          evalWithSourceUrl));
+}
+#endif
+
+void WorkletRuntime::bindToString() {
+  jsi_utils::installJsiFunction(
+      *runtime_, "_toString", [](jsi::Runtime &rt, const jsi::Value &value) {
+        return jsi::String::createFromUtf8(rt, stringifyJSIValue(rt, value));
+      });
+}
+
+void WorkletRuntime::bindLog() {
+  jsi_utils::installJsiFunction(
+      *runtime_, "_log", [](jsi::Runtime &rt, const jsi::Value &value) {
+        Logger::log(stringifyJSIValue(rt, value));
       });
 }
 

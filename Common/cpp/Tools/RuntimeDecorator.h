@@ -18,7 +18,6 @@ using UpdateDataSynchronouslyFunction =
 
 class RuntimeDecorator {
  public:
-  static void decorateRuntime(jsi::Runtime &rt, const std::string &label);
   static void decorateUIRuntime(
       jsi::Runtime &rt,
       const UpdatePropsFunction updateProps,
