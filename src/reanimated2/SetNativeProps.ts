@@ -1,4 +1,4 @@
-import { ShadowNodeWrapper, StyleProps } from './commonTypes';
+import type { ShadowNodeWrapper, StyleProps } from './commonTypes';
 import {
   isChromeDebugger,
   isJest,

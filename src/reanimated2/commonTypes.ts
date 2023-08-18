@@ -178,10 +178,6 @@ export type AnimatedSensor<T extends Value3D | ValueRotation> = {
   config: SensorConfig;
 };
 
-export interface NumericAnimation {
-  current?: number;
-}
-
 export type AnimationCallback = (
   finished?: boolean,
   current?: AnimatableValue

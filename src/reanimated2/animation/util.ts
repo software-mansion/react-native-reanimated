@@ -1,4 +1,4 @@
-import { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
+import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type { ParsedColorArray } from '../Colors';
 import {
   isColor,
@@ -17,9 +17,11 @@ import {
   ReduceMotion,
 } from '../commonTypes';
 import NativeReanimatedModule from '../NativeReanimated';
-import {
+import type {
   AffineMatrixFlat,
   AffineMatrix,
+} from './transformationMatrix/matrixUtils';
+import {
   flatten,
   multiplyMatrices,
   scaleMatrix,
