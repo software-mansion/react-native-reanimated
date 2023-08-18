@@ -6,7 +6,7 @@ namespace reanimated {
 void RNRuntimeDecorator::decorate(
     jsi::Runtime &rnRuntime,
     jsi::Runtime &uiRuntime,
-    bool isReducedMotion) {
+    const bool isReducedMotion) {
   auto workletRuntimeValue =
       rnRuntime.global()
           .getPropertyAsObject(rnRuntime, "ArrayBuffer")

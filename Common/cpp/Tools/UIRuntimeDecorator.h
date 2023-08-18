@@ -8,7 +8,7 @@ using namespace facebook;
 
 namespace reanimated {
 
-using RequestFrameFunction =
+using RequestAnimationFrameFunction =
     std::function<void(jsi::Runtime &, const jsi::Value &)>;
 using UpdateDataSynchronouslyFunction =
     std::function<void(jsi::Runtime &, const jsi::Value &, const jsi::Value &)>;
@@ -16,25 +16,22 @@ using UpdateDataSynchronouslyFunction =
 class UIRuntimeDecorator {
  public:
   static void decorate(
-      jsi::Runtime &rt,
-      const UpdatePropsFunction updateProps,
+      jsi::Runtime &uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
       const RemoveFromPropsRegistryFunction removeFromPropsRegistry,
-#endif
-      const MeasureFunction measure,
-#ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
 #else
       const ScrollToFunction scrollTo,
 #endif
+      const UpdatePropsFunction updateProps,
+      const MeasureFunction measure,
       const DispatchCommandFunction dispatchCommand,
-      const RequestFrameFunction requestFrame,
+      const RequestAnimationFrameFunction requestAnimationFrame,
       const UpdateDataSynchronouslyFunction updateDataSynchronously,
       const TimeProviderFunction getCurrentTime,
       const SetGestureStateFunction setGestureState,
-      const ProgressLayoutAnimationFunction progressLayoutAnimationFunction,
-      const EndLayoutAnimationFunction endLayoutAnimationFunction,
-      const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction);
+      const ProgressLayoutAnimationFunction progressLayoutAnimation,
+      const EndLayoutAnimationFunction endLayoutAnimation,
+      const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue);
 };
 
 } // namespace reanimated

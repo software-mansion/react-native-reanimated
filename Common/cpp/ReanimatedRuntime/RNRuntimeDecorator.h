@@ -11,7 +11,7 @@ class RNRuntimeDecorator {
   static void decorate(
       jsi::Runtime &rnRuntime,
       jsi::Runtime &uiRuntime,
-      bool isReducedMotion);
+      const bool isReducedMotion);
 };
 
 } // namespace reanimated

@@ -4,54 +4,53 @@
 namespace reanimated {
 
 void UIRuntimeDecorator::decorate(
-    jsi::Runtime &rt,
-    const UpdatePropsFunction updateProps,
+    jsi::Runtime &uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
     const RemoveFromPropsRegistryFunction removeFromPropsRegistry,
-#endif
-    const MeasureFunction measure,
-#ifdef RCT_NEW_ARCH_ENABLED
-// nothing
 #else
     const ScrollToFunction scrollTo,
 #endif
+    const UpdatePropsFunction updateProps,
+    const MeasureFunction measure,
     const DispatchCommandFunction dispatchCommand,
-    const RequestFrameFunction requestFrame,
+    const RequestAnimationFrameFunction requestAnimationFrame,
     const UpdateDataSynchronouslyFunction updateDataSynchronously,
     const TimeProviderFunction getCurrentTime,
     const SetGestureStateFunction setGestureState,
-    const ProgressLayoutAnimationFunction progressLayoutAnimationFunction,
-    const EndLayoutAnimationFunction endLayoutAnimationFunction,
-    const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction) {
-  rt.global().setProperty(rt, "_UI", true);
+    const ProgressLayoutAnimationFunction progressLayoutAnimation,
+    const EndLayoutAnimationFunction endLayoutAnimation,
+    const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue) {
+  uiRuntime.global().setProperty(uiRuntime, "_UI", true);
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  jsi_utils::installJsiFunction(rt, "_updatePropsFabric", updateProps);
+  jsi_utils::installJsiFunction(uiRuntime, "_updatePropsFabric", updateProps);
   jsi_utils::installJsiFunction(
-      rt, "_removeFromPropsRegistry", removeFromPropsRegistry);
-  jsi_utils::installJsiFunction(rt, "_dispatchCommandFabric", dispatchCommand);
-  jsi_utils::installJsiFunction(rt, "_measureFabric", measure);
+      uiRuntime, "_removeFromPropsRegistry", removeFromPropsRegistry);
+  jsi_utils::installJsiFunction(
+      uiRuntime, "_dispatchCommandFabric", dispatchCommand);
+  jsi_utils::installJsiFunction(uiRuntime, "_measureFabric", measure);
 #else
-  jsi_utils::installJsiFunction(rt, "_updatePropsPaper", updateProps);
-  jsi_utils::installJsiFunction(rt, "_dispatchCommandPaper", dispatchCommand);
-  jsi_utils::installJsiFunction(rt, "_scrollToPaper", scrollTo);
-
-  std::function<jsi::Value(jsi::Runtime &, int)> _measure =
+  jsi_utils::installJsiFunction(uiRuntime, "_updatePropsPaper", updateProps);
+  jsi_utils::installJsiFunction(
+      uiRuntime, "_dispatchCommandPaper", dispatchCommand);
+  jsi_utils::installJsiFunction(uiRuntime, "_scrollToPaper", scrollTo);
+  jsi_utils::installJsiFunction(
+      uiRuntime,
+      "_measurePaper",
       [measure](jsi::Runtime &rt, int viewTag) -> jsi::Value {
-    auto result = measure(viewTag);
-    jsi::Object resultObject(rt);
-    for (auto &i : result) {
-      resultObject.setProperty(rt, i.first.c_str(), i.second);
-    }
-    return resultObject;
-  };
-
-  jsi_utils::installJsiFunction(rt, "_measurePaper", _measure);
+        auto result = measure(viewTag);
+        jsi::Object resultObject(rt);
+        for (const auto &item : result) {
+          resultObject.setProperty(rt, item.first.c_str(), item.second);
+        }
+        return resultObject;
+      });
 #endif // RCT_NEW_ARCH_ENABLED
 
-  jsi_utils::installJsiFunction(rt, "requestAnimationFrame", requestFrame);
   jsi_utils::installJsiFunction(
-      rt, "_updateDataSynchronously", updateDataSynchronously);
+      uiRuntime, "requestAnimationFrame", requestAnimationFrame);
+  jsi_utils::installJsiFunction(
+      uiRuntime, "_updateDataSynchronously", updateDataSynchronously);
 
   auto performanceNow = [getCurrentTime](
                             jsi::Runtime &,
@@ -60,23 +59,25 @@ void UIRuntimeDecorator::decorate(
                             size_t) -> jsi::Value {
     return jsi::Value(getCurrentTime());
   };
-  jsi::Object performance(rt);
+  jsi::Object performance(uiRuntime);
   performance.setProperty(
-      rt,
+      uiRuntime,
       "now",
       jsi::Function::createFromHostFunction(
-          rt, jsi::PropNameID::forAscii(rt, "now"), 0, performanceNow));
-  rt.global().setProperty(rt, "performance", performance);
+          uiRuntime,
+          jsi::PropNameID::forAscii(uiRuntime, "now"),
+          0,
+          performanceNow));
+  uiRuntime.global().setProperty(uiRuntime, "performance", performance);
 
-  // layout animation
   jsi_utils::installJsiFunction(
-      rt, "_notifyAboutProgress", progressLayoutAnimationFunction);
+      uiRuntime, "_notifyAboutProgress", progressLayoutAnimation);
   jsi_utils::installJsiFunction(
-      rt, "_notifyAboutEnd", endLayoutAnimationFunction);
+      uiRuntime, "_notifyAboutEnd", endLayoutAnimation);
 
-  jsi_utils::installJsiFunction(rt, "_setGestureState", setGestureState);
+  jsi_utils::installJsiFunction(uiRuntime, "_setGestureState", setGestureState);
   jsi_utils::installJsiFunction(
-      rt, "_maybeFlushUIUpdatesQueue", maybeFlushUIUpdatesQueueFunction);
+      uiRuntime, "_maybeFlushUIUpdatesQueue", maybeFlushUIUpdatesQueue);
 }
 
 } // namespace reanimated

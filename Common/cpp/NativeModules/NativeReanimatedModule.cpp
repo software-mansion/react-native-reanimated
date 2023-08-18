@@ -113,14 +113,14 @@ NativeReanimatedModule::NativeReanimatedModule(
   UIRuntimeDecorator::decorate(
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
-      updateProps,
       removeFromPropsRegistry,
+      updateProps,
       measure,
       dispatchCommand,
 #else
+      platformDepMethodsHolder.scrollToFunction,
       platformDepMethodsHolder.updatePropsFunction,
       platformDepMethodsHolder.measureFunction,
-      platformDepMethodsHolder.scrollToFunction,
       platformDepMethodsHolder.dispatchCommandFunction,
 #endif
       requestAnimationFrame,
