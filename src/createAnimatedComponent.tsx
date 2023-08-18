@@ -325,7 +325,7 @@ export default function createAnimatedComponent(
       this._detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
 
-      if (isWeb()) {
+      if (IS_WEB) {
         this.handleWebAnimation(LayoutAnimationType.EXITING);
       }
     }
@@ -336,7 +336,7 @@ export default function createAnimatedComponent(
       this._attachAnimatedStyles();
       this._attachInlineProps();
 
-      if (isWeb()) {
+      if (IS_WEB) {
         insertWebAnimations();
         this.handleWebAnimation(LayoutAnimationType.ENTERING);
       }
@@ -887,7 +887,7 @@ export default function createAnimatedComponent(
       // Because of that we can encounter a situation in which component is visible for a short amount of time, and later on animation triggers.
       // I've tested that on various browsers and devices and it did not happen to me. To be sure that it won't happen to someone else,
       // I've decided to hide component at first render. Its visibility is reset in `componentDidMount`.
-      if (isWeb() && props.entering) {
+      if (IS_WEB && props.entering) {
         props.style = {
           ...(props.style ?? {}),
           visibility: 'hidden', // Hide component until `componentDidMount` triggers
