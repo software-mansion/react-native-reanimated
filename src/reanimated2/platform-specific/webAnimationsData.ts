@@ -21,6 +21,7 @@ export interface AnimationData {
   duration: number;
 }
 
+// TODO: rewrite to px instead of %
 export const AnimationsData: Record<string, AnimationData> = {
   FadeIn: {
     name: 'FadeIn',

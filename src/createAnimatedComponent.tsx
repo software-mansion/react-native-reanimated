@@ -57,17 +57,23 @@ import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
 import { JSPropUpdater } from './JSPropUpdater';
 
 import {
+  AnimationConfig,
   Animations,
   AnimationsTypes,
-  TransitionConfig,
-  TransitionGenerator,
-  TransitionType,
-  createAnimationWithTransform,
+  areDOMRectsEqual,
+  createAnimationWithExistingTransform,
   getEasing,
   getRandomDelay,
   insertWebAnimations,
   setElementAnimation,
 } from './reanimated2/platform-specific/webAnimations';
+
+import {
+  TransitionConfig,
+  TransitionGenerator,
+  TransitionType,
+} from './reanimated2/platform-specific/webTransitions';
+
 const IS_WEB = isWeb();
 
 function dummyListener() {
@@ -637,6 +643,10 @@ export default function createAnimatedComponent(
       if (IS_WEB) {
         const rect = (this._component as HTMLElement).getBoundingClientRect();
 
+        if (areDOMRectsEqual(rect, snapshot)) {
+          return;
+        }
+
         const transitionConfig: TransitionConfig = {
           dx: snapshot.x - rect.x,
           dy: snapshot.y - rect.y,
@@ -798,7 +808,7 @@ export default function createAnimatedComponent(
 
     handleWebAnimation(
       animationType: LayoutAnimationType,
-      animationConfig?: TransitionConfig
+      transitionConfig?: TransitionConfig
     ) {
       const config =
         animationType === LayoutAnimationType.ENTERING
@@ -820,7 +830,7 @@ export default function createAnimatedComponent(
       const transform = this.props.style?.transform;
 
       const customAnimationName = transform
-        ? createAnimationWithTransform(animationName, transform)
+        ? createAnimationWithExistingTransform(animationName, transform)
         : animationName;
 
       const hasDelay = Object.prototype.hasOwnProperty.call(config, 'delayV');
@@ -851,6 +861,13 @@ export default function createAnimatedComponent(
       // @ts-ignore Property does exist (and even if in some case it doesn't, getEasing will return linear easing, so we are safe)
       const easing = getEasing(config.easingV);
 
+      const animationConfig: AnimationConfig = {
+        animationName: customAnimationName,
+        duration: duration,
+        delay: delay,
+        easing: easing,
+      };
+
       const element = this._component as unknown as HTMLElement;
 
       if (animationType === LayoutAnimationType.ENTERING) {
@@ -868,16 +885,8 @@ export default function createAnimatedComponent(
           }, delay * 1000);
         }
 
-        setElementAnimation(
-          element,
-          duration,
-          delay,
-          customAnimationName,
-          easing
-        );
-        // element.onanimationend = () => saveStyleAfterAnimation(element);
+        setElementAnimation(element, animationConfig);
       } else if (animationType === LayoutAnimationType.LAYOUT) {
-        console.log(config, animationName);
         let animationType;
 
         switch (animationName) {
@@ -887,7 +896,7 @@ export default function createAnimatedComponent(
           case 'SequencedTransition':
             animationType = TransitionType.SEQUENCED;
             // @ts-ignore reversed exists in Sequenced transition
-            animationConfig!.reversed = config.reversed;
+            transitionConfig!.reversed = config.reversed;
             break;
           case 'FadingTransition':
             animationType = TransitionType.FADING;
@@ -897,14 +906,14 @@ export default function createAnimatedComponent(
             break;
         }
 
-        console.log(config);
-
-        const transition = TransitionGenerator(
+        animationConfig.animationName = TransitionGenerator(
           animationType,
-          animationConfig as TransitionConfig
+          transitionConfig as TransitionConfig
         );
 
-        setElementAnimation(element, 1, delay, transition, easing);
+        animationConfig.duration = 1;
+
+        setElementAnimation(element, animationConfig);
       } else if (animationType === LayoutAnimationType.EXITING) {
         if (!(animationName in Animations)) {
           return;
@@ -922,13 +931,7 @@ export default function createAnimatedComponent(
           tmpElement.appendChild(element.firstChild);
         }
 
-        setElementAnimation(
-          tmpElement,
-          duration,
-          delay,
-          customAnimationName,
-          easing
-        );
+        setElementAnimation(tmpElement, animationConfig);
         parent?.appendChild(tmpElement);
 
         // We hide current element so only its copy with proper animation will be displayed
