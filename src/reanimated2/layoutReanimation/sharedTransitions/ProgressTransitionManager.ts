@@ -126,34 +126,29 @@ function createProgressTransitionRegister() {
   const currentTransitions = new Set<number>();
   const toRemove = new Set<number>();
 
-  let ignoreCleaning = false;
-  let restartTransition = false;
-  let ignoreCleaning2 = false;
+  let skipCleaning = false;
+  let isTransitionRestart = false;
 
   const progressTransitionManager = {
     addProgressAnimation: (
       viewTag: number,
       progressAnimation: ProgressAnimation
     ) => {
-      console.log('addProgressAnimation', viewTag);
       if (currentTransitions.size > 0) {
-        restartTransition = true;
-        ignoreCleaning2 = true;
+        isTransitionRestart = true;
       }
       progressAnimations.set(viewTag, progressAnimation);
     },
     removeProgressAnimation: (viewTag: number) => {
-      console.log('removeProgressAnimation', viewTag);
       if (currentTransitions.size > 0) {
-        restartTransition = true;
+        isTransitionRestart = true;
       }
       // Remove the animation config after the transition is finished
       toRemove.add(viewTag);
     },
     onTransitionStart: (viewTag: number, snapshot: any) => {
-      console.log('onTransitionStart', viewTag);
-      if (restartTransition) {
-        ignoreCleaning = true;
+      if (isTransitionRestart) {
+        skipCleaning = true;
       }
       snapshots.set(viewTag, snapshot);
       currentTransitions.add(viewTag);
@@ -172,7 +167,6 @@ function createProgressTransitionRegister() {
       }
     },
     onAndroidFinishTransitioning: () => {
-      console.log('onAndroidFinishTransitioning');
       if (toRemove.size > 0) {
         // it should be ran only on modal closing
         progressTransitionManager.onTransitionEnd();
@@ -184,18 +178,9 @@ function createProgressTransitionRegister() {
         return;
       }
       console.log('onTransitionEnd');
-      if (ignoreCleaning2) {
-        ignoreCleaning2 = false;
-        console.log('---ignoreCleaning2');
-
-        for (const viewTag of currentTransitions) {
-          _notifyAboutEnd(viewTag, false);
-        }
-        return;
-      }
-      if (ignoreCleaning) {
-        ignoreCleaning = false;
-        restartTransition = false;
+      if (skipCleaning) {
+        skipCleaning = false;
+        isTransitionRestart = false;
         console.log('---omitCleaning');
         return;
       }
@@ -204,18 +189,13 @@ function createProgressTransitionRegister() {
       }
       currentTransitions.clear();
       if (isTransitionRestart) {
-        // on transition restart, progressAnimations should be saved
+        // on transition restart, progressAnimations should be saved 
         // because they potentially can be used in the next transition
         return;
       }
       snapshots.clear();
-      if (restartTransition) {
-        console.log('---restartTransition');
-        return;
-      }
       if (toRemove.size > 0) {
         for (const viewTag of toRemove) {
-          console.log('removeProgressAnimationDZIK', viewTag);
           progressAnimations.delete(viewTag);
           _notifyAboutEnd(viewTag, removeViews);
         }

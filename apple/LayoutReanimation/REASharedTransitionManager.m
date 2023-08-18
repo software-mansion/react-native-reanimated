@@ -327,7 +327,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
     for (UIView *view in currentSoureViews) {
       if (![newSoureViews containsObject:view]) {
         _temopraryViewRegistry[view.reactTag] = view;
-        [self finishSharedAnimation:view removeView:YES];
+        
+//        [self finishSharedAnimation:view removeView:YES];
         [self cancelAnimation:view.reactTag];
       }
     }
@@ -642,9 +643,12 @@ static REASharedTransitionManager *_sharedTransitionManager;
   if ([_removedViews containsObject:view]) {
     [_animationManager clearAnimationConfigForTag:viewTag];
   }
-  
+  if (_temopraryViewRegistry[view.reactTag]) {
+    return;
+  }
   if ([_reparentedViews count] == 0) {
     [_transitionContainer removeFromSuperview];
+    [_temopraryViewRegistry removeAllObjects];
     [_currentSharedTransitionViews removeAllObjects];
     [_removedViews removeAllObjects];
     [_sharedElements removeAllObjects];
