@@ -14,8 +14,13 @@ export default function AnimatedSensorRotationExample() {
     const { pitch, roll, yaw } = rotation.sensor.value;
     return {
       transform: [
+        // https://developer.apple.com/documentation/coremotion/cmattitude#1669448
+        //A roll is a rotation around a longitudinal axis that passes through the device from its top to bottom.
         { rotateX: `${pitch}rad` },
+        //A roll is a rotation around a longitudinal axis that passes through the device from its top to bottom.
         { rotateY: `${roll}rad` },
+        // A yaw is a rotation around an axis that runs vertically through the device. It is perpendicular to the body
+        // of the device, with its origin at the center of gravity and directed toward the bottom of the device.
         { rotateZ: `${yaw}rad` },
       ],
     };
@@ -39,7 +44,9 @@ const styles = StyleSheet.create({
     height: 150,
     borderWidth: 10,
     backgroundColor: 'navy',
-    borderTopColor: 'red',
+    borderTopColor: 'yellow',
+    borderRightColor: 'red',
+    borderLeftColor: 'blue',
     borderBottomColor: 'green',
   },
 });
