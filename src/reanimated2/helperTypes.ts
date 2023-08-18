@@ -13,33 +13,50 @@ import type {
   TransformsStyle as RNTransformsStyle,
 } from 'react-native';
 import type { AnimatableValue, SharedValue } from './commonTypes';
-import {
-  BaseAnimationBuilder,
+import type { BaseAnimationBuilder } from './layoutReanimation/animationBuilder/BaseAnimationBuilder';
+import type {
   EntryExitAnimationFunction,
   LayoutAnimationFunction,
-} from './layoutReanimation';
+} from './layoutReanimation/animationBuilder/commonTypes';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 import type { DependencyList } from './hook/commonTypes';
 
+/**
+ * @deprecated This type is no longer relevant.
+ */
 export type Adaptable<T> =
   | T
   | ReadonlyArray<T | ReadonlyArray<T>>
   | SharedValue<T>;
 
+/**
+ * @deprecated This type is no longer relevant.
+ */
 export type AdaptTransforms<T> = {
   [P in keyof T]: Adaptable<T[P]>;
 };
 
-type TransformsStyle = Pick<RNTransformsStyle, 'transform'>;
+type RNTransformType = RNTransformsStyle['transform'];
 
-export type TransformStyleTypes = TransformsStyle['transform'] extends
-  | readonly (infer T)[]
-  | string
-  | undefined
-  ? T
+export type ExtractArrayItemType<Arr> = Arr extends readonly (infer Item)[]
+  ? Item
   : never;
-export type AnimatedTransform = AdaptTransforms<TransformStyleTypes>[];
+
+/**
+ * @deprecated Please use `TransformArrayItemType` type instead.
+ */
+export type TransformStyleTypes = ExtractArrayItemType<RNTransformType>;
+
+export type TransformArrayItemType = TransformStyleTypes;
+
+// Note: why is `readonly` here? For safety.
+// In TS `ReadonlyArray` is a supertype of `Array`,
+// therefore `Array` can be assigned to `ReadonlyArray` but
+// `ReadonlyArray` cannot be assigned to `Array`.
+export type AnimatedTransform =
+  | readonly (TransformArrayItemType | SharedValue<TransformArrayItemType>)[]
+  | RNTransformType;
 
 /**
  * @deprecated Please use `AnimatedStyle` type instead.

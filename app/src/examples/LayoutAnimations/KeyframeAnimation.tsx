@@ -2,7 +2,7 @@ import Animated, { Easing, Keyframe } from 'react-native-reanimated';
 import { Button, View, StyleSheet } from 'react-native';
 import React, { useState } from 'react';
 
-export default function KeyframeAnimation(): React.ReactElement {
+export default function KeyframeAnimation() {
   const [show, setShow] = useState(false);
   const enteringAnimation = new Keyframe({
     from: {

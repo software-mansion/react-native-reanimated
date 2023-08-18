@@ -36,13 +36,7 @@ NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<CallInvoker> &jsInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::shared_ptr<jsi::Runtime> &rt,
-#ifdef RCT_NEW_ARCH_ENABLED
-// nothing
-#else
-    std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
-        propObtainer,
-#endif
-    PlatformDepMethodsHolder platformDepMethodsHolder)
+    const PlatformDepMethodsHolder &platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
       runtimeManager_(std::make_shared<RuntimeManager>(
           rt,
@@ -54,7 +48,7 @@ NativeReanimatedModule::NativeReanimatedModule(
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
-      propObtainer(propObtainer),
+      obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
 #endif
       animatedSensorModule(platformDepMethodsHolder),
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -326,14 +320,16 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
 
 jsi::Value NativeReanimatedModule::registerEventHandler(
     jsi::Runtime &rt,
-    const jsi::Value &eventHash,
-    const jsi::Value &worklet) {
-  static uint64_t EVENT_HANDLER_ID = 1;
+    const jsi::Value &worklet,
+    const jsi::Value &eventName,
+    const jsi::Value &emitterReactTag) {
+  static uint64_t NEXT_EVENT_HANDLER_ID = 1;
 
-  uint64_t newRegistrationId = EVENT_HANDLER_ID++;
-  auto eventName = eventHash.asString(rt).utf8(rt);
+  uint64_t newRegistrationId = NEXT_EVENT_HANDLER_ID++;
+  auto eventNameStr = eventName.asString(rt).utf8(rt);
   auto handlerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, worklet, "event handler must be a worklet");
+  int emitterReactTagInt = emitterReactTag.asNumber();
 
   runtimeManager_->uiScheduler_->scheduleOnUI([=] {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime();
@@ -341,7 +337,8 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
     auto handler = std::make_shared<WorkletEventHandler>(
         runtimeHelper,
         newRegistrationId,
-        eventName,
+        eventNameStr,
+        emitterReactTagInt,
         std::move(handlerFunction));
     eventHandlerRegistry->registerEventHandler(std::move(handler));
   });
@@ -355,6 +352,37 @@ void NativeReanimatedModule::unregisterEventHandler(
   uint64_t id = registrationId.asNumber();
   runtimeManager_->uiScheduler_->scheduleOnUI(
       [=] { eventHandlerRegistry->unregisterEventHandler(id); });
+}
+
+jsi::Value NativeReanimatedModule::getViewProp(
+    jsi::Runtime &rnRuntime,
+    const jsi::Value &viewTag,
+    const jsi::Value &propName,
+    const jsi::Value &callback) {
+  const int viewTagInt = static_cast<int>(viewTag.asNumber());
+  std::string propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
+  jsi::Function fun = callback.getObject(rnRuntime).asFunction(rnRuntime);
+  std::shared_ptr<jsi::Function> funPtr =
+      std::make_shared<jsi::Function>(std::move(fun));
+
+  runtimeManager_->uiScheduler_->scheduleOnUI(
+      [&rnRuntime, viewTagInt, funPtr, this, propNameStr]() {
+        jsi::Runtime &uiRuntime = *runtimeManager_->runtime;
+        const jsi::String propNameValue =
+            jsi::String::createFromUtf8(uiRuntime, propNameStr);
+        jsi::Value result =
+            obtainPropFunction_(uiRuntime, viewTagInt, propNameValue);
+        std::string resultStr = result.asString(uiRuntime).utf8(uiRuntime);
+
+        runtimeManager_->jsScheduler_->scheduleOnJS(
+            [&rnRuntime, resultStr, funPtr]() {
+              const jsi::String resultValue =
+                  jsi::String::createFromUtf8(rnRuntime, resultStr);
+              funPtr->call(rnRuntime, resultValue);
+            });
+      });
+
+  return jsi::Value::undefined();
 }
 
 jsi::Value NativeReanimatedModule::enableLayoutAnimations(
@@ -398,8 +426,10 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
 }
 
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
-    std::string eventName) {
-  return eventHandlerRegistry->isAnyHandlerWaitingForEvent(eventName);
+    const std::string &eventName,
+    const int emitterReactTag) {
+  return eventHandlerRegistry->isAnyHandlerWaitingForEvent(
+      eventName, emitterReactTag);
 }
 
 void NativeReanimatedModule::maybeRequestRender() {

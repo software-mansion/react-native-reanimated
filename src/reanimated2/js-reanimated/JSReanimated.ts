@@ -36,8 +36,9 @@ export default class JSReanimated {
   }
 
   registerEventHandler<T>(
-    _eventHash: string,
-    _eventHandler: ShareableRef<T>
+    _eventHandler: ShareableRef<T>,
+    _eventName: string,
+    _emitterReactTag: number
   ): number {
     // noop
     return -1;
@@ -239,6 +240,16 @@ export default class JSReanimated {
   getDataSynchronously<T>(_ref: ShareableSyncDataHolderRef<T>): T {
     throw new Error(
       '[Reanimated] getDataSynchronously is not available in JSReanimated.'
+    );
+  }
+
+  getViewProp<T>(
+    _viewTag: number,
+    _propName: string,
+    _callback?: (result: T) => void
+  ): Promise<T> {
+    throw new Error(
+      '[Reanimated] getViewProp is not available in JSReanimated.'
     );
   }
 

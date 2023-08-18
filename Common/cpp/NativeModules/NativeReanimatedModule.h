@@ -35,13 +35,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const std::shared_ptr<CallInvoker> &jsInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<jsi::Runtime> &rt,
-#ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
-#else
-      std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
-          propObtainer,
-#endif
-      PlatformDepMethodsHolder platformDepMethodsHolder);
+      const PlatformDepMethodsHolder &platformDepMethodsHolder);
 
   ~NativeReanimatedModule();
 
@@ -77,8 +71,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
-      const jsi::Value &eventHash,
-      const jsi::Value &worklet) override;
+      const jsi::Value &worklet,
+      const jsi::Value &eventName,
+      const jsi::Value &emitterReactTag) override;
   void unregisterEventHandler(
       jsi::Runtime &rt,
       const jsi::Value &registrationId) override;
@@ -98,7 +93,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void onRender(double timestampMs);
 
-  bool isAnyHandlerWaitingForEvent(std::string eventName);
+  bool isAnyHandlerWaitingForEvent(
+      const std::string &eventName,
+      const int emitterReactTag);
 
   void maybeRequestRender();
   UpdatePropsFunction updatePropsFunction;
@@ -159,11 +156,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 #endif // RCT_NEW_ARCH_ENABLED
 
   std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry;
-  std::function<void(FrameCallback &, jsi::Runtime &)> requestRender;
+  const RequestRenderFunction requestRender;
   std::vector<FrameCallback> frameCallbacks;
   bool renderRequested = false;
-  std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
-      propObtainer;
+  const ObtainPropFunction obtainPropFunction_;
   std::function<void(double)> onRenderCallback;
   AnimatedSensorModule animatedSensorModule;
   ConfigurePropsFunction configurePropsPlatformFunction;

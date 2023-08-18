@@ -47,7 +47,29 @@ global._log = function (s: string) {
   console.log(s);
 };
 
-function getSensorContainer() {
+export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
+  if (global._IS_FABRIC) {
+    throw new Error(
+      '[react-native-reanimated] `getViewProp` is not supported on Fabric yet'
+    );
+  }
+
+  return new Promise((resolve, reject) => {
+    return NativeReanimatedModule.getViewProp(
+      viewTag,
+      propName,
+      (result: T) => {
+        if (typeof result === 'string' && result.substr(0, 6) === 'error:') {
+          reject(result);
+        } else {
+          resolve(result);
+        }
+      }
+    );
+  });
+}
+
+export function getSensorContainer(): SensorContainer {
   if (!global.__sensorContainer) {
     global.__sensorContainer = new SensorContainer();
   }
@@ -55,8 +77,9 @@ function getSensorContainer() {
 }
 
 export function registerEventHandler<T>(
-  eventHash: string,
-  eventHandler: (event: T) => void
+  eventHandler: (event: T) => void,
+  eventName: string,
+  emitterReactTag = -1
 ): number {
   function handleAndFlushAnimationFrame(eventTimestamp: number, event: T) {
     'worklet';
@@ -66,8 +89,9 @@ export function registerEventHandler<T>(
     global.__frameTimestamp = undefined;
   }
   return NativeReanimatedModule.registerEventHandler(
-    eventHash,
-    makeShareableCloneRecursive(handleAndFlushAnimationFrame)
+    makeShareableCloneRecursive(handleAndFlushAnimationFrame),
+    eventName,
+    emitterReactTag
   );
 }
 
@@ -162,7 +186,7 @@ export function enableLayoutAnimations(
 }
 
 export function configureLayoutAnimations(
-  viewTag: number,
+  viewTag: number | HTMLElement,
   type: LayoutAnimationType,
   config:
     | LayoutAnimationFunction
@@ -172,7 +196,7 @@ export function configureLayoutAnimations(
   sharedTransitionTag = ''
 ): void {
   NativeReanimatedModule.configureLayoutAnimation(
-    viewTag,
+    viewTag as number, // On web this function is no-op, therefore we can cast viewTag to number
     type,
     sharedTransitionTag,
     makeShareableCloneRecursive(config)

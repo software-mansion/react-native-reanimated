@@ -30,10 +30,16 @@ export interface NativeReanimatedModule {
   getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>): T;
   scheduleOnUI<T>(shareable: ShareableRef<T>): void;
   registerEventHandler<T>(
-    eventHash: string,
-    eventHandler: ShareableRef<T>
+    eventHandler: ShareableRef<T>,
+    eventName: string,
+    emitterReactTag: number
   ): number;
   unregisterEventHandler(id: number): void;
+  getViewProp<T>(
+    viewTag: number,
+    propName: string,
+    callback?: (result: T) => void
+  ): Promise<T>;
   enableLayoutAnimations(flag: boolean): void;
   registerSensor(
     sensorType: number,
@@ -127,12 +133,28 @@ export class NativeReanimated {
     return this.InnerNativeModule.unregisterSensor(sensorId);
   }
 
-  registerEventHandler<T>(eventHash: string, eventHandler: ShareableRef<T>) {
-    return this.InnerNativeModule.registerEventHandler(eventHash, eventHandler);
+  registerEventHandler<T>(
+    eventHandler: ShareableRef<T>,
+    eventName: string,
+    emitterReactTag: number
+  ) {
+    return this.InnerNativeModule.registerEventHandler(
+      eventHandler,
+      eventName,
+      emitterReactTag
+    );
   }
 
   unregisterEventHandler(id: number) {
     return this.InnerNativeModule.unregisterEventHandler(id);
+  }
+
+  getViewProp<T>(
+    viewTag: number,
+    propName: string,
+    callback?: (result: T) => void
+  ) {
+    return this.InnerNativeModule.getViewProp(viewTag, propName, callback);
   }
 
   configureLayoutAnimation(

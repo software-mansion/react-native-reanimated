@@ -31,8 +31,8 @@ const App = () => {
     return sv.value * state;
   }, dependencies);
   //...
-  return <></>
-}
+  return <></>;
+};
 ```
 
 `dependencies` here may be:
