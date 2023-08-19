@@ -108,8 +108,6 @@ void NativeProxy::installJSIBindings(
         fabricUIManager
 #endif
     /**/) {
-  WorkletRuntimeCollector::install(*rnRuntime_);
-
 #ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
   std::shared_ptr<UIManager> uiManager =
@@ -128,17 +126,13 @@ void NativeProxy::installJSIBindings(
 #endif
 
   jsi::Runtime &rnRuntime = *rnRuntime_;
-  jsi::Runtime &uiRuntime = nativeReanimatedModule_->getUIRuntime();
+  WorkletRuntimeCollector::install(rnRuntime);
   auto isReducedMotion = getIsReducedMotion();
-  RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, isReducedMotion);
+  RNRuntimeDecorator::decorate(
+      rnRuntime, nativeReanimatedModule_, isReducedMotion);
 
   registerEventHandler();
   setupLayoutAnimations();
-
-  rnRuntime.global().setProperty(
-      rnRuntime,
-      jsi::PropNameID::forAscii(rnRuntime, "__reanimatedModuleProxy"),
-      jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule_));
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(

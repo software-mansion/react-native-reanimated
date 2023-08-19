@@ -23,6 +23,7 @@
 #import <RNReanimated/RNRuntimeDecorator.h>
 #import <RNReanimated/SingleInstanceChecker.h>
 #import <RNReanimated/WorkletRuntime.h>
+#import <RNReanimated/WorkletRuntimeCollector.h>
 
 #if __has_include(<UIKit/UIAccessibility.h>)
 #import <UIKit/UIAccessibility.h>
@@ -275,19 +276,15 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     auto nativeReanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
 
     jsi::Runtime &rnRuntime = *jsiRuntime;
-    jsi::Runtime &uiRuntime = nativeReanimatedModule->getUIRuntime();
+    WorkletRuntimeCollector::install(rnRuntime);
 
 #if __has_include(<UIKit/UIAccessibility.h>)
     auto isReducedMotion = UIAccessibilityIsReduceMotionEnabled();
 #else
     auto isReducedMotion = false;
 #endif
-    RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, isReducedMotion);
 
-    rnRuntime.global().setProperty(
-        rnRuntime,
-        jsi::PropNameID::forAscii(rnRuntime, "__reanimatedModuleProxy"),
-        jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule));
+    RNRuntimeDecorator::decorate(rnRuntime, nativeReanimatedModule, isReducedMotion);
 
 #ifdef RCT_NEW_ARCH_ENABLED
     weakNativeReanimatedModule_ = nativeReanimatedModule;

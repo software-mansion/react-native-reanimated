@@ -12,7 +12,6 @@
 #import <RNReanimated/RNGestureHandlerStateManager.h>
 #import <RNReanimated/ReanimatedRuntime.h>
 #import <RNReanimated/ReanimatedSensorContainer.h>
-#import <RNReanimated/WorkletRuntimeCollector.h>
 
 #ifdef DEBUG
 #import <RNReanimated/REAScreensHelper.h>
@@ -167,7 +166,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #endif
 
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
-  WorkletRuntimeCollector::install(rnRuntime);
 
   std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
 
