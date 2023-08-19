@@ -180,17 +180,12 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
   // std::shared_ptr<EventListener> eventListener_;
 #endif
+  void installJSIBindings();
 #ifdef RCT_NEW_ARCH_ENABLED
-  void installJSIBindings(
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-      jni::alias_ref<JFabricUIManager::javaobject> fabricUIManager);
   void synchronouslyUpdateUIProps(
       jsi::Runtime &rt,
       Tag viewTag,
       const jsi::Object &props);
-#else
-  void installJSIBindings(
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread);
 #endif
   PlatformDepMethodsHolder getPlatformDependentMethods();
   void setupLayoutAnimations();

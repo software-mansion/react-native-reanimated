@@ -42,8 +42,7 @@ public class NativeProxy extends NativeProxyCommon {
                         LayoutAnimations,
                         fabricUIManager);
         prepareLayoutAnimations(LayoutAnimations);
-        ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
-        installJSIBindings(messageQueueThread, fabricUIManager);
+        installJSIBindings();
     }
 
     private native HybridData initHybrid(
@@ -51,10 +50,6 @@ public class NativeProxy extends NativeProxyCommon {
             CallInvokerHolderImpl jsCallInvokerHolder,
             AndroidUIScheduler androidUIScheduler,
             LayoutAnimations LayoutAnimations,
-            FabricUIManager fabricUIManager);
-
-    private native void installJSIBindings(
-            MessageQueueThread messageQueueThread,
             FabricUIManager fabricUIManager);
 
     public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
