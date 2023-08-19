@@ -273,6 +273,10 @@ jsi::Value NativeReanimatedModule::getViewProp(
     const jsi::Value &viewTag,
     const jsi::Value &propName,
     const jsi::Value &callback) {
+#ifdef RCT_NEW_ARCH_ENABLED
+  throw std::runtime_error(
+      "[Reanimated] getViewProp is not implemented on Fabric yet");
+#else
   const int viewTagInt = viewTag.asNumber();
   const auto propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
   const auto funPtr = std::make_shared<jsi::Function>(
@@ -294,6 +298,7 @@ jsi::Value NativeReanimatedModule::getViewProp(
   });
 
   return jsi::Value::undefined();
+#endif
 }
 
 jsi::Value NativeReanimatedModule::enableLayoutAnimations(
@@ -444,7 +449,7 @@ bool NativeReanimatedModule::handleRawEvent(
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
   }
-  jsi::Runtime &rt = *runtimeManager_->runtime.get();
+  jsi::Runtime &rt = uiWorkletRuntime_->getRuntime();
   jsi::Value payload = payloadFactory(rt);
 
   auto res = handleEvent(eventType, tag, std::move(payload), currentTime);
@@ -484,7 +489,7 @@ void NativeReanimatedModule::performOperations() {
   operationsInBatch_ =
       std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>();
 
-  jsi::Runtime &rt = *runtimeManager_->runtime;
+  jsi::Runtime &rt = uiWorkletRuntime_->getRuntime();
 
   {
     auto lock = propsRegistry_->createLock();

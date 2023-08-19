@@ -183,6 +183,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 #ifdef RCT_NEW_ARCH_ENABLED
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
 
+  std::unordered_set<std::string> nativePropNames_; // filled by configureProps
+
   std::shared_ptr<UIManager> uiManager_;
 
   // After app reload, surfaceId on iOS is still 1 but on Android it's 11.
@@ -200,9 +202,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   const ConfigurePropsFunction configurePropsPlatformFunction_;
   const UpdatePropsFunction updatePropsFunction_;
 #endif
-
-  const std::unordered_set<std::string>
-      nativePropNames_; // filled by configureProps
 
   const KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;
