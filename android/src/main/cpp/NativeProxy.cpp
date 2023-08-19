@@ -48,17 +48,23 @@ NativeProxy::NativeProxy(
           jsCallInvoker,
           uiScheduler,
           getPlatformDependentMethods())),
-      layoutAnimations_(std::move(layoutAnimations))
+      layoutAnimations_(std::move(layoutAnimations)) {
 #ifdef RCT_NEW_ARCH_ENABLED
-      ,
-      propsRegistry_(std::make_shared<PropsRegistry>())
-#endif
-{
-#ifdef RCT_NEW_ARCH_ENABLED
-  Binding *binding = fabricUIManager->getBinding();
-  uiManager_ = binding->getScheduler()->getUIManager();
+  const auto &uiManager =
+      fabricUIManager->getBinding()->getScheduler()->getUIManager();
+  auto propsRegistry = std::make_shared<PropsRegistry>();
   commitHook_ =
-      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
+      std::make_shared<ReanimatedCommitHook>(propsRegistry, uiManager);
+  nativeReanimatedModule_->setUIManager(uiManager);
+  nativeReanimatedModule_->setPropsRegistry(propsRegistry);
+  // removed temporarily, event listener mechanism needs to be fixed on RN side
+  // eventListener_ = std::make_shared<EventListener>(
+  //     [nativeReanimatedModule, getCurrentTime](const RawEvent &rawEvent) {
+  //       return nativeReanimatedModule->handleRawEvent(
+  //           rawEvent, getCurrentTime());
+  //     });
+  // reactScheduler_ = binding->getScheduler();
+  // reactScheduler_->addEventListener(eventListener_);
 #endif
 }
 
@@ -108,23 +114,6 @@ void NativeProxy::installJSIBindings(
         fabricUIManager
 #endif
     /**/) {
-#ifdef RCT_NEW_ARCH_ENABLED
-  Binding *binding = fabricUIManager->getBinding();
-  std::shared_ptr<UIManager> uiManager =
-      binding->getScheduler()->getUIManager();
-  nativeReanimatedModule->setUIManager(uiManager);
-  nativeReanimatedModule->setPropsRegistry(propsRegistry_);
-  propsRegistry_ = nullptr;
-  //  removed temporary, new event listener mechanism need fix on the RN side
-  //  eventListener_ = std::make_shared<EventListener>(
-  //      [nativeReanimatedModule, getCurrentTime](const RawEvent &rawEvent) {
-  //        return nativeReanimatedModule->handleRawEvent(rawEvent,
-  //        getCurrentTime());
-  //      });
-  //  reactScheduler_ = binding->getScheduler();
-  //  reactScheduler_->addEventListener(eventListener_);
-#endif
-
   jsi::Runtime &rnRuntime = *rnRuntime_;
   WorkletRuntimeCollector::install(rnRuntime);
   auto isReducedMotion = getIsReducedMotion();

@@ -96,21 +96,16 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   return scheduler.uiManager;
 }
 
-- (void)setUpNativeReanimatedModule:(std::shared_ptr<UIManager>)uiManager
-{
-  if (auto nativeReanimatedModule = weakNativeReanimatedModule_.lock()) {
-    nativeReanimatedModule->setUIManager(uiManager);
-    nativeReanimatedModule->setPropsRegistry(propsRegistry_);
-  }
-}
-
 - (void)injectDependencies:(jsi::Runtime &)runtime
 {
-  auto uiManager = [self getUIManager];
+  const auto &uiManager = [self getUIManager];
   react_native_assert(uiManager.get() != nil);
-  propsRegistry_ = std::make_shared<PropsRegistry>();
-  commitHook_ = std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager);
-  [self setUpNativeReanimatedModule:uiManager];
+  auto propsRegistry = std::make_shared<PropsRegistry>();
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(propsRegistry, uiManager);
+  if (auto nativeReanimatedModule = weakNativeReanimatedModule_.lock()) {
+    nativeReanimatedModule->setUIManager(uiManager);
+    nativeReanimatedModule->setPropsRegistry(propsRegistry);
+  }
 }
 
 #pragma mark-- Initialize

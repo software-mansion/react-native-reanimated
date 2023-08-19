@@ -129,9 +129,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue);
 
-  void setUIManager(std::shared_ptr<UIManager> uiManager);
+  void setUIManager(const std::shared_ptr<UIManager> &uiManager);
 
-  void setPropsRegistry(std::shared_ptr<PropsRegistry> propsRegistry);
+  void setPropsRegistry(const std::shared_ptr<PropsRegistry> &propsRegistry);
 #endif
 
   jsi::Value registerSensor(

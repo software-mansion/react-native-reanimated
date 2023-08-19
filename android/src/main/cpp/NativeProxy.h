@@ -175,13 +175,10 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
 #ifdef RCT_NEW_ARCH_ENABLED
-  std::shared_ptr<PropsRegistry> propsRegistry_;
-  std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
-
-// removed temporary, new event listener mechanism need fix on the RN side
-// std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
-// std::shared_ptr<EventListener> eventListener_;
+  // removed temporarily, event listener mechanism needs to be fixed on RN side
+  // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
+  // std::shared_ptr<EventListener> eventListener_;
 #endif
 #ifdef RCT_NEW_ARCH_ENABLED
   void installJSIBindings(

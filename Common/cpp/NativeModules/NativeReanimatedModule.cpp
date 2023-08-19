@@ -486,12 +486,12 @@ void NativeReanimatedModule::performOperations() {
   }
 
   auto copiedOperationsQueue = std::move(operationsInBatch_);
-  operationsInBatch_ =
-      std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>();
+  operationsInBatch_.clear();
 
   jsi::Runtime &rt = uiWorkletRuntime_->getRuntime();
 
   {
+    assert(propsRegistry_ != nullptr);
     auto lock = propsRegistry_->createLock();
 
     // remove recently unmounted ShadowNodes from PropsRegistry
@@ -642,12 +642,12 @@ jsi::Value NativeReanimatedModule::measure(
 }
 
 void NativeReanimatedModule::setUIManager(
-    std::shared_ptr<UIManager> uiManager) {
+    const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
 }
 
 void NativeReanimatedModule::setPropsRegistry(
-    std::shared_ptr<PropsRegistry> propsRegistry) {
+    const std::shared_ptr<PropsRegistry> &propsRegistry) {
   propsRegistry_ = propsRegistry;
 }
 #endif // RCT_NEW_ARCH_ENABLED
