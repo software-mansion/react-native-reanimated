@@ -30,6 +30,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   NativeReanimatedModule(
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<CallInvoker> &jsInvoker,
+      const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const PlatformDepMethodsHolder &platformDepMethodsHolder);
 
@@ -167,6 +168,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Object &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
+  const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
 

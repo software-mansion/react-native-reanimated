@@ -34,7 +34,8 @@ NativeProxy::NativeProxy(
     jsi::Runtime *rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
-    jni::global_ref<LayoutAnimations::javaobject> layoutAnimations
+    jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
 #ifdef RCT_NEW_ARCH_ENABLED
     ,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
@@ -46,6 +47,7 @@ NativeProxy::NativeProxy(
       nativeReanimatedModule_(std::make_shared<NativeReanimatedModule>(
           *rnRuntime,
           jsCallInvoker,
+          std::make_shared<JMessageQueueThread>(messageQueueThread),
           uiScheduler,
           getPlatformDependentMethods())),
       layoutAnimations_(std::move(layoutAnimations)) {
@@ -84,7 +86,8 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
     jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
-    jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations
+    jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
 #ifdef RCT_NEW_ARCH_ENABLED
     ,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
@@ -98,9 +101,10 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       (jsi::Runtime *)jsContext,
       jsCallInvoker,
       uiScheduler,
-      make_global(layoutAnimations)
+      make_global(layoutAnimations),
+      messageQueueThread
 #ifdef RCT_NEW_ARCH_ENABLED
-          ,
+      ,
       fabricUIManager
 #endif
       /**/);

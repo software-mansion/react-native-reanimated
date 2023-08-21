@@ -34,13 +34,16 @@ public class NativeProxy extends NativeProxyCommon {
 
         LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
 
+        ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
+
         mHybridData =
                 initHybrid(
                         context.getJavaScriptContextHolder().get(),
                         holder,
                         mAndroidUIScheduler,
                         LayoutAnimations,
-                        fabricUIManager);
+                        fabricUIManager,
+                        messageQueueThread);
         prepareLayoutAnimations(LayoutAnimations);
         installJSIBindings();
     }

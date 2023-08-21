@@ -24,12 +24,14 @@ public class NativeProxy extends NativeProxyCommon {
         CallInvokerHolderImpl holder =
                 (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
         LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
+        ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
         mHybridData =
                 initHybrid(
                         context.getJavaScriptContextHolder().get(),
                         holder,
                         mAndroidUIScheduler,
-                        LayoutAnimations);
+                        LayoutAnimations,
+                        messageQueueThread);
         prepareLayoutAnimations(LayoutAnimations);
         installJSIBindings();
     }
@@ -38,7 +40,8 @@ public class NativeProxy extends NativeProxyCommon {
             long jsContext,
             CallInvokerHolderImpl jsCallInvokerHolder,
             AndroidUIScheduler androidUIScheduler,
-            LayoutAnimations LayoutAnimations);
+            LayoutAnimations LayoutAnimations,
+            MessageQueueThread messageQueueThread);
 
     public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 

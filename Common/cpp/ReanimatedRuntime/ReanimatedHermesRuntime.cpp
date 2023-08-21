@@ -32,10 +32,15 @@ class HermesExecutorRuntimeAdapter
     : public facebook::hermes::inspector::RuntimeAdapter {
  public:
   explicit HermesExecutorRuntimeAdapter(
-      facebook::hermes::HermesRuntime &hermesRuntime)
-      : hermesRuntime_(hermesRuntime) {}
+      facebook::hermes::HermesRuntime &hermesRuntime,
+      const std::shared_ptr<MessageQueueThread> &thread)
+      : hermesRuntime_(hermesRuntime), thread_(std::move(thread)) {}
 
-  virtual ~HermesExecutorRuntimeAdapter() {}
+  virtual ~HermesExecutorRuntimeAdapter() {
+    // This is required by iOS, because there is an assertion in the destructor
+    // that the thread was indeed `quit` before
+    thread_->quitSynchronous();
+  }
 
 #if REACT_NATIVE_MINOR_VERSION >= 71
   facebook::hermes::HermesRuntime &getRuntime() override {
@@ -59,19 +64,22 @@ class HermesExecutorRuntimeAdapter
 
  public:
   facebook::hermes::HermesRuntime &hermesRuntime_;
+  std::shared_ptr<MessageQueueThread> thread_;
 };
 
 #endif // HERMES_ENABLE_DEBUGGER
 
 ReanimatedHermesRuntime::ReanimatedHermesRuntime(
     std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
+    const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name)
     : jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck>(
           *runtime,
           reentrancyCheck_),
       runtime_(std::move(runtime)) {
 #if HERMES_ENABLE_DEBUGGER
-  auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_);
+  auto adapter =
+      std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_, jsQueue);
 #if REACT_NATIVE_MINOR_VERSION >= 71
   debugToken_ = facebook::hermes::inspector::chrome::enableDebugging(
       std::move(adapter), name);
@@ -79,6 +87,10 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
   facebook::hermes::inspector::chrome::enableDebugging(
       std::move(adapter), name);
 #endif // REACT_NATIVE_MINOR_VERSION
+#else
+  // This is required by iOS, because there is an assertion in the destructor
+  // that the thread was indeed `quit` before
+  jsQueue->quitSynchronous();
 #endif // HERMES_ENABLE_DEBUGGER
 
 #ifdef DEBUG

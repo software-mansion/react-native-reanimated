@@ -23,6 +23,7 @@ class ReanimatedRuntime {
  public:
   static std::shared_ptr<jsi::Runtime> make(
       jsi::Runtime &rnRuntime,
+      const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::string &name);
 };
 

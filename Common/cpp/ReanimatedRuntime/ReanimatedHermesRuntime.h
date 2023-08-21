@@ -117,6 +117,7 @@ class ReanimatedHermesRuntime
  public:
   ReanimatedHermesRuntime(
       std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
+      const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::string &name);
   ~ReanimatedHermesRuntime();
 

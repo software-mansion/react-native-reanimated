@@ -9,9 +9,10 @@ namespace reanimated {
 
 WorkletRuntime::WorkletRuntime(
     jsi::Runtime &rnRuntime,
+    const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name)
-    : runtime_(ReanimatedRuntime::make(rnRuntime, name)), name_(name) {
+    : runtime_(ReanimatedRuntime::make(rnRuntime, jsQueue, name)), name_(name) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
   WorkletRuntimeDecorator::decorate(rt, name, jsScheduler);

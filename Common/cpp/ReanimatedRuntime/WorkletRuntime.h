@@ -19,6 +19,7 @@ class WorkletRuntime : public jsi::HostObject {
  public:
   explicit WorkletRuntime(
       jsi::Runtime &rnRuntime,
+      const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::string &name);
 

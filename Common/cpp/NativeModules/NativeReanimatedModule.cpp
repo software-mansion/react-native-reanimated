@@ -40,13 +40,16 @@ namespace reanimated {
 NativeReanimatedModule::NativeReanimatedModule(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<CallInvoker> &jsInvoker,
+    const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const PlatformDepMethodsHolder &platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
+      jsQueue_(jsQueue),
       jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsInvoker)),
       uiScheduler_(uiScheduler),
       uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
           rnRuntime,
+          jsQueue,
           jsScheduler_,
           "Reanimated UI runtime")),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
@@ -172,7 +175,7 @@ jsi::Value NativeReanimatedModule::createWorkletRuntime(
   auto nameString = name.asString(rt).utf8(rt);
   auto valueUnpackerCodeString = valueUnpackerCode.asString(rt).utf8(rt);
   auto workletRuntime =
-      std::make_shared<WorkletRuntime>(rt, jsScheduler_, nameString);
+      std::make_shared<WorkletRuntime>(rt, jsQueue_, jsScheduler_, nameString);
   workletRuntime->installValueUnpacker(valueUnpackerCodeString);
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }
