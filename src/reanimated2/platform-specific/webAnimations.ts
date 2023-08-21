@@ -1,6 +1,6 @@
 import { Animations, AnimationsData, WebEasings } from './webAnimationsData';
 
-import type { AnimationsTypes } from './webAnimationsData';
+import type { AnimationTypes } from './webAnimationsData';
 
 import {
   parseAnimationObjectToKeyframe,
@@ -30,8 +30,8 @@ export function insertWebAnimations(): void {
 
   document.head.appendChild(style);
 
-  for (const animationName in Animations) {
-    style.sheet?.insertRule(Animations[animationName as AnimationsTypes].style);
+  for (const animationType in Animations) {
+    style.sheet?.insertRule(Animations[animationType as AnimationTypes].style);
   }
 }
 
@@ -136,7 +136,7 @@ export function getDelayFromConfig(config: any): number {
 export function getDurationFromConfig(
   config: any,
   isLayoutTransition: boolean,
-  animationName: AnimationsTypes
+  animationName: AnimationTypes
 ): number {
   const hasDuration = Object.prototype.hasOwnProperty.call(config, 'durationV');
   const defaultDuration = isLayoutTransition

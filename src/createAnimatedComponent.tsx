@@ -72,7 +72,7 @@ import { handleLayoutTransition } from './reanimated2/platform-specific/webTrans
 import type { TransitionConfig } from './reanimated2/platform-specific/webTransitions';
 
 import { Animations } from './reanimated2/platform-specific/webAnimationsData';
-import type { AnimationsTypes } from './reanimated2/platform-specific/webAnimationsData';
+import type { AnimationTypes } from './reanimated2/platform-specific/webAnimationsData';
 
 const IS_WEB = isWeb();
 
@@ -846,7 +846,7 @@ export default function createAnimatedComponent(
         duration: getDurationFromConfig(
           config,
           isLayoutTransition,
-          initialAnimationName as AnimationsTypes
+          initialAnimationName as AnimationTypes
         ),
         delay: getDelayFromConfig(config),
         easing: getEasingFromConfig(config),

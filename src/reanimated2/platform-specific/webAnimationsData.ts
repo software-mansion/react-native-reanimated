@@ -112,5 +112,5 @@ export const WebEasings: Record<string, number[]> = {
   exp: [0.7, 0, 0.84, 0],
 };
 
-export type AnimationsTypes = keyof typeof Animations;
+export type AnimationTypes = keyof typeof Animations;
 export type LayoutTransitionsTypes = keyof typeof AnimationsData;
