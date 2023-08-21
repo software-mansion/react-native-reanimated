@@ -7,6 +7,8 @@ import { StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
+const BOX_SIZE = 150;
+
 export default function AnimatedSensorMagneticFieldExample() {
   const magneticField = useAnimatedSensor(SensorType.MAGNETIC_FIELD);
 
@@ -14,7 +16,7 @@ export default function AnimatedSensorMagneticFieldExample() {
     const { x, y } = magneticField.sensor.value;
     const angle = (Math.atan2(y, x) * 180) / Math.PI;
     return {
-      transform: [{ rotateZ: `${angle}deg` }, { translateY: 75 }],
+      transform: [{ rotateZ: `${angle}deg` }, { translateY: BOX_SIZE / 2 }],
     };
   });
 
@@ -33,7 +35,7 @@ const styles = StyleSheet.create({
   },
   box: {
     width: 10,
-    height: 150,
+    height: BOX_SIZE,
     backgroundColor: 'navy',
   },
 });
