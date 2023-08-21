@@ -832,6 +832,9 @@ export default function createAnimatedComponent(
       // This prevents crashes if we try to set animations that are not defined.
       // We don't care about layout transitions since they're created dynamically
       if (!(initialAnimationName in Animations) && !isLayoutTransition) {
+        console.warn(
+          "[Reanimated] Couldn't load entering/exiting animation. Current version supports only predefined animations with modifiers: duration, delay, easing, randomizeDelay."
+        );
         return;
       }
 
