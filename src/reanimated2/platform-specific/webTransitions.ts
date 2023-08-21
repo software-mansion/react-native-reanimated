@@ -1,9 +1,10 @@
 import {
-  AnimationConfig,
   WEB_ANIMATIONS_ID,
   generateRandomKeyframeName,
   setElementAnimation,
 } from './webAnimations';
+
+import type { AnimationConfig } from './webAnimations';
 
 export enum TransitionType {
   LINEAR,

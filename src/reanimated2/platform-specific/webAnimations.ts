@@ -1,10 +1,9 @@
-import {
+import { Animations, AnimationsData, WebEasings } from './webAnimationsData';
+
+import type {
   AnimationData,
-  Animations,
-  AnimationsData,
   AnimationsTypes,
   TransformProperties,
-  WebEasings,
 } from './webAnimationsData';
 
 export const WEB_ANIMATIONS_ID = 'webAnimationsStyle';

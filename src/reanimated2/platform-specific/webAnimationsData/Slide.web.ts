@@ -1,5 +1,5 @@
 import { parseAnimationObjectToKeyframe } from '../webAnimations';
-import { AnimationData } from '../webAnimationsData';
+import type { AnimationData } from '../webAnimationsData';
 
 const DEFAULT_SLIDE_TIME = 0.3;
 

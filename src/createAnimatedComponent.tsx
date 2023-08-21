@@ -57,7 +57,6 @@ import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
 import { JSPropUpdater } from './JSPropUpdater';
 
 import {
-  AnimationConfig,
   areDOMRectsEqual,
   createAnimationWithExistingTransform,
   getDelayFromConfig,
@@ -67,15 +66,13 @@ import {
   handleExitingAnimation,
   insertWebAnimations,
 } from './reanimated2/platform-specific/webAnimations';
+import type { AnimationConfig } from './reanimated2/platform-specific/webAnimations';
 
-import {
-  TransitionConfig,
-  handleLayoutTransition,
-} from './reanimated2/platform-specific/webTransitions';
-import {
-  Animations,
-  AnimationsTypes,
-} from './reanimated2/platform-specific/webAnimationsData';
+import { handleLayoutTransition } from './reanimated2/platform-specific/webTransitions';
+import type { TransitionConfig } from './reanimated2/platform-specific/webTransitions';
+
+import { Animations } from './reanimated2/platform-specific/webAnimationsData';
+import type { AnimationsTypes } from './reanimated2/platform-specific/webAnimationsData';
 
 const IS_WEB = isWeb();
 
