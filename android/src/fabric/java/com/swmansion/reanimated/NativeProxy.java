@@ -53,7 +53,8 @@ public class NativeProxy extends NativeProxyCommon {
             CallInvokerHolderImpl jsCallInvokerHolder,
             AndroidUIScheduler androidUIScheduler,
             LayoutAnimations LayoutAnimations,
-            FabricUIManager fabricUIManager);
+            FabricUIManager fabricUIManager,
+            MessageQueueThread messageQueueThread);
 
     public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 
