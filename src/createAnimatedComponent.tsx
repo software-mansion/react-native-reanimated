@@ -59,6 +59,7 @@ import { JSPropUpdater } from './JSPropUpdater';
 import {
   AnimationConfig,
   Animations,
+  AnimationsTypes,
   areDOMRectsEqual,
   createAnimationWithExistingTransform,
   getDelayFromConfig,
@@ -822,15 +823,14 @@ export default function createAnimatedComponent(
         return;
       }
 
+      const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
+
       const initialAnimationName =
         typeof config === 'function' ? config.name : config.constructor.name;
 
       // This prevents crashes if we try to set animations that are not defined.
       // We don't care about layout transitions since they're created dynamically
-      if (
-        !(initialAnimationName in Animations) &&
-        animationType !== LayoutAnimationType.LAYOUT
-      ) {
+      if (!(initialAnimationName in Animations) && !isLayoutTransition) {
         return;
       }
 
@@ -842,7 +842,11 @@ export default function createAnimatedComponent(
 
       const animationConfig: AnimationConfig = {
         animationName: animationName,
-        duration: getDurationFromConfig(config),
+        duration: getDurationFromConfig(
+          config,
+          isLayoutTransition,
+          initialAnimationName as AnimationsTypes
+        ),
         delay: getDelayFromConfig(config),
         easing: getEasingFromConfig(config),
       };

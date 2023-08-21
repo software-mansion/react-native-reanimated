@@ -164,10 +164,18 @@ export function getDelayFromConfig(config: any): number {
   return delay;
 }
 
-export function getDurationFromConfig(config: any): number {
+export function getDurationFromConfig(
+  config: any,
+  isLayoutTransition: boolean,
+  animationName: AnimationsTypes
+): number {
+  console.log(config);
   const hasDuration = Object.prototype.hasOwnProperty.call(config, 'durationV');
+  const defaultDuration = isLayoutTransition
+    ? 0.3
+    : Animations[animationName].duration;
 
-  return hasDuration ? config.durationV / 1000 : 0.3;
+  return hasDuration ? config.durationV / 1000 : defaultDuration;
 }
 
 export function getRandomDelay(maxDelay = 1000): number {
