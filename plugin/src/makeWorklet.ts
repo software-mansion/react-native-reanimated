@@ -54,8 +54,6 @@ export function makeWorklet(
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
-  const functionName = makeWorkletName(fun);
-
   removeWorkletDirective(fun);
 
   // We use copy because some of the plugins don't update bindings and
@@ -98,7 +96,9 @@ export function makeWorklet(
 
   const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
 
-  const privateFunctionId = identifier('_f');
+  const functionName = makeWorkletName(fun);
+  const functionIdentifier = identifier(functionName);
+
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
     ? functionExpression(null, clone.params, clone.body)
@@ -191,12 +191,12 @@ export function makeWorklet(
     VariableDeclaration | ExpressionStatement | ReturnStatement
   > = [
     variableDeclaration('const', [
-      variableDeclarator(privateFunctionId, funExpression),
+      variableDeclarator(functionIdentifier, funExpression),
     ]),
     expressionStatement(
       assignmentExpression(
         '=',
-        memberExpression(privateFunctionId, identifier('__closure'), false),
+        memberExpression(functionIdentifier, identifier('__closure'), false),
         objectExpression(
           variables.map((variable) =>
             objectProperty(identifier(variable.name), variable, false, true)
@@ -207,14 +207,18 @@ export function makeWorklet(
     expressionStatement(
       assignmentExpression(
         '=',
-        memberExpression(privateFunctionId, identifier('__initData'), false),
+        memberExpression(functionIdentifier, identifier('__initData'), false),
         initDataId
       )
     ),
     expressionStatement(
       assignmentExpression(
         '=',
-        memberExpression(privateFunctionId, identifier('__workletHash'), false),
+        memberExpression(
+          functionIdentifier,
+          identifier('__workletHash'),
+          false
+        ),
         numericLiteral(workletHash)
       )
     ),
@@ -241,7 +245,7 @@ export function makeWorklet(
         assignmentExpression(
           '=',
           memberExpression(
-            privateFunctionId,
+            functionIdentifier,
             identifier('__stackDetails'),
             false
           ),
@@ -251,7 +255,7 @@ export function makeWorklet(
     );
   }
 
-  statements.push(returnStatement(privateFunctionId));
+  statements.push(returnStatement(functionIdentifier));
 
   const newFun = functionExpression(undefined, [], blockStatement(statements));
 
@@ -292,10 +296,10 @@ function hash(str: string) {
 }
 
 function makeWorkletName(fun: NodePath<WorkletizableFunction>) {
-  if (isObjectMethod(fun.node) && 'name' in fun.node.key) {
+  if (isObjectMethod(fun.node) && isIdentifier(fun.node.key)) {
     return fun.node.key.name;
   }
-  if (isFunctionDeclaration(fun.node) && fun.node.id) {
+  if (isFunctionDeclaration(fun.node) && isIdentifier(fun.node.id)) {
     return fun.node.id.name;
   }
   if (isFunctionExpression(fun.node) && isIdentifier(fun.node.id)) {
