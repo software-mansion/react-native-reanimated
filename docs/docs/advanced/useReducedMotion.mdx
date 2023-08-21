@@ -1,0 +1,53 @@
+---
+id: useReducedMotion
+title: useReducedMotion
+sidebar_label: useReducedMotion
+---
+
+This hook allows you to conditionally control animations based on the system's `Reduced Motion` accessibility setting.
+
+## Reference
+
+```javascript
+import { useReducedMotion } from 'react-native-reanimated';
+
+function App() {
+  const shouldReduceMotion = useReducedMotion();
+
+  if (shouldReduceMotion) {
+    // display static content ✨
+  } else {
+    // run animations ✨
+  }
+
+  // ...
+}
+```
+
+### Returns
+
+`useReducedMotion` returns a boolean value that indicates whether the `Reduced Motion` accessibility setting was enabled when the app started.
+
+## Example
+
+import UseReducedMotion from '@site/src/examples/UseReducedMotion';
+import UseReducedMotionSrc from '!!raw-loader!@site/src/examples/UseReducedMotion';
+
+<InteractiveExample
+  src={UseReducedMotionSrc}
+  component={<UseReducedMotion />}
+/>
+
+## Remarks
+
+- Keep in mind that the hook doesn't cause the component to reload when the system setting is changed.
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>
