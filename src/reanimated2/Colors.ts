@@ -6,7 +6,7 @@
  */
 
 /* eslint no-bitwise: 0 */
-import { StyleProps } from './commonTypes';
+import type { StyleProps } from './commonTypes';
 import { makeShareable } from './core';
 import { isAndroid, isWeb } from './PlatformChecker';
 

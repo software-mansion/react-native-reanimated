@@ -29,7 +29,7 @@ import { strict as assert } from 'assert';
 import * as convertSourceMap from 'convert-source-map';
 import * as fs from 'fs';
 import { isRelease } from './utils';
-import { WorkletizableFunction } from './types';
+import type { WorkletizableFunction } from './types';
 
 const MOCK_SOURCE_MAP = 'mock source map';
 
