@@ -58,10 +58,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
 
-  jsi::Value createWorkletRuntime(
-      jsi::Runtime &rt,
-      const jsi::Value &name,
-      const jsi::Value &valueUnpackerCode) override;
+  jsi::Value createWorkletRuntime(jsi::Runtime &rt, const jsi::Value &name)
+      override;
   void runOnRuntime(
       jsi::Runtime &rt,
       const jsi::Value &runtime,
@@ -171,8 +169,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
-
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
+  std::string valueUnpackerCode_;
 
   std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;
   const RequestRenderFunction requestRender_;

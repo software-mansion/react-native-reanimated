@@ -34,7 +34,6 @@ interface JSReanimated {
   pushFrame(frame: (timestamp: Timestamp) => void): void;
   maybeRequestRender(): void;
   _onRender(timestampMs: number): void;
-  installValueUnpacker(): void;
   makeShareable<T>(value: T): T;
   makeMutable<T>(value: T): MutableValue<T>;
   makeRemote<T>(object: Record<string, any>): T;

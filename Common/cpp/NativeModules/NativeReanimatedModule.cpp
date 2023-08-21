@@ -138,8 +138,8 @@ NativeReanimatedModule::NativeReanimatedModule(
 void NativeReanimatedModule::installValueUnpacker(
     jsi::Runtime &rt,
     const jsi::Value &valueUnpackerCode) {
-  uiWorkletRuntime_->installValueUnpacker(
-      valueUnpackerCode.asString(rt).utf8(rt));
+  valueUnpackerCode_ = valueUnpackerCode.asString(rt).utf8(rt);
+  uiWorkletRuntime_->installValueUnpacker(valueUnpackerCode_);
 }
 
 NativeReanimatedModule::~NativeReanimatedModule() {
@@ -170,13 +170,10 @@ void NativeReanimatedModule::scheduleOnUI(
 
 jsi::Value NativeReanimatedModule::createWorkletRuntime(
     jsi::Runtime &rt,
-    const jsi::Value &name,
-    const jsi::Value &valueUnpackerCode) {
-  auto nameString = name.asString(rt).utf8(rt);
-  auto valueUnpackerCodeString = valueUnpackerCode.asString(rt).utf8(rt);
-  auto workletRuntime =
-      std::make_shared<WorkletRuntime>(rt, jsQueue_, jsScheduler_, nameString);
-  workletRuntime->installValueUnpacker(valueUnpackerCodeString);
+    const jsi::Value &name) {
+  auto workletRuntime = std::make_shared<WorkletRuntime>(
+      rt, jsQueue_, jsScheduler_, name.asString(rt).utf8(rt));
+  workletRuntime->installValueUnpacker(valueUnpackerCode_);
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }
 

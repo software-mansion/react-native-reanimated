@@ -22,19 +22,12 @@ export default class JSReanimated {
     );
   }
 
-  installValueUnpacker(_valueUnpackerCode: string): void {
-    // noop
-  }
-
   scheduleOnUI<T>(worklet: ShareableRef<T>) {
     // @ts-ignore web implementation has still not been updated after the rewrite, this will be addressed once the web implementation updates are ready
     requestAnimationFrame(worklet);
   }
 
-  createWorkletRuntime(
-    _name: string,
-    _valueUnpackerCode: string
-  ): WorkletRuntime {
+  createWorkletRuntime(_name: string): WorkletRuntime {
     throw new Error(
       '[Reanimated] createWorkletRuntime is not available in JSReanimated.'
     );

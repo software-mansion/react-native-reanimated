@@ -12,6 +12,7 @@ import type {
 } from '../layoutReanimation';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import type { WorkletRuntime } from '../runtimes';
+import { getValueUnpackerCode } from '../valueUnpacker';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
@@ -25,7 +26,7 @@ export interface NativeReanimatedModule {
   ): ShareableSyncDataHolderRef<T>;
   getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>): T;
   scheduleOnUI<T>(shareable: ShareableRef<T>): void;
-  createWorkletRuntime(name: string, valueUnpackerCode: string): WorkletRuntime;
+  createWorkletRuntime(name: string): WorkletRuntime;
   runOnRuntime(
     runtime: WorkletRuntime,
     shareable: ShareableRef<ComplexWorkletFunction<[], void>>
@@ -86,10 +87,7 @@ export class NativeReanimated {
     }
     checkCppVersion();
     this.InnerNativeModule = global.__reanimatedModuleProxy;
-  }
-
-  installValueUnpacker(valueUnpackerCode: string): void {
-    return this.InnerNativeModule.installValueUnpacker(valueUnpackerCode);
+    this.InnerNativeModule.installValueUnpacker(getValueUnpackerCode());
   }
 
   makeShareableClone<T>(value: T, shouldPersistRemote: boolean) {
@@ -111,8 +109,8 @@ export class NativeReanimated {
     return this.InnerNativeModule.scheduleOnUI(shareable);
   }
 
-  createWorkletRuntime(name: string, valueUnpackerCode: string) {
-    return this.InnerNativeModule.createWorkletRuntime(name, valueUnpackerCode);
+  createWorkletRuntime(name: string) {
+    return this.InnerNativeModule.createWorkletRuntime(name);
   }
 
   runOnRuntime(

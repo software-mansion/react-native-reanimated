@@ -65,7 +65,7 @@ static jsi::Value SPEC_PREFIX(createWorkletRuntime)(
     const jsi::Value *args,
     size_t) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->createWorkletRuntime(rt, std::move(args[0]), std::move(args[1]));
+      ->createWorkletRuntime(rt, std::move(args[0]));
 }
 
 static jsi::Value SPEC_PREFIX(runOnRuntime)(
@@ -212,7 +212,7 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
 
   methodMap_["scheduleOnUI"] = MethodMetadata{1, SPEC_PREFIX(scheduleOnUI)};
   methodMap_["createWorkletRuntime"] =
-      MethodMetadata{2, SPEC_PREFIX(createWorkletRuntime)};
+      MethodMetadata{1, SPEC_PREFIX(createWorkletRuntime)};
   methodMap_["runOnRuntime"] = MethodMetadata{2, SPEC_PREFIX(runOnRuntime)};
   methodMap_["runOnRuntimeSync"] =
       MethodMetadata{2, SPEC_PREFIX(runOnRuntimeSync)};
