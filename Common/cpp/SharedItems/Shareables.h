@@ -129,7 +129,7 @@ class ShareableJSRef : public jsi::HostObject {
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
-    const char *errorMessage =
+    const std::string errorMessage =
         "expecting the object to be of type ShareableJSRef.");
 
 template <typename T>
