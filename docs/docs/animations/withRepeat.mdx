@@ -32,8 +32,15 @@ function withRepeat<T extends AnimatableValue>(
   animation: T,
   numberOfReps?: number,
   reverse?: boolean,
-  callback?: (finished?: boolean, current?: AnimatableValue) => void
+  callback?: (finished?: boolean, current?: AnimatableValue) => void,
+  reduceMotion?: ReduceMotion
 ): T;
+
+enum ReduceMotion {
+  System = 'system',
+  Always = 'always',
+  Never = 'never',
+}
 ```
 
 </details>
@@ -59,6 +66,10 @@ This option only supports [animation functions](/docs/fundamentals/glossary#anim
 #### `callback` <Optional />
 
 A function called on animation complete. In case the animation is cancelled, the callback will receive `false` as the argument, otherwise it will receive `true`.
+
+#### `reduceMotion` <Optional />
+
+A parameter that determines how the animation responds to the device's `Reduced Motion` accessibility setting.
 
 ### Returns
 
