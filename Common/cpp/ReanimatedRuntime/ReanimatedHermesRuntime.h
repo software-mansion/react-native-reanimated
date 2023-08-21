@@ -67,13 +67,13 @@ struct ReanimatedReentrancyCheck {
       // Returns true if tid and expected were the same.  If they
       // were, then the stored tid referred to no thread, and we
       // atomically saved this thread's tid.  Now increment depth.
-      assert(depth == 0 && "No thread id, but depth != 0");
+      assert(depth == 0 && "[Reanimated] No thread id, but depth != 0");
       ++depth;
     } else if (expected == this_id) {
       // If the stored tid referred to a thread, expected was set to
       // that value.  If that value is this thread's tid, that's ok,
       // just increment depth again.
-      assert(depth != 0 && "Thread id was set, but depth == 0");
+      assert(depth != 0 && "[Reanimated] Thread id was set, but depth == 0");
       ++depth;
     } else {
       // The stored tid was some other thread.  This indicates a bad
@@ -87,13 +87,13 @@ struct ReanimatedReentrancyCheck {
   void after() {
     assert(
         tid.load(std::memory_order_relaxed) == std::this_thread::get_id() &&
-        "No thread id in after()");
+        "[Reanimated] No thread id in after()");
     if (--depth == 0) {
       // If we decremented depth to zero, store no-thread into tid.
       std::thread::id expected = std::this_thread::get_id();
       bool didWrite = tid.compare_exchange_strong(
           expected, std::thread::id(), std::memory_order_relaxed);
-      assert(didWrite && "Decremented to zero, but no tid write");
+      assert(didWrite && "[Reanimated] Decremented to zero, but no tid write");
     }
   }
 

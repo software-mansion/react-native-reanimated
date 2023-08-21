@@ -136,12 +136,12 @@ template <typename T>
 std::shared_ptr<T> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &shareableRef,
-    const char *errorMessage =
+    const std::string errorMessage =
         "provided shareable object is of an incompatible type.") {
   auto res = std::dynamic_pointer_cast<T>(
       extractShareableOrThrow(rt, shareableRef, errorMessage));
   if (!res) {
-    throw std::runtime_error(std::string("[Reanimated] ") + errorMessage);
+    throw std::runtime_error("[Reanimated] " + errorMessage);
   }
   return res;
 }

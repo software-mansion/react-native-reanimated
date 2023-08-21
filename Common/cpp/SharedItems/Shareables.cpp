@@ -44,7 +44,7 @@ std::unique_ptr<jsi::Function> &CoreFunction::getFunction(jsi::Runtime &rt) {
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
-    const char *errorMessage) {
+    const std::string errorMessage) {
   if (maybeShareableValue.isObject()) {
     auto object = maybeShareableValue.asObject(rt);
     if (object.isHostObject<ShareableJSRef>(rt)) {
@@ -53,7 +53,7 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
   } else if (maybeShareableValue.isUndefined()) {
     return Shareable::undefined();
   }
-  throw std::runtime_error(std::string("[Reanimated] ") + errorMessage);
+  throw std::runtime_error("[Reanimated] " + errorMessage);
 }
 
 Shareable::~Shareable() {}

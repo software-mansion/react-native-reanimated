@@ -71,7 +71,6 @@ export class NativeReanimated {
       const { ReanimatedModule } = NativeModules;
       ReanimatedModule?.installTurboModule();
     }
-
     if (global.__reanimatedModuleProxy === undefined) {
       throw new Error(
         `[Reanimated] Native part of Reanimated doesn't seem to be initialized.

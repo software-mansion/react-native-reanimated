@@ -411,7 +411,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       propMap.putMap(key, (ReadableMap) value);
     } else {
       throw new IllegalStateException(
-          "[Reanimated] Unknown type of animated value [Layout Animations].");
+          "[Reanimated] Unknown type of animated value for Layout Animations.");
     }
   }
 

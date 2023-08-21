@@ -22,7 +22,6 @@ declare global {
   var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var _IS_FABRIC: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
-  var _REANIMATED_VERSION_JAVA: string | undefined;
   var _REANIMATED_VERSION_JS: string | undefined;
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
   var __reanimatedModuleProxy: NativeReanimatedModule | undefined;

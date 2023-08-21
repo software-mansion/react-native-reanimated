@@ -154,23 +154,23 @@ export const withDecay = function (
     function validateConfig(): void {
       if (config.clamp) {
         if (!Array.isArray(config.clamp)) {
-          throw Error(
+          throw new Error(
             `[Reanimated] \`config.clamp\` must be an array but is ${typeof config.clamp}.`
           );
         }
         if (config.clamp.length !== 2) {
-          throw Error(
+          throw new Error(
             `[Reanimated] \`clamp array\` must contain 2 items but is given ${config.clamp.length}.`
           );
         }
       }
       if (config.velocityFactor <= 0) {
-        throw Error(
+        throw new Error(
           `[Reanimated] \`config.velocityFactor\` must be greather then 0 but is ${config.velocityFactor}.`
         );
       }
       if (config.rubberBandEffect && !config.clamp) {
-        throw Error(
+        throw new Error(
           '[Reanimated] You need to set `clamp` property when using `rubberBandEffect`.'
         );
       }

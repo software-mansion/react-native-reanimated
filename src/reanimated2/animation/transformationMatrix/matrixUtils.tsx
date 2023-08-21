@@ -345,7 +345,7 @@ export function decomposeMatrix(
 
   // normalize matrix
   if (matrix[15] === 0) {
-    throw new Error('[Reanimated] Invalid transform matrix!');
+    throw new Error('[Reanimated] Invalid transform matrix.');
   }
   matrix.forEach((_, i) => (matrix[i] /= matrix[15]));
 

@@ -16,7 +16,7 @@ export class BaseAnimationBuilder {
   ) => InstanceType<T>;
 
   build = (): EntryExitAnimationFunction | LayoutAnimationFunction => {
-    throw Error('[Reanimated] Unimplemented method in child class.');
+    throw new Error('[Reanimated] Unimplemented method in child class.');
   };
 
   static duration<T extends typeof BaseAnimationBuilder>(
