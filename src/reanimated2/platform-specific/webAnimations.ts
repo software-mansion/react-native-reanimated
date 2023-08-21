@@ -6,6 +6,7 @@ import {
   parseAnimationObjectToKeyframe,
   type TransformProperties,
 } from './animationParser';
+import type { TransformsStyle } from 'react-native';
 
 export const WEB_ANIMATIONS_ID = 'webAnimationsStyle';
 
@@ -44,7 +45,7 @@ export function insertWebAnimations(): void {
  */
 export function createAnimationWithExistingTransform(
   animationName: string,
-  existingTransform: any
+  existingTransform: NonNullable<TransformsStyle['transform']>
 ): string {
   if (!(animationName in Animations)) {
     return '';
@@ -55,8 +56,16 @@ export function createAnimationWithExistingTransform(
 
   newAnimationData.name = keyframeName;
 
-  existingTransform = existingTransform.map(
-    (transformProp: TransformProperties) => {
+  if (typeof existingTransform === 'string') {
+    throw new Error(
+      '[Reanimated] String transform is not currently supported.'
+    );
+  }
+
+  type TransformPropType = (typeof existingTransform)[number];
+
+  const newTransform = existingTransform.map(
+    (transformProp: TransformPropType) => {
       const newTransformProp: TransformProperties = {};
       for (const [key, value] of Object.entries(transformProp)) {
         if (key.includes('translate')) {
@@ -74,12 +83,12 @@ export function createAnimationWithExistingTransform(
 
   for (const timestampProperties of Object.values(newAnimationData.style)) {
     if (!timestampProperties.transform) {
-      timestampProperties.transform = existingTransform;
+      timestampProperties.transform = newTransform;
     } else {
       // We insert existing transformations before ours.
       Array.prototype.unshift.apply(
         timestampProperties.transform,
-        existingTransform
+        newTransform
       );
     }
   }
