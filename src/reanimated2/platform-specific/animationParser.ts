@@ -12,10 +12,11 @@ export interface TransformProperties {
   skewX?: string;
 }
 
-export interface AnimationStyle {
+interface AnimationStyle {
   opacity?: number;
   transform?: TransformProperties[];
 }
+
 export interface AnimationData {
   name: string;
   style: Record<number, AnimationStyle>;
