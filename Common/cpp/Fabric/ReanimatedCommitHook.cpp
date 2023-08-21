@@ -24,7 +24,8 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &,
     RootShadowNode::Shared const &,
     RootShadowNode::Unshared const &newRootShadowNode) const noexcept {
-  if (propsRegistry_->isLastReanimatedRoot(newRootShadowNode)) {
+#endif
+  if (ReanimatedCommitMarker::isReanimatedCommit()) {
     // ShadowTree commited by Reanimated, no need to apply updates from
     // PropsRegistry
     return newRootShadowNode;
