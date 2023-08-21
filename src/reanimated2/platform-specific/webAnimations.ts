@@ -5,7 +5,7 @@ import type { AnimationsTypes } from './webAnimationsData';
 import {
   parseAnimationObjectToKeyframe,
   type TransformProperties,
-} from './webAnimationsData/animationParser';
+} from './animationParser';
 
 export const WEB_ANIMATIONS_ID = 'webAnimationsStyle';
 

@@ -1,7 +1,7 @@
 import {
   type AnimationData,
   parseAnimationObjectToKeyframe,
-} from './animationParser';
+} from '../animationParser';
 
 const DEFAULT_BOUNCE_TIME = 0.6;
 
