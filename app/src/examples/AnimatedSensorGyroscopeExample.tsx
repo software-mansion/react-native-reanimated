@@ -13,9 +13,9 @@ function clamp(num: number, min: number, max: number) {
   return Math.min(Math.max(num, min), max);
 }
 
-const OFFSET_X = 100; //in px
-const OFFSET_Y = 100; //in px
-const OFFSET_Z = 180; //in degrees
+const OFFSET_X = 100; // in px
+const OFFSET_Y = 100; // in px
+const OFFSET_Z = 180; // in degrees
 
 export default function AnimatedSensorGyroscopeExample() {
   const gyroscope = useAnimatedSensor(SensorType.GYROSCOPE);
