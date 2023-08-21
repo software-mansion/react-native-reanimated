@@ -132,7 +132,6 @@ const capturableConsole = { ...console };
 export function setupConsole() {
   'worklet';
   if (!IS_CHROME_DEBUGGER) {
-    // setup console
     // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
     global.console = {
       assert: runOnJS(capturableConsole.assert),
@@ -208,7 +207,6 @@ export function initializeUIRuntime() {
     'worklet';
     setupCallGuard();
     setupConsole();
-    // TODO: setupPerformanceNow();
     if (IS_NATIVE) {
       setupMicrotasks();
       setupRequestAnimationFrame();

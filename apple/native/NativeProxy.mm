@@ -165,6 +165,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
 #endif
 
+  auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
+    throw error;
+  });
+
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
 
   std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
@@ -282,10 +286,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUIUpdatesQueueFunction,
   };
-
-  auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
-    throw error;
-  });
 
   auto nativeReanimatedModule =
       std::make_shared<NativeReanimatedModule>(rnRuntime, jsInvoker, jsQueue, uiScheduler, platformDepMethodsHolder);
