@@ -34,7 +34,9 @@
     "plugin": "cd plugin && yarn && cd ..",
     "app": "cd app && yarn && cd ..",
     "run-example:ios": "cd Example && yarn && cd ios && pod install && open ReanimatedExample.xcworkspace && cd .. && yarn start --reset-cache",
-    "run-example:ios:cold-start": "cd Example && yarn && cd ios && git clean -xdf && pod install && open ReanimatedExample.xcworkspace && cd .. && yarn start --reset-cache"
+    "run-example:ios:cold-start": "cd Example && yarn && cd ios && git clean -xdf && pod install && open ReanimatedExample.xcworkspace && cd .. && yarn start --reset-cache",
+    "run-fabric-example:ios": "cd FabricExample && yarn && cd ios && pod install && open FabricExample.xcworkspace && cd .. && yarn start --reset-cache",
+    "run-fabric-example:ios:cold-start": "cd FabricExample && yarn && cd ios && git clean -xdf && pod install && open FabricExample.xcworkspace && cd .. && yarn start --reset-cache"
   },
   "main": "lib/module/index",
   "module": "lib/module/index",
