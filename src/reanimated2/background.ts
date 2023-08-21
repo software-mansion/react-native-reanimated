@@ -19,6 +19,7 @@ export function backgroundTask<T>(
         const result = worklet();
         runOnJS(resolve)(result);
       } catch (error) {
+        // TODO: properly clone Error objects
         runOnJS(reject)(error);
       }
     })();

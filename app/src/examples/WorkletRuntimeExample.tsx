@@ -24,6 +24,7 @@ export default function WorkletRuntimeExample() {
       <RunOnRuntimeSyncDemo />
       <ThrowErrorDemo />
       <BackgroundTaskDemo />
+      <BackgroundTaskErrorDemo />
     </View>
   );
 }
@@ -169,6 +170,21 @@ function BackgroundTaskDemo() {
       <Text>{result}</Text>
     </>
   );
+}
+
+function BackgroundTaskErrorDemo() {
+  const handlePress = async () => {
+    try {
+      await backgroundTask(() => {
+        'worklet';
+        throw new Error('Hello world!');
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  return <Button title="Background task error" onPress={handlePress} />;
 }
 
 const styles = StyleSheet.create({
