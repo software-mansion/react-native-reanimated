@@ -58,8 +58,6 @@ import { JSPropUpdater } from './JSPropUpdater';
 
 import {
   AnimationConfig,
-  Animations,
-  AnimationsTypes,
   areDOMRectsEqual,
   createAnimationWithExistingTransform,
   getDelayFromConfig,
@@ -74,6 +72,10 @@ import {
   TransitionConfig,
   handleLayoutTransition,
 } from './reanimated2/platform-specific/webTransitions';
+import {
+  Animations,
+  AnimationsTypes,
+} from './reanimated2/platform-specific/webAnimationsData';
 
 const IS_WEB = isWeb();
 

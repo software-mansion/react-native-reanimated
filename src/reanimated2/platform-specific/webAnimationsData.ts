@@ -1,16 +1,58 @@
-import { BounceInData, BounceOutData } from './webAnimationsData/Bounce.web';
-import { FadeInData, FadeOutData } from './webAnimationsData/Fade.web';
-import { FlipInData, FlipOutData } from './webAnimationsData/Flip.web';
 import {
+  BounceIn,
+  BounceInData,
+  BounceOut,
+  BounceOutData,
+} from './webAnimationsData/Bounce.web';
+import {
+  FadeIn,
+  FadeInData,
+  FadeOut,
+  FadeOutData,
+} from './webAnimationsData/Fade.web';
+import {
+  FlipIn,
+  FlipInData,
+  FlipOut,
+  FlipOutData,
+} from './webAnimationsData/Flip.web';
+import {
+  LightSpeedIn,
   LightSpeedInData,
+  LightSpeedOut,
   LightSpeedOutData,
 } from './webAnimationsData/Lightspeed.web';
-import { PinwheelData } from './webAnimationsData/Pinwheel.web';
-import { RollInData, RollOutData } from './webAnimationsData/Roll.web';
-import { RotateInData, RotateOutData } from './webAnimationsData/Rotate.web';
-import { SlideInData, SlideOutData } from './webAnimationsData/Slide.web';
-import { StretchInData, StretchOutData } from './webAnimationsData/Stretch.web';
-import { ZoomInData, ZoomOutData } from './webAnimationsData/Zoom.web';
+import { Pinwheel, PinwheelData } from './webAnimationsData/Pinwheel.web';
+import {
+  RollIn,
+  RollInData,
+  RollOut,
+  RollOutData,
+} from './webAnimationsData/Roll.web';
+import {
+  RotateIn,
+  RotateInData,
+  RotateOut,
+  RotateOutData,
+} from './webAnimationsData/Rotate.web';
+import {
+  SlideIn,
+  SlideInData,
+  SlideOut,
+  SlideOutData,
+} from './webAnimationsData/Slide.web';
+import {
+  StretchIn,
+  StretchInData,
+  StretchOut,
+  StretchOutData,
+} from './webAnimationsData/Stretch.web';
+import {
+  ZoomIn,
+  ZoomInData,
+  ZoomOut,
+  ZoomOutData,
+} from './webAnimationsData/Zoom.web';
 
 export interface TransformProperties {
   translateX?: string;
@@ -58,6 +100,28 @@ export const AnimationsData: Record<string, AnimationData> = {
   ...RollOutData,
 };
 
+export const Animations = {
+  ...FadeIn,
+  ...FadeOut,
+  ...BounceIn,
+  ...BounceOut,
+  ...FlipIn,
+  ...FlipOut,
+  ...StretchIn,
+  ...StretchOut,
+  ...ZoomIn,
+  ...ZoomOut,
+  ...SlideIn,
+  ...SlideOut,
+  ...LightSpeedIn,
+  ...LightSpeedOut,
+  ...Pinwheel,
+  ...RotateIn,
+  ...RotateOut,
+  ...RollIn,
+  ...RollOut,
+};
+
 // Those are the easings that can be implemented using Bezier curves.
 // Others should be done as CSS animations
 export const WebEasings: Record<string, number[]> = {
@@ -69,3 +133,6 @@ export const WebEasings: Record<string, number[]> = {
   circle: [0.55, 0, 1, 0.45],
   exp: [0.7, 0, 0.84, 0],
 };
+
+export type AnimationsTypes = keyof typeof Animations;
+export type LayoutTransitionsTypes = keyof typeof AnimationsData;

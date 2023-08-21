@@ -1,3 +1,4 @@
+import { parseAnimationObjectToKeyframe } from '../webAnimations';
 import { AnimationData } from '../webAnimationsData';
 
 const DEFAULT_LIGHTSPEED_TIME = 0.3;
@@ -53,5 +54,27 @@ export const LightSpeedOutData: Record<string, AnimationData> = {
       },
     },
     duration: DEFAULT_LIGHTSPEED_TIME,
+  },
+};
+
+export const LightSpeedIn = {
+  LightSpeedInRight: {
+    style: parseAnimationObjectToKeyframe(LightSpeedInData.LightSpeedInRight),
+    duration: LightSpeedInData.LightSpeedInRight.duration,
+  },
+  LightSpeedInLeft: {
+    style: parseAnimationObjectToKeyframe(LightSpeedInData.LightSpeedInLeft),
+    duration: LightSpeedInData.LightSpeedInLeft.duration,
+  },
+};
+
+export const LightSpeedOut = {
+  LightSpeedOutRight: {
+    style: parseAnimationObjectToKeyframe(LightSpeedOutData.LightSpeedOutRight),
+    duration: LightSpeedOutData.LightSpeedOutRight.duration,
+  },
+  LightSpeedOutLeft: {
+    style: parseAnimationObjectToKeyframe(LightSpeedOutData.LightSpeedOutLeft),
+    duration: LightSpeedOutData.LightSpeedOutLeft.duration,
   },
 };

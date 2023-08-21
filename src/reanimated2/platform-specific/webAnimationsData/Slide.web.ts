@@ -1,3 +1,4 @@
+import { parseAnimationObjectToKeyframe } from '../webAnimations';
 import { AnimationData } from '../webAnimationsData';
 
 const DEFAULT_SLIDE_TIME = 0.3;
@@ -75,5 +76,43 @@ export const SlideOutData: Record<string, AnimationData> = {
       100: { transform: [{ translateY: '100vh' }] },
     },
     duration: DEFAULT_SLIDE_TIME,
+  },
+};
+
+export const SlideIn = {
+  SlideInRight: {
+    style: parseAnimationObjectToKeyframe(SlideInData.SlideInRight),
+    duration: SlideInData.SlideInRight.duration,
+  },
+  SlideInLeft: {
+    style: parseAnimationObjectToKeyframe(SlideInData.SlideInLeft),
+    duration: SlideInData.SlideInLeft.duration,
+  },
+  SlideInUp: {
+    style: parseAnimationObjectToKeyframe(SlideInData.SlideInUp),
+    duration: SlideInData.SlideInUp.duration,
+  },
+  SlideInDown: {
+    style: parseAnimationObjectToKeyframe(SlideInData.SlideInDown),
+    duration: SlideInData.SlideInDown.duration,
+  },
+};
+
+export const SlideOut = {
+  SlideOutRight: {
+    style: parseAnimationObjectToKeyframe(SlideOutData.SlideOutRight),
+    duration: SlideOutData.SlideOutRight.duration,
+  },
+  SlideOutLeft: {
+    style: parseAnimationObjectToKeyframe(SlideOutData.SlideOutLeft),
+    duration: SlideOutData.SlideOutLeft.duration,
+  },
+  SlideOutUp: {
+    style: parseAnimationObjectToKeyframe(SlideOutData.SlideOutUp),
+    duration: SlideOutData.SlideOutUp.duration,
+  },
+  SlideOutDown: {
+    style: parseAnimationObjectToKeyframe(SlideOutData.SlideOutDown),
+    duration: SlideOutData.SlideOutDown.duration,
   },
 };

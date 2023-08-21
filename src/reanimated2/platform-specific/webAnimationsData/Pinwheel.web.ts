@@ -1,3 +1,4 @@
+import { parseAnimationObjectToKeyframe } from '../webAnimations';
 import { AnimationData } from '../webAnimationsData';
 
 const DEFAULT_PINWHEEL_TIME = 0.3;
@@ -28,5 +29,16 @@ export const PinwheelData: Record<string, AnimationData> = {
       },
     },
     duration: DEFAULT_PINWHEEL_TIME,
+  },
+};
+
+export const Pinwheel = {
+  PinwheelIn: {
+    style: parseAnimationObjectToKeyframe(PinwheelData.PinwheelIn),
+    duration: PinwheelData.PinwheelIn.duration,
+  },
+  PinwheelOut: {
+    style: parseAnimationObjectToKeyframe(PinwheelData.PinwheelOut),
+    duration: PinwheelData.PinwheelOut.duration,
   },
 };

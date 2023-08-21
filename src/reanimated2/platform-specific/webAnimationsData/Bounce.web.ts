@@ -1,3 +1,4 @@
+import { parseAnimationObjectToKeyframe } from '../webAnimations';
 import { AnimationData } from '../webAnimationsData';
 
 const DEFAULT_BOUNCE_TIME = 0.6;
@@ -115,5 +116,51 @@ export const BounceOutData: Record<string, AnimationData> = {
       100: { transform: [{ translateY: '100vh' }] },
     },
     duration: DEFAULT_BOUNCE_TIME,
+  },
+};
+
+export const BounceIn = {
+  BounceIn: {
+    style: parseAnimationObjectToKeyframe(BounceInData.BounceIn),
+    duration: BounceInData.BounceIn.duration,
+  },
+  BounceInRight: {
+    style: parseAnimationObjectToKeyframe(BounceInData.BounceInRight),
+    duration: BounceInData.BounceInRight.duration,
+  },
+  BounceInLeft: {
+    style: parseAnimationObjectToKeyframe(BounceInData.BounceInLeft),
+    duration: BounceInData.BounceInLeft.duration,
+  },
+  BounceInUp: {
+    style: parseAnimationObjectToKeyframe(BounceInData.BounceInUp),
+    duration: BounceInData.BounceInUp.duration,
+  },
+  BounceInDown: {
+    style: parseAnimationObjectToKeyframe(BounceInData.BounceInDown),
+    duration: BounceInData.BounceInDown.duration,
+  },
+};
+
+export const BounceOut = {
+  BounceOut: {
+    style: parseAnimationObjectToKeyframe(BounceOutData.BounceOut),
+    duration: BounceOutData.BounceOut.duration,
+  },
+  BounceOutRight: {
+    style: parseAnimationObjectToKeyframe(BounceOutData.BounceOutRight),
+    duration: BounceOutData.BounceOutRight.duration,
+  },
+  BounceOutLeft: {
+    style: parseAnimationObjectToKeyframe(BounceOutData.BounceOutLeft),
+    duration: BounceOutData.BounceOutLeft.duration,
+  },
+  BounceOutUp: {
+    style: parseAnimationObjectToKeyframe(BounceOutData.BounceOutUp),
+    duration: BounceOutData.BounceOutUp.duration,
+  },
+  BounceOutDown: {
+    style: parseAnimationObjectToKeyframe(BounceOutData.BounceOutDown),
+    duration: BounceOutData.BounceOutDown.duration,
   },
 };

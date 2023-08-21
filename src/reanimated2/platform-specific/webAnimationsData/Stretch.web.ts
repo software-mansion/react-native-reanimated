@@ -1,3 +1,4 @@
+import { parseAnimationObjectToKeyframe } from '../webAnimations';
 import { AnimationData } from '../webAnimationsData';
 
 const DEFAULT_STRETCH_TIME = 0.3;
@@ -39,5 +40,27 @@ export const StretchOutData: Record<string, AnimationData> = {
       100: { transform: [{ scaleY: 0 }] },
     },
     duration: DEFAULT_STRETCH_TIME,
+  },
+};
+
+export const StretchIn = {
+  StretchInX: {
+    style: parseAnimationObjectToKeyframe(StretchInData.StretchInX),
+    duration: StretchInData.StretchInX.duration,
+  },
+  StretchInY: {
+    style: parseAnimationObjectToKeyframe(StretchInData.StretchInY),
+    duration: StretchInData.StretchInY.duration,
+  },
+};
+
+export const StretchOut = {
+  StretchOutX: {
+    style: parseAnimationObjectToKeyframe(StretchOutData.StretchOutX),
+    duration: StretchOutData.StretchOutX.duration,
+  },
+  StretchOutY: {
+    style: parseAnimationObjectToKeyframe(StretchOutData.StretchOutY),
+    duration: StretchOutData.StretchOutY.duration,
   },
 };

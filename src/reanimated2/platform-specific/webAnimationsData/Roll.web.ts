@@ -1,3 +1,4 @@
+import { parseAnimationObjectToKeyframe } from '../webAnimations';
 import { AnimationData } from '../webAnimationsData';
 
 const DEFAULT_ROLL_TIME = 0.3;
@@ -43,5 +44,27 @@ export const RollOutData: Record<string, AnimationData> = {
       },
     },
     duration: DEFAULT_ROLL_TIME,
+  },
+};
+
+export const RollIn = {
+  RollInLeft: {
+    style: parseAnimationObjectToKeyframe(RollInData.RollInLeft),
+    duration: RollInData.RollInLeft.duration,
+  },
+  RollInRight: {
+    style: parseAnimationObjectToKeyframe(RollInData.RollInRight),
+    duration: RollInData.RollInRight.duration,
+  },
+};
+
+export const RollOut = {
+  RollOutLeft: {
+    style: parseAnimationObjectToKeyframe(RollOutData.RollOutLeft),
+    duration: RollOutData.RollOutLeft.duration,
+  },
+  RollOutRight: {
+    style: parseAnimationObjectToKeyframe(RollOutData.RollOutRight),
+    duration: RollOutData.RollOutRight.duration,
   },
 };

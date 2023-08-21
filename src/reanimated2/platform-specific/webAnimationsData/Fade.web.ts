@@ -1,3 +1,4 @@
+import { parseAnimationObjectToKeyframe } from '../webAnimations';
 import { AnimationData } from '../webAnimationsData';
 
 const DEFAULT_FADE_TIME = 0.3;
@@ -109,5 +110,51 @@ export const FadeOutData: Record<string, AnimationData> = {
       },
     },
     duration: DEFAULT_FADE_TIME,
+  },
+};
+
+export const FadeIn = {
+  FadeIn: {
+    style: parseAnimationObjectToKeyframe(FadeInData.FadeIn),
+    duration: FadeInData.FadeIn.duration,
+  },
+  FadeInRight: {
+    style: parseAnimationObjectToKeyframe(FadeInData.FadeInRight),
+    duration: FadeInData.FadeInRight.duration,
+  },
+  FadeInLeft: {
+    style: parseAnimationObjectToKeyframe(FadeInData.FadeInLeft),
+    duration: FadeInData.FadeInLeft.duration,
+  },
+  FadeInUp: {
+    style: parseAnimationObjectToKeyframe(FadeInData.FadeInUp),
+    duration: FadeInData.FadeInUp.duration,
+  },
+  FadeInDown: {
+    style: parseAnimationObjectToKeyframe(FadeInData.FadeInDown),
+    duration: FadeInData.FadeInDown.duration,
+  },
+};
+
+export const FadeOut = {
+  FadeOut: {
+    style: parseAnimationObjectToKeyframe(FadeOutData.FadeOut),
+    duration: FadeOutData.FadeOut.duration,
+  },
+  FadeOutRight: {
+    style: parseAnimationObjectToKeyframe(FadeOutData.FadeOutRight),
+    duration: FadeOutData.FadeOutRight.duration,
+  },
+  FadeOutLeft: {
+    style: parseAnimationObjectToKeyframe(FadeOutData.FadeOutLeft),
+    duration: FadeOutData.FadeOutLeft.duration,
+  },
+  FadeOutUp: {
+    style: parseAnimationObjectToKeyframe(FadeOutData.FadeOutUp),
+    duration: FadeOutData.FadeOutUp.duration,
+  },
+  FadeOutDown: {
+    style: parseAnimationObjectToKeyframe(FadeOutData.FadeOutDown),
+    duration: FadeOutData.FadeOutDown.duration,
   },
 };

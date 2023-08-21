@@ -1,3 +1,4 @@
+import { parseAnimationObjectToKeyframe } from '../webAnimations';
 import { AnimationData } from '../webAnimationsData';
 
 const DEFAULT_ZOOM_TIME = 0.3;
@@ -139,5 +140,75 @@ export const ZoomOutData: Record<string, AnimationData> = {
       100: { transform: [{ translateY: '100%', scale: 0 }] },
     },
     duration: DEFAULT_ZOOM_TIME,
+  },
+};
+
+export const ZoomIn = {
+  ZoomIn: {
+    style: parseAnimationObjectToKeyframe(ZoomInData.ZoomIn),
+    duration: ZoomInData.ZoomIn.duration,
+  },
+  ZoomInRotate: {
+    style: parseAnimationObjectToKeyframe(ZoomInData.ZoomInRotate),
+    duration: ZoomInData.ZoomInRotate.duration,
+  },
+  ZoomInRight: {
+    style: parseAnimationObjectToKeyframe(ZoomInData.ZoomInRight),
+    duration: ZoomInData.ZoomInRight.duration,
+  },
+  ZoomInLeft: {
+    style: parseAnimationObjectToKeyframe(ZoomInData.ZoomInLeft),
+    duration: ZoomInData.ZoomInLeft.duration,
+  },
+  ZoomInUp: {
+    style: parseAnimationObjectToKeyframe(ZoomInData.ZoomInUp),
+    duration: ZoomInData.ZoomInUp.duration,
+  },
+  ZoomInDown: {
+    style: parseAnimationObjectToKeyframe(ZoomInData.ZoomInDown),
+    duration: ZoomInData.ZoomInDown.duration,
+  },
+  ZoomInEasyUp: {
+    style: parseAnimationObjectToKeyframe(ZoomInData.ZoomInEasyUp),
+    duration: ZoomInData.ZoomInEasyUp.duration,
+  },
+  ZoomInEasyDown: {
+    style: parseAnimationObjectToKeyframe(ZoomInData.ZoomInEasyDown),
+    duration: ZoomInData.ZoomInEasyDown.duration,
+  },
+};
+
+export const ZoomOut = {
+  ZoomOut: {
+    style: parseAnimationObjectToKeyframe(ZoomOutData.ZoomOut),
+    duration: ZoomOutData.ZoomOut.duration,
+  },
+  ZoomOutRotate: {
+    style: parseAnimationObjectToKeyframe(ZoomOutData.ZoomOutRotate),
+    duration: ZoomOutData.ZoomOutRotate.duration,
+  },
+  ZoomOutRight: {
+    style: parseAnimationObjectToKeyframe(ZoomOutData.ZoomOutRight),
+    duration: ZoomOutData.ZoomOutRight.duration,
+  },
+  ZoomOutLeft: {
+    style: parseAnimationObjectToKeyframe(ZoomOutData.ZoomOutLeft),
+    duration: ZoomOutData.ZoomOutLeft.duration,
+  },
+  ZoomOutUp: {
+    style: parseAnimationObjectToKeyframe(ZoomOutData.ZoomOutUp),
+    duration: ZoomOutData.ZoomOutUp.duration,
+  },
+  ZoomOutDown: {
+    style: parseAnimationObjectToKeyframe(ZoomOutData.ZoomOutDown),
+    duration: ZoomOutData.ZoomOutDown.duration,
+  },
+  ZoomOutEasyUp: {
+    style: parseAnimationObjectToKeyframe(ZoomOutData.ZoomOutEasyUp),
+    duration: ZoomOutData.ZoomOutEasyUp.duration,
+  },
+  ZoomOutEasyDown: {
+    style: parseAnimationObjectToKeyframe(ZoomOutData.ZoomOutEasyDown),
+    duration: ZoomOutData.ZoomOutEasyDown.duration,
   },
 };
