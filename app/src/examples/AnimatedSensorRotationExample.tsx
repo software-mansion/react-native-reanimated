@@ -1,9 +1,9 @@
 import Animated, {
-  useAnimatedStyle,
-  useAnimatedSensor,
   SensorType,
+  useAnimatedSensor,
+  useAnimatedStyle,
 } from 'react-native-reanimated';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import React from 'react';
 
@@ -17,7 +17,7 @@ export default function AnimatedSensorRotationExample() {
         { perspective: 100 },
         // https://developer.apple.com/documentation/coremotion/cmattitude#1669448
         // A roll is a rotation around a longitudinal axis that passes through the device from its top to bottom.
-        // we are negating the value to make the behavior
+        // we are negating the value to make the behavior more as user would expect
         { rotateX: `${-pitch}rad` },
         // A roll is a rotation around a longitudinal axis that passes through the device from its top to bottom.
         { rotateY: `${roll}rad` },
@@ -30,6 +30,22 @@ export default function AnimatedSensorRotationExample() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.textContainer}>
+        <Text>
+          Device must be parallel to the ground with screen facing up and top
+          edge of the screen facing forward
+        </Text>
+        <Text>On tilt right, the blue edge should enlarge</Text>
+        <Text>On tilt left, the red edge should enlarge</Text>
+        <Text>On tilt forward, the green edge should enlarge</Text>
+        <Text>On tilt backward, the yellow should move forward</Text>
+        <Text>
+          On turning phone clockwise, the box should rotate counter clockwise
+        </Text>
+        <Text>
+          On turning phone counter clockwise, the box should rotate clockwise
+        </Text>
+      </View>
       <Animated.View style={[styles.box, animatedStyle]} />
     </View>
   );
@@ -50,5 +66,10 @@ const styles = StyleSheet.create({
     borderRightColor: 'red',
     borderLeftColor: 'blue',
     borderBottomColor: 'green',
+  },
+  textContainer: {
+    position: 'absolute',
+    margin: 16,
+    top: 0,
   },
 });

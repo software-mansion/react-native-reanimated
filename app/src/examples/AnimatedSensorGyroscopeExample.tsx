@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView, StyleSheet, View } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   SensorType,
   useAnimatedSensor,
@@ -41,6 +41,22 @@ export default function AnimatedSensorGyroscopeExample() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.textContainer}>
+        <Text>
+          Device must be parallel to the ground with screen facing up and top
+          edge of the screen facing forward
+        </Text>
+        <Text>On tilt right, the box should move to the left</Text>
+        <Text>On tilt left, the box should move to the right</Text>
+        <Text>On tilt forward, the box should move backward</Text>
+        <Text>On tilt backward, the box should move forward</Text>
+        <Text>
+          On turning phone clockwise, the box should turn counter clockwise
+        </Text>
+        <Text>
+          On turning phone counter clockwise, the box should turn clockwise
+        </Text>
+      </View>
       <View style={styles.wrapper}>
         <Animated.View style={[styles.box, animatedStyle]} />
       </View>
@@ -57,6 +73,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  textContainer: {
+    position: 'absolute',
+    margin: 16,
+    top: 0,
   },
   box: {
     backgroundColor: 'navy',
