@@ -59,6 +59,7 @@ import { JSPropUpdater } from './JSPropUpdater';
 import {
   areDOMRectsEqual,
   createAnimationWithExistingTransform,
+  getCallbackFromConfig,
   getDelayFromConfig,
   getDurationFromConfig,
   getEasingFromConfig,
@@ -853,6 +854,7 @@ export default function createAnimatedComponent(
         ),
         delay: getDelayFromConfig(config),
         easing: getEasingFromConfig(config),
+        callback: getCallbackFromConfig(config),
       };
 
       const element = this._component as HTMLElement;

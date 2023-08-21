@@ -15,6 +15,7 @@ export interface AnimationConfig {
   duration: number;
   delay: number;
   easing: string;
+  callback: () => void;
 }
 
 /**
@@ -155,6 +156,12 @@ export function getDurationFromConfig(
   return hasDuration ? config.durationV / 1000 : defaultDuration;
 }
 
+export function getCallbackFromConfig(config: any): () => void | null {
+  const hasCallback = Object.prototype.hasOwnProperty.call(config, 'callbackV');
+
+  return hasCallback ? config.callbackV : null;
+}
+
 export function getRandomDelay(maxDelay = 1000): number {
   return Math.floor(Math.random() * (maxDelay + 1)) / 1000;
 }
@@ -174,6 +181,10 @@ export function setElementAnimation(
   element.style.animationDelay = `${delay}s`;
   element.style.animationTimingFunction = easing;
   element.style.animationFillMode = 'forwards'; // Prevents returning to base state after animation finishes.
+
+  if (animationConfig.callback !== null) {
+    element.onanimationend = () => animationConfig.callback();
+  }
 }
 
 export function handleEnteringAnimation(
@@ -222,6 +233,13 @@ export function handleExitingAnimation(
   tmpElement.style.left = `${element.offsetLeft}px`;
   tmpElement.style.margin = '0px'; // tmpElement has absolute position, so margin is not necessary
 
-  tmpElement.onanimationend = () =>
-    parent?.contains(tmpElement) ? parent.removeChild(tmpElement) : null;
+  tmpElement.onanimationend = () => {
+    if (parent?.contains(tmpElement)) {
+      parent.removeChild(tmpElement);
+    }
+  };
+
+  if (animationConfig.callback !== null) {
+    animationConfig.callback();
+  }
 }
