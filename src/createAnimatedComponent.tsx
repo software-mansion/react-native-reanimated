@@ -640,7 +640,7 @@ export default function createAnimatedComponent(
       this._attachAnimatedStyles();
       this._attachInlineProps();
 
-      if (IS_WEB) {
+      if (IS_WEB && snapshot !== null) {
         const rect = (this._component as HTMLElement).getBoundingClientRect();
 
         if (areDOMRectsEqual(rect, snapshot)) {
@@ -798,8 +798,10 @@ export default function createAnimatedComponent(
     }
 
     getSnapshotBeforeUpdate() {
-      if (this._component instanceof HTMLElement) {
-        return this._component.getBoundingClientRect();
+      if (
+        (this._component as HTMLElement).getBoundingClientRect !== undefined
+      ) {
+        return (this._component as HTMLElement).getBoundingClientRect();
       }
 
       return null;

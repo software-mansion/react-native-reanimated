@@ -138,7 +138,6 @@ export function getDurationFromConfig(
   isLayoutTransition: boolean,
   animationName: AnimationsTypes
 ): number {
-  console.log(config);
   const hasDuration = Object.prototype.hasOwnProperty.call(config, 'durationV');
   const defaultDuration = isLayoutTransition
     ? 0.3
