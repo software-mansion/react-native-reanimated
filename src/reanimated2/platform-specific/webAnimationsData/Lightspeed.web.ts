@@ -1,5 +1,7 @@
-import { parseAnimationObjectToKeyframe } from '../webAnimations';
-import type { AnimationData } from '../webAnimationsData';
+import {
+  AnimationData,
+  parseAnimationObjectToKeyframe,
+} from './animationParser';
 
 const DEFAULT_LIGHTSPEED_TIME = 0.3;
 

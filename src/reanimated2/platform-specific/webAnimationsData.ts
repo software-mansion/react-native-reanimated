@@ -54,29 +54,7 @@ import {
   ZoomOutData,
 } from './webAnimationsData/Zoom.web';
 
-export interface TransformProperties {
-  translateX?: string;
-  translateY?: string;
-  rotate?: string;
-  rotateX?: string;
-  rotateY?: string;
-  scale?: number;
-  scaleX?: number;
-  scaleY?: number;
-  perspective?: string;
-  skew?: string;
-  skewX?: string;
-}
-
-export interface AnimationStyle {
-  opacity?: number;
-  transform?: TransformProperties[];
-}
-export interface AnimationData {
-  name: string;
-  style: Record<number, AnimationStyle>;
-  duration: number;
-}
+import { AnimationData } from './webAnimationsData/animationParser';
 
 export const AnimationsData: Record<string, AnimationData> = {
   ...FadeInData,

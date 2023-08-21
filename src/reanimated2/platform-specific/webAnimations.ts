@@ -1,10 +1,11 @@
 import { Animations, AnimationsData, WebEasings } from './webAnimationsData';
 
-import type {
-  AnimationData,
-  AnimationsTypes,
-  TransformProperties,
-} from './webAnimationsData';
+import type { AnimationsTypes } from './webAnimationsData';
+
+import {
+  parseAnimationObjectToKeyframe,
+  type TransformProperties,
+} from './webAnimationsData/animationParser';
 
 export const WEB_ANIMATIONS_ID = 'webAnimationsStyle';
 
@@ -32,39 +33,6 @@ export function insertWebAnimations(): void {
   for (const animationName in Animations) {
     style.sheet?.insertRule(Animations[animationName as AnimationsTypes].style);
   }
-}
-
-export function parseAnimationObjectToKeyframe(
-  animationObject: AnimationData
-): string {
-  let keyframe = `@keyframes ${animationObject.name} { `;
-
-  for (const [timestamp, style] of Object.entries(animationObject.style)) {
-    keyframe += `${timestamp}% { `;
-
-    for (const [property, values] of Object.entries(style)) {
-      if (property !== 'transform') {
-        keyframe += `${property}: ${values}; `;
-        continue;
-      }
-
-      keyframe += `transform:`;
-
-      values.forEach((value: TransformProperties) => {
-        for (const [
-          transformProperty,
-          transformPropertyValue,
-        ] of Object.entries(value)) {
-          keyframe += ` ${transformProperty}(${transformPropertyValue})`;
-        }
-      });
-      keyframe += `; `; // Property end
-    }
-    keyframe += `} `; // Timestamp end
-  }
-  keyframe += `} `; // Keyframe end
-
-  return keyframe;
 }
 
 /**
