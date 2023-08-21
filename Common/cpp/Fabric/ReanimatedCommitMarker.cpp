@@ -1,3 +1,5 @@
+#ifdef RCT_NEW_ARCH_ENABLED
+
 #include "ReanimatedCommitMarker.h"
 
 #include <react/debug/react_native_assert.h>
@@ -20,3 +22,5 @@ bool ReanimatedCommitMarker::isReanimatedCommit() {
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED
