@@ -43,7 +43,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     */
     if (this.definitions.from) {
       if (this.definitions['0']) {
-        throw Error(
+        throw new Error(
           "[Reanimated] You cannot provide both keyframe 0 and 'from' as they both specified initial values."
         );
       }
