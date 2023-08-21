@@ -1,5 +1,5 @@
 import {
-  AnimationData,
+  type AnimationData,
   parseAnimationObjectToKeyframe,
 } from './animationParser';
 

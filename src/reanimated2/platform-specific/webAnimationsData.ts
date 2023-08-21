@@ -54,7 +54,7 @@ import {
   ZoomOutData,
 } from './webAnimationsData/Zoom.web';
 
-import { AnimationData } from './webAnimationsData/animationParser';
+import type { AnimationData } from './webAnimationsData/animationParser';
 
 export const AnimationsData: Record<string, AnimationData> = {
   ...FadeInData,
