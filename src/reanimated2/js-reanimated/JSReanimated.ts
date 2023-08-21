@@ -262,7 +262,7 @@ export default class JSReanimated {
   }
 
   getViewProp<T>(
-    _viewTag: string,
+    _viewTag: number,
     _propName: string,
     _callback?: (result: T) => void
   ): Promise<T> {
