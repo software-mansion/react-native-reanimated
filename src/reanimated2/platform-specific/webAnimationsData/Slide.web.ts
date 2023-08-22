@@ -1,7 +1,5 @@
-import {
-  type AnimationData,
-  parseAnimationObjectToKeyframe,
-} from '../animationParser';
+import { parseAnimationObjectToKeyframe } from '../animationParser';
+import type { AnimationData } from '../animationParser';
 
 const DEFAULT_SLIDE_TIME = 0.3;
 

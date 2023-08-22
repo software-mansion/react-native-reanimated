@@ -1,11 +1,7 @@
 import { Animations, AnimationsData, WebEasings } from './webAnimationsData';
-
 import type { AnimationTypes } from './webAnimationsData';
-
-import {
-  parseAnimationObjectToKeyframe,
-  type TransformProperties,
-} from './animationParser';
+import { parseAnimationObjectToKeyframe } from './animationParser';
+import type { TransformProperties } from './animationParser';
 import type { TransformsStyle } from 'react-native';
 
 export const WEB_ANIMATIONS_ID = 'webAnimationsStyle';
