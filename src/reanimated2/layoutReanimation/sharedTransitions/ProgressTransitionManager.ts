@@ -65,9 +65,8 @@ export class ProgressTransitionManager {
         },
         eventPrefix + 'TransitionProgress'
       );
-      eventHandler.onAppear = registerEventHandler((e) => {
+      eventHandler.onAppear = registerEventHandler(() => {
         'worklet';
-        console.log('onAppear', e);
         global.ProgressTransitionRegister.onTransitionEnd(false);
       }, eventPrefix + 'Appear');
 
