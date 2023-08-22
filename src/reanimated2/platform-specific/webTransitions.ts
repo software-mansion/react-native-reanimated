@@ -137,7 +137,5 @@ export function handleLayoutTransition(
     transitionConfig as TransitionConfig
   );
 
-  animationConfig.duration = 1;
-
   setElementAnimation(element, animationConfig);
 }
