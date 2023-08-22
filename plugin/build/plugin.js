@@ -193,7 +193,7 @@ var require_buildWorkletString = __commonJS({
     var assert_1 = require("assert");
     var convertSourceMap = __importStar(require("convert-source-map"));
     var fs = __importStar(require("fs"));
-    var utils_1 = require_utils();
+    var utils_12 = require_utils();
     var MOCK_SOURCE_MAP = "mock source map";
     function buildWorkletString(fun, closureVariables, name, inputMap) {
       const draftExpression = fun.program.body.find((obj) => (0, types_1.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_1.isExpressionStatement)(obj)) || void 0;
@@ -204,7 +204,7 @@ var require_buildWorkletString = __commonJS({
       const workletFunction = (0, types_1.functionExpression)((0, types_1.identifier)(name), expression.params, expression.body);
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "'inputMap' is undefined");
-      const includeSourceMap = !(0, utils_1.isRelease)();
+      const includeSourceMap = !(0, utils_12.isRelease)();
       if (includeSourceMap) {
         inputMap.sourcesContent = [];
         for (const sourceFile of inputMap.sources) {
@@ -288,7 +288,7 @@ var require_makeWorklet = __commonJS({
     var path_1 = require("path");
     var buildWorkletString_1 = require_buildWorkletString();
     var commonObjects_12 = require_commonObjects();
-    var utils_1 = require_utils();
+    var utils_12 = require_utils();
     var REAL_VERSION = require("../../package.json").version;
     var MOCK_VERSION = "x.y.z";
     function makeWorklet(fun, state) {
@@ -338,7 +338,7 @@ var require_makeWorklet = __commonJS({
       const initDataObjectExpression = (0, types_1.objectExpression)([
         (0, types_1.objectProperty)((0, types_1.identifier)("code"), (0, types_1.stringLiteral)(funString))
       ]);
-      const shouldInjectLocation = !(0, utils_1.isRelease)();
+      const shouldInjectLocation = !(0, utils_12.isRelease)();
       if (shouldInjectLocation) {
         let location = state.file.opts.filename;
         if (state.opts.relativeSourceLocation) {
@@ -349,7 +349,7 @@ var require_makeWorklet = __commonJS({
       if (sourceMapString) {
         initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("sourceMap"), (0, types_1.stringLiteral)(sourceMapString)));
       }
-      const shouldInjectVersion = !(0, utils_1.isRelease)();
+      const shouldInjectVersion = !(0, utils_12.isRelease)();
       if (shouldInjectVersion) {
         initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("version"), (0, types_1.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)));
       }
@@ -366,7 +366,7 @@ var require_makeWorklet = __commonJS({
         (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__initData"), false), initDataId)),
         (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__workletHash"), false), (0, types_1.numericLiteral)(workletHash)))
       ];
-      if (!(0, utils_1.isRelease)()) {
+      if (!(0, utils_12.isRelease)()) {
         statements.unshift((0, types_1.variableDeclaration)("const", [
           (0, types_1.variableDeclarator)((0, types_1.identifier)("_e"), (0, types_1.arrayExpression)([
             (0, types_1.newExpression)((0, types_1.memberExpression)((0, types_1.identifier)("global"), (0, types_1.identifier)("Error")), []),
@@ -617,7 +617,7 @@ var require_processInlineStylesWarning = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.processInlineStylesWarning = void 0;
     var types_1 = require("@babel/types");
-    var utils_1 = require_utils();
+    var utils_12 = require_utils();
     var assert_1 = require("assert");
     function generateInlineStylesWarning(path) {
       return (0, types_1.callExpression)((0, types_1.arrowFunctionExpression)([], (0, types_1.blockStatement)([
@@ -661,7 +661,7 @@ var require_processInlineStylesWarning = __commonJS({
       }
     }
     function processInlineStylesWarning(path, state) {
-      if ((0, utils_1.isRelease)()) {
+      if ((0, utils_12.isRelease)()) {
         return;
       }
       if (state.opts.disableInlineStylesWarning) {
@@ -929,30 +929,46 @@ var processForCalleesWorklets_1 = require_processForCalleesWorklets();
 var processIfWorkletNode_1 = require_processIfWorkletNode();
 var processInlineStylesWarning_1 = require_processInlineStylesWarning();
 var processIfCallback_1 = require_processIfCallback();
+var utils_1 = require_utils();
 module.exports = function() {
+  function callGuardDEV(fun) {
+    try {
+      fun();
+    } catch (e) {
+      throw new Error("[Reanimated] Babel plugin exception: " + e);
+    }
+  }
+  function releaseCaller(fun) {
+    fun();
+  }
+  const maybeUseCallGuardDEV = (0, utils_1.isRelease)() ? releaseCaller : callGuardDEV;
   return {
     pre() {
-      if (this.opts != null && Array.isArray(this.opts.globals)) {
-        this.opts.globals.forEach((name) => {
-          commonObjects_1.globals.add(name);
-        });
-      }
+      maybeUseCallGuardDEV(() => {
+        if (this.opts != null && Array.isArray(this.opts.globals)) {
+          this.opts.globals.forEach((name) => {
+            commonObjects_1.globals.add(name);
+          });
+        }
+      });
     },
     visitor: {
       CallExpression: {
         enter(path, state) {
-          (0, processForCalleesWorklets_1.processForCalleesWorklets)(path, state);
+          maybeUseCallGuardDEV(() => (0, processForCalleesWorklets_1.processForCalleesWorklets)(path, state));
         }
       },
       "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression": {
         enter(path, state) {
-          (0, processIfWorkletNode_1.processIfWorkletNode)(path, state);
-          (0, processIfCallback_1.processIfCallback)(path, state);
+          maybeUseCallGuardDEV(() => {
+            (0, processIfWorkletNode_1.processIfWorkletNode)(path, state);
+            (0, processIfCallback_1.processIfCallback)(path, state);
+          });
         }
       },
       JSXAttribute: {
         enter(path, state) {
-          (0, processInlineStylesWarning_1.processInlineStylesWarning)(path, state);
+          maybeUseCallGuardDEV(() => (0, processInlineStylesWarning_1.processInlineStylesWarning)(path, state));
         }
       }
     }
