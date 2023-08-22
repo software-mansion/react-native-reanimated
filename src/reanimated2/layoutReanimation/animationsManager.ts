@@ -26,7 +26,7 @@ function startObservingProgress(
 function stopObservingProgress(
   tag: number,
   sharedValue: SharedValue<number>,
-  removeView: boolean
+  removeView = false
 ): void {
   'worklet';
   sharedValue.removeListener(tag + TAG_OFFSET);
@@ -69,7 +69,7 @@ function createLayoutAnimationManager() {
         value = makeUIMutable(style.initialValues);
         mutableValuesForTag.set(tag, value);
       } else {
-        stopObservingProgress(tag, value, false);
+        stopObservingProgress(tag, value);
         value._value = style.initialValues;
       }
 
@@ -95,7 +95,7 @@ function createLayoutAnimationManager() {
       if (!value) {
         return;
       }
-      stopObservingProgress(tag, value, true);
+      stopObservingProgress(tag, value);
     },
   };
 }

@@ -311,7 +311,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     [sharedElements addObject:sharedElement];
   }
   if ([newTransitionViews count] > 0) {
-    NSMutableSet *currentSoureViews = [NSMutableSet new];
+    NSMutableArray *currentSoureViews = [NSMutableArray new];
     for (REASharedElement *sharedElement in _sharedElements) {
       [currentSoureViews addObject:sharedElement.sourceView];
     }
