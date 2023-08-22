@@ -4,17 +4,20 @@ const path = require('path');
 const util = require('util');
 const fsp = fs.promises;
 const readFile = util.promisify(fs.readFile);
-const fetch = require('node-fetch');
+const fetch = require('axios').get;
 
 const directories = [
   'android',
   'app',
-  'common',
+  'apple',
+  'Common',
+  'docs',
   'Example',
   'FabricExample',
-  'apple',
   'MacOSExample',
   'plugin',
+  'scripts',
+  'src',
   'TVOSExample',
   'WebExample',
 ];
@@ -34,28 +37,16 @@ const extensions = [
   '.java',
   '.gradle',
   '.podspec',
+  '.rb',
 ];
 
 // Every hidden directory is ignored as well.
 const ignoredDirectories = ['node_modules', 'Pods', 'lib', 'build'];
 
+const ignoredFiles = ['validate-urls.js'];
+
 const urlRegex =
-  /\b((http|https):\/\/?)[^\s()<>`]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
-
-// This is hardcoded only for docs for now but it's easy to change it into
-// a proper config that could be passed as an argument if we ever need it.
-const redirects = [
-  { from: 'https://docs.swmansion.com', to: 'http://localhost:3000' },
-];
-
-function maybeRedirectUrl(url) {
-  const redirect = redirects.find((r) => url.startsWith(r.from));
-  if (redirect) {
-    return url.replace(redirect.from, redirect.to);
-  } else {
-    return url;
-  }
-}
+  /\b((http|https):\/\/?)[^\s<>[\]`]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
 
 async function getFiles(dir) {
   const dirents = await fsp.readdir(dir, { withFileTypes: true });
@@ -70,7 +61,10 @@ async function getFiles(dir) {
       } else if (dirent.isDirectory()) {
         return getFiles(res);
       } else {
-        if (extensions.includes(path.extname(dirent.name))) {
+        if (
+          !ignoredFiles.includes(dirent.name) &&
+          extensions.includes(path.extname(dirent.name))
+        ) {
           const fileContent = await readFile(res, 'utf-8');
           const urls = Array.from(fileContent.matchAll(urlRegex), (m) => m[0]);
           const validUrls = [];
@@ -96,16 +90,15 @@ directories.forEach(async (dir) => {
   const files = await getFiles(path.join(currentDir, dir));
   files.forEach(async (file) => {
     file.urls.forEach(async (url) => {
-      const actualUrl = maybeRedirectUrl(url);
       try {
-        const response = await fetch(actualUrl);
+        const response = await fetch(url);
         if (response.status !== 200) {
-          console.error(`🔴 ${response.status} - ${file.file} - ${actualUrl}`);
+          console.error(`🔴 ${response.status} - ${file.file} - ${url}`);
         } else {
-          console.log(`🟢 ${file.file} - ${actualUrl}`);
+          console.log(`🟢 ${file.file} - ${url}`);
         }
       } catch (e) {
-        console.error(`🔴 ${e} - ${file.file} - ${actualUrl}`);
+        console.error(`🔴 ${e} - ${file.file} - ${url}`);
       }
     });
   });
