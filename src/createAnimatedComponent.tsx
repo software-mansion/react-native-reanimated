@@ -55,6 +55,7 @@ import { isSharedValue } from './reanimated2/utils';
 import type { AnimateProps } from './reanimated2/helperTypes';
 import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
 import { JSPropUpdater } from './JSPropUpdater';
+import { getReduceMotionFromConfig } from './reanimated2/animation/util';
 
 const IS_WEB = isWeb();
 
@@ -439,13 +440,13 @@ export default function createAnimatedComponent(
         const hostInstance = RNRenderer.findHostInstance_DEPRECATED(component);
         if (!hostInstance) {
           throw new Error(
-            'Cannot find host instance for this component. Maybe it renders nothing?'
+            '[Reanimated] Cannot find host instance for this component. Maybe it renders nothing?'
           );
         }
         // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
         viewTag = hostInstance?._nativeTag;
         /**
-         * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
+         * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/packages/react-native/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
          * The name we're looking for is in the field named uiViewClassName.
          */
         viewName = hostInstance?.viewConfig?.uiViewClassName;
@@ -648,20 +649,32 @@ export default function createAnimatedComponent(
             );
           }
           if (exiting) {
-            configureLayoutAnimations(
-              tag,
-              LayoutAnimationType.EXITING,
-              maybeBuild(exiting)
-            );
+            const reduceMotionInExiting =
+              'getReduceMotion' in exiting &&
+              typeof exiting.getReduceMotion === 'function'
+                ? getReduceMotionFromConfig(exiting.getReduceMotion())
+                : getReduceMotionFromConfig();
+            if (!reduceMotionInExiting) {
+              configureLayoutAnimations(
+                tag,
+                LayoutAnimationType.EXITING,
+                maybeBuild(exiting)
+              );
+            }
           }
           if (sharedTransitionTag && !IS_WEB) {
             const sharedElementTransition =
               this.props.sharedTransitionStyle ?? new SharedTransition();
-            sharedElementTransition.registerTransition(
-              tag as number,
-              sharedTransitionTag
+            const reduceMotionInTransition = getReduceMotionFromConfig(
+              sharedElementTransition.getReduceMotion()
             );
-            this._sharedElementTransition = sharedElementTransition;
+            if (!reduceMotionInTransition) {
+              sharedElementTransition.registerTransition(
+                tag as number,
+                sharedTransitionTag
+              );
+              this._sharedElementTransition = sharedElementTransition;
+            }
           }
         }
 

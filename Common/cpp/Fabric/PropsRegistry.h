@@ -25,16 +25,6 @@ class PropsRegistry {
 
   void remove(const Tag tag);
 
-  void setLastReanimatedRoot(
-      RootShadowNode::Shared const &lastReanimatedRoot) noexcept {
-    lastReanimatedRoot_.store(lastReanimatedRoot.get());
-  }
-
-  bool isLastReanimatedRoot(
-      RootShadowNode::Shared const &newRootShadowNode) const noexcept {
-    return newRootShadowNode.get() == lastReanimatedRoot_.load();
-  }
-
   void pleaseSkipCommit() {
     letMeIn_ = true;
   }
@@ -47,8 +37,6 @@ class PropsRegistry {
   std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>> map_;
 
   mutable std::mutex mutex_; // Protects `map_`.
-
-  std::atomic<const RootShadowNode *> lastReanimatedRoot_;
 
   std::atomic<bool> letMeIn_;
 };

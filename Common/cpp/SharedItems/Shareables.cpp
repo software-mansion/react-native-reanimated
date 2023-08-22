@@ -89,7 +89,8 @@ jsi::Value makeShareableClone(
     shareable =
         std::make_shared<ShareableString>(value.getSymbol(rt).toString(rt));
   } else {
-    throw std::runtime_error("attempted to convert an unsupported value type");
+    throw std::runtime_error(
+        "[Reanimated] Attempted to convert an unsupported value type.");
   }
   return ShareableJSRef::newHostObject(rt, shareable);
 }
@@ -97,7 +98,7 @@ jsi::Value makeShareableClone(
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
-    const char *errorMessage) {
+    const std::string &errorMessage) {
   if (maybeShareableValue.isObject()) {
     auto object = maybeShareableValue.asObject(rt);
     if (object.isHostObject<ShareableJSRef>(rt)) {
@@ -106,10 +107,7 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
   } else if (maybeShareableValue.isUndefined()) {
     return Shareable::undefined();
   }
-  throw std::runtime_error(
-      errorMessage != nullptr
-          ? errorMessage
-          : "expecting the object to be of type ShareableJSRef");
+  throw std::runtime_error("[Reanimated] " + errorMessage);
 }
 
 Shareable::~Shareable() {}
