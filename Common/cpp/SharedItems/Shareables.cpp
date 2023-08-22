@@ -44,7 +44,7 @@ std::unique_ptr<jsi::Function> &CoreFunction::getFunction(jsi::Runtime &rt) {
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
-    const std::string errorMessage) {
+    const std::string &errorMessage) {
   if (maybeShareableValue.isObject()) {
     auto object = maybeShareableValue.asObject(rt);
     if (object.isHostObject<ShareableJSRef>(rt)) {

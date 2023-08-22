@@ -508,7 +508,7 @@ void NativeProxy::setupLayoutAnimations() {
               }
             } catch (std::invalid_argument e) {
               throw std::runtime_error(
-                  "[Reanimated] Failed to convert value to number");
+                  "[Reanimated] Failed to convert value to number.");
             }
           }
           nativeReanimatedModule->layoutAnimationsManager()

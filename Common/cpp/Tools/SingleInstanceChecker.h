@@ -28,7 +28,7 @@ class SingleInstanceChecker {
     if (!condition) {
 #ifdef ANDROID
       __android_log_print(
-          ANDROID_LOG_WARN, "[Reanimated] ", "%s", message.c_str());
+          ANDROID_LOG_WARN, "Reanimated", "%s", message.c_str());
 #else
       std::cerr << "[Reanimated] " << message << std::endl;
 #endif

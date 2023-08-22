@@ -129,14 +129,14 @@ class ShareableJSRef : public jsi::HostObject {
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
-    const std::string errorMessage =
+    const std::string &errorMessage =
         "expecting the object to be of type ShareableJSRef.");
 
 template <typename T>
 std::shared_ptr<T> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &shareableRef,
-    const std::string errorMessage =
+    const std::string &errorMessage =
         "provided shareable object is of an incompatible type.") {
   auto res = std::dynamic_pointer_cast<T>(
       extractShareableOrThrow(rt, shareableRef, errorMessage));

@@ -12,7 +12,7 @@ const directories = [
   'common',
   'Example',
   'FabricExample',
-  'ios',
+  'apple',
   'MacOSExample',
   'plugin',
   'TVOSExample',
@@ -36,11 +36,26 @@ const extensions = [
   '.podspec',
 ];
 
-// also every hidden directory is ignored
+// Every hidden directory is ignored as well.
 const ignoredDirectories = ['node_modules', 'Pods', 'lib', 'build'];
 
 const urlRegex =
   /\b((http|https):\/\/?)[^\s()<>`]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
+
+// This is hardcoded only for docs for now but it's easy to change it into
+// a proper config that could be passed as an argument if we ever need it.
+const redirects = [
+  { from: 'https://docs.swmansion.com', to: 'http://localhost:3000' },
+];
+
+function maybeRedirectUrl(url) {
+  const redirect = redirects.find((r) => url.startsWith(r.from));
+  if (redirect) {
+    return url.replace(redirect.from, redirect.to);
+  } else {
+    return url;
+  }
+}
 
 async function getFiles(dir) {
   const dirents = await fsp.readdir(dir, { withFileTypes: true });
@@ -81,15 +96,16 @@ directories.forEach(async (dir) => {
   const files = await getFiles(path.join(currentDir, dir));
   files.forEach(async (file) => {
     file.urls.forEach(async (url) => {
+      const actualUrl = maybeRedirectUrl(url);
       try {
-        const response = await fetch(url);
+        const response = await fetch(actualUrl);
         if (response.status !== 200) {
-          console.error(`🔴 ${response.status} - ${file.file} - ${url}`);
+          console.error(`🔴 ${response.status} - ${file.file} - ${actualUrl}`);
         } else {
-          console.log(`🟢 ${file.file} - ${url}`);
+          console.log(`🟢 ${file.file} - ${actualUrl}`);
         }
       } catch (e) {
-        console.error(`🔴 ${e} - ${file.file} - ${url}`);
+        console.error(`🔴 ${e} - ${file.file} - ${actualUrl}`);
       }
     });
   });
