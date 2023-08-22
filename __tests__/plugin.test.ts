@@ -1440,7 +1440,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('uses `callGuardDev` for worklets in dev builds', () => {
+    it('uses `runWithTaggedErrors` for worklets', () => {
       const input = html`<script>
         const foo = useAnimatedStyle(() => {
           return <Image />;
