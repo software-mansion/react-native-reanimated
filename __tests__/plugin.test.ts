@@ -1448,21 +1448,6 @@ describe('babel plugin', () => {
       </script>`;
 
       expect(() => runPlugin(input)).toThrow('[Reanimated]');
-      console.log('Ended first test');
-    });
-
-    it("doesn't use 'callGuardDev' for worklets in production builds", () => {
-      const input = html`<script>
-        const foo = useAnimatedStyle(() => {
-          return <View />;
-        });
-      </script>`;
-
-      const current = process.env.BABEL_ENV;
-      process.env.BABEL_ENV = 'production';
-      expect(() => runPlugin(input)).toThrow();
-      expect(() => runPlugin(input)).not.toThrow('[Reanimated]');
-      process.env.BABEL_ENV = current;
     });
   });
 

@@ -1,15 +1,14 @@
 import type { PluginItem, NodePath } from '@babel/core';
-import { globals } from './commonObjects';
 import type { CallExpression } from '@babel/types';
 import { processForCalleesWorklets } from './processForCalleesWorklets';
 import type { ExplicitWorklet, ReanimatedPluginPass } from './types';
 import { processIfWorkletNode } from './processIfWorkletNode';
 import { processInlineStylesWarning } from './processInlineStylesWarning';
 import { processIfCallback } from './processIfCallback';
-import { isRelease } from './utils';
+import { addCustomGlobals } from './addCustomGlobals';
 
 module.exports = function (): PluginItem {
-  function callGuardDEV(fun: () => void) {
+  function runWithTaggedExceptions(fun: () => void) {
     try {
       fun();
     } catch (e) {
@@ -17,32 +16,21 @@ module.exports = function (): PluginItem {
     }
   }
 
-  function releaseCaller(fun: () => void) {
-    fun();
-  }
-
-  const maybeUseCallGuardDEV = isRelease() ? releaseCaller : callGuardDEV;
-
   return {
     pre() {
-      maybeUseCallGuardDEV(() => {
-        // allows adding custom globals such as host-functions
-        if (this.opts != null && Array.isArray(this.opts.globals)) {
-          this.opts.globals.forEach((name: string) => {
-            globals.add(name);
-          });
-        }
+      runWithTaggedExceptions(() => {
+        addCustomGlobals.call(this);
       });
     },
     visitor: {
       CallExpression: {
         enter(path: NodePath<CallExpression>, state: ReanimatedPluginPass) {
-          maybeUseCallGuardDEV(() => processForCalleesWorklets(path, state));
+          runWithTaggedExceptions(() => processForCalleesWorklets(path, state));
         },
       },
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
         enter(path: NodePath<ExplicitWorklet>, state: ReanimatedPluginPass) {
-          maybeUseCallGuardDEV(() => {
+          runWithTaggedExceptions(() => {
             processIfWorkletNode(path, state);
             processIfCallback(path, state);
           });
@@ -50,7 +38,9 @@ module.exports = function (): PluginItem {
       },
       JSXAttribute: {
         enter(path, state) {
-          maybeUseCallGuardDEV(() => processInlineStylesWarning(path, state));
+          runWithTaggedExceptions(() =>
+            processInlineStylesWarning(path, state)
+          );
         },
       },
     },

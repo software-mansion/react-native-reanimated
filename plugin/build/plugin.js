@@ -25,6 +25,146 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
+// lib/utils.js
+var require_utils = __commonJS({
+  "lib/utils.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.isRelease = void 0;
+    function isRelease() {
+      var _a;
+      return !!((_a = process.env.BABEL_ENV) === null || _a === void 0 ? void 0 : _a.match(/(prod|release|stag[ei])/i));
+    }
+    exports2.isRelease = isRelease;
+  }
+});
+
+// lib/buildWorkletString.js
+var require_buildWorkletString = __commonJS({
+  "lib/buildWorkletString.js"(exports2) {
+    "use strict";
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+      if (k2 === void 0)
+        k2 = k;
+      var desc = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+        desc = { enumerable: true, get: function() {
+          return m[k];
+        } };
+      }
+      Object.defineProperty(o, k2, desc);
+    } : function(o, m, k, k2) {
+      if (k2 === void 0)
+        k2 = k;
+      o[k2] = m[k];
+    });
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
+      Object.defineProperty(o, "default", { enumerable: true, value: v });
+    } : function(o, v) {
+      o["default"] = v;
+    });
+    var __importStar = exports2 && exports2.__importStar || function(mod) {
+      if (mod && mod.__esModule)
+        return mod;
+      var result = {};
+      if (mod != null) {
+        for (var k in mod)
+          if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k))
+            __createBinding(result, mod, k);
+      }
+      __setModuleDefault(result, mod);
+      return result;
+    };
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.buildWorkletString = void 0;
+    var core_1 = require("@babel/core");
+    var generator_1 = __importDefault(require("@babel/generator"));
+    var types_1 = require("@babel/types");
+    var assert_1 = require("assert");
+    var convertSourceMap = __importStar(require("convert-source-map"));
+    var fs = __importStar(require("fs"));
+    var utils_1 = require_utils();
+    var MOCK_SOURCE_MAP = "mock source map";
+    function buildWorkletString(fun, closureVariables, name, inputMap) {
+      const draftExpression = fun.program.body.find((obj) => (0, types_1.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_1.isExpressionStatement)(obj)) || void 0;
+      (0, assert_1.strict)(draftExpression, "'draftExpression' is undefined");
+      const expression = (0, types_1.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
+      (0, assert_1.strict)("params" in expression, "'params' property is undefined in 'expression'");
+      (0, assert_1.strict)((0, types_1.isBlockStatement)(expression.body), "'expression.body' is not a 'BlockStatement'");
+      const workletFunction = (0, types_1.functionExpression)((0, types_1.identifier)(name), expression.params, expression.body);
+      const code = (0, generator_1.default)(workletFunction).code;
+      (0, assert_1.strict)(inputMap, "'inputMap' is undefined");
+      const includeSourceMap = !(0, utils_1.isRelease)();
+      if (includeSourceMap) {
+        inputMap.sourcesContent = [];
+        for (const sourceFile of inputMap.sources) {
+          inputMap.sourcesContent.push(fs.readFileSync(sourceFile).toString("utf-8"));
+        }
+      }
+      const transformed = (0, core_1.transformSync)(code, {
+        plugins: [prependClosureVariablesIfNecessary(closureVariables)],
+        compact: true,
+        sourceMaps: includeSourceMap,
+        inputSourceMap: inputMap,
+        ast: false,
+        babelrc: false,
+        configFile: false,
+        comments: false
+      });
+      (0, assert_1.strict)(transformed, "'transformed' is null");
+      let sourceMap;
+      if (includeSourceMap) {
+        if (shouldMockSourceMap()) {
+          sourceMap = MOCK_SOURCE_MAP;
+        } else {
+          sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
+          delete sourceMap.sourcesContent;
+        }
+      }
+      return [transformed.code, JSON.stringify(sourceMap)];
+    }
+    exports2.buildWorkletString = buildWorkletString;
+    function shouldMockSourceMap() {
+      return process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP === "1";
+    }
+    function prependClosure(path, closureVariables, closureDeclaration) {
+      if (closureVariables.length === 0 || !(0, types_1.isProgram)(path.parent)) {
+        return;
+      }
+      if (!(0, types_1.isExpression)(path.node.body)) {
+        path.node.body.body.unshift(closureDeclaration);
+      }
+    }
+    function prependRecursiveDeclaration(path) {
+      var _a;
+      if ((0, types_1.isProgram)(path.parent) && !(0, types_1.isArrowFunctionExpression)(path.node) && !(0, types_1.isObjectMethod)(path.node) && path.node.id && path.scope.parent) {
+        const hasRecursiveCalls = ((_a = path.scope.parent.bindings[path.node.id.name]) === null || _a === void 0 ? void 0 : _a.references) > 0;
+        if (hasRecursiveCalls) {
+          path.node.body.body.unshift((0, types_1.variableDeclaration)("const", [
+            (0, types_1.variableDeclarator)((0, types_1.identifier)(path.node.id.name), (0, types_1.memberExpression)((0, types_1.thisExpression)(), (0, types_1.identifier)("_recur")))
+          ]));
+        }
+      }
+    }
+    function prependClosureVariablesIfNecessary(closureVariables) {
+      const closureDeclaration = (0, types_1.variableDeclaration)("const", [
+        (0, types_1.variableDeclarator)((0, types_1.objectPattern)(closureVariables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), (0, types_1.identifier)(variable.name), false, true))), (0, types_1.memberExpression)((0, types_1.thisExpression)(), (0, types_1.identifier)("__closure")))
+      ]);
+      return {
+        visitor: {
+          "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod": (path) => {
+            prependClosure(path, closureVariables, closureDeclaration);
+            prependRecursiveDeclaration(path);
+          }
+        }
+      };
+    }
+  }
+});
+
 // lib/commonObjects.js
 var require_commonObjects = __commonJS({
   "lib/commonObjects.js"(exports2) {
@@ -132,146 +272,6 @@ var require_commonObjects = __commonJS({
   }
 });
 
-// lib/utils.js
-var require_utils = __commonJS({
-  "lib/utils.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.isRelease = void 0;
-    function isRelease() {
-      var _a;
-      return !!((_a = process.env.BABEL_ENV) === null || _a === void 0 ? void 0 : _a.match(/(prod|release|stag[ei])/i));
-    }
-    exports2.isRelease = isRelease;
-  }
-});
-
-// lib/buildWorkletString.js
-var require_buildWorkletString = __commonJS({
-  "lib/buildWorkletString.js"(exports2) {
-    "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
-      if (k2 === void 0)
-        k2 = k;
-      var desc = Object.getOwnPropertyDescriptor(m, k);
-      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-        desc = { enumerable: true, get: function() {
-          return m[k];
-        } };
-      }
-      Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
-      if (k2 === void 0)
-        k2 = k;
-      o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
-      Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
-      o["default"] = v;
-    });
-    var __importStar = exports2 && exports2.__importStar || function(mod) {
-      if (mod && mod.__esModule)
-        return mod;
-      var result = {};
-      if (mod != null) {
-        for (var k in mod)
-          if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k))
-            __createBinding(result, mod, k);
-      }
-      __setModuleDefault(result, mod);
-      return result;
-    };
-    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
-      return mod && mod.__esModule ? mod : { "default": mod };
-    };
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.buildWorkletString = void 0;
-    var core_1 = require("@babel/core");
-    var generator_1 = __importDefault(require("@babel/generator"));
-    var types_1 = require("@babel/types");
-    var assert_1 = require("assert");
-    var convertSourceMap = __importStar(require("convert-source-map"));
-    var fs = __importStar(require("fs"));
-    var utils_12 = require_utils();
-    var MOCK_SOURCE_MAP = "mock source map";
-    function buildWorkletString(fun, closureVariables, name, inputMap) {
-      const draftExpression = fun.program.body.find((obj) => (0, types_1.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_1.isExpressionStatement)(obj)) || void 0;
-      (0, assert_1.strict)(draftExpression, "'draftExpression' is undefined");
-      const expression = (0, types_1.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
-      (0, assert_1.strict)("params" in expression, "'params' property is undefined in 'expression'");
-      (0, assert_1.strict)((0, types_1.isBlockStatement)(expression.body), "'expression.body' is not a 'BlockStatement'");
-      const workletFunction = (0, types_1.functionExpression)((0, types_1.identifier)(name), expression.params, expression.body);
-      const code = (0, generator_1.default)(workletFunction).code;
-      (0, assert_1.strict)(inputMap, "'inputMap' is undefined");
-      const includeSourceMap = !(0, utils_12.isRelease)();
-      if (includeSourceMap) {
-        inputMap.sourcesContent = [];
-        for (const sourceFile of inputMap.sources) {
-          inputMap.sourcesContent.push(fs.readFileSync(sourceFile).toString("utf-8"));
-        }
-      }
-      const transformed = (0, core_1.transformSync)(code, {
-        plugins: [prependClosureVariablesIfNecessary(closureVariables)],
-        compact: true,
-        sourceMaps: includeSourceMap,
-        inputSourceMap: inputMap,
-        ast: false,
-        babelrc: false,
-        configFile: false,
-        comments: false
-      });
-      (0, assert_1.strict)(transformed, "'transformed' is null");
-      let sourceMap;
-      if (includeSourceMap) {
-        if (shouldMockSourceMap()) {
-          sourceMap = MOCK_SOURCE_MAP;
-        } else {
-          sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
-          delete sourceMap.sourcesContent;
-        }
-      }
-      return [transformed.code, JSON.stringify(sourceMap)];
-    }
-    exports2.buildWorkletString = buildWorkletString;
-    function shouldMockSourceMap() {
-      return process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP === "1";
-    }
-    function prependClosure(path, closureVariables, closureDeclaration) {
-      if (closureVariables.length === 0 || !(0, types_1.isProgram)(path.parent)) {
-        return;
-      }
-      if (!(0, types_1.isExpression)(path.node.body)) {
-        path.node.body.body.unshift(closureDeclaration);
-      }
-    }
-    function prependRecursiveDeclaration(path) {
-      var _a;
-      if ((0, types_1.isProgram)(path.parent) && !(0, types_1.isArrowFunctionExpression)(path.node) && !(0, types_1.isObjectMethod)(path.node) && path.node.id && path.scope.parent) {
-        const hasRecursiveCalls = ((_a = path.scope.parent.bindings[path.node.id.name]) === null || _a === void 0 ? void 0 : _a.references) > 0;
-        if (hasRecursiveCalls) {
-          path.node.body.body.unshift((0, types_1.variableDeclaration)("const", [
-            (0, types_1.variableDeclarator)((0, types_1.identifier)(path.node.id.name), (0, types_1.memberExpression)((0, types_1.thisExpression)(), (0, types_1.identifier)("_recur")))
-          ]));
-        }
-      }
-    }
-    function prependClosureVariablesIfNecessary(closureVariables) {
-      const closureDeclaration = (0, types_1.variableDeclaration)("const", [
-        (0, types_1.variableDeclarator)((0, types_1.objectPattern)(closureVariables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), (0, types_1.identifier)(variable.name), false, true))), (0, types_1.memberExpression)((0, types_1.thisExpression)(), (0, types_1.identifier)("__closure")))
-      ]);
-      return {
-        visitor: {
-          "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod": (path) => {
-            prependClosure(path, closureVariables, closureDeclaration);
-            prependRecursiveDeclaration(path);
-          }
-        }
-      };
-    }
-  }
-});
-
 // lib/makeWorklet.js
 var require_makeWorklet = __commonJS({
   "lib/makeWorklet.js"(exports2) {
@@ -287,8 +287,8 @@ var require_makeWorklet = __commonJS({
     var assert_1 = require("assert");
     var path_1 = require("path");
     var buildWorkletString_1 = require_buildWorkletString();
-    var commonObjects_12 = require_commonObjects();
-    var utils_12 = require_utils();
+    var commonObjects_1 = require_commonObjects();
+    var utils_1 = require_utils();
     var REAL_VERSION = require("../../package.json").version;
     var MOCK_VERSION = "x.y.z";
     function makeWorklet(fun, state) {
@@ -338,7 +338,7 @@ var require_makeWorklet = __commonJS({
       const initDataObjectExpression = (0, types_1.objectExpression)([
         (0, types_1.objectProperty)((0, types_1.identifier)("code"), (0, types_1.stringLiteral)(funString))
       ]);
-      const shouldInjectLocation = !(0, utils_12.isRelease)();
+      const shouldInjectLocation = !(0, utils_1.isRelease)();
       if (shouldInjectLocation) {
         let location = state.file.opts.filename;
         if (state.opts.relativeSourceLocation) {
@@ -349,7 +349,7 @@ var require_makeWorklet = __commonJS({
       if (sourceMapString) {
         initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("sourceMap"), (0, types_1.stringLiteral)(sourceMapString)));
       }
-      const shouldInjectVersion = !(0, utils_12.isRelease)();
+      const shouldInjectVersion = !(0, utils_1.isRelease)();
       if (shouldInjectVersion) {
         initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("version"), (0, types_1.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)));
       }
@@ -366,7 +366,7 @@ var require_makeWorklet = __commonJS({
         (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(functionIdentifier, (0, types_1.identifier)("__initData"), false), initDataId)),
         (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(functionIdentifier, (0, types_1.identifier)("__workletHash"), false), (0, types_1.numericLiteral)(workletHash)))
       ];
-      if (!(0, utils_12.isRelease)()) {
+      if (!(0, utils_1.isRelease)()) {
         statements.unshift((0, types_1.variableDeclaration)("const", [
           (0, types_1.variableDeclarator)((0, types_1.identifier)("_e"), (0, types_1.arrayExpression)([
             (0, types_1.newExpression)((0, types_1.memberExpression)((0, types_1.identifier)("global"), (0, types_1.identifier)("Error")), []),
@@ -424,7 +424,7 @@ var require_makeWorklet = __commonJS({
             return;
           }
           const name = path.node.name;
-          if (commonObjects_12.globals.has(name)) {
+          if (commonObjects_1.globals.has(name)) {
             return;
           }
           if ("id" in fun.node && fun.node.id && fun.node.id.name === name) {
@@ -617,7 +617,7 @@ var require_processInlineStylesWarning = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.processInlineStylesWarning = void 0;
     var types_1 = require("@babel/types");
-    var utils_12 = require_utils();
+    var utils_1 = require_utils();
     var assert_1 = require("assert");
     function generateInlineStylesWarning(path) {
       return (0, types_1.callExpression)((0, types_1.arrowFunctionExpression)([], (0, types_1.blockStatement)([
@@ -661,7 +661,7 @@ var require_processInlineStylesWarning = __commonJS({
       }
     }
     function processInlineStylesWarning(path, state) {
-      if ((0, utils_12.isRelease)()) {
+      if ((0, utils_1.isRelease)()) {
         return;
       }
       if (state.opts.disableInlineStylesWarning) {
@@ -922,45 +922,54 @@ var require_processIfCallback = __commonJS({
   }
 });
 
+// lib/addCustomGlobals.js
+var require_addCustomGlobals = __commonJS({
+  "lib/addCustomGlobals.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.addCustomGlobals = void 0;
+    var commonObjects_1 = require_commonObjects();
+    var addCustomGlobals = function() {
+      if (this.opts != null && Array.isArray(this.opts.globals)) {
+        this.opts.globals.forEach((name) => {
+          commonObjects_1.globals.add(name);
+        });
+      }
+    };
+    exports2.addCustomGlobals = addCustomGlobals;
+  }
+});
+
 // lib/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
-var commonObjects_1 = require_commonObjects();
 var processForCalleesWorklets_1 = require_processForCalleesWorklets();
 var processIfWorkletNode_1 = require_processIfWorkletNode();
 var processInlineStylesWarning_1 = require_processInlineStylesWarning();
 var processIfCallback_1 = require_processIfCallback();
-var utils_1 = require_utils();
+var addCustomGlobals_1 = require_addCustomGlobals();
 module.exports = function() {
-  function callGuardDEV(fun) {
+  function runWithTaggedExceptions(fun) {
     try {
       fun();
     } catch (e) {
       throw new Error("[Reanimated] Babel plugin exception: " + e);
     }
   }
-  function releaseCaller(fun) {
-    fun();
-  }
-  const maybeUseCallGuardDEV = (0, utils_1.isRelease)() ? releaseCaller : callGuardDEV;
   return {
     pre() {
-      maybeUseCallGuardDEV(() => {
-        if (this.opts != null && Array.isArray(this.opts.globals)) {
-          this.opts.globals.forEach((name) => {
-            commonObjects_1.globals.add(name);
-          });
-        }
+      runWithTaggedExceptions(() => {
+        addCustomGlobals_1.addCustomGlobals.call(this);
       });
     },
     visitor: {
       CallExpression: {
         enter(path, state) {
-          maybeUseCallGuardDEV(() => (0, processForCalleesWorklets_1.processForCalleesWorklets)(path, state));
+          runWithTaggedExceptions(() => (0, processForCalleesWorklets_1.processForCalleesWorklets)(path, state));
         }
       },
       "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression": {
         enter(path, state) {
-          maybeUseCallGuardDEV(() => {
+          runWithTaggedExceptions(() => {
             (0, processIfWorkletNode_1.processIfWorkletNode)(path, state);
             (0, processIfCallback_1.processIfCallback)(path, state);
           });
@@ -968,7 +977,7 @@ module.exports = function() {
       },
       JSXAttribute: {
         enter(path, state) {
-          maybeUseCallGuardDEV(() => (0, processInlineStylesWarning_1.processInlineStylesWarning)(path, state));
+          runWithTaggedExceptions(() => (0, processInlineStylesWarning_1.processInlineStylesWarning)(path, state));
         }
       }
     }
