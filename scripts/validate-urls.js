@@ -43,8 +43,6 @@ const extensions = [
 // Every hidden directory is ignored as well.
 const ignoredDirectories = ['node_modules', 'Pods', 'lib', 'build'];
 
-const ignoredFiles = ['validate-urls.js'];
-
 const urlRegex =
   /\b((http|https):\/\/?)[^\s<>[\]`]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
 
@@ -61,10 +59,7 @@ async function getFiles(dir) {
       } else if (dirent.isDirectory()) {
         return getFiles(res);
       } else {
-        if (
-          !ignoredFiles.includes(dirent.name) &&
-          extensions.includes(path.extname(dirent.name))
-        ) {
+        if (extensions.includes(path.extname(dirent.name))) {
           const fileContent = await readFile(res, 'utf-8');
           const urls = Array.from(fileContent.matchAll(urlRegex), (m) => m[0]);
           const validUrls = [];
