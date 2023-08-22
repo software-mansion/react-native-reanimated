@@ -33,6 +33,10 @@ class PropsRegistry {
     return letMeIn_.exchange(false);
   }
 
+  void resetSkipCommitFlag() {
+    letMeIn_ = false;
+  }
+
  private:
   std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>> map_;
 

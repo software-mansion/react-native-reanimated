@@ -57,8 +57,8 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     });
   }
 
-  // request Reanimated to skip one commit so that React Native can mount the
-  // changes instead of failing 1024 times and crashing the app
+  // If the commit comes from React Native then skip one commit from Reanimated
+  // since the tree is already outdated and we have necessary updates.
   propsRegistry_->pleaseSkipCommit();
 
   return std::static_pointer_cast<RootShadowNode>(rootNode);
