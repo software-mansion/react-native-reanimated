@@ -220,10 +220,7 @@ public class SharedTransitionManager {
 
       boolean isSourceViewInTransition =
           mCurrentSharedTransitionViews.containsKey(viewSource.getId());
-      boolean isTargetViewInTransition =
-          mCurrentSharedTransitionViews.containsKey(viewTarget.getId());
-
-      if (!(isSourceViewInTransition || isTargetViewInTransition)) {
+      if (!isSourceViewInTransition) {
         View viewSourceScreen = findScreen(viewSource);
         View viewTargetScreen = findScreen(viewTarget);
         if (viewSourceScreen == null || viewTargetScreen == null) {
@@ -336,7 +333,6 @@ public class SharedTransitionManager {
   private void reparentSharedViewsForCurrentTransition(List<SharedElement> sharedElements) {
     for (SharedElement sharedElement : sharedElements) {
       View viewSource = sharedElement.sourceView;
-      viewSource.setVisibility(View.VISIBLE);
       if (!mSharedTransitionParent.containsKey(viewSource.getId())) {
         mSharedTransitionParent.put(viewSource.getId(), (View) viewSource.getParent());
         mSharedTransitionInParentIndex.put(
@@ -423,7 +419,7 @@ public class SharedTransitionManager {
       }
 
       View targetView = sharedElement.targetView;
-      Integer targetViewTag = targetView.getId();
+      int targetViewTag = targetView.getId();
       mCurrentSharedTransitionViews.remove(targetViewTag);
       mCurrentSharedTransitionViews.remove(viewTag);
       mSharedTransitionParent.remove(viewTag);

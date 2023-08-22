@@ -315,9 +315,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
     for (UIView *view in currentSoureViews) {
       if (![newSoureViews containsObject:view]) {
         _temopraryViewRegistry[view.reactTag] = view;
-
-        //        [self finishSharedAnimation:view removeView:YES];
-        [self cancelAnimation:view.reactTag];
       }
     }
     [_currentSharedTransitionViews removeAllObjects];
