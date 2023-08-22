@@ -14,6 +14,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
 #include "PropsRegistry.h"
+#include "ReanimatedCommitMarker.h"
 #include "ShadowTreeCloner.h"
 #endif
 
@@ -622,6 +623,10 @@ void NativeReanimatedModule::performOperations() {
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
+    // Mark the commit as Reanimated commit so that we can distinguish it
+    // in ReanimatedCommitHook.
+    ReanimatedCommitMarker commitMarker;
+
     shadowTree.commit(
         [&](RootShadowNode const &oldRootShadowNode) {
           auto rootNode =
@@ -646,9 +651,6 @@ void NativeReanimatedModule::performOperations() {
           }
 
           auto newRoot = std::static_pointer_cast<RootShadowNode>(rootNode);
-
-          // skip ReanimatedCommitHook for this ShadowTree
-          propsRegistry_->setLastReanimatedRoot(newRoot);
 
           return newRoot;
         },

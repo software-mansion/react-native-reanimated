@@ -7,14 +7,14 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-import {
-  type SharedValue,
-  type AnimatableValue,
-  type Animation,
-  type AnimationObject,
-  type Timestamp,
-  type AnimatableValueObject,
-  ReduceMotion,
+import { ReduceMotion } from '../commonTypes';
+import type {
+  SharedValue,
+  AnimatableValue,
+  Animation,
+  AnimationObject,
+  Timestamp,
+  AnimatableValueObject,
 } from '../commonTypes';
 import NativeReanimatedModule from '../NativeReanimated';
 import type {
@@ -72,7 +72,7 @@ function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
  * Returns whether the motion should be reduced for a specified config.
  * By default returns the system setting.
  */
-function getReduceMotionFromConfig(config?: ReduceMotion) {
+export function getReduceMotionFromConfig(config?: ReduceMotion) {
   'worklet';
   return !config || config === ReduceMotion.System
     ? IS_REDUCED_MOTION
