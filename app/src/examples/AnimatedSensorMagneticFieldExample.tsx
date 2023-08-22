@@ -1,19 +1,22 @@
 import Animated, {
-  useAnimatedStyle,
-  useAnimatedSensor,
   SensorType,
+  useAnimatedSensor,
+  useAnimatedStyle,
 } from 'react-native-reanimated';
 import { StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
-export default function AnimatedSensorExample() {
-  const gravity = useAnimatedSensor(SensorType.GRAVITY, { interval: 16 });
+const BOX_SIZE = 150;
+
+export default function AnimatedSensorMagneticFieldExample() {
+  const magneticField = useAnimatedSensor(SensorType.MAGNETIC_FIELD);
 
   const animatedStyle = useAnimatedStyle(() => {
+    const { x, y } = magneticField.sensor.value;
+    const angle = (Math.atan2(y, x) * 180) / Math.PI;
     return {
-      top: -gravity.sensor.value.y * 300,
-      left: gravity.sensor.value.x * 200,
+      transform: [{ rotateZ: `${angle}deg` }, { translateY: BOX_SIZE / 2 }],
     };
   });
 
@@ -31,8 +34,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   box: {
-    width: 150,
-    height: 150,
+    width: 10,
+    height: BOX_SIZE,
     backgroundColor: 'navy',
   },
 });
