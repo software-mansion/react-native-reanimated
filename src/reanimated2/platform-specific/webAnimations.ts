@@ -3,6 +3,11 @@ import type { AnimationTypes } from './webAnimationsData';
 import { parseAnimationObjectToKeyframe } from './animationParser';
 import type { TransformProperties } from './animationParser';
 import type { TransformsStyle } from 'react-native';
+import type {
+  BaseAnimationBuilder,
+  EntryExitAnimationFunction,
+  ILayoutAnimationBuilder,
+} from '../layoutReanimation';
 
 export const WEB_ANIMATIONS_ID = 'webAnimationsStyle';
 
@@ -11,8 +16,24 @@ export interface AnimationConfig {
   duration: number;
   delay: number;
   easing: string;
-  callback: () => void;
+  callback: (() => void) | null;
 }
+
+interface CustomConfig {
+  easingV?: () => number;
+  durationV?: number;
+  delayV?: number;
+  randomizeDelay?: boolean;
+  callbackV?: () => void;
+}
+
+type ConfigType =
+  | BaseAnimationBuilder
+  | ILayoutAnimationBuilder
+  | typeof BaseAnimationBuilder
+  | EntryExitAnimationFunction
+  | Keyframe
+  | CustomConfig;
 
 /**
  *  Creates `HTMLStyleElement`, inserts it into DOM and then inserts CSS rules into the stylesheet.
@@ -113,49 +134,69 @@ export function generateRandomKeyframeName() {
   return keyframeName;
 }
 
-export function getEasingFromConfig(config: any): string {
-  const hasEasing = Object.prototype.hasOwnProperty.call(config, 'easingV');
+export function getEasingFromConfig(config: ConfigType): string {
+  if (!('easingV' in config)) {
+    return `cubic-bezier(${WebEasings.linear.toString()})`;
+  }
+
+  config = config as CustomConfig;
 
   const easingName =
-    hasEasing && config.easingV.name in WebEasings
+    config.easingV !== undefined && config.easingV.name in WebEasings
       ? config.easingV.name
       : 'linear';
 
   return `cubic-bezier(${WebEasings[easingName].toString()})`;
 }
 
-export function getDelayFromConfig(config: any): number {
-  const hasDelay = Object.prototype.hasOwnProperty.call(config, 'delayV');
-  const shouldRandomizeDelay = config.randomizeDelay;
+export function getDelayFromConfig(config: ConfigType): number {
+  const shouldRandomizeDelay = (config as CustomConfig).randomizeDelay;
 
-  let delay = shouldRandomizeDelay ? getRandomDelay() : 0;
+  const delay = shouldRandomizeDelay ? getRandomDelay() : 0;
 
-  if (hasDelay) {
-    delay = shouldRandomizeDelay
-      ? getRandomDelay(config.delayV)
-      : config.delayV / 1000;
+  if (!('delayV' in config)) {
+    return delay;
   }
 
-  return delay;
+  config = config as CustomConfig;
+
+  if (config.delayV === undefined) {
+    return delay;
+  }
+
+  return shouldRandomizeDelay
+    ? getRandomDelay((config as CustomConfig).delayV)
+    : config.delayV / 1000;
 }
 
 export function getDurationFromConfig(
-  config: any,
+  config: ConfigType,
   isLayoutTransition: boolean,
   animationName: AnimationTypes
 ): number {
-  const hasDuration = Object.prototype.hasOwnProperty.call(config, 'durationV');
   const defaultDuration = isLayoutTransition
     ? 0.3
     : Animations[animationName].duration;
 
-  return hasDuration ? config.durationV / 1000 : defaultDuration;
+  if (!('durationV' in config)) {
+    return defaultDuration;
+  }
+
+  config = config as CustomConfig;
+
+  return config.durationV !== undefined
+    ? config.durationV / 1000
+    : defaultDuration;
 }
 
-export function getCallbackFromConfig(config: any): () => void | null {
-  const hasCallback = Object.prototype.hasOwnProperty.call(config, 'callbackV');
+export function getCallbackFromConfig(config: ConfigType): (() => void) | null {
+  if (!('callbackV' in config)) {
+    return null;
+  }
 
-  return hasCallback ? config.callbackV : null;
+  config = config as CustomConfig;
+
+  return config.callbackV !== undefined ? config.callbackV : null;
 }
 
 export function getRandomDelay(maxDelay = 1000): number {
@@ -178,9 +219,7 @@ export function setElementAnimation(
   element.style.animationTimingFunction = easing;
   element.style.animationFillMode = 'forwards'; // Prevents returning to base state after animation finishes.
 
-  if (animationConfig.callback !== null) {
-    element.onanimationend = () => animationConfig.callback();
-  }
+  element.onanimationend = () => animationConfig.callback?.();
 }
 
 export function handleEnteringAnimation(
@@ -235,7 +274,5 @@ export function handleExitingAnimation(
     }
   };
 
-  if (animationConfig.callback !== null) {
-    animationConfig.callback();
-  }
+  animationConfig.callback?.();
 }
