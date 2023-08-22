@@ -6,12 +6,16 @@ import {
   Value3D,
   ValueRotation,
 } from '../commonTypes';
+import { mockedRequestAnimationFrame } from '../utils';
 import { WebSensor } from './WebSensor';
 
 // In Node.js environments (like when static rendering with Expo Router)
 // requestAnimationFrame is unavailable, so we use setImmediate.
-const scheduleOnUI =
-  globalThis.requestAnimationFrame || globalThis.setImmediate;
+const scheduleOnUI = globalThis.requestAnimationFrame
+  ? isJest()
+    ? mockedRequestAnimationFrame
+    : globalThis.requestAnimationFrame
+  : setImmediate;
 
 export default class JSReanimated extends NativeReanimated {
   nextSensorId = 0;

@@ -7,6 +7,7 @@ import {
   callMicrotasks,
   runOnUIImmediately,
 } from './threads';
+import { mockedRequestAnimationFrame } from './utils';
 
 // callGuard is only used with debug builds
 function callGuardDEV<T extends Array<any>, U>(
@@ -150,9 +151,7 @@ export function initializeUIRuntime() {
     // We override this setup here to make sure that callbacks get the proper timestamps
     // when executed. For non-jest environments we define requestAnimationFrame in setupRequestAnimationFrame
     // @ts-ignore TypeScript uses Node definition for rAF, setTimeout, etc which returns a Timeout object rather than a number
-    global.requestAnimationFrame = (callback: (timestamp: number) => void) => {
-      return setTimeout(() => callback(performance.now()), 0);
-    };
+    global.requestAnimationFrame = mockedRequestAnimationFrame;
   }
 
   // We really have to create a copy of console here. Function runOnJS we use on elements inside
