@@ -133,7 +133,6 @@ function createProgressTransitionRegister() {
       viewTag: number,
       progressAnimation: ProgressAnimation
     ) => {
-      console.log('addProgressAnimation', viewTag);
       if (currentTransitions.size > 0) {
         // there is no need to prevent cleaning on android
         isTransitionRestart = Platform.OS !== 'android';
@@ -141,7 +140,6 @@ function createProgressTransitionRegister() {
       progressAnimations.set(viewTag, progressAnimation);
     },
     removeProgressAnimation: (viewTag: number) => {
-      console.log('removeProgressAnimation', viewTag);
       if (currentTransitions.size > 0) {
         // there is no need to prevent cleaning on android
         isTransitionRestart = Platform.OS !== 'android';
@@ -150,7 +148,6 @@ function createProgressTransitionRegister() {
       toRemove.add(viewTag);
     },
     onTransitionStart: (viewTag: number, snapshot: any) => {
-      console.log('onTransitionStart', viewTag);
       if (isTransitionRestart) {
         skipCleaning = true;
       }
@@ -170,22 +167,19 @@ function createProgressTransitionRegister() {
       }
     },
     onAndroidFinishTransitioning: () => {
-      console.log('onAndroidFinishTransitioning');
       if (toRemove.size > 0) {
         // it should be ran only on modal closing
         progressTransitionManager.onTransitionEnd();
       }
     },
     onTransitionEnd: (removeViews = false) => {
-      console.log('onTransitionEnd', removeViews);
-      if (currentTransitions.size == 0) {
-        toRemove.clear()
+      if (currentTransitions.size === 0) {
+        toRemove.clear();
         return;
       }
       if (skipCleaning) {
         skipCleaning = false;
         isTransitionRestart = false;
-        console.log('--- skipCleaning');
         return;
       }
       for (const viewTag of currentTransitions) {
@@ -193,9 +187,8 @@ function createProgressTransitionRegister() {
       }
       currentTransitions.clear();
       if (isTransitionRestart) {
-        // on transition restart, progressAnimations should be saved 
+        // on transition restart, progressAnimations should be saved
         // because they potentially can be used in the next transition
-        console.log('--- isTransitionRestart');
         return;
       }
       snapshots.clear();

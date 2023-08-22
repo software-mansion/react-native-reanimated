@@ -23,9 +23,7 @@
   NSMutableDictionary<NSNumber *, UIView *> *_temopraryViewRegistry;
   NSMutableSet<NSNumber *> *_layoutedSharedViewsTags;
   NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
-  
   NSMutableSet<UIView *> *_reparentedViews;
-  
   BOOL _isStackDropped;
   BOOL _isAsyncSharedTransitionConfigured;
   BOOL _isConfigured;
@@ -57,9 +55,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _temopraryViewRegistry = [NSMutableDictionary new];
     _layoutedSharedViewsTags = [NSMutableSet new];
     _layoutedSharedViewsFrame = [NSMutableDictionary new];
-    
     _reparentedViews = [NSMutableSet new];
-    
     _isAsyncSharedTransitionConfigured = NO;
     _isConfigured = NO;
     [self swizzleScreensMethods];
@@ -319,8 +315,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
     for (UIView *view in currentSoureViews) {
       if (![newSoureViews containsObject:view]) {
         _temopraryViewRegistry[view.reactTag] = view;
-        
-//        [self finishSharedAnimation:view removeView:YES];
+
+        //        [self finishSharedAnimation:view removeView:YES];
         [self cancelAnimation:view.reactTag];
       }
     }
@@ -573,7 +569,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
   if (!_isConfigured) {
     return;
   }
-  
   NSNumber *viewTag = view.reactTag;
   if (_disableCleaningForView[viewTag]) {
     [self enableCleaningForViewTag:viewTag];
@@ -607,11 +602,10 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
 
   UIView *targetView = sharedElement.targetView;
-  targetView.hidden = NO;  
+  targetView.hidden = NO;
   if ([_viewsToHide containsObject:viewTag]) {
     view.hidden = YES;
   }
-          
   if (!removeView) {
     [_removedViews removeObject:view];
   }
