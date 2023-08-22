@@ -204,7 +204,7 @@ export {
   SharedTransition,
   SharedTransitionType,
 } from './layoutReanimation';
-export { getRelativeCoords, ComponentCoords } from './utils';
+export { getRelativeCoords, ComponentCoords, clamp } from './utils';
 export {
   StyleProps,
   SharedValue,

@@ -32,3 +32,14 @@ export function isSharedValue<T>(value: any): value is SharedValue<T> {
   'worklet';
   return value?._isReanimatedSharedValue === true;
 }
+
+/**
+ * @param val preferred value
+ * @param min minimum allowed value
+ * @param max maximum allowed value
+ * Clamps given value within a range of values between a defined minimum bound and a maximum bound.
+ */
+export function clamp(val: number, min: number, max: number) {
+  'worklet';
+  return Math.min(Math.max(val, min), max);
+}
