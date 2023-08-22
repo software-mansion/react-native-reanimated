@@ -173,15 +173,14 @@ function createProgressTransitionRegister() {
       }
     },
     onTransitionEnd: (removeViews = false) => {
-      if (currentTransitions.size == 0) {
-        toRemove.clear()
+      if (currentTransitions.size === 0) {
+        toRemove.clear();
         return;
       }
       console.log('onTransitionEnd');
       if (skipCleaning) {
         skipCleaning = false;
         isTransitionRestart = false;
-        console.log('---omitCleaning');
         return;
       }
       for (const viewTag of currentTransitions) {
@@ -189,7 +188,7 @@ function createProgressTransitionRegister() {
       }
       currentTransitions.clear();
       if (isTransitionRestart) {
-        // on transition restart, progressAnimations should be saved 
+        // on transition restart, progressAnimations should be saved
         // because they potentially can be used in the next transition
         return;
       }
