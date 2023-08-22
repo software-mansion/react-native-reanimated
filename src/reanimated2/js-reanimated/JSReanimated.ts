@@ -121,8 +121,11 @@ export default class JSReanimated {
       case SensorType.GRAVITY:
         return () => {
           let { x, y, z } = sensor;
-          [x, y, z] =
-            this.platform === Platform.WEB_ANDROID ? [-x, -y, -z] : [x, y, z];
+
+          // Web Android sensors have a different coordinate system than iOS
+          if (this.platform === Platform.WEB_ANDROID) {
+            [x, y, z] = [-x, -y, -z];
+          }
           // TODO TYPESCRIPT on web ShareableRef is the value itself so we call it directly
           (eventHandler as any)({ x, y, z, interfaceOrientation: 0 });
         };
