@@ -55,6 +55,7 @@ import { isSharedValue } from './reanimated2/utils';
 import type { AnimateProps } from './reanimated2/helperTypes';
 import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
 import { JSPropUpdater } from './JSPropUpdater';
+import { getReduceMotionFromConfig } from './reanimated2/animation/util';
 
 import {
   areDOMRectsEqual,
@@ -696,20 +697,32 @@ export default function createAnimatedComponent(
             );
           }
           if (exiting) {
-            configureLayoutAnimations(
-              tag,
-              LayoutAnimationType.EXITING,
-              maybeBuild(exiting)
-            );
+            const reduceMotionInExiting =
+              'getReduceMotion' in exiting &&
+              typeof exiting.getReduceMotion === 'function'
+                ? getReduceMotionFromConfig(exiting.getReduceMotion())
+                : getReduceMotionFromConfig();
+            if (!reduceMotionInExiting) {
+              configureLayoutAnimations(
+                tag,
+                LayoutAnimationType.EXITING,
+                maybeBuild(exiting)
+              );
+            }
           }
           if (sharedTransitionTag && !IS_WEB) {
             const sharedElementTransition =
               this.props.sharedTransitionStyle ?? new SharedTransition();
-            sharedElementTransition.registerTransition(
-              tag as number,
-              sharedTransitionTag
+            const reduceMotionInTransition = getReduceMotionFromConfig(
+              sharedElementTransition.getReduceMotion()
             );
-            this._sharedElementTransition = sharedElementTransition;
+            if (!reduceMotionInTransition) {
+              sharedElementTransition.registerTransition(
+                tag as number,
+                sharedTransitionTag
+              );
+              this._sharedElementTransition = sharedElementTransition;
+            }
           }
         }
 
