@@ -112,51 +112,6 @@ interface Example {
 }
 
 export const EXAMPLES: Record<string, Example> = {
-  CardExample: {
-    title: '[SET] Card',
-    screen: CardExample,
-  },
-  CustomTransitionExample: {
-    title: '[SET] Custom transition',
-    screen: CustomTransitionExample,
-  },
-  LayoutAnimationExample: {
-    title: '[SET] Layout Animation',
-    screen: LayoutAnimationExample,
-  },
-  ManyScreensExample: {
-    title: '[SET] Many screens',
-    screen: ManyScreensExample,
-  },
-  ManyTagsExample: {
-    title: '[SET] Many tags',
-    screen: ManyTagsExample,
-  },
-  NestedStacksExample: {
-    title: '[SET] Nested stacks',
-    screen: NestedStacksExample,
-  },
-  ModalsExample: {
-    title: '[SET] Modals',
-    screen: ModalsExample,
-  },
-  FlatListExample: {
-    title: '[SET] FlatList',
-    screen: FlatListExample,
-  },
-  ImageStackExample: {
-    title: '[SET] Image Stack',
-    screen: ImageStackExample,
-  },
-  RestoreStateExample: {
-    title: '[SET] Restore State',
-    screen: RestoreStateExample,
-  },
-  DuplicateTagsExample: {
-    title: '[SET] Duplicate Tags',
-    screen: DuplicateTagsExample,
-  },
-  
   // Empty example for test purposes
 
   EmptyExample: {
@@ -609,5 +564,52 @@ export const EXAMPLES: Record<string, Example> = {
 
   // Shared Element Transitions
 
-  
+  CardExample: {
+    title: '[SET] Card',
+    screen: CardExample,
+  },
+  CustomTransitionExample: {
+    title: '[SET] Custom transition',
+    screen: CustomTransitionExample,
+  },
+  LayoutAnimationExample: {
+    title: '[SET] Layout Animation',
+    screen: LayoutAnimationExample,
+  },
+  ManyScreensExample: {
+    title: '[SET] Many screens',
+    screen: ManyScreensExample,
+  },
+  ManyTagsExample: {
+    title: '[SET] Many tags',
+    screen: ManyTagsExample,
+  },
+  NestedStacksExample: {
+    title: '[SET] Nested stacks',
+    screen: NestedStacksExample,
+  },
+  ModalsExample: {
+    title: '[SET] Modals',
+    screen: ModalsExample,
+  },
+  FlatListExample: {
+    title: '[SET] FlatList',
+    screen: FlatListExample,
+  },
+  ImageStackExample: {
+    title: '[SET] Image Stack',
+    screen: ImageStackExample,
+  },
+  RestoreStateExample: {
+    title: '[SET] Restore State',
+    screen: RestoreStateExample,
+  },
+  DuplicateTagsExample: {
+    title: '[SET] Duplicate Tags',
+    screen: DuplicateTagsExample,
+  },
+  ReducedMotionSharedExample: {
+    title: '[SET] Reduced Motion',
+    screen: ReducedMotionSharedExample,
+  },
 } as const;
