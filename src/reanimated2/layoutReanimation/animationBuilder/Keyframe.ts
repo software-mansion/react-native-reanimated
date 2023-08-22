@@ -6,8 +6,12 @@ import type {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
   KeyframeProps,
+  StylePropsWithArrayTransform,
 } from './commonTypes';
 import type { TransformProperty, StyleProps } from '../../commonTypes';
+import { ReduceMotion } from '../../commonTypes';
+import { getReduceMotionFromConfig } from '../../animation/util';
+
 interface KeyframePoint {
   duration: number;
   value: number | string;
@@ -20,6 +24,7 @@ interface ParsedKeyframesDefinition {
 class InnerKeyframe implements IEntryExitAnimationBuilder {
   durationV?: number;
   delayV?: number;
+  reduceMotionV: ReduceMotion = ReduceMotion.System;
   callbackV?: (finished: boolean) => void;
   definitions: Record<string, KeyframeProps>;
 
@@ -73,7 +78,10 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     */
     Object.keys(initialValues).forEach((styleProp: string) => {
       if (styleProp === 'transform') {
-        initialValues[styleProp]?.forEach((transformStyle, index) => {
+        if (!Array.isArray(initialValues.transform)) {
+          return;
+        }
+        initialValues.transform.forEach((transformStyle, index) => {
           Object.keys(transformStyle).forEach((transformProp: string) => {
             parsedKeyframes[index.toString() + '_transform:' + transformProp] =
               [];
@@ -145,7 +153,10 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
           });
         Object.keys(keyframe).forEach((key: string) => {
           if (key === 'transform') {
-            keyframe[key]?.forEach(
+            if (!Array.isArray(keyframe.transform)) {
+              return;
+            }
+            keyframe.transform.forEach(
               (transformStyle: { [key: string]: any }, index) => {
                 Object.keys(transformStyle).forEach((transformProp: string) => {
                   addKeyPointWith(
@@ -178,12 +189,22 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     return this;
   }
 
+  reduceMotion(reduceMotionV: ReduceMotion): this {
+    this.reduceMotionV = reduceMotionV;
+    return this;
+  }
+
   private getDelayFunction(): AnimationFunction {
     const delay = this.delayV;
+    const reduceMotion = this.reduceMotionV;
     return delay
-      ? withDelay
+      ? (delay, animation) => {
+          'worklet';
+          return withDelay(delay, animation, reduceMotion);
+        }
       : (_, animation) => {
           'worklet';
+          animation.reduceMotion = getReduceMotionFromConfig(reduceMotion);
           return animation;
         };
   }
@@ -196,7 +217,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
 
     return () => {
       'worklet';
-      const animations: StyleProps = {};
+      const animations: StylePropsWithArrayTransform = {};
 
       /* 
             For each style property, an animations sequence is created that corresponds with its key points.
@@ -205,7 +226,9 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       const addAnimation = (key: string) => {
         const keyframePoints = keyframes[key];
         // in case if property was only passed as initial value
-        if (keyframePoints.length === 0) return;
+        if (keyframePoints.length === 0) {
+          return;
+        }
         const animation = delayFunction(
           delay,
           keyframePoints.length === 1
@@ -231,7 +254,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
           if (!('transform' in animations)) {
             animations.transform = [];
           }
-          animations.transform?.push(<TransformProperty>{
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          animations.transform!.push(<TransformProperty>{
             [key.split(':')[1]]: animation,
           });
         } else {
@@ -267,6 +291,7 @@ export declare class ReanimatedKeyframe {
   constructor(definitions: Record<string, KeyframeProps>);
   duration(durationMs: number): ReanimatedKeyframe;
   delay(delayMs: number): ReanimatedKeyframe;
+  reduceMotion(reduceMotionV: ReduceMotion): ReanimatedKeyframe;
   withCallback(callback: (finished: boolean) => void): ReanimatedKeyframe;
 }
 

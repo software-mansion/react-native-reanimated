@@ -14,7 +14,7 @@ import {
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 
-export default function ExtrapolationExample(): React.ReactElement {
+export default function ExtrapolationExample() {
   const translation = {
     x: useSharedValue(50),
     y: useSharedValue(0),

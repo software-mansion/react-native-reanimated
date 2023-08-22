@@ -16,6 +16,10 @@ export function isAndroid(): boolean {
   return Platform.OS === 'android';
 }
 
+export function isMacOS(): boolean {
+  return Platform.OS === 'macos';
+}
+
 function isWindows(): boolean {
   return Platform.OS === 'windows';
 }
@@ -26,4 +30,10 @@ export function shouldBeUseWeb() {
 
 export function nativeShouldBeMock() {
   return isJest() || isChromeDebugger() || isWindows();
+}
+
+export function isReducedMotion() {
+  return isWeb()
+    ? !window.matchMedia('(prefers-reduced-motion: no-preference)').matches
+    : global._REANIMATED_IS_REDUCED_MOTION ?? false;
 }

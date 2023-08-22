@@ -292,7 +292,6 @@ var require_makeWorklet = __commonJS({
     var REAL_VERSION = require("../../package.json").version;
     var MOCK_VERSION = "x.y.z";
     function makeWorklet(fun, state) {
-      const functionName = makeWorkletName(fun);
       removeWorkletDirective(fun);
       (0, assert_1.strict)(state.file.opts.filename, "'state.file.opts.filename' is undefined");
       const codeObject = (0, generator_1.default)(fun.node, {
@@ -321,7 +320,8 @@ var require_makeWorklet = __commonJS({
       (0, assert_1.strict)(transformed, "'transformed' is undefined");
       (0, assert_1.strict)(transformed.ast, "'transformed.ast' is undefined");
       const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
-      const privateFunctionId = (0, types_1.identifier)("_f");
+      const functionName = makeWorkletName(fun);
+      const functionIdentifier = (0, types_1.identifier)(functionName);
       const clone = (0, types_1.cloneNode)(fun.node);
       const funExpression = (0, types_1.isBlockStatement)(clone.body) ? (0, types_1.functionExpression)(null, clone.params, clone.body) : clone;
       const [funString, sourceMapString] = (0, buildWorkletString_1.buildWorkletString)(transformed.ast, variables, functionName, transformed.map);
@@ -360,11 +360,11 @@ var require_makeWorklet = __commonJS({
       (0, assert_1.strict)(!(0, types_1.isObjectMethod)(funExpression), "'funExpression' is an 'ObjectMethod'");
       const statements = [
         (0, types_1.variableDeclaration)("const", [
-          (0, types_1.variableDeclarator)(privateFunctionId, funExpression)
+          (0, types_1.variableDeclarator)(functionIdentifier, funExpression)
         ]),
-        (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__closure"), false), (0, types_1.objectExpression)(variables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), variable, false, true))))),
-        (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__initData"), false), initDataId)),
-        (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__workletHash"), false), (0, types_1.numericLiteral)(workletHash)))
+        (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(functionIdentifier, (0, types_1.identifier)("__closure"), false), (0, types_1.objectExpression)(variables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), variable, false, true))))),
+        (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(functionIdentifier, (0, types_1.identifier)("__initData"), false), initDataId)),
+        (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(functionIdentifier, (0, types_1.identifier)("__workletHash"), false), (0, types_1.numericLiteral)(workletHash)))
       ];
       if (!(0, utils_1.isRelease)()) {
         statements.unshift((0, types_1.variableDeclaration)("const", [
@@ -374,9 +374,9 @@ var require_makeWorklet = __commonJS({
             (0, types_1.numericLiteral)(-27)
           ]))
         ]));
-        statements.push((0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__stackDetails"), false), (0, types_1.identifier)("_e"))));
+        statements.push((0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(functionIdentifier, (0, types_1.identifier)("__stackDetails"), false), (0, types_1.identifier)("_e"))));
       }
-      statements.push((0, types_1.returnStatement)(privateFunctionId));
+      statements.push((0, types_1.returnStatement)(functionIdentifier));
       const newFun = (0, types_1.functionExpression)(void 0, [], (0, types_1.blockStatement)(statements));
       return newFun;
     }
@@ -405,10 +405,10 @@ var require_makeWorklet = __commonJS({
       return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
     }
     function makeWorkletName(fun) {
-      if ((0, types_1.isObjectMethod)(fun.node) && "name" in fun.node.key) {
+      if ((0, types_1.isObjectMethod)(fun.node) && (0, types_1.isIdentifier)(fun.node.key)) {
         return fun.node.key.name;
       }
-      if ((0, types_1.isFunctionDeclaration)(fun.node) && fun.node.id) {
+      if ((0, types_1.isFunctionDeclaration)(fun.node) && (0, types_1.isIdentifier)(fun.node.id)) {
         return fun.node.id.name;
       }
       if ((0, types_1.isFunctionExpression)(fun.node) && (0, types_1.isIdentifier)(fun.node.id)) {
@@ -835,6 +835,7 @@ var require_isLayoutAnimationCallback = __commonJS({
     ]);
     var LayoutTransitions = /* @__PURE__ */ new Set([
       "Layout",
+      "LinearTransition",
       "SequencedTransition",
       "FadingTransition",
       "JumpingTransition",

@@ -14,6 +14,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
 #include "PropsRegistry.h"
+#include "ReanimatedCommitMarker.h"
 #include "ShadowTreeCloner.h"
 #endif
 
@@ -36,13 +37,7 @@ NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<CallInvoker> &jsInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::shared_ptr<jsi::Runtime> &rt,
-#ifdef RCT_NEW_ARCH_ENABLED
-// nothing
-#else
-    std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
-        propObtainer,
-#endif
-    PlatformDepMethodsHolder platformDepMethodsHolder)
+    const PlatformDepMethodsHolder &platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
       runtimeManager_(std::make_shared<RuntimeManager>(
           rt,
@@ -54,7 +49,7 @@ NativeReanimatedModule::NativeReanimatedModule(
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
-      propObtainer(propObtainer),
+      obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
 #endif
       animatedSensorModule(platformDepMethodsHolder),
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -361,28 +356,31 @@ void NativeReanimatedModule::unregisterEventHandler(
 }
 
 jsi::Value NativeReanimatedModule::getViewProp(
-    jsi::Runtime &rt,
+    jsi::Runtime &rnRuntime,
     const jsi::Value &viewTag,
     const jsi::Value &propName,
     const jsi::Value &callback) {
   const int viewTagInt = static_cast<int>(viewTag.asNumber());
-  std::string propNameStr = propName.asString(rt).utf8(rt);
-  jsi::Function fun = callback.getObject(rt).asFunction(rt);
+  std::string propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
+  jsi::Function fun = callback.getObject(rnRuntime).asFunction(rnRuntime);
   std::shared_ptr<jsi::Function> funPtr =
       std::make_shared<jsi::Function>(std::move(fun));
 
   runtimeManager_->uiScheduler_->scheduleOnUI(
-      [&rt, viewTagInt, funPtr, this, propNameStr]() {
+      [&rnRuntime, viewTagInt, funPtr, this, propNameStr]() {
+        jsi::Runtime &uiRuntime = *runtimeManager_->runtime;
         const jsi::String propNameValue =
-            jsi::String::createFromUtf8(rt, propNameStr);
-        jsi::Value result = propObtainer(rt, viewTagInt, propNameValue);
-        std::string resultStr = result.asString(rt).utf8(rt);
+            jsi::String::createFromUtf8(uiRuntime, propNameStr);
+        jsi::Value result =
+            obtainPropFunction_(uiRuntime, viewTagInt, propNameValue);
+        std::string resultStr = result.asString(uiRuntime).utf8(uiRuntime);
 
-        runtimeManager_->jsScheduler_->scheduleOnJS([&rt, resultStr, funPtr]() {
-          const jsi::String resultValue =
-              jsi::String::createFromUtf8(rt, resultStr);
-          funPtr->call(rt, resultValue);
-        });
+        runtimeManager_->jsScheduler_->scheduleOnJS(
+            [&rnRuntime, resultStr, funPtr]() {
+              const jsi::String resultValue =
+                  jsi::String::createFromUtf8(rnRuntime, resultStr);
+              funPtr->call(rnRuntime, resultValue);
+            });
       });
 
   return jsi::Value::undefined();
@@ -624,6 +622,10 @@ void NativeReanimatedModule::performOperations() {
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
+    // Mark the commit as Reanimated commit so that we can distinguish it
+    // in ReanimatedCommitHook.
+    ReanimatedCommitMarker commitMarker;
+
     shadowTree.commit(
         [&](RootShadowNode const &oldRootShadowNode) {
           auto rootNode =
@@ -648,9 +650,6 @@ void NativeReanimatedModule::performOperations() {
           }
 
           auto newRoot = std::static_pointer_cast<RootShadowNode>(rootNode);
-
-          // skip ReanimatedCommitHook for this ShadowTree
-          propsRegistry_->setLastReanimatedRoot(newRoot);
 
           return newRoot;
         },
