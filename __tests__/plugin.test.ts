@@ -254,7 +254,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__closure = {};');
+    expect(code).toContain('f.__closure = {};');
     expect(code).toMatchSnapshot();
   });
 

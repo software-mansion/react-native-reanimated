@@ -74,7 +74,7 @@ function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
  * Returns whether the motion should be reduced for a specified config.
  * By default returns the system setting.
  */
-function getReduceMotionFromConfig(config?: ReduceMotion) {
+export function getReduceMotionFromConfig(config?: ReduceMotion) {
   'worklet';
   return !config || config === ReduceMotion.System
     ? IS_REDUCED_MOTION
