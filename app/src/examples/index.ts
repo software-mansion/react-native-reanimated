@@ -613,4 +613,8 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[SET] Reduced Motion',
     screen: ReducedMotionSharedExample,
   },
+  TransitionRestartExample: {
+    title: '[SET] Transition Restart',
+    screen: TransitionRestartExample,
+  },
 } as const;
