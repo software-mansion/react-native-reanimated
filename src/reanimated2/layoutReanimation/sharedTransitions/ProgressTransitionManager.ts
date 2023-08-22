@@ -74,20 +74,19 @@ export class ProgressTransitionManager {
       if (Platform.OS === 'android') {
         // onFinishTransitioning event is available only on Android and
         // is used to handle closing modals
-        eventHandler.onDisappear = registerEventHandler(() => {
+        eventHandler.onDisappear = registerEventHandler((e) => {
           'worklet';
+          console.log('onDisappear', e);
           global.ProgressTransitionRegister.onAndroidFinishTransitioning();
         }, 'onFinishTransitioning');
       } else if (Platform.OS === 'ios') {
         // topDisappear event is required to handle closing modals on iOS
-        eventHandler.onDisappear = registerEventHandler((e) => {
+        eventHandler.onDisappear = registerEventHandler(() => {
           'worklet';
-          console.log('onDisappear', e);
           global.ProgressTransitionRegister.onTransitionEnd(true);
         }, 'topDisappear');
         eventHandler.onSwipeDismiss = registerEventHandler(() => {
           'worklet';
-          console.log('onSwipeDismiss');
           global.ProgressTransitionRegister.onTransitionEnd();
         }, 'topGestureCancel');
       }
@@ -134,19 +133,24 @@ function createProgressTransitionRegister() {
       viewTag: number,
       progressAnimation: ProgressAnimation
     ) => {
+      console.log('addProgressAnimation', viewTag);
       if (currentTransitions.size > 0) {
-        isTransitionRestart = true;
+        // there is no need to prevent cleaning on android
+        isTransitionRestart = Platform.OS !== 'android';
       }
       progressAnimations.set(viewTag, progressAnimation);
     },
     removeProgressAnimation: (viewTag: number) => {
+      console.log('removeProgressAnimation', viewTag);
       if (currentTransitions.size > 0) {
-        isTransitionRestart = true;
+        // there is no need to prevent cleaning on android
+        isTransitionRestart = Platform.OS !== 'android';
       }
       // Remove the animation config after the transition is finished
       toRemove.add(viewTag);
     },
     onTransitionStart: (viewTag: number, snapshot: any) => {
+      console.log('onTransitionStart', viewTag);
       if (isTransitionRestart) {
         skipCleaning = true;
       }
@@ -159,7 +163,6 @@ function createProgressTransitionRegister() {
       for (const viewTag of currentTransitions) {
         const progressAnimation = progressAnimations.get(viewTag);
         if (!progressAnimation) {
-          console.log(progressAnimations, viewTag);
           continue;
         }
         const snapshot = snapshots.get(viewTag);
@@ -167,21 +170,22 @@ function createProgressTransitionRegister() {
       }
     },
     onAndroidFinishTransitioning: () => {
+      console.log('onAndroidFinishTransitioning');
       if (toRemove.size > 0) {
         // it should be ran only on modal closing
         progressTransitionManager.onTransitionEnd();
       }
     },
     onTransitionEnd: (removeViews = false) => {
+      console.log('onTransitionEnd', removeViews);
       if (currentTransitions.size == 0) {
         toRemove.clear()
         return;
       }
-      console.log('onTransitionEnd');
       if (skipCleaning) {
         skipCleaning = false;
         isTransitionRestart = false;
-        console.log('---omitCleaning');
+        console.log('--- skipCleaning');
         return;
       }
       for (const viewTag of currentTransitions) {
@@ -191,6 +195,7 @@ function createProgressTransitionRegister() {
       if (isTransitionRestart) {
         // on transition restart, progressAnimations should be saved 
         // because they potentially can be used in the next transition
+        console.log('--- isTransitionRestart');
         return;
       }
       snapshots.clear();
