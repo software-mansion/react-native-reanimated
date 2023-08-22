@@ -78,6 +78,8 @@ import ProgressTransitionExample from './SharedElementTransitions/ProgressTransi
 import RainbowExample from './RainbowExample';
 import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
 import ReducedMotionExample from './ReducedMotionExample';
+import ReducedMotionLayoutExample from './LayoutAnimations/ReducedMotionLayoutExample';
+import ReducedMotionSharedExample from './SharedElementTransitions/ReducedMotionSharedExample';
 import RefExample from './RefExample';
 import RestoreStateExample from './SharedElementTransitions/RestoreState';
 import ScreenStackExample from './ScreenStackExample';
@@ -549,6 +551,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Carousel',
     screen: Carousel,
   },
+  ReducedMotionLayoutExample: {
+    title: '[LA] Reduced Motion',
+    screen: ReducedMotionLayoutExample,
+  },
 
   // Shared Element Transitions
 
@@ -595,5 +601,9 @@ export const EXAMPLES: Record<string, Example> = {
   DuplicateTagsExample: {
     title: '[SET] Duplicate Tags',
     screen: DuplicateTagsExample,
+  },
+  ReducedMotionSharedExample: {
+    title: '[SET] Reduced Motion',
+    screen: ReducedMotionSharedExample,
   },
 } as const;
