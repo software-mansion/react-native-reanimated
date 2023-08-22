@@ -65,18 +65,16 @@ export class ProgressTransitionManager {
         },
         eventPrefix + 'TransitionProgress'
       );
-      eventHandler.onAppear = registerEventHandler((e) => {
+      eventHandler.onAppear = registerEventHandler(() => {
         'worklet';
-        console.log('onAppear', e);
         global.ProgressTransitionRegister.onTransitionEnd(false);
       }, eventPrefix + 'Appear');
 
       if (Platform.OS === 'android') {
         // onFinishTransitioning event is available only on Android and
         // is used to handle closing modals
-        eventHandler.onDisappear = registerEventHandler((e) => {
+        eventHandler.onDisappear = registerEventHandler(() => {
           'worklet';
-          console.log('onDisappear', e);
           global.ProgressTransitionRegister.onAndroidFinishTransitioning();
         }, 'onFinishTransitioning');
       } else if (Platform.OS === 'ios') {
