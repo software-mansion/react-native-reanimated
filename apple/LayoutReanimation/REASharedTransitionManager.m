@@ -21,10 +21,10 @@
   NSMutableArray<REAUIView *> *_removedViews;
   NSMutableSet<REAUIView *> *_viewsWithCanceledAnimation;
   NSMutableDictionary<NSNumber *, NSNumber *> *_disableCleaningForView;
-  NSMutableDictionary<NSNumber *, UIView *> *_temopraryViewRegistry;
+  NSMutableDictionary<NSNumber *, REAUIView *> *_temopraryViewRegistry;
   NSMutableSet<NSNumber *> *_layoutedSharedViewsTags;
   NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
-  NSMutableSet<UIView *> *_reparentedViews;
+  NSMutableSet<REAUIView *> *_reparentedViews;
   BOOL _isStackDropped;
   BOOL _isAsyncSharedTransitionConfigured;
   BOOL _isConfigured;
@@ -77,7 +77,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (REAUIView *)getTransitioningView:(NSNumber *)tag
 {
-  UIView *view = _currentSharedTransitionViews[tag];
+  REAUIView *view = _currentSharedTransitionViews[tag];
   if (view == nil) {
     return _temopraryViewRegistry[tag];
   }
@@ -618,7 +618,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     [_sharedTransitionInParentIndex removeObjectForKey:viewTag];
   }
 
-  UIView *targetView = sharedElement.targetView;
+  REAUIView *targetView = sharedElement.targetView;
   targetView.hidden = NO;
   if ([_viewsToHide containsObject:viewTag]) {
     view.hidden = YES;
