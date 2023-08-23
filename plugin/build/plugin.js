@@ -933,13 +933,13 @@ var require_addCustomGlobals = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.addCustomGlobals = void 0;
     var globals_12 = require_globals();
-    var addCustomGlobals = function() {
+    function addCustomGlobals() {
       if (this.opts && Array.isArray(this.opts.globals)) {
         this.opts.globals.forEach((name) => {
           globals_12.globals.add(name);
         });
       }
-    };
+    }
     exports2.addCustomGlobals = addCustomGlobals;
   }
 });

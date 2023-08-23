@@ -1458,7 +1458,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('uses `runWithTaggedExceptions` for worklets', () => {
+    it('throws a tagged exception when worklet processing fails', () => {
       const input = html`<script>
         const foo = useAnimatedStyle(() => {
           return <Image />;
