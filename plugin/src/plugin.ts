@@ -6,6 +6,7 @@ import { processIfWorkletNode } from './processIfWorkletNode';
 import { processInlineStylesWarning } from './processInlineStylesWarning';
 import { processIfCallback } from './processIfCallback';
 import { addCustomGlobals } from './addCustomGlobals';
+import { initializeGlobals } from './globals';
 
 module.exports = function (): PluginItem {
   function runWithTaggedExceptions(fun: () => void) {
@@ -19,6 +20,7 @@ module.exports = function (): PluginItem {
   return {
     pre() {
       runWithTaggedExceptions(() => {
+        initializeGlobals();
         addCustomGlobals.call(this);
       });
     },

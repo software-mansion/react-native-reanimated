@@ -165,13 +165,13 @@ var require_buildWorkletString = __commonJS({
   }
 });
 
-// lib/commonObjects.js
-var require_commonObjects = __commonJS({
-  "lib/commonObjects.js"(exports2) {
+// lib/globals.js
+var require_globals = __commonJS({
+  "lib/globals.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.globals = void 0;
-    exports2.globals = /* @__PURE__ */ new Set([
+    exports2.initializeGlobals = exports2.globals = exports2.defaultGlobals = void 0;
+    exports2.defaultGlobals = /* @__PURE__ */ new Set([
       "globalThis",
       "Infinity",
       "NaN",
@@ -269,6 +269,10 @@ var require_commonObjects = __commonJS({
       "_notifyAboutEnd",
       "_runOnUIQueue"
     ]);
+    function initializeGlobals() {
+      exports2.globals = new Set(exports2.defaultGlobals);
+    }
+    exports2.initializeGlobals = initializeGlobals;
   }
 });
 
@@ -287,7 +291,7 @@ var require_makeWorklet = __commonJS({
     var assert_1 = require("assert");
     var path_1 = require("path");
     var buildWorkletString_1 = require_buildWorkletString();
-    var commonObjects_1 = require_commonObjects();
+    var globals_12 = require_globals();
     var utils_1 = require_utils();
     var REAL_VERSION = require("../../package.json").version;
     var MOCK_VERSION = "x.y.z";
@@ -424,7 +428,7 @@ var require_makeWorklet = __commonJS({
             return;
           }
           const name = path.node.name;
-          if (commonObjects_1.globals.has(name)) {
+          if (globals_12.globals.has(name)) {
             return;
           }
           if ("id" in fun.node && fun.node.id && fun.node.id.name === name) {
@@ -928,11 +932,11 @@ var require_addCustomGlobals = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.addCustomGlobals = void 0;
-    var commonObjects_1 = require_commonObjects();
+    var globals_12 = require_globals();
     var addCustomGlobals = function() {
-      if (this.opts != null && Array.isArray(this.opts.globals)) {
+      if (this.opts && Array.isArray(this.opts.globals)) {
         this.opts.globals.forEach((name) => {
-          commonObjects_1.globals.add(name);
+          globals_12.globals.add(name);
         });
       }
     };
@@ -947,6 +951,7 @@ var processIfWorkletNode_1 = require_processIfWorkletNode();
 var processInlineStylesWarning_1 = require_processInlineStylesWarning();
 var processIfCallback_1 = require_processIfCallback();
 var addCustomGlobals_1 = require_addCustomGlobals();
+var globals_1 = require_globals();
 module.exports = function() {
   function runWithTaggedExceptions(fun) {
     try {
@@ -958,6 +963,7 @@ module.exports = function() {
   return {
     pre() {
       runWithTaggedExceptions(() => {
+        (0, globals_1.initializeGlobals)();
         addCustomGlobals_1.addCustomGlobals.call(this);
       });
     },
