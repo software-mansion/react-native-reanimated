@@ -314,6 +314,11 @@
       }
     }
 
+    // Clean up
+    // below line serves as this one uiManager->_layoutAnimationGroup = nil;, because we don't have access to the
+    // private field
+    [uiManager setValue:nil forKey:@"_layoutAnimationGroup"];
+
     [originalSelf.animationsManager viewsDidLayout];
     // Reanimated changes /end
   };
