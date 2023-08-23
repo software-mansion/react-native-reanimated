@@ -1,17 +1,13 @@
 import React from 'react';
 import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import Animated, {
+  clamp,
   SensorType,
   useAnimatedSensor,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-
-function clamp(num: number, min: number, max: number) {
-  'worklet';
-  return Math.min(Math.max(num, min), max);
-}
 
 const OFFSET_X = 100; // in px
 const OFFSET_Y = 100; // in px
