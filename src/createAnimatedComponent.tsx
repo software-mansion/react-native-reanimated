@@ -68,7 +68,8 @@ function maybeBuild(
   layoutAnimationOrBuilder:
     | ILayoutAnimationBuilder
     | LayoutAnimationFunction
-    | Keyframe
+    | Keyframe,
+  style?: StyleProps
 ): LayoutAnimationFunction | Keyframe {
   const isAnimationBuilder = (
     value: ILayoutAnimationBuilder | LayoutAnimationFunction | Keyframe
@@ -77,7 +78,7 @@ function maybeBuild(
     typeof layoutAnimationOrBuilder.build === 'function';
 
   if (isAnimationBuilder(layoutAnimationOrBuilder)) {
-    return layoutAnimationOrBuilder.build();
+    return layoutAnimationOrBuilder.build(style);
   } else {
     return layoutAnimationOrBuilder;
   }
@@ -645,7 +646,7 @@ export default function createAnimatedComponent(
             configureLayoutAnimations(
               tag,
               LayoutAnimationType.ENTERING,
-              maybeBuild(entering)
+              maybeBuild(entering, this.props.style)
             );
           }
           if (exiting) {

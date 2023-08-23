@@ -1,3 +1,4 @@
+import type { StyleProps } from 'src/reanimated2/commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 import type {
@@ -55,24 +56,33 @@ export class RollInRight
     return new RollInRight() as InstanceType<T>;
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (style?: StyleProps): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
+    // If view has its own transformations we must apply them above our animation
+    const viewTransformations = style?.transform || [];
+
     return (values: EntryExitAnimationsValues) => {
       'worklet';
+
       return {
         animations: {
           transform: [
+            ...viewTransformations,
             { translateX: delayFunction(delay, animation(0, config)) },
             { rotate: delayFunction(delay, animation('0deg', config)) },
           ],
         },
         initialValues: {
-          transform: [{ translateX: values.windowWidth }, { rotate: '180deg' }],
+          transform: [
+            ...viewTransformations,
+            { translateX: values.windowWidth },
+            { rotate: '180deg' },
+          ],
           ...initialValues,
         },
         callback: callback,

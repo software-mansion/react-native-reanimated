@@ -92,7 +92,7 @@ export type LayoutAnimationStartFunction = (
 ) => void;
 
 export interface ILayoutAnimationBuilder {
-  build: () => LayoutAnimationFunction;
+  build: (style?: StyleProps) => LayoutAnimationFunction;
 }
 
 export interface BaseLayoutAnimationConfig {
