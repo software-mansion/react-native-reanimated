@@ -111,9 +111,30 @@ const updatePropsDOM = (
   if (Array.isArray(domStyle.transform) && createTransformValue !== undefined) {
     domStyle.transform = createTransformValue(domStyle.transform);
   }
+
   for (const key in domStyle) {
     (component.style as StyleProps)[key] = domStyle[key];
   }
+
+  const textShadow = {
+    height:
+      'textShadowOffset' in domStyle
+        ? `${domStyle.textShadowOffset.height}`
+        : '0px',
+    width:
+      'textShadowOffset' in domStyle
+        ? `${domStyle.textShadowOffset.width}`
+        : '0px',
+    radius: 'textShadowRadius' in domStyle ? domStyle.textShadowRadius : '0px',
+    color:
+      'textShadowColor' in domStyle
+        ? domStyle.textShadowColor
+        : 'rgba(0,0,0,0)',
+  };
+
+  (
+    component.style as StyleProps
+  ).textShadow = `${textShadow.height} ${textShadow.width} ${textShadow.radius} ${textShadow.color}`;
 };
 
 export default reanimatedJS;
