@@ -131,7 +131,6 @@ void NativeProxy::installJSIBindings(
   auto &rnRuntime = *rnRuntime_;
   auto isReducedMotion = getIsReducedMotion();
   RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
-
   registerEventHandler();
   setupLayoutAnimations();
 
@@ -508,7 +507,8 @@ void NativeProxy::setupLayoutAnimations() {
                 yogaValues.setProperty(rt, key, value);
               }
             } catch (std::invalid_argument e) {
-              throw std::runtime_error("Failed to convert value to number");
+              throw std::runtime_error(
+                  "[Reanimated] Failed to convert value to number.");
             }
           }
           nativeReanimatedModule->layoutAnimationsManager()

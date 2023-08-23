@@ -64,7 +64,7 @@ public class ReanimatedSensorListener implements SensorEventListener {
                 -quaternion[2], // qz -> we set -qy to match iOS
                 quaternion[0], // qw
                 // make Android consistent with iOS, which is better documented here:
-                // https://developer.apple.com/documentation/coremotion/getting_processed_device-motion_data/understanding_reference_frames_and_device_attitude
+                // https://developer.apple.com/documentation/coremotion/getting_processed_device-motion_data/
                 -orientation[0], // yaw
                 -orientation[1], // pitch
                 orientation[2] // roll
@@ -87,7 +87,7 @@ public class ReanimatedSensorListener implements SensorEventListener {
           break;
         }
       default:
-        throw new IllegalArgumentException("[Reanimated] Unknown sensor type");
+        throw new IllegalArgumentException("[Reanimated] Unknown sensor type.");
     }
   }
 

@@ -45,7 +45,7 @@ export function buildWorkletString(
     fun.program.body.find((obj) => isExpressionStatement(obj)) ||
     undefined) as FunctionDeclaration | ExpressionStatement | undefined;
 
-  assert(draftExpression, "'draftExpression' is undefined");
+  assert(draftExpression, '[Reanimated] `draftExpression` is undefined.');
 
   const expression = isFunctionDeclaration(draftExpression)
     ? draftExpression
@@ -57,7 +57,7 @@ export function buildWorkletString(
   );
   assert(
     isBlockStatement(expression.body),
-    "'expression.body' is not a 'BlockStatement'"
+    '[Reanimated] `expression.body` is not a `BlockStatement`'
   );
 
   const workletFunction = functionExpression(
@@ -68,7 +68,7 @@ export function buildWorkletString(
 
   const code = generate(workletFunction).code;
 
-  assert(inputMap, "'inputMap' is undefined");
+  assert(inputMap, '[Reanimated] `inputMap` is undefined.');
 
   const includeSourceMap = !isRelease();
 
@@ -95,7 +95,7 @@ export function buildWorkletString(
     comments: false,
   });
 
-  assert(transformed, "'transformed' is null");
+  assert(transformed, '[Reanimated] `transformed` is null.');
 
   let sourceMap;
   if (includeSourceMap) {
