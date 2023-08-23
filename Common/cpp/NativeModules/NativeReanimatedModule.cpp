@@ -321,7 +321,8 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
     shareable =
         std::make_shared<ShareableString>(value.getSymbol(rt).toString(rt));
   } else {
-    throw std::runtime_error("attempted to convert an unsupported value type");
+    throw std::runtime_error(
+        "[Reanimated] Attempted to convert an unsupported value type.");
   }
   return ShareableJSRef::newHostObject(rt, shareable);
 }

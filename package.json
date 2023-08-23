@@ -126,6 +126,7 @@
     "@types/react-test-renderer": "17.0.2",
     "@typescript-eslint/eslint-plugin": "^5.11.0",
     "@typescript-eslint/parser": "^5.11.0",
+    "axios": "^1.4.0",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^27.5.1",
     "babel-plugin-module-resolver": "^5.0.0",

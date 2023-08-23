@@ -73,10 +73,8 @@ export class NativeReanimated {
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new Error(
-        `[Reanimated] The native part of Reanimated doesn't seem to be initialized. This could be caused by\n\
-- not rebuilding the app after installing or upgrading Reanimated\n\
-- trying to run Reanimated on an unsupported platform\n\
-- running in a brownfield app without manually initializing the native library`
+        `[Reanimated] Native part of Reanimated doesn't seem to be initialized.
+See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#Native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
     checkCppVersion();

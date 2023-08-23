@@ -56,9 +56,7 @@ function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
       /([A-Za-z]*)(-?\d*\.?\d*)([eE][-+]?[0-9]+)?([A-Za-z%]*)/
     );
     if (!match) {
-      throw Error(
-        "Couldn't parse animation value. Check if there isn't any typo."
-      );
+      throw new Error("[Reanimated] Couldn't parse animation value.");
     }
     const prefix = match[1];
     const suffix = match[4];
