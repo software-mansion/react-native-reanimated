@@ -20,7 +20,7 @@
   NSMutableSet<NSNumber *> *_viewsToHide;
   NSMutableArray<UIView *> *_removedViews;
   NSMutableDictionary<NSNumber *, NSNumber *> *_disableCleaningForView;
-  NSMutableDictionary<NSNumber *, REAUIView *> *_temopraryViewRegistry;
+  NSMutableDictionary<NSNumber *, REAUIView *> *_removedViewRegistry;
   NSMutableSet<NSNumber *> *_layoutedSharedViewsTags;
   NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
   NSMutableSet<REAUIView *> *_reparentedViews;
@@ -53,7 +53,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _viewsToHide = [NSMutableSet new];
     _sharedTransitionManager = self;
     _disableCleaningForView = [NSMutableDictionary new];
-    _temopraryViewRegistry = [NSMutableDictionary new];
+    _removedViewRegistry = [NSMutableDictionary new];
     _layoutedSharedViewsTags = [NSMutableSet new];
     _layoutedSharedViewsFrame = [NSMutableDictionary new];
     _reparentedViews = [NSMutableSet new];
@@ -79,7 +79,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   REAUIView *view = _currentSharedTransitionViews[tag];
   if (view == nil) {
-    return _temopraryViewRegistry[tag];
+    return _removedViewRegistry[tag];
   }
   return view;
 }
@@ -322,7 +322,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     }
     for (UIView *view in currentSoureViews) {
       if (![newSoureViews containsObject:view]) {
-        _temopraryViewRegistry[view.reactTag] = view;
+        _removedViewRegistry[view.reactTag] = view;
       }
     }
     [_currentSharedTransitionViews removeAllObjects];
@@ -634,12 +634,12 @@ static REASharedTransitionManager *_sharedTransitionManager;
   if ([_removedViews containsObject:view]) {
     [_animationManager clearAnimationConfigForTag:viewTag];
   }
-  if (_temopraryViewRegistry[view.reactTag]) {
+  if (_removedViewRegistry[view.reactTag]) {
     return;
   }
   if ([_reparentedViews count] == 0) {
     [_transitionContainer removeFromSuperview];
-    [_temopraryViewRegistry removeAllObjects];
+    [_removedViewRegistry removeAllObjects];
     [_currentSharedTransitionViews removeAllObjects];
     [_removedViews removeAllObjects];
     [_sharedElements removeAllObjects];
