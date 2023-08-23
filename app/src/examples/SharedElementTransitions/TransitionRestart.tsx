@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, Button, StyleSheet } from 'react-native';
+import { View, Button, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
@@ -26,11 +26,11 @@ function navigationSequence(
   }, 150);
 }
 
-function SharedView({ style }) {
+function SharedView({ style }: { style: StyleProp<ViewStyle> }) {
   return <Animated.View style={style} sharedTransitionTag="tag1" />;
 }
 
-function SharedViewWithAnimation({ style }) {
+function SharedViewWithAnimation({ style }: { style: StyleProp<ViewStyle> }) {
   return (
     <Animated.View
       style={style}
