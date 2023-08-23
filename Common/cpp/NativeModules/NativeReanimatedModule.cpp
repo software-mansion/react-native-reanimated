@@ -530,7 +530,7 @@ bool NativeReanimatedModule::handleRawEvent(
   }
 
   int tag = eventTarget->getTag();
-  std::string eventType = rawEvent.type;
+  const auto &eventType = rawEvent.type;
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
   }
