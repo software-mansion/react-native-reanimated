@@ -34,6 +34,7 @@ jobs:
       - name: Build app
         working-directory: app
         run: yarn react-native run-ios
+        shell: bash
 
   build_android:
     runs-on: ubuntu-latest
