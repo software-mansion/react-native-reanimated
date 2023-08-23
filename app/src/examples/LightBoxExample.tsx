@@ -237,7 +237,7 @@ const images: ExampleImage[] = Array.from({ length: 30 }, (_, index) => {
   };
 });
 
-export default function LightBoxExample(): React.ReactElement {
+export default function LightBoxExample() {
   const [activeImage, setActiveImage] = useState<ActiveExampleImage | null>(
     null
   );

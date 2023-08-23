@@ -53,7 +53,7 @@ function Box({ label, state }: { label: string; state: boolean }) {
   );
 }
 
-export default function CustomLayoutAnimationScreen(): React.ReactElement {
+export default function CustomLayoutAnimationScreen() {
   const [state, setState] = useState(true);
   return (
     <View style={styles.marginTop}>

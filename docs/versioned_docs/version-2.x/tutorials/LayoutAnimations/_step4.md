@@ -11,7 +11,7 @@ function Participant({
 }: {
   name: string;
   onRemove: () => void;
-}): React.ReactElement {
+}) {
   return (
     <Animated.View
       entering={LightSpeedInLeft}

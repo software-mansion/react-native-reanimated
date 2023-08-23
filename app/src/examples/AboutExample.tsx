@@ -23,7 +23,18 @@ function getMode() {
 }
 
 function getRuntime() {
-  return 'HermesInternal' in global ? 'Hermes' : 'JSC'; // TODO: V8
+  if ('HermesInternal' in global) {
+    const version =
+      // @ts-ignore this is fine
+      global.HermesInternal?.getRuntimeProperties?.()['OSS Release Version'];
+    return `Hermes (${version})`;
+  }
+  if ('_v8runtime' in global) {
+    // @ts-ignore this is fine
+    const version = global._v8runtime().version;
+    return `V8 (${version})`;
+  }
+  return 'JSC';
 }
 
 function getArchitecture() {

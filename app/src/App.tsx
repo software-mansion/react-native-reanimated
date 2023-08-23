@@ -32,6 +32,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXAMPLES } from './examples';
 import React from 'react';
+import { useReducedMotion } from 'react-native-reanimated';
 
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
   Home: undefined;
@@ -167,6 +168,8 @@ export default function App() {
     }
   }, [isReady]);
 
+  const shouldReduceMotion = useReducedMotion();
+
   if (!isReady) {
     return (
       <View style={[styles.container, styles.center]}>
@@ -199,6 +202,7 @@ export default function App() {
               name={name}
               component={EXAMPLES[name].screen}
               options={{
+                animation: shouldReduceMotion ? 'fade' : 'default',
                 headerTitle: EXAMPLES[name].title,
                 title: EXAMPLES[name].title,
                 headerLeft: Platform.OS === 'web' ? BackButton : undefined,

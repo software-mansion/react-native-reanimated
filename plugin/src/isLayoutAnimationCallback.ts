@@ -96,6 +96,7 @@ const EntryExitAnimations = new Set([
 
 const LayoutTransitions = new Set([
   'Layout',
+  'LinearTransition',
   'SequencedTransition',
   'FadingTransition',
   'JumpingTransition',
