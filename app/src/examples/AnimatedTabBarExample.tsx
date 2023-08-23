@@ -238,7 +238,7 @@ const tabBarStyles = StyleSheet.create({
   },
 });
 
-export default function AnimatedTabBarExample(): React.ReactElement {
+export default function AnimatedTabBarExample() {
   return (
     <View style={tabBarStyles.container}>
       <View style={tabBarStyles.dummyPusher} />

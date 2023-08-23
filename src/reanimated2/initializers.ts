@@ -80,7 +80,7 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
   } else if (category === 'RemoteFunction') {
     const fun = () => {
       throw new Error(`[Reanimated] Tried to synchronously call a non-worklet function on the UI thread.
-See \`http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread\` for more details.`);
+See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread\` for more details.`);
     };
     fun.__remoteFunction = objectToUnpack;
     return fun;
@@ -143,7 +143,7 @@ export function initializeUIRuntime() {
   if (IS_JEST) {
     // requestAnimationFrame react-native jest's setup is incorrect as it polyfills
     // the method directly using setTimeout, therefore the callback doesn't get the
-    // expected timestamp as the only argument: https://github.com/facebook/react-native/blob/main/jest/setup.js#L28
+    // expected timestamp as the only argument: https://github.com/facebook/react-native/blob/main/packages/react-native/jest/setup.js#L28
     // We override this setup here to make sure that callbacks get the proper timestamps
     // when executed. For non-jest environments we define requestAnimationFrame in setupRequestAnimationFrame
     // @ts-ignore TypeScript uses Node definition for rAF, setTimeout, etc which returns a Timeout object rather than a number

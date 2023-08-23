@@ -8,6 +8,7 @@ import type {
   ShareableSyncDataHolderRef,
   ShadowNodeWrapper,
   ComplexWorkletFunction,
+  FlatShareableRef,
 } from './commonTypes';
 import type { AnimatedStyle } from './helperTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
@@ -21,7 +22,6 @@ declare global {
   var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var _IS_FABRIC: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
-  var _REANIMATED_VERSION_JAVA: string | undefined;
   var _REANIMATED_VERSION_JS: string | undefined;
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
   var __reanimatedModuleProxy: NativeReanimatedModule | undefined;
@@ -38,7 +38,7 @@ declare global {
   ) => void;
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
-  var _makeShareableClone: <T>(value: T) => ShareableRef<T>;
+  var _makeShareableClone: <T>(value: T) => FlatShareableRef<T>;
   var _updateDataSynchronously: (
     dataHolder: ShareableSyncDataHolderRef<any>,
     data: ShareableRef<any>

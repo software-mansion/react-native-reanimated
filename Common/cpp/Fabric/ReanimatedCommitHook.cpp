@@ -3,6 +3,7 @@
 #include <react/renderer/core/ComponentDescriptor.h>
 
 #include "ReanimatedCommitHook.h"
+#include "ReanimatedCommitMarker.h"
 #include "ShadowTreeCloner.h"
 
 using namespace facebook::react;
@@ -24,7 +25,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &,
     RootShadowNode::Shared const &,
     RootShadowNode::Unshared const &newRootShadowNode) const noexcept {
-  if (propsRegistry_->isLastReanimatedRoot(newRootShadowNode)) {
+  if (ReanimatedCommitMarker::isReanimatedCommit()) {
     // ShadowTree commited by Reanimated, no need to apply updates from
     // PropsRegistry
     return newRootShadowNode;

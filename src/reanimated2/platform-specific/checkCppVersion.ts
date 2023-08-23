@@ -5,31 +5,32 @@ export function checkCppVersion() {
   if (cppVersion === undefined) {
     throw new Error(
       `[Reanimated] Couldn't determine the version of the native part of Reanimated.
-See \`http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#couldnt-determine-the-version-of-the-native-part-of-reanimated\` for more details.`
+See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#couldnt-determine-the-version-of-the-native-part-of-reanimated\` for more details.`
     );
   }
   const ok = matchVersion(jsVersion, cppVersion);
   if (!ok) {
     throw new Error(
       `[Reanimated] Mismatch between JavaScript part and native part of Reanimated (${jsVersion} vs ${cppVersion}).
-See \`http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-mismatch-between-javascript-part-and-native-part-of-reanimated\` for more details.`
+See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reanimated-mismatch-between-javascript-part-and-native-part-of-reanimated\` for more details.`
     );
   }
 }
 
 export function maybeCheckJavaVersion() {
+  // @ts-ignore hehe
   const javaVersion = global._REANIMATED_VERSION_JAVA;
   if (javaVersion === undefined) {
     throw new Error(
       `[Reanimated] Couldn't determine the version of the native part of Reanimated.
-See \`http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-couldnt-determine-the-version-of-the-native-part-of-reanimated\` for more details.`
+See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reanimated-couldnt-determine-the-version-of-the-native-part-of-reanimated\` for more details.`
     );
   }
   const ok = matchVersion(jsVersion, javaVersion);
   if (!ok) {
     throw new Error(
       `[Reanimated] Mismatch between JavaScript part and Java part of Reanimated (${jsVersion} vs ${javaVersion}).
-See \`http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-javascript-part-and-native-part-of-reanimated\` for more details.`
+See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-javascript-part-and-native-part-of-reanimated\` for more details.`
     );
   }
 }

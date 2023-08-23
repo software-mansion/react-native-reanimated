@@ -6,7 +6,7 @@ import {
   isMemberExpression,
   isExpression,
 } from '@babel/types';
-import { ExplicitWorklet } from './types';
+import type { ExplicitWorklet } from './types';
 
 const gestureHandlerGestureObjects = new Set([
   'Tap',

@@ -4,17 +4,20 @@ const path = require('path');
 const util = require('util');
 const fsp = fs.promises;
 const readFile = util.promisify(fs.readFile);
-const fetch = require('node-fetch');
+const fetch = require('axios').get;
 
 const directories = [
   'android',
   'app',
-  'common',
+  'apple',
+  'Common',
+  'docs',
   'Example',
   'FabricExample',
-  'ios',
   'MacOSExample',
   'plugin',
+  'scripts',
+  'src',
   'TVOSExample',
   'WebExample',
 ];
@@ -34,13 +37,14 @@ const extensions = [
   '.java',
   '.gradle',
   '.podspec',
+  '.rb',
 ];
 
-// also every hidden directory is ignored
+// Every hidden directory is ignored as well.
 const ignoredDirectories = ['node_modules', 'Pods', 'lib', 'build'];
 
 const urlRegex =
-  /\b((http|https):\/\/?)[^\s()<>`]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
+  /\b((http|https):\/\/?)[^\s<>[\]`]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
 
 async function getFiles(dir) {
   const dirents = await fsp.readdir(dir, { withFileTypes: true });

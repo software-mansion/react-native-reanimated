@@ -1,5 +1,5 @@
-import { BabelFile } from '@babel/core';
-import {
+import type { BabelFile } from '@babel/core';
+import type {
   FunctionDeclaration,
   FunctionExpression,
   ObjectMethod,

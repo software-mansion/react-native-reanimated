@@ -40,7 +40,7 @@ export interface NativeReanimatedModule {
   ): number;
   unregisterEventHandler(id: number): void;
   getViewProp<T>(
-    viewTag: string,
+    viewTag: number,
     propName: string,
     callback?: (result: T) => void
   ): Promise<T>;
@@ -91,11 +91,10 @@ export class NativeReanimated {
       const { ReanimatedModule } = NativeModules;
       ReanimatedModule?.installTurboModule();
     }
-
     if (global.__reanimatedModuleProxy === undefined) {
       throw new Error(
         `[Reanimated] Native part of Reanimated doesn't seem to be initialized.
-See http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#Native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
+See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#Native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
     if (!shouldBeUseNotDebug) {
@@ -173,7 +172,7 @@ See http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#Na
   }
 
   getViewProp<T>(
-    viewTag: string,
+    viewTag: number,
     propName: string,
     callback?: (result: T) => void
   ) {

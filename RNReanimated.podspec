@@ -3,10 +3,7 @@ require_relative './scripts/reanimated_utils'
 
 reanimated_package_json = JSON.parse(File.read(File.join(__dir__, "package.json")))
 config = find_config()
-assert_no_multiple_instances(config)
-assert_no_reanimated2_with_new_architecture(reanimated_package_json)
 assert_latest_react_native_with_new_architecture(config, reanimated_package_json)
-
 fabric_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
 is_release = ENV['PRODUCTION'] == '1'
 using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
@@ -18,7 +15,7 @@ boost_compiler_flags = '-Wno-documentation'
 fabric_flags = fabric_enabled ? '-DRCT_NEW_ARCH_ENABLED' : ''
 example_flag = config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP' : ''
 version_flag = '-DREANIMATED_VERSION=' + reanimated_package_json["version"]
-debug_flag = is_release ? '-DNDEBUG' : '-DDEBUG'
+debug_flag = is_release ? '-DNDEBUG' : ''
 
 Pod::Spec.new do |s|
   
@@ -32,11 +29,11 @@ Pod::Spec.new do |s|
   s.license      = "MIT"
   # s.license    = { :type => "MIT", :file => "FILE_LICENSE" }
   s.author       = { "author" => "author@domain.cn" }
-  s.platforms    = { :ios => "9.0", :tvos => "9.0" }
+  s.platforms    = { :ios => "9.0", :tvos => "9.0", :osx => "10.14" }
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
   s.source_files = [
-    "ios/**/*.{mm,h,m}",
+    "apple/**/*.{mm,h,m}",
     "Common/cpp/**/*.{cpp,h}"
   ]
 

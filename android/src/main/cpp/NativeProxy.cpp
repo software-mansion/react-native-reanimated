@@ -142,15 +142,7 @@ void NativeProxy::installJSIBindings(
       ReanimatedRuntime::make(rnRuntime_, jsQueue);
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
-      jsCallInvoker_,
-      uiScheduler_,
-      uiRuntime,
-#ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
-#else
-      bindThis(&NativeProxy::obtainProp),
-#endif
-      getPlatformDependentMethods());
+      jsCallInvoker_, uiScheduler_, uiRuntime, getPlatformDependentMethods());
 
   uiScheduler_->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
   nativeReanimatedModule_ = nativeReanimatedModule;
@@ -408,6 +400,10 @@ void NativeProxy::handleEvent(
     jint emitterReactTag,
     jni::alias_ref<react::WritableMap> event) {
   // handles RCTEvents from RNGestureHandler
+  if (event.get() == nullptr) {
+    // Ignore events with null payload.
+    return;
+  }
   // TODO: convert event directly to jsi::Value without JSON serialization
   std::string eventAsString;
   try {
@@ -464,6 +460,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto scrollToFunction = bindThis(&NativeProxy::scrollTo);
 
   auto dispatchCommandFunction = bindThis(&NativeProxy::dispatchCommand);
+
+  auto obtainPropFunction = bindThis(&NativeProxy::obtainProp);
 #endif
 
   auto getCurrentTime = bindThis(&NativeProxy::getCurrentTime);
@@ -508,6 +506,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       dispatchCommandFunction,
       measureFunction,
       configurePropsFunction,
+      obtainPropFunction,
 #endif
       getCurrentTime,
       progressLayoutAnimation,
@@ -547,7 +546,7 @@ void NativeProxy::setupLayoutAnimations() {
               }
             } catch (std::invalid_argument e) {
               throw std::runtime_error(
-                  "[Reanimated] Failed to convert value to number");
+                  "[Reanimated] Failed to convert value to number.");
             }
           }
           nativeReanimatedModule->layoutAnimationsManager()
