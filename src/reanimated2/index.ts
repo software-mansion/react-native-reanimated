@@ -59,6 +59,7 @@ export {
   ExtrapolationConfig,
   ExtrapolationType,
   interpolate,
+  clamp,
 } from './interpolation';
 export {
   Extrapolate,
@@ -204,7 +205,7 @@ export {
   SharedTransition,
   SharedTransitionType,
 } from './layoutReanimation';
-export { getRelativeCoords, ComponentCoords, clamp } from './utils';
+export { getRelativeCoords, ComponentCoords } from './utils';
 export {
   StyleProps,
   SharedValue,

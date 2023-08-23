@@ -185,3 +185,14 @@ export function interpolate(
 
   return internalInterpolate(x, narrowedInput, extrapolationConfig);
 }
+
+/**
+ * @param value value to be clamped
+ * @param min minimum allowed value
+ * @param max maximum allowed value
+ * Clamps given value within a range of values between a defined minimum bound and a maximum bound.
+ */
+export function clamp(value: number, min: number, max: number) {
+  'worklet';
+  return Math.min(Math.max(value, min), max);
+}
