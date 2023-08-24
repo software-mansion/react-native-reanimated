@@ -32,7 +32,6 @@ import type {
   BaseAnimationBuilder,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
-  LayoutAnimationFunction,
 } from './reanimated2/layoutReanimation';
 import {
   SharedTransition,
@@ -56,32 +55,13 @@ import type { AnimateProps } from './reanimated2/helperTypes';
 import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
 import { JSPropUpdater } from './JSPropUpdater';
 import { getReduceMotionFromConfig } from './reanimated2/animation/util';
+import { maybeBuild } from './animationBuilder';
 
 const IS_WEB = isWeb();
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
   // event is used.
-}
-
-function maybeBuild(
-  layoutAnimationOrBuilder:
-    | ILayoutAnimationBuilder
-    | LayoutAnimationFunction
-    | Keyframe,
-  style?: StyleProps
-): LayoutAnimationFunction | Keyframe {
-  const isAnimationBuilder = (
-    value: ILayoutAnimationBuilder | LayoutAnimationFunction | Keyframe
-  ): value is ILayoutAnimationBuilder =>
-    'build' in layoutAnimationOrBuilder &&
-    typeof layoutAnimationOrBuilder.build === 'function';
-
-  if (isAnimationBuilder(layoutAnimationOrBuilder)) {
-    return layoutAnimationOrBuilder.build(style);
-  } else {
-    return layoutAnimationOrBuilder;
-  }
 }
 
 type NestedArray<T> = T | NestedArray<T>[];
@@ -639,14 +619,14 @@ export default function createAnimatedComponent(
             configureLayoutAnimations(
               tag,
               LayoutAnimationType.LAYOUT,
-              maybeBuild(layout)
+              maybeBuild(layout, this.props?.style)
             );
           }
           if (entering) {
             configureLayoutAnimations(
               tag,
               LayoutAnimationType.ENTERING,
-              maybeBuild(entering, this.props.style)
+              maybeBuild(entering, this.props?.style)
             );
           }
           if (exiting) {
@@ -659,7 +639,7 @@ export default function createAnimatedComponent(
               configureLayoutAnimations(
                 tag,
                 LayoutAnimationType.EXITING,
-                maybeBuild(exiting)
+                maybeBuild(exiting, this.props?.style)
               );
             }
           }

@@ -4,7 +4,7 @@ import type {
   AnimationFunction,
   LayoutAnimationFunction,
 } from './commonTypes';
-import type { StyleProps } from '../../commonTypes';
+
 import { ReduceMotion } from '../../commonTypes';
 import { getReduceMotionFromConfig } from '../../animation/util';
 
@@ -19,10 +19,7 @@ export class BaseAnimationBuilder {
     this: T
   ) => InstanceType<T>;
 
-  build = (
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    style?: StyleProps
-  ): EntryExitAnimationFunction | LayoutAnimationFunction => {
+  build = (): EntryExitAnimationFunction | LayoutAnimationFunction => {
     throw new Error('[Reanimated] Unimplemented method in child class.');
   };
 
@@ -126,10 +123,9 @@ export class BaseAnimationBuilder {
   }
 
   static build<T extends typeof BaseAnimationBuilder>(
-    this: T,
-    style?: StyleProps
+    this: T
   ): EntryExitAnimationFunction | LayoutAnimationFunction {
     const instance = this.createInstance();
-    return instance.build(style);
+    return instance.build();
   }
 }
