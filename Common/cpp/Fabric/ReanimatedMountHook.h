@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef RCT_NEW_ARCH_ENABLED &&REACT_NATIVE_MINOR_VERSION >= 73
+#if defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 73
 
 #include "PropsRegistry.h"
 
@@ -31,4 +31,4 @@ class ReanimatedMountHook : public UIManagerMountHook {
 
 } // namespace reanimated
 
-#endif // RCT_NEW_ARCH_ENABLED && REACT_NATIVE_MINOR_VERSION >= 73
+#endif // defined(RCT_NEW_ARCH_ENABLED) &&REACT_NATIVE_MINOR_VERSION >= 73
