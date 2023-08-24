@@ -120,9 +120,10 @@ const updatePropsDOM = (
   }
 
   if (
-    domStyle.textShadowColor ||
-    domStyle.textShadowRadius ||
-    domStyle.textShadowOffset
+    createTextShadowValue !== undefined &&
+    (domStyle.textShadowColor ||
+      domStyle.textShadowRadius ||
+      domStyle.textShadowOffset)
   ) {
     domStyle.textShadow = createTextShadowValue({
       textShadowColor: domStyle.textShadowColor,
