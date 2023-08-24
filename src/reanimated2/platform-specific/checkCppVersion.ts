@@ -12,7 +12,7 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
   if (!ok) {
     throw new Error(
       `[Reanimated] Mismatch between JavaScript part and native part of Reanimated (${jsVersion} vs ${cppVersion}).
-See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reanimated-mismatch-between-javascript-part-and-native-part-of-reanimated\` for more details.`
+See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-javascript-part-and-native-part-of-reanimated\` for more details.`
     );
   }
 }

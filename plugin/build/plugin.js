@@ -25,113 +25,6 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// lib/commonObjects.js
-var require_commonObjects = __commonJS({
-  "lib/commonObjects.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.globals = void 0;
-    exports2.globals = /* @__PURE__ */ new Set([
-      "globalThis",
-      "Infinity",
-      "NaN",
-      "undefined",
-      "eval",
-      "isFinite",
-      "isNaN",
-      "parseFloat",
-      "parseInt",
-      "decodeURI",
-      "decodeURIComponent",
-      "encodeURI",
-      "encodeURIComponent",
-      "escape",
-      "unescape",
-      "Object",
-      "Function",
-      "Boolean",
-      "Symbol",
-      "Error",
-      "AggregateError",
-      "EvalError",
-      "RangeError",
-      "ReferenceError",
-      "SyntaxError",
-      "TypeError",
-      "URIError",
-      "InternalError",
-      "Number",
-      "BigInt",
-      "Math",
-      "Date",
-      "String",
-      "RegExp",
-      "Array",
-      "Int8Array",
-      "Uint8Array",
-      "Uint8ClampedArray",
-      "Int16Array",
-      "Uint16Array",
-      "Int32Array",
-      "Uint32Array",
-      "BigInt64Array",
-      "BigUint64Array",
-      "Float32Array",
-      "Float64Array",
-      "Map",
-      "Set",
-      "WeakMap",
-      "WeakSet",
-      "ArrayBuffer",
-      "SharedArrayBuffer",
-      "DataView",
-      "Atomics",
-      "JSON",
-      "WeakRef",
-      "FinalizationRegistry",
-      "Iterator",
-      "AsyncIterator",
-      "Promise",
-      "GeneratorFunction",
-      "AsyncGeneratorFunction",
-      "Generator",
-      "AsyncGenerator",
-      "AsyncFunction",
-      "Reflect",
-      "Proxy",
-      "Intl",
-      "null",
-      "this",
-      "global",
-      "console",
-      "performance",
-      "queueMicrotask",
-      "requestAnimationFrame",
-      "setImmediate",
-      "arguments",
-      "HermesInternal",
-      "_WORKLET",
-      "_log",
-      "_toString",
-      "_scheduleOnJS",
-      "_makeShareableClone",
-      "_updateDataSynchronously",
-      "_updatePropsPaper",
-      "_updatePropsFabric",
-      "_removeFromPropsRegistry",
-      "_measurePaper",
-      "_measureFabric",
-      "_scrollToPaper",
-      "_dispatchCommandPaper",
-      "_dispatchCommandFabric",
-      "_setGestureState",
-      "_notifyAboutProgress",
-      "_notifyAboutEnd",
-      "_runOnUIQueue"
-    ]);
-  }
-});
-
 // lib/utils.js
 var require_utils = __commonJS({
   "lib/utils.js"(exports2) {
@@ -272,6 +165,117 @@ var require_buildWorkletString = __commonJS({
   }
 });
 
+// lib/globals.js
+var require_globals = __commonJS({
+  "lib/globals.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.initializeGlobals = exports2.globals = exports2.defaultGlobals = void 0;
+    exports2.defaultGlobals = /* @__PURE__ */ new Set([
+      "globalThis",
+      "Infinity",
+      "NaN",
+      "undefined",
+      "eval",
+      "isFinite",
+      "isNaN",
+      "parseFloat",
+      "parseInt",
+      "decodeURI",
+      "decodeURIComponent",
+      "encodeURI",
+      "encodeURIComponent",
+      "escape",
+      "unescape",
+      "Object",
+      "Function",
+      "Boolean",
+      "Symbol",
+      "Error",
+      "AggregateError",
+      "EvalError",
+      "RangeError",
+      "ReferenceError",
+      "SyntaxError",
+      "TypeError",
+      "URIError",
+      "InternalError",
+      "Number",
+      "BigInt",
+      "Math",
+      "Date",
+      "String",
+      "RegExp",
+      "Array",
+      "Int8Array",
+      "Uint8Array",
+      "Uint8ClampedArray",
+      "Int16Array",
+      "Uint16Array",
+      "Int32Array",
+      "Uint32Array",
+      "BigInt64Array",
+      "BigUint64Array",
+      "Float32Array",
+      "Float64Array",
+      "Map",
+      "Set",
+      "WeakMap",
+      "WeakSet",
+      "ArrayBuffer",
+      "SharedArrayBuffer",
+      "DataView",
+      "Atomics",
+      "JSON",
+      "WeakRef",
+      "FinalizationRegistry",
+      "Iterator",
+      "AsyncIterator",
+      "Promise",
+      "GeneratorFunction",
+      "AsyncGeneratorFunction",
+      "Generator",
+      "AsyncGenerator",
+      "AsyncFunction",
+      "Reflect",
+      "Proxy",
+      "Intl",
+      "null",
+      "this",
+      "global",
+      "console",
+      "performance",
+      "queueMicrotask",
+      "requestAnimationFrame",
+      "setImmediate",
+      "arguments",
+      "HermesInternal",
+      "_WORKLET",
+      "_log",
+      "_toString",
+      "_scheduleOnJS",
+      "_makeShareableClone",
+      "_updateDataSynchronously",
+      "_updatePropsPaper",
+      "_updatePropsFabric",
+      "_removeFromPropsRegistry",
+      "_measurePaper",
+      "_measureFabric",
+      "_scrollToPaper",
+      "_dispatchCommandPaper",
+      "_dispatchCommandFabric",
+      "_setGestureState",
+      "_notifyAboutProgress",
+      "_notifyAboutEnd",
+      "_runOnUIQueue"
+    ]);
+    function initializeGlobals() {
+      exports2.globals = new Set(exports2.defaultGlobals);
+    }
+    exports2.initializeGlobals = initializeGlobals;
+  }
+});
+
 // lib/makeWorklet.js
 var require_makeWorklet = __commonJS({
   "lib/makeWorklet.js"(exports2) {
@@ -287,7 +291,7 @@ var require_makeWorklet = __commonJS({
     var assert_1 = require("assert");
     var path_1 = require("path");
     var buildWorkletString_1 = require_buildWorkletString();
-    var commonObjects_12 = require_commonObjects();
+    var globals_12 = require_globals();
     var utils_1 = require_utils();
     var REAL_VERSION = require("../../package.json").version;
     var MOCK_VERSION = "x.y.z";
@@ -424,7 +428,7 @@ var require_makeWorklet = __commonJS({
             return;
           }
           const name = path.node.name;
-          if (commonObjects_12.globals.has(name)) {
+          if (globals_12.globals.has(name)) {
             return;
           }
           if ("id" in fun.node && fun.node.id && fun.node.id.name === name) {
@@ -922,37 +926,64 @@ var require_processIfCallback = __commonJS({
   }
 });
 
+// lib/addCustomGlobals.js
+var require_addCustomGlobals = __commonJS({
+  "lib/addCustomGlobals.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.addCustomGlobals = void 0;
+    var globals_12 = require_globals();
+    function addCustomGlobals() {
+      if (this.opts && Array.isArray(this.opts.globals)) {
+        this.opts.globals.forEach((name) => {
+          globals_12.globals.add(name);
+        });
+      }
+    }
+    exports2.addCustomGlobals = addCustomGlobals;
+  }
+});
+
 // lib/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
-var commonObjects_1 = require_commonObjects();
 var processForCalleesWorklets_1 = require_processForCalleesWorklets();
 var processIfWorkletNode_1 = require_processIfWorkletNode();
 var processInlineStylesWarning_1 = require_processInlineStylesWarning();
 var processIfCallback_1 = require_processIfCallback();
+var addCustomGlobals_1 = require_addCustomGlobals();
+var globals_1 = require_globals();
 module.exports = function() {
+  function runWithTaggedExceptions(fun) {
+    try {
+      fun();
+    } catch (e) {
+      throw new Error("[Reanimated] Babel plugin exception: " + e);
+    }
+  }
   return {
     pre() {
-      if (this.opts != null && Array.isArray(this.opts.globals)) {
-        this.opts.globals.forEach((name) => {
-          commonObjects_1.globals.add(name);
-        });
-      }
+      runWithTaggedExceptions(() => {
+        (0, globals_1.initializeGlobals)();
+        addCustomGlobals_1.addCustomGlobals.call(this);
+      });
     },
     visitor: {
       CallExpression: {
         enter(path, state) {
-          (0, processForCalleesWorklets_1.processForCalleesWorklets)(path, state);
+          runWithTaggedExceptions(() => (0, processForCalleesWorklets_1.processForCalleesWorklets)(path, state));
         }
       },
       "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression": {
         enter(path, state) {
-          (0, processIfWorkletNode_1.processIfWorkletNode)(path, state);
-          (0, processIfCallback_1.processIfCallback)(path, state);
+          runWithTaggedExceptions(() => {
+            (0, processIfWorkletNode_1.processIfWorkletNode)(path, state);
+            (0, processIfCallback_1.processIfCallback)(path, state);
+          });
         }
       },
       JSXAttribute: {
         enter(path, state) {
-          (0, processInlineStylesWarning_1.processInlineStylesWarning)(path, state);
+          runWithTaggedExceptions(() => (0, processInlineStylesWarning_1.processInlineStylesWarning)(path, state));
         }
       }
     }
