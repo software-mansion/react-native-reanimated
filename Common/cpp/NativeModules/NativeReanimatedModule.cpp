@@ -38,10 +38,6 @@ using namespace facebook;
 bool CoreFeatures::useNativeState;
 #endif
 
-#if REACT_NATIVE_MINOR_VERSION >= 73 && RCT_NEW_ARCH_ENABLED
-bool CoreFeatures::useNativeState;
-#endif
-
 namespace reanimated {
 
 NativeReanimatedModule::NativeReanimatedModule(
