@@ -34,9 +34,10 @@ export function valueSetter(sv: any, value: any): void {
     initializeAnimation(currentTimestamp);
 
     const step = (newTimestamp: number) => {
-      // We have found that react-native-gesture-handle causes some bugs https://github.com/software-mansion/react-native-reanimated/issues/4852
-      // In such a case we may have slight timestamp oscillation
-      // Therefore an extra check is added - if new timestamp is smaller, keep the previous one.
+      // Function `requestAnimationFrame` adds callback to an array, all the callbacks are flushed with function `__flushAnimationFrame`
+      // Usually we flush them inside function `nativeRequestAnimationFrame` and then the given timestamp is the timestamp of end of the current frame.
+      // However function `__flushAnimationFrame` may also be called inside `registerEventHandler` - then we get actual timestamp which is earlier than the end of the frame.
+
       const timestamp =
         newTimestamp < (animation.timestamp || 0)
           ? animation.timestamp
