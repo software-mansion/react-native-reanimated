@@ -15,6 +15,7 @@
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
 #include "ReanimatedRuntime.h"
+#include "ReanimatedVersion.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
@@ -95,37 +96,27 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 }
 
 #ifdef DEBUG
-void NativeProxy::checkVersion(jsi::Runtime &rnRuntime) {
-  std::string androidVersion;
+void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
+  std::string javaVersion;
   try {
-    androidVersion =
+    javaVersion =
         getJniMethod<jstring()>("getReanimatedJavaVersion")(javaPart_.get())
             ->toStdString();
   } catch (std::exception &) {
     throw std::runtime_error(
         std::string(
-            "[Reanimated] Native side failed to resolve Java code version.\n") +
+            "[Reanimated] (C++) Native side failed to resolve Java code version.\n") +
         "See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-native-side-failed-to-resolve-java-code-version` for more details.");
   }
-  auto maybeJSVersion =
-      rnRuntime.global().getProperty(rnRuntime, "_REANIMATED_VERSION_JS");
-  if (maybeJSVersion.isUndefined()) {
+
+  auto cppVersion = getCppVersion();
+  if (cppVersion != javaVersion) {
     throw std::runtime_error(
         std::string(
-            "[Reanimated] Native side (Java) failed to resolve JS version of `react-native-reanimated`.\n") +
-        "See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-native-side-java-failed-to-resolve-js-version-of-react-native-reanimated` for more details.");
+            "[Reanimated] (C++) Native side detected mismatch between C++ code version and Java code version ( ") +
+        cppVersion + " vs. " + javaVersion + " respectively).\n" +
+        "See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#link` for more details.");
   }
-  auto JSVersion = maybeJSVersion.asString(rnRuntime).utf8(rnRuntime);
-  if (androidVersion != JSVersion) {
-    auto errorMessage =
-        std::string(
-            "[Reanimated] Native mismatch between JS version of `react-native-reanimated` and Java version ( ") +
-        JSVersion + " vs " + androidVersion + ").\n" +
-        "See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-native-mismatch-between-js-version-of-react-native-reanimated-and-java-version` for more details.";
-    throw std::runtime_error(errorMessage);
-  }
-  rnRuntime.global().setProperty(
-      rnRuntime, "_REANIMATED_VERSION_JAVA", androidVersion);
 }
 #endif // DEBUG
 
@@ -166,7 +157,7 @@ void NativeProxy::installJSIBindings(
   auto &rnRuntime = *rnRuntime_;
   auto isReducedMotion = getIsReducedMotion();
 #ifdef DEBUG
-  checkVersion(rnRuntime);
+  checkJavaVersion(rnRuntime);
 #endif // DEBUG
   RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
   registerEventHandler();

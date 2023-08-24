@@ -177,7 +177,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
   std::shared_ptr<UIScheduler> uiScheduler_;
 #ifdef DEBUG
-  void checkVersion(jsi::Runtime &);
+  void checkJavaVersion(jsi::Runtime &);
 #endif // DEBUG
 #ifdef RCT_NEW_ARCH_ENABLED
   std::shared_ptr<PropsRegistry> propsRegistry_;

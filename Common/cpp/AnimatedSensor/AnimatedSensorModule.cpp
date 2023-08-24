@@ -27,7 +27,9 @@ jsi::Value AnimatedSensorModule::registerSensor(
   SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
 
   auto shareableHandler = extractShareableOrThrow<ShareableWorklet>(
-      rt, sensorDataHandler, "sensor event handler must be a worklet");
+      rt,
+      sensorDataHandler,
+      "[Reanimated] Sensor event handler must be a worklet.");
 
   int sensorId = platformRegisterSensorFunction_(
       sensorType,

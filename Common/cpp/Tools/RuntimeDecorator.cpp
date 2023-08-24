@@ -153,31 +153,32 @@ void RuntimeDecorator::decorateUIRuntime(
 }
 
 #ifdef DEBUG
-void versionCheck(jsi::Runtime &rnRuntime) {
-  auto rawCppVersion = getReanimatedVersionString(rnRuntime);
+void checkJSVersion(jsi::Runtime &rnRuntime) {
+  auto cppVersion = getReanimatedCppVersion();
 
   auto maybeJSVersion =
       rnRuntime.global().getProperty(rnRuntime, "_REANIMATED_VERSION_JS");
   if (maybeJSVersion.isUndefined()) {
     throw std::runtime_error(
         std::string(
-            "[Reanimated] Native side failed to resolved JS version of `react-native-reanimated`\n") +
-        "See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-native-side-failed-to-resolved-js-version-of-react-native-reanimated` for more details.");
+            "[Reanimated] (C++) Native side failed to resolve JavaScript code version\n") +
+        "See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#link` for more details.");
   }
 
-  auto cppVersion = rawCppVersion.utf8(rnRuntime);
-  auto JSVersion = maybeJSVersion.asString(rnRuntime).utf8(rnRuntime);
+  auto jsVersion = maybeJSVersion.asString(rnRuntime).utf8(rnRuntime);
 
-  if (JSVersion != cppVersion) {
+  if (jsVersion != cppVersion) {
     throw std::runtime_error(
         std::string(
-            "[Reanimated] Native mismatch between JS version of `react-native-reanimated` and C++ version (") +
-        cppVersion + " vs " + "JSVersion" + ")\n" +
-        "See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-native-mismatch-between-js-version-of-react-native-reanimated-and-c-version` for more details.");
+            "[Reanimated] (C++) Mismatch between C++ code version and JavaScript code version (") +
+        cppVersion + " vs. " + jsVersion + " respectively)\n" +
+        "See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#link` for more details.");
   }
 
   rnRuntime.global().setProperty(
-      rnRuntime, "_REANIMATED_VERSION_CPP", rawCppVersion);
+      rnRuntime,
+      "_REANIMATED_VERSION_CPP",
+      jsi::String::createFromUtf8(rnRuntime, cppCodeVersion));
 }
 #endif // DEBUG
 
@@ -208,7 +209,7 @@ void RuntimeDecorator::decorateRNRuntime(
   rnRuntime.global().setProperty(rnRuntime, "_IS_FABRIC", isFabric);
 
 #ifdef DEBUG
-  versionCheck(rnRuntime);
+  checkJSVersion(rnRuntime);
 #endif // DEBUG
 
   rnRuntime.global().setProperty(

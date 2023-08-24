@@ -1,4 +1,5 @@
 #include "ReanimatedVersion.h"
+#include <string>
 
 #ifdef REANIMATED_VERSION
 #define STRINGIZE(x) #x
@@ -10,8 +11,8 @@ using namespace facebook;
 
 namespace reanimated {
 
-jsi::String getReanimatedVersionString(jsi::Runtime &rt) {
-  return jsi::String::createFromUtf8(rt, REANIMATED_VERSION_STRING);
+std::string getReanimatedCppVersion() {
+  return std::string(REANIMATED_VERSION_STRING);
 }
 
 }; // namespace reanimated

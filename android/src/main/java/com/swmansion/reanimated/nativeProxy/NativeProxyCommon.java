@@ -98,7 +98,7 @@ public abstract class NativeProxyCommon {
 
   @DoNotStrip
   public String getReanimatedJavaVersion() {
-    return BuildConfig._REANIMATED_VERSION_JAVA;
+    return BuildConfig.REANIMATED_VERSION_JAVA;
   }
 
   @DoNotStrip

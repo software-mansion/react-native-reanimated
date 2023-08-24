@@ -9,10 +9,7 @@ import type {
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from '../layoutReanimation';
-import {
-  checkCppVersion,
-  maybeCheckJavaVersion,
-} from '../platform-specific/checkCppVersion';
+import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
@@ -99,7 +96,6 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     }
     if (!shouldBeUseNotDebug) {
       checkCppVersion();
-      maybeCheckJavaVersion();
     }
 
     this.InnerNativeModule = global.__reanimatedModuleProxy;
