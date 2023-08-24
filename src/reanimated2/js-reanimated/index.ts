@@ -8,6 +8,8 @@ let createReactDOMStyle: (style: any) => any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let createTransformValue: (transform: any) => any;
 
+let createTextShadowValue: (style: any) => void | string;
+
 if (isWeb()) {
   try {
     createReactDOMStyle =
@@ -20,6 +22,11 @@ if (isWeb()) {
     createTransformValue =
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       require('react-native-web/dist/exports/StyleSheet/preprocess').createTransformValue;
+  } catch (e) {}
+
+  try {
+    createTextShadowValue =
+      require('react-native-web/dist/exports/StyleSheet/preprocess').createTextShadowValue;
   } catch (e) {}
 }
 
@@ -112,29 +119,21 @@ const updatePropsDOM = (
     domStyle.transform = createTransformValue(domStyle.transform);
   }
 
+  if (
+    domStyle.textShadowColor ||
+    domStyle.textShadowRadius ||
+    domStyle.textShadowOffset
+  ) {
+    domStyle.textShadow = createTextShadowValue({
+      textShadowColor: domStyle.textShadowColor,
+      textShadowOffset: domStyle.textShadowOffset,
+      textShadowRadius: domStyle.textShadowRadius,
+    });
+  }
+
   for (const key in domStyle) {
     (component.style as StyleProps)[key] = domStyle[key];
   }
-
-  const textShadow = {
-    height:
-      'textShadowOffset' in domStyle
-        ? `${domStyle.textShadowOffset.height}`
-        : '0px',
-    width:
-      'textShadowOffset' in domStyle
-        ? `${domStyle.textShadowOffset.width}`
-        : '0px',
-    radius: 'textShadowRadius' in domStyle ? domStyle.textShadowRadius : '0px',
-    color:
-      'textShadowColor' in domStyle
-        ? domStyle.textShadowColor
-        : 'rgba(0,0,0,0)',
-  };
-
-  (
-    component.style as StyleProps
-  ).textShadow = `${textShadow.height} ${textShadow.width} ${textShadow.radius} ${textShadow.color}`;
 };
 
 export default reanimatedJS;
