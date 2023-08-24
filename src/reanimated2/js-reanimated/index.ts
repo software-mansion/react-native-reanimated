@@ -7,6 +7,8 @@ import { isWeb } from '../PlatformChecker';
 let createReactDOMStyle: (style: any) => any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let createTransformValue: (transform: any) => any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let createTextShadowValue: (style: any) => void | string;
 
 if (isWeb()) {
   try {
@@ -20,6 +22,11 @@ if (isWeb()) {
     createTransformValue =
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       require('react-native-web/dist/exports/StyleSheet/preprocess').createTransformValue;
+  } catch (e) {}
+
+  try {
+    createTextShadowValue =
+      require('react-native-web/dist/exports/StyleSheet/preprocess').createTextShadowValue;
   } catch (e) {}
 }
 
@@ -111,6 +118,20 @@ const updatePropsDOM = (
   if (Array.isArray(domStyle.transform) && createTransformValue !== undefined) {
     domStyle.transform = createTransformValue(domStyle.transform);
   }
+
+  if (
+    createTextShadowValue !== undefined &&
+    (domStyle.textShadowColor ||
+      domStyle.textShadowRadius ||
+      domStyle.textShadowOffset)
+  ) {
+    domStyle.textShadow = createTextShadowValue({
+      textShadowColor: domStyle.textShadowColor,
+      textShadowOffset: domStyle.textShadowOffset,
+      textShadowRadius: domStyle.textShadowRadius,
+    });
+  }
+
   for (const key in domStyle) {
     (component.style as StyleProps)[key] = domStyle[key];
   }
