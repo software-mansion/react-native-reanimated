@@ -90,7 +90,7 @@ module.exports = {
 };
 ```
 
-## Web without a Babel plugin
+## Web without the Babel plugin
 
 It is possible to use Reanimated without the Babel plugin (`react-native-reanimated/plugin` on the Web, with some additional configuration.
 
