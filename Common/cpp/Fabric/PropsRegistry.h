@@ -26,15 +26,15 @@ class PropsRegistry {
   void remove(const Tag tag);
 
   void pleaseSkipCommit() {
-    letMeIn_ = true;
+    shouldReanimatedSkipCommit_ = true;
   }
 
   bool shouldSkipCommit() {
-    return letMeIn_.exchange(false);
+    return shouldReanimatedSkipCommit_.exchange(false);
   }
 
   void resetSkipCommitFlag() {
-    letMeIn_ = false;
+    shouldReanimatedSkipCommit_ = false;
   }
 
  private:
@@ -42,7 +42,7 @@ class PropsRegistry {
 
   mutable std::mutex mutex_; // Protects `map_`.
 
-  std::atomic<bool> letMeIn_;
+  std::atomic<bool> shouldReanimatedSkipCommit_;
 };
 
 } // namespace reanimated
