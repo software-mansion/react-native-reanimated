@@ -183,7 +183,8 @@ function styleUpdater(
   updater: BasicWorkletFunction<AnimatedStyle<any>>,
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
-  animationsActive: SharedValue<boolean>
+  animationsActive: SharedValue<boolean>,
+  isAnimatedProps: boolean
 ): void {
   'worklet';
   const animations = state.animations ?? {};
@@ -260,7 +261,7 @@ function styleUpdater(
     state.animations = [];
 
     if (!shallowEqual(oldValues, newValues)) {
-      updateProps(viewDescriptors, newValues, maybeViewRef);
+      updateProps(viewDescriptors, newValues, maybeViewRef, isAnimatedProps);
     }
   }
   state.last = newValues;
@@ -416,7 +417,8 @@ export const useAnimatedStyle = function <T extends AnimatedStyle<any>>(
   // animated style cannot be an array
   updater: BasicWorkletFunction<T extends Array<unknown> ? never : T>,
   dependencies?: DependencyList,
-  adapters?: AdapterWorkletFunction | AdapterWorkletFunction[]
+  adapters?: AdapterWorkletFunction | AdapterWorkletFunction[],
+  isAnimatedProps = false
 ): AnimatedStyleResult {
   const viewsRef: ViewRefSet<any> = makeViewsRefSet();
   const initRef = useRef<AnimationRef>();
@@ -512,7 +514,8 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
           updaterFn,
           remoteState,
           maybeViewRef,
-          animationsActive
+          animationsActive,
+          isAnimatedProps
         );
       };
     }

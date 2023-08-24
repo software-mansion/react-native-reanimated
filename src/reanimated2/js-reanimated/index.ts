@@ -56,7 +56,8 @@ interface JSReanimatedComponent {
 
 export const _updatePropsJS = (
   updates: StyleProps | AnimatedStyle<any>,
-  viewRef: { _component?: JSReanimatedComponent }
+  viewRef: { _component?: JSReanimatedComponent },
+  isAnimatedProps = false
 ): void => {
   if (viewRef._component) {
     const component = viewRef._component;
@@ -81,7 +82,7 @@ export const _updatePropsJS = (
     ) {
       // React Native Web 0.19+ no longer provides setNativeProps function,
       // so we need to update DOM nodes directly.
-      updatePropsDOM(component, rawStyles);
+      updatePropsDOM(component, rawStyles, isAnimatedProps);
     } else if (Object.keys(component.props).length > 0) {
       Object.keys(component.props).forEach((key) => {
         if (!rawStyles[key]) {
@@ -108,7 +109,8 @@ const setNativeProps = (
 
 const updatePropsDOM = (
   component: JSReanimatedComponent,
-  style: StyleProps
+  style: StyleProps,
+  isAnimatedProps = false
 ): void => {
   const previousStyle = component.previousStyle ? component.previousStyle : {};
   const currentStyle = { ...previousStyle, ...style };
@@ -133,7 +135,11 @@ const updatePropsDOM = (
   }
 
   for (const key in domStyle) {
-    (component.style as StyleProps)[key] = domStyle[key];
+    if (isAnimatedProps) {
+      (component as unknown as HTMLElement).setAttribute(key, domStyle[key]);
+    } else {
+      (component.style as StyleProps)[key] = domStyle[key];
+    }
   }
 };
 
