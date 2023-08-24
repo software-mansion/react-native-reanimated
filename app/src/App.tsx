@@ -44,11 +44,9 @@ type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
 };
 
 interface HomeScreenProps {
-  navigation: StackNavigationProp<RootStackParamList, 'Home'>;
-}
-
-interface HomeScreenNativeProps {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
+  navigation:
+    | StackNavigationProp<RootStackParamList, 'Home'>
+    | NativeStackNavigationProp<RootStackParamList, 'Home'>;
 }
 
 const EXAMPLES_NAMES = Object.keys(EXAMPLES) as (keyof typeof EXAMPLES)[];
@@ -64,7 +62,7 @@ function findExamples(search: string) {
   );
 }
 
-function HomeScreen({ navigation }: HomeScreenProps | HomeScreenNativeProps) {
+function HomeScreen({ navigation }: HomeScreenProps) {
   const [search, setSearch] = React.useState('');
 
   React.useLayoutEffect(() => {
