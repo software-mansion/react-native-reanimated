@@ -8,7 +8,7 @@ let createReactDOMStyle: (style: any) => any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let createTransformValue: (transform: any) => any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-let createTextShadowValue: (style: any) => string;
+let createTextShadowValue: (style: any) => void | string;
 
 if (isWeb()) {
   try {
