@@ -33,7 +33,7 @@ jobs:
         run: export RCT_NEW_ARCH_ENABLED=1 && pod install
       - name: Build app
         working-directory: app
-        run: npx react-native run-ios --no-packager
+        run: yarn react-native run-ios --simulator='iPhone 14' --no-packager
 
   build_android:
     runs-on: ubuntu-latest
