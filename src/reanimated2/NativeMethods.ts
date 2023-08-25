@@ -8,7 +8,7 @@ import {
 
 import type { AnimatedRef } from './hook/commonTypes';
 import type { Component } from 'react';
-import type { ScrollView } from '../Animated';
+import type { ScrollView } from 'react-native';
 
 const IS_NATIVE = !shouldBeUseWeb();
 
