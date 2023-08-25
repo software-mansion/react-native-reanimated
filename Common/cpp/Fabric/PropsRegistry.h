@@ -31,8 +31,8 @@ class PropsRegistry {
 
   bool shouldReanimatedSkipCommit() {
 #if REACT_NATIVE_MINOR_VERSION >= 73
-    // In RN 0.73 we have a mount hook will properly set this flag after
-    // non-Reanimated commit
+    // In RN 0.73+ we have a mount hook that will properly set this flag
+    // after a non-Reanimated commit.
     return shouldReanimatedSkipCommit_;
 #else
     return shouldReanimatedSkipCommit_.exchange(false);

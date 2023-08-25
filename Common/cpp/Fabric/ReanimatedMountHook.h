@@ -24,11 +24,10 @@ class ReanimatedMountHook : public UIManagerMountHook {
       double mountTime) noexcept override;
 
  private:
-  std::shared_ptr<PropsRegistry> propsRegistry_;
-
-  std::shared_ptr<UIManager> uiManager_;
+  const std::shared_ptr<PropsRegistry> propsRegistry_;
+  const std::shared_ptr<UIManager> uiManager_;
 };
 
 } // namespace reanimated
 
-#endif // defined(RCT_NEW_ARCH_ENABLED) &&REACT_NATIVE_MINOR_VERSION >= 73
+#endif // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 73
