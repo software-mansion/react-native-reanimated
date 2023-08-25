@@ -53,7 +53,7 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
   } else if (maybeShareableValue.isUndefined()) {
     return Shareable::undefined();
   }
-  throw std::runtime_error("[Reanimated] " + errorMessage);
+  throw std::runtime_error(errorMessage);
 }
 
 Shareable::~Shareable() {}
