@@ -20,7 +20,7 @@ class Shareable {
   virtual jsi::Value toJSValue(jsi::Runtime &rt) = 0;
 
  public:
-  virtual ~Shareable();
+  virtual ~Shareable() = default;
 
   enum ValueType {
     UndefinedType,

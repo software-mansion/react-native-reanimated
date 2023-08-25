@@ -56,8 +56,6 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
   throw std::runtime_error("[Reanimated] " + errorMessage);
 }
 
-Shareable::~Shareable() {}
-
 ShareableArray::ShareableArray(jsi::Runtime &rt, const jsi::Array &array)
     : Shareable(ArrayType) {
   auto size = array.size(rt);
