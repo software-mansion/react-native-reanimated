@@ -12,7 +12,7 @@ class UIScheduler {
  public:
   virtual void scheduleOnUI(std::function<void()> job);
   virtual void triggerUI();
-  virtual ~UIScheduler();
+  virtual ~UIScheduler() = default;
 
  protected:
   std::atomic<bool> scheduledOnUI_{false};

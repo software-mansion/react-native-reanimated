@@ -17,6 +17,4 @@ void UIScheduler::triggerUI() {
   }
 }
 
-UIScheduler::~UIScheduler() {}
-
 } // namespace reanimated
