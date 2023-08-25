@@ -21,6 +21,12 @@ void PropsRegistry::update(
     // no need to update `.first` because ShadowNodeFamily doesn't change
     // merge new props with old props
     it->second.second.update(props);
+
+    // Update ShadowNode stored in the map in case it was replaced
+    // in order to allow old ShadowNode to be deallocated
+    if (it->second.first != shadowNode) {
+      it->second.first = shadowNode;
+    }
   }
 }
 
