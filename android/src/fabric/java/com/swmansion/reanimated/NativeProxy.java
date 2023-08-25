@@ -42,8 +42,8 @@ public class NativeProxy extends NativeProxyCommon {
                         holder,
                         mAndroidUIScheduler,
                         LayoutAnimations,
-                        fabricUIManager,
-                        messageQueueThread);
+                        messageQueueThread,
+                        fabricUIManager);
         prepareLayoutAnimations(LayoutAnimations);
         installJSIBindings();
     }
@@ -53,8 +53,8 @@ public class NativeProxy extends NativeProxyCommon {
             CallInvokerHolderImpl jsCallInvokerHolder,
             AndroidUIScheduler androidUIScheduler,
             LayoutAnimations LayoutAnimations,
-            FabricUIManager fabricUIManager,
-            MessageQueueThread messageQueueThread);
+            MessageQueueThread messageQueueThread,
+            FabricUIManager fabricUIManager);
 
     public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 
