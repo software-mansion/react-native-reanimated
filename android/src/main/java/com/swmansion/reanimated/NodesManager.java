@@ -311,9 +311,9 @@ public class NodesManager implements EventDispatcherListener {
       boolean shouldSaveEvent = false;
       String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
       int viewTag = event.getViewTag();
-      String key = viewTag + eventName;
 
-      shouldSaveEvent |= mNativeProxy != null && mNativeProxy.isAnyHandlerWaitingForEvent(key);
+      shouldSaveEvent |=
+          mNativeProxy != null && mNativeProxy.isAnyHandlerWaitingForEvent(eventName, viewTag);
       if (shouldSaveEvent) {
         mEventQueue.offer(new CopiedEvent(event));
       }
@@ -430,7 +430,7 @@ public class NodesManager implements EventDispatcherListener {
           copy.pushArray(copyReadableArray(array.getArray(i)));
           break;
         default:
-          throw new IllegalStateException("Unknown type of ReadableArray");
+          throw new IllegalStateException("[Reanimated] Unknown type of ReadableArray.");
       }
     }
     return copy;
@@ -462,7 +462,7 @@ public class NodesManager implements EventDispatcherListener {
         propMap.putMap(key, (ReadableMap) value);
       }
     } else {
-      throw new IllegalStateException("Unknown type of animated value");
+      throw new IllegalStateException("[Reanimated] Unknown type of animated value.");
     }
   }
 }

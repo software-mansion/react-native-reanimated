@@ -12,32 +12,55 @@ import type {
   StyleProp,
   TransformsStyle as RNTransformsStyle,
 } from 'react-native';
+import type { AnimatableValue, SharedValue } from './commonTypes';
+import type { BaseAnimationBuilder } from './layoutReanimation/animationBuilder/BaseAnimationBuilder';
 import type {
-  AnimatableValue,
-  BaseAnimationBuilder,
   EntryExitAnimationFunction,
   LayoutAnimationFunction,
-  SharedValue,
-} from '.';
+} from './layoutReanimation/animationBuilder/commonTypes';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 import type { DependencyList } from './hook/commonTypes';
 
-type Adaptable<T> = T | ReadonlyArray<T | ReadonlyArray<T>> | SharedValue<T>;
+/**
+ * @deprecated This type is no longer relevant.
+ */
+export type Adaptable<T> =
+  | T
+  | ReadonlyArray<T | ReadonlyArray<T>>
+  | SharedValue<T>;
 
-type AdaptTransforms<T> = {
+/**
+ * @deprecated This type is no longer relevant.
+ */
+export type AdaptTransforms<T> = {
   [P in keyof T]: Adaptable<T[P]>;
 };
 
-type TransformsStyle = Pick<RNTransformsStyle, 'transform'>;
+type RNTransformType = RNTransformsStyle['transform'];
 
-type TransformStyleTypes = TransformsStyle['transform'] extends
-  | readonly (infer T)[]
-  | undefined
-  ? T
+export type ExtractArrayItemType<Arr> = Arr extends readonly (infer Item)[]
+  ? Item
   : never;
-type AnimatedTransform = AdaptTransforms<TransformStyleTypes>[];
 
+/**
+ * @deprecated Please use `TransformArrayItemType` type instead.
+ */
+export type TransformStyleTypes = ExtractArrayItemType<RNTransformType>;
+
+export type TransformArrayItemType = TransformStyleTypes;
+
+// Note: why is `readonly` here? For safety.
+// In TS `ReadonlyArray` is a supertype of `Array`,
+// therefore `Array` can be assigned to `ReadonlyArray` but
+// `ReadonlyArray` cannot be assigned to `Array`.
+export type AnimatedTransform =
+  | readonly (TransformArrayItemType | SharedValue<TransformArrayItemType>)[]
+  | RNTransformType;
+
+/**
+ * @deprecated Please use `AnimatedStyle` type instead.
+ */
 export type AnimateStyle<S> = {
   [K in keyof S]: K extends 'transform'
     ? AnimatedTransform
@@ -50,13 +73,15 @@ export type AnimateStyle<S> = {
     : S[K] | SharedValue<AnimatableValue>;
 };
 
+export type AnimatedStyle<S> = AnimateStyle<S>;
+
 // provided types can either be their original types (like backgroundColor: pink)
 // or inline shared values/derived values
 type MaybeSharedValue<S> = {
   [K in keyof S]: S[K] | Readonly<SharedValue<Extract<S[K], AnimatableValue>>>;
 };
 
-type StylesOrDefault<T> = 'style' extends keyof T
+export type StylesOrDefault<T> = 'style' extends keyof T
   ? MaybeSharedValue<T['style']>
   : Record<string, unknown>;
 
@@ -81,12 +106,12 @@ type PickStyleProps<T> = Pick<
 
 type StyleAnimatedProps<P extends object> = {
   [K in keyof PickStyleProps<P>]: StyleProp<
-    AnimateStyle<P[K] | MaybeSharedValue<P[K]>>
+    AnimatedStyle<P[K] | MaybeSharedValue<P[K]>>
   >;
 };
 
 type JustStyleAnimatedProp<P extends object> = {
-  style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
+  style?: StyleProp<AnimatedStyle<StylesOrDefault<P>>>;
 };
 
 type NonStyleAnimatedProps<P extends object> = {
@@ -115,6 +140,9 @@ type AnimatedPropsProp<P extends object> = NonStyleAnimatedProps<P> &
   LayoutProps &
   SharedTransitionProps;
 
+/**
+ * @deprecated Please use `AnimatedProps` instead.
+ */
 export type AnimateProps<P extends object> = NonStyleAnimatedProps<P> &
   JustStyleAnimatedProp<P> &
   StyleAnimatedProps<P> &
@@ -123,7 +151,6 @@ export type AnimateProps<P extends object> = NonStyleAnimatedProps<P> &
     animatedProps?: Partial<AnimatedPropsProp<P>>;
   };
 
-// ts-prune-ignore-next This will be used soon
 export type AnimatedProps<P extends object> = AnimateProps<P>;
 
 export type AnimatedPropsAdapterFunction = (

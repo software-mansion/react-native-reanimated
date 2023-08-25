@@ -41,6 +41,8 @@ interface ReanimatedFlatListPropsWithLayout<T> extends FlatListProps<T> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
 }
 
+export type FlatListPropsWithLayout<T> = ReanimatedFlatListPropsWithLayout<T>;
+
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 declare class ReanimatedFlatListClass<T> extends Component<
   AnimateProps<ReanimatedFlatListPropsWithLayout<T>>

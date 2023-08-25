@@ -129,20 +129,19 @@ class ShareableJSRef : public jsi::HostObject {
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
-    const char *errorMessage = nullptr);
+    const std::string &errorMessage =
+        "expecting the object to be of type ShareableJSRef.");
 
 template <typename T>
 std::shared_ptr<T> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &shareableRef,
-    const char *errorMessage = nullptr) {
+    const std::string &errorMessage =
+        "provided shareable object is of an incompatible type.") {
   auto res = std::dynamic_pointer_cast<T>(
       extractShareableOrThrow(rt, shareableRef, errorMessage));
   if (!res) {
-    throw new std::runtime_error(
-        errorMessage != nullptr
-            ? errorMessage
-            : "provided shareable object is of an incompatible type");
+    throw std::runtime_error("[Reanimated] " + errorMessage);
   }
   return res;
 }
@@ -308,7 +307,7 @@ class ShareableHandle : public Shareable {
       remoteValue_ = std::make_unique<jsi::Value>(
           runtimeHelper_->valueUnpacker->call(rt, initObj));
       initializer_ = nullptr; // we can release ref to initializer as this
-                              // method should be called at most once
+      // method should be called at most once
     }
     return jsi::Value(rt, *remoteValue_);
   }
@@ -401,7 +400,7 @@ class ShareableScalar : public Shareable {
         return jsi::Value(data_.number);
       default:
         throw std::runtime_error(
-            "attempted to convert object that's not of a scalar type");
+            "[Reanimated] Attempted to convert object that's not of a scalar type.");
     }
   }
 

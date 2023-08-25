@@ -1,8 +1,9 @@
-import type { EasingFn } from '../../Easing';
+import type { ExtractArrayItemType } from '../../helperTypes';
+import type { EasingFunction } from '../../Easing';
 import type { StyleProps } from '../../commonTypes';
 
 export interface KeyframeProps extends StyleProps {
-  easing?: EasingFn;
+  easing?: EasingFunction;
   [key: string]: any;
 }
 
@@ -96,7 +97,7 @@ export interface ILayoutAnimationBuilder {
 
 export interface BaseLayoutAnimationConfig {
   duration?: number;
-  easing?: EasingFn;
+  easing?: EasingFunction;
   type?: AnimationFunction;
   damping?: number;
   dampingRatio?: number;
@@ -152,3 +153,7 @@ export enum SharedTransitionType {
 export type EntryExitAnimationsValues =
   | EntryAnimationsValues
   | ExitAnimationsValues;
+
+export type StylePropsWithArrayTransform = StyleProps & {
+  transform?: ExtractArrayItemType<StyleProps['transform']>[];
+};

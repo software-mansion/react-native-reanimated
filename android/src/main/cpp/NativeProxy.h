@@ -181,9 +181,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
 
-// removed temporary, new event listener mechanism need fix on the RN side
-// std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
-// std::shared_ptr<EventListener> eventListener_;
+  // removed temporary, new event listener mechanism need fix on the RN side
+  // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
+  // std::shared_ptr<EventListener> eventListener_;
 #endif
 #ifdef RCT_NEW_ARCH_ENABLED
   void installJSIBindings(
@@ -201,7 +201,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void setupLayoutAnimations();
 
   double getCurrentTime();
-  bool isAnyHandlerWaitingForEvent(std::string);
+  bool isAnyHandlerWaitingForEvent(
+      const std::string &eventName,
+      const int emitterReactTag);
   void performOperations();
   bool getIsReducedMotion();
   void requestRender(std::function<void(double)> onRender, jsi::Runtime &rt);
@@ -242,6 +244,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jni::alias_ref<react::WritableMap> event);
 
   void progressLayoutAnimation(
+      jsi::Runtime &rt,
       int tag,
       const jsi::Object &newProps,
       bool isSharedTransition);

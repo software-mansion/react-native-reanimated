@@ -1,21 +1,25 @@
-import type { EasingFn, EasingFactoryFn } from '../Easing';
+import type { EasingFunction, EasingFunctionFactory } from '../Easing';
 import { Easing } from '../Easing';
-import { defineAnimation } from './util';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
 import type {
   Animation,
   AnimationCallback,
   Timestamp,
   AnimatableValue,
+  ReduceMotion,
 } from '../commonTypes';
 
 interface TimingConfig {
   duration?: number;
-  easing?: EasingFn | EasingFactoryFn;
+  reduceMotion?: ReduceMotion;
+  easing?: EasingFunction | EasingFunctionFactory;
 }
+
+export type WithTimingConfig = TimingConfig;
 
 export interface TimingAnimation extends Animation<TimingAnimation> {
   type: string;
-  easing: EasingFn;
+  easing: EasingFunction;
   startValue: AnimatableValue;
   startTime: Timestamp;
   progress: number;
@@ -45,7 +49,7 @@ export const withTiming = function (
 
   return defineAnimation<TimingAnimation>(toValue, () => {
     'worklet';
-    const config: Required<TimingConfig> = {
+    const config: Required<Omit<TimingConfig, 'reduceMotion'>> = {
       duration: 300,
       easing: Easing.inOut(Easing.quad),
     };
@@ -114,6 +118,7 @@ export const withTiming = function (
       easing: () => 0,
       current: toValue,
       callback,
+      reduceMotion: getReduceMotionForAnimation(userConfig?.reduceMotion),
     } as TimingAnimation;
   });
 } as withTimingType;

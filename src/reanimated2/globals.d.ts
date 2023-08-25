@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-var */
 import type {
-  AnimatedStyle,
   StyleProps,
   MeasuredDimensions,
   MapperRegistry,
@@ -9,7 +8,9 @@ import type {
   ShareableSyncDataHolderRef,
   ShadowNodeWrapper,
   ComplexWorkletFunction,
+  FlatShareableRef,
 } from './commonTypes';
+import type { AnimatedStyle } from './helperTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
 import type { NativeReanimatedModule } from './NativeReanimated/NativeReanimated';
 import type { SensorContainer } from './SensorContainer';
@@ -21,6 +22,7 @@ declare global {
   var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var _IS_FABRIC: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
+  var _REANIMATED_VERSION_JS: string | undefined;
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
   var __reanimatedModuleProxy: NativeReanimatedModule | undefined;
   var evalWithSourceMap:
@@ -28,6 +30,7 @@ declare global {
     | undefined;
   var evalWithSourceUrl: ((js: string, sourceURL: string) => any) | undefined;
   var _log: (s: string) => void;
+  var _toString: (value: unknown) => string;
   var _notifyAboutProgress: (
     tag: number,
     value: Record<string, unknown>,
@@ -35,7 +38,7 @@ declare global {
   ) => void;
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
-  var _makeShareableClone: <T>(value: T) => ShareableRef<T>;
+  var _makeShareableClone: <T>(value: T) => FlatShareableRef<T>;
   var _updateDataSynchronously: (
     dataHolder: ShareableSyncDataHolderRef<any>,
     data: ShareableRef<any>
@@ -49,7 +52,7 @@ declare global {
         operations: {
           tag: number;
           name: string;
-          updates: StyleProps | AnimatedStyle;
+          updates: StyleProps | AnimatedStyle<any>;
         }[]
       ) => void)
     | undefined;
@@ -57,7 +60,7 @@ declare global {
     | ((
         operations: {
           shadowNodeWrapper: ShadowNodeWrapper;
-          updates: StyleProps | AnimatedStyle;
+          updates: StyleProps | AnimatedStyle<any>;
         }[]
       ) => void)
     | undefined;

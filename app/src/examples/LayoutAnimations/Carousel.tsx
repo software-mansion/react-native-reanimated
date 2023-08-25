@@ -59,7 +59,7 @@ function AnimatedView({ pokemon }: { pokemon: Pokemon }) {
   );
 }
 
-export default function Carousel(): React.ReactElement {
+export default function Carousel() {
   const [currentIndex, incrementIndex] = useState(0);
   return (
     <View style={styles.columnReverse}>

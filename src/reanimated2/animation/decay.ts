@@ -1,10 +1,11 @@
-import { defineAnimation } from './util';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
 import type {
   Animation,
   AnimationCallback,
   AnimationObject,
   AnimatableValue,
   Timestamp,
+  ReduceMotion,
 } from '../commonTypes';
 import { isWeb } from '../PlatformChecker';
 
@@ -13,13 +14,17 @@ interface DecayConfig {
   velocityFactor?: number;
   clamp?: number[];
   velocity?: number;
+  reduceMotion?: ReduceMotion;
 }
+
+export type WithDecayConfig = DecayConfig;
 
 interface DefaultDecayConfig {
   deceleration: number;
   velocityFactor: number;
   clamp?: number[];
   velocity: number;
+  reduceMotion?: ReduceMotion;
   rubberBandEffect?: boolean;
   rubberBandFactor: number;
 }
@@ -149,24 +154,24 @@ export const withDecay = function (
     function validateConfig(): void {
       if (config.clamp) {
         if (!Array.isArray(config.clamp)) {
-          throw Error(
-            `config.clamp must be an array but is ${typeof config.clamp}`
+          throw new Error(
+            `[Reanimated] \`config.clamp\` must be an array but is ${typeof config.clamp}.`
           );
         }
         if (config.clamp.length !== 2) {
-          throw Error(
-            `clamp array must contain 2 items but is given ${config.clamp.length}`
+          throw new Error(
+            `[Reanimated] \`clamp array\` must contain 2 items but is given ${config.clamp.length}.`
           );
         }
       }
       if (config.velocityFactor <= 0) {
-        throw Error(
-          `config.velocityFactor must be greather then 0 but is ${config.velocityFactor}`
+        throw new Error(
+          `[Reanimated] \`config.velocityFactor\` must be greather then 0 but is ${config.velocityFactor}.`
         );
       }
       if (config.rubberBandEffect && !config.clamp) {
-        throw Error(
-          'You need to set `clamp` property when using `rubberBandEffect`.'
+        throw new Error(
+          '[Reanimated] You need to set `clamp` property when using `rubberBandEffect`.'
         );
       }
     }
@@ -181,6 +186,14 @@ export const withDecay = function (
       animation.startTimestamp = now;
       animation.initialVelocity = config.velocity;
       validateConfig();
+
+      if (animation.reduceMotion && config.clamp) {
+        if (value < config.clamp[0]) {
+          animation.current = config.clamp[0];
+        } else if (value > config.clamp[1]) {
+          animation.current = config.clamp[1];
+        }
+      }
     }
 
     return {
@@ -192,6 +205,7 @@ export const withDecay = function (
       current: 0,
       lastTimestamp: 0,
       startTimestamp: 0,
+      reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
     } as DecayAnimation;
   });
 } as unknown as withDecayType;

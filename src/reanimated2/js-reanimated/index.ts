@@ -1,11 +1,14 @@
 import JSReanimated from './JSReanimated';
-import type { AnimatedStyle, StyleProps } from '../commonTypes';
+import type { StyleProps } from '../commonTypes';
+import type { AnimatedStyle } from '../helperTypes';
 import { isWeb } from '../PlatformChecker';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let createReactDOMStyle: (style: any) => any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let createTransformValue: (transform: any) => any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let createTextShadowValue: (style: any) => void | string;
 
 if (isWeb()) {
   try {
@@ -19,6 +22,11 @@ if (isWeb()) {
     createTransformValue =
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       require('react-native-web/dist/exports/StyleSheet/preprocess').createTransformValue;
+  } catch (e) {}
+
+  try {
+    createTextShadowValue =
+      require('react-native-web/dist/exports/StyleSheet/preprocess').createTextShadowValue;
   } catch (e) {}
 }
 
@@ -47,13 +55,13 @@ interface JSReanimatedComponent {
 }
 
 export const _updatePropsJS = (
-  updates: StyleProps | AnimatedStyle,
+  updates: StyleProps | AnimatedStyle<any>,
   viewRef: { _component?: JSReanimatedComponent }
 ): void => {
   if (viewRef._component) {
     const component = viewRef._component;
     const [rawStyles] = Object.keys(updates).reduce(
-      (acc: [StyleProps, AnimatedStyle], key) => {
+      (acc: [StyleProps, AnimatedStyle<any>], key) => {
         const value = updates[key];
         const index = typeof value === 'function' ? 1 : 0;
         acc[index][key] = value;
@@ -110,6 +118,20 @@ const updatePropsDOM = (
   if (Array.isArray(domStyle.transform) && createTransformValue !== undefined) {
     domStyle.transform = createTransformValue(domStyle.transform);
   }
+
+  if (
+    createTextShadowValue !== undefined &&
+    (domStyle.textShadowColor ||
+      domStyle.textShadowRadius ||
+      domStyle.textShadowOffset)
+  ) {
+    domStyle.textShadow = createTextShadowValue({
+      textShadowColor: domStyle.textShadowColor,
+      textShadowOffset: domStyle.textShadowOffset,
+      textShadowRadius: domStyle.textShadowRadius,
+    });
+  }
+
   for (const key in domStyle) {
     (component.style as StyleProps)[key] = domStyle[key];
   }

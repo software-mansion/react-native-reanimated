@@ -1,4 +1,9 @@
-import type { Animation, AnimatableValue, Timestamp } from '../commonTypes';
+import type {
+  Animation,
+  AnimatableValue,
+  Timestamp,
+  ReduceMotion,
+} from '../commonTypes';
 
 export type SpringConfig = {
   stiffness?: number;
@@ -6,6 +11,7 @@ export type SpringConfig = {
   restDisplacementThreshold?: number;
   restSpeedThreshold?: number;
   velocity?: number;
+  reduceMotion?: ReduceMotion;
 } & (
   | {
       mass?: number;
@@ -20,6 +26,8 @@ export type SpringConfig = {
       dampingRatio?: number;
     }
 );
+
+export type WithSpringConfig = SpringConfig;
 
 export interface SpringConfigInner {
   useDuration: boolean;

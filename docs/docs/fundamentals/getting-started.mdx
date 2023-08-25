@@ -1,0 +1,167 @@
+---
+sidebar_position: 1
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Getting started
+
+The _Fundamentals_ section was designed to help you gain a strong foundation on the core concepts of Reanimated and give you the confidence to explore more advanced use cases on your own. This section is packed with interactive examples, code snippets and explanations. Are you ready? Let's dive in!
+
+## What is React Native Reanimated?
+
+React Native Reanimated is a powerful animation library built by [Software Mansion](https://swmansion.com/).
+
+With Reanimated, you can easily create smooth animations and interactions that run on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+
+## Quick start
+
+If you don't have an existing project, you can create a new Expo app using a template:
+
+<Tabs groupId="package-managers">
+  <TabItem value="npm" label="NPM">
+
+    npx create-expo-app my-app -e with-reanimated
+
+  </TabItem>
+  <TabItem value="yarn" label="YARN">
+
+    yarn create expo-app my-app -e with-reanimated
+
+  </TabItem>
+</Tabs>
+
+Alternatively, you can dive into [our examples](https://github.com/software-mansion/react-native-reanimated/tree/3.3.0/app/src/examples) on GitHub.
+
+## Installation
+
+It takes three steps to add Reanimated to a project:
+
+### Step 1: Install the package
+
+Install `react-native-reanimated` package from npm:
+
+<Tabs groupId="package-managers">
+  <TabItem value="expo" label="EXPO" default>
+
+    npx expo install react-native-reanimated
+
+  </TabItem>
+  <TabItem value="npm" label="NPM">
+
+    npm install react-native-reanimated
+
+  </TabItem>
+  <TabItem value="yarn" label="YARN">
+
+    yarn add react-native-reanimated
+
+  </TabItem>
+</Tabs>
+
+### Step 2: Add Reanimated's babel plugin
+
+Add `react-native-reanimated/plugin` plugin to your `babel.config.js`.
+
+```js {7}
+  module.exports = {
+    presets: [
+      ... // don't add it here :)
+    ],
+    plugins: [
+      ...
+      'react-native-reanimated/plugin',
+    ],
+  };
+```
+
+:::caution
+
+`react-native-reanimated/plugin` has to be listed last.
+
+:::
+
+<details>
+<summary>Why do I need this?</summary>
+
+In short, the Reanimated babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) in a way that they could be passed and ran on the UI thread.
+
+To learn more about the plugin head onto to [Reanimated babel plugin](/docs/fundamentals/glossary#reanimated-babel-plugin) section.
+
+</details>
+
+### Step 3: Clear cache (recommended)
+
+<Tabs groupId="package-managers">
+  <TabItem value="expo" label="EXPO" default>
+
+    npx expo start -c
+
+  </TabItem>
+  <TabItem value="npm" label="NPM">
+
+    npm start -- --reset-cache
+
+  </TabItem>
+  <TabItem value="yarn" label="YARN">
+
+    yarn start --reset-cache
+
+  </TabItem>
+</Tabs>
+
+### Platform specific setup
+
+#### Android
+
+No additional steps are necessary.
+
+#### iOS
+
+While developing for iOS, make sure to install [pods](https://cocoapods.org/) first before running the app:
+
+```bash
+cd ios && pod install && cd ..
+```
+
+#### Web
+
+For building apps that target web using [react-native-web](https://www.npmjs.com/package/react-native-web) we highly recommend to use [Expo](https://expo.dev/).
+
+To use Reanimated on the web all you need to do is to install and add [`@babel/plugin-proposal-export-namespace-from`](https://babeljs.io/docs/en/babel-plugin-proposal-export-namespace-from) Babel plugin to your `babel.config.js`.
+
+<Tabs groupId="package-managers">
+  <TabItem value="expo" label="EXPO" default>
+
+    npx expo install @babel/plugin-proposal-export-namespace-from
+
+  </TabItem>
+  <TabItem value="npm" label="NPM">
+
+    npm install @babel/plugin-proposal-export-namespace-from
+
+  </TabItem>
+  <TabItem value="yarn" label="YARN">
+
+    yarn add @babel/plugin-proposal-export-namespace-from
+
+  </TabItem>
+</Tabs>
+
+```js {7}
+  module.exports = {
+      presets: [
+        ... // don't add it here :)
+      ],
+      plugins: [
+          ...
+          '@babel/plugin-proposal-export-namespace-from',
+          'react-native-reanimated/plugin',
+      ],
+  };
+```
+
+Make sure to list `react-native-reanimated/plugin` last.
+
+More advanced use cases such as running Reanimated with `webpack` or with `Next.js` are explained in a separate [Web Support](/docs/guides/web-support) guide.

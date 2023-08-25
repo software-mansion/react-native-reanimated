@@ -30,12 +30,13 @@ export interface NativeReanimatedModule {
   getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>): T;
   scheduleOnUI<T>(shareable: ShareableRef<T>): void;
   registerEventHandler<T>(
-    eventHash: string,
-    eventHandler: ShareableRef<T>
+    eventHandler: ShareableRef<T>,
+    eventName: string,
+    emitterReactTag: number
   ): number;
   unregisterEventHandler(id: number): void;
   getViewProp<T>(
-    viewTag: string,
+    viewTag: number,
     propName: string,
     callback?: (result: T) => void
   ): Promise<T>;
@@ -72,10 +73,8 @@ export class NativeReanimated {
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new Error(
-        `[Reanimated] The native part of Reanimated doesn't seem to be initialized. This could be caused by\n\
-- not rebuilding the app after installing or upgrading Reanimated\n\
-- trying to run Reanimated on an unsupported platform\n\
-- running in a brownfield app without manually initializing the native library`
+        `[Reanimated] Native part of Reanimated doesn't seem to be initialized.
+See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#Native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
     checkCppVersion();
@@ -132,8 +131,16 @@ export class NativeReanimated {
     return this.InnerNativeModule.unregisterSensor(sensorId);
   }
 
-  registerEventHandler<T>(eventHash: string, eventHandler: ShareableRef<T>) {
-    return this.InnerNativeModule.registerEventHandler(eventHash, eventHandler);
+  registerEventHandler<T>(
+    eventHandler: ShareableRef<T>,
+    eventName: string,
+    emitterReactTag: number
+  ) {
+    return this.InnerNativeModule.registerEventHandler(
+      eventHandler,
+      eventName,
+      emitterReactTag
+    );
   }
 
   unregisterEventHandler(id: number) {
@@ -141,7 +148,7 @@ export class NativeReanimated {
   }
 
   getViewProp<T>(
-    viewTag: string,
+    viewTag: number,
     propName: string,
     callback?: (result: T) => void
   ) {

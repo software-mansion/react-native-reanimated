@@ -21,6 +21,7 @@ module.exports = {
   },
   rules: {
     'import/no-unresolved': 'error',
+    'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
     'react/jsx-uses-vars': 'error',
     'react/jsx-uses-react': 'error',
     'no-use-before-define': 'off',
@@ -37,5 +38,9 @@ module.exports = {
     // '@typescript-eslint/no-duplicate-type-constituents': 'error', // TODO this currently breaks ESLint for VSCode in plugin
     eqeqeq: 'error',
     'no-unreachable': 'error',
+    '@typescript-eslint/consistent-type-imports': [
+      'error',
+      { prefer: 'type-imports' },
+    ],
   },
 };
