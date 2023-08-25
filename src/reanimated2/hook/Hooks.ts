@@ -5,27 +5,42 @@ import type {
   AnimatedPropsAdapterFunction,
   useAnimatedPropsType,
 } from '../helperTypes';
-import { isWeb } from '../PlatformChecker';
+import { shouldBeUseWeb } from '../PlatformChecker';
 
 // TODO: we should make sure that when useAP is used we are not assigning styles
 // when you need styles to animated you should always use useAS
 // TODO TYPESCRIPT This is a temporary cast to get rid of .d.ts file.
 
-export const useAnimatedProps = function <T extends object>(
-  updater: () => Partial<T>,
-  deps?: DependencyList | null,
-  adapters?:
-    | AnimatedPropsAdapterFunction
-    | AnimatedPropsAdapterFunction[]
-    | null
-) {
-  return (useAnimatedStyle as useAnimatedPropsType)(
-    updater,
-    deps,
-    adapters,
-    isWeb() // We only need this flag set to true on web
-  );
-};
+export let useAnimatedProps: useAnimatedPropsType;
+
+if (shouldBeUseWeb()) {
+  useAnimatedProps = function <T extends object>(
+    updater: () => Partial<T>,
+    deps?: DependencyList | null,
+    adapters?:
+      | AnimatedPropsAdapterFunction
+      | AnimatedPropsAdapterFunction[]
+      | null
+  ) {
+    return (useAnimatedStyle as useAnimatedPropsType)(
+      updater,
+      deps,
+      adapters,
+      true
+    );
+  };
+} else {
+  useAnimatedProps = function <T extends object>(
+    updater: () => Partial<T>,
+    deps?: DependencyList | null,
+    adapters?:
+      | AnimatedPropsAdapterFunction
+      | AnimatedPropsAdapterFunction[]
+      | null
+  ) {
+    return (useAnimatedStyle as useAnimatedPropsType)(updater, deps, adapters);
+  };
+}
 
 export function useWorkletCallback<A extends unknown[], R>(
   fun: (...args: A) => R,
