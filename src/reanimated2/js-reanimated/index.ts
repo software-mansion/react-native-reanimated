@@ -108,13 +108,15 @@ const setNativeProps = (
 };
 
 const updatePropsDOM = (
-  component: JSReanimatedComponent,
+  component: JSReanimatedComponent | HTMLElement,
   style: StyleProps,
   isAnimatedProps = false
 ): void => {
-  const previousStyle = component.previousStyle ? component.previousStyle : {};
+  const previousStyle = (component as JSReanimatedComponent).previousStyle
+    ? (component as JSReanimatedComponent).previousStyle
+    : {};
   const currentStyle = { ...previousStyle, ...style };
-  component.previousStyle = currentStyle;
+  (component as JSReanimatedComponent).previousStyle = currentStyle;
 
   const domStyle = createReactDOMStyle(currentStyle);
   if (Array.isArray(domStyle.transform) && createTransformValue !== undefined) {
@@ -136,7 +138,7 @@ const updatePropsDOM = (
 
   for (const key in domStyle) {
     if (isAnimatedProps) {
-      (component as unknown as HTMLElement).setAttribute(key, domStyle[key]);
+      (component as HTMLElement).setAttribute(key, domStyle[key]);
     } else {
       (component.style as StyleProps)[key] = domStyle[key];
     }

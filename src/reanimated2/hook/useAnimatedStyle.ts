@@ -184,7 +184,7 @@ function styleUpdater(
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
-  isAnimatedProps: boolean
+  isAnimatedProps = false
 ): void {
   'worklet';
   const animations = state.animations ?? {};

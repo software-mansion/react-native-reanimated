@@ -5,6 +5,7 @@ import type {
   AnimatedPropsAdapterFunction,
   useAnimatedPropsType,
 } from '../helperTypes';
+import { isWeb } from '../PlatformChecker';
 
 // TODO: we should make sure that when useAP is used we are not assigning styles
 // when you need styles to animated you should always use useAS
@@ -23,7 +24,7 @@ export const useAnimatedProps = function <T extends object>(
     updater,
     deps,
     adapters,
-    true
+    isWeb() // We only need this flag set to true on web
   );
 };
 
