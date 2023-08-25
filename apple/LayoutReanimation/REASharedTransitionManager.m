@@ -23,7 +23,7 @@
   NSMutableDictionary<NSNumber *, REAUIView *> *_removedViewRegistry;
   NSMutableSet<NSNumber *> *_layoutedSharedViewsTags;
   NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
-  NSMutableSet<REAUIView *> *_reparentedViews;
+  NSMutableSet<REAUIView *> *_reattachedViews;
   BOOL _isStackDropped;
   BOOL _isAsyncSharedTransitionConfigured;
   BOOL _isConfigured;
@@ -55,7 +55,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _removedViewRegistry = [NSMutableDictionary new];
     _layoutedSharedViewsTags = [NSMutableSet new];
     _layoutedSharedViewsFrame = [NSMutableDictionary new];
-    _reparentedViews = [NSMutableSet new];
+    _reattachedViews = [NSMutableSet new];
     _isAsyncSharedTransitionConfigured = NO;
     _isConfigured = NO;
     [self swizzleScreensMethods];
@@ -543,8 +543,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
 - (void)reparentSharedViewsForCurrentTransition:(NSArray *)sharedElements
 {
   for (REASharedElement *sharedElement in sharedElements) {
-    UIView *viewSource = sharedElement.sourceView;
-    [_reparentedViews addObject:viewSource];
+    REAUIView *viewSource = sharedElement.sourceView;
+    [_reattachedViews addObject:viewSource];
     if (_sharedTransitionParent[viewSource.reactTag] == nil) {
       _sharedTransitionParent[viewSource.reactTag] = viewSource.superview;
       _sharedTransitionInParentIndex[viewSource.reactTag] = @([viewSource.superview.subviews indexOfObject:viewSource]);
@@ -596,8 +596,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
     return;
   }
   [_sharedElementsLookup removeObjectForKey:viewTag];
-  if ([_reparentedViews containsObject:view]) {
-    [_reparentedViews removeObject:view];
+  if ([_reattachedViews containsObject:view]) {
+    [_reattachedViews removeObject:view];
     [view removeFromSuperview];
     REAUIView *parent = _sharedTransitionParent[viewTag];
     int childIndex = [_sharedTransitionInParentIndex[viewTag] intValue];
@@ -632,7 +632,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   if (_removedViewRegistry[view.reactTag]) {
     return;
   }
-  if ([_reparentedViews count] == 0) {
+  if ([_reattachedViews count] == 0) {
     [_transitionContainer removeFromSuperview];
     [_removedViewRegistry removeAllObjects];
     [_currentSharedTransitionViews removeAllObjects];
