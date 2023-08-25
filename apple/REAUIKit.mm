@@ -2,7 +2,7 @@
 
 #if TARGET_OS_OSX
 
-@implementation REAUIKit
+@implementation REAUIView
 
 - (CGPoint)center
 {
