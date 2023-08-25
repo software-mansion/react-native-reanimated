@@ -6,8 +6,6 @@
 #include <utility>
 #include <vector>
 
-#include "ReanimatedRuntime.h"
-#include "UIScheduler.h"
 #include "WorkletRuntimeRegistry.h"
 
 using namespace facebook;

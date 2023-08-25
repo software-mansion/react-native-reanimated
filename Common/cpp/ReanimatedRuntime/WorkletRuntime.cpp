@@ -2,6 +2,7 @@
 #include "JSISerializer.h"
 #include "JsiUtils.h"
 #include "Logger.h"
+#include "ReanimatedRuntime.h"
 #include "WorkletRuntimeCollector.h"
 #include "WorkletRuntimeDecorator.h"
 

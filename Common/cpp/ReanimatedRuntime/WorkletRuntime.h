@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
 
 #include "JSScheduler.h"
@@ -12,6 +13,7 @@
 #include <vector>
 
 using namespace facebook;
+using namespace react;
 
 namespace reanimated {
 
