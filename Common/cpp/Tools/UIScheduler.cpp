@@ -32,6 +32,4 @@ void UIScheduler::setRuntimeManager(
   weakRuntimeManager_ = runtimeManager;
 }
 
-UIScheduler::~UIScheduler() {}
-
 } // namespace reanimated
