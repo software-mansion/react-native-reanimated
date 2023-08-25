@@ -1,4 +1,9 @@
-import { isChromeDebugger, isJest, isWeb } from '../PlatformChecker';
+import {
+  isChromeDebugger,
+  isJest,
+  isWeb,
+  isWindowAvailable,
+} from '../PlatformChecker';
 import type {
   ShareableRef,
   ShareableSyncDataHolderRef,
@@ -78,6 +83,12 @@ export default class JSReanimated {
     _iosReferenceFrame: number,
     eventHandler: ShareableRef<(data: Value3D | ValueRotation) => void>
   ): number {
+    if (!isWindowAvailable()) {
+      // the window object is unavailable when building the server portion of a site that uses SSG
+      // this check is here to ensure that the server build won't fail
+      return -1;
+    }
+
     if (this.platform === undefined) {
       this.detectPlatform();
     }

@@ -40,7 +40,7 @@ import {
 import { strict as assert } from 'assert';
 import { relative } from 'path';
 import { buildWorkletString } from './buildWorkletString';
-import { globals } from './commonObjects';
+import { globals } from './globals';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { isRelease } from './utils';
 
