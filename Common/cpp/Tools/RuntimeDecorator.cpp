@@ -7,6 +7,7 @@
 #include "JSISerializer.h"
 #include "JsiUtils.h"
 #include "ReanimatedHiddenHeaders.h"
+#include "ReanimatedVersion.h"
 
 namespace reanimated {
 
@@ -162,7 +163,7 @@ void checkJSVersion(jsi::Runtime &rnRuntime) {
     throw std::runtime_error(
         std::string(
             "[Reanimated] (C++) Native side failed to resolve JavaScript code version\n") +
-        "See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#link` for more details.");
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#native-side-failed-to-resolve-javascript-code-version` for more details.");
   }
 
   auto jsVersion = maybeJSVersion.asString(rnRuntime).utf8(rnRuntime);
@@ -171,14 +172,14 @@ void checkJSVersion(jsi::Runtime &rnRuntime) {
     throw std::runtime_error(
         std::string(
             "[Reanimated] (C++) Mismatch between C++ code version and JavaScript code version (") +
-        cppVersion + " vs. " + jsVersion + " respectively)\n" +
-        "See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#link` for more details.");
+        cppVersion + " vs. " + jsVersion + " respectively).\n" +
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#c-mismatch-between-c-code-version-and-java-code-version` for more details.");
   }
 
   rnRuntime.global().setProperty(
       rnRuntime,
       "_REANIMATED_VERSION_CPP",
-      jsi::String::createFromUtf8(rnRuntime, cppCodeVersion));
+      jsi::String::createFromUtf8(rnRuntime, cppVersion));
 }
 #endif // DEBUG
 

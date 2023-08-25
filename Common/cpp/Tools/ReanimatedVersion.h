@@ -7,6 +7,6 @@ using namespace facebook;
 
 namespace reanimated {
 
-jsi::String getReanimatedVersionString(jsi::Runtime &rt);
+std::string getReanimatedCppVersion();
 
 };

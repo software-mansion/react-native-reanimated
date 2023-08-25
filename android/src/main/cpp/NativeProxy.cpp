@@ -106,16 +106,16 @@ void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
     throw std::runtime_error(
         std::string(
             "[Reanimated] (C++) Native side failed to resolve Java code version.\n") +
-        "See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-native-side-failed-to-resolve-java-code-version` for more details.");
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#native-side-failed-to-resolve-java-code-version` for more details.");
   }
 
-  auto cppVersion = getCppVersion();
+  auto cppVersion = getReanimatedCppVersion();
   if (cppVersion != javaVersion) {
     throw std::runtime_error(
         std::string(
-            "[Reanimated] (C++) Native side detected mismatch between C++ code version and Java code version ( ") +
+            "[Reanimated] (C++) Mismatch between C++ code version and Java code version ( ") +
         cppVersion + " vs. " + javaVersion + " respectively).\n" +
-        "See `http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#link` for more details.");
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#c-mismatch-between-c-code-version-and-java-code-version` for more details.");
   }
 }
 #endif // DEBUG
