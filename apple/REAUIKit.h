@@ -16,6 +16,10 @@ extern "C" {
 }
 #endif
 
-typedef RCTUIView REAUIView;
+@interface REAUIView : RCTUIView
+
+@property CGPoint center;
+
+@end
 
 #endif // ] TARGET_OS_OSX
