@@ -9,9 +9,6 @@
 namespace reanimated {
 
 class WorkletRuntimeCollector : public jsi::HostObject {
- private:
-  jsi::Runtime &runtime_;
-
  public:
   explicit WorkletRuntimeCollector(jsi::Runtime &runtime) : runtime_(runtime) {
     WorkletRuntimeRegistry::registerRuntime(runtime_);
@@ -26,6 +23,9 @@ class WorkletRuntimeCollector : public jsi::HostObject {
     auto object = jsi::Object::createFromHostObject(rt, collector);
     rt.global().setProperty(rt, "__workletRuntimeCollector", object);
   }
+
+ private:
+  jsi::Runtime &runtime_;
 };
 
 } // namespace reanimated
