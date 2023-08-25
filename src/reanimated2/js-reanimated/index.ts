@@ -72,16 +72,10 @@ export const _updatePropsJS = (
     );
 
     if (typeof component.setNativeProps === 'function') {
-      // react-native-web puts everything inside style, that's why animated props don't work.
-      // Calling this function results in adding attributes correctly
-      if (isAnimatedProps) {
-        updatePropsDOM(component, rawStyles, isAnimatedProps);
-      } else {
-        // This is the legacy way to update props on React Native Web <= 0.18.
-        // Also, some components (e.g. from react-native-svg) don't have styles
-        // and always provide setNativeProps function instead (even on React Native Web 0.19+).
-        setNativeProps(component, rawStyles);
-      }
+      // This is the legacy way to update props on React Native Web <= 0.18.
+      // Also, some components (e.g. from react-native-svg) don't have styles
+      // and always provide setNativeProps function instead (even on React Native Web 0.19+).
+      setNativeProps(component, rawStyles, isAnimatedProps);
     } else if (
       createReactDOMStyle !== undefined &&
       component.style !== undefined
@@ -105,12 +99,18 @@ export const _updatePropsJS = (
 
 const setNativeProps = (
   component: JSReanimatedComponent,
-  style: StyleProps
+  style: StyleProps,
+  isAnimatedProps = false
 ): void => {
   const previousStyle = component.previousStyle ? component.previousStyle : {};
   const currentStyle = { ...previousStyle, ...style };
   component.previousStyle = currentStyle;
-  component.setNativeProps?.({ style: currentStyle });
+
+  if (isAnimatedProps) {
+    component.setNativeProps?.(style);
+  } else {
+    component.setNativeProps?.({ style: currentStyle });
+  }
 };
 
 const updatePropsDOM = (
