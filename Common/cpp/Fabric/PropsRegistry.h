@@ -25,15 +25,21 @@ class PropsRegistry {
 
   void remove(const Tag tag);
 
-  void pleaseSkipCommit() {
+  void pleaseSkipReanimatedCommit() {
     shouldReanimatedSkipCommit_ = true;
   }
 
-  bool shouldSkipCommit() {
+  bool shouldReanimatedSkipCommit() {
+#if REACT_NATIVE_MINOR_VERSION >= 73
+    // In RN 0.73 we have a mount hook will properly set this flag after
+    // non-Reanimated commit
+    return shouldReanimatedSkipCommit_;
+#else
     return shouldReanimatedSkipCommit_.exchange(false);
+#endif
   }
 
-  void resetSkipCommitFlag() {
+  void resetReanimatedSkipCommitFlag() {
     shouldReanimatedSkipCommit_ = false;
   }
 

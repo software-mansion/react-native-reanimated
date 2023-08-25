@@ -61,7 +61,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   // since the ShadowTree to be committed by Reanimated may not include the new
   // changes from React Native yet and all changes of animated props will be
   // applied in ReanimatedCommitHook by iterating over PropsRegistry.
-  propsRegistry_->pleaseSkipCommit();
+  propsRegistry_->pleaseSkipReanimatedCommit();
 
   return std::static_pointer_cast<RootShadowNode>(rootNode);
 }

@@ -22,7 +22,7 @@ void ReanimatedMountHook::shadowTreeDidMount(
   // When commit from React Native has finished, we reset the skip commit flag
   // in order to allow Reanimated to commit its tree
   if (!ReanimatedCommitMarker::isReanimatedCommit()) {
-    propsRegistry_->resetSkipCommitFlag();
+    propsRegistry_->resetReanimatedSkipCommitFlag();
   }
 }
 
