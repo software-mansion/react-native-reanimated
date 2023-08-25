@@ -76,6 +76,12 @@ export const _updatePropsJS = (
       // Also, some components (e.g. from react-native-svg) don't have styles
       // and always provide setNativeProps function instead (even on React Native Web 0.19+).
       setNativeProps(component, rawStyles);
+
+      // react-native-web puts everything inside style, that's why animated props don't work.
+      // Calling this function results in adding attributes correctly
+      if (isAnimatedProps) {
+        updatePropsDOM(component, rawStyles, isAnimatedProps);
+      }
     } else if (
       createReactDOMStyle !== undefined &&
       component.style !== undefined
