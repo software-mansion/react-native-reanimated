@@ -99,18 +99,19 @@ export const _updatePropsJS = (
 
 const setNativeProps = (
   component: JSReanimatedComponent,
-  style: StyleProps,
+  newProps: StyleProps,
   isAnimatedProps?: boolean
 ): void => {
+  if (isAnimatedProps) {
+    component.setNativeProps?.(newProps);
+    return;
+  }
+
   const previousStyle = component.previousStyle ? component.previousStyle : {};
-  const currentStyle = { ...previousStyle, ...style };
+  const currentStyle = { ...previousStyle, ...newProps };
   component.previousStyle = currentStyle;
 
-  if (isAnimatedProps) {
-    component.setNativeProps?.(style);
-  } else {
-    component.setNativeProps?.({ style: currentStyle });
-  }
+  component.setNativeProps?.({ style: currentStyle });
 };
 
 const updatePropsDOM = (
