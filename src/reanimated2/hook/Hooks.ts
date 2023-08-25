@@ -30,16 +30,7 @@ if (shouldBeUseWeb()) {
     );
   };
 } else {
-  useAnimatedProps = function <T extends object>(
-    updater: () => Partial<T>,
-    deps?: DependencyList | null,
-    adapters?:
-      | AnimatedPropsAdapterFunction
-      | AnimatedPropsAdapterFunction[]
-      | null
-  ) {
-    return (useAnimatedStyle as useAnimatedPropsType)(updater, deps, adapters);
-  };
+  useAnimatedProps = useAnimatedStyle as useAnimatedPropsType;
 }
 
 export function useWorkletCallback<A extends unknown[], R>(
