@@ -22,11 +22,14 @@ static const auto callGuardLambda = [](facebook::jsi::Runtime &rt,
 jsi::Function getCallGuard(jsi::Runtime &rt) {
   auto callGuard = rt.global().getProperty(rt, "__callGuardDEV");
   if (callGuard.isObject()) {
-    // use JS-based implementation if available
+    // Use JS implementation if `__callGuardDEV` has already been installed.
     return callGuard.asObject(rt).asFunction(rt);
   }
-  // fallback to C++ JSI implementation
-  // this is necessary to install __callGuardDEV itself
+
+  // Otherwise, fallback to C++ JSI implementation which doesn't intercept
+  // errors and throws them as C++ exceptions. This should happen only once when
+  // we install `__callGuardDEV` itself. We assume that installing
+  // `__callGuardDEV` doesn't throw any errors.
   return jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "callGuard"), 1, callGuardLambda);
 }
