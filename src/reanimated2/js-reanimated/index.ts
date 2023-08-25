@@ -57,7 +57,7 @@ interface JSReanimatedComponent {
 export const _updatePropsJS = (
   updates: StyleProps | AnimatedStyle<any>,
   viewRef: { _component?: JSReanimatedComponent },
-  isAnimatedProps = false
+  isAnimatedProps?: boolean
 ): void => {
   if (viewRef._component) {
     const component = viewRef._component;
@@ -100,7 +100,7 @@ export const _updatePropsJS = (
 const setNativeProps = (
   component: JSReanimatedComponent,
   style: StyleProps,
-  isAnimatedProps = false
+  isAnimatedProps?: boolean
 ): void => {
   const previousStyle = component.previousStyle ? component.previousStyle : {};
   const currentStyle = { ...previousStyle, ...style };
@@ -116,7 +116,7 @@ const setNativeProps = (
 const updatePropsDOM = (
   component: JSReanimatedComponent | HTMLElement,
   style: StyleProps,
-  isAnimatedProps = false
+  isAnimatedProps?: boolean
 ): void => {
   const previousStyle = (component as JSReanimatedComponent).previousStyle
     ? (component as JSReanimatedComponent).previousStyle
