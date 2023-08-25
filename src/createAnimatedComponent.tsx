@@ -619,14 +619,22 @@ export default function createAnimatedComponent(
             configureLayoutAnimations(
               tag,
               LayoutAnimationType.LAYOUT,
-              maybeBuild(layout, this.props?.style)
+              maybeBuild(
+                layout,
+                this.props?.style,
+                AnimatedComponent.displayName
+              )
             );
           }
           if (entering) {
             configureLayoutAnimations(
               tag,
               LayoutAnimationType.ENTERING,
-              maybeBuild(entering, this.props?.style)
+              maybeBuild(
+                entering,
+                this.props?.style,
+                AnimatedComponent.displayName
+              )
             );
           }
           if (exiting) {
@@ -639,7 +647,11 @@ export default function createAnimatedComponent(
               configureLayoutAnimations(
                 tag,
                 LayoutAnimationType.EXITING,
-                maybeBuild(exiting, this.props?.style)
+                maybeBuild(
+                  exiting,
+                  this.props?.style,
+                  AnimatedComponent.displayName
+                )
               );
             }
           }

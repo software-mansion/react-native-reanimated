@@ -26,7 +26,8 @@ export function maybeBuild(
     | ILayoutAnimationBuilder
     | LayoutAnimationFunction
     | Keyframe,
-  style: StyleProps | undefined
+  style: StyleProps | undefined,
+  displayName: string
 ): LayoutAnimationFunction | Keyframe {
   const isAnimationBuilder = (
     value: ILayoutAnimationBuilder | LayoutAnimationFunction | Keyframe
@@ -48,7 +49,7 @@ export function maybeBuild(
       console.warn(
         `[Reanimated] ${
           commonProperties.length === 1 ? 'Property' : 'Properties: '
-        } "${commonProperties}" may be overwritten with layout animation. Please create a wrapper with the layout animation you want to apply.`
+        } "${commonProperties}" of ${displayName} may be overwritten with layout animation. Please create a wrapper with the layout animation you want to apply.`
       );
     }
 
