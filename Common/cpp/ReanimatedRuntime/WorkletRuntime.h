@@ -27,7 +27,7 @@ class WorkletRuntime : public jsi::HostObject {
 
   void installValueUnpacker(const std::string &valueUnpackerCode);
 
-  jsi::Runtime &getRuntime() const {
+  jsi::Runtime &getJSIRuntime() const {
     return *runtime_;
   }
 

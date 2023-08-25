@@ -156,7 +156,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   }
 
   inline jsi::Runtime &getUIRuntime() {
-    return uiWorkletRuntime_->getRuntime();
+    return uiWorkletRuntime_->getJSIRuntime();
   }
 
  private:

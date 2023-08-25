@@ -113,7 +113,7 @@ NativeReanimatedModule::NativeReanimatedModule(
   };
 #endif
 
-  jsi::Runtime &uiRuntime = uiWorkletRuntime_->getRuntime();
+  jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
   UIRuntimeDecorator::decorate(
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -163,7 +163,7 @@ void NativeReanimatedModule::scheduleOnUI(
     // JSI objects and hence it allows for such objects to be garbage collected
     // much sooner.
     // Apparently the scope API is only supported on Hermes at the moment.
-    const auto scope = jsi::Scope(uiWorkletRuntime_->getRuntime());
+    const auto scope = jsi::Scope(uiWorkletRuntime_->getJSIRuntime());
 #endif
     uiWorkletRuntime_->runGuarded(shareableWorklet);
   });
@@ -284,7 +284,7 @@ jsi::Value NativeReanimatedModule::getViewProp(
       callback.getObject(rnRuntime).asFunction(rnRuntime));
 
   uiScheduler_->scheduleOnUI([=]() {
-    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getRuntime();
+    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
     const auto propNameValue =
         jsi::String::createFromUtf8(uiRuntime, propNameStr);
     const auto resultValue =
@@ -359,7 +359,7 @@ void NativeReanimatedModule::requestAnimationFrame(
 void NativeReanimatedModule::maybeRequestRender() {
   if (!renderRequested_) {
     renderRequested_ = true;
-    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getRuntime();
+    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
     requestRender_(onRenderCallback_, uiRuntime);
   }
 }
@@ -367,7 +367,7 @@ void NativeReanimatedModule::maybeRequestRender() {
 void NativeReanimatedModule::onRender(double timestampMs) {
   auto callbacks = std::move(frameCallbacks_);
   frameCallbacks_.clear();
-  jsi::Runtime &uiRuntime = uiWorkletRuntime_->getRuntime();
+  jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
   jsi::Value timestamp{timestampMs};
   for (const auto &callback : callbacks) {
     runOnRuntimeGuarded(uiRuntime, *callback, timestamp);
@@ -450,7 +450,7 @@ bool NativeReanimatedModule::handleRawEvent(
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
   }
-  jsi::Runtime &rt = uiWorkletRuntime_->getRuntime();
+  jsi::Runtime &rt = uiWorkletRuntime_->getJSIRuntime();
   jsi::Value payload = payloadFactory(rt);
 
   auto res = handleEvent(eventType, tag, std::move(payload), currentTime);
@@ -489,7 +489,7 @@ void NativeReanimatedModule::performOperations() {
   auto copiedOperationsQueue = std::move(operationsInBatch_);
   operationsInBatch_.clear();
 
-  jsi::Runtime &rt = uiWorkletRuntime_->getRuntime();
+  jsi::Runtime &rt = uiWorkletRuntime_->getJSIRuntime();
 
   {
     assert(propsRegistry_ != nullptr);
