@@ -17,6 +17,8 @@ TurboModule::TurboModule(
     std::shared_ptr<CallInvoker> jsInvoker)
     : name_(name), jsInvoker_(jsInvoker) {}
 
+TurboModule::~TurboModule() {}
+
 jsi::Value TurboModule::get(
     jsi::Runtime &runtime,
     const jsi::PropNameID &propName) {

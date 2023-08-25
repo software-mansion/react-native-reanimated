@@ -36,7 +36,7 @@ class HermesExecutorRuntimeAdapter
       std::shared_ptr<MessageQueueThread> thread)
       : hermesRuntime_(hermesRuntime), thread_(std::move(thread)) {}
 
-  ~HermesExecutorRuntimeAdapter() override {
+  virtual ~HermesExecutorRuntimeAdapter() {
     // This is required by iOS, because there is an assertion in the destructor
     // that the thread was indeed `quit` before
     thread_->quitSynchronous();
