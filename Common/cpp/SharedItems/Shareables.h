@@ -35,7 +35,7 @@ inline void runOnRuntimeGuarded(
 #endif
 }
 
-void cleanupIfRuntimeExists(
+inline void cleanupIfRuntimeExists(
     jsi::Runtime *rt,
     std::unique_ptr<jsi::Value> &value) {
   if (rt != nullptr && !WorkletRuntimeRegistry::isRuntimeAlive(rt)) {
