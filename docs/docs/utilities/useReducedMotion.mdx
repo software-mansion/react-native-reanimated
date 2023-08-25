@@ -13,9 +13,9 @@ This hook allows you to conditionally control animations based on the system's `
 import { useReducedMotion } from 'react-native-reanimated';
 
 function App() {
-  const shouldReduceMotion = useReducedMotion();
+  const reduceMotion = useReducedMotion();
 
-  if (shouldReduceMotion) {
+  if (reduceMotion) {
     // display static content ✨
   } else {
     // run animations ✨

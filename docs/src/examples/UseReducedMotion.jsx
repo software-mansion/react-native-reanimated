@@ -11,12 +11,12 @@ import Animated, {
 export default function App() {
   const sv = useSharedValue(-200);
   // highlight-start
-  const shouldReduceMotion = useReducedMotion();
+  const reduceMotion = useReducedMotion();
   // highlight-end
 
   const animatedStyle = useAnimatedStyle(() => ({
     // highlight-start
-    transform: [{ translateX: shouldReduceMotion ? 0 : sv.value }],
+    transform: [{ translateX: reduceMotion ? 0 : sv.value }],
     // highlight-end
   }));
 

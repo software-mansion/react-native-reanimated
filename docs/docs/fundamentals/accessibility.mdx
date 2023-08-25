@@ -31,9 +31,9 @@ When `Reduced Motion` is enabled:
 - `withDecay` returns the current value immediately, taking into account the clamp parameter
 - `withDelay` initiates the next animation immediately
 - `withRepeat`
-  - when the numOfReps is infinite or even and the animation is reversed, then the repeated animation does not start and the startValue is returned
+  - when the `numberOfReps` is infinite or even and the animation is reversed, then the repeated animation does not start
   - otherwise, the repeated animation runs once
-- `withSequence` exclusively starts animations with reduced motion disabled
+- `withSequence` exclusively starts animations that have `Reduced Motion` disabled
 
 Higher-order animations pass the configuration to their children, only if the children have not been configured by the user.
 
@@ -67,7 +67,7 @@ function App() {
 }
 ```
 
-And here `withTiming` will be executed with no delay:
+And here `withTiming` will be executed as usual and with no delay:
 
 ```javascript
 import { withDelay, withTiming } from 'react-native-reanimated';
