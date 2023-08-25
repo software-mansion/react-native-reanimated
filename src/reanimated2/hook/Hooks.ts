@@ -10,7 +10,6 @@ import { isWeb } from '../PlatformChecker';
 // TODO: we should make sure that when useAP is used we are not assigning styles
 // when you need styles to animated you should always use useAS
 // TODO TYPESCRIPT This is a temporary cast to get rid of .d.ts file.
-// export const useAnimatedProps = useAnimatedStyle as useAnimatedPropsType;
 
 export const useAnimatedProps = function <T extends object>(
   updater: () => Partial<T>,
