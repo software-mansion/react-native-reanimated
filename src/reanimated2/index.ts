@@ -65,6 +65,7 @@ export {
   ExtrapolationConfig,
   ExtrapolationType,
   interpolate,
+  clamp,
 } from './interpolation';
 export {
   Extrapolate,
