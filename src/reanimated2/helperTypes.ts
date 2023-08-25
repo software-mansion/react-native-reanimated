@@ -163,5 +163,6 @@ export type useAnimatedPropsType = <T extends object>(
   adapters?:
     | AnimatedPropsAdapterFunction
     | AnimatedPropsAdapterFunction[]
-    | null
+    | null,
+  isAnimatedProps?: boolean
 ) => Partial<T>;
