@@ -33,6 +33,9 @@ public class NativeProxy extends NativeProxyCommon {
         prepareLayoutAnimations(LayoutAnimations);
         ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
         installJSIBindings(messageQueueThread);
+        if(BuildConfig.DEBUG){
+            checkCppVersion();
+        }
     }
 
     private native HybridData initHybrid(

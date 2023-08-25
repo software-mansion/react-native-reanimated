@@ -45,6 +45,7 @@ public abstract class NativeProxyCommon {
   private ReanimatedKeyboardEventListener reanimatedKeyboardEventListener;
   private Long firstUptime = SystemClock.uptimeMillis();
   private boolean slowAnimationsEnabled = false;
+  protected String cppVersion = null;
 
   protected NativeProxyCommon(ReactApplicationContext context) {
     mAndroidUIScheduler = new AndroidUIScheduler(context);
@@ -99,6 +100,30 @@ public abstract class NativeProxyCommon {
   @DoNotStrip
   public String getReanimatedJavaVersion() {
     return BuildConfig.REANIMATED_VERSION_JAVA;
+  }
+
+  @DoNotStrip
+  @SuppressWarnings("unused")
+  protected void setCppVersion(String version) {
+    cppVersion = version;
+  }
+
+  protected void checkCppVersion() {
+    if (cppVersion == null) {
+      throw new RuntimeException(
+          "[Reanimated] Native side failed to resolve C++ code version. "
+              + "See https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#native-side-failed-to-resolve-c-code-version for more information.");
+    }
+    String javaVersion = getReanimatedJavaVersion();
+    if (!cppVersion.equals(javaVersion)) {
+      throw new RuntimeException(
+          "[Reanimated] (Java) Mismatch between Java code version and C++ code version ("
+              + javaVersion
+              + " vs. "
+              + cppVersion
+              + " respectively). See "
+              + "https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#java-mismatch-between-java-code-version-and-c-code-version for more information.");
+    }
   }
 
   @DoNotStrip

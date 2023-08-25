@@ -118,6 +118,20 @@ void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
         "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#c-mismatch-between-c-code-version-and-java-code-version` for more details.");
   }
 }
+
+void NativeProxy::injectCppVersion() {
+  auto cppVersion = getReanimatedCppVersion();
+  try {
+    static const auto method =
+        getJniMethod<void(jni::local_ref<JString>)>("setCppVersion");
+    method(javaPart_.get(), make_jstring(cppVersion));
+  } catch (std::exception &) {
+    throw std::runtime_error(
+        std::string(
+            "[Reanimated] (C++) Native side failed to resolve Java code version (injection).\n") +
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#native-side-failed-to-resolve-java-code-version` for more details.");
+  }
+}
 #endif // DEBUG
 
 void NativeProxy::installJSIBindings(
@@ -158,6 +172,7 @@ void NativeProxy::installJSIBindings(
   auto isReducedMotion = getIsReducedMotion();
 #ifdef DEBUG
   checkJavaVersion(rnRuntime);
+  injectCppVersion();
 #endif // DEBUG
   RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
   registerEventHandler();

@@ -88,7 +88,21 @@ See (Mismatch between JavaScript part and native part of Reanimated)[#mismatch-b
 
 ### (C++) Mismatch between C++ code version and Java code version
 
-See [Native side failed to resolve Java code version](#native-side-failed-to-resolve-java-code-version).
+**Problem:** This happens when Reanimated has different versions of its C++ and Java parts.
+
+**Solution:** See [Native side failed to resolve Java code version](#native-side-failed-to-resolve-java-code-version).
+
+### Native side failed to resolve C++ code version
+
+**Problem:** This happens when Reanimated fails to determine the version of its C++ part - most likely because for some reason C++ part hasn't rebuilt after an upgrade.
+
+**Solution:** See [Native side failed to resolve Java code version](#native-side-failed-to-resolve-java-code-version).
+
+### (Java) Mismatch between Java code version and C++ code version
+
+**Problem:** This happens when Reanimated has different versions of its Java and C++ parts.
+
+**Solution:** See [Native side failed to resolve Java code version](#native-side-failed-to-resolve-java-code-version).
 
 ### Multiple versions of Reanimated were detected
 
