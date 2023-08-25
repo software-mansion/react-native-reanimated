@@ -67,15 +67,19 @@ const shouldBeUseNotDebug = !__DEV__;
 
 function checkReanimatedInstance() {
   if (!shouldBeUseNotDebug) {
-    if (global._REANIMATED_VERSION_JS !== undefined) {
+    if (
+      global._REANIMATED_VERSION_JS !== undefined &&
+      global._REANIMATED_VERSION_JS !== jsVersion
+    ) {
       throw new Error(
         `[Reanimated] Another instance of \`react-native-reanimated\` was detected.
-See \`http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-another-instance-of-react-native-reanimated-was-detected\` for more details.`
+See \`http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-another-instance-of-react-native-reanimated-was-detected\` for more details. global._REANIMATED_VERSION_JS: ${global._REANIMATED_VERSION_JS}, jsVersion: ${jsVersion}}`
       );
     }
     global._REANIMATED_VERSION_JS = jsVersion;
   }
 }
+//
 
 export class NativeReanimated {
   native = true;

@@ -2,6 +2,7 @@
 #include <jsi/instrumentation.h>
 #include <chrono>
 #include <memory>
+#include <regex>
 #include <unordered_map>
 #include <utility>
 #include "JSISerializer.h"
@@ -154,6 +155,28 @@ void RuntimeDecorator::decorateUIRuntime(
 }
 
 #ifdef DEBUG
+// This function is pretty much a copy of
+// `src/reanimated2/platform-specific/checkVersion.ts`.
+bool matchVersion(std::string version1, std::string version2) {
+  std::regex pattern("^\\d+\\.\\d+\\.\\d+$");
+  if (std::regex_match(version1, pattern) &&
+      std::regex_match(version2, pattern)) {
+    auto major1 = std::regex_search(version1, std::regex("^\\d+"));
+    auto major2 = std::regex_search(version2, std::regex("^\\d+"));
+    if (major1 != major2) {
+      return false;
+    }
+    auto minor1 = std::regex_search(version1, std::regex("\\.\\d+\\."));
+    auto minor2 = std::regex_search(version2, std::regex("\\.\\d+\\."));
+    if (minor1 != minor2) {
+      return false;
+    }
+    return true;
+  } else {
+    return version1 == version2;
+  }
+}
+
 void checkJSVersion(jsi::Runtime &rnRuntime) {
   auto cppVersion = getReanimatedCppVersion();
 
@@ -168,7 +191,7 @@ void checkJSVersion(jsi::Runtime &rnRuntime) {
 
   auto jsVersion = maybeJSVersion.asString(rnRuntime).utf8(rnRuntime);
 
-  if (jsVersion != cppVersion) {
+  if (!matchVersion(cppVersion, jsVersion)) {
     throw std::runtime_error(
         std::string(
             "[Reanimated] (C++) Mismatch between C++ code version and JavaScript code version (") +
