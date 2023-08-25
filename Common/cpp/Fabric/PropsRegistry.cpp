@@ -18,7 +18,6 @@ void PropsRegistry::update(
     // returns `ShadowNodeFamily const &` which is non-owning
     map_[tag] = std::make_pair(shadowNode, props);
   } else {
-    // no need to update `.first` because ShadowNodeFamily doesn't change
     // merge new props with old props
     it->second.second.update(props);
 
