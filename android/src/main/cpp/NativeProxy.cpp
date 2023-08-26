@@ -19,11 +19,6 @@
 #include "WorkletRuntime.h"
 #include "WorkletRuntimeCollector.h"
 
-#ifdef RCT_NEW_ARCH_ENABLED
-#include "FabricUtils.h"
-#include "ReanimatedCommitHook.h"
-#endif
-
 namespace reanimated {
 
 using namespace facebook;
@@ -57,6 +52,9 @@ NativeProxy::NativeProxy(
   auto propsRegistry = std::make_shared<PropsRegistry>();
   commitHook_ =
       std::make_shared<ReanimatedCommitHook>(propsRegistry, uiManager);
+#if REACT_NATIVE_MINOR_VERSION >= 73
+  mountHook_ = std::make_shared<ReanimatedMountHook>(propsRegistry, uiManager_);
+#endif
   nativeReanimatedModule_->setUIManager(uiManager);
   nativeReanimatedModule_->setPropsRegistry(propsRegistry);
   // removed temporarily, event listener mechanism needs to be fixed on RN side

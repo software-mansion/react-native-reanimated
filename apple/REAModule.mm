@@ -13,6 +13,10 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <RNReanimated/REAInitializerRCTFabricSurface.h>
 #import <RNReanimated/ReanimatedCommitHook.h>
+
+#if REACT_NATIVE_MINOR_VERSION >= 73
+#import <RNReanimated/ReanimatedMountHook.h>
+#endif
 #endif
 
 #import <RNReanimated/JsiUtils.h>
@@ -52,6 +56,9 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
   __weak RCTSurfacePresenter *_surfacePresenter;
   std::shared_ptr<PropsRegistry> propsRegistry_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
+#if REACT_NATIVE_MINOR_VERSION >= 73
+  std::shared_ptr<ReanimatedMountHook> mountHook_;
+#endif
   std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule_;
 #else
   NSMutableArray<AnimatedOperation> *_operations;
@@ -102,6 +109,9 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   react_native_assert(uiManager.get() != nil);
   auto propsRegistry = std::make_shared<PropsRegistry>();
   commitHook_ = std::make_shared<ReanimatedCommitHook>(propsRegistry, uiManager);
+#if REACT_NATIVE_MINOR_VERSION >= 73
+  mountHook_ = std::make_shared<ReanimatedMountHook>(propsRegistry, uiManager);
+#endif
   if (auto nativeReanimatedModule = weakNativeReanimatedModule_.lock()) {
     nativeReanimatedModule->setUIManager(uiManager);
     nativeReanimatedModule->setPropsRegistry(propsRegistry);

@@ -531,7 +531,7 @@ void NativeReanimatedModule::performOperations() {
     return;
   }
 
-  if (propsRegistry_->shouldSkipCommit()) {
+  if (propsRegistry_->shouldReanimatedSkipCommit()) {
     // It may happen that `performOperations` is called on the UI thread
     // while React Native tries to commit a new tree on the JS thread.
     // In this case, we should skip the commit here and let React Native do it.
