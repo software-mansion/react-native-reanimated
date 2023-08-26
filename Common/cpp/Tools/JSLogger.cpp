@@ -5,12 +5,8 @@
 
 namespace reanimated {
 
-JSLogger::JSLogger(const std::shared_ptr<JSRuntimeHelper> &runtimeHelper)
-    : runtimeHelper_(runtimeHelper) {}
-
 void JSLogger::warnOnJS(const std::string &warning) const {
-  runtimeHelper_->scheduleOnJS([warning, &runtimeHelper = runtimeHelper_]() {
-    jsi::Runtime &rt = *(runtimeHelper->rnRuntime());
+  jsScheduler_->scheduleOnJS([warning](jsi::Runtime &rt) {
     auto console = rt.global().getPropertyAsObject(rt, "console");
     auto warn = console.getPropertyAsFunction(rt, "warn");
     warn.call(rt, jsi::String::createFromUtf8(rt, warning));
