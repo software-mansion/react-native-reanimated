@@ -23,13 +23,15 @@ jsi::Function getCallGuard(jsi::Runtime &rt) {
   auto callGuard = rt.global().getProperty(rt, "__callGuardDEV");
   if (callGuard.isObject()) {
     // Use JS implementation if `__callGuardDEV` has already been installed.
+    // This is the desired behavior.
     return callGuard.asObject(rt).asFunction(rt);
   }
 
-  // Otherwise, fallback to C++ JSI implementation which doesn't intercept
-  // errors and throws them as C++ exceptions. This should happen only once when
-  // we install `__callGuardDEV` itself. We assume that installing
-  // `__callGuardDEV` doesn't throw any errors.
+  // Otherwise, fallback to C++ JSI implementation. This is necessary so that we
+  // can install `__callGuardDEV` itself and should happen only once. Note that
+  // the C++ implementation doesn't intercept errors and simply throws them as
+  // C++ exceptions which crashes the app. We assume that installing the guard
+  // doesn't throw any errors.
   return jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "callGuard"), 1, callGuardLambda);
 }
