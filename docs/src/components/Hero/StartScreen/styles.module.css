@@ -9,8 +9,8 @@
 
 .heading {
   position: absolute;
-  margin-top: 25vh;
-  margin-left: 10vw;
+  padding-top: 25vh;
+  padding-left: 10vw;
 
   width: 80%;
   height: fit-content;

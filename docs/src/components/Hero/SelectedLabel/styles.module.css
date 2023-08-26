@@ -4,6 +4,7 @@
 }
 
 .selection {
+  cursor: grab;
   display: inline-block;
   padding: 2px 10px 8px;
   color: var(--swm-landing-heading-selected);
@@ -16,6 +17,10 @@
     linear-gradient(var(--swm-landing-heading-selected-border) 50%, transparent 0%) right/var(--swm-dash-width) var(--swm-dash-spacing) repeat-y, /* right */
     linear-gradient(to right, var(--swm-landing-heading-selected-border) 50%, transparent 0%) bottom/var(--swm-dash-spacing) var(--swm-dash-width) repeat-x, /* bottom */
     linear-gradient(var(--swm-landing-heading-selected-border) 50%, transparent 0%) left/var(--swm-dash-width) var(--swm-dash-spacing) repeat-y; /* left */
+}
+
+.selection:active {
+  cursor: grabbing;
 }
 
 .selectionContainer {
