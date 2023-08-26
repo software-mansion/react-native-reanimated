@@ -16,11 +16,6 @@
 #include "PlatformDepMethodsHolder.h"
 #include "ReanimatedRuntime.h"
 
-#ifdef RCT_NEW_ARCH_ENABLED
-#include "FabricUtils.h"
-#include "ReanimatedCommitHook.h"
-#endif
-
 namespace reanimated {
 
 using namespace facebook;
@@ -53,6 +48,10 @@ NativeProxy::NativeProxy(
   uiManager_ = binding->getScheduler()->getUIManager();
   commitHook_ =
       std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
+#if REACT_NATIVE_MINOR_VERSION >= 73
+  mountHook_ =
+      std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
+#endif
 #endif
 }
 
