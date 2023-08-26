@@ -1,12 +1,9 @@
-import React, { useEffect } from 'react';
-import { Button, StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
-  backgroundTask,
   createWorkletRuntime,
   runOnJS,
-  runOnRuntime,
-  runOnRuntimeSync,
   runOnUI,
   useAnimatedStyle,
   useSharedValue,
@@ -20,11 +17,7 @@ export default function WorkletRuntimeExample() {
       <RunOnUIRunOnJSDemo />
       <CreateWorkletRuntimeDemo />
       <InitializerDemo />
-      <RunOnRuntimeAsyncDemo />
-      <RunOnRuntimeSyncDemo />
       <ThrowErrorDemo />
-      <BackgroundTaskDemo />
-      <BackgroundTaskErrorDemo />
     </View>
   );
 }
@@ -89,31 +82,7 @@ function InitializerDemo() {
     });
   };
 
-  return <Button title="initializer" onPress={handlePress} />;
-}
-
-function RunOnRuntimeAsyncDemo() {
-  const handlePress = () => {
-    const runtime = createWorkletRuntime('foo');
-    runOnRuntime(runtime, () => {
-      'worklet';
-      console.log('Hello from worklet runtime async!');
-    })();
-  };
-
-  return <Button title="runOnRuntimeAsync" onPress={handlePress} />;
-}
-
-function RunOnRuntimeSyncDemo() {
-  const handlePress = () => {
-    const runtime = createWorkletRuntime('foo');
-    runOnRuntimeSync(runtime, () => {
-      'worklet';
-      console.log('Hello from worklet runtime sync!');
-    })();
-  };
-
-  return <Button title="runOnRuntimeSync" onPress={handlePress} />;
+  return <Button title="Initializer" onPress={handlePress} />;
 }
 
 function ThrowErrorDemo() {
@@ -133,58 +102,6 @@ function ThrowErrorDemo() {
   };
 
   return <Button title="Throw error" onPress={handlePress} />;
-}
-
-function BackgroundTaskDemo() {
-  const [count, setCount] = React.useState(0);
-  const [result, setResult] = React.useState(' ');
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setCount((prev) => prev + 1);
-    }, 10);
-    return () => clearInterval(id);
-  });
-
-  function fib(n: number): number {
-    'worklet';
-    if (n < 2) {
-      return 1;
-    }
-    return fib(n - 1) + fib(n - 2);
-  }
-
-  const handlePress = async () => {
-    setResult('Work in progress...');
-    const result = await backgroundTask(() => {
-      'worklet';
-      return fib(35);
-    });
-    setResult(String(result));
-  };
-
-  return (
-    <>
-      <Button title="Background task" onPress={handlePress} />
-      <Text>{count}</Text>
-      <Text>{result}</Text>
-    </>
-  );
-}
-
-function BackgroundTaskErrorDemo() {
-  const handlePress = async () => {
-    try {
-      await backgroundTask(() => {
-        'worklet';
-        throw new Error('Hello world!');
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  return <Button title="Background task error" onPress={handlePress} />;
 }
 
 const styles = StyleSheet.create({

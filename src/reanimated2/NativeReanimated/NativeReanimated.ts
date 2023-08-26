@@ -1,6 +1,5 @@
 import { NativeModules } from 'react-native';
 import type {
-  ComplexWorkletFunction,
   ShareableRef,
   ShareableSyncDataHolderRef,
   Value3D,
@@ -26,15 +25,10 @@ export interface NativeReanimatedModule {
   ): ShareableSyncDataHolderRef<T>;
   getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>): T;
   scheduleOnUI<T>(shareable: ShareableRef<T>): void;
-  createWorkletRuntime(name: string): WorkletRuntime;
-  runOnRuntime(
-    runtime: WorkletRuntime,
-    shareable: ShareableRef<ComplexWorkletFunction<[], void>>
-  ): void;
-  runOnRuntimeSync(
-    runtime: WorkletRuntime,
-    worklet: ShareableRef<ComplexWorkletFunction<[], void>>
-  ): void;
+  createWorkletRuntime(
+    name: string,
+    initializer: ShareableRef<() => void>
+  ): WorkletRuntime;
   registerEventHandler<T>(
     eventHandler: ShareableRef<T>,
     eventName: string,
@@ -107,22 +101,8 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return this.InnerNativeModule.scheduleOnUI(shareable);
   }
 
-  createWorkletRuntime(name: string) {
-    return this.InnerNativeModule.createWorkletRuntime(name);
-  }
-
-  runOnRuntime(
-    runtime: WorkletRuntime,
-    worklet: ShareableRef<ComplexWorkletFunction<[], void>>
-  ) {
-    return this.InnerNativeModule.runOnRuntime(runtime, worklet);
-  }
-
-  runOnRuntimeSync(
-    runtime: WorkletRuntime,
-    worklet: ShareableRef<ComplexWorkletFunction<[], void>>
-  ) {
-    return this.InnerNativeModule.runOnRuntimeSync(runtime, worklet);
+  createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {
+    return this.InnerNativeModule.createWorkletRuntime(name, initializer);
   }
 
   registerSensor(

@@ -3,12 +3,8 @@ import './publicGlobals';
 export {
   runOnJS,
   runOnUI,
-  runOnRuntime,
-  runOnRuntimeSync,
   createWorkletRuntime,
   WorkletRuntime,
-  backgroundTask,
-  BackgroundTaskConfig,
   makeMutable,
   isReanimated3,
   isConfigured,

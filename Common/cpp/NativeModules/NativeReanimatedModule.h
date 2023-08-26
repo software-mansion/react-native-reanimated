@@ -58,16 +58,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
 
-  jsi::Value createWorkletRuntime(jsi::Runtime &rt, const jsi::Value &name)
-      override;
-  void runOnRuntime(
+  jsi::Value createWorkletRuntime(
       jsi::Runtime &rt,
-      const jsi::Value &runtime,
-      const jsi::Value &worklet) override;
-  void runOnRuntimeSync(
-      jsi::Runtime &rt,
-      const jsi::Value &runtime,
-      const jsi::Value &worklet) override;
+      const jsi::Value &name,
+      const jsi::Value &initializer) override;
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,

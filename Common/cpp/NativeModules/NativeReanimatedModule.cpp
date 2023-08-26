@@ -171,40 +171,15 @@ void NativeReanimatedModule::scheduleOnUI(
 
 jsi::Value NativeReanimatedModule::createWorkletRuntime(
     jsi::Runtime &rt,
-    const jsi::Value &name) {
+    const jsi::Value &name,
+    const jsi::Value &initializer) {
   auto workletRuntime = std::make_shared<WorkletRuntime>(
       rt, jsQueue_, jsScheduler_, name.asString(rt).utf8(rt));
   workletRuntime->installValueUnpacker(valueUnpackerCode_);
+  auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
+      rt, initializer, "[Reanimated] Initializer must be a worklet.");
+  workletRuntime->runGuarded(initializerShareable);
   return jsi::Object::createFromHostObject(rt, workletRuntime);
-}
-
-void NativeReanimatedModule::runOnRuntime(
-    jsi::Runtime &rt,
-    const jsi::Value &runtime,
-    const jsi::Value &worklet) {
-  auto workletRuntime = extractWorkletRuntime(rt, runtime);
-  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
-      rt, worklet, "only worklets can be scheduled to run on worklet runtime");
-  std::thread job([=] {
-#ifdef __ANDROID__
-    jni::ThreadScope::WithClassLoader([=] { // thread attached to JVM
-#endif
-      workletRuntime->runGuarded(shareableWorklet);
-#ifdef __ANDROID__
-    });
-#endif
-  });
-  job.detach();
-}
-
-void NativeReanimatedModule::runOnRuntimeSync(
-    jsi::Runtime &rt,
-    const jsi::Value &runtime,
-    const jsi::Value &worklet) {
-  auto workletRuntime = extractWorkletRuntime(rt, runtime);
-  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
-      rt, worklet, "only worklets can be run on worklet runtime");
-  workletRuntime->runGuarded(shareableWorklet);
 }
 
 jsi::Value NativeReanimatedModule::makeSynchronizedDataHolder(

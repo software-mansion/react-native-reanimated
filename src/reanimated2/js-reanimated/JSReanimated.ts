@@ -5,7 +5,6 @@ import {
   isWindowAvailable,
 } from '../PlatformChecker';
 import type {
-  ComplexWorkletFunction,
   ShareableRef,
   ShareableSyncDataHolderRef,
   Value3D,
@@ -32,27 +31,12 @@ export default class JSReanimated {
     requestAnimationFrame(worklet);
   }
 
-  createWorkletRuntime(_name: string): WorkletRuntime {
+  createWorkletRuntime(
+    _name: string,
+    _initializer: ShareableRef<() => void>
+  ): WorkletRuntime {
     throw new Error(
       '[Reanimated] createWorkletRuntime is not available in JSReanimated.'
-    );
-  }
-
-  runOnRuntime(
-    _runtime: WorkletRuntime,
-    _worklet: ShareableRef<ComplexWorkletFunction<[], void>>
-  ) {
-    throw new Error(
-      '[Reanimated] runOnRuntime is not implemented in JSReanimated yet'
-    );
-  }
-
-  runOnRuntimeSync(
-    _runtime: WorkletRuntime,
-    _worklet: ShareableRef<ComplexWorkletFunction<[], void>>
-  ) {
-    throw new Error(
-      '[Reanimated] runOnRuntimeSync is not implemented in JSReanimated yet'
     );
   }
 
