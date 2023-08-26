@@ -168,8 +168,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
     throw error;
   });
-  auto rnRuntime = reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
-  std::shared_ptr<jsi::Runtime> uiRuntime = ReanimatedRuntime::make(rnRuntime, jsQueue);
+
+  jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
 
   std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
 
@@ -209,7 +209,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   // Layout Animations start
   REAAnimationsManager *animationsManager = reaModule.animationsManager;
   __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
-  std::weak_ptr<jsi::Runtime> weakUiRuntime = uiRuntime;
 
   auto progressLayoutAnimation = [=](jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool isSharedTransition) {
     NSDictionary *propsDict = convertJSIObjectToNSDictionary(rt, newStyle);
@@ -289,17 +288,15 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
 
   auto nativeReanimatedModule =
-      std::make_shared<NativeReanimatedModule>(jsInvoker, uiScheduler, uiRuntime, platformDepMethodsHolder);
-
-  uiScheduler->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
+      std::make_shared<NativeReanimatedModule>(rnRuntime, jsInvoker, jsQueue, uiScheduler, platformDepMethodsHolder);
 
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
     std::string eventName = [event.eventName UTF8String];
     int emitterReactTag = [event.viewTag intValue];
     id eventData = [event arguments][2];
-    jsi::Runtime &rt = *nativeReanimatedModule->runtimeManager_->runtime;
-    jsi::Value payload = convertObjCObjectToJSIValue(rt, eventData);
+    jsi::Runtime &uiRuntime = nativeReanimatedModule->getUIRuntime();
+    jsi::Value payload = convertObjCObjectToJSIValue(uiRuntime, eventData);
     double currentTime = CACurrentMediaTime() * 1000;
     nativeReanimatedModule->handleEvent(eventName, emitterReactTag, payload, currentTime);
   }];
@@ -316,11 +313,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   [animationsManager
       setAnimationStartingBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values) {
         if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-          auto uiRuntime = weakUiRuntime.lock();
-          if (uiRuntime == nullptr) {
-            return;
-          }
-          jsi::Runtime &rt = *uiRuntime;
+          jsi::Runtime &rt = nativeReanimatedModule->getUIRuntime();
           jsi::Object yogaValues(rt);
           for (NSString *key in values.allKeys) {
             NSObject *value = values[key];
@@ -356,10 +349,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   [animationsManager setCancelAnimationBlock:^(NSNumber *_Nonnull tag) {
     if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      if (auto uiRuntime = weakUiRuntime.lock()) {
-        jsi::Runtime &rt = *uiRuntime;
-        nativeReanimatedModule->layoutAnimationsManager().cancelLayoutAnimation(rt, [tag intValue]);
-      }
+      jsi::Runtime &rt = nativeReanimatedModule->getUIRuntime();
+      nativeReanimatedModule->layoutAnimationsManager().cancelLayoutAnimation(rt, [tag intValue]);
     }
   }];
 
