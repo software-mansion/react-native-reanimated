@@ -105,17 +105,17 @@ class Shareable {
 template <typename BaseClass>
 class RetainingShareable : virtual public BaseClass {
  private:
-  jsi::Runtime *rnRuntime_;
-  jsi::Runtime *uiRuntime_;
-  std::unique_ptr<jsi::Value> uiValue_;
+  jsi::Runtime *primaryRuntime_;
+  jsi::Runtime *secondaryRuntime_;
+  std::unique_ptr<jsi::Value> secondaryValue_;
 
  public:
   template <typename... Args>
   explicit RetainingShareable(jsi::Runtime &rt, Args &&...args)
-      : BaseClass(rt, std::forward<Args>(args)...), rnRuntime_(&rt) {}
+      : BaseClass(rt, std::forward<Args>(args)...), primaryRuntime_(&rt) {}
 
   jsi::Value getJSValue(jsi::Runtime &rt) {
-    if (&rt == rnRuntime_) {
+    if (&rt == primaryRuntime_) {
       // TODO: it is suboptimal to generate new object every time getJS is
       // called on host runtime – the objects we are generating already exists
       // and we should possibly just grab a hold of such object and use it here
@@ -124,20 +124,20 @@ class RetainingShareable : virtual public BaseClass {
       // shared value is created and then accessed on the same runtime
       return BaseClass::toJSValue(rt);
     }
-    if (uiValue_ == nullptr) {
+    if (secondaryValue_ == nullptr) {
       auto value = BaseClass::toJSValue(rt);
-      uiValue_ = std::make_unique<jsi::Value>(rt, value);
-      uiRuntime_ = &rt;
+      secondaryValue_ = std::make_unique<jsi::Value>(rt, value);
+      secondaryRuntime_ = &rt;
       return value;
     }
-    if (&rt == uiRuntime_) {
-      return jsi::Value(rt, *uiValue_);
+    if (&rt == secondaryRuntime_) {
+      return jsi::Value(rt, *secondaryValue_);
     }
     return BaseClass::toJSValue(rt);
   }
 
   ~RetainingShareable() {
-    cleanupIfRuntimeExists(uiRuntime_, uiValue_);
+    cleanupIfRuntimeExists(secondaryRuntime_, secondaryValue_);
   }
 };
 
@@ -338,10 +338,10 @@ class ShareableSynchronizedDataHolder
  private:
   std::shared_ptr<Shareable> data_;
   std::mutex dataAccessMutex_; // Protects `data_`.
-  jsi::Runtime *rnRuntime_;
-  jsi::Runtime *uiRuntime_;
-  std::unique_ptr<jsi::Value> rnValue_;
-  std::unique_ptr<jsi::Value> uiValue_;
+  jsi::Runtime *primaryRuntime_;
+  jsi::Runtime *secondaryRuntime_;
+  std::unique_ptr<jsi::Value> primaryValue_;
+  std::unique_ptr<jsi::Value> secondaryValue_;
 
  public:
   ShareableSynchronizedDataHolder(
@@ -349,31 +349,31 @@ class ShareableSynchronizedDataHolder
       const jsi::Value &initialValue)
       : Shareable(SynchronizedDataHolder),
         data_(extractShareableOrThrow(rt, initialValue)),
-        rnRuntime_(&rt) {}
+        primaryRuntime_(&rt) {}
 
   ~ShareableSynchronizedDataHolder() {
-    cleanupIfRuntimeExists(rnRuntime_, rnValue_);
-    cleanupIfRuntimeExists(uiRuntime_, uiValue_);
+    cleanupIfRuntimeExists(primaryRuntime_, primaryValue_);
+    cleanupIfRuntimeExists(secondaryRuntime_, secondaryValue_);
   }
 
   jsi::Value get(jsi::Runtime &rt) {
     std::unique_lock<std::mutex> read_lock(dataAccessMutex_);
-    if (&rt == rnRuntime_) {
-      if (rnValue_ != nullptr) {
-        return jsi::Value(rt, *rnValue_);
+    if (&rt == primaryRuntime_) {
+      if (primaryValue_ != nullptr) {
+        return jsi::Value(rt, *primaryValue_);
       }
       auto value = data_->getJSValue(rt);
-      rnValue_ = std::make_unique<jsi::Value>(rt, value);
+      primaryValue_ = std::make_unique<jsi::Value>(rt, value);
       return value;
     }
-    if (uiValue_ == nullptr) {
+    if (secondaryValue_ == nullptr) {
       auto value = data_->getJSValue(rt);
-      uiValue_ = std::make_unique<jsi::Value>(rt, value);
-      uiRuntime_ = &rt;
+      secondaryValue_ = std::make_unique<jsi::Value>(rt, value);
+      secondaryRuntime_ = &rt;
       return value;
     }
-    if (&rt == uiRuntime_) {
-      return jsi::Value(rt, *uiValue_);
+    if (&rt == secondaryRuntime_) {
+      return jsi::Value(rt, *secondaryValue_);
     }
     throw std::runtime_error(
         "ShareableSynchronizedDataHolder supports only RN or UI runtime");
@@ -382,8 +382,8 @@ class ShareableSynchronizedDataHolder
   void set(jsi::Runtime &rt, const jsi::Value &data) {
     std::unique_lock<std::mutex> write_lock(dataAccessMutex_);
     data_ = extractShareableOrThrow(rt, data);
-    uiValue_.reset();
-    rnValue_.reset();
+    primaryValue_.reset();
+    secondaryValue_.reset();
   }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override {
