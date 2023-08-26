@@ -31,7 +31,7 @@ class PropsRegistry {
 
   bool shouldReanimatedSkipCommit() {
 #if REACT_NATIVE_MINOR_VERSION >= 73
-    // In RN 0.73+ we have a mount hook that will properly set this flag
+    // In RN 0.73+ we have a mount hook that will properly unset this flag
     // after a non-Reanimated commit.
     return shouldReanimatedSkipCommit_;
 #else
@@ -39,9 +39,11 @@ class PropsRegistry {
 #endif
   }
 
+#if REACT_NATIVE_MINOR_VERSION >= 73
   void resetReanimatedSkipCommitFlag() {
     shouldReanimatedSkipCommit_ = false;
   }
+#endif
 
  private:
   std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>> map_;
