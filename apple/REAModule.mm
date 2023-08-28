@@ -10,18 +10,24 @@
 #import <React/RCTSurfaceView.h>
 #endif
 
-#import <RNReanimated/NativeProxy.h>
-
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <RNReanimated/REAInitializerRCTFabricSurface.h>
 #import <RNReanimated/ReanimatedCommitHook.h>
+
+#if REACT_NATIVE_MINOR_VERSION >= 73
+#import <RNReanimated/ReanimatedMountHook.h>
+#endif
 #endif
 
+#import <RNReanimated/JsiUtils.h>
+#import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REAUIKit.h>
-#import <RNReanimated/ReanimatedVersion.h>
+#import <RNReanimated/RNRuntimeDecorator.h>
 #import <RNReanimated/SingleInstanceChecker.h>
+#import <RNReanimated/WorkletRuntime.h>
+#import <RNReanimated/WorkletRuntimeCollector.h>
 
 #if __has_include(<UIKit/UIAccessibility.h>)
 #import <UIKit/UIAccessibility.h>
@@ -50,6 +56,9 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
   __weak RCTSurfacePresenter *_surfacePresenter;
   std::shared_ptr<PropsRegistry> propsRegistry_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
+#if REACT_NATIVE_MINOR_VERSION >= 73
+  std::shared_ptr<ReanimatedMountHook> mountHook_;
+#endif
   std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule_;
 #else
   NSMutableArray<AnimatedOperation> *_operations;
@@ -94,21 +103,19 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   return scheduler.uiManager;
 }
 
-- (void)setUpNativeReanimatedModule:(std::shared_ptr<UIManager>)uiManager
-{
-  if (auto nativeReanimatedModule = weakNativeReanimatedModule_.lock()) {
-    nativeReanimatedModule->setUIManager(uiManager);
-    nativeReanimatedModule->setPropsRegistry(propsRegistry_);
-  }
-}
-
 - (void)injectDependencies:(jsi::Runtime &)runtime
 {
-  auto uiManager = [self getUIManager];
+  const auto &uiManager = [self getUIManager];
   react_native_assert(uiManager.get() != nil);
-  propsRegistry_ = std::make_shared<PropsRegistry>();
-  commitHook_ = std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager);
-  [self setUpNativeReanimatedModule:uiManager];
+  auto propsRegistry = std::make_shared<PropsRegistry>();
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(propsRegistry, uiManager);
+#if REACT_NATIVE_MINOR_VERSION >= 73
+  mountHook_ = std::make_shared<ReanimatedMountHook>(propsRegistry, uiManager);
+#endif
+  if (auto nativeReanimatedModule = weakNativeReanimatedModule_.lock()) {
+    nativeReanimatedModule->setUIManager(uiManager);
+    nativeReanimatedModule->setPropsRegistry(propsRegistry);
+  }
 }
 
 #pragma mark-- Initialize
@@ -274,19 +281,15 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     auto nativeReanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
 
     jsi::Runtime &rnRuntime = *jsiRuntime;
-    auto uiRuntime = nativeReanimatedModule->runtimeManager_->runtime;
+    WorkletRuntimeCollector::install(rnRuntime);
 
 #if __has_include(<UIKit/UIAccessibility.h>)
     auto isReducedMotion = UIAccessibilityIsReduceMotionEnabled();
 #else
     auto isReducedMotion = false;
 #endif
-    RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
 
-    rnRuntime.global().setProperty(
-        rnRuntime,
-        jsi::PropNameID::forAscii(rnRuntime, "__reanimatedModuleProxy"),
-        jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule));
+    RNRuntimeDecorator::decorate(rnRuntime, nativeReanimatedModule, isReducedMotion);
 
 #ifdef RCT_NEW_ARCH_ENABLED
     weakNativeReanimatedModule_ = nativeReanimatedModule;

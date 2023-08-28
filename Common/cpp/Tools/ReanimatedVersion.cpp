@@ -1,4 +1,5 @@
 #include "ReanimatedVersion.h"
+#include <regex>
 #include <string>
 
 #ifdef REANIMATED_VERSION
@@ -14,5 +15,57 @@ namespace reanimated {
 std::string getReanimatedCppVersion() {
   return std::string(REANIMATED_VERSION_STRING);
 }
+
+#ifdef DEBUG
+// This function is pretty much a copy of
+// `src/reanimated2/platform-specific/checkVersion.ts`.
+bool matchVersion(std::string version1, std::string version2) {
+  std::regex pattern("^\\d+\\.\\d+\\.\\d+$");
+  if (std::regex_match(version1, pattern) &&
+      std::regex_match(version2, pattern)) {
+    auto major1 = std::regex_search(version1, std::regex("^\\d+"));
+    auto major2 = std::regex_search(version2, std::regex("^\\d+"));
+    if (major1 != major2) {
+      return false;
+    }
+    auto minor1 = std::regex_search(version1, std::regex("\\.\\d+\\."));
+    auto minor2 = std::regex_search(version2, std::regex("\\.\\d+\\."));
+    if (minor1 != minor2) {
+      return false;
+    }
+    return true;
+  } else {
+    return version1 == version2;
+  }
+}
+
+void checkJSVersion(jsi::Runtime &rnRuntime) {
+  auto cppVersion = getReanimatedCppVersion();
+
+  auto maybeJSVersion =
+      rnRuntime.global().getProperty(rnRuntime, "_REANIMATED_VERSION_JS");
+  if (maybeJSVersion.isUndefined()) {
+    throw std::runtime_error(
+        std::string(
+            "[Reanimated] (C++) Native side failed to resolve JavaScript code version\n") +
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#native-side-failed-to-resolve-javascript-code-version` for more details.");
+  }
+
+  auto jsVersion = maybeJSVersion.asString(rnRuntime).utf8(rnRuntime);
+
+  if (!matchVersion(cppVersion, jsVersion)) {
+    throw std::runtime_error(
+        std::string(
+            "[Reanimated] (C++) Mismatch between C++ code version and JavaScript code version (") +
+        cppVersion + " vs. " + jsVersion + " respectively).\n" +
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#c-mismatch-between-c-code-version-and-java-code-version` for more details.");
+  }
+
+  rnRuntime.global().setProperty(
+      rnRuntime,
+      "_REANIMATED_VERSION_CPP",
+      jsi::String::createFromUtf8(rnRuntime, cppVersion));
+}
+#endif // DEBUG
 
 }; // namespace reanimated

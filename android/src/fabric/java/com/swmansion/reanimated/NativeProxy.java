@@ -34,16 +34,18 @@ public class NativeProxy extends NativeProxyCommon {
 
         LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
 
+        ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
+
         mHybridData =
                 initHybrid(
                         context.getJavaScriptContextHolder().get(),
                         holder,
                         mAndroidUIScheduler,
                         LayoutAnimations,
+                        messageQueueThread,
                         fabricUIManager);
         prepareLayoutAnimations(LayoutAnimations);
-        ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
-        installJSIBindings(messageQueueThread, fabricUIManager);
+        installJSIBindings();
         if(BuildConfig.DEBUG){
             checkCppVersion();
         }
@@ -54,9 +56,6 @@ public class NativeProxy extends NativeProxyCommon {
             CallInvokerHolderImpl jsCallInvokerHolder,
             AndroidUIScheduler androidUIScheduler,
             LayoutAnimations LayoutAnimations,
-            FabricUIManager fabricUIManager);
-
-    private native void installJSIBindings(
             MessageQueueThread messageQueueThread,
             FabricUIManager fabricUIManager);
 

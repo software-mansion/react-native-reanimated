@@ -67,6 +67,8 @@ public abstract class NativeProxyCommon {
     gestureHandlerStateManager = tempHandlerStateManager;
   }
 
+  protected native void installJSIBindings();
+
   public AndroidUIScheduler getAndroidUIScheduler() {
     return mAndroidUIScheduler;
   }
