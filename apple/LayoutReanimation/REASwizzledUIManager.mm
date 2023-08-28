@@ -90,7 +90,9 @@
       for (REAUIView *view in permanentlyRemovedChildren) {
         [originalSelf.animationsManager endAnimationsRecursive:view];
       }
-      [originalSelf.animationsManager removeAnimationsFromSubtree:(REAUIView *)container];
+      if (![originalSelf.animationsManager hasLayoutAnimation:(REAUIView *)container]) {
+        [originalSelf.animationsManager removeAnimationsFromSubtree:(REAUIView *)container];
+      }
       [originalSelf.animationsManager onScreenRemoval:(REAUIView *)permanentlyRemovedChildren[0]
                                                 stack:(REAUIView *)container];
     }

@@ -336,6 +336,14 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   });
 }
 
+- (BOOL)hasLayoutAnimation:(REAUIView *)view
+{
+  return REANodeFind(view, ^(id<RCTComponent> view) {
+    return [self->_exitingSubviewsCountMap objectForKey:view.reactTag] != nil ||
+        self->_hasAnimationForTag(view.reactTag, LAYOUT);
+  });
+}
+
 - (void)registerExitingAncestors:(REAUIView *)child
 {
   [self registerExitingAncestors:child exitingSubviewsCount:1];
