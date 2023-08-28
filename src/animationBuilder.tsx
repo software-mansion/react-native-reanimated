@@ -1,10 +1,11 @@
 import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
+  LayoutAnimationsValues,
 } from './reanimated2/layoutReanimation';
 import type { StyleProps } from './reanimated2/commonTypes';
 
-const mockTargetValues = {
+const mockTargetValues: LayoutAnimationsValues = {
   targetOriginX: 0,
   targetOriginY: 0,
   targetWidth: 0,
@@ -36,8 +37,9 @@ export function maybeBuild(
     typeof layoutAnimationOrBuilder.build === 'function';
 
   if (isAnimationBuilder(layoutAnimationOrBuilder)) {
-    const animatedStyle =
-      layoutAnimationOrBuilder.build()(mockTargetValues).animations;
+    const animationFactory = layoutAnimationOrBuilder.build();
+    const layoutAnimation = animationFactory(mockTargetValues);
+    const animatedStyle = layoutAnimation.animations;
 
     const getCommonProperties = (obj1: object, obj2: object) =>
       Object.keys(obj1).filter((key) =>
