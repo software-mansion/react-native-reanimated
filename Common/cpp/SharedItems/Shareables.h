@@ -114,27 +114,7 @@ class RetainingShareable : virtual public BaseClass {
   explicit RetainingShareable(jsi::Runtime &rt, Args &&...args)
       : BaseClass(rt, std::forward<Args>(args)...), primaryRuntime_(&rt) {}
 
-  jsi::Value getJSValue(jsi::Runtime &rt) {
-    if (&rt == primaryRuntime_) {
-      // TODO: it is suboptimal to generate new object every time getJS is
-      // called on host runtime – the objects we are generating already exists
-      // and we should possibly just grab a hold of such object and use it here
-      // instead of creating a new JS representation. As far as I understand the
-      // only case where it can be realistically called this way is when a
-      // shared value is created and then accessed on the same runtime
-      return BaseClass::toJSValue(rt);
-    }
-    if (secondaryValue_ == nullptr) {
-      auto value = BaseClass::toJSValue(rt);
-      secondaryValue_ = std::make_unique<jsi::Value>(rt, value);
-      secondaryRuntime_ = &rt;
-      return value;
-    }
-    if (&rt == secondaryRuntime_) {
-      return jsi::Value(rt, *secondaryValue_);
-    }
-    return BaseClass::toJSValue(rt);
-  }
+  jsi::Value getJSValue(jsi::Runtime &rt);
 
   ~RetainingShareable() {
     cleanupIfRuntimeExists(secondaryRuntime_, secondaryValue_);
@@ -147,6 +127,8 @@ class ShareableJSRef : public jsi::HostObject {
 
  public:
   explicit ShareableJSRef(std::shared_ptr<Shareable> value) : value_(value) {}
+
+  virtual ~ShareableJSRef();
 
   std::shared_ptr<Shareable> value() const {
     return value_;
@@ -189,14 +171,7 @@ class ShareableArray : public Shareable {
  public:
   ShareableArray(jsi::Runtime &rt, const jsi::Array &array);
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
-    auto size = data_.size();
-    auto ary = jsi::Array(rt, size);
-    for (size_t i = 0; i < size; i++) {
-      ary.setValueAtIndex(rt, i, data_[i]->getJSValue(rt));
-    }
-    return ary;
-  }
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
   std::vector<std::shared_ptr<Shareable>> data_;
@@ -206,14 +181,7 @@ class ShareableObject : public Shareable {
  public:
   ShareableObject(jsi::Runtime &rt, const jsi::Object &object);
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
-    auto obj = jsi::Object(rt);
-    for (size_t i = 0, size = data_.size(); i < size; i++) {
-      obj.setProperty(
-          rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
-    }
-    return obj;
-  }
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
   std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data_;
@@ -226,9 +194,7 @@ class ShareableHostObject : public Shareable {
       const std::shared_ptr<jsi::HostObject> &hostObject)
       : Shareable(HostObjectType), hostObject_(hostObject) {}
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
-    return jsi::Object::createFromHostObject(rt, hostObject_);
-  }
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
   std::shared_ptr<jsi::HostObject> hostObject_;
@@ -244,10 +210,7 @@ class ShareableHostFunction : public Shareable {
         name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
         paramCount_(function.getProperty(rt, "length").asNumber()) {}
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
-    return jsi::Function::createFromHostFunction(
-        rt, jsi::PropNameID::forUtf8(rt, name_), paramCount_, hostFunction_);
-  }
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
   jsi::HostFunctionType hostFunction_;
@@ -262,16 +225,7 @@ class ShareableWorklet : public ShareableObject {
     valueType_ = WorkletType;
   }
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
-    assert(
-        std::any_of(
-            data_.cbegin(),
-            data_.cend(),
-            [](const auto &item) { return item.first == "__workletHash"; }) &&
-        "ShareableWorklet doesn't have `__workletHash` property");
-    jsi::Value obj = ShareableObject::toJSValue(rt);
-    return getValueUnpacker(rt).call(rt, obj);
-  }
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
 };
 
 class ShareableRemoteFunction
@@ -287,20 +241,7 @@ class ShareableRemoteFunction
         runtime_(&rt),
         function_(std::move(function)) {}
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
-    if (&rt == runtime_) {
-      return jsi::Value(rt, function_);
-    } else {
-#ifdef DEBUG
-      return getValueUnpacker(rt).call(
-          rt,
-          ShareableJSRef::newHostObject(rt, shared_from_this()),
-          jsi::String::createFromAscii(rt, "RemoteFunction"));
-#else
-      return ShareableJSRef::newHostObject(rt, shared_from_this());
-#endif
-    }
-  }
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
 };
 
 class ShareableHandle : public Shareable {
@@ -319,17 +260,7 @@ class ShareableHandle : public Shareable {
     cleanupIfRuntimeExists(remoteRuntime_, remoteValue_);
   }
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
-    if (initializer_ != nullptr) {
-      auto initObj = initializer_->getJSValue(rt);
-      remoteValue_ =
-          std::make_unique<jsi::Value>(getValueUnpacker(rt).call(rt, initObj));
-      remoteRuntime_ = &rt;
-      initializer_ = nullptr; // we can release ref to initializer as this
-      // method should be called at most once
-    }
-    return jsi::Value(rt, *remoteValue_);
-  }
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
 };
 
 class ShareableSynchronizedDataHolder
@@ -356,39 +287,11 @@ class ShareableSynchronizedDataHolder
     cleanupIfRuntimeExists(secondaryRuntime_, secondaryValue_);
   }
 
-  jsi::Value get(jsi::Runtime &rt) {
-    std::unique_lock<std::mutex> read_lock(dataAccessMutex_);
-    if (&rt == primaryRuntime_) {
-      if (primaryValue_ != nullptr) {
-        return jsi::Value(rt, *primaryValue_);
-      }
-      auto value = data_->getJSValue(rt);
-      primaryValue_ = std::make_unique<jsi::Value>(rt, value);
-      return value;
-    }
-    if (secondaryValue_ == nullptr) {
-      auto value = data_->getJSValue(rt);
-      secondaryValue_ = std::make_unique<jsi::Value>(rt, value);
-      secondaryRuntime_ = &rt;
-      return value;
-    }
-    if (&rt == secondaryRuntime_) {
-      return jsi::Value(rt, *secondaryValue_);
-    }
-    throw std::runtime_error(
-        "ShareableSynchronizedDataHolder supports only RN or UI runtime");
-  }
+  jsi::Value get(jsi::Runtime &rt);
 
-  void set(jsi::Runtime &rt, const jsi::Value &data) {
-    std::unique_lock<std::mutex> write_lock(dataAccessMutex_);
-    data_ = extractShareableOrThrow(rt, data);
-    primaryValue_.reset();
-    secondaryValue_.reset();
-  }
+  void set(jsi::Runtime &rt, const jsi::Value &data);
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
-    return ShareableJSRef::newHostObject(rt, shared_from_this());
-  };
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
 };
 
 class ShareableString : public Shareable {
@@ -396,9 +299,7 @@ class ShareableString : public Shareable {
   explicit ShareableString(const std::string &string)
       : Shareable(StringType), data_(string) {}
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
-    return jsi::String::createFromUtf8(rt, data_);
-  }
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
   std::string data_;
@@ -415,21 +316,7 @@ class ShareableScalar : public Shareable {
   ShareableScalar() : Shareable(UndefinedType) {}
   explicit ShareableScalar(std::nullptr_t) : Shareable(NullType) {}
 
-  jsi::Value toJSValue(jsi::Runtime &) override {
-    switch (valueType_) {
-      case Shareable::UndefinedType:
-        return jsi::Value();
-      case Shareable::NullType:
-        return jsi::Value(nullptr);
-      case Shareable::BooleanType:
-        return jsi::Value(data_.boolean);
-      case Shareable::NumberType:
-        return jsi::Value(data_.number);
-      default:
-        throw std::runtime_error(
-            "[Reanimated] Attempted to convert object that's not of a scalar type.");
-    }
-  }
+  jsi::Value toJSValue(jsi::Runtime &);
 
  protected:
   union Data {
