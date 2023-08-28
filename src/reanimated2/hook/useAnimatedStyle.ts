@@ -385,6 +385,7 @@ function checkSharedValueUsage(
   }
 }
 
+// You cannot pass Shared Values to `useAnimatedStyle` directly.
 export function useAnimatedStyle<Style extends DefaultStyle>(
   updater: () => Style,
   deps?: DependencyList | null

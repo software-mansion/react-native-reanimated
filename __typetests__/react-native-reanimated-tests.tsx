@@ -1026,6 +1026,38 @@ function TestUseAnimatedStyleStyle20() {
   return <Animated.View style={animatedStyle} />;
 }
 
+function TestUseAnimatedStyleStyle21() {
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      overflow: 'scroll',
+    };
+  });
+
+  return (
+    <>
+      <Animated.View style={animatedStyle} />
+      {/* @ts-expect-error properly detects illegal type */}
+      <Animated.Image source={{ uri: 'uri' }} style={animatedStyle} />
+      <Animated.Text style={animatedStyle} />
+    </>
+  );
+}
+
+function TestUseAnimatedStyleStyle22() {
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      overflow: 'hidden',
+    };
+  });
+  return (
+    <>
+      <Animated.View style={animatedStyle} />
+      <Animated.Image source={{ uri: 'uri' }} style={animatedStyle} />
+      <Animated.Text style={animatedStyle} />
+    </>
+  );
+}
+
 function TestInlineStyles1() {
   const animatedIndex = useSharedValue(0);
   const backgroundColor = useDerivedValue(() => {
@@ -1198,6 +1230,27 @@ function TestInlineStyles21() {
 
 function TestInlineStyles22() {
   return <Animated.View style={{ flexWrap: 'wrap' as const }} />;
+}
+
+function TestInlineStyles23() {
+  return (
+    <>
+      <Animated.View style={{ overflow: 'scroll' }} />;
+      {/* @ts-expect-error properly detects illegal type */}
+      <Animated.Image source={{ uri: 'uri' }} style={{ overflow: 'scroll' }} />;
+      <Animated.Text style={{ overflow: 'scroll' }} />;
+    </>
+  );
+}
+
+function TestInlineStyles24() {
+  return (
+    <>
+      <Animated.View style={{ overflow: 'hidden' }} />;
+      <Animated.Image source={{ uri: 'uri' }} style={{ overflow: 'hidden' }} />;
+      <Animated.Text style={{ overflow: 'hidden' }} />;
+    </>
+  );
 }
 
 // test style prop of Animated components

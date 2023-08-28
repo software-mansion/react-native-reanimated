@@ -32,22 +32,26 @@ export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
 >;
 
-type MaybeSharedValue<Value> = Value | Value extends AnimatableValue
-  ? SharedValue<Value>
+type MaybeSharedValue<TValue> = TValue | TValue extends AnimatableValue
+  ? SharedValue<TValue>
   : never;
 
-type MaybeSharedValueRecursive<Value> = Value extends (infer InnerValue)[]
+type MaybeSharedValueRecursive<TValue> = TValue extends (infer TItem)[]
+  ? SharedValue<TItem[]> | (MaybeSharedValueRecursive<TItem> | TItem)[]
+  : TValue extends object
   ?
-      | SharedValue<InnerValue[]>
-      | (MaybeSharedValueRecursive<InnerValue> | InnerValue)[]
-  : Value extends object
-  ?
-      | SharedValue<Value>
-      | { [K in keyof Value]: MaybeSharedValueRecursive<Value[K]> | Value[K] }
-  : MaybeSharedValue<Value>;
+      | SharedValue<TValue>
+      | {
+          [TKey in keyof TValue]:
+            | MaybeSharedValueRecursive<TValue[TKey]>
+            | TValue[TKey];
+        }
+  : MaybeSharedValue<TValue>;
 
 type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
 
+// Ideally we want AnimatedStyle to not be generic, but there are
+// so many depenedencies on it being generic that it's not feasible at the moment.
 export type AnimatedStyle<Style = DefaultStyle> =
   | Style
   | MaybeSharedValueRecursive<Style>;
@@ -64,23 +68,25 @@ type EntryOrExitLayoutType =
   Type definition for all style type properties should act similarly, hence we
   pick keys with 'Style' substring with the use of this utility type.
 */
-type PickStyleProps<T> = Pick<
-  T,
+type PickStyleProps<TProps> = Pick<
+  TProps,
   {
-    [Key in keyof T]-?: Key extends `${string}Style` | 'style' ? Key : never;
-  }[keyof T]
+    [Key in keyof TProps]-?: Key extends `${string}Style` | 'style'
+      ? Key
+      : never;
+  }[keyof TProps]
 >;
 
-type StyleProps<P extends object> = {
-  [K in keyof PickStyleProps<P>]: StyleProp<
-    AnimatedStyle<PickStyleProps<P>[K]>
+type StyleProps<TProps extends object> = {
+  [TKey in keyof PickStyleProps<TProps>]: StyleProp<
+    AnimatedStyle<TProps[TKey]>
   >;
 };
 
-type NonStyleAnimatedProps<P extends object> = {
-  [K in keyof Omit<P, keyof PickStyleProps<P> | 'style'>]:
-    | P[K]
-    | SharedValue<P[K]>;
+type NonStyleAnimatedProps<TProps extends object> = {
+  [K in keyof Omit<TProps, keyof PickStyleProps<TProps> | 'style'>]:
+    | TProps[K]
+    | SharedValue<TProps[K]>;
 };
 
 type LayoutProps = {
@@ -97,32 +103,31 @@ type SharedTransitionProps = {
   sharedTransitionStyle?: SharedTransition;
 };
 
-type AnimatedPropsProp<Props extends object> = NonStyleAnimatedProps<Props> &
-  StyleProps<Props> &
+type AnimatedPropsProp<TProps extends object> = NonStyleAnimatedProps<TProps> &
+  StyleProps<TProps> &
   LayoutProps &
   SharedTransitionProps;
 
-export type AnimateProps<Props extends object> = NonStyleAnimatedProps<Props> &
-  StyleProps<Props> &
-  LayoutProps &
-  SharedTransitionProps & {
-    animatedProps?: Partial<AnimatedPropsProp<Props>>;
-  };
-
-export type AnimatedProps<Props extends object> = AnimateProps<Props>;
+export type AnimatedProps<TProps extends object> =
+  NonStyleAnimatedProps<TProps> &
+    StyleProps<TProps> &
+    LayoutProps &
+    SharedTransitionProps & {
+      animatedProps?: Partial<AnimatedPropsProp<TProps>>;
+    };
 
 export type AnimatedPropsAdapterFunction = (
   props: Record<string, unknown>
 ) => void;
 
-export type useAnimatedPropsType = <T extends object>(
-  updater: () => Partial<T>,
+export type useAnimatedPropsType = <TProps extends object>(
+  updater: () => Partial<TProps>,
   deps?: DependencyList | null,
   adapters?:
     | AnimatedPropsAdapterFunction
     | AnimatedPropsAdapterFunction[]
     | null
-) => Partial<T>;
+) => Partial<TProps>;
 
 // THE LAND OF THE DEPRECATED
 
@@ -164,3 +169,8 @@ export type StylesOrDefault<T> = 'style' extends keyof T
 export type AnimatedStyleProp<T> =
   | AnimatedStyle<T>
   | RegisteredStyle<AnimatedStyle<T>>;
+
+/**
+ * @deprecated Please use `AnimatedProps` type instead.
+ */
+export type AnimateProps<TProps extends object> = AnimatedProps<TProps>;

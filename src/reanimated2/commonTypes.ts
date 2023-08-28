@@ -1,35 +1,4 @@
-import type {
-  PerpectiveTransform,
-  RotateTransform,
-  RotateXTransform,
-  RotateYTransform,
-  RotateZTransform,
-  ScaleTransform,
-  ScaleXTransform,
-  ScaleYTransform,
-  TranslateXTransform,
-  TranslateYTransform,
-  SkewXTransform,
-  SkewYTransform,
-  MatrixTransform,
-  ViewStyle,
-  TextStyle,
-} from 'react-native';
-
-export type TransformProperty =
-  | PerpectiveTransform
-  | RotateTransform
-  | RotateXTransform
-  | RotateYTransform
-  | RotateZTransform
-  | ScaleTransform
-  | ScaleXTransform
-  | ScaleYTransform
-  | TranslateXTransform
-  | TranslateYTransform
-  | SkewXTransform
-  | SkewYTransform
-  | MatrixTransform;
+import type { ViewStyle, TextStyle } from 'react-native';
 
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;
@@ -37,8 +6,8 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
-export interface SharedValue<T> {
-  value: T;
+export interface SharedValue<TValue> {
+  value: TValue;
   addListener: (listenerID: number, listener: (value: any) => void) => void;
   removeListener: (listenerID: number) => void;
   modify: (modifier: (value: any) => any) => void;
