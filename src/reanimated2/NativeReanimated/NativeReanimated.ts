@@ -63,21 +63,17 @@ export interface NativeReanimatedModule {
   ): void;
 }
 
-const shouldBeUseNotDebug = !__DEV__;
-
 function checkReanimatedInstance() {
-  if (!shouldBeUseNotDebug) {
-    if (
-      global._REANIMATED_VERSION_JS !== undefined &&
-      global._REANIMATED_VERSION_JS !== jsVersion
-    ) {
-      throw new Error(
-        `[Reanimated] Another instance of \`react-native-reanimated\` was detected.
+  if (
+    global._REANIMATED_VERSION_JS !== undefined &&
+    global._REANIMATED_VERSION_JS !== jsVersion
+  ) {
+    throw new Error(
+      `[Reanimated] Another instance of \`react-native-reanimated\` was detected.
 See \`http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-another-instance-of-react-native-reanimated-was-detected\` for more details. global._REANIMATED_VERSION_JS: ${global._REANIMATED_VERSION_JS}, jsVersion: ${jsVersion}}`
-      );
-    }
-    global._REANIMATED_VERSION_JS = jsVersion;
+    );
   }
+  global._REANIMATED_VERSION_JS = jsVersion;
 }
 //
 
@@ -86,8 +82,6 @@ export class NativeReanimated {
   private InnerNativeModule: NativeReanimatedModule;
 
   constructor() {
-    checkReanimatedInstance();
-
     if (global.__reanimatedModuleProxy === undefined) {
       const { ReanimatedModule } = NativeModules;
       ReanimatedModule?.installTurboModule();
@@ -98,7 +92,8 @@ export class NativeReanimated {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#Native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    if (!shouldBeUseNotDebug) {
+    if (__DEV__) {
+      checkReanimatedInstance();
       checkCppVersion();
     }
 
