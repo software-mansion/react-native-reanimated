@@ -46,8 +46,6 @@ public class NativeProxy extends NativeProxyCommon {
             LayoutAnimations LayoutAnimations,
             MessageQueueThread messageQueueThread);
 
-    protected native void installJSIBindings();
-
     public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 
     public native void performOperations();

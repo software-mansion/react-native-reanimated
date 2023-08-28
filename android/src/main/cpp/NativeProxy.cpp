@@ -16,7 +16,9 @@
 #include "PlatformDepMethodsHolder.h"
 #include "RNRuntimeDecorator.h"
 #include "ReanimatedRuntime.h"
+#ifdef DEBUG
 #include "ReanimatedVersion.h"
+#endif // DEBUG
 #include "WorkletRuntime.h"
 #include "WorkletRuntimeCollector.h"
 

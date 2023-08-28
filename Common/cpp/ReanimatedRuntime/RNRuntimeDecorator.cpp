@@ -1,6 +1,7 @@
 #include "RNRuntimeDecorator.h"
-#include <regex>
+#ifdef DEBUG
 #include "ReanimatedVersion.h"
+#endif // DEBUG
 
 namespace reanimated {
 
