@@ -27,6 +27,10 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "PropsRegistry.h"
 #include "ReanimatedCommitHook.h"
+
+#if REACT_NATIVE_MINOR_VERSION >= 73
+#include "ReanimatedMountHook.h"
+#endif
 #endif
 
 namespace reanimated {
@@ -157,7 +161,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
           jsCallInvokerHolder,
       jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
-      jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations
+      jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
+      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
@@ -172,30 +177,23 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
-  std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
-  std::shared_ptr<UIScheduler> uiScheduler_;
 #ifdef RCT_NEW_ARCH_ENABLED
-  std::shared_ptr<PropsRegistry> propsRegistry_;
-  std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
-
-  // removed temporary, new event listener mechanism need fix on the RN side
+#if REACT_NATIVE_MINOR_VERSION >= 73
+  std::shared_ptr<ReanimatedMountHook> mountHook_;
+#endif
+  // removed temporarily, event listener mechanism needs to be fixed on RN side
   // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
   // std::shared_ptr<EventListener> eventListener_;
 #endif
+  void installJSIBindings();
 #ifdef RCT_NEW_ARCH_ENABLED
-  void installJSIBindings(
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-      jni::alias_ref<JFabricUIManager::javaobject> fabricUIManager);
   void synchronouslyUpdateUIProps(
       jsi::Runtime &rt,
       Tag viewTag,
       const jsi::Object &props);
-#else
-  void installJSIBindings(
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread);
 #endif
   PlatformDepMethodsHolder getPlatformDependentMethods();
   void setupLayoutAnimations();
@@ -275,7 +273,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations
+      jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
+      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>

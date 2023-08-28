@@ -56,7 +56,8 @@ interface JSReanimatedComponent {
 
 export const _updatePropsJS = (
   updates: StyleProps | AnimatedStyle<any>,
-  viewRef: { _component?: JSReanimatedComponent }
+  viewRef: { _component?: JSReanimatedComponent },
+  isAnimatedProps?: boolean
 ): void => {
   if (viewRef._component) {
     const component = viewRef._component;
@@ -74,14 +75,14 @@ export const _updatePropsJS = (
       // This is the legacy way to update props on React Native Web <= 0.18.
       // Also, some components (e.g. from react-native-svg) don't have styles
       // and always provide setNativeProps function instead (even on React Native Web 0.19+).
-      setNativeProps(component, rawStyles);
+      setNativeProps(component, rawStyles, isAnimatedProps);
     } else if (
       createReactDOMStyle !== undefined &&
       component.style !== undefined
     ) {
       // React Native Web 0.19+ no longer provides setNativeProps function,
       // so we need to update DOM nodes directly.
-      updatePropsDOM(component, rawStyles);
+      updatePropsDOM(component, rawStyles, isAnimatedProps);
     } else if (Object.keys(component.props).length > 0) {
       Object.keys(component.props).forEach((key) => {
         if (!rawStyles[key]) {
@@ -98,21 +99,31 @@ export const _updatePropsJS = (
 
 const setNativeProps = (
   component: JSReanimatedComponent,
-  style: StyleProps
+  newProps: StyleProps,
+  isAnimatedProps?: boolean
 ): void => {
+  if (isAnimatedProps) {
+    component.setNativeProps?.(newProps);
+    return;
+  }
+
   const previousStyle = component.previousStyle ? component.previousStyle : {};
-  const currentStyle = { ...previousStyle, ...style };
+  const currentStyle = { ...previousStyle, ...newProps };
   component.previousStyle = currentStyle;
+
   component.setNativeProps?.({ style: currentStyle });
 };
 
 const updatePropsDOM = (
-  component: JSReanimatedComponent,
-  style: StyleProps
+  component: JSReanimatedComponent | HTMLElement,
+  style: StyleProps,
+  isAnimatedProps?: boolean
 ): void => {
-  const previousStyle = component.previousStyle ? component.previousStyle : {};
+  const previousStyle = (component as JSReanimatedComponent).previousStyle
+    ? (component as JSReanimatedComponent).previousStyle
+    : {};
   const currentStyle = { ...previousStyle, ...style };
-  component.previousStyle = currentStyle;
+  (component as JSReanimatedComponent).previousStyle = currentStyle;
 
   const domStyle = createReactDOMStyle(currentStyle);
   if (Array.isArray(domStyle.transform) && createTransformValue !== undefined) {
@@ -133,7 +144,11 @@ const updatePropsDOM = (
   }
 
   for (const key in domStyle) {
-    (component.style as StyleProps)[key] = domStyle[key];
+    if (isAnimatedProps) {
+      (component as HTMLElement).setAttribute(key, domStyle[key]);
+    } else {
+      (component.style as StyleProps)[key] = domStyle[key];
+    }
   }
 };
 

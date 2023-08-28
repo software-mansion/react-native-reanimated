@@ -1,50 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`babel plugin doesn't capture arguments 1`] = `
-"var _worklet_17093819837059_init_data = {
-  code: "function f(a,b,c){console.log(arguments);}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-var f = function () {
-  var _e = [new global.Error(), 1, -27];
-  var f = function f(a, b, c) {
-    console.log(arguments);
-  };
-  f.__closure = {};
-  f.__initData = _worklet_17093819837059_init_data;
-  f.__workletHash = 17093819837059;
-  f.__stackDetails = _e;
-  return f;
-}();"
-`;
-
-exports[`babel plugin doesn't capture objects' properties 1`] = `
-"var foo = {
-  bar: 42
-};
-var _worklet_3750134465664_init_data = {
-  code: "function f(){const{foo}=this.__closure;console.log(foo.bar);}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-var f = function () {
-  var _e = [new global.Error(), -2, -27];
-  var f = function f() {
-    console.log(foo.bar);
-  };
-  f.__closure = {
-    foo: foo
-  };
-  f.__initData = _worklet_3750134465664_init_data;
-  f.__workletHash = 3750134465664;
-  f.__stackDetails = _e;
-  return f;
-}();"
-`;
-
 exports[`babel plugin for DirectiveLiterals doesn't bother other Directive Literals 1`] = `
 "function foo() {
   'foobar';
@@ -619,7 +574,48 @@ var f = function () {
 }();"
 `;
 
-exports[`babel plugin for closure capturing doesn't capture globals 1`] = `
+exports[`babel plugin for closure capturing doesn't capture arguments 1`] = `
+"var _worklet_17093819837059_init_data = {
+  code: "function f(a,b,c){console.log(arguments);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var f = function () {
+  var _e = [new global.Error(), 1, -27];
+  var f = function f(a, b, c) {
+    console.log(arguments);
+  };
+  f.__closure = {};
+  f.__initData = _worklet_17093819837059_init_data;
+  f.__workletHash = 17093819837059;
+  f.__stackDetails = _e;
+  return f;
+}();"
+`;
+
+exports[`babel plugin for closure capturing doesn't capture custom globals 1`] = `
+"var foo = 42;
+var _worklet_7141086932261_init_data = {
+  code: "function f(){console.log(foo);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var f = function () {
+  var _e = [new global.Error(), 1, -27];
+  var f = function f() {
+    console.log(foo);
+  };
+  f.__closure = {};
+  f.__initData = _worklet_7141086932261_init_data;
+  f.__workletHash = 7141086932261;
+  f.__stackDetails = _e;
+  return f;
+}();"
+`;
+
+exports[`babel plugin for closure capturing doesn't capture default globals 1`] = `
 "var _worklet_13298016111221_init_data = {
   code: "function f(){console.log('test');}",
   location: "/dev/null",
@@ -634,6 +630,31 @@ var f = function () {
   f.__closure = {};
   f.__initData = _worklet_13298016111221_init_data;
   f.__workletHash = 13298016111221;
+  f.__stackDetails = _e;
+  return f;
+}();"
+`;
+
+exports[`babel plugin for closure capturing doesn't capture objects' properties 1`] = `
+"var foo = {
+  bar: 42
+};
+var _worklet_3750134465664_init_data = {
+  code: "function f(){const{foo}=this.__closure;console.log(foo.bar);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var f = function () {
+  var _e = [new global.Error(), -2, -27];
+  var f = function f() {
+    console.log(foo.bar);
+  };
+  f.__closure = {
+    foo: foo
+  };
+  f.__initData = _worklet_3750134465664_init_data;
+  f.__workletHash = 3750134465664;
   f.__stackDetails = _e;
   return f;
 }();"

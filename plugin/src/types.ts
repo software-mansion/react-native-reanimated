@@ -10,6 +10,7 @@ export interface ReanimatedPluginOptions {
   relativeSourceLocation?: boolean;
   disableInlineStylesWarning?: boolean;
   processNestedWorklets?: boolean;
+  globals?: string[];
 }
 
 export interface ReanimatedPluginPass {

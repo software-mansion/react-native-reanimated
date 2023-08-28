@@ -10,16 +10,12 @@ import type {
   LayoutAnimationType,
 } from '../layoutReanimation';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
+import type { WorkletRuntime } from '../runtimes';
+import { getValueUnpackerCode } from '../valueUnpacker';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
-  installCoreFunctions(
-    callGuard: <T extends Array<unknown>, U>(
-      fn: (...args: T) => U,
-      ...args: T
-    ) => void,
-    valueUnpacker: <T>(value: T) => T
-  ): void;
+  installValueUnpacker(valueUnpackerCode: string): void;
   makeShareableClone<T>(
     value: T,
     shouldPersistRemote: boolean
@@ -29,6 +25,10 @@ export interface NativeReanimatedModule {
   ): ShareableSyncDataHolderRef<T>;
   getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>): T;
   scheduleOnUI<T>(shareable: ShareableRef<T>): void;
+  createWorkletRuntime(
+    name: string,
+    initializer: ShareableRef<() => void>
+  ): WorkletRuntime;
   registerEventHandler<T>(
     eventHandler: ShareableRef<T>,
     eventName: string,
@@ -79,19 +79,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     }
     checkCppVersion();
     this.InnerNativeModule = global.__reanimatedModuleProxy;
-  }
-
-  installCoreFunctions(
-    callGuard: <T extends Array<unknown>, U>(
-      fn: (...args: T) => U,
-      ...args: T
-    ) => void,
-    valueUnpacker: <T>(value: T) => T
-  ) {
-    return this.InnerNativeModule.installCoreFunctions(
-      callGuard,
-      valueUnpacker
-    );
+    this.InnerNativeModule.installValueUnpacker(getValueUnpackerCode());
   }
 
   makeShareableClone<T>(value: T, shouldPersistRemote: boolean) {
@@ -111,6 +99,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   scheduleOnUI<T>(shareable: ShareableRef<T>) {
     return this.InnerNativeModule.scheduleOnUI(shareable);
+  }
+
+  createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {
+    return this.InnerNativeModule.createWorkletRuntime(name, initializer);
   }
 
   registerSensor(
