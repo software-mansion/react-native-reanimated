@@ -155,7 +155,7 @@ void NativeReanimatedModule::scheduleOnUI(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
-      rt, worklet, "only worklets can be scheduled to run on UI");
+      rt, worklet, "[Reanimated] Only worklets can be scheduled to run on UI.");
   uiScheduler_->scheduleOnUI([=] {
 #if JS_RUNTIME_HERMES
     // JSI's scope defined here allows for JSI-objects to be cleared up after
@@ -224,7 +224,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
   uint64_t newRegistrationId = NEXT_EVENT_HANDLER_ID++;
   auto eventNameStr = eventName.asString(rt).utf8(rt);
   auto handlerShareable = extractShareableOrThrow<ShareableWorklet>(
-      rt, worklet, "event handler must be a worklet");
+      rt, worklet, "[Reanimated] Event handler must be a worklet.");
   int emitterReactTagInt = emitterReactTag.asNumber();
 
   uiScheduler_->scheduleOnUI([=] {
@@ -313,7 +313,9 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
       static_cast<LayoutAnimationType>(type.asNumber()),
       sharedTransitionTag.asString(rt).utf8(rt),
       extractShareableOrThrow<ShareableObject>(
-          rt, config, "layout animation config must be an object"));
+          rt,
+          config,
+          "[Reanimated] Layout animation config must be an object."));
   return jsi::Value::undefined();
 }
 
@@ -634,7 +636,9 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     const jsi::Value &handlerWorklet,
     const jsi::Value &isStatusBarTranslucent) {
   auto shareableHandler = extractShareableOrThrow<ShareableWorklet>(
-      rt, handlerWorklet, "keyboard event handler must be a worklet");
+      rt,
+      handlerWorklet,
+      "[Reanimated] Keyboard event handler must be a worklet.");
   return subscribeForKeyboardEventsFunction_(
       [=](int keyboardState, int height) {
         uiWorkletRuntime_->runGuarded(

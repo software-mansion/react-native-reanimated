@@ -169,18 +169,18 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
     const std::string &errorMessage =
-        "expecting the object to be of type ShareableJSRef.");
+        "[Reanimated] Expecting the object to be of type ShareableJSRef.");
 
 template <typename T>
 std::shared_ptr<T> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &shareableRef,
     const std::string &errorMessage =
-        "provided shareable object is of an incompatible type.") {
+        "[Reanimated] Provided shareable object is of an incompatible type.") {
   auto res = std::dynamic_pointer_cast<T>(
       extractShareableOrThrow(rt, shareableRef, errorMessage));
   if (!res) {
-    throw std::runtime_error("[Reanimated] " + errorMessage);
+    throw std::runtime_error(errorMessage);
   }
   return res;
 }
