@@ -224,7 +224,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   REANodesManager *nodesManager = _nodesManager;
 
   [uiManager
-      addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, REAUIView *> *viewRegistry) {
+      addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, RCTUIView *> *viewRegistry) {
         for (AnimatedOperation operation in operations) {
           operation(nodesManager);
         }
