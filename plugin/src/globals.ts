@@ -1,4 +1,4 @@
-export const globals = new Set([
+export const defaultGlobals = new Set([
   // Based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
 
   // Note that objects' properties don't need to be listed since we always only capture the whole object,
@@ -97,16 +97,6 @@ export const globals = new Set([
 
   // Internationalization
   'Intl',
-  // 'Intl.Collator',
-  // 'Intl.DateTimeFormat',
-  // 'Intl.DisplayNames',
-  // 'Intl.DurationFormat',
-  // 'Intl.ListFormat',
-  // 'Intl.Locale',
-  // 'Intl.NumberFormat',
-  // 'Intl.PluralRules',
-  // 'Intl.RelativeTimeFormat',
-  // 'Intl.Segmenter',
 
   // Other stuff
   'null',
@@ -142,3 +132,9 @@ export const globals = new Set([
   '_notifyAboutEnd',
   '_runOnUIQueue',
 ]);
+
+export let globals: Set<string>;
+
+export function initializeGlobals() {
+  globals = new Set(defaultGlobals);
+}

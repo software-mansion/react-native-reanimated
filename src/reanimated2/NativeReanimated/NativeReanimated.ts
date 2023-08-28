@@ -10,16 +10,12 @@ import type {
   LayoutAnimationType,
 } from '../layoutReanimation';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
+import type { WorkletRuntime } from '../runtimes';
+import { getValueUnpackerCode } from '../valueUnpacker';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
-  installCoreFunctions(
-    callGuard: <T extends Array<unknown>, U>(
-      fn: (...args: T) => U,
-      ...args: T
-    ) => void,
-    valueUnpacker: <T>(value: T) => T
-  ): void;
+  installValueUnpacker(valueUnpackerCode: string): void;
   makeShareableClone<T>(
     value: T,
     shouldPersistRemote: boolean
@@ -29,6 +25,10 @@ export interface NativeReanimatedModule {
   ): ShareableSyncDataHolderRef<T>;
   getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>): T;
   scheduleOnUI<T>(shareable: ShareableRef<T>): void;
+  createWorkletRuntime(
+    name: string,
+    initializer: ShareableRef<() => void>
+  ): WorkletRuntime;
   registerEventHandler<T>(
     eventHandler: ShareableRef<T>,
     eventName: string,
@@ -36,7 +36,7 @@ export interface NativeReanimatedModule {
   ): number;
   unregisterEventHandler(id: number): void;
   getViewProp<T>(
-    viewTag: string,
+    viewTag: number,
     propName: string,
     callback?: (result: T) => void
   ): Promise<T>;
@@ -73,27 +73,13 @@ export class NativeReanimated {
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new Error(
-        `[Reanimated] The native part of Reanimated doesn't seem to be initialized. This could be caused by\n\
-- not rebuilding the app after installing or upgrading Reanimated\n\
-- trying to run Reanimated on an unsupported platform\n\
-- running in a brownfield app without manually initializing the native library`
+        `[Reanimated] Native part of Reanimated doesn't seem to be initialized.
+See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#Native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
     checkCppVersion();
     this.InnerNativeModule = global.__reanimatedModuleProxy;
-  }
-
-  installCoreFunctions(
-    callGuard: <T extends Array<unknown>, U>(
-      fn: (...args: T) => U,
-      ...args: T
-    ) => void,
-    valueUnpacker: <T>(value: T) => T
-  ) {
-    return this.InnerNativeModule.installCoreFunctions(
-      callGuard,
-      valueUnpacker
-    );
+    this.InnerNativeModule.installValueUnpacker(getValueUnpackerCode());
   }
 
   makeShareableClone<T>(value: T, shouldPersistRemote: boolean) {
@@ -113,6 +99,10 @@ export class NativeReanimated {
 
   scheduleOnUI<T>(shareable: ShareableRef<T>) {
     return this.InnerNativeModule.scheduleOnUI(shareable);
+  }
+
+  createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {
+    return this.InnerNativeModule.createWorkletRuntime(name, initializer);
   }
 
   registerSensor(
@@ -150,7 +140,7 @@ export class NativeReanimated {
   }
 
   getViewProp<T>(
-    viewTag: string,
+    viewTag: number,
     propName: string,
     callback?: (result: T) => void
   ) {

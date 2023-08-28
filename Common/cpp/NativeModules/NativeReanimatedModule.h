@@ -11,11 +11,11 @@
 #include <vector>
 
 #include "AnimatedSensorModule.h"
+#include "EventHandlerRegistry.h"
+#include "JSScheduler.h"
 #include "LayoutAnimationsManager.h"
 #include "NativeReanimatedModuleSpec.h"
 #include "PlatformDepMethodsHolder.h"
-#include "RuntimeDecorator.h"
-#include "RuntimeManager.h"
 #include "SingleInstanceChecker.h"
 #include "UIScheduler.h"
 
@@ -25,33 +25,20 @@
 
 namespace reanimated {
 
-using FrameCallback = std::function<void(double)>;
-
-class EventHandlerRegistry;
-
 class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  public:
   NativeReanimatedModule(
+      jsi::Runtime &rnRuntime,
       const std::shared_ptr<CallInvoker> &jsInvoker,
+      const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      const std::shared_ptr<jsi::Runtime> &rt,
-#ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
-#else
-      std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
-          propObtainer,
-#endif
-      PlatformDepMethodsHolder platformDepMethodsHolder);
+      const PlatformDepMethodsHolder &platformDepMethodsHolder);
 
   ~NativeReanimatedModule();
 
-  std::shared_ptr<RuntimeManager> runtimeManager_;
-  std::shared_ptr<JSRuntimeHelper> runtimeHelper;
-
-  void installCoreFunctions(
+  void installValueUnpacker(
       jsi::Runtime &rt,
-      const jsi::Value &callGuard,
-      const jsi::Value &valueUnpacker) override;
+      const jsi::Value &valueUnpackerCode) override;
 
   jsi::Value makeShareableClone(
       jsi::Runtime &rt,
@@ -70,10 +57,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &newData);
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
-  void scheduleOnJS(
+
+  jsi::Value createWorkletRuntime(
       jsi::Runtime &rt,
-      const jsi::Value &remoteFun,
-      const jsi::Value &argsValue);
+      const jsi::Value &name,
+      const jsi::Value &initializer) override;
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
@@ -110,7 +98,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const int emitterReactTag);
 
   void maybeRequestRender();
-  UpdatePropsFunction updatePropsFunction;
 
   bool handleEvent(
       const std::string &eventName,
@@ -135,9 +122,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue);
 
-  void setUIManager(std::shared_ptr<UIManager> uiManager);
+  void setUIManager(const std::shared_ptr<UIManager> &uiManager);
 
-  void setPropsRegistry(std::shared_ptr<PropsRegistry> propsRegistry);
+  void setPropsRegistry(const std::shared_ptr<PropsRegistry> &propsRegistry);
 #endif
 
   jsi::Value registerSensor(
@@ -162,23 +149,35 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     return layoutAnimationsManager_;
   }
 
+  inline jsi::Runtime &getUIRuntime() {
+    return uiWorkletRuntime_->getJSIRuntime();
+  }
+
  private:
+  void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
+
 #ifdef RCT_NEW_ARCH_ENABLED
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Object &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
-  std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry;
-  std::function<void(FrameCallback &, jsi::Runtime &)> requestRender;
-  std::vector<FrameCallback> frameCallbacks;
-  bool renderRequested = false;
-  std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
-      propObtainer;
-  std::function<void(double)> onRenderCallback;
-  AnimatedSensorModule animatedSensorModule;
-  ConfigurePropsFunction configurePropsPlatformFunction;
+  const std::shared_ptr<MessageQueueThread> jsQueue_;
+  const std::shared_ptr<JSScheduler> jsScheduler_;
+  const std::shared_ptr<UIScheduler> uiScheduler_;
+  std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
+  std::string valueUnpackerCode_;
+
+  std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;
+  const RequestRenderFunction requestRender_;
+  std::vector<std::shared_ptr<jsi::Value>> frameCallbacks_;
+  volatile bool renderRequested_{false};
+  const std::function<void(const double)> onRenderCallback_;
+  AnimatedSensorModule animatedSensorModule_;
+  LayoutAnimationsManager layoutAnimationsManager_;
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
+  const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
+
+  std::unordered_set<std::string> nativePropNames_; // filled by configureProps
 
   std::shared_ptr<UIManager> uiManager_;
 
@@ -192,16 +191,16 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   std::shared_ptr<PropsRegistry> propsRegistry_;
 
   std::vector<Tag> tagsToRemove_; // from `propsRegistry_`
+#else
+  const ObtainPropFunction obtainPropFunction_;
+  const ConfigurePropsFunction configurePropsPlatformFunction_;
+  const UpdatePropsFunction updatePropsFunction_;
 #endif
 
-  std::unordered_set<std::string> nativePropNames_; // filled by configureProps
-  LayoutAnimationsManager layoutAnimationsManager_;
-
-  KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction;
-  KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;
+  const KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
+  const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;
 
 #ifdef DEBUG
-  std::shared_ptr<JSLogger> jsLogger_;
   SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;
 #endif
 };

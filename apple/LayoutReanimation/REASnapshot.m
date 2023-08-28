@@ -67,7 +67,7 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
 
     UIView *transformedView = [self findTransformedView:view];
     if (transformedView != nil) {
-      // iOS affine matrix: https://developer.apple.com/documentation/corefoundation/cgaffinetransform?language=objc
+      // iOS affine matrix: https://developer.apple.com/documentation/corefoundation/cgaffinetransform
       CGAffineTransform transform = transformedView.transform;
       NSNumber *a = @(transform.a);
       NSNumber *b = @(transform.b);

@@ -8,7 +8,7 @@ import { BaseAnimationBuilder } from '../animationBuilder';
 import { withSequence, withTiming } from '../../animation';
 import { FadeIn, FadeOut } from '../defaultAnimations/Fade';
 import type { AnimationObject } from '../../commonTypes';
-import { TransformArrayItem } from '../../helperTypes';
+import type { TransformArrayItem } from '../../helperTypes';
 
 export class EntryExitTransition
   extends BaseAnimationBuilder

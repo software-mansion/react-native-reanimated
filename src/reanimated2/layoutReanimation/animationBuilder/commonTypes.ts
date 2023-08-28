@@ -1,4 +1,4 @@
-import { TransformArrayItem } from '../../helperTypes';
+import type { TransformArrayItem } from '../../helperTypes';
 import type { EasingFunction } from '../../Easing';
 import type { StyleProps } from '../../commonTypes';
 

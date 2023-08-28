@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
+
 #include <map>
 #include <memory>
 #include <mutex>
@@ -9,6 +10,8 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#include "WorkletRuntime.h"
 
 using namespace facebook;
 
@@ -33,8 +36,8 @@ class EventHandlerRegistry {
   void unregisterEventHandler(uint64_t id);
 
   void processEvent(
-      jsi::Runtime &rt,
-      double eventTimestamp,
+      const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,
+      const double eventTimestamp,
       const std::string &eventName,
       const int emitterReactTag,
       const jsi::Value &eventPayload);

@@ -169,7 +169,8 @@ function styleUpdater(
   updater: BasicWorkletFunction<AnimatedStyle<any>>,
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
-  animationsActive: SharedValue<boolean>
+  animationsActive: SharedValue<boolean>,
+  isAnimatedProps = false
 ): void {
   'worklet';
   const animations = state.animations ?? {};
@@ -246,7 +247,7 @@ function styleUpdater(
     state.animations = [];
 
     if (!shallowEqual(oldValues, newValues)) {
-      updateProps(viewDescriptors, newValues, maybeViewRef);
+      updateProps(viewDescriptors, newValues, maybeViewRef, isAnimatedProps);
     }
   }
   state.last = newValues;
@@ -380,7 +381,7 @@ function checkSharedValueUsage(
   ) {
     // if shared value is passed insted of its value, throw an error
     throw new Error(
-      `invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
+      `[Reanimated] Invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
     );
   }
 }
@@ -394,7 +395,8 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
 export function useAnimatedStyle<Style extends DefaultStyle>(
   updater: BasicWorkletFunction<Style>,
   dependencies?: DependencyList | null,
-  adapters?: AdapterWorkletFunction | AdapterWorkletFunction[]
+  adapters?: AdapterWorkletFunction | AdapterWorkletFunction[],
+  isAnimatedProps = false
 ) {
   const viewsRef: ViewRefSet<unknown> = makeViewsRefSet();
   const initRef = useRef<AnimationRef>();
@@ -406,9 +408,8 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
     }
     if (__DEV__ && !inputs.length && !dependencies && !updater.__workletHash) {
       throw new Error(
-        `useAnimatedStyle was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel/SWC plugin.
-
-For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/web-support#web-without-a-babel-plugin`
+        `[Reanimated] \`useAnimatedStyle\` was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel/SWC plugin.
+For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin\`.`
       );
     }
   }
@@ -490,7 +491,8 @@ For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/
           updaterFn,
           remoteState,
           maybeViewRef,
-          animationsActive
+          animationsActive,
+          isAnimatedProps
         );
       };
     }

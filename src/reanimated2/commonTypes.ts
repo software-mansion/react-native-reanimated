@@ -55,10 +55,6 @@ export interface BasicWorkletFunction<T> extends WorkletFunction {
   (): T;
 }
 
-export interface BasicWorkletFunctionOptional<T> extends WorkletFunction {
-  (): Partial<T>;
-}
-
 export interface NativeEvent<T> {
   nativeEvent: T;
 }
@@ -146,10 +142,6 @@ export type AnimatedSensor<T extends Value3D | ValueRotation> = {
   isAvailable: boolean;
   config: SensorConfig;
 };
-
-export interface NumericAnimation {
-  current?: number;
-}
 
 export type AnimationCallback = (
   finished?: boolean,

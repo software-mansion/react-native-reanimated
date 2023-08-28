@@ -4,7 +4,7 @@ import {
   findNodeHandle,
 } from 'react-native';
 import { nativeShouldBeMock } from './reanimated2/PlatformChecker';
-import { StyleProps } from './reanimated2';
+import type { StyleProps } from './reanimated2';
 
 interface ListenerData {
   viewTag: number;

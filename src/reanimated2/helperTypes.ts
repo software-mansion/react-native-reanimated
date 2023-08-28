@@ -126,7 +126,8 @@ export type useAnimatedPropsType = <TProps extends object>(
   adapters?:
     | AnimatedPropsAdapterFunction
     | AnimatedPropsAdapterFunction[]
-    | null
+    | null,
+  isAnimatedProps?: boolean
 ) => Partial<TProps>;
 
 // THE LAND OF THE DEPRECATED

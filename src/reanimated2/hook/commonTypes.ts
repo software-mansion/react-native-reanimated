@@ -1,6 +1,6 @@
 import type { Component } from 'react';
 import type { Context, ShadowNodeWrapper } from '../commonTypes';
-import { ViewStyle, ImageStyle, TextStyle } from 'react-native';
+import type { ViewStyle, ImageStyle, TextStyle } from 'react-native';
 
 export type DependencyList = Array<unknown> | undefined;
 

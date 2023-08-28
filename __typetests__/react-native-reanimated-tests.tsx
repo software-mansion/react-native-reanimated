@@ -1257,7 +1257,7 @@ function TestInlineStyles24() {
 
 declare const RNStyle: ViewStyle;
 
-function TestStyleProps() {
+function testStyleProps() {
   const MyAnimatedView = Animated.createAnimatedComponent(View);
   const MyAnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
   const MyAnimatedFlatList = Animated.createAnimatedComponent(FlatList);
@@ -1268,8 +1268,16 @@ function TestStyleProps() {
       <MyAnimatedView style={RNStyle} />
       <Animated.ScrollView style={RNStyle} />
       <MyAnimatedScrollView style={RNStyle} />
-      <Animated.FlatList style={RNStyle} data={[]} renderItem={() => null} />
-      <MyAnimatedFlatList style={RNStyle} data={[]} renderItem={() => null} />
+      <Animated.FlatList
+        style={RNStyle}
+        data={[]}
+        renderItem={() => <View />}
+      />
+      <MyAnimatedFlatList
+        style={RNStyle}
+        data={[]}
+        renderItem={() => <View />}
+      />
     </View>
   );
 }
