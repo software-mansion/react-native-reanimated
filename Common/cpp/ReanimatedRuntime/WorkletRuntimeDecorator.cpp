@@ -67,11 +67,11 @@ void WorkletRuntimeDecorator::decorate(
             ShareableRemoteFunction>(
             rt,
             remoteFun,
-            "Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
+            "[Reanimated] Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
         auto shareableArgs = argsValue.isUndefined()
             ? nullptr
             : extractShareableOrThrow<ShareableArray>(
-                  rt, argsValue, "args must be an array");
+                  rt, argsValue, "[Reanimated] Args must be an array.");
         jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
           auto remoteFun = shareableRemoteFun->getJSValue(rt);
           if (shareableArgs == nullptr) {
