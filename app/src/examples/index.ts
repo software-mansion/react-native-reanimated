@@ -103,6 +103,9 @@ import WidthExample from './WidthExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
+import SimpleEntering from './LayoutAnimations/SimpleEntering';
+import NestedEntering from './LayoutAnimations/NestedEntering';
+import FlatListEntering from './LayoutAnimations/FlatListEntering';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 
 interface Example {
@@ -112,6 +115,20 @@ interface Example {
 }
 
 export const EXAMPLES: Record<string, Example> = {
+  // entering first render tests
+  Test1: {
+    title: 'Simple',
+    screen: SimpleEntering,
+  },
+  Test2: {
+    title: 'Nested',
+    screen: NestedEntering,
+  },
+  Test3: {
+    title: 'Flat List',
+    screen: FlatListEntering,
+  },
+
   // Empty example for test purposes
 
   EmptyExample: {

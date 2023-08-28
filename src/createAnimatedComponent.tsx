@@ -56,6 +56,7 @@ import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
 import { JSPropUpdater } from './JSPropUpdater';
 import { getReduceMotionFromConfig } from './reanimated2/animation/util';
 import { maybeBuild } from './animationBuilder';
+import { LayoutConfigContext } from './reanimated2/component/LayoutConfig';
 
 const IS_WEB = isWeb();
 
@@ -601,11 +602,10 @@ export default function createAnimatedComponent(
         >,
       setLocalRef: (ref) => {
         // TODO update config
-
+        console.log('setLocalRef');
         const tag = IS_WEB
           ? (ref as HTMLElement)
           : findNodeHandle(ref as Component);
-
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (
           !isMacOS() &&
@@ -626,7 +626,7 @@ export default function createAnimatedComponent(
               )
             );
           }
-          if (entering) {
+          if (entering && !LayoutConfigContext.value) {
             configureLayoutAnimations(
               tag,
               LayoutAnimationType.ENTERING,
@@ -757,6 +757,7 @@ export default function createAnimatedComponent(
     }
 
     render() {
+      console.log('rendering');
       const props = this._filterNonAnimatedProps(this.props);
       if (isJest()) {
         props.animatedStyle = this.animatedStyle;
