@@ -1,11 +1,11 @@
-import type { StyleProps } from 'src/reanimated2';
+import type { StyleProps } from '../reanimated2';
 import type { AnimatedComponentProps } from './utils';
 import { flattenArray } from './utils';
 import { makeViewDescriptorsSet } from '../reanimated2/ViewDescriptorsSet';
 import type {
   ViewDescriptorsSet,
   ViewRefSet,
-} from 'src/reanimated2/ViewDescriptorsSet';
+} from '../reanimated2/ViewDescriptorsSet';
 import { adaptViewConfig } from '../ConfigHelper';
 import updateProps from '../reanimated2/UpdateProps';
 import { stopMapper, startMapper } from '../reanimated2/mappers';
