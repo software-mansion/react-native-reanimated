@@ -26,7 +26,6 @@ interface WindowDimensions {
 
 export interface KeyframeProps extends StyleProps {
   easing?: EasingFunction;
-  [key: string]: any;
 }
 
 export type LayoutAnimation = {
