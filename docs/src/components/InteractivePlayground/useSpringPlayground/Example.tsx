@@ -18,9 +18,10 @@ interface Props {
 
 export default function App({ options }: Props) {
   const offset = useSharedValue(initialOffset);
+  const reduceMotion = useReducedMotion();
   const shouldReduceMotion =
     options.reduceMotion === ReduceMotion.Always ||
-    (useReducedMotion() && options.reduceMotion === ReduceMotion.System);
+    (options.reduceMotion === ReduceMotion.System && reduceMotion);
   const callback = (isFinished) => {
     setTimeout(() => {
       if (isFinished) {

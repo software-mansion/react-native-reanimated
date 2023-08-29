@@ -10,14 +10,12 @@ import Animated, {
 
 export default function App() {
   const sv = useSharedValue(-200);
-  // highlight-start
+  // highlight-next-line
   const reduceMotion = useReducedMotion();
-  // highlight-end
 
   const animatedStyle = useAnimatedStyle(() => ({
-    // highlight-start
+    // highlight-next-line
     transform: [{ translateX: reduceMotion ? 0 : sv.value }],
-    // highlight-end
   }));
 
   React.useEffect(() => {

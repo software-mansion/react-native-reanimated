@@ -5,7 +5,7 @@ sidebar_label: useReducedMotion
 sidebar_position: 4
 ---
 
-This hook allows you to conditionally control animations based on the system's `Reduced Motion` accessibility setting.
+`useReducedMotion` lets you query the reduced motion system setting. You can use it to disable animations.
 
 ## Reference
 
@@ -27,7 +27,7 @@ function App() {
 
 ### Returns
 
-`useReducedMotion` returns a boolean value that indicates whether the `Reduced Motion` accessibility setting was enabled when the app started.
+`useReducedMotion` returns a boolean indicating whether the reduced motion setting was enabled when the app started.
 
 ## Example
 
@@ -41,7 +41,8 @@ import UseReducedMotionSrc from '!!raw-loader!@site/src/examples/UseReducedMotio
 
 ## Remarks
 
-- Keep in mind that the hook doesn't cause the component to reload when the system setting is changed.
+- Changing the reduced motion system setting doesn't cause your components to rerender.
+- In contrast to [`AccessibilityInfo.isReduceMotionEnabled()`](https://reactnative.dev/docs/accessibilityinfo#isreducemotionenabled) the `useReduceMotion` hook lets you get the value synchronously.
 
 ## Platform compatibility
 

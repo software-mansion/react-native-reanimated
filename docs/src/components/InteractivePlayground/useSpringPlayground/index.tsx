@@ -162,7 +162,7 @@ export default function useSpringPlayground() {
         onChange={setRestSpeedThreshold}
       />
       <SelectOption
-        label="Reduce Motion"
+        label="Reduce motion"
         value={reduceMotion}
         onChange={(option) => setReduceMotion(option as ReduceMotion)}
         options={[ReduceMotion.System, ReduceMotion.Always, ReduceMotion.Never]}
