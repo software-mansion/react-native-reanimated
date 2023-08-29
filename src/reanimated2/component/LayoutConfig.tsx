@@ -4,10 +4,10 @@ export const LayoutConfigContext =
   createContext<React.MutableRefObject<boolean> | null>(null);
 
 export function LayoutConfig(props: {
-  config: boolean;
+  disableEntering: boolean;
   children?: React.ReactNode | undefined;
 }) {
-  const ref = useRef(props.config);
+  const ref = useRef(props.disableEntering);
 
   useEffect(() => {
     ref.current = false;

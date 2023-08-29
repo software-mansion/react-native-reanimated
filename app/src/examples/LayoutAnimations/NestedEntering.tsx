@@ -35,12 +35,12 @@ export default function NestedEntering() {
         }}
         title="Toggle second inner"
       />
-      <Animated.LayoutConfig config={true}>
+      <Animated.LayoutConfig disableEntering={true}>
         <View style={styles.rowContainer}>
           <View style={styles.boxContainer}>
             {outer1 && (
               <Animated.View entering={PinwheelIn} style={styles.outerBox}>
-                <Animated.LayoutConfig config={true}>
+                <Animated.LayoutConfig disableEntering={true}>
                   {inner1 && (
                     <Animated.View
                       style={styles.box}

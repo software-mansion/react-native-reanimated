@@ -12,7 +12,7 @@ const digits = [...Array(3).keys()];
 
 export default function FlatListEntering() {
   return (
-    <Animated.LayoutConfig config={true}>
+    <Animated.LayoutConfig disableEntering={true}>
       <List />
     </Animated.LayoutConfig>
   );
@@ -64,7 +64,7 @@ function Item() {
       <Animated.View
         entering={FadeInUp.duration(1000).delay(500)}
         style={styles.outerBox}>
-        <Animated.LayoutConfig config={false}>
+        <Animated.LayoutConfig disableEntering={false}>
           <Animated.View
             style={styles.box}
             entering={PinwheelIn.duration(2000)}
