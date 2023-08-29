@@ -536,9 +536,14 @@ void NativeReanimatedModule::performOperations() {
             const ShadowNodeFamily &family = shadowNode->getFamily();
             react_native_assert(family.getSurfaceId() == surfaceId_);
 
+#if REACT_NATIVE_MINOR_VERSION >= 73
+            // Fix for catching nullptr returned from commit hook was introduced
+            // in 0.72.4 but we have only check for minor version of React
+            // Native so enable that optimization in React Native >= 0.73
             if (propsRegistry_->shouldSkipCommit()) {
               return nullptr;
             }
+#endif
 
             auto newRootNode = shadowTreeCloner.cloneWithNewProps(
                 rootNode, family, RawProps(rt, *props));
