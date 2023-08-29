@@ -167,6 +167,8 @@ def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 def reactNativeThirdParty = new File("$reactNativeRootDir/ReactAndroid/src/main/jni/third-party")
 def reactNativeAndroidDownloadDir = new File("$reactNativeRootDir/ReactAndroid/build/downloads")
 
+def prefabHeadersDir = project.file("$buildDir/prefab-headers/reanimated")
+
 def JS_RUNTIME = {
     // Override JS runtime with environment variable
     if (System.getenv("JS_RUNTIME")) {
@@ -246,11 +248,18 @@ android {
         ndkVersion rootProject.ext.ndkVersion
     }
 
-    if (REACT_NATIVE_MINOR_VERSION >= 71) {
-        buildFeatures {
-            prefab true
+    buildFeatures {
+        prefab true
+        prefabPublishing true
+    }
+
+    prefab {
+        reanimated {
+            headers prefabHeadersDir.absolutePath
+            libraryName "libreanimated"
         }
     }
+
     defaultConfig {
         minSdkVersion safeExtGet("minSdkVersion", 16)
         targetSdkVersion safeExtGet("targetSdkVersion", 30)
@@ -445,6 +454,13 @@ def assertLatestReactNativeWithNewArchitecture = task assertLatestReactNativeWit
             "\n[Reanimated] Outdated version of React Native for New Architecture. Reanimated " + REANIMATED_VERSION + " supports the New Architecture on React Native 0.72.0+. See https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#outdated-version-of-react-native-for-new-architecture for more information."
         )
     }
+}
+
+task prepareHeadersForPrefab(type: Copy) {
+    from("$projectDir/src/main/cpp")
+    from("$projectDir/../Common/cpp")
+    include("**/*.h")
+    into(prefabHeadersDir)
 }
 
 tasks.preBuild {
@@ -904,6 +920,8 @@ afterEvaluate {
         nativeBuildDependsOn(extractAARHeaders)
         nativeBuildDependsOn(extractSOFiles)
     }
+
+    preBuild.dependsOn(prepareHeadersForPrefab)
 
     tasks.forEach({ task ->
         if (task.name.contains("JniLibFolders")) {
