@@ -256,7 +256,6 @@ android {
     prefab {
         reanimated {
             headers prefabHeadersDir.absolutePath
-            libraryName "libreanimated"
         }
     }
 
