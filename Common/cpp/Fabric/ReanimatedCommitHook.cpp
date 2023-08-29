@@ -3,6 +3,7 @@
 #include <react/renderer/core/ComponentDescriptor.h>
 
 #include "ReanimatedCommitHook.h"
+#include "ReanimatedCommitMarker.h"
 #include "ShadowTreeCloner.h"
 
 using namespace facebook::react;
@@ -24,7 +25,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &,
     RootShadowNode::Shared const &,
     RootShadowNode::Unshared const &newRootShadowNode) const noexcept {
-  if (propsRegistry_->isLastReanimatedRoot(newRootShadowNode)) {
+  if (ReanimatedCommitMarker::isReanimatedCommit()) {
     // ShadowTree commited by Reanimated, no need to apply updates from
     // PropsRegistry
     return newRootShadowNode;
@@ -56,9 +57,11 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     });
   }
 
-  // request Reanimated to skip one commit so that React Native can mount the
-  // changes instead of failing 1024 times and crashing the app
-  propsRegistry_->pleaseSkipCommit();
+  // If the commit comes from React Native then skip one commit from Reanimated
+  // since the ShadowTree to be committed by Reanimated may not include the new
+  // changes from React Native yet and all changes of animated props will be
+  // applied in ReanimatedCommitHook by iterating over PropsRegistry.
+  propsRegistry_->pleaseSkipReanimatedCommit();
 
   return std::static_pointer_cast<RootShadowNode>(rootNode);
 }

@@ -2,7 +2,11 @@ import AboutExample from './AboutExample';
 import AnimatableRefExample from './AnimatableRefExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import AnimatedListExample from './LayoutAnimations/AnimatedList';
-import AnimatedSensorExample from './AnimatedSensorExample';
+import AnimatedSensorAccelerometerExample from './AnimatedSensorAccelerometerExample';
+import AnimatedSensorGravityExample from './AnimatedSensorGravityExample';
+import AnimatedSensorGyroscopeExample from './AnimatedSensorGyroscopeExample';
+import AnimatedSensorMagneticFieldExample from './AnimatedSensorMagneticFieldExample';
+import AnimatedSensorRotationExample from './AnimatedSensorRotationExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 import AnimatedTextInputExample from './AnimatedTextInputExample';
@@ -38,6 +42,7 @@ import FlatListExample from './SharedElementTransitions/FlatList';
 import FrameCallbackExample from './FrameCallbackExample';
 import GalleryExample from './SharedElementTransitions/Gallery';
 import GestureHandlerExample from './GestureHandlerExample';
+import GetViewPropExample from './GetViewPropExample';
 import IPodExample from './IPodExample';
 import ImageStackExample from './SharedElementTransitions/ImageStack';
 import InvertedFlatListExample from './InvertedFlatListExample';
@@ -73,6 +78,8 @@ import ProgressTransitionExample from './SharedElementTransitions/ProgressTransi
 import RainbowExample from './RainbowExample';
 import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
 import ReducedMotionExample from './ReducedMotionExample';
+import ReducedMotionLayoutExample from './LayoutAnimations/ReducedMotionLayoutExample';
+import ReducedMotionSharedExample from './SharedElementTransitions/ReducedMotionSharedExample';
 import RefExample from './RefExample';
 import RestoreStateExample from './SharedElementTransitions/RestoreState';
 import ScreenStackExample from './ScreenStackExample';
@@ -96,6 +103,7 @@ import WidthExample from './WidthExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
+import WorkletRuntimeExample from './WorkletRuntimeExample';
 
 interface Example {
   icon?: string;
@@ -110,6 +118,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
+  },
+  WorkletRuntimeExample: {
+    icon: '🏃‍♂️',
+    title: 'Worklet runtime',
+    screen: WorkletRuntimeExample,
   },
 
   // About
@@ -235,10 +248,30 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'useAnimatedKeyboard',
     screen: AnimatedKeyboardExample,
   },
-  AnimatedSensorExample: {
-    icon: '📡',
-    title: 'useAnimatedSensor',
-    screen: AnimatedSensorExample,
+  AnimatedSensorAccelerometerExample: {
+    icon: '🚀',
+    title: 'useAnimatedSensor - accelerometer',
+    screen: AnimatedSensorAccelerometerExample,
+  },
+  AnimatedSensorGyroscopeExample: {
+    icon: '⚖️',
+    title: 'useAnimatedSensor - gyroscope',
+    screen: AnimatedSensorGyroscopeExample,
+  },
+  AnimatedSensorGravityExample: {
+    icon: '🌎',
+    title: 'useAnimatedSensor - gravity',
+    screen: AnimatedSensorGravityExample,
+  },
+  AnimatedSensorMagneticFieldExample: {
+    icon: '🧲',
+    title: 'useAnimatedSensor - magnetic field',
+    screen: AnimatedSensorMagneticFieldExample,
+  },
+  AnimatedSensorRotationExample: {
+    icon: '🔄',
+    title: 'useAnimatedSensor - rotation',
+    screen: AnimatedSensorRotationExample,
   },
   FrameCallbackExample: {
     icon: '🗣',
@@ -359,6 +392,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⏸️',
     title: 'Reduced Motion',
     screen: ReducedMotionExample,
+  },
+  GetViewPropExample: {
+    icon: '🔎',
+    title: 'getViewProp',
+    screen: GetViewPropExample,
   },
   LogExample: {
     icon: '⌨',
@@ -519,6 +557,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Carousel',
     screen: Carousel,
   },
+  ReducedMotionLayoutExample: {
+    title: '[LA] Reduced Motion',
+    screen: ReducedMotionLayoutExample,
+  },
 
   // Shared Element Transitions
 
@@ -565,5 +607,9 @@ export const EXAMPLES: Record<string, Example> = {
   DuplicateTagsExample: {
     title: '[SET] Duplicate Tags',
     screen: DuplicateTagsExample,
+  },
+  ReducedMotionSharedExample: {
+    title: '[SET] Reduced Motion',
+    screen: ReducedMotionSharedExample,
   },
 } as const;

@@ -55,6 +55,12 @@ export type ShareableRef<T> = {
   __hostObjectShareableJSRef: T;
 };
 
+// In case of objects with depth or arrays of objects or arrays of arrays etc.
+// we add this utility type that makes it a SharaebleRef of the outermost type.
+export type FlatShareableRef<T> = T extends ShareableRef<infer U>
+  ? ShareableRef<U>
+  : ShareableRef<T>;
+
 export type ShareableSyncDataHolderRef<T> = {
   __hostObjectShareableJSRefSyncDataHolder: T;
 };
@@ -171,10 +177,6 @@ export type AnimatedSensor<T extends Value3D | ValueRotation> = {
   isAvailable: boolean;
   config: SensorConfig;
 };
-
-export interface NumericAnimation {
-  current?: number;
-}
 
 export type AnimationCallback = (
   finished?: boolean,

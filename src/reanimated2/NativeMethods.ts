@@ -1,4 +1,4 @@
-import { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
+import type { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
 import {
   isChromeDebugger,
   isJest,
@@ -8,6 +8,7 @@ import {
 
 import type { AnimatedRef } from './hook/commonTypes';
 import type { Component } from 'react';
+import type { ScrollView } from 'react-native';
 
 const IS_NATIVE = !shouldBeUseWeb();
 
@@ -145,10 +146,13 @@ export let scrollTo: <T extends Component>(
 
 if (isWeb()) {
   scrollTo = (animatedRef, x, y, animated) => {
-    'worklet';
-    const element = (animatedRef as any)() as HTMLElement; // TODO: fix typing of animated refs on web
-    // @ts-ignore same call as in react-native-web
-    element.scrollTo({ x, y, animated });
+    const element = animatedRef();
+
+    // This prevents crashes if ref has not been set yet
+    if (element !== -1) {
+      // By ScrollView we mean any scrollable component
+      (element as ScrollView)?.scrollTo({ x, y, animated });
+    }
   };
 } else if (IS_NATIVE && global._IS_FABRIC) {
   scrollTo = (animatedRef, x, y, animated) => {

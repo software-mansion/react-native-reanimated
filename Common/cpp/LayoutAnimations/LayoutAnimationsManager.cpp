@@ -138,18 +138,12 @@ void LayoutAnimationsManager::checkDuplicateSharedTag(
   const auto &pair = getScreenSharedTagPairString(screenTag, sharedTag);
   bool hasDuplicate = screenSharedTagSet_.count(pair);
   if (hasDuplicate) {
-    assert(jsLogger_ != nullptr);
     jsLogger_->warnOnJS(
         "[Reanimated] Duplicate shared tag \"" + sharedTag +
         "\" on the same screen");
   }
   viewsScreenSharedTagMap_[viewTag] = pair;
   screenSharedTagSet_.insert(pair);
-}
-
-void LayoutAnimationsManager::setJSLogger(
-    const std::shared_ptr<JSLogger> &jsLogger) {
-  jsLogger_ = jsLogger;
 }
 #endif // DEBUG
 
