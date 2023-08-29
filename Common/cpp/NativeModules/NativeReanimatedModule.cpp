@@ -13,7 +13,6 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
-#include "PropsRegistry.h"
 #include "ReanimatedCommitMarker.h"
 #include "ShadowTreeCloner.h"
 #endif
@@ -66,6 +65,7 @@ NativeReanimatedModule::NativeReanimatedModule(
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
+      propsRegistry_(std::make_shared<PropsRegistry>()),
 #else
       obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
       configurePropsPlatformFunction_(
@@ -469,7 +469,6 @@ void NativeReanimatedModule::performOperations() {
   jsi::Runtime &rt = uiWorkletRuntime_->getJSIRuntime();
 
   {
-    assert(propsRegistry_ != nullptr);
     auto lock = propsRegistry_->createLock();
 
     // remove recently unmounted ShadowNodes from PropsRegistry
@@ -620,14 +619,14 @@ jsi::Value NativeReanimatedModule::measure(
   return result;
 }
 
-void NativeReanimatedModule::setUIManager(
+void NativeReanimatedModule::initializeFabric(
     const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
-}
-
-void NativeReanimatedModule::setPropsRegistry(
-    const std::shared_ptr<PropsRegistry> &propsRegistry) {
-  propsRegistry_ = propsRegistry;
+  commitHook_ =
+      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
+#if REACT_NATIVE_MINOR_VERSION >= 73
+  mountHook_ = std::make_shared<ReanimatedMountHook>(propsRegistry, uiManager_);
+#endif
 }
 #endif // RCT_NEW_ARCH_ENABLED
 
