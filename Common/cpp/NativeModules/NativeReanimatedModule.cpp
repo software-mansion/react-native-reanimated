@@ -540,7 +540,7 @@ void NativeReanimatedModule::performOperations() {
             // Fix for catching nullptr returned from commit hook was introduced
             // in 0.72.4 but we have only check for minor version of React
             // Native so enable that optimization in React Native >= 0.73
-            if (propsRegistry_->shouldSkipCommit()) {
+            if (propsRegistry_->shouldReanimatedSkipCommit()) {
               return nullptr;
             }
 #endif
@@ -564,7 +564,7 @@ void NativeReanimatedModule::performOperations() {
         {/* .enableStateReconciliation = */ false,
          /* .mountSynchronously = */ true,
          /* .shouldYield = */ [this]() {
-           return propsRegistry_->shouldSkipCommit();
+           return propsRegistry_->shouldReanimatedSkipCommit();
          }});
   });
 }
