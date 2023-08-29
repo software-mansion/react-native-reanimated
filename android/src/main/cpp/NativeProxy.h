@@ -24,15 +24,6 @@
 #include "NativeReanimatedModule.h"
 #include "UIScheduler.h"
 
-#ifdef RCT_NEW_ARCH_ENABLED
-#include "PropsRegistry.h"
-#include "ReanimatedCommitHook.h"
-
-#if REACT_NATIVE_MINOR_VERSION >= 73
-#include "ReanimatedMountHook.h"
-#endif
-#endif
-
 namespace reanimated {
 
 using namespace facebook;
@@ -180,10 +171,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
 #ifdef RCT_NEW_ARCH_ENABLED
-  std::shared_ptr<ReanimatedCommitHook> commitHook_;
-#if REACT_NATIVE_MINOR_VERSION >= 73
-  std::shared_ptr<ReanimatedMountHook> mountHook_;
-#endif
   // removed temporarily, event listener mechanism needs to be fixed on RN side
   // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
   // std::shared_ptr<EventListener> eventListener_;
