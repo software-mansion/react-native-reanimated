@@ -6,11 +6,11 @@ import type {
   EntryExitAnimationFunction,
   SharedTransition,
   SharedValue,
-} from './reanimated2';
+} from '../reanimated2';
 import type {
   ViewDescriptorsSet,
   ViewRefSet,
-} from './reanimated2/ViewDescriptorsSet';
+} from '../reanimated2/ViewDescriptorsSet';
 
 export interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;

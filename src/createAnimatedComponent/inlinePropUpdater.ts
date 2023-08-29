@@ -1,16 +1,16 @@
 import type { StyleProps } from 'src/reanimated2';
-import { isSharedValue } from './reanimated2/utils';
 import type { AnimatedComponentProps } from './utils';
 import { flattenArray } from './utils';
-import { makeViewDescriptorsSet } from './reanimated2/ViewDescriptorsSet';
+import { makeViewDescriptorsSet } from '../reanimated2/ViewDescriptorsSet';
 import type {
   ViewDescriptorsSet,
   ViewRefSet,
 } from 'src/reanimated2/ViewDescriptorsSet';
-import { adaptViewConfig } from './ConfigHelper';
-import NativeReanimatedModule from './reanimated2/NativeReanimated';
-import updateProps from './reanimated2/UpdateProps';
-import { stopMapper, startMapper } from './reanimated2/mappers';
+import { adaptViewConfig } from '../ConfigHelper';
+import updateProps from '../reanimated2/UpdateProps';
+import { stopMapper, startMapper } from '../reanimated2/mappers';
+import { isSharedValue } from '../reanimated2/utils';
+import NativeReanimatedModule from '../reanimated2/NativeReanimated';
 
 function isInlineStyleTransform(transform: unknown): boolean {
   if (!transform) {

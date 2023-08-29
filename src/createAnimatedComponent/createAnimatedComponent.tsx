@@ -8,43 +8,44 @@ import type {
 } from 'react';
 import React from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
-import WorkletEventHandler from './reanimated2/WorkletEventHandler';
-import './reanimated2/layoutReanimation/animationsManager';
+import WorkletEventHandler from '../reanimated2/WorkletEventHandler';
+import '../reanimated2/layoutReanimation/animationsManager';
 import invariant from 'invariant';
-import { adaptViewConfig } from './ConfigHelper';
-import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
+import { adaptViewConfig } from '../ConfigHelper';
+import { RNRenderer } from '../reanimated2/platform-specific/RNRenderer';
 import {
   configureLayoutAnimations,
   enableLayoutAnimations,
-} from './reanimated2/core';
+} from '../reanimated2/core';
 import {
   isJest,
   isChromeDebugger,
   shouldBeUseWeb,
   isWeb,
   isMacOS,
-} from './reanimated2/PlatformChecker';
-import { initialUpdaterRun } from './reanimated2/animation';
+} from '../reanimated2/PlatformChecker';
+import { initialUpdaterRun } from '../reanimated2/animation';
 import {
   SharedTransition,
   LayoutAnimationType,
-} from './reanimated2/layoutReanimation';
+} from '../reanimated2/layoutReanimation';
 import type {
   SharedValue,
   StyleProps,
   ShadowNodeWrapper,
-} from './reanimated2/commonTypes';
-import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
-import { isSharedValue } from './reanimated2/utils';
-import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
-import { getReduceMotionFromConfig } from './reanimated2/animation/util';
-import { maybeBuild } from './animationBuilder';
-import { InlinePropUpdater } from './inlinePropUpdater';
+} from '../reanimated2/commonTypes';
+import { getShadowNodeWrapperFromRef } from '../reanimated2/fabricUtils';
+import { isSharedValue } from '../reanimated2/utils';
+import { removeFromPropsRegistry } from '../reanimated2/PropsRegistry';
+import { getReduceMotionFromConfig } from '../reanimated2/animation/util';
+import { maybeBuild } from '../animationBuilder';
+
+import type { AnimateProps } from '../reanimated2';
 import { JSPropUpdater } from './JSPropUpdater';
+import { InlinePropUpdater } from './inlinePropUpdater';
 import type { AnimatedComponentProps, AnimatedProps } from './utils';
 import { has, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
-import type { AnimateProps } from './reanimated2';
 
 const IS_WEB = isWeb();
 
