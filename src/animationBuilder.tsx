@@ -47,7 +47,7 @@ export function maybeBuild(
       );
 
     const commonProperties = getCommonProperties(animatedStyle, style || {});
-    if (commonProperties) {
+    if (commonProperties.length > 0) {
       console.warn(
         `[Reanimated] ${
           commonProperties.length === 1 ? 'Property' : 'Properties: '
