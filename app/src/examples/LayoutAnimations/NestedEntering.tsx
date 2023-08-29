@@ -1,11 +1,13 @@
-import Animated, { PinwheelIn, PinwheelOut } from 'react-native-reanimated';
+import Animated, { PinwheelIn } from 'react-native-reanimated';
 import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
 export default function NestedEntering() {
   const [outer1, setOuter1] = React.useState(true);
+  const [inner1, setInner1] = React.useState(true);
   const [outer2, setOuter2] = React.useState(false);
+  const [inner2, setInner2] = React.useState(true);
 
   return (
     <View style={styles.container}>
@@ -13,37 +15,54 @@ export default function NestedEntering() {
         onPress={() => {
           setOuter1(!outer1);
         }}
-        title="Toggle first"
+        title="Toggle first outer"
+      />
+      <Button
+        onPress={() => {
+          setInner1(!inner1);
+        }}
+        title="Toggle first inner"
       />
       <Button
         onPress={() => {
           setOuter2(!outer2);
         }}
-        title="Toggle second"
+        title="Toggle second outer"
+      />
+      <Button
+        onPress={() => {
+          setInner2(!inner2);
+        }}
+        title="Toggle second inner"
       />
       <Animated.LayoutConfig config={true}>
-        <View style={styles.container2}>
-          {outer1 && (
-            <Animated.View entering={PinwheelIn} style={styles.outerBox}>
-              <Animated.LayoutConfig config={false}>
-                <Animated.View
-                  style={styles.box}
-                  entering={PinwheelIn.duration(1000)}
-                  exiting={PinwheelOut}
-                />
-              </Animated.LayoutConfig>
-            </Animated.View>
-          )}
-
-          {outer2 && (
-            <Animated.View entering={PinwheelIn} style={styles.outerBox}>
-              <Animated.View
-                style={styles.box}
-                entering={PinwheelIn.duration(1000)}
-                exiting={PinwheelOut}
-              />
-            </Animated.View>
-          )}
+        <View style={styles.rowContainer}>
+          <View style={styles.boxContainer}>
+            {outer1 && (
+              <Animated.View entering={PinwheelIn} style={styles.outerBox}>
+                <Animated.LayoutConfig config={true}>
+                  {inner1 && (
+                    <Animated.View
+                      style={styles.box}
+                      entering={PinwheelIn.duration(1000)}
+                    />
+                  )}
+                </Animated.LayoutConfig>
+              </Animated.View>
+            )}
+          </View>
+          <View style={styles.boxContainer}>
+            {outer2 && (
+              <Animated.View entering={PinwheelIn} style={styles.outerBox}>
+                {inner2 && (
+                  <Animated.View
+                    style={styles.box}
+                    entering={PinwheelIn.duration(1000)}
+                  />
+                )}
+              </Animated.View>
+            )}
+          </View>
         </View>
       </Animated.LayoutConfig>
     </View>
@@ -55,25 +74,30 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    marginTop: 150,
+    marginTop: 100,
   },
-  container2: {
+  rowContainer: {
     width: 340,
+    marginTop: 100,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  boxContainer: {
+    width: 170,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   outerBox: {
     width: 150,
     height: 150,
-    backgroundColor: 'navy',
+    backgroundColor: '#b58df1',
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 20,
     borderRadius: 20,
   },
   box: {
-    width: 100,
-    height: 100,
-    backgroundColor: 'red',
+    width: 80,
+    height: 80,
+    backgroundColor: '#782aeb',
   },
 });

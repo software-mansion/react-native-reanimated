@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { Button, StyleSheet, Text } from 'react-native';
-import Animated, { SlideInRight, SlideOutLeft } from 'react-native-reanimated';
+import { Button, StyleSheet } from 'react-native';
+import Animated, {
+  FadeInUp,
+  PinwheelIn,
+  PinwheelOut,
+  SlideInRight,
+  SlideOutLeft,
+} from 'react-native-reanimated';
 
-const digits = [...Array(10).keys()];
-
-const cardMargin = 10;
+const digits = [...Array(3).keys()];
 
 export default function FlatListEntering() {
   return (
@@ -44,20 +48,39 @@ function List() {
           contentContainerStyle={[styles.contentContainer]}
           decelerationRate="fast"
           data={data}
-          renderItem={({ item, index }) => <Item item={item} index={index} />}
+          renderItem={() => <Item />}
         />
       )}
     </>
   );
 }
 
-function Item({ item }: { item: number; index: number }) {
+function Item() {
   return (
     <Animated.View
       entering={SlideInRight.duration(500)}
       exiting={SlideOutLeft}
       style={styles.card}>
-      <Text style={styles.text}>{item}</Text>
+      <Animated.View
+        entering={FadeInUp.duration(1000).delay(500)}
+        style={styles.outerBox}>
+        <Animated.LayoutConfig config={false}>
+          <Animated.View
+            style={styles.box}
+            entering={PinwheelIn.duration(2000)}
+            exiting={PinwheelOut}
+          />
+        </Animated.LayoutConfig>
+      </Animated.View>
+      <Animated.View
+        entering={FadeInUp.duration(1000).delay(500)}
+        style={styles.outerBox}>
+        <Animated.View
+          style={styles.box}
+          entering={PinwheelIn.duration(2000)}
+          exiting={PinwheelOut}
+        />
+      </Animated.View>
     </Animated.View>
   );
 }
@@ -77,11 +100,22 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderColor: '#eee',
     borderWidth: 1,
-    margin: cardMargin,
+    margin: 10,
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  outerBox: {
+    width: 50,
+    height: 50,
+    backgroundColor: '#b58df1',
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: 80,
+    borderRadius: 5,
   },
-  text: {
-    fontSize: 32,
+  box: {
+    width: 30,
+    height: 30,
+    backgroundColor: '#782aeb',
   },
 });

@@ -275,6 +275,8 @@ export default function createAnimatedComponent(
     _sharedElementTransition: SharedTransition | null = null;
     _JSPropUpdater = new JSPropUpdater();
     static displayName: string;
+    static contextType = LayoutConfigContext;
+    context!: React.ContextType<typeof LayoutConfigContext>;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
@@ -602,7 +604,6 @@ export default function createAnimatedComponent(
         >,
       setLocalRef: (ref) => {
         // TODO update config
-        console.log('setLocalRef');
         const tag = IS_WEB
           ? (ref as HTMLElement)
           : findNodeHandle(ref as Component);
@@ -626,7 +627,7 @@ export default function createAnimatedComponent(
               )
             );
           }
-          if (entering && !LayoutConfigContext.value) {
+          if (entering && !this.context?.current) {
             configureLayoutAnimations(
               tag,
               LayoutAnimationType.ENTERING,
@@ -757,7 +758,6 @@ export default function createAnimatedComponent(
     }
 
     render() {
-      console.log('rendering');
       const props = this._filterNonAnimatedProps(this.props);
       if (isJest()) {
         props.animatedStyle = this.animatedStyle;
