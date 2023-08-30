@@ -8,7 +8,8 @@ import type {
   KeyframeProps,
   StylePropsWithArrayTransform,
 } from './commonTypes';
-import type { TransformProperty, StyleProps } from '../../commonTypes';
+import type { StyleProps } from '../../commonTypes';
+import type { TransformArrayItem } from '../../helperTypes';
 import { ReduceMotion } from '../../commonTypes';
 import { getReduceMotionFromConfig } from '../../animation/util';
 
@@ -257,7 +258,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
             animations.transform = [];
           }
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          animations.transform!.push(<TransformProperty>{
+          animations.transform!.push(<TransformArrayItem>{
             [key.split(':')[1]]: animation,
           });
         } else {
