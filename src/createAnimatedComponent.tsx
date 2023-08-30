@@ -53,7 +53,7 @@ import NativeReanimatedModule from './reanimated2/NativeReanimated';
 import { isSharedValue } from './reanimated2/utils';
 import type { AnimateProps } from './reanimated2/helperTypes';
 import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
-import { JSPropUpdater } from './JSPropUpdater';
+import JSPropUpdater from './JSPropUpdater';
 import { getReduceMotionFromConfig } from './reanimated2/animation/util';
 import { maybeBuild } from './animationBuilder';
 

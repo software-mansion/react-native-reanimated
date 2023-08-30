@@ -17,6 +17,7 @@
 #include "ShadowTreeCloner.h"
 #endif
 
+#include "CollectionUtils.h"
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
 #include "JSScheduler.h"
@@ -289,11 +290,16 @@ jsi::Value NativeReanimatedModule::configureProps(
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps) {
 #ifdef RCT_NEW_ARCH_ENABLED
-  (void)uiProps; // unused variable on Fabric
-  jsi::Array array = nativeProps.asObject(rt).asArray(rt);
+  jsi::Array array = uiProps.asObject(rt).asArray(rt);
+  for (size_t i = 0; i < array.size(rt); ++i) {
+    std::string name = array.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    animatableProps_.insert(name);
+  }
+  array = nativeProps.asObject(rt).asArray(rt);
   for (size_t i = 0; i < array.size(rt); ++i) {
     std::string name = array.getValueAtIndex(rt, i).asString(rt).utf8(rt);
     nativePropNames_.insert(name);
+    animatableProps_.insert(name);
   }
 #else
   configurePropsPlatformFunction_(rt, uiProps, nativeProps);
@@ -392,6 +398,30 @@ bool NativeReanimatedModule::isThereAnyLayoutProp(
   }
   return false;
 }
+
+jsi::Value NativeReanimatedModule::getNonAnimatableProp(
+    jsi::Runtime &rt,
+    const jsi::Value &props) {
+  jsi::Object nonAnimatableProps(rt);
+  bool isAnyProp = false;
+  const jsi::Object &propsObject = props.asObject(rt);
+  const jsi::Array &propNames = propsObject.getPropertyNames(rt);
+  for (size_t i = 0; i < propNames.size(rt); ++i) {
+    const std::string &propName =
+        propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    if (!collection::contains(animatableProps_, propName)) {
+      isAnyProp = true;
+      const auto &propNameStr = propName.c_str();
+      const jsi::Value &propValue = propsObject.getProperty(rt, propNameStr);
+      nonAnimatableProps.setProperty(rt, propNameStr, propValue);
+    }
+  }
+  if (isAnyProp) {
+    return nonAnimatableProps;
+  } else {
+    return jsi::Value::undefined();
+  }
+}
 #endif // RCT_NEW_ARCH_ENABLED
 
 bool NativeReanimatedModule::handleEvent(
@@ -487,6 +517,23 @@ void NativeReanimatedModule::performOperations() {
     for (const auto &[shadowNode, props] : copiedOperationsQueue) {
       propsRegistry_->update(shadowNode, dynamicFromValue(rt, *props));
     }
+  }
+
+  for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+    const jsi::Value &nonAnimatableProps = getNonAnimatableProp(rt, *props);
+    if (nonAnimatableProps.isUndefined()) {
+      continue;
+    }
+    Tag viewTag = shadowNode->getTag();
+    uiScheduler_->scheduleOnUI([&]() {
+      jsi::Value jsPropsUpdaterValue =
+          rt.global().getProperty(rt, "_jsPropsUpdater");
+      if (jsPropsUpdaterValue.isObject()) {
+        jsi::Function jsPropsUpdater =
+            jsPropsUpdaterValue.asObject(rt).asFunction(rt);
+        jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
+      }
+    });
   }
 
   bool hasLayoutUpdates = false;
