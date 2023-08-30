@@ -13,7 +13,7 @@ You can use `measure()` only on rendered components. For example, calling `measu
 :::
 
 :::tip
-If you call `measure` inside [`useAnimatedStyle`](../hooks/useAnimatedStyle), you may get the following warning:
+If you call `measure` inside [`useAnimatedStyle`](/docs/2.x/api/hooks/useAnimatedStyle), you may get the following warning:
 
 > [Reanimated] measure() was called from the main JS context. Measure is only available
 > in the UI runtime. (...)
@@ -32,14 +32,14 @@ if (_WORKLET || isWeb) {
 :::
 
 :::info
-`measure` is not available when Chrome Developer Tools (remote JS debugger) is attached. However, the recommended tool for debugging React Native apps is Flipper (Chrome DevTools) which supports `measure`. Check out more details [here](../../guide/debugging).
+`measure` is not available when Chrome Developer Tools (remote JS debugger) is attached. However, the recommended tool for debugging React Native apps is Flipper (Chrome DevTools) which supports `measure`. Check out more details [here](/docs/2.x/guide/debugging).
 :::
 
 ### Arguments
 
 #### animatedRef
 
-The product of [`useAnimatedRef`](../hooks/useAnimatedRef) which is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread).
+The product of [`useAnimatedRef`](/docs/2.x/api/hooks/useAnimatedRef) which is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread).
 
 ### Returns
 
