@@ -1,7 +1,7 @@
 #include "WorkletRuntimeDecorator.h"
-#include "Common/cpp/Tools/JsiUtils.h"
 #include "JSISerializer.h"
 #include "Logger.h"
+#include "ReanimatedJSIUtils.h"
 #include "Shareables.h"
 
 namespace reanimated {
