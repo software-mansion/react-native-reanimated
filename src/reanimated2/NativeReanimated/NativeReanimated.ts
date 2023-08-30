@@ -63,14 +63,14 @@ export interface NativeReanimatedModule {
   ): void;
 }
 
-function checkReanimatedInstance() {
+function assertSingleReanimatedInstance() {
   if (
     global._REANIMATED_VERSION_JS !== undefined &&
     global._REANIMATED_VERSION_JS !== jsVersion
   ) {
     throw new Error(
       `[Reanimated] Another instance of \`react-native-reanimated\` was detected.
-See \`http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-another-instance-of-react-native-reanimated-was-detected\` for more details. global._REANIMATED_VERSION_JS: ${global._REANIMATED_VERSION_JS}, jsVersion: ${jsVersion}}`
+See \`http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-another-instance-of-react-native-reanimated-was-detected\` for more details. Previous: ${global._REANIMATED_VERSION_JS}, current: ${jsVersion}.`
     );
   }
   global._REANIMATED_VERSION_JS = jsVersion;
@@ -93,7 +93,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       );
     }
     if (__DEV__) {
-      checkReanimatedInstance();
+      assertSingleReanimatedInstance();
       checkCppVersion();
     }
 

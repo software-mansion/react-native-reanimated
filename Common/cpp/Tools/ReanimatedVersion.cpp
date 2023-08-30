@@ -18,7 +18,7 @@ std::string getReanimatedCppVersion() {
 
 // This function is pretty much a copy of
 // `src/reanimated2/platform-specific/checkVersion.ts`.
-bool matchVersion(std::string version1, std::string version2) {
+bool matchVersion(const std::string &version1, const std::string &version2) {
   std::regex pattern("^\\d+\\.\\d+\\.\\d+$");
   if (std::regex_match(version1, pattern) &&
       std::regex_match(version2, pattern)) {
@@ -46,8 +46,8 @@ void checkJSVersion(jsi::Runtime &rnRuntime) {
   if (maybeJSVersion.isUndefined()) {
     throw std::runtime_error(
         std::string(
-            "[Reanimated] (C++) Native side failed to resolve JavaScript code version\n") +
-        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#native-side-failed-to-resolve-javascript-code-version` for more details.");
+            "[Reanimated] C++ side failed to resolve JavaScript code version\n") +
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#c-side-failed-to-resolve-javascript-code-version` for more details.");
   }
 
   auto jsVersion = maybeJSVersion.asString(rnRuntime).utf8(rnRuntime);
@@ -55,9 +55,9 @@ void checkJSVersion(jsi::Runtime &rnRuntime) {
   if (!matchVersion(cppVersion, jsVersion)) {
     throw std::runtime_error(
         std::string(
-            "[Reanimated] (C++) Mismatch between C++ code version and JavaScript code version (") +
+            "[Reanimated] Mismatch between C++ code version and JavaScript code version (") +
         cppVersion + " vs. " + jsVersion + " respectively).\n" +
-        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#c-mismatch-between-c-code-version-and-java-code-version` for more details.");
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#mismatch-between-c-code-version-and-javascript-code-version` for more details.");
   }
 
   rnRuntime.global().setProperty(
