@@ -32,21 +32,21 @@ export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
 >;
 
-type MaybeSharedValue<TValue> = TValue | TValue extends AnimatableValue
-  ? SharedValue<TValue>
+type MaybeSharedValue<Value> = Value | Value extends AnimatableValue
+  ? SharedValue<Value>
   : never;
 
-type MaybeSharedValueRecursive<TValue> = TValue extends (infer TItem)[]
-  ? SharedValue<TItem[]> | (MaybeSharedValueRecursive<TItem> | TItem)[]
-  : TValue extends object
+type MaybeSharedValueRecursive<Value> = Value extends (infer Item)[]
+  ? SharedValue<Item[]> | (MaybeSharedValueRecursive<Item> | Item)[]
+  : Value extends object
   ?
-      | SharedValue<TValue>
+      | SharedValue<Value>
       | {
-          [TKey in keyof TValue]:
-            | MaybeSharedValueRecursive<TValue[TKey]>
-            | TValue[TKey];
+          [Key in keyof Value]:
+            | MaybeSharedValueRecursive<Value[Key]>
+            | Value[Key];
         }
-  : MaybeSharedValue<TValue>;
+  : MaybeSharedValue<Value>;
 
 type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
 
@@ -68,25 +68,23 @@ type EntryOrExitLayoutType =
   Type definition for all style type properties should act similarly, hence we
   pick keys with 'Style' substring with the use of this utility type.
 */
-type PickStyleProps<TProps> = Pick<
-  TProps,
+type PickStyleProps<Props> = Pick<
+  Props,
   {
-    [Key in keyof TProps]-?: Key extends `${string}Style` | 'style'
+    [Key in keyof Props]-?: Key extends `${string}Style` | 'style'
       ? Key
       : never;
-  }[keyof TProps]
+  }[keyof Props]
 >;
 
-type StyleProps<TProps extends object> = {
-  [TKey in keyof PickStyleProps<TProps>]: StyleProp<
-    AnimatedStyle<TProps[TKey]>
-  >;
+type AnimatedStyleProps<Props extends object> = {
+  [Key in keyof PickStyleProps<Props>]: StyleProp<AnimatedStyle<Props[Key]>>;
 };
 
-type NonStyleAnimatedProps<TProps extends object> = {
-  [K in keyof Omit<TProps, keyof PickStyleProps<TProps> | 'style'>]:
-    | TProps[K]
-    | SharedValue<TProps[K]>;
+type NonStyleAnimatedProps<Props extends object> = {
+  [K in keyof Omit<Props, keyof PickStyleProps<Props> | 'style'>]:
+    | Props[K]
+    | SharedValue<Props[K]>;
 };
 
 type LayoutProps = {
@@ -103,32 +101,31 @@ type SharedTransitionProps = {
   sharedTransitionStyle?: SharedTransition;
 };
 
-type AnimatedPropsProp<TProps extends object> = NonStyleAnimatedProps<TProps> &
-  StyleProps<TProps> &
+type AnimatedPropsProp<Props extends object> = NonStyleAnimatedProps<Props> &
+  AnimatedStyleProps<Props> &
   LayoutProps &
   SharedTransitionProps;
 
-export type AnimatedProps<TProps extends object> =
-  NonStyleAnimatedProps<TProps> &
-    StyleProps<TProps> &
-    LayoutProps &
-    SharedTransitionProps & {
-      animatedProps?: Partial<AnimatedPropsProp<TProps>>;
-    };
+export type AnimatedProps<Props extends object> = NonStyleAnimatedProps<Props> &
+  AnimatedStyleProps<Props> &
+  LayoutProps &
+  SharedTransitionProps & {
+    animatedProps?: Partial<AnimatedPropsProp<Props>>;
+  };
 
 export type AnimatedPropsAdapterFunction = (
   props: Record<string, unknown>
 ) => void;
 
-export type useAnimatedPropsType = <TProps extends object>(
-  updater: () => Partial<TProps>,
+export type useAnimatedPropsType = <Props extends object>(
+  updater: () => Partial<Props>,
   deps?: DependencyList | null,
   adapters?:
     | AnimatedPropsAdapterFunction
     | AnimatedPropsAdapterFunction[]
     | null,
   isAnimatedProps?: boolean
-) => Partial<TProps>;
+) => Partial<Props>;
 
 // THE LAND OF THE DEPRECATED
 
@@ -174,4 +171,4 @@ export type AnimatedStyleProp<T> =
 /**
  * @deprecated Please use `AnimatedProps` type instead.
  */
-export type AnimateProps<TProps extends object> = AnimatedProps<TProps>;
+export type AnimateProps<Props extends object> = AnimatedProps<Props>;

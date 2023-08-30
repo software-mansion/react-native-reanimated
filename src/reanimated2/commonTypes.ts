@@ -6,8 +6,8 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
-export interface SharedValue<TValue> {
-  value: TValue;
+export interface SharedValue<Value> {
+  value: Value;
   addListener: (listenerID: number, listener: (value: any) => void) => void;
   removeListener: (listenerID: number) => void;
   modify: (modifier: (value: any) => any) => void;
