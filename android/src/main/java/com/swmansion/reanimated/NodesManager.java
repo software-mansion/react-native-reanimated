@@ -98,6 +98,7 @@ public class NodesManager implements EventDispatcherListener {
   public Set<String> uiProps = Collections.emptySet();
   public Set<String> nativeProps = Collections.emptySet();
   private ReaCompatibility compatibility;
+  private boolean isInitialized = false;
 
   public NativeProxy getNativeProxy() {
     return mNativeProxy;
@@ -110,6 +111,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void onCatalystInstanceDestroy() {
+    isInitialized = false;
     if (mAnimationManager != null) {
       mAnimationManager.onCatalystInstanceDestroy();
     }
@@ -126,6 +128,7 @@ public class NodesManager implements EventDispatcherListener {
     mAnimationManager.setAndroidUIScheduler(getNativeProxy().getAndroidUIScheduler());
     compatibility = new ReaCompatibility(reactApplicationContext);
     compatibility.registerFabricEventListener(this);
+    isInitialized = true;
   }
 
   private final class NativeUpdateOperation {
@@ -202,7 +205,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void performOperations() {
-    if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
+    if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED && mNativeProxy != null) {
       mNativeProxy.performOperations();
     } else if (!mOperationsInBatch.isEmpty()) {
       final Queue<NativeUpdateOperation> copiedOperationsQueue = mOperationsInBatch;
@@ -302,6 +305,9 @@ public class NodesManager implements EventDispatcherListener {
 
   @Override
   public void onEventDispatch(Event event) {
+    if (!isInitialized) {
+      return;
+    }
     // Events can be dispatched from any thread so we have to make sure handleEvent is run from the
     // UI thread.
     if (UiThreadUtil.isOnUiThread()) {
