@@ -14,12 +14,12 @@
 #import <RNReanimated/REAInitializerRCTFabricSurface.h>
 #endif
 
-#import <RNReanimated/JsiUtils.h>
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REAUIKit.h>
 #import <RNReanimated/RNRuntimeDecorator.h>
+#import <RNReanimated/ReanimatedJSIUtils.h>
 #import <RNReanimated/SingleInstanceChecker.h>
 #import <RNReanimated/WorkletRuntime.h>
 #import <RNReanimated/WorkletRuntimeCollector.h>
