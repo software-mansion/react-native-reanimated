@@ -10,16 +10,12 @@ typedef UIView REAUIView;
 extern "C" {
 #endif
 
-#import <React/RCTUIKit.h>
+#import <RNReanimated/RCTUIView+Reanimated.h>
 
 #ifdef __cplusplus
 }
 #endif
 
-@interface REAUIView : RCTUIView
-
-@property CGPoint center;
-
-@end
+typedef RCTUIView REAUIView;
 
 #endif // ] TARGET_OS_OSX

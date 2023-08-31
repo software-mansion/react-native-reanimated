@@ -1,8 +1,9 @@
-#import <RNReanimated/REAUIKit.h>
-
 #if TARGET_OS_OSX
 
-@implementation REAUIView
+#import <RNReanimated/RCTUIView+Reanimated.h>
+#import <React/RCTUIKit.h>
+
+@implementation RCTUIView (Reanimated)
 
 - (CGPoint)center
 {
