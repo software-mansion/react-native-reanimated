@@ -621,7 +621,7 @@ export default function createAnimatedComponent(
               LayoutAnimationType.LAYOUT,
               maybeBuild(
                 layout,
-                this.props?.style,
+                undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */,
                 AnimatedComponent.displayName
               )
             );
