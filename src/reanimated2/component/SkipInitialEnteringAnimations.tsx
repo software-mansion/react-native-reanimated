@@ -5,7 +5,7 @@ export const SkipEnteringContext =
 
 export function SkipInitialEnteringAnimations(props: {
   value?: boolean;
-  children?: React.ReactNode | undefined;
+  children?: React.ReactNode;
 }) {
   const skipValueRef = useRef(props.value !== false);
 
