@@ -180,7 +180,6 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
             true,
             depth + 1
           );
-          delete value.__initData;
         }
 
         for (const [key, element] of Object.entries(value)) {

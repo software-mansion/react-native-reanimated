@@ -3,6 +3,8 @@ import './publicGlobals';
 export {
   runOnJS,
   runOnUI,
+  createWorkletRuntime,
+  WorkletRuntime,
   makeMutable,
   isReanimated3,
   isConfigured,
@@ -32,7 +34,6 @@ export {
   FrameCallback,
   useAnimatedKeyboard,
   useScrollViewOffset,
-  AnimatedStyleProp,
 } from './hook';
 export {
   DelayAnimation,
@@ -244,9 +245,10 @@ export type {
   AnimatedProps,
   AnimatedTransform,
   TransformStyleTypes,
-  TransformArrayItemType,
+  TransformArrayItem,
   AnimateStyle,
   AnimatedStyle,
+  AnimatedStyleProp,
   StylesOrDefault,
 } from './helperTypes';
 export type { AnimatedScrollViewProps } from './component/ScrollView';

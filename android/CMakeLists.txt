@@ -80,16 +80,15 @@ add_library(
 target_include_directories(
         ${PACKAGE_NAME}
         PRIVATE
-        "${COMMON_SRC_DIR}/cpp/Tools"
-        "${COMMON_SRC_DIR}/cpp/SpecTools"
-        "${COMMON_SRC_DIR}/cpp/NativeModules"
-        "${COMMON_SRC_DIR}/cpp/SharedItems"
-        "${COMMON_SRC_DIR}/cpp/ReanimatedRuntime"
-        "${COMMON_SRC_DIR}/cpp/Registries"
-        "${COMMON_SRC_DIR}/cpp/LayoutAnimations"
         "${COMMON_SRC_DIR}/cpp/AnimatedSensor"
         "${COMMON_SRC_DIR}/cpp/Fabric"
         "${COMMON_SRC_DIR}/cpp/hidden_headers"
+        "${COMMON_SRC_DIR}/cpp/LayoutAnimations"
+        "${COMMON_SRC_DIR}/cpp/NativeModules"
+        "${COMMON_SRC_DIR}/cpp/ReanimatedRuntime"
+        "${COMMON_SRC_DIR}/cpp/Registries"
+        "${COMMON_SRC_DIR}/cpp/SharedItems"
+        "${COMMON_SRC_DIR}/cpp/Tools"
         "${SRC_DIR}/main/cpp"
 )
 

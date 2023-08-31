@@ -13,19 +13,19 @@ For animating properties use [`useAnimatedProps`](/docs/core/useAnimatedProps) i
 ## Reference
 
 ```jsx
-import { useAnimatedStyle } from "react-native-reanimated";
+import { useAnimatedStyle } from 'react-native-reanimated';
 
 function App() {
   // highlight-next-line
   const animatedStyles = useAnimatedStyle(() => {
     return {
-      opacity: sv.value ? 1 : 0;
+      opacity: sv.value ? 1 : 0,
     };
-  // highlight-next-line
+    // highlight-next-line
   });
 
   // highlight-next-line
-  return <Animated.View style={[styles.box, animatedStyles]} />
+  return <Animated.View style={[styles.box, animatedStyles]} />;
 }
 ```
 
