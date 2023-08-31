@@ -239,6 +239,7 @@ export {
   setUpTests,
   getAnimatedStyle,
 } from './jestUtils';
+export { SkipInitialEnteringAnimations } from './component/SkipInitialEnteringAnimations';
 export type {
   Adaptable,
   AdaptTransforms,

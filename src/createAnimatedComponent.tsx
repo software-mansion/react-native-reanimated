@@ -56,7 +56,7 @@ import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
 import { JSPropUpdater } from './JSPropUpdater';
 import { getReduceMotionFromConfig } from './reanimated2/animation/util';
 import { maybeBuild } from './animationBuilder';
-import { LayoutConfigContext } from './reanimated2/component/LayoutConfig';
+import { SkipEnteringContext } from './reanimated2/component/SkipInitialEnteringAnimations';
 
 const IS_WEB = isWeb();
 
@@ -275,8 +275,8 @@ export default function createAnimatedComponent(
     _sharedElementTransition: SharedTransition | null = null;
     _JSPropUpdater = new JSPropUpdater();
     static displayName: string;
-    static contextType = LayoutConfigContext;
-    context!: React.ContextType<typeof LayoutConfigContext>;
+    static contextType = SkipEnteringContext;
+    context!: React.ContextType<typeof SkipEnteringContext>;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);

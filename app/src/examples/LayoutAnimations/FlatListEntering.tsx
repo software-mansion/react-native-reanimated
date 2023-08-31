@@ -4,6 +4,7 @@ import Animated, {
   FadeInUp,
   PinwheelIn,
   PinwheelOut,
+  SkipInitialEnteringAnimations,
   SlideInRight,
   SlideOutLeft,
 } from 'react-native-reanimated';
@@ -11,11 +12,7 @@ import Animated, {
 const digits = [...Array(3).keys()];
 
 export default function FlatListEntering() {
-  return (
-    <Animated.LayoutConfig disableEntering={true}>
-      <List />
-    </Animated.LayoutConfig>
-  );
+  return <List />;
 }
 
 function List() {
@@ -44,6 +41,7 @@ function List() {
       />
       {show && (
         <Animated.FlatList
+          skipInitialEnteringAnimations
           style={styles.container}
           contentContainerStyle={[styles.contentContainer]}
           decelerationRate="fast"
@@ -64,13 +62,13 @@ function Item() {
       <Animated.View
         entering={FadeInUp.duration(1000).delay(500)}
         style={styles.outerBox}>
-        <Animated.LayoutConfig disableEntering={false}>
+        <SkipInitialEnteringAnimations value={false}>
           <Animated.View
             style={styles.box}
             entering={PinwheelIn.duration(2000)}
             exiting={PinwheelOut}
           />
-        </Animated.LayoutConfig>
+        </SkipInitialEnteringAnimations>
       </Animated.View>
       <Animated.View
         entering={FadeInUp.duration(1000).delay(500)}
