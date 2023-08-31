@@ -208,7 +208,7 @@ jsi::Value ShareableWorklet::toJSValue(jsi::Runtime &rt) {
 
 jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
   if (&rt == runtime_) {
-    return jsi::Value(rt, function_);
+    return jsi::Value(rt, *function_);
   } else {
 #ifdef DEBUG
     return getValueUnpacker(rt).call(
