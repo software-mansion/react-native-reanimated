@@ -6,6 +6,7 @@ export {
   createWorkletRuntime,
   WorkletRuntime,
   makeMutable,
+  makeShareableCloneRecursive,
   isReanimated3,
   isConfigured,
   enableLayoutAnimations,
