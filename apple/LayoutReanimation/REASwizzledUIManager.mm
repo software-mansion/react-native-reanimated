@@ -217,7 +217,7 @@
     for (NSNumber *reactTag in reactTags) {
       RCTFrameData frameData = frameDataArray[index++];
 
-      REAUIView *view = (REAUIView *)viewRegistry[reactTag];
+      REAUIView *view = viewRegistry[reactTag];
       CGRect frame = frameData.frame;
 
       UIUserInterfaceLayoutDirection layoutDirection = frameData.layoutDirection;
@@ -303,7 +303,7 @@
     index = 0;
     for (NSNumber *reactTag in reactTags) {
       RCTFrameData frameData = frameDataArray[index++];
-      REAUIView *view = (REAUIView *)viewRegistry[reactTag];
+      REAUIView *view = viewRegistry[reactTag];
       BOOL isNew = frameData.isNew;
       CGRect frame = frameData.frame;
 
