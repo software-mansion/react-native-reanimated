@@ -608,6 +608,7 @@ export default function createAnimatedComponent(
           ? (ref as HTMLElement)
           : findNodeHandle(ref as Component);
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
+        const skipEntering = !!this.context?.current;
         if (
           !isMacOS() &&
           (layout || entering || exiting || sharedTransitionTag) &&
@@ -627,7 +628,7 @@ export default function createAnimatedComponent(
               )
             );
           }
-          if (entering && !this.context?.current) {
+          if (entering && !skipEntering) {
             configureLayoutAnimations(
               tag,
               LayoutAnimationType.ENTERING,

@@ -563,11 +563,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Reduced Motion',
     screen: ReducedMotionLayoutExample,
   },
-  Test2: {
+  NestedEntering: {
     title: '[LA] Nested disable entering',
     screen: NestedEntering,
   },
-  Test3: {
+  FlatListEntering: {
     title: '[LA] FlatList disable entering',
     screen: FlatListEntering,
   },
