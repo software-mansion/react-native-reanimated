@@ -249,8 +249,10 @@ android {
     }
 
     buildFeatures {
-        prefab true
-        prefabPublishing true
+        if (REACT_NATIVE_MINOR_VERSION > 68) {
+            prefab true
+            prefabPublishing true
+        }
     }
 
     prefab {
