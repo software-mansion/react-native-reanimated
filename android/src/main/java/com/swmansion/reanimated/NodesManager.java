@@ -202,8 +202,10 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void performOperations() {
-    if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED && mNativeProxy != null) {
-      mNativeProxy.performOperations();
+    if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
+      if (mNativeProxy != null) {
+        mNativeProxy.performOperations();
+      }
     } else if (!mOperationsInBatch.isEmpty()) {
       final Queue<NativeUpdateOperation> copiedOperationsQueue = mOperationsInBatch;
       mOperationsInBatch = new LinkedList<>();
