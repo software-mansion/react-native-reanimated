@@ -98,7 +98,6 @@ public class NodesManager implements EventDispatcherListener {
   public Set<String> uiProps = Collections.emptySet();
   public Set<String> nativeProps = Collections.emptySet();
   private ReaCompatibility compatibility;
-  private boolean isInitialized = false;
 
   public NativeProxy getNativeProxy() {
     return mNativeProxy;
@@ -111,7 +110,6 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void onCatalystInstanceDestroy() {
-    isInitialized = false;
     if (mAnimationManager != null) {
       mAnimationManager.onCatalystInstanceDestroy();
     }
@@ -128,7 +126,6 @@ public class NodesManager implements EventDispatcherListener {
     mAnimationManager.setAndroidUIScheduler(getNativeProxy().getAndroidUIScheduler());
     compatibility = new ReaCompatibility(reactApplicationContext);
     compatibility.registerFabricEventListener(this);
-    isInitialized = true;
   }
 
   private final class NativeUpdateOperation {
@@ -305,7 +302,7 @@ public class NodesManager implements EventDispatcherListener {
 
   @Override
   public void onEventDispatch(Event event) {
-    if (!isInitialized) {
+    if (mNativeProxy == null) {
       return;
     }
     // Events can be dispatched from any thread so we have to make sure handleEvent is run from the
@@ -314,12 +311,9 @@ public class NodesManager implements EventDispatcherListener {
       handleEvent(event);
       performOperations();
     } else {
-      boolean shouldSaveEvent = false;
       String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
       int viewTag = event.getViewTag();
-
-      shouldSaveEvent |=
-          mNativeProxy != null && mNativeProxy.isAnyHandlerWaitingForEvent(eventName, viewTag);
+      boolean shouldSaveEvent = mNativeProxy.isAnyHandlerWaitingForEvent(eventName, viewTag);
       if (shouldSaveEvent) {
         mEventQueue.offer(new CopiedEvent(event));
       }
