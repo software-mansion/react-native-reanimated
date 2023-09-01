@@ -37,9 +37,9 @@ Hook `useAnimatedKeyboard` returns an instance of [[AnimatedKeyboardInfo](#anima
 
 Properties:
 
-- `height`: [[SharedValue](../../api/hooks/useSharedValue)] contains `[number]`
+- `height`: [[SharedValue](/docs/2.x/api/hooks/useSharedValue)] contains `[number]`
   contains current height of the keyboard
-- `state`: [[SharedValue](../../api/hooks/useSharedValue)] contains `[enum]`
+- `state`: [[SharedValue](/docs/2.x/api/hooks/useSharedValue)] contains `[enum]`
   contains current state of the keyboard. Possible states: `{ CLOSED, OPEN, CLOSING, OPENING }`
 
 #### `AnimatedKeyboardOptions: [object]`

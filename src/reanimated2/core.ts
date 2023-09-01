@@ -22,7 +22,9 @@ import { SensorContainer } from './SensorContainer';
 
 export { startMapper, stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
-export { makeShareable } from './shareables';
+export { createWorkletRuntime } from './runtimes';
+export type { WorkletRuntime } from './runtimes';
+export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export { makeMutable, makeRemote } from './mutables';
 
 /**

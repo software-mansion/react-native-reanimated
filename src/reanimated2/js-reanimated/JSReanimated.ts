@@ -11,6 +11,7 @@ import type {
   ValueRotation,
 } from '../commonTypes';
 import { SensorType } from '../commonTypes';
+import type { WorkletRuntime } from '../runtimes';
 import type { WebSensor } from './WebSensor';
 
 export default class JSReanimated {
@@ -25,19 +26,18 @@ export default class JSReanimated {
     );
   }
 
-  installCoreFunctions(
-    _callGuard: <T extends Array<unknown>, U>(
-      fn: (...args: T) => U,
-      ...args: T
-    ) => void,
-    _valueUnpacker: <T>(value: T) => T
-  ): void {
-    // noop
-  }
-
   scheduleOnUI<T>(worklet: ShareableRef<T>) {
     // @ts-ignore web implementation has still not been updated after the rewrite, this will be addressed once the web implementation updates are ready
     requestAnimationFrame(worklet);
+  }
+
+  createWorkletRuntime(
+    _name: string,
+    _initializer: ShareableRef<() => void>
+  ): WorkletRuntime {
+    throw new Error(
+      '[Reanimated] createWorkletRuntime is not available in JSReanimated.'
+    );
   }
 
   registerEventHandler<T>(
