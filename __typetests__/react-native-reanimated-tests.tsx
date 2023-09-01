@@ -45,6 +45,7 @@ import Animated, {
   scrollTo,
   setGestureState,
   isSharedValue,
+  makeShareableCloneRecursive,
 } from '..';
 
 class Path extends React.Component<{ fill?: string }> {
@@ -219,6 +220,13 @@ function MakeMutableTest() {
   const mut2 = makeMutable(true);
 
   return <Animated.View style={styles.container} />;
+}
+
+// makeShareableCloneRecursive
+function MakeShareableCloneRecursiveTest() {
+  const mut = makeShareableCloneRecursive(0);
+  const mut2 = makeShareableCloneRecursive(true);
+  const mut3 = makeShareableCloneRecursive({ foo: 'bar' });
 }
 
 /**
