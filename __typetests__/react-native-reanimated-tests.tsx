@@ -45,7 +45,7 @@ import Animated, {
   scrollTo,
   setGestureState,
   isSharedValue,
-  makeShareableCloneRecursive
+  makeShareableCloneRecursive,
 } from '..';
 
 class Path extends React.Component<{ fill?: string }> {
