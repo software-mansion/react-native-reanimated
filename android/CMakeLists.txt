@@ -349,8 +349,7 @@ if(DEFINED CHECK_HEADERS)
     get_filename_component(directory ${header} DIRECTORY)
     string(REPLACE ".h" ".cpp" CPP_FILE ${header_name})
 
-    # Copy header as cpp file for compilation
-    # configure_file(${header} ${CMAKE_BINARY_DIR}/headers_check/${CPP_FILE} COPYONLY)
+    # Create cpp file with include of the header
     file(WRITE ${CMAKE_BINARY_DIR}/headers_check/${CPP_FILE} "#include \"${header}\"\n")
 
     add_library(${header_name}_test ${CMAKE_BINARY_DIR}/headers_check/${CPP_FILE})
