@@ -58,3 +58,6 @@ react-native-reanimated-tests.js
 # plugin
 !plugin/build
 plugin/types
+
+# headers-sufficiency-checker
+headers-sufficiency-check
