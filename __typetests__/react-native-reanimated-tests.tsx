@@ -44,9 +44,9 @@ import Animated, {
   measure,
   scrollTo,
   setGestureState,
-  makeShareableCloneRecursive,
+  isSharedValue,
+  makeShareableCloneRecursive
 } from '..';
-import type { AnimatedStyle } from '..';
 
 class Path extends React.Component<{ fill?: string }> {
   render() {
@@ -245,6 +245,18 @@ function SharedValueTest() {
   }
 
   return <Animated.View style={styles.container} />;
+}
+
+// isSharedValue
+function IsSharedValueTest() {
+  const sv = useSharedValue(0);
+
+  isSharedValue(null);
+  isSharedValue(undefined);
+  isSharedValue(42);
+  isSharedValue('foo');
+  isSharedValue({ foo: 'bar' });
+  isSharedValue(sv);
 }
 
 // useAnimatedStyle
