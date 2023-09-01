@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <stdexcept>
+
 #include "./LoggerInterface.h"
 
 namespace reanimated {
