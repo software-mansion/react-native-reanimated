@@ -17,12 +17,12 @@ import type { WebSensor } from './WebSensor';
 import { mockedRequestAnimationFrame } from '../utils';
 
 // In Node.js environments (like when static rendering with Expo Router)
-// requestAnimationFrame is unavailable, so we use setImmediate.
-const scheduleOnUI = globalThis.requestAnimationFrame
-  ? isJest()
+// requestAnimationFrame is unavailable, so we use our mock.
+// It also has to be mocked for Jest purposes (see `initializeUIRuntime`).
+const scheduleOnUI =
+  isJest() || !global.requestAnimationFrame
     ? mockedRequestAnimationFrame
-    : globalThis.requestAnimationFrame
-  : setImmediate;
+    : global.requestAnimationFrame;
 
 export default class JSReanimated {
   native = false;
