@@ -328,19 +328,11 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   return preparedData;
 }
 
-- (BOOL)wantsHandleRemovalOfView:(REAUIView *)view
+- (BOOL)hasLayoutAnimation:(REAUIView *)view layoutAnimationType:(LayoutAnimationType)layoutAnimationType
 {
   return REANodeFind(view, ^(id<RCTComponent> view) {
     return [self->_exitingSubviewsCountMap objectForKey:view.reactTag] != nil ||
-        self->_hasAnimationForTag(view.reactTag, EXITING);
-  });
-}
-
-- (BOOL)hasLayoutAnimation:(REAUIView *)view
-{
-  return REANodeFind(view, ^(id<RCTComponent> view) {
-    return [self->_exitingSubviewsCountMap objectForKey:view.reactTag] != nil ||
-        self->_hasAnimationForTag(view.reactTag, LAYOUT);
+        self->_hasAnimationForTag(view.reactTag, layoutAnimationType);
   });
 }
 
