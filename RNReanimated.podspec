@@ -18,6 +18,10 @@ example_flag = config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP
 version_flag = '-DREANIMATED_VERSION=' + reanimated_package_json["version"]
 debug_flag = is_release ? '-DNDEBUG' : ''
 
+if config[:react_native_minor_version] < 66
+  raise "[Reanimated] Unsupported React Native version. Please use 0.66 or newer."
+end
+
 Pod::Spec.new do |s|
   
   s.name         = "RNReanimated"

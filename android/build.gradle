@@ -443,6 +443,13 @@ def assertLatestReactNativeWithNewArchitecture = task assertLatestReactNativeWit
     }
 }
 
+def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
+    onlyIf { REACT_NATIVE_MINOR_VERSION < 66 }
+    doFirst {
+        throw new GradleException("\n[Reanimated] Unsupported React Native version. Please use 0.66 or newer.")
+    }
+}
+
 task prepareHeadersForPrefab(type: Copy) {
     from("$projectDir/src/main/cpp")
     from("$projectDir/../Common/cpp/AnimatedSensor")
@@ -458,7 +465,7 @@ task prepareHeadersForPrefab(type: Copy) {
 }
 
 tasks.preBuild {
-    dependsOn assertNoMultipleInstances, assertLatestReactNativeWithNewArchitecture
+    dependsOn assertNoMultipleInstances, assertLatestReactNativeWithNewArchitecture, assertMinimalReactNativeVersion
 }
 
 task cleanCmakeCache() {
