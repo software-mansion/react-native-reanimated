@@ -1112,9 +1112,9 @@ function TestInlineStyles3() {
 }
 
 function TestInlineStyles4() {
-  const sv = useSharedValue('0');
+  const sv = useSharedValue(true);
   // @ts-expect-error properly detects illegal type
-  return <Animated.View style={{ width: true }} />;
+  return <Animated.View style={{ width: sv }} />;
 }
 
 function TestInlineStyles5() {
