@@ -852,9 +852,6 @@ if (REACT_NATIVE_MINOR_VERSION < 71) {
 task packageNdkLibs(type: Copy) {
     from("$buildDir/reanimated-ndk/all")
     include("**/libreanimated.so")
-    if(REACT_NATIVE_MINOR_VERSION < 64) {
-        include("**/libturbomodulejsijni.so")
-    }
     into("$projectDir/src/main/jniLibs")
 }
 
