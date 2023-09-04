@@ -23,6 +23,7 @@ on:
 
 jobs:
   build_android_reanimated_non_hoisted:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     name: Android (non-hoisted Reanimated)
     uses: ./.github/workflows/build-monorepo-action.yml
     with:
@@ -31,6 +32,7 @@ jobs:
       is_hoisted: false
 
   build_ios_reanimated_non_hoisted:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     name: iOS (non-hoisted Reanimated)
     uses: ./.github/workflows/build-monorepo-action.yml
     with:
@@ -39,6 +41,7 @@ jobs:
       is_hoisted: false
 
   build_android_reanimated_hoisted:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     name: Android (hoisted Reanimated)
     uses: ./.github/workflows/build-monorepo-action.yml
     with:
@@ -47,6 +50,7 @@ jobs:
       is_hoisted: true
 
   build_ios_reanimated_hoisted:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     name: iOS (hoisted Reanimated)
     uses: ./.github/workflows/build-monorepo-action.yml
     with:

@@ -15,6 +15,7 @@ on:
       - 'plugin/**'
 jobs:
   check:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     concurrency:
       group: plugin-${{ github.ref }}
