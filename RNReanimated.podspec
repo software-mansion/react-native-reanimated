@@ -5,6 +5,7 @@ reanimated_package_json = JSON.parse(File.read(File.join(__dir__, "package.json"
 config = find_config()
 assert_no_multiple_instances(config)
 assert_latest_react_native_with_new_architecture(config, reanimated_package_json)
+assert_minimal_react_native_version(config)
 
 fabric_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
 is_release = ENV['PRODUCTION'] == '1'
