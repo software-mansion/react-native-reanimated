@@ -83,8 +83,7 @@ def assert_latest_react_native_with_new_architecture(config, reanimated_package_
 end
 
 def assert_minimal_react_native_version(config)
-  react_native_minor_version = config[:react_native_minor_version]
-  if react_native_minor_version < 66
+  if config[:react_native_minor_version] < 66
     raise "[Reanimated] Unsupported React Native version. Please use 0.66 or newer."
   end
 end
