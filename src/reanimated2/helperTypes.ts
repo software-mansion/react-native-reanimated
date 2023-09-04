@@ -24,9 +24,12 @@ import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Ke
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 import type { DependencyList } from './hook/commonTypes';
 
-export type TransformArrayItem = NonNullable<
-  TransformsStyle['transform']
->[number];
+export type TransformArrayItem = Extract<
+  TransformsStyle['transform'],
+  Array<unknown>
+> extends (infer Item)[]
+  ? Item
+  : never;
 
 export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
