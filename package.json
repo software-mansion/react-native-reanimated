@@ -27,7 +27,7 @@
     "type:check:app": "yarn type:run-test app/src/App.tsx",
     "type:check:tests:common": "yarn type:run-test __typetests__/common.tsx",
     "type:check:tests:0.72+": "yarn type:run-test __typetests__/0.72+.tsx",
-    "type:check:all": "yarn type:check:app && yarn type:check:tests:common && yarn type:check:tests-0.72+",
+    "type:check:all": "yarn type:check:app && yarn type:check:tests:common && yarn type:check:tests:0.72+",
     "prepare": "yarn plugin && bob build && husky install && yarn app",
     "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular src lib",
     "setup": "yarn && cd Example && yarn && cd ios && pod install --verbose && cd ../..",
