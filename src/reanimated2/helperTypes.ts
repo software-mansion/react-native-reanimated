@@ -27,9 +27,7 @@ import type { DependencyList } from './hook/commonTypes';
 export type TransformArrayItem = Extract<
   TransformsStyle['transform'],
   Array<unknown>
-> extends (infer Item)[]
-  ? Item
-  : never;
+>[number];
 
 export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
