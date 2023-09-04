@@ -11,7 +11,7 @@ export default function LogExample() {
       // @ts-ignore _log function is registered for UI runtime
       _log(actual);
       if (actual !== expected) {
-        throw new Error(`Test failed, expected "${expected}", "got ${actual}"`);
+        throw new Error(`Test failed, expected "${expected}", got "${actual}"`);
       }
     }
 

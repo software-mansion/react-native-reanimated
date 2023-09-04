@@ -51,7 +51,10 @@ export function processForCalleesWorklets(
 
   if (objectHooks.has(name)) {
     const workletToProcess = path.get('arguments.0');
-    assert(!Array.isArray(workletToProcess), "'workletToProcess' is an array'");
+    assert(
+      !Array.isArray(workletToProcess),
+      '[Reanimated] `workletToProcess` is an array.'
+    );
     if (workletToProcess.isObjectExpression()) {
       processObjectHook(workletToProcess, state);
       // useAnimatedScrollHandler can take a function as an argument instead of an ObjectExpression
@@ -81,7 +84,7 @@ function processObjectHook(
       processIfWorkletFunction(value, state);
     } else {
       throw new Error(
-        `'${property.type}' as to-be workletized arguments is not supported for object hooks`
+        `[Reanimated] '${property.type}' as to-be workletized arguments is not supported for object hooks.`
       );
     }
   }

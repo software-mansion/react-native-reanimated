@@ -1,35 +1,4 @@
-import type {
-  PerpectiveTransform,
-  RotateTransform,
-  RotateXTransform,
-  RotateYTransform,
-  RotateZTransform,
-  ScaleTransform,
-  ScaleXTransform,
-  ScaleYTransform,
-  TranslateXTransform,
-  TranslateYTransform,
-  SkewXTransform,
-  SkewYTransform,
-  MatrixTransform,
-  ViewStyle,
-  TextStyle,
-} from 'react-native';
-
-export type TransformProperty =
-  | PerpectiveTransform
-  | RotateTransform
-  | RotateXTransform
-  | RotateYTransform
-  | RotateZTransform
-  | ScaleTransform
-  | ScaleXTransform
-  | ScaleYTransform
-  | TranslateXTransform
-  | TranslateYTransform
-  | SkewXTransform
-  | SkewYTransform
-  | MatrixTransform;
+import type { ViewStyle, TextStyle } from 'react-native';
 
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;
@@ -37,11 +6,11 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
-export interface SharedValue<T> {
-  value: T;
-  addListener: (listenerID: number, listener: (value: T) => void) => void;
+export interface SharedValue<Value> {
+  value: Value;
+  addListener: (listenerID: number, listener: (value: any) => void) => void;
   removeListener: (listenerID: number) => void;
-  modify: (modifier: (value: T) => T) => void;
+  modify: (modifier: (value: any) => any) => void;
 }
 
 // The below type is used for HostObjects returned by the JSI API that don't have
@@ -84,10 +53,6 @@ export interface WorkletFunction {
 
 export interface BasicWorkletFunction<T> extends WorkletFunction {
   (): T;
-}
-
-export interface BasicWorkletFunctionOptional<T> extends WorkletFunction {
-  (): Partial<T>;
 }
 
 export interface NativeEvent<T> {

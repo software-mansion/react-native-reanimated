@@ -11,15 +11,16 @@ import { runOnUIImmediately } from './threads';
 let updateProps: (
   viewDescriptor: SharedValue<Descriptor[]>,
   updates: StyleProps | AnimatedStyle<any>,
-  maybeViewRef: ViewRefSet<any> | undefined
+  maybeViewRef: ViewRefSet<any> | undefined,
+  isAnimatedProps?: boolean
 ) => void;
 
 if (shouldBeUseWeb()) {
-  updateProps = (_, updates, maybeViewRef) => {
+  updateProps = (_, updates, maybeViewRef, isAnimatedProps) => {
     'worklet';
     if (maybeViewRef) {
       maybeViewRef.items.forEach((item, _) => {
-        _updatePropsJS(updates, item);
+        _updatePropsJS(updates, item, isAnimatedProps);
       });
     }
   };

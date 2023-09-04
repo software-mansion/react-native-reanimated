@@ -13,19 +13,19 @@ For animating properties use [`useAnimatedProps`](/docs/core/useAnimatedProps) i
 ## Reference
 
 ```jsx
-import { useAnimatedStyle } from "react-native-reanimated";
+import { useAnimatedStyle } from 'react-native-reanimated';
 
 function App() {
   // highlight-next-line
   const animatedStyles = useAnimatedStyle(() => {
     return {
-      opacity: sv.value ? 1 : 0;
+      opacity: sv.value ? 1 : 0,
     };
-  // highlight-next-line
+    // highlight-next-line
   });
 
   // highlight-next-line
-  return <Animated.View style={[styles.box, animatedStyles]} />
+  return <Animated.View style={[styles.box, animatedStyles]} />;
 }
 ```
 
@@ -52,7 +52,7 @@ A function returning an object with style properties you want to animate. You ca
 
 An optional array of dependencies.
 
-Only relevant when using Reanimated [without the Babel plugin on the Web](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/web-support#web-without-a-babel-plugin).
+Only relevant when using Reanimated [without the Babel plugin on the Web](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin).
 
 ## Returns
 

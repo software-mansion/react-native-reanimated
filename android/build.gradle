@@ -92,9 +92,7 @@ def resolveReactNativeDirectory() {
     }
 
     throw new GradleException(
-        "[Reanimated] Unable to resolve react-native location in " +
-        "node_modules. You should project extension property (in app/build.gradle) " +
-        "`REACT_NATIVE_NODE_MODULES_DIR` with path to react-native."
+        "[Reanimated] Unable to resolve react-native location in node_modules. You should project extension property (in `app/build.gradle`) `REACT_NATIVE_NODE_MODULES_DIR` with path to react-native."
     )
 }
 
@@ -109,7 +107,7 @@ def getPlaygroundAppName() { // only for the development
             }
         })
     } catch (_) {
-        throw new GradleException("Couldn't determine playground app name.")
+        throw new GradleException("[Reanimated] Couldn't determine playground app name.")
     }
     return playgroundAppName
 }
@@ -168,6 +166,8 @@ def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 
 def reactNativeThirdParty = new File("$reactNativeRootDir/ReactAndroid/src/main/jni/third-party")
 def reactNativeAndroidDownloadDir = new File("$reactNativeRootDir/ReactAndroid/build/downloads")
+
+def prefabHeadersDir = project.file("$buildDir/prefab-headers/reanimated")
 
 def JS_RUNTIME = {
     // Override JS runtime with environment variable
@@ -248,17 +248,23 @@ android {
         ndkVersion rootProject.ext.ndkVersion
     }
 
-    if (REACT_NATIVE_MINOR_VERSION >= 71) {
-        buildFeatures {
-            prefab true
+    buildFeatures {
+        prefab true
+        prefabPublishing true
+    }
+
+    prefab {
+        reanimated {
+            headers prefabHeadersDir.absolutePath
         }
     }
+
     defaultConfig {
         minSdkVersion safeExtGet("minSdkVersion", 16)
         targetSdkVersion safeExtGet("targetSdkVersion", 30)
         versionCode 1
         versionName "1.0"
-        buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString()
+        buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString())
         externalNativeBuild {
             cmake {
                 arguments "-DANDROID_STL=c++_shared",
@@ -427,12 +433,7 @@ abstract class NoMultipleInstancesAssertionTask extends DefaultTask {
                 String parsedLocation = files.stream().map({
                     File file -> "- " + file.toString().replace("/package.json", "")
                 }).collect().join("\n")
-                String exceptionMessage = "\n[react-native-reanimated] Multiple versions of Reanimated " +
-                        "were detected. Only one instance of react-native-reanimated can be installed in a " +
-                        "project. You need to resolve the conflict manually. Check out the documentation: " +
-                        "https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/" +
-                        "troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict " +
-                        "between: \n" + parsedLocation + "\n"
+                String exceptionMessage = "\n[Reanimated] Multiple versions of Reanimated were detected in `build.gradle`. See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#multiple-versions-of-reanimated-were-detected-in-buildgradle` for more details.\n\nConflict between: \n" + parsedLocation + "\n"
                 throw new GradleException(exceptionMessage)
             }
         }
@@ -449,11 +450,23 @@ def assertLatestReactNativeWithNewArchitecture = task assertLatestReactNativeWit
     onlyIf { IS_NEW_ARCHITECTURE_ENABLED && REANIMATED_MAJOR_VERSION == 3 && REACT_NATIVE_MINOR_VERSION < 72 }
     doFirst {
         throw new GradleException(
-            "\n[react-native-reanimated] Reanimated " + REANIMATED_VERSION + " supports the New Architecture " +
-            "only on the latest minor release of React Native. Please upgrade to React Native 0.72.0+ " +
-            "or downgrade to an older version of Reanimated v3."
+            "\n[Reanimated] Outdated version of React Native for New Architecture. Reanimated " + REANIMATED_VERSION + " supports the New Architecture on React Native 0.72.0+. See https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#outdated-version-of-react-native-for-new-architecture for more information."
         )
     }
+}
+
+task prepareHeadersForPrefab(type: Copy) {
+    from("$projectDir/src/main/cpp")
+    from("$projectDir/../Common/cpp/AnimatedSensor")
+    from("$projectDir/../Common/cpp/Fabric")
+    from("$projectDir/../Common/cpp/LayoutAnimations")
+    from("$projectDir/../Common/cpp/NativeModules")
+    from("$projectDir/../Common/cpp/ReanimatedRuntime")
+    from("$projectDir/../Common/cpp/Registries")
+    from("$projectDir/../Common/cpp/SharedItems")
+    from("$projectDir/../Common/cpp/Tools")
+    include("*.h")
+    into(prefabHeadersDir)
 }
 
 tasks.preBuild {
@@ -475,6 +488,7 @@ task printVersions {
 task createNativeDepsDirectories() {
     downloadsDir.mkdirs()
     thirdPartyNdkDir.mkdirs()
+    prefabHeadersDir.mkdirs()
 }
 
 def resolveTaskFactory(String taskName, String artifactLocalName, File reactNativeAndroidDownloadDir, File reanimatedDownloadDir) {
@@ -716,7 +730,7 @@ if (REACT_NATIVE_MINOR_VERSION < 71) {
                     "${resolveBuildType()}.aar"
                 )
                 if (!hermesAAR.exists()) {
-                    throw new GradleException("Could not find hermes-engine AAR", null)
+                    throw new GradleException("[Reanimated] Could not find hermes-engine AAR.", null)
                 }
 
                 def soFiles = zipTree(hermesAAR).matching({ it.include "**/*.so" })
@@ -731,12 +745,12 @@ if (REACT_NATIVE_MINOR_VERSION < 71) {
             doLast {
                 def hermesPackagePath = findNodeModulePath(projectDir, "hermes-engine")
                 if (!hermesPackagePath) {
-                    throw new GradleException("Could not find the hermes-engine npm package", null)
+                    throw new GradleException("[Reanimated] Could not find the hermes-engine npm package.", null)
                 }
 
                 def hermesAAR = file("$hermesPackagePath/android/hermes-${resolveBuildType()}.aar") // e.g. hermes-debug.aar
                 if (!hermesAAR.exists()) {
-                    throw new GradleException("The hermes-engine npm package is missing \"android/hermes-${resolveBuildType()}.aar\"", null)
+                    throw new GradleException("[Reanimated] The hermes-engine npm package is missing \"android/hermes-${resolveBuildType()}.aar\".", null)
                 }
 
                 def soFiles = zipTree(hermesAAR).matching({ it.include "**/*.so" })
@@ -757,12 +771,12 @@ if (REACT_NATIVE_MINOR_VERSION < 71) {
             doLast {
                 def jscPackagePath = findNodeModulePath(projectDir, "jsc-android")
                 if (!jscPackagePath) {
-                    throw new GradleException("Could not find the jsc-android npm package", null)
+                    throw new GradleException("[Reanimated] Could not find the jsc-android npm package.", null)
                 }
 
                 def jscDist = file("$jscPackagePath/dist")
                 if (!jscDist.exists()) {
-                    throw new GradleException("The jsc-android npm package is missing its \"dist\" directory", null)
+                    throw new GradleException("[Reanimated] The jsc-android npm package is missing its \"dist\" directory.", null)
                 }
 
                 def jscAAR = fileTree(jscDist).matching({ it.include "**/android-jsc/**/*.aar" }).singleFile
@@ -914,6 +928,8 @@ afterEvaluate {
         nativeBuildDependsOn(extractSOFiles)
     }
 
+    preBuild.dependsOn(prepareHeadersForPrefab)
+
     tasks.forEach({ task ->
         if (task.name.contains("JniLibFolders")) {
             task.dependsOn(packageNdkLibs)
@@ -938,6 +954,6 @@ afterEvaluate {
             extractSOFiles.dependsOn(prepareJSC)
         }
     } else {
-      throw GradleScriptException("Unknown JS runtime ${JS_RUNTIME}.")
+      throw GradleScriptException("[Reanimated] Unknown JS runtime ${JS_RUNTIME}.")
     }
 }

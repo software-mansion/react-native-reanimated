@@ -255,7 +255,7 @@ function assertVectorsHaveEqualLengths(a: number[], b: number[]) {
   'worklet';
   if (__DEV__ && a.length !== b.length) {
     throw new Error(
-      `Cannot calculate inner product of two vectors of different lengths. Length of ${a} is ${a.length} and length of ${b} is ${b.length}.`
+      `[Reanimated] Cannot calculate inner product of two vectors of different lengths. Length of ${a} is ${a.length} and length of ${b} is ${b.length}.`
     );
   }
 }
@@ -345,7 +345,7 @@ export function decomposeMatrix(
 
   // normalize matrix
   if (matrix[15] === 0) {
-    throw new Error('Invalid transform matrix!');
+    throw new Error('[Reanimated] Invalid transform matrix.');
   }
   matrix.forEach((_, i) => (matrix[i] /= matrix[15]));
 

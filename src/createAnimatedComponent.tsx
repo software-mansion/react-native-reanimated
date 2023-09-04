@@ -32,7 +32,6 @@ import type {
   BaseAnimationBuilder,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
-  LayoutAnimationFunction,
 } from './reanimated2/layoutReanimation';
 import {
   SharedTransition,
@@ -56,31 +55,13 @@ import type { AnimateProps } from './reanimated2/helperTypes';
 import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
 import { JSPropUpdater } from './JSPropUpdater';
 import { getReduceMotionFromConfig } from './reanimated2/animation/util';
+import { maybeBuild } from './animationBuilder';
 
 const IS_WEB = isWeb();
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
   // event is used.
-}
-
-function maybeBuild(
-  layoutAnimationOrBuilder:
-    | ILayoutAnimationBuilder
-    | LayoutAnimationFunction
-    | Keyframe
-): LayoutAnimationFunction | Keyframe {
-  const isAnimationBuilder = (
-    value: ILayoutAnimationBuilder | LayoutAnimationFunction | Keyframe
-  ): value is ILayoutAnimationBuilder =>
-    'build' in layoutAnimationOrBuilder &&
-    typeof layoutAnimationOrBuilder.build === 'function';
-
-  if (isAnimationBuilder(layoutAnimationOrBuilder)) {
-    return layoutAnimationOrBuilder.build();
-  } else {
-    return layoutAnimationOrBuilder;
-  }
 }
 
 type NestedArray<T> = T | NestedArray<T>[];
@@ -440,13 +421,13 @@ export default function createAnimatedComponent(
         const hostInstance = RNRenderer.findHostInstance_DEPRECATED(component);
         if (!hostInstance) {
           throw new Error(
-            'Cannot find host instance for this component. Maybe it renders nothing?'
+            '[Reanimated] Cannot find host instance for this component. Maybe it renders nothing?'
           );
         }
         // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
         viewTag = hostInstance?._nativeTag;
         /**
-         * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
+         * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/packages/react-native/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
          * The name we're looking for is in the field named uiViewClassName.
          */
         viewName = hostInstance?.viewConfig?.uiViewClassName;
@@ -638,14 +619,22 @@ export default function createAnimatedComponent(
             configureLayoutAnimations(
               tag,
               LayoutAnimationType.LAYOUT,
-              maybeBuild(layout)
+              maybeBuild(
+                layout,
+                undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */,
+                AnimatedComponent.displayName
+              )
             );
           }
           if (entering) {
             configureLayoutAnimations(
               tag,
               LayoutAnimationType.ENTERING,
-              maybeBuild(entering)
+              maybeBuild(
+                entering,
+                this.props?.style,
+                AnimatedComponent.displayName
+              )
             );
           }
           if (exiting) {
@@ -658,7 +647,11 @@ export default function createAnimatedComponent(
               configureLayoutAnimations(
                 tag,
                 LayoutAnimationType.EXITING,
-                maybeBuild(exiting)
+                maybeBuild(
+                  exiting,
+                  this.props?.style,
+                  AnimatedComponent.displayName
+                )
               );
             }
           }

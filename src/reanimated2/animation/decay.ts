@@ -12,6 +12,7 @@ import { isWeb } from '../PlatformChecker';
 interface DecayConfig {
   deceleration?: number;
   velocityFactor?: number;
+  rubberBandEffect?: boolean;
   clamp?: number[];
   velocity?: number;
   reduceMotion?: ReduceMotion;
@@ -73,6 +74,7 @@ export const withDecay = function (
     }
 
     const VELOCITY_EPS = IS_WEB ? 1 / 20 : 1;
+    const DERIVATIVE_EPS = 0.1;
     const SLOPE_FACTOR = 0.1;
 
     let decay: (animation: InnerDecayAnimation, now: number) => boolean;
@@ -93,19 +95,21 @@ export const withDecay = function (
           derivative = current - config.clamp![clampIndex];
         }
 
-        if (derivative !== 0) {
-          animation.springActive = true;
-        } else if (derivative === 0 && animation.springActive) {
-          animation.current = config.clamp![clampIndex];
-          return true;
-        }
-
         const v =
           velocity *
             Math.exp(
               -(1 - config.deceleration) * (now - startTimestamp) * SLOPE_FACTOR
             ) -
           derivative * config.rubberBandFactor;
+
+        if (Math.abs(derivative) > DERIVATIVE_EPS) {
+          animation.springActive = true;
+        } else if (animation.springActive) {
+          animation.current = config.clamp![clampIndex];
+          return true;
+        } else if (Math.abs(v) < VELOCITY_EPS) {
+          return true;
+        }
 
         animation.current =
           current + (v * config.velocityFactor * deltaTime) / 1000;
@@ -154,24 +158,24 @@ export const withDecay = function (
     function validateConfig(): void {
       if (config.clamp) {
         if (!Array.isArray(config.clamp)) {
-          throw Error(
-            `config.clamp must be an array but is ${typeof config.clamp}`
+          throw new Error(
+            `[Reanimated] \`config.clamp\` must be an array but is ${typeof config.clamp}.`
           );
         }
         if (config.clamp.length !== 2) {
-          throw Error(
-            `clamp array must contain 2 items but is given ${config.clamp.length}`
+          throw new Error(
+            `[Reanimated] \`clamp array\` must contain 2 items but is given ${config.clamp.length}.`
           );
         }
       }
       if (config.velocityFactor <= 0) {
-        throw Error(
-          `config.velocityFactor must be greather then 0 but is ${config.velocityFactor}`
+        throw new Error(
+          `[Reanimated] \`config.velocityFactor\` must be greather then 0 but is ${config.velocityFactor}.`
         );
       }
       if (config.rubberBandEffect && !config.clamp) {
-        throw Error(
-          'You need to set `clamp` property when using `rubberBandEffect`.'
+        throw new Error(
+          '[Reanimated] You need to set `clamp` property when using `rubberBandEffect`.'
         );
       }
     }

@@ -349,7 +349,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
     Class screenClass = [RNSScreen class];
     Class screenViewClass = [RNSScreenView class];
     BOOL allSelectorsAreAvailable = [RNSScreen instancesRespondToSelector:viewDidLayoutSubviewsSelector] &&
-        [RNSScreenView instancesRespondToSelector:notifyWillDisappearSelector];
+        [RNSScreenView instancesRespondToSelector:notifyWillDisappearSelector] &&
+        [RNSScreenView instancesRespondToSelector:@selector(isModal)]; // used by REAScreenHelper
 
     if (allSelectorsAreAvailable) {
       [REAUtils swizzleMethod:viewDidLayoutSubviewsSelector
