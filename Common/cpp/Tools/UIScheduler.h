@@ -2,6 +2,7 @@
 
 #include <ReactCommon/CallInvoker.h>
 
+#include <atomic>
 #include <memory>
 
 #include "ThreadSafeQueue.h"
