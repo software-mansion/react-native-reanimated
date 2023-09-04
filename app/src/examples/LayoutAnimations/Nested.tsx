@@ -1,5 +1,5 @@
 import Animated, { FadeOut } from 'react-native-reanimated';
-import { Button, View } from 'react-native';
+import { Button, View, StyleSheet } from 'react-native';
 import React, { useState } from 'react';
 
 const levelOne = {
@@ -25,17 +25,9 @@ export default function NestedTest() {
   const [toggle, setToggle] = useState(false);
 
   return (
-    <View
-      style={{
-        flex: 1,
-        flexDirection: 'column',
-        marginTop: 60,
-      }}>
+    <View style={styles.container}>
       <Button title="toggle" onPress={() => setToggle((current) => !current)} />
-      <View
-        style={{
-          flexWrap: 'wrap',
-        }}>
+      <View style={styles.wrap}>
         {
           // when toggled off, in this column:
           toggle && (
@@ -93,3 +85,14 @@ export default function NestedTest() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexDirection: 'column',
+    marginTop: 60,
+  },
+  wrap: {
+    flexWrap: 'wrap',
+  },
+});

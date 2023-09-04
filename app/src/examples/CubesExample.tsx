@@ -41,7 +41,6 @@ function eulerToMatrix(pitch: number, roll: number, yaw: number) {
   ];
 }
 
-// copied from https://github.com/facebook/react-native/blob/main/Libraries/Utilities/MatrixMath.js
 function createIdentityMatrix() {
   'worklet';
   return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
@@ -320,12 +319,6 @@ const componentStyle = StyleSheet.create({
   cubesContainer: {
     flexDirection: 'row',
   },
-  square: {
-    width: 50,
-    height: 50,
-    backgroundColor: 'black',
-    margin: 30,
-  },
   box: {
     width: 100,
     height: 100,
@@ -333,15 +326,6 @@ const componentStyle = StyleSheet.create({
     top: 0,
     left: 0,
     backfaceVisibility: 'hidden',
-  },
-  red: {
-    backgroundColor: 'red',
-  },
-  green: {
-    backgroundColor: 'green',
-  },
-  blue: {
-    backgroundColor: 'blue',
   },
   compass: {
     backgroundColor: 'black',

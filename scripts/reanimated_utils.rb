@@ -27,7 +27,7 @@ def find_config()
   end
 
   if react_native_json == nil
-    raise '[RNReanimated] Unable to recognize your `react-native` version! Please set environmental variable with `react-native` locations: `export REACT_NATIVE_NODE_MODULES_DIR="<path to react-native>" && pod install'
+    raise '[Reanimated] Unable to recognize your `react-native` version. Please set environmental variable with `react-native` location: `export REACT_NATIVE_NODE_MODULES_DIR="<path to react-native>" && pod install`.'
   end
 
   result[:is_reanimated_example_app] = ENV["REANIMATED_EXAMPLE_APP_NAME"] != nil
@@ -68,15 +68,7 @@ def assert_no_multiple_instances(react_native_info)
       location['/package.json'] = ''
       parsed_location += "- " + location + "\n"
     end
-    raise "[react-native-reanimated] Multiple versions of Reanimated were detected. Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting/#multiple-versions-of-reanimated-were-detected \n\nConflict between: \n" + parsed_location
-  end
-end
-
-def assert_no_reanimated2_with_new_architecture(reanimated_package_json)
-  reanimated_major_version = reanimated_package_json['version'].split('.')[0].to_i
-  fabric_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
-  if fabric_enabled && reanimated_major_version == 2
-    raise "[react-native-reanimated] Reanimated 2.x does not support Fabric. Please upgrade to 3.x to use Reanimated with the New Architecture. For details, see https://blog.swmansion.com/announcing-reanimated-3-16167428c5f7"
+    raise "[Reanimated] Multiple versions of Reanimated were detected (iOS). See https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#multiple-versions-of-reanimated-were-detected/ for more information.\n\nConflict between: \n" + parsed_location
   end
 end
 
@@ -86,6 +78,6 @@ def assert_latest_react_native_with_new_architecture(config, reanimated_package_
   react_native_minor_version = config[:react_native_minor_version]
   fabric_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
   if fabric_enabled && reanimated_major_version == 3 && react_native_minor_version < 72
-    raise "[react-native-reanimated] Reanimated " + reanimated_version + " supports the New Architecture only on the latest minor release of React Native. Please upgrade to React Native 0.72.0+ or downgrade to an older version of Reanimated v3"
+    raise "[Reanimated] Outdated version of React Native for New Architecture. Reanimated " + reanimated-version + " supports the New Architecture on React Native 0.72.0+. See https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#outdated-version-of-react-native-for-new-architecture for more information."
   end
 end

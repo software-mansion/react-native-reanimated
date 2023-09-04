@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  RefObject,
-  Component,
-} from 'react';
+import React, { useState, useRef, useEffect, Component } from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -23,6 +17,7 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native-gesture-handler';
 import { useHeaderHeight } from '@react-navigation/elements';
+import '../types';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -52,7 +47,7 @@ type ActiveExampleImage = {
 };
 
 type onItemPressFn = (
-  imageRef: RefObject<Component>,
+  imageRef: React.MutableRefObject<Component>,
   item: ExampleImage,
   sv: Animated.SharedValue<number>
 ) => void;
@@ -242,13 +237,13 @@ const images: ExampleImage[] = Array.from({ length: 30 }, (_, index) => {
   };
 });
 
-export default function LightBoxExample(): React.ReactElement {
+export default function LightBoxExample() {
   const [activeImage, setActiveImage] = useState<ActiveExampleImage | null>(
     null
   );
 
   function onItemPress(
-    imageRef: RefObject<Component>,
+    imageRef: React.MutableRefObject<Component>,
     item: ExampleImage,
     sv: Animated.SharedValue<number>
   ) {

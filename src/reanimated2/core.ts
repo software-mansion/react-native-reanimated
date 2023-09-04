@@ -1,104 +1,58 @@
 import NativeReanimatedModule from './NativeReanimated';
-import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
-import {
+import { nativeShouldBeMock, isWeb } from './PlatformChecker';
+import type {
   AnimatedKeyboardOptions,
-  BasicWorkletFunction,
   SensorConfig,
   SensorType,
   SharedValue,
   Value3D,
   ValueRotation,
 } from './commonTypes';
-import {
-  makeShareableCloneRecursive,
-  makeShareable as makeShareableUnwrapped,
-} from './shareables';
-import { startMapper as startMapperUnwrapped } from './mappers';
-import {
-  makeMutable as makeMutableUnwrapped,
-  makeRemote as makeRemoteUnwrapped,
-} from './mutables';
-import {
+import { makeShareableCloneRecursive } from './shareables';
+import type {
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from './layoutReanimation';
 import { initializeUIRuntime } from './initializers';
+import type {
+  ProgressAnimationCallback,
+  SharedTransitionAnimationsFunction,
+} from './layoutReanimation/animationBuilder/commonTypes';
 import { SensorContainer } from './SensorContainer';
 
-export { stopMapper } from './mappers';
+export { startMapper, stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
+export { createWorkletRuntime } from './runtimes';
+export type { WorkletRuntime } from './runtimes';
+export { makeShareable, makeShareableCloneRecursive } from './shareables';
+export { makeMutable, makeRemote } from './mutables';
 
-export type ReanimatedConsole = Pick<
-  Console,
-  'debug' | 'log' | 'warn' | 'info' | 'error'
->;
+/**
+ * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1
+ */
+export const isReanimated3 = () => true;
 
-const testWorklet: BasicWorkletFunction<void> = () => {
-  'worklet';
-};
+// Superseded by check in `/src/threads.ts`.
+// Used by `react-navigation` to detect if using Reanimated 2 or 3.
+/**
+ * @deprecated This function was superseded by other checks.
+ * We keep it here for backward compatibility reasons.
+ * If you need to check if you are using Reanimated 3 or Reanimated 2
+ * please use `isReanimated3` function instead.
+ * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2
+ */
+export const isConfigured = isReanimated3;
 
-const throwUninitializedReanimatedException = () => {
-  throw new Error(
-    "Failed to initialize react-native-reanimated library, make sure you followed installation steps here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation/ \n1) Make sure reanimated's babel plugin is installed in your babel.config.js (you should have 'react-native-reanimated/plugin' listed there - also see the above link for details) \n2) Make sure you reset build cache after updating the config, run: yarn start --reset-cache"
-  );
-};
-
-export const checkPluginState: (throwError: boolean) => boolean = (
-  throwError = true
-) => {
-  if (!testWorklet.__workletHash && !shouldBeUseWeb()) {
-    if (throwError) {
-      throwUninitializedReanimatedException();
-    }
-    return false;
-  }
-  return true;
-};
-
-export const isConfigured: (throwError?: boolean) => boolean = (
-  throwError = false
-) => {
-  return checkPluginState(throwError);
-};
-
-export const isConfiguredCheck: () => void = () => {
-  checkPluginState(true);
-};
-
-const configurationCheckWrapper = __DEV__
-  ? <T extends Array<any>, U>(fn: (...args: T) => U) => {
-      return (...args: T): U => {
-        isConfigured(true);
-        return fn(...args);
-      };
-    }
-  : <T extends Array<any>, U>(fn: (...args: T) => U) => fn;
-
-export const startMapper = __DEV__
-  ? configurationCheckWrapper(startMapperUnwrapped)
-  : startMapperUnwrapped;
-
-export const makeShareable = __DEV__
-  ? configurationCheckWrapper(makeShareableUnwrapped)
-  : makeShareableUnwrapped;
-
-export const makeMutable = __DEV__
-  ? configurationCheckWrapper(makeMutableUnwrapped)
-  : makeMutableUnwrapped;
-
-export const makeRemote = __DEV__
-  ? configurationCheckWrapper(makeRemoteUnwrapped)
-  : makeRemoteUnwrapped;
-
+// this is for web implementation
 global._WORKLET = false;
 global._log = function (s: string) {
   console.log(s);
 };
 
-export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
+export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
   if (global._IS_FABRIC) {
     throw new Error(
-      '[react-native-reanimated] `getViewProp` is not supported on Fabric yet'
+      '[Reanimated] `getViewProp` is not supported on Fabric yet.'
     );
   }
 
@@ -117,7 +71,7 @@ export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
   });
 }
 
-export function getSensorContainer(): SensorContainer {
+function getSensorContainer(): SensorContainer {
   if (!global.__sensorContainer) {
     global.__sensorContainer = new SensorContainer();
   }
@@ -125,9 +79,10 @@ export function getSensorContainer(): SensorContainer {
 }
 
 export function registerEventHandler<T>(
-  eventHash: string,
-  eventHandler: (event: T) => void
-): string {
+  eventHandler: (event: T) => void,
+  eventName: string,
+  emitterReactTag = -1
+): number {
   function handleAndFlushAnimationFrame(eventTimestamp: number, event: T) {
     'worklet';
     global.__frameTimestamp = eventTimestamp;
@@ -136,12 +91,13 @@ export function registerEventHandler<T>(
     global.__frameTimestamp = undefined;
   }
   return NativeReanimatedModule.registerEventHandler(
-    eventHash,
-    makeShareableCloneRecursive(handleAndFlushAnimationFrame)
+    makeShareableCloneRecursive(handleAndFlushAnimationFrame),
+    eventName,
+    emitterReactTag
   );
 }
 
-export function unregisterEventHandler(id: string): void {
+export function unregisterEventHandler(id: number): void {
   return NativeReanimatedModule.unregisterEventHandler(id);
 }
 
@@ -198,8 +154,7 @@ export function unregisterSensor(sensorId: number): void {
   return sensorContainer.unregisterSensor(sensorId);
 }
 
-// initialize UI runtime if applicable
-if (!isWeb() && isConfigured()) {
+if (!isWeb()) {
   initializeUIRuntime();
 }
 
@@ -233,13 +188,17 @@ export function enableLayoutAnimations(
 }
 
 export function configureLayoutAnimations(
-  viewTag: number,
+  viewTag: number | HTMLElement,
   type: LayoutAnimationType,
-  config: LayoutAnimationFunction | Keyframe,
+  config:
+    | LayoutAnimationFunction
+    | Keyframe
+    | SharedTransitionAnimationsFunction
+    | ProgressAnimationCallback,
   sharedTransitionTag = ''
 ): void {
   NativeReanimatedModule.configureLayoutAnimation(
-    viewTag,
+    viewTag as number, // On web this function is no-op, therefore we can cast viewTag to number
     type,
     sharedTransitionTag,
     makeShareableCloneRecursive(config)

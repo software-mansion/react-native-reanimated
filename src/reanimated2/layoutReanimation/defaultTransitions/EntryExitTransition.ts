@@ -1,16 +1,14 @@
-import {
+import type {
   ILayoutAnimationBuilder,
   LayoutAnimationsValues,
   LayoutAnimationFunction,
+  StylePropsWithArrayTransform,
 } from '../animationBuilder/commonTypes';
 import { BaseAnimationBuilder } from '../animationBuilder';
 import { withSequence, withTiming } from '../../animation';
 import { FadeIn, FadeOut } from '../defaultAnimations/Fade';
-import {
-  StyleProps,
-  TransformProperty,
-  AnimationObject,
-} from '../../commonTypes';
+import type { AnimationObject } from '../../commonTypes';
+import type { TransformArrayItem } from '../../helperTypes';
 
 export class EntryExitTransition
   extends BaseAnimationBuilder
@@ -68,30 +66,34 @@ export class EntryExitTransition
       'worklet';
       const enteringValues = enteringAnimation(values);
       const exitingValues = exitingAnimation(values);
-      const animations: StyleProps = {
+      const animations: StylePropsWithArrayTransform = {
         transform: [],
       };
 
       for (const prop of Object.keys(exitingValues.animations)) {
         if (prop === 'transform') {
-          exitingValues.animations[prop]?.forEach((value, index) => {
+          if (!Array.isArray(exitingValues.animations.transform)) {
+            continue;
+          }
+          exitingValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
-              animations.transform?.push({
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              animations.transform!.push({
                 [transformProp]: delayFunction(
                   delay,
                   withSequence(
-                    value[transformProp as keyof TransformProperty],
+                    value[transformProp as keyof TransformArrayItem],
                     withTiming(
                       exitingValues.initialValues.transform
                         ? exitingValues.initialValues.transform[index][
-                            transformProp as keyof TransformProperty
+                            transformProp as keyof TransformArrayItem
                           ]
                         : 0,
                       { duration: 0 }
                     )
                   )
                 ),
-              } as TransformProperty);
+              } as TransformArrayItem);
             }
           });
         } else {
@@ -119,24 +121,28 @@ export class EntryExitTransition
       }
       for (const prop of Object.keys(enteringValues.animations)) {
         if (prop === 'transform') {
-          enteringValues.animations[prop]?.forEach((value, index) => {
+          if (!Array.isArray(enteringValues.animations.transform)) {
+            continue;
+          }
+          enteringValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
-              animations.transform?.push({
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              animations.transform!.push({
                 [transformProp]: delayFunction(
                   delay + exitingDuration,
                   withSequence(
                     withTiming(
                       enteringValues.initialValues.transform
                         ? enteringValues.initialValues.transform[index][
-                            transformProp as keyof TransformProperty
+                            transformProp as keyof TransformArrayItem
                           ]
                         : 0,
                       { duration: exitingDuration }
                     ),
-                    value[transformProp as keyof TransformProperty]
+                    value[transformProp as keyof TransformArrayItem]
                   )
                 ),
-              } as TransformProperty);
+              } as TransformArrayItem);
             }
           });
         } else if (animations[prop] !== undefined) {
@@ -154,9 +160,14 @@ export class EntryExitTransition
       }
 
       const mergedTransform = (
-        exitingValues.initialValues.transform ?? []
+        Array.isArray(exitingValues.initialValues.transform)
+          ? exitingValues.initialValues.transform
+          : []
       ).concat(
-        (enteringValues.animations.transform ?? []).map((value) => {
+        (Array.isArray(enteringValues.animations.transform)
+          ? enteringValues.animations.transform
+          : []
+        ).map((value) => {
           const objectKeys = Object.keys(value);
           if (objectKeys?.length < 1) {
             console.error(
@@ -166,23 +177,22 @@ export class EntryExitTransition
           }
           const transformProp = objectKeys[0];
           const current = (
-            value[transformProp as keyof TransformProperty] as AnimationObject
+            value[transformProp as keyof TransformArrayItem] as AnimationObject
           ).current;
           if (typeof current === 'string') {
             if (current.includes('deg'))
               return {
                 [transformProp]: '0deg',
-              } as unknown as TransformProperty;
+              } as unknown as TransformArrayItem;
             else
               return {
                 [transformProp]: '0',
-              } as unknown as TransformProperty;
+              } as unknown as TransformArrayItem;
           } else if (transformProp.includes('translate')) {
-            return { [transformProp]: 0 } as unknown as TransformProperty;
+            return { [transformProp]: 0 } as unknown as TransformArrayItem;
           } else {
-            return { [transformProp]: 1 } as unknown as TransformProperty;
+            return { [transformProp]: 1 } as unknown as TransformArrayItem;
           }
-          return value;
         })
       );
 

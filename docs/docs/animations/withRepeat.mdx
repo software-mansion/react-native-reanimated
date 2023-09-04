@@ -1,0 +1,97 @@
+---
+sidebar_position: 5
+---
+
+# withRepeat
+
+`withRepeat` is an [animation modifier](/docs/fundamentals/glossary#animation-modifier) that lets you repeat an animation given number of times or run it indefinitely.
+
+import RepeatBasic from '@site/src/examples/RepeatBasic';
+import RepeatBasicSrc from '!!raw-loader!@site/src/examples/RepeatBasic';
+
+<InteractiveExample src={RepeatBasicSrc} component={<RepeatBasic />} />
+
+## Reference
+
+```javascript
+import { withRepeat } from 'react-native-reanimated';
+
+function App() {
+  sv.value = withRepeat(withSpring(0), 5);
+  // ...
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type AnimatableValue = number | string | number[];
+
+function withRepeat<T extends AnimatableValue>(
+  animation: T,
+  numberOfReps?: number,
+  reverse?: boolean,
+  callback?: (finished?: boolean, current?: AnimatableValue) => void,
+  reduceMotion?: ReduceMotion
+): T;
+
+enum ReduceMotion {
+  System = 'system',
+  Always = 'always',
+  Never = 'never',
+}
+```
+
+</details>
+
+### Arguments
+
+#### `animation`
+
+The animation you want to repeat.
+
+#### `numberOfReps` <Optional />
+
+The number of times the animation is going to be repeated. Defaults to `2`.
+
+A non-positive value (e.g. `0` or `-1`) will cause the animation to repeat indefinitely until it is cancelled or torn down. For example, if the component unmounts or [`cancelAnimation`](/docs/core/cancelAnimation) was called.
+
+#### `reverse` <Optional />
+
+Whether the animation should run in reverse every other repetition. Defaults to `false`.
+
+This option only supports [animation functions](/docs/fundamentals/glossary#animation-function) (eg. [`withSpring`](/docs/animations/withSpring)) and doesn't work with [animation modifiers](/docs/fundamentals/glossary#animation-modifier) (eg. [`withSequence`](/docs/animations/withSequence)).
+
+#### `callback` <Optional />
+
+A function called on animation complete. In case the animation is cancelled, the callback will receive `false` as the argument, otherwise it will receive `true`.
+
+#### `reduceMotion` <Optional />
+
+A parameter that determines how the animation responds to the device's reduced motion accessibility setting.
+
+### Returns
+
+`withRepeat` returns an [animation object](/docs/fundamentals/glossary#animation-object). It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](docs/core/useAnimatedStyle).
+
+## Example
+
+import SequenceWobble from '@site/src/examples/SequenceWobble';
+import SequenceWobbleSrc from '!!raw-loader!@site/src/examples/SequenceWobble';
+
+<InteractiveExample src={SequenceWobbleSrc} component={<SequenceWobble />} />
+
+## Remarks
+
+- The callback passed to the 4th argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>

@@ -1,35 +1,4 @@
-import {
-  PerpectiveTransform,
-  RotateTransform,
-  RotateXTransform,
-  RotateYTransform,
-  RotateZTransform,
-  ScaleTransform,
-  ScaleXTransform,
-  ScaleYTransform,
-  TranslateXTransform,
-  TranslateYTransform,
-  SkewXTransform,
-  SkewYTransform,
-  MatrixTransform,
-  ViewStyle,
-  TextStyle,
-} from 'react-native';
-
-export type TransformProperty =
-  | PerpectiveTransform
-  | RotateTransform
-  | RotateXTransform
-  | RotateYTransform
-  | RotateZTransform
-  | ScaleTransform
-  | ScaleXTransform
-  | ScaleYTransform
-  | TranslateXTransform
-  | TranslateYTransform
-  | SkewXTransform
-  | SkewYTransform
-  | MatrixTransform;
+import type { ViewStyle, TextStyle } from 'react-native';
 
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;
@@ -37,40 +6,15 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
-export interface AnimatedStyle extends Record<string, AnimationObject> {
-  [key: string]: any;
-  transform?: Array<
-    | Record<'matrix', number[] | AnimationObject>
-    | Partial<
-        Record<
-          | 'perspective'
-          | 'scale'
-          | 'scaleX'
-          | 'scaleY'
-          | 'translateX'
-          | 'translateY',
-          number | AnimationObject
-        >
-      >
-    | Partial<
-        Record<
-          'rotate' | 'rotateX' | 'rotateY' | 'rotateZ' | 'skewX' | 'skewY',
-          string | AnimationObject
-        >
-      >
-    | Record<string, AnimationObject>
-  >;
-}
-
-export interface SharedValue<T> {
-  value: T;
-  addListener: (listenerID: number, listener: (value: T) => void) => void;
+export interface SharedValue<Value> {
+  value: Value;
+  addListener: (listenerID: number, listener: (value: any) => void) => void;
   removeListener: (listenerID: number) => void;
-  modify: (modifier: (value: T) => T) => void;
+  modify: (modifier: (value: any) => any) => void;
 }
 
-// The below type is used for HostObjects retured by the JSI API that don't have
-// any accessable fields or methods but can carry data that is accessed from the
+// The below type is used for HostObjects returned by the JSI API that don't have
+// any accessible fields or methods but can carry data that is accessed from the
 // c++ side. We add a field to the type to make it possible for typescript to recognize
 // which JSI methods accept those types as arguments and to be able to correctly type
 // check other methods that may use them. However, this field is not actually defined
@@ -79,6 +23,12 @@ export interface SharedValue<T> {
 export type ShareableRef<T> = {
   __hostObjectShareableJSRef: T;
 };
+
+// In case of objects with depth or arrays of objects or arrays of arrays etc.
+// we add this utility type that makes it a SharaebleRef of the outermost type.
+export type FlatShareableRef<T> = T extends ShareableRef<infer U>
+  ? ShareableRef<U>
+  : ShareableRef<T>;
 
 export type ShareableSyncDataHolderRef<T> = {
   __hostObjectShareableJSRefSyncDataHolder: T;
@@ -97,16 +47,12 @@ export type MapperRegistry = {
 export type Context = Record<string, unknown>;
 
 export interface WorkletFunction {
-  _closure?: Context;
+  __closure?: Context;
   __workletHash?: number;
 }
 
 export interface BasicWorkletFunction<T> extends WorkletFunction {
   (): T;
-}
-
-export interface BasicWorkletFunctionOptional<T> extends WorkletFunction {
-  (): Partial<T>;
 }
 
 export interface NativeEvent<T> {
@@ -146,6 +92,7 @@ export interface AnimationObject {
   finished?: boolean;
   strippedCurrent?: number;
   cancelled?: boolean;
+  reduceMotion?: boolean;
 
   __prefix?: string;
   __suffix?: string;
@@ -195,10 +142,6 @@ export type AnimatedSensor<T extends Value3D | ValueRotation> = {
   isAvailable: boolean;
   config: SensorConfig;
 };
-
-export interface NumericAnimation {
-  current?: number;
-}
 
 export type AnimationCallback = (
   finished?: boolean,
@@ -258,4 +201,15 @@ export interface MeasuredDimensions {
 
 export interface AnimatedKeyboardOptions {
   isStatusBarTranslucentAndroid?: boolean;
+}
+
+/**
+ * - `System` - If the `Reduce motion` accessibility setting is enabled on the device, disable the animation. Otherwise, enable the animation.
+ * - `Always` - Disable the animation.
+ * - `Never` - Enable the animation.
+ */
+export enum ReduceMotion {
+  System = 'system',
+  Always = 'always',
+  Never = 'never',
 }

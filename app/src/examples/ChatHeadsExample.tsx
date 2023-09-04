@@ -157,20 +157,24 @@ function Followers({
   );
 }
 
-export default function ChatHeadsExample(): React.ReactElement {
+export default function ChatHeadsExample() {
   return (
-    <View style={{ flex: 1, margin: 50 }}>
+    <View style={styles.container}>
       <ChatHeads>
-        <View style={[styles.head, { backgroundColor: 'black' }]} />
-        <View style={[styles.head, { backgroundColor: 'blue' }]} />
-        <View style={[styles.head, { backgroundColor: 'green' }]} />
-        <View style={[styles.head, { backgroundColor: 'yellow' }]} />
+        <View style={[styles.head, styles.black]} />
+        <View style={[styles.head, styles.blue]} />
+        <View style={[styles.head, styles.green]} />
+        <View style={[styles.head, styles.yellow]} />
       </ChatHeads>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    margin: 50,
+  },
   head: {
     width: 40,
     height: 40,
@@ -178,4 +182,8 @@ const styles = StyleSheet.create({
   headContainer: {
     position: 'absolute',
   },
+  black: { backgroundColor: 'black' },
+  blue: { backgroundColor: 'blue' },
+  green: { backgroundColor: 'green' },
+  yellow: { backgroundColor: 'yellow' },
 });

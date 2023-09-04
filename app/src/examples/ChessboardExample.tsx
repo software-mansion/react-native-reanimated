@@ -1,5 +1,6 @@
 import Animated, {
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -30,12 +31,17 @@ export default function ChessboardExample() {
 
   const sv = useLoop();
 
+  const shouldReduceMotion = useReducedMotion();
+
   useEffect(() => {
+    if (shouldReduceMotion) {
+      return;
+    }
     const id = setInterval(() => {
       setState((s) => 1 - s);
     }, 10);
     return () => clearInterval(id);
-  }, []);
+  }, [shouldReduceMotion]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -71,9 +77,6 @@ const styles = StyleSheet.create({
   workaround: {
     height: 400,
     // prevents calling _state->updateState from RNScreens after each change because of view flattening
-  },
-  buttons: {
-    marginVertical: 50,
   },
   chessboard: {
     alignItems: 'flex-start',

@@ -1,0 +1,40 @@
+:root {
+  --docusaurus-collapse-button-bg: transparent;
+  --docusaurus-collapse-button-bg-hover: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark']:root {
+  --docusaurus-collapse-button-bg: rgba(255, 255, 255, 0.05);
+  --docusaurus-collapse-button-bg-hover: rgba(255, 255, 255, 0.1);
+}
+
+@media (min-width: 996px) {
+  .collapseSidebarButton {
+    display: block !important;
+    background-color: var(--docusaurus-collapse-button-bg);
+    height: var(--swm-logo-height);
+    position: sticky;
+    bottom: 0;
+    border-radius: 0;
+    border: 1px solid var(--ifm-toc-border-color);
+  }
+
+  .collapseSidebarButtonIcon {
+    transform: rotate(180deg);
+    margin-top: 4px;
+  }
+
+  [dir='rtl'] .collapseSidebarButtonIcon {
+    transform: rotate(0);
+  }
+
+  .collapseSidebarButton:hover,
+  .collapseSidebarButton:focus {
+    background-color: var(--docusaurus-collapse-button-bg-hover);
+  }
+}
+
+.collapseSidebarButton {
+  display: none;
+  margin: 0;
+}

@@ -19,6 +19,7 @@ import Animated, {
   runOnJS,
   SharedTransition,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
@@ -311,11 +312,6 @@ const homeStyles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 25,
   },
-  header: {
-    fontSize: 40,
-    fontFamily: 'Poppins-Medium',
-    color: '#1e293b',
-  },
   pressable: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -509,10 +505,20 @@ export default function ProfilesExample() {
     }
   }, [navigation]);
 
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Profiles" component={ProfilesScreen} />
-      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen
+        name="Profiles"
+        component={ProfilesScreen}
+        options={{ animation: shouldReduceMotion ? 'fade' : 'default' }}
+      />
+      <Stack.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ animation: shouldReduceMotion ? 'fade' : 'default' }}
+      />
       <Stack.Screen
         name="Details"
         component={DetailsScreen}
@@ -527,10 +533,6 @@ export default function ProfilesExample() {
 }
 
 const commonStyles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    marginHorizontal: 25,
-  },
   row: {
     flexDirection: 'row',
     flexWrap: 'wrap',

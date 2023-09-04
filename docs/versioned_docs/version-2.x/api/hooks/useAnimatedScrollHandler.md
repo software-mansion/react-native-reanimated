@@ -17,12 +17,12 @@ Each of the worklet will be triggered when the corresponding event is dispatched
 Each of the event worklets will receive the following parameters when called:
 
 - `event` [object] - event object carrying the information about the scroll.
-The payload can differ depending on the type of the event (`onScroll`, `onBeginDrag`, etc.).
-Please consult [React Native's ScrollView documentation](https://reactnative.dev/docs/scrollview) to learn about scroll event structure.
+  The payload can differ depending on the type of the event (`onScroll`, `onBeginDrag`, etc.).
+  Please consult [React Native's ScrollView documentation](https://reactnative.dev/docs/scrollview) to learn about scroll event structure.
 
 - `context` [object] - plain JS object that can be used to store some state.
-This object will persist in between scroll event occurrences and you can read and write any data to it.
-When there are several event handlers provided in a form of an object of worklets, the `context` object will be shared in between the worklets allowing them to communicate with each other.
+  This object will persist in between scroll event occurrences and you can read and write any data to it.
+  When there are several event handlers provided in a form of an object of worklets, the `context` object will be shared in between the worklets allowing them to communicate with each other.
 
 #### `dependencies` [Array]
 
@@ -44,8 +44,8 @@ const App = () => {
     dependencies
   );
   //...
-  return <></>
-}
+  return <></>;
+};
 ```
 
 `dependencies` here may be:

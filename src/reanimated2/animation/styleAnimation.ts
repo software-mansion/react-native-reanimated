@@ -1,21 +1,20 @@
 import { defineAnimation } from './util';
-import {
+import type {
   Timestamp,
   AnimatableValue,
   AnimationObject,
   Animation,
-  AnimatedStyle,
   NestedObject,
   NestedObjectValues,
 } from '../commonTypes';
-import { StyleLayoutAnimation } from './commonTypes';
+import type { AnimatedStyle } from '../helperTypes';
+import type { StyleLayoutAnimation } from './commonTypes';
 import { withTiming } from './timing';
-import { ColorProperties } from '../UpdateProps';
-import { processColor } from '../Colors';
+import { ColorProperties, processColor } from '../Colors';
 
 // resolves path to value for nested objects
 // if path cannot be resolved returns undefined
-export function resolvePath<T>(
+function resolvePath<T>(
   obj: NestedObject<T>,
   path: AnimatableValue[] | AnimatableValue
 ): NestedObjectValues<T> | undefined {
@@ -39,7 +38,7 @@ export function resolvePath<T>(
 
 // set value at given path
 type Path = Array<string | number> | string | number;
-export function setPath<T>(
+function setPath<T>(
   obj: NestedObject<T>,
   path: Path,
   value: NestedObjectValues<T>
@@ -71,7 +70,7 @@ interface NestedObjectEntry<T> {
 }
 
 export function withStyleAnimation(
-  styleAnimations: AnimatedStyle
+  styleAnimations: AnimatedStyle<any>
 ): StyleLayoutAnimation {
   'worklet';
   return defineAnimation<StyleLayoutAnimation>({}, () => {
@@ -143,7 +142,7 @@ export function withStyleAnimation(
 
     const onStart = (
       animation: StyleLayoutAnimation,
-      value: AnimatedStyle,
+      value: AnimatedStyle<any>,
       now: Timestamp,
       previousAnimation: StyleLayoutAnimation
     ): void => {
@@ -180,7 +179,7 @@ export function withStyleAnimation(
           );
           let prevVal = resolvePath(value, currentEntry.path);
           if (prevAnimation && !prevVal) {
-            prevVal = prevAnimation.current;
+            prevVal = (prevAnimation as any).current;
           }
           if (prevVal === undefined) {
             console.warn(

@@ -1,17 +1,19 @@
-import { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
+import type { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
 import {
   isChromeDebugger,
   isJest,
   isWeb,
   shouldBeUseWeb,
 } from './PlatformChecker';
-import { AnimatedRef } from './hook/commonTypes';
-import { Component, RefObject } from 'react';
+
+import type { AnimatedRef } from './hook/commonTypes';
+import type { Component } from 'react';
+import type { ScrollView } from 'react-native';
 
 const IS_NATIVE = !shouldBeUseWeb();
 
-export let measure: (
-  animatedRef: RefObject<Component>
+export let measure: <T extends Component>(
+  animatedRef: AnimatedRef<T>
 ) => MeasuredDimensions | null;
 
 if (isWeb()) {
@@ -85,29 +87,33 @@ if (isWeb()) {
   };
 }
 
-export let dispatchCommand: (
-  animatedRef: AnimatedRef<Component>,
+export let dispatchCommand: <T extends Component>(
+  animatedRef: AnimatedRef<T>,
   commandName: string,
-  args: Array<unknown>
+  args?: Array<unknown>
 ) => void;
 
 if (IS_NATIVE && global._IS_FABRIC) {
-  dispatchCommand = (animatedRef, commandName, args) => {
+  dispatchCommand = (animatedRef, commandName, args = []) => {
     'worklet';
     if (!_WORKLET) {
       return;
     }
 
-    // dispatchCommand works only on Fabric where animatedRef returns
-    // an object (ShadowNodeWrapper) and not a number
     const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     _dispatchCommandFabric!(shadowNodeWrapper, commandName, args);
   };
 } else if (IS_NATIVE) {
-  dispatchCommand = () => {
+  dispatchCommand = (animatedRef, commandName, args = []) => {
     'worklet';
-    console.warn('[Reanimated] dispatchCommand() is not supported on Paper.');
+    if (!_WORKLET) {
+      return;
+    }
+
+    const viewTag = animatedRef() as number;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    _dispatchCommandPaper!(viewTag, commandName, args);
   };
 } else if (isWeb()) {
   dispatchCommand = () => {
@@ -131,8 +137,8 @@ if (IS_NATIVE && global._IS_FABRIC) {
   };
 }
 
-export let scrollTo: (
-  animatedRef: RefObject<Component>,
+export let scrollTo: <T extends Component>(
+  animatedRef: AnimatedRef<T>,
   x: number,
   y: number,
   animated: boolean
@@ -140,10 +146,13 @@ export let scrollTo: (
 
 if (isWeb()) {
   scrollTo = (animatedRef, x, y, animated) => {
-    'worklet';
-    const element = (animatedRef as any)() as HTMLElement; // TODO: fix typing of animated refs on web
-    // @ts-ignore same call as in react-native-web
-    element.scrollTo({ x, y, animated });
+    const element = animatedRef();
+
+    // This prevents crashes if ref has not been set yet
+    if (element !== -1) {
+      // By ScrollView we mean any scrollable component
+      (element as ScrollView)?.scrollTo({ x, y, animated });
+    }
   };
 } else if (IS_NATIVE && global._IS_FABRIC) {
   scrollTo = (animatedRef, x, y, animated) => {

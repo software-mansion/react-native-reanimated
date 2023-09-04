@@ -1,10 +1,7 @@
-import { NodePath } from '@babel/core';
-import {
-  CallExpression,
-  isSequenceExpression,
-  ObjectExpression,
-} from '@babel/types';
-import { ReanimatedPluginPass } from './types';
+import type { NodePath } from '@babel/core';
+import type { CallExpression, ObjectExpression } from '@babel/types';
+import { isSequenceExpression } from '@babel/types';
+import type { ReanimatedPluginPass } from './types';
 import { processWorkletObjectMethod } from './processWorkletObjectMethod';
 import { processIfWorkletFunction } from './processIfWorkletFunction';
 import { strict as assert } from 'assert';
@@ -54,7 +51,10 @@ export function processForCalleesWorklets(
 
   if (objectHooks.has(name)) {
     const workletToProcess = path.get('arguments.0');
-    assert(!Array.isArray(workletToProcess), "'workletToProcess' is an array'");
+    assert(
+      !Array.isArray(workletToProcess),
+      '[Reanimated] `workletToProcess` is an array.'
+    );
     if (workletToProcess.isObjectExpression()) {
       processObjectHook(workletToProcess, state);
       // useAnimatedScrollHandler can take a function as an argument instead of an ObjectExpression
@@ -84,7 +84,7 @@ function processObjectHook(
       processIfWorkletFunction(value, state);
     } else {
       throw new Error(
-        `'${property.type}' as to-be workletized arguments is not supported for object hooks`
+        `[Reanimated] '${property.type}' as to-be workletized arguments is not supported for object hooks.`
       );
     }
   }

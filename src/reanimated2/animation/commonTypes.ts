@@ -1,5 +1,4 @@
-import {
-  AnimatedStyle,
+import type {
   StyleProps,
   AnimatableValue,
   AnimationObject,
@@ -7,6 +6,7 @@ import {
   Timestamp,
   AnimationCallback,
 } from '../commonTypes';
+import type { AnimatedStyle } from '../helperTypes';
 
 export interface HigherOrderAnimation {
   isHigherOrder?: boolean;
@@ -40,11 +40,11 @@ export interface SequenceAnimation
 
 export interface StyleLayoutAnimation extends HigherOrderAnimation {
   current: StyleProps;
-  styleAnimations: AnimatedStyle;
+  styleAnimations: AnimatedStyle<any>;
   onFrame: (animation: StyleLayoutAnimation, timestamp: Timestamp) => boolean;
   onStart: (
     nextAnimation: StyleLayoutAnimation,
-    current: AnimatedStyle,
+    current: AnimatedStyle<any>,
     timestamp: Timestamp,
     previousAnimation: StyleLayoutAnimation
   ) => void;

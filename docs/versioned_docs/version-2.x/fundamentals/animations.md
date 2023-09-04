@@ -20,7 +20,10 @@ Animated Shared Value updates require just a tiny change compared to immediate u
 Let us recall the example from the previous article, where we'd update a Shared Value with some random number on every button tap:
 
 ```js {15}
-import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 
 function Box() {
   const offset = useSharedValue(0);
@@ -46,7 +49,7 @@ As a result, when we tap on the "Move" button the animated box jumps to a new, r
 
 ![](/docs/shared-values/sv-immediate.gif)
 
-With Reanimated 2, such Shared Value updates can be transformed to animated updates by wrapping the target value using one of the animation helpers, e.g., [`withTiming`](../api/animations/withTiming) or [`withSpring`](../api/animations/withSpring).
+With Reanimated 2, such Shared Value updates can be transformed to animated updates by wrapping the target value using one of the animation helpers, e.g., [`withTiming`](/docs/2.x/api/animations/withTiming) or [`withSpring`](/docs/2.x/api/animations/withSpring).
 The only change that we can do now, is to wrap the random offset value with a `withSpring` call as shown below:
 
 ```js {3}
@@ -67,7 +70,7 @@ As a result the `offset` Shared Value transitions smoothly between the current a
 
 Animated Shared Value transitions are not the only way to initiate and run animations.
 It is often the case that we'd like to animate properties that are not directly mapped onto a Shared Value.
-For that, in Reanimated we allow for animations to be specified directly in the [`useAnimatedStyle`](../api/hooks/useAnimatedStyle) hook.
+For that, in Reanimated we allow for animations to be specified directly in the [`useAnimatedStyle`](/docs/2.x/api/hooks/useAnimatedStyle) hook.
 In order to do this you can use the same animation helper methods from Reanimated API, but instead of using it when updating a Shared Value you use it to wrap the style value property:
 
 ```js {5}
@@ -108,7 +111,7 @@ Interruptions also work correctly for animations defined in `useAnimatedStyle` h
 When the style is updated and the target value for a given property has changed compared to the last time when the style hook was run, the new animation will launch immediately starting from the current position of the property.
 
 We believe that the described behavior, when it comes to interruptions, is desirable in the majority of the use cases, and hence we made it the default.
-In case you'd like to wait with the next animation until the previous one is finished, or in the case you'd like to cancel currently running animation prior to starting a new one, you can still do it using animation callbacks in the former, or the [`cancelAnimation`](../api/animations/cancelAnimation) method in the latter case.
+In case you'd like to wait with the next animation until the previous one is finished, or in the case you'd like to cancel currently running animation prior to starting a new one, you can still do it using animation callbacks in the former, or the [`cancelAnimation`](/docs/2.x/api/animations/cancelAnimation) method in the latter case.
 
 To illustrate how interruptions perform in practice, please take a look at the below video, where we run the example presented earlier, but make much more frequent taps on the button in order to trigger value changes before the animation settles:
 
@@ -116,10 +119,10 @@ To illustrate how interruptions perform in practice, please take a look at the b
 
 ## Customizing Animations
 
-Reanimated currently provides three built-in animation helpers: [`withTiming`](../api/animations/withTiming), [`withSpring`](../api/animations/withSpring), and [`withDecay`](../api/animations/withDecay).
+Reanimated currently provides three built-in animation helpers: [`withTiming`](/docs/2.x/api/animations/withTiming), [`withSpring`](/docs/2.x/api/animations/withSpring), and [`withDecay`](/docs/2.x/api/animations/withDecay).
 There are ways of expanding that with your own custom animations (animation helpers are built on top of the [worklets](worklets) abstraction), but we are not yet ready to document that as we still plan some changes in that part of the API.
 However, the built-in methods along with the animation modifiers (that we discuss later on), already provide great flexibility.
-Below we discuss some of the most common configuration options of the animation helpers, and we refer to the documentation page of [`withTiming`](../api/animations/withTiming) and [`withSpring`](../api/animations/withSpring) for the complete set of parameters.
+Below we discuss some of the most common configuration options of the animation helpers, and we refer to the documentation page of [`withTiming`](/docs/2.x/api/animations/withTiming) and [`withSpring`](/docs/2.x/api/animations/withSpring) for the complete set of parameters.
 
 Both animation helper methods share a similar structure.
 They take target value as the first parameter, configuration object as the second, and finally a callback method as the last parameter.
@@ -131,9 +134,9 @@ The callback is run with a single argument – a boolean indicating whether the 
   onPress={() => {
     offset.value = withSpring(Math.random(), {}, (finished) => {
       if (finished) {
-        console.log("ANIMATION ENDED");
+        console.log('ANIMATION ENDED');
       } else {
-        console.log("ANIMATION GOT CANCELLED");
+        console.log('ANIMATION GOT CANCELLED');
       }
     });
   }}
@@ -172,7 +175,7 @@ To learn how to apply these please refer to the [Easing.ts](https://github.com/s
 Unlike timing, spring-based animations do not take duration as a parameter.
 Instead the time it takes for the spring to run is determined by the spring physics (which is configurable), initial velocity, and the distance to travel.
 Below we show an example of how a custom spring animation can be defined and how it compares to the default spring settings.
-Please review [`withSpring`](../api/animations/withSpring) documentation for the complete list of configurable options.
+Please review [`withSpring`](/docs/2.x/api/animations/withSpring) documentation for the complete list of configurable options.
 
 ```js
 import Animated, {
@@ -221,7 +224,7 @@ This makes it possible to use a single Shared Value but map that to two View's s
 ## Animation Modifiers
 
 Besides the ability to adjust animation options, another way of customizing animations is by using animation modifiers.
-Currently, Reanimated exposes three modifiers: [`withDelay`](../api/animations/withDelay), [`withSequence`](../api/animations/withSequence) and [`withRepeat`](../api/animations/withRepeat).
+Currently, Reanimated exposes three modifiers: [`withDelay`](/docs/2.x/api/animations/withDelay), [`withSequence`](/docs/2.x/api/animations/withSequence) and [`withRepeat`](/docs/2.x/api/animations/withRepeat).
 As the name suggests, the `withDelay` modifier makes the provided animation to start with a given delay, the `withSequence` modifier allows a number of animations to be provided and will make them run one after another.
 Finally, the `withRepeat` modifier allows for the provided animation to be repeated several times.
 
@@ -233,7 +236,10 @@ Let us now exercise the use of modifiers in practice and build an animation that
 We start by rendering the actual view and defining the rotation Shared Value that we then use to run the animation:
 
 ```js
-import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 
 function WobbleExample(props) {
   const rotation = useSharedValue(0);
@@ -263,7 +269,7 @@ Then, in `useAnimatedStyle` we map that variable to the rotation attribute by ad
 Let us see how we can now make the rotation animate back and forth using modifiers, here is what we can put in the button's `onPress` handler:
 
 ```js
-rotation.value = withRepeat(withTiming(10), 6, true)
+rotation.value = withRepeat(withTiming(10), 6, true);
 ```
 
 The above code will cause the view to run six repetitions of timing animation between the initial state of the `rotation` value (that is `0`) and value `10`.
@@ -311,7 +317,7 @@ Such a change will cause each of the items to reposition and also change their d
 The change of the dimensions for each of the views may trigger further layout recalculations of the nested views down to the leaf nodes.
 As you can see, a single property change can trigger a lot of recomputation.
 It may perform just fine when we need to fire it once, but if we decided to run such computation during animation for every frame, the outcome may not be satisfactory especially on low-end devices.
-As we work to improve performance of complex layout updates in Reanimated 2, when you experience  issues that are the effects of heavy layout computation on every frame, we recommend that you try Reanimated's [Transition API](/react-native-reanimated/docs/1.x/transitions) or React Native's [LayoutAnimation API](https://reactnative.dev/docs/layoutanimation).
+As we work to improve performance of complex layout updates in Reanimated 2, when you experience issues that are the effects of heavy layout computation on every frame, we recommend that you try Reanimated's [Transition API](/docs/1.x/transitions) or React Native's [LayoutAnimation API](https://reactnative.dev/docs/layoutanimation).
 
 ## Animating Non-Style Properties
 
@@ -323,4 +329,4 @@ Thankfully, Reanimated allows for that, but as the properties do not belong to s
 For this purpose Reanimated exposes a separate hook called `useAnimatedProps`.
 It works in a very similar way to `useAnimatedStyle` but instead of expecting a method that returns the animated styles, we expect the returned object to contain properties that we want to animate.
 Then, in order to hook animated props to a view, we provide the resulting object as `animatedProps` property to the "Animated" version of the view type we want to render (e.g. `Animated.View`).
-Please check the documentation of the [`useAnimatedProps`](../api/hooks/useAnimatedProps) hook for usage examples.
+Please check the documentation of the [`useAnimatedProps`](/docs/2.x/api/hooks/useAnimatedProps) hook for usage examples.

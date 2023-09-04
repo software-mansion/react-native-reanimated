@@ -1,5 +1,5 @@
-import { Context, WorkletFunction, NativeEvent } from '../commonTypes';
-import { DependencyList } from './commonTypes';
+import type { Context, WorkletFunction, NativeEvent } from '../commonTypes';
+import type { DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
 
 interface Handler<T, TContext extends Context> extends WorkletFunction {
@@ -16,7 +16,7 @@ export interface GestureHandlers<T, TContext extends Context> {
   onFinish?: Handler<T, TContext>;
 }
 
-export const EventType = {
+const EventType = {
   UNDETERMINED: 0,
   FAILED: 1,
   BEGAN: 2,
@@ -25,7 +25,7 @@ export const EventType = {
   END: 5,
 };
 
-export interface GestureHandlerNativeEvent {
+interface GestureHandlerNativeEvent {
   handlerTag: number;
   numberOfPointers: number;
   state: (typeof EventType)[keyof typeof EventType];

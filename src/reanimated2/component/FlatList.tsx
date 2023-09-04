@@ -1,15 +1,12 @@
-import React, { Component, ForwardedRef, forwardRef } from 'react';
-import {
-  FlatList,
-  FlatListProps,
-  LayoutChangeEvent,
-  StyleSheet,
-} from 'react-native';
+import type { ForwardedRef } from 'react';
+import React, { Component, forwardRef } from 'react';
+import type { FlatListProps, LayoutChangeEvent } from 'react-native';
+import { FlatList, StyleSheet } from 'react-native';
 import { AnimatedView } from './View';
 import createAnimatedComponent from '../../createAnimatedComponent';
-import { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
-import { StyleProps } from '../commonTypes';
-import { AnimateProps } from '../helperTypes';
+import type { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
+import type { StyleProps } from '../commonTypes';
+import type { AnimateProps } from '../helperTypes';
 
 const AnimatedFlatList = createAnimatedComponent(FlatList as any) as any;
 
@@ -44,6 +41,8 @@ interface ReanimatedFlatListPropsWithLayout<T> extends FlatListProps<T> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
 }
 
+export type FlatListPropsWithLayout<T> = ReanimatedFlatListPropsWithLayout<T>;
+
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 declare class ReanimatedFlatListClass<T> extends Component<
   AnimateProps<ReanimatedFlatListPropsWithLayout<T>>
@@ -51,7 +50,7 @@ declare class ReanimatedFlatListClass<T> extends Component<
   getNode(): FlatList;
 }
 
-export interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
+interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
 }
 
@@ -64,6 +63,15 @@ export const ReanimatedFlatList = forwardRef(
         ? styles.horizontallyInverted
         : styles.verticallyInverted
       : undefined;
+
+    // Set default scrollEventThrottle, because user expects
+    // to have continuous scroll events and
+    // react-native defaults it to 50 for FlatLists.
+    // We set it to 1 so we have peace until
+    // there are 960 fps screens.
+    if (!('scrollEventThrottle' in restProps)) {
+      restProps.scrollEventThrottle = 1;
+    }
 
     const cellRenderer = React.useMemo(
       () => createCellRenderer(itemLayoutAnimation, cellStyle),

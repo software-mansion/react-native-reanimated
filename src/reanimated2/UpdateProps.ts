@@ -1,62 +1,33 @@
-/* global _updatePropsPaper _updatePropsFabric */
-import { MutableRefObject } from 'react';
-import { processColor } from './Colors';
-import {
-  AnimatedStyle,
-  ShadowNodeWrapper,
-  SharedValue,
-  StyleProps,
-} from './commonTypes';
-import { makeShareable, isConfigured } from './core';
-import { Descriptor } from './hook/commonTypes';
+import type { MutableRefObject } from 'react';
+import { processColorsInProps } from './Colors';
+import type { ShadowNodeWrapper, SharedValue, StyleProps } from './commonTypes';
+import type { AnimatedStyle } from './helperTypes';
+import type { Descriptor } from './hook/commonTypes';
 import { _updatePropsJS } from './js-reanimated';
 import { shouldBeUseWeb } from './PlatformChecker';
-import { ViewRefSet } from './ViewDescriptorsSet';
+import type { ViewRefSet } from './ViewDescriptorsSet';
 import { runOnUIImmediately } from './threads';
 
-// copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
-export const colorProps = [
-  'backgroundColor',
-  'borderBottomColor',
-  'borderColor',
-  'borderLeftColor',
-  'borderRightColor',
-  'borderTopColor',
-  'borderStartColor',
-  'borderEndColor',
-  'color',
-  'shadowColor',
-  'textDecorationColor',
-  'tintColor',
-  'textShadowColor',
-  'overlayColor',
-];
-
-export const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
-
-export let updateProps: (
+let updateProps: (
   viewDescriptor: SharedValue<Descriptor[]>,
-  updates: StyleProps | AnimatedStyle,
-  maybeViewRef: ViewRefSet<any> | undefined
+  updates: StyleProps | AnimatedStyle<any>,
+  maybeViewRef: ViewRefSet<any> | undefined,
+  isAnimatedProps?: boolean
 ) => void;
 
 if (shouldBeUseWeb()) {
-  updateProps = (_, updates, maybeViewRef) => {
+  updateProps = (_, updates, maybeViewRef, isAnimatedProps) => {
     'worklet';
     if (maybeViewRef) {
       maybeViewRef.items.forEach((item, _) => {
-        _updatePropsJS(updates, item);
+        _updatePropsJS(updates, item, isAnimatedProps);
       });
     }
   };
 } else {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
-    for (const key in updates) {
-      if (ColorProperties.indexOf(key) !== -1) {
-        updates[key] = processColor(updates[key]);
-      }
-    }
+    processColorsInProps(updates);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     global.UpdatePropsManager!.update(viewDescriptors, updates);
   };
@@ -64,10 +35,10 @@ if (shouldBeUseWeb()) {
 
 export const updatePropsJestWrapper = (
   viewDescriptors: SharedValue<Descriptor[]>,
-  updates: AnimatedStyle,
+  updates: AnimatedStyle<any>,
   maybeViewRef: ViewRefSet<any> | undefined,
-  animatedStyle: MutableRefObject<AnimatedStyle>,
-  adapters: ((updates: AnimatedStyle) => void)[]
+  animatedStyle: MutableRefObject<AnimatedStyle<any>>,
+  adapters: ((updates: AnimatedStyle<any>) => void)[]
 ): void => {
   adapters.forEach((adapter) => {
     adapter(updates);
@@ -88,12 +59,12 @@ const createUpdatePropsManager = global._IS_FABRIC
       // Fabric
       const operations: {
         shadowNodeWrapper: ShadowNodeWrapper;
-        updates: StyleProps | AnimatedStyle;
+        updates: StyleProps | AnimatedStyle<any>;
       }[] = [];
       return {
         update(
           viewDescriptors: SharedValue<Descriptor[]>,
-          updates: StyleProps | AnimatedStyle
+          updates: StyleProps | AnimatedStyle<any>
         ) {
           viewDescriptors.value.forEach((viewDescriptor) => {
             operations.push({
@@ -118,12 +89,12 @@ const createUpdatePropsManager = global._IS_FABRIC
       const operations: {
         tag: number;
         name: string;
-        updates: StyleProps | AnimatedStyle;
+        updates: StyleProps | AnimatedStyle<any>;
       }[] = [];
       return {
         update(
           viewDescriptors: SharedValue<Descriptor[]>,
-          updates: StyleProps | AnimatedStyle
+          updates: StyleProps | AnimatedStyle<any>
         ) {
           viewDescriptors.value.forEach((viewDescriptor) => {
             operations.push({
@@ -152,7 +123,7 @@ runOnUIImmediately(() => {
 export interface UpdatePropsManager {
   update(
     viewDescriptors: SharedValue<Descriptor[]>,
-    updates: StyleProps | AnimatedStyle
+    updates: StyleProps | AnimatedStyle<any>
   ): void;
   flush(): void;
 }

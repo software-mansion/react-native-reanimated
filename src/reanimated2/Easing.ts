@@ -46,9 +46,19 @@ import { Bezier } from './Bezier';
  * - [`out`](docs/easing.html#out) runs an easing function backwards
  */
 
-export type EasingFn = (t: number) => number;
+export type EasingFunction = (t: number) => number;
 
-export type EasingFactoryFn = { factory: () => EasingFn };
+/**
+ * @deprecated Please use `EasingFunction` type instead.
+ */
+export type EasingFn = EasingFunction;
+
+export type EasingFunctionFactory = { factory: () => EasingFunction };
+
+/**
+ * @deprecated Please use `EasingFunctionFactory` type instead.
+ */
+export type EasingFactoryFn = EasingFunctionFactory;
 /**
  * A linear function, `f(t) = t`. Position correlates to elapsed time one to
  * one.
@@ -99,7 +109,7 @@ function cubic(t: number): number {
  * n = 4: http://easings.net/#easeInQuart
  * n = 5: http://easings.net/#easeInQuint
  */
-function poly(n: number): EasingFn {
+function poly(n: number): EasingFunction {
   'worklet';
   return (t) => {
     'worklet';
@@ -147,7 +157,7 @@ function exp(t: number): number {
  *
  * http://easings.net/#easeInElastic
  */
-function elastic(bounciness = 1): EasingFn {
+function elastic(bounciness = 1): EasingFunction {
   'worklet';
   const p = bounciness * Math.PI;
   return (t) => {
@@ -232,7 +242,7 @@ function bezierFn(
 /**
  * Runs an easing function forwards.
  */
-function in_(easing: EasingFn): EasingFn {
+function in_(easing: EasingFunction): EasingFunction {
   'worklet';
   return easing;
 }
@@ -240,7 +250,7 @@ function in_(easing: EasingFn): EasingFn {
 /**
  * Runs an easing function backwards.
  */
-function out(easing: EasingFn): EasingFn {
+function out(easing: EasingFunction): EasingFunction {
   'worklet';
   return (t) => {
     'worklet';
@@ -253,7 +263,7 @@ function out(easing: EasingFn): EasingFn {
  * forwards for half of the duration, then backwards for the rest of the
  * duration.
  */
-function inOut(easing: EasingFn): EasingFn {
+function inOut(easing: EasingFunction): EasingFunction {
   'worklet';
   return (t) => {
     'worklet';
@@ -270,7 +280,7 @@ function inOut(easing: EasingFn): EasingFn {
  * steps in the animation, and the `roundToNextStep` parameter determines whether the animation
  * should start at the beginning or end of each step.
  */
-function steps(n = 10, roundToNextStep = true): EasingFn {
+function steps(n = 10, roundToNextStep = true): EasingFunction {
   'worklet';
   return (t) => {
     'worklet';

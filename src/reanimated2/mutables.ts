@@ -1,5 +1,5 @@
 import NativeReanimatedModule from './NativeReanimated';
-import { SharedValue, ShareableSyncDataHolderRef } from './commonTypes';
+import type { SharedValue, ShareableSyncDataHolderRef } from './commonTypes';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -7,7 +7,6 @@ import {
 } from './shareables';
 import { runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
-export { stopMapper } from './mappers';
 
 export function makeUIMutable<T>(
   initial: T,
@@ -98,7 +97,7 @@ export function makeMutable<T>(
     set _value(newValue: T) {
       if (NativeReanimatedModule.native) {
         throw new Error(
-          'Setting `_value` directly is only possible on the UI runtime'
+          '[Reanimated] Setting `_value` directly is only possible on the UI runtime.'
         );
       }
       value = newValue;
@@ -109,7 +108,7 @@ export function makeMutable<T>(
     get _value(): T {
       if (NativeReanimatedModule.native) {
         throw new Error(
-          'Reading from `_value` directly is only possible on the UI runtime'
+          '[Reanimated] Reading from `_value` directly is only possible on the UI runtime.'
         );
       }
       return value;
@@ -121,14 +120,16 @@ export function makeMutable<T>(
     },
     addListener: (id: number, listener: (value: T) => void) => {
       if (NativeReanimatedModule.native) {
-        throw new Error('adding listeners is only possible on the UI runtime');
+        throw new Error(
+          '[Reanimated] Adding listeners is only possible on the UI runtime.'
+        );
       }
       listeners!.set(id, listener);
     },
     removeListener: (id: number) => {
       if (NativeReanimatedModule.native) {
         throw new Error(
-          'removing listeners is only possible on the UI runtime'
+          '[Reanimated] Removing listeners is only possible on the UI runtime.'
         );
       }
       listeners!.delete(id);

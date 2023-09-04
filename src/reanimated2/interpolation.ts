@@ -78,7 +78,7 @@ function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
   if (typeof type === 'string') {
     if (!isExtrapolate(type)) {
       throw new Error(
-        `Reanimated: not supported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
+        `[Reanimated] Unsupported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
         interpolate(value, [inputRange], [outputRange], "clamp")`
       );
     }
@@ -93,7 +93,7 @@ function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
     (type.extrapolateRight && !isExtrapolate(type.extrapolateRight))
   ) {
     throw new Error(
-      `Reanimated: not supported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
+      `[Reanimated] Unsupported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
       interpolate(value, [inputRange], [outputRange], {
         extrapolateLeft: Extrapolation.CLAMP,
         extrapolateRight: Extrapolation.IDENTITY
@@ -151,8 +151,8 @@ export function interpolate(
 ): number {
   'worklet';
   if (input.length < 2 || output.length < 2) {
-    throw Error(
-      'Interpolation input and output should contain at least two values.'
+    throw new Error(
+      '[Reanimated] Interpolation input and output should contain at least two values.'
     );
   }
 
@@ -184,4 +184,15 @@ export function interpolate(
   }
 
   return internalInterpolate(x, narrowedInput, extrapolationConfig);
+}
+
+/**
+ * @param value value to be clamped
+ * @param min minimum allowed value
+ * @param max maximum allowed value
+ * Clamps given value within a range of values between a defined minimum bound and a maximum bound.
+ */
+export function clamp(value: number, min: number, max: number) {
+  'worklet';
+  return Math.min(Math.max(value, min), max);
 }
