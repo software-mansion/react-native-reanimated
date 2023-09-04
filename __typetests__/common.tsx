@@ -843,7 +843,7 @@ function TestUseAnimatedStyleStyle1() {
 }
 
 function TestUseAnimatedStyleStyle2() {
-  const sv = useSharedValue('0');
+  const sv = useSharedValue(true);
   // @ts-expect-error properly detects illegal type
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -862,7 +862,7 @@ function TestUseAnimatedStyleStyle3() {
 }
 
 function TestUseAnimatedStyleStyle4() {
-  const sv = useSharedValue({ width: '0' });
+  const sv = useSharedValue({ width: true });
   // @ts-expect-error properly detects illegal type
   const animatedStyle = useAnimatedStyle(() => {
     return sv.value;
@@ -1114,7 +1114,7 @@ function TestInlineStyles3() {
 function TestInlineStyles4() {
   const sv = useSharedValue('0');
   // @ts-expect-error properly detects illegal type
-  return <Animated.View style={{ width: sv }} />;
+  return <Animated.View style={{ width: true }} />;
 }
 
 function TestInlineStyles5() {
@@ -1123,7 +1123,7 @@ function TestInlineStyles5() {
 }
 
 function TestInlineStyles6() {
-  const sv = useSharedValue({ width: '0' });
+  const sv = useSharedValue({ width: true });
   // @ts-expect-error properly detects illegal type
   return <Animated.View style={sv} />;
 }

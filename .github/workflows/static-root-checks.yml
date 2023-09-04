@@ -28,7 +28,7 @@ jobs:
       - name: Check types
         run: yarn tsc --noEmit
       - name: Check api
-        run: yarn type:check-api
+        run: yarn type:check:all
       - name: Lint
         run: yarn lint:js
       - name: Find unused code
