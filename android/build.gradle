@@ -375,25 +375,11 @@ android {
                 }
             }
 
-            // UIImplementation
-            if (REACT_NATIVE_MINOR_VERSION <= 64) {
-                srcDirs += "src/reactNativeVersionPatch/UIImplementation/64"
-            } else {
-                srcDirs += "src/reactNativeVersionPatch/UIImplementation/latest"
-            }
-
             // ReanimatedUIManager & ReanimatedUIImplementation 
             if (REACT_NATIVE_MINOR_VERSION <= 70) {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/70"
             } else {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest"
-            }
-
-            // nativeHierarchyManager
-            if (REACT_NATIVE_MINOR_VERSION <= 62) {
-                srcDirs += "src/reactNativeVersionPatch/nativeHierarchyManager/62"
-            } else {
-                srcDirs += "src/reactNativeVersionPatch/nativeHierarchyManager/latest"
             }
         }
     }
