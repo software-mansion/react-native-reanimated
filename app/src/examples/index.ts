@@ -104,6 +104,7 @@ import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
+import KeyboardAvoidingViewExample from './KeyboardAvoidingView';
 
 interface Example {
   icon?: string;
@@ -242,6 +243,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📦',
     title: 'Bouncing box',
     screen: BouncingBoxExample,
+  },
+  KeyboardAvoidingViewExample: {
+    icon: '⌨️',
+    title: 'KeyboardAvoidingView',
+    screen: KeyboardAvoidingViewExample,
   },
   AnimatedKeyboardExample: {
     icon: '⌨️',
