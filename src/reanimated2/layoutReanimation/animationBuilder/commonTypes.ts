@@ -35,13 +35,12 @@ export type LayoutAnimation = {
 };
 
 export type AnimationFunction = (a?: any, b?: any, c?: any) => any; // this is just a temporary mock
-export interface EntryAnimationsValues
-  extends TargetLayoutAnimationsValues,
-    WindowDimensions {}
 
-export interface ExitAnimationsValues
-  extends CurrentLayoutAnimationsValues,
-    WindowDimensions {}
+export type EntryAnimationsValues = TargetLayoutAnimationsValues &
+  WindowDimensions;
+
+export type ExitAnimationsValues = CurrentLayoutAnimationsValues &
+  WindowDimensions;
 
 export type EntryExitAnimationFunction =
   | ((targetValues: EntryAnimationsValues) => LayoutAnimation)
@@ -50,10 +49,9 @@ export type EntryExitAnimationFunction =
 
 export type AnimationConfigFunction<T> = (targetValues: T) => LayoutAnimation;
 
-export interface LayoutAnimationsValues
-  extends CurrentLayoutAnimationsValues,
-    TargetLayoutAnimationsValues,
-    WindowDimensions {}
+export type LayoutAnimationsValues = CurrentLayoutAnimationsValues &
+  TargetLayoutAnimationsValues &
+  WindowDimensions;
 
 export interface SharedTransitionAnimationsValues
   extends LayoutAnimationsValues {

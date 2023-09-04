@@ -212,8 +212,8 @@ export class SharedTransition {
           const currentPropertyName = `current${PropertyName}` as const;
           const targetPropertyName = `target${PropertyName}` as const;
 
-          const currentValue: number = values[currentPropertyName];
-          const targetValue: number = values[targetPropertyName];
+          const currentValue = values[currentPropertyName];
+          const targetValue = values[targetPropertyName];
 
           newStyles[propertyName] =
             progress * (targetValue - currentValue) + currentValue;
