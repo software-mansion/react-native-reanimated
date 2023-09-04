@@ -2,10 +2,18 @@
 
 #include "FabricUtils.h"
 
-#include <react/renderer/debug/SystraceSection.h>
-#include <react/renderer/uimanager/UIManagerBinding.h>
-
 using namespace facebook::react;
+
+struct UIManagerPublic {
+  void *vtable;
+  SharedComponentDescriptorRegistry componentDescriptorRegistry_;
+  UIManagerDelegate *delegate_;
+  UIManagerAnimationDelegate *animationDelegate_{nullptr};
+  RuntimeExecutor const runtimeExecutor_{};
+  ShadowTreeRegistry shadowTreeRegistry_{};
+  BackgroundExecutor const backgroundExecutor_{};
+  ContextContainer::Shared contextContainer_;
+};
 
 namespace reanimated {
 

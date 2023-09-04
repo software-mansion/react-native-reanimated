@@ -167,6 +167,8 @@ def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 def reactNativeThirdParty = new File("$reactNativeRootDir/ReactAndroid/src/main/jni/third-party")
 def reactNativeAndroidDownloadDir = new File("$reactNativeRootDir/ReactAndroid/build/downloads")
 
+def prefabHeadersDir = project.file("$buildDir/prefab-headers/reanimated")
+
 def JS_RUNTIME = {
     // Override JS runtime with environment variable
     if (System.getenv("JS_RUNTIME")) {
@@ -246,11 +248,17 @@ android {
         ndkVersion rootProject.ext.ndkVersion
     }
 
-    if (REACT_NATIVE_MINOR_VERSION >= 71) {
-        buildFeatures {
-            prefab true
+    buildFeatures {
+        prefab true
+        prefabPublishing true
+    }
+
+    prefab {
+        reanimated {
+            headers prefabHeadersDir.absolutePath
         }
     }
+
     defaultConfig {
         minSdkVersion safeExtGet("minSdkVersion", 16)
         targetSdkVersion safeExtGet("targetSdkVersion", 30)
@@ -447,6 +455,20 @@ def assertLatestReactNativeWithNewArchitecture = task assertLatestReactNativeWit
     }
 }
 
+task prepareHeadersForPrefab(type: Copy) {
+    from("$projectDir/src/main/cpp")
+    from("$projectDir/../Common/cpp/AnimatedSensor")
+    from("$projectDir/../Common/cpp/Fabric")
+    from("$projectDir/../Common/cpp/LayoutAnimations")
+    from("$projectDir/../Common/cpp/NativeModules")
+    from("$projectDir/../Common/cpp/ReanimatedRuntime")
+    from("$projectDir/../Common/cpp/Registries")
+    from("$projectDir/../Common/cpp/SharedItems")
+    from("$projectDir/../Common/cpp/Tools")
+    include("*.h")
+    into(prefabHeadersDir)
+}
+
 tasks.preBuild {
     dependsOn assertNoMultipleInstances, assertLatestReactNativeWithNewArchitecture
 }
@@ -466,6 +488,7 @@ task printVersions {
 task createNativeDepsDirectories() {
     downloadsDir.mkdirs()
     thirdPartyNdkDir.mkdirs()
+    prefabHeadersDir.mkdirs()
 }
 
 def resolveTaskFactory(String taskName, String artifactLocalName, File reactNativeAndroidDownloadDir, File reanimatedDownloadDir) {
@@ -904,6 +927,8 @@ afterEvaluate {
         nativeBuildDependsOn(extractAARHeaders)
         nativeBuildDependsOn(extractSOFiles)
     }
+
+    preBuild.dependsOn(prepareHeadersForPrefab)
 
     tasks.forEach({ task ->
         if (task.name.contains("JniLibFolders")) {

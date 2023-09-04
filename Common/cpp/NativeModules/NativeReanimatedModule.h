@@ -21,6 +21,10 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "PropsRegistry.h"
+#include "ReanimatedCommitHook.h"
+#if REACT_NATIVE_MINOR_VERSION >= 73
+#include "ReanimatedMountHook.h"
+#endif
 #endif
 
 namespace reanimated {
@@ -122,9 +126,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue);
 
-  void setUIManager(const std::shared_ptr<UIManager> &uiManager);
-
-  void setPropsRegistry(const std::shared_ptr<PropsRegistry> &propsRegistry);
+  void initializeFabric(const std::shared_ptr<UIManager> &uiManager);
 #endif
 
   jsi::Value registerSensor(
@@ -189,6 +191,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       operationsInBatch_; // TODO: refactor std::pair to custom struct
 
   std::shared_ptr<PropsRegistry> propsRegistry_;
+  std::shared_ptr<ReanimatedCommitHook> commitHook_;
+#if REACT_NATIVE_MINOR_VERSION >= 73
+  std::shared_ptr<ReanimatedMountHook> mountHook_;
+#endif
 
   std::vector<Tag> tagsToRemove_; // from `propsRegistry_`
 #else

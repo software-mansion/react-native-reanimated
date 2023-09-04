@@ -1,7 +1,9 @@
 #include "NativeReanimatedModule.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
+#if REACT_NATIVE_MINOR_VERSION >= 72
 #include <react/renderer/core/TraitCast.h>
+#endif
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 #endif
@@ -13,7 +15,6 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
-#include "PropsRegistry.h"
 #include "ReanimatedCommitMarker.h"
 #include "ShadowTreeCloner.h"
 #endif
@@ -66,6 +67,7 @@ NativeReanimatedModule::NativeReanimatedModule(
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
+      propsRegistry_(std::make_shared<PropsRegistry>()),
 #else
       obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
       configurePropsPlatformFunction_(
@@ -469,7 +471,6 @@ void NativeReanimatedModule::performOperations() {
   jsi::Runtime &rt = uiWorkletRuntime_->getJSIRuntime();
 
   {
-    assert(propsRegistry_ != nullptr);
     auto lock = propsRegistry_->createLock();
 
     // remove recently unmounted ShadowNodes from PropsRegistry
@@ -526,7 +527,8 @@ void NativeReanimatedModule::performOperations() {
     ReanimatedCommitMarker commitMarker;
 
     shadowTree.commit(
-        [&](RootShadowNode const &oldRootShadowNode) {
+        [&](RootShadowNode const &oldRootShadowNode)
+            -> RootShadowNode::Unshared {
           auto rootNode =
               oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
@@ -535,6 +537,15 @@ void NativeReanimatedModule::performOperations() {
           for (const auto &[shadowNode, props] : copiedOperationsQueue) {
             const ShadowNodeFamily &family = shadowNode->getFamily();
             react_native_assert(family.getSurfaceId() == surfaceId_);
+
+#if REACT_NATIVE_MINOR_VERSION >= 73
+            // Fix for catching nullptr returned from commit hook was introduced
+            // in 0.72.4 but we have only check for minor version of React
+            // Native so enable that optimization in React Native >= 0.73
+            if (propsRegistry_->shouldReanimatedSkipCommit()) {
+              return nullptr;
+            }
+#endif
 
             auto newRootNode = shadowTreeCloner.cloneWithNewProps(
                 rootNode, family, RawProps(rt, *props));
@@ -552,7 +563,15 @@ void NativeReanimatedModule::performOperations() {
 
           return newRoot;
         },
-        {/* default commit options */});
+        { /* .enableStateReconciliation = */
+          false,
+#if REACT_NATIVE_MINOR_VERSION >= 72
+              /* .mountSynchronously = */ true,
+#endif
+              /* .shouldYield = */ [this]() {
+                return propsRegistry_->shouldReanimatedSkipCommit();
+              }
+        });
   });
 }
 
@@ -620,14 +639,14 @@ jsi::Value NativeReanimatedModule::measure(
   return result;
 }
 
-void NativeReanimatedModule::setUIManager(
+void NativeReanimatedModule::initializeFabric(
     const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
-}
-
-void NativeReanimatedModule::setPropsRegistry(
-    const std::shared_ptr<PropsRegistry> &propsRegistry) {
-  propsRegistry_ = propsRegistry;
+  commitHook_ =
+      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
+#if REACT_NATIVE_MINOR_VERSION >= 73
+  mountHook_ = std::make_shared<ReanimatedMountHook>(propsRegistry, uiManager_);
+#endif
 }
 #endif // RCT_NEW_ARCH_ENABLED
 
