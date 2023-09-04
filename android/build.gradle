@@ -438,7 +438,7 @@ def assertLatestReactNativeWithNewArchitecture = task assertLatestReactNativeWit
     onlyIf { IS_NEW_ARCHITECTURE_ENABLED && REANIMATED_MAJOR_VERSION == 3 && REACT_NATIVE_MINOR_VERSION < 72 }
     doFirst {
         throw new GradleException(
-            "\n[Reanimated] Outdated version of React Native for New Architecture. Reanimated " + REANIMATED_VERSION + " supports the New Architecture on React Native 0.72.0+. See https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#outdated-version-of-react-native-for-new-architecture for more information."
+            "[Reanimated] Outdated version of React Native for New Architecture. Reanimated " + REANIMATED_VERSION + " supports the New Architecture on React Native 0.72.0+. See https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#outdated-version-of-react-native-for-new-architecture for more information."
         )
     }
 }
@@ -446,7 +446,7 @@ def assertLatestReactNativeWithNewArchitecture = task assertLatestReactNativeWit
 def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
     onlyIf { REACT_NATIVE_MINOR_VERSION < 66 }
     doFirst {
-        throw new GradleException("\n[Reanimated] Unsupported React Native version. Please use 0.66 or newer.")
+        throw new GradleException("[Reanimated] Unsupported React Native version. Please use 0.66 or newer.")
     }
 }
 
