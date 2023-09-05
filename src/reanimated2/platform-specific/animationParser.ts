@@ -1,4 +1,4 @@
-export interface TransformProperties {
+export interface ReanimatedWebTransformProperties {
   translateX?: string;
   translateY?: string;
   rotate?: string;
@@ -14,7 +14,7 @@ export interface TransformProperties {
 
 interface AnimationStyle {
   opacity?: number;
-  transform?: TransformProperties[];
+  transform?: ReanimatedWebTransformProperties[];
 }
 
 export interface AnimationData {
@@ -23,9 +23,7 @@ export interface AnimationData {
   duration: number;
 }
 
-export function parseAnimationObjectToKeyframe(
-  animationObject: AnimationData
-): string {
+export function parseAnimationObjectToKeyframe(animationObject: AnimationData) {
   let keyframe = `@keyframes ${animationObject.name} { `;
 
   for (const [timestamp, style] of Object.entries(animationObject.style)) {
@@ -39,7 +37,7 @@ export function parseAnimationObjectToKeyframe(
 
       keyframe += `transform:`;
 
-      values.forEach((value: TransformProperties) => {
+      values.forEach((value: ReanimatedWebTransformProperties) => {
         for (const [
           transformProperty,
           transformPropertyValue,

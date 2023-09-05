@@ -1,9 +1,8 @@
 import { parseAnimationObjectToKeyframe } from '../animationParser';
-import type { AnimationData } from '../animationParser';
 
 const DEFAULT_ROLL_TIME = 0.3;
 
-export const RollInData: Record<string, AnimationData> = {
+export const RollInData = {
   RollInLeft: {
     name: 'RollInLeft',
     style: {
@@ -25,7 +24,7 @@ export const RollInData: Record<string, AnimationData> = {
   },
 };
 
-export const RollOutData: Record<string, AnimationData> = {
+export const RollOutData = {
   RollOutLeft: {
     name: 'RollOutLeft',
     style: {

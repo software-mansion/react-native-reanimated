@@ -73,7 +73,7 @@ import { handleLayoutTransition } from './reanimated2/platform-specific/webTrans
 import type { TransitionConfig } from './reanimated2/platform-specific/webTransitions';
 
 import { Animations } from './reanimated2/platform-specific/webAnimationsData';
-import type { AnimationTypes } from './reanimated2/platform-specific/webAnimationsData';
+import type { AnimationNames } from './reanimated2/platform-specific/webAnimationsData';
 
 const IS_WEB = isWeb();
 
@@ -615,9 +615,10 @@ export default function createAnimatedComponent(
 
     componentDidUpdate(
       prevProps: AnimatedComponentProps<InitialComponentProps>,
-      prevState: Readonly<unknown>,
+      _prevState: Readonly<unknown>,
+      // @typescript-eslint/no-explicit-any This type comes straight from React
       snapshot?: any
-    ): void {
+    ) {
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
       this._attachInlineProps();
@@ -630,8 +631,8 @@ export default function createAnimatedComponent(
         }
 
         const transitionConfig: TransitionConfig = {
-          dx: snapshot.x - rect.x,
-          dy: snapshot.y - rect.y,
+          translateX: snapshot.x - rect.x,
+          translateY: snapshot.y - rect.y,
           scaleX: snapshot.width / rect.width,
           scaleY: snapshot.height / rect.height,
           reversed: false, // This field is used only in `SequencedTransition`, so by default it will by false
@@ -854,7 +855,7 @@ export default function createAnimatedComponent(
         duration: getDurationFromConfig(
           config,
           isLayoutTransition,
-          initialAnimationName as AnimationTypes
+          initialAnimationName as AnimationNames
         ),
         delay: getDelayFromConfig(config),
         easing: getEasingFromConfig(config),

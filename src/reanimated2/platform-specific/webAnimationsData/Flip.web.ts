@@ -1,9 +1,8 @@
 import { parseAnimationObjectToKeyframe } from '../animationParser';
-import type { AnimationData } from '../animationParser';
 
 const DEFAULT_FLIP_TIME = 0.3;
 
-export const FlipInData: Record<string, AnimationData> = {
+export const FlipInData = {
   FlipInYRight: {
     name: 'FlipInYRight',
     style: {
@@ -123,7 +122,7 @@ export const FlipInData: Record<string, AnimationData> = {
   },
 };
 
-export const FlipOutData: Record<string, AnimationData> = {
+export const FlipOutData = {
   FlipOutYRight: {
     name: 'FlipOutYRight',
     style: {

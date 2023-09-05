@@ -1,9 +1,8 @@
 import { parseAnimationObjectToKeyframe } from '../animationParser';
-import type { AnimationData } from '../animationParser';
 
 const DEFAULT_LIGHTSPEED_TIME = 0.3;
 
-export const LightSpeedInData: Record<string, AnimationData> = {
+export const LightSpeedInData = {
   LightSpeedInRight: {
     name: 'LightSpeedInRight',
     style: {
@@ -33,7 +32,7 @@ export const LightSpeedInData: Record<string, AnimationData> = {
   },
 };
 
-export const LightSpeedOutData: Record<string, AnimationData> = {
+export const LightSpeedOutData = {
   LightSpeedOutRight: {
     name: 'LightSpeedOutRight',
     style: {

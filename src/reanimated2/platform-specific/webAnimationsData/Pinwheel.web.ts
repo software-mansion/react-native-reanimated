@@ -1,9 +1,8 @@
 import { parseAnimationObjectToKeyframe } from '../animationParser';
-import type { AnimationData } from '../animationParser';
 
 const DEFAULT_PINWHEEL_TIME = 0.3;
 
-export const PinwheelData: Record<string, AnimationData> = {
+export const PinwheelData = {
   PinwheelIn: {
     name: 'PinwheelIn',
     style: {

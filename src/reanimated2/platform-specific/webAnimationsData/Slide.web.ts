@@ -1,9 +1,8 @@
 import { parseAnimationObjectToKeyframe } from '../animationParser';
-import type { AnimationData } from '../animationParser';
 
 const DEFAULT_SLIDE_TIME = 0.3;
 
-export const SlideInData: Record<string, AnimationData> = {
+export const SlideInData = {
   SlideInRight: {
     name: 'SlideInRight',
     style: {
@@ -41,7 +40,7 @@ export const SlideInData: Record<string, AnimationData> = {
   },
 };
 
-export const SlideOutData: Record<string, AnimationData> = {
+export const SlideOutData = {
   SlideOutRight: {
     name: 'SlideOutRight',
     style: {

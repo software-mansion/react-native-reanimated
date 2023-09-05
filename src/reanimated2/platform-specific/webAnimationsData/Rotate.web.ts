@@ -1,9 +1,8 @@
 import { parseAnimationObjectToKeyframe } from '../animationParser';
-import type { AnimationData } from '../animationParser';
 
 const DEFAULT_ROTATE_TIME = 0.3;
 
-export const RotateInData: Record<string, AnimationData> = {
+export const RotateInData = {
   RotateInDownLeft: {
     name: 'RotateInDownLeft',
     style: {
@@ -73,7 +72,7 @@ export const RotateInData: Record<string, AnimationData> = {
   },
 };
 
-export const RotateOutData: Record<string, AnimationData> = {
+export const RotateOutData = {
   RotateOutDownLeft: {
     name: 'RotateOutDownLeft',
     style: {

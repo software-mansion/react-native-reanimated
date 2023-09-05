@@ -1,9 +1,8 @@
 import { parseAnimationObjectToKeyframe } from '../animationParser';
-import type { AnimationData } from '../animationParser';
 
 const DEFAULT_BOUNCE_TIME = 0.6;
 
-export const BounceInData: Record<string, AnimationData> = {
+export const BounceInData = {
   BounceIn: {
     name: 'BounceIn',
     style: {
@@ -62,7 +61,7 @@ export const BounceInData: Record<string, AnimationData> = {
   },
 };
 
-export const BounceOutData: Record<string, AnimationData> = {
+export const BounceOutData = {
   BounceOut: {
     name: 'BounceOut',
     style: {

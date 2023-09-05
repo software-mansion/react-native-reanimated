@@ -1,9 +1,8 @@
 import { parseAnimationObjectToKeyframe } from '../animationParser';
-import type { AnimationData } from '../animationParser';
 
 const DEFAULT_STRETCH_TIME = 0.3;
 
-export const StretchInData: Record<string, AnimationData> = {
+export const StretchInData = {
   StretchInX: {
     name: 'StretchInX',
     style: {
@@ -23,7 +22,7 @@ export const StretchInData: Record<string, AnimationData> = {
   },
 };
 
-export const StretchOutData: Record<string, AnimationData> = {
+export const StretchOutData = {
   StretchOutX: {
     name: 'StretchOutX',
     style: {

@@ -1,9 +1,8 @@
 import { parseAnimationObjectToKeyframe } from '../animationParser';
-import type { AnimationData } from '../animationParser';
 
 const DEFAULT_FADE_TIME = 0.3;
 
-export const FadeInData: Record<string, AnimationData> = {
+export const FadeInData = {
   FadeIn: {
     name: 'FadeIn',
     style: {
@@ -58,7 +57,7 @@ export const FadeInData: Record<string, AnimationData> = {
   },
 };
 
-export const FadeOutData: Record<string, AnimationData> = {
+export const FadeOutData = {
   FadeOut: {
     name: 'FadeOut',
     style: {

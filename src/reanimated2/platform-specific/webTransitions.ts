@@ -13,33 +13,35 @@ export enum TransitionType {
 }
 
 export interface TransitionConfig {
-  dx: number;
-  dy: number;
+  translateX: number;
+  translateY: number;
   scaleX: number;
   scaleY: number;
   reversed?: boolean;
 }
 
 function LinearTransition(name: string, transitionConfig: TransitionConfig) {
-  const { dx, dy, scaleX, scaleY } = transitionConfig;
+  const { translateX, translateY, scaleX, scaleY } = transitionConfig;
 
   return `@keyframes ${name} {
                   0% {
-                    transform: translateX(${dx}px) translateY(${dy}px) scale(${scaleX},${scaleY});
+                    transform: translateX(${translateX}px) translateY(${translateY}px) scale(${scaleX},${scaleY});
                   }
                 }`;
 }
 
 function SequencedTransition(name: string, transitionConfig: TransitionConfig) {
-  const { dx, dy, scaleX, scaleY, reversed } = transitionConfig;
+  const { translateX, translateY, scaleX, scaleY, reversed } = transitionConfig;
 
-  const translate = `translate${reversed ? 'X' : 'Y'}(${reversed ? dx : dy}px)`;
+  const translate = `translate${reversed ? 'X' : 'Y'}(${
+    reversed ? translateX : translateY
+  }px)`;
   const scaleValue = reversed ? `1, ${scaleX}` : `${scaleY}, 1`;
 
   // TODO: Change proportions
   return `@keyframes ${name} {
                 0% {
-                  transform: translateX(${dx}px) translateY(${dy}px) scale(${scaleX}, ${scaleY});
+                  transform: translateX(${translateX}px) translateY(${translateY}px) scale(${scaleX}, ${scaleY});
                 }
                 50% {
                   transform: ${translate} scale(${scaleValue});
@@ -51,16 +53,16 @@ function SequencedTransition(name: string, transitionConfig: TransitionConfig) {
 }
 
 function FadingTransition(name: string, transitionConfig: TransitionConfig) {
-  const { dx, dy, scaleX, scaleY } = transitionConfig;
+  const { translateX, translateY, scaleX, scaleY } = transitionConfig;
 
   return `@keyframes ${name} {
                 0% {
                   opacity: 1;
-                  transform: translateX(${dx}px) translateY(${dy}px) scale(${scaleX}, ${scaleY});
+                  transform: translateX(${translateX}px) translateY(${translateY}px) scale(${scaleX}, ${scaleY});
                 }
                 20%{
                   opacity: 0;
-                  transform: translateX(${dx}px) translateY(${dy}px) scale(${scaleX}, ${scaleY});
+                  transform: translateX(${translateX}px) translateY(${translateY}px) scale(${scaleX}, ${scaleY});
                 }
                 60% {
                   opacity: 0;
@@ -77,7 +79,7 @@ function FadingTransition(name: string, transitionConfig: TransitionConfig) {
  * Creates transition of given type, appends it to stylesheet and returns keyframe name.
  *
  * @param transitionType Type of transition (e.g. LINEAR).
- * @param transitionConfig Object containing data for transforms (dx, scaleX,...).
+ * @param transitionConfig Object containing data for transforms (translateX, scaleX,...).
  * @returns Keyframe name that represents transition.
  */
 export function TransitionGenerator(
@@ -112,7 +114,7 @@ export function handleLayoutTransition(
   element: HTMLElement,
   animationConfig: AnimationConfig,
   transitionConfig: TransitionConfig
-): void {
+) {
   const { animationName } = animationConfig;
 
   let animationType;
@@ -134,7 +136,7 @@ export function handleLayoutTransition(
 
   animationConfig.animationName = TransitionGenerator(
     animationType,
-    transitionConfig as TransitionConfig
+    transitionConfig
   );
 
   setElementAnimation(element, animationConfig);

@@ -1,7 +1,7 @@
 import { Animations, AnimationsData, WebEasings } from './webAnimationsData';
-import type { AnimationTypes } from './webAnimationsData';
+import type { AnimationNames } from './webAnimationsData';
 import { parseAnimationObjectToKeyframe } from './animationParser';
-import type { TransformProperties } from './animationParser';
+import type { ReanimatedWebTransformProperties } from './animationParser';
 import type { TransformsStyle } from 'react-native';
 import type {
   BaseAnimationBuilder,
@@ -9,7 +9,7 @@ import type {
   ILayoutAnimationBuilder,
 } from '../layoutReanimation';
 
-export const WEB_ANIMATIONS_ID = 'webAnimationsStyle';
+export const WEB_ANIMATIONS_ID = 'ReanimatedWebAnimationsStyle';
 
 export interface AnimationConfig {
   animationName: string;
@@ -39,7 +39,7 @@ type ConfigType =
  *  Creates `HTMLStyleElement`, inserts it into DOM and then inserts CSS rules into the stylesheet.
  *  If style element already exists, nothing happens.
  */
-export function insertWebAnimations(): void {
+export function insertWebAnimations() {
   if (document.getElementById(WEB_ANIMATIONS_ID) !== null) {
     return;
   }
@@ -49,8 +49,8 @@ export function insertWebAnimations(): void {
 
   document.head.appendChild(style);
 
-  for (const animationType in Animations) {
-    style.sheet?.insertRule(Animations[animationType as AnimationTypes].style);
+  for (const animationName in Animations) {
+    style.sheet?.insertRule(Animations[animationName as AnimationNames].style);
   }
 }
 
@@ -64,7 +64,7 @@ export function insertWebAnimations(): void {
 export function createAnimationWithExistingTransform(
   animationName: string,
   existingTransform: NonNullable<TransformsStyle['transform']>
-): string {
+) {
   if (!(animationName in Animations)) {
     return '';
   }
@@ -75,16 +75,14 @@ export function createAnimationWithExistingTransform(
   newAnimationData.name = keyframeName;
 
   if (typeof existingTransform === 'string') {
-    throw new Error(
-      '[Reanimated] String transform is not currently supported.'
-    );
+    throw new Error('[Reanimated] String transform is currently unsupported.');
   }
 
-  type TransformPropType = (typeof existingTransform)[number];
+  type RNTransformProp = (typeof existingTransform)[number];
 
   const newTransform = existingTransform.map(
-    (transformProp: TransformPropType) => {
-      const newTransformProp: TransformProperties = {};
+    (transformProp: RNTransformProp) => {
+      const newTransformProp: ReanimatedWebTransformProperties = {};
       for (const [key, value] of Object.entries(transformProp)) {
         if (key.includes('translate')) {
           // @ts-ignore After many trials we decided to ignore this error - it says that we cannot use 'key' to index this object.
@@ -172,7 +170,7 @@ export function getDelayFromConfig(config: ConfigType): number {
 export function getDurationFromConfig(
   config: ConfigType,
   isLayoutTransition: boolean,
-  animationName: AnimationTypes
+  animationName: AnimationNames
 ): number {
   const defaultDuration = isLayoutTransition
     ? 0.3
@@ -199,11 +197,11 @@ export function getCallbackFromConfig(config: ConfigType): (() => void) | null {
   return config.callbackV !== undefined ? config.callbackV : null;
 }
 
-export function getRandomDelay(maxDelay = 1000): number {
+export function getRandomDelay(maxDelay = 1000) {
   return Math.floor(Math.random() * (maxDelay + 1)) / 1000;
 }
 
-export function areDOMRectsEqual(r1: DOMRect, r2: DOMRect): boolean {
+export function areDOMRectsEqual(r1: DOMRect, r2: DOMRect) {
   return JSON.stringify(r1) === JSON.stringify(r2);
 }
 
@@ -225,7 +223,7 @@ export function setElementAnimation(
 export function handleEnteringAnimation(
   element: HTMLElement,
   animationConfig: AnimationConfig
-): void {
+) {
   const { delay } = animationConfig;
 
   // If `delay` === 0, value passed to `setTimeout` will be 0. However, `setTimeout` executes after given amount of time, not exactly after that time
@@ -244,7 +242,7 @@ export function handleEnteringAnimation(
 export function handleExitingAnimation(
   element: HTMLElement,
   animationConfig: AnimationConfig
-): void {
+) {
   const parent = element.offsetParent;
   const tmpElement = element.cloneNode() as HTMLElement;
 
@@ -252,7 +250,7 @@ export function handleExitingAnimation(
   // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
   // Using element.cloneNode(true) doesn't solve the problem, because it creates copy of children and we won't be able to set their animations
   //
-  // This loop works because appendChild() moves element into its new parent instead of copying it and then inserting copy into new parent
+  // This loop works because appendChild() moves element into its new parent instead of copying it
   while (element.firstChild) {
     tmpElement.appendChild(element.firstChild);
   }

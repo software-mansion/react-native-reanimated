@@ -1,9 +1,8 @@
 import { parseAnimationObjectToKeyframe } from '../animationParser';
-import type { AnimationData } from '../animationParser';
 
 const DEFAULT_ZOOM_TIME = 0.3;
 
-export const ZoomInData: Record<string, AnimationData> = {
+export const ZoomInData = {
   ZoomIn: {
     name: 'ZoomIn',
     style: {
@@ -77,7 +76,7 @@ export const ZoomInData: Record<string, AnimationData> = {
   },
 };
 
-export const ZoomOutData: Record<string, AnimationData> = {
+export const ZoomOutData = {
   ZoomOut: {
     name: 'ZoomOut',
     style: {
