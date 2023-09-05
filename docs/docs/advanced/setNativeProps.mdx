@@ -1,0 +1,73 @@
+---
+sidebar_position: 7
+---
+
+# setNativeProps
+
+`setNativeProps` lets you directly update component properties on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+
+:::caution
+
+`setNativeProps` is an escape hatch for specific edge-cases.
+
+You should always reach for [`useAnimatedStyle`](docs/core/useAnimatedStyle) and [`useAnimatedProps`](docs/core/useAnimatedProps) first when animating styles or properties.
+
+:::
+
+## Reference
+
+```jsx
+import { setNativeProps } from 'react-native-reanimated';
+
+function App() {
+  const animatedRef = useAnimatedRef();
+
+  const handlePress = () => {
+    runOnUI(() => {
+      // highlight-start
+      setNativeProps(animatedRef, {
+        opacity: 0,
+      });
+      // highlight-end
+      // ...
+    })();
+  };
+
+  return <Animated.View ref={animatedRef} />;
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function setNativeProps<T extends Component>(
+  animatedRef: AnimatedRef<T>,
+  updates: StyleProps
+) => void;
+```
+
+</details>
+
+### Arguments
+
+#### `animatedRef`
+
+An [animated ref](/docs/core/useAnimatedRef#returns) connected to the component you'd want to get the measurements from. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
+
+#### `updates`
+
+An object with properties you want to animate.
+
+### Returns
+
+`setNativeProps` returns `undefined`.
+
+## Example
+
+import SetNativeProps from '@site/src/examples/SetNativeProps';
+import SetNativePropsSrc from '!!raw-loader!@site/src/examples/SetNativeProps';
+
+<InteractiveExample src={SetNativePropsSrc} component={<SetNativeProps />} />
+
+## Remarks

@@ -1,58 +1,41 @@
+import React from 'react';
 import Animated, {
   runOnJS,
+  runOnUI,
   setNativeProps,
   useAnimatedRef,
+  useSharedValue,
+  withSpring,
 } from 'react-native-reanimated';
-import { Button, StyleSheet } from 'react-native';
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-  TextInput,
-} from 'react-native-gesture-handler';
+import { Button, StyleSheet, TextInput, View } from 'react-native';
 
-import React from 'react';
+// const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
-const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+export default function Example() {
+  const width = useSharedValue(100);
 
-function delay(ms: number) {
-  const start = performance.now();
-  while (performance.now() - start < ms) {}
-}
-
-export default function SetNativePropsExample() {
-  const [text, setText] = React.useState('Hello');
-
+  const [text, onChangeText] = React.useState(
+    'This animation clears the input'
+  );
   const animatedRef = useAnimatedRef<TextInput>();
 
-  const send = () => {
-    delay(500);
-    console.log('SEND', text);
-    setText(''); // calling setText affects the JS state but doesn't update the native view
+  const handlePress = () => {
+    width.value = withSpring(width.value + 50, {}, () => {
+      runOnJS(onChangeText)('');
+    });
   };
 
-  const tap = Gesture.Tap().onEnd(() => {
-    'worklet';
-    setNativeProps(animatedRef, {
-      text: '',
-      backgroundColor: `hsl(${Math.random() * 360}, 100%, 50%)`,
-    });
-    runOnJS(send)();
-  });
-
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <AnimatedTextInput
-        value={text}
-        onChangeText={setText}
-        style={styles.input}
+    <View style={styles.container}>
+      <Animated.View style={{ ...styles.box, width }} />
+      <TextInput
         ref={animatedRef}
-        autoFocus
+        style={styles.input}
+        onChangeText={onChangeText}
+        value={text}
       />
-      <GestureDetector gesture={tap}>
-        <Button title="Send" />
-      </GestureDetector>
-    </GestureHandlerRootView>
+      <Button title="Run animation" onPress={handlePress} />
+    </View>
   );
 }
 
@@ -62,9 +45,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  box: { width: 100, height: 100, backgroundColor: 'red' },
   input: {
-    width: 250,
-    padding: 3,
+    height: 40,
+    margin: 12,
     borderWidth: 1,
+    padding: 10,
   },
 });
