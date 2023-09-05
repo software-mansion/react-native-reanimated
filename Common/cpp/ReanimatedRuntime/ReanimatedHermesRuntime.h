@@ -16,7 +16,9 @@
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
 
+#include <atomic>
 #include <memory>
+#include <string>
 #include <thread>
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
@@ -116,7 +118,8 @@ class ReanimatedHermesRuntime
  public:
   ReanimatedHermesRuntime(
       std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
-      std::shared_ptr<MessageQueueThread> jsQueue);
+      const std::shared_ptr<MessageQueueThread> &jsQueue,
+      const std::string &name);
   ~ReanimatedHermesRuntime();
 
  private:

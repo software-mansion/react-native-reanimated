@@ -44,6 +44,8 @@ import Animated, {
   measure,
   scrollTo,
   setGestureState,
+  isSharedValue,
+  makeShareableCloneRecursive,
 } from '..';
 
 class Path extends React.Component<{ fill?: string }> {
@@ -80,6 +82,7 @@ function CreateAnimatedComponentTest1() {
   return (
     <AnimatedPath
       animatedProps={animatedProps}
+      // @ts-expect-error `style` was not defined in `Path`'s props
       style={{ backgroundColor: 'red' }}
     />
   );
@@ -219,6 +222,13 @@ function MakeMutableTest() {
   return <Animated.View style={styles.container} />;
 }
 
+// makeShareableCloneRecursive
+function MakeShareableCloneRecursiveTest() {
+  const mut = makeShareableCloneRecursive(0);
+  const mut2 = makeShareableCloneRecursive(true);
+  const mut3 = makeShareableCloneRecursive({ foo: 'bar' });
+}
+
 /**
  * Reanimated 2 Hooks
  */
@@ -235,6 +245,18 @@ function SharedValueTest() {
   }
 
   return <Animated.View style={styles.container} />;
+}
+
+// isSharedValue
+function IsSharedValueTest() {
+  const sv = useSharedValue(0);
+
+  isSharedValue(null);
+  isSharedValue(undefined);
+  isSharedValue(42);
+  isSharedValue('foo');
+  isSharedValue({ foo: 'bar' });
+  isSharedValue(sv);
 }
 
 // useAnimatedStyle
@@ -293,6 +315,9 @@ function AnimatedScrollHandlerTest() {
   const scrollHandler = useAnimatedScrollHandler((event) => {
     translationY.value = event.contentOffset.y;
   });
+  // We allow using colors in useAnimatedStyle but it's not a part
+  // of a public API hence we expect an error here.
+  // @ts-expect-error color cannot be a number
   const stylez = useAnimatedStyle(() => {
     return {
       color: 'red',
@@ -325,10 +350,6 @@ function AnimatedScrollHandlerTest() {
   });
   return (
     <View style={styles.container}>
-      {/* this is correct usage, we allow numbers as colors 
-      in Reanimated but there's some problem with AnimatedProps
-      and this fails to resolve correctly
-      @ts-expect-error TODO  */}
       <Animated.View style={[styles.box, stylez]} />
       <Animated.ScrollView onScroll={scrollHandler} scrollEventThrottle={16} />
     </View>
@@ -765,81 +786,497 @@ function testPartialAnimatedProps() {
   const test4 = (
     <AnimatedImage source={{ uri: 'whatever' }} animatedProps={aps} />
   );
+}
 
-  /* 
+/* 
     NativeMethods:
   */
 
-  // test measure
-  function testMeasure() {
-    const animatedRef = useAnimatedRef<Animated.View>();
-    measure(animatedRef);
-    const plainRef = useRef<Animated.View>();
-    // @ts-expect-error should only work for Animated refs
-    measure(plainRef);
-  }
-
-  // test dispatchCommand
-  function testDispatchCommand() {
-    const animatedRef = useAnimatedRef<Animated.View>();
-    // TODO I don't know how to fix it at the moment
-    dispatchCommand(animatedRef, 'command', [1, 2, 3]);
-    const plainRef = useRef<Animated.View>();
-    // @ts-expect-error should only work for Animated refs
-    dispatchCommand(plainRef, 'command', [1, 2, 3]);
-    // it should work without arguments
-    dispatchCommand(animatedRef, 'command');
-  }
-
-  // test scrollTo
-  function testScrollTo() {
-    const animatedRef = useAnimatedRef<Animated.ScrollView>();
-    scrollTo(animatedRef, 0, 0, true);
-    const plainRef = useRef<Animated.ScrollView>();
-    // @ts-expect-error should only work for Animated refs
-    scrollTo(plainRef, 0, 0, true);
-    const animatedViewRef = useAnimatedRef<Animated.View>();
-  }
-
-  // test setGestureState
-  function testSetGestureState() {
-    setGestureState(1, 2);
-    // not sure what more I can test here
-  }
-
-  // test InlineStyles
-
-  function testInlineStyles1() {
-    const animatedIndex = useSharedValue(0);
-    const backgroundColor = useDerivedValue(() => {
-      return interpolateColor(
-        animatedIndex.value,
-        [0, 1, 2],
-        ['#273D3A', '#8B645C', '#60545A']
-      );
-    });
-    <Animated.View
-      style={{
-        flex: 1,
-        height: '100%',
-        backgroundColor,
-      }}
-    />;
-  }
-
-  function testInlineStyles2() {
-    const animatedFlex = useSharedValue(0);
-    <Animated.View
-      style={{
-        flex: animatedFlex,
-        height: '100%',
-      }}
-    />;
-  }
+// test measure
+function testMeasure() {
+  const animatedRef = useAnimatedRef<Animated.View>();
+  measure(animatedRef);
+  const plainRef = useRef<Animated.View>();
+  // @ts-expect-error it should only work for Animated refs
+  measure(plainRef);
 }
 
-declare const RNStyle: ViewStyle;
+// test dispatchCommand
+function testDispatchCommand() {
+  const animatedRef = useAnimatedRef<Animated.View>();
+  dispatchCommand(animatedRef, 'command', [1, 2, 3]);
+  const plainRef = useRef<Animated.View>();
+  // @ts-expect-error it should only work for Animated refs
+  dispatchCommand(plainRef, 'command', [1, 2, 3]);
+  // it should work without arguments
+  dispatchCommand(animatedRef, 'command');
+}
+
+// test scrollTo
+function testScrollTo() {
+  const animatedRef = useAnimatedRef<Animated.ScrollView>();
+  scrollTo(animatedRef, 0, 0, true);
+  const plainRef = useRef<Animated.ScrollView>();
+  // @ts-expect-error it should only work for Animated refs
+  scrollTo(plainRef, 0, 0, true);
+  const animatedViewRef = useAnimatedRef<Animated.View>();
+}
+
+// test setGestureState
+function testSetGestureState() {
+  setGestureState(1, 2);
+  // not sure what more I can test here
+}
+
+/*
+  Test Animated style
+*/
+
+function TestUseAnimatedStyleStyle1() {
+  const sv = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      width: sv.value,
+    };
+  });
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle2() {
+  const sv = useSharedValue('0');
+  // @ts-expect-error properly detects illegal type
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      width: sv.value,
+    };
+  });
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle3() {
+  const sv = useSharedValue({ width: 0 });
+  const animatedStyle = useAnimatedStyle(() => {
+    return sv.value;
+  });
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle4() {
+  const sv = useSharedValue({ width: '0' });
+  // @ts-expect-error properly detects illegal type
+  const animatedStyle = useAnimatedStyle(() => {
+    return sv.value;
+  });
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle5() {
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: 0 }],
+    };
+  });
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle6() {
+  // @ts-expect-error properly detects illegal type
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotate: 0 }],
+    };
+  });
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle7() {
+  const sv = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: sv.value }],
+    };
+  });
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle8() {
+  const sv = useSharedValue(0);
+  // @ts-expect-error properly detects illegal type
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotate: sv.value }],
+    };
+  });
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle9() {
+  const sv = useSharedValue({ translateX: 0 });
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [sv.value],
+    };
+  });
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle10() {
+  const sv = useSharedValue({ rotate: 0 });
+  // @ts-expect-error properly detects illegal type
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [sv.value],
+    };
+  });
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle11() {
+  const sv = useSharedValue([{ translateX: 0 }]);
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: sv.value,
+    };
+  });
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle12() {
+  const sv = useSharedValue([{ rotate: 0 }]);
+  // @ts-expect-error properly detects illegal type
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: sv.value,
+    };
+  });
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle13() {
+  const sv = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      shadowOffset: {
+        width: sv.value,
+        height: sv.value,
+      },
+    };
+  });
+
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle14() {
+  const sv = useSharedValue(0);
+
+  // @ts-expect-error properly detects illegal type
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      shadowOffset: {
+        width: sv.value,
+      },
+    };
+  });
+
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle15() {
+  const sv = useSharedValue({ width: 0, height: 0 });
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      shadowOffset: sv.value,
+    };
+  });
+
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle16() {
+  const sv = useSharedValue({ width: 0 });
+
+  // @ts-expect-error properly detects illegal type
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      shadowOffset: sv.value,
+    };
+  });
+
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle17() {
+  const sv = useSharedValue({ shadowOffset: { width: 0, height: 0 } });
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      shadowOffset: sv.value.shadowOffset,
+    };
+  });
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle18() {
+  const sv = useSharedValue({ shadowOffset: { width: 0 } });
+  // @ts-expect-error properly detects illegal type
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      shadowOffset: sv.value.shadowOffset,
+    };
+  });
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle19() {
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      flexWrap: 'wrap',
+    };
+  });
+
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle20() {
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      flexWrap: 'wrap' as const,
+    };
+  });
+  return <Animated.View style={animatedStyle} />;
+}
+
+function TestUseAnimatedStyleStyle21() {
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      overflow: 'scroll',
+    };
+  });
+
+  return (
+    <>
+      <Animated.View style={animatedStyle} />
+      {/* @ts-expect-error properly detects illegal type */}
+      <Animated.Image source={{ uri: 'uri' }} style={animatedStyle} />
+      <Animated.Text style={animatedStyle} />
+    </>
+  );
+}
+
+function TestUseAnimatedStyleStyle22() {
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      overflow: 'hidden',
+    };
+  });
+  return (
+    <>
+      <Animated.View style={animatedStyle} />
+      <Animated.Image source={{ uri: 'uri' }} style={animatedStyle} />
+      <Animated.Text style={animatedStyle} />
+    </>
+  );
+}
+
+function TestInlineStyles1() {
+  const animatedIndex = useSharedValue(0);
+  const backgroundColor = useDerivedValue(() => {
+    return interpolateColor(
+      animatedIndex.value,
+      [0, 1, 2],
+      ['#273D3A', '#8B645C', '#60545A']
+    );
+  });
+  <Animated.View
+    style={{
+      flex: 1,
+      height: '100%',
+      backgroundColor,
+    }}
+  />;
+}
+
+function TestInlineStyles2() {
+  const animatedFlex = useSharedValue(0);
+  <Animated.View
+    style={{
+      flex: animatedFlex,
+      height: '100%',
+    }}
+  />;
+}
+
+function TestInlineStyles3() {
+  const sv = useSharedValue(0);
+  return <Animated.View style={{ width: sv }} />;
+}
+
+function TestInlineStyles4() {
+  const sv = useSharedValue('0');
+  // @ts-expect-error properly detects illegal type
+  return <Animated.View style={{ width: sv }} />;
+}
+
+function TestInlineStyles5() {
+  const sv = useSharedValue({ width: 0 });
+  return <Animated.View style={sv} />;
+}
+
+function TestInlineStyles6() {
+  const sv = useSharedValue({ width: '0' });
+  // @ts-expect-error properly detects illegal type
+  return <Animated.View style={sv} />;
+}
+
+function TestInlineStyles7() {
+  const sv = useSharedValue(0);
+  return <Animated.View style={{ transform: [{ translateX: sv }] }} />;
+}
+
+function TestInlineStyles8() {
+  const sv = useSharedValue(0);
+  // @ts-expect-error properly detects illegal type
+  return <Animated.View style={{ transform: [{ rotate: sv }] }} />;
+}
+
+function TestInlineStyles9() {
+  const sv = useSharedValue({ translateX: 0 });
+  return <Animated.View style={{ transform: [sv] }} />;
+}
+
+function TestInlineStyles10() {
+  const sv = useSharedValue({ rotate: 0 });
+  // @ts-expect-error properly detects illegal type
+  return <Animated.View style={{ transform: [sv] }} />;
+}
+
+function TestInlineStyles11() {
+  const sv = useSharedValue([{ translateX: 0 }]);
+  return <Animated.View style={{ transform: sv }} />;
+}
+
+function TestInlineStyles12() {
+  const sv = useSharedValue([{ rotate: 0 }]);
+  // @ts-expect-error properly detects illegal type
+  return <Animated.View style={{ transform: sv }} />;
+}
+
+function TestInlineStyles13() {
+  const sv = useSharedValue({ transform: [{ translateX: 0 }] });
+  return <Animated.View style={sv} />;
+}
+
+function TestInlineStyles14() {
+  const sv = useSharedValue({ transform: [{ rotate: 0 }] });
+  // @ts-expect-error properly detects illegal type
+  return <Animated.View style={sv} />;
+}
+
+function TestInlineStyles15() {
+  const sv = useSharedValue(0);
+
+  return (
+    <Animated.View
+      style={{
+        shadowOffset: {
+          width: sv.value,
+          height: sv.value,
+        },
+      }}
+    />
+  );
+}
+
+function TestInlineStyles16() {
+  const sv = useSharedValue(0);
+
+  return (
+    <Animated.View
+      // @ts-expect-error properly detects illegal type
+      style={{
+        shadowOffset: {
+          width: sv.value,
+        },
+      }}
+    />
+  );
+}
+
+function TestInlineStyles17() {
+  const sv = useSharedValue({ width: 0, height: 0 });
+
+  return (
+    <Animated.View
+      style={{
+        shadowOffset: sv.value,
+      }}
+    />
+  );
+}
+
+function TestInlineStyles18() {
+  const sv = useSharedValue({ width: 0 });
+
+  return (
+    <Animated.View
+      // @ts-expect-error properly detects illegal type
+      style={{
+        shadowOffset: sv.value,
+      }}
+    />
+  );
+}
+
+function TestInlineStyles19() {
+  const sv = useSharedValue({ shadowOffset: { width: 0, height: 0 } });
+  return <Animated.View style={sv} />;
+}
+
+function TestInlineStyles20() {
+  const sv = useSharedValue({ shadowOffset: { width: 0 } });
+  return (
+    <Animated.View
+      // @ts-expect-error properly detects illegal type
+      style={{
+        shadowOffset: sv,
+      }}
+    />
+  );
+}
+
+function TestInlineStyles21() {
+  return <Animated.View style={{ flexWrap: 'wrap' }} />;
+}
+
+function TestInlineStyles22() {
+  return <Animated.View style={{ flexWrap: 'wrap' as const }} />;
+}
+
+function TestInlineStyles23() {
+  return (
+    <>
+      <Animated.View style={{ overflow: 'scroll' }} />;
+      {/* @ts-expect-error properly detects illegal type */}
+      <Animated.Image source={{ uri: 'uri' }} style={{ overflow: 'scroll' }} />;
+      <Animated.Text style={{ overflow: 'scroll' }} />;
+    </>
+  );
+}
+
+function TestInlineStyles24() {
+  return (
+    <>
+      <Animated.View style={{ overflow: 'hidden' }} />;
+      <Animated.Image source={{ uri: 'uri' }} style={{ overflow: 'hidden' }} />;
+      <Animated.Text style={{ overflow: 'hidden' }} />;
+    </>
+  );
+}
+
 // test style prop of Animated components
+
+declare const RNStyle: ViewStyle;
+
 function testStyleProps() {
   const MyAnimatedView = Animated.createAnimatedComponent(View);
   const MyAnimatedScrollView = Animated.createAnimatedComponent(ScrollView);

@@ -180,6 +180,15 @@ export function CheckboxOption({ value, onChange, label }: CheckboxProps) {
   );
 }
 
+export function formatReduceMotion(reduceMotion: string) {
+  if (reduceMotion === 'always') {
+    return 'ReduceMotion.Always';
+  } else if (reduceMotion === 'never') {
+    return 'ReduceMotion.Never';
+  }
+  return 'ReduceMotion.System';
+}
+
 interface SelectProps {
   value: string;
   onChange: Dispatch<string>;

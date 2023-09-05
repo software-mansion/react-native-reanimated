@@ -3,7 +3,10 @@ import './publicGlobals';
 export {
   runOnJS,
   runOnUI,
+  createWorkletRuntime,
+  WorkletRuntime,
   makeMutable,
+  makeShareableCloneRecursive,
   isReanimated3,
   isConfigured,
   enableLayoutAnimations,
@@ -32,7 +35,6 @@ export {
   FrameCallback,
   useAnimatedKeyboard,
   useScrollViewOffset,
-  AnimatedStyleProp,
 } from './hook';
 export {
   DelayAnimation,
@@ -205,7 +207,7 @@ export {
   SharedTransition,
   SharedTransitionType,
 } from './layoutReanimation';
-export { getRelativeCoords, ComponentCoords } from './utils';
+export { getRelativeCoords, ComponentCoords, isSharedValue } from './utils';
 export {
   StyleProps,
   SharedValue,
@@ -244,9 +246,10 @@ export type {
   AnimatedProps,
   AnimatedTransform,
   TransformStyleTypes,
-  TransformArrayItemType,
+  TransformArrayItem,
   AnimateStyle,
   AnimatedStyle,
+  AnimatedStyleProp,
   StylesOrDefault,
 } from './helperTypes';
 export type { AnimatedScrollViewProps } from './component/ScrollView';

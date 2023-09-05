@@ -25,14 +25,12 @@ import {
   isChromeDebugger,
   shouldBeUseWeb,
   isWeb,
-  isMacOS,
 } from './reanimated2/PlatformChecker';
 import { initialUpdaterRun } from './reanimated2/animation';
 import type {
   BaseAnimationBuilder,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
-  LayoutAnimationFunction,
 } from './reanimated2/layoutReanimation';
 import {
   SharedTransition,
@@ -56,6 +54,7 @@ import type { AnimateProps } from './reanimated2/helperTypes';
 import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
 import { JSPropUpdater } from './JSPropUpdater';
 import { getReduceMotionFromConfig } from './reanimated2/animation/util';
+import { maybeBuild } from './animationBuilder';
 
 import {
   areDOMRectsEqual,
@@ -81,25 +80,6 @@ const IS_WEB = isWeb();
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
   // event is used.
-}
-
-function maybeBuild(
-  layoutAnimationOrBuilder:
-    | ILayoutAnimationBuilder
-    | LayoutAnimationFunction
-    | Keyframe
-): LayoutAnimationFunction | Keyframe {
-  const isAnimationBuilder = (
-    value: ILayoutAnimationBuilder | LayoutAnimationFunction | Keyframe
-  ): value is ILayoutAnimationBuilder =>
-    'build' in layoutAnimationOrBuilder &&
-    typeof layoutAnimationOrBuilder.build === 'function';
-
-  if (isAnimationBuilder(layoutAnimationOrBuilder)) {
-    return layoutAnimationOrBuilder.build();
-  } else {
-    return layoutAnimationOrBuilder;
-  }
 }
 
 type NestedArray<T> = T | NestedArray<T>[];
@@ -675,7 +655,6 @@ export default function createAnimatedComponent(
 
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (
-          !isMacOS() &&
           (layout || entering || exiting || sharedTransitionTag) &&
           tag != null
         ) {
@@ -686,14 +665,22 @@ export default function createAnimatedComponent(
             configureLayoutAnimations(
               tag,
               LayoutAnimationType.LAYOUT,
-              maybeBuild(layout)
+              maybeBuild(
+                layout,
+                undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */,
+                AnimatedComponent.displayName
+              )
             );
           }
           if (entering) {
             configureLayoutAnimations(
               tag,
               LayoutAnimationType.ENTERING,
-              maybeBuild(entering)
+              maybeBuild(
+                entering,
+                this.props?.style,
+                AnimatedComponent.displayName
+              )
             );
           }
           if (exiting) {
@@ -706,7 +693,11 @@ export default function createAnimatedComponent(
               configureLayoutAnimations(
                 tag,
                 LayoutAnimationType.EXITING,
-                maybeBuild(exiting)
+                maybeBuild(
+                  exiting,
+                  this.props?.style,
+                  AnimatedComponent.displayName
+                )
               );
             }
           }

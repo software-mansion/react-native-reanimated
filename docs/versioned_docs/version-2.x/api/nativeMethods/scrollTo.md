@@ -10,7 +10,7 @@ Provides synchronous scroll on the UI thread to a given offset using an animated
 
 #### `animatedRef`
 
-The product of [`useAnimatedRef`](../hooks/useAnimatedRef) which is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread).
+The product of [`useAnimatedRef`](/docs/2.x/api/hooks/useAnimatedRef) which is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread).
 
 #### `x` [Float]
 
