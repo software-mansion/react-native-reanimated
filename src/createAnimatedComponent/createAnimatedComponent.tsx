@@ -42,11 +42,11 @@ import type { AnimatedComponentProps, AnimatedProps } from './utils';
 import { has, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
 import {
-  isWeb,
-  isJest,
-  shouldBeUseWeb,
   isChromeDebugger,
-} from 'src/reanimated2/PlatformChecker';
+  isJest,
+  isWeb,
+  shouldBeUseWeb,
+} from '../reanimated2/PlatformChecker';
 
 const IS_WEB = isWeb();
 
