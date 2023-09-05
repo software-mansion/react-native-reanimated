@@ -94,7 +94,7 @@ export default function KeyboardAvoidingViewExample(): React.ReactElement {
       <View style={styles.header}>
         {(['position', 'padding', 'height', undefined] as const).map((key) => {
           return (
-            <View style={styles.flexOne}>
+            <View style={styles.flexOne} key={key || 'undefined'}>
               <TouchableOpacity
                 style={[
                   styles.behavior,
