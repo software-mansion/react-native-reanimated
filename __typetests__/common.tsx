@@ -760,31 +760,101 @@ function updatePropsTest() {
   useAnimatedProps(() => ({}), null, [adapter2, adapter3]);
 }
 
-// test partial animated props
-function testPartialAnimatedProps() {
-  const ap = useAnimatedProps<ImageProps>(() => ({
-    borderRadius: 100,
-  }));
-  const aps = useAnimatedProps<ImageProps>(() => ({
-    source: { uri: 'whatever' },
-  }));
-
-  // should pass because source is set
-  const test1 = <AnimatedImage source={{ uri: 'whatever' }} />;
-
-  // should pass because source is set and `animatedProps` doesn't change that
-  const test2 = (
-    <AnimatedImage source={{ uri: 'whatever' }} animatedProps={ap} />
+/* 
+Test Animated Props
+*/
+function testPartialAnimatedProps1() {
+  return (
+    <>
+      <AnimatedFlatList data={['1']} renderItem={() => null} />;
+      <Animated.FlatList data={['1']} renderItem={() => null} />;
+    </>
   );
+}
 
-  // @ts-expect-error This is a correct usage but it doesn't pass
-  // and seems tricky to make it work correctly
-  // (I have tried and it's probably not worth the time at the moment).
-  const test3 = <AnimatedImage animatedProps={aps} />;
+function testPartialAnimatedProps2() {
+  const optionalProps = useAnimatedProps<FlatListProps<unknown>>(() => ({
+    style: {},
+  }));
+  const requiredProps = useAnimatedProps<FlatListProps<unknown>>(() => ({
+    data: ['1'],
+    renderItem: () => null,
+  }));
 
-  // should pass because source is set normally and in `animatedProps`
-  const test4 = (
-    <AnimatedImage source={{ uri: 'whatever' }} animatedProps={aps} />
+  // Should pass because required props are set.
+  return (
+    <>
+      <AnimatedFlatList
+        data={['1']}
+        renderItem={() => null}
+        animatedProps={optionalProps}
+      />
+      ;
+      <Animated.FlatList
+        data={['1']}
+        renderItem={() => null}
+        animatedProps={optionalProps}
+      />
+      ;
+    </>
+  );
+}
+
+function testPartialAnimatedProps3() {
+  const optionalProps = useAnimatedProps<FlatListProps<string>>(() => ({
+    style: {},
+  }));
+
+  // Shouldn't pass because required props are not set.
+  return (
+    <>
+      {/* @ts-expect-error Correctly detects that required props are not set. */}
+      <AnimatedFlatList animatedProps={optionalProps} />
+      {/* @ts-expect-error Correctly detects that required props are not set. */}
+      <Animated.FlatList animatedProps={optionalProps} />
+    </>
+  );
+}
+
+function testPartialAnimatedProps4() {
+  const requiredProps = useAnimatedProps<FlatListProps<string>>(() => ({
+    data: ['1'],
+    renderItem: () => null,
+  }));
+
+  // Should pass because required props are set but fails
+  // because AnimatedProps are incorrectly typed.
+  return (
+    <>
+      {/* @ts-expect-error Fails due to bad type. */}
+      <AnimatedFlatList animatedProps={requiredProps} />;
+      {/* @ts-expect-error Fails due to bad type. */}
+      <Animated.FlatList animatedProps={requiredProps} />;
+    </>
+  );
+}
+
+function testPartialAnimatedProps5() {
+  const partOfRequiredProps = useAnimatedProps<FlatListProps<string>>(() => ({
+    data: ['1'],
+  }));
+
+  // Should pass because required props are set but fails
+  // because AnimatedProps are incorrectly typed.
+  return (
+    <>
+      <AnimatedFlatList
+        renderItem={() => null}
+        // @ts-expect-error Fails due to bad type.
+        animatedProps={partOfRequiredProps}
+      />
+      {/* @ts-expect-error Fails due to bad type. */}
+      <Animated.FlatList
+        animatedProps={partOfRequiredProps}
+        renderItem={() => null}
+      />
+      ;
+    </>
   );
 }
 
