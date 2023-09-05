@@ -60,6 +60,7 @@ export interface NativeReanimatedModule {
     sharedTransitionTag: string,
     config: ShareableRef<Keyframe | LayoutAnimationFunction>
   ): void;
+  disableExitingAnimation(viewTag: number): void;
 }
 
 export class NativeReanimated {
@@ -159,6 +160,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       sharedTransitionTag,
       config
     );
+  }
+
+  disableExitingAnimation(viewTag: number) {
+    this.InnerNativeModule.disableExitingAnimation(viewTag);
   }
 
   enableLayoutAnimations(flag: boolean) {

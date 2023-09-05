@@ -94,6 +94,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &type,
       const jsi::Value &sharedTransitionTag,
       const jsi::Value &config) override;
+  jsi::Value disableExiting(jsi::Runtime &rt, const jsi::Value &viewTag)
+      override;
 
   void onRender(double timestampMs);
 

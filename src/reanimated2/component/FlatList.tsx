@@ -7,7 +7,7 @@ import createAnimatedComponent from '../../createAnimatedComponent';
 import type { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
 import type { StyleProps } from '../commonTypes';
 import type { AnimateProps } from '../helperTypes';
-import { SkipInitialEnteringAnimations } from './SkipInitialEnteringAnimations';
+import { LayoutAnimationConfig } from './LayoutAnimationConfig';
 
 const AnimatedFlatList = createAnimatedComponent(FlatList as any) as any;
 
@@ -40,7 +40,7 @@ const createCellRenderer = (
 
 interface ReanimatedFlatListPropsWithLayout<T> extends FlatListProps<T> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
-  skipInitialEnteringAnimations?: boolean;
+  skipLayoutAnimations?: boolean;
 }
 
 export type FlatListPropsWithLayout<T> = ReanimatedFlatListPropsWithLayout<T>;
@@ -54,13 +54,12 @@ declare class ReanimatedFlatListClass<T> extends Component<
 
 interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
-  skipInitialEnteringAnimations?: boolean;
+  skipLayoutAnimations?: boolean;
 }
 
 export const ReanimatedFlatList = forwardRef(
   (props: ReanimatedFlatListProps<any>, ref: ForwardedRef<FlatList>) => {
-    const { itemLayoutAnimation, skipInitialEnteringAnimations, ...restProps } =
-      props;
+    const { itemLayoutAnimation, skipLayoutAnimations, ...restProps } = props;
 
     const cellStyle = restProps?.inverted
       ? restProps?.horizontal
@@ -90,14 +89,14 @@ export const ReanimatedFlatList = forwardRef(
       />
     );
 
-    if (skipInitialEnteringAnimations === undefined) {
+    if (skipLayoutAnimations === undefined) {
       return animatedFlatList;
     }
 
     return (
-      <SkipInitialEnteringAnimations value={skipInitialEnteringAnimations}>
+      <LayoutAnimationConfig skipInitial skipExiting>
         {animatedFlatList}
-      </SkipInitialEnteringAnimations>
+      </LayoutAnimationConfig>
     );
   }
   // TODO TYPESCRIPT this was a cast before

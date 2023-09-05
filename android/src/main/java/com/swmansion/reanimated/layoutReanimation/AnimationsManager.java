@@ -86,7 +86,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     Integer tag = view.getId();
     mCallbacks.put(tag, callback);
 
-    if (!removeOrAnimateExitRecursive(view, true)) {
+    if (!removeOrAnimateExitRecursive(view, true, true)) {
       removeView(view, parent);
     }
   }
@@ -489,6 +489,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
   }
 
+  public boolean isDisabledExiting(int tag) {
+    return mNativeMethodsHolder.isDisabledExiting(tag);
+  }
+
   public boolean hasAnimationForTag(int tag, int type) {
     return mNativeMethodsHolder.hasAnimation(tag, type);
   }
@@ -497,7 +501,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     return mNativeMethodsHolder != null && mNativeMethodsHolder.isLayoutAnimationEnabled();
   }
 
-  private boolean removeOrAnimateExitRecursive(View view, boolean shouldRemove) {
+  private boolean removeOrAnimateExitRecursive(
+      View view, boolean shouldRemove, boolean shouldAnimate) {
     int tag = view.getId();
     ViewManager viewManager = resolveViewManager(tag);
 
@@ -512,8 +517,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
       }
     }
 
+    shouldAnimate &= !isDisabledExiting(tag);
+
     boolean hasExitAnimation =
-        hasAnimationForTag(tag, LayoutAnimations.Types.EXITING) || mExitingViews.containsKey(tag);
+        (hasAnimationForTag(tag, LayoutAnimations.Types.EXITING) || mExitingViews.containsKey(tag))
+            && shouldAnimate;
     boolean hasAnimatedChildren = false;
     shouldRemove = shouldRemove && !hasExitAnimation;
 
@@ -531,7 +539,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       ViewGroup viewGroup = (ViewGroup) view;
       for (int i = viewGroup.getChildCount() - 1; i >= 0; i--) {
         View child = viewGroup.getChildAt(i);
-        if (removeOrAnimateExitRecursive(child, shouldRemove)) {
+        if (removeOrAnimateExitRecursive(child, shouldRemove, shouldAnimate)) {
           hasAnimatedChildren = true;
         } else if (shouldRemove && child.getId() != -1) {
           toBeRemoved.add(child);

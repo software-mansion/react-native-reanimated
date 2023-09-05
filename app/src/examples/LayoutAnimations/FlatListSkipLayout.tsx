@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 import { Button, StyleSheet } from 'react-native';
 import Animated, {
   FadeInUp,
+  LayoutAnimationConfig,
   PinwheelIn,
   PinwheelOut,
-  SkipInitialEnteringAnimations,
   SlideInRight,
   SlideOutLeft,
 } from 'react-native-reanimated';
 
 const digits = [...Array(3).keys()];
 
-export default function FlatListEntering() {
+export default function FlatListSkipLayout() {
   return <List />;
 }
 
@@ -41,7 +41,7 @@ function List() {
       />
       {show && (
         <Animated.FlatList
-          skipInitialEnteringAnimations
+          skipLayoutAnimations
           style={styles.container}
           contentContainerStyle={[styles.contentContainer]}
           decelerationRate="fast"
@@ -62,13 +62,13 @@ function Item() {
       <Animated.View
         entering={FadeInUp.duration(1000).delay(500)}
         style={styles.outerBox}>
-        <SkipInitialEnteringAnimations value={false}>
+        <LayoutAnimationConfig skipInitial={false}>
           <Animated.View
             style={styles.box}
             entering={PinwheelIn.duration(2000)}
             exiting={PinwheelOut}
           />
-        </SkipInitialEnteringAnimations>
+        </LayoutAnimationConfig>
       </Animated.View>
       <Animated.View
         entering={FadeInUp.duration(1000).delay(500)}
@@ -90,6 +90,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     alignItems: 'center',
+    height: 1000,
   },
   card: {
     width: 330,

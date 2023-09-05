@@ -1,6 +1,6 @@
 import Animated, {
+  LayoutAnimationConfig,
   PinwheelIn,
-  SkipInitialEnteringAnimations,
 } from 'react-native-reanimated';
 import { Button, StyleSheet, View } from 'react-native';
 
@@ -38,19 +38,19 @@ export default function NestedEntering() {
         }}
         title="Toggle second inner"
       />
-      <SkipInitialEnteringAnimations>
+      <LayoutAnimationConfig skipInitial>
         <View style={styles.rowContainer}>
           <View style={styles.boxContainer}>
             {outer1 && (
               <Animated.View entering={PinwheelIn} style={styles.outerBox}>
-                <SkipInitialEnteringAnimations>
+                <LayoutAnimationConfig skipInitial={false}>
                   {inner1 && (
                     <Animated.View
                       style={styles.box}
                       entering={PinwheelIn.duration(1000)}
                     />
                   )}
-                </SkipInitialEnteringAnimations>
+                </LayoutAnimationConfig>
               </Animated.View>
             )}
           </View>
@@ -67,7 +67,7 @@ export default function NestedEntering() {
             )}
           </View>
         </View>
-      </SkipInitialEnteringAnimations>
+      </LayoutAnimationConfig>
     </View>
   );
 }

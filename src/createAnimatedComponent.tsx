@@ -56,7 +56,7 @@ import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
 import { JSPropUpdater } from './JSPropUpdater';
 import { getReduceMotionFromConfig } from './reanimated2/animation/util';
 import { maybeBuild } from './animationBuilder';
-import { SkipEnteringContext } from './reanimated2/component/SkipInitialEnteringAnimations';
+import { LayoutAnimationConfigContext } from './reanimated2/component/LayoutAnimationConfig';
 
 const IS_WEB = isWeb();
 
@@ -275,8 +275,8 @@ export default function createAnimatedComponent(
     _sharedElementTransition: SharedTransition | null = null;
     _JSPropUpdater = new JSPropUpdater();
     static displayName: string;
-    static contextType = SkipEnteringContext;
-    context!: React.ContextType<typeof SkipEnteringContext>;
+    static contextType = LayoutAnimationConfigContext;
+    context!: React.ContextType<typeof LayoutAnimationConfigContext>;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
@@ -608,7 +608,7 @@ export default function createAnimatedComponent(
           ? (ref as HTMLElement)
           : findNodeHandle(ref as Component);
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
-        const skipEntering = !!this.context?.current;
+        const skipEntering = !!this.context?.current.skipInitial;
         if (
           !isMacOS() &&
           (layout || entering || exiting || sharedTransitionTag) &&

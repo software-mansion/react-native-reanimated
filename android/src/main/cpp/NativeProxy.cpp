@@ -498,6 +498,15 @@ void NativeProxy::setupLayoutAnimations() {
         return false;
       });
 
+  layoutAnimations_->cthis()->setIsDisabledExitingBlock(
+      [weakNativeReanimatedModule](int tag) {
+        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+          return nativeReanimatedModule->layoutAnimationsManager()
+              .isDisabledExiting(tag);
+        }
+        return false;
+      });
+
 #ifdef DEBUG
   layoutAnimations_->cthis()->setCheckDuplicateSharedTag(
       [weakNativeReanimatedModule](int viewTag, int screenTag) {

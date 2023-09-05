@@ -239,7 +239,7 @@ export {
   setUpTests,
   getAnimatedStyle,
 } from './jestUtils';
-export { SkipInitialEnteringAnimations } from './component/SkipInitialEnteringAnimations';
+export { LayoutAnimationConfig } from './component/LayoutAnimationConfig';
 export type {
   Adaptable,
   AdaptTransforms,

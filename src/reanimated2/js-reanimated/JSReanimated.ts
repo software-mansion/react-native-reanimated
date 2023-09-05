@@ -77,6 +77,10 @@ export default class JSReanimated {
     // no-op
   }
 
+  disableExitingAnimation() {
+    // no-op
+  }
+
   registerSensor(
     sensorType: SensorType,
     interval: number,

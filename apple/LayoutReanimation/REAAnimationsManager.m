@@ -41,6 +41,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   NSMutableArray<NSString *> *_currentKeys;
   REAAnimationStartingBlock _startAnimationForTag;
   REAHasAnimationBlock _hasAnimationForTag;
+  REAIsDisabledExitingBlock _isDisabledExiting;
   REAAnimationRemovingBlock _clearAnimationConfigForTag;
   REASharedTransitionManager *_sharedTransitionManager;
 #ifdef DEBUG
@@ -115,6 +116,11 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)setHasAnimationBlock:(REAHasAnimationBlock)hasAnimation
 {
   _hasAnimationForTag = hasAnimation;
+}
+
+- (void)setIsDisabledExitingBlock:(REAIsDisabledExitingBlock)isDisabledExiting
+{
+  _isDisabledExiting = isDisabledExiting;
 }
 
 - (void)setAnimationRemovingBlock:(REAAnimationRemovingBlock)clearAnimation
@@ -415,7 +421,8 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 }
 
 - (BOOL)startAnimationsRecursive:(REAUIView *)view
-    shouldRemoveSubviewsWithoutAnimations:(BOOL)shouldRemoveSubviewsWithoutAnimations;
+    shouldRemoveSubviewsWithoutAnimations:(BOOL)shouldRemoveSubviewsWithoutAnimations
+                            shouldAnimate:(BOOL)shouldAnimate;
 {
   if (!view.reactTag) {
     return NO;
@@ -433,15 +440,19 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     return NO;
   }
 
+  shouldAnimate &= ![self isDisabledExiting:view.reactTag];
+
   BOOL hasExitAnimation =
-      [self hasAnimationForTag:view.reactTag type:EXITING] || [_exitingViews objectForKey:view.reactTag];
+      ([self hasAnimationForTag:view.reactTag type:EXITING] || [_exitingViews objectForKey:view.reactTag]) &&
+      shouldAnimate;
   BOOL hasAnimatedChildren = NO;
   shouldRemoveSubviewsWithoutAnimations = shouldRemoveSubviewsWithoutAnimations && !hasExitAnimation;
   NSMutableArray *toBeRemoved = [[NSMutableArray alloc] init];
 
   for (REAUIView *subview in [view.reactSubviews copy]) {
     if ([self startAnimationsRecursive:subview
-            shouldRemoveSubviewsWithoutAnimations:shouldRemoveSubviewsWithoutAnimations]) {
+            shouldRemoveSubviewsWithoutAnimations:shouldRemoveSubviewsWithoutAnimations
+                                    shouldAnimate:shouldAnimate]) {
       hasAnimatedChildren = YES;
     } else if (shouldRemoveSubviewsWithoutAnimations) {
       [toBeRemoved addObject:subview];
@@ -510,7 +521,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     }
     REAUIView *childView = (REAUIView *)child;
     NSNumber *originalIndex = indices[i];
-    if ([self startAnimationsRecursive:childView shouldRemoveSubviewsWithoutAnimations:YES]) {
+    if ([self startAnimationsRecursive:childView shouldRemoveSubviewsWithoutAnimations:YES shouldAnimate:TRUE]) {
       [(REAUIView *)container insertSubview:childView atIndex:[originalIndex intValue] - skippedViewsCount];
       int exitingSubviewsCount = [_exitingSubviewsCountMap[childView.reactTag] intValue];
       if ([_exitingViews objectForKey:childView.reactTag] != nil) {
@@ -606,6 +617,15 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     return NO;
   }
   return _hasAnimationForTag(tag, type);
+}
+
+- (BOOL)isDisabledExiting:(NSNumber *)tag
+{
+  if (!_isDisabledExiting) {
+    // It can happen during reload.
+    return NO;
+  }
+  return _isDisabledExiting(tag);
 }
 
 - (void)clearAnimationConfigForTag:(NSNumber *)tag

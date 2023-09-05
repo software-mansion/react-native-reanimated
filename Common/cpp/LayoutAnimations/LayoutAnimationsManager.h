@@ -32,6 +32,8 @@ class LayoutAnimationsManager {
       LayoutAnimationType type,
       const std::string &sharedTransitionTag,
       std::shared_ptr<Shareable> config);
+  void disableExiting(int tag);
+  bool isDisabledExiting(int tag);
   bool hasLayoutAnimation(int tag, LayoutAnimationType type);
   void startLayoutAnimation(
       jsi::Runtime &rt,
@@ -61,6 +63,7 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::string> viewsScreenSharedTagMap_;
 #endif
 
+  std::unordered_set<int> disableExiting_;
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> layoutAnimations_;

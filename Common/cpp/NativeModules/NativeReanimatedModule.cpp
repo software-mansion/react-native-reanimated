@@ -319,6 +319,13 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
   return jsi::Value::undefined();
 }
 
+jsi::Value NativeReanimatedModule::disableExiting(
+    jsi::Runtime &rt,
+    const jsi::Value &viewTag) {
+  layoutAnimationsManager_.disableExiting(viewTag.asNumber());
+  return jsi::Value::undefined();
+}
+
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
     const std::string &eventName,
     const int emitterReactTag) {

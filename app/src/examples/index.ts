@@ -39,6 +39,7 @@ import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import FlatListExample from './SharedElementTransitions/FlatList';
+import FlatListSkipLayout from './LayoutAnimations/FlatListSkipLayout';
 import FrameCallbackExample from './FrameCallbackExample';
 import GalleryExample from './SharedElementTransitions/Gallery';
 import GestureHandlerExample from './GestureHandlerExample';
@@ -104,7 +105,6 @@ import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import NestedEntering from './LayoutAnimations/NestedEntering';
-import FlatListEntering from './LayoutAnimations/FlatListEntering';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 
 interface Example {
@@ -568,8 +568,8 @@ export const EXAMPLES: Record<string, Example> = {
     screen: NestedEntering,
   },
   FlatListEntering: {
-    title: '[LA] FlatList disable entering',
-    screen: FlatListEntering,
+    title: '[LA] FlatList skip layout',
+    screen: FlatListSkipLayout,
   },
 
   // Shared Element Transitions

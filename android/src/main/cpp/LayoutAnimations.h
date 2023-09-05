@@ -15,6 +15,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   using AnimationStartingBlock =
       std::function<void(int, int, alias_ref<JMap<jstring, jstring>>)>;
   using HasAnimationBlock = std::function<bool(int, int)>;
+  using IsDisabledExitingBlock = std::function<bool(int)>;
 #ifdef DEBUG
   using CheckDuplicateSharedTag = std::function<void(int, int)>;
 #endif
@@ -34,10 +35,12 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
       int type,
       alias_ref<JMap<jstring, jstring>> values);
   bool hasAnimationForTag(int tag, int type);
+  bool isDisabledExiting(int tag);
   bool isLayoutAnimationEnabled();
 
   void setAnimationStartingBlock(AnimationStartingBlock animationStartingBlock);
   void setHasAnimationBlock(HasAnimationBlock hasAnimationBlock);
+  void setIsDisabledExitingBlock(IsDisabledExitingBlock isDisabledExitingBlock);
 #ifdef DEBUG
   void setCheckDuplicateSharedTag(
       CheckDuplicateSharedTag checkDuplicateSharedTag);
@@ -64,6 +67,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   jni::global_ref<LayoutAnimations::javaobject> javaPart_;
   AnimationStartingBlock animationStartingBlock_;
   HasAnimationBlock hasAnimationBlock_;
+  IsDisabledExitingBlock isDisabledExitingBlock_;
   ClearAnimationConfigBlock clearAnimationConfigBlock_;
   CancelAnimationBlock cancelAnimationBlock_;
   FindPrecedingViewTagForTransitionBlock
