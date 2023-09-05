@@ -70,7 +70,7 @@ import {
 import type { AnimationConfig } from './reanimated2/platform-specific/webAnimations';
 
 import { handleLayoutTransition } from './reanimated2/platform-specific/webTransitions';
-import type { TransitionConfig } from './reanimated2/platform-specific/webTransitions';
+import type { TransitionData } from './reanimated2/platform-specific/webTransitions';
 
 import { Animations } from './reanimated2/platform-specific/webAnimationsData';
 import type { AnimationNames } from './reanimated2/platform-specific/webAnimationsData';
@@ -631,7 +631,7 @@ export default function createAnimatedComponent(
           return;
         }
 
-        const transitionConfig: TransitionConfig = {
+        const transitionData: TransitionData = {
           translateX: snapshot.x - rect.x,
           translateY: snapshot.y - rect.y,
           scaleX: snapshot.width / rect.width,
@@ -639,7 +639,7 @@ export default function createAnimatedComponent(
           reversed: false, // This field is used only in `SequencedTransition`, so by default it will by false
         };
 
-        this.handleWebAnimation(LayoutAnimationType.LAYOUT, transitionConfig);
+        this.handleWebAnimation(LayoutAnimationType.LAYOUT, transitionData);
       }
     }
 
@@ -816,7 +816,7 @@ export default function createAnimatedComponent(
 
     handleWebAnimation(
       animationType: LayoutAnimationType,
-      transitionConfig?: TransitionConfig
+      transitionData?: TransitionData
     ) {
       const config =
         animationType === LayoutAnimationType.ENTERING
@@ -870,8 +870,11 @@ export default function createAnimatedComponent(
           handleEnteringAnimation(element, animationConfig);
           break;
         case LayoutAnimationType.LAYOUT:
+          // `transitionData` is casted as defined because it is a result of calculations made inside componentDidUpdate method.
+          // We can reach this piece of code only from componentDidUpdate, therefore this parameter will be defined.
+
           // @ts-ignore This property exists in SequencedTransition
-          (transitionConfig as TransitionConfig).reversed = config.reversed
+          (transitionData as TransitionData).reversed = config.reversed
             ? // @ts-ignore This property exists in SequencedTransition
               config.reversed
             : false;
@@ -879,7 +882,7 @@ export default function createAnimatedComponent(
           handleLayoutTransition(
             element,
             animationConfig,
-            transitionConfig as TransitionConfig
+            transitionData as TransitionData
           );
           break;
         case LayoutAnimationType.EXITING:

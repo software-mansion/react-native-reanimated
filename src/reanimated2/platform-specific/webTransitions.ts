@@ -12,7 +12,7 @@ export enum TransitionType {
   FADING,
 }
 
-export interface TransitionConfig {
+export interface TransitionData {
   translateX: number;
   translateY: number;
   scaleX: number;
@@ -20,7 +20,7 @@ export interface TransitionConfig {
   reversed?: boolean;
 }
 
-function LinearTransition(name: string, transitionConfig: TransitionConfig) {
+function LinearTransition(name: string, transitionConfig: TransitionData) {
   const { translateX, translateY, scaleX, scaleY } = transitionConfig;
 
   return `@keyframes ${name} {
@@ -30,7 +30,7 @@ function LinearTransition(name: string, transitionConfig: TransitionConfig) {
                 }`;
 }
 
-function SequencedTransition(name: string, transitionConfig: TransitionConfig) {
+function SequencedTransition(name: string, transitionConfig: TransitionData) {
   const { translateX, translateY, scaleX, scaleY, reversed } = transitionConfig;
 
   const translate = `translate${reversed ? 'X' : 'Y'}(${
@@ -52,7 +52,7 @@ function SequencedTransition(name: string, transitionConfig: TransitionConfig) {
               }`;
 }
 
-function FadingTransition(name: string, transitionConfig: TransitionConfig) {
+function FadingTransition(name: string, transitionConfig: TransitionData) {
   const { translateX, translateY, scaleX, scaleY } = transitionConfig;
 
   return `@keyframes ${name} {
@@ -84,7 +84,7 @@ function FadingTransition(name: string, transitionConfig: TransitionConfig) {
  */
 export function TransitionGenerator(
   transitionType: TransitionType,
-  transitionConfig: TransitionConfig
+  transitionConfig: TransitionData
 ) {
   const keyframe = generateRandomKeyframeName();
   let transition;
@@ -119,7 +119,7 @@ export function TransitionGenerator(
 export function handleLayoutTransition(
   element: HTMLElement,
   animationConfig: AnimationConfig,
-  transitionConfig: TransitionConfig
+  transitionConfig: TransitionData
 ) {
   const { animationName } = animationConfig;
 
