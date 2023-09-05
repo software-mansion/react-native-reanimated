@@ -623,6 +623,7 @@ export default function createAnimatedComponent(
       this._attachAnimatedStyles();
       this._attachInlineProps();
 
+      // Snapshot won't be undefined because of getSnapshotBeforeUpdate method
       if (IS_WEB && snapshot !== null) {
         const rect = (this._component as HTMLElement).getBoundingClientRect();
 
