@@ -1,5 +1,5 @@
 import { Animations, AnimationsData, WebEasings } from './webAnimationsData';
-import type { AnimationNames } from './webAnimationsData';
+import type { AnimationNames, WebEasingsNames } from './webAnimationsData';
 import { parseAnimationObjectToKeyframe } from './animationParser';
 import type { ReanimatedWebTransformProperties } from './animationParser';
 import type { TransformsStyle } from 'react-native';
@@ -154,10 +154,11 @@ export function getEasingFromConfig(config: ConfigType): string {
 
   config = config as CustomConfig;
 
-  const easingName =
+  const easingName = (
     config.easingV !== undefined && config.easingV.name in WebEasings
       ? config.easingV.name
-      : 'linear';
+      : 'linear'
+  ) as WebEasingsNames;
 
   return `cubic-bezier(${WebEasings[easingName].toString()})`;
 }

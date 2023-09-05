@@ -870,7 +870,7 @@ export default function createAnimatedComponent(
           handleEnteringAnimation(element, animationConfig);
           break;
         case LayoutAnimationType.LAYOUT:
-          // `transitionData` is casted as defined because it is a result of calculations made inside componentDidUpdate method.
+          // `transitionData` is cast as defined because it is a result of calculations made inside componentDidUpdate method.
           // We can reach this piece of code only from componentDidUpdate, therefore this parameter will be defined.
 
           // @ts-ignore This property exists in SequencedTransition

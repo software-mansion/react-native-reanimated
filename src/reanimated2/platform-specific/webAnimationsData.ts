@@ -102,7 +102,7 @@ export const Animations = {
 
 // Those are the easings that can be implemented using Bezier curves.
 // Others should be done as CSS animations
-export const WebEasings: Record<string, number[]> = {
+export const WebEasings = {
   linear: [0, 0, 1, 1],
   ease: [0.42, 0, 1, 1],
   quad: [0.11, 0, 0.5, 0],
@@ -114,3 +114,4 @@ export const WebEasings: Record<string, number[]> = {
 
 export type AnimationNames = keyof typeof Animations;
 export type LayoutTransitionsNames = keyof typeof AnimationsData;
+export type WebEasingsNames = keyof typeof WebEasings;
