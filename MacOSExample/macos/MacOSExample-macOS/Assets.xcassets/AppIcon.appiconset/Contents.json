@@ -7,7 +7,7 @@
       "size" : "16x16"
     },
     {
-      "filename" : "32 1.png",
+      "filename" : "32_1.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "16x16"
@@ -31,7 +31,7 @@
       "size" : "128x128"
     },
     {
-      "filename" : "256 1.png",
+      "filename" : "256_1.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "128x128"
@@ -43,7 +43,7 @@
       "size" : "256x256"
     },
     {
-      "filename" : "512 1.png",
+      "filename" : "512_1.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "256x256"
