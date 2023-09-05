@@ -152,11 +152,12 @@ export function getEasingFromConfig(config: ConfigType): string {
     return `cubic-bezier(${WebEasings.linear.toString()})`;
   }
 
-  config = config as CustomConfig;
-
   const easingName = (
-    config.easingV !== undefined && config.easingV.name in WebEasings
-      ? config.easingV.name
+    config.easingV !== undefined &&
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    (config as CustomConfig).easingV!.name in WebEasings
+      ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        (config as CustomConfig).easingV!.name
       : 'linear'
   ) as WebEasingsNames;
 
@@ -172,15 +173,14 @@ export function getDelayFromConfig(config: ConfigType): number {
     return delay;
   }
 
-  config = config as CustomConfig;
-
   if (config.delayV === undefined) {
     return delay;
   }
 
   return shouldRandomizeDelay
     ? getRandomDelay((config as CustomConfig).delayV)
-    : config.delayV / 1000;
+    : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      (config as CustomConfig).delayV! / 1000;
 }
 
 export function getDurationFromConfig(
@@ -196,10 +196,9 @@ export function getDurationFromConfig(
     return defaultDuration;
   }
 
-  config = config as CustomConfig;
-
   return config.durationV !== undefined
-    ? config.durationV / 1000
+    ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      (config as CustomConfig).durationV! / 1000
     : defaultDuration;
 }
 
@@ -208,9 +207,10 @@ export function getCallbackFromConfig(config: ConfigType): (() => void) | null {
     return null;
   }
 
-  config = config as CustomConfig;
-
-  return config.callbackV !== undefined ? config.callbackV : null;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return config.callbackV !== undefined
+    ? (config as CustomConfig).callbackV!
+    : null;
 }
 
 export function getRandomDelay(maxDelay = 1000) {
