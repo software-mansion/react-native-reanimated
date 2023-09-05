@@ -29,7 +29,14 @@ jobs:
         run: scripts/clear-annotations.sh
       - name: Install react-native ${{ matrix.react-native-version }}
         run: yarn add react-native@${{ matrix.react-native-version }}
-      - name: Check types
-        run: yarn type:check
+      - name: Check source types
+        run: yarn type:check:src
+      - name: Check plugin types
+        run: yarn type:check:plugin
       - name: Check API
-        run: yarn type:check-api
+        run: yarn type:check:app
+      - name: Run common type tests
+        run: yarn type:check:tests:common
+      - name: Run 0.72+ type tests
+        if: matrix.react-native-version != '0.71'
+        run: yarn type:check:tests:0.72+

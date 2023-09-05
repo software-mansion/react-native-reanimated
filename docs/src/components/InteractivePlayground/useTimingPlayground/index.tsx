@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import Example from './Example';
 import styles from './styles.module.css';
 
-import { Range, SelectOption } from '..';
+import { Range, SelectOption, formatReduceMotion } from '..';
 
-import { Easing } from 'react-native-reanimated';
+import { Easing, ReduceMotion } from 'react-native-reanimated';
 import PlaygroundChart, {
   bezierEasingValues,
   HandleMoveHandlerProps,
@@ -18,6 +18,7 @@ const initialState = {
   duration: 1000,
   easing: 'inOut',
   nestedEasing: 'quad',
+  reduceMotion: ReduceMotion.System,
 
   x1: 0.25,
   y1: 0.1,
@@ -40,6 +41,7 @@ export default function useTimingPlayground() {
   const [duration, setDuration] = useState(initialState.duration);
   const [easing, setEasing] = useState(initialState.easing);
   const [nestedEasing, setNestedEasing] = useState(initialState.nestedEasing);
+  const [reduceMotion, setReduceMotion] = useState(initialState.reduceMotion);
 
   // bezier
   const [x1, setX1] = useState(initialState.x1);
@@ -148,7 +150,8 @@ export default function useTimingPlayground() {
   const code = `
     withTiming(sv.value, {
       duration: ${duration},
-      easing: ${formatEasing(easing).code}
+      easing: ${formatEasing(easing).code},
+      reduceMotion: ${formatReduceMotion(reduceMotion)},
     })
   `;
 
@@ -312,6 +315,12 @@ export default function useTimingPlayground() {
           />
         </>
       )}
+      <SelectOption
+        label="Reduce motion"
+        value={reduceMotion}
+        onChange={(option) => setReduceMotion(option as ReduceMotion)}
+        options={[ReduceMotion.System, ReduceMotion.Always, ReduceMotion.Never]}
+      />
     </>
   );
 
@@ -353,6 +362,7 @@ export default function useTimingPlayground() {
       options={{
         duration,
         easing: formatEasing(easing).fn,
+        reduceMotion,
       }}
     />
   );
