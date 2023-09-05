@@ -729,14 +729,25 @@ export default function createAnimatedComponent(
           has('current', value) &&
           value.current instanceof WorkletEventHandler
         ) {
-          if (value.current.eventNames.length > 0) {
-            value.current.eventNames.forEach((eventName) => {
+          const { eventNames } = value.current;
+          if (eventNames.length > 0) {
+            eventNames.forEach((eventName) => {
               props[eventName] = has('listeners', value.current)
                 ? (value.current.listeners as Record<string, unknown>)[
                     eventName
                   ]
                 : dummyListener;
             });
+            if (
+              Platform.OS === 'android' &&
+              (eventNames.includes('onMomentumScrollBegin') ||
+                eventNames.includes('onMomentumScrollEnd')) &&
+              this.props.onMomentumScrollBegin === undefined &&
+              this.props.onMomentumScrollEnd === undefined
+            ) {
+              // force sendMomentumEvents to be true
+              props.onMomentumScrollEnd = dummyListener;
+            }
           } else {
             props[key] = dummyListener;
           }
