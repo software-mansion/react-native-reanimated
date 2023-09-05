@@ -22,7 +22,7 @@ const SUPPORTED_PROPS = [
   'originY',
   'transform',
   'borderRadius',
-] as Array<LayoutAnimationsOptions | 'transform'>;
+] as const;
 
 type AnimationFactory = (
   values: SharedTransitionAnimationsValues
@@ -140,7 +140,7 @@ export class SharedTransition {
       if (animationFactory) {
         animations = animationFactory(values);
         for (const key in animations) {
-          if (!(SUPPORTED_PROPS as string[]).includes(key)) {
+          if (!(SUPPORTED_PROPS as readonly string[]).includes(key)) {
             throw new Error(
               `[Reanimated] The prop '${key}' is not supported yet.`
             );
