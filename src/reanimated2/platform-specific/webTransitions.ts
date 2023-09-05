@@ -20,8 +20,8 @@ export interface TransitionData {
   reversed?: boolean;
 }
 
-function LinearTransition(name: string, transitionConfig: TransitionData) {
-  const { translateX, translateY, scaleX, scaleY } = transitionConfig;
+function LinearTransition(name: string, transitionData: TransitionData) {
+  const { translateX, translateY, scaleX, scaleY } = transitionData;
 
   return `@keyframes ${name} {
                   0% {
@@ -30,8 +30,8 @@ function LinearTransition(name: string, transitionConfig: TransitionData) {
                 }`;
 }
 
-function SequencedTransition(name: string, transitionConfig: TransitionData) {
-  const { translateX, translateY, scaleX, scaleY, reversed } = transitionConfig;
+function SequencedTransition(name: string, transitionData: TransitionData) {
+  const { translateX, translateY, scaleX, scaleY, reversed } = transitionData;
 
   const translate = `translate${reversed ? 'X' : 'Y'}(${
     reversed ? translateX : translateY
@@ -52,8 +52,8 @@ function SequencedTransition(name: string, transitionConfig: TransitionData) {
               }`;
 }
 
-function FadingTransition(name: string, transitionConfig: TransitionData) {
-  const { translateX, translateY, scaleX, scaleY } = transitionConfig;
+function FadingTransition(name: string, transitionData: TransitionData) {
+  const { translateX, translateY, scaleX, scaleY } = transitionData;
 
   return `@keyframes ${name} {
                 0% {
@@ -79,25 +79,25 @@ function FadingTransition(name: string, transitionConfig: TransitionData) {
  * Creates transition of given type, appends it to stylesheet and returns keyframe name.
  *
  * @param transitionType Type of transition (e.g. LINEAR).
- * @param transitionConfig Object containing data for transforms (translateX, scaleX,...).
+ * @param transitionData Object containing data for transforms (translateX, scaleX,...).
  * @returns Keyframe name that represents transition.
  */
 export function TransitionGenerator(
   transitionType: TransitionType,
-  transitionConfig: TransitionData
+  transitionData: TransitionData
 ) {
   const keyframe = generateRandomKeyframeName();
   let transition;
 
   switch (transitionType) {
     case TransitionType.LINEAR:
-      transition = LinearTransition(keyframe, transitionConfig);
+      transition = LinearTransition(keyframe, transitionData);
       break;
     case TransitionType.SEQUENCED:
-      transition = SequencedTransition(keyframe, transitionConfig);
+      transition = SequencedTransition(keyframe, transitionData);
       break;
     case TransitionType.FADING:
-      transition = FadingTransition(keyframe, transitionConfig);
+      transition = FadingTransition(keyframe, transitionData);
       break;
   }
 
@@ -119,7 +119,7 @@ export function TransitionGenerator(
 export function handleLayoutTransition(
   element: HTMLElement,
   animationConfig: AnimationConfig,
-  transitionConfig: TransitionData
+  transitionData: TransitionData
 ) {
   const { animationName } = animationConfig;
 
@@ -142,7 +142,7 @@ export function handleLayoutTransition(
 
   animationConfig.animationName = TransitionGenerator(
     animationType,
-    transitionConfig
+    transitionData
   );
 
   setElementAnimation(element, animationConfig);
