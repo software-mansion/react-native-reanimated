@@ -113,7 +113,8 @@ export default function KeyboardAvoidingViewExample(): React.ReactElement {
       <KeyboardAvoidingView
         behavior={behavior}
         style={styles.flexOne}
-        keyboardVerticalOffset={48 + 10}>
+        keyboardVerticalOffset={48 + 10}
+        contentContainerStyle={styles.flexOne}>
         <Animated.FlatList
           inverted
           contentContainerStyle={{ flex: 1 }}
