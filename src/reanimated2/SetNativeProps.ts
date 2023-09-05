@@ -26,6 +26,11 @@ if (isWeb()) {
 } else if (IS_NATIVE && global._IS_FABRIC) {
   setNativeProps = (animatedRef, updates) => {
     'worklet';
+    if (!_WORKLET) {
+      throw new Error(
+        '[Reanimated] `setNativeProps` can only be used on the UI runtime. Please call the function with `runOnUI` or run it in a worklet instead.'
+      );
+    }
     const shadowNodeWrapper = (animatedRef as any)() as ShadowNodeWrapper;
     processColorsInProps(updates);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -34,6 +39,11 @@ if (isWeb()) {
 } else if (IS_NATIVE) {
   setNativeProps = (animatedRef, updates) => {
     'worklet';
+    if (!_WORKLET) {
+      throw new Error(
+        '[Reanimated] `setNativeProps` can only be used on the UI runtime. Please call the function with `runOnUI` or run it in a worklet instead.'
+      );
+    }
     const tag = (animatedRef as any)() as number;
     const name = (animatedRef as any).viewName.value;
     processColorsInProps(updates);
