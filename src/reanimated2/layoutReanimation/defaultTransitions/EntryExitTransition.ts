@@ -189,12 +189,10 @@ export class EntryExitTransition
           }
 
           const transformProp = objectKeys[0];
-          const current = // TODO TYPESCRIPT
+          const current =
+            // TODO TYPESCRIPT
             // @ts-ignore Read similar comment above.
-            // prettier-ignore
-            // (prettier loves to push this @ts-ignore out of here and break CI)
-            (value[transformProp as keyof TransformArrayItem] as AnimationObject)
-            .current;
+            (value[transformProp] as AnimationObject).current;
           if (typeof current === 'string') {
             if (current.includes('deg'))
               return {
