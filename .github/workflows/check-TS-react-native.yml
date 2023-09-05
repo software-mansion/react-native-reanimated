@@ -34,8 +34,8 @@ jobs:
         run: yarn type:check:plugin
       - name: Check API
         run: yarn type:check:app
-      - name: Run common tests
+      - name: Run common type tests
         run: yarn type:check:tests:common
-      - name: Run 0.72+ tests
+      - name: Run 0.72+ type tests
         if: matrix.react-native-version != '0.71'
         run: yarn type:check:tests:0.72+
