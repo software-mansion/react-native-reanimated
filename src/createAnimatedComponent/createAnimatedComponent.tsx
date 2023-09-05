@@ -17,14 +17,7 @@ import {
   configureLayoutAnimations,
   enableLayoutAnimations,
 } from '../reanimated2/core';
-import {
-  isJest,
-  isChromeDebugger,
-  shouldBeUseWeb,
-  isWeb,
-  isMacOS,
-} from '../reanimated2/PlatformChecker';
-import { initialUpdaterRun } from '../reanimated2/animation';
+
 import {
   SharedTransition,
   LayoutAnimationType,
@@ -37,15 +30,23 @@ import type {
 import { getShadowNodeWrapperFromRef } from '../reanimated2/fabricUtils';
 import { isSharedValue } from '../reanimated2/utils';
 import { removeFromPropsRegistry } from '../reanimated2/PropsRegistry';
-import { getReduceMotionFromConfig } from '../reanimated2/animation/util';
+import {
+  getReduceMotionFromConfig,
+  initialUpdaterRun,
+} from '../reanimated2/animation/util';
 import { maybeBuild } from '../animationBuilder';
-
 import type { AnimateProps } from '../reanimated2';
 import { JSPropUpdater } from './JSPropUpdater';
 import { InlinePropUpdater } from './inlinePropUpdater';
 import type { AnimatedComponentProps, AnimatedProps } from './utils';
 import { has, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
+import {
+  isWeb,
+  isJest,
+  shouldBeUseWeb,
+  isChromeDebugger,
+} from 'src/reanimated2/PlatformChecker';
 
 const IS_WEB = isWeb();
 
@@ -392,7 +393,6 @@ export default function createAnimatedComponent(
 
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (
-          !isMacOS() &&
           (layout || entering || exiting || sharedTransitionTag) &&
           tag != null
         ) {

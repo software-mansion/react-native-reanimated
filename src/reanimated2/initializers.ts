@@ -6,6 +6,7 @@ import {
   callMicrotasks,
   runOnUIImmediately,
 } from './threads';
+import { mockedRequestAnimationFrame } from './utils';
 
 const IS_JEST = isJest();
 const IS_NATIVE = !shouldBeUseWeb();
@@ -112,9 +113,7 @@ export function initializeUIRuntime() {
     // We override this setup here to make sure that callbacks get the proper timestamps
     // when executed. For non-jest environments we define requestAnimationFrame in setupRequestAnimationFrame
     // @ts-ignore TypeScript uses Node definition for rAF, setTimeout, etc which returns a Timeout object rather than a number
-    global.requestAnimationFrame = (callback: (timestamp: number) => void) => {
-      return setTimeout(() => callback(performance.now()), 0);
-    };
+    globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
   }
 
   runOnUIImmediately(() => {

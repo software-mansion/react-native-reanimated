@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import Example from './Example';
 
-import { Range, CheckboxOption } from '..';
-import { WithSpringConfig } from 'react-native-reanimated';
+import { Range, CheckboxOption, SelectOption, formatReduceMotion } from '..';
+import { ReduceMotion, WithSpringConfig } from 'react-native-reanimated';
 
 const defaultConfig = {
   damping: 10,
@@ -14,6 +14,7 @@ const defaultConfig = {
   // velocity: 0,
   duration: 2000,
   dampingRatio: 0.5,
+  reduceMotion: ReduceMotion.System,
 };
 
 export default function useSpringPlayground() {
@@ -34,6 +35,7 @@ export default function useSpringPlayground() {
   );
   const [duration, setDuration] = useState(defaultConfig.duration);
   const [dampingRatio, setDampingRatio] = useState(defaultConfig.dampingRatio);
+  const [reduceMotion, setReduceMotion] = useState(defaultConfig.reduceMotion);
 
   const resetOptions = () => {
     setDamping(() => defaultConfig.damping);
@@ -61,6 +63,7 @@ export default function useSpringPlayground() {
       overshootClamping: ${overshootClamping},
       restDisplacementThreshold: ${restDisplacementThreshold},
       restSpeedThreshold: ${restSpeedThreshold},
+      reduceMotion: ${formatReduceMotion(reduceMotion)},
     })
   `;
 
@@ -158,6 +161,12 @@ export default function useSpringPlayground() {
         value={restSpeedThreshold}
         onChange={setRestSpeedThreshold}
       />
+      <SelectOption
+        label="Reduce motion"
+        value={reduceMotion}
+        onChange={(option) => setReduceMotion(option as ReduceMotion)}
+        options={[ReduceMotion.System, ReduceMotion.Always, ReduceMotion.Never]}
+      />
     </>
   );
 
@@ -170,6 +179,7 @@ export default function useSpringPlayground() {
     overshootClamping,
     restDisplacementThreshold,
     restSpeedThreshold,
+    reduceMotion,
   };
 
   const example = <Example options={{ ...options, ...restOptions }} />;

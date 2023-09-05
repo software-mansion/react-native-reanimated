@@ -12,6 +12,7 @@ import { isWeb } from '../PlatformChecker';
 interface DecayConfig {
   deceleration?: number;
   velocityFactor?: number;
+  rubberBandEffect?: boolean;
   clamp?: number[];
   velocity?: number;
   reduceMotion?: ReduceMotion;
@@ -73,6 +74,7 @@ export const withDecay = function (
     }
 
     const VELOCITY_EPS = IS_WEB ? 1 / 20 : 1;
+    const DERIVATIVE_EPS = 0.1;
     const SLOPE_FACTOR = 0.1;
 
     let decay: (animation: InnerDecayAnimation, now: number) => boolean;
@@ -93,19 +95,21 @@ export const withDecay = function (
           derivative = current - config.clamp![clampIndex];
         }
 
-        if (derivative !== 0) {
-          animation.springActive = true;
-        } else if (derivative === 0 && animation.springActive) {
-          animation.current = config.clamp![clampIndex];
-          return true;
-        }
-
         const v =
           velocity *
             Math.exp(
               -(1 - config.deceleration) * (now - startTimestamp) * SLOPE_FACTOR
             ) -
           derivative * config.rubberBandFactor;
+
+        if (Math.abs(derivative) > DERIVATIVE_EPS) {
+          animation.springActive = true;
+        } else if (animation.springActive) {
+          animation.current = config.clamp![clampIndex];
+          return true;
+        } else if (Math.abs(v) < VELOCITY_EPS) {
+          return true;
+        }
 
         animation.current =
           current + (v * config.velocityFactor * deltaTime) / 1000;
