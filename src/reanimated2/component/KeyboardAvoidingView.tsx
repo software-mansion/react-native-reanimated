@@ -61,7 +61,7 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
       [onLayout]
     );
 
-    const getBackwardCompatibleHeight = useWorkletCallback(
+    const getBackwardCompatibleBottomHeight = useWorkletCallback(
       (keyboardHeight: number) => {
         if (currentFrame.value == null || initialFrame.value == null) {
           return 0;
@@ -71,14 +71,7 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
           screenHeight - keyboardHeight - keyboardVerticalOffset;
 
         if (behavior === 'height') {
-          return Math.max(
-            keyboardHeight +
-              currentFrame.value.y +
-              currentFrame.value.height -
-              keyboardY -
-              initialFrame.value.height,
-            0
-          );
+          return Math.max(initialFrame.value.height - keyboardHeight, 0);
         }
 
         return Math.max(
@@ -91,17 +84,21 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
     const animatedStyle = useAnimatedStyle(() => {
       const keyboardHeight = keyboard.height.value;
 
-      const bottom = getBackwardCompatibleHeight(keyboardHeight);
+      const bottom = getBackwardCompatibleBottomHeight(keyboardHeight);
 
       // we use `enabled === true` to be 100% compatible with original implementation
       const bottomHeight = enabled === true ? bottom : 0;
 
       switch (behavior) {
         case 'height':
-          return {
-            height: bottomHeight > 0 ? bottomHeight : undefined,
-            flex: 0,
-          };
+          const style =
+            bottomHeight > 0
+              ? {
+                  height: bottomHeight,
+                  flex: 0,
+                }
+              : {};
+          return style;
 
         case 'position':
           return {
@@ -125,7 +122,7 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
         style={
           behavior === 'position' || behavior === undefined
             ? style
-            : StyleSheet.compose(style, animatedStyle)
+            : [style, animatedStyle]
         }
         {...props}>
         {behavior === 'position' ? (
@@ -136,7 +133,6 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
         ) : (
           children
         )}
-        {}
       </ReanimatedView>
     );
   }
