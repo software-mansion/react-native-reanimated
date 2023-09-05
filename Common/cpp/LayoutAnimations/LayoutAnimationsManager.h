@@ -69,6 +69,7 @@ class LayoutAnimationsManager {
   std::unordered_set<int> ignoreProgressAnimationForTag_;
   std::unordered_map<std::string, std::vector<int>> sharedTransitionGroups_;
   std::unordered_map<int, std::string> viewTagToSharedTag_;
+  std::unordered_map<int, int> viewTagToScreenTag_;
   mutable std::mutex
       animationsMutex_; // Protects `enteringAnimations_`, `exitingAnimations_`,
   // `layoutAnimations_` and `viewSharedValues_`.

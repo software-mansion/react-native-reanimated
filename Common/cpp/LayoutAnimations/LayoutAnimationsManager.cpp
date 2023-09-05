@@ -138,12 +138,30 @@ void LayoutAnimationsManager::checkDuplicateSharedTag(
   const auto &pair = getScreenSharedTagPairString(screenTag, sharedTag);
   bool hasDuplicate = screenSharedTagSet_.count(pair);
   if (hasDuplicate) {
+//    sharedTransitionGroups_[sharedTag].empty();
+//    sharedTransitionGroups_[sharedTag].push_back(viewTag);
+    
+    auto &group = sharedTransitionGroups_[sharedTag];
+    for (int i = 0; i < group.size(); i++) {
+      int groupItemViewTag = group[i];
+      if (viewTagToScreenTag_[groupItemViewTag] == screenTag) {
+//        group.erase(std::prev(group.end()));
+//        group[i] = viewTag;
+        group[i] = viewTag;
+        group.erase(std::prev(group.end()));
+        viewTagToScreenTag_.erase(groupItemViewTag);
+        clearLayoutAnimationConfig(groupItemViewTag);
+        break;
+      }
+    }
+    
     jsLogger_->warnOnJS(
         "[Reanimated] Duplicate shared tag \"" + sharedTag +
         "\" on the same screen");
   }
   viewsScreenSharedTagMap_[viewTag] = pair;
   screenSharedTagSet_.insert(pair);
+  viewTagToScreenTag_[viewTag] = screenTag;
 }
 #endif // DEBUG
 

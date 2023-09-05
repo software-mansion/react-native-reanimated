@@ -99,12 +99,8 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)invalidate
 {
-  _startAnimationForTag = nil;
-  _hasAnimationForTag = nil;
+  [_sharedTransitionManager invalidate];
   _uiManager = nil;
-  _exitingViews = nil;
-  _targetKeys = nil;
-  _currentKeys = nil;
 }
 
 - (void)setAnimationStartingBlock:(REAAnimationStartingBlock)startAnimation

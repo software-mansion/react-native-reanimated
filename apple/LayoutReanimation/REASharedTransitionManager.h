@@ -3,6 +3,7 @@
 
 @interface REASharedTransitionManager : NSObject
 
+- (void)invalidate;
 - (void)notifyAboutNewView:(REAUIView *)view;
 - (void)notifyAboutViewLayout:(REAUIView *)view withViewFrame:(CGRect)frame;
 - (void)viewsDidLayout;

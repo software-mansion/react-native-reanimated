@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, Button, StyleSheet } from 'react-native';
+import { View, Button, StyleSheet, Text } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
@@ -12,6 +12,7 @@ const Stack = createNativeStackNavigator();
 function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.flexOne}>
+      {/* <Text>Screen2</Text> */}
       <Animated.View style={styles.redBox} sharedTransitionTag="tag1" />
       <Button title="Screen2" onPress={() => navigation.navigate('Screen2')} />
       <Button title="Screen3" onPress={() => navigation.navigate('Screen3')} />
@@ -22,6 +23,7 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
 function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.container}>
+      <Text>Screen2</Text>
       <Animated.View style={styles.greenBox} sharedTransitionTag="tag1" />
       <Button title="Screen1" onPress={() => navigation.navigate('Screen1')} />
       <Button title="Screen3" onPress={() => navigation.navigate('Screen3')} />

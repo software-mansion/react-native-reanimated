@@ -74,6 +74,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 #endif
   [_nodesManager invalidate];
+  [_animationsManager invalidate];
   [super invalidate];
 }
 

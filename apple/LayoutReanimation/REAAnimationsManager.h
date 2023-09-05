@@ -62,6 +62,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
 - (void)clearAnimationConfigForTag:(NSNumber *)tag;
 - (void)startAnimationForTag:(NSNumber *)tag type:(LayoutAnimationType)type yogaValues:(NSDictionary *)yogaValues;
 - (void)onScreenRemoval:(REAUIView *)screen stack:(REAUIView *)stack;
+- (void)notAffectedLayout;
 
 @end
 

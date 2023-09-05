@@ -28,6 +28,7 @@
   BOOL _isAsyncSharedTransitionConfigured;
   BOOL _isConfigured;
   BOOL _clearScreen;
+  BOOL _fastRefresHappend;
 }
 
 /*
@@ -59,19 +60,19 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _isAsyncSharedTransitionConfigured = NO;
     _isConfigured = NO;
     [self swizzleScreensMethods];
+    [self listenForFastRefresh];
   }
   return self;
 }
 
 - (void)invalidate
 {
-  _snapshotRegistry = nil;
-  _currentSharedTransitionViews = nil;
-  _addedSharedViews = nil;
-  _sharedTransitionParent = nil;
-  _sharedTransitionInParentIndex = nil;
-  _sharedElements = nil;
-  _animationManager = nil;
+  if (_transitionContainer != nil) {
+    UIView *transitionContainer = _transitionContainer;
+    RCTExecuteOnMainQueue(^() {
+      [transitionContainer removeFromSuperview];
+    });
+  }
 }
 
 - (REAUIView *)getTransitioningView:(NSNumber *)tag
@@ -119,6 +120,10 @@ static REASharedTransitionManager *_sharedTransitionManager;
 - (void)configureAsyncSharedTransitionForViews:(NSArray<REAUIView *> *)views
 {
   if ([views count] > 0) {
+    if (_fastRefresHappend) {
+      _fastRefresHappend = NO;
+      return;
+    }
     NSArray *sharedViews = [self sortViewsByTags:views];
     _sharedElements = [self getSharedElementForCurrentTransition:sharedViews withNewElements:YES];
     [self resolveAnimationType:_sharedElements isInteractive:NO];
@@ -738,5 +743,41 @@ static REASharedTransitionManager *_sharedTransitionManager;
     return false;
   });
 }
+
+- (void)listenForFastRefresh
+{
+  NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+  [notificationCenter addObserver:self
+                         selector:@selector(handleFastRefresh)
+                             name:RCTBridgeFastRefreshNotification
+                           object:nil];
+}
+
+- (void)handleFastRefresh
+{
+  _fastRefresHappend = YES;
+}
+
+//- (REASnapshot *)tryToMakeAbsoluteSnapshot:(REAUIView *)viewSource viewTarget:(REAUIView *)viewTarget stack:(REAUIView *)stack
+//{
+//  REASnapshot *targetViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewTarget];
+//  UIView *sourceScreen = [REAScreensHelper getScreenForView:viewSource];
+//  UIView *targetScreen = [REAScreensHelper getScreenForView:viewTarget];
+//  UIView *mainWindow = UIApplication.sharedApplication.keyWindow;
+//  CGPoint absolutePosition = [stack convertPoint:targetScreen.center toView:mainWindow];
+//  float originY = absolutePosition.y - sharedViewScreen.bounds.size.height / 2.0;
+//  bool sourceScreenHasHeader = ![[sourceScreen.reactSubviews[0] valueForKey:@"hide"] boolValue];
+//  bool targetScreenHasHeader = ![[targetScreen.reactSubviews[0] valueForKey:@"hide"] boolValue];
+//  float headerSize = [[REAScreensHelper getDefaultHeaderSize] floatValue];
+//  float topOffset = 0;
+//  if (targetScreenHasHeader) {
+//    topOffset = headerSize;
+//  } else if (sourceScreenHasHeader) {
+//    topOffset = -(headerSize / 2);
+//  }
+//  targetViewSnapshot.values[@"originY"] = @(originY + [targetViewSnapshot.values[@"originY"] floatValue] + topOffset);
+//  _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
+//  return targetViewSnapshot;
+//}
 
 @end
