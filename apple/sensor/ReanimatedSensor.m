@@ -218,7 +218,10 @@
 
 @implementation ReanimatedSensor
 
-- (instancetype)init:(ReanimatedSensorType)sensorType interval:(int)interval setter:(void (^)(double[]))setter
+- (instancetype)init:(ReanimatedSensorType)sensorType
+             interval:(int)interval
+    iosReferenceFrame:(int)iosReferenceFrame
+               setter:(void (^)(double[], int))setter
 {
   self = [super init];
   return self;
