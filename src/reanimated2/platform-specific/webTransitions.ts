@@ -105,7 +105,13 @@ export function TransitionGenerator(
     WEB_ANIMATIONS_ID
   ) as HTMLStyleElement;
 
-  styleTag.sheet?.insertRule(transition);
+  if (styleTag.sheet) {
+    styleTag.sheet.insertRule(transition);
+  } else {
+    console.error(
+      '[Reanimated] Failed to insert layout animation into CSS stylesheet'
+    );
+  }
 
   return keyframe;
 }

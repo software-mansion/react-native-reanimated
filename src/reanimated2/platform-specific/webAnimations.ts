@@ -47,11 +47,20 @@ export function insertWebAnimations() {
   const style = document.createElement('style');
   style.id = WEB_ANIMATIONS_ID;
 
-  document.head.appendChild(style);
+  style.onload = () => {
+    if (!style.sheet) {
+      console.error(
+        '[Reanimated] Failed to create layout animations stylesheet'
+      );
+      return;
+    }
 
-  for (const animationName in Animations) {
-    style.sheet?.insertRule(Animations[animationName as AnimationNames].style);
-  }
+    for (const animationName in Animations) {
+      style.sheet.insertRule(Animations[animationName as AnimationNames].style);
+    }
+  };
+
+  document.head.appendChild(style);
 }
 
 /**
@@ -115,7 +124,13 @@ export function createAnimationWithExistingTransform(
     WEB_ANIMATIONS_ID
   ) as HTMLStyleElement;
 
-  styleTag.sheet?.insertRule(keyframe);
+  if (styleTag.sheet) {
+    styleTag.sheet.insertRule(keyframe);
+  } else {
+    console.error(
+      '[Reanimated] Failed to insert layout animation into CSS stylesheet'
+    );
+  }
 
   return keyframeName;
 }
