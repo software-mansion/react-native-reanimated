@@ -113,7 +113,7 @@ export function initializeUIRuntime() {
     // We override this setup here to make sure that callbacks get the proper timestamps
     // when executed. For non-jest environments we define requestAnimationFrame in setupRequestAnimationFrame
     // @ts-ignore TypeScript uses Node definition for rAF, setTimeout, etc which returns a Timeout object rather than a number
-    global.requestAnimationFrame = mockedRequestAnimationFrame;
+    globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
   }
 
   runOnUIImmediately(() => {

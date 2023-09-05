@@ -19,10 +19,10 @@ import { mockedRequestAnimationFrame } from '../utils';
 // In Node.js environments (like when static rendering with Expo Router)
 // requestAnimationFrame is unavailable, so we use our mock.
 // It also has to be mocked for Jest purposes (see `initializeUIRuntime`).
-const scheduleOnUI =
-  isJest() || !global.requestAnimationFrame
+const _scheduleOnUI =
+  isJest() || !globalThis.requestAnimationFrame
     ? mockedRequestAnimationFrame
-    : global.requestAnimationFrame;
+    : globalThis.requestAnimationFrame;
 
 export default class JSReanimated {
   native = false;
@@ -38,7 +38,7 @@ export default class JSReanimated {
 
   scheduleOnUI<T>(worklet: ShareableRef<T>) {
     // @ts-ignore web implementation has still not been updated after the rewrite, this will be addressed once the web implementation updates are ready
-    scheduleOnUI(worklet);
+    _scheduleOnUI(worklet);
   }
 
   createWorkletRuntime(
