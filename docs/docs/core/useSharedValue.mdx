@@ -88,6 +88,22 @@ function App() {
 
 </Indent>
 
+- When the shared value is an object, you cannot alter values individually. Set the value as the complete object.
+
+<Indent>
+
+```javascript
+  const offsets = useSharedValue({x: 0, y: 0})
+
+  const pan = Gesture.Pan()
+    .onChange((event) => {
+      offsets.value.x = event.translationX; // doesn't work
+      offsets.value = {x: event.translationX, y: offsets.value.y}; // Correct
+    })
+```
+
+</Indent>
+
 ## Platform compatibility
 
 <div className="compatibility">
