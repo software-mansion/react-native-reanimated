@@ -81,6 +81,11 @@ public class NativeProxy extends NativeProxyCommon {
             }
 
             @Override
+            public boolean isDisabledExiting(int tag) {
+                return false;
+            }
+
+            @Override
             public boolean hasAnimation(int tag, int type) {
                 return false;
             }
