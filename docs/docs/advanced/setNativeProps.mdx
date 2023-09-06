@@ -4,7 +4,7 @@ sidebar_position: 7
 
 # setNativeProps
 
-`setNativeProps` lets you directly update component properties on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+`setNativeProps` lets you directly update component properties from the [UI thread](/docs/fundamentals/glossary#ui-thread).
 
 :::caution
 
@@ -71,3 +71,15 @@ import SetNativePropsSrc from '!!raw-loader!@site/src/examples/SetNativeProps';
 <InteractiveExample src={SetNativePropsSrc} component={<SetNativeProps />} />
 
 ## Remarks
+
+- You should always reach for [`useAnimatedStyle`](docs/core/useAnimatedStyle) and [`useAnimatedProps`](docs/core/useAnimatedProps) first when animating styles or properties.
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>
