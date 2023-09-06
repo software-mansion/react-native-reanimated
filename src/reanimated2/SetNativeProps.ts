@@ -28,7 +28,7 @@ if (isWeb()) {
     'worklet';
     if (!_WORKLET) {
       throw new Error(
-        '[Reanimated] `setNativeProps` can only be used on the UI runtime. Please call the function with `runOnUI` or run it in a worklet instead.'
+        '[Reanimated] `setNativeProps` can only be used on the UI runtime.'
       );
     }
     const shadowNodeWrapper = (animatedRef as any)() as ShadowNodeWrapper;
@@ -41,7 +41,7 @@ if (isWeb()) {
     'worklet';
     if (!_WORKLET) {
       throw new Error(
-        '[Reanimated] `setNativeProps` can only be used on the UI runtime. Please call the function with `runOnUI` or run it in a worklet instead.'
+        '[Reanimated] `setNativeProps` can only be used on the UI runtime.'
       );
     }
     const tag = (animatedRef as any)() as number;
