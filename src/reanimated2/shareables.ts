@@ -275,7 +275,9 @@ export function makeShareableCloneOnUIRecursive<T>(
       if (isHostObject(value)) {
         // We call `_makeShareableClone` because provided HostObject
         // might not be a Shareable.
-        return _makeShareableClone(value) as FlatShareableRef<T>;
+        return _makeShareableClone(
+          _makeShareableClone(value)
+        ) as FlatShareableRef<T>;
       }
       if (isRemoteFunction<T>(value)) {
         // RemoteFunctions are created by us therefore they are
