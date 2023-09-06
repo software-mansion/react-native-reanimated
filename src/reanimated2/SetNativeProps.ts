@@ -27,9 +27,10 @@ if (isWeb()) {
   setNativeProps = (animatedRef, updates) => {
     'worklet';
     if (!_WORKLET) {
-      throw new Error(
+      console.warn(
         '[Reanimated] `setNativeProps` can only be used on the UI runtime.'
       );
+      return;
     }
     const shadowNodeWrapper = (animatedRef as any)() as ShadowNodeWrapper;
     processColorsInProps(updates);
@@ -40,9 +41,10 @@ if (isWeb()) {
   setNativeProps = (animatedRef, updates) => {
     'worklet';
     if (!_WORKLET) {
-      throw new Error(
+      console.warn(
         '[Reanimated] `setNativeProps` can only be used on the UI runtime.'
       );
+      return;
     }
     const tag = (animatedRef as any)() as number;
     const name = (animatedRef as any).viewName.value;
@@ -53,17 +55,17 @@ if (isWeb()) {
 } else if (isChromeDebugger()) {
   setNativeProps = () => {
     console.warn(
-      '[Reanimated] setNativeProps() is not supported with Chrome Debugger.'
+      '[Reanimated] `setNativeProps` is not supported with Chrome Debugger.'
     );
   };
 } else if (isJest()) {
   setNativeProps = () => {
-    console.warn('[Reanimated] setNativeProps() is not supported with Jest.');
+    console.warn('[Reanimated] `setNativeProps` is not supported with Jest.');
   };
 } else {
   setNativeProps = () => {
     console.warn(
-      '[Reanimated] setNativeProps() is not supported on this configuration.'
+      '[Reanimated] `setNativeProps` is not supported on this configuration.'
     );
   };
 }
