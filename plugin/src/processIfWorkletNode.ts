@@ -4,7 +4,7 @@ import type { BlockStatement } from '@babel/types';
 import { processIfWorkletFunction } from './processIfWorkletFunction';
 import type { ExplicitWorklet, ReanimatedPluginPass } from './types';
 
-function hasWorkletDirective(directives: BlockStatement['directives']) {
+export function hasWorkletDirective(directives: BlockStatement['directives']) {
   return (
     directives &&
     directives.length > 0 &&

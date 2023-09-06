@@ -15,6 +15,8 @@ import {
   assignmentExpression,
   blockStatement,
   cloneNode,
+  directive,
+  directiveLiteral,
   expressionStatement,
   functionExpression,
   identifier,
@@ -46,6 +48,8 @@ import { isRelease } from './utils';
 
 const REAL_VERSION = require('../../package.json').version;
 const MOCK_VERSION = 'x.y.z';
+
+export const WORKLET_DIRECTIVE = directive(directiveLiteral('worklet'));
 
 export function makeWorklet(
   fun: NodePath<WorkletizableFunction>,

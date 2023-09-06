@@ -5,9 +5,14 @@ import {
   isExportNamedDeclaration,
   variableDeclaration,
   variableDeclarator,
+  blockStatement,
+  returnStatement,
+  isBlockStatement,
+  isLogicalExpression,
 } from '@babel/types';
 import type { ExplicitWorklet, ReanimatedPluginPass } from './types';
-import { makeWorklet } from './makeWorklet';
+import { WORKLET_DIRECTIVE, makeWorklet } from './makeWorklet';
+import { hasWorkletDirective } from './processIfWorkletNode';
 
 // Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
 // with a workletized version of itself.
@@ -21,7 +26,8 @@ export function processIfWorkletFunction(
     path.isFunctionExpression() ||
     path.isArrowFunctionExpression()
   ) {
-    processWorkletFunction(path, state);
+    // processWorkletFunction(path, state);
+    annotateWorkletFunction(path, state);
   }
 }
 
@@ -47,4 +53,26 @@ function processWorkletFunction(
         ])
       : replacement
   );
+}
+function annotateWorkletFunction(
+  path: NodePath<ExplicitWorklet>,
+  state: ReanimatedPluginPass
+) {
+  const body = path.get('body');
+  if (isBlockStatement(body.node)) {
+    if (!hasWorkletDirective(body.node.directives)) {
+      body.node.directives = [
+        WORKLET_DIRECTIVE,
+        ...(body.node.directives || []),
+      ];
+    }
+  } else if (isLogicalExpression(body.node)) {
+    const block = blockStatement([returnStatement(body.node)]);
+    block.directives.push(WORKLET_DIRECTIVE);
+    body.replaceWith(block);
+  } else {
+    throw new Error(
+      `[Reanimated] Unsupported '${body.node.type}' type for annotation.`
+    );
+  }
 }
