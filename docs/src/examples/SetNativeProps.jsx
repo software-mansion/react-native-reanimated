@@ -1,17 +1,23 @@
 import React from 'react';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   runOnUI,
   setNativeProps,
   useAnimatedRef,
 } from 'react-native-reanimated';
-import { Button, StyleSheet, View } from 'react-native';
+
+const COLORS = ['#FFE780', '#87CCE8', '#FFA3A1', '#B1DFD0', '#B58DF1'];
 
 export default function Example() {
   const animatedRef = useAnimatedRef();
 
   const handlePress = () => {
     runOnUI(() => {
-      setNativeProps(animatedRef, { backgroundColor: 'blue' });
+      // highlight-next-line
+      setNativeProps(animatedRef, {
+        backgroundColor: COLORS[Math.floor(Math.random() * COLORS.length)],
+        // highlight-next-line
+      });
     })();
   };
 
@@ -29,5 +35,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  box: { width: 100, height: 100, backgroundColor: 'red' },
+  box: {
+    height: 120,
+    width: 120,
+    backgroundColor: '#B58DF1',
+    borderRadius: 20,
+    marginBottom: 30,
+  },
 });
