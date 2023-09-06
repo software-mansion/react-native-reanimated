@@ -28,7 +28,7 @@ if (isWeb()) {
     'worklet';
     if (!_WORKLET) {
       console.warn(
-        '[Reanimated] `setNativeProps` can only be used on the UI runtime.'
+        '[Reanimated] setNativeProps() can only be used on the UI runtime.'
       );
       return;
     }
@@ -42,7 +42,7 @@ if (isWeb()) {
     'worklet';
     if (!_WORKLET) {
       console.warn(
-        '[Reanimated] `setNativeProps` can only be used on the UI runtime.'
+        '[Reanimated] setNativeProps() can only be used on the UI runtime.'
       );
       return;
     }
@@ -55,17 +55,17 @@ if (isWeb()) {
 } else if (isChromeDebugger()) {
   setNativeProps = () => {
     console.warn(
-      '[Reanimated] `setNativeProps` is not supported with Chrome Debugger.'
+      '[Reanimated] setNativeProps() is not supported with Chrome Debugger.'
     );
   };
 } else if (isJest()) {
   setNativeProps = () => {
-    console.warn('[Reanimated] `setNativeProps` is not supported with Jest.');
+    console.warn('[Reanimated] setNativeProps() is not supported with Jest.');
   };
 } else {
   setNativeProps = () => {
     console.warn(
-      '[Reanimated] `setNativeProps` is not supported on this configuration.'
+      '[Reanimated] setNativeProps() is not supported on this configuration.'
     );
   };
 }
