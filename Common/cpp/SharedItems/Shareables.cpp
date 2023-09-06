@@ -109,6 +109,8 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
     if (object.isHostObject<ShareableJSRef>(rt)) {
       return object.getHostObject<ShareableJSRef>(rt)->value();
     }
+    throw std::runtime_error(
+        "[Reanimated] Attempted to extract from a HostObject that wasn't converted to a Shareable.");
   } else if (maybeShareableValue.isUndefined()) {
     return Shareable::undefined();
   }
