@@ -1,8 +1,6 @@
-import type { NativeScrollEvent } from 'react-native';
-import type {} from '../commonTypes';
 import type { DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
-import { NativeSyntheticEvent } from 'react-native';
+import type { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 
 export interface ScrollEvent extends NativeScrollEvent {
   eventName: string;
