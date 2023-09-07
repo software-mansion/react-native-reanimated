@@ -17,9 +17,10 @@ interface Handler<T, TContext extends __Context> extends __WorkletFunction {
   (event: T, context: TContext): void;
 }
 
-interface Handlers<T, TContext extends __Context> {
-  [key: string]: Handler<T, TContext> | undefined;
-}
+type Handlers<Payload, Context extends Record<string, unknown>> = Record<
+  string,
+  Handler<Payload, Context> | undefined
+>;
 
 interface UseHandlerContext<TContext extends __Context> {
   context: TContext;

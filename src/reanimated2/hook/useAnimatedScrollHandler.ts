@@ -6,13 +6,9 @@ export interface ScrollEvent extends NativeScrollEvent {
   eventName: string;
 }
 
-type ScrollHandlerArguments<Context extends Record<string, unknown>> = [
+export type ScrollHandler<Context extends Record<string, unknown>> = (
   event: ScrollEvent,
   context: Context
-];
-
-export type ScrollHandler<Context extends Record<string, unknown>> = (
-  ...args: ScrollHandlerArguments<Context>
 ) => void;
 export interface ScrollHandlers<Context extends Record<string, unknown>> {
   onScroll?: ScrollHandler<Context>;
@@ -32,11 +28,7 @@ export function useAnimatedScrollHandler<
   const scrollHandlers: ScrollHandlers<Context> =
     typeof handlers === 'function' ? { onScroll: handlers } : handlers;
   const { context, doDependenciesDiffer } = useHandler<ScrollEvent, Context>(
-    // This cast is only to signify the problem of [key: string] usage
-    // and will be eliminated in the future when types of
-    // `useHandler` will be corrected.
-    scrollHandlers as typeof scrollHandlers &
-      Record<string, ScrollHandler<Context>>,
+    scrollHandlers as Record<string, ScrollHandler<Context>>,
     dependencies
   );
 
@@ -85,9 +77,9 @@ export function useAnimatedScrollHandler<
     },
     subscribeForEvents,
     doDependenciesDiffer
-    // This casts stems from `react-native-reanimated` pretending that
-    // our event hooks use `react-native` wrapper event objects
-    // for easier assignment to `onScroll` prop in components.
-    // This will be fixed in the future.
+    // TODO TYPESCRIPT
+    // This casts stems from improper assumption
+    // that all events are wrappers that have 'nativeEvent' field.
+    // This will be fixed in the future when `useEvent` is tackled.
   ) as (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }
