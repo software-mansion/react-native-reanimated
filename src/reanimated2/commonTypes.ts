@@ -252,8 +252,10 @@ export interface __BasicWorkletFunction<T> extends __WorkletFunction {
 /**
  * @deprecated
  */
-export interface __BasicWorkletFunctionOptional<T> extends __WorkletFunction {
-  (): Partial<T>;
+export interface __ComplexWorkletFunction<A extends any[], R>
+  extends __WorkletFunction {
+  (...args: A): R;
+  __remoteFunction?: (...args: A) => R;
 }
 
 /**
