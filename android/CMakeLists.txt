@@ -26,8 +26,10 @@ if(${IS_REANIMATED_EXAMPLE_APP})
     string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP")
 endif()
 
-if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
     string(APPEND CMAKE_CXX_FLAGS " -DDEBUG")
+else()
+    string(APPEND CMAKE_CXX_FLAGS " -DNDEBUG")
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -59,11 +61,6 @@ else()
     file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
 endif()
 
-if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
-    set(INCLUDE_JSI_CPP "${REACT_NATIVE_DIR}/ReactCommon/jsi/jsi/jsi.cpp")
-    set(INCLUDE_JSIDYNAMIC_CPP "${REACT_NATIVE_DIR}/ReactCommon/jsi/jsi/JSIDynamic.cpp")
-endif()
-
 add_library(
         ${PACKAGE_NAME}
         SHARED
@@ -78,16 +75,15 @@ add_library(
 target_include_directories(
         ${PACKAGE_NAME}
         PRIVATE
-        "${COMMON_SRC_DIR}/cpp/Tools"
-        "${COMMON_SRC_DIR}/cpp/SpecTools"
-        "${COMMON_SRC_DIR}/cpp/NativeModules"
-        "${COMMON_SRC_DIR}/cpp/SharedItems"
-        "${COMMON_SRC_DIR}/cpp/ReanimatedRuntime"
-        "${COMMON_SRC_DIR}/cpp/Registries"
-        "${COMMON_SRC_DIR}/cpp/LayoutAnimations"
         "${COMMON_SRC_DIR}/cpp/AnimatedSensor"
         "${COMMON_SRC_DIR}/cpp/Fabric"
         "${COMMON_SRC_DIR}/cpp/hidden_headers"
+        "${COMMON_SRC_DIR}/cpp/LayoutAnimations"
+        "${COMMON_SRC_DIR}/cpp/NativeModules"
+        "${COMMON_SRC_DIR}/cpp/ReanimatedRuntime"
+        "${COMMON_SRC_DIR}/cpp/Registries"
+        "${COMMON_SRC_DIR}/cpp/SharedItems"
+        "${COMMON_SRC_DIR}/cpp/Tools"
         "${SRC_DIR}/main/cpp"
 )
 
@@ -149,18 +145,13 @@ if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
         fbjni::fbjni
     )
 else()
-    if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
-        set (JSI_LIB "")
-    else()
-        find_library(
-            JSI_LIB
-            jsi
-            PATHS ${LIBRN_DIR}
-            NO_DEFAULT_PATH
-            NO_CMAKE_FIND_ROOT_PATH
-        )
-    endif()
-
+    find_library(
+        JSI_LIB
+        jsi
+        PATHS ${LIBRN_DIR}
+        NO_DEFAULT_PATH
+        NO_CMAKE_FIND_ROOT_PATH
+    )
     find_library(
         GLOG_LIB
         glog
@@ -317,16 +308,6 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
         ReactAndroid::react_render_scheduler
         ReactAndroid::react_render_uimanager
         ReactAndroid::rrc_view
-    )
-endif()
-
-if(${REACT_NATIVE_MINOR_VERSION} LESS 64)
-    add_library(
-            turbomodulejsijni
-            # Sets the library as a shared library.
-            SHARED
-            # Provides a relative path to your source file(s).
-            ./empty.cpp
     )
 endif()
 

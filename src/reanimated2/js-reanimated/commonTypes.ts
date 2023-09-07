@@ -34,7 +34,6 @@ interface JSReanimated {
   pushFrame(frame: (timestamp: Timestamp) => void): void;
   maybeRequestRender(): void;
   _onRender(timestampMs: number): void;
-  installCoreFunctions(valueSetter: <T>(value: T) => void): void;
   makeShareable<T>(value: T): T;
   makeMutable<T>(value: T): MutableValue<T>;
   makeRemote<T>(object: Record<string, any>): T;
@@ -44,7 +43,11 @@ interface JSReanimated {
     outputs: NestedObjectValues<MutableValue<unknown>>[]
   ): number;
   stopMapper(mapperId: number): void;
-  registerEventHandler<T>(_: string, __: (event: T) => void): string;
+  registerEventHandler<T>(
+    eventHandler: (event: T) => void,
+    eventName: string,
+    emitterReactTag: number
+  ): string;
   unregisterEventHandler(_: string): void;
   enableLayoutAnimations(): void;
 }

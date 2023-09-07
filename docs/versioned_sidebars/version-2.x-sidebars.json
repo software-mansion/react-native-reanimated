@@ -72,17 +72,12 @@
     {
       "type": "category",
       "label": "Guides",
-      "items": [
-        "guide/testing",
-        "guide/debugging"
-      ]
+      "items": ["guide/testing", "guide/debugging"]
     },
     {
       "type": "category",
       "label": "Tutorials",
-      "items": [
-        "tutorials/LayoutAnimations/layoutAnimations"
-      ]
+      "items": ["tutorials/LayoutAnimations/layoutAnimations"]
     },
     {
       "type": "doc",

@@ -1,0 +1,130 @@
+---
+sidebar_position: 2
+---
+
+# useAnimatedStyle
+
+`useAnimatedStyle` lets you create a styles object, similar to `StyleSheet` styles, which can be animated using [shared values](/docs/fundamentals/glossary#shared-value).
+
+Styles defined using `useAnimatedStyle` have to be passed to `style` property of an [Animated component](/docs/fundamentals/glossary#animated-component). Styles are automatically updated whenever an associated shared value or React state changes.
+
+For animating properties use [`useAnimatedProps`](/docs/core/useAnimatedProps) instead.
+
+## Reference
+
+```jsx
+import { useAnimatedStyle } from 'react-native-reanimated';
+
+function App() {
+  // highlight-next-line
+  const animatedStyles = useAnimatedStyle(() => {
+    return {
+      opacity: sv.value ? 1 : 0,
+    };
+    // highlight-next-line
+  });
+
+  // highlight-next-line
+  return <Animated.View style={[styles.box, animatedStyles]} />;
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type AnimatedStyleProp<T> = AnimateStyle<T> | RegisteredStyle<AnimateStyle<T>>;
+
+function useAnimatedStyle<
+  T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
+>(updater: () => T, dependencies?: DependencyList | null): T;
+```
+
+</details>
+
+### Arguments
+
+#### `updater`
+
+A function returning an object with style properties you want to animate. You can animate any style property available in React Native.
+
+#### `dependencies` <Optional/>
+
+An optional array of dependencies.
+
+Only relevant when using Reanimated [without the Babel plugin on the Web](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin).
+
+## Returns
+
+`useAnimatedStyle` returns an animated style object which has to be passed to the `style` property of an [Animated component](/docs/fundamentals/glossary#animated-component) that you want to animate.
+
+## Example
+
+import AnimatingStyles from '@site/src/examples/AnimatingStyles';
+import AnimatingStylesSrc from '!!raw-loader!@site/src/examples/AnimatingStyles';
+
+<InteractiveExample
+  src={AnimatingStylesSrc}
+  component={<AnimatingStyles />}
+  showCode
+/>
+
+## Remarks
+
+- The callback passed to the `useAnimatedStyle` is first run on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) and immediately after on the [UI thread](/docs/fundamentals/glossary#ui-thread). Some functions like [`measure`](/docs/advanced/measure) and [`scrollTo`](/docs/scroll/scrollTo) have implementations only on the UI thread. To safely use them inside of `useAnimatedStyle` callback add a check to your code:
+
+<Indent>
+
+```jsx
+function App() {
+  const animatedStyles = useAnimatedStyle(() => {
+    // highlight-next-line
+    if (!_WORKLET) {
+      return { offset: 0 };
+    }
+
+    // safely use measure or scrollTo functions
+  });
+}
+```
+
+</Indent>
+
+- Make sure not to mutate shared values in `useAnimatedStyle`'s callback. In many cases this can cause an infinite loop.
+
+- Only define the dynamic part of your styles with `useAnimatedStyle` and keep the static ones separately using `StyleSheet` API or (if you really have to) with inline styles. That way you avoid lots of unnecessary style recalculations. Static and dynamic styles can be easily merged using the `[]` syntax:
+
+<Indent>
+
+```jsx
+function App() {
+  const animatedStyles = useAnimatedStyle(() => ({
+    offset: sv.value,
+  }));
+
+  // highlight-next-line
+  return <Animated.View style={[styles.box, animatedStyles]} />;
+}
+
+const styles = StyleSheet.create({
+  box: {
+    height: 120,
+    width: 120,
+    backgroundColor: '#b58df1',
+  },
+});
+```
+
+</Indent>
+
+- You can share animated props between components to avoid code duplication.
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>

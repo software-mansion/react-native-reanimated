@@ -157,7 +157,7 @@ function Followers({
   );
 }
 
-export default function ChatHeadsExample(): React.ReactElement {
+export default function ChatHeadsExample() {
   return (
     <View style={styles.container}>
       <ChatHeads>

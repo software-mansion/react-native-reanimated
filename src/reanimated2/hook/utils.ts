@@ -50,12 +50,6 @@ export const useEvent = function <T extends __NativeEvent<T>>(
   // TODO TYPESCRIPT This cast is to get rid of .d.ts file.
 } as unknown as useEventType;
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type useHandlerType = <T, TContext extends __Context = Record<string, never>>(
-  handlers: Handlers<T, TContext>,
-  deps?: DependencyList
-) => { context: TContext; doDependenciesDiffer: boolean; useWeb: boolean };
-
 export const useHandler = function <T, TContext extends __Context>(
   handlers: Handlers<T, TContext>,
   dependencies?: DependencyList
@@ -86,8 +80,7 @@ export const useHandler = function <T, TContext extends __Context>(
   const useWeb = isWeb() || isJest();
 
   return { context, doDependenciesDiffer, useWeb };
-  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
-} as useHandlerType;
+};
 
 // builds one big hash from multiple worklets' hashes
 export function buildWorkletsHash(
@@ -187,11 +180,11 @@ export const validateAnimatedStyles = (styles: AnimatedStyle<any>): void => {
   'worklet';
   if (typeof styles !== 'object') {
     throw new Error(
-      `useAnimatedStyle has to return an object, found ${typeof styles} instead`
+      `[Reanimated] \`useAnimatedStyle\` has to return an object, found ${typeof styles} instead.`
     );
   } else if (Array.isArray(styles)) {
     throw new Error(
-      'useAnimatedStyle has to return an object and cannot return static styles combined with dynamic ones. Please do merging where a component receives props.'
+      '[Reanimated] `useAnimatedStyle` has to return an object and cannot return static styles combined with dynamic ones. Please do merging where a component receives props.'
     );
   }
 };

@@ -25,7 +25,7 @@ const SLIDES = [
   { color: 'pink', key: 5 },
 ];
 
-export default function PagerExample(): React.ReactElement {
+export default function PagerExample() {
   const scrollPosition = useSharedValue(0);
   const scrollState = useSharedValue<PageScrollState>('idle');
   const currentPage = useSharedValue(0);

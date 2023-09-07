@@ -1,0 +1,108 @@
+---
+sidebar_position: 3
+---
+
+# withDecay
+
+`withDecay` lets you create animations that mimic objects in motion. The animation will start with the provided velocity and slow down over time according to the given deceleration rate until it stops.
+
+import DecayBasic from '@site/src/examples/DecayBasic';
+import DecayBasicSrc from '!!raw-loader!@site/src/examples/DecayBasic';
+
+<InteractiveExample
+  src={DecayBasicSrc}
+  component={<DecayBasic />}
+  label="Grab and drag the square"
+/>
+
+## Reference
+
+```javascript
+import { withDecay } from 'react-native-reanimated';
+
+function App() {
+  sv.value = withDecay({ velocity: 1 });
+  // ...
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type AnimatableValue = number | string | number[];
+
+interface WithDecayConfig {
+  deceleration?: number;
+  velocity?: number;
+  clamp?: [number, number];
+  velocityFactor?: number;
+  rubberBandEffect?: boolean;
+  rubberBandFactor?: number;
+  reduceMotion?: ReduceMotion;
+}
+
+function withDecay(
+  userConfig: WithDecayConfig,
+  callback?: (finished?: boolean, current?: AnimatableValue) => void
+): number;
+
+enum ReduceMotion {
+  System = 'system',
+  Always = 'always',
+  Never = 'never',
+}
+```
+
+</details>
+
+### Arguments
+
+#### `config`
+
+The decay animation configuration.
+
+Available properties:
+
+| Name                          | Type               | Default               | Description                                                                                                                                                 |
+| ----------------------------- | ------------------ | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| velocity <Optional />         | `number`           | 0                     | Initial velocity of the animation.                                                                                                                          |
+| deceleration <Optional />     | `number`           | 0.998                 | The rate at which the velocity decreases over time.                                                                                                         |
+| clamp <Optional />            | `[number, number]` | []                    | Array of two numbers which restricts animation's range. Animation stops when either bound is reached unless the `rubberBandEffect` option is set to `true`. |
+| velocityFactor <Optional />   | `number`           | 1                     | Velocity multiplier.                                                                                                                                        |
+| rubberBandEffect <Optional /> | `boolean`          | false                 | Makes the animation bounce over the limit specified in `clamp`.                                                                                             |
+| rubberBandFactor <Optional /> | `number`           | 0.6                   | Strength of the rubber band effect.                                                                                                                         |
+| reduceMotion <Optional />     | `ReduceMotion`     | `ReduceMotion.System` | A parameter that determines how the animation responds to the device's reduced motion accessibility setting.                                                |
+
+#### `callback` <Optional />
+
+A function called on animation complete. In case the animation is cancelled, the callback will receive `false` as the argument, otherwise it will receive `true`.
+
+### Returns
+
+`withDecay` returns an [animation object](/docs/fundamentals/glossary#animation-object). It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](/docs/core/useAnimatedStyle).
+
+## Example
+
+import DecayTrain from '@site/src/examples/DecayTrain';
+import DecayTrainSrc from '!!raw-loader!@site/src/examples/DecayTrain';
+
+<InteractiveExample
+  src={DecayTrainSrc}
+  component={<DecayTrain />}
+  label="Grab and drag the train"
+/>
+
+## Remarks
+
+- The callback passed to the 2nd argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>

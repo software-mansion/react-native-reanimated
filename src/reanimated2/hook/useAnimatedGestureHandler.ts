@@ -1,6 +1,6 @@
 import type { DependencyList, WebEvent, NativeEvent } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
-import { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
+import type { PanGestureHandlerGestureEvent as DefaultEvent } from 'react-native-gesture-handler';
 
 const EventType = {
   UNDETERMINED: 0,
@@ -79,9 +79,7 @@ type GestureHandlersPayload<
  * for information about how to migrate to `react-native-gesture-handler` v2
  */
 export function useAnimatedGestureHandler<
-  EventType extends RNGHProvidedType<
-    InferPayload<EventType>
-  > = PanGestureHandlerGestureEvent,
+  EventType extends RNGHProvidedType<InferPayload<EventType>> = DefaultEvent,
   HandlerContext extends Record<string, unknown> = Record<string, unknown>
 >(
   handlers: GestureHandlers<GestureHandlersPayload<EventType>, HandlerContext>,
