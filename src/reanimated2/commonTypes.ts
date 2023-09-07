@@ -81,23 +81,23 @@ interface WorkletInitDataRelease {
   code: string;
 }
 
-interface WorkletInitDataDev {
-  code: string;
+interface WorkletInitDataDev extends WorkletInitDataRelease {
   location: string;
   sourceMap: string;
   version: string;
 }
 
-interface WorkletBaseRelease {
+interface WorkletBaseCommon {
   __closure: WorkletClosure;
-  __initData: WorkletInitDataRelease;
   __workletHash: number;
 }
 
-interface WorkletBaseDev {
-  __closure: WorkletClosure;
+interface WorkletBaseRelease extends WorkletBaseCommon {
+  __initData: WorkletInitDataRelease;
+}
+
+interface WorkletBaseDev extends WorkletBaseCommon {
   __initData: WorkletInitDataDev;
-  __workletHash: number;
   __stackDetails: Error;
 }
 
