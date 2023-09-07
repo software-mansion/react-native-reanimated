@@ -714,7 +714,8 @@ var require_isGestureHandlerEventCallback = __commonJS({
       "Manual",
       "Race",
       "Simultaneous",
-      "Exclusive"
+      "Exclusive",
+      "Hover"
     ]);
     var gestureHandlerBuilderMethods = /* @__PURE__ */ new Set([
       "onBegin",

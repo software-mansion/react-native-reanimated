@@ -14,7 +14,7 @@ In React Native during unmounting of components from the hierarchy of views, it 
 
 #### How it is possible?
 
-Reanimated listen on changes in tree of views and if detect that some of component should disappear in next frame, It replaces this process with exiting animation. It is easy and fast. You can use predefined animations - examples below or you can define your own custom animation. If you want to create more complex animation you can use [Keyframes](keyframeAnimations).
+Reanimated listen on changes in tree of views and if detect that some of component should disappear in next frame, It replaces this process with exiting animation. It is easy and fast. You can use predefined animations - examples below or you can define your own custom animation. If you want to create more complex animation you can use [Keyframes](/docs/2.x/api/LayoutAnimations/keyframeAnimations).
 
 ## How to use predefined exiting animation?
 

@@ -12,7 +12,7 @@ import {
   shallowEqual,
   validateAnimatedStyles,
 } from './utils';
-import type { DependencyList, Descriptor } from './commonTypes';
+import type { DefaultStyle, DependencyList, Descriptor } from './commonTypes';
 import type { ViewDescriptorsSet, ViewRefSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet, makeViewsRefSet } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
@@ -21,25 +21,11 @@ import type {
   Timestamp,
   AdapterWorkletFunction,
   BasicWorkletFunction,
-  BasicWorkletFunctionOptional,
   NestedObjectValues,
   SharedValue,
   StyleProps,
 } from '../commonTypes';
-import type {
-  ImageStyle,
-  RegisteredStyle,
-  TextStyle,
-  ViewStyle,
-} from 'react-native';
 import type { AnimatedStyle } from '../helperTypes';
-
-export interface AnimatedStyleResult {
-  viewDescriptors: ViewDescriptorsSet;
-  initial: AnimatedStyle<any>;
-  viewsRef: ViewRefSet<any>;
-  animatedStyle?: MutableRefObject<AnimatedStyle<any>>;
-}
 
 interface AnimatedState {
   last: AnimatedStyle<any>;
@@ -400,27 +386,19 @@ function checkSharedValueUsage(
   }
 }
 
-// This type is kept for backward compatibility.
-export type AnimatedStyleProp<T> =
-  | AnimatedStyle<T>
-  | RegisteredStyle<AnimatedStyle<T>>;
-
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type useAnimatedStyleType = <
-  T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
->(
-  updater: () => T,
+// You cannot pass Shared Values to `useAnimatedStyle` directly.
+export function useAnimatedStyle<Style extends DefaultStyle>(
+  updater: () => Style,
   deps?: DependencyList | null
-) => T;
+): Style;
 
-export const useAnimatedStyle = function <T extends AnimatedStyle<any>>(
-  // animated style cannot be an array
-  updater: BasicWorkletFunction<T extends Array<unknown> ? never : T>,
-  dependencies?: DependencyList,
+export function useAnimatedStyle<Style extends DefaultStyle>(
+  updater: BasicWorkletFunction<Style>,
+  dependencies?: DependencyList | null,
   adapters?: AdapterWorkletFunction | AdapterWorkletFunction[],
   isAnimatedProps = false
-): AnimatedStyleResult {
-  const viewsRef: ViewRefSet<any> = makeViewsRefSet();
+) {
+  const viewsRef: ViewRefSet<unknown> = makeViewsRefSet();
   const initRef = useRef<AnimationRef>();
   let inputs = Object.values(updater.__closure ?? {});
   if (shouldBeUseWeb()) {
@@ -442,9 +420,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     : [];
   const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
   const animationsActive = useSharedValue<boolean>(true);
-  const animatedStyle: MutableRefObject<AnimatedStyle<any>> = useRef<
-    AnimatedStyle<any>
-  >({});
+  const animatedStyle: MutableRefObject<Style> = useRef<Style>({} as Style);
 
   // build dependencies
   if (!dependencies) {
@@ -455,7 +431,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   adaptersHash && dependencies.push(adaptersHash);
 
   if (!initRef.current) {
-    const initialStyle: AnimatedStyle<any> = initialUpdaterRun(updater);
+    const initialStyle = initialUpdaterRun(updater);
     validateAnimatedStyles(initialStyle);
     initRef.current = {
       initial: {
@@ -472,8 +448,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const { initial, remoteState, viewDescriptors } = initRef.current!;
+  const { initial, remoteState, viewDescriptors } = initRef.current;
   const sharableViewDescriptors = viewDescriptors.sharableViewDescriptors;
   const maybeViewRef = NativeReanimatedModule.native ? undefined : viewsRef;
 
@@ -481,13 +456,15 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
 
   useEffect(() => {
     let fun;
-    let updaterFn = updater as BasicWorkletFunctionOptional<T>;
+    let updaterFn = updater;
     if (adapters) {
       updaterFn = () => {
         'worklet';
         const newValues = updater();
         adaptersArray.forEach((adapter) => {
-          adapter(newValues);
+          // Those adapters are some crazy stuff
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          adapter(newValues as any);
         });
         return newValues;
       };
@@ -539,5 +516,4 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   } else {
     return { viewDescriptors, initial, viewsRef };
   }
-  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
-} as useAnimatedStyleType;
+}

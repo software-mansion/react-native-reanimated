@@ -57,3 +57,9 @@ def assert_latest_react_native_with_new_architecture(config, reanimated_package_
     raise "[Reanimated] Outdated version of React Native for New Architecture. Reanimated " + reanimated-version + " supports the New Architecture on React Native 0.72.0+. See https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#outdated-version-of-react-native-for-new-architecture for more information."
   end
 end
+
+def assert_minimal_react_native_version(config)
+  if config[:react_native_minor_version] < 66
+    raise "[Reanimated] Unsupported React Native version. Please use 0.66 or newer."
+  end
+end

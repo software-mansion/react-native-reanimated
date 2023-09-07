@@ -10,11 +10,11 @@
 #include <string>
 
 #include "AndroidUIScheduler.h"
-#include "JsiUtils.h"
 #include "LayoutAnimationsManager.h"
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
 #include "RNRuntimeDecorator.h"
+#include "ReanimatedJSIUtils.h"
 #include "ReanimatedRuntime.h"
 #ifdef DEBUG
 #include "ReanimatedVersion.h"
@@ -52,14 +52,7 @@ NativeProxy::NativeProxy(
 #ifdef RCT_NEW_ARCH_ENABLED
   const auto &uiManager =
       fabricUIManager->getBinding()->getScheduler()->getUIManager();
-  auto propsRegistry = std::make_shared<PropsRegistry>();
-  commitHook_ =
-      std::make_shared<ReanimatedCommitHook>(propsRegistry, uiManager);
-#if REACT_NATIVE_MINOR_VERSION >= 73
-  mountHook_ = std::make_shared<ReanimatedMountHook>(propsRegistry, uiManager_);
-#endif
-  nativeReanimatedModule_->setUIManager(uiManager);
-  nativeReanimatedModule_->setPropsRegistry(propsRegistry);
+  nativeReanimatedModule_->initializeFabric(uiManager);
   // removed temporarily, event listener mechanism needs to be fixed on RN side
   // eventListener_ = std::make_shared<EventListener>(
   //     [nativeReanimatedModule, getCurrentTime](const RawEvent &rawEvent) {

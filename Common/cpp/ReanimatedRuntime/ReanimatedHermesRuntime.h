@@ -16,6 +16,7 @@
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
 
+#include <atomic>
 #include <memory>
 #include <string>
 #include <thread>
