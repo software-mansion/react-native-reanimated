@@ -11,8 +11,6 @@ NS_ASSUME_NONNULL_BEGIN
 const int ScreenStackPresentationModal = 1; // RNSScreenStackPresentationModal
 const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from screen top edge by 69px
 
-#if !TARGET_OS_OSX
-
 - (instancetype)init:(REAUIView *)view
 {
   self = [super init];
@@ -30,10 +28,15 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
 - (void)makeSnapshotForView:(REAUIView *)view useAbsolutePositionOnly:(BOOL)useAbsolutePositionOnly
 {
   REAUIView *mainWindow = UIApplication.sharedApplication.keyWindow;
-  CGPoint absolutePosition = [[view superview] convertPoint:view.center toView:mainWindow];
+  CGPoint absolutePosition = [[view superview] convertPoint:view.center toView:nil];
   _values = [NSMutableDictionary new];
+#if TARGET_OS_OSX
+  _values[@"windowWidth"] = [NSNumber numberWithDouble:mainWindow.frame.size.width];
+  _values[@"windowHeight"] = [NSNumber numberWithDouble:mainWindow.frame.size.height];
+#else
   _values[@"windowWidth"] = [NSNumber numberWithDouble:mainWindow.bounds.size.width];
   _values[@"windowHeight"] = [NSNumber numberWithDouble:mainWindow.bounds.size.height];
+#endif
   _values[@"width"] = [NSNumber numberWithDouble:(double)(view.bounds.size.width)];
   _values[@"height"] = [NSNumber numberWithDouble:(double)(view.bounds.size.height)];
   _values[@"globalOriginX"] = [NSNumber numberWithDouble:absolutePosition.x - view.bounds.size.width / 2.0];
@@ -44,15 +47,19 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
     _values[@"originXByParent"] = [NSNumber numberWithDouble:view.center.x - view.bounds.size.width / 2.0];
     _values[@"originYByParent"] = [NSNumber numberWithDouble:view.center.y - view.bounds.size.height / 2.0];
 
+#if TARGET_OS_OSX
+    REAUIView *header = nil;
+#else
     REAUIView *navigationContainer = view.reactViewController.navigationController.view;
     REAUIView *header = [navigationContainer.subviews count] > 1 ? navigationContainer.subviews[1] : nil;
+#endif
     if (header != nil) {
       CGFloat headerHeight = header.frame.size.height;
       CGFloat headerOriginY = header.frame.origin.y;
-      UIView *screen = [REAScreensHelper getScreenForView:view];
+      REAUIView *screen = [REAScreensHelper getScreenForView:view];
       if ([REAScreensHelper isScreenModal:screen] && screen.superview == nil) {
         int additionalModalOffset = 0;
-        UIView *screenWrapper = [REAScreensHelper getScreenWrapper:view];
+        REAUIView *screenWrapper = [REAScreensHelper getScreenWrapper:view];
         int screenType = [REAScreensHelper getScreenType:screenWrapper];
         if (screenType == ScreenStackPresentationModal) {
           additionalModalOffset = DEFAULT_MODAL_TOP_OFFSET;
@@ -65,9 +72,9 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
       _values[@"headerHeight"] = @(0);
     }
 
-    UIView *transformedView = [self findTransformedView:view];
+    REAUIView *transformedView = [self findTransformedView:view];
     if (transformedView != nil) {
-      // iOS affine matrix: https://developer.apple.com/documentation/corefoundation/cgaffinetransform?language=objc
+      // iOS affine matrix: https://developer.apple.com/documentation/corefoundation/cgaffinetransform
       CGAffineTransform transform = transformedView.transform;
       NSNumber *a = @(transform.a);
       NSNumber *b = @(transform.b);
@@ -121,23 +128,6 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
   }
   return nil;
 }
-
-#else // TARGET_OS_OSX
-      // TODO macOS
-
-- (instancetype)init:(REAUIView *)view
-{
-  self = [super init];
-  return self;
-}
-
-- (instancetype)initWithAbsolutePosition:(REAUIView *)view
-{
-  self = [super init];
-  return self;
-}
-
-#endif
 
 @end
 

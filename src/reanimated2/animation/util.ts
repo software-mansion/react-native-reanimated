@@ -7,14 +7,14 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-import {
-  type SharedValue,
-  type AnimatableValue,
-  type Animation,
-  type AnimationObject,
-  type Timestamp,
-  type AnimatableValueObject,
-  ReduceMotion,
+import { ReduceMotion } from '../commonTypes';
+import type {
+  SharedValue,
+  AnimatableValue,
+  Animation,
+  AnimationObject,
+  Timestamp,
+  AnimatableValueObject,
 } from '../commonTypes';
 import NativeReanimatedModule from '../NativeReanimated';
 import type {
@@ -36,7 +36,7 @@ import { isReducedMotion } from '../PlatformChecker';
 let IN_STYLE_UPDATER = false;
 const IS_REDUCED_MOTION = isReducedMotion();
 
-export function initialUpdaterRun<T>(updater: () => T): T {
+export function initialUpdaterRun<T>(updater: () => T) {
   IN_STYLE_UPDATER = true;
   const result = updater();
   IN_STYLE_UPDATER = false;
@@ -56,9 +56,7 @@ function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
       /([A-Za-z]*)(-?\d*\.?\d*)([eE][-+]?[0-9]+)?([A-Za-z%]*)/
     );
     if (!match) {
-      throw Error(
-        "Couldn't parse animation value. Check if there isn't any typo."
-      );
+      throw new Error("[Reanimated] Couldn't parse animation value.");
     }
     const prefix = match[1];
     const suffix = match[4];
@@ -74,7 +72,7 @@ function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
  * Returns whether the motion should be reduced for a specified config.
  * By default returns the system setting.
  */
-function getReduceMotionFromConfig(config?: ReduceMotion) {
+export function getReduceMotionFromConfig(config?: ReduceMotion) {
   'worklet';
   return !config || config === ReduceMotion.System
     ? IS_REDUCED_MOTION

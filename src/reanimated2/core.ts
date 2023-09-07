@@ -22,7 +22,9 @@ import { SensorContainer } from './SensorContainer';
 
 export { startMapper, stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
-export { makeShareable } from './shareables';
+export { createWorkletRuntime } from './runtimes';
+export type { WorkletRuntime } from './runtimes';
+export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export { makeMutable, makeRemote } from './mutables';
 
 /**
@@ -50,7 +52,7 @@ global._log = function (s: string) {
 export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
   if (global._IS_FABRIC) {
     throw new Error(
-      '[react-native-reanimated] `getViewProp` is not supported on Fabric yet'
+      '[Reanimated] `getViewProp` is not supported on Fabric yet.'
     );
   }
 

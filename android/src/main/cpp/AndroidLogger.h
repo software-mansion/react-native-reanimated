@@ -13,7 +13,6 @@ class AndroidLogger : public LoggerInterface {
   void log(double d) override;
   void log(int i) override;
   void log(bool b) override;
-  virtual ~AndroidLogger() {}
 };
 
 } // namespace reanimated

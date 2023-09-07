@@ -275,7 +275,7 @@ std::string JSISerializer::stringifyJSIValueRecursively(
   if (value.isSymbol()) {
     return value.getSymbol(rt_).toString(rt_);
   }
-#if REACT_NATIVE_MINOR_VERSION >= 70
+#if REACT_NATIVE_MINOR_VERSION >= 71
   if (value.isBigInt()) {
     return value.getBigInt(rt_).toString(rt_).utf8(rt_) + 'n';
   }
@@ -330,7 +330,7 @@ std::string JSISerializer::stringifyJSIValueRecursively(
     return stringifyObject(object);
   }
 
-  throw std::runtime_error("unsupported value type");
+  throw std::runtime_error("[Reanimated] Unsupported value type.");
 }
 
 std::string stringifyJSIValue(jsi::Runtime &rt, const jsi::Value &value) {

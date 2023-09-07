@@ -16,10 +16,6 @@ export function isAndroid(): boolean {
   return Platform.OS === 'android';
 }
 
-export function isMacOS(): boolean {
-  return Platform.OS === 'macos';
-}
-
 function isWindows(): boolean {
   return Platform.OS === 'windows';
 }
@@ -32,8 +28,17 @@ export function nativeShouldBeMock() {
   return isJest() || isChromeDebugger() || isWindows();
 }
 
+export function isWindowAvailable() {
+  // the window object is unavailable when building the server portion of a site that uses SSG
+  // this function shouldn't be used to conditionally render components
+  // https://www.joshwcomeau.com/react/the-perils-of-rehydration/
+  return typeof window !== 'undefined';
+}
+
 export function isReducedMotion() {
   return isWeb()
-    ? !window.matchMedia('(prefers-reduced-motion: no-preference)').matches
+    ? isWindowAvailable()
+      ? !window.matchMedia('(prefers-reduced-motion: no-preference)').matches
+      : false
     : global._REANIMATED_IS_REDUCED_MOTION ?? false;
 }

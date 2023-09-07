@@ -1,5 +1,6 @@
 import type { Component } from 'react';
 import type { __Context, ShadowNodeWrapper } from '../commonTypes';
+import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
 
 export type DependencyList = Array<unknown> | undefined;
 
@@ -21,3 +22,5 @@ export interface AnimatedRef<T extends Component> {
     | ShadowNodeWrapper // Fabric
     | HTMLElement; // web
 }
+
+export type DefaultStyle = ViewStyle | ImageStyle | TextStyle;

@@ -68,11 +68,11 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
   'worklet';
   if (__DEV__ && IS_NATIVE && _WORKLET) {
     throw new Error(
-      'runOnUI() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
+      '[Reanimated] `runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
   if (__DEV__ && IS_NATIVE && worklet.__workletHash === undefined) {
-    throw new Error('runOnUI() can only be used on worklets');
+    throw new Error('[Reanimated] `runOnUI` can only be used on worklets.');
   }
   return (...args) => {
     if (IS_JEST) {
@@ -135,11 +135,13 @@ export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
   'worklet';
   if (__DEV__ && IS_NATIVE && _WORKLET) {
     throw new Error(
-      'runOnUIImmediately() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
+      '[Reanimated] `runOnUIImmediately` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
   if (__DEV__ && IS_NATIVE && worklet.__workletHash === undefined) {
-    throw new Error('runOnUIImmediately() can only be used on worklets');
+    throw new Error(
+      '[Reanimated] `runOnUIImmediately` can only be used on worklets.'
+    );
   }
   return (...args) => {
     NativeReanimatedModule.scheduleOnUI(
@@ -157,7 +159,7 @@ if (__DEV__ && IS_NATIVE) {
   }) as WorkletFunction<[], void>;
   if (f.__workletHash === undefined) {
     throw new Error(
-      'Failed to create a worklet. Did you forget to add Reanimated Babel plugin in babel.config.js? See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation#babel-plugin.'
+      `[Reanimated] Failed to create a worklet. See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet\` for more details.`
     );
   }
 }

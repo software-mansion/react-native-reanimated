@@ -25,8 +25,15 @@ type AnimatableValue = number | string | number[];
 
 function withDelay<T extends AnimatableValue>(
   delayMs: number,
-  delayedAnimation: T
+  delayedAnimation: T,
+  reduceMotion?: ReduceMotion
 ): T;
+
+enum ReduceMotion {
+  System = 'system',
+  Always = 'always',
+  Never = 'never',
+}
 ```
 
 </details>
@@ -40,6 +47,10 @@ Duration (in milliseconds) before the animation starts.
 #### `delayedAnimation`
 
 Animation to delay.
+
+#### `reduceMotion` <Optional />
+
+A parameter that determines how the animation responds to the device's reduced motion accessibility setting.
 
 ### Returns
 

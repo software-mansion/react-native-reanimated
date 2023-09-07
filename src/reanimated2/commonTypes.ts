@@ -1,35 +1,4 @@
-import type {
-  PerpectiveTransform,
-  RotateTransform,
-  RotateXTransform,
-  RotateYTransform,
-  RotateZTransform,
-  ScaleTransform,
-  ScaleXTransform,
-  ScaleYTransform,
-  TranslateXTransform,
-  TranslateYTransform,
-  SkewXTransform,
-  SkewYTransform,
-  MatrixTransform,
-  ViewStyle,
-  TextStyle,
-} from 'react-native';
-
-export type TransformProperty =
-  | PerpectiveTransform
-  | RotateTransform
-  | RotateXTransform
-  | RotateYTransform
-  | RotateZTransform
-  | ScaleTransform
-  | ScaleXTransform
-  | ScaleYTransform
-  | TranslateXTransform
-  | TranslateYTransform
-  | SkewXTransform
-  | SkewYTransform
-  | MatrixTransform;
+import type { ViewStyle, TextStyle } from 'react-native';
 
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;
@@ -37,11 +6,11 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
-export interface SharedValue<T> {
-  value: T;
-  addListener: (listenerID: number, listener: (value: T) => void) => void;
+export interface SharedValue<Value> {
+  value: Value;
+  addListener: (listenerID: number, listener: (value: any) => void) => void;
   removeListener: (listenerID: number) => void;
-  modify: (modifier: (value: T) => T) => void;
+  modify: (modifier: (value: any) => any) => void;
 }
 
 // The below type is used for HostObjects returned by the JSI API that don't have
@@ -77,11 +46,13 @@ export type MapperRegistry = {
 
 type WorkletClosure = Record<string, unknown>;
 
-interface WorkletInitDataRelease {
+interface WorkletInitDataCommon {
   code: string;
 }
 
-interface WorkletInitDataDev extends WorkletInitDataRelease {
+type WorkletInitDataRelease = WorkletInitDataCommon;
+
+interface WorkletInitDataDev extends WorkletInitDataCommon {
   location: string;
   sourceMap: string;
   version: string;
@@ -105,49 +76,6 @@ export type WorkletFunction<Args extends unknown[], ReturnValue> = ((
   ...args: Args
 ) => ReturnValue) &
   (WorkletBaseRelease | WorkletBaseDev);
-
-/**
- * @deprecated
- */
-export type __Context = Record<string, unknown>;
-
-/**
- * @deprecated
- */
-export interface __WorkletFunction {
-  __closure?: __Context;
-  __workletHash?: number;
-}
-
-/**
- * @deprecated
- */
-export interface __BasicWorkletFunction<T> extends __WorkletFunction {
-  (): T;
-}
-
-/**
- * @deprecated
- */
-export interface __BasicWorkletFunctionOptional<T> extends __WorkletFunction {
-  (): Partial<T>;
-}
-
-/**
- * @deprecated
- */
-export interface __ComplexWorkletFunction<A extends any[], R>
-  extends __WorkletFunction {
-  (...args: A): R;
-  __remoteFunction?: (...args: A) => R;
-}
-
-/**
- * @deprecated
- */
-export interface __AdapterWorkletFunction extends __WorkletFunction {
-  (value: NestedObject<string | number | AnimationObject>): void;
-}
 
 export interface NativeEvent<T> {
   nativeEvent: T;
@@ -297,4 +225,40 @@ export enum ReduceMotion {
   System = 'system',
   Always = 'always',
   Never = 'never',
+}
+
+// THE LAND OF THE DEPRECATED
+
+/**
+ * @deprecated
+ */
+export type __Context = Record<string, unknown>;
+
+/**
+ * @deprecated
+ */
+export interface __WorkletFunction {
+  __closure?: __Context;
+  __workletHash?: number;
+}
+
+/**
+ * @deprecated
+ */
+export interface __BasicWorkletFunction<T> extends __WorkletFunction {
+  (): T;
+}
+
+/**
+ * @deprecated
+ */
+export interface __BasicWorkletFunctionOptional<T> extends __WorkletFunction {
+  (): Partial<T>;
+}
+
+/**
+ * @deprecated
+ */
+export interface __AdapterWorkletFunction extends __WorkletFunction {
+  (value: NestedObject<string | number | AnimationObject>): void;
 }

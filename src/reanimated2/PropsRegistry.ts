@@ -11,7 +11,7 @@ export function removeFromPropsRegistry(viewTag: number) {
 
 function flush() {
   if (__DEV__ && !global._IS_FABRIC) {
-    throw new Error('PropsRegistry is only available on Fabric');
+    throw new Error('[Reanimated] PropsRegistry is only available on Fabric.');
   }
   runOnUI(removeFromPropsRegistryOnUI)(viewTags);
   viewTags = [];

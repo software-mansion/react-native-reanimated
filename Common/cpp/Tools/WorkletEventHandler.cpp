@@ -3,9 +3,10 @@
 namespace reanimated {
 
 void WorkletEventHandler::process(
-    double eventTimestamp,
+    const std::shared_ptr<WorkletRuntime> &workletRuntime,
+    const double eventTimestamp,
     const jsi::Value &eventValue) const {
-  runtimeHelper_->runOnUIGuarded(
+  workletRuntime->runGuarded(
       handlerFunction_, jsi::Value(eventTimestamp), eventValue);
 }
 

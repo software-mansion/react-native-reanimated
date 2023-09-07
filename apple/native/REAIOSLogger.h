@@ -10,7 +10,6 @@ class REAIOSLogger : public LoggerInterface {
   void log(double d) override;
   void log(int i) override;
   void log(bool b) override;
-  virtual ~REAIOSLogger() {}
 };
 
 } // namespace reanimated
