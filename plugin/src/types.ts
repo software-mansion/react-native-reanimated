@@ -1,5 +1,5 @@
-import { BabelFile } from '@babel/core';
-import {
+import type { BabelFile } from '@babel/core';
+import type {
   FunctionDeclaration,
   FunctionExpression,
   ObjectMethod,
@@ -10,6 +10,7 @@ export interface ReanimatedPluginOptions {
   relativeSourceLocation?: boolean;
   disableInlineStylesWarning?: boolean;
   processNestedWorklets?: boolean;
+  globals?: string[];
 }
 
 export interface ReanimatedPluginPass {

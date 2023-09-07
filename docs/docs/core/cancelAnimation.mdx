@@ -1,0 +1,64 @@
+---
+sidebar_position: 7
+---
+
+# cancelAnimation
+
+`cancelAnimation` lets you cancel a running animation paired to a [shared value](/docs/fundamentals/glossary#shared-value).
+
+## Reference
+
+```javascript
+import { cancelAnimation } from 'react-native-reanimated';
+
+function App() {
+  const offset = useSharedValue(100);
+
+  const handleCancel = () => {
+    // highlight-next-line
+    cancelAnimation(offset);
+  };
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type SharedValue<T> = { value: T };
+
+function cancelAnimation<T>(sharedValue: SharedValue<T>): void;
+```
+
+</details>
+
+### Arguments
+
+#### `sharedValue`
+
+The shared value of a running animation that you want to cancel. If no animation is running, the `cancelAnimation` function does nothing.
+
+### Returns
+
+`cancelAnimation` returns `undefined`.
+
+## Example
+
+import CancelAnimation from '@site/src/examples/CancelAnimation';
+import CancelAnimationSrc from '!!raw-loader!@site/src/examples/CancelAnimation';
+
+<InteractiveExample src={CancelAnimationSrc} component={<CancelAnimation />} />
+
+## Remarks
+
+- You can resume the animation by assigning the same animation (i.e. `withSpring`, `withTiming`) to the shared value again.
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>

@@ -1,0 +1,73 @@
+---
+sidebar_position: 5
+---
+
+# useDerivedValue
+
+`useDerivedValue` lets you create new [shared values](/docs/fundamentals/glossary#shared-value) based on existing ones while keeping them reactive.
+
+## Reference
+
+```javascript
+import { useDerivedValue } from 'react-native-reanimated';
+
+function App() {
+  const derivedValue = useDerivedValue(() => {
+    return sv.value * 50;
+  });
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type SharedValue<T> = { value: T };
+type DerivedValue<T> = Readonly<SharedValue<T>>;
+
+function useDerivedValue<T>(
+  updater: () => T,
+  dependencies?: DependencyList
+): DerivedValue<T>;
+```
+
+</details>
+
+### Arguments
+
+#### `updater`
+
+A function that should return a value constructed of shared values, React state or any other JavaScript value. This function is called whenever at least one of the shared values or state used in the function body changes.
+
+#### `dependencies` <Optional/>
+
+An optional array of dependencies.
+
+Only relevant when using Reanimated [without the Babel plugin on the Web](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin).
+
+### Returns
+
+`useDerivedValue` returns a new readonly [shared value](/docs/fundamentals/glossary#shared-value) based on a value returned from the [`updater`](/docs/core/useDerivedValue#updater) function.
+
+## Example
+
+import DerivedValue from '@site/src/examples/DerivedValue';
+import DerivedValueSrc from '!!raw-loader!@site/src/examples/DerivedValue';
+
+<InteractiveExample src={DerivedValueSrc} component={<DerivedValue />} />
+
+## Remarks
+
+- The callback passed to the first argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+
+- You can also use `useDerivedValue` without returning a value in the `updater` function to react to a change of a shared value. If you need to access the previous value stored in a shared value use [`useAnimatedReaction`](/docs/advanced/useAnimatedReaction) instead.
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>

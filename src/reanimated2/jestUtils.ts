@@ -186,7 +186,7 @@ const requireFunction = isJest()
   ? require
   : () => {
       throw new Error(
-        '[Reanimated] setUpTests() is available only in Jest environment'
+        '[Reanimated] `setUpTests` is available only in Jest environment.'
       );
     };
 

@@ -1,0 +1,119 @@
+---
+sidebar_position: 2
+---
+
+# withSpring
+
+`withSpring` lets you create spring-based animations.
+
+import SpringBasic from '@site/src/examples/SpringBasic';
+import SpringBasicSrc from '!!raw-loader!@site/src/examples/SpringBasic';
+
+<InteractiveExample src={SpringBasicSrc} component={<SpringBasic />} />
+
+## Reference
+
+```javascript
+import { withSpring } from 'react-native-reanimated';
+
+function App() {
+  sv.value = withSpring(0);
+  // ...
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type AnimatableValue = number | string | number[];
+
+interface WithSpringConfig {
+  damping?: number;
+  mass?: number;
+  stiffness?: number;
+  overshootClamping?: boolean;
+  restSpeedThreshold?: number;
+  restDisplacementThreshold?: number;
+  velocity?: number;
+  reduceMotion?: ReduceMotion;
+}
+
+function withSpring<T extends AnimatableValue>(
+  toValue: T,
+  config?: WithSpringConfig,
+  callback?: (finished?: boolean, current?: AnimatableValue) => void
+): T;
+
+enum ReduceMotion {
+  System = 'system',
+  Always = 'always',
+  Never = 'never',
+}
+```
+
+</details>
+
+### Arguments
+
+#### `toValue`
+
+The value at which the animation will come to rest.
+
+#### `config` <Optional />
+
+The spring animation configuration.
+
+import { useSpringPlayground } from '@site/src/components/InteractivePlayground';
+
+<InteractivePlayground usePlayground={useSpringPlayground} />
+
+Available properties:
+
+| Name                      | Type           | Default               | Description                                                                                                               |
+| ------------------------- | -------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| mass                      | `number`       | 1                     | The weight of the spring. Reducing this value makes the animation faster.                                                 |
+| damping                   | `number`       | 10                    | How quickly a spring slows down. Higher damping means the spring will come to rest faster.                                |
+| duration                  | `number`       | 2000                  | Length of the animation (in milliseconds).                                                                                |
+| dampingRatio              | `number`       | 0.5                   | How damped the spring is. Value `1` means the spring is critically damped, and value `>1` means the spring is overdamped. |
+| stiffness                 | `number`       | 100                   | How bouncy the spring is.                                                                                                 |
+| velocity                  | `number`       | 0                     | Initial velocity applied to the spring equation.                                                                          |
+| overshootClamping         | `boolean`      | false                 | Whether a spring can bounce over the `toValue`.                                                                           |
+| restDisplacementThreshold | `number`       | 0.01                  | The displacement below which the spring will snap to `toValue` without further oscillations.                              |
+| restSpeedThreshold        | `number`       | 2                     | The speed in pixels per second from which the spring will snap to `toValue` without further oscillations.                 |
+| reduceMotion <Optional /> | `ReduceMotion` | `ReduceMotion.System` | A parameter that determines how the animation responds to the device's reduced motion accessibility setting.              |
+
+:::info
+The `mass` and `damping` (physics-based) properties can't be used at the same time as `duration` and `dampingRatio` (duration-based).
+
+When used together `duration` and `dampingRatio` overrides `mass` and `damping` props.
+:::
+
+#### `callback` <Optional />
+
+A function called upon animation completion. If the animation is cancelled, the callback will receive `false` as the argument; otherwise, it will receive `true`.
+
+### Returns
+
+`withSpring` returns an [animation object](/docs/fundamentals/glossary#animation-object). It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](docs/core/useAnimatedStyle).
+
+## Example
+
+import SpringCarousel from '@site/src/examples/SpringCarousel';
+import SpringCarouselSrc from '!!raw-loader!@site/src/examples/SpringCarousel';
+
+<InteractiveExample src={SpringCarouselSrc} component={<SpringCarousel />} />
+
+## Remarks
+
+- The callback passed to the 3rd argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>

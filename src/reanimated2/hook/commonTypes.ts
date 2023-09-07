@@ -1,5 +1,6 @@
 import type { Component } from 'react';
 import type { __Context, ShadowNodeWrapper } from '../commonTypes';
+import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
 
 export type DependencyList = Array<unknown> | undefined;
 
@@ -27,3 +28,4 @@ export type NativeEvent<Payload extends object> = Payload;
 export type WebEvent<Payload extends object> = {
   nativeEvent: Payload;
 };
+export type DefaultStyle = ViewStyle | ImageStyle | TextStyle;

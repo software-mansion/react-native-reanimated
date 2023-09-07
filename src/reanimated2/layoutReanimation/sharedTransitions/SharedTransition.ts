@@ -4,23 +4,25 @@ import type {
   SharedTransitionAnimationsValues,
   CustomProgressAnimation,
   ProgressAnimation,
+  LayoutAnimationsOptions,
 } from '../animationBuilder/commonTypes';
 import {
   LayoutAnimationType,
   SharedTransitionType,
 } from '../animationBuilder/commonTypes';
 import type { StyleProps } from '../../commonTypes';
+import { ReduceMotion } from '../../commonTypes';
 import { configureLayoutAnimations } from '../../core';
 import { ProgressTransitionManager } from './ProgressTransitionManager';
 
-const supportedProps = [
+const SUPPORTED_PROPS = [
   'width',
   'height',
   'originX',
   'originY',
   'transform',
   'borderRadius',
-];
+] as const;
 
 type AnimationFactory = (
   values: SharedTransitionAnimationsValues
@@ -30,6 +32,7 @@ export class SharedTransition {
   private _customAnimationFactory: AnimationFactory | null = null;
   private _animation: SharedTransitionAnimationsFunction | null = null;
   private _transitionDuration = 500;
+  private _reduceMotion: ReduceMotion = ReduceMotion.System;
   private _customProgressAnimation?: ProgressAnimation = undefined;
   private _progressAnimation?: ProgressAnimation = undefined;
   private _defaultTransitionType?: SharedTransitionType = undefined;
@@ -53,6 +56,11 @@ export class SharedTransition {
 
   public duration(duration: number): SharedTransition {
     this._transitionDuration = duration;
+    return this;
+  }
+
+  public reduceMotion(_reduceMotion: ReduceMotion): this {
+    this._reduceMotion = _reduceMotion;
     return this;
   }
 
@@ -98,6 +106,10 @@ export class SharedTransition {
     );
   }
 
+  public getReduceMotion(): ReduceMotion {
+    return this._reduceMotion;
+  }
+
   private getTransitionAnimation(): SharedTransitionAnimationsFunction {
     if (!this._animation) {
       this.buildAnimation();
@@ -115,6 +127,7 @@ export class SharedTransition {
   private buildAnimation() {
     const animationFactory = this._customAnimationFactory;
     const transitionDuration = this._transitionDuration;
+    const reduceMotion = this._reduceMotion;
     this._animation = (values: SharedTransitionAnimationsValues) => {
       'worklet';
       let animations: {
@@ -127,21 +140,29 @@ export class SharedTransition {
       if (animationFactory) {
         animations = animationFactory(values);
         for (const key in animations) {
-          if (!supportedProps.includes(key)) {
-            throw Error(`The prop '${key}' is not supported yet.`);
+          if (!(SUPPORTED_PROPS as readonly string[]).includes(key)) {
+            throw new Error(
+              `[Reanimated] The prop '${key}' is not supported yet.`
+            );
           }
         }
       } else {
-        for (const propName of supportedProps) {
+        for (const propName of SUPPORTED_PROPS) {
           if (propName === 'transform') {
             const matrix = values.targetTransformMatrix;
             animations.transformMatrix = withTiming(matrix, {
+              reduceMotion,
               duration: transitionDuration,
             });
           } else {
-            const keyToTargetValue =
-              'target' + propName.charAt(0).toUpperCase() + propName.slice(1);
+            const capitalizedPropName = `${propName
+              .charAt(0)
+              .toUpperCase()}${propName.slice(
+              1
+            )}` as Capitalize<LayoutAnimationsOptions>;
+            const keyToTargetValue = `target${capitalizedPropName}` as const;
             animations[propName] = withTiming(values[keyToTargetValue], {
+              reduceMotion,
               duration: transitionDuration,
             });
           }
@@ -152,8 +173,9 @@ export class SharedTransition {
         if (propName === 'transform') {
           initialValues.transformMatrix = values.currentTransformMatrix;
         } else {
-          const keyToCurrentValue =
-            'current' + propName.charAt(0).toUpperCase() + propName.slice(1);
+          const capitalizedPropName = (propName.charAt(0).toUpperCase() +
+            propName.slice(1)) as Capitalize<LayoutAnimationsOptions>;
+          const keyToCurrentValue = `current${capitalizedPropName}` as const;
           initialValues[propName] = values[keyToCurrentValue];
         }
       }
@@ -170,7 +192,7 @@ export class SharedTransition {
     this._progressAnimation = (viewTag, values, progress) => {
       'worklet';
       const newStyles: { [key: string]: number | number[] } = {};
-      for (const propertyName of supportedProps) {
+      for (const propertyName of SUPPORTED_PROPS) {
         if (propertyName === 'transform') {
           // this is not the perfect solution, but at this moment it just interpolates the whole
           // matrix instead of interpolating scale, translate, rotate, etc. separately
@@ -185,10 +207,14 @@ export class SharedTransition {
           newStyles.transformMatrix = newMatrix;
         } else {
           // PropertyName == propertyName with capitalized fist letter, (width -> Width)
-          const PropertyName =
-            propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
-          const currentValue = values['current' + PropertyName] as number;
-          const targetValue = values['target' + PropertyName] as number;
+          const PropertyName = (propertyName.charAt(0).toUpperCase() +
+            propertyName.slice(1)) as Capitalize<LayoutAnimationsOptions>;
+          const currentPropertyName = `current${PropertyName}` as const;
+          const targetPropertyName = `target${PropertyName}` as const;
+
+          const currentValue = values[currentPropertyName];
+          const targetValue = values[targetPropertyName];
+
           newStyles[propertyName] =
             progress * (targetValue - currentValue) + currentValue;
         }
@@ -219,5 +245,9 @@ export class SharedTransition {
     transitionType: SharedTransitionType
   ): SharedTransition {
     return new SharedTransition().defaultTransitionType(transitionType);
+  }
+
+  public static reduceMotion(_reduceMotion: ReduceMotion): SharedTransition {
+    return new SharedTransition().reduceMotion(_reduceMotion);
   }
 }

@@ -6,10 +6,9 @@ import {
   isMemberExpression,
   isExpression,
 } from '@babel/types';
-import { ExplicitWorklet } from './types';
+import type { ExplicitWorklet } from './types';
 
 const gestureHandlerGestureObjects = new Set([
-  // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gestureObjects.ts
   'Tap',
   'Pan',
   'Pinch',
@@ -22,6 +21,7 @@ const gestureHandlerGestureObjects = new Set([
   'Race',
   'Simultaneous',
   'Exclusive',
+  'Hover',
 ]);
 
 const gestureHandlerBuilderMethods = new Set([
