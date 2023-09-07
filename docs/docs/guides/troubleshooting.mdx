@@ -21,7 +21,7 @@ All of them are supposed to work correctly only within the same minor version. T
 
 **Problem:** This usually happens when Reanimated is not properly installed, e.g. forgetting to include the Reanimated Babel plugin in `babel.config.js`.
 
-**Solution:** See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation#babel-plugin for more information.
+**Solution:** See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#installation for more information.
 
 ### Native part of Reanimated doesn't seem to be initialized
 
@@ -80,9 +80,9 @@ See [Couldn't determine the version of the native part of Reanimated](#couldnt-d
 
 See (Mismatch between JavaScript part and native part of Reanimated)[#mismatch-between-javascript-part-and-native-part-of-reanimated] and (Mismatch between JavaScript code version and Reanimated Babel plugin version)[#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version].
 
-### Native side failed to resolve Java code version
+### C++ side failed to resolve Java code version
 
-**Problem:** This happens when Reanimated fails to determine the version of its Java part - most likely because for some reason Java part hasn't rebuilt after an upgrade.
+**Problem:** This happens when Reanimated fails to determine the version of its Java part - most likely because Java part hasn't rebuilt after an upgrade.
 
 **Solution:** Make sure to rebuild your app and see if the problem persists. If it does, feel free to [create an issue on our GitHub](https://github.com/software-mansion/react-native-reanimated/).
 
@@ -128,7 +128,7 @@ See (Mismatch between JavaScript part and native part of Reanimated)[#mismatch-b
 
 After that make sure to run your package manager again, either `yarn` or `npm install`.
 
-### [Reanimated] Another instance of `react-native-reanimated` was detected
+### Another instance of Reanimated was detected
 
 See [Multiple versions of Reanimated were detected](#multiple-versions-of-reanimated-were-detected).
 

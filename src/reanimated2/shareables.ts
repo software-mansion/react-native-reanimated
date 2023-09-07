@@ -148,11 +148,11 @@ export function makeShareableCloneRecursive<T>(
             const babelVersion = value.__initData.version;
             if (babelVersion === undefined) {
               throw new Error(`[Reanimated] Unknown version of Reanimated Babel plugin.
-See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#unknown-version-of-reanimated-babel-plugin\` for more details. 
+See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#unknown-version-of-reanimated-babel-plugin\` for more details. 
 Offending code was: \`${getWorkletCode(value)}\``);
             } else if (babelVersion !== jsVersion) {
               throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}).        
-See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version\` for more details.
+See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version\` for more details.
 Offending code was: \`${getWorkletCode(value)}\``);
             }
             registerWorkletStackDetails(
@@ -167,7 +167,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
             // Reanimated plugin.
             throw new Error(
               `[Reanimated] Using dev bundle in a release app build is not supported.
-See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#using-dev-bundle-in-a-release-app-build-is-not-supported\` for more details.`
+See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#using-dev-bundle-in-a-release-app-build-is-not-supported\` for more details.`
             );
           }
           // to save on transferring static __initData field of worklet structure

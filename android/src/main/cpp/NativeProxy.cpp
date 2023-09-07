@@ -121,17 +121,17 @@ void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
   } catch (std::exception &) {
     throw std::runtime_error(
         std::string(
-            "[Reanimated] (C++) Native side failed to resolve Java code version.\n") +
-        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#native-side-failed-to-resolve-java-code-version` for more details.");
+            "[Reanimated] C++ side failed to resolve Java code version.\n") +
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#c-side-failed-to-resolve-java-code-version` for more details.");
   }
 
   auto cppVersion = getReanimatedCppVersion();
   if (cppVersion != javaVersion) {
     throw std::runtime_error(
         std::string(
-            "[Reanimated] (C++) Mismatch between C++ code version and Java code version ( ") +
+            "[Reanimated] Mismatch between C++ code version and Java code version ( ") +
         cppVersion + " vs. " + javaVersion + " respectively).\n" +
-        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#c-mismatch-between-c-code-version-and-java-code-version` for more details.");
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#mismatch-between-c-code-version-and-java-code-version` for more details.");
   }
 }
 
@@ -144,8 +144,8 @@ void NativeProxy::injectCppVersion() {
   } catch (std::exception &) {
     throw std::runtime_error(
         std::string(
-            "[Reanimated] (C++) Native side failed to resolve Java code version (injection).\n") +
-        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#native-side-failed-to-resolve-java-code-version` for more details.");
+            "[Reanimated] C++ side failed to resolve Java code version (injection).\n") +
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#c-side-failed-to-resolve-java-code-version` for more details.");
   }
 }
 #endif // DEBUG

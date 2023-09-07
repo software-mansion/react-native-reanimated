@@ -69,8 +69,8 @@ function assertSingleReanimatedInstance() {
     global._REANIMATED_VERSION_JS !== jsVersion
   ) {
     throw new Error(
-      `[Reanimated] Another instance of \`react-native-reanimated\` was detected.
-See \`http://localhost:3000/react-native-reanimated/docs/guides/troubleshooting#reanimated-another-instance-of-react-native-reanimated-was-detected\` for more details. Previous: ${global._REANIMATED_VERSION_JS}, current: ${jsVersion}.`
+      `[Reanimated] Another instance of Reanimated was detected.
+See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#another-instance-of-reanimated-was-detected\` for more details. Previous: ${global._REANIMATED_VERSION_JS}, current: ${jsVersion}.`
     );
   }
   global._REANIMATED_VERSION_JS = jsVersion;
@@ -89,7 +89,7 @@ export class NativeReanimated {
     if (global.__reanimatedModuleProxy === undefined) {
       throw new Error(
         `[Reanimated] Native part of Reanimated doesn't seem to be initialized.
-See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#Native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
+See https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
     if (__DEV__) {

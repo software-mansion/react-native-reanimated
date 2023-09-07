@@ -46,6 +46,8 @@ const ignoredDirectories = ['node_modules', 'Pods', 'lib', 'build'];
 const urlRegex =
   /\b((http|https):\/\/?)[^\s<>[\]`]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
 
+const ignoredDomains = ['twitter.com', 'x.com'];
+
 async function getFiles(dir) {
   const dirents = await fsp.readdir(dir, { withFileTypes: true });
   const files = await Promise.all(
@@ -64,7 +66,12 @@ async function getFiles(dir) {
           const urls = Array.from(fileContent.matchAll(urlRegex), (m) => m[0]);
           const validUrls = [];
           urls.forEach((url) => {
-            if (!/({|})/.test(url)) {
+            if (
+              !/({|})/.test(url) &&
+              !ignoredDomains.some((ignoredDirectory) =>
+                url.includes(ignoredDirectory)
+              )
+            ) {
               validUrls.push(url);
             }
           });
