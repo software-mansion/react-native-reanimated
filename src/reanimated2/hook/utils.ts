@@ -50,12 +50,6 @@ export const useEvent = function <T extends __NativeEvent<T>>(
   // TODO TYPESCRIPT This cast is to get rid of .d.ts file.
 } as unknown as useEventType;
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type useHandlerType = <T, TContext extends __Context = Record<string, never>>(
-  handlers: Handlers<T, TContext>,
-  deps?: DependencyList
-) => { context: TContext; doDependenciesDiffer: boolean; useWeb: boolean };
-
 export const useHandler = function <T, TContext extends __Context>(
   handlers: Handlers<T, TContext>,
   dependencies?: DependencyList
@@ -86,8 +80,7 @@ export const useHandler = function <T, TContext extends __Context>(
   const useWeb = isWeb() || isJest();
 
   return { context, doDependenciesDiffer, useWeb };
-  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
-} as useHandlerType;
+};
 
 // builds one big hash from multiple worklets' hashes
 export function buildWorkletsHash(
