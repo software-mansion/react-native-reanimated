@@ -1,3 +1,4 @@
+'use strict';
 import { runOnUI } from './threads';
 
 let viewTags: number[] = [];

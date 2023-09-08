@@ -1,3 +1,4 @@
+'use strict';
 import { runOnUIImmediately } from '../threads';
 
 type CallbackDetails = {

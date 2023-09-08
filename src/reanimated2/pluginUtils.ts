@@ -1,3 +1,4 @@
+'use strict';
 export function getUseOfValueInStyleWarning() {
   return (
     "It looks like you might be using shared value's .value inside reanimated inline style. " +

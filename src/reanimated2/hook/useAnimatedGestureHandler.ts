@@ -1,3 +1,4 @@
+'use strict';
 import type { __Context, __WorkletFunction, NativeEvent } from '../commonTypes';
 import type { DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
