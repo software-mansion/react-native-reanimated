@@ -19,11 +19,11 @@ import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import type {
   AnimationObject,
   Timestamp,
-  AdapterWorkletFunction,
-  BasicWorkletFunction,
   NestedObjectValues,
   SharedValue,
   StyleProps,
+  __AdapterWorkletFunction,
+  __BasicWorkletFunction,
 } from '../commonTypes';
 import type { AnimatedStyle } from '../helperTypes';
 
@@ -166,7 +166,7 @@ function runAnimations(
 
 function styleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: BasicWorkletFunction<AnimatedStyle<any>>,
+  updater: __BasicWorkletFunction<AnimatedStyle<any>>,
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
@@ -255,12 +255,12 @@ function styleUpdater(
 
 function jestStyleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: BasicWorkletFunction<AnimatedStyle<any>>,
+  updater: __BasicWorkletFunction<AnimatedStyle<any>>,
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
   animatedStyle: MutableRefObject<AnimatedStyle<any>>,
-  adapters: AdapterWorkletFunction[] = []
+  adapters: __AdapterWorkletFunction[] = []
 ): void {
   'worklet';
   const animations: AnimatedStyle<any> = state.animations ?? {};
@@ -393,9 +393,9 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
 ): Style;
 
 export function useAnimatedStyle<Style extends DefaultStyle>(
-  updater: BasicWorkletFunction<Style>,
+  updater: __BasicWorkletFunction<Style>,
   dependencies?: DependencyList | null,
-  adapters?: AdapterWorkletFunction | AdapterWorkletFunction[],
+  adapters?: __AdapterWorkletFunction | __AdapterWorkletFunction[],
   isAnimatedProps = false
 ) {
   const viewsRef: ViewRefSet<unknown> = makeViewsRefSet();
@@ -413,7 +413,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       );
     }
   }
-  const adaptersArray: AdapterWorkletFunction[] = adapters
+  const adaptersArray: __AdapterWorkletFunction[] = adapters
     ? Array.isArray(adapters)
       ? adapters
       : [adapters]

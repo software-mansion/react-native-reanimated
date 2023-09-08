@@ -1,4 +1,4 @@
-import type { ComplexWorkletFunction } from './commonTypes';
+import type { __ComplexWorkletFunction } from './commonTypes';
 import { setupCallGuard, setupConsole } from './initializers';
 import NativeReanimatedModule from './NativeReanimated';
 import { makeShareableCloneRecursive } from './shareables';
@@ -10,7 +10,7 @@ export type WorkletRuntime = {
 
 export function createWorkletRuntime(
   name: string,
-  initializer?: ComplexWorkletFunction<[], void>
+  initializer?: __ComplexWorkletFunction<[], void>
 ) {
   return NativeReanimatedModule.createWorkletRuntime(
     name,
