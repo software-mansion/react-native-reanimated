@@ -1,15 +1,17 @@
-import type { DependencyList } from './commonTypes';
-import { useEvent, useHandler } from './Hooks';
-import type { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import type { DependencyList, NativeEvent } from './commonTypes';
+import { useHandler } from './useHandler';
+import { useEvent } from './useEvent';
+import type { NativeScrollEvent } from 'react-native';
 
-export interface ScrollEvent extends NativeScrollEvent {
+export interface ScrollEventPayload extends NativeScrollEvent {
   eventName: string;
 }
 
-export type ScrollHandler<Context extends Record<string, unknown>> = (
-  event: ScrollEvent,
-  context: Context
-) => void;
+export type ScrollEvent = NativeEvent<ScrollEventPayload>;
+
+export type ScrollHandler<
+  Context extends Record<string, unknown> = Record<string, unknown>
+> = (event: NativeEvent<ScrollEventPayload>, context: Context) => void;
 export interface ScrollHandlers<Context extends Record<string, unknown>> {
   onScroll?: ScrollHandler<Context>;
   onBeginDrag?: ScrollHandler<Context>;
@@ -23,14 +25,14 @@ export function useAnimatedScrollHandler<
 >(
   handlers: ScrollHandlers<Context> | ScrollHandler<Context>,
   dependencies?: DependencyList
-) {
+): ScrollHandler<Context> {
   // case when handlers is a function
   const scrollHandlers: ScrollHandlers<Context> =
     typeof handlers === 'function' ? { onScroll: handlers } : handlers;
-  const { context, doDependenciesDiffer } = useHandler<ScrollEvent, Context>(
-    scrollHandlers as Record<string, ScrollHandler<Context>>,
-    dependencies
-  );
+  const { context, doDependenciesDiffer } = useHandler<
+    ScrollEventPayload,
+    Context
+  >(scrollHandlers as Record<string, ScrollHandler<Context>>, dependencies);
 
   // build event subscription array
   const subscribeForEvents = ['onScroll'];
@@ -47,8 +49,8 @@ export function useAnimatedScrollHandler<
     subscribeForEvents.push('onMomentumScrollEnd');
   }
 
-  return useEvent<ScrollEvent>(
-    (event: ScrollEvent) => {
+  return useEvent<ScrollEventPayload>(
+    (event: NativeEvent<ScrollEventPayload>) => {
       'worklet';
       const {
         onScroll,
@@ -77,9 +79,5 @@ export function useAnimatedScrollHandler<
     },
     subscribeForEvents,
     doDependenciesDiffer
-    // TODO TYPESCRIPT
-    // This casts stems from improper assumption
-    // that all events are wrappers that have 'nativeEvent' field.
-    // This will be fixed in the future when `useEvent` is tackled.
-  ) as (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  );
 }

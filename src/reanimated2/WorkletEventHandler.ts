@@ -1,24 +1,27 @@
-import type { __NativeEvent } from './commonTypes';
 import NativeReanimatedModule from './NativeReanimated';
 import { registerEventHandler, unregisterEventHandler } from './core';
+import type { NativeEvent, WrappedNativeEvent } from './hook/commonTypes';
 
-function jsListener<T extends __NativeEvent<T>>(
+function jsListener<Payload extends object>(
   eventName: string,
-  handler: (event: T) => void
+  handler: (event: NativeEvent<Payload>) => void
 ) {
-  return (evt: T) => {
+  return (evt: WrappedNativeEvent<Payload>) => {
     handler({ ...evt.nativeEvent, eventName });
   };
 }
 
-export default class WorkletEventHandler<T extends __NativeEvent<T>> {
-  worklet: (event: T) => void;
+export default class WorkletEventHandler<Payload extends object> {
+  worklet: (event: NativeEvent<Payload>) => void;
   eventNames: string[];
   reattachNeeded: boolean;
-  listeners: Record<string, (event: T) => void>;
+  listeners: Record<string, (event: NativeEvent<Payload>) => void>;
   viewTag: number | undefined;
   registrations: number[];
-  constructor(worklet: (event: T) => void, eventNames: string[] = []) {
+  constructor(
+    worklet: (event: NativeEvent<Payload>) => void,
+    eventNames: string[] = []
+  ) {
     this.worklet = worklet;
     this.eventNames = eventNames;
     this.reattachNeeded = false;
@@ -28,16 +31,23 @@ export default class WorkletEventHandler<T extends __NativeEvent<T>> {
 
     if (!NativeReanimatedModule.native) {
       this.listeners = eventNames.reduce(
-        (acc: Record<string, (event: T) => void>, eventName: string) => {
+        (
+          acc: Record<string, (event: WrappedNativeEvent<Payload>) => void>,
+          eventName: string
+        ) => {
           acc[eventName] = jsListener(eventName, worklet);
           return acc;
         },
         {}
-      );
+        // TODO TYPESCRIPT
+        // We do this cast because the types are a bit scuffed at the moment.
+        // In Native implementation Events are just their Payload, but in
+        // web they are wrapped in an object with a `nativeEvent` field.
+      ) as Record<string, (event: NativeEvent<Payload>) => void>;
     }
   }
 
-  updateWorklet(newWorklet: (event: T) => void): void {
+  updateWorklet(newWorklet: (event: NativeEvent<Payload>) => void): void {
     this.worklet = newWorklet;
     this.reattachNeeded = true;
   }

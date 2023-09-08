@@ -3,7 +3,8 @@ import type {
   WrappedNativeEvent,
   NativeEvent,
 } from './commonTypes';
-import { useEvent, useHandler } from './Hooks';
+import { useHandler } from './useHandler';
+import { useEvent } from './useEvent';
 import type { PanGestureHandlerGestureEvent as DefaultEvent } from 'react-native-gesture-handler';
 
 const EventType = {
@@ -27,7 +28,7 @@ export type GestureHandlerEvent<Payload extends object> =
   | WrappedNativeEvent<Payload>
   | NativeEvent<Payload>;
 
-type Handler<
+type GestureHandler<
   Payload extends PropsUsedInUseAnimatedGestureHandler,
   Context extends Record<string, unknown>
 > = (
@@ -40,13 +41,13 @@ export interface GestureHandlers<
   Payload extends PropsUsedInUseAnimatedGestureHandler,
   Context extends Record<string, unknown>
 > {
-  [key: string]: Handler<Payload, Context> | undefined;
-  onStart?: Handler<Payload, Context>;
-  onActive?: Handler<Payload, Context>;
-  onEnd?: Handler<Payload, Context>;
-  onFail?: Handler<Payload, Context>;
-  onCancel?: Handler<Payload, Context>;
-  onFinish?: Handler<Payload, Context>;
+  [key: string]: GestureHandler<Payload, Context> | undefined;
+  onStart?: GestureHandler<Payload, Context>;
+  onActive?: GestureHandler<Payload, Context>;
+  onEnd?: GestureHandler<Payload, Context>;
+  onFail?: GestureHandler<Payload, Context>;
+  onCancel?: GestureHandler<Payload, Context>;
+  onFinish?: GestureHandler<Payload, Context>;
 }
 
 /**

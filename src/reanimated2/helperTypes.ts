@@ -23,6 +23,7 @@ import type {
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 import type { DependencyList } from './hook/commonTypes';
+import type { ScrollHandler } from './hook';
 
 export type TransformArrayItem = Extract<
   TransformsStyle['transform'],
@@ -82,8 +83,8 @@ type AnimatedStyleProps<Props extends object> = {
   [Key in keyof PickStyleProps<Props>]: StyleProp<AnimatedStyle<Props[Key]>>;
 };
 
-type NonStyleAnimatedProps<Props extends object> = {
-  [K in keyof Omit<Props, keyof PickStyleProps<Props> | 'style'>]:
+type RestProps<Props extends object> = {
+  [K in keyof Omit<Props, keyof PickStyleProps<Props> | 'style' | 'onScroll'>]:
     | Props[K]
     | SharedValue<Props[K]>;
 };
@@ -102,15 +103,20 @@ type SharedTransitionProps = {
   sharedTransitionStyle?: SharedTransition;
 };
 
-type AnimatedPropsProp<Props extends object> = NonStyleAnimatedProps<Props> &
+type EventListenersProps = {
+  onScroll?: ScrollHandler;
+};
+
+type AnimatedPropsProp<Props extends object> = RestProps<Props> &
   AnimatedStyleProps<Props> &
   LayoutProps &
   SharedTransitionProps;
 
-export type AnimatedProps<Props extends object> = NonStyleAnimatedProps<Props> &
+export type AnimatedProps<Props extends object> = RestProps<Props> &
   AnimatedStyleProps<Props> &
   LayoutProps &
-  SharedTransitionProps & {
+  SharedTransitionProps &
+  EventListenersProps & {
     animatedProps?: Partial<AnimatedPropsProp<Props>>;
   };
 

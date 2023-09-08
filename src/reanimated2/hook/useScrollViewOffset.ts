@@ -2,10 +2,10 @@ import type { RefObject } from 'react';
 import { useEffect, useRef } from 'react';
 
 import type Animated from '../../index'; // TODO: fixme?
-import type { ScrollEvent } from './useAnimatedScrollHandler';
+import type { ScrollEventPayload } from './useAnimatedScrollHandler';
 import type { SharedValue } from '../commonTypes';
 import { findNodeHandle } from 'react-native';
-import { useEvent } from './utils';
+import { useEvent } from './useEvent';
 import { useSharedValue } from './useSharedValue';
 
 const scrollEventNames = [
@@ -24,7 +24,7 @@ export function useScrollViewOffset(
     initialRef !== undefined ? initialRef : useSharedValue(0)
   );
 
-  const event = useEvent<ScrollEvent>((event: ScrollEvent) => {
+  const event = useEvent<ScrollEventPayload>((event: ScrollEventPayload) => {
     'worklet';
     offsetRef.current.value =
       event.contentOffset.x === 0
