@@ -37,7 +37,7 @@ jobs:
         run: yarn
       - name: Check types
         working-directory: plugin
-        run: yarn type:check
+        run: yarn type:check:src
       - name: Lint and format
         working-directory: plugin
         run: yarn lint
