@@ -27,7 +27,7 @@ type Handler<
   Payload extends PropsUsedInUseAnimatedGestureHandler,
   Context extends Record<string, unknown>
 > = (
-  event: GestureHandlerEvent<Payload>,
+  eventPayload: Payload,
   context: Context,
   isCanceledOrFailed?: boolean
 ) => void;
