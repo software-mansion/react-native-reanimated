@@ -63,14 +63,14 @@ import {
   handleEnteringAnimation,
   handleExitingAnimation,
   insertWebAnimations,
-} from './reanimated2/platform-specific/webAnimations';
-import type { AnimationConfig } from './reanimated2/platform-specific/webAnimations';
+} from '../reanimated2/platform-specific/webAnimations';
+import type { AnimationConfig } from '../reanimated2/platform-specific/webAnimations';
 
-import { handleLayoutTransition } from './reanimated2/platform-specific/webTransitions';
-import type { TransitionData } from './reanimated2/platform-specific/webTransitions';
+import { handleLayoutTransition } from '../reanimated2/platform-specific/webTransitions';
+import type { TransitionData } from '../reanimated2/platform-specific/webTransitions';
 
-import { Animations } from './reanimated2/platform-specific/webAnimationsData';
-import type { AnimationNames } from './reanimated2/platform-specific/webAnimationsData';
+import { Animations } from '../reanimated2/platform-specific/webAnimationsData';
+import type { AnimationNames } from '../reanimated2/platform-specific/webAnimationsData';
 
 const IS_WEB = isWeb();
 
