@@ -570,7 +570,7 @@ export default function createAnimatedComponent(
           translateY: snapshot.y - rect.y,
           scaleX: snapshot.width / rect.width,
           scaleY: snapshot.height / rect.height,
-          reversed: false, // This field is used only in `SequencedTransition`, so by default it will by false
+          reversed: false, // This field is used only in `SequencedTransition`, so by default it will be false
         };
 
         this.handleWebAnimation(LayoutAnimationType.LAYOUT, transitionData);
