@@ -23,15 +23,14 @@ export type GestureHandlerEvent<Payload extends object> =
   | WebEvent<Payload>
   | NativeEvent<Payload>;
 
-type HandlerArguments<
-  Payload extends PropsUsedInUseAnimatedGestureHandler,
-  Context extends Record<string, unknown>
-> = [event: Payload, context: Context, isCanceledOrFailed?: boolean];
-
 type Handler<
   Payload extends PropsUsedInUseAnimatedGestureHandler,
   Context extends Record<string, unknown>
-> = (...args: HandlerArguments<Payload, Context>) => void;
+> = (
+  event: GestureHandlerEvent<Payload>,
+  context: Context,
+  isCanceledOrFailed?: boolean
+) => void;
 
 export interface GestureHandlers<
   Payload extends PropsUsedInUseAnimatedGestureHandler,
