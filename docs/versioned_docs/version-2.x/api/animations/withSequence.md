@@ -16,7 +16,7 @@ The animations to be run in sequence.
 
 ### Returns
 
-This method returns an animation object. It can be either assigned directly to a Shared Value or can be used as a value for a style object returned from [`useAnimatedStyle`](../hooks/useAnimatedStyle).
+This method returns an animation object. It can be either assigned directly to a Shared Value or can be used as a value for a style object returned from [`useAnimatedStyle`](/docs/2.x/api/hooks/useAnimatedStyle).
 
 ## Example
 

@@ -209,8 +209,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   [self setNewProps:newProps forView:view convertFromAbsolute:NO];
 }
 
-#if !TARGET_OS_OSX
-
 - (void)setNewProps:(NSMutableDictionary *)newProps
                 forView:(REAUIView *)view
     convertFromAbsolute:(BOOL)convertFromAbsolute
@@ -272,17 +270,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   RCTComponentData *componentData = componentDataByName[@"RCTView"];
   [componentData setProps:newProps forView:view];
 }
-
-#else
-
-// TODO macOS view does not have center property
-- (void)setNewProps:(NSMutableDictionary *)newProps
-                forView:(REAUIView *)view
-    convertFromAbsolute:(BOOL)convertFromAbsolute
-{
-}
-
-#endif
 
 - (NSDictionary *)prepareDataForAnimatingWorklet:(NSMutableDictionary *)values frameConfig:(FrameConfigType)frameConfig
 {

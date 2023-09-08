@@ -203,7 +203,9 @@ public class NodesManager implements EventDispatcherListener {
 
   public void performOperations() {
     if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
-      mNativeProxy.performOperations();
+      if (mNativeProxy != null) {
+        mNativeProxy.performOperations();
+      }
     } else if (!mOperationsInBatch.isEmpty()) {
       final Queue<NativeUpdateOperation> copiedOperationsQueue = mOperationsInBatch;
       mOperationsInBatch = new LinkedList<>();
@@ -302,18 +304,18 @@ public class NodesManager implements EventDispatcherListener {
 
   @Override
   public void onEventDispatch(Event event) {
+    if (mNativeProxy == null) {
+      return;
+    }
     // Events can be dispatched from any thread so we have to make sure handleEvent is run from the
     // UI thread.
     if (UiThreadUtil.isOnUiThread()) {
       handleEvent(event);
       performOperations();
     } else {
-      boolean shouldSaveEvent = false;
       String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
       int viewTag = event.getViewTag();
-
-      shouldSaveEvent |=
-          mNativeProxy != null && mNativeProxy.isAnyHandlerWaitingForEvent(eventName, viewTag);
+      boolean shouldSaveEvent = mNativeProxy.isAnyHandlerWaitingForEvent(eventName, viewTag);
       if (shouldSaveEvent) {
         mEventQueue.offer(new CopiedEvent(event));
       }

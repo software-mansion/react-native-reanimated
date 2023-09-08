@@ -25,7 +25,6 @@ import {
   isChromeDebugger,
   shouldBeUseWeb,
   isWeb,
-  isMacOS,
 } from './reanimated2/PlatformChecker';
 import { initialUpdaterRun } from './reanimated2/animation';
 import type {
@@ -610,7 +609,6 @@ export default function createAnimatedComponent(
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         const skipEntering = !!this.context?.current.skipInitial;
         if (
-          !isMacOS() &&
           (layout || entering || exiting || sharedTransitionTag) &&
           tag != null
         ) {
@@ -623,7 +621,7 @@ export default function createAnimatedComponent(
               LayoutAnimationType.LAYOUT,
               maybeBuild(
                 layout,
-                this.props?.style,
+                undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */,
                 AnimatedComponent.displayName
               )
             );

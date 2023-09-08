@@ -1,7 +1,9 @@
 #include "NativeReanimatedModule.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
+#if REACT_NATIVE_MINOR_VERSION >= 72
 #include <react/renderer/core/TraitCast.h>
+#endif
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 #endif
@@ -568,11 +570,15 @@ void NativeReanimatedModule::performOperations() {
 
           return newRoot;
         },
-        {/* .enableStateReconciliation = */ false,
-         /* .mountSynchronously = */ true,
-         /* .shouldYield = */ [this]() {
-           return propsRegistry_->shouldReanimatedSkipCommit();
-         }});
+        { /* .enableStateReconciliation = */
+          false,
+#if REACT_NATIVE_MINOR_VERSION >= 72
+              /* .mountSynchronously = */ true,
+#endif
+              /* .shouldYield = */ [this]() {
+                return propsRegistry_->shouldReanimatedSkipCommit();
+              }
+        });
   });
 }
 

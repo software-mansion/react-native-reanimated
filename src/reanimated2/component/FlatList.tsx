@@ -99,11 +99,7 @@ export const ReanimatedFlatList = forwardRef(
       </LayoutAnimationConfig>
     );
   }
-  // TODO TYPESCRIPT this was a cast before
-  // ) as <T>(
-  //   props: ReanimatedFlatListProps<T> & RefAttributes<FlatList<any>>
-  // ) => React.ReactElement;
-);
+) as unknown as ReanimatedFlatList<any>;
 
 const styles = StyleSheet.create({
   verticallyInverted: { transform: [{ scaleY: -1 }] },

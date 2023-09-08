@@ -16,6 +16,6 @@ In React Native every component appears instantly whenever you add it to the com
 
 When unmounting a component from the hierarchy of views, it just disappears in the next frame. However you can beautify this process using Exiting Animations. Reanimated includes gorgeous exit animations for your components.
 
-### [Read more about LayoutAnimations](./../api/LayoutAnimations/entryAnimations)
+### [Read more about LayoutAnimations](/docs/2.x/api/LayoutAnimations/entryAnimations)
 
 <iframe width="940px" height="557px" src="https://www.youtube.com/embed/6UXfS6FI674" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
