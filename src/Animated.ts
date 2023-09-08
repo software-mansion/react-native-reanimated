@@ -15,7 +15,7 @@ import type { EasingFunction as _EasingFunction } from './reanimated2/Easing';
 import type { AnimatedScrollViewProps as _AnimatedScrollViewProps } from './reanimated2/component/ScrollView';
 import type { FlatListPropsWithLayout as _FlatListPropsWithLayout } from './reanimated2/component/FlatList';
 
-export { default as createAnimatedComponent } from './createAnimatedComponent';
+export { default as createAnimatedComponent } from './createAnimatedComponent/createAnimatedComponent';
 export { AnimatedText as Text } from './reanimated2/component/Text';
 export { AnimatedView as View } from './reanimated2/component/View';
 export { AnimatedScrollView as ScrollView } from './reanimated2/component/ScrollView';

@@ -1,8 +1,8 @@
 import NativeReanimatedModule from './NativeReanimated';
 import type {
-  FlatShareableRef,
   ShareableRef,
-  WorkletFunction,
+  FlatShareableRef,
+  __WorkletFunction,
 } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
 import { registerWorkletStackDetails } from './errors';
@@ -237,7 +237,7 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
 
 const WORKLET_CODE_THRESHOLD = 255;
 
-function getWorkletCode(value: WorkletFunction) {
+function getWorkletCode(value: __WorkletFunction) {
   // @ts-ignore this is fine
   const code = value?.__initData?.code;
   if (!code) {
