@@ -25,7 +25,8 @@ export interface AnimatedRef<T extends Component> {
 
 export type NativeEvent<Payload extends object> = Payload;
 
-export type WebEvent<Payload extends object> = {
+export type WrappedNativeEvent<Payload extends object> = {
   nativeEvent: Payload;
 };
+
 export type DefaultStyle = ViewStyle | ImageStyle | TextStyle;
