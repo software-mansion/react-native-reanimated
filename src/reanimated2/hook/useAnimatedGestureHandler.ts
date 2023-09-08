@@ -1,4 +1,8 @@
-import type { DependencyList, WebEvent, NativeEvent } from './commonTypes';
+import type {
+  DependencyList,
+  WrappedNativeEvent,
+  NativeEvent,
+} from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
 import type { PanGestureHandlerGestureEvent as DefaultEvent } from 'react-native-gesture-handler';
 
@@ -20,7 +24,7 @@ interface PropsUsedInUseAnimatedGestureHandler {
 }
 
 export type GestureHandlerEvent<Payload extends object> =
-  | WebEvent<Payload>
+  | WrappedNativeEvent<Payload>
   | NativeEvent<Payload>;
 
 type Handler<
@@ -84,7 +88,7 @@ export function useAnimatedGestureHandler<
   handlers: GestureHandlers<GestureHandlersPayload<EventType>, HandlerContext>,
   dependencies?: DependencyList
 ) {
-  type RealWebEvent = WebEvent<GestureHandlersPayload<EventType>>;
+  type RealWebEvent = WrappedNativeEvent<GestureHandlersPayload<EventType>>;
   type RealNativeEvent = NativeEvent<GestureHandlersPayload<EventType>>;
   type RealEvent = RealWebEvent | RealNativeEvent;
 
@@ -95,7 +99,7 @@ export function useAnimatedGestureHandler<
   const handler = (e: RealEvent) => {
     'worklet';
     const event = useWeb
-      ? (e as WebEvent<GestureHandlersPayload<EventType>>).nativeEvent
+      ? (e as WrappedNativeEvent<GestureHandlersPayload<EventType>>).nativeEvent
       : (e as NativeEvent<GestureHandlersPayload<EventType>>);
 
     if (event.state === EventType.BEGAN && handlers.onStart) {
