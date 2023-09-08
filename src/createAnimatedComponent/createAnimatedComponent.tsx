@@ -8,53 +8,53 @@ import type {
 } from 'react';
 import React from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
-import WorkletEventHandler from './reanimated2/WorkletEventHandler';
+import WorkletEventHandler from '../reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
-import './reanimated2/layoutReanimation/animationsManager';
+import '../reanimated2/layoutReanimation/animationsManager';
 import invariant from 'invariant';
-import { adaptViewConfig } from './ConfigHelper';
-import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
+import { adaptViewConfig } from '../ConfigHelper';
+import { RNRenderer } from '../reanimated2/platform-specific/RNRenderer';
 import {
   configureLayoutAnimations,
   enableLayoutAnimations,
   startMapper,
   stopMapper,
-} from './reanimated2/core';
+} from '../reanimated2/core';
 import {
   isJest,
   isChromeDebugger,
   shouldBeUseWeb,
   isWeb,
-} from './reanimated2/PlatformChecker';
-import { initialUpdaterRun } from './reanimated2/animation';
+} from '../reanimated2/PlatformChecker';
+import { initialUpdaterRun } from '../reanimated2/animation';
 import type {
   BaseAnimationBuilder,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
-} from './reanimated2/layoutReanimation';
+} from '../reanimated2/layoutReanimation';
 import {
   SharedTransition,
   LayoutAnimationType,
-} from './reanimated2/layoutReanimation';
+} from '../reanimated2/layoutReanimation';
 import type {
   SharedValue,
   StyleProps,
   ShadowNodeWrapper,
-} from './reanimated2/commonTypes';
+} from '../reanimated2/commonTypes';
 import type {
   ViewDescriptorsSet,
   ViewRefSet,
-} from './reanimated2/ViewDescriptorsSet';
-import { makeViewDescriptorsSet } from './reanimated2/ViewDescriptorsSet';
-import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
-import updateProps from './reanimated2/UpdateProps';
-import NativeReanimatedModule from './reanimated2/NativeReanimated';
-import { isSharedValue } from './reanimated2/utils';
-import type { AnimateProps } from './reanimated2/helperTypes';
-import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
+} from '../reanimated2/ViewDescriptorsSet';
+import { makeViewDescriptorsSet } from '../reanimated2/ViewDescriptorsSet';
+import { getShadowNodeWrapperFromRef } from '../reanimated2/fabricUtils';
+import updateProps from '../reanimated2/UpdateProps';
+import NativeReanimatedModule from '../reanimated2/NativeReanimated';
+import { isSharedValue } from '../reanimated2/utils';
+import type { AnimateProps } from '../reanimated2/helperTypes';
+import { removeFromPropsRegistry } from '../reanimated2/PropsRegistry';
 import { JSPropUpdater } from './JSPropUpdater';
-import { getReduceMotionFromConfig } from './reanimated2/animation/util';
-import { maybeBuild } from './animationBuilder';
+import { getReduceMotionFromConfig } from '../reanimated2/animation/util';
+import { maybeBuild } from '../animationBuilder';
 
 const IS_WEB = isWeb();
 
