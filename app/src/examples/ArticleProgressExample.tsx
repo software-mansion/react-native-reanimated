@@ -13,15 +13,12 @@ export default function ArticleProgressExample() {
   const scrollHandler = useScrollViewOffset(scrollViewRef);
 
   const progressBarAnimatedStyle = useAnimatedStyle(() => {
-    console.log('textRef', textRef);
     const measuredText = measure(textRef);
-    console.log('measuredText', measuredText);
     if (measuredText === null) {
       return { width: 0 };
     }
 
     const measuredScroll = measure(scrollViewRef);
-    console.log('measuredScroll', measuredScroll);
     if (measuredScroll === null) {
       return { width: 0 };
     }
@@ -31,9 +28,7 @@ export default function ArticleProgressExample() {
     // We need this, because the useScrollViewOffset hook reports the offset of
     // the top of the view.
     const scrollViewHeightOffset =
-      maxOffset === 0
-        ? 0
-        : (measuredScroll.height / maxOffset) * scrollHandler.value;
+      (measuredScroll.height / maxOffset) * scrollHandler.value;
 
     const width = Math.max(
       ((scrollHandler.value + scrollViewHeightOffset) / measuredText.height) *
