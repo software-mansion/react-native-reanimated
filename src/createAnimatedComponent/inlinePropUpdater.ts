@@ -109,6 +109,25 @@ export class InlinePropUpdater {
     });
   }
 
+  public static getInlineStyle(
+    style: Record<string, unknown>,
+    isFirstRender: boolean
+  ) {
+    if (isFirstRender) {
+      return getInlinePropsUpdate(style);
+    }
+    const newStyle: StyleProps = {};
+    for (const [key, styleValue] of Object.entries(style)) {
+      if (
+        !isSharedValue(styleValue) &&
+        !(key === 'transform' && isInlineStyleTransform(styleValue))
+      ) {
+        newStyle[key] = styleValue;
+      }
+    }
+    return newStyle;
+  }
+
   public attachInlineProps(
     animatedComponent: React.Component<unknown, unknown>,
     viewInfo: any // viewTag, viewName, shadowNodeWrapper, viewConfig
@@ -167,24 +186,5 @@ export class InlinePropUpdater {
     if (this._inlinePropsMapperId) {
       stopMapper(this._inlinePropsMapperId);
     }
-  }
-
-  public getInlineStyle(
-    style: Record<string, unknown>,
-    isFirstRender: boolean
-  ) {
-    if (isFirstRender) {
-      return getInlinePropsUpdate(style);
-    }
-    const newStyle: StyleProps = {};
-    for (const [key, styleValue] of Object.entries(style)) {
-      if (
-        !isSharedValue(styleValue) &&
-        !(key === 'transform' && isInlineStyleTransform(styleValue))
-      ) {
-        newStyle[key] = styleValue;
-      }
-    }
-    return newStyle;
   }
 }

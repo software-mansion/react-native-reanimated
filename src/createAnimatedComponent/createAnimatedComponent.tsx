@@ -17,7 +17,6 @@ import {
   configureLayoutAnimations,
   enableLayoutAnimations,
 } from '../reanimated2/core';
-
 import {
   SharedTransition,
   LayoutAnimationType,
@@ -483,7 +482,7 @@ export default function createAnimatedComponent(
               }
               return this.initialStyle;
             } else if (InlinePropUpdater.hasInlineStyles(style)) {
-              return this._inlinePropUpdater.getInlineStyle(
+              return InlinePropUpdater.getInlineStyle(
                 style,
                 this._isFirstRender
               );
