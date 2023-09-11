@@ -431,16 +431,16 @@ using namespace facebook::react;
 {
   // adapted from RCTPropsAnimatedNode.m
   RCTSurfacePresenter *surfacePresenter = _bridge.surfacePresenter ?: _surfacePresenter;
-  // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
-  // so that's why we need to call `finalizeUpdates` here.
   RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
   REAUIView<RCTComponentViewProtocol> *componentView =
       [componentViewRegistry findComponentViewWithTag:[viewTag integerValue]];
 
-  NSSet<NSString *> *rnAnimatedProps = [componentView propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN];
+  NSSet<NSString *> *propKeysManagedByAnimated = [componentView propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN];
   [surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
-  [componentView setPropKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN:rnAnimatedProps];
+  [componentView setPropKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN:propKeysManagedByAnimated];
 
+  // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
+  // so that's why we need to call `finalizeUpdates` here.
   [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
 }
 
