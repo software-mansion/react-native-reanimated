@@ -1,3 +1,4 @@
+'use strict';
 import type { ForwardedRef } from 'react';
 import React, { Component, forwardRef } from 'react';
 import type { FlatListProps, LayoutChangeEvent } from 'react-native';
