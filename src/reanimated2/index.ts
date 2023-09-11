@@ -52,6 +52,7 @@ export {
   withDecay,
   WithDecayConfig,
   DecayAnimation,
+  TransformMatrix,
   withDelay,
   withRepeat,
   withSequence,

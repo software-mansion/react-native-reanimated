@@ -1,22 +1,38 @@
-type FixedLengthArray<
-  T,
-  L extends number,
-  PassedObject = [T, ...Array<T>]
-> = PassedObject & {
-  readonly length: L;
-  [I: number]: T;
-};
+export type AffineMatrix = [
+  [number, number, number, number],
+  [number, number, number, number],
+  [number, number, number, number],
+  [number, number, number, number]
+];
 
-export type AffineMatrix = FixedLengthArray<FixedLengthArray<number, 4>, 4>;
+type ArrayOf16 = [
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number
+];
 
-export type AffineMatrixFlat = FixedLengthArray<number, 16>;
+export type Vector3DType = [number, number, number];
+export type AffineMatrixFlat = ArrayOf16 | Readonly<ArrayOf16>;
 
 type TransformMatrixDecomposition = Record<
-  'translationMatrix' | 'scaleMatrix' | 'rotationMatrix' | 'skewMatrix',
-  AffineMatrix
+  'translationMatrix' | '_scaleMatrix' | 'rotationMatrix' | 'skewMatrix',
+  AffineMatrixFlat
 >;
 
-type Axis = 'x' | 'y' | 'z';
+export type Axis = 'x' | 'y' | 'z';
 
 interface TansformMatrixDecompositionWithAngles
   extends TransformMatrixDecomposition {
@@ -25,14 +41,12 @@ interface TansformMatrixDecompositionWithAngles
   rz: number;
 }
 
-export function isAffineMatrixFlat(x: unknown): x is AffineMatrixFlat {
-  'worklet';
-  return (
-    Array.isArray(x) &&
-    x.length === 16 &&
-    x.every((element) => typeof element === 'number' && !isNaN(element))
-  );
-}
+// ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+// ┃ This functions are exported and exposed as API through class 🅼🅰🆃🆁🅸🆇 🆃🆁🅰🅽🆂🅵🅾🆁🅼 ┃
+// ┃ We don't define them directly in a this class, because using class on UI thread is not  ┃
+// ┃ efficient. So we use them directly in our internal code, but we provide a clean API for ┃
+// ┃ external users                                                                          ┃
+// ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 // ts-prune-ignore-next This function is exported to be tested
 export function isAffineMatrix(x: unknown): x is AffineMatrix {
@@ -49,9 +63,19 @@ export function isAffineMatrix(x: unknown): x is AffineMatrix {
   );
 }
 
+export function isAffineMatrixFlat(x: unknown): x is AffineMatrixFlat {
+  'worklet';
+  return (
+    Array.isArray(x) &&
+    x.length === 16 &&
+    x.every((element) => typeof element === 'number' && !isNaN(element))
+  );
+}
+
 export function flatten(matrix: AffineMatrix): AffineMatrixFlat {
   'worklet';
-  return matrix.flat() as AffineMatrixFlat;
+  const [col1, col2, col3, col4] = matrix;
+  return [...col1, ...col2, ...col3, ...col4];
 }
 
 // ts-prune-ignore-next This function is exported to be tested
@@ -69,16 +93,20 @@ function maybeFlattenMatrix(
   matrix: AffineMatrix | AffineMatrixFlat
 ): AffineMatrixFlat {
   'worklet';
+
   return isAffineMatrix(matrix) ? flatten(matrix) : matrix;
 }
 
-export function multiplyMatrices(
-  a: AffineMatrix,
-  b: AffineMatrix
-): AffineMatrix {
+export function _multiplyMatrices(
+  aFlat: AffineMatrixFlat,
+  bFlat: AffineMatrixFlat
+): AffineMatrixFlat {
   'worklet';
+  const a = unflatten(aFlat);
+  const b = unflatten(bFlat);
+
   return [
-    [
+    ...[
       a[0][0] * b[0][0] +
         a[0][1] * b[1][0] +
         a[0][2] * b[2][0] +
@@ -99,7 +127,7 @@ export function multiplyMatrices(
         a[0][2] * b[2][3] +
         a[0][3] * b[3][3],
     ],
-    [
+    ...[
       a[1][0] * b[0][0] +
         a[1][1] * b[1][0] +
         a[1][2] * b[2][0] +
@@ -120,7 +148,7 @@ export function multiplyMatrices(
         a[1][2] * b[2][3] +
         a[1][3] * b[3][3],
     ],
-    [
+    ...[
       a[2][0] * b[0][0] +
         a[2][1] * b[1][0] +
         a[2][2] * b[2][0] +
@@ -141,7 +169,7 @@ export function multiplyMatrices(
         a[2][2] * b[2][3] +
         a[2][3] * b[3][3],
     ],
-    [
+    ...[
       a[3][0] * b[0][0] +
         a[3][1] * b[1][0] +
         a[3][2] * b[2][0] +
@@ -162,76 +190,63 @@ export function multiplyMatrices(
         a[3][2] * b[2][3] +
         a[3][3] * b[3][3],
     ],
-  ];
+  ] as const;
 }
 
-export function subtractMatrices<T extends AffineMatrixFlat | AffineMatrix>(
-  maybeFlatA: T,
-  maybeFlatB: T
-): T {
+export function _subtractMatrices(
+  a: AffineMatrixFlat,
+  b: AffineMatrixFlat
+): AffineMatrixFlat {
   'worklet';
-  const isFlatOnStart = isAffineMatrixFlat(maybeFlatA);
-  const a: AffineMatrixFlat = maybeFlattenMatrix(maybeFlatA);
-  const b: AffineMatrixFlat = maybeFlattenMatrix(maybeFlatB);
-
-  const c = a.map((_, i) => a[i] - b[i]) as AffineMatrixFlat;
-  return isFlatOnStart ? (c as T) : (unflatten(c) as T);
+  return a.map((_, i) => a[i] - b[i]) as AffineMatrixFlat;
 }
 
-export function addMatrices<T extends AffineMatrixFlat | AffineMatrix>(
-  maybeFlatA: T,
-  maybeFlatB: T
-): T {
+export function _addMatrices(
+  a: AffineMatrixFlat,
+  b: AffineMatrixFlat
+): AffineMatrixFlat {
   'worklet';
-  const isFlatOnStart = isAffineMatrixFlat(maybeFlatA);
-  const a = maybeFlattenMatrix(maybeFlatA);
-  const b = maybeFlattenMatrix(maybeFlatB);
 
-  const c = a.map((_, i) => a[i] + b[i]) as AffineMatrixFlat;
-  return isFlatOnStart ? (c as T) : (unflatten(c) as T);
+  return a.map((_, i) => a[i] + b[i]) as AffineMatrixFlat;
 }
 
-export function scaleMatrix<T extends AffineMatrixFlat | AffineMatrix>(
-  maybeFlatA: T,
+export function _scaleMatrix(
+  a: AffineMatrixFlat,
   scalar: number
-): T {
+): AffineMatrixFlat {
   'worklet';
-  const isFlatOnStart = isAffineMatrixFlat(maybeFlatA);
-  const a = maybeFlattenMatrix(maybeFlatA);
-
-  const b = a.map((x) => x * scalar) as AffineMatrixFlat;
-  return isFlatOnStart ? (b as T) : (unflatten(b) as T);
+  return a.map((x) => x * scalar) as AffineMatrixFlat;
 }
 
-export function getRotationMatrix(
+export function _getRotationMatrix(
   angle: number,
   axis: Axis = 'z'
-): AffineMatrix {
+): AffineMatrixFlat {
   'worklet';
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
   switch (axis) {
     case 'z':
       return [
-        [cos, sin, 0, 0],
-        [-sin, cos, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-      ];
+        ...[cos, sin, 0, 0],
+        ...[-sin, cos, 0, 0],
+        ...[0, 0, 1, 0],
+        ...[0, 0, 0, 1],
+      ] as const;
     case 'y':
       return [
-        [cos, 0, -sin, 0],
-        [0, 1, 0, 0],
-        [sin, 0, cos, 0],
-        [0, 0, 0, 1],
-      ];
+        ...[cos, 0, -sin, 0],
+        ...[0, 1, 0, 0],
+        ...[sin, 0, cos, 0],
+        ...[0, 0, 0, 1],
+      ] as const;
     case 'x':
       return [
-        [1, 0, 0, 0],
-        [0, cos, sin, 0],
-        [0, -sin, cos, 0],
-        [0, 0, 0, 1],
-      ];
+        ...[1, 0, 0, 0],
+        ...[0, cos, sin, 0],
+        ...[0, -sin, cos, 0],
+        ...[0, 0, 0, 1],
+      ] as const;
   }
 }
 
@@ -240,15 +255,14 @@ function norm3d(x: number, y: number, z: number) {
   return Math.sqrt(x * x + y * y + z * z);
 }
 
-function transposeMatrix(matrix: AffineMatrix): AffineMatrix {
+function transposeMatrix(m: AffineMatrixFlat): AffineMatrixFlat {
   'worklet';
-  const m = flatten(matrix);
   return [
-    [m[0], m[4], m[8], m[12]],
-    [m[1], m[5], m[9], m[13]],
-    [m[2], m[6], m[10], m[14]],
-    [m[3], m[7], m[11], m[15]],
-  ];
+    ...[m[0], m[4], m[8], m[12]],
+    ...[m[1], m[5], m[9], m[13]],
+    ...[m[2], m[6], m[10], m[14]],
+    ...[m[3], m[7], m[11], m[15]],
+  ] as const;
 }
 
 function assertVectorsHaveEqualLengths(a: number[], b: number[]) {
@@ -284,15 +298,15 @@ function scaleVector(u: number[], a: number) {
   return u.map((e) => e * a);
 }
 
-function gramSchmidtAlgorithm(matrix: AffineMatrix): {
-  rotationMatrix: AffineMatrix;
-  skewMatrix: AffineMatrix;
+function gramSchmidtAlgorithm(matrix: AffineMatrixFlat): {
+  rotationMatrix: AffineMatrixFlat;
+  skewMatrix: AffineMatrixFlat;
 } {
   // Gram-Schmidt orthogonalization decomposes any matrix with non-zero determinant into an orthogonal and a triangular matrix
   // These matrices are equal to rotation and skew matrices respectively, because we apply it to transformation matrix
   // That is expected to already have extracted the remaining transforms (scale & translation)
   'worklet';
-  const [a0, a1, a2, a3] = matrix;
+  const [a0, a1, a2, a3] = unflatten(matrix);
 
   const u0 = a0;
   const u1 = subtractVectors(a1, projection(u0, a1));
@@ -312,24 +326,24 @@ function gramSchmidtAlgorithm(matrix: AffineMatrix): {
     scaleVector(u, 1 / Math.sqrt(innerProduct(u, u)))
   );
 
-  const rotationMatrix: AffineMatrix = [
-    [e0[0], e1[0], e2[0], e3[0]],
-    [e0[1], e1[1], e2[1], e3[1]],
-    [e0[2], e1[2], e2[2], e3[2]],
-    [e0[3], e1[3], e2[3], e3[3]],
-  ];
+  const rotationMatrix: AffineMatrixFlat = [
+    ...[e0[0], e1[0], e2[0], e3[0]],
+    ...[e0[1], e1[1], e2[1], e3[1]],
+    ...[e0[2], e1[2], e2[2], e3[2]],
+    ...[e0[3], e1[3], e2[3], e3[3]],
+  ] as const;
 
-  const skewMatrix: AffineMatrix = [
-    [
+  const skewMatrix: AffineMatrixFlat = [
+    ...[
       innerProduct(e0, a0),
       innerProduct(e0, a1),
       innerProduct(e0, a2),
       innerProduct(e0, a3),
     ],
-    [0, innerProduct(e1, a1), innerProduct(e1, a2), innerProduct(e1, a3)],
-    [0, 0, innerProduct(e2, a2), innerProduct(e2, a3)],
-    [0, 0, 0, innerProduct(e3, a3)],
-  ];
+    ...[0, innerProduct(e1, a1), innerProduct(e1, a2), innerProduct(e1, a3)],
+    ...[0, 0, innerProduct(e2, a2), innerProduct(e2, a3)],
+    ...[0, 0, 0, innerProduct(e3, a3)],
+  ] as const;
   return {
     rotationMatrix: transposeMatrix(rotationMatrix),
     skewMatrix: transposeMatrix(skewMatrix),
@@ -338,40 +352,41 @@ function gramSchmidtAlgorithm(matrix: AffineMatrix): {
 
 // ts-prune-ignore-next This function is exported to be tested
 export function decomposeMatrix(
-  unknownTypeMatrix: AffineMatrixFlat | AffineMatrix
+  unknownTypeMatrix: AffineMatrixFlat
 ): TransformMatrixDecomposition {
   'worklet';
-  const matrix = maybeFlattenMatrix(unknownTypeMatrix);
+  const matrixF = maybeFlattenMatrix(unknownTypeMatrix);
 
   // normalize matrix
-  if (matrix[15] === 0) {
+  if (matrixF[15] === 0) {
     throw new Error('[Reanimated] Invalid transform matrix.');
   }
-  matrix.forEach((_, i) => (matrix[i] /= matrix[15]));
 
-  const translationMatrix: AffineMatrix = [
-    [1, 0, 0, 0],
-    [0, 1, 0, 0],
-    [0, 0, 1, 0],
-    [matrix[12], matrix[13], matrix[14], 1],
-  ];
+  const matrix = matrixF.map((_, i) => matrixF[i] / matrixF[15]);
+
+  const translationMatrix: AffineMatrixFlat = [
+    ...[1, 0, 0, 0],
+    ...[0, 1, 0, 0],
+    ...[0, 0, 1, 0],
+    ...[matrix[12], matrix[13], matrix[14], 1],
+  ] as const;
   const sx = matrix[15] * norm3d(matrix[0], matrix[4], matrix[8]);
   const sy = matrix[15] * norm3d(matrix[1], matrix[5], matrix[9]);
   const sz = matrix[15] * norm3d(matrix[2], matrix[6], matrix[10]);
 
-  const scaleMatrix: AffineMatrix = [
-    [sx, 0, 0, 0],
-    [0, sy, 0, 0],
-    [0, 0, sz, 0],
-    [0, 0, 0, 1],
-  ];
+  const _scaleMatrix: AffineMatrixFlat = [
+    ...[sx, 0, 0, 0],
+    ...[0, sy, 0, 0],
+    ...[0, 0, sz, 0],
+    ...[0, 0, 0, 1],
+  ] as const;
 
-  const rotationAndSkewMatrix: AffineMatrix = [
-    [matrix[0] / sx, matrix[1] / sx, matrix[2] / sx, 0],
-    [matrix[4] / sy, matrix[5] / sy, matrix[6] / sy, 0],
-    [matrix[8] / sz, matrix[9] / sz, matrix[10] / sz, 0],
-    [0, 0, 0, 1],
-  ];
+  const rotationAndSkewMatrix: AffineMatrixFlat = [
+    ...[matrix[0] / sx, matrix[1] / sx, matrix[2] / sx, 0],
+    ...[matrix[4] / sy, matrix[5] / sy, matrix[6] / sy, 0],
+    ...[matrix[8] / sz, matrix[9] / sz, matrix[10] / sz, 0],
+    ...[0, 0, 0, 1],
+  ] as const;
 
   const { rotationMatrix, skewMatrix } = gramSchmidtAlgorithm(
     rotationAndSkewMatrix
@@ -379,34 +394,37 @@ export function decomposeMatrix(
 
   return {
     translationMatrix,
-    scaleMatrix,
+    _scaleMatrix,
     rotationMatrix,
     skewMatrix,
   };
 }
 
 export function decomposeMatrixIntoMatricesAndAngles(
-  matrix: AffineMatrixFlat | AffineMatrix
+  matrix: AffineMatrixFlat
 ): TansformMatrixDecompositionWithAngles {
   'worklet';
-  const { scaleMatrix, rotationMatrix, translationMatrix, skewMatrix } =
+  const { _scaleMatrix, rotationMatrix, translationMatrix, skewMatrix } =
     decomposeMatrix(matrix);
 
-  const sinRy = -rotationMatrix[0][2];
+  const sinRy = -rotationMatrix[0 * 4 + 2];
 
   const ry = Math.asin(sinRy);
   let rx;
   let rz;
   if (sinRy === 1 || sinRy === -1) {
     rz = 0;
-    rx = Math.atan2(sinRy * rotationMatrix[0][1], sinRy * rotationMatrix[0][2]);
+    rx = Math.atan2(
+      sinRy * rotationMatrix[0 * 4 + 1],
+      sinRy * rotationMatrix[0 * 4 + 2]
+    );
   } else {
-    rz = Math.atan2(rotationMatrix[0][1], rotationMatrix[0][0]);
-    rx = Math.atan2(rotationMatrix[1][2], rotationMatrix[2][2]);
+    rz = Math.atan2(rotationMatrix[0 * 4 + 1], rotationMatrix[0 * 4 + 0]);
+    rx = Math.atan2(rotationMatrix[1 * 4 + 2], rotationMatrix[2 * 4 + 2]);
   }
 
   return {
-    scaleMatrix,
+    _scaleMatrix,
     rotationMatrix,
     translationMatrix,
     skewMatrix,
