@@ -1,17 +1,20 @@
-import type { DependencyList, NativeEvent } from './commonTypes';
+import type {
+  DependencyList,
+  ReanimatedEvent,
+  ReanimatedPayload,
+} from './commonTypes';
 import { useHandler } from './useHandler';
+import type { EventHandlerInternal, EventHandlerProcessed } from './useEvent';
 import { useEvent } from './useEvent';
 import type { NativeScrollEvent } from 'react-native';
 
-export interface ScrollEventPayload extends NativeScrollEvent {
-  eventName: string;
-}
+export type ScrollEventPayload = ReanimatedPayload<NativeScrollEvent>;
 
-export type ScrollEvent = NativeEvent<ScrollEventPayload>;
+export type ScrollEvent = ReanimatedEvent<ScrollEventPayload>;
 
 export type ScrollHandler<
   Context extends Record<string, unknown> = Record<string, unknown>
-> = (event: NativeEvent<ScrollEventPayload>, context: Context) => void;
+> = (event: ReanimatedEvent<ScrollEventPayload>, context: Context) => void;
 export interface ScrollHandlers<Context extends Record<string, unknown>> {
   onScroll?: ScrollHandler<Context>;
   onBeginDrag?: ScrollHandler<Context>;
@@ -20,12 +23,20 @@ export interface ScrollHandlers<Context extends Record<string, unknown>> {
   onMomentumEnd?: ScrollHandler<Context>;
 }
 
+// @ts-expect-error This is fine.
+export function useAnimatedScrollHandler<
+  Context extends Record<string, unknown>
+>(
+  handlers: ScrollHandler<Context> | ScrollHandlers<Context>,
+  dependencies?: DependencyList
+): EventHandlerProcessed<NativeScrollEvent, Context>;
+
 export function useAnimatedScrollHandler<
   Context extends Record<string, unknown>
 >(
   handlers: ScrollHandlers<Context> | ScrollHandler<Context>,
   dependencies?: DependencyList
-): ScrollHandler<Context> {
+) {
   // case when handlers is a function
   const scrollHandlers: ScrollHandlers<Context> =
     typeof handlers === 'function' ? { onScroll: handlers } : handlers;
@@ -49,8 +60,8 @@ export function useAnimatedScrollHandler<
     subscribeForEvents.push('onMomentumScrollEnd');
   }
 
-  return useEvent<ScrollEventPayload>(
-    (event: NativeEvent<ScrollEventPayload>) => {
+  return useEvent<ScrollEventPayload, Context>(
+    (event: ReanimatedEvent<ScrollEventPayload>) => {
       'worklet';
       const {
         onScroll,
@@ -79,5 +90,5 @@ export function useAnimatedScrollHandler<
     },
     subscribeForEvents,
     doDependenciesDiffer
-  );
+  ) as unknown as EventHandlerInternal<ScrollEventPayload>;
 }

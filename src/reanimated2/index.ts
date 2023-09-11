@@ -36,6 +36,8 @@ export {
   useAnimatedKeyboard,
   useScrollViewOffset,
   ScrollEvent,
+  EventHandler,
+  UseHandlerContext,
 } from './hook';
 export {
   DelayAnimation,

@@ -1,6 +1,11 @@
 import type { Component } from 'react';
 import type { ShadowNodeWrapper } from '../commonTypes';
-import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
+import type {
+  ImageStyle,
+  NativeSyntheticEvent,
+  TextStyle,
+  ViewStyle,
+} from 'react-native';
 
 export type DependencyList = Array<unknown> | undefined;
 
@@ -18,10 +23,12 @@ export interface AnimatedRef<T extends Component> {
     | HTMLElement; // web
 }
 
-export type NativeEvent<Payload extends object> = Payload;
-
-export type WrappedNativeEvent<Payload extends object> = {
-  nativeEvent: Payload;
+export type ReanimatedPayload<Payload extends object> = Payload & {
+  eventName: string;
 };
+
+export type ReanimatedEvent<Payload extends object> = Payload;
+
+export type RNEvent<Payload extends object> = NativeSyntheticEvent<Payload>;
 
 export type DefaultStyle = ViewStyle | ImageStyle | TextStyle;

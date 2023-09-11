@@ -10,7 +10,6 @@ export type {
   GestureHandlers,
 } from './useAnimatedGestureHandler';
 export { useAnimatedReaction } from './useAnimatedReaction';
-export type { AnimatedReactionWorkletFunction } from './useAnimatedReaction';
 export { useAnimatedRef } from './useAnimatedRef';
 export { useAnimatedScrollHandler } from './useAnimatedScrollHandler';
 export type {
@@ -25,5 +24,5 @@ export { useFrameCallback } from './useFrameCallback';
 export type { FrameCallback } from './useFrameCallback';
 export { useAnimatedKeyboard } from './useAnimatedKeyboard';
 export { useScrollViewOffset } from './useScrollViewOffset';
-export { useEvent } from './useEvent';
-export { useHandler } from './useHandler';
+export { useEvent, EventHandler } from './useEvent';
+export { useHandler, UseHandlerContext } from './useHandler';

@@ -1,8 +1,4 @@
-import type {
-  DependencyList,
-  WrappedNativeEvent,
-  NativeEvent,
-} from './commonTypes';
+import type { DependencyList, ReanimatedEvent } from './commonTypes';
 import { useHandler } from './useHandler';
 import { useEvent } from './useEvent';
 import type { PanGestureHandlerGestureEvent as DefaultEvent } from 'react-native-gesture-handler';
@@ -24,9 +20,13 @@ interface PropsUsedInUseAnimatedGestureHandler {
   oldState?: StateType;
 }
 
+type WrappedNativeEvent<Payload extends object> = {
+  nativeEvent: Payload;
+};
+
 export type GestureHandlerEvent<Payload extends object> =
   | WrappedNativeEvent<Payload>
-  | NativeEvent<Payload>;
+  | ReanimatedEvent<Payload>;
 
 type GestureHandler<
   Payload extends PropsUsedInUseAnimatedGestureHandler,
@@ -90,7 +90,7 @@ export function useAnimatedGestureHandler<
   dependencies?: DependencyList
 ) {
   type RealWebEvent = WrappedNativeEvent<GestureHandlersPayload<EventType>>;
-  type RealNativeEvent = NativeEvent<GestureHandlersPayload<EventType>>;
+  type RealNativeEvent = ReanimatedEvent<GestureHandlersPayload<EventType>>;
   type RealEvent = RealWebEvent | RealNativeEvent;
 
   const { context, doDependenciesDiffer, useWeb } = useHandler<
@@ -101,7 +101,7 @@ export function useAnimatedGestureHandler<
     'worklet';
     const event = useWeb
       ? (e as WrappedNativeEvent<GestureHandlersPayload<EventType>>).nativeEvent
-      : (e as NativeEvent<GestureHandlersPayload<EventType>>);
+      : (e as ReanimatedEvent<GestureHandlersPayload<EventType>>);
 
     if (event.state === EventType.BEGAN && handlers.onStart) {
       handlers.onStart(event, context);
@@ -154,7 +154,4 @@ export function useAnimatedGestureHandler<
     ['onGestureHandlerStateChange', 'onGestureHandlerEvent'],
     doDependenciesDiffer
   ) as unknown as (e: EventType) => void;
-  // This cast is necessary since `react-native-gesture-handler`
-  // expects to get a function
-  // and useEvent returns a ref that is casted to something else x_x
 }

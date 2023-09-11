@@ -1,17 +1,46 @@
+import type { MutableRefObject } from 'react';
 import { useRef } from 'react';
 import WorkletEventHandler from '../WorkletEventHandler';
-import type { NativeEvent } from './commonTypes';
+import type {
+  RNEvent,
+  ReanimatedEvent,
+  ReanimatedPayload,
+} from './commonTypes';
 
-// TODO TYPESCRIPT
-// @ts-expect-error This overload seems to be necessary at the moment.
-export function useEvent<Payload extends object>(
-  handler: (event: NativeEvent<Payload>) => void,
-  eventNames: string[],
+export type EventHandler<
+  Payload extends object,
+  Context extends Record<string, unknown>
+> = (
+  event: ReanimatedEvent<ReanimatedPayload<Payload>>,
+  context?: Context
+) => void;
+
+export type EventHandlerProcessed<
+  Payload extends object,
+  Context extends Record<string, unknown>
+> = (event: RNEvent<Payload>, context?: Context) => void;
+
+export type EventHandlerInternal<Payload extends object> = MutableRefObject<
+  WorkletEventHandler<Payload>
+>;
+
+// @ts-expect-error This is fine.
+// This cast is necessary if we want to keep our API simple.
+// We don't know which properites of a component that is made into
+// an AnimatedComponent are handlers and we don't want to force the user to define it.
+// Therefore we disguise `useEvent` return type as a simple function and we handle
+// it being a React Ref in `createAnimatedComponent`.
+export function useEvent<
+  Payload extends object,
+  Context extends Record<string, unknown> = never
+>(
+  handler: EventHandler<Payload, Context>,
+  eventNames?: string[],
   rebuild?: boolean
-): (event: NativeEvent<Payload>) => void;
+): EventHandlerProcessed<Payload, Context>;
 
-export function useEvent<Payload extends object>(
-  handler: (event: NativeEvent<Payload>) => void,
+export function useEvent<Payload extends object, Context = never>(
+  handler: (event: ReanimatedEvent<Payload>, context?: Context) => void,
   eventNames: string[] = [],
   rebuild = false
 ) {

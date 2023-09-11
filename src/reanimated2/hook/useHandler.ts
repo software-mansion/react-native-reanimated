@@ -2,14 +2,14 @@ import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from '../commonTypes';
 import { makeRemote } from '../core';
 import { isWeb, isJest } from '../PlatformChecker';
-import type { DependencyList } from './commonTypes';
+import type { DependencyList, ReanimatedPayload } from './commonTypes';
 import { areDependenciesEqual, buildDependencies } from './utils';
 
 interface GeneralHandler<
   Payload extends object,
   Context extends Record<string, unknown>
 > {
-  (eventPayload: Payload, context: Context): void;
+  (eventPayload: ReanimatedPayload<Payload>, context: Context): void;
 }
 
 type GeneralHandlers<
@@ -76,16 +76,4 @@ export function useHandler<
   const useWeb = isWeb() || isJest();
 
   return { context, doDependenciesDiffer, useWeb };
-}
-
-// Builds one big hash from multiple worklets' hashes.
-export function buildWorkletsHash(
-  worklets: Record<string, WorkletFunction> | WorkletFunction[]
-) {
-  // For arrays `Object.values` returns the array itself.
-  return Object.values(worklets).reduce(
-    (accumulatedResult, worklet: WorkletFunction) =>
-      accumulatedResult + worklet.__workletHash.toString(),
-    ''
-  );
 }

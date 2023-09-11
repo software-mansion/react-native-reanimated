@@ -228,13 +228,8 @@ export enum ReduceMotion {
 /**
  * @deprecated
  */
-export type __Context = Record<string, unknown>;
-
-/**
- * @deprecated
- */
 export interface __WorkletFunction {
-  __closure?: __Context;
+  __closure?: Record<string, unknown>;
   __workletHash?: number;
 }
 
@@ -259,11 +254,4 @@ export interface __ComplexWorkletFunction<A extends any[], R>
  */
 export interface __AdapterWorkletFunction extends __WorkletFunction {
   (value: NestedObject<string | number | AnimationObject>): void;
-}
-
-/**
- * @deprecated
- */
-export interface __NativeEvent<T> {
-  nativeEvent: T;
 }

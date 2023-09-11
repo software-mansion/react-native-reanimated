@@ -5,6 +5,7 @@ import type Animated from '../../index'; // TODO: fixme?
 import type { ScrollEventPayload } from './useAnimatedScrollHandler';
 import type { SharedValue } from '../commonTypes';
 import { findNodeHandle } from 'react-native';
+import type { EventHandlerInternal } from './useEvent';
 import { useEvent } from './useEvent';
 import { useSharedValue } from './useSharedValue';
 
@@ -30,12 +31,10 @@ export function useScrollViewOffset(
       event.contentOffset.x === 0
         ? event.contentOffset.y
         : event.contentOffset.x;
-  }, scrollEventNames);
+  }, scrollEventNames) as unknown as EventHandlerInternal<ScrollEventPayload>;
 
   useEffect(() => {
     const viewTag = findNodeHandle(aref.current);
-    // @ts-ignore TODO TYPESCRIPT This happens because of
-    // how we had to type `useEvent` to get rid of .d.ts file.
     event.current?.registerForEvents(viewTag as number);
   }, [aref.current]);
 

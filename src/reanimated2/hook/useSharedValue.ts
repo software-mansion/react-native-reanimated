@@ -15,11 +15,9 @@ export function useSharedValue<T>(
 
   useEffect(() => {
     return () => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      cancelAnimation(ref.current!);
+      cancelAnimation(ref.current);
     };
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return ref.current!;
+  return ref.current;
 }

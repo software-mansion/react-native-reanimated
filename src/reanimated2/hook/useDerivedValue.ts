@@ -1,14 +1,20 @@
 import { useEffect, useRef } from 'react';
 import { initialUpdaterRun } from '../animation';
-import type { __BasicWorkletFunction, SharedValue } from '../commonTypes';
+import type { SharedValue, WorkletFunction } from '../commonTypes';
 import { makeMutable, startMapper, stopMapper } from '../core';
 import type { DependencyList } from './commonTypes';
 import { shouldBeUseWeb } from '../PlatformChecker';
 
 export type DerivedValue<T> = Readonly<SharedValue<T>>;
 
+// @ts-expect-error This is fine.
 export function useDerivedValue<T>(
-  processor: __BasicWorkletFunction<T>,
+  processor: () => T,
+  dependencies?: DependencyList
+): DerivedValue<T>;
+
+export function useDerivedValue<T>(
+  processor: WorkletFunction<[], T>,
   dependencies?: DependencyList
 ): DerivedValue<T> {
   const initRef = useRef<SharedValue<T> | null>(null);

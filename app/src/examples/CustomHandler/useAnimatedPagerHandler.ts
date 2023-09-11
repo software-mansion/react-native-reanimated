@@ -6,11 +6,6 @@ import {
 } from 'react-native-pager-view';
 import { useEvent, useHandler } from 'react-native-reanimated';
 
-interface CustomPagerViewOnPageScrollEventData
-  extends PagerViewOnPageScrollEventData {
-  eventName: string;
-}
-
 interface CustomPageScrollStateChangedEvent
   extends PageScrollStateChangedEvent {
   eventName: string;
@@ -30,26 +25,19 @@ export function useAnimatedPagerScrollHandler<
       context: TContext
     ) => void;
   },
-  dependencies?: ReadonlyArray<unknown>
+  dependencies?: unknown[]
 ): (e: NativeSyntheticEvent<PagerViewOnPageScrollEventData>) => void {
   const { context, doDependenciesDiffer } = useHandler<
     PagerViewOnPageScrollEventData,
     TContext
-    // @ts-ignore TODO LATER-TYPESCRIPT
   >(handlers, dependencies);
 
-  // @ts-ignore TODO LATER-TYPESCRIPT
   return useEvent<PagerViewOnPageScrollEventData>(
     (event) => {
       'worklet';
       const { onPageScroll } = handlers;
 
-      if (
-        onPageScroll &&
-        (event as CustomPagerViewOnPageScrollEventData).eventName.endsWith(
-          'onPageScroll'
-        )
-      ) {
+      if (onPageScroll && event.eventName.endsWith('onPageScroll')) {
         onPageScroll(event, context);
       }
     },
