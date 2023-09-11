@@ -1,9 +1,31 @@
-import type { EasingFn } from '../../Easing';
+import type { TransformArrayItem } from '../../helperTypes';
+import type { EasingFunction } from '../../Easing';
 import type { StyleProps } from '../../commonTypes';
 
+export type LayoutAnimationsOptions =
+  | 'originX'
+  | 'originY'
+  | 'width'
+  | 'height'
+  | 'borderRadius'
+  | 'globalOriginX'
+  | 'globalOriginY';
+
+type CurrentLayoutAnimationsValues = {
+  [K in LayoutAnimationsOptions as `current${Capitalize<string & K>}`]: number;
+};
+
+type TargetLayoutAnimationsValues = {
+  [K in LayoutAnimationsOptions as `target${Capitalize<string & K>}`]: number;
+};
+
+interface WindowDimensions {
+  windowWidth: number;
+  windowHeight: number;
+}
+
 export interface KeyframeProps extends StyleProps {
-  easing?: EasingFn;
-  [key: string]: any;
+  easing?: EasingFunction;
 }
 
 export type LayoutAnimation = {
@@ -14,27 +36,11 @@ export type LayoutAnimation = {
 
 export type AnimationFunction = (a?: any, b?: any, c?: any) => any; // this is just a temporary mock
 
-export interface EntryAnimationsValues {
-  targetOriginX: number;
-  targetOriginY: number;
-  targetWidth: number;
-  targetHeight: number;
-  targetGlobalOriginX: number;
-  targetGlobalOriginY: number;
-  windowWidth: number;
-  windowHeight: number;
-}
+export type EntryAnimationsValues = TargetLayoutAnimationsValues &
+  WindowDimensions;
 
-export interface ExitAnimationsValues {
-  currentOriginX: number;
-  currentOriginY: number;
-  currentWidth: number;
-  currentHeight: number;
-  currentGlobalOriginX: number;
-  currentGlobalOriginY: number;
-  windowWidth: number;
-  windowHeight: number;
-}
+export type ExitAnimationsValues = CurrentLayoutAnimationsValues &
+  WindowDimensions;
 
 export type EntryExitAnimationFunction =
   | ((targetValues: EntryAnimationsValues) => LayoutAnimation)
@@ -43,23 +49,9 @@ export type EntryExitAnimationFunction =
 
 export type AnimationConfigFunction<T> = (targetValues: T) => LayoutAnimation;
 
-export interface LayoutAnimationsValues {
-  [key: string]: number | number[];
-  currentOriginX: number;
-  currentOriginY: number;
-  currentWidth: number;
-  currentHeight: number;
-  currentGlobalOriginX: number;
-  currentGlobalOriginY: number;
-  targetOriginX: number;
-  targetOriginY: number;
-  targetWidth: number;
-  targetHeight: number;
-  targetGlobalOriginX: number;
-  targetGlobalOriginY: number;
-  windowWidth: number;
-  windowHeight: number;
-}
+export type LayoutAnimationsValues = CurrentLayoutAnimationsValues &
+  TargetLayoutAnimationsValues &
+  WindowDimensions;
 
 export interface SharedTransitionAnimationsValues
   extends LayoutAnimationsValues {
@@ -96,7 +88,7 @@ export interface ILayoutAnimationBuilder {
 
 export interface BaseLayoutAnimationConfig {
   duration?: number;
-  easing?: EasingFn;
+  easing?: EasingFunction;
   type?: AnimationFunction;
   damping?: number;
   dampingRatio?: number;
@@ -152,3 +144,7 @@ export enum SharedTransitionType {
 export type EntryExitAnimationsValues =
   | EntryAnimationsValues
   | ExitAnimationsValues;
+
+export type StylePropsWithArrayTransform = StyleProps & {
+  transform?: TransformArrayItem[];
+};

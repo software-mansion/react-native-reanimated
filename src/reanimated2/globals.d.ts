@@ -1,52 +1,52 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-var */
 import type {
-  AnimatedStyle,
   StyleProps,
   MeasuredDimensions,
   MapperRegistry,
   ShareableRef,
   ShareableSyncDataHolderRef,
   ShadowNodeWrapper,
-  ComplexWorkletFunction,
+  __ComplexWorkletFunction,
+  FlatShareableRef,
 } from './commonTypes';
+import type { AnimatedStyle } from './helperTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
-import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
+import type { NativeReanimatedModule } from './NativeReanimated/NativeReanimated';
 import type { SensorContainer } from './SensorContainer';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
 import type { ProgressTransitionRegister } from './layoutReanimation/sharedTransitions';
 import type { UpdatePropsManager } from './UpdateProps';
+import type { callGuardDEV } from './initializers';
 
 declare global {
-  var _WORKLET: boolean | undefined;
+  var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var _IS_FABRIC: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
+  var _REANIMATED_VERSION_JS: string | undefined;
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
-  var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
-  var __reanimatedModuleProxy: NativeReanimated | undefined;
+  var __reanimatedModuleProxy: NativeReanimatedModule | undefined;
+  var __callGuardDEV: typeof callGuardDEV | undefined;
   var evalWithSourceMap:
     | ((js: string, sourceURL: string, sourceMap: string) => any)
     | undefined;
   var evalWithSourceUrl: ((js: string, sourceURL: string) => any) | undefined;
   var _log: (s: string) => void;
+  var _toString: (value: unknown) => string;
   var _notifyAboutProgress: (
     tag: number,
     value: Record<string, unknown>,
     isSharedTransition: boolean
   ) => void;
-  var _notifyAboutEnd: (
-    tag: number,
-    finished: boolean,
-    removeView: boolean
-  ) => void;
+  var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
-  var _makeShareableClone: (value: any) => any;
+  var _makeShareableClone: <T>(value: T) => FlatShareableRef<T>;
   var _updateDataSynchronously: (
     dataHolder: ShareableSyncDataHolderRef<any>,
     data: ShareableRef<any>
   ) => void;
   var _scheduleOnJS: (
-    fun: ComplexWorkletFunction<A, R>,
+    fun: __ComplexWorkletFunction<A, R>,
     args?: unknown[]
   ) => void;
   var _updatePropsPaper:
@@ -54,7 +54,7 @@ declare global {
         operations: {
           tag: number;
           name: string;
-          updates: StyleProps | AnimatedStyle;
+          updates: StyleProps | AnimatedStyle<any>;
         }[]
       ) => void)
     | undefined;
@@ -62,7 +62,7 @@ declare global {
     | ((
         operations: {
           shadowNodeWrapper: ShadowNodeWrapper;
-          updates: StyleProps | AnimatedStyle;
+          updates: StyleProps | AnimatedStyle<any>;
         }[]
       ) => void)
     | undefined;
@@ -73,6 +73,9 @@ declare global {
     | undefined;
   var _scrollToPaper:
     | ((viewTag: number, x: number, y: number, animated: boolean) => void)
+    | undefined;
+  var _dispatchCommandPaper:
+    | ((viewTag: number, commandName: string, args: Array<unknown>) => void)
     | undefined;
   var _dispatchCommandFabric:
     | ((

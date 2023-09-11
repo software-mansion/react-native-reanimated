@@ -26,6 +26,7 @@ function runPlugin(
   assert(transformed);
   return transformed;
 }
+
 describe('babel plugin', () => {
   beforeEach(() => {
     process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '1';
@@ -213,11 +214,11 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).not.toContain('_f._closure = {};');
+      expect(code).not.toContain('_f.__closure = {};');
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't capture globals", () => {
+    it("doesn't capture default globals", () => {
       const input = html`<script>
         function f() {
           'worklet';
@@ -234,13 +235,56 @@ describe('babel plugin', () => {
             'property' in path.node.left &&
             'name' in path.node.left.property &&
             'properties' in path.node.right &&
-            path.node.left.property.name === '_closure'
+            path.node.left.property.name === '__closure'
           ) {
             closureBindings = path.node.right.properties;
           }
         },
       });
       expect(closureBindings).toEqual([]);
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't capture custom globals", () => {
+      const input = html`<script>
+        const foo = 42;
+
+        function f() {
+          'worklet';
+          console.log(foo);
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, undefined, { globals: ['foo'] });
+      expect(code).toContain('f.__closure = {};');
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't capture arguments", () => {
+      const input = html`<script>
+        function f(a, b, c) {
+          'worklet';
+          console.log(arguments);
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('f.__closure = {};');
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't capture objects' properties", () => {
+      const input = html`<script>
+        const foo = { bar: 42 };
+
+        function f() {
+          'worklet';
+          console.log(foo.bar);
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('foo: foo');
       expect(code).toMatchSnapshot();
     });
   });
@@ -943,7 +987,7 @@ describe('babel plugin', () => {
             'property' in path.node.left &&
             'name' in path.node.left.property &&
             'properties' in path.node.right &&
-            path.node.left.property.name === '_closure'
+            path.node.left.property.name === '__closure'
           ) {
             closureBindings = path.node.right.properties;
           }
@@ -1011,110 +1055,112 @@ describe('babel plugin', () => {
     });
   });
 
-  describe('is indempotent for common cases', () => {
-    function resultIsIdempotent(input: string) {
-      const firstResult = runPlugin(input).code;
-      assert(firstResult);
-      const secondResult = runPlugin(firstResult).code;
-      return firstResult === secondResult;
-    }
+  describe('is indempotent', () => {
+    it('for common cases', () => {
+      function resultIsIdempotent(input: string) {
+        const firstResult = runPlugin(input).code;
+        assert(firstResult);
+        const secondResult = runPlugin(firstResult).code;
+        return firstResult === secondResult;
+      }
 
-    const input1 = html`<script>
-      const foo = useAnimatedStyle(() => {
-        const x = 1;
-      });
-    </script>`;
-    expect(resultIsIdempotent(input1)).toBe(true);
-
-    const input2 = html`<script>
-      const foo = useAnimatedStyle(() => {
-        const bar = useAnimatedStyle(() => {
+      const input1 = html`<script>
+        const foo = useAnimatedStyle(() => {
           const x = 1;
         });
-      });
-    </script>`;
-    expect(resultIsIdempotent(input2)).toBe(true);
+      </script>`;
+      expect(resultIsIdempotent(input1)).toBe(true);
 
-    const input3 = html`<script>
-      const foo = useAnimatedStyle(function named() {
-        const bar = useAnimatedStyle(function named() {
-          const x = 1;
+      const input2 = html`<script>
+        const foo = useAnimatedStyle(() => {
+          const bar = useAnimatedStyle(() => {
+            const x = 1;
+          });
         });
-      });
-    </script>`;
-    expect(resultIsIdempotent(input3)).toBe(true);
+      </script>`;
+      expect(resultIsIdempotent(input2)).toBe(true);
 
-    const input4 = html`<script>
-      const foo = (x) => {
-        return () => {
-          'worklet';
-          return x;
-        };
-      };
-    </script>`;
-    expect(resultIsIdempotent(input4)).toBe(true);
+      const input3 = html`<script>
+        const foo = useAnimatedStyle(function named() {
+          const bar = useAnimatedStyle(function named() {
+            const x = 1;
+          });
+        });
+      </script>`;
+      expect(resultIsIdempotent(input3)).toBe(true);
 
-    const input5 = html`<script>
-      const foo = useAnimatedStyle({
-        method() {
-          'worklet';
-          const x = 1;
-        },
-      });
-    </script>`;
-    expect(resultIsIdempotent(input5)).toBe(true);
-
-    const input6 = html`<script>
-      const foo = () => {
-        'worklet';
-        return useAnimatedStyle(() => {
+      const input4 = html`<script>
+        const foo = (x) => {
           return () => {
             'worklet';
-            return 1;
+            return x;
           };
-        });
-      };
-    </script>`;
-    expect(resultIsIdempotent(input6)).toBe(true);
+        };
+      </script>`;
+      expect(resultIsIdempotent(input4)).toBe(true);
 
-    const input7 = html`<script>
-      const x = useAnimatedGestureHandler({
-        onStart: () => {
-          return useAnimatedStyle(() => {
-            return 1;
-          });
-        },
-      });
-    </script>`;
-    expect(resultIsIdempotent(input7)).toBe(true);
-
-    const input8 = html`<script>
-      const x = useAnimatedGestureHandler({
-        onStart: () => {
-          return useAnimatedGestureHandler({
-            onStart: () => {
-              return 1;
-            },
-          });
-        },
-      });
-    </script>`;
-    expect(resultIsIdempotent(input8)).toBe(true);
-
-    const input9 = html`<script>
-      Gesture.Pan.onStart(
-        useAnimatedStyle(() => {
-          return () => {
+      const input5 = html`<script>
+        const foo = useAnimatedStyle({
+          method() {
             'worklet';
-            Gesture.Pan.onStart(() => {
+            const x = 1;
+          },
+        });
+      </script>`;
+      expect(resultIsIdempotent(input5)).toBe(true);
+
+      const input6 = html`<script>
+        const foo = () => {
+          'worklet';
+          return useAnimatedStyle(() => {
+            return () => {
               'worklet';
               return 1;
+            };
+          });
+        };
+      </script>`;
+      expect(resultIsIdempotent(input6)).toBe(true);
+
+      const input7 = html`<script>
+        const x = useAnimatedGestureHandler({
+          onStart: () => {
+            return useAnimatedStyle(() => {
+              return 1;
             });
-          };
-        })
-      );
-    </script>`;
-    expect(resultIsIdempotent(input9)).toBe(true);
+          },
+        });
+      </script>`;
+      expect(resultIsIdempotent(input7)).toBe(true);
+
+      const input8 = html`<script>
+        const x = useAnimatedGestureHandler({
+          onStart: () => {
+            return useAnimatedGestureHandler({
+              onStart: () => {
+                return 1;
+              },
+            });
+          },
+        });
+      </script>`;
+      expect(resultIsIdempotent(input8)).toBe(true);
+
+      const input9 = html`<script>
+        Gesture.Pan.onStart(
+          useAnimatedStyle(() => {
+            return () => {
+              'worklet';
+              Gesture.Pan.onStart(() => {
+                'worklet';
+                return 1;
+              });
+            };
+          })
+        );
+      </script>`;
+      expect(resultIsIdempotent(input9)).toBe(true);
+    });
   });
 
   describe('for Layout Animations', () => {
@@ -1410,6 +1456,16 @@ describe('babel plugin', () => {
       process.env.BABEL_ENV = current;
       expect(code).not.toContain('version: ');
       expect(code).toMatchSnapshot();
+    });
+
+    it('throws a tagged exception when worklet processing fails', () => {
+      const input = html`<script>
+        const foo = useAnimatedStyle(() => {
+          return <Image />;
+        });
+      </script>`;
+
+      expect(() => runPlugin(input)).toThrow('[Reanimated]');
     });
   });
 

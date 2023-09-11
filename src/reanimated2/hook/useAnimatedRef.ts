@@ -1,21 +1,26 @@
-import type { Component, RefObject } from 'react';
+import type { Component } from 'react';
 import { useRef } from 'react';
 import { useSharedValue } from './useSharedValue';
-import type { AnimatedRef, RefObjectFunction } from './commonTypes';
+import type { AnimatedRef } from './commonTypes';
 import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import {
   makeShareableCloneRecursive,
   registerShareableMapping,
 } from '../shareables';
-import { findNodeHandle } from 'react-native';
+import { Platform, findNodeHandle } from 'react-native';
 
-interface ComponentRef extends Component {
-  getNativeScrollRef?: () => ComponentRef;
-  getScrollableNode?: () => ComponentRef;
+interface MaybeScrollableComponent extends Component {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getNativeScrollRef?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getScrollableNode?: any;
+  viewConfig?: {
+    uiViewClassName?: string;
+  };
 }
 
-function getComponentOrScrollableRef(component: ComponentRef): ComponentRef {
+function getComponentOrScrollable(component: MaybeScrollableComponent) {
   if (global._IS_FABRIC && component.getNativeScrollRef) {
     return component.getNativeScrollRef();
   } else if (!global._IS_FABRIC && component.getScrollableNode) {
@@ -28,18 +33,24 @@ const getTagValueFunction = global._IS_FABRIC
   ? getShadowNodeWrapperFromRef
   : findNodeHandle;
 
-export const useAnimatedRef = function <
-  T extends ComponentRef
+export function useAnimatedRef<
+  T extends MaybeScrollableComponent
 >(): AnimatedRef<T> {
   const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
-  const ref = useRef<RefObjectFunction<T>>();
+  const viewName = useSharedValue<string | null>(null);
+
+  const ref = useRef<AnimatedRef<T>>();
 
   if (!ref.current) {
-    const fun: RefObjectFunction<T> = <RefObjectFunction<T>>((component) => {
+    const fun: AnimatedRef<T> = <AnimatedRef<T>>((component) => {
       // enters when ref is set by attaching to a component
       if (component) {
-        tag.value = getTagValueFunction(getComponentOrScrollableRef(component));
+        tag.value = getTagValueFunction(getComponentOrScrollable(component));
         fun.current = component;
+        // viewName is required only on iOS with Paper
+        if (Platform.OS === 'ios' && !global._IS_FABRIC) {
+          viewName.value = component?.viewConfig?.uiViewClassName || 'RCTView';
+        }
       }
       return tag.value;
     });
@@ -49,7 +60,9 @@ export const useAnimatedRef = function <
     const remoteRef = makeShareableCloneRecursive({
       __init: () => {
         'worklet';
-        return () => tag.value;
+        const f = () => tag.value;
+        f.viewName = viewName;
+        return f;
       },
     });
     registerShareableMapping(fun, remoteRef);
@@ -57,5 +70,4 @@ export const useAnimatedRef = function <
   }
 
   return ref.current;
-  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
-} as <T extends Component>() => RefObject<T>;
+}

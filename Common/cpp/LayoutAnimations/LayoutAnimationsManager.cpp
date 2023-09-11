@@ -93,12 +93,7 @@ void LayoutAnimationsManager::startLayoutAnimation(
       config->getJSValue(rt));
 }
 
-void LayoutAnimationsManager::cancelLayoutAnimation(
-    jsi::Runtime &rt,
-    int tag,
-    LayoutAnimationType,
-    bool cancelled = true,
-    bool removeView = true) {
+void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, int tag) {
   jsi::Value layoutAnimationRepositoryAsValue =
       rt.global()
           .getPropertyAsObject(rt, "global")
@@ -106,15 +101,7 @@ void LayoutAnimationsManager::cancelLayoutAnimation(
   jsi::Function cancelLayoutAnimation =
       layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(
           rt, "stop");
-  std::shared_ptr<Shareable> config;
-  {
-    auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-    config = sharedTransitionAnimations_[tag];
-  }
-  if (config != nullptr) {
-    cancelLayoutAnimation.call(
-        rt, jsi::Value(tag), config->getJSValue(rt), cancelled, removeView);
-  }
+  cancelLayoutAnimation.call(rt, jsi::Value(tag));
 }
 
 /*
@@ -151,18 +138,12 @@ void LayoutAnimationsManager::checkDuplicateSharedTag(
   const auto &pair = getScreenSharedTagPairString(screenTag, sharedTag);
   bool hasDuplicate = screenSharedTagSet_.count(pair);
   if (hasDuplicate) {
-    assert(jsLogger_ != nullptr);
     jsLogger_->warnOnJS(
         "[Reanimated] Duplicate shared tag \"" + sharedTag +
         "\" on the same screen");
   }
   viewsScreenSharedTagMap_[viewTag] = pair;
   screenSharedTagSet_.insert(pair);
-}
-
-void LayoutAnimationsManager::setJSLogger(
-    const std::shared_ptr<JSLogger> &jsLogger) {
-  jsLogger_ = jsLogger;
 }
 #endif // DEBUG
 

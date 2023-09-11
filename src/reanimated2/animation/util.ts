@@ -1,9 +1,4 @@
-import type {
-  HigherOrderAnimation,
-  NextAnimation,
-  StyleLayoutAnimation,
-} from './commonTypes';
-/* global _WORKLET */
+import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type { ParsedColorArray } from '../Colors';
 import {
   isColor,
@@ -12,9 +7,8 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-
+import { ReduceMotion } from '../commonTypes';
 import type {
-  AnimatedStyle,
   SharedValue,
   AnimatableValue,
   Animation,
@@ -23,9 +17,11 @@ import type {
   AnimatableValueObject,
 } from '../commonTypes';
 import NativeReanimatedModule from '../NativeReanimated';
-import {
+import type {
   AffineMatrixFlat,
   AffineMatrix,
+} from './transformationMatrix/matrixUtils';
+import {
   flatten,
   multiplyMatrices,
   scaleMatrix,
@@ -35,12 +31,12 @@ import {
   subtractMatrices,
   getRotationMatrix,
 } from './transformationMatrix/matrixUtils';
+import { isReducedMotion } from '../PlatformChecker';
 
 let IN_STYLE_UPDATER = false;
+const IS_REDUCED_MOTION = isReducedMotion();
 
-export type UserUpdater = () => AnimatedStyle;
-
-export function initialUpdaterRun<T>(updater: () => T): T {
+export function initialUpdaterRun<T>(updater: () => T) {
   IN_STYLE_UPDATER = true;
   const result = updater();
   IN_STYLE_UPDATER = false;
@@ -60,9 +56,7 @@ function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
       /([A-Za-z]*)(-?\d*\.?\d*)([eE][-+]?[0-9]+)?([A-Za-z%]*)/
     );
     if (!match) {
-      throw Error(
-        "Couldn't parse animation value. Check if there isn't any typo."
-      );
+      throw new Error("[Reanimated] Couldn't parse animation value.");
     }
     const prefix = match[1];
     const suffix = match[4];
@@ -72,6 +66,32 @@ function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
   } else {
     return { strippedValue: value };
   }
+}
+
+/**
+ * Returns whether the motion should be reduced for a specified config.
+ * By default returns the system setting.
+ */
+export function getReduceMotionFromConfig(config?: ReduceMotion) {
+  'worklet';
+  return !config || config === ReduceMotion.System
+    ? IS_REDUCED_MOTION
+    : config === ReduceMotion.Always;
+}
+
+/**
+ * Returns the value that should be assigned to `animation.reduceMotion`
+ * for a given config. If the config is not defined, `undefined` is returned.
+ */
+export function getReduceMotionForAnimation(config?: ReduceMotion) {
+  'worklet';
+  // if the config is not defined, we want `reduceMotion` to be undefined,
+  // so the parent animation knows if it should overwrite it
+  if (!config) {
+    return undefined;
+  }
+
+  return getReduceMotionFromConfig(config);
 }
 
 function applyProgressToMatrix(
@@ -92,12 +112,24 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
   animation: T
 ): void {
   'worklet';
+  const baseOnStart = (animation as Animation<AnimationObject>).onStart;
+  const baseOnFrame = (animation as Animation<AnimationObject>).onFrame;
+
   if ((animation as HigherOrderAnimation).isHigherOrder) {
+    animation.onStart = (
+      animation: Animation<AnimationObject>,
+      value: number,
+      timestamp: Timestamp,
+      previousAnimation: Animation<AnimationObject>
+    ) => {
+      if (animation.reduceMotion === undefined) {
+        animation.reduceMotion = getReduceMotionFromConfig();
+      }
+      return baseOnStart(animation, value, timestamp, previousAnimation);
+    };
     return;
   }
 
-  const baseOnStart = (animation as Animation<AnimationObject>).onStart;
-  const baseOnFrame = (animation as Animation<AnimationObject>).onFrame;
   const animationCopy = Object.assign({}, animation);
   delete animationCopy.callback;
 
@@ -204,7 +236,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       animation[i].current = RGBACurrent[index];
       const result = animation[i].onFrame(animation[i], timestamp);
       // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
-      finished &&= result;
+      finished = finished && result;
       res.push(animation[i].current);
     });
 
@@ -249,7 +281,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     let finished = true;
     const result = animation[0].onFrame(animation[0], timestamp);
     // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
-    finished &&= result;
+    finished = finished && result;
 
     const progress = animation[0].current / 100;
 
@@ -331,7 +363,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     (animation.current as Array<number>).forEach((_, i) => {
       const result = animation[i].onFrame(animation[i], timestamp);
       // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
-      finished &&= result;
+      finished = finished && result;
       (animation.current as Array<number>)[i] = animation[i].current;
     });
 
@@ -371,7 +403,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     for (const key in animation.current as AnimatableValueObject) {
       const result = animation[key].onFrame(animation[key], timestamp);
       // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
-      finished &&= result;
+      finished = finished && result;
       newObject[key] = animation[key].current;
     }
     animation.current = newObject;
@@ -384,6 +416,20 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     timestamp: Timestamp,
     previousAnimation: Animation<AnimationObject>
   ) => {
+    if (animation.reduceMotion === undefined) {
+      animation.reduceMotion = getReduceMotionFromConfig();
+    }
+    if (animation.reduceMotion) {
+      if (animation.toValue !== undefined) {
+        animation.current = animation.toValue;
+      } else {
+        // if there is no `toValue`, then the base function is responsible for setting the current value
+        baseOnStart(animation, value, timestamp, previousAnimation);
+      }
+      animation.startTime = 0;
+      animation.onFrame = () => true;
+      return;
+    }
     if (isColor(value)) {
       colorOnStart(animation, value, timestamp, previousAnimation);
       animation.onFrame = colorOnFrame;
@@ -449,20 +495,4 @@ export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running
   sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
-}
-
-// TODO it should work only if there was no animation before.
-export function withStartValue(
-  startValue: AnimatableValue,
-  animation: NextAnimation<AnimationObject>
-): Animation<AnimationObject> {
-  'worklet';
-  return defineAnimation(startValue, () => {
-    'worklet';
-    if (!_WORKLET && typeof animation === 'function') {
-      animation = animation();
-    }
-    (animation as Animation<AnimationObject>).current = startValue;
-    return animation as Animation<AnimationObject>;
-  });
 }

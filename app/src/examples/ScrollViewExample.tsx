@@ -1,4 +1,3 @@
-/* global _WORKLET */
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { StyleSheet, Text } from 'react-native';
 

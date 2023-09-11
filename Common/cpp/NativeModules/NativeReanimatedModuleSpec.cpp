@@ -6,13 +6,13 @@
 
 namespace reanimated {
 
-static jsi::Value SPEC_PREFIX(installCoreFunctions)(
+static jsi::Value SPEC_PREFIX(installValueUnpacker)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->installCoreFunctions(rt, std::move(args[0]), std::move(args[1]));
+      ->installValueUnpacker(rt, std::move(args[0]));
   return jsi::Value::undefined();
 }
 
@@ -59,13 +59,23 @@ static jsi::Value SPEC_PREFIX(scheduleOnUI)(
   return jsi::Value::undefined();
 }
 
+static jsi::Value SPEC_PREFIX(createWorkletRuntime)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->createWorkletRuntime(rt, std::move(args[0]), std::move(args[1]));
+}
+
 static jsi::Value SPEC_PREFIX(registerEventHandler)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->registerEventHandler(rt, std::move(args[0]), std::move(args[1]));
+      ->registerEventHandler(
+          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
 }
 
 static jsi::Value SPEC_PREFIX(unregisterEventHandler)(
@@ -169,8 +179,8 @@ static jsi::Value SPEC_PREFIX(configureLayoutAnimation)(
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
     std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
-  methodMap_["installCoreFunctions"] =
-      MethodMetadata{2, SPEC_PREFIX(installCoreFunctions)};
+  methodMap_["installValueUnpacker"] =
+      MethodMetadata{1, SPEC_PREFIX(installValueUnpacker)};
 
   methodMap_["makeShareableClone"] =
       MethodMetadata{2, SPEC_PREFIX(makeShareableClone)};
@@ -181,9 +191,11 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
       MethodMetadata{1, SPEC_PREFIX(getDataSynchronously)};
 
   methodMap_["scheduleOnUI"] = MethodMetadata{1, SPEC_PREFIX(scheduleOnUI)};
+  methodMap_["createWorkletRuntime"] =
+      MethodMetadata{2, SPEC_PREFIX(createWorkletRuntime)};
 
   methodMap_["registerEventHandler"] =
-      MethodMetadata{2, SPEC_PREFIX(registerEventHandler)};
+      MethodMetadata{3, SPEC_PREFIX(registerEventHandler)};
   methodMap_["unregisterEventHandler"] =
       MethodMetadata{1, SPEC_PREFIX(unregisterEventHandler)};
 

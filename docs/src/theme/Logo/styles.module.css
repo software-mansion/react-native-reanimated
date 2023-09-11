@@ -1,0 +1,48 @@
+:root {
+  --swm-logo-height: 36px;
+}
+
+.navbar__logo {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 218px;
+}
+
+@media (max-width: 996px) {
+  .navbar__logo {
+    width: 50px;
+  }
+}
+
+.navbar__logo img {
+  height: var(--swm-logo-height);
+}
+
+/* Hide logo on mobile sidebar */
+[class*='navbar-sidebar'] [class*='navbar__logo'] {
+  display: none;
+}
+
+/* Logo shown on the sidebar after scrolling down the page. */
+@media (min-width: 996px) {
+  [class*='sidebar'] [class*='navbar__logo'] {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 60px;
+  }
+}
+
+.navbar__title {
+  margin-left: 1em;
+  height: var(--swm-logo-height);
+}
+
+@media (max-width: 996px) {
+  .navbar__title {
+    display: none;
+  }
+}

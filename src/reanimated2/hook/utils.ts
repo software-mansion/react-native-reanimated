@@ -1,29 +1,27 @@
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
-import { processColor } from '../Colors';
 import type {
-  AnimatedStyle,
-  Context,
+  __Context,
   NativeEvent,
   NestedObjectValues,
-  WorkletFunction,
+  __WorkletFunction,
   AnimationObject,
 } from '../commonTypes';
+import type { AnimatedStyle } from '../helperTypes';
 import { makeRemote } from '../core';
 import { isWeb, isJest } from '../PlatformChecker';
-import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
 import type { ContextWithDependencies, DependencyList } from './commonTypes';
 import type { NativeSyntheticEvent } from 'react-native';
-interface Handler<T, TContext extends Context> extends WorkletFunction {
+interface Handler<T, TContext extends __Context> extends __WorkletFunction {
   (event: T, context: TContext): void;
 }
 
-interface Handlers<T, TContext extends Context> {
+interface Handlers<T, TContext extends __Context> {
   [key: string]: Handler<T, TContext> | undefined;
 }
 
-export interface UseHandlerContext<TContext extends Context> {
+interface UseHandlerContext<TContext extends __Context> {
   context: TContext;
   doDependenciesDiffer: boolean;
   useWeb: boolean;
@@ -53,12 +51,12 @@ export const useEvent = function <T extends NativeEvent<T>>(
 } as unknown as useEventType;
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type useHandlerType = <T, TContext extends Context = Record<string, never>>(
+type useHandlerType = <T, TContext extends __Context = Record<string, never>>(
   handlers: Handlers<T, TContext>,
   deps?: DependencyList
 ) => { context: TContext; doDependenciesDiffer: boolean; useWeb: boolean };
 
-export const useHandler = function <T, TContext extends Context>(
+export const useHandler = function <T, TContext extends __Context>(
   handlers: Handlers<T, TContext>,
   dependencies?: DependencyList
 ): UseHandlerContext<TContext> {
@@ -93,10 +91,10 @@ export const useHandler = function <T, TContext extends Context>(
 
 // builds one big hash from multiple worklets' hashes
 export function buildWorkletsHash(
-  handlers: Record<string, WorkletFunction> | Array<WorkletFunction>
+  handlers: Record<string, __WorkletFunction> | Array<__WorkletFunction>
 ): string {
   return Object.values(handlers).reduce(
-    (acc: string, worklet: WorkletFunction) =>
+    (acc: string, worklet: __WorkletFunction) =>
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       acc + worklet.__workletHash!.toString(),
     ''
@@ -104,18 +102,18 @@ export function buildWorkletsHash(
 }
 
 // builds dependencies array for gesture handlers
-export function buildDependencies(
+function buildDependencies(
   dependencies: DependencyList,
-  handlers: Record<string, WorkletFunction | undefined>
+  handlers: Record<string, __WorkletFunction | undefined>
 ): Array<unknown> {
-  const handlersList: WorkletFunction[] = Object.values(handlers).filter(
+  const handlersList: __WorkletFunction[] = Object.values(handlers).filter(
     (handler) => handler !== undefined
-  ) as WorkletFunction[];
+  ) as __WorkletFunction[];
   if (!dependencies) {
     dependencies = handlersList.map((handler) => {
       return {
         workletHash: handler.__workletHash,
-        closure: handler._closure,
+        closure: handler.__closure,
       };
     });
   } else {
@@ -126,7 +124,7 @@ export function buildDependencies(
 }
 
 // this is supposed to work as useEffect comparison
-export function areDependenciesEqual(
+function areDependenciesEqual(
   nextDeps: DependencyList,
   prevDeps: DependencyList
 ): boolean {
@@ -154,30 +152,6 @@ export function areDependenciesEqual(
   }
 
   return areHookInputsEqual(nextDeps, prevDeps);
-}
-
-export function hasColorProps(updates: AnimatedStyle): boolean {
-  const colorPropsSet = new Set(colorProps);
-  for (const key in updates) {
-    if (colorPropsSet.has(key)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-export function parseColors(updates: AnimatedStyle): void {
-  'worklet';
-  for (const key in updates) {
-    if (colorProps.indexOf(key) !== -1) {
-      // value could be an animation in which case processColor will recognize it and will return undefined
-      // -> in such a case we don't want to override style of that key
-      const processedColor = processColor(updates[key]);
-      if (processedColor !== undefined) {
-        updates[key] = processedColor;
-      }
-    }
-  }
 }
 
 export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
@@ -209,15 +183,15 @@ export function shallowEqual(a: any, b: any) {
   return true;
 }
 
-export const validateAnimatedStyles = (styles: AnimatedStyle): void => {
+export const validateAnimatedStyles = (styles: AnimatedStyle<any>): void => {
   'worklet';
   if (typeof styles !== 'object') {
     throw new Error(
-      `useAnimatedStyle has to return an object, found ${typeof styles} instead`
+      `[Reanimated] \`useAnimatedStyle\` has to return an object, found ${typeof styles} instead.`
     );
   } else if (Array.isArray(styles)) {
     throw new Error(
-      'useAnimatedStyle has to return an object and cannot return static styles combined with dynamic ones. Please do merging where a component receives props.'
+      '[Reanimated] `useAnimatedStyle` has to return an object and cannot return static styles combined with dynamic ones. Please do merging where a component receives props.'
     );
   }
 };

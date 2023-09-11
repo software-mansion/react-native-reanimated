@@ -1,0 +1,98 @@
+---
+sidebar_position: 3
+---
+
+# useAnimatedProps
+
+`useAnimatedProps` lets you create an animated props object which can be animated using [shared values](/docs/fundamentals/glossary#shared-value). This object is used to animate properties of third-party components.
+
+For animating style use [`useAnimatedStyle`](/docs/core/useAnimatedStyle) instead.
+
+## Reference
+
+```jsx
+import { useAnimatedProps } from 'react-native-reanimated';
+
+function App() {
+  // highlight-next-line
+  const animatedProps = useAnimatedProps(() => {
+    return {
+      opacity: sv.value ? 1 : 0,
+    };
+    // highlight-next-line
+  });
+
+  // highlight-next-line
+  return <Animated.View animatedProps={animatedProps} />;
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function useAnimatedProps<T extends {}>(
+  updater: () => Partial<T>,
+  dependencies?: DependencyList | null,
+  adapters?: PropsAdapterFunction | PropsAdapterFunction[] | null
+): Partial<T>;
+```
+
+</details>
+
+### Arguments
+
+#### `updater`
+
+A function returning an object with properties you want to animate.
+
+#### `dependencies` <Optional/>
+
+An optional array of dependencies.
+
+Only relevant when using Reanimated [without the Babel plugin on the Web](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin).
+
+#### `adapters` <Optional/>
+
+An optional function or an array of functions.
+
+Sometimes when working with third-party libraries properties might be named differently on the API surface from what they really represent on the native side. Adapters make it possible to handle these cases by defining a way to convert these props.
+
+Reanimated comes with two built-in adapters:
+
+- [`SVGAdapter`](https://github.com/software-mansion/react-native-reanimated/blob/Reanimated2/src/reanimated2/PropAdapters.ts#L19) for handling `transform` property in `react-native-svg`
+- [`TextInputAdapter`](https://github.com/software-mansion/react-native-reanimated/blob/Reanimated2/src/reanimated2/PropAdapters.ts#L57).
+
+You can create your own adapters using `createAnimatedPropAdapter` function.
+
+Here's an example of adapting `fill` and `stroke` properties from `react-native-svg` to be able to animate them with Reanimated.
+
+import AnimatedPropAdapterSrc from '!!raw-loader!@site/src/examples/AnimatedPropAdapter';
+
+<CollapsibleCode showLines={[13, 25]} src={AnimatedPropAdapterSrc} />
+
+## Returns
+
+`useAnimatedProps` returns an animated props object which has to be passed to `animatedProps` property of an [Animated component](/docs/fundamentals/glossary#animated-component) that you want to animate.
+
+## Example
+
+import AnimatingProps from '@site/src/examples/AnimatingProps';
+import AnimatingPropsSrc from '!!raw-loader!@site/src/examples/AnimatingProps';
+
+<InteractiveExample src={AnimatingPropsSrc} component={<AnimatingProps />} />
+
+## Remarks
+
+- You can share animated props between components to avoid code duplication.
+- We recommend to create adapters outside of the component's body to avoid unnecessary recalculations.
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>

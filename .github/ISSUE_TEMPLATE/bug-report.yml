@@ -107,6 +107,7 @@ body:
       description: How your application is managed? Not sure? Read [this part](https://docs.expo.dev/introduction/managed-vs-bare/) of Expo documentation
       options:
         - React Native (without Expo)
+        - React Native with Expo modules
         - Expo bare workflow
         - Expo managed workflow
 

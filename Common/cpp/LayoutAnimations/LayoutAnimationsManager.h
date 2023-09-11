@@ -23,6 +23,10 @@ using namespace facebook;
 
 class LayoutAnimationsManager {
  public:
+#ifdef DEBUG
+  explicit LayoutAnimationsManager(const std::shared_ptr<JSLogger> &jsLogger)
+      : jsLogger_(jsLogger) {}
+#endif
   void configureAnimation(
       int tag,
       LayoutAnimationType type,
@@ -35,19 +39,13 @@ class LayoutAnimationsManager {
       LayoutAnimationType type,
       const jsi::Object &values);
   void clearLayoutAnimationConfig(int tag);
-  void cancelLayoutAnimation(
-      jsi::Runtime &rt,
-      int tag,
-      LayoutAnimationType type,
-      bool cancelled /* = true */,
-      bool removeView /* = true */);
+  void cancelLayoutAnimation(jsi::Runtime &rt, int tag);
   int findPrecedingViewTagForTransition(int tag);
 #ifdef DEBUG
   std::string getScreenSharedTagPairString(
       const int screenTag,
       const std::string &sharedTag) const;
   void checkDuplicateSharedTag(const int viewTag, const int screenTag);
-  void setJSLogger(const std::shared_ptr<JSLogger> &jsLogger);
 #endif
 
  private:

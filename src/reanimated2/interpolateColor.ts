@@ -111,7 +111,7 @@ const interpolateColorsRGB = (
   );
 };
 
-interface InterpolateRGB {
+export interface InterpolateRGB {
   r: number[];
   g: number[];
   b: number[];
@@ -141,7 +141,7 @@ const getInterpolateRGB = (
   return { r, g, b, a };
 };
 
-interface InterpolateHSV {
+export interface InterpolateHSV {
   h: number[];
   s: number[];
   v: number[];
@@ -215,7 +215,7 @@ export function interpolateColor(
     );
   }
   throw new Error(
-    `Invalid color space provided: ${colorSpace}. Supported values are: ['RGB', 'HSV']`
+    `[Reanimated] Invalid color space provided: ${colorSpace}. Supported values are: ['RGB', 'HSV'].`
   );
 }
 
@@ -246,37 +246,3 @@ export function useInterpolateConfig(
     options,
   });
 }
-
-export const interpolateSharableColor = (
-  value: number,
-  interpolateConfig: SharedValue<InterpolateConfig>
-): string | number => {
-  'worklet';
-  let colors = interpolateConfig.value.cache.value;
-  if (interpolateConfig.value.colorSpace === ColorSpace.RGB) {
-    if (!colors) {
-      colors = getInterpolateRGB(interpolateConfig.value.outputRange);
-      interpolateConfig.value.cache.value = colors;
-    }
-    return interpolateColorsRGB(
-      value,
-      interpolateConfig.value.inputRange,
-      colors as InterpolateRGB,
-      interpolateConfig.value.options
-    );
-  } else if (interpolateConfig.value.colorSpace === ColorSpace.HSV) {
-    if (!colors) {
-      colors = getInterpolateHSV(interpolateConfig.value.outputRange);
-      interpolateConfig.value.cache.value = colors;
-    }
-    return interpolateColorsHSV(
-      value,
-      interpolateConfig.value.inputRange,
-      colors as InterpolateHSV,
-      interpolateConfig.value.options
-    );
-  }
-  throw new Error(
-    `Invalid color space provided: ${interpolateConfig.value.colorSpace}. Supported values are: ['RGB', 'HSV']`
-  );
-};

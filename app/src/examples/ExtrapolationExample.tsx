@@ -14,7 +14,7 @@ import {
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 
-export default function ExtrapolationExample(): React.ReactElement {
+export default function ExtrapolationExample() {
   const translation = {
     x: useSharedValue(50),
     y: useSharedValue(0),
@@ -86,7 +86,7 @@ export default function ExtrapolationExample(): React.ReactElement {
   return (
     <>
       <PanGestureHandler onGestureEvent={gestureHandler}>
-        <Animated.View style={[styles.circle, stylez]} />
+        <Animated.View style={[styles.circle, styles.topCircle, stylez]} />
       </PanGestureHandler>
       <Animated.View style={[styles.circle, button1Style]} />
       <Animated.View style={[styles.circle, button2Style]} />
@@ -96,6 +96,10 @@ export default function ExtrapolationExample(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
+  topCircle: {
+    zIndex: 1,
+    backgroundColor: '#001a72',
+  },
   circle: {
     width: 50,
     height: 50,
@@ -103,7 +107,6 @@ const styles = StyleSheet.create({
     top: 400,
     alignSelf: 'center',
     borderRadius: 25,
-    zIndex: 1,
-    backgroundColor: '#001a72',
+    backgroundColor: 'red',
   },
 });

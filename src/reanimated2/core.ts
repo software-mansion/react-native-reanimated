@@ -22,23 +22,37 @@ import { SensorContainer } from './SensorContainer';
 
 export { startMapper, stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
-export { makeShareable } from './shareables';
+export { createWorkletRuntime } from './runtimes';
+export type { WorkletRuntime } from './runtimes';
+export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export { makeMutable, makeRemote } from './mutables';
 
-export type ReanimatedConsole = Pick<
-  Console,
-  'debug' | 'log' | 'warn' | 'info' | 'error'
->;
+/**
+ * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1
+ */
+export const isReanimated3 = () => true;
 
+// Superseded by check in `/src/threads.ts`.
+// Used by `react-navigation` to detect if using Reanimated 2 or 3.
+/**
+ * @deprecated This function was superseded by other checks.
+ * We keep it here for backward compatibility reasons.
+ * If you need to check if you are using Reanimated 3 or Reanimated 2
+ * please use `isReanimated3` function instead.
+ * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2
+ */
+export const isConfigured = isReanimated3;
+
+// this is for web implementation
 global._WORKLET = false;
 global._log = function (s: string) {
   console.log(s);
 };
 
-export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
+export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
   if (global._IS_FABRIC) {
     throw new Error(
-      '[react-native-reanimated] `getViewProp` is not supported on Fabric yet'
+      '[Reanimated] `getViewProp` is not supported on Fabric yet.'
     );
   }
 
@@ -57,7 +71,7 @@ export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
   });
 }
 
-export function getSensorContainer(): SensorContainer {
+function getSensorContainer(): SensorContainer {
   if (!global.__sensorContainer) {
     global.__sensorContainer = new SensorContainer();
   }
@@ -65,8 +79,9 @@ export function getSensorContainer(): SensorContainer {
 }
 
 export function registerEventHandler<T>(
-  eventHash: string,
-  eventHandler: (event: T) => void
+  eventHandler: (event: T) => void,
+  eventName: string,
+  emitterReactTag = -1
 ): number {
   function handleAndFlushAnimationFrame(eventTimestamp: number, event: T) {
     'worklet';
@@ -76,8 +91,9 @@ export function registerEventHandler<T>(
     global.__frameTimestamp = undefined;
   }
   return NativeReanimatedModule.registerEventHandler(
-    eventHash,
-    makeShareableCloneRecursive(handleAndFlushAnimationFrame)
+    makeShareableCloneRecursive(handleAndFlushAnimationFrame),
+    eventName,
+    emitterReactTag
   );
 }
 
@@ -172,7 +188,7 @@ export function enableLayoutAnimations(
 }
 
 export function configureLayoutAnimations(
-  viewTag: number,
+  viewTag: number | HTMLElement,
   type: LayoutAnimationType,
   config:
     | LayoutAnimationFunction
@@ -182,7 +198,7 @@ export function configureLayoutAnimations(
   sharedTransitionTag = ''
 ): void {
   NativeReanimatedModule.configureLayoutAnimation(
-    viewTag,
+    viewTag as number, // On web this function is no-op, therefore we can cast viewTag to number
     type,
     sharedTransitionTag,
     makeShareableCloneRecursive(config)

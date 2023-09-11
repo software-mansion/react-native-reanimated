@@ -1,4 +1,4 @@
-import React, { ReactElement, ReactNode, RefObject, useRef } from 'react';
+import React, { ReactElement, ReactNode, useRef } from 'react';
 import { StyleSheet, View, Text, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -11,6 +11,7 @@ import Animated, {
   useDerivedValue,
   useAnimatedRef,
 } from 'react-native-reanimated';
+import type { AnimatedRef } from 'react-native-reanimated';
 import {
   TapGestureHandler,
   TapGestureHandlerGestureEvent,
@@ -52,7 +53,7 @@ function createSharedVariables() {
   };
 }
 
-export default function OldMeasureExample(): React.ReactElement {
+export default function OldMeasureExample() {
   const { heights, contentHeights } = createSharedVariables();
 
   return (
@@ -139,7 +140,7 @@ type MeasuredDimensions = {
   pageY: number;
 };
 function asyncMeasure(
-  animatedRef: RefObject<React.Component>
+  animatedRef: AnimatedRef<React.Component>
 ): Promise<MeasuredDimensions> {
   return new Promise((resolve, reject) => {
     if (animatedRef && animatedRef.current) {
@@ -154,7 +155,7 @@ function asyncMeasure(
 
 type SectionHeaderProps = {
   title: string;
-  animatedRef: RefObject<React.Component>;
+  animatedRef: AnimatedRef<React.Component>;
   contentHeight: Animated.SharedValue<number>;
   show: boolean;
 };

@@ -1,6 +1,5 @@
 import type { AnimationObject, AnimatableValue } from './commonTypes';
 import type { Descriptor } from './hook/commonTypes';
-export { stopMapper } from './mappers';
 
 export function valueSetter(sv: any, value: any): void {
   'worklet';
@@ -33,7 +32,17 @@ export function valueSetter(sv: any, value: any): void {
     };
     const currentTimestamp = global.__frameTimestamp || performance.now();
     initializeAnimation(currentTimestamp);
-    const step = (timestamp: number) => {
+
+    const step = (newTimestamp: number) => {
+      // Function `requestAnimationFrame` adds callback to an array, all the callbacks are flushed with function `__flushAnimationFrame`
+      // Usually we flush them inside function `nativeRequestAnimationFrame` and then the given timestamp is the timestamp of end of the current frame.
+      // However function `__flushAnimationFrame` may also be called inside `registerEventHandler` - then we get actual timestamp which is earlier than the end of the frame.
+
+      const timestamp =
+        newTimestamp < (animation.timestamp || 0)
+          ? animation.timestamp
+          : newTimestamp;
+
       if (animation.cancelled) {
         animation.callback && animation.callback(false /* finished */);
         return;

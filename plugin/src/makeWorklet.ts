@@ -40,7 +40,7 @@ import {
 import { strict as assert } from 'assert';
 import { relative } from 'path';
 import { buildWorkletString } from './buildWorkletString';
-import { globals } from './commonObjects';
+import { globals } from './globals';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { isRelease } from './utils';
 
@@ -54,13 +54,14 @@ export function makeWorklet(
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
-  const functionName = makeWorkletName(fun);
-
   removeWorkletDirective(fun);
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
-  assert(state.file.opts.filename, "'state.file.opts.filename' is undefined");
+  assert(
+    state.file.opts.filename,
+    '[Reanimated] `state.file.opts.filename` is undefined.'
+  );
 
   const codeObject = generate(fun.node, {
     sourceMaps: true,
@@ -93,12 +94,14 @@ export function makeWorklet(
     inputSourceMap: codeObject.map,
   });
 
-  assert(transformed, "'transformed' is undefined");
-  assert(transformed.ast, "'transformed.ast' is undefined");
+  assert(transformed, '[Reanimated] `transformed` is undefined.');
+  assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
   const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
 
-  const privateFunctionId = identifier('_f');
+  const functionName = makeWorkletName(fun);
+  const functionIdentifier = identifier(functionName);
+
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
     ? functionExpression(null, clone.params, clone.body)
@@ -110,7 +113,7 @@ export function makeWorklet(
     functionName,
     transformed.map
   );
-  assert(funString, "'funString' is undefined");
+  assert(funString, '[Reanimated] `funString` is undefined.');
   const workletHash = hash(funString);
 
   let lineOffset = 1;
@@ -126,10 +129,13 @@ export function makeWorklet(
   const pathForStringDefinitions = fun.parentPath.isProgram()
     ? fun
     : fun.findParent((path) => isProgram(path.parentPath));
-  assert(pathForStringDefinitions, "'pathForStringDefinitions' is null");
+  assert(
+    pathForStringDefinitions,
+    '[Reanimated] `pathForStringDefinitions` is null.'
+  );
   assert(
     pathForStringDefinitions.parentPath,
-    "'pathForStringDefinitions.parentPath' is null"
+    '[Reanimated] `pathForStringDefinitions.parentPath` is null.'
   );
 
   const initDataId =
@@ -180,23 +186,23 @@ export function makeWorklet(
 
   assert(
     !isFunctionDeclaration(funExpression),
-    "'funExpression' is a 'FunctionDeclaration'"
+    '[Reanimated] `funExpression` is a `FunctionDeclaration`.'
   );
   assert(
     !isObjectMethod(funExpression),
-    "'funExpression' is an 'ObjectMethod'"
+    '[Reanimated] `funExpression` is an `ObjectMethod`.'
   );
 
   const statements: Array<
     VariableDeclaration | ExpressionStatement | ReturnStatement
   > = [
     variableDeclaration('const', [
-      variableDeclarator(privateFunctionId, funExpression),
+      variableDeclarator(functionIdentifier, funExpression),
     ]),
     expressionStatement(
       assignmentExpression(
         '=',
-        memberExpression(privateFunctionId, identifier('_closure'), false),
+        memberExpression(functionIdentifier, identifier('__closure'), false),
         objectExpression(
           variables.map((variable) =>
             objectProperty(identifier(variable.name), variable, false, true)
@@ -207,14 +213,18 @@ export function makeWorklet(
     expressionStatement(
       assignmentExpression(
         '=',
-        memberExpression(privateFunctionId, identifier('__initData'), false),
+        memberExpression(functionIdentifier, identifier('__initData'), false),
         initDataId
       )
     ),
     expressionStatement(
       assignmentExpression(
         '=',
-        memberExpression(privateFunctionId, identifier('__workletHash'), false),
+        memberExpression(
+          functionIdentifier,
+          identifier('__workletHash'),
+          false
+        ),
         numericLiteral(workletHash)
       )
     ),
@@ -241,7 +251,7 @@ export function makeWorklet(
         assignmentExpression(
           '=',
           memberExpression(
-            privateFunctionId,
+            functionIdentifier,
             identifier('__stackDetails'),
             false
           ),
@@ -251,7 +261,7 @@ export function makeWorklet(
     );
   }
 
-  statements.push(returnStatement(privateFunctionId));
+  statements.push(returnStatement(functionIdentifier));
 
   const newFun = functionExpression(undefined, [], blockStatement(statements));
 
@@ -292,10 +302,10 @@ function hash(str: string) {
 }
 
 function makeWorkletName(fun: NodePath<WorkletizableFunction>) {
-  if (isObjectMethod(fun.node) && 'name' in fun.node.key) {
+  if (isObjectMethod(fun.node) && isIdentifier(fun.node.key)) {
     return fun.node.key.name;
   }
-  if (isFunctionDeclaration(fun.node) && fun.node.id) {
+  if (isFunctionDeclaration(fun.node) && isIdentifier(fun.node.id)) {
     return fun.node.id.name;
   }
   if (isFunctionExpression(fun.node) && isIdentifier(fun.node.id)) {
