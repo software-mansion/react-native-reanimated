@@ -187,10 +187,11 @@ export function interpolate(
 }
 
 /**
- * @param value value to be clamped
- * @param min minimum allowed value
- * @param max maximum allowed value
- * Clamps given value within a range of values between a defined minimum bound and a maximum bound.
+ * `clamp` lets you limit a value within a specified range.
+ *
+ * @param value - A number that will be returned as long as the provided value is in range between `min` and `max`.
+ * @param min - A number which will be returned when provided `value` is lower than `min`.
+ * @param max - A number which will be returned when provided `value` is higher than `max`.
  */
 export function clamp(value: number, min: number, max: number) {
   'worklet';
