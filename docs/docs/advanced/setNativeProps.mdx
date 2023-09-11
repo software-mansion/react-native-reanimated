@@ -22,15 +22,11 @@ import { setNativeProps } from 'react-native-reanimated';
 function App() {
   const animatedRef = useAnimatedRef();
 
-  const handlePress = () => {
-    runOnUI(() => {
-      // highlight-start
-      setNativeProps(animatedRef, {
-        text: '',
-      });
-      // highlight-end
-    })();
-  };
+  const tap = Gesture.Tap().onEnd(() => {
+    // highlight-start
+    setNativeProps(animatedRef, { text: '' });
+    // highlight-end
+  });
 
   return <TextInput ref={animatedRef} />;
 }
@@ -73,7 +69,9 @@ import SetNativePropsSrc from '!!raw-loader!@site/src/examples/SetNativeProps';
 
 - You should always reach for [`useAnimatedStyle`](docs/core/useAnimatedStyle) and [`useAnimatedProps`](docs/core/useAnimatedProps) first when animating styles or properties.
 
-- `setNativeProps` is implemented only on the [UI thread](/docs/fundamentals/glossary#ui-thread). When using `setNativeProps` inside [event handlers](https://react.dev/learn/responding-to-events#adding-event-handlers), it has to be wrapped with the [`runOnUI`](/docs/threading/runOnUI) function.
+- The `setNativeProps` is implemented only on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+
+- The `setNativeProps` function was created to allow updating props imperatively from gesture handlers. Because in other cases, you need to wrap `setNativeProps` with an additional `runOnUI` call, React Native's [built-in `setNativeProps`](https://reactnative.dev/docs/animations#setnativeprops) proves to work better with fewer jumps between runtimes.
 
 ## Platform compatibility
 
