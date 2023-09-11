@@ -69,9 +69,9 @@ import SetNativePropsSrc from '!!raw-loader!@site/src/examples/SetNativeProps';
 
 - You should always reach for [`useAnimatedStyle`](docs/core/useAnimatedStyle) and [`useAnimatedProps`](docs/core/useAnimatedProps) first when animating styles or properties.
 
-- The `setNativeProps` is implemented only on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+- `setNativeProps` is supposed to only be used on the [UI thread](/docs/fundamentals/glossary#ui-thread).
 
-- The `setNativeProps` function was created to allow updating props imperatively from gesture handlers. Because in other cases, you need to wrap `setNativeProps` with an additional `runOnUI` call, React Native's [built-in `setNativeProps`](https://reactnative.dev/docs/animations#setnativeprops) proves to work better with fewer jumps between runtimes.
+- `setNativeProps` function was created to allow updating props imperatively from gesture handlers. Because in other cases, you need to wrap `setNativeProps` with an additional `runOnUI` call, React Native's [built-in `setNativeProps`](https://reactnative.dev/docs/animations#setnativeprops) proves to work better with fewer jumps between runtimes.
 
 ## Platform compatibility
 
