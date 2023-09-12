@@ -5,7 +5,7 @@ import { findNodeHandle } from 'react-native';
 import type { EventHandlerInternal } from './useEvent';
 import { useEvent } from './useEvent';
 import { useSharedValue } from './useSharedValue';
-import type { ScrollView as ReanimatedScrollView } from 'src/Animated';
+import type { AnimatedScrollView } from '../component/ScrollView';
 import type { RNNativeScrollEvent, ReanimatedScrollEvent } from './commonTypes';
 
 const scrollEventNames = [
@@ -17,7 +17,7 @@ const scrollEventNames = [
 ];
 
 export function useScrollViewOffset(
-  aref: RefObject<ReanimatedScrollView>,
+  aref: RefObject<AnimatedScrollView>,
   initialRef?: SharedValue<number>
 ): SharedValue<number> {
   const offsetRef = useRef(
