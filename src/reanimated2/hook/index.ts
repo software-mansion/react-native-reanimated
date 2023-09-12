@@ -1,3 +1,4 @@
+'use strict';
 export type { DependencyList, AnimatedRef } from './commonTypes';
 export {
   useAnimatedProps,

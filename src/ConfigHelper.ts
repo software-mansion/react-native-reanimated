@@ -1,3 +1,4 @@
+'use strict';
 import { configureProps as jsiConfigureProps } from './reanimated2/core';
 
 /**

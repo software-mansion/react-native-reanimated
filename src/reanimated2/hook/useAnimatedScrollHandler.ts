@@ -1,3 +1,4 @@
+'use strict';
 import type { RefObject } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import type { __Context, NativeEvent, __WorkletFunction } from '../commonTypes';

@@ -1,3 +1,4 @@
+'use strict';
 export enum Extrapolation {
   IDENTITY = 'identity',
   CLAMP = 'clamp',

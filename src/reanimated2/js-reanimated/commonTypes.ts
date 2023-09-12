@@ -1,3 +1,4 @@
+'use strict';
 import type { Timestamp, NestedObjectValues } from '../commonTypes';
 import type MutableValue from './MutableValue';
 

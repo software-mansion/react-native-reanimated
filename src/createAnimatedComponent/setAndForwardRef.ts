@@ -1,3 +1,4 @@
+'use strict';
 /**
  * imported from react-native
  */
