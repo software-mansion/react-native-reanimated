@@ -4,6 +4,7 @@ import type {
   SharedTransitionAnimationsValues,
   CustomProgressAnimation,
   ProgressAnimation,
+  LayoutAnimationsOptions,
 } from '../animationBuilder/commonTypes';
 import {
   LayoutAnimationType,
@@ -14,14 +15,14 @@ import { ReduceMotion } from '../../commonTypes';
 import { configureLayoutAnimations } from '../../core';
 import { ProgressTransitionManager } from './ProgressTransitionManager';
 
-const supportedProps = [
+const SUPPORTED_PROPS = [
   'width',
   'height',
   'originX',
   'originY',
   'transform',
   'borderRadius',
-];
+] as const;
 
 type AnimationFactory = (
   values: SharedTransitionAnimationsValues
@@ -139,14 +140,14 @@ export class SharedTransition {
       if (animationFactory) {
         animations = animationFactory(values);
         for (const key in animations) {
-          if (!supportedProps.includes(key)) {
+          if (!(SUPPORTED_PROPS as readonly string[]).includes(key)) {
             throw new Error(
               `[Reanimated] The prop '${key}' is not supported yet.`
             );
           }
         }
       } else {
-        for (const propName of supportedProps) {
+        for (const propName of SUPPORTED_PROPS) {
           if (propName === 'transform') {
             const matrix = values.targetTransformMatrix;
             animations.transformMatrix = withTiming(matrix, {
@@ -154,8 +155,12 @@ export class SharedTransition {
               duration: transitionDuration,
             });
           } else {
-            const keyToTargetValue =
-              'target' + propName.charAt(0).toUpperCase() + propName.slice(1);
+            const capitalizedPropName = `${propName
+              .charAt(0)
+              .toUpperCase()}${propName.slice(
+              1
+            )}` as Capitalize<LayoutAnimationsOptions>;
+            const keyToTargetValue = `target${capitalizedPropName}` as const;
             animations[propName] = withTiming(values[keyToTargetValue], {
               reduceMotion,
               duration: transitionDuration,
@@ -168,8 +173,9 @@ export class SharedTransition {
         if (propName === 'transform') {
           initialValues.transformMatrix = values.currentTransformMatrix;
         } else {
-          const keyToCurrentValue =
-            'current' + propName.charAt(0).toUpperCase() + propName.slice(1);
+          const capitalizedPropName = (propName.charAt(0).toUpperCase() +
+            propName.slice(1)) as Capitalize<LayoutAnimationsOptions>;
+          const keyToCurrentValue = `current${capitalizedPropName}` as const;
           initialValues[propName] = values[keyToCurrentValue];
         }
       }
@@ -186,7 +192,7 @@ export class SharedTransition {
     this._progressAnimation = (viewTag, values, progress) => {
       'worklet';
       const newStyles: { [key: string]: number | number[] } = {};
-      for (const propertyName of supportedProps) {
+      for (const propertyName of SUPPORTED_PROPS) {
         if (propertyName === 'transform') {
           // this is not the perfect solution, but at this moment it just interpolates the whole
           // matrix instead of interpolating scale, translate, rotate, etc. separately
@@ -201,10 +207,14 @@ export class SharedTransition {
           newStyles.transformMatrix = newMatrix;
         } else {
           // PropertyName == propertyName with capitalized fist letter, (width -> Width)
-          const PropertyName =
-            propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
-          const currentValue = values['current' + PropertyName] as number;
-          const targetValue = values['target' + PropertyName] as number;
+          const PropertyName = (propertyName.charAt(0).toUpperCase() +
+            propertyName.slice(1)) as Capitalize<LayoutAnimationsOptions>;
+          const currentPropertyName = `current${PropertyName}` as const;
+          const targetPropertyName = `target${PropertyName}` as const;
+
+          const currentValue = values[currentPropertyName];
+          const targetValue = values[targetPropertyName];
+
           newStyles[propertyName] =
             progress * (targetValue - currentValue) + currentValue;
         }

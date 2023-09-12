@@ -6,6 +6,7 @@ export {
   createWorkletRuntime,
   WorkletRuntime,
   makeMutable,
+  makeShareableCloneRecursive,
   isReanimated3,
   isConfigured,
   enableLayoutAnimations,
@@ -206,11 +207,10 @@ export {
   SharedTransition,
   SharedTransitionType,
 } from './layoutReanimation';
-export { getRelativeCoords, ComponentCoords } from './utils';
+export { getRelativeCoords, ComponentCoords, isSharedValue } from './utils';
 export {
   StyleProps,
   SharedValue,
-  Context,
   AnimatableValueObject,
   AnimatableValue,
   AnimationObject,

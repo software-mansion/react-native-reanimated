@@ -3,7 +3,7 @@ import React, { Component, forwardRef } from 'react';
 import type { FlatListProps, LayoutChangeEvent } from 'react-native';
 import { FlatList, StyleSheet } from 'react-native';
 import { AnimatedView } from './View';
-import createAnimatedComponent from '../../createAnimatedComponent';
+import createAnimatedComponent from '../../createAnimatedComponent/createAnimatedComponent';
 import type { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
 import type { StyleProps } from '../commonTypes';
 import type { AnimateProps } from '../helperTypes';
@@ -86,11 +86,7 @@ export const ReanimatedFlatList = forwardRef(
       />
     );
   }
-  // TODO TYPESCRIPT this was a cast before
-  // ) as <T>(
-  //   props: ReanimatedFlatListProps<T> & RefAttributes<FlatList<any>>
-  // ) => React.ReactElement;
-);
+) as unknown as ReanimatedFlatList<any>;
 
 const styles = StyleSheet.create({
   verticallyInverted: { transform: [{ scaleY: -1 }] },

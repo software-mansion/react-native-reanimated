@@ -28,12 +28,25 @@ function App() {
 ```typescript
 type AnimatableValue = number | string | number[];
 
-function withSequence<T extends AnimatableValue>(...animations: [T, ...T[]]): T;
+function withSequence<T extends AnimatableValue>(
+  reduceMotion?: ReduceMotion,
+  ...animations: [T, ...T[]]
+): T;
+
+enum ReduceMotion {
+  System = 'system',
+  Always = 'always',
+  Never = 'never',
+}
 ```
 
 </details>
 
 ### Arguments
+
+#### `reduceMotion` <Optional />
+
+A parameter that determines how the animation responds to the device's reduced motion accessibility setting.
 
 #### `...animations`
 

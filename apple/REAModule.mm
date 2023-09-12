@@ -272,7 +272,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 #if __has_include(<UIKit/UIAccessibility.h>)
     auto isReducedMotion = UIAccessibilityIsReduceMotionEnabled();
 #else
-    auto isReducedMotion = false;
+    auto isReducedMotion = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
 #endif
 
     RNRuntimeDecorator::decorate(rnRuntime, nativeReanimatedModule, isReducedMotion);
