@@ -211,7 +211,6 @@ export { getRelativeCoords, ComponentCoords, isSharedValue } from './utils';
 export {
   StyleProps,
   SharedValue,
-  Context,
   AnimatableValueObject,
   AnimatableValue,
   AnimationObject,
