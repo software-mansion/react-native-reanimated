@@ -543,7 +543,6 @@ export default function createAnimatedComponent(
           : findNodeHandle(ref as Component);
 
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
-        const skipEntering = this.context?.current;
         if (
           (layout || entering || exiting || sharedTransitionTag) &&
           tag != null
@@ -562,6 +561,7 @@ export default function createAnimatedComponent(
               )
             );
           }
+          const skipEntering = this.context?.current;
           if (entering && !skipEntering) {
             configureLayoutAnimations(
               tag,
