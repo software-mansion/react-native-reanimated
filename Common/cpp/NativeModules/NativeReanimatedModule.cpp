@@ -656,7 +656,8 @@ void NativeReanimatedModule::initializeFabric(
   commitHook_ =
       std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
 #if REACT_NATIVE_MINOR_VERSION >= 73
-  mountHook_ = std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
+  mountHook_ =
+      std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
 #endif
 }
 #endif // RCT_NEW_ARCH_ENABLED
