@@ -94,7 +94,7 @@ export const ReanimatedFlatList = forwardRef(
     }
 
     return (
-      <LayoutAnimationConfig skipInitial skipExiting>
+      <LayoutAnimationConfig skipEntering skipExiting>
         {animatedFlatList}
       </LayoutAnimationConfig>
     );

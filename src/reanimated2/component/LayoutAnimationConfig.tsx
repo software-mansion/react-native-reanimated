@@ -3,28 +3,26 @@ import type { ReactNode } from 'react';
 import { disableExitingAnimation } from '../core';
 import { findNodeHandle } from 'react-native';
 
-export const LayoutAnimationConfigContext =
-  createContext<React.MutableRefObject<{
-    skipInitial?: boolean;
-  }> | null>(null);
+export const SkipEnteringContext =
+  createContext<React.MutableRefObject<boolean> | null>(null);
 
 interface LayoutAnimationConfigProps {
-  skipInitial?: boolean;
+  skipEntering?: boolean;
   skipExiting?: boolean;
   children: ReactNode;
 }
 
-function SkipEntering(props: { value?: boolean; children: ReactNode }) {
-  const skipValueRef = useRef({ skipInitial: !!props.value });
+function SkipEntering(props: { value: boolean; children: ReactNode }) {
+  const skipValueRef = useRef(props.value);
 
   useEffect(() => {
-    skipValueRef.current.skipInitial = false;
+    skipValueRef.current = false;
   }, [skipValueRef]);
 
   return (
-    <LayoutAnimationConfigContext.Provider value={skipValueRef}>
+    <SkipEnteringContext.Provider value={skipValueRef}>
       {props.children}
-    </LayoutAnimationConfigContext.Provider>
+    </SkipEnteringContext.Provider>
   );
 }
 
@@ -39,8 +37,12 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
   }
 
   render(): ReactNode {
+    if (this.props.skipEntering === undefined) {
+      return this.props.children;
+    }
+
     return (
-      <SkipEntering value={this.props.skipInitial}>
+      <SkipEntering value={this.props.skipEntering}>
         {this.props.children}
       </SkipEntering>
     );

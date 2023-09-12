@@ -52,7 +52,7 @@ import { getReduceMotionFromConfig } from '../reanimated2/animation/util';
 import { maybeBuild } from '../animationBuilder';
 import type { AnimatedComponentProps, AnimatedProps } from './utils';
 import { flattenArray, has } from './utils';
-import { LayoutAnimationConfigContext } from '../reanimated2/component/LayoutAnimationConfig';
+import { SkipEnteringContext } from '../reanimated2/component/LayoutAnimationConfig';
 
 const IS_WEB = isWeb();
 
@@ -208,8 +208,8 @@ export default function createAnimatedComponent(
     _sharedElementTransition: SharedTransition | null = null;
     _JSPropUpdater = new JSPropUpdater();
     static displayName: string;
-    static contextType = LayoutAnimationConfigContext;
-    context!: React.ContextType<typeof LayoutAnimationConfigContext>;
+    static contextType = SkipEnteringContext;
+    context!: React.ContextType<typeof SkipEnteringContext>;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
@@ -543,7 +543,7 @@ export default function createAnimatedComponent(
           : findNodeHandle(ref as Component);
 
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
-        const skipEntering = !!this.context?.current.skipInitial;
+        const skipEntering = this.context?.current;
         if (
           (layout || entering || exiting || sharedTransitionTag) &&
           tag != null

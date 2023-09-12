@@ -62,7 +62,7 @@ function Item() {
       <Animated.View
         entering={FadeInUp.duration(1000).delay(500)}
         style={styles.outerBox}>
-        <LayoutAnimationConfig skipInitial={false}>
+        <LayoutAnimationConfig skipEntering={false}>
           <Animated.View
             style={styles.box}
             entering={PinwheelIn.duration(2000)}

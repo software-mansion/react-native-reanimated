@@ -433,7 +433,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       ([self hasAnimationForTag:view.reactTag type:EXITING] || [_exitingViews objectForKey:view.reactTag]) &&
       shouldAnimate;
   BOOL hasAnimatedChildren = NO;
-  shouldRemoveSubviewsWithoutAnimations = shouldRemoveSubviewsWithoutAnimations && !hasExitAnimation;
+  shouldRemoveSubviewsWithoutAnimations = shouldRemoveSubviewsWithoutAnimations && hasExitAnimation;
   NSMutableArray *toBeRemoved = [[NSMutableArray alloc] init];
 
   for (REAUIView *subview in [view.reactSubviews copy]) {
@@ -448,10 +448,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
   BOOL wantAnimateExit = hasExitAnimation || hasAnimatedChildren;
 
-  if (!wantAnimateExit) {
-    return NO;
-  }
-
   REASnapshot *before;
   if (hasExitAnimation) {
     before = [[REASnapshot alloc] init:view];
@@ -465,6 +461,16 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     _startAnimationForTag(view.reactTag, EXITING, preparedValues);
   }
 
+  // NOTE: even though this view is still visible,
+  // since it's removed from the React tree, we won't
+  // start new animations for it, and might as well remove
+  // the layout animation config now
+  _clearAnimationConfigForTag(view.reactTag);
+
+  if (!wantAnimateExit) {
+    return NO;
+  }
+
   if (hasAnimatedChildren) {
     [_ancestorsToRemove addObject:view.reactTag];
   }
@@ -472,12 +478,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   for (REAUIView *child in toBeRemoved) {
     [view removeReactSubview:child];
   }
-
-  // NOTE: even though this view is still visible,
-  // since it's removed from the React tree, we won't
-  // start new animations for it, and might as well remove
-  // the layout animation config now
-  _clearAnimationConfigForTag(view.reactTag);
 
   // we don't want user interaction on exiting views
   view.userInteractionEnabled = NO;
@@ -508,7 +508,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     }
     REAUIView *childView = (REAUIView *)child;
     NSNumber *originalIndex = indices[i];
-    if ([self startAnimationsRecursive:childView shouldRemoveSubviewsWithoutAnimations:YES shouldAnimate:TRUE]) {
+    if ([self startAnimationsRecursive:childView shouldRemoveSubviewsWithoutAnimations:YES shouldAnimate:YES]) {
       [(REAUIView *)container insertSubview:childView atIndex:[originalIndex intValue] - skippedViewsCount];
       int exitingSubviewsCount = [_exitingSubviewsCountMap[childView.reactTag] intValue];
       if ([_exitingViews objectForKey:childView.reactTag] != nil) {
