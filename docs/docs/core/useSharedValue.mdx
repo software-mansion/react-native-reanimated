@@ -88,6 +88,22 @@ function App() {
 
 </Indent>
 
+- When storing objects in shared values, make sure to reassign an object instead of changing the properties individually.
+
+<Indent>
+
+```javascript
+function App() {
+  const sv = useSharedValue({ x: 0, y: 0 });
+
+  sv.value.x = 50; // Reanimated loses reactivity 🚨
+
+  sv.value = { x: 50, y: 50 }; // ✅
+}
+```
+
+</Indent>
+
 ## Platform compatibility
 
 <div className="compatibility">
