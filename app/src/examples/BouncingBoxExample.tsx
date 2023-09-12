@@ -1,9 +1,8 @@
 import { StyleSheet, View } from 'react-native';
 import Animated, {
-  interpolate,
+  TransformMatrix,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
 } from 'react-native-reanimated';
 
 import React from 'react';
@@ -14,46 +13,76 @@ import {
 } from 'react-native-gesture-handler';
 
 export default function BouncingBoxExample() {
-  const offset = useSharedValue(0);
-  const angle = useSharedValue(0);
+  const matrixBefore = useSharedValue(TransformMatrix.getIdentityMatrix());
+  const matrix = useSharedValue(TransformMatrix.getIdentityMatrix());
+
+  const rotateMatrix = useSharedValue(TransformMatrix.getIdentityMatrix());
+
+  const scaleMatrix = useSharedValue(TransformMatrix.getIdentityMatrix());
 
   const pan = Gesture.Pan()
     .minDistance(0)
     .onChange((event) => {
       'worklet';
-      offset.value = interpolate(
-        event.translationX,
-        [-100, -50, 0, 50, 100],
-        [-30, -10, 0, 10, 30]
+      matrix.value = TransformMatrix.multiplyMatrices(
+        matrixBefore.value,
+        TransformMatrix.getTranslationMatrix(
+          event.translationX,
+          event.translationY,
+          0
+        )
       );
     })
     .onFinalize(() => {
-      offset.value = withSpring(0, { mass: 2, stiffness: 500 });
+      matrixBefore.value = matrix.value;
     });
 
   const rotation = Gesture.Rotation()
     .onChange((event) => {
       'worklet';
-      angle.value = interpolate(
-        event.rotation,
-        [-1.2, -1, -0.5, 0, 0.5, 1, 1.2],
-        [-0.52, -0.5, -0.3, 0, 0.3, 0.5, 0.52]
+      rotateMatrix.value = TransformMatrix.multiplyMatrices(
+        matrixBefore.value,
+        TransformMatrix.getRotationMatrix(event.rotation)
+      );
+
+      matrix.value = TransformMatrix.multiplyMatrices(
+        rotateMatrix.value,
+        scaleMatrix.value
       );
     })
     .onFinalize(() => {
-      angle.value = withSpring(0, { mass: 2, stiffness: 500 });
+      matrixBefore.value = matrix.value;
+    });
+
+  const scale = Gesture.Pinch()
+    .onChange((event) => {
+      'worklet';
+
+      scaleMatrix.value = TransformMatrix.multiplyMatrices(
+        matrixBefore.value,
+        TransformMatrix.getScaleMatrix(event.scale)
+      );
+
+      matrix.value = TransformMatrix.multiplyMatrices(
+        rotateMatrix.value,
+        scaleMatrix.value
+      );
+    })
+    .onFinalize(() => {
+      matrixBefore.value = matrix.value;
     });
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
       transform: [
-        { translateX: offset.value },
-        { rotate: `${angle.value}rad` },
+        {
+          matrix: matrix.value,
+        },
       ],
     };
   });
 
-  const gesture = Gesture.Simultaneous(pan, rotation);
+  const gesture = Gesture.Simultaneous(pan, rotation, scale);
 
   return (
     <GestureHandlerRootView style={styles.container}>

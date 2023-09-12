@@ -24,7 +24,6 @@ type ArrayOf16 = [
   number
 ];
 
-export type Vector3DType = [number, number, number];
 export type AffineMatrixFlat = ArrayOf16 | Readonly<ArrayOf16>;
 
 export type Axis = 'x' | 'y' | 'z';

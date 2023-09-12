@@ -9,8 +9,8 @@ import React, { useRef } from 'react';
 
 const TRANSFORM_MATRICES = [
   [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2],
-  TransformMatrix.getRotationMatrix('90deg').value,
-  TransformMatrix.getRotationMatrix('-60.6deg').value,
+  TransformMatrix.getRotationMatrix('90deg'),
+  TransformMatrix.getRotationMatrix('-60.6deg'),
 ];
 
 const springConfig = { duration: 5000 };
