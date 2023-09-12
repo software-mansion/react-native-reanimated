@@ -32,7 +32,7 @@ export function useAnimatedPagerScrollHandler<
     TContext
   >(handlers, dependencies);
 
-  return useEvent<PagerViewOnPageScrollEventData>(
+  return useEvent<NativeSyntheticEvent<PagerViewOnPageScrollEventData>>(
     (event) => {
       'worklet';
       const { onPageScroll } = handlers;
@@ -62,7 +62,7 @@ export function useAnimatedPagerScrollStateHandler<
     TContext
   >(handlers, dependencies);
 
-  return useEvent<PageScrollStateChangedEvent>(
+  return useEvent<NativeSyntheticEvent<PageScrollStateChangedEvent>>(
     (event) => {
       'worklet';
       const { onPageScrollStateChanged } = handlers;
@@ -97,7 +97,7 @@ export function useAnimatedPagerSelectedPageHandler<
     TContext
   >(handlers, dependencies);
 
-  return useEvent<PagerViewOnPageSelectedEventData>(
+  return useEvent<NativeSyntheticEvent<PagerViewOnPageSelectedEventData>>(
     (event) => {
       'worklet';
       const { onPageSelected } = handlers;

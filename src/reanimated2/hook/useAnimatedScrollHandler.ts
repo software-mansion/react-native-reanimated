@@ -1,20 +1,15 @@
 import type {
   DependencyList,
-  ReanimatedEvent,
-  ReanimatedPayload,
+  RNNativeScrollEvent,
+  ReanimatedScrollEvent,
 } from './commonTypes';
 import { useHandler } from './useHandler';
 import type { EventHandlerInternal, EventHandlerProcessed } from './useEvent';
 import { useEvent } from './useEvent';
-import type { NativeScrollEvent } from 'react-native';
-
-export type ScrollEventPayload = ReanimatedPayload<NativeScrollEvent>;
-
-export type ScrollEvent = ReanimatedEvent<ScrollEventPayload>;
 
 export type ScrollHandler<
   Context extends Record<string, unknown> = Record<string, unknown>
-> = (event: ReanimatedEvent<ScrollEventPayload>, context: Context) => void;
+> = (event: ReanimatedScrollEvent, context: Context) => void;
 export interface ScrollHandlers<Context extends Record<string, unknown>> {
   onScroll?: ScrollHandler<Context>;
   onBeginDrag?: ScrollHandler<Context>;
@@ -29,7 +24,7 @@ export function useAnimatedScrollHandler<
 >(
   handlers: ScrollHandler<Context> | ScrollHandlers<Context>,
   dependencies?: DependencyList
-): EventHandlerProcessed<NativeScrollEvent, Context>;
+): EventHandlerProcessed<RNNativeScrollEvent, Context>;
 
 export function useAnimatedScrollHandler<
   Context extends Record<string, unknown>
@@ -41,7 +36,7 @@ export function useAnimatedScrollHandler<
   const scrollHandlers: ScrollHandlers<Context> =
     typeof handlers === 'function' ? { onScroll: handlers } : handlers;
   const { context, doDependenciesDiffer } = useHandler<
-    ScrollEventPayload,
+    RNNativeScrollEvent,
     Context
   >(scrollHandlers as Record<string, ScrollHandler<Context>>, dependencies);
 
@@ -60,8 +55,8 @@ export function useAnimatedScrollHandler<
     subscribeForEvents.push('onMomentumScrollEnd');
   }
 
-  return useEvent<ScrollEventPayload, Context>(
-    (event: ReanimatedEvent<ScrollEventPayload>) => {
+  return useEvent<RNNativeScrollEvent, Context>(
+    (event: ReanimatedScrollEvent) => {
       'worklet';
       const {
         onScroll,
@@ -90,5 +85,5 @@ export function useAnimatedScrollHandler<
     },
     subscribeForEvents,
     doDependenciesDiffer
-  ) as unknown as EventHandlerInternal<ScrollEventPayload>;
+  ) as unknown as EventHandlerInternal<RNNativeScrollEvent>;
 }

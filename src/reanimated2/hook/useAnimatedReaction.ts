@@ -12,18 +12,21 @@ import { shouldBeUseWeb } from '../PlatformChecker';
  * the second one can modify any shared values but those which are mentioned in the first worklet. Beware of that, because this may result in endless loop and high cpu usage.
  */
 // @ts-expect-error This is fine.
-export function useAnimatedReaction<T>(
-  prepare: () => T,
-  react: (prepared: T, previous: T | null) => void,
+export function useAnimatedReaction<PreparedResult>(
+  prepare: () => PreparedResult,
+  react: (prepared: PreparedResult, previous: PreparedResult | null) => void,
   dependencies?: DependencyList
 ): void;
 
-export function useAnimatedReaction<T>(
-  prepare: WorkletFunction<[], T>,
-  react: WorkletFunction<[prepare: T, previous: T | null], void>,
+export function useAnimatedReaction<PreparedResult>(
+  prepare: WorkletFunction<[], PreparedResult>,
+  react: WorkletFunction<
+    [prepare: PreparedResult, previous: PreparedResult | null],
+    void
+  >,
   dependencies?: DependencyList
 ) {
-  const previous = useSharedValue<T | null>(null, true);
+  const previous = useSharedValue<PreparedResult | null>(null, true);
 
   let inputs = Object.values(prepare.__closure ?? {});
 

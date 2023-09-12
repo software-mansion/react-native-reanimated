@@ -1,28 +1,36 @@
 import NativeReanimatedModule from './NativeReanimated';
 import { registerEventHandler, unregisterEventHandler } from './core';
-import type { RNEvent, ReanimatedEvent } from './hook/commonTypes';
+import type { ReanimatedEvent } from './hook/commonTypes';
 
-function jsListener<Payload extends object>(
+type AssertNativeEvent<Event extends object> = Event extends {
+  nativeEvent: object;
+}
+  ? Event
+  : {
+      nativeEvent: ReanimatedEvent<Event>;
+    };
+
+function jsListener<Event extends object>(
   eventName: string,
-  handler: (event: ReanimatedEvent<Payload>) => void
+  handler: (event: ReanimatedEvent<Event>) => void
 ) {
-  return (evt: RNEvent<Payload>) => {
-    handler({ ...evt.nativeEvent, eventName });
+  return (evt: AssertNativeEvent<Event>) => {
+    handler({ ...evt.nativeEvent, eventName } as ReanimatedEvent<Event>);
   };
 }
 
-export default class WorkletEventHandler<Payload extends object> {
-  worklet: (event: ReanimatedEvent<Payload>) => void;
+export default class WorkletEventHandler<Event extends object> {
+  worklet: (event: ReanimatedEvent<Event>) => void;
   eventNames: string[];
   reattachNeeded: boolean;
   listeners:
-    | Record<string, (event: ReanimatedEvent<ReanimatedEvent<Payload>>) => void>
-    | Record<string, (event: RNEvent<Payload>) => void>;
+    | Record<string, (event: ReanimatedEvent<ReanimatedEvent<Event>>) => void>
+    | Record<string, (event: AssertNativeEvent<Event>) => void>;
 
   viewTag: number | undefined;
   registrations: number[];
   constructor(
-    worklet: (event: ReanimatedEvent<Payload>) => void,
+    worklet: (event: ReanimatedEvent<Event>) => void,
     eventNames: string[] = []
   ) {
     this.worklet = worklet;
@@ -35,7 +43,7 @@ export default class WorkletEventHandler<Payload extends object> {
     if (!NativeReanimatedModule.native) {
       this.listeners = eventNames.reduce(
         (
-          acc: Record<string, (event: RNEvent<Payload>) => void>,
+          acc: Record<string, (event: AssertNativeEvent<Event>) => void>,
           eventName: string
         ) => {
           acc[eventName] = jsListener(eventName, worklet);
@@ -46,7 +54,7 @@ export default class WorkletEventHandler<Payload extends object> {
     }
   }
 
-  updateWorklet(newWorklet: (event: ReanimatedEvent<Payload>) => void): void {
+  updateWorklet(newWorklet: (event: ReanimatedEvent<Event>) => void): void {
     this.worklet = newWorklet;
     this.reattachNeeded = true;
   }

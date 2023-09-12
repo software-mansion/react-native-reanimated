@@ -5,6 +5,7 @@ import type {
   NativeSyntheticEvent,
   TextStyle,
   ViewStyle,
+  NativeScrollEvent,
 } from 'react-native';
 
 export type DependencyList = Array<unknown> | undefined;
@@ -23,12 +24,23 @@ export interface AnimatedRef<T extends Component> {
     | HTMLElement; // web
 }
 
-export type ReanimatedPayload<Payload extends object> = Payload & {
+type ReanimatedPayload = {
   eventName: string;
 };
 
-export type ReanimatedEvent<Payload extends object> = Payload;
+export type ReanimatedEvent<Event extends object> = ReanimatedPayload &
+  (Event extends {
+    nativeEvent: infer NativeEvent extends object;
+  }
+    ? Omit<Event, 'nativeEvent'> & NativeEvent
+    : Event);
 
-export type RNEvent<Payload extends object> = NativeSyntheticEvent<Payload>;
+export type NativeEventWrapper<Event extends object> = {
+  nativeEvent: Event;
+};
 
 export type DefaultStyle = ViewStyle | ImageStyle | TextStyle;
+
+export type RNNativeScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
+
+export type ReanimatedScrollEvent = ReanimatedEvent<RNNativeScrollEvent>;

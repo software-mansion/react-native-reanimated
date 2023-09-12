@@ -1,9 +1,13 @@
-import type { DependencyList, ReanimatedEvent } from './commonTypes';
+import type {
+  DependencyList,
+  NativeEventWrapper,
+  ReanimatedEvent,
+} from './commonTypes';
 import { useHandler } from './useHandler';
 import { useEvent } from './useEvent';
 import type { PanGestureHandlerGestureEvent as DefaultEvent } from 'react-native-gesture-handler';
 
-const EventType = {
+const EVENT_TYPE = {
   UNDETERMINED: 0,
   FAILED: 1,
   BEGAN: 2,
@@ -12,7 +16,8 @@ const EventType = {
   END: 5,
 };
 
-type StateType = (typeof EventType)[keyof typeof EventType];
+type StateType = (typeof EVENT_TYPE)[keyof typeof EVENT_TYPE];
+
 interface PropsUsedInUseAnimatedGestureHandler {
   handlerTag?: number;
   numberOfPointers?: number;
@@ -20,61 +25,31 @@ interface PropsUsedInUseAnimatedGestureHandler {
   oldState?: StateType;
 }
 
-type WrappedNativeEvent<Payload extends object> = {
-  nativeEvent: Payload;
-};
-
-export type GestureHandlerEvent<Payload extends object> =
-  | WrappedNativeEvent<Payload>
-  | ReanimatedEvent<Payload>;
+export type GestureHandlerEvent<Event extends object> =
+  | ReanimatedEvent<Event>
+  | Event;
 
 type GestureHandler<
-  Payload extends PropsUsedInUseAnimatedGestureHandler,
+  Event extends NativeEventWrapper<PropsUsedInUseAnimatedGestureHandler>,
   Context extends Record<string, unknown>
 > = (
-  eventPayload: Payload,
+  eventPayload: ReanimatedEvent<Event>,
   context: Context,
   isCanceledOrFailed?: boolean
 ) => void;
 
 export interface GestureHandlers<
-  Payload extends PropsUsedInUseAnimatedGestureHandler,
+  Event extends NativeEventWrapper<PropsUsedInUseAnimatedGestureHandler>,
   Context extends Record<string, unknown>
 > {
-  [key: string]: GestureHandler<Payload, Context> | undefined;
-  onStart?: GestureHandler<Payload, Context>;
-  onActive?: GestureHandler<Payload, Context>;
-  onEnd?: GestureHandler<Payload, Context>;
-  onFail?: GestureHandler<Payload, Context>;
-  onCancel?: GestureHandler<Payload, Context>;
-  onFinish?: GestureHandler<Payload, Context>;
+  [key: string]: GestureHandler<Event, Context> | undefined;
+  onStart?: GestureHandler<Event, Context>;
+  onActive?: GestureHandler<Event, Context>;
+  onEnd?: GestureHandler<Event, Context>;
+  onFail?: GestureHandler<Event, Context>;
+  onCancel?: GestureHandler<Event, Context>;
+  onFinish?: GestureHandler<Event, Context>;
 }
-
-/**
- * useAnimatedGestureHandler is generized by event types coming from
- * `react-native-gesture-handler`
- * and they all have those events defined as having `nativeEvent` field
- * therefore we use this type to signify that,
- * this by no means is the actual received type in runtime.
- */
-type RNGHProvidedType<Payload extends object> = {
-  nativeEvent: Payload;
-};
-
-// we have to get to event's Payload to construct
-// a valid type later on
-type InferPayload<EventType extends object> = EventType extends {
-  nativeEvent: infer Payload extends object;
-}
-  ? Payload
-  : never;
-
-// and then we have to mark it that events we get
-// contain all the necessary fields we use
-// in `useAnimatedGestureHandler`
-type GestureHandlersPayload<
-  EventType extends RNGHProvidedType<InferPayload<EventType>>
-> = InferPayload<EventType> & PropsUsedInUseAnimatedGestureHandler;
 
 /**
  * @deprecated useAnimatedGestureHandler is an old API which is no longer supported.
@@ -83,64 +58,66 @@ type GestureHandlersPayload<
  * for information about how to migrate to `react-native-gesture-handler` v2
  */
 export function useAnimatedGestureHandler<
-  EventType extends RNGHProvidedType<InferPayload<EventType>> = DefaultEvent,
-  HandlerContext extends Record<string, unknown> = Record<string, unknown>
->(
-  handlers: GestureHandlers<GestureHandlersPayload<EventType>, HandlerContext>,
-  dependencies?: DependencyList
-) {
-  type RealWebEvent = WrappedNativeEvent<GestureHandlersPayload<EventType>>;
-  type RealNativeEvent = ReanimatedEvent<GestureHandlersPayload<EventType>>;
-  type RealEvent = RealWebEvent | RealNativeEvent;
+  Event extends NativeEventWrapper<PropsUsedInUseAnimatedGestureHandler> = DefaultEvent,
+  Context extends Record<string, unknown> = Record<string, unknown>
+>(handlers: GestureHandlers<Event, Context>, dependencies?: DependencyList) {
+  // type RealWebEvent = WrappedNativeEvent<GestureHandlersPayload<Event>>;
+  // type RealNativeEvent = ReanimatedEvent<GestureHandlersPayload<Event>>;
+  // type RealEvent = RealWebEvent | RealNativeEvent;
+  type WebOrNativeEvent = Event | ReanimatedEvent<Event>;
 
-  const { context, doDependenciesDiffer, useWeb } = useHandler<
-    GestureHandlersPayload<EventType>,
-    HandlerContext
-  >(handlers, dependencies);
-  const handler = (e: RealEvent) => {
+  const { context, doDependenciesDiffer, useWeb } = useHandler<Event, Context>(
+    handlers,
+    dependencies
+  );
+  const handler = (e: WebOrNativeEvent) => {
     'worklet';
     const event = useWeb
-      ? (e as WrappedNativeEvent<GestureHandlersPayload<EventType>>).nativeEvent
-      : (e as ReanimatedEvent<GestureHandlersPayload<EventType>>);
+      ? // On Web we get events straight from React Native and they don't have
+        // the `eventName` field there. To simplify the types here we just
+        // cast it as the field was available.
+        ((e as Event).nativeEvent as ReanimatedEvent<Event>)
+      : (e as ReanimatedEvent<Event>);
 
-    if (event.state === EventType.BEGAN && handlers.onStart) {
+    if (event.state === EVENT_TYPE.BEGAN && handlers.onStart) {
       handlers.onStart(event, context);
     }
-    if (event.state === EventType.ACTIVE && handlers.onActive) {
+    if (event.state === EVENT_TYPE.ACTIVE && handlers.onActive) {
       handlers.onActive(event, context);
     }
     if (
-      event.oldState === EventType.ACTIVE &&
-      event.state === EventType.END &&
+      event.oldState === EVENT_TYPE.ACTIVE &&
+      event.state === EVENT_TYPE.END &&
       handlers.onEnd
     ) {
       handlers.onEnd(event, context);
     }
     if (
-      event.oldState === EventType.BEGAN &&
-      event.state === EventType.FAILED &&
+      event.oldState === EVENT_TYPE.BEGAN &&
+      event.state === EVENT_TYPE.FAILED &&
       handlers.onFail
     ) {
       handlers.onFail(event, context);
     }
     if (
-      event.oldState === EventType.ACTIVE &&
-      event.state === EventType.CANCELLED &&
+      event.oldState === EVENT_TYPE.ACTIVE &&
+      event.state === EVENT_TYPE.CANCELLED &&
       handlers.onCancel
     ) {
       handlers.onCancel(event, context);
     }
     if (
-      (event.oldState === EventType.BEGAN ||
-        event.oldState === EventType.ACTIVE) &&
-      event.state !== EventType.BEGAN &&
-      event.state !== EventType.ACTIVE &&
+      (event.oldState === EVENT_TYPE.BEGAN ||
+        event.oldState === EVENT_TYPE.ACTIVE) &&
+      event.state !== EVENT_TYPE.BEGAN &&
+      event.state !== EVENT_TYPE.ACTIVE &&
       handlers.onFinish
     ) {
       handlers.onFinish(
         event,
         context,
-        event.state === EventType.CANCELLED || event.state === EventType.FAILED
+        event.state === EVENT_TYPE.CANCELLED ||
+          event.state === EVENT_TYPE.FAILED
       );
     }
   };
@@ -149,9 +126,9 @@ export function useAnimatedGestureHandler<
     return handler;
   }
 
-  return useEvent<RealEvent>(
+  return useEvent<Event>(
     handler,
     ['onGestureHandlerStateChange', 'onGestureHandlerEvent'],
     doDependenciesDiffer
-  ) as unknown as (e: EventType) => void;
+  ) as unknown as (e: Event) => void;
 }

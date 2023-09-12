@@ -5,19 +5,19 @@ import { makeMutable, startMapper, stopMapper } from '../core';
 import type { DependencyList } from './commonTypes';
 import { shouldBeUseWeb } from '../PlatformChecker';
 
-export type DerivedValue<T> = Readonly<SharedValue<T>>;
+export type DerivedValue<Value> = Readonly<SharedValue<Value>>;
 
 // @ts-expect-error This is fine.
-export function useDerivedValue<T>(
-  processor: () => T,
+export function useDerivedValue<Value>(
+  processor: () => Value,
   dependencies?: DependencyList
-): DerivedValue<T>;
+): DerivedValue<Value>;
 
-export function useDerivedValue<T>(
-  processor: WorkletFunction<[], T>,
+export function useDerivedValue<Value>(
+  processor: WorkletFunction<[], Value>,
   dependencies?: DependencyList
-): DerivedValue<T> {
-  const initRef = useRef<SharedValue<T> | null>(null);
+): DerivedValue<Value> {
+  const initRef = useRef<SharedValue<Value> | null>(null);
   let inputs = Object.values(processor.__closure ?? {});
   if (shouldBeUseWeb()) {
     if (!inputs.length && dependencies?.length) {
@@ -38,7 +38,7 @@ export function useDerivedValue<T>(
   }
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const sharedValue: SharedValue<T> = initRef.current!;
+  const sharedValue: SharedValue<Value> = initRef.current!;
 
   useEffect(() => {
     const fun = () => {

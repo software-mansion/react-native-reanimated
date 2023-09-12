@@ -2,20 +2,20 @@ import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from '../commonTypes';
 import { makeRemote } from '../core';
 import { isWeb, isJest } from '../PlatformChecker';
-import type { DependencyList, ReanimatedPayload } from './commonTypes';
+import type { DependencyList, ReanimatedEvent } from './commonTypes';
 import { areDependenciesEqual, buildDependencies } from './utils';
 
 interface GeneralHandler<
-  Payload extends object,
+  Event extends object,
   Context extends Record<string, unknown>
 > {
-  (eventPayload: ReanimatedPayload<Payload>, context: Context): void;
+  (eventPayload: ReanimatedEvent<Event>, context: Context): void;
 }
 
 type GeneralHandlers<
-  Payload extends object,
+  Event extends object,
   Context extends Record<string, unknown>
-> = Record<string, GeneralHandler<Payload, Context> | undefined>;
+> = Record<string, GeneralHandler<Event, Context> | undefined>;
 
 interface ContextWithDependencies<Context extends Record<string, unknown>> {
   context: Context;
@@ -30,20 +30,23 @@ export interface UseHandlerContext<Context extends Record<string, unknown>> {
 
 // @ts-expect-error This is fine.
 export function useHandler<
-  Payload extends object,
+  Event extends object,
   Context extends Record<string, unknown>
 >(
-  handlers: GeneralHandlers<Payload, Context>,
+  handlers: GeneralHandlers<Event, Context>,
   dependencies?: DependencyList
 ): UseHandlerContext<Context>;
 
 export function useHandler<
-  Payload extends object,
+  Event extends object,
   Context extends Record<string, unknown>
 >(
   handlers: Record<
     string,
-    WorkletFunction<[eventPayload: Payload, context: Context], void>
+    WorkletFunction<
+      [eventPayload: ReanimatedEvent<Event>, context: Context],
+      void
+    >
   >,
   dependencies?: DependencyList
 ): UseHandlerContext<Context> {

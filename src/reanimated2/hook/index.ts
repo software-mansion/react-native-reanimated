@@ -1,4 +1,8 @@
-export type { DependencyList, AnimatedRef } from './commonTypes';
+export type {
+  DependencyList,
+  AnimatedRef,
+  ReanimatedScrollEvent as ScrollEvent,
+} from './commonTypes';
 export { useAnimatedProps } from './useAnimatedProps';
 export { useWorkletCallback } from './useWorkletCallback';
 export { useSharedValue } from './useSharedValue';
@@ -12,11 +16,7 @@ export type {
 export { useAnimatedReaction } from './useAnimatedReaction';
 export { useAnimatedRef } from './useAnimatedRef';
 export { useAnimatedScrollHandler } from './useAnimatedScrollHandler';
-export type {
-  ScrollHandler,
-  ScrollHandlers,
-  ScrollEvent,
-} from './useAnimatedScrollHandler';
+export type { ScrollHandler, ScrollHandlers } from './useAnimatedScrollHandler';
 export { useDerivedValue } from './useDerivedValue';
 export type { DerivedValue } from './useDerivedValue';
 export { useAnimatedSensor } from './useAnimatedSensor';
