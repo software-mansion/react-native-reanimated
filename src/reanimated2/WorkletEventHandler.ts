@@ -1,15 +1,15 @@
+import type { NativeSyntheticEvent } from 'react-native';
 import NativeReanimatedModule from './NativeReanimated';
 import { registerEventHandler, unregisterEventHandler } from './core';
-import type { ReanimatedEvent } from './hook/commonTypes';
+import type { EventPayload, ReanimatedEvent } from './hook/commonTypes';
 
-type AssertNativeEvent<Event extends object> = Event extends {
-  nativeEvent: object;
-}
-  ? Event
-  : {
-      nativeEvent: ReanimatedEvent<Event>;
-    };
+type AssertNativeEvent<Event extends object> = NativeSyntheticEvent<
+  EventPayload<Event>
+>;
 
+// In JS implementation (e.g. for web) we don't use Reanimated's
+// event emitter therefore we have to handle here
+// the event that came from React Native and convert it.
 function jsListener<Event extends object>(
   eventName: string,
   handler: (event: ReanimatedEvent<Event>) => void

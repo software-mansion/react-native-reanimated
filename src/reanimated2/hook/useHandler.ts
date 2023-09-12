@@ -12,10 +12,20 @@ interface GeneralHandler<
   (eventPayload: ReanimatedEvent<Event>, context: Context): void;
 }
 
+type GeneralWorkletHandler<
+  Event extends object,
+  Context extends Record<string, unknown>
+> = WorkletFunction<[eventPayload: ReanimatedEvent<Event>, context: Context]>;
+
 type GeneralHandlers<
   Event extends object,
   Context extends Record<string, unknown>
 > = Record<string, GeneralHandler<Event, Context> | undefined>;
+
+type GeneralWorkletHandlers<
+  Event extends object,
+  Context extends Record<string, unknown>
+> = Record<string, GeneralWorkletHandler<Event, Context> | undefined>;
 
 interface ContextWithDependencies<Context extends Record<string, unknown>> {
   context: Context;
@@ -41,13 +51,7 @@ export function useHandler<
   Event extends object,
   Context extends Record<string, unknown>
 >(
-  handlers: Record<
-    string,
-    WorkletFunction<
-      [eventPayload: ReanimatedEvent<Event>, context: Context],
-      void
-    >
-  >,
+  handlers: GeneralWorkletHandlers<Event, Context>,
   dependencies?: DependencyList
 ): UseHandlerContext<Context> {
   const initRef = useRef<ContextWithDependencies<Context> | null>(null);

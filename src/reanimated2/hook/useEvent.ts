@@ -36,13 +36,14 @@ export function useEvent<Event extends object, Context = never>(
   handler: (event: ReanimatedEvent<Event>, context?: Context) => void,
   eventNames: string[] = [],
   rebuild = false
-) {
+): EventHandlerInternal<Event> {
   const initRef = useRef<WorkletEventHandler<Event> | null>(null);
   if (initRef.current === null) {
-    initRef.current = new WorkletEventHandler(handler, eventNames);
+    initRef.current = new WorkletEventHandler<Event>(handler, eventNames);
   } else if (rebuild) {
     initRef.current.updateWorklet(handler);
   }
 
-  return initRef;
+  // We cast it since we don't want to expose initial null value outside.
+  return initRef as EventHandlerInternal<Event>;
 }

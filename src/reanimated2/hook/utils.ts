@@ -71,9 +71,7 @@ export function isAnimated(prop: unknown) {
   if (Array.isArray(prop)) {
     return prop.some(isAnimated);
   } else if (typeof prop === 'object' && prop !== null) {
-    // @ts-expect-error This should be `'onFrame' in prop` but I'm not
-    // sure if it safe to do so at the moment.
-    if (prop.onFrame !== undefined) {
+    if ('onFrame' in prop) {
       return true;
     } else {
       return Object.values(prop).some(isAnimated);
@@ -82,7 +80,9 @@ export function isAnimated(prop: unknown) {
   return false;
 }
 
-// This is fine.
+// This function works because `Object.keys`
+// return empty array of primitives and on arrays
+// it returns array of its indices.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function shallowEqual(a: any, b: any) {
   'worklet';

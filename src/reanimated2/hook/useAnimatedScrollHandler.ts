@@ -18,13 +18,21 @@ export interface ScrollHandlers<Context extends Record<string, unknown>> {
   onMomentumEnd?: ScrollHandler<Context>;
 }
 
+// ts-prune-ignore-next This is planned to be used in the future.
+export type ScrollHandlerProcessed<
+  Context extends Record<string, unknown> = Record<string, unknown>
+> = EventHandlerProcessed<RNNativeScrollEvent, Context>;
+
+// ts-prune-ignore-next This is planned to be used in the future.
+export type ScrollHandlerInternal = EventHandlerInternal<RNNativeScrollEvent>;
+
 // @ts-expect-error This is fine.
 export function useAnimatedScrollHandler<
   Context extends Record<string, unknown>
 >(
   handlers: ScrollHandler<Context> | ScrollHandlers<Context>,
   dependencies?: DependencyList
-): EventHandlerProcessed<RNNativeScrollEvent, Context>;
+): ScrollHandlerProcessed<Context>;
 
 export function useAnimatedScrollHandler<
   Context extends Record<string, unknown>
@@ -85,5 +93,5 @@ export function useAnimatedScrollHandler<
     },
     subscribeForEvents,
     doDependenciesDiffer
-  ) as unknown as EventHandlerInternal<RNNativeScrollEvent>;
+  ) as unknown as ScrollHandlerInternal;
 }
