@@ -38,6 +38,7 @@ export {
   ScrollEvent,
   EventHandler,
   UseHandlerContext,
+  ReanimatedEvent,
 } from './hook';
 export {
   DelayAnimation,

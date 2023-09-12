@@ -2,6 +2,7 @@ export type {
   DependencyList,
   AnimatedRef,
   ReanimatedScrollEvent as ScrollEvent,
+  ReanimatedEvent,
 } from './commonTypes';
 export { useAnimatedProps } from './useAnimatedProps';
 export { useWorkletCallback } from './useWorkletCallback';
