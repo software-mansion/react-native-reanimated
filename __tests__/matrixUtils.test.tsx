@@ -1,7 +1,7 @@
+import { decomposeMatrixIntoMatricesAndAngles } from '../src/reanimated2/animation/transformationMatrix/matrixDecomposition';
 import {
   AffineMatrixFlat,
   _addMatrices,
-  decomposeMatrix,
   isAffineMatrix,
   _multiplyMatrices,
   _subtractMatrices,
@@ -135,15 +135,17 @@ describe('Matrix util functions', () => {
         ...[1, 1, 1, 1],
         ...[1, 1, 1, 0],
       ] as const;
-      expect(() => decomposeMatrix(incorrectMatrix)).toThrowError();
+      expect(() =>
+        decomposeMatrixIntoMatricesAndAngles(incorrectMatrix)
+      ).toThrowError();
     });
 
     it('Decompose identity into identities', () => {
-      const { translationMatrix, _scaleMatrix, rotationMatrix, skewMatrix } =
-        decomposeMatrix(identityMatrix);
+      const { translationMatrix, scaleMatrix, rotationMatrix, skewMatrix } =
+        decomposeMatrixIntoMatricesAndAngles(identityMatrix);
 
       expect(translationMatrix).toEqual(identityMatrix);
-      expect(_scaleMatrix).toEqual(identityMatrix);
+      expect(scaleMatrix).toEqual(identityMatrix);
       expect(rotationMatrix).toEqual(identityMatrix);
       expect(skewMatrix).toEqual(identityMatrix);
     });
@@ -153,12 +155,12 @@ describe('Matrix util functions', () => {
         1, 2, 3, 0, 1, 1, 1, 0, 1, 2, 0, 0, 4, 5, 6, 1,
       ];
 
-      const { translationMatrix, _scaleMatrix, rotationMatrix, skewMatrix } =
-        decomposeMatrix(m2);
+      const { translationMatrix, scaleMatrix, rotationMatrix, skewMatrix } =
+        decomposeMatrixIntoMatricesAndAngles(m2);
 
       _multiplyMatrices(
         _multiplyMatrices(
-          _scaleMatrix,
+          scaleMatrix,
           _multiplyMatrices(skewMatrix, rotationMatrix)
         ),
         translationMatrix

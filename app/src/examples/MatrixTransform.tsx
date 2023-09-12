@@ -2,14 +2,15 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  TransformMatrix,
 } from 'react-native-reanimated';
 import { SafeAreaView, Button, View, StyleSheet, Platform } from 'react-native';
 import React, { useRef } from 'react';
 
 const TRANSFORM_MATRICES = [
   [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2],
-  [0.5, 1, 0, 0, -1, 0.5, 0, 0, 0, 0, 1, 0, 100, 100, 100, 1],
-  [0.5, 5, 0, 0, -1, 0.5, 0, 0, 0, 0, 1, 0, 100, 100, 100, 4],
+  TransformMatrix.getRotationMatrix('90deg').value,
+  TransformMatrix.getRotationMatrix('-60.6deg').value,
 ];
 
 const springConfig = { duration: 5000 };

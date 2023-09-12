@@ -22,12 +22,12 @@ import {
   _multiplyMatrices,
   _scaleMatrix,
   _addMatrices,
-  decomposeMatrixIntoMatricesAndAngles,
   isAffineMatrixFlat,
   _subtractMatrices,
   _getRotationMatrix,
 } from './transformationMatrix/matrixUtils';
 import { isReducedMotion } from '../PlatformChecker';
+import { decomposeMatrixIntoMatricesAndAngles } from './transformationMatrix/matrixDecomposition';
 
 let IN_STYLE_UPDATER = false;
 const IS_REDUCED_MOTION = isReducedMotion();
@@ -281,7 +281,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
 
     const progress = animation[0].current / 100;
 
-    const transforms = ['translationMatrix', '_scaleMatrix', 'skewMatrix'];
+    const transforms = ['translationMatrix', 'scaleMatrix', 'skewMatrix'];
     const mappedTransforms: Array<AffineMatrixFlat> = [];
 
     transforms.forEach((key, _) =>
