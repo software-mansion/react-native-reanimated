@@ -104,7 +104,7 @@ body:
     id: workflow
     attributes:
       label: Workflow
-      description: How your application is managed?
+      description: How is your application managed?
       options:
         - React Native 
         - Expo Go
