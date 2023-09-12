@@ -1,7 +1,5 @@
 import { NativeSyntheticEvent } from 'react-native';
 import {
-  // PagerViewOnPageScrollEventData,
-  // PagerViewOnPageSelectedEventData,
   PageScrollStateChangedEvent,
   PagerViewOnPageScrollEvent,
   PagerViewOnPageSelectedEvent,
