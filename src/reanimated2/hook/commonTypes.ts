@@ -1,3 +1,4 @@
+'use strict';
 import type { Component } from 'react';
 import type { __Context, ShadowNodeWrapper } from '../commonTypes';
 import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';

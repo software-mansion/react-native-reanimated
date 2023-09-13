@@ -1,3 +1,4 @@
+'use strict';
 import { useEffect, useRef } from 'react';
 import { cancelAnimation } from '../animation';
 import type { SharedValue } from '../commonTypes';

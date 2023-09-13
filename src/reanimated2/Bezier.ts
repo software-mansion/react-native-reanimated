@@ -1,3 +1,4 @@
+'use strict';
 /**
  * https://github.com/gre/bezier-easing
  * BezierEasing - use bezier curve for transition easing function

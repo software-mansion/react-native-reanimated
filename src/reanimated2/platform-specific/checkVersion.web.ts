@@ -1,3 +1,4 @@
+'use strict';
 /* eslint-disable @typescript-eslint/no-empty-function */
 /**
  * Checks that native and js versions of reanimated match.

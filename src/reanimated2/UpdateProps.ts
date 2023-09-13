@@ -1,3 +1,4 @@
+'use strict';
 import type { MutableRefObject } from 'react';
 import { processColorsInProps } from './Colors';
 import type { ShadowNodeWrapper, SharedValue, StyleProps } from './commonTypes';

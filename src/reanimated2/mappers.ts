@@ -1,3 +1,4 @@
+'use strict';
 import type { SharedValue } from './commonTypes';
 import { isJest } from './PlatformChecker';
 import { runOnUI } from './threads';

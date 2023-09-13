@@ -1,3 +1,4 @@
+'use strict';
 import { withDelay } from '../../animation';
 import type {
   EntryExitAnimationFunction,

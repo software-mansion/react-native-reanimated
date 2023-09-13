@@ -1,3 +1,4 @@
+'use strict';
 import type { AnimationObject, AnimatableValue } from './commonTypes';
 import type { Descriptor } from './hook/commonTypes';
 
