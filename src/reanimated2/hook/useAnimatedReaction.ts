@@ -33,7 +33,7 @@ export function useAnimatedReaction<PreparedResult>(
 
   if (shouldBeUseWeb()) {
     if (!inputs.length && dependencies?.length) {
-      // let web work without a Babel/SWC plugin
+      // let web work without a Reanimated Babel plugin
       inputs = dependencies;
     }
   }
