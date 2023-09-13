@@ -4,7 +4,7 @@ export interface ReanimatedWebTransformProperties {
   rotate?: string;
   rotateX?: string;
   rotateY?: string;
-  scale?: number;
+  scale?: number | string;
   scaleX?: number;
   scaleY?: number;
   perspective?: string;

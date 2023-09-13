@@ -9,6 +9,7 @@ import {
 
 import type { AnimationConfig } from './webAnimations';
 import { LayoutAnimationType } from '..';
+import { parseAnimationObjectToKeyframe } from './animationParser';
 
 export enum TransitionType {
   LINEAR,
@@ -27,56 +28,113 @@ export interface TransitionData {
 function LinearTransition(name: string, transitionData: TransitionData) {
   const { translateX, translateY, scaleX, scaleY } = transitionData;
 
-  return `@keyframes ${name} {
-                  0% {
-                    transform: translateX(${translateX}px) translateY(${translateY}px) scale(${scaleX},${scaleY});
-                  }
-                }`;
+  const linearTransition = {
+    name: name,
+    style: {
+      0: {
+        transform: [
+          {
+            translateX: `${translateX}px`,
+            translateY: `${translateY}px`,
+            scale: `${scaleX},${scaleY}`,
+          },
+        ],
+      },
+    },
+    duration: 300,
+  };
+
+  return parseAnimationObjectToKeyframe(linearTransition);
 }
 
 function SequencedTransition(name: string, transitionData: TransitionData) {
   const { translateX, translateY, scaleX, scaleY, reversed } = transitionData;
 
-  const translate = `translate${reversed ? 'X' : 'Y'}(${
-    reversed ? translateX : translateY
-  }px)`;
   const scaleValue = reversed ? `1, ${scaleX}` : `${scaleY}, 1`;
 
   // TODO: Change proportions
-  return `@keyframes ${name} {
-                0% {
-                  transform: translateX(${translateX}px) translateY(${translateY}px) scale(${scaleX}, ${scaleY});
-                }
-                50% {
-                  transform: ${translate} scale(${scaleValue});
-                }
-                100% {
-                  transform: translateX(0) translateY(0) scale(1,1);
-                }
-              }`;
+  const sequencedTransition = {
+    name: name,
+    style: {
+      0: {
+        transform: [
+          {
+            translateX: `${translateX}px`,
+            translateY: `${translateY}px`,
+            scale: `${scaleX}, ${scaleY}`,
+          },
+        ],
+      },
+      50: {
+        transform: [
+          {
+            translateX: reversed ? `${translateX}px` : '0px',
+            translateY: reversed ? '0px' : `${translateY}px`,
+            scale: scaleValue,
+          },
+        ],
+      },
+      100: {
+        transform: [{ translateX: '0px', translateY: '0px', scale: '1,1' }],
+      },
+    },
+    duration: 300,
+  };
+
+  return parseAnimationObjectToKeyframe(sequencedTransition);
 }
 
 function FadingTransition(name: string, transitionData: TransitionData) {
   const { translateX, translateY, scaleX, scaleY } = transitionData;
 
-  return `@keyframes ${name} {
-                0% {
-                  opacity: 1;
-                  transform: translateX(${translateX}px) translateY(${translateY}px) scale(${scaleX}, ${scaleY});
-                }
-                20%{
-                  opacity: 0;
-                  transform: translateX(${translateX}px) translateY(${translateY}px) scale(${scaleX}, ${scaleY});
-                }
-                60% {
-                  opacity: 0;
-                  transform: translateX(0) translateY(0) scale(1,1);
-                }
-                100% {
-                  opacity: 1;
-                  transform: translateX(0) translateY(0) scale(1,1);
-                }
-              }`;
+  const fadingTransition = {
+    name: name,
+    style: {
+      0: {
+        opacity: 1,
+        transform: [
+          {
+            translateX: `${translateX}px`,
+            translateY: `${translateY}px`,
+            scale: `${scaleX}, ${scaleY}`,
+          },
+        ],
+      },
+      20: {
+        opacity: 0,
+        transform: [
+          {
+            translateX: `${translateX}px`,
+            translateY: `${translateY}px`,
+            scale: `${scaleX}, ${scaleY}`,
+          },
+        ],
+      },
+      60: {
+        opacity: 0,
+        transform: [
+          {
+            translateX: '0px',
+            translateY: '0px',
+            scale: `1,1`,
+          },
+        ],
+      },
+      100: {
+        opacity: 1,
+        transform: [
+          {
+            translateX: '0px',
+            translateY: '0px',
+            scale: `1,1`,
+          },
+        ],
+      },
+    },
+    duration: 300,
+  };
+
+  return parseAnimationObjectToKeyframe(fadingTransition);
 }
 
 /**
