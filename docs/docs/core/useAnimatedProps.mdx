@@ -4,26 +4,26 @@ sidebar_position: 3
 
 # useAnimatedProps
 
-`useAnimatedStyle` lets you create an animated props object which can be animated using [shared values](/docs/fundamentals/glossary#shared-value). This object is used to animate properties of third-party components.
+`useAnimatedProps` lets you create an animated props object which can be animated using [shared values](/docs/fundamentals/glossary#shared-value). This object is used to animate properties of third-party components.
 
 For animating style use [`useAnimatedStyle`](/docs/core/useAnimatedStyle) instead.
 
 ## Reference
 
 ```jsx
-import { useAnimatedProps } from "react-native-reanimated";
+import { useAnimatedProps } from 'react-native-reanimated';
 
 function App() {
   // highlight-next-line
   const animatedProps = useAnimatedProps(() => {
     return {
-      opacity: sv.value ? 1 : 0;
+      opacity: sv.value ? 1 : 0,
     };
-  // highlight-next-line
+    // highlight-next-line
   });
 
   // highlight-next-line
-  return <Animated.View animatedProps={animatedProps} />
+  return <Animated.View animatedProps={animatedProps} />;
 }
 ```
 

@@ -2,7 +2,7 @@
 . "$(dirname "$0")/_/husky.sh"
 
 yarn lint-staged
-yarn type:check
+yarn type:check:all
 yarn find-unused-code:js
 
 # This automatically builds Reanimated Babel plugin JavaScript files if their

@@ -1,3 +1,4 @@
+'use strict';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type { ParsedColorArray } from '../Colors';
 import {
@@ -36,7 +37,7 @@ import { isReducedMotion } from '../PlatformChecker';
 let IN_STYLE_UPDATER = false;
 const IS_REDUCED_MOTION = isReducedMotion();
 
-export function initialUpdaterRun<T>(updater: () => T): T {
+export function initialUpdaterRun<T>(updater: () => T) {
   IN_STYLE_UPDATER = true;
   const result = updater();
   IN_STYLE_UPDATER = false;

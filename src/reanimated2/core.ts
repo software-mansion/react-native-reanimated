@@ -1,3 +1,4 @@
+'use strict';
 import NativeReanimatedModule from './NativeReanimated';
 import { nativeShouldBeMock, isWeb } from './PlatformChecker';
 import type {
@@ -24,7 +25,7 @@ export { startMapper, stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
 export { createWorkletRuntime } from './runtimes';
 export type { WorkletRuntime } from './runtimes';
-export { makeShareable } from './shareables';
+export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export { makeMutable, makeRemote } from './mutables';
 
 /**

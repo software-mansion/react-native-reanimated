@@ -1,7 +1,8 @@
+'use strict';
 import { Component } from 'react';
 import type { TextProps } from 'react-native';
 import { Text } from 'react-native';
-import createAnimatedComponent from '../../createAnimatedComponent';
+import createAnimatedComponent from '../../createAnimatedComponent/createAnimatedComponent';
 import type { AnimateProps } from '../helperTypes';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.

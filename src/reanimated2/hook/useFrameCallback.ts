@@ -1,3 +1,4 @@
+'use strict';
 import { useEffect, useRef } from 'react';
 import FrameCallbackRegistryJS from '../frameCallback/FrameCallbackRegistryJS';
 import type { FrameInfo } from '../frameCallback/FrameCallbackRegistryUI';

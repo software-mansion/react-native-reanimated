@@ -1,3 +1,4 @@
+'use strict';
 export type { DependencyList, AnimatedRef } from './commonTypes';
 export {
   useAnimatedProps,
@@ -8,10 +9,6 @@ export {
 export { useSharedValue } from './useSharedValue';
 export { useReducedMotion } from './useReducedMotion';
 export { useAnimatedStyle } from './useAnimatedStyle';
-export type {
-  AnimatedStyleResult,
-  AnimatedStyleProp,
-} from './useAnimatedStyle';
 export { useAnimatedGestureHandler } from './useAnimatedGestureHandler';
 export type {
   GestureHandlerEvent,

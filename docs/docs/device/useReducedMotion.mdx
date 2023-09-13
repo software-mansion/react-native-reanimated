@@ -1,0 +1,54 @@
+---
+id: useReducedMotion
+title: useReducedMotion
+sidebar_label: useReducedMotion
+---
+
+`useReducedMotion` lets you query the reduced motion system setting. You can use it to disable animations.
+
+## Reference
+
+```javascript
+import { useReducedMotion } from 'react-native-reanimated';
+
+function App() {
+  const reduceMotion = useReducedMotion();
+
+  if (reduceMotion) {
+    // display static content ✨
+  } else {
+    // run animations ✨
+  }
+
+  // ...
+}
+```
+
+### Returns
+
+`useReducedMotion` returns a boolean indicating whether the reduced motion setting was enabled when the app started.
+
+## Example
+
+import UseReducedMotion from '@site/src/examples/UseReducedMotion';
+import UseReducedMotionSrc from '!!raw-loader!@site/src/examples/UseReducedMotion';
+
+<InteractiveExample
+  src={UseReducedMotionSrc}
+  component={<UseReducedMotion />}
+/>
+
+## Remarks
+
+- Changing the reduced motion system setting doesn't cause your components to rerender.
+- In contrast to [`AccessibilityInfo.isReduceMotionEnabled()`](https://reactnative.dev/docs/accessibilityinfo#isreducemotionenabled) the `useReducedMotion` hook lets you get the value synchronously.
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>

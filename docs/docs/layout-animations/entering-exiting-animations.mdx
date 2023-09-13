@@ -138,6 +138,7 @@ FadeInUp.springify()
 ```javascript
 FadeInDown.delay(500)
   .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
   .withInitialValues({ transform: [{ translateY: 420 }] })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
@@ -145,6 +146,7 @@ FadeInDown.delay(500)
 ```
 
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
+- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
@@ -241,6 +243,7 @@ These are the initial values for each animation that can be customized with the 
 BounceInDown.duration(500)
   .delay(500)
   .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
   .withInitialValues({ transform: [{ translateY: -420 }] })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
@@ -250,6 +253,7 @@ BounceInDown.duration(500)
 - `.duration(durationMs: number)` is the length of the animation (in milliseconds). Defaults to `600`.
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
@@ -389,6 +393,7 @@ FlipInXUp.springify()
 ```javascript
 FlipInEasyY.delay(500)
   .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
   .withInitialValues({
     transform: [{ perspective: 100 }, { rotateY: '123deg' }],
   })
@@ -399,6 +404,7 @@ FlipInEasyY.delay(500)
 
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
@@ -516,6 +522,7 @@ LightSpeedInLeft.springify()
 ```javascript
 LightSpeedInRight.delay(500)
   .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
   .withInitialValues({
     transform: [{ translateX: -100 }, { skewX: '-10deg' }],
   })
@@ -526,6 +533,7 @@ LightSpeedInRight.delay(500)
 
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
@@ -635,6 +643,7 @@ PinwheelIn.springify()
 ```javascript
 PinwheelIn.delay(500)
   .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
   .withInitialValues({
     transform: [{ scale: 0.8 }, { rotate: '3' }],
   })
@@ -645,6 +654,7 @@ PinwheelIn.delay(500)
 
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
@@ -760,6 +770,7 @@ RollInLeft.springify()
 ```javascript
 RollInRight.delay(500)
   .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
   .withInitialValues({ transform: [{ translateX: 100 }, { rotate: '-45deg' }] })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
@@ -768,6 +779,7 @@ RollInRight.delay(500)
 
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
@@ -897,6 +909,7 @@ RotateInUpLeft.springify()
 ```javascript
 RotateInDownLeft.delay(500)
   .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
   .withInitialValues({
     transform: [{ rotate: '-90deg' }, { translateX: 100 }, { translateY: 100 }],
   })
@@ -907,6 +920,7 @@ RotateInDownLeft.delay(500)
 
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
@@ -1034,6 +1048,7 @@ SlideInUp.springify()
 ```javascript
 SlideInDown.delay(500)
   .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
   .withInitialValues({ transform: [{ translateY: 420 }] })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
@@ -1042,6 +1057,7 @@ SlideInDown.delay(500)
 
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
@@ -1158,6 +1174,7 @@ StretchInX.springify()
 ```javascript
 StretchInY.delay(500)
   .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
   .withInitialValues({ transform: [{ scaleY: 0.5 }] })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
@@ -1166,6 +1183,7 @@ StretchInY.delay(500)
 
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
@@ -1317,6 +1335,7 @@ ZoomInRotate.springify()
 ```javascript
 ZoomIn.delay(500)
   .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
   .withInitialValues({ transform: [{ scale: 0.5 }] })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
@@ -1325,6 +1344,7 @@ ZoomIn.delay(500)
 
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 

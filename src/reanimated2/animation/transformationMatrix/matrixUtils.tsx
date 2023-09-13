@@ -1,3 +1,4 @@
+'use strict';
 type FixedLengthArray<
   T,
   L extends number,

@@ -1,11 +1,12 @@
+'use strict';
 import { useEffect } from 'react';
-import type { BasicWorkletFunction, WorkletFunction } from '../commonTypes';
+import type { __BasicWorkletFunction, __WorkletFunction } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
 import type { DependencyList } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
 import { shouldBeUseWeb } from '../PlatformChecker';
 
-export interface AnimatedReactionWorkletFunction<T> extends WorkletFunction {
+export interface AnimatedReactionWorkletFunction<T> extends __WorkletFunction {
   (prepared: T, previous: T | null): void;
 }
 /**
@@ -15,7 +16,7 @@ export interface AnimatedReactionWorkletFunction<T> extends WorkletFunction {
  * the second one can modify any shared values but those which are mentioned in the first worklet. Beware of that, because this may result in endless loop and high cpu usage.
  */
 export function useAnimatedReaction<T>(
-  prepare: BasicWorkletFunction<T>,
+  prepare: __BasicWorkletFunction<T>,
   react: AnimatedReactionWorkletFunction<T>,
   dependencies?: DependencyList
 ): void {

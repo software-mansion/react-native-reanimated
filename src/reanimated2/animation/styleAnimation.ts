@@ -1,3 +1,4 @@
+'use strict';
 import { defineAnimation } from './util';
 import type {
   Timestamp,
@@ -179,7 +180,7 @@ export function withStyleAnimation(
           );
           let prevVal = resolvePath(value, currentEntry.path);
           if (prevAnimation && !prevVal) {
-            prevVal = prevAnimation.current;
+            prevVal = (prevAnimation as any).current;
           }
           if (prevVal === undefined) {
             console.warn(

@@ -1,10 +1,11 @@
+'use strict';
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
 import type {
-  Context,
+  __Context,
   NativeEvent,
   NestedObjectValues,
-  WorkletFunction,
+  __WorkletFunction,
   AnimationObject,
 } from '../commonTypes';
 import type { AnimatedStyle } from '../helperTypes';
@@ -13,15 +14,15 @@ import { isWeb, isJest } from '../PlatformChecker';
 import WorkletEventHandler from '../WorkletEventHandler';
 import type { ContextWithDependencies, DependencyList } from './commonTypes';
 import type { NativeSyntheticEvent } from 'react-native';
-interface Handler<T, TContext extends Context> extends WorkletFunction {
+interface Handler<T, TContext extends __Context> extends __WorkletFunction {
   (event: T, context: TContext): void;
 }
 
-interface Handlers<T, TContext extends Context> {
+interface Handlers<T, TContext extends __Context> {
   [key: string]: Handler<T, TContext> | undefined;
 }
 
-interface UseHandlerContext<TContext extends Context> {
+interface UseHandlerContext<TContext extends __Context> {
   context: TContext;
   doDependenciesDiffer: boolean;
   useWeb: boolean;
@@ -51,12 +52,12 @@ export const useEvent = function <T extends NativeEvent<T>>(
 } as unknown as useEventType;
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type useHandlerType = <T, TContext extends Context = Record<string, never>>(
+type useHandlerType = <T, TContext extends __Context = Record<string, never>>(
   handlers: Handlers<T, TContext>,
   deps?: DependencyList
 ) => { context: TContext; doDependenciesDiffer: boolean; useWeb: boolean };
 
-export const useHandler = function <T, TContext extends Context>(
+export const useHandler = function <T, TContext extends __Context>(
   handlers: Handlers<T, TContext>,
   dependencies?: DependencyList
 ): UseHandlerContext<TContext> {
@@ -91,10 +92,10 @@ export const useHandler = function <T, TContext extends Context>(
 
 // builds one big hash from multiple worklets' hashes
 export function buildWorkletsHash(
-  handlers: Record<string, WorkletFunction> | Array<WorkletFunction>
+  handlers: Record<string, __WorkletFunction> | Array<__WorkletFunction>
 ): string {
   return Object.values(handlers).reduce(
-    (acc: string, worklet: WorkletFunction) =>
+    (acc: string, worklet: __WorkletFunction) =>
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       acc + worklet.__workletHash!.toString(),
     ''
@@ -104,11 +105,11 @@ export function buildWorkletsHash(
 // builds dependencies array for gesture handlers
 function buildDependencies(
   dependencies: DependencyList,
-  handlers: Record<string, WorkletFunction | undefined>
+  handlers: Record<string, __WorkletFunction | undefined>
 ): Array<unknown> {
-  const handlersList: WorkletFunction[] = Object.values(handlers).filter(
+  const handlersList: __WorkletFunction[] = Object.values(handlers).filter(
     (handler) => handler !== undefined
-  ) as WorkletFunction[];
+  ) as __WorkletFunction[];
   if (!dependencies) {
     dependencies = handlersList.map((handler) => {
       return {
