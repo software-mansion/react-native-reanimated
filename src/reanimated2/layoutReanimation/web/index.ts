@@ -3,56 +3,36 @@ import {
   BounceInData,
   BounceOut,
   BounceOutData,
-} from './Animations/Bounce.web';
-import {
-  FadeIn,
-  FadeInData,
-  FadeOut,
-  FadeOutData,
-} from './Animations/Fade.web';
-import {
-  FlipIn,
-  FlipInData,
-  FlipOut,
-  FlipOutData,
-} from './Animations/Flip.web';
+} from './animation/Bounce.web';
+import { FadeIn, FadeInData, FadeOut, FadeOutData } from './animation/Fade.web';
+import { FlipIn, FlipInData, FlipOut, FlipOutData } from './animation/Flip.web';
 import {
   LightSpeedIn,
   LightSpeedInData,
   LightSpeedOut,
   LightSpeedOutData,
-} from './Animations/Lightspeed.web';
-import { Pinwheel, PinwheelData } from './Animations/Pinwheel.web';
-import {
-  RollIn,
-  RollInData,
-  RollOut,
-  RollOutData,
-} from './Animations/Roll.web';
+} from './animation/Lightspeed.web';
+import { Pinwheel, PinwheelData } from './animation/Pinwheel.web';
+import { RollIn, RollInData, RollOut, RollOutData } from './animation/Roll.web';
 import {
   RotateIn,
   RotateInData,
   RotateOut,
   RotateOutData,
-} from './Animations/Rotate.web';
+} from './animation/Rotate.web';
 import {
   SlideIn,
   SlideInData,
   SlideOut,
   SlideOutData,
-} from './Animations/Slide.web';
+} from './animation/Slide.web';
 import {
   StretchIn,
   StretchInData,
   StretchOut,
   StretchOutData,
-} from './Animations/Stretch.web';
-import {
-  ZoomIn,
-  ZoomInData,
-  ZoomOut,
-  ZoomOutData,
-} from './Animations/Zoom.web';
+} from './animation/Stretch.web';
+import { ZoomIn, ZoomInData, ZoomOut, ZoomOutData } from './animation/Zoom.web';
 
 import type { AnimationData } from './animationParser';
 
