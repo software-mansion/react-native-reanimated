@@ -55,23 +55,10 @@ import type { AnimatedComponentProps, AnimatedProps } from './utils';
 import { flattenArray, has } from './utils';
 
 import {
-  areDOMRectsEqual,
-  createAnimationWithExistingTransform,
-  getCallbackFromConfig,
-  getDelayFromConfig,
-  getDurationFromConfig,
-  getEasingFromConfig,
-  handleEnteringAnimation,
-  handleExitingAnimation,
+  handleWebAnimation,
   insertWebAnimations,
 } from '../reanimated2/platform-specific/webAnimations';
-import type { AnimationConfig } from '../reanimated2/platform-specific/webAnimations';
-
-import { handleLayoutTransition } from '../reanimated2/platform-specific/webTransitions';
-import type { TransitionData } from '../reanimated2/platform-specific/webTransitions';
-
-import { Animations } from '../reanimated2/platform-specific/webAnimationsData';
-import type { AnimationNames } from '../reanimated2/platform-specific/webAnimationsData';
+import { tryActivateLayoutTransition } from '../reanimated2/platform-specific/webTransitions';
 
 const IS_WEB = isWeb();
 
@@ -243,7 +230,11 @@ export default function createAnimatedComponent(
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
 
       if (IS_WEB) {
-        this.handleWebAnimation(LayoutAnimationType.EXITING);
+        handleWebAnimation(
+          this.props,
+          this._component as HTMLElement,
+          LayoutAnimationType.EXITING
+        );
       }
     }
 
@@ -255,7 +246,11 @@ export default function createAnimatedComponent(
 
       if (IS_WEB) {
         insertWebAnimations();
-        this.handleWebAnimation(LayoutAnimationType.ENTERING);
+        handleWebAnimation(
+          this.props,
+          this._component as HTMLElement,
+          LayoutAnimationType.ENTERING
+        );
       }
     }
 
@@ -560,21 +555,11 @@ export default function createAnimatedComponent(
 
       // Snapshot won't be undefined because of getSnapshotBeforeUpdate method
       if (IS_WEB && snapshot !== null) {
-        const rect = (this._component as HTMLElement).getBoundingClientRect();
-
-        if (areDOMRectsEqual(rect, snapshot)) {
-          return;
-        }
-
-        const transitionData: TransitionData = {
-          translateX: snapshot.x - rect.x,
-          translateY: snapshot.y - rect.y,
-          scaleX: snapshot.width / rect.width,
-          scaleY: snapshot.height / rect.height,
-          reversed: false, // This field is used only in `SequencedTransition`, so by default it will be false
-        };
-
-        this.handleWebAnimation(LayoutAnimationType.LAYOUT, transitionData);
+        tryActivateLayoutTransition(
+          this.props,
+          this._component as HTMLElement,
+          snapshot
+        );
       }
     }
 
@@ -747,83 +732,6 @@ export default function createAnimatedComponent(
       }
 
       return null;
-    }
-
-    handleWebAnimation(
-      animationType: LayoutAnimationType,
-      transitionData?: TransitionData
-    ) {
-      const config =
-        animationType === LayoutAnimationType.ENTERING
-          ? this.props.entering
-          : animationType === LayoutAnimationType.EXITING
-          ? this.props.exiting
-          : animationType === LayoutAnimationType.LAYOUT
-          ? this.props.layout
-          : null;
-
-      if (!config) {
-        return;
-      }
-
-      const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
-
-      const initialAnimationName =
-        typeof config === 'function' ? config.name : config.constructor.name;
-
-      // This prevents crashes if we try to set animations that are not defined.
-      // We don't care about layout transitions since they're created dynamically
-      if (!(initialAnimationName in Animations) && !isLayoutTransition) {
-        console.warn(
-          "[Reanimated] Couldn't load entering/exiting animation. Current version supports only predefined animations with modifiers: duration, delay, easing, randomizeDelay."
-        );
-        return;
-      }
-
-      const transform = (this.props.style as StyleProps)?.transform;
-
-      const animationName = transform
-        ? createAnimationWithExistingTransform(initialAnimationName, transform)
-        : initialAnimationName;
-
-      const animationConfig: AnimationConfig = {
-        animationName: animationName,
-        duration: getDurationFromConfig(
-          config,
-          isLayoutTransition,
-          initialAnimationName as AnimationNames
-        ),
-        delay: getDelayFromConfig(config),
-        easing: getEasingFromConfig(config),
-        callback: getCallbackFromConfig(config),
-      };
-
-      const element = this._component as HTMLElement;
-
-      switch (animationType) {
-        case LayoutAnimationType.ENTERING:
-          handleEnteringAnimation(element, animationConfig);
-          break;
-        case LayoutAnimationType.LAYOUT:
-          // `transitionData` is cast as defined because it is a result of calculations made inside componentDidUpdate method.
-          // We can reach this piece of code only from componentDidUpdate, therefore this parameter will be defined.
-
-          // @ts-ignore This property exists in SequencedTransition
-          (transitionData as TransitionData).reversed = config.reversed
-            ? // @ts-ignore This property exists in SequencedTransition
-              config.reversed
-            : false;
-
-          handleLayoutTransition(
-            element,
-            animationConfig,
-            transitionData as TransitionData
-          );
-          break;
-        case LayoutAnimationType.EXITING:
-          handleExitingAnimation(element, animationConfig);
-          break;
-      }
     }
 
     render() {

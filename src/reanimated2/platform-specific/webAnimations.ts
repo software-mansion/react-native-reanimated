@@ -8,6 +8,11 @@ import type {
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
 } from '../layoutReanimation';
+import { LayoutAnimationType } from '../layoutReanimation';
+import type { AnimatedComponentProps } from '../../createAnimatedComponent/utils';
+import type { TransitionData } from './webTransitions';
+import { handleLayoutTransition } from './webTransitions';
+import type { StyleProps } from '../commonTypes';
 
 export const WEB_ANIMATIONS_ID = 'ReanimatedWebAnimationsStyle';
 
@@ -234,6 +239,85 @@ export function setElementAnimation(
   element.style.animationFillMode = 'forwards'; // Prevents returning to base state after animation finishes.
 
   element.onanimationend = () => animationConfig.callback?.();
+}
+
+export function handleWebAnimation<
+  ComponentProps extends Record<string, unknown>
+>(
+  props: Readonly<AnimatedComponentProps<ComponentProps>>,
+  element: HTMLElement,
+  animationType: LayoutAnimationType,
+  transitionData?: TransitionData
+) {
+  const config =
+    animationType === LayoutAnimationType.ENTERING
+      ? props.entering
+      : animationType === LayoutAnimationType.EXITING
+      ? props.exiting
+      : animationType === LayoutAnimationType.LAYOUT
+      ? props.layout
+      : null;
+
+  if (!config) {
+    return;
+  }
+
+  const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
+
+  const initialAnimationName =
+    typeof config === 'function' ? config.name : config.constructor.name;
+
+  // This prevents crashes if we try to set animations that are not defined.
+  // We don't care about layout transitions since they're created dynamically
+  if (!(initialAnimationName in Animations) && !isLayoutTransition) {
+    console.warn(
+      "[Reanimated] Couldn't load entering/exiting animation. Current version supports only predefined animations with modifiers: duration, delay, easing, randomizeDelay."
+    );
+    return;
+  }
+
+  const transform = (props.style as StyleProps)?.transform;
+
+  const animationName = transform
+    ? createAnimationWithExistingTransform(initialAnimationName, transform)
+    : initialAnimationName;
+
+  const animationConfig: AnimationConfig = {
+    animationName: animationName,
+    duration: getDurationFromConfig(
+      config,
+      isLayoutTransition,
+      initialAnimationName as AnimationNames
+    ),
+    delay: getDelayFromConfig(config),
+    easing: getEasingFromConfig(config),
+    callback: getCallbackFromConfig(config),
+  };
+
+  switch (animationType) {
+    case LayoutAnimationType.ENTERING:
+      handleEnteringAnimation(element, animationConfig);
+      break;
+    case LayoutAnimationType.LAYOUT:
+      // `transitionData` is cast as defined because it is a result of calculations made inside componentDidUpdate method.
+      // We can reach this piece of code only from componentDidUpdate, therefore this parameter will be defined.
+
+      // @ts-ignore This property exists in SequencedTransition
+      (transitionData as TransitionData).reversed = config.reversed
+        ? // @ts-ignore This property exists in SequencedTransition
+          config.reversed
+        : false;
+
+      handleLayoutTransition(
+        element,
+        animationConfig,
+        transitionData as TransitionData
+      );
+      break;
+    case LayoutAnimationType.EXITING:
+      handleExitingAnimation(element, animationConfig);
+      break;
+  }
 }
 
 export function handleEnteringAnimation(

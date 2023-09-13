@@ -1,10 +1,14 @@
+import type { AnimatedComponentProps } from '../../createAnimatedComponent/utils';
 import {
   WEB_ANIMATIONS_ID,
+  areDOMRectsEqual,
   generateRandomKeyframeName,
+  handleWebAnimation,
   setElementAnimation,
 } from './webAnimations';
 
 import type { AnimationConfig } from './webAnimations';
+import { LayoutAnimationType } from '../layoutReanimation';
 
 export enum TransitionType {
   LINEAR,
@@ -114,6 +118,35 @@ export function TransitionGenerator(
   }
 
   return keyframe;
+}
+
+export function tryActivateLayoutTransition<
+  ComponentProps extends Record<string, unknown>
+>(
+  props: Readonly<AnimatedComponentProps<ComponentProps>>,
+  element: HTMLElement,
+  snapshot: DOMRect
+) {
+  const rect = element.getBoundingClientRect();
+
+  if (areDOMRectsEqual(rect, snapshot)) {
+    return;
+  }
+
+  const transitionData: TransitionData = {
+    translateX: snapshot.x - rect.x,
+    translateY: snapshot.y - rect.y,
+    scaleX: snapshot.width / rect.width,
+    scaleY: snapshot.height / rect.height,
+    reversed: false, // This field is used only in `SequencedTransition`, so by default it will be false
+  };
+
+  handleWebAnimation(
+    props,
+    element,
+    LayoutAnimationType.LAYOUT,
+    transitionData
+  );
 }
 
 export function handleLayoutTransition(
