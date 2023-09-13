@@ -1,7 +1,10 @@
 import { Animations, AnimationsData, WebEasings } from '.';
 import type { AnimationNames, WebEasingsNames } from '.';
 import { parseAnimationObjectToKeyframe } from './animationParser';
-import type { ReanimatedWebTransformProperties } from './animationParser';
+import type {
+  ReanimatedWebTransformProperties,
+  TransitionData,
+} from './animationParser';
 import type { TransformsStyle } from 'react-native';
 import type {
   BaseAnimationBuilder,
@@ -10,9 +13,11 @@ import type {
 } from '..';
 import { LayoutAnimationType } from '..';
 import type { AnimatedComponentProps } from '../../../createAnimatedComponent/utils';
-import type { TransitionData } from './transitionsManager';
-import { handleLayoutTransition } from './transitionsManager';
 import type { StyleProps } from '../../commonTypes';
+
+import { LinearTransition } from './transition/Linear.web';
+import { SequencedTransition } from './transition/Sequenced.web';
+import { FadingTransition } from './transition/Fading.web';
 
 export const WEB_ANIMATIONS_ID = 'ReanimatedWebAnimationsStyle';
 
@@ -39,6 +44,12 @@ type ConfigType =
   | EntryExitAnimationFunction
   | Keyframe
   | CustomConfig;
+
+export enum TransitionType {
+  LINEAR,
+  SEQUENCED,
+  FADING,
+}
 
 /**
  *  Creates `HTMLStyleElement`, inserts it into DOM and then inserts CSS rules into the stylesheet.
@@ -233,6 +244,76 @@ export function setElementAnimation(
   element.onanimationend = () => animationConfig.callback?.();
 }
 
+/**
+ * Creates transition of given type, appends it to stylesheet and returns keyframe name.
+ *
+ * @param transitionType Type of transition (e.g. LINEAR).
+ * @param transitionData Object containing data for transforms (translateX, scaleX,...).
+ * @returns Keyframe name that represents transition.
+ */
+export function TransitionGenerator(
+  transitionType: TransitionType,
+  transitionData: TransitionData
+) {
+  const keyframe = generateRandomKeyframeName();
+  let transition;
+
+  switch (transitionType) {
+    case TransitionType.LINEAR:
+      transition = LinearTransition(keyframe, transitionData);
+      break;
+    case TransitionType.SEQUENCED:
+      transition = SequencedTransition(keyframe, transitionData);
+      break;
+    case TransitionType.FADING:
+      transition = FadingTransition(keyframe, transitionData);
+      break;
+  }
+
+  const styleTag = document.getElementById(
+    WEB_ANIMATIONS_ID
+  ) as HTMLStyleElement;
+
+  if (styleTag.sheet) {
+    styleTag.sheet.insertRule(transition);
+  } else {
+    console.error(
+      '[Reanimated] Failed to insert layout animation into CSS stylesheet'
+    );
+  }
+
+  return keyframe;
+}
+
+export function tryActivateLayoutTransition<
+  ComponentProps extends Record<string, unknown>
+>(
+  props: Readonly<AnimatedComponentProps<ComponentProps>>,
+  element: HTMLElement,
+  snapshot: DOMRect
+) {
+  const rect = element.getBoundingClientRect();
+
+  if (areDOMRectsEqual(rect, snapshot)) {
+    return;
+  }
+
+  const transitionData: TransitionData = {
+    translateX: snapshot.x - rect.x,
+    translateY: snapshot.y - rect.y,
+    scaleX: snapshot.width / rect.width,
+    scaleY: snapshot.height / rect.height,
+    reversed: false, // This field is used only in `SequencedTransition`, so by default it will be false
+  };
+
+  handleWebAnimation(
+    props,
+    element,
+    LayoutAnimationType.LAYOUT,
+    transitionData
+  );
+}
+
 export function handleWebAnimation<
   ComponentProps extends Record<string, unknown>
 >(
@@ -327,6 +408,38 @@ export function handleEnteringAnimation(
       element.style.visibility = 'initial';
     }, delay * 1000);
   }
+
+  setElementAnimation(element, animationConfig);
+}
+
+export function handleLayoutTransition(
+  element: HTMLElement,
+  animationConfig: AnimationConfig,
+  transitionData: TransitionData
+) {
+  const { animationName } = animationConfig;
+
+  let animationType;
+
+  switch (animationName) {
+    case 'LinearTransition':
+      animationType = TransitionType.LINEAR;
+      break;
+    case 'SequencedTransition':
+      animationType = TransitionType.SEQUENCED;
+      break;
+    case 'FadingTransition':
+      animationType = TransitionType.FADING;
+      break;
+    default:
+      animationType = TransitionType.LINEAR;
+      break;
+  }
+
+  animationConfig.animationName = TransitionGenerator(
+    animationType,
+    transitionData
+  );
 
   setElementAnimation(element, animationConfig);
 }

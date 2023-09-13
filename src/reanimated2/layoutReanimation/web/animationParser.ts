@@ -22,6 +22,13 @@ export interface AnimationData {
   style: Record<number, AnimationStyle>;
   duration: number;
 }
+export interface TransitionData {
+  translateX: number;
+  translateY: number;
+  scaleX: number;
+  scaleY: number;
+  reversed?: boolean;
+}
 
 export function parseAnimationObjectToKeyframe(animationObject: AnimationData) {
   let keyframe = `@keyframes ${animationObject.name} { `;
