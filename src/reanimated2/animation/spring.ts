@@ -79,6 +79,10 @@ export const withSpring = ((
     ): boolean {
       const { toValue, startTimestamp, current } = animation;
 
+      if (current === toValue) {
+        return true;
+      }
+
       const timeFromStart = now - startTimestamp;
 
       if (config.useDuration && timeFromStart >= config.duration) {
@@ -86,7 +90,7 @@ export const withSpring = ((
 
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
-        return true;
+        return false;
       }
 
       if (config.configIsInvalid) {
@@ -95,7 +99,7 @@ export const withSpring = ((
         else {
           animation.current = toValue;
           animation.lastTimestamp = 0;
-          return true;
+          return false;
         }
       }
       const { lastTimestamp, velocity } = animation;
@@ -140,7 +144,7 @@ export const withSpring = ((
         animation.current = toValue;
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
-        return true;
+        return false;
       }
 
       return false;
