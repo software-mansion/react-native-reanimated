@@ -37,7 +37,6 @@ import {
 import { maybeBuild } from '../animationBuilder';
 import type { AnimateProps } from '../reanimated2';
 import { JSPropUpdater } from './JSPropUpdater';
-import { InlinePropUpdater } from './inlinePropUpdater';
 import type { AnimatedComponentProps, AnimatedProps } from './utils';
 import { has, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
@@ -47,6 +46,7 @@ import {
   isWeb,
   shouldBeUseWeb,
 } from '../reanimated2/PlatformChecker';
+import { InlinePropManager } from './InlinePropManager';
 
 const IS_WEB = isWeb();
 
@@ -117,7 +117,7 @@ export default function createAnimatedComponent(
     _component: ComponentRef | HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
     _JSPropUpdater = new JSPropUpdater();
-    _inlinePropUpdater = new InlinePropUpdater();
+    _InlinePropManager = new InlinePropManager();
     static displayName: string;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
@@ -131,14 +131,14 @@ export default function createAnimatedComponent(
       this._attachNativeEvents();
       this._JSPropUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
-      this._inlinePropUpdater.attachInlineProps(this, this._getViewInfo());
+      this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
     }
 
     componentWillUnmount() {
       this._detachNativeEvents();
       this._JSPropUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
-      this._inlinePropUpdater.detachInlineProps();
+      this._InlinePropManager.detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
     }
 
@@ -376,7 +376,7 @@ export default function createAnimatedComponent(
     ) {
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
-      this._inlinePropUpdater.attachInlineProps(this, this._getViewInfo());
+      this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
     }
 
     _setComponentRef = setAndForwardRef<Component | HTMLElement>({
@@ -482,8 +482,8 @@ export default function createAnimatedComponent(
                 };
               }
               return this.initialStyle;
-            } else if (InlinePropUpdater.hasInlineStyles(style)) {
-              return InlinePropUpdater.getInlineStyle(
+            } else if (InlinePropManager.hasInlineStyles(style)) {
+              return InlinePropManager.getInlineStyle(
                 style,
                 this._isFirstRender
               );

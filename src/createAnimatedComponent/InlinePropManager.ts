@@ -21,7 +21,7 @@ function isInlineStyleTransform(transform: unknown): boolean {
   }
 
   return transform.some((t: Record<string, unknown>) =>
-    InlinePropUpdater.hasInlineStyles(t)
+    InlinePropManager.hasInlineStyles(t)
   );
 }
 
@@ -91,7 +91,7 @@ function extractSharedValuesMapFromProps(
   return inlineProps;
 }
 
-export class InlinePropUpdater {
+export class InlinePropManager {
   _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
   _inlinePropsMapperId: number | null = null;
   _inlineProps: StyleProps = {};

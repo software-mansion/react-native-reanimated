@@ -1,7 +1,7 @@
 'use strict';
 import type { ImageProps } from 'react-native';
 import { Image } from 'react-native';
-import createAnimatedComponent from '../../createAnimatedComponent';
+import { createAnimatedComponent } from '../../createAnimatedComponent';
 import { Component } from 'react';
 import type { AnimateProps } from '../helperTypes';
 
