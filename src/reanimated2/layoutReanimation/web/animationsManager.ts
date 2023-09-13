@@ -343,7 +343,9 @@ export function handleWebAnimation<
   // This prevents crashes if we try to set animations that are not defined.
   // We don't care about layout transitions since they're created dynamically
   if (!(initialAnimationName in Animations) && !isLayoutTransition) {
-    element.style.visibility = 'initial';
+    if (props.entering) {
+      element.style.visibility = 'initial';
+    }
 
     console.warn(
       "[Reanimated] Couldn't load entering/exiting animation. Current version supports only predefined animations with modifiers: duration, delay, easing, randomizeDelay."
