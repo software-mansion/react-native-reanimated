@@ -36,7 +36,7 @@ export default function ArticleProgressExample() {
       0
     );
 
-    return { width };
+    return { width: Number.isNaN(width) ? 0 : width };
   }, []);
 
   return (
