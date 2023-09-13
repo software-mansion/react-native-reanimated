@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-var */
+'use strict';
 import type {
   StyleProps,
   MeasuredDimensions,

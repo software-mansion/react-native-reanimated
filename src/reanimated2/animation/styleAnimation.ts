@@ -1,3 +1,4 @@
+'use strict';
 import { defineAnimation } from './util';
 import type {
   Timestamp,
