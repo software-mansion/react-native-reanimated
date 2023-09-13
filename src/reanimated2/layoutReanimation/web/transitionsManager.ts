@@ -5,9 +5,9 @@ import {
   generateRandomKeyframeName,
   handleWebAnimation,
   setElementAnimation,
-} from './webAnimations';
+} from './animationsManager';
 
-import type { AnimationConfig } from './webAnimations';
+import type { AnimationConfig } from './animationsManager';
 import { LayoutAnimationType } from '..';
 import { parseAnimationObjectToKeyframe } from './animationParser';
 

@@ -10,8 +10,8 @@ import type {
 } from '..';
 import { LayoutAnimationType } from '..';
 import type { AnimatedComponentProps } from '../../../createAnimatedComponent/utils';
-import type { TransitionData } from './webTransitions';
-import { handleLayoutTransition } from './webTransitions';
+import type { TransitionData } from './transitionsManager';
+import { handleLayoutTransition } from './transitionsManager';
 import type { StyleProps } from '../../commonTypes';
 
 export const WEB_ANIMATIONS_ID = 'ReanimatedWebAnimationsStyle';
@@ -141,15 +141,7 @@ export function createAnimationWithExistingTransform(
 }
 
 export function generateRandomKeyframeName() {
-  const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const length = 50;
-  let keyframeName = '';
-
-  for (let i = 0; i < length; i++) {
-    keyframeName += characters[Math.floor(Math.random() * characters.length)];
-  }
-
-  return keyframeName;
+  return `REA${Date.now()}${Math.round(Math.random() * 1000)}`;
 }
 
 export function getEasingFromConfig(config: ConfigType): string {
