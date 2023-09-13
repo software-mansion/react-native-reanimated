@@ -1,10 +1,12 @@
-import { useEffect, useRef } from 'react';
-import { BasicWorkletFunction, WorkletFunction } from '../commonTypes';
+'use strict';
+import { useEffect } from 'react';
+import type { __BasicWorkletFunction, __WorkletFunction } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
-import { DependencyList } from './commonTypes';
+import type { DependencyList } from './commonTypes';
+import { useSharedValue } from './useSharedValue';
 import { shouldBeUseWeb } from '../PlatformChecker';
 
-export interface AnimatedReactionWorkletFunction<T> extends WorkletFunction {
+export interface AnimatedReactionWorkletFunction<T> extends __WorkletFunction {
   (prepared: T, previous: T | null): void;
 }
 /**
@@ -14,13 +16,13 @@ export interface AnimatedReactionWorkletFunction<T> extends WorkletFunction {
  * the second one can modify any shared values but those which are mentioned in the first worklet. Beware of that, because this may result in endless loop and high cpu usage.
  */
 export function useAnimatedReaction<T>(
-  prepare: BasicWorkletFunction<T>,
+  prepare: __BasicWorkletFunction<T>,
   react: AnimatedReactionWorkletFunction<T>,
-  dependencies: DependencyList
+  dependencies?: DependencyList
 ): void {
-  const previous = useRef({ value: null as T | null }).current;
+  const previous = useSharedValue<T | null>(null, true);
 
-  let inputs = Object.values(prepare._closure ?? {});
+  let inputs = Object.values(prepare.__closure ?? {});
 
   if (shouldBeUseWeb()) {
     if (!inputs.length && dependencies?.length) {
@@ -31,8 +33,8 @@ export function useAnimatedReaction<T>(
 
   if (dependencies === undefined) {
     dependencies = [
-      ...Object.values(prepare._closure ?? {}),
-      ...Object.values(react._closure ?? {}),
+      ...Object.values(prepare.__closure ?? {}),
+      ...Object.values(react.__closure ?? {}),
       prepare.__workletHash,
       react.__workletHash,
     ];

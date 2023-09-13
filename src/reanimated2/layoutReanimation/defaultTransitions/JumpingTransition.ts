@@ -1,4 +1,5 @@
-import {
+'use strict';
+import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
 } from '../animationBuilder/commonTypes';
@@ -9,8 +10,10 @@ export class JumpingTransition
   extends BaseAnimationBuilder
   implements ILayoutAnimationBuilder
 {
-  static createInstance(): JumpingTransition {
-    return new JumpingTransition();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new JumpingTransition() as InstanceType<T>;
   }
 
   build = (): LayoutAnimationFunction => {

@@ -9,12 +9,12 @@ sidebar_label: Event handling
 This syntax allows for providing some post-processing for the event data that does not fit well as a dependency of other nodes we connect to `Animated.View` component props. [See example](https://github.com/software-mansion/react-native-reanimated/blob/main/Example/reanimated1/PanRotateAndZoom/index.js#L25)
 
 ```js
-import { event, set } from 'react-native-reanimated'
+import { event, set } from 'react-native-reanimated';
 
 this.onGestureEvent = event([
   {
     nativeEvent: {
-      translationX: x => set(this._x, x),
+      translationX: (x) => set(this._x, x),
     },
   },
 ]);

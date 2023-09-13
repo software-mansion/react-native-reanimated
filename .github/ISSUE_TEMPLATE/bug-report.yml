@@ -104,11 +104,11 @@ body:
     id: workflow
     attributes:
       label: Workflow
-      description: How your application is managed? Not sure? Read [this part](https://docs.expo.dev/introduction/managed-vs-bare/) of Expo documentation
+      description: How is your application managed?
       options:
-        - React Native (without Expo)
-        - Expo bare workflow
-        - Expo managed workflow
+        - React Native 
+        - Expo Go
+        - Expo Dev Client
 
   - type: dropdown
     id: architecture

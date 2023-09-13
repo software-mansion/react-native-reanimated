@@ -1,26 +1,37 @@
-import { defineAnimation } from './util';
-import {
+'use strict';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
+import type {
   Animation,
   AnimationCallback,
   AnimatableValue,
   Timestamp,
 } from '../commonTypes';
-import {
+import type {
   SpringConfig,
-  initialCalculations,
-  calcuateNewMassToMatchDuration,
   SpringAnimation,
   InnerSpringAnimation,
+  SpringConfigInner,
+} from './springUtils';
+import {
+  initialCalculations,
+  calculateNewMassToMatchDuration,
   underDampedSpringCalculations,
   criticallyDampedSpringCalculations,
   isAnimationTerminatingCalculation,
 } from './springUtils';
 
-export function withSpring(
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+type withSpringType = <T extends AnimatableValue>(
+  toValue: T,
+  userConfig?: SpringConfig,
+  callback?: AnimationCallback
+) => T;
+
+export const withSpring = ((
   toValue: AnimatableValue,
   userConfig?: SpringConfig,
   callback?: AnimationCallback
-): Animation<SpringAnimation> {
+): Animation<SpringAnimation> => {
   'worklet';
 
   return defineAnimation<SpringAnimation>(toValue, () => {
@@ -35,15 +46,37 @@ export function withSpring(
       velocity: 0,
       duration: 2000,
       dampingRatio: 0.5,
+      reduceMotion: undefined,
     } as const;
 
-    const config = {
+    const config: Record<keyof SpringConfig, any> & SpringConfigInner = {
       ...defaultConfig,
       ...userConfig,
-      useDuration: userConfig?.duration || userConfig?.dampingRatio,
+      useDuration: !!(userConfig?.duration || userConfig?.dampingRatio),
+      configIsInvalid: false,
     };
 
-    function spring(animation: InnerSpringAnimation, now: Timestamp): boolean {
+    if (
+      [
+        config.stiffness,
+        config.damping,
+        config.duration,
+        config.dampingRatio,
+        config.restDisplacementThreshold,
+        config.restSpeedThreshold,
+      ].some((x) => x <= 0) ||
+      config.mass === 0
+    ) {
+      config.configIsInvalid = true;
+      console.warn(
+        "You have provided invalid spring animation configuration! \n Value of stiffness, damping, duration and damping ratio must be greater than zero, and mass can't equal zero."
+      );
+    }
+
+    function springOnFrame(
+      animation: InnerSpringAnimation,
+      now: Timestamp
+    ): boolean {
       const { toValue, startTimestamp, current } = animation;
 
       const timeFromStart = now - startTimestamp;
@@ -56,6 +89,15 @@ export function withSpring(
         return true;
       }
 
+      if (config.configIsInvalid) {
+        // We don't animate wrong config
+        if (config.useDuration) return false;
+        else {
+          animation.current = toValue;
+          animation.lastTimestamp = 0;
+          return true;
+        }
+      }
       const { lastTimestamp, velocity } = animation;
 
       const deltaTime = Math.min(now - lastTimestamp, 64);
@@ -84,26 +126,23 @@ export function withSpring(
               t,
             });
 
-      if (!config.useDuration) {
-        const { isOvershooting, isVelocity, isDisplacement } =
-          isAnimationTerminatingCalculation(animation, config);
+      animation.current = newPosition;
+      animation.velocity = newVelocity;
 
-        animation.current = newPosition;
-        animation.velocity = newVelocity;
+      const { isOvershooting, isVelocity, isDisplacement } =
+        isAnimationTerminatingCalculation(animation, config);
 
-        const springIsNotInMove =
-          isOvershooting || (isVelocity && isDisplacement);
+      const springIsNotInMove =
+        isOvershooting || (isVelocity && isDisplacement);
 
-        if (springIsNotInMove) {
-          if (config.stiffness !== 0) {
-            animation.velocity = 0;
-            animation.current = toValue;
-          }
-          // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
-          animation.lastTimestamp = 0;
-          return true;
-        }
+      if (!config.useDuration && springIsNotInMove) {
+        animation.velocity = 0;
+        animation.current = toValue;
+        // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
+        animation.lastTimestamp = 0;
+        return true;
       }
+
       return false;
     }
 
@@ -112,6 +151,8 @@ export function withSpring(
       animation: SpringAnimation
     ) {
       return (
+        previousAnimation?.lastTimestamp &&
+        previousAnimation?.startTimestamp &&
         previousAnimation?.toValue === animation.toValue &&
         previousAnimation?.duration === animation.duration &&
         previousAnimation?.dampingRatio === animation.dampingRatio
@@ -135,22 +176,25 @@ export function withSpring(
       const x0 = triggeredTwice
         ? // If animation is triggered twice we want to continue the previous animation
           // form the previous starting point
-          (previousAnimation?.startValue as number)
+          previousAnimation?.startValue
         : Number(animation.toValue) - value;
 
-      animation.velocity = previousAnimation
-        ? triggeredTwice
-          ? previousAnimation.velocity
-          : previousAnimation.velocity + config.velocity
-        : config.velocity;
+      if (previousAnimation) {
+        animation.velocity =
+          (triggeredTwice
+            ? previousAnimation?.velocity
+            : previousAnimation?.velocity + config.velocity) || 0;
+      } else {
+        animation.velocity = config.velocity || 0;
+      }
 
       if (triggeredTwice) {
         animation.zeta = previousAnimation?.zeta || 0;
         animation.omega0 = previousAnimation?.omega0 || 0;
         animation.omega1 = previousAnimation?.omega1 || 0;
       } else {
-        if (duration) {
-          const acutalDuration = triggeredTwice
+        if (config.useDuration) {
+          const actualDuration = triggeredTwice
             ? // If animation is triggered twice we want to continue the previous animation
               // so we need to include the time that already elapsed
               duration -
@@ -158,8 +202,12 @@ export function withSpring(
                 (previousAnimation?.startTimestamp || 0))
             : duration;
 
-          config.duration = acutalDuration;
-          mass = calcuateNewMassToMatchDuration(x0, config, animation.velocity);
+          config.duration = actualDuration;
+          mass = calculateNewMassToMatchDuration(
+            x0 as number,
+            config,
+            animation.velocity
+          );
         }
 
         const { zeta, omega0, omega1 } = initialCalculations(mass, config);
@@ -168,14 +216,15 @@ export function withSpring(
         animation.omega1 = omega1;
       }
 
-      animation.lastTimestamp = now;
+      animation.lastTimestamp = previousAnimation?.lastTimestamp || now;
+
       animation.startTimestamp = triggeredTwice
         ? previousAnimation?.startTimestamp || now
         : now;
     }
 
     return {
-      onFrame: spring,
+      onFrame: springOnFrame,
       onStart,
       toValue,
       velocity: config.velocity || 0,
@@ -187,6 +236,7 @@ export function withSpring(
       zeta: 0,
       omega0: 0,
       omega1: 0,
+      reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
     } as SpringAnimation;
   });
-}
+}) as withSpringType;

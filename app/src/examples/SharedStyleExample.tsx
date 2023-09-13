@@ -27,18 +27,16 @@ export default function SharedStyleExample() {
   });
 
   const scopeObject = (
-    <Animated.View
-      style={[{ backgroundColor: 'black' }, styles.block, style]}
-    />
+    <Animated.View style={[styles.black, styles.block, style]} />
   );
 
   const renderItems = () => {
-    const output = [];
+    const output: JSX.Element[] = [];
     for (let i = 0; i < blueCounter; i++) {
       output.push(
         <Animated.View
           key={i + 'a'}
-          style={[{ backgroundColor: 'blue' }, styles.block, style]}
+          style={[styles.blue, styles.block, style]}
         />
       );
     }
@@ -46,11 +44,7 @@ export default function SharedStyleExample() {
   };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        flexDirection: 'column',
-      }}>
+    <View style={styles.container}>
       <Button
         title="animate"
         onPress={() => {
@@ -71,7 +65,7 @@ export default function SharedStyleExample() {
             ...itemList,
             <Animated.View
               key={greenCounter + 'b'}
-              style={[{ backgroundColor: 'green' }, styles.block, style]}
+              style={[styles.green, styles.block, style]}
             />,
           ]);
         }}
@@ -82,13 +76,9 @@ export default function SharedStyleExample() {
           setToggleState(!toggleState);
         }}
       />
-      <Animated.View
-        style={[{ backgroundColor: 'orange' }, styles.block, style]}
-      />
+      <Animated.View style={[styles.orange, styles.block, style]} />
       {toggleState && (
-        <Animated.View
-          style={[{ backgroundColor: 'black' }, styles.block, style]}
-        />
+        <Animated.View style={[styles.black, styles.block, style]} />
       )}
       {toggleState && scopeObject}
       {renderItems()}
@@ -98,9 +88,17 @@ export default function SharedStyleExample() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexDirection: 'column',
+  },
   block: {
     width: 100,
     height: 3,
     margin: 1,
   },
+  black: { backgroundColor: 'black' },
+  orange: { backgroundColor: 'orange' },
+  green: { backgroundColor: 'green' },
+  blue: { backgroundColor: 'blue' },
 });

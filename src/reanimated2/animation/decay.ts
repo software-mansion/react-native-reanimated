@@ -1,25 +1,32 @@
-import { defineAnimation } from './util';
-import {
+'use strict';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
+import type {
   Animation,
   AnimationCallback,
   AnimationObject,
   AnimatableValue,
   Timestamp,
+  ReduceMotion,
 } from '../commonTypes';
-import { Platform } from 'react-native';
+import { isWeb } from '../PlatformChecker';
 
 interface DecayConfig {
   deceleration?: number;
   velocityFactor?: number;
+  rubberBandEffect?: boolean;
   clamp?: number[];
   velocity?: number;
+  reduceMotion?: ReduceMotion;
 }
+
+export type WithDecayConfig = DecayConfig;
 
 interface DefaultDecayConfig {
   deceleration: number;
   velocityFactor: number;
   clamp?: number[];
   velocity: number;
+  reduceMotion?: ReduceMotion;
   rubberBandEffect?: boolean;
   rubberBandFactor: number;
 }
@@ -32,13 +39,21 @@ export interface DecayAnimation extends Animation<DecayAnimation> {
   current: AnimatableValue;
 }
 
-export interface InnerDecayAnimation
+interface InnerDecayAnimation
   extends Omit<DecayAnimation, 'current'>,
     AnimationObject {
   current: number;
 }
 
-export function withDecay(
+const IS_WEB = isWeb();
+
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+type withDecayType = (
+  userConfig: DecayConfig,
+  callback?: AnimationCallback
+) => number;
+
+export const withDecay = function (
   userConfig: DecayConfig,
   callback?: AnimationCallback
 ): Animation<DecayAnimation> {
@@ -59,33 +74,26 @@ export function withDecay(
       );
     }
 
-    const VELOCITY_EPS = Platform.OS !== 'web' ? 1 : 1 / 20;
+    const VELOCITY_EPS = IS_WEB ? 1 / 20 : 1;
+    const DERIVATIVE_EPS = 0.1;
     const SLOPE_FACTOR = 0.1;
 
     let decay: (animation: InnerDecayAnimation, now: number) => boolean;
 
     if (config.rubberBandEffect) {
       decay = (animation: InnerDecayAnimation, now: number): boolean => {
-        const {
-          lastTimestamp,
-          startTimestamp,
-          current,
-          initialVelocity,
-          velocity,
-        } = animation;
+        const { lastTimestamp, startTimestamp, current, velocity } = animation;
 
         const deltaTime = Math.min(now - lastTimestamp, 64);
-        const clampIndex = initialVelocity > 0 ? 1 : 0;
+        const clampIndex =
+          Math.abs(current - config.clamp![0]) <
+          Math.abs(current - config.clamp![1])
+            ? 0
+            : 1;
+
         let derivative = 0;
         if (current < config.clamp![0] || current > config.clamp![1]) {
           derivative = current - config.clamp![clampIndex];
-        }
-
-        if (derivative !== 0) {
-          animation.springActive = true;
-        } else if (derivative === 0 && animation.springActive) {
-          animation.current = config.clamp![clampIndex];
-          return true;
         }
 
         const v =
@@ -94,6 +102,15 @@ export function withDecay(
               -(1 - config.deceleration) * (now - startTimestamp) * SLOPE_FACTOR
             ) -
           derivative * config.rubberBandFactor;
+
+        if (Math.abs(derivative) > DERIVATIVE_EPS) {
+          animation.springActive = true;
+        } else if (animation.springActive) {
+          animation.current = config.clamp![clampIndex];
+          return true;
+        } else if (Math.abs(v) < VELOCITY_EPS) {
+          return true;
+        }
 
         animation.current =
           current + (v * config.velocityFactor * deltaTime) / 1000;
@@ -142,24 +159,24 @@ export function withDecay(
     function validateConfig(): void {
       if (config.clamp) {
         if (!Array.isArray(config.clamp)) {
-          throw Error(
-            `config.clamp must be an array but is ${typeof config.clamp}`
+          throw new Error(
+            `[Reanimated] \`config.clamp\` must be an array but is ${typeof config.clamp}.`
           );
         }
         if (config.clamp.length !== 2) {
-          throw Error(
-            `clamp array must contain 2 items but is given ${config.clamp.length}`
+          throw new Error(
+            `[Reanimated] \`clamp array\` must contain 2 items but is given ${config.clamp.length}.`
           );
         }
       }
       if (config.velocityFactor <= 0) {
-        throw Error(
-          `config.velocityFactor must be greather then 0 but is ${config.velocityFactor}`
+        throw new Error(
+          `[Reanimated] \`config.velocityFactor\` must be greather then 0 but is ${config.velocityFactor}.`
         );
       }
       if (config.rubberBandEffect && !config.clamp) {
-        throw Error(
-          'You need to set `clamp` property when using `rubberBandEffect`.'
+        throw new Error(
+          '[Reanimated] You need to set `clamp` property when using `rubberBandEffect`.'
         );
       }
     }
@@ -174,6 +191,14 @@ export function withDecay(
       animation.startTimestamp = now;
       animation.initialVelocity = config.velocity;
       validateConfig();
+
+      if (animation.reduceMotion && config.clamp) {
+        if (value < config.clamp[0]) {
+          animation.current = config.clamp[0];
+        } else if (value > config.clamp[1]) {
+          animation.current = config.clamp[1];
+        }
+      }
     }
 
     return {
@@ -185,6 +210,7 @@ export function withDecay(
       current: 0,
       lastTimestamp: 0,
       startTimestamp: 0,
+      reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
     } as DecayAnimation;
   });
-}
+} as unknown as withDecayType;

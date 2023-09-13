@@ -1,14 +1,13 @@
-import React, { ForwardedRef, forwardRef } from 'react';
-import {
-  FlatList,
-  FlatListProps,
-  LayoutChangeEvent,
-  StyleSheet,
-} from 'react-native';
-import ReanimatedView from './View';
-import createAnimatedComponent from '../../createAnimatedComponent';
-import { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
-import { StyleProps } from '../commonTypes';
+'use strict';
+import type { ForwardedRef } from 'react';
+import React, { Component, forwardRef } from 'react';
+import type { FlatListProps, LayoutChangeEvent } from 'react-native';
+import { FlatList, StyleSheet } from 'react-native';
+import { AnimatedView } from './View';
+import createAnimatedComponent from '../../createAnimatedComponent/createAnimatedComponent';
+import type { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
+import type { StyleProps } from '../commonTypes';
+import type { AnimateProps } from '../helperTypes';
 
 const AnimatedFlatList = createAnimatedComponent(FlatList as any) as any;
 
@@ -26,25 +25,37 @@ const createCellRenderer = (
 ) => {
   const cellRenderer = (props: AnimatedFlatListProps) => {
     return (
-      <ReanimatedView
-        layout={itemLayoutAnimation}
+      <AnimatedView
+        // TODO TYPESCRIPT This is temporary cast is to get rid of .d.ts file.
+        layout={itemLayoutAnimation as any}
         onLayout={props.onLayout}
         style={cellStyle}>
         {props.children}
-      </ReanimatedView>
+      </AnimatedView>
     );
   };
 
   return cellRenderer;
 };
 
-export interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
+interface ReanimatedFlatListPropsWithLayout<T> extends FlatListProps<T> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
 }
 
-type ReanimatedFlatListFC<T = any> = React.FC<ReanimatedFlatListProps<T>>;
+export type FlatListPropsWithLayout<T> = ReanimatedFlatListPropsWithLayout<T>;
 
-const ReanimatedFlatlist: ReanimatedFlatListFC = forwardRef(
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+declare class ReanimatedFlatListClass<T> extends Component<
+  AnimateProps<ReanimatedFlatListPropsWithLayout<T>>
+> {
+  getNode(): FlatList;
+}
+
+interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
+  itemLayoutAnimation?: ILayoutAnimationBuilder;
+}
+
+export const ReanimatedFlatList = forwardRef(
   (props: ReanimatedFlatListProps<any>, ref: ForwardedRef<FlatList>) => {
     const { itemLayoutAnimation, ...restProps } = props;
 
@@ -53,6 +64,15 @@ const ReanimatedFlatlist: ReanimatedFlatListFC = forwardRef(
         ? styles.horizontallyInverted
         : styles.verticallyInverted
       : undefined;
+
+    // Set default scrollEventThrottle, because user expects
+    // to have continuous scroll events and
+    // react-native defaults it to 50 for FlatLists.
+    // We set it to 1 so we have peace until
+    // there are 960 fps screens.
+    if (!('scrollEventThrottle' in restProps)) {
+      restProps.scrollEventThrottle = 1;
+    }
 
     const cellRenderer = React.useMemo(
       () => createCellRenderer(itemLayoutAnimation, cellStyle),
@@ -67,11 +87,12 @@ const ReanimatedFlatlist: ReanimatedFlatListFC = forwardRef(
       />
     );
   }
-);
+) as unknown as ReanimatedFlatList<any>;
 
 const styles = StyleSheet.create({
   verticallyInverted: { transform: [{ scaleY: -1 }] },
   horizontallyInverted: { transform: [{ scaleX: -1 }] },
 });
 
-export default ReanimatedFlatlist;
+export type ReanimatedFlatList<T> = typeof ReanimatedFlatListClass<T> &
+  FlatList<T>;

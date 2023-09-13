@@ -1,56 +1,62 @@
 import Animated, {
   useAnimatedStyle,
-  useDerivedValue,
+  useReducedMotion,
   useSharedValue,
+  withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { Button, StyleSheet, View } from 'react-native';
-
-import React from 'react';
+import React, { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 const colors = [
   ['lime', 'green'],
   ['blue', 'cyan'],
 ];
 
+function useLoop() {
+  const sv = useSharedValue(0);
+
+  useEffect(() => {
+    sv.value = 0;
+    sv.value = withRepeat(withTiming(1, { duration: 1000 }), -1, true);
+  }, [sv]);
+
+  return sv;
+}
+
+const N = 12;
+
 export default function ChessboardExample() {
   const [state, setState] = React.useState(0);
 
-  const ref = React.useRef(0);
+  const sv = useLoop();
 
-  const sv = useSharedValue(0);
+  const shouldReduceMotion = useReducedMotion();
 
-  const size = useDerivedValue(() => {
-    return 10 + sv.value * 20;
-  });
+  useEffect(() => {
+    if (shouldReduceMotion) {
+      return;
+    }
+    const id = setInterval(() => {
+      setState((s) => 1 - s);
+    }, 10);
+    return () => clearInterval(id);
+  }, [shouldReduceMotion]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      width: size.value,
-      height: size.value,
+      width: 10 + sv.value * 20,
+      height: 10 + sv.value * 20,
     };
   }, []);
 
-  const handleAnimateSize = () => {
-    ref.current = 1 - ref.current;
-    sv.value = withTiming(ref.current, { duration: 2000 });
-  };
-
-  const handleToggleColors = () => {
-    setState((s) => 1 - s);
-  };
-
   return (
-    <>
-      <View style={styles.buttons}>
-        <Button onPress={handleAnimateSize} title="Animate size" />
-        <Button onPress={handleToggleColors} title="Toggle colors" />
-      </View>
+    <View style={styles.workaround} collapsable={false}>
       <View style={styles.chessboard}>
         <View style={styles.border}>
-          {[...Array(12).keys()].map((i) => (
+          {[...Array(N).keys()].map((i) => (
             <View style={styles.row} key={i}>
-              {[...Array(12).keys()].map((j) => (
+              {[...Array(N).keys()].map((j) => (
                 <Animated.View
                   key={j}
                   style={[
@@ -63,13 +69,14 @@ export default function ChessboardExample() {
           ))}
         </View>
       </View>
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  buttons: {
-    marginVertical: 50,
+  workaround: {
+    height: 400,
+    // prevents calling _state->updateState from RNScreens after each change because of view flattening
   },
   chessboard: {
     alignItems: 'flex-start',

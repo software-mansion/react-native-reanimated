@@ -1,8 +1,10 @@
-import { RefObject, useEffect, useRef } from 'react';
+'use strict';
+import type { RefObject } from 'react';
+import { useEffect, useRef } from 'react';
 
-import type Animated from 'react-native-reanimated';
-import { ScrollEvent } from './useAnimatedScrollHandler';
-import { SharedValue } from '../commonTypes';
+import type Animated from '../../index'; // TODO: fixme?
+import type { ScrollEvent } from './useAnimatedScrollHandler';
+import type { SharedValue } from '../commonTypes';
 import { findNodeHandle } from 'react-native';
 import { useEvent } from './utils';
 import { useSharedValue } from './useSharedValue';
@@ -33,6 +35,8 @@ export function useScrollViewOffset(
 
   useEffect(() => {
     const viewTag = findNodeHandle(aref.current);
+    // @ts-ignore TODO TYPESCRIPT This happens because of
+    // how we had to type `useEvent` to get rid of .d.ts file.
     event.current?.registerForEvents(viewTag as number);
   }, [aref.current]);
 

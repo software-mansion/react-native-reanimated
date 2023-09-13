@@ -1,4 +1,10 @@
-import { Animation, AnimatableValue, Timestamp } from '../commonTypes';
+'use strict';
+import type {
+  Animation,
+  AnimatableValue,
+  Timestamp,
+  ReduceMotion,
+} from '../commonTypes';
 
 export type SpringConfig = {
   stiffness?: number;
@@ -6,6 +12,7 @@ export type SpringConfig = {
   restDisplacementThreshold?: number;
   restSpeedThreshold?: number;
   velocity?: number;
+  reduceMotion?: ReduceMotion;
 } & (
   | {
       mass?: number;
@@ -20,6 +27,13 @@ export type SpringConfig = {
       dampingRatio?: number;
     }
 );
+
+export type WithSpringConfig = SpringConfig;
+
+export interface SpringConfigInner {
+  useDuration: boolean;
+  configIsInvalid: boolean;
+}
 
 export interface SpringAnimation extends Animation<SpringAnimation> {
   current: AnimatableValue;
@@ -69,13 +83,18 @@ function bisectRoot({
 
 export function initialCalculations(
   mass = 0,
-  config: Record<keyof SpringConfig | 'useDuration', any>
+  config: Record<keyof SpringConfig, any> & SpringConfigInner
 ): {
   zeta: number;
   omega0: number;
   omega1: number;
 } {
   'worklet';
+
+  if (config.configIsInvalid) {
+    return { zeta: 0, omega0: 0, omega1: 0 };
+  }
+
   if (config.useDuration) {
     const { stiffness: k, dampingRatio: zeta } = config;
 
@@ -97,19 +116,23 @@ export function initialCalculations(
   }
 }
 
-export function calcuateNewMassToMatchDuration(
+export function calculateNewMassToMatchDuration(
   x0: number,
-  config: Record<keyof SpringConfig, any>,
+  config: Record<keyof SpringConfig, any> & SpringConfigInner,
   v0: number
 ) {
   'worklet';
+  if (config.configIsInvalid) {
+    return 0;
+  }
+
   /** Use this formula: https://phys.libretexts.org/Bookshelves/University_Physics/Book%3A_University_Physics_(OpenStax)/Book%3A_University_Physics_I_-_Mechanics_Sound_Oscillations_and_Waves_(OpenStax)/15%3A_Oscillations/15.06%3A_Damped_Oscillations
-       * to find the asympotote and esitmate the damping that gives us the expected duration 
+       * to find the asymptote and estimate the damping that gives us the expected duration 
 
             ⎛ ⎛ c⎞           ⎞           
             ⎜-⎜──⎟ ⋅ duration⎟           
             ⎝ ⎝2m⎠           ⎠           
-       A ⋅ e                   = treshold
+       A ⋅ e                   = threshold
 
  
       Amplitude calculated using "Conservation of energy"
@@ -223,15 +246,13 @@ export function isAnimationTerminatingCalculation(
   'worklet';
   const { toValue, velocity, startValue, current } = animation;
 
-  const isOvershooting =
-    config.overshootClamping && config.stiffness !== 0
-      ? (current > toValue && startValue < toValue) ||
-        (current < toValue && startValue > toValue)
-      : false;
+  const isOvershooting = config.overshootClamping
+    ? (current > toValue && startValue < toValue) ||
+      (current < toValue && startValue > toValue)
+    : false;
 
   const isVelocity = Math.abs(velocity) < config.restSpeedThreshold;
   const isDisplacement =
-    config.stiffness === 0 ||
     Math.abs(toValue - current) < config.restDisplacementThreshold;
 
   return { isOvershooting, isVelocity, isDisplacement };

@@ -1,4 +1,3 @@
-/* global _WORKLET */
 import React from 'react';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import Animated, {
@@ -14,10 +13,6 @@ export default function ArticleProgressExample() {
   const scrollHandler = useScrollViewOffset(scrollViewRef);
 
   const progressBarAnimatedStyle = useAnimatedStyle(() => {
-    if (!_WORKLET) {
-      return { width: 0 };
-    }
-
     const measuredText = measure(textRef);
     if (measuredText === null) {
       return { width: 0 };
@@ -47,10 +42,7 @@ export default function ArticleProgressExample() {
   return (
     <SafeAreaView>
       <Animated.View style={[styles.progressBar, progressBarAnimatedStyle]} />
-      <Animated.ScrollView
-        ref={scrollViewRef}
-        scrollEventThrottle={16}
-        style={styles.articleScrollView}>
+      <Animated.ScrollView ref={scrollViewRef} style={styles.articleScrollView}>
         <Animated.Text ref={textRef}>{loremIpsum}</Animated.Text>
       </Animated.ScrollView>
     </SafeAreaView>

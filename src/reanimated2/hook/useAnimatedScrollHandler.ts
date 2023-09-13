@@ -1,12 +1,13 @@
-import { RefObject } from 'react';
-import { NativeScrollEvent } from 'react-native';
-import { Context, NativeEvent, WorkletFunction } from '../commonTypes';
-import WorkletEventHandler from '../WorkletEventHandler';
-import { DependencyList } from './commonTypes';
+'use strict';
+import type { RefObject } from 'react';
+import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import type { __Context, NativeEvent, __WorkletFunction } from '../commonTypes';
+import type WorkletEventHandler from '../WorkletEventHandler';
+import type { DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
 
-export interface ScrollHandler<TContext extends Context>
-  extends WorkletFunction {
+export interface ScrollHandler<TContext extends __Context>
+  extends __WorkletFunction {
   (event: NativeScrollEvent, context?: TContext): void;
 }
 
@@ -15,7 +16,7 @@ export interface ScrollEvent
     NativeEvent<ScrollEvent> {
   eventName: string;
 }
-export interface ScrollHandlers<TContext extends Context> {
+export interface ScrollHandlers<TContext extends __Context> {
   [key: string]: ScrollHandler<TContext> | undefined;
   onScroll?: ScrollHandler<TContext>;
   onBeginDrag?: ScrollHandler<TContext>;
@@ -24,7 +25,18 @@ export interface ScrollHandlers<TContext extends Context> {
   onMomentumEnd?: ScrollHandler<TContext>;
 }
 
-export function useAnimatedScrollHandler<TContext extends Context>(
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+type OnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+export type useAnimatedScrollHandler = <
+  TContext extends __Context = Record<string, never>
+>(
+  handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
+  deps?: DependencyList
+) => OnScroll;
+
+export const useAnimatedScrollHandler = function <TContext extends __Context>(
   handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
   dependencies?: DependencyList
 ): RefObject<WorkletEventHandler<ScrollEvent>> {
@@ -81,5 +93,7 @@ export function useAnimatedScrollHandler<TContext extends Context>(
     },
     subscribeForEvents,
     doDependenciesDiffer
-  );
-}
+    // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
+  ) as any;
+  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
+} as unknown as useAnimatedScrollHandler;

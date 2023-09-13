@@ -40,7 +40,7 @@ const BIG_BALL_SIZE = 200;
 const SMALL_BALL_SIZE = 50;
 const INNER_BALL_SIZE = BIG_BALL_SIZE - SMALL_BALL_SIZE * 2;
 
-export default function IPodExample(): React.ReactElement {
+export default function IPodExample() {
   const position = useSharedValue(0);
   const animatedRef = useAnimatedRef<Animated.ScrollView>();
 
@@ -134,7 +134,6 @@ export default function IPodExample(): React.ReactElement {
         ref={animatedRef}
         horizontal={true}
         style={styles.scroll}
-        scrollEventThrottle={1}
         showsHorizontalScrollIndicator={false}
         onScroll={scrollHandler}>
         {data.map(({ artist, song }, i) => {
@@ -164,7 +163,7 @@ export default function IPodExample(): React.ReactElement {
           return (
             <Animated.View key={i} style={[styles.item, uas]}>
               <View style={styles.cover}>
-                <Text style={{ fontSize: 80, textAlign: 'center' }}>♪</Text>
+                <Text style={styles.noteText}>♪</Text>
               </View>
               <Text style={styles.label}>{artist}</Text>
               <Text style={[styles.label, styles.songLabel]}>{song}</Text>
@@ -209,13 +208,6 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     backgroundColor: 'white',
   },
-  ball: {
-    width: SMALL_BALL_SIZE,
-    height: SMALL_BALL_SIZE,
-    backgroundColor: 'orange',
-    borderRadius: SMALL_BALL_SIZE,
-    position: 'absolute',
-  },
   innerBall: {
     position: 'absolute',
     width: INNER_BALL_SIZE,
@@ -239,5 +231,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     margin: 20,
     marginLeft: ITEM_SIZE.size / 2 - 100 / 2,
+  },
+  noteText: {
+    fontSize: 80,
+    textAlign: 'center',
   },
 });

@@ -1,3 +1,4 @@
+'use strict';
 export declare class WebSensor {
   start: () => void;
   stop: () => void;
@@ -30,5 +31,6 @@ declare global {
     Magnetometer: Constructable<WebSensor>;
     AbsoluteOrientationSensor: Constructable<WebSensor>;
     Sensor: Constructable<WebSensor>;
+    opera?: string;
   }
 }

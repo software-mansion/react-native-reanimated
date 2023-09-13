@@ -6,7 +6,7 @@ sidebar_label: useDerivedValue
 
 This hook allows for creating shared value reference that can change in response to updating of one or more other shared values.
 
-The hook returns the same type of a shared value reference instance as [`useSharedValue`](useSharedValue) hook.
+The hook returns the same type of a shared value reference instance as [`useSharedValue`](/docs/2.x/api/hooks/useSharedValue) hook.
 
 ### Arguments
 
@@ -31,8 +31,8 @@ const App = () => {
     return sv.value * state;
   }, dependencies);
   //...
-  return <></>
-}
+  return <></>;
+};
 ```
 
 `dependencies` here may be:

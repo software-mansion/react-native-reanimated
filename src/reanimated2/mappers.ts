@@ -1,11 +1,12 @@
-import { SharedValue } from './commonTypes';
+'use strict';
+import type { SharedValue } from './commonTypes';
 import { isJest } from './PlatformChecker';
 import { runOnUI } from './threads';
 import { isSharedValue } from './utils';
 
 const IS_JEST = isJest();
 
-export type Mapper = {
+type Mapper = {
   id: number;
   dirty: boolean;
   worklet: () => void;
@@ -13,7 +14,7 @@ export type Mapper = {
   outputs?: SharedValue<any>[];
 };
 
-export function createMapperRegistry() {
+function createMapperRegistry() {
   'worklet';
   const mappers = new Map();
   let sortedMappers: Mapper[] = [];

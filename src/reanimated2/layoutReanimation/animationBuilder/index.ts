@@ -1,7 +1,8 @@
+'use strict';
 export { BaseAnimationBuilder } from './BaseAnimationBuilder';
 export { ComplexAnimationBuilder } from './ComplexAnimationBuilder';
 export { Keyframe } from './Keyframe';
-export { LayoutAnimationType } from './commonTypes';
+export { LayoutAnimationType, SharedTransitionType } from './commonTypes';
 export type {
   LayoutAnimation,
   AnimationFunction,

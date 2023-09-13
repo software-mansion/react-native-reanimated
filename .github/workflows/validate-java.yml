@@ -11,6 +11,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - '.github/workflows/validate-java.yml'
+      - 'android/src/main/java/**'
+      - 'android/build.gradle'
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -25,6 +29,9 @@ jobs:
         with:
           node-version: 16
           cache: 'yarn'
+      - name: Clear annotations
+        run: scripts/clear-annotations.sh
+
       - name: Install node dependencies
         run: yarn
       - name: Lint

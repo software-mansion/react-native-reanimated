@@ -1,7 +1,8 @@
+'use strict';
 import { useRef } from 'react';
 import { makeMutable } from './core';
-import { SharedValue } from './commonTypes';
-import { Descriptor } from './hook/commonTypes';
+import type { SharedValue } from './commonTypes';
+import type { Descriptor } from './hook/commonTypes';
 
 export interface ViewRefSet<T> {
   items: Set<T>;

@@ -1,5 +1,7 @@
+'use strict';
 import { runOnUI } from '../core';
-import { FrameInfo, prepareUIRegistry } from './FrameCallbackRegistryUI';
+import type { FrameInfo } from './FrameCallbackRegistryUI';
+import { prepareUIRegistry } from './FrameCallbackRegistryUI';
 
 export default class FrameCallbackRegistryJS {
   private nextCallbackId = 0;
