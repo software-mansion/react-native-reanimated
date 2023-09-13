@@ -1,3 +1,4 @@
+'use strict';
 import type { Extrapolate as _Extrapolate } from './reanimated2/interpolateColor';
 import type { SharedValue as _SharedValue } from './reanimated2/commonTypes';
 import type { DerivedValue as _DerivedValue } from './reanimated2/hook/useDerivedValue';

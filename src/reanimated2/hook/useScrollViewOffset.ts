@@ -1,3 +1,4 @@
+'use strict';
 import type { RefObject } from 'react';
 import { useEffect, useRef } from 'react';
 

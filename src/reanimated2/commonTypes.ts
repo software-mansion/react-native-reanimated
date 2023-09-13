@@ -1,3 +1,4 @@
+'use strict';
 import type { ViewStyle, TextStyle } from 'react-native';
 
 export interface StyleProps extends ViewStyle, TextStyle {

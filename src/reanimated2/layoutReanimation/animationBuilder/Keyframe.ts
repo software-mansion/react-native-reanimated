@@ -1,3 +1,4 @@
+'use strict';
 import type { EasingFunction } from '../../Easing';
 import { Easing } from '../../Easing';
 import { withDelay, withSequence, withTiming } from '../../animation';

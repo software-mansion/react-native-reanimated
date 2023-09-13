@@ -1,3 +1,4 @@
+'use strict';
 import { useRef } from 'react';
 import { makeMutable } from './core';
 import type { SharedValue } from './commonTypes';

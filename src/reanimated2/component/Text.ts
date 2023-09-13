@@ -1,3 +1,4 @@
+'use strict';
 import { Component } from 'react';
 import type { TextProps } from 'react-native';
 import { Text } from 'react-native';

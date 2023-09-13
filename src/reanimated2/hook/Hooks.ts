@@ -1,3 +1,4 @@
+'use strict';
 import { useCallback } from 'react';
 import { useAnimatedStyle } from './useAnimatedStyle';
 import type { DependencyList } from './commonTypes';
