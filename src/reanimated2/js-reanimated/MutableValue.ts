@@ -1,3 +1,4 @@
+'use strict';
 export default class MutableValue<T> {
   static MUTABLE_ID = 1;
   _id: number;

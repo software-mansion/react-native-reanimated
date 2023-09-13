@@ -1,3 +1,4 @@
+'use strict';
 import { Platform } from 'react-native';
 
 export function isJest(): boolean {

@@ -1,3 +1,4 @@
+'use strict';
 import type { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
 import {
   isChromeDebugger,
@@ -62,7 +63,7 @@ if (isWeb()) {
       return null;
     }
 
-    const measured = _IS_FABRIC
+    const measured = global._IS_FABRIC
       ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         _measureFabric!(viewTag as ShadowNodeWrapper)
       : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

@@ -1,3 +1,4 @@
+'use strict';
 import { withStyleAnimation } from '../animation/styleAnimation';
 import type { SharedValue } from '../commonTypes';
 import { makeUIMutable } from '../mutables';

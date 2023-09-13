@@ -1,3 +1,4 @@
+'use strict';
 import * as Animated from './Animated';
 
 export * from './reanimated2';

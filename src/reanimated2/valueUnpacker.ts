@@ -1,3 +1,4 @@
+'use strict';
 import { shouldBeUseWeb } from './PlatformChecker';
 
 const IS_NATIVE = !shouldBeUseWeb();
