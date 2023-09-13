@@ -1,3 +1,4 @@
+'use strict';
 import type { ForwardedRef, RefObject } from 'react';
 import React, { Component, forwardRef } from 'react';
 import type { ScrollViewProps } from 'react-native';
