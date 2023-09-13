@@ -12,7 +12,7 @@ import { shouldBeUseWeb } from '../PlatformChecker';
  * the first worklet defines the inputs, in other words on which shared values change will it be called.
  * the second one can modify any shared values but those which are mentioned in the first worklet. Beware of that, because this may result in endless loop and high cpu usage.
  */
-// @ts-expect-error This is fine.
+// @ts-expect-error This overload is required by our API.
 export function useAnimatedReaction<PreparedResult>(
   prepare: () => PreparedResult,
   react: (prepared: PreparedResult, previous: PreparedResult | null) => void,
@@ -33,7 +33,7 @@ export function useAnimatedReaction<PreparedResult>(
 
   if (shouldBeUseWeb()) {
     if (!inputs.length && dependencies?.length) {
-      // let web work without a Babel/SWC plugin
+      // let web work without a Reanimated Babel plugin
       inputs = dependencies;
     }
   }
