@@ -6,6 +6,7 @@ import type { DependencyList } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
 import { shouldBeUseWeb } from '../PlatformChecker';
 
+// ts-prune-ignore-next This will be used in the next PRs in this series.
 export interface AnimatedReactionWorkletFunction<T> extends __WorkletFunction {
   (prepared: T, previous: T | null): void;
 }

@@ -13,7 +13,7 @@ interface Handlers<T, TContext extends __Context> {
   [key: string]: Handler<T, TContext> | undefined;
 }
 
-interface UseHandlerContext<TContext extends __Context> {
+export interface UseHandlerContext<TContext extends __Context> {
   context: TContext;
   doDependenciesDiffer: boolean;
   useWeb: boolean;
