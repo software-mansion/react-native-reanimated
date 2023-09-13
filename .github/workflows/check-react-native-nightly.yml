@@ -9,7 +9,7 @@ on:
 
 jobs:
   build_ios:
-    runs-on: macos-12
+    runs-on: macos-13
     strategy:
       matrix:
         react-native-architecture: ['Paper', 'Fabric']
