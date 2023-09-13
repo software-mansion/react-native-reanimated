@@ -73,12 +73,15 @@ interface WorkletBaseDev extends WorkletBaseCommon {
   __stackDetails: Error;
 }
 
-export type WorkletFunction<Args extends unknown[], ReturnValue> = ((
-  ...args: Args
-) => ReturnValue) &
-  (WorkletBaseRelease | WorkletBaseDev);
+export type WorkletFunction<
+  Args extends unknown[] = unknown[],
+  ReturnValue = unknown
+> = ((...args: Args) => ReturnValue) & (WorkletBaseRelease | WorkletBaseDev);
 
-export interface NativeEvent<T> {
+/**
+ * @deprecated
+ */
+export interface __NativeEvent<T> {
   nativeEvent: T;
 }
 

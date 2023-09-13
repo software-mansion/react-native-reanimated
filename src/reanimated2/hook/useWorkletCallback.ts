@@ -1,10 +1,10 @@
 'use strict';
 import { useCallback } from 'react';
-import type { DependencyList } from './commonTypes';
+import type { DependencyList } from 'react';
 
-export function useWorkletCallback<A extends unknown[], R>(
-  fun: (...args: A) => R,
+export function useWorkletCallback<Args extends unknown[], ReturnValue>(
+  worklet: (...args: Args) => ReturnValue,
   deps?: DependencyList
-): (...args: Parameters<typeof fun>) => R {
-  return useCallback(fun, deps ?? []);
+) {
+  return useCallback(worklet, deps ?? []);
 }
