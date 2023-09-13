@@ -6,8 +6,8 @@ import type Animated from '../../index'; // TODO: fixme?
 import type { ScrollEvent } from './useAnimatedScrollHandler';
 import type { SharedValue } from '../commonTypes';
 import { findNodeHandle } from 'react-native';
-import { useEvent } from './utils';
 import { useSharedValue } from './useSharedValue';
+import { useEvent } from './useEvent';
 
 const scrollEventNames = [
   'onScroll',

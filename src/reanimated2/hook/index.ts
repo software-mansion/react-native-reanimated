@@ -1,11 +1,5 @@
 'use strict';
 export type { DependencyList, AnimatedRef } from './commonTypes';
-export {
-  useAnimatedProps,
-  useEvent,
-  useHandler,
-  useWorkletCallback,
-} from './Hooks';
 export { useSharedValue } from './useSharedValue';
 export { useReducedMotion } from './useReducedMotion';
 export { useAnimatedStyle } from './useAnimatedStyle';
@@ -26,3 +20,7 @@ export { useFrameCallback } from './useFrameCallback';
 export type { FrameCallback } from './useFrameCallback';
 export { useAnimatedKeyboard } from './useAnimatedKeyboard';
 export { useScrollViewOffset } from './useScrollViewOffset';
+export { useAnimatedProps } from './useAnimatedProps';
+export { useHandler } from './useHandler';
+export { useWorkletCallback } from './useWorkletCallback';
+export { useEvent } from './useEvent';
