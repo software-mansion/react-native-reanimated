@@ -57,8 +57,8 @@ import { flattenArray, has } from './utils';
 import {
   handleWebAnimation,
   insertWebAnimations,
-} from '../reanimated2/platform-specific/webAnimations';
-import { tryActivateLayoutTransition } from '../reanimated2/platform-specific/webTransitions';
+} from '../reanimated2/layoutReanimation/web/webAnimations';
+import { tryActivateLayoutTransition } from '../reanimated2/layoutReanimation/web/webTransitions';
 
 const IS_WEB = isWeb();
 

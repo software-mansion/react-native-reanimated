@@ -1,4 +1,4 @@
-import type { AnimatedComponentProps } from '../../createAnimatedComponent/utils';
+import type { AnimatedComponentProps } from '../../../createAnimatedComponent/utils';
 import {
   WEB_ANIMATIONS_ID,
   areDOMRectsEqual,
@@ -8,7 +8,7 @@ import {
 } from './webAnimations';
 
 import type { AnimationConfig } from './webAnimations';
-import { LayoutAnimationType } from '../layoutReanimation';
+import { LayoutAnimationType } from '..';
 
 export enum TransitionType {
   LINEAR,

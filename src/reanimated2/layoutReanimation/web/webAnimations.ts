@@ -1,5 +1,5 @@
-import { Animations, AnimationsData, WebEasings } from './webAnimationsData';
-import type { AnimationNames, WebEasingsNames } from './webAnimationsData';
+import { Animations, AnimationsData, WebEasings } from '.';
+import type { AnimationNames, WebEasingsNames } from '.';
 import { parseAnimationObjectToKeyframe } from './animationParser';
 import type { ReanimatedWebTransformProperties } from './animationParser';
 import type { TransformsStyle } from 'react-native';
@@ -7,12 +7,12 @@ import type {
   BaseAnimationBuilder,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
-} from '../layoutReanimation';
-import { LayoutAnimationType } from '../layoutReanimation';
-import type { AnimatedComponentProps } from '../../createAnimatedComponent/utils';
+} from '..';
+import { LayoutAnimationType } from '..';
+import type { AnimatedComponentProps } from '../../../createAnimatedComponent/utils';
 import type { TransitionData } from './webTransitions';
 import { handleLayoutTransition } from './webTransitions';
-import type { StyleProps } from '../commonTypes';
+import type { StyleProps } from '../../commonTypes';
 
 export const WEB_ANIMATIONS_ID = 'ReanimatedWebAnimationsStyle';
 
