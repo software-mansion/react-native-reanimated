@@ -236,9 +236,15 @@ export {
   KeyboardState,
   ReduceMotion,
 } from './commonTypes';
-export { FrameInfo } from './frameCallback';
+export type { FrameInfo } from './frameCallback';
 export { getUseOfValueInStyleWarning } from './pluginUtils';
-export * from './jestUtils';
+export {
+  withReanimatedTimer,
+  advanceAnimationByTime,
+  advanceAnimationByFrame,
+  setUpTests,
+  getAnimatedStyle,
+} from './jestUtils';
 export type {
   Adaptable,
   AdaptTransforms,
