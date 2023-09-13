@@ -1,3 +1,4 @@
+'use strict';
 import NativeReanimatedModule from './NativeReanimated';
 import type { SharedValue, ShareableSyncDataHolderRef } from './commonTypes';
 import {

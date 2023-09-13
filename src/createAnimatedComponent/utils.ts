@@ -1,3 +1,4 @@
+'use strict';
 import type { Ref, Component } from 'react';
 import type {
   StyleProps,

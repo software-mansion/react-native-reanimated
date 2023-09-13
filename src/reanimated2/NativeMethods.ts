@@ -1,3 +1,4 @@
+'use strict';
 import type { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
 import {
   isChromeDebugger,
@@ -18,8 +19,16 @@ export let measure: <T extends Component>(
 
 if (isWeb()) {
   measure = (animatedRef) => {
-    const element = (animatedRef as any)() as HTMLElement; // TODO: fix typing of animated refs on web
-    const viewportOffset = element.getBoundingClientRect();
+    const element = (animatedRef as any)();
+
+    if (element === -1) {
+      console.warn(
+        `[Reanimated] The view with tag ${element} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
+      );
+      return null;
+    }
+
+    const viewportOffset = (element as HTMLElement).getBoundingClientRect();
     return {
       width: element.offsetWidth,
       height: element.offsetHeight,
