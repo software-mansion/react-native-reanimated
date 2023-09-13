@@ -21,6 +21,7 @@ on:
 
 jobs:
   check:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

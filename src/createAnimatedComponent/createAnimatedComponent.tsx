@@ -1,3 +1,4 @@
+'use strict';
 import type {
   Component,
   ComponentClass,
@@ -8,79 +9,56 @@ import type {
 } from 'react';
 import React from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
-import WorkletEventHandler from './reanimated2/WorkletEventHandler';
+import WorkletEventHandler from '../reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
-import './reanimated2/layoutReanimation/animationsManager';
+import '../reanimated2/layoutReanimation/animationsManager';
 import invariant from 'invariant';
-import { adaptViewConfig } from './ConfigHelper';
-import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
+import { adaptViewConfig } from '../ConfigHelper';
+import { RNRenderer } from '../reanimated2/platform-specific/RNRenderer';
 import {
   configureLayoutAnimations,
   enableLayoutAnimations,
   startMapper,
   stopMapper,
-} from './reanimated2/core';
+} from '../reanimated2/core';
 import {
   isJest,
   isChromeDebugger,
   shouldBeUseWeb,
   isWeb,
-} from './reanimated2/PlatformChecker';
-import { initialUpdaterRun } from './reanimated2/animation';
-import type {
-  BaseAnimationBuilder,
-  EntryExitAnimationFunction,
-  ILayoutAnimationBuilder,
-} from './reanimated2/layoutReanimation';
+} from '../reanimated2/PlatformChecker';
+import { initialUpdaterRun } from '../reanimated2/animation';
 import {
   SharedTransition,
   LayoutAnimationType,
-} from './reanimated2/layoutReanimation';
+} from '../reanimated2/layoutReanimation';
 import type {
   SharedValue,
   StyleProps,
   ShadowNodeWrapper,
-} from './reanimated2/commonTypes';
+} from '../reanimated2/commonTypes';
 import type {
   ViewDescriptorsSet,
   ViewRefSet,
-} from './reanimated2/ViewDescriptorsSet';
-import { makeViewDescriptorsSet } from './reanimated2/ViewDescriptorsSet';
-import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
-import updateProps from './reanimated2/UpdateProps';
-import NativeReanimatedModule from './reanimated2/NativeReanimated';
-import { isSharedValue } from './reanimated2/utils';
-import type { AnimateProps } from './reanimated2/helperTypes';
-import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
+} from '../reanimated2/ViewDescriptorsSet';
+import { makeViewDescriptorsSet } from '../reanimated2/ViewDescriptorsSet';
+import { getShadowNodeWrapperFromRef } from '../reanimated2/fabricUtils';
+import updateProps from '../reanimated2/UpdateProps';
+import NativeReanimatedModule from '../reanimated2/NativeReanimated';
+import { isSharedValue } from '../reanimated2/utils';
+import type { AnimateProps } from '../reanimated2/helperTypes';
+import { removeFromPropsRegistry } from '../reanimated2/PropsRegistry';
 import { JSPropUpdater } from './JSPropUpdater';
-import { getReduceMotionFromConfig } from './reanimated2/animation/util';
-import { maybeBuild } from './animationBuilder';
+import { getReduceMotionFromConfig } from '../reanimated2/animation/util';
+import { maybeBuild } from '../animationBuilder';
+import type { AnimatedComponentProps, AnimatedProps } from './utils';
+import { flattenArray, has } from './utils';
 
 const IS_WEB = isWeb();
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
   // event is used.
-}
-
-type NestedArray<T> = T | NestedArray<T>[];
-function flattenArray<T>(array: NestedArray<T>): T[] {
-  if (!Array.isArray(array)) {
-    return [array];
-  }
-  const resultArr: T[] = [];
-
-  const _flattenArray = (arr: NestedArray<T>[]): void => {
-    arr.forEach((item) => {
-      if (Array.isArray(item)) {
-        _flattenArray(item);
-      } else {
-        resultArr.push(item);
-      }
-    });
-  };
-  _flattenArray(array);
-  return resultArr;
 }
 
 function onlyAnimatedStyles(styles: StyleProps[]) {
@@ -97,20 +75,6 @@ function isSameAnimatedStyle(
 }
 
 const isSameAnimatedProps = isSameAnimatedStyle;
-
-const has = <K extends string>(
-  key: K,
-  x: unknown
-): x is { [key in K]: unknown } => {
-  if (typeof x === 'function' || typeof x === 'object') {
-    if (x === null || x === undefined) {
-      return false;
-    } else {
-      return key in x;
-    }
-  }
-  return false;
-};
 
 function isInlineStyleTransform(transform: any): boolean {
   if (!transform) {
@@ -192,35 +156,6 @@ function getInlinePropsUpdate(inlineProps: Record<string, any>) {
   }
   return update;
 }
-
-interface AnimatedProps extends Record<string, unknown> {
-  viewDescriptors?: ViewDescriptorsSet;
-  viewsRef?: ViewRefSet<unknown>;
-  initial?: SharedValue<StyleProps>;
-}
-
-type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
-  forwardedRef?: Ref<Component>;
-  style?: NestedArray<StyleProps>;
-  animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
-  animatedStyle?: StyleProps;
-  layout?:
-    | BaseAnimationBuilder
-    | ILayoutAnimationBuilder
-    | typeof BaseAnimationBuilder;
-  entering?:
-    | BaseAnimationBuilder
-    | typeof BaseAnimationBuilder
-    | EntryExitAnimationFunction
-    | Keyframe;
-  exiting?:
-    | BaseAnimationBuilder
-    | typeof BaseAnimationBuilder
-    | EntryExitAnimationFunction
-    | Keyframe;
-  sharedTransitionTag?: string;
-  sharedTransitionStyle?: SharedTransition;
-};
 
 type Options<P> = {
   setNativeProps: (ref: ComponentRef, props: P) => void;

@@ -1,3 +1,4 @@
+'use strict';
 import type { Component } from 'react';
 import { useRef } from 'react';
 import { useSharedValue } from './useSharedValue';

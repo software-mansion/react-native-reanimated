@@ -1,3 +1,4 @@
+'use strict';
 import type { WorkletFunction } from '../commonTypes';
 import type { DependencyList } from './commonTypes';
 

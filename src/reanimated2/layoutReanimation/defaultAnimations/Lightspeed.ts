@@ -1,3 +1,4 @@
+'use strict';
 import { withSequence, withTiming } from '../../animation';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';

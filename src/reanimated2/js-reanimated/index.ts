@@ -1,3 +1,4 @@
+'use strict';
 import JSReanimated from './JSReanimated';
 import type { StyleProps } from '../commonTypes';
 import type { AnimatedStyle } from '../helperTypes';

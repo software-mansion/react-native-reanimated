@@ -1,3 +1,4 @@
+'use strict';
 import { useEffect } from 'react';
 import type { WorkletFunction } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';

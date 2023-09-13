@@ -1,3 +1,4 @@
+'use strict';
 /* eslint-disable camelcase */
 
 import type { ShadowNodeWrapper } from './commonTypes';

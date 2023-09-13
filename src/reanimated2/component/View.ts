@@ -1,6 +1,7 @@
+'use strict';
 import type { ViewProps } from 'react-native';
 import { View } from 'react-native';
-import createAnimatedComponent from '../../createAnimatedComponent';
+import createAnimatedComponent from '../../createAnimatedComponent/createAnimatedComponent';
 import { Component } from 'react';
 import type { AnimateProps } from '../helperTypes';
 

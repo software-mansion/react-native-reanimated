@@ -1,3 +1,4 @@
+'use strict';
 import { useAnimatedStyle } from './useAnimatedStyle';
 import type { DependencyList } from './commonTypes';
 import type {

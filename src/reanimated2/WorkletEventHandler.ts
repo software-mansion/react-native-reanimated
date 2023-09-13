@@ -1,3 +1,4 @@
+'use strict';
 import type { NativeSyntheticEvent } from 'react-native';
 import NativeReanimatedModule from './NativeReanimated';
 import { registerEventHandler, unregisterEventHandler } from './core';

@@ -1,3 +1,4 @@
+'use strict';
 import type { Component } from 'react';
 import type { ShadowNodeWrapper } from '../commonTypes';
 import type {

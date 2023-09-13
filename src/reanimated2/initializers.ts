@@ -1,3 +1,4 @@
+'use strict';
 import { reportFatalErrorOnJS } from './errors';
 import { isChromeDebugger, isJest, shouldBeUseWeb } from './PlatformChecker';
 import {

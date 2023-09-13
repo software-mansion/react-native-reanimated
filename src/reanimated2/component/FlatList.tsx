@@ -1,9 +1,10 @@
+'use strict';
 import type { ForwardedRef } from 'react';
 import React, { Component, forwardRef } from 'react';
 import type { FlatListProps, LayoutChangeEvent } from 'react-native';
 import { FlatList, StyleSheet } from 'react-native';
 import { AnimatedView } from './View';
-import createAnimatedComponent from '../../createAnimatedComponent';
+import createAnimatedComponent from '../../createAnimatedComponent/createAnimatedComponent';
 import type { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
 import type { StyleProps } from '../commonTypes';
 import type { AnimateProps } from '../helperTypes';

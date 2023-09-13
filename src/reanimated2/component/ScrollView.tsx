@@ -1,8 +1,9 @@
+'use strict';
 import type { ForwardedRef, RefObject } from 'react';
 import React, { Component, forwardRef } from 'react';
 import type { ScrollViewProps } from 'react-native';
 import { ScrollView } from 'react-native';
-import createAnimatedComponent from '../../createAnimatedComponent';
+import createAnimatedComponent from '../../createAnimatedComponent/createAnimatedComponent';
 import type { SharedValue } from '../commonTypes';
 import type { AnimateProps } from '../helperTypes';
 import { useAnimatedRef, useScrollViewOffset } from '../hook';

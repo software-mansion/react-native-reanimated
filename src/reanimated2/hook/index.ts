@@ -1,3 +1,4 @@
+'use strict';
 export type {
   DependencyList,
   AnimatedRef,
@@ -25,5 +26,7 @@ export { useFrameCallback } from './useFrameCallback';
 export type { FrameCallback } from './useFrameCallback';
 export { useAnimatedKeyboard } from './useAnimatedKeyboard';
 export { useScrollViewOffset } from './useScrollViewOffset';
-export { useEvent, EventHandler } from './useEvent';
-export { useHandler, UseHandlerContext } from './useHandler';
+export type { EventHandler } from './useEvent';
+export { useEvent } from './useEvent';
+export type { UseHandlerContext } from './useHandler';
+export { useHandler } from './useHandler';
