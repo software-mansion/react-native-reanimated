@@ -454,10 +454,10 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   }
 
   const { initial, remoteState, viewDescriptors } = initRef.current;
-  const sharableViewDescriptors = viewDescriptors.sharableViewDescriptors;
+  const shareableViewDescriptors = viewDescriptors.shareableViewDescriptors;
   const maybeViewRef = NativeReanimatedModule.native ? undefined : viewsRef;
 
-  dependencies.push(sharableViewDescriptors);
+  dependencies.push(shareableViewDescriptors);
 
   useEffect(() => {
     let fun;
@@ -479,7 +479,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       fun = () => {
         'worklet';
         jestStyleUpdater(
-          sharableViewDescriptors,
+          shareableViewDescriptors,
           updater,
           remoteState,
           maybeViewRef,
@@ -492,7 +492,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       fun = () => {
         'worklet';
         styleUpdater(
-          sharableViewDescriptors,
+          shareableViewDescriptors,
           updaterFn,
           remoteState,
           maybeViewRef,
