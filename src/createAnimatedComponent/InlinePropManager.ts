@@ -13,9 +13,6 @@ import { isSharedValue } from '../reanimated2/utils';
 import NativeReanimatedModule from '../reanimated2/NativeReanimated';
 
 function isInlineStyleTransform(transform: unknown): boolean {
-  if (!transform) {
-    return false;
-  }
   if (!Array.isArray(transform)) {
     return false;
   }
@@ -156,8 +153,8 @@ export class InlinePropManager {
           shadowNodeWrapper: shadowNodeWrapper!,
         });
       }
-      const sharableViewDescriptors =
-        this._inlinePropsViewDescriptors.sharableViewDescriptors;
+      const shareableViewDescriptors =
+        this._inlinePropsViewDescriptors.shareableViewDescriptors;
 
       const maybeViewRef = NativeReanimatedModule.native
         ? undefined
@@ -166,7 +163,7 @@ export class InlinePropManager {
       const updaterFunction = () => {
         'worklet';
         const update = getInlinePropsUpdate(newInlineProps);
-        updateProps(sharableViewDescriptors, update, maybeViewRef);
+        updateProps(shareableViewDescriptors, update, maybeViewRef);
       };
       this._inlineProps = newInlineProps;
       if (this._inlinePropsMapperId) {
