@@ -1,1 +1,1 @@
-export { default as createAnimatedComponent } from './createAnimatedComponent';
+export { createAnimatedComponent } from './createAnimatedComponent';

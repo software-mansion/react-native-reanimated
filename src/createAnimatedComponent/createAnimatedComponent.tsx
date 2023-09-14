@@ -85,17 +85,17 @@ interface InitialComponentProps extends Record<string, unknown> {
   collapsable?: boolean;
 }
 
-export default function createAnimatedComponent<P extends object>(
+export function createAnimatedComponent<P extends object>(
   component: FunctionComponent<P>,
   options?: Options<P>
 ): FunctionComponent<AnimateProps<P>>;
 
-export default function createAnimatedComponent<P extends object>(
+export function createAnimatedComponent<P extends object>(
   component: ComponentClass<P>,
   options?: Options<P>
 ): ComponentClass<AnimateProps<P>>;
 
-export default function createAnimatedComponent(
+export function createAnimatedComponent(
   Component: ComponentType<InitialComponentProps>,
   options?: Options<InitialComponentProps>
 ): any {
