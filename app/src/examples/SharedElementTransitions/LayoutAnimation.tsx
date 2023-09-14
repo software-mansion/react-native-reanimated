@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, View } from 'react-native';
+import { Button, View, StyleSheet } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
@@ -13,18 +13,12 @@ const AnimatedButton = Animated.createAnimatedComponent(Button);
 
 function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
-    <Animated.ScrollView style={{ flex: 1 }}>
-      <View
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
+    <Animated.ScrollView style={styles.flexOne}>
+      <View style={styles.container}>
         <Animated.Image
           sharedTransitionTag="sharedImage"
           source={photo}
-          style={{ width: 150, height: 150, marginTop: 50 }}
+          style={styles.imageScreenOne}
         />
         <Button
           onPress={() => navigation.navigate('Screen2')}
@@ -37,9 +31,9 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
 
 function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.flexOne}>
       <Animated.Text
-        style={{ marginTop: 10, fontWeight: 'bold', fontSize: 30 }}
+        style={styles.text}
         entering={SlideInLeft.delay(1000)}
         exiting={SlideOutLeft}>
         Awesome header!
@@ -47,10 +41,10 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
       <Animated.Image
         sharedTransitionTag="sharedImage"
         source={photo}
-        style={{ width: '100%', height: 500 }}
+        style={styles.imageScreenTwo}
       />
       <Animated.Text
-        style={{ textAlign: 'justify' }}
+        style={styles.justify}
         entering={SlideInLeft.delay(1000)}
         exiting={SlideOutLeft}>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris id
@@ -88,3 +82,30 @@ export default function LayoutAnimationExample() {
     </Stack.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  flexOne: { flex: 1 },
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  justify: {
+    textAlign: 'justify',
+  },
+  imageScreenOne: {
+    width: 150,
+    height: 150,
+    marginTop: 50,
+  },
+  imageScreenTwo: {
+    width: '100%',
+    height: 500,
+  },
+  text: {
+    marginTop: 10,
+    fontWeight: 'bold',
+    fontSize: 30,
+  },
+});

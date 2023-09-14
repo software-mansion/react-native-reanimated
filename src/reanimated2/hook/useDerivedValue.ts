@@ -1,18 +1,19 @@
+'use strict';
 import { useEffect, useRef } from 'react';
 import { initialUpdaterRun } from '../animation';
-import { BasicWorkletFunction, SharedValue } from '../commonTypes';
+import type { __BasicWorkletFunction, SharedValue } from '../commonTypes';
 import { makeMutable, startMapper, stopMapper } from '../core';
-import { DependencyList } from './commonTypes';
+import type { DependencyList } from './commonTypes';
 import { shouldBeUseWeb } from '../PlatformChecker';
 
 export type DerivedValue<T> = Readonly<SharedValue<T>>;
 
 export function useDerivedValue<T>(
-  processor: BasicWorkletFunction<T>,
+  processor: __BasicWorkletFunction<T>,
   dependencies?: DependencyList
 ): DerivedValue<T> {
   const initRef = useRef<SharedValue<T> | null>(null);
-  let inputs = Object.values(processor._closure ?? {});
+  let inputs = Object.values(processor.__closure ?? {});
   if (shouldBeUseWeb()) {
     if (!inputs.length && dependencies?.length) {
       // let web work without a Babel/SWC plugin

@@ -1,0 +1,80 @@
+---
+sidebar_position: 3
+---
+
+# createWorkletRuntime
+
+`createWorkletRuntime` lets you create a new JS runtime which can be used to run [worklets](/docs/fundamentals/glossary#worklet) possibly on different threads than [JS](/docs/fundamentals/glossary#javascript-thread) or [UI thread](/docs/fundamentals/glossary#ui-thread). This function is supposed to be used by third-party libraries that need to integrate with worklets. The return value represents the runtime and it's supposed to be passed to C++ side using JSI (JavaScript Interface) for further operations.
+
+## Reference
+
+### Usage in JavaScript
+
+```jsx
+import { createWorkletRuntime } from 'react-native-reanimated';
+
+function App() {
+  const runtime = createWorkletRuntime('background');
+}
+```
+
+### Usage in C++
+
+```cpp
+auto runtime = reanimated::extractWorkletRuntime(rt, runtimeValue);
+
+jsi::Runtime &rt = runtime->getJSIRuntime();
+
+auto worklet = reanimated::extractShareableOrThrow<reanimated::ShareableWorklet>(rt, workletValue);
+
+runtime->runGuarded(worklet, ...args);
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type WorkletRuntime = {
+  __hostObjectWorkletRuntime: never;
+  readonly name: string;
+};
+
+function createWorkletRuntime(
+  name: string,
+  initializer?: __ComplexWorkletFunction<[], void>
+): WorkletRuntime;
+```
+
+</details>
+
+### Arguments
+
+#### `name`
+
+A name used to identify the runtime which will appear in devices list in Chrome DevTools.
+
+#### `initializer`
+
+An optional worklet that will be run synchronously on the same thread immediately after the runtime is created. It can be used to inject some global variables or functions into the runtime.
+
+### Returns
+
+`createWorkletRuntime` returns `WorkletRuntime` which is a `jsi::HostObject<reanimated::WorkletRuntime>`.
+
+## Remarks
+
+- Worklet runtimes come with `console.*` methods installed out-of-the-box. Other APIs (including `performance.now`) are not available and need to be injected into the runtime or captured via worklet closure.
+
+- In development mode, all unhandled errors thrown in the runtime (except for those thrown in `initializer`) will be caught and thus logged to the console and displayed in a LogBox.
+
+- You can use Chrome DevTools to debug the runtime (Hermes only). The runtime will appear in the devices list as `name` passed to `createWorkletRuntime`.
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ❌  |
+
+</div>

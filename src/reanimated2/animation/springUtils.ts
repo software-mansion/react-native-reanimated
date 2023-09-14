@@ -1,4 +1,10 @@
-import { Animation, AnimatableValue, Timestamp } from '../commonTypes';
+'use strict';
+import type {
+  Animation,
+  AnimatableValue,
+  Timestamp,
+  ReduceMotion,
+} from '../commonTypes';
 
 export type SpringConfig = {
   stiffness?: number;
@@ -6,6 +12,7 @@ export type SpringConfig = {
   restDisplacementThreshold?: number;
   restSpeedThreshold?: number;
   velocity?: number;
+  reduceMotion?: ReduceMotion;
 } & (
   | {
       mass?: number;
@@ -20,6 +27,8 @@ export type SpringConfig = {
       dampingRatio?: number;
     }
 );
+
+export type WithSpringConfig = SpringConfig;
 
 export interface SpringConfigInner {
   useDuration: boolean;
@@ -107,7 +116,7 @@ export function initialCalculations(
   }
 }
 
-export function calcuateNewMassToMatchDuration(
+export function calculateNewMassToMatchDuration(
   x0: number,
   config: Record<keyof SpringConfig, any> & SpringConfigInner,
   v0: number
@@ -118,12 +127,12 @@ export function calcuateNewMassToMatchDuration(
   }
 
   /** Use this formula: https://phys.libretexts.org/Bookshelves/University_Physics/Book%3A_University_Physics_(OpenStax)/Book%3A_University_Physics_I_-_Mechanics_Sound_Oscillations_and_Waves_(OpenStax)/15%3A_Oscillations/15.06%3A_Damped_Oscillations
-       * to find the asympotote and esitmate the damping that gives us the expected duration 
+       * to find the asymptote and estimate the damping that gives us the expected duration 
 
             ⎛ ⎛ c⎞           ⎞           
             ⎜-⎜──⎟ ⋅ duration⎟           
             ⎝ ⎝2m⎠           ⎠           
-       A ⋅ e                   = treshold
+       A ⋅ e                   = threshold
 
  
       Amplitude calculated using "Conservation of energy"

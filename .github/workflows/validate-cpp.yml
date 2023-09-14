@@ -8,14 +8,14 @@ on:
       - '.github/workflows/validate-cpp.yml'
       - 'scripts/cpplint.sh'
       - 'Common/cpp/**'
-      - 'ios/native/**'
+      - 'apple/native/**'
       - 'android/src/main/cpp/**'
   pull_request:
     paths:
       - '.github/workflows/validate-cpp.yml'
       - 'scripts/cpplint.sh'
       - 'Common/cpp/**'
-      - 'ios/native/**'
+      - 'apple/native/**'
       - 'android/src/main/cpp/**'
   merge_group:
     branches:
@@ -23,6 +23,7 @@ on:
 
 jobs:
   lint:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     name: cpplint
     runs-on: ubuntu-latest
     strategy:

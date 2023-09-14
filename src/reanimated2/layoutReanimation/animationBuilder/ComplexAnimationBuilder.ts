@@ -1,18 +1,20 @@
+'use strict';
 import { withTiming, withSpring } from '../../animation';
-import {
+import type {
   AnimationFunction,
   BaseBuilderAnimationConfig,
   LayoutAnimationAndConfig,
 } from './commonTypes';
-import { EasingFn } from '../../Easing';
+import type { EasingFunction } from '../../Easing';
 import { BaseAnimationBuilder } from './BaseAnimationBuilder';
-import { StyleProps } from '../../commonTypes';
+import type { StyleProps } from '../../commonTypes';
 
 export class ComplexAnimationBuilder extends BaseAnimationBuilder {
-  easingV?: EasingFn;
+  easingV?: EasingFunction;
   rotateV?: string;
   type?: AnimationFunction;
   dampingV?: number;
+  dampingRatioV?: number;
   massV?: number;
   stiffnessV?: number;
   overshootClampingV?: number;
@@ -26,13 +28,13 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
 
   static easing<T extends typeof ComplexAnimationBuilder>(
     this: T,
-    easingFunction: EasingFn
+    easingFunction: EasingFunction
   ) {
     const instance = this.createInstance();
     return instance.easing(easingFunction);
   }
 
-  easing(easingFunction: EasingFn): this {
+  easing(easingFunction: EasingFunction): this {
     this.easingV = easingFunction;
     return this;
   }
@@ -51,14 +53,29 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   }
 
   static springify<T extends typeof ComplexAnimationBuilder>(
-    this: T
+    this: T,
+    duration?: number
   ): ComplexAnimationBuilder {
     const instance = this.createInstance();
-    return instance.springify();
+    return instance.springify(duration);
   }
 
-  springify(): this {
+  springify(duration?: number): this {
+    this.durationV = duration;
     this.type = withSpring as AnimationFunction;
+    return this;
+  }
+
+  static dampingRatio<T extends typeof ComplexAnimationBuilder>(
+    this: T,
+    dampingRatio: number
+  ) {
+    const instance = this.createInstance();
+    return instance.dampingRatio(dampingRatio);
+  }
+
+  dampingRatio(dampingRatio: number): this {
+    this.dampingRatioV = dampingRatio;
     return this;
   }
 
@@ -156,6 +173,7 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
     const rotate = this.rotateV;
     const type = this.type ? this.type : (withTiming as AnimationFunction);
     const damping = this.dampingV;
+    const dampingRatio = this.dampingRatioV;
     const mass = this.massV;
     const stiffness = this.stiffnessV;
     const overshootClamping = this.overshootClampingV;
@@ -166,39 +184,38 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
 
     const config: BaseBuilderAnimationConfig = {};
 
-    if (type === withTiming) {
-      if (easing) {
-        config.easing = easing;
-      }
-      if (duration) {
-        config.duration = duration;
-      }
-      if (rotate) {
-        config.rotate = rotate;
-      }
-    } else {
-      if (damping) {
-        config.damping = damping;
-      }
-      if (mass) {
-        config.mass = mass;
-      }
-      if (stiffness) {
-        config.stiffness = stiffness;
-      }
-      if (overshootClamping) {
-        config.overshootClamping = overshootClamping;
-      }
-      if (restDisplacementThreshold) {
-        config.restDisplacementThreshold = restDisplacementThreshold;
-      }
-      if (restSpeedThreshold) {
-        config.restSpeedThreshold = restSpeedThreshold;
-      }
-      if (rotate) {
-        config.rotate = rotate;
+    function maybeSetConfigValue<Key extends keyof BaseBuilderAnimationConfig>(
+      value: BaseBuilderAnimationConfig[Key],
+      variableName: Key
+    ) {
+      if (value) {
+        config[variableName] = value;
       }
     }
+
+    if (type === withTiming) {
+      maybeSetConfigValue(easing, 'easing');
+    }
+
+    (
+      [
+        { variableName: 'damping', value: damping },
+        { variableName: 'dampingRatio', value: dampingRatio },
+        { variableName: 'mass', value: mass },
+        { variableName: 'stiffness', value: stiffness },
+        { variableName: 'overshootClamping', value: overshootClamping },
+        {
+          variableName: 'restDisplacementThreshold',
+          value: restDisplacementThreshold,
+        },
+        { variableName: 'restSpeedThreshold', value: restSpeedThreshold },
+        { variableName: 'duration', value: duration },
+        { variableName: 'rotate', value: rotate },
+      ] as const
+    ).forEach(({ value, variableName }) =>
+      maybeSetConfigValue(value, variableName)
+    );
+
     return [animation, config];
   }
 }

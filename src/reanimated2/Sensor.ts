@@ -1,12 +1,13 @@
+'use strict';
 import NativeReanimatedModule from './NativeReanimated';
-import {
-  SensorType,
+import type {
   SensorConfig,
   SharedValue,
   Value3D,
   ValueRotation,
   ShareableRef,
 } from './commonTypes';
+import { SensorType } from './commonTypes';
 import { makeMutable } from './mutables';
 
 function initSensorData(
@@ -33,7 +34,7 @@ function initSensorData(
   }
 }
 
-export default class Sensor<T> {
+export default class Sensor {
   public listenersNumber = 0;
   private sensorId: number | null = null;
   private sensorType: SensorType;
@@ -47,7 +48,7 @@ export default class Sensor<T> {
   }
 
   register(
-    eventHandler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
+    eventHandler: ShareableRef<(data: Value3D | ValueRotation) => void>
   ) {
     const config = this.config;
     const sensorType = this.sensorType;

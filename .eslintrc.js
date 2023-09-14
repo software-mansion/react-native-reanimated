@@ -1,6 +1,10 @@
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
+  parserOptions: {
+    project: true,
+    tsconfigRootDir: __dirname,
+  },
   extends: [
     'standard',
     'plugin:@typescript-eslint/recommended',
@@ -21,6 +25,7 @@ module.exports = {
   },
   rules: {
     'import/no-unresolved': 'error',
+    'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
     'react/jsx-uses-vars': 'error',
     'react/jsx-uses-react': 'error',
     'no-use-before-define': 'off',
@@ -34,5 +39,16 @@ module.exports = {
     ],
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     '@typescript-eslint/no-var-requires': 'warn',
+    // '@typescript-eslint/no-duplicate-type-constituents': 'error', // TODO this currently breaks ESLint for VSCode in plugin
+    eqeqeq: 'error',
+    'no-unreachable': 'error',
+    '@typescript-eslint/consistent-type-imports': [
+      'error',
+      { prefer: 'type-imports' },
+    ],
+    '@typescript-eslint/consistent-type-exports': [
+      'error',
+      { fixMixedExportsWithInlineTypeSpecifier: false },
+    ],
   },
 };

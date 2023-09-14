@@ -1,0 +1,115 @@
+---
+sidebar_position: 1
+---
+
+# useSharedValue
+
+`useSharedValue` lets you define [shared values](/docs/fundamentals/glossary#shared-value) in your components.
+
+## Reference
+
+```javascript
+import { useSharedValue } from 'react-native-reanimated';
+
+function App() {
+  const sv = useSharedValue(100);
+
+  // read a shared value
+  console.log(sv.value);
+
+  // and modify it
+  sv.value += 50;
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type SharedValue<T> = { value: T };
+
+function useSharedValue<T>(initialValue: T): SharedValue<T>;
+```
+
+</details>
+
+### Arguments
+
+#### `initialValue`
+
+The value you want to be initially stored to a `.value` property. It can be any JavaScript value like `number`, `string` or `boolean` but also data structures such as `array` and `object`.
+
+### Returns
+
+`useSharedValue` returns a shared value with a single `value` property initially set to the `initialValue`.
+
+Values stored in shared values can be accessed and modified by their `.value` property.
+
+## Example
+
+import SharedValue from '@site/src/examples/SharedValue';
+import SharedValueSrc from '!!raw-loader!@site/src/examples/SharedValue';
+
+<InteractiveExample src={SharedValueSrc} component={<SharedValue />} showCode />
+
+## Remarks
+
+- When you change the `sv.value` Reanimated will update the styles and keep the shared value in sync between the threads. However, this won't trigger a typical React re-render because a shared value is a plain JavaScript object.
+
+- When you change the `sv.value` the update will happen synchronously on the [UI thread](/docs/fundamentals/glossary#ui-thread). On the other hand, on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) the update is asynchronous. This means when you try to immediately log the `value` after the change it will log the previously stored value.
+
+<Indent>
+
+```javascript
+function App() {
+  const sv = useSharedValue(100); // initially set 100
+
+  sv.value += 50; // changing value stored in a shared value
+
+  console.log(sv.value); // will still log 100
+}
+```
+
+</Indent>
+
+- Stay away from [destructuring assignment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment) when working with shared values. While this is a completely valid JavaScript code it will make Reanimated unable to keep the reactivity of a shared value.
+
+<Indent>
+
+```javascript
+function App() {
+  let { value } = sv; // don't do this
+
+  console.log(value); // you can read the value just fine
+
+  value += 50; // but this won't update the styles
+}
+```
+
+</Indent>
+
+- When storing objects in a shared value, make sure to reassign an object instead of changing the properties individually.
+
+<Indent>
+
+```javascript
+function App() {
+  const sv = useSharedValue({ x: 0, y: 0 });
+
+  sv.value.x = 50; // Reanimated loses reactivity 🚨
+
+  sv.value = { x: 50, y: 50 }; // ✅
+}
+```
+
+</Indent>
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>

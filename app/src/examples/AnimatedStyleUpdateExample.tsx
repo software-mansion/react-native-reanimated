@@ -4,10 +4,10 @@ import Animated, {
   useAnimatedStyle,
   Easing,
 } from 'react-native-reanimated';
-import { View, Button } from 'react-native';
+import { View, Button, StyleSheet } from 'react-native';
 import React from 'react';
 
-export default function AnimatedStyleUpdateExample(): React.ReactElement {
+export default function AnimatedStyleUpdateExample() {
   const randomWidth = useSharedValue(10);
 
   const config = {
@@ -22,17 +22,8 @@ export default function AnimatedStyleUpdateExample(): React.ReactElement {
   });
 
   return (
-    <View
-      style={{
-        flex: 1,
-        flexDirection: 'column',
-      }}>
-      <Animated.View
-        style={[
-          { width: 100, height: 80, backgroundColor: 'black', margin: 30 },
-          style,
-        ]}
-      />
+    <View style={styles.container}>
+      <Animated.View style={[styles.box, style]} />
       <Button
         title="toggle"
         onPress={() => {
@@ -42,3 +33,16 @@ export default function AnimatedStyleUpdateExample(): React.ReactElement {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexDirection: 'column',
+  },
+  box: {
+    width: 100,
+    height: 80,
+    backgroundColor: 'black',
+    margin: 30,
+  },
+});

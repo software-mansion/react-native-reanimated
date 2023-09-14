@@ -1,3 +1,4 @@
+'use strict';
 import { configureProps as jsiConfigureProps } from './reanimated2/core';
 
 /**
@@ -83,6 +84,12 @@ let NATIVE_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
   lineHeight: true,
   textShadowRadius: true,
   letterSpacing: true,
+  aspectRatio: true,
+  columnGap: true, // iOS only
+  end: true, // number or string
+  flexBasis: true, // number or string
+  gap: true,
+  rowGap: true,
   /* strings */
   display: true,
   backfaceVisibility: true,
@@ -98,6 +105,14 @@ let NATIVE_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
   textDecorationStyle: true,
   textTransform: true,
   writingDirection: true,
+  alignContent: true,
+  alignItems: true,
+  alignSelf: true,
+  direction: true, // iOS only
+  flexDirection: true,
+  flexWrap: true,
+  justifyContent: true,
+  position: true,
   /* text color */
   color: true,
   tintColor: true,

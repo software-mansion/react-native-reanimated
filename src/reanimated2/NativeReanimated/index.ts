@@ -1,12 +1,6 @@
+'use strict';
 import reanimatedJS from '../js-reanimated';
 import { shouldBeUseWeb } from '../PlatformChecker';
 import { NativeReanimated } from './NativeReanimated';
 
-let exportedModule;
-if (shouldBeUseWeb()) {
-  exportedModule = reanimatedJS;
-} else {
-  exportedModule = new NativeReanimated();
-}
-
-export default exportedModule as NativeReanimated;
+export default shouldBeUseWeb() ? reanimatedJS : new NativeReanimated();

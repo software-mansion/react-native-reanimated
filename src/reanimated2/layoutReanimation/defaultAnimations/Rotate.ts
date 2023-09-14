@@ -1,7 +1,6 @@
-import {
-  ComplexAnimationBuilder,
-  BaseAnimationBuilder,
-} from '../animationBuilder';
+'use strict';
+import type { BaseAnimationBuilder } from '../animationBuilder';
+import { ComplexAnimationBuilder } from '../animationBuilder';
 import type {
   EntryAnimationsValues,
   ExitAnimationsValues,

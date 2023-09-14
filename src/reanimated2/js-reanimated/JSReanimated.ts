@@ -1,50 +1,66 @@
-import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
-import { isChromeDebugger, isJest, isWeb } from '../PlatformChecker';
+'use strict';
 import {
-  SensorType,
+  isChromeDebugger,
+  isJest,
+  isWeb,
+  isWindowAvailable,
+} from '../PlatformChecker';
+import type {
   ShareableRef,
+  ShareableSyncDataHolderRef,
   Value3D,
   ValueRotation,
 } from '../commonTypes';
-import { WebSensor } from './WebSensor';
+import { SensorType } from '../commonTypes';
+import type { WorkletRuntime } from '../runtimes';
+import type { WebSensor } from './WebSensor';
 
-export default class JSReanimated extends NativeReanimated {
+import { mockedRequestAnimationFrame } from '../utils';
+
+// In Node.js environments (like when static rendering with Expo Router)
+// requestAnimationFrame is unavailable, so we use our mock.
+// It also has to be mocked for Jest purposes (see `initializeUIRuntime`).
+const requestAnimationFrameImpl =
+  isJest() || !globalThis.requestAnimationFrame
+    ? mockedRequestAnimationFrame
+    : globalThis.requestAnimationFrame;
+
+export default class JSReanimated {
+  native = false;
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
   platform?: Platform = undefined;
 
-  constructor() {
-    super(false);
-  }
-
-  makeShareableClone<T>(value: T): ShareableRef<T> {
-    return { __hostObjectShareableJSRef: value };
-  }
-
-  installCoreFunctions(
-    _callGuard: <T extends Array<any>, U>(
-      fn: (...args: T) => U,
-      ...args: T
-    ) => void,
-    _valueUnpacker: <T>(value: T) => T
-  ): void {
-    // noop
+  makeShareableClone<T>(): ShareableRef<T> {
+    throw new Error(
+      '[Reanimated] makeShareableClone should never be called in JSReanimated.'
+    );
   }
 
   scheduleOnUI<T>(worklet: ShareableRef<T>) {
     // @ts-ignore web implementation has still not been updated after the rewrite, this will be addressed once the web implementation updates are ready
-    requestAnimationFrame(worklet);
+    requestAnimationFrameImpl(worklet);
+  }
+
+  createWorkletRuntime(
+    _name: string,
+    _initializer: ShareableRef<() => void>
+  ): WorkletRuntime {
+    throw new Error(
+      '[Reanimated] createWorkletRuntime is not available in JSReanimated.'
+    );
   }
 
   registerEventHandler<T>(
-    _eventHash: string,
-    _eventHandler: ShareableRef<T>
-  ): string {
+    _eventHandler: ShareableRef<T>,
+    _eventName: string,
+    _emitterReactTag: number
+  ): number {
     // noop
-    return '';
+    return -1;
   }
 
-  unregisterEventHandler(_: string): void {
+  unregisterEventHandler(_: number): void {
     // noop
   }
 
@@ -75,9 +91,15 @@ export default class JSReanimated extends NativeReanimated {
   registerSensor(
     sensorType: SensorType,
     interval: number,
-    iosReferenceFrame: number,
-    eventHandler: (data: Value3D | ValueRotation) => void
+    _iosReferenceFrame: number,
+    eventHandler: ShareableRef<(data: Value3D | ValueRotation) => void>
   ): number {
+    if (!isWindowAvailable()) {
+      // the window object is unavailable when building the server portion of a site that uses SSG
+      // this check is here to ensure that the server build won't fail
+      return -1;
+    }
+
     if (this.platform === undefined) {
       this.detectPlatform();
     }
@@ -101,51 +123,74 @@ export default class JSReanimated extends NativeReanimated {
     }
 
     const sensor: WebSensor = this.initializeSensor(sensorType, interval);
-    let callback;
-    if (sensorType === SensorType.ROTATION) {
-      callback = () => {
-        let [qw, qx, qy, qz] = sensor.quaternion;
-
-        // Android sensors have a different coordinate system than iOS
-        if (this.platform === Platform.WEB_ANDROID) {
-          [qy, qz] = [qz, -qy];
-        }
-
-        // reference: https://stackoverflow.com/questions/5782658/extracting-yaw-from-a-quaternion
-        const yaw = Math.atan2(
-          2.0 * (qy * qz + qw * qx),
-          qw * qw - qx * qx - qy * qy + qz * qz
-        );
-        const pitch = Math.sin(-2.0 * (qx * qz - qw * qy));
-        const roll = Math.atan2(
-          2.0 * (qx * qy + qw * qz),
-          qw * qw + qx * qx - qy * qy - qz * qz
-        );
-        eventHandler({
-          qw,
-          qx,
-          qy,
-          qz,
-          yaw,
-          pitch,
-          roll,
-          interfaceOrientation: 0,
-        });
-      };
-    } else {
-      callback = () => {
-        let { x, y, z } = sensor;
-        [x, y, z] =
-          this.platform === Platform.WEB_ANDROID ? [-x, -y, -z] : [x, y, z];
-        eventHandler({ x, y, z, interfaceOrientation: 0 });
-      };
-    }
-    sensor.addEventListener('reading', callback);
+    sensor.addEventListener(
+      'reading',
+      this.getSensorCallback(sensor, sensorType, eventHandler)
+    );
     sensor.start();
 
     this.sensors.set(this.nextSensorId, sensor);
     return this.nextSensorId++;
   }
+
+  getSensorCallback = (
+    sensor: WebSensor,
+    sensorType: SensorType,
+    eventHandler: ShareableRef<(data: Value3D | ValueRotation) => void>
+  ) => {
+    switch (sensorType) {
+      case SensorType.ACCELEROMETER:
+      case SensorType.GRAVITY:
+        return () => {
+          let { x, y, z } = sensor;
+
+          // Web Android sensors have a different coordinate system than iOS
+          if (this.platform === Platform.WEB_ANDROID) {
+            [x, y, z] = [-x, -y, -z];
+          }
+          // TODO TYPESCRIPT on web ShareableRef is the value itself so we call it directly
+          (eventHandler as any)({ x, y, z, interfaceOrientation: 0 });
+        };
+      case SensorType.GYROSCOPE:
+      case SensorType.MAGNETIC_FIELD:
+        return () => {
+          const { x, y, z } = sensor;
+          // TODO TYPESCRIPT on web ShareableRef is the value itself so we call it directly
+          (eventHandler as any)({ x, y, z, interfaceOrientation: 0 });
+        };
+      case SensorType.ROTATION:
+        return () => {
+          let [qw, qx, qy, qz] = sensor.quaternion;
+
+          // Android sensors have a different coordinate system than iOS
+          if (this.platform === Platform.WEB_ANDROID) {
+            [qy, qz] = [qz, -qy];
+          }
+
+          // reference: https://stackoverflow.com/questions/5782658/extracting-yaw-from-a-quaternion
+          const yaw = -Math.atan2(
+            2.0 * (qy * qz + qw * qx),
+            qw * qw - qx * qx - qy * qy + qz * qz
+          );
+          const pitch = Math.sin(-2.0 * (qx * qz - qw * qy));
+          const roll = -Math.atan2(
+            2.0 * (qx * qy + qw * qz),
+            qw * qw + qx * qx - qy * qy - qz * qz
+          );
+          // TODO TYPESCRIPT on web ShareableRef is the value itself so we call it directly
+          (eventHandler as any)({
+            qw,
+            qx,
+            qy,
+            qz,
+            yaw,
+            pitch,
+            roll,
+            interfaceOrientation: 0,
+          });
+        };
+    }
+  };
 
   unregisterSensor(id: number): void {
     const sensor: WebSensor | undefined = this.sensors.get(id);
@@ -225,6 +270,36 @@ export default class JSReanimated extends NativeReanimated {
     } else {
       this.platform = Platform.WEB;
     }
+  }
+
+  makeSynchronizedDataHolder<T>(
+    _valueRef: ShareableRef<T>
+  ): ShareableSyncDataHolderRef<T> {
+    throw new Error(
+      '[Reanimated] makeSynchronizedDataHolder is not available in JSReanimated.'
+    );
+  }
+
+  getDataSynchronously<T>(_ref: ShareableSyncDataHolderRef<T>): T {
+    throw new Error(
+      '[Reanimated] getDataSynchronously is not available in JSReanimated.'
+    );
+  }
+
+  getViewProp<T>(
+    _viewTag: number,
+    _propName: string,
+    _callback?: (result: T) => void
+  ): Promise<T> {
+    throw new Error(
+      '[Reanimated] getViewProp is not available in JSReanimated.'
+    );
+  }
+
+  configureProps() {
+    throw new Error(
+      '[Reanimated] configureProps is not available in JSReanimated.'
+    );
   }
 }
 

@@ -1,11 +1,14 @@
-import { NodePath } from '@babel/core';
-import {
+import type { NodePath } from '@babel/core';
+import type {
   MemberExpression,
+  ObjectExpression,
+  JSXAttribute,
+  ObjectProperty,
+} from '@babel/types';
+import {
   callExpression,
   arrowFunctionExpression,
   isArrayExpression,
-  ObjectExpression,
-  JSXAttribute,
   isJSXExpressionContainer,
   identifier,
   stringLiteral,
@@ -13,11 +16,10 @@ import {
   memberExpression,
   returnStatement,
   blockStatement,
-  ObjectProperty,
   isIdentifier,
 } from '@babel/types';
 import { isRelease } from './utils';
-import { ReanimatedPluginPass } from './types';
+import type { ReanimatedPluginPass } from './types';
 import { strict as assert } from 'assert';
 
 function generateInlineStylesWarning(path: NodePath<MemberExpression>) {
@@ -65,7 +67,10 @@ function processTransformPropertyForInlineStylesWarning(
 ) {
   if (isArrayExpression(path.node)) {
     const elements = path.get('elements');
-    assert(Array.isArray(elements), "'elements' should be an array");
+    assert(
+      Array.isArray(elements),
+      '[Reanimated] `elements` should be an array.'
+    );
     for (const element of elements) {
       if (element.isObjectExpression()) {
         processStyleObjectForInlineStylesWarning(element);
@@ -112,10 +117,16 @@ export function processInlineStylesWarning(
 
   const expression = path.get('value').get('expression');
   // style={[{...}, {...}]}
-  assert(!Array.isArray(expression), "'expression' should not be an array");
+  assert(
+    !Array.isArray(expression),
+    '[Reanimated] `expression` should not be an array.'
+  );
   if (expression.isArrayExpression()) {
     const elements = expression.get('elements');
-    assert(Array.isArray(elements), "'elements' should be an array");
+    assert(
+      Array.isArray(elements),
+      '[Reanimated] `elements` should be an array.'
+    );
     for (const element of elements) {
       if (element.isObjectExpression()) {
         processStyleObjectForInlineStylesWarning(element);

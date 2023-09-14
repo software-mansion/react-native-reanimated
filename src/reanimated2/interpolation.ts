@@ -1,3 +1,4 @@
+'use strict';
 export enum Extrapolation {
   IDENTITY = 'identity',
   CLAMP = 'clamp',
@@ -78,7 +79,7 @@ function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
   if (typeof type === 'string') {
     if (!isExtrapolate(type)) {
       throw new Error(
-        `Reanimated: not supported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
+        `[Reanimated] Unsupported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
         interpolate(value, [inputRange], [outputRange], "clamp")`
       );
     }
@@ -93,7 +94,7 @@ function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
     (type.extrapolateRight && !isExtrapolate(type.extrapolateRight))
   ) {
     throw new Error(
-      `Reanimated: not supported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
+      `[Reanimated] Unsupported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
       interpolate(value, [inputRange], [outputRange], {
         extrapolateLeft: Extrapolation.CLAMP,
         extrapolateRight: Extrapolation.IDENTITY
@@ -151,8 +152,8 @@ export function interpolate(
 ): number {
   'worklet';
   if (input.length < 2 || output.length < 2) {
-    throw Error(
-      'Interpolation input and output should contain at least two values.'
+    throw new Error(
+      '[Reanimated] Interpolation input and output should contain at least two values.'
     );
   }
 
@@ -184,4 +185,16 @@ export function interpolate(
   }
 
   return internalInterpolate(x, narrowedInput, extrapolationConfig);
+}
+
+/**
+ * `clamp` lets you limit a value within a specified range.
+ *
+ * @param value - A number that will be returned as long as the provided value is in range between `min` and `max`.
+ * @param min - A number which will be returned when provided `value` is lower than `min`.
+ * @param max - A number which will be returned when provided `value` is higher than `max`.
+ */
+export function clamp(value: number, min: number, max: number) {
+  'worklet';
+  return Math.min(Math.max(value, min), max);
 }

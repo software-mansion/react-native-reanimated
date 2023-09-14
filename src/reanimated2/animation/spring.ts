@@ -1,20 +1,23 @@
-import { defineAnimation } from './util';
-import {
+'use strict';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
+import type {
   Animation,
   AnimationCallback,
   AnimatableValue,
   Timestamp,
 } from '../commonTypes';
-import {
+import type {
   SpringConfig,
-  initialCalculations,
-  calcuateNewMassToMatchDuration,
   SpringAnimation,
   InnerSpringAnimation,
+  SpringConfigInner,
+} from './springUtils';
+import {
+  initialCalculations,
+  calculateNewMassToMatchDuration,
   underDampedSpringCalculations,
   criticallyDampedSpringCalculations,
   isAnimationTerminatingCalculation,
-  SpringConfigInner,
 } from './springUtils';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
@@ -43,6 +46,7 @@ export const withSpring = ((
       velocity: 0,
       duration: 2000,
       dampingRatio: 0.5,
+      reduceMotion: undefined,
     } as const;
 
     const config: Record<keyof SpringConfig, any> & SpringConfigInner = {
@@ -75,6 +79,10 @@ export const withSpring = ((
     ): boolean {
       const { toValue, startTimestamp, current } = animation;
 
+      if (current === toValue) {
+        return true;
+      }
+
       const timeFromStart = now - startTimestamp;
 
       if (config.useDuration && timeFromStart >= config.duration) {
@@ -82,7 +90,7 @@ export const withSpring = ((
 
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
-        return true;
+        return false;
       }
 
       if (config.configIsInvalid) {
@@ -91,7 +99,7 @@ export const withSpring = ((
         else {
           animation.current = toValue;
           animation.lastTimestamp = 0;
-          return true;
+          return false;
         }
       }
       const { lastTimestamp, velocity } = animation;
@@ -136,7 +144,7 @@ export const withSpring = ((
         animation.current = toValue;
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
-        return true;
+        return false;
       }
 
       return false;
@@ -147,6 +155,7 @@ export const withSpring = ((
       animation: SpringAnimation
     ) {
       return (
+        previousAnimation?.lastTimestamp &&
         previousAnimation?.startTimestamp &&
         previousAnimation?.toValue === animation.toValue &&
         previousAnimation?.duration === animation.duration &&
@@ -189,7 +198,7 @@ export const withSpring = ((
         animation.omega1 = previousAnimation?.omega1 || 0;
       } else {
         if (config.useDuration) {
-          const acutalDuration = triggeredTwice
+          const actualDuration = triggeredTwice
             ? // If animation is triggered twice we want to continue the previous animation
               // so we need to include the time that already elapsed
               duration -
@@ -197,8 +206,8 @@ export const withSpring = ((
                 (previousAnimation?.startTimestamp || 0))
             : duration;
 
-          config.duration = acutalDuration;
-          mass = calcuateNewMassToMatchDuration(
+          config.duration = actualDuration;
+          mass = calculateNewMassToMatchDuration(
             x0 as number,
             config,
             animation.velocity
@@ -231,6 +240,7 @@ export const withSpring = ((
       zeta: 0,
       omega0: 0,
       omega1: 0,
+      reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
     } as SpringAnimation;
   });
 }) as withSpringType;

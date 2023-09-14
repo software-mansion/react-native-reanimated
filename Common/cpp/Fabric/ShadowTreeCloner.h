@@ -14,20 +14,15 @@ namespace reanimated {
 
 class ShadowTreeCloner {
  public:
-  ShadowTreeCloner(std::shared_ptr<UIManager> uiManager, SurfaceId surfaceId);
-
-  ~ShadowTreeCloner();
+  ShadowTreeCloner(const UIManager &uiManager, SurfaceId surfaceId);
 
   ShadowNode::Unshared cloneWithNewProps(
       const ShadowNode::Shared &oldRootNode,
       const ShadowNodeFamily &family,
       RawProps &&rawProps);
 
-  void updateYogaChildren();
-
  private:
   PropsParserContext propsParserContext_;
-  std::set<ShadowNode *> yogaChildrenUpdates_;
 };
 
 } // namespace reanimated

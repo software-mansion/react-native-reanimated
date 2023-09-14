@@ -1,13 +1,12 @@
+'use strict';
 import type {
   EntryExitAnimationFunction,
   EntryExitAnimationsValues,
   IEntryExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
 import { withSequence, withTiming } from '../../animation';
-import {
-  ComplexAnimationBuilder,
-  BaseAnimationBuilder,
-} from '../animationBuilder';
+import type { BaseAnimationBuilder } from '../animationBuilder';
+import { ComplexAnimationBuilder } from '../animationBuilder';
 export class BounceIn
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder

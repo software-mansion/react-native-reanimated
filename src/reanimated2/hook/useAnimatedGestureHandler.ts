@@ -1,12 +1,13 @@
-import { Context, WorkletFunction, NativeEvent } from '../commonTypes';
-import { DependencyList } from './commonTypes';
+'use strict';
+import type { __Context, __WorkletFunction, NativeEvent } from '../commonTypes';
+import type { DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
 
-interface Handler<T, TContext extends Context> extends WorkletFunction {
+interface Handler<T, TContext extends __Context> extends __WorkletFunction {
   (event: T, context: TContext, isCanceledOrFailed?: boolean): void;
 }
 
-export interface GestureHandlers<T, TContext extends Context> {
+export interface GestureHandlers<T, TContext extends __Context> {
   [key: string]: Handler<T, TContext> | undefined;
   onStart?: Handler<T, TContext>;
   onActive?: Handler<T, TContext>;
@@ -16,7 +17,7 @@ export interface GestureHandlers<T, TContext extends Context> {
   onFinish?: Handler<T, TContext>;
 }
 
-export const EventType = {
+const EventType = {
   UNDETERMINED: 0,
   FAILED: 1,
   BEGAN: 2,
@@ -25,7 +26,7 @@ export const EventType = {
   END: 5,
 };
 
-export interface GestureHandlerNativeEvent {
+interface GestureHandlerNativeEvent {
   handlerTag: number;
   numberOfPointers: number;
   state: (typeof EventType)[keyof typeof EventType];
@@ -43,7 +44,7 @@ type InferArgument<T> = T extends GestureHandlerEvent<infer E>
 
 export function useAnimatedGestureHandler<
   T extends GestureHandlerEvent<any>,
-  TContext extends Context = Context,
+  TContext extends __Context = __Context,
   Payload = InferArgument<T>
 >(
   handlers: GestureHandlers<Payload, TContext>,

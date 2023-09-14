@@ -4,9 +4,9 @@ title: useAnimatedProps
 sidebar_label: useAnimatedProps
 ---
 
-This hook is a counterpart of [`useAnimatedStyle`](useAnimatedStyle.md) hook, but works for a non-style view properties.
+This hook is a counterpart of [`useAnimatedStyle`](/docs/2.x/api/hooks/useAnimatedStyle) hook, but works for a non-style view properties.
 It allows for defining a set of native view properties that can be updated on the UI thread as a response to a Shared Value change.
-Similarly to [`useAnimatedStyle`](useAnimatedStyle.md), this hook takes a single worklet (it is not necessary to add `worklet` directive here, because the method will be converted to worklet automatically).
+Similarly to [`useAnimatedStyle`](/docs/2.x/api/hooks/useAnimatedStyle), this hook takes a single worklet (it is not necessary to add `worklet` directive here, because the method will be converted to worklet automatically).
 The provided worklet is responsible for returning a object with view properties.
 
 Only "native" properties of "native views" can be set via `useAnimatedProps`.

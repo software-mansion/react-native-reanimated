@@ -1,7 +1,7 @@
 module.exports = {
   root: true,
-  extends: '@react-native',
+  extends: '../.eslintrc.js',
   rules: {
     'curly': 'error',
-  }
-};
+  },
+  ignorePatterns: ['**/*.d.ts','jestUtils.ts']};

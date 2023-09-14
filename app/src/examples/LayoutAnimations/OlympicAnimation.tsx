@@ -1,9 +1,9 @@
 import Animated, { Easing, Keyframe } from 'react-native-reanimated';
-import { Button, View } from 'react-native';
+import { Button, View, StyleSheet } from 'react-native';
 import React, { useState } from 'react';
 import Svg, { Path } from 'react-native-svg';
 
-export default function OlympicAnimation(): React.ReactElement {
+export default function OlympicAnimation() {
   const [show, setShow] = useState(true);
 
   const blueRingAnimation = new Keyframe({
@@ -172,7 +172,7 @@ export default function OlympicAnimation(): React.ReactElement {
           <Animated.View
             entering={yellowRingAnimation}
             exiting={yellowRingExitAnimation}
-            style={{ position: 'absolute', transform: [{ translateX: -13 }] }}>
+            style={styles.absoluteAndTranslation}>
             <Svg width={500} height={500}>
               <Path
                 fill="none"
@@ -186,7 +186,7 @@ export default function OlympicAnimation(): React.ReactElement {
           <Animated.View
             entering={blackRingAnimation}
             exiting={blackRingExitAnimation}
-            style={{ position: 'absolute', transform: [{ translateX: -13 }] }}>
+            style={styles.absoluteAndTranslation}>
             <Svg width={500} height={500}>
               <Path
                 fill="none"
@@ -200,7 +200,7 @@ export default function OlympicAnimation(): React.ReactElement {
           <Animated.View
             entering={greenRingAnimation}
             exiting={greenRingExitAnimation}
-            style={{ position: 'absolute', transform: [{ translateX: -13 }] }}>
+            style={styles.absoluteAndTranslation}>
             <Svg width={500} height={500}>
               <Path
                 fill="none"
@@ -214,7 +214,7 @@ export default function OlympicAnimation(): React.ReactElement {
           <Animated.View
             entering={redRingAnimation}
             exiting={redRingExitAnimation}
-            style={{ position: 'absolute' }}>
+            style={styles.absolute}>
             <Svg width={500} height={500}>
               <Path
                 fill="none"
@@ -230,3 +230,13 @@ export default function OlympicAnimation(): React.ReactElement {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  absolute: {
+    position: 'absolute',
+  },
+  absoluteAndTranslation: {
+    position: 'absolute',
+    transform: [{ translateX: -13 }],
+  },
+});

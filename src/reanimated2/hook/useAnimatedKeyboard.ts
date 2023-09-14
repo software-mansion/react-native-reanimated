@@ -1,14 +1,15 @@
+'use strict';
 import { useEffect, useRef } from 'react';
 import {
   makeMutable,
   subscribeForKeyboardEvents,
   unsubscribeFromKeyboardEvents,
 } from '../core';
-import {
+import type {
   AnimatedKeyboardInfo,
   AnimatedKeyboardOptions,
-  KeyboardState,
 } from '../commonTypes';
+import { KeyboardState } from '../commonTypes';
 
 export function useAnimatedKeyboard(
   options: AnimatedKeyboardOptions = { isStatusBarTranslucentAndroid: false }

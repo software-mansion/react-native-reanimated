@@ -1,0 +1,84 @@
+---
+sidebar_position: 1
+---
+
+# runOnJS
+
+`runOnJS` lets you asynchronously run non-[workletized](/docs/fundamentals/glossary#to-workletize) functions that couldn't otherwise run on the [UI thread](/docs/fundamentals/glossary#ui-thread). This applies to most external libraries as they don't have their functions marked with `"worklet";` directive.
+
+`runOnJS` is usually used to update React state either on animation finish or conditionally within a gesture.
+
+## Reference
+
+```javascript
+import { runOnJS } from 'react-native-reanimated';
+
+function App() {
+  // While on the UI thread
+  runOnJS(navigation.goBack)();
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function runOnJS<A extends any[], R>(
+  fn: (...args: A) => R
+): (...args: Parameters<typeof fn>) => void;
+```
+
+</details>
+
+### Arguments
+
+#### fn
+
+A reference to a function you want to execute on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) from the [UI thread](/docs/fundamentals/glossary#ui-thread). Arguments to your function have to be passed to the function returned from `runOnJS` i.e. `runOnJS(setValue)(10);`.
+
+### Returns
+
+`runOnJS` returns a function that accepts arguments for the function passed as the first argument. This function can be safely executed on the UI thread.
+
+:::info
+Don't forget to call the function returned from `runOnJS`.
+:::
+
+## Example
+
+import RunOnJS from '@site/src/examples/RunOnJS';
+import RunOnJSSrc from '!!raw-loader!@site/src/examples/RunOnJS';
+
+<InteractiveExample src={RunOnJSSrc} component={<RunOnJS />} />
+
+## Remarks
+
+- Functions passed to `runOnJS` must be defined in the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) scope, i.e. in the component body or the global scope. This code won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI thread](/docs/fundamentals/glossary#ui-thread):
+
+<Indent>
+
+```jsx
+withTiming(0, {}, () => {
+  // myFunction is defined on the UI thread
+  const myFunction = () => {
+    // ...
+  };
+  runOnJS(myFunction)(); // 💥
+});
+```
+
+</Indent>
+
+- It's a common mistake to execute function inside of runOnJS like this: ~~`runOnJS(setValue(10))()`~~. Here, the correct usage would be `runOnJS(setValue)(10)`.
+
+- It's safe to run functions via `runOnJS` on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread), as this has no effect.
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>

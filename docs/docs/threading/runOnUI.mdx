@@ -1,0 +1,82 @@
+---
+sidebar_position: 2
+---
+
+# runOnUI
+
+`runOnUI` lets you asynchronously run [workletized](/docs/fundamentals/glossary#to-workletize) functions on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+
+Most commonly used either with an `useEffect` to start an animation on component mount/unmount or with [`measure`](/docs/advanced/measure) and [`scrollTo`](/docs/scroll/scrollTo) functions which have implementations only on the UI thread.
+
+## Reference
+
+```javascript
+import { runOnUI } from 'react-native-reanimated';
+
+function App() {
+  // E.g. in event handler or in an effect
+  // highlight-next-line
+  runOnUI((greeting) => {
+    console.log(`${greeting} from the UI thread`);
+    // highlight-next-line
+  })('Howdy');
+
+  // ...
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function runOnUI<A extends any[], R>(
+  fn: (...args: A) => R
+): (...args: Parameters<typeof fn>) => void;
+```
+
+</details>
+
+### Arguments
+
+#### fn
+
+A reference to a function you want to execute on the [UI thread](/docs/fundamentals/glossary#ui-thread) from the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread). Arguments to your function have to be passed to the function returned from `runOnUI` i.e. `runOnUI(myWorklet)(10);`.
+
+### Returns
+
+`runOnUI` returns a function that accepts arguments for the function passed as the first argument.
+
+:::info
+Don't forget to call the function returned from `runOnUI`.
+:::
+
+## Example
+
+import RunOnUI from '@site/src/examples/RunOnUI';
+import RunOnUISrc from '!!raw-loader!@site/src/examples/RunOnUI';
+
+<InteractiveExample
+  src={RunOnUISrc}
+  component={<RunOnUI />}
+  label="Tap each word"
+/>
+
+## Remarks
+
+- When implementing your animations you should first reach for more general solutions such as [`useDerivedValue`](/docs/core/useDerivedValue), [`useAnimatedReaction`](/docs/advanced/useAnimatedReaction) or running code in gesture callbacks and only use `runOnUI` after you've tried other methods.
+
+- It's a common mistake to execute function inside of runOnUI like this: ~~`runOnUI(myWorklet(10))()`~~. Here, the correct usage would be `runOnUI(myWorklet)(10)`.
+
+- The callback passed as the argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ready to be run on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+
+- Make sure not to execute `runOnUI` on the UI thread as this will result in an error.
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>

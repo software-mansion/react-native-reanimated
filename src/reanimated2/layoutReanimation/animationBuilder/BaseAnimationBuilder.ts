@@ -1,13 +1,18 @@
+'use strict';
 import { withDelay } from '../../animation';
-import {
+import type {
   EntryExitAnimationFunction,
   AnimationFunction,
   LayoutAnimationFunction,
 } from './commonTypes';
 
+import { ReduceMotion } from '../../commonTypes';
+import { getReduceMotionFromConfig } from '../../animation/util';
+
 export class BaseAnimationBuilder {
   durationV?: number;
   delayV?: number;
+  reduceMotionV: ReduceMotion = ReduceMotion.System;
   randomizeDelay = false;
   callbackV?: (finished: boolean) => void;
 
@@ -16,7 +21,7 @@ export class BaseAnimationBuilder {
   ) => InstanceType<T>;
 
   build = (): EntryExitAnimationFunction | LayoutAnimationFunction => {
-    throw Error('Unimplemented method in child class.');
+    throw new Error('[Reanimated] Unimplemented method in child class.');
   };
 
   static duration<T extends typeof BaseAnimationBuilder>(
@@ -58,6 +63,19 @@ export class BaseAnimationBuilder {
     return this;
   }
 
+  static reduceMotion<T extends typeof BaseAnimationBuilder>(
+    this: T,
+    reduceMotionV: ReduceMotion
+  ): InstanceType<T> {
+    const instance = this.createInstance();
+    return instance.reduceMotion(reduceMotionV);
+  }
+
+  reduceMotion(reduceMotionV: ReduceMotion): this {
+    this.reduceMotionV = reduceMotionV;
+    return this;
+  }
+
   // 300ms is the default animation duration. If any animation has different default has to override this method.
   static getDuration(): number {
     return 300;
@@ -86,12 +104,21 @@ export class BaseAnimationBuilder {
       : this.delayV ?? 0;
   }
 
+  getReduceMotion(): ReduceMotion {
+    return this.reduceMotionV;
+  }
+
   getDelayFunction(): AnimationFunction {
     const isDelayProvided = this.randomizeDelay || this.delayV;
+    const reduceMotion = this.getReduceMotion();
     return isDelayProvided
-      ? withDelay
+      ? (delay, animation) => {
+          'worklet';
+          return withDelay(delay, animation, reduceMotion);
+        }
       : (_, animation) => {
           'worklet';
+          animation.reduceMotion = getReduceMotionFromConfig(reduceMotion);
           return animation;
         };
   }

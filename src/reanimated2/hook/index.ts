@@ -1,4 +1,5 @@
-export type { DependencyList } from './commonTypes';
+'use strict';
+export type { DependencyList, AnimatedRef } from './commonTypes';
 export {
   useAnimatedProps,
   useEvent,
@@ -6,8 +7,8 @@ export {
   useWorkletCallback,
 } from './Hooks';
 export { useSharedValue } from './useSharedValue';
+export { useReducedMotion } from './useReducedMotion';
 export { useAnimatedStyle } from './useAnimatedStyle';
-export type { AnimatedStyleResult } from './useAnimatedStyle';
 export { useAnimatedGestureHandler } from './useAnimatedGestureHandler';
 export type {
   GestureHandlerEvent,

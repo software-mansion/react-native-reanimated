@@ -1,4 +1,5 @@
-import {
+'use strict';
+import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
 } from '../animationBuilder/commonTypes';

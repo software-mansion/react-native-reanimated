@@ -12,7 +12,7 @@ function PaginationElement({
 }: {
   position: Animated.SharedValue<number>;
   slideIndex: number;
-}): React.ReactElement {
+}) {
   const inputRange = [slideIndex - 1, slideIndex, slideIndex + 1];
   const dotAnimatedStyle = useAnimatedStyle(() => {
     const width = interpolate(
@@ -49,7 +49,7 @@ export function Pagination({
 }: {
   numberOfSlides: number;
   position: Animated.SharedValue<number>;
-}): React.ReactElement {
+}) {
   return (
     <View style={styles.pagination}>
       {Array(numberOfSlides)

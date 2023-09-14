@@ -125,9 +125,9 @@ const AnimatedBlock = ({
   );
 };
 
-export default function DefaultAnimations(): React.ReactElement {
+export default function DefaultAnimations() {
   return (
-    <ScrollView style={{ flexDirection: 'column' }}>
+    <ScrollView style={styles.container}>
       <Text style={styles.groupText}>Fade in</Text>
       <AnimatedBlock name="FadeIn" animatedStyle={{ entering: FadeIn }} />
       <AnimatedBlock
@@ -503,6 +503,9 @@ export default function DefaultAnimations(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'column',
+  },
   groupText: {
     fontSize: 20,
     paddingTop: 5,
@@ -534,6 +537,7 @@ const styles = StyleSheet.create({
   animatedText: {
     color: '#ffffff',
     fontSize: 20,
+    userSelect: 'none',
   },
   animatedBox: {
     padding: 5,

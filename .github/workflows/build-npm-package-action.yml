@@ -21,6 +21,7 @@ on:
 
 jobs:
   build:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     steps:
       - name: Check out
@@ -33,6 +34,8 @@ jobs:
         with:
           node-version: 16.x
           registry-url: https://registry.npmjs.org/
+      - name: Clear annotations
+        run: scripts/clear-annotations.sh
 
       - name: Set up JDK 11
         uses: actions/setup-java@v3

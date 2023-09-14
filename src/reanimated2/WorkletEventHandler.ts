@@ -1,4 +1,5 @@
-import { NativeEvent } from './commonTypes';
+'use strict';
+import type { NativeEvent } from './commonTypes';
 import NativeReanimatedModule from './NativeReanimated';
 import { registerEventHandler, unregisterEventHandler } from './core';
 
@@ -17,7 +18,7 @@ export default class WorkletEventHandler<T extends NativeEvent<T>> {
   reattachNeeded: boolean;
   listeners: Record<string, (event: T) => void>;
   viewTag: number | undefined;
-  registrations: string[];
+  registrations: number[];
   constructor(worklet: (event: T) => void, eventNames: string[] = []) {
     this.worklet = worklet;
     this.eventNames = eventNames;
@@ -45,17 +46,17 @@ export default class WorkletEventHandler<T extends NativeEvent<T>> {
   registerForEvents(viewTag: number, fallbackEventName?: string): void {
     this.viewTag = viewTag;
     this.registrations = this.eventNames.map((eventName) =>
-      registerEventHandler(viewTag + eventName, this.worklet)
+      registerEventHandler(this.worklet, eventName, viewTag)
     );
     if (this.registrations.length === 0 && fallbackEventName) {
       this.registrations.push(
-        registerEventHandler(viewTag + fallbackEventName, this.worklet)
+        registerEventHandler(this.worklet, fallbackEventName, viewTag)
       );
     }
   }
 
   registerForEventByName(eventName: string) {
-    this.registrations.push(registerEventHandler(eventName, this.worklet));
+    this.registrations.push(registerEventHandler(this.worklet, eventName));
   }
 
   unregisterFromEvents(): void {

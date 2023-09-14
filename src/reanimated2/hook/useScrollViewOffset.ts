@@ -1,8 +1,10 @@
-import { RefObject, useEffect, useRef } from 'react';
+'use strict';
+import type { RefObject } from 'react';
+import { useEffect, useRef } from 'react';
 
 import type Animated from '../../index'; // TODO: fixme?
-import { ScrollEvent } from './useAnimatedScrollHandler';
-import { SharedValue } from '../commonTypes';
+import type { ScrollEvent } from './useAnimatedScrollHandler';
+import type { SharedValue } from '../commonTypes';
 import { findNodeHandle } from 'react-native';
 import { useEvent } from './utils';
 import { useSharedValue } from './useSharedValue';

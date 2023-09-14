@@ -1,3 +1,4 @@
+'use strict';
 import type {
   IEntryExitAnimationBuilder,
   EntryExitAnimationFunction,
@@ -8,10 +9,8 @@ import type {
   IEntryAnimationBuilder,
   IExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
-import {
-  ComplexAnimationBuilder,
-  BaseAnimationBuilder,
-} from '../animationBuilder';
+import type { BaseAnimationBuilder } from '../animationBuilder';
+import { ComplexAnimationBuilder } from '../animationBuilder';
 
 export class ZoomIn
   extends ComplexAnimationBuilder

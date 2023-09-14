@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, View } from 'react-native';
+import { Button, View, StyleSheet } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
@@ -11,16 +11,10 @@ const Stack = createNativeStackNavigator();
 
 function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
-    <View style={{ flex: 1, marginTop: 50, marginLeft: 50 }}>
-      <Animated.ScrollView style={{ marginTop: 50, marginLeft: 50 }}>
+    <View style={[styles.flexOne, styles.margins]}>
+      <Animated.ScrollView style={styles.margins}>
         <Animated.View
-          style={{
-            width: 50,
-            height: 100,
-            backgroundColor: 'red',
-            marginTop: 50,
-            marginLeft: 50,
-          }}
+          style={styles.redBox}
           sharedTransitionTag="sharedElement"
         />
         <Button
@@ -34,14 +28,9 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
 
 function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.flexOne}>
       <Animated.View
-        style={{
-          width: '100%',
-          height: 200,
-          backgroundColor: 'green',
-          marginTop: 200,
-        }}
+        style={styles.greenBox}
         sharedTransitionTag="sharedElement"
       />
       <Button
@@ -55,7 +44,7 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
 
 function Screen3({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
-    <View style={{ flex: 1, marginTop: 50 }}>
+    <View style={styles.container}>
       <Button
         title="go to screen1"
         onPress={() => navigation.navigate('Screen1')}
@@ -72,7 +61,7 @@ export default function RestoreStateExample() {
   return (
     <Stack.Navigator
       screenOptions={{
-        animation: 'none',
+        animation: 'fade',
       }}>
       <Stack.Screen
         name="Screen1"
@@ -92,3 +81,30 @@ export default function RestoreStateExample() {
     </Stack.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  flexOne: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+    marginTop: 50,
+  },
+  margins: {
+    marginTop: 50,
+    marginLeft: 50,
+  },
+  redBox: {
+    width: 50,
+    height: 100,
+    backgroundColor: 'red',
+    marginTop: 50,
+    marginLeft: 50,
+  },
+  greenBox: {
+    width: '100%',
+    height: 200,
+    backgroundColor: 'green',
+    marginTop: 200,
+  },
+});

@@ -1,0 +1,37 @@
+name: Check static framework nightly build
+on:
+  pull_request:
+    paths:
+      - .github/workflows/check-static-framework-nightly.yml
+  schedule:
+    - cron: '37 19 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: macos-12
+    strategy:
+      matrix:
+        react-native-architecture: ['Paper', 'Fabric']
+      fail-fast: false
+    concurrency:
+      group: ios-static-framework-${{ matrix.react-native-architecture }}-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Create React Native app
+        run: npx react-native init app
+      - name: Install dependencies
+        working-directory: app
+        run: yarn add github:software-mansion/react-native-reanimated
+      - name: Install Paper Pods
+        if: ${{ matrix.react-native-architecture == 'Paper' }}
+        working-directory: app/ios
+        run: export USE_FRAMEWORKS=static NO_FLIPPER=1 && pod install
+      - name: Install Fabric Pods
+        if: ${{ matrix.react-native-architecture == 'Fabric' }}
+        working-directory: app/ios
+        run: export USE_FRAMEWORKS=static NO_FLIPPER=1 RCT_NEW_ARCH_ENABLED=1 && pod install
+      - name: Build app
+        working-directory: app
+        run: npx react-native run-ios

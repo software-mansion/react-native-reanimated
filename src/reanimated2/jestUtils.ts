@@ -1,5 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
+'use strict';
 
 import { isJest } from './PlatformChecker';
 
@@ -186,7 +187,7 @@ const requireFunction = isJest()
   ? require
   : () => {
       throw new Error(
-        '[Reanimated] setUpTests() is available only in Jest environment'
+        '[Reanimated] `setUpTests` is available only in Jest environment.'
       );
     };
 

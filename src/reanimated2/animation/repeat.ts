@@ -1,26 +1,30 @@
-import { defineAnimation } from './util';
-import {
+'use strict';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
+import type {
   Animation,
   AnimationCallback,
   AnimatableValue,
   Timestamp,
   AnimationObject,
+  ReduceMotion,
 } from '../commonTypes';
-import { RepeatAnimation } from './commonTypes';
+import type { RepeatAnimation } from './commonTypes';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withRepeatType = <T extends AnimatableValue>(
   animation: T,
   numberOfReps?: number,
   reverse?: boolean,
-  callback?: AnimationCallback
+  callback?: AnimationCallback,
+  reduceMotion?: ReduceMotion
 ) => T;
 
 export const withRepeat = function <T extends AnimationObject>(
   _nextAnimation: T | (() => T),
   numberOfReps = 2,
   reverse = false,
-  callback?: AnimationCallback
+  callback?: AnimationCallback,
+  reduceMotion?: ReduceMotion
 ): Animation<RepeatAnimation> {
   'worklet';
 
@@ -44,7 +48,10 @@ export const withRepeat = function <T extends AnimationObject>(
           if (nextAnimation.callback) {
             nextAnimation.callback(true /* finished */, animation.current);
           }
-          if (numberOfReps > 0 && animation.reps >= numberOfReps) {
+          if (
+            animation.reduceMotion ||
+            (numberOfReps > 0 && animation.reps >= numberOfReps)
+          ) {
             return true;
           }
 
@@ -84,7 +91,25 @@ export const withRepeat = function <T extends AnimationObject>(
       ): void {
         animation.startValue = value;
         animation.reps = 0;
-        nextAnimation.onStart(nextAnimation, value, now, previousAnimation);
+
+        // child animations inherit the setting, unless they already have it defined
+        // they will have it defined only if the user used the `reduceMotion` prop
+        if (nextAnimation.reduceMotion === undefined) {
+          nextAnimation.reduceMotion = animation.reduceMotion;
+        }
+
+        // don't start the animation if reduced motion is enabled and
+        // the animation would end at its starting point
+        if (
+          animation.reduceMotion &&
+          reverse &&
+          (numberOfReps <= 0 || numberOfReps % 2 === 0)
+        ) {
+          animation.current = animation.startValue;
+          animation.onFrame = () => true;
+        } else {
+          nextAnimation.onStart(nextAnimation, value, now, previousAnimation);
+        }
       }
 
       return {
@@ -95,6 +120,7 @@ export const withRepeat = function <T extends AnimationObject>(
         current: nextAnimation.current,
         callback: repCallback,
         startValue: 0,
+        reduceMotion: getReduceMotionForAnimation(reduceMotion),
       };
     }
   );

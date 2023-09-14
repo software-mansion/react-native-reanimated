@@ -2,7 +2,7 @@ import {
   checkCppVersion,
   matchVersion,
 } from '../src/reanimated2/platform-specific/checkCppVersion';
-const { version: packageVersion } = require('../package.json');
+import { version as packageVersion } from '../package.json';
 
 describe('checkCppVersion', () => {
   beforeEach(() => {

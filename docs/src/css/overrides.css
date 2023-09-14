@@ -1,0 +1,81 @@
+:root {
+  --swm-expandable-transition: transform 200ms ease;
+}
+
+table {
+  display: table;
+  width: 100%;
+}
+
+@media (max-width: 1280px) {
+  table {
+    display: block;
+    width: 100%;
+  }
+}
+
+table thead tr {
+  border-bottom: 1px solid var(--ifm-table-border-color);
+}
+
+.compatibility table {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.header-github {
+  margin-left: 1.5em;
+}
+
+.header-github:before {
+  display: flex;
+  height: 24px;
+  width: 24px;
+
+  mask: url(/static/img/github.svg) no-repeat 100% 100%;
+  mask-size: cover;
+  content: '';
+
+  background-color: var(--ifm-navbar-link-color);
+}
+
+@media (max-height: 768px) {
+  .header-github:before {
+    height: 20px;
+    width: 20px;
+  }
+}
+
+.header-github:hover:before {
+  background-color: var(--ifm-navbar-link-hover-color);
+}
+
+[class*='navbarLanding'] .header-github:before,
+[class*='navbarLanding'] .header-github:hover:before {
+  background-color: var(--swm-off-white);
+}
+
+[class*='codeBlockContent'] pre {
+  border: 1px solid var(--swm-border);
+}
+
+[class*='codeBlockContent'] pre,
+[class*='codeBlockContent'] code {
+  border-radius: 0;
+  background-color: var(--swm-off-background);
+}
+
+/* Add small padding, when some of the lines are too long in a code block */
+[class*='codeBlockLines'] span:last-of-type {
+  margin-right: 1em;
+}
+
+.theme-doc-version-badge {
+  color: var(--swm-version-badge);
+  background: var(--swm-version-badge-background);
+  padding: 6px;
+  border-radius: 8px;
+  border: none;
+  margin-bottom: 8px;
+}
