@@ -21,7 +21,13 @@ export type {
   DerivedValue,
   FrameCallback,
 } from './hook';
-export type { ScrollEvent, UseHandlerContext, ReanimatedEvent } from './hook';
+export type {
+  ScrollEvent,
+  EventHandler,
+  EventHandlerProcessed,
+  UseHandlerContext,
+  ReanimatedEvent,
+} from './hook';
 export {
   useAnimatedProps,
   useEvent,
