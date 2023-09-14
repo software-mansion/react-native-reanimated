@@ -94,7 +94,7 @@ export function createAnimationWithExistingTransform(
     return '';
   }
 
-  const keyframeName = generateRandomKeyframeName();
+  const keyframeName = generateNextCustomKeyframeName();
   const newAnimationData = structuredClone(AnimationsData[animationName]);
 
   newAnimationData.name = keyframeName;
@@ -151,8 +151,10 @@ export function createAnimationWithExistingTransform(
   return keyframeName;
 }
 
-export function generateRandomKeyframeName() {
-  return `REA${Date.now()}${Math.round(Math.random() * 1000)}`;
+let customKeyframeCounter = 0;
+
+export function generateNextCustomKeyframeName() {
+  return `REA${customKeyframeCounter++}`;
 }
 
 export function getEasingFromConfig(config: ConfigType): string {
@@ -255,7 +257,7 @@ export function TransitionGenerator(
   transitionType: TransitionType,
   transitionData: TransitionData
 ) {
-  const keyframe = generateRandomKeyframeName();
+  const keyframe = generateNextCustomKeyframeName();
   let transition;
 
   switch (transitionType) {
