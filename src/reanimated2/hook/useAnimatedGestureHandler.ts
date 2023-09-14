@@ -62,9 +62,6 @@ export function useAnimatedGestureHandler<
   Event extends NativeEventWrapper<PropsUsedInUseAnimatedGestureHandler> = DefaultEvent,
   Context extends Record<string, unknown> = Record<string, unknown>
 >(handlers: GestureHandlers<Event, Context>, dependencies?: DependencyList) {
-  // type RealWebEvent = WrappedNativeEvent<GestureHandlersPayload<Event>>;
-  // type RealNativeEvent = ReanimatedEvent<GestureHandlersPayload<Event>>;
-  // type RealEvent = RealWebEvent | RealNativeEvent;
   type WebOrNativeEvent = Event | ReanimatedEvent<Event>;
 
   const { context, doDependenciesDiffer, useWeb } = useHandler<Event, Context>(
