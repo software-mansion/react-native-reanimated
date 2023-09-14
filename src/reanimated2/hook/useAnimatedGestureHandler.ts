@@ -1,7 +1,8 @@
 'use strict';
 import type { __Context, __WorkletFunction, NativeEvent } from '../commonTypes';
 import type { DependencyList } from './commonTypes';
-import { useEvent, useHandler } from './Hooks';
+import { useEvent } from './useEvent';
+import { useHandler } from './useHandler';
 
 interface Handler<T, TContext extends __Context> extends __WorkletFunction {
   (event: T, context: TContext, isCanceledOrFailed?: boolean): void;
