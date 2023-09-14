@@ -1,4 +1,4 @@
-import { parseAnimationObjectToKeyframe } from '../animationParser';
+import { convertAnimationObjectToKeyframes } from '../animationParser';
 import type { TransitionData } from '../animationParser';
 
 export function FadingTransition(name: string, transitionData: TransitionData) {
@@ -51,5 +51,5 @@ export function FadingTransition(name: string, transitionData: TransitionData) {
     duration: 300,
   };
 
-  return parseAnimationObjectToKeyframe(fadingTransition);
+  return convertAnimationObjectToKeyframes(fadingTransition);
 }

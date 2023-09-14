@@ -30,7 +30,9 @@ export interface TransitionData {
   reversed?: boolean;
 }
 
-export function parseAnimationObjectToKeyframe(animationObject: AnimationData) {
+export function convertAnimationObjectToKeyframes(
+  animationObject: AnimationData
+) {
   let keyframe = `@keyframes ${animationObject.name} { `;
 
   for (const [timestamp, style] of Object.entries(animationObject.style)) {

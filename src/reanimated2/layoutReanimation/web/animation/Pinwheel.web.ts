@@ -1,4 +1,4 @@
-import { parseAnimationObjectToKeyframe } from '../animationParser';
+import { convertAnimationObjectToKeyframes } from '../animationParser';
 
 const DEFAULT_PINWHEEL_TIME = 0.3;
 
@@ -33,11 +33,11 @@ export const PinwheelData = {
 
 export const Pinwheel = {
   PinwheelIn: {
-    style: parseAnimationObjectToKeyframe(PinwheelData.PinwheelIn),
+    style: convertAnimationObjectToKeyframes(PinwheelData.PinwheelIn),
     duration: PinwheelData.PinwheelIn.duration,
   },
   PinwheelOut: {
-    style: parseAnimationObjectToKeyframe(PinwheelData.PinwheelOut),
+    style: convertAnimationObjectToKeyframes(PinwheelData.PinwheelOut),
     duration: PinwheelData.PinwheelOut.duration,
   },
 };

@@ -1,4 +1,4 @@
-import { parseAnimationObjectToKeyframe } from '../animationParser';
+import { convertAnimationObjectToKeyframes } from '../animationParser';
 
 const DEFAULT_ROTATE_TIME = 0.3;
 
@@ -144,38 +144,38 @@ export const RotateOutData = {
 
 export const RotateIn = {
   RotateInDownLeft: {
-    style: parseAnimationObjectToKeyframe(RotateInData.RotateInDownLeft),
+    style: convertAnimationObjectToKeyframes(RotateInData.RotateInDownLeft),
     duration: RotateInData.RotateInDownLeft.duration,
   },
   RotateInDownRight: {
-    style: parseAnimationObjectToKeyframe(RotateInData.RotateInDownRight),
+    style: convertAnimationObjectToKeyframes(RotateInData.RotateInDownRight),
     duration: RotateInData.RotateInDownRight.duration,
   },
   RotateInUpLeft: {
-    style: parseAnimationObjectToKeyframe(RotateInData.RotateInUpLeft),
+    style: convertAnimationObjectToKeyframes(RotateInData.RotateInUpLeft),
     duration: RotateInData.RotateInUpLeft.duration,
   },
   RotateInUpRight: {
-    style: parseAnimationObjectToKeyframe(RotateInData.RotateInUpRight),
+    style: convertAnimationObjectToKeyframes(RotateInData.RotateInUpRight),
     duration: RotateInData.RotateInUpRight.duration,
   },
 };
 
 export const RotateOut = {
   RotateOutDownLeft: {
-    style: parseAnimationObjectToKeyframe(RotateOutData.RotateOutDownLeft),
+    style: convertAnimationObjectToKeyframes(RotateOutData.RotateOutDownLeft),
     duration: RotateOutData.RotateOutDownLeft.duration,
   },
   RotateOutDownRight: {
-    style: parseAnimationObjectToKeyframe(RotateOutData.RotateOutDownRight),
+    style: convertAnimationObjectToKeyframes(RotateOutData.RotateOutDownRight),
     duration: RotateOutData.RotateOutDownRight.duration,
   },
   RotateOutUpLeft: {
-    style: parseAnimationObjectToKeyframe(RotateOutData.RotateOutUpLeft),
+    style: convertAnimationObjectToKeyframes(RotateOutData.RotateOutUpLeft),
     duration: RotateOutData.RotateOutUpLeft.duration,
   },
   RotateOutUpRight: {
-    style: parseAnimationObjectToKeyframe(RotateOutData.RotateOutUpRight),
+    style: convertAnimationObjectToKeyframes(RotateOutData.RotateOutUpRight),
     duration: RotateOutData.RotateOutUpRight.duration,
   },
 };

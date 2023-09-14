@@ -1,4 +1,4 @@
-import { parseAnimationObjectToKeyframe } from '../animationParser';
+import { convertAnimationObjectToKeyframes } from '../animationParser';
 
 const DEFAULT_BOUNCE_TIME = 0.6;
 
@@ -120,46 +120,46 @@ export const BounceOutData = {
 
 export const BounceIn = {
   BounceIn: {
-    style: parseAnimationObjectToKeyframe(BounceInData.BounceIn),
+    style: convertAnimationObjectToKeyframes(BounceInData.BounceIn),
     duration: BounceInData.BounceIn.duration,
   },
   BounceInRight: {
-    style: parseAnimationObjectToKeyframe(BounceInData.BounceInRight),
+    style: convertAnimationObjectToKeyframes(BounceInData.BounceInRight),
     duration: BounceInData.BounceInRight.duration,
   },
   BounceInLeft: {
-    style: parseAnimationObjectToKeyframe(BounceInData.BounceInLeft),
+    style: convertAnimationObjectToKeyframes(BounceInData.BounceInLeft),
     duration: BounceInData.BounceInLeft.duration,
   },
   BounceInUp: {
-    style: parseAnimationObjectToKeyframe(BounceInData.BounceInUp),
+    style: convertAnimationObjectToKeyframes(BounceInData.BounceInUp),
     duration: BounceInData.BounceInUp.duration,
   },
   BounceInDown: {
-    style: parseAnimationObjectToKeyframe(BounceInData.BounceInDown),
+    style: convertAnimationObjectToKeyframes(BounceInData.BounceInDown),
     duration: BounceInData.BounceInDown.duration,
   },
 };
 
 export const BounceOut = {
   BounceOut: {
-    style: parseAnimationObjectToKeyframe(BounceOutData.BounceOut),
+    style: convertAnimationObjectToKeyframes(BounceOutData.BounceOut),
     duration: BounceOutData.BounceOut.duration,
   },
   BounceOutRight: {
-    style: parseAnimationObjectToKeyframe(BounceOutData.BounceOutRight),
+    style: convertAnimationObjectToKeyframes(BounceOutData.BounceOutRight),
     duration: BounceOutData.BounceOutRight.duration,
   },
   BounceOutLeft: {
-    style: parseAnimationObjectToKeyframe(BounceOutData.BounceOutLeft),
+    style: convertAnimationObjectToKeyframes(BounceOutData.BounceOutLeft),
     duration: BounceOutData.BounceOutLeft.duration,
   },
   BounceOutUp: {
-    style: parseAnimationObjectToKeyframe(BounceOutData.BounceOutUp),
+    style: convertAnimationObjectToKeyframes(BounceOutData.BounceOutUp),
     duration: BounceOutData.BounceOutUp.duration,
   },
   BounceOutDown: {
-    style: parseAnimationObjectToKeyframe(BounceOutData.BounceOutDown),
+    style: convertAnimationObjectToKeyframes(BounceOutData.BounceOutDown),
     duration: BounceOutData.BounceOutDown.duration,
   },
 };

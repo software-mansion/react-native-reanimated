@@ -1,4 +1,4 @@
-import { parseAnimationObjectToKeyframe } from '../animationParser';
+import { convertAnimationObjectToKeyframes } from '../animationParser';
 
 const DEFAULT_ROLL_TIME = 0.3;
 
@@ -48,22 +48,22 @@ export const RollOutData = {
 
 export const RollIn = {
   RollInLeft: {
-    style: parseAnimationObjectToKeyframe(RollInData.RollInLeft),
+    style: convertAnimationObjectToKeyframes(RollInData.RollInLeft),
     duration: RollInData.RollInLeft.duration,
   },
   RollInRight: {
-    style: parseAnimationObjectToKeyframe(RollInData.RollInRight),
+    style: convertAnimationObjectToKeyframes(RollInData.RollInRight),
     duration: RollInData.RollInRight.duration,
   },
 };
 
 export const RollOut = {
   RollOutLeft: {
-    style: parseAnimationObjectToKeyframe(RollOutData.RollOutLeft),
+    style: convertAnimationObjectToKeyframes(RollOutData.RollOutLeft),
     duration: RollOutData.RollOutLeft.duration,
   },
   RollOutRight: {
-    style: parseAnimationObjectToKeyframe(RollOutData.RollOutRight),
+    style: convertAnimationObjectToKeyframes(RollOutData.RollOutRight),
     duration: RollOutData.RollOutRight.duration,
   },
 };

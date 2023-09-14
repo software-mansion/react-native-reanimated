@@ -1,4 +1,4 @@
-import { parseAnimationObjectToKeyframe } from '../animationParser';
+import { convertAnimationObjectToKeyframes } from '../animationParser';
 
 const DEFAULT_FLIP_TIME = 0.3;
 
@@ -244,54 +244,54 @@ export const FlipOutData = {
 
 export const FlipIn = {
   FlipInYRight: {
-    style: parseAnimationObjectToKeyframe(FlipInData.FlipInYRight),
+    style: convertAnimationObjectToKeyframes(FlipInData.FlipInYRight),
     duration: FlipInData.FlipInYRight.duration,
   },
   FlipInYLeft: {
-    style: parseAnimationObjectToKeyframe(FlipInData.FlipInYLeft),
+    style: convertAnimationObjectToKeyframes(FlipInData.FlipInYLeft),
     duration: FlipInData.FlipInYLeft.duration,
   },
   FlipInXUp: {
-    style: parseAnimationObjectToKeyframe(FlipInData.FlipInXUp),
+    style: convertAnimationObjectToKeyframes(FlipInData.FlipInXUp),
     duration: FlipInData.FlipInXUp.duration,
   },
   FlipInXDown: {
-    style: parseAnimationObjectToKeyframe(FlipInData.FlipInXDown),
+    style: convertAnimationObjectToKeyframes(FlipInData.FlipInXDown),
     duration: FlipInData.FlipInXDown.duration,
   },
   FlipInEasyX: {
-    style: parseAnimationObjectToKeyframe(FlipInData.FlipInEasyX),
+    style: convertAnimationObjectToKeyframes(FlipInData.FlipInEasyX),
     duration: FlipInData.FlipInEasyX.duration,
   },
   FlipInEasyY: {
-    style: parseAnimationObjectToKeyframe(FlipInData.FlipInEasyY),
+    style: convertAnimationObjectToKeyframes(FlipInData.FlipInEasyY),
     duration: FlipInData.FlipInEasyY.duration,
   },
 };
 
 export const FlipOut = {
   FlipOutYRight: {
-    style: parseAnimationObjectToKeyframe(FlipOutData.FlipOutYRight),
+    style: convertAnimationObjectToKeyframes(FlipOutData.FlipOutYRight),
     duration: FlipOutData.FlipOutYRight.duration,
   },
   FlipOutYLeft: {
-    style: parseAnimationObjectToKeyframe(FlipOutData.FlipOutYLeft),
+    style: convertAnimationObjectToKeyframes(FlipOutData.FlipOutYLeft),
     duration: FlipOutData.FlipOutYLeft.duration,
   },
   FlipOutXUp: {
-    style: parseAnimationObjectToKeyframe(FlipOutData.FlipOutXUp),
+    style: convertAnimationObjectToKeyframes(FlipOutData.FlipOutXUp),
     duration: FlipOutData.FlipOutXUp.duration,
   },
   FlipOutXDown: {
-    style: parseAnimationObjectToKeyframe(FlipOutData.FlipOutXDown),
+    style: convertAnimationObjectToKeyframes(FlipOutData.FlipOutXDown),
     duration: FlipOutData.FlipOutXDown.duration,
   },
   FlipOutEasyX: {
-    style: parseAnimationObjectToKeyframe(FlipOutData.FlipOutEasyX),
+    style: convertAnimationObjectToKeyframes(FlipOutData.FlipOutEasyX),
     duration: FlipOutData.FlipOutEasyX.duration,
   },
   FlipOutEasyY: {
-    style: parseAnimationObjectToKeyframe(FlipOutData.FlipOutEasyY),
+    style: convertAnimationObjectToKeyframes(FlipOutData.FlipOutEasyY),
     duration: FlipOutData.FlipOutEasyY.duration,
   },
 };

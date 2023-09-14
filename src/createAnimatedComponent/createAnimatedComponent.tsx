@@ -55,8 +55,8 @@ import type { AnimatedComponentProps, AnimatedProps } from './utils';
 import { flattenArray, has } from './utils';
 
 import {
-  handleWebAnimation,
-  insertWebAnimations,
+  startWebLayoutAnimation,
+  configureWebLayoutAnimations,
   tryActivateLayoutTransition,
 } from '../reanimated2/layoutReanimation/web/animationsManager';
 
@@ -230,7 +230,7 @@ export default function createAnimatedComponent(
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
 
       if (IS_WEB) {
-        handleWebAnimation(
+        startWebLayoutAnimation(
           this.props,
           this._component as HTMLElement,
           LayoutAnimationType.EXITING
@@ -245,8 +245,8 @@ export default function createAnimatedComponent(
       this._attachInlineProps();
 
       if (IS_WEB) {
-        insertWebAnimations();
-        handleWebAnimation(
+        configureWebLayoutAnimations();
+        startWebLayoutAnimation(
           this.props,
           this._component as HTMLElement,
           LayoutAnimationType.ENTERING

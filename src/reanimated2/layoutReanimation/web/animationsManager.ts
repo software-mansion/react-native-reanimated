@@ -1,6 +1,6 @@
 import { Animations, AnimationsData, WebEasings } from '.';
 import type { AnimationNames, WebEasingsNames } from '.';
-import { parseAnimationObjectToKeyframe } from './animationParser';
+import { convertAnimationObjectToKeyframes } from './animationParser';
 import type {
   ReanimatedWebTransformProperties,
   TransitionData,
@@ -55,7 +55,7 @@ export enum TransitionType {
  *  Creates `HTMLStyleElement`, inserts it into DOM and then inserts CSS rules into the stylesheet.
  *  If style element already exists, nothing happens.
  */
-export function insertWebAnimations() {
+export function configureWebLayoutAnimations() {
   if (document.getElementById(WEB_ANIMATIONS_ID) !== null) {
     return;
   }
@@ -134,7 +134,7 @@ export function createAnimationWithExistingTransform(
     }
   }
 
-  const keyframe = parseAnimationObjectToKeyframe(newAnimationData);
+  const keyframe = convertAnimationObjectToKeyframes(newAnimationData);
 
   const styleTag = document.getElementById(
     WEB_ANIMATIONS_ID
@@ -306,7 +306,7 @@ export function tryActivateLayoutTransition<
     reversed: false, // This field is used only in `SequencedTransition`, so by default it will be false
   };
 
-  handleWebAnimation(
+  startWebLayoutAnimation(
     props,
     element,
     LayoutAnimationType.LAYOUT,
@@ -314,7 +314,7 @@ export function tryActivateLayoutTransition<
   );
 }
 
-export function handleWebAnimation<
+export function startWebLayoutAnimation<
   ComponentProps extends Record<string, unknown>
 >(
   props: Readonly<AnimatedComponentProps<ComponentProps>>,

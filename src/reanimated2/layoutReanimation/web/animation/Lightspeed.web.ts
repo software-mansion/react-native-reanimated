@@ -1,4 +1,4 @@
-import { parseAnimationObjectToKeyframe } from '../animationParser';
+import { convertAnimationObjectToKeyframes } from '../animationParser';
 
 const DEFAULT_LIGHTSPEED_TIME = 0.3;
 
@@ -58,22 +58,28 @@ export const LightSpeedOutData = {
 
 export const LightSpeedIn = {
   LightSpeedInRight: {
-    style: parseAnimationObjectToKeyframe(LightSpeedInData.LightSpeedInRight),
+    style: convertAnimationObjectToKeyframes(
+      LightSpeedInData.LightSpeedInRight
+    ),
     duration: LightSpeedInData.LightSpeedInRight.duration,
   },
   LightSpeedInLeft: {
-    style: parseAnimationObjectToKeyframe(LightSpeedInData.LightSpeedInLeft),
+    style: convertAnimationObjectToKeyframes(LightSpeedInData.LightSpeedInLeft),
     duration: LightSpeedInData.LightSpeedInLeft.duration,
   },
 };
 
 export const LightSpeedOut = {
   LightSpeedOutRight: {
-    style: parseAnimationObjectToKeyframe(LightSpeedOutData.LightSpeedOutRight),
+    style: convertAnimationObjectToKeyframes(
+      LightSpeedOutData.LightSpeedOutRight
+    ),
     duration: LightSpeedOutData.LightSpeedOutRight.duration,
   },
   LightSpeedOutLeft: {
-    style: parseAnimationObjectToKeyframe(LightSpeedOutData.LightSpeedOutLeft),
+    style: convertAnimationObjectToKeyframes(
+      LightSpeedOutData.LightSpeedOutLeft
+    ),
     duration: LightSpeedOutData.LightSpeedOutLeft.duration,
   },
 };

@@ -1,4 +1,4 @@
-import { parseAnimationObjectToKeyframe } from '../animationParser';
+import { convertAnimationObjectToKeyframes } from '../animationParser';
 
 const DEFAULT_STRETCH_TIME = 0.3;
 
@@ -44,22 +44,22 @@ export const StretchOutData = {
 
 export const StretchIn = {
   StretchInX: {
-    style: parseAnimationObjectToKeyframe(StretchInData.StretchInX),
+    style: convertAnimationObjectToKeyframes(StretchInData.StretchInX),
     duration: StretchInData.StretchInX.duration,
   },
   StretchInY: {
-    style: parseAnimationObjectToKeyframe(StretchInData.StretchInY),
+    style: convertAnimationObjectToKeyframes(StretchInData.StretchInY),
     duration: StretchInData.StretchInY.duration,
   },
 };
 
 export const StretchOut = {
   StretchOutX: {
-    style: parseAnimationObjectToKeyframe(StretchOutData.StretchOutX),
+    style: convertAnimationObjectToKeyframes(StretchOutData.StretchOutX),
     duration: StretchOutData.StretchOutX.duration,
   },
   StretchOutY: {
-    style: parseAnimationObjectToKeyframe(StretchOutData.StretchOutY),
+    style: convertAnimationObjectToKeyframes(StretchOutData.StretchOutY),
     duration: StretchOutData.StretchOutY.duration,
   },
 };

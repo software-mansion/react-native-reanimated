@@ -1,4 +1,4 @@
-import { parseAnimationObjectToKeyframe } from '../animationParser';
+import { convertAnimationObjectToKeyframes } from '../animationParser';
 
 const DEFAULT_FADE_TIME = 0.3;
 
@@ -114,46 +114,46 @@ export const FadeOutData = {
 
 export const FadeIn = {
   FadeIn: {
-    style: parseAnimationObjectToKeyframe(FadeInData.FadeIn),
+    style: convertAnimationObjectToKeyframes(FadeInData.FadeIn),
     duration: FadeInData.FadeIn.duration,
   },
   FadeInRight: {
-    style: parseAnimationObjectToKeyframe(FadeInData.FadeInRight),
+    style: convertAnimationObjectToKeyframes(FadeInData.FadeInRight),
     duration: FadeInData.FadeInRight.duration,
   },
   FadeInLeft: {
-    style: parseAnimationObjectToKeyframe(FadeInData.FadeInLeft),
+    style: convertAnimationObjectToKeyframes(FadeInData.FadeInLeft),
     duration: FadeInData.FadeInLeft.duration,
   },
   FadeInUp: {
-    style: parseAnimationObjectToKeyframe(FadeInData.FadeInUp),
+    style: convertAnimationObjectToKeyframes(FadeInData.FadeInUp),
     duration: FadeInData.FadeInUp.duration,
   },
   FadeInDown: {
-    style: parseAnimationObjectToKeyframe(FadeInData.FadeInDown),
+    style: convertAnimationObjectToKeyframes(FadeInData.FadeInDown),
     duration: FadeInData.FadeInDown.duration,
   },
 };
 
 export const FadeOut = {
   FadeOut: {
-    style: parseAnimationObjectToKeyframe(FadeOutData.FadeOut),
+    style: convertAnimationObjectToKeyframes(FadeOutData.FadeOut),
     duration: FadeOutData.FadeOut.duration,
   },
   FadeOutRight: {
-    style: parseAnimationObjectToKeyframe(FadeOutData.FadeOutRight),
+    style: convertAnimationObjectToKeyframes(FadeOutData.FadeOutRight),
     duration: FadeOutData.FadeOutRight.duration,
   },
   FadeOutLeft: {
-    style: parseAnimationObjectToKeyframe(FadeOutData.FadeOutLeft),
+    style: convertAnimationObjectToKeyframes(FadeOutData.FadeOutLeft),
     duration: FadeOutData.FadeOutLeft.duration,
   },
   FadeOutUp: {
-    style: parseAnimationObjectToKeyframe(FadeOutData.FadeOutUp),
+    style: convertAnimationObjectToKeyframes(FadeOutData.FadeOutUp),
     duration: FadeOutData.FadeOutUp.duration,
   },
   FadeOutDown: {
-    style: parseAnimationObjectToKeyframe(FadeOutData.FadeOutDown),
+    style: convertAnimationObjectToKeyframes(FadeOutData.FadeOutDown),
     duration: FadeOutData.FadeOutDown.duration,
   },
 };
