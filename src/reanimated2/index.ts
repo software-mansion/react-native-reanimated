@@ -24,6 +24,7 @@ export type {
 export type {
   ScrollEvent,
   EventHandler,
+  EventHandlerProcessed,
   UseHandlerContext,
   ReanimatedEvent,
 } from './hook';

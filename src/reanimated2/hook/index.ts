@@ -26,7 +26,11 @@ export { useFrameCallback } from './useFrameCallback';
 export type { FrameCallback } from './useFrameCallback';
 export { useAnimatedKeyboard } from './useAnimatedKeyboard';
 export { useScrollViewOffset } from './useScrollViewOffset';
-export type { EventHandler } from './useEvent';
+export type {
+  EventHandler,
+  EventHandlerProcessed,
+  EventHandlerInternal,
+} from './useEvent';
 export { useEvent } from './useEvent';
 export type { UseHandlerContext } from './useHandler';
 export { useHandler } from './useHandler';
