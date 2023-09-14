@@ -46,7 +46,11 @@ import {
   isWeb,
   shouldBeUseWeb,
 } from '../reanimated2/PlatformChecker';
-import { InlinePropManager } from './InlinePropManager';
+import {
+  InlinePropManager,
+  getInlineStyle,
+  hasInlineStyles,
+} from './InlinePropManager';
 
 const IS_WEB = isWeb();
 
@@ -482,11 +486,8 @@ export function createAnimatedComponent(
                 };
               }
               return this.initialStyle;
-            } else if (InlinePropManager.hasInlineStyles(style)) {
-              return InlinePropManager.getInlineStyle(
-                style,
-                this._isFirstRender
-              );
+            } else if (hasInlineStyles(style)) {
+              return getInlineStyle(style, this._isFirstRender);
             } else {
               return style;
             }

@@ -17,9 +17,7 @@ function isInlineStyleTransform(transform: unknown): boolean {
     return false;
   }
 
-  return transform.some((t: Record<string, unknown>) =>
-    InlinePropManager.hasInlineStyles(t)
-  );
+  return transform.some((t: Record<string, unknown>) => hasInlineStyles(t));
 }
 
 function inlinePropsHasChanged(
@@ -88,42 +86,42 @@ function extractSharedValuesMapFromProps(
   return inlineProps;
 }
 
+export function hasInlineStyles(style: StyleProps): boolean {
+  if (!style) {
+    return false;
+  }
+  return Object.keys(style).some((key) => {
+    const styleValue = style[key];
+    return (
+      isSharedValue(styleValue) ||
+      (key === 'transform' && isInlineStyleTransform(styleValue))
+    );
+  });
+}
+
+export function getInlineStyle(
+  style: Record<string, unknown>,
+  isFirstRender: boolean
+) {
+  if (isFirstRender) {
+    return getInlinePropsUpdate(style);
+  }
+  const newStyle: StyleProps = {};
+  for (const [key, styleValue] of Object.entries(style)) {
+    if (
+      !isSharedValue(styleValue) &&
+      !(key === 'transform' && isInlineStyleTransform(styleValue))
+    ) {
+      newStyle[key] = styleValue;
+    }
+  }
+  return newStyle;
+}
+
 export class InlinePropManager {
   _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
   _inlinePropsMapperId: number | null = null;
   _inlineProps: StyleProps = {};
-
-  public static hasInlineStyles(style: StyleProps): boolean {
-    if (!style) {
-      return false;
-    }
-    return Object.keys(style).some((key) => {
-      const styleValue = style[key];
-      return (
-        isSharedValue(styleValue) ||
-        (key === 'transform' && isInlineStyleTransform(styleValue))
-      );
-    });
-  }
-
-  public static getInlineStyle(
-    style: Record<string, unknown>,
-    isFirstRender: boolean
-  ) {
-    if (isFirstRender) {
-      return getInlinePropsUpdate(style);
-    }
-    const newStyle: StyleProps = {};
-    for (const [key, styleValue] of Object.entries(style)) {
-      if (
-        !isSharedValue(styleValue) &&
-        !(key === 'transform' && isInlineStyleTransform(styleValue))
-      ) {
-        newStyle[key] = styleValue;
-      }
-    }
-    return newStyle;
-  }
 
   public attachInlineProps(
     animatedComponent: React.Component<unknown, unknown>,
