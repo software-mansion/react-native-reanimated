@@ -1,34 +1,20 @@
 'use strict';
 import { defineAnimation, getReduceMotionForAnimation } from '../util';
 import type {
-  Animation,
   AnimationCallback,
-  AnimationObject,
-  AnimatableValue,
   Timestamp,
   RequiredKeys,
+  Animation,
 } from '../../commonTypes';
 import { rubberBandEffectDecay } from './rubberBandDecay';
-import type { DefaultDecayConfig } from './utils';
+import type {
+  DecayAnimation,
+  DecayConfig,
+  DefaultDecayConfig,
+  InnerDecayAnimation,
+} from './utils';
 import { validateConfig } from './utils';
 import { rigidDecay } from './rigidDecay';
-
-type DecayConfig = Partial<Omit<DefaultDecayConfig, 'rubberBandFactor'>>;
-export type WithDecayConfig = DecayConfig;
-
-export interface DecayAnimation extends Animation<DecayAnimation> {
-  lastTimestamp: Timestamp;
-  startTimestamp: Timestamp;
-  initialVelocity: number;
-  velocity: number;
-  current: AnimatableValue;
-}
-
-export interface InnerDecayAnimation
-  extends Omit<DecayAnimation, 'current'>,
-    AnimationObject {
-  current: number;
-}
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withDecayType = (

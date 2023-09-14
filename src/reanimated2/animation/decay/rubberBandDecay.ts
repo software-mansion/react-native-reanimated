@@ -1,7 +1,6 @@
 import type { RequiredKeys } from 'src/reanimated2/commonTypes';
-import type { DefaultDecayConfig } from './utils';
+import type { DefaultDecayConfig, InnerDecayAnimation } from './utils';
 import { SLOPE_FACTOR, VELOCITY_EPS } from './utils';
-import type { InnerDecayAnimation } from './decay';
 
 const DERIVATIVE_EPS = 0.1;
 

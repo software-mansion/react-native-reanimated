@@ -1,10 +1,32 @@
-import type { ReduceMotion } from 'src/reanimated2/commonTypes';
+import type {
+  AnimatableValue,
+  AnimationObject,
+  Animation,
+  ReduceMotion,
+  Timestamp,
+} from 'src/reanimated2/commonTypes';
 import { isWeb } from '../../PlatformChecker';
 
 const IS_WEB = isWeb();
 export const VELOCITY_EPS = IS_WEB ? 1 / 20 : 1;
 export const SLOPE_FACTOR = 0.1;
 
+export type DecayConfig = Partial<Omit<DefaultDecayConfig, 'rubberBandFactor'>>;
+export type WithDecayConfig = DecayConfig;
+
+export interface DecayAnimation extends Animation<DecayAnimation> {
+  lastTimestamp: Timestamp;
+  startTimestamp: Timestamp;
+  initialVelocity: number;
+  velocity: number;
+  current: AnimatableValue;
+}
+
+export interface InnerDecayAnimation
+  extends Omit<DecayAnimation, 'current'>,
+    AnimationObject {
+  current: number;
+}
 export interface DefaultDecayConfig {
   deceleration: number;
   velocityFactor: number;

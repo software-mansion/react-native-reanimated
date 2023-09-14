@@ -1,6 +1,5 @@
 import { SLOPE_FACTOR, VELOCITY_EPS } from './utils';
-import type { DefaultDecayConfig } from './utils';
-import type { InnerDecayAnimation } from './decay';
+import type { DefaultDecayConfig, InnerDecayAnimation } from './utils';
 
 export function rigidDecay(
   animation: InnerDecayAnimation,
