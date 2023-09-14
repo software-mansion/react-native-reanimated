@@ -294,6 +294,10 @@ export function tryActivateLayoutTransition<
   element: HTMLElement,
   snapshot: DOMRect
 ) {
+  if (!props.layout) {
+    return;
+  }
+
   const rect = element.getBoundingClientRect();
 
   if (areDOMRectsEqual(rect, snapshot)) {
