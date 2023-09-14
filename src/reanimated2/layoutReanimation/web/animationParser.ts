@@ -22,6 +22,7 @@ export interface AnimationData {
   style: Record<number, AnimationStyle>;
   duration: number;
 }
+
 export interface TransitionData {
   translateX: number;
   translateY: number;

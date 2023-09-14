@@ -13,7 +13,7 @@ export function FadingTransition(name: string, transitionData: TransitionData) {
           {
             translateX: `${translateX}px`,
             translateY: `${translateY}px`,
-            scale: `${scaleX}, ${scaleY}`,
+            scale: `${scaleX},${scaleY}`,
           },
         ],
       },
@@ -23,7 +23,7 @@ export function FadingTransition(name: string, transitionData: TransitionData) {
           {
             translateX: `${translateX}px`,
             translateY: `${translateY}px`,
-            scale: `${scaleX}, ${scaleY}`,
+            scale: `${scaleX},${scaleY}`,
           },
         ],
       },

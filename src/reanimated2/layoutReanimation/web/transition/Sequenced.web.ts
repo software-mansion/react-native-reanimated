@@ -7,7 +7,7 @@ export function SequencedTransition(
 ) {
   const { translateX, translateY, scaleX, scaleY, reversed } = transitionData;
 
-  const scaleValue = reversed ? `1, ${scaleX}` : `${scaleY}, 1`;
+  const scaleValue = reversed ? `1,${scaleX}` : `${scaleY},1`;
 
   // TODO: Change proportions
   const sequencedTransition = {
@@ -18,7 +18,7 @@ export function SequencedTransition(
           {
             translateX: `${translateX}px`,
             translateY: `${translateY}px`,
-            scale: `${scaleX}, ${scaleY}`,
+            scale: `${scaleX},${scaleY}`,
           },
         ],
       },

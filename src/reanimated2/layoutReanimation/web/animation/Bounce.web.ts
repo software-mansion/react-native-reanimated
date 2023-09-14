@@ -26,6 +26,7 @@ export const BounceInData = {
     },
     duration: DEFAULT_BOUNCE_TIME,
   },
+
   BounceInLeft: {
     name: 'BounceInLeft',
     style: {
@@ -37,6 +38,7 @@ export const BounceInData = {
     },
     duration: DEFAULT_BOUNCE_TIME,
   },
+
   BounceInUp: {
     name: 'BounceInUp',
     style: {
@@ -48,6 +50,7 @@ export const BounceInData = {
     },
     duration: DEFAULT_BOUNCE_TIME,
   },
+
   BounceInDown: {
     name: 'BounceInDown',
     style: {
