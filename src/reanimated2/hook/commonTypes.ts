@@ -1,6 +1,6 @@
 'use strict';
 import type { Component } from 'react';
-import type { __Context, ShadowNodeWrapper } from '../commonTypes';
+import type { ShadowNodeWrapper } from '../commonTypes';
 import type {
   ImageStyle,
   NativeSyntheticEvent,
@@ -10,11 +10,6 @@ import type {
 } from 'react-native';
 
 export type DependencyList = Array<unknown> | undefined;
-
-export interface ContextWithDependencies<TContext extends __Context> {
-  context: TContext;
-  savedDependencies: DependencyList;
-}
 
 export interface Descriptor {
   tag: number;
