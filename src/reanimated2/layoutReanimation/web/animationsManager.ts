@@ -14,6 +14,7 @@ import type {
 } from '..';
 import { LayoutAnimationType } from '..';
 import type { AnimatedComponentProps } from '../../../createAnimatedComponent/utils';
+import { ReduceMotion } from '../../commonTypes';
 import type { StyleProps } from '../../commonTypes';
 
 import { LinearTransition } from './transition/Linear.web';
@@ -27,6 +28,7 @@ export interface AnimationConfig {
   duration: number;
   delay: number;
   easing: string;
+  reduceMotion: boolean;
   callback: (() => void) | null;
 }
 
@@ -35,6 +37,7 @@ interface CustomConfig {
   durationV?: number;
   delayV?: number;
   randomizeDelay?: boolean;
+  reduceMotionV?: ReduceMotion;
   callbackV?: () => void;
 }
 
@@ -223,6 +226,26 @@ export function getDelayFromConfig(config: ConfigType): number {
     ? getRandomDelay((config as CustomConfig).delayV)
     : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       (config as CustomConfig).delayV! / 1000;
+}
+
+function getSystemReduceMotion() {
+  const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+  return query.matches;
+}
+
+export function getReducedMotionFromConfig(config: ConfigType) {
+  if (!('reduceMotionV' in config)) {
+    return getSystemReduceMotion();
+  }
+
+  switch (config.reduceMotionV) {
+    case ReduceMotion.Never:
+      return false;
+    case ReduceMotion.Always:
+      return true;
+    default:
+      return getSystemReduceMotion();
+  }
 }
 
 export function getDurationFromConfig(
@@ -428,8 +451,17 @@ export function startWebLayoutAnimation<
     ),
     delay: getDelayFromConfig(config),
     easing: getEasingFromConfig(config),
+    reduceMotion: getReducedMotionFromConfig(config),
     callback: getCallbackFromConfig(config),
   };
+
+  if (animationConfig.reduceMotion) {
+    if (props.entering) {
+      element.style.visibility = 'initial';
+    }
+
+    return;
+  }
 
   switch (animationType) {
     case LayoutAnimationType.ENTERING:
