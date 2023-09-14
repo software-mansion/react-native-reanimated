@@ -1,6 +1,7 @@
 'use strict';
 import type { ViewStyle, TextStyle } from 'react-native';
 
+export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;
   originY?: number;
