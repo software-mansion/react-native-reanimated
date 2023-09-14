@@ -14,19 +14,18 @@ export {
   getViewProp,
 } from './core';
 export type {
-  GestureHandlers,
+  ReanimatedEvent,
   AnimatedRef,
+  GestureHandlers,
+  DerivedValue,
+  ScrollEvent,
   ScrollHandler,
   ScrollHandlers,
-  DerivedValue,
-  FrameCallback,
-} from './hook';
-export type {
-  ScrollEvent,
+  ScrollHandlerProcessed,
   EventHandler,
   EventHandlerProcessed,
   UseHandlerContext,
-  ReanimatedEvent,
+  FrameCallback,
 } from './hook';
 export {
   useAnimatedProps,

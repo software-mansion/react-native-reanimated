@@ -38,7 +38,7 @@ export interface UseHandlerContext<Context extends Record<string, unknown>> {
   useWeb: boolean;
 }
 
-// @ts-expect-error This is fine.
+// @ts-expect-error This overload is required by our API.
 export function useHandler<
   Event extends object,
   Context extends Record<string, unknown>
