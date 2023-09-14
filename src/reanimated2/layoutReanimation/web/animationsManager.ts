@@ -52,6 +52,9 @@ export enum TransitionType {
   FADING,
 }
 
+// Since we cannot remove keyframe from DOM by its name, we have to store its id
+const customAnimations = new Map<string, number>();
+
 /**
  *  Creates `HTMLStyleElement`, inserts it into DOM and then inserts CSS rules into the stylesheet.
  *  If style element already exists, nothing happens.
@@ -162,7 +165,8 @@ export function createAnimationWithExistingTransform(
   ) as HTMLStyleElement;
 
   if (styleTag.sheet) {
-    styleTag.sheet.insertRule(keyframe);
+    const customAnimationId = styleTag.sheet.insertRule(keyframe);
+    customAnimations.set(keyframeName, customAnimationId);
   } else {
     console.error(
       '[Reanimated] Failed to insert layout animation into CSS stylesheet'
@@ -264,7 +268,17 @@ export function setElementAnimation(
   element.style.animationTimingFunction = easing;
   element.style.animationFillMode = 'forwards'; // Prevents returning to base state after animation finishes.
 
-  element.onanimationend = () => animationConfig.callback?.();
+  element.onanimationend = () => {
+    if (customAnimations.has(animationName)) {
+      const styleTag = document.getElementById(
+        WEB_ANIMATIONS_ID
+      ) as HTMLStyleElement;
+      styleTag.sheet?.deleteRule(customAnimations.get(animationName) as number);
+      customAnimations.delete(animationName);
+    }
+
+    animationConfig.callback?.();
+  };
 }
 
 /**
@@ -298,7 +312,8 @@ export function TransitionGenerator(
   ) as HTMLStyleElement;
 
   if (styleTag.sheet) {
-    styleTag.sheet.insertRule(transition);
+    const customTransitionId = styleTag.sheet.insertRule(transition);
+    customAnimations.set(keyframe, customTransitionId);
   } else {
     console.error(
       '[Reanimated] Failed to insert layout animation into CSS stylesheet'
@@ -506,7 +521,17 @@ export function handleExitingAnimation(
     if (parent?.contains(tmpElement)) {
       parent.removeChild(tmpElement);
     }
-  };
 
-  animationConfig.callback?.();
+    const animationName = tmpElement.style.animationName;
+
+    if (customAnimations.has(animationName)) {
+      const styleTag = document.getElementById(
+        WEB_ANIMATIONS_ID
+      ) as HTMLStyleElement;
+      styleTag.sheet?.deleteRule(customAnimations.get(animationName) as number);
+      customAnimations.delete(animationName);
+    }
+
+    animationConfig.callback?.();
+  };
 }
