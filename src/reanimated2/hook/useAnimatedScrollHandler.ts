@@ -16,6 +16,7 @@ export interface ScrollHandler<TContext extends __Context>
   (event: NativeScrollEvent, context?: TContext): void;
 }
 
+// ts-prune-ignore-next This will be removed in the next PR in the series.
 export interface ScrollEvent
   extends NativeScrollEvent,
     __NativeEvent<ScrollEvent> {
