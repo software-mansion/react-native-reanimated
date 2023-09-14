@@ -9,7 +9,7 @@ import {
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from '../layoutReanimation';
-import { checkVersion } from '../platform-specific/checkVersion';
+import { checkCppVersion } from '../platform-specific/checkCppVersion';
 
 export class NativeReanimated {
   native: boolean;
@@ -24,15 +24,14 @@ export class NativeReanimated {
     this.native = native;
     if (native) {
       if (this.InnerNativeModule === undefined) {
-        console.error(
+        throw new Error(
           `[Reanimated] The native part of Reanimated doesn't seem to be initialized. This could be caused by\n\
   - not rebuilding the app after installing or upgrading Reanimated\n\
   - trying to run Reanimated on an unsupported platform\n\
   - running in a brownfield app without manually initializing the native library`
         );
-        return;
       }
-      checkVersion();
+      checkCppVersion();
     }
   }
 

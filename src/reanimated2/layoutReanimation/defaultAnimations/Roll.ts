@@ -1,4 +1,7 @@
-import { ComplexAnimationBuilder } from '../animationBuilder';
+import {
+  ComplexAnimationBuilder,
+  BaseAnimationBuilder,
+} from '../animationBuilder';
 import {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
@@ -8,8 +11,10 @@ export class RollInLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): RollInLeft {
-    return new RollInLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new RollInLeft() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -45,8 +50,10 @@ export class RollInRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): RollInRight {
-    return new RollInRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new RollInRight() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -79,8 +86,10 @@ export class RollOutLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): RollOutLeft {
-    return new RollOutLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new RollOutLeft() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -118,8 +127,10 @@ export class RollOutRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): RollOutRight {
-    return new RollOutRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new RollOutRight() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {

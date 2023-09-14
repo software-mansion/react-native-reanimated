@@ -9,8 +9,10 @@ export class FadingTransition
   extends BaseAnimationBuilder
   implements ILayoutAnimationBuilder
 {
-  static createInstance(): FadingTransition {
-    return new FadingTransition();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadingTransition() as InstanceType<T>;
   }
 
   build = (): LayoutAnimationFunction => {

@@ -15,5 +15,7 @@ export interface Descriptor {
 
 export interface RefObjectFunction<T> {
   current: T | null;
-  (component?: T): number;
+  (component?: T): number | ShadowNodeWrapper;
 }
+
+export type AnimatedRef<T> = RefObjectFunction<T>;

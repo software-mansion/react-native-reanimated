@@ -1,4 +1,4 @@
-import React, { ForwardedRef, forwardRef } from 'react';
+import React, { ForwardedRef, forwardRef, RefAttributes } from 'react';
 import {
   FlatList,
   FlatListProps,
@@ -42,9 +42,7 @@ export interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
 }
 
-type ReanimatedFlatListFC<T = any> = React.FC<ReanimatedFlatListProps<T>>;
-
-export const ReanimatedFlatList: ReanimatedFlatListFC = forwardRef(
+export const ReanimatedFlatList = forwardRef(
   (props: ReanimatedFlatListProps<any>, ref: ForwardedRef<FlatList>) => {
     const { itemLayoutAnimation, ...restProps } = props;
 
@@ -67,9 +65,11 @@ export const ReanimatedFlatList: ReanimatedFlatListFC = forwardRef(
       />
     );
   }
-);
+) as <T>(
+  props: ReanimatedFlatListProps<T> & RefAttributes<FlatList<any>>
+) => React.ReactElement;
 
-export type ReanimatedFlatList = typeof ReanimatedFlatList & FlatList;
+export type ReanimatedFlatList<T> = typeof ReanimatedFlatList<T> & FlatList<T>;
 const styles = StyleSheet.create({
   verticallyInverted: { transform: [{ scaleY: -1 }] },
   horizontallyInverted: { transform: [{ scaleX: -1 }] },
