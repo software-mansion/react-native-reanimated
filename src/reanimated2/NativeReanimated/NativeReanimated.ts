@@ -75,7 +75,6 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshoo
   }
   global._REANIMATED_VERSION_JS = jsVersion;
 }
-//
 
 export class NativeReanimated {
   native = true;

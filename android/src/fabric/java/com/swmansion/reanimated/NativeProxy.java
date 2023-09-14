@@ -46,7 +46,7 @@ public class NativeProxy extends NativeProxyCommon {
                         fabricUIManager);
         prepareLayoutAnimations(LayoutAnimations);
         installJSIBindings();
-        if(BuildConfig.DEBUG){
+        if (BuildConfig.DEBUG) {
             checkCppVersion();
         }
     }

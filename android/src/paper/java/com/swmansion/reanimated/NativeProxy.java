@@ -34,7 +34,7 @@ public class NativeProxy extends NativeProxyCommon {
                         messageQueueThread);
         prepareLayoutAnimations(LayoutAnimations);
         installJSIBindings();
-        if( BuildConfig.DEBUG ){
+        if (BuildConfig.DEBUG) {
             checkCppVersion();
         }
     }
