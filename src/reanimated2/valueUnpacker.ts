@@ -74,7 +74,7 @@ type ValueUnpacker = WorkletFunction<
 >;
 
 if (__DEV__ && IS_NATIVE) {
-  if (!(valueUnpacker as ValueUnpacker).__workletHash) {
+  if (!('__workletHash' in valueUnpacker)) {
     throw new Error('[Reanimated] `valueUnpacker` is not a worklet');
   }
   const closure = (valueUnpacker as ValueUnpacker).__closure;
