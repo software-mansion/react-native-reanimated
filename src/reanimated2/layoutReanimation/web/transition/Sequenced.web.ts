@@ -9,7 +9,6 @@ export function SequencedTransition(
 
   const scaleValue = reversed ? `1,${scaleX}` : `${scaleY},1`;
 
-  // TODO: Change proportions
   const sequencedTransition = {
     name: name,
     style: {
