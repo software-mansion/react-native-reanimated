@@ -4,7 +4,8 @@ import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import type { __Context, NativeEvent, __WorkletFunction } from '../commonTypes';
 import type WorkletEventHandler from '../WorkletEventHandler';
 import type { DependencyList } from './commonTypes';
-import { useEvent, useHandler } from './Hooks';
+import { useEvent } from './useEvent';
+import { useHandler } from './useHandler';
 
 export interface ScrollHandler<TContext extends __Context>
   extends __WorkletFunction {
