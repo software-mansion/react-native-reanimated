@@ -2,6 +2,7 @@ import { Animations, AnimationsData, WebEasings } from '.';
 import type { AnimationNames, WebEasingsNames } from '.';
 import { convertAnimationObjectToKeyframes } from './animationParser';
 import type {
+  AnimationData,
   ReanimatedWebTransformProperties,
   TransitionData,
 } from './animationParser';
@@ -79,6 +80,53 @@ export function configureWebLayoutAnimations() {
   document.head.appendChild(style);
 }
 
+// Translate values are passed as numbers. However, if `translate` property receives number, it will not automatically
+// convert it to `px`. Therefore if we want to keep exisitng transform we have to add 'px' suffix to each of translate values
+// that are present inside transform.
+function addPxToTranslate(
+  existingTransform: NonNullable<TransformsStyle['transform']>
+) {
+  type RNTransformProp = (typeof existingTransform)[number];
+
+  const newTransform = existingTransform.map(
+    (transformProp: RNTransformProp) => {
+      const newTransformProp: ReanimatedWebTransformProperties = {};
+      for (const [key, value] of Object.entries(transformProp)) {
+        if (key.includes('translate')) {
+          // @ts-ignore After many trials we decided to ignore this error - it says that we cannot use 'key' to index this object.
+          // Sadly it doesn't go away after using cast `key as keyof TransformProperties`.
+          newTransformProp[key] = `${value}px`;
+        } else {
+          // @ts-ignore same as above.
+          newTransformProp[key] = value;
+        }
+      }
+      return newTransformProp;
+    }
+  );
+
+  return newTransform;
+}
+
+// In order to keep exisitng transform throughout animation, we have to add it to each of keyframe step.
+function addExistingTransform(
+  newAnimationData: AnimationData,
+  newTransform: ReanimatedWebTransformProperties[]
+) {
+  for (const keyframeStepProperties of Object.values(newAnimationData.style)) {
+    if (!keyframeStepProperties.transform) {
+      // If transform doesn't exist, we add only transform that already exists
+      keyframeStepProperties.transform = newTransform;
+    } else {
+      // We insert existing transformations before ours.
+      Array.prototype.unshift.apply(
+        keyframeStepProperties.transform,
+        newTransform
+      );
+    }
+  }
+}
+
 /**
  *  Modifies default animation by preserving transformations that given element already contains.
  *
@@ -103,36 +151,9 @@ export function createAnimationWithExistingTransform(
     throw new Error('[Reanimated] String transform is currently unsupported.');
   }
 
-  type RNTransformProp = (typeof existingTransform)[number];
+  const newTransform = addPxToTranslate(existingTransform);
 
-  const newTransform = existingTransform.map(
-    (transformProp: RNTransformProp) => {
-      const newTransformProp: ReanimatedWebTransformProperties = {};
-      for (const [key, value] of Object.entries(transformProp)) {
-        if (key.includes('translate')) {
-          // @ts-ignore After many trials we decided to ignore this error - it says that we cannot use 'key' to index this object.
-          // Sadly it doesn't go away after using cast `key as keyof TransformProperties`.
-          newTransformProp[key] = `${value}px`;
-        } else {
-          // @ts-ignore same as above.
-          newTransformProp[key] = value;
-        }
-      }
-      return newTransformProp;
-    }
-  );
-
-  for (const timestampProperties of Object.values(newAnimationData.style)) {
-    if (!timestampProperties.transform) {
-      timestampProperties.transform = newTransform;
-    } else {
-      // We insert existing transformations before ours.
-      Array.prototype.unshift.apply(
-        timestampProperties.transform,
-        newTransform
-      );
-    }
-  }
+  addExistingTransform(newAnimationData, newTransform);
 
   const keyframe = convertAnimationObjectToKeyframes(newAnimationData);
 
