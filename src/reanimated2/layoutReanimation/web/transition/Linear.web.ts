@@ -1,4 +1,3 @@
-import { convertAnimationObjectToKeyframes } from '../animationParser';
 import type { TransitionData } from '../animationParser';
 
 export function LinearTransition(name: string, transitionData: TransitionData) {
@@ -20,5 +19,5 @@ export function LinearTransition(name: string, transitionData: TransitionData) {
     duration: 300,
   };
 
-  return convertAnimationObjectToKeyframes(linearTransition);
+  return linearTransition;
 }

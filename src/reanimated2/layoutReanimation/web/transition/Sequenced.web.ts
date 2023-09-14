@@ -1,4 +1,3 @@
-import { convertAnimationObjectToKeyframes } from '../animationParser';
 import type { TransitionData } from '../animationParser';
 
 export function SequencedTransition(
@@ -37,5 +36,5 @@ export function SequencedTransition(
     duration: 300,
   };
 
-  return convertAnimationObjectToKeyframes(sequencedTransition);
+  return sequencedTransition;
 }

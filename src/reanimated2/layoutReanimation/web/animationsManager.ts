@@ -139,14 +139,21 @@ function addExistingTransform(
  */
 export function createAnimationWithExistingTransform(
   animationName: string,
-  existingTransform: NonNullable<TransformsStyle['transform']>
+  existingTransform: NonNullable<TransformsStyle['transform']>,
+  layoutTransition?: AnimationData
 ) {
-  if (!(animationName in Animations)) {
-    return '';
+  let newAnimationData;
+
+  if (layoutTransition) {
+    newAnimationData = layoutTransition;
+  } else {
+    if (!(animationName in Animations)) {
+      return '';
+    }
+    newAnimationData = structuredClone(AnimationsData[animationName]);
   }
 
   const keyframeName = generateNextCustomKeyframeName();
-  const newAnimationData = structuredClone(AnimationsData[animationName]);
 
   newAnimationData.name = keyframeName;
 
@@ -290,22 +297,33 @@ export function setElementAnimation(
  */
 export function TransitionGenerator(
   transitionType: TransitionType,
-  transitionData: TransitionData
+  transitionData: TransitionData,
+  existingTransform?: NonNullable<TransformsStyle['transform']>
 ) {
   const keyframe = generateNextCustomKeyframeName();
-  let transition;
+  let transitionObject;
 
   switch (transitionType) {
     case TransitionType.LINEAR:
-      transition = LinearTransition(keyframe, transitionData);
+      transitionObject = LinearTransition(keyframe, transitionData);
       break;
     case TransitionType.SEQUENCED:
-      transition = SequencedTransition(keyframe, transitionData);
+      transitionObject = SequencedTransition(keyframe, transitionData);
       break;
     case TransitionType.FADING:
-      transition = FadingTransition(keyframe, transitionData);
+      transitionObject = FadingTransition(keyframe, transitionData);
       break;
   }
+
+  if (existingTransform) {
+    return createAnimationWithExistingTransform(
+      '',
+      existingTransform,
+      transitionObject
+    );
+  }
+
+  const transition = convertAnimationObjectToKeyframes(transitionObject);
 
   const styleTag = document.getElementById(
     WEB_ANIMATIONS_ID
@@ -430,7 +448,8 @@ export function startWebLayoutAnimation<
       handleLayoutTransition(
         element,
         animationConfig,
-        transitionData as TransitionData
+        transitionData as TransitionData,
+        transform
       );
       break;
     case LayoutAnimationType.EXITING:
@@ -461,7 +480,8 @@ export function handleEnteringAnimation(
 export function handleLayoutTransition(
   element: HTMLElement,
   animationConfig: AnimationConfig,
-  transitionData: TransitionData
+  transitionData: TransitionData,
+  existingTransform?: NonNullable<TransformsStyle['transform']>
 ) {
   const { animationName } = animationConfig;
 
@@ -484,7 +504,8 @@ export function handleLayoutTransition(
 
   animationConfig.animationName = TransitionGenerator(
     animationType,
-    transitionData
+    transitionData,
+    existingTransform
   );
 
   setElementAnimation(element, animationConfig);
