@@ -561,7 +561,7 @@ export function handleExitingAnimation(
   animationConfig: AnimationConfig
 ) {
   const parent = element.offsetParent;
-  const tmpElement = element.cloneNode() as HTMLElement;
+  const dummy = element.cloneNode() as HTMLElement;
 
   // After cloning the element, we want to move all children from original element to its clone. This is because original element
   // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
@@ -569,25 +569,25 @@ export function handleExitingAnimation(
   //
   // This loop works because appendChild() moves element into its new parent instead of copying it
   while (element.firstChild) {
-    tmpElement.appendChild(element.firstChild);
+    dummy.appendChild(element.firstChild);
   }
 
-  setElementAnimation(tmpElement, animationConfig);
-  parent?.appendChild(tmpElement);
+  setElementAnimation(dummy, animationConfig);
+  parent?.appendChild(dummy);
 
   // We hide current element so only its copy with proper animation will be displayed
   element.style.visibility = 'hidden';
 
-  tmpElement.style.position = 'absolute';
-  tmpElement.style.top = `${element.offsetTop}px`;
-  tmpElement.style.left = `${element.offsetLeft}px`;
-  tmpElement.style.margin = '0px'; // tmpElement has absolute position, so margin is not necessary
+  dummy.style.position = 'absolute';
+  dummy.style.top = `${element.offsetTop}px`;
+  dummy.style.left = `${element.offsetLeft}px`;
+  dummy.style.margin = '0px'; // tmpElement has absolute position, so margin is not necessary
 
-  const originalOnAnimationEnd = tmpElement.onanimationend;
+  const originalOnAnimationEnd = dummy.onanimationend;
 
-  tmpElement.onanimationend = function (event: AnimationEvent) {
-    if (parent?.contains(tmpElement)) {
-      parent.removeChild(tmpElement);
+  dummy.onanimationend = function (event: AnimationEvent) {
+    if (parent?.contains(dummy)) {
+      parent.removeChild(dummy);
     }
 
     // Given that this function overrides onAnimationEnd, it won't be null
