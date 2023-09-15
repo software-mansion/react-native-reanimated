@@ -8,8 +8,7 @@ export function buildWorkletsHash(
 ) {
   // For arrays `Object.values` returns the array itself.
   return Object.values(worklets).reduce(
-    (accumulatedResult, worklet: WorkletFunction) =>
-      accumulatedResult + worklet.__workletHash.toString(),
+    (acc, worklet: WorkletFunction) => acc + worklet.__workletHash.toString(),
     ''
   );
 }
@@ -72,7 +71,7 @@ export function isAnimated(prop: unknown) {
   if (Array.isArray(prop)) {
     return prop.some(isAnimated);
   } else if (typeof prop === 'object' && prop !== null) {
-    if ('onFrame' in prop) {
+    if ((prop as Record<string, unknown>).onFrame !== undefined) {
       return true;
     } else {
       return Object.values(prop).some(isAnimated);
