@@ -195,6 +195,8 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
     | WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
   'worklet';
+  type FunWorklet = Extract<typeof fun, WorkletFunction<Args, ReturnValue>>;
+  type FunDevRemote = Extract<typeof fun, DevRemoteFunction<Args, ReturnValue>>;
   if (!IS_NATIVE || !_WORKLET) {
     // if we are already on the JS thread, we just schedule the worklet on the JS queue
     return (...args) =>
@@ -204,7 +206,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
           : (fun as () => ReturnValue)
       );
   }
-  if ('__workletHash' in fun) {
+  if ((fun as FunWorklet).__workletHash) {
     // If `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
     // and pass the worklet as a first argument followed by original arguments.
 
@@ -214,12 +216,12 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
         ...args
       );
   }
-  if ('__remoteFunction' in fun) {
+  if ((fun as FunDevRemote).__remoteFunction) {
     // In development mode the function provided as `fun` throws an error message
     // such that when someone accidentally calls it directly on the UI runtime, they
     // see that they should use `runOnJS` instead. To facilitate that we put the
     // reference to the original remote function in the `__functionInDEV` property.
-    fun = fun.__remoteFunction;
+    fun = (fun as FunDevRemote).__remoteFunction;
   }
   return (...args) => {
     _scheduleOnJS(
