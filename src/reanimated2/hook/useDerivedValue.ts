@@ -8,7 +8,7 @@ import { shouldBeUseWeb } from '../PlatformChecker';
 
 export type DerivedValue<Value> = Readonly<SharedValue<Value>>;
 
-// @ts-expect-error This is fine.
+// @ts-expect-error This overload is required by our API.
 export function useDerivedValue<Value>(
   processor: () => Value,
   dependencies?: DependencyList
