@@ -444,7 +444,7 @@ export function startWebLayoutAnimation<
     }
 
     console.warn(
-      "[Reanimated] Couldn't load entering/exiting animation. Current version supports only predefined animations with modifiers: duration, delay, easing, randomizeDelay."
+      "[Reanimated] Couldn't load entering/exiting animation. Current version supports only predefined animations with modifiers: duration, delay, easing, randomizeDelay, wtihCallback, reducedMotion."
     );
     return;
   }
