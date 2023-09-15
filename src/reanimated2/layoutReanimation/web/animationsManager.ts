@@ -23,13 +23,15 @@ import { FadingTransition } from './transition/Fading.web';
 
 export const WEB_ANIMATIONS_ID = 'ReanimatedWebAnimationsStyle';
 
+type AnimationCallback = ((finished: boolean) => void) | null;
+
 export interface AnimationConfig {
   animationName: string;
   duration: number;
   delay: number;
   easing: string;
   reduceMotion: boolean;
-  callback: (() => void) | null;
+  callback: AnimationCallback;
 }
 
 interface CustomConfig {
@@ -38,7 +40,7 @@ interface CustomConfig {
   delayV?: number;
   randomizeDelay?: boolean;
   reduceMotionV?: ReduceMotion;
-  callbackV?: () => void;
+  callbackV?: AnimationCallback;
 }
 
 type ConfigType =
@@ -267,7 +269,7 @@ export function getDurationFromConfig(
     : defaultDuration;
 }
 
-export function getCallbackFromConfig(config: ConfigType): (() => void) | null {
+export function getCallbackFromConfig(config: ConfigType): AnimationCallback {
   if (!('callbackV' in config)) {
     return null;
   }
@@ -307,8 +309,17 @@ export function setElementAnimation(
       customAnimations.delete(animationName);
     }
 
-    animationConfig.callback?.();
+    animationConfig.callback?.(true);
+    element.removeEventListener('animationcancel', animationCancelHandler);
   };
+
+  const animationCancelHandler = () => {
+    animationConfig.callback?.(false);
+    element.removeEventListener('animationcancel', animationCancelHandler);
+  };
+
+  // Here we have to use `addEventListener` since element.onanimationcancel doesn't work on chrome
+  element.addEventListener('animationcancel', animationCancelHandler);
 }
 
 /**
@@ -570,21 +581,14 @@ export function handleExitingAnimation(
   tmpElement.style.left = `${element.offsetLeft}px`;
   tmpElement.style.margin = '0px'; // tmpElement has absolute position, so margin is not necessary
 
-  tmpElement.onanimationend = () => {
+  const originalOnAnimationEnd = tmpElement.onanimationend;
+
+  tmpElement.onanimationend = function (event: AnimationEvent) {
     if (parent?.contains(tmpElement)) {
       parent.removeChild(tmpElement);
     }
 
-    const animationName = tmpElement.style.animationName;
-
-    if (customAnimations.has(animationName)) {
-      const styleTag = document.getElementById(
-        WEB_ANIMATIONS_ID
-      ) as HTMLStyleElement;
-      styleTag.sheet?.deleteRule(customAnimations.get(animationName) as number);
-      customAnimations.delete(animationName);
-    }
-
-    animationConfig.callback?.();
+    // Given that this function overrides onAnimationEnd, it won't be null
+    originalOnAnimationEnd?.call(this, event);
   };
 }
