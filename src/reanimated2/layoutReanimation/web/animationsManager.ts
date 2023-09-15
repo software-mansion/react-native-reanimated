@@ -319,8 +319,9 @@ export function setElementAnimation(
   };
 
   // Here we have to use `addEventListener` since element.onanimationcancel doesn't work on chrome
-  element.onanimationstart = () =>
+  element.onanimationstart = () => {
     element.addEventListener('animationcancel', animationCancelHandler);
+  };
 }
 
 /**
