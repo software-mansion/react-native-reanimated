@@ -452,7 +452,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   }
 
   const { initial, remoteState, viewDescriptors } = initRef.current;
-  const shareableViewDescriptors = viewDescriptors.sharableViewDescriptors;
+  const shareableViewDescriptors = viewDescriptors.shareableViewDescriptors;
   const maybeViewRef = NativeReanimatedModule.native ? undefined : viewsRef;
 
   dependencies.push(shareableViewDescriptors);

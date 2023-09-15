@@ -83,6 +83,9 @@ type AnimatedStyleProps<Props extends object> = {
   [Key in keyof PickStyleProps<Props>]: StyleProp<AnimatedStyle<Props[Key]>>;
 };
 
+/**
+ * Component props that are not specially handled by us.
+ */
 type RestProps<Props extends object> = {
   [K in keyof Omit<Props, keyof PickStyleProps<Props> | 'style'>]:
     | Props[K]
