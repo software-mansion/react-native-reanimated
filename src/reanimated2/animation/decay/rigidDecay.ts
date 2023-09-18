@@ -1,3 +1,4 @@
+'use strict';
 import { SLOPE_FACTOR, VELOCITY_EPS } from './utils';
 import type { DefaultDecayConfig, InnerDecayAnimation } from './utils';
 
