@@ -1,7 +1,12 @@
 'use strict';
-import type { __Context, __WorkletFunction, NativeEvent } from '../commonTypes';
+import type {
+  __Context,
+  __WorkletFunction,
+  __NativeEvent,
+} from '../commonTypes';
 import type { DependencyList } from './commonTypes';
-import { useEvent, useHandler } from './Hooks';
+import { useEvent } from './useEvent';
+import { useHandler } from './useHandler';
 
 interface Handler<T, TContext extends __Context> extends __WorkletFunction {
   (event: T, context: TContext, isCanceledOrFailed?: boolean): void;
@@ -32,7 +37,7 @@ interface GestureHandlerNativeEvent {
   state: (typeof EventType)[keyof typeof EventType];
 }
 
-export interface GestureHandlerEvent<T> extends NativeEvent<T> {
+export interface GestureHandlerEvent<T> extends __NativeEvent<T> {
   nativeEvent: T;
 }
 

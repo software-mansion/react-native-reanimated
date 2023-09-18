@@ -9,6 +9,7 @@ on:
 
 jobs:
   build_ios:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: macos-12
     strategy:
       matrix:
@@ -36,6 +37,7 @@ jobs:
         run: yarn react-native run-ios --simulator='iPhone 14'
 
   build_android:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     strategy:
       matrix:
