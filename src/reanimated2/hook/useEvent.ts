@@ -1,7 +1,7 @@
 'use strict';
 import type { MutableRefObject } from 'react';
 import { useRef } from 'react';
-import type { NativeEvent } from '../commonTypes';
+import type { __NativeEvent } from '../commonTypes';
 import WorkletEventHandler from '../WorkletEventHandler';
 import type { NativeSyntheticEvent } from 'react-native';
 
@@ -12,7 +12,7 @@ type useEventType = <T extends object>(
   rebuild?: boolean
 ) => (e: NativeSyntheticEvent<T>) => void;
 
-export const useEvent = function <T extends NativeEvent<T>>(
+export const useEvent = function <T extends __NativeEvent<T>>(
   handler: (event: T) => void,
   eventNames: string[] = [],
   rebuild = false
