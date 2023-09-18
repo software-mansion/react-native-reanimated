@@ -422,10 +422,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       : [adapters]
     : [];
 
-  const adaptersHash = adapters
-    ? // This will be amended in the following PRs in this series (and this comment will be gone);
-      buildWorkletsHash(adaptersArray as any)
-    : null;
+  const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
   const animationsActive = useSharedValue<boolean>(true);
   const animatedStyle: MutableRefObject<Style> = useRef<Style>({} as Style);
 
