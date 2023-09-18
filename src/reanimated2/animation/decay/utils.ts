@@ -1,3 +1,4 @@
+'use strict';
 import type { AnimationObject, AnimatableValue } from '../../../index.web';
 import { isWeb } from '../../../reanimated2/PlatformChecker';
 import type {
