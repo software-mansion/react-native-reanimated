@@ -389,7 +389,7 @@ function checkSharedValueUsage(
 }
 
 // You cannot pass Shared Values to `useAnimatedStyle` directly.
-// @ts-expect-error This is fine.
+// @ts-expect-error This overload is required by our API.
 export function useAnimatedStyle<Style extends DefaultStyle>(
   updater: () => Style,
   deps?: DependencyList | null
@@ -421,7 +421,6 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       ? adapters
       : [adapters]
     : [];
-
   const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
   const animationsActive = useSharedValue<boolean>(true);
   const animatedStyle: MutableRefObject<Style> = useRef<Style>({} as Style);
