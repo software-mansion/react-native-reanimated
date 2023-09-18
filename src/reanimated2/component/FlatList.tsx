@@ -7,7 +7,7 @@ import { AnimatedView } from './View';
 import { createAnimatedComponent } from '../../createAnimatedComponent';
 import type { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
 import type { StyleProps } from '../commonTypes';
-import type { AnimateProps } from '../helperTypes';
+import type { AnimatedProps } from '../helperTypes';
 
 const AnimatedFlatList = createAnimatedComponent(FlatList as any) as any;
 
@@ -46,7 +46,7 @@ export type FlatListPropsWithLayout<T> = ReanimatedFlatListPropsWithLayout<T>;
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 declare class ReanimatedFlatListClass<T> extends Component<
-  AnimateProps<ReanimatedFlatListPropsWithLayout<T>>
+  AnimatedProps<ReanimatedFlatListPropsWithLayout<T>>
 > {
   getNode(): FlatList;
 }
