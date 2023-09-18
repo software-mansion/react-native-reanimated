@@ -1,9 +1,9 @@
 'use strict';
-import type { NativeEvent } from './commonTypes';
+import type { __NativeEvent } from './commonTypes';
 import NativeReanimatedModule from './NativeReanimated';
 import { registerEventHandler, unregisterEventHandler } from './core';
 
-function jsListener<T extends NativeEvent<T>>(
+function jsListener<T extends __NativeEvent<T>>(
   eventName: string,
   handler: (event: T) => void
 ) {
@@ -12,7 +12,7 @@ function jsListener<T extends NativeEvent<T>>(
   };
 }
 
-export default class WorkletEventHandler<T extends NativeEvent<T>> {
+export default class WorkletEventHandler<T extends __NativeEvent<T>> {
   worklet: (event: T) => void;
   eventNames: string[];
   reattachNeeded: boolean;
