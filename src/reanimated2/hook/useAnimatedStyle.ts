@@ -25,6 +25,7 @@ import type {
   StyleProps,
   __AdapterWorkletFunction,
   __BasicWorkletFunction,
+  WorkletFunction,
 } from '../commonTypes';
 import type { AnimatedStyle } from '../helperTypes';
 
@@ -388,15 +389,16 @@ function checkSharedValueUsage(
 }
 
 // You cannot pass Shared Values to `useAnimatedStyle` directly.
+// @ts-expect-error This overload is required by our API.
 export function useAnimatedStyle<Style extends DefaultStyle>(
   updater: () => Style,
   deps?: DependencyList | null
 ): Style;
 
 export function useAnimatedStyle<Style extends DefaultStyle>(
-  updater: __BasicWorkletFunction<Style>,
+  updater: WorkletFunction<[], Style>,
   dependencies?: DependencyList | null,
-  adapters?: __AdapterWorkletFunction | __AdapterWorkletFunction[],
+  adapters?: WorkletFunction | WorkletFunction[],
   isAnimatedProps = false
 ) {
   const viewsRef: ViewRefSet<unknown> = makeViewsRefSet();
@@ -414,7 +416,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       );
     }
   }
-  const adaptersArray: __AdapterWorkletFunction[] = adapters
+  const adaptersArray = adapters
     ? Array.isArray(adapters)
       ? adapters
       : [adapters]
@@ -459,16 +461,14 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     let fun;
     let updaterFn = updater;
     if (adapters) {
-      updaterFn = () => {
+      updaterFn = (() => {
         'worklet';
         const newValues = updater();
         adaptersArray.forEach((adapter) => {
-          // Those adapters are some crazy stuff
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          adapter(newValues as any);
+          adapter(newValues);
         });
         return newValues;
-      };
+      }) as WorkletFunction<[], Style>;
     }
 
     if (isJest()) {
