@@ -5,7 +5,7 @@ import type {
   Animation,
   ReduceMotion,
   Timestamp,
-} from 'src/reanimated2/commonTypes';
+} from '../../../reanimated2/commonTypes';
 import { isWeb } from '../../PlatformChecker';
 
 const IS_WEB = isWeb();
@@ -27,6 +27,7 @@ export interface InnerDecayAnimation
   extends Omit<DecayAnimation, 'current'>,
     AnimationObject {
   current: number;
+  springActive?: boolean;
 }
 export interface DefaultDecayConfig {
   deceleration: number;

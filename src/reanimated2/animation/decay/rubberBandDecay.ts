@@ -1,5 +1,5 @@
 'use strict';
-import type { RequiredKeys } from 'src/reanimated2/commonTypes';
+import type { RequiredKeys } from '../../../reanimated2/commonTypes';
 import type { DefaultDecayConfig, InnerDecayAnimation } from './utils';
 import { SLOPE_FACTOR, VELOCITY_EPS } from './utils';
 
