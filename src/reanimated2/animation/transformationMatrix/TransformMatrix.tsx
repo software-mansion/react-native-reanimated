@@ -1,9 +1,7 @@
 import type { AffineMatrixFlat, Axis } from './matrixUtils';
 import { _multiplyMatrices, _getRotationMatrix } from './matrixUtils';
 
-// ╔═══════════════════════════╗
-// ║  This is part of the API  ║ // SOON ;-)
-// ╚═══════════════════════════╝
+// This will be part of the API soon
 
 function getAngle(angle: number | string) {
   'worklet';
