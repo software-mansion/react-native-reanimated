@@ -61,8 +61,8 @@ export function isValidRubberBandConfig(
 ): config is RubberBandDecayConfig {
   'worklet';
   return (
+    !!config.rubberBandEffect &&
     Array.isArray(config.clamp) &&
-    config.clamp.length === 2 &&
-    !!config.rubberBandEffect
+    config.clamp.length === 2
   );
 }

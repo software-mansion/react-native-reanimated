@@ -45,12 +45,11 @@ export const withDecay = function (
     }
 
     const decay: (animation: InnerDecayAnimation, now: number) => boolean =
-      config.rubberBandEffect && isValidRubberBandConfig(config)
+      isValidRubberBandConfig(config)
         ? (animation, now) => rubberBandDecay(animation, now, config)
         : (animation, now) => rigidDecay(animation, now, config);
 
     function validateConfig(config: DefaultDecayConfig): void {
-      'worklet';
       if (config.clamp) {
         if (!Array.isArray(config.clamp)) {
           throw new Error(
