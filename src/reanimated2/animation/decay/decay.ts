@@ -3,31 +3,25 @@ import { defineAnimation, getReduceMotionForAnimation } from '../util';
 import type {
   AnimationCallback,
   Timestamp,
-  RequiredKeys,
   Animation,
 } from '../../commonTypes';
-import { rubberBandEffectDecay } from './rubberBandDecay';
+import { rubberBandDecay } from './rubberBandDecay';
+import { isValidRubberBandConfig } from './utils';
 import type {
   DecayAnimation,
-  DecayConfig,
   DefaultDecayConfig,
   InnerDecayAnimation,
 } from './utils';
-import { validateConfig } from './utils';
 import { rigidDecay } from './rigidDecay';
+
+type DecayConfig = Partial<DefaultDecayConfig>;
+export type WithDecayConfig = DecayConfig;
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withDecayType = (
   userConfig: DecayConfig,
   callback?: AnimationCallback
 ) => number;
-
-function isDefaultDecayConfigWithClamp(
-  config: DefaultDecayConfig
-): config is RequiredKeys<DefaultDecayConfig, 'clamp'> {
-  'worklet';
-  return Array.isArray(config.clamp) && config.clamp.length === 2;
-}
 
 export const withDecay = function (
   userConfig: DecayConfig,
@@ -51,10 +45,35 @@ export const withDecay = function (
     }
 
     const decay: (animation: InnerDecayAnimation, now: number) => boolean =
-      config.rubberBandEffect && isDefaultDecayConfigWithClamp(config)
-        ? (animation, now) => rubberBandEffectDecay(animation, now, config)
+      config.rubberBandEffect && isValidRubberBandConfig(config)
+        ? (animation, now) => rubberBandDecay(animation, now, config)
         : (animation, now) => rigidDecay(animation, now, config);
 
+    function validateConfig(config: DefaultDecayConfig): void {
+      'worklet';
+      if (config.clamp) {
+        if (!Array.isArray(config.clamp)) {
+          throw new Error(
+            `[Reanimated] \`config.clamp\` must be an array but is ${typeof config.clamp}.`
+          );
+        }
+        if (config.clamp.length !== 2) {
+          throw new Error(
+            `[Reanimated] \`clamp array\` must contain 2 items but is given ${config.clamp.length}.`
+          );
+        }
+      }
+      if (config.velocityFactor <= 0) {
+        throw new Error(
+          `[Reanimated] \`config.velocityFactor\` must be greather then 0 but is ${config.velocityFactor}.`
+        );
+      }
+      if (config.rubberBandEffect && !config.clamp) {
+        throw new Error(
+          '[Reanimated] You need to set `clamp` property when using `rubberBandEffect`.'
+        );
+      }
+    }
     function onStart(
       animation: DecayAnimation,
       value: number,

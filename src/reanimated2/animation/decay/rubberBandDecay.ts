@@ -1,14 +1,13 @@
 'use strict';
-import type { RequiredKeys } from '../../../reanimated2/commonTypes';
-import type { DefaultDecayConfig, InnerDecayAnimation } from './utils';
+import type { RubberBandDecayConfig, InnerDecayAnimation } from './utils';
 import { SLOPE_FACTOR, VELOCITY_EPS } from './utils';
 
 const DERIVATIVE_EPS = 0.1;
 
-export function rubberBandEffectDecay(
+export function rubberBandDecay(
   animation: InnerDecayAnimation,
   now: number,
-  config: RequiredKeys<DefaultDecayConfig, 'clamp'>
+  config: RubberBandDecayConfig
 ): boolean {
   'worklet';
   const { lastTimestamp, startTimestamp, current, velocity } = animation;

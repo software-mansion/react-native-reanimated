@@ -1,3 +1,4 @@
 'use strict';
+export type { WithDecayConfig } from './decay';
 export { withDecay } from './decay';
-export type { DecayAnimation, WithDecayConfig } from './utils';
+export type { DecayAnimation } from './utils';
