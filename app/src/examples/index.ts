@@ -19,6 +19,7 @@ import BasicNestedLayoutAnimation from './LayoutAnimations/BasicNestedLayoutAnim
 import BilliardExample from './BilliardExample';
 import BokehExample from './BokehExample';
 import BouncingBoxExample from './BouncingBoxExample';
+import MoveScaleRotateExample from './MoveScaleRotateExample';
 import BubblesExample from './BubblesExample';
 import CardExample from './SharedElementTransitions/Card';
 import Carousel from './LayoutAnimations/Carousel';
@@ -242,6 +243,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📦',
     title: 'Bouncing box',
     screen: BouncingBoxExample,
+  },
+  MoveScaleRotateExample: {
+    icon: '🔄',
+    title: 'Bouncing box',
+    screen: MoveScaleRotateExample,
   },
   AnimatedKeyboardExample: {
     icon: '⌨️',
