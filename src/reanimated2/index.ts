@@ -20,8 +20,6 @@ export type {
   ScrollHandlers,
   DerivedValue,
   FrameCallback,
-} from './hook';
-export type {
   ScrollEvent,
   EventHandler,
   EventHandlerProcessed,
