@@ -9,12 +9,12 @@ import { rubberBandDecay } from './rubberBandDecay';
 import { isValidRubberBandConfig } from './utils';
 import type {
   DecayAnimation,
+  DecayConfig,
   DefaultDecayConfig,
   InnerDecayAnimation,
 } from './utils';
 import { rigidDecay } from './rigidDecay';
 
-type DecayConfig = Partial<DefaultDecayConfig>;
 export type WithDecayConfig = DecayConfig;
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.

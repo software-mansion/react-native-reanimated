@@ -27,15 +27,28 @@ export interface InnerDecayAnimation
   current: number;
   springActive?: boolean;
 }
-export interface DefaultDecayConfig {
-  deceleration: number;
-  velocityFactor: number;
-  clamp?: [min: number, max: number];
-  velocity: number;
+
+export type DecayConfig = {
+  deceleration?: number;
+  velocityFactor?: number;
+  velocity?: number;
   reduceMotion?: ReduceMotion;
-  rubberBandEffect?: boolean;
-  rubberBandFactor: number;
-}
+} & (
+  | {
+      rubberBandEffect?: false;
+      clamp?: [min: number, max: number];
+    }
+  | {
+      rubberBandEffect: true;
+      clamp: [min: number, max: number];
+      rubberBandFactor?: number;
+    }
+);
+
+export type DefaultDecayConfig = RequiredKeys<
+  DecayConfig,
+  'deceleration' | 'velocityFactor' | 'velocity'
+> & { rubberBandFactor: number };
 
 // If user wants to use rubber band decay animation we have to make sure he has provided clamp
 export type RubberBandDecayConfig = RequiredKeys<
