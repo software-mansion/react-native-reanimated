@@ -1,8 +1,13 @@
 #include "WorkletRuntimeDecorator.h"
 #include "JSISerializer.h"
-#include "Logger.h"
 #include "ReanimatedJSIUtils.h"
 #include "Shareables.h"
+
+#ifdef ANDROID
+#include "Logger.h"
+#else
+#include "Common/cpp/hidden_headers/Logger.h"
+#endif
 
 namespace reanimated {
 
