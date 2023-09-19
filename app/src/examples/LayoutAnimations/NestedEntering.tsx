@@ -44,7 +44,7 @@ export default function NestedEntering() {
           <View style={styles.boxContainer}>
             {outer1 && (
               <Animated.View entering={PinwheelIn} style={styles.outerBox}>
-                <LayoutAnimationConfig skipEntering>
+                <LayoutAnimationConfig skipEntering skipExiting>
                   {inner1 && (
                     <Animated.View
                       style={styles.box}

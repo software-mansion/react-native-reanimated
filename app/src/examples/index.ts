@@ -564,7 +564,7 @@ export const EXAMPLES: Record<string, Example> = {
     screen: ReducedMotionLayoutExample,
   },
   NestedEntering: {
-    title: '[LA] Nested disable entering',
+    title: '[LA] Nested LayoutAnimationConfig',
     screen: NestedEntering,
   },
   FlatListEntering: {
