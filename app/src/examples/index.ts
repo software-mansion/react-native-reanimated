@@ -246,7 +246,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   MoveScaleRotateExample: {
     icon: '🔄',
-    title: 'Bouncing box',
+    title: 'Move Scale Rotate',
     screen: MoveScaleRotateExample,
   },
   AnimatedKeyboardExample: {
