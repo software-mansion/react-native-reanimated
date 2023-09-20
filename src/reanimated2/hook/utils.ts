@@ -1,32 +1,27 @@
 'use strict';
-import type {
-  NestedObjectValues,
-  __WorkletFunction,
-  AnimationObject,
-} from '../commonTypes';
-import type { AnimatedStyle } from '../helperTypes';
+import type { WorkletFunction } from '../commonTypes';
 import type { DependencyList } from './commonTypes';
 
-// builds one big hash from multiple worklets' hashes
+// Builds one big hash from multiple worklets' hashes.
 export function buildWorkletsHash(
-  handlers: Record<string, __WorkletFunction> | Array<__WorkletFunction>
-): string {
-  return Object.values(handlers).reduce(
-    (acc: string, worklet: __WorkletFunction) =>
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      acc + worklet.__workletHash!.toString(),
+  worklets: Record<string, WorkletFunction> | WorkletFunction[]
+) {
+  // For arrays `Object.values` returns the array itself.
+  return Object.values(worklets).reduce(
+    (acc, worklet: WorkletFunction) => acc + worklet.__workletHash.toString(),
     ''
   );
 }
 
-// builds dependencies array for gesture handlers
+// Builds dependencies array for useEvent handlers.
 export function buildDependencies(
   dependencies: DependencyList,
-  handlers: Record<string, __WorkletFunction | undefined>
-): Array<unknown> {
-  const handlersList: __WorkletFunction[] = Object.values(handlers).filter(
+  handlers: Record<string, WorkletFunction | undefined>
+) {
+  type Handler = (typeof handlers)[keyof typeof handlers];
+  const handlersList = Object.values(handlers).filter(
     (handler) => handler !== undefined
-  ) as __WorkletFunction[];
+  ) as NonNullable<Handler>[];
   if (!dependencies) {
     dependencies = handlersList.map((handler) => {
       return {
@@ -41,15 +36,14 @@ export function buildDependencies(
   return dependencies;
 }
 
-// this is supposed to work as useEffect comparison
+// This is supposed to work as useEffect comparison.
 export function areDependenciesEqual(
   nextDeps: DependencyList,
   prevDeps: DependencyList
-): boolean {
+) {
   function is(x: number, y: number) {
-    /* eslint-disable no-self-compare */
+    // eslint-disable-next-line no-self-compare
     return (x === y && (x !== 0 || 1 / x === 1 / y)) || (x !== x && y !== y);
-    /* eslint-enable no-self-compare */
   }
   const objectIs: (nextDeps: unknown, prevDeps: unknown) => boolean =
     typeof Object.is === 'function' ? Object.is : is;
@@ -57,7 +51,7 @@ export function areDependenciesEqual(
   function areHookInputsEqual(
     nextDeps: DependencyList,
     prevDeps: DependencyList
-  ): boolean {
+  ) {
     if (!nextDeps || !prevDeps || prevDeps.length !== nextDeps.length) {
       return false;
     }
@@ -72,12 +66,12 @@ export function areDependenciesEqual(
   return areHookInputsEqual(nextDeps, prevDeps);
 }
 
-export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
+export function isAnimated(prop: unknown) {
   'worklet';
   if (Array.isArray(prop)) {
     return prop.some(isAnimated);
   } else if (typeof prop === 'object' && prop !== null) {
-    if (prop.onFrame !== undefined) {
+    if ((prop as Record<string, unknown>).onFrame !== undefined) {
       return true;
     } else {
       return Object.values(prop).some(isAnimated);
@@ -86,6 +80,10 @@ export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
   return false;
 }
 
+// This function works because `Object.keys`
+// return empty array of primitives and on arrays
+// it returns array of its indices.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function shallowEqual(a: any, b: any) {
   'worklet';
   const aKeys = Object.keys(a);
@@ -101,7 +99,7 @@ export function shallowEqual(a: any, b: any) {
   return true;
 }
 
-export const validateAnimatedStyles = (styles: AnimatedStyle<any>): void => {
+export function validateAnimatedStyles(styles: unknown[] | object) {
   'worklet';
   if (typeof styles !== 'object') {
     throw new Error(
@@ -112,4 +110,4 @@ export const validateAnimatedStyles = (styles: AnimatedStyle<any>): void => {
       '[Reanimated] `useAnimatedStyle` has to return an object and cannot return static styles combined with dynamic ones. Please do merging where a component receives props.'
     );
   }
-};
+}

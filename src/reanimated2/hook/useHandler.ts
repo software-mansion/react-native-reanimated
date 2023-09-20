@@ -13,7 +13,7 @@ interface Handlers<T, TContext extends __Context> {
   [key: string]: Handler<T, TContext> | undefined;
 }
 
-interface UseHandlerContext<TContext extends __Context> {
+export interface UseHandlerContext<TContext extends __Context> {
   context: TContext;
   doDependenciesDiffer: boolean;
   useWeb: boolean;
@@ -45,7 +45,8 @@ export const useHandler = function <T, TContext extends __Context>(
 
   const { context, savedDependencies } = initRef.current;
 
-  dependencies = buildDependencies(dependencies, handlers);
+  // This will be amended in the following PRs in this series (and this comment will be gone);
+  dependencies = buildDependencies(dependencies, handlers as any);
 
   const doDependenciesDiffer = !areDependenciesEqual(
     dependencies,
