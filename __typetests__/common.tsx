@@ -637,20 +637,20 @@ function WithSequenceTest() {
 
 // withDecay
 function withDecayTest() {
-  // @ts-expect-error rubberBandEffect=true makes clamp required
+  // @ts-expect-error `rubberBandEffect=true` makes `clamp` required.
   const a = withDecay({ rubberBandEffect: true });
 
   const b = withDecay({ rubberBandEffect: false });
 
   const c = withDecay({ rubberBandEffect: true, clamp: [0, 1] });
 
-  // @ts-expect-error clamp too short
+  // @ts-expect-error `clamp` too short.
   const d = withDecay({ rubberBandEffect: true, clamp: [0] });
 
-  // @ts-expect-error clamp too long
+  // @ts-expect-error `clamp` too long.
   const e = withDecay({ rubberBandEffect: true, clamp: [0, 1, 2] });
 
-  // @ts-expect-error When rubberBandEffect is false then rubberBandFactor should not be provided
+  // @ts-expect-error When `rubberBandEffect` is false then `rubberBandFactor` should not be provided.
   const f = withDecay({ rubberBandEffect: false, rubberBandFactor: 3 });
 
   // @ts-expect-error When `rubberBandEffect` isn't provided then `rubberBandFactor` should not be provided.
@@ -663,7 +663,7 @@ function withDecayTest() {
   });
 
   const rubberBandOn: boolean = Math.random() < 0.5;
-  // @ts-expect-error  When rubberBandEffect is an unknown boolean user still has to pass clamp
+  // @ts-expect-error  When `rubberBandEffect` is an unknown boolean user still has to pass clamp.
   const h = withDecay({ rubberBandEffect: rubberBandOn });
 
   const i = withDecay({ rubberBandEffect: rubberBandOn, clamp: [0, 1] });
