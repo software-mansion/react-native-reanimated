@@ -40,15 +40,15 @@ export function isWindowAvailable() {
   // the window object is unavailable when building the server portion of a site that uses SSG
   // this function shouldn't be used to conditionally render components
   // https://www.joshwcomeau.com/react/the-perils-of-rehydration/
-  return typeof (global as localGlobal).window !== 'undefined';
+  // @ts-ignore Fallback if `window` is undefined.
+  return typeof window !== 'undefined';
 }
 
 export function isReducedMotion() {
   return isWeb()
     ? isWindowAvailable()
-      ? !(global as localGlobal).window.matchMedia(
-          '(prefers-reduced-motion: no-preference)'
-        ).matches
+      ? // @ts-ignore Fallback if `window` is undefined.
+        !window.matchMedia('(prefers-reduced-motion: no-preference)').matches
       : false
     : (global as localGlobal)._REANIMATED_IS_REDUCED_MOTION ?? false;
 }
