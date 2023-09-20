@@ -429,9 +429,8 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
   shouldAnimate = [self shouldAnimateExiting:view.reactTag withCurrent:shouldAnimate];
 
-  BOOL hasExitAnimation =
-      ([self hasAnimationForTag:view.reactTag type:EXITING] || [_exitingViews objectForKey:view.reactTag]) &&
-      shouldAnimate;
+  BOOL hasExitAnimation = shouldAnimate &&
+      ([self hasAnimationForTag:view.reactTag type:EXITING] || [_exitingViews objectForKey:view.reactTag]);
   BOOL hasAnimatedChildren = NO;
   shouldRemoveSubviewsWithoutAnimations = shouldRemoveSubviewsWithoutAnimations && !hasExitAnimation;
   NSMutableArray *toBeRemoved = [[NSMutableArray alloc] init];

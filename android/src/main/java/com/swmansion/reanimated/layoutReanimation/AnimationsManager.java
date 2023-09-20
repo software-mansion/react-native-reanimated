@@ -520,8 +520,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
     shouldAnimate = shouldAnimateExiting(tag, shouldAnimate);
 
     boolean hasExitAnimation =
-        (hasAnimationForTag(tag, LayoutAnimations.Types.EXITING) || mExitingViews.containsKey(tag))
-            && shouldAnimate;
+        shouldAnimate
+            && (hasAnimationForTag(tag, LayoutAnimations.Types.EXITING)
+                || mExitingViews.containsKey(tag));
     boolean hasAnimatedChildren = false;
     shouldRemove = shouldRemove && !hasExitAnimation;
 
