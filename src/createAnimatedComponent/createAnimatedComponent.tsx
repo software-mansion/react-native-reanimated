@@ -5,10 +5,9 @@ import type {
   ComponentType,
   FunctionComponent,
   MutableRefObject,
-  Ref,
 } from 'react';
 import React from 'react';
-import { findNodeHandle, Platform, StyleSheet } from 'react-native';
+import { findNodeHandle, Platform } from 'react-native';
 import WorkletEventHandler from '../reanimated2/WorkletEventHandler';
 import '../reanimated2/layoutReanimation/animationsManager';
 import invariant from 'invariant';
@@ -22,42 +21,25 @@ import {
   SharedTransition,
   LayoutAnimationType,
 } from '../reanimated2/layoutReanimation';
-import type {
-  SharedValue,
-  StyleProps,
-  ShadowNodeWrapper,
-} from '../reanimated2/commonTypes';
+import type { StyleProps, ShadowNodeWrapper } from '../reanimated2/commonTypes';
 import { getShadowNodeWrapperFromRef } from '../reanimated2/fabricUtils';
-import { isSharedValue } from '../reanimated2/utils';
 import { removeFromPropsRegistry } from '../reanimated2/PropsRegistry';
-import {
-  getReduceMotionFromConfig,
-  initialUpdaterRun,
-} from '../reanimated2/animation/util';
+import { getReduceMotionFromConfig } from '../reanimated2/animation/util';
 import { maybeBuild } from '../animationBuilder';
 import type { AnimateProps } from '../reanimated2';
 import { JSPropUpdater } from './JSPropUpdater';
-import type { AnimatedComponentProps, AnimatedProps } from './utils';
+import type {
+  AnimatedComponentProps,
+  AnimatedProps,
+  InitialComponentProps,
+} from './utils';
 import { has, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
-import {
-  isChromeDebugger,
-  isJest,
-  isWeb,
-  shouldBeUseWeb,
-} from '../reanimated2/PlatformChecker';
-import {
-  InlinePropManager,
-  getInlineStyle,
-  hasInlineStyles,
-} from './InlinePropManager';
+import { isJest, isWeb, shouldBeUseWeb } from '../reanimated2/PlatformChecker';
+import { InlinePropManager } from './InlinePropManager';
+import { PropsFilter } from './PropsFilter';
 
 const IS_WEB = isWeb();
-
-function dummyListener() {
-  // empty listener we use to assign to listener properties for which animated
-  // event is used.
-}
 
 function onlyAnimatedStyles(styles: StyleProps[]): StyleProps[] {
   return styles.filter((style) => style?.viewDescriptors);
@@ -82,11 +64,6 @@ interface ComponentRef extends Component {
   setNativeProps?: (props: Record<string, unknown>) => void;
   getScrollableNode?: () => ComponentRef;
   getAnimatableRef?: () => ComponentRef;
-}
-
-interface InitialComponentProps extends Record<string, unknown> {
-  ref?: Ref<Component>;
-  collapsable?: boolean;
 }
 
 export function createAnimatedComponent<P extends object>(
@@ -117,11 +94,11 @@ export function createAnimatedComponent(
     _viewTag = -1;
     _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
-    initialStyle = {};
     _component: ComponentRef | HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
     _JSPropUpdater = new JSPropUpdater();
     _InlinePropManager = new InlinePropManager();
+    _propsFilter = new PropsFilter();
     static displayName: string;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
@@ -465,81 +442,12 @@ export function createAnimatedComponent(
       },
     });
 
-    _filterNonAnimatedProps(
-      inputProps: AnimatedComponentProps<InitialComponentProps>
-    ): Record<string, unknown> {
-      const props: Record<string, unknown> = {};
-      for (const key in inputProps) {
-        const value = inputProps[key];
-        if (key === 'style') {
-          const styleProp = inputProps.style;
-          const styles = flattenArray<StyleProps>(styleProp ?? []);
-          const processedStyle: StyleProps = styles.map((style) => {
-            if (style && style.viewDescriptors) {
-              // this is how we recognize styles returned by useAnimatedStyle
-              style.viewsRef.add(this);
-              if (this._isFirstRender) {
-                this.initialStyle = {
-                  ...style.initial.value,
-                  ...this.initialStyle,
-                  ...initialUpdaterRun<StyleProps>(style.initial.updater),
-                };
-              }
-              return this.initialStyle;
-            } else if (hasInlineStyles(style)) {
-              return getInlineStyle(style, this._isFirstRender);
-            } else {
-              return style;
-            }
-          });
-          props[key] = StyleSheet.flatten(processedStyle);
-        } else if (key === 'animatedProps') {
-          const animatedProp = inputProps.animatedProps as Partial<
-            AnimatedComponentProps<AnimatedProps>
-          >;
-          if (animatedProp.initial !== undefined) {
-            Object.keys(animatedProp.initial.value).forEach((key) => {
-              props[key] = animatedProp.initial?.value[key];
-              animatedProp.viewsRef?.add(this);
-            });
-          }
-        } else if (
-          has('current', value) &&
-          value.current instanceof WorkletEventHandler
-        ) {
-          if (value.current.eventNames.length > 0) {
-            value.current.eventNames.forEach((eventName) => {
-              props[eventName] = has('listeners', value.current)
-                ? (value.current.listeners as Record<string, unknown>)[
-                    eventName
-                  ]
-                : dummyListener;
-            });
-          } else {
-            props[key] = dummyListener;
-          }
-        } else if (isSharedValue(value)) {
-          if (this._isFirstRender) {
-            props[key] = (value as SharedValue<any>).value;
-          }
-        } else if (
-          key !== 'onGestureHandlerStateChange' ||
-          !isChromeDebugger()
-        ) {
-          props[key] = value;
-        }
-      }
-      return props;
-    }
-
     render() {
-      const props = this._filterNonAnimatedProps(this.props);
+      const props = this._propsFilter.filterNonAnimatedProps(this.props);
+      this._propsFilter.setNotAFirstRender();
+
       if (isJest()) {
         props.animatedStyle = this.animatedStyle;
-      }
-
-      if (this._isFirstRender) {
-        this._isFirstRender = false;
       }
 
       const platformProps = Platform.select({
