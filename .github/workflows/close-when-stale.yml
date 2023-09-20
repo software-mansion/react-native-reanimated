@@ -10,6 +10,7 @@ on:
 
 jobs:
   main:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Actions

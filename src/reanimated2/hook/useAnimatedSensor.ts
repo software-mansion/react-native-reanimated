@@ -81,7 +81,7 @@ export function useAnimatedSensor(
 export function useAnimatedSensor(
   sensorType: SensorType,
   userConfig?: Partial<SensorConfig>
-): AnimatedSensor<any> {
+): AnimatedSensor<ValueRotation | Value3D> {
   const config: SensorConfig = {
     interval: 'auto',
     adjustToInterfaceOrientation: true,

@@ -83,7 +83,6 @@ export const withSpring = ((
 
       if (config.useDuration && timeFromStart >= config.duration) {
         animation.current = toValue;
-
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
         return true;

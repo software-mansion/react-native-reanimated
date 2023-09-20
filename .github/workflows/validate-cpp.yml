@@ -23,6 +23,7 @@ on:
 
 jobs:
   lint:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     name: cpplint
     runs-on: ubuntu-latest
     strategy:
