@@ -5,8 +5,13 @@ export function isJest(): boolean {
   return !!process.env.JEST_WORKER_ID;
 }
 
+type localGlobal = typeof globalThis & Record<string, unknown>;
+
 export function isChromeDebugger(): boolean {
-  return !(global as any).nativeCallSyncHook || (global as any).__REMOTEDEV__;
+  return (
+    !(global as localGlobal).nativeCallSyncHook ||
+    !!(global as localGlobal).__REMOTEDEV__
+  );
 }
 
 export function isWeb(): boolean {
@@ -41,5 +46,5 @@ export function isReducedMotion() {
     ? isWindowAvailable()
       ? !window.matchMedia('(prefers-reduced-motion: no-preference)').matches
       : false
-    : global._REANIMATED_IS_REDUCED_MOTION ?? false;
+    : (global as localGlobal)._REANIMATED_IS_REDUCED_MOTION ?? false;
 }
