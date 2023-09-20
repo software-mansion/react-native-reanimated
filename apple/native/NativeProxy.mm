@@ -341,10 +341,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     return NO;
   }];
 
-  [animationsManager setIsDisabledExitingBlock:^(NSNumber *_Nonnull tag) {
+  [animationsManager setShouldAnimateExitingBlock:^(NSNumber *_Nonnull tag, BOOL current) {
     if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      bool isDisabledExiting = nativeReanimatedModule->layoutAnimationsManager().isDisabledExiting([tag intValue]);
-      return isDisabledExiting ? YES : NO;
+      bool shouldAnimateExiting =
+          nativeReanimatedModule->layoutAnimationsManager().shouldAnimateExiting([tag intValue], current);
+      return shouldAnimateExiting ? YES : NO;
     }
     return NO;
   }];

@@ -489,8 +489,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
   }
 
-  public boolean isDisabledExiting(int tag) {
-    return mNativeMethodsHolder.isDisabledExiting(tag);
+  public boolean shouldAnimateExiting(int tag, boolean current) {
+    return mNativeMethodsHolder.shouldAnimateExiting(tag, current);
   }
 
   public boolean hasAnimationForTag(int tag, int type) {
@@ -517,7 +517,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       }
     }
 
-    shouldAnimate &= !isDisabledExiting(tag);
+    shouldAnimate = shouldAnimateExiting(tag, shouldAnimate);
 
     boolean hasExitAnimation =
         (hasAnimationForTag(tag, LayoutAnimations.Types.EXITING) || mExitingViews.containsKey(tag))

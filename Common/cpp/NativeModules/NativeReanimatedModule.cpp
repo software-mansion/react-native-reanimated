@@ -321,10 +321,12 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
   return jsi::Value::undefined();
 }
 
-jsi::Value NativeReanimatedModule::disableExiting(
+jsi::Value NativeReanimatedModule::setShouldAnimateExiting(
     jsi::Runtime &rt,
-    const jsi::Value &viewTag) {
-  layoutAnimationsManager_.disableExiting(viewTag.asNumber());
+    const jsi::Value &viewTag,
+    const jsi::Value &current) {
+  layoutAnimationsManager_.setShouldAnimateExiting(
+      viewTag.asNumber(), current.asBool());
   return jsi::Value::undefined();
 }
 

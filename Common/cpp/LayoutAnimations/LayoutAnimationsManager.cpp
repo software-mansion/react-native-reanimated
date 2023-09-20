@@ -28,14 +28,16 @@ void LayoutAnimationsManager::configureAnimation(
   }
 }
 
-void LayoutAnimationsManager::disableExiting(int tag) {
+void LayoutAnimationsManager::setShouldAnimateExiting(int tag, bool value) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-  disableExiting_.emplace(tag);
+  shouldAnimateExitingForTag_[tag] = value;
 }
 
-bool LayoutAnimationsManager::isDisabledExiting(int tag) {
+bool LayoutAnimationsManager::shouldAnimateExiting(int tag, bool current) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-  return collection::contains(disableExiting_, tag);
+  return collection::contains(shouldAnimateExitingForTag_, tag)
+      ? shouldAnimateExitingForTag_[tag]
+      : current;
 }
 
 bool LayoutAnimationsManager::hasLayoutAnimation(
@@ -75,7 +77,7 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   }
   viewTagToSharedTag_.erase(tag);
   ignoreProgressAnimationForTag_.erase(tag);
-  disableExiting_.erase(tag);
+  shouldAnimateExitingForTag_.erase(tag);
 }
 
 void LayoutAnimationsManager::startLayoutAnimation(

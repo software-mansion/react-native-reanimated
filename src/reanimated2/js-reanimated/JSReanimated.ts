@@ -87,7 +87,7 @@ export default class JSReanimated {
     // no-op
   }
 
-  disableExitingAnimation() {
+  setShouldAnimateExitingForTag() {
     // no-op
   }
 

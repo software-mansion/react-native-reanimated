@@ -73,10 +73,10 @@ public class NativeProxy extends NativeProxyCommon {
             }
 
             @Override
-            public boolean isDisabledExiting(int tag) {
+            public boolean shouldAnimateExiting(int tag, boolean current) {
                 LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
                 if (layoutAnimations != null) {
-                    return layoutAnimations.isDisabledExiting(tag);
+                    return layoutAnimations.shouldAnimateExiting(tag, current);
                 }
                 return false;
             }

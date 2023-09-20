@@ -205,8 +205,14 @@ export function configureLayoutAnimations(
   );
 }
 
-export function disableExitingAnimation(viewTag: number | HTMLElement) {
-  NativeReanimatedModule.disableExitingAnimation(viewTag as number);
+export function setShouldAnimateExitingForTag(
+  viewTag: number | HTMLElement,
+  current: boolean
+) {
+  NativeReanimatedModule.setShouldAnimateExitingForTag(
+    viewTag as number,
+    current
+  );
 }
 
 export function configureProps(uiProps: string[], nativeProps: string[]): void {

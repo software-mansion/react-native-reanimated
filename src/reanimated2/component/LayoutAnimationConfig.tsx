@@ -1,6 +1,6 @@
 import { Children, Component, createContext, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { disableExitingAnimation } from '../core';
+import { setShouldAnimateExitingForTag } from '../core';
 import { findNodeHandle } from 'react-native';
 
 export const SkipEnteringContext =
@@ -28,10 +28,13 @@ function SkipEntering(props: { value: boolean; children: ReactNode }) {
 
 export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps> {
   componentWillUnmount(): void {
-    if (this.props.skipExiting && Children.count(this.props.children) === 1) {
+    if (
+      this.props.skipExiting !== undefined &&
+      Children.count(this.props.children) === 1
+    ) {
       const tag = findNodeHandle(this);
       if (tag) {
-        disableExitingAnimation(tag);
+        setShouldAnimateExitingForTag(tag, !this.props.skipExiting);
       }
     }
   }

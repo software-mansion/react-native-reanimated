@@ -16,7 +16,7 @@ typedef NS_ENUM(NSInteger, ViewState) {
 };
 
 typedef BOOL (^REAHasAnimationBlock)(NSNumber *_Nonnull tag, LayoutAnimationType type);
-typedef BOOL (^REAIsDisabledExitingBlock)(NSNumber *_Nonnull tag);
+typedef BOOL (^REAShouldAnimateExitingBlock)(NSNumber *_Nonnull tag, BOOL current);
 typedef void (
     ^REAAnimationStartingBlock)(NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull yogaValues);
 typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
@@ -33,7 +33,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
 - (instancetype)initWithUIManager:(RCTUIManager *)uiManager;
 - (void)setAnimationStartingBlock:(REAAnimationStartingBlock)startAnimation;
 - (void)setHasAnimationBlock:(REAHasAnimationBlock)hasAnimation;
-- (void)setIsDisabledExitingBlock:(REAIsDisabledExitingBlock)isDisabledExiting;
+- (void)setShouldAnimateExitingBlock:(REAShouldAnimateExitingBlock)shouldAnimateExiting;
 - (void)setAnimationRemovingBlock:(REAAnimationRemovingBlock)clearAnimation;
 #ifdef DEBUG
 - (void)setCheckDuplicateSharedTagBlock:(REACheckDuplicateSharedTagBlock)checkDuplicateSharedTag;

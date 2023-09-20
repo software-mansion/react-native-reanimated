@@ -44,14 +44,14 @@ export default function NestedLayoutConfig() {
           <View style={styles.boxContainer}>
             {outer1 && (
               <Animated.View
-                entering={PinwheelIn}
-                exiting={PinwheelOut}
+                entering={PinwheelIn.duration(1000)}
+                exiting={PinwheelOut.duration(2000)}
                 style={styles.outerBox}>
                 <LayoutAnimationConfig skipEntering skipExiting>
                   {inner1 && (
                     <Animated.View
                       style={styles.box}
-                      entering={PinwheelIn.duration(1000)}
+                      entering={PinwheelIn.duration(2000)}
                       exiting={PinwheelOut.duration(1000)}
                     />
                   )}
@@ -62,17 +62,17 @@ export default function NestedLayoutConfig() {
           <View style={styles.boxContainer}>
             {outer2 && (
               <Animated.View
-                entering={PinwheelIn}
-                exiting={PinwheelOut}
+                entering={PinwheelIn.duration(1000)}
+                exiting={PinwheelOut.duration(2000)}
                 style={styles.outerBox}>
                 {/* setting skipEntering to false cancels the skip */}
                 <LayoutAnimationConfig skipEntering={false} skipExiting>
                   {inner2 && (
-                    // setting skipExiting to false doesn't cancel the skip
+                    // setting skipExiting to false cancels the skip
                     <LayoutAnimationConfig skipExiting={false}>
                       <Animated.View
                         style={styles.box}
-                        entering={PinwheelIn.duration(1000)}
+                        entering={PinwheelIn.duration(2000)}
                         exiting={PinwheelOut.duration(1000)}
                       />
                     </LayoutAnimationConfig>

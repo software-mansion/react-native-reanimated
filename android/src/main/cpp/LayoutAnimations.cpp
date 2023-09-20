@@ -47,9 +47,9 @@ void LayoutAnimations::setHasAnimationBlock(
   this->hasAnimationBlock_ = hasAnimationBlock;
 }
 
-void LayoutAnimations::setIsDisabledExitingBlock(
-    IsDisabledExitingBlock isDisabledExitingBlock) {
-  this->isDisabledExitingBlock_ = isDisabledExitingBlock;
+void LayoutAnimations::setShouldAnimateExitingBlock(
+    ShouldAnimateExitingBlock shouldAnimateExitingBlock) {
+  this->shouldAnimateExitingBlock_ = shouldAnimateExitingBlock;
 }
 
 #ifdef DEBUG
@@ -67,8 +67,8 @@ bool LayoutAnimations::hasAnimationForTag(int tag, int type) {
   return hasAnimationBlock_(tag, type);
 }
 
-bool LayoutAnimations::isDisabledExiting(int tag) {
-  return isDisabledExitingBlock_(tag);
+bool LayoutAnimations::shouldAnimateExiting(int tag, bool current) {
+  return shouldAnimateExitingBlock_(tag, current);
 }
 
 void LayoutAnimations::setClearAnimationConfigBlock(
@@ -112,7 +112,7 @@ void LayoutAnimations::registerNatives() {
       makeNativeMethod(
           "hasAnimationForTag", LayoutAnimations::hasAnimationForTag),
       makeNativeMethod(
-          "isDisabledExiting", LayoutAnimations::isDisabledExiting),
+          "shouldAnimateExiting", LayoutAnimations::shouldAnimateExiting),
       makeNativeMethod(
           "clearAnimationConfigForTag",
           LayoutAnimations::clearAnimationConfigForTag),

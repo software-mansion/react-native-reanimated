@@ -32,8 +32,8 @@ class LayoutAnimationsManager {
       LayoutAnimationType type,
       const std::string &sharedTransitionTag,
       std::shared_ptr<Shareable> config);
-  void disableExiting(int tag);
-  bool isDisabledExiting(int tag);
+  void setShouldAnimateExiting(int tag, bool value);
+  bool shouldAnimateExiting(int tag, bool current);
   bool hasLayoutAnimation(int tag, LayoutAnimationType type);
   void startLayoutAnimation(
       jsi::Runtime &rt,
@@ -63,7 +63,6 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::string> viewsScreenSharedTagMap_;
 #endif
 
-  std::unordered_set<int> disableExiting_;
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> layoutAnimations_;
@@ -72,9 +71,10 @@ class LayoutAnimationsManager {
   std::unordered_set<int> ignoreProgressAnimationForTag_;
   std::unordered_map<std::string, std::vector<int>> sharedTransitionGroups_;
   std::unordered_map<int, std::string> viewTagToSharedTag_;
+  std::unordered_map<int, bool> shouldAnimateExitingForTag_;
   mutable std::mutex
       animationsMutex_; // Protects `enteringAnimations_`, `exitingAnimations_`,
-  // `layoutAnimations_` and `viewSharedValues_`.
+  // `layoutAnimations_`, `viewSharedValues_` and `shouldAnimateExitingForTag_`.
 };
 
 } // namespace reanimated

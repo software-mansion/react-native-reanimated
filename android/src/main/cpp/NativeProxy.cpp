@@ -498,11 +498,11 @@ void NativeProxy::setupLayoutAnimations() {
         return false;
       });
 
-  layoutAnimations_->cthis()->setIsDisabledExitingBlock(
-      [weakNativeReanimatedModule](int tag) {
+  layoutAnimations_->cthis()->setShouldAnimateExitingBlock(
+      [weakNativeReanimatedModule](int tag, bool current) {
         if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
           return nativeReanimatedModule->layoutAnimationsManager()
-              .isDisabledExiting(tag);
+              .shouldAnimateExiting(tag, current);
         }
         return false;
       });

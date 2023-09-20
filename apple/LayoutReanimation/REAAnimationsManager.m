@@ -41,7 +41,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   NSMutableArray<NSString *> *_currentKeys;
   REAAnimationStartingBlock _startAnimationForTag;
   REAHasAnimationBlock _hasAnimationForTag;
-  REAIsDisabledExitingBlock _isDisabledExiting;
+  REAShouldAnimateExitingBlock _shouldAnimateExiting;
   REAAnimationRemovingBlock _clearAnimationConfigForTag;
   REASharedTransitionManager *_sharedTransitionManager;
 #ifdef DEBUG
@@ -118,9 +118,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   _hasAnimationForTag = hasAnimation;
 }
 
-- (void)setIsDisabledExitingBlock:(REAIsDisabledExitingBlock)isDisabledExiting
+- (void)setShouldAnimateExitingBlock:(REAShouldAnimateExitingBlock)shouldAnimateExiting
 {
-  _isDisabledExiting = isDisabledExiting;
+  _shouldAnimateExiting = shouldAnimateExiting;
 }
 
 - (void)setAnimationRemovingBlock:(REAAnimationRemovingBlock)clearAnimation
@@ -427,7 +427,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     return NO;
   }
 
-  shouldAnimate &= ![self isDisabledExiting:view.reactTag];
+  shouldAnimate = [self shouldAnimateExiting:view.reactTag withCurrent:shouldAnimate];
 
   BOOL hasExitAnimation =
       ([self hasAnimationForTag:view.reactTag type:EXITING] || [_exitingViews objectForKey:view.reactTag]) &&
@@ -437,7 +437,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   NSMutableArray *toBeRemoved = [[NSMutableArray alloc] init];
 
   for (REAUIView *subview in [view.reactSubviews copy]) {
-    BOOL shouldAnimateChild = shouldAnimate && ![self isDisabledExiting:subview.reactTag];
     if ([self startAnimationsRecursive:subview
             shouldRemoveSubviewsWithoutAnimations:shouldRemoveSubviewsWithoutAnimations
                                     shouldAnimate:shouldAnimate]) {
@@ -607,13 +606,13 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   return _hasAnimationForTag(tag, type);
 }
 
-- (BOOL)isDisabledExiting:(NSNumber *)tag
+- (BOOL)shouldAnimateExiting:(NSNumber *)tag withCurrent:(BOOL)current
 {
-  if (!_isDisabledExiting) {
+  if (!_shouldAnimateExiting) {
     // It can happen during reload.
     return NO;
   }
-  return _isDisabledExiting(tag);
+  return _shouldAnimateExiting(tag, current);
 }
 
 - (void)clearAnimationConfigForTag:(NSNumber *)tag
