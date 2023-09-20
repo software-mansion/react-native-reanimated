@@ -653,7 +653,7 @@ function withDecayTest() {
   // @ts-expect-error When rubberBandEffect is false then rubberBandFactor should not be provided
   const f = withDecay({ rubberBandEffect: false, rubberBandFactor: 3 });
 
-  // @ts-expect-error -||-
+  // @ts-expect-error When `rubberBandEffect` isn't provided then `rubberBandFactor` should not be provided.
   const f2 = withDecay({ rubberBandFactor: 3 });
 
   const g = withDecay({
