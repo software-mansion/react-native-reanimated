@@ -1,3 +1,4 @@
+'use strict';
 import { Platform } from 'react-native';
 
 export function isJest(): boolean {
@@ -14,10 +15,6 @@ export function isWeb(): boolean {
 
 export function isAndroid(): boolean {
   return Platform.OS === 'android';
-}
-
-export function isMacOS(): boolean {
-  return Platform.OS === 'macos';
 }
 
 function isWindows(): boolean {

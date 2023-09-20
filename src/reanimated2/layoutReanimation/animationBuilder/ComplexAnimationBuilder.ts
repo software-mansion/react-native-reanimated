@@ -1,3 +1,4 @@
+'use strict';
 import { withTiming, withSpring } from '../../animation';
 import type {
   AnimationFunction,

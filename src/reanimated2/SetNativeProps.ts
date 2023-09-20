@@ -1,3 +1,4 @@
+'use strict';
 import type { ShadowNodeWrapper, StyleProps } from './commonTypes';
 import {
   isChromeDebugger,
@@ -26,6 +27,12 @@ if (isWeb()) {
 } else if (IS_NATIVE && global._IS_FABRIC) {
   setNativeProps = (animatedRef, updates) => {
     'worklet';
+    if (!_WORKLET) {
+      console.warn(
+        '[Reanimated] setNativeProps() can only be used on the UI runtime.'
+      );
+      return;
+    }
     const shadowNodeWrapper = (animatedRef as any)() as ShadowNodeWrapper;
     processColorsInProps(updates);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -34,6 +41,12 @@ if (isWeb()) {
 } else if (IS_NATIVE) {
   setNativeProps = (animatedRef, updates) => {
     'worklet';
+    if (!_WORKLET) {
+      console.warn(
+        '[Reanimated] setNativeProps() can only be used on the UI runtime.'
+      );
+      return;
+    }
     const tag = (animatedRef as any)() as number;
     const name = (animatedRef as any).viewName.value;
     processColorsInProps(updates);

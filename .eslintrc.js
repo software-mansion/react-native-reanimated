@@ -1,6 +1,10 @@
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
+  parserOptions: {
+    project: true,
+    tsconfigRootDir: __dirname,
+  },
   extends: [
     'standard',
     'plugin:@typescript-eslint/recommended',
@@ -42,6 +46,10 @@ module.exports = {
     '@typescript-eslint/consistent-type-imports': [
       'error',
       { prefer: 'type-imports' },
+    ],
+    '@typescript-eslint/consistent-type-exports': [
+      'error',
+      { fixMixedExportsWithInlineTypeSpecifier: false },
     ],
   },
 };
