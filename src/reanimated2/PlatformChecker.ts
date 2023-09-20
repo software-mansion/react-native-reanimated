@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 
 // This type is necessary since some libraries tend to do a lib check
 // and this file causes type errors on `global` access.
-type localGlobal = typeof globalThis & Record<string, unknown>;
+type localGlobal = typeof global & Record<string, unknown>;
 
 export function isJest(): boolean {
   return !!process.env.JEST_WORKER_ID;
@@ -40,13 +40,15 @@ export function isWindowAvailable() {
   // the window object is unavailable when building the server portion of a site that uses SSG
   // this function shouldn't be used to conditionally render components
   // https://www.joshwcomeau.com/react/the-perils-of-rehydration/
-  return typeof window !== 'undefined';
+  return typeof (global as localGlobal).window !== 'undefined';
 }
 
 export function isReducedMotion() {
   return isWeb()
     ? isWindowAvailable()
-      ? !window.matchMedia('(prefers-reduced-motion: no-preference)').matches
+      ? !(global as localGlobal).window.matchMedia(
+          '(prefers-reduced-motion: no-preference)'
+        ).matches
       : false
     : (global as localGlobal)._REANIMATED_IS_REDUCED_MOTION ?? false;
 }
