@@ -415,8 +415,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     return NO;
   }
 
-  NSLog(view.reactTag.stringValue);
-
   UIViewController *viewController = view.reactViewController;
 
   // `startAnimationsRecursive:shouldRemoveSubviewsWithoutAnimations:`
@@ -435,7 +433,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       ([self hasAnimationForTag:view.reactTag type:EXITING] || [_exitingViews objectForKey:view.reactTag]) &&
       shouldAnimate;
   BOOL hasAnimatedChildren = NO;
-  shouldRemoveSubviewsWithoutAnimations = shouldRemoveSubviewsWithoutAnimations && hasExitAnimation;
+  shouldRemoveSubviewsWithoutAnimations = shouldRemoveSubviewsWithoutAnimations && !hasExitAnimation;
   NSMutableArray *toBeRemoved = [[NSMutableArray alloc] init];
 
   for (REAUIView *subview in [view.reactSubviews copy]) {

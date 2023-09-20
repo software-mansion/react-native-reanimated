@@ -104,8 +104,8 @@ import WidthExample from './WidthExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
-import NestedEntering from './LayoutAnimations/NestedEntering';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
+import NestedLayoutConfig from './LayoutAnimations/NestedLayoutConfig';
 
 interface Example {
   icon?: string;
@@ -565,7 +565,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   NestedEntering: {
     title: '[LA] Nested LayoutAnimationConfig',
-    screen: NestedEntering,
+    screen: NestedLayoutConfig,
   },
   FlatListEntering: {
     title: '[LA] FlatList skip layout',

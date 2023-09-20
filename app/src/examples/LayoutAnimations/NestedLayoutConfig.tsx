@@ -7,10 +7,10 @@ import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
-export default function NestedEntering() {
+export default function NestedLayoutConfig() {
   const [outer1, setOuter1] = React.useState(true);
   const [inner1, setInner1] = React.useState(true);
-  const [outer2, setOuter2] = React.useState(false);
+  const [outer2, setOuter2] = React.useState(true);
   const [inner2, setInner2] = React.useState(true);
 
   return (
@@ -19,31 +19,34 @@ export default function NestedEntering() {
         onPress={() => {
           setOuter1(!outer1);
         }}
-        title="Toggle first outer"
+        title={toggleString(outer1) + ' first outer'}
       />
       <Button
         onPress={() => {
           setInner1(!inner1);
         }}
-        title="Toggle first inner"
+        title={toggleString(inner1) + ' first inner'}
       />
       <Button
         onPress={() => {
           setOuter2(!outer2);
         }}
-        title="Toggle second outer"
+        title={toggleString(outer2) + ' second outer'}
       />
       <Button
         onPress={() => {
           setInner2(!inner2);
         }}
-        title="Toggle second inner"
+        title={toggleString(inner2) + ' second inner'}
       />
       <LayoutAnimationConfig skipEntering>
         <View style={styles.rowContainer}>
           <View style={styles.boxContainer}>
             {outer1 && (
-              <Animated.View entering={PinwheelIn} style={styles.outerBox}>
+              <Animated.View
+                entering={PinwheelIn}
+                exiting={PinwheelOut}
+                style={styles.outerBox}>
                 <LayoutAnimationConfig skipEntering skipExiting>
                   {inner1 && (
                     <Animated.View
@@ -58,13 +61,23 @@ export default function NestedEntering() {
           </View>
           <View style={styles.boxContainer}>
             {outer2 && (
-              <Animated.View entering={PinwheelIn} style={styles.outerBox}>
-                {inner2 && (
-                  <Animated.View
-                    style={styles.box}
-                    entering={PinwheelIn.duration(1000)}
-                  />
-                )}
+              <Animated.View
+                entering={PinwheelIn}
+                exiting={PinwheelOut}
+                style={styles.outerBox}>
+                {/* setting skipEntering to false cancels the skip */}
+                <LayoutAnimationConfig skipEntering={false} skipExiting>
+                  {inner2 && (
+                    // setting skipExiting to false doesn't cancel the skip
+                    <LayoutAnimationConfig skipExiting={false}>
+                      <Animated.View
+                        style={styles.box}
+                        entering={PinwheelIn.duration(1000)}
+                        exiting={PinwheelOut.duration(1000)}
+                      />
+                    </LayoutAnimationConfig>
+                  )}
+                </LayoutAnimationConfig>
               </Animated.View>
             )}
           </View>
@@ -72,6 +85,10 @@ export default function NestedEntering() {
       </LayoutAnimationConfig>
     </View>
   );
+}
+
+function toggleString(value: boolean) {
+  return value ? 'Hide' : 'Show';
 }
 
 const styles = StyleSheet.create({
@@ -89,6 +106,7 @@ const styles = StyleSheet.create({
   },
   boxContainer: {
     width: 170,
+    height: 150,
     alignItems: 'center',
     justifyContent: 'center',
   },
