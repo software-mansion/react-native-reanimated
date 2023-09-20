@@ -56,6 +56,7 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   enteringAnimations_.erase(tag);
   exitingAnimations_.erase(tag);
   layoutAnimations_.erase(tag);
+  shouldAnimateExitingForTag_.erase(tag);
 #ifdef DEBUG
   const auto &pair = viewsScreenSharedTagMap_[tag];
   screenSharedTagSet_.erase(pair);
@@ -77,7 +78,6 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   }
   viewTagToSharedTag_.erase(tag);
   ignoreProgressAnimationForTag_.erase(tag);
-  shouldAnimateExitingForTag_.erase(tag);
 }
 
 void LayoutAnimationsManager::startLayoutAnimation(

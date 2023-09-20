@@ -39,7 +39,7 @@ import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import FlatListExample from './SharedElementTransitions/FlatList';
-import FlatListSkipLayout from './LayoutAnimations/FlatListSkipLayout';
+import FlatListSkipEnteringExiting from './LayoutAnimations/FlatListSkipEnteringExiting';
 import FrameCallbackExample from './FrameCallbackExample';
 import GalleryExample from './SharedElementTransitions/Gallery';
 import GestureHandlerExample from './GestureHandlerExample';
@@ -105,7 +105,7 @@ import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
-import NestedLayoutConfig from './LayoutAnimations/NestedLayoutConfig';
+import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
 
 interface Example {
   icon?: string;
@@ -563,13 +563,13 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Reduced Motion',
     screen: ReducedMotionLayoutExample,
   },
-  NestedEntering: {
+  NestedLayoutAnimationConfig: {
     title: '[LA] Nested LayoutAnimationConfig',
-    screen: NestedLayoutConfig,
+    screen: NestedLayoutAnimationConfig,
   },
-  FlatListEntering: {
-    title: '[LA] FlatList skip layout',
-    screen: FlatListSkipLayout,
+  FlatListSkipEnteringExiting: {
+    title: '[LA] FlatList skip entering & exiting',
+    screen: FlatListSkipEnteringExiting,
   },
 
   // Shared Element Transitions

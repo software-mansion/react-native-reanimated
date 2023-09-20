@@ -94,7 +94,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &type,
       const jsi::Value &sharedTransitionTag,
       const jsi::Value &config) override;
-  jsi::Value setShouldAnimateExiting(
+  void setShouldAnimateExiting(
       jsi::Runtime &rt,
       const jsi::Value &viewTag,
       const jsi::Value &current) override;

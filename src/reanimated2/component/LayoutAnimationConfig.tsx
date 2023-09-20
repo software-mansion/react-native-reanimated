@@ -1,3 +1,4 @@
+'use strict';
 import { Children, Component, createContext, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { setShouldAnimateExitingForTag } from '../core';
@@ -12,8 +13,8 @@ interface LayoutAnimationConfigProps {
   children: ReactNode;
 }
 
-function SkipEntering(props: { value: boolean; children: ReactNode }) {
-  const skipValueRef = useRef(props.value);
+function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
+  const skipValueRef = useRef(props.shouldSkip);
 
   useEffect(() => {
     skipValueRef.current = false;
@@ -52,7 +53,9 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
     }
 
     return (
-      <SkipEntering value={this.props.skipEntering}>{children}</SkipEntering>
+      <SkipEntering shouldSkip={this.props.skipEntering}>
+        {children}
+      </SkipEntering>
     );
   }
 }

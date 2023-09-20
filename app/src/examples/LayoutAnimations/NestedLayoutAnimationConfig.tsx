@@ -1,3 +1,4 @@
+'use strict';
 import Animated, {
   LayoutAnimationConfig,
   PinwheelIn,
@@ -7,7 +8,7 @@ import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
-export default function NestedLayoutConfig() {
+export default function NestedLayoutAnimationConfig() {
   const [outer1, setOuter1] = React.useState(true);
   const [inner1, setInner1] = React.useState(true);
   const [outer2, setOuter2] = React.useState(true);

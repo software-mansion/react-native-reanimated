@@ -40,7 +40,7 @@ const createCellRenderer = (
 
 interface ReanimatedFlatListPropsWithLayout<T> extends FlatListProps<T> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
-  skipLayoutAnimations?: boolean;
+  skipEnteringExitingAnimations?: boolean;
 }
 
 export type FlatListPropsWithLayout<T> = ReanimatedFlatListPropsWithLayout<T>;
@@ -54,12 +54,13 @@ declare class ReanimatedFlatListClass<T> extends Component<
 
 interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
-  skipLayoutAnimations?: boolean;
+  skipEnteringExitingAnimations?: boolean;
 }
 
 export const ReanimatedFlatList = forwardRef(
   (props: ReanimatedFlatListProps<any>, ref: ForwardedRef<FlatList>) => {
-    const { itemLayoutAnimation, skipLayoutAnimations, ...restProps } = props;
+    const { itemLayoutAnimation, skipEnteringExitingAnimations, ...restProps } =
+      props;
 
     const cellStyle = restProps?.inverted
       ? restProps?.horizontal
@@ -89,7 +90,7 @@ export const ReanimatedFlatList = forwardRef(
       />
     );
 
-    if (skipLayoutAnimations === undefined) {
+    if (skipEnteringExitingAnimations === undefined) {
       return animatedFlatList;
     }
 

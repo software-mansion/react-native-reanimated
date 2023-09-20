@@ -1,3 +1,4 @@
+'use strict';
 import React, { useState } from 'react';
 import { Button, StyleSheet } from 'react-native';
 import Animated, {
@@ -9,9 +10,9 @@ import Animated, {
   SlideOutLeft,
 } from 'react-native-reanimated';
 
-const digits = [...Array(3).keys()];
+const digits = [0, 1, 2];
 
-export default function FlatListSkipLayout() {
+export default function FlatListSkipEnteringExiting() {
   return <List />;
 }
 
@@ -41,7 +42,7 @@ function List() {
       />
       {show && (
         <Animated.FlatList
-          skipLayoutAnimations
+          skipEnteringExitingAnimations
           style={styles.container}
           contentContainerStyle={[styles.contentContainer]}
           decelerationRate="fast"
