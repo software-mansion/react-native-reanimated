@@ -5,7 +5,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 
 import { useEffect } from 'react';
 
@@ -25,6 +25,10 @@ export default function App() {
 
   return (
     <View style={styles.container}>
+      <Text accessibilityRole="header" style={styles.text}>
+        This page was statically generated during build
+      </Text>
+
       <Animated.View
         entering={PinwheelIn}
         style={[styles.box, animatedStyle]}

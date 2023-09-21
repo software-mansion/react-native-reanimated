@@ -8,14 +8,13 @@ module.exports = withExpo({
     ignoreDuringBuilds: true,
   },
   transpilePackages: ['react-native-reanimated', 'react-native', 'expo'],
-  // webpack(config, _options) {
-  //   config.resolve.alias = {
-  //     ...config.resolve.alias,
-  //     'react-native-reanimated': require('path').resolve(
-  //       __dirname,
-  //       '../lib/commonjs/index.js'
-  //     ),
-  //   };
-  //   return config;
-  // },
+  webpack(config, _options) {
+    config.resolve.alias.react = require('path').resolve(
+      __dirname,
+      '.',
+      'node_modules',
+      'react'
+    );
+    return config;
+  },
 });

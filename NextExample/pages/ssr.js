@@ -5,7 +5,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 
 import { useEffect } from 'react';
 
@@ -25,6 +25,15 @@ export default function App(props) {
 
   return (
     <View style={styles.container}>
+      <Text accessibilityRole="header" style={styles.text}>
+        This page is server-side rendered during request. Target width of the
+        blue component is randomly generated on refresh.
+      </Text>
+
+      <Text accessibilityRole="header" style={styles.text}>
+        Current target width: {props.width}
+      </Text>
+
       <Animated.View
         entering={PinwheelIn}
         style={[styles.box, animatedStyle]}
