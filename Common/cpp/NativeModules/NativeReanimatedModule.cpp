@@ -292,16 +292,16 @@ jsi::Value NativeReanimatedModule::configureProps(
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps) {
 #ifdef RCT_NEW_ARCH_ENABLED
-  jsi::Array array = uiProps.asObject(rt).asArray(rt);
-  for (size_t i = 0; i < array.size(rt); ++i) {
-    std::string name = array.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    animatableProps_.insert(name);
+  auto uiPropsArray = uiProps.asObject(rt).asArray(rt);
+  for (size_t i = 0; i < uiPropsArray.size(rt); ++i) {
+    auto name = uiPropsArray.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    animatablePropNames_.insert(name);
   }
-  array = nativeProps.asObject(rt).asArray(rt);
-  for (size_t i = 0; i < array.size(rt); ++i) {
-    std::string name = array.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+  auto nativePropsArray = nativeProps.asObject(rt).asArray(rt);
+  for (size_t i = 0; i < nativePropsArray.size(rt); ++i) {
+    auto name = nativePropsArray.getValueAtIndex(rt, i).asString(rt).utf8(rt);
     nativePropNames_.insert(name);
-    animatableProps_.insert(name);
+    animatablePropNames_.insert(name);
   }
 #else
   configurePropsPlatformFunction_(rt, uiProps, nativeProps);
@@ -401,24 +401,24 @@ bool NativeReanimatedModule::isThereAnyLayoutProp(
   return false;
 }
 
-jsi::Value NativeReanimatedModule::getNonAnimatableProp(
+jsi::Value NativeReanimatedModule::getNonAnimatableProps(
     jsi::Runtime &rt,
     const jsi::Value &props) {
   jsi::Object nonAnimatableProps(rt);
-  bool isAnyProp = false;
+  bool isAnyNonAnimatableProp = false;
   const jsi::Object &propsObject = props.asObject(rt);
   const jsi::Array &propNames = propsObject.getPropertyNames(rt);
   for (size_t i = 0; i < propNames.size(rt); ++i) {
     const std::string &propName =
         propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    if (!collection::contains(animatableProps_, propName)) {
-      isAnyProp = true;
+    if (!collection::contains(animatablePropNames_, propName)) {
+      isAnyNonAnimatableProp = true;
       const auto &propNameStr = propName.c_str();
       const jsi::Value &propValue = propsObject.getProperty(rt, propNameStr);
       nonAnimatableProps.setProperty(rt, propNameStr, propValue);
     }
   }
-  if (isAnyProp) {
+  if (isAnyNonAnimatableProp) {
     return nonAnimatableProps;
   } else {
     return jsi::Value::undefined();
@@ -522,20 +522,25 @@ void NativeReanimatedModule::performOperations() {
   }
 
   for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-    const jsi::Value &nonAnimatableProps = getNonAnimatableProp(rt, *props);
+    const jsi::Value &nonAnimatableProps = getNonAnimatableProps(rt, *props);
     if (nonAnimatableProps.isUndefined()) {
       continue;
     }
     Tag viewTag = shadowNode->getTag();
-    uiScheduler_->scheduleOnUI([&]() {
-      jsi::Value jsPropsUpdaterValue =
-          rt.global().getProperty(rt, "_jsPropsUpdater");
-      if (jsPropsUpdaterValue.isObject()) {
-        jsi::Function jsPropsUpdater =
-            jsPropsUpdaterValue.asObject(rt).asFunction(rt);
-        jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
-      }
-    });
+    jsi::Value maybeJSPropUpdater =
+        rt.global().getProperty(rt, "updateJSProps");
+    if (maybeJSPropUpdater.isObject()) {
+      jsi::Function jsPropsUpdater =
+          maybeJSPropUpdater.asObject(rt).asFunction(rt);
+      jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
+#if DEBUG
+    } else {
+      JSLogger jsLogger(jsScheduler_);
+      jsLogger.warnOnJS("[Reanimated] Unable to update JS props.");
+    }
+#else
+    }
+#endif
   }
 
   bool hasLayoutUpdates = false;

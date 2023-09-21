@@ -36,7 +36,7 @@ import {
 } from '../reanimated2/animation/util';
 import { maybeBuild } from '../animationBuilder';
 import type { AnimateProps } from '../reanimated2';
-import { JSPropUpdater } from './JSPropUpdater';
+import JSPropUpdater from './JSPropUpdater';
 import type { AnimatedComponentProps, AnimatedProps } from './utils';
 import { has, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';

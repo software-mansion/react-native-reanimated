@@ -89,7 +89,7 @@ class JSPropUpdaterFabric implements JSPropUpdater {
       };
       runOnUIImmediately(() => {
         'worklet';
-        global._jsPropsUpdater = (viewTag: number, props: unknown) => {
+        global.updateJSProps = (viewTag: number, props: unknown) => {
           runOnJS(updater)(viewTag, props);
         };
       })();

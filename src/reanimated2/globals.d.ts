@@ -101,5 +101,5 @@ declare global {
   var LayoutAnimationsManager: LayoutAnimationsManager;
   var UpdatePropsManager: UpdatePropsManager;
   var ProgressTransitionRegister: ProgressTransitionRegister;
-  var _jsPropsUpdater: (viewTag: number, props: unknown) => void;
+  var updateJSProps: (viewTag: number, props: Record) => void;
 }
