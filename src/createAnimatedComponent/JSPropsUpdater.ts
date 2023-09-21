@@ -4,7 +4,10 @@ import {
   NativeModules,
   findNodeHandle,
 } from 'react-native';
-import { nativeShouldBeMock } from '../reanimated2/PlatformChecker';
+import {
+  nativeShouldBeMock,
+  shouldBeUseWeb,
+} from '../reanimated2/PlatformChecker';
 import type { StyleProps } from '../reanimated2';
 import { runOnJS, runOnUIImmediately } from '../reanimated2/threads';
 
@@ -121,4 +124,30 @@ class JSPropsUpdaterFabric implements JSPropsUpdater {
   }
 }
 
-export default global._IS_FABRIC ? JSPropsUpdaterFabric : JSPropsUpdaterPaper;
+class JSPropsUpdaterWeb implements JSPropsUpdater {
+  public addOnJSPropsChangeListener(
+    _animatedComponent: React.Component<unknown, unknown>
+  ) {
+    // noop
+  }
+
+  public removeOnJSPropsChangeListener(
+    _animatedComponent: React.Component<unknown, unknown>
+  ) {
+    // noop
+  }
+}
+
+function getJSPropsUpdater():
+  | typeof JSPropsUpdaterWeb
+  | typeof JSPropsUpdaterFabric
+  | typeof JSPropsUpdaterPaper {
+  if (shouldBeUseWeb()) {
+    return JSPropsUpdaterWeb;
+  } else if (global._IS_FABRIC) {
+    return JSPropsUpdaterFabric;
+  } else {
+    return JSPropsUpdaterPaper;
+  }
+}
+export default getJSPropsUpdater();
