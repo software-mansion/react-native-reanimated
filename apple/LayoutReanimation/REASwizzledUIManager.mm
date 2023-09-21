@@ -89,7 +89,7 @@
           [originalSelf _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
       for (REAUIView *view in permanentlyRemovedChildren) {
         [originalSelf.animationsManager endAnimationsRecursive:view];
-        [originalSelf.animationsManager removeAnimationsFromSubtree:(REAUIView *)view];
+        [originalSelf.animationsManager removeAnimationsFromSubtree:view];
       }
       [originalSelf.animationsManager onScreenRemoval:(REAUIView *)permanentlyRemovedChildren[0]
                                                 stack:(REAUIView *)container];
