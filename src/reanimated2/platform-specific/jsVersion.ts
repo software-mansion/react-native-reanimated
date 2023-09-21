@@ -3,4 +3,4 @@
  * with the version used to build the native part of the library in runtime.
  * Remember to keep this in sync with the version declared in `package.json`
  */
-export const jsVersion = '3.5.3';
+export const jsVersion = '3.5.4';
