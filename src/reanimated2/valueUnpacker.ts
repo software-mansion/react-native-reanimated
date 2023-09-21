@@ -1,5 +1,6 @@
 'use strict';
 import { shouldBeUseWeb } from './PlatformChecker';
+import type { WorkletFunction } from './commonTypes';
 
 const IS_NATIVE = !shouldBeUseWeb();
 
@@ -67,18 +68,21 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
   }
 }
 
+type ValueUnpacker = WorkletFunction<
+  [objectToUnpack: any, category?: string],
+  any
+>;
+
 if (__DEV__ && IS_NATIVE) {
   if (!('__workletHash' in valueUnpacker)) {
     throw new Error('[Reanimated] `valueUnpacker` is not a worklet');
   }
-  // @ts-ignore TODO TYPESCRIPT
-  const closure = valueUnpacker.__closure;
+  const closure = (valueUnpacker as ValueUnpacker).__closure;
   if (closure !== undefined && Object.keys(closure).length !== 0) {
     throw new Error('[Reanimated] `valueUnpacker` must have empty closure');
   }
 }
 
 export function getValueUnpackerCode() {
-  // @ts-ignore TODO TYPESCRIPT
-  return valueUnpacker.__initData.code as string;
+  return (valueUnpacker as ValueUnpacker).__initData.code;
 }

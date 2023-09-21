@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -7,6 +8,7 @@ import type {
   ViewProps,
   ImageProps,
   ViewStyle,
+  NativeSyntheticEvent,
 } from 'react-native';
 import { StyleSheet, Button, View, Image, ScrollView } from 'react-native';
 import type {
@@ -46,7 +48,10 @@ import Animated, {
   setGestureState,
   isSharedValue,
   makeShareableCloneRecursive,
+  useEvent,
+  useScrollViewOffset,
 } from '..';
+import type { ReanimatedEvent } from '..';
 
 class Path extends React.Component<{ fill?: string }> {
   render() {
@@ -413,6 +418,246 @@ function AnimatedPinchGestureHandlerTest() {
     <PinchGestureHandler onGestureEvent={gestureHandler}>
       <Animated.View style={[styles.box, animatedStyle]} />
     </PinchGestureHandler>
+  );
+}
+
+// useEvent
+
+function TestUseEventNativeSyntheticEvent() {
+  type CustomEventPayload = {
+    foo: string;
+  };
+  type RNEvent = NativeSyntheticEvent<CustomEventPayload>;
+  type CustomProps = {
+    onCustomEvent: (event: RNEvent) => void;
+  };
+  function CustomComponent(props: CustomProps) {
+    return null;
+  }
+  const CustomAnimatedComponent =
+    Animated.createAnimatedComponent(CustomComponent);
+
+  const eventHandler1 = useEvent<RNEvent>((event) => {
+    event.eventName;
+    event.foo;
+    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+    event.nativeEvent;
+  });
+
+  const eventHandler2 = useEvent<RNEvent>((event: ReanimatedEvent<RNEvent>) => {
+    event.eventName;
+    event.foo;
+    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+    event.nativeEvent;
+  });
+
+  const eventHandler3 = useEvent((event: ReanimatedEvent<RNEvent>) => {
+    event.eventName;
+    event.foo;
+    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+    event.nativeEvent;
+  });
+
+  const eventHandler4 = useEvent((event) => {
+    event.eventName;
+    // @ts-expect-error `useEvent` cannot know the type of the event.
+    event.foo;
+    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+    event.nativeEvent;
+  });
+
+  const eventHandler5 = useEvent<CustomEventPayload>((event) => {
+    event.eventName;
+    event.foo;
+    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+    event.nativeEvent;
+  });
+
+  return (
+    <>
+      <CustomAnimatedComponent onCustomEvent={eventHandler1} />;
+      <CustomAnimatedComponent onCustomEvent={eventHandler2} />;
+      <CustomAnimatedComponent onCustomEvent={eventHandler3} />;
+      <CustomAnimatedComponent onCustomEvent={eventHandler4} />;
+      {/* @ts-expect-error Properly detected wrong type */}
+      <CustomAnimatedComponent onCustomEvent={eventHandler5} />;
+    </>
+  );
+}
+
+function TestUseEventBareEvent() {
+  type CustomEventPayload = {
+    foo: string;
+  };
+  type CustomEvent = CustomEventPayload;
+  type CustomProps = {
+    onCustomEvent: (event: CustomEvent) => void;
+  };
+  function CustomComponent(props: CustomProps) {
+    return null;
+  }
+  const CustomAnimatedComponent =
+    Animated.createAnimatedComponent(CustomComponent);
+
+  const eventHandler1 = useEvent<CustomEvent>((event) => {
+    event.eventName;
+    event.foo;
+    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+    event.nativeEvent;
+  });
+
+  const eventHandler2 = useEvent<CustomEvent>(
+    (event: ReanimatedEvent<CustomEvent>) => {
+      event.eventName;
+      event.foo;
+      // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+      event.nativeEvent;
+    }
+  );
+
+  const eventHandler3 = useEvent((event: ReanimatedEvent<CustomEvent>) => {
+    event.eventName;
+    event.foo;
+    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+    event.nativeEvent;
+  });
+
+  const eventHandler4 = useEvent((event) => {
+    event.eventName;
+    // @ts-expect-error `useEvent` cannot know the type of the event.
+    event.foo;
+    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+    event.nativeEvent;
+  });
+
+  return (
+    <>
+      <CustomAnimatedComponent onCustomEvent={eventHandler1} />;
+      <CustomAnimatedComponent onCustomEvent={eventHandler2} />;
+      <CustomAnimatedComponent onCustomEvent={eventHandler3} />;
+      <CustomAnimatedComponent onCustomEvent={eventHandler4} />;
+    </>
+  );
+}
+
+function TestUseEventReanimatedEvent() {
+  // This is not how we want users to use it, but it's legal.
+  type CustomEventPayload = {
+    foo: string;
+  };
+  type CustomReanimatedEvent = ReanimatedEvent<CustomEventPayload>;
+  type CustomProps = {
+    onCustomEvent: (event: CustomReanimatedEvent) => void;
+  };
+  function CustomComponent(props: CustomProps) {
+    return null;
+  }
+  const CustomAnimatedComponent =
+    Animated.createAnimatedComponent(CustomComponent);
+
+  const eventHandler1 = useEvent<CustomReanimatedEvent>((event) => {
+    event.eventName;
+    event.foo;
+    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+    event.nativeEvent;
+  });
+
+  const eventHandler2 = useEvent<CustomReanimatedEvent>(
+    (event: ReanimatedEvent<CustomReanimatedEvent>) => {
+      event.eventName;
+      event.foo;
+      // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+      event.nativeEvent;
+    }
+  );
+
+  const eventHandler3 = useEvent(
+    (event: ReanimatedEvent<CustomReanimatedEvent>) => {
+      event.eventName;
+      event.foo;
+      // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+      event.nativeEvent;
+    }
+  );
+
+  const eventHandler4 = useEvent((event) => {
+    event.eventName;
+    // @ts-expect-error `useEvent` cannot know the type of the event.
+    event.foo;
+    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+    event.nativeEvent;
+  });
+
+  const eventHandler5 = useEvent<CustomEventPayload>((event) => {
+    event.eventName;
+    event.foo;
+    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+    event.nativeEvent;
+  });
+
+  return (
+    <>
+      <CustomAnimatedComponent onCustomEvent={eventHandler1} />;
+      <CustomAnimatedComponent onCustomEvent={eventHandler2} />;
+      <CustomAnimatedComponent onCustomEvent={eventHandler3} />;
+      <CustomAnimatedComponent onCustomEvent={eventHandler4} />;
+      <CustomAnimatedComponent onCustomEvent={eventHandler5} />;
+    </>
+  );
+}
+
+// useScrollViewOffset
+
+function TestUseScrollViewOffset1() {
+  const scrollViewRef = useRef<ScrollView>(null);
+  // @ts-expect-error Funny enough, it works like this in runtime,
+  // but we call TS error here for extra safety anyway.
+  const offset = useScrollViewOffset(scrollViewRef);
+
+  return (
+    // @ts-expect-error Cannot assign plain ref to Animated ref.
+    <Animated.ScrollView ref={scrollViewRef}>
+      <Animated.View style={{ opacity: offset.value }} />
+    </Animated.ScrollView>
+  );
+}
+
+function TestUseScrollViewOffset2() {
+  const scrollViewRef = useRef<Animated.ScrollView>(null);
+  // @ts-expect-error Cannot use plain ref with `useScrollViewOffset`.
+  const offset = useScrollViewOffset(scrollViewRef);
+
+  return (
+    // TODO TYPESCRIPT After `createAnimatedComponent` is fixed
+    // this shouldn't be legal (I think)
+    <Animated.ScrollView ref={scrollViewRef}>
+      <Animated.View style={{ opacity: offset.value }} />
+    </Animated.ScrollView>
+  );
+}
+
+function TestUseScrollViewOffset3() {
+  // TODO TYPESCRIPT Maybe disallow using non-animated components as
+  // generic argument for `useAnimatedRef`?
+  const scrollViewRef = useAnimatedRef<ScrollView>();
+  // @ts-expect-error Properly detects that non-animated component was used.
+  const offset = useScrollViewOffset(scrollViewRef);
+
+  return (
+    <ScrollView ref={scrollViewRef}>
+      <Animated.View style={{ opacity: offset.value }} />
+    </ScrollView>
+  );
+}
+
+function TestUseScrollViewOffset4() {
+  const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
+  const offset = useScrollViewOffset(scrollViewRef);
+
+  return (
+    <ScrollView ref={scrollViewRef}>
+      <Animated.View style={{ opacity: offset.value }} />
+    </ScrollView>
   );
 }
 
