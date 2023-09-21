@@ -49,6 +49,7 @@ import Animated, {
   isSharedValue,
   makeShareableCloneRecursive,
   useEvent,
+  useScrollViewOffset,
 } from '..';
 import type { ReanimatedEvent } from '..';
 
@@ -602,6 +603,61 @@ function TestUseEventReanimatedEvent() {
       <CustomAnimatedComponent onCustomEvent={eventHandler4} />;
       <CustomAnimatedComponent onCustomEvent={eventHandler5} />;
     </>
+  );
+}
+
+// useScrollViewOffset
+
+function TestUseScrollViewOffset1() {
+  const scrollViewRef = useRef<ScrollView>(null);
+  // @ts-expect-error Funny enough, it works like this in runtime,
+  // but we call TS error here for extra safety anyway.
+  const offset = useScrollViewOffset(scrollViewRef);
+
+  return (
+    // @ts-expect-error Cannot assign plain ref to Animated ref.
+    <Animated.ScrollView ref={scrollViewRef}>
+      <Animated.View style={{ opacity: offset.value }} />
+    </Animated.ScrollView>
+  );
+}
+
+function TestUseScrollViewOffset2() {
+  const scrollViewRef = useRef<Animated.ScrollView>(null);
+  // @ts-expect-error Cannot use plain ref with `useScrollViewOffset`.
+  const offset = useScrollViewOffset(scrollViewRef);
+
+  return (
+    // TODO TYPESCRIPT After `createAnimatedComponent` is fixed
+    // this shouldn't be legal (I think)
+    <Animated.ScrollView ref={scrollViewRef}>
+      <Animated.View style={{ opacity: offset.value }} />
+    </Animated.ScrollView>
+  );
+}
+
+function TestUseScrollViewOffset3() {
+  // TODO TYPESCRIPT Maybe disallow using non-animated components as
+  // generic argument for `useAnimatedRef`?
+  const scrollViewRef = useAnimatedRef<ScrollView>();
+  // @ts-expect-error Properly detects that non-animated component was used.
+  const offset = useScrollViewOffset(scrollViewRef);
+
+  return (
+    <ScrollView ref={scrollViewRef}>
+      <Animated.View style={{ opacity: offset.value }} />
+    </ScrollView>
+  );
+}
+
+function TestUseScrollViewOffset4() {
+  const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
+  const offset = useScrollViewOffset(scrollViewRef);
+
+  return (
+    <ScrollView ref={scrollViewRef}>
+      <Animated.View style={{ opacity: offset.value }} />
+    </ScrollView>
   );
 }
 
