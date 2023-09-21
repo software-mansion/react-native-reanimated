@@ -21,6 +21,7 @@ const gestureHandlerGestureObjects = new Set([
   'Race',
   'Simultaneous',
   'Exclusive',
+  'Hover',
 ]);
 
 const gestureHandlerBuilderMethods = new Set([

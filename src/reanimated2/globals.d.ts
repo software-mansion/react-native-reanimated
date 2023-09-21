@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-var */
+'use strict';
 import type {
   StyleProps,
   MeasuredDimensions,
@@ -7,7 +8,7 @@ import type {
   ShareableRef,
   ShareableSyncDataHolderRef,
   ShadowNodeWrapper,
-  ComplexWorkletFunction,
+  __ComplexWorkletFunction,
   FlatShareableRef,
 } from './commonTypes';
 import type { AnimatedStyle } from './helperTypes';
@@ -46,7 +47,7 @@ declare global {
     data: ShareableRef<any>
   ) => void;
   var _scheduleOnJS: (
-    fun: ComplexWorkletFunction<A, R>,
+    fun: __ComplexWorkletFunction<A, R>,
     args?: unknown[]
   ) => void;
   var _updatePropsPaper:

@@ -1,3 +1,4 @@
+'use strict';
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
 
@@ -19,11 +20,12 @@ import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import type {
   AnimationObject,
   Timestamp,
-  AdapterWorkletFunction,
-  BasicWorkletFunction,
   NestedObjectValues,
   SharedValue,
   StyleProps,
+  __AdapterWorkletFunction,
+  __BasicWorkletFunction,
+  WorkletFunction,
 } from '../commonTypes';
 import type { AnimatedStyle } from '../helperTypes';
 
@@ -166,7 +168,7 @@ function runAnimations(
 
 function styleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: BasicWorkletFunction<AnimatedStyle<any>>,
+  updater: __BasicWorkletFunction<AnimatedStyle<any>>,
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
@@ -255,12 +257,12 @@ function styleUpdater(
 
 function jestStyleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: BasicWorkletFunction<AnimatedStyle<any>>,
+  updater: __BasicWorkletFunction<AnimatedStyle<any>>,
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
   animatedStyle: MutableRefObject<AnimatedStyle<any>>,
-  adapters: AdapterWorkletFunction[] = []
+  adapters: __AdapterWorkletFunction[] = []
 ): void {
   'worklet';
   const animations: AnimatedStyle<any> = state.animations ?? {};
@@ -387,15 +389,16 @@ function checkSharedValueUsage(
 }
 
 // You cannot pass Shared Values to `useAnimatedStyle` directly.
+// @ts-expect-error This overload is required by our API.
 export function useAnimatedStyle<Style extends DefaultStyle>(
   updater: () => Style,
   deps?: DependencyList | null
 ): Style;
 
 export function useAnimatedStyle<Style extends DefaultStyle>(
-  updater: BasicWorkletFunction<Style>,
+  updater: WorkletFunction<[], Style>,
   dependencies?: DependencyList | null,
-  adapters?: AdapterWorkletFunction | AdapterWorkletFunction[],
+  adapters?: WorkletFunction | WorkletFunction[],
   isAnimatedProps = false
 ) {
   const viewsRef: ViewRefSet<unknown> = makeViewsRefSet();
@@ -413,7 +416,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       );
     }
   }
-  const adaptersArray: AdapterWorkletFunction[] = adapters
+  const adaptersArray = adapters
     ? Array.isArray(adapters)
       ? adapters
       : [adapters]
@@ -449,32 +452,30 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   }
 
   const { initial, remoteState, viewDescriptors } = initRef.current;
-  const sharableViewDescriptors = viewDescriptors.sharableViewDescriptors;
+  const shareableViewDescriptors = viewDescriptors.shareableViewDescriptors;
   const maybeViewRef = NativeReanimatedModule.native ? undefined : viewsRef;
 
-  dependencies.push(sharableViewDescriptors);
+  dependencies.push(shareableViewDescriptors);
 
   useEffect(() => {
     let fun;
     let updaterFn = updater;
     if (adapters) {
-      updaterFn = () => {
+      updaterFn = (() => {
         'worklet';
         const newValues = updater();
         adaptersArray.forEach((adapter) => {
-          // Those adapters are some crazy stuff
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          adapter(newValues as any);
+          adapter(newValues);
         });
         return newValues;
-      };
+      }) as WorkletFunction<[], Style>;
     }
 
     if (isJest()) {
       fun = () => {
         'worklet';
         jestStyleUpdater(
-          sharableViewDescriptors,
+          shareableViewDescriptors,
           updater,
           remoteState,
           maybeViewRef,
@@ -487,7 +488,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       fun = () => {
         'worklet';
         styleUpdater(
-          sharableViewDescriptors,
+          shareableViewDescriptors,
           updaterFn,
           remoteState,
           maybeViewRef,

@@ -1,3 +1,4 @@
+'use strict';
 import {
   isChromeDebugger,
   isJest,
@@ -14,6 +15,16 @@ import { SensorType } from '../commonTypes';
 import type { WorkletRuntime } from '../runtimes';
 import type { WebSensor } from './WebSensor';
 
+import { mockedRequestAnimationFrame } from '../utils';
+
+// In Node.js environments (like when static rendering with Expo Router)
+// requestAnimationFrame is unavailable, so we use our mock.
+// It also has to be mocked for Jest purposes (see `initializeUIRuntime`).
+const requestAnimationFrameImpl =
+  isJest() || !globalThis.requestAnimationFrame
+    ? mockedRequestAnimationFrame
+    : globalThis.requestAnimationFrame;
+
 export default class JSReanimated {
   native = false;
   nextSensorId = 0;
@@ -28,7 +39,7 @@ export default class JSReanimated {
 
   scheduleOnUI<T>(worklet: ShareableRef<T>) {
     // @ts-ignore web implementation has still not been updated after the rewrite, this will be addressed once the web implementation updates are ready
-    requestAnimationFrame(worklet);
+    requestAnimationFrameImpl(worklet);
   }
 
   createWorkletRuntime(

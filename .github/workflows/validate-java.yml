@@ -17,6 +17,7 @@ on:
       - 'android/build.gradle'
 jobs:
   check:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     concurrency:
       group: validate-java-${{ github.ref }}

@@ -1,0 +1,84 @@
+---
+sidebar_position: 7
+---
+
+# setNativeProps
+
+`setNativeProps` lets you imperatively update component properties.
+
+:::caution
+
+`setNativeProps` is an escape hatch for specific edge-cases.
+
+You should always reach for [`useAnimatedStyle`](docs/core/useAnimatedStyle) and [`useAnimatedProps`](docs/core/useAnimatedProps) first when animating styles or properties.
+
+:::
+
+## Reference
+
+```jsx
+import { setNativeProps } from 'react-native-reanimated';
+
+function App() {
+  const animatedRef = useAnimatedRef();
+
+  const tap = Gesture.Tap().onEnd(() => {
+    // highlight-start
+    setNativeProps(animatedRef, { text: '' });
+    // highlight-end
+  });
+
+  return <TextInput ref={animatedRef} />;
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function setNativeProps<T extends Component>(
+  animatedRef: AnimatedRef<T>,
+  updates: StyleProps
+) => void;
+```
+
+</details>
+
+### Arguments
+
+#### `animatedRef`
+
+An [animated ref](/docs/core/useAnimatedRef#returns) connected to the component you'd want to get the measurements from. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
+
+#### `updates`
+
+An object with properties you want to update. These could be both style props (eg. `width`, `backgroundColor`) and regular props (eg. `text`).
+
+### Returns
+
+`setNativeProps` returns `undefined`.
+
+## Example
+
+import SetNativeProps from '@site/src/examples/SetNativeProps';
+import SetNativePropsSrc from '!!raw-loader!@site/src/examples/SetNativeProps';
+
+<InteractiveExample src={SetNativePropsSrc} component={<SetNativeProps />} />
+
+## Remarks
+
+- You should always reach for [`useAnimatedStyle`](docs/core/useAnimatedStyle) and [`useAnimatedProps`](docs/core/useAnimatedProps) first when animating styles or properties.
+
+- `setNativeProps` is supposed to only be used on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+
+- `setNativeProps` function was created to allow updating props imperatively from gesture handlers. Because in other cases, you need to wrap `setNativeProps` with an additional `runOnUI` call, React Native's [built-in `setNativeProps`](https://reactnative.dev/docs/animations#setnativeprops) proves to work better with fewer jumps between runtimes.
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>

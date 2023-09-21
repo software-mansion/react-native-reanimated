@@ -1,3 +1,4 @@
+'use strict';
 import { runOnUIImmediately } from '../../threads';
 import type { ProgressAnimation } from '../animationBuilder/commonTypes';
 import { registerEventHandler, unregisterEventHandler } from '../../core';

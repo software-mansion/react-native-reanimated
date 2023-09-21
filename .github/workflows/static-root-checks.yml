@@ -9,6 +9,7 @@ on:
       - main
 jobs:
   check:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     concurrency:
       group: static-root-${{ github.ref }}
@@ -26,9 +27,7 @@ jobs:
       - name: Install node dependencies
         run: yarn
       - name: Check types
-        run: yarn tsc --noEmit
-      - name: Check api
-        run: yarn type:check-api
+        run: yarn type:check:all
       - name: Lint
         run: yarn lint:js
       - name: Find unused code

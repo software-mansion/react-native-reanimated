@@ -1,3 +1,4 @@
+'use strict';
 import type { Component } from 'react';
 import { measure } from './NativeMethods';
 import type { AnimatedRef } from './hook/commonTypes';
@@ -31,4 +32,12 @@ export function getRelativeCoords(
 export function isSharedValue<T>(value: any): value is SharedValue<T> {
   'worklet';
   return value?._isReanimatedSharedValue === true;
+}
+
+// This is Jest implementation of `requestAnimationFrame` that is required
+// by React Native for test purposes.
+export function mockedRequestAnimationFrame(
+  callback: (timestamp: number) => void
+) {
+  return setTimeout(() => callback(performance.now()), 0);
 }

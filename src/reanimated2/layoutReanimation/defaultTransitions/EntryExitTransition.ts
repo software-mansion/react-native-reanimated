@@ -1,3 +1,4 @@
+'use strict';
 import type {
   ILayoutAnimationBuilder,
   LayoutAnimationsValues,
@@ -85,8 +86,16 @@ export class EntryExitTransition
                     value[transformProp as keyof TransformArrayItem],
                     withTiming(
                       exitingValues.initialValues.transform
-                        ? exitingValues.initialValues.transform[index][
-                            transformProp as keyof TransformArrayItem
+                        ? // TODO TYPESCRIPT
+                          // @ts-ignore This line of code fails tragically
+                          // in newer versions of React Native, where they have
+                          // narrowed down the type of `transform` even further.
+                          // Since this piece of code improperly typed anyway
+                          // (e.g. it assumes types from RN Animated here) I'd rather
+                          // fix it in the future when types for animations
+                          // are properly defined.
+                          exitingValues.initialValues.transform[index][
+                            transformProp
                           ]
                         : 0,
                       { duration: 0 }
@@ -133,7 +142,9 @@ export class EntryExitTransition
                   withSequence(
                     withTiming(
                       enteringValues.initialValues.transform
-                        ? enteringValues.initialValues.transform[index][
+                        ? // TODO TYPESCRIPT
+                          // @ts-ignore Read similar comment above.
+                          enteringValues.initialValues.transform[index][
                             transformProp as keyof TransformArrayItem
                           ]
                         : 0,
@@ -164,6 +175,8 @@ export class EntryExitTransition
           ? exitingValues.initialValues.transform
           : []
       ).concat(
+        // TODO TYPESCRIPT
+        // @ts-ignore Read similar comment above.
         (Array.isArray(enteringValues.animations.transform)
           ? enteringValues.animations.transform
           : []
@@ -175,10 +188,12 @@ export class EntryExitTransition
             );
             return value;
           }
+
           const transformProp = objectKeys[0];
-          const current = (
-            value[transformProp as keyof TransformArrayItem] as AnimationObject
-          ).current;
+          const current =
+            // TODO TYPESCRIPT
+            // @ts-ignore Read similar comment above.
+            (value[transformProp] as AnimationObject).current;
           if (typeof current === 'string') {
             if (current.includes('deg'))
               return {
