@@ -1,3 +1,4 @@
+'use strict';
 import { useEffect, useRef } from 'react';
 import { initializeSensor, registerSensor, unregisterSensor } from '../core';
 import type {
@@ -80,7 +81,7 @@ export function useAnimatedSensor(
 export function useAnimatedSensor(
   sensorType: SensorType,
   userConfig?: Partial<SensorConfig>
-): AnimatedSensor<any> {
+): AnimatedSensor<ValueRotation | Value3D> {
   const config: SensorConfig = {
     interval: 'auto',
     adjustToInterfaceOrientation: true,

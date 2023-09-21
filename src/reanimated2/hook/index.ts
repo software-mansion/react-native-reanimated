@@ -1,24 +1,21 @@
-export type { DependencyList, AnimatedRef } from './commonTypes';
-export {
-  useAnimatedProps,
-  useEvent,
-  useHandler,
-  useWorkletCallback,
-} from './Hooks';
+'use strict';
+export type {
+  DependencyList,
+  AnimatedRef,
+  ReanimatedScrollEvent as ScrollEvent,
+  ReanimatedEvent,
+} from './commonTypes';
+export { useAnimatedProps } from './useAnimatedProps';
+export { useWorkletCallback } from './useWorkletCallback';
 export { useSharedValue } from './useSharedValue';
 export { useReducedMotion } from './useReducedMotion';
 export { useAnimatedStyle } from './useAnimatedStyle';
-export type {
-  AnimatedStyleResult,
-  AnimatedStyleProp,
-} from './useAnimatedStyle';
 export { useAnimatedGestureHandler } from './useAnimatedGestureHandler';
 export type {
   GestureHandlerEvent,
   GestureHandlers,
 } from './useAnimatedGestureHandler';
 export { useAnimatedReaction } from './useAnimatedReaction';
-export type { AnimatedReactionWorkletFunction } from './useAnimatedReaction';
 export { useAnimatedRef } from './useAnimatedRef';
 export { useAnimatedScrollHandler } from './useAnimatedScrollHandler';
 export type { ScrollHandler, ScrollHandlers } from './useAnimatedScrollHandler';
@@ -29,3 +26,11 @@ export { useFrameCallback } from './useFrameCallback';
 export type { FrameCallback } from './useFrameCallback';
 export { useAnimatedKeyboard } from './useAnimatedKeyboard';
 export { useScrollViewOffset } from './useScrollViewOffset';
+export type {
+  EventHandler,
+  EventHandlerProcessed,
+  EventHandlerInternal,
+} from './useEvent';
+export { useEvent } from './useEvent';
+export type { UseHandlerContext } from './useHandler';
+export { useHandler } from './useHandler';

@@ -1,7 +1,9 @@
 #include "NativeReanimatedModule.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
+#if REACT_NATIVE_MINOR_VERSION >= 72
 #include <react/renderer/core/TraitCast.h>
+#endif
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 #endif
@@ -572,7 +574,8 @@ void NativeReanimatedModule::performOperations() {
     ReanimatedCommitMarker commitMarker;
 
     shadowTree.commit(
-        [&](RootShadowNode const &oldRootShadowNode) {
+        [&](RootShadowNode const &oldRootShadowNode)
+            -> RootShadowNode::Unshared {
           auto rootNode =
               oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
@@ -581,6 +584,15 @@ void NativeReanimatedModule::performOperations() {
           for (const auto &[shadowNode, props] : copiedOperationsQueue) {
             const ShadowNodeFamily &family = shadowNode->getFamily();
             react_native_assert(family.getSurfaceId() == surfaceId_);
+
+#if REACT_NATIVE_MINOR_VERSION >= 73
+            // Fix for catching nullptr returned from commit hook was introduced
+            // in 0.72.4 but we have only check for minor version of React
+            // Native so enable that optimization in React Native >= 0.73
+            if (propsRegistry_->shouldReanimatedSkipCommit()) {
+              return nullptr;
+            }
+#endif
 
             auto newRootNode = shadowTreeCloner.cloneWithNewProps(
                 rootNode, family, RawProps(rt, *props));
@@ -598,7 +610,15 @@ void NativeReanimatedModule::performOperations() {
 
           return newRoot;
         },
-        {/* default commit options */});
+        { /* .enableStateReconciliation = */
+          false,
+#if REACT_NATIVE_MINOR_VERSION >= 72
+              /* .mountSynchronously = */ true,
+#endif
+              /* .shouldYield = */ [this]() {
+                return propsRegistry_->shouldReanimatedSkipCommit();
+              }
+        });
   });
 }
 

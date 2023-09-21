@@ -233,13 +233,17 @@ class ShareableRemoteFunction
       public std::enable_shared_from_this<ShareableRemoteFunction> {
  private:
   jsi::Runtime *runtime_;
-  jsi::Function function_;
+  std::unique_ptr<jsi::Value> function_;
 
  public:
   ShareableRemoteFunction(jsi::Runtime &rt, jsi::Function &&function)
       : Shareable(RemoteFunctionType),
         runtime_(&rt),
-        function_(std::move(function)) {}
+        function_(std::make_unique<jsi::Value>(rt, std::move(function))) {}
+
+  ~ShareableRemoteFunction() {
+    cleanupIfRuntimeExists(runtime_, function_);
+  }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 };

@@ -179,7 +179,6 @@ This flowchart represents the high-level logic of our plugin's control flow. It'
 ```mermaid
 flowchart TB
 node([ASTnode])
-iv([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/injectVersion.ts'>injectVersion</a><br><i>only once</i>])
 pw([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processForCalleesWorklets.ts'>processForCalleesWorklets</a>])
 pwsbw{{should be workletized?}}
 pwgwa([get workletizable arguments])
@@ -190,7 +189,6 @@ pghsbw{{should be workletized?}}
 pwf([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processIfWorkletFunction.ts'>processIfWorkletFunction</a>])
 pwom([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processWorkletObjectMethod.ts'>processWorkletObjectMethod</a>])
 pisw([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processInlineStylesWarning.ts'>processInlineStylesWarning</a>])
-node-->|isDirectiveLiteral|iv
 node-->|isCallExpression|pw
 node-->|isArrowFunctionExpression|pwn
 node-->|isFunctionDeclaration|pwn

@@ -45,7 +45,7 @@ In case the animation is cancelled, the callback will receive `false` as the arg
 
 ### Returns
 
-This method returns an animation object. It can be either assigned directly to a Shared Value or can be used as a value for a style object returned from [`useAnimatedStyle`](../hooks/useAnimatedStyle).
+This method returns an animation object. It can be either assigned directly to a Shared Value or can be used as a value for a style object returned from [`useAnimatedStyle`](/docs/2.x/api/hooks/useAnimatedStyle).
 
 ## Example
 

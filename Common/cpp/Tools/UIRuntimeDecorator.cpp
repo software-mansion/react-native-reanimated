@@ -1,5 +1,5 @@
 #include "UIRuntimeDecorator.h"
-#include "JsiUtils.h"
+#include "ReanimatedJSIUtils.h"
 
 namespace reanimated {
 

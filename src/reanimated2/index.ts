@@ -1,16 +1,31 @@
+'use strict';
 import './publicGlobals';
 
+export type { WorkletRuntime } from './core';
 export {
   runOnJS,
   runOnUI,
   createWorkletRuntime,
-  WorkletRuntime,
   makeMutable,
+  makeShareableCloneRecursive,
   isReanimated3,
   isConfigured,
   enableLayoutAnimations,
   getViewProp,
 } from './core';
+export type {
+  GestureHandlers,
+  AnimatedRef,
+  ScrollHandler,
+  ScrollHandlers,
+  DerivedValue,
+  FrameCallback,
+  ScrollEvent,
+  EventHandler,
+  EventHandlerProcessed,
+  UseHandlerContext,
+  ReanimatedEvent,
+} from './hook';
 export {
   useAnimatedProps,
   useEvent,
@@ -20,66 +35,58 @@ export {
   useReducedMotion,
   useAnimatedStyle,
   useAnimatedGestureHandler,
-  GestureHandlers,
   useAnimatedReaction,
-  AnimatedRef,
   useAnimatedRef,
   useAnimatedScrollHandler,
-  ScrollHandler,
-  ScrollHandlers,
   useDerivedValue,
-  DerivedValue,
   useAnimatedSensor,
   useFrameCallback,
-  FrameCallback,
   useAnimatedKeyboard,
   useScrollViewOffset,
-  AnimatedStyleProp,
 } from './hook';
-export {
+export type {
   DelayAnimation,
   RepeatAnimation,
   SequenceAnimation,
   StyleLayoutAnimation,
+  WithTimingConfig,
+  TimingAnimation,
+  WithSpringConfig,
+  SpringAnimation,
+  WithDecayConfig,
+  DecayAnimation,
+} from './animation';
+export {
   cancelAnimation,
   defineAnimation,
   withTiming,
-  WithTimingConfig,
-  TimingAnimation,
   withSpring,
-  WithSpringConfig,
-  SpringAnimation,
   withDecay,
-  WithDecayConfig,
-  DecayAnimation,
   withDelay,
   withRepeat,
   withSequence,
 } from './animation';
-export {
-  Extrapolation,
-  ExtrapolationConfig,
-  ExtrapolationType,
-  interpolate,
-  clamp,
-} from './interpolation';
-export {
-  Extrapolate,
+export type { ExtrapolationConfig, ExtrapolationType } from './interpolation';
+export { Extrapolation, interpolate, clamp } from './interpolation';
+export type {
   InterpolationOptions,
-  interpolateColor,
-  ColorSpace,
   InterpolateConfig,
-  useInterpolateConfig,
   InterpolateRGB,
   InterpolateHSV,
 } from './interpolateColor';
 export {
+  Extrapolate,
+  ColorSpace,
+  interpolateColor,
+  useInterpolateConfig,
+} from './interpolateColor';
+export type {
   EasingFunction,
   EasingFn,
   EasingFunctionFactory,
   EasingFactoryFn,
-  Easing,
 } from './Easing';
+export { Easing } from './Easing';
 export {
   measure,
   dispatchCommand,
@@ -87,17 +94,10 @@ export {
   setGestureState,
 } from './NativeMethods';
 export { setNativeProps } from './SetNativeProps';
-export {
-  isColor,
-  processColor,
-  ParsedColorArray,
-  convertToRGBA,
-} from './Colors';
+export type { ParsedColorArray } from './Colors';
+export { isColor, processColor, convertToRGBA } from './Colors';
 export { createAnimatedPropAdapter } from './PropAdapters';
-export {
-  BaseAnimationBuilder,
-  ComplexAnimationBuilder,
-  Keyframe,
+export type {
   LayoutAnimation,
   EntryAnimationsValues,
   ExitAnimationsValues,
@@ -106,6 +106,11 @@ export {
   LayoutAnimationFunction,
   ILayoutAnimationBuilder,
   IEntryExitAnimationBuilder,
+} from './layoutReanimation';
+export {
+  BaseAnimationBuilder,
+  ComplexAnimationBuilder,
+  Keyframe,
   // Flip
   FlipInXUp,
   FlipInYLeft,
@@ -207,30 +212,32 @@ export {
   SharedTransition,
   SharedTransitionType,
 } from './layoutReanimation';
-export { getRelativeCoords, ComponentCoords } from './utils';
-export {
+export type { ComponentCoords } from './utils';
+export { getRelativeCoords, isSharedValue } from './utils';
+export type {
   StyleProps,
   SharedValue,
-  Context,
   AnimatableValueObject,
   AnimatableValue,
   AnimationObject,
-  Animation,
-  SensorType,
-  IOSReferenceFrame,
   SensorConfig,
+  Animation,
   AnimatedSensor,
   AnimationCallback,
   Value3D,
   ValueRotation,
+  AnimatedKeyboardInfo,
+  AnimatedKeyboardOptions,
+  MeasuredDimensions,
+} from './commonTypes';
+export {
+  SensorType,
+  IOSReferenceFrame,
   InterfaceOrientation,
   KeyboardState,
-  AnimatedKeyboardInfo,
-  MeasuredDimensions,
-  AnimatedKeyboardOptions,
   ReduceMotion,
 } from './commonTypes';
-export { FrameInfo } from './frameCallback';
+export type { FrameInfo } from './frameCallback';
 export { getUseOfValueInStyleWarning } from './pluginUtils';
 export {
   withReanimatedTimer,
@@ -246,10 +253,12 @@ export type {
   AnimatedProps,
   AnimatedTransform,
   TransformStyleTypes,
-  TransformArrayItemType,
+  TransformArrayItem,
   AnimateStyle,
   AnimatedStyle,
+  AnimatedStyleProp,
   StylesOrDefault,
 } from './helperTypes';
 export type { AnimatedScrollViewProps } from './component/ScrollView';
 export type { FlatListPropsWithLayout } from './component/FlatList';
+export { startMapper, stopMapper } from './mappers';

@@ -1,3 +1,4 @@
+'use strict';
 export * from './LinearTransition';
 export * from './FadingTransition';
 export * from './SequencedTransition';

@@ -1,8 +1,9 @@
+'use strict';
 import NativeReanimatedModule from './NativeReanimated';
 import type {
-  FlatShareableRef,
   ShareableRef,
-  WorkletFunction,
+  FlatShareableRef,
+  __WorkletFunction,
 } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
 import { registerWorkletStackDetails } from './errors';
@@ -237,7 +238,7 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
 
 const WORKLET_CODE_THRESHOLD = 255;
 
-function getWorkletCode(value: WorkletFunction) {
+function getWorkletCode(value: __WorkletFunction) {
   // @ts-ignore this is fine
   const code = value?.__initData?.code;
   if (!code) {
@@ -253,9 +254,11 @@ type RemoteFunction<T> = {
   __remoteFunction: FlatShareableRef<T>;
 };
 
-function isRemoteFunction<T>(value: object): value is RemoteFunction<T> {
+function isRemoteFunction<T>(value: {
+  __remoteFunction?: unknown;
+}): value is RemoteFunction<T> {
   'worklet';
-  return '__remoteFunction' in value;
+  return !!value.__remoteFunction;
 }
 
 export function makeShareableCloneOnUIRecursive<T>(
@@ -273,9 +276,14 @@ export function makeShareableCloneOnUIRecursive<T>(
       typeof value === 'function'
     ) {
       if (isHostObject(value)) {
-        return value as FlatShareableRef<T>;
+        // We call `_makeShareableClone` to wrap the provided HostObject
+        // inside ShareableJSRef.
+        return _makeShareableClone(value) as FlatShareableRef<T>;
       }
       if (isRemoteFunction<T>(value)) {
+        // RemoteFunctions are created by us therefore they are
+        // a Shareable out of the box and there is no need to
+        // call `_makeShareableClone`.
         return value.__remoteFunction;
       }
       if (Array.isArray(value)) {

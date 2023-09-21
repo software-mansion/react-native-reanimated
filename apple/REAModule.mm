@@ -14,12 +14,12 @@
 #import <RNReanimated/REAInitializerRCTFabricSurface.h>
 #endif
 
-#import <RNReanimated/JsiUtils.h>
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REAUIKit.h>
 #import <RNReanimated/RNRuntimeDecorator.h>
+#import <RNReanimated/ReanimatedJSIUtils.h>
 #import <RNReanimated/SingleInstanceChecker.h>
 #import <RNReanimated/WorkletRuntime.h>
 #import <RNReanimated/WorkletRuntimeCollector.h>
@@ -270,7 +270,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 #if __has_include(<UIKit/UIAccessibility.h>)
     auto isReducedMotion = UIAccessibilityIsReduceMotionEnabled();
 #else
-    auto isReducedMotion = false;
+    auto isReducedMotion = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
 #endif
 
     RNRuntimeDecorator::decorate(rnRuntime, nativeReanimatedModule, isReducedMotion);

@@ -1,3 +1,4 @@
+'use strict';
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
 
@@ -12,34 +13,21 @@ import {
   shallowEqual,
   validateAnimatedStyles,
 } from './utils';
-import type { DependencyList, Descriptor } from './commonTypes';
+import type { DefaultStyle, DependencyList, Descriptor } from './commonTypes';
 import type { ViewDescriptorsSet, ViewRefSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet, makeViewsRefSet } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import type {
   AnimationObject,
   Timestamp,
-  AdapterWorkletFunction,
-  BasicWorkletFunction,
-  BasicWorkletFunctionOptional,
   NestedObjectValues,
   SharedValue,
   StyleProps,
+  __AdapterWorkletFunction,
+  __BasicWorkletFunction,
+  WorkletFunction,
 } from '../commonTypes';
-import type {
-  ImageStyle,
-  RegisteredStyle,
-  TextStyle,
-  ViewStyle,
-} from 'react-native';
 import type { AnimatedStyle } from '../helperTypes';
-
-export interface AnimatedStyleResult {
-  viewDescriptors: ViewDescriptorsSet;
-  initial: AnimatedStyle<any>;
-  viewsRef: ViewRefSet<any>;
-  animatedStyle?: MutableRefObject<AnimatedStyle<any>>;
-}
 
 interface AnimatedState {
   last: AnimatedStyle<any>;
@@ -180,7 +168,7 @@ function runAnimations(
 
 function styleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: BasicWorkletFunction<AnimatedStyle<any>>,
+  updater: __BasicWorkletFunction<AnimatedStyle<any>>,
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
@@ -269,12 +257,12 @@ function styleUpdater(
 
 function jestStyleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: BasicWorkletFunction<AnimatedStyle<any>>,
+  updater: __BasicWorkletFunction<AnimatedStyle<any>>,
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
   animatedStyle: MutableRefObject<AnimatedStyle<any>>,
-  adapters: AdapterWorkletFunction[] = []
+  adapters: __AdapterWorkletFunction[] = []
 ): void {
   'worklet';
   const animations: AnimatedStyle<any> = state.animations ?? {};
@@ -400,27 +388,20 @@ function checkSharedValueUsage(
   }
 }
 
-// This type is kept for backward compatibility.
-export type AnimatedStyleProp<T> =
-  | AnimatedStyle<T>
-  | RegisteredStyle<AnimatedStyle<T>>;
-
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type useAnimatedStyleType = <
-  T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
->(
-  updater: () => T,
+// You cannot pass Shared Values to `useAnimatedStyle` directly.
+// @ts-expect-error This overload is required by our API.
+export function useAnimatedStyle<Style extends DefaultStyle>(
+  updater: () => Style,
   deps?: DependencyList | null
-) => T;
+): Style;
 
-export const useAnimatedStyle = function <T extends AnimatedStyle<any>>(
-  // animated style cannot be an array
-  updater: BasicWorkletFunction<T extends Array<unknown> ? never : T>,
-  dependencies?: DependencyList,
-  adapters?: AdapterWorkletFunction | AdapterWorkletFunction[],
+export function useAnimatedStyle<Style extends DefaultStyle>(
+  updater: WorkletFunction<[], Style>,
+  dependencies?: DependencyList | null,
+  adapters?: WorkletFunction | WorkletFunction[],
   isAnimatedProps = false
-): AnimatedStyleResult {
-  const viewsRef: ViewRefSet<any> = makeViewsRefSet();
+) {
+  const viewsRef: ViewRefSet<unknown> = makeViewsRefSet();
   const initRef = useRef<AnimationRef>();
   let inputs = Object.values(updater.__closure ?? {});
   if (shouldBeUseWeb()) {
@@ -435,16 +416,14 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       );
     }
   }
-  const adaptersArray: AdapterWorkletFunction[] = adapters
+  const adaptersArray = adapters
     ? Array.isArray(adapters)
       ? adapters
       : [adapters]
     : [];
   const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
   const animationsActive = useSharedValue<boolean>(true);
-  const animatedStyle: MutableRefObject<AnimatedStyle<any>> = useRef<
-    AnimatedStyle<any>
-  >({});
+  const animatedStyle: MutableRefObject<Style> = useRef<Style>({} as Style);
 
   // build dependencies
   if (!dependencies) {
@@ -455,7 +434,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   adaptersHash && dependencies.push(adaptersHash);
 
   if (!initRef.current) {
-    const initialStyle: AnimatedStyle<any> = initialUpdaterRun(updater);
+    const initialStyle = initialUpdaterRun(updater);
     validateAnimatedStyles(initialStyle);
     initRef.current = {
       initial: {
@@ -472,32 +451,31 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const { initial, remoteState, viewDescriptors } = initRef.current!;
-  const sharableViewDescriptors = viewDescriptors.sharableViewDescriptors;
+  const { initial, remoteState, viewDescriptors } = initRef.current;
+  const shareableViewDescriptors = viewDescriptors.shareableViewDescriptors;
   const maybeViewRef = NativeReanimatedModule.native ? undefined : viewsRef;
 
-  dependencies.push(sharableViewDescriptors);
+  dependencies.push(shareableViewDescriptors);
 
   useEffect(() => {
     let fun;
-    let updaterFn = updater as BasicWorkletFunctionOptional<T>;
+    let updaterFn = updater;
     if (adapters) {
-      updaterFn = () => {
+      updaterFn = (() => {
         'worklet';
         const newValues = updater();
         adaptersArray.forEach((adapter) => {
           adapter(newValues);
         });
         return newValues;
-      };
+      }) as WorkletFunction<[], Style>;
     }
 
     if (isJest()) {
       fun = () => {
         'worklet';
         jestStyleUpdater(
-          sharableViewDescriptors,
+          shareableViewDescriptors,
           updater,
           remoteState,
           maybeViewRef,
@@ -510,7 +488,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       fun = () => {
         'worklet';
         styleUpdater(
-          sharableViewDescriptors,
+          shareableViewDescriptors,
           updaterFn,
           remoteState,
           maybeViewRef,
@@ -539,5 +517,4 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   } else {
     return { viewDescriptors, initial, viewsRef };
   }
-  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
-} as useAnimatedStyleType;
+}

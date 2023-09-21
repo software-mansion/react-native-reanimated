@@ -1,21 +1,27 @@
+'use strict';
 import type { RefObject } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import type { Context, NativeEvent, WorkletFunction } from '../commonTypes';
+import type {
+  __Context,
+  __NativeEvent,
+  __WorkletFunction,
+} from '../commonTypes';
 import type WorkletEventHandler from '../WorkletEventHandler';
 import type { DependencyList } from './commonTypes';
-import { useEvent, useHandler } from './Hooks';
+import { useEvent } from './useEvent';
+import { useHandler } from './useHandler';
 
-export interface ScrollHandler<TContext extends Context>
-  extends WorkletFunction {
+export interface ScrollHandler<TContext extends __Context>
+  extends __WorkletFunction {
   (event: NativeScrollEvent, context?: TContext): void;
 }
 
 export interface ScrollEvent
   extends NativeScrollEvent,
-    NativeEvent<ScrollEvent> {
+    __NativeEvent<ScrollEvent> {
   eventName: string;
 }
-export interface ScrollHandlers<TContext extends Context> {
+export interface ScrollHandlers<TContext extends __Context> {
   [key: string]: ScrollHandler<TContext> | undefined;
   onScroll?: ScrollHandler<TContext>;
   onBeginDrag?: ScrollHandler<TContext>;
@@ -28,14 +34,14 @@ export interface ScrollHandlers<TContext extends Context> {
 type OnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-export type useAnimatedScrollHandler = <
-  TContext extends Context = Record<string, never>
+type useAnimatedScrollHandlerType = <
+  TContext extends __Context = Record<string, never>
 >(
   handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
   deps?: DependencyList
 ) => OnScroll;
 
-export const useAnimatedScrollHandler = function <TContext extends Context>(
+export const useAnimatedScrollHandler = function <TContext extends __Context>(
   handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
   dependencies?: DependencyList
 ): RefObject<WorkletEventHandler<ScrollEvent>> {
@@ -95,4 +101,4 @@ export const useAnimatedScrollHandler = function <TContext extends Context>(
     // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
   ) as any;
   // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
-} as unknown as useAnimatedScrollHandler;
+} as unknown as useAnimatedScrollHandlerType;

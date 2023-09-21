@@ -10,11 +10,11 @@
 #include <string>
 
 #include "AndroidUIScheduler.h"
-#include "JsiUtils.h"
 #include "LayoutAnimationsManager.h"
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
 #include "RNRuntimeDecorator.h"
+#include "ReanimatedJSIUtils.h"
 #include "ReanimatedRuntime.h"
 #include "WorkletRuntime.h"
 #include "WorkletRuntimeCollector.h"

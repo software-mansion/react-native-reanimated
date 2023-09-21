@@ -1,13 +1,14 @@
+'use strict';
 import { useEffect, useRef } from 'react';
 import { cancelAnimation } from '../animation';
 import type { SharedValue } from '../commonTypes';
 import { makeMutable } from '../core';
 
-export function useSharedValue<T>(
-  init: T,
+export function useSharedValue<Value>(
+  init: Value,
   oneWayReadsOnly = false
-): SharedValue<T> {
-  const ref = useRef<SharedValue<T>>(makeMutable(init, oneWayReadsOnly));
+): SharedValue<Value> {
+  const ref = useRef<SharedValue<Value>>(makeMutable(init, oneWayReadsOnly));
 
   if (ref.current === null) {
     ref.current = makeMutable(init, oneWayReadsOnly);
@@ -15,11 +16,9 @@ export function useSharedValue<T>(
 
   useEffect(() => {
     return () => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      cancelAnimation(ref.current!);
+      cancelAnimation(ref.current);
     };
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return ref.current!;
+  return ref.current;
 }

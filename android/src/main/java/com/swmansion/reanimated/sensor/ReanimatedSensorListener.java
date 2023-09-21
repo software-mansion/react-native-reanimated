@@ -80,7 +80,7 @@ public class ReanimatedSensorListener implements SensorEventListener {
           break;
         }
       case Sensor.TYPE_GRAVITY:
-      case Sensor.TYPE_ACCELEROMETER:
+      case Sensor.TYPE_LINEAR_ACCELERATION:
         {
           float[] data = new float[] {-event.values[0], -event.values[1], -event.values[2]};
           setter.sensorSetter(data, orientationDegrees);

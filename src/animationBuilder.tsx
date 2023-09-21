@@ -1,3 +1,4 @@
+'use strict';
 import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
@@ -12,6 +13,7 @@ const mockTargetValues: LayoutAnimationsValues = {
   targetHeight: 0,
   targetGlobalOriginX: 0,
   targetGlobalOriginY: 0,
+  targetBorderRadius: 0,
   windowWidth: 0,
   windowHeight: 0,
   currentOriginX: 0,
@@ -20,6 +22,7 @@ const mockTargetValues: LayoutAnimationsValues = {
   currentHeight: 0,
   currentGlobalOriginX: 0,
   currentGlobalOriginY: 0,
+  currentBorderRadius: 0,
 };
 
 export function maybeBuild(
@@ -47,7 +50,7 @@ export function maybeBuild(
       );
 
     const commonProperties = getCommonProperties(animatedStyle, style || {});
-    if (commonProperties) {
+    if (commonProperties.length > 0) {
       console.warn(
         `[Reanimated] ${
           commonProperties.length === 1 ? 'Property' : 'Properties: '

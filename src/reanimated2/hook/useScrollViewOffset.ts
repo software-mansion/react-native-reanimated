@@ -1,3 +1,4 @@
+'use strict';
 import type { RefObject } from 'react';
 import { useEffect, useRef } from 'react';
 
@@ -5,7 +6,7 @@ import type Animated from '../../index'; // TODO: fixme?
 import type { ScrollEvent } from './useAnimatedScrollHandler';
 import type { SharedValue } from '../commonTypes';
 import { findNodeHandle } from 'react-native';
-import { useEvent } from './utils';
+import { useEvent } from './useEvent';
 import { useSharedValue } from './useSharedValue';
 
 const scrollEventNames = [
