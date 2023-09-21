@@ -1,0 +1,39 @@
+name: Build NextExample
+on:
+  pull_request:
+    paths:
+      - .github/workflows/build-next-example.yml
+      - 'src/**'
+      - 'NextExample/**'
+      - '*'
+  push:
+    branches:
+      - master
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: build-next-example-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout Git repository
+        uses: actions/checkout@v3
+
+      - name: Install Reanimated node_modules
+        run: yarn install --frozen-lockfile
+
+      - name: Build Reanimated package
+        run: ./createNPMPackage.sh nightly
+
+      - name: Install NextExample node_modules
+        working-directory: NextExample
+        run: yarn install --frozen-lockfile
+
+      - name: Install Reanimated package
+        working-directory: NextExample
+        run: yarn add file:`find .. -name "react-native-reanimated-*.tgz"`
+
+      - name: Compile production build
+        working-directory: NextExample
+        run: yarn build
