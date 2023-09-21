@@ -38,8 +38,6 @@ export function isWindowAvailable() {
 
 export function isReducedMotion() {
   return isWeb()
-    ? isWindowAvailable()
-      ? !window.matchMedia('(prefers-reduced-motion: no-preference)').matches
-      : false
+    ? !window.matchMedia('(prefers-reduced-motion: no-preference)').matches
     : global._REANIMATED_IS_REDUCED_MOTION ?? false;
 }
