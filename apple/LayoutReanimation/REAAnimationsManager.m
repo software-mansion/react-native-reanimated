@@ -315,14 +315,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   return preparedData;
 }
 
-- (BOOL)wantsHandleRemovalOfView:(REAUIView *)view
-{
-  return REANodeFind(view, ^(id<RCTComponent> view) {
-    return [self->_exitingSubviewsCountMap objectForKey:view.reactTag] != nil ||
-        self->_hasAnimationForTag(view.reactTag, EXITING);
-  });
-}
-
 - (void)registerExitingAncestors:(REAUIView *)child
 {
   [self registerExitingAncestors:child exitingSubviewsCount:1];
