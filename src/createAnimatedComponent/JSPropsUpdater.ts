@@ -13,7 +13,7 @@ interface ListenerData {
   props: StyleProps;
 }
 
-interface JSPropUpdater {
+interface JSPropsUpdater {
   addOnJSPropsChangeListener: (
     animatedComponent: React.Component<unknown, unknown>
   ) => void;
@@ -22,7 +22,7 @@ interface JSPropUpdater {
   ) => void;
 }
 
-class JSPropUpdaterPaper implements JSPropUpdater {
+class JSPropsUpdaterPaper implements JSPropsUpdater {
   private static _tagToComponentMapping = new Map();
   private _reanimatedEventEmitter: NativeEventEmitter;
   private static _reanimatedModuleMock = {
@@ -35,9 +35,9 @@ class JSPropUpdaterPaper implements JSPropUpdater {
   };
 
   constructor() {
-    let reanimatedModule: typeof JSPropUpdaterPaper._reanimatedModuleMock;
+    let reanimatedModule: typeof JSPropsUpdaterPaper._reanimatedModuleMock;
     if (nativeShouldBeMock()) {
-      reanimatedModule = JSPropUpdaterPaper._reanimatedModuleMock;
+      reanimatedModule = JSPropsUpdaterPaper._reanimatedModuleMock;
     } else {
       reanimatedModule = NativeModules.ReanimatedModule;
     }
@@ -48,10 +48,10 @@ class JSPropUpdaterPaper implements JSPropUpdater {
     animatedComponent: React.Component<unknown, unknown>
   ) {
     const viewTag = findNodeHandle(animatedComponent);
-    JSPropUpdaterPaper._tagToComponentMapping.set(viewTag, animatedComponent);
-    if (JSPropUpdaterPaper._tagToComponentMapping.size === 1) {
+    JSPropsUpdaterPaper._tagToComponentMapping.set(viewTag, animatedComponent);
+    if (JSPropsUpdaterPaper._tagToComponentMapping.size === 1) {
       const listener = (data: ListenerData) => {
-        const component = JSPropUpdaterPaper._tagToComponentMapping.get(
+        const component = JSPropsUpdaterPaper._tagToComponentMapping.get(
           data.viewTag
         );
         component?._updateFromNative(data.props);
@@ -67,8 +67,8 @@ class JSPropUpdaterPaper implements JSPropUpdater {
     animatedComponent: React.Component<unknown, unknown>
   ) {
     const viewTag = findNodeHandle(animatedComponent);
-    JSPropUpdaterPaper._tagToComponentMapping.delete(viewTag);
-    if (JSPropUpdaterPaper._tagToComponentMapping.size === 0) {
+    JSPropsUpdaterPaper._tagToComponentMapping.delete(viewTag);
+    if (JSPropsUpdaterPaper._tagToComponentMapping.size === 0) {
       this._reanimatedEventEmitter.removeAllListeners(
         'onReanimatedPropsChange'
       );
@@ -76,15 +76,18 @@ class JSPropUpdaterPaper implements JSPropUpdater {
   }
 }
 
-class JSPropUpdaterFabric implements JSPropUpdater {
+class JSPropsUpdaterFabric implements JSPropsUpdater {
   private static _tagToComponentMapping = new Map();
   private static isInitialized = false;
 
   constructor() {
-    if (!JSPropUpdaterFabric.isInitialized) {
+    if (nativeShouldBeMock()) {
+      return;
+    }
+    if (!JSPropsUpdaterFabric.isInitialized) {
       const updater = (viewTag: number, props: unknown) => {
         const component =
-          JSPropUpdaterFabric._tagToComponentMapping.get(viewTag);
+          JSPropsUpdaterFabric._tagToComponentMapping.get(viewTag);
         component?._updateFromNative(props);
       };
       runOnUIImmediately(() => {
@@ -93,23 +96,29 @@ class JSPropUpdaterFabric implements JSPropUpdater {
           runOnJS(updater)(viewTag, props);
         };
       })();
-      JSPropUpdaterFabric.isInitialized = true;
+      JSPropsUpdaterFabric.isInitialized = true;
     }
   }
 
   public addOnJSPropsChangeListener(
     animatedComponent: React.Component<unknown, unknown>
   ) {
+    if (!JSPropsUpdaterFabric.isInitialized) {
+      return;
+    }
     const viewTag = findNodeHandle(animatedComponent);
-    JSPropUpdaterFabric._tagToComponentMapping.set(viewTag, animatedComponent);
+    JSPropsUpdaterFabric._tagToComponentMapping.set(viewTag, animatedComponent);
   }
 
   public removeOnJSPropsChangeListener(
     animatedComponent: React.Component<unknown, unknown>
   ) {
+    if (!JSPropsUpdaterFabric.isInitialized) {
+      return;
+    }
     const viewTag = findNodeHandle(animatedComponent);
-    JSPropUpdaterFabric._tagToComponentMapping.delete(viewTag);
+    JSPropsUpdaterFabric._tagToComponentMapping.delete(viewTag);
   }
 }
 
-export default global._IS_FABRIC ? JSPropUpdaterFabric : JSPropUpdaterPaper;
+export default global._IS_FABRIC ? JSPropsUpdaterFabric : JSPropsUpdaterPaper;

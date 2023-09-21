@@ -36,7 +36,7 @@ import {
 } from '../reanimated2/animation/util';
 import { maybeBuild } from '../animationBuilder';
 import type { AnimateProps } from '../reanimated2';
-import JSPropUpdater from './JSPropUpdater';
+import JSPropsUpdater from './JSPropsUpdater';
 import type { AnimatedComponentProps, AnimatedProps } from './utils';
 import { has, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
@@ -120,7 +120,7 @@ export function createAnimatedComponent(
     initialStyle = {};
     _component: ComponentRef | HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
-    _JSPropUpdater = new JSPropUpdater();
+    _JSPropsUpdater = new JSPropsUpdater();
     _InlinePropManager = new InlinePropManager();
     static displayName: string;
 
@@ -133,14 +133,14 @@ export function createAnimatedComponent(
 
     componentDidMount() {
       this._attachNativeEvents();
-      this._JSPropUpdater.addOnJSPropsChangeListener(this);
+      this._JSPropsUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
     }
 
     componentWillUnmount() {
       this._detachNativeEvents();
-      this._JSPropUpdater.removeOnJSPropsChangeListener(this);
+      this._JSPropsUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
       this._InlinePropManager.detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
