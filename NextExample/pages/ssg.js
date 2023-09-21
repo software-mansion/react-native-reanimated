@@ -1,4 +1,5 @@
 import Animated, {
+  PinwheelIn,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -24,7 +25,10 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.box, animatedStyle]} />
+      <Animated.View
+        entering={PinwheelIn}
+        style={[styles.box, animatedStyle]}
+      />
     </View>
   );
 }
@@ -32,7 +36,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'grey',
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -6,13 +6,19 @@
     "start": "next start"
   },
   "dependencies": {
+    "@expo/webpack-config": "^18.0.0",
+    "@react-native-community/slider": "^4.4.2",
+    "expo": "~48.0.10",
     "next": "latest",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-native-web": "^0.18.9",
-    "react-native-reanimated": "3.5.2"
+    "react-native-reanimated": "3.5.2",
+    "react-native-web": "^0.18.9"
   },
   "devDependencies": {
+    "@babel/core": "^7.12.9",
+    "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
+    "@babel/preset-env": "^7.19.4",
     "@expo/next-adapter": "^5.0.0"
   }
 }

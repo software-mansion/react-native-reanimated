@@ -24,18 +24,16 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Text accessibilityRole="header" style={styles.text}>
-        React Native for Web & Next.js
+        Next example
       </Text>
 
-      <Text style={styles.link} accessibilityRole="link" href={`/alternate`}>
-        A universal link
+      <Text style={styles.link} accessibilityRole="link" href={`/ssg`}>
+        SSG
       </Text>
 
-      <View style={styles.textContainer}>
-        <Text accessibilityRole="header" aria-level="2" style={styles.text}>
-          Subheader
-        </Text>
-      </View>
+      <Text style={styles.link} accessibilityRole="link" href={`/ssr`}>
+        SSR
+      </Text>
     </View>
   );
 }
