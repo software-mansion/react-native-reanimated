@@ -66,21 +66,17 @@ export {
   withRepeat,
   withSequence,
 } from './animation';
-export type {
-  Extrapolation,
-  ExtrapolationConfig,
-  ExtrapolationType,
-} from './interpolation';
-export { interpolate, clamp } from './interpolation';
+export type { ExtrapolationConfig, ExtrapolationType } from './interpolation';
+export { Extrapolation, interpolate, clamp } from './interpolation';
 export type {
   InterpolationOptions,
-  ColorSpace,
   InterpolateConfig,
   InterpolateRGB,
   InterpolateHSV,
 } from './interpolateColor';
 export {
   Extrapolate,
+  ColorSpace,
   interpolateColor,
   useInterpolateConfig,
 } from './interpolateColor';
