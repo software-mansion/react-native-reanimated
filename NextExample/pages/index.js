@@ -5,9 +5,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexGrow: 1,
     justifyContent: 'center',
+    backgroundColor: 'grey',
   },
   link: {
     color: 'blue',
+    fontSize: 40,
   },
   textContainer: {
     alignItems: 'center',
@@ -15,7 +17,7 @@ const styles = StyleSheet.create({
   },
   text: {
     alignItems: 'center',
-    fontSize: 24,
+    fontSize: 50,
     marginBottom: 24,
   },
 });

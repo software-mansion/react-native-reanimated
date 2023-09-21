@@ -46,6 +46,12 @@ const styles = StyleSheet.create({
   },
   box: {
     height: 100,
-    backgroundColor: 'blue',
+    backgroundColor: '#b58df1',
+    borderRadius: 10,
+  },
+  text: {
+    alignItems: 'center',
+    fontSize: 40,
+    marginBottom: 24,
   },
 });

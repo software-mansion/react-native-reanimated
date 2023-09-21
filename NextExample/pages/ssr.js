@@ -27,7 +27,7 @@ export default function App(props) {
     <View style={styles.container}>
       <Text accessibilityRole="header" style={styles.text}>
         This page is server-side rendered during request. Target width of the
-        blue component is randomly generated on refresh.
+        component is randomly generated on refresh.
       </Text>
 
       <Text accessibilityRole="header" style={styles.text}>
@@ -55,6 +55,13 @@ const styles = StyleSheet.create({
   },
   box: {
     height: 100,
-    backgroundColor: 'blue',
+    backgroundColor: '#b58df1',
+    borderRadius: 10,
+  },
+  text: {
+    alignItems: 'center',
+    textAlign: 'center',
+    fontSize: 40,
+    marginBottom: 24,
   },
 });
