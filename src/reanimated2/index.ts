@@ -20,8 +20,12 @@ export type {
   ScrollHandlers,
   DerivedValue,
   FrameCallback,
+  ScrollEvent,
+  EventHandler,
+  EventHandlerProcessed,
+  UseHandlerContext,
+  ReanimatedEvent,
 } from './hook';
-export type { ScrollEvent, UseHandlerContext, ReanimatedEvent } from './hook';
 export {
   useAnimatedProps,
   useEvent,
@@ -261,3 +265,4 @@ export type {
 } from './helperTypes';
 export type { AnimatedScrollViewProps } from './component/ScrollView';
 export type { FlatListPropsWithLayout } from './component/FlatList';
+export { startMapper, stopMapper } from './mappers';
