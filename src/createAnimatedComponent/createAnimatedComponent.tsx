@@ -408,7 +408,7 @@ export function createAnimatedComponent(
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
-      // Snapshot won't be undefined because of getSnapshotBeforeUpdate method
+      // Snapshot won't be undefined because it comes from getSnapshotBeforeUpdate method
       if (IS_WEB && snapshot !== null) {
         tryActivateLayoutTransition(
           this.props,
