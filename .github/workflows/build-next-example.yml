@@ -5,7 +5,6 @@ on:
       - .github/workflows/build-next-example.yml
       - 'src/**'
       - 'NextExample/**'
-      - '*'
   push:
     branches:
       - master
