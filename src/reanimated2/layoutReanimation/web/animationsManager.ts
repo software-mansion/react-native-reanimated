@@ -7,11 +7,6 @@ import type {
   TransitionData,
 } from './animationParser';
 import type { TransformsStyle } from 'react-native';
-import type {
-  BaseAnimationBuilder,
-  EntryExitAnimationFunction,
-  ILayoutAnimationBuilder,
-} from '..';
 import { LayoutAnimationType } from '..';
 import type { AnimatedComponentProps } from '../../../createAnimatedComponent/utils';
 import { ReduceMotion } from '../../commonTypes';
@@ -42,14 +37,6 @@ interface CustomConfig {
   reduceMotionV?: ReduceMotion;
   callbackV?: AnimationCallback;
 }
-
-type ConfigType =
-  | BaseAnimationBuilder
-  | ILayoutAnimationBuilder
-  | typeof BaseAnimationBuilder
-  | EntryExitAnimationFunction
-  | Keyframe
-  | CustomConfig;
 
 export enum TransitionType {
   LINEAR,
@@ -194,40 +181,36 @@ export function generateNextCustomKeyframeName() {
   return `REA${customKeyframeCounter++}`;
 }
 
-export function getEasingFromConfig(config: ConfigType): string {
-  if (!('easingV' in config)) {
-    return `cubic-bezier(${WebEasings.linear.toString()})`;
-  }
-
+export function getEasingFromConfig(config: CustomConfig): string {
   const easingName = (
     config.easingV !== undefined &&
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    (config as CustomConfig).easingV!.name in WebEasings
+    config.easingV!.name in WebEasings
       ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        (config as CustomConfig).easingV!.name
+        config.easingV!.name
       : 'linear'
   ) as WebEasingsNames;
 
   return `cubic-bezier(${WebEasings[easingName].toString()})`;
 }
 
-export function getDelayFromConfig(config: ConfigType): number {
-  const shouldRandomizeDelay = (config as CustomConfig).randomizeDelay;
+function getRandomDelay(maxDelay = 1000) {
+  return Math.floor(Math.random() * (maxDelay + 1)) / 1000;
+}
+
+export function getDelayFromConfig(config: CustomConfig): number {
+  const shouldRandomizeDelay = config.randomizeDelay;
 
   const delay = shouldRandomizeDelay ? getRandomDelay() : 0;
 
-  if (!('delayV' in config)) {
-    return delay;
-  }
-
-  if (config.delayV === undefined) {
+  if (!config.delayV) {
     return delay;
   }
 
   return shouldRandomizeDelay
-    ? getRandomDelay((config as CustomConfig).delayV)
+    ? getRandomDelay(config.delayV)
     : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      (config as CustomConfig).delayV! / 1000;
+      config.delayV! / 1000;
 }
 
 function getSystemReduceMotion() {
@@ -235,8 +218,8 @@ function getSystemReduceMotion() {
   return query.matches;
 }
 
-export function getReducedMotionFromConfig(config: ConfigType) {
-  if (!('reduceMotionV' in config)) {
+export function getReducedMotionFromConfig(config: CustomConfig) {
+  if (!config.reduceMotionV) {
     return getSystemReduceMotion();
   }
 
@@ -251,7 +234,7 @@ export function getReducedMotionFromConfig(config: ConfigType) {
 }
 
 export function getDurationFromConfig(
-  config: ConfigType,
+  config: CustomConfig,
   isLayoutTransition: boolean,
   animationName: AnimationNames
 ): number {
@@ -259,29 +242,15 @@ export function getDurationFromConfig(
     ? 0.3
     : Animations[animationName].duration;
 
-  if (!('durationV' in config)) {
-    return defaultDuration;
-  }
-
   return config.durationV !== undefined
     ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      (config as CustomConfig).durationV! / 1000
+      config.durationV! / 1000
     : defaultDuration;
 }
 
-export function getCallbackFromConfig(config: ConfigType): AnimationCallback {
-  if (!('callbackV' in config)) {
-    return null;
-  }
-
+export function getCallbackFromConfig(config: CustomConfig): AnimationCallback {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return config.callbackV !== undefined
-    ? (config as CustomConfig).callbackV!
-    : null;
-}
-
-export function getRandomDelay(maxDelay = 1000) {
-  return Math.floor(Math.random() * (maxDelay + 1)) / 1000;
+  return config.callbackV !== undefined ? config.callbackV! : null;
 }
 
 export function areDOMRectsEqual(r1: DOMRect, r2: DOMRect) {
@@ -464,14 +433,14 @@ export function startWebLayoutAnimation<
   const animationConfig: AnimationConfig = {
     animationName: animationName,
     duration: getDurationFromConfig(
-      config,
+      config as CustomConfig,
       isLayoutTransition,
       initialAnimationName as AnimationNames
     ),
-    delay: getDelayFromConfig(config),
-    easing: getEasingFromConfig(config),
-    reduceMotion: getReducedMotionFromConfig(config),
-    callback: getCallbackFromConfig(config),
+    delay: getDelayFromConfig(config as CustomConfig),
+    easing: getEasingFromConfig(config as CustomConfig),
+    reduceMotion: getReducedMotionFromConfig(config as CustomConfig),
+    callback: getCallbackFromConfig(config as CustomConfig),
   };
 
   if (animationConfig.reduceMotion) {
