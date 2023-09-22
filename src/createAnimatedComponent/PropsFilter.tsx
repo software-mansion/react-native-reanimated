@@ -24,8 +24,10 @@ export class PropsFilter {
   private _isFirstRender = true;
 
   public filterNonAnimatedProps(
-    inputProps: AnimatedComponentProps<InitialComponentProps>
+    component: React.Component<unknown, unknown>
   ): Record<string, unknown> {
+    const inputProps =
+      component.props as AnimatedComponentProps<InitialComponentProps>;
     const props: Record<string, unknown> = {};
     for (const key in inputProps) {
       const value = inputProps[key];
@@ -35,7 +37,7 @@ export class PropsFilter {
         const processedStyle: StyleProps = styles.map((style) => {
           if (style && style.viewDescriptors) {
             // this is how we recognize styles returned by useAnimatedStyle
-            style.viewsRef.add(this);
+            style.viewsRef.add(component);
             if (this._isFirstRender) {
               this._initialStyle = {
                 ...style.initial.value,
@@ -58,7 +60,7 @@ export class PropsFilter {
         if (animatedProp.initial !== undefined) {
           Object.keys(animatedProp.initial.value).forEach((key) => {
             props[key] = animatedProp.initial?.value[key];
-            animatedProp.viewsRef?.add(this);
+            animatedProp.viewsRef?.add(component);
           });
         }
       } else if (
