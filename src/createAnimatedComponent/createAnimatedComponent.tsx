@@ -98,7 +98,7 @@ export function createAnimatedComponent(
     _sharedElementTransition: SharedTransition | null = null;
     _JSPropUpdater = new JSPropUpdater();
     _InlinePropManager = new InlinePropManager();
-    _propsFilter = new PropsFilter();
+    _PropsFilter = new PropsFilter();
     static displayName: string;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
@@ -443,8 +443,8 @@ export function createAnimatedComponent(
     });
 
     render() {
-      const props = this._propsFilter.filterNonAnimatedProps(this.props);
-      this._propsFilter.setNotAFirstRender();
+      const props = this._PropsFilter.filterNonAnimatedProps(this.props);
+      this._PropsFilter.onRender();
 
       if (isJest()) {
         props.animatedStyle = this.animatedStyle;

@@ -20,8 +20,8 @@ function dummyListener() {
 }
 
 export class PropsFilter {
-  initialStyle = {};
-  _isFirstRender = true;
+  private _initialStyle = {};
+  private _isFirstRender = true;
 
   public filterNonAnimatedProps(
     inputProps: AnimatedComponentProps<InitialComponentProps>
@@ -37,13 +37,13 @@ export class PropsFilter {
             // this is how we recognize styles returned by useAnimatedStyle
             style.viewsRef.add(this);
             if (this._isFirstRender) {
-              this.initialStyle = {
+              this._initialStyle = {
                 ...style.initial.value,
-                ...this.initialStyle,
+                ...this._initialStyle,
                 ...initialUpdaterRun<StyleProps>(style.initial.updater),
               };
             }
-            return this.initialStyle;
+            return this._initialStyle;
           } else if (hasInlineStyles(style)) {
             return getInlineStyle(style, this._isFirstRender);
           } else {
@@ -85,7 +85,7 @@ export class PropsFilter {
     return props;
   }
 
-  public setNotAFirstRender() {
+  public onRender() {
     if (this._isFirstRender) {
       this._isFirstRender = false;
     }
