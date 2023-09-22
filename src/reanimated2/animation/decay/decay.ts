@@ -24,6 +24,7 @@ type withDecayType = (
 ) => number;
 
 function validateConfig(config: DefaultDecayConfig): void {
+  'worklet';
   if (config.clamp) {
     if (!Array.isArray(config.clamp)) {
       throw new Error(
