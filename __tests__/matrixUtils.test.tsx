@@ -7,18 +7,20 @@ import {
   _subtractMatrices,
 } from '../src/reanimated2/animation/transformationMatrix/matrixUtils';
 
+// prettier-ignore
 const identityMatrix: AffineMatrixFlat = [
-  ...[1, 0, 0, 0],
-  ...[0, 1, 0, 0],
-  ...[0, 0, 1, 0],
-  ...[0, 0, 0, 1],
+  1, 0, 0, 0,
+  0, 1, 0, 0,
+  0, 0, 1, 0,
+  0, 0, 0, 1,
 ] as const;
 
+// prettier-ignore
 const consecutiveNumMatrix: AffineMatrixFlat = [
-  ...[1, 2, 3, 4],
-  ...[5, 6, 7, 8],
-  ...[9, 10, 11, 12],
-  ...[13, 14, 15, 16],
+  1, 2, 3, 4,
+  5, 6, 7, 8,
+  9, 10, 11, 12,
+  13, 14, 15, 16,
 ] as const;
 
 describe('Matrix util functions', () => {
@@ -41,12 +43,15 @@ describe('Matrix util functions', () => {
     it('Multiply two arbitrary matrices', () => {
       expect(
         _multiplyMatrices(consecutiveNumMatrix, consecutiveNumMatrix)
-      ).toEqual([
-        ...[90, 100, 110, 120],
-        ...[202, 228, 254, 280],
-        ...[314, 356, 398, 440],
-        ...[426, 484, 542, 600],
-      ]);
+      ).toEqual(
+        // prettier-ignore
+        [
+        90, 100, 110, 120,
+        202, 228, 254, 280,
+        314, 356, 398, 440,
+        426, 484, 542, 600,
+      ]
+      );
     });
   });
 
@@ -97,23 +102,29 @@ describe('Matrix util functions', () => {
 
   describe('Matrix calculations: ', () => {
     const a = consecutiveNumMatrix;
+
+    // prettier-ignore
     const b: AffineMatrixFlat = [
-      ...[0, 0, 0, 0],
-      ...[0, 0, 0, 0],
-      ...[1, 1, 1, 1],
-      ...[1, 1, 1, 1],
+      0, 0, 0, 0,
+      0, 0, 0, 0,
+      1, 1, 1, 1,
+      1, 1, 1, 1,
     ] as const;
+
+    // prettier-ignore
     const aMinusB: AffineMatrixFlat = [
-      ...[1, 2, 3, 4],
-      ...[5, 6, 7, 8],
-      ...[8, 9, 10, 11],
-      ...[12, 13, 14, 15],
+      1, 2, 3, 4,
+      5, 6, 7, 8,
+      8, 9, 10, 11,
+      12, 13, 14, 15,
     ] as const;
+
+    // prettier-ignore
     const aPlusB: AffineMatrixFlat = [
-      ...[1, 2, 3, 4],
-      ...[5, 6, 7, 8],
-      ...[10, 11, 12, 13],
-      ...[14, 15, 16, 17],
+      1, 2, 3, 4,
+      5, 6, 7, 8,
+      10, 11, 12, 13,
+      14, 15, 16, 17,
     ] as const;
 
     it('subtract matrices', () => {
@@ -129,11 +140,12 @@ describe('Matrix util functions', () => {
 
   describe('Matrix decomposition', () => {
     it('Throw an error if matrix is incorrect (has zero as its last element)', () => {
+      // prettier-ignore
       const incorrectMatrix: AffineMatrixFlat = [
-        ...[1, 1, 1, 1],
-        ...[1, 1, 1, 1],
-        ...[1, 1, 1, 1],
-        ...[1, 1, 1, 0],
+        1, 1, 1, 1,
+        1, 1, 1, 1,
+        1, 1, 1, 1,
+        1, 1, 1, 0,
       ] as const;
       expect(() =>
         decomposeMatrixIntoMatricesAndAngles(incorrectMatrix)
@@ -151,8 +163,12 @@ describe('Matrix util functions', () => {
     });
 
     it('Decompose arbitrary matrix ', () => {
+      // prettier-ignore
       const m2: AffineMatrixFlat = [
-        1, 2, 3, 0, 1, 1, 1, 0, 1, 2, 0, 0, 4, 5, 6, 1,
+        1, 2, 3, 0, 
+        1, 1, 1, 0,
+        1, 2, 0, 0, 
+        4, 5, 6, 1,
       ];
 
       const { translationMatrix, scaleMatrix, rotationMatrix, skewMatrix } =

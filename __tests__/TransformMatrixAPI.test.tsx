@@ -2,11 +2,12 @@ import { TransformMatrix } from '../src/reanimated2/animation/transformationMatr
 
 const identityMatrix = TransformMatrix.getIdentityMatrix();
 
+// prettier-ignore
 const consecutiveNumMatrix = [
-  ...[1, 2, 3, 4],
-  ...[5, 6, 7, 8],
-  ...[9, 10, 11, 12],
-  ...[13, 14, 15, 16],
+  1, 2, 3, 4,
+  5, 6, 7, 8,
+  9, 10, 11, 12,
+  13, 14, 15, 16,
 ];
 
 describe('Matrix util functions', () => {
@@ -32,12 +33,15 @@ describe('Matrix util functions', () => {
           consecutiveNumMatrix,
           consecutiveNumMatrix
         )
-      ).toEqual([
-        ...[90, 100, 110, 120],
-        ...[202, 228, 254, 280],
-        ...[314, 356, 398, 440],
-        ...[426, 484, 542, 600],
-      ]);
+      ).toEqual(
+        // prettier-ignore
+        [
+        90, 100, 110, 120,
+        202, 228, 254, 280,
+        314, 356, 398, 440,
+        426, 484, 542, 600,
+      ]
+      );
     });
   });
 });

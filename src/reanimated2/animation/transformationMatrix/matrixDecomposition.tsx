@@ -46,11 +46,13 @@ function norm3d(x: number, y: number, z: number) {
 
 function transposeMatrix(m: AffineMatrixFlat): AffineMatrixFlat {
   'worklet';
+
+  // prettier-ignore
   return [
-    ...[m[0], m[4], m[8], m[12]],
-    ...[m[1], m[5], m[9], m[13]],
-    ...[m[2], m[6], m[10], m[14]],
-    ...[m[3], m[7], m[11], m[15]],
+    m[0], m[4], m[8], m[12],
+    m[1], m[5], m[9], m[13],
+    m[2], m[6], m[10], m[14],
+    m[3], m[7], m[11], m[15],
   ] as const;
 }
 
@@ -100,24 +102,22 @@ function gramSchmidtAlgorithm(matrix: AffineMatrixFlat): {
     scaleVector(u, 1 / Math.sqrt(innerProduct(u, u)))
   );
 
+  // prettier-ignore
   const rotationMatrix: AffineMatrixFlat = [
-    ...[e0[0], e1[0], e2[0], e3[0]],
-    ...[e0[1], e1[1], e2[1], e3[1]],
-    ...[e0[2], e1[2], e2[2], e3[2]],
-    ...[e0[3], e1[3], e2[3], e3[3]],
+    e0[0], e1[0], e2[0], e3[0],
+    e0[1], e1[1], e2[1], e3[1],
+    e0[2], e1[2], e2[2], e3[2],
+    e0[3], e1[3], e2[3], e3[3],
   ] as const;
 
+  // prettier-ignore
   const skewMatrix: AffineMatrixFlat = [
-    ...[
-      innerProduct(e0, a0),
-      innerProduct(e0, a1),
-      innerProduct(e0, a2),
-      innerProduct(e0, a3),
-    ],
-    ...[0, innerProduct(e1, a1), innerProduct(e1, a2), innerProduct(e1, a3)],
-    ...[0, 0, innerProduct(e2, a2), innerProduct(e2, a3)],
-    ...[0, 0, 0, innerProduct(e3, a3)],
+    innerProduct(e0, a0), innerProduct(e0, a1), innerProduct(e0, a2), innerProduct(e0, a3),
+    0, innerProduct(e1, a1), innerProduct(e1, a2), innerProduct(e1, a3),
+    0, 0, innerProduct(e2, a2), innerProduct(e2, a3),
+    0, 0, 0, innerProduct(e3, a3),
   ] as const;
+
   return {
     rotationMatrix: transposeMatrix(rotationMatrix),
     skewMatrix: transposeMatrix(skewMatrix),
@@ -139,28 +139,31 @@ function decomposeMatrix(
 
   const matrix = matrixF.map((_, i) => matrixF[i] / matrixF[15]);
 
+  // prettier-ignore
   const translationMatrix: AffineMatrixFlat = [
-    ...[1, 0, 0, 0],
-    ...[0, 1, 0, 0],
-    ...[0, 0, 1, 0],
-    ...[matrix[12], matrix[13], matrix[14], 1],
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    matrix[12], matrix[13], matrix[14], 1,
   ] as const;
   const sx = matrix[15] * norm3d(matrix[0], matrix[4], matrix[8]);
   const sy = matrix[15] * norm3d(matrix[1], matrix[5], matrix[9]);
   const sz = matrix[15] * norm3d(matrix[2], matrix[6], matrix[10]);
 
+  // prettier-ignore
   const scaleMatrix: AffineMatrixFlat = [
-    ...[sx, 0, 0, 0],
-    ...[0, sy, 0, 0],
-    ...[0, 0, sz, 0],
-    ...[0, 0, 0, 1],
+    sx, 0, 0, 0,
+    0, sy, 0, 0,
+    0, 0, sz, 0,
+    0, 0, 0, 1,
   ] as const;
 
+  // prettier-ignore
   const rotationAndSkewMatrix: AffineMatrixFlat = [
-    ...[matrix[0] / sx, matrix[1] / sx, matrix[2] / sx, 0],
-    ...[matrix[4] / sy, matrix[5] / sy, matrix[6] / sy, 0],
-    ...[matrix[8] / sz, matrix[9] / sz, matrix[10] / sz, 0],
-    ...[0, 0, 0, 1],
+    matrix[0] / sx, matrix[1] / sx, matrix[2] / sx, 0,
+    matrix[4] / sy, matrix[5] / sy, matrix[6] / sy, 0,
+    matrix[8] / sz, matrix[9] / sz, matrix[10] / sz, 0,
+    0, 0, 0, 1,
   ] as const;
 
   const { rotationMatrix, skewMatrix } = gramSchmidtAlgorithm(

@@ -20,7 +20,14 @@ function getAngle(angle: number | string) {
 export const TransformMatrix = {
   getIdentityMatrix: () => {
     'worklet';
-    return [...[1, 0, 0, 0], ...[0, 1, 0, 0], ...[0, 0, 1, 0], ...[0, 0, 0, 1]];
+
+    // prettier-ignore
+    return [
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0, 
+      0, 0, 0, 1
+    ];
   },
 
   getRotationMatrix: (angle: number | string, axis: Axis = 'z') => {
@@ -32,17 +39,25 @@ export const TransformMatrix = {
     'worklet';
     const [sx, sy, sz] = Array.isArray(scale) ? scale : [scale, scale, scale];
 
+    // prettier-ignore
     return [
-      ...[sx, 0, 0, 0],
-      ...[0, sy, 0, 0],
-      ...[0, 0, sz, 0],
-      ...[0, 0, 0, 1],
+      sx, 0, 0, 0,
+      0, sy, 0, 0,
+      0, 0, sz, 0,
+      0, 0, 0, 1,
     ];
   },
 
   getTranslationMatrix: (x: number, y: number, z: number) => {
     'worklet';
-    return [...[1, 0, 0, 0], ...[0, 1, 0, 0], ...[0, 0, 1, 0], ...[x, y, z, 1]];
+
+    // prettier-ignore
+    return [
+      1, 0, 0, 0,
+      0, 1, 0, 0, 
+      0, 0, 1, 0, 
+      x, y, z, 1
+    ];
   },
 
   multiplyMatrices: (a: Array<number>, b: Array<number>) => {
