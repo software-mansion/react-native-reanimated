@@ -174,7 +174,7 @@ public class SharedTransitionManager {
   private List<SharedElement> getSharedElementsForCurrentTransition(
       List<View> sharedViews, boolean addedNewScreen) {
     // ignore removed views if it is transition restart
-    boolean ignoreRemovedViews = mReattachedViews.size() > 0;
+    boolean isTransitionRestart = mReattachedViews.size() > 0;
     List<View> newTransitionViews = new ArrayList<>();
     Set<Integer> viewTags = new HashSet<>();
     if (!addedNewScreen) {
@@ -192,7 +192,7 @@ public class SharedTransitionManager {
     for (View sharedView : sharedViews) {
       int targetViewTag =
           mNativeMethodsHolder.findPrecedingViewTagForTransition(sharedView.getId());
-      if (ignoreRemovedViews) {
+      if (isTransitionRestart) {
         while (removedViewsTags.contains(targetViewTag)) {
           mNativeMethodsHolder.clearAnimationConfig(targetViewTag);
           targetViewTag =
@@ -297,7 +297,7 @@ public class SharedTransitionManager {
       for (View view : currentSourceViews) {
         if (!newSourceViews.contains(view)) {
           mViewTagsToHide.remove(view.getId());
-          view.setVisibility(View.INVISIBLE);
+          view.setVisibility(View.VISIBLE);
         }
       }
       mCurrentSharedTransitionViews.clear();

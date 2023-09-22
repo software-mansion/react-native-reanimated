@@ -200,7 +200,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
                                                              withNewElements:(BOOL)addedNewScreen
 {
   NSMutableArray<REAUIView *> *newTransitionViews = [NSMutableArray new];
-  NSMutableArray<REASharedElement *> *sharedElements = [NSMutableArray new];
+  NSMutableArray<REASharedElement *> *newSharedElements = [NSMutableArray new];
   NSMutableSet<NSNumber *> *currentSharedViewsTags = [NSMutableSet new];
   for (REAUIView *sharedView in sharedViews) {
     [currentSharedViewsTags addObject:sharedView.reactTag];
@@ -305,19 +305,19 @@ static REASharedTransitionManager *_sharedTransitionManager;
                                                                 sourceViewSnapshot:sourceViewSnapshot
                                                                         targetView:viewTarget
                                                                 targetViewSnapshot:targetViewSnapshot];
-    [sharedElements addObject:sharedElement];
+    [newSharedElements addObject:sharedElement];
   }
   if ([newTransitionViews count] > 0) {
-    NSMutableArray *currentSoureViews = [NSMutableArray new];
+    NSMutableArray *currentSourceViews = [NSMutableArray new];
     for (REASharedElement *sharedElement in _sharedElements) {
-      [currentSoureViews addObject:sharedElement.sourceView];
+      [currentSourceViews addObject:sharedElement.sourceView];
     }
-    NSMutableSet *newSoureViews = [NSMutableSet new];
-    for (REASharedElement *sharedElement in sharedElements) {
-      [newSoureViews addObject:sharedElement.sourceView];
+    NSMutableSet *newSourceViews = [NSMutableSet new];
+    for (REASharedElement *sharedElement in newSharedElements) {
+      [newSourceViews addObject:sharedElement.sourceView];
     }
-    for (REAUIView *view in currentSoureViews) {
-      if (![newSoureViews containsObject:view]) {
+    for (REAUIView *view in currentSourceViews) {
+      if (![newSourceViews containsObject:view]) {
         _removedViewRegistry[view.reactTag] = view;
       }
     }
@@ -326,13 +326,13 @@ static REASharedTransitionManager *_sharedTransitionManager;
       _currentSharedTransitionViews[view.reactTag] = view;
     }
   }
-  if ([sharedElements count] != 0) {
-    _sharedElements = sharedElements;
-    for (REASharedElement *sharedElement in sharedElements) {
+  if ([newSharedElements count] != 0) {
+    _sharedElements = newSharedElements;
+    for (REASharedElement *sharedElement in newSharedElements) {
       _sharedElementsLookup[sharedElement.sourceView.reactTag] = sharedElement;
     }
   }
-  return sharedElements;
+  return newSharedElements;
 }
 
 /*

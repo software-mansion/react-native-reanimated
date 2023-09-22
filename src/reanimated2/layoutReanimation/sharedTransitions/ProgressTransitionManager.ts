@@ -12,6 +12,8 @@ type TransitionProgressEvent = {
   target: number;
 };
 
+const IS_ANDROID = Platform.OS === 'android';
+
 export class ProgressTransitionManager {
   private _sharedElementCount = 0;
   private _eventHandler = {
@@ -49,7 +51,7 @@ export class ProgressTransitionManager {
     const eventHandler = this._eventHandler;
     if (!eventHandler.isRegistered) {
       eventHandler.isRegistered = true;
-      const eventPrefix = Platform.OS === 'android' ? 'on' : 'top';
+      const eventPrefix = IS_ANDROID ? 'on' : 'top';
       let lastProgressValue = -1;
       eventHandler.onTransitionProgress = registerEventHandler(
         (event: TransitionProgressEvent) => {
@@ -68,10 +70,10 @@ export class ProgressTransitionManager {
       );
       eventHandler.onAppear = registerEventHandler(() => {
         'worklet';
-        global.ProgressTransitionRegister.onTransitionEnd(false);
+        global.ProgressTransitionRegister.onTransitionEnd();
       }, eventPrefix + 'Appear');
 
-      if (Platform.OS === 'android') {
+      if (IS_ANDROID) {
         // onFinishTransitioning event is available only on Android and
         // is used to handle closing modals
         eventHandler.onDisappear = registerEventHandler(() => {
@@ -134,22 +136,20 @@ function createProgressTransitionRegister() {
     ) => {
       if (currentTransitions.size > 0) {
         // there is no need to prevent cleaning on android
-        isTransitionRestart = Platform.OS !== 'android';
+        isTransitionRestart = !IS_ANDROID;
       }
       progressAnimations.set(viewTag, progressAnimation);
     },
     removeProgressAnimation: (viewTag: number) => {
       if (currentTransitions.size > 0) {
         // there is no need to prevent cleaning on android
-        isTransitionRestart = Platform.OS !== 'android';
+        isTransitionRestart = !IS_ANDROID;
       }
       // Remove the animation config after the transition is finished
       toRemove.add(viewTag);
     },
     onTransitionStart: (viewTag: number, snapshot: any) => {
-      if (isTransitionRestart) {
-        skipCleaning = true;
-      }
+      skipCleaning = isTransitionRestart;
       snapshots.set(viewTag, snapshot);
       currentTransitions.add(viewTag);
       // set initial style for re-parented components
