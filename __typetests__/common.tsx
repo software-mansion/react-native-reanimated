@@ -9,6 +9,7 @@ import type {
   ImageProps,
   ViewStyle,
   NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { StyleSheet, Button, View, Image, ScrollView } from 'react-native';
 import type {
@@ -50,6 +51,7 @@ import Animated, {
   makeShareableCloneRecursive,
   useEvent,
   useScrollViewOffset,
+  useHandler,
 } from '..';
 import type { ReanimatedEvent } from '..';
 
@@ -659,6 +661,108 @@ function TestUseScrollViewOffset4() {
       <Animated.View style={{ opacity: offset.value }} />
     </ScrollView>
   );
+}
+
+// Test `useHandler`
+function TestUseHandler1() {
+  type ScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
+  const dependencies = [{ isWeb: false }];
+  const handlers = {
+    onScroll: (event: ReanimatedEvent<ScrollEvent>) => {
+      'worklet';
+      console.log(event);
+    },
+  };
+
+  const { context, doDependenciesDiffer, useWeb } = useHandler(
+    handlers,
+    dependencies
+  );
+
+  const customScrollHandler = useEvent(
+    (event: ReanimatedEvent<ScrollEvent>) => {
+      'worklet';
+      const { onScroll } = handlers;
+      if (onScroll && event.eventName.endsWith('onScroll')) {
+        context.eventName = context.eventName
+          ? context.eventName + event.eventName + useWeb
+          : event.eventName + useWeb;
+        onScroll(event);
+      }
+    },
+    ['onScroll'],
+    doDependenciesDiffer
+  );
+
+  return <Animated.ScrollView onScroll={customScrollHandler} />;
+}
+
+function TestUseHandler2() {
+  type ScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
+  const dependencies = [{ isWeb: false }];
+  const handlers = {
+    onScroll: (event: ScrollEvent) => {
+      'worklet';
+      console.log(event);
+    },
+  };
+
+  const { context, doDependenciesDiffer, useWeb } = useHandler(
+    // @ts-expect-error Works with `ReanimatedEvent` only.
+    handlers,
+    dependencies
+  );
+
+  const customScrollHandler = useEvent(
+    (event: ReanimatedEvent<ScrollEvent>) => {
+      'worklet';
+      const { onScroll } = handlers;
+      if (onScroll && event.eventName.endsWith('onScroll')) {
+        context.eventName = context.eventName
+          ? context.eventName + event.eventName + useWeb
+          : event.eventName + useWeb;
+        // @ts-expect-error Works with `ReanimatedEvent` only.
+        onScroll(event);
+      }
+    },
+    ['onScroll'],
+    doDependenciesDiffer
+  );
+
+  return <Animated.ScrollView onScroll={customScrollHandler} />;
+}
+
+function TestUseHandler3() {
+  type ScrollEvent = NativeScrollEvent;
+  const dependencies = [{ isWeb: false }];
+  const handlers = {
+    onScroll: (event: ScrollEvent) => {
+      'worklet';
+      console.log(event);
+    },
+  };
+
+  const { context, doDependenciesDiffer, useWeb } = useHandler(
+    handlers,
+    dependencies
+  );
+
+  const customScrollHandler = useEvent<NativeSyntheticEvent<ScrollEvent>>(
+    (event: ReanimatedEvent<ScrollEvent>) => {
+      'worklet';
+      const { onScroll } = handlers;
+      if (onScroll && event.eventName.endsWith('onScroll')) {
+        context.eventName = context.eventName
+          ? context.eventName + event.eventName + useWeb
+          : event.eventName + useWeb;
+        onScroll(event);
+      }
+    },
+    ['onScroll'],
+    doDependenciesDiffer
+  );
+
+  return <Animated.ScrollView onScroll={customScrollHandler} />;
 }
 
 /**

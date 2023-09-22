@@ -21,7 +21,6 @@ export function useAnimatedPagerScrollHandler<
   const { context, doDependenciesDiffer } = useHandler<
     PagerViewOnPageScrollEvent,
     TContext
-    // @ts-expect-error This will be fixed in the PR of the series.
   >(handlers, dependencies);
 
   return useEvent<PagerViewOnPageScrollEvent>(
@@ -52,7 +51,6 @@ export function useAnimatedPagerScrollStateHandler<
   const { context, doDependenciesDiffer } = useHandler<
     PageScrollStateChangedEvent,
     TContext
-    // @ts-expect-error This will be fixed in the PR of the series.
   >(handlers, dependencies);
 
   return useEvent<NativeSyntheticEvent<PageScrollStateChangedEvent>>(
@@ -86,7 +84,6 @@ export function useAnimatedPagerSelectedPageHandler<
   const { context, doDependenciesDiffer } = useHandler<
     PagerViewOnPageSelectedEvent,
     TContext
-    // @ts-expect-error This will be fixed in the PR of the series.
   >(handlers, dependencies);
 
   return useEvent<PagerViewOnPageSelectedEvent>(

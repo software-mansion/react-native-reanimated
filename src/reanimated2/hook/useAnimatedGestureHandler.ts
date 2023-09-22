@@ -56,7 +56,8 @@ export function useAnimatedGestureHandler<
   dependencies?: DependencyList
 ): (e: T) => void {
   const { context, doDependenciesDiffer, useWeb } = useHandler<
-    Payload,
+    // This will be removed in the next PR in the series.
+    any,
     TContext
   >(handlers, dependencies);
 
