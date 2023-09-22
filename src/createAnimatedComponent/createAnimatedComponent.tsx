@@ -567,6 +567,9 @@ export function createAnimatedComponent(
       return props;
     }
 
+    // This is a component lifecycle method from React, therefore we are not calling it directly.
+    // It is called before the component gets rerendered. This way we can access components' position before it changed
+    // and later on, in componentDidUpdate, calculate translation for layout transition.
     getSnapshotBeforeUpdate() {
       if (
         (this._component as HTMLElement).getBoundingClientRect !== undefined
