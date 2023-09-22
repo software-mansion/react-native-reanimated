@@ -22,16 +22,9 @@ jobs:
       - name: Install Reanimated node_modules
         run: yarn install --frozen-lockfile
 
-      - name: Build Reanimated package
-        run: ./createNPMPackage.sh nightly
-
       - name: Install NextExample node_modules
         working-directory: NextExample
         run: yarn install --frozen-lockfile
-
-      - name: Install Reanimated package
-        working-directory: NextExample
-        run: yarn add file:`find .. -name "react-native-reanimated-*.tgz"`
 
       - name: Compile production build
         working-directory: NextExample
