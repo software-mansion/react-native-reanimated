@@ -48,7 +48,7 @@ export const TransformMatrix = {
     ];
   },
 
-  getTranslationMatrix: (x: number, y: number, z: number) => {
+  getTranslationMatrix: (x: number, y: number, z = 0) => {
     'worklet';
 
     // prettier-ignore
