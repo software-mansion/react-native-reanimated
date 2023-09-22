@@ -15,6 +15,7 @@ import type { StyleProps } from '../../commonTypes';
 import { LinearTransition } from './transition/Linear.web';
 import { SequencedTransition } from './transition/Sequenced.web';
 import { FadingTransition } from './transition/Fading.web';
+import { useReducedMotion } from '../../../reanimated2/hook/useReducedMotion';
 
 export const WEB_ANIMATIONS_ID = 'ReanimatedWebAnimationsStyle';
 
@@ -213,14 +214,9 @@ export function getDelayFromConfig(config: CustomConfig): number {
       config.delayV! / 1000;
 }
 
-function getSystemReduceMotion() {
-  const query = window.matchMedia('(prefers-reduced-motion: reduce)');
-  return query.matches;
-}
-
 export function getReducedMotionFromConfig(config: CustomConfig) {
   if (!config.reduceMotionV) {
-    return getSystemReduceMotion();
+    return useReducedMotion();
   }
 
   switch (config.reduceMotionV) {
@@ -229,7 +225,7 @@ export function getReducedMotionFromConfig(config: CustomConfig) {
     case ReduceMotion.Always:
       return true;
     default:
-      return getSystemReduceMotion();
+      return useReducedMotion();
   }
 }
 
