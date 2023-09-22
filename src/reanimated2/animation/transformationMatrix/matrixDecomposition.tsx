@@ -1,16 +1,14 @@
 import type { AffineMatrixFlat } from './matrixUtils';
 import { unflatten, isAffineMatrix, flatten } from './matrixUtils';
 
-// ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-// ┃ Matrix decomposition is a factorization of the given matrix into a product of other matrices. ┃
-// ┃ These other matrices represent simple affine transformations:                                 ┃
-// ┃     • scale                                                                                   ┃
-// ┃     • translation                                                                             ┃
-// ┃     • rotation (3 matrices, fo reach axis)                                                    ┃
-// ┃     • skew                                                                                    ┃
-// ┃ This allows us to correctly animate transition from initial to final transform matrix, since  ┃
-// ┃ we should animate each transformation separately.                                   ┃
-// ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+//  Matrix decomposition is a factorization of the given matrix into a product of other matrices.
+//  These other matrices represent simple affine transformations:
+//      • scale
+//      • translation
+//      • rotation (3 matrices, fo reach axis)
+//      • skew
+//  This allows us to correctly animate transition from initial to final transform matrix, since
+//  we should animate each transformation separately.
 
 type TransformMatrixDecomposition = Record<
   'translationMatrix' | 'scaleMatrix' | 'rotationMatrix' | 'skewMatrix',
