@@ -212,7 +212,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
     // and pass the worklet as a first argument followed by original arguments.
 
     return (...args) =>
-      runOnJS(runWorkletOnJS<Args, ReturnValue>)(
+      runOnJS(runWorkletOnJS as typeof runWorkletOnJS<Args, ReturnValue>)(
         fun as WorkletFunction<Args, ReturnValue>,
         ...args
       );
