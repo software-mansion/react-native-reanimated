@@ -9,6 +9,7 @@ import type {
   ImageProps,
   ViewStyle,
   NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { StyleSheet, Button, View, Image, ScrollView } from 'react-native';
 import type {
@@ -50,6 +51,7 @@ import Animated, {
   makeShareableCloneRecursive,
   useEvent,
   useScrollViewOffset,
+  useHandler,
 } from '..';
 import type { ReanimatedEvent } from '..';
 
@@ -661,6 +663,108 @@ function TestUseScrollViewOffset4() {
   );
 }
 
+// Test `useHandler`
+function TestUseHandler1() {
+  type ScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
+  const dependencies = [{ isWeb: false }];
+  const handlers = {
+    onScroll: (event: ReanimatedEvent<ScrollEvent>) => {
+      'worklet';
+      console.log(event);
+    },
+  };
+
+  const { context, doDependenciesDiffer, useWeb } = useHandler(
+    handlers,
+    dependencies
+  );
+
+  const customScrollHandler = useEvent(
+    (event: ReanimatedEvent<ScrollEvent>) => {
+      'worklet';
+      const { onScroll } = handlers;
+      if (onScroll && event.eventName.endsWith('onScroll')) {
+        context.eventName = context.eventName
+          ? context.eventName + event.eventName + useWeb
+          : event.eventName + useWeb;
+        onScroll(event);
+      }
+    },
+    ['onScroll'],
+    doDependenciesDiffer
+  );
+
+  return <Animated.ScrollView onScroll={customScrollHandler} />;
+}
+
+function TestUseHandler2() {
+  type ScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
+  const dependencies = [{ isWeb: false }];
+  const handlers = {
+    onScroll: (event: ScrollEvent) => {
+      'worklet';
+      console.log(event);
+    },
+  };
+
+  const { context, doDependenciesDiffer, useWeb } = useHandler(
+    // @ts-expect-error Works with `ReanimatedEvent` only.
+    handlers,
+    dependencies
+  );
+
+  const customScrollHandler = useEvent(
+    (event: ReanimatedEvent<ScrollEvent>) => {
+      'worklet';
+      const { onScroll } = handlers;
+      if (onScroll && event.eventName.endsWith('onScroll')) {
+        context.eventName = context.eventName
+          ? context.eventName + event.eventName + useWeb
+          : event.eventName + useWeb;
+        // @ts-expect-error Works with `ReanimatedEvent` only.
+        onScroll(event);
+      }
+    },
+    ['onScroll'],
+    doDependenciesDiffer
+  );
+
+  return <Animated.ScrollView onScroll={customScrollHandler} />;
+}
+
+function TestUseHandler3() {
+  type ScrollEvent = NativeScrollEvent;
+  const dependencies = [{ isWeb: false }];
+  const handlers = {
+    onScroll: (event: ScrollEvent) => {
+      'worklet';
+      console.log(event);
+    },
+  };
+
+  const { context, doDependenciesDiffer, useWeb } = useHandler(
+    handlers,
+    dependencies
+  );
+
+  const customScrollHandler = useEvent<NativeSyntheticEvent<ScrollEvent>>(
+    (event: ReanimatedEvent<ScrollEvent>) => {
+      'worklet';
+      const { onScroll } = handlers;
+      if (onScroll && event.eventName.endsWith('onScroll')) {
+        context.eventName = context.eventName
+          ? context.eventName + event.eventName + useWeb
+          : event.eventName + useWeb;
+        onScroll(event);
+      }
+    },
+    ['onScroll'],
+    doDependenciesDiffer
+  );
+
+  return <Animated.ScrollView onScroll={customScrollHandler} />;
+}
+
 /**
  * Reanimated 2 Animations
  */
@@ -881,7 +985,45 @@ function WithSequenceTest() {
 }
 
 // withDecay
-function WithDecayTest() {
+function withDecayTest() {
+  // @ts-expect-error `rubberBandEffect=true` makes `clamp` required.
+  const a = withDecay({ rubberBandEffect: true });
+
+  const b = withDecay({ rubberBandEffect: false });
+
+  const c = withDecay({ rubberBandEffect: true, clamp: [0, 1] });
+
+  // @ts-expect-error `clamp` too short.
+  const d = withDecay({ rubberBandEffect: true, clamp: [0] });
+
+  // @ts-expect-error `clamp` too long.
+  const e = withDecay({ rubberBandEffect: true, clamp: [0, 1, 2] });
+
+  // @ts-expect-error When `rubberBandEffect` is false then `rubberBandFactor` should not be provided.
+  const f = withDecay({ rubberBandEffect: false, rubberBandFactor: 3 });
+
+  // @ts-expect-error When `rubberBandEffect` isn't provided then `rubberBandFactor` should not be provided.
+  const f2 = withDecay({ rubberBandFactor: 3 });
+
+  const g = withDecay({
+    rubberBandEffect: true,
+    clamp: [0, 1],
+    rubberBandFactor: 3,
+  });
+
+  const rubberBandOn: boolean = Math.random() < 0.5;
+  // @ts-expect-error  When `rubberBandEffect` is an unknown boolean user still has to pass clamp.
+  const h = withDecay({ rubberBandEffect: rubberBandOn });
+
+  const i = withDecay({ rubberBandEffect: rubberBandOn, clamp: [0, 1] });
+
+  // @ts-expect-error Config is required
+  const j = withDecay();
+
+  const k = withDecay({});
+}
+
+function WithDecayComponentTest() {
   const x = useSharedValue(0);
 
   const gestureHandler = useAnimatedGestureHandler({

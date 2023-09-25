@@ -1,0 +1,31 @@
+name: Build NextExample
+on:
+  pull_request:
+    paths:
+      - .github/workflows/build-next-example.yml
+      - 'src/**'
+      - 'NextExample/**'
+  push:
+    branches:
+      - master
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: build-next-example-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout Git repository
+        uses: actions/checkout@v3
+
+      - name: Install Reanimated node_modules
+        run: yarn install --frozen-lockfile
+
+      - name: Install NextExample node_modules
+        working-directory: NextExample
+        run: yarn install --frozen-lockfile
+
+      - name: Compile production build
+        working-directory: NextExample
+        run: yarn build
