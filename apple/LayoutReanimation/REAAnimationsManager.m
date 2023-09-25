@@ -427,7 +427,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     return NO;
   }
 
-  shouldAnimate = [self shouldAnimateExiting:view.reactTag withCurrent:shouldAnimate];
+  shouldAnimate = [self shouldAnimateExiting:view.reactTag shouldAnimate:shouldAnimate];
 
   BOOL hasExitAnimation = shouldAnimate &&
       ([self hasAnimationForTag:view.reactTag type:EXITING] || [_exitingViews objectForKey:view.reactTag]);
@@ -605,13 +605,13 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   return _hasAnimationForTag(tag, type);
 }
 
-- (BOOL)shouldAnimateExiting:(NSNumber *)tag withCurrent:(BOOL)current
+- (BOOL)shouldAnimateExiting:(NSNumber *)tag shouldAnimate:(BOOL)shouldAnimate
 {
   if (!_shouldAnimateExiting) {
     // It can happen during reload.
     return NO;
   }
-  return _shouldAnimateExiting(tag, current);
+  return _shouldAnimateExiting(tag, shouldAnimate);
 }
 
 - (void)clearAnimationConfigForTag:(NSNumber *)tag

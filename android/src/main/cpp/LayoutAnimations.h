@@ -35,7 +35,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
       int type,
       alias_ref<JMap<jstring, jstring>> values);
   bool hasAnimationForTag(int tag, int type);
-  bool shouldAnimateExiting(int tag, bool current);
+  bool shouldAnimateExiting(int tag, bool shouldAnimate);
   bool isLayoutAnimationEnabled();
 
   void setAnimationStartingBlock(AnimationStartingBlock animationStartingBlock);

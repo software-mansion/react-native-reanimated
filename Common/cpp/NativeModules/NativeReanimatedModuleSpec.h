@@ -106,7 +106,7 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   virtual void setShouldAnimateExiting(
       jsi::Runtime &rt,
       const jsi::Value &viewTag,
-      const jsi::Value &current) = 0;
+      const jsi::Value &shouldAnimate) = 0;
 };
 
 } // namespace reanimated

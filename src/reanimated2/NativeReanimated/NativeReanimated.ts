@@ -60,7 +60,7 @@ export interface NativeReanimatedModule {
     sharedTransitionTag: string,
     config: ShareableRef<Keyframe | LayoutAnimationFunction>
   ): void;
-  setShouldAnimateExitingForTag(viewTag: number, current: boolean): void;
+  setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
 }
 
 export class NativeReanimated {
@@ -162,8 +162,11 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     );
   }
 
-  setShouldAnimateExitingForTag(viewTag: number, current: boolean) {
-    this.InnerNativeModule.setShouldAnimateExitingForTag(viewTag, current);
+  setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean) {
+    this.InnerNativeModule.setShouldAnimateExitingForTag(
+      viewTag,
+      shouldAnimate
+    );
   }
 
   enableLayoutAnimations(flag: boolean) {

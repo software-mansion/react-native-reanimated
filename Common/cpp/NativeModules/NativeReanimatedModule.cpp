@@ -324,9 +324,9 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
 void NativeReanimatedModule::setShouldAnimateExiting(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
-    const jsi::Value &current) {
+    const jsi::Value &shouldAnimate) {
   layoutAnimationsManager_.setShouldAnimateExiting(
-      viewTag.asNumber(), current.asBool());
+      viewTag.asNumber(), shouldAnimate.asBool());
 }
 
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
@@ -521,7 +521,7 @@ void NativeReanimatedModule::performOperations() {
     // It may happen that `performOperations` is called on the UI thread
     // while React Native tries to commit a new tree on the JS thread.
     // In this case, we should skip the commit here and let React Native do it.
-    // The commit will include the current values from PropsRegistry
+    // The commit will include the shouldAnimate values from PropsRegistry
     // which will be applied in ReanimatedCommitHook.
     return;
   }

@@ -5,7 +5,7 @@ import java.util.HashMap;
 public interface NativeMethodsHolder {
   void startAnimation(int tag, int type, HashMap<String, Object> values);
 
-  boolean shouldAnimateExiting(int tag, boolean current);
+  boolean shouldAnimateExiting(int tag, boolean shouldAnimate);
 
   boolean hasAnimation(int tag, int type);
 

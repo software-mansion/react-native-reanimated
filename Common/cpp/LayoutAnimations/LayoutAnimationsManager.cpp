@@ -33,11 +33,13 @@ void LayoutAnimationsManager::setShouldAnimateExiting(int tag, bool value) {
   shouldAnimateExitingForTag_[tag] = value;
 }
 
-bool LayoutAnimationsManager::shouldAnimateExiting(int tag, bool current) {
+bool LayoutAnimationsManager::shouldAnimateExiting(
+    int tag,
+    bool shouldAnimate) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   return collection::contains(shouldAnimateExitingForTag_, tag)
       ? shouldAnimateExitingForTag_[tag]
-      : current;
+      : shouldAnimate;
 }
 
 bool LayoutAnimationsManager::hasLayoutAnimation(

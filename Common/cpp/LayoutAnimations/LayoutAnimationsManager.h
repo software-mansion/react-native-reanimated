@@ -33,7 +33,7 @@ class LayoutAnimationsManager {
       const std::string &sharedTransitionTag,
       std::shared_ptr<Shareable> config);
   void setShouldAnimateExiting(int tag, bool value);
-  bool shouldAnimateExiting(int tag, bool current);
+  bool shouldAnimateExiting(int tag, bool shouldAnimate);
   bool hasLayoutAnimation(int tag, LayoutAnimationType type);
   void startLayoutAnimation(
       jsi::Runtime &rt,

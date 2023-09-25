@@ -489,8 +489,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
   }
 
-  public boolean shouldAnimateExiting(int tag, boolean current) {
-    return mNativeMethodsHolder.shouldAnimateExiting(tag, current);
+  public boolean shouldAnimateExiting(int tag, boolean shouldAnimate) {
+    return mNativeMethodsHolder.shouldAnimateExiting(tag, shouldAnimate);
   }
 
   public boolean hasAnimationForTag(int tag, int type) {

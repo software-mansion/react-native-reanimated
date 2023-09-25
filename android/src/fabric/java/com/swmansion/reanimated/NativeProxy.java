@@ -81,7 +81,7 @@ public class NativeProxy extends NativeProxyCommon {
             }
 
             @Override
-            public boolean shouldAnimateExiting(int tag, boolean current) {
+            public boolean shouldAnimateExiting(int tag, boolean shouldAnimate) {
                 return false;
             }
 

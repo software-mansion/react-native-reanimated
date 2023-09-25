@@ -67,8 +67,8 @@ bool LayoutAnimations::hasAnimationForTag(int tag, int type) {
   return hasAnimationBlock_(tag, type);
 }
 
-bool LayoutAnimations::shouldAnimateExiting(int tag, bool current) {
-  return shouldAnimateExitingBlock_(tag, current);
+bool LayoutAnimations::shouldAnimateExiting(int tag, bool shouldAnimate) {
+  return shouldAnimateExitingBlock_(tag, shouldAnimate);
 }
 
 void LayoutAnimations::setClearAnimationConfigBlock(
