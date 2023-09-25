@@ -36,6 +36,10 @@ export default function App() {
       <Text style={styles.link} accessibilityRole="link" href={`/ssr`}>
         SSR
       </Text>
+
+      <Text style={styles.link} accessibilityRole="link" href={`/test`}>
+        e2e test page
+      </Text>
     </View>
   );
 }

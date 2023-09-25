@@ -1,4 +1,4 @@
-name: Build NextExample
+name: Build/test NextExample
 on:
   pull_request:
     paths:
@@ -29,3 +29,7 @@ jobs:
       - name: Compile production build
         working-directory: NextExample
         run: yarn build
+
+      - name: Run e2e tests
+        working-directory: NextExample
+        run: yarn e2e:headless
