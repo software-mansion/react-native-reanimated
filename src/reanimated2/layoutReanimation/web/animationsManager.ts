@@ -259,6 +259,23 @@ export function areDOMRectsEqual(r1: DOMRect, r2: DOMRect) {
   );
 }
 
+function scheduleAnimationCleanup(
+  animationName: string,
+  animationDuration: number
+) {
+  const timeoutValue = animationDuration * 1000;
+
+  setTimeout(() => {
+    if (customAnimations.has(animationName)) {
+      const styleTag = document.getElementById(
+        WEB_ANIMATIONS_ID
+      ) as HTMLStyleElement;
+      styleTag.sheet?.deleteRule(customAnimations.get(animationName) as number);
+      customAnimations.delete(animationName);
+    }
+  }, timeoutValue);
+}
+
 export function setElementAnimation(
   element: HTMLElement,
   animationConfig: AnimationConfig
@@ -272,14 +289,6 @@ export function setElementAnimation(
   element.style.animationFillMode = 'forwards'; // Prevents returning to base state after animation finishes.
 
   element.onanimationend = () => {
-    if (customAnimations.has(animationName)) {
-      const styleTag = document.getElementById(
-        WEB_ANIMATIONS_ID
-      ) as HTMLStyleElement;
-      styleTag.sheet?.deleteRule(customAnimations.get(animationName) as number);
-      customAnimations.delete(animationName);
-    }
-
     animationConfig.callback?.(true);
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
@@ -293,6 +302,8 @@ export function setElementAnimation(
   element.onanimationstart = () => {
     element.addEventListener('animationcancel', animationCancelHandler);
   };
+
+  scheduleAnimationCleanup(animationName, duration);
 }
 
 /**
