@@ -443,7 +443,7 @@ export function createAnimatedComponent(
     });
 
     render() {
-      const props = this._PropsFilter.filterNonAnimatedProps(this.props);
+      const props = this._PropsFilter.filterNonAnimatedProps(this);
       this._PropsFilter.onRender();
 
       if (isJest()) {
