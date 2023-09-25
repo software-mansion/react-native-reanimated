@@ -14,8 +14,8 @@ export {
   getViewProp,
 } from './core';
 export type {
-  AnimatedRef,
   GestureHandlers,
+  AnimatedRef,
   DerivedValue,
   ScrollHandler,
   ScrollHandlers,
