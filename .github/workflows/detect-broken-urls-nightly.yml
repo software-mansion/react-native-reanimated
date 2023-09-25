@@ -16,6 +16,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Install dependencies
-        run: yarn add node-fetch
+        run: yarn global add node-fetch
       - name: Validate urls
         run: node scripts/validate-urls.js
