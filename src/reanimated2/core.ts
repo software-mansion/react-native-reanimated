@@ -208,11 +208,11 @@ export function configureLayoutAnimations(
 
 export function setShouldAnimateExitingForTag(
   viewTag: number | HTMLElement,
-  current: boolean
+  shouldAnimate: boolean
 ) {
   NativeReanimatedModule.setShouldAnimateExitingForTag(
     viewTag as number,
-    current
+    shouldAnimate
   );
 }
 
