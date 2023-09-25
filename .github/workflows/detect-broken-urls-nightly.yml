@@ -18,4 +18,4 @@ jobs:
       - name: Install dependencies
         run: yarn add node-fetch@2
       - name: Validate urls
-        run: node reanimated_repo/scripts/validate-urls.js
+        run: node scripts/validate-urls.js
