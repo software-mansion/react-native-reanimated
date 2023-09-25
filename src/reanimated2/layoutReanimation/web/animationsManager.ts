@@ -260,11 +260,20 @@ export function areDOMRectsEqual(r1: DOMRect, r2: DOMRect) {
   );
 }
 
+const timeoutScale = 1.25; // We use this value to enlarge timeout duration. It can prove useful if animation lags.
+const frameDurationMs = 16; // Just an approximation.
+const minimumFrames = 10;
+
 function scheduleAnimationCleanup(
   animationName: string,
   animationDuration: number
 ) {
-  const timeoutValue = animationDuration * 1000;
+  // If duration is very short, we want to keep remove delay to at least 10 frames
+  // In our case it is exactly 160/1099 s, which is approximately 0.15s
+  const timeoutValue = Math.max(
+    animationDuration * timeoutScale * 1000,
+    animationDuration + frameDurationMs * minimumFrames
+  );
 
   setTimeout(() => {
     if (customAnimations.has(animationName)) {
