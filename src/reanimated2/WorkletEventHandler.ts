@@ -4,18 +4,16 @@ import NativeReanimatedModule from './NativeReanimated';
 import { registerEventHandler, unregisterEventHandler } from './core';
 import type { EventPayload, ReanimatedEvent } from './hook/commonTypes';
 
-type AssertNativeEvent<Event extends object> = NativeSyntheticEvent<
-  EventPayload<Event>
->;
+type JSEvent<Event extends object> = NativeSyntheticEvent<EventPayload<Event>>;
 
 // In JS implementation (e.g. for web) we don't use Reanimated's
-// event emitter therefore we have to handle here
+// event emitter, therefore we have to handle here
 // the event that came from React Native and convert it.
 function jsListener<Event extends object>(
   eventName: string,
   handler: (event: ReanimatedEvent<Event>) => void
 ) {
-  return (evt: AssertNativeEvent<Event>) => {
+  return (evt: JSEvent<Event>) => {
     handler({ ...evt.nativeEvent, eventName } as ReanimatedEvent<Event>);
   };
 }
@@ -26,7 +24,7 @@ export default class WorkletEventHandler<Event extends object> {
   reattachNeeded: boolean;
   listeners:
     | Record<string, (event: ReanimatedEvent<ReanimatedEvent<Event>>) => void>
-    | Record<string, (event: AssertNativeEvent<Event>) => void>;
+    | Record<string, (event: JSEvent<Event>) => void>;
 
   viewTag: number | undefined;
   registrations: number[];
@@ -44,7 +42,7 @@ export default class WorkletEventHandler<Event extends object> {
     if (!NativeReanimatedModule.native) {
       this.listeners = eventNames.reduce(
         (
-          acc: Record<string, (event: AssertNativeEvent<Event>) => void>,
+          acc: Record<string, (event: JSEvent<Event>) => void>,
           eventName: string
         ) => {
           acc[eventName] = jsListener(eventName, worklet);

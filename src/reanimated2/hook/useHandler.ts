@@ -9,13 +9,13 @@ interface GeneralHandler<
   Event extends object,
   Context extends Record<string, unknown>
 > {
-  (eventPayload: ReanimatedEvent<Event>, context: Context): void;
+  (event: ReanimatedEvent<Event>, context: Context): void;
 }
 
 type GeneralWorkletHandler<
   Event extends object,
   Context extends Record<string, unknown>
-> = WorkletFunction<[eventPayload: ReanimatedEvent<Event>, context: Context]>;
+> = WorkletFunction<[event: ReanimatedEvent<Event>, context: Context]>;
 
 type GeneralHandlers<
   Event extends object,
