@@ -6,10 +6,7 @@ const DEFAULT_FADE_TIME = 0.3;
 export const FadeInData = {
   FadeIn: {
     name: 'FadeIn',
-    style: {
-      0: { opacity: 0 },
-      100: { opacity: 1 },
-    },
+    style: { 0: { opacity: 0 } },
     duration: DEFAULT_FADE_TIME,
   },
 
@@ -61,10 +58,7 @@ export const FadeInData = {
 export const FadeOutData = {
   FadeOut: {
     name: 'FadeOut',
-    style: {
-      0: { opacity: 1 },
-      100: { opacity: 0 },
-    },
+    style: { 100: { opacity: 0 } },
     duration: DEFAULT_FADE_TIME,
   },
 
