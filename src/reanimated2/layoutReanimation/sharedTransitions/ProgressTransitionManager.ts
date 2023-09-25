@@ -3,6 +3,7 @@ import { runOnUIImmediately } from '../../threads';
 import type { ProgressAnimation } from '../animationBuilder/commonTypes';
 import { registerEventHandler, unregisterEventHandler } from '../../core';
 import { Platform } from 'react-native';
+import { shouldBeUseWeb } from '../../PlatformChecker';
 
 type TransitionProgressEvent = {
   closing: number;
@@ -203,10 +204,26 @@ function createProgressTransitionRegister() {
   return progressTransitionManager;
 }
 
-runOnUIImmediately(() => {
-  'worklet';
-  global.ProgressTransitionRegister = createProgressTransitionRegister();
-})();
+if (shouldBeUseWeb()) {
+  const throwError = () => {
+    throw new Error(
+      '[Reanimated] ProgressTransitionRegister should not be used on web'
+    );
+  };
+  global.ProgressTransitionRegister = {
+    addProgressAnimation: throwError,
+    removeProgressAnimation: throwError,
+    onTransitionStart: throwError,
+    frame: throwError,
+    onAndroidFinishTransitioning: throwError,
+    onTransitionEnd: throwError,
+  };
+} else {
+  runOnUIImmediately(() => {
+    'worklet';
+    global.ProgressTransitionRegister = createProgressTransitionRegister();
+  })();
+}
 
 export type ProgressTransitionRegister = ReturnType<
   typeof createProgressTransitionRegister

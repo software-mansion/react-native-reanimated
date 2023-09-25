@@ -116,10 +116,22 @@ const createUpdatePropsManager = global._IS_FABRIC
       };
     };
 
-runOnUIImmediately(() => {
-  'worklet';
-  global.UpdatePropsManager = createUpdatePropsManager();
-})();
+if (shouldBeUseWeb()) {
+  const throwError = () => {
+    throw new Error(
+      '[Reanimated] UpdatePropsManager should not be used on web'
+    );
+  };
+  global.UpdatePropsManager = {
+    update: throwError,
+    flush: throwError,
+  };
+} else {
+  runOnUIImmediately(() => {
+    'worklet';
+    global.UpdatePropsManager = createUpdatePropsManager();
+  })();
+}
 
 export interface UpdatePropsManager {
   update(
