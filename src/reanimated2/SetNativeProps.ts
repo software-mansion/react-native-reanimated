@@ -33,7 +33,7 @@ if (isWeb()) {
       );
       return;
     }
-    const shadowNodeWrapper = (animatedRef as any)() as ShadowNodeWrapper;
+    const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
     processColorsInProps(updates);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     _updatePropsFabric!([{ shadowNodeWrapper, updates }]);
@@ -47,7 +47,7 @@ if (isWeb()) {
       );
       return;
     }
-    const tag = (animatedRef as any)() as number;
+    const tag = animatedRef() as number;
     const name = (animatedRef as any).viewName.value;
     processColorsInProps(updates);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

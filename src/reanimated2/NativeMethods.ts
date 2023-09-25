@@ -55,7 +55,7 @@ if (isWeb()) {
       return null;
     }
 
-    const viewTag = (animatedRef as any)();
+    const viewTag = animatedRef();
     if (viewTag === -1) {
       console.warn(
         `[Reanimated] The view with tag ${viewTag} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
@@ -166,7 +166,7 @@ if (isWeb()) {
 } else if (IS_NATIVE && global._IS_FABRIC) {
   scrollTo = (animatedRef, x, y, animated) => {
     'worklet';
-    dispatchCommand(animatedRef as any, 'scrollTo', [x, y, animated]);
+    dispatchCommand(animatedRef, 'scrollTo', [x, y, animated]);
   };
 } else if (IS_NATIVE) {
   scrollTo = (animatedRef, x, y, animated) => {
@@ -176,7 +176,7 @@ if (isWeb()) {
     }
 
     // Calling animatedRef on Paper returns a number (nativeTag)
-    const viewTag = (animatedRef as any)() as number;
+    const viewTag = animatedRef() as number;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     _scrollToPaper!(viewTag, x, y, animated);
   };
