@@ -83,6 +83,7 @@ import ReducedMotionLayoutExample from './LayoutAnimations/ReducedMotionLayoutEx
 import ReducedMotionSharedExample from './SharedElementTransitions/ReducedMotionSharedExample';
 import RefExample from './RefExample';
 import RestoreStateExample from './SharedElementTransitions/RestoreState';
+import TransitionRestartExample from './SharedElementTransitions/TransitionRestart';
 import ScreenStackExample from './ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderConfigBackgroundColorExample';
 import ScrollEventExample from './ScrollEventExample';
@@ -621,5 +622,9 @@ export const EXAMPLES: Record<string, Example> = {
   ReducedMotionSharedExample: {
     title: '[SET] Reduced Motion',
     screen: ReducedMotionSharedExample,
+  },
+  TransitionRestartExample: {
+    title: '[SET] Transition Restart',
+    screen: TransitionRestartExample,
   },
 } as const;

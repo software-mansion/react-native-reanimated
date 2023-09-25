@@ -1,3 +1,4 @@
+'use strict';
 import NativeReanimatedModule from './NativeReanimated';
 import { nativeShouldBeMock, isWeb } from './PlatformChecker';
 import type {

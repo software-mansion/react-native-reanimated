@@ -1,55 +1,34 @@
 import { NativeSyntheticEvent } from 'react-native';
 import {
-  PagerViewOnPageScrollEventData,
-  PagerViewOnPageSelectedEventData,
   PageScrollStateChangedEvent,
+  PagerViewOnPageScrollEvent,
+  PagerViewOnPageSelectedEvent,
 } from 'react-native-pager-view';
 import { useEvent, useHandler } from 'react-native-reanimated';
-
-interface CustomPagerViewOnPageScrollEventData
-  extends PagerViewOnPageScrollEventData {
-  eventName: string;
-}
-
-interface CustomPageScrollStateChangedEvent
-  extends PageScrollStateChangedEvent {
-  eventName: string;
-}
-
-interface CustomPagerViewOnPageSelectedEventData
-  extends PagerViewOnPageSelectedEventData {
-  eventName: string;
-}
+import type { ReanimatedEvent } from 'react-native-reanimated';
 
 export function useAnimatedPagerScrollHandler<
   TContext extends Record<string, unknown>
 >(
   handlers: {
     onPageScroll: (
-      e: PagerViewOnPageScrollEventData,
+      e: ReanimatedEvent<PagerViewOnPageScrollEvent>,
       context: TContext
     ) => void;
   },
-  dependencies?: ReadonlyArray<unknown>
-): (e: NativeSyntheticEvent<PagerViewOnPageScrollEventData>) => void {
+  dependencies?: unknown[]
+): (e: PagerViewOnPageScrollEvent) => void {
   const { context, doDependenciesDiffer } = useHandler<
-    PagerViewOnPageScrollEventData,
+    PagerViewOnPageScrollEvent,
     TContext
-    // @ts-ignore TODO LATER-TYPESCRIPT
   >(handlers, dependencies);
 
-  // @ts-ignore TODO LATER-TYPESCRIPT
-  return useEvent<PagerViewOnPageScrollEventData>(
+  return useEvent<PagerViewOnPageScrollEvent>(
     (event) => {
       'worklet';
       const { onPageScroll } = handlers;
 
-      if (
-        onPageScroll &&
-        (event as CustomPagerViewOnPageScrollEventData).eventName.endsWith(
-          'onPageScroll'
-        )
-      ) {
+      if (onPageScroll && event.eventName.endsWith('onPageScroll')) {
         onPageScroll(event, context);
       }
     },
@@ -63,7 +42,7 @@ export function useAnimatedPagerScrollStateHandler<
 >(
   handlers: {
     onPageScrollStateChanged: (
-      e: PageScrollStateChangedEvent,
+      e: ReanimatedEvent<PageScrollStateChangedEvent>,
       context: TContext
     ) => void;
   },
@@ -74,16 +53,14 @@ export function useAnimatedPagerScrollStateHandler<
     TContext
   >(handlers, dependencies);
 
-  return useEvent<PageScrollStateChangedEvent>(
+  return useEvent<NativeSyntheticEvent<PageScrollStateChangedEvent>>(
     (event) => {
       'worklet';
       const { onPageScrollStateChanged } = handlers;
 
       if (
         onPageScrollStateChanged &&
-        (event as CustomPageScrollStateChangedEvent).eventName.endsWith(
-          'onPageScrollStateChanged'
-        )
+        event.eventName.endsWith('onPageScrollStateChanged')
       ) {
         onPageScrollStateChanged(event, context);
       }
@@ -98,28 +75,23 @@ export function useAnimatedPagerSelectedPageHandler<
 >(
   handlers: {
     onPageSelected: (
-      e: PagerViewOnPageSelectedEventData,
+      e: ReanimatedEvent<PagerViewOnPageSelectedEvent>,
       context: TContext
     ) => void;
   },
   dependencies?: Array<unknown>
-): (e: NativeSyntheticEvent<PagerViewOnPageSelectedEventData>) => void {
+): (e: PagerViewOnPageSelectedEvent) => void {
   const { context, doDependenciesDiffer } = useHandler<
-    PagerViewOnPageSelectedEventData,
+    PagerViewOnPageSelectedEvent,
     TContext
   >(handlers, dependencies);
 
-  return useEvent<PagerViewOnPageSelectedEventData>(
+  return useEvent<PagerViewOnPageSelectedEvent>(
     (event) => {
       'worklet';
       const { onPageSelected } = handlers;
 
-      if (
-        onPageSelected &&
-        (event as CustomPagerViewOnPageSelectedEventData).eventName.endsWith(
-          'onPageSelected'
-        )
-      ) {
+      if (onPageSelected && event.eventName.endsWith('onPageSelected')) {
         onPageSelected(event, context);
       }
     },

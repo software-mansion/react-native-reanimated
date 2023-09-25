@@ -1,3 +1,4 @@
+'use strict';
 import NativeReanimatedModule from './NativeReanimated';
 import type {
   ShareableRef,
@@ -253,9 +254,11 @@ type RemoteFunction<T> = {
   __remoteFunction: FlatShareableRef<T>;
 };
 
-function isRemoteFunction<T>(value: object): value is RemoteFunction<T> {
+function isRemoteFunction<T>(value: {
+  __remoteFunction?: unknown;
+}): value is RemoteFunction<T> {
   'worklet';
-  return '__remoteFunction' in value;
+  return !!value.__remoteFunction;
 }
 
 export function makeShareableCloneOnUIRecursive<T>(

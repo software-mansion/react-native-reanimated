@@ -1,6 +1,12 @@
-import type { __Context, __WorkletFunction, NativeEvent } from '../commonTypes';
+'use strict';
+import type {
+  __Context,
+  __WorkletFunction,
+  __NativeEvent,
+} from '../commonTypes';
 import type { DependencyList } from './commonTypes';
-import { useEvent, useHandler } from './Hooks';
+import { useEvent } from './useEvent';
+import { useHandler } from './useHandler';
 
 interface Handler<T, TContext extends __Context> extends __WorkletFunction {
   (event: T, context: TContext, isCanceledOrFailed?: boolean): void;
@@ -31,7 +37,7 @@ interface GestureHandlerNativeEvent {
   state: (typeof EventType)[keyof typeof EventType];
 }
 
-export interface GestureHandlerEvent<T> extends NativeEvent<T> {
+export interface GestureHandlerEvent<T> extends __NativeEvent<T> {
   nativeEvent: T;
 }
 
@@ -50,7 +56,8 @@ export function useAnimatedGestureHandler<
   dependencies?: DependencyList
 ): (e: T) => void {
   const { context, doDependenciesDiffer, useWeb } = useHandler<
-    Payload,
+    // This will be removed in the next PR in the series.
+    any,
     TContext
   >(handlers, dependencies);
 

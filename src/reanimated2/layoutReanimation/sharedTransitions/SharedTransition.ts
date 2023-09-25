@@ -1,3 +1,4 @@
+'use strict';
 import { withTiming } from '../../animation';
 import type {
   SharedTransitionAnimationsFunction,

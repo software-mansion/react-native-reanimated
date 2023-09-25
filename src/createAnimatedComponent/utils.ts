@@ -1,3 +1,4 @@
+'use strict';
 import type { Ref, Component } from 'react';
 import type {
   StyleProps,
@@ -42,6 +43,11 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
 };
 
 type NestedArray<T> = T | NestedArray<T>[];
+
+export interface InitialComponentProps extends Record<string, unknown> {
+  ref?: Ref<Component>;
+  collapsable?: boolean;
+}
 
 export function flattenArray<T>(array: NestedArray<T>): T[] {
   if (!Array.isArray(array)) {

@@ -1,3 +1,4 @@
+'use strict';
 import type { Component } from 'react';
 import { useRef } from 'react';
 import { useSharedValue } from './useSharedValue';
@@ -34,15 +35,17 @@ const getTagValueFunction = global._IS_FABRIC
   : findNodeHandle;
 
 export function useAnimatedRef<
-  T extends MaybeScrollableComponent
->(): AnimatedRef<T> {
+  TComponent extends MaybeScrollableComponent
+>(): AnimatedRef<TComponent> {
   const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
   const viewName = useSharedValue<string | null>(null);
 
-  const ref = useRef<AnimatedRef<T>>();
+  const ref = useRef<AnimatedRef<TComponent>>();
 
   if (!ref.current) {
-    const fun: AnimatedRef<T> = <AnimatedRef<T>>((component) => {
+    const fun: AnimatedRef<TComponent> = <AnimatedRef<TComponent>>((
+      component
+    ) => {
       // enters when ref is set by attaching to a component
       if (component) {
         tag.value = getTagValueFunction(getComponentOrScrollable(component));

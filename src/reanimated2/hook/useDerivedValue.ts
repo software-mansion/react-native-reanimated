@@ -1,17 +1,24 @@
+'use strict';
 import { useEffect, useRef } from 'react';
 import { initialUpdaterRun } from '../animation';
-import type { __BasicWorkletFunction, SharedValue } from '../commonTypes';
+import type { SharedValue, WorkletFunction } from '../commonTypes';
 import { makeMutable, startMapper, stopMapper } from '../core';
 import type { DependencyList } from './commonTypes';
 import { shouldBeUseWeb } from '../PlatformChecker';
 
-export type DerivedValue<T> = Readonly<SharedValue<T>>;
+export type DerivedValue<Value> = Readonly<SharedValue<Value>>;
 
-export function useDerivedValue<T>(
-  processor: __BasicWorkletFunction<T>,
+// @ts-expect-error This overload is required by our API.
+export function useDerivedValue<Value>(
+  processor: () => Value,
   dependencies?: DependencyList
-): DerivedValue<T> {
-  const initRef = useRef<SharedValue<T> | null>(null);
+): DerivedValue<Value>;
+
+export function useDerivedValue<Value>(
+  processor: WorkletFunction<[], Value>,
+  dependencies?: DependencyList
+): DerivedValue<Value> {
+  const initRef = useRef<SharedValue<Value> | null>(null);
   let inputs = Object.values(processor.__closure ?? {});
   if (shouldBeUseWeb()) {
     if (!inputs.length && dependencies?.length) {
@@ -32,7 +39,7 @@ export function useDerivedValue<T>(
   }
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const sharedValue: SharedValue<T> = initRef.current!;
+  const sharedValue: SharedValue<Value> = initRef.current!;
 
   useEffect(() => {
     const fun = () => {

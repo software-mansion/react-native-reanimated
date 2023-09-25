@@ -1,3 +1,4 @@
+'use strict';
 import type { __ComplexWorkletFunction } from './commonTypes';
 import { setupCallGuard, setupConsole } from './initializers';
 import NativeReanimatedModule from './NativeReanimated';

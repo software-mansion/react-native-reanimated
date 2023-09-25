@@ -1,5 +1,7 @@
+'use strict';
 import type { ViewStyle, TextStyle } from 'react-native';
 
+export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;
   originY?: number;
@@ -72,12 +74,15 @@ interface WorkletBaseDev extends WorkletBaseCommon {
   __stackDetails: Error;
 }
 
-export type WorkletFunction<Args extends unknown[], ReturnValue> = ((
-  ...args: Args
-) => ReturnValue) &
-  (WorkletBaseRelease | WorkletBaseDev);
+export type WorkletFunction<
+  Args extends unknown[] = unknown[],
+  ReturnValue = unknown
+> = ((...args: Args) => ReturnValue) & (WorkletBaseRelease | WorkletBaseDev);
 
-export interface NativeEvent<T> {
+/**
+ * @deprecated
+ */
+export interface __NativeEvent<T> {
   nativeEvent: T;
 }
 
@@ -238,7 +243,7 @@ export type __Context = Record<string, unknown>;
  * @deprecated
  */
 export interface __WorkletFunction {
-  __closure?: __Context;
+  __closure?: Record<string, unknown>;
   __workletHash?: number;
 }
 

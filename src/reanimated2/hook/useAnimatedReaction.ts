@@ -1,31 +1,39 @@
+'use strict';
 import { useEffect } from 'react';
-import type { __BasicWorkletFunction, __WorkletFunction } from '../commonTypes';
+import type { WorkletFunction } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
 import type { DependencyList } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
 import { shouldBeUseWeb } from '../PlatformChecker';
 
-export interface AnimatedReactionWorkletFunction<T> extends __WorkletFunction {
-  (prepared: T, previous: T | null): void;
-}
 /**
  * @param prepare - worklet used for data preparation for the second parameter
  * @param react - worklet which takes data prepared by the one in the first parameter and performs certain actions
  * the first worklet defines the inputs, in other words on which shared values change will it be called.
  * the second one can modify any shared values but those which are mentioned in the first worklet. Beware of that, because this may result in endless loop and high cpu usage.
  */
-export function useAnimatedReaction<T>(
-  prepare: __BasicWorkletFunction<T>,
-  react: AnimatedReactionWorkletFunction<T>,
+// @ts-expect-error This overload is required by our API.
+export function useAnimatedReaction<PreparedResult>(
+  prepare: () => PreparedResult,
+  react: (prepared: PreparedResult, previous: PreparedResult | null) => void,
   dependencies?: DependencyList
-): void {
-  const previous = useSharedValue<T | null>(null, true);
+): void;
+
+export function useAnimatedReaction<PreparedResult>(
+  prepare: WorkletFunction<[], PreparedResult>,
+  react: WorkletFunction<
+    [prepare: PreparedResult, previous: PreparedResult | null],
+    void
+  >,
+  dependencies?: DependencyList
+) {
+  const previous = useSharedValue<PreparedResult | null>(null, true);
 
   let inputs = Object.values(prepare.__closure ?? {});
 
   if (shouldBeUseWeb()) {
     if (!inputs.length && dependencies?.length) {
-      // let web work without a Babel/SWC plugin
+      // let web work without a Reanimated Babel plugin
       inputs = dependencies;
     }
   }

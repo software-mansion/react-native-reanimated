@@ -1,3 +1,4 @@
+'use strict';
 import { isReducedMotion } from '../PlatformChecker';
 
 const IS_REDUCED_MOTION = isReducedMotion();

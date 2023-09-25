@@ -1,3 +1,4 @@
+'use strict';
 /*
 This file is a legacy remainder of manual types from react-native-reanimated.d.ts file. 
 I wasn't able to get rid of all of them from the code. 
@@ -82,7 +83,10 @@ type AnimatedStyleProps<Props extends object> = {
   [Key in keyof PickStyleProps<Props>]: StyleProp<AnimatedStyle<Props[Key]>>;
 };
 
-type NonStyleAnimatedProps<Props extends object> = {
+/**
+ * Component props that are not specially handled by us.
+ */
+type RestProps<Props extends object> = {
   [K in keyof Omit<Props, keyof PickStyleProps<Props> | 'style'>]:
     | Props[K]
     | SharedValue<Props[K]>;
@@ -102,12 +106,12 @@ type SharedTransitionProps = {
   sharedTransitionStyle?: SharedTransition;
 };
 
-type AnimatedPropsProp<Props extends object> = NonStyleAnimatedProps<Props> &
+type AnimatedPropsProp<Props extends object> = RestProps<Props> &
   AnimatedStyleProps<Props> &
   LayoutProps &
   SharedTransitionProps;
 
-export type AnimatedProps<Props extends object> = NonStyleAnimatedProps<Props> &
+export type AnimatedProps<Props extends object> = RestProps<Props> &
   AnimatedStyleProps<Props> &
   LayoutProps &
   SharedTransitionProps & {
