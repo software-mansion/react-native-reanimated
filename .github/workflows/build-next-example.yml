@@ -1,4 +1,4 @@
-name: Build NextExample
+name: Build/test NextExample
 on:
   pull_request:
     paths:

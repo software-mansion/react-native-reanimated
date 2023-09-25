@@ -1,3 +1,5 @@
+export {};
+
 describe('Simple animation Test', () => {
   it('Visits the test page and tests component width before and after animation', () => {
     // open NextExample page
