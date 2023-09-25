@@ -5,9 +5,7 @@ const util = require('util');
 const fsp = fs.promises;
 const readFile = util.promisify(fs.readFile);
 const fetch = require('node-fetch');
-const { is } = require('@babel/types');
 
-let isBrokenUrlDetected = false;
 const extensions = [
   '.js',
   '.jsx',
@@ -58,11 +56,14 @@ async function getFileAndUrls(dir) {
   return Array.prototype.concat(...files);
 }
 
-function sendRequestsInOrder(data) {
+function validUrls(data) {
   let index = 0;
+  let isBrokenUrlDetected = false;
   function sendRequest() {
     if (index >= data.length) {
-      return;
+      if (isBrokenUrlDetected) {
+        throw new Error('🔴 Invalid links detected.');
+      }
     }
     const currentData = data[index];
     if (currentData.url.includes('twitter.com')) {
@@ -92,13 +93,7 @@ function sendRequestsInOrder(data) {
 async function scanLinks() {
   const currentDir = process.cwd();
   const data = await getFileAndUrls(currentDir);
-  data.forEach(element => {
-    console.log(element);
-  });
-  sendRequestsInOrder(data);
-  if (isBrokenUrlDetected) {
-    throw new Error('🔴 Invalid links detected.');
-  }
+  validUrls(data);
 }
 
 scanLinks();
