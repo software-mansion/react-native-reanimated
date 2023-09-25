@@ -64,7 +64,6 @@ export interface NativeReanimatedModule {
 }
 
 export class NativeReanimated {
-  native = true;
   private InnerNativeModule: NativeReanimatedModule;
 
   constructor() {

@@ -10,7 +10,7 @@ import { adaptViewConfig } from '../ConfigHelper';
 import updateProps from '../reanimated2/UpdateProps';
 import { stopMapper, startMapper } from '../reanimated2/mappers';
 import { isSharedValue } from '../reanimated2/utils';
-import NativeReanimatedModule from '../reanimated2/NativeReanimated';
+import { shouldBeUseWeb } from '../reanimated2/PlatformChecker';
 
 function isInlineStyleTransform(transform: unknown): boolean {
   if (!Array.isArray(transform)) {
@@ -154,9 +154,9 @@ export class InlinePropManager {
       const shareableViewDescriptors =
         this._inlinePropsViewDescriptors.shareableViewDescriptors;
 
-      const maybeViewRef = NativeReanimatedModule.native
-        ? undefined
-        : ({ items: new Set([this]) } as ViewRefSet<any>); // see makeViewsRefSet
+      const maybeViewRef = shouldBeUseWeb()
+        ? ({ items: new Set([this]) } as ViewRefSet<any>) // see makeViewsRefSet
+        : undefined;
 
       const updaterFunction = () => {
         'worklet';

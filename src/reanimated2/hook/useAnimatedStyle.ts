@@ -5,7 +5,6 @@ import { useEffect, useRef } from 'react';
 import { startMapper, stopMapper, makeRemote } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animation';
-import NativeReanimatedModule from '../NativeReanimated';
 import { useSharedValue } from './useSharedValue';
 import {
   buildWorkletsHash,
@@ -453,7 +452,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
 
   const { initial, remoteState, viewDescriptors } = initRef.current;
   const shareableViewDescriptors = viewDescriptors.shareableViewDescriptors;
-  const maybeViewRef = NativeReanimatedModule.native ? undefined : viewsRef;
+  const maybeViewRef = shouldBeUseWeb() ? viewsRef : undefined;
 
   dependencies.push(shareableViewDescriptors);
 
