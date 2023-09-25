@@ -15,7 +15,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          path: 'reanimated_repo'
       - name: Install dependencies
-        run: npm i -g node-fetch
+        run: yarn add node-fetch
       - name: Validate urls
-        run: node scripts/validate-urls.js
+        run: node reanimated_repo/scripts/validate-urls.js
