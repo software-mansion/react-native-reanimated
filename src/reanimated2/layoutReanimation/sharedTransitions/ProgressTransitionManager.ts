@@ -207,17 +207,16 @@ function createProgressTransitionRegister() {
 if (shouldBeUseWeb()) {
   const throwError = () => {
     throw new Error(
-      '[Reanimated] ProgressTransitionRegister should not be used on web'
+      '[Reanimated] ProgressTransitionRegister should not be used on web.'
     );
   };
-  global.ProgressTransitionRegister = {
-    addProgressAnimation: throwError,
-    removeProgressAnimation: throwError,
-    onTransitionStart: throwError,
-    frame: throwError,
-    onAndroidFinishTransitioning: throwError,
-    onTransitionEnd: throwError,
-  };
+  global.ProgressTransitionRegister = new Proxy(
+    {} as ProgressTransitionRegister,
+    {
+      get: throwError,
+      set: throwError,
+    }
+  );
 } else {
   runOnUIImmediately(() => {
     'worklet';

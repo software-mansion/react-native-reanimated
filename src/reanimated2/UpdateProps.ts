@@ -119,13 +119,13 @@ const createUpdatePropsManager = global._IS_FABRIC
 if (shouldBeUseWeb()) {
   const throwError = () => {
     throw new Error(
-      '[Reanimated] UpdatePropsManager should not be used on web'
+      '[Reanimated] UpdatePropsManager should not be used on web.'
     );
   };
-  global.UpdatePropsManager = {
-    update: throwError,
-    flush: throwError,
-  };
+  global.UpdatePropsManager = new Proxy({} as UpdatePropsManager, {
+    get: throwError,
+    set: throwError,
+  });
 } else {
   runOnUIImmediately(() => {
     'worklet';
