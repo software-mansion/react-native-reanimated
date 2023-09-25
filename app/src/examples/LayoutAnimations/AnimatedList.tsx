@@ -76,7 +76,7 @@ function Participant({
 }
 
 export default function AnimatedListExample() {
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState('Name');
   const [participantList, setParticipantList] = useState<EventParticipant[]>(
     []
   );
