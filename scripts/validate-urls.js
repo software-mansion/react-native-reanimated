@@ -4,24 +4,9 @@ const path = require('path');
 const util = require('util');
 const fsp = fs.promises;
 const readFile = util.promisify(fs.readFile);
-const fetch = require('axios').get;
+const fetch = require('node-fetch');
 
-const directories = [
-  'android',
-  'app',
-  'apple',
-  'Common',
-  'docs',
-  'Example',
-  'FabricExample',
-  'MacOSExample',
-  'plugin',
-  'scripts',
-  'src',
-  'TVOSExample',
-  'WebExample',
-];
-
+let isBrokenUrlDetected = false;
 const extensions = [
   '.js',
   '.jsx',
@@ -39,37 +24,30 @@ const extensions = [
   '.podspec',
   '.rb',
 ];
-
 // Every hidden directory is ignored as well.
 const ignoredDirectories = ['node_modules', 'Pods', 'lib', 'build'];
 
 const urlRegex =
   /\b((http|https):\/\/?)[^\s<>[\]`]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
 
-async function getFiles(dir) {
-  const dirents = await fsp.readdir(dir, { withFileTypes: true });
+async function getFileAndUrls(dir) {
+  const directories = await fsp.readdir(dir, { withFileTypes: true });
   const files = await Promise.all(
-    dirents.map(async (dirent) => {
-      const res = path.resolve(dir, dirent.name);
+    directories.map(async (file) => {
+      const resource = path.resolve(dir, file.name);
       if (
-        dirent.name.startsWith('.') ||
-        ignoredDirectories.includes(dirent.name)
+        file.name.startsWith('.') ||
+        ignoredDirectories.includes(file.name)
       ) {
         return [];
-      } else if (dirent.isDirectory()) {
-        return getFiles(res);
+      } else if (file.isDirectory()) {
+        return getFileAndUrls(resource);
       } else {
-        if (extensions.includes(path.extname(dirent.name))) {
-          const fileContent = await readFile(res, 'utf-8');
+        if (extensions.includes(path.extname(file.name))) {
+          const fileContent = await readFile(resource, 'utf-8');
           const urls = Array.from(fileContent.matchAll(urlRegex), (m) => m[0]);
-          const validUrls = [];
-          urls.forEach((url) => {
-            if (!/({|})/.test(url)) {
-              validUrls.push(url);
-            }
-          });
-
-          return validUrls.length > 0 ? { file: res, urls: validUrls } : [];
+          urls.filter((url) => !/({|})/.test(url));
+          return urls.length > 0 ? urls.map((url) => ({ file: resource, url: url })) : [];
         } else {
           return [];
         }
@@ -79,22 +57,44 @@ async function getFiles(dir) {
   return Array.prototype.concat(...files);
 }
 
-const currentDir = process.cwd();
-
-directories.forEach(async (dir) => {
-  const files = await getFiles(path.join(currentDir, dir));
-  files.forEach(async (file) => {
-    file.urls.forEach(async (url) => {
-      try {
-        const response = await fetch(url);
-        if (response.status !== 200) {
-          console.error(`🔴 ${response.status} - ${file.file} - ${url}`);
-        } else {
-          console.log(`🟢 ${file.file} - ${url}`);
+function sendRequestsInOrder(data) {
+  let index = 0;
+  function sendRequest() {
+    if (index >= data.length) {
+      return;
+    }
+    const currentData = data[index];
+    if (currentData.url.includes('twitter.com')) {
+      index++;
+      sendRequest();
+      return;
+    }
+    fetch(currentData.url)
+      .then(response => {
+        if (response.status !== 200 && response.status !== 301 && response.status !== 302) {
+          console.error(`🔴 Invalid link: ${response.url} in file: ${currentData.file}\n`);
+          isBrokenUrlDetected = true;
         }
-      } catch (e) {
-        console.error(`🔴 ${e} - ${file.file} - ${url}`);
-      }
-    });
-  });
-});
+        index++;
+        sendRequest();
+      })
+      .catch(error => {
+        isBrokenUrlDetected = true;
+        console.error("Error:", error);
+        index++;
+        sendRequest();
+      });
+  }
+  sendRequest();
+}
+
+async function scanLinks() {
+  const currentDir = process.cwd();
+  const data = await getFileAndUrls(currentDir);
+  sendRequestsInOrder(data);
+  if (isBrokenUrlDetected) {
+    process.exit(1);
+  }
+}
+
+scanLinks();
