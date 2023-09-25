@@ -10,15 +10,18 @@ import {
   opacity,
 } from './Colors';
 import { makeMutable } from './core';
-import { interpolate } from './interpolation';
+import { Extrapolation, interpolate } from './interpolation';
 import type { SharedValue } from './commonTypes';
 import { useSharedValue } from './hook/useSharedValue';
 
+/**
+ * @deprecated Please use Extrapolation instead
+ */
 export const Extrapolate = {
   EXTEND: 'extend',
   CLAMP: 'clamp',
   IDENTITY: 'identity',
-};
+} as const;
 
 export type InterpolationOptions = {
   gamma?: number;
@@ -61,15 +64,20 @@ const interpolateColorsHSV = (
       }
     }
     h =
-      (interpolate(value, correctedInputRange, correctedH, Extrapolate.CLAMP) +
+      (interpolate(
+        value,
+        correctedInputRange,
+        correctedH,
+        Extrapolation.CLAMP
+      ) +
         1) %
       1;
   } else {
-    h = interpolate(value, inputRange, colors.h, Extrapolate.CLAMP);
+    h = interpolate(value, inputRange, colors.h, Extrapolation.CLAMP);
   }
-  const s = interpolate(value, inputRange, colors.s, Extrapolate.CLAMP);
-  const v = interpolate(value, inputRange, colors.v, Extrapolate.CLAMP);
-  const a = interpolate(value, inputRange, colors.a, Extrapolate.CLAMP);
+  const s = interpolate(value, inputRange, colors.s, Extrapolation.CLAMP);
+  const v = interpolate(value, inputRange, colors.v, Extrapolation.CLAMP);
+  const a = interpolate(value, inputRange, colors.a, Extrapolation.CLAMP);
   return hsvToColor(h, s, v, a);
 };
 
@@ -97,10 +105,10 @@ const interpolateColorsRGB = (
     outputG = toLinearSpace(outputG, gamma);
     outputB = toLinearSpace(outputB, gamma);
   }
-  const r = interpolate(value, inputRange, outputR, Extrapolate.CLAMP);
-  const g = interpolate(value, inputRange, outputG, Extrapolate.CLAMP);
-  const b = interpolate(value, inputRange, outputB, Extrapolate.CLAMP);
-  const a = interpolate(value, inputRange, colors.a, Extrapolate.CLAMP);
+  const r = interpolate(value, inputRange, outputR, Extrapolation.CLAMP);
+  const g = interpolate(value, inputRange, outputG, Extrapolation.CLAMP);
+  const b = interpolate(value, inputRange, outputB, Extrapolation.CLAMP);
+  const a = interpolate(value, inputRange, colors.a, Extrapolation.CLAMP);
   if (gamma === 1) {
     return rgbaColor(r, g, b, a);
   }
