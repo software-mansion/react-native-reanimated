@@ -5,6 +5,7 @@ const util = require('util');
 const fsp = fs.promises;
 const readFile = util.promisify(fs.readFile);
 const fetch = require('node-fetch');
+const { is } = require('@babel/types');
 
 let isBrokenUrlDetected = false;
 const extensions = [
@@ -45,8 +46,8 @@ async function getFileAndUrls(dir) {
       } else {
         if (extensions.includes(path.extname(file.name))) {
           const fileContent = await readFile(resource, 'utf-8');
-          const urls = Array.from(fileContent.matchAll(urlRegex), (m) => m[0]);
-          urls.filter((url) => !/({|})/.test(url));
+          let urls = Array.from(fileContent.matchAll(urlRegex), (m) => m[0]);
+          urls = urls.filter((url) => !/({|})/.test(url));
           return urls.length > 0 ? urls.map((url) => ({ file: resource, url: url })) : [];
         } else {
           return [];
@@ -91,9 +92,12 @@ function sendRequestsInOrder(data) {
 async function scanLinks() {
   const currentDir = process.cwd();
   const data = await getFileAndUrls(currentDir);
+  data.forEach(element => {
+    console.log(element);
+  });
   sendRequestsInOrder(data);
   if (isBrokenUrlDetected) {
-    process.exit(1);
+    throw new Error('🔴 Invalid links detected.');
   }
 }
 
