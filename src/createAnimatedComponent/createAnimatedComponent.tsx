@@ -36,6 +36,7 @@ import type {
 import { has, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
 import { isJest, isWeb, shouldBeUseWeb } from '../reanimated2/PlatformChecker';
+import type { ViewInfo } from './InlinePropManager';
 import { InlinePropManager } from './InlinePropManager';
 import { PropsFilter } from './PropsFilter';
 
@@ -224,7 +225,7 @@ export function createAnimatedComponent(
       }
     }
 
-    _getViewInfo() {
+    _getViewInfo(): ViewInfo {
       let viewTag: number | HTMLElement | null;
       let viewName: string | null;
       let shadowNodeWrapper: ShadowNodeWrapper | null = null;

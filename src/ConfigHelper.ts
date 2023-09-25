@@ -150,7 +150,7 @@ export function addWhitelistedUIProps(props: Record<string, boolean>): void {
 
 const PROCESSED_VIEW_NAMES = new Set();
 
-interface ViewConfig {
+export interface ViewConfig {
   uiViewClassName: string;
   validAttributes: Record<string, unknown>;
 }
