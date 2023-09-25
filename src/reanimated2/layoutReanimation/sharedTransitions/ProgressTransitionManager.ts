@@ -1,6 +1,10 @@
 'use strict';
 import { runOnUIImmediately } from '../../threads';
-import type { ProgressAnimation } from '../animationBuilder/commonTypes';
+import type {
+  LayoutAnimationsValues,
+  ProgressAnimation,
+  SharedTransitionAnimationsValues,
+} from '../animationBuilder/commonTypes';
 import { registerEventHandler, unregisterEventHandler } from '../../core';
 import { Platform } from 'react-native';
 
@@ -122,7 +126,7 @@ export class ProgressTransitionManager {
 function createProgressTransitionRegister() {
   'worklet';
   const progressAnimations = new Map<number, ProgressAnimation>();
-  const snapshots = new Map<number, any>();
+  const snapshots = new Map<number, LayoutAnimationsValues>();
   const currentTransitions = new Set<number>();
   const toRemove = new Set<number>();
 
@@ -148,7 +152,7 @@ function createProgressTransitionRegister() {
       // Remove the animation config after the transition is finished
       toRemove.add(viewTag);
     },
-    onTransitionStart: (viewTag: number, snapshot: any) => {
+    onTransitionStart: (viewTag: number, snapshot: LayoutAnimationsValues) => {
       skipCleaning = isTransitionRestart;
       snapshots.set(viewTag, snapshot);
       currentTransitions.add(viewTag);
@@ -161,7 +165,9 @@ function createProgressTransitionRegister() {
         if (!progressAnimation) {
           continue;
         }
-        const snapshot = snapshots.get(viewTag);
+        const snapshot = snapshots.get(
+          viewTag
+        )! as SharedTransitionAnimationsValues;
         progressAnimation!(viewTag, snapshot, progress);
       }
     },
