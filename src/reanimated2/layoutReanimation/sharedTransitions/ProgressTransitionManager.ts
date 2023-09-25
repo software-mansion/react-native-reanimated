@@ -3,7 +3,7 @@ import { runOnUIImmediately } from '../../threads';
 import type { ProgressAnimation } from '../animationBuilder/commonTypes';
 import { registerEventHandler, unregisterEventHandler } from '../../core';
 import { Platform } from 'react-native';
-import { shouldBeUseWeb } from '../../PlatformChecker';
+import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
 
 type TransitionProgressEvent = {
   closing: number;
@@ -205,16 +205,21 @@ function createProgressTransitionRegister() {
 }
 
 if (shouldBeUseWeb()) {
-  const throwError = () => {
-    throw new Error(
-      '[Reanimated] ProgressTransitionRegister should not be used on web.'
-    );
+  const maybeThrowError = () => {
+    if (!isJest()) {
+      throw new Error(
+        '[Reanimated] `ProgressTransitionRegister` is not available on non-native platform.'
+      );
+    }
   };
   global.ProgressTransitionRegister = new Proxy(
     {} as ProgressTransitionRegister,
     {
-      get: throwError,
-      set: throwError,
+      get: maybeThrowError,
+      set: () => {
+        maybeThrowError();
+        return false;
+      },
     }
   );
 } else {

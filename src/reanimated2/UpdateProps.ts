@@ -5,7 +5,7 @@ import type { ShadowNodeWrapper, SharedValue, StyleProps } from './commonTypes';
 import type { AnimatedStyle } from './helperTypes';
 import type { Descriptor } from './hook/commonTypes';
 import { _updatePropsJS } from './js-reanimated';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { isJest, shouldBeUseWeb } from './PlatformChecker';
 import type { ViewRefSet } from './ViewDescriptorsSet';
 import { runOnUIImmediately } from './threads';
 
@@ -117,14 +117,19 @@ const createUpdatePropsManager = global._IS_FABRIC
     };
 
 if (shouldBeUseWeb()) {
-  const throwError = () => {
-    throw new Error(
-      '[Reanimated] UpdatePropsManager should not be used on web.'
-    );
+  const maybeThrowError = () => {
+    if (!isJest()) {
+      throw new Error(
+        '[Reanimated] `UpdatePropsManager` is not available on non-native platform.'
+      );
+    }
   };
   global.UpdatePropsManager = new Proxy({} as UpdatePropsManager, {
-    get: throwError,
-    set: throwError,
+    get: maybeThrowError,
+    set: () => {
+      maybeThrowError();
+      return false;
+    },
   });
 } else {
   runOnUIImmediately(() => {
