@@ -378,7 +378,7 @@ export function createAnimatedComponent(
     componentDidUpdate(
       prevProps: AnimatedComponentProps<InitialComponentProps>,
       _prevState: Readonly<unknown>,
-      // @typescript-eslint/no-explicit-any This type comes straight from React
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any This type comes straight from React
       snapshot?: any
     ) {
       this._reattachNativeEvents(prevProps);
