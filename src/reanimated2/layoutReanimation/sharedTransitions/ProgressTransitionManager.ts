@@ -206,6 +206,8 @@ function createProgressTransitionRegister() {
 
 if (shouldBeUseWeb()) {
   const maybeThrowError = () => {
+    // Jest attempts to access a property of this object to check if it is a Jest mock
+    // so we can't throw an error in the getter.
     if (!isJest()) {
       throw new Error(
         '[Reanimated] `ProgressTransitionRegister` is not available on non-native platform.'
