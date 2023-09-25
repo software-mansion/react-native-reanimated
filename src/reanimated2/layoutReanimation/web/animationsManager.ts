@@ -1,3 +1,4 @@
+'use strict';
 import { Animations, AnimationsData, WebEasings } from '.';
 import type { AnimationNames, WebEasingsNames } from '.';
 import { convertAnimationObjectToKeyframes } from './animationParser';

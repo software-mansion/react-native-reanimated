@@ -1,3 +1,4 @@
+'use strict';
 import { convertAnimationObjectToKeyframes } from '../animationParser';
 
 const DEFAULT_ROLL_TIME = 0.3;

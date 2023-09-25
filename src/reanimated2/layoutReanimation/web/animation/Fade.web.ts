@@ -1,3 +1,4 @@
+'use strict';
 import { convertAnimationObjectToKeyframes } from '../animationParser';
 
 const DEFAULT_FADE_TIME = 0.3;

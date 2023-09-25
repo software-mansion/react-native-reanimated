@@ -1,3 +1,4 @@
+'use strict';
 import type { TransitionData } from '../animationParser';
 
 export function LinearTransition(name: string, transitionData: TransitionData) {
