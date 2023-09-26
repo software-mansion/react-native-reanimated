@@ -389,7 +389,7 @@ function checkSharedValueUsage(
 }
 
 // You cannot pass Shared Values to `useAnimatedStyle` directly.
-// @ts-expect-error This is fine.
+// @ts-expect-error This overload is required by our API.
 export function useAnimatedStyle<Style extends DefaultStyle>(
   updater: () => Style,
   deps?: DependencyList | null

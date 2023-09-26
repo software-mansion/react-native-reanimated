@@ -92,5 +92,7 @@ export function useAnimatedScrollHandler<
     },
     subscribeForEvents,
     doDependenciesDiffer
+    // Read https://github.com/software-mansion/react-native-reanimated/pull/5056
+    // for more information about this cast.
   ) as unknown as ScrollHandlerInternal;
 }

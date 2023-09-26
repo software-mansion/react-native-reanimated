@@ -14,18 +14,18 @@ export {
   getViewProp,
 } from './core';
 export type {
-  ReanimatedEvent,
-  AnimatedRef,
   GestureHandlers,
+  AnimatedRef,
   DerivedValue,
-  ScrollEvent,
   ScrollHandler,
   ScrollHandlers,
   ScrollHandlerProcessed,
+  FrameCallback,
+  ScrollEvent,
   EventHandler,
   EventHandlerProcessed,
   UseHandlerContext,
-  FrameCallback,
+  ReanimatedEvent,
 } from './hook';
 export {
   useAnimatedProps,
@@ -67,21 +67,17 @@ export {
   withRepeat,
   withSequence,
 } from './animation';
-export type {
-  Extrapolation,
-  ExtrapolationConfig,
-  ExtrapolationType,
-} from './interpolation';
-export { interpolate, clamp } from './interpolation';
+export type { ExtrapolationConfig, ExtrapolationType } from './interpolation';
+export { Extrapolation, interpolate, clamp } from './interpolation';
 export type {
   InterpolationOptions,
-  ColorSpace,
   InterpolateConfig,
   InterpolateRGB,
   InterpolateHSV,
 } from './interpolateColor';
 export {
   Extrapolate,
+  ColorSpace,
   interpolateColor,
   useInterpolateConfig,
 } from './interpolateColor';
@@ -266,3 +262,4 @@ export type {
 } from './helperTypes';
 export type { AnimatedScrollViewProps } from './component/ScrollView';
 export type { FlatListPropsWithLayout } from './component/FlatList';
+export { startMapper, stopMapper } from './mappers';

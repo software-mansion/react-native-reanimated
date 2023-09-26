@@ -128,5 +128,6 @@ export function useAnimatedGestureHandler<
     handler,
     ['onGestureHandlerStateChange', 'onGestureHandlerEvent'],
     doDependenciesDiffer
+    // This is not correct but we want to make GH think it receives a function.
   ) as unknown as (e: Event) => void;
 }
