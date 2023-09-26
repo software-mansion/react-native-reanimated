@@ -122,7 +122,7 @@ void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
   if (cppVersion != javaVersion) {
     throw std::runtime_error(
         std::string(
-            "[Reanimated] Mismatch between C++ code version and Java code version ( ") +
+            "[Reanimated] Mismatch between C++ code version and Java code version (") +
         cppVersion + " vs. " + javaVersion + " respectively).\n" +
         "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-c-code-version-and-java-code-version` for more details.");
   }

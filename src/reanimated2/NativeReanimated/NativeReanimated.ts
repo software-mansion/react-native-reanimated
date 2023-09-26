@@ -82,6 +82,10 @@ export class NativeReanimated {
   private InnerNativeModule: NativeReanimatedModule;
 
   constructor() {
+    // These checks have to split since version checking depend on the execution order
+    if (__DEV__) {
+      assertSingleReanimatedInstance();
+    }
     if (global.__reanimatedModuleProxy === undefined) {
       const { ReanimatedModule } = NativeModules;
       ReanimatedModule?.installTurboModule();
@@ -93,7 +97,6 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       );
     }
     if (__DEV__) {
-      assertSingleReanimatedInstance();
       checkCppVersion();
     }
 
