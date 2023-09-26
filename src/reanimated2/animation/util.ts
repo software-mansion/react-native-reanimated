@@ -18,21 +18,17 @@ import type {
   AnimatableValueObject,
 } from '../commonTypes';
 import NativeReanimatedModule from '../NativeReanimated';
-import type {
-  AffineMatrixFlat,
-  AffineMatrix,
-} from './transformationMatrix/matrixUtils';
+import type { AffineMatrixFlat } from './transformationMatrix/matrixUtils';
 import {
-  flatten,
-  multiplyMatrices,
-  scaleMatrix,
-  addMatrices,
-  decomposeMatrixIntoMatricesAndAngles,
+  _multiplyMatrices,
+  _scaleMatrix,
+  _addMatrices,
   isAffineMatrixFlat,
-  subtractMatrices,
-  getRotationMatrix,
+  _subtractMatrices,
+  _getRotationMatrix,
 } from './transformationMatrix/matrixUtils';
 import { isReducedMotion } from '../PlatformChecker';
+import { decomposeMatrixIntoMatricesAndAngles } from './transformationMatrix/matrixDecomposition';
 
 let IN_STYLE_UPDATER = false;
 const IS_REDUCED_MOTION = isReducedMotion();
@@ -97,11 +93,11 @@ export function getReduceMotionForAnimation(config?: ReduceMotion) {
 
 function applyProgressToMatrix(
   progress: number,
-  a: AffineMatrix,
-  b: AffineMatrix
+  a: AffineMatrixFlat,
+  b: AffineMatrixFlat
 ) {
   'worklet';
-  return addMatrices(a, scaleMatrix(subtractMatrices(b, a), progress));
+  return _addMatrices(a, _scaleMatrix(_subtractMatrices(b, a), progress));
 }
 
 function applyProgressToNumber(progress: number, a: number, b: number) {
@@ -272,7 +268,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       previousAnimation ? previousAnimation[0] : undefined
     );
 
-    animation.current = value;
+    animation.current = value as AnimatableValue;
   };
 
   const transformationMatrixOnFrame = (
@@ -287,7 +283,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     const progress = animation[0].current / 100;
 
     const transforms = ['translationMatrix', 'scaleMatrix', 'skewMatrix'];
-    const mappedTransforms: Array<AffineMatrix> = [];
+    const mappedTransforms: Array<AffineMatrixFlat> = [];
 
     transforms.forEach((key, _) =>
       mappedTransforms.push(
@@ -302,7 +298,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     const [currentTranslation, currentScale, skewMatrix] = mappedTransforms;
 
     const rotations: Array<'x' | 'y' | 'z'> = ['x', 'y', 'z'];
-    const mappedRotations: Array<AffineMatrix> = [];
+    const mappedRotations: Array<AffineMatrixFlat> = [];
 
     rotations.forEach((key, _) => {
       const angle = applyProgressToNumber(
@@ -310,27 +306,25 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
         animation.startMatrices['r' + key],
         animation.stopMatrices['r' + key]
       );
-      mappedRotations.push(getRotationMatrix(angle, key));
+      mappedRotations.push(_getRotationMatrix(angle, key));
     });
 
     const [rotationMatrixX, rotationMatrixY, rotationMatrixZ] = mappedRotations;
 
-    const rotationMatrix = multiplyMatrices(
+    const rotationMatrix = _multiplyMatrices(
       rotationMatrixX,
-      multiplyMatrices(rotationMatrixY, rotationMatrixZ)
+      _multiplyMatrices(rotationMatrixY, rotationMatrixZ)
     );
 
-    const updated = flatten(
-      multiplyMatrices(
-        multiplyMatrices(
-          currentScale,
-          multiplyMatrices(skewMatrix, rotationMatrix)
-        ),
-        currentTranslation
-      )
+    const updated = _multiplyMatrices(
+      _multiplyMatrices(
+        currentScale,
+        _multiplyMatrices(skewMatrix, rotationMatrix)
+      ),
+      currentTranslation
     );
 
-    animation.current = updated;
+    animation.current = updated as AnimatableValue;
 
     return finished;
   };

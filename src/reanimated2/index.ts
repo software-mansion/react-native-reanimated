@@ -65,6 +65,7 @@ export {
   withDelay,
   withRepeat,
   withSequence,
+  TransformMatrix,
 } from './animation';
 export type { ExtrapolationConfig, ExtrapolationType } from './interpolation';
 export { Extrapolation, interpolate, clamp } from './interpolation';
