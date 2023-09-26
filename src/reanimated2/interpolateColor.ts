@@ -17,7 +17,7 @@ import { useSharedValue } from './hook/useSharedValue';
 /**
  * @deprecated Please use Extrapolation instead
  */
-export const Extrapolate = {
+export const Extrapolate = Extrapolation
   EXTEND: 'extend',
   CLAMP: 'clamp',
   IDENTITY: 'identity',
