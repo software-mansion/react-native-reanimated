@@ -11,7 +11,6 @@ const extensions = [
   '.jsx',
   '.ts',
   '.tsx',
-  '.json',
   '.md',
   '.mdx',
   '.h',
@@ -22,9 +21,10 @@ const extensions = [
   '.gradle',
   '.podspec',
   '.rb',
+  '.swift',
 ];
 // Every hidden directory is ignored as well.
-const ignoredDirectories = ['node_modules', 'Pods', 'lib', 'build'];
+const ignoredDirectories = ['node_modules', 'Pods', 'lib', 'build', 'cypress'];
 
 const urlRegex =
   /\b((http|https):\/\/?)[^\s<>[\]`]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
@@ -66,6 +66,9 @@ function validUrls(data) {
       }
     }
     const currentData = data[index];
+    if (!currentData) {
+      throw new Error('🔴 Invalid data.');
+    }
     if (currentData.url.includes('twitter.com')) {
       index++;
       sendRequest();
