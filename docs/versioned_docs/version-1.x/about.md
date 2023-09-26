@@ -68,4 +68,4 @@ The current algorithm for making decisions of which nodes to evaluate works as f
 
 `react-native-reanimated` works best with the [Gesture Handler](https://kmagiera.github.io/react-native-gesture-handler)
 library. Currently all the examples are made using that library, including the ultimate
-[ImagePreview app](https://github.com/software-mansion/react-native-reanimated/blob/main/Example/src/imageViewer).
+[ImagePreview app](https://github.com/software-mansion/react-native-reanimated/tree/v1/Example/src/imageViewer).
