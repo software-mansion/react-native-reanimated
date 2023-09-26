@@ -64,12 +64,9 @@ function validUrls(data) {
       if (isBrokenUrlDetected) {
         throw new Error('🔴 Invalid links detected.');
       }
-    }
-    const currentData = data[index];
-    if (!currentData) {
-      console.error('🔴 Invalid data.');
       return;
     }
+    const currentData = data[index];
     if (
       currentData.url.includes('twitter.com') // redirect issue
       || currentData.url.includes('blog.swmansion.com') // authorization issue
