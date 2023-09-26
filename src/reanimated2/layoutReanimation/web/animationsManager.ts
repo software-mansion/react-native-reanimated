@@ -317,7 +317,7 @@ export function setElementAnimation(
     element.addEventListener('animationcancel', animationCancelHandler);
   };
 
-  scheduleAnimationCleanup(animationName, duration);
+  scheduleAnimationCleanup(animationName, duration + delay);
 }
 
 /**
