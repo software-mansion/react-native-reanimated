@@ -46,19 +46,15 @@ function inlinePropsHasChanged(
 }
 
 function getInlinePropsUpdate(
-  inlineProps: Record<string, unknown> &
-    TransformsStyle &
-    Partial<TransformArrayItem>
+  inlineProps: (Record<string, unknown> & TransformsStyle) | TransformArrayItem
 ) {
   'worklet';
   const update: Record<string, unknown> = {};
   for (const [key, styleValue] of Object.entries(inlineProps)) {
-    if (key === 'transform') {
-      update[key] = inlineProps[key]?.map(
-        (transform: Partial<TransformArrayItem>) => {
-          return getInlinePropsUpdate(transform);
-        }
-      );
+    if (key === 'transform' && 'transform' in inlineProps) {
+      update[key] = inlineProps[key]?.map((transform) => {
+        return getInlinePropsUpdate(transform);
+      });
     } else if (isSharedValue(styleValue)) {
       update[key] = styleValue.value;
     } else {
