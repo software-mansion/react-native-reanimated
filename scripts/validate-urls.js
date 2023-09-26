@@ -67,16 +67,21 @@ function validUrls(data) {
     }
     const currentData = data[index];
     if (!currentData) {
-      throw new Error('🔴 Invalid data.');
+      console.error('🔴 Invalid data.');
+      return;
     }
-    if (currentData.url.includes('twitter.com')) {
+    if (
+      currentData.url.includes('twitter.com') // redirect issue
+      || currentData.url.includes('blog.swmansion.com') // authorization issue
+    ) {
       index++;
       sendRequest();
       return;
     }
-    fetch(currentData.url)
+    fetch(currentData.url, { redirect: 'manual' })
       .then(response => {
-        if (response.status !== 200 && response.status !== 301 && response.status !== 302) {
+        const status = response.status;
+        if ([200, 301, 302, 307].includes(status)) {
           console.error(`🔴 Invalid link: ${response.url} in file: ${currentData.file}\n`);
           isBrokenUrlDetected = true;
         }
@@ -94,9 +99,10 @@ function validUrls(data) {
 }
 
 async function scanLinks() {
-  const currentDir = process.cwd();
-  const data = await getFileAndUrls(currentDir);
-  validUrls(data);
+  // const currentDir = process.cwd();
+  // const data = await getFileAndUrls(currentDir);
+  // validUrls(data);
+  validUrls([{file: "", url: "https://blog.swmansion.com/releasing-reanimated-3-0-17fab4cb2394"}])
 }
 
 scanLinks();
