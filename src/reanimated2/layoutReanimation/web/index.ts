@@ -41,8 +41,6 @@ import type { AnimationData } from './animationParser';
 // Since we cannot remove keyframe from DOM by its name, we have to store its id
 export const customAnimations = new Map<string, number>();
 
-export const WEB_ANIMATIONS_ID = 'ReanimatedWebAnimationsStyle';
-
 export type AnimationCallback = ((finished: boolean) => void) | null;
 
 export interface AnimationConfig {
