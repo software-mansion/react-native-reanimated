@@ -50,5 +50,5 @@ export function isReducedMotion() {
       ? // @ts-ignore Fallback if `window` is undefined.
         !window.matchMedia('(prefers-reduced-motion: no-preference)').matches
       : false
-    : !!(global as localGlobal)._REANIMATED_IS_REDUCED_MOTION ?? false;
+    : !!(global as localGlobal)._REANIMATED_IS_REDUCED_MOTION;
 }
