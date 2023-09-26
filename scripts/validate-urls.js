@@ -105,7 +105,4 @@ async function scanLinks() {
   validUrls(data);
 }
 
-// scanLinks();
-fetch('https://opensource.org/license/bsd-2-clause').then(response => {
-  console.log(response.status);
-});
+scanLinks();
