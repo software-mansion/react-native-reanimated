@@ -99,10 +99,9 @@ function validUrls(data) {
 }
 
 async function scanLinks() {
-  // const currentDir = process.cwd();
-  // const data = await getFileAndUrls(currentDir);
-  // validUrls(data);
-  validUrls([{file: "", url: "https://blog.swmansion.com/releasing-reanimated-3-0-17fab4cb2394"}])
+  const currentDir = process.cwd();
+  const data = await getFileAndUrls(currentDir);
+  validUrls(data);
 }
 
 scanLinks();
