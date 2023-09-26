@@ -78,7 +78,7 @@ function validUrls(data) {
       sendRequest();
       return;
     }
-    fetch(currentData.url, { redirect: 'manual' })
+    fetch(currentData.url)
       .then(response => {
         const status = response.status;
         if ([200, 301, 302, 307].includes(status)) {
