@@ -81,7 +81,7 @@ function validUrls(data) {
     fetch(currentData.url)
       .then(response => {
         const status = response.status;
-        if ([200, 301, 302, 307].includes(status)) {
+        if (![200, 301, 302, 307].includes(status)) {
           console.error(`🔴 Invalid link: ${response.url} in file: ${currentData.file}\n`);
           isBrokenUrlDetected = true;
         }
