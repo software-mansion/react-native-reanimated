@@ -14,7 +14,7 @@ import {
   getReducedMotionFromConfig,
 } from './animationsManager';
 import type { StyleProps } from '../../commonTypes';
-import { removeWebAnimation } from './DOMManager';
+import { areDOMRectsEqual, removeWebAnimation } from './DOMManager';
 
 const timeoutScale = 1.25; // We use this value to enlarge timeout duration. It can prove useful if animation lags.
 const frameDurationMs = 16; // Just an approximation.
@@ -63,16 +63,6 @@ export function setElementAnimation(
   };
 
   scheduleAnimationCleanup(animationName, duration);
-}
-
-export function areDOMRectsEqual(r1: DOMRect, r2: DOMRect) {
-  // There are 4 more fields, but checking these should suffice
-  return (
-    r1.x === r2.x &&
-    r1.y === r2.y &&
-    r1.width === r2.width &&
-    r1.height === r2.height
-  );
 }
 
 export function tryActivateLayoutTransition<

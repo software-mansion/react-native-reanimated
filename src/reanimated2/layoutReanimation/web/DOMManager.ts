@@ -1,11 +1,11 @@
 import { Animations, WEB_ANIMATIONS_ID, customAnimations } from '.';
 import type { AnimationNames } from '.';
+
 /**
  *  Creates `HTMLStyleElement`, inserts it into DOM and then inserts CSS rules into the stylesheet.
  *  If style element already exists, nothing happens.
  */
 export function configureWebLayoutAnimations() {
-  // TODO: Move outside
   if (document.getElementById(WEB_ANIMATIONS_ID) !== null) {
     return;
   }
@@ -51,4 +51,14 @@ export function removeWebAnimation(animationName: string) {
     styleTag.sheet?.deleteRule(customAnimations.get(animationName) as number);
     customAnimations.delete(animationName);
   }
+}
+
+export function areDOMRectsEqual(r1: DOMRect, r2: DOMRect) {
+  // There are 4 more fields, but checking these should suffice
+  return (
+    r1.x === r2.x &&
+    r1.y === r2.y &&
+    r1.width === r2.width &&
+    r1.height === r2.height
+  );
 }
