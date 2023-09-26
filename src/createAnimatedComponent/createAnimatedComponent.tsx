@@ -39,6 +39,12 @@ import { isJest, isWeb, shouldBeUseWeb } from '../reanimated2/PlatformChecker';
 import { InlinePropManager } from './InlinePropManager';
 import { PropsFilter } from './PropsFilter';
 
+import {
+  startWebLayoutAnimation,
+  configureWebLayoutAnimations,
+  tryActivateLayoutTransition,
+} from '../reanimated2/layoutReanimation/web/animationsManager';
+
 const IS_WEB = isWeb();
 
 function onlyAnimatedStyles(styles: StyleProps[]): StyleProps[] {
@@ -113,6 +119,15 @@ export function createAnimatedComponent(
       this._JSPropUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+
+      if (IS_WEB) {
+        configureWebLayoutAnimations();
+        startWebLayoutAnimation(
+          this.props,
+          this._component as HTMLElement,
+          LayoutAnimationType.ENTERING
+        );
+      }
     }
 
     componentWillUnmount() {
@@ -121,6 +136,14 @@ export function createAnimatedComponent(
       this._detachStyles();
       this._InlinePropManager.detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
+
+      if (IS_WEB) {
+        startWebLayoutAnimation(
+          this.props,
+          this._component as HTMLElement,
+          LayoutAnimationType.EXITING
+        );
+      }
     }
 
     _getEventViewRef() {
@@ -353,11 +376,24 @@ export function createAnimatedComponent(
     }
 
     componentDidUpdate(
-      prevProps: AnimatedComponentProps<InitialComponentProps>
+      prevProps: AnimatedComponentProps<InitialComponentProps>,
+      _prevState: Readonly<unknown>,
+      // This type comes straight from React
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      snapshot?: any
     ) {
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+
+      // Snapshot won't be undefined because it comes from getSnapshotBeforeUpdate method
+      if (IS_WEB && snapshot !== null) {
+        tryActivateLayoutTransition(
+          this.props,
+          this._component as HTMLElement,
+          snapshot
+        );
+      }
     }
 
     _setComponentRef = setAndForwardRef<Component | HTMLElement>({
@@ -442,12 +478,36 @@ export function createAnimatedComponent(
       },
     });
 
+    // This is a component lifecycle method from React, therefore we are not calling it directly.
+    // It is called before the component gets rerendered. This way we can access components' position before it changed
+    // and later on, in componentDidUpdate, calculate translation for layout transition.
+    getSnapshotBeforeUpdate() {
+      if (
+        (this._component as HTMLElement).getBoundingClientRect !== undefined
+      ) {
+        return (this._component as HTMLElement).getBoundingClientRect();
+      }
+
+      return null;
+    }
+
     render() {
       const props = this._PropsFilter.filterNonAnimatedProps(this);
       this._PropsFilter.onRender();
 
       if (isJest()) {
         props.animatedStyle = this.animatedStyle;
+      }
+
+      // Layout animations on web are set inside `componentDidMount` method, which is called after first render.
+      // Because of that we can encounter a situation in which component is visible for a short amount of time, and later on animation triggers.
+      // I've tested that on various browsers and devices and it did not happen to me. To be sure that it won't happen to someone else,
+      // I've decided to hide component at first render. Its visibility is reset in `componentDidMount`.
+      if (IS_WEB && props.entering) {
+        props.style = {
+          ...(props.style ?? {}),
+          visibility: 'hidden', // Hide component until `componentDidMount` triggers
+        };
       }
 
       const platformProps = Platform.select({
