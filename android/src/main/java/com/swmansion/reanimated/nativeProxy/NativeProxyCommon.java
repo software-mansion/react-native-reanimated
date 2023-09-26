@@ -116,7 +116,7 @@ public abstract class NativeProxyCommon {
     if (cppVersion == null) {
       throw new RuntimeException(
           "[Reanimated] Java side failed to resolve C++ code version. "
-              + "See https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#java-side-failed-to-resolve-c-code-version for more information.");
+              + "See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#java-side-failed-to-resolve-c-code-version for more information.");
     }
     String javaVersion = getReanimatedJavaVersion();
     if (!cppVersion.equals(javaVersion)) {
@@ -126,7 +126,7 @@ public abstract class NativeProxyCommon {
               + " vs. "
               + cppVersion
               + " respectively). See "
-              + "https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#mismatch-between-java-code-version-and-c-code-version for more information.");
+              + "https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-java-code-version-and-c-code-version for more information.");
     }
   }
 

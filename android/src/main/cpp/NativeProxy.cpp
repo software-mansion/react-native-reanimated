@@ -115,7 +115,7 @@ void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
     throw std::runtime_error(
         std::string(
             "[Reanimated] C++ side failed to resolve Java code version.\n") +
-        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#c-side-failed-to-resolve-java-code-version` for more details.");
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#c-side-failed-to-resolve-java-code-version` for more details.");
   }
 
   auto cppVersion = getReanimatedCppVersion();
@@ -124,7 +124,7 @@ void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
         std::string(
             "[Reanimated] Mismatch between C++ code version and Java code version ( ") +
         cppVersion + " vs. " + javaVersion + " respectively).\n" +
-        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#mismatch-between-c-code-version-and-java-code-version` for more details.");
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-c-code-version-and-java-code-version` for more details.");
   }
 }
 
@@ -138,7 +138,7 @@ void NativeProxy::injectCppVersion() {
     throw std::runtime_error(
         std::string(
             "[Reanimated] C++ side failed to resolve Java code version (injection).\n") +
-        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#c-side-failed-to-resolve-java-code-version` for more details.");
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#c-side-failed-to-resolve-java-code-version` for more details.");
   }
 }
 #endif // DEBUG
