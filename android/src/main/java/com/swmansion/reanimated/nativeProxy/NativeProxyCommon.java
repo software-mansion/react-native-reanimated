@@ -106,7 +106,7 @@ public abstract class NativeProxyCommon {
 
   @DoNotStrip
   @SuppressWarnings("unused")
-  // It turns out it's pretty difficult to set a member of a class 
+  // It turns out it's pretty difficult to set a member of a class
   // instance through JNI so we decided to use a setter instead.
   protected void setCppVersion(String version) {
     cppVersion = version;
