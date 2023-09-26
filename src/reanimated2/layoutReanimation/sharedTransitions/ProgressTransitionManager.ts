@@ -3,6 +3,7 @@ import { runOnUIImmediately } from '../../threads';
 import type { ProgressAnimation } from '../animationBuilder/commonTypes';
 import { registerEventHandler, unregisterEventHandler } from '../../core';
 import { Platform } from 'react-native';
+import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
 
 type TransitionProgressEvent = {
   closing: number;
@@ -203,10 +204,32 @@ function createProgressTransitionRegister() {
   return progressTransitionManager;
 }
 
-runOnUIImmediately(() => {
-  'worklet';
-  global.ProgressTransitionRegister = createProgressTransitionRegister();
-})();
+if (shouldBeUseWeb()) {
+  const maybeThrowError = () => {
+    // Jest attempts to access a property of this object to check if it is a Jest mock
+    // so we can't throw an error in the getter.
+    if (!isJest()) {
+      throw new Error(
+        '[Reanimated] `ProgressTransitionRegister` is not available on non-native platform.'
+      );
+    }
+  };
+  global.ProgressTransitionRegister = new Proxy(
+    {} as ProgressTransitionRegister,
+    {
+      get: maybeThrowError,
+      set: () => {
+        maybeThrowError();
+        return false;
+      },
+    }
+  );
+} else {
+  runOnUIImmediately(() => {
+    'worklet';
+    global.ProgressTransitionRegister = createProgressTransitionRegister();
+  })();
+}
 
 export type ProgressTransitionRegister = ReturnType<
   typeof createProgressTransitionRegister

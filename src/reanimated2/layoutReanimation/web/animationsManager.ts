@@ -30,6 +30,10 @@ function addPxToTranslate(
 ) {
   type RNTransformProp = (typeof existingTransform)[number];
 
+  if (typeof existingTransform === 'string') {
+    throw new Error('[Reanimated] String transform is unsupported.');
+  }
+
   const newTransform = existingTransform.map(
     (transformProp: RNTransformProp) => {
       const newTransformProp: ReanimatedWebTransformProperties = {};
