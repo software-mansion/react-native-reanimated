@@ -160,7 +160,7 @@ if (__DEV__ && IS_NATIVE) {
   }) as WorkletFunction<[], void>;
   if (f.__workletHash === undefined) {
     throw new Error(
-      `[Reanimated] Failed to create a worklet. See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#failed-to-create-a-worklet\` for more details.`
+      `[Reanimated] Failed to create a worklet. See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet\` for more details.`
     );
   }
 }
