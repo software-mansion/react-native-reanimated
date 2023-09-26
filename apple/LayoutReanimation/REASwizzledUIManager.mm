@@ -89,8 +89,8 @@
           [originalSelf _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
       for (REAUIView *view in permanentlyRemovedChildren) {
         [originalSelf.animationsManager endAnimationsRecursive:view];
+        [originalSelf.animationsManager removeAnimationsFromSubtree:view];
       }
-      [originalSelf.animationsManager removeAnimationsFromSubtree:(REAUIView *)container];
       [originalSelf.animationsManager onScreenRemoval:(REAUIView *)permanentlyRemovedChildren[0]
                                                 stack:(REAUIView *)container];
     }
@@ -317,7 +317,7 @@
     // Clean up
     // below line serves as this one uiManager->_layoutAnimationGroup = nil;, because we don't have access to the
     // private field
-    [uiManager setNextLayoutAnimationGroup:nil];
+    [uiManager setValue:nil forKey:@"_layoutAnimationGroup"];
 
     [originalSelf.animationsManager viewsDidLayout];
     // Reanimated changes /end

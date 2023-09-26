@@ -1,5 +1,7 @@
+'use strict';
 import type { ViewStyle, TextStyle } from 'react-native';
 
+export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;
   originY?: number;
@@ -44,24 +46,44 @@ export type MapperRegistry = {
   stop: (mapperID: number) => void;
 };
 
-export type Context = Record<string, unknown>;
+type WorkletClosure = Record<string, unknown>;
 
-export interface WorkletFunction {
-  __closure?: Context;
-  __workletHash?: number;
+interface WorkletInitDataCommon {
+  code: string;
 }
 
-export interface BasicWorkletFunction<T> extends WorkletFunction {
-  (): T;
+type WorkletInitDataRelease = WorkletInitDataCommon;
+
+interface WorkletInitDataDev extends WorkletInitDataCommon {
+  location: string;
+  sourceMap: string;
+  version: string;
 }
 
-export interface NativeEvent<T> {
+interface WorkletBaseCommon {
+  __closure: WorkletClosure;
+  __workletHash: number;
+}
+
+interface WorkletBaseRelease extends WorkletBaseCommon {
+  __initData: WorkletInitDataRelease;
+}
+
+interface WorkletBaseDev extends WorkletBaseCommon {
+  __initData: WorkletInitDataDev;
+  __stackDetails: Error;
+}
+
+export type WorkletFunction<
+  Args extends unknown[] = unknown[],
+  ReturnValue = unknown
+> = ((...args: Args) => ReturnValue) & (WorkletBaseRelease | WorkletBaseDev);
+
+/**
+ * @deprecated
+ */
+export interface __NativeEvent<T> {
   nativeEvent: T;
-}
-export interface ComplexWorkletFunction<A extends any[], R>
-  extends WorkletFunction {
-  (...args: A): R;
-  __remoteFunction?: (...args: A) => R;
 }
 
 export interface NestedObject<T> {
@@ -72,10 +94,6 @@ export type NestedObjectValues<T> =
   | T
   | Array<NestedObjectValues<T>>
   | NestedObject<T>;
-
-export interface AdapterWorkletFunction extends WorkletFunction {
-  (value: NestedObject<string | number | AnimationObject>): void;
-}
 
 type Animatable = number | string | Array<number>;
 
@@ -212,4 +230,42 @@ export enum ReduceMotion {
   System = 'system',
   Always = 'always',
   Never = 'never',
+}
+
+// THE LAND OF THE DEPRECATED
+
+/**
+ * @deprecated
+ */
+export type __Context = Record<string, unknown>;
+
+/**
+ * @deprecated
+ */
+export interface __WorkletFunction {
+  __closure?: Record<string, unknown>;
+  __workletHash?: number;
+}
+
+/**
+ * @deprecated
+ */
+export interface __BasicWorkletFunction<T> extends __WorkletFunction {
+  (): T;
+}
+
+/**
+ * @deprecated
+ */
+export interface __ComplexWorkletFunction<A extends any[], R>
+  extends __WorkletFunction {
+  (...args: A): R;
+  __remoteFunction?: (...args: A) => R;
+}
+
+/**
+ * @deprecated
+ */
+export interface __AdapterWorkletFunction extends __WorkletFunction {
+  (value: NestedObject<string | number | AnimationObject>): void;
 }

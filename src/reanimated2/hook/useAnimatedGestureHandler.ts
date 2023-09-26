@@ -1,12 +1,18 @@
-import type { Context, WorkletFunction, NativeEvent } from '../commonTypes';
+'use strict';
+import type {
+  __Context,
+  __WorkletFunction,
+  __NativeEvent,
+} from '../commonTypes';
 import type { DependencyList } from './commonTypes';
-import { useEvent, useHandler } from './Hooks';
+import { useEvent } from './useEvent';
+import { useHandler } from './useHandler';
 
-interface Handler<T, TContext extends Context> extends WorkletFunction {
+interface Handler<T, TContext extends __Context> extends __WorkletFunction {
   (event: T, context: TContext, isCanceledOrFailed?: boolean): void;
 }
 
-export interface GestureHandlers<T, TContext extends Context> {
+export interface GestureHandlers<T, TContext extends __Context> {
   [key: string]: Handler<T, TContext> | undefined;
   onStart?: Handler<T, TContext>;
   onActive?: Handler<T, TContext>;
@@ -31,7 +37,7 @@ interface GestureHandlerNativeEvent {
   state: (typeof EventType)[keyof typeof EventType];
 }
 
-export interface GestureHandlerEvent<T> extends NativeEvent<T> {
+export interface GestureHandlerEvent<T> extends __NativeEvent<T> {
   nativeEvent: T;
 }
 
@@ -43,14 +49,15 @@ type InferArgument<T> = T extends GestureHandlerEvent<infer E>
 
 export function useAnimatedGestureHandler<
   T extends GestureHandlerEvent<any>,
-  TContext extends Context = Context,
+  TContext extends __Context = __Context,
   Payload = InferArgument<T>
 >(
   handlers: GestureHandlers<Payload, TContext>,
   dependencies?: DependencyList
 ): (e: T) => void {
   const { context, doDependenciesDiffer, useWeb } = useHandler<
-    Payload,
+    // This will be removed in the next PR in the series.
+    any,
     TContext
   >(handlers, dependencies);
 

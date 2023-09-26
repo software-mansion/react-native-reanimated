@@ -1,89 +1,53 @@
+'use strict';
 import type {
   Component,
   ComponentClass,
   ComponentType,
   FunctionComponent,
   MutableRefObject,
-  Ref,
 } from 'react';
 import React from 'react';
-import { findNodeHandle, Platform, StyleSheet } from 'react-native';
-import WorkletEventHandler from './reanimated2/WorkletEventHandler';
-import setAndForwardRef from './setAndForwardRef';
-import './reanimated2/layoutReanimation/animationsManager';
+import { findNodeHandle, Platform } from 'react-native';
+import WorkletEventHandler from '../reanimated2/WorkletEventHandler';
+import '../reanimated2/layoutReanimation/animationsManager';
 import invariant from 'invariant';
-import { adaptViewConfig } from './ConfigHelper';
-import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
+import { adaptViewConfig } from '../ConfigHelper';
+import { RNRenderer } from '../reanimated2/platform-specific/RNRenderer';
 import {
   configureLayoutAnimations,
   enableLayoutAnimations,
-  startMapper,
-  stopMapper,
-} from './reanimated2/core';
-import {
-  isJest,
-  isChromeDebugger,
-  shouldBeUseWeb,
-  isWeb,
-} from './reanimated2/PlatformChecker';
-import { initialUpdaterRun } from './reanimated2/animation';
-import type {
-  BaseAnimationBuilder,
-  EntryExitAnimationFunction,
-  ILayoutAnimationBuilder,
-} from './reanimated2/layoutReanimation';
+} from '../reanimated2/core';
 import {
   SharedTransition,
   LayoutAnimationType,
-} from './reanimated2/layoutReanimation';
-import type {
-  SharedValue,
-  StyleProps,
-  ShadowNodeWrapper,
-} from './reanimated2/commonTypes';
-import type {
-  ViewDescriptorsSet,
-  ViewRefSet,
-} from './reanimated2/ViewDescriptorsSet';
-import { makeViewDescriptorsSet } from './reanimated2/ViewDescriptorsSet';
-import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
-import updateProps from './reanimated2/UpdateProps';
-import NativeReanimatedModule from './reanimated2/NativeReanimated';
-import { isSharedValue } from './reanimated2/utils';
-import type { AnimateProps } from './reanimated2/helperTypes';
-import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
+} from '../reanimated2/layoutReanimation';
+import type { StyleProps, ShadowNodeWrapper } from '../reanimated2/commonTypes';
+import { getShadowNodeWrapperFromRef } from '../reanimated2/fabricUtils';
+import { removeFromPropsRegistry } from '../reanimated2/PropsRegistry';
+import { getReduceMotionFromConfig } from '../reanimated2/animation/util';
+import { maybeBuild } from '../animationBuilder';
+import type { AnimateProps } from '../reanimated2';
 import { JSPropUpdater } from './JSPropUpdater';
-import { getReduceMotionFromConfig } from './reanimated2/animation/util';
-import { maybeBuild } from './animationBuilder';
+import type {
+  AnimatedComponentProps,
+  AnimatedProps,
+  InitialComponentProps,
+} from './utils';
+import { has, flattenArray } from './utils';
+import setAndForwardRef from './setAndForwardRef';
+import { isJest, isWeb, shouldBeUseWeb } from '../reanimated2/PlatformChecker';
+import { InlinePropManager } from './InlinePropManager';
+import { PropsFilter } from './PropsFilter';
+
+import {
+  startWebLayoutAnimation,
+  configureWebLayoutAnimations,
+  tryActivateLayoutTransition,
+} from '../reanimated2/layoutReanimation/web/animationsManager';
 
 const IS_WEB = isWeb();
 
-function dummyListener() {
-  // empty listener we use to assign to listener properties for which animated
-  // event is used.
-}
-
-type NestedArray<T> = T | NestedArray<T>[];
-function flattenArray<T>(array: NestedArray<T>): T[] {
-  if (!Array.isArray(array)) {
-    return [array];
-  }
-  const resultArr: T[] = [];
-
-  const _flattenArray = (arr: NestedArray<T>[]): void => {
-    arr.forEach((item) => {
-      if (Array.isArray(item)) {
-        _flattenArray(item);
-      } else {
-        resultArr.push(item);
-      }
-    });
-  };
-  _flattenArray(array);
-  return resultArr;
-}
-
-function onlyAnimatedStyles(styles: StyleProps[]) {
+function onlyAnimatedStyles(styles: StyleProps[]): StyleProps[] {
   return styles.filter((style) => style?.viewDescriptors);
 }
 
@@ -98,130 +62,6 @@ function isSameAnimatedStyle(
 
 const isSameAnimatedProps = isSameAnimatedStyle;
 
-const has = <K extends string>(
-  key: K,
-  x: unknown
-): x is { [key in K]: unknown } => {
-  if (typeof x === 'function' || typeof x === 'object') {
-    if (x === null || x === undefined) {
-      return false;
-    } else {
-      return key in x;
-    }
-  }
-  return false;
-};
-
-function isInlineStyleTransform(transform: any): boolean {
-  if (!transform) {
-    return false;
-  }
-  return transform.some((t: Record<string, any>) => hasInlineStyles(t));
-}
-
-function hasInlineStyles(style: StyleProps): boolean {
-  if (!style) {
-    return false;
-  }
-  return Object.keys(style).some((key) => {
-    const styleValue = style[key];
-    return (
-      isSharedValue(styleValue) ||
-      (key === 'transform' && isInlineStyleTransform(styleValue))
-    );
-  });
-}
-
-function extractSharedValuesMapFromProps(
-  props: AnimatedComponentProps<InitialComponentProps>
-): Record<string, any> {
-  const inlineProps: Record<string, any> = {};
-
-  for (const key in props) {
-    const value = props[key];
-    if (key === 'style') {
-      const styles = flattenArray<StyleProps>(props.style ?? []);
-      styles.forEach((style) => {
-        if (!style) {
-          return;
-        }
-        for (const [key, styleValue] of Object.entries(style)) {
-          if (isSharedValue(styleValue)) {
-            inlineProps[key] = styleValue;
-          } else if (
-            key === 'transform' &&
-            isInlineStyleTransform(styleValue)
-          ) {
-            inlineProps[key] = styleValue;
-          }
-        }
-      });
-    } else if (isSharedValue(value)) {
-      inlineProps[key] = value;
-    }
-  }
-
-  return inlineProps;
-}
-
-function inlinePropsHasChanged(styles1: StyleProps, styles2: StyleProps) {
-  if (Object.keys(styles1).length !== Object.keys(styles2).length) {
-    return true;
-  }
-
-  for (const key of Object.keys(styles1)) {
-    if (styles1[key] !== styles2[key]) return true;
-  }
-
-  return false;
-}
-
-function getInlinePropsUpdate(inlineProps: Record<string, any>) {
-  'worklet';
-  const update: Record<string, any> = {};
-  for (const [key, styleValue] of Object.entries(inlineProps)) {
-    if (key === 'transform') {
-      update[key] = styleValue.map((transform: Record<string, any>) => {
-        return getInlinePropsUpdate(transform);
-      });
-    } else if (isSharedValue(styleValue)) {
-      update[key] = styleValue.value;
-    } else {
-      update[key] = styleValue;
-    }
-  }
-  return update;
-}
-
-interface AnimatedProps extends Record<string, unknown> {
-  viewDescriptors?: ViewDescriptorsSet;
-  viewsRef?: ViewRefSet<unknown>;
-  initial?: SharedValue<StyleProps>;
-}
-
-type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
-  forwardedRef?: Ref<Component>;
-  style?: NestedArray<StyleProps>;
-  animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
-  animatedStyle?: StyleProps;
-  layout?:
-    | BaseAnimationBuilder
-    | ILayoutAnimationBuilder
-    | typeof BaseAnimationBuilder;
-  entering?:
-    | BaseAnimationBuilder
-    | typeof BaseAnimationBuilder
-    | EntryExitAnimationFunction
-    | Keyframe;
-  exiting?:
-    | BaseAnimationBuilder
-    | typeof BaseAnimationBuilder
-    | EntryExitAnimationFunction
-    | Keyframe;
-  sharedTransitionTag?: string;
-  sharedTransitionStyle?: SharedTransition;
-};
-
 type Options<P> = {
   setNativeProps: (ref: ComponentRef, props: P) => void;
 };
@@ -232,22 +72,17 @@ interface ComponentRef extends Component {
   getAnimatableRef?: () => ComponentRef;
 }
 
-interface InitialComponentProps extends Record<string, unknown> {
-  ref?: Ref<Component>;
-  collapsable?: boolean;
-}
-
-export default function createAnimatedComponent<P extends object>(
+export function createAnimatedComponent<P extends object>(
   component: FunctionComponent<P>,
   options?: Options<P>
 ): FunctionComponent<AnimateProps<P>>;
 
-export default function createAnimatedComponent<P extends object>(
+export function createAnimatedComponent<P extends object>(
   component: ComponentClass<P>,
   options?: Options<P>
 ): ComponentClass<AnimateProps<P>>;
 
-export default function createAnimatedComponent(
+export function createAnimatedComponent(
   Component: ComponentType<InitialComponentProps>,
   options?: Options<InitialComponentProps>
 ): any {
@@ -265,13 +100,11 @@ export default function createAnimatedComponent(
     _viewTag = -1;
     _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
-    initialStyle = {};
     _component: ComponentRef | HTMLElement | null = null;
-    _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
-    _inlinePropsMapperId: number | null = null;
-    _inlineProps: StyleProps = {};
     _sharedElementTransition: SharedTransition | null = null;
     _JSPropUpdater = new JSPropUpdater();
+    _InlinePropManager = new InlinePropManager();
+    _PropsFilter = new PropsFilter();
     static displayName: string;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
@@ -281,19 +114,36 @@ export default function createAnimatedComponent(
       }
     }
 
-    componentWillUnmount() {
-      this._detachNativeEvents();
-      this._JSPropUpdater.removeOnJSPropsChangeListener(this);
-      this._detachStyles();
-      this._detachInlineProps();
-      this._sharedElementTransition?.unregisterTransition(this._viewTag);
-    }
-
     componentDidMount() {
       this._attachNativeEvents();
       this._JSPropUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
-      this._attachInlineProps();
+      this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+
+      if (IS_WEB) {
+        configureWebLayoutAnimations();
+        startWebLayoutAnimation(
+          this.props,
+          this._component as HTMLElement,
+          LayoutAnimationType.ENTERING
+        );
+      }
+    }
+
+    componentWillUnmount() {
+      this._detachNativeEvents();
+      this._JSPropUpdater.removeOnJSPropsChangeListener(this);
+      this._detachStyles();
+      this._InlinePropManager.detachInlineProps();
+      this._sharedElementTransition?.unregisterTransition(this._viewTag);
+
+      if (IS_WEB) {
+        startWebLayoutAnimation(
+          this.props,
+          this._component as HTMLElement,
+          LayoutAnimationType.EXITING
+        );
+      }
     }
 
     _getEventViewRef() {
@@ -525,72 +375,25 @@ export default function createAnimatedComponent(
       }
     }
 
-    _attachInlineProps() {
-      const newInlineProps: Record<string, any> =
-        extractSharedValuesMapFromProps(this.props);
-      const hasChanged = inlinePropsHasChanged(
-        newInlineProps,
-        this._inlineProps
-      );
-
-      if (hasChanged) {
-        if (!this._inlinePropsViewDescriptors) {
-          this._inlinePropsViewDescriptors = makeViewDescriptorsSet();
-
-          const { viewTag, viewName, shadowNodeWrapper, viewConfig } =
-            this._getViewInfo();
-
-          if (Object.keys(newInlineProps).length && viewConfig) {
-            adaptViewConfig(viewConfig);
-          }
-
-          this._inlinePropsViewDescriptors.add({
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            tag: viewTag as number,
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            name: viewName!,
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            shadowNodeWrapper: shadowNodeWrapper!,
-          });
-        }
-        const sharableViewDescriptors =
-          this._inlinePropsViewDescriptors.sharableViewDescriptors;
-
-        const maybeViewRef = NativeReanimatedModule.native
-          ? undefined
-          : ({ items: new Set([this]) } as ViewRefSet<any>); // see makeViewsRefSet
-
-        const updaterFunction = () => {
-          'worklet';
-          const update = getInlinePropsUpdate(newInlineProps);
-          updateProps(sharableViewDescriptors, update, maybeViewRef);
-        };
-        this._inlineProps = newInlineProps;
-        if (this._inlinePropsMapperId) {
-          stopMapper(this._inlinePropsMapperId);
-        }
-        this._inlinePropsMapperId = null;
-        if (Object.keys(newInlineProps).length) {
-          this._inlinePropsMapperId = startMapper(
-            updaterFunction,
-            Object.values(newInlineProps)
-          );
-        }
-      }
-    }
-
-    _detachInlineProps() {
-      if (this._inlinePropsMapperId) {
-        stopMapper(this._inlinePropsMapperId);
-      }
-    }
-
     componentDidUpdate(
-      prevProps: AnimatedComponentProps<InitialComponentProps>
+      prevProps: AnimatedComponentProps<InitialComponentProps>,
+      _prevState: Readonly<unknown>,
+      // This type comes straight from React
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      snapshot?: any
     ) {
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
-      this._attachInlineProps();
+      this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+
+      // Snapshot won't be undefined because it comes from getSnapshotBeforeUpdate method
+      if (IS_WEB && snapshot !== null) {
+        tryActivateLayoutTransition(
+          this.props,
+          this._component as HTMLElement,
+          snapshot
+        );
+      }
     }
 
     _setComponentRef = setAndForwardRef<Component | HTMLElement>({
@@ -675,93 +478,36 @@ export default function createAnimatedComponent(
       },
     });
 
-    _filterNonAnimatedProps(
-      inputProps: AnimatedComponentProps<InitialComponentProps>
-    ): Record<string, unknown> {
-      const props: Record<string, unknown> = {};
-      for (const key in inputProps) {
-        const value = inputProps[key];
-        if (key === 'style') {
-          const styleProp = inputProps.style;
-          const styles = flattenArray<StyleProps>(styleProp ?? []);
-          const processedStyle: StyleProps = styles.map((style) => {
-            if (style && style.viewDescriptors) {
-              // this is how we recognize styles returned by useAnimatedStyle
-              style.viewsRef.add(this);
-              if (this._isFirstRender) {
-                this.initialStyle = {
-                  ...style.initial.value,
-                  ...this.initialStyle,
-                  ...initialUpdaterRun<StyleProps>(style.initial.updater),
-                };
-              }
-              return this.initialStyle;
-            } else if (hasInlineStyles(style)) {
-              if (this._isFirstRender) {
-                return getInlinePropsUpdate(style);
-              }
-              const newStyle: StyleProps = {};
-              for (const [key, styleValue] of Object.entries(style)) {
-                if (
-                  !isSharedValue(styleValue) &&
-                  !(key === 'transform' && isInlineStyleTransform(styleValue))
-                ) {
-                  newStyle[key] = styleValue;
-                }
-              }
-              return newStyle;
-            } else {
-              return style;
-            }
-          });
-          props[key] = StyleSheet.flatten(processedStyle);
-        } else if (key === 'animatedProps') {
-          const animatedProp = inputProps.animatedProps as Partial<
-            AnimatedComponentProps<AnimatedProps>
-          >;
-          if (animatedProp.initial !== undefined) {
-            Object.keys(animatedProp.initial.value).forEach((key) => {
-              props[key] = animatedProp.initial?.value[key];
-              animatedProp.viewsRef?.add(this);
-            });
-          }
-        } else if (
-          has('current', value) &&
-          value.current instanceof WorkletEventHandler
-        ) {
-          if (value.current.eventNames.length > 0) {
-            value.current.eventNames.forEach((eventName) => {
-              props[eventName] = has('listeners', value.current)
-                ? (value.current.listeners as Record<string, unknown>)[
-                    eventName
-                  ]
-                : dummyListener;
-            });
-          } else {
-            props[key] = dummyListener;
-          }
-        } else if (isSharedValue(value)) {
-          if (this._isFirstRender) {
-            props[key] = (value as SharedValue<any>).value;
-          }
-        } else if (
-          key !== 'onGestureHandlerStateChange' ||
-          !isChromeDebugger()
-        ) {
-          props[key] = value;
-        }
+    // This is a component lifecycle method from React, therefore we are not calling it directly.
+    // It is called before the component gets rerendered. This way we can access components' position before it changed
+    // and later on, in componentDidUpdate, calculate translation for layout transition.
+    getSnapshotBeforeUpdate() {
+      if (
+        (this._component as HTMLElement).getBoundingClientRect !== undefined
+      ) {
+        return (this._component as HTMLElement).getBoundingClientRect();
       }
-      return props;
+
+      return null;
     }
 
     render() {
-      const props = this._filterNonAnimatedProps(this.props);
+      const props = this._PropsFilter.filterNonAnimatedProps(this);
+      this._PropsFilter.onRender();
+
       if (isJest()) {
         props.animatedStyle = this.animatedStyle;
       }
 
-      if (this._isFirstRender) {
-        this._isFirstRender = false;
+      // Layout animations on web are set inside `componentDidMount` method, which is called after first render.
+      // Because of that we can encounter a situation in which component is visible for a short amount of time, and later on animation triggers.
+      // I've tested that on various browsers and devices and it did not happen to me. To be sure that it won't happen to someone else,
+      // I've decided to hide component at first render. Its visibility is reset in `componentDidMount`.
+      if (IS_WEB && props.entering) {
+        props.style = {
+          ...(props.style ?? {}),
+          visibility: 'hidden', // Hide component until `componentDidMount` triggers
+        };
       }
 
       const platformProps = Platform.select({

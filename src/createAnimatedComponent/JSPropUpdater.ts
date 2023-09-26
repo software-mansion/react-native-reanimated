@@ -1,10 +1,11 @@
+'use strict';
 import {
   NativeEventEmitter,
   NativeModules,
   findNodeHandle,
 } from 'react-native';
-import { nativeShouldBeMock } from './reanimated2/PlatformChecker';
-import type { StyleProps } from './reanimated2';
+import { nativeShouldBeMock } from '../reanimated2/PlatformChecker';
+import type { StyleProps } from '../reanimated2';
 
 interface ListenerData {
   viewTag: number;

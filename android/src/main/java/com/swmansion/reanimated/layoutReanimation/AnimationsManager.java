@@ -367,7 +367,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       view.setScaleX(matrixValues[0]);
       view.setScaleY(matrixValues[4]);
       // as far, let's support only scale and translation. Rotation maybe the future feature
-      // (http://eecs.qmul.ac.uk/~gslabaugh/publications/euler.pdf)
+      // http://eecs.qmul.ac.uk/~gslabaugh/publications/euler.pdf
 
       props.remove(Snapshot.TRANSFORM_MATRIX);
     }
