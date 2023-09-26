@@ -421,7 +421,7 @@ abstract class NoMultipleInstancesAssertionTask extends DefaultTask {
                 String parsedLocation = files.stream().map({
                     File file -> "- " + file.toString().replace("/package.json", "")
                 }).collect().join("\n")
-                String exceptionMessage = "\n[Reanimated] Multiple versions of Reanimated were detected in `build.gradle`. See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#multiple-versions-of-reanimated-were-detected-in-buildgradle` for more details.\n\nConflict between: \n" + parsedLocation + "\n"
+                String exceptionMessage = "\n[Reanimated] Multiple versions of Reanimated were detected in `build.gradle`. See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting/#multiple-versions-of-reanimated-were-detected` for more details.\n\nConflict between: \n" + parsedLocation + "\n"
                 throw new GradleException(exceptionMessage)
             }
         }
@@ -438,7 +438,7 @@ def assertLatestReactNativeWithNewArchitecture = task assertLatestReactNativeWit
     onlyIf { IS_NEW_ARCHITECTURE_ENABLED && REANIMATED_MAJOR_VERSION == 3 && REACT_NATIVE_MINOR_VERSION < 72 }
     doFirst {
         throw new GradleException(
-            "[Reanimated] Outdated version of React Native for New Architecture. Reanimated " + REANIMATED_VERSION + " supports the New Architecture on React Native 0.72.0+. See https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#outdated-version-of-react-native-for-new-architecture for more information."
+            "[Reanimated] Outdated version of React Native for New Architecture. Reanimated " + REANIMATED_VERSION + " supports the New Architecture on React Native 0.72.0+. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#outdated-version-of-react-native-for-new-architecture for more information."
         )
     }
 }
