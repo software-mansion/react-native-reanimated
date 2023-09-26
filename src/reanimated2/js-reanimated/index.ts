@@ -45,7 +45,7 @@ global._scheduleOnJS = () => {
   );
 };
 
-export interface JSReanimatedComponent {
+interface JSReanimatedComponent {
   previousStyle: StyleProps;
   setNativeProps?: (style: StyleProps) => void;
   style?: StyleProps;
