@@ -1327,7 +1327,7 @@ function testSetGestureState() {
   Test Animated style
 */
 
-function TestUseAnimatedStyle1() {
+function UseAnimatedStyleTest1() {
   const sv = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -1337,7 +1337,7 @@ function TestUseAnimatedStyle1() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle2() {
+function UseAnimatedStyleTest2() {
   const sv = useSharedValue(true);
   // @ts-expect-error properly detects illegal type
   const animatedStyle = useAnimatedStyle(() => {
@@ -1348,7 +1348,7 @@ function TestUseAnimatedStyle2() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle3() {
+function UseAnimatedStyleTest3() {
   const sv = useSharedValue({ width: 0 });
   const animatedStyle = useAnimatedStyle(() => {
     return sv.value;
@@ -1356,7 +1356,7 @@ function TestUseAnimatedStyle3() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle4() {
+function UseAnimatedStyleTest4() {
   const sv = useSharedValue({ width: true });
   // @ts-expect-error properly detects illegal type
   const animatedStyle = useAnimatedStyle(() => {
@@ -1365,7 +1365,7 @@ function TestUseAnimatedStyle4() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle5() {
+function UseAnimatedStyleTest5() {
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateX: 0 }],
@@ -1374,7 +1374,7 @@ function TestUseAnimatedStyle5() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle6() {
+function UseAnimatedStyleTest6() {
   // @ts-expect-error properly detects illegal type
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -1384,7 +1384,7 @@ function TestUseAnimatedStyle6() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle7() {
+function UseAnimatedStyleTest7() {
   const sv = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -1394,7 +1394,7 @@ function TestUseAnimatedStyle7() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle8() {
+function UseAnimatedStyleTest8() {
   const sv = useSharedValue(0);
   // @ts-expect-error properly detects illegal type
   const animatedStyle = useAnimatedStyle(() => {
@@ -1405,7 +1405,7 @@ function TestUseAnimatedStyle8() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle9() {
+function UseAnimatedStyleTest9() {
   const sv = useSharedValue({ translateX: 0 });
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -1415,7 +1415,7 @@ function TestUseAnimatedStyle9() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle10() {
+function UseAnimatedStyleTest10() {
   const sv = useSharedValue({ rotate: 0 });
   // @ts-expect-error properly detects illegal type
   const animatedStyle = useAnimatedStyle(() => {
@@ -1426,7 +1426,7 @@ function TestUseAnimatedStyle10() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle11() {
+function UseAnimatedStyleTest11() {
   const sv = useSharedValue([{ translateX: 0 }]);
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -1436,7 +1436,7 @@ function TestUseAnimatedStyle11() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle12() {
+function UseAnimatedStyleTest12() {
   const sv = useSharedValue([{ rotate: 0 }]);
   // @ts-expect-error properly detects illegal type
   const animatedStyle = useAnimatedStyle(() => {
@@ -1447,7 +1447,7 @@ function TestUseAnimatedStyle12() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle13() {
+function UseAnimatedStyleTest13() {
   const sv = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -1461,7 +1461,7 @@ function TestUseAnimatedStyle13() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle14() {
+function UseAnimatedStyleTest14() {
   const sv = useSharedValue(0);
 
   // @ts-expect-error properly detects illegal type
@@ -1476,7 +1476,7 @@ function TestUseAnimatedStyle14() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle15() {
+function UseAnimatedStyleTest15() {
   const sv = useSharedValue({ width: 0, height: 0 });
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -1488,7 +1488,7 @@ function TestUseAnimatedStyle15() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle16() {
+function UseAnimatedStyleTest16() {
   const sv = useSharedValue({ width: 0 });
 
   // @ts-expect-error properly detects illegal type
@@ -1501,7 +1501,7 @@ function TestUseAnimatedStyle16() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle17() {
+function UseAnimatedStyleTest17() {
   const sv = useSharedValue({ shadowOffset: { width: 0, height: 0 } });
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -1511,7 +1511,7 @@ function TestUseAnimatedStyle17() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle18() {
+function UseAnimatedStyleTest18() {
   const sv = useSharedValue({ shadowOffset: { width: 0 } });
   // @ts-expect-error properly detects illegal type
   const animatedStyle = useAnimatedStyle(() => {
@@ -1522,7 +1522,7 @@ function TestUseAnimatedStyle18() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle19() {
+function UseAnimatedStyleTest19() {
   const animatedStyle = useAnimatedStyle(() => {
     return {
       flexWrap: 'wrap',
@@ -1532,7 +1532,7 @@ function TestUseAnimatedStyle19() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle20() {
+function UseAnimatedStyleTest20() {
   const animatedStyle = useAnimatedStyle(() => {
     return {
       flexWrap: 'wrap' as const,
@@ -1541,7 +1541,7 @@ function TestUseAnimatedStyle20() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyle21() {
+function UseAnimatedStyleTest21() {
   const animatedStyle = useAnimatedStyle(() => {
     return {
       overflow: 'scroll',
@@ -1558,7 +1558,7 @@ function TestUseAnimatedStyle21() {
   );
 }
 
-function TestUseAnimatedStyle22() {
+function UseAnimatedStyleTest22() {
   const animatedStyle = useAnimatedStyle(() => {
     return {
       overflow: 'hidden',
@@ -1573,7 +1573,7 @@ function TestUseAnimatedStyle22() {
   );
 }
 
-function TestUseAnimatedStyle23() {
+function UseAnimatedStyleTest23() {
   const animatedStyle = useAnimatedStyle(() => ({
     // @ts-expect-error Passing a number here will work,
     // but we don't allow for it as a part of API.
@@ -1581,7 +1581,7 @@ function TestUseAnimatedStyle23() {
   }));
 }
 
-function TestInlineStyles1() {
+function InlineStylesTest1() {
   const animatedIndex = useSharedValue(0);
   const backgroundColor = useDerivedValue(() => {
     return interpolateColor(
@@ -1599,7 +1599,7 @@ function TestInlineStyles1() {
   />;
 }
 
-function TestInlineStyles2() {
+function InlineStylesTest2() {
   const animatedFlex = useSharedValue(0);
   <Animated.View
     style={{
@@ -1609,73 +1609,73 @@ function TestInlineStyles2() {
   />;
 }
 
-function TestInlineStyles3() {
+function InlineStylesTest3() {
   const sv = useSharedValue(0);
   return <Animated.View style={{ width: sv }} />;
 }
 
-function TestInlineStyles4() {
+function InlineStylesTest4() {
   const sv = useSharedValue(true);
   // @ts-expect-error properly detects illegal type
   return <Animated.View style={{ width: sv }} />;
 }
 
-function TestInlineStyles5() {
+function InlineStylesTest5() {
   const sv = useSharedValue({ width: 0 });
   return <Animated.View style={sv} />;
 }
 
-function TestInlineStyles6() {
+function InlineStylesTest6() {
   const sv = useSharedValue({ width: true });
   // @ts-expect-error properly detects illegal type
   return <Animated.View style={sv} />;
 }
 
-function TestInlineStyles7() {
+function InlineStylesTest7() {
   const sv = useSharedValue(0);
   return <Animated.View style={{ transform: [{ translateX: sv }] }} />;
 }
 
-function TestInlineStyles8() {
+function InlineStylesTest8() {
   const sv = useSharedValue(0);
   // @ts-expect-error properly detects illegal type
   return <Animated.View style={{ transform: [{ rotate: sv }] }} />;
 }
 
-function TestInlineStyles9() {
+function InlineStylesTest9() {
   const sv = useSharedValue({ translateX: 0 });
   return <Animated.View style={{ transform: [sv] }} />;
 }
 
-function TestInlineStyles10() {
+function InlineStylesTest10() {
   const sv = useSharedValue({ rotate: 0 });
   // @ts-expect-error properly detects illegal type
   return <Animated.View style={{ transform: [sv] }} />;
 }
 
-function TestInlineStyles11() {
+function InlineStylesTest11() {
   const sv = useSharedValue([{ translateX: 0 }]);
   return <Animated.View style={{ transform: sv }} />;
 }
 
-function TestInlineStyles12() {
+function InlineStylesTest12() {
   const sv = useSharedValue([{ rotate: 0 }]);
   // @ts-expect-error properly detects illegal type
   return <Animated.View style={{ transform: sv }} />;
 }
 
-function TestInlineStyles13() {
+function InlineStylesTest13() {
   const sv = useSharedValue({ transform: [{ translateX: 0 }] });
   return <Animated.View style={sv} />;
 }
 
-function TestInlineStyles14() {
+function InlineStylesTest14() {
   const sv = useSharedValue({ transform: [{ rotate: 0 }] });
   // @ts-expect-error properly detects illegal type
   return <Animated.View style={sv} />;
 }
 
-function TestInlineStyles15() {
+function InlineStylesTest15() {
   const sv = useSharedValue(0);
 
   return (
@@ -1690,7 +1690,7 @@ function TestInlineStyles15() {
   );
 }
 
-function TestInlineStyles16() {
+function InlineStylesTest16() {
   const sv = useSharedValue(0);
 
   return (
@@ -1705,7 +1705,7 @@ function TestInlineStyles16() {
   );
 }
 
-function TestInlineStyles17() {
+function InlineStylesTest17() {
   const sv = useSharedValue({ width: 0, height: 0 });
 
   return (
@@ -1717,7 +1717,7 @@ function TestInlineStyles17() {
   );
 }
 
-function TestInlineStyles18() {
+function InlineStylesTest18() {
   const sv = useSharedValue({ width: 0 });
 
   return (
@@ -1730,12 +1730,12 @@ function TestInlineStyles18() {
   );
 }
 
-function TestInlineStyles19() {
+function InlineStylesTest19() {
   const sv = useSharedValue({ shadowOffset: { width: 0, height: 0 } });
   return <Animated.View style={sv} />;
 }
 
-function TestInlineStyles20() {
+function InlineStylesTest20() {
   const sv = useSharedValue({ shadowOffset: { width: 0 } });
   return (
     <Animated.View
@@ -1747,15 +1747,15 @@ function TestInlineStyles20() {
   );
 }
 
-function TestInlineStyles21() {
+function InlineStylesTest21() {
   return <Animated.View style={{ flexWrap: 'wrap' }} />;
 }
 
-function TestInlineStyles22() {
+function InlineStylesTest22() {
   return <Animated.View style={{ flexWrap: 'wrap' as const }} />;
 }
 
-function TestInlineStyles23() {
+function InlineStylesTest23() {
   return (
     <>
       <Animated.View style={{ overflow: 'scroll' }} />;
@@ -1766,7 +1766,7 @@ function TestInlineStyles23() {
   );
 }
 
-function TestInlineStyles24() {
+function InlineStylesTest24() {
   return (
     <>
       <Animated.View style={{ overflow: 'hidden' }} />;
@@ -1776,7 +1776,7 @@ function TestInlineStyles24() {
   );
 }
 
-function TestInlineStyles25() {
+function InlineStylesTest25() {
   // @ts-expect-error Passing a number here will work,
   // but we don't allow for it as a part of API.
   return <Animated.View style={{ backgroundColor: 0x000000 }} />;
