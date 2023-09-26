@@ -38,12 +38,11 @@ import setAndForwardRef from './setAndForwardRef';
 import { isJest, isWeb, shouldBeUseWeb } from '../reanimated2/PlatformChecker';
 import { InlinePropManager } from './InlinePropManager';
 import { PropsFilter } from './PropsFilter';
-
 import {
   startWebLayoutAnimation,
-  configureWebLayoutAnimations,
   tryActivateLayoutTransition,
-} from '../reanimated2/layoutReanimation/web/animationsManager';
+} from '../reanimated2/layoutReanimation/web/elementManager';
+import { configureWebLayoutAnimations } from '../reanimated2/layoutReanimation/web/DOMManager';
 
 const IS_WEB = isWeb();
 
