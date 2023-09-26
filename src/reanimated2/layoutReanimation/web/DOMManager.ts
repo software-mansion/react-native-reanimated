@@ -1,5 +1,7 @@
-import { Animations, WEB_ANIMATIONS_ID, customAnimations } from '.';
+import { Animations, customAnimations } from '.';
 import type { AnimationNames } from '.';
+
+const WEB_ANIMATIONS_ID = 'ReanimatedWebAnimationsStyle';
 
 /**
  *  Creates `HTMLStyleElement`, inserts it into DOM and then inserts CSS rules into the stylesheet.
@@ -44,13 +46,16 @@ export function insertWebAnimation(animationName: string, keyframe: string) {
 }
 
 export function removeWebAnimation(animationName: string) {
-  if (customAnimations.has(animationName)) {
-    const styleTag = document.getElementById(
-      WEB_ANIMATIONS_ID
-    ) as HTMLStyleElement;
-    styleTag.sheet?.deleteRule(customAnimations.get(animationName) as number);
-    customAnimations.delete(animationName);
+  if (!customAnimations.has(animationName)) {
+    return;
   }
+
+  const styleTag = document.getElementById(
+    WEB_ANIMATIONS_ID
+  ) as HTMLStyleElement;
+
+  styleTag.sheet?.deleteRule(customAnimations.get(animationName) as number);
+  customAnimations.delete(animationName);
 }
 
 export function areDOMRectsEqual(r1: DOMRect, r2: DOMRect) {
