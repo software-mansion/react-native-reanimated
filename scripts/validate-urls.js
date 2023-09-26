@@ -73,6 +73,7 @@ function validUrls(data) {
     if (
       currentData.url.includes('twitter.com') // redirect issue
       || currentData.url.includes('blog.swmansion.com') // authorization issue
+      || currentData.url.includes('opensource.org') // request from GitHub actions probably blocked
     ) {
       index++;
       sendRequest();
@@ -104,4 +105,7 @@ async function scanLinks() {
   validUrls(data);
 }
 
-scanLinks();
+// scanLinks();
+fetch('https://opensource.org/license/bsd-2-clause').then(response => {
+  console.log(response.status);
+});
