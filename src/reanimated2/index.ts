@@ -76,7 +76,7 @@ export type {
 } from './interpolateColor';
 export {
   /**
-   * @deprecated Please use `Extrapolation` instead of `Extrapolate`
+   * @deprecated Please use `Extrapolation` instead.
    */
   Extrapolate,
   ColorSpace,
