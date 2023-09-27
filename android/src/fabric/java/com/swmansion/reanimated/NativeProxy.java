@@ -46,6 +46,9 @@ public class NativeProxy extends NativeProxyCommon {
                         fabricUIManager);
         prepareLayoutAnimations(LayoutAnimations);
         installJSIBindings();
+        if (BuildConfig.DEBUG) {
+            checkCppVersion();
+        }
     }
 
     private native HybridData initHybrid(
