@@ -37,16 +37,18 @@ function inlinePropsHasChanged(
   return false;
 }
 
-function getInlinePropsUpdate(inlineProps: Record<string, any>) {
+function getInlinePropsUpdate(inlineProps: Record<string, unknown>) {
   'worklet';
-  const update: Record<string, any> = {};
+  const update: Record<string, unknown> = {};
   for (const [key, styleValue] of Object.entries(inlineProps)) {
-    if (key === 'transform') {
-      update[key] = styleValue.map((transform: Record<string, any>) => {
-        return getInlinePropsUpdate(transform);
-      });
-    } else if (isSharedValue(styleValue)) {
+    if (isSharedValue(styleValue)) {
       update[key] = styleValue.value;
+    } else if (Array.isArray(styleValue)) {
+      update[key] = styleValue.map((item) => {
+        return getInlinePropsUpdate(item);
+      });
+    } else if (typeof styleValue === 'object') {
+      update[key] = getInlinePropsUpdate(styleValue as Record<string, unknown>);
     } else {
       update[key] = styleValue;
     }
