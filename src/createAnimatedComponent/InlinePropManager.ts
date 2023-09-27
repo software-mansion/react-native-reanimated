@@ -12,6 +12,8 @@ import { stopMapper, startMapper } from '../reanimated2/mappers';
 import { isSharedValue } from '../reanimated2/utils';
 import { shouldBeUseWeb } from '../reanimated2/PlatformChecker';
 
+const IS_NATIVE = !shouldBeUseWeb();
+
 function isInlineStyleTransform(transform: unknown): boolean {
   if (!Array.isArray(transform)) {
     return false;
@@ -154,9 +156,9 @@ export class InlinePropManager {
       const shareableViewDescriptors =
         this._inlinePropsViewDescriptors.shareableViewDescriptors;
 
-      const maybeViewRef = shouldBeUseWeb()
-        ? ({ items: new Set([this]) } as ViewRefSet<any>) // see makeViewsRefSet
-        : undefined;
+      const maybeViewRef = IS_NATIVE
+        ? undefined
+        : ({ items: new Set([this]) } as ViewRefSet<any>); // see makeViewsRefSet
 
       const updaterFunction = () => {
         'worklet';

@@ -10,6 +10,8 @@ import {
 import { runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
 
+const IS_NATIVE = !shouldBeUseWeb();
+
 export function makeUIMutable<T>(
   initial: T,
   syncDataHolder?: ShareableSyncDataHolderRef<T>
@@ -65,7 +67,7 @@ export function makeMutable<T>(
 ): SharedValue<T> {
   let value: T = initial;
   let syncDataHolder: ShareableSyncDataHolderRef<T> | undefined;
-  if (!oneWayReadsOnly && !shouldBeUseWeb()) {
+  if (!oneWayReadsOnly && IS_NATIVE) {
     // updates are always synchronous when running on web or in Jest environment
     syncDataHolder = NativeReanimatedModule.makeSynchronizedDataHolder(
       makeShareableCloneRecursive(value)
@@ -79,10 +81,10 @@ export function makeMutable<T>(
     },
   });
   // listeners can only work on JS thread on Web and jest environments
-  const listeners = shouldBeUseWeb() ? new Map() : undefined;
+  const listeners = IS_NATIVE ? undefined : new Map();
   const mutable = {
     set value(newValue) {
-      if (!shouldBeUseWeb()) {
+      if (IS_NATIVE) {
         runOnUI(() => {
           mutable.value = newValue;
         })();

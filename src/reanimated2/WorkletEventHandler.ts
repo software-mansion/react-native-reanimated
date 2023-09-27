@@ -4,6 +4,8 @@ import { registerEventHandler, unregisterEventHandler } from './core';
 import type { EventPayload, ReanimatedEvent } from './hook/commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
 
+const IS_NATIVE = !shouldBeUseWeb();
+
 type JSEvent<Event extends object> = NativeSyntheticEvent<EventPayload<Event>>;
 
 // In JS implementation (e.g. for web) we don't use Reanimated's
@@ -39,7 +41,7 @@ export default class WorkletEventHandler<Event extends object> {
     this.viewTag = undefined;
     this.registrations = [];
 
-    if (shouldBeUseWeb()) {
+    if (!IS_NATIVE) {
       this.listeners = eventNames.reduce(
         (
           acc: Record<string, (event: JSEvent<Event>) => void>,
