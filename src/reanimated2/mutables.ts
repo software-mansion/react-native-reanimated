@@ -99,7 +99,7 @@ export function makeMutable<T>(
       return value;
     },
     set _value(newValue: T) {
-      if (!shouldBeUseWeb()) {
+      if (IS_NATIVE) {
         throw new Error(
           '[Reanimated] Setting `_value` directly is only possible on the UI runtime.'
         );
@@ -110,7 +110,7 @@ export function makeMutable<T>(
       });
     },
     get _value(): T {
-      if (!shouldBeUseWeb()) {
+      if (IS_NATIVE) {
         throw new Error(
           '[Reanimated] Reading from `_value` directly is only possible on the UI runtime.'
         );
@@ -123,7 +123,7 @@ export function makeMutable<T>(
       })();
     },
     addListener: (id: number, listener: (value: T) => void) => {
-      if (!shouldBeUseWeb()) {
+      if (IS_NATIVE) {
         throw new Error(
           '[Reanimated] Adding listeners is only possible on the UI runtime.'
         );
@@ -131,7 +131,7 @@ export function makeMutable<T>(
       listeners!.set(id, listener);
     },
     removeListener: (id: number) => {
-      if (!shouldBeUseWeb()) {
+      if (IS_NATIVE) {
         throw new Error(
           '[Reanimated] Removing listeners is only possible on the UI runtime.'
         );
