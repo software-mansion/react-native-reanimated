@@ -1,7 +1,6 @@
 'use strict';
 import { runOnUIImmediately } from '../../threads';
 import type {
-  LayoutAnimationsValues,
   ProgressAnimation,
   SharedTransitionAnimationsValues,
 } from '../animationBuilder/commonTypes';
@@ -126,7 +125,10 @@ export class ProgressTransitionManager {
 function createProgressTransitionRegister() {
   'worklet';
   const progressAnimations = new Map<number, ProgressAnimation>();
-  const snapshots = new Map<number, LayoutAnimationsValues>();
+  const snapshots = new Map<
+    number,
+    Partial<SharedTransitionAnimationsValues>
+  >();
   const currentTransitions = new Set<number>();
   const toRemove = new Set<number>();
 
@@ -152,7 +154,10 @@ function createProgressTransitionRegister() {
       // Remove the animation config after the transition is finished
       toRemove.add(viewTag);
     },
-    onTransitionStart: (viewTag: number, snapshot: LayoutAnimationsValues) => {
+    onTransitionStart: (
+      viewTag: number,
+      snapshot: Partial<SharedTransitionAnimationsValues>
+    ) => {
       skipCleaning = isTransitionRestart;
       snapshots.set(viewTag, snapshot);
       currentTransitions.add(viewTag);
