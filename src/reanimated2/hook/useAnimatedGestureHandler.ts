@@ -6,7 +6,7 @@ import type {
 } from './commonTypes';
 import { useHandler } from './useHandler';
 import { useEvent } from './useEvent';
-import type { PanGestureHandlerGestureEvent as DefaultEvent } from 'react-native-gesture-handler';
+// import type { PanGestureHandlerGestureEvent as DefaultEvent } from 'react-native-gesture-handler';
 
 const EVENT_TYPE = {
   UNDETERMINED: 0,
@@ -15,9 +15,27 @@ const EVENT_TYPE = {
   CANCELLED: 3,
   ACTIVE: 4,
   END: 5,
-};
+} as const;
 
 type StateType = (typeof EVENT_TYPE)[keyof typeof EVENT_TYPE];
+
+// This type comes from React Native Gesture Handler
+// import type { PanGestureHandlerGestureEvent as DefaultEvent } from 'react-native-gesture-handler';
+type DefaultEvent = {
+  nativeEvent: {
+    readonly handlerTag: number;
+    readonly numberOfPointers: number;
+    readonly state: (typeof EVENT_TYPE)[keyof typeof EVENT_TYPE];
+    readonly x: number;
+    readonly y: number;
+    readonly absoluteX: number;
+    readonly absoluteY: number;
+    readonly translationX: number;
+    readonly translationY: number;
+    readonly velocityX: number;
+    readonly velocityY: number;
+  };
+};
 
 interface PropsUsedInUseAnimatedGestureHandler {
   handlerTag?: number;
