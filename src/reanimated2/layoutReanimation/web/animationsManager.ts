@@ -200,18 +200,27 @@ export function TransitionGenerator(
   transitionData: TransitionData,
   existingTransform?: NonNullable<TransformsStyle['transform']>
 ) {
-  const keyframe = generateNextCustomKeyframeName();
+  const transitionKeyframeName = generateNextCustomKeyframeName();
   let transitionObject;
 
   switch (transitionType) {
     case TransitionType.LINEAR:
-      transitionObject = LinearTransition(keyframe, transitionData);
+      transitionObject = LinearTransition(
+        transitionKeyframeName,
+        transitionData
+      );
       break;
     case TransitionType.SEQUENCED:
-      transitionObject = SequencedTransition(keyframe, transitionData);
+      transitionObject = SequencedTransition(
+        transitionKeyframeName,
+        transitionData
+      );
       break;
     case TransitionType.FADING:
-      transitionObject = FadingTransition(keyframe, transitionData);
+      transitionObject = FadingTransition(
+        transitionKeyframeName,
+        transitionData
+      );
       break;
   }
 
@@ -223,9 +232,10 @@ export function TransitionGenerator(
     );
   }
 
-  const transition = convertAnimationObjectToKeyframes(transitionObject);
+  const transitionKeyframe =
+    convertAnimationObjectToKeyframes(transitionObject);
 
-  insertWebAnimation(keyframe, transition);
+  insertWebAnimation(transitionKeyframeName, transitionKeyframe);
 
-  return keyframe;
+  return transitionKeyframeName;
 }
