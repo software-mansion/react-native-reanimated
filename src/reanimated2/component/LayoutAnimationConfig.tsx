@@ -37,11 +37,16 @@ function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
 // Since `ReactNode` can be a list of nodes, we wrap every child with our wrapper
 // so we are able to access its tag with `findNodeHandle`.
 export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps> {
-  componentWillUnmount(): void {
-    if (
-      this.props.skipExiting !== undefined &&
-      Children.count(this.props.children) === 1
-    ) {
+  getMaybeWrappedChildren() {
+    return Children.count(this.props.children) > 1 && this.props.skipExiting
+      ? Children.map(this.props.children, (child) => (
+          <LayoutAnimationConfig skipExiting>{child}</LayoutAnimationConfig>
+        ))
+      : this.props.children;
+  }
+
+  setShouldAnimateExiting() {
+    if (Children.count(this.props.children) === 1) {
       const tag = findNodeHandle(this);
       if (tag) {
         setShouldAnimateExitingForTag(tag, !this.props.skipExiting);
@@ -49,13 +54,14 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
     }
   }
 
+  componentWillUnmount(): void {
+    if (this.props.skipExiting !== undefined) {
+      this.setShouldAnimateExiting();
+    }
+  }
+
   render(): ReactNode {
-    const children =
-      Children.count(this.props.children) > 1 && this.props.skipExiting
-        ? Children.map(this.props.children, (child) => (
-            <LayoutAnimationConfig skipExiting>{child}</LayoutAnimationConfig>
-          ))
-        : this.props.children;
+    const children = this.getMaybeWrappedChildren();
 
     if (this.props.skipEntering === undefined) {
       return children;

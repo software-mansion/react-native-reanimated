@@ -86,6 +86,10 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       // default implementation, this block will be replaced by a setter
       return NO;
     };
+    _shouldAnimateExiting = ^(NSNumber *tag, BOOL shouldAnimate) {
+      // default implementation, this block will be replaced by a setter
+      return YES;
+    };
     _clearAnimationConfigForTag = ^(NSNumber *tag) {
       // default implementation, this block will be replaced by a setter
     };
@@ -590,19 +594,11 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (BOOL)hasAnimationForTag:(NSNumber *)tag type:(LayoutAnimationType)type
 {
-  if (!_hasAnimationForTag) {
-    // It can happen during reload.
-    return NO;
-  }
   return _hasAnimationForTag(tag, type);
 }
 
 - (BOOL)shouldAnimateExiting:(NSNumber *)tag shouldAnimate:(BOOL)shouldAnimate
 {
-  if (!_shouldAnimateExiting) {
-    // It can happen during reload.
-    return NO;
-  }
   return _shouldAnimateExiting(tag, shouldAnimate);
 }
 
