@@ -1,12 +1,12 @@
 'use strict';
 
-import type { Extrapolate } from '.';
-
 export enum Extrapolation {
   IDENTITY = 'identity',
   CLAMP = 'clamp',
   EXTEND = 'extend',
 }
+
+type ExtrapolationAsString = 'identity' | 'clamp' | 'extend';
 
 interface InterpolationNarrowedInput {
   leftEdgeInput: number;
@@ -28,7 +28,7 @@ interface RequiredExtrapolationConfig {
 export type ExtrapolationType =
   | ExtrapolationConfig
   | Extrapolation
-  | (typeof Extrapolate)[keyof typeof Extrapolate]
+  | ExtrapolationAsString
   | undefined;
 
 function getVal(
