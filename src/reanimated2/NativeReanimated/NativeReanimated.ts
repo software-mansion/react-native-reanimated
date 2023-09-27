@@ -79,7 +79,6 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
 }
 
 export class NativeReanimated {
-  native = true;
   private InnerNativeModule: NativeReanimatedModule;
 
   constructor() {

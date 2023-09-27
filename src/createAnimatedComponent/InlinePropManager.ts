@@ -10,7 +10,9 @@ import { adaptViewConfig } from '../ConfigHelper';
 import updateProps from '../reanimated2/UpdateProps';
 import { stopMapper, startMapper } from '../reanimated2/mappers';
 import { isSharedValue } from '../reanimated2/utils';
-import NativeReanimatedModule from '../reanimated2/NativeReanimated';
+import { shouldBeUseWeb } from '../reanimated2/PlatformChecker';
+
+const IS_NATIVE = !shouldBeUseWeb();
 
 function isInlineStyleTransform(transform: unknown): boolean {
   if (!Array.isArray(transform)) {
@@ -154,7 +156,7 @@ export class InlinePropManager {
       const shareableViewDescriptors =
         this._inlinePropsViewDescriptors.shareableViewDescriptors;
 
-      const maybeViewRef = NativeReanimatedModule.native
+      const maybeViewRef = IS_NATIVE
         ? undefined
         : ({ items: new Set([this]) } as ViewRefSet<any>); // see makeViewsRefSet
 
