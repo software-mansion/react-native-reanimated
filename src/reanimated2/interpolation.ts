@@ -25,12 +25,10 @@ interface RequiredExtrapolationConfig {
   extrapolateRight: Extrapolation;
 }
 
-type extrapolateValues = (typeof Extrapolate)[keyof typeof Extrapolate];
-
 export type ExtrapolationType =
   | ExtrapolationConfig
   | Extrapolation
-  | extrapolateValues
+  | (typeof Extrapolate)[keyof typeof Extrapolate]
   | undefined;
 
 function getVal(
