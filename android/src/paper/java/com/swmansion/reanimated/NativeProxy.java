@@ -34,6 +34,9 @@ public class NativeProxy extends NativeProxyCommon {
                         messageQueueThread);
         prepareLayoutAnimations(LayoutAnimations);
         installJSIBindings();
+        if (BuildConfig.DEBUG) {
+            checkCppVersion();
+        }
     }
 
     private native HybridData initHybrid(

@@ -16,6 +16,9 @@
 #include "RNRuntimeDecorator.h"
 #include "ReanimatedJSIUtils.h"
 #include "ReanimatedRuntime.h"
+#ifdef DEBUG
+#include "ReanimatedVersion.h"
+#endif // DEBUG
 #include "WorkletRuntime.h"
 #include "WorkletRuntimeCollector.h"
 
@@ -101,12 +104,55 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       /**/);
 }
 
+#ifdef DEBUG
+void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
+  std::string javaVersion;
+  try {
+    javaVersion =
+        getJniMethod<jstring()>("getReanimatedJavaVersion")(javaPart_.get())
+            ->toStdString();
+  } catch (std::exception &) {
+    throw std::runtime_error(
+        std::string(
+            "[Reanimated] C++ side failed to resolve Java code version.\n") +
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#c-side-failed-to-resolve-java-code-version` for more details.");
+  }
+
+  auto cppVersion = getReanimatedCppVersion();
+  if (cppVersion != javaVersion) {
+    throw std::runtime_error(
+        std::string(
+            "[Reanimated] Mismatch between C++ code version and Java code version (") +
+        cppVersion + " vs. " + javaVersion + " respectively).\n" +
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-c-code-version-and-java-code-version` for more details.");
+  }
+}
+
+void NativeProxy::injectCppVersion() {
+  auto cppVersion = getReanimatedCppVersion();
+  try {
+    static const auto method =
+        getJniMethod<void(jni::local_ref<JString>)>("setCppVersion");
+    method(javaPart_.get(), make_jstring(cppVersion));
+  } catch (std::exception &) {
+    throw std::runtime_error(
+        std::string(
+            "[Reanimated] C++ side failed to resolve Java code version (injection).\n") +
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#c-side-failed-to-resolve-java-code-version` for more details.");
+  }
+}
+#endif // DEBUG
+
 void NativeProxy::installJSIBindings() {
   jsi::Runtime &rnRuntime = *rnRuntime_;
   WorkletRuntimeCollector::install(rnRuntime);
   auto isReducedMotion = getIsReducedMotion();
   RNRuntimeDecorator::decorate(
       rnRuntime, nativeReanimatedModule_, isReducedMotion);
+#ifdef DEBUG
+  checkJavaVersion(rnRuntime);
+  injectCppVersion();
+#endif // DEBUG
 
   registerEventHandler();
   setupLayoutAnimations();

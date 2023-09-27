@@ -170,6 +170,10 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   jsi::Runtime *rnRuntime_;
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
+#ifdef DEBUG
+  void checkJavaVersion(jsi::Runtime &);
+  void injectCppVersion();
+#endif // DEBUG
 #ifdef RCT_NEW_ARCH_ENABLED
   // removed temporarily, event listener mechanism needs to be fixed on RN side
   // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;

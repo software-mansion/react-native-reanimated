@@ -34,10 +34,7 @@ async function getFileAndUrls(dir) {
   const files = await Promise.all(
     directories.map(async (file) => {
       const resource = path.resolve(dir, file.name);
-      if (
-        file.name.startsWith('.') ||
-        ignoredDirectories.includes(file.name)
-      ) {
+      if (file.name.startsWith('.') || ignoredDirectories.includes(file.name)) {
         return [];
       } else if (file.isDirectory()) {
         return getFileAndUrls(resource);
@@ -46,7 +43,9 @@ async function getFileAndUrls(dir) {
           const fileContent = await readFile(resource, 'utf-8');
           let urls = Array.from(fileContent.matchAll(urlRegex), (m) => m[0]);
           urls = urls.filter((url) => !/({|})/.test(url));
-          return urls.length > 0 ? urls.map((url) => ({ file: resource, url: url })) : [];
+          return urls.length > 0
+            ? urls.map((url) => ({ file: resource, url: url }))
+            : [];
         } else {
           return [];
         }
@@ -68,27 +67,29 @@ function validUrls(data) {
     }
     const currentData = data[index];
     if (
-      currentData.url.includes('twitter.com') // redirect issue
-      || currentData.url.includes('blog.swmansion.com') // authorization issue
-      || currentData.url.includes('opensource.org') // request from GitHub actions probably blocked
+      currentData.url.includes('twitter.com') || // redirect issue
+      currentData.url.includes('blog.swmansion.com') || // authorization issue
+      currentData.url.includes('opensource.org') // request from GitHub actions probably blocked
     ) {
       index++;
       sendRequest();
       return;
     }
     fetch(currentData.url)
-      .then(response => {
+      .then((response) => {
         const status = response.status;
         if (![200, 301, 302, 307].includes(status)) {
-          console.error(`🔴 Invalid link: ${response.url} in file: ${currentData.file}\n`);
+          console.error(
+            `🔴 Invalid link: ${response.url} in file: ${currentData.file}\n`
+          );
           isBrokenUrlDetected = true;
         }
         index++;
         sendRequest();
       })
-      .catch(error => {
+      .catch((error) => {
         isBrokenUrlDetected = true;
-        console.error("Error:", error);
+        console.error('Error:', error);
         index++;
         sendRequest();
       });
