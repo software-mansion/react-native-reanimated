@@ -16,9 +16,10 @@ export {
 export type {
   GestureHandlers,
   AnimatedRef,
+  DerivedValue,
   ScrollHandler,
   ScrollHandlers,
-  DerivedValue,
+  ScrollHandlerProcessed,
   FrameCallback,
   ScrollEvent,
   EventHandler,
