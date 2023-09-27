@@ -206,6 +206,16 @@ export function configureLayoutAnimations(
   );
 }
 
+export function setShouldAnimateExitingForTag(
+  viewTag: number | HTMLElement,
+  shouldAnimate: boolean
+) {
+  NativeReanimatedModule.setShouldAnimateExitingForTag(
+    viewTag as number,
+    shouldAnimate
+  );
+}
+
 export function configureProps(uiProps: string[], nativeProps: string[]): void {
   if (!nativeShouldBeMock()) {
     NativeReanimatedModule.configureProps(uiProps, nativeProps);

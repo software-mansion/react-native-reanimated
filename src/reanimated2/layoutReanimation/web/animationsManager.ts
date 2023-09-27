@@ -85,6 +85,10 @@ function addPxToTranslate(
 ) {
   type RNTransformProp = (typeof existingTransform)[number];
 
+  if (typeof existingTransform === 'string') {
+    throw new Error('[Reanimated] String transform is unsupported.');
+  }
+
   const newTransform = existingTransform.map(
     (transformProp: RNTransformProp) => {
       const newTransformProp: ReanimatedWebTransformProperties = {};
@@ -313,7 +317,7 @@ export function setElementAnimation(
     element.addEventListener('animationcancel', animationCancelHandler);
   };
 
-  scheduleAnimationCleanup(animationName, duration);
+  scheduleAnimationCleanup(animationName, duration + delay);
 }
 
 /**
