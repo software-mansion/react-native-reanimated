@@ -6,7 +6,6 @@ import type {
 } from './commonTypes';
 import { useHandler } from './useHandler';
 import { useEvent } from './useEvent';
-// import type { PanGestureHandlerGestureEvent as DefaultEvent } from 'react-native-gesture-handler';
 
 const EVENT_TYPE = {
   UNDETERMINED: 0,
