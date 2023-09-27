@@ -38,7 +38,6 @@ export function setElementAnimation(
   element: HTMLElement,
   animationConfig: AnimationConfig
 ) {
-  // TODO: Move outside
   const { animationName, duration, delay, easing } = animationConfig;
 
   element.style.animationName = animationName;
