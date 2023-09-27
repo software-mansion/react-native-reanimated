@@ -246,6 +246,7 @@ export {
   setUpTests,
   getAnimatedStyle,
 } from './jestUtils';
+export { LayoutAnimationConfig } from './component/LayoutAnimationConfig';
 export type {
   Adaptable,
   AdaptTransforms,

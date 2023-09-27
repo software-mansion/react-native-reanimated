@@ -88,6 +88,10 @@ export default class JSReanimated {
     // no-op
   }
 
+  setShouldAnimateExitingForTag() {
+    // no-op
+  }
+
   registerSensor(
     sensorType: SensorType,
     interval: number,
