@@ -392,7 +392,7 @@ function checkSharedValueUsage(
 // @ts-expect-error This overload is required by our API.
 export function useAnimatedStyle<Style extends DefaultStyle>(
   updater: () => Style,
-  deps?: DependencyList | null
+  dependencies?: DependencyList | null
 ): Style;
 
 export function useAnimatedStyle<Style extends DefaultStyle>(
