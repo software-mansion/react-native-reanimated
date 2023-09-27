@@ -102,12 +102,21 @@ After that make sure to run your package manager again, either `yarn` or `npm in
 
 **Solution:** Please upgrade to at least React Native 0.72 or downgrade to an older version of Reanimated 3.
 
-| Reanimated | New Architecture enabled             | React-native |
-| ---------- | ------------------------------------ | ------------ |
-| 3.1.0      | ✅                                   | 0.72.0+      |
-| 3.0.0      | ✅                                   | 0.71.0+      |
-| 3.0.0      | ❌                                   | any          |
-| 2.0.0      | ❌ New Architecture is not supported | any          |
+#### Supported Rect Native versions for Reanimated 3
+
+| Reanimated                  | New Architecture (fabric) enabled | Minimum React-native | Maximum React-native |
+| --------------------------- | --------------------------------- | -------------------- | -------------------- |
+| from **3.1.x** to **3.5.x** | ✅                                | 0.72                 | 0.72                 |
+| from **3.4.x** to **3.5.x** | ❌                                | 0.66                 | 0.72                 |
+| from **3.1.x** to **3.3.x** | ❌                                | 0.63                 | 0.72                 |
+
+#### Supported Rect Native versions for Reanimated 2
+
+| Reanimated                  | Minimum React-native | Maximum React-native |
+| --------------------------- | -------------------- | -------------------- |
+| above **2.10.x**            | 0.63                 | 0.70                 |
+| from **2.5.x** to **2.9.x** | 0.63                 | 0.68                 |
+| from **2.3.x** to **2.5.x** | 0.63                 | 0.67                 |
 
 ## Threading issues
 
