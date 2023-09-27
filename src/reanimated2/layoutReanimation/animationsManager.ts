@@ -48,7 +48,6 @@ function createLayoutAnimationManager() {
         arg: Partial<SharedTransitionAnimationsValues>
       ) => LayoutAnimation
     ) {
-      console.log(yogaValues);
       if (type === LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS) {
         global.ProgressTransitionRegister.onTransitionStart(tag, yogaValues);
         return;
