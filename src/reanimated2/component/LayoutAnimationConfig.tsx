@@ -1,5 +1,11 @@
 'use strict';
-import { Children, Component, createContext, useEffect, useRef } from 'react';
+import React, {
+  Children,
+  Component,
+  createContext,
+  useEffect,
+  useRef,
+} from 'react';
 import type { ReactNode } from 'react';
 import { setShouldAnimateExitingForTag } from '../core';
 import { findNodeHandle } from 'react-native';
