@@ -55,9 +55,18 @@ export interface JSReanimatedComponent {
   };
 }
 
+export interface ReanimatedHTMLElement extends HTMLElement {
+  previousStyle: StyleProps;
+  setNativeProps?: (style: StyleProps) => void;
+  props: Record<string, string | number>;
+  _touchableNode: {
+    setAttribute: (key: string, props: unknown) => void;
+  };
+}
+
 export const _updatePropsJS = (
   updates: StyleProps | AnimatedStyle<any>,
-  viewRef: { _component?: JSReanimatedComponent },
+  viewRef: { _component?: JSReanimatedComponent | ReanimatedHTMLElement },
   isAnimatedProps?: boolean
 ): void => {
   if (viewRef._component) {
@@ -99,7 +108,7 @@ export const _updatePropsJS = (
 };
 
 const setNativeProps = (
-  component: JSReanimatedComponent,
+  component: JSReanimatedComponent | ReanimatedHTMLElement,
   newProps: StyleProps,
   isAnimatedProps?: boolean
 ): void => {
