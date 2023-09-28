@@ -447,7 +447,7 @@ def assertLatestReactNativeWithNewArchitecture = task assertLatestReactNativeWit
 def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
     onlyIf { REACT_NATIVE_MINOR_VERSION < 66 }
     doFirst {
-        // If you change the minimal react native version remember to update docs (troubleeshooting section)
+        // If you change the minimal React Native version remember to update Compatibility Table in docs
         throw new GradleException("[Reanimated] Unsupported React Native version. Please use 0.66 or newer.")
     }
 }
