@@ -8,6 +8,7 @@ import { createAnimatedComponent } from '../../createAnimatedComponent';
 import type { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
 import type { StyleProps } from '../commonTypes';
 import type { AnimateProps } from '../helperTypes';
+import { LayoutAnimationConfig } from './LayoutAnimationConfig';
 
 const AnimatedFlatList = createAnimatedComponent(FlatList as any) as any;
 
@@ -40,6 +41,7 @@ const createCellRenderer = (
 
 interface ReanimatedFlatListPropsWithLayout<T> extends FlatListProps<T> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
+  skipEnteringExitingAnimations?: boolean;
 }
 
 export type FlatListPropsWithLayout<T> = ReanimatedFlatListPropsWithLayout<T>;
@@ -53,11 +55,13 @@ declare class ReanimatedFlatListClass<T> extends Component<
 
 interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
+  skipEnteringExitingAnimations?: boolean;
 }
 
 export const ReanimatedFlatList = forwardRef(
   (props: ReanimatedFlatListProps<any>, ref: ForwardedRef<FlatList>) => {
-    const { itemLayoutAnimation, ...restProps } = props;
+    const { itemLayoutAnimation, skipEnteringExitingAnimations, ...restProps } =
+      props;
 
     const cellStyle = restProps?.inverted
       ? restProps?.horizontal
@@ -79,12 +83,22 @@ export const ReanimatedFlatList = forwardRef(
       [cellStyle]
     );
 
-    return (
+    const animatedFlatList = (
       <AnimatedFlatList
         ref={ref}
         {...restProps}
         CellRendererComponent={cellRenderer}
       />
+    );
+
+    if (skipEnteringExitingAnimations === undefined) {
+      return animatedFlatList;
+    }
+
+    return (
+      <LayoutAnimationConfig skipEntering skipExiting>
+        {animatedFlatList}
+      </LayoutAnimationConfig>
     );
   }
 ) as unknown as ReanimatedFlatList<any>;

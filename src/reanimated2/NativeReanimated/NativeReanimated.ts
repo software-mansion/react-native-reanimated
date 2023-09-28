@@ -62,6 +62,7 @@ export interface NativeReanimatedModule {
     sharedTransitionTag: string,
     config: ShareableRef<Keyframe | LayoutAnimationFunction>
   ): void;
+  setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
 }
 
 function assertSingleReanimatedInstance() {
@@ -78,7 +79,6 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
 }
 
 export class NativeReanimated {
-  native = true;
   private InnerNativeModule: NativeReanimatedModule;
 
   constructor() {
@@ -180,6 +180,13 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       type,
       sharedTransitionTag,
       config
+    );
+  }
+
+  setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean) {
+    this.InnerNativeModule.setShouldAnimateExitingForTag(
+      viewTag,
+      shouldAnimate
     );
   }
 

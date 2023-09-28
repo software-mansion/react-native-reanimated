@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
-  Extrapolate,
+  Extrapolation,
   interpolate,
   useAnimatedStyle,
 } from 'react-native-reanimated';
@@ -19,7 +19,7 @@ function PaginationElement({
       position.value,
       inputRange,
       [4, 40, 4],
-      Extrapolate.CLAMP
+      Extrapolation.CLAMP
     );
 
     return { width };
@@ -29,7 +29,7 @@ function PaginationElement({
       position.value,
       inputRange,
       [0.4, 1, 0.4],
-      Extrapolate.CLAMP
+      Extrapolation.CLAMP
     );
 
     return { opacity };

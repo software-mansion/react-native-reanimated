@@ -26,6 +26,7 @@ import { getShadowNodeWrapperFromRef } from '../reanimated2/fabricUtils';
 import { removeFromPropsRegistry } from '../reanimated2/PropsRegistry';
 import { getReduceMotionFromConfig } from '../reanimated2/animation/util';
 import { maybeBuild } from '../animationBuilder';
+import { SkipEnteringContext } from '../reanimated2/component/LayoutAnimationConfig';
 import type { AnimateProps } from '../reanimated2';
 import { JSPropUpdater } from './JSPropUpdater';
 import type {
@@ -105,6 +106,8 @@ export function createAnimatedComponent(
     _InlinePropManager = new InlinePropManager();
     _PropsFilter = new PropsFilter();
     static displayName: string;
+    static contextType = SkipEnteringContext;
+    context!: React.ContextType<typeof SkipEnteringContext>;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
@@ -426,7 +429,8 @@ export function createAnimatedComponent(
               )
             );
           }
-          if (entering) {
+          const skipEntering = this.context?.current;
+          if (entering && !skipEntering) {
             configureLayoutAnimations(
               tag,
               LayoutAnimationType.ENTERING,

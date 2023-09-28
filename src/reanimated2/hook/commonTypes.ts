@@ -41,7 +41,6 @@ export type ReanimatedEvent<Event extends object> = ReanimatedPayload &
     ? NativeEvent
     : Event);
 
-// ts-prune-ignore-next It will be used in the following PRs.
 export type EventPayload<Event extends object> = Event extends {
   nativeEvent: infer NativeEvent extends object;
 }
@@ -55,7 +54,6 @@ export type NativeEventWrapper<Event extends object> = {
 
 export type DefaultStyle = ViewStyle | ImageStyle | TextStyle;
 
-// ts-prune-ignore-next It will be used in the following PRs.
 export type RNNativeScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
 
 export type ReanimatedScrollEvent = ReanimatedEvent<RNNativeScrollEvent>;
