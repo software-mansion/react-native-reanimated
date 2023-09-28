@@ -1,5 +1,5 @@
 'use strict';
-import { configureProps as jsiConfigureProps } from './reanimated2/core';
+import { jsiConfigureProps } from './reanimated2/core';
 
 /**
  * Styles allowed to be direcly updated in UI thread
@@ -121,7 +121,18 @@ let NATIVE_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
   placeholderTextColor: true,
 };
 
+function assertNoOverlapInLists() {
+  for (const key in NATIVE_THREAD_PROPS_WHITELIST) {
+    if (key in UI_THREAD_PROPS_WHITELIST) {
+      throw new Error(
+        `[Reanimated] Property \`${key}\` was whitelisted both as UI and native prop. Please remove it from one of the lists.`
+      );
+    }
+  }
+}
+
 function configureProps(): void {
+  assertNoOverlapInLists();
   jsiConfigureProps(
     Object.keys(UI_THREAD_PROPS_WHITELIST),
     Object.keys(NATIVE_THREAD_PROPS_WHITELIST)

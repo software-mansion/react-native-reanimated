@@ -216,7 +216,10 @@ export function setShouldAnimateExitingForTag(
   );
 }
 
-export function configureProps(uiProps: string[], nativeProps: string[]): void {
+export function jsiConfigureProps(
+  uiProps: string[],
+  nativeProps: string[]
+): void {
   if (!nativeShouldBeMock()) {
     NativeReanimatedModule.configureProps(uiProps, nativeProps);
   }
