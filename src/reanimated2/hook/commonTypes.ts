@@ -47,7 +47,6 @@ export type EventPayload<Event extends object> = Event extends {
   ? NativeEvent
   : Omit<Event, 'eventName'>;
 
-// ts-prune-ignore-next It will be used in the following PRs.
 export type NativeEventWrapper<Event extends object> = {
   nativeEvent: Event;
 };
