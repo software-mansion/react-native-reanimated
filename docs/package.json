@@ -41,7 +41,7 @@
     "react-draggable": "^4.4.5",
     "react-native": "^0.71.4",
     "react-native-gesture-handler": "^2.10.0",
-    "react-native-reanimated": "3.5.0-nightly-20230829-dd8e1d530",
+    "react-native-reanimated": "https://github.com/software-mansion/react-native-reanimated/#d32f3ebd0aa789be5af279da0251b0bfc399e6b2",
     "react-native-svg": "^13.8.0",
     "react-native-web": "^0.18.12",
     "source-map": "^0.7.4",

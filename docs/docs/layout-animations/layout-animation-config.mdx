@@ -1,0 +1,87 @@
+---
+sidebar_position: 5
+---
+
+# Skipping Layout Animations
+
+`LayoutAnimationConfig` is a wrapper that lets you skip entering and exiting animations.
+
+## Reference
+
+```javascript
+import Animated, {
+  LayoutAnimationConfig,
+  PinwheelIn,
+  PinwheelOut,
+} from 'react-native-reanimated';
+
+function App() {
+  const [show, setShow] = React.useState(true);
+
+  return (
+    <LayoutAnimationConfig skipEntering>
+      <View>
+        {show && <Animated.View entering={PinwheelIn} exiting={PinwheelOut} />}
+      </View>
+    </LayoutAnimationConfig>
+  );
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+interface LayoutAnimationConfigProps {
+  skipEntering?: boolean;
+  skipExiting?: boolean;
+  children: ReactNode;
+}
+```
+
+</details>
+
+### Arguments
+
+#### `skipEntering` <Optional />
+
+A boolean indicating whether children's entering animations should be skipped when `LayoutAnimationConfig` is mounted.
+
+#### `skipExiting` <Optional />
+
+A boolean indicating whether children's exiting animations should be skipped when `LayoutAnimationConfig` is unmounted.
+
+## Example
+
+<Row>
+
+<ThemedVideo
+  sources={{
+    light: '/recordings/layout-animations/layoutconfig_light.mov',
+    dark: '/recordings/layout-animations/layoutconfig_dark.mov',
+  }}
+/>
+
+<div style={{flexGrow: 1}}>
+
+import src from '!!raw-loader!@site/src/examples/LayoutAnimationConfig';
+
+<CollapsibleCode src={src} showLines={[29, 46]} />
+
+</div>
+
+</Row>
+
+## Remarks
+
+- You can nest the `LayoutAnimationConfig` wrapper if you want to disable animations on a smaller subset of components.
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ❌  |
+
+</div>
