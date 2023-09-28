@@ -112,14 +112,6 @@ def getPlaygroundAppName() { // only for the development
     return playgroundAppName
 }
 
-def shouldAssertNoMultipleInstances() {
-  if (rootProject.hasProperty("disableMultipleInstancesCheck")) {
-    return rootProject.property("disableMultipleInstancesCheck") != "true"
-  } else {
-    return true
-  }
-}
-
 def getReanimatedVersion() {
     def inputFile = file(projectDir.path + '/../package.json')
     def json = new JsonSlurper().parseText(inputFile.text)
@@ -267,6 +259,7 @@ android {
         versionCode 1
         versionName "1.0"
         buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString())
+        buildConfigField("String", "REANIMATED_VERSION_JAVA", "\"${REANIMATED_VERSION}\"")
         externalNativeBuild {
             cmake {
                 arguments "-DANDROID_STL=c++_shared",
@@ -385,61 +378,12 @@ android {
     }
 }
 
-abstract class NoMultipleInstancesAssertionTask extends DefaultTask {
-    @Inject abstract ObjectFactory getObjectFactory()
-
-    @Input abstract Property<File> getProjectDirFile()
-    @Input abstract Property<File> getRootDirFile()
-    @Input abstract Property<Boolean> getShouldCheck()
-
-    def findReanimatedInstancesForPath(String path) {
-        return objectFactory.fileTree().from(path)
-                .include("**/react-native-reanimated/package.json")
-                .exclude("**/.yarn/**")
-                .exclude({ Files.isSymbolicLink(it.getFile().toPath()) })
-                .findAll()
-    }
-
-    @TaskAction
-    def check() {
-        if (shouldCheck.get()) {
-            // Assert there are no multiple installations of Reanimated
-            Set<File> files
-
-            if (projectDirFile.get().parent.contains(rootDirFile.get().parent)) {
-                // standard app
-                files = findReanimatedInstancesForPath(rootDirFile.get().parent + "/node_modules")
-            } else {
-                // monorepo
-                files = findReanimatedInstancesForPath(rootDirFile.get().parent + "/node_modules")
-                files.addAll(
-                    findReanimatedInstancesForPath(projectDirFile.get().parentFile.parent)
-                )
-            }
-
-            if (files.size() > 1) {
-                String parsedLocation = files.stream().map({
-                    File file -> "- " + file.toString().replace("/package.json", "")
-                }).collect().join("\n")
-                String exceptionMessage = "\n[Reanimated] Multiple versions of Reanimated were detected in `build.gradle`. See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#multiple-versions-of-reanimated-were-detected-in-buildgradle` for more details.\n\nConflict between: \n" + parsedLocation + "\n"
-                throw new GradleException(exceptionMessage)
-            }
-        }
-    }
-}
-
-tasks.register('assertNoMultipleInstances', NoMultipleInstancesAssertionTask) {
-    shouldCheck = shouldAssertNoMultipleInstances()
-    rootDirFile = rootDir
-    projectDirFile = projectDir
-}
-
 def assertLatestReactNativeWithNewArchitecture = task assertLatestReactNativeWithNewArchitectureTask {
     onlyIf { IS_NEW_ARCHITECTURE_ENABLED && REANIMATED_MAJOR_VERSION == 3 && REACT_NATIVE_MINOR_VERSION < 72 }
     doFirst {
         // If you change the minimal react native version remember to update docs (troubleeshooting section)
         throw new GradleException(
-            "[Reanimated] Outdated version of React Native for New Architecture. Reanimated " + REANIMATED_VERSION + " supports the New Architecture on React Native 0.72.0+. See https://docs.swmansion.com/react-native-reanimated/docs/guides/Troubleshooting#outdated-version-of-react-native-for-new-architecture for more information."
+            "[Reanimated] Outdated version of React Native for New Architecture. Reanimated " + REANIMATED_VERSION + " supports the New Architecture on React Native 0.72.0+. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#outdated-version-of-react-native-for-new-architecture for more information."
         )
     }
 }
@@ -467,7 +411,7 @@ task prepareHeadersForPrefab(type: Copy) {
 }
 
 tasks.preBuild {
-    dependsOn assertNoMultipleInstances, assertLatestReactNativeWithNewArchitecture, assertMinimalReactNativeVersion
+    dependsOn assertLatestReactNativeWithNewArchitecture, assertMinimalReactNativeVersion
 }
 
 task cleanCmakeCache() {

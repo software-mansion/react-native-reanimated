@@ -26,7 +26,6 @@ const requestAnimationFrameImpl =
     : globalThis.requestAnimationFrame;
 
 export default class JSReanimated {
-  native = false;
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
   platform?: Platform = undefined;
@@ -85,6 +84,10 @@ export default class JSReanimated {
   }
 
   configureLayoutAnimation() {
+    // no-op
+  }
+
+  setShouldAnimateExitingForTag() {
     // no-op
   }
 

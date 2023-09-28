@@ -83,6 +83,7 @@ let NATIVE_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
   fontSize: true,
   lineHeight: true,
   textShadowRadius: true,
+  textShadowOffset: true,
   letterSpacing: true,
   aspectRatio: true,
   columnGap: true, // iOS only
