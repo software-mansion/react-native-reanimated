@@ -17,6 +17,8 @@ import { LinearTransition } from './transition/Linear.web';
 import { SequencedTransition } from './transition/Sequenced.web';
 import { FadingTransition } from './transition/Fading.web';
 import { useReducedMotion } from '../../../reanimated2/hook/useReducedMotion';
+import { _updatePropsJS } from '../../js-reanimated';
+import type { JSReanimatedComponent } from '../../js-reanimated';
 
 export const WEB_ANIMATIONS_ID = 'ReanimatedWebAnimationsStyle';
 
@@ -436,7 +438,11 @@ export function startWebLayoutAnimation<
   // We don't care about layout transitions since they're created dynamically
   if (!(initialAnimationName in Animations) && !isLayoutTransition) {
     if (props.entering) {
-      element.style.visibility = 'initial';
+      // TODO TYPESCRIPT: Fix this
+      _updatePropsJS(
+        { visibility: 'initial' },
+        { _component: element as unknown as JSReanimatedComponent }
+      );
     }
 
     console.warn(
@@ -508,10 +514,18 @@ export function handleEnteringAnimation(
   // If `delay` === 0, value passed to `setTimeout` will be 0. However, `setTimeout` executes after given amount of time, not exactly after that time
   // Because of that, we have to immediately toggle on the component when the delay is 0.
   if (delay === 0) {
-    element.style.visibility = 'initial';
+    // TODO TYPESCRIPT: Fix this
+    _updatePropsJS(
+      { visibility: 'initial' },
+      { _component: element as unknown as JSReanimatedComponent }
+    );
   } else {
     setTimeout(() => {
-      element.style.visibility = 'initial';
+      // TODO TYPESCRIPT: Fix this
+      _updatePropsJS(
+        { visibility: 'initial' },
+        { _component: element as unknown as JSReanimatedComponent }
+      );
     }, delay * 1000);
   }
 
