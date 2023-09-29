@@ -75,6 +75,7 @@ import src from '!!raw-loader!@site/src/examples/LayoutAnimationConfig';
 ## Remarks
 
 - You can nest the `LayoutAnimationConfig` wrapper if you want to disable animations on a smaller subset of components.
+- If you are working with a `FlatList` and want to skip animations in items when the list is mounted and unmounted you can use `skipEnteringExitingAnimations`. This prop automatically wraps your `FlatList` with `<LayoutAnimationConfig skipEntering skipExiting>`.
 
 ## Platform compatibility
 
