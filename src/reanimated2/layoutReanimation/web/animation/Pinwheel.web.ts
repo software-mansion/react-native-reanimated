@@ -12,10 +12,10 @@ export const PinwheelData = {
         opacity: 0,
       },
 
-      100: {
-        transform: [{ rotate: '0deg', scale: 1 }],
-        opacity: 1,
-      },
+      // 100: {
+      //   transform: [{ rotate: '0deg', scale: 1 }],
+      //   opacity: 1,
+      // },
     },
     duration: DEFAULT_PINWHEEL_TIME,
   },
