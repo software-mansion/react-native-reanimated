@@ -11,6 +11,8 @@ In [the last section](/docs/fundamentals/your-first-animation), we learned how t
 As we learned in the previous section we can animate styles by [passing shared values inline](/docs/fundamentals/glossary#animations-in-inline-styling) to the elements' `style` property:
 
 ```jsx
+import Animated, { useSharedValue } from 'react-native-reanimated';
+
 function App() {
   const width = useSharedValue(100);
 
@@ -26,16 +28,21 @@ In basic cases, this syntax works well but it has one big downside. It doesn't a
 
 Let's suppose we have an example with a box which moves to the right on every button press:
 
-```jsx {5,10}
+```jsx
+import { View, Button } from 'react-native';
+import Animated, { useSharedValue, withSpring } from 'react-native-reanimated';
+
 function App() {
   const translateX = useSharedValue(0);
 
   const handlePress = () => {
+    // highlight-next-line
     translateX.value = withSpring(translateX.value + 50);
   };
 
   return (
     <View style={styles.container}>
+      {/* highlight-next-line */}
       <Animated.View style={[styles.box, { transform: [{ translateX }] }]} />
       <Button onPress={handlePress} title="Click me" />
     </View>
@@ -83,12 +90,16 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 To animate the radius of the SVG circle we can simply pass the shared value as a prop:
 
-```jsx {6}
+```jsx
+import { useSharedValue } from 'react-native-reanimated';
+import { Svg } from 'react-native-svg';
+
 function App() {
   const r = useSharedValue(10);
 
   return (
     <Svg>
+      {/* highlight-next-line */}
       <AnimatedCircle cx="50" cy="50" r={r} fill="blue" />
     </Svg>
   );
