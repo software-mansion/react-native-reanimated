@@ -183,4 +183,8 @@ export function adaptViewConfig(viewConfig: ViewConfig): void {
   }
 }
 
+export function isNativeProp(propName: string): boolean {
+  return !!NATIVE_THREAD_PROPS_WHITELIST[propName];
+}
+
 configureProps();
