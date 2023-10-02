@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
-export const CompatibilityTablePaper: React.FC<> = () => {
+export const CompatibilityTablePaper: React.FC = () => {
   return (
     <table>
       <tr>
@@ -19,7 +19,9 @@ export const CompatibilityTablePaper: React.FC<> = () => {
         <th>0.72</th>
       </tr>
       <tr>
-        <td>from 3.4.x to 3.5.x</td>
+        <td>
+          from <b>3.4.x</b> to <b>3.5.x</b>
+        </td>
         <td></td>
         <td></td>
         <td></td>
@@ -33,7 +35,9 @@ export const CompatibilityTablePaper: React.FC<> = () => {
         <td style={styles.supported}></td>
       </tr>
       <tr>
-        <td>from 3.1.x to 3.3.x</td>
+        <td>
+          from <b>3.1.x</b> to <b>3.3.x</b>
+        </td>
         <td></td>
         <td style={styles.supported}></td>
         <td style={styles.supported}></td>
@@ -47,7 +51,9 @@ export const CompatibilityTablePaper: React.FC<> = () => {
         <td style={styles.supported}></td>
       </tr>
       <tr>
-        <td>from 3.0.x to 3.1.x</td>
+        <td>
+          from <b>3.0.x</b> to <b>3.1.x</b>
+        </td>
         <td></td>
         <td style={styles.supported}></td>
         <td style={styles.supported}></td>
@@ -61,7 +67,9 @@ export const CompatibilityTablePaper: React.FC<> = () => {
         <td></td>
       </tr>
       <tr>
-        <td>from 2.10.x to 2.17.x</td>
+        <td>
+          from <b>2.10.x</b> to <b>2.17.x</b>
+        </td>
         <td></td>
         <td style={styles.supported}></td>
         <td style={styles.supported}></td>
@@ -75,7 +83,9 @@ export const CompatibilityTablePaper: React.FC<> = () => {
         <td></td>
       </tr>
       <tr>
-        <td>from 2.5.x to 2.9.x</td>
+        <td>
+          from <b>2.5.x</b> to <b>2.9.x</b>
+        </td>
         <td></td>
         <td style={styles.supported}></td>
         <td style={styles.supported}></td>
@@ -87,9 +97,11 @@ export const CompatibilityTablePaper: React.FC<> = () => {
         <td></td>
         <td></td>
         <td></td>
-      </tr>{' '}
+      </tr>
       <tr>
-        <td>from 2.3.x to 2.4.x</td>
+        <td>
+          from <b>2.3.x</b> to <b>2.4.x</b>
+        </td>
         <td></td>
         <td style={styles.supported}></td>
         <td style={styles.supported}></td>
@@ -130,7 +142,9 @@ export const CompatibilityTableFabric: React.FC<{
         <th>0.72</th>
       </tr>
       <tr>
-        <td>from 3.1.x to 3.5.x</td>
+        <td>
+          from <b>3.1.x</b> to <b>3.5.x</b>
+        </td>
         <td></td>
         <td></td>
         <td></td>
@@ -144,7 +158,9 @@ export const CompatibilityTableFabric: React.FC<{
         <td style={styles.supported}></td>
       </tr>
       <tr>
-        <td>3.0.x</td>
+        <td>
+          <b>3.0.x</b>
+        </td>
         <td></td>
         <td></td>
         <td></td>
