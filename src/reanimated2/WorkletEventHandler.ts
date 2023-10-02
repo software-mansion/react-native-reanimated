@@ -1,8 +1,10 @@
 'use strict';
 import type { NativeSyntheticEvent } from 'react-native';
-import NativeReanimatedModule from './NativeReanimated';
 import { registerEventHandler, unregisterEventHandler } from './core';
 import type { EventPayload, ReanimatedEvent } from './hook/commonTypes';
+import { shouldBeUseWeb } from './PlatformChecker';
+
+const IS_NATIVE = !shouldBeUseWeb();
 
 type JSEvent<Event extends object> = NativeSyntheticEvent<EventPayload<Event>>;
 
@@ -39,7 +41,7 @@ export default class WorkletEventHandler<Event extends object> {
     this.viewTag = undefined;
     this.registrations = [];
 
-    if (!NativeReanimatedModule.native) {
+    if (!IS_NATIVE) {
       this.listeners = eventNames.reduce(
         (
           acc: Record<string, (event: JSEvent<Event>) => void>,

@@ -43,7 +43,7 @@ const config = {
           sidebarPath: require.resolve('./sidebars.js'),
           sidebarCollapsible: false,
           editUrl:
-            'https://github.com/software-mansion/react-native-reanimated/edit/main/',
+            'https://github.com/software-mansion/react-native-reanimated/tree/main/docs',
           lastVersion: 'current', // <- this makes 3.x docs as default
           versions: {
             current: {
