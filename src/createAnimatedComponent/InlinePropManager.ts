@@ -160,7 +160,7 @@ export class InlinePropManager {
 
       const maybeViewRef = IS_NATIVE
         ? undefined
-        : ({ items: new Set([this]) } as ViewRefSet<any>); // see makeViewsRefSet
+        : ({ items: new Set([animatedComponent]) } as ViewRefSet<any>); // see makeViewsRefSet
 
       const updaterFunction = () => {
         'worklet';
