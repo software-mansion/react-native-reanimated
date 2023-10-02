@@ -3,6 +3,10 @@ import MDXComponents from '@theme-original/MDXComponents';
 import InteractiveExample from '@site/src/components/InteractiveExample';
 import InteractivePlayground from '@site/src/components/InteractivePlayground';
 import CollapsibleCode from '@site/src/components/CollapsibleCode';
+import {
+  CompatibilityTablePaper,
+  CompatibilityTableFabric,
+} from '@site/src/components/CompatibilityTable';
 import Optional from '@site/src/components/Optional';
 import Indent from '@site/src/components/Indent';
 import Row from '@site/src/components/Row';
@@ -17,6 +21,8 @@ export default {
   InteractiveExample,
   InteractivePlayground,
   CollapsibleCode,
+  CompatibilityTablePaper,
+  CompatibilityTableFabric,
   Optional,
   Indent,
   Row,
