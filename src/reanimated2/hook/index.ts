@@ -18,7 +18,12 @@ export type {
 export { useAnimatedReaction } from './useAnimatedReaction';
 export { useAnimatedRef } from './useAnimatedRef';
 export { useAnimatedScrollHandler } from './useAnimatedScrollHandler';
-export type { ScrollHandler, ScrollHandlers } from './useAnimatedScrollHandler';
+export type {
+  ScrollHandler,
+  ScrollHandlers,
+  ScrollHandlerProcessed,
+  ScrollHandlerInternal,
+} from './useAnimatedScrollHandler';
 export { useDerivedValue } from './useDerivedValue';
 export type { DerivedValue } from './useDerivedValue';
 export { useAnimatedSensor } from './useAnimatedSensor';

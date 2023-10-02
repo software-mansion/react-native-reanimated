@@ -5,7 +5,7 @@ import Animated, {
   useAnimatedGestureHandler,
   cancelAnimation,
   interpolate,
-  Extrapolate,
+  Extrapolation,
   withSpring,
 } from 'react-native-reanimated';
 import {
@@ -59,14 +59,14 @@ export default function LiquidSwipe() {
           event.translationX,
           [0, maxDist],
           [1, 0],
-          Extrapolate.CLAMP
+          Extrapolation.CLAMP
         );
       } else {
         progress.value = interpolate(
           event.translationX,
           [-maxDist, 0],
           [0.4, 0],
-          Extrapolate.CLAMP
+          Extrapolation.CLAMP
         );
       }
     },
