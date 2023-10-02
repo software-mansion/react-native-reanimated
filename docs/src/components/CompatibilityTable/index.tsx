@@ -1,13 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
-export const CompatibilityTablePaper: React.FC<{
-  label: string;
-  labelCollapsed: string;
-  collapsed: boolean;
-  onCollapse: () => void;
-  className?: string;
-}> = ({ label, labelCollapsed, collapsed, onCollapse, className }) => {
+export const CompatibilityTablePaper: React.FC<> = () => {
   return (
     <table>
       <tr>
