@@ -3,7 +3,7 @@ import JSReanimated from './JSReanimated';
 import type { StyleProps } from '../commonTypes';
 import type { AnimatedStyle } from '../helperTypes';
 import { isWeb } from '../PlatformChecker';
-import { isNativeProp } from '../../ConfigHelper';
+import { PropsAllowlists } from '../../propsAllowlists';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let createReactDOMStyle: (style: any) => any;
@@ -169,5 +169,9 @@ const updatePropsDOM = (
     }
   }
 };
+
+function isNativeProp(propName: string): boolean {
+  return !!PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST[propName];
+}
 
 export default reanimatedJS;
