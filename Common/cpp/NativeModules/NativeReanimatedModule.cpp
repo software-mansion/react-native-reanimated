@@ -83,15 +83,6 @@ NativeReanimatedModule::NativeReanimatedModule(
         this->requestAnimationFrame(rt, callback);
       };
 
-  auto updateDataSynchronously =
-      [this](
-          jsi::Runtime &rt,
-          const jsi::Value &synchronizedDataHolderRef,
-          const jsi::Value &newData) {
-        return this->updateDataSynchronously(
-            rt, synchronizedDataHolderRef, newData);
-      };
-
 #ifdef RCT_NEW_ARCH_ENABLED
   auto updateProps = [this](jsi::Runtime &rt, const jsi::Value &operations) {
     this->updateProps(rt, operations);
