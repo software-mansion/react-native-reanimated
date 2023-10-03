@@ -130,7 +130,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.dispatchCommandFunction,
 #endif
       requestAnimationFrame,
-      updateDataSynchronously,
       platformDepMethodsHolder.getCurrentTime,
       platformDepMethodsHolder.setGestureStateFunction,
       platformDepMethodsHolder.progressLayoutAnimation,
@@ -196,9 +195,7 @@ void NativeReanimatedModule::updateDataSynchronously(
     jsi::Runtime &rt,
     const jsi::Value &synchronizedDataHolderRef,
     const jsi::Value &newData) {
-  auto dataHolder = extractShareableOrThrow<ShareableSynchronizedDataHolder>(
-      rt, synchronizedDataHolderRef);
-  dataHolder->set(rt, newData);
+  reanimated::updateDataSynchronously(rt, synchronizedDataHolderRef, newData);
 }
 
 jsi::Value NativeReanimatedModule::getDataSynchronously(
