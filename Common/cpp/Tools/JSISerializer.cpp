@@ -140,10 +140,10 @@ std::string JSISerializer::stringifyHostObject(jsi::HostObject &hostObject) {
 
   auto props = hostObject.getPropertyNames(rt_);
   auto propsCount = props.size();
-  auto lastKey = props.back().utf8(rt_);
 
   if (propsCount > 0) {
     ss << '{';
+    auto lastKey = props.back().utf8(rt_);
     for (const auto &key : props) {
       auto formattedKey = key.utf8(rt_);
       auto value = hostObject.get(rt_, key);
