@@ -341,7 +341,7 @@ using namespace facebook::react;
 
       auto isViewTreesSynchronized = [[strongSelf.uiManager isViewTreesSynchronized] intValue] == 1;
       BOOL canUpdateSynchronously =
-          trySynchronously && ![strongSelf.uiManager hasEnqueuedUICommands] && !isViewTreesSynchronized;
+          trySynchronously && ![strongSelf.uiManager hasEnqueuedUICommands] && isViewTreesSynchronized;
       if (!canUpdateSynchronously) {
         [syncUpdateObserver unblockUIThread];
       }

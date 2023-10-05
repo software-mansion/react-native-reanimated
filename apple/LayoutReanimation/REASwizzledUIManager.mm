@@ -85,9 +85,9 @@
     // The `isViewTreesSynchronized` flag is necessary to prevent Reanimated from performing
     // synchronous updates when there is inconsistency between the shadow tree and native tree.
     // More details here: https://github.com/software-mansion/react-native-reanimated/pull/5187
-    [self setIsViewTreesSynchronized:@(1)];
-  } else {
     [self setIsViewTreesSynchronized:@(0)];
+  } else {
+    [self setIsViewTreesSynchronized:@(1)];
   }
   bool isLayoutAnimationEnabled = reanimated::FeaturesConfig::isLayoutAnimationEnabled();
   id<RCTComponent> container;
