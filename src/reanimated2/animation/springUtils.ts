@@ -28,11 +28,17 @@ export type SpringConfig = {
     }
 );
 
+// This type contains all the properties from SpringConfig, which are changed to be required, except for optional 'reduceMotion'
+export type DefaultSpringConfig = {
+  [K in keyof Required<SpringConfig>]: K extends 'reduceMotion'
+    ? Required<SpringConfig>[K] | undefined
+    : Required<SpringConfig>[K];
+};
 export type WithSpringConfig = SpringConfig;
 
 export interface SpringConfigInner {
   useDuration: boolean;
-  configIsInvalid: boolean;
+  skipAnimation: boolean;
 }
 
 export interface SpringAnimation extends Animation<SpringAnimation> {
@@ -51,6 +57,39 @@ export interface InnerSpringAnimation
   extends Omit<SpringAnimation, 'toValue' | 'current'> {
   toValue: number;
   current: number;
+}
+
+export function validateConfig(config: DefaultSpringConfig): boolean {
+  'worklet';
+  let errorLog = '[Reanimated] Invalid spring config, ';
+  let invalidConfig = false;
+
+  (
+    [
+      'stiffness',
+      'damping',
+      'dampingRatio',
+      'restDisplacementThreshold',
+      'restSpeedThreshold',
+      'mass',
+    ] as const
+  ).forEach((property) => {
+    if (config[property] <= 0) {
+      invalidConfig = true;
+      errorLog += `${property} must be grater than zero, `;
+    }
+  });
+
+  if (config.duration < 0) {
+    invalidConfig = true;
+    errorLog += "duration can't be negative";
+  }
+
+  if (invalidConfig) {
+    console.warn(errorLog);
+  }
+
+  return invalidConfig;
 }
 
 function bisectRoot({
@@ -91,7 +130,7 @@ export function initialCalculations(
 } {
   'worklet';
 
-  if (config.configIsInvalid) {
+  if (config.skipAnimation) {
     return { zeta: 0, omega0: 0, omega1: 0 };
   }
 
@@ -122,7 +161,7 @@ export function calculateNewMassToMatchDuration(
   v0: number
 ) {
   'worklet';
-  if (config.configIsInvalid) {
+  if (config.skipAnimation) {
     return 0;
   }
 
@@ -234,10 +273,7 @@ export function underDampedSpringCalculations(
 
 export function isAnimationTerminatingCalculation(
   animation: InnerSpringAnimation,
-  config: Partial<SpringConfig> &
-    Required<
-      Pick<SpringConfig, 'restSpeedThreshold' | 'restDisplacementThreshold'>
-    >
+  config: DefaultSpringConfig
 ): {
   isOvershooting: boolean;
   isVelocity: boolean;
