@@ -34,6 +34,8 @@ using namespace facebook::react;
 
 - (void)setNeedsLayout;
 
+- (id)isViewTreesSynchronized;
+
 @end
 
 @interface RCTUIManager (SyncUpdates)
@@ -336,8 +338,10 @@ using namespace facebook::react;
       if (strongSelf == nil) {
         return;
       }
-      BOOL canUpdateSynchronously = trySynchronously && ![strongSelf.uiManager hasEnqueuedUICommands];
 
+      auto isViewTreesSynchronized = [[strongSelf.uiManager isViewTreesSynchronized] intValue] == 1;
+      BOOL canUpdateSynchronously =
+          trySynchronously && ![strongSelf.uiManager hasEnqueuedUICommands] && !isViewTreesSynchronized;
       if (!canUpdateSynchronously) {
         [syncUpdateObserver unblockUIThread];
       }

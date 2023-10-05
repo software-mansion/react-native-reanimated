@@ -9,6 +9,7 @@
 #import <React/RCTUIManager.h>
 
 @interface RCTUIManager (Reanimated)
+@property (atomic) NSNumber *isViewTreesSynchronized;
 @property REAAnimationsManager *animationsManager;
 - (NSArray<id<RCTComponent>> *)_childrenToRemoveFromContainer:(id<RCTComponent>)container
                                                     atIndices:(NSArray<NSNumber *> *)atIndices;
@@ -24,6 +25,16 @@
 {
   return objc_getAssociatedObject(self, @selector(animationsManager));
 }
+
+@dynamic isViewTreesSynchronized;
+- (void)setIsViewTreesSynchronized:(NSNumber *)isViewTreesSynchronized
+{
+  objc_setAssociatedObject(self, @selector(isViewTreesSynchronized), isViewTreesSynchronized, OBJC_ASSOCIATION_RETAIN);
+}
+- (id)isViewTreesSynchronized
+{
+  return objc_getAssociatedObject(self, @selector(isViewTreesSynchronized));
+}
 @end
 
 @implementation REASwizzledUIManager
@@ -33,6 +44,7 @@
 {
   if (self = [super init]) {
     [uiManager setAnimationsManager:animationsManager];
+    [uiManager setIsViewTreesSynchronized:@(1)];
     [self swizzleMethods];
   }
   return self;
@@ -66,6 +78,12 @@
                   removeAtIndices:(NSArray<NSNumber *> *)removeAtIndices
                          registry:(NSMutableDictionary<NSNumber *, id<RCTComponent>> *)registry
 {
+  BOOL isUIViewRegistry = ((id)registry == (id)[self valueForKey:@"_viewRegistry"]);
+  if (!isUIViewRegistry) {
+    [self setIsViewTreesSynchronized:@(1)];
+  } else {
+    [self setIsViewTreesSynchronized:@(0)];
+  }
   bool isLayoutAnimationEnabled = reanimated::FeaturesConfig::isLayoutAnimationEnabled();
   id<RCTComponent> container;
   NSArray<id<RCTComponent>> *permanentlyRemovedChildren;
