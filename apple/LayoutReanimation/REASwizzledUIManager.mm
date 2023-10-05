@@ -38,7 +38,7 @@
 @end
 
 @implementation REASwizzledUIManager {
-  NSMutableDictionary<NSNumber *, UIView *> *_viewRegistry;
+  NSMutableDictionary<NSNumber *, REAUIView *> *_viewRegistry;
 }
 
 - (instancetype)initWithUIManager:(RCTUIManager *)uiManager
