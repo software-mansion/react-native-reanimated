@@ -19,6 +19,7 @@
 #include "ShadowTreeCloner.h"
 #endif
 
+#include "BackgroundQueue.h"
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
 #include "JSScheduler.h"
@@ -172,6 +173,14 @@ jsi::Value NativeReanimatedModule::createWorkletRuntime(
       rt, initializer, "[Reanimated] Initializer must be a worklet.");
   workletRuntime->runGuarded(initializerShareable);
   return jsi::Object::createFromHostObject(rt, workletRuntime);
+}
+
+jsi::Value NativeReanimatedModule::createBackgroundQueue(
+    jsi::Runtime &rt,
+    const jsi::Value &name) {
+  auto backgroundQueue =
+      std::make_shared<BackgroundQueue>(name.asString(rt).utf8(rt));
+  return jsi::Object::createFromHostObject(rt, backgroundQueue);
 }
 
 jsi::Value NativeReanimatedModule::makeSynchronizedDataHolder(

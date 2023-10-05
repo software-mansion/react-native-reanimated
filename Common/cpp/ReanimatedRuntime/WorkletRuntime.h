@@ -41,7 +41,7 @@ class WorkletRuntime : public jsi::HostObject {
   }
 
   std::string toString() const {
-    return "<WorkletRuntime \"" + name_ + "\">";
+    return "[WorkletRuntime \"" + name_ + "\"]";
   }
 
   jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override;

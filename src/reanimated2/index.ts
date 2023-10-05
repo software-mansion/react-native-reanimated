@@ -1,11 +1,14 @@
 'use strict';
+
 import './publicGlobals';
 
-export type { WorkletRuntime } from './core';
+export type { BackgroundQueue, WorkletRuntime } from './core';
 export {
   runOnJS,
   runOnUI,
+  createBackgroundQueue,
   createWorkletRuntime,
+  runOnBackgroundQueue,
   makeMutable,
   makeShareableCloneRecursive,
   isReanimated3,

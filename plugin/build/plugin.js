@@ -255,6 +255,7 @@ var require_globals = __commonJS({
       "_log",
       "_toString",
       "_scheduleOnJS",
+      "_scheduleOnBackgroundQueue",
       "_makeShareableClone",
       "_updateDataSynchronously",
       "_updatePropsPaper",

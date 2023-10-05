@@ -48,6 +48,9 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &name,
       const jsi::Value &initializer) = 0;
+  virtual jsi::Value createBackgroundQueue(
+      jsi::Runtime &rt,
+      const jsi::Value &name) = 0;
 
   // events
   virtual jsi::Value registerEventHandler(

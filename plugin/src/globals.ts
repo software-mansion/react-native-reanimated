@@ -118,6 +118,7 @@ export const defaultGlobals = new Set([
   '_log',
   '_toString',
   '_scheduleOnJS',
+  '_scheduleOnBackgroundQueue',
   '_makeShareableClone',
   '_updateDataSynchronously',
   '_updatePropsPaper',

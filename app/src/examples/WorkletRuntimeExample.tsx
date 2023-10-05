@@ -2,7 +2,9 @@ import React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
+  createBackgroundQueue,
   createWorkletRuntime,
+  runOnBackgroundQueue,
   runOnJS,
   runOnUI,
   useAnimatedStyle,
@@ -18,6 +20,7 @@ export default function WorkletRuntimeExample() {
       <CreateWorkletRuntimeDemo />
       <InitializerDemo />
       <ThrowErrorDemo />
+      <BackgroundQueueDemo />
     </View>
   );
 }
@@ -102,6 +105,22 @@ function ThrowErrorDemo() {
   };
 
   return <Button title="Throw error" onPress={handlePress} />;
+}
+
+function BackgroundQueueDemo() {
+  const handlePress = () => {
+    const runtime = createWorkletRuntime('foo');
+    const queue = createBackgroundQueue('bar');
+    runOnUI(() => {
+      'worklet';
+      runOnBackgroundQueue(queue, runtime, () => {
+        'worklet';
+        console.log('Hello from background!', Math.random());
+      });
+    })();
+  };
+
+  return <Button title="Background queue" onPress={handlePress} />;
 }
 
 const styles = StyleSheet.create({

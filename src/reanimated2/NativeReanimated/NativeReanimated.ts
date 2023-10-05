@@ -14,6 +14,7 @@ import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
 import type { WorkletRuntime } from '../runtimes';
 import { getValueUnpackerCode } from '../valueUnpacker';
+import type { BackgroundQueue } from '../background';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
@@ -31,6 +32,7 @@ export interface NativeReanimatedModule {
     name: string,
     initializer: ShareableRef<() => void>
   ): WorkletRuntime;
+  createBackgroundQueue(name: string): BackgroundQueue;
   registerEventHandler<T>(
     eventHandler: ShareableRef<T>,
     eventName: string,
@@ -125,6 +127,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {
     return this.InnerNativeModule.createWorkletRuntime(name, initializer);
+  }
+
+  createBackgroundQueue(name: string) {
+    return this.InnerNativeModule.createBackgroundQueue(name);
   }
 
   registerSensor(

@@ -46,6 +46,12 @@ global._scheduleOnJS = () => {
   );
 };
 
+global._scheduleOnBackgroundQueue = () => {
+  throw new Error(
+    '[Reanimated] _scheduleOnBackgroundQueue should never be called in JSReanimated.'
+  );
+};
+
 interface JSReanimatedComponent {
   previousStyle: StyleProps;
   setNativeProps?: (style: StyleProps) => void;

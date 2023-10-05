@@ -19,6 +19,8 @@ import type { LayoutAnimationsManager } from './layoutReanimation/animationsMana
 import type { ProgressTransitionRegister } from './layoutReanimation/sharedTransitions';
 import type { UpdatePropsManager } from './UpdateProps';
 import type { callGuardDEV } from './initializers';
+import type { BackgroundQueue } from './background';
+import type { WorkletRuntime } from './runtimes';
 
 declare global {
   var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
@@ -49,6 +51,11 @@ declare global {
   var _scheduleOnJS: (
     fun: __ComplexWorkletFunction<A, R>,
     args?: unknown[]
+  ) => void;
+  var _scheduleOnBackgroundQueue: (
+    queue: BackgroundQueue,
+    runtime: WorkletRuntime,
+    worklet: ShareableRef<() => void>
   ) => void;
   var _updatePropsPaper:
     | ((
