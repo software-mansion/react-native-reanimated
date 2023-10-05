@@ -37,7 +37,9 @@
 }
 @end
 
-@implementation REASwizzledUIManager
+@implementation REASwizzledUIManager {
+  NSMutableDictionary<NSNumber *, UIView *> *_viewRegistry;
+}
 
 - (instancetype)initWithUIManager:(RCTUIManager *)uiManager
              withAnimationManager:(REAAnimationsManager *)animationsManager
@@ -78,8 +80,11 @@
                   removeAtIndices:(NSArray<NSNumber *> *)removeAtIndices
                          registry:(NSMutableDictionary<NSNumber *, id<RCTComponent>> *)registry
 {
-  BOOL isUIViewRegistry = ((id)registry == (id)[self valueForKey:@"_viewRegistry"]);
+  BOOL isUIViewRegistry = (id)registry == (id)_viewRegistry;
   if (!isUIViewRegistry) {
+    // The `isViewTreesSynchronized` flag is necessary to prevent Reanimated from performing
+    // synchronous updates when there is inconsistency between the shadow tree and native tree.
+    // More details here: https://github.com/software-mansion/react-native-reanimated/pull/5187
     [self setIsViewTreesSynchronized:@(1)];
   } else {
     [self setIsViewTreesSynchronized:@(0)];
