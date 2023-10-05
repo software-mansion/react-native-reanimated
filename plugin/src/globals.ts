@@ -121,6 +121,7 @@ export const defaultGlobals = new Set([
   '_scheduleOnBackgroundQueue',
   '_makeShareableClone',
   '_updateDataSynchronously',
+  '_getDataSynchronously',
   '_updatePropsPaper',
   '_updatePropsFabric',
   '_removeFromPropsRegistry',

@@ -130,6 +130,13 @@ void WorkletRuntimeDecorator::decorate(
         return reanimated::updateDataSynchronously(
             rt, synchronizedDataHolderRef, newData);
       });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_getDataSynchronously",
+      [](jsi::Runtime &rt, const jsi::Value &synchronizedDataHolderRef) {
+        return reanimated::getDataSynchronously(rt, synchronizedDataHolderRef);
+      });
 }
 
 } // namespace reanimated

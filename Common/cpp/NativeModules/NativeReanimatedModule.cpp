@@ -201,9 +201,7 @@ void NativeReanimatedModule::updateDataSynchronously(
 jsi::Value NativeReanimatedModule::getDataSynchronously(
     jsi::Runtime &rt,
     const jsi::Value &synchronizedDataHolderRef) {
-  auto dataHolder = extractShareableOrThrow<ShareableSynchronizedDataHolder>(
-      rt, synchronizedDataHolderRef);
-  return dataHolder->get(rt);
+  return reanimated::getDataSynchronously(rt, synchronizedDataHolderRef);
 }
 
 jsi::Value NativeReanimatedModule::makeShareableClone(

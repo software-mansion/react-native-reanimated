@@ -66,11 +66,12 @@ jsi::Value makeShareableClone(
         shareable = std::make_shared<ShareableArray>(rt, object.asArray(rt));
       }
     } else if (object.isHostObject(rt)) {
-      assert(
-          !object.isHostObject<ShareableJSRef>(rt) &&
-          "[Reanimated] Provided value is already an instance of ShareableJSRef.");
-      shareable =
-          std::make_shared<ShareableHostObject>(rt, object.getHostObject(rt));
+      if (object.isHostObject<ShareableJSRef>(rt)) {
+        shareable = object.getHostObject<ShareableJSRef>(rt)->value();
+      } else {
+        shareable =
+            std::make_shared<ShareableHostObject>(rt, object.getHostObject(rt));
+      }
     } else {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         shareable =
@@ -110,6 +111,14 @@ void updateDataSynchronously(
   auto dataHolder = extractShareableOrThrow<ShareableSynchronizedDataHolder>(
       rt, synchronizedDataHolderRef);
   dataHolder->set(rt, newData);
+}
+
+jsi::Value getDataSynchronously(
+    jsi::Runtime &rt,
+    const jsi::Value &synchronizedDataHolderRef) {
+  auto dataHolder = extractShareableOrThrow<ShareableSynchronizedDataHolder>(
+      rt, synchronizedDataHolderRef);
+  return dataHolder->get(rt);
 }
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
