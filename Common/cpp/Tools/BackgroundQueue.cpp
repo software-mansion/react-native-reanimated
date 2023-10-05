@@ -6,7 +6,6 @@ namespace reanimated {
 
 BackgroundQueue::BackgroundQueue(const std::string &name) : name_(name) {
   thread_ = std::thread([this] { runLoop(); });
-  // TODO: pthread_setname_np(thread_.native_handle(), name.c_str());
 }
 
 BackgroundQueue::~BackgroundQueue() {
@@ -52,6 +51,7 @@ void BackgroundQueue::push(
 }
 
 void BackgroundQueue::runLoop() {
+  pthread_setname_np(name_.c_str());
   while (running_) {
     std::unique_lock<std::mutex> lock(mutex_);
     cv_.wait(lock, [this] { return !queue_.empty() || !running_; });
