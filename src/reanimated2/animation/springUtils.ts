@@ -122,7 +122,7 @@ function bisectRoot({
 
 export function initialCalculations(
   mass = 0,
-  config: Record<keyof SpringConfig, any> & SpringConfigInner
+  config: DefaultSpringConfig & SpringConfigInner
 ): {
   zeta: number;
   omega0: number;
@@ -157,7 +157,7 @@ export function initialCalculations(
 
 export function calculateNewMassToMatchDuration(
   x0: number,
-  config: Record<keyof SpringConfig, any> & SpringConfigInner,
+  config: DefaultSpringConfig & SpringConfigInner,
   v0: number
 ) {
   'worklet';
