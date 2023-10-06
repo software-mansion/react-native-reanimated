@@ -110,7 +110,7 @@ export function subscribeForKeyboardEvents(
   // via registerEventHandler. For now we are copying the code from there.
   function handleAndFlushAnimationFrame(state: number, height: number) {
     'worklet';
-    const now = performance.now();
+    const now = _getCurrentTime();
     global.__frameTimestamp = now;
     eventHandler(state, height);
     global.__flushAnimationFrame(now);
