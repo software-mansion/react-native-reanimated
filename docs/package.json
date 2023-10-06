@@ -29,8 +29,6 @@
     "@emotion/styled": "^11.10.6",
     "@mdx-js/react": "^1.6.22",
     "@mui/material": "^5.12.0",
-    "@react-three/fiber": "^7.0.29",
-    "@types/three": "^0.156.0",
     "babel-polyfill": "^6.26.0",
     "babel-preset-expo": "^9.2.2",
     "babel-preset-react-native": "^4.0.1",
@@ -48,7 +46,6 @@
     "react-native-web": "^0.18.12",
     "source-map": "^0.7.4",
     "source-map-loader": "^4.0.1",
-    "three": "^0.157.0",
     "usehooks-ts": "^2.9.1"
   },
   "devDependencies": {

@@ -38,30 +38,9 @@ export default function useAnimatedSensorPlayground() {
 
   const controls = (
     <>
-      <Range
-        label="X"
-        min={0}
-        max={2 * Math.PI}
-        step={0.01}
-        value={x}
-        onChange={setX}
-      />
-      <Range
-        label="Y"
-        min={0}
-        max={2 * Math.PI}
-        step={0.01}
-        value={y}
-        onChange={setY}
-      />
-      <Range
-        label="Z"
-        min={0}
-        max={2 * Math.PI}
-        step={0.01}
-        value={z}
-        onChange={setZ}
-      />
+      <Range label="X" min={0} max={360} step={1} value={x} onChange={setX} />
+      <Range label="Y" min={0} max={360} step={1} value={y} onChange={setY} />
+      <Range label="Z" min={0} max={360} step={1} value={z} onChange={setZ} />
     </>
   );
 
