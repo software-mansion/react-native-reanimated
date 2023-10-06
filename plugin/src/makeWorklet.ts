@@ -97,6 +97,7 @@ export function makeWorklet(
   assert(transformed, '[Reanimated] `transformed` is undefined.');
   assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
+  // const variables = makeArrayFromCapturedBindings(fun);
   const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
 
   const functionName = makeWorkletName(fun);
@@ -319,6 +320,7 @@ function makeArrayFromCapturedBindings(
   fun: NodePath<WorkletizableFunction>
 ) {
   const closure = new Map<string, Identifier>();
+  const isLocationSet = new Map<string, boolean>();
 
   // this traversal looks for variables to capture
   traverse(ast, {
@@ -368,6 +370,25 @@ function makeArrayFromCapturedBindings(
         currentScope = currentScope.parent;
       }
       closure.set(name, path.node);
+      isLocationSet.set(name, false);
+    },
+  });
+
+  /*
+  For reasons I don't exactly understand, the above traversal will
+  crash the whole bundle if we traversed original node instead of generated
+  AST. This is why we need to traverse it again, but this time we set
+  location for each identifier that was captured to their original counterparts, since
+  AST has its location set relative as if it was a separate file.
+  */
+  fun.traverse({
+    Identifier(path) {
+      const node = closure.get(path.node.name);
+      if (!node || isLocationSet.get(path.node.name)) {
+        return;
+      }
+      node.loc = path.node.loc;
+      isLocationSet.set(path.node.name, true);
     },
   });
 
