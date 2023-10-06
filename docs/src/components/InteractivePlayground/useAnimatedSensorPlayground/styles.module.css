@@ -29,6 +29,8 @@
   width: 100px;
   height: 200px;
   transform: rotateY(0deg) translateZ(5px);
+  background-image: url('/img/phone_texture.png');
+  background-size: 98px 198px;
 }
 .back {
   width: 100px;
