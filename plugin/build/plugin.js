@@ -269,7 +269,7 @@ var require_globals = __commonJS({
       "_notifyAboutProgress",
       "_notifyAboutEnd",
       "_runOnUIQueue",
-      "_getCurrentTime"
+      "_getAnimationTimestamp"
     ]);
     function initializeGlobals() {
       exports2.globals = new Set(exports2.defaultGlobals);
