@@ -11,7 +11,7 @@ struct UIManagerPublic {
   UIManagerAnimationDelegate *animationDelegate_{nullptr};
   RuntimeExecutor const runtimeExecutor_{};
   ShadowTreeRegistry shadowTreeRegistry_{};
-  BackgroundQueue const backgroundExecutor_{};
+  BackgroundExecutor const backgroundExecutor_{};
   ContextContainer::Shared contextContainer_;
 };
 
