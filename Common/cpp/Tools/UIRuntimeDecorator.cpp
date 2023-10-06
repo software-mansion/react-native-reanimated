@@ -49,7 +49,7 @@ void UIRuntimeDecorator::decorate(
   jsi_utils::installJsiFunction(
       uiRuntime, "requestAnimationFrame", requestAnimationFrame);
   jsi_utils::installJsiFunction(
-    uiRuntime, "_getAnimationTimestamp", getAnimationTimestamp);
+      uiRuntime, "_getAnimationTimestamp", getAnimationTimestamp);
 
   jsi_utils::installJsiFunction(
       uiRuntime, "_notifyAboutProgress", progressLayoutAnimation);

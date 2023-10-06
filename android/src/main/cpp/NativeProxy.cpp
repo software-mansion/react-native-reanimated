@@ -55,7 +55,8 @@ NativeProxy::NativeProxy(
   nativeReanimatedModule_->initializeFabric(uiManager);
   // removed temporarily, event listener mechanism needs to be fixed on RN side
   // eventListener_ = std::make_shared<EventListener>(
-  //     [nativeReanimatedModule, getAnimationTimestamp](const RawEvent &rawEvent) {
+  //     [nativeReanimatedModule,
+  //      getAnimationTimestamp](const RawEvent &rawEvent) {
   //       return nativeReanimatedModule->handleRawEvent(
   //           rawEvent, getAnimationTimestamp());
   //     });
@@ -416,7 +417,7 @@ void NativeProxy::handleEvent(
   }
 
   nativeReanimatedModule_->handleEvent(
-      eventName->toString(), emitterReactTag, payload, this->getAnimationTimestamp());
+      eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
 }
 
 void NativeProxy::progressLayoutAnimation(
