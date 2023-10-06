@@ -30,7 +30,8 @@ export type SpringConfig = {
     }
 );
 
-// This type contains all the properties from SpringConfig, which are changed to be required, except for optional 'reduceMotion'
+// This type contains all the properties from SpringConfig, which are changed to be required,
+// except for optional 'reduceMotion' and 'clamp'
 export type DefaultSpringConfig = {
   [K in keyof Required<SpringConfig>]: K extends 'reduceMotion' | 'clamp'
     ? Required<SpringConfig>[K] | undefined
@@ -64,7 +65,7 @@ export interface InnerSpringAnimation
 export function validateConfig(config: DefaultSpringConfig): boolean {
   'worklet';
   let errorLog = '[Reanimated] Invalid spring config, ';
-  let invalidConfig = false;
+  let configIsInvalid = false;
 
   (
     [
@@ -77,26 +78,26 @@ export function validateConfig(config: DefaultSpringConfig): boolean {
     ] as const
   ).forEach((property) => {
     if (config[property] <= 0) {
-      invalidConfig = true;
+      configIsInvalid = true;
       errorLog += `${property} must be grater than zero but got ${config[property]}, `;
     }
   });
 
   if (config.duration < 0) {
-    invalidConfig = true;
+    configIsInvalid = true;
     errorLog += `duration can't be negative, got ${config.duration}, `;
   }
 
   if (config.clamp && config.clamp[0] > config.clamp[1]) {
-    invalidConfig = true;
+    configIsInvalid = true;
     errorLog += `clamp should have format [number1, number2], where number1 is smaller than number2, got [${config.clamp[0]}, ${config.clamp[1]}]`;
   }
 
-  if (invalidConfig) {
+  if (configIsInvalid) {
     console.warn(errorLog);
   }
 
-  return invalidConfig;
+  return configIsInvalid;
 }
 
 function bisectRoot({
