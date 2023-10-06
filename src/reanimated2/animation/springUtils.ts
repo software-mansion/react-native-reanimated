@@ -61,7 +61,6 @@ export interface InnerSpringAnimation
   toValue: number;
   current: number;
 }
-
 export function validateConfig(config: DefaultSpringConfig): boolean {
   'worklet';
   let errorLog = '[Reanimated] Invalid spring config, ';

@@ -82,7 +82,7 @@ export const withSpring = ((
       }
 
       if (config.skipAnimation) {
-        // We don't animate wrong config
+        // If we use duration we want to wait the provided time before stopping
         if (config.useDuration) return false;
         else {
           animation.current = toValue;
