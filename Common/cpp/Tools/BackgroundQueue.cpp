@@ -5,7 +5,15 @@
 namespace reanimated {
 
 BackgroundQueue::BackgroundQueue(const std::string &name) : name_(name) {
-  thread_ = std::thread([this] { runLoop(); });
+  thread_ = std::thread([this] {
+#if __APPLE__
+    pthread_setname_np(name_.c_str());
+#endif
+    runLoop();
+  });
+#ifdef ANDROID
+  pthread_setname_np(thread_.native_handle(), name_.c_str());
+#endif
 }
 
 BackgroundQueue::~BackgroundQueue() {
@@ -51,7 +59,6 @@ void BackgroundQueue::push(
 }
 
 void BackgroundQueue::runLoop() {
-  pthread_setname_np(name_.c_str());
   while (running_) {
     std::unique_lock<std::mutex> lock(mutex_);
     cv_.wait(lock, [this] { return !queue_.empty() || !running_; });
@@ -65,6 +72,12 @@ void BackgroundQueue::runLoop() {
       workletRuntime->runGuarded(shareableWorklet);
     }
   }
+}
+
+std::shared_ptr<BackgroundQueue> extractBackgroundQueue(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  return value.getObject(rt).getHostObject<BackgroundQueue>(rt);
 }
 
 } // namespace reanimated

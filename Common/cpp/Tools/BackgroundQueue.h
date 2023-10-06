@@ -52,8 +52,6 @@ class BackgroundQueue : public jsi::HostObject {
 
 std::shared_ptr<BackgroundQueue> extractBackgroundQueue(
     jsi::Runtime &rt,
-    const jsi::Value &value) {
-  return value.getObject(rt).getHostObject<BackgroundQueue>(rt);
-}
+    const jsi::Value &value);
 
 } // namespace reanimated
