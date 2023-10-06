@@ -48,7 +48,7 @@ export const isConfigured = isReanimated3;
 if (shouldBeUseWeb()) {
   global._WORKLET = false;
   global._log = console.log;
-  global._getAnimationTimestamp = performance.now.bind(performance);
+  global._getAnimationTimestamp = () => performance.now();
 }
 
 export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
