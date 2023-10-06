@@ -19,18 +19,20 @@ export type SpringConfig = {
       damping?: number;
       duration?: never;
       dampingRatio?: never;
+      clamp?: never;
     }
   | {
       mass?: never;
       damping?: never;
       duration?: number;
       dampingRatio?: number;
+      clamp?: [number, number];
     }
 );
 
 // This type contains all the properties from SpringConfig, which are changed to be required, except for optional 'reduceMotion'
 export type DefaultSpringConfig = {
-  [K in keyof Required<SpringConfig>]: K extends 'reduceMotion'
+  [K in keyof Required<SpringConfig>]: K extends 'reduceMotion' | 'clamp'
     ? Required<SpringConfig>[K] | undefined
     : Required<SpringConfig>[K];
 };
@@ -76,13 +78,18 @@ export function validateConfig(config: DefaultSpringConfig): boolean {
   ).forEach((property) => {
     if (config[property] <= 0) {
       invalidConfig = true;
-      errorLog += `${property} must be grater than zero, `;
+      errorLog += `${property} must be grater than zero but got ${config[property]}, `;
     }
   });
 
   if (config.duration < 0) {
     invalidConfig = true;
-    errorLog += "duration can't be negative";
+    errorLog += `duration can't be negative, got ${config.duration}, `;
+  }
+
+  if (config.clamp && config.clamp[0] > config.clamp[1]) {
+    invalidConfig = true;
+    errorLog += `clamp should have format [number1, number2], where number1 is smaller than number2, got [${config.clamp[0]}, ${config.clamp[1]}]`;
   }
 
   if (invalidConfig) {
@@ -153,6 +160,57 @@ export function initialCalculations(
 
     return { zeta, omega0, omega1 };
   }
+}
+
+/** We make an assumption that we can manipulate zeta without changing duration of movement.
+ *  According to theory this change is small and tests shows that we can indeed ignore it.
+ */
+export function scaleZetaToMatchClamps(
+  animation: SpringAnimation,
+  clamp: [number, number]
+) {
+  'worklet';
+  const { zeta, toValue, startValue } = animation;
+  if (Number(toValue) === startValue) {
+    return zeta;
+  }
+
+  const signum = Number(toValue) - startValue < 0 ? -1 : +1;
+  const firstClamp = signum === +1 ? clamp[1] : clamp[0];
+  const secondClamp = signum === +1 ? clamp[0] : clamp[1];
+
+  /** The extrema we get from equation below are relative (we obtain a ratio),
+   *  To get absolute extrema we convert it as follows:
+   *
+   *  AbsoluteExtremum = startValue ± RelativeExtremum * (toValue - startValue)
+   *  Where ± denotes:
+   *    + if extremum is over the target and signum = +1
+   *    - overwise
+   */
+
+  const relativeExtremum1 = Math.abs(
+    (firstClamp - Number(toValue)) / (Number(toValue) - startValue)
+  );
+
+  const relativeExtremum2 = Math.abs(
+    (secondClamp - Number(toValue)) / (Number(toValue) - startValue)
+  );
+
+  /** Use this formula http://hyperphysics.phy-astr.gsu.edu/hbase/oscda.html to calculate
+   *  first two extrema. These extrema are located where cos = +- 1
+   *
+   *  Therefore the first two extrema are:
+   *
+   *     Math.exp(-zeta * Math.PI);      (over the target)
+   *     Math.exp(-zeta * 2 * Math.PI);  (before the target)
+   */
+
+  const newZeta1 = Math.abs(Math.log(relativeExtremum1) / Math.PI);
+  const newZeta2 = Math.abs(Math.log(relativeExtremum2) / (2 * Math.PI));
+
+  // The bigger is zeta the smaller are bounces, we return the biggest one
+  // because it should satisfy all conditions
+  return Math.max(Math.max(newZeta1, newZeta2), zeta);
 }
 
 export function calculateNewMassToMatchDuration(

@@ -20,6 +20,7 @@ import {
   criticallyDampedSpringCalculations,
   isAnimationTerminatingCalculation,
   validateConfig,
+  scaleZetaToMatchClamps,
 } from './springUtils';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
@@ -49,6 +50,7 @@ export const withSpring = ((
       duration: 2000,
       dampingRatio: 0.5,
       reduceMotion: undefined,
+      clamp: undefined,
     } as const;
 
     const config: DefaultSpringConfig & SpringConfigInner = {
@@ -204,6 +206,10 @@ export const withSpring = ((
         animation.zeta = zeta;
         animation.omega0 = omega0;
         animation.omega1 = omega1;
+
+        if (config.useDuration && config.clamp !== undefined) {
+          animation.zeta = scaleZetaToMatchClamps(animation, config.clamp);
+        }
       }
 
       animation.lastTimestamp = previousAnimation?.lastTimestamp || now;
