@@ -97,7 +97,6 @@ export function makeWorklet(
   assert(transformed, '[Reanimated] `transformed` is undefined.');
   assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
-  // const variables = makeArrayFromCapturedBindings(fun);
   const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
 
   const functionName = makeWorkletName(fun);
