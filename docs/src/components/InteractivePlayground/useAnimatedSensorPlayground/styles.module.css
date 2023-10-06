@@ -15,7 +15,7 @@
   height: 100%;
   position: relative;
   top: 40px;
-  left: 40px;
+  left: 100px;
   transform-style: preserve-3d;
   transform-origin: 50px 100px;
 }
