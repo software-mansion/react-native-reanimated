@@ -48,24 +48,8 @@ void UIRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       uiRuntime, "requestAnimationFrame", requestAnimationFrame);
-
-  auto performanceNow = [getCurrentTime](
-                            jsi::Runtime &,
-                            const jsi::Value &,
-                            const jsi::Value *,
-                            size_t) -> jsi::Value {
-    return jsi::Value(getCurrentTime());
-  };
-  jsi::Object performance(uiRuntime);
-  performance.setProperty(
-      uiRuntime,
-      "now",
-      jsi::Function::createFromHostFunction(
-          uiRuntime,
-          jsi::PropNameID::forAscii(uiRuntime, "now"),
-          0,
-          performanceNow));
-  uiRuntime.global().setProperty(uiRuntime, "performance", performance);
+  jsi_utils::installJsiFunction(
+    uiRuntime, "_getCurrentTime", getCurrentTime);
 
   jsi_utils::installJsiFunction(
       uiRuntime, "_notifyAboutProgress", progressLayoutAnimation);

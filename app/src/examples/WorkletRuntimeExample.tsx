@@ -112,6 +112,11 @@ function PerformanceNowDemo() {
       'worklet';
       console.log('WR', performance.now());
     });
+    runOnUI(() => {
+      console.log('UI', performance.now());
+      // @ts-ignore it works
+      console.log('AT', _getCurrentTime());
+    })();
   };
 
   return <Button title="performance.now" onPress={handlePress} />;

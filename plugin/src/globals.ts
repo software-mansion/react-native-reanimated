@@ -132,6 +132,7 @@ export const defaultGlobals = new Set([
   '_notifyAboutProgress',
   '_notifyAboutEnd',
   '_runOnUIQueue',
+  '_getCurrentTime',
 ]);
 
 export let globals: Set<string>;
