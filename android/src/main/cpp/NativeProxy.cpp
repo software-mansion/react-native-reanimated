@@ -370,6 +370,10 @@ void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
 }
 
 double NativeProxy::getCurrentTime() {
+  if (javaPart_.get() == nullptr) {
+      // This can happen when NativeProxy is destroyed
+      return 0;
+  }
   static const auto method = getJniMethod<jlong()>("getCurrentTime");
   jlong output = method(javaPart_.get());
   return static_cast<double>(output);
