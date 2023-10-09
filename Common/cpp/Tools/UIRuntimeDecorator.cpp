@@ -14,7 +14,6 @@ void UIRuntimeDecorator::decorate(
     const MeasureFunction measure,
     const DispatchCommandFunction dispatchCommand,
     const RequestAnimationFrameFunction requestAnimationFrame,
-    const UpdateDataSynchronouslyFunction updateDataSynchronously,
     const TimeProviderFunction getCurrentTime,
     const SetGestureStateFunction setGestureState,
     const ProgressLayoutAnimationFunction progressLayoutAnimation,
@@ -49,8 +48,6 @@ void UIRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       uiRuntime, "requestAnimationFrame", requestAnimationFrame);
-  jsi_utils::installJsiFunction(
-      uiRuntime, "_updateDataSynchronously", updateDataSynchronously);
 
   auto performanceNow = [getCurrentTime](
                             jsi::Runtime &,
