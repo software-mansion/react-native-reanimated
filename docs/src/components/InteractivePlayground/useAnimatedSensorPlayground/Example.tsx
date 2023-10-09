@@ -1,11 +1,13 @@
 import React from 'react';
 import styles from './styles.module.css';
 
-interface Props {
-  options: any;
+interface Degree {
+  x: number;
+  y: number;
+  z: number;
 }
 
-function Phone(props) {
+function Phone(props: Degree) {
   const { x, y, z } = props;
 
   return (
@@ -28,6 +30,10 @@ function Phone(props) {
   );
 }
 
-export default function App({ options }: Props) {
-  return <Phone {...options} />;
+interface Props {
+  values: Degree;
+}
+
+export default function App({ values }: Props) {
+  return <Phone {...values} />;
 }

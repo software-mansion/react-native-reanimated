@@ -1,21 +1,29 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Example from './Example';
 
-import { Range, SelectOption, formatReduceMotion } from '..';
+import { Range, SelectOption } from '..';
 
-import { ReduceMotion } from 'react-native-reanimated';
-import useScreenSize from '@site/src/hooks/useScreenSize';
-import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
-import { SensorType, ValueRotation } from 'react-native-reanimated';
+import { ValueRotation } from 'react-native-reanimated';
 import * as THREE from 'three';
 
-const g_0 = 9.80665;
+const g_0 = 9.80665; // m/s^2
+const INTERVAL = 500; // ms
 
 const initialState = {
   x: 0,
   y: 0,
   z: 0,
   sensorType: 'GRAVITY',
+  measurement: {
+    current: null,
+    previous: null,
+    currentX: null,
+    previousX: null,
+    currentY: null,
+    previousY: null,
+    currentZ: null,
+    previousZ: null,
+  },
 };
 
 function degreeToRadian(x: number, y: number, z: number) {
@@ -32,9 +40,7 @@ function getGravityRotationVector(x: number, y: number, z: number) {
   const rotationMatrix = new THREE.Matrix4().makeRotationFromEuler(euler);
   const gravityVector = new THREE.Vector3(0, -g_0, 0);
 
-  const rotationVector = gravityVector.applyMatrix4(rotationMatrix);
-
-  return rotationVector;
+  return gravityVector.applyMatrix4(rotationMatrix);
 }
 
 function formatGravityCode(rotationVector: THREE.Vector3) {
@@ -84,7 +90,6 @@ function formatRotationCode({
     "pitch": ${(-pitch).toFixed(2)},
     "roll": ${roll.toFixed(2)},
     "yaw": ${yaw.toFixed(2)},
-
     "qw": ${qw.toFixed(2)},
     "qx": ${qx.toFixed(2)},
     "qy": ${qy.toFixed(2)},
@@ -93,10 +98,25 @@ function formatRotationCode({
   `;
 }
 
-function getGyroscope(x: number, y: number, z: number, dt: number) {
-  const { radX, radY, radZ } = degreeToRadian(x, y, z);
+function getGyroscope(dx: number, dy: number, dz: number, dt: number) {
+  const { radX, radY, radZ } = degreeToRadian(dx, dy, dz);
 
-  console.log(radY / dt);
+  return {
+    x: (1000 * radX) / dt,
+    y: (1000 * radY) / dt,
+    z: (1000 * radZ) / dt,
+  };
+}
+
+function formatGyroscopeCode({ x, y, z }: { x: number; y: number; z: number }) {
+  return `
+  { 
+    "interfaceOrientation": 0,
+    "x": ${x.toFixed(2)},
+    "y": ${y.toFixed(2)},
+    "z": ${z.toFixed(2)}
+  }
+  `;
 }
 
 export default function useAnimatedSensorPlayground() {
@@ -104,12 +124,38 @@ export default function useAnimatedSensorPlayground() {
   const [y, setY] = useState(initialState.y);
   const [z, setZ] = useState(initialState.z);
   const [sensorType, setSensorType] = useState(initialState.sensorType);
+  const [measurement, setMeasurement] = useState(initialState.measurement);
 
   const resetOptions = () => {
     setX(initialState.x);
     setY(initialState.y);
     setZ(initialState.z);
+    setMeasurement(initialState.measurement);
   };
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+
+    const loop = () => {
+      const now = performance.now();
+      setMeasurement((prev) => ({
+        current: now,
+        previous: prev.current,
+        currentX: x,
+        previousX: prev.currentX,
+        currentY: y,
+        previousY: prev.currentY,
+        currentZ: z,
+        previousZ: prev.currentZ,
+      }));
+      timer = setTimeout(loop, INTERVAL);
+    };
+    loop();
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [x, y, z]);
 
   const controls = (
     <>
@@ -124,6 +170,7 @@ export default function useAnimatedSensorPlayground() {
           'MAGNETIC_FIELD',
           'ROTATION',
         ]}
+        disabledOptions={['ACCELEROMETER', 'MAGNETIC_FIELD']}
       />
       <Range
         label="X"
@@ -152,22 +199,27 @@ export default function useAnimatedSensorPlayground() {
     </>
   );
 
-  const example = <Example options={{ x, y, z }} />;
-
   const gravityCode = formatGravityCode(getGravityRotationVector(x, y, z));
   const rotationCode = formatRotationCode(getRotation(x, y, z));
+  const gyroscopeCode = formatGyroscopeCode(
+    getGyroscope(
+      measurement.currentX - measurement.previousX,
+      measurement.currentY - measurement.previousY,
+      measurement.currentZ - measurement.previousZ,
+      measurement.current - measurement.previous
+    )
+  );
 
-  const formatCode = (sensorType: string) => {
-    if (sensorType === 'GRAVITY') {
-      return gravityCode;
-    }
-    if (sensorType === 'ROTATION') {
-      return rotationCode;
-    }
-  };
+  const code = {
+    GRAVITY: gravityCode,
+    ROTATION: rotationCode,
+    GYROSCOPE: gyroscopeCode,
+  }[sensorType];
+
+  const example = useMemo(() => <Example values={{ x, y, z }} />, [x, y, z]);
 
   return {
-    code: formatCode(sensorType),
+    code,
     controls,
     example,
     resetOptions,

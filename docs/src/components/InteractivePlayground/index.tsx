@@ -197,6 +197,7 @@ interface SelectProps {
   label: string;
   options: string[];
   disabled?: boolean;
+  disabledOptions?: string[];
 }
 
 const SelectStyling = {
@@ -215,6 +216,7 @@ export function SelectOption({
   label,
   options,
   disabled,
+  disabledOptions,
 }: SelectProps) {
   return (
     <div className={styles.row}>
@@ -229,6 +231,7 @@ export function SelectOption({
             <MenuItem
               key={option}
               value={option}
+              disabled={disabledOptions?.includes(option)}
               sx={{ color: 'text.secondary' }}>
               {option}
             </MenuItem>
