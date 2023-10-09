@@ -91,12 +91,10 @@ export type {
   EasingFactoryFn,
 } from './Easing';
 export { Easing } from './Easing';
-export {
-  measure,
-  dispatchCommand,
-  scrollTo,
-  setGestureState,
-} from './NativeMethods';
+export { measure } from './measure';
+export { dispatchCommand } from './dispatchCommand';
+export { scrollTo } from './scrollTo';
+export { setGestureState } from './setGestureState';
 export { setNativeProps } from './SetNativeProps';
 export type { ParsedColorArray } from './Colors';
 export { isColor, processColor, convertToRGBA } from './Colors';
