@@ -103,6 +103,16 @@ void WorkletRuntimeDecorator::decorate(
           }
         });
       });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_updateDataSynchronously",
+      [](jsi::Runtime &rt,
+         const jsi::Value &synchronizedDataHolderRef,
+         const jsi::Value &newData) {
+        return reanimated::updateDataSynchronously(
+            rt, synchronizedDataHolderRef, newData);
+      });
 }
 
 } // namespace reanimated
