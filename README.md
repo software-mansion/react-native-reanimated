@@ -19,6 +19,7 @@ comes to gesture based interactions.
 [![Check TypeScript nightly build](https://github.com/software-mansion/react-native-reanimated/actions/workflows/check-TS-react-native.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/check-TS-react-native.yml)
 [![Test V8 on Android nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-v8-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-v8-nightly.yml)
 [![Test build on Windows nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-on-windows-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-on-windows-nightly.yml)
+[![Validate urls in source code](https://github.com/software-mansion/react-native-reanimated/actions/workflows/detect-broken-urls-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/detect-broken-urls-nightly.yml)
 
 ## Installation
 

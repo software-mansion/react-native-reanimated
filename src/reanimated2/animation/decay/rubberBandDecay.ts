@@ -1,25 +1,26 @@
 'use strict';
+import type { RubberBandDecayConfig, InnerDecayAnimation } from './utils';
 import { SLOPE_FACTOR, VELOCITY_EPS } from './utils';
-import type { DefaultDecayConfig, InnerDecayAnimation } from './utils';
 
 const DERIVATIVE_EPS = 0.1;
 
-export const rubberBandDecay = (
+export function rubberBandDecay(
   animation: InnerDecayAnimation,
   now: number,
-  config: DefaultDecayConfig
-): boolean => {
+  config: RubberBandDecayConfig
+): boolean {
+  'worklet';
   const { lastTimestamp, startTimestamp, current, velocity } = animation;
 
   const deltaTime = Math.min(now - lastTimestamp, 64);
   const clampIndex =
-    Math.abs(current - config.clamp![0]) < Math.abs(current - config.clamp![1])
+    Math.abs(current - config.clamp[0]) < Math.abs(current - config.clamp[1])
       ? 0
       : 1;
 
   let derivative = 0;
-  if (current < config.clamp![0] || current > config.clamp![1]) {
-    derivative = current - config.clamp![clampIndex];
+  if (current < config.clamp[0] || current > config.clamp[1]) {
+    derivative = current - config.clamp[clampIndex];
   }
 
   const v =
@@ -32,7 +33,7 @@ export const rubberBandDecay = (
   if (Math.abs(derivative) > DERIVATIVE_EPS) {
     animation.springActive = true;
   } else if (animation.springActive) {
-    animation.current = config.clamp![clampIndex];
+    animation.current = config.clamp[clampIndex];
     return true;
   } else if (Math.abs(v) < VELOCITY_EPS) {
     return true;
@@ -42,4 +43,4 @@ export const rubberBandDecay = (
   animation.velocity = v;
   animation.lastTimestamp = now;
   return false;
-};
+}

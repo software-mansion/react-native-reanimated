@@ -1,57 +1,51 @@
 'use strict';
-import type { RefObject } from 'react';
-import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import type {
-  __Context,
-  __NativeEvent,
-  __WorkletFunction,
-} from '../commonTypes';
-import type WorkletEventHandler from '../WorkletEventHandler';
-import type { DependencyList } from './commonTypes';
-import { useEvent } from './useEvent';
+  DependencyList,
+  RNNativeScrollEvent,
+  ReanimatedScrollEvent,
+} from './commonTypes';
 import { useHandler } from './useHandler';
+import type { EventHandlerInternal, EventHandlerProcessed } from './useEvent';
+import { useEvent } from './useEvent';
 
-export interface ScrollHandler<TContext extends __Context>
-  extends __WorkletFunction {
-  (event: NativeScrollEvent, context?: TContext): void;
+export type ScrollHandler<
+  Context extends Record<string, unknown> = Record<string, unknown>
+> = (event: ReanimatedScrollEvent, context: Context) => void;
+export interface ScrollHandlers<Context extends Record<string, unknown>> {
+  onScroll?: ScrollHandler<Context>;
+  onBeginDrag?: ScrollHandler<Context>;
+  onEndDrag?: ScrollHandler<Context>;
+  onMomentumBegin?: ScrollHandler<Context>;
+  onMomentumEnd?: ScrollHandler<Context>;
 }
 
-export interface ScrollEvent
-  extends NativeScrollEvent,
-    __NativeEvent<ScrollEvent> {
-  eventName: string;
-}
-export interface ScrollHandlers<TContext extends __Context> {
-  [key: string]: ScrollHandler<TContext> | undefined;
-  onScroll?: ScrollHandler<TContext>;
-  onBeginDrag?: ScrollHandler<TContext>;
-  onEndDrag?: ScrollHandler<TContext>;
-  onMomentumBegin?: ScrollHandler<TContext>;
-  onMomentumEnd?: ScrollHandler<TContext>;
-}
+export type ScrollHandlerProcessed<
+  Context extends Record<string, unknown> = Record<string, unknown>
+> = EventHandlerProcessed<RNNativeScrollEvent, Context>;
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type OnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+export type ScrollHandlerInternal = EventHandlerInternal<RNNativeScrollEvent>;
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type useAnimatedScrollHandlerType = <
-  TContext extends __Context = Record<string, never>
+// @ts-expect-error This overload is required by our API.
+export function useAnimatedScrollHandler<
+  Context extends Record<string, unknown>
 >(
-  handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
-  deps?: DependencyList
-) => OnScroll;
-
-export const useAnimatedScrollHandler = function <TContext extends __Context>(
-  handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
+  handlers: ScrollHandler<Context> | ScrollHandlers<Context>,
   dependencies?: DependencyList
-): RefObject<WorkletEventHandler<ScrollEvent>> {
+): ScrollHandlerProcessed<Context>;
+
+export function useAnimatedScrollHandler<
+  Context extends Record<string, unknown>
+>(
+  handlers: ScrollHandlers<Context> | ScrollHandler<Context>,
+  dependencies?: DependencyList
+) {
   // case when handlers is a function
-  const scrollHandlers: ScrollHandlers<TContext> =
+  const scrollHandlers: ScrollHandlers<Context> =
     typeof handlers === 'function' ? { onScroll: handlers } : handlers;
-  const { context, doDependenciesDiffer } = useHandler<ScrollEvent, TContext>(
-    scrollHandlers,
-    dependencies
-  );
+  const { context, doDependenciesDiffer } = useHandler<
+    RNNativeScrollEvent,
+    Context
+  >(scrollHandlers as Record<string, ScrollHandler<Context>>, dependencies);
 
   // build event subscription array
   const subscribeForEvents = ['onScroll'];
@@ -68,8 +62,8 @@ export const useAnimatedScrollHandler = function <TContext extends __Context>(
     subscribeForEvents.push('onMomentumScrollEnd');
   }
 
-  return useEvent<ScrollEvent>(
-    (event: ScrollEvent) => {
+  return useEvent<RNNativeScrollEvent, Context>(
+    (event: ReanimatedScrollEvent) => {
       'worklet';
       const {
         onScroll,
@@ -98,7 +92,7 @@ export const useAnimatedScrollHandler = function <TContext extends __Context>(
     },
     subscribeForEvents,
     doDependenciesDiffer
-    // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
-  ) as any;
-  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
-} as unknown as useAnimatedScrollHandlerType;
+    // Read https://github.com/software-mansion/react-native-reanimated/pull/5056
+    // for more information about this cast.
+  ) as unknown as ScrollHandlerInternal;
+}

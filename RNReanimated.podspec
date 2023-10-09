@@ -3,7 +3,6 @@ require_relative './scripts/reanimated_utils'
 
 reanimated_package_json = JSON.parse(File.read(File.join(__dir__, "package.json")))
 config = find_config()
-assert_no_multiple_instances(config)
 assert_latest_react_native_with_new_architecture(config, reanimated_package_json)
 assert_minimal_react_native_version(config)
 
@@ -45,6 +44,7 @@ Pod::Spec.new do |s|
 
   s.pod_target_xcconfig = {
     "USE_HEADERMAP" => "YES",
+    "DEFINES_MODULE" => "YES",
     "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_TARGET_SRCROOT)\" \"$(PODS_ROOT)/RCT-Folly\" \"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\"",
     "FRAMEWORK_SEARCH_PATHS" => "\"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes\"",
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",

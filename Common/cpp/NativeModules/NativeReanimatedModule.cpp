@@ -84,15 +84,6 @@ NativeReanimatedModule::NativeReanimatedModule(
         this->requestAnimationFrame(rt, callback);
       };
 
-  auto updateDataSynchronously =
-      [this](
-          jsi::Runtime &rt,
-          const jsi::Value &synchronizedDataHolderRef,
-          const jsi::Value &newData) {
-        return this->updateDataSynchronously(
-            rt, synchronizedDataHolderRef, newData);
-      };
-
 #ifdef RCT_NEW_ARCH_ENABLED
   auto updateProps = [this](jsi::Runtime &rt, const jsi::Value &operations) {
     this->updateProps(rt, operations);
@@ -131,7 +122,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.dispatchCommandFunction,
 #endif
       requestAnimationFrame,
-      updateDataSynchronously,
       platformDepMethodsHolder.getCurrentTime,
       platformDepMethodsHolder.setGestureStateFunction,
       platformDepMethodsHolder.progressLayoutAnimation,
@@ -197,9 +187,7 @@ void NativeReanimatedModule::updateDataSynchronously(
     jsi::Runtime &rt,
     const jsi::Value &synchronizedDataHolderRef,
     const jsi::Value &newData) {
-  auto dataHolder = extractShareableOrThrow<ShareableSynchronizedDataHolder>(
-      rt, synchronizedDataHolderRef);
-  dataHolder->set(rt, newData);
+  reanimated::updateDataSynchronously(rt, synchronizedDataHolderRef, newData);
 }
 
 jsi::Value NativeReanimatedModule::getDataSynchronously(
@@ -325,6 +313,14 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
           config,
           "[Reanimated] Layout animation config must be an object."));
   return jsi::Value::undefined();
+}
+
+void NativeReanimatedModule::setShouldAnimateExiting(
+    jsi::Runtime &rt,
+    const jsi::Value &viewTag,
+    const jsi::Value &shouldAnimate) {
+  layoutAnimationsManager_.setShouldAnimateExiting(
+      viewTag.asNumber(), shouldAnimate.asBool());
 }
 
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(

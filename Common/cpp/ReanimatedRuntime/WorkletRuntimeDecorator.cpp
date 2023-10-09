@@ -22,6 +22,13 @@ void WorkletRuntimeDecorator::decorate(
 
   rt.global().setProperty(rt, "_LABEL", jsi::String::createFromAscii(rt, name));
 
+#ifdef RCT_NEW_ARCH_ENABLED
+  constexpr auto isFabric = true;
+#else
+  constexpr auto isFabric = false;
+#endif // RCT_NEW_ARCH_ENABLED
+  rt.global().setProperty(rt, "_IS_FABRIC", isFabric);
+
 #ifdef DEBUG
   auto evalWithSourceUrl = [](jsi::Runtime &rt,
                               const jsi::Value &thisValue,
@@ -95,6 +102,16 @@ void WorkletRuntimeDecorator::decorate(
             remoteFun.asObject(rt).asFunction(rt).call(rt, args, argsSize);
           }
         });
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_updateDataSynchronously",
+      [](jsi::Runtime &rt,
+         const jsi::Value &synchronizedDataHolderRef,
+         const jsi::Value &newData) {
+        return reanimated::updateDataSynchronously(
+            rt, synchronizedDataHolderRef, newData);
       });
 }
 

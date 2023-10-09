@@ -1,13 +1,12 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
-
 import Animated, {
   useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   interpolate,
   withTiming,
-  Extrapolate,
+  Extrapolation,
 } from 'react-native-reanimated';
 import {
   PanGestureHandler,
@@ -44,8 +43,8 @@ export default function ExtrapolationExample() {
   const button1Style = useAnimatedStyle(() => {
     const translateX = Math.round(
       interpolate(translation.y.value, [0, -75], [0, -75], {
-        extrapolateLeft: Extrapolate.CLAMP,
-        extrapolateRight: Extrapolate.EXTEND,
+        extrapolateLeft: Extrapolation.CLAMP,
+        extrapolateRight: Extrapolation.EXTEND,
       })
     );
 
@@ -56,8 +55,8 @@ export default function ExtrapolationExample() {
   const button2Style = useAnimatedStyle(() => {
     const translateY = Math.round(
       interpolate(translation.y.value, [0, -75], [0, -150], {
-        extrapolateLeft: Extrapolate.CLAMP,
-        extrapolateRight: Extrapolate.EXTEND,
+        extrapolateLeft: Extrapolation.CLAMP,
+        extrapolateRight: Extrapolation.EXTEND,
       })
     );
 
@@ -69,8 +68,8 @@ export default function ExtrapolationExample() {
   const button3Style = useAnimatedStyle(() => {
     const translateX = Math.round(
       interpolate(translation.y.value, [0, -75], [0, 75], {
-        extrapolateLeft: Extrapolate.CLAMP,
-        extrapolateRight: Extrapolate.EXTEND,
+        extrapolateLeft: Extrapolation.CLAMP,
+        extrapolateRight: Extrapolation.EXTEND,
       })
     );
 
