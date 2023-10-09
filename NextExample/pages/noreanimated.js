@@ -6,7 +6,7 @@ export default function Reanimated() {
       <Text accessibilityRole="header" style={styles.text}>
         Reanimated Page
       </Text>
-      <Text style={styles.link} accessibilityRole="link" href={`/`}>
+      <Text style={styles.link} accessibilityRole="link" href="/">
         Go Back
       </Text>
     </View>

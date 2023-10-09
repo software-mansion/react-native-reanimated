@@ -3,8 +3,10 @@ const { withExpo } = require('@expo/next-adapter');
 const withPlugins = require('next-compose-plugins');
 
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === 'true',
+  enabled: process.env.ANALYZE === '1',
 });
+
+const disableMinification = process.env.DISABLE_MINIFICATION === '1';
 
 /** @type {import('next').NextConfig} */
 module.exports = withPlugins([withBundleAnalyzer, withExpo], {
@@ -15,8 +17,9 @@ module.exports = withPlugins([withBundleAnalyzer, withExpo], {
   },
   transpilePackages: ['react-native-reanimated', 'react-native', 'expo'],
   webpack(config, _options) {
-    // uncomment this to remove bundle minification
-    // config.optimization.minimizer = [];
+    if (disableMinification) {
+      config.optimization.minimizer = [];
+    }
     config.resolve.alias.react = require('path').resolve(
       __dirname,
       '.',
