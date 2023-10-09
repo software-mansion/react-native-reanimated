@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef DEBUG
+#ifndef NDEBUG
 
 #include <cxxabi.h>
 
@@ -67,4 +67,4 @@ SingleInstanceChecker<T>::~SingleInstanceChecker() {
 
 } // namespace reanimated
 
-#endif // DEBUG
+#endif // NDEBUG

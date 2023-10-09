@@ -124,7 +124,7 @@ void LayoutAnimations::registerNatives() {
       makeNativeMethod(
           "findPrecedingViewTagForTransition",
           LayoutAnimations::findPrecedingViewTagForTransition),
-#ifdef DEBUG
+#ifndef NDEBUG
       makeNativeMethod(
           "checkDuplicateSharedTag", LayoutAnimations::checkDuplicateSharedTag),
 #endif
