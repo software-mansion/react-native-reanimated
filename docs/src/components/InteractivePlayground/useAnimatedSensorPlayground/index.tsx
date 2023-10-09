@@ -46,7 +46,6 @@ function getGravityRotationVector(x: number, y: number, z: number) {
 function formatGravityCode(rotationVector: Vector3) {
   return `
   { 
-    "interfaceOrientation": 0,
     "x": ${rotationVector.x.toFixed(2)},
     "y": ${rotationVector.y.toFixed(2)},
     "z": ${rotationVector.z.toFixed(2)}
@@ -86,7 +85,6 @@ function formatRotationCode({
 }: Omit<ValueRotation, 'interfaceOrientation'>) {
   return `
   { 
-    "interfaceOrientation": 0,
     "pitch": ${(-pitch).toFixed(2)},
     "roll": ${roll.toFixed(2)},
     "yaw": ${yaw.toFixed(2)},
@@ -112,7 +110,6 @@ function getGyroscope(dx: number, dy: number, dz: number, dt: number) {
 function formatGyroscopeCode({ x, y, z }: { x: number; y: number; z: number }) {
   return `
   { 
-    "interfaceOrientation": 0,
     "x": ${x.toFixed(2)},
     "y": ${y.toFixed(2)},
     "z": ${z.toFixed(2)}
@@ -200,15 +197,25 @@ export default function useAnimatedSensorPlayground() {
     </>
   );
 
-  const gravityCode = formatGravityCode(getGravityRotationVector(x, y, z));
-  const rotationCode = formatRotationCode(getRotation(x, y, z));
-  const gyroscopeCode = formatGyroscopeCode(
-    getGyroscope(
-      measurement.currentX - measurement.previousX,
-      measurement.currentY - measurement.previousY,
-      measurement.currentZ - measurement.previousZ,
-      measurement.current - measurement.previous
-    )
+  const gravityCode = useMemo(
+    () => formatGravityCode(getGravityRotationVector(x, y, z)),
+    [x, y, z]
+  );
+  const rotationCode = useMemo(
+    () => formatRotationCode(getRotation(x, y, z)),
+    [x, y, z]
+  );
+  const gyroscopeCode = useMemo(
+    () =>
+      formatGyroscopeCode(
+        getGyroscope(
+          measurement.currentX - measurement.previousX,
+          measurement.currentY - measurement.previousY,
+          measurement.currentZ - measurement.previousZ,
+          measurement.current - measurement.previous
+        )
+      ),
+    [measurement]
   );
 
   const code = {
