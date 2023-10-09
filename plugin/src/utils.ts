@@ -1,3 +1,6 @@
 export function isRelease() {
-  return !!process.env.BABEL_ENV?.match(/(prod|release|stag[ei])/i);
+  const regex = /(prod|release|stag[ei]|test)/i;
+  return !!(
+    process.env.BABEL_ENV?.match(regex) || process.env.NODE_ENV?.match(regex)
+  );
 }

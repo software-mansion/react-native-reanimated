@@ -5,7 +5,8 @@
     "build": "next build",
     "start": "next start",
     "e2e": "start-server-and-test dev http://localhost:3000 \"cypress open --e2e\"",
-    "e2e:headless": "start-server-and-test dev http://localhost:3000 \"cypress run --e2e\""
+    "e2e:headless": "start-server-and-test dev http://localhost:3000 \"cypress run --e2e\"",
+    "analyze": "ANALYZE=true next build"
   },
   "dependencies": {
     "expo": "~48.0.10",
@@ -18,7 +19,9 @@
   "devDependencies": {
     "@babel/core": "^7.12.9",
     "@expo/next-adapter": "^5.0.2",
+    "@next/bundle-analyzer": "^13.5.3",
     "cypress": "^13.2.0",
+    "next-compose-plugins": "^2.2.1",
     "start-server-and-test": "^2.0.1"
   }
 }
