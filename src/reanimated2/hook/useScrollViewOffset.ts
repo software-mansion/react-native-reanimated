@@ -44,6 +44,10 @@ export function useScrollViewOffset(
   useEffect(() => {
     const viewTag = findNodeHandle(animatedRef.current);
     event.current?.registerForEvents(viewTag as number);
+
+    return () => {
+      event.current?.unregisterFromEvents();
+    };
   }, [animatedRef.current]);
 
   return offsetRef.current;

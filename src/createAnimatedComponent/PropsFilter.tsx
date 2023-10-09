@@ -1,5 +1,4 @@
 'use strict';
-
 import type { StyleProps, SharedValue } from '../reanimated2';
 import { isSharedValue } from '../reanimated2';
 import { isChromeDebugger } from '../reanimated2/PlatformChecker';
@@ -78,7 +77,7 @@ export class PropsFilter {
         }
       } else if (isSharedValue(value)) {
         if (this._isFirstRender) {
-          props[key] = (value as SharedValue<any>).value;
+          props[key] = (value as SharedValue<unknown>).value;
         }
       } else if (key !== 'onGestureHandlerStateChange' || !isChromeDebugger()) {
         props[key] = value;
