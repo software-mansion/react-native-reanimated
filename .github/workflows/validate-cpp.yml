@@ -49,4 +49,4 @@ jobs:
 
       - name: Disallow DEBUG macros
         run: |
-          egrep -r '(#if DEBUG|#ifdef DEBUG)' android/src/main/cpp common/Cpp || exit 1
+          egrep -r '(#if DEBUG|#ifdef DEBUG)' android/src/main/cpp Common/cpp || exit 1
