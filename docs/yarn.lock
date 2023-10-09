@@ -3143,35 +3143,15 @@
   resolved "https://registry.yarnpkg.com/@types/stack-utils/-/stack-utils-2.0.1.tgz#20f18294f797f2209b5f65c8e3b5c8e8261d127c"
   integrity sha512-Hl219/BT5fLAaz6NDkSuhzasy49dwQS/DSdu4MdggFB8zcXv7vflBI3xp7FEmkmdDkBUI2bPUNeMttp2knYdxw==
 
-"@types/stats.js@*":
-  version "0.17.1"
-  resolved "https://registry.yarnpkg.com/@types/stats.js/-/stats.js-0.17.1.tgz#3066e95031f013b0e01d723fb7207c79fd75e6a0"
-  integrity sha512-OgfYE1x2w1jRUXzzKABX+kOdwz2y9PE0uSwnZabkWfJTWOzm7Pvfm4JI2xqRE0q2nwUe2jZLWcrcnhd9lQU63w==
-
 "@types/supports-color@^8.0.0":
   version "8.1.1"
   resolved "https://registry.yarnpkg.com/@types/supports-color/-/supports-color-8.1.1.tgz#1b44b1b096479273adf7f93c75fc4ecc40a61ee4"
   integrity sha512-dPWnWsf+kzIG140B8z2w3fr5D03TLWbOAFQl45xUpI3vcizeXriNR5VYkWZ+WTMsUHqZ9Xlt3hrxGNANFyNQfw==
 
-"@types/three@^0.156.0":
-  version "0.156.0"
-  resolved "https://registry.yarnpkg.com/@types/three/-/three-0.156.0.tgz#cd49f2a12e858400962ea818d1e1c45e638141a8"
-  integrity sha512-733bXDSRdlrxqOmQuOmfC1UBRuJ2pREPk8sWnx9MtIJEVDQMx8U0NQO5MVVaOrjzDPyLI+cFPim2X/ss9v0+LQ==
-  dependencies:
-    "@types/stats.js" "*"
-    "@types/webxr" "*"
-    fflate "~0.6.10"
-    meshoptimizer "~0.18.1"
-
 "@types/unist@*", "@types/unist@^2.0.0", "@types/unist@^2.0.2", "@types/unist@^2.0.3":
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/@types/unist/-/unist-2.0.6.tgz#250a7b16c3b91f672a24552ec64678eeb1d3a08d"
   integrity sha512-PBjIUxZHOuj0R15/xuwJYjFi+KZdNFrehocChv4g5hu6aFroHue8m0lBP0POdK2nKzbw0cgV1mws8+V/JAcEkQ==
-
-"@types/webxr@*":
-  version "0.5.5"
-  resolved "https://registry.yarnpkg.com/@types/webxr/-/webxr-0.5.5.tgz#9e0a27e809c8f76cc1ef525d9f96b8fd94ef9c42"
-  integrity sha512-HVOsSRTQYx3zpVl0c0FBmmmcY/60BkQLzVnpE9M1aG4f2Z0aKlBWfj4XZ2zr++XNBfkQWYcwhGlmuu44RJPDqg==
 
 "@types/ws@^8.5.1":
   version "8.5.4"
@@ -6152,11 +6132,6 @@ feed@^4.2.2:
   dependencies:
     xml-js "^1.6.11"
 
-fflate@~0.6.10:
-  version "0.6.10"
-  resolved "https://registry.yarnpkg.com/fflate/-/fflate-0.6.10.tgz#5f40f9659205936a2d18abf88b2e7781662b6d43"
-  integrity sha512-IQrh3lEPM93wVCEczc9SaAOvkmcoQn/G8Bo1e8ZPlY3X3bnAxWaBdvTdvM1hP62iZp0BXWDy4vTAy4fF0+Dlpg==
-
 file-loader@^6.2.0:
   version "6.2.0"
   resolved "https://registry.yarnpkg.com/file-loader/-/file-loader-6.2.0.tgz#baef7cf8e1840df325e4390b4484879480eebe4d"
@@ -8191,11 +8166,6 @@ merge2@^1.3.0, merge2@^1.4.1:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/merge2/-/merge2-1.4.1.tgz#4368892f885e907455a6fd7dc55c0c9d404990ae"
   integrity sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==
-
-meshoptimizer@~0.18.1:
-  version "0.18.1"
-  resolved "https://registry.yarnpkg.com/meshoptimizer/-/meshoptimizer-0.18.1.tgz#cdb90907f30a7b5b1190facd3b7ee6b7087797d8"
-  integrity sha512-ZhoIoL7TNV4s5B6+rx5mC//fw8/POGyNxS/DZyCJeiZ12ScLfVwRE/GfsxwiTkMYYD5DmK2/JXnEVXqL4rF+Sw==
 
 methods@~1.1.2:
   version "1.1.2"
@@ -11735,11 +11705,6 @@ text-table@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/text-table/-/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
   integrity sha512-N+8UisAXDGk8PFXP4HAzVR9nbfmVJ3zYLAWiTIoqC5v5isinhr+r5uaO8+7r3BMfuNIufIsA7RdpVgacC2cSpw==
-
-three@^0.157.0:
-  version "0.157.0"
-  resolved "https://registry.yarnpkg.com/three/-/three-0.157.0.tgz#5baac531941fc8c4ca62d45ee4265652e03318d0"
-  integrity sha512-CeAwQrf4x3z0/e+MC4F+nXLW5t0gh3pw+L6CCBqpHvOq3bGYIgRYub7Pv0j/9wR+d++OiEglyZzWyuSYbwWGOA==
 
 throat@^5.0.0:
   version "5.0.0"

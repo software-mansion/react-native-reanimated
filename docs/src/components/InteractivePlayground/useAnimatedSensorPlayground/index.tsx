@@ -4,7 +4,7 @@ import Example from './Example';
 import { Range, SelectOption } from '..';
 
 import { ValueRotation } from 'react-native-reanimated';
-import * as THREE from 'three';
+import { Euler, MathUtils, Matrix4, Quaternion, Vector3 } from './threejs';
 
 const g_0 = 9.80665; // m/s^2
 const INTERVAL = 500; // ms
@@ -27,23 +27,23 @@ const initialState = {
 };
 
 function degreeToRadian(x: number, y: number, z: number) {
-  const radX = THREE.MathUtils.degToRad(x);
-  const radY = THREE.MathUtils.degToRad(y);
-  const radZ = THREE.MathUtils.degToRad(z);
+  const radX = MathUtils.degToRad(x);
+  const radY = MathUtils.degToRad(y);
+  const radZ = MathUtils.degToRad(z);
   return { radX, radY, radZ };
 }
 
 function getGravityRotationVector(x: number, y: number, z: number) {
   const { radX, radY, radZ } = degreeToRadian(x, y, z);
 
-  const euler = new THREE.Euler(radX, radY, radZ, 'XYZ');
-  const rotationMatrix = new THREE.Matrix4().makeRotationFromEuler(euler);
-  const gravityVector = new THREE.Vector3(0, -g_0, 0);
+  const euler = new Euler(radX, radY, radZ, 'XYZ');
+  const rotationMatrix = new Matrix4().makeRotationFromEuler(euler);
+  const gravityVector = new Vector3(0, -g_0, 0);
 
   return gravityVector.applyMatrix4(rotationMatrix);
 }
 
-function formatGravityCode(rotationVector: THREE.Vector3) {
+function formatGravityCode(rotationVector: Vector3) {
   return `
   { 
     "interfaceOrientation": 0,
@@ -60,8 +60,8 @@ function getRotation(
   z: number
 ): Omit<ValueRotation, 'interfaceOrientation'> {
   const { radX, radY, radZ } = degreeToRadian(x, y, z);
-  const euler = new THREE.Euler(radX, radY, radZ, 'XYZ');
-  const quaternion = new THREE.Quaternion();
+  const euler = new Euler(radX, radY, radZ, 'XYZ');
+  const quaternion = new Quaternion();
   quaternion.setFromEuler(euler);
 
   return {
@@ -90,6 +90,7 @@ function formatRotationCode({
     "pitch": ${(-pitch).toFixed(2)},
     "roll": ${roll.toFixed(2)},
     "yaw": ${yaw.toFixed(2)},
+
     "qw": ${qw.toFixed(2)},
     "qx": ${qx.toFixed(2)},
     "qy": ${qy.toFixed(2)},
