@@ -1,3 +1,5 @@
+'use strict';
+
 import { Animations, customAnimations } from '.';
 import type { AnimationNames } from '.';
 
@@ -56,6 +58,24 @@ export function removeWebAnimation(animationName: string) {
 
   styleTag.sheet?.deleteRule(customAnimations.get(animationName) as number);
   customAnimations.delete(animationName);
+}
+
+const timeoutScale = 1.25; // We use this value to enlarge timeout duration. It can prove useful if animation lags.
+const frameDurationMs = 16; // Just an approximation.
+const minimumFrames = 10;
+
+export function scheduleAnimationCleanup(
+  animationName: string,
+  animationDuration: number
+) {
+  // If duration is very short, we want to keep remove delay to at least 10 frames
+  // In our case it is exactly 160/1099 s, which is approximately 0.15s
+  const timeoutValue = Math.max(
+    animationDuration * timeoutScale * 1000,
+    animationDuration + frameDurationMs * minimumFrames
+  );
+
+  setTimeout(() => removeWebAnimation(animationName), timeoutValue);
 }
 
 export function areDOMRectsEqual(r1: DOMRect, r2: DOMRect) {

@@ -1,39 +1,87 @@
+'use strict';
+
 import type { TransformsStyle } from 'react-native';
-import { Animations, TransitionType } from '.';
-import type { AnimationConfig, AnimationNames, CustomConfig } from '.';
-import { LayoutAnimationType } from '..';
-import type { AnimatedComponentProps } from '../../../createAnimatedComponent/utils';
+import { Animations, TransitionType, WebEasings } from '.';
+import type {
+  AnimationCallback,
+  AnimationConfig,
+  AnimationNames,
+  CustomConfig,
+  WebEasingsNames,
+} from '.';
 import type { TransitionData } from './animationParser';
-import {
-  TransitionGenerator,
-  createAnimationWithExistingTransform,
-  getCallbackFromConfig,
-  getDelayFromConfig,
-  getDurationFromConfig,
-  getEasingFromConfig,
-  getReducedMotionFromConfig,
-} from './animationsManager';
-import type { StyleProps } from '../../commonTypes';
-import { areDOMRectsEqual, removeWebAnimation } from './DOMManager';
+import { TransitionGenerator } from './createAnimation';
+import { scheduleAnimationCleanup } from './DOMManager';
 import { _updatePropsJS } from '../../../reanimated2/js-reanimated';
 import type { ReanimatedHTMLElement } from '../../../reanimated2/js-reanimated';
+import { ReduceMotion } from '../../commonTypes';
+import { useReducedMotion } from '../../../reanimated2/hook/useReducedMotion';
 
-const timeoutScale = 1.25; // We use this value to enlarge timeout duration. It can prove useful if animation lags.
-const frameDurationMs = 16; // Just an approximation.
-const minimumFrames = 10;
+export function getEasingFromConfig(config: CustomConfig): string {
+  const easingName = (
+    config.easingV !== undefined &&
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    config.easingV!.name in WebEasings
+      ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        config.easingV!.name
+      : 'linear'
+  ) as WebEasingsNames;
 
-function scheduleAnimationCleanup(
-  animationName: string,
-  animationDuration: number
-) {
-  // If duration is very short, we want to keep remove delay to at least 10 frames
-  // In our case it is exactly 160/1099 s, which is approximately 0.15s
-  const timeoutValue = Math.max(
-    animationDuration * timeoutScale * 1000,
-    animationDuration + frameDurationMs * minimumFrames
-  );
+  return `cubic-bezier(${WebEasings[easingName].toString()})`;
+}
 
-  setTimeout(() => removeWebAnimation(animationName), timeoutValue);
+function getRandomDelay(maxDelay = 1000) {
+  return Math.floor(Math.random() * (maxDelay + 1)) / 1000;
+}
+
+export function getDelayFromConfig(config: CustomConfig): number {
+  const shouldRandomizeDelay = config.randomizeDelay;
+
+  const delay = shouldRandomizeDelay ? getRandomDelay() : 0;
+
+  if (!config.delayV) {
+    return delay;
+  }
+
+  return shouldRandomizeDelay
+    ? getRandomDelay(config.delayV)
+    : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      config.delayV! / 1000;
+}
+
+export function getReducedMotionFromConfig(config: CustomConfig) {
+  if (!config.reduceMotionV) {
+    return useReducedMotion();
+  }
+
+  switch (config.reduceMotionV) {
+    case ReduceMotion.Never:
+      return false;
+    case ReduceMotion.Always:
+      return true;
+    default:
+      return useReducedMotion();
+  }
+}
+
+export function getDurationFromConfig(
+  config: CustomConfig,
+  isLayoutTransition: boolean,
+  animationName: AnimationNames
+): number {
+  const defaultDuration = isLayoutTransition
+    ? 0.3
+    : Animations[animationName].duration;
+
+  return config.durationV !== undefined
+    ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      config.durationV! / 1000
+    : defaultDuration;
+}
+
+export function getCallbackFromConfig(config: CustomConfig): AnimationCallback {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return config.callbackV !== undefined ? config.callbackV! : null;
 }
 
 export function setElementAnimation(
@@ -46,7 +94,6 @@ export function setElementAnimation(
   element.style.animationDuration = `${duration}s`;
   element.style.animationDelay = `${delay}s`;
   element.style.animationTimingFunction = easing;
-  element.style.animationFillMode = 'forwards'; // Prevents returning to base state after animation finishes.
 
   element.onanimationend = () => {
     animationConfig.callback?.(true);
@@ -64,138 +111,6 @@ export function setElementAnimation(
   };
 
   scheduleAnimationCleanup(animationName, duration + delay);
-}
-
-export function tryActivateLayoutTransition<
-  ComponentProps extends Record<string, unknown>
->(
-  props: Readonly<AnimatedComponentProps<ComponentProps>>,
-  element: HTMLElement,
-  snapshot: DOMRect
-) {
-  if (!props.layout) {
-    return;
-  }
-
-  const rect = element.getBoundingClientRect();
-
-  if (areDOMRectsEqual(rect, snapshot)) {
-    return;
-  }
-
-  const transitionData: TransitionData = {
-    translateX: snapshot.x - rect.x,
-    translateY: snapshot.y - rect.y,
-    scaleX: snapshot.width / rect.width,
-    scaleY: snapshot.height / rect.height,
-    reversed: false, // This field is used only in `SequencedTransition`, so by default it will be false
-  };
-
-  startWebLayoutAnimation(
-    props,
-    element,
-    LayoutAnimationType.LAYOUT,
-    transitionData
-  );
-}
-
-export function startWebLayoutAnimation<
-  ComponentProps extends Record<string, unknown>
->(
-  props: Readonly<AnimatedComponentProps<ComponentProps>>,
-  element: HTMLElement,
-  animationType: LayoutAnimationType,
-  transitionData?: TransitionData
-) {
-  const config =
-    animationType === LayoutAnimationType.ENTERING
-      ? props.entering
-      : animationType === LayoutAnimationType.EXITING
-      ? props.exiting
-      : animationType === LayoutAnimationType.LAYOUT
-      ? props.layout
-      : null;
-
-  if (!config) {
-    return;
-  }
-
-  const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
-
-  const initialAnimationName =
-    typeof config === 'function' ? config.name : config.constructor.name;
-
-  // This prevents crashes if we try to set animations that are not defined.
-  // We don't care about layout transitions since they're created dynamically
-  if (!(initialAnimationName in Animations) && !isLayoutTransition) {
-    if (props.entering) {
-      _updatePropsJS(
-        { visibility: 'initial' },
-        { _component: element as ReanimatedHTMLElement }
-      );
-    }
-
-    console.warn(
-      "[Reanimated] Couldn't load entering/exiting animation. Current version supports only predefined animations with modifiers: duration, delay, easing, randomizeDelay, wtihCallback, reducedMotion."
-    );
-    return;
-  }
-
-  const transform = (props.style as StyleProps)?.transform;
-
-  const animationName = transform
-    ? createAnimationWithExistingTransform(initialAnimationName, transform)
-    : initialAnimationName;
-
-  const animationConfig: AnimationConfig = {
-    animationName: animationName,
-    duration: getDurationFromConfig(
-      config as CustomConfig,
-      isLayoutTransition,
-      initialAnimationName as AnimationNames
-    ),
-    delay: getDelayFromConfig(config as CustomConfig),
-    easing: getEasingFromConfig(config as CustomConfig),
-    reduceMotion: getReducedMotionFromConfig(config as CustomConfig),
-    callback: getCallbackFromConfig(config as CustomConfig),
-  };
-
-  if (animationConfig.reduceMotion) {
-    if (props.entering) {
-      _updatePropsJS(
-        { visibility: 'initial' },
-        { _component: element as ReanimatedHTMLElement }
-      );
-    }
-
-    return;
-  }
-
-  switch (animationType) {
-    case LayoutAnimationType.ENTERING:
-      handleEnteringAnimation(element, animationConfig);
-      break;
-    case LayoutAnimationType.LAYOUT:
-      // `transitionData` is cast as defined because it is a result of calculations made inside componentDidUpdate method.
-      // We can reach this piece of code only from componentDidUpdate, therefore this parameter will be defined.
-
-      // @ts-ignore This property exists in SequencedTransition
-      (transitionData as TransitionData).reversed = config.reversed
-        ? // @ts-ignore This property exists in SequencedTransition
-          config.reversed
-        : false;
-
-      handleLayoutTransition(
-        element,
-        animationConfig,
-        transitionData as TransitionData,
-        transform
-      );
-      break;
-    case LayoutAnimationType.EXITING:
-      handleExitingAnimation(element, animationConfig);
-      break;
-  }
 }
 
 export function handleEnteringAnimation(
