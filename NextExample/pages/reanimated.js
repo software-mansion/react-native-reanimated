@@ -4,7 +4,7 @@ import Animated from 'react-native-reanimated';
 export default function Reanimated() {
   return (
     <Animated.View style={styles.container}>
-      <Animated.Text sha accessibilityRole="header" style={styles.text}>
+      <Animated.Text accessibilityRole="header" style={styles.text}>
         Reanimated Page
       </Animated.Text>
       <Animated.Text style={styles.link} accessibilityRole="link" href={`/`}>
