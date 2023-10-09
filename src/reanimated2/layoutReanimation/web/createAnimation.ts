@@ -108,7 +108,7 @@ export function createAnimationWithExistingTransform(
 
 let customKeyframeCounter = 0;
 
-export function generateNextCustomKeyframeName() {
+function generateNextCustomKeyframeName() {
   return `REA${customKeyframeCounter++}`;
 }
 

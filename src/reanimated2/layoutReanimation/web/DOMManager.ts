@@ -47,7 +47,7 @@ export function insertWebAnimation(animationName: string, keyframe: string) {
   customAnimations.set(animationName, customTransitionId);
 }
 
-export function removeWebAnimation(animationName: string) {
+function removeWebAnimation(animationName: string) {
   if (!customAnimations.has(animationName)) {
     return;
   }

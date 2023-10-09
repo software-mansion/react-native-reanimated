@@ -84,7 +84,7 @@ export function getCallbackFromConfig(config: CustomConfig): AnimationCallback {
   return config.callbackV !== undefined ? config.callbackV! : null;
 }
 
-export function setElementAnimation(
+function setElementAnimation(
   element: HTMLElement,
   animationConfig: AnimationConfig
 ) {
