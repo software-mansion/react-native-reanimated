@@ -52,7 +52,7 @@ void LayoutAnimations::setShouldAnimateExitingBlock(
   this->shouldAnimateExitingBlock_ = shouldAnimateExitingBlock;
 }
 
-#ifdef DEBUG
+#ifndef NDEBUG
 void LayoutAnimations::setCheckDuplicateSharedTag(
     CheckDuplicateSharedTag checkDuplicateSharedTag) {
   checkDuplicateSharedTag_ = checkDuplicateSharedTag;
