@@ -36,6 +36,8 @@ import {
 } from './animation/Stretch.web';
 import { ZoomIn, ZoomInData, ZoomOut, ZoomOutData } from './animation/Zoom.web';
 
+import type { AnimationData } from './animationParser';
+
 // Since we cannot remove keyframe from DOM by its name, we have to store its id
 export const customAnimations = new Map<string, number>();
 
@@ -63,39 +65,6 @@ export enum TransitionType {
   LINEAR,
   SEQUENCED,
   FADING,
-}
-
-export interface ReanimatedWebTransformProperties {
-  translateX?: string;
-  translateY?: string;
-  rotate?: string;
-  rotateX?: string;
-  rotateY?: string;
-  scale?: number | string;
-  scaleX?: number;
-  scaleY?: number;
-  perspective?: string;
-  skew?: string;
-  skewX?: string;
-}
-
-interface AnimationStyle {
-  opacity?: number;
-  transform?: ReanimatedWebTransformProperties[];
-}
-
-export interface AnimationData {
-  name: string;
-  style: Record<number, AnimationStyle>;
-  duration: number;
-}
-
-export interface TransitionData {
-  translateX: number;
-  translateY: number;
-  scaleX: number;
-  scaleY: number;
-  reversed?: boolean;
 }
 
 export const AnimationsData: Record<string, AnimationData> = {

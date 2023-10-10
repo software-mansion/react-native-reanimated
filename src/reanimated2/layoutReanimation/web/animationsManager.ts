@@ -1,11 +1,6 @@
 'use strict';
 
-import type {
-  AnimationConfig,
-  AnimationNames,
-  CustomConfig,
-  TransitionData,
-} from './config';
+import type { AnimationConfig, AnimationNames, CustomConfig } from './config';
 import { Animations } from './config';
 import type { AnimatedComponentProps } from '../../../createAnimatedComponent/utils';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
@@ -20,6 +15,7 @@ import {
 } from './componentUtils';
 import { areDOMRectsEqual } from './domUtils';
 import type { TransformsStyle } from 'react-native';
+import type { TransitionData } from './animationParser';
 
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
   animationType: LayoutAnimationType,

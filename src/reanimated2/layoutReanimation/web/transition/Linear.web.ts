@@ -1,5 +1,5 @@
 'use strict';
-import type { TransitionData } from '../config';
+import type { TransitionData } from '../animationParser';
 
 export function LinearTransition(name: string, transitionData: TransitionData) {
   const { translateX, translateY, scaleX, scaleY } = transitionData;
