@@ -93,7 +93,7 @@ export function isConfigValid(config: DefaultSpringConfig): boolean {
     console.warn('[Reanimated] Invalid spring config' + errorMessage);
   }
 
-  return errorMessage !== null;
+  return errorMessage === null;
 }
 
 function bisectRoot({
