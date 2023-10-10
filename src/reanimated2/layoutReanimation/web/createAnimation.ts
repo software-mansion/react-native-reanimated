@@ -1,6 +1,6 @@
 'use strict';
 
-import { Animations, AnimationsData, TransitionType } from '.';
+import { Animations, AnimationsData, TransitionType } from './config';
 import { convertAnimationObjectToKeyframes } from './animationParser';
 import type {
   AnimationData,

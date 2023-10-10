@@ -1,7 +1,7 @@
 'use strict';
 
-import { Animations, customAnimations } from '.';
-import type { AnimationNames } from '.';
+import { Animations, customAnimations } from './config';
+import type { AnimationNames } from './config';
 
 const WEB_ANIMATIONS_ID = 'ReanimatedWebAnimationsStyle';
 

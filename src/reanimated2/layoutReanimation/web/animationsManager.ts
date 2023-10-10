@@ -1,7 +1,7 @@
 'use strict';
 
-import type { AnimationConfig, AnimationNames, CustomConfig } from '.';
-import { Animations } from '.';
+import type { AnimationConfig, AnimationNames, CustomConfig } from './config';
+import { Animations } from './config';
 import type { AnimatedComponentProps } from '../../../createAnimatedComponent/utils';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { TransitionData } from './animationParser';
