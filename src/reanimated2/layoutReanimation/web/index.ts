@@ -38,6 +38,13 @@ import { ZoomIn, ZoomInData, ZoomOut, ZoomOutData } from './animation/Zoom.web';
 
 import type { AnimationData } from './animationParser';
 
+export {
+  startWebLayoutAnimation,
+  tryActivateLayoutTransition,
+} from './animationsManager';
+
+export { configureWebLayoutAnimations } from './DOMManager';
+
 // Since we cannot remove keyframe from DOM by its name, we have to store its id
 export const customAnimations = new Map<string, number>();
 

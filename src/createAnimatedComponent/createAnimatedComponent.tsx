@@ -43,8 +43,8 @@ import { PropsFilter } from './PropsFilter';
 import {
   startWebLayoutAnimation,
   tryActivateLayoutTransition,
-} from '../reanimated2/layoutReanimation/web/animationsManager';
-import { configureWebLayoutAnimations } from '../reanimated2/layoutReanimation/web/DOMManager';
+  configureWebLayoutAnimations,
+} from '../reanimated2/layoutReanimation/web';
 
 const IS_WEB = isWeb();
 
