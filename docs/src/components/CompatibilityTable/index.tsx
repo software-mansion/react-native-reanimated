@@ -68,7 +68,23 @@ export const CompatibilityTablePaper: React.FC = () => {
       </tr>
       <tr>
         <td>
-          from <b>2.10.x</b> to <b>2.17.x</b>
+          from <b>2.14.x</b> to <b>2.17.x</b>
+        </td>
+        <td></td>
+        <td style={styles.supported}></td>
+        <td style={styles.supported}></td>
+        <td style={styles.supported}></td>
+        <td style={styles.supported}></td>
+        <td style={styles.supported}></td>
+        <td style={styles.supported}></td>
+        <td style={styles.supported}></td>
+        <td style={styles.supported}></td>
+        <td style={styles.supported}></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>
+          from <b>2.10.x</b> to <b>2.13.x</b>
         </td>
         <td></td>
         <td style={styles.supported}></td>
