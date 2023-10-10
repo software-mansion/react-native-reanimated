@@ -135,7 +135,12 @@
   }
 
   RCTUIManager *originalSelf = (RCTUIManager *)self;
+#if REACT_NATIVE_MINOR_VERSION >= 73
   NSPointerArray *affectedShadowViews = [NSPointerArray weakObjectsPointerArray];
+#endif // REACT_NATIVE_MINOR_VERSION >= 73
+#if REACT_NATIVE_MINOR_VERSION <= 72
+  NSHashTable<RCTShadowView *> *affectedShadowViews = [NSHashTable weakObjectsHashTable];
+#endif // REACT_NATIVE_MINOR_VERSION <= 72
   [rootShadowView layoutWithAffectedShadowViews:affectedShadowViews];
 
   if (!affectedShadowViews.count) {
