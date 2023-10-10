@@ -183,9 +183,8 @@ export function scaleZetaToMatchClamps(
     return zeta;
   }
 
-  const signum = Number(toValue) - startValue < 0 ? -1 : +1;
-  const firstClamp = signum === +1 ? clamp[1] : clamp[0];
-  const secondClamp = signum === +1 ? clamp[0] : clamp[1];
+  const [lowerBound, secondClamp] =
+    Number(toValue) - startValue > 0 ? clamp : [clamp[1], clamp[0]];
 
   /** The extrema we get from equation below are relative (we obtain a ratio),
    *  To get absolute extrema we convert it as follows:
@@ -193,11 +192,11 @@ export function scaleZetaToMatchClamps(
    *  AbsoluteExtremum = startValue ± RelativeExtremum * (toValue - startValue)
    *  Where ± denotes:
    *    + if extremum is over the target and signum = +1
-   *    - overwise
+   *    - otherwise
    */
 
   const relativeExtremum1 = Math.abs(
-    (firstClamp - Number(toValue)) / (Number(toValue) - startValue)
+    (lowerBound - Number(toValue)) / (Number(toValue) - startValue)
   );
 
   const relativeExtremum2 = Math.abs(
