@@ -17,7 +17,7 @@ import type { ReanimatedHTMLElement } from '../../../reanimated2/js-reanimated';
 import { ReduceMotion } from '../../commonTypes';
 import { useReducedMotion } from '../../../reanimated2/hook/useReducedMotion';
 
-export function getEasingFromConfig(config: CustomConfig): string {
+function getEasingFromConfig(config: CustomConfig): string {
   const easingName = (
     config.easingV !== undefined &&
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -34,7 +34,7 @@ function getRandomDelay(maxDelay = 1000) {
   return Math.floor(Math.random() * (maxDelay + 1)) / 1000;
 }
 
-export function getDelayFromConfig(config: CustomConfig): number {
+function getDelayFromConfig(config: CustomConfig): number {
   const shouldRandomizeDelay = config.randomizeDelay;
 
   const delay = shouldRandomizeDelay ? getRandomDelay() : 0;
@@ -49,7 +49,7 @@ export function getDelayFromConfig(config: CustomConfig): number {
       config.delayV! / 1000;
 }
 
-export function getReducedMotionFromConfig(config: CustomConfig) {
+function getReducedMotionFromConfig(config: CustomConfig) {
   if (!config.reduceMotionV) {
     return useReducedMotion();
   }
@@ -64,7 +64,7 @@ export function getReducedMotionFromConfig(config: CustomConfig) {
   }
 }
 
-export function getDurationFromConfig(
+function getDurationFromConfig(
   config: CustomConfig,
   isLayoutTransition: boolean,
   animationName: AnimationNames
@@ -79,9 +79,36 @@ export function getDurationFromConfig(
     : defaultDuration;
 }
 
-export function getCallbackFromConfig(config: CustomConfig): AnimationCallback {
+function getCallbackFromConfig(config: CustomConfig): AnimationCallback {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return config.callbackV !== undefined ? config.callbackV! : null;
+}
+
+export function getProcessedConfig(
+  animationName: string,
+  config: CustomConfig,
+  isLayoutTransition: boolean,
+  initialAnimationName: AnimationNames
+): AnimationConfig {
+  return {
+    animationName: animationName,
+    duration: getDurationFromConfig(
+      config,
+      isLayoutTransition,
+      initialAnimationName
+    ),
+    delay: getDelayFromConfig(config),
+    easing: getEasingFromConfig(config),
+    reduceMotion: getReducedMotionFromConfig(config),
+    callback: getCallbackFromConfig(config),
+  };
+}
+
+export function makeElementVisible(element: HTMLElement) {
+  _updatePropsJS(
+    { visibility: 'initial' },
+    { _component: element as ReanimatedHTMLElement }
+  );
 }
 
 function setElementAnimation(
