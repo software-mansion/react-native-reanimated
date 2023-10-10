@@ -135,7 +135,7 @@
   }
 
   RCTUIManager *originalSelf = (RCTUIManager *)self;
-  NSHashTable<RCTShadowView *> *affectedShadowViews = [NSHashTable weakObjectsHashTable];
+  NSPointerArray *affectedShadowViews = [NSPointerArray weakObjectsPointerArray];
   [rootShadowView layoutWithAffectedShadowViews:affectedShadowViews];
 
   if (!affectedShadowViews.count) {
