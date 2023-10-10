@@ -61,10 +61,9 @@ export interface InnerSpringAnimation
   toValue: number;
   current: number;
 }
-export function validateConfig(config: DefaultSpringConfig): boolean {
+export function isConfigValid(config: DefaultSpringConfig): boolean {
   'worklet';
-  let errorLog = '[Reanimated] Invalid spring config, ';
-  let configIsInvalid = false;
+  let errorMessage: string | null = null;
 
   (
     [
@@ -75,28 +74,37 @@ export function validateConfig(config: DefaultSpringConfig): boolean {
       'restSpeedThreshold',
       'mass',
     ] as const
-  ).forEach((property) => {
-    if (config[property] <= 0) {
-      configIsInvalid = true;
-      errorLog += `${property} must be grater than zero but got ${config[property]}, `;
+  ).forEach((prop) => {
+    const value = config[prop];
+    if (value <= 0) {
+      if (errorMessage === null) {
+        errorMessage = '';
+      }
+      errorMessage += `, ${prop} must be grater than zero but got ${value}`;
     }
   });
 
   if (config.duration < 0) {
-    configIsInvalid = true;
-    errorLog += `duration can't be negative, got ${config.duration}, `;
+    if (errorMessage === null) {
+      errorMessage = '';
+    }
+
+    errorMessage += `, duration can't be negative, got ${config.duration}`;
   }
 
   if (config.clamp && config.clamp[0] > config.clamp[1]) {
-    configIsInvalid = true;
-    errorLog += `clamp should have format [number1, number2], where number1 is smaller than number2, got [${config.clamp[0]}, ${config.clamp[1]}]`;
+    if (errorMessage === null) {
+      errorMessage = '';
+    }
+    errorMessage +=
+      'clamp is incorrect, lower bound should not be greater than the upper band';
   }
 
-  if (configIsInvalid) {
-    console.warn(errorLog);
+  if (errorMessage !== null) {
+    console.warn('[Reanimated] Invalid spring config' + errorMessage);
   }
 
-  return configIsInvalid;
+  return errorMessage !== null;
 }
 
 function bisectRoot({

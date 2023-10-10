@@ -19,8 +19,8 @@ import {
   underDampedSpringCalculations,
   criticallyDampedSpringCalculations,
   isAnimationTerminatingCalculation,
-  validateConfig,
   scaleZetaToMatchClamps,
+  isConfigValid,
 } from './springUtils';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
@@ -60,7 +60,7 @@ export const withSpring = ((
       skipAnimation: false,
     };
 
-    config.skipAnimation = validateConfig(config);
+    config.skipAnimation = !isConfigValid(config);
 
     if (config.duration === 0) {
       config.skipAnimation = true;
