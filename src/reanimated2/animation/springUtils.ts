@@ -104,7 +104,7 @@ export function isConfigValid(config: DefaultSpringConfig): boolean {
     console.warn('[Reanimated] Invalid spring config' + errorMessage);
   }
 
-  return errorMessage !== null;
+  return errorMessage === null;
 }
 
 function bisectRoot({
@@ -218,7 +218,7 @@ export function scaleZetaToMatchClamps(
 
   // The bigger is zeta the smaller are bounces, we return the biggest one
   // because it should satisfy all conditions
-  return Math.max(Math.max(newZeta1, newZeta2), zeta);
+  return Math.max(newZeta1, newZeta2, zeta);
 }
 
 export function calculateNewMassToMatchDuration(
