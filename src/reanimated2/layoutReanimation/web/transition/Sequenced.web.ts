@@ -1,5 +1,5 @@
 'use strict';
-import type { TransitionData } from '../animationParser';
+import type { TransitionData } from '../config';
 
 export function SequencedTransition(
   name: string,

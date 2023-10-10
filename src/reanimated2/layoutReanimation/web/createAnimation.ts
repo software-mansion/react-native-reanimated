@@ -6,7 +6,7 @@ import type {
   AnimationData,
   ReanimatedWebTransformProperties,
   TransitionData,
-} from './animationParser';
+} from './config';
 import type { TransformsStyle } from 'react-native';
 import { LinearTransition } from './transition/Linear.web';
 import { SequencedTransition } from './transition/Sequenced.web';

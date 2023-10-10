@@ -8,8 +8,8 @@ import type {
   AnimationNames,
   CustomConfig,
   WebEasingsNames,
+  TransitionData,
 } from './config';
-import type { TransitionData } from './animationParser';
 import { TransitionGenerator } from './createAnimation';
 import { scheduleAnimationCleanup } from './DOMManager';
 import { _updatePropsJS } from '../../../reanimated2/js-reanimated';
