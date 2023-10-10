@@ -75,7 +75,7 @@ if (isWeb()) {
       return null;
     } else if (measured.x === -1234567) {
       console.warn(
-        `[Reanimated] The view with tag ${viewTag} returned an invalid measurement response. Please ensure that the view has been rendered.`
+        `[Reanimated] The view with tag ${viewTag} returned an invalid measurement response. Please make sure the view is currently rendered.`
       );
       return null;
     } else if (isNaN(measured.x)) {
