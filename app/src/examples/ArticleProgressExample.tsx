@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import Animated, {
   measure,
@@ -11,16 +11,12 @@ export default function ArticleProgressExample() {
   const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
   const textRef = useAnimatedRef<Animated.Text>();
   const scrollHandler = useScrollViewOffset(scrollViewRef);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const progressBarAnimatedStyle = useAnimatedStyle(() => {
-    if (!mounted) {
+    if (!textRef.current || !scrollViewRef.current) {
       return {};
     }
+
     const measuredText = measure(textRef);
     if (measuredText === null) {
       return { width: 0 };
