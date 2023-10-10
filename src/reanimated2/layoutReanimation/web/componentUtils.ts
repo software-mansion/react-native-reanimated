@@ -11,11 +11,11 @@ import type {
   TransitionData,
 } from './config';
 import { TransitionGenerator } from './createAnimation';
-import { scheduleAnimationCleanup } from './DOMManager';
-import { _updatePropsJS } from '../../../reanimated2/js-reanimated';
-import type { ReanimatedHTMLElement } from '../../../reanimated2/js-reanimated';
+import { scheduleAnimationCleanup } from './domUtils';
+import { _updatePropsJS } from '../../js-reanimated';
+import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { ReduceMotion } from '../../commonTypes';
-import { useReducedMotion } from '../../../reanimated2/hook/useReducedMotion';
+import { useReducedMotion } from '../../hook/useReducedMotion';
 
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName = (

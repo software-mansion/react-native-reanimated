@@ -11,7 +11,7 @@ import type { TransformsStyle } from 'react-native';
 import { LinearTransition } from './transition/Linear.web';
 import { SequencedTransition } from './transition/Sequenced.web';
 import { FadingTransition } from './transition/Fading.web';
-import { insertWebAnimation } from './DOMManager';
+import { insertWebAnimation } from './domUtils';
 
 // Translate values are passed as numbers. However, if `translate` property receives number, it will not automatically
 // convert it to `px`. Therefore if we want to keep exisitng transform we have to add 'px' suffix to each of translate values

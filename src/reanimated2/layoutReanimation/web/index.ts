@@ -5,4 +5,4 @@ export {
   tryActivateLayoutTransition,
 } from './animationsManager';
 
-export { configureWebLayoutAnimations } from './DOMManager';
+export { configureWebLayoutAnimations } from './domUtils';

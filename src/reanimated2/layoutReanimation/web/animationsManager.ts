@@ -17,8 +17,8 @@ import {
   handleExitingAnimation,
   handleLayoutTransition,
   makeElementVisible,
-} from './elementManager';
-import { areDOMRectsEqual } from './DOMManager';
+} from './componentUtils';
+import { areDOMRectsEqual } from './domUtils';
 import type { TransformsStyle } from 'react-native';
 
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
