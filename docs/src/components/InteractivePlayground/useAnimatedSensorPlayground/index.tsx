@@ -9,23 +9,6 @@ import { Euler, MathUtils, Matrix4, Quaternion, Vector3 } from './threejs';
 const g_0 = 9.80665; // m/s^2
 const INTERVAL = 500; // ms
 
-const initialState = {
-  x: 0,
-  y: 0,
-  z: 0,
-  sensorType: 'GRAVITY',
-  measurement: {
-    current: null,
-    previous: null,
-    currentX: null,
-    previousX: null,
-    currentY: null,
-    previousY: null,
-    currentZ: null,
-    previousZ: null,
-  },
-};
-
 function degreeToRadian(x: number, y: number, z: number) {
   const radX = MathUtils.degToRad(x);
   const radY = MathUtils.degToRad(y);
@@ -85,7 +68,7 @@ function formatRotationCode({
 }: Omit<ValueRotation, 'interfaceOrientation'>) {
   return `
   { 
-    "pitch": ${(-pitch).toFixed(2)},
+    "pitch": ${pitch.toFixed(2)},
     "roll": ${roll.toFixed(2)},
     "yaw": ${yaw.toFixed(2)},
 
@@ -116,6 +99,23 @@ function formatGyroscopeCode({ x, y, z }: { x: number; y: number; z: number }) {
   }
   `;
 }
+
+const initialState = {
+  x: 0,
+  y: 0,
+  z: 0,
+  sensorType: 'ROTATION',
+  measurement: {
+    current: null,
+    previous: null,
+    currentX: null,
+    previousX: null,
+    currentY: null,
+    previousY: null,
+    currentZ: null,
+    previousZ: null,
+  },
+};
 
 export default function useAnimatedSensorPlayground() {
   const [x, setX] = useState(initialState.x);
@@ -171,7 +171,7 @@ export default function useAnimatedSensorPlayground() {
         disabledOptions={['ACCELEROMETER', 'MAGNETIC_FIELD']}
       />
       <Range
-        label="X"
+        label="X axis angle"
         min={-180}
         max={180}
         step={1}
@@ -179,7 +179,7 @@ export default function useAnimatedSensorPlayground() {
         onChange={setX}
       />
       <Range
-        label="Y"
+        label="Y axis angle"
         min={-180}
         max={180}
         step={1}
@@ -187,7 +187,7 @@ export default function useAnimatedSensorPlayground() {
         onChange={setY}
       />
       <Range
-        label="Z"
+        label="Z axis angle"
         min={-180}
         max={180}
         step={1}

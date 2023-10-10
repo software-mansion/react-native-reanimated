@@ -1,141 +1,243 @@
-# useAnimatedSensor
+---
+sidebar_position: 2
+---
 
-`useAnimatedSensor` lets you based on device sensors like accelerometer and gyroscope.
+`useAnimatedSensor` lets you create animations based on data from the device's sensors. You can access:
+
+- [Accelerometer](/docs/device/useAnimatedSensor#accelerometer) - the device acceleration (without gravity).
+- [Gyroscope](/docs/device/useAnimatedSensor#gyroscope) - the rotation rate of the device.
+- [Gravity](/docs/device/useAnimatedSensor#gravity) - the current gravity vector.
+- [Magnetic field](/docs/device/useAnimatedSensor#magnetic-field) - the magnetic field vector.
+- [Rotation](/docs/device/useAnimatedSensor#rotation) - the device orientation in three dimensions.
+
+For a full, in depth documentation follow [Sensors guide](https://developer.android.com/guide/topics/sensors/sensors_overview) on Android Developers and [Device motion](https://developer.apple.com/documentation/coremotion/getting_processed_device-motion_data) in the Apple Developer documentation.
 
 import { useAnimatedSensorPlayground } from '@site/src/components/InteractivePlayground';
 
 <InteractivePlayground usePlayground={useAnimatedSensorPlayground} />
 
-### Arguments
+## Reference
 
-#### `sensorType` - [[SensorType](#sensortype-enum)]
+```javascript
+import { useAnimatedSensor, SensorType } from 'react-native-reanimated';
 
-You can select the sensor available in [[SensorType](#sensortype-enum)] enum.
+function App() {
+  const gyroscope = useAnimatedSensor(SensorType.GYROSCOPE);
 
-#### `config` - [[UserConfig](#userconfig-object)]
-
-Optionally, you can pass configuration to customize the sensor behavior.
-
-### Returns
-
-Hook `useAnimatedSensor` returns an instance of [[AnimatedSensor](#animatedsensor-object)];
-
-### Types
-
-#### `AnimatedSensor: [object]`
-
-Properties:
-
-- `sensor`: [[SharedValue](/docs/core/useSharedValue)] contains [[3DVector](#3dvector-object)] or [[RotationVector](#rotationvector-object)] or `null`  
-  contains actual sensor measurements as a shared value
-- `unregister: [function]`  
-  allows you to stop listening to sensor updates
-- `isAvailable: [boolean]`  
-  the flag contains information on the availability of sensors in a device
-- `config`: [[UserConfig](#userconfig-object)]  
-  the configuration provided by a user
-
-#### `SensorType: [enum]`
-
-`SensorType` is an enum that contains possibly supported sensors.
-Values:
-
-- `ACCELEROMETER`  
-  measurements output as [[3DVector](#3dvector-object)]. Measured in m/s², excluding gravity.
-- `GYROSCOPE`  
-  measurements output as [[3DVector](#3dvector-object)]. Measured in rad/s.
-- `GRAVITY`  
-  measurements output as [[3DVector](#3dvector-object)]. Measured in m/s².
-- `MAGNETIC_FIELD`  
-  measurements output as [[3DVector](#3dvector-object)]. Measured in μT.
-- `ROTATION`  
-  measurements output as [[RotationVector](#rotationvector-object)]. [qx, qy, qz, qw] is a normalized quaternion. [yaw, pitch, roll] are rotations measured in radians along respective axes. We follow the iOS [convention](https://developer.apple.com/documentation/coremotion/getting_processed_device-motion_data).
-
-#### `UserConfig: [object]`
-
-Properties:
-
-- `interval: [number | auto]` - interval in milliseconds between shared value updates. Pass `'auto'` to select interval based on device frame rate. Default: `'auto'`.
-- `iosReferenceFrame: [[IOSReferenceFrame](#iosreferenceframe-enum)]` - reference frame to use on iOS. Default: `Auto`.
-- `adjustToInterfaceOrientation: [boolean]` - whether to adjust measurements to the current interface orientation. For example, in the landscape orientation axes x and y may need to be reversed when drawn on the screen. It's `true` by default.
-
-#### `IOSReferenceFrame: [enum]`
-
-`IOSReferenceFrame` is an enum describing reference frame to use on iOS. It follows Apple's [documentation](https://developer.apple.com/documentation/coremotion/cmattitudereferenceframe). Possible values:
-
-- `XArbitraryZVertical`
-- `XArbitraryCorrectedZVertical`
-- `XMagneticNorthZVertical`
-- `XTrueNorthZVertical`
-- `Auto` - on devices without magnetometer (for example iPods) `XArbitraryZVertical`, on devices with magnetometer `XArbitraryCorrectedZVertical`
-
-#### `3DVector: [object]`
-
-Properties:
-
-- `x: number`
-- `y: number`
-- `z: number`
-- `interfaceOrientation: [[InterfaceOrientation](#interfaceorientation-enum)]`
-
-#### `RotationVector: [object]`
-
-Properties:
-
-- `qw: number`
-- `qx: number`
-- `qy: number`
-- `qz: number`
-- `yaw: number`
-- `pitch: number`
-- `roll: number`
-- `interfaceOrientation: [[InterfaceOrientation](#interfaceorientation-enum)]`
-
-#### `InterfaceOrientation: [enum]`
-
-Values:
-
-- `ROTATION_0` - default rotation on Android, portrait orientation on iOS
-- `ROTATION_90` - 90 degrees rotation on Android, landscape right orientation on iOS (landscape and home button on the right)
-- `ROTATION_180` - 180 degrees rotation on Android, upside down orientation on iOS
-- `ROTATION_270` - 270 degrees rotation on Android, landscape left orientation on iOS (landscape and home button on the left)
-
-### Example
-
-```jsx
-function UseAnimatedSensorExample() {
-  const animatedSensor = useAnimatedSensor(SensorType.ROTATION, {
-    interval: 10,
-  }); // <- initialization
-  const style = useAnimatedStyle(() => {
-    const yaw = Math.abs(animatedSensor.sensor.value.yaw);
-    const pitch = Math.abs(animatedSensor.sensor.value.pitch);
-    return {
-      height: withTiming(yaw * 200 + 20, { duration: 100 }), // <- usage
-      width: withTiming(pitch * 200 + 20, { duration: 100 }), // <- usage
-    };
+  useDerivedValue(() => {
+    const { x, y, z } = gyroscope.sensor.value;
   });
-
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Animated.View style={[{ backgroundColor: 'black' }, style]} />
-    </View>
-  );
 }
 ```
 
-### Live example
+<details>
+<summary>Type definitions</summary>
 
-<video
-  src="https://user-images.githubusercontent.com/36106620/158634922-eaad656e-c837-44d5-8d51-8e7fa27c5a16.mp4"
-  controls="controls"
-  muted="muted"
-  width="400"></video>
+```typescript
+// --- Function declaration ---
 
-### Tips
+function useAnimatedSensor(
+  sensorType: SensorType,
+  config?: Partial<SensorConfig>
+): AnimatedSensor<ValueRotation | Value3D>;
 
-:::caution
+// --- Configuration types ---
 
-On iOS, if you want to read sensor data you need to enable location services on your device (`Settings > Privacy > Location Services`).
+enum SensorType {
+  ACCELEROMETER = 1,
+  GYROSCOPE = 2,
+  GRAVITY = 3,
+  MAGNETIC_FIELD = 4,
+  ROTATION = 5,
+}
 
-:::
+type SensorConfig = {
+  interval: number | 'auto';
+  adjustToInterfaceOrientation: boolean;
+  iosReferenceFrame: IOSReferenceFrame;
+};
+
+enum IOSReferenceFrame {
+  XArbitraryZVertical,
+  XArbitraryCorrectedZVertical,
+  XMagneticNorthZVertical,
+  XTrueNorthZVertical,
+  Auto,
+}
+
+// --- Return types ---
+
+type AnimatedSensor<T extends Value3D | ValueRotation> = {
+  sensor: SharedValue<T>;
+  unregister: () => void;
+  isAvailable: boolean;
+  config: SensorConfig;
+};
+
+type Value3D = {
+  x: number;
+  y: number;
+  z: number;
+  interfaceOrientation: InterfaceOrientation;
+};
+
+type ValueRotation = {
+  qw: number;
+  qx: number;
+  qy: number;
+  qz: number;
+  yaw: number;
+  pitch: number;
+  roll: number;
+  interfaceOrientation: InterfaceOrientation;
+};
+
+enum InterfaceOrientation {
+  ROTATION_0 = 0,
+  ROTATION_90 = 90,
+  ROTATION_180 = 180,
+  ROTATION_270 = 270,
+}
+```
+
+</details>
+
+### Arguments
+
+#### `sensorType`
+
+A type of a sensor to use. You specify the sensor type using a `SensorType` enum containing fields:
+
+- `ACCELEROMETER`
+- `GYROSCOPE`
+- `GRAVITY`
+- `MAGNETIC_FIELD`
+- `ROTATION`
+
+#### `config` <Optional />
+
+Available properties:
+
+| Name                         | Type                           | Default                  | Description        |
+| ---------------------------- | ------------------------------ | ------------------------ | ------------------ |
+| interval                     | `number`&nbsp;or&nbsp;`"auto"` | `"auto"`                 | on iOS up to 100Hz |
+| adjustToInterfaceOrientation | `boolean`                      | `true`                   |                    |
+| iosReferenceFrame            | `IOSReferenceFrame`            | `IOSReferenceFrame.Auto` |                    |
+
+You can specify the iOS reference frame using an `IOSReferenceFrame` enum containing fields:
+
+- [`xArbitraryZVertical`](https://developer.apple.com/documentation/coremotion/cmattitudereferenceframe/1615953-xarbitraryzvertical) a reference frame where the Z axis is vertical and the X axis points in an arbitrary direction in the horizontal plane.
+
+- [`xArbitraryCorrectedZVertical`](https://developer.apple.com/documentation/coremotion/cmattitudereferenceframe/1615969-xarbitrarycorrectedzvertical) a reference frame where the Z axis is vertical and has improved rotation accuracy, and the X axis points in an arbitrary direction in the horizontal plane.
+
+- [`XMagneticNorthZVertical`](https://developer.apple.com/documentation/coremotion/cmattitudereferenceframe/1616123-xmagneticnorthzvertical) a reference frame where the Z axis is vertical and the X axis points to the magnetic north pole.
+
+- [`XTrueNorthZVertical`](https://developer.apple.com/documentation/coremotion/cmattitudereferenceframe/1616019-xtruenorthzvertical) a reference frame where the Z axis is vertical and the X axis points to the geographic north pole.
+
+- `Auto` on iOS devices without magnetometer (eg. iPods) `XArbitraryZVertical`, on devices with magnetometer `XArbitraryCorrectedZVertical`
+
+### Returns
+
+`useAnimatedSensor` returns an object containing these fields:
+
+- `sensor` a [shared value](/docs/fundamentals/glossary#shared-value) containing the sensor measurements. The measurement depend on the type of sensor you choose with [sensorType](/docs/device/useAnimatedSensor#sensortype) argument.
+
+- `unregister` a function allowing to stop listening to sensor updates.
+
+- `isAvailable` a boolean indicating whether sensor is available to use. You won't be able to use a sensor when it's missing from the device or the app doesn't have permission to access it.
+
+- `config` an object containing sensor configuration.
+
+## Sensors
+
+### Accelerometer
+
+The accelerometer measures the device acceleration along x, y, and z axes (excluding gravity) in m/s^2.
+
+```javascript
+const accelerometer = useAnimatedSensor(SensorType.ACCELEROMETER);
+```
+
+### Gyroscope
+
+The gyroscope measures the rate of rotation along x, y, and z axes in radians per second.
+
+```javascript
+const gyroscope = useAnimatedSensor(SensorType.GYROSCOPE);
+```
+
+### Gravity
+
+The gravity sensor measures acceleration due to gravity along x, y, and z axes in m/s^2.
+
+```javascript
+const gravity = useAnimatedSensor(SensorType.GRAVITY);
+```
+
+### Magnetic field
+
+The magnetic field sensor measures the strength and direction of the Earth's magnetic field in microtesla (μT).
+
+```javascript
+const magneticField = useAnimatedSensor(SensorType.MAGNETIC_FIELD);
+```
+
+### Rotation
+
+The rotation sensor measures the device orientation in three dimensions. This sensor represents the rotation by both Euler angles (roll, pitch, and yaw) and a quaternion.
+
+```javascript
+const rotation = useAnimatedSensor(SensorType.ROTATION);
+```
+
+Euler angles are:
+
+- **Roll** which is a rotation in radians along an axis that goes from the top to the bottom of the device.
+- **Pitch** which is a rotation in radians along an axis that goes from side to side of the device.
+- **Yaw** which is a rotation in radians along an axis that goes from the front to the back of the device.
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+<div style={{display: "grid", gridTemplateColumns: "repeat(3, 150px)", justifyContent: "center", textAlign: "center"}}>
+
+<div>
+  <img src={useBaseUrl('/img/rotation/roll.gif')} />
+  <p>Roll</p>
+</div>
+<div>
+  <img src={useBaseUrl('/img/rotation/pitch.gif')} />
+  <p>Pitch</p>
+</div>
+<div>
+  <img src={useBaseUrl('/img/rotation/yaw.gif')} />
+  <p>Yaw</p>
+</div>
+
+</div>
+
+**Quaternion** is a convenient way to represent rotations.
+Quaternion is based on complex numbers and isn't easy to understand intuitively. Quaternions simplify interpolation between two rotations.
+Quaternions are oftentimes used in computer graphics because they don't suffer from a [gimbal lock](https://en.wikipedia.org/wiki/Gimbal_lock). Rotation sensor returns a quaternion in form of components are:
+
+- `qw` - W component of the quaternion.
+- `qx` - X component of the quaternion.
+- `qy` - Y component of the quaternion.
+- `qz` - Z component of the quaternion.
+
+## Example
+
+## Remarks
+
+- On iOS, if you want to read sensor data you need to enable location services on your device (`Settings > Privacy > Location Services`).
+
+- You can read the sensor data on both [UI thread](/docs/fundamentals/glossary#ui-thread) and [JavaScript thread](/docs/fundamentals/glossary#javascript-thread).
+
+## Platform compatibility
+
+<div className="compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>
