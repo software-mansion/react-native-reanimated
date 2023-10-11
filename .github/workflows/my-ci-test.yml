@@ -14,4 +14,4 @@ jobs:
       #   with:
       #     path: 'reanimated_repo'
       - name: Create React Native app
-        run: npx react-native init app
+        run: npx react-native@latest init app
