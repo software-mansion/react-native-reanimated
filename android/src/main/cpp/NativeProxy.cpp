@@ -58,9 +58,10 @@ NativeProxy::NativeProxy(
   nativeReanimatedModule_->initializeFabric(uiManager);
   // removed temporarily, event listener mechanism needs to be fixed on RN side
   // eventListener_ = std::make_shared<EventListener>(
-  //     [nativeReanimatedModule, getCurrentTime](const RawEvent &rawEvent) {
+  //     [nativeReanimatedModule,
+  //      getAnimationTimestamp](const RawEvent &rawEvent) {
   //       return nativeReanimatedModule->handleRawEvent(
-  //           rawEvent, getCurrentTime());
+  //           rawEvent, getAnimationTimestamp());
   //     });
   // reactScheduler_ = binding->getScheduler();
   // reactScheduler_->addEventListener(eventListener_);
@@ -372,8 +373,8 @@ void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
   method(javaPart_.get(), listenerId);
 }
 
-double NativeProxy::getCurrentTime() {
-  static const auto method = getJniMethod<jlong()>("getCurrentTime");
+double NativeProxy::getAnimationTimestamp() {
+  static const auto method = getJniMethod<jlong()>("getAnimationTimestamp");
   jlong output = method(javaPart_.get());
   return static_cast<double>(output);
 }
@@ -419,7 +420,7 @@ void NativeProxy::handleEvent(
   }
 
   nativeReanimatedModule_->handleEvent(
-      eventName->toString(), emitterReactTag, payload, this->getCurrentTime());
+      eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
 }
 
 void NativeProxy::progressLayoutAnimation(
@@ -447,7 +448,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto obtainPropFunction = bindThis(&NativeProxy::obtainProp);
 #endif
 
-  auto getCurrentTime = bindThis(&NativeProxy::getCurrentTime);
+  auto getAnimationTimestamp = bindThis(&NativeProxy::getAnimationTimestamp);
 
   auto requestRender = bindThis(&NativeProxy::requestRender);
 
@@ -491,7 +492,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       configurePropsFunction,
       obtainPropFunction,
 #endif
-      getCurrentTime,
+      getAnimationTimestamp,
       progressLayoutAnimation,
       endLayoutAnimation,
       registerSensorFunction,

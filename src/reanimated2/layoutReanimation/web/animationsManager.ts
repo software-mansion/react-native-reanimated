@@ -302,7 +302,6 @@ export function setElementAnimation(
   element.style.animationDuration = `${duration}s`;
   element.style.animationDelay = `${delay}s`;
   element.style.animationTimingFunction = easing;
-  element.style.animationFillMode = 'forwards'; // Prevents returning to base state after animation finishes.
 
   element.onanimationend = () => {
     animationConfig.callback?.(true);

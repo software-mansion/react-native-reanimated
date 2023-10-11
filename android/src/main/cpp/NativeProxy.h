@@ -190,7 +190,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   PlatformDepMethodsHolder getPlatformDependentMethods();
   void setupLayoutAnimations();
 
-  double getCurrentTime();
+  double getAnimationTimestamp();
   bool isAnyHandlerWaitingForEvent(
       const std::string &eventName,
       const int emitterReactTag);
