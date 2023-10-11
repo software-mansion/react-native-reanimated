@@ -3,15 +3,9 @@ on:
   pull_request:
     paths:
       - .github/workflows/my-ci-test.yml
-  workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # - name: Check out
-      #   uses: actions/checkout@v3
-      #   with:
-      #     path: 'reanimated_repo'
       - name: Create React Native app
-        run: npx react-native@latest init app
+        run: npx react-native@alpha init app
