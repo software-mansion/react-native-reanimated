@@ -344,6 +344,19 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void updateProps(int viewTag, Map<String, Object> props) {
+    // We need to check current view exist in UIManager or not
+    // Sometime, view can be replace, recycle, ... with wrong way (like FlashList)
+    // So before update, We need to check view tag exist in UIManager
+    try {
+        View view = mUIManager.resolveView(viewTag);
+        if(view == null) {
+          return;
+        }
+    } catch (Exception ex) {
+        Log.d("Reanimated-updateProps", "Skip update props cause viewTag not exist or have been removed!");
+        return;
+    }
+
     // TODO: update PropsNode to use this method instead of its own way of updating props
     boolean hasUIProps = false;
     boolean hasNativeProps = false;
