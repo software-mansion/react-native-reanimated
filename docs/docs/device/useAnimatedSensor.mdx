@@ -226,6 +226,10 @@ Quaternions are oftentimes used in computer graphics because they don't suffer f
 
 ## Example
 
+import AnimatedSensorSrc from '!!raw-loader!@site/src/examples/AnimatedSensor';
+
+<CollapsibleCode src={AnimatedSensorSrc} showLines={[9, 29]} />
+
 ## Remarks
 
 - On iOS, if you want to read sensor data you need to enable location services on your device (`Settings > Privacy > Location Services`).
@@ -236,8 +240,11 @@ Quaternions are oftentimes used in computer graphics because they don't suffer f
 
 <div className="compatibility">
 
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
+| Android | iOS | Web               |
+| ------- | --- | ----------------- |
+| ✅      | ✅  | ✅ <sup>[1]</sup> |
+
+<sup>[1]</sup> The device needs to support sensors and your web application has to
+be connected over HTTPS.
 
 </div>
