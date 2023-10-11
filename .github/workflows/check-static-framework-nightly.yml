@@ -19,6 +19,10 @@ jobs:
       group: ios-static-framework-${{ matrix.react-native-architecture }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '2.6'
       - name: Create React Native app
         run: npx react-native init app
       - name: Install dependencies
