@@ -83,15 +83,6 @@ NativeReanimatedModule::NativeReanimatedModule(
         this->requestAnimationFrame(rt, callback);
       };
 
-  auto updateDataSynchronously =
-      [this](
-          jsi::Runtime &rt,
-          const jsi::Value &synchronizedDataHolderRef,
-          const jsi::Value &newData) {
-        return this->updateDataSynchronously(
-            rt, synchronizedDataHolderRef, newData);
-      };
-
 #ifdef RCT_NEW_ARCH_ENABLED
   auto updateProps = [this](jsi::Runtime &rt, const jsi::Value &operations) {
     this->updateProps(rt, operations);
@@ -130,8 +121,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.dispatchCommandFunction,
 #endif
       requestAnimationFrame,
-      updateDataSynchronously,
-      platformDepMethodsHolder.getCurrentTime,
+      platformDepMethodsHolder.getAnimationTimestamp,
       platformDepMethodsHolder.setGestureStateFunction,
       platformDepMethodsHolder.progressLayoutAnimation,
       platformDepMethodsHolder.endLayoutAnimation,
@@ -196,9 +186,7 @@ void NativeReanimatedModule::updateDataSynchronously(
     jsi::Runtime &rt,
     const jsi::Value &synchronizedDataHolderRef,
     const jsi::Value &newData) {
-  auto dataHolder = extractShareableOrThrow<ShareableSynchronizedDataHolder>(
-      rt, synchronizedDataHolderRef);
-  dataHolder->set(rt, newData);
+  reanimated::updateDataSynchronously(rt, synchronizedDataHolderRef, newData);
 }
 
 jsi::Value NativeReanimatedModule::getDataSynchronously(
