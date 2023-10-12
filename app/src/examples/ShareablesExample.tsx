@@ -1,7 +1,7 @@
 import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
-import { runOnUI } from 'react-native-reanimated';
+import { runOnJS, runOnUI } from 'react-native-reanimated';
 
 export default function ShareablesExample() {
   return (
@@ -45,10 +45,15 @@ function ArrayBufferDemo() {
     const ab = new ArrayBuffer(8);
     const ta = new Uint8Array(ab);
     ta[7] = 42;
+    function after() {
+      console.log(ta[7] === 42);
+    }
     runOnUI(() => {
       console.log(ab instanceof ArrayBuffer);
       const ta = new Uint8Array(ab);
-      console.log(ta[7]);
+      console.log(ta[7] === 42);
+      ta[7] = 123;
+      runOnJS(after)();
     })();
   };
 
@@ -61,7 +66,7 @@ function TypedArrayDemo() {
     ta[7] = 1234567;
     runOnUI(() => {
       console.log(ta instanceof Uint32Array);
-      console.log(ta[7]);
+      console.log(ta[7] === 1234567);
     })();
   };
 
@@ -75,7 +80,7 @@ function DataViewDemo() {
     dv.setInt16(7, 12345);
     runOnUI(() => {
       console.log(dv instanceof DataView);
-      console.log(dv.getInt16(7));
+      console.log(dv.getInt16(7) === 12345);
     })();
   };
 
