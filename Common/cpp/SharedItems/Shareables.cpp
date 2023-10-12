@@ -65,6 +65,9 @@ jsi::Value makeShareableClone(
       } else {
         shareable = std::make_shared<ShareableArray>(rt, object.asArray(rt));
       }
+    } else if (object.isArrayBuffer(rt)) {
+      shareable =
+          std::make_shared<ShareableArrayBuffer>(rt, object.getArrayBuffer(rt));
     } else if (object.isHostObject(rt)) {
       assert(
           !object.isHostObject<ShareableJSRef>(rt) &&
@@ -177,6 +180,17 @@ jsi::Value ShareableArray::toJSValue(jsi::Runtime &rt) {
     ary.setValueAtIndex(rt, i, data_[i]->getJSValue(rt));
   }
   return ary;
+}
+
+jsi::Value ShareableArrayBuffer::toJSValue(jsi::Runtime &rt) {
+  auto size = static_cast<int>(data_.size());
+  auto arrayBuffer = rt.global()
+                         .getPropertyAsFunction(rt, "ArrayBuffer")
+                         .callAsConstructor(rt, size)
+                         .getObject(rt)
+                         .getArrayBuffer(rt);
+  memcpy(arrayBuffer.data(rt), data_.data(), size);
+  return arrayBuffer;
 }
 
 ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)

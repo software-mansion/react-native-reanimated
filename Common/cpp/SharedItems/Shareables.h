@@ -84,6 +84,7 @@ class Shareable {
     SynchronizedDataHolder,
     HostObjectType,
     HostFunctionType,
+    ArrayBufferType,
   };
 
   explicit Shareable(ValueType valueType) : valueType_(valueType) {}
@@ -221,6 +222,20 @@ class ShareableHostFunction : public Shareable {
   jsi::HostFunctionType hostFunction_;
   std::string name_;
   unsigned int paramCount_;
+};
+
+class ShareableArrayBuffer : public Shareable {
+ public:
+  ShareableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer)
+      : Shareable(ArrayBufferType),
+        data_(
+            arrayBuffer.data(rt),
+            arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::vector<uint8_t> data_;
 };
 
 class ShareableWorklet : public ShareableObject {

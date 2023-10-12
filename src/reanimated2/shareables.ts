@@ -201,6 +201,8 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
         });
         registerShareableMapping(value, handle);
         return handle as ShareableRef<T>;
+      } else if (value instanceof ArrayBuffer) {
+        toAdapt = value;
       } else {
         // This is reached for object types that are not of plain Object.prototype.
         // We don't support such objects from being transferred as shareables to
