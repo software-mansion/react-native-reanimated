@@ -1,7 +1,7 @@
 package com.swmansion.reanimated;
 
 import static java.lang.Float.NaN;
-
+import android.util.Log;
 import android.view.View;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.GuardedRunnable;
