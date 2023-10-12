@@ -10,7 +10,7 @@ on:
 jobs:
   build_ios:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: macos-12
+    runs-on: macos-13
     strategy:
       matrix:
         react-native-architecture: ['Paper', 'Fabric']
