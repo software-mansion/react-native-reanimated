@@ -85,17 +85,20 @@ function createMapperRegistry() {
     if (processingMappers) {
       return;
     }
-    processingMappers = true;
-    if (mappers.size !== sortedMappers.length) {
-      updateMappersOrder();
-    }
-    for (const mapper of sortedMappers) {
-      if (mapper.dirty) {
-        mapper.dirty = false;
-        mapper.worklet();
+    try {
+      processingMappers = true;
+      if (mappers.size !== sortedMappers.length) {
+        updateMappersOrder();
       }
+      for (const mapper of sortedMappers) {
+        if (mapper.dirty) {
+          mapper.dirty = false;
+          mapper.worklet();
+        }
+      }
+    } finally {
+      processingMappers = false;
     }
-    processingMappers = false;
   }
 
   function maybeRequestUpdates() {
