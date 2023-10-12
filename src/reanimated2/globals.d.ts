@@ -85,6 +85,7 @@ declare global {
         args: Array<unknown>
       ) => void)
     | undefined;
+  var _getAnimationTimestamp: () => number;
   var __ErrorUtils: {
     reportFatalError: (error: Error) => void;
   };

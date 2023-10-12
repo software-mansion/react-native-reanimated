@@ -14,7 +14,7 @@ void UIRuntimeDecorator::decorate(
     const MeasureFunction measure,
     const DispatchCommandFunction dispatchCommand,
     const RequestAnimationFrameFunction requestAnimationFrame,
-    const TimeProviderFunction getCurrentTime,
+    const GetAnimationTimestampFunction getAnimationTimestamp,
     const SetGestureStateFunction setGestureState,
     const ProgressLayoutAnimationFunction progressLayoutAnimation,
     const EndLayoutAnimationFunction endLayoutAnimation,
@@ -48,24 +48,8 @@ void UIRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       uiRuntime, "requestAnimationFrame", requestAnimationFrame);
-
-  auto performanceNow = [getCurrentTime](
-                            jsi::Runtime &,
-                            const jsi::Value &,
-                            const jsi::Value *,
-                            size_t) -> jsi::Value {
-    return jsi::Value(getCurrentTime());
-  };
-  jsi::Object performance(uiRuntime);
-  performance.setProperty(
-      uiRuntime,
-      "now",
-      jsi::Function::createFromHostFunction(
-          uiRuntime,
-          jsi::PropNameID::forAscii(uiRuntime, "now"),
-          0,
-          performanceNow));
-  uiRuntime.global().setProperty(uiRuntime, "performance", performance);
+  jsi_utils::installJsiFunction(
+      uiRuntime, "_getAnimationTimestamp", getAnimationTimestamp);
 
   jsi_utils::installJsiFunction(
       uiRuntime, "_notifyAboutProgress", progressLayoutAnimation);
