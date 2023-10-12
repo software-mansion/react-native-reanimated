@@ -225,7 +225,7 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
               DataView,
             }[type];
             if (!constructor) {
-              throw new Error(`Unknown array type: ${type}`);
+              throw new Error(`[Reanimated] Unknown array type: ${type}`);
             }
             return new constructor(buffer);
           },
