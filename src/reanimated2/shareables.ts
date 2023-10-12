@@ -203,6 +203,35 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
         return handle as ShareableRef<T>;
       } else if (value instanceof ArrayBuffer) {
         toAdapt = value;
+      } else if (ArrayBuffer.isView(value)) {
+        // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
+        const buffer = value.buffer;
+        const type = value.constructor.name;
+        const handle = makeShareableCloneRecursive({
+          __init: () => {
+            'worklet';
+            const constructor = {
+              Int8Array,
+              Uint8Array,
+              Uint8ClampedArray,
+              Int16Array,
+              Uint16Array,
+              Int32Array,
+              Uint32Array,
+              Float32Array,
+              Float64Array,
+              BigInt64Array,
+              BigUint64Array,
+              DataView,
+            }[type];
+            if (!constructor) {
+              throw new Error(`Unknown array type: ${type}`);
+            }
+            return new constructor(buffer);
+          },
+        });
+        registerShareableMapping(value, handle);
+        return handle as ShareableRef<T>;
       } else {
         // This is reached for object types that are not of plain Object.prototype.
         // We don't support such objects from being transferred as shareables to

@@ -9,6 +9,8 @@ export default function ShareablesExample() {
       <CyclicObjectDemo />
       <InaccessibleObjectDemo />
       <ArrayBufferDemo />
+      <TypedArrayDemo />
+      <DataViewDemo />
     </View>
   );
 }
@@ -51,6 +53,33 @@ function ArrayBufferDemo() {
   };
 
   return <Button title="ArrayBuffer" onPress={handlePress} />;
+}
+
+function TypedArrayDemo() {
+  const handlePress = () => {
+    const ta = new Uint32Array(8);
+    ta[7] = 1234567;
+    runOnUI(() => {
+      console.log(ta instanceof Uint32Array);
+      console.log(ta[7]);
+    })();
+  };
+
+  return <Button title="TypedArray" onPress={handlePress} />;
+}
+
+function DataViewDemo() {
+  const handlePress = () => {
+    const buffer = new ArrayBuffer(16);
+    const dv = new DataView(buffer);
+    dv.setInt16(7, 12345);
+    runOnUI(() => {
+      console.log(dv instanceof DataView);
+      console.log(dv.getInt16(7));
+    })();
+  };
+
+  return <Button title="DataView" onPress={handlePress} />;
 }
 
 const styles = StyleSheet.create({
