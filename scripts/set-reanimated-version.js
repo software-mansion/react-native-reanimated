@@ -1,17 +1,32 @@
 const fs = require('fs');
 const { cat, exec } = require('shelljs');
 
-const helpInfo =
-  'Use --nightly or -n to set nightly version.\nUse --fresh or -f to set fresh version.\nElse pass the version number as an argument.';
+let IS_HELP = false;
+let IS_NIGHTLY = false;
+let IS_FRESH = false;
 
-if (process.argv[2] === '--help' || process.argv[2] === '-h') {
-  console.log(helpInfo);
+process.argv.forEach((arg) => {
+  if (arg === '--help' || arg === '-h') {
+    IS_HELP = true;
+  } else if (arg === '--nightly' || arg === '-n') {
+    IS_NIGHTLY = true;
+  } else if (arg === '--fresh' || arg === '-f') {
+    IS_FRESH = true;
+  }
+});
+
+if (IS_HELP) {
+  console.warn(
+    'Use --nightly or -n to set nightly version.\nUse --fresh or -f to set fresh version.\nElse pass the version as an argument.'
+  );
+  process.exitCode = 1;
   return;
 }
 
-const mode = process.argv[2];
-const IS_NIGHTLY = mode === '--nightly' || mode === '-n';
-const IS_FRESH = mode === '--fresh' || mode === '-f';
+if (IS_NIGHTLY && IS_FRESH) {
+  throw new Error('Cannot set nightly and fresh version at the same time');
+}
+
 const IS_SET_CUSTOM = !IS_NIGHTLY && !IS_FRESH;
 
 const packageJsonPath = 'package.json';
@@ -19,7 +34,8 @@ const packageJson = JSON.parse(cat(packageJsonPath));
 const currentVersion = packageJson.version;
 
 if (process.argv.length < 3) {
-  return currentVersion;
+  console.log(currentVersion);
+  return;
 }
 
 let version;
@@ -67,4 +83,3 @@ const after = before.replace(
 fs.writeFileSync(jsVersionPath, after, 'utf-8');
 
 console.log(currentVersion);
-return currentVersion;
