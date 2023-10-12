@@ -1,3 +1,4 @@
+#import <RNReanimated/REABatchObserver.h>
 #import <RNReanimated/READisplayLink.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
@@ -30,6 +31,8 @@ using namespace facebook::react;
 
 @interface RCTUIManager ()
 
+@property REABatchObserver *batchObserver;
+
 - (void)updateView:(nonnull NSNumber *)reactTag viewName:(NSString *)viewName props:(NSDictionary *)props;
 
 - (void)setNeedsLayout;
@@ -37,8 +40,6 @@ using namespace facebook::react;
 @end
 
 @interface RCTUIManager (SyncUpdates)
-
-- (BOOL)hasEnqueuedUICommands;
 
 - (void)runSyncUIUpdatesWithObserver:(id<RCTUIManagerObserver>)observer;
 
@@ -56,12 +57,6 @@ using namespace facebook::react;
 @end
 
 @implementation RCTUIManager (SyncUpdates)
-
-- (BOOL)hasEnqueuedUICommands
-{
-  // Accessing some private bits of RCTUIManager to provide missing functionality
-  return [[self valueForKey:@"_pendingUIBlocks"] count] > 0;
-}
 
 - (void)runSyncUIUpdatesWithObserver:(id<RCTUIManagerObserver>)observer
 {
@@ -336,7 +331,8 @@ using namespace facebook::react;
       if (strongSelf == nil) {
         return;
       }
-      BOOL canUpdateSynchronously = trySynchronously && ![strongSelf.uiManager hasEnqueuedUICommands];
+      bool isActiveBatch = strongSelf.uiManager.batchObserver.isActiveBatch;
+      BOOL canUpdateSynchronously = trySynchronously && !isActiveBatch;
 
       if (!canUpdateSynchronously) {
         [syncUpdateObserver unblockUIThread];

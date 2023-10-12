@@ -10,6 +10,7 @@
 
 @interface RCTUIManager (Reanimated)
 @property REAAnimationsManager *animationsManager;
+@property REABatchObserver *batchObserver;
 - (NSArray<id<RCTComponent>> *)_childrenToRemoveFromContainer:(id<RCTComponent>)container
                                                     atIndices:(NSArray<NSNumber *> *)atIndices;
 @end
@@ -24,6 +25,16 @@
 {
   return objc_getAssociatedObject(self, @selector(animationsManager));
 }
+
+@dynamic batchObserver;
+- (void)setBatchObserver:(REABatchObserver *)batchObserver
+{
+  objc_setAssociatedObject(self, @selector(batchObserver), batchObserver, OBJC_ASSOCIATION_RETAIN);
+}
+- (REABatchObserver *)batchObserver
+{
+  return objc_getAssociatedObject(self, @selector(batchObserver));
+}
 @end
 
 @implementation REASwizzledUIManager
@@ -33,6 +44,7 @@
 {
   if (self = [super init]) {
     [uiManager setAnimationsManager:animationsManager];
+    [uiManager setBatchObserver:[REABatchObserver new]];
     [self swizzleMethods];
   }
   return self;
@@ -54,6 +66,18 @@
     [REAUtils swizzleMethod:manageChildrenOriginal
                    forClass:[RCTUIManager class]
                        with:manageChildrenReanimated
+                  fromClass:[self class]];
+    [REAUtils swizzleMethod:@selector(addUIBlock:)
+                   forClass:[RCTUIManager class]
+                       with:@selector(reanimated_addUIBlock:)
+                  fromClass:[self class]];
+    [REAUtils swizzleMethod:@selector(prependUIBlock:)
+                   forClass:[RCTUIManager class]
+                       with:@selector(reanimated_prependUIBlock:)
+                  fromClass:[self class]];
+    [REAUtils swizzleMethod:@selector(flushUIBlocksWithCompletion:)
+                   forClass:[RCTUIManager class]
+                       with:@selector(reanimated_flushUIBlocksWithCompletion:)
                   fromClass:[self class]];
   });
 }
@@ -322,6 +346,34 @@
     [originalSelf.animationsManager viewsDidLayout];
     // Reanimated changes /end
   };
+}
+
+- (void)reanimated_addUIBlock:(RCTViewManagerUIBlock)block
+{
+  [self.batchObserver onNewBatchBlockQueued];
+  [self reanimated_addUIBlock:block];
+}
+
+- (void)reanimated_prependUIBlock:(RCTViewManagerUIBlock)block
+{
+  [self.batchObserver onNewBatchBlockQueued];
+  [self reanimated_prependUIBlock:block];
+}
+
+- (void)reanimated_flushUIBlocksWithCompletion:(void (^)(void))completion
+{
+  NSNumber *batchId = [self.batchObserver batchWillFlush];
+  NSMutableArray<RCTViewManagerUIBlock> *pendingUIBlocks = [self valueForKey:@"_pendingUIBlocks"];
+  bool isUIQueueEmpty = [pendingUIBlocks count] == 0;
+  if (!isUIQueueEmpty) {
+    [pendingUIBlocks
+        addObject:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, REAUIView *> *viewRegistry) {
+          [self.batchObserver batchDidFlush:batchId];
+        }];
+  } else {
+    [self.batchObserver batchDidFlush:batchId];
+  }
+  [self reanimated_flushUIBlocksWithCompletion:completion];
 }
 
 @end
