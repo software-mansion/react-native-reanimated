@@ -3,9 +3,9 @@ import type { MeasuredDimensions } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 import type { Component } from 'react';
 
-export const measure: <T extends Component>(
+export function measure<T extends Component>(
   animatedRef: AnimatedRef<T>
-) => MeasuredDimensions | null = (animatedRef) => {
+): MeasuredDimensions | null {
   const element = (animatedRef as any)();
 
   if (element === -1) {
@@ -24,4 +24,4 @@ export const measure: <T extends Component>(
     pageX: viewportOffset.left,
     pageY: viewportOffset.top,
   };
-};
+}

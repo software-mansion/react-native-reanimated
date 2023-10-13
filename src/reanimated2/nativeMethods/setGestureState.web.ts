@@ -1,8 +1,5 @@
 'use strict';
 
-export const setGestureState: (
-  handlerTag: number,
-  newState: number
-) => void = () => {
+export function setGestureState() {
   console.warn('[Reanimated] setGestureState() is not available on web.');
-};
+}
