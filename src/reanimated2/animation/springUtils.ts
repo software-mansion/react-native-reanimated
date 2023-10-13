@@ -61,7 +61,6 @@ export interface InnerSpringAnimation
 export function isConfigValid(config: DefaultSpringConfig): boolean {
   'worklet';
   let errorMessage = '';
-
   (
     [
       'stiffness',
