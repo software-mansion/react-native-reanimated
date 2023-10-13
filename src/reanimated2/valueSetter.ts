@@ -31,7 +31,8 @@ export function valueSetter(sv: any, value: any): void {
     const initializeAnimation = (timestamp: number) => {
       animation.onStart(animation, sv.value, timestamp, previousAnimation);
     };
-    const currentTimestamp = global.__frameTimestamp || performance.now();
+    const currentTimestamp =
+      global.__frameTimestamp || _getAnimationTimestamp();
     initializeAnimation(currentTimestamp);
 
     const step = (newTimestamp: number) => {

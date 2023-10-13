@@ -269,7 +269,8 @@ var require_globals = __commonJS({
       "_setGestureState",
       "_notifyAboutProgress",
       "_notifyAboutEnd",
-      "_runOnUIQueue"
+      "_runOnUIQueue",
+      "_getAnimationTimestamp"
     ]);
     function initializeGlobals() {
       exports2.globals = new Set(exports2.defaultGlobals);

@@ -24,7 +24,7 @@ class UIRuntimeDecorator {
       const MeasureFunction measure,
       const DispatchCommandFunction dispatchCommand,
       const RequestAnimationFrameFunction requestAnimationFrame,
-      const TimeProviderFunction getCurrentTime,
+      const GetAnimationTimestampFunction getAnimationTimestamp,
       const SetGestureStateFunction setGestureState,
       const ProgressLayoutAnimationFunction progressLayoutAnimation,
       const EndLayoutAnimationFunction endLayoutAnimation,
