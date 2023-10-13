@@ -50,10 +50,11 @@ jobs:
           ndk-version: r21d
 
       - name: Build package
+        id: build
         env:
           ANDROID_NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: >-
-          ./createNPMPackage.sh ${{ inputs.option }} 2> build.log
+          ./createNPMPackage.sh ${{ inputs.option }}
 
       - name: Check if any node_modules were packed
         id: node_modules
