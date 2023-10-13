@@ -24,9 +24,14 @@ table thead tr {
   table-layout: fixed;
 }
 
+.compatibility {
+  overflow-x: auto;
+}
+
 .compatibility table {
   display: table;
   width: 100%;
+  white-space: nowrap;
 }
 
 .compatibility td {
