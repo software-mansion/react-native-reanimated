@@ -67,7 +67,7 @@ jobs:
         run: grep --silent -E "npm notice package size:\s*[0-9][0-9]?[0-9]?(\.[0-9]*)?\s*kB" build.log
 
       - name: Show build log
-        if: failure() && steps.build.outcome == 'failure'
+        if: failure()
         run: >-
           cat build.log
 
