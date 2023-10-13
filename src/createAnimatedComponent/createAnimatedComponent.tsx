@@ -46,6 +46,7 @@ import {
   configureWebLayoutAnimations,
   tryActivateLayoutTransition,
 } from '../reanimated2/layoutReanimation/web/animationsManager';
+import { shallowEqual } from '../reanimated2/hook/utils';
 
 const IS_WEB = isWeb();
 
@@ -53,7 +54,7 @@ function onlyAnimatedStyles(styles: StyleProps[]): StyleProps[] {
   return styles.filter((style) => style?.viewDescriptors);
 }
 
-function isSameAnimatedStyle(
+export function isSameAnimatedStyle(
   style1?: StyleProps,
   style2?: StyleProps
 ): boolean {
@@ -74,10 +75,64 @@ interface ComponentRef extends Component {
   getAnimatableRef?: () => ComponentRef;
 }
 
-export function createAnimatedComponent<P extends object>(
-  component: FunctionComponent<P>,
-  options?: Options<P>
-): FunctionComponent<AnimateProps<P>>;
+export type AnimatedStylesManager = {
+  data: { id: number; counter: number; snapshot: any }[];
+  styleToRestore: any;
+  requiresUpdate: boolean;
+  add: (id: number) => void;
+  updateSnapshot: (id: number, value: any) => void;
+  // remove: (id: number) => void;
+  removeUnused: () => void;
+  recalculateStyleToRestore: () => void;
+  purgeCounters: () => void;
+};
+
+export function createAnimatedStylesManager() {
+  const manager: AnimatedStylesManager = {
+    data: [] as { id: number; counter: number; snapshot: any }[],
+    styleToRestore: {},
+    requiresUpdate: false,
+    add: (id: number) => {
+      const index = manager.data.findIndex((v) => v.id === id);
+      if (index !== -1) {
+        manager.data[index].counter++;
+      } else {
+        manager.data.push({ id, counter: 1, snapshot: {} });
+      }
+    },
+    // remove: (id: number) => {
+    //   const index = manager.data.findIndex((v) => v.id === id);
+    //   if (index !== -1) {
+    //     manager.data.splice(index, 1);
+    //   }
+    // },
+    removeUnused() {
+      manager.data = manager.data.filter((v) => v.counter > 0);
+      this.recalculateStyleToRestore();
+    },
+    recalculateStyleToRestore: () => {
+      manager.styleToRestore = manager.data.reduce(
+        (acc, { snapshot }) => ({ ...acc, ...snapshot }),
+        {}
+      );
+    },
+    updateSnapshot(id, value) {
+      const index = manager.data.findIndex((v) => v.id === id);
+      if (index !== -1) {
+        manager.data[index].snapshot = value;
+      }
+    },
+    purgeCounters: () => {
+      manager.data.forEach((v) => (v.counter = 0));
+    },
+  };
+  return manager;
+}
+
+export function createAnimatedComponent<Props extends object>(
+  component: FunctionComponent<Props>,
+  options?: Options<Props>
+): FunctionComponent<AnimateProps<Props>>;
 
 export function createAnimatedComponent<P extends object>(
   component: ComponentClass<P>,
@@ -99,8 +154,8 @@ export function createAnimatedComponent(
   > {
     _styles: StyleProps[] | null = null;
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
+
     _viewTag = -1;
-    _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
     _component: ComponentRef | HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
@@ -110,6 +165,9 @@ export function createAnimatedComponent(
     static displayName: string;
     static contextType = SkipEnteringContext;
     context!: React.ContextType<typeof SkipEnteringContext>;
+
+    _animatedStylesManager: AnimatedStylesManager =
+      createAnimatedStylesManager();
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
@@ -332,6 +390,11 @@ export function createAnimatedComponent(
             );
             if (!isPresent) {
               prevStyle.viewDescriptors.remove(viewTag);
+              if (IS_WEB) {
+                prevStyle.viewsRef.remove(this);
+                // this._animatedStylesManager.remove(prevStyle.viewsRef.id);
+                // this._animatedStylesManager.requiresUpdate = true;
+              }
             }
           }
         }
@@ -339,10 +402,11 @@ export function createAnimatedComponent(
 
       styles.forEach((style) => {
         style.viewDescriptors.add({
-          tag: viewTag,
+          key: viewTag,
           name: viewName,
           shadowNodeWrapper,
         });
+        // this._animatedStylesManager.requiresUpdate = true;
         if (isJest()) {
           /**
            * We need to connect Jest's TestObject instance whose contains just props object

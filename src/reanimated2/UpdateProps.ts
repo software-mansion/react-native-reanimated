@@ -21,7 +21,7 @@ if (shouldBeUseWeb()) {
     'worklet';
     if (maybeViewRef) {
       maybeViewRef.items.forEach((item, _) => {
-        _updatePropsJS(updates, item, isAnimatedProps);
+        _updatePropsJS(updates, item, isAnimatedProps, maybeViewRef.id);
       });
     }
   };

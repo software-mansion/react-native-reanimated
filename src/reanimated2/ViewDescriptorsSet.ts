@@ -8,6 +8,7 @@ export interface ViewRefSet<T> {
   items: Set<T>;
   add: (item: T) => void;
   remove: (item: T) => void;
+  id: number;
 }
 
 export interface ViewDescriptorsSet {
@@ -51,6 +52,8 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
   return data;
 }
 
+let ViewRefSetId = 2137;
+
 export function makeViewsRefSet<T>(): ViewRefSet<T> {
   const ref = useRef<ViewRefSet<T> | null>(null);
   if (ref.current === null) {
@@ -65,7 +68,11 @@ export function makeViewsRefSet<T>(): ViewRefSet<T> {
       remove: (item: T) => {
         data.items.delete(item);
       },
-    };
+    } as ViewRefSet<T>;
+    Object.defineProperty(data, 'id', {
+      value: ViewRefSetId++,
+      writable: false,
+    });
     ref.current = data;
   }
 
