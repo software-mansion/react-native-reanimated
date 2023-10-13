@@ -88,6 +88,21 @@ const INACCESSIBLE_OBJECT = {
   },
 };
 
+const VALID_ARRAY_VIEWS_NAMES = [
+  'Int8Array',
+  'Uint8Array',
+  'Uint8ClampedArray',
+  'Int16Array',
+  'Uint16Array',
+  'Int32Array',
+  'Uint32Array',
+  'Float32Array',
+  'Float64Array',
+  'BigInt64Array',
+  'BigUint64Array',
+  'DataView',
+];
+
 const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // Below variable stores object that we process in makeShareableCloneRecursive at the specified depth.
 // We use it to check if later on the function reenters with the same object
@@ -210,22 +225,16 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
         const handle = makeShareableCloneRecursive({
           __init: () => {
             'worklet';
-            const constructor = {
-              Int8Array,
-              Uint8Array,
-              Uint8ClampedArray,
-              Int16Array,
-              Uint16Array,
-              Int32Array,
-              Uint32Array,
-              Float32Array,
-              Float64Array,
-              BigInt64Array,
-              BigUint64Array,
-              DataView,
-            }[type];
-            if (!constructor) {
-              throw new Error(`[Reanimated] Unknown array type: ${type}`);
+            if (!VALID_ARRAY_VIEWS_NAMES.includes(type)) {
+              throw new Error(
+                `[Reanimated] Invalid array view name \`${type}\`.`
+              );
+            }
+            const constructor = global[type as keyof typeof global];
+            if (constructor === undefined) {
+              throw new Error(
+                `[Reanimated] Constructor for \`${type}\` not found.`
+              );
             }
             return new constructor(buffer);
           },
