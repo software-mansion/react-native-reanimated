@@ -1,5 +1,5 @@
 'use strict';
-import type { AnimatedRef } from './hook/commonTypes';
+import type { AnimatedRef } from '../hook/commonTypes';
 import type { Component } from 'react';
 import type { ScrollView } from 'react-native';
 

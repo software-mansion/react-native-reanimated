@@ -1,6 +1,6 @@
 'use strict';
-import type { MeasuredDimensions } from './commonTypes';
-import type { AnimatedRef } from './hook/commonTypes';
+import type { MeasuredDimensions } from '../commonTypes';
+import type { AnimatedRef } from '../hook/commonTypes';
 import type { Component } from 'react';
 
 export const measure: <T extends Component>(

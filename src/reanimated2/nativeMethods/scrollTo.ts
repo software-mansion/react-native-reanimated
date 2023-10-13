@@ -1,7 +1,7 @@
 'use strict';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from './PlatformChecker';
+import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
 import { dispatchCommand } from './dispatchCommand';
-import type { AnimatedRef } from './hook/commonTypes';
+import type { AnimatedRef } from '../hook/commonTypes';
 import type { Component } from 'react';
 
 const IS_NATIVE = !shouldBeUseWeb();

@@ -1,5 +1,5 @@
 'use strict';
-import type { AnimatedRef } from './hook/commonTypes';
+import type { AnimatedRef } from '../hook/commonTypes';
 import type { Component } from 'react';
 
 export const dispatchCommand: <T extends Component>(

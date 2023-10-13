@@ -1,5 +1,5 @@
 'use strict';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from './PlatformChecker';
+import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
 
 const IS_NATIVE = !shouldBeUseWeb();
 
