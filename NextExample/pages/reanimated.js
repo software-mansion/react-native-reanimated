@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-export default function Reanimated() {
+export default function App() {
   return (
     <Animated.View style={styles.container}>
       <Animated.Text accessibilityRole="header" style={styles.text}>

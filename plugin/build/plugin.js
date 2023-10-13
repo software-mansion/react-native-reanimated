@@ -33,8 +33,8 @@ var require_utils = __commonJS({
     exports2.isRelease = void 0;
     function isRelease() {
       var _a, _b;
-      const regex = /(prod|release|stag[ei])/i;
-      return !!(((_a = process.env.BABEL_ENV) === null || _a === void 0 ? void 0 : _a.match(regex)) || ((_b = process.env.NODE_ENV) === null || _b === void 0 ? void 0 : _b.match(regex)));
+      const pattern = /(prod|release|stag[ei])/i;
+      return !!(((_a = process.env.BABEL_ENV) === null || _a === void 0 ? void 0 : _a.match(pattern)) || ((_b = process.env.NODE_ENV) === null || _b === void 0 ? void 0 : _b.match(pattern)));
     }
     exports2.isRelease = isRelease;
   }
