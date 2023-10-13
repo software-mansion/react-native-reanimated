@@ -58,7 +58,7 @@ export interface InnerSpringAnimation
   toValue: number;
   current: number;
 }
-export function isConfigValid(config: DefaultSpringConfig): boolean {
+export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   'worklet';
   let errorMessage = '';
   (
