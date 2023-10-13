@@ -163,7 +163,7 @@ public abstract class NativeProxyCommon {
   }
 
   @DoNotStrip
-  public long getCurrentTime() {
+  public long getAnimationTimestamp() {
     if (slowAnimationsEnabled) {
       final long ANIMATIONS_DRAG_FACTOR = 10;
       return this.firstUptime
