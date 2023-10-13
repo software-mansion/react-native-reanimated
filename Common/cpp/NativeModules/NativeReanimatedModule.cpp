@@ -529,14 +529,12 @@ void NativeReanimatedModule::performOperations() {
       jsi::Function jsPropsUpdater =
           maybeJSPropUpdater.asObject(rt).asFunction(rt);
       jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
-#if DEBUG
     } else {
+#if DEBUG
       JSLogger jsLogger(jsScheduler_);
       jsLogger.warnOnJS("[Reanimated] Unable to update JS props.");
-    }
-#else
-    }
 #endif
+    }
   }
 
   bool hasLayoutUpdates = false;

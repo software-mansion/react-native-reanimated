@@ -138,16 +138,18 @@ class JSPropsUpdaterWeb implements JSPropsUpdater {
   }
 }
 
-function getJSPropsUpdater():
+type JSPropsUpdaterOptions =
   | typeof JSPropsUpdaterWeb
   | typeof JSPropsUpdaterFabric
-  | typeof JSPropsUpdaterPaper {
-  if (shouldBeUseWeb()) {
-    return JSPropsUpdaterWeb;
-  } else if (global._IS_FABRIC) {
-    return JSPropsUpdaterFabric;
-  } else {
-    return JSPropsUpdaterPaper;
-  }
+  | typeof JSPropsUpdaterPaper;
+
+let JSPropsUpdater: JSPropsUpdaterOptions;
+if (shouldBeUseWeb()) {
+  JSPropsUpdater = JSPropsUpdaterWeb;
+} else if (global._IS_FABRIC) {
+  JSPropsUpdater = JSPropsUpdaterFabric;
+} else {
+  JSPropsUpdater = JSPropsUpdaterPaper;
 }
-export default getJSPropsUpdater();
+
+export default JSPropsUpdater;

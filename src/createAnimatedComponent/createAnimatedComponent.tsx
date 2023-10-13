@@ -104,7 +104,7 @@ export function createAnimatedComponent(
     animatedStyle: { value: StyleProps } = { value: {} };
     _component: ComponentRef | HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
-    _JSPropsUpdater = new JSPropsUpdater();
+    _jsPropsUpdater = new JSPropsUpdater();
     _InlinePropManager = new InlinePropManager();
     _PropsFilter = new PropsFilter();
     static displayName: string;
@@ -120,7 +120,7 @@ export function createAnimatedComponent(
 
     componentDidMount() {
       this._attachNativeEvents();
-      this._JSPropsUpdater.addOnJSPropsChangeListener(this);
+      this._jsPropsUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
@@ -136,7 +136,7 @@ export function createAnimatedComponent(
 
     componentWillUnmount() {
       this._detachNativeEvents();
-      this._JSPropsUpdater.removeOnJSPropsChangeListener(this);
+      this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
       this._InlinePropManager.detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
