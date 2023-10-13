@@ -382,6 +382,9 @@ function makeArrayFromCapturedBindings(
   */
   fun.traverse({
     Identifier(path) {
+      if (!path.isReferencedIdentifier()) {
+        return;
+      }
       const node = closure.get(path.node.name);
       if (!node || isLocationSet.get(path.node.name)) {
         return;
