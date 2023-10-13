@@ -39,6 +39,7 @@ import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import FlatListExample from './SharedElementTransitions/FlatList';
+import FlatListSkipEnteringExiting from './LayoutAnimations/FlatListSkipEnteringExiting';
 import FrameCallbackExample from './FrameCallbackExample';
 import GalleryExample from './SharedElementTransitions/Gallery';
 import GestureHandlerExample from './GestureHandlerExample';
@@ -82,6 +83,7 @@ import ReducedMotionLayoutExample from './LayoutAnimations/ReducedMotionLayoutEx
 import ReducedMotionSharedExample from './SharedElementTransitions/ReducedMotionSharedExample';
 import RefExample from './RefExample';
 import RestoreStateExample from './SharedElementTransitions/RestoreState';
+import TransitionRestartExample from './SharedElementTransitions/TransitionRestart';
 import ScreenStackExample from './ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderConfigBackgroundColorExample';
 import ScrollEventExample from './ScrollEventExample';
@@ -104,6 +106,7 @@ import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
+import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
 
 interface Example {
   icon?: string;
@@ -561,6 +564,14 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Reduced Motion',
     screen: ReducedMotionLayoutExample,
   },
+  NestedLayoutAnimationConfig: {
+    title: '[LA] Nested LayoutAnimationConfig',
+    screen: NestedLayoutAnimationConfig,
+  },
+  FlatListSkipEnteringExiting: {
+    title: '[LA] FlatList skip entering & exiting',
+    screen: FlatListSkipEnteringExiting,
+  },
 
   // Shared Element Transitions
 
@@ -611,5 +622,9 @@ export const EXAMPLES: Record<string, Example> = {
   ReducedMotionSharedExample: {
     title: '[SET] Reduced Motion',
     screen: ReducedMotionSharedExample,
+  },
+  TransitionRestartExample: {
+    title: '[SET] Transition Restart',
+    screen: TransitionRestartExample,
   },
 } as const;

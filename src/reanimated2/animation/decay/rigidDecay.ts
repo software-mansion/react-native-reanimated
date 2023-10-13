@@ -1,12 +1,13 @@
 'use strict';
-import type { DefaultDecayConfig, InnerDecayAnimation } from './utils';
 import { SLOPE_FACTOR, VELOCITY_EPS } from './utils';
+import type { DefaultDecayConfig, InnerDecayAnimation } from './utils';
 
-export const rigidDecay = (
+export function rigidDecay(
   animation: InnerDecayAnimation,
   now: number,
   config: DefaultDecayConfig
-): boolean => {
+): boolean {
+  'worklet';
   const { lastTimestamp, startTimestamp, initialVelocity, current, velocity } =
     animation;
 
@@ -29,6 +30,5 @@ export const rigidDecay = (
       return true;
     }
   }
-
   return Math.abs(v) < VELOCITY_EPS;
-};
+}

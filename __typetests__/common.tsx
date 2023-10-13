@@ -9,6 +9,7 @@ import type {
   ImageProps,
   ViewStyle,
   NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { StyleSheet, Button, View, Image, ScrollView } from 'react-native';
 import type {
@@ -49,6 +50,8 @@ import Animated, {
   isSharedValue,
   makeShareableCloneRecursive,
   useEvent,
+  useScrollViewOffset,
+  useHandler,
 } from '..';
 import type { ReanimatedEvent } from '..';
 
@@ -314,49 +317,87 @@ function DerivedValueTest() {
 }
 
 // useAnimatedScrollHandler
-function AnimatedScrollHandlerTest() {
-  const translationY = useSharedValue(0);
-  const scrollHandler = useAnimatedScrollHandler((event) => {
-    translationY.value = event.contentOffset.y;
+function AnimatedScrollHandlerTest1() {
+  const CustomScrollView = Animated.createAnimatedComponent(ScrollView);
+  const CustomFlatList = Animated.createAnimatedComponent(FlatList);
+  const scrollHandler1 = useAnimatedScrollHandler((event) => {
+    console.log(event.contentOffset.x);
+    console.log(event.eventName);
   });
-  // We allow using colors in useAnimatedStyle but it's not a part
-  // of a public API hence we expect an error here.
-  // @ts-expect-error color cannot be a number
-  const stylez = useAnimatedStyle(() => {
-    return {
-      color: 'red',
-      backgroundColor: 0x00ff00,
-      transform: [
-        {
-          translateY: translationY.value,
-        },
-        {
-          rotate: `${Math.PI}rad`,
-        },
-      ],
-    };
+  const scrollHandler2 = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      console.log(event.contentOffset.x);
+      console.log(event.eventName);
+    },
+    // @ts-expect-error Properly detects wrong event name.
+    onWrongEvent: (event) => {
+      console.log(event.contentOffset.x);
+      console.log(event.eventName);
+    },
   });
-  // @ts-expect-error Valid rotation is a string (either radians or degrees)
-  const style2 = useAnimatedStyle(() => {
-    return {
-      transform: [
-        {
-          rotate: Math.PI,
-        },
-      ],
-    };
-  });
-  // @ts-expect-error color cannot be an object
-  const style3 = useAnimatedStyle(() => {
-    return {
-      color: {},
-    };
+
+  return (
+    <>
+      <Animated.ScrollView onScroll={scrollHandler1} />
+      <Animated.ScrollView onScroll={scrollHandler2} />
+      <CustomScrollView onScroll={scrollHandler1} />
+      <CustomScrollView onScroll={scrollHandler2} />
+      <Animated.FlatList
+        onScroll={scrollHandler1}
+        data={[]}
+        renderItem={null}
+      />
+      <Animated.FlatList
+        onScroll={scrollHandler2}
+        data={[]}
+        renderItem={null}
+      />
+      <CustomFlatList onScroll={scrollHandler1} data={[]} renderItem={null} />
+      <CustomFlatList onScroll={scrollHandler2} data={[]} renderItem={null} />
+    </>
+  );
+}
+
+function AnimatedScrollHandlerTest2() {
+  const CustomScrollView = Animated.createAnimatedComponent(ScrollView);
+  const CustomFlatList = Animated.createAnimatedComponent(FlatList);
+  const scrollHandler = useAnimatedScrollHandler(
+    // @ts-expect-error `event` is a `ReanimatedEvent`.
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      // @ts-expect-error `event` is a `ReanimatedEvent`.
+      console.log(event.contentOffset.x);
+      // @ts-expect-error `event` is a `ReanimatedEvent`.
+      console.log(event.eventName);
+    }
+  );
+  return (
+    <>
+      <Animated.ScrollView onScroll={scrollHandler} />
+      <CustomScrollView onScroll={scrollHandler} />
+      <Animated.FlatList onScroll={scrollHandler} data={[]} renderItem={null} />
+      <CustomFlatList onScroll={scrollHandler} data={[]} renderItem={null} />
+    </>
+  );
+}
+
+function AnimatedScrollHandlerTest3() {
+  const CustomScrollView = Animated.createAnimatedComponent(ScrollView);
+  const CustomFlatList = Animated.createAnimatedComponent(FlatList);
+
+  const x = useSharedValue(0);
+  // This cast works because it's narrowing.
+  const scrollHandler = useAnimatedScrollHandler((event: NativeScrollEvent) => {
+    console.log(event.contentOffset.x);
+    // @ts-expect-error This gives error because of the cast.
+    console.log(event.eventName);
   });
   return (
-    <View style={styles.container}>
-      <Animated.View style={[styles.box, stylez]} />
-      <Animated.ScrollView onScroll={scrollHandler} scrollEventThrottle={16} />
-    </View>
+    <>
+      <Animated.ScrollView onScroll={scrollHandler} />
+      <CustomScrollView onScroll={scrollHandler} />
+      <Animated.FlatList onScroll={scrollHandler} data={[]} renderItem={null} />
+      <CustomFlatList onScroll={scrollHandler} data={[]} renderItem={null} />
+    </>
   );
 }
 
@@ -605,6 +646,163 @@ function TestUseEventReanimatedEvent() {
   );
 }
 
+// useScrollViewOffset
+
+function TestUseScrollViewOffset1() {
+  const scrollViewRef = useRef<ScrollView>(null);
+  // @ts-expect-error Funny enough, it works like this in runtime,
+  // but we call TS error here for extra safety anyway.
+  const offset = useScrollViewOffset(scrollViewRef);
+
+  return (
+    // @ts-expect-error Cannot assign plain ref to Animated ref.
+    <Animated.ScrollView ref={scrollViewRef}>
+      <Animated.View style={{ opacity: offset.value }} />
+    </Animated.ScrollView>
+  );
+}
+
+function TestUseScrollViewOffset2() {
+  const scrollViewRef = useRef<Animated.ScrollView>(null);
+  // @ts-expect-error Cannot use plain ref with `useScrollViewOffset`.
+  const offset = useScrollViewOffset(scrollViewRef);
+
+  return (
+    // TODO TYPESCRIPT After `createAnimatedComponent` is fixed
+    // this shouldn't be legal (I think)
+    <Animated.ScrollView ref={scrollViewRef}>
+      <Animated.View style={{ opacity: offset.value }} />
+    </Animated.ScrollView>
+  );
+}
+
+function TestUseScrollViewOffset3() {
+  // TODO TYPESCRIPT Maybe disallow using non-animated components as
+  // generic argument for `useAnimatedRef`?
+  const scrollViewRef = useAnimatedRef<ScrollView>();
+  // @ts-expect-error Properly detects that non-animated component was used.
+  const offset = useScrollViewOffset(scrollViewRef);
+
+  return (
+    <ScrollView ref={scrollViewRef}>
+      <Animated.View style={{ opacity: offset.value }} />
+    </ScrollView>
+  );
+}
+
+function TestUseScrollViewOffset4() {
+  const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
+  const offset = useScrollViewOffset(scrollViewRef);
+
+  return (
+    <ScrollView ref={scrollViewRef}>
+      <Animated.View style={{ opacity: offset.value }} />
+    </ScrollView>
+  );
+}
+
+// Test `useHandler`
+function TestUseHandler1() {
+  type ScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
+  const dependencies = [{ isWeb: false }];
+  const handlers = {
+    onScroll: (event: ReanimatedEvent<ScrollEvent>) => {
+      'worklet';
+      console.log(event);
+    },
+  };
+
+  const { context, doDependenciesDiffer, useWeb } = useHandler(
+    handlers,
+    dependencies
+  );
+
+  const customScrollHandler = useEvent(
+    (event: ReanimatedEvent<ScrollEvent>) => {
+      'worklet';
+      const { onScroll } = handlers;
+      if (onScroll && event.eventName.endsWith('onScroll')) {
+        context.eventName = context.eventName
+          ? context.eventName + event.eventName + useWeb
+          : event.eventName + useWeb;
+        onScroll(event);
+      }
+    },
+    ['onScroll'],
+    doDependenciesDiffer
+  );
+
+  return <Animated.ScrollView onScroll={customScrollHandler} />;
+}
+
+function TestUseHandler2() {
+  type ScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
+  const dependencies = [{ isWeb: false }];
+  const handlers = {
+    onScroll: (event: ScrollEvent) => {
+      'worklet';
+      console.log(event);
+    },
+  };
+
+  const { context, doDependenciesDiffer, useWeb } = useHandler(
+    // @ts-expect-error Works with `ReanimatedEvent` only.
+    handlers,
+    dependencies
+  );
+
+  const customScrollHandler = useEvent(
+    (event: ReanimatedEvent<ScrollEvent>) => {
+      'worklet';
+      const { onScroll } = handlers;
+      if (onScroll && event.eventName.endsWith('onScroll')) {
+        context.eventName = context.eventName
+          ? context.eventName + event.eventName + useWeb
+          : event.eventName + useWeb;
+        // @ts-expect-error Works with `ReanimatedEvent` only.
+        onScroll(event);
+      }
+    },
+    ['onScroll'],
+    doDependenciesDiffer
+  );
+
+  return <Animated.ScrollView onScroll={customScrollHandler} />;
+}
+
+function TestUseHandler3() {
+  type ScrollEvent = NativeScrollEvent;
+  const dependencies = [{ isWeb: false }];
+  const handlers = {
+    onScroll: (event: ScrollEvent) => {
+      'worklet';
+      console.log(event);
+    },
+  };
+
+  const { context, doDependenciesDiffer, useWeb } = useHandler(
+    handlers,
+    dependencies
+  );
+
+  const customScrollHandler = useEvent<NativeSyntheticEvent<ScrollEvent>>(
+    (event: ReanimatedEvent<ScrollEvent>) => {
+      'worklet';
+      const { onScroll } = handlers;
+      if (onScroll && event.eventName.endsWith('onScroll')) {
+        context.eventName = context.eventName
+          ? context.eventName + event.eventName + useWeb
+          : event.eventName + useWeb;
+        onScroll(event);
+      }
+    },
+    ['onScroll'],
+    doDependenciesDiffer
+  );
+
+  return <Animated.ScrollView onScroll={customScrollHandler} />;
+}
+
 /**
  * Reanimated 2 Animations
  */
@@ -825,7 +1023,45 @@ function WithSequenceTest() {
 }
 
 // withDecay
-function WithDecayTest() {
+function withDecayTest() {
+  // @ts-expect-error `rubberBandEffect=true` makes `clamp` required.
+  const a = withDecay({ rubberBandEffect: true });
+
+  const b = withDecay({ rubberBandEffect: false });
+
+  const c = withDecay({ rubberBandEffect: true, clamp: [0, 1] });
+
+  // @ts-expect-error `clamp` too short.
+  const d = withDecay({ rubberBandEffect: true, clamp: [0] });
+
+  // @ts-expect-error `clamp` too long.
+  const e = withDecay({ rubberBandEffect: true, clamp: [0, 1, 2] });
+
+  // @ts-expect-error When `rubberBandEffect` is false then `rubberBandFactor` should not be provided.
+  const f = withDecay({ rubberBandEffect: false, rubberBandFactor: 3 });
+
+  // @ts-expect-error When `rubberBandEffect` isn't provided then `rubberBandFactor` should not be provided.
+  const f2 = withDecay({ rubberBandFactor: 3 });
+
+  const g = withDecay({
+    rubberBandEffect: true,
+    clamp: [0, 1],
+    rubberBandFactor: 3,
+  });
+
+  const rubberBandOn: boolean = Math.random() < 0.5;
+  // @ts-expect-error  When `rubberBandEffect` is an unknown boolean user still has to pass clamp.
+  const h = withDecay({ rubberBandEffect: rubberBandOn });
+
+  const i = withDecay({ rubberBandEffect: rubberBandOn, clamp: [0, 1] });
+
+  // @ts-expect-error Config is required
+  const j = withDecay();
+
+  const k = withDecay({});
+}
+
+function WithDecayComponentTest() {
   const x = useSharedValue(0);
 
   const gestureHandler = useAnimatedGestureHandler({
@@ -1091,7 +1327,7 @@ function testSetGestureState() {
   Test Animated style
 */
 
-function TestUseAnimatedStyleStyle1() {
+function UseAnimatedStyleTest1() {
   const sv = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -1101,7 +1337,7 @@ function TestUseAnimatedStyleStyle1() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle2() {
+function UseAnimatedStyleTest2() {
   const sv = useSharedValue(true);
   // @ts-expect-error properly detects illegal type
   const animatedStyle = useAnimatedStyle(() => {
@@ -1112,7 +1348,7 @@ function TestUseAnimatedStyleStyle2() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle3() {
+function UseAnimatedStyleTest3() {
   const sv = useSharedValue({ width: 0 });
   const animatedStyle = useAnimatedStyle(() => {
     return sv.value;
@@ -1120,7 +1356,7 @@ function TestUseAnimatedStyleStyle3() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle4() {
+function UseAnimatedStyleTest4() {
   const sv = useSharedValue({ width: true });
   // @ts-expect-error properly detects illegal type
   const animatedStyle = useAnimatedStyle(() => {
@@ -1129,7 +1365,7 @@ function TestUseAnimatedStyleStyle4() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle5() {
+function UseAnimatedStyleTest5() {
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateX: 0 }],
@@ -1138,7 +1374,7 @@ function TestUseAnimatedStyleStyle5() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle6() {
+function UseAnimatedStyleTest6() {
   // @ts-expect-error properly detects illegal type
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -1148,7 +1384,7 @@ function TestUseAnimatedStyleStyle6() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle7() {
+function UseAnimatedStyleTest7() {
   const sv = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -1158,7 +1394,7 @@ function TestUseAnimatedStyleStyle7() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle8() {
+function UseAnimatedStyleTest8() {
   const sv = useSharedValue(0);
   // @ts-expect-error properly detects illegal type
   const animatedStyle = useAnimatedStyle(() => {
@@ -1169,7 +1405,7 @@ function TestUseAnimatedStyleStyle8() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle9() {
+function UseAnimatedStyleTest9() {
   const sv = useSharedValue({ translateX: 0 });
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -1179,7 +1415,7 @@ function TestUseAnimatedStyleStyle9() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle10() {
+function UseAnimatedStyleTest10() {
   const sv = useSharedValue({ rotate: 0 });
   // @ts-expect-error properly detects illegal type
   const animatedStyle = useAnimatedStyle(() => {
@@ -1190,7 +1426,7 @@ function TestUseAnimatedStyleStyle10() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle11() {
+function UseAnimatedStyleTest11() {
   const sv = useSharedValue([{ translateX: 0 }]);
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -1200,7 +1436,7 @@ function TestUseAnimatedStyleStyle11() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle12() {
+function UseAnimatedStyleTest12() {
   const sv = useSharedValue([{ rotate: 0 }]);
   // @ts-expect-error properly detects illegal type
   const animatedStyle = useAnimatedStyle(() => {
@@ -1211,7 +1447,7 @@ function TestUseAnimatedStyleStyle12() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle13() {
+function UseAnimatedStyleTest13() {
   const sv = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -1225,7 +1461,7 @@ function TestUseAnimatedStyleStyle13() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle14() {
+function UseAnimatedStyleTest14() {
   const sv = useSharedValue(0);
 
   // @ts-expect-error properly detects illegal type
@@ -1240,7 +1476,7 @@ function TestUseAnimatedStyleStyle14() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle15() {
+function UseAnimatedStyleTest15() {
   const sv = useSharedValue({ width: 0, height: 0 });
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -1252,7 +1488,7 @@ function TestUseAnimatedStyleStyle15() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle16() {
+function UseAnimatedStyleTest16() {
   const sv = useSharedValue({ width: 0 });
 
   // @ts-expect-error properly detects illegal type
@@ -1265,7 +1501,7 @@ function TestUseAnimatedStyleStyle16() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle17() {
+function UseAnimatedStyleTest17() {
   const sv = useSharedValue({ shadowOffset: { width: 0, height: 0 } });
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -1275,7 +1511,7 @@ function TestUseAnimatedStyleStyle17() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle18() {
+function UseAnimatedStyleTest18() {
   const sv = useSharedValue({ shadowOffset: { width: 0 } });
   // @ts-expect-error properly detects illegal type
   const animatedStyle = useAnimatedStyle(() => {
@@ -1286,7 +1522,7 @@ function TestUseAnimatedStyleStyle18() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle19() {
+function UseAnimatedStyleTest19() {
   const animatedStyle = useAnimatedStyle(() => {
     return {
       flexWrap: 'wrap',
@@ -1296,7 +1532,7 @@ function TestUseAnimatedStyleStyle19() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle20() {
+function UseAnimatedStyleTest20() {
   const animatedStyle = useAnimatedStyle(() => {
     return {
       flexWrap: 'wrap' as const,
@@ -1305,7 +1541,7 @@ function TestUseAnimatedStyleStyle20() {
   return <Animated.View style={animatedStyle} />;
 }
 
-function TestUseAnimatedStyleStyle21() {
+function UseAnimatedStyleTest21() {
   const animatedStyle = useAnimatedStyle(() => {
     return {
       overflow: 'scroll',
@@ -1322,7 +1558,7 @@ function TestUseAnimatedStyleStyle21() {
   );
 }
 
-function TestUseAnimatedStyleStyle22() {
+function UseAnimatedStyleTest22() {
   const animatedStyle = useAnimatedStyle(() => {
     return {
       overflow: 'hidden',
@@ -1337,7 +1573,15 @@ function TestUseAnimatedStyleStyle22() {
   );
 }
 
-function TestInlineStyles1() {
+function UseAnimatedStyleTest23() {
+  const animatedStyle = useAnimatedStyle(() => ({
+    // @ts-expect-error Passing a number here will work,
+    // but we don't allow for it as a part of API.
+    backgroundColor: 0x000000,
+  }));
+}
+
+function InlineStylesTest1() {
   const animatedIndex = useSharedValue(0);
   const backgroundColor = useDerivedValue(() => {
     return interpolateColor(
@@ -1355,7 +1599,7 @@ function TestInlineStyles1() {
   />;
 }
 
-function TestInlineStyles2() {
+function InlineStylesTest2() {
   const animatedFlex = useSharedValue(0);
   <Animated.View
     style={{
@@ -1365,73 +1609,73 @@ function TestInlineStyles2() {
   />;
 }
 
-function TestInlineStyles3() {
+function InlineStylesTest3() {
   const sv = useSharedValue(0);
   return <Animated.View style={{ width: sv }} />;
 }
 
-function TestInlineStyles4() {
+function InlineStylesTest4() {
   const sv = useSharedValue(true);
   // @ts-expect-error properly detects illegal type
   return <Animated.View style={{ width: sv }} />;
 }
 
-function TestInlineStyles5() {
+function InlineStylesTest5() {
   const sv = useSharedValue({ width: 0 });
   return <Animated.View style={sv} />;
 }
 
-function TestInlineStyles6() {
+function InlineStylesTest6() {
   const sv = useSharedValue({ width: true });
   // @ts-expect-error properly detects illegal type
   return <Animated.View style={sv} />;
 }
 
-function TestInlineStyles7() {
+function InlineStylesTest7() {
   const sv = useSharedValue(0);
   return <Animated.View style={{ transform: [{ translateX: sv }] }} />;
 }
 
-function TestInlineStyles8() {
+function InlineStylesTest8() {
   const sv = useSharedValue(0);
   // @ts-expect-error properly detects illegal type
   return <Animated.View style={{ transform: [{ rotate: sv }] }} />;
 }
 
-function TestInlineStyles9() {
+function InlineStylesTest9() {
   const sv = useSharedValue({ translateX: 0 });
   return <Animated.View style={{ transform: [sv] }} />;
 }
 
-function TestInlineStyles10() {
+function InlineStylesTest10() {
   const sv = useSharedValue({ rotate: 0 });
   // @ts-expect-error properly detects illegal type
   return <Animated.View style={{ transform: [sv] }} />;
 }
 
-function TestInlineStyles11() {
+function InlineStylesTest11() {
   const sv = useSharedValue([{ translateX: 0 }]);
   return <Animated.View style={{ transform: sv }} />;
 }
 
-function TestInlineStyles12() {
+function InlineStylesTest12() {
   const sv = useSharedValue([{ rotate: 0 }]);
   // @ts-expect-error properly detects illegal type
   return <Animated.View style={{ transform: sv }} />;
 }
 
-function TestInlineStyles13() {
+function InlineStylesTest13() {
   const sv = useSharedValue({ transform: [{ translateX: 0 }] });
   return <Animated.View style={sv} />;
 }
 
-function TestInlineStyles14() {
+function InlineStylesTest14() {
   const sv = useSharedValue({ transform: [{ rotate: 0 }] });
   // @ts-expect-error properly detects illegal type
   return <Animated.View style={sv} />;
 }
 
-function TestInlineStyles15() {
+function InlineStylesTest15() {
   const sv = useSharedValue(0);
 
   return (
@@ -1446,7 +1690,7 @@ function TestInlineStyles15() {
   );
 }
 
-function TestInlineStyles16() {
+function InlineStylesTest16() {
   const sv = useSharedValue(0);
 
   return (
@@ -1461,7 +1705,7 @@ function TestInlineStyles16() {
   );
 }
 
-function TestInlineStyles17() {
+function InlineStylesTest17() {
   const sv = useSharedValue({ width: 0, height: 0 });
 
   return (
@@ -1473,7 +1717,7 @@ function TestInlineStyles17() {
   );
 }
 
-function TestInlineStyles18() {
+function InlineStylesTest18() {
   const sv = useSharedValue({ width: 0 });
 
   return (
@@ -1486,12 +1730,12 @@ function TestInlineStyles18() {
   );
 }
 
-function TestInlineStyles19() {
+function InlineStylesTest19() {
   const sv = useSharedValue({ shadowOffset: { width: 0, height: 0 } });
   return <Animated.View style={sv} />;
 }
 
-function TestInlineStyles20() {
+function InlineStylesTest20() {
   const sv = useSharedValue({ shadowOffset: { width: 0 } });
   return (
     <Animated.View
@@ -1503,15 +1747,15 @@ function TestInlineStyles20() {
   );
 }
 
-function TestInlineStyles21() {
+function InlineStylesTest21() {
   return <Animated.View style={{ flexWrap: 'wrap' }} />;
 }
 
-function TestInlineStyles22() {
+function InlineStylesTest22() {
   return <Animated.View style={{ flexWrap: 'wrap' as const }} />;
 }
 
-function TestInlineStyles23() {
+function InlineStylesTest23() {
   return (
     <>
       <Animated.View style={{ overflow: 'scroll' }} />;
@@ -1522,7 +1766,7 @@ function TestInlineStyles23() {
   );
 }
 
-function TestInlineStyles24() {
+function InlineStylesTest24() {
   return (
     <>
       <Animated.View style={{ overflow: 'hidden' }} />;
@@ -1530,6 +1774,12 @@ function TestInlineStyles24() {
       <Animated.Text style={{ overflow: 'hidden' }} />;
     </>
   );
+}
+
+function InlineStylesTest25() {
+  // @ts-expect-error Passing a number here will work,
+  // but we don't allow for it as a part of API.
+  return <Animated.View style={{ backgroundColor: 0x000000 }} />;
 }
 
 // test style prop of Animated components

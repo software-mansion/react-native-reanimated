@@ -1,5 +1,6 @@
 'use strict';
 import NativeReanimatedModule from './NativeReanimated';
+import { shouldBeUseWeb } from './PlatformChecker';
 import type { SharedValue, ShareableSyncDataHolderRef } from './commonTypes';
 import {
   makeShareableCloneOnUIRecursive,
@@ -8,6 +9,8 @@ import {
 } from './shareables';
 import { runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
+
+const IS_NATIVE = !shouldBeUseWeb();
 
 export function makeUIMutable<T>(
   initial: T,
@@ -64,7 +67,7 @@ export function makeMutable<T>(
 ): SharedValue<T> {
   let value: T = initial;
   let syncDataHolder: ShareableSyncDataHolderRef<T> | undefined;
-  if (!oneWayReadsOnly && NativeReanimatedModule.native) {
+  if (!oneWayReadsOnly && IS_NATIVE) {
     // updates are always synchronous when running on web or in Jest environment
     syncDataHolder = NativeReanimatedModule.makeSynchronizedDataHolder(
       makeShareableCloneRecursive(value)
@@ -78,10 +81,10 @@ export function makeMutable<T>(
     },
   });
   // listeners can only work on JS thread on Web and jest environments
-  const listeners = NativeReanimatedModule.native ? undefined : new Map();
+  const listeners = IS_NATIVE ? undefined : new Map();
   const mutable = {
     set value(newValue) {
-      if (NativeReanimatedModule.native) {
+      if (IS_NATIVE) {
         runOnUI(() => {
           mutable.value = newValue;
         })();
@@ -96,7 +99,7 @@ export function makeMutable<T>(
       return value;
     },
     set _value(newValue: T) {
-      if (NativeReanimatedModule.native) {
+      if (IS_NATIVE) {
         throw new Error(
           '[Reanimated] Setting `_value` directly is only possible on the UI runtime.'
         );
@@ -107,7 +110,7 @@ export function makeMutable<T>(
       });
     },
     get _value(): T {
-      if (NativeReanimatedModule.native) {
+      if (IS_NATIVE) {
         throw new Error(
           '[Reanimated] Reading from `_value` directly is only possible on the UI runtime.'
         );
@@ -120,7 +123,7 @@ export function makeMutable<T>(
       })();
     },
     addListener: (id: number, listener: (value: T) => void) => {
-      if (NativeReanimatedModule.native) {
+      if (IS_NATIVE) {
         throw new Error(
           '[Reanimated] Adding listeners is only possible on the UI runtime.'
         );
@@ -128,7 +131,7 @@ export function makeMutable<T>(
       listeners!.set(id, listener);
     },
     removeListener: (id: number) => {
-      if (NativeReanimatedModule.native) {
+      if (IS_NATIVE) {
         throw new Error(
           '[Reanimated] Removing listeners is only possible on the UI runtime.'
         );

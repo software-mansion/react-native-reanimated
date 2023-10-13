@@ -49,4 +49,4 @@ jobs:
         if: failure() && steps.diff.outcome == 'failure'
         run: git diff
       - name: Test
-        run: yarn jest
+        run: yarn jest plugin

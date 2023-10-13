@@ -1,6 +1,7 @@
 'use strict';
 import type { ViewStyle, TextStyle } from 'react-native';
 
+export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;
   originY?: number;
@@ -77,13 +78,6 @@ export type WorkletFunction<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown
 > = ((...args: Args) => ReturnValue) & (WorkletBaseRelease | WorkletBaseDev);
-
-/**
- * @deprecated
- */
-export interface __NativeEvent<T> {
-  nativeEvent: T;
-}
 
 export interface NestedObject<T> {
   [key: string]: NestedObjectValues<T>;
@@ -232,11 +226,6 @@ export enum ReduceMotion {
 }
 
 // THE LAND OF THE DEPRECATED
-
-/**
- * @deprecated
- */
-export type __Context = Record<string, unknown>;
 
 /**
  * @deprecated

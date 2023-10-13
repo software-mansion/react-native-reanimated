@@ -251,6 +251,7 @@ var require_globals = __commonJS({
       "arguments",
       "HermesInternal",
       "_WORKLET",
+      "_IS_FABRIC",
       "_log",
       "_toString",
       "_scheduleOnJS",
@@ -267,7 +268,8 @@ var require_globals = __commonJS({
       "_setGestureState",
       "_notifyAboutProgress",
       "_notifyAboutEnd",
-      "_runOnUIQueue"
+      "_runOnUIQueue",
+      "_getAnimationTimestamp"
     ]);
     function initializeGlobals() {
       exports2.globals = new Set(exports2.defaultGlobals);

@@ -1,6 +1,6 @@
 'use strict';
 import type { Component } from 'react';
-import type { __Context, ShadowNodeWrapper } from '../commonTypes';
+import type { ShadowNodeWrapper } from '../commonTypes';
 import type {
   ImageStyle,
   NativeSyntheticEvent,
@@ -10,11 +10,6 @@ import type {
 } from 'react-native';
 
 export type DependencyList = Array<unknown> | undefined;
-
-export interface ContextWithDependencies<TContext extends __Context> {
-  context: TContext;
-  savedDependencies: DependencyList;
-}
 
 export interface Descriptor {
   tag: number;
@@ -46,21 +41,18 @@ export type ReanimatedEvent<Event extends object> = ReanimatedPayload &
     ? NativeEvent
     : Event);
 
-// ts-prune-ignore-next It will be used in the following PRs.
 export type EventPayload<Event extends object> = Event extends {
   nativeEvent: infer NativeEvent extends object;
 }
   ? NativeEvent
   : Omit<Event, 'eventName'>;
 
-// ts-prune-ignore-next It will be used in the following PRs.
 export type NativeEventWrapper<Event extends object> = {
   nativeEvent: Event;
 };
 
 export type DefaultStyle = ViewStyle | ImageStyle | TextStyle;
 
-// ts-prune-ignore-next It will be used in the following PRs.
 export type RNNativeScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
 
 export type ReanimatedScrollEvent = ReanimatedEvent<RNNativeScrollEvent>;
