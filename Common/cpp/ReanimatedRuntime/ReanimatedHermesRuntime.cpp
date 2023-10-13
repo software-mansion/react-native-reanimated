@@ -18,8 +18,6 @@
 #include <hermes/hermes.h>
 #endif
 
-#include <hermes/inspector-modern/RuntimeAdapter.h>
-
 namespace reanimated {
 
 using namespace facebook;
