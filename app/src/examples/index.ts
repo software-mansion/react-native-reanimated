@@ -107,6 +107,7 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
+import DynamicStylesExample from './DynamicStylesExample';
 
 interface Example {
   icon?: string;
@@ -116,7 +117,12 @@ interface Example {
 
 export const EXAMPLES: Record<string, Example> = {
   // Empty example for test purposes
-
+  // here just for easier access
+  DynamicStylesExample: {
+    icon: '🧨',
+    title: 'Dynamically appending/removing styles',
+    screen: DynamicStylesExample,
+  },
   EmptyExample: {
     icon: '👻',
     title: 'Empty',

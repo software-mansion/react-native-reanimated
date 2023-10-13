@@ -68,7 +68,8 @@ export interface ReanimatedHTMLElement extends HTMLElement {
 export const _updatePropsJS = (
   updates: StyleProps | AnimatedStyle<any>,
   viewRef: { _component?: JSReanimatedComponent | ReanimatedHTMLElement },
-  isAnimatedProps?: boolean
+  isAnimatedProps?: boolean,
+  ViewRefSetId?: number
 ): void => {
   if (viewRef._component) {
     const component = viewRef._component;
@@ -86,7 +87,13 @@ export const _updatePropsJS = (
       // This is the legacy way to update props on React Native Web <= 0.18.
       // Also, some components (e.g. from react-native-svg) don't have styles
       // and always provide setNativeProps function instead (even on React Native Web 0.19+).
-      setNativeProps(component, rawStyles, isAnimatedProps);
+      setNativeProps(
+        component,
+        rawStyles,
+        isAnimatedProps,
+        ViewRefSetId,
+        viewRef
+      );
     } else if (
       createReactDOMStyle !== undefined &&
       component.style !== undefined
@@ -111,7 +118,9 @@ export const _updatePropsJS = (
 const setNativeProps = (
   component: JSReanimatedComponent | ReanimatedHTMLElement,
   newProps: StyleProps,
-  isAnimatedProps?: boolean
+  isAnimatedProps?: boolean,
+  ViewRefSetId: number,
+  viewRef
 ): void => {
   if (isAnimatedProps) {
     const uiProps: Record<string, unknown> = {};
@@ -125,9 +134,13 @@ const setNativeProps = (
     component.setNativeProps?.(uiProps);
   }
 
-  const previousStyle = component.previousStyle ? component.previousStyle : {};
-  const currentStyle = { ...previousStyle, ...newProps };
-  component.previousStyle = currentStyle;
+  type PreviousStyleArray = { value: StyleProps; key: number }[];
+  declare const arr: PreviousStyleArray;
+
+  // const previousStyle = component.previousStyle ?? [];
+  viewRef._animatedStylesManager.updateSnapshot(ViewRefSetId, newProps);
+  viewRef._animatedStylesManager.recalculateStyleToRestore();
+  const currentStyle = viewRef._animatedStylesManager.styleToRestore;
 
   component.setNativeProps?.({ style: currentStyle });
 };
