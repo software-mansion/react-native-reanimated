@@ -60,7 +60,7 @@ export interface InnerSpringAnimation
 }
 export function isConfigValid(config: DefaultSpringConfig): boolean {
   'worklet';
-  let errorMessage: string | null = null;
+  let errorMessage = '';
 
   (
     [
@@ -74,26 +74,19 @@ export function isConfigValid(config: DefaultSpringConfig): boolean {
   ).forEach((prop) => {
     const value = config[prop];
     if (value <= 0) {
-      if (errorMessage === null) {
-        errorMessage = '';
-      }
       errorMessage += `, ${prop} must be grater than zero but got ${value}`;
     }
   });
 
   if (config.duration < 0) {
-    if (errorMessage === null) {
-      errorMessage = '';
-    }
-
     errorMessage += `, duration can't be negative, got ${config.duration}`;
   }
 
-  if (errorMessage !== null) {
+  if (errorMessage !== '') {
     console.warn('[Reanimated] Invalid spring config' + errorMessage);
   }
 
-  return errorMessage === null;
+  return errorMessage === '';
 }
 
 function bisectRoot({
