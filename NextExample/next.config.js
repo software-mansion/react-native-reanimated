@@ -3,9 +3,10 @@ const { withExpo } = require('@expo/next-adapter');
 const withPlugins = require('next-compose-plugins');
 
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === '1',
+  enabled: process.env.ANALYZE_BUNDLE === '1',
 });
 
+// this can be used to obtain a more readable bundle for debugging
 const disableMinification = process.env.DISABLE_MINIFICATION === '1';
 
 /** @type {import('next').NextConfig} */

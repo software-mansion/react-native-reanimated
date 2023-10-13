@@ -13,6 +13,10 @@ export default function ArticleProgressExample() {
   const scrollHandler = useScrollViewOffset(scrollViewRef);
 
   const progressBarAnimatedStyle = useAnimatedStyle(() => {
+    if (!textRef.current || !scrollViewRef.current) {
+      return {};
+    }
+
     const measuredText = measure(textRef);
     if (measuredText === null) {
       return { width: 0 };

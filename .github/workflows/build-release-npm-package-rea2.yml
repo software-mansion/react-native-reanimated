@@ -8,6 +8,5 @@ jobs:
     if: github.repository == 'software-mansion/react-native-reanimated'
     uses: ./.github/workflows/build-npm-package-action.yml
     with:
-      version: release
       ref: Reanimated2
       upload_binaries: true
