@@ -20,7 +20,7 @@
     "@react-navigation/native-stack": "^6.9.14",
     "@react-navigation/stack": "^6.3.18",
     "react": "18.2.0",
-    "react-native": "0.72.5",
+    "react-native": "0.72.6",
     "react-native-gesture-handler": "^2.13.2",
     "react-native-macos": "^0.72.1",
     "react-native-pager-view": "^5.4.25",
