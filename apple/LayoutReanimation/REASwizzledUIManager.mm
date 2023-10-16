@@ -7,10 +7,10 @@
 #import <React/RCTRootShadowView.h>
 #import <React/RCTRootViewInternal.h>
 #import <React/RCTUIManager.h>
+#import <objc/runtime.h>
 
 @interface RCTUIManager (Reanimated)
 @property REAAnimationsManager *animationsManager;
-@property REABatchObserver *batchObserver;
 - (NSArray<id<RCTComponent>> *)_childrenToRemoveFromContainer:(id<RCTComponent>)container
                                                     atIndices:(NSArray<NSNumber *> *)atIndices;
 @end
@@ -25,27 +25,26 @@
 {
   return objc_getAssociatedObject(self, @selector(animationsManager));
 }
-
-@dynamic batchObserver;
-- (void)setBatchObserver:(REABatchObserver *)batchObserver
-{
-  objc_setAssociatedObject(self, @selector(batchObserver), batchObserver, OBJC_ASSOCIATION_RETAIN);
-}
-- (REABatchObserver *)batchObserver
-{
-  return objc_getAssociatedObject(self, @selector(batchObserver));
-}
 @end
 
 @implementation REASwizzledUIManager
+
+std::atomic<uint> isFlushingBlocks;
+std::atomic<bool> hasPendingBlocks;
 
 - (instancetype)initWithUIManager:(RCTUIManager *)uiManager
              withAnimationManager:(REAAnimationsManager *)animationsManager
 {
   if (self = [super init]) {
+    isFlushingBlocks = 0;
+    hasPendingBlocks = false;
     [uiManager setAnimationsManager:animationsManager];
-    [uiManager setBatchObserver:[REABatchObserver new]];
     [self swizzleMethods];
+
+    IMP isExecutingUpdatesBatchImpl = imp_implementationWithBlock(^() {
+      return hasPendingBlocks || isFlushingBlocks > 0;
+    });
+    class_addMethod([RCTUIManager class], @selector(isExecutingUpdatesBatch), isExecutingUpdatesBatchImpl, "");
   }
   return self;
 }
@@ -350,28 +349,25 @@
 
 - (void)reanimated_addUIBlock:(RCTViewManagerUIBlock)block
 {
-  [self.batchObserver onNewBatchBlockQueued];
+  hasPendingBlocks = true;
   [self reanimated_addUIBlock:block];
 }
 
 - (void)reanimated_prependUIBlock:(RCTViewManagerUIBlock)block
 {
-  [self.batchObserver onNewBatchBlockQueued];
+  hasPendingBlocks = true;
   [self reanimated_prependUIBlock:block];
 }
 
 - (void)reanimated_flushUIBlocksWithCompletion:(void (^)(void))completion
 {
-  NSNumber *batchId = [self.batchObserver batchWillFlush];
-  NSMutableArray<RCTViewManagerUIBlock> *pendingUIBlocks = [self valueForKey:@"_pendingUIBlocks"];
-  bool isUIQueueEmpty = [pendingUIBlocks count] == 0;
-  if (!isUIQueueEmpty) {
-    [pendingUIBlocks
-        addObject:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, REAUIView *> *viewRegistry) {
-          [self.batchObserver batchDidFlush:batchId];
-        }];
-  } else {
-    [self.batchObserver batchDidFlush:batchId];
+  if (hasPendingBlocks) {
+    ++isFlushingBlocks;
+    hasPendingBlocks = false;
+    [self reanimated_addUIBlock:^(
+              __unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, REAUIView *> *viewRegistry) {
+      --isFlushingBlocks;
+    }];
   }
   [self reanimated_flushUIBlocksWithCompletion:completion];
 }

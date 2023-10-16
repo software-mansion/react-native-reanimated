@@ -31,11 +31,11 @@ using namespace facebook::react;
 
 @interface RCTUIManager ()
 
-@property REABatchObserver *batchObserver;
-
 - (void)updateView:(nonnull NSNumber *)reactTag viewName:(NSString *)viewName props:(NSDictionary *)props;
 
 - (void)setNeedsLayout;
+
+- (bool)isExecutingUpdatesBatch;
 
 @end
 
@@ -331,8 +331,7 @@ using namespace facebook::react;
       if (strongSelf == nil) {
         return;
       }
-      bool isActiveBatch = strongSelf.uiManager.batchObserver.isActiveBatch;
-      BOOL canUpdateSynchronously = trySynchronously && !isActiveBatch;
+      BOOL canUpdateSynchronously = trySynchronously && ![strongSelf.uiManager isExecutingUpdatesBatch];
 
       if (!canUpdateSynchronously) {
         [syncUpdateObserver unblockUIThread];
