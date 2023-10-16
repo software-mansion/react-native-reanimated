@@ -41,6 +41,7 @@
 using namespace facebook;
 
 #if REACT_NATIVE_MINOR_VERSION >= 73 && defined(RCT_NEW_ARCH_ENABLED)
+// Android can't find the definition of this static field
 bool CoreFeatures::useNativeState;
 #endif
 
