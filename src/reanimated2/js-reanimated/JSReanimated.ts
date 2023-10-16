@@ -68,13 +68,13 @@ export default class JSReanimated {
       console.warn(
         '[Reanimated] Layout Animations are not supported on web yet.'
       );
-    } else if (isChromeDebugger()) {
-      console.warn(
-        '[Reanimated] Layout Animations are no-ops when using Chrome Debugger.'
-      );
     } else if (isJest()) {
       console.warn(
         '[Reanimated] Layout Animations are no-ops when using Jest.'
+      );
+    } else if (isChromeDebugger()) {
+      console.warn(
+        '[Reanimated] Layout Animations are no-ops when using Chrome Debugger.'
       );
     } else {
       console.warn(
@@ -208,13 +208,13 @@ export default class JSReanimated {
       console.warn(
         '[Reanimated] useAnimatedKeyboard is not available on web yet.'
       );
-    } else if (isChromeDebugger()) {
-      console.warn(
-        '[Reanimated] useAnimatedKeyboard is not available when using Chrome Debugger.'
-      );
     } else if (isJest()) {
       console.warn(
         '[Reanimated] useAnimatedKeyboard is not available when using Jest.'
+      );
+    } else if (isChromeDebugger()) {
+      console.warn(
+        '[Reanimated] useAnimatedKeyboard is not available when using Chrome Debugger.'
       );
     } else {
       console.warn(
