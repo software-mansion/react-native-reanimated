@@ -13,6 +13,7 @@ export type { TimingAnimation, WithTimingConfig } from './timing';
 export { withSpring } from './spring';
 export type { SpringAnimation, WithSpringConfig } from './springUtils';
 export { withDecay } from './decay';
+export { withClamp } from './clamp';
 export type { DecayAnimation, WithDecayConfig } from './decay';
 export { withDelay } from './delay';
 export { withRepeat } from './repeat';

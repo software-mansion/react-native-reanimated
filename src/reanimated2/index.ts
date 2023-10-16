@@ -64,6 +64,7 @@ export {
   withSpring,
   withDecay,
   withDelay,
+  withClamp,
   withRepeat,
   withSequence,
 } from './animation';
