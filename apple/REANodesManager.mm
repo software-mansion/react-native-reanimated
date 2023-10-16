@@ -1,4 +1,3 @@
-#import <RNReanimated/REABatchObserver.h>
 #import <RNReanimated/READisplayLink.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
