@@ -1,6 +1,6 @@
 'use strict';
 import type { Component } from 'react';
-import { measure } from './nativeMethods/measure';
+import { measure } from './functions';
 import type { AnimatedRef } from './hook/commonTypes';
 import type { SharedValue } from './commonTypes';
 
