@@ -20,11 +20,10 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Create app
-        run: npx react-native@12.0.0-alpha.18 init app --version 0.73.0-rc.2
-        # run: npx react-native init app --skip-install --version nightly
-      # - name: Install Reanimated
-        # working-directory: app
-        # run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
+        run: npx react-native init app --skip-install --version nightly
+      - name: Install Reanimated
+        working-directory: app
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
       - name: Install Paper Pods
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         working-directory: app/ios
@@ -54,7 +53,7 @@ jobs:
           distribution: 'zulu'
           java-version: '18'
       - name: Create app
-        run: npx react-native@12.0.0-alpha.18 init app --skip-install --version 0.73.0-rc.2
+        run: npx react-native init app --skip-install --version nightly
       - name: Install Reanimated
         working-directory: app
         run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
