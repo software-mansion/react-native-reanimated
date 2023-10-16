@@ -13,49 +13,65 @@ export let setNativeProps: <T extends Component>(
   updates: StyleProps
 ) => void;
 
+function setNativePropsFabric<T extends Component>(
+  animatedRef: AnimatedRef<T>,
+  updates: StyleProps
+) {
+  'worklet';
+  if (!_WORKLET) {
+    console.warn(
+      '[Reanimated] setNativeProps() can only be used on the UI runtime.'
+    );
+    return;
+  }
+  const shadowNodeWrapper = (animatedRef as any)() as ShadowNodeWrapper;
+  processColorsInProps(updates);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  _updatePropsFabric!([{ shadowNodeWrapper, updates }]);
+}
+
+function setNativePropsPaper<T extends Component>(
+  animatedRef: AnimatedRef<T>,
+  updates: StyleProps
+) {
+  'worklet';
+  if (!_WORKLET) {
+    console.warn(
+      '[Reanimated] setNativeProps() can only be used on the UI runtime.'
+    );
+    return;
+  }
+  const tag = (animatedRef as any)() as number;
+  const name = (animatedRef as any).viewName.value;
+  processColorsInProps(updates);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  _updatePropsPaper!([{ tag, name, updates }]);
+}
+
+function setNativePropsJest() {
+  console.warn('[Reanimated] setNativeProps() is not supported with Jest.');
+}
+
+function setNativePropsChromeDebugger() {
+  console.warn(
+    '[Reanimated] setNativeProps() is not supported with Chrome Debugger.'
+  );
+}
+
+function setNativePropsDefault() {
+  console.warn(
+    '[Reanimated] setNativeProps() is not supported on this configuration.'
+  );
+}
+
 if (IS_NATIVE && global._IS_FABRIC) {
-  setNativeProps = (animatedRef, updates) => {
-    'worklet';
-    if (!_WORKLET) {
-      console.warn(
-        '[Reanimated] setNativeProps() can only be used on the UI runtime.'
-      );
-      return;
-    }
-    const shadowNodeWrapper = (animatedRef as any)() as ShadowNodeWrapper;
-    processColorsInProps(updates);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    _updatePropsFabric!([{ shadowNodeWrapper, updates }]);
-  };
+  setNativeProps = setNativePropsFabric;
 } else if (IS_NATIVE) {
-  setNativeProps = (animatedRef, updates) => {
-    'worklet';
-    if (!_WORKLET) {
-      console.warn(
-        '[Reanimated] setNativeProps() can only be used on the UI runtime.'
-      );
-      return;
-    }
-    const tag = (animatedRef as any)() as number;
-    const name = (animatedRef as any).viewName.value;
-    processColorsInProps(updates);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    _updatePropsPaper!([{ tag, name, updates }]);
-  };
+  setNativeProps = setNativePropsPaper;
 } else if (isJest()) {
-  setNativeProps = () => {
-    console.warn('[Reanimated] setNativeProps() is not supported with Jest.');
-  };
+  setNativeProps = setNativePropsJest;
 } else if (isChromeDebugger()) {
-  setNativeProps = () => {
-    console.warn(
-      '[Reanimated] setNativeProps() is not supported with Chrome Debugger.'
-    );
-  };
+  setNativeProps = setNativePropsChromeDebugger;
 } else {
-  setNativeProps = () => {
-    console.warn(
-      '[Reanimated] setNativeProps() is not supported on this configuration.'
-    );
-  };
+  setNativeProps = setNativePropsDefault;
 }
