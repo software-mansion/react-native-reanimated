@@ -39,6 +39,9 @@ export const withClamp = function <T extends AnimationObject>(
               clamp.min,
               Math.min(clamp.max, nextAnimation.current)
             );
+            break;
+          default:
+            animation.current = nextAnimation.current!;
         }
         return finished;
       }
