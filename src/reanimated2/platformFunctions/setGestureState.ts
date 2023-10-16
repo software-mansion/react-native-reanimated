@@ -1,8 +1,6 @@
 'use strict';
 import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
 
-const IS_NATIVE = !shouldBeUseWeb();
-
 export let setGestureState: (handlerTag: number, newState: number) => void;
 
 function setGestureStateNative(handlerTag: number, newState: number) {
@@ -32,7 +30,7 @@ function setGestureStateDefault() {
   );
 }
 
-if (IS_NATIVE) {
+if (!shouldBeUseWeb()) {
   setGestureState = setGestureStateNative;
 } else if (isJest()) {
   setGestureState = setGestureStateJest;

@@ -1,10 +1,13 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../commonTypes';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
+import {
+  isChromeDebugger,
+  isFabric,
+  isJest,
+  shouldBeUseWeb,
+} from '../PlatformChecker';
 import type { AnimatedRef } from '../hook/commonTypes';
 import type { Component } from 'react';
-
-const IS_NATIVE = !shouldBeUseWeb();
 
 function dispatchCommandFabric<T extends Component>(
   animatedRef: AnimatedRef<T>,
@@ -57,10 +60,12 @@ export let dispatchCommand: <T extends Component>(
   commandName: string,
   args?: Array<unknown>
 ) => void;
-if (IS_NATIVE && global._IS_FABRIC) {
-  dispatchCommand = dispatchCommandFabric;
-} else if (IS_NATIVE) {
-  dispatchCommand = dispatchCommandPaper;
+if (!shouldBeUseWeb()) {
+  if (isFabric()) {
+    dispatchCommand = dispatchCommandFabric;
+  } else {
+    dispatchCommand = dispatchCommandPaper;
+  }
 } else if (isJest()) {
   dispatchCommand = dispatchCommandJest;
 } else if (isChromeDebugger()) {
