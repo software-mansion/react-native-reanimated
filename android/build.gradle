@@ -364,6 +364,8 @@ android {
             if (REANIMATED_MAJOR_VERSION > 2) {
                 if (REACT_NATIVE_MINOR_VERSION <= 67) {
                     srcDirs += "src/reactNativeVersionPatch/messageQueueThread/67"
+                } else if (REACT_NATIVE_MINOR_VERSION <= 72) {
+                    srcDirs += "src/reactNativeVersionPatch/messageQueueThread/72"
                 } else {
                     srcDirs += "src/reactNativeVersionPatch/messageQueueThread/latest"
                 }
