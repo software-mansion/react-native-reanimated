@@ -10,7 +10,7 @@ jsi::Function getValueUnpacker(jsi::Runtime &rt) {
   return valueUnpacker.asObject(rt).asFunction(rt);
 }
 
-#ifdef DEBUG
+#ifndef NDEBUG
 
 static const auto callGuardLambda = [](facebook::jsi::Runtime &rt,
                                        const facebook::jsi::Value &thisVal,
@@ -36,7 +36,7 @@ jsi::Function getCallGuard(jsi::Runtime &rt) {
       rt, jsi::PropNameID::forAscii(rt, "callGuard"), 1, callGuardLambda);
 }
 
-#endif // DEBUG
+#endif // NDEBUG
 
 jsi::Value makeShareableClone(
     jsi::Runtime &rt,
@@ -238,7 +238,7 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
   if (&rt == runtime_) {
     return jsi::Value(rt, *function_);
   } else {
-#ifdef DEBUG
+#ifndef NDEBUG
     return getValueUnpacker(rt).call(
         rt,
         ShareableJSRef::newHostObject(rt, shared_from_this()),
