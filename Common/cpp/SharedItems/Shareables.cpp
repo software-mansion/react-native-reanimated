@@ -309,7 +309,7 @@ jsi::Value ShareableString::toJSValue(jsi::Runtime &rt) {
 jsi::Value ShareableBigInt::toJSValue(jsi::Runtime &rt) {
   return rt.global()
       .getPropertyAsFunction(rt, "BigInt")
-      .call(rt, jsi::String::createFromAscii(rt, string_));
+      .call(rt, jsi::String::createFromUtf8(rt, string_));
 }
 #endif
 
