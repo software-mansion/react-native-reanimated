@@ -1,7 +1,7 @@
 'use strict';
-import { _updatePropsJS } from '../js-reanimated';
-import type { StyleProps } from '../commonTypes';
-import type { AnimatedRef } from '../hook/commonTypes';
+import { _updatePropsJS } from './js-reanimated';
+import type { StyleProps } from './commonTypes';
+import type { AnimatedRef } from './hook/commonTypes';
 import type { Component } from 'react';
 
 export function setNativeProps<T extends Component>(

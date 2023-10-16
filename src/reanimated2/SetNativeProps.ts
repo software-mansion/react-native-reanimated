@@ -1,10 +1,10 @@
 'use strict';
-import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
+import type { ShadowNodeWrapper, StyleProps } from './commonTypes';
+import { isChromeDebugger, isJest, shouldBeUseWeb } from './PlatformChecker';
 
-import type { AnimatedRef } from '../hook/commonTypes';
+import type { AnimatedRef } from './hook/commonTypes';
 import type { Component } from 'react';
-import { processColorsInProps } from '../Colors';
+import { processColorsInProps } from './Colors';
 
 const IS_NATIVE = !shouldBeUseWeb();
 
