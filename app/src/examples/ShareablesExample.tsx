@@ -10,6 +10,7 @@ export default function ShareablesExample() {
       <InaccessibleObjectDemo />
       <ArrayBufferDemo />
       <TypedArrayDemo />
+      <BigIntTypedArrayDemo />
       <DataViewDemo />
     </View>
   );
@@ -62,15 +63,71 @@ function ArrayBufferDemo() {
 
 function TypedArrayDemo() {
   const handlePress = () => {
-    const ta = new Uint32Array(8);
-    ta[7] = 1234567;
+    const ta1 = new Int8Array(100);
+    const ta2 = new Uint8Array(100);
+    const ta3 = new Uint8ClampedArray(100);
+    const ta4 = new Int16Array(100);
+    const ta5 = new Uint16Array(100);
+    const ta6 = new Int32Array(100);
+    const ta7 = new Uint32Array(100);
+    const ta8 = new Float32Array(100);
+    const ta9 = new Float64Array(100);
+
+    ta1[99] = -123;
+    ta2[99] = 123;
+    ta3[99] = 999;
+    ta4[99] = -12345;
+    ta5[99] = 12345;
+    ta6[99] = -123456789;
+    ta7[99] = 123456789;
+    ta8[99] = 123.45;
+    ta9[99] = 12345.6789;
+
     runOnUI(() => {
-      console.log(ta instanceof Uint32Array);
-      console.log(ta[7] === 1234567);
+      console.log(ta1 instanceof Int8Array);
+      console.log(ta2 instanceof Uint8Array);
+      console.log(ta3 instanceof Uint8ClampedArray);
+      console.log(ta4 instanceof Int16Array);
+      console.log(ta5 instanceof Uint16Array);
+      console.log(ta6 instanceof Int32Array);
+      console.log(ta7 instanceof Uint32Array);
+      console.log(ta8 instanceof Float32Array);
+      console.log(ta9 instanceof Float64Array);
+
+      console.log(ta1[99] === -123);
+      console.log(ta2[99] === 123);
+      console.log(ta3[99] === 255);
+      console.log(ta4[99] === -12345);
+      console.log(ta5[99] === 12345);
+      console.log(ta6[99] === -123456789);
+      console.log(ta7[99] === 123456789);
+      console.log(Math.abs(ta8[99] - 123.45) < 1e-5);
+      console.log(Math.abs(ta9[99] - 12345.6789) < 1e-5);
     })();
   };
 
   return <Button title="TypedArray" onPress={handlePress} />;
+}
+
+function BigIntTypedArrayDemo() {
+  const handlePress = () => {
+    const ta1 = new BigInt64Array(100);
+    const ta2 = new BigUint64Array(100);
+
+    // BigInt literals are not available when targeting lower than ES2020
+    ta1[99] = BigInt('-1234567890');
+    ta2[99] = BigInt('1234567890');
+
+    runOnUI(() => {
+      console.log(ta1 instanceof BigInt64Array);
+      console.log(ta2 instanceof BigUint64Array);
+
+      console.log(ta1[99] === BigInt('-1234567890'));
+      console.log(ta2[99] === BigInt('1234567890'));
+    })();
+  };
+
+  return <Button title="BigIntTypedArray" onPress={handlePress} />;
 }
 
 function DataViewDemo() {
