@@ -8,6 +8,7 @@ export default function ShareablesExample() {
     <View style={styles.container}>
       <CyclicObjectDemo />
       <InaccessibleObjectDemo />
+      <BigIntDemo />
       <ArrayBufferDemo />
       <TypedArrayDemo />
       <BigIntTypedArrayDemo />
@@ -39,6 +40,18 @@ function InaccessibleObjectDemo() {
   };
 
   return <Button title="Inaccessible object" onPress={handlePress} />;
+}
+
+function BigIntDemo() {
+  const handlePress = () => {
+    const bigint = BigInt('1234567890');
+    runOnUI(() => {
+      console.log(bigint === BigInt('1234567890'));
+      console.log(typeof bigint === 'bigint');
+    })();
+  };
+
+  return <Button title="BigInt" onPress={handlePress} />;
 }
 
 function ArrayBufferDemo() {

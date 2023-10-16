@@ -92,6 +92,10 @@ jsi::Value makeShareableClone(
     shareable = std::make_shared<ShareableScalar>(value.getBool());
   } else if (value.isNumber()) {
     shareable = std::make_shared<ShareableScalar>(value.getNumber());
+#if REACT_NATIVE_MINOR_VERSION >= 71
+  } else if (value.isBigInt()) {
+    shareable = std::make_shared<ShareableBigInt>(rt, value.getBigInt(rt));
+#endif
   } else if (value.isSymbol()) {
     // TODO: this is only a placeholder implementation, here we replace symbols
     // with strings in order to make certain objects to be captured. There isn't
@@ -299,6 +303,12 @@ jsi::Value ShareableSynchronizedDataHolder::toJSValue(jsi::Runtime &rt) {
 
 jsi::Value ShareableString::toJSValue(jsi::Runtime &rt) {
   return jsi::String::createFromUtf8(rt, data_);
+}
+
+jsi::Value ShareableBigInt::toJSValue(jsi::Runtime &rt) {
+  return rt.global()
+      .getPropertyAsFunction(rt, "BigInt")
+      .call(rt, jsi::String::createFromAscii(rt, string_));
 }
 
 jsi::Value ShareableScalar::toJSValue(jsi::Runtime &) {
