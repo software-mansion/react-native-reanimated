@@ -35,6 +35,8 @@ function InaccessibleObjectDemo() {
     const x = new Set();
     runOnUI(() => {
       console.log(x);
+      console.log(x instanceof Set); // returns false
+      console.log(x.has(42)); // should throw error
     })();
   };
 
