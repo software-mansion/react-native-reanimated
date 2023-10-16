@@ -96,8 +96,8 @@ export {
   dispatchCommand,
   scrollTo,
   setGestureState,
-} from './functions';
-export { setNativeProps } from './SetNativeProps';
+  setNativeProps,
+} from './platformFunctions';
 export type { ParsedColorArray } from './Colors';
 export { isColor, processColor, convertToRGBA } from './Colors';
 export { createAnimatedPropAdapter } from './PropAdapters';
