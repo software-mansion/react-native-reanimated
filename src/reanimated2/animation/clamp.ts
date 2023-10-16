@@ -10,16 +10,15 @@ import type {
 import type { ClampAnimation } from './commonTypes';
 
 type withClampType = <T extends AnimatableValue>(
-  clamp: { min: number; max: number },
+  config: { min?: number; max?: number; reduceMotion?: ReduceMotion },
   delayedAnimation: T,
   reduceMotion?: ReduceMotion
 ) => T;
 
 // TODO This feature is not documented yet
-export const withClamp = function <T extends AnimationObject>(
-  clamp: { min: number; max: number },
-  _nextAnimation: T | (() => T),
-  reduceMotion?: ReduceMotion
+export const withClamp = function <T extends AnimationObject<number>>(
+  config: { min?: number; max?: number; reduceMotion?: ReduceMotion },
+  _nextAnimation: T | (() => T)
 ): Animation<ClampAnimation> {
   'worklet';
   return defineAnimation<ClampAnimation, T>(
@@ -33,15 +32,17 @@ export const withClamp = function <T extends AnimationObject>(
 
       function delay(animation: ClampAnimation, now: Timestamp): boolean {
         const finished = nextAnimation.onFrame(nextAnimation, now);
-        switch (typeof nextAnimation.current) {
-          case 'number':
-            animation.current = Math.max(
-              clamp.min,
-              Math.min(clamp.max, nextAnimation.current)
-            );
-            break;
-          default:
-            animation.current = nextAnimation.current!;
+
+        if (nextAnimation.current === undefined) {
+          // This should never happen
+          // TODO fix nextAnimation.current shouldn't be optional
+        } else {
+          const clampUpper = config.max ? config.max : nextAnimation.current;
+          const clampLower = config.min ? config.min : nextAnimation.current;
+          animation.current = Math.max(
+            clampLower,
+            Math.min(clampUpper, nextAnimation.current)
+          );
         }
         return finished;
       }
@@ -85,7 +86,7 @@ export const withClamp = function <T extends AnimationObject>(
         previousAnimation: null,
         startTime: 0,
         started: false,
-        reduceMotion: getReduceMotionForAnimation(reduceMotion),
+        reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
       };
     }
   );

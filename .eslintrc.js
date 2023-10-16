@@ -24,6 +24,7 @@ module.exports = {
     },
   },
   rules: {
+    'no-case-declarations': 'off',
     'import/no-unresolved': 'error',
     'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
     'react/jsx-uses-vars': 'error',
