@@ -74,7 +74,7 @@ class Shareable {
     BooleanType,
     NumberType,
     // SymbolType, TODO
-    // BigIntType, TODO
+    BigIntType,
     StringType,
     ObjectType,
     ArrayType,
@@ -336,6 +336,19 @@ class ShareableString : public Shareable {
  protected:
   std::string data_;
 };
+
+#if REACT_NATIVE_MINOR_VERSION >= 71
+class ShareableBigInt : public Shareable {
+ public:
+  explicit ShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint)
+      : Shareable(BigIntType), string_(bigint.toString(rt).utf8(rt)) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::string string_;
+};
+#endif
 
 class ShareableScalar : public Shareable {
  public:
