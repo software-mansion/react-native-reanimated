@@ -40,12 +40,11 @@ import { isJest, isWeb, shouldBeUseWeb } from '../reanimated2/PlatformChecker';
 import type { ViewInfo } from './InlinePropManager';
 import { InlinePropManager } from './InlinePropManager';
 import { PropsFilter } from './PropsFilter';
-
 import {
   startWebLayoutAnimation,
-  configureWebLayoutAnimations,
   tryActivateLayoutTransition,
-} from '../reanimated2/layoutReanimation/web/animationsManager';
+  configureWebLayoutAnimations,
+} from '../reanimated2/layoutReanimation/web';
 
 const IS_WEB = isWeb();
 
