@@ -15,6 +15,7 @@ type withClampType = <T extends AnimatableValue>(
   reduceMotion?: ReduceMotion
 ) => T;
 
+// TODO This feature is not documented yet
 export const withClamp = function <T extends AnimationObject>(
   clamp: { min: number; max: number },
   _nextAnimation: T | (() => T),
