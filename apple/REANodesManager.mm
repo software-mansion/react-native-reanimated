@@ -330,6 +330,9 @@ using namespace facebook::react;
       if (strongSelf == nil) {
         return;
       }
+      // It is safe to call `isExecutingUpdatesBatch` in this context (Shadow thread) because both
+      // the Shadow thread and UI Thread are locked at this point. The UI Thread is specifically
+      // locked by the lock inside `REASyncUpdateObserver`, ensuring a safe reading operation.
       BOOL canUpdateSynchronously = trySynchronously && ![strongSelf.uiManager isExecutingUpdatesBatch];
 
       if (!canUpdateSynchronously) {

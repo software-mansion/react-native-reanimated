@@ -7,6 +7,7 @@
 #import <React/RCTRootShadowView.h>
 #import <React/RCTRootViewInternal.h>
 #import <React/RCTUIManager.h>
+#import <React/RCTUIManagerUtils.h>
 #import <objc/runtime.h>
 
 @interface RCTUIManager (Reanimated)
@@ -349,18 +350,21 @@ std::atomic<bool> hasPendingBlocks;
 
 - (void)reanimated_addUIBlock:(RCTViewManagerUIBlock)block
 {
+  RCTAssertUIManagerQueue();
   hasPendingBlocks = true;
   [self reanimated_addUIBlock:block];
 }
 
 - (void)reanimated_prependUIBlock:(RCTViewManagerUIBlock)block
 {
+  RCTAssertUIManagerQueue();
   hasPendingBlocks = true;
   [self reanimated_prependUIBlock:block];
 }
 
 - (void)reanimated_flushUIBlocksWithCompletion:(void (^)(void))completion
 {
+  RCTAssertUIManagerQueue();
   if (hasPendingBlocks) {
     ++isFlushingBlocks;
     hasPendingBlocks = false;
