@@ -9,7 +9,6 @@ import type {
 } from '../commonTypes';
 import type { ClampAnimation } from './commonTypes';
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withClampType = <T extends AnimatableValue>(
   clamp: { min: number; max: number },
   delayedAnimation: T,
