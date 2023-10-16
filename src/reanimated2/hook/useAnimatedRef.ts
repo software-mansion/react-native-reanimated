@@ -10,6 +10,9 @@ import {
   registerShareableMapping,
 } from '../shareables';
 import { Platform, findNodeHandle } from 'react-native';
+import { isFabric } from '../PlatformChecker';
+
+const IS_FABRIC = isFabric();
 
 interface MaybeScrollableComponent extends Component {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,15 +25,15 @@ interface MaybeScrollableComponent extends Component {
 }
 
 function getComponentOrScrollable(component: MaybeScrollableComponent) {
-  if (global._IS_FABRIC && component.getNativeScrollRef) {
+  if (IS_FABRIC && component.getNativeScrollRef) {
     return component.getNativeScrollRef();
-  } else if (!global._IS_FABRIC && component.getScrollableNode) {
+  } else if (!IS_FABRIC && component.getScrollableNode) {
     return component.getScrollableNode();
   }
   return component;
 }
 
-const getTagValueFunction = global._IS_FABRIC
+const getTagValueFunction = IS_FABRIC
   ? getShadowNodeWrapperFromRef
   : findNodeHandle;
 
@@ -51,7 +54,7 @@ export function useAnimatedRef<
         tag.value = getTagValueFunction(getComponentOrScrollable(component));
         fun.current = component;
         // viewName is required only on iOS with Paper
-        if (Platform.OS === 'ios' && !global._IS_FABRIC) {
+        if (Platform.OS === 'ios' && !IS_FABRIC) {
           viewName.value = component?.viewConfig?.uiViewClassName || 'RCTView';
         }
       }
