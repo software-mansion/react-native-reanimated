@@ -305,11 +305,13 @@ jsi::Value ShareableString::toJSValue(jsi::Runtime &rt) {
   return jsi::String::createFromUtf8(rt, data_);
 }
 
+#if REACT_NATIVE_MINOR_VERSION >= 71
 jsi::Value ShareableBigInt::toJSValue(jsi::Runtime &rt) {
   return rt.global()
       .getPropertyAsFunction(rt, "BigInt")
       .call(rt, jsi::String::createFromAscii(rt, string_));
 }
+#endif
 
 jsi::Value ShareableScalar::toJSValue(jsi::Runtime &) {
   switch (valueType_) {
