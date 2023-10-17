@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-shadow */
 'use strict';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type { ParsedColorArray } from '../Colors';

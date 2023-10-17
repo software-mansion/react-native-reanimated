@@ -16,6 +16,8 @@ export class BaseAnimationBuilder {
   randomizeDelay = false;
   callbackV?: (finished: boolean) => void;
 
+  // We have to disable this rule because of recursion
+  // eslint-disable-next-line no-use-before-define
   static createInstance: <T extends typeof BaseAnimationBuilder>(
     this: T
   ) => InstanceType<T>;

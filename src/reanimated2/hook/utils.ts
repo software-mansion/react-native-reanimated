@@ -49,14 +49,14 @@ export function areDependenciesEqual(
     typeof Object.is === 'function' ? Object.is : is;
 
   function areHookInputsEqual(
-    nextDeps: DependencyList,
-    prevDeps: DependencyList
+    _nextDeps: DependencyList,
+    _prevDeps: DependencyList
   ) {
-    if (!nextDeps || !prevDeps || prevDeps.length !== nextDeps.length) {
+    if (!_nextDeps || !_prevDeps || _prevDeps.length !== _nextDeps.length) {
       return false;
     }
-    for (let i = 0; i < prevDeps.length; ++i) {
-      if (!objectIs(nextDeps[i], prevDeps[i])) {
+    for (let i = 0; i < _prevDeps.length; ++i) {
+      if (!objectIs(_nextDeps[i], _prevDeps[i])) {
         return false;
       }
     }

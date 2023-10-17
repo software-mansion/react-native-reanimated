@@ -112,8 +112,8 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
         NativeReanimatedModule.scheduleOnUI(
           makeShareableCloneRecursive(() => {
             'worklet';
-            queue.forEach(([worklet, args]) => {
-              worklet(...args);
+            queue.forEach(([_worklet, _args]) => {
+              _worklet(..._args);
             });
             callMicrotasks();
           })
