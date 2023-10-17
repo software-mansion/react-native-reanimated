@@ -84,8 +84,6 @@ function chooseAction(
       handleEnteringAnimation(element, animationConfig);
       break;
     case LayoutAnimationType.LAYOUT:
-      // `transitionData` is cast as defined because it is a result of calculations made inside componentDidUpdate method.
-      // We can reach this piece of code only from componentDidUpdate, therefore this parameter will be defined.
       transitionData.reversed = animationConfig.reversed;
 
       handleLayoutTransition(
