@@ -110,9 +110,9 @@ enum InterfaceOrientation {
 
 A type of a sensor to use. You specify the sensor type using a `SensorType` enum containing fields:
 
-- `ACCELEROMETER` - measures the device acceleration along x, y, and z axes (excluding gravity) in m/s^2.
+- `ACCELEROMETER` - measures the device acceleration along x, y, and z axes (excluding gravity) in m/s<sup>2</sup>.
 - `GYROSCOPE` - measures the rate of rotation along x, y, and z axes in radians per second.
-- `GRAVITY` - measures acceleration due to gravity along x, y, and z axes in m/s^2.
+- `GRAVITY` - measures acceleration due to gravity along x, y, and z axes in m/s<sup>2</sup>.
 - `MAGNETIC_FIELD` - measures the strength and direction of the Earth's magnetic field in microtesla (μT).
 - `ROTATION` - measures the device orientation in three dimensions. This sensor represents the rotation by both Euler angles (roll, pitch, and yaw) and a quaternion.
 
@@ -191,7 +191,7 @@ and
 - `z` - sensor measurement on the Z axis.
 - `interfaceOrientation: InterfaceOrientation`.
 
-Depending on the sensor type the measurement is a number in radians per second, m/s^2 or microtesla (μT).
+Depending on the sensor type the measurement is a number in radians per second, m/s<sup>2</sup> or microtesla (μT).
 
 `InterfaceOrientation` is an enum containing these properties:
 
