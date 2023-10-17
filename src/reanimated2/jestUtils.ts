@@ -113,11 +113,11 @@ const findStyleDiff = (current, expect, shouldMatchAllProps) => {
   return { isEqual, diffs };
 };
 
-const compareStyle = (received, expectedStyle, config) => {
+const compareStyle = (received, expectedStyle, _config) => {
   if (!received.props.style) {
     return { message: () => message, pass: false };
   }
-  const { shouldMatchAllProps } = config;
+  const { shouldMatchAllProps } = _config;
   const currentStyle = getCurrentStyle(received);
   const { isEqual, diffs } = findStyleDiff(
     currentStyle,
@@ -216,7 +216,7 @@ export const setUpTests = (userConfig = {}) => {
     ...userConfig,
   };
   expect.extend({
-    toHaveAnimatedStyle(received, expectedStyle, config = {}) {
+    toHaveAnimatedStyle(received, expectedStyle, _config = {}) {
       return compareStyle(received, expectedStyle, config);
     },
   });

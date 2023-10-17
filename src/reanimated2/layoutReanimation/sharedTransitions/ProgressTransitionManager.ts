@@ -13,6 +13,10 @@ type TransitionProgressEvent = {
   target: number;
 };
 
+export type ProgressTransitionRegister = ReturnType<
+  typeof createProgressTransitionRegister
+>;
+
 const IS_ANDROID = Platform.OS === 'android';
 
 export class ProgressTransitionManager {
@@ -230,7 +234,3 @@ if (shouldBeUseWeb()) {
     global.ProgressTransitionRegister = createProgressTransitionRegister();
   })();
 }
-
-export type ProgressTransitionRegister = ReturnType<
-  typeof createProgressTransitionRegister
->;

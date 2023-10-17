@@ -17,6 +17,13 @@ import type { WebSensor } from './WebSensor';
 
 import { mockedRequestAnimationFrame } from '../utils';
 
+enum Platform {
+  WEB_IOS = 'web iOS',
+  WEB_ANDROID = 'web Android',
+  WEB = 'web',
+  UNKNOWN = 'unknown',
+}
+
 // In Node.js environments (like when static rendering with Expo Router)
 // requestAnimationFrame is unavailable, so we use our mock.
 // It also has to be mocked for Jest purposes (see `initializeUIRuntime`).
@@ -304,13 +311,6 @@ export default class JSReanimated {
       '[Reanimated] configureProps is not available in JSReanimated.'
     );
   }
-}
-
-enum Platform {
-  WEB_IOS = 'web iOS',
-  WEB_ANDROID = 'web Android',
-  WEB = 'web',
-  UNKNOWN = 'unknown',
 }
 
 declare global {

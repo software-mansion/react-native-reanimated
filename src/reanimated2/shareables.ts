@@ -108,6 +108,20 @@ const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // We use it to check if later on the function reenters with the same object
 let processedObjectAtThresholdDepth: any;
 
+const WORKLET_CODE_THRESHOLD = 255;
+
+function getWorkletCode(value: __WorkletFunction) {
+  // @ts-ignore this is fine
+  const code = value?.__initData?.code;
+  if (!code) {
+    return 'unknown';
+  }
+  if (code.length > WORKLET_CODE_THRESHOLD) {
+    return `${code.substring(0, WORKLET_CODE_THRESHOLD)}...`;
+  }
+  return code;
+}
+
 export function makeShareableCloneRecursive<T>(
   value: any,
   shouldPersistRemote = false,
@@ -221,19 +235,19 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
       } else if (ArrayBuffer.isView(value)) {
         // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
         const buffer = value.buffer;
-        const type = value.constructor.name;
+        const _type = value.constructor.name;
         const handle = makeShareableCloneRecursive({
           __init: () => {
             'worklet';
-            if (!VALID_ARRAY_VIEWS_NAMES.includes(type)) {
+            if (!VALID_ARRAY_VIEWS_NAMES.includes(_type)) {
               throw new Error(
-                `[Reanimated] Invalid array view name \`${type}\`.`
+                `[Reanimated] Invalid array view name \`${_type}\`.`
               );
             }
-            const constructor = global[type as keyof typeof global];
+            const constructor = global[_type as keyof typeof global];
             if (constructor === undefined) {
               throw new Error(
-                `[Reanimated] Constructor for \`${type}\` not found.`
+                `[Reanimated] Constructor for \`${_type}\` not found.`
               );
             }
             return new constructor(buffer);
@@ -276,20 +290,6 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
   return NativeReanimatedModule.makeShareableClone(value, shouldPersistRemote);
 }
 
-const WORKLET_CODE_THRESHOLD = 255;
-
-function getWorkletCode(value: __WorkletFunction) {
-  // @ts-ignore this is fine
-  const code = value?.__initData?.code;
-  if (!code) {
-    return 'unknown';
-  }
-  if (code.length > WORKLET_CODE_THRESHOLD) {
-    return `${code.substring(0, WORKLET_CODE_THRESHOLD)}...`;
-  }
-  return code;
-}
-
 type RemoteFunction<T> = {
   __remoteFunction: FlatShareableRef<T>;
 };
@@ -310,34 +310,35 @@ export function makeShareableCloneOnUIRecursive<T>(
     // see more details in the comment where USE_STUB_IMPLEMENTATION is defined.
     return value;
   }
-  function cloneRecursive<T>(value: T): FlatShareableRef<T> {
+
+  function cloneRecursive(_value: T): FlatShareableRef<T> {
     if (
-      (typeof value === 'object' && value !== null) ||
-      typeof value === 'function'
+      (typeof _value === 'object' && _value !== null) ||
+      typeof _value === 'function'
     ) {
-      if (isHostObject(value)) {
+      if (isHostObject(_value)) {
         // We call `_makeShareableClone` to wrap the provided HostObject
         // inside ShareableJSRef.
-        return _makeShareableClone(value) as FlatShareableRef<T>;
+        return _makeShareableClone(_value) as FlatShareableRef<T>;
       }
-      if (isRemoteFunction<T>(value)) {
+      if (isRemoteFunction<T>(_value)) {
         // RemoteFunctions are created by us therefore they are
         // a Shareable out of the box and there is no need to
         // call `_makeShareableClone`.
-        return value.__remoteFunction;
+        return _value.__remoteFunction;
       }
-      if (Array.isArray(value)) {
+      if (Array.isArray(_value)) {
         return _makeShareableClone(
-          value.map(cloneRecursive)
+          _value.map(cloneRecursive)
         ) as FlatShareableRef<T>;
       }
       const toAdapt: Record<string, FlatShareableRef<T>> = {};
-      for (const [key, element] of Object.entries(value)) {
-        toAdapt[key] = cloneRecursive<T>(element);
+      for (const [key, element] of Object.entries(_value)) {
+        toAdapt[key] = cloneRecursive(element);
       }
       return _makeShareableClone(toAdapt) as FlatShareableRef<T>;
     }
-    return _makeShareableClone(value);
+    return _makeShareableClone(_value);
   }
   return cloneRecursive(value);
 }

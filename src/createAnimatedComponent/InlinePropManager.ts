@@ -28,6 +28,8 @@ function isInlineStyleTransform(transform: unknown): boolean {
     return false;
   }
 
+  // We have to disable this rule due to recursion here
+  // eslint-disable-next-line @typescript-eslint/no-use-before-define
   return transform.some((t: Record<string, unknown>) => hasInlineStyles(t));
 }
 
@@ -80,14 +82,14 @@ function extractSharedValuesMapFromProps(
         if (!style) {
           return;
         }
-        for (const [key, styleValue] of Object.entries(style)) {
+        for (const [styleKey, styleValue] of Object.entries(style)) {
           if (isSharedValue(styleValue)) {
-            inlineProps[key] = styleValue;
+            inlineProps[styleKey] = styleValue;
           } else if (
-            key === 'transform' &&
+            styleKey === 'transform' &&
             isInlineStyleTransform(styleValue)
           ) {
-            inlineProps[key] = styleValue;
+            inlineProps[styleKey] = styleValue;
           }
         }
       });
