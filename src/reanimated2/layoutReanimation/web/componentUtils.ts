@@ -127,13 +127,13 @@ function setElementAnimation(
   element.style.animationDelay = `${delay}s`;
   element.style.animationTimingFunction = easing;
 
-  element.onanimationend = () => {
-    animationConfig.callback?.(true);
+  const animationCancelHandler = () => {
+    animationConfig.callback?.(false);
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
 
-  const animationCancelHandler = () => {
-    animationConfig.callback?.(false);
+  element.onanimationend = () => {
+    animationConfig.callback?.(true);
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
 

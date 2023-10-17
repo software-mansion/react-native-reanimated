@@ -64,6 +64,12 @@ function addExistingTransform(
   }
 }
 
+let customKeyframeCounter = 0;
+
+function generateNextCustomKeyframeName() {
+  return `REA${customKeyframeCounter++}`;
+}
+
 /**
  *  Modifies default animation by preserving transformations that given element already contains.
  *
@@ -104,12 +110,6 @@ export function createAnimationWithExistingTransform(
   insertWebAnimation(keyframeName, keyframe);
 
   return keyframeName;
-}
-
-let customKeyframeCounter = 0;
-
-function generateNextCustomKeyframeName() {
-  return `REA${customKeyframeCounter++}`;
 }
 
 /**

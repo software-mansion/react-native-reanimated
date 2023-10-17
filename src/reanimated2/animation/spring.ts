@@ -68,19 +68,19 @@ export const withSpring = ((
       animation: InnerSpringAnimation,
       now: Timestamp
     ): boolean {
-      const { toValue, startTimestamp, current } = animation;
+      const { _toValue, startTimestamp, current } = animation;
 
       const timeFromStart = now - startTimestamp;
 
       if (config.useDuration && timeFromStart >= config.duration) {
-        animation.current = toValue;
+        animation.current = _toValue;
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
         return true;
       }
 
       if (config.skipAnimation) {
-        animation.current = toValue;
+        animation.current = _toValue;
         animation.lastTimestamp = 0;
         return true;
       }
@@ -91,7 +91,7 @@ export const withSpring = ((
 
       const t = deltaTime / 1000;
       const v0 = -velocity;
-      const x0 = toValue - current;
+      const x0 = _toValue - current;
 
       const { zeta, omega0, omega1 } = animation;
 
@@ -123,7 +123,7 @@ export const withSpring = ((
 
       if (!config.useDuration && springIsNotInMove) {
         animation.velocity = 0;
-        animation.current = toValue;
+        animation.current = _toValue;
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
         return true;
