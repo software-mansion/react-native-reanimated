@@ -74,6 +74,14 @@ type ValueUnpacker = WorkletFunction<
 >;
 
 if (__DEV__ && IS_NATIVE) {
+  const f = (() => {
+    'worklet';
+  }) as WorkletFunction<[], void>;
+  if (f.__workletHash === undefined) {
+    throw new Error(
+      `[Reanimated] Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
+    );
+  }
   if (!('__workletHash' in valueUnpacker)) {
     throw new Error('[Reanimated] `valueUnpacker` is not a worklet');
   }
