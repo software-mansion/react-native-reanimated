@@ -84,14 +84,7 @@ function chooseAction(
       handleEnteringAnimation(element, animationConfig);
       break;
     case LayoutAnimationType.LAYOUT:
-      // `transitionData` is cast as defined because it is a result of calculations made inside componentDidUpdate method.
-      // We can reach this piece of code only from componentDidUpdate, therefore this parameter will be defined.
-
-      // @ts-ignore This property exists in SequencedTransition
-      (transitionData as TransitionData).reversed = config.reversed
-        ? // @ts-ignore This property exists in SequencedTransition
-          config.reversed
-        : false;
+      transitionData.reversed = animationConfig.reversed;
 
       handleLayoutTransition(
         element,
