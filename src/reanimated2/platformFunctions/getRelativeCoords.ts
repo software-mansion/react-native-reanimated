@@ -1,8 +1,7 @@
 'use strict';
 import type { Component } from 'react';
-import { measure } from './platformFunctions';
-import type { AnimatedRef } from './hook/commonTypes';
-import type { SharedValue } from './commonTypes';
+import { measure } from './measure';
+import type { AnimatedRef } from '../hook/commonTypes';
 
 export interface ComponentCoords {
   x: number;
@@ -27,9 +26,4 @@ export function getRelativeCoords(
     x: absoluteX - parentCoords.x,
     y: absoluteY - parentCoords.y,
   };
-}
-
-export function isSharedValue<T>(value: any): value is SharedValue<T> {
-  'worklet';
-  return value?._isReanimatedSharedValue === true;
 }
