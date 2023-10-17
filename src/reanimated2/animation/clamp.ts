@@ -29,7 +29,10 @@ export const withClamp = function <T extends AnimationObject<number>>(
           ? _clampedAnimation()
           : _clampedAnimation;
 
-      function delay(animation: ClampAnimation, now: Timestamp): boolean {
+      function clampOnFrame(
+        animation: ClampAnimation,
+        now: Timestamp
+      ): boolean {
         const finished = clampedAnimation.onFrame(clampedAnimation, now);
 
         if (clampedAnimation.current === undefined) {
@@ -87,7 +90,7 @@ export const withClamp = function <T extends AnimationObject<number>>(
 
       return {
         isHigherOrder: true,
-        onFrame: delay,
+        onFrame: clampOnFrame,
         onStart,
         current: clampedAnimation.current!,
         callback,
