@@ -7,7 +7,7 @@ import {
   callMicrotasks,
   runOnUIImmediately,
 } from './threads';
-import { mockedRequestAnimationFrame } from './utils';
+import { mockedRequestAnimationFrame } from './mockedRequestAnimationFrame';
 
 const IS_JEST = isJest();
 const IS_NATIVE = !shouldBeUseWeb();
