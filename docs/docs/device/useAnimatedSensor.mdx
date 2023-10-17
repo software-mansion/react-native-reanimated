@@ -120,11 +120,11 @@ A type of a sensor to use. You specify the sensor type using a `SensorType` enum
 
 Available properties:
 
-| Name                         | Type                | Default                  | Description                                                                             |
-| ---------------------------- | ------------------- | ------------------------ | --------------------------------------------------------------------------------------- |
-| interval                     | `number｜"auto"`    | `"auto"`                 | Time in milliseconds between sensor readings. `"auto"` matches the device refresh rate. |
-| adjustToInterfaceOrientation | `boolean`           | `true`                   | Whether to adjust measurements to the current interface orientation.                    |
-| iosReferenceFrame            | `IOSReferenceFrame` | `IOSReferenceFrame.Auto` | The frame of reference for device's sensors on iOS.                                     |
+| Name                         | Type                | Default                  | Description                                                                                      |
+| ---------------------------- | ------------------- | ------------------------ | ------------------------------------------------------------------------------------------------ |
+| interval                     | `number｜"auto"`    | `"auto"`                 | Time in milliseconds between sensor readings. `"auto"` matches the device's screen refresh rate. |
+| adjustToInterfaceOrientation | `boolean`           | `true`                   | Whether to adjust measurements to the current interface orientation.                             |
+| iosReferenceFrame            | `IOSReferenceFrame` | `IOSReferenceFrame.Auto` | The frame of reference for device's sensors on iOS.                                              |
 
 You can specify the iOS reference frame using an `IOSReferenceFrame` enum containing fields:
 
