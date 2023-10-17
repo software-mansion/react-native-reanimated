@@ -14,7 +14,6 @@ export function scrollTo<T extends Component>(
   // This prevents crashes if ref has not been set yet
   if (element !== -1) {
     // By ScrollView we mean any scrollable component
-    const scrollView = element as HTMLElement as unknown as ScrollView;
-    scrollView?.scrollTo({ x, y, animated });
+    (element as ScrollView)?.scrollTo({ x, y, animated });
   }
 }

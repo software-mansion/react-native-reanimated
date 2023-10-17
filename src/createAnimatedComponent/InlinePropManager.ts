@@ -13,12 +13,11 @@ import updateProps from '../reanimated2/UpdateProps';
 import { stopMapper, startMapper } from '../reanimated2/mappers';
 import { isSharedValue } from '../reanimated2/utils';
 import { shouldBeUseWeb } from '../reanimated2/PlatformChecker';
-import type { ShadowNodeWrapper } from '../reanimated2/commonTypes';
 
 export interface ViewInfo {
   viewTag: number | HTMLElement | null;
   viewName: string | null;
-  shadowNodeWrapper: ShadowNodeWrapper | null;
+  shadowNodeWrapper: object | null;
   viewConfig: ViewConfig;
 }
 
