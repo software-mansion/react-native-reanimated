@@ -1,3 +1,4 @@
+'use strict';
 import type { StyleProps } from '../reanimated2';
 import type { AnimatedComponentProps } from './utils';
 import { flattenArray } from './utils';
@@ -6,11 +7,21 @@ import type {
   ViewDescriptorsSet,
   ViewRefSet,
 } from '../reanimated2/ViewDescriptorsSet';
+import type { ViewConfig } from '../ConfigHelper';
 import { adaptViewConfig } from '../ConfigHelper';
 import updateProps from '../reanimated2/UpdateProps';
 import { stopMapper, startMapper } from '../reanimated2/mappers';
 import { isSharedValue } from '../reanimated2/utils';
-import NativeReanimatedModule from '../reanimated2/NativeReanimated';
+import { shouldBeUseWeb } from '../reanimated2/PlatformChecker';
+
+export interface ViewInfo {
+  viewTag: number | HTMLElement | null;
+  viewName: string | null;
+  shadowNodeWrapper: object | null;
+  viewConfig: ViewConfig;
+}
+
+const IS_NATIVE = !shouldBeUseWeb();
 
 function isInlineStyleTransform(transform: unknown): boolean {
   if (!Array.isArray(transform)) {
@@ -35,16 +46,18 @@ function inlinePropsHasChanged(
   return false;
 }
 
-function getInlinePropsUpdate(inlineProps: Record<string, any>) {
+function getInlinePropsUpdate(inlineProps: Record<string, unknown>) {
   'worklet';
-  const update: Record<string, any> = {};
+  const update: Record<string, unknown> = {};
   for (const [key, styleValue] of Object.entries(inlineProps)) {
-    if (key === 'transform') {
-      update[key] = styleValue.map((transform: Record<string, any>) => {
-        return getInlinePropsUpdate(transform);
-      });
-    } else if (isSharedValue(styleValue)) {
+    if (isSharedValue(styleValue)) {
       update[key] = styleValue.value;
+    } else if (Array.isArray(styleValue)) {
+      update[key] = styleValue.map((item) => {
+        return getInlinePropsUpdate(item);
+      });
+    } else if (typeof styleValue === 'object') {
+      update[key] = getInlinePropsUpdate(styleValue as Record<string, unknown>);
     } else {
       update[key] = styleValue;
     }
@@ -125,11 +138,10 @@ export class InlinePropManager {
 
   public attachInlineProps(
     animatedComponent: React.Component<unknown, unknown>,
-    viewInfo: any // viewTag, viewName, shadowNodeWrapper, viewConfig
+    viewInfo: ViewInfo
   ) {
-    const newInlineProps: Record<string, any> = extractSharedValuesMapFromProps(
-      animatedComponent.props
-    );
+    const newInlineProps: Record<string, unknown> =
+      extractSharedValuesMapFromProps(animatedComponent.props);
     const hasChanged = inlinePropsHasChanged(newInlineProps, this._inlineProps);
 
     if (hasChanged) {
@@ -154,9 +166,9 @@ export class InlinePropManager {
       const shareableViewDescriptors =
         this._inlinePropsViewDescriptors.shareableViewDescriptors;
 
-      const maybeViewRef = NativeReanimatedModule.native
+      const maybeViewRef = IS_NATIVE
         ? undefined
-        : ({ items: new Set([this]) } as ViewRefSet<any>); // see makeViewsRefSet
+        : ({ items: new Set([animatedComponent]) } as ViewRefSet<unknown>); // see makeViewsRefSet
 
       const updaterFunction = () => {
         'worklet';

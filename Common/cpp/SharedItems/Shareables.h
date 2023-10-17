@@ -14,9 +14,9 @@ namespace reanimated {
 
 jsi::Function getValueUnpacker(jsi::Runtime &rt);
 
-#ifdef DEBUG
+#ifndef NDEBUG
 jsi::Function getCallGuard(jsi::Runtime &rt);
-#endif // DEBUG
+#endif // NDEBUG
 
 // If possible, please use `WorkletRuntime::runGuarded` instead.
 template <typename... Args>
@@ -28,7 +28,7 @@ inline void runOnRuntimeGuarded(
   // function directly. CallGuard provides a way of capturing exceptions in
   // JavaScript and propagating them to the main React Native thread such that
   // they can be presented using RN's LogBox.
-#ifdef DEBUG
+#ifndef NDEBUG
   getCallGuard(rt).call(rt, function, args...);
 #else
   function.asObject(rt).asFunction(rt).call(rt, args...);
@@ -74,7 +74,7 @@ class Shareable {
     BooleanType,
     NumberType,
     // SymbolType, TODO
-    // BigIntType, TODO
+    BigIntType,
     StringType,
     ObjectType,
     ArrayType,
@@ -84,6 +84,7 @@ class Shareable {
     SynchronizedDataHolder,
     HostObjectType,
     HostFunctionType,
+    ArrayBufferType,
   };
 
   explicit Shareable(ValueType valueType) : valueType_(valueType) {}
@@ -146,6 +147,11 @@ jsi::Value makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
     const jsi::Value &shouldRetainRemote);
+
+void updateDataSynchronously(
+    jsi::Runtime &rt,
+    const jsi::Value &synchronizedDataHolderRef,
+    const jsi::Value &newData);
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
@@ -216,6 +222,28 @@ class ShareableHostFunction : public Shareable {
   jsi::HostFunctionType hostFunction_;
   std::string name_;
   unsigned int paramCount_;
+};
+
+class ShareableArrayBuffer : public Shareable {
+ public:
+  ShareableArrayBuffer(
+      jsi::Runtime &rt,
+#if REACT_NATIVE_MINOR_VERSION >= 72
+      const jsi::ArrayBuffer &arrayBuffer
+#else
+      jsi::ArrayBuffer arrayBuffer
+#endif
+      )
+      : Shareable(ArrayBufferType),
+        data_(
+            arrayBuffer.data(rt),
+            arrayBuffer.data(rt) + arrayBuffer.size(rt)) {
+  }
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::vector<uint8_t> data_;
 };
 
 class ShareableWorklet : public ShareableObject {
@@ -308,6 +336,19 @@ class ShareableString : public Shareable {
  protected:
   std::string data_;
 };
+
+#if REACT_NATIVE_MINOR_VERSION >= 71
+class ShareableBigInt : public Shareable {
+ public:
+  explicit ShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint)
+      : Shareable(BigIntType), string_(bigint.toString(rt).utf8(rt)) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::string string_;
+};
+#endif
 
 class ShareableScalar : public Shareable {
  public:

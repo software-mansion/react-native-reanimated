@@ -43,8 +43,8 @@ All of them are supposed to work correctly only within the same minor version. T
 
 **Solution:**
 
-1. Part of your code might be transpiled with an outdated version of Reanimated Babel plugin. See [Mismatch between JavaScript code version and Reanimated Babel plugin version](https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version).
-2. You use release bundle with debug build of the app. This is not supported. See [Using dev bundle in release app build is not supported](https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#using-dev-bundle-in-a-release-app-build-is-not-supported) for more information.
+1. Part of your code might be transpiled with an outdated version of Reanimated Babel plugin. See [Mismatch between JavaScript code version and Reanimated Babel plugin version](#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version).
+2. You use release bundle with debug build of the app. This is not supported. See [Using dev bundle in release app build is not supported](#using-dev-bundle-in-a-release-app-build-is-not-supported) for more information.
 
 ### Mismatch between JavaScript code version and Reanimated Babel plugin version
 
@@ -72,6 +72,38 @@ If this didn't help, you probably have a dependency that contains already transf
 
 **Solution:** Check if you have rebuilt your app after upgrading `react-native-reanimated`. If you use Expo Go, you must use the exact version which is bundled into Expo SDK.
 
+### C++ side failed to resolve JavaScript code version
+
+See [Couldn't determine the version of the native part of Reanimated](#couldnt-determine-the-version-of-the-native-part-of-reanimated) and [Unknown version of Reanimated Babel plugin](#unknown-version-of-reanimated-babel-plugin).
+
+### Mismatch between C++ code version and JavaScript code version
+
+See (Mismatch between JavaScript part and native part of Reanimated)[#mismatch-between-javascript-part-and-native-part-of-reanimated] and (Mismatch between JavaScript code version and Reanimated Babel plugin version)[#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version].
+
+### C++ side failed to resolve Java code version
+
+**Problem:** This happens when Reanimated fails to determine the version of its Java part - most likely because Java part hasn't rebuilt after an upgrade.
+
+**Solution:** Make sure to rebuild your app and see if the problem persists. If it does, feel free to [create an issue on our GitHub](https://github.com/software-mansion/react-native-reanimated/).
+
+### Mismatch between C++ code version and Java code version
+
+**Problem:** This happens when Reanimated has different versions of its C++ and Java parts.
+
+**Solution:** See [Native side failed to resolve Java code version](#c-side-failed-to-resolve-javas-code-version).
+
+### Java side failed to resolve C++ code version
+
+**Problem:** This happens when Reanimated fails to determine the version of its C++ part - most likely because for some reason C++ part hasn't rebuilt after an upgrade.
+
+**Solution:** See [Native side failed to resolve Java code version](#c-side-failed-to-resolve-java-code-version).
+
+### Mismatch between Java code version and C++ code version
+
+**Problem:** This happens when Reanimated has different versions of its Java and C++ parts.
+
+**Solution:** See [Native side failed to resolve Java code version](#c-side-failed-to-resolve-java-code-version).
+
 ### Multiple versions of Reanimated were detected
 
 **Problem:** This error usually happens when in your project exists more than one instance of Reanimated. It can occur when some of your dependency has installed Reanimated inside their own `node_modules` instead of using it as a peer dependency. In this case two different versions of Reanimated JavaScript module might try to initialize its native part. You can check which libraries are using Reanimated e.g. with `yarn why react-native-reanimated` or `npm ls react-native-reanimated`.
@@ -96,11 +128,16 @@ If this didn't help, you probably have a dependency that contains already transf
 
 After that make sure to run your package manager again, either `yarn` or `npm install`.
 
+### Another instance of Reanimated was detected
+
+See [Multiple versions of Reanimated were detected](#multiple-versions-of-reanimated-were-detected).
+
 ### Outdated version of React Native for New Architecture
 
 **Problem:** Reanimated supports New Architecture (Fabric) only on the latest minor release of React Native.
 
-**Solution:** Please upgrade to at least React Native 0.72 or downgrade to an older version of Reanimated 3.
+**Solution:** Please upgrade to a newer version of React Native or downgrade to an older version of Reanimated.
+See [the compatibility table](compatibility) for a full list of supported versions of React Native.
 
 ## Threading issues
 

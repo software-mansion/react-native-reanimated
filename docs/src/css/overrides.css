@@ -18,10 +18,31 @@ table thead tr {
   border-bottom: 1px solid var(--ifm-table-border-color);
 }
 
-.compatibility table {
+.platform-compatibility table {
   display: table;
   width: 100%;
   table-layout: fixed;
+}
+
+.compatibility {
+  overflow-x: auto;
+}
+
+.compatibility table {
+  display: table;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.compatibility td {
+  padding: 0;
+  border: transparent 2px solid;
+  background: var(--ifm-background-color);
+}
+
+.compatibility th {
+  background: var(--ifm-background-color);
+  border: transparent 2px solid;
 }
 
 .header-github {

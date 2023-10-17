@@ -9,6 +9,7 @@ export function isJest(): boolean {
   return !!process.env.JEST_WORKER_ID;
 }
 
+// `isChromeDebugger` also returns true in Jest environment, so `isJest()` check should always be performed first
 export function isChromeDebugger(): boolean {
   return (
     !(global as localGlobal).nativeCallSyncHook ||

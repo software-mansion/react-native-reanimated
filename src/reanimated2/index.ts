@@ -16,9 +16,10 @@ export {
 export type {
   GestureHandlers,
   AnimatedRef,
+  DerivedValue,
   ScrollHandler,
   ScrollHandlers,
-  DerivedValue,
+  ScrollHandlerProcessed,
   FrameCallback,
   ScrollEvent,
   EventHandler,
@@ -75,6 +76,9 @@ export type {
   InterpolateHSV,
 } from './interpolateColor';
 export {
+  /**
+   * @deprecated Please use `Extrapolation` instead.
+   */
   Extrapolate,
   ColorSpace,
   interpolateColor,
@@ -92,7 +96,7 @@ export {
   dispatchCommand,
   scrollTo,
   setGestureState,
-} from './NativeMethods';
+} from './platformFunctions';
 export { setNativeProps } from './SetNativeProps';
 export type { ParsedColorArray } from './Colors';
 export { isColor, processColor, convertToRGBA } from './Colors';
@@ -246,6 +250,7 @@ export {
   setUpTests,
   getAnimatedStyle,
 } from './jestUtils';
+export { LayoutAnimationConfig } from './component/LayoutAnimationConfig';
 export type {
   Adaptable,
   AdaptTransforms,
