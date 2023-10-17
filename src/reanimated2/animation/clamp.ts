@@ -11,37 +11,40 @@ import type { ClampAnimation } from './commonTypes';
 
 type withClampType = <T extends AnimatableValue>(
   config: { min?: number; max?: number; reduceMotion?: ReduceMotion },
-  delayedAnimation: T,
-  reduceMotion?: ReduceMotion
+  clampedAnimation: T
 ) => T;
 
 // TODO This feature is not documented yet
 export const withClamp = function <T extends AnimationObject<number>>(
   config: { min?: number; max?: number; reduceMotion?: ReduceMotion },
-  _nextAnimation: T | (() => T)
+  _clampedAnimation: T | (() => T)
 ): Animation<ClampAnimation> {
   'worklet';
   return defineAnimation<ClampAnimation, T>(
-    _nextAnimation,
+    _clampedAnimation,
     (): ClampAnimation => {
       'worklet';
-      const nextAnimation =
-        typeof _nextAnimation === 'function'
-          ? _nextAnimation()
-          : _nextAnimation;
+      const clampedAnimation =
+        typeof _clampedAnimation === 'function'
+          ? _clampedAnimation()
+          : _clampedAnimation;
 
       function delay(animation: ClampAnimation, now: Timestamp): boolean {
-        const finished = nextAnimation.onFrame(nextAnimation, now);
+        const finished = clampedAnimation.onFrame(clampedAnimation, now);
 
-        if (nextAnimation.current === undefined) {
+        if (clampedAnimation.current === undefined) {
           // This should never happen
-          // TODO fix nextAnimation.current shouldn't be optional
+          // TODO check if nextAnimation.current should be optional
+          console.warn(
+            "[Reanimated] Error inside 'withClamp' animation, the inner animation has invalid current value"
+          );
+          return true;
         } else {
-          const clampUpper = config.max ? config.max : nextAnimation.current;
-          const clampLower = config.min ? config.min : nextAnimation.current;
+          const clampUpper = config.max ? config.max : clampedAnimation.current;
+          const clampLower = config.min ? config.min : clampedAnimation.current;
           animation.current = Math.max(
             clampLower,
-            Math.min(clampUpper, nextAnimation.current)
+            Math.min(clampUpper, clampedAnimation.current)
           );
         }
         return finished;
@@ -64,16 +67,21 @@ export const withClamp = function <T extends AnimationObject<number>>(
 
         // child animations inherit the setting, unless they already have it defined
         // they will have it defined only if the user used the `reduceMotion` prop
-        if (nextAnimation.reduceMotion === undefined) {
-          nextAnimation.reduceMotion = animation.reduceMotion;
+        if (clampedAnimation.reduceMotion === undefined) {
+          clampedAnimation.reduceMotion = animation.reduceMotion;
         }
 
-        nextAnimation.onStart(nextAnimation, value, now, previousAnimation!);
+        clampedAnimation.onStart(
+          clampedAnimation,
+          value,
+          now,
+          previousAnimation!
+        );
       }
 
       const callback = (finished?: boolean): void => {
-        if (nextAnimation.callback) {
-          nextAnimation.callback(finished);
+        if (clampedAnimation.callback) {
+          clampedAnimation.callback(finished);
         }
       };
 
@@ -81,11 +89,9 @@ export const withClamp = function <T extends AnimationObject<number>>(
         isHigherOrder: true,
         onFrame: delay,
         onStart,
-        current: nextAnimation.current!,
+        current: clampedAnimation.current!,
         callback,
         previousAnimation: null,
-        startTime: 0,
-        started: false,
         reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
       };
     }

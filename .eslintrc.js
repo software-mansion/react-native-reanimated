@@ -24,7 +24,6 @@ module.exports = {
     },
   },
   rules: {
-    'no-case-declarations': 'off',
     curly: 'error',
     'import/no-unresolved': 'error',
     'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
