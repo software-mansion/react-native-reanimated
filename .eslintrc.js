@@ -25,12 +25,14 @@ module.exports = {
   },
   rules: {
     curly: 'error',
+    'no-case-declarations': 'off', // This recommended rule is actually harmful instead of helpful
+    '@typescript-eslint/no-shadow': 'error',
     'import/no-unresolved': 'error',
     'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
     'react/jsx-uses-vars': 'error',
     'react/jsx-uses-react': 'error',
-    'no-use-before-define': 'off',
-    '@typescript-eslint/no-use-before-define': 'off', // TODO consider enabling this (currently it reports styles defined at the bottom of the file)
+    'no-use-before-define': 'error',
+    '@typescript-eslint/no-use-before-define': 'error',
     '@typescript-eslint/ban-ts-comment': [
       'error',
       {
