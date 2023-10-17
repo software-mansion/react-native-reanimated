@@ -1,4 +1,8 @@
 module.exports = {
   root: true,
   extends: '../.eslintrc.js',
-  ignorePatterns: ['**/*.d.ts','jestUtils.ts']};
+  rules:{
+    '@typescript-eslint/no-use-before-define':'off'
+  },
+  ignorePatterns: ['**/*.d.ts','jestUtils.ts']
+};
