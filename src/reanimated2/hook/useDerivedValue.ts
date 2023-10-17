@@ -6,6 +6,7 @@ import { makeMutable, startMapper, stopMapper } from '../core';
 import type { DependencyList } from './commonTypes';
 import { shouldBeUseWeb } from '../PlatformChecker';
 
+// @refresh reset
 export type DerivedValue<Value> = Readonly<SharedValue<Value>>;
 
 // @ts-expect-error This overload is required by our API.
