@@ -4,6 +4,7 @@ module.exports = {
   plugins: ['eslint-plugin-no-inline-styles'],
   rules: {
     '@typescript-eslint/no-use-before-define': 'off',
+    '@typescript-eslint/no-shadow': 'off',
     'no-inline-styles/no-inline-styles': 'error',
     'react-native/no-inline-styles': 'off',
     '@typescript-eslint/no-shadow': 'error',
