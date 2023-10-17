@@ -216,7 +216,8 @@ export const setUpTests = (userConfig = {}) => {
     ...userConfig,
   };
   expect.extend({
-    toHaveAnimatedStyle(received, expectedStyle, _config = {}) {
+    // eslint-disable-next-line @typescript-eslint/no-shadow
+    toHaveAnimatedStyle(received, expectedStyle, config = {}) {
       return compareStyle(received, expectedStyle, config);
     },
   });
