@@ -30,10 +30,6 @@ export type TransformArrayItem = Extract<
   Array<unknown>
 >[number];
 
-export type AnimatedTransform = MaybeSharedValueRecursive<
-  TransformsStyle['transform']
->;
-
 type MaybeSharedValue<Value> = Value | Value extends AnimatableValue
   ? SharedValue<Value>
   : never;
@@ -49,6 +45,10 @@ type MaybeSharedValueRecursive<Value> = Value extends (infer Item)[]
             | Value[Key];
         }
   : MaybeSharedValue<Value>;
+
+export type AnimatedTransform = MaybeSharedValueRecursive<
+  TransformsStyle['transform']
+>;
 
 type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
 

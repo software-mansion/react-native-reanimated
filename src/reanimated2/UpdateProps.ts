@@ -9,6 +9,14 @@ import { isJest, shouldBeUseWeb } from './PlatformChecker';
 import type { ViewRefSet } from './ViewDescriptorsSet';
 import { runOnUIImmediately } from './threads';
 
+export interface UpdatePropsManager {
+  update(
+    viewDescriptors: SharedValue<Descriptor[]>,
+    updates: StyleProps | AnimatedStyle<any>
+  ): void;
+  flush(): void;
+}
+
 let updateProps: (
   viewDescriptor: SharedValue<Descriptor[]>,
   updates: StyleProps | AnimatedStyle<any>,
@@ -20,7 +28,7 @@ if (shouldBeUseWeb()) {
   updateProps = (_, updates, maybeViewRef, isAnimatedProps) => {
     'worklet';
     if (maybeViewRef) {
-      maybeViewRef.items.forEach((item, _) => {
+      maybeViewRef.items.forEach((item, __) => {
         _updatePropsJS(updates, item, isAnimatedProps);
       });
     }
@@ -138,12 +146,4 @@ if (shouldBeUseWeb()) {
     'worklet';
     global.UpdatePropsManager = createUpdatePropsManager();
   })();
-}
-
-export interface UpdatePropsManager {
-  update(
-    viewDescriptors: SharedValue<Descriptor[]>,
-    updates: StyleProps | AnimatedStyle<any>
-  ): void;
-  flush(): void;
 }

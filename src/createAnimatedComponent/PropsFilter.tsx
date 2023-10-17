@@ -57,8 +57,8 @@ export class PropsFilter {
           AnimatedComponentProps<AnimatedProps>
         >;
         if (animatedProp.initial !== undefined) {
-          Object.keys(animatedProp.initial.value).forEach((key) => {
-            props[key] = animatedProp.initial?.value[key];
+          Object.keys(animatedProp.initial.value).forEach((initialKey) => {
+            props[initialKey] = animatedProp.initial?.value[initialKey];
             animatedProp.viewsRef?.add(component);
           });
         }

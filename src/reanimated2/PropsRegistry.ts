@@ -3,11 +3,9 @@ import { runOnUI } from './threads';
 
 let viewTags: number[] = [];
 
-export function removeFromPropsRegistry(viewTag: number) {
-  viewTags.push(viewTag);
-  if (viewTags.length === 1) {
-    queueMicrotask(flush);
-  }
+function removeFromPropsRegistryOnUI(_viewTags: number[]) {
+  'worklet';
+  _removeFromPropsRegistry(_viewTags);
 }
 
 function flush() {
@@ -18,7 +16,9 @@ function flush() {
   viewTags = [];
 }
 
-function removeFromPropsRegistryOnUI(viewTags: number[]) {
-  'worklet';
-  _removeFromPropsRegistry(viewTags);
+export function removeFromPropsRegistry(viewTag: number) {
+  viewTags.push(viewTag);
+  if (viewTags.length === 1) {
+    queueMicrotask(flush);
+  }
 }

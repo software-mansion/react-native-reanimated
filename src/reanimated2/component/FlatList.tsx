@@ -53,10 +53,18 @@ declare class ReanimatedFlatListClass<T> extends Component<
   getNode(): FlatList;
 }
 
+export type ReanimatedFlatList<T> = typeof ReanimatedFlatListClass<T> &
+  FlatList<T>;
+
 interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
   skipEnteringExitingAnimations?: boolean;
 }
+
+const styles = StyleSheet.create({
+  verticallyInverted: { transform: [{ scaleY: -1 }] },
+  horizontallyInverted: { transform: [{ scaleX: -1 }] },
+});
 
 export const ReanimatedFlatList = forwardRef(
   (props: ReanimatedFlatListProps<any>, ref: ForwardedRef<FlatList>) => {
@@ -102,11 +110,3 @@ export const ReanimatedFlatList = forwardRef(
     );
   }
 ) as unknown as ReanimatedFlatList<any>;
-
-const styles = StyleSheet.create({
-  verticallyInverted: { transform: [{ scaleY: -1 }] },
-  horizontallyInverted: { transform: [{ scaleX: -1 }] },
-});
-
-export type ReanimatedFlatList<T> = typeof ReanimatedFlatListClass<T> &
-  FlatList<T>;

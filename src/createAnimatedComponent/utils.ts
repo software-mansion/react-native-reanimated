@@ -19,6 +19,8 @@ export interface AnimatedProps extends Record<string, unknown> {
   initial?: SharedValue<StyleProps>;
 }
 
+type NestedArray<T> = T | NestedArray<T>[];
+
 export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
   forwardedRef?: Ref<Component>;
   style?: NestedArray<StyleProps>;
@@ -41,8 +43,6 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
   sharedTransitionTag?: string;
   sharedTransitionStyle?: SharedTransition;
 };
-
-type NestedArray<T> = T | NestedArray<T>[];
 
 export interface InitialComponentProps extends Record<string, unknown> {
   ref?: Ref<Component>;

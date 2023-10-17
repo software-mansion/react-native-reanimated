@@ -63,15 +63,15 @@ function isSameAnimatedStyle(
 
 const isSameAnimatedProps = isSameAnimatedStyle;
 
-type Options<P> = {
-  setNativeProps: (ref: ComponentRef, props: P) => void;
-};
-
 interface ComponentRef extends Component {
   setNativeProps?: (props: Record<string, unknown>) => void;
   getScrollableNode?: () => ComponentRef;
   getAnimatableRef?: () => ComponentRef;
 }
+
+type Options<P> = {
+  setNativeProps: (ref: ComponentRef, props: P) => void;
+};
 
 export function createAnimatedComponent<P extends object>(
   component: FunctionComponent<P>,
