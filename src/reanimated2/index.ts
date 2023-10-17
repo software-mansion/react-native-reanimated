@@ -97,7 +97,7 @@ export {
   dispatchCommand,
   scrollTo,
   setGestureState,
-} from './NativeMethods';
+} from './platformFunctions';
 export { setNativeProps } from './SetNativeProps';
 export type { ParsedColorArray } from './Colors';
 export { isColor, processColor, convertToRGBA } from './Colors';
