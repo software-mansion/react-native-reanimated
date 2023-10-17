@@ -60,7 +60,7 @@ Only relevant when using Reanimated [without the Babel plugin on the Web](https:
 
 `useAnimatedStyle` returns an animated style object which has to be passed to the `style` property of an [Animated component](/docs/fundamentals/glossary#animated-component) that you want to animate.
 
-Types of `useAnimatedStyle` are made so they mimic behavior of `StyleSheet` styles as much as possible - `updater` callback return value should just look like a regular style object - with the exception of using shared values.
+`useAnimatedStyle` mimics the behavior of `StyleSheet` as much as possible. `updater` callback returns a value that looks like a regular style object in which you can also use shared values.
 
 :::caution
 For better compliance with custom components, `useAnimatedStyle` return value type might seem like it can be appended to a non-animated component - but this will result in an error. Always use `useAnimatedStyle` return value with animated components only.
@@ -79,7 +79,7 @@ import AnimatingStylesSrc from '!!raw-loader!@site/src/examples/AnimatingStyles'
 
 ## Remarks
 
-- Mutating shared values in `useAnimatedStyle`'s callback is considered a bad practice. While it might work most of the time, it can lead to undefined behavior and infinite loops.
+- Mutating shared values in `useAnimatedStyle`'s callback is an undefined behavior which may lead to infinite loops.
 
 <Indent>
 
