@@ -1,16 +1,8 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include "ShadowTreeCloner.h"
-#include "FabricUtils.h"
 
 namespace reanimated {
-
-ShadowTreeCloner::ShadowTreeCloner(
-    const UIManager &uiManager,
-    SurfaceId surfaceId)
-    : propsParserContext_{
-          surfaceId,
-          getContextContainerFromUIManager(uiManager)} {}
 
 ShadowNode::Unshared ShadowTreeCloner::cloneWithNewProps(
     const ShadowNode::Shared &oldRootNode,
@@ -27,8 +19,10 @@ ShadowNode::Unshared ShadowTreeCloner::cloneWithNewProps(
   auto &parent = ancestors.back();
   auto &source = parent.first.get().getChildren().at(parent.second);
 
+  PropsParserContext propsParserContext{
+      source->getSurfaceId(), *source->getContextContainer()};
   const auto props = source->getComponentDescriptor().cloneProps(
-      propsParserContext_, source->getProps(), rawProps);
+      propsParserContext, source->getProps(), rawProps);
 
   auto newChildNode = source->clone({/* .props = */ props});
 

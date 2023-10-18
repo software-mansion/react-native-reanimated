@@ -33,11 +33,9 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   // ShadowTree not commited by Reanimated, apply updates from PropsRegistry
 
-  auto surfaceId = newRootShadowNode->getSurfaceId();
-
   auto rootNode = newRootShadowNode->ShadowNode::clone(ShadowNodeFragment{});
 
-  ShadowTreeCloner shadowTreeCloner{*uiManager_, surfaceId};
+  ShadowTreeCloner shadowTreeCloner;
 
   {
     auto lock = propsRegistry_->createLock();
