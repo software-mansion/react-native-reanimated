@@ -187,7 +187,7 @@ function styleUpdater(
   for (const key in newValues) {
     const value = newValues[key];
     if (isAnimated(value)) {
-      frameTimestamp = global.__frameTimestamp || performance.now();
+      frameTimestamp = global.__frameTimestamp || _getAnimationTimestamp();
       prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
@@ -282,7 +282,7 @@ function jestStyleUpdater(
   Object.keys(newValues).forEach((key) => {
     const value = newValues[key];
     if (isAnimated(value)) {
-      frameTimestamp = global.__frameTimestamp || performance.now();
+      frameTimestamp = global.__frameTimestamp || _getAnimationTimestamp();
       prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
@@ -393,7 +393,7 @@ function checkSharedValueUsage(
 // @ts-expect-error This overload is required by our API.
 export function useAnimatedStyle<Style extends DefaultStyle>(
   updater: () => Style,
-  deps?: DependencyList | null
+  dependencies?: DependencyList | null
 ): Style;
 
 export function useAnimatedStyle<Style extends DefaultStyle>(

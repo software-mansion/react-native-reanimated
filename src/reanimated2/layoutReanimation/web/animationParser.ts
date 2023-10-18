@@ -1,4 +1,5 @@
 'use strict';
+
 export interface ReanimatedWebTransformProperties {
   translateX?: string;
   translateY?: string;
