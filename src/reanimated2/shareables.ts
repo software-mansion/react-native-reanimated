@@ -62,10 +62,14 @@ const INACCESSIBLE_OBJECT = {
       {},
       {
         get: (_: any, prop: string | symbol) => {
-          if (prop === '_isReanimatedSharedValue') {
+          if (
+            prop === '_isReanimatedSharedValue' ||
+            prop === '__remoteFunction'
+          ) {
             // not very happy about this check here, but we need to allow for
             // "inaccessible" objects to be tested with isSharedValue check
-            // as it is being used in the mappers when extracing inputs recursively.
+            // as it is being used in the mappers when extracting inputs recursively
+            // as well as with isRemoteFunction when cloning objects recursively.
             // Apparently we can't check if a key exists there as HostObjects always
             // return true for such tests, so the only possibility for us is to
             // actually access that key and see if it is set to true. We therefore
