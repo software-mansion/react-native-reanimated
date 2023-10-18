@@ -527,8 +527,6 @@ void NativeReanimatedModule::performOperations() {
           auto rootNode =
               oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
-          ShadowTreeCloner shadowTreeCloner;
-
           for (const auto &[shadowNode, props] : copiedOperationsQueue) {
             const ShadowNodeFamily &family = shadowNode->getFamily();
             react_native_assert(family.getSurfaceId() == surfaceId_);
@@ -542,7 +540,7 @@ void NativeReanimatedModule::performOperations() {
             }
 #endif
 
-            auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+            auto newRootNode = cloneShadowTreeWithNewProps(
                 rootNode, family, RawProps(rt, *props));
 
             if (newRootNode == nullptr) {

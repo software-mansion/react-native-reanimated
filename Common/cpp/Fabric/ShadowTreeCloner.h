@@ -12,13 +12,10 @@ using namespace react;
 
 namespace reanimated {
 
-class ShadowTreeCloner {
- public:
-  ShadowNode::Unshared cloneWithNewProps(
-      const ShadowNode::Shared &oldRootNode,
-      const ShadowNodeFamily &family,
-      RawProps &&rawProps);
-};
+ShadowNode::Unshared cloneShadowTreeWithNewProps(
+    const ShadowNode::Shared &oldRootNode,
+    const ShadowNodeFamily &family,
+    RawProps &&rawProps);
 
 } // namespace reanimated
 

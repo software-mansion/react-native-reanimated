@@ -4,7 +4,7 @@
 
 namespace reanimated {
 
-ShadowNode::Unshared ShadowTreeCloner::cloneWithNewProps(
+ShadowNode::Unshared cloneShadowTreeWithNewProps(
     const ShadowNode::Shared &oldRootNode,
     const ShadowNodeFamily &family,
     RawProps &&rawProps) {
