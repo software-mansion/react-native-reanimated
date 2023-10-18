@@ -36,7 +36,12 @@ import type {
 } from './utils';
 import { has, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
-import { isJest, isWeb, shouldBeUseWeb } from '../reanimated2/PlatformChecker';
+import {
+  isFabric,
+  isJest,
+  isWeb,
+  shouldBeUseWeb,
+} from '../reanimated2/PlatformChecker';
 import type { ViewInfo } from './InlinePropManager';
 import { InlinePropManager } from './InlinePropManager';
 import { PropsFilter } from './PropsFilter';
@@ -47,6 +52,7 @@ import {
 } from '../reanimated2/layoutReanimation/web';
 
 const IS_WEB = isWeb();
+const IS_FABRIC = isFabric();
 
 function onlyAnimatedStyles(styles: StyleProps[]): StyleProps[] {
   return styles.filter((style) => style?.viewDescriptors);
@@ -201,7 +207,7 @@ export function createAnimatedComponent(
         if (this.props.animatedProps?.viewDescriptors) {
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
-        if (global._IS_FABRIC) {
+        if (IS_FABRIC) {
           removeFromPropsRegistry(this._viewTag);
         }
       }
@@ -286,7 +292,7 @@ export function createAnimatedComponent(
 
         viewConfig = hostInstance?.viewConfig;
 
-        if (global._IS_FABRIC) {
+        if (IS_FABRIC) {
           shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
         }
       }

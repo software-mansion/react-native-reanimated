@@ -22,7 +22,7 @@ export interface ViewInfo {
   viewConfig: ViewConfig;
 }
 
-const IS_NATIVE = !shouldBeUseWeb();
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 function isInlineStyleTransform(transform: unknown): boolean {
   if (!Array.isArray(transform)) {
@@ -167,10 +167,9 @@ export class InlinePropManager {
       const shareableViewDescriptors =
         this._inlinePropsViewDescriptors.shareableViewDescriptors;
 
-      const maybeViewRef = IS_NATIVE
-        ? undefined
-        : ({ items: new Set([animatedComponent]) } as ViewRefSet<unknown>); // see makeViewsRefSet
-
+      const maybeViewRef = SHOULD_BE_USE_WEB
+        ? ({ items: new Set([animatedComponent]) } as ViewRefSet<unknown>) // see makeViewsRefSet
+        : undefined;
       const updaterFunction = () => {
         'worklet';
         const update = getInlinePropsUpdate(newInlineProps);

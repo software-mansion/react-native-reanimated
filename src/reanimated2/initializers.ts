@@ -10,7 +10,7 @@ import {
 import { mockedRequestAnimationFrame } from './mockedRequestAnimationFrame';
 
 const IS_JEST = isJest();
-const IS_NATIVE = !shouldBeUseWeb();
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 const IS_CHROME_DEBUGGER = isChromeDebugger();
 
 // callGuard is only used with debug builds
@@ -121,7 +121,7 @@ export function initializeUIRuntime() {
     'worklet';
     setupCallGuard();
     setupConsole();
-    if (IS_NATIVE) {
+    if (!SHOULD_BE_USE_WEB) {
       setupMicrotasks();
       setupRequestAnimationFrame();
     }
