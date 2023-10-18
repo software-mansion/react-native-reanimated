@@ -56,5 +56,5 @@ react-native-reanimated-tests.js
 *.settings**
 
 # plugin
-!plugin/build
+!plugin/build/plugin.js
 plugin/types
