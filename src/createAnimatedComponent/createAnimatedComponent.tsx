@@ -112,6 +112,7 @@ export function createAnimatedComponent(
     _JSPropUpdater = new JSPropUpdater();
     _InlinePropManager = new InlinePropManager();
     _PropsFilter = new PropsFilter();
+    _viewInfo?: ViewInfo;
     static displayName: string;
     static contextType = SkipEnteringContext;
     context!: React.ContextType<typeof SkipEnteringContext>;
@@ -257,6 +258,10 @@ export function createAnimatedComponent(
     }
 
     _getViewInfo(): ViewInfo {
+      if (this._viewInfo !== undefined) {
+        return this._viewInfo;
+      }
+
       let viewTag: number | HTMLElement | null;
       let viewName: string | null;
       let shadowNodeWrapper: ShadowNodeWrapper | null = null;
@@ -296,7 +301,8 @@ export function createAnimatedComponent(
           shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
         }
       }
-      return { viewTag, viewName, shadowNodeWrapper, viewConfig };
+      this._viewInfo = { viewTag, viewName, shadowNodeWrapper, viewConfig };
+      return this._viewInfo;
     }
 
     _attachAnimatedStyles() {
