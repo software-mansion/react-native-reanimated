@@ -44,7 +44,7 @@ function createLayoutAnimationManager() {
     start(
       tag: number,
       type: LayoutAnimationType,
-      yogaValues: Partial<SharedTransitionAnimationsValues>,
+      yogaValues: Partial<SharedTransitionAnimationsValues>, // Here we have broader type including SET animations, because SET animations extend LAYOUT ones
       config: (
         arg: Partial<SharedTransitionAnimationsValues>
       ) => LayoutAnimation
