@@ -423,7 +423,7 @@ var require_makeWorklet = __commonJS({
     }
     function makeArrayFromCapturedBindings(ast, fun) {
       const closure = /* @__PURE__ */ new Map();
-      const isLocationSet = /* @__PURE__ */ new Map();
+      const isLocationAssignedMap = /* @__PURE__ */ new Map();
       (0, core_1.traverse)(ast, {
         Identifier(path) {
           if (!path.isReferencedIdentifier()) {
@@ -451,7 +451,7 @@ var require_makeWorklet = __commonJS({
             currentScope = currentScope.parent;
           }
           closure.set(name, path.node);
-          isLocationSet.set(name, false);
+          isLocationAssignedMap.set(name, false);
         }
       });
       fun.traverse({
@@ -460,11 +460,11 @@ var require_makeWorklet = __commonJS({
             return;
           }
           const node = closure.get(path.node.name);
-          if (!node || isLocationSet.get(path.node.name)) {
+          if (!node || isLocationAssignedMap.get(path.node.name)) {
             return;
           }
           node.loc = path.node.loc;
-          isLocationSet.set(path.node.name, true);
+          isLocationAssignedMap.set(path.node.name, true);
         }
       });
       return Array.from(closure.values());
