@@ -2,8 +2,9 @@
 import { isFabric } from './PlatformChecker';
 import { runOnUI } from './threads';
 
-let viewTags: number[] = [];
 const IS_FABRIC = isFabric();
+
+let viewTags: number[] = [];
 
 export function removeFromPropsRegistry(viewTag: number) {
   viewTags.push(viewTag);
