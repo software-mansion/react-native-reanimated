@@ -105,7 +105,6 @@ export function createAnimatedComponent(
     _styles: StyleProps[] | null = null;
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _viewTag = -1;
-    _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
     _component: ComponentRef | HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;

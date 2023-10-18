@@ -1,4 +1,6 @@
 'use strict';
+
+import { shallowEqual } from '../reanimated2/hook/utils';
 import type { StyleProps, SharedValue } from '../reanimated2';
 import { isSharedValue } from '../reanimated2';
 import { isChromeDebugger } from '../reanimated2/PlatformChecker';
@@ -20,24 +22,35 @@ function dummyListener() {
 
 export class PropsFilter {
   private _initialStyle = {};
-  private _isFirstRender = true;
+  private _previousProps: React.Component['props'] | null = null;
+  private _requiresPropInitialization = true;
 
   public filterNonAnimatedProps(
     component: React.Component<unknown, unknown>
   ): Record<string, unknown> {
     const inputProps =
       component.props as AnimatedComponentProps<InitialComponentProps>;
+    if (this._previousProps && inputProps.style) {
+      this._requiresPropInitialization = !shallowEqual(
+        this._previousProps,
+        inputProps
+      );
+    }
+    this._previousProps = inputProps;
     const props: Record<string, unknown> = {};
     for (const key in inputProps) {
       const value = inputProps[key];
       if (key === 'style') {
         const styleProp = inputProps.style;
         const styles = flattenArray<StyleProps>(styleProp ?? []);
+        if (this._requiresPropInitialization) {
+          this._initialStyle = {};
+        }
         const processedStyle: StyleProps = styles.map((style) => {
           if (style && style.viewDescriptors) {
             // this is how we recognize styles returned by useAnimatedStyle
             style.viewsRef.add(component);
-            if (this._isFirstRender) {
+            if (this._requiresPropInitialization) {
               this._initialStyle = {
                 ...style.initial.value,
                 ...this._initialStyle,
@@ -46,7 +59,7 @@ export class PropsFilter {
             }
             return this._initialStyle;
           } else if (hasInlineStyles(style)) {
-            return getInlineStyle(style, this._isFirstRender);
+            return getInlineStyle(style, this._requiresPropInitialization);
           } else {
             return style;
           }
@@ -76,7 +89,7 @@ export class PropsFilter {
           props[key] = dummyListener;
         }
       } else if (isSharedValue(value)) {
-        if (this._isFirstRender) {
+        if (this._requiresPropInitialization) {
           props[key] = (value as SharedValue<unknown>).value;
         }
       } else if (key !== 'onGestureHandlerStateChange' || !isChromeDebugger()) {
@@ -87,8 +100,6 @@ export class PropsFilter {
   }
 
   public onRender() {
-    if (this._isFirstRender) {
-      this._isFirstRender = false;
-    }
+    this._requiresPropInitialization = false;
   }
 }
