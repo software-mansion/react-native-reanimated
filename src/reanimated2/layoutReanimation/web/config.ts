@@ -50,6 +50,7 @@ export interface AnimationConfig {
   easing: string;
   reduceMotion: boolean;
   callback: AnimationCallback;
+  reversed: boolean;
 }
 
 export interface CustomConfig {
@@ -59,6 +60,7 @@ export interface CustomConfig {
   randomizeDelay?: boolean;
   reduceMotionV?: ReduceMotion;
   callbackV?: AnimationCallback;
+  reversed?: boolean;
 }
 
 export enum TransitionType {

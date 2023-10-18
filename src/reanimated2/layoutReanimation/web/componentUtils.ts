@@ -84,6 +84,10 @@ function getCallbackFromConfig(config: CustomConfig): AnimationCallback {
   return config.callbackV !== undefined ? config.callbackV! : null;
 }
 
+function getReversedFromConfig(config: CustomConfig) {
+  return !!config.reversed;
+}
+
 export function getProcessedConfig(
   animationName: string,
   config: CustomConfig,
@@ -101,6 +105,7 @@ export function getProcessedConfig(
     easing: getEasingFromConfig(config),
     reduceMotion: getReducedMotionFromConfig(config),
     callback: getCallbackFromConfig(config),
+    reversed: getReversedFromConfig(config),
   };
 }
 

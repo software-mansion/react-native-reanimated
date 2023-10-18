@@ -1,15 +1,14 @@
 'use strict';
-import type { ShadowNodeWrapper, StyleProps } from './commonTypes';
+import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
 import {
   isChromeDebugger,
   isFabric,
   isJest,
   shouldBeUseWeb,
-} from './PlatformChecker';
-
-import type { AnimatedRef } from './hook/commonTypes';
+} from '../PlatformChecker';
+import type { AnimatedRef } from '../hook/commonTypes';
 import type { Component } from 'react';
-import { processColorsInProps } from './Colors';
+import { processColorsInProps } from '../Colors';
 
 export let setNativeProps: <T extends Component>(
   animatedRef: AnimatedRef<T>,
