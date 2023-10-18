@@ -1582,4 +1582,18 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
   });
+
+  it('skips initData on web', () => {
+    process.env.REANIMATED_BABEL_PLUGIN_IS_WEB = '1';
+    const input = html`<script>
+      function foo() {
+        'worklet';
+        var foo = 'bar';
+      }
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData(0);
+    expect(code).toMatchSnapshot();
+  });
 });
