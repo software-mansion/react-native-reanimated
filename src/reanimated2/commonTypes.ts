@@ -186,7 +186,9 @@ export enum InterfaceOrientation {
   ROTATION_270 = 270,
 }
 
-export type ShadowNodeWrapper = object;
+export type ShadowNodeWrapper = {
+  __hostObjectShadowNodeWrapper: never;
+};
 
 export enum KeyboardState {
   UNKNOWN = 0,

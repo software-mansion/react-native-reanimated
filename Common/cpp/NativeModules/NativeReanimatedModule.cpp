@@ -31,7 +31,7 @@
 #include <fbjni/fbjni.h>
 #endif
 
-#ifdef DEBUG
+#ifndef NDEBUG
 #include "JSLogger.h"
 #endif
 
@@ -61,7 +61,7 @@ NativeReanimatedModule::NativeReanimatedModule(
         onRender(timestampMs);
       }),
       animatedSensorModule_(platformDepMethodsHolder),
-#ifdef DEBUG
+#ifndef NDEBUG
       layoutAnimationsManager_(std::make_shared<JSLogger>(jsScheduler_)),
 #endif
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -81,15 +81,6 @@ NativeReanimatedModule::NativeReanimatedModule(
   auto requestAnimationFrame =
       [this](jsi::Runtime &rt, const jsi::Value &callback) {
         this->requestAnimationFrame(rt, callback);
-      };
-
-  auto updateDataSynchronously =
-      [this](
-          jsi::Runtime &rt,
-          const jsi::Value &synchronizedDataHolderRef,
-          const jsi::Value &newData) {
-        return this->updateDataSynchronously(
-            rt, synchronizedDataHolderRef, newData);
       };
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -130,8 +121,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.dispatchCommandFunction,
 #endif
       requestAnimationFrame,
-      updateDataSynchronously,
-      platformDepMethodsHolder.getCurrentTime,
+      platformDepMethodsHolder.getAnimationTimestamp,
       platformDepMethodsHolder.setGestureStateFunction,
       platformDepMethodsHolder.progressLayoutAnimation,
       platformDepMethodsHolder.endLayoutAnimation,
@@ -196,9 +186,7 @@ void NativeReanimatedModule::updateDataSynchronously(
     jsi::Runtime &rt,
     const jsi::Value &synchronizedDataHolderRef,
     const jsi::Value &newData) {
-  auto dataHolder = extractShareableOrThrow<ShareableSynchronizedDataHolder>(
-      rt, synchronizedDataHolderRef);
-  dataHolder->set(rt, newData);
+  reanimated::updateDataSynchronously(rt, synchronizedDataHolderRef, newData);
 }
 
 jsi::Value NativeReanimatedModule::getDataSynchronously(
