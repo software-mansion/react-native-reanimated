@@ -52,8 +52,8 @@ export function Bezier(
     aX: number,
     aA: number,
     aB: number,
-    _mX1: number,
-    _mX2: number
+    innerMX1: number,
+    innerMX2: number
   ): number {
     'worklet';
     let currentX;
@@ -61,7 +61,7 @@ export function Bezier(
     let i = 0;
     do {
       currentT = aA + (aB - aA) / 2.0;
-      currentX = calcBezier(currentT, _mX1, _mX2) - aX;
+      currentX = calcBezier(currentT, innerMX1, innerMX2) - aX;
       if (currentX > 0.0) {
         aB = currentT;
       } else {
@@ -77,16 +77,16 @@ export function Bezier(
   function newtonRaphsonIterate(
     aX: number,
     aGuessT: number,
-    _mX1: number,
-    _mX2: number
+    innerMX1: number,
+    innerMX2: number
   ): number {
     'worklet';
     for (let i = 0; i < NEWTON_ITERATIONS; ++i) {
-      const currentSlope = getSlope(aGuessT, _mX1, _mX2);
+      const currentSlope = getSlope(aGuessT, innerMX1, innerMX2);
       if (currentSlope === 0.0) {
         return aGuessT;
       }
-      const currentX = calcBezier(aGuessT, _mX1, _mX2) - aX;
+      const currentX = calcBezier(aGuessT, innerMX1, innerMX2) - aX;
       aGuessT -= currentX / currentSlope;
     }
     return aGuessT;

@@ -360,7 +360,7 @@ export function decomposeMatrix(
   const sy = matrix[15] * norm3d(matrix[1], matrix[5], matrix[9]);
   const sz = matrix[15] * norm3d(matrix[2], matrix[6], matrix[10]);
 
-  const _scaleMatrix: AffineMatrix = [
+  const innerScaleMatrix: AffineMatrix = [
     [sx, 0, 0, 0],
     [0, sy, 0, 0],
     [0, 0, sz, 0],
@@ -380,7 +380,7 @@ export function decomposeMatrix(
 
   return {
     translationMatrix,
-    scaleMatrix: _scaleMatrix,
+    scaleMatrix: innerScaleMatrix,
     rotationMatrix,
     skewMatrix,
   };
@@ -391,7 +391,7 @@ export function decomposeMatrixIntoMatricesAndAngles(
 ): TansformMatrixDecompositionWithAngles {
   'worklet';
   const {
-    scaleMatrix: _scaleMatrix,
+    scaleMatrix: innerScaleMatrix,
     rotationMatrix,
     translationMatrix,
     skewMatrix,
@@ -411,7 +411,7 @@ export function decomposeMatrixIntoMatricesAndAngles(
   }
 
   return {
-    scaleMatrix: _scaleMatrix,
+    scaleMatrix: innerScaleMatrix,
     rotationMatrix,
     translationMatrix,
     skewMatrix,

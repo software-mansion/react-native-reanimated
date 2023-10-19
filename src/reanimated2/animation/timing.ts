@@ -62,18 +62,19 @@ export const withTiming = function (
     }
 
     function timing(animation: InnerTimingAnimation, now: Timestamp): boolean {
-      const { toValue: _toValue, startTime, startValue } = animation;
+      const { toValue: innerToValue, startTime, startValue } = animation;
       const runtime = now - startTime;
 
       if (runtime >= config.duration) {
         // reset startTime to avoid reusing finished animation config in `start` method
         animation.startTime = 0;
-        animation.current = _toValue;
+        animation.current = innerToValue;
         return true;
       }
       const progress = animation.easing(runtime / config.duration);
       animation.current =
-        (startValue as number) + (_toValue - (startValue as number)) * progress;
+        (startValue as number) +
+        (innerToValue - (startValue as number)) * progress;
       return false;
     }
 

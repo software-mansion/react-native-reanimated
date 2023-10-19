@@ -202,9 +202,9 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     const delay = this.delayV;
     const reduceMotion = this.reduceMotionV;
     return delay
-      ? (_delay, animation) => {
+      ? (innerDelay, animation) => {
           'worklet';
-          return withDelay(_delay, animation, reduceMotion);
+          return withDelay(innerDelay, animation, reduceMotion);
         }
       : (_, animation) => {
           'worklet';

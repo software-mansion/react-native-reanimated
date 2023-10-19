@@ -113,11 +113,11 @@ const findStyleDiff = (current, expect, shouldMatchAllProps) => {
   return { isEqual, diffs };
 };
 
-const compareStyle = (received, expectedStyle, _config) => {
+const compareStyle = (received, expectedStyle, innerConfig) => {
   if (!received.props.style) {
     return { message: () => message, pass: false };
   }
-  const { shouldMatchAllProps } = _config;
+  const { shouldMatchAllProps } = innerConfig;
   const currentStyle = getCurrentStyle(received);
   const { isEqual, diffs } = findStyleDiff(
     currentStyle,

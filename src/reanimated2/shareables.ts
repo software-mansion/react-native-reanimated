@@ -235,19 +235,19 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
       } else if (ArrayBuffer.isView(value)) {
         // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
         const buffer = value.buffer;
-        const _type = value.constructor.name;
+        const innerType = value.constructor.name;
         const handle = makeShareableCloneRecursive({
           __init: () => {
             'worklet';
-            if (!VALID_ARRAY_VIEWS_NAMES.includes(_type)) {
+            if (!VALID_ARRAY_VIEWS_NAMES.includes(innerType)) {
               throw new Error(
-                `[Reanimated] Invalid array view name \`${_type}\`.`
+                `[Reanimated] Invalid array view name \`${innerType}\`.`
               );
             }
-            const constructor = global[_type as keyof typeof global];
+            const constructor = global[innerType as keyof typeof global];
             if (constructor === undefined) {
               throw new Error(
-                `[Reanimated] Constructor for \`${_type}\` not found.`
+                `[Reanimated] Constructor for \`${innerType}\` not found.`
               );
             }
             return new constructor(buffer);

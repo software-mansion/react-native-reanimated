@@ -200,7 +200,7 @@ function styleUpdater(
 
   if (hasAnimations) {
     const frame = (timestamp: Timestamp) => {
-      const { animations: _animations, last, isAnimationCancelled } = state;
+      const { animations: innerAnimations, last, isAnimationCancelled } = state;
       if (isAnimationCancelled) {
         state.isAnimationRunning = false;
         return;
@@ -208,9 +208,9 @@ function styleUpdater(
 
       const updates: AnimatedStyle<any> = {};
       let allFinished = true;
-      for (const propName in _animations) {
+      for (const propName in innerAnimations) {
         const finished = runAnimations(
-          _animations[propName],
+          innerAnimations[propName],
           timestamp,
           propName,
           updates,
@@ -218,7 +218,7 @@ function styleUpdater(
         );
         if (finished) {
           last[propName] = updates[propName];
-          delete _animations[propName];
+          delete innerAnimations[propName];
         } else {
           allFinished = false;
         }
@@ -290,7 +290,7 @@ function jestStyleUpdater(
   });
 
   function frame(timestamp: Timestamp) {
-    const { animations: _animations, last, isAnimationCancelled } = state;
+    const { animations: innerAnimations, last, isAnimationCancelled } = state;
     if (isAnimationCancelled) {
       state.isAnimationRunning = false;
       return;
@@ -298,9 +298,9 @@ function jestStyleUpdater(
 
     const updates: AnimatedStyle<any> = {};
     let allFinished = true;
-    Object.keys(_animations).forEach((propName) => {
+    Object.keys(innerAnimations).forEach((propName) => {
       const finished = runAnimations(
-        _animations[propName],
+        innerAnimations[propName],
         timestamp,
         propName,
         updates,
@@ -308,7 +308,7 @@ function jestStyleUpdater(
       );
       if (finished) {
         last[propName] = updates[propName];
-        delete _animations[propName];
+        delete innerAnimations[propName];
       } else {
         allFinished = false;
       }
