@@ -184,7 +184,7 @@ export function scaleZetaToMatchClamps(
   }
 
   const [lowerBound, secondClamp] =
-    Number(toValue) - startValue > 0 ? clamp : [clamp[1], clamp[0]];
+    Number(toValue) - startValue < 0 ? clamp : [clamp[1], clamp[0]];
 
   /** The extrema we get from equation below are relative (we obtain a ratio),
    *  To get absolute extrema we convert it as follows:
@@ -215,6 +215,13 @@ export function scaleZetaToMatchClamps(
   const newZeta1 = Math.abs(Math.log(relativeExtremum1) / Math.PI);
   const newZeta2 = Math.abs(Math.log(relativeExtremum2) / (2 * Math.PI));
 
+  console.log(
+    'DUPA',
+    newZeta1,
+    newZeta2,
+    zeta,
+    Math.max(newZeta1, newZeta2, zeta)
+  );
   // The bigger is zeta the smaller are bounces, we return the biggest one
   // because it should satisfy all conditions
   return Math.max(newZeta1, newZeta2, zeta);

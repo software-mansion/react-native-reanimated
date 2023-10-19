@@ -207,7 +207,7 @@ export const withSpring = ((
         animation.omega0 = omega0;
         animation.omega1 = omega1;
 
-        if (config.useDuration && config.clamp !== undefined) {
+        if (config.clamp !== undefined) {
           animation.zeta = scaleZetaToMatchClamps(animation, config.clamp);
         }
       }

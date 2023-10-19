@@ -107,7 +107,7 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
-
+import WithClampExample from './WithClampExample';
 interface Example {
   icon?: string;
   title: string;
@@ -390,6 +390,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🕰',
     title: 'Pendulum example',
     screen: PendulumExample,
+  },
+  SpringClampExample: {
+    icon: '🗜',
+    title: 'Spring with Clamp',
+    screen: WithClampExample,
   },
   ReducedMotionExample: {
     icon: '⏸️',
