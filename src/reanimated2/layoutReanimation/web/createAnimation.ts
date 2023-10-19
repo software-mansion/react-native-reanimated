@@ -1,6 +1,7 @@
 'use strict';
 
 import { Animations, AnimationsData, TransitionType } from './config';
+import type { KeyframeDefinitions } from './config';
 import { convertAnimationObjectToKeyframes } from './animationParser';
 import type {
   AnimationData,
@@ -13,12 +14,12 @@ import { SequencedTransition } from './transition/Sequenced.web';
 import { FadingTransition } from './transition/Fading.web';
 import { insertWebAnimation } from './domUtils';
 
+type TransformType = NonNullable<TransformsStyle['transform']>;
+
 // Translate values are passed as numbers. However, if `translate` property receives number, it will not automatically
 // convert it to `px`. Therefore if we want to keep exisitng transform we have to add 'px' suffix to each of translate values
 // that are present inside transform.
-function addPxToTranslate(
-  existingTransform: NonNullable<TransformsStyle['transform']>
-) {
+function addPxToTranslate(existingTransform: TransformType) {
   type RNTransformProp = (typeof existingTransform)[number];
 
   if (typeof existingTransform === 'string') {
@@ -73,13 +74,13 @@ function addExistingTransform(
  */
 export function createAnimationWithExistingTransform(
   animationName: string,
-  existingTransform: NonNullable<TransformsStyle['transform']>,
-  layoutTransition?: AnimationData
+  existingTransform: TransformType,
+  customData?: AnimationData
 ) {
   let newAnimationData;
 
-  if (layoutTransition) {
-    newAnimationData = layoutTransition;
+  if (customData) {
+    newAnimationData = customData;
   } else {
     if (!(animationName in Animations)) {
       return '';
@@ -106,6 +107,39 @@ export function createAnimationWithExistingTransform(
   return keyframeName;
 }
 
+export function createCustomKeyFrameAnimation(
+  keyframeDefinitions: KeyframeDefinitions,
+  transform: TransformsStyle['transform']
+) {
+  for (const value of Object.values(keyframeDefinitions)) {
+    if (value.transform) {
+      value.transform = addPxToTranslate(value.transform as TransformType);
+    }
+  }
+
+  const animationData: AnimationData = {
+    name: '',
+    style: keyframeDefinitions,
+    duration: -1,
+  };
+
+  if (transform) {
+    return createAnimationWithExistingTransform(
+      animationData.name,
+      transform,
+      animationData
+    );
+  }
+
+  animationData.name = generateNextCustomKeyframeName();
+
+  const parsedKeyframe = convertAnimationObjectToKeyframes(animationData);
+
+  insertWebAnimation(animationData.name, parsedKeyframe);
+
+  return animationData.name;
+}
+
 let customKeyframeCounter = 0;
 
 function generateNextCustomKeyframeName() {
@@ -122,7 +156,7 @@ function generateNextCustomKeyframeName() {
 export function TransitionGenerator(
   transitionType: TransitionType,
   transitionData: TransitionData,
-  existingTransform?: NonNullable<TransformsStyle['transform']>
+  existingTransform?: TransformType
 ) {
   const transitionKeyframeName = generateNextCustomKeyframeName();
   let transitionObject;

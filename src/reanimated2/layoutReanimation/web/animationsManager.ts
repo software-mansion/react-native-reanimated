@@ -5,7 +5,10 @@ import { Animations } from './config';
 import type { AnimatedComponentProps } from '../../../createAnimatedComponent/utils';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { StyleProps } from '../../commonTypes';
-import { createAnimationWithExistingTransform } from './createAnimation';
+import {
+  createAnimationWithExistingTransform,
+  createCustomKeyFrameAnimation,
+} from './createAnimation';
 import {
   getProcessedConfig,
   handleEnteringAnimation,
@@ -16,6 +19,7 @@ import {
 import { areDOMRectsEqual } from './domUtils';
 import type { TransformsStyle } from 'react-native';
 import type { TransitionData } from './animationParser';
+import { Keyframe } from '../animationBuilder';
 
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
   animationType: LayoutAnimationType,
@@ -36,12 +40,17 @@ function chooseConfig<ComponentProps extends Record<string, unknown>>(
 function checkUndefinedAnimationFail(
   initialAnimationName: string,
   isLayoutTransition: boolean,
+  isCustomKeyframe: boolean,
   hasEnteringAnimation: boolean,
   element: HTMLElement
 ) {
   // This prevents crashes if we try to set animations that are not defined.
-  // We don't care about layout transitions since they're created dynamically
-  if (initialAnimationName in Animations || isLayoutTransition) {
+  // We don't care about layout transitions or custom keyframes since they're created dynamically
+  if (
+    initialAnimationName in Animations ||
+    isLayoutTransition ||
+    isCustomKeyframe
+  ) {
     return false;
   }
 
@@ -114,12 +123,14 @@ export function startWebLayoutAnimation<
 
   const hasEnteringAnimation = props.entering !== undefined;
   const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
+  const isCustomKeyframe = config instanceof Keyframe;
   const initialAnimationName =
     typeof config === 'function' ? config.name : config.constructor.name;
 
   const shouldFail = checkUndefinedAnimationFail(
     initialAnimationName,
     isLayoutTransition,
+    isCustomKeyframe,
     hasEnteringAnimation,
     element
   );
@@ -130,14 +141,23 @@ export function startWebLayoutAnimation<
 
   const transform = (props.style as StyleProps)?.transform;
 
-  const animationName = transform
-    ? createAnimationWithExistingTransform(initialAnimationName, transform)
-    : initialAnimationName;
+  let animationName = initialAnimationName;
+
+  if (isCustomKeyframe) {
+    animationName = createCustomKeyFrameAnimation(
+      (config as CustomConfig).definitions!,
+      transform
+    );
+  } else {
+    animationName = transform
+      ? createAnimationWithExistingTransform(initialAnimationName, transform)
+      : initialAnimationName;
+  }
 
   const animationConfig = getProcessedConfig(
     animationName,
     config as CustomConfig,
-    isLayoutTransition,
+    isLayoutTransition || isCustomKeyframe,
     initialAnimationName as AnimationNames
   );
 

@@ -36,12 +36,14 @@ import {
 } from './animation/Stretch.web';
 import { ZoomIn, ZoomInData, ZoomOut, ZoomOutData } from './animation/Zoom.web';
 
-import type { AnimationData } from './animationParser';
+import type { AnimationData, AnimationStyle } from './animationParser';
 
 // Since we cannot remove keyframe from DOM by its name, we have to store its id
 export const customAnimations = new Map<string, number>();
 
 export type AnimationCallback = ((finished: boolean) => void) | null;
+
+export type KeyframeDefinitions = Record<number, AnimationStyle>;
 
 export interface AnimationConfig {
   animationName: string;
@@ -61,6 +63,7 @@ export interface CustomConfig {
   reduceMotionV?: ReduceMotion;
   callbackV?: AnimationCallback;
   reversed?: boolean;
+  definitions?: KeyframeDefinitions;
 }
 
 export enum TransitionType {

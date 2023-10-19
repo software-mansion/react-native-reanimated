@@ -66,10 +66,10 @@ function getReducedMotionFromConfig(config: CustomConfig) {
 
 function getDurationFromConfig(
   config: CustomConfig,
-  isLayoutTransition: boolean,
+  needsCustomization: boolean,
   animationName: AnimationNames
 ): number {
-  const defaultDuration = isLayoutTransition
+  const defaultDuration = needsCustomization
     ? 0.3
     : Animations[animationName].duration;
 
@@ -91,14 +91,14 @@ function getReversedFromConfig(config: CustomConfig) {
 export function getProcessedConfig(
   animationName: string,
   config: CustomConfig,
-  isLayoutTransition: boolean,
+  needsCustomization: boolean,
   initialAnimationName: AnimationNames
 ): AnimationConfig {
   return {
     animationName: animationName,
     duration: getDurationFromConfig(
       config,
-      isLayoutTransition,
+      needsCustomization,
       initialAnimationName
     ),
     delay: getDelayFromConfig(config),

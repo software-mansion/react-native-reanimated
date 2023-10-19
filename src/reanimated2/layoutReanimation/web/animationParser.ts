@@ -14,7 +14,7 @@ export interface ReanimatedWebTransformProperties {
   skewX?: string;
 }
 
-interface AnimationStyle {
+export interface AnimationStyle {
   opacity?: number;
   transform?: ReanimatedWebTransformProperties[];
 }
