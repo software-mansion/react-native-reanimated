@@ -18,11 +18,20 @@ export function createBackgroundQueue(name: string) {
   return NativeReanimatedModule.createBackgroundQueue(name);
 }
 
-export function runOnBackgroundQueue(
+// @ts-expect-error Check `runOnUI` overload.
+export function runOnBackgroundQueue<Args extends unknown[], ReturnValue>(
   backgroundQueue: BackgroundQueue,
   workletRuntime: WorkletRuntime,
-  worklet: WorkletFunction<[], void>
-) {
+  worklet: (...args: Args) => ReturnValue
+): WorkletFunction<Args, ReturnValue>;
+/**
+ * Schedule a worklet to execute on the background queue.
+ */
+export function runOnBackgroundQueue<Args extends unknown[], ReturnValue>(
+  backgroundQueue: BackgroundQueue,
+  workletRuntime: WorkletRuntime,
+  worklet: WorkletFunction<Args, ReturnValue>
+): (...args: Args) => void {
   'worklet';
   if (__DEV__ && !SHOULD_BE_USE_WEB && worklet.__workletHash === undefined) {
     throw new Error(
@@ -30,16 +39,24 @@ export function runOnBackgroundQueue(
     );
   }
   if (_WORKLET) {
-    _scheduleOnBackgroundQueue(
-      backgroundQueue,
-      workletRuntime,
-      makeShareableCloneOnUIRecursive(worklet)
-    );
+    return (...args) =>
+      _scheduleOnBackgroundQueue(
+        backgroundQueue,
+        workletRuntime,
+        makeShareableCloneOnUIRecursive(() => {
+          'worklet';
+          worklet(...args);
+        })
+      );
   } else {
-    NativeReanimatedModule.scheduleOnBackgroundQueue(
-      backgroundQueue,
-      workletRuntime,
-      makeShareableCloneRecursive(worklet)
-    );
+    return (...args) =>
+      NativeReanimatedModule.scheduleOnBackgroundQueue(
+        backgroundQueue,
+        workletRuntime,
+        makeShareableCloneRecursive(() => {
+          'worklet';
+          worklet(...args);
+        })
+      );
   }
 }
