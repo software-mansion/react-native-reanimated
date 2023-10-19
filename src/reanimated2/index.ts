@@ -273,3 +273,8 @@ export {
   finishScreenTransition,
   ScreenTransition,
 } from './screenTransition';
+export type {
+  AnimatedScreenTransition,
+  GoBackGesture,
+  ScreenTransitionConfig,
+} from './screenTransition';
