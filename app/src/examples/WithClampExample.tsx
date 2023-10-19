@@ -61,6 +61,7 @@ export default function AnimatedStyleUpdateExample() {
       }),
     };
   });
+
   const style = useAnimatedStyle(() => {
     return {
       width: withSpring(randomWidth.value, config),
@@ -70,7 +71,6 @@ export default function AnimatedStyleUpdateExample() {
   return (
     <View style={styles.container}>
       {renderFramedExample(clampedStyle, 'Clamp example')}
-
       {renderFramedExample(style, 'Default')}
       <Button
         title="toggle"
