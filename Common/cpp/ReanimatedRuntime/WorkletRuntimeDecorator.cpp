@@ -123,13 +123,11 @@ void WorkletRuntimeDecorator::decorate(
          const jsi::Value &backgroundQueueValue,
          const jsi::Value &workletRuntimeValue,
          const jsi::Value &shareableWorkletValue) {
-        auto backgroundQueue = extractBackgroundQueue(rt, backgroundQueueValue);
-        auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
-        auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
+        reanimated::scheduleOnBackgroundQueue(
             rt,
-            shareableWorkletValue,
-            "[Reanimated] Function passed to `_scheduleOnBackgroundQueue` is not a shareable worklet. Please make sure that `processNestedWorklets` option in Reanimated Babel plugin is enabled.");
-        backgroundQueue->push(workletRuntime, shareableWorklet);
+            backgroundQueueValue,
+            workletRuntimeValue,
+            shareableWorkletValue);
       });
 
   jsi_utils::installJsiFunction(

@@ -54,4 +54,10 @@ std::shared_ptr<BackgroundQueue> extractBackgroundQueue(
     jsi::Runtime &rt,
     const jsi::Value &value);
 
+void scheduleOnBackgroundQueue(
+    jsi::Runtime &rt,
+    const jsi::Value &backgroundQueueValue,
+    const jsi::Value &workletRuntimeValue,
+    const jsi::Value &shareableWorkletValue);
+
 } // namespace reanimated

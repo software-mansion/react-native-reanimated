@@ -188,13 +188,8 @@ jsi::Value NativeReanimatedModule::scheduleOnBackgroundQueue(
     const jsi::Value &backgroundQueueValue,
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &shareableWorkletValue) {
-  auto backgroundQueue = extractBackgroundQueue(rt, backgroundQueueValue);
-  auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
-  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
-      rt,
-      shareableWorkletValue,
-      "[Reanimated] Function passed to `_scheduleOnBackgroundQueue` is not a shareable worklet. Please make sure that `processNestedWorklets` option in Reanimated Babel plugin is enabled.");
-  backgroundQueue->push(workletRuntime, shareableWorklet);
+  reanimated::scheduleOnBackgroundQueue(
+      rt, backgroundQueueValue, workletRuntimeValue, shareableWorkletValue);
   return jsi::Value::undefined();
 }
 
