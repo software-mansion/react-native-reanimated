@@ -6,6 +6,9 @@ import type {
   AnimatedScreenTransition,
   PanGestureHandlerEventPayload,
 } from './commonTypes';
+import { configureProps } from '../../ConfigHelper';
+
+configureProps();
 
 type GoBackGesture = 'swipeRight' | 'swipeLeft' | 'swipeUp' | 'swipeDown';
 type ScreenTransitionConfig = {

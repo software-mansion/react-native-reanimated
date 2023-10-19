@@ -11,7 +11,7 @@ function assertNoOverlapInLists() {
   }
 }
 
-function configureProps(): void {
+export function configureProps(): void {
   assertNoOverlapInLists();
   jsiConfigureProps(
     Object.keys(PropsAllowlists.UI_THREAD_PROPS_WHITELIST),
