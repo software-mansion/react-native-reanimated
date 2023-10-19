@@ -9,6 +9,7 @@ import type {
   AnimatedComponentProps,
   AnimatedProps,
   InitialComponentProps,
+  AnimatedComponentClass,
 } from './utils';
 import { flattenArray, has } from './utils';
 import { StyleSheet } from 'react-native';
@@ -20,10 +21,9 @@ function dummyListener() {
 
 export class PropsFilter {
   private _initialStyle = {};
-  private _isFirstRender = true;
 
   public filterNonAnimatedProps(
-    component: React.Component<unknown, unknown>
+    component: React.Component<unknown, unknown> & AnimatedComponentClass
   ): Record<string, unknown> {
     const inputProps =
       component.props as AnimatedComponentProps<InitialComponentProps>;
@@ -37,7 +37,7 @@ export class PropsFilter {
           if (style && style.viewDescriptors) {
             // this is how we recognize styles returned by useAnimatedStyle
             style.viewsRef.add(component);
-            if (this._isFirstRender) {
+            if (component._isFirstRender) {
               this._initialStyle = {
                 ...style.initial.value,
                 ...this._initialStyle,
@@ -46,7 +46,7 @@ export class PropsFilter {
             }
             return this._initialStyle;
           } else if (hasInlineStyles(style)) {
-            return getInlineStyle(style, this._isFirstRender);
+            return getInlineStyle(style, component._isFirstRender);
           } else {
             return style;
           }
@@ -76,7 +76,7 @@ export class PropsFilter {
           props[key] = dummyListener;
         }
       } else if (isSharedValue(value)) {
-        if (this._isFirstRender) {
+        if (component._isFirstRender) {
           props[key] = (value as SharedValue<unknown>).value;
         }
       } else if (key !== 'onGestureHandlerStateChange' || !isChromeDebugger()) {
@@ -84,11 +84,5 @@ export class PropsFilter {
       }
     }
     return props;
-  }
-
-  public onRender() {
-    if (this._isFirstRender) {
-      this._isFirstRender = false;
-    }
   }
 }

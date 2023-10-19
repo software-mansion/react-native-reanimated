@@ -35,18 +35,12 @@ function chooseConfig<ComponentProps extends Record<string, unknown>>(
 
 function checkUndefinedAnimationFail(
   initialAnimationName: string,
-  isLayoutTransition: boolean,
-  hasEnteringAnimation: boolean,
-  element: HTMLElement
+  isLayoutTransition: boolean
 ) {
   // This prevents crashes if we try to set animations that are not defined.
   // We don't care about layout transitions since they're created dynamically
   if (initialAnimationName in Animations || isLayoutTransition) {
     return false;
-  }
-
-  if (hasEnteringAnimation) {
-    makeElementVisible(element);
   }
 
   console.warn(
@@ -56,17 +50,9 @@ function checkUndefinedAnimationFail(
   return true;
 }
 
-function checkReduceMotionFail(
-  animationConfig: AnimationConfig,
-  hasEnteringAnimation: boolean,
-  element: HTMLElement
-) {
+function checkReduceMotionFail(animationConfig: AnimationConfig) {
   if (!animationConfig.reduceMotion) {
     return false;
-  }
-
-  if (hasEnteringAnimation) {
-    makeElementVisible(element);
   }
 
   return true;
@@ -105,6 +91,7 @@ export function startWebLayoutAnimation<
   props: Readonly<AnimatedComponentProps<ComponentProps>>,
   element: HTMLElement,
   animationType: LayoutAnimationType,
+  shouldMakeVisible = false,
   transitionData?: TransitionData
 ) {
   const config = chooseConfig(animationType, props);
@@ -112,16 +99,13 @@ export function startWebLayoutAnimation<
     return;
   }
 
-  const hasEnteringAnimation = props.entering !== undefined;
   const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
   const initialAnimationName =
     typeof config === 'function' ? config.name : config.constructor.name;
 
   const shouldFail = checkUndefinedAnimationFail(
     initialAnimationName,
-    isLayoutTransition,
-    hasEnteringAnimation,
-    element
+    isLayoutTransition
   );
 
   if (shouldFail) {
@@ -141,8 +125,12 @@ export function startWebLayoutAnimation<
     initialAnimationName as AnimationNames
   );
 
-  if (checkReduceMotionFail(animationConfig, hasEnteringAnimation, element)) {
+  if (checkReduceMotionFail(animationConfig)) {
     return;
+  }
+
+  if (shouldMakeVisible) {
+    makeElementVisible(element);
   }
 
   chooseAction(
@@ -183,6 +171,7 @@ export function tryActivateLayoutTransition<
     props,
     element,
     LayoutAnimationType.LAYOUT,
+    false,
     transitionData
   );
 }

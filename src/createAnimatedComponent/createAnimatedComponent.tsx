@@ -33,6 +33,8 @@ import type {
   AnimatedComponentProps,
   AnimatedProps,
   InitialComponentProps,
+  ReanimatedComponentRef,
+  AnimatedComponentClass,
 } from './utils';
 import { has, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
@@ -70,14 +72,8 @@ function isSameAnimatedStyle(
 const isSameAnimatedProps = isSameAnimatedStyle;
 
 type Options<P> = {
-  setNativeProps: (ref: ComponentRef, props: P) => void;
+  setNativeProps: (ref: ReanimatedComponentRef, props: P) => void;
 };
-
-interface ComponentRef extends Component {
-  setNativeProps?: (props: Record<string, unknown>) => void;
-  getScrollableNode?: () => ComponentRef;
-  getAnimatableRef?: () => ComponentRef;
-}
 
 export function createAnimatedComponent<P extends object>(
   component: FunctionComponent<P>,
@@ -99,15 +95,16 @@ export function createAnimatedComponent(
     `Looks like you're passing a function component \`${Component.name}\` to \`createAnimatedComponent\` function which supports only class components. Please wrap your function component with \`React.forwardRef()\` or use a class component instead.`
   );
 
-  class AnimatedComponent extends React.Component<
-    AnimatedComponentProps<InitialComponentProps>
-  > {
+  class AnimatedComponent
+    extends React.Component<AnimatedComponentProps<InitialComponentProps>>
+    implements AnimatedComponentClass
+  {
     _styles: StyleProps[] | null = null;
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _viewTag = -1;
     _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
-    _component: ComponentRef | HTMLElement | null = null;
+    _component: ReanimatedComponentRef | HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
     _JSPropUpdater = new JSPropUpdater();
     _InlinePropManager = new InlinePropManager();
@@ -135,9 +132,12 @@ export function createAnimatedComponent(
         startWebLayoutAnimation(
           this.props,
           this._component as HTMLElement,
-          LayoutAnimationType.ENTERING
+          LayoutAnimationType.ENTERING,
+          !!(this._isFirstRender && this.props.entering)
         );
       }
+
+      this._isFirstRender = false;
     }
 
     componentWillUnmount() {
@@ -159,13 +159,13 @@ export function createAnimatedComponent(
     _getEventViewRef() {
       // Make sure to get the scrollable node for components that implement
       // `ScrollResponder.Mixin`.
-      return (this._component as ComponentRef)?.getScrollableNode
-        ? (this._component as ComponentRef).getScrollableNode?.()
+      return (this._component as ReanimatedComponentRef)?.getScrollableNode
+        ? (this._component as ReanimatedComponentRef).getScrollableNode?.()
         : this._component;
     }
 
     _attachNativeEvents() {
-      const node = this._getEventViewRef() as ComponentRef;
+      const node = this._getEventViewRef() as ReanimatedComponentRef;
       let viewTag = null; // We set it only if needed
 
       for (const key in this.props) {
@@ -238,7 +238,7 @@ export function createAnimatedComponent(
           prop.current.reattachNeeded
         ) {
           if (viewTag === null) {
-            const node = this._getEventViewRef() as ComponentRef;
+            const node = this._getEventViewRef() as ReanimatedComponentRef;
             viewTag = findNodeHandle(options?.setNativeProps ? this : node);
           }
           prop.current.registerForEvents(viewTag as number, key);
@@ -250,10 +250,13 @@ export function createAnimatedComponent(
     _updateFromNative(props: StyleProps) {
       if (options?.setNativeProps) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        options.setNativeProps(this._component as ComponentRef, props);
+        options.setNativeProps(
+          this._component as ReanimatedComponentRef,
+          props
+        );
       } else {
         // eslint-disable-next-line no-unused-expressions
-        (this._component as ComponentRef)?.setNativeProps?.(props);
+        (this._component as ReanimatedComponentRef)?.setNativeProps?.(props);
       }
     }
 
@@ -268,8 +271,9 @@ export function createAnimatedComponent(
       let viewConfig;
       // Component can specify ref which should be animated when animated version of the component is created.
       // Otherwise, we animate the component itself.
-      const component = (this._component as ComponentRef)?.getAnimatableRef
-        ? (this._component as ComponentRef).getAnimatableRef?.()
+      const component = (this._component as ReanimatedComponentRef)
+        ?.getAnimatableRef
+        ? (this._component as ReanimatedComponentRef).getAnimatableRef?.()
         : this;
 
       if (IS_WEB) {
@@ -509,7 +513,6 @@ export function createAnimatedComponent(
 
     render() {
       const props = this._PropsFilter.filterNonAnimatedProps(this);
-      this._PropsFilter.onRender();
 
       if (isJest()) {
         props.animatedStyle = this.animatedStyle;
@@ -519,7 +522,7 @@ export function createAnimatedComponent(
       // Because of that we can encounter a situation in which component is visible for a short amount of time, and later on animation triggers.
       // I've tested that on various browsers and devices and it did not happen to me. To be sure that it won't happen to someone else,
       // I've decided to hide component at first render. Its visibility is reset in `componentDidMount`.
-      if (IS_WEB && props.entering) {
+      if (this._isFirstRender && IS_WEB && props.entering) {
         props.style = {
           ...(props.style ?? {}),
           visibility: 'hidden', // Hide component until `componentDidMount` triggers

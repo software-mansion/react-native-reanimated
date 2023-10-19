@@ -12,6 +12,10 @@ import type {
   ViewDescriptorsSet,
   ViewRefSet,
 } from '../reanimated2/ViewDescriptorsSet';
+import type { JSPropUpdater } from './JSPropUpdater';
+import type { InlinePropManager, ViewInfo } from './InlinePropManager';
+import type { SkipEnteringContext } from 'src/reanimated2/component/LayoutAnimationConfig';
+import type { PropsFilter } from './PropsFilter';
 
 export interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;
@@ -41,6 +45,27 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
   sharedTransitionTag?: string;
   sharedTransitionStyle?: SharedTransition;
 };
+
+export interface ReanimatedComponentRef extends Component {
+  setNativeProps?: (props: Record<string, unknown>) => void;
+  getScrollableNode?: () => ReanimatedComponentRef;
+  getAnimatableRef?: () => ReanimatedComponentRef;
+}
+
+export interface AnimatedComponentClass {
+  _styles: StyleProps[] | null;
+  _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
+  _viewTag: number;
+  _isFirstRender: boolean;
+  animatedStyle: { value: StyleProps };
+  _component: ReanimatedComponentRef | HTMLElement | null;
+  _sharedElementTransition: SharedTransition | null;
+  _JSPropUpdater: JSPropUpdater;
+  _InlinePropManager: InlinePropManager;
+  _PropsFilter: PropsFilter;
+  _viewInfo?: ViewInfo;
+  context: React.ContextType<typeof SkipEnteringContext>;
+}
 
 type NestedArray<T> = T | NestedArray<T>[];
 
