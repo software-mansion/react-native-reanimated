@@ -2,7 +2,7 @@
 import type { SharedValue } from './commonTypes';
 import { isJest } from './PlatformChecker';
 import { runOnUI } from './threads';
-import { isSharedValue } from './utils';
+import { isSharedValue } from './isSharedValue';
 
 const IS_JEST = isJest();
 
@@ -85,17 +85,20 @@ function createMapperRegistry() {
     if (processingMappers) {
       return;
     }
-    processingMappers = true;
-    if (mappers.size !== sortedMappers.length) {
-      updateMappersOrder();
-    }
-    for (const mapper of sortedMappers) {
-      if (mapper.dirty) {
-        mapper.dirty = false;
-        mapper.worklet();
+    try {
+      processingMappers = true;
+      if (mappers.size !== sortedMappers.length) {
+        updateMappersOrder();
       }
+      for (const mapper of sortedMappers) {
+        if (mapper.dirty) {
+          mapper.dirty = false;
+          mapper.worklet();
+        }
+      }
+    } finally {
+      processingMappers = false;
     }
-    processingMappers = false;
   }
 
   function maybeRequestUpdates() {

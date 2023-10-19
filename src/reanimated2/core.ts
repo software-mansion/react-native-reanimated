@@ -1,6 +1,11 @@
 'use strict';
 import NativeReanimatedModule from './NativeReanimated';
-import { nativeShouldBeMock, isWeb } from './PlatformChecker';
+import {
+  nativeShouldBeMock,
+  isWeb,
+  shouldBeUseWeb,
+  isFabric,
+} from './PlatformChecker';
 import type {
   AnimatedKeyboardOptions,
   SensorConfig,
@@ -30,6 +35,8 @@ export type { BackgroundQueue } from './background';
 export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export { makeMutable, makeRemote } from './mutables';
 
+const IS_FABRIC = isFabric();
+
 /**
  * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1
  */
@@ -47,13 +54,14 @@ export const isReanimated3 = () => true;
 export const isConfigured = isReanimated3;
 
 // this is for web implementation
-global._WORKLET = false;
-global._log = function (s: string) {
-  console.log(s);
-};
+if (shouldBeUseWeb()) {
+  global._WORKLET = false;
+  global._log = console.log;
+  global._getAnimationTimestamp = () => performance.now();
+}
 
 export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
-  if (global._IS_FABRIC) {
+  if (IS_FABRIC) {
     throw new Error(
       '[Reanimated] `getViewProp` is not supported on Fabric yet.'
     );
@@ -112,7 +120,7 @@ export function subscribeForKeyboardEvents(
   // via registerEventHandler. For now we are copying the code from there.
   function handleAndFlushAnimationFrame(state: number, height: number) {
     'worklet';
-    const now = performance.now();
+    const now = _getAnimationTimestamp();
     global.__frameTimestamp = now;
     eventHandler(state, height);
     global.__flushAnimationFrame(now);
@@ -218,7 +226,10 @@ export function setShouldAnimateExitingForTag(
   );
 }
 
-export function configureProps(uiProps: string[], nativeProps: string[]): void {
+export function jsiConfigureProps(
+  uiProps: string[],
+  nativeProps: string[]
+): void {
   if (!nativeShouldBeMock()) {
     NativeReanimatedModule.configureProps(uiProps, nativeProps);
   }

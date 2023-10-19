@@ -62,10 +62,14 @@ const INACCESSIBLE_OBJECT = {
       {},
       {
         get: (_: any, prop: string | symbol) => {
-          if (prop === '_isReanimatedSharedValue') {
+          if (
+            prop === '_isReanimatedSharedValue' ||
+            prop === '__remoteFunction'
+          ) {
             // not very happy about this check here, but we need to allow for
             // "inaccessible" objects to be tested with isSharedValue check
-            // as it is being used in the mappers when extracing inputs recursively.
+            // as it is being used in the mappers when extracting inputs recursively
+            // as well as with isRemoteFunction when cloning objects recursively.
             // Apparently we can't check if a key exists there as HostObjects always
             // return true for such tests, so the only possibility for us is to
             // actually access that key and see if it is set to true. We therefore
@@ -87,6 +91,21 @@ const INACCESSIBLE_OBJECT = {
     );
   },
 };
+
+const VALID_ARRAY_VIEWS_NAMES = [
+  'Int8Array',
+  'Uint8Array',
+  'Uint8ClampedArray',
+  'Int16Array',
+  'Uint16Array',
+  'Int32Array',
+  'Uint32Array',
+  'Float32Array',
+  'Float64Array',
+  'BigInt64Array',
+  'BigUint64Array',
+  'DataView',
+];
 
 const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // Below variable stores object that we process in makeShareableCloneRecursive at the specified depth.
@@ -197,6 +216,31 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
           __init: () => {
             'worklet';
             return new RegExp(pattern, flags);
+          },
+        });
+        registerShareableMapping(value, handle);
+        return handle as ShareableRef<T>;
+      } else if (value instanceof ArrayBuffer) {
+        toAdapt = value;
+      } else if (ArrayBuffer.isView(value)) {
+        // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
+        const buffer = value.buffer;
+        const type = value.constructor.name;
+        const handle = makeShareableCloneRecursive({
+          __init: () => {
+            'worklet';
+            if (!VALID_ARRAY_VIEWS_NAMES.includes(type)) {
+              throw new Error(
+                `[Reanimated] Invalid array view name \`${type}\`.`
+              );
+            }
+            const constructor = global[type as keyof typeof global];
+            if (constructor === undefined) {
+              throw new Error(
+                `[Reanimated] Constructor for \`${type}\` not found.`
+              );
+            }
+            return new constructor(buffer);
           },
         });
         registerShareableMapping(value, handle);

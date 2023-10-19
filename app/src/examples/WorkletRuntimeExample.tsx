@@ -20,6 +20,7 @@ export default function WorkletRuntimeExample() {
       <CreateWorkletRuntimeDemo />
       <InitializerDemo />
       <ThrowErrorDemo />
+      <PerformanceNowDemo />
       <BackgroundQueueDemo />
     </View>
   );
@@ -105,6 +106,23 @@ function ThrowErrorDemo() {
   };
 
   return <Button title="Throw error" onPress={handlePress} />;
+}
+
+function PerformanceNowDemo() {
+  const handlePress = () => {
+    console.log('RN', performance.now());
+    createWorkletRuntime('foo', () => {
+      'worklet';
+      console.log('WR', performance.now());
+    });
+    runOnUI(() => {
+      console.log('UI', performance.now());
+      // @ts-ignore it works
+      console.log('AT', _getAnimationTimestamp());
+    })();
+  };
+
+  return <Button title="performance.now" onPress={handlePress} />;
 }
 
 function BackgroundQueueDemo() {

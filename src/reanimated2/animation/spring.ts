@@ -11,6 +11,7 @@ import type {
   SpringAnimation,
   InnerSpringAnimation,
   SpringConfigInner,
+  DefaultSpringConfig,
 } from './springUtils';
 import {
   initialCalculations,
@@ -18,6 +19,7 @@ import {
   underDampedSpringCalculations,
   criticallyDampedSpringCalculations,
   isAnimationTerminatingCalculation,
+  checkIfConfigIsValid,
 } from './springUtils';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
@@ -36,7 +38,7 @@ export const withSpring = ((
 
   return defineAnimation<SpringAnimation>(toValue, () => {
     'worklet';
-    const defaultConfig: Record<keyof SpringConfig, any> = {
+    const defaultConfig: DefaultSpringConfig = {
       damping: 10,
       mass: 1,
       stiffness: 100,
@@ -49,28 +51,17 @@ export const withSpring = ((
       reduceMotion: undefined,
     } as const;
 
-    const config: Record<keyof SpringConfig, any> & SpringConfigInner = {
+    const config: DefaultSpringConfig & SpringConfigInner = {
       ...defaultConfig,
       ...userConfig,
       useDuration: !!(userConfig?.duration || userConfig?.dampingRatio),
-      configIsInvalid: false,
+      skipAnimation: false,
     };
 
-    if (
-      [
-        config.stiffness,
-        config.damping,
-        config.duration,
-        config.dampingRatio,
-        config.restDisplacementThreshold,
-        config.restSpeedThreshold,
-      ].some((x) => x <= 0) ||
-      config.mass === 0
-    ) {
-      config.configIsInvalid = true;
-      console.warn(
-        "You have provided invalid spring animation configuration! \n Value of stiffness, damping, duration and damping ratio must be greater than zero, and mass can't equal zero."
-      );
+    config.skipAnimation = !checkIfConfigIsValid(config);
+
+    if (config.duration === 0) {
+      config.skipAnimation = true;
     }
 
     function springOnFrame(
@@ -88,14 +79,10 @@ export const withSpring = ((
         return true;
       }
 
-      if (config.configIsInvalid) {
-        // We don't animate wrong config
-        if (config.useDuration) return false;
-        else {
-          animation.current = toValue;
-          animation.lastTimestamp = 0;
-          return true;
-        }
+      if (config.skipAnimation) {
+        animation.current = toValue;
+        animation.lastTimestamp = 0;
+        return true;
       }
       const { lastTimestamp, velocity } = animation;
 

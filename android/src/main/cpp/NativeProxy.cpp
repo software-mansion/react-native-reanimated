@@ -16,9 +16,9 @@
 #include "RNRuntimeDecorator.h"
 #include "ReanimatedJSIUtils.h"
 #include "ReanimatedRuntime.h"
-#ifdef DEBUG
+#ifndef NDEBUG
 #include "ReanimatedVersion.h"
-#endif // DEBUG
+#endif // NDEBUG
 #include "WorkletRuntime.h"
 #include "WorkletRuntimeCollector.h"
 
@@ -55,9 +55,10 @@ NativeProxy::NativeProxy(
   nativeReanimatedModule_->initializeFabric(uiManager);
   // removed temporarily, event listener mechanism needs to be fixed on RN side
   // eventListener_ = std::make_shared<EventListener>(
-  //     [nativeReanimatedModule, getCurrentTime](const RawEvent &rawEvent) {
+  //     [nativeReanimatedModule,
+  //      getAnimationTimestamp](const RawEvent &rawEvent) {
   //       return nativeReanimatedModule->handleRawEvent(
-  //           rawEvent, getCurrentTime());
+  //           rawEvent, getAnimationTimestamp());
   //     });
   // reactScheduler_ = binding->getScheduler();
   // reactScheduler_->addEventListener(eventListener_);
@@ -104,7 +105,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       /**/);
 }
 
-#ifdef DEBUG
+#ifndef NDEBUG
 void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
   std::string javaVersion;
   try {
@@ -141,7 +142,7 @@ void NativeProxy::injectCppVersion() {
         "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#c-side-failed-to-resolve-java-code-version` for more details.");
   }
 }
-#endif // DEBUG
+#endif // NDEBUG
 
 void NativeProxy::installJSIBindings() {
   jsi::Runtime &rnRuntime = *rnRuntime_;
@@ -149,10 +150,10 @@ void NativeProxy::installJSIBindings() {
   auto isReducedMotion = getIsReducedMotion();
   RNRuntimeDecorator::decorate(
       rnRuntime, nativeReanimatedModule_, isReducedMotion);
-#ifdef DEBUG
+#ifndef NDEBUG
   checkJavaVersion(rnRuntime);
   injectCppVersion();
-#endif // DEBUG
+#endif // NDEBUG
 
   registerEventHandler();
   setupLayoutAnimations();
@@ -369,8 +370,8 @@ void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
   method(javaPart_.get(), listenerId);
 }
 
-double NativeProxy::getCurrentTime() {
-  static const auto method = getJniMethod<jlong()>("getCurrentTime");
+double NativeProxy::getAnimationTimestamp() {
+  static const auto method = getJniMethod<jlong()>("getAnimationTimestamp");
   jlong output = method(javaPart_.get());
   return static_cast<double>(output);
 }
@@ -416,7 +417,7 @@ void NativeProxy::handleEvent(
   }
 
   nativeReanimatedModule_->handleEvent(
-      eventName->toString(), emitterReactTag, payload, this->getCurrentTime());
+      eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
 }
 
 void NativeProxy::progressLayoutAnimation(
@@ -444,7 +445,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto obtainPropFunction = bindThis(&NativeProxy::obtainProp);
 #endif
 
-  auto getCurrentTime = bindThis(&NativeProxy::getCurrentTime);
+  auto getAnimationTimestamp = bindThis(&NativeProxy::getAnimationTimestamp);
 
   auto requestRender = bindThis(&NativeProxy::requestRender);
 
@@ -488,7 +489,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       configurePropsFunction,
       obtainPropFunction,
 #endif
-      getCurrentTime,
+      getAnimationTimestamp,
       progressLayoutAnimation,
       endLayoutAnimation,
       registerSensorFunction,
@@ -553,7 +554,7 @@ void NativeProxy::setupLayoutAnimations() {
         return false;
       });
 
-#ifdef DEBUG
+#ifndef NDEBUG
   layoutAnimations_->cthis()->setCheckDuplicateSharedTag(
       [weakNativeReanimatedModule](int viewTag, int screenTag) {
         if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
