@@ -20,7 +20,7 @@ import {
   criticallyDampedSpringCalculations,
   isAnimationTerminatingCalculation,
   scaleZetaToMatchClamps,
-  isConfigValid,
+  checkIfConfigIsValid,
 } from './springUtils';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
@@ -60,7 +60,7 @@ export const withSpring = ((
       skipAnimation: false,
     };
 
-    config.skipAnimation = !isConfigValid(config);
+    config.skipAnimation = !checkIfConfigIsValid(config);
 
     if (config.duration === 0) {
       config.skipAnimation = true;
@@ -82,13 +82,9 @@ export const withSpring = ((
       }
 
       if (config.skipAnimation) {
-        // If we use duration we want to wait the provided time before stopping
-        if (config.useDuration) return false;
-        else {
-          animation.current = toValue;
-          animation.lastTimestamp = 0;
-          return true;
-        }
+        animation.current = toValue;
+        animation.lastTimestamp = 0;
+        return true;
       }
       const { lastTimestamp, velocity } = animation;
 
