@@ -11,7 +11,7 @@ import type { ViewConfig } from '../ConfigHelper';
 import { adaptViewConfig } from '../ConfigHelper';
 import updateProps from '../reanimated2/UpdateProps';
 import { stopMapper, startMapper } from '../reanimated2/mappers';
-import { isSharedValue } from '../reanimated2/utils';
+import { isSharedValue } from '../reanimated2/isSharedValue';
 import { shouldBeUseWeb } from '../reanimated2/PlatformChecker';
 import type { ShadowNodeWrapper } from '../reanimated2/commonTypes';
 
@@ -22,7 +22,7 @@ export interface ViewInfo {
   viewConfig: ViewConfig;
 }
 
-const IS_NATIVE = !shouldBeUseWeb();
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 function isInlineStyleTransform(transform: unknown): boolean {
   if (!Array.isArray(transform)) {
@@ -167,10 +167,9 @@ export class InlinePropManager {
       const shareableViewDescriptors =
         this._inlinePropsViewDescriptors.shareableViewDescriptors;
 
-      const maybeViewRef = IS_NATIVE
-        ? undefined
-        : ({ items: new Set([animatedComponent]) } as ViewRefSet<unknown>); // see makeViewsRefSet
-
+      const maybeViewRef = SHOULD_BE_USE_WEB
+        ? ({ items: new Set([animatedComponent]) } as ViewRefSet<unknown>) // see makeViewsRefSet
+        : undefined;
       const updaterFunction = () => {
         'worklet';
         const update = getInlinePropsUpdate(newInlineProps);

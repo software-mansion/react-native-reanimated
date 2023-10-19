@@ -1,5 +1,8 @@
 'use strict';
+import { isFabric } from './PlatformChecker';
 import { runOnUI } from './threads';
+
+const IS_FABRIC = isFabric();
 
 let viewTags: number[] = [];
 
@@ -11,7 +14,7 @@ export function removeFromPropsRegistry(viewTag: number) {
 }
 
 function flush() {
-  if (__DEV__ && !global._IS_FABRIC) {
+  if (__DEV__ && !IS_FABRIC) {
     throw new Error('[Reanimated] PropsRegistry is only available on Fabric.');
   }
   runOnUI(removeFromPropsRegistryOnUI)(viewTags);

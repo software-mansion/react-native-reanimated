@@ -1,10 +1,13 @@
 'use strict';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
+import {
+  isChromeDebugger,
+  isFabric,
+  isJest,
+  shouldBeUseWeb,
+} from '../PlatformChecker';
 import { dispatchCommand } from './dispatchCommand';
 import type { AnimatedRef } from '../hook/commonTypes';
 import type { Component } from 'react';
-
-const IS_NATIVE = !shouldBeUseWeb();
 
 export let scrollTo: <T extends Component>(
   animatedRef: AnimatedRef<T>,
@@ -56,10 +59,12 @@ function scrollToDefault() {
   );
 }
 
-if (IS_NATIVE && global._IS_FABRIC) {
-  scrollTo = scrollToFabric;
-} else if (IS_NATIVE) {
-  scrollTo = scrollToPaper;
+if (!shouldBeUseWeb()) {
+  if (isFabric()) {
+    scrollTo = scrollToFabric;
+  } else {
+    scrollTo = scrollToPaper;
+  }
 } else if (isJest()) {
   scrollTo = scrollToJest;
 } else if (isChromeDebugger()) {
