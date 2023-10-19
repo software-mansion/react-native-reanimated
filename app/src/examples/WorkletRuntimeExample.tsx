@@ -23,6 +23,7 @@ export default function WorkletRuntimeExample() {
       <PerformanceNowDemo />
       <BackgroundQueueFromJSDemo />
       <BackgroundQueueFromUIDemo />
+      <BackgroundQueueLongRunningTaskDemo />
     </View>
   );
 }
@@ -155,6 +156,27 @@ function BackgroundQueueFromUIDemo() {
   };
 
   return <Button title="Background queue from UI" onPress={handlePress} />;
+}
+
+function BackgroundQueueLongRunningTaskDemo() {
+  const handlePress = () => {
+    if ((global as any)._queue === undefined) {
+      (global as any)._queue = createBackgroundQueue('bar');
+      (global as any)._runtime = createWorkletRuntime('foo');
+    }
+    runOnBackgroundQueue(
+      (global as any)._queue,
+      (global as any)._runtime,
+      () => {
+        'worklet';
+        const until = performance.now() + 500;
+        while (performance.now() < until) {}
+        console.log('Hello from background!', performance.now());
+      }
+    );
+  };
+
+  return <Button title="Long-running task" onPress={handlePress} />;
 }
 
 const styles = StyleSheet.create({

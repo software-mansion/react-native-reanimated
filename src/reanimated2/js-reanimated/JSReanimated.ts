@@ -56,6 +56,16 @@ export default class JSReanimated {
     );
   }
 
+  scheduleOnBackgroundQueue(
+    _backgroundQueue: BackgroundQueue,
+    _workletRuntime: WorkletRuntime,
+    _shareableWorklet: ShareableRef<() => void>
+  ): BackgroundQueue {
+    throw new Error(
+      '[Reanimated] scheduleOnBackgroundQueue is not available in JSReanimated.'
+    );
+  }
+
   registerEventHandler<T>(
     _eventHandler: ShareableRef<T>,
     _eventName: string,

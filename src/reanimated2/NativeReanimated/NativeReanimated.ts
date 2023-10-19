@@ -33,6 +33,11 @@ export interface NativeReanimatedModule {
     initializer: ShareableRef<() => void>
   ): WorkletRuntime;
   createBackgroundQueue(name: string): BackgroundQueue;
+  scheduleOnBackgroundQueue(
+    backgroundQueue: BackgroundQueue,
+    workletRuntime: WorkletRuntime,
+    shareableWorklet: ShareableRef<() => void>
+  ): void;
   registerEventHandler<T>(
     eventHandler: ShareableRef<T>,
     eventName: string,
@@ -131,6 +136,18 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   createBackgroundQueue(name: string) {
     return this.InnerNativeModule.createBackgroundQueue(name);
+  }
+
+  scheduleOnBackgroundQueue(
+    backgroundQueue: BackgroundQueue,
+    workletRuntime: WorkletRuntime,
+    shareableWorklet: ShareableRef<() => void>
+  ) {
+    return this.InnerNativeModule.scheduleOnBackgroundQueue(
+      backgroundQueue,
+      workletRuntime,
+      shareableWorklet
+    );
   }
 
   registerSensor(
