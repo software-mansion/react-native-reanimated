@@ -21,7 +21,8 @@ export default function WorkletRuntimeExample() {
       <InitializerDemo />
       <ThrowErrorDemo />
       <PerformanceNowDemo />
-      <BackgroundQueueDemo />
+      <BackgroundQueueFromJSDemo />
+      <BackgroundQueueFromUIDemo />
     </View>
   );
 }
@@ -125,20 +126,35 @@ function PerformanceNowDemo() {
   return <Button title="performance.now" onPress={handlePress} />;
 }
 
-function BackgroundQueueDemo() {
+function BackgroundQueueFromJSDemo() {
+  const handlePress = () => {
+    const runtime = createWorkletRuntime('foo');
+    const queue = createBackgroundQueue('bar');
+    runOnBackgroundQueue(queue, runtime, () => {
+      'worklet';
+      console.log('Hello from background!', Math.random());
+    });
+  };
+
+  return <Button title="Background queue from JS" onPress={handlePress} />;
+}
+
+function BackgroundQueueFromUIDemo() {
   const handlePress = () => {
     const runtime = createWorkletRuntime('foo');
     const queue = createBackgroundQueue('bar');
     runOnUI(() => {
       'worklet';
+      const x = Math.random();
+      console.log('Hello from UI thread!', x);
       runOnBackgroundQueue(queue, runtime, () => {
         'worklet';
-        console.log('Hello from background!', Math.random());
+        console.log('Hello from background!', x);
       });
     })();
   };
 
-  return <Button title="Background queue" onPress={handlePress} />;
+  return <Button title="Background queue from UI" onPress={handlePress} />;
 }
 
 const styles = StyleSheet.create({
