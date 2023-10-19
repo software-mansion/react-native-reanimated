@@ -84,6 +84,10 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   if (config.duration < 0) {
     errorMessage += `, duration can't be negative, got ${config.duration}`;
   }
+  if (config.clamp && config.clamp[0] > config.clamp[1]) {
+    errorMessage +=
+      'clamp is incorrect, lower bound should not be greater than the upper band';
+  }
 
   if (errorMessage !== '') {
     console.warn('[Reanimated] Invalid spring config' + errorMessage);
@@ -168,8 +172,8 @@ export function scaleZetaToMatchClamps(
     return zeta;
   }
 
-  const [lowerBound, secondClamp] =
-    Number(toValue) - startValue < 0 ? clamp : [clamp[1], clamp[0]];
+  const [lowerBound, upperBound] =
+    Number(toValue) - startValue > 0 ? clamp : [clamp[1], clamp[0]];
 
   /** The extrema we get from equation below are relative (we obtain a ratio),
    *  To get absolute extrema we convert it as follows:
@@ -181,11 +185,11 @@ export function scaleZetaToMatchClamps(
    */
 
   const relativeExtremum1 = Math.abs(
-    (lowerBound - Number(toValue)) / (Number(toValue) - startValue)
+    (upperBound - Number(toValue)) / (Number(toValue) - startValue)
   );
 
   const relativeExtremum2 = Math.abs(
-    (secondClamp - Number(toValue)) / (Number(toValue) - startValue)
+    (lowerBound - Number(toValue)) / (Number(toValue) - startValue)
   );
 
   /** Use this formula http://hyperphysics.phy-astr.gsu.edu/hbase/oscda.html to calculate
@@ -200,13 +204,6 @@ export function scaleZetaToMatchClamps(
   const newZeta1 = Math.abs(Math.log(relativeExtremum1) / Math.PI);
   const newZeta2 = Math.abs(Math.log(relativeExtremum2) / (2 * Math.PI));
 
-  console.log(
-    'DUPA',
-    newZeta1,
-    newZeta2,
-    zeta,
-    Math.max(newZeta1, newZeta2, zeta)
-  );
   // The bigger is zeta the smaller are bounces, we return the biggest one
   // because it should satisfy all conditions
   return Math.max(newZeta1, newZeta2, zeta);

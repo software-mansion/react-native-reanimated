@@ -1,20 +1,21 @@
+import React from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
 import { View, Text, Button, StyleSheet, ViewStyle } from 'react-native';
-import React, { useState } from 'react';
 
 const VIOLET = '#b58df1';
 const BORDER_WIDTH = 4;
 const FRAME_WIDTH = 300;
-
 const LOWER_CLAMP = 120;
 const UPPER_CLAMP = 220;
+const CLAMP_MARKER_HEIGHT = 40;
+
 function renderFramedExample(testedStyle: ViewStyle, description: string) {
   return (
-    <>
+    <React.Fragment>
       <Text style={styles.text}>{description}</Text>
       <View
         style={{
@@ -25,7 +26,7 @@ function renderFramedExample(testedStyle: ViewStyle, description: string) {
         <Animated.View
           style={[
             styles.clampMarker,
-            { marginBottom: -40, width: UPPER_CLAMP },
+            { marginBottom: -CLAMP_MARKER_HEIGHT, width: UPPER_CLAMP },
           ]}
         />
         <Animated.View style={[styles.movingBox, testedStyle]} />
@@ -33,20 +34,19 @@ function renderFramedExample(testedStyle: ViewStyle, description: string) {
           style={[
             styles.clampMarker,
             {
-              marginTop: -40,
+              marginTop: -CLAMP_MARKER_HEIGHT,
               width: FRAME_WIDTH - LOWER_CLAMP,
               alignSelf: 'flex-end',
             },
           ]}
         />
       </View>
-    </>
+    </React.Fragment>
   );
 }
 
 export default function AnimatedStyleUpdateExample() {
-  const randomWidth = useSharedValue(100);
-  const [toggle, setToggle] = useState(false);
+  const randomWidth = useSharedValue(130);
 
   const config = {
     duration: 5000,
@@ -75,8 +75,7 @@ export default function AnimatedStyleUpdateExample() {
       <Button
         title="toggle"
         onPress={() => {
-          randomWidth.value = toggle ? 130 : 210;
-          setToggle(!toggle);
+          randomWidth.value = randomWidth.value === 210 ? 130 : 210;
         }}
       />
     </View>
@@ -92,7 +91,7 @@ const styles = StyleSheet.create({
   clampMarker: {
     margin: 0,
     opacity: 0.5,
-    height: 40,
+    height: CLAMP_MARKER_HEIGHT,
     backgroundColor: VIOLET,
   },
   movingBox: {
