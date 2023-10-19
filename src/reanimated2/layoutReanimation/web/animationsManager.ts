@@ -1,6 +1,11 @@
 'use strict';
 
-import type { AnimationConfig, AnimationNames, CustomConfig } from './config';
+import type {
+  AnimationConfig,
+  AnimationNames,
+  CustomConfig,
+  KeyframeDefinitions,
+} from './config';
 import { Animations } from './config';
 import type { AnimatedComponentProps } from '../../../createAnimatedComponent/utils';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
@@ -145,7 +150,7 @@ export function startWebLayoutAnimation<
 
   if (isCustomKeyframe) {
     animationName = createCustomKeyFrameAnimation(
-      (config as CustomConfig).definitions!,
+      (config as CustomConfig).definitions as KeyframeDefinitions,
       transform
     );
   } else {
