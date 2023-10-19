@@ -10,6 +10,7 @@ import type {
   AnimatedProps,
   InitialComponentProps,
   AnimatedComponentClass,
+  IPropsFilter,
 } from './utils';
 import { flattenArray, has } from './utils';
 import { StyleSheet } from 'react-native';
@@ -19,7 +20,7 @@ function dummyListener() {
   // event is used.
 }
 
-export class PropsFilter {
+export class PropsFilter implements IPropsFilter {
   private _initialStyle = {};
 
   public filterNonAnimatedProps(

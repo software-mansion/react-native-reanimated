@@ -13,14 +13,35 @@ import type {
   ViewRefSet,
 } from '../reanimated2/ViewDescriptorsSet';
 import type { JSPropUpdater } from './JSPropUpdater';
-import type { InlinePropManager, ViewInfo } from './InlinePropManager';
 import type { SkipEnteringContext } from 'src/reanimated2/component/LayoutAnimationConfig';
-import type { PropsFilter } from './PropsFilter';
+import type { ShadowNodeWrapper } from 'src/reanimated2/commonTypes';
+import type { ViewConfig } from '../ConfigHelper';
 
 export interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;
   viewsRef?: ViewRefSet<unknown>;
   initial?: SharedValue<StyleProps>;
+}
+
+export interface ViewInfo {
+  viewTag: number | HTMLElement | null;
+  viewName: string | null;
+  shadowNodeWrapper: ShadowNodeWrapper | null;
+  viewConfig: ViewConfig;
+}
+
+export interface IInlinePropManager {
+  attachInlineProps(
+    animatedComponent: React.Component<unknown, unknown>,
+    viewInfo: ViewInfo
+  ): void;
+  detachInlineProps(): void;
+}
+
+export interface IPropsFilter {
+  filterNonAnimatedProps: (
+    component: React.Component<unknown, unknown> & AnimatedComponentClass
+  ) => Record<string, unknown>;
 }
 
 export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
@@ -61,8 +82,8 @@ export interface AnimatedComponentClass {
   _component: ReanimatedComponentRef | HTMLElement | null;
   _sharedElementTransition: SharedTransition | null;
   _JSPropUpdater: JSPropUpdater;
-  _InlinePropManager: InlinePropManager;
-  _PropsFilter: PropsFilter;
+  _InlinePropManager: IInlinePropManager;
+  _PropsFilter: IPropsFilter;
   _viewInfo?: ViewInfo;
   context: React.ContextType<typeof SkipEnteringContext>;
 }

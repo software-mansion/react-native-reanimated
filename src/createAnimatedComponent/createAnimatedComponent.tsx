@@ -35,6 +35,7 @@ import type {
   InitialComponentProps,
   ReanimatedComponentRef,
   AnimatedComponentClass,
+  ViewInfo,
 } from './utils';
 import { has, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
@@ -44,7 +45,6 @@ import {
   isWeb,
   shouldBeUseWeb,
 } from '../reanimated2/PlatformChecker';
-import type { ViewInfo } from './InlinePropManager';
 import { InlinePropManager } from './InlinePropManager';
 import { PropsFilter } from './PropsFilter';
 import {
