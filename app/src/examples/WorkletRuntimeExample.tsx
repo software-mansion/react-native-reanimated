@@ -1,7 +1,9 @@
 import React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
+  BackgroundQueue,
   Easing,
+  WorkletRuntime,
   createBackgroundQueue,
   createWorkletRuntime,
   runOnBackgroundQueue,
@@ -158,22 +160,23 @@ function BackgroundQueueFromUIDemo() {
   return <Button title="Background queue from UI" onPress={handlePress} />;
 }
 
+let queue: BackgroundQueue | undefined;
+let runtime: WorkletRuntime | undefined;
+
 function BackgroundQueueLongRunningTaskDemo() {
   const handlePress = () => {
-    if ((global as any)._queue === undefined) {
-      (global as any)._queue = createBackgroundQueue('bar');
-      (global as any)._runtime = createWorkletRuntime('foo');
+    if (queue === undefined) {
+      queue = createBackgroundQueue('bar');
     }
-    runOnBackgroundQueue(
-      (global as any)._queue,
-      (global as any)._runtime,
-      () => {
-        'worklet';
-        const until = performance.now() + 500;
-        while (performance.now() < until) {}
-        console.log('Hello from background!', performance.now());
-      }
-    );
+    if (runtime === undefined) {
+      runtime = createWorkletRuntime('foo');
+    }
+    runOnBackgroundQueue(queue, runtime, () => {
+      'worklet';
+      const until = performance.now() + 500;
+      while (performance.now() < until) {}
+      console.log('Hello from background!', performance.now());
+    });
   };
 
   return <Button title="Long-running task" onPress={handlePress} />;
