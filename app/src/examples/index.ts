@@ -108,6 +108,7 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
+import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 
 interface Example {
   icon?: string;
@@ -411,6 +412,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⌨',
     title: 'Log test',
     screen: LogExample,
+  },
+  WorkletFactoryCrash: {
+    icon: '🏭',
+    title: 'Worklet factory crash',
+    screen: WorkletFactoryCrash,
   },
 
   // Old examples
