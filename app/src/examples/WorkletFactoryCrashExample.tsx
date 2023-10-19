@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
-import { Button, StyleSheet, View } from 'react-native';
+import { Button, StyleSheet, View, Text } from 'react-native';
 
 export default function App() {
   function handleOnPress() {
@@ -13,6 +13,10 @@ export default function App() {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.text}>
+        Clicking the button below should give a stack trace that denotes the
+        error in `badWorklet` function, pointing to `unexistingVariable` usage.
+      </Text>
       <Button title={'Crash me'} onPress={handleOnPress} />
     </View>
   );
@@ -23,5 +27,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  text: {
+    textAlign: 'center',
   },
 });
