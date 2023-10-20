@@ -32,6 +32,7 @@
 #endif
 
 #import <RNReanimated/READisplayLink.h>
+#import <RNScreens/RNSModule.h>
 
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
@@ -264,6 +265,33 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
   // end keyboard events
 
+  enum ScreenTransitionCommand {
+    Start = 1,
+    Update = 2,
+    Finish = 3,
+  };
+  RNSModule *screensModule = [bridge moduleForClass:[RNSModule class]];
+  auto manageScreenTransitionFunction =
+      [=](jsi::Runtime &rt, int command, int stackTag, const jsi::Value &param) -> jsi::Value {
+    NSNumber *nsScreenTag = @(stackTag);
+    if (command == ScreenTransitionCommand::Start) {
+      NSArray<NSNumber *> *screenTags = [screensModule _startTransition:nsScreenTag];
+      if ([screenTags count] > 0) {
+        jsi::Object screenTagsObject(rt);
+        screenTagsObject.setProperty(rt, "topScreenTag", [screenTags[0] intValue]);
+        screenTagsObject.setProperty(rt, "belowTopScreenTag", [screenTags[1] intValue]);
+        return screenTagsObject;
+      }
+    } else if (command == ScreenTransitionCommand::Update) {
+      double progress = param.asNumber();
+      [screensModule _updateTransition:nsScreenTag progress:progress];
+    } else if (command == ScreenTransitionCommand::Finish) {
+      bool canceled = param.asBool();
+      [screensModule _finishTransition:nsScreenTag canceled:canceled];
+    }
+    return jsi::Value::undefined();
+  };
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -285,6 +313,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUIUpdatesQueueFunction,
+      manageScreenTransitionFunction,
   };
 
   auto nativeReanimatedModule =

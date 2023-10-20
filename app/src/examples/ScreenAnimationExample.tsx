@@ -5,11 +5,12 @@ import {
   createNativeStackNavigator,
   NativeStackScreenProps,
 } from 'react-native-screens/native-stack';
+import { ScreenTransition } from 'react-native-reanimated';
 
 const ScreenA = ({ navigation }: NativeStackScreenProps<ParamListBase>) => (
   <View style={[styles.container, styles.screenA]}>
     <Button
-      title="Go to detail"
+      title="Go to details"
       onPress={() => navigation.navigate('ScreenB')}
     />
     <Button onPress={() => navigation.pop()} title="🔙 Back to ScreenA" />
@@ -28,6 +29,8 @@ const App = () => (
   <Stack.Navigator
     screenOptions={{
       stackAnimation: 'none',
+      goBackGesture: 'swipeRight',
+      transitionAnimation: ScreenTransition.horizontal,
     }}>
     <Stack.Screen
       name="ScreenA"

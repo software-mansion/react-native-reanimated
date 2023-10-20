@@ -71,6 +71,8 @@ using KeyboardEventSubscribeFunction =
     std::function<int(std::function<void(int, int)>, bool)>;
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
+using ManageScreenTransitionFunction =
+    std::function<jsi::Value(jsi::Runtime &, int, int, const jsi::Value &)>;
 
 struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
@@ -93,6 +95,7 @@ struct PlatformDepMethodsHolder {
   KeyboardEventSubscribeFunction subscribeForKeyboardEvents;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEvents;
   MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction;
+  ManageScreenTransitionFunction manageScreenTransitionFunction;
 };
 
 } // namespace reanimated

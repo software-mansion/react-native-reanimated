@@ -125,7 +125,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.setGestureStateFunction,
       platformDepMethodsHolder.progressLayoutAnimation,
       platformDepMethodsHolder.endLayoutAnimation,
-      platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction);
+      platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction,
+      platformDepMethodsHolder.manageScreenTransitionFunction);
 }
 
 void NativeReanimatedModule::installValueUnpacker(
