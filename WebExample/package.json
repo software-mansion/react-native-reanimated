@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
-    "start": "expo start --web",
+    "start": "REANIMATED_BABEL_PLUGIN_IS_WEB=1 expo start --web",
     "start:noplugin": "DISABLE_BABEL_PLUGIN=1 yarn start",
     "lint": "eslint --max-warnings=0 .",
-    "build": "expo export:web"
+    "build": "REANIMATED_BABEL_PLUGIN_IS_WEB=1 expo export:web"
   },
   "dependencies": {
     "@expo/webpack-config": "^18.0.0",

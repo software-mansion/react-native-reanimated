@@ -1,10 +1,10 @@
 {
   "private": true,
   "scripts": {
-    "dev": "next",
-    "build": "next build",
-    "build:analyze": "ANALYZE_BUNDLE=1 next build",
-    "build:disable-minification": "DISABLE_MINIFICATION=1 next build",
+    "dev": "REANIMATED_BABEL_PLUGIN_IS_WEB=1 next",
+    "build": "REANIMATED_BABEL_PLUGIN_IS_WEB=1 next build",
+    "build:analyze": "ANALYZE_BUNDLE=1 yarn build",
+    "build:disable-minification": "DISABLE_MINIFICATION=1 yarn build",
     "start": "next start",
     "e2e": "start-server-and-test dev http://localhost:3000 \"cypress open --e2e\"",
     "e2e:headless": "start-server-and-test dev http://localhost:3000 \"cypress run --e2e\""
