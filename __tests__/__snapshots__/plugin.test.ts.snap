@@ -335,6 +335,52 @@ new FadeIn().withCallback(function () {
 }());"
 `;
 
+exports[`babel plugin for Web configuration includes initData when isWeb option is set and is overridden with REANIMATED_BABEL_PLUGIN_IS_WEB 1`] = `
+"var _worklet_17472070642672_init_data = {
+  code: "function foo(){var foo='bar';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo = function foo() {
+    var foo = 'bar';
+  };
+  foo.__closure = {};
+  foo.__workletHash = 17472070642672;
+  foo.__initData = _worklet_17472070642672_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
+exports[`babel plugin for Web configuration skips initData when REANIMATED_BABEL_PLUGIN_IS_WEB is set 1`] = `
+"var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo = function foo() {
+    var foo = 'bar';
+  };
+  foo.__closure = {};
+  foo.__workletHash = 17472070642672;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
+exports[`babel plugin for Web configuration skips initData when isWeb option is set 1`] = `
+"var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo = function foo() {
+    var foo = 'bar';
+  };
+  foo.__closure = {};
+  foo.__workletHash = 17472070642672;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
 exports[`babel plugin for class worklets workletizes class field 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
@@ -1992,50 +2038,4 @@ function Box() {
     title: "Move"
   }));
 }"
-`;
-
-exports[`babel plugin includes initData when isWeb option is set and is overridden with REANIMATED_BABEL_PLUGIN_IS_WEB 1`] = `
-"var _worklet_17472070642672_init_data = {
-  code: "function foo(){var foo='bar';}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-var foo = function () {
-  var _e = [new global.Error(), 1, -27];
-  var foo = function foo() {
-    var foo = 'bar';
-  };
-  foo.__closure = {};
-  foo.__workletHash = 17472070642672;
-  foo.__initData = _worklet_17472070642672_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}();"
-`;
-
-exports[`babel plugin skips initData when REANIMATED_BABEL_PLUGIN_IS_WEB is set 1`] = `
-"var foo = function () {
-  var _e = [new global.Error(), 1, -27];
-  var foo = function foo() {
-    var foo = 'bar';
-  };
-  foo.__closure = {};
-  foo.__workletHash = 17472070642672;
-  foo.__stackDetails = _e;
-  return foo;
-}();"
-`;
-
-exports[`babel plugin skips initData when isWeb option is set 1`] = `
-"var foo = function () {
-  var _e = [new global.Error(), 1, -27];
-  var foo = function foo() {
-    var foo = 'bar';
-  };
-  foo.__closure = {};
-  foo.__workletHash = 17472070642672;
-  foo.__stackDetails = _e;
-  return foo;
-}();"
 `;
