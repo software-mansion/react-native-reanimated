@@ -20,7 +20,7 @@ module.exports = function (api) {
         },
       ],
       '@babel/plugin-proposal-export-namespace-from',
-      !disableBabelPlugin && 'react-native-reanimated/plugin',
+      !disableBabelPlugin && ['react-native-reanimated/plugin', {isWeb: true}],
     ].filter(Boolean),
   };
 };

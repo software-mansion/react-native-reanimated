@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
-    "start": "REANIMATED_BABEL_PLUGIN_IS_WEB=1 docusaurus start",
-    "build": "REANIMATED_BABEL_PLUGIN_IS_WEB=1 docusaurus build",
+    "start": "docusaurus start",
+    "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
