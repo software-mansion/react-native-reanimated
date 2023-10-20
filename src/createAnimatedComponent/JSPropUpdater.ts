@@ -6,14 +6,13 @@ import {
 } from 'react-native';
 import { nativeShouldBeMock } from '../reanimated2/PlatformChecker';
 import type { StyleProps } from '../reanimated2';
-import type { IAnimatedComponentInternal } from './commonTypes';
+import type { IAnimatedComponentInternal, IJSPropUpdater } from './commonTypes';
 
 interface ListenerData {
   viewTag: number;
   props: StyleProps;
 }
-
-export class JSPropUpdater {
+export class JSPropUpdater implements IJSPropUpdater {
   private static _tagToComponentMapping = new Map();
   private _reanimatedEventEmitter: NativeEventEmitter;
   private static _reanimatedModuleMock = {

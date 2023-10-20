@@ -12,7 +12,6 @@ import type {
   ViewDescriptorsSet,
   ViewRefSet,
 } from '../reanimated2/ViewDescriptorsSet';
-import type { JSPropUpdater } from './JSPropUpdater';
 import type { SkipEnteringContext } from '../reanimated2/component/LayoutAnimationConfig';
 import type { ShadowNodeWrapper } from '../reanimated2/commonTypes';
 import type { ViewConfig } from '../ConfigHelper';
@@ -42,6 +41,17 @@ export interface IPropsFilter {
   filterNonAnimatedProps: (
     component: React.Component<unknown, unknown> & IAnimatedComponentInternal
   ) => Record<string, unknown>;
+}
+
+export interface IJSPropUpdater {
+  addOnJSPropsChangeListener(
+    animatedComponent: React.Component<unknown, unknown> &
+      IAnimatedComponentInternal
+  ): void;
+  removeOnJSPropsChangeListener(
+    animatedComponent: React.Component<unknown, unknown> &
+      IAnimatedComponentInternal
+  ): void;
 }
 
 export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
@@ -81,7 +91,7 @@ export interface IAnimatedComponentInternal {
   animatedStyle: { value: StyleProps };
   _component: AnimatedComponentRef | HTMLElement | null;
   _sharedElementTransition: SharedTransition | null;
-  _JSPropUpdater: JSPropUpdater;
+  _JSPropUpdater: IJSPropUpdater;
   _InlinePropManager: IInlinePropManager;
   _PropsFilter: IPropsFilter;
   _viewInfo?: ViewInfo;
