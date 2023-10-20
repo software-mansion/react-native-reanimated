@@ -335,7 +335,7 @@ new FadeIn().withCallback(function () {
 }());"
 `;
 
-exports[`babel plugin for Web configuration includes initData when isWeb option is set and is overridden with REANIMATED_BABEL_PLUGIN_IS_WEB 1`] = `
+exports[`babel plugin for Web configuration includes initData when isWeb option is set to true and is overridden with REANIMATED_BABEL_PLUGIN_IS_WEB 1`] = `
 "var _worklet_17472070642672_init_data = {
   code: "function foo(){var foo='bar';}",
   location: "/dev/null",
@@ -369,6 +369,19 @@ exports[`babel plugin for Web configuration skips initData when REANIMATED_BABEL
 `;
 
 exports[`babel plugin for Web configuration skips initData when isWeb option is set 1`] = `
+"var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo = function foo() {
+    var foo = 'bar';
+  };
+  foo.__closure = {};
+  foo.__workletHash = 17472070642672;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
+exports[`babel plugin for Web configuration skips initData when isWeb option is set to false and is overridden with REANIMATED_BABEL_PLUGIN_IS_WEB 1`] = `
 "var foo = function () {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo() {
