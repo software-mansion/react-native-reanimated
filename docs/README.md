@@ -4,7 +4,7 @@
 
 ## What's in the docs
 
-The Docs come with a [Fundamentals](https://reanimated-beta-docs.swmansion.com/docs/fundamentals/getting-started) section which is a step-by-step introduction into the world of Reanimated.
+The Docs come with a [Fundamentals](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/) section which is a step-by-step introduction into the world of Reanimated.
 
 All sections feature interactive examples, playgrounds, and easily copyable code snippets designed for use in your projects.
 
