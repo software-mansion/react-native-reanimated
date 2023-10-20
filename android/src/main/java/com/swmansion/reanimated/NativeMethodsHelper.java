@@ -31,7 +31,8 @@ public class NativeMethodsHelper {
 
     float result[] = new float[6];
     result[0] = result[1] = 0;
-    for (int i = 2; i < 6; ++i) result[i] = PixelUtil.toDIPFromPixel(buffer[i - 2]);
+    for (int i = 2; i < 6; ++i)
+      result[i] = PixelUtil.toDIPFromPixel(buffer[i - 2]);
 
     return result;
   }
@@ -51,6 +52,13 @@ public class NativeMethodsHelper {
             "NativeMethodsHelper: Unhandled scroll view type - allowed only {ReactScrollView, ReactHorizontalScrollView}");
         return;
       }
+    }
+
+    // Interrupt any ongoing scroll momentum
+    if (isHorizontal) {
+      ((ReactHorizontalScrollView) view).smoothScrollBy(1, 1);
+    } else {
+      ((ReactScrollView) view).smoothScrollBy(1, 1);
     }
 
     if (animated) {
