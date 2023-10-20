@@ -126,6 +126,7 @@ export function getInlineStyle(
   }
   return newStyle;
 }
+
 export class InlinePropManager implements IInlinePropManager {
   _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
   _inlinePropsMapperId: number | null = null;
