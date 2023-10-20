@@ -178,7 +178,7 @@ export function makeWorklet(
     );
   }
 
-  const shouldIncludeInitData = !isWeb();
+  const shouldIncludeInitData = !isWeb(state);
   if (shouldIncludeInitData) {
     pathForStringDefinitions.insertBefore(
       variableDeclaration('const', [

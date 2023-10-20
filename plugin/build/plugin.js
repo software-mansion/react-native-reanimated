@@ -37,8 +37,11 @@ var require_utils = __commonJS({
       return !!(((_a = process.env.BABEL_ENV) === null || _a === void 0 ? void 0 : _a.match(pattern)) || ((_b = process.env.NODE_ENV) === null || _b === void 0 ? void 0 : _b.match(pattern)));
     }
     exports2.isRelease = isRelease;
-    function isWeb() {
-      return process.env.REANIMATED_BABEL_PLUGIN_IS_WEB === "1";
+    function isWeb(state) {
+      if (process.env.REANIMATED_BABEL_PLUGIN_IS_WEB === "0") {
+        return false;
+      }
+      return process.env.REANIMATED_BABEL_PLUGIN_IS_WEB === "1" || state.opts.isWeb;
     }
     exports2.isWeb = isWeb;
   }
@@ -364,7 +367,7 @@ var require_makeWorklet = __commonJS({
       if (shouldInjectVersion) {
         initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("version"), (0, types_1.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)));
       }
-      const shouldIncludeInitData = !(0, utils_1.isWeb)();
+      const shouldIncludeInitData = !(0, utils_1.isWeb)(state);
       if (shouldIncludeInitData) {
         pathForStringDefinitions.insertBefore((0, types_1.variableDeclaration)("const", [
           (0, types_1.variableDeclarator)(initDataId, initDataObjectExpression)

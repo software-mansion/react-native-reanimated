@@ -1583,8 +1583,7 @@ describe('babel plugin', () => {
     });
   });
 
-  it('skips initData on web', () => {
-    process.env.REANIMATED_BABEL_PLUGIN_IS_WEB = '1';
+  it('skips initData when REANIMATED_BABEL_PLUGIN_IS_WEB is set', () => {
     const input = html`<script>
       function foo() {
         'worklet';
@@ -1592,8 +1591,38 @@ describe('babel plugin', () => {
       }
     </script>`;
 
+    process.env.REANIMATED_BABEL_PLUGIN_IS_WEB = '1';
     const { code } = runPlugin(input);
+    process.env.REANIMATED_BABEL_PLUGIN_IS_WEB = undefined;
     expect(code).toHaveWorkletData(0);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('skips initData when isWeb option is set', () => {
+    const input = html`<script>
+      function foo() {
+        'worklet';
+        var foo = 'bar';
+      }
+    </script>`;
+
+    const { code } = runPlugin(input, {}, { isWeb: true });
+    expect(code).toHaveWorkletData(0);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('includes initData when isWeb option is set and is overridden with REANIMATED_BABEL_PLUGIN_IS_WEB', () => {
+    const input = html`<script>
+      function foo() {
+        'worklet';
+        var foo = 'bar';
+      }
+    </script>`;
+
+    process.env.REANIMATED_BABEL_PLUGIN_IS_WEB = '0';
+    const { code } = runPlugin(input, {}, { isWeb: true });
+    process.env.REANIMATED_BABEL_PLUGIN_IS_WEB = undefined;
+    expect(code).toHaveWorkletData(1);
     expect(code).toMatchSnapshot();
   });
 });
