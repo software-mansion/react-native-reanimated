@@ -94,6 +94,10 @@ export function startWebLayoutAnimation<
   shouldMakeVisible = false,
   transitionData?: TransitionData
 ) {
+  if (shouldMakeVisible) {
+    makeElementVisible(element);
+  }
+
   const config = chooseConfig(animationType, props);
   if (!config) {
     return;
@@ -127,10 +131,6 @@ export function startWebLayoutAnimation<
 
   if (checkReduceMotionFail(animationConfig)) {
     return;
-  }
-
-  if (shouldMakeVisible) {
-    makeElementVisible(element);
   }
 
   chooseAction(

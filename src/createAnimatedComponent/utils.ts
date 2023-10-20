@@ -13,8 +13,8 @@ import type {
   ViewRefSet,
 } from '../reanimated2/ViewDescriptorsSet';
 import type { JSPropUpdater } from './JSPropUpdater';
-import type { SkipEnteringContext } from 'src/reanimated2/component/LayoutAnimationConfig';
-import type { ShadowNodeWrapper } from 'src/reanimated2/commonTypes';
+import type { SkipEnteringContext } from '../reanimated2/component/LayoutAnimationConfig';
+import type { ShadowNodeWrapper } from '../reanimated2/commonTypes';
 import type { ViewConfig } from '../ConfigHelper';
 
 export interface AnimatedProps extends Record<string, unknown> {
