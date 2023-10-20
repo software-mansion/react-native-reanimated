@@ -40,7 +40,7 @@ export interface IInlinePropManager {
 
 export interface IPropsFilter {
   filterNonAnimatedProps: (
-    component: React.Component<unknown, unknown> & AnimatedComponentClass
+    component: React.Component<unknown, unknown> & IAnimatedComponentInternal
   ) => Record<string, unknown>;
 }
 
@@ -73,7 +73,7 @@ export interface AnimatedComponentRef extends Component {
   getAnimatableRef?: () => AnimatedComponentRef;
 }
 
-export interface AnimatedComponentClass {
+export interface IAnimatedComponentInternal {
   _styles: StyleProps[] | null;
   _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
   _viewTag: number;

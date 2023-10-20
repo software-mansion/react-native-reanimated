@@ -9,7 +9,7 @@ import type {
   AnimatedComponentProps,
   AnimatedProps,
   InitialComponentProps,
-  AnimatedComponentClass,
+  IAnimatedComponentInternal,
   IPropsFilter,
 } from './commonTypes';
 import { flattenArray, has } from './utils';
@@ -25,7 +25,7 @@ export class PropsFilter implements IPropsFilter {
   private _isFirstRender = true;
 
   public filterNonAnimatedProps(
-    component: React.Component<unknown, unknown> & AnimatedComponentClass
+    component: React.Component<unknown, unknown> & IAnimatedComponentInternal
   ): Record<string, unknown> {
     const inputProps =
       component.props as AnimatedComponentProps<InitialComponentProps>;

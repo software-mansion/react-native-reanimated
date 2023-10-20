@@ -34,7 +34,7 @@ import type {
   AnimatedProps,
   InitialComponentProps,
   AnimatedComponentRef,
-  AnimatedComponentClass,
+  IAnimatedComponentInternal,
   ViewInfo,
 } from './commonTypes';
 import { has, flattenArray } from './utils';
@@ -97,7 +97,7 @@ export function createAnimatedComponent(
 
   class AnimatedComponent
     extends React.Component<AnimatedComponentProps<InitialComponentProps>>
-    implements AnimatedComponentClass
+    implements IAnimatedComponentInternal
   {
     _styles: StyleProps[] | null = null;
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;

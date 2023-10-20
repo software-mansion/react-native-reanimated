@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import { nativeShouldBeMock } from '../reanimated2/PlatformChecker';
 import type { StyleProps } from '../reanimated2';
-import type { AnimatedComponentClass } from './commonTypes';
+import type { IAnimatedComponentInternal } from './commonTypes';
 
 interface ListenerData {
   viewTag: number;
@@ -42,7 +42,7 @@ export class JSPropUpdater {
 
   public addOnJSPropsChangeListener(
     animatedComponent: React.Component<unknown, unknown> &
-      AnimatedComponentClass
+      IAnimatedComponentInternal
   ) {
     const viewTag = findNodeHandle(animatedComponent);
     JSPropUpdater._tagToComponentMapping.set(viewTag, animatedComponent);
@@ -56,7 +56,7 @@ export class JSPropUpdater {
 
   public removeOnJSPropsChangeListener(
     animatedComponent: React.Component<unknown, unknown> &
-      AnimatedComponentClass
+      IAnimatedComponentInternal
   ) {
     const viewTag = findNodeHandle(animatedComponent);
     JSPropUpdater._tagToComponentMapping.delete(viewTag);

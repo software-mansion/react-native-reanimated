@@ -1,7 +1,7 @@
 'use strict';
 import type { StyleProps } from '../reanimated2';
 import type {
-  AnimatedComponentClass,
+  IAnimatedComponentInternal,
   AnimatedComponentProps,
   IInlinePropManager,
   ViewInfo,
@@ -135,7 +135,7 @@ export class InlinePropManager implements IInlinePropManager {
 
   public attachInlineProps(
     animatedComponent: React.Component<unknown, unknown> &
-      AnimatedComponentClass,
+      IAnimatedComponentInternal,
     viewInfo: ViewInfo
   ) {
     const newInlineProps: Record<string, unknown> =
