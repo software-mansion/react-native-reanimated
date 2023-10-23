@@ -12,15 +12,18 @@ import { LayoutAnimationConfig } from './LayoutAnimationConfig';
 
 const AnimatedFlatList = createAnimatedComponent(FlatList as any) as any;
 
-interface CellRendererProps {
+interface CellRendererComponentProps {
   onLayout: (event: LayoutChangeEvent) => void;
   // implicit `children` prop has been removed in @types/react^18.0.0
   children: React.ReactNode;
   style?: StyleProps;
 }
 
-const createCellRenderer = (itemLayoutAnimation?: ILayoutAnimationBuilder) => {
-  const cellRenderer = (props: CellRendererProps) => {
+const createCellRendererComponent = (
+  itemLayoutAnimation?: ILayoutAnimationBuilder
+) => {
+  const CellRendererComponent = (props: CellRendererComponentProps) => {
+    console.log(itemLayoutAnimation);
     return (
       <AnimatedView
         // TODO TYPESCRIPT This is temporary cast is to get rid of .d.ts file.
@@ -32,7 +35,7 @@ const createCellRenderer = (itemLayoutAnimation?: ILayoutAnimationBuilder) => {
     );
   };
 
-  return cellRenderer;
+  return CellRendererComponent;
 };
 
 interface ReanimatedFlatListPropsWithLayout<T> extends FlatListProps<T> {
@@ -68,8 +71,8 @@ export const ReanimatedFlatList = forwardRef(
       restProps.scrollEventThrottle = 1;
     }
 
-    const cellRenderer = React.useMemo(
-      () => createCellRenderer(itemLayoutAnimation),
+    const CellRendererComponent = React.useMemo(
+      () => createCellRendererComponent(itemLayoutAnimation),
       []
     );
 
@@ -77,7 +80,7 @@ export const ReanimatedFlatList = forwardRef(
       <AnimatedFlatList
         ref={ref}
         {...restProps}
-        CellRendererComponent={cellRenderer}
+        CellRendererComponent={CellRendererComponent}
       />
     );
 
