@@ -9,6 +9,7 @@ export function isJest(): boolean {
   return !!process.env.JEST_WORKER_ID;
 }
 
+// `isChromeDebugger` also returns true in Jest environment, so `isJest()` check should always be performed first
 export function isChromeDebugger(): boolean {
   return (
     !(global as localGlobal).nativeCallSyncHook ||
@@ -36,6 +37,10 @@ export function nativeShouldBeMock() {
   return isJest() || isChromeDebugger() || isWindows();
 }
 
+export function isFabric() {
+  return !!global._IS_FABRIC;
+}
+
 export function isWindowAvailable() {
   // the window object is unavailable when building the server portion of a site that uses SSG
   // this function shouldn't be used to conditionally render components
@@ -50,5 +55,5 @@ export function isReducedMotion() {
       ? // @ts-ignore Fallback if `window` is undefined.
         !window.matchMedia('(prefers-reduced-motion: no-preference)').matches
       : false
-    : (global as localGlobal)._REANIMATED_IS_REDUCED_MOTION ?? false;
+    : !!(global as localGlobal)._REANIMATED_IS_REDUCED_MOTION;
 }

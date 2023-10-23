@@ -26,6 +26,7 @@ import { getShadowNodeWrapperFromRef } from '../reanimated2/fabricUtils';
 import { removeFromPropsRegistry } from '../reanimated2/PropsRegistry';
 import { getReduceMotionFromConfig } from '../reanimated2/animation/util';
 import { maybeBuild } from '../animationBuilder';
+import { SkipEnteringContext } from '../reanimated2/component/LayoutAnimationConfig';
 import type { AnimateProps } from '../reanimated2';
 import { JSPropUpdater } from './JSPropUpdater';
 import type {
@@ -35,11 +36,23 @@ import type {
 } from './utils';
 import { has, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
-import { isJest, isWeb, shouldBeUseWeb } from '../reanimated2/PlatformChecker';
+import {
+  isFabric,
+  isJest,
+  isWeb,
+  shouldBeUseWeb,
+} from '../reanimated2/PlatformChecker';
+import type { ViewInfo } from './InlinePropManager';
 import { InlinePropManager } from './InlinePropManager';
 import { PropsFilter } from './PropsFilter';
+import {
+  startWebLayoutAnimation,
+  tryActivateLayoutTransition,
+  configureWebLayoutAnimations,
+} from '../reanimated2/layoutReanimation/web';
 
 const IS_WEB = isWeb();
+const IS_FABRIC = isFabric();
 
 function onlyAnimatedStyles(styles: StyleProps[]): StyleProps[] {
   return styles.filter((style) => style?.viewDescriptors);
@@ -99,7 +112,10 @@ export function createAnimatedComponent(
     _JSPropUpdater = new JSPropUpdater();
     _InlinePropManager = new InlinePropManager();
     _PropsFilter = new PropsFilter();
+    _viewInfo?: ViewInfo;
     static displayName: string;
+    static contextType = SkipEnteringContext;
+    context!: React.ContextType<typeof SkipEnteringContext>;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
@@ -113,6 +129,15 @@ export function createAnimatedComponent(
       this._JSPropUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+
+      if (IS_WEB) {
+        configureWebLayoutAnimations();
+        startWebLayoutAnimation(
+          this.props,
+          this._component as HTMLElement,
+          LayoutAnimationType.ENTERING
+        );
+      }
     }
 
     componentWillUnmount() {
@@ -121,6 +146,14 @@ export function createAnimatedComponent(
       this._detachStyles();
       this._InlinePropManager.detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
+
+      if (IS_WEB) {
+        startWebLayoutAnimation(
+          this.props,
+          this._component as HTMLElement,
+          LayoutAnimationType.EXITING
+        );
+      }
     }
 
     _getEventViewRef() {
@@ -175,7 +208,7 @@ export function createAnimatedComponent(
         if (this.props.animatedProps?.viewDescriptors) {
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
-        if (global._IS_FABRIC) {
+        if (IS_FABRIC) {
           removeFromPropsRegistry(this._viewTag);
         }
       }
@@ -224,7 +257,11 @@ export function createAnimatedComponent(
       }
     }
 
-    _getViewInfo() {
+    _getViewInfo(): ViewInfo {
+      if (this._viewInfo !== undefined) {
+        return this._viewInfo;
+      }
+
       let viewTag: number | HTMLElement | null;
       let viewName: string | null;
       let shadowNodeWrapper: ShadowNodeWrapper | null = null;
@@ -253,18 +290,19 @@ export function createAnimatedComponent(
         // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
         viewTag = hostInstance?._nativeTag;
         /**
-         * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/packages/react-native/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
+         * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/Components/ScrollView/ScrollViewNativeComponent.js#L24).
          * The name we're looking for is in the field named uiViewClassName.
          */
         viewName = hostInstance?.viewConfig?.uiViewClassName;
 
         viewConfig = hostInstance?.viewConfig;
 
-        if (global._IS_FABRIC) {
+        if (IS_FABRIC) {
           shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
         }
       }
-      return { viewTag, viewName, shadowNodeWrapper, viewConfig };
+      this._viewInfo = { viewTag, viewName, shadowNodeWrapper, viewConfig };
+      return this._viewInfo;
     }
 
     _attachAnimatedStyles() {
@@ -353,11 +391,24 @@ export function createAnimatedComponent(
     }
 
     componentDidUpdate(
-      prevProps: AnimatedComponentProps<InitialComponentProps>
+      prevProps: AnimatedComponentProps<InitialComponentProps>,
+      _prevState: Readonly<unknown>,
+      // This type comes straight from React
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      snapshot?: any
     ) {
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+
+      // Snapshot won't be undefined because it comes from getSnapshotBeforeUpdate method
+      if (IS_WEB && snapshot !== null) {
+        tryActivateLayoutTransition(
+          this.props,
+          this._component as HTMLElement,
+          snapshot
+        );
+      }
     }
 
     _setComponentRef = setAndForwardRef<Component | HTMLElement>({
@@ -391,7 +442,8 @@ export function createAnimatedComponent(
               )
             );
           }
-          if (entering) {
+          const skipEntering = this.context?.current;
+          if (entering && !skipEntering) {
             configureLayoutAnimations(
               tag,
               LayoutAnimationType.ENTERING,
@@ -442,12 +494,36 @@ export function createAnimatedComponent(
       },
     });
 
+    // This is a component lifecycle method from React, therefore we are not calling it directly.
+    // It is called before the component gets rerendered. This way we can access components' position before it changed
+    // and later on, in componentDidUpdate, calculate translation for layout transition.
+    getSnapshotBeforeUpdate() {
+      if (
+        (this._component as HTMLElement).getBoundingClientRect !== undefined
+      ) {
+        return (this._component as HTMLElement).getBoundingClientRect();
+      }
+
+      return null;
+    }
+
     render() {
       const props = this._PropsFilter.filterNonAnimatedProps(this);
       this._PropsFilter.onRender();
 
       if (isJest()) {
         props.animatedStyle = this.animatedStyle;
+      }
+
+      // Layout animations on web are set inside `componentDidMount` method, which is called after first render.
+      // Because of that we can encounter a situation in which component is visible for a short amount of time, and later on animation triggers.
+      // I've tested that on various browsers and devices and it did not happen to me. To be sure that it won't happen to someone else,
+      // I've decided to hide component at first render. Its visibility is reset in `componentDidMount`.
+      if (IS_WEB && props.entering) {
+        props.style = {
+          ...(props.style ?? {}),
+          visibility: 'hidden', // Hide component until `componentDidMount` triggers
+        };
       }
 
       const platformProps = Platform.select({

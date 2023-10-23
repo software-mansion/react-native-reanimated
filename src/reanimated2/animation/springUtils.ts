@@ -28,11 +28,17 @@ export type SpringConfig = {
     }
 );
 
+// This type contains all the properties from SpringConfig, which are changed to be required, except for optional 'reduceMotion'
+export type DefaultSpringConfig = {
+  [K in keyof Required<SpringConfig>]: K extends 'reduceMotion'
+    ? Required<SpringConfig>[K] | undefined
+    : Required<SpringConfig>[K];
+};
 export type WithSpringConfig = SpringConfig;
 
 export interface SpringConfigInner {
   useDuration: boolean;
-  configIsInvalid: boolean;
+  skipAnimation: boolean;
 }
 
 export interface SpringAnimation extends Animation<SpringAnimation> {
@@ -51,6 +57,35 @@ export interface InnerSpringAnimation
   extends Omit<SpringAnimation, 'toValue' | 'current'> {
   toValue: number;
   current: number;
+}
+export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
+  'worklet';
+  let errorMessage = '';
+  (
+    [
+      'stiffness',
+      'damping',
+      'dampingRatio',
+      'restDisplacementThreshold',
+      'restSpeedThreshold',
+      'mass',
+    ] as const
+  ).forEach((prop) => {
+    const value = config[prop];
+    if (value <= 0) {
+      errorMessage += `, ${prop} must be grater than zero but got ${value}`;
+    }
+  });
+
+  if (config.duration < 0) {
+    errorMessage += `, duration can't be negative, got ${config.duration}`;
+  }
+
+  if (errorMessage !== '') {
+    console.warn('[Reanimated] Invalid spring config' + errorMessage);
+  }
+
+  return errorMessage === '';
 }
 
 function bisectRoot({
@@ -83,7 +118,7 @@ function bisectRoot({
 
 export function initialCalculations(
   mass = 0,
-  config: Record<keyof SpringConfig, any> & SpringConfigInner
+  config: DefaultSpringConfig & SpringConfigInner
 ): {
   zeta: number;
   omega0: number;
@@ -91,7 +126,7 @@ export function initialCalculations(
 } {
   'worklet';
 
-  if (config.configIsInvalid) {
+  if (config.skipAnimation) {
     return { zeta: 0, omega0: 0, omega1: 0 };
   }
 
@@ -118,11 +153,11 @@ export function initialCalculations(
 
 export function calculateNewMassToMatchDuration(
   x0: number,
-  config: Record<keyof SpringConfig, any> & SpringConfigInner,
+  config: DefaultSpringConfig & SpringConfigInner,
   v0: number
 ) {
   'worklet';
-  if (config.configIsInvalid) {
+  if (config.skipAnimation) {
     return 0;
   }
 
@@ -234,10 +269,7 @@ export function underDampedSpringCalculations(
 
 export function isAnimationTerminatingCalculation(
   animation: InnerSpringAnimation,
-  config: Partial<SpringConfig> &
-    Required<
-      Pick<SpringConfig, 'restSpeedThreshold' | 'restDisplacementThreshold'>
-    >
+  config: DefaultSpringConfig
 ): {
   isOvershooting: boolean;
   isVelocity: boolean;

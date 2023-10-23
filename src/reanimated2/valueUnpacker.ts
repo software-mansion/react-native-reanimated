@@ -2,8 +2,6 @@
 import { shouldBeUseWeb } from './PlatformChecker';
 import type { WorkletFunction } from './commonTypes';
 
-const IS_NATIVE = !shouldBeUseWeb();
-
 function valueUnpacker(objectToUnpack: any, category?: string): any {
   'worklet';
   let workletsCache = global.__workletsCache;
@@ -73,7 +71,7 @@ type ValueUnpacker = WorkletFunction<
   any
 >;
 
-if (__DEV__ && IS_NATIVE) {
+if (__DEV__ && !shouldBeUseWeb()) {
   if (!('__workletHash' in valueUnpacker)) {
     throw new Error('[Reanimated] `valueUnpacker` is not a worklet');
   }

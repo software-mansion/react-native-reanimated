@@ -16,9 +16,10 @@ export {
 export type {
   GestureHandlers,
   AnimatedRef,
+  DerivedValue,
   ScrollHandler,
   ScrollHandlers,
-  DerivedValue,
+  ScrollHandlerProcessed,
   FrameCallback,
   ScrollEvent,
   EventHandler,
@@ -75,6 +76,9 @@ export type {
   InterpolateHSV,
 } from './interpolateColor';
 export {
+  /**
+   * @deprecated Please use `Extrapolation` instead.
+   */
   Extrapolate,
   ColorSpace,
   interpolateColor,
@@ -87,13 +91,15 @@ export type {
   EasingFactoryFn,
 } from './Easing';
 export { Easing } from './Easing';
+export type { ComponentCoords } from './platformFunctions';
 export {
   measure,
   dispatchCommand,
   scrollTo,
   setGestureState,
-} from './NativeMethods';
-export { setNativeProps } from './SetNativeProps';
+  setNativeProps,
+  getRelativeCoords,
+} from './platformFunctions';
 export type { ParsedColorArray } from './Colors';
 export { isColor, processColor, convertToRGBA } from './Colors';
 export { createAnimatedPropAdapter } from './PropAdapters';
@@ -212,8 +218,7 @@ export {
   SharedTransition,
   SharedTransitionType,
 } from './layoutReanimation';
-export type { ComponentCoords } from './utils';
-export { getRelativeCoords, isSharedValue } from './utils';
+export { isSharedValue } from './isSharedValue';
 export type {
   StyleProps,
   SharedValue,
@@ -246,6 +251,7 @@ export {
   setUpTests,
   getAnimatedStyle,
 } from './jestUtils';
+export { LayoutAnimationConfig } from './component/LayoutAnimationConfig';
 export type {
   Adaptable,
   AdaptTransforms,

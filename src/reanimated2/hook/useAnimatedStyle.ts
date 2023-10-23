@@ -5,7 +5,6 @@ import { useEffect, useRef } from 'react';
 import { startMapper, stopMapper, makeRemote } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animation';
-import NativeReanimatedModule from '../NativeReanimated';
 import { useSharedValue } from './useSharedValue';
 import {
   buildWorkletsHash,
@@ -28,6 +27,8 @@ import type {
   WorkletFunction,
 } from '../commonTypes';
 import type { AnimatedStyle } from '../helperTypes';
+
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 interface AnimatedState {
   last: AnimatedStyle<any>;
@@ -186,7 +187,7 @@ function styleUpdater(
   for (const key in newValues) {
     const value = newValues[key];
     if (isAnimated(value)) {
-      frameTimestamp = global.__frameTimestamp || performance.now();
+      frameTimestamp = global.__frameTimestamp || _getAnimationTimestamp();
       prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
@@ -281,7 +282,7 @@ function jestStyleUpdater(
   Object.keys(newValues).forEach((key) => {
     const value = newValues[key];
     if (isAnimated(value)) {
-      frameTimestamp = global.__frameTimestamp || performance.now();
+      frameTimestamp = global.__frameTimestamp || _getAnimationTimestamp();
       prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
@@ -392,7 +393,7 @@ function checkSharedValueUsage(
 // @ts-expect-error This overload is required by our API.
 export function useAnimatedStyle<Style extends DefaultStyle>(
   updater: () => Style,
-  deps?: DependencyList | null
+  dependencies?: DependencyList | null
 ): Style;
 
 export function useAnimatedStyle<Style extends DefaultStyle>(
@@ -404,7 +405,7 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
   const viewsRef: ViewRefSet<unknown> = makeViewsRefSet();
   const initRef = useRef<AnimationRef>();
   let inputs = Object.values(updater.__closure ?? {});
-  if (shouldBeUseWeb()) {
+  if (SHOULD_BE_USE_WEB) {
     if (!inputs.length && dependencies?.length) {
       // let web work without a Babel/SWC plugin
       inputs = dependencies;
@@ -453,7 +454,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
 
   const { initial, remoteState, viewDescriptors } = initRef.current;
   const shareableViewDescriptors = viewDescriptors.shareableViewDescriptors;
-  const maybeViewRef = NativeReanimatedModule.native ? undefined : viewsRef;
+  const maybeViewRef = SHOULD_BE_USE_WEB ? viewsRef : undefined;
 
   dependencies.push(shareableViewDescriptors);
 

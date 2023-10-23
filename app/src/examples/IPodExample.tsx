@@ -7,7 +7,7 @@ import Animated, {
   useAnimatedRef,
   scrollTo,
   useAnimatedGestureHandler,
-  Extrapolate,
+  Extrapolation,
   interpolate,
 } from 'react-native-reanimated';
 import {
@@ -119,7 +119,7 @@ export default function IPodExample() {
         position.value + sign * dist * 5,
         arr,
         arr,
-        Extrapolate.CLAMP
+        Extrapolation.CLAMP
       );
       scrollTo(animatedRef, position.value, 0, false);
     },
