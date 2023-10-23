@@ -2,7 +2,7 @@
 import type { ForwardedRef } from 'react';
 import React, { Component, forwardRef } from 'react';
 import type { FlatListProps, LayoutChangeEvent } from 'react-native';
-import { FlatList, StyleSheet } from 'react-native';
+import { FlatList } from 'react-native';
 import { AnimatedView } from './View';
 import { createAnimatedComponent } from '../../createAnimatedComponent';
 import type { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
@@ -12,25 +12,21 @@ import { LayoutAnimationConfig } from './LayoutAnimationConfig';
 
 const AnimatedFlatList = createAnimatedComponent(FlatList as any) as any;
 
-interface AnimatedFlatListProps {
+interface CellRendererProps {
   onLayout: (event: LayoutChangeEvent) => void;
   // implicit `children` prop has been removed in @types/react^18.0.0
   children: React.ReactNode;
-  inverted?: boolean;
-  horizontal?: boolean;
+  style?: StyleProps;
 }
 
-const createCellRenderer = (
-  itemLayoutAnimation?: ILayoutAnimationBuilder,
-  cellStyle?: StyleProps
-) => {
-  const cellRenderer = (props: AnimatedFlatListProps) => {
+const createCellRenderer = (itemLayoutAnimation?: ILayoutAnimationBuilder) => {
+  const cellRenderer = (props: CellRendererProps) => {
     return (
       <AnimatedView
         // TODO TYPESCRIPT This is temporary cast is to get rid of .d.ts file.
         layout={itemLayoutAnimation as any}
         onLayout={props.onLayout}
-        style={cellStyle}>
+        style={props.style}>
         {props.children}
       </AnimatedView>
     );
@@ -63,12 +59,6 @@ export const ReanimatedFlatList = forwardRef(
     const { itemLayoutAnimation, skipEnteringExitingAnimations, ...restProps } =
       props;
 
-    const cellStyle = restProps?.inverted
-      ? restProps?.horizontal
-        ? styles.horizontallyInverted
-        : styles.verticallyInverted
-      : undefined;
-
     // Set default scrollEventThrottle, because user expects
     // to have continuous scroll events and
     // react-native defaults it to 50 for FlatLists.
@@ -79,8 +69,8 @@ export const ReanimatedFlatList = forwardRef(
     }
 
     const cellRenderer = React.useMemo(
-      () => createCellRenderer(itemLayoutAnimation, cellStyle),
-      [cellStyle]
+      () => createCellRenderer(itemLayoutAnimation),
+      []
     );
 
     const animatedFlatList = (
@@ -102,11 +92,6 @@ export const ReanimatedFlatList = forwardRef(
     );
   }
 ) as unknown as ReanimatedFlatList<any>;
-
-const styles = StyleSheet.create({
-  verticallyInverted: { transform: [{ scaleY: -1 }] },
-  horizontallyInverted: { transform: [{ scaleX: -1 }] },
-});
 
 export type ReanimatedFlatList<T> = typeof ReanimatedFlatListClass<T> &
   FlatList<T>;
