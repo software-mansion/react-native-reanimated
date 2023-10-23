@@ -140,6 +140,7 @@ function setElementAnimation(
   // Here we have to use `addEventListener` since element.onanimationcancel doesn't work on chrome
   element.onanimationstart = () => {
     element.addEventListener('animationcancel', animationCancelHandler);
+    element.style.translate = '';
   };
 
   scheduleAnimationCleanup(animationName, duration + delay);
@@ -200,6 +201,8 @@ export function handleLayoutTransition(
     transitionData,
     existingTransform
   );
+
+  element.style.translate = `${transitionData.translateX}px ${transitionData.translateY}px`;
 
   setElementAnimation(element, animationConfig);
 }
