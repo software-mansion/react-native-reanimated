@@ -1583,7 +1583,7 @@ describe('babel plugin', () => {
     });
   });
 
-  describe('for Web configuration', () => {
+  describe('for web configuration', () => {
     it('skips initData when REANIMATED_BABEL_PLUGIN_IS_WEB is set', () => {
       const input = html`<script>
         function foo() {
