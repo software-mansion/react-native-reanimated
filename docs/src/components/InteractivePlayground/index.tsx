@@ -8,6 +8,7 @@ import CodeBlock from '@theme/CodeBlock';
 import useSpringPlayground from './useSpringPlayground';
 import useTimingPlayground from './useTimingPlayground';
 import useInterpolateColorPlayground from './useInterpolateColorPlayground';
+import useAnimatedSensorPlayground from './useAnimatedSensorPlayground';
 
 import Reset from '@site/static/img/reset.svg';
 import ResetDark from '@site/static/img/reset-dark.svg';
@@ -25,6 +26,7 @@ export {
   useSpringPlayground,
   useTimingPlayground,
   useInterpolateColorPlayground,
+  useAnimatedSensorPlayground,
 };
 
 interface InteractivePlaygroundProps {
@@ -33,7 +35,7 @@ interface InteractivePlaygroundProps {
     code: string;
     controls: string;
     resetOptions: () => {};
-    additionalComponents: { section; chart };
+    additionalComponents?: { section; chart };
   };
 }
 
@@ -70,11 +72,11 @@ export default function InteractivePlayground(
           <div className={styles.previewWrapper}>
             <React.Fragment key={key}>{example}</React.Fragment>
           </div>
-          {additionalComponents.section}
+          {additionalComponents?.section}
           <div className={styles.wrapper}>
             <div className={styles.controls}>
               {controls}
-              {additionalComponents.chart}
+              {additionalComponents?.chart}
             </div>
             <div className={styles.codeWrapper}>
               <CodeBlock className={styles.code} language="javascript">
@@ -195,6 +197,7 @@ interface SelectProps {
   label: string;
   options: string[];
   disabled?: boolean;
+  disabledOptions?: string[];
 }
 
 const SelectStyling = {
@@ -213,6 +216,7 @@ export function SelectOption({
   label,
   options,
   disabled,
+  disabledOptions,
 }: SelectProps) {
   return (
     <div className={styles.row}>
@@ -227,6 +231,7 @@ export function SelectOption({
             <MenuItem
               key={option}
               value={option}
+              disabled={disabledOptions?.includes(option)}
               sx={{ color: 'text.secondary' }}>
               {option}
             </MenuItem>
