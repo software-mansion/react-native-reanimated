@@ -226,15 +226,14 @@ export function handleLayoutTransition(
     existingTransform
   );
 
-  if (existingTransform) {
-    const existingTransformCopy = structuredClone(existingTransform);
+  const tmpTransform = existingTransform
+    ? structuredClone(existingTransform)
+    : [];
 
-    // @ts-ignore `existingTransform` cannot be string because in that case
-    // we throw error in `extractTransformFromStyle`
-    existingTransformCopy.push(transitionData);
-
-    element.style.transform = convertTransformToString(existingTransformCopy);
-  }
+  // @ts-ignore `existingTransform` cannot be string because in that case
+  // we throw error in `extractTransformFromStyle`
+  tmpTransform.push(transitionData);
+  element.style.transform = convertTransformToString(tmpTransform);
 
   setElementAnimation(element, animationConfig, existingTransform);
 }
