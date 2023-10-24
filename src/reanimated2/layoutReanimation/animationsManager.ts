@@ -51,11 +51,6 @@ function createLayoutAnimationManager() {
         arg: Partial<SharedTransitionAnimationsValues>
       ) => LayoutAnimation
     ) {
-      console.log(
-        Object.keys(yogaValues),
-        yogaValues.currentTransformMatrix !== undefined,
-        yogaValues.targetTransformMatrix !== undefined
-      );
       if (type === LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS) {
         global.ProgressTransitionRegister.onTransitionStart(tag, yogaValues);
         return;
