@@ -9,6 +9,7 @@ import type {
   CustomConfig,
   WebEasingsNames,
 } from './config';
+import { convertTransformToString } from './animationParser';
 import type { TransitionData } from './animationParser';
 import { TransitionGenerator } from './createAnimation';
 import { scheduleAnimationCleanup } from './domUtils';
@@ -118,7 +119,8 @@ export function makeElementVisible(element: HTMLElement) {
 
 function setElementAnimation(
   element: HTMLElement,
-  animationConfig: AnimationConfig
+  animationConfig: AnimationConfig,
+  existingTransform?: any
 ) {
   const { animationName, duration, delay, easing } = animationConfig;
 
@@ -140,7 +142,7 @@ function setElementAnimation(
   // Here we have to use `addEventListener` since element.onanimationcancel doesn't work on chrome
   element.onanimationstart = () => {
     element.addEventListener('animationcancel', animationCancelHandler);
-    element.style.translate = '';
+    element.style.transform = convertTransformToString(existingTransform);
   };
 
   scheduleAnimationCleanup(animationName, duration + delay);
@@ -175,7 +177,7 @@ export function handleLayoutTransition(
   element: HTMLElement,
   animationConfig: AnimationConfig,
   transitionData: TransitionData,
-  existingTransform?: NonNullable<TransformsStyle['transform']>
+  existingTransform: TransformsStyle['transform'] | undefined
 ) {
   const { animationName } = animationConfig;
 
@@ -202,9 +204,17 @@ export function handleLayoutTransition(
     existingTransform
   );
 
-  element.style.translate = `${transitionData.translateX}px ${transitionData.translateY}px`;
+  if (existingTransform) {
+    const existingTransformCopy = structuredClone(existingTransform);
 
-  setElementAnimation(element, animationConfig);
+    // @ts-ignore existing transform cannot be string because in that case
+    // we throw error at the beginning
+    existingTransformCopy.push(transitionData);
+
+    element.style.transform = convertTransformToString(existingTransformCopy);
+  }
+
+  setElementAnimation(element, animationConfig, existingTransform);
 }
 
 export function handleExitingAnimation(

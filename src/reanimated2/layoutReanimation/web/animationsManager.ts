@@ -77,7 +77,7 @@ function chooseAction(
   animationConfig: AnimationConfig,
   element: HTMLElement,
   transitionData: TransitionData,
-  transform?: NonNullable<TransformsStyle['transform']>
+  transform: TransformsStyle['transform'] | undefined
 ) {
   switch (animationType) {
     case LayoutAnimationType.ENTERING:
@@ -96,6 +96,27 @@ function chooseAction(
     case LayoutAnimationType.EXITING:
       handleExitingAnimation(element, animationConfig);
       break;
+  }
+}
+
+function extractTransformFromStyle(style: StyleProps) {
+  if (!style) {
+    return;
+  }
+
+  if (typeof style.transform === 'string') {
+    throw new Error('[Reanimated] String transform is currently unsupported.');
+  }
+
+  if (!Array.isArray(style)) {
+    return style.transform;
+  }
+
+  // Only last transform should be considered
+  for (let i = style.length - 1; i >= 0; --i) {
+    if (style[i].transform) {
+      return style[i].transform;
+    }
   }
 }
 
@@ -128,7 +149,7 @@ export function startWebLayoutAnimation<
     return;
   }
 
-  const transform = (props.style as StyleProps)?.transform;
+  const transform = extractTransformFromStyle(props.style as StyleProps);
 
   const animationName = transform
     ? createAnimationWithExistingTransform(initialAnimationName, transform)
