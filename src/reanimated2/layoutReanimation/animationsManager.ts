@@ -34,7 +34,6 @@ function stopObservingProgress(
   _notifyAboutEnd(tag, removeView);
 }
 
-// This function works with both layout and shared transition tag animations
 function createLayoutAnimationManager() {
   'worklet';
   const enteringAnimationForTag = new Map();
@@ -45,7 +44,7 @@ function createLayoutAnimationManager() {
       tag: number,
       type: LayoutAnimationType,
       /**
-       * This creates an animation manager for both Layout animations and Shared Transition Elements animations.
+       * createLayoutAnimationManager creates an animation manager for both Layout animations and Shared Transition Elements animations.
        */
       yogaValues: Partial<SharedTransitionAnimationsValues>,
       config: (
