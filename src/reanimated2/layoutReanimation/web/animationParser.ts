@@ -69,8 +69,12 @@ export function convertAnimationObjectToKeyframes(
 }
 
 export function convertTransformToString(
-  transform: NonNullable<TransformsStyle['transform']>
+  transform: NonNullable<TransformsStyle['transform']> | undefined
 ) {
+  if (!transform) {
+    return '';
+  }
+
   type RNTransformProp = (typeof transform)[number];
 
   let transformString = '';

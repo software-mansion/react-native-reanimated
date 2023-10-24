@@ -16,6 +16,7 @@ import { scheduleAnimationCleanup } from './domUtils';
 import { _updatePropsJS } from '../../js-reanimated';
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { ReduceMotion } from '../../commonTypes';
+import type { StyleProps } from '../../commonTypes';
 import { useReducedMotion } from '../../hook/useReducedMotion';
 
 function getEasingFromConfig(config: CustomConfig): string {
@@ -89,6 +90,27 @@ function getReversedFromConfig(config: CustomConfig) {
   return !!config.reversed;
 }
 
+export function extractTransformFromStyle(style: StyleProps) {
+  if (!style) {
+    return;
+  }
+
+  if (typeof style.transform === 'string') {
+    throw new Error('[Reanimated] String transform is currently unsupported.');
+  }
+
+  if (!Array.isArray(style)) {
+    return style.transform;
+  }
+
+  // Only last transform should be considered
+  for (let i = style.length - 1; i >= 0; --i) {
+    if (style[i].transform) {
+      return style[i].transform;
+    }
+  }
+}
+
 export function getProcessedConfig(
   animationName: string,
   config: CustomConfig,
@@ -120,7 +142,7 @@ export function makeElementVisible(element: HTMLElement) {
 function setElementAnimation(
   element: HTMLElement,
   animationConfig: AnimationConfig,
-  existingTransform?: any
+  existingTransform?: TransformsStyle['transform']
 ) {
   const { animationName, duration, delay, easing } = animationConfig;
 

@@ -7,6 +7,7 @@ import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { StyleProps } from '../../commonTypes';
 import { createAnimationWithExistingTransform } from './createAnimation';
 import {
+  extractTransformFromStyle,
   getProcessedConfig,
   handleEnteringAnimation,
   handleExitingAnimation,
@@ -96,27 +97,6 @@ function chooseAction(
     case LayoutAnimationType.EXITING:
       handleExitingAnimation(element, animationConfig);
       break;
-  }
-}
-
-function extractTransformFromStyle(style: StyleProps) {
-  if (!style) {
-    return;
-  }
-
-  if (typeof style.transform === 'string') {
-    throw new Error('[Reanimated] String transform is currently unsupported.');
-  }
-
-  if (!Array.isArray(style)) {
-    return style.transform;
-  }
-
-  // Only last transform should be considered
-  for (let i = style.length - 1; i >= 0; --i) {
-    if (style[i].transform) {
-      return style[i].transform;
-    }
   }
 }
 
