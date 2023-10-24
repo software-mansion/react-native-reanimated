@@ -75,7 +75,8 @@ export function convertTransformToString(
 
   let transformString = '';
 
-  // @ts-ignore It cannot be string
+  // @ts-ignore `transform` cannot be string because in that case
+  // we throw error in `extractTransformFromStyle`
   transform.forEach((transformObject: RNTransformProp) => {
     for (const [key, value] of Object.entries(transformObject)) {
       if (key === 'reversed') {

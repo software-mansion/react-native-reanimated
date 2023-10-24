@@ -21,7 +21,8 @@ function addPxToTranslate(
 ) {
   type RNTransformProp = (typeof existingTransform)[number];
 
-  // @ts-ignore It cannot be string
+  // @ts-ignore `existingTransform` cannot be string because in that case
+  // we throw error in `extractTransformFromStyle`
   const newTransform = existingTransform.map(
     (transformProp: RNTransformProp) => {
       const newTransformProp: ReanimatedWebTransformProperties = {};

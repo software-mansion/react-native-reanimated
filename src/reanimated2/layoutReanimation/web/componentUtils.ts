@@ -207,8 +207,8 @@ export function handleLayoutTransition(
   if (existingTransform) {
     const existingTransformCopy = structuredClone(existingTransform);
 
-    // @ts-ignore existing transform cannot be string because in that case
-    // we throw error at the beginning
+    // @ts-ignore `existingTransform` cannot be string because in that case
+    // we throw error in `extractTransformFromStyle`
     existingTransformCopy.push(transitionData);
 
     element.style.transform = convertTransformToString(existingTransformCopy);
