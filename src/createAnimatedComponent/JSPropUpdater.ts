@@ -43,9 +43,11 @@ export class JSPropUpdater {
     this._reanimatedEventEmitter = new NativeEventEmitter(reanimatedModule);
   }
 
-  public addOnJSPropsChangeListener(animatedComponent: WebAnimatedComponent) {
+  public addOnJSPropsChangeListener(
+    animatedComponent: React.Component<unknown, unknown>
+  ) {
     const viewTag = isWeb()
-      ? animatedComponent._component
+      ? (animatedComponent as WebAnimatedComponent)._component
       : findNodeHandle(animatedComponent);
 
     JSPropUpdater._tagToComponentMapping.set(viewTag, animatedComponent);
@@ -58,10 +60,10 @@ export class JSPropUpdater {
   }
 
   public removeOnJSPropsChangeListener(
-    animatedComponent: WebAnimatedComponent
+    animatedComponent: React.Component<unknown, unknown>
   ) {
     const viewTag = isWeb()
-      ? animatedComponent._component
+      ? (animatedComponent as WebAnimatedComponent)._component
       : findNodeHandle(animatedComponent);
     JSPropUpdater._tagToComponentMapping.delete(viewTag);
     if (JSPropUpdater._tagToComponentMapping.size === 0) {
