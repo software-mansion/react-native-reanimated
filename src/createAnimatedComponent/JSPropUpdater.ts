@@ -4,12 +4,16 @@ import {
   NativeModules,
   findNodeHandle,
 } from 'react-native';
-import { nativeShouldBeMock } from '../reanimated2/PlatformChecker';
+import { isWeb, nativeShouldBeMock } from '../reanimated2/PlatformChecker';
 import type { StyleProps } from '../reanimated2';
 
 interface ListenerData {
   viewTag: number;
   props: StyleProps;
+}
+
+interface WebAnimatedComponent extends React.Component<unknown, unknown> {
+  _component: HTMLElement;
 }
 
 export class JSPropUpdater {
@@ -39,10 +43,11 @@ export class JSPropUpdater {
     this._reanimatedEventEmitter = new NativeEventEmitter(reanimatedModule);
   }
 
-  public addOnJSPropsChangeListener(
-    animatedComponent: React.Component<unknown, unknown>
-  ) {
-    const viewTag = findNodeHandle(animatedComponent);
+  public addOnJSPropsChangeListener(animatedComponent: WebAnimatedComponent) {
+    const viewTag = isWeb()
+      ? animatedComponent._component
+      : findNodeHandle(animatedComponent);
+
     JSPropUpdater._tagToComponentMapping.set(viewTag, animatedComponent);
     if (JSPropUpdater._tagToComponentMapping.size === 1) {
       this._reanimatedEventEmitter.addListener(
@@ -53,9 +58,11 @@ export class JSPropUpdater {
   }
 
   public removeOnJSPropsChangeListener(
-    animatedComponent: React.Component<unknown, unknown>
+    animatedComponent: WebAnimatedComponent
   ) {
-    const viewTag = findNodeHandle(animatedComponent);
+    const viewTag = isWeb()
+      ? animatedComponent._component
+      : findNodeHandle(animatedComponent);
     JSPropUpdater._tagToComponentMapping.delete(viewTag);
     if (JSPropUpdater._tagToComponentMapping.size === 0) {
       this._reanimatedEventEmitter.removeAllListeners(
