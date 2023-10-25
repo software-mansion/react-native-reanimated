@@ -31,6 +31,7 @@ const App = () => (
       stackAnimation: 'none',
       goBackGesture: 'swipeRight',
       transitionAnimation: ScreenTransition.horizontal,
+      gestureEnabled: false,
     }}>
     <Stack.Screen
       name="ScreenA"

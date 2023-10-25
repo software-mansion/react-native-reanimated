@@ -39,7 +39,6 @@ function applyStyle(
     value: [{ tag: topScreenTag, name: 'RCTView' }],
   };
   updateProps(topScreenDescriptor as any, topStyle, null as any);
-
   const belowTopScreenTag = screenTransitionConfig.belowTopScreenTag;
   const belowTopScreenFrame =
     screenTransitionConfig.screenTransition.belowTopScreenFrame;
@@ -61,6 +60,36 @@ export function startScreenTransition(
   });
 }
 
+function easing(x: number): number {
+  'worklet';
+  return 1 - Math.pow(1 - x, 5);
+}
+
+const VELOCITY = 300;
+
+function maybeScheduleNextFrame(
+  step: () => void, 
+  isScreenReachDestination: boolean, 
+  screenTransitionConfig: ScreenTransitionConfig
+) {
+  'worklet';
+  if (!isScreenReachDestination) {
+    requestAnimationFrame(step);
+  } else {
+    if (screenTransitionConfig.onFinishAnimation) {
+      screenTransitionConfig.onFinishAnimation();
+    }
+  }
+}
+
+function computeProgress(startingTimestamp: number, distance: number) {
+  'worklet';
+  const elapsedTime = (_getAnimationTimestamp() - startingTimestamp) / 1000;
+  const currentPosition = VELOCITY * elapsedTime;
+  const progress = currentPosition / distance;
+  return progress;
+}
+
 export function finishScreenTransition(
   screenTransitionConfig: ScreenTransitionConfig
 ) {
@@ -68,7 +97,7 @@ export function finishScreenTransition(
   screenTransitionConfig.sharedEvent.removeListener(
     screenTransitionConfig.stackTag
   );
-  const event = screenTransitionConfig.sharedEvent.value;
+  const event = {...screenTransitionConfig.sharedEvent.value};
   const isTransitionCanceled = screenTransitionConfig.isTransitionCanceled;
   const goBackGesture = screenTransitionConfig.goBackGesture;
   const screenSize = screenTransitionConfig.screenDimensions;
@@ -76,30 +105,30 @@ export function finishScreenTransition(
   let step = () => {
     // noop
   };
+  // console.log(event, _getAnimationTimestamp(), event.translationX);
+  let startingTimestamp = _getAnimationTimestamp();
   if (goBackGesture === 'swipeRight') {
+    const startingPosition = event.translationX;
+    const finalPosition = isTransitionCanceled ? 0 : screenSize.width;
+    const distance = Math.abs(finalPosition - startingPosition);
     step = () => {
+      const progress = computeProgress(startingTimestamp, distance);
       let isScreenReachDestination = false;
       if (isTransitionCanceled) {
-        event.translationX -= 400 * 0.016;
-        if (event.translationX < 0) {
+        event.translationX = startingPosition - distance * easing(progress);
+        if (event.translationX <= 0) {
           isScreenReachDestination = true;
           event.translationX = 0;
         }
       } else {
-        event.translationX += 400 * 0.016;
-        if (event.translationX > screenSize.width) {
+        event.translationX = startingPosition + distance * easing(progress);
+        if (event.translationX >= screenSize.width) {
           isScreenReachDestination = true;
           event.translationX = screenSize.width;
         }
       }
       applyStyle(screenTransitionConfig, event);
-      if (!isScreenReachDestination) {
-        requestAnimationFrame(step);
-      } else {
-        if (screenTransitionConfig.onFinishAnimation) {
-          screenTransitionConfig.onFinishAnimation();
-        }
-      }
+      maybeScheduleNextFrame(step, isScreenReachDestination, screenTransitionConfig);
     };
   }
 
@@ -120,13 +149,7 @@ export function finishScreenTransition(
         }
       }
       applyStyle(screenTransitionConfig, event);
-      if (!isScreenReachDestination) {
-        requestAnimationFrame(step);
-      } else {
-        if (screenTransitionConfig.onFinishAnimation) {
-          screenTransitionConfig.onFinishAnimation();
-        }
-      }
+      maybeScheduleNextFrame(step, isScreenReachDestination, screenTransitionConfig);
     };
   }
 
@@ -147,13 +170,7 @@ export function finishScreenTransition(
         }
       }
       applyStyle(screenTransitionConfig, event);
-      if (!isScreenReachDestination) {
-        requestAnimationFrame(step);
-      } else {
-        if (screenTransitionConfig.onFinishAnimation) {
-          screenTransitionConfig.onFinishAnimation();
-        }
-      }
+      maybeScheduleNextFrame(step, isScreenReachDestination, screenTransitionConfig);
     };
   }
 
@@ -174,13 +191,7 @@ export function finishScreenTransition(
         }
       }
       applyStyle(screenTransitionConfig, event);
-      if (!isScreenReachDestination) {
-        requestAnimationFrame(step);
-      } else {
-        if (screenTransitionConfig.onFinishAnimation) {
-          screenTransitionConfig.onFinishAnimation();
-        }
-      }
+      maybeScheduleNextFrame(step, isScreenReachDestination, screenTransitionConfig);
     };
   }
   step();

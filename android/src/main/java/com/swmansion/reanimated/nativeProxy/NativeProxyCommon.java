@@ -15,6 +15,7 @@ import com.facebook.react.bridge.ReadableNativeArray;
 import com.facebook.react.devsupport.interfaces.DevSupportManager;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
+import com.swmansion.common.ScreenTransitionManager;
 import com.swmansion.reanimated.AndroidUIScheduler;
 import com.swmansion.reanimated.BuildConfig;
 import com.swmansion.reanimated.NativeProxy;
@@ -42,6 +43,7 @@ public abstract class NativeProxyCommon {
   protected AndroidUIScheduler mAndroidUIScheduler;
   private ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
+  private final ScreenTransitionManager screenTransitionManager;
   private ReanimatedKeyboardEventListener reanimatedKeyboardEventListener;
   private Long firstUptime = SystemClock.uptimeMillis();
   private boolean slowAnimationsEnabled = false;
@@ -65,6 +67,18 @@ public abstract class NativeProxyCommon {
       tempHandlerStateManager = null;
     }
     gestureHandlerStateManager = tempHandlerStateManager;
+
+    ScreenTransitionManager tmpScreenTransitionManager;
+    try {
+      Class<NativeModule> screensModuleClass =
+              (Class<NativeModule>)
+                      Class.forName("com.swmansion.rnscreens.ScreensModule");
+      tmpScreenTransitionManager =
+              (ScreenTransitionManager) context.getNativeModule(screensModuleClass);
+    } catch (ClassCastException | ClassNotFoundException e) {
+      tmpScreenTransitionManager = null;
+    }
+    screenTransitionManager = tmpScreenTransitionManager;
   }
 
   protected native void installJSIBindings();
@@ -261,5 +275,23 @@ public abstract class NativeProxyCommon {
     if (!mNodesManager.isAnimationRunning()) {
       mNodesManager.performOperations();
     }
+  }
+
+  @DoNotStrip
+  @SuppressWarnings("unused")
+  protected int[] startScreenTransition(int stackTag) {
+    return screenTransitionManager.startTransition(stackTag);
+  }
+
+  @DoNotStrip
+  @SuppressWarnings("unused")
+  protected void updateScreenTransition(int stackTag, double progress) {
+    screenTransitionManager.updateTransition(stackTag, progress);
+  }
+
+  @DoNotStrip
+  @SuppressWarnings("unused")
+  protected void finishScreenTransition(int stackTag, boolean canceled) {
+    screenTransitionManager.finishTransition(stackTag, canceled);
   }
 }
