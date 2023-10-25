@@ -172,10 +172,6 @@ class Quaternion {
       z = euler._z,
       order = euler._order;
 
-    // http://www.mathworks.com/matlabcentral/fileexchange/
-    // 	20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/
-    //	content/SpinCalc.m
-
     const cos = Math.cos;
     const sin = Math.sin;
 
@@ -243,8 +239,6 @@ class Quaternion {
   }
 
   setFromAxisAngle(axis, angle) {
-    // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/index.htm
-
     // assumes axis is normalized
 
     const halfAngle = angle / 2,
@@ -261,8 +255,6 @@ class Quaternion {
   }
 
   setFromRotationMatrix(m) {
-    // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
-
     // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
 
     const te = m.elements,
@@ -434,8 +426,6 @@ class Quaternion {
   }
 
   multiplyQuaternions(a, b) {
-    // from http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/code/index.htm
-
     const qax = a._x,
       qay = a._y,
       qaz = a._z,
@@ -463,8 +453,6 @@ class Quaternion {
       y = this._y,
       z = this._z,
       w = this._w;
-
-    // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
 
     let cosHalfTheta = w * qb._w + x * qb._x + y * qb._y + z * qb._z;
 
@@ -523,7 +511,6 @@ class Quaternion {
   }
 
   random() {
-    // Derived from http://planning.cs.uiuc.edu/node198.html
     // Note, this source uses w, x, y, z ordering,
     // so we swap the order below.
 
