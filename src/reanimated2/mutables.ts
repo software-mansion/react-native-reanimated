@@ -49,6 +49,9 @@ export function makeUIMutable<T>(
     get _value(): T {
       return value;
     },
+    modify: (modifier: (value: T) => T) => {
+      valueSetter(self, modifier(value), true);
+    },
     addListener: (id: number, listener: (newValue: T) => void) => {
       listeners.set(id, listener);
     },
@@ -118,9 +121,13 @@ export function makeMutable<T>(
       return value;
     },
     modify: (modifier: (value: T) => T) => {
-      runOnUI(() => {
-        mutable.value = modifier(mutable.value);
-      })();
+      if (!SHOULD_BE_USE_WEB) {
+        runOnUI(() => {
+          mutable.modify(modifier);
+        })();
+      } else {
+        valueSetter(mutable, modifier(mutable.value), true);
+      }
     },
     addListener: (id: number, listener: (value: T) => void) => {
       if (!SHOULD_BE_USE_WEB) {
