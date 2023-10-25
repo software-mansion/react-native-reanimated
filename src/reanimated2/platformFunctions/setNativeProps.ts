@@ -1,12 +1,14 @@
 'use strict';
-import type { ShadowNodeWrapper, StyleProps } from './commonTypes';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from './PlatformChecker';
-
-import type { AnimatedRef } from './hook/commonTypes';
+import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
+import {
+  isChromeDebugger,
+  isFabric,
+  isJest,
+  shouldBeUseWeb,
+} from '../PlatformChecker';
+import type { AnimatedRef } from '../hook/commonTypes';
 import type { Component } from 'react';
-import { processColorsInProps } from './Colors';
-
-const IS_NATIVE = !shouldBeUseWeb();
+import { processColorsInProps } from '../Colors';
 
 export let setNativeProps: <T extends Component>(
   animatedRef: AnimatedRef<T>,
@@ -64,10 +66,12 @@ function setNativePropsDefault() {
   );
 }
 
-if (IS_NATIVE && global._IS_FABRIC) {
-  setNativeProps = setNativePropsFabric;
-} else if (IS_NATIVE) {
-  setNativeProps = setNativePropsPaper;
+if (!shouldBeUseWeb()) {
+  if (isFabric()) {
+    setNativeProps = setNativePropsFabric;
+  } else {
+    setNativeProps = setNativePropsPaper;
+  }
 } else if (isJest()) {
   setNativeProps = setNativePropsJest;
 } else if (isChromeDebugger()) {

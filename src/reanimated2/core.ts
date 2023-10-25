@@ -1,6 +1,11 @@
 'use strict';
 import NativeReanimatedModule from './NativeReanimated';
-import { nativeShouldBeMock, isWeb, shouldBeUseWeb } from './PlatformChecker';
+import {
+  nativeShouldBeMock,
+  isWeb,
+  shouldBeUseWeb,
+  isFabric,
+} from './PlatformChecker';
 import type {
   AnimatedKeyboardOptions,
   SensorConfig,
@@ -28,6 +33,8 @@ export type { WorkletRuntime } from './runtimes';
 export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export { makeMutable, makeRemote } from './mutables';
 
+const IS_FABRIC = isFabric();
+
 /**
  * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1
  */
@@ -52,7 +59,7 @@ if (shouldBeUseWeb()) {
 }
 
 export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
-  if (global._IS_FABRIC) {
+  if (IS_FABRIC) {
     throw new Error(
       '[Reanimated] `getViewProp` is not supported on Fabric yet.'
     );

@@ -1,10 +1,13 @@
 'use strict';
 import type { MeasuredDimensions, ShadowNodeWrapper } from '../commonTypes';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
+import {
+  isChromeDebugger,
+  isFabric,
+  isJest,
+  shouldBeUseWeb,
+} from '../PlatformChecker';
 import type { AnimatedRef } from '../hook/commonTypes';
 import type { Component } from 'react';
-
-const IS_NATIVE = !shouldBeUseWeb();
 
 export let measure: <T extends Component>(
   animatedRef: AnimatedRef<T>
@@ -99,10 +102,12 @@ function measureDefault() {
   return null;
 }
 
-if (IS_NATIVE && global._IS_FABRIC) {
-  measure = measureFabric;
-} else if (IS_NATIVE) {
-  measure = measurePaper;
+if (!shouldBeUseWeb()) {
+  if (isFabric()) {
+    measure = measureFabric;
+  } else {
+    measure = measurePaper;
+  }
 } else if (isJest()) {
   measure = measureJest;
 } else if (isChromeDebugger()) {

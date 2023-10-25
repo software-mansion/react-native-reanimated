@@ -124,7 +124,7 @@ class RetainingShareable : virtual public BaseClass {
 
 class ShareableJSRef : public jsi::HostObject {
  private:
-  std::shared_ptr<Shareable> value_;
+  const std::shared_ptr<Shareable> value_;
 
  public:
   explicit ShareableJSRef(std::shared_ptr<Shareable> value) : value_(value) {}
@@ -203,7 +203,7 @@ class ShareableHostObject : public Shareable {
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
-  std::shared_ptr<jsi::HostObject> hostObject_;
+  const std::shared_ptr<jsi::HostObject> hostObject_;
 };
 
 class ShareableHostFunction : public Shareable {
@@ -219,9 +219,9 @@ class ShareableHostFunction : public Shareable {
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
-  jsi::HostFunctionType hostFunction_;
-  std::string name_;
-  unsigned int paramCount_;
+  const jsi::HostFunctionType hostFunction_;
+  const std::string name_;
+  const unsigned int paramCount_;
 };
 
 class ShareableArrayBuffer : public Shareable {
@@ -334,7 +334,7 @@ class ShareableString : public Shareable {
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
-  std::string data_;
+  const std::string data_;
 };
 
 #if REACT_NATIVE_MINOR_VERSION >= 71
