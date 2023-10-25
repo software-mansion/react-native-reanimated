@@ -1,6 +1,7 @@
 import React from 'react';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import Animated, {
+  clamp,
   measure,
   useAnimatedRef,
   useAnimatedStyle,
@@ -13,34 +14,36 @@ export default function ArticleProgressExample() {
   const scrollHandler = useScrollViewOffset(scrollViewRef);
 
   const progressBarAnimatedStyle = useAnimatedStyle(() => {
-    if (!textRef.current || !scrollViewRef.current) {
-      return {};
-    }
-
     const measuredText = measure(textRef);
-    if (measuredText === null) {
+    if (
+      measuredText === null ||
+      measuredText.height === 0 ||
+      Number.isNaN(measuredText.height)
+    ) {
       return { width: 0 };
     }
 
     const measuredScroll = measure(scrollViewRef);
-    if (measuredScroll === null) {
+    if (
+      measuredScroll === null ||
+      measuredScroll.width === 0 ||
+      measuredScroll.height === 0 ||
+      Number.isNaN(measuredScroll.width) ||
+      Number.isNaN(measuredScroll.height)
+    ) {
       return { width: 0 };
     }
 
+    const currentOffset = scrollHandler.value;
     const maxOffset = measuredText.height - measuredScroll.height;
 
-    // We need this, because the useScrollViewOffset hook reports the offset of
-    // the top of the view.
-    const scrollViewHeightOffset =
-      (measuredScroll.height / maxOffset) * scrollHandler.value;
+    const progress = currentOffset / maxOffset;
+    const clampedProgress = clamp(progress, 0, 1);
 
-    const width = Math.max(
-      ((scrollHandler.value + scrollViewHeightOffset) / measuredText.height) *
-        measuredScroll.width,
-      0
-    );
+    const maxWidth = measuredScroll.width;
+    const width = clampedProgress * maxWidth;
 
-    return { width: Number.isNaN(width) ? 0 : width };
+    return { width };
   }, []);
 
   return (

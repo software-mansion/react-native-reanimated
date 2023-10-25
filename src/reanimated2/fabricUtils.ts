@@ -1,6 +1,7 @@
 'use strict';
 /* eslint-disable camelcase */
 
+import { isFabric } from './PlatformChecker';
 import type { ShadowNodeWrapper } from './commonTypes';
 
 interface HostInstance {
@@ -12,7 +13,7 @@ interface HostInstance {
 }
 
 let findHostInstance_DEPRECATED: (ref: React.Component) => HostInstance;
-if (global._IS_FABRIC) {
+if (isFabric()) {
   try {
     findHostInstance_DEPRECATED =
       // eslint-disable-next-line @typescript-eslint/no-var-requires
