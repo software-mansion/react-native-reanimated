@@ -14,7 +14,6 @@
 #include <unordered_map>
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#include "FabricUtils.h"
 #include "ReanimatedCommitMarker.h"
 #include "ShadowTreeCloner.h"
 #endif
@@ -31,7 +30,7 @@
 #include <fbjni/fbjni.h>
 #endif
 
-#ifdef DEBUG
+#ifndef NDEBUG
 #include "JSLogger.h"
 #endif
 
@@ -61,7 +60,7 @@ NativeReanimatedModule::NativeReanimatedModule(
         onRender(timestampMs);
       }),
       animatedSensorModule_(platformDepMethodsHolder),
-#ifdef DEBUG
+#ifndef NDEBUG
       layoutAnimationsManager_(std::make_shared<JSLogger>(jsScheduler_)),
 #endif
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -121,7 +120,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.dispatchCommandFunction,
 #endif
       requestAnimationFrame,
-      platformDepMethodsHolder.getCurrentTime,
+      platformDepMethodsHolder.getAnimationTimestamp,
       platformDepMethodsHolder.setGestureStateFunction,
       platformDepMethodsHolder.progressLayoutAnimation,
       platformDepMethodsHolder.endLayoutAnimation,
@@ -528,8 +527,6 @@ void NativeReanimatedModule::performOperations() {
           auto rootNode =
               oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
-          ShadowTreeCloner shadowTreeCloner{*uiManager_, surfaceId_};
-
           for (const auto &[shadowNode, props] : copiedOperationsQueue) {
             const ShadowNodeFamily &family = shadowNode->getFamily();
             react_native_assert(family.getSurfaceId() == surfaceId_);
@@ -543,7 +540,7 @@ void NativeReanimatedModule::performOperations() {
             }
 #endif
 
-            auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+            auto newRootNode = cloneShadowTreeWithNewProps(
                 rootNode, family, RawProps(rt, *props));
 
             if (newRootNode == nullptr) {

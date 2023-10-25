@@ -195,14 +195,15 @@ export class EntryExitTransition
             // @ts-ignore Read similar comment above.
             (value[transformProp] as AnimationObject).current;
           if (typeof current === 'string') {
-            if (current.includes('deg'))
+            if (current.includes('deg')) {
               return {
                 [transformProp]: '0deg',
               } as unknown as TransformArrayItem;
-            else
+            } else {
               return {
                 [transformProp]: '0',
               } as unknown as TransformArrayItem;
+            }
           } else if (transformProp.includes('translate')) {
             return { [transformProp]: 0 } as unknown as TransformArrayItem;
           } else {
