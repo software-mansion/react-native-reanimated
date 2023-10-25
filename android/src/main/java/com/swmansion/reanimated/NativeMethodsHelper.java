@@ -31,8 +31,7 @@ public class NativeMethodsHelper {
 
     float result[] = new float[6];
     result[0] = result[1] = 0;
-    for (int i = 2; i < 6; ++i)
-      result[i] = PixelUtil.toDIPFromPixel(buffer[i - 2]);
+    for (int i = 2; i < 6; ++i) result[i] = PixelUtil.toDIPFromPixel(buffer[i - 2]);
 
     return result;
   }
