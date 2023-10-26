@@ -8,7 +8,7 @@ import {
 } from './shareables';
 
 const IS_JEST = isJest();
-const IS_NATIVE = !shouldBeUseWeb();
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /**
  * An array of [worklet, args] pairs.
@@ -47,11 +47,11 @@ function callMicrotasksOnUIThread() {
   global.__callMicrotasks();
 }
 
-export const callMicrotasks = IS_NATIVE
-  ? callMicrotasksOnUIThread
-  : () => {
+export const callMicrotasks = SHOULD_BE_USE_WEB
+  ? () => {
       // on web flushing is a noop as immediates are handled by the browser
-    };
+    }
+  : callMicrotasksOnUIThread;
 
 // @ts-expect-error This overload is correct since it's what user sees in his code
 // before it's transformed by Reanimated Babel plugin.
@@ -67,12 +67,12 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
   'worklet';
-  if (__DEV__ && IS_NATIVE && _WORKLET) {
+  if (__DEV__ && !SHOULD_BE_USE_WEB && _WORKLET) {
     throw new Error(
       '[Reanimated] `runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && IS_NATIVE && worklet.__workletHash === undefined) {
+  if (__DEV__ && !SHOULD_BE_USE_WEB && worklet.__workletHash === undefined) {
     throw new Error('[Reanimated] `runOnUI` can only be used on worklets.');
   }
   return (...args) => {
@@ -134,12 +134,12 @@ export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
   'worklet';
-  if (__DEV__ && IS_NATIVE && _WORKLET) {
+  if (__DEV__ && !SHOULD_BE_USE_WEB && _WORKLET) {
     throw new Error(
       '[Reanimated] `runOnUIImmediately` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && IS_NATIVE && worklet.__workletHash === undefined) {
+  if (__DEV__ && !SHOULD_BE_USE_WEB && worklet.__workletHash === undefined) {
     throw new Error(
       '[Reanimated] `runOnUIImmediately` can only be used on worklets.'
     );
@@ -154,7 +154,7 @@ export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
   };
 }
 
-if (__DEV__ && IS_NATIVE) {
+if (__DEV__ && !SHOULD_BE_USE_WEB) {
   const f = (() => {
     'worklet';
   }) as WorkletFunction<[], void>;
@@ -198,7 +198,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
   'worklet';
   type FunWorklet = Extract<typeof fun, WorkletFunction<Args, ReturnValue>>;
   type FunDevRemote = Extract<typeof fun, DevRemoteFunction<Args, ReturnValue>>;
-  if (!IS_NATIVE || !_WORKLET) {
+  if (SHOULD_BE_USE_WEB || !_WORKLET) {
     // if we are already on the JS thread, we just schedule the worklet on the JS queue
     return (...args) =>
       queueMicrotask(

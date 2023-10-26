@@ -3,6 +3,12 @@ import MDXComponents from '@theme-original/MDXComponents';
 import InteractiveExample from '@site/src/components/InteractiveExample';
 import InteractivePlayground from '@site/src/components/InteractivePlayground';
 import CollapsibleCode from '@site/src/components/CollapsibleCode';
+import {
+  Supported,
+  NotSupported,
+  Version,
+  Spacer,
+} from '@site/src/components/Compatibility';
 import Optional from '@site/src/components/Optional';
 import Indent from '@site/src/components/Indent';
 import Row from '@site/src/components/Row';
@@ -17,6 +23,10 @@ export default {
   InteractiveExample,
   InteractivePlayground,
   CollapsibleCode,
+  Supported,
+  NotSupported,
+  Version,
+  Spacer,
   Optional,
   Indent,
   Row,

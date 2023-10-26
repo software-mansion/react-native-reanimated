@@ -31,7 +31,7 @@
 #include <fbjni/fbjni.h>
 #endif
 
-#ifdef DEBUG
+#ifndef NDEBUG
 #include "JSLogger.h"
 #endif
 
@@ -61,7 +61,7 @@ NativeReanimatedModule::NativeReanimatedModule(
         onRender(timestampMs);
       }),
       animatedSensorModule_(platformDepMethodsHolder),
-#ifdef DEBUG
+#ifndef NDEBUG
       layoutAnimationsManager_(std::make_shared<JSLogger>(jsScheduler_)),
 #endif
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -121,7 +121,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.dispatchCommandFunction,
 #endif
       requestAnimationFrame,
-      platformDepMethodsHolder.getCurrentTime,
+      platformDepMethodsHolder.getAnimationTimestamp,
       platformDepMethodsHolder.setGestureStateFunction,
       platformDepMethodsHolder.progressLayoutAnimation,
       platformDepMethodsHolder.endLayoutAnimation,

@@ -264,6 +264,11 @@
   /* Version badge */
   --swm-version-badge: var(--swm-navy-light-100);
   --swm-version-badge-background: var(--swm-navy-light-10);
+
+  /* Compatibility table */
+  --swm-compatibility-supported-background: var(--swm-green-light-80);
+  --swm-compatibility-not-supported-background: var(--swm-red-light-80);
+  --swm-compatibility-text-color: var(--swm-white);
 }
 
 :root[data-theme='dark'] {
@@ -425,6 +430,11 @@
   /* Version badge */
   --swm-version-badge: var(--swm-off-white);
   --swm-version-badge-background: var(--swm-light-off-navy);
+
+  /* Compatibility table */
+  --swm-compatibility-supported-background: var(--swm-green-dark-120);
+  --swm-compatibility-not-supported-background: var(--swm-red-dark-120);
+  --swm-compatibility-text-color: var(--swm-navy-dark-20);
 }
 
 code {

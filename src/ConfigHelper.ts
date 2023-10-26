@@ -1,8 +1,18 @@
 'use strict';
 import { PropsAllowlists } from './propsAllowlists';
-import { configureProps as jsiConfigureProps } from './reanimated2/core';
+import { jsiConfigureProps } from './reanimated2/core';
+function assertNoOverlapInLists() {
+  for (const key in PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST) {
+    if (key in PropsAllowlists.UI_THREAD_PROPS_WHITELIST) {
+      throw new Error(
+        `[Reanimated] Property \`${key}\` was whitelisted both as UI and native prop. Please remove it from one of the lists.`
+      );
+    }
+  }
+}
 
 function configureProps(): void {
+  assertNoOverlapInLists();
   jsiConfigureProps(
     Object.keys(PropsAllowlists.UI_THREAD_PROPS_WHITELIST),
     Object.keys(PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST)

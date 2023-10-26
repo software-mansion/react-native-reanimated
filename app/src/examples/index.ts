@@ -92,6 +92,7 @@ import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import SetNativePropsExample from './SetNativePropsExample';
+import ShareablesExample from './ShareablesExample';
 import SharedStyleExample from './SharedStyleExample';
 import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
 import SvgExample from './SvgExample';
@@ -127,6 +128,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🏃‍♂️',
     title: 'Worklet runtime',
     screen: WorkletRuntimeExample,
+  },
+  ShareablesExample: {
+    icon: '🖇',
+    title: 'Shareables',
+    screen: ShareablesExample,
   },
 
   // About
