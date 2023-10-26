@@ -4,6 +4,7 @@ import {
   NativeModules,
   findNodeHandle,
 } from 'react-native';
+import type { AnimatedComponentProps, InitialComponentProps } from './utils';
 import { isWeb, nativeShouldBeMock } from '../reanimated2/PlatformChecker';
 import type { StyleProps } from '../reanimated2';
 
@@ -52,7 +53,9 @@ export class JSPropUpdater {
   }
 
   public addOnJSPropsChangeListener(
-    animatedComponent: React.Component<unknown, unknown>
+    animatedComponent: React.Component<
+      AnimatedComponentProps<InitialComponentProps>
+    >
   ) {
     const viewTag = getViewTagForComponent(animatedComponent);
 
@@ -66,7 +69,9 @@ export class JSPropUpdater {
   }
 
   public removeOnJSPropsChangeListener(
-    animatedComponent: React.Component<unknown, unknown>
+    animatedComponent: React.Component<
+      AnimatedComponentProps<InitialComponentProps>
+    >
   ) {
     const viewTag = getViewTagForComponent(animatedComponent);
 
