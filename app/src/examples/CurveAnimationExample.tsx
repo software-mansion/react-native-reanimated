@@ -8,6 +8,21 @@ import Animated, {
 import { View, Button, StyleSheet } from 'react-native';
 import React, { useEffect, useState } from 'react';
 
+//TODO Make this function a parto of our API
+const withCurveTransition = (progress: number, duration = 1000) => {
+  'worklet';
+  return {
+    x: withTiming(progress, {
+      duration,
+      easing: Easing.in(Easing.ease),
+    }),
+    y: withTiming(progress, {
+      duration,
+      easing: Easing.out(Easing.ease),
+    }),
+  };
+};
+
 export default function AnimatedStyleUpdateExample() {
   const [toggle, setToggle] = useState(false);
   const transition = useSharedValue(0);
@@ -18,14 +33,8 @@ export default function AnimatedStyleUpdateExample() {
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      marginLeft: withTiming(transition.value, {
-        duration: 300,
-        easing: Easing.in(Easing.ease),
-      }),
-      marginTop: withTiming(transition.value, {
-        duration: 300,
-        easing: Easing.out(Easing.ease),
-      }),
+      marginLeft: withCurveTransition(transition.value, 300).x,
+      marginTop: withCurveTransition(transition.value, 300).y,
     };
   });
 
