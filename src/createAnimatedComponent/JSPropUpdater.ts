@@ -18,11 +18,11 @@ interface WebAnimatedComponent<A, B> extends React.Component<A, B> {
 
 const IS_WEB = isWeb();
 
-function getViewTagForComponent(
-  animatedComponent: React.Component<unknown, unknown>
+function getViewTagForComponent<A, B>(
+  animatedComponent: React.Component<A, B>
 ) {
   return IS_WEB
-    ? (animatedComponent as WebAnimatedComponent<unknown, unknown>)._component
+    ? (animatedComponent as WebAnimatedComponent<A, B>)._component
     : findNodeHandle(animatedComponent);
 }
 
