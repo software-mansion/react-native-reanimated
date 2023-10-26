@@ -11,7 +11,15 @@ import type {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
-import { StyleSheet, Button, View, Image, ScrollView } from 'react-native';
+import {
+  StyleSheet,
+  Button,
+  View,
+  Text,
+  Image,
+  ScrollView,
+  FlatList,
+} from 'react-native';
 import type {
   PanGestureHandlerGestureEvent,
   PinchGestureHandlerGestureEvent,
@@ -19,7 +27,7 @@ import type {
 import {
   PanGestureHandler,
   PinchGestureHandler,
-  FlatList,
+  FlatList as RNGHFlatList,
 } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -463,344 +471,345 @@ function AnimatedPinchGestureHandlerTest() {
 
 // useEvent
 
-function TestUseEventNativeSyntheticEvent() {
-  type CustomEventPayload = {
-    foo: string;
-  };
-  type RNEvent = NativeSyntheticEvent<CustomEventPayload>;
-  type CustomProps = {
-    onCustomEvent: (event: RNEvent) => void;
-  };
-  function CustomComponent(props: CustomProps) {
-    return null;
-  }
-  const CustomAnimatedComponent =
-    Animated.createAnimatedComponent(CustomComponent);
+function UseEventTest() {
+  function UseEventTestNativeSyntheticEvent() {
+    type CustomEventPayload = {
+      foo: string;
+    };
+    type RNEvent = NativeSyntheticEvent<CustomEventPayload>;
+    type CustomProps = {
+      onCustomEvent: (event: RNEvent) => void;
+    };
+    function CustomComponent(props: CustomProps) {
+      return null;
+    }
+    const CustomAnimatedComponent =
+      Animated.createAnimatedComponent(CustomComponent);
 
-  const eventHandler1 = useEvent<RNEvent>((event) => {
-    event.eventName;
-    event.foo;
-    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
-    event.nativeEvent;
-  });
-
-  const eventHandler2 = useEvent<RNEvent>((event: ReanimatedEvent<RNEvent>) => {
-    event.eventName;
-    event.foo;
-    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
-    event.nativeEvent;
-  });
-
-  const eventHandler3 = useEvent((event: ReanimatedEvent<RNEvent>) => {
-    event.eventName;
-    event.foo;
-    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
-    event.nativeEvent;
-  });
-
-  const eventHandler4 = useEvent((event) => {
-    event.eventName;
-    // @ts-expect-error `useEvent` cannot know the type of the event.
-    event.foo;
-    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
-    event.nativeEvent;
-  });
-
-  const eventHandler5 = useEvent<CustomEventPayload>((event) => {
-    event.eventName;
-    event.foo;
-    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
-    event.nativeEvent;
-  });
-
-  return (
-    <>
-      <CustomAnimatedComponent onCustomEvent={eventHandler1} />;
-      <CustomAnimatedComponent onCustomEvent={eventHandler2} />;
-      <CustomAnimatedComponent onCustomEvent={eventHandler3} />;
-      <CustomAnimatedComponent onCustomEvent={eventHandler4} />;
-      {/* @ts-expect-error Properly detected wrong type */}
-      <CustomAnimatedComponent onCustomEvent={eventHandler5} />;
-    </>
-  );
-}
-
-function TestUseEventBareEvent() {
-  type CustomEventPayload = {
-    foo: string;
-  };
-  type CustomEvent = CustomEventPayload;
-  type CustomProps = {
-    onCustomEvent: (event: CustomEvent) => void;
-  };
-  function CustomComponent(props: CustomProps) {
-    return null;
-  }
-  const CustomAnimatedComponent =
-    Animated.createAnimatedComponent(CustomComponent);
-
-  const eventHandler1 = useEvent<CustomEvent>((event) => {
-    event.eventName;
-    event.foo;
-    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
-    event.nativeEvent;
-  });
-
-  const eventHandler2 = useEvent<CustomEvent>(
-    (event: ReanimatedEvent<CustomEvent>) => {
+    const eventHandler1 = useEvent<RNEvent>((event) => {
       event.eventName;
       event.foo;
       // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
       event.nativeEvent;
-    }
-  );
+    });
 
-  const eventHandler3 = useEvent((event: ReanimatedEvent<CustomEvent>) => {
-    event.eventName;
-    event.foo;
-    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
-    event.nativeEvent;
-  });
+    const eventHandler2 = useEvent<RNEvent>(
+      (event: ReanimatedEvent<RNEvent>) => {
+        event.eventName;
+        event.foo;
+        // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+        event.nativeEvent;
+      }
+    );
 
-  const eventHandler4 = useEvent((event) => {
-    event.eventName;
-    // @ts-expect-error `useEvent` cannot know the type of the event.
-    event.foo;
-    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
-    event.nativeEvent;
-  });
+    const eventHandler3 = useEvent((event: ReanimatedEvent<RNEvent>) => {
+      event.eventName;
+      event.foo;
+      // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+      event.nativeEvent;
+    });
 
-  return (
-    <>
-      <CustomAnimatedComponent onCustomEvent={eventHandler1} />;
-      <CustomAnimatedComponent onCustomEvent={eventHandler2} />;
-      <CustomAnimatedComponent onCustomEvent={eventHandler3} />;
-      <CustomAnimatedComponent onCustomEvent={eventHandler4} />;
-    </>
-  );
-}
+    const eventHandler4 = useEvent((event) => {
+      event.eventName;
+      // @ts-expect-error `useEvent` cannot know the type of the event.
+      event.foo;
+      // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+      event.nativeEvent;
+    });
 
-function TestUseEventReanimatedEvent() {
-  // This is not how we want users to use it, but it's legal.
-  type CustomEventPayload = {
-    foo: string;
-  };
-  type CustomReanimatedEvent = ReanimatedEvent<CustomEventPayload>;
-  type CustomProps = {
-    onCustomEvent: (event: CustomReanimatedEvent) => void;
-  };
-  function CustomComponent(props: CustomProps) {
-    return null;
+    const eventHandler5 = useEvent<CustomEventPayload>((event) => {
+      event.eventName;
+      event.foo;
+      // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+      event.nativeEvent;
+    });
+
+    return (
+      <>
+        <CustomAnimatedComponent onCustomEvent={eventHandler1} />;
+        <CustomAnimatedComponent onCustomEvent={eventHandler2} />;
+        <CustomAnimatedComponent onCustomEvent={eventHandler3} />;
+        <CustomAnimatedComponent onCustomEvent={eventHandler4} />;
+        {/* @ts-expect-error Properly detected wrong type */}
+        <CustomAnimatedComponent onCustomEvent={eventHandler5} />;
+      </>
+    );
   }
-  const CustomAnimatedComponent =
-    Animated.createAnimatedComponent(CustomComponent);
 
-  const eventHandler1 = useEvent<CustomReanimatedEvent>((event) => {
-    event.eventName;
-    event.foo;
-    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
-    event.nativeEvent;
-  });
+  function UseEventTestBareEvent() {
+    type CustomEventPayload = {
+      foo: string;
+    };
+    type CustomEvent = CustomEventPayload;
+    type CustomProps = {
+      onCustomEvent: (event: CustomEvent) => void;
+    };
+    function CustomComponent(props: CustomProps) {
+      return null;
+    }
+    const CustomAnimatedComponent =
+      Animated.createAnimatedComponent(CustomComponent);
 
-  const eventHandler2 = useEvent<CustomReanimatedEvent>(
-    (event: ReanimatedEvent<CustomReanimatedEvent>) => {
+    const eventHandler1 = useEvent<CustomEvent>((event) => {
       event.eventName;
       event.foo;
       // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
       event.nativeEvent;
-    }
-  );
+    });
 
-  const eventHandler3 = useEvent(
-    (event: ReanimatedEvent<CustomReanimatedEvent>) => {
+    const eventHandler2 = useEvent<CustomEvent>(
+      (event: ReanimatedEvent<CustomEvent>) => {
+        event.eventName;
+        event.foo;
+        // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+        event.nativeEvent;
+      }
+    );
+
+    const eventHandler3 = useEvent((event: ReanimatedEvent<CustomEvent>) => {
       event.eventName;
       event.foo;
       // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
       event.nativeEvent;
+    });
+
+    const eventHandler4 = useEvent((event) => {
+      event.eventName;
+      // @ts-expect-error `useEvent` cannot know the type of the event.
+      event.foo;
+      // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+      event.nativeEvent;
+    });
+
+    return (
+      <>
+        <CustomAnimatedComponent onCustomEvent={eventHandler1} />;
+        <CustomAnimatedComponent onCustomEvent={eventHandler2} />;
+        <CustomAnimatedComponent onCustomEvent={eventHandler3} />;
+        <CustomAnimatedComponent onCustomEvent={eventHandler4} />;
+      </>
+    );
+  }
+
+  function UseEventTestReanimatedEvent() {
+    // This is not how we want users to use it, but it's legal.
+    type CustomEventPayload = {
+      foo: string;
+    };
+    type CustomReanimatedEvent = ReanimatedEvent<CustomEventPayload>;
+    type CustomProps = {
+      onCustomEvent: (event: CustomReanimatedEvent) => void;
+    };
+    function CustomComponent(props: CustomProps) {
+      return null;
     }
-  );
+    const CustomAnimatedComponent =
+      Animated.createAnimatedComponent(CustomComponent);
 
-  const eventHandler4 = useEvent((event) => {
-    event.eventName;
-    // @ts-expect-error `useEvent` cannot know the type of the event.
-    event.foo;
-    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
-    event.nativeEvent;
-  });
+    const eventHandler1 = useEvent<CustomReanimatedEvent>((event) => {
+      event.eventName;
+      event.foo;
+      // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+      event.nativeEvent;
+    });
 
-  const eventHandler5 = useEvent<CustomEventPayload>((event) => {
-    event.eventName;
-    event.foo;
-    // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
-    event.nativeEvent;
-  });
-
-  return (
-    <>
-      <CustomAnimatedComponent onCustomEvent={eventHandler1} />;
-      <CustomAnimatedComponent onCustomEvent={eventHandler2} />;
-      <CustomAnimatedComponent onCustomEvent={eventHandler3} />;
-      <CustomAnimatedComponent onCustomEvent={eventHandler4} />;
-      <CustomAnimatedComponent onCustomEvent={eventHandler5} />;
-    </>
-  );
-}
-
-// useScrollViewOffset
-
-function TestUseScrollViewOffset1() {
-  const scrollViewRef = useRef<ScrollView>(null);
-  // @ts-expect-error Funny enough, it works like this in runtime,
-  // but we call TS error here for extra safety anyway.
-  const offset = useScrollViewOffset(scrollViewRef);
-
-  return (
-    // @ts-expect-error Cannot assign plain ref to Animated ref.
-    <Animated.ScrollView ref={scrollViewRef}>
-      <Animated.View style={{ opacity: offset.value }} />
-    </Animated.ScrollView>
-  );
-}
-
-function TestUseScrollViewOffset2() {
-  const scrollViewRef = useRef<Animated.ScrollView>(null);
-  // @ts-expect-error Cannot use plain ref with `useScrollViewOffset`.
-  const offset = useScrollViewOffset(scrollViewRef);
-
-  return (
-    // TODO TYPESCRIPT After `createAnimatedComponent` is fixed
-    // this shouldn't be legal (I think)
-    <Animated.ScrollView ref={scrollViewRef}>
-      <Animated.View style={{ opacity: offset.value }} />
-    </Animated.ScrollView>
-  );
-}
-
-function TestUseScrollViewOffset3() {
-  // TODO TYPESCRIPT Maybe disallow using non-animated components as
-  // generic argument for `useAnimatedRef`?
-  const scrollViewRef = useAnimatedRef<ScrollView>();
-  // @ts-expect-error Properly detects that non-animated component was used.
-  const offset = useScrollViewOffset(scrollViewRef);
-
-  return (
-    <ScrollView ref={scrollViewRef}>
-      <Animated.View style={{ opacity: offset.value }} />
-    </ScrollView>
-  );
-}
-
-function TestUseScrollViewOffset4() {
-  const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
-  const offset = useScrollViewOffset(scrollViewRef);
-
-  return (
-    <ScrollView ref={scrollViewRef}>
-      <Animated.View style={{ opacity: offset.value }} />
-    </ScrollView>
-  );
-}
-
-// Test `useHandler`
-function TestUseHandler1() {
-  type ScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
-  const dependencies = [{ isWeb: false }];
-  const handlers = {
-    onScroll: (event: ReanimatedEvent<ScrollEvent>) => {
-      'worklet';
-      console.log(event);
-    },
-  };
-
-  const { context, doDependenciesDiffer, useWeb } = useHandler(
-    handlers,
-    dependencies
-  );
-
-  const customScrollHandler = useEvent(
-    (event: ReanimatedEvent<ScrollEvent>) => {
-      'worklet';
-      const { onScroll } = handlers;
-      if (onScroll && event.eventName.endsWith('onScroll')) {
-        context.eventName = context.eventName
-          ? context.eventName + event.eventName + useWeb
-          : event.eventName + useWeb;
-        onScroll(event);
+    const eventHandler2 = useEvent<CustomReanimatedEvent>(
+      (event: ReanimatedEvent<CustomReanimatedEvent>) => {
+        event.eventName;
+        event.foo;
+        // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+        event.nativeEvent;
       }
-    },
-    ['onScroll'],
-    doDependenciesDiffer
-  );
+    );
 
-  return <Animated.ScrollView onScroll={customScrollHandler} />;
+    const eventHandler3 = useEvent(
+      (event: ReanimatedEvent<CustomReanimatedEvent>) => {
+        event.eventName;
+        event.foo;
+        // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+        event.nativeEvent;
+      }
+    );
+
+    const eventHandler4 = useEvent((event) => {
+      event.eventName;
+      // @ts-expect-error `useEvent` cannot know the type of the event.
+      event.foo;
+      // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+      event.nativeEvent;
+    });
+
+    const eventHandler5 = useEvent<CustomEventPayload>((event) => {
+      event.eventName;
+      event.foo;
+      // @ts-expect-error Inside parameter of `useEvent` is always `ReanimatedEvent`.
+      event.nativeEvent;
+    });
+
+    return (
+      <>
+        <CustomAnimatedComponent onCustomEvent={eventHandler1} />;
+        <CustomAnimatedComponent onCustomEvent={eventHandler2} />;
+        <CustomAnimatedComponent onCustomEvent={eventHandler3} />;
+        <CustomAnimatedComponent onCustomEvent={eventHandler4} />;
+        <CustomAnimatedComponent onCustomEvent={eventHandler5} />;
+      </>
+    );
+  }
 }
 
-function TestUseHandler2() {
-  type ScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
-  const dependencies = [{ isWeb: false }];
-  const handlers = {
-    onScroll: (event: ScrollEvent) => {
-      'worklet';
-      console.log(event);
-    },
-  };
+function UseScrollViewOffsetTest() {
+  function UseScrollViewOffsetTest1() {
+    const scrollViewRef = useRef<ScrollView>(null);
+    // @ts-expect-error Funny enough, it works like this in runtime,
+    // but we call TS error here for extra safety anyway.
+    const offset = useScrollViewOffset(scrollViewRef);
 
-  const { context, doDependenciesDiffer, useWeb } = useHandler(
-    // @ts-expect-error Works with `ReanimatedEvent` only.
-    handlers,
-    dependencies
-  );
+    return (
+      // @ts-expect-error Cannot assign plain ref to Animated ref.
+      <Animated.ScrollView ref={scrollViewRef}>
+        <Animated.View style={{ opacity: offset.value }} />
+      </Animated.ScrollView>
+    );
+  }
 
-  const customScrollHandler = useEvent(
-    (event: ReanimatedEvent<ScrollEvent>) => {
-      'worklet';
-      const { onScroll } = handlers;
-      if (onScroll && event.eventName.endsWith('onScroll')) {
-        context.eventName = context.eventName
-          ? context.eventName + event.eventName + useWeb
-          : event.eventName + useWeb;
-        // @ts-expect-error Works with `ReanimatedEvent` only.
-        onScroll(event);
-      }
-    },
-    ['onScroll'],
-    doDependenciesDiffer
-  );
+  function UseScrollViewOffsetTest2() {
+    const scrollViewRef = useRef<Animated.ScrollView>(null);
+    // @ts-expect-error Cannot use plain ref with `useScrollViewOffset`.
+    const offset = useScrollViewOffset(scrollViewRef);
 
-  return <Animated.ScrollView onScroll={customScrollHandler} />;
+    return (
+      <Animated.ScrollView ref={scrollViewRef}>
+        <Animated.View style={{ opacity: offset.value }} />
+      </Animated.ScrollView>
+    );
+  }
+
+  function UseScrollViewOffsetTest3() {
+    const scrollViewRef = useAnimatedRef<ScrollView>();
+    // @ts-expect-error Properly detects that non-animated component was used.
+    const offset = useScrollViewOffset(scrollViewRef);
+
+    return (
+      <ScrollView ref={scrollViewRef}>
+        <Animated.View style={{ opacity: offset.value }} />
+      </ScrollView>
+    );
+  }
+
+  function UseScrollViewOffsetTest4() {
+    const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
+    const offset = useScrollViewOffset(scrollViewRef);
+
+    return (
+      <ScrollView ref={scrollViewRef}>
+        <Animated.View style={{ opacity: offset.value }} />
+      </ScrollView>
+    );
+  }
 }
 
-function TestUseHandler3() {
-  type ScrollEvent = NativeScrollEvent;
-  const dependencies = [{ isWeb: false }];
-  const handlers = {
-    onScroll: (event: ScrollEvent) => {
-      'worklet';
-      console.log(event);
-    },
-  };
+function UseHandlerTest() {
+  function UseHandlerTest1() {
+    type ScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
+    const dependencies = [{ isWeb: false }];
+    const handlers = {
+      onScroll: (event: ReanimatedEvent<ScrollEvent>) => {
+        'worklet';
+        console.log(event);
+      },
+    };
 
-  const { context, doDependenciesDiffer, useWeb } = useHandler(
-    handlers,
-    dependencies
-  );
+    const { context, doDependenciesDiffer, useWeb } = useHandler(
+      handlers,
+      dependencies
+    );
 
-  const customScrollHandler = useEvent<NativeSyntheticEvent<ScrollEvent>>(
-    (event: ReanimatedEvent<ScrollEvent>) => {
-      'worklet';
-      const { onScroll } = handlers;
-      if (onScroll && event.eventName.endsWith('onScroll')) {
-        context.eventName = context.eventName
-          ? context.eventName + event.eventName + useWeb
-          : event.eventName + useWeb;
-        onScroll(event);
-      }
-    },
-    ['onScroll'],
-    doDependenciesDiffer
-  );
+    const customScrollHandler = useEvent(
+      (event: ReanimatedEvent<ScrollEvent>) => {
+        'worklet';
+        const { onScroll } = handlers;
+        if (onScroll && event.eventName.endsWith('onScroll')) {
+          context.eventName = context.eventName
+            ? context.eventName + event.eventName + useWeb
+            : event.eventName + useWeb;
+          onScroll(event);
+        }
+      },
+      ['onScroll'],
+      doDependenciesDiffer
+    );
 
-  return <Animated.ScrollView onScroll={customScrollHandler} />;
+    return <Animated.ScrollView onScroll={customScrollHandler} />;
+  }
+
+  function UseHandlerTest2() {
+    type ScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
+    const dependencies = [{ isWeb: false }];
+    const handlers = {
+      onScroll: (event: ScrollEvent) => {
+        'worklet';
+        console.log(event);
+      },
+    };
+
+    const { context, doDependenciesDiffer, useWeb } = useHandler(
+      // @ts-expect-error Works with `ReanimatedEvent` only.
+      handlers,
+      dependencies
+    );
+
+    const customScrollHandler = useEvent(
+      (event: ReanimatedEvent<ScrollEvent>) => {
+        'worklet';
+        const { onScroll } = handlers;
+        if (onScroll && event.eventName.endsWith('onScroll')) {
+          context.eventName = context.eventName
+            ? context.eventName + event.eventName + useWeb
+            : event.eventName + useWeb;
+          // @ts-expect-error Works with `ReanimatedEvent` only.
+          onScroll(event);
+        }
+      },
+      ['onScroll'],
+      doDependenciesDiffer
+    );
+
+    return <Animated.ScrollView onScroll={customScrollHandler} />;
+  }
+
+  function UseHandlerTest3() {
+    type ScrollEvent = NativeScrollEvent;
+    const dependencies = [{ isWeb: false }];
+    const handlers = {
+      onScroll: (event: ScrollEvent) => {
+        'worklet';
+        console.log(event);
+      },
+    };
+
+    const { context, doDependenciesDiffer, useWeb } = useHandler(
+      handlers,
+      dependencies
+    );
+
+    const customScrollHandler = useEvent<NativeSyntheticEvent<ScrollEvent>>(
+      (event: ReanimatedEvent<ScrollEvent>) => {
+        'worklet';
+        const { onScroll } = handlers;
+        if (onScroll && event.eventName.endsWith('onScroll')) {
+          context.eventName = context.eventName
+            ? context.eventName + event.eventName + useWeb
+            : event.eventName + useWeb;
+          onScroll(event);
+        }
+      },
+      ['onScroll'],
+      doDependenciesDiffer
+    );
+
+    return <Animated.ScrollView onScroll={customScrollHandler} />;
+  }
 }
 
 /**
@@ -1178,10 +1187,8 @@ function updatePropsTest() {
   // @ts-expect-error works only for useAnimatedProps
   useAnimatedStyle(() => ({}), undefined, [adapter1, adapter2, adapter3]);
 
-  // THIS SHOULD BE FIXED SOON
   useAnimatedProps(() => ({}), null, adapter1);
 
-  // THIS SHOULD BE FIXED SOON
   useAnimatedProps(() => ({}), null, [adapter2, adapter3]);
 }
 
@@ -1323,463 +1330,875 @@ function testSetGestureState() {
   // not sure what more I can test here
 }
 
-/*
-  Test Animated style
-*/
-
-function UseAnimatedStyleTest1() {
-  const sv = useSharedValue(0);
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      width: sv.value,
-    };
-  });
-  return <Animated.View style={animatedStyle} />;
-}
-
-function UseAnimatedStyleTest2() {
-  const sv = useSharedValue(true);
-  // @ts-expect-error properly detects illegal type
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      width: sv.value,
-    };
-  });
-  return <Animated.View style={animatedStyle} />;
-}
-
-function UseAnimatedStyleTest3() {
-  const sv = useSharedValue({ width: 0 });
-  const animatedStyle = useAnimatedStyle(() => {
-    return sv.value;
-  });
-  return <Animated.View style={animatedStyle} />;
-}
-
-function UseAnimatedStyleTest4() {
-  const sv = useSharedValue({ width: true });
-  // @ts-expect-error properly detects illegal type
-  const animatedStyle = useAnimatedStyle(() => {
-    return sv.value;
-  });
-  return <Animated.View style={animatedStyle} />;
-}
-
-function UseAnimatedStyleTest5() {
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: 0 }],
-    };
-  });
-  return <Animated.View style={animatedStyle} />;
-}
-
-function UseAnimatedStyleTest6() {
-  // @ts-expect-error properly detects illegal type
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ rotate: 0 }],
-    };
-  });
-  return <Animated.View style={animatedStyle} />;
-}
-
-function UseAnimatedStyleTest7() {
-  const sv = useSharedValue(0);
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: sv.value }],
-    };
-  });
-  return <Animated.View style={animatedStyle} />;
-}
-
-function UseAnimatedStyleTest8() {
-  const sv = useSharedValue(0);
-  // @ts-expect-error properly detects illegal type
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ rotate: sv.value }],
-    };
-  });
-  return <Animated.View style={animatedStyle} />;
-}
-
-function UseAnimatedStyleTest9() {
-  const sv = useSharedValue({ translateX: 0 });
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [sv.value],
-    };
-  });
-  return <Animated.View style={animatedStyle} />;
-}
-
-function UseAnimatedStyleTest10() {
-  const sv = useSharedValue({ rotate: 0 });
-  // @ts-expect-error properly detects illegal type
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [sv.value],
-    };
-  });
-  return <Animated.View style={animatedStyle} />;
-}
-
-function UseAnimatedStyleTest11() {
-  const sv = useSharedValue([{ translateX: 0 }]);
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: sv.value,
-    };
-  });
-  return <Animated.View style={animatedStyle} />;
-}
-
-function UseAnimatedStyleTest12() {
-  const sv = useSharedValue([{ rotate: 0 }]);
-  // @ts-expect-error properly detects illegal type
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: sv.value,
-    };
-  });
-  return <Animated.View style={animatedStyle} />;
-}
-
-function UseAnimatedStyleTest13() {
-  const sv = useSharedValue(0);
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      shadowOffset: {
+function UseAnimatedStyleTest() {
+  function UseAnimatedStyleTest1() {
+    const sv = useSharedValue(0);
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
         width: sv.value,
-        height: sv.value,
-      },
-    };
-  });
+      };
+    });
+    return <Animated.View style={animatedStyle} />;
+  }
 
-  return <Animated.View style={animatedStyle} />;
-}
-
-function UseAnimatedStyleTest14() {
-  const sv = useSharedValue(0);
-
-  // @ts-expect-error properly detects illegal type
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      shadowOffset: {
+  function UseAnimatedStyleTest2() {
+    const sv = useSharedValue(true);
+    // @ts-expect-error properly detects illegal type
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
         width: sv.value,
-      },
-    };
-  });
+      };
+    });
+    return <Animated.View style={animatedStyle} />;
+  }
 
-  return <Animated.View style={animatedStyle} />;
-}
+  function UseAnimatedStyleTest3() {
+    const sv = useSharedValue({ width: 0 });
+    const animatedStyle = useAnimatedStyle(() => {
+      return sv.value;
+    });
+    return <Animated.View style={animatedStyle} />;
+  }
 
-function UseAnimatedStyleTest15() {
-  const sv = useSharedValue({ width: 0, height: 0 });
+  function UseAnimatedStyleTest4() {
+    const sv = useSharedValue({ width: true });
+    // @ts-expect-error properly detects illegal type
+    const animatedStyle = useAnimatedStyle(() => {
+      return sv.value;
+    });
+    return <Animated.View style={animatedStyle} />;
+  }
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      shadowOffset: sv.value,
-    };
-  });
+  function UseAnimatedStyleTest5() {
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        transform: [{ translateX: 0 }],
+      };
+    });
+    return <Animated.View style={animatedStyle} />;
+  }
 
-  return <Animated.View style={animatedStyle} />;
-}
+  function UseAnimatedStyleTest6() {
+    // @ts-expect-error properly detects illegal type
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        transform: [{ rotate: 0 }],
+      };
+    });
+    return <Animated.View style={animatedStyle} />;
+  }
 
-function UseAnimatedStyleTest16() {
-  const sv = useSharedValue({ width: 0 });
+  function UseAnimatedStyleTest7() {
+    const sv = useSharedValue(0);
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        transform: [{ translateX: sv.value }],
+      };
+    });
+    return <Animated.View style={animatedStyle} />;
+  }
 
-  // @ts-expect-error properly detects illegal type
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      shadowOffset: sv.value,
-    };
-  });
+  function UseAnimatedStyleTest8() {
+    const sv = useSharedValue(0);
+    // @ts-expect-error properly detects illegal type
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        transform: [{ rotate: sv.value }],
+      };
+    });
+    return <Animated.View style={animatedStyle} />;
+  }
 
-  return <Animated.View style={animatedStyle} />;
-}
+  function UseAnimatedStyleTest9() {
+    const sv = useSharedValue({ translateX: 0 });
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        transform: [sv.value],
+      };
+    });
+    return <Animated.View style={animatedStyle} />;
+  }
 
-function UseAnimatedStyleTest17() {
-  const sv = useSharedValue({ shadowOffset: { width: 0, height: 0 } });
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      shadowOffset: sv.value.shadowOffset,
-    };
-  });
-  return <Animated.View style={animatedStyle} />;
-}
+  function UseAnimatedStyleTest10() {
+    const sv = useSharedValue({ rotate: 0 });
+    // @ts-expect-error properly detects illegal type
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        transform: [sv.value],
+      };
+    });
+    return <Animated.View style={animatedStyle} />;
+  }
 
-function UseAnimatedStyleTest18() {
-  const sv = useSharedValue({ shadowOffset: { width: 0 } });
-  // @ts-expect-error properly detects illegal type
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      shadowOffset: sv.value.shadowOffset,
-    };
-  });
-  return <Animated.View style={animatedStyle} />;
-}
+  function UseAnimatedStyleTest11() {
+    const sv = useSharedValue([{ translateX: 0 }]);
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        transform: sv.value,
+      };
+    });
+    return <Animated.View style={animatedStyle} />;
+  }
 
-function UseAnimatedStyleTest19() {
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      flexWrap: 'wrap',
-    };
-  });
+  function UseAnimatedStyleTest12() {
+    const sv = useSharedValue([{ rotate: 0 }]);
+    // @ts-expect-error properly detects illegal type
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        transform: sv.value,
+      };
+    });
+    return <Animated.View style={animatedStyle} />;
+  }
 
-  return <Animated.View style={animatedStyle} />;
-}
-
-function UseAnimatedStyleTest20() {
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      flexWrap: 'wrap' as const,
-    };
-  });
-  return <Animated.View style={animatedStyle} />;
-}
-
-function UseAnimatedStyleTest21() {
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      overflow: 'scroll',
-    };
-  });
-
-  return (
-    <>
-      <Animated.View style={animatedStyle} />
-      {/* @ts-expect-error properly detects illegal type */}
-      <Animated.Image source={{ uri: 'uri' }} style={animatedStyle} />
-      <Animated.Text style={animatedStyle} />
-    </>
-  );
-}
-
-function UseAnimatedStyleTest22() {
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      overflow: 'hidden',
-    };
-  });
-  return (
-    <>
-      <Animated.View style={animatedStyle} />
-      <Animated.Image source={{ uri: 'uri' }} style={animatedStyle} />
-      <Animated.Text style={animatedStyle} />
-    </>
-  );
-}
-
-function UseAnimatedStyleTest23() {
-  const animatedStyle = useAnimatedStyle(() => ({
-    // @ts-expect-error Passing a number here will work,
-    // but we don't allow for it as a part of API.
-    backgroundColor: 0x000000,
-  }));
-}
-
-function InlineStylesTest1() {
-  const animatedIndex = useSharedValue(0);
-  const backgroundColor = useDerivedValue(() => {
-    return interpolateColor(
-      animatedIndex.value,
-      [0, 1, 2],
-      ['#273D3A', '#8B645C', '#60545A']
-    );
-  });
-  <Animated.View
-    style={{
-      flex: 1,
-      height: '100%',
-      backgroundColor,
-    }}
-  />;
-}
-
-function InlineStylesTest2() {
-  const animatedFlex = useSharedValue(0);
-  <Animated.View
-    style={{
-      flex: animatedFlex,
-      height: '100%',
-    }}
-  />;
-}
-
-function InlineStylesTest3() {
-  const sv = useSharedValue(0);
-  return <Animated.View style={{ width: sv }} />;
-}
-
-function InlineStylesTest4() {
-  const sv = useSharedValue(true);
-  // @ts-expect-error properly detects illegal type
-  return <Animated.View style={{ width: sv }} />;
-}
-
-function InlineStylesTest5() {
-  const sv = useSharedValue({ width: 0 });
-  return <Animated.View style={sv} />;
-}
-
-function InlineStylesTest6() {
-  const sv = useSharedValue({ width: true });
-  // @ts-expect-error properly detects illegal type
-  return <Animated.View style={sv} />;
-}
-
-function InlineStylesTest7() {
-  const sv = useSharedValue(0);
-  return <Animated.View style={{ transform: [{ translateX: sv }] }} />;
-}
-
-function InlineStylesTest8() {
-  const sv = useSharedValue(0);
-  // @ts-expect-error properly detects illegal type
-  return <Animated.View style={{ transform: [{ rotate: sv }] }} />;
-}
-
-function InlineStylesTest9() {
-  const sv = useSharedValue({ translateX: 0 });
-  return <Animated.View style={{ transform: [sv] }} />;
-}
-
-function InlineStylesTest10() {
-  const sv = useSharedValue({ rotate: 0 });
-  // @ts-expect-error properly detects illegal type
-  return <Animated.View style={{ transform: [sv] }} />;
-}
-
-function InlineStylesTest11() {
-  const sv = useSharedValue([{ translateX: 0 }]);
-  return <Animated.View style={{ transform: sv }} />;
-}
-
-function InlineStylesTest12() {
-  const sv = useSharedValue([{ rotate: 0 }]);
-  // @ts-expect-error properly detects illegal type
-  return <Animated.View style={{ transform: sv }} />;
-}
-
-function InlineStylesTest13() {
-  const sv = useSharedValue({ transform: [{ translateX: 0 }] });
-  return <Animated.View style={sv} />;
-}
-
-function InlineStylesTest14() {
-  const sv = useSharedValue({ transform: [{ rotate: 0 }] });
-  // @ts-expect-error properly detects illegal type
-  return <Animated.View style={sv} />;
-}
-
-function InlineStylesTest15() {
-  const sv = useSharedValue(0);
-
-  return (
-    <Animated.View
-      style={{
+  function UseAnimatedStyleTest13() {
+    const sv = useSharedValue(0);
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
         shadowOffset: {
           width: sv.value,
           height: sv.value,
         },
-      }}
-    />
-  );
-}
+      };
+    });
 
-function InlineStylesTest16() {
-  const sv = useSharedValue(0);
+    return <Animated.View style={animatedStyle} />;
+  }
 
-  return (
-    <Animated.View
-      // @ts-expect-error properly detects illegal type
-      style={{
+  function UseAnimatedStyleTest14() {
+    const sv = useSharedValue(0);
+
+    // @ts-expect-error properly detects illegal type
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
         shadowOffset: {
           width: sv.value,
         },
-      }}
-    />
-  );
-}
+      };
+    });
 
-function InlineStylesTest17() {
-  const sv = useSharedValue({ width: 0, height: 0 });
+    return <Animated.View style={animatedStyle} />;
+  }
 
-  return (
-    <Animated.View
-      style={{
+  function UseAnimatedStyleTest15() {
+    const sv = useSharedValue({ width: 0, height: 0 });
+
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
         shadowOffset: sv.value,
-      }}
-    />
-  );
-}
+      };
+    });
 
-function InlineStylesTest18() {
-  const sv = useSharedValue({ width: 0 });
+    return <Animated.View style={animatedStyle} />;
+  }
 
-  return (
-    <Animated.View
-      // @ts-expect-error properly detects illegal type
-      style={{
+  function UseAnimatedStyleTest16() {
+    const sv = useSharedValue({ width: 0 });
+
+    // @ts-expect-error properly detects illegal type
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
         shadowOffset: sv.value,
-      }}
-    />
-  );
+      };
+    });
+
+    return <Animated.View style={animatedStyle} />;
+  }
+
+  function UseAnimatedStyleTest17() {
+    const sv = useSharedValue({ shadowOffset: { width: 0, height: 0 } });
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        shadowOffset: sv.value.shadowOffset,
+      };
+    });
+    return <Animated.View style={animatedStyle} />;
+  }
+
+  function UseAnimatedStyleTest18() {
+    const sv = useSharedValue({ shadowOffset: { width: 0 } });
+    // @ts-expect-error properly detects illegal type
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        shadowOffset: sv.value.shadowOffset,
+      };
+    });
+    return <Animated.View style={animatedStyle} />;
+  }
+
+  function UseAnimatedStyleTest19() {
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        flexWrap: 'wrap',
+      };
+    });
+
+    return <Animated.View style={animatedStyle} />;
+  }
+
+  function UseAnimatedStyleTest20() {
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        flexWrap: 'wrap' as const,
+      };
+    });
+    return <Animated.View style={animatedStyle} />;
+  }
+
+  function UseAnimatedStyleTest21() {
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        overflow: 'scroll',
+      };
+    });
+
+    return (
+      <>
+        <Animated.View style={animatedStyle} />
+        {/* @ts-expect-error properly detects illegal type */}
+        <Animated.Image source={{ uri: 'uri' }} style={animatedStyle} />
+        <Animated.Text style={animatedStyle} />
+      </>
+    );
+  }
+
+  function UseAnimatedStyleTest22() {
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        overflow: 'hidden',
+      };
+    });
+    return (
+      <>
+        <Animated.View style={animatedStyle} />
+        <Animated.Image source={{ uri: 'uri' }} style={animatedStyle} />
+        <Animated.Text style={animatedStyle} />
+      </>
+    );
+  }
+
+  function UseAnimatedStyleTest23() {
+    const animatedStyle = useAnimatedStyle(() => ({
+      // @ts-expect-error Passing a number here will work,
+      // but we don't allow for it as a part of API.
+      backgroundColor: 0x000000,
+    }));
+  }
 }
 
-function InlineStylesTest19() {
-  const sv = useSharedValue({ shadowOffset: { width: 0, height: 0 } });
-  return <Animated.View style={sv} />;
-}
-
-function InlineStylesTest20() {
-  const sv = useSharedValue({ shadowOffset: { width: 0 } });
-  return (
+function InlineStylesTest() {
+  function InlineStylesTest1() {
+    const animatedIndex = useSharedValue(0);
+    const backgroundColor = useDerivedValue(() => {
+      return interpolateColor(
+        animatedIndex.value,
+        [0, 1, 2],
+        ['#273D3A', '#8B645C', '#60545A']
+      );
+    });
     <Animated.View
-      // @ts-expect-error properly detects illegal type
       style={{
-        shadowOffset: sv,
+        flex: 1,
+        height: '100%',
+        backgroundColor,
       }}
-    />
-  );
+    />;
+  }
+
+  function InlineStylesTest2() {
+    const animatedFlex = useSharedValue(0);
+    <Animated.View
+      style={{
+        flex: animatedFlex,
+        height: '100%',
+      }}
+    />;
+  }
+
+  function InlineStylesTest3() {
+    const sv = useSharedValue(0);
+    return <Animated.View style={{ width: sv }} />;
+  }
+
+  function InlineStylesTest4() {
+    const sv = useSharedValue(true);
+    // @ts-expect-error properly detects illegal type
+    return <Animated.View style={{ width: sv }} />;
+  }
+
+  function InlineStylesTest5() {
+    const sv = useSharedValue({ width: 0 });
+    return <Animated.View style={sv} />;
+  }
+
+  function InlineStylesTest6() {
+    const sv = useSharedValue({ width: true });
+    // @ts-expect-error properly detects illegal type
+    return <Animated.View style={sv} />;
+  }
+
+  function InlineStylesTest7() {
+    const sv = useSharedValue(0);
+    return <Animated.View style={{ transform: [{ translateX: sv }] }} />;
+  }
+
+  function InlineStylesTest8() {
+    const sv = useSharedValue(0);
+    // @ts-expect-error properly detects illegal type
+    return <Animated.View style={{ transform: [{ rotate: sv }] }} />;
+  }
+
+  function InlineStylesTest9() {
+    const sv = useSharedValue({ translateX: 0 });
+    return <Animated.View style={{ transform: [sv] }} />;
+  }
+
+  function InlineStylesTest10() {
+    const sv = useSharedValue({ rotate: 0 });
+    // @ts-expect-error properly detects illegal type
+    return <Animated.View style={{ transform: [sv] }} />;
+  }
+
+  function InlineStylesTest11() {
+    const sv = useSharedValue([{ translateX: 0 }]);
+    return <Animated.View style={{ transform: sv }} />;
+  }
+
+  function InlineStylesTest12() {
+    const sv = useSharedValue([{ rotate: 0 }]);
+    // @ts-expect-error properly detects illegal type
+    return <Animated.View style={{ transform: sv }} />;
+  }
+
+  function InlineStylesTest13() {
+    const sv = useSharedValue({ transform: [{ translateX: 0 }] });
+    return <Animated.View style={sv} />;
+  }
+
+  function InlineStylesTest14() {
+    const sv = useSharedValue({ transform: [{ rotate: 0 }] });
+    // @ts-expect-error properly detects illegal type
+    return <Animated.View style={sv} />;
+  }
+
+  function InlineStylesTest15() {
+    const sv = useSharedValue(0);
+
+    return (
+      <Animated.View
+        style={{
+          shadowOffset: {
+            width: sv.value,
+            height: sv.value,
+          },
+        }}
+      />
+    );
+  }
+
+  function InlineStylesTest16() {
+    const sv = useSharedValue(0);
+
+    return (
+      <Animated.View
+        // @ts-expect-error properly detects illegal type
+        style={{
+          shadowOffset: {
+            width: sv.value,
+          },
+        }}
+      />
+    );
+  }
+
+  function InlineStylesTest17() {
+    const sv = useSharedValue({ width: 0, height: 0 });
+
+    return (
+      <Animated.View
+        style={{
+          shadowOffset: sv.value,
+        }}
+      />
+    );
+  }
+
+  function InlineStylesTest18() {
+    const sv = useSharedValue({ width: 0 });
+
+    return (
+      <Animated.View
+        // @ts-expect-error properly detects illegal type
+        style={{
+          shadowOffset: sv.value,
+        }}
+      />
+    );
+  }
+
+  function InlineStylesTest19() {
+    const sv = useSharedValue({ shadowOffset: { width: 0, height: 0 } });
+    return <Animated.View style={sv} />;
+  }
+
+  function InlineStylesTest20() {
+    const sv = useSharedValue({ shadowOffset: { width: 0 } });
+    return (
+      <Animated.View
+        // @ts-expect-error properly detects illegal type
+        style={{
+          shadowOffset: sv,
+        }}
+      />
+    );
+  }
+
+  function InlineStylesTest21() {
+    return <Animated.View style={{ flexWrap: 'wrap' }} />;
+  }
+
+  function InlineStylesTest22() {
+    return <Animated.View style={{ flexWrap: 'wrap' as const }} />;
+  }
+
+  function InlineStylesTest23() {
+    return (
+      <>
+        <Animated.View style={{ overflow: 'scroll' }} />;
+        <Animated.Image
+          source={{ uri: 'uri' }}
+          // @ts-expect-error properly detects illegal type */
+          style={{ overflow: 'scroll' }}
+        />
+        ;
+        <Animated.Text style={{ overflow: 'scroll' }} />;
+      </>
+    );
+  }
+
+  function InlineStylesTest24() {
+    return (
+      <>
+        <Animated.View style={{ overflow: 'hidden' }} />;
+        <Animated.Image
+          source={{ uri: 'uri' }}
+          style={{ overflow: 'hidden' }}
+        />
+        ;
+        <Animated.Text style={{ overflow: 'hidden' }} />;
+      </>
+    );
+  }
+
+  function InlineStylesTest25() {
+    // @ts-expect-error Passing a number here will work,
+    // but we don't allow for it as a part of API.
+    return <Animated.View style={{ backgroundColor: 0x000000 }} />;
+  }
 }
 
-function InlineStylesTest21() {
-  return <Animated.View style={{ flexWrap: 'wrap' }} />;
-}
+function UseAnimatedRefTest() {
+  function UseAnimatedRefTestView() {
+    const CreatedAnimatedView = Animated.createAnimatedComponent(View);
+    const plainRefPlainComponent = useRef<View>(null);
+    const animatedRefPlainComponent = useAnimatedRef<View>();
+    const plainRefAnimatedComponent = useRef<Animated.View>(null);
+    const animatedRefAnimatedComponent = useAnimatedRef<Animated.View>();
+    const plainRefCreatedComponent = useRef<typeof CreatedAnimatedView>(null);
+    const animatedRefCreatedComponent =
+      // @ts-expect-error TODO TYPESCRIPT This should work IMO
+      useAnimatedRef<typeof CreatedAnimatedView>();
 
-function InlineStylesTest22() {
-  return <Animated.View style={{ flexWrap: 'wrap' as const }} />;
-}
+    return (
+      <>
+        <View ref={plainRefPlainComponent} />
+        <View ref={animatedRefPlainComponent} />
+        <View ref={plainRefAnimatedComponent} />
+        <View ref={animatedRefAnimatedComponent} />
+        {/* @ts-expect-error Properly detects misused type. */}
+        <View ref={plainRefCreatedComponent} />
+        {/* @ts-expect-error Properly detects misused AnimatedRef. */}
+        <View ref={animatedRefCreatedComponent} />
 
-function InlineStylesTest23() {
-  return (
-    <>
-      <Animated.View style={{ overflow: 'scroll' }} />;
-      {/* @ts-expect-error properly detects illegal type */}
-      <Animated.Image source={{ uri: 'uri' }} style={{ overflow: 'scroll' }} />;
-      <Animated.Text style={{ overflow: 'scroll' }} />;
-    </>
-  );
-}
+        <Animated.View ref={plainRefPlainComponent} />
+        <Animated.View ref={animatedRefPlainComponent} />
+        <Animated.View ref={plainRefAnimatedComponent} />
+        <Animated.View ref={animatedRefAnimatedComponent} />
+        {/* @ts-expect-error Properly detects misused type. */}
+        <Animated.View ref={plainRefCreatedComponent} />
+        {/* @ts-expect-error Properly detects misused type. */}
+        <Animated.View ref={animatedRefCreatedComponent} />
 
-function InlineStylesTest24() {
-  return (
-    <>
-      <Animated.View style={{ overflow: 'hidden' }} />;
-      <Animated.Image source={{ uri: 'uri' }} style={{ overflow: 'hidden' }} />;
-      <Animated.Text style={{ overflow: 'hidden' }} />;
-    </>
-  );
-}
+        <CreatedAnimatedView ref={plainRefPlainComponent} />
+        <CreatedAnimatedView ref={animatedRefPlainComponent} />
+        <CreatedAnimatedView ref={plainRefAnimatedComponent} />
+        <CreatedAnimatedView ref={animatedRefAnimatedComponent} />
+        {/* @ts-expect-error Properly detects misused Plain Ref. */}
+        <CreatedAnimatedView ref={plainRefCreatedComponent} />
+        {/* @ts-expect-error TODO This should work!!! */}
+        <CreatedAnimatedView ref={animatedRefCreatedComponent} />
+      </>
+    );
+  }
 
-function InlineStylesTest25() {
-  // @ts-expect-error Passing a number here will work,
-  // but we don't allow for it as a part of API.
-  return <Animated.View style={{ backgroundColor: 0x000000 }} />;
+  function UseAnimatedRefTestText() {
+    const CreatedAnimatedText = Animated.createAnimatedComponent(Text);
+    const plainRefPlainComponent = useRef<Text>(null);
+    const animatedRefPlainComponent = useAnimatedRef<Text>();
+    const plainRefAnimatedComponent = useRef<Animated.Text>(null);
+    const animatedRefAnimatedComponent = useAnimatedRef<Animated.Text>();
+    const plainRefCreatedComponent = useRef<typeof CreatedAnimatedText>(null);
+    const animatedRefCreatedComponent =
+      // @ts-expect-error TODO TYPESCRIPT This should work IMO
+      useAnimatedRef<typeof CreatedAnimatedText>();
+
+    return (
+      <>
+        <Text ref={plainRefPlainComponent} />
+        <Text ref={animatedRefPlainComponent} />
+        <Text ref={plainRefAnimatedComponent} />
+        <Text ref={animatedRefAnimatedComponent} />
+        {/* @ts-expect-error Properly detects misused type. */}
+        <Text ref={plainRefCreatedComponent} />
+        {/* @ts-expect-error Properly detects misused Animated Ref. */}
+        <Text ref={animatedRefCreatedComponent} />
+
+        {/* @ts-expect-error Properly detects misused Plain Ref. */}
+        <Animated.Text ref={plainRefPlainComponent} />
+        {/* @ts-expect-error Properly detects misused type. */}
+        <Animated.Text ref={animatedRefPlainComponent} />
+        <Animated.Text ref={plainRefAnimatedComponent} />
+        <Animated.Text ref={animatedRefAnimatedComponent} />
+        {/* @ts-expect-error Properly detects misused Plain Ref */}
+        <Animated.Text ref={plainRefCreatedComponent} />
+        {/* @ts-expect-error Properly detects misused type. */}
+        <Animated.Text ref={animatedRefCreatedComponent} />
+
+        <CreatedAnimatedText ref={plainRefPlainComponent} />
+        <CreatedAnimatedText ref={animatedRefPlainComponent} />
+        <CreatedAnimatedText ref={plainRefAnimatedComponent} />
+        <CreatedAnimatedText ref={animatedRefAnimatedComponent} />
+        {/* @ts-expect-error Properly detects misused Plain Ref. */}
+        <CreatedAnimatedText ref={plainRefCreatedComponent} />
+        {/* @ts-expect-error TODO This should work!!! */}
+        <CreatedAnimatedText ref={animatedRefCreatedComponent} />
+      </>
+    );
+  }
+
+  function UseAnimatedRefTestImage() {
+    const CreatedAnimatedImage = Animated.createAnimatedComponent(Image);
+    const plainRefPlainComponent = useRef<Image>(null);
+    const animatedRefPlainComponent = useAnimatedRef<Image>();
+    const plainRefAnimatedComponent = useRef<Animated.Image>(null);
+    const animatedRefAnimatedComponent = useAnimatedRef<Animated.Image>();
+    const plainRefCreatedComponent = useRef<typeof CreatedAnimatedImage>(null);
+    const animatedRefCreatedComponent =
+      // @ts-expect-error TODO TYPESCRIPT This should work IMO
+      useAnimatedRef<typeof CreatedAnimatedImage>();
+
+    return (
+      <>
+        <Image ref={plainRefPlainComponent} source={{ uri: undefined }} />
+        <Image ref={animatedRefPlainComponent} source={{ uri: undefined }} />
+        <Image ref={plainRefAnimatedComponent} source={{ uri: undefined }} />
+        <Image ref={animatedRefAnimatedComponent} source={{ uri: undefined }} />
+        {/* @ts-expect-error Properly detects misused type. */}
+        <Image ref={plainRefCreatedComponent} source={{ uri: undefined }} />
+        {/* @ts-expect-error Properly detects misused Animated Ref. */}
+        <Image ref={animatedRefCreatedComponent} source={{ uri: undefined }} />
+
+        {/* @ts-expect-error Properly detects misused Plain Ref. */}
+        <Animated.Image ref={plainRefPlainComponent} />
+        {/* @ts-expect-error Properly detects misused type. */}
+        <Animated.Image ref={animatedRefPlainComponent} />
+        {/* @ts-expect-error Properly detects misused Plain Ref. */}
+        <Animated.Image ref={plainRefAnimatedComponent} />
+        {/* @ts-expect-error TODO This should work!!! */}
+        <Animated.Image ref={animatedRefAnimatedComponent} />
+        {/* @ts-expect-error Properly detects misused Plain Ref. */}
+        <Animated.Image ref={plainRefCreatedComponent} />
+        {/* @ts-expect-error Properly detects misused type. */}
+        <Animated.Image ref={animatedRefCreatedComponent} />
+
+        {/* @ts-expect-error Properly detects misused Plain Ref. */}
+        <CreatedAnimatedImage ref={plainRefPlainComponent} />
+        {/* @ts-expect-error Properly detects misused type. */}
+        <CreatedAnimatedImage ref={animatedRefPlainComponent} />
+        {/* @ts-expect-error Properly detects misused Plain Ref. */}
+        <CreatedAnimatedImage ref={plainRefAnimatedComponent} />
+        {/* @ts-expect-error Properly detects misused type. */}
+        <CreatedAnimatedImage ref={animatedRefAnimatedComponent} />
+        {/* @ts-expect-error Properly detects misused Plain Ref. */}
+        <CreatedAnimatedImage ref={plainRefCreatedComponent} />
+        {/* @ts-expect-error TODO This should work!!! */}
+        <CreatedAnimatedImage ref={animatedRefCreatedComponent} />
+      </>
+    );
+  }
+
+  function UseAnimatedRefTestScrollView() {
+    const CreatedAnimatedScrollView =
+      Animated.createAnimatedComponent(ScrollView);
+    const plainRefPlainComponent = useRef<ScrollView>(null);
+    const animatedRefPlainComponent = useAnimatedRef<ScrollView>();
+    const plainRefAnimatedComponent = useRef<Animated.ScrollView>(null);
+    const animatedRefAnimatedComponent = useAnimatedRef<Animated.ScrollView>();
+    const plainRefCreatedComponent =
+      useRef<typeof CreatedAnimatedScrollView>(null);
+    const animatedRefCreatedComponent =
+      // @ts-expect-error TODO TYPESCRIPT This should work IMO
+      useAnimatedRef<typeof CreatedAnimatedScrollView>();
+
+    return (
+      <>
+        <ScrollView ref={plainRefPlainComponent} />
+        <ScrollView ref={animatedRefPlainComponent} />
+        <ScrollView ref={plainRefAnimatedComponent} />
+        <ScrollView ref={animatedRefAnimatedComponent} />
+        {/* @ts-expect-error Properly detects misused Plain Ref. */}
+        <ScrollView ref={plainRefCreatedComponent} />
+        {/* @ts-expect-error Properly detects misused Animated Ref. */}
+        <ScrollView ref={animatedRefCreatedComponent} />
+
+        {/* @ts-expect-error Properly detects misused Plain Ref. */}
+        <Animated.ScrollView ref={plainRefPlainComponent} />
+        {/* @ts-expect-error Properly detects misused type. */}
+        <Animated.ScrollView ref={animatedRefPlainComponent} />
+        <Animated.ScrollView ref={plainRefAnimatedComponent} />
+        <Animated.ScrollView ref={animatedRefAnimatedComponent} />
+        {/* @ts-expect-error Properly detects misused Plain Ref. */}
+        <Animated.ScrollView ref={plainRefCreatedComponent} />
+        {/* @ts-expect-error Properly detects misused type. */}
+        <Animated.ScrollView ref={animatedRefCreatedComponent} />
+
+        <CreatedAnimatedScrollView ref={plainRefPlainComponent} />
+        <CreatedAnimatedScrollView ref={animatedRefPlainComponent} />
+        <CreatedAnimatedScrollView ref={plainRefAnimatedComponent} />
+        <CreatedAnimatedScrollView ref={animatedRefAnimatedComponent} />
+        {/* @ts-expect-error Properly detects misused Plain Ref. */}
+        <CreatedAnimatedScrollView ref={plainRefCreatedComponent} />
+        {/* @ts-expect-error TODO This should work!!! */}
+        <CreatedAnimatedScrollView ref={animatedRefCreatedComponent} />
+      </>
+    );
+  }
+
+  function UseAnimatedRefTestFlatListNoType() {
+    const CreatedAnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+    const plainRefPlainComponent = useRef<FlatList>(null);
+    const animatedRefPlainComponent = useAnimatedRef<FlatList>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const plainRefAnimatedComponent = useRef<Animated.FlatList<any>>(null);
+    const animatedRefAnimatedComponent =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      useAnimatedRef<Animated.FlatList<any>>();
+    const plainRefCreatedComponent =
+      useRef<typeof CreatedAnimatedFlatList>(null);
+    const animatedRefCreatedComponent =
+      // @ts-expect-error TODO TYPESCRIPT This should work IMO
+      useAnimatedRef<typeof CreatedAnimatedFlatList>();
+
+    return (
+      <>
+        <FlatList ref={plainRefPlainComponent} data={[]} renderItem={null} />
+        <FlatList ref={animatedRefPlainComponent} data={[]} renderItem={null} />
+        <FlatList ref={plainRefAnimatedComponent} data={[]} renderItem={null} />
+        <FlatList
+          ref={animatedRefAnimatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+        {/* @ts-expect-error Properly detects misused type. */}
+        <FlatList ref={plainRefCreatedComponent} data={[]} renderItem={null} />
+        <FlatList
+          // @ts-expect-error Properly detects misused Animated Ref.
+          ref={animatedRefCreatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+
+        <Animated.FlatList
+          // @ts-expect-error Properly detects misused Plain Ref.
+          ref={plainRefPlainComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <Animated.FlatList
+          // @ts-expect-error Properly detects misused type.
+          ref={animatedRefPlainComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <Animated.FlatList
+          // @ts-expect-error Properly detects misused Plain Ref.
+          ref={plainRefAnimatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <Animated.FlatList
+          // @ts-expect-error TODO This should work!!!
+          ref={animatedRefAnimatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <Animated.FlatList
+          // @ts-expect-error Properly detects misused Plain Ref.
+          ref={plainRefCreatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <Animated.FlatList
+          // @ts-expect-error Properly detects misused type.
+          ref={animatedRefCreatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+
+        <CreatedAnimatedFlatList
+          ref={plainRefPlainComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <CreatedAnimatedFlatList
+          ref={animatedRefPlainComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <CreatedAnimatedFlatList
+          ref={plainRefAnimatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <CreatedAnimatedFlatList
+          ref={animatedRefAnimatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <CreatedAnimatedFlatList
+          // @ts-expect-error Properly detects misused Plain Ref.
+          ref={plainRefCreatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <CreatedAnimatedFlatList
+          // @ts-expect-error TODO This should work!!!
+          ref={animatedRefCreatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+      </>
+    );
+  }
+
+  function UseAnimatedRefTestFlatListWithType() {
+    const CreatedAnimatedFlatList = Animated.createAnimatedComponent(
+      FlatList<number>
+    );
+    const plainRefPlainComponent = useRef<FlatList<number>>(null);
+    const animatedRefPlainComponent = useAnimatedRef<FlatList<number>>();
+    const plainRefAnimatedComponent = useRef<Animated.FlatList<string>>(null);
+    const animatedRefAnimatedComponent =
+      useAnimatedRef<Animated.FlatList<string>>();
+    const plainRefCreatedComponent =
+      useRef<typeof CreatedAnimatedFlatList>(null);
+    const animatedRefCreatedComponent =
+      // @ts-expect-error TODO TYPESCRIPT This should work IMO
+      useAnimatedRef<typeof CreatedAnimatedFlatList>();
+
+    return (
+      <>
+        <FlatList ref={plainRefPlainComponent} data={[]} renderItem={null} />
+        <FlatList ref={animatedRefPlainComponent} data={[]} renderItem={null} />
+        <FlatList ref={plainRefAnimatedComponent} data={[]} renderItem={null} />
+        <FlatList
+          ref={animatedRefAnimatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+        {/* @ts-expect-error Properly detects misused type. */}
+        <FlatList ref={plainRefCreatedComponent} data={[]} renderItem={null} />
+        <FlatList
+          // @ts-expect-error Properly detects misused Animated Ref.
+          ref={animatedRefCreatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+
+        <Animated.FlatList
+          // @ts-expect-error Properly detects misused Plain Ref.
+          ref={plainRefPlainComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <Animated.FlatList
+          // @ts-expect-error Properly detects misused type.
+          ref={animatedRefPlainComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <Animated.FlatList
+          // @ts-expect-error Properly detects misused Plain Ref.
+          ref={plainRefAnimatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <Animated.FlatList
+          // @ts-expect-error TODO This should work!!!
+          ref={animatedRefAnimatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <Animated.FlatList
+          // @ts-expect-error Properly detects misused Plain Ref.
+          ref={plainRefCreatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <Animated.FlatList
+          // @ts-expect-error Properly detects misused type.
+          ref={animatedRefCreatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+
+        <CreatedAnimatedFlatList
+          ref={plainRefPlainComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <CreatedAnimatedFlatList
+          ref={animatedRefPlainComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <CreatedAnimatedFlatList
+          // @ts-expect-error Properly detects misused Plain Ref.
+          ref={plainRefAnimatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <CreatedAnimatedFlatList
+          // @ts-expect-error Properly detects misused type.
+          ref={animatedRefAnimatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <CreatedAnimatedFlatList
+          // @ts-expect-error Properly detects misused Plain Ref.
+          ref={plainRefCreatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+        <CreatedAnimatedFlatList
+          // @ts-expect-error TODO This should work!!!
+          ref={animatedRefCreatedComponent}
+          data={[]}
+          renderItem={null}
+        />
+      </>
+    );
+  }
 }
 
 // test style prop of Animated components
