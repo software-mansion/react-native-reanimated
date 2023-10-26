@@ -44,12 +44,10 @@ export class JSPropUpdater {
   }
 
   constructor() {
-    let reanimatedModule: typeof JSPropUpdater._reanimatedModuleMock;
-    if (nativeShouldBeMock()) {
-      reanimatedModule = JSPropUpdater._reanimatedModuleMock;
-    } else {
-      reanimatedModule = NativeModules.ReanimatedModule;
-    }
+    const reanimatedModule = nativeShouldBeMock()
+      ? JSPropUpdater._reanimatedModuleMock
+      : NativeModules.ReanimatedModule;
+
     this._reanimatedEventEmitter = new NativeEventEmitter(reanimatedModule);
   }
 
