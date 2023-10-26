@@ -18,6 +18,10 @@ export default function ModifyExample() {
     });
   };
 
+  const handleModifyWithoutArgument = () => {
+    sv.modify();
+  };
+
   useDerivedValue(() => {
     console.log('useDerivedValue', sv.value);
   });
@@ -32,6 +36,10 @@ export default function ModifyExample() {
   return (
     <View style={styles.container}>
       <Button title="Modify" onPress={handleModify} />
+      <Button
+        title="Modify without argument"
+        onPress={handleModifyWithoutArgument}
+      />
       <Button title="Read" onPress={handleRead} />
     </View>
   );
