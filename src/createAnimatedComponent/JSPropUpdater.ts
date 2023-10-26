@@ -12,7 +12,7 @@ interface ListenerData {
   props: StyleProps;
 }
 
-interface WebAnimatedComponent extends React.Component<unknown, unknown> {
+interface WebAnimatedComponent<A, B> extends React.Component<A, B> {
   _component: HTMLElement;
 }
 
@@ -22,7 +22,7 @@ function getViewTagForComponent(
   animatedComponent: React.Component<unknown, unknown>
 ) {
   return IS_WEB
-    ? (animatedComponent as WebAnimatedComponent)._component
+    ? (animatedComponent as WebAnimatedComponent<unknown, unknown>)._component
     : findNodeHandle(animatedComponent);
 }
 
