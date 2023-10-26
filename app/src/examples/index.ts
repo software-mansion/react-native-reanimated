@@ -60,6 +60,7 @@ import MeasureExample from './MeasureExample';
 import Modal from './LayoutAnimations/Modal';
 import ModalNewAPI from './LayoutAnimations/ModalNewAPI';
 import ModalsExample from './SharedElementTransitions/Modals';
+import ModifyExample from './ModifyExample';
 import MountingUnmounting from './LayoutAnimations/MountingUnmounting';
 import NativeModals from './LayoutAnimations/NativeModals';
 import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksWithLayout';
@@ -132,6 +133,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🖇',
     title: 'Shareables',
     screen: ShareablesExample,
+  },
+  ModifyExample: {
+    icon: '🪛',
+    title: 'Modify',
+    screen: ModifyExample,
   },
 
   // About
