@@ -29,8 +29,8 @@ const App = () => (
   <Stack.Navigator
     screenOptions={{
       stackAnimation: 'none',
-      goBackGesture: 'swipeRight',
-      transitionAnimation: ScreenTransition.horizontal,
+      goBackGesture: 'swipeLeft',
+      // transitionAnimation: ScreenTransition.TwoDimensional,
       gestureEnabled: false,
     }}>
     <Stack.Screen

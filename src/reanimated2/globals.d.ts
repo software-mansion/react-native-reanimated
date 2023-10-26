@@ -99,6 +99,7 @@ declare global {
   var __mapperRegistry: MapperRegistry;
   var __sensorContainer: SensorContainer;
   var _maybeFlushUIUpdatesQueue: () => void;
+  var _manageScreenTransition: (command: number, stackTag: number, additionalParam: unknown) => Array<number>;
   var LayoutAnimationsManager: LayoutAnimationsManager;
   var UpdatePropsManager: UpdatePropsManager;
   var ProgressTransitionRegister: ProgressTransitionRegister;
