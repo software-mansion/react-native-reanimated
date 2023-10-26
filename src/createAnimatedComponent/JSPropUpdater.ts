@@ -13,17 +13,17 @@ interface ListenerData {
   props: StyleProps;
 }
 
-interface WebAnimatedComponent<A, B> extends React.Component<A, B> {
+interface WebAnimatedComponent<P, S> extends React.Component<P, S> {
   _component: HTMLElement;
 }
 
 const IS_WEB = isWeb();
 
-function getViewTagForComponent<A, B>(
-  animatedComponent: React.Component<A, B>
+function getViewTagForComponent<P, S>(
+  animatedComponent: React.Component<P, S>
 ) {
   return IS_WEB
-    ? (animatedComponent as WebAnimatedComponent<A, B>)._component
+    ? (animatedComponent as WebAnimatedComponent<P, S>)._component
     : findNodeHandle(animatedComponent);
 }
 
