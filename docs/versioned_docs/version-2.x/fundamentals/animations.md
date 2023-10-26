@@ -49,7 +49,7 @@ As a result, when we tap on the "Move" button the animated box jumps to a new, r
 
 ![](/docs/shared-values/sv-immediate.gif)
 
-With Reanimated 2, such Shared Value updates can be transformed to animated updates by wrapping the target value using one of the animation helpers, e.g., [`withTiming`](/docs/2.x/api/animations/withTiming) or [`withSpring`](/docs/2.x/api/animations/withSpring).
+With Reanimated 2, such Shared Value updates can be transformed to animated updates by wrapping the target value using one of the animation helpers, e.g., [`withTiming`](/docs/2.x/animations/withTiming) or [`withSpring`](/docs/2.x/animations/withSpring).
 The only change that we can do now, is to wrap the random offset value with a `withSpring` call as shown below:
 
 ```js {3}
@@ -111,7 +111,7 @@ Interruptions also work correctly for animations defined in `useAnimatedStyle` h
 When the style is updated and the target value for a given property has changed compared to the last time when the style hook was run, the new animation will launch immediately starting from the current position of the property.
 
 We believe that the described behavior, when it comes to interruptions, is desirable in the majority of the use cases, and hence we made it the default.
-In case you'd like to wait with the next animation until the previous one is finished, or in the case you'd like to cancel currently running animation prior to starting a new one, you can still do it using animation callbacks in the former, or the [`cancelAnimation`](/docs/2.x/api/animations/cancelAnimation) method in the latter case.
+In case you'd like to wait with the next animation until the previous one is finished, or in the case you'd like to cancel currently running animation prior to starting a new one, you can still do it using animation callbacks in the former, or the [`cancelAnimation`](/docs/2.x/animations/cancelAnimation) method in the latter case.
 
 To illustrate how interruptions perform in practice, please take a look at the below video, where we run the example presented earlier, but make much more frequent taps on the button in order to trigger value changes before the animation settles:
 
@@ -119,10 +119,10 @@ To illustrate how interruptions perform in practice, please take a look at the b
 
 ## Customizing Animations
 
-Reanimated currently provides three built-in animation helpers: [`withTiming`](/docs/2.x/api/animations/withTiming), [`withSpring`](/docs/2.x/api/animations/withSpring), and [`withDecay`](/docs/2.x/api/animations/withDecay).
+Reanimated currently provides three built-in animation helpers: [`withTiming`](/docs/2.x/animations/withTiming), [`withSpring`](/docs/2.x/animations/withSpring), and [`withDecay`](/docs/2.x/animations/withDecay).
 There are ways of expanding that with your own custom animations (animation helpers are built on top of the [worklets](worklets) abstraction), but we are not yet ready to document that as we still plan some changes in that part of the API.
 However, the built-in methods along with the animation modifiers (that we discuss later on), already provide great flexibility.
-Below we discuss some of the most common configuration options of the animation helpers, and we refer to the documentation page of [`withTiming`](/docs/2.x/api/animations/withTiming) and [`withSpring`](/docs/2.x/api/animations/withSpring) for the complete set of parameters.
+Below we discuss some of the most common configuration options of the animation helpers, and we refer to the documentation page of [`withTiming`](/docs/2.x/animations/withTiming) and [`withSpring`](/docs/2.x/animations/withSpring) for the complete set of parameters.
 
 Both animation helper methods share a similar structure.
 They take target value as the first parameter, configuration object as the second, and finally a callback method as the last parameter.
@@ -175,7 +175,7 @@ To learn how to apply these please refer to the [Easing.ts](https://github.com/s
 Unlike timing, spring-based animations do not take duration as a parameter.
 Instead the time it takes for the spring to run is determined by the spring physics (which is configurable), initial velocity, and the distance to travel.
 Below we show an example of how a custom spring animation can be defined and how it compares to the default spring settings.
-Please review [`withSpring`](/docs/2.x/api/animations/withSpring) documentation for the complete list of configurable options.
+Please review [`withSpring`](/docs/2.x/animations/withSpring) documentation for the complete list of configurable options.
 
 ```js
 import Animated, {
@@ -224,7 +224,7 @@ This makes it possible to use a single Shared Value but map that to two View's s
 ## Animation Modifiers
 
 Besides the ability to adjust animation options, another way of customizing animations is by using animation modifiers.
-Currently, Reanimated exposes three modifiers: [`withDelay`](/docs/2.x/api/animations/withDelay), [`withSequence`](/docs/2.x/api/animations/withSequence) and [`withRepeat`](/docs/2.x/api/animations/withRepeat).
+Currently, Reanimated exposes three modifiers: [`withDelay`](/docs/2.x/animations/withDelay), [`withSequence`](/docs/2.x/animations/withSequence) and [`withRepeat`](/docs/2.x/animations/withRepeat).
 As the name suggests, the `withDelay` modifier makes the provided animation to start with a given delay, the `withSequence` modifier allows a number of animations to be provided and will make them run one after another.
 Finally, the `withRepeat` modifier allows for the provided animation to be repeated several times.
 

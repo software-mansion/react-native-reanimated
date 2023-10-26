@@ -23,13 +23,13 @@
       "items": [
         {
           "Animations": [
-            "api/animations/cancelAnimation",
-            "api/animations/withDecay",
-            "api/animations/withDelay",
-            "api/animations/withRepeat",
-            "api/animations/withSequence",
-            "api/animations/withSpring",
-            "api/animations/withTiming"
+            "animations/cancelAnimation",
+            "animations/withDecay",
+            "animations/withDelay",
+            "animations/withRepeat",
+            "animations/withSequence",
+            "animations/withSpring",
+            "animations/withTiming"
           ],
           "Hooks": [
             "api/hooks/useAnimatedGestureHandler",

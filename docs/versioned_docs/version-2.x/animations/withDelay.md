@@ -7,7 +7,7 @@ sidebar_label: withDelay
 Allows for the provided animation to start with a specified delay.
 
 In case the value for which we are starting the delayed animation is running a previous animation, that animation won't be cancelled until the new animation starts after the delay.
-If you want the animation to cancel immediately, use the [`cancelAnimation`](/docs/2.x/api/animations/cancelAnimation) method.
+If you want the animation to cancel immediately, use the [`cancelAnimation`](/docs/2.x/animations/cancelAnimation) method.
 
 ### Arguments
 

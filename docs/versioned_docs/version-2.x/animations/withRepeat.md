@@ -21,7 +21,7 @@ When negative, the animation will be repeated forever (until the shared value is
 
 Specify whether we should attempt to reverse the animation every other repetition.
 When `true`, this will cause the animation to run from the current value to the destination, after that the same animation will run in the reverse direction.
-Note that this option will only work when the provided animation is a plain, non-modified animation like [`withTiming`](/docs/2.x/api/animations/withTiming) or [`withSpring`](/docs/2.x/api/animations/withSpring).
+Note that this option will only work when the provided animation is a plain, non-modified animation like [`withTiming`](/docs/2.x/animations/withTiming) or [`withSpring`](/docs/2.x/animations/withSpring).
 The option is not supported for animation wrapped using other animation modifiers like `withDelay` or `withSequence`.
 
 #### `callback` [function]\(optional\)
