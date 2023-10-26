@@ -33,10 +33,6 @@ export function shouldBeUseWeb() {
   return isJest() || isChromeDebugger() || isWeb() || isWindows();
 }
 
-export function nativeShouldBeMock() {
-  return isJest() || isChromeDebugger() || isWindows();
-}
-
 export function isFabric() {
   return !!global._IS_FABRIC;
 }

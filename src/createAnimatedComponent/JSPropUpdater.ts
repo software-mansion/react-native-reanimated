@@ -5,7 +5,7 @@ import {
   findNodeHandle,
 } from 'react-native';
 import type { AnimatedComponentProps, InitialComponentProps } from './utils';
-import { isWeb, nativeShouldBeMock } from '../reanimated2/PlatformChecker';
+import { isWeb, shouldBeUseWeb } from '../reanimated2/PlatformChecker';
 import type { StyleProps } from '../reanimated2';
 
 interface ListenerData {
@@ -18,6 +18,7 @@ interface WebAnimatedComponent<P, S> extends React.Component<P, S> {
 }
 
 const IS_WEB = isWeb();
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 function getViewTagForComponent<P, S>(
   animatedComponent: React.Component<P, S>
@@ -45,7 +46,7 @@ export class JSPropUpdater {
   }
 
   constructor() {
-    const reanimatedModule = nativeShouldBeMock()
+    const reanimatedModule = SHOULD_BE_USE_WEB
       ? JSPropUpdater._reanimatedModuleMock
       : NativeModules.ReanimatedModule;
 
