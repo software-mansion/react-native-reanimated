@@ -18,6 +18,14 @@ interface WebAnimatedComponent extends React.Component<unknown, unknown> {
 
 const IS_WEB = isWeb();
 
+function getViewTagForComponent(
+  animatedComponent: React.Component<unknown, unknown>
+) {
+  return IS_WEB
+    ? (animatedComponent as WebAnimatedComponent)._component
+    : findNodeHandle(animatedComponent);
+}
+
 export class JSPropUpdater {
   private static _tagToComponentMapping = new Map();
   private _reanimatedEventEmitter: NativeEventEmitter;
@@ -48,9 +56,7 @@ export class JSPropUpdater {
   public addOnJSPropsChangeListener(
     animatedComponent: React.Component<unknown, unknown>
   ) {
-    const viewTag = IS_WEB
-      ? (animatedComponent as WebAnimatedComponent)._component
-      : findNodeHandle(animatedComponent);
+    const viewTag = getViewTagForComponent(animatedComponent);
 
     JSPropUpdater._tagToComponentMapping.set(viewTag, animatedComponent);
     if (JSPropUpdater._tagToComponentMapping.size === 1) {
@@ -64,9 +70,8 @@ export class JSPropUpdater {
   public removeOnJSPropsChangeListener(
     animatedComponent: React.Component<unknown, unknown>
   ) {
-    const viewTag = IS_WEB
-      ? (animatedComponent as WebAnimatedComponent)._component
-      : findNodeHandle(animatedComponent);
+    const viewTag = getViewTagForComponent(animatedComponent);
+
     JSPropUpdater._tagToComponentMapping.delete(viewTag);
     if (JSPropUpdater._tagToComponentMapping.size === 0) {
       this._reanimatedEventEmitter.removeAllListeners(
