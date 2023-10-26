@@ -117,9 +117,8 @@ function App() {
   sv.value = [...sv.value, 1000]; // works, but creates a new copy ⚠️
 
   sv.modify((value) => {
-    // ✅
     'worklet';
-    value.push(1000);
+    value.push(1000); // ✅
     return value;
   });
 }
