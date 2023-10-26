@@ -60,6 +60,7 @@ import MeasureExample from './MeasureExample';
 import Modal from './LayoutAnimations/Modal';
 import ModalNewAPI from './LayoutAnimations/ModalNewAPI';
 import ModalsExample from './SharedElementTransitions/Modals';
+import ModifyExample from './ModifyExample';
 import MountingUnmounting from './LayoutAnimations/MountingUnmounting';
 import NativeModals from './LayoutAnimations/NativeModals';
 import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksWithLayout';
@@ -92,6 +93,7 @@ import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import SetNativePropsExample from './SetNativePropsExample';
+import ShareablesExample from './ShareablesExample';
 import SharedStyleExample from './SharedStyleExample';
 import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
 import SvgExample from './SvgExample';
@@ -126,6 +128,16 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🏃‍♂️',
     title: 'Worklet runtime',
     screen: WorkletRuntimeExample,
+  },
+  ShareablesExample: {
+    icon: '🖇',
+    title: 'Shareables',
+    screen: ShareablesExample,
+  },
+  ModifyExample: {
+    icon: '🪛',
+    title: 'Modify',
+    screen: ModifyExample,
   },
 
   // About
