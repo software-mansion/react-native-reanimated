@@ -1,12 +1,9 @@
 module.exports = function (api) {
-  const platform = api.caller(getPlatform);
-  const isWeb = platform === 'web';
-
   return {
-    plugins: [['../plugin', { isWeb }]],
+    plugins: [['../plugin', { isWeb: isWeb(api.caller) }]],
   };
 };
 
-function getPlatform(caller) {
-  return caller && (caller.platform ?? caller.target);
+function isWeb(caller) {
+  return caller && (caller.platform ?? caller.target) === 'web';
 }
