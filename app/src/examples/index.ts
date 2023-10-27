@@ -9,7 +9,6 @@ import AnimatedSensorMagneticFieldExample from './AnimatedSensorMagneticFieldExa
 import AnimatedSensorRotationExample from './AnimatedSensorRotationExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
-import AnimatedTextInputExample from './AnimatedTextInputExample';
 import AnimatedTextWidthExample from './AnimatedTextWidthExample';
 import ArticleProgressExample from './ArticleProgressExample';
 import BabelVersionCheckExample from './BabelVersionCheckExample';
@@ -27,6 +26,7 @@ import ChessboardExample from './ChessboardExample';
 import ColorExample from './ColorExample';
 import ColorInterpolationExample from './ColorInterpolationExample';
 import CombinedTest from './LayoutAnimations/Combined';
+import CounterExample from './CounterExample';
 import CubesExample from './CubesExample';
 import CustomLayoutAnimationScreen from './LayoutAnimations/CustomLayout';
 import CustomTransitionExample from './SharedElementTransitions/CustomTransition';
@@ -218,10 +218,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Animate inner component',
     screen: AnimatableRefExample,
   },
-  AnimatedTextInputExample: {
+  CounterExample: {
     icon: '🎰',
     title: 'Counter',
-    screen: AnimatedTextInputExample,
+    screen: CounterExample,
   },
   AnimatedTextWidthExample: {
     icon: '✂️',
