@@ -96,7 +96,6 @@ function AnimatedFlatListTest() {
     const newContentContainerStyle = [contentContainerStyle, { flex: 1 }];
 
     return (
-      // @ts-expect-error TODO This will be fixed soon.
       <Animated.FlatList
         data={[{ foo: 1 }]}
         renderItem={() => null}
@@ -116,7 +115,6 @@ function AnimatedFlatListTest() {
       <Animated.FlatList
         data={[{ foo: 1 }]}
         renderItem={() => null}
-        // @ts-expect-error TODO This will be fixed soon.
         contentContainerStyle={contentContainerStyle}
       />
     );
@@ -1469,6 +1467,7 @@ function UseAnimatedRefTest() {
     return (
       <>
         <AnimatedImage ref={animatedRef} source={{}} />
+        {/* @ts-expect-error TODO This will be fixed soon. */}
         <Animated.Image ref={animatedRef} source={{}} />
       </>
     );
