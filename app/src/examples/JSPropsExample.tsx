@@ -19,15 +19,21 @@ interface Point {
   y: number;
 }
 
-function polarToCartesian(angle: number, radius: number, { x, y }: Point) {
+function polarToCartesian(angle: number, radius: number, center: Point) {
   'worklet';
   const a = ((angle - 90) * Math.PI) / 180;
-  return { x: x + radius * Math.cos(a), y: y + radius * Math.sin(a) };
+  return {
+    x: center.x + radius * Math.cos(a),
+    y: center.y + radius * Math.sin(a),
+  };
 }
 
-function cartesianToPolar({ x, y }: Point, { x: cx, y: cy }: Point) {
+function cartesianToPolar(point: Point, center: Point) {
   'worklet';
-  return Math.atan((y - cy) / (x - cx)) / (Math.PI / 180) + (x > cx ? 90 : 270);
+  return (
+    Math.atan((point.y - center.y) / (point.x - center.x)) / (Math.PI / 180) +
+    (point.x > center.x ? 90 : 270)
+  );
 }
 
 function valueToAngle(value: number, min: number, max: number) {
@@ -162,15 +168,15 @@ export default function JSPropsExample() {
       <CircularSlider
         size={300}
         circleRadius={120}
-        knobRadius={15}
-        knobColor="green"
+        knobRadius={20}
+        knobColor="black"
         progressLineWidth={20}
         progressLineColor="lime"
         trackLineWidth={10}
         trackLineColor="lightgray"
-        value={120}
+        value={20}
         min={0}
-        max={359}
+        max={100}
         onValueChange={console.log}
       />
     </View>
