@@ -38,7 +38,8 @@ const createCellRenderer = (
   return cellRenderer;
 };
 
-interface ReanimatedFlatListPropsWithLayout<T> extends FlatListProps<T> {
+interface ReanimatedFlatListPropsWithLayout<T>
+  extends AnimatedProps<FlatListProps<T>> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
   skipEnteringExitingAnimations?: boolean;
 }
@@ -54,9 +55,7 @@ interface AnimatedFlatListComplement<T> extends FlatList<T> {
 export const ReanimatedFlatList = forwardRef(
   (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    props: ReanimatedFlatListPropsWithLayout<any> &
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      AnimatedProps<FlatListProps<any>>,
+    props: ReanimatedFlatListPropsWithLayout<any>,
     ref: ForwardedRef<FlatList>
   ) => {
     const { itemLayoutAnimation, skipEnteringExitingAnimations, ...restProps } =
