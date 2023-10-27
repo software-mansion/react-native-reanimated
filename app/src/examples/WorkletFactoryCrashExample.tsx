@@ -14,10 +14,11 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>
-        Clicking the button below should give a stack trace that denotes the
-        error in `badWorklet` function, pointing to `unexistingVariable` usage.
+        Clicking the button below should give a RedBox with stack trace that
+        denotes the error in `badWorklet` function, pointing to
+        `unexistingVariable` usage.
       </Text>
-      <Button title={'Crash me'} onPress={handleOnPress} />
+      <Button title="Crash me" onPress={handleOnPress} />
     </View>
   );
 }
