@@ -13,8 +13,8 @@ import type { AnimatedProps } from '../helperTypes';
 const AnimatedFlatList = createAnimatedComponent(FlatList);
 
 interface AnimatedFlatListProps {
-  onLayout: (event: LayoutChangeEvent) => void;
-  children: React.ReactNode;
+  onLayout?: (event: LayoutChangeEvent) => void;
+  children?: React.ReactNode;
   inverted?: boolean;
   horizontal?: boolean;
 }
@@ -85,7 +85,6 @@ export const ReanimatedFlatList = forwardRef(
       <AnimatedFlatList
         ref={ref}
         {...restProps}
-        // @ts-expect-error TODO Not sure what's happening here.
         CellRendererComponent={cellRenderer}
       />
     );
