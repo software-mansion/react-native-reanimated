@@ -171,7 +171,7 @@ export default function JSPropsExample() {
         knobRadius={20}
         knobColor="black"
         progressLineWidth={20}
-        progressLineColor="lime"
+        progressLineColor="gold"
         trackLineWidth={10}
         trackLineColor="lightgray"
         value={20}
