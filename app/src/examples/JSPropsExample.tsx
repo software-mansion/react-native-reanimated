@@ -7,7 +7,6 @@ import Animated, {
   useDerivedValue,
   useAnimatedProps,
   useAnimatedGestureHandler,
-  interpolate,
 } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 
@@ -44,8 +43,7 @@ function unMix(value: number, x: number, y: number) {
 }
 
 type CircleSliderProps = {
-  width: number;
-  height: number;
+  size: number;
   value: number;
   min?: number;
   max?: number;
@@ -55,22 +53,14 @@ type CircleSliderProps = {
 };
 
 function CircleSlider(props: CircleSliderProps) {
-  const {
-    width,
-    height,
-    value,
-    min = 0,
-    max = 359,
-    step = 1,
-    decimals,
-  } = props;
-  const smallestSide = Math.min(width, height);
+  const { size, value, min = 0, max = 359, step = 1, decimals } = props;
+  const CIRCLE_RADIUS = 150;
+  const KNOB_RADIUS = 15;
+  const PROGRESS_WIDTH = 20;
 
-  const BALL_RADIUS = 20;
-
-  const cx = width / 2;
-  const cy = height / 2;
-  const r = (smallestSide / 2) * 0.85;
+  const cx = CIRCLE_RADIUS;
+  const cy = CIRCLE_RADIUS;
+  const r = CIRCLE_RADIUS * 0.85;
 
   const start = useSharedValue(0);
   const end = useSharedValue(unMix(value, min! / 360, max! / 360));
@@ -100,8 +90,8 @@ function CircleSlider(props: CircleSliderProps) {
   const animatedCircle = useAnimatedProps(() => {
     const p2 = endPos.value;
     return {
-      x: p2.x - BALL_RADIUS,
-      y: p2.y - BALL_RADIUS,
+      x: p2.x - KNOB_RADIUS,
+      y: p2.y - KNOB_RADIUS,
     };
   });
 
@@ -117,11 +107,7 @@ function CircleSlider(props: CircleSliderProps) {
       return 0;
     };
 
-    const value = interpolate(
-      end.value,
-      [min! / 360, max! / 360],
-      [min! / 360, max! / 360]
-    );
+    const value = end.value;
 
     const text = `${value.toFixed(decimalCount(step))}`;
 
@@ -131,12 +117,7 @@ function CircleSlider(props: CircleSliderProps) {
   const gestureHandler = useAnimatedGestureHandler({
     onActive: ({ x, y }, ctx: { value: number }) => {
       const value = cartesianToPolar(x, y, { x: cx, y: cy }, step);
-
-      ctx.value = interpolate(
-        value,
-        [min! / 360, max! / 360],
-        [min! / 360, max! / 360]
-      );
+      ctx.value = value;
       end.value = value;
     },
     onFinish: (_, ctx) => {
@@ -150,28 +131,27 @@ function CircleSlider(props: CircleSliderProps) {
     <>
       <PanGestureHandler onGestureEvent={gestureHandler} minDist={0}>
         <Animated.View>
-          <Svg width={width} height={height}>
-            <Circle cx={cx} cy={cy} r={r + 20 / 2 - 1} fill="lightgray" />
+          <Svg width={size} height={size}>
             <Circle
               cx={cx}
               cy={cy}
               r={r}
-              strokeWidth={20}
-              fill="url(#fill)"
-              stroke="rgba(255, 255, 255, 0.2)"
+              strokeWidth={PROGRESS_WIDTH}
+              fill="none"
+              stroke="lightgray"
             />
             <AnimatedPath
-              stroke="white"
-              strokeWidth={20}
+              stroke="lime"
+              strokeWidth={PROGRESS_WIDTH}
               fill="none"
               animatedProps={animatedPath}
             />
-            <AnimatedG animatedProps={animatedCircle} onPress={() => {}}>
+            <AnimatedG animatedProps={animatedCircle}>
               <Circle
-                cx={BALL_RADIUS}
-                cy={BALL_RADIUS}
-                r={BALL_RADIUS}
-                fill="white"
+                cx={KNOB_RADIUS}
+                cy={KNOB_RADIUS}
+                r={KNOB_RADIUS}
+                fill="blue"
               />
             </AnimatedG>
           </Svg>
@@ -190,8 +170,7 @@ export default function JSPropsExample() {
   return (
     <View style={styles.container}>
       <CircleSlider
-        width={300}
-        height={300}
+        size={300}
         value={45}
         onValueChange={(value) => console.log(value)}
       />
