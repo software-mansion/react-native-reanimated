@@ -89,13 +89,14 @@ function CircularSlider(props: CircularSliderProps) {
     polarToCartesian(currentAngle.value, circleRadius, center)
   );
 
+  const start = polarToCartesian(0, circleRadius, center);
+
   const animatedPathProps = useAnimatedProps(() => {
-    const p1 = polarToCartesian(0, circleRadius, center);
-    const p2 = knobPosition.value;
+    const end = knobPosition.value;
     return {
-      d: `M${p1.x} ${p1.y} A ${circleRadius} ${circleRadius} 0 ${
+      d: `M${start.x} ${start.y} A ${circleRadius} ${circleRadius} 0 ${
         currentAngle.value > 180 ? 1 : 0
-      } 1 ${p2.x} ${p2.y}`,
+      } 1 ${end.x} ${end.y}`,
     };
   });
 
