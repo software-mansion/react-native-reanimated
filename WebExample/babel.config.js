@@ -6,7 +6,7 @@ module.exports = function (api) {
     console.log('Starting Web example without Babel plugin.');
   }
   return {
-    presets: ['babel-preset-expo'],
+    presets: [['../preset', {disableBabelPlugin}], 'babel-preset-expo'],
     plugins: [
       [
         'module-resolver',
@@ -20,7 +20,6 @@ module.exports = function (api) {
         },
       ],
       '@babel/plugin-proposal-export-namespace-from',
-      !disableBabelPlugin && ['react-native-reanimated/plugin', {isWeb: true}],
-    ].filter(Boolean),
+    ],
   };
 };

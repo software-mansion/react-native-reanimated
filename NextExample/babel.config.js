@@ -1,5 +1,5 @@
 module.exports = {
-  presets: ['next/babel'],
+  presets: ['../preset', 'next/babel'],
   plugins: [
     [
       'module-resolver',
@@ -12,6 +12,5 @@ module.exports = {
         },
       },
     ],
-    ['react-native-reanimated/plugin', { isWeb: true }],
   ],
 };
