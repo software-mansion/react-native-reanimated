@@ -1,10 +1,8 @@
-name: Check React Native nightly build
+name: Check React Native `@next` build
 on:
   pull_request:
     paths:
-      - .github/workflows/check-react-native-nightly.yml
-  schedule:
-    - cron: '37 19 * * *'
+      - .github/workflows/check-react-native-next.yml
   workflow_dispatch:
 
 jobs:
@@ -20,10 +18,10 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Create app
-        run: npx react-native init app --skip-install --version nightly
+        run: npx react-native init app --skip-install --version next
       - name: Install Reanimated
         working-directory: app
-        run: yarn add github:software-mansion/react-native-reanimated
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
       - name: Install Paper Pods
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         working-directory: app/ios
@@ -34,7 +32,7 @@ jobs:
         run: export RCT_NEW_ARCH_ENABLED=1 && pod install
       - name: Build app
         working-directory: app
-        run: yarn react-native run-ios --simulator='iPhone 14'
+        run: yarn react-native run-ios --no-packager
 
   build_android:
     if: github.repository == 'software-mansion/react-native-reanimated'
@@ -53,10 +51,10 @@ jobs:
           distribution: 'zulu'
           java-version: '18'
       - name: Create app
-        run: npx react-native init app --skip-install --version nightly
+        run: npx react-native init app --skip-install --version next
       - name: Install Reanimated
         working-directory: app
-        run: yarn add github:software-mansion/react-native-reanimated
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
       - name: Setup Fabric
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
         working-directory: app/android
