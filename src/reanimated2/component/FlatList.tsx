@@ -1,20 +1,19 @@
 'use strict';
 import type { ForwardedRef } from 'react';
-import React, { Component, forwardRef } from 'react';
+import React, { forwardRef } from 'react';
 import type { FlatListProps, LayoutChangeEvent } from 'react-native';
 import { FlatList, StyleSheet } from 'react-native';
 import { AnimatedView } from './View';
 import { createAnimatedComponent } from '../../createAnimatedComponent';
 import type { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
 import type { StyleProps } from '../commonTypes';
-import type { AnimateProps } from '../helperTypes';
 import { LayoutAnimationConfig } from './LayoutAnimationConfig';
+import type { AnimatedProps } from '../helperTypes';
 
-const AnimatedFlatList = createAnimatedComponent(FlatList as any) as any;
+const AnimatedFlatList = createAnimatedComponent(FlatList);
 
 interface AnimatedFlatListProps {
   onLayout: (event: LayoutChangeEvent) => void;
-  // implicit `children` prop has been removed in @types/react^18.0.0
   children: React.ReactNode;
   inverted?: boolean;
   horizontal?: boolean;
@@ -46,20 +45,20 @@ interface ReanimatedFlatListPropsWithLayout<T> extends FlatListProps<T> {
 
 export type FlatListPropsWithLayout<T> = ReanimatedFlatListPropsWithLayout<T>;
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-declare class ReanimatedFlatListClass<T> extends Component<
-  AnimateProps<ReanimatedFlatListPropsWithLayout<T>>
-> {
-  getNode(): FlatList;
-}
-
-interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
-  itemLayoutAnimation?: ILayoutAnimationBuilder;
-  skipEnteringExitingAnimations?: boolean;
+// Since createAnimatedComponent return type is ComponentClass that has the props of the argument,
+// but not things like NativeMethods, etc. we need to add them manually by extending the type.
+interface AnimatedFlatListComplement<T> extends FlatList<T> {
+  getNode(): FlatList<T>;
 }
 
 export const ReanimatedFlatList = forwardRef(
-  (props: ReanimatedFlatListProps<any>, ref: ForwardedRef<FlatList>) => {
+  (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    props: ReanimatedFlatListPropsWithLayout<any> &
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      AnimatedProps<FlatListProps<any>>,
+    ref: ForwardedRef<FlatList>
+  ) => {
     const { itemLayoutAnimation, skipEnteringExitingAnimations, ...restProps } =
       props;
 
@@ -87,6 +86,7 @@ export const ReanimatedFlatList = forwardRef(
       <AnimatedFlatList
         ref={ref}
         {...restProps}
+        // @ts-expect-error TODO Not sure what's happening here.
         CellRendererComponent={cellRenderer}
       />
     );
@@ -101,12 +101,12 @@ export const ReanimatedFlatList = forwardRef(
       </LayoutAnimationConfig>
     );
   }
-) as unknown as ReanimatedFlatList<any>;
+);
 
 const styles = StyleSheet.create({
   verticallyInverted: { transform: [{ scaleY: -1 }] },
   horizontallyInverted: { transform: [{ scaleX: -1 }] },
 });
 
-export type ReanimatedFlatList<T> = typeof ReanimatedFlatListClass<T> &
-  FlatList<T>;
+export type ReanimatedFlatList<T> = typeof AnimatedFlatList &
+  AnimatedFlatListComplement<T>;

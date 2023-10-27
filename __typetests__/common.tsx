@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import type { Ref } from 'react';
 import React, { useState, useCallback, forwardRef, useRef } from 'react';
 import type {
   FlatListProps,
@@ -1270,9 +1271,9 @@ function testPartialAnimatedProps5() {
   const partOfRequiredProps = useAnimatedProps<FlatListProps<string>>(() => ({
     data: ['1'],
   }));
-
+  // TODO
   // Should pass because required props are set but fails
-  // because AnimatedProps are incorrectly typed.
+  // because useAnimatedProps and createAnimatedComponent are incorrectly typed.
   return (
     <>
       <AnimatedFlatList
@@ -1806,8 +1807,9 @@ function UseAnimatedRefTest() {
     const animatedRefAnimatedComponent = useAnimatedRef<Animated.View>();
     const plainRefCreatedComponent = useRef<typeof CreatedAnimatedView>(null);
     const animatedRefCreatedComponent =
-      // @ts-expect-error TODO TYPESCRIPT This should work IMO
-      useAnimatedRef<typeof CreatedAnimatedView>();
+      // TODO This below should be the correct syntax I believe, but currently it doesn't work.
+      // useAnimatedRef<typeof CreatedAnimatedView>();
+      useAnimatedRef<typeof CreatedAnimatedView & View>();
 
     return (
       <>
@@ -1817,7 +1819,6 @@ function UseAnimatedRefTest() {
         <View ref={animatedRefAnimatedComponent} />
         {/* @ts-expect-error Properly detects misused type. */}
         <View ref={plainRefCreatedComponent} />
-        {/* @ts-expect-error Properly detects misused AnimatedRef. */}
         <View ref={animatedRefCreatedComponent} />
 
         <Animated.View ref={plainRefPlainComponent} />
@@ -1826,7 +1827,6 @@ function UseAnimatedRefTest() {
         <Animated.View ref={animatedRefAnimatedComponent} />
         {/* @ts-expect-error Properly detects misused type. */}
         <Animated.View ref={plainRefCreatedComponent} />
-        {/* @ts-expect-error Properly detects misused type. */}
         <Animated.View ref={animatedRefCreatedComponent} />
 
         <CreatedAnimatedView ref={plainRefPlainComponent} />
@@ -1835,7 +1835,6 @@ function UseAnimatedRefTest() {
         <CreatedAnimatedView ref={animatedRefAnimatedComponent} />
         {/* @ts-expect-error Properly detects misused Plain Ref. */}
         <CreatedAnimatedView ref={plainRefCreatedComponent} />
-        {/* @ts-expect-error TODO This should work!!! */}
         <CreatedAnimatedView ref={animatedRefCreatedComponent} />
       </>
     );
@@ -1849,8 +1848,9 @@ function UseAnimatedRefTest() {
     const animatedRefAnimatedComponent = useAnimatedRef<Animated.Text>();
     const plainRefCreatedComponent = useRef<typeof CreatedAnimatedText>(null);
     const animatedRefCreatedComponent =
-      // @ts-expect-error TODO TYPESCRIPT This should work IMO
-      useAnimatedRef<typeof CreatedAnimatedText>();
+      // TODO This below should be the correct syntax I believe, but currently it doesn't work.
+      // useAnimatedRef<typeof CreatedAnimatedText>();
+      useAnimatedRef<typeof CreatedAnimatedText & Text>();
 
     return (
       <>
@@ -1860,18 +1860,14 @@ function UseAnimatedRefTest() {
         <Text ref={animatedRefAnimatedComponent} />
         {/* @ts-expect-error Properly detects misused type. */}
         <Text ref={plainRefCreatedComponent} />
-        {/* @ts-expect-error Properly detects misused Animated Ref. */}
         <Text ref={animatedRefCreatedComponent} />
 
-        {/* @ts-expect-error Properly detects misused Plain Ref. */}
         <Animated.Text ref={plainRefPlainComponent} />
-        {/* @ts-expect-error Properly detects misused type. */}
         <Animated.Text ref={animatedRefPlainComponent} />
         <Animated.Text ref={plainRefAnimatedComponent} />
         <Animated.Text ref={animatedRefAnimatedComponent} />
         {/* @ts-expect-error Properly detects misused Plain Ref */}
         <Animated.Text ref={plainRefCreatedComponent} />
-        {/* @ts-expect-error Properly detects misused type. */}
         <Animated.Text ref={animatedRefCreatedComponent} />
 
         <CreatedAnimatedText ref={plainRefPlainComponent} />
@@ -1880,7 +1876,6 @@ function UseAnimatedRefTest() {
         <CreatedAnimatedText ref={animatedRefAnimatedComponent} />
         {/* @ts-expect-error Properly detects misused Plain Ref. */}
         <CreatedAnimatedText ref={plainRefCreatedComponent} />
-        {/* @ts-expect-error TODO This should work!!! */}
         <CreatedAnimatedText ref={animatedRefCreatedComponent} />
       </>
     );
@@ -1894,8 +1889,9 @@ function UseAnimatedRefTest() {
     const animatedRefAnimatedComponent = useAnimatedRef<Animated.Image>();
     const plainRefCreatedComponent = useRef<typeof CreatedAnimatedImage>(null);
     const animatedRefCreatedComponent =
-      // @ts-expect-error TODO TYPESCRIPT This should work IMO
-      useAnimatedRef<typeof CreatedAnimatedImage>();
+      // TODO This below should be the correct syntax I believe, but currently it doesn't work.
+      // useAnimatedRef<typeof CreatedAnimatedImage>();
+      useAnimatedRef<typeof CreatedAnimatedImage & Image>();
 
     return (
       <>
@@ -1905,34 +1901,59 @@ function UseAnimatedRefTest() {
         <Image ref={animatedRefAnimatedComponent} source={{ uri: undefined }} />
         {/* @ts-expect-error Properly detects misused type. */}
         <Image ref={plainRefCreatedComponent} source={{ uri: undefined }} />
-        {/* @ts-expect-error Properly detects misused Animated Ref. */}
         <Image ref={animatedRefCreatedComponent} source={{ uri: undefined }} />
 
-        {/* @ts-expect-error Properly detects misused Plain Ref. */}
-        <Animated.Image ref={plainRefPlainComponent} />
-        {/* @ts-expect-error Properly detects misused type. */}
-        <Animated.Image ref={animatedRefPlainComponent} />
-        {/* @ts-expect-error Properly detects misused Plain Ref. */}
-        <Animated.Image ref={plainRefAnimatedComponent} />
-        {/* @ts-expect-error TODO This should work!!! */}
-        <Animated.Image ref={animatedRefAnimatedComponent} />
-        {/* @ts-expect-error Properly detects misused Plain Ref. */}
-        <Animated.Image ref={plainRefCreatedComponent} />
-        {/* @ts-expect-error Properly detects misused type. */}
-        <Animated.Image ref={animatedRefCreatedComponent} />
+        <Animated.Image
+          ref={plainRefPlainComponent}
+          source={{ uri: undefined }}
+        />
+        <Animated.Image
+          ref={animatedRefPlainComponent}
+          source={{ uri: undefined }}
+        />
+        <Animated.Image
+          ref={plainRefAnimatedComponent}
+          source={{ uri: undefined }}
+        />
+        <Animated.Image
+          ref={animatedRefAnimatedComponent}
+          source={{ uri: undefined }}
+        />
+        <Animated.Image
+          // @ts-expect-error Properly detects misused Plain Ref.
+          ref={plainRefCreatedComponent}
+          source={{ uri: undefined }}
+        />
+        <Animated.Image
+          ref={animatedRefCreatedComponent}
+          source={{ uri: undefined }}
+        />
 
-        {/* @ts-expect-error Properly detects misused Plain Ref. */}
-        <CreatedAnimatedImage ref={plainRefPlainComponent} />
-        {/* @ts-expect-error Properly detects misused type. */}
-        <CreatedAnimatedImage ref={animatedRefPlainComponent} />
-        {/* @ts-expect-error Properly detects misused Plain Ref. */}
-        <CreatedAnimatedImage ref={plainRefAnimatedComponent} />
-        {/* @ts-expect-error Properly detects misused type. */}
-        <CreatedAnimatedImage ref={animatedRefAnimatedComponent} />
-        {/* @ts-expect-error Properly detects misused Plain Ref. */}
-        <CreatedAnimatedImage ref={plainRefCreatedComponent} />
-        {/* @ts-expect-error TODO This should work!!! */}
-        <CreatedAnimatedImage ref={animatedRefCreatedComponent} />
+        <CreatedAnimatedImage
+          ref={plainRefPlainComponent}
+          source={{ uri: undefined }}
+        />
+        <CreatedAnimatedImage
+          ref={animatedRefPlainComponent}
+          source={{ uri: undefined }}
+        />
+        <CreatedAnimatedImage
+          ref={plainRefAnimatedComponent}
+          source={{ uri: undefined }}
+        />
+        <CreatedAnimatedImage
+          ref={animatedRefAnimatedComponent}
+          source={{ uri: undefined }}
+        />
+        <CreatedAnimatedImage
+          // @ts-expect-error Properly detects misused Plain Ref.
+          ref={plainRefCreatedComponent}
+          source={{ uri: undefined }}
+        />
+        <CreatedAnimatedImage
+          ref={animatedRefCreatedComponent}
+          source={{ uri: undefined }}
+        />
       </>
     );
   }
@@ -1947,8 +1968,9 @@ function UseAnimatedRefTest() {
     const plainRefCreatedComponent =
       useRef<typeof CreatedAnimatedScrollView>(null);
     const animatedRefCreatedComponent =
-      // @ts-expect-error TODO TYPESCRIPT This should work IMO
-      useAnimatedRef<typeof CreatedAnimatedScrollView>();
+      // TODO This below should be the correct syntax I believe, but currently it doesn't work.
+      // useAnimatedRef<typeof CreatedAnimatedScrollView>();
+      useAnimatedRef<typeof CreatedAnimatedScrollView & ScrollView>();
 
     return (
       <>
@@ -1958,7 +1980,6 @@ function UseAnimatedRefTest() {
         <ScrollView ref={animatedRefAnimatedComponent} />
         {/* @ts-expect-error Properly detects misused Plain Ref. */}
         <ScrollView ref={plainRefCreatedComponent} />
-        {/* @ts-expect-error Properly detects misused Animated Ref. */}
         <ScrollView ref={animatedRefCreatedComponent} />
 
         {/* @ts-expect-error Properly detects misused Plain Ref. */}
@@ -1978,7 +1999,6 @@ function UseAnimatedRefTest() {
         <CreatedAnimatedScrollView ref={animatedRefAnimatedComponent} />
         {/* @ts-expect-error Properly detects misused Plain Ref. */}
         <CreatedAnimatedScrollView ref={plainRefCreatedComponent} />
-        {/* @ts-expect-error TODO This should work!!! */}
         <CreatedAnimatedScrollView ref={animatedRefCreatedComponent} />
       </>
     );
@@ -1996,8 +2016,9 @@ function UseAnimatedRefTest() {
     const plainRefCreatedComponent =
       useRef<typeof CreatedAnimatedFlatList>(null);
     const animatedRefCreatedComponent =
-      // @ts-expect-error TODO TYPESCRIPT This should work IMO
-      useAnimatedRef<typeof CreatedAnimatedFlatList>();
+      // TODO This below should be the correct syntax I believe, but currently it doesn't work.
+      // useAnimatedRef<typeof CreatedAnimatedFlatList>();
+      useAnimatedRef<typeof CreatedAnimatedFlatList & FlatList>();
 
     return (
       <>
@@ -2012,32 +2033,27 @@ function UseAnimatedRefTest() {
         {/* @ts-expect-error Properly detects misused type. */}
         <FlatList ref={plainRefCreatedComponent} data={[]} renderItem={null} />
         <FlatList
-          // @ts-expect-error Properly detects misused Animated Ref.
           ref={animatedRefCreatedComponent}
           data={[]}
           renderItem={null}
         />
 
         <Animated.FlatList
-          // @ts-expect-error Properly detects misused Plain Ref.
           ref={plainRefPlainComponent}
           data={[]}
           renderItem={null}
         />
         <Animated.FlatList
-          // @ts-expect-error Properly detects misused type.
           ref={animatedRefPlainComponent}
           data={[]}
           renderItem={null}
         />
         <Animated.FlatList
-          // @ts-expect-error Properly detects misused Plain Ref.
           ref={plainRefAnimatedComponent}
           data={[]}
           renderItem={null}
         />
         <Animated.FlatList
-          // @ts-expect-error TODO This should work!!!
           ref={animatedRefAnimatedComponent}
           data={[]}
           renderItem={null}
@@ -2049,7 +2065,6 @@ function UseAnimatedRefTest() {
           renderItem={null}
         />
         <Animated.FlatList
-          // @ts-expect-error Properly detects misused type.
           ref={animatedRefCreatedComponent}
           data={[]}
           renderItem={null}
@@ -2082,7 +2097,6 @@ function UseAnimatedRefTest() {
           renderItem={null}
         />
         <CreatedAnimatedFlatList
-          // @ts-expect-error TODO This should work!!!
           ref={animatedRefCreatedComponent}
           data={[]}
           renderItem={null}
@@ -2103,8 +2117,9 @@ function UseAnimatedRefTest() {
     const plainRefCreatedComponent =
       useRef<typeof CreatedAnimatedFlatList>(null);
     const animatedRefCreatedComponent =
-      // @ts-expect-error TODO TYPESCRIPT This should work IMO
-      useAnimatedRef<typeof CreatedAnimatedFlatList>();
+      // TODO This below should be the correct syntax I believe, but currently it doesn't work.
+      // useAnimatedRef<typeof CreatedAnimatedFlatList>();
+      useAnimatedRef<typeof CreatedAnimatedFlatList & FlatList<number>>();
 
     return (
       <>
@@ -2119,32 +2134,27 @@ function UseAnimatedRefTest() {
         {/* @ts-expect-error Properly detects misused type. */}
         <FlatList ref={plainRefCreatedComponent} data={[]} renderItem={null} />
         <FlatList
-          // @ts-expect-error Properly detects misused Animated Ref.
           ref={animatedRefCreatedComponent}
           data={[]}
           renderItem={null}
         />
 
         <Animated.FlatList
-          // @ts-expect-error Properly detects misused Plain Ref.
           ref={plainRefPlainComponent}
           data={[]}
           renderItem={null}
         />
         <Animated.FlatList
-          // @ts-expect-error Properly detects misused type.
           ref={animatedRefPlainComponent}
           data={[]}
           renderItem={null}
         />
         <Animated.FlatList
-          // @ts-expect-error Properly detects misused Plain Ref.
           ref={plainRefAnimatedComponent}
           data={[]}
           renderItem={null}
         />
         <Animated.FlatList
-          // @ts-expect-error TODO This should work!!!
           ref={animatedRefAnimatedComponent}
           data={[]}
           renderItem={null}
@@ -2156,7 +2166,6 @@ function UseAnimatedRefTest() {
           renderItem={null}
         />
         <Animated.FlatList
-          // @ts-expect-error Properly detects misused type.
           ref={animatedRefCreatedComponent}
           data={[]}
           renderItem={null}
@@ -2191,10 +2200,53 @@ function UseAnimatedRefTest() {
           renderItem={null}
         />
         <CreatedAnimatedFlatList
-          // @ts-expect-error TODO This should work!!!
           ref={animatedRefCreatedComponent}
           data={[]}
           renderItem={null}
+        />
+      </>
+    );
+  }
+
+  function UseAnimatedRefTestCustomClassComponent() {
+    interface CustomProps {
+      customProp?: string;
+      otherProp?: number;
+      ref?: Ref<CustomClassComponent>;
+    }
+    class CustomClassComponent extends React.Component<CustomProps> {
+      render() {
+        return <View ref={this.props.ref as Ref<View>} />;
+      }
+    }
+
+    const CreatedAnimatedCustomClassComponent =
+      Animated.createAnimatedComponent(CustomClassComponent);
+    const plainRefPlainComponent = useRef<CustomClassComponent>(null);
+    const animatedRefPlainComponent = useAnimatedRef<CustomClassComponent>();
+    const plainRefCreatedComponent =
+      useRef<typeof CreatedAnimatedCustomClassComponent>(null);
+    const animatedRefCreatedComponent =
+      // TODO This below should be the correct syntax I believe, but currently it doesn't work.
+      // useAnimatedRef<typeof CreatedAnimatedCustomClassComponent>();
+      useAnimatedRef<
+        typeof CreatedAnimatedCustomClassComponent & CustomClassComponent
+      >();
+
+    return (
+      <>
+        <CustomClassComponent ref={plainRefPlainComponent} />
+        <CustomClassComponent ref={animatedRefPlainComponent} />
+        {/* @ts-expect-error Properly detects misused type. */}
+        <CustomClassComponent ref={plainRefCreatedComponent} />
+        <CustomClassComponent ref={animatedRefCreatedComponent} />
+
+        <CreatedAnimatedCustomClassComponent ref={plainRefPlainComponent} />
+        <CreatedAnimatedCustomClassComponent ref={animatedRefPlainComponent} />
+        {/* @ts-expect-error Properly detects misused Plain Ref. */}
+        <CreatedAnimatedCustomClassComponent ref={plainRefCreatedComponent} />
+        <CreatedAnimatedCustomClassComponent
+          ref={animatedRefCreatedComponent}
         />
       </>
     );
