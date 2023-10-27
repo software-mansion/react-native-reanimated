@@ -33,10 +33,6 @@
 #include <fbjni/fbjni.h>
 #endif
 
-#ifndef NDEBUG
-#include "JSLogger.h"
-#endif
-
 using namespace facebook;
 
 #if REACT_NATIVE_MINOR_VERSION >= 73 && defined(RCT_NEW_ARCH_ENABLED)
