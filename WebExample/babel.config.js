@@ -1,12 +1,15 @@
 module.exports = function (api) {
-  const disableBabelPlugin = process.env.DISABLE_BABEL_PLUGIN === '1';
+  const disableBabelPreset = process.env.DISABLE_BABEL_PRESET === '1';
   // https://babeljs.io/docs/en/config-files#apicache
-  api.cache.invalidate(() => disableBabelPlugin);
-  if (disableBabelPlugin) {
-    console.log('Starting Web example without Babel plugin.');
+  api.cache.invalidate(() => disableBabelPreset);
+  if (disableBabelPreset) {
+    console.log('Starting Web example without Babel preset.');
   }
   return {
-    presets: [['../preset', {disableBabelPlugin}], 'babel-preset-expo'],
+    presets: [
+      !disableBabelPreset && 'react-native-reanimated/preset',
+      'babel-preset-expo',
+    ].filter(Boolean),
     plugins: [
       [
         'module-resolver',

@@ -4,7 +4,7 @@
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start --web",
-    "start:noplugin": "DISABLE_BABEL_PLUGIN=1 yarn start",
+    "start:nopreset": "DISABLE_BABEL_PRESET=1 yarn start",
     "lint": "eslint --max-warnings=0 .",
     "build": "expo export:web"
   },

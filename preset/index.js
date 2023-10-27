@@ -1,8 +1,4 @@
-module.exports = function (api, options = { disableBabelPlugin: false }) {
-  if (options.disableBabelPlugin) {
-    return {};
-  }
-
+module.exports = function (api) {
   const platform = api.caller(getPlatform);
   const isWeb = platform === 'web';
 
