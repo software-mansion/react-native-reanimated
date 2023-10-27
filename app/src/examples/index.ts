@@ -47,6 +47,7 @@ import GetViewPropExample from './GetViewPropExample';
 import IPodExample from './IPodExample';
 import ImageStackExample from './SharedElementTransitions/ImageStack';
 import InvertedFlatListExample from './InvertedFlatListExample';
+import JSPropsExample from './JSPropsExample';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
 import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
 import LettersExample from './LettersExample';
@@ -138,6 +139,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🪛',
     title: 'Modify',
     screen: ModifyExample,
+  },
+  JSPropsExample: {
+    icon: '🟨',
+    title: 'JS props',
+    screen: JSPropsExample,
   },
 
   // About
