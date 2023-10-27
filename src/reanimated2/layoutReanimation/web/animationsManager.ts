@@ -89,7 +89,6 @@ function tryGetAnimationConfigWithTransform<
   ComponentProps extends Record<string, unknown>
 >(
   props: Readonly<AnimatedComponentProps<ComponentProps>>,
-  element: HTMLElement,
   animationType: LayoutAnimationType
 ) {
   const config = chooseConfig(animationType, props);
@@ -143,7 +142,6 @@ export function startWebLayoutAnimation<
 
   const maybeAnimationConfigWithTransform = tryGetAnimationConfigWithTransform(
     props,
-    element,
     animationType
   );
 
