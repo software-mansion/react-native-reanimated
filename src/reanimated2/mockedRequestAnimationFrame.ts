@@ -4,6 +4,6 @@
 // by React Native for test purposes.
 export function mockedRequestAnimationFrame(
   callback: (timestamp: number) => void
-) {
+): ReturnType<typeof setTimeout> {
   return setTimeout(() => callback(performance.now()), 0);
 }
