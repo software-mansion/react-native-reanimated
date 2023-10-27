@@ -321,7 +321,7 @@ void NativeReanimatedModule::setShouldAnimateExiting(
     const jsi::Value &viewTag,
     const jsi::Value &shouldAnimate) {
   layoutAnimationsManager_.setShouldAnimateExiting(
-      viewTag.asNumber(), shouldAnimate.asBool());
+      viewTag.asNumber(), shouldAnimate.getBool());
 }
 
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
