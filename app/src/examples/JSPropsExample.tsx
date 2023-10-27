@@ -35,9 +35,9 @@ function valueToAngle(value: number, min: number, max: number) {
   return interpolate(value, [min, max], [0, 360]);
 }
 
-function angleToValue(progress: number, min: number, max: number) {
+function angleToValue(angle: number, min: number, max: number) {
   'worklet';
-  return interpolate(progress, [0, 360], [min, max]);
+  return interpolate(angle, [0, 360], [min, max]);
 }
 
 type CircularSliderProps = {
@@ -68,6 +68,7 @@ function CircularSlider(props: CircularSliderProps) {
     value,
     min,
     max,
+    onValueChange,
   } = props;
 
   const center = { x: size / 2, y: size / 2 };
@@ -110,9 +111,9 @@ function CircularSlider(props: CircularSliderProps) {
     .onUpdate(({ x, y }) => {
       currentAngle.value = cartesianToPolar({ x, y }, center);
     })
-    .onEnd(() => {
-      if (props.onValueChange) {
-        runOnJS(props.onValueChange)(currentValue.value);
+    .onFinalize(() => {
+      if (onValueChange) {
+        runOnJS(onValueChange)(currentValue.value);
       }
     });
 
