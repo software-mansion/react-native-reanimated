@@ -2,7 +2,7 @@
 
 import type { AnimationConfig, AnimationNames, CustomConfig } from './config';
 import { Animations } from './config';
-import type { AnimatedComponentProps } from '../../../createAnimatedComponent/utils';
+import type { AnimatedComponentProps } from '../../../createAnimatedComponent/commonTypes';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { StyleProps } from '../../commonTypes';
 import { createAnimationWithExistingTransform } from './createAnimation';

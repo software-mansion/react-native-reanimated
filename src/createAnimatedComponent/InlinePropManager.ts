@@ -1,10 +1,11 @@
 'use strict';
 import type { StyleProps } from '../reanimated2';
 import type {
+  IAnimatedComponentInternal,
   AnimatedComponentProps,
   IInlinePropManager,
   ViewInfo,
-} from './utils';
+} from './commonTypes';
 import { flattenArray } from './utils';
 import { makeViewDescriptorsSet } from '../reanimated2/ViewDescriptorsSet';
 import type {
@@ -126,13 +127,15 @@ export function getInlineStyle(
   }
   return newStyle;
 }
+
 export class InlinePropManager implements IInlinePropManager {
   _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
   _inlinePropsMapperId: number | null = null;
   _inlineProps: StyleProps = {};
 
   public attachInlineProps(
-    animatedComponent: React.Component<unknown, unknown>,
+    animatedComponent: React.Component<unknown, unknown> &
+      IAnimatedComponentInternal,
     viewInfo: ViewInfo
   ) {
     const newInlineProps: Record<string, unknown> =

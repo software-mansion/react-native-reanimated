@@ -105,7 +105,7 @@ export const _updatePropsJS = (
       });
     } else {
       console.warn(
-        `[Reanimated] It is not possible to manipulate the component ${component}`
+        `[Reanimated] It's not possible to manipulate the component ${component}`
       );
     }
   }

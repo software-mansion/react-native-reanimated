@@ -33,10 +33,10 @@ import type {
   AnimatedComponentProps,
   AnimatedProps,
   InitialComponentProps,
-  ReanimatedComponentRef,
-  AnimatedComponentClass,
+  AnimatedComponentRef,
+  IAnimatedComponentInternal,
   ViewInfo,
-} from './utils';
+} from './commonTypes';
 import { has, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
 import {
@@ -72,7 +72,7 @@ function isSameAnimatedStyle(
 const isSameAnimatedProps = isSameAnimatedStyle;
 
 type Options<P> = {
-  setNativeProps: (ref: ReanimatedComponentRef, props: P) => void;
+  setNativeProps: (ref: AnimatedComponentRef, props: P) => void;
 };
 
 export function createAnimatedComponent<P extends object>(
@@ -97,14 +97,14 @@ export function createAnimatedComponent(
 
   class AnimatedComponent
     extends React.Component<AnimatedComponentProps<InitialComponentProps>>
-    implements AnimatedComponentClass
+    implements IAnimatedComponentInternal
   {
     _styles: StyleProps[] | null = null;
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _viewTag = -1;
     _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
-    _component: ReanimatedComponentRef | HTMLElement | null = null;
+    _component: AnimatedComponentRef | HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
     _JSPropUpdater = new JSPropUpdater();
     _InlinePropManager = new InlinePropManager();
@@ -159,13 +159,13 @@ export function createAnimatedComponent(
     _getEventViewRef() {
       // Make sure to get the scrollable node for components that implement
       // `ScrollResponder.Mixin`.
-      return (this._component as ReanimatedComponentRef)?.getScrollableNode
-        ? (this._component as ReanimatedComponentRef).getScrollableNode?.()
+      return (this._component as AnimatedComponentRef)?.getScrollableNode
+        ? (this._component as AnimatedComponentRef).getScrollableNode?.()
         : this._component;
     }
 
     _attachNativeEvents() {
-      const node = this._getEventViewRef() as ReanimatedComponentRef;
+      const node = this._getEventViewRef() as AnimatedComponentRef;
       let viewTag = null; // We set it only if needed
 
       for (const key in this.props) {
@@ -238,7 +238,7 @@ export function createAnimatedComponent(
           prop.current.reattachNeeded
         ) {
           if (viewTag === null) {
-            const node = this._getEventViewRef() as ReanimatedComponentRef;
+            const node = this._getEventViewRef() as AnimatedComponentRef;
             viewTag = findNodeHandle(options?.setNativeProps ? this : node);
           }
           prop.current.registerForEvents(viewTag as number, key);
@@ -250,13 +250,10 @@ export function createAnimatedComponent(
     _updateFromNative(props: StyleProps) {
       if (options?.setNativeProps) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        options.setNativeProps(
-          this._component as ReanimatedComponentRef,
-          props
-        );
+        options.setNativeProps(this._component as AnimatedComponentRef, props);
       } else {
         // eslint-disable-next-line no-unused-expressions
-        (this._component as ReanimatedComponentRef)?.setNativeProps?.(props);
+        (this._component as AnimatedComponentRef)?.setNativeProps?.(props);
       }
     }
 
@@ -271,9 +268,9 @@ export function createAnimatedComponent(
       let viewConfig;
       // Component can specify ref which should be animated when animated version of the component is created.
       // Otherwise, we animate the component itself.
-      const component = (this._component as ReanimatedComponentRef)
+      const component = (this._component as AnimatedComponentRef)
         ?.getAnimatableRef
-        ? (this._component as ReanimatedComponentRef).getAnimatableRef?.()
+        ? (this._component as AnimatedComponentRef).getAnimatableRef?.()
         : this;
 
       if (IS_WEB) {
@@ -294,7 +291,7 @@ export function createAnimatedComponent(
         // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
         viewTag = hostInstance?._nativeTag;
         /**
-         * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/packages/react-native/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
+         * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/Components/ScrollView/ScrollViewNativeComponent.js#L24).
          * The name we're looking for is in the field named uiViewClassName.
          */
         viewName = hostInstance?.viewConfig?.uiViewClassName;

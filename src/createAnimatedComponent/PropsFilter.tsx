@@ -9,9 +9,9 @@ import type {
   AnimatedComponentProps,
   AnimatedProps,
   InitialComponentProps,
-  AnimatedComponentClass,
+  IAnimatedComponentInternal,
   IPropsFilter,
-} from './utils';
+} from './commonTypes';
 import { flattenArray, has } from './utils';
 import { StyleSheet } from 'react-native';
 
@@ -24,7 +24,7 @@ export class PropsFilter implements IPropsFilter {
   private _initialStyle = {};
 
   public filterNonAnimatedProps(
-    component: React.Component<unknown, unknown> & AnimatedComponentClass
+    component: React.Component<unknown, unknown> & IAnimatedComponentInternal
   ): Record<string, unknown> {
     const inputProps =
       component.props as AnimatedComponentProps<InitialComponentProps>;
