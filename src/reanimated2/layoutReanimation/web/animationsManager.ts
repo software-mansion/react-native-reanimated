@@ -85,22 +85,16 @@ function chooseAction(
   }
 }
 
-export function startWebLayoutAnimation<
+function tryGetAnimationConfigWithTransform<
   ComponentProps extends Record<string, unknown>
 >(
   props: Readonly<AnimatedComponentProps<ComponentProps>>,
   element: HTMLElement,
-  animationType: LayoutAnimationType,
-  shouldMakeVisible = false,
-  transitionData?: TransitionData
+  animationType: LayoutAnimationType
 ) {
-  if (shouldMakeVisible) {
-    makeElementVisible(element);
-  }
-
   const config = chooseConfig(animationType, props);
   if (!config) {
-    return;
+    return null;
   }
 
   const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
@@ -113,7 +107,7 @@ export function startWebLayoutAnimation<
   );
 
   if (shouldFail) {
-    return;
+    return null;
   }
 
   const transform = (props.style as StyleProps)?.transform;
@@ -130,16 +124,46 @@ export function startWebLayoutAnimation<
   );
 
   if (checkReduceMotionFail(animationConfig)) {
-    return;
+    return null;
   }
 
-  chooseAction(
-    animationType,
-    animationConfig,
+  return { animationConfig, transform };
+}
+
+export function startWebLayoutAnimation<
+  ComponentProps extends Record<string, unknown>
+>(
+  props: Readonly<AnimatedComponentProps<ComponentProps>>,
+  element: HTMLElement,
+  animationType: LayoutAnimationType,
+  shouldMakeVisible = false,
+  transitionData?: TransitionData
+) {
+  let visibilityDelay = 0;
+
+  const maybeAnimationConfigWithTransform = tryGetAnimationConfigWithTransform(
+    props,
     element,
-    transitionData as TransitionData,
-    transform
+    animationType
   );
+
+  if (maybeAnimationConfigWithTransform) {
+    const { animationConfig, transform } = maybeAnimationConfigWithTransform;
+
+    visibilityDelay = animationConfig.delay;
+
+    chooseAction(
+      animationType,
+      animationConfig,
+      element,
+      transitionData as TransitionData,
+      transform
+    );
+  }
+
+  if (shouldMakeVisible) {
+    makeElementVisible(element, visibilityDelay);
+  }
 }
 
 export function tryActivateLayoutTransition<

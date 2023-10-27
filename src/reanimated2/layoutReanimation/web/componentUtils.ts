@@ -109,11 +109,20 @@ export function getProcessedConfig(
   };
 }
 
-export function makeElementVisible(element: HTMLElement) {
-  _updatePropsJS(
-    { visibility: 'initial' },
-    { _component: element as ReanimatedHTMLElement }
-  );
+export function makeElementVisible(element: HTMLElement, delay: number) {
+  if (delay === 0) {
+    _updatePropsJS(
+      { visibility: 'initial' },
+      { _component: element as ReanimatedHTMLElement }
+    );
+  } else {
+    setTimeout(() => {
+      _updatePropsJS(
+        { visibility: 'initial' },
+        { _component: element as ReanimatedHTMLElement }
+      );
+    }, delay * 1000);
+  }
 }
 
 function setElementAnimation(
@@ -149,18 +158,6 @@ export function handleEnteringAnimation(
   element: HTMLElement,
   animationConfig: AnimationConfig
 ) {
-  const { delay } = animationConfig;
-
-  // If `delay` === 0, value passed to `setTimeout` will be 0. However, `setTimeout` executes after given amount of time, not exactly after that time
-  // Because of that, we have to immediately toggle on the component when the delay is 0.
-  if (delay === 0) {
-    makeElementVisible(element);
-  } else {
-    setTimeout(() => {
-      makeElementVisible(element);
-    }, delay * 1000);
-  }
-
   setElementAnimation(element, animationConfig);
 }
 
