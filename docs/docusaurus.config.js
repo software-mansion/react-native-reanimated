@@ -109,6 +109,17 @@ const config = {
       },
     }),
   plugins: [
+    [
+      '@docusaurus/plugin-client-redirects',
+      {
+        createRedirects(existingPath) {
+          if (existingPath.includes('/animations/')) {
+            return [existingPath.replace('/animations/', '/api/animations/')];
+          }
+          return undefined;
+        },
+      },
+    ],
     ...[
       process.env.NODE_ENV === 'production' && '@docusaurus/plugin-debug',
     ].filter(Boolean),
