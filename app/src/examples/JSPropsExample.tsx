@@ -22,20 +22,13 @@ interface Point {
 
 function polarToCartesian(angle: number, radius: number, { x, y }: Point) {
   'worklet';
-  const a = ((angle - 90) * Math.PI) / 180.0;
+  const a = ((angle - 90) * Math.PI) / 180;
   return { x: x + radius * Math.cos(a), y: y + radius * Math.sin(a) };
 }
 
-function cartesianToPolar(
-  x: number,
-  y: number,
-  { x: cx, y: cy }: Point,
-  step = 1
-) {
+function cartesianToPolar({ x, y }: Point, { x: cx, y: cy }: Point) {
   'worklet';
-  const value =
-    Math.atan((y - cy) / (x - cx)) / (Math.PI / 180) + (x > cx ? 90 : 270);
-  return Math.round(value * (1 / step)) / (1 / step);
+  return Math.atan((y - cy) / (x - cx)) / (Math.PI / 180) + (x > cx ? 90 : 270);
 }
 
 function valueToProgress(value: number, min: number, max: number) {
@@ -57,11 +50,9 @@ type CircularSliderProps = {
   progressLineColor: ColorValue;
   trackLineWidth: number;
   trackLineColor: ColorValue;
-
   value: number;
   min: number;
   max: number;
-  step?: number;
   onValueChange?: (value: number) => void;
 };
 
@@ -75,36 +66,34 @@ function CircularSlider(props: CircularSliderProps) {
     progressLineColor,
     trackLineWidth,
     trackLineColor,
-
     value,
     min,
     max,
-    step = 1,
   } = props;
 
-  const CENTER = { x: size / 2, y: size / 2 };
+  const center = { x: size / 2, y: size / 2 };
 
-  const angle = useSharedValue(valueToProgress(value, min, max));
+  const currentAngle = useSharedValue(valueToProgress(value, min, max));
 
   const currentValue = useDerivedValue(() =>
-    Math.floor(progressToValue(angle.value / 360, min, max))
+    Math.floor(progressToValue(currentAngle.value / 360, min, max))
   );
 
   const knobPosition = useDerivedValue(() =>
-    polarToCartesian(angle.value, circleRadius, CENTER)
+    polarToCartesian(currentAngle.value, circleRadius, center)
   );
 
-  const animatedPath = useAnimatedProps(() => {
-    const p1 = polarToCartesian(0, circleRadius, CENTER);
+  const animatedPathProps = useAnimatedProps(() => {
+    const p1 = polarToCartesian(0, circleRadius, center);
     const p2 = knobPosition.value;
     return {
       d: `M${p1.x} ${p1.y} A ${circleRadius} ${circleRadius} 0 ${
-        angle.value > 180 ? 1 : 0
+        currentAngle.value > 180 ? 1 : 0
       } 1 ${p2.x} ${p2.y}`,
     };
   });
 
-  const animatedCircle = useAnimatedProps(() => {
+  const animatedCircleProps = useAnimatedProps(() => {
     const p = knobPosition.value;
     return {
       x: p.x - knobRadius,
@@ -119,7 +108,7 @@ function CircularSlider(props: CircularSliderProps) {
 
   const gestureHandler = useAnimatedGestureHandler({
     onActive: ({ x, y }) => {
-      angle.value = cartesianToPolar(x, y, CENTER, step);
+      currentAngle.value = cartesianToPolar({ x, y }, center);
     },
     onFinish: () => {
       if (props.onValueChange) {
@@ -130,12 +119,12 @@ function CircularSlider(props: CircularSliderProps) {
 
   return (
     <>
-      <PanGestureHandler onGestureEvent={gestureHandler} minDist={10}>
+      <PanGestureHandler onGestureEvent={gestureHandler} minDist={0}>
         <Animated.View>
           <Svg width={size} height={size}>
             <Circle
-              cx={CENTER.x}
-              cy={CENTER.y}
+              cx={center.x}
+              cy={center.y}
               r={circleRadius}
               stroke={trackLineColor}
               strokeWidth={trackLineWidth}
@@ -145,9 +134,9 @@ function CircularSlider(props: CircularSliderProps) {
               stroke={progressLineColor}
               strokeWidth={progressLineWidth}
               fill="none"
-              animatedProps={animatedPath}
+              animatedProps={animatedPathProps}
             />
-            <AnimatedG animatedProps={animatedCircle}>
+            <AnimatedG animatedProps={animatedCircleProps}>
               <Circle
                 cx={knobRadius}
                 cy={knobRadius}
