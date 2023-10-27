@@ -6,10 +6,9 @@ import Animated, {
   useSharedValue,
   useDerivedValue,
   useAnimatedProps,
-  useAnimatedGestureHandler,
   interpolate,
 } from 'react-native-reanimated';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedG = Animated.createAnimatedComponent(G);
@@ -106,20 +105,20 @@ function CircularSlider(props: CircularSliderProps) {
     return { text, defaultValue: text };
   });
 
-  const gestureHandler = useAnimatedGestureHandler({
-    onActive: ({ x, y }) => {
+  const gesture = Gesture.Pan()
+    .minDistance(0)
+    .onUpdate(({ x, y }) => {
       currentAngle.value = cartesianToPolar({ x, y }, center);
-    },
-    onFinish: () => {
+    })
+    .onEnd(() => {
       if (props.onValueChange) {
         runOnJS(props.onValueChange)(currentValue.value);
       }
-    },
-  });
+    });
 
   return (
     <>
-      <PanGestureHandler onGestureEvent={gestureHandler} minDist={0}>
+      <GestureDetector gesture={gesture}>
         <Animated.View>
           <Svg width={size} height={size}>
             <Circle
@@ -146,7 +145,7 @@ function CircularSlider(props: CircularSliderProps) {
             </AnimatedG>
           </Svg>
         </Animated.View>
-      </PanGestureHandler>
+      </GestureDetector>
       <AnimatedInput
         editable={false}
         animatedProps={animatedInputProps}
