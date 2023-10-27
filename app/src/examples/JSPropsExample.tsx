@@ -30,14 +30,14 @@ function cartesianToPolar({ x, y }: Point, { x: cx, y: cy }: Point) {
   return Math.atan((y - cy) / (x - cx)) / (Math.PI / 180) + (x > cx ? 90 : 270);
 }
 
-function valueToProgress(value: number, min: number, max: number) {
+function valueToAngle(value: number, min: number, max: number) {
   'worklet';
   return interpolate(value, [min, max], [0, 360]);
 }
 
-function progressToValue(progress: number, min: number, max: number) {
+function angleToValue(progress: number, min: number, max: number) {
   'worklet';
-  return interpolate(progress, [0, 1], [min, max]);
+  return interpolate(progress, [0, 360], [min, max]);
 }
 
 type CircularSliderProps = {
@@ -72,10 +72,10 @@ function CircularSlider(props: CircularSliderProps) {
 
   const center = { x: size / 2, y: size / 2 };
 
-  const currentAngle = useSharedValue(valueToProgress(value, min, max));
+  const currentAngle = useSharedValue(valueToAngle(value, min, max));
 
   const currentValue = useDerivedValue(() =>
-    Math.floor(progressToValue(currentAngle.value / 360, min, max))
+    Math.floor(angleToValue(currentAngle.value, min, max))
   );
 
   const knobPosition = useDerivedValue(() =>
@@ -92,7 +92,7 @@ function CircularSlider(props: CircularSliderProps) {
     };
   });
 
-  const animatedCircleProps = useAnimatedProps(() => {
+  const animatedGProps = useAnimatedProps(() => {
     const p = knobPosition.value;
     return {
       x: p.x - knobRadius,
@@ -135,7 +135,7 @@ function CircularSlider(props: CircularSliderProps) {
               fill="none"
               animatedProps={animatedPathProps}
             />
-            <AnimatedG animatedProps={animatedCircleProps}>
+            <AnimatedG animatedProps={animatedGProps}>
               <Circle
                 cx={knobRadius}
                 cy={knobRadius}
