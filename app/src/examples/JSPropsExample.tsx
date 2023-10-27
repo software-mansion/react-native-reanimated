@@ -190,6 +190,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   input: {
+    fontSize: 80,
     fontVariant: ['tabular-nums'],
+    position: 'absolute',
+    color: 'black',
   },
 });
