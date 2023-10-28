@@ -262,7 +262,6 @@ let _seed = 1234567;
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 180 / Math.PI;
 
-// http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript/21963136#21963136
 function generateUUID() {
   const d0 = (Math.random() * 0xffffffff) | 0;
   const d1 = (Math.random() * 0xffffffff) | 0;
@@ -299,7 +298,6 @@ function clamp(value, min, max) {
 }
 
 // compute euclidean modulo of m % n
-// https://en.wikipedia.org/wiki/Modulo_operation
 function euclideanModulo(n, m) {
   return ((n % m) + m) % m;
 }
@@ -309,7 +307,6 @@ function mapLinear(x, a1, a2, b1, b2) {
   return b1 + ((x - a1) * (b2 - b1)) / (a2 - a1);
 }
 
-// https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/inverse-lerp-a-super-useful-yet-often-overlooked-function-r5230/
 function inverseLerp(x, y, value) {
   if (x !== y) {
     return (value - x) / (y - x);
@@ -318,22 +315,18 @@ function inverseLerp(x, y, value) {
   }
 }
 
-// https://en.wikipedia.org/wiki/Linear_interpolation
 function lerp(x, y, t) {
   return (1 - t) * x + t * y;
 }
 
-// http://www.rorydriscoll.com/2016/03/07/frame-rate-independent-damping-using-lerp/
 function damp(x, y, lambda, dt) {
   return lerp(x, y, 1 - Math.exp(-lambda * dt));
 }
 
-// https://www.desmos.com/calculator/vcsjnyz7x4
 function pingpong(x, length = 1) {
   return length - Math.abs(euclideanModulo(x, length * 2) - length);
 }
 
-// http://en.wikipedia.org/wiki/Smoothstep
 function smoothstep(x, min, max) {
   if (x <= min) return 0;
   if (x >= max) return 1;
@@ -403,7 +396,7 @@ function floorPowerOfTwo(value) {
 }
 
 function setQuaternionFromProperEuler(q, a, b, c, order) {
-  // Intrinsic Proper Euler Angles - see https://en.wikipedia.org/wiki/Euler_angles
+  // Intrinsic Proper Euler Angles
 
   // rotations are applied to the axes in the order specified by 'order'
   // rotation by angle 'a' is applied first, then by angle 'b', then by angle 'c'

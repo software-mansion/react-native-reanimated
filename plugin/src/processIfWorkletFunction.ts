@@ -1,4 +1,4 @@
-import type { NodePath, Node } from '@babel/core';
+import type { NodePath } from '@babel/core';
 import {
   callExpression,
   isScopable,
@@ -9,11 +9,12 @@ import {
 import type { ExplicitWorklet, ReanimatedPluginPass } from './types';
 import { makeWorklet } from './makeWorklet';
 
-// Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
-// with a workletized version of itself.
-
+/**
+ * Replaces `FunctionDeclaration`, `FunctionExpression` or `ArrowFunctionExpression`
+ * with a workletized version of itself.
+ */
 export function processIfWorkletFunction(
-  path: NodePath<Node>,
+  path: NodePath,
   state: ReanimatedPluginPass
 ) {
   if (
@@ -29,9 +30,33 @@ function processWorkletFunction(
   path: NodePath<ExplicitWorklet>,
   state: ReanimatedPluginPass
 ) {
-  const newFun = makeWorklet(path, state);
+  const workletFactory = makeWorklet(path, state);
 
-  const replacement = callExpression(newFun, []);
+  const workletFactoryCall = callExpression(workletFactory, []);
+
+  /* 
+  If for some reason the code of the worklet is so bad that it
+  causes the worklet factory to crash, eg.:
+
+  function foo() {
+    'worklet'
+    unexistingVariable;
+  };
+
+  Such function will cause the factory to crash on closure creation because
+  of reference to `unexistingVariable`.
+  
+  With this we are able to give a meaningful stack trace - we use `start` twice on purpose, since
+  crashing on the factory leads to its end on the stack trace - the closing bracket. It's more
+  approachable this way, when it points to the start of the original function.
+  */
+  const originalWorkletLocation = path.node.loc;
+  if (originalWorkletLocation) {
+    workletFactoryCall.callee.loc = {
+      start: originalWorkletLocation.start,
+      end: originalWorkletLocation.start,
+    };
+  }
 
   // we check if function needs to be assigned to variable declaration.
   // This is needed if function definition directly in a scope. Some other ways
@@ -40,11 +65,13 @@ function processWorkletFunction(
   // ^ in such a case we don't need to define variable for the function
   const needDeclaration =
     isScopable(path.parent) || isExportNamedDeclaration(path.parent);
-  path.replaceWith(
+
+  const replacement =
     'id' in path.node && path.node.id && needDeclaration
       ? variableDeclaration('const', [
-          variableDeclarator(path.node.id, replacement),
+          variableDeclarator(path.node.id, workletFactoryCall),
         ])
-      : replacement
-  );
+      : workletFactoryCall;
+
+  path.replaceWith(replacement);
 }
