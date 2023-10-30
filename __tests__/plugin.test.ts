@@ -1626,7 +1626,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to true", () => {
+    it("doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to false", () => {
       const input = html`<script>
         const x = isWeb();
         const y = shouldBeUseWeb();
