@@ -51,6 +51,7 @@ function getDelayFromConfig(config: CustomConfig): number {
 
 function getReducedMotionFromConfig(config: CustomConfig) {
   if (!config.reduceMotionV) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     return useReducedMotion();
   }
 
@@ -60,6 +61,7 @@ function getReducedMotionFromConfig(config: CustomConfig) {
     case ReduceMotion.Always:
       return true;
     default:
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       return useReducedMotion();
   }
 }
