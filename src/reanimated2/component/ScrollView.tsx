@@ -32,9 +32,11 @@ const AnimatedScrollViewComponent = createAnimatedComponent(
 export const AnimatedScrollView: AnimatedScrollView = forwardRef(
   (props: AnimatedScrollViewProps, ref: ForwardedRef<AnimatedScrollView>) => {
     const { scrollViewOffset, ...restProps } = props;
-    const animatedRef = // eslint-disable-next-line react-hooks/rules-of-hooks
-    (
-      ref === null ? useAnimatedRef<ScrollView>() : ref
+    const animatedRef = (
+      ref === null
+        ? // eslint-disable-next-line react-hooks/rules-of-hooks
+          useAnimatedRef<ScrollView>()
+        : ref
     ) as AnimatedRef<AnimatedScrollView>;
 
     if (scrollViewOffset) {
