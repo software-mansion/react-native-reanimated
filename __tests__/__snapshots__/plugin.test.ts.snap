@@ -1620,6 +1620,16 @@ function App() {
 }"
 `;
 
+exports[`babel plugin for web configuration doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to true 1`] = `
+"var x = isWeb();
+var y = shouldBeUseWeb();"
+`;
+
+exports[`babel plugin for web configuration doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is undefined 1`] = `
+"var x = isWeb();
+var y = shouldBeUseWeb();"
+`;
+
 exports[`babel plugin for web configuration includes initData when omitWorkletInitData option is set to false 1`] = `
 "var _worklet_17472070642672_init_data = {
   code: "function foo(){var foo='bar';}",
@@ -1651,6 +1661,11 @@ exports[`babel plugin for web configuration skips initData when omitWorkletInitD
   foo.__stackDetails = _e;
   return foo;
 }();"
+`;
+
+exports[`babel plugin for web configuration substitutes isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to true 1`] = `
+"var x = true;
+var y = true;"
 `;
 
 exports[`babel plugin for worklet nesting doesn't process nested worklets when disabled 1`] = `
