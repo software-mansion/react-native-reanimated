@@ -1584,7 +1584,7 @@ describe('babel plugin', () => {
   });
 
   describe('for web configuration', () => {
-    it('skips initData when REANIMATED_BABEL_PLUGIN_IS_WEB is set', () => {
+    it('skips initData when omitWorkletInitData option is set to true', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -1592,15 +1592,12 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const current = process.env.REANIMATED_BABEL_PLUGIN_IS_WEB;
-      process.env.REANIMATED_BABEL_PLUGIN_IS_WEB = '1';
-      const { code } = runPlugin(input);
-      process.env.REANIMATED_BABEL_PLUGIN_IS_WEB = current;
+      const { code } = runPlugin(input, {}, { omitWorkletInitData: true });
       expect(code).toHaveWorkletData(0);
       expect(code).toMatchSnapshot();
     });
 
-    it('skips initData when isWeb option is set', () => {
+    it('includes initData when omitWorkletInitData option is set to false', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -1608,40 +1605,8 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input, {}, { isWeb: true });
-      expect(code).toHaveWorkletData(0);
-      expect(code).toMatchSnapshot();
-    });
-
-    it('includes initData when isWeb option is set to true and is overridden with REANIMATED_BABEL_PLUGIN_IS_WEB', () => {
-      const input = html`<script>
-        function foo() {
-          'worklet';
-          var foo = 'bar';
-        }
-      </script>`;
-
-      const current = process.env.REANIMATED_BABEL_PLUGIN_IS_WEB;
-      process.env.REANIMATED_BABEL_PLUGIN_IS_WEB = '0';
-      const { code } = runPlugin(input, {}, { isWeb: true });
-      process.env.REANIMATED_BABEL_PLUGIN_IS_WEB = current;
+      const { code } = runPlugin(input, {}, { omitWorkletInitData: false });
       expect(code).toHaveWorkletData(1);
-      expect(code).toMatchSnapshot();
-    });
-
-    it('skips initData when isWeb option is set to false and is overridden with REANIMATED_BABEL_PLUGIN_IS_WEB', () => {
-      const input = html`<script>
-        function foo() {
-          'worklet';
-          var foo = 'bar';
-        }
-      </script>`;
-
-      const current = process.env.REANIMATED_BABEL_PLUGIN_IS_WEB;
-      process.env.REANIMATED_BABEL_PLUGIN_IS_WEB = '1';
-      const { code } = runPlugin(input, {}, { isWeb: false });
-      process.env.REANIMATED_BABEL_PLUGIN_IS_WEB = current;
-      expect(code).toHaveWorkletData(0);
       expect(code).toMatchSnapshot();
     });
   });

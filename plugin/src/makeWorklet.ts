@@ -42,7 +42,7 @@ import { relative } from 'path';
 import { buildWorkletString } from './buildWorkletString';
 import { globals } from './globals';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
-import { isRelease, isWeb } from './utils';
+import { isRelease } from './utils';
 
 const REAL_VERSION = require('../../package.json').version;
 const MOCK_VERSION = 'x.y.z';
@@ -178,7 +178,7 @@ export function makeWorklet(
     );
   }
 
-  const shouldIncludeInitData = !isWeb(state);
+  const shouldIncludeInitData = !state.opts.omitWorkletInitData;
   if (shouldIncludeInitData) {
     pathForStringDefinitions.insertBefore(
       variableDeclaration('const', [

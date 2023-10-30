@@ -30,20 +30,13 @@ var require_utils = __commonJS({
   "lib/utils.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.isWeb = exports2.isRelease = void 0;
+    exports2.isRelease = void 0;
     function isRelease() {
       var _a, _b;
       const pattern = /(prod|release|stag[ei])/i;
       return !!(((_a = process.env.BABEL_ENV) === null || _a === void 0 ? void 0 : _a.match(pattern)) || ((_b = process.env.NODE_ENV) === null || _b === void 0 ? void 0 : _b.match(pattern)));
     }
     exports2.isRelease = isRelease;
-    function isWeb(state) {
-      if (process.env.REANIMATED_BABEL_PLUGIN_IS_WEB === "0") {
-        return false;
-      }
-      return process.env.REANIMATED_BABEL_PLUGIN_IS_WEB === "1" || state.opts.isWeb;
-    }
-    exports2.isWeb = isWeb;
   }
 });
 
@@ -367,7 +360,7 @@ var require_makeWorklet = __commonJS({
       if (shouldInjectVersion) {
         initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("version"), (0, types_1.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)));
       }
-      const shouldIncludeInitData = !(0, utils_1.isWeb)(state);
+      const shouldIncludeInitData = !state.opts.omitWorkletInitData;
       if (shouldIncludeInitData) {
         pathForStringDefinitions.insertBefore((0, types_1.variableDeclaration)("const", [
           (0, types_1.variableDeclarator)(initDataId, initDataObjectExpression)

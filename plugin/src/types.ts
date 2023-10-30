@@ -10,7 +10,7 @@ export interface ReanimatedPluginOptions {
   relativeSourceLocation?: boolean;
   disableInlineStylesWarning?: boolean;
   processNestedWorklets?: boolean;
-  isWeb?: boolean;
+  omitWorkletInitData?: boolean;
   globals?: string[];
 }
 

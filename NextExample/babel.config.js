@@ -12,6 +12,6 @@ module.exports = {
         },
       },
     ],
-    ['react-native-reanimated/plugin', { isWeb: true }],
+    ['react-native-reanimated/plugin'],
   ],
 };
