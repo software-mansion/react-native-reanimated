@@ -36,7 +36,12 @@ import type {
 } from './utils';
 import { has, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
-import { isJest, isWeb, shouldBeUseWeb } from '../reanimated2/PlatformChecker';
+import {
+  isFabric,
+  isJest,
+  isWeb,
+  shouldBeUseWeb,
+} from '../reanimated2/PlatformChecker';
 import type { ViewInfo } from './InlinePropManager';
 import { InlinePropManager } from './InlinePropManager';
 import { PropsFilter } from './PropsFilter';
@@ -47,6 +52,7 @@ import {
 } from '../reanimated2/layoutReanimation/web';
 
 const IS_WEB = isWeb();
+const IS_FABRIC = isFabric();
 
 function onlyAnimatedStyles(styles: StyleProps[]): StyleProps[] {
   return styles.filter((style) => style?.viewDescriptors);
@@ -106,6 +112,7 @@ export function createAnimatedComponent(
     _JSPropUpdater = new JSPropUpdater();
     _InlinePropManager = new InlinePropManager();
     _PropsFilter = new PropsFilter();
+    _viewInfo?: ViewInfo;
     static displayName: string;
     static contextType = SkipEnteringContext;
     context!: React.ContextType<typeof SkipEnteringContext>;
@@ -201,7 +208,7 @@ export function createAnimatedComponent(
         if (this.props.animatedProps?.viewDescriptors) {
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
-        if (global._IS_FABRIC) {
+        if (IS_FABRIC) {
           removeFromPropsRegistry(this._viewTag);
         }
       }
@@ -251,6 +258,10 @@ export function createAnimatedComponent(
     }
 
     _getViewInfo(): ViewInfo {
+      if (this._viewInfo !== undefined) {
+        return this._viewInfo;
+      }
+
       let viewTag: number | HTMLElement | null;
       let viewName: string | null;
       let shadowNodeWrapper: ShadowNodeWrapper | null = null;
@@ -279,18 +290,19 @@ export function createAnimatedComponent(
         // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
         viewTag = hostInstance?._nativeTag;
         /**
-         * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/packages/react-native/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
+         * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/Components/ScrollView/ScrollViewNativeComponent.js#L24).
          * The name we're looking for is in the field named uiViewClassName.
          */
         viewName = hostInstance?.viewConfig?.uiViewClassName;
 
         viewConfig = hostInstance?.viewConfig;
 
-        if (global._IS_FABRIC) {
+        if (IS_FABRIC) {
           shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
         }
       }
-      return { viewTag, viewName, shadowNodeWrapper, viewConfig };
+      this._viewInfo = { viewTag, viewName, shadowNodeWrapper, viewConfig };
+      return this._viewInfo;
     }
 
     _attachAnimatedStyles() {

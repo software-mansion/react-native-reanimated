@@ -92,13 +92,15 @@ export type {
   EasingFactoryFn,
 } from './Easing';
 export { Easing } from './Easing';
+export type { ComponentCoords } from './platformFunctions';
 export {
   measure,
   dispatchCommand,
   scrollTo,
   setGestureState,
+  setNativeProps,
+  getRelativeCoords,
 } from './platformFunctions';
-export { setNativeProps } from './SetNativeProps';
 export type { ParsedColorArray } from './Colors';
 export { isColor, processColor, convertToRGBA } from './Colors';
 export { createAnimatedPropAdapter } from './PropAdapters';
@@ -217,8 +219,7 @@ export {
   SharedTransition,
   SharedTransitionType,
 } from './layoutReanimation';
-export type { ComponentCoords } from './utils';
-export { getRelativeCoords, isSharedValue } from './utils';
+export { isSharedValue } from './isSharedValue';
 export type {
   StyleProps,
   SharedValue,
