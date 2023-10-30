@@ -360,7 +360,7 @@ var require_makeWorklet = __commonJS({
       if (shouldInjectVersion) {
         initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("version"), (0, types_1.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)));
       }
-      const shouldIncludeInitData = !state.opts.omitWorkletInitData;
+      const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
       if (shouldIncludeInitData) {
         pathForStringDefinitions.insertBefore((0, types_1.variableDeclaration)("const", [
           (0, types_1.variableDeclarator)(initDataId, initDataObjectExpression)

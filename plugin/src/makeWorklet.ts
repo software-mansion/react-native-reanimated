@@ -178,7 +178,7 @@ export function makeWorklet(
     );
   }
 
-  const shouldIncludeInitData = !state.opts.omitWorkletInitData;
+  const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
   if (shouldIncludeInitData) {
     pathForStringDefinitions.insertBefore(
       variableDeclaration('const', [
