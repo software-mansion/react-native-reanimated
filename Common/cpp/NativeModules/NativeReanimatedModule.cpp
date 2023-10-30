@@ -428,10 +428,10 @@ bool NativeReanimatedModule::handleRawEvent(
   }
   jsi::Runtime &rt = uiWorkletRuntime_->getJSIRuntime();
 #if REACT_NATIVE_MINOR_VERSION >= 73
-  const SharedEventPayload &eventPayload = rawEvent.eventPayload;
+  const auto &eventPayload = rawEvent.eventPayload;
   jsi::Value payload = eventPayload->asJSIValue(rt);
 #else
-  const ValueFactory &payloadFactory = rawEvent.payloadFactory;
+  const auto &payloadFactory = rawEvent.payloadFactory;
   jsi::Value payload = payloadFactory(rt);
 #endif
 
