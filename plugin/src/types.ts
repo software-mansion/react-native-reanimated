@@ -12,6 +12,7 @@ export interface ReanimatedPluginOptions {
   processNestedWorklets?: boolean;
   omitWorkletInitData?: boolean;
   globals?: string[];
+  substituteWebPlatformChecks?: boolean;
 }
 
 export interface ReanimatedPluginPass {

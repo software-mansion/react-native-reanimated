@@ -7,6 +7,7 @@ import { processInlineStylesWarning } from './processInlineStylesWarning';
 import { processIfCallback } from './processIfCallback';
 import { addCustomGlobals } from './addCustomGlobals';
 import { initializeGlobals } from './globals';
+import { substituteWebCallExpression } from './substituteWebCallExpression';
 
 module.exports = function (): PluginItem {
   function runWithTaggedExceptions(fun: () => void) {
@@ -27,7 +28,12 @@ module.exports = function (): PluginItem {
     visitor: {
       CallExpression: {
         enter(path: NodePath<CallExpression>, state: ReanimatedPluginPass) {
-          runWithTaggedExceptions(() => processForCalleesWorklets(path, state));
+          runWithTaggedExceptions(() => {
+            processForCalleesWorklets(path, state);
+            if (state.opts.substituteWebPlatformChecks) {
+              substituteWebCallExpression(path);
+            }
+          });
         },
       },
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
