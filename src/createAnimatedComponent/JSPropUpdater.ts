@@ -4,14 +4,34 @@ import {
   NativeModules,
   findNodeHandle,
 } from 'react-native';
-import { nativeShouldBeMock } from '../reanimated2/PlatformChecker';
+import { isWeb, nativeShouldBeMock } from '../reanimated2/PlatformChecker';
 import type { StyleProps } from '../reanimated2';
-import type { IAnimatedComponentInternal, IJSPropUpdater } from './commonTypes';
+import type {
+  AnimatedComponentProps,
+  IAnimatedComponentInternal,
+  IJSPropUpdater,
+  InitialComponentProps,
+} from './commonTypes';
 
 interface ListenerData {
   viewTag: number;
   props: StyleProps;
 }
+
+interface WebAnimatedComponent<P, S> extends React.Component<P, S> {
+  _component: HTMLElement;
+}
+
+const IS_WEB = isWeb();
+
+function getViewTagForComponent<P, S>(
+  animatedComponent: React.Component<P, S>
+) {
+  return IS_WEB
+    ? (animatedComponent as WebAnimatedComponent<P, S>)._component
+    : findNodeHandle(animatedComponent);
+}
+
 export class JSPropUpdater implements IJSPropUpdater {
   private static _tagToComponentMapping = new Map();
   private _reanimatedEventEmitter: NativeEventEmitter;
@@ -30,20 +50,21 @@ export class JSPropUpdater implements IJSPropUpdater {
   }
 
   constructor() {
-    let reanimatedModule: typeof JSPropUpdater._reanimatedModuleMock;
-    if (nativeShouldBeMock()) {
-      reanimatedModule = JSPropUpdater._reanimatedModuleMock;
-    } else {
-      reanimatedModule = NativeModules.ReanimatedModule;
-    }
+    const reanimatedModule = nativeShouldBeMock()
+      ? JSPropUpdater._reanimatedModuleMock
+      : NativeModules.ReanimatedModule;
+
     this._reanimatedEventEmitter = new NativeEventEmitter(reanimatedModule);
   }
 
   public addOnJSPropsChangeListener(
-    animatedComponent: React.Component<unknown, unknown> &
+    animatedComponent: React.Component<
+      AnimatedComponentProps<InitialComponentProps>
+    > &
       IAnimatedComponentInternal
   ) {
-    const viewTag = findNodeHandle(animatedComponent);
+    const viewTag = getViewTagForComponent(animatedComponent);
+
     JSPropUpdater._tagToComponentMapping.set(viewTag, animatedComponent);
     if (JSPropUpdater._tagToComponentMapping.size === 1) {
       this._reanimatedEventEmitter.addListener(
@@ -54,10 +75,13 @@ export class JSPropUpdater implements IJSPropUpdater {
   }
 
   public removeOnJSPropsChangeListener(
-    animatedComponent: React.Component<unknown, unknown> &
+    animatedComponent: React.Component<
+      AnimatedComponentProps<InitialComponentProps>
+    > &
       IAnimatedComponentInternal
   ) {
-    const viewTag = findNodeHandle(animatedComponent);
+    const viewTag = getViewTagForComponent(animatedComponent);
+
     JSPropUpdater._tagToComponentMapping.delete(viewTag);
     if (JSPropUpdater._tagToComponentMapping.size === 0) {
       this._reanimatedEventEmitter.removeAllListeners(
