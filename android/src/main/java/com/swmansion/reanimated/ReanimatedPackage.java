@@ -13,7 +13,6 @@ import com.facebook.react.bridge.ReactMarker;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.module.model.ReactModuleInfo;
 import com.facebook.react.module.model.ReactModuleInfoProvider;
-import com.facebook.react.turbomodule.core.interfaces.TurboModule;
 import com.facebook.react.uimanager.ReanimatedUIManager;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
@@ -55,7 +54,7 @@ public class ReanimatedPackage extends TurboReactPackage implements ReactPackage
               reactModule.needsEagerInit(),
               reactModule.hasConstants(),
               reactModule.isCxxModule(),
-              TurboModule.class.isAssignableFrom(moduleClass)));
+              false /* TurboModule.class.isAssignableFrom(moduleClass) == false */));
     }
 
     return new ReactModuleInfoProvider() {

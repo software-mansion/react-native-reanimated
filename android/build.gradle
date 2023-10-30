@@ -377,6 +377,15 @@ android {
             } else {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest"
             }
+
+            // NativeProxy on Paper
+            if (!IS_NEW_ARCHITECTURE_ENABLED) {
+                if (REACT_NATIVE_MINOR_VERSION <= 73) {
+                    srcDirs += "src/reactNativeVersionPatch/NativeProxy/73"
+                } else {
+                    srcDirs += "src/reactNativeVersionPatch/NativeProxy/latest"
+                }
+            }
         }
     }
 }
