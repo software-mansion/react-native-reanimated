@@ -24,12 +24,6 @@ export interface DelayAnimation
   current: AnimatableValue;
 }
 
-export interface ClampAnimation
-  extends Animation<ClampAnimation>,
-    HigherOrderAnimation {
-  current: AnimatableValue;
-}
-
 export interface RepeatAnimation
   extends Animation<RepeatAnimation>,
     HigherOrderAnimation {
