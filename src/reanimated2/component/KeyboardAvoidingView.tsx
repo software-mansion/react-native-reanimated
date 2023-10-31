@@ -90,7 +90,7 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
       const bottomHeight = enabled === true ? bottom : 0;
 
       switch (behavior) {
-        case 'height':
+        case 'height': {
           const style =
             bottomHeight > 0
               ? {
@@ -99,19 +99,20 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
                 }
               : {};
           return style;
-
-        case 'position':
+        }
+        case 'position': {
           return {
             bottom: bottomHeight,
           };
-
-        case 'padding':
+        }
+        case 'padding': {
           return {
             paddingBottom: bottomHeight,
           };
-
-        default:
+        }
+        default: {
           return {};
+        }
       }
     });
 
