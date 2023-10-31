@@ -22,7 +22,8 @@ if new_arch_enabled
   ios_min_version = '11.0'
 end
 
-def legacy_install_modules_dependencies(s, config, new_arch_enabled)
+module LegacyModule
+def self.install_modules_dependencies(s, config, new_arch_enabled, using_hermes)
   s.dependency "React-Core"
   if new_arch_enabled
     s.dependency "React-RCTFabric"
@@ -64,6 +65,7 @@ def legacy_install_modules_dependencies(s, config, new_arch_enabled)
   if config[:react_native_minor_version] >= 72 && !new_arch_enabled
     s.dependency 'React-RCTAppDelegate'
   end
+end
 end
 
 Pod::Spec.new do |s|
@@ -107,6 +109,6 @@ Pod::Spec.new do |s|
   if defined?(install_modules_dependencies()) != nil
     install_modules_dependencies(s)
   else
-    legacy_install_modules_dependencies(s, config, new_arch_enabled)
+    LegacyModule.install_modules_dependencies(s, config, new_arch_enabled, using_hermes)
   end
 end
