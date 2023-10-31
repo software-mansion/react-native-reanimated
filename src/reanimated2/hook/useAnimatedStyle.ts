@@ -513,10 +513,9 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
 
   checkSharedValueUsage(initial.value);
 
-  if (isJest()) {
-    return useRef({ viewDescriptors, initial, viewsRef, animatedStyle })
-      .current;
-  } else {
-    return useRef({ initial, viewsRef, viewDescriptors }).current;
-  }
+  const style = isJest()
+    ? { viewDescriptors, initial, viewsRef, animatedStyle }
+    : { initial, viewsRef, viewDescriptors };
+
+  return useRef(style).current;
 }
