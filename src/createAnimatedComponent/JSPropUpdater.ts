@@ -4,9 +4,14 @@ import {
   NativeModules,
   findNodeHandle,
 } from 'react-native';
-import type { AnimatedComponentProps, InitialComponentProps } from './utils';
 import { isWeb, nativeShouldBeMock } from '../reanimated2/PlatformChecker';
 import type { StyleProps } from '../reanimated2';
+import type {
+  AnimatedComponentProps,
+  IAnimatedComponentInternal,
+  IJSPropUpdater,
+  InitialComponentProps,
+} from './commonTypes';
 
 interface ListenerData {
   viewTag: number;
@@ -27,7 +32,7 @@ function getViewTagForComponent<P, S>(
     : findNodeHandle(animatedComponent);
 }
 
-export class JSPropUpdater {
+export class JSPropUpdater implements IJSPropUpdater {
   private static _tagToComponentMapping = new Map();
   private _reanimatedEventEmitter: NativeEventEmitter;
   private static _reanimatedModuleMock = {
@@ -55,7 +60,8 @@ export class JSPropUpdater {
   public addOnJSPropsChangeListener(
     animatedComponent: React.Component<
       AnimatedComponentProps<InitialComponentProps>
-    >
+    > &
+      IAnimatedComponentInternal
   ) {
     const viewTag = getViewTagForComponent(animatedComponent);
 
@@ -71,7 +77,8 @@ export class JSPropUpdater {
   public removeOnJSPropsChangeListener(
     animatedComponent: React.Component<
       AnimatedComponentProps<InitialComponentProps>
-    >
+    > &
+      IAnimatedComponentInternal
   ) {
     const viewTag = getViewTagForComponent(animatedComponent);
 
