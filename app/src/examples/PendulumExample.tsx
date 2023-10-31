@@ -166,7 +166,7 @@ export default function SpringExample() {
           </Animated.View>
         </View>
       </GestureDetector>
-      <React.Fragment>
+      <>
         {fields.map((item) => {
           return (
             <InputField
@@ -179,7 +179,7 @@ export default function SpringExample() {
             />
           );
         })}
-      </React.Fragment>
+      </>
     </GestureHandlerRootView>
   );
 }

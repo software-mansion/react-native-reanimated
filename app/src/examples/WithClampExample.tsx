@@ -13,9 +13,9 @@ const LOWER_CLAMP = 120;
 const UPPER_CLAMP = 220;
 const CLAMP_MARKER_HEIGHT = 40;
 
-function renderFramedExample(testedStyle: ViewStyle, description: string) {
+function renderExample(testedStyle: ViewStyle, description: string) {
   return (
-    <React.Fragment>
+    <>
       <Text style={styles.text}>{description}</Text>
       <View
         style={{
@@ -41,7 +41,7 @@ function renderFramedExample(testedStyle: ViewStyle, description: string) {
           ]}
         />
       </View>
-    </React.Fragment>
+    </>
   );
 }
 
@@ -70,8 +70,8 @@ export default function AnimatedStyleUpdateExample() {
 
   return (
     <View style={styles.container}>
-      {renderFramedExample(clampedStyle, 'Clamp example')}
-      {renderFramedExample(style, 'Default')}
+      {renderExample(clampedStyle, 'Clamp example')}
+      {renderExample(style, 'Default')}
       <Button
         title="toggle"
         onPress={() => {

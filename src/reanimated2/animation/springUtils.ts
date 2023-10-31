@@ -167,12 +167,14 @@ export function scaleZetaToMatchClamps(
 ) {
   'worklet';
   const { zeta, toValue, startValue } = animation;
-  if (Number(toValue) === startValue) {
+  const toValueNum = Number(toValue);
+
+  if (toValueNum === startValue) {
     return zeta;
   }
 
   const [lowerBound, upperBound] =
-    Number(toValue) - startValue > 0 ? clamp : [clamp[1], clamp[0]];
+    toValueNum - startValue > 0 ? clamp : [clamp[1], clamp[0]];
 
   /** The extrema we get from equation below are relative (we obtain a ratio),
    *  To get absolute extrema we convert it as follows:
@@ -184,11 +186,11 @@ export function scaleZetaToMatchClamps(
    */
 
   const relativeExtremum1 = Math.abs(
-    (upperBound - Number(toValue)) / (Number(toValue) - startValue)
+    (upperBound - toValueNum) / (toValueNum - startValue)
   );
 
   const relativeExtremum2 = Math.abs(
-    (lowerBound - Number(toValue)) / (Number(toValue) - startValue)
+    (lowerBound - toValueNum) / (toValueNum - startValue)
   );
 
   /** Use this formula http://hyperphysics.phy-astr.gsu.edu/hbase/oscda.html to calculate

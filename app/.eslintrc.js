@@ -9,5 +9,6 @@ module.exports = {
     'react-native/no-unused-styles': 'error',
     'react-native/no-raw-text': 'off',
     'react-native/no-single-element-style-arrays': 'error',
+    'react/jsx-fragments': ['error', 'syntax'],
   },
 };
