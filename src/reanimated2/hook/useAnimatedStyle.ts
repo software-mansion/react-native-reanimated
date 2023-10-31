@@ -1,7 +1,6 @@
 'use strict';
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
-
 import { startMapper, stopMapper, makeRemote } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animation';
@@ -405,6 +404,7 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
   const viewsRef: ViewRefSet<unknown> = makeViewsRefSet();
   const initRef = useRef<AnimationRef>();
   let inputs = Object.values(updater.__closure ?? {});
+
   if (SHOULD_BE_USE_WEB) {
     if (!inputs.length && dependencies?.length) {
       // let web work without a Babel/SWC plugin
@@ -514,8 +514,9 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   checkSharedValueUsage(initial.value);
 
   if (isJest()) {
-    return { viewDescriptors, initial, viewsRef, animatedStyle };
+    return useRef({ viewDescriptors, initial, viewsRef, animatedStyle })
+      .current;
   } else {
-    return { viewDescriptors, initial, viewsRef };
+    return useRef({ initial, viewsRef, viewDescriptors }).current;
   }
 }
