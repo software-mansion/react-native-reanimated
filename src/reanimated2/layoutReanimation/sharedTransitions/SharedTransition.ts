@@ -132,10 +132,10 @@ export class SharedTransition {
     this._animation = (values: SharedTransitionAnimationsValues) => {
       'worklet';
       let animations: {
-        [key: string]: any;
+        [key: string]: unknown;
       } = {};
       const initialValues: {
-        [key: string]: any;
+        [key: string]: unknown;
       } = {};
 
       if (animationFactory) {

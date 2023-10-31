@@ -1,11 +1,12 @@
 'use strict';
-import type { ForwardedRef, RefObject } from 'react';
+import type { ForwardedRef } from 'react';
 import React, { Component, forwardRef } from 'react';
 import type { ScrollViewProps } from 'react-native';
 import { ScrollView } from 'react-native';
 import { createAnimatedComponent } from '../../createAnimatedComponent';
 import type { SharedValue } from '../commonTypes';
-import type { AnimateProps } from '../helperTypes';
+import type { AnimatedProps } from '../helperTypes';
+import type { AnimatedRef } from '../hook';
 import { useAnimatedRef, useScrollViewOffset } from '../hook';
 
 export interface AnimatedScrollViewProps extends ScrollViewProps {
@@ -14,7 +15,7 @@ export interface AnimatedScrollViewProps extends ScrollViewProps {
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 declare class AnimatedScrollViewClass extends Component<
-  AnimateProps<AnimatedScrollViewProps>
+  AnimatedProps<AnimatedScrollViewProps>
 > {
   getNode(): ScrollView;
 }
@@ -28,18 +29,19 @@ const AnimatedScrollViewComponent = createAnimatedComponent(
   ScrollView as any
 ) as any;
 
-// type AnimatedScrollViewFC = React.FC<AnimatedScrollViewProps>;
-
 export const AnimatedScrollView: AnimatedScrollView = forwardRef(
   (props: AnimatedScrollViewProps, ref: ForwardedRef<AnimatedScrollView>) => {
     const { scrollViewOffset, ...restProps } = props;
-    const aref = ref === null ? useAnimatedRef<ScrollView>() : ref;
+    const animatedRef = (
+      ref === null
+        ? // eslint-disable-next-line react-hooks/rules-of-hooks
+          useAnimatedRef<ScrollView>()
+        : ref
+    ) as AnimatedRef<AnimatedScrollView>;
 
     if (scrollViewOffset) {
-      useScrollViewOffset(
-        aref as RefObject<AnimatedScrollView>,
-        scrollViewOffset
-      );
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      useScrollViewOffset(animatedRef, scrollViewOffset);
     }
 
     // Set default scrollEventThrottle, because user expects
@@ -50,7 +52,7 @@ export const AnimatedScrollView: AnimatedScrollView = forwardRef(
       restProps.scrollEventThrottle = 1;
     }
 
-    return <AnimatedScrollViewComponent ref={aref} {...restProps} />;
+    return <AnimatedScrollViewComponent ref={animatedRef} {...restProps} />;
   }
 ) as unknown as AnimatedScrollView;
 

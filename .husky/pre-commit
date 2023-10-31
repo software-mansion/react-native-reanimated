@@ -6,16 +6,16 @@ yarn type:check:all
 yarn find-unused-code:js
 
 # This automatically builds Reanimated Babel plugin JavaScript files if their
-# TypeScript counterparts were changed. It also adds those files to the commit
-# if those built files differ from currently committed ones.
+# TypeScript counterparts were changed. It also adds the output file to the commit
+# if the built file differs from currently committed one.
 ! git diff-index HEAD --name-only |\
 grep -E '^plugin/' > /dev/null
 if [ $? -eq 1 ]; then
   yarn plugin
   ! git status -u |\
-  grep -E 'plugin/build/plugin\.js|plugin/build/plugin\.js\.map' > /dev/null
+  grep -E 'plugin/build/plugin\.js' > /dev/null
   if [ $? -eq 1 ]; then
-    git add plugin/build/plugin.js plugin/build/plugin.js.map
+    git add plugin/build/plugin.js
     echo "[Reanimated] Plugin files were automatically built and changes were spotted.\
     \n             Those changes were added to the commit." >&2
   fi

@@ -10,6 +10,7 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'prettier',
     'plugin:import/typescript',
+    'plugin:react-hooks/recommended',
   ],
   plugins: ['react', 'react-native', 'import', 'jest', '@typescript-eslint'],
   env: {
@@ -24,7 +25,7 @@ module.exports = {
     },
   },
   rules: {
-    'no-case-declarations': 'off',
+    curly: 'error',
     'import/no-unresolved': 'error',
     'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
     'react/jsx-uses-vars': 'error',

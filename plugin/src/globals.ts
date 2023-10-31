@@ -114,6 +114,7 @@ export const defaultGlobals = new Set([
 
   // Reanimated
   '_WORKLET',
+  '_IS_FABRIC',
   '_log',
   '_toString',
   '_scheduleOnJS',
@@ -131,6 +132,7 @@ export const defaultGlobals = new Set([
   '_notifyAboutProgress',
   '_notifyAboutEnd',
   '_runOnUIQueue',
+  '_getAnimationTimestamp',
 ]);
 
 export let globals: Set<string>;

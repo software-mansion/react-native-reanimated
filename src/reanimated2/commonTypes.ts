@@ -1,6 +1,7 @@
 'use strict';
 import type { ViewStyle, TextStyle } from 'react-native';
 
+export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;
   originY?: number;
@@ -11,7 +12,7 @@ export interface SharedValue<Value> {
   value: Value;
   addListener: (listenerID: number, listener: (value: any) => void) => void;
   removeListener: (listenerID: number) => void;
-  modify: (modifier: (value: any) => any) => void;
+  modify: (modifier?: (value: any) => any) => void;
 }
 
 // The below type is used for HostObjects returned by the JSI API that don't have
@@ -77,13 +78,6 @@ export type WorkletFunction<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown
 > = ((...args: Args) => ReturnValue) & (WorkletBaseRelease | WorkletBaseDev);
-
-/**
- * @deprecated
- */
-export interface __NativeEvent<T> {
-  nativeEvent: T;
-}
 
 export interface NestedObject<T> {
   [key: string]: NestedObjectValues<T>;
@@ -192,7 +186,9 @@ export enum InterfaceOrientation {
   ROTATION_270 = 270,
 }
 
-export type ShadowNodeWrapper = object;
+export type ShadowNodeWrapper = {
+  __hostObjectShadowNodeWrapper: never;
+};
 
 export enum KeyboardState {
   UNKNOWN = 0,
@@ -232,11 +228,6 @@ export enum ReduceMotion {
 }
 
 // THE LAND OF THE DEPRECATED
-
-/**
- * @deprecated
- */
-export type __Context = Record<string, unknown>;
 
 /**
  * @deprecated

@@ -3,6 +3,7 @@ import JSReanimated from './JSReanimated';
 import type { StyleProps } from '../commonTypes';
 import type { AnimatedStyle } from '../helperTypes';
 import { isWeb } from '../PlatformChecker';
+import { PropsAllowlists } from '../../propsAllowlists';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let createReactDOMStyle: (style: any) => any;
@@ -27,6 +28,7 @@ if (isWeb()) {
 
   try {
     createTextShadowValue =
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       require('react-native-web/dist/exports/StyleSheet/preprocess').createTextShadowValue;
   } catch (e) {}
 }
@@ -55,9 +57,18 @@ interface JSReanimatedComponent {
   };
 }
 
+export interface ReanimatedHTMLElement extends HTMLElement {
+  previousStyle: StyleProps;
+  setNativeProps?: (style: StyleProps) => void;
+  props: Record<string, string | number>;
+  _touchableNode: {
+    setAttribute: (key: string, props: unknown) => void;
+  };
+}
+
 export const _updatePropsJS = (
   updates: StyleProps | AnimatedStyle<any>,
-  viewRef: { _component?: JSReanimatedComponent },
+  viewRef: { _component?: JSReanimatedComponent | ReanimatedHTMLElement },
   isAnimatedProps?: boolean
 ): void => {
   if (viewRef._component) {
@@ -93,19 +104,28 @@ export const _updatePropsJS = (
         component._touchableNode.setAttribute(dashedKey, rawStyles[key]);
       });
     } else {
-      console.warn('It is not possible to manipulate component');
+      console.warn(
+        `[Reanimated] It's not possible to manipulate the component ${component}`
+      );
     }
   }
 };
 
 const setNativeProps = (
-  component: JSReanimatedComponent,
+  component: JSReanimatedComponent | ReanimatedHTMLElement,
   newProps: StyleProps,
   isAnimatedProps?: boolean
 ): void => {
   if (isAnimatedProps) {
-    component.setNativeProps?.(newProps);
-    return;
+    const uiProps: Record<string, unknown> = {};
+    for (const key in newProps) {
+      if (isNativeProp(key)) {
+        uiProps[key] = newProps[key];
+      }
+    }
+    // Only update UI props directly on the component,
+    // other props can be updated as standard style props.
+    component.setNativeProps?.(uiProps);
   }
 
   const previousStyle = component.previousStyle ? component.previousStyle : {};
@@ -152,5 +172,9 @@ const updatePropsDOM = (
     }
   }
 };
+
+function isNativeProp(propName: string): boolean {
+  return !!PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST[propName];
+}
 
 export default reanimatedJS;

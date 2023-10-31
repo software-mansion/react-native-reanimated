@@ -63,7 +63,7 @@ An optional worklet that will be run synchronously on the same thread immediatel
 
 ## Remarks
 
-- Worklet runtimes come with `console.*` methods installed out-of-the-box. Other APIs (including `performance.now`) are not available and need to be injected into the runtime or captured via worklet closure.
+- Worklet runtimes come with `performance.now` and `console.*` methods installed out-of-the-box. Other APIs are not available and need to be injected into the runtime or captured via worklet closure.
 
 - In development mode, all unhandled errors thrown in the runtime (except for those thrown in `initializer`) will be caught and thus logged to the console and displayed in a LogBox.
 
@@ -71,7 +71,7 @@ An optional worklet that will be run synchronously on the same thread immediatel
 
 ## Platform compatibility
 
-<div className="compatibility">
+<div className="platform-compatibility">
 
 | Android | iOS | Web |
 | ------- | --- | --- |

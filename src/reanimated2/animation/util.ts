@@ -17,7 +17,6 @@ import type {
   Timestamp,
   AnimatableValueObject,
 } from '../commonTypes';
-import NativeReanimatedModule from '../NativeReanimated';
 import type {
   AffineMatrixFlat,
   AffineMatrix,
@@ -32,7 +31,7 @@ import {
   subtractMatrices,
   getRotationMatrix,
 } from './transformationMatrix/matrixUtils';
-import { isReducedMotion } from '../PlatformChecker';
+import { isReducedMotion, shouldBeUseWeb } from '../PlatformChecker';
 
 let IN_STYLE_UPDATER = false;
 const IS_REDUCED_MOTION = isReducedMotion();
@@ -468,7 +467,7 @@ type AnimationToDecoration<
   ? Record<string, unknown>
   : U | (() => U) | AnimatableValue;
 
-const IS_NATIVE = NativeReanimatedModule.native;
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 export function defineAnimation<
   T extends AnimationObject | StyleLayoutAnimation, // type that's supposed to be returned
@@ -485,7 +484,7 @@ export function defineAnimation<
     return animation;
   };
 
-  if (_WORKLET || !IS_NATIVE) {
+  if (_WORKLET || SHOULD_BE_USE_WEB) {
     return create();
   }
   // @ts-ignore: eslint-disable-line

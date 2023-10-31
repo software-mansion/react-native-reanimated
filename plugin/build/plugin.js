@@ -32,8 +32,9 @@ var require_utils = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.isRelease = void 0;
     function isRelease() {
-      var _a;
-      return !!((_a = process.env.BABEL_ENV) === null || _a === void 0 ? void 0 : _a.match(/(prod|release|stag[ei])/i));
+      var _a, _b;
+      const pattern = /(prod|release|stag[ei])/i;
+      return !!(((_a = process.env.BABEL_ENV) === null || _a === void 0 ? void 0 : _a.match(pattern)) || ((_b = process.env.NODE_ENV) === null || _b === void 0 ? void 0 : _b.match(pattern)));
     }
     exports2.isRelease = isRelease;
   }
@@ -251,6 +252,7 @@ var require_globals = __commonJS({
       "arguments",
       "HermesInternal",
       "_WORKLET",
+      "_IS_FABRIC",
       "_log",
       "_toString",
       "_scheduleOnJS",
@@ -267,7 +269,8 @@ var require_globals = __commonJS({
       "_setGestureState",
       "_notifyAboutProgress",
       "_notifyAboutEnd",
-      "_runOnUIQueue"
+      "_runOnUIQueue",
+      "_getAnimationTimestamp"
     ]);
     function initializeGlobals() {
       exports2.globals = new Set(exports2.defaultGlobals);
@@ -422,6 +425,7 @@ var require_makeWorklet = __commonJS({
     }
     function makeArrayFromCapturedBindings(ast, fun) {
       const closure = /* @__PURE__ */ new Map();
+      const isLocationAssignedMap = /* @__PURE__ */ new Map();
       (0, core_1.traverse)(ast, {
         Identifier(path) {
           if (!path.isReferencedIdentifier()) {
@@ -449,6 +453,20 @@ var require_makeWorklet = __commonJS({
             currentScope = currentScope.parent;
           }
           closure.set(name, path.node);
+          isLocationAssignedMap.set(name, false);
+        }
+      });
+      fun.traverse({
+        Identifier(path) {
+          if (!path.isReferencedIdentifier()) {
+            return;
+          }
+          const node = closure.get(path.node.name);
+          if (!node || isLocationAssignedMap.get(path.node.name)) {
+            return;
+          }
+          node.loc = path.node.loc;
+          isLocationAssignedMap.set(path.node.name, true);
         }
       });
       return Array.from(closure.values());
@@ -491,12 +509,20 @@ var require_processIfWorkletFunction = __commonJS({
     }
     exports2.processIfWorkletFunction = processIfWorkletFunction;
     function processWorkletFunction(path, state) {
-      const newFun = (0, makeWorklet_1.makeWorklet)(path, state);
-      const replacement = (0, types_1.callExpression)(newFun, []);
+      const workletFactory = (0, makeWorklet_1.makeWorklet)(path, state);
+      const workletFactoryCall = (0, types_1.callExpression)(workletFactory, []);
+      const originalWorkletLocation = path.node.loc;
+      if (originalWorkletLocation) {
+        workletFactoryCall.callee.loc = {
+          start: originalWorkletLocation.start,
+          end: originalWorkletLocation.start
+        };
+      }
       const needDeclaration = (0, types_1.isScopable)(path.parent) || (0, types_1.isExportNamedDeclaration)(path.parent);
-      path.replaceWith("id" in path.node && path.node.id && needDeclaration ? (0, types_1.variableDeclaration)("const", [
-        (0, types_1.variableDeclarator)(path.node.id, replacement)
-      ]) : replacement);
+      const replacement = "id" in path.node && path.node.id && needDeclaration ? (0, types_1.variableDeclaration)("const", [
+        (0, types_1.variableDeclarator)(path.node.id, workletFactoryCall)
+      ]) : workletFactoryCall;
+      path.replaceWith(replacement);
     }
   }
 });

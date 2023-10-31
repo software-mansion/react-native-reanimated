@@ -5,7 +5,7 @@ import type { ShadowNodeWrapper, SharedValue, StyleProps } from './commonTypes';
 import type { AnimatedStyle } from './helperTypes';
 import type { Descriptor } from './hook/commonTypes';
 import { _updatePropsJS } from './js-reanimated';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
 import type { ViewRefSet } from './ViewDescriptorsSet';
 import { runOnUIImmediately } from './threads';
 
@@ -54,7 +54,7 @@ export const updatePropsJestWrapper = (
 
 export default updateProps;
 
-const createUpdatePropsManager = global._IS_FABRIC
+const createUpdatePropsManager = isFabric()
   ? () => {
       'worklet';
       // Fabric
@@ -116,10 +116,29 @@ const createUpdatePropsManager = global._IS_FABRIC
       };
     };
 
-runOnUIImmediately(() => {
-  'worklet';
-  global.UpdatePropsManager = createUpdatePropsManager();
-})();
+if (shouldBeUseWeb()) {
+  const maybeThrowError = () => {
+    // Jest attempts to access a property of this object to check if it is a Jest mock
+    // so we can't throw an error in the getter.
+    if (!isJest()) {
+      throw new Error(
+        '[Reanimated] `UpdatePropsManager` is not available on non-native platform.'
+      );
+    }
+  };
+  global.UpdatePropsManager = new Proxy({} as UpdatePropsManager, {
+    get: maybeThrowError,
+    set: () => {
+      maybeThrowError();
+      return false;
+    },
+  });
+} else {
+  runOnUIImmediately(() => {
+    'worklet';
+    global.UpdatePropsManager = createUpdatePropsManager();
+  })();
+}
 
 export interface UpdatePropsManager {
   update(
