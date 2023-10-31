@@ -18,6 +18,8 @@ example_flag = config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP
 version_flag = '-DREANIMATED_VERSION=' + reanimated_package_json["version"]
 debug_flag = is_release ? '-DNDEBUG' : ''
 ios_min_version = config[:react_native_minor_version] >= 73 ? '10.0' : '9.0'
+new_arch_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
+# ios_min_version = new_arch_enabled ? '11.0' : '9.0'
 
 Pod::Spec.new do |s|
   
@@ -58,47 +60,49 @@ Pod::Spec.new do |s|
 
   s.requires_arc = true
 
-  s.dependency "React-Core"
-  if fabric_enabled
-    s.dependency "React-RCTFabric"
-    s.dependency "React-Codegen"
-  end
-  s.dependency "RCT-Folly"
-  s.dependency "RCTRequired"
-  s.dependency "RCTTypeSafety"
+  # s.dependency "React-Core"
+  # if fabric_enabled
+  #   s.dependency "React-RCTFabric"
+  #   s.dependency "React-Codegen"
+  # end
+  # s.dependency "RCT-Folly"
+  # s.dependency "RCTRequired"
+  # s.dependency "RCTTypeSafety"
   s.dependency "ReactCommon/turbomodule/core"
-  s.dependency 'FBLazyVector'
-  if config[:react_native_minor_version] <= 71
-    s.dependency 'FBReactNativeSpec'
-  end
-  s.dependency 'React-Core'
-  s.dependency 'React-CoreModules'
-  s.dependency 'React-Core/DevSupport'
-  if !config[:is_tvos_target]
-    s.dependency 'React-RCTActionSheet'
-  end
-  s.dependency 'React-RCTNetwork'
-  s.dependency 'React-RCTAnimation'
-  s.dependency 'React-RCTLinking'
-  s.dependency 'React-RCTBlob'
-  s.dependency 'React-RCTSettings'
-  s.dependency 'React-RCTText'
-  s.dependency 'React-RCTImage'
-  s.dependency 'React-Core/RCTWebSocket'
-  s.dependency 'React-cxxreact'
-  s.dependency 'React-jsi'
-  s.dependency 'React-jsiexecutor'
-  s.dependency 'React-jsinspector'
-  s.dependency 'Yoga'
-  s.dependency 'DoubleConversion'
-  s.dependency 'glog'
-  if using_hermes && !config[:is_tvos_target] && config[:react_native_minor_version] >= 70
-    s.dependency 'React-hermes'
-    s.dependency 'hermes-engine'
-  end
-  s.dependency 'React-callinvoker'
+  # s.dependency 'FBLazyVector'
+  # if config[:react_native_minor_version] <= 71
+  #   s.dependency 'FBReactNativeSpec'
+  # end
+  # s.dependency 'React-Core'
+  # s.dependency 'React-CoreModules'
+  # s.dependency 'React-Core/DevSupport'
+  # if !config[:is_tvos_target]
+  #   s.dependency 'React-RCTActionSheet'
+  # end
+  # s.dependency 'React-RCTNetwork'
+  # s.dependency 'React-RCTAnimation'
+  # s.dependency 'React-RCTLinking'
+  # s.dependency 'React-RCTBlob'
+  # s.dependency 'React-RCTSettings'
+  # s.dependency 'React-RCTText'
+  # s.dependency 'React-RCTImage'
+  # s.dependency 'React-Core/RCTWebSocket'
+  # s.dependency 'React-cxxreact'
+  # s.dependency 'React-jsi'
+  # s.dependency 'React-jsiexecutor'
+  # s.dependency 'React-jsinspector'
+  # s.dependency 'Yoga'
+  # s.dependency 'DoubleConversion'
+  # s.dependency 'glog'
+  # if using_hermes && !config[:is_tvos_target] && config[:react_native_minor_version] >= 70
+  #   s.dependency 'React-hermes'
+  #   s.dependency 'hermes-engine'
+  # end
+  # s.dependency 'React-callinvoker'
 
-  if config[:react_native_minor_version] >= 72 && !fabric_enabled
-    s.dependency 'React-RCTAppDelegate'
-  end
+  # if config[:react_native_minor_version] >= 72 && !fabric_enabled
+  #   s.dependency 'React-RCTAppDelegate'
+  # end
+
+  install_modules_dependencies(s);
 end
