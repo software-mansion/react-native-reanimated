@@ -14,7 +14,7 @@ import {
 } from './utils';
 import type { DefaultStyle, DependencyList, Descriptor } from './commonTypes';
 import type { ViewDescriptorsSet, ViewRefSet } from '../ViewDescriptorsSet';
-import { makeViewDescriptorsSet, makeViewsRefSet } from '../ViewDescriptorsSet';
+import { makeViewDescriptorsSet, useViewRefSet } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import type {
   AnimationObject,
@@ -402,7 +402,7 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
   adapters?: WorkletFunction | WorkletFunction[],
   isAnimatedProps = false
 ) {
-  const viewsRef: ViewRefSet<unknown> = makeViewsRefSet();
+  const viewsRef: ViewRefSet<unknown> = useViewRefSet();
   const initRef = useRef<AnimationRef>();
   let inputs = Object.values(updater.__closure ?? {});
   if (SHOULD_BE_USE_WEB) {

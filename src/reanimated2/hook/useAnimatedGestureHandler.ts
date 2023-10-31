@@ -141,6 +141,7 @@ export function useAnimatedGestureHandler<
     return handler;
   }
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   return useEvent<Event>(
     handler,
     ['onGestureHandlerStateChange', 'onGestureHandlerEvent'],

@@ -1,4 +1,3 @@
-// import { WebGLCoordinateSystem, WebGPUCoordinateSystem } from '../constants.js';
 import { Vector3 } from './Vector3.js';
 
 class Matrix4 {
@@ -511,9 +510,6 @@ class Matrix4 {
       n43 = te[11],
       n44 = te[15];
 
-    //TODO: make this more efficient
-    //( based on http://www.euclideanspace.com/maths/algebra/matrix/functions/inverse/fourD/index.htm )
-
     return (
       n41 *
         (+n14 * n23 * n32 -
@@ -590,7 +586,6 @@ class Matrix4 {
   }
 
   invert() {
-    // based on http://www.euclideanspace.com/maths/algebra/matrix/functions/inverse/fourD/index.htm
     const te = this.elements,
       n11 = te[0],
       n21 = te[1],
@@ -821,8 +816,6 @@ class Matrix4 {
   }
 
   makeRotationAxis(axis, angle) {
-    // Based on http://www.gamedev.net/reference/articles/article1199.asp
-
     const c = Math.cos(angle);
     const s = Math.sin(angle);
     const t = 1 - c;
@@ -955,109 +948,6 @@ class Matrix4 {
 
     return this;
   }
-
-  // makePerspective(
-  //   left,
-  //   right,
-  //   top,
-  //   bottom,
-  //   near,
-  //   far,
-  //   coordinateSystem = WebGLCoordinateSystem
-  // ) {
-  //   const te = this.elements;
-  //   const x = (2 * near) / (right - left);
-  //   const y = (2 * near) / (top - bottom);
-
-  //   const a = (right + left) / (right - left);
-  //   const b = (top + bottom) / (top - bottom);
-
-  //   let c, d;
-
-  //   if (coordinateSystem === WebGLCoordinateSystem) {
-  //     c = -(far + near) / (far - near);
-  //     d = (-2 * far * near) / (far - near);
-  //   } else if (coordinateSystem === WebGPUCoordinateSystem) {
-  //     c = -far / (far - near);
-  //     d = (-far * near) / (far - near);
-  //   } else {
-  //     throw new Error(
-  //       'THREE.Matrix4.makePerspective(): Invalid coordinate system: ' +
-  //         coordinateSystem
-  //     );
-  //   }
-
-  //   te[0] = x;
-  //   te[4] = 0;
-  //   te[8] = a;
-  //   te[12] = 0;
-  //   te[1] = 0;
-  //   te[5] = y;
-  //   te[9] = b;
-  //   te[13] = 0;
-  //   te[2] = 0;
-  //   te[6] = 0;
-  //   te[10] = c;
-  //   te[14] = d;
-  //   te[3] = 0;
-  //   te[7] = 0;
-  //   te[11] = -1;
-  //   te[15] = 0;
-
-  //   return this;
-  // }
-
-  // makeOrthographic(
-  //   left,
-  //   right,
-  //   top,
-  //   bottom,
-  //   near,
-  //   far,
-  //   coordinateSystem = WebGLCoordinateSystem
-  // ) {
-  //   const te = this.elements;
-  //   const w = 1.0 / (right - left);
-  //   const h = 1.0 / (top - bottom);
-  //   const p = 1.0 / (far - near);
-
-  //   const x = (right + left) * w;
-  //   const y = (top + bottom) * h;
-
-  //   let z, zInv;
-
-  //   if (coordinateSystem === WebGLCoordinateSystem) {
-  //     z = (far + near) * p;
-  //     zInv = -2 * p;
-  //   } else if (coordinateSystem === WebGPUCoordinateSystem) {
-  //     z = near * p;
-  //     zInv = -1 * p;
-  //   } else {
-  //     throw new Error(
-  //       'THREE.Matrix4.makeOrthographic(): Invalid coordinate system: ' +
-  //         coordinateSystem
-  //     );
-  //   }
-
-  //   te[0] = 2 * w;
-  //   te[4] = 0;
-  //   te[8] = 0;
-  //   te[12] = -x;
-  //   te[1] = 0;
-  //   te[5] = 2 * h;
-  //   te[9] = 0;
-  //   te[13] = -y;
-  //   te[2] = 0;
-  //   te[6] = 0;
-  //   te[10] = zInv;
-  //   te[14] = -z;
-  //   te[3] = 0;
-  //   te[7] = 0;
-  //   te[11] = 0;
-  //   te[15] = 1;
-
-  //   return this;
-  // }
 
   equals(matrix) {
     const te = this.elements;
