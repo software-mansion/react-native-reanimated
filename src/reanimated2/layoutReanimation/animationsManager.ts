@@ -2,12 +2,12 @@
 import { withStyleAnimation } from '../animation/styleAnimation';
 import type { SharedValue } from '../commonTypes';
 import { makeUIMutable } from '../mutables';
-import type {
-  LayoutAnimationFunction,
-  LayoutAnimationsValues,
-} from './animationBuilder';
 import { LayoutAnimationType } from './animationBuilder';
 import { runOnUIImmediately } from '../threads';
+import type {
+  SharedTransitionAnimationsValues,
+  LayoutAnimation,
+} from './animationBuilder/commonTypes';
 
 const TAG_OFFSET = 1e9;
 
@@ -43,8 +43,13 @@ function createLayoutAnimationManager() {
     start(
       tag: number,
       type: LayoutAnimationType,
-      yogaValues: LayoutAnimationsValues,
-      config: LayoutAnimationFunction
+      /**
+       * createLayoutAnimationManager creates an animation manager for both Layout animations and Shared Transition Elements animations.
+       */
+      yogaValues: Partial<SharedTransitionAnimationsValues>,
+      config: (
+        arg: Partial<SharedTransitionAnimationsValues>
+      ) => LayoutAnimation
     ) {
       if (type === LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS) {
         global.ProgressTransitionRegister.onTransitionStart(tag, yogaValues);

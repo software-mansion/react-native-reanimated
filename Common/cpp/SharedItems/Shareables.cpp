@@ -69,9 +69,9 @@ jsi::Value makeShareableClone(
       shareable =
           std::make_shared<ShareableArrayBuffer>(rt, object.getArrayBuffer(rt));
     } else if (object.isHostObject(rt)) {
-      assert(
-          !object.isHostObject<ShareableJSRef>(rt) &&
-          "[Reanimated] Provided value is already an instance of ShareableJSRef.");
+      if (object.isHostObject<ShareableJSRef>(rt)) {
+        return object;
+      }
       shareable =
           std::make_shared<ShareableHostObject>(rt, object.getHostObject(rt));
     } else {
