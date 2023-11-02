@@ -65,8 +65,6 @@ export const withClamp = function <T extends AnimationObject<number>>(
         now: Timestamp,
         previousAnimation: Animation<any> | null
       ): void {
-        animation.startTime = now;
-        animation.started = false;
         animation.current = value;
         if (previousAnimation === animation) {
           animation.previousAnimation = previousAnimation.previousAnimation;
