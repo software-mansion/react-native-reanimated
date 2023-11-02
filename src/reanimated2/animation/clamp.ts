@@ -43,12 +43,12 @@ export const withClamp = function <T extends AnimationObject<number>>(
           );
           return true;
         } else {
-          const clampUpper = config.max ? config.max : clampedAnimation.current;
-          const clampLower = config.min ? config.min : clampedAnimation.current;
-          animation.current = Math.max(
-            clampLower,
-            Math.min(clampUpper, clampedAnimation.current)
-          );
+if (config.max < clampedAnimation.current) {
+  animation.current = config.max;
+}
+if (config.min > clampedAnimation.current) {
+  animation.current = config.min;
+}
         }
         return finished;
       }
