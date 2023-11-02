@@ -37,18 +37,24 @@ export const withClamp = function <T extends AnimationObject<number>>(
 
         if (clampedAnimation.current === undefined) {
           // This should never happen
-          // TODO check if nextAnimation.current should be optional
+          // TODO  Actually nextAnimation.current shouldn't be optional
           console.warn(
             "[Reanimated] Error inside 'withClamp' animation, the inner animation has invalid current value"
           );
           return true;
         } else {
-if (config.max < clampedAnimation.current) {
-  animation.current = config.max;
-}
-if (config.min > clampedAnimation.current) {
-  animation.current = config.min;
-}
+          if (
+            config.max !== undefined &&
+            config.max < clampedAnimation.current
+          ) {
+            animation.current = config.max;
+          }
+          if (
+            config.min !== undefined &&
+            config.min > clampedAnimation.current
+          ) {
+            animation.current = config.min;
+          }
         }
         return finished;
       }

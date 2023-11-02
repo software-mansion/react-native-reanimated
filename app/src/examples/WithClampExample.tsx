@@ -43,7 +43,6 @@ export default function AnimatedStyleUpdateExample() {
   const config = {
     duration: 25000,
     dampingRatio: 0.075,
-    clamp: [120, 220],
   };
 
   const clampedStyle = useAnimatedStyle(() => {
