@@ -42,13 +42,17 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
     const keyboard = useAnimatedKeyboard();
     const { height: screenHeight } = useWindowDimensions();
 
-    const onLayoutWorklet = useWorkletCallback((layout: LayoutRectangle) => {
-      if (initialFrame.value == null) {
-        initialFrame.value = layout;
-      }
-
-      currentFrame.value = layout;
-    });
+    const onLayoutWorklet = useCallback(
+      (layout: LayoutRectangle) => {
+        'worklet';
+        if (initialFrame.value == null) {
+          initialFrame.value = layout;
+        }
+        
+        currentFrame.value = layout;
+      },
+      [currentFrame, initialFrame] 
+    );
 
     const handleOnLayout = useCallback<NonNullable<ViewProps['onLayout']>>(
       (event) => {
@@ -61,8 +65,9 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
       [onLayout]
     );
 
-    const getBackwardCompatibleBottomHeight = useWorkletCallback(
+    const getBackwardCompatibleBottomHeight = useCallback(
       (keyboardHeight: number) => {
+        'worklet';
         if (currentFrame.value == null || initialFrame.value == null) {
           return 0;
         }
@@ -78,7 +83,14 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
           currentFrame.value.y + currentFrame.value.height - keyboardY,
           0
         );
-      }
+      },
+      [
+        behavior,
+        currentFrame,
+        initialFrame,
+        keyboardVerticalOffset,
+        screenHeight,
+      ]
     );
 
     const animatedStyle = useAnimatedStyle(() => {
