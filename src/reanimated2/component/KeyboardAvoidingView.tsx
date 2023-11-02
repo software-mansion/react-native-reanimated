@@ -10,7 +10,6 @@ import { AnimatedView as ReanimatedView } from './View';
 import {
   useAnimatedKeyboard,
   useAnimatedStyle,
-  useWorkletCallback,
   runOnUI,
   useSharedValue,
 } from '../';
@@ -48,10 +47,10 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
         if (initialFrame.value == null) {
           initialFrame.value = layout;
         }
-        
+
         currentFrame.value = layout;
       },
-      [currentFrame, initialFrame] 
+      [currentFrame, initialFrame]
     );
 
     const handleOnLayout = useCallback<NonNullable<ViewProps['onLayout']>>(
@@ -62,7 +61,7 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
           onLayout(event);
         }
       },
-      [onLayout]
+      [onLayout, onLayoutWorklet]
     );
 
     const getBackwardCompatibleBottomHeight = useCallback(
