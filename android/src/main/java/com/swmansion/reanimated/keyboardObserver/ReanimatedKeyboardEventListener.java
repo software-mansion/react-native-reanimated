@@ -58,12 +58,13 @@ public class ReanimatedKeyboardEventListener {
         rootView,
         (v, insets) -> {
           if (state == KeyboardState.OPEN) {
-            int keyboardHeight = (int)
+            int keyboardHeight =
+                (int)
                     PixelUtil.toDIPFromPixel(
-                            Math.max(
-                                    0,
-                                    insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
-                                            - insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom));
+                        Math.max(
+                            0,
+                            insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+                                - insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom));
 
             updateKeyboard(keyboardHeight);
           }
