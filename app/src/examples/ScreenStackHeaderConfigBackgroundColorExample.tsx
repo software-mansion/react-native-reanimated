@@ -72,7 +72,13 @@ export default function ScreenStackHeaderConfigBackgroundColorExample() {
     <GestureHandlerRootView style={styles.root}>
       <ScreenStack style={styles.container}>
         <Screen>
-          <AnimatedScreenStackHeaderConfig animatedProps={animatedProps} />
+          {/*
+            just temporary, this is fix for CI, because screen
+            installed from github doesn't contains propr types
+          */}
+          <AnimatedScreenStackHeaderConfig
+            animatedProps={animatedProps as any}
+          />
           <View style={styles.container}>
             <GestureDetector gesture={gesture}>
               <Animated.View style={[styles.ball, animatedStyles]} />

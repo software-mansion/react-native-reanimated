@@ -1,4 +1,4 @@
-import { ScreenTransitionConfig } from "../commonTypes";
+import type { ScreenTransitionConfig } from '../commonTypes';
 
 const VELOCITY = 300;
 
@@ -16,8 +16,8 @@ export function easing(x: number): number {
 }
 
 export function maybeScheduleNextFrame(
-  step: () => void, 
-  isScreenReachDestination: boolean, 
+  step: () => void,
+  isScreenReachDestination: boolean,
   screenTransitionConfig: ScreenTransitionConfig
 ) {
   'worklet';

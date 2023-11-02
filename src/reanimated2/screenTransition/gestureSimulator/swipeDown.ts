@@ -1,4 +1,7 @@
-import { PanGestureHandlerEventPayload, ScreenTransitionConfig } from '../commonTypes';
+import type {
+  PanGestureHandlerEventPayload,
+  ScreenTransitionConfig,
+} from '../commonTypes';
 import { applyStyle } from '../styleUpdater';
 import { computeProgress, easing, maybeScheduleNextFrame } from './utils';
 
@@ -26,7 +29,11 @@ export function getSwipeDownSimulator(
         requestAnimationFrame(computeFrame);
       }
       applyStyle(screenTransitionConfig, event);
-      maybeScheduleNextFrame(computeFrame, isScreenReachDestination, screenTransitionConfig);
+      maybeScheduleNextFrame(
+        computeFrame,
+        isScreenReachDestination,
+        screenTransitionConfig
+      );
     };
     return computeFrame;
   } else {
@@ -39,7 +46,11 @@ export function getSwipeDownSimulator(
         event.translationY = screenSize.height;
       }
       applyStyle(screenTransitionConfig, event);
-      maybeScheduleNextFrame(computeFrame, isScreenReachDestination, screenTransitionConfig);
+      maybeScheduleNextFrame(
+        computeFrame,
+        isScreenReachDestination,
+        screenTransitionConfig
+      );
     };
     return computeFrame;
   }

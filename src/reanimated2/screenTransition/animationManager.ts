@@ -1,11 +1,14 @@
 'use strict';
 
-import type {
-  ScreenTransitionConfig,
-} from './commonTypes';
+import type { ScreenTransitionConfig } from './commonTypes';
 import { configureProps } from '../../ConfigHelper';
 import { applyStyle } from './styleUpdater';
-import { getSwipeDownSimulator, getSwipeLeftSimulator, getSwipeRightSimulator, getSwipeUpSimulator } from './gestureSimulator';
+import {
+  getSwipeDownSimulator,
+  getSwipeLeftSimulator,
+  getSwipeRightSimulator,
+  getSwipeUpSimulator,
+} from './gestureSimulator';
 
 configureProps();
 
@@ -27,9 +30,9 @@ export function finishScreenTransition(
   screenTransitionConfig.sharedEvent.removeListener(
     screenTransitionConfig.stackTag
   );
-  const event = {...screenTransitionConfig.sharedEvent.value};
+  const event = { ...screenTransitionConfig.sharedEvent.value };
   const goBackGesture = screenTransitionConfig.goBackGesture;
-  
+
   let step = () => {
     // noop
   };

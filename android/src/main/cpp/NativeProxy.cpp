@@ -481,12 +481,16 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       bindThis(&NativeProxy::maybeFlushUIUpdatesQueue);
 
   enum ScreenTransitionCommand {
-      Start = 1,
-      Update = 2,
-      Finish = 3,
+    Start = 1,
+    Update = 2,
+    Finish = 3,
   };
 
-  auto manageScreenTransitionFunction = [=](jsi::Runtime &rt, int command, int stackTag, const jsi::Value &param) -> jsi::Value {
+  auto manageScreenTransitionFunction =
+      [=](jsi::Runtime &rt,
+          int command,
+          int stackTag,
+          const jsi::Value &param) -> jsi::Value {
     if (command == ScreenTransitionCommand::Start) {
       std::array<int, 2> screenTags = startScreenTransition(stackTag);
       if (screenTags[0] > 0) {
@@ -622,9 +626,11 @@ void NativeProxy::setupLayoutAnimations() {
 }
 
 std::array<int, 2> NativeProxy::startScreenTransition(int stackTag) {
-  static const auto method = javaPart_->getClass()->getMethod<jni::JArrayInt(int)>("startScreenTransition");
+  static const auto method =
+      javaPart_->getClass()->getMethod<jni::JArrayInt(int)>(
+          "startScreenTransition");
   auto screenTagsJava = method(javaPart_.get(), stackTag);
-  std::array<int, 2> screenTags {-1, -1};
+  std::array<int, 2> screenTags{-1, -1};
   auto tags = screenTagsJava->pin();
   screenTags[0] = tags[0];
   screenTags[1] = tags[1];
@@ -632,12 +638,14 @@ std::array<int, 2> NativeProxy::startScreenTransition(int stackTag) {
 }
 
 void NativeProxy::updateScreenTransition(int stackTag, double progress) {
-  static const auto method = getJniMethod<void(jint, jdouble)>("updateScreenTransition");
+  static const auto method =
+      getJniMethod<void(jint, jdouble)>("updateScreenTransition");
   method(javaPart_.get(), stackTag, progress);
 }
 
 void NativeProxy::finishScreenTransition(int stackTag, bool canceled) {
-  static const auto method = getJniMethod<void(jint, jboolean)>("finishScreenTransition");
+  static const auto method =
+      getJniMethod<void(jint, jboolean)>("finishScreenTransition");
   method(javaPart_.get(), stackTag, canceled);
 }
 

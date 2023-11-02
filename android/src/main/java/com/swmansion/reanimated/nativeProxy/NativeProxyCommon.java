@@ -71,10 +71,9 @@ public abstract class NativeProxyCommon {
     ScreenTransitionManager tmpScreenTransitionManager;
     try {
       Class<NativeModule> screensModuleClass =
-              (Class<NativeModule>)
-                      Class.forName("com.swmansion.rnscreens.ScreensModule");
+          (Class<NativeModule>) Class.forName("com.swmansion.rnscreens.ScreensModule");
       tmpScreenTransitionManager =
-              (ScreenTransitionManager) context.getNativeModule(screensModuleClass);
+          (ScreenTransitionManager) context.getNativeModule(screensModuleClass);
     } catch (ClassCastException | ClassNotFoundException e) {
       tmpScreenTransitionManager = null;
     }

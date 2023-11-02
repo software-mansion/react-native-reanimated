@@ -1,5 +1,8 @@
-import updateProps from "../UpdateProps";
-import { PanGestureHandlerEventPayload, ScreenTransitionConfig } from "./commonTypes";
+import updateProps from '../UpdateProps';
+import type {
+  PanGestureHandlerEventPayload,
+  ScreenTransitionConfig,
+} from './commonTypes';
 
 export function applyStyle(
   screenTransitionConfig: ScreenTransitionConfig,

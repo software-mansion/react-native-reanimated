@@ -242,7 +242,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void updateScreenTransition(int stackTag, double progress);
   void finishScreenTransition(int stackTag, bool canceled);
 
-
   /***
    * Wraps a method of `NativeProxy` in a function object capturing `this`
    * @tparam TReturn return type of passed method
