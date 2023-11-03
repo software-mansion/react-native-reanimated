@@ -21,7 +21,7 @@ function flush() {
   viewTags = [];
 }
 
-function removeFromPropsRegistryOnUI(viewTags: number[]) {
+function removeFromPropsRegistryOnUI(innerViewTags: number[]) {
   'worklet';
-  _removeFromPropsRegistry(viewTags);
+  _removeFromPropsRegistry(innerViewTags);
 }
