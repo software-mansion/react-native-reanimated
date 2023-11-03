@@ -4,13 +4,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import {
-  Button,
-  TextInput,
-  TextInputProps,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Button, TextInput, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
@@ -18,7 +12,7 @@ Animated.addWhitelistedNativeProps({ text: true });
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
-export default function AnimatedTextInputExample() {
+export default function CounterExample() {
   const ref = React.useRef(0);
 
   const sv = useSharedValue(0);
@@ -28,7 +22,7 @@ export default function AnimatedTextInputExample() {
   });
 
   const animatedProps = useAnimatedProps(() => {
-    return { text: text.value } as TextInputProps;
+    return { text: text.value, defaultValue: text.value };
   });
 
   const handleToggle = () => {
@@ -41,13 +35,7 @@ export default function AnimatedTextInputExample() {
       <View style={styles.buttons}>
         <Button onPress={handleToggle} title="Toggle" />
       </View>
-      <AnimatedTextInput
-        underlineColorAndroid="transparent"
-        editable={false}
-        value={text.value}
-        style={styles.text}
-        animatedProps={animatedProps}
-      />
+      <AnimatedTextInput animatedProps={animatedProps} style={styles.text} />
     </>
   );
 }
@@ -58,6 +46,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 100,
+    fontVariant: ['tabular-nums'],
     textAlign: 'center',
   },
 });
