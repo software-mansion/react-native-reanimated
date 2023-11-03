@@ -14,7 +14,7 @@ import {
 } from './utils';
 import type { DefaultStyle, DependencyList, Descriptor } from './commonTypes';
 import type { ViewDescriptorsSet, ViewRefSet } from '../ViewDescriptorsSet';
-import { makeViewDescriptorsSet, makeViewsRefSet } from '../ViewDescriptorsSet';
+import { makeViewDescriptorsSet, useViewRefSet } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import type {
   AnimationObject,
@@ -28,7 +28,7 @@ import type {
 } from '../commonTypes';
 import type { AnimatedStyle } from '../helperTypes';
 
-const IS_NATIVE = !shouldBeUseWeb();
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 interface AnimatedState {
   last: AnimatedStyle<any>;
@@ -402,10 +402,10 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
   adapters?: WorkletFunction | WorkletFunction[],
   isAnimatedProps = false
 ) {
-  const viewsRef: ViewRefSet<unknown> = makeViewsRefSet();
+  const viewsRef: ViewRefSet<unknown> = useViewRefSet();
   const initRef = useRef<AnimationRef>();
   let inputs = Object.values(updater.__closure ?? {});
-  if (!IS_NATIVE) {
+  if (SHOULD_BE_USE_WEB) {
     if (!inputs.length && dependencies?.length) {
       // let web work without a Babel/SWC plugin
       inputs = dependencies;
@@ -454,7 +454,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
 
   const { initial, remoteState, viewDescriptors } = initRef.current;
   const shareableViewDescriptors = viewDescriptors.shareableViewDescriptors;
-  const maybeViewRef = IS_NATIVE ? undefined : viewsRef;
+  const maybeViewRef = SHOULD_BE_USE_WEB ? viewsRef : undefined;
 
   dependencies.push(shareableViewDescriptors);
 

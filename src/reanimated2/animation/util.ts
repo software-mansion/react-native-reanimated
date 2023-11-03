@@ -468,7 +468,7 @@ type AnimationToDecoration<
   ? Record<string, unknown>
   : U | (() => U) | AnimatableValue;
 
-const IS_NATIVE = !shouldBeUseWeb();
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 export function defineAnimation<
   T extends AnimationObject | StyleLayoutAnimation, // type that's supposed to be returned
@@ -485,7 +485,7 @@ export function defineAnimation<
     return animation;
   };
 
-  if (_WORKLET || !IS_NATIVE) {
+  if (_WORKLET || SHOULD_BE_USE_WEB) {
     return create();
   }
   // @ts-ignore: eslint-disable-line
