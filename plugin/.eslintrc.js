@@ -1,5 +1,7 @@
 module.exports = {
   root: true,
   extends: '../.eslintrc.js',
-  ignorePatterns: ['**/*.d.ts','jestUtils.ts']
-};
+  rules: {
+    'curly': 'error',
+  },
+  ignorePatterns: ['**/*.d.ts','jestUtils.ts']};
