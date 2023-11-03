@@ -14,7 +14,7 @@ type withClampType = <T extends AnimatableValue>(
   clampedAnimation: T
 ) => T;
 
-// TODO This feature is not documented yet
+// TODO #5239 This feature is not documented yet
 export const withClamp = function <T extends AnimationObject<number>>(
   config: { min?: number; max?: number; reduceMotion?: ReduceMotion },
   _clampedAnimation: T | (() => T)
@@ -37,7 +37,7 @@ export const withClamp = function <T extends AnimationObject<number>>(
 
         if (clampedAnimation.current === undefined) {
           // This should never happen
-          // TODO  Actually nextAnimation.current shouldn't be optional
+          // TODO  #5239 Actually nextAnimation.current shouldn't be optional
           console.warn(
             "[Reanimated] Error inside 'withClamp' animation, the inner animation has invalid current value"
           );

@@ -60,13 +60,13 @@ export type {
 export {
   cancelAnimation,
   defineAnimation,
-  withTiming,
-  withSpring,
+  withClamp,
   withDecay,
   withDelay,
-  withClamp,
   withRepeat,
   withSequence,
+  withSpring,
+  withTiming,
 } from './animation';
 export type { ExtrapolationConfig, ExtrapolationType } from './interpolation';
 export { Extrapolation, interpolate, clamp } from './interpolation';

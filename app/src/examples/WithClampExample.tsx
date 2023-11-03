@@ -7,11 +7,19 @@ import Animated, {
 import { View, Text, Button, StyleSheet, ViewStyle } from 'react-native';
 import React, { useState } from 'react';
 
+/**  TODO #5239 As soon as 'withClamp' is included in reanimated version used in docs
+copy this example inside our documentation */
+
 const VIOLET = '#b58df1';
 const BORDER_WIDTH = 4;
 const FRAME_WIDTH = 300;
+const CLAMP_MARKER_HEIGHT = 40;
 
-function renderFramedExample(testedStyle: ViewStyle, description: string) {
+// Modify this values to change clamp limits
+const LOWER_BOUND = 120;
+const UPPER_BOUND = 220;
+
+function renderExample(testedStyle: ViewStyle, description: string) {
   return (
     <>
       <Text style={styles.text}>{description}</Text>
@@ -22,13 +30,20 @@ function renderFramedExample(testedStyle: ViewStyle, description: string) {
           borderColor: VIOLET,
         }}>
         <Animated.View
-          style={[styles.clampMarker, { marginBottom: -40, width: 220 }]}
+          style={[
+            styles.clampMarker,
+            { marginBottom: -CLAMP_MARKER_HEIGHT, width: UPPER_BOUND },
+          ]}
         />
         <Animated.View style={[styles.movingBox, testedStyle]} />
         <Animated.View
           style={[
             styles.clampMarker,
-            { marginTop: -40, width: 300 - 120, alignSelf: 'flex-end' },
+            {
+              marginTop: -CLAMP_MARKER_HEIGHT,
+              width: FRAME_WIDTH - LOWER_BOUND,
+              alignSelf: 'flex-end',
+            },
           ]}
         />
       </View>
@@ -48,7 +63,7 @@ export default function AnimatedStyleUpdateExample() {
   const clampedStyle = useAnimatedStyle(() => {
     return {
       width: withClamp(
-        { min: 120, max: 220 },
+        { min: LOWER_BOUND, max: UPPER_BOUND },
         withSpring(randomWidth.value, config)
       ),
     };
@@ -61,9 +76,9 @@ export default function AnimatedStyleUpdateExample() {
 
   return (
     <View style={styles.container}>
-      {renderFramedExample(clampedStyle, 'Clamp example')}
+      {renderExample(clampedStyle, 'Clamped spring example')}
 
-      {renderFramedExample(style, 'Default')}
+      {renderExample(style, 'Default spring')}
       <Button
         title="toggle"
         onPress={() => {
@@ -79,12 +94,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'column',
-    padding: 40,
+    padding: CLAMP_MARKER_HEIGHT,
   },
   clampMarker: {
     margin: 0,
     opacity: 0.5,
-    height: 40,
+    height: CLAMP_MARKER_HEIGHT,
     backgroundColor: VIOLET,
   },
   movingBox: {

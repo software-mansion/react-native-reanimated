@@ -15,18 +15,18 @@ export interface HigherOrderAnimation {
 
 export type NextAnimation<T extends AnimationObject> = T | (() => T);
 
+export interface ClampAnimation
+  extends Animation<ClampAnimation>,
+    HigherOrderAnimation {
+  current: AnimatableValue;
+}
+
 export interface DelayAnimation
   extends Animation<DelayAnimation>,
     HigherOrderAnimation {
   startTime: Timestamp;
   started: boolean;
   previousAnimation: DelayAnimation | null;
-  current: AnimatableValue;
-}
-
-export interface ClampAnimation
-  extends Animation<ClampAnimation>,
-    HigherOrderAnimation {
   current: AnimatableValue;
 }
 

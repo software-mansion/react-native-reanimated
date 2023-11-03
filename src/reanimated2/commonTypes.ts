@@ -97,12 +97,12 @@ export type AnimatableValue = Animatable | AnimatableValueObject;
 export interface AnimationObject<T = AnimatableValue> {
   [key: string]: any;
   callback?: AnimationCallback;
-  /** TODO `current` should be required */
+  /** TODO #5239 `current` should be required */
   current?: T;
   toValue?: AnimationObject<T>['current'];
   startValue?: AnimationObject<T>['current'];
   finished?: boolean;
-  /** TODO `strippedCurrent` should be required if animated value is a prefixed string */
+  /** TODO #5239 `strippedCurrent` should be required if animated value is a prefixed string */
   strippedCurrent?: number;
   cancelled?: boolean;
   reduceMotion?: boolean;
