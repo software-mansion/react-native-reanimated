@@ -71,7 +71,7 @@ function ListItem({
 }
 
 export default function KeyboardAvoidingViewExample(): React.ReactElement {
-  const [useReanimated, setUseReanimated] = useState(true);
+  const [useReanimated, setUseReanimated] = useState(false);
 
   const [behavior, setBehavior] = useState<
     'position' | 'height' | 'padding' | undefined
@@ -132,6 +132,10 @@ export default function KeyboardAvoidingViewExample(): React.ReactElement {
           />
         </View>
       </KeyboardAvoidingView>
+
+      <View style={styles.additionalView}>
+        <Text>A view below KeyboardAvoidingView</Text>
+      </View>
     </View>
   );
 }
@@ -148,6 +152,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
+    backgroundColor: OVERLAY_COLOR,
+  },
+  additionalView: {
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: OVERLAY_COLOR,
   },
   itemContainer: {
