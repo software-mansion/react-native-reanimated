@@ -66,6 +66,7 @@ export {
   withDelay,
   withRepeat,
   withSequence,
+  withCurveTransition,
 } from './animation';
 export type { ExtrapolationConfig, ExtrapolationType } from './interpolation';
 export { Extrapolation, interpolate, clamp } from './interpolation';

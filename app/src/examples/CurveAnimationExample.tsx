@@ -1,27 +1,14 @@
 import Animated, {
   useSharedValue,
-  withTiming,
   useAnimatedStyle,
-  Easing,
   CurvedTransition,
+  withCurveTransition,
 } from 'react-native-reanimated';
-import { View, Button, StyleSheet } from 'react-native';
+import { View, Text, Button, StyleSheet } from 'react-native';
 import React, { useEffect, useState } from 'react';
 
-//TODO Make this function a parto of our API
-const withCurveTransition = (progress: number, duration = 1000) => {
-  'worklet';
-  return {
-    x: withTiming(progress, {
-      duration,
-      easing: Easing.in(Easing.ease),
-    }),
-    y: withTiming(progress, {
-      duration,
-      easing: Easing.out(Easing.ease),
-    }),
-  };
-};
+const LIGHT_BLUE = '#4fc3f7';
+const DARK_BLUE = '#0288d1';
 
 export default function AnimatedStyleUpdateExample() {
   const [toggle, setToggle] = useState(false);
@@ -46,11 +33,14 @@ export default function AnimatedStyleUpdateExample() {
             styles.box,
             { marginLeft: toggle ? 0 : 100, marginTop: toggle ? 0 : 100 },
           ]}
-          layout={CurvedTransition.duration(300)}
-        />
+          layout={CurvedTransition.duration(300)}>
+          <Text style={styles.text}>CurvedTransition</Text>
+        </Animated.View>
       </View>
       <View style={styles.section}>
-        <Animated.View style={[styles.box, animatedStyle]} />
+        <Animated.View style={[styles.box, animatedStyle]}>
+          <Text style={styles.text}>UseAnimatedStyle</Text>
+        </Animated.View>
       </View>
       <Button
         title="toggle"
@@ -72,9 +62,16 @@ const styles = StyleSheet.create({
     height: 250,
   },
   box: {
-    width: 100,
+    width: 200,
     height: 100,
-    backgroundColor: 'black',
-    // margin: 30,
+    backgroundColor: LIGHT_BLUE,
+    borderWidth: 4,
+    borderRadius: 10,
+    borderColor: DARK_BLUE,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  text: {
+    fontSize: 17,
   },
 });

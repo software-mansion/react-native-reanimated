@@ -427,6 +427,7 @@ export const EXAMPLES: Record<string, Example> = {
     screen: LogExample,
   },
   CurveAnimationExample: {
+    icon: '⤹',
     title: 'Curve animation example',
     screen: CurveAnimationExample,
   },
