@@ -7,6 +7,7 @@ import type {
 } from 'react-native';
 import { StyleSheet, useWindowDimensions } from 'react-native';
 import { AnimatedView as ReanimatedView } from './View';
+import { useHeaderHeight } from '@react-navigation/elements';
 import {
   useAnimatedKeyboard,
   useAnimatedStyle,
@@ -35,11 +36,9 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
     ref
   ) => {
     const initialFrame = useSharedValue<LayoutRectangle | null>(null);
-
-    const currentFrame = useSharedValue<LayoutRectangle | null>(null);
-
     const keyboard = useAnimatedKeyboard();
     const { height: screenHeight } = useWindowDimensions();
+    const headerHeight = useHeaderHeight();
 
     const onLayoutWorklet = useCallback(
       (layout: LayoutRectangle) => {
@@ -47,10 +46,8 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
         if (initialFrame.value == null) {
           initialFrame.value = layout;
         }
-
-        currentFrame.value = layout;
       },
-      [currentFrame, initialFrame]
+      [initialFrame]
     );
 
     const handleOnLayout = useCallback<NonNullable<ViewProps['onLayout']>>(
@@ -67,28 +64,36 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
     const getBackwardCompatibleBottomHeight = useCallback(
       (keyboardHeight: number) => {
         'worklet';
-        if (currentFrame.value == null || initialFrame.value == null) {
+        if (initialFrame.value == null) {
           return 0;
         }
 
-        const keyboardY =
-          screenHeight - keyboardHeight - keyboardVerticalOffset;
-
-        if (behavior === 'height') {
-          return Math.max(initialFrame.value.height - keyboardHeight, 0);
-        }
-
-        return Math.max(
-          currentFrame.value.y + currentFrame.value.height - keyboardY,
+        /*
+        We calculate how much of the view to move by taking sum of keyboard's and view's heights
+        (keyboardHeight + initialFrame.value.height) and substracting how much space they both should actually
+        occupy (screenHeight - headerHeight - keyboardVerticalOffset). If the result is less than 0 - it means
+        that keyboard doesn't cover the view and we don't need to tinker with it.
+        */
+        const amountToMove = Math.max(
+          keyboardHeight +
+            initialFrame.value.height -
+            (screenHeight - headerHeight - keyboardVerticalOffset),
           0
         );
+
+        if (behavior === 'height') {
+          // in case of changing height, it is just the view height without the amount to move
+          return Math.max(initialFrame.value.height - amountToMove);
+        }
+
+        return Math.max(amountToMove);
       },
       [
-        behavior,
-        currentFrame,
         initialFrame,
-        keyboardVerticalOffset,
+        behavior,
         screenHeight,
+        headerHeight,
+        keyboardVerticalOffset,
       ]
     );
 
