@@ -28,6 +28,7 @@ if (isWeb()) {
 
   try {
     createTextShadowValue =
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       require('react-native-web/dist/exports/StyleSheet/preprocess').createTextShadowValue;
   } catch (e) {}
 }
@@ -64,72 +65,6 @@ export interface ReanimatedHTMLElement extends HTMLElement {
     setAttribute: (key: string, props: unknown) => void;
   };
 }
-
-function isNativeProp(propName: string): boolean {
-  return !!PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST[propName];
-}
-
-const updatePropsDOM = (
-  component: JSReanimatedComponent | HTMLElement,
-  style: StyleProps,
-  isAnimatedProps?: boolean
-): void => {
-  const previousStyle = (component as JSReanimatedComponent).previousStyle
-    ? (component as JSReanimatedComponent).previousStyle
-    : {};
-  const currentStyle = { ...previousStyle, ...style };
-  (component as JSReanimatedComponent).previousStyle = currentStyle;
-
-  const domStyle = createReactDOMStyle(currentStyle);
-  if (Array.isArray(domStyle.transform) && createTransformValue !== undefined) {
-    domStyle.transform = createTransformValue(domStyle.transform);
-  }
-
-  if (
-    createTextShadowValue !== undefined &&
-    (domStyle.textShadowColor ||
-      domStyle.textShadowRadius ||
-      domStyle.textShadowOffset)
-  ) {
-    domStyle.textShadow = createTextShadowValue({
-      textShadowColor: domStyle.textShadowColor,
-      textShadowOffset: domStyle.textShadowOffset,
-      textShadowRadius: domStyle.textShadowRadius,
-    });
-  }
-
-  for (const key in domStyle) {
-    if (isAnimatedProps) {
-      (component as HTMLElement).setAttribute(key, domStyle[key]);
-    } else {
-      (component.style as StyleProps)[key] = domStyle[key];
-    }
-  }
-};
-
-const setNativeProps = (
-  component: JSReanimatedComponent | ReanimatedHTMLElement,
-  newProps: StyleProps,
-  isAnimatedProps?: boolean
-): void => {
-  if (isAnimatedProps) {
-    const uiProps: Record<string, unknown> = {};
-    for (const key in newProps) {
-      if (isNativeProp(key)) {
-        uiProps[key] = newProps[key];
-      }
-    }
-    // Only update UI props directly on the component,
-    // other props can be updated as standard style props.
-    component.setNativeProps?.(uiProps);
-  }
-
-  const previousStyle = component.previousStyle ? component.previousStyle : {};
-  const currentStyle = { ...previousStyle, ...newProps };
-  component.previousStyle = currentStyle;
-
-  component.setNativeProps?.({ style: currentStyle });
-};
 
 export const _updatePropsJS = (
   updates: StyleProps | AnimatedStyle<any>,
@@ -169,9 +104,77 @@ export const _updatePropsJS = (
         component._touchableNode.setAttribute(dashedKey, rawStyles[key]);
       });
     } else {
-      console.warn('It is not possible to manipulate component');
+      console.warn(
+        `[Reanimated] It's not possible to manipulate the component ${component}`
+      );
     }
   }
 };
+
+const setNativeProps = (
+  component: JSReanimatedComponent | ReanimatedHTMLElement,
+  newProps: StyleProps,
+  isAnimatedProps?: boolean
+): void => {
+  if (isAnimatedProps) {
+    const uiProps: Record<string, unknown> = {};
+    for (const key in newProps) {
+      if (isNativeProp(key)) {
+        uiProps[key] = newProps[key];
+      }
+    }
+    // Only update UI props directly on the component,
+    // other props can be updated as standard style props.
+    component.setNativeProps?.(uiProps);
+  }
+
+  const previousStyle = component.previousStyle ? component.previousStyle : {};
+  const currentStyle = { ...previousStyle, ...newProps };
+  component.previousStyle = currentStyle;
+
+  component.setNativeProps?.({ style: currentStyle });
+};
+
+const updatePropsDOM = (
+  component: JSReanimatedComponent | HTMLElement,
+  style: StyleProps,
+  isAnimatedProps?: boolean
+): void => {
+  const previousStyle = (component as JSReanimatedComponent).previousStyle
+    ? (component as JSReanimatedComponent).previousStyle
+    : {};
+  const currentStyle = { ...previousStyle, ...style };
+  (component as JSReanimatedComponent).previousStyle = currentStyle;
+
+  const domStyle = createReactDOMStyle(currentStyle);
+  if (Array.isArray(domStyle.transform) && createTransformValue !== undefined) {
+    domStyle.transform = createTransformValue(domStyle.transform);
+  }
+
+  if (
+    createTextShadowValue !== undefined &&
+    (domStyle.textShadowColor ||
+      domStyle.textShadowRadius ||
+      domStyle.textShadowOffset)
+  ) {
+    domStyle.textShadow = createTextShadowValue({
+      textShadowColor: domStyle.textShadowColor,
+      textShadowOffset: domStyle.textShadowOffset,
+      textShadowRadius: domStyle.textShadowRadius,
+    });
+  }
+
+  for (const key in domStyle) {
+    if (isAnimatedProps) {
+      (component as HTMLElement).setAttribute(key, domStyle[key]);
+    } else {
+      (component.style as StyleProps)[key] = domStyle[key];
+    }
+  }
+};
+
+function isNativeProp(propName: string): boolean {
+  return !!PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST[propName];
+}
 
 export default reanimatedJS;

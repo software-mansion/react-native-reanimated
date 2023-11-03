@@ -1,15 +1,15 @@
 'use strict';
 import { runOnUIImmediately } from '../threads';
 
+type CallbackDetails = {
+  callback: (frameInfo: FrameInfo) => void;
+  startTime: number | null;
+};
+
 export type FrameInfo = {
   timestamp: number;
   timeSincePreviousFrame: number | null;
   timeSinceFirstFrame: number;
-};
-
-type CallbackDetails = {
-  callback: (frameInfo: FrameInfo) => void;
-  startTime: number | null;
 };
 
 export interface FrameCallbackRegistryUI {

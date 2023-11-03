@@ -1,6 +1,9 @@
 'use strict';
 import { runOnUIImmediately } from '../../threads';
-import type { ProgressAnimation } from '../animationBuilder/commonTypes';
+import type {
+  ProgressAnimation,
+  SharedTransitionAnimationsValues,
+} from '../animationBuilder/commonTypes';
 import { registerEventHandler, unregisterEventHandler } from '../../core';
 import { Platform } from 'react-native';
 import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
@@ -12,10 +15,6 @@ type TransitionProgressEvent = {
   progress: number;
   target: number;
 };
-
-export type ProgressTransitionRegister = ReturnType<
-  typeof createProgressTransitionRegister
->;
 
 const IS_ANDROID = Platform.OS === 'android';
 
@@ -127,7 +126,10 @@ export class ProgressTransitionManager {
 function createProgressTransitionRegister() {
   'worklet';
   const progressAnimations = new Map<number, ProgressAnimation>();
-  const snapshots = new Map<number, any>();
+  const snapshots = new Map<
+    number,
+    Partial<SharedTransitionAnimationsValues>
+  >();
   const currentTransitions = new Set<number>();
   const toRemove = new Set<number>();
 
@@ -153,7 +155,10 @@ function createProgressTransitionRegister() {
       // Remove the animation config after the transition is finished
       toRemove.add(viewTag);
     },
-    onTransitionStart: (viewTag: number, snapshot: any) => {
+    onTransitionStart: (
+      viewTag: number,
+      snapshot: Partial<SharedTransitionAnimationsValues>
+    ) => {
       skipCleaning = isTransitionRestart;
       snapshots.set(viewTag, snapshot);
       currentTransitions.add(viewTag);
@@ -166,7 +171,9 @@ function createProgressTransitionRegister() {
         if (!progressAnimation) {
           continue;
         }
-        const snapshot = snapshots.get(viewTag);
+        const snapshot = snapshots.get(
+          viewTag
+        )! as SharedTransitionAnimationsValues;
         progressAnimation!(viewTag, snapshot, progress);
       }
     },
@@ -234,3 +241,7 @@ if (shouldBeUseWeb()) {
     global.ProgressTransitionRegister = createProgressTransitionRegister();
   })();
 }
+
+export type ProgressTransitionRegister = ReturnType<
+  typeof createProgressTransitionRegister
+>;

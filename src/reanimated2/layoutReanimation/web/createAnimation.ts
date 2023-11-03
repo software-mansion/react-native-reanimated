@@ -21,10 +21,8 @@ function addPxToTranslate(
 ) {
   type RNTransformProp = (typeof existingTransform)[number];
 
-  if (typeof existingTransform === 'string') {
-    throw new Error('[Reanimated] String transform is unsupported.');
-  }
-
+  // @ts-ignore `existingTransform` cannot be string because in that case
+  // we throw error in `extractTransformFromStyle`
   const newTransform = existingTransform.map(
     (transformProp: RNTransformProp) => {
       const newTransformProp: ReanimatedWebTransformProperties = {};
@@ -64,12 +62,6 @@ function addExistingTransform(
   }
 }
 
-let customKeyframeCounter = 0;
-
-function generateNextCustomKeyframeName() {
-  return `REA${customKeyframeCounter++}`;
-}
-
 /**
  *  Modifies default animation by preserving transformations that given element already contains.
  *
@@ -97,10 +89,6 @@ export function createAnimationWithExistingTransform(
 
   newAnimationData.name = keyframeName;
 
-  if (typeof existingTransform === 'string') {
-    throw new Error('[Reanimated] String transform is currently unsupported.');
-  }
-
   const newTransform = addPxToTranslate(existingTransform);
 
   addExistingTransform(newAnimationData, newTransform);
@@ -110,6 +98,12 @@ export function createAnimationWithExistingTransform(
   insertWebAnimation(keyframeName, keyframe);
 
   return keyframeName;
+}
+
+let customKeyframeCounter = 0;
+
+function generateNextCustomKeyframeName() {
+  return `REA${customKeyframeCounter++}`;
 }
 
 /**
@@ -122,7 +116,7 @@ export function createAnimationWithExistingTransform(
 export function TransitionGenerator(
   transitionType: TransitionType,
   transitionData: TransitionData,
-  existingTransform?: NonNullable<TransformsStyle['transform']>
+  existingTransform: TransformsStyle['transform'] | undefined
 ) {
   const transitionKeyframeName = generateNextCustomKeyframeName();
   let transitionObject;

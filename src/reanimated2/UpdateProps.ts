@@ -5,17 +5,9 @@ import type { ShadowNodeWrapper, SharedValue, StyleProps } from './commonTypes';
 import type { AnimatedStyle } from './helperTypes';
 import type { Descriptor } from './hook/commonTypes';
 import { _updatePropsJS } from './js-reanimated';
-import { isJest, shouldBeUseWeb } from './PlatformChecker';
+import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
 import type { ViewRefSet } from './ViewDescriptorsSet';
 import { runOnUIImmediately } from './threads';
-
-export interface UpdatePropsManager {
-  update(
-    viewDescriptors: SharedValue<Descriptor[]>,
-    updates: StyleProps | AnimatedStyle<any>
-  ): void;
-  flush(): void;
-}
 
 let updateProps: (
   viewDescriptor: SharedValue<Descriptor[]>,
@@ -28,7 +20,7 @@ if (shouldBeUseWeb()) {
   updateProps = (_, updates, maybeViewRef, isAnimatedProps) => {
     'worklet';
     if (maybeViewRef) {
-      maybeViewRef.items.forEach((item, __) => {
+      maybeViewRef.items.forEach((item, _) => {
         _updatePropsJS(updates, item, isAnimatedProps);
       });
     }
@@ -62,7 +54,7 @@ export const updatePropsJestWrapper = (
 
 export default updateProps;
 
-const createUpdatePropsManager = global._IS_FABRIC
+const createUpdatePropsManager = isFabric()
   ? () => {
       'worklet';
       // Fabric
@@ -146,4 +138,12 @@ if (shouldBeUseWeb()) {
     'worklet';
     global.UpdatePropsManager = createUpdatePropsManager();
   })();
+}
+
+export interface UpdatePropsManager {
+  update(
+    viewDescriptors: SharedValue<Descriptor[]>,
+    updates: StyleProps | AnimatedStyle<any>
+  ): void;
+  flush(): void;
 }

@@ -12,7 +12,7 @@ export interface SharedValue<Value> {
   value: Value;
   addListener: (listenerID: number, listener: (value: any) => void) => void;
   removeListener: (listenerID: number) => void;
-  modify: (modifier: (value: any) => any) => void;
+  modify: (modifier?: (value: any) => any) => void;
 }
 
 // The below type is used for HostObjects returned by the JSI API that don't have
@@ -80,8 +80,6 @@ export type WorkletFunction<
 > = ((...args: Args) => ReturnValue) & (WorkletBaseRelease | WorkletBaseDev);
 
 export interface NestedObject<T> {
-  // We have to disable this rule due to recursion
-  // eslint-disable-next-line no-use-before-define
   [key: string]: NestedObjectValues<T>;
 }
 
@@ -95,13 +93,6 @@ type Animatable = number | string | Array<number>;
 export type AnimatableValueObject = { [key: string]: Animatable };
 
 export type AnimatableValue = Animatable | AnimatableValueObject;
-
-export type AnimationCallback = (
-  finished?: boolean,
-  current?: AnimatableValue
-) => void;
-
-export type Timestamp = number;
 
 export interface AnimationObject {
   [key: string]: any;
@@ -156,12 +147,27 @@ export type SensorConfig = {
   iosReferenceFrame: IOSReferenceFrame;
 };
 
-export enum InterfaceOrientation {
-  ROTATION_0 = 0,
-  ROTATION_90 = 90,
-  ROTATION_180 = 180,
-  ROTATION_270 = 270,
-}
+export type AnimatedSensor<T extends Value3D | ValueRotation> = {
+  sensor: SharedValue<T>;
+  unregister: () => void;
+  isAvailable: boolean;
+  config: SensorConfig;
+};
+
+export type AnimationCallback = (
+  finished?: boolean,
+  current?: AnimatableValue
+) => void;
+
+export type Timestamp = number;
+
+export type Value3D = {
+  x: number;
+  y: number;
+  z: number;
+  interfaceOrientation: InterfaceOrientation;
+};
+
 export type ValueRotation = {
   qw: number;
   qx: number;
@@ -173,21 +179,16 @@ export type ValueRotation = {
   interfaceOrientation: InterfaceOrientation;
 };
 
-export type Value3D = {
-  x: number;
-  y: number;
-  z: number;
-  interfaceOrientation: InterfaceOrientation;
-};
+export enum InterfaceOrientation {
+  ROTATION_0 = 0,
+  ROTATION_90 = 90,
+  ROTATION_180 = 180,
+  ROTATION_270 = 270,
+}
 
-export type AnimatedSensor<T extends Value3D | ValueRotation> = {
-  sensor: SharedValue<T>;
-  unregister: () => void;
-  isAvailable: boolean;
-  config: SensorConfig;
+export type ShadowNodeWrapper = {
+  __hostObjectShadowNodeWrapper: never;
 };
-
-export type ShadowNodeWrapper = object;
 
 export enum KeyboardState {
   UNKNOWN = 0,

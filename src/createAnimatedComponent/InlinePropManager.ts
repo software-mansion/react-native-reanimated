@@ -28,8 +28,6 @@ function isInlineStyleTransform(transform: unknown): boolean {
     return false;
   }
 
-  // We have to disable this rule due to recursion here
-  // eslint-disable-next-line @typescript-eslint/no-use-before-define
   return transform.some((t: Record<string, unknown>) => hasInlineStyles(t));
 }
 

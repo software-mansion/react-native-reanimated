@@ -24,32 +24,6 @@ export type InterpolationOptions = {
   useCorrectedHSVInterpolation?: boolean;
 };
 
-export enum ColorSpace {
-  RGB = 0,
-  HSV = 1,
-}
-export interface InterpolateHSV {
-  h: number[];
-  s: number[];
-  v: number[];
-  a: number[];
-}
-
-export interface InterpolateRGB {
-  r: number[];
-  g: number[];
-  b: number[];
-  a: number[];
-}
-
-export interface InterpolateConfig {
-  inputRange: readonly number[];
-  outputRange: readonly (string | number)[];
-  colorSpace: ColorSpace;
-  cache: SharedValue<InterpolateRGB | InterpolateHSV | null>;
-  options: InterpolationOptions;
-}
-
 const interpolateColorsHSV = (
   value: number,
   inputRange: readonly number[],
@@ -142,6 +116,13 @@ const interpolateColorsRGB = (
   );
 };
 
+export interface InterpolateRGB {
+  r: number[];
+  g: number[];
+  b: number[];
+  a: number[];
+}
+
 const getInterpolateRGB = (
   colors: readonly (string | number)[]
 ): InterpolateRGB => {
@@ -164,6 +145,13 @@ const getInterpolateRGB = (
   }
   return { r, g, b, a };
 };
+
+export interface InterpolateHSV {
+  h: number[];
+  s: number[];
+  v: number[];
+  a: number[];
+}
 
 const getInterpolateHSV = (
   colors: readonly (string | number)[]
@@ -234,6 +222,19 @@ export function interpolateColor(
   throw new Error(
     `[Reanimated] Invalid color space provided: ${colorSpace}. Supported values are: ['RGB', 'HSV'].`
   );
+}
+
+export enum ColorSpace {
+  RGB = 0,
+  HSV = 1,
+}
+
+export interface InterpolateConfig {
+  inputRange: readonly number[];
+  outputRange: readonly (string | number)[];
+  colorSpace: ColorSpace;
+  cache: SharedValue<InterpolateRGB | InterpolateHSV | null>;
+  options: InterpolationOptions;
 }
 
 export function useInterpolateConfig(

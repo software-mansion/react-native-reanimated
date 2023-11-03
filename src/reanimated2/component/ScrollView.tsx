@@ -25,9 +25,6 @@ interface AnimatedScrollViewInterface extends ScrollView {
   getNode(): ScrollView;
 }
 
-export type AnimatedScrollView = typeof AnimatedScrollViewClass &
-  AnimatedScrollViewInterface;
-
 const AnimatedScrollViewComponent = createAnimatedComponent(
   ScrollView as any
 ) as any;
@@ -36,10 +33,14 @@ export const AnimatedScrollView: AnimatedScrollView = forwardRef(
   (props: AnimatedScrollViewProps, ref: ForwardedRef<AnimatedScrollView>) => {
     const { scrollViewOffset, ...restProps } = props;
     const animatedRef = (
-      ref === null ? useAnimatedRef<ScrollView>() : ref
+      ref === null
+        ? // eslint-disable-next-line react-hooks/rules-of-hooks
+          useAnimatedRef<ScrollView>()
+        : ref
     ) as AnimatedRef<AnimatedScrollView>;
 
     if (scrollViewOffset) {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       useScrollViewOffset(animatedRef, scrollViewOffset);
     }
 
@@ -54,3 +55,6 @@ export const AnimatedScrollView: AnimatedScrollView = forwardRef(
     return <AnimatedScrollViewComponent ref={animatedRef} {...restProps} />;
   }
 ) as unknown as AnimatedScrollView;
+
+export type AnimatedScrollView = typeof AnimatedScrollViewClass &
+  AnimatedScrollViewInterface;

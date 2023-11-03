@@ -17,7 +17,7 @@ const USE_STUB_IMPLEMENTATION = shouldBeUseWeb();
 
 const _shareableCache = new WeakMap<
   Record<string, unknown>,
-  ShareableRef<any> | symbol
+  ShareableRef<unknown> | symbol
 >();
 // the below symbol is used to represent a mapping from the value to itself
 // this is used to allow for a converted shareable to be passed to makeShareableClone
@@ -36,7 +36,7 @@ function isHostObject(value: NonNullable<object>) {
 
 export function registerShareableMapping(
   shareable: any,
-  shareableRef?: ShareableRef<any>
+  shareableRef?: ShareableRef<unknown>
 ): void {
   if (USE_STUB_IMPLEMENTATION) {
     return;
@@ -62,10 +62,14 @@ const INACCESSIBLE_OBJECT = {
       {},
       {
         get: (_: any, prop: string | symbol) => {
-          if (prop === '_isReanimatedSharedValue') {
+          if (
+            prop === '_isReanimatedSharedValue' ||
+            prop === '__remoteFunction'
+          ) {
             // not very happy about this check here, but we need to allow for
             // "inaccessible" objects to be tested with isSharedValue check
-            // as it is being used in the mappers when extracing inputs recursively.
+            // as it is being used in the mappers when extracting inputs recursively
+            // as well as with isRemoteFunction when cloning objects recursively.
             // Apparently we can't check if a key exists there as HostObjects always
             // return true for such tests, so the only possibility for us is to
             // actually access that key and see if it is set to true. We therefore
@@ -107,20 +111,6 @@ const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // Below variable stores object that we process in makeShareableCloneRecursive at the specified depth.
 // We use it to check if later on the function reenters with the same object
 let processedObjectAtThresholdDepth: any;
-
-const WORKLET_CODE_THRESHOLD = 255;
-
-function getWorkletCode(value: __WorkletFunction) {
-  // @ts-ignore this is fine
-  const code = value?.__initData?.code;
-  if (!code) {
-    return 'unknown';
-  }
-  if (code.length > WORKLET_CODE_THRESHOLD) {
-    return `${code.substring(0, WORKLET_CODE_THRESHOLD)}...`;
-  }
-  return code;
-}
 
 export function makeShareableCloneRecursive<T>(
   value: any,
@@ -235,19 +225,19 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
       } else if (ArrayBuffer.isView(value)) {
         // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
         const buffer = value.buffer;
-        const innerType = value.constructor.name;
+        const type = value.constructor.name;
         const handle = makeShareableCloneRecursive({
           __init: () => {
             'worklet';
-            if (!VALID_ARRAY_VIEWS_NAMES.includes(innerType)) {
+            if (!VALID_ARRAY_VIEWS_NAMES.includes(type)) {
               throw new Error(
-                `[Reanimated] Invalid array view name \`${innerType}\`.`
+                `[Reanimated] Invalid array view name \`${type}\`.`
               );
             }
-            const constructor = global[innerType as keyof typeof global];
+            const constructor = global[type as keyof typeof global];
             if (constructor === undefined) {
               throw new Error(
-                `[Reanimated] Constructor for \`${innerType}\` not found.`
+                `[Reanimated] Constructor for \`${type}\` not found.`
               );
             }
             return new constructor(buffer);
@@ -290,6 +280,20 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
   return NativeReanimatedModule.makeShareableClone(value, shouldPersistRemote);
 }
 
+const WORKLET_CODE_THRESHOLD = 255;
+
+function getWorkletCode(value: __WorkletFunction) {
+  // @ts-ignore this is fine
+  const code = value?.__initData?.code;
+  if (!code) {
+    return 'unknown';
+  }
+  if (code.length > WORKLET_CODE_THRESHOLD) {
+    return `${code.substring(0, WORKLET_CODE_THRESHOLD)}...`;
+  }
+  return code;
+}
+
 type RemoteFunction<T> = {
   __remoteFunction: FlatShareableRef<T>;
 };
@@ -310,35 +314,34 @@ export function makeShareableCloneOnUIRecursive<T>(
     // see more details in the comment where USE_STUB_IMPLEMENTATION is defined.
     return value;
   }
-
-  function cloneRecursive(_value: T): FlatShareableRef<T> {
+  function cloneRecursive<T>(value: T): FlatShareableRef<T> {
     if (
-      (typeof _value === 'object' && _value !== null) ||
-      typeof _value === 'function'
+      (typeof value === 'object' && value !== null) ||
+      typeof value === 'function'
     ) {
-      if (isHostObject(_value)) {
+      if (isHostObject(value)) {
         // We call `_makeShareableClone` to wrap the provided HostObject
         // inside ShareableJSRef.
-        return _makeShareableClone(_value) as FlatShareableRef<T>;
+        return _makeShareableClone(value) as FlatShareableRef<T>;
       }
-      if (isRemoteFunction<T>(_value)) {
+      if (isRemoteFunction<T>(value)) {
         // RemoteFunctions are created by us therefore they are
         // a Shareable out of the box and there is no need to
         // call `_makeShareableClone`.
-        return _value.__remoteFunction;
+        return value.__remoteFunction;
       }
-      if (Array.isArray(_value)) {
+      if (Array.isArray(value)) {
         return _makeShareableClone(
-          _value.map(cloneRecursive)
+          value.map(cloneRecursive)
         ) as FlatShareableRef<T>;
       }
       const toAdapt: Record<string, FlatShareableRef<T>> = {};
-      for (const [key, element] of Object.entries(_value)) {
-        toAdapt[key] = cloneRecursive(element);
+      for (const [key, element] of Object.entries(value)) {
+        toAdapt[key] = cloneRecursive<T>(element);
       }
       return _makeShareableClone(toAdapt) as FlatShareableRef<T>;
     }
-    return _makeShareableClone(_value);
+    return _makeShareableClone(value);
   }
   return cloneRecursive(value);
 }
