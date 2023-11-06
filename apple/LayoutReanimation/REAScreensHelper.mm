@@ -105,6 +105,12 @@
 
 #if SCREENS_MODULE_EXISTS
 
+enum ScreenTransitionCommand {
+  Start = 1,
+  Update = 2,
+  Finish = 3,
+};
+
 + (ManageScreenTransitionBlock)getManageScreenTransitionFunction:(RCTBridge *)bridge
 {
   __block RNSModule *screensModule = [bridge moduleForClass:[RNSModule class]];

@@ -23,12 +23,6 @@
 
 @interface REAScreensHelper : NSObject
 
-enum ScreenTransitionCommand {
-  Start = 1,
-  Update = 2,
-  Finish = 3,
-};
-
 + (REAUIView *)getScreenForView:(REAUIView *)view;
 + (REAUIView *)getStackForView:(REAUIView *)view;
 + (bool)isScreenModal:(REAUIView *)screen;
