@@ -6,6 +6,8 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE_BUNDLE === '1',
 });
 
+const path = require('path');
+
 // this can be used to obtain a more readable bundle for debugging
 const disableMinification = process.env.DISABLE_MINIFICATION === '1';
 
@@ -21,12 +23,11 @@ module.exports = withPlugins([withBundleAnalyzer, withExpo], {
     if (disableMinification) {
       config.optimization.minimizer = [];
     }
-    config.resolve.alias.react = require('path').resolve(
-      __dirname,
-      '.',
-      'node_modules',
-      'react'
-    );
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      react: path.resolve(__dirname, '.', 'node_modules', 'react'),
+      'react-dom': path.resolve(__dirname, '.', 'node_modules', 'react-dom'),
+    };
     return config;
   },
 });
