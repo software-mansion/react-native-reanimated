@@ -5990,7 +5990,7 @@ react-native-safe-area-context@^4.7.2:
 
 "react-native-screens@file:../react-native-screens-3.27.0.tgz":
   version "3.27.0"
-  resolved "file:../react-native-screens-3.27.0.tgz#4be4a5c5d51ab27bfbdb9800f74e79246767fbf2"
+  resolved "file:../react-native-screens-3.27.0.tgz#08242adf0c2787eedaaccdcc2cfedc112aabdb7b"
   dependencies:
     react-freeze "^1.0.0"
     warn-once "^0.1.0"
