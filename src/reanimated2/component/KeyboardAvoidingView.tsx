@@ -7,13 +7,20 @@ import type {
 } from 'react-native';
 import { StyleSheet, useWindowDimensions } from 'react-native';
 import { AnimatedView as ReanimatedView } from './View';
-import { useHeaderHeight } from '@react-navigation/elements';
 import {
   useAnimatedKeyboard,
   useAnimatedStyle,
   runOnUI,
   useSharedValue,
 } from '../';
+
+let useHeaderHeight: () => number;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  useHeaderHeight = require('@react-navigation/elements').useHeaderHeight;
+} catch (e) {
+  useHeaderHeight = () => 0;
+}
 
 type Props = ViewProps & KeyboardAvoidingViewProps;
 
