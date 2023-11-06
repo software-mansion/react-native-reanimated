@@ -47,6 +47,12 @@ global._scheduleOnJS = () => {
   );
 };
 
+global._manageScreenTransition = () => {
+  throw new Error(
+    '[Reanimated] _manageScreenTransition should never be called in JSReanimated.'
+  );
+};
+
 interface JSReanimatedComponent {
   previousStyle: StyleProps;
   setNativeProps?: (style: StyleProps) => void;
