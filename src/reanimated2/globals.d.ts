@@ -103,7 +103,10 @@ declare global {
     command: number,
     stackTag: number,
     additionalParam: unknown
-  ) => Array<number>;
+  ) => {
+    topScreenTag: number;
+    belowTopScreenTag: number;
+  };
   var LayoutAnimationsManager: LayoutAnimationsManager;
   var UpdatePropsManager: UpdatePropsManager;
   var ProgressTransitionRegister: ProgressTransitionRegister;
