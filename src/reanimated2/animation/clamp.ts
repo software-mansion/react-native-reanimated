@@ -9,10 +9,10 @@ import type {
 } from '../commonTypes';
 import type { ClampAnimation } from './commonTypes';
 
-type withClampType = <T extends AnimatableValue>(
+type withClampType = <T extends number | string>(
   config: {
-    min?: number | string;
-    max?: number | string;
+    min?: T;
+    max?: T;
     reduceMotion?: ReduceMotion;
   },
   clampedAnimation: T
