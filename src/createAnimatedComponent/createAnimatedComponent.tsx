@@ -24,7 +24,7 @@ import {
 import type { StyleProps, ShadowNodeWrapper } from '../reanimated2/commonTypes';
 import { getShadowNodeWrapperFromRef } from '../reanimated2/fabricUtils';
 import { removeFromPropsRegistry } from '../reanimated2/PropsRegistry';
-import { getReduceMotionFromConfig } from '../reanimated2/animation/utils';
+import { getReduceMotionFromConfig } from '../reanimated2/animation/util';
 import { maybeBuild } from '../animationBuilder';
 import { SkipEnteringContext } from '../reanimated2/component/LayoutAnimationConfig';
 import type { AnimateProps } from '../reanimated2';

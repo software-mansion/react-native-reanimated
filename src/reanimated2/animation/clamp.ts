@@ -3,7 +3,7 @@ import {
   defineAnimation,
   getReduceMotionForAnimation,
   recognizePrefixSuffix,
-} from './utils';
+} from './util';
 import type {
   Animation,
   Timestamp,

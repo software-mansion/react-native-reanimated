@@ -1,5 +1,5 @@
 'use strict';
-import { defineAnimation } from './utils';
+import { defineAnimation } from './util';
 import type {
   Timestamp,
   AnimatableValue,
