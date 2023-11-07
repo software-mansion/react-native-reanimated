@@ -17,7 +17,6 @@ type withClampType = <T extends number | string>(
   config: {
     min?: T;
     max?: T;
-    reduceMotion?: ReduceMotion;
   },
   clampedAnimation: T
 ) => T;
@@ -93,11 +92,14 @@ export const withClamp = function <T extends number | string>(
         } else {
           animation.previousAnimation = previousAnimation;
         }
-
-        // child animations inherit the setting, unless they already have it defined
-        // they will have it defined only if the user used the `reduceMotion` prop
-        if (animationToClamp.reduceMotion === undefined) {
-          animationToClamp.reduceMotion = animation.reduceMotion;
+        if (
+          config.max !== undefined &&
+          config.min !== undefined &&
+          config.max < config.min
+        ) {
+          console.warn(
+            '[Reanimated] Wrong config was provided to withClamp. Min value is bigger than max'
+          );
         }
 
         animationToClamp.onStart(
