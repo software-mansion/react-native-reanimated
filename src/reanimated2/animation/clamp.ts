@@ -57,7 +57,7 @@ export const withClamp = function <T extends number | string>(
           );
           return true;
         } else {
-          const { strippedValue, suffix } = recognizePrefixSuffix(
+          const { prefix, strippedValue, suffix } = recognizePrefixSuffix(
             animationToClamp.current
           );
 
@@ -74,7 +74,9 @@ export const withClamp = function <T extends number | string>(
           animation.current =
             typeof animationToClamp.current === 'number'
               ? (newValue as number)
-              : `${newValue}${suffix === undefined ? '' : suffix}`;
+              : `${prefix === undefined ? '' : prefix}${newValue}${
+                  suffix === undefined ? '' : suffix
+                }`;
         }
 
         return finished;
