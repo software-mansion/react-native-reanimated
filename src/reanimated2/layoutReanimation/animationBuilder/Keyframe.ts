@@ -12,7 +12,7 @@ import type {
 import type { StyleProps } from '../../commonTypes';
 import type { TransformArrayItem } from '../../helperTypes';
 import { ReduceMotion } from '../../commonTypes';
-import { getReduceMotionFromConfig } from '../../animation/util';
+import { getReduceMotionFromConfig } from '../../animation/defineAnimation';
 
 interface KeyframePoint {
   duration: number;

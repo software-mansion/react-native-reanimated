@@ -1,5 +1,8 @@
 'use strict';
-import { defineAnimation, getReduceMotionForAnimation } from './util';
+import {
+  defineAnimation,
+  getReduceMotionForAnimation,
+} from './defineAnimation';
 import type {
   Animation,
   Timestamp,
@@ -8,6 +11,7 @@ import type {
   ReduceMotion,
 } from '../commonTypes';
 import type { ClampAnimation } from './commonTypes';
+import { recognizePrefixSuffix } from './utils';
 
 type withClampType = <T extends number | string>(
   config: {
@@ -18,12 +22,12 @@ type withClampType = <T extends number | string>(
   clampedAnimation: T
 ) => T;
 
-export const withClamp = function <T extends AnimationObject<number>>(
-  config: { min?: number; max?: number; reduceMotion?: ReduceMotion },
-  _animationToClamp: T | (() => T)
+export const withClamp = function <T extends number | string>(
+  config: { min?: T; max?: T; reduceMotion?: ReduceMotion },
+  _animationToClamp: AnimationObject<T> | (() => AnimationObject<T>)
 ): Animation<ClampAnimation> {
   'worklet';
-  return defineAnimation<ClampAnimation, T>(
+  return defineAnimation<ClampAnimation, AnimationObject<T>>(
     _animationToClamp,
     (): ClampAnimation => {
       'worklet';
@@ -31,6 +35,16 @@ export const withClamp = function <T extends AnimationObject<number>>(
         typeof _animationToClamp === 'function'
           ? _animationToClamp()
           : _animationToClamp;
+
+      const strippedMin =
+        config.min === undefined
+          ? undefined
+          : recognizePrefixSuffix(config.min).strippedValue;
+
+      const strippedMax =
+        config.max === undefined
+          ? undefined
+          : recognizePrefixSuffix(config.max).strippedValue;
 
       function clampOnFrame(
         animation: ClampAnimation,
@@ -44,20 +58,26 @@ export const withClamp = function <T extends AnimationObject<number>>(
           );
           return true;
         } else {
-          if (
-            config.max !== undefined &&
-            config.max < animationToClamp.current
-          ) {
-            animation.current = config.max;
-          } else if (
-            config.min !== undefined &&
-            config.min > animationToClamp.current
-          ) {
-            animation.current = config.min;
+          const { strippedValue, suffix } = recognizePrefixSuffix(
+            animationToClamp.current
+          );
+
+          let newValue;
+
+          if (strippedMax !== undefined && strippedMax < strippedValue) {
+            newValue = config.max;
+          } else if (strippedMin !== undefined && strippedMin > strippedValue) {
+            newValue = config.min;
           } else {
-            animation.current = animationToClamp.current;
+            newValue = strippedValue;
           }
+
+          animation.current =
+            typeof animationToClamp.current === 'number'
+              ? (newValue as number)
+              : `${newValue}${suffix === undefined ? '' : suffix}`;
         }
+
         return finished;
       }
 
