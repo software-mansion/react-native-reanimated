@@ -10,34 +10,35 @@ import type {
 import type { ClampAnimation } from './commonTypes';
 
 type withClampType = <T extends AnimatableValue>(
-  config: { min?: number; max?: number; reduceMotion?: ReduceMotion },
+  config: {
+    min?: number | string;
+    max?: number | string;
+    reduceMotion?: ReduceMotion;
+  },
   clampedAnimation: T
 ) => T;
 
-// TODO #5239 This feature is not documented yet
 export const withClamp = function <T extends AnimationObject<number>>(
   config: { min?: number; max?: number; reduceMotion?: ReduceMotion },
-  _clampedAnimation: T | (() => T)
+  _animationToClamp: T | (() => T)
 ): Animation<ClampAnimation> {
   'worklet';
   return defineAnimation<ClampAnimation, T>(
-    _clampedAnimation,
+    _animationToClamp,
     (): ClampAnimation => {
       'worklet';
-      const clampedAnimation =
-        typeof _clampedAnimation === 'function'
-          ? _clampedAnimation()
-          : _clampedAnimation;
+      const animationToClamp =
+        typeof _animationToClamp === 'function'
+          ? _animationToClamp()
+          : _animationToClamp;
 
       function clampOnFrame(
         animation: ClampAnimation,
         now: Timestamp
       ): boolean {
-        const finished = clampedAnimation.onFrame(clampedAnimation, now);
+        const finished = animationToClamp.onFrame(animationToClamp, now);
 
-        if (clampedAnimation.current === undefined) {
-          // This should never happen
-          // TODO  #5239 Actually nextAnimation.current shouldn't be optional
+        if (animationToClamp.current === undefined) {
           console.warn(
             "[Reanimated] Error inside 'withClamp' animation, the inner animation has invalid current value"
           );
@@ -45,15 +46,16 @@ export const withClamp = function <T extends AnimationObject<number>>(
         } else {
           if (
             config.max !== undefined &&
-            config.max < clampedAnimation.current
+            config.max < animationToClamp.current
           ) {
             animation.current = config.max;
-          }
-          if (
+          } else if (
             config.min !== undefined &&
-            config.min > clampedAnimation.current
+            config.min > animationToClamp.current
           ) {
             animation.current = config.min;
+          } else {
+            animation.current = animationToClamp.current;
           }
         }
         return finished;
@@ -65,6 +67,8 @@ export const withClamp = function <T extends AnimationObject<number>>(
         now: Timestamp,
         previousAnimation: Animation<any> | null
       ): void {
+        animation.startTime = now;
+        animation.started = false;
         animation.current = value;
         if (previousAnimation === animation) {
           animation.previousAnimation = previousAnimation.previousAnimation;
@@ -74,21 +78,21 @@ export const withClamp = function <T extends AnimationObject<number>>(
 
         // child animations inherit the setting, unless they already have it defined
         // they will have it defined only if the user used the `reduceMotion` prop
-        if (clampedAnimation.reduceMotion === undefined) {
-          clampedAnimation.reduceMotion = animation.reduceMotion;
+        if (animationToClamp.reduceMotion === undefined) {
+          animationToClamp.reduceMotion = animation.reduceMotion;
         }
 
-        clampedAnimation.onStart(
-          clampedAnimation,
+        animationToClamp.onStart(
+          animationToClamp,
           value,
           now,
-          previousAnimation!
+          previousAnimation
         );
       }
 
       const callback = (finished?: boolean): void => {
-        if (clampedAnimation.callback) {
-          clampedAnimation.callback(finished);
+        if (animationToClamp.callback) {
+          animationToClamp.callback(finished);
         }
       };
 
@@ -96,7 +100,7 @@ export const withClamp = function <T extends AnimationObject<number>>(
         isHigherOrder: true,
         onFrame: clampOnFrame,
         onStart,
-        current: clampedAnimation.current!,
+        current: animationToClamp.current!,
         callback,
         previousAnimation: null,
         reduceMotion: getReduceMotionForAnimation(config.reduceMotion),

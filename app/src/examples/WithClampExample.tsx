@@ -7,9 +7,6 @@ import Animated, {
 import { View, Text, Button, StyleSheet, ViewStyle } from 'react-native';
 import React, { useState } from 'react';
 
-/**  TODO #5239 As soon as 'withClamp' is included in reanimated version used in docs
-copy this example inside our documentation */
-
 const VIOLET = '#b58df1';
 const BORDER_WIDTH = 4;
 const FRAME_WIDTH = 300;
@@ -53,6 +50,7 @@ function renderExample(testedStyle: ViewStyle, description: string) {
 
 export default function AnimatedStyleUpdateExample() {
   const randomWidth = useSharedValue(100);
+  const rotation = useSharedValue('0deg');
   const [toggle, setToggle] = useState(false);
 
   const config = {
@@ -74,15 +72,36 @@ export default function AnimatedStyleUpdateExample() {
     };
   });
 
+  const rotStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          rotate: withClamp(
+            { min: '-45deg', max: '180deg' },
+            withSpring(rotation.value)
+          ),
+        },
+      ],
+    };
+  });
+
   return (
     <View style={styles.container}>
       {renderExample(clampedStyle, 'Clamped spring example')}
 
       {renderExample(style, 'Default spring')}
+
+      <Animated.View
+        style={[
+          { margin: 50, width: 50, height: 50, backgroundColor: 'teal' },
+          rotStyle,
+        ]}
+      />
       <Button
         title="toggle"
         onPress={() => {
           randomWidth.value = toggle ? 150 : 200;
+          rotation.value = toggle ? '380deg' : '-120deg';
           setToggle(!toggle);
         }}
       />
