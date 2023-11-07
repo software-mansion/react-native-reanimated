@@ -88,9 +88,7 @@ export default function AnimatedStyleUpdateExample() {
   return (
     <View style={styles.container}>
       {renderExample(clampedStyle, 'Clamped spring example')}
-
       {renderExample(style, 'Default spring')}
-
       <Animated.View
         style={[
           { margin: 50, width: 50, height: 50, backgroundColor: 'teal' },
