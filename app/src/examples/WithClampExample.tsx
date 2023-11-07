@@ -72,7 +72,7 @@ export default function AnimatedStyleUpdateExample() {
     };
   });
 
-  const rotStyle = useAnimatedStyle(() => {
+  const rotationStyle = useAnimatedStyle(() => {
     return {
       transform: [
         {
@@ -94,7 +94,7 @@ export default function AnimatedStyleUpdateExample() {
       <Animated.View
         style={[
           { margin: 50, width: 50, height: 50, backgroundColor: 'teal' },
-          rotStyle,
+          rotationStyle,
         ]}
       />
       <Button
