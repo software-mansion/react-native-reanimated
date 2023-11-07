@@ -7,11 +7,7 @@ export type {
   SequenceAnimation,
   StyleLayoutAnimation,
 } from './commonTypes';
-export {
-  cancelAnimation,
-  defineAnimation,
-  initialUpdaterRun,
-} from './defineAnimation';
+export { cancelAnimation, defineAnimation, initialUpdaterRun } from './utils';
 export { withTiming } from './timing';
 export type { TimingAnimation, WithTimingConfig } from './timing';
 export { withSpring } from './spring';

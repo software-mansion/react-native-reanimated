@@ -1,10 +1,7 @@
 'use strict';
 import type { EasingFunction, EasingFunctionFactory } from '../Easing';
 import { Easing } from '../Easing';
-import {
-  defineAnimation,
-  getReduceMotionForAnimation,
-} from './defineAnimation';
+import { defineAnimation, getReduceMotionForAnimation } from './utils';
 import type {
   Animation,
   AnimationCallback,

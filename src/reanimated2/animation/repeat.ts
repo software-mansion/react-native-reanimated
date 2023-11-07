@@ -1,8 +1,5 @@
 'use strict';
-import {
-  defineAnimation,
-  getReduceMotionForAnimation,
-} from './defineAnimation';
+import { defineAnimation, getReduceMotionForAnimation } from './utils';
 import type {
   Animation,
   AnimationCallback,

@@ -2,7 +2,8 @@
 import {
   defineAnimation,
   getReduceMotionForAnimation,
-} from './defineAnimation';
+  recognizePrefixSuffix,
+} from './utils';
 import type {
   Animation,
   Timestamp,
@@ -11,7 +12,6 @@ import type {
   ReduceMotion,
 } from '../commonTypes';
 import type { ClampAnimation } from './commonTypes';
-import { recognizePrefixSuffix } from './utils';
 
 type withClampType = <T extends number | string>(
   config: {

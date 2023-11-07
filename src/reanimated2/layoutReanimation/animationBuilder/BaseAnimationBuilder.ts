@@ -7,7 +7,7 @@ import type {
 } from './commonTypes';
 
 import { ReduceMotion } from '../../commonTypes';
-import { getReduceMotionFromConfig } from '../../animation/defineAnimation';
+import { getReduceMotionFromConfig } from '../../animation/utils';
 
 export class BaseAnimationBuilder {
   durationV?: number;
