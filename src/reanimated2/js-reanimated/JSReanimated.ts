@@ -12,9 +12,7 @@ import type {
   ValueRotation,
 } from '../commonTypes';
 import { SensorType } from '../commonTypes';
-import type { WorkletRuntime } from '../runtimes';
 import type { WebSensor } from './WebSensor';
-import type { BackgroundQueue } from '../background';
 import { mockedRequestAnimationFrame } from '../mockedRequestAnimationFrame';
 
 // In Node.js environments (like when static rendering with Expo Router)
@@ -41,16 +39,13 @@ export default class JSReanimated {
     requestAnimationFrameImpl(worklet);
   }
 
-  createWorkletRuntime(
-    _name: string,
-    _initializer: ShareableRef<() => void>
-  ): WorkletRuntime {
+  createWorkletRuntime(_name: string, _initializer: ShareableRef<() => void>) {
     throw new Error(
       '[Reanimated] createWorkletRuntime is not available in JSReanimated.'
     );
   }
 
-  createBackgroundQueue(_name: string): BackgroundQueue {
+  createBackgroundQueue(_name: string) {
     throw new Error(
       '[Reanimated] createBackgroundQueue is not available in JSReanimated.'
     );
