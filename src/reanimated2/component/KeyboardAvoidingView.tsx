@@ -26,7 +26,7 @@ try {
  * View that moves out of the way when the keyboard appears by automatically
  * adjusting its height, position, or bottom padding.
  */
-export const ReanimatedKeyboardAvoidingView = forwardRef<
+export const KeyboardAvoidingView = forwardRef<
   View,
   React.PropsWithChildren<KeyboardAvoidingViewProps>
 >(
