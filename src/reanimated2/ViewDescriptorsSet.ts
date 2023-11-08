@@ -51,7 +51,7 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
   return data;
 }
 
-export function makeViewsRefSet<T>(): ViewRefSet<T> {
+export function useViewRefSet<T>(): ViewRefSet<T> {
   const ref = useRef<ViewRefSet<T> | null>(null);
   if (ref.current === null) {
     const data: ViewRefSet<T> = {
