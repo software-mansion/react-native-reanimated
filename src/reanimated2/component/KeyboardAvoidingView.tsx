@@ -6,7 +6,7 @@ import type {
   ViewProps,
 } from 'react-native';
 import { StyleSheet, useWindowDimensions } from 'react-native';
-import { AnimatedView as ReanimatedView } from './View';
+import { AnimatedView } from './View';
 import {
   useAnimatedKeyboard,
   useAnimatedStyle,
@@ -22,13 +22,14 @@ try {
   useHeaderHeight = () => 0;
 }
 
-type Props = ViewProps & KeyboardAvoidingViewProps;
-
 /**
  * View that moves out of the way when the keyboard appears by automatically
  * adjusting its height, position, or bottom padding.
  */
-const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
+export const ReanimatedKeyboardAvoidingView = forwardRef<
+  View,
+  React.PropsWithChildren<KeyboardAvoidingViewProps>
+>(
   (
     {
       behavior,
@@ -42,19 +43,19 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
     },
     ref
   ) => {
-    const initialFrame = useSharedValue<LayoutRectangle | null>(null);
+    const initialFrameLayout = useSharedValue<LayoutRectangle | null>(null);
     const keyboard = useAnimatedKeyboard();
-    const { height: screenHeight } = useWindowDimensions();
+    const screenHeight = useWindowDimensions().height;
     const headerHeight = useHeaderHeight();
 
     const onLayoutWorklet = useCallback(
       (layout: LayoutRectangle) => {
         'worklet';
-        if (initialFrame.value == null) {
-          initialFrame.value = layout;
+        if (initialFrameLayout.value == null) {
+          initialFrameLayout.value = layout;
         }
       },
-      [initialFrame]
+      [initialFrameLayout]
     );
 
     const handleOnLayout = useCallback<NonNullable<ViewProps['onLayout']>>(
@@ -71,7 +72,7 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
     const getBackwardCompatibleBottomHeight = useCallback(
       (keyboardHeight: number) => {
         'worklet';
-        if (initialFrame.value == null) {
+        if (initialFrameLayout.value == null) {
           return 0;
         }
 
@@ -81,22 +82,22 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
         occupy (screenHeight - headerHeight - keyboardVerticalOffset). If the result is less than 0 - it means
         that keyboard doesn't cover the view and we don't need to tinker with it.
         */
-        const amountToMove = Math.max(
+        const displacement = Math.max(
           keyboardHeight +
-            initialFrame.value.height -
+            initialFrameLayout.value.height -
             (screenHeight - headerHeight - keyboardVerticalOffset),
           0
         );
 
         if (behavior === 'height') {
           // in case of changing height, it is just the view height without the amount to move
-          return Math.max(initialFrame.value.height - amountToMove);
+          return Math.max(initialFrameLayout.value.height - displacement);
         }
 
-        return Math.max(amountToMove);
+        return displacement;
       },
       [
-        initialFrame,
+        initialFrameLayout,
         behavior,
         screenHeight,
         headerHeight,
@@ -140,7 +141,7 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
     });
 
     return (
-      <ReanimatedView
+      <AnimatedView
         ref={ref}
         onLayout={handleOnLayout}
         style={
@@ -150,16 +151,14 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
         }
         {...props}>
         {behavior === 'position' ? (
-          <ReanimatedView
+          <AnimatedView
             style={StyleSheet.compose(contentContainerStyle, animatedStyle)}>
             {children}
-          </ReanimatedView>
+          </AnimatedView>
         ) : (
           children
         )}
-      </ReanimatedView>
+      </AnimatedView>
     );
   }
 );
-
-export default KeyboardAvoidingView;
