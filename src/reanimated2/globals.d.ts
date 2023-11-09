@@ -48,6 +48,9 @@ declare global {
     dataHolder: ShareableSyncDataHolderRef<any>,
     data: ShareableRef<any>
   ) => void;
+  var _getDataSynchronously: <T>(
+    dataHolder: ShareableSyncDataHolderRef<T>
+  ) => ShareableRef<T>;
   var _scheduleOnJS: (
     fun: __ComplexWorkletFunction<A, R>,
     args?: unknown[]
