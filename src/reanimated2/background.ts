@@ -10,9 +10,7 @@ import {
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-export type BackgroundQueue = {
-  __hostObjectBackgroundQueue: never;
-};
+export type BackgroundQueue = Record<string, never> & 'BackgroundQueue';
 
 export function createBackgroundQueue(name: string) {
   return NativeReanimatedModule.createBackgroundQueue(name);
