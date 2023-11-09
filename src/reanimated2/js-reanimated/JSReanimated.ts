@@ -14,6 +14,8 @@ import type {
 import { SensorType } from '../commonTypes';
 import type { WebSensor } from './WebSensor';
 import { mockedRequestAnimationFrame } from '../mockedRequestAnimationFrame';
+import type { WorkletRuntime } from '../runtimes';
+import type { BackgroundQueue } from '../background';
 
 // In Node.js environments (like when static rendering with Expo Router)
 // requestAnimationFrame is unavailable, so we use our mock.
@@ -39,13 +41,16 @@ export default class JSReanimated {
     requestAnimationFrameImpl(worklet);
   }
 
-  createWorkletRuntime(_name: string, _initializer: ShareableRef<() => void>) {
+  createWorkletRuntime(
+    _name: string,
+    _initializer: ShareableRef<() => void>
+  ): WorkletRuntime {
     throw new Error(
       '[Reanimated] createWorkletRuntime is not available in JSReanimated.'
     );
   }
 
-  createBackgroundQueue(_name: string) {
+  createBackgroundQueue(_name: string): BackgroundQueue {
     throw new Error(
       '[Reanimated] createBackgroundQueue is not available in JSReanimated.'
     );
