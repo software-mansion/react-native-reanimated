@@ -46,15 +46,14 @@ export function runOnBackgroundQueue<Args extends unknown[], ReturnValue>(
           worklet(...args);
         })
       );
-  } else {
-    return (...args) =>
-      NativeReanimatedModule.scheduleOnBackgroundQueue(
-        backgroundQueue,
-        workletRuntime,
-        makeShareableCloneRecursive(() => {
-          'worklet';
-          worklet(...args);
-        })
-      );
   }
+  return (...args) =>
+    NativeReanimatedModule.scheduleOnBackgroundQueue(
+      backgroundQueue,
+      workletRuntime,
+      makeShareableCloneRecursive(() => {
+        'worklet';
+        worklet(...args);
+      })
+    );
 }
