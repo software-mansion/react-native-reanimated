@@ -25,7 +25,7 @@ export default function WorkletRuntimeExample() {
       <PerformanceNowDemo />
       <BackgroundQueueFromJSDemo />
       <BackgroundQueueFromUIDemo />
-      <BackgroundQueueLongRunningTaskDemo />
+      <BackgroundQueueLongRunningTasksDemo />
       <BackgroundQueueArgsDemo />
     </View>
   );
@@ -164,7 +164,7 @@ function BackgroundQueueFromUIDemo() {
 let queue: BackgroundQueue | undefined;
 let runtime: WorkletRuntime | undefined;
 
-function BackgroundQueueLongRunningTaskDemo() {
+function BackgroundQueueLongRunningTasksDemo() {
   const handlePress = () => {
     if (queue === undefined) {
       queue = createBackgroundQueue('bar');
@@ -172,15 +172,17 @@ function BackgroundQueueLongRunningTaskDemo() {
     if (runtime === undefined) {
       runtime = createWorkletRuntime('foo');
     }
-    runOnBackgroundQueue(queue, runtime, () => {
-      'worklet';
-      const until = performance.now() + 500;
-      while (performance.now() < until) {}
-      console.log('Hello from background!', performance.now());
-    })();
+    for (let i = 0; i < 3; i++) {
+      runOnBackgroundQueue(queue, runtime, () => {
+        'worklet';
+        const until = performance.now() + 500;
+        while (performance.now() < until) {}
+        console.log('Hello from background!', performance.now());
+      })();
+    }
   };
 
-  return <Button title="Long-running task" onPress={handlePress} />;
+  return <Button title="Long-running tasks" onPress={handlePress} />;
 }
 
 function BackgroundQueueArgsDemo() {
