@@ -166,7 +166,7 @@
   "lint-staged": {
     "*.(js|ts|tsx)": [
       "eslint --ignore-pattern docs --ignore-pattern plugin --ignore-pattern .eslintrc.js --ignore-pattern jest.config.js --ignore-pattern __typetests__",
-            "prettier --write"
+      "prettier --write"
     ],
     "plugin/**/*.ts": "yarn lint:plugin",
     "**/*.{h,cpp}": "yarn lint:cpp",
