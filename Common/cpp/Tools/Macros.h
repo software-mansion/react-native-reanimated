@@ -20,11 +20,11 @@ build
 #ifdef NDEBUG
 #define REANIMATED_NDEBUG = 1
 #endif // NDEBUG
-#ifdef _APPLE
+#ifdef __APPLE__
 #ifndef RCT_NEW_ARCH_ENABLED
 #ifndef DEBUG
 #define REANIMATED_NDEBUG = 1
 #endif // DEBUG
 #endif // RCT_NEW_ARCH_ENABLED
-#endif // _APPLE
+#endif // __APPLE__
 #endif // REANIMATED_NDEBUG
