@@ -17,10 +17,7 @@ fabric_flags = new_arch_enabled ? '-DRCT_NEW_ARCH_ENABLED' : ''
 example_flag = config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP' : ''
 version_flag = '-DREANIMATED_VERSION=' + reanimated_package_json["version"]
 debug_flag = is_release ? '-DNDEBUG' : ''
-ios_min_version = config[:react_native_minor_version] >= 73 ? '10.0' : '9.0'
-if new_arch_enabled
-  ios_min_version = '11.0'
-end
+ios_min_version = new_arch_enabled ? '11.0' : config[:react_native_minor_version] >= 73 ? '10.0' : '9.0'
 
 module LegacyModule
 def self.install_modules_dependencies(s, config, new_arch_enabled, using_hermes)
