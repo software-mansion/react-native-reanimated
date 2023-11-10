@@ -16,6 +16,7 @@ type ParamList = {
 };
 
 const photo = require('./assets/image.jpg');
+
 const Stack = createNativeStackNavigator<ParamList>();
 
 interface CardProps {
