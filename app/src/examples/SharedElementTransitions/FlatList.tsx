@@ -33,6 +33,7 @@ type ParamList = {
 };
 
 const Stack = createNativeStackNavigator<ParamList>();
+
 const DATA: Item[] = [
   { id: 'a1', title: 'a1' },
   { id: 'a2', title: 'a2' },
