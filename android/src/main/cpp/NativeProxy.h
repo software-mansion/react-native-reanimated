@@ -172,7 +172,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   jsi::Runtime *rnRuntime_;
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
-#ifndef DEBUG
+#ifndef NDEBUG
   void checkJavaVersion(jsi::Runtime &);
   void injectCppVersion();
 #endif // NDEBUG

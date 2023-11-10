@@ -2,7 +2,7 @@
 
 #include "ReanimatedMacros.h"
 
-#ifndef DEBUG
+#ifndef NDEBUG
 
 #include <cxxabi.h>
 

@@ -21,7 +21,7 @@ typedef BOOL (^REAShouldAnimateExitingBlock)(NSNumber *_Nonnull tag, BOOL should
 typedef void (
     ^REAAnimationStartingBlock)(NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull yogaValues);
 typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
-#ifndef DEBUG
+#ifndef NDEBUG
 typedef void (^REACheckDuplicateSharedTagBlock)(REAUIView *view, NSNumber *_Nonnull viewTag);
 #endif
 typedef void (^REACancelAnimationBlock)(NSNumber *_Nonnull tag);
@@ -36,7 +36,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
 - (void)setHasAnimationBlock:(REAHasAnimationBlock)hasAnimation;
 - (void)setShouldAnimateExitingBlock:(REAShouldAnimateExitingBlock)shouldAnimateExiting;
 - (void)setAnimationRemovingBlock:(REAAnimationRemovingBlock)clearAnimation;
-#ifndef DEBUG
+#ifndef NDEBUG
 - (void)setCheckDuplicateSharedTagBlock:(REACheckDuplicateSharedTagBlock)checkDuplicateSharedTag;
 #endif
 - (void)progressLayoutAnimationWithStyle:(NSDictionary *_Nonnull)newStyle

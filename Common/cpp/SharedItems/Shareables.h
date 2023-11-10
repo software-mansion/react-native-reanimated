@@ -15,7 +15,7 @@ namespace reanimated {
 
 jsi::Function getValueUnpacker(jsi::Runtime &rt);
 
-#ifndef DEBUG
+#ifndef NDEBUG
 jsi::Function getCallGuard(jsi::Runtime &rt);
 #endif // NDEBUG
 
@@ -29,7 +29,7 @@ inline void runOnRuntimeGuarded(
   // function directly. CallGuard provides a way of capturing exceptions in
   // JavaScript and propagating them to the main React Native thread such that
   // they can be presented using RN's LogBox.
-#ifndef DEBUG
+#ifndef NDEBUG
   getCallGuard(rt).call(rt, function, args...);
 #else
   function.asObject(rt).asFunction(rt).call(rt, args...);

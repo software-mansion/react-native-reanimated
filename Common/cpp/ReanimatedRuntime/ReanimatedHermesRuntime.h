@@ -52,7 +52,7 @@ using namespace facebook::hermes::inspector;
 struct ReanimatedReentrancyCheck {
   // This is effectively a very subtle and complex assert, so only
   // include it in builds which would include asserts.
-#ifndef DEBUG
+#ifndef NDEBUG
   ReanimatedReentrancyCheck() : tid(std::thread::id()), depth(0) {}
 
   void before() {

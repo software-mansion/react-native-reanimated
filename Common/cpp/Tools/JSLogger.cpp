@@ -1,5 +1,5 @@
 #include "ReanimatedMacros.h"
-#ifndef DEBUG
+#ifndef NDEBUG
 
 #include <memory>
 #include "JSLogger.h"

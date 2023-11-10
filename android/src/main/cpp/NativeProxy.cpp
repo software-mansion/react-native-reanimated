@@ -19,7 +19,7 @@
 #include "RNRuntimeDecorator.h"
 #include "ReanimatedJSIUtils.h"
 #include "ReanimatedRuntime.h"
-#ifndef DEBUG
+#ifndef NDEBUG
 #include "ReanimatedVersion.h"
 #endif // NDEBUG
 #include "ReanimatedMacros.h"
@@ -109,7 +109,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       /**/);
 }
 
-#ifndef DEBUG
+#ifndef NDEBUG
 void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
   std::string javaVersion;
   try {
@@ -154,7 +154,7 @@ void NativeProxy::installJSIBindings() {
   auto isReducedMotion = getIsReducedMotion();
   RNRuntimeDecorator::decorate(
       rnRuntime, nativeReanimatedModule_, isReducedMotion);
-#ifndef DEBUG
+#ifndef NDEBUG
   checkJavaVersion(rnRuntime);
   injectCppVersion();
 #endif // NDEBUG
@@ -558,7 +558,7 @@ void NativeProxy::setupLayoutAnimations() {
         return false;
       });
 
-#ifndef DEBUG
+#ifndef NDEBUG
   layoutAnimations_->cthis()->setCheckDuplicateSharedTag(
       [weakNativeReanimatedModule](int viewTag, int screenTag) {
         if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {

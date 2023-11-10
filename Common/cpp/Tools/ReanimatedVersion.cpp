@@ -19,7 +19,7 @@ std::string getReanimatedCppVersion() {
 
 // This function is pretty much a copy of
 // `src/reanimated2/platform-specific/checkVersion.ts`.
-#ifndef DEBUG
+#ifndef NDEBUG
 bool matchVersion(const std::string &version1, const std::string &version2) {
   std::regex pattern("^\\d+\\.\\d+\\.\\d+$");
   if (std::regex_match(version1, pattern) &&

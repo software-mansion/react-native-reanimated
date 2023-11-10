@@ -41,7 +41,7 @@ void WorkletRuntimeDecorator::decorate(
 #endif // RCT_NEW_ARCH_ENABLED
   rt.global().setProperty(rt, "_IS_FABRIC", isFabric);
 
-#ifndef DEBUG
+#ifndef NDEBUG
   auto evalWithSourceUrl = [](jsi::Runtime &rt,
                               const jsi::Value &thisValue,
                               const jsi::Value *args,
