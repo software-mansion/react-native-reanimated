@@ -63,7 +63,7 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   const auto &pair = viewsScreenSharedTagMap_[tag];
   screenSharedTagSet_.erase(pair);
   viewsScreenSharedTagMap_.erase(tag);
-#endif // REANIMATED_NDEBUG
+#endif // NDEBUG
 
   sharedTransitionAnimations_.erase(tag);
   auto const &groupName = viewTagToSharedTag_[tag];
@@ -160,7 +160,7 @@ void LayoutAnimationsManager::checkDuplicateSharedTag(
   viewsScreenSharedTagMap_[viewTag] = pair;
   screenSharedTagSet_.insert(pair);
 }
-#endif // REANIMATED_NDEBUG
+#endif // NDEBUG
 
 std::unordered_map<int, std::shared_ptr<Shareable>>
     &LayoutAnimationsManager::getConfigsForType(LayoutAnimationType type) {

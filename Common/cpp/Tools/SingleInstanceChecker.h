@@ -70,4 +70,4 @@ SingleInstanceChecker<T>::~SingleInstanceChecker() {
 
 } // namespace reanimated
 
-#endif // REANIMATED_NDEBUG
+#endif // NDEBUG

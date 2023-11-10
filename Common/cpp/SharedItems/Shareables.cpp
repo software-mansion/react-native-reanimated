@@ -37,7 +37,7 @@ jsi::Function getCallGuard(jsi::Runtime &rt) {
       rt, jsi::PropNameID::forAscii(rt, "callGuard"), 1, callGuardLambda);
 }
 
-#endif // REANIMATED_NDEBUG
+#endif // NDEBUG
 
 jsi::Value makeShareableClone(
     jsi::Runtime &rt,

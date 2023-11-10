@@ -381,7 +381,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       nativeReanimatedModule->layoutAnimationsManager().checkDuplicateSharedTag([viewTag intValue], screenTag);
     }
   }];
-#endif // REANIMATED_NDEBUG
+#endif // NDEBUG
 
 #endif
 

@@ -69,6 +69,6 @@ void checkJSVersion(jsi::Runtime &rnRuntime) {
       "_REANIMATED_VERSION_CPP",
       jsi::String::createFromUtf8(rnRuntime, cppVersion));
 }
-#endif // REANIMATED_NDEBUG
+#endif // NDEBUG
 
 }; // namespace reanimated

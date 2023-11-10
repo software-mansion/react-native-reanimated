@@ -2,7 +2,7 @@
 #include "ReanimatedMacros.h"
 #ifndef DEBUG
 #include "ReanimatedVersion.h"
-#endif // REANIMATED_NDEBUG
+#endif // NDEBUG
 
 namespace reanimated {
 
@@ -34,7 +34,7 @@ void RNRuntimeDecorator::decorate(
 
 #ifndef DEBUG
   checkJSVersion(rnRuntime);
-#endif // REANIMATED_NDEBUG
+#endif // NDEBUG
 
   rnRuntime.global().setProperty(
       rnRuntime, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);

@@ -22,4 +22,4 @@ class JSLogger {
 
 } // namespace reanimated
 
-#endif // REANIMATED_NDEBUG
+#endif // NDEBUG

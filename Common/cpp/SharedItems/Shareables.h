@@ -17,7 +17,7 @@ jsi::Function getValueUnpacker(jsi::Runtime &rt);
 
 #ifndef DEBUG
 jsi::Function getCallGuard(jsi::Runtime &rt);
-#endif // REANIMATED_NDEBUG
+#endif // NDEBUG
 
 // If possible, please use `WorkletRuntime::runGuarded` instead.
 template <typename... Args>

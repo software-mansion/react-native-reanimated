@@ -120,7 +120,7 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
       });
   runtime_->global().setProperty(
       *runtime_, "evalWithSourceMap", evalWithSourceMap);
-#endif // REANIMATED_NDEBUG
+#endif // NDEBUG
 }
 
 ReanimatedHermesRuntime::~ReanimatedHermesRuntime() {

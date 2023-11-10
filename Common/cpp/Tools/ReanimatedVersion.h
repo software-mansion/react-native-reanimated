@@ -13,6 +13,6 @@ std::string getReanimatedCppVersion();
 #ifndef DEBUG
 bool matchVersion(const std::string &, const std::string &);
 void checkJSVersion(jsi::Runtime &);
-#endif // REANIMATED_NDEBUG
+#endif // NDEBUG
 
 }; // namespace reanimated

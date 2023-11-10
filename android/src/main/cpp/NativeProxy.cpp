@@ -21,7 +21,7 @@
 #include "ReanimatedRuntime.h"
 #ifndef DEBUG
 #include "ReanimatedVersion.h"
-#endif // REANIMATED_NDEBUG
+#endif // NDEBUG
 #include "ReanimatedMacros.h"
 #include "WorkletRuntime.h"
 #include "WorkletRuntimeCollector.h"
@@ -146,7 +146,7 @@ void NativeProxy::injectCppVersion() {
         "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#c-side-failed-to-resolve-java-code-version` for more details.");
   }
 }
-#endif // REANIMATED_NDEBUG
+#endif // NDEBUG
 
 void NativeProxy::installJSIBindings() {
   jsi::Runtime &rnRuntime = *rnRuntime_;
@@ -157,7 +157,7 @@ void NativeProxy::installJSIBindings() {
 #ifndef DEBUG
   checkJavaVersion(rnRuntime);
   injectCppVersion();
-#endif // REANIMATED_NDEBUG
+#endif // NDEBUG
 
   registerEventHandler();
   setupLayoutAnimations();

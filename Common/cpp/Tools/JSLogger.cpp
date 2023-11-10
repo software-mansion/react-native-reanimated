@@ -16,4 +16,4 @@ void JSLogger::warnOnJS(const std::string &warning) const {
 
 } // namespace reanimated
 
-#endif // REANIMATED_NDEBUG
+#endif // NDEBUG

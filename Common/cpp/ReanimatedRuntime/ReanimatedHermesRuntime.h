@@ -113,7 +113,7 @@ struct ReanimatedReentrancyCheck {
   // This is not atomic, as it is only written or read from the owning
   // thread.
   unsigned int depth;
-#endif // REANIMATED_NDEBUG
+#endif // NDEBUG
 };
 
 // This is in fact a subclass of jsi::Runtime! WithRuntimeDecorator is a
