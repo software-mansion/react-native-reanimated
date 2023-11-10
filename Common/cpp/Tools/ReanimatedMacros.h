@@ -19,7 +19,7 @@ automatically (on Fabric only). Therefore, we do the following:
 #ifndef NDEBUG
 #ifdef __APPLE__
 #ifndef RCT_NEW_ARCH_ENABLED
-#ifndef NDEBUG
+#ifndef DEBUG
 #define NDEBUG 1
 #endif // DEBUG
 #endif // RCT_NEW_ARCH_ENABLED
