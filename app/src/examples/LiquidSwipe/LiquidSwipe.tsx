@@ -71,12 +71,7 @@ export default function LiquidSwipe() {
       }
     },
     onEnd: () => {
-      let goBack: boolean;
-      if (isBack.value) {
-        goBack = progress.value > 0.5;
-      } else {
-        goBack = progress.value > 0.2;
-      }
+      const goBack = isBack.value ? progress.value > 0.5 : progress.value > 0.2;
       centerY.value = withSpring(initialWaveCenter);
       progress.value = withSpring(goBack ? 1 : 0, {}, () => {
         isBack.value = goBack;
