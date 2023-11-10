@@ -13,18 +13,19 @@ automatically (on Fabric only). Therefore, we do the following:
 - on iOS we look-up NDEBUG (we inject it in .podspec when `PRODUCTION=1`)
   - if NDEBUG is not defined we check if Fabric is disabled
     - if Fabric is disabled, we check for out-of-the-box DEBUG
-      - if DEBUG is not defined it's (almost) safe to assume we have a release
-build
+      - if DEBUG isn't defined it's almost safe to assume a release build
 */
+
 #ifndef REANIMATED_NDEBUG
 #ifdef NDEBUG
-#define REANIMATED_NDEBUG = 1
-#endif // NDEBUG
+#define REANIMATED_NDEBUG 1
+#else // NDEBUG
 #ifdef __APPLE__
 #ifndef RCT_NEW_ARCH_ENABLED
 #ifndef DEBUG
-#define REANIMATED_NDEBUG = 1
+#define REANIMATED_NDEBUG 1
 #endif // DEBUG
 #endif // RCT_NEW_ARCH_ENABLED
 #endif // __APPLE__
+#endif // NDEBUG
 #endif // REANIMATED_NDEBUG
