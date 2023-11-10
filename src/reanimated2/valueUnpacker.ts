@@ -2,8 +2,6 @@
 import { shouldBeUseWeb } from './PlatformChecker';
 import type { WorkletFunction } from './commonTypes';
 
-const IS_NATIVE = !shouldBeUseWeb();
-
 function valueUnpacker(objectToUnpack: any, category?: string): any {
   'worklet';
   let workletsCache = global.__workletsCache;
@@ -73,12 +71,23 @@ type ValueUnpacker = WorkletFunction<
   any
 >;
 
-if (__DEV__ && IS_NATIVE) {
+if (__DEV__ && !shouldBeUseWeb()) {
+  const testWorklet = (() => {
+    'worklet';
+  }) as WorkletFunction<[], void>;
+  if (testWorklet.__workletHash === undefined) {
+    throw new Error(
+      `[Reanimated] Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
+    );
+  }
   if (!('__workletHash' in valueUnpacker)) {
     throw new Error('[Reanimated] `valueUnpacker` is not a worklet');
   }
   const closure = (valueUnpacker as ValueUnpacker).__closure;
-  if (closure !== undefined && Object.keys(closure).length !== 0) {
+  if (closure === undefined) {
+    throw new Error('[Reanimated] `valueUnpacker` closure is undefined');
+  }
+  if (Object.keys(closure).length !== 0) {
     throw new Error('[Reanimated] `valueUnpacker` must have empty closure');
   }
 }

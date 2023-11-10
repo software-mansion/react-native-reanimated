@@ -9,7 +9,6 @@ import AnimatedSensorMagneticFieldExample from './AnimatedSensorMagneticFieldExa
 import AnimatedSensorRotationExample from './AnimatedSensorRotationExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
-import AnimatedTextInputExample from './AnimatedTextInputExample';
 import AnimatedTextWidthExample from './AnimatedTextWidthExample';
 import ArticleProgressExample from './ArticleProgressExample';
 import BabelVersionCheckExample from './BabelVersionCheckExample';
@@ -27,6 +26,7 @@ import ChessboardExample from './ChessboardExample';
 import ColorExample from './ColorExample';
 import ColorInterpolationExample from './ColorInterpolationExample';
 import CombinedTest from './LayoutAnimations/Combined';
+import CounterExample from './CounterExample';
 import CubesExample from './CubesExample';
 import CustomLayoutAnimationScreen from './LayoutAnimations/CustomLayout';
 import CustomTransitionExample from './SharedElementTransitions/CustomTransition';
@@ -47,6 +47,7 @@ import GetViewPropExample from './GetViewPropExample';
 import IPodExample from './IPodExample';
 import ImageStackExample from './SharedElementTransitions/ImageStack';
 import InvertedFlatListExample from './InvertedFlatListExample';
+import JSPropsExample from './JSPropsExample';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
 import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
 import LettersExample from './LettersExample';
@@ -60,6 +61,7 @@ import MeasureExample from './MeasureExample';
 import Modal from './LayoutAnimations/Modal';
 import ModalNewAPI from './LayoutAnimations/ModalNewAPI';
 import ModalsExample from './SharedElementTransitions/Modals';
+import ModifyExample from './ModifyExample';
 import MountingUnmounting from './LayoutAnimations/MountingUnmounting';
 import NativeModals from './LayoutAnimations/NativeModals';
 import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksWithLayout';
@@ -92,6 +94,7 @@ import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import SetNativePropsExample from './SetNativePropsExample';
+import ShareablesExample from './ShareablesExample';
 import SharedStyleExample from './SharedStyleExample';
 import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
 import SvgExample from './SvgExample';
@@ -107,6 +110,7 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
+import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 
 interface Example {
   icon?: string;
@@ -126,6 +130,21 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🏃‍♂️',
     title: 'Worklet runtime',
     screen: WorkletRuntimeExample,
+  },
+  ShareablesExample: {
+    icon: '🖇',
+    title: 'Shareables',
+    screen: ShareablesExample,
+  },
+  ModifyExample: {
+    icon: '🪛',
+    title: 'Modify',
+    screen: ModifyExample,
+  },
+  JSPropsExample: {
+    icon: '🟨',
+    title: 'JS props',
+    screen: JSPropsExample,
   },
 
   // About
@@ -206,10 +225,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Animate inner component',
     screen: AnimatableRefExample,
   },
-  AnimatedTextInputExample: {
+  CounterExample: {
     icon: '🎰',
     title: 'Counter',
-    screen: AnimatedTextInputExample,
+    screen: CounterExample,
   },
   AnimatedTextWidthExample: {
     icon: '✂️',
@@ -405,6 +424,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⌨',
     title: 'Log test',
     screen: LogExample,
+  },
+  WorkletFactoryCrash: {
+    icon: '🏭',
+    title: 'Worklet factory crash',
+    screen: WorkletFactoryCrash,
   },
 
   // Old examples

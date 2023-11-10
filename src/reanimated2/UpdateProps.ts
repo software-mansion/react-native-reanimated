@@ -5,7 +5,7 @@ import type { ShadowNodeWrapper, SharedValue, StyleProps } from './commonTypes';
 import type { AnimatedStyle } from './helperTypes';
 import type { Descriptor } from './hook/commonTypes';
 import { _updatePropsJS } from './js-reanimated';
-import { isJest, shouldBeUseWeb } from './PlatformChecker';
+import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
 import type { ViewRefSet } from './ViewDescriptorsSet';
 import { runOnUIImmediately } from './threads';
 
@@ -54,7 +54,7 @@ export const updatePropsJestWrapper = (
 
 export default updateProps;
 
-const createUpdatePropsManager = global._IS_FABRIC
+const createUpdatePropsManager = isFabric()
   ? () => {
       'worklet';
       // Fabric

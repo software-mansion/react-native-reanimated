@@ -57,6 +57,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'column',
+    overflow: 'hidden',
   },
   bar: {
     width: 100,

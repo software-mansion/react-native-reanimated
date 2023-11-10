@@ -6,6 +6,9 @@
 #endif
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
+#if REACT_NATIVE_MINOR_VERSION >= 73 && defined(RCT_NEW_ARCH_ENABLED)
+#include <react/utils/CoreFeatures.h>
+#endif
 #endif
 
 #include <functional>
@@ -14,7 +17,6 @@
 #include <unordered_map>
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#include "FabricUtils.h"
 #include "ReanimatedCommitMarker.h"
 #include "ShadowTreeCloner.h"
 #endif
@@ -32,11 +34,12 @@
 #include <fbjni/fbjni.h>
 #endif
 
-#ifdef DEBUG
-#include "JSLogger.h"
-#endif
-
 using namespace facebook;
+
+#if REACT_NATIVE_MINOR_VERSION >= 73 && defined(RCT_NEW_ARCH_ENABLED)
+// Android can't find the definition of this static field
+bool CoreFeatures::useNativeState;
+#endif
 
 namespace reanimated {
 
@@ -62,7 +65,7 @@ NativeReanimatedModule::NativeReanimatedModule(
         onRender(timestampMs);
       }),
       animatedSensorModule_(platformDepMethodsHolder),
-#ifdef DEBUG
+#ifndef NDEBUG
       layoutAnimationsManager_(std::make_shared<JSLogger>(jsScheduler_)),
 #endif
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -320,7 +323,7 @@ void NativeReanimatedModule::setShouldAnimateExiting(
     const jsi::Value &viewTag,
     const jsi::Value &shouldAnimate) {
   layoutAnimationsManager_.setShouldAnimateExiting(
-      viewTag.asNumber(), shouldAnimate.asBool());
+      viewTag.asNumber(), shouldAnimate.getBool());
 }
 
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
@@ -447,16 +450,20 @@ bool NativeReanimatedModule::handleRawEvent(
     // just ignore this event, because it's an event on unmounted component
     return false;
   }
-  const std::string &type = rawEvent.type;
-  const ValueFactory &payloadFactory = rawEvent.payloadFactory;
 
   int tag = eventTarget->getTag();
-  std::string eventType = type;
+  auto eventType = rawEvent.type;
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
   }
   jsi::Runtime &rt = uiWorkletRuntime_->getJSIRuntime();
+#if REACT_NATIVE_MINOR_VERSION >= 73
+  const auto &eventPayload = rawEvent.eventPayload;
+  jsi::Value payload = eventPayload->asJSIValue(rt);
+#else
+  const auto &payloadFactory = rawEvent.payloadFactory;
   jsi::Value payload = payloadFactory(rt);
+#endif
 
   auto res = handleEvent(eventType, tag, std::move(payload), currentTime);
   // TODO: we should call performOperations conditionally if event is handled
@@ -578,8 +585,6 @@ void NativeReanimatedModule::performOperations() {
           auto rootNode =
               oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
-          ShadowTreeCloner shadowTreeCloner{*uiManager_, surfaceId_};
-
           for (const auto &[shadowNode, props] : copiedOperationsQueue) {
             const ShadowNodeFamily &family = shadowNode->getFamily();
             react_native_assert(family.getSurfaceId() == surfaceId_);
@@ -593,7 +598,7 @@ void NativeReanimatedModule::performOperations() {
             }
 #endif
 
-            auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+            auto newRootNode = cloneShadowTreeWithNewProps(
                 rootNode, family, RawProps(rt, *props));
 
             if (newRootNode == nullptr) {
@@ -691,7 +696,8 @@ void NativeReanimatedModule::initializeFabric(
   commitHook_ =
       std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
 #if REACT_NATIVE_MINOR_VERSION >= 73
-  mountHook_ = std::make_shared<ReanimatedMountHook>(propsRegistry, uiManager_);
+  mountHook_ =
+      std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
 #endif
 }
 #endif // RCT_NEW_ARCH_ENABLED

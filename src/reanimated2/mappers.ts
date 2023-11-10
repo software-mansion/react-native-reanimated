@@ -2,7 +2,7 @@
 import type { SharedValue } from './commonTypes';
 import { isJest } from './PlatformChecker';
 import { runOnUI } from './threads';
-import { isSharedValue } from './utils';
+import { isSharedValue } from './isSharedValue';
 
 const IS_JEST = isJest();
 

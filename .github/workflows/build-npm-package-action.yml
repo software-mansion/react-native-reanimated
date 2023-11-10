@@ -50,6 +50,7 @@ jobs:
           ndk-version: r21d
 
       - name: Build package
+        id: build
         env:
           ANDROID_NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: >-
