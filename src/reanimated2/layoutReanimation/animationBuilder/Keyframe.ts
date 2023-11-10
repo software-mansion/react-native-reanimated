@@ -160,16 +160,14 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
             if (!Array.isArray(keyframe.transform)) {
               return;
             }
-            keyframe.transform.forEach(
-              (transformStyle: { [key: string]: any }, index) => {
-                Object.keys(transformStyle).forEach((transformProp: string) => {
-                  addKeyPointWith(
-                    index.toString() + '_transform:' + transformProp,
-                    transformStyle[transformProp]
-                  );
-                });
-              }
-            );
+            keyframe.transform.forEach((transformStyle, index) => {
+              Object.keys(transformStyle).forEach((transformProp: string) => {
+                addKeyPointWith(
+                  index.toString() + '_transform:' + transformProp,
+                  transformStyle[transformProp as keyof typeof transformStyle]
+                );
+              });
+            });
           } else {
             addKeyPointWith(key, keyframe[key]);
           }
@@ -258,8 +256,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
           if (!('transform' in animations)) {
             animations.transform = [];
           }
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          animations.transform!.push(<TransformArrayItem>{
+          animations.transform?.push(<TransformArrayItem>{
             [key.split(':')[1]]: animation,
           });
         } else {

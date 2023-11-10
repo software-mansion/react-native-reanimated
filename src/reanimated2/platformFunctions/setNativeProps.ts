@@ -26,10 +26,9 @@ function setNativePropsFabric<T extends Component>(
     );
     return;
   }
-  const shadowNodeWrapper = (animatedRef as any)() as ShadowNodeWrapper;
+  const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
   processColorsInProps(updates);
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  _updatePropsFabric!([{ shadowNodeWrapper, updates }]);
+  _updatePropsFabric?.([{ shadowNodeWrapper, updates }]);
 }
 
 function setNativePropsPaper<T extends Component>(
@@ -43,11 +42,10 @@ function setNativePropsPaper<T extends Component>(
     );
     return;
   }
-  const tag = (animatedRef as any)() as number;
+  const tag = animatedRef() as number;
   const name = (animatedRef as any).viewName.value;
   processColorsInProps(updates);
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  _updatePropsPaper!([{ tag, name, updates }]);
+  _updatePropsPaper?.([{ tag, name, updates }]);
 }
 
 function setNativePropsJest() {

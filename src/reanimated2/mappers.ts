@@ -6,18 +6,18 @@ import { isSharedValue } from './isSharedValue';
 
 const IS_JEST = isJest();
 
-type Mapper = {
+type Mapper<T> = {
   id: number;
   dirty: boolean;
   worklet: () => void;
-  inputs: SharedValue<any>[];
-  outputs?: SharedValue<any>[];
+  inputs: unknown[];
+  outputs?: SharedValue<T>[];
 };
 
-function createMapperRegistry() {
+function createMapperRegistry<T>() {
   'worklet';
   const mappers = new Map();
-  let sortedMappers: Mapper[] = [];
+  let sortedMappers: Mapper<T>[] = [];
 
   let runRequested = false;
   let processingMappers = false;
@@ -57,8 +57,8 @@ function createMapperRegistry() {
       }
     });
     const visited = new Set();
-    const newOrder: Mapper[] = [];
-    function dfs(mapper: Mapper) {
+    const newOrder: Mapper<T>[] = [];
+    function dfs(mapper: Mapper<T>) {
       visited.add(mapper);
       for (const input of mapper.inputs) {
         const preMappers = pre.get(input);
@@ -131,17 +131,21 @@ function createMapperRegistry() {
     }
   }
 
-  function extractInputs(
-    inputs: any,
-    resultArray: SharedValue<any>[]
-  ): SharedValue<any>[] {
+  function isBaseObject(obj: unknown): obj is object {
+    return Object.getPrototypeOf(obj) === Object.prototype;
+  }
+
+  function extractInputs<T>(
+    inputs: unknown | unknown[],
+    resultArray: SharedValue<T>[]
+  ): SharedValue<T>[] {
     if (Array.isArray(inputs)) {
       for (const input of inputs) {
         input && extractInputs(input, resultArray);
       }
-    } else if (isSharedValue(inputs)) {
+    } else if (isSharedValue<T>(inputs)) {
       resultArray.push(inputs);
-    } else if (Object.getPrototypeOf(inputs) === Object.prototype) {
+    } else if (isBaseObject(inputs)) {
       // we only extract inputs recursively from "plain" objects here, if object
       // is of a derivative class (e.g. HostObject on web, or Map) we don't scan
       // it recursively
@@ -153,11 +157,11 @@ function createMapperRegistry() {
   }
 
   return {
-    start: (
+    start: <T>(
       mapperID: number,
       worklet: () => void,
-      inputs: SharedValue<any>[],
-      outputs?: SharedValue<any>[]
+      inputs: unknown[],
+      outputs?: SharedValue<T>[]
     ) => {
       const mapper = {
         id: mapperID,
@@ -191,10 +195,10 @@ function createMapperRegistry() {
 
 let MAPPER_ID = 9999;
 
-export function startMapper(
+export function startMapper<T>(
   worklet: () => void,
-  inputs: any[] = [],
-  outputs: any[] = []
+  inputs: unknown[] = [],
+  outputs: SharedValue<T>[] = []
 ): number {
   const mapperID = (MAPPER_ID += 1);
 

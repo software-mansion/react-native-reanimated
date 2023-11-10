@@ -1,8 +1,16 @@
 'use strict';
-import type { AnimationObject, AnimatableValue } from './commonTypes';
+import type {
+  AnimationObject,
+  AnimatableValue,
+  SharedValueWithInternals,
+} from './commonTypes';
 import type { Descriptor } from './hook/commonTypes';
 
-export function valueSetter(sv: any, value: any, forceUpdate = false): void {
+export function valueSetter<T>(
+  sv: SharedValueWithInternals<T>,
+  value: T,
+  forceUpdate = false
+): void {
   'worklet';
   const previousAnimation = sv._animation;
   if (previousAnimation) {
@@ -13,12 +21,12 @@ export function valueSetter(sv: any, value: any, forceUpdate = false): void {
     typeof value === 'function' ||
     (value !== null &&
       typeof value === 'object' &&
-      (value as AnimationObject).onFrame !== undefined)
+      (value as unknown as AnimationObject).onFrame !== undefined)
   ) {
     const animation: AnimationObject =
       typeof value === 'function'
         ? (value as () => AnimationObject)()
-        : (value as AnimationObject);
+        : (value as unknown as AnimationObject);
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
     // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)

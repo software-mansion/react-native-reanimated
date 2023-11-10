@@ -6,7 +6,7 @@ import type { Component } from 'react';
 export function measure<T extends Component>(
   animatedRef: AnimatedRef<T>
 ): MeasuredDimensions | null {
-  const element = (animatedRef as any)();
+  const element = animatedRef() as HTMLElement | -1;
 
   if (element === -1) {
     console.warn(
@@ -15,7 +15,7 @@ export function measure<T extends Component>(
     return null;
   }
 
-  const viewportOffset = (element as HTMLElement).getBoundingClientRect();
+  const viewportOffset = element.getBoundingClientRect();
   return {
     width: element.offsetWidth,
     height: element.offsetHeight,

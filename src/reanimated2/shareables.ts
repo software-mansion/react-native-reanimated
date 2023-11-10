@@ -61,7 +61,7 @@ const INACCESSIBLE_OBJECT = {
     return new Proxy(
       {},
       {
-        get: (_: any, prop: string | symbol) => {
+        get: (_: unknown, prop: string | symbol) => {
           if (
             prop === '_isReanimatedSharedValue' ||
             prop === '__remoteFunction'

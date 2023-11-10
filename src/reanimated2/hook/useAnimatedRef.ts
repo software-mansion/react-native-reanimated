@@ -9,16 +9,16 @@ import {
   makeShareableCloneRecursive,
   registerShareableMapping,
 } from '../shareables';
+import type { ScrollViewComponent } from 'react-native';
 import { Platform, findNodeHandle } from 'react-native';
 import { isFabric } from '../PlatformChecker';
+import type { AnimatedComponentRef } from 'src/createAnimatedComponent/commonTypes';
 
 const IS_FABRIC = isFabric();
 
 interface MaybeScrollableComponent extends Component {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getNativeScrollRef?: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getScrollableNode?: any;
+  getNativeScrollRef?: () => React.ElementRef<typeof ScrollViewComponent>;
+  getScrollableNode?: () => AnimatedComponentRef;
   viewConfig?: {
     uiViewClassName?: string;
   };

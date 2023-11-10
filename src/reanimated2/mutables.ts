@@ -1,7 +1,11 @@
 'use strict';
 import NativeReanimatedModule from './NativeReanimated';
 import { shouldBeUseWeb } from './PlatformChecker';
-import type { SharedValue, ShareableSyncDataHolderRef } from './commonTypes';
+import type {
+  SharedValue,
+  ShareableSyncDataHolderRef,
+  SharedValueWithInternals,
+} from './commonTypes';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -21,7 +25,7 @@ export function makeUIMutable<T>(
   const listeners = new Map();
   let value = initial;
 
-  const self = {
+  const self: SharedValueWithInternals<T> = {
     set value(newValue) {
       valueSetter(self, newValue);
     },
@@ -49,7 +53,7 @@ export function makeUIMutable<T>(
     get _value(): T {
       return value;
     },
-    modify: (modifier?: (value: T) => T) => {
+    modify: (modifier) => {
       valueSetter(self, modifier !== undefined ? modifier(value) : value, true);
     },
     addListener: (id: number, listener: (newValue: T) => void) => {
@@ -85,7 +89,7 @@ export function makeMutable<T>(
   });
   // listeners can only work on JS thread on Web and jest environments
   const listeners = SHOULD_BE_USE_WEB ? new Map() : undefined;
-  const mutable = {
+  const mutable: SharedValueWithInternals<T> = {
     set value(newValue) {
       if (SHOULD_BE_USE_WEB) {
         valueSetter(mutable, newValue);
@@ -108,7 +112,7 @@ export function makeMutable<T>(
         );
       }
       value = newValue;
-      listeners!.forEach((listener) => {
+      listeners?.forEach((listener) => {
         listener(newValue);
       });
     },
@@ -120,7 +124,8 @@ export function makeMutable<T>(
       }
       return value;
     },
-    modify: (modifier?: (value: T) => T) => {
+
+    modify: (modifier) => {
       if (!SHOULD_BE_USE_WEB) {
         runOnUI(() => {
           mutable.modify(modifier);
@@ -139,7 +144,7 @@ export function makeMutable<T>(
           '[Reanimated] Adding listeners is only possible on the UI runtime.'
         );
       }
-      listeners!.set(id, listener);
+      listeners?.set(id, listener);
     },
     removeListener: (id: number) => {
       if (!SHOULD_BE_USE_WEB) {
@@ -147,7 +152,7 @@ export function makeMutable<T>(
           '[Reanimated] Removing listeners is only possible on the UI runtime.'
         );
       }
-      listeners!.delete(id);
+      listeners?.delete(id);
     },
     _isReanimatedSharedValue: true,
   };

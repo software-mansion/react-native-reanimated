@@ -1,7 +1,7 @@
 'use strict';
 import type { SharedValue } from './commonTypes';
 
-export function isSharedValue<T>(value: any): value is SharedValue<T> {
+export function isSharedValue<T>(value: unknown): value is SharedValue<T> {
   'worklet';
-  return value?._isReanimatedSharedValue === true;
+  return (value as Record<string, unknown>)?._isReanimatedSharedValue === true;
 }

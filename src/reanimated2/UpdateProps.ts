@@ -29,8 +29,7 @@ if (shouldBeUseWeb()) {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
     processColorsInProps(updates);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    global.UpdatePropsManager!.update(viewDescriptors, updates);
+    global.UpdatePropsManager?.update(viewDescriptors, updates);
   };
 }
 
@@ -78,8 +77,7 @@ const createUpdatePropsManager = isFabric()
           });
         },
         flush() {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          _updatePropsFabric!(operations);
+          _updatePropsFabric?.(operations);
           operations.length = 0;
         },
       };
@@ -109,8 +107,7 @@ const createUpdatePropsManager = isFabric()
           });
         },
         flush() {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          _updatePropsPaper!(operations);
+          _updatePropsPaper?.(operations);
           operations.length = 0;
         },
       };

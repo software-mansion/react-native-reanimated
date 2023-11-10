@@ -21,10 +21,10 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
   const data: ViewDescriptorsSet = {
     shareableViewDescriptors,
     add: (item: Descriptor) => {
-      shareableViewDescriptors.modify((descriptors: Descriptor[]) => {
+      shareableViewDescriptors.modify((descriptors: any): Descriptor[] => {
         'worklet';
         const index = descriptors.findIndex(
-          (descriptor) => descriptor.tag === item.tag
+          (descriptor: Descriptor) => descriptor.tag === item.tag
         );
         if (index !== -1) {
           descriptors[index] = item;
@@ -36,10 +36,10 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
     },
 
     remove: (viewTag: number) => {
-      shareableViewDescriptors.modify((descriptors: Descriptor[]) => {
+      shareableViewDescriptors.modify((descriptors: any): Descriptor[] => {
         'worklet';
         const index = descriptors.findIndex(
-          (descriptor) => descriptor.tag === viewTag
+          (descriptor: Descriptor) => descriptor.tag === viewTag
         );
         if (index !== -1) {
           descriptors.splice(index, 1);

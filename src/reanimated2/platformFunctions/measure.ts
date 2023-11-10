@@ -19,7 +19,7 @@ function measureFabric<T extends Component>(animatedRef: AnimatedRef<T>) {
     return null;
   }
 
-  const viewTag = (animatedRef as any)();
+  const viewTag = animatedRef();
   if (viewTag === -1) {
     console.warn(
       `[Reanimated] The view with tag ${viewTag} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
@@ -27,9 +27,8 @@ function measureFabric<T extends Component>(animatedRef: AnimatedRef<T>) {
     return null;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const measured = _measureFabric!(viewTag as ShadowNodeWrapper);
-  if (measured === null) {
+  const measured = _measureFabric?.(viewTag as ShadowNodeWrapper);
+  if (measured == null) {
     console.warn(
       `[Reanimated] The view with tag ${viewTag} has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
     );
@@ -55,7 +54,7 @@ function measurePaper<T extends Component>(animatedRef: AnimatedRef<T>) {
     return null;
   }
 
-  const viewTag = (animatedRef as any)();
+  const viewTag = animatedRef();
   if (viewTag === -1) {
     console.warn(
       `[Reanimated] The view with tag ${viewTag} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
@@ -63,9 +62,8 @@ function measurePaper<T extends Component>(animatedRef: AnimatedRef<T>) {
     return null;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const measured = _measurePaper!(viewTag as number);
-  if (measured === null) {
+  const measured = _measurePaper?.(viewTag as number);
+  if (measured == null) {
     console.warn(
       `[Reanimated] The view with tag ${viewTag} has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
     );

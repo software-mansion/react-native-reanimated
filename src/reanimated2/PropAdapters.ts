@@ -14,7 +14,6 @@ export const createAnimatedPropAdapter = ((
   nativeProps?: string[]
 ): __AdapterWorkletFunction => {
   const nativePropsToAdd: { [key: string]: boolean } = {};
-  // eslint-disable-next-line no-unused-expressions
   nativeProps?.forEach((prop) => {
     nativePropsToAdd[prop] = true;
   });

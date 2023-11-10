@@ -38,8 +38,7 @@ export function useDerivedValue<Value>(
     initRef.current = makeMutable(initialUpdaterRun(processor));
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const sharedValue: SharedValue<Value> = initRef.current!;
+  const sharedValue: SharedValue<Value> = initRef.current;
 
   useEffect(() => {
     const fun = () => {

@@ -1,5 +1,6 @@
 'use strict';
 import type { ViewStyle, TextStyle } from 'react-native';
+import type { Descriptor } from './hook/commonTypes';
 
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
 export interface StyleProps extends ViewStyle, TextStyle {
@@ -8,12 +9,21 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
+interface SharedValueInternals<T> {
+  _isReanimatedSharedValue: true;
+  _animation?: AnimationObject | null;
+  _value?: T | Descriptor | AnimatableValue;
+}
+
 export interface SharedValue<Value> {
   value: Value;
-  addListener: (listenerID: number, listener: (value: any) => void) => void;
+  addListener: (listenerID: number, listener: (value: Value) => void) => void;
   removeListener: (listenerID: number) => void;
-  modify: (modifier?: (value: any) => any) => void;
+  modify: (modifier?: (value: Value) => unknown) => void;
 }
+
+export type SharedValueWithInternals<Value> = SharedValue<Value> &
+  SharedValueInternals<Value>;
 
 // The below type is used for HostObjects returned by the JSI API that don't have
 // any accessible fields or methods but can carry data that is accessed from the
@@ -36,12 +46,12 @@ export type ShareableSyncDataHolderRef<T> = {
   __hostObjectShareableJSRefSyncDataHolder: T;
 };
 
-export type MapperRegistry = {
+export type MapperRegistry<T> = {
   start: (
     mapperID: number,
     worklet: () => void,
-    inputs: SharedValue<any>[],
-    outputs?: SharedValue<any>[]
+    inputs: Record<string, unknown>[],
+    outputs?: SharedValue<T>[]
   ) => void;
   stop: (mapperID: number) => void;
 };

@@ -20,8 +20,7 @@ function dispatchCommandFabric<T extends Component>(
   }
 
   const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  _dispatchCommandFabric!(shadowNodeWrapper, commandName, args);
+  _dispatchCommandFabric?.(shadowNodeWrapper, commandName, args);
 }
 
 function dispatchCommandPaper<T extends Component>(
@@ -35,8 +34,7 @@ function dispatchCommandPaper<T extends Component>(
   }
 
   const viewTag = animatedRef() as number;
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  _dispatchCommandPaper!(viewTag, commandName, args);
+  _dispatchCommandPaper?.(viewTag, commandName, args);
 }
 
 function dispatchCommandJest() {

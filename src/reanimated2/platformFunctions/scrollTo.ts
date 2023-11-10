@@ -23,7 +23,7 @@ function scrollToFabric<T extends Component>(
   animated: boolean
 ) {
   'worklet';
-  dispatchCommand(animatedRef as any, 'scrollTo', [x, y, animated]);
+  dispatchCommand(animatedRef, 'scrollTo', [x, y, animated]);
 }
 
 function scrollToPaper<T extends Component>(
@@ -38,9 +38,8 @@ function scrollToPaper<T extends Component>(
   }
 
   // Calling animatedRef on Paper returns a number (nativeTag)
-  const viewTag = (animatedRef as any)() as number;
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  _scrollToPaper!(viewTag, x, y, animated);
+  const viewTag = animatedRef() as number;
+  _scrollToPaper?.(viewTag, x, y, animated);
 }
 
 function scrollToJest() {

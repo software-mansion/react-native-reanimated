@@ -17,15 +17,12 @@ import { _updatePropsJS } from '../../js-reanimated';
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { ReduceMotion } from '../../commonTypes';
 import type { StyleProps } from '../../commonTypes';
-import { useReducedMotion } from '../../hook/useReducedMotion';
+import { isReducedMotion } from '../../PlatformChecker';
 
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName = (
-    config.easingV !== undefined &&
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    config.easingV!.name in WebEasings
-      ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        config.easingV!.name
+    config.easingV !== undefined && config.easingV?.name in WebEasings
+      ? config.easingV.name
       : 'linear'
   ) as WebEasingsNames;
 
@@ -47,14 +44,12 @@ function getDelayFromConfig(config: CustomConfig): number {
 
   return shouldRandomizeDelay
     ? getRandomDelay(config.delayV)
-    : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      config.delayV! / 1000;
+    : config.delayV / 1000;
 }
 
 function getReducedMotionFromConfig(config: CustomConfig) {
   if (!config.reduceMotionV) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return useReducedMotion();
+    return isReducedMotion();
   }
 
   switch (config.reduceMotionV) {
@@ -63,8 +58,7 @@ function getReducedMotionFromConfig(config: CustomConfig) {
     case ReduceMotion.Always:
       return true;
     default:
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      return useReducedMotion();
+      return isReducedMotion();
   }
 }
 
@@ -78,14 +72,12 @@ function getDurationFromConfig(
     : Animations[animationName].duration;
 
   return config.durationV !== undefined
-    ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      config.durationV! / 1000
+    ? config.durationV / 1000
     : defaultDuration;
 }
 
 function getCallbackFromConfig(config: CustomConfig): AnimationCallback {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return config.callbackV !== undefined ? config.callbackV! : null;
+  return config.callbackV !== undefined ? config.callbackV : null;
 }
 
 function getReversedFromConfig(config: CustomConfig) {
