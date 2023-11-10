@@ -16,16 +16,12 @@ automatically (on Fabric only). Therefore, we do the following:
       - if DEBUG isn't defined it's almost safe to assume a release build
 */
 
-#ifndef REANIMATED_NDEBUG
-#ifdef NDEBUG
-#define REANIMATED_NDEBUG 1
-#else // NDEBUG
+#ifndef NDEBUG
 #ifdef __APPLE__
 #ifndef RCT_NEW_ARCH_ENABLED
 #ifndef DEBUG
-#define REANIMATED_NDEBUG 1
+#define NDEBUG 1
 #endif // DEBUG
 #endif // RCT_NEW_ARCH_ENABLED
 #endif // __APPLE__
 #endif // NDEBUG
-#endif // REANIMATED_NDEBUG

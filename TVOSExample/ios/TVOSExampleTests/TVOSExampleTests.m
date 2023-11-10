@@ -4,7 +4,7 @@
 #import <React/RCTLog.h>
 #import <React/RCTRootView.h>
 
-#import <RNReanimated/Macros.h>
+#import <RNReanimated/ReanimatedMacros.h>
 
 #define TIMEOUT_SECONDS 600
 #define TEXT_TO_LOOK_FOR @"Welcome to React"
@@ -35,7 +35,7 @@
   BOOL foundElement = NO;
 
   __block NSString *redboxError = nil;
-#ifndef REANIMATED_NDEBUG
+#ifndef DEBUG
   RCTSetLogFunction(
       ^(RCTLogLevel level, RCTLogSource source, NSString *fileName, NSNumber *lineNumber, NSString *message) {
         if (level >= RCTLogLevelError) {
@@ -57,7 +57,7 @@
                                   }];
   }
 
-#ifndef REANIMATED_NDEBUG
+#ifndef DEBUG
   RCTSetLogFunction(RCTDefaultLogFunction);
 #endif
 

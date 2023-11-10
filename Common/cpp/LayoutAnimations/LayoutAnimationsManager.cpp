@@ -1,9 +1,9 @@
 #include "LayoutAnimationsManager.h"
 #include "CollectionUtils.h"
-#include "Macros.h"
+#include "ReanimatedMacros.h"
 #include "Shareables.h"
 
-#ifndef REANIMATED_NDEBUG
+#ifndef DEBUG
 #include <utility>
 #endif
 
@@ -59,7 +59,7 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   exitingAnimations_.erase(tag);
   layoutAnimations_.erase(tag);
   shouldAnimateExitingForTag_.erase(tag);
-#ifndef REANIMATED_NDEBUG
+#ifndef DEBUG
   const auto &pair = viewsScreenSharedTagMap_[tag];
   screenSharedTagSet_.erase(pair);
   viewsScreenSharedTagMap_.erase(tag);
@@ -136,7 +136,7 @@ int LayoutAnimationsManager::findPrecedingViewTagForTransition(int tag) {
   return -1;
 }
 
-#ifndef REANIMATED_NDEBUG
+#ifndef DEBUG
 std::string LayoutAnimationsManager::getScreenSharedTagPairString(
     const int screenTag,
     const std::string &sharedTag) const {

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Macros.h"
+#include "ReanimatedMacros.h"
 
-#ifndef REANIMATED_NDEBUG
+#ifndef DEBUG
 
 #include <cxxabi.h>
 

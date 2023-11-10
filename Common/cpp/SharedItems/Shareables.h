@@ -5,7 +5,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "Macros.h"
+#include "ReanimatedMacros.h"
 
 #include "WorkletRuntimeRegistry.h"
 
@@ -15,7 +15,7 @@ namespace reanimated {
 
 jsi::Function getValueUnpacker(jsi::Runtime &rt);
 
-#ifndef REANIMATED_NDEBUG
+#ifndef DEBUG
 jsi::Function getCallGuard(jsi::Runtime &rt);
 #endif // REANIMATED_NDEBUG
 
@@ -29,7 +29,7 @@ inline void runOnRuntimeGuarded(
   // function directly. CallGuard provides a way of capturing exceptions in
   // JavaScript and propagating them to the main React Native thread such that
   // they can be presented using RN's LogBox.
-#ifndef REANIMATED_NDEBUG
+#ifndef DEBUG
   getCallGuard(rt).call(rt, function, args...);
 #else
   function.asObject(rt).asFunction(rt).call(rt, args...);

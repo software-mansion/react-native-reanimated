@@ -1,5 +1,5 @@
-#include "Macros.h"
-#ifndef REANIMATED_NDEBUG
+#include "ReanimatedMacros.h"
+#ifndef DEBUG
 
 #pragma once
 

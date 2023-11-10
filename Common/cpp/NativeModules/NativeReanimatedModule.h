@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Macros.h"
+#include "ReanimatedMacros.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManager.h>
@@ -212,7 +212,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   const KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;
 
-#ifndef REANIMATED_NDEBUG
+#ifndef DEBUG
   SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;
 #endif
 };

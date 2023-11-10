@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Macros.h"
+#include "ReanimatedMacros.h"
 
 // JS_RUNTIME_HERMES is only set on Android so we have to check __has_include
 // on iOS.
@@ -52,7 +52,7 @@ using namespace facebook::hermes::inspector;
 struct ReanimatedReentrancyCheck {
   // This is effectively a very subtle and complex assert, so only
   // include it in builds which would include asserts.
-#ifndef REANIMATED_NDEBUG
+#ifndef DEBUG
   ReanimatedReentrancyCheck() : tid(std::thread::id()), depth(0) {}
 
   void before() {

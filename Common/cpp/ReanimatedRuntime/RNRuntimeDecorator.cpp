@@ -1,6 +1,6 @@
 #include "RNRuntimeDecorator.h"
-#include "Macros.h"
-#ifndef REANIMATED_NDEBUG
+#include "ReanimatedMacros.h"
+#ifndef DEBUG
 #include "ReanimatedVersion.h"
 #endif // REANIMATED_NDEBUG
 
@@ -32,7 +32,7 @@ void RNRuntimeDecorator::decorate(
 #endif // RCT_NEW_ARCH_ENABLED
   rnRuntime.global().setProperty(rnRuntime, "_IS_FABRIC", isFabric);
 
-#ifndef REANIMATED_NDEBUG
+#ifndef DEBUG
   checkJSVersion(rnRuntime);
 #endif // REANIMATED_NDEBUG
 

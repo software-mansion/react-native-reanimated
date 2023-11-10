@@ -1,5 +1,5 @@
 #include "ReanimatedHermesRuntime.h"
-#include "Macros.h"
+#include "ReanimatedMacros.h"
 
 // Only include this file in Hermes-enabled builds as some platforms (like tvOS)
 // don't support hermes and it causes the compilation to fail.
@@ -93,7 +93,7 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
   jsQueue->quitSynchronous();
 #endif // HERMES_ENABLE_DEBUGGER
 
-#ifndef REANIMATED_NDEBUG
+#ifndef DEBUG
   facebook::hermes::HermesRuntime *wrappedRuntime = runtime_.get();
   jsi::Value evalWithSourceMap = jsi::Function::createFromHostFunction(
       *runtime_,

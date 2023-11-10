@@ -16,13 +16,13 @@
 #import <RNReanimated/REAInitializerRCTFabricSurface.h>
 #endif
 
-#import <RNReanimated/Macros.h>
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REAUIKit.h>
 #import <RNReanimated/RNRuntimeDecorator.h>
 #import <RNReanimated/ReanimatedJSIUtils.h>
+#import <RNReanimated/ReanimatedMacros.h>
 #import <RNReanimated/SingleInstanceChecker.h>
 #import <RNReanimated/WorkletRuntime.h>
 #import <RNReanimated/WorkletRuntimeCollector.h>
@@ -56,7 +56,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 #else
   NSMutableArray<AnimatedOperation> *_operations;
 #endif
-#ifndef REANIMATED_NDEBUG
+#ifndef DEBUG
   SingleInstanceChecker<REAModule> singleInstanceChecker_;
 #endif
   bool hasListeners;
@@ -165,7 +165,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   // only within the first loading `self.bridge.surfacePresenter` exists
   // during the reload `self.bridge.surfacePresenter` is null
   _surfacePresenter = self.bridge.surfacePresenter;
-#ifndef REANIMATED_NDEBUG
+#ifndef DEBUG
   if (reaSurface == nil) {
     // we need only one instance because SurfacePresenter is the same during the application lifetime
     reaSurface = [[REAInitializerRCTFabricSurface alloc] init];

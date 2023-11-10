@@ -1,5 +1,4 @@
 #import <RNReanimated/LayoutAnimationsManager.h>
-#import <RNReanimated/Macros.h>
 #import <RNReanimated/NativeMethods.h>
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAAnimationsManager.h>
@@ -11,10 +10,11 @@
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REASwizzledUIManager.h>
 #import <RNReanimated/RNGestureHandlerStateManager.h>
+#import <RNReanimated/ReanimatedMacros.h>
 #import <RNReanimated/ReanimatedRuntime.h>
 #import <RNReanimated/ReanimatedSensorContainer.h>
 
-#ifndef REANIMATED_NDEBUG
+#ifndef DEBUG
 #import <RNReanimated/REAScreensHelper.h>
 #endif
 
@@ -372,7 +372,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
     return nil;
   }];
-#ifndef REANIMATED_NDEBUG
+#ifndef DEBUG
   [animationsManager setCheckDuplicateSharedTagBlock:^(REAUIView *view, NSNumber *_Nonnull viewTag) {
     if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
       REAUIView *screen = [REAScreensHelper getScreenForView:(REAUIView *)view];

@@ -1,5 +1,5 @@
 #include "NativeReanimatedModule.h"
-#include "Macros.h"
+#include "ReanimatedMacros.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #if REACT_NATIVE_MINOR_VERSION >= 72
@@ -65,7 +65,7 @@ NativeReanimatedModule::NativeReanimatedModule(
         onRender(timestampMs);
       }),
       animatedSensorModule_(platformDepMethodsHolder),
-#ifndef REANIMATED_NDEBUG
+#ifndef DEBUG
       layoutAnimationsManager_(std::make_shared<JSLogger>(jsScheduler_)),
 #endif
 #ifdef RCT_NEW_ARCH_ENABLED
