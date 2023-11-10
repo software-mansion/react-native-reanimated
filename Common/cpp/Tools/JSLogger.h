@@ -1,4 +1,5 @@
-#ifndef NDEBUG
+#include "Macros.h"
+#ifndef REANIMATED_NDEBUG
 
 #pragma once
 
@@ -21,4 +22,4 @@ class JSLogger {
 
 } // namespace reanimated
 
-#endif // NDEBUG
+#endif // REANIMATED_NDEBUG

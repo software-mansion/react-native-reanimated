@@ -1,6 +1,8 @@
 #pragma once
 
-#ifndef NDEBUG
+#include "Macros.h"
+
+#ifndef REANIMATED_NDEBUG
 
 #include <cxxabi.h>
 
@@ -68,4 +70,4 @@ SingleInstanceChecker<T>::~SingleInstanceChecker() {
 
 } // namespace reanimated
 
-#endif // NDEBUG
+#endif // REANIMATED_NDEBUG

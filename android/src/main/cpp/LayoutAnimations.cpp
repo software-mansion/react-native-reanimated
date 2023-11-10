@@ -1,6 +1,7 @@
 #include "LayoutAnimations.h"
 #include "FeaturesConfig.h"
 #include "Logger.h"
+#include "Macros.h"
 
 namespace reanimated {
 
@@ -52,7 +53,7 @@ void LayoutAnimations::setShouldAnimateExitingBlock(
   this->shouldAnimateExitingBlock_ = shouldAnimateExitingBlock;
 }
 
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
 void LayoutAnimations::setCheckDuplicateSharedTag(
     CheckDuplicateSharedTag checkDuplicateSharedTag) {
   checkDuplicateSharedTag_ = checkDuplicateSharedTag;
@@ -124,7 +125,7 @@ void LayoutAnimations::registerNatives() {
       makeNativeMethod(
           "findPrecedingViewTagForTransition",
           LayoutAnimations::findPrecedingViewTagForTransition),
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
       makeNativeMethod(
           "checkDuplicateSharedTag", LayoutAnimations::checkDuplicateSharedTag),
 #endif

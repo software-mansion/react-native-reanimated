@@ -1,6 +1,7 @@
 #include "ReanimatedVersion.h"
 #include <regex>
 #include <string>
+#include "Macros.h"
 
 #ifdef REANIMATED_VERSION
 #define STRINGIZE(x) #x
@@ -18,7 +19,7 @@ std::string getReanimatedCppVersion() {
 
 // This function is pretty much a copy of
 // `src/reanimated2/platform-specific/checkVersion.ts`.
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
 bool matchVersion(const std::string &version1, const std::string &version2) {
   std::regex pattern("^\\d+\\.\\d+\\.\\d+$");
   if (std::regex_match(version1, pattern) &&
@@ -68,6 +69,6 @@ void checkJSVersion(jsi::Runtime &rnRuntime) {
       "_REANIMATED_VERSION_CPP",
       jsi::String::createFromUtf8(rnRuntime, cppVersion));
 }
-#endif // NDEBUG
+#endif // REANIMATED_NDEBUG
 
 }; // namespace reanimated

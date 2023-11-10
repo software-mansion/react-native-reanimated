@@ -7,6 +7,7 @@
 #import <React/RCTAppSetupUtils.h>
 
 #if RCT_NEW_ARCH_ENABLED
+#import <RNReanimated/Macros.h>
 #import <React/CoreModulesPlugins.h>
 #import <React/RCTCxxBridgeDelegate.h>
 #import <React/RCTFabricSurfaceHostingProxyRootView.h>
@@ -87,7 +88,7 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
 {
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
   return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];
 #else
   return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];

@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include "JNIHelper.h"
+#include "Macros.h"
 
 namespace reanimated {
 
@@ -16,7 +17,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
       std::function<void(int, int, alias_ref<JMap<jstring, jstring>>)>;
   using HasAnimationBlock = std::function<bool(int, int)>;
   using ShouldAnimateExitingBlock = std::function<bool(int, bool)>;
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
   using CheckDuplicateSharedTag = std::function<void(int, int)>;
 #endif
   using ClearAnimationConfigBlock = std::function<void(int)>;
@@ -42,7 +43,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   void setHasAnimationBlock(HasAnimationBlock hasAnimationBlock);
   void setShouldAnimateExitingBlock(
       ShouldAnimateExitingBlock shouldAnimateExitingBlock);
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
   void setCheckDuplicateSharedTag(
       CheckDuplicateSharedTag checkDuplicateSharedTag);
   void checkDuplicateSharedTag(int viewTag, int screenTag);
@@ -73,7 +74,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   CancelAnimationBlock cancelAnimationBlock_;
   FindPrecedingViewTagForTransitionBlock
       findPrecedingViewTagForTransitionBlock_;
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
   CheckDuplicateSharedTag checkDuplicateSharedTag_;
 #endif
 

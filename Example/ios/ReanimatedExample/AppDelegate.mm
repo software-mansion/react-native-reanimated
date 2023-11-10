@@ -1,4 +1,5 @@
 #import "AppDelegate.h"
+#import "RNReanimated/Macros.h"
 
 #import <React/RCTBundleURLProvider.h>
 
@@ -16,7 +17,7 @@
 
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
 {
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
   return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];
 #else
   return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];

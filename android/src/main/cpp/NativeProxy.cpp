@@ -19,9 +19,10 @@
 #include "RNRuntimeDecorator.h"
 #include "ReanimatedJSIUtils.h"
 #include "ReanimatedRuntime.h"
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
 #include "ReanimatedVersion.h"
-#endif // NDEBUG
+#endif // REANIMATED_NDEBUG
+#include "Macros.h"
 #include "WorkletRuntime.h"
 #include "WorkletRuntimeCollector.h"
 
@@ -108,7 +109,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       /**/);
 }
 
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
 void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
   std::string javaVersion;
   try {
@@ -145,7 +146,7 @@ void NativeProxy::injectCppVersion() {
         "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#c-side-failed-to-resolve-java-code-version` for more details.");
   }
 }
-#endif // NDEBUG
+#endif // REANIMATED_NDEBUG
 
 void NativeProxy::installJSIBindings() {
   jsi::Runtime &rnRuntime = *rnRuntime_;
@@ -153,10 +154,10 @@ void NativeProxy::installJSIBindings() {
   auto isReducedMotion = getIsReducedMotion();
   RNRuntimeDecorator::decorate(
       rnRuntime, nativeReanimatedModule_, isReducedMotion);
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
   checkJavaVersion(rnRuntime);
   injectCppVersion();
-#endif // NDEBUG
+#endif // REANIMATED_NDEBUG
 
   registerEventHandler();
   setupLayoutAnimations();
@@ -557,7 +558,7 @@ void NativeProxy::setupLayoutAnimations() {
         return false;
       });
 
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
   layoutAnimations_->cthis()->setCheckDuplicateSharedTag(
       [weakNativeReanimatedModule](int viewTag, int screenTag) {
         if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {

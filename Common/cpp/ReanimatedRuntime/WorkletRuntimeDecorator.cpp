@@ -1,5 +1,6 @@
 #include "WorkletRuntimeDecorator.h"
 #include "JSISerializer.h"
+#include "Macros.h"
 #include "ReanimatedJSIUtils.h"
 #include "Shareables.h"
 
@@ -40,7 +41,7 @@ void WorkletRuntimeDecorator::decorate(
 #endif // RCT_NEW_ARCH_ENABLED
   rt.global().setProperty(rt, "_IS_FABRIC", isFabric);
 
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
   auto evalWithSourceUrl = [](jsi::Runtime &rt,
                               const jsi::Value &thisValue,
                               const jsi::Value *args,

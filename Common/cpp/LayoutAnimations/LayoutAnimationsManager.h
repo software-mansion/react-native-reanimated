@@ -1,9 +1,10 @@
 #pragma once
 
 #include "LayoutAnimationType.h"
+#include "Macros.h"
 #include "Shareables.h"
 
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
 #include "JSLogger.h"
 #endif
 
@@ -23,7 +24,7 @@ using namespace facebook;
 
 class LayoutAnimationsManager {
  public:
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
   explicit LayoutAnimationsManager(const std::shared_ptr<JSLogger> &jsLogger)
       : jsLogger_(jsLogger) {}
 #endif
@@ -43,7 +44,7 @@ class LayoutAnimationsManager {
   void clearLayoutAnimationConfig(int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, int tag);
   int findPrecedingViewTagForTransition(int tag);
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
   std::string getScreenSharedTagPairString(
       const int screenTag,
       const std::string &sharedTag) const;
@@ -54,7 +55,7 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::shared_ptr<Shareable>> &getConfigsForType(
       LayoutAnimationType type);
 
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
   std::shared_ptr<JSLogger> jsLogger_;
   // This set's function is to detect duplicate sharedTags on a single screen
   // it contains strings in form: "reactScreenTag:sharedTag"

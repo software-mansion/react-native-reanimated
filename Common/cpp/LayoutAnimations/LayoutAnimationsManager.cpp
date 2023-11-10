@@ -1,8 +1,9 @@
 #include "LayoutAnimationsManager.h"
 #include "CollectionUtils.h"
+#include "Macros.h"
 #include "Shareables.h"
 
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
 #include <utility>
 #endif
 
@@ -58,11 +59,11 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   exitingAnimations_.erase(tag);
   layoutAnimations_.erase(tag);
   shouldAnimateExitingForTag_.erase(tag);
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
   const auto &pair = viewsScreenSharedTagMap_[tag];
   screenSharedTagSet_.erase(pair);
   viewsScreenSharedTagMap_.erase(tag);
-#endif // NDEBUG
+#endif // REANIMATED_NDEBUG
 
   sharedTransitionAnimations_.erase(tag);
   auto const &groupName = viewTagToSharedTag_[tag];
@@ -135,7 +136,7 @@ int LayoutAnimationsManager::findPrecedingViewTagForTransition(int tag) {
   return -1;
 }
 
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
 std::string LayoutAnimationsManager::getScreenSharedTagPairString(
     const int screenTag,
     const std::string &sharedTag) const {
@@ -159,7 +160,7 @@ void LayoutAnimationsManager::checkDuplicateSharedTag(
   viewsScreenSharedTagMap_[viewTag] = pair;
   screenSharedTagSet_.insert(pair);
 }
-#endif // NDEBUG
+#endif // REANIMATED_NDEBUG
 
 std::unordered_map<int, std::shared_ptr<Shareable>>
     &LayoutAnimationsManager::getConfigsForType(LayoutAnimationType type) {

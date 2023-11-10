@@ -22,6 +22,7 @@
 #include "AndroidUIScheduler.h"
 #include "JNIHelper.h"
 #include "LayoutAnimations.h"
+#include "Macros.h"
 #include "NativeReanimatedModule.h"
 #include "UIScheduler.h"
 
@@ -171,10 +172,10 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   jsi::Runtime *rnRuntime_;
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
   void checkJavaVersion(jsi::Runtime &);
   void injectCppVersion();
-#endif // NDEBUG
+#endif // REANIMATED_NDEBUG
 #ifdef RCT_NEW_ARCH_ENABLED
   // removed temporarily, event listener mechanism needs to be fixed on RN side
   // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;

@@ -1,7 +1,8 @@
-#ifndef NDEBUG
+#include "Macros.h"
+#ifndef REANIMATED_NDEBUG
 
-#include "JSLogger.h"
 #include <memory>
+#include "JSLogger.h"
 
 namespace reanimated {
 
@@ -15,4 +16,4 @@ void JSLogger::warnOnJS(const std::string &warning) const {
 
 } // namespace reanimated
 
-#endif // NDEBUG
+#endif // REANIMATED_NDEBUG

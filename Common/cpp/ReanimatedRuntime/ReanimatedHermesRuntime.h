@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Macros.h"
+
 // JS_RUNTIME_HERMES is only set on Android so we have to check __has_include
 // on iOS.
 #if __APPLE__ &&    \
@@ -50,7 +52,7 @@ using namespace facebook::hermes::inspector;
 struct ReanimatedReentrancyCheck {
   // This is effectively a very subtle and complex assert, so only
   // include it in builds which would include asserts.
-#ifndef NDEBUG
+#ifndef REANIMATED_NDEBUG
   ReanimatedReentrancyCheck() : tid(std::thread::id()), depth(0) {}
 
   void before() {
@@ -111,7 +113,7 @@ struct ReanimatedReentrancyCheck {
   // This is not atomic, as it is only written or read from the owning
   // thread.
   unsigned int depth;
-#endif // NDEBUG
+#endif // REANIMATED_NDEBUG
 };
 
 // This is in fact a subclass of jsi::Runtime! WithRuntimeDecorator is a
