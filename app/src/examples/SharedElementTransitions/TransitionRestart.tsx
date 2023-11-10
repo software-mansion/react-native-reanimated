@@ -16,7 +16,7 @@ const transition = SharedTransition.defaultTransitionType(
 ).duration(500);
 
 function navigationSequence(
-  navigation: any,
+  navigation: NativeStackScreenProps<ParamListBase>['navigation'],
   firstScreen: string,
   nextScreen: string
 ) {

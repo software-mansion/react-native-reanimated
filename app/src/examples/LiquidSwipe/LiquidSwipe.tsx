@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
 });
 
 export default function LiquidSwipe() {
-  const isBack = useSharedValue(0);
+  const isBack = useSharedValue(false);
   const centerY = useSharedValue(initialWaveCenter);
   const progress = useSharedValue(0);
 
@@ -71,12 +71,11 @@ export default function LiquidSwipe() {
       }
     },
     onEnd: () => {
-      let goBack: number;
+      let goBack: boolean;
       if (isBack.value) {
-        goBack = progress.value > 0.5 ? 1 : 0;
+        goBack = progress.value > 0.5;
       } else {
-        // TODO: want to use a boolean here
-        goBack = progress.value > 0.2 ? 1 : 0;
+        goBack = progress.value > 0.2;
       }
       centerY.value = withSpring(initialWaveCenter);
       progress.value = withSpring(goBack ? 1 : 0, {}, () => {

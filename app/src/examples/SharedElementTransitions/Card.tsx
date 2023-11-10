@@ -1,14 +1,30 @@
 import * as React from 'react';
 import { View, TouchableNativeFeedback, StyleSheet } from 'react-native';
-import { ParamListBase } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
+  NativeStackNavigationProp,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import Animated from 'react-native-reanimated';
 
+type ParamList = {
+  Screen1: {};
+  Screen2: {
+    title: string;
+    sharedTransitionTag: string;
+  };
+};
+
 const photo = require('./assets/image.jpg');
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<ParamList>();
+
+interface CardProps {
+  navigation: NativeStackNavigationProp<ParamList, keyof ParamList, undefined>;
+  title: string;
+  transitionTag: string;
+  isOpen?: boolean;
+  nextScreen: keyof ParamList;
+}
 
 function Card({
   navigation,
@@ -16,8 +32,8 @@ function Card({
   transitionTag,
   isOpen = false,
   nextScreen,
-}: any) {
-  const goNext = (screenName: string) => {
+}: CardProps) {
+  const goNext = (screenName: keyof ParamList) => {
     navigation.navigate(screenName, {
       title: title,
       sharedTransitionTag: transitionTag,
@@ -55,7 +71,7 @@ function Card({
   );
 }
 
-function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen1({ navigation }: NativeStackScreenProps<ParamList, 'Screen1'>) {
   return (
     <Animated.ScrollView style={styles.flexOne}>
       {[...Array(6)].map((_, i) => (
@@ -71,8 +87,11 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen2({ route, navigation }: NativeStackScreenProps<ParamListBase>) {
-  const { title, sharedTransitionTag } = route.params as any;
+function Screen2({
+  route,
+  navigation,
+}: NativeStackScreenProps<ParamList, 'Screen2'>) {
+  const { title, sharedTransitionTag } = route.params;
 
   return (
     <View style={styles.flexOne}>

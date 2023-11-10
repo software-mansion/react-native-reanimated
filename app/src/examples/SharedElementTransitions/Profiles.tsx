@@ -9,6 +9,7 @@ import {
   FlatList,
   StatusBar,
   Platform,
+  ImageSourcePropType,
 } from 'react-native';
 import {
   createNativeStackNavigator,
@@ -18,6 +19,7 @@ import Animated, {
   FadeIn,
   runOnJS,
   SharedTransition,
+  SharedValue,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -31,10 +33,16 @@ const leavesBackground = require('./assets/nature/leaves.jpg');
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
+type Item = {
+  id: string;
+  image: ImageSourcePropType | SharedValue<ImageSourcePropType>;
+  title: string;
+};
+
 type StackParamList = {
   Profiles: undefined;
   Home: { tag: Tag };
-  Details: { item: any };
+  Details: { item: Item };
 };
 
 const springOptions = {

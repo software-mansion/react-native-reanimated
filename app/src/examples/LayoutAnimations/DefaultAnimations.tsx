@@ -90,7 +90,7 @@ import {
 
 interface AnimatedBlockProps {
   name: string;
-  animatedStyle: Record<string, any>;
+  animatedStyle: Record<string, unknown>;
   defaultShow?: boolean;
 }
 

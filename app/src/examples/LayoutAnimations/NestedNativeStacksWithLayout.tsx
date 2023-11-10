@@ -3,10 +3,15 @@ import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useNavigationBuilder } from '@react-navigation/native';
 
 const Stack = createNativeStackNavigator();
 
-function First({ navigation }: { navigation: any }) {
+function First({
+  navigation,
+}: {
+  navigation: ReturnType<typeof useNavigationBuilder>['navigation'];
+}) {
   return (
     <>
       <Button title="Navigate" onPress={() => navigation.navigate('Second')} />
