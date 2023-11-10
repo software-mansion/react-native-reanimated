@@ -8,7 +8,7 @@ import {
 import Animated from 'react-native-reanimated';
 
 type ParamList = {
-  Screen1: {};
+  Screen1?: {};
   Screen2: {
     title: string;
     sharedTransitionTag: string;

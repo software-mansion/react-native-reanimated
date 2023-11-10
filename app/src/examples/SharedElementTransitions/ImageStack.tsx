@@ -18,8 +18,8 @@ const countryside = require('./assets/countryside.jpg');
 const dawn = require('./assets/dawn.jpg');
 
 type ParamList = {
-  Screen1: {};
-  Screen2: {};
+  Screen1?: {};
+  Screen2?: {};
   Screen3: {
     image: ImageSourcePropType | SharedValue<ImageSourcePropType>;
     index: number;

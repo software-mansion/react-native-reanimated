@@ -17,7 +17,7 @@ import {
 } from 'react-native-gesture-handler';
 
 type ParamList = {
-  Screen1: {};
+  Screen1?: {};
   Screen2: { title: string; sharedTransitionTag: string };
 };
 
