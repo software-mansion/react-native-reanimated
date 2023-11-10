@@ -36,7 +36,6 @@ export const KeyboardAvoidingView = forwardRef<
       children,
       contentContainerStyle,
       enabled = true,
-      keyboardVerticalOffset = 0,
       style,
       onLayout,
       ...props
@@ -46,7 +45,13 @@ export const KeyboardAvoidingView = forwardRef<
     const initialFrameLayout = useSharedValue<LayoutRectangle | null>(null);
     const keyboard = useAnimatedKeyboard();
     const screenHeight = useWindowDimensions().height;
-    const headerHeight = useHeaderHeight();
+    let headerHeight = 0;
+    try {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      headerHeight = useHeaderHeight();
+    } catch (e) {
+      headerHeight = 0;
+    }
 
     const onLayoutWorklet = useCallback(
       (layout: LayoutRectangle) => {
@@ -78,31 +83,24 @@ export const KeyboardAvoidingView = forwardRef<
 
         /*
         We calculate how much of the view to move by taking sum of keyboard's and view's heights
-        (keyboardHeight + initialFrame.value.height) and substracting how much space they both should actually
-        occupy (screenHeight - headerHeight - keyboardVerticalOffset). If the result is less than 0 - it means
-        that keyboard doesn't cover the view and we don't need to tinker with it.
+        and substracting how much space they both should actually occupy. If the result is less 
+        than 0 - it means that keyboard doesn't cover the view and we don't need to tinker with it.
         */
         const displacement = Math.max(
           keyboardHeight +
             initialFrameLayout.value.height -
-            (screenHeight - headerHeight - keyboardVerticalOffset),
+            (screenHeight - headerHeight - initialFrameLayout.value.y),
           0
         );
 
         if (behavior === 'height') {
-          // in case of changing height, it is just the view height without the amount to move
-          return Math.max(initialFrameLayout.value.height - displacement);
+          // in case of changing height, it is just the view height without the displacement
+          return Math.max(initialFrameLayout.value.height - displacement, 0);
         }
 
         return displacement;
       },
-      [
-        initialFrameLayout,
-        behavior,
-        screenHeight,
-        headerHeight,
-        keyboardVerticalOffset,
-      ]
+      [initialFrameLayout, screenHeight, headerHeight, behavior]
     );
 
     const animatedStyle = useAnimatedStyle(() => {

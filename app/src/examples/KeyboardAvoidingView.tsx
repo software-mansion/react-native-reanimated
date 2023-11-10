@@ -113,7 +113,6 @@ export default function KeyboardAvoidingViewExample(): React.ReactElement {
       <KeyboardAvoidingView
         behavior={behavior}
         style={styles.flexOne}
-        keyboardVerticalOffset={2 * HEADER_VIEW_HEIGHT}
         contentContainerStyle={styles.flexOne}>
         <Animated.FlatList
           inverted
@@ -141,14 +140,13 @@ export default function KeyboardAvoidingViewExample(): React.ReactElement {
 }
 
 const OVERLAY_COLOR = 'rgba(29, 28, 29, 0.13)';
-const HEADER_VIEW_HEIGHT = 40;
 
 const styles = StyleSheet.create({
   flexOne: {
     flex: 1,
   },
   header: {
-    height: HEADER_VIEW_HEIGHT,
+    height: 40,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
