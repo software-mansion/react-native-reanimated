@@ -12,7 +12,7 @@ import {
 import type { ScrollViewComponent } from 'react-native';
 import { Platform, findNodeHandle } from 'react-native';
 import { isFabric } from '../PlatformChecker';
-import type { AnimatedComponentRef } from 'src/createAnimatedComponent/commonTypes';
+import type { AnimatedComponentRef } from '../../createAnimatedComponent/commonTypes';
 
 const IS_FABRIC = isFabric();
 
