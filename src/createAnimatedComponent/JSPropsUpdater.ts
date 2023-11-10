@@ -10,22 +10,19 @@ import {
 } from '../reanimated2/PlatformChecker';
 import type { StyleProps } from '../reanimated2';
 import { runOnJS, runOnUIImmediately } from '../reanimated2/threads';
+import type {
+  AnimatedComponentProps,
+  IAnimatedComponentInternal,
+  IJSPropsUpdater,
+  InitialComponentProps,
+} from './commonTypes';
 
 interface ListenerData {
   viewTag: number;
   props: StyleProps;
 }
 
-interface JSPropsUpdater {
-  addOnJSPropsChangeListener: (
-    animatedComponent: React.Component<unknown, unknown>
-  ) => void;
-  removeOnJSPropsChangeListener: (
-    animatedComponent: React.Component<unknown, unknown>
-  ) => void;
-}
-
-class JSPropsUpdaterPaper implements JSPropsUpdater {
+class JSPropsUpdaterPaper implements IJSPropsUpdater {
   private static _tagToComponentMapping = new Map();
   private _reanimatedEventEmitter: NativeEventEmitter;
   private static _reanimatedModuleMock = {
@@ -48,7 +45,10 @@ class JSPropsUpdaterPaper implements JSPropsUpdater {
   }
 
   public addOnJSPropsChangeListener(
-    animatedComponent: React.Component<unknown, unknown>
+    animatedComponent: React.Component<
+      AnimatedComponentProps<InitialComponentProps>
+    > &
+      IAnimatedComponentInternal
   ) {
     const viewTag = findNodeHandle(animatedComponent);
     JSPropsUpdaterPaper._tagToComponentMapping.set(viewTag, animatedComponent);
@@ -67,7 +67,10 @@ class JSPropsUpdaterPaper implements JSPropsUpdater {
   }
 
   public removeOnJSPropsChangeListener(
-    animatedComponent: React.Component<unknown, unknown>
+    animatedComponent: React.Component<
+      AnimatedComponentProps<InitialComponentProps>
+    > &
+      IAnimatedComponentInternal
   ) {
     const viewTag = findNodeHandle(animatedComponent);
     JSPropsUpdaterPaper._tagToComponentMapping.delete(viewTag);
@@ -79,7 +82,7 @@ class JSPropsUpdaterPaper implements JSPropsUpdater {
   }
 }
 
-class JSPropsUpdaterFabric implements JSPropsUpdater {
+class JSPropsUpdaterFabric implements IJSPropsUpdater {
   private static _tagToComponentMapping = new Map();
   private static isInitialized = false;
 
@@ -104,7 +107,10 @@ class JSPropsUpdaterFabric implements JSPropsUpdater {
   }
 
   public addOnJSPropsChangeListener(
-    animatedComponent: React.Component<unknown, unknown>
+    animatedComponent: React.Component<
+      AnimatedComponentProps<InitialComponentProps>
+    > &
+      IAnimatedComponentInternal
   ) {
     if (!JSPropsUpdaterFabric.isInitialized) {
       return;
@@ -114,7 +120,10 @@ class JSPropsUpdaterFabric implements JSPropsUpdater {
   }
 
   public removeOnJSPropsChangeListener(
-    animatedComponent: React.Component<unknown, unknown>
+    animatedComponent: React.Component<
+      AnimatedComponentProps<InitialComponentProps>
+    > &
+      IAnimatedComponentInternal
   ) {
     if (!JSPropsUpdaterFabric.isInitialized) {
       return;
@@ -124,15 +133,21 @@ class JSPropsUpdaterFabric implements JSPropsUpdater {
   }
 }
 
-class JSPropsUpdaterWeb implements JSPropsUpdater {
+class JSPropsUpdaterWeb implements IJSPropsUpdater {
   public addOnJSPropsChangeListener(
-    _animatedComponent: React.Component<unknown, unknown>
+    _animatedComponent: React.Component<
+      AnimatedComponentProps<InitialComponentProps>
+    > &
+      IAnimatedComponentInternal
   ) {
     // noop
   }
 
   public removeOnJSPropsChangeListener(
-    _animatedComponent: React.Component<unknown, unknown>
+    _animatedComponent: React.Component<
+      AnimatedComponentProps<InitialComponentProps>
+    > &
+      IAnimatedComponentInternal
   ) {
     // noop
   }
