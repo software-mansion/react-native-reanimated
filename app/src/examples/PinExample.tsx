@@ -60,13 +60,12 @@ function NumberDisplay({ number }: { number: Animated.SharedValue<number> }) {
   );
 }
 
-function Digit({
-  number,
-  index,
-}: {
-  number: Animated.SharedValue<number>;
+type DigitProps = {
+  number: SharedValue<number>;
   index: number;
-}) {
+};
+
+function Digit({ number, index }: DigitProps) {
   const digit = useDigit(number, index);
   const aref = useAnimatedRef<Animated.ScrollView>();
 
