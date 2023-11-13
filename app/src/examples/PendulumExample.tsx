@@ -166,20 +166,18 @@ export default function SpringExample() {
           </Animated.View>
         </View>
       </GestureDetector>
-      <>
-        {fields.map((item) => {
-          return (
-            <InputField
-              fieldName={item.fieldName}
-              value={item.value}
-              setValue={(value) => {
-                item.setValue(value);
-              }}
-              key={item.fieldName}
-            />
-          );
-        })}
-      </>
+      {fields.map((item) => {
+        return (
+          <InputField
+            fieldName={item.fieldName}
+            value={item.value}
+            setValue={(value) => {
+              item.setValue(value);
+            }}
+            key={item.fieldName}
+          />
+        );
+      })}
     </GestureHandlerRootView>
   );
 }
