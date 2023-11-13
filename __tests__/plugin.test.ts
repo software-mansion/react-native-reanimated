@@ -1584,7 +1584,7 @@ describe('babel plugin', () => {
   });
 
   describe('for worklet minification', () => {
-    it('minifies worklet `code` property in production builds', () => {
+    it('minifies worklets in production builds', () => {
       const input = html`<script>
         function foo(x) {
           'worklet';
@@ -1600,7 +1600,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't minify worklet `code` property in dev builds", () => {
+    it("doesn't minify worklets in dev builds", () => {
       const input = html`<script>
         function foo(x) {
           'worklet';
@@ -1613,7 +1613,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('minifies nested worklets `code` property in production builds', () => {
+    it('minifies nested worklets ` in production builds', () => {
       const input = html`<script>
         function foo(x) {
           'worklet';
@@ -1634,7 +1634,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't minify nested worklet `code` property in dev builds", () => {
+    it("doesn't minify nested worklets in dev builds", () => {
       const input = html`<script>
         function foo(x) {
           'worklet';
@@ -1652,7 +1652,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('minifies recursive worklets `code` property in production builds', () => {
+    it('minifies recursive worklets in production builds', () => {
       const input = html`<script>
         function foo(x) {
           'worklet';
@@ -1670,7 +1670,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't minify recursive worklet `code` property in dev builds", () => {
+    it("doesn't minify recursive worklets in dev builds", () => {
       const input = html`<script>
         function foo(x) {
           'worklet';

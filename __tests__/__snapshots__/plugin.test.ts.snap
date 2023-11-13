@@ -1620,7 +1620,7 @@ function App() {
 }"
 `;
 
-exports[`babel plugin for worklet minification doesn't minify nested worklet \`code\` property in dev builds 1`] = `
+exports[`babel plugin for worklet minification doesn't minify nested worklets in dev builds 1`] = `
 "var _worklet_12453974381334_init_data = {
   code: "function foo(x){x=2;function bar(y){'worklet';y=3;}}",
   location: "/dev/null",
@@ -1657,7 +1657,7 @@ var foo = function () {
 }();"
 `;
 
-exports[`babel plugin for worklet minification doesn't minify recursive worklet \`code\` property in dev builds 1`] = `
+exports[`babel plugin for worklet minification doesn't minify recursive worklets in dev builds 1`] = `
 "var _worklet_10654913230779_init_data = {
   code: "function foo(x){const foo=this._recur;if(x>0){foo(x-1);}}",
   location: "/dev/null",
@@ -1679,7 +1679,7 @@ var foo = function () {
 }();"
 `;
 
-exports[`babel plugin for worklet minification doesn't minify worklet \`code\` property in dev builds 1`] = `
+exports[`babel plugin for worklet minification doesn't minify worklets in dev builds 1`] = `
 "var _worklet_4679479961836_init_data = {
   code: "function foo(x){return x+2;}",
   location: "/dev/null",
@@ -1699,7 +1699,7 @@ var foo = function () {
 }();"
 `;
 
-exports[`babel plugin for worklet minification minifies nested worklets \`code\` property in production builds 1`] = `
+exports[`babel plugin for worklet minification minifies nested worklets \` in production builds 1`] = `
 "var _worklet_1507112842880_init_data = {
   code: "function b(a){function c(a){'worklet';a=3;}a=2;}"
 };
@@ -1726,7 +1726,7 @@ var foo = function () {
 }();"
 `;
 
-exports[`babel plugin for worklet minification minifies recursive worklets \`code\` property in production builds 1`] = `
+exports[`babel plugin for worklet minification minifies recursive worklets in production builds 1`] = `
 "var _worklet_10809661610572_init_data = {
   code: "function b(a){const b=this._recur;0<a&&b(a-1);}"
 };
@@ -1743,7 +1743,7 @@ var foo = function () {
 }();"
 `;
 
-exports[`babel plugin for worklet minification minifies worklet \`code\` property in production builds 1`] = `
+exports[`babel plugin for worklet minification minifies worklets in production builds 1`] = `
 "var _worklet_9470503914760_init_data = {
   code: "function b(a){return a+2;}"
 };
