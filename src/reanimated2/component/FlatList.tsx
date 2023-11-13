@@ -1,6 +1,6 @@
 'use strict';
 import type { ForwardedRef } from 'react';
-import React, { Component, forwardRef } from 'react';
+import React, { Component, forwardRef, useRef } from 'react';
 import type { FlatListProps, LayoutChangeEvent } from 'react-native';
 import { FlatList } from 'react-native';
 import { AnimatedView } from './View';
@@ -20,13 +20,15 @@ interface CellRendererComponentProps {
 }
 
 const createCellRendererComponent = (
-  itemLayoutAnimation?: ILayoutAnimationBuilder
+  itemLayoutAnimationRef?: React.MutableRefObject<
+    ILayoutAnimationBuilder | undefined
+  >
 ) => {
   const CellRendererComponent = (props: CellRendererComponentProps) => {
     return (
       <AnimatedView
         // TODO TYPESCRIPT This is temporary cast is to get rid of .d.ts file.
-        layout={itemLayoutAnimation as any}
+        layout={itemLayoutAnimationRef?.current as any}
         onLayout={props.onLayout}
         style={props.style}>
         {props.children}
@@ -70,9 +72,12 @@ export const ReanimatedFlatList = forwardRef(
       restProps.scrollEventThrottle = 1;
     }
 
+    const itemLayoutAnimationRef = useRef(itemLayoutAnimation);
+    itemLayoutAnimationRef.current = itemLayoutAnimation;
+
     const CellRendererComponent = React.useMemo(
-      () => createCellRendererComponent(itemLayoutAnimation),
-      []
+      () => createCellRendererComponent(itemLayoutAnimationRef),
+      [itemLayoutAnimationRef]
     );
 
     const animatedFlatList = (
