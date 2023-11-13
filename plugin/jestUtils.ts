@@ -4,6 +4,7 @@ export {};
 declare global {
   namespace jest {
     interface Matchers<R> {
+      toContainCount(expectedString: string, expectedCount?: number): R;
       toHaveWorkletData(times?: number): R;
       toHaveInlineStyleWarning(times?: number): R;
       toHaveLocation(location: string): R;
@@ -16,6 +17,23 @@ const INLINE_STYLE_WARNING_REGEX =
   /console\.warn\(require\("react-native-reanimated"\)\.getUseOfValueInStyleWarning\(\)\)/g;
 
 expect.extend({
+  toContainCount(received: string, expectedString: string, expectedCount = 1) {
+    const receivedCount =
+      received.match(new RegExp(expectedString, 'g'))?.length || 0;
+
+    if (receivedCount === expectedCount) {
+      return {
+        message: () =>
+          `Reanimated: found ${expectedString} ${expectedCount} times`,
+        pass: true,
+      };
+    }
+    return {
+      message: () =>
+        `Reanimated: expected code to have ${expectedString} ${expectedCount} times, but found ${receivedCount}`,
+      pass: false,
+    };
+  },
   toHaveWorkletData(received: string, expectedMatchCount = 1) {
     const receivedMatchCount = received.match(WORKLET_REGEX)?.length || 0;
 

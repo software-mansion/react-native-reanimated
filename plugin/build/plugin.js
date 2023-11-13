@@ -306,19 +306,25 @@ var require_makeWorklet = __commonJS({
         sourceFileName: state.file.opts.filename
       });
       codeObject.code = "(" + ((0, types_1.isObjectMethod)(fun) ? "function " : "") + codeObject.code + "\n)";
+      const presets = [require.resolve("@babel/preset-typescript")];
+      const plugins = [
+        require.resolve("@babel/plugin-transform-shorthand-properties"),
+        require.resolve("@babel/plugin-transform-arrow-functions"),
+        require.resolve("@babel/plugin-proposal-optional-chaining"),
+        require.resolve("@babel/plugin-proposal-nullish-coalescing-operator"),
+        [
+          require.resolve("@babel/plugin-transform-template-literals"),
+          { loose: true }
+        ]
+      ];
+      if ((0, utils_1.isRelease)()) {
+        presets.push([require.resolve("babel-preset-minify"), { deadcode: false }]);
+        plugins.push(require.resolve("@babel/plugin-transform-block-scoping"));
+      }
       const transformed = (0, core_1.transformSync)(codeObject.code, {
         filename: state.file.opts.filename,
-        presets: [require.resolve("@babel/preset-typescript")],
-        plugins: [
-          require.resolve("@babel/plugin-transform-shorthand-properties"),
-          require.resolve("@babel/plugin-transform-arrow-functions"),
-          require.resolve("@babel/plugin-proposal-optional-chaining"),
-          require.resolve("@babel/plugin-proposal-nullish-coalescing-operator"),
-          [
-            require.resolve("@babel/plugin-transform-template-literals"),
-            { loose: true }
-          ]
-        ],
+        presets,
+        plugins,
         ast: true,
         babelrc: false,
         configFile: false,
@@ -327,11 +333,13 @@ var require_makeWorklet = __commonJS({
       (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is undefined.");
       (0, assert_1.strict)(transformed.ast, "[Reanimated] `transformed.ast` is undefined.");
       const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
-      const functionName = makeWorkletName(fun);
+      const transformedWorklet = transformed.ast.program.body[0].expression;
+      const functionName = makeWorkletName(fun.node);
+      const minifiedFunctionName = makeWorkletName(transformedWorklet);
       const functionIdentifier = (0, types_1.identifier)(functionName);
       const clone = (0, types_1.cloneNode)(fun.node);
       const funExpression = (0, types_1.isBlockStatement)(clone.body) ? (0, types_1.functionExpression)(null, clone.params, clone.body) : clone;
-      const [funString, sourceMapString] = (0, buildWorkletString_1.buildWorkletString)(transformed.ast, variables, functionName, transformed.map);
+      const [funString, sourceMapString] = (0, buildWorkletString_1.buildWorkletString)(transformed.ast, variables, minifiedFunctionName, transformed.map);
       (0, assert_1.strict)(funString, "[Reanimated] `funString` is undefined.");
       const workletHash = hash(funString);
       let lineOffset = 1;
@@ -412,14 +420,14 @@ var require_makeWorklet = __commonJS({
       return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
     }
     function makeWorkletName(fun) {
-      if ((0, types_1.isObjectMethod)(fun.node) && (0, types_1.isIdentifier)(fun.node.key)) {
-        return fun.node.key.name;
+      if ((0, types_1.isObjectMethod)(fun) && (0, types_1.isIdentifier)(fun.key)) {
+        return fun.key.name;
       }
-      if ((0, types_1.isFunctionDeclaration)(fun.node) && (0, types_1.isIdentifier)(fun.node.id)) {
-        return fun.node.id.name;
+      if ((0, types_1.isFunctionDeclaration)(fun) && (0, types_1.isIdentifier)(fun.id)) {
+        return fun.id.name;
       }
-      if ((0, types_1.isFunctionExpression)(fun.node) && (0, types_1.isIdentifier)(fun.node.id)) {
-        return fun.node.id.name;
+      if ((0, types_1.isFunctionExpression)(fun) && (0, types_1.isIdentifier)(fun.id)) {
+        return fun.id.name;
       }
       return "anonymous";
     }

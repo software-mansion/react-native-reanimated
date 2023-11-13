@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-import type { NodePath } from '@babel/core';
+import type { NodePath, PluginItem } from '@babel/core';
 import { transformSync, traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
@@ -75,19 +75,27 @@ export function makeWorklet(
   codeObject.code =
     '(' + (isObjectMethod(fun) ? 'function ' : '') + codeObject.code + '\n)';
 
+  const presets: PluginItem[] = [require.resolve('@babel/preset-typescript')];
+  const plugins: PluginItem[] = [
+    require.resolve('@babel/plugin-transform-shorthand-properties'),
+    require.resolve('@babel/plugin-transform-arrow-functions'),
+    require.resolve('@babel/plugin-proposal-optional-chaining'),
+    require.resolve('@babel/plugin-proposal-nullish-coalescing-operator'),
+    [
+      require.resolve('@babel/plugin-transform-template-literals'),
+      { loose: true },
+    ],
+  ];
+
+  if (isRelease()) {
+    presets.push([require.resolve('babel-preset-minify'), { deadcode: false }]);
+    plugins.push(require.resolve('@babel/plugin-transform-block-scoping'));
+  }
+
   const transformed = transformSync(codeObject.code, {
     filename: state.file.opts.filename,
-    presets: [require.resolve('@babel/preset-typescript')],
-    plugins: [
-      require.resolve('@babel/plugin-transform-shorthand-properties'),
-      require.resolve('@babel/plugin-transform-arrow-functions'),
-      require.resolve('@babel/plugin-proposal-optional-chaining'),
-      require.resolve('@babel/plugin-proposal-nullish-coalescing-operator'),
-      [
-        require.resolve('@babel/plugin-transform-template-literals'),
-        { loose: true },
-      ],
-    ],
+    presets,
+    plugins,
     ast: true,
     babelrc: false,
     configFile: false,
@@ -99,7 +107,12 @@ export function makeWorklet(
 
   const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
 
-  const functionName = makeWorkletName(fun);
+  const transformedWorklet = (
+    transformed.ast.program.body[0] as ExpressionStatement
+  ).expression as WorkletizableFunction;
+
+  const functionName = makeWorkletName(fun.node);
+  const minifiedFunctionName = makeWorkletName(transformedWorklet);
   const functionIdentifier = identifier(functionName);
 
   const clone = cloneNode(fun.node);
@@ -110,7 +123,7 @@ export function makeWorklet(
   const [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
     variables,
-    functionName,
+    minifiedFunctionName,
     transformed.map
   );
   assert(funString, '[Reanimated] `funString` is undefined.');
@@ -301,15 +314,15 @@ function hash(str: string) {
   return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
 }
 
-function makeWorkletName(fun: NodePath<WorkletizableFunction>) {
-  if (isObjectMethod(fun.node) && isIdentifier(fun.node.key)) {
-    return fun.node.key.name;
+function makeWorkletName(fun: WorkletizableFunction) {
+  if (isObjectMethod(fun) && isIdentifier(fun.key)) {
+    return fun.key.name;
   }
-  if (isFunctionDeclaration(fun.node) && isIdentifier(fun.node.id)) {
-    return fun.node.id.name;
+  if (isFunctionDeclaration(fun) && isIdentifier(fun.id)) {
+    return fun.id.name;
   }
-  if (isFunctionExpression(fun.node) && isIdentifier(fun.node.id)) {
-    return fun.node.id.name;
+  if (isFunctionExpression(fun) && isIdentifier(fun.id)) {
+    return fun.id.name;
   }
   return 'anonymous'; // fallback for ArrowFunctionExpression and unnamed FunctionExpression
 }

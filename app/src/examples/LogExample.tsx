@@ -45,7 +45,7 @@ export default function LogExample() {
 
       test(() => {}, '[Function anonymous]');
       test(function () {}, '[Function anonymous]');
-      test(function foo() {}, '[Function foo]');
+      test(function foo() {}, __DEV__ ? '[Function foo]' : '[Function a]');
       test(isFinite, '[Function isFinite]');
       test(Object, '[Function Object]');
       // @ts-ignore _log function is registered for UI runtime

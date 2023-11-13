@@ -89,8 +89,10 @@
   },
   "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
   "dependencies": {
+    "@babel/plugin-transform-block-scoping": "^7.23.3",
     "@babel/plugin-transform-object-assign": "^7.16.7",
     "@babel/preset-typescript": "^7.16.7",
+    "babel-preset-minify": "^0.5.2",
     "convert-source-map": "^2.0.0",
     "invariant": "^2.2.4"
   },
