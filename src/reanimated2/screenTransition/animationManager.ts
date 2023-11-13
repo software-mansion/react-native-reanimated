@@ -3,12 +3,7 @@
 import type { ScreenTransitionConfig } from './commonTypes';
 import { configureProps } from '../../ConfigHelper';
 import { applyStyle } from './styleUpdater';
-import {
-  getSwipeDownSimulator,
-  getSwipeLeftSimulator,
-  getSwipeRightSimulator,
-  getSwipeUpSimulator,
-} from './gestureSimulator';
+import { swipeSimulator } from './swipeSimulator';
 
 configureProps();
 
@@ -32,18 +27,14 @@ export function finishScreenTransition(
   );
   const event = { ...screenTransitionConfig.sharedEvent.value };
   const goBackGesture = screenTransitionConfig.goBackGesture;
-
-  let step = () => {
-    // noop
-  };
-  if (goBackGesture === 'swipeRight') {
-    step = getSwipeRightSimulator(event, screenTransitionConfig);
-  } else if (goBackGesture === 'swipeLeft') {
-    step = getSwipeLeftSimulator(event, screenTransitionConfig);
-  } else if (goBackGesture === 'swipeUp') {
-    step = getSwipeUpSimulator(event, screenTransitionConfig);
-  } else if (goBackGesture === 'swipeDown') {
-    step = getSwipeDownSimulator(event, screenTransitionConfig);
+  let lockAxis: 'x' | 'y' | undefined;
+  if (['swipeRight', 'swipeLeft', 'horizontalSwipe'].includes(goBackGesture)) {
+    lockAxis = 'x';
+  } else if (
+    ['swipeUp', 'swipeDown', 'verticalSwipe'].includes(goBackGesture)
+  ) {
+    lockAxis = 'y';
   }
+  const step = swipeSimulator(event, screenTransitionConfig, lockAxis);
   step();
 }

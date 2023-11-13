@@ -28,7 +28,10 @@ export type GoBackGesture =
   | 'swipeRight'
   | 'swipeLeft'
   | 'swipeUp'
-  | 'swipeDown';
+  | 'swipeDown'
+  | 'verticalSwipe'
+  | 'horizontalSwipe'
+  | 'twoDimensionalSwipe';
 
 export type ScreenTransitionConfig = {
   stackTag: number;

@@ -71,19 +71,42 @@ const SwipeUp: AnimatedScreenTransition = {
 };
 
 const TwoDimensional: AnimatedScreenTransition = {
-  topScreenFrame: (event, screenSize) => {
+  topScreenFrame: (event, _screenSize) => {
     'worklet';
     return {
       transform: [
         { translateX: event.translationX },
         { translateY: event.translationY },
-        {
-          scale: Math.min(
-            1,
-            (screenSize.height - event.translationY) / screenSize.height
-          ),
-        },
+        // {
+        //   scale: 1 - 0.3 * event.translationY / screenSize.height,
+        // },
       ],
+    };
+  },
+  belowTopScreenFrame: (_event, _screenSize) => {
+    'worklet';
+    return {};
+  },
+};
+
+const Horizontal: AnimatedScreenTransition = {
+  topScreenFrame: (event, _screenSize) => {
+    'worklet';
+    return {
+      transform: [{ translateX: event.translationX }],
+    };
+  },
+  belowTopScreenFrame: (_event, _screenSize) => {
+    'worklet';
+    return {};
+  },
+};
+
+const Vertical: AnimatedScreenTransition = {
+  topScreenFrame: (event, _screenSize) => {
+    'worklet';
+    return {
+      transform: [{ translateY: event.translationY }],
     };
   },
   belowTopScreenFrame: (_event, _screenSize) => {
@@ -106,13 +129,12 @@ const SwipeRightFade: AnimatedScreenTransition = {
 };
 
 export const ScreenTransition = {
-  // basics
   SwipeRight,
   SwipeLeft,
   SwipeDown,
   SwipeUp,
-
-  // extends
+  Horizontal,
+  Vertical,
   TwoDimensional,
   SwipeRightFade,
 };
