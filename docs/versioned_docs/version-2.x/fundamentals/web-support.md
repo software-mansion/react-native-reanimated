@@ -72,7 +72,7 @@ module.exports = {
           options: {
             presets: [
               '@babel/preset-react',
-              { plugins: ['@babel/plugin-proposal-class-properties'] },
+              { plugins: ['@babel/plugin-transform-class-properties'] },
             ],
           },
         },
@@ -115,7 +115,7 @@ const dv = useDerivedValue(
 
 Be sure to pass the dependency itself (`sv`) and not `sv.value` to the dependency array.
 
-> Babel users will still need to install the `@babel/plugin-proposal-class-properties` plugin.
+> Babel users will still need to install the `@babel/plugin-transform-class-properties` plugin.
 
 ### ESLint Support
 

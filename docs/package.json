@@ -17,7 +17,7 @@
     "format": "prettier --write --list-different docs src versioned_docs versioned_docs"
   },
   "dependencies": {
-    "@babel/plugin-proposal-class-properties": "^7.18.6",
+    "@babel/plugin-transform-class-properties": "^7.18.6",
     "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
     "@babel/preset-env": "^7.20.2",
     "@babel/preset-react": "^7.18.6",

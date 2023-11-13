@@ -234,6 +234,6 @@ Dependencies that are required for plugin to run:
 - `@babel/@babel/plugin-transform-shorthand-properties`,
 - `@babel/plugin-transform-shorthand-properties`,
 - `@babel/plugin-transform-arrow-functions`,
-- `@babel/plugin-proposal-optional-chaining`,
-- `@babel/plugin-proposal-nullish-coalescing-operator`,
+- `@babel/plugin-transform-optional-chaining`,
+- `@babel/plugin-transform-nullish-coalescing-operator`,
 - `@babel/plugin-transform-template-literals`.

@@ -12,8 +12,8 @@ module.exports = {
     'module:metro-react-native-babel-preset',
   ],
   plugins: [
-    '@babel/plugin-proposal-class-properties',
-    '@babel/plugin-proposal-private-methods',
+    '@babel/plugin-transform-class-properties',
+    '@babel/plugin-transform-private-methods',
     ['./plugin', { disableInlineStylesWarning: true }],
     [
       '@babel/plugin-transform-react-jsx',

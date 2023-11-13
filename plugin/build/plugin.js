@@ -312,8 +312,8 @@ var require_makeWorklet = __commonJS({
         plugins: [
           require.resolve("@babel/plugin-transform-shorthand-properties"),
           require.resolve("@babel/plugin-transform-arrow-functions"),
-          require.resolve("@babel/plugin-proposal-optional-chaining"),
-          require.resolve("@babel/plugin-proposal-nullish-coalescing-operator"),
+          require.resolve("@babel/plugin-transform-optional-chaining"),
+          require.resolve("@babel/plugin-transform-nullish-coalescing-operator"),
           [
             require.resolve("@babel/plugin-transform-template-literals"),
             { loose: true }
