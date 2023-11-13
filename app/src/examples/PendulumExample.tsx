@@ -171,9 +171,7 @@ export default function SpringExample() {
           <InputField
             fieldName={item.fieldName}
             value={item.value}
-            setValue={(value) => {
-              item.setValue(value);
-            }}
+            setValue={item.setValue}
             key={item.fieldName}
           />
         );
