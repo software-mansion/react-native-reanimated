@@ -6,6 +6,7 @@ import {
 } from 'react-native-screens/native-stack';
 import { GestureDetectorProvider } from 'react-native-screens/gesture-handler';
 import { ParamListBase } from '@react-navigation/native';
+// import { ScreenTransition } from 'react-native-reanimated';
 
 const MainScreen = ({ navigation }: NativeStackScreenProps<ParamListBase>) => (
   <View style={[styles.container, styles.screenA]}>
@@ -29,6 +30,28 @@ const ScreenC = ({ navigation }: NativeStackScreenProps<ParamListBase>) => (
 
 const Stack = createNativeStackNavigator();
 
+// const customTransition: AnimatedScreenTransition = {
+//   topScreenFrame: (event, screenSize) => {
+//     'worklet';
+//     const progress = event.translationX / screenSize.width;
+//     return {
+//       transform: [
+//         { translateX: event.translationX },
+//         { rotate: 20 * progress + 'deg' }
+//       ]
+//     };
+//   },
+//   belowTopScreenFrame: (event, screenSize) => {
+//     'worklet';
+//     const progress = event.translationX / screenSize.width;
+//     return {
+//       transform: [
+//         { scale: 0.7 + 0.3 * progress },
+//       ]
+//     };
+//   },
+// }
+
 const App = (): JSX.Element => (
   <GestureDetectorProvider>
     <Stack.Navigator
@@ -42,7 +65,9 @@ const App = (): JSX.Element => (
         name="ScreenB"
         component={ScreenB}
         options={{
-          goBackGesture: 'swipeLeft',
+          goBackGesture: 'swipeRight',
+          // transitionAnimation: ScreenTransition.SwipeRightFade,
+          // transitionAnimation: customTransition,
         }}
       />
       <Stack.Screen name="ScreenC" component={ScreenC} />
