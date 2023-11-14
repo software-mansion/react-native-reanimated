@@ -287,7 +287,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
   };
 }
 
-function keyframeKey(index: number, transformProp: string) {
+function makeKeyframeKey(index: number, transformProp: string) {
   return `${index}_transform:${transformProp}`;
 }
 
