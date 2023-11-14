@@ -53,21 +53,21 @@ export function recognizePrefixSuffix(
   value: string | number
 ): RecognizedPrefixSuffix {
   'worklet';
-  if (typeof value === 'number') {
+  if (typeof value === 'string') {
+    const match = value.match(
+      /([A-Za-z]*)(-?\d*\.?\d*)([eE][-+]?[0-9]+)?([A-Za-z%]*)/
+    );
+    if (!match) {
+      throw new Error("[Reanimated] Couldn't parse animation value.");
+    }
+    const prefix = match[1];
+    const suffix = match[4];
+    // number with scientific notation
+    const number = match[2] + (match[3] ?? '');
+    return { prefix, suffix, strippedValue: parseFloat(number) };
+  } else {
     return { strippedValue: value };
   }
-
-  const match = value.match(
-    /([A-Za-z]*)(-?\d*\.?\d*)([eE][-+]?[0-9]+)?([A-Za-z%]*)/
-  );
-  if (!match) {
-    throw new Error(`[Reanimated] Couldn't parse animation value ${value}.`);
-  }
-  const prefix = match[1];
-  const suffix = match[4];
-  // number with scientific notation
-  const number = match[2] + (match[3] ?? '');
-  return { prefix, suffix, strippedValue: parseFloat(number) };
 }
 
 /**
@@ -114,7 +114,27 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
   animation: T
 ): void {
   'worklet';
-  const baseOnStart = (animation as Animation<AnimationObject>).onStart;
+  const _baseOnStart = (animation as Animation<AnimationObject>).onStart;
+
+  const baseOnStart = (
+    animationCopy: Animation<AnimationObject>,
+    value: number,
+    timestamp: Timestamp,
+    _previousAnimation: Animation<AnimationObject>
+  ) => {
+    const previousAnimation =
+      _previousAnimation?.type === 'CLAMP'
+        ? _previousAnimation?.previousAnimation
+        : _previousAnimation;
+
+    console.log(
+      'HERE',
+      _previousAnimation?.type === 'CLAMP',
+      previousAnimation?.current
+    );
+    return _baseOnStart(animationCopy, value, timestamp, previousAnimation);
+  };
+
   const baseOnFrame = (animation as Animation<AnimationObject>).onFrame;
 
   if ((animation as HigherOrderAnimation).isHigherOrder) {
