@@ -1,3 +1,4 @@
+'use strict';
 import updateProps from '../UpdateProps';
 import type {
   PanGestureHandlerEventPayload,
