@@ -494,7 +494,6 @@ export function RGBtoHSV(r: RGB | number, g?: number, b?: number): HSV {
       h /= 6 * d;
       break;
     case min:
-    /* fallthrough */
     default:
       h = 0;
       break;
