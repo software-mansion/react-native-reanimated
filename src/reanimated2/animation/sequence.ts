@@ -14,7 +14,7 @@ import type {
  *
  * @param reduceMotion determines how the animation responds to the device's reduced motion accessibility setting
  * @param animations any number of animation objects to be run in a sequence
- * @returns an animation object which holds the current state of the animation
+ * @returns an [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSequence
  */
 export function withSequence<T extends AnimatableValue>(
