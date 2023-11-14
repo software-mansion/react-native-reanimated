@@ -44,7 +44,7 @@ export function registerShareableMapping(
   _shareableCache.set(shareable, shareableRef || _shareableFlag);
 }
 
-function isPlainJSObject(object: object) {
+export function isPlainJSObject(object: unknown): object is object {
   return Object.getPrototypeOf(object) === Object.prototype;
 }
 

@@ -3,6 +3,7 @@ import type { SharedValue } from './commonTypes';
 import { isJest } from './PlatformChecker';
 import { runOnUI } from './threads';
 import { isSharedValue } from './isSharedValue';
+import { isPlainJSObject } from './shareables';
 
 const IS_JEST = isJest();
 
@@ -131,10 +132,6 @@ function createMapperRegistry<T>() {
     }
   }
 
-  function isBaseObject(obj: unknown): obj is object {
-    return Object.getPrototypeOf(obj) === Object.prototype;
-  }
-
   function extractInputs<T>(
     inputs: unknown | unknown[],
     resultArray: SharedValue<T>[]
@@ -145,7 +142,7 @@ function createMapperRegistry<T>() {
       }
     } else if (isSharedValue<T>(inputs)) {
       resultArray.push(inputs);
-    } else if (isBaseObject(inputs)) {
+    } else if (isPlainJSObject(inputs)) {
       // we only extract inputs recursively from "plain" objects here, if object
       // is of a derivative class (e.g. HostObject on web, or Map) we don't scan
       // it recursively
