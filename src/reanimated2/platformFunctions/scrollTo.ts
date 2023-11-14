@@ -9,6 +9,15 @@ import { dispatchCommand } from './dispatchCommand';
 import type { AnimatedRef } from '../hook/commonTypes';
 import type { Component } from 'react';
 
+/**
+ * Lets you _synchronously_ scroll to a given position of a ScrollView.
+ *
+ * @param animatedRef an [animated ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef) attached to an Animated.ScrollView component
+ * @param x the x position you want to scroll to
+ * @param y the y position you want to scroll to
+ * @param animated whether the scrolling should be smooth or instant
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/scroll/scrollTo
+ */
 export let scrollTo: <T extends Component>(
   animatedRef: AnimatedRef<T>,
   x: number,

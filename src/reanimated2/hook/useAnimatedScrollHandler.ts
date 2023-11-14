@@ -25,6 +25,14 @@ export type ScrollHandlerProcessed<
 
 export type ScrollHandlerInternal = EventHandlerInternal<RNNativeScrollEvent>;
 
+/**
+ * Lets you run callbacks on ScrollView events. Supports `onScroll`, `onBeginDrag`, `onEndDrag`, `onMomentumBegin`, and `onMomentumEnd` events.
+ *
+ * @param handlers an object containing event handlers
+ * @param dependencies an optional array of dependencies. Only relevant when using Reanimated without the Babel plugin on the Web
+ * @returns an object you need to pass to `onScroll` prop on the `Animated.ScrollView` component
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/scroll/useAnimatedScrollHandler
+ */
 // @ts-expect-error This overload is required by our API.
 export function useAnimatedScrollHandler<
   Context extends Record<string, unknown>
