@@ -85,7 +85,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
         }
         initialValues.transform.forEach((transformStyle, index) => {
           Object.keys(transformStyle).forEach((transformProp: string) => {
-            parsedKeyframes[keyframeKey(index, transformProp)] = [];
+            parsedKeyframes[makeKeyframeKey(index, transformProp)] = [];
           });
         });
       } else {
@@ -163,7 +163,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
               (transformStyle: { [key: string]: any }, index) => {
                 Object.keys(transformStyle).forEach((transformProp: string) => {
                   addKeyPointWith(
-                    keyframeKey(index, transformProp),
+                    makeKeyframeKey(index, transformProp),
                     transformStyle[transformProp]
                   );
                 });
@@ -270,7 +270,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
           initialValues[key].forEach(
             (transformProp: Record<string, number | string>, index: number) => {
               Object.keys(transformProp).forEach((transformPropKey: string) => {
-                addAnimation(keyframeKey(index, transformPropKey));
+                addAnimation(makeKeyframeKey(index, transformPropKey));
               });
             }
           );
