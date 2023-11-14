@@ -288,7 +288,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
 }
 
 function keyframeKey(index: number, transformProp: string) {
-  return `${index.toString()}_transform:${transformProp}`;
+  return `${index}_transform:${transformProp}`;
 }
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
