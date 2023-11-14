@@ -142,11 +142,7 @@ function createMapperRegistry<T>() {
       }
     } else if (isSharedValue<T>(inputs)) {
       resultArray.push(inputs);
-    } else if (
-      inputs !== null &&
-      inputs !== undefined &&
-      isPlainJSObject(inputs)
-    ) {
+    } else if (inputs && isPlainJSObject(inputs)) {
       // we only extract inputs recursively from "plain" objects here, if object
       // is of a derivative class (e.g. HostObject on web, or Map) we don't scan
       // it recursively
