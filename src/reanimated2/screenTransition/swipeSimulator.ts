@@ -2,9 +2,10 @@ import type {
   PanGestureHandlerEventPayload,
   ScreenTransitionConfig,
 } from './commonTypes';
+import { ScreenTransitionCommand } from './commonTypes';
 import { applyStyle } from './styleUpdater';
 
-function computeProgress(
+function computeEasingProgress(
   startingTimestamp: number,
   distance: number,
   velocity: number
@@ -24,13 +25,42 @@ function easing(x: number): number {
   return 1 - Math.pow(1 - x, 5);
 }
 
+function computeProgress(
+  screenTransitionConfig: ScreenTransitionConfig,
+  event: PanGestureHandlerEventPayload,
+  isTransitionCanceled: boolean
+) {
+  'worklet';
+  const screenWidth = screenTransitionConfig.screenDimensions.width;
+  const progressX = Math.abs(event.translationX / screenWidth);
+  const screenHeight = screenTransitionConfig.screenDimensions.height;
+  const progressY = Math.abs(event.translationY / screenHeight);
+  const progress = isTransitionCanceled
+    ? Math.max(progressX, progressY) / 2
+    : Math.max(progressX, progressY);
+  return progress;
+}
+
 function maybeScheduleNextFrame(
   step: () => void,
   isScreenReachDestination: boolean,
-  screenTransitionConfig: ScreenTransitionConfig
+  screenTransitionConfig: ScreenTransitionConfig,
+  event: PanGestureHandlerEventPayload,
+  isTransitionCanceled: boolean
 ) {
   'worklet';
   if (!isScreenReachDestination) {
+    const stackTag = screenTransitionConfig.stackTag;
+    const progress = computeProgress(
+      screenTransitionConfig,
+      event,
+      isTransitionCanceled
+    );
+    global._manageScreenTransition(
+      ScreenTransitionCommand.Update,
+      stackTag,
+      progress
+    );
     requestAnimationFrame(step);
   } else {
     if (screenTransitionConfig.onFinishAnimation) {
@@ -98,8 +128,8 @@ export function swipeSimulator(
         };
     const computeFrame = () => {
       const progress = {
-        x: computeProgress(startingTimestamp, distance.x, velocity.x),
-        y: computeProgress(startingTimestamp, distance.y, velocity.y),
+        x: computeEasingProgress(startingTimestamp, distance.x, velocity.x),
+        y: computeEasingProgress(startingTimestamp, distance.y, velocity.y),
       };
       event.translationX =
         startingPosition.x - direction.x * distance.x * easing(progress.x);
@@ -131,15 +161,17 @@ export function swipeSimulator(
       maybeScheduleNextFrame(
         computeFrame,
         isScreenReachDestinationCheck(),
-        screenTransitionConfig
+        screenTransitionConfig,
+        event,
+        isTransitionCanceled
       );
     };
     return computeFrame;
   } else {
     const computeFrame = () => {
       const progress = {
-        x: computeProgress(startingTimestamp, distance.x, velocity.x),
-        y: computeProgress(startingTimestamp, distance.y, velocity.y),
+        x: computeEasingProgress(startingTimestamp, distance.x, velocity.x),
+        y: computeEasingProgress(startingTimestamp, distance.y, velocity.y),
       };
       event.translationX =
         startingPosition.x + direction.x * distance.x * easing(progress.x);
@@ -171,7 +203,9 @@ export function swipeSimulator(
       maybeScheduleNextFrame(
         computeFrame,
         isScreenReachDestination.x || isScreenReachDestination.y,
-        screenTransitionConfig
+        screenTransitionConfig,
+        event,
+        isTransitionCanceled
       );
     };
     return computeFrame;

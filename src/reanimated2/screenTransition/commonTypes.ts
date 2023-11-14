@@ -38,7 +38,6 @@ export type ScreenTransitionConfig = {
   belowTopScreenTag: number;
   topScreenTag: number;
   screenTransition: AnimatedScreenTransition;
-  isSwipeGesture: boolean;
   sharedEvent: SharedValue<PanGestureHandlerEventPayload>;
   startingGesturePosition: SharedValue<PanGestureHandlerEventPayload>;
   onFinishAnimation?: () => void;
@@ -46,3 +45,9 @@ export type ScreenTransitionConfig = {
   goBackGesture: GoBackGesture;
   screenDimensions: MeasuredDimensions;
 };
+
+export enum ScreenTransitionCommand {
+  Start = 1,
+  Update = 2,
+  Finish = 3,
+}
