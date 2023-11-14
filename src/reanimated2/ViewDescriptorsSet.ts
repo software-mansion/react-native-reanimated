@@ -21,35 +21,31 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
   const data: ViewDescriptorsSet = {
     shareableViewDescriptors,
     add: (item: Descriptor) => {
-      shareableViewDescriptors.modify(
-        (descriptors: Descriptor[]): Descriptor[] => {
-          'worklet';
-          const index = descriptors.findIndex(
-            (descriptor: Descriptor) => descriptor.tag === item.tag
-          );
-          if (index !== -1) {
-            descriptors[index] = item;
-          } else {
-            descriptors.push(item);
-          }
-          return descriptors;
+      shareableViewDescriptors.modify((descriptors) => {
+        'worklet';
+        const index = descriptors.findIndex(
+          (descriptor: Descriptor) => descriptor.tag === item.tag
+        );
+        if (index !== -1) {
+          descriptors[index] = item;
+        } else {
+          descriptors.push(item);
         }
-      );
+        return descriptors;
+      });
     },
 
     remove: (viewTag: number) => {
-      shareableViewDescriptors.modify(
-        (descriptors: Descriptor[]): Descriptor[] => {
-          'worklet';
-          const index = descriptors.findIndex(
-            (descriptor: Descriptor) => descriptor.tag === viewTag
-          );
-          if (index !== -1) {
-            descriptors.splice(index, 1);
-          }
-          return descriptors;
+      shareableViewDescriptors.modify((descriptors) => {
+        'worklet';
+        const index = descriptors.findIndex(
+          (descriptor: Descriptor) => descriptor.tag === viewTag
+        );
+        if (index !== -1) {
+          descriptors.splice(index, 1);
         }
-      );
+        return descriptors;
+      });
     },
   };
   return data;
