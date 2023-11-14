@@ -114,26 +114,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
   animation: T
 ): void {
   'worklet';
-  const _baseOnStart = (animation as Animation<AnimationObject>).onStart;
-
-  const baseOnStart = (
-    animationCopy: Animation<AnimationObject>,
-    value: number,
-    timestamp: Timestamp,
-    _previousAnimation: Animation<AnimationObject>
-  ) => {
-    const previousAnimation =
-      _previousAnimation?.type === 'CLAMP'
-        ? _previousAnimation?.previousAnimation
-        : _previousAnimation;
-
-    console.log(
-      'HERE',
-      _previousAnimation?.type === 'CLAMP',
-      previousAnimation?.current
-    );
-    return _baseOnStart(animationCopy, value, timestamp, previousAnimation);
-  };
+  const baseOnStart = (animation as Animation<AnimationObject>).onStart;
 
   const baseOnFrame = (animation as Animation<AnimationObject>).onFrame;
 

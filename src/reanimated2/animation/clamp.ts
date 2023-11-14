@@ -89,11 +89,8 @@ export const withClamp = function <T extends number | string>(
         previousAnimation: Animation<any> | null
       ): void {
         animation.current = value;
-        if (previousAnimation === animation) {
-          animation.previousAnimation = previousAnimation.previousAnimation;
-        } else {
-          animation.previousAnimation = previousAnimation;
-        }
+        animation.previousAnimation = animationToClamp;
+        const animationBeforeClamped = previousAnimation?.previousAnimation;
         if (
           config.max !== undefined &&
           config.min !== undefined &&
@@ -106,9 +103,12 @@ export const withClamp = function <T extends number | string>(
 
         animationToClamp.onStart(
           animationToClamp,
-          value,
+          /** provide the current value of the previous animation of the clamped animation 
+          so we can animate from the original "un-truncated" value
+          */
+          animationBeforeClamped?.current || value,
           now,
-          previousAnimation
+          animationBeforeClamped
         );
       }
 
@@ -119,6 +119,7 @@ export const withClamp = function <T extends number | string>(
       };
 
       return {
+        type: 'CLAMP',
         isHigherOrder: true,
         onFrame: clampOnFrame,
         onStart,

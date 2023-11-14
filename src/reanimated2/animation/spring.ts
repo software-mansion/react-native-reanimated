@@ -203,6 +203,7 @@ export const withSpring = ((
       }
 
       animation.lastTimestamp = previousAnimation?.lastTimestamp || now;
+      animation.previousAnimation = previousAnimation;
 
       animation.startTimestamp = triggeredTwice
         ? previousAnimation?.startTimestamp || now
@@ -223,6 +224,7 @@ export const withSpring = ((
       omega0: 0,
       omega1: 0,
       reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
+      previousAnimation: null,
     } as SpringAnimation;
   });
 }) as withSpringType;
