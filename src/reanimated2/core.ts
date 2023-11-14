@@ -28,10 +28,8 @@ import { SensorContainer } from './SensorContainer';
 
 export { startMapper, stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
-export { createWorkletRuntime } from './runtimes';
+export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export type { WorkletRuntime } from './runtimes';
-export { createBackgroundQueue, runOnBackgroundQueue } from './background';
-export type { BackgroundQueue } from './background';
 export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export { makeMutable, makeRemote } from './mutables';
 

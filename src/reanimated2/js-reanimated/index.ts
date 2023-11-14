@@ -47,9 +47,9 @@ global._scheduleOnJS = () => {
   );
 };
 
-global._scheduleOnBackgroundQueue = () => {
+global._scheduleOnWorkletRuntime = () => {
   throw new Error(
-    '[Reanimated] _scheduleOnBackgroundQueue should never be called in JSReanimated.'
+    '[Reanimated] _scheduleOnWorkletRuntime should never be called in JSReanimated.'
   );
 };
 

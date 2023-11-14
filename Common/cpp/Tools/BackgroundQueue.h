@@ -2,8 +2,6 @@
 
 #include <jsi/jsi.h>
 
-#include "WorkletRuntime.h"
-
 #include <atomic>
 #include <condition_variable>
 #include <memory>
@@ -13,28 +11,15 @@
 #include <utility>
 #include <vector>
 
-using namespace facebook;
-using namespace react;
-
 namespace reanimated {
 
-class BackgroundQueue : public jsi::HostObject {
+class BackgroundQueue {
  public:
   explicit BackgroundQueue(const std::string &name);
 
-  ~BackgroundQueue() override;
+  ~BackgroundQueue();
 
-  std::string toString() const {
-    return "[BackgroundQueue \"" + name_ + "\"]";
-  }
-
-  jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override;
-
-  std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
-
-  void push(
-      const std::shared_ptr<WorkletRuntime> &runtime,
-      const std::shared_ptr<ShareableWorklet> &worklet);
+  void push(std::function<void()> &&job);
 
  private:
   void runLoop();
@@ -44,20 +29,7 @@ class BackgroundQueue : public jsi::HostObject {
   std::atomic_bool running_{true};
   std::mutex mutex_;
   std::condition_variable cv_;
-  std::queue<std::pair<
-      std::shared_ptr<WorkletRuntime>,
-      std::shared_ptr<ShareableWorklet>>>
-      queue_;
+  std::queue<std::function<void()>> queue_;
 };
-
-std::shared_ptr<BackgroundQueue> extractBackgroundQueue(
-    jsi::Runtime &rt,
-    const jsi::Value &value);
-
-void scheduleOnBackgroundQueue(
-    jsi::Runtime &rt,
-    const jsi::Value &backgroundQueueValue,
-    const jsi::Value &workletRuntimeValue,
-    const jsi::Value &shareableWorkletValue);
 
 } // namespace reanimated

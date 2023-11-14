@@ -66,12 +66,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       jsi::Runtime &rt,
       const jsi::Value &name,
       const jsi::Value &initializer) override;
-
-  jsi::Value createBackgroundQueue(jsi::Runtime &rt, const jsi::Value &name)
-      override;
-  jsi::Value scheduleOnBackgroundQueue(
+  jsi::Value scheduleOnWorkletRuntime(
       jsi::Runtime &rt,
-      const jsi::Value &backgroundQueueValue,
       const jsi::Value &workletRuntimeValue,
       const jsi::Value &shareableWorkletValue) override;
 

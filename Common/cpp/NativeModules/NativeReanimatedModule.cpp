@@ -178,21 +178,12 @@ jsi::Value NativeReanimatedModule::createWorkletRuntime(
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }
 
-jsi::Value NativeReanimatedModule::createBackgroundQueue(
+jsi::Value NativeReanimatedModule::scheduleOnWorkletRuntime(
     jsi::Runtime &rt,
-    const jsi::Value &name) {
-  auto backgroundQueue =
-      std::make_shared<BackgroundQueue>(name.asString(rt).utf8(rt));
-  return jsi::Object::createFromHostObject(rt, backgroundQueue);
-}
-
-jsi::Value NativeReanimatedModule::scheduleOnBackgroundQueue(
-    jsi::Runtime &rt,
-    const jsi::Value &backgroundQueueValue,
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &shareableWorkletValue) {
-  reanimated::scheduleOnBackgroundQueue(
-      rt, backgroundQueueValue, workletRuntimeValue, shareableWorkletValue);
+  reanimated::scheduleOnWorkletRuntime(
+      rt, workletRuntimeValue, shareableWorkletValue);
   return jsi::Value::undefined();
 }
 

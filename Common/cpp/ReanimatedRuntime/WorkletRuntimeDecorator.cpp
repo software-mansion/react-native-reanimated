@@ -1,8 +1,8 @@
 #include "WorkletRuntimeDecorator.h"
-#include "BackgroundQueue.h"
 #include "JSISerializer.h"
 #include "ReanimatedJSIUtils.h"
 #include "Shareables.h"
+#include "WorkletRuntime.h"
 
 #ifdef ANDROID
 #include "Logger.h"
@@ -118,16 +118,12 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt,
-      "_scheduleOnBackgroundQueue",
+      "_scheduleOnWorkletRuntime",
       [](jsi::Runtime &rt,
-         const jsi::Value &backgroundQueueValue,
          const jsi::Value &workletRuntimeValue,
          const jsi::Value &shareableWorkletValue) {
-        reanimated::scheduleOnBackgroundQueue(
-            rt,
-            backgroundQueueValue,
-            workletRuntimeValue,
-            shareableWorkletValue);
+        reanimated::scheduleOnWorkletRuntime(
+            rt, workletRuntimeValue, shareableWorkletValue);
       });
 
   jsi_utils::installJsiFunction(

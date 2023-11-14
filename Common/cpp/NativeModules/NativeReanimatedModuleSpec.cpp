@@ -68,23 +68,13 @@ static jsi::Value SPEC_PREFIX(createWorkletRuntime)(
       ->createWorkletRuntime(rt, std::move(args[0]), std::move(args[1]));
 }
 
-static jsi::Value SPEC_PREFIX(createBackgroundQueue)(
+static jsi::Value SPEC_PREFIX(scheduleOnWorkletRuntime)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->createBackgroundQueue(rt, std::move(args[0]));
-}
-
-static jsi::Value SPEC_PREFIX(scheduleOnBackgroundQueue)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->scheduleOnBackgroundQueue(
-          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
+      ->scheduleOnWorkletRuntime(rt, std::move(args[0]), std::move(args[1]));
 }
 
 static jsi::Value SPEC_PREFIX(registerEventHandler)(
@@ -222,10 +212,8 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
   methodMap_["scheduleOnUI"] = MethodMetadata{1, SPEC_PREFIX(scheduleOnUI)};
   methodMap_["createWorkletRuntime"] =
       MethodMetadata{2, SPEC_PREFIX(createWorkletRuntime)};
-  methodMap_["createBackgroundQueue"] =
-      MethodMetadata{1, SPEC_PREFIX(createBackgroundQueue)};
-  methodMap_["scheduleOnBackgroundQueue"] =
-      MethodMetadata{3, SPEC_PREFIX(scheduleOnBackgroundQueue)};
+  methodMap_["scheduleOnWorkletRuntime"] =
+      MethodMetadata{2, SPEC_PREFIX(scheduleOnWorkletRuntime)};
 
   methodMap_["registerEventHandler"] =
       MethodMetadata{3, SPEC_PREFIX(registerEventHandler)};

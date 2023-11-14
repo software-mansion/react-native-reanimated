@@ -14,47 +14,17 @@ BackgroundQueue::BackgroundQueue(const std::string &name) : name_(name) {
 #ifdef ANDROID
   pthread_setname_np(thread_.native_handle(), name_.c_str());
 #endif
+  thread_.detach();
 }
 
 BackgroundQueue::~BackgroundQueue() {
   running_ = false;
   cv_.notify_all();
-  thread_.join();
 }
 
-jsi::Value BackgroundQueue::get(
-    jsi::Runtime &rt,
-    const jsi::PropNameID &propName) {
-  auto name = propName.utf8(rt);
-  if (name == "toString") {
-    return jsi::Function::createFromHostFunction(
-        rt,
-        propName,
-        0,
-        [this](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *, size_t)
-            -> jsi::Value {
-          return jsi::String::createFromUtf8(rt, toString());
-        });
-  }
-  if (name == "name") {
-    return jsi::String::createFromUtf8(rt, name_);
-  }
-  return jsi::Value::undefined();
-}
-
-std::vector<jsi::PropNameID> BackgroundQueue::getPropertyNames(
-    jsi::Runtime &rt) {
-  std::vector<jsi::PropNameID> result;
-  result.push_back(jsi::PropNameID::forUtf8(rt, "toString"));
-  result.push_back(jsi::PropNameID::forUtf8(rt, "name"));
-  return result;
-}
-
-void BackgroundQueue::push(
-    const std::shared_ptr<WorkletRuntime> &runtime,
-    const std::shared_ptr<ShareableWorklet> &worklet) {
+void BackgroundQueue::push(std::function<void()> &&job) {
   std::unique_lock<std::mutex> lock(mutex_);
-  queue_.emplace(runtime, worklet);
+  queue_.emplace(job);
   cv_.notify_one();
 }
 
@@ -66,32 +36,12 @@ void BackgroundQueue::runLoop() {
       return;
     }
     if (!queue_.empty()) {
-      auto [workletRuntime, shareableWorklet] = std::move(queue_.front());
+      auto job = std::move(queue_.front());
       queue_.pop();
       lock.unlock();
-      workletRuntime->runGuarded(shareableWorklet);
+      job();
     }
   }
-}
-
-std::shared_ptr<BackgroundQueue> extractBackgroundQueue(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  return value.getObject(rt).getHostObject<BackgroundQueue>(rt);
-}
-
-void scheduleOnBackgroundQueue(
-    jsi::Runtime &rt,
-    const jsi::Value &backgroundQueueValue,
-    const jsi::Value &workletRuntimeValue,
-    const jsi::Value &shareableWorkletValue) {
-  auto backgroundQueue = extractBackgroundQueue(rt, backgroundQueueValue);
-  auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
-  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
-      rt,
-      shareableWorkletValue,
-      "[Reanimated] Function passed to `_scheduleOnBackgroundQueue` is not a shareable worklet. Please make sure that `processNestedWorklets` option in Reanimated Babel plugin is enabled.");
-  backgroundQueue->push(workletRuntime, shareableWorklet);
 }
 
 } // namespace reanimated

@@ -1,14 +1,12 @@
 import React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
-  BackgroundQueue,
   Easing,
   WorkletRuntime,
-  createBackgroundQueue,
   createWorkletRuntime,
-  runOnBackgroundQueue,
   runOnJS,
   runOnUI,
+  runOnRuntime,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -23,10 +21,10 @@ export default function WorkletRuntimeExample() {
       <InitializerDemo />
       <ThrowErrorDemo />
       <PerformanceNowDemo />
-      <BackgroundQueueFromJSDemo />
-      <BackgroundQueueFromUIDemo />
-      <BackgroundQueueLongRunningTasksDemo />
-      <BackgroundQueueArgsDemo />
+      <RunOnRuntimeFromJSDemo />
+      <RunOnRuntimeFromUIDemo />
+      <RunOnRuntimeArgsDemo />
+      <RunOnRuntimeLongRunningTasksDemo />
     </View>
   );
 }
@@ -130,50 +128,56 @@ function PerformanceNowDemo() {
   return <Button title="performance.now" onPress={handlePress} />;
 }
 
-function BackgroundQueueFromJSDemo() {
+function RunOnRuntimeFromJSDemo() {
   const handlePress = () => {
     const runtime = createWorkletRuntime('foo');
-    const queue = createBackgroundQueue('bar');
-    runOnBackgroundQueue(queue, runtime, () => {
+    runOnRuntime(runtime, () => {
       'worklet';
       console.log('Hello from background!', Math.random());
     })();
   };
 
-  return <Button title="Background queue from JS" onPress={handlePress} />;
+  return <Button title="runOnRuntime from JS" onPress={handlePress} />;
 }
 
-function BackgroundQueueFromUIDemo() {
+function RunOnRuntimeFromUIDemo() {
   const handlePress = () => {
     const runtime = createWorkletRuntime('foo');
-    const queue = createBackgroundQueue('bar');
     runOnUI(() => {
       'worklet';
       const x = Math.random();
       console.log('Hello from UI thread!', x);
-      runOnBackgroundQueue(queue, runtime, () => {
+      runOnRuntime(runtime, () => {
         'worklet';
         console.log('Hello from background!', x);
       })();
     })();
   };
 
-  return <Button title="Background queue from UI" onPress={handlePress} />;
+  return <Button title="runOnRuntime from UI" onPress={handlePress} />;
 }
 
-let queue: BackgroundQueue | undefined;
+function RunOnRuntimeArgsDemo() {
+  const handlePress = () => {
+    const runtime = createWorkletRuntime('foo');
+    runOnRuntime(runtime, (x: number) => {
+      'worklet';
+      console.log('Hello from background!', x);
+    })(42);
+  };
+
+  return <Button title="runOnRuntime with args" onPress={handlePress} />;
+}
+
 let runtime: WorkletRuntime | undefined;
 
-function BackgroundQueueLongRunningTasksDemo() {
+function RunOnRuntimeLongRunningTasksDemo() {
   const handlePress = () => {
-    if (queue === undefined) {
-      queue = createBackgroundQueue('bar');
-    }
     if (runtime === undefined) {
       runtime = createWorkletRuntime('foo');
     }
     for (let i = 0; i < 3; i++) {
-      runOnBackgroundQueue(queue, runtime, () => {
+      runOnRuntime(runtime, () => {
         'worklet';
         const until = performance.now() + 500;
         while (performance.now() < until) {}
@@ -183,19 +187,6 @@ function BackgroundQueueLongRunningTasksDemo() {
   };
 
   return <Button title="Long-running tasks" onPress={handlePress} />;
-}
-
-function BackgroundQueueArgsDemo() {
-  const handlePress = () => {
-    const runtime = createWorkletRuntime('foo');
-    const queue = createBackgroundQueue('bar');
-    runOnBackgroundQueue(queue, runtime, (x: number) => {
-      'worklet';
-      console.log('Hello from background!', x);
-    })(42);
-  };
-
-  return <Button title="Background queue args" onPress={handlePress} />;
 }
 
 const styles = StyleSheet.create({

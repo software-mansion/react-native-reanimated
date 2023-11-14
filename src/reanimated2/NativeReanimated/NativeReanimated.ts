@@ -14,7 +14,6 @@ import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
 import type { WorkletRuntime } from '../runtimes';
 import { getValueUnpackerCode } from '../valueUnpacker';
-import type { BackgroundQueue } from '../background';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
@@ -32,9 +31,7 @@ export interface NativeReanimatedModule {
     name: string,
     initializer: ShareableRef<() => void>
   ): WorkletRuntime;
-  createBackgroundQueue(name: string): BackgroundQueue;
-  scheduleOnBackgroundQueue<T>(
-    backgroundQueue: BackgroundQueue,
+  scheduleOnWorkletRuntime<T>(
     workletRuntime: WorkletRuntime,
     worklet: ShareableRef<T>
   ): void;
@@ -134,17 +131,11 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return this.InnerNativeModule.createWorkletRuntime(name, initializer);
   }
 
-  createBackgroundQueue(name: string) {
-    return this.InnerNativeModule.createBackgroundQueue(name);
-  }
-
-  scheduleOnBackgroundQueue<T>(
-    backgroundQueue: BackgroundQueue,
+  scheduleOnWorkletRuntime<T>(
     workletRuntime: WorkletRuntime,
     shareableWorklet: ShareableRef<T>
   ) {
-    return this.InnerNativeModule.scheduleOnBackgroundQueue(
-      backgroundQueue,
+    return this.InnerNativeModule.scheduleOnWorkletRuntime(
       workletRuntime,
       shareableWorklet
     );

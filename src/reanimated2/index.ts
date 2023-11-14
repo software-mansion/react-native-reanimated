@@ -2,13 +2,12 @@
 
 import './publicGlobals';
 
-export type { BackgroundQueue, WorkletRuntime } from './core';
+export type { WorkletRuntime } from './core';
 export {
   runOnJS,
   runOnUI,
-  createBackgroundQueue,
   createWorkletRuntime,
-  runOnBackgroundQueue,
+  runOnRuntime,
   makeMutable,
   makeShareableCloneRecursive,
   isReanimated3,
