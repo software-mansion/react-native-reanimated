@@ -1,0 +1,64 @@
+---
+sidebar_position: 4
+---
+
+# KeyboardAvoidingView
+
+`KeyboardAvoidingView` is Reanimated's implementation of [React Native's KeyboardAvoidingView](https://reactnative.dev/docs/keyboardavoidingview). It uses [useAnimatedKeyboard](/docs/device/useAnimatedKeyboard) hook so that it is possible to animate things based on the keyboard state in the same frame.
+
+## Reference
+
+```javascript
+import Animated from 'react-native-reanimated';
+
+function App() {
+  return (
+    // highlight-next-line
+    <Animated.KeyboardAvoidingView>
+      // views that need to be moved out of the way of the keyboard
+    // highlight-next-line
+    </Animated.KeyboardAvoidingView>
+  );
+}
+```
+
+### Props
+
+#### `View Props`
+Inherits [View Props](https://reactnative.dev/docs/view#props).
+
+#### `behavior`
+
+A string specifying how the view achieves its goal. Takes one of the following values: `('height', 'position', 'padding')`. Works adequately to [React Native's behavior prop](https://reactnative.dev/docs/keyboardavoidingview#behavior):
+
+- `height` behavior changes component's height if needed
+
+- `position` behavior moves the component upwards relatively to other components
+
+- `padding` behavior adds corresponding padding to the component, effectively moving its content inside its frame
+
+#### `contentContainerStyle`
+
+The style of the content container (View) when behavior is `position`. Works the same way as [React Native's corresponding prop](https://reactnative.dev/docs/keyboardavoidingview#contentcontainerstyle).
+
+#### `enabled`
+
+A boolean that decides whether the component is enabled or not, `true` by default.
+
+## Remarks
+
+- Reanimated's `KeyboardAvoidingView` calculations already take views above the component into account, so the confusing [keyboardVerticalOffset](https://reactnative.dev/docs/keyboardavoidingview#keyboardverticaloffset) prop from React Native is not needed.
+
+- The component works properly with any navigation stack from [React Navigation](https://reactnavigation.org/).
+
+- The previous point also holds true for `SafeAreaView` (either from [React Native](https://reactnative.dev/docs/safeareaview) or [react-native-safe-area-context](https://github.com/th3rdwave/react-native-safe-area-context)) and for views not confined to any safe area or navigation.
+
+## Platform compatibility
+
+<div className="platform-compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ❌  |
+
+</div>
