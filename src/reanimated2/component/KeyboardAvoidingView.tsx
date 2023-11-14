@@ -7,12 +7,7 @@ import type {
 } from 'react-native';
 import { StyleSheet, useWindowDimensions } from 'react-native';
 import { AnimatedView } from './View';
-import {
-  useAnimatedKeyboard,
-  useAnimatedStyle,
-  runOnUI,
-  useSharedValue,
-} from '../';
+import { useAnimatedKeyboard, useAnimatedStyle, useSharedValue } from '../';
 
 let useHeaderHeight: () => number;
 try {
@@ -53,25 +48,16 @@ export const KeyboardAvoidingView = forwardRef<
       headerHeight = 0;
     }
 
-    const onLayoutWorklet = useCallback(
-      (layout: LayoutRectangle) => {
-        'worklet';
-        if (initialFrameLayout.value == null) {
-          initialFrameLayout.value = layout;
-        }
-      },
-      [initialFrameLayout]
-    );
-
     const handleOnLayout = useCallback<NonNullable<ViewProps['onLayout']>>(
       (event) => {
-        runOnUI(onLayoutWorklet)(event.nativeEvent.layout);
-
+        if (initialFrameLayout.value == null) {
+          initialFrameLayout.value = event.nativeEvent.layout;
+        }
         if (onLayout) {
           onLayout(event);
         }
       },
-      [onLayout, onLayoutWorklet]
+      [onLayout, initialFrameLayout]
     );
 
     const getBackwardCompatibleBottomHeight = useCallback(
