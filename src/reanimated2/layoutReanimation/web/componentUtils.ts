@@ -21,8 +21,8 @@ import { isReducedMotion } from '../../PlatformChecker';
 
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName = (
-    config.easingV !== undefined && config.easingV?.name in WebEasings
-      ? config.easingV.name
+    (config?.easingV?.name as string) in WebEasings
+      ? config.easingV?.name
       : 'linear'
   ) as WebEasingsNames;
 
