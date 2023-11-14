@@ -29,6 +29,15 @@ type withSpringType = <T extends AnimatableValue>(
   callback?: AnimationCallback
 ) => T;
 
+/**
+ * Lets you create spring-based animations.
+ *
+ * @param toValue the value at which the animation will come to rest
+ * @param config the spring animation configuration
+ * @param callback a function called on animation complete
+ * @returns an animation object which holds the current state of the animation
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring
+ */
 export const withSpring = ((
   toValue: AnimatableValue,
   userConfig?: SpringConfig,

@@ -16,6 +16,16 @@ type withDelayType = <T extends AnimatableValue>(
   reduceMotion?: ReduceMotion
 ) => T;
 
+/**
+ * An animation modifier that lets you start an animation with a delay.
+ *
+ * @param delayMs duration (in milliseconds) before the animation starts
+ * @param nextAnimation animation to delay
+ * @param reduceMotion determines how the animation responds to the device's reduced motion accessibility setting
+ * @returns an animation object which holds the current state of the animation
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withDelay
+ */
 export const withDelay = function <T extends AnimationObject>(
   delayMs: number,
   _nextAnimation: T | (() => T),

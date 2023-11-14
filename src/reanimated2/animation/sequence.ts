@@ -9,13 +9,36 @@ import type {
   Timestamp,
 } from '../commonTypes';
 
+/**
+ * Lets you run animations in a sequence.
+ *
+ * @param reduceMotion determines how the animation responds to the device's reduced motion accessibility setting
+ * @param animations any number of animation objects to be run in a sequence
+ * @returns an animation object which holds the current state of the animation
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSequence
+ */
 export function withSequence<T extends AnimatableValue>(
   _reduceMotion: ReduceMotion,
   ...animations: T[]
 ): T;
 
+/**
+ * Lets you run animations in a sequence.
+ *
+ * @param animations any number of animation objects to be run in a sequence
+ * @returns an animation object which holds the current state of the animation
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSequence
+ */
 export function withSequence<T extends AnimatableValue>(...animations: T[]): T;
 
+/**
+ * Lets you run animations in a sequence.
+ *
+ * @param reduceMotion determines how the animation responds to the device's reduced motion accessibility setting
+ * @param animations any number of animation objects to be run in a sequence
+ * @returns an animation object which holds the current state of the animation
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSequence
+ */
 export function withSequence(
   _reduceMotionOrFirstAnimation?: ReduceMotion | NextAnimation<AnimationObject>,
   ..._animations: NextAnimation<AnimationObject>[]
