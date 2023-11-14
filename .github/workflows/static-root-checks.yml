@@ -34,5 +34,7 @@ jobs:
         run: yarn find-unused-code:js
       - name: Find circular dependencies
         run: yarn circular_dependency_check
+      - name: Check use strict
+        run: yarn use_strict_check
       - name: Run jest unit tests
         run: yarn test:unit
