@@ -10,7 +10,7 @@ type Mapper<T> = {
   id: number;
   dirty: boolean;
   worklet: () => void;
-  inputs: unknown[];
+  inputs: Record<string, unknown>[];
   outputs?: SharedValue<T>[];
 };
 
