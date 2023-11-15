@@ -494,7 +494,7 @@ export function defineAnimation<
 /**
  * Lets you cancel a running animation paired to a shared value.
  *
- * @param sharedValue the shared value of a running animation that you want to cancel
+ * @param sharedValue - the shared value of a running animation that you want to cancel
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/cancelAnimation
  */
 export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {

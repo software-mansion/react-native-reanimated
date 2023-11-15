@@ -399,8 +399,8 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
 /**
  * Lets you create a styles object, similar to StyleSheet styles, which can be animated using shared values.
  *
- * @param updater a function returning an object with style properties you want to animate
- * @param dependencies an optional array of dependencies. Only relevant when using Reanimated without the Babel plugin on the Web.
+ * @param updater - a function returning an object with style properties you want to animate
+ * @param dependencies - an optional array of dependencies. Only relevant when using Reanimated without the Babel plugin on the Web.
  * @returns an animated style object which has to be passed to the `style` property of an Animated component you want to animate.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle
  */

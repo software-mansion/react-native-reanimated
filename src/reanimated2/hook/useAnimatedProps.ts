@@ -14,9 +14,9 @@ import { shouldBeUseWeb } from '../PlatformChecker';
 /**
  * Lets you create an animated props object which can be animated using shared values.
  *
- * @param updater a function returning an object with properties you want to animate
- * @param dependencies an optional array of dependencies. Only relevant when using Reanimated without the Babel plugin on the Web.
- * @param adapters an optional function or array of functions allowing to adopt prop naming between JS and the native side.
+ * @param updater - a function returning an object with properties you want to animate
+ * @param dependencies - an optional array of dependencies. Only relevant when using Reanimated without the Babel plugin on the Web.
+ * @param adapters - an optional function or array of functions allowing to adopt prop naming between JS and the native side.
  * @returns an animated props object which has to be passed to `animatedProps` property of an Animated component that you want to animate.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
  */

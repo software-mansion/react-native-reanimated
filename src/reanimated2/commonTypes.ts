@@ -230,7 +230,7 @@ export enum ReduceMotion {
 // THE LAND OF THE DEPRECATED
 
 /**
- * @deprecated
+ * @deprecated don't use
  */
 export interface __WorkletFunction {
   __closure?: Record<string, unknown>;
@@ -238,14 +238,14 @@ export interface __WorkletFunction {
 }
 
 /**
- * @deprecated
+ * @deprecated don't use
  */
 export interface __BasicWorkletFunction<T> extends __WorkletFunction {
   (): T;
 }
 
 /**
- * @deprecated
+ * @deprecated don't use
  */
 export interface __ComplexWorkletFunction<A extends any[], R>
   extends __WorkletFunction {
@@ -254,7 +254,7 @@ export interface __ComplexWorkletFunction<A extends any[], R>
 }
 
 /**
- * @deprecated
+ * @deprecated don't use
  */
 export interface __AdapterWorkletFunction extends __WorkletFunction {
   (value: NestedObject<string | number | AnimationObject>): void;

@@ -5,6 +5,7 @@
 
 import type { MutableRefObject } from 'react';
 
+/* eslint-disable */
 /**
  * This is a helper function for when a component needs to be able to forward a ref
  * to a child component, but still needs to have access to that component as part of
@@ -35,6 +36,7 @@ import type { MutableRefObject } from 'react';
  *
  *   module.exports = MyViewWithRef;
  */
+/* eslint-enable */
 
 type ForwardedRef<T> = () => MutableRefObject<T> | ((ref: T) => void);
 

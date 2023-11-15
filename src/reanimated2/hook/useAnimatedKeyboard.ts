@@ -14,7 +14,7 @@ import { KeyboardState } from '../commonTypes';
 /**
  * Lets you synchronously get the position and state of the keyboard.
  *
- * @param options an additional keyboard configuration options
+ * @param options - an additional keyboard configuration options
  * @returns an object with the current keyboard `height` and `state` as [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value)
  * @see https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedKeyboard
  */
