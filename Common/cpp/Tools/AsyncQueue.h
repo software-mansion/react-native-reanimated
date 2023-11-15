@@ -13,23 +13,23 @@
 
 namespace reanimated {
 
+struct AsyncQueueState {
+  std::atomic_bool running{true};
+  std::mutex mutex;
+  std::condition_variable cv;
+  std::queue<std::function<void()>> queue;
+};
+
 class AsyncQueue {
  public:
-  explicit AsyncQueue(const std::string &name);
+  explicit AsyncQueue(std::string name);
 
   ~AsyncQueue();
 
   void push(std::function<void()> &&job);
 
  private:
-  void runLoop();
-
-  const std::string name_;
-  std::thread thread_;
-  std::atomic_bool running_{true};
-  std::mutex mutex_;
-  std::condition_variable cv_;
-  std::queue<std::function<void()>> queue_;
+  const std::shared_ptr<AsyncQueueState> state_;
 };
 
 } // namespace reanimated
