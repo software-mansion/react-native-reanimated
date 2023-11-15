@@ -115,7 +115,6 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
 ): void {
   'worklet';
   const baseOnStart = (animation as Animation<AnimationObject>).onStart;
-
   const baseOnFrame = (animation as Animation<AnimationObject>).onFrame;
 
   if ((animation as HigherOrderAnimation).isHigherOrder) {

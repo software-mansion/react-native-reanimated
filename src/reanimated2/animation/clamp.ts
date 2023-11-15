@@ -119,7 +119,6 @@ export const withClamp = function <T extends number | string>(
       };
 
       return {
-        type: 'CLAMP',
         isHigherOrder: true,
         onFrame: clampOnFrame,
         onStart,

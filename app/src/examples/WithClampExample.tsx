@@ -3,6 +3,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withClamp,
+  withDelay,
 } from 'react-native-reanimated';
 import { View, Text, Button, StyleSheet, ViewStyle } from 'react-native';
 import React, { useState } from 'react';
@@ -62,7 +63,7 @@ export default function AnimatedStyleUpdateExample() {
     return {
       width: withClamp(
         { min: LOWER_BOUND, max: UPPER_BOUND },
-        withSpring(randomWidth.value, config)
+        withDelay(0, withSpring(randomWidth.value, config))
       ),
     };
   });
