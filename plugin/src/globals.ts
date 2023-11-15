@@ -118,7 +118,7 @@ export const defaultGlobals = new Set([
   '_log',
   '_toString',
   '_scheduleOnJS',
-  '_scheduleOnWorkletRuntime',
+  '_scheduleOnRuntime',
   '_makeShareableClone',
   '_updateDataSynchronously',
   '_getDataSynchronously',

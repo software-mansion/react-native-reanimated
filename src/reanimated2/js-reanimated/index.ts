@@ -47,9 +47,9 @@ global._scheduleOnJS = () => {
   );
 };
 
-global._scheduleOnWorkletRuntime = () => {
+global._scheduleOnRuntime = () => {
   throw new Error(
-    '[Reanimated] _scheduleOnWorkletRuntime should never be called in JSReanimated.'
+    '[Reanimated] _scheduleOnRuntime should never be called in JSReanimated.'
   );
 };
 

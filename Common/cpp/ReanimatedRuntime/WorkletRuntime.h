@@ -71,7 +71,7 @@ std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
     jsi::Runtime &rt,
     const jsi::Value &value);
 
-void scheduleOnWorkletRuntime(
+void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &shareableWorkletValue);

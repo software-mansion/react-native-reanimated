@@ -62,7 +62,7 @@ std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
   return value.getObject(rt).getHostObject<WorkletRuntime>(rt);
 }
 
-void scheduleOnWorkletRuntime(
+void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &shareableWorkletValue) {
@@ -70,7 +70,7 @@ void scheduleOnWorkletRuntime(
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
       rt,
       shareableWorkletValue,
-      "[Reanimated] Function passed to `_scheduleOnWorkletRuntime` is not a shareable worklet. Please make sure that `processNestedWorklets` option in Reanimated Babel plugin is enabled.");
+      "[Reanimated] Function passed to `_scheduleOnRuntime` is not a shareable worklet. Please make sure that `processNestedWorklets` option in Reanimated Babel plugin is enabled.");
   workletRuntime->runAsyncGuarded(shareableWorklet);
 }
 

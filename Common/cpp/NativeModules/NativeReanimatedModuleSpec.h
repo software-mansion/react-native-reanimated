@@ -48,7 +48,7 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &name,
       const jsi::Value &initializer) = 0;
-  virtual jsi::Value scheduleOnWorkletRuntime(
+  virtual jsi::Value scheduleOnRuntime(
       jsi::Runtime &rt,
       const jsi::Value &workletRuntimeValue,
       const jsi::Value &shareableWorkletValue) = 0;

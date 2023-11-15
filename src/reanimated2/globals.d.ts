@@ -54,7 +54,7 @@ declare global {
     fun: __ComplexWorkletFunction<A, R>,
     args?: unknown[]
   ) => void;
-  var _scheduleOnWorkletRuntime: (
+  var _scheduleOnRuntime: (
     runtime: WorkletRuntime,
     worklet: ShareableRef<() => void>
   ) => void;

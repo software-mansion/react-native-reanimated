@@ -53,7 +53,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
   }
   if (_WORKLET) {
     return (...args) =>
-      _scheduleOnWorkletRuntime(
+      _scheduleOnRuntime(
         workletRuntime,
         makeShareableCloneOnUIRecursive(() => {
           'worklet';
@@ -62,7 +62,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
       );
   }
   return (...args) =>
-    NativeReanimatedModule.scheduleOnWorkletRuntime(
+    NativeReanimatedModule.scheduleOnRuntime(
       workletRuntime,
       makeShareableCloneRecursive(() => {
         'worklet';

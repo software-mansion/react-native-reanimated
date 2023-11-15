@@ -256,7 +256,7 @@ var require_globals = __commonJS({
       "_log",
       "_toString",
       "_scheduleOnJS",
-      "_scheduleOnWorkletRuntime",
+      "_scheduleOnRuntime",
       "_makeShareableClone",
       "_updateDataSynchronously",
       "_getDataSynchronously",

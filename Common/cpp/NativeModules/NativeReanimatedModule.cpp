@@ -178,12 +178,11 @@ jsi::Value NativeReanimatedModule::createWorkletRuntime(
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }
 
-jsi::Value NativeReanimatedModule::scheduleOnWorkletRuntime(
+jsi::Value NativeReanimatedModule::scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &shareableWorkletValue) {
-  reanimated::scheduleOnWorkletRuntime(
-      rt, workletRuntimeValue, shareableWorkletValue);
+  reanimated::scheduleOnRuntime(rt, workletRuntimeValue, shareableWorkletValue);
   return jsi::Value::undefined();
 }
 

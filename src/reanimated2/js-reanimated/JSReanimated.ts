@@ -49,9 +49,9 @@ export default class JSReanimated {
     );
   }
 
-  scheduleOnWorkletRuntime() {
+  scheduleOnRuntime() {
     throw new Error(
-      '[Reanimated] scheduleOnWorkletRuntime is not available in JSReanimated.'
+      '[Reanimated] scheduleOnRuntime is not available in JSReanimated.'
     );
   }
 

@@ -118,11 +118,11 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt,
-      "_scheduleOnWorkletRuntime",
+      "_scheduleOnRuntime",
       [](jsi::Runtime &rt,
          const jsi::Value &workletRuntimeValue,
          const jsi::Value &shareableWorkletValue) {
-        reanimated::scheduleOnWorkletRuntime(
+        reanimated::scheduleOnRuntime(
             rt, workletRuntimeValue, shareableWorkletValue);
       });
 

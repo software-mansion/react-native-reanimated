@@ -31,7 +31,7 @@ export interface NativeReanimatedModule {
     name: string,
     initializer: ShareableRef<() => void>
   ): WorkletRuntime;
-  scheduleOnWorkletRuntime<T>(
+  scheduleOnRuntime<T>(
     workletRuntime: WorkletRuntime,
     worklet: ShareableRef<T>
   ): void;
@@ -131,11 +131,11 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return this.InnerNativeModule.createWorkletRuntime(name, initializer);
   }
 
-  scheduleOnWorkletRuntime<T>(
+  scheduleOnRuntime<T>(
     workletRuntime: WorkletRuntime,
     shareableWorklet: ShareableRef<T>
   ) {
-    return this.InnerNativeModule.scheduleOnWorkletRuntime(
+    return this.InnerNativeModule.scheduleOnRuntime(
       workletRuntime,
       shareableWorklet
     );
