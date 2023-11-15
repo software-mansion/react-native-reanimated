@@ -5,12 +5,7 @@
 namespace reanimated {
 
 BackgroundQueue::BackgroundQueue(const std::string &name) : name_(name) {
-  auto thread = std::thread([this] {
-#if __APPLE__
-    pthread_setname_np(name_.c_str());
-#endif
-    runLoop();
-  });
+  auto thread = std::thread(&BackgroundQueue::runLoop, this);
 #ifdef ANDROID
   pthread_setname_np(thread.native_handle(), name_.c_str());
 #endif
@@ -29,6 +24,9 @@ void BackgroundQueue::push(std::function<void()> &&job) {
 }
 
 void BackgroundQueue::runLoop() {
+#if __APPLE__
+  pthread_setname_np(name_.c_str());
+#endif
   while (running_) {
     std::unique_lock<std::mutex> lock(mutex_);
     cv_.wait(lock, [this] { return !queue_.empty() || !running_; });
