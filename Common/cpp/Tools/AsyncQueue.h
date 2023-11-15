@@ -13,11 +13,11 @@
 
 namespace reanimated {
 
-class BackgroundQueue {
+class AsyncQueue {
  public:
-  explicit BackgroundQueue(const std::string &name);
+  explicit AsyncQueue(const std::string &name);
 
-  ~BackgroundQueue();
+  ~AsyncQueue();
 
   void push(std::function<void()> &&job);
 

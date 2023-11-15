@@ -21,7 +21,7 @@
 #include "ShadowTreeCloner.h"
 #endif
 
-#include "BackgroundQueue.h"
+#include "AsyncQueue.h"
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
 #include "JSScheduler.h"

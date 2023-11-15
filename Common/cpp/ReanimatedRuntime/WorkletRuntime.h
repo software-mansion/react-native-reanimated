@@ -3,7 +3,7 @@
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
 
-#include "BackgroundQueue.h"
+#include "AsyncQueue.h"
 #include "JSScheduler.h"
 #include "Shareables.h"
 
@@ -45,7 +45,7 @@ class WorkletRuntime : public jsi::HostObject,
   void runAsyncGuarded(
       const std::shared_ptr<ShareableWorklet> &shareableWorklet) {
     if (queue_ == nullptr) {
-      queue_ = std::make_shared<BackgroundQueue>(name_);
+      queue_ = std::make_shared<AsyncQueue>(name_);
     }
     queue_->push(
         [=, self = shared_from_this()] { self->runGuarded(shareableWorklet); });
@@ -62,7 +62,7 @@ class WorkletRuntime : public jsi::HostObject,
  private:
   const std::shared_ptr<jsi::Runtime> runtime_;
   const std::string name_;
-  std::shared_ptr<BackgroundQueue> queue_;
+  std::shared_ptr<AsyncQueue> queue_;
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on

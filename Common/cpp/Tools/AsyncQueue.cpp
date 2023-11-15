@@ -1,29 +1,31 @@
-#include "BackgroundQueue.h"
+#include "AsyncQueue.h"
 
 #include <utility>
 
 namespace reanimated {
 
-BackgroundQueue::BackgroundQueue(const std::string &name) : name_(name) {
-  auto thread = std::thread(&BackgroundQueue::runLoop, this);
+AsyncQueue::AsyncQueue(const std::string &name) : name_(name) {
+  auto thread = std::thread(&AsyncQueue::runLoop, this);
 #ifdef ANDROID
   pthread_setname_np(thread.native_handle(), name_.c_str());
 #endif
   thread.detach();
 }
 
-BackgroundQueue::~BackgroundQueue() {
+AsyncQueue::~AsyncQueue() {
   running_ = false;
   cv_.notify_all();
 }
 
-void BackgroundQueue::push(std::function<void()> &&job) {
-  std::unique_lock<std::mutex> lock(mutex_);
-  queue_.emplace(job);
+void AsyncQueue::push(std::function<void()> &&job) {
+  {
+    std::unique_lock<std::mutex> lock(mutex_);
+    queue_.emplace(job);
+  }
   cv_.notify_one();
 }
 
-void BackgroundQueue::runLoop() {
+void AsyncQueue::runLoop() {
 #if __APPLE__
   pthread_setname_np(name_.c_str());
 #endif
