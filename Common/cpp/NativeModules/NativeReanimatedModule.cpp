@@ -400,28 +400,27 @@ bool NativeReanimatedModule::isThereAnyLayoutProp(
   return false;
 }
 
-jsi::Value NativeReanimatedModule::getNonAnimatableProps(
+jsi::Value NativeReanimatedModule::filterNonAnimatableProps(
     jsi::Runtime &rt,
     const jsi::Value &props) {
   jsi::Object nonAnimatableProps(rt);
-  bool isAnyNonAnimatableProp = false;
+  bool hasAnyNonAnimatableProp = false;
   const jsi::Object &propsObject = props.asObject(rt);
   const jsi::Array &propNames = propsObject.getPropertyNames(rt);
   for (size_t i = 0; i < propNames.size(rt); ++i) {
     const std::string &propName =
         propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
     if (!collection::contains(animatablePropNames_, propName)) {
-      isAnyNonAnimatableProp = true;
+      hasAnyNonAnimatableProp = true;
       const auto &propNameStr = propName.c_str();
       const jsi::Value &propValue = propsObject.getProperty(rt, propNameStr);
       nonAnimatableProps.setProperty(rt, propNameStr, propValue);
     }
   }
-  if (isAnyNonAnimatableProp) {
-    return nonAnimatableProps;
-  } else {
+  if (!hasAnyNonAnimatableProp) {
     return jsi::Value::undefined();
   }
+  return nonAnimatableProps;
 }
 #endif // RCT_NEW_ARCH_ENABLED
 
@@ -525,23 +524,19 @@ void NativeReanimatedModule::performOperations() {
   }
 
   for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-    const jsi::Value &nonAnimatableProps = getNonAnimatableProps(rt, *props);
+    const jsi::Value &nonAnimatableProps = filterNonAnimatableProps(rt, *props);
     if (nonAnimatableProps.isUndefined()) {
       continue;
     }
     Tag viewTag = shadowNode->getTag();
     jsi::Value maybeJSPropUpdater =
         rt.global().getProperty(rt, "updateJSProps");
-    if (maybeJSPropUpdater.isObject()) {
-      jsi::Function jsPropsUpdater =
-          maybeJSPropUpdater.asObject(rt).asFunction(rt);
-      jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
-    } else {
-#ifndef NDEBUG
-      JSLogger jsLogger(jsScheduler_);
-      jsLogger.warnOnJS("[Reanimated] Unable to update JS props.");
-#endif
-    }
+    assert(
+        maybeJSPropUpdater.isObject() &&
+        "[Reanimated] `updateJSProps` not found");
+    jsi::Function jsPropsUpdater =
+        maybeJSPropUpdater.asObject(rt).asFunction(rt);
+    jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
   }
 
   bool hasLayoutUpdates = false;

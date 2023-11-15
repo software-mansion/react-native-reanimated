@@ -4,10 +4,7 @@ import {
   NativeModules,
   findNodeHandle,
 } from 'react-native';
-import {
-  nativeShouldBeMock,
-  shouldBeUseWeb,
-} from '../reanimated2/PlatformChecker';
+import { shouldBeUseWeb } from '../reanimated2/PlatformChecker';
 import type { StyleProps } from '../reanimated2';
 import { runOnJS, runOnUIImmediately } from '../reanimated2/threads';
 import type {
@@ -22,26 +19,16 @@ interface ListenerData {
   props: StyleProps;
 }
 
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+
 class JSPropsUpdaterPaper implements IJSPropsUpdater {
   private static _tagToComponentMapping = new Map();
   private _reanimatedEventEmitter: NativeEventEmitter;
-  private static _reanimatedModuleMock = {
-    async addListener(): Promise<void> {
-      // noop
-    },
-    async removeListeners(): Promise<void> {
-      // noop
-    },
-  };
 
   constructor() {
-    let reanimatedModule: typeof JSPropsUpdaterPaper._reanimatedModuleMock;
-    if (nativeShouldBeMock()) {
-      reanimatedModule = JSPropsUpdaterPaper._reanimatedModuleMock;
-    } else {
-      reanimatedModule = NativeModules.ReanimatedModule;
-    }
-    this._reanimatedEventEmitter = new NativeEventEmitter(reanimatedModule);
+    this._reanimatedEventEmitter = new NativeEventEmitter(
+      NativeModules.ReanimatedModule
+    );
   }
 
   public addOnJSPropsChangeListener(
@@ -87,9 +74,6 @@ class JSPropsUpdaterFabric implements IJSPropsUpdater {
   private static isInitialized = false;
 
   constructor() {
-    if (nativeShouldBeMock()) {
-      return;
-    }
     if (!JSPropsUpdaterFabric.isInitialized) {
       const updater = (viewTag: number, props: unknown) => {
         const component =
@@ -159,7 +143,7 @@ type JSPropsUpdaterOptions =
   | typeof JSPropsUpdaterPaper;
 
 let JSPropsUpdater: JSPropsUpdaterOptions;
-if (shouldBeUseWeb()) {
+if (SHOULD_BE_USE_WEB) {
   JSPropsUpdater = JSPropsUpdaterWeb;
 } else if (global._IS_FABRIC) {
   JSPropsUpdater = JSPropsUpdaterFabric;
