@@ -5,16 +5,16 @@
 namespace reanimated {
 
 BackgroundQueue::BackgroundQueue(const std::string &name) : name_(name) {
-  thread_ = std::thread([this] {
+  auto thread = std::thread([this] {
 #if __APPLE__
     pthread_setname_np(name_.c_str());
 #endif
     runLoop();
   });
 #ifdef ANDROID
-  pthread_setname_np(thread_.native_handle(), name_.c_str());
+  pthread_setname_np(thread.native_handle(), name_.c_str());
 #endif
-  thread_.detach();
+  thread.detach();
 }
 
 BackgroundQueue::~BackgroundQueue() {
