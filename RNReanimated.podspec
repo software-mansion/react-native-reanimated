@@ -67,11 +67,8 @@ module LegacyModule
     if $config[:react_native_minor_version] <= 72
       return '9.0'
     end
-    # 0.73+ supports iOS 10+, but with new architecture enabled it supports iOS 11+
-    if $new_arch_enabled
-      return '11.0'
-    end
-    return '10.0'
+    # 0.73+ supports iOS 13.4+, https://github.com/facebook/react-native/pull/39478
+    return '13.4'
   end
 end
 
