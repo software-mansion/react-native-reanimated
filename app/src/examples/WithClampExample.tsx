@@ -63,6 +63,14 @@ export default function AnimatedStyleUpdateExample() {
     return {
       width: withClamp(
         { min: LOWER_BOUND, max: UPPER_BOUND },
+        withSpring(randomWidth.value, config)
+      ),
+    };
+  });
+  const clampedStyleWithDelay = useAnimatedStyle(() => {
+    return {
+      width: withClamp(
+        { min: LOWER_BOUND, max: UPPER_BOUND },
         withDelay(0, withSpring(randomWidth.value, config))
       ),
     };
@@ -88,7 +96,8 @@ export default function AnimatedStyleUpdateExample() {
 
   return (
     <View style={styles.container}>
-      {renderExample(clampedStyle, 'Clamped spring example')}
+      {renderExample(clampedStyle, 'Clamped spring')}
+      {renderExample(clampedStyleWithDelay, 'Clamped spring with delay')}
       {renderExample(style, 'Default spring')}
       <Animated.View
         style={[
