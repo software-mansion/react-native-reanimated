@@ -529,13 +529,13 @@ void NativeReanimatedModule::performOperations() {
       continue;
     }
     Tag viewTag = shadowNode->getTag();
-    jsi::Value maybeJSPropUpdater =
+    jsi::Value maybeJSPropsUpdater =
         rt.global().getProperty(rt, "updateJSProps");
     assert(
-        maybeJSPropUpdater.isObject() &&
+        maybeJSPropsUpdater.isObject() &&
         "[Reanimated] `updateJSProps` not found");
     jsi::Function jsPropsUpdater =
-        maybeJSPropUpdater.asObject(rt).asFunction(rt);
+        maybeJSPropsUpdater.asObject(rt).asFunction(rt);
     jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
   }
 
