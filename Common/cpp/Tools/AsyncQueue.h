@@ -25,6 +25,7 @@ class AsyncQueue {
   void runLoop();
 
   const std::string name_;
+  std::thread thread_;
   std::atomic_bool running_{true};
   std::mutex mutex_;
   std::condition_variable cv_;

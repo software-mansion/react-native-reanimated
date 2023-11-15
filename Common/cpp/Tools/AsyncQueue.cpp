@@ -5,16 +5,16 @@
 namespace reanimated {
 
 AsyncQueue::AsyncQueue(const std::string &name) : name_(name) {
-  auto thread = std::thread(&AsyncQueue::runLoop, this);
+  thread_ = std::thread(&AsyncQueue::runLoop, this);
 #ifdef ANDROID
-  pthread_setname_np(thread.native_handle(), name_.c_str());
+  pthread_setname_np(thread_.native_handle(), name_.c_str());
 #endif
-  thread.detach();
 }
 
 AsyncQueue::~AsyncQueue() {
   running_ = false;
   cv_.notify_all();
+  thread_.join();
 }
 
 void AsyncQueue::push(std::function<void()> &&job) {
