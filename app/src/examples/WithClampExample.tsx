@@ -63,7 +63,7 @@ function renderExample(testedStyle: ViewStyle, description: string) {
             style={[
               styles.clampMarker,
               {
-                marginTop: -CLAMP_MARKER_HEIGHT,
+                marginTop: -100,
                 width: FRAME_WIDTH - UPPER_BOUND,
                 alignSelf: 'flex-end',
               },
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     margin: 0,
     opacity: 0.5,
-    height: CLAMP_MARKER_HEIGHT,
+    height: 100,
     backgroundColor: VIOLET,
   },
   movingBox: {
