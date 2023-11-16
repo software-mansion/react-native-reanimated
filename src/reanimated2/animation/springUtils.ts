@@ -83,14 +83,14 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   if (config.duration < 0) {
     errorMessage += `, duration can't be negative, got ${config.duration}`;
   }
+
   if (
-    config.clamp &&
+    config?.clamp &&
     config.clamp?.min &&
     config.clamp?.max &&
     config.clamp.min > config.clamp.max
   ) {
-    errorMessage +=
-      'clamp is incorrect, lower bound should not be greater than the upper band';
+    errorMessage += `, clamp.min should be lower than clamp.max, got clamp: {min:${config.clamp.min}, max:${config.clamp.max}} `;
   }
 
   if (errorMessage !== '') {

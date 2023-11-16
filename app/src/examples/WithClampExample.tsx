@@ -13,8 +13,11 @@ const FRAME_WIDTH = 300;
 const CLAMP_MARKER_HEIGHT = 40;
 
 // Modify this values to change clamp limits
-const LOWER_BOUND = 120;
+const LOWER_BOUND = 100;
 const UPPER_BOUND = 220;
+
+const LOWER_SPRING_TO_VALUE = 150;
+const UPPER_SPRING_TO_VALUE = 200;
 
 function renderExample(testedStyle: ViewStyle, description: string) {
   return (
@@ -26,23 +29,47 @@ function renderExample(testedStyle: ViewStyle, description: string) {
           borderWidth: BORDER_WIDTH,
           borderColor: VIOLET,
         }}>
-        <Animated.View
-          style={[
-            styles.clampMarker,
-            { marginBottom: -CLAMP_MARKER_HEIGHT, width: UPPER_BOUND },
-          ]}
-        />
+        <View>
+          <View
+            style={[
+              styles.toValueMarker,
+              {
+                width: LOWER_SPRING_TO_VALUE,
+              },
+            ]}
+          />
+          <View
+            style={[
+              styles.clampMarker,
+              {
+                width: LOWER_BOUND,
+              },
+            ]}
+          />
+        </View>
         <Animated.View style={[styles.movingBox, testedStyle]} />
-        <Animated.View
-          style={[
-            styles.clampMarker,
-            {
-              marginTop: -CLAMP_MARKER_HEIGHT,
-              width: FRAME_WIDTH - LOWER_BOUND,
-              alignSelf: 'flex-end',
-            },
-          ]}
-        />
+        <View>
+          <View
+            style={[
+              styles.toValueMarker,
+              {
+                marginTop: -CLAMP_MARKER_HEIGHT / 2,
+                width: FRAME_WIDTH - UPPER_SPRING_TO_VALUE,
+                alignSelf: 'flex-end',
+              },
+            ]}
+          />
+          <View
+            style={[
+              styles.clampMarker,
+              {
+                marginTop: -CLAMP_MARKER_HEIGHT,
+                width: FRAME_WIDTH - UPPER_BOUND,
+                alignSelf: 'flex-end',
+              },
+            ]}
+          />
+        </View>
       </View>
     </>
   );
@@ -110,7 +137,9 @@ export default function AnimatedStyleUpdateExample() {
       <Button
         title="toggle"
         onPress={() => {
-          randomWidth.value = toggle ? 150 : 200;
+          randomWidth.value = toggle
+            ? LOWER_SPRING_TO_VALUE
+            : UPPER_SPRING_TO_VALUE;
           rotation.value = toggle ? '380deg' : '-120deg';
           setToggle(!toggle);
         }}
@@ -125,16 +154,26 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     padding: CLAMP_MARKER_HEIGHT,
   },
+  toValueMarker: {
+    position: 'absolute',
+    margin: 0,
+    opacity: 1,
+    zIndex: 100,
+    height: CLAMP_MARKER_HEIGHT / 2,
+    backgroundColor: VIOLET,
+  },
   clampMarker: {
+    position: 'absolute',
     margin: 0,
     opacity: 0.5,
     height: CLAMP_MARKER_HEIGHT,
     backgroundColor: VIOLET,
   },
   movingBox: {
+    zIndex: 1,
     height: 100,
-    opacity: 0.5,
-    backgroundColor: 'black',
+    // opacity: 0.5,
+    backgroundColor: 'rgba(0,0,0,0.5)', //'black',
   },
   text: {
     fontSize: 16,
