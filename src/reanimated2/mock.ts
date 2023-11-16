@@ -3,7 +3,7 @@
 // @ts-nocheck
 'use strict';
 
-import { SensorType } from './commonTypes';
+import { ReduceMotion, SensorType } from './commonTypes';
 
 const NOOP = () => {
   // noop
@@ -44,8 +44,16 @@ class BaseAnimationMock {
     return this;
   }
 
+  easing(_: (t: number) => number) {
+    return this;
+  }
+
   build() {
     return () => ({ initialValues: {}, animations: {} });
+  }
+
+  reduceMotion(_: ReduceMotion) {
+    return this;
   }
 }
 
@@ -58,6 +66,7 @@ const ReanimatedV2 = {
   useAnimatedRef: () => ({ current: null }),
   useAnimatedReaction: NOOP,
   useAnimatedProps: IMMEDIATE_CB_INVOCATION,
+  ReduceMotion: ReduceMotion,
   SensorType: SensorType,
   useAnimatedSensor: () => ({
     sensor: {

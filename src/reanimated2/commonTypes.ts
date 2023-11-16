@@ -104,12 +104,12 @@ export type AnimatableValueObject = { [key: string]: Animatable };
 
 export type AnimatableValue = Animatable | AnimatableValueObject;
 
-export interface AnimationObject {
+export interface AnimationObject<T = AnimatableValue> {
   [key: string]: any;
   callback?: AnimationCallback;
-  current?: AnimatableValue;
-  toValue?: AnimationObject['current'];
-  startValue?: AnimationObject['current'];
+  current?: T;
+  toValue?: AnimationObject<T>['current'];
+  startValue?: AnimationObject<T>['current'];
   finished?: boolean;
   strippedCurrent?: number;
   cancelled?: boolean;

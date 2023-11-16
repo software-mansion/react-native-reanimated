@@ -203,6 +203,9 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
         }
 
         for (const [key, element] of Object.entries(value)) {
+          if (key === '__initData' && toAdapt.__initData !== undefined) {
+            continue;
+          }
           toAdapt[key] = makeShareableCloneRecursive(
             element,
             shouldPersistRemote,
