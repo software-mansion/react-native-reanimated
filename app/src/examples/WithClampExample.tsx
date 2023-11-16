@@ -3,7 +3,6 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withClamp,
-  withDelay,
 } from 'react-native-reanimated';
 import { View, Text, Button, StyleSheet, ViewStyle } from 'react-native';
 import React, { useState } from 'react';
@@ -59,7 +58,7 @@ export default function AnimatedStyleUpdateExample() {
     dampingRatio: 0.075,
   };
 
-  const clampedStyle = useAnimatedStyle(() => {
+  const clampedStyleWithHoc = useAnimatedStyle(() => {
     return {
       width: withClamp(
         { min: LOWER_BOUND, max: UPPER_BOUND },
@@ -67,12 +66,12 @@ export default function AnimatedStyleUpdateExample() {
       ),
     };
   });
-  const clampedStyleWithDelay = useAnimatedStyle(() => {
+  const clampedStyleWithConfig = useAnimatedStyle(() => {
     return {
-      width: withClamp(
-        { min: LOWER_BOUND, max: UPPER_BOUND },
-        withDelay(0, withSpring(randomWidth.value, config))
-      ),
+      width: withSpring(randomWidth.value, {
+        ...config,
+        clamp: { min: LOWER_BOUND, max: UPPER_BOUND },
+      }),
     };
   });
   const style = useAnimatedStyle(() => {
@@ -96,8 +95,11 @@ export default function AnimatedStyleUpdateExample() {
 
   return (
     <View style={styles.container}>
-      {renderExample(clampedStyle, 'Clamped spring')}
-      {renderExample(clampedStyleWithDelay, 'Clamped spring with delay')}
+      {renderExample(clampedStyleWithHoc, 'Clamped spring with withClamp HOC')}
+      {renderExample(
+        clampedStyleWithConfig,
+        'Clamped spring with clamp config property'
+      )}
       {renderExample(style, 'Default spring')}
       <Animated.View
         style={[

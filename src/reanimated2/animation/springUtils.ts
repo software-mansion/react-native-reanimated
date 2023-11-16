@@ -26,7 +26,7 @@ export type SpringConfig = {
       damping?: never;
       duration?: number;
       dampingRatio?: number;
-      clamp?: [number, number];
+      clamp?: { min?: number; max?: number };
     }
 );
 
@@ -83,7 +83,12 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   if (config.duration < 0) {
     errorMessage += `, duration can't be negative, got ${config.duration}`;
   }
-  if (config.clamp && config.clamp[0] > config.clamp[1]) {
+  if (
+    config.clamp &&
+    config.clamp?.min &&
+    config.clamp?.max &&
+    config.clamp.min > config.clamp.max
+  ) {
     errorMessage +=
       'clamp is incorrect, lower bound should not be greater than the upper band';
   }
@@ -163,7 +168,7 @@ export function initialCalculations(
  */
 export function scaleZetaToMatchClamps(
   animation: SpringAnimation,
-  clamp: [number, number]
+  clamp: { min?: number; max?: number }
 ) {
   'worklet';
   const { zeta, toValue, startValue } = animation;
@@ -173,9 +178,10 @@ export function scaleZetaToMatchClamps(
     return zeta;
   }
 
-  const [lowerBound, upperBound] =
-    toValueNum - startValue > 0 ? clamp : [clamp[1], clamp[0]];
-
+  const [firstBound, secondBound] =
+    toValueNum - startValue > 0
+      ? [clamp.min, clamp.max]
+      : [clamp.max, clamp.min];
   /** The extrema we get from equation below are relative (we obtain a ratio),
    *  To get absolute extrema we convert it as follows:
    *
@@ -185,13 +191,13 @@ export function scaleZetaToMatchClamps(
    *    - otherwise
    */
 
-  const relativeExtremum1 = Math.abs(
-    (upperBound - toValueNum) / (toValueNum - startValue)
-  );
+  const relativeExtremum1 = secondBound
+    ? Math.abs((secondBound - toValueNum) / (toValueNum - startValue))
+    : undefined;
 
-  const relativeExtremum2 = Math.abs(
-    (lowerBound - toValueNum) / (toValueNum - startValue)
-  );
+  const relativeExtremum2 = firstBound
+    ? Math.abs((firstBound - toValueNum) / (toValueNum - startValue))
+    : undefined;
 
   /** Use this formula http://hyperphysics.phy-astr.gsu.edu/hbase/oscda.html to calculate
    *  first two extrema. These extrema are located where cos = +- 1
@@ -202,12 +208,20 @@ export function scaleZetaToMatchClamps(
    *     Math.exp(-zeta * 2 * Math.PI);  (before the target)
    */
 
-  const newZeta1 = Math.abs(Math.log(relativeExtremum1) / Math.PI);
-  const newZeta2 = Math.abs(Math.log(relativeExtremum2) / (2 * Math.PI));
+  const newZeta1 = relativeExtremum1
+    ? Math.abs(Math.log(relativeExtremum1) / Math.PI)
+    : undefined;
+  const newZeta2 = relativeExtremum2
+    ? Math.abs(Math.log(relativeExtremum2) / (2 * Math.PI))
+    : undefined;
 
+  const zetaSatisfyingClamp = [newZeta1, newZeta2].filter(
+    (x: number | undefined): x is number => x !== undefined
+  );
+  console.log(zetaSatisfyingClamp);
   // The bigger is zeta the smaller are bounces, we return the biggest one
   // because it should satisfy all conditions
-  return Math.max(newZeta1, newZeta2, zeta);
+  return Math.max(...zetaSatisfyingClamp, zeta);
 }
 
 export function calculateNewMassToMatchDuration(
