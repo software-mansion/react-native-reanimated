@@ -246,6 +246,14 @@ export class EntryExitTransition
   };
 }
 
+/**
+ * Lets you combine two layout animations into a layout transition. You can modify the behavior by chaining methods like `.delay(500)`.
+ *
+ * @param exiting - layout animation used when components are removed from layout (eg. `FadeOut`)
+ * @param entering - layout animation used when components are added to layout (eg. `FadeIn`)
+ * @returns a custom layout transition. You pass it to the `layout` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions#combine-transition
+ */
 export function combineTransition(
   exiting: BaseAnimationBuilder | typeof BaseAnimationBuilder,
   entering: BaseAnimationBuilder | typeof BaseAnimationBuilder
