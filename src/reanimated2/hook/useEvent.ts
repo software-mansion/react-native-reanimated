@@ -1,3 +1,4 @@
+'use strict';
 import type { MutableRefObject } from 'react';
 import { useRef } from 'react';
 import WorkletEventHandler from '../WorkletEventHandler';

@@ -1,17 +1,21 @@
-import React from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  withClamp,
+  withDelay,
 } from 'react-native-reanimated';
 import { View, Text, Button, StyleSheet, ViewStyle } from 'react-native';
+import React, { useState } from 'react';
 
 const VIOLET = '#b58df1';
 const BORDER_WIDTH = 4;
 const FRAME_WIDTH = 300;
-const LOWER_CLAMP = 120;
-const UPPER_CLAMP = 220;
 const CLAMP_MARKER_HEIGHT = 40;
+
+// Modify this values to change clamp limits
+const LOWER_BOUND = 120;
+const UPPER_BOUND = 220;
 
 function renderExample(testedStyle: ViewStyle, description: string) {
   return (
@@ -26,7 +30,7 @@ function renderExample(testedStyle: ViewStyle, description: string) {
         <Animated.View
           style={[
             styles.clampMarker,
-            { marginBottom: -CLAMP_MARKER_HEIGHT, width: UPPER_CLAMP },
+            { marginBottom: -CLAMP_MARKER_HEIGHT, width: UPPER_BOUND },
           ]}
         />
         <Animated.View style={[styles.movingBox, testedStyle]} />
@@ -35,7 +39,7 @@ function renderExample(testedStyle: ViewStyle, description: string) {
             styles.clampMarker,
             {
               marginTop: -CLAMP_MARKER_HEIGHT,
-              width: FRAME_WIDTH - LOWER_CLAMP,
+              width: FRAME_WIDTH - LOWER_BOUND,
               alignSelf: 'flex-end',
             },
           ]}
@@ -46,36 +50,67 @@ function renderExample(testedStyle: ViewStyle, description: string) {
 }
 
 export default function AnimatedStyleUpdateExample() {
-  const randomWidth = useSharedValue(130);
+  const randomWidth = useSharedValue(100);
+  const rotation = useSharedValue('0deg');
+  const [toggle, setToggle] = useState(false);
 
   const config = {
-    duration: 5000,
-    dampingRatio: 0.4,
+    duration: 25000,
+    dampingRatio: 0.075,
   };
 
   const clampedStyle = useAnimatedStyle(() => {
     return {
-      width: withSpring(randomWidth.value, {
-        ...config,
-        clamp: [LOWER_CLAMP, UPPER_CLAMP],
-      }),
+      width: withClamp(
+        { min: LOWER_BOUND, max: UPPER_BOUND },
+        withSpring(randomWidth.value, config)
+      ),
     };
   });
-
+  const clampedStyleWithDelay = useAnimatedStyle(() => {
+    return {
+      width: withClamp(
+        { min: LOWER_BOUND, max: UPPER_BOUND },
+        withDelay(0, withSpring(randomWidth.value, config))
+      ),
+    };
+  });
   const style = useAnimatedStyle(() => {
     return {
       width: withSpring(randomWidth.value, config),
     };
   });
 
+  const rotationStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          rotate: withClamp(
+            { min: '-45deg', max: '180deg' },
+            withSpring(rotation.value)
+          ),
+        },
+      ],
+    };
+  });
+
   return (
     <View style={styles.container}>
-      {renderExample(clampedStyle, 'Clamp example')}
-      {renderExample(style, 'Default')}
+      {renderExample(clampedStyle, 'Clamped spring')}
+      {renderExample(clampedStyleWithDelay, 'Clamped spring with delay')}
+      {renderExample(style, 'Default spring')}
+      <Animated.View
+        style={[
+          { margin: 50, width: 50, height: 50, backgroundColor: 'teal' },
+          rotationStyle,
+        ]}
+      />
       <Button
         title="toggle"
         onPress={() => {
-          randomWidth.value = randomWidth.value === 210 ? 130 : 210;
+          randomWidth.value = toggle ? 150 : 200;
+          rotation.value = toggle ? '380deg' : '-120deg';
+          setToggle(!toggle);
         }}
       />
     </View>
@@ -86,7 +121,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'column',
-    padding: 40,
+    padding: CLAMP_MARKER_HEIGHT,
   },
   clampMarker: {
     margin: 0,
