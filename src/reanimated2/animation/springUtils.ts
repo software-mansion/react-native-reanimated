@@ -218,7 +218,6 @@ export function scaleZetaToMatchClamps(
   const zetaSatisfyingClamp = [newZeta1, newZeta2].filter(
     (x: number | undefined): x is number => x !== undefined
   );
-  console.log(zetaSatisfyingClamp);
   // The bigger is zeta the smaller are bounces, we return the biggest one
   // because it should satisfy all conditions
   return Math.max(...zetaSatisfyingClamp, zeta);
