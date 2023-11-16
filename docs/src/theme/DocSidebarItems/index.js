@@ -9,6 +9,7 @@ const NEW_APIS = [
   'advanced/setNativeProps',
   'threading/createWorkletRuntime',
   'device/useReducedMotion',
+  'animations/withClamp',
 ];
 // TODO this item should probably not receive the "activePath" props
 // TODO this triggers whole sidebar re-renders on navigation
