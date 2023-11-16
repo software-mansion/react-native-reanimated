@@ -20,7 +20,7 @@ debug_flag = is_release ? '-DNDEBUG' : ''
 ios_min_version = config[:react_native_minor_version] >= 73 ? '10.0' : '9.0'
 
 Pod::Spec.new do |s|
-  
+
   s.name         = "RNReanimated"
   s.version      = reanimated_package_json["version"]
   s.summary      = reanimated_package_json["description"]
@@ -49,8 +49,9 @@ Pod::Spec.new do |s|
     "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_TARGET_SRCROOT)\" \"$(PODS_ROOT)/RCT-Folly\" \"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\" \"$(PODS_ROOT)/Headers/Private/Yoga\"",
     "FRAMEWORK_SEARCH_PATHS" => "\"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes\"",
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
+    "GCC_PREPROCESSOR_DEFINITIONS[config=Debug]" => "$(inherited) HERMES_ENABLE_DEBUGGER=1",
   }
-  s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags + ' -DHERMES_ENABLE_DEBUGGER'
+  s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/RCT-Folly\" \"$(PODS_ROOT)/Headers/Public/React-hermes\" \"$(PODS_ROOT)/Headers/Public/hermes-engine\" \"$(PODS_ROOT)/#{config[:react_native_common_dir]}\"",
     "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags + " " + fabric_flags + " " + example_flag + " " + version_flag + " " + debug_flag
