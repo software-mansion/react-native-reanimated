@@ -44,6 +44,10 @@ class BaseAnimationMock {
     return this;
   }
 
+  easing(_: (t: number) => number) {
+    return this;
+  }
+
   build() {
     return () => ({ initialValues: {}, animations: {} });
   }
