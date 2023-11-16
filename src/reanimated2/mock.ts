@@ -49,27 +49,27 @@ class BaseAnimationMock {
   }
 
   rotate(_: string) {
-    return this
+    return this;
   }
 
   mass(_: number) {
-    return this
+    return this;
   }
 
   restDisplacementThreshold(_: number) {
-    return this
+    return this;
   }
 
   restSpeedThreshold(_: number) {
-    return this
+    return this;
   }
 
   overshootClamping(_: number) {
-    return this
+    return this;
   }
 
   dampingRatio(_: number) {
-    return this
+    return this;
   }
 
   build() {
