@@ -9,6 +9,10 @@ import type {
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 
+/**
+ * Slide from right animation. You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
+ */
 export class SlideInRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
@@ -45,6 +49,10 @@ export class SlideInRight
   };
 }
 
+/**
+ * Slide from left animation. You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
+ */
 export class SlideInLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
@@ -81,6 +89,10 @@ export class SlideInLeft
   };
 }
 
+/**
+ * Slide to right animation. You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
+ */
 export class SlideOutRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
@@ -123,6 +135,10 @@ export class SlideOutRight
   };
 }
 
+/**
+ * Slide to left animation. You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
+ */
 export class SlideOutLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
@@ -165,6 +181,10 @@ export class SlideOutLeft
   };
 }
 
+/**
+ * Slide from top animation. You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
+ */
 export class SlideInUp
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
@@ -201,6 +221,10 @@ export class SlideInUp
   };
 }
 
+/**
+ * Slide from bottom animation. You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
+ */
 export class SlideInDown
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
@@ -237,6 +261,10 @@ export class SlideInDown
   };
 }
 
+/**
+ * Slide to top animation. You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
+ */
 export class SlideOutUp
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
@@ -276,6 +304,10 @@ export class SlideOutUp
   };
 }
 
+/**
+ * Slide to bottom animation. You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
+ */
 export class SlideOutDown
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder

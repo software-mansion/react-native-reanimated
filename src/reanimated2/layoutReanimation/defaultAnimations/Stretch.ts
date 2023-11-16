@@ -6,6 +6,10 @@ import type {
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 
+/**
+ * Stretch animation on the X axis. You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#stretch
+ */
 export class StretchInX
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -39,6 +43,10 @@ export class StretchInX
   };
 }
 
+/**
+ * Stretch animation on the Y axis. You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#stretch
+ */
 export class StretchInY
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -72,6 +80,10 @@ export class StretchInY
   };
 }
 
+/**
+ * Stretch animation on the X axis. You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#stretch
+ */
 export class StretchOutX
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -105,6 +117,10 @@ export class StretchOutX
   };
 }
 
+/**
+ * Stretch animation on the Y axis. You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#stretch
+ */
 export class StretchOutY
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder

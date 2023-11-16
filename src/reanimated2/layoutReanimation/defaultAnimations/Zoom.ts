@@ -12,6 +12,10 @@ import type {
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 
+/**
+ * Scale from center animation. You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomIn
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -45,6 +49,10 @@ export class ZoomIn
   };
 }
 
+/**
+ * Scale from center with rotation. You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomInRotate
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -82,6 +90,10 @@ export class ZoomInRotate
   };
 }
 
+/**
+ * Scale from left animation. You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomInLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -118,6 +130,10 @@ export class ZoomInLeft
   };
 }
 
+/**
+ * Scale from right animation. You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomInRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -154,6 +170,10 @@ export class ZoomInRight
   };
 }
 
+/**
+ * Scale from top animation. You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomInUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -190,6 +210,10 @@ export class ZoomInUp
   };
 }
 
+/**
+ * Scale from bottom animation. You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomInDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -226,6 +250,10 @@ export class ZoomInDown
   };
 }
 
+/**
+ * Eased scale from top animation. You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomInEasyUp
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
@@ -262,6 +290,10 @@ export class ZoomInEasyUp
   };
 }
 
+/**
+ * Eased scale from bottom animation. You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomInEasyDown
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
@@ -298,6 +330,10 @@ export class ZoomInEasyDown
   };
 }
 
+/**
+ * Scale to center animation. You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomOut
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -331,6 +367,10 @@ export class ZoomOut
   };
 }
 
+/**
+ * Scale to center with rotation. You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomOutRotate
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -368,6 +408,10 @@ export class ZoomOutRotate
   };
 }
 
+/**
+ * Scale to left animation. You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomOutLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -409,6 +453,10 @@ export class ZoomOutLeft
   };
 }
 
+/**
+ * Scale to right animation. You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomOutRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -450,6 +498,10 @@ export class ZoomOutRight
   };
 }
 
+/**
+ * Scale to top animation. You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomOutUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -491,6 +543,10 @@ export class ZoomOutUp
   };
 }
 
+/**
+ * Scale to bottom animation. You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomOutDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -532,6 +588,10 @@ export class ZoomOutDown
   };
 }
 
+/**
+ * Eased scale to top animation. You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomOutEasyUp
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
@@ -573,6 +633,10 @@ export class ZoomOutEasyUp
   };
 }
 
+/**
+ * Eased scale to bottom animation. You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomOutEasyDown
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
