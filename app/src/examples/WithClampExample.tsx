@@ -13,7 +13,7 @@ const FRAME_WIDTH = 300;
 const CLAMP_MARKER_HEIGHT = 40;
 
 // Modify this values to change clamp limits
-const LOWER_BOUND = 100;
+const LOWER_BOUND = 120;
 const UPPER_BOUND = 220;
 
 const LOWER_SPRING_TO_VALUE = 150;
@@ -172,8 +172,8 @@ const styles = StyleSheet.create({
   movingBox: {
     zIndex: 1,
     height: 100,
-    // opacity: 0.5,
-    backgroundColor: 'rgba(0,0,0,0.5)', //'black',
+    opacity: 0.5,
+    backgroundColor: 'black',
   },
   text: {
     fontSize: 16,
