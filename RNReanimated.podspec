@@ -16,6 +16,7 @@ fabric_flags = $new_arch_enabled ? '-DRCT_NEW_ARCH_ENABLED' : ''
 example_flag = $config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP' : ''
 version_flag = '-DREANIMATED_VERSION=' + reanimated_package_json["version"]
 debug_flag = is_release ? '-DNDEBUG' : ''
+ios_min_version = $config[:react_native_minor_version] >= 73 ? '13.4' : '9.0'
 
 module LegacyModule
   def self.install_modules_dependencies(s)
@@ -62,14 +63,6 @@ module LegacyModule
       s.dependency 'React-RCTAppDelegate'
     end
   end
-
-  def self.get_ios_min_version()
-    if $config[:react_native_minor_version] <= 72
-      return '9.0'
-    end
-    # 0.73+ supports iOS 13.4+, https://github.com/facebook/react-native/pull/39478
-    return '13.4'
-  end
 end
 
 Pod::Spec.new do |s|
@@ -83,7 +76,7 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/software-mansion/react-native-reanimated"
   s.license      = "MIT"
   s.author       = { "author" => "author@domain.cn" }
-  s.platforms    = { :ios => LegacyModule.get_ios_min_version(), :tvos => "9.0", :osx => "10.14" }
+  s.platforms    = { :ios => ios_min_version, :tvos => "9.0", :osx => "10.14" }
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
   s.source_files = [
