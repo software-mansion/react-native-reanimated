@@ -110,4 +110,5 @@ declare global {
   var LayoutAnimationsManager: LayoutAnimationsManager;
   var UpdatePropsManager: UpdatePropsManager;
   var ProgressTransitionRegister: ProgressTransitionRegister;
+  var updateJSProps: (viewTag: number, props: Record<string, unknown>) => void;
 }
