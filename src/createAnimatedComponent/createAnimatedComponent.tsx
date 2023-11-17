@@ -13,10 +13,7 @@ import '../reanimated2/layoutReanimation/animationsManager';
 import invariant from 'invariant';
 import { adaptViewConfig } from '../ConfigHelper';
 import { RNRenderer } from '../reanimated2/platform-specific/RNRenderer';
-import {
-  configureLayoutAnimations,
-  enableLayoutAnimations,
-} from '../reanimated2/core';
+import { enableLayoutAnimations } from '../reanimated2/core';
 import {
   SharedTransition,
   LayoutAnimationType,
@@ -52,13 +49,10 @@ import {
   tryActivateLayoutTransition,
   configureWebLayoutAnimations,
 } from '../reanimated2/layoutReanimation/web';
+import { updateLayoutAnimations } from '../reanimated2/UpdateLayoutAnimations';
 
 const IS_WEB = isWeb();
 const IS_FABRIC = isFabric();
-const EMPTY_TRANSITION = () => {
-  'worklet';
-  return { initialValues: {}, animations: {} };
-};
 
 function onlyAnimatedStyles(styles: StyleProps[]): StyleProps[] {
   return styles.filter((style) => style?.viewDescriptors);
@@ -167,7 +161,7 @@ export function createAnimatedComponent(
             ? getReduceMotionFromConfig(exiting.getReduceMotion())
             : getReduceMotionFromConfig();
         if (!reduceMotionInExiting) {
-          configureLayoutAnimations(
+          updateLayoutAnimations(
             this._viewTag,
             LayoutAnimationType.EXITING,
             maybeBuild(
@@ -442,15 +436,14 @@ export function createAnimatedComponent(
     }
 
     _configureLayoutTransition() {
-      configureLayoutAnimations(
-        this._viewTag,
-        LayoutAnimationType.LAYOUT,
-        maybeBuild(
-          this.props.layout ?? EMPTY_TRANSITION,
-          undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */,
-          AnimatedComponent.displayName
-        )
-      );
+      const layout = this.props.layout
+        ? maybeBuild(
+            this.props.layout,
+            undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */,
+            AnimatedComponent.displayName
+          )
+        : undefined;
+      updateLayoutAnimations(this._viewTag, LayoutAnimationType.LAYOUT, layout);
     }
 
     _setComponentRef = setAndForwardRef<Component | HTMLElement>({
@@ -473,8 +466,8 @@ export function createAnimatedComponent(
 
           const skipEntering = this.context?.current;
           if (entering && !skipEntering) {
-            configureLayoutAnimations(
-              tag,
+            updateLayoutAnimations(
+              tag as number,
               LayoutAnimationType.ENTERING,
               maybeBuild(
                 entering,

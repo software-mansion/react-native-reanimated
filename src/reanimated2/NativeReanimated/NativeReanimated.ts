@@ -62,6 +62,13 @@ export interface NativeReanimatedModule {
     sharedTransitionTag: string,
     config: ShareableRef<Keyframe | LayoutAnimationFunction>
   ): void;
+  configureLayoutAnimationBatch(
+    layoutAnimationsBatch: {
+      viewTag: number;
+      type: LayoutAnimationType;
+      config: ShareableRef<Keyframe | LayoutAnimationFunction> | undefined;
+    }[]
+  ): void;
   setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
 }
 
@@ -181,6 +188,16 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       sharedTransitionTag,
       config
     );
+  }
+
+  configureLayoutAnimationBatch(
+    layoutAnimationsBatch: {
+      viewTag: number;
+      type: LayoutAnimationType;
+      config: ShareableRef<Keyframe | LayoutAnimationFunction> | undefined;
+    }[]
+  ) {
+    this.InnerNativeModule.configureLayoutAnimationBatch(layoutAnimationsBatch);
   }
 
   setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean) {

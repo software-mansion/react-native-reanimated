@@ -214,6 +214,26 @@ export function configureLayoutAnimations(
   );
 }
 
+export function configureLayoutAnimationBatch(
+  layoutAnimationsBatch: {
+    viewTag: number;
+    type: LayoutAnimationType;
+    config?: LayoutAnimationFunction | Keyframe;
+  }[]
+): void {
+  NativeReanimatedModule.configureLayoutAnimationBatch(
+    layoutAnimationsBatch.map((operation) => {
+      return {
+        viewTag: operation.viewTag,
+        type: operation.type,
+        config: operation.config
+          ? makeShareableCloneRecursive(operation.config)
+          : undefined,
+      };
+    })
+  );
+}
+
 export function setShouldAnimateExitingForTag(
   viewTag: number | HTMLElement,
   shouldAnimate: boolean
