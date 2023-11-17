@@ -1,3 +1,4 @@
+'use strict';
 import { configureLayoutAnimationBatch } from './core';
 import type {
   LayoutAnimationFunction,
