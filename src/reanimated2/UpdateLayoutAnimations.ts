@@ -1,4 +1,5 @@
 'use strict';
+import { shouldBeUseWeb } from './PlatformChecker';
 import { configureLayoutAnimationBatch } from './core';
 import type {
   LayoutAnimationFunction,
@@ -30,12 +31,18 @@ function createUpdateManager() {
   };
 }
 
-const updateLayoutAnimationsManager = createUpdateManager();
-
-export function updateLayoutAnimations(
+export let updateLayoutAnimations: (
   viewTag: number,
   type: LayoutAnimationType,
   config?: Keyframe | LayoutAnimationFunction
-) {
-  updateLayoutAnimationsManager.update({ viewTag, type, config });
+) => void;
+
+if (shouldBeUseWeb()) {
+  updateLayoutAnimations = () => {
+    // no-op
+  };
+} else {
+  const updateLayoutAnimationsManager = createUpdateManager();
+  updateLayoutAnimations = (viewTag, type, config) =>
+    updateLayoutAnimationsManager.update({ viewTag, type, config });
 }
