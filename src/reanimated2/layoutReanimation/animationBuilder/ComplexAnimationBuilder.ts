@@ -17,7 +17,7 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   dampingRatioV?: number;
   massV?: number;
   stiffnessV?: number;
-  overshootClampingV?: number;
+  overshootClampingV?: boolean;
   restDisplacementThresholdV?: number;
   restSpeedThresholdV?: number;
   initialValues?: StyleProps;
@@ -26,6 +26,10 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
     this: T
   ) => InstanceType<T>;
 
+  /**
+   * Lets you change the easing curve of the animation. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   * @param easingFunction - an easing function which defines the animation curve.
+   */
   static easing<T extends typeof ComplexAnimationBuilder>(
     this: T,
     easingFunction: EasingFunction
@@ -39,6 +43,11 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
     return this;
   }
 
+  /**
+   * Lets you rotate the element. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param degree - rotation degree.
+   */
   static rotate<T extends typeof ComplexAnimationBuilder>(
     this: T,
     degree: string
@@ -52,6 +61,11 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
     return this;
   }
 
+  /**
+   * Enables the spring-based animation configuration. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param duration - optional duration of the spring animation (in milliseconds).
+   */
   static springify<T extends typeof ComplexAnimationBuilder>(
     this: T,
     duration?: number
@@ -66,6 +80,11 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
     return this;
   }
 
+  /**
+   * Lets you adjust the spring animation damping ratio. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param dampingRatio - how damped the spring is.
+   */
   static dampingRatio<T extends typeof ComplexAnimationBuilder>(
     this: T,
     dampingRatio: number
@@ -74,11 +93,16 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
     return instance.dampingRatio(dampingRatio);
   }
 
-  dampingRatio(dampingRatio: number): this {
-    this.dampingRatioV = dampingRatio;
+  dampingRatio(value: number): this {
+    this.dampingRatioV = value;
     return this;
   }
 
+  /**
+   * Lets you adjust the spring animation damping. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param value - decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster.
+   */
   static damping<T extends typeof ComplexAnimationBuilder>(
     this: T,
     damping: number
@@ -92,6 +116,11 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
     return this;
   }
 
+  /**
+   * Lets you adjust the spring animation mass. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param mass - the weight of the spring. Reducing this value makes the animation faster.
+   */
   static mass<T extends typeof ComplexAnimationBuilder>(this: T, mass: number) {
     const instance = this.createInstance();
     return instance.mass(mass);
@@ -102,6 +131,11 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
     return this;
   }
 
+  /**
+   * Lets you adjust the stiffness of the spring animation. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param stiffness -
+   */
   static stiffness<T extends typeof ComplexAnimationBuilder>(
     this: T,
     stiffness: number
@@ -115,19 +149,29 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
     return this;
   }
 
+  /**
+   * Lets you adjust overshoot clamping of the spring. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param overshootClamping - whether a spring can bounce over the final position.
+   */
   static overshootClamping<T extends typeof ComplexAnimationBuilder>(
     this: T,
-    overshootClamping: number
+    overshootClamping: boolean
   ) {
     const instance = this.createInstance();
     return instance.overshootClamping(overshootClamping);
   }
 
-  overshootClamping(overshootClamping: number): this {
+  overshootClamping(overshootClamping: boolean): this {
     this.overshootClampingV = overshootClamping;
     return this;
   }
 
+  /**
+   * Lets you adjust the rest displacement threshold of the spring animation. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param restDisplacementThreshold - the displacement below which the spring will snap to the designated position without further oscillations.
+   */
   static restDisplacementThreshold<T extends typeof ComplexAnimationBuilder>(
     this: T,
     restDisplacementThreshold: number
@@ -141,6 +185,11 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
     return this;
   }
 
+  /**
+   * Lets you adjust the rest speed threshold of the spring animation. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param restSpeedThreshold - the speed in pixels per second from which the spring will snap to the designated position without further oscillations.
+   */
   static restSpeedThreshold<T extends typeof ComplexAnimationBuilder>(
     this: T,
     restSpeedThreshold: number
@@ -154,6 +203,11 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
     return this;
   }
 
+  /**
+   * Lets you override the initial config of the animation
+   *
+   * @param values - an object containing the styles to override.
+   */
   static withInitialValues<T extends typeof ComplexAnimationBuilder>(
     this: T,
     values: StyleProps
