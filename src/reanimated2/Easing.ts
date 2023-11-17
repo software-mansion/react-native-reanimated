@@ -50,14 +50,14 @@ import { Bezier } from './Bezier';
 export type EasingFunction = (t: number) => number;
 
 /**
- * @deprecated Please use `EasingFunction` type instead.
+ * @deprecated Please use {@link EasingFunction} type instead.
  */
 export type EasingFn = EasingFunction;
 
 export type EasingFunctionFactory = { factory: () => EasingFunction };
 
 /**
- * @deprecated Please use `EasingFunctionFactory` type instead.
+ * @deprecated Please use {@link EasingFunctionFactory} type instead.
  */
 export type EasingFactoryFn = EasingFunctionFactory;
 /**

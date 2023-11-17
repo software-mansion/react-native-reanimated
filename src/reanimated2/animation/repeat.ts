@@ -22,12 +22,12 @@ type withRepeatType = <T extends AnimatableValue>(
 /**
  * Lets you repeat an animation given number of times or run it indefinitely.
  *
- * @param animation - an animation object you want to repeat
- * @param numberOfReps - the number of times the animation is going to be repeated. Defaults to 2
- * @param reverse - whether the animation should run in reverse every other repetition. Defaults to false
- * @param callback - a function called on animation complete
- * @param reduceMotion - determines how the animation responds to the device's reduced motion accessibility setting
- * @returns an [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation
+ * @param animation - An animation object you want to repeat.
+ * @param numberOfReps - The number of times the animation is going to be repeated. Defaults to 2.
+ * @param reverse - Whether the animation should run in reverse every other repetition. Defaults to false.
+ * @param callback - A function called on animation complete.
+ * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting.
+ * @returns An [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withRepeat
  */
 export const withRepeat = function <T extends AnimationObject>(

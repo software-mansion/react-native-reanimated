@@ -220,6 +220,7 @@ export interface AnimatedKeyboardOptions {
  * - `System` - If the `Reduce motion` accessibility setting is enabled on the device, disable the animation. Otherwise, enable the animation.
  * - `Always` - Disable the animation.
  * - `Never` - Enable the animation.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility
  */
 export enum ReduceMotion {
   System = 'system',

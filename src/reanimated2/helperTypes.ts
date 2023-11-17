@@ -103,19 +103,21 @@ type LayoutProps = {
 
 type SharedTransitionProps = {
   /**
-   * @experimental Lets you animate components between two navigation screens.
+   * Lets you animate components between two navigation screens.
    *
    * Assign the same `sharedTransitionTag` to [animated components](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component) on two different navigation screens to create a shared transition.
    *
    * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
+   * @experimental
    */
   sharedTransitionTag?: string;
   /**
-   * @experimental Lets you create a custom shared transition animation.
+   * Lets you create a custom shared transition animation.
    *
    * Used alongside `SharedTransition.custom()` method.
    *
    * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
+   * @experimental
    */
   sharedTransitionStyle?: SharedTransition;
 };
@@ -164,12 +166,12 @@ export type AdaptTransforms<T> = {
 };
 
 /**
- * @deprecated Please use `TransformArrayItem` type instead.
+ * @deprecated Please use {@link TransformArrayItem} type instead.
  */
 export type TransformStyleTypes = TransformArrayItem;
 
 /**
- * @deprecated Please use `AnimatedStyle` type instead.
+ * @deprecated Please use {@link AnimatedStyle} type instead.
  */
 export type AnimateStyle<Style = DefaultStyle> = AnimatedStyle<Style>;
 
@@ -188,6 +190,6 @@ export type AnimatedStyleProp<T> =
   | RegisteredStyle<AnimatedStyle<T>>;
 
 /**
- * @deprecated Please use `AnimatedProps` type instead.
+ * @deprecated Please use {@link AnimatedProps} type instead.
  */
 export type AnimateProps<Props extends object> = AnimatedProps<Props>;

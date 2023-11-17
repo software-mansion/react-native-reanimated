@@ -57,6 +57,6 @@ export class LinearTransition
 }
 
 /**
- * @deprecated use `LinearTransition` instead.
+ * @deprecated Please use {@link LinearTransition} instead.
  */
 export const Layout = LinearTransition;
