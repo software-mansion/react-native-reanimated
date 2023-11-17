@@ -102,7 +102,21 @@ type LayoutProps = {
 };
 
 type SharedTransitionProps = {
+  /**
+   * @experimental Lets you animate components between two navigation screens.
+   *
+   * Assign the same `sharedTransitionTag` to [animated components](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component) on two different navigation screens to create a shared transition.
+   *
+   * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
+   */
   sharedTransitionTag?: string;
+  /**
+   * @experimental Lets you create a custom shared transition animation.
+   *
+   * Used alongside `SharedTransition.custom()` method.
+   *
+   * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
+   */
   sharedTransitionStyle?: SharedTransition;
 };
 
