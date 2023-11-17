@@ -10,6 +10,13 @@ import type {
   ReduceMotion,
 } from '../commonTypes';
 
+/**
+ * The timing animation configuration.
+ *
+ * @param duration - Length of the animation (in milliseconds). Defaults to 300.
+ * @param easing - An easing function which defines the animation curve. Defaults to `Easing.inOut(Easing.quad)`.
+ * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Defaults to `ReduceMotion.System`.
+ */
 interface TimingConfig {
   duration?: number;
   reduceMotion?: ReduceMotion;
@@ -44,9 +51,9 @@ type withTimingType = <T extends AnimatableValue>(
 /**
  * Lets you create an animation based on duration and easing.
  *
- * @param toValue - the value on which the animation will come at rest
- * @param config - the timing animation configuration
- * @param callback - a function called on animation complete
+ * @param toValue - the value on which the animation will come at rest - {@link AnimatableValue}
+ * @param config - the timing animation configuration - {@link TimingConfig}
+ * @param callback - a function called on animation complete - {@link AnimationCallback}
  * @returns an [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming
  */

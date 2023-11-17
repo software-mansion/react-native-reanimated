@@ -154,6 +154,9 @@ export type AnimatedSensor<T extends Value3D | ValueRotation> = {
   config: SensorConfig;
 };
 
+/**
+ * A function called upon animation completion. If the animation is cancelled, the callback will receive `false` as the argument; otherwise, it will receive `true`.
+ */
 export type AnimationCallback = (
   finished?: boolean,
   current?: AnimatableValue
