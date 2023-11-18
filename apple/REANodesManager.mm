@@ -534,6 +534,14 @@ using namespace facebook::react;
   } else if ([propName isEqualToString:@"zIndex"]) {
     NSInteger zIndex = view.reactZIndex;
     result = [@(zIndex) stringValue];
+  } else if ([propName isEqualToString:@"width"]) {
+    result = [@(view.frame.size.width) stringValue];
+  } else if ([propName isEqualToString:@"height"]) {
+    result = [@(view.frame.size.height) stringValue];
+  } else if ([propName isEqualToString:@"top"]) {
+    result = [@(view.frame.origin.y) stringValue];
+  } else if ([propName isEqualToString:@"left"]) {
+    result = [@(view.frame.origin.x) stringValue];
   }
 
   return result;
