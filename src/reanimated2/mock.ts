@@ -12,6 +12,10 @@ const ID = (t) => t;
 const IMMEDIATE_CB_INVOCATION = (cb: () => unknown) => cb();
 
 class BaseAnimationMock {
+  createInstance() {
+    return this;
+  }
+
   duration(_: number) {
     return this;
   }
