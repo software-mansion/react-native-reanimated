@@ -72,6 +72,26 @@ class BaseAnimationMock {
     return this;
   }
 
+  getDelay() {
+    return 0;
+  }
+
+  getDelayFunction() {
+    return NOOP;
+  }
+
+  getDuration() {
+    return 300;
+  }
+
+  getReduceMotion() {
+    return ReduceMotion.System;
+  }
+
+  getAnimationAndConfig() {
+    return [NOOP, {}];
+  }
+
   build() {
     return () => ({ initialValues: {}, animations: {} });
   }
