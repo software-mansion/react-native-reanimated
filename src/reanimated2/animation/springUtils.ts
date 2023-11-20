@@ -100,7 +100,6 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   }
 
   if (
-    config?.clamp &&
     config.clamp?.min &&
     config.clamp?.max &&
     config.clamp.min > config.clamp.max
