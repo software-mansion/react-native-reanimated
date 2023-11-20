@@ -23,7 +23,6 @@
 #include "JNIHelper.h"
 #include "LayoutAnimations.h"
 #include "NativeReanimatedModule.h"
-#include "ReanimatedMacros.h"
 #include "UIScheduler.h"
 
 namespace reanimated {

@@ -5,7 +5,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "ReanimatedMacros.h"
 
 #include "WorkletRuntimeRegistry.h"
 

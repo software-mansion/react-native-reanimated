@@ -1,8 +1,7 @@
-#include "ReanimatedMacros.h"
 #ifndef NDEBUG
 
-#include <memory>
 #include "JSLogger.h"
+#include <memory>
 
 namespace reanimated {
 

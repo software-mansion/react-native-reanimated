@@ -1,7 +1,6 @@
 #include "WorkletRuntimeDecorator.h"
 #include "JSISerializer.h"
 #include "ReanimatedJSIUtils.h"
-#include "ReanimatedMacros.h"
 #include "Shareables.h"
 
 #ifdef ANDROID

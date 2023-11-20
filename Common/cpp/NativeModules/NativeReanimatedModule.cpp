@@ -1,5 +1,4 @@
 #include "NativeReanimatedModule.h"
-#include "ReanimatedMacros.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #if REACT_NATIVE_MINOR_VERSION >= 72

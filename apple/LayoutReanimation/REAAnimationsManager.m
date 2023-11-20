@@ -2,7 +2,6 @@
 #import <RNReanimated/REASharedElement.h>
 #import <RNReanimated/REASharedTransitionManager.h>
 #import <RNReanimated/REASwizzledUIManager.h>
-#import <RNReanimated/ReanimatedMacros.h>
 #import <React/RCTComponentData.h>
 #import <React/RCTTextView.h>
 #import <React/UIView+Private.h>

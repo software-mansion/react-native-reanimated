@@ -1,7 +1,5 @@
 #pragma once
 
-#include "ReanimatedMacros.h"
-
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManager.h>
 #endif

@@ -2,7 +2,6 @@
 
 #include <jsi/jsi.h>
 #include <string>
-#include "ReanimatedMacros.h"
 
 using namespace facebook;
 

@@ -1,5 +1,4 @@
 #include "RNRuntimeDecorator.h"
-#include "ReanimatedMacros.h"
 #ifndef NDEBUG
 #include "ReanimatedVersion.h"
 #endif // NDEBUG

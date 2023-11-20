@@ -22,7 +22,6 @@
 #ifndef NDEBUG
 #include "ReanimatedVersion.h"
 #endif // NDEBUG
-#include "ReanimatedMacros.h"
 #include "WorkletRuntime.h"
 #include "WorkletRuntimeCollector.h"
 

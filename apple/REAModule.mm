@@ -22,7 +22,6 @@
 #import <RNReanimated/REAUIKit.h>
 #import <RNReanimated/RNRuntimeDecorator.h>
 #import <RNReanimated/ReanimatedJSIUtils.h>
-#import <RNReanimated/ReanimatedMacros.h>
 #import <RNReanimated/SingleInstanceChecker.h>
 #import <RNReanimated/WorkletRuntime.h>
 #import <RNReanimated/WorkletRuntimeCollector.h>

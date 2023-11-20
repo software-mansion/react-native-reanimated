@@ -5,7 +5,6 @@
 #include <memory>
 #include <string>
 #include "JNIHelper.h"
-#include "ReanimatedMacros.h"
 
 namespace reanimated {
 

@@ -1,6 +1,5 @@
 #import "AppDelegate.h"
 
-#import <RNReanimated/ReanimatedMacros.h>
 #import <React/RCTBundleURLProvider.h>
 
 @implementation AppDelegate

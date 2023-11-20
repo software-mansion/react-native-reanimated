@@ -1,7 +1,5 @@
 #pragma once
 
-#include "ReanimatedMacros.h"
-
 // JS_RUNTIME_HERMES is only set on Android so we have to check __has_include
 // on iOS.
 #if __APPLE__ &&    \

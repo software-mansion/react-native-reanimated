@@ -3,7 +3,6 @@
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REASnapshot.h>
 #import <RNReanimated/REAUIKit.h>
-#import <RNReanimated/ReanimatedMacros.h>
 #import <React/RCTUIManager.h>
 
 NS_ASSUME_NONNULL_BEGIN

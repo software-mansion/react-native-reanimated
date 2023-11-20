@@ -1,7 +1,6 @@
 #include "ReanimatedVersion.h"
 #include <regex>
 #include <string>
-#include "ReanimatedMacros.h"
 
 #ifdef REANIMATED_VERSION
 #define STRINGIZE(x) #x

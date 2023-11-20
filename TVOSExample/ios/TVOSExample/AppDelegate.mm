@@ -48,11 +48,11 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 
 #if !TARGET_OS_TV
   if (@available(iOS 13.0, *)) {
-    rootView.backgroundColor = [UIColor systemBackgroundColor];
+      rootView.backgroundColor = [UIColor systemBackgroundColor];
   } else
 #endif
   {
-    rootView.backgroundColor = [UIColor whiteColor];
+      rootView.backgroundColor = [UIColor whiteColor];
   }
 
   self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
@@ -87,7 +87,7 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
 {
-#ifdef DEBUG
+#ifndef NDEBUG
   return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];
 #else
   return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];

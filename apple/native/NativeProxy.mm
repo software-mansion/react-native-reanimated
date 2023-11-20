@@ -10,7 +10,6 @@
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REASwizzledUIManager.h>
 #import <RNReanimated/RNGestureHandlerStateManager.h>
-#import <RNReanimated/ReanimatedMacros.h>
 #import <RNReanimated/ReanimatedRuntime.h>
 #import <RNReanimated/ReanimatedSensorContainer.h>
 
