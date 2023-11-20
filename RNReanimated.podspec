@@ -43,13 +43,18 @@ Pod::Spec.new do |s|
     "Common/cpp/hidden_headers/**"
   ]
 
+  gcc_debug_definitions =  "$(inherited)"
+  if config[:react_native_minor_version] >= 73 || !is_release
+    gcc_debug_definitions << " HERMES_ENABLE_DEBUGGER=1"
+  end
+
   s.pod_target_xcconfig = {
     "USE_HEADERMAP" => "YES",
     "DEFINES_MODULE" => "YES",
     "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_TARGET_SRCROOT)\" \"$(PODS_ROOT)/RCT-Folly\" \"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\" \"$(PODS_ROOT)/Headers/Private/Yoga\"",
     "FRAMEWORK_SEARCH_PATHS" => "\"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes\"",
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
-    "GCC_PREPROCESSOR_DEFINITIONS[config=Debug]" => "$(inherited) HERMES_ENABLE_DEBUGGER=1",
+    "GCC_PREPROCESSOR_DEFINITIONS[config=Debug]" => gcc_debug_definitions,
     "GCC_PREPROCESSOR_DEFINITIONS[config=Release]" => "$(inherited) NDEBUG=1",
   }
   s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags
