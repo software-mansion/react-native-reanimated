@@ -18,50 +18,48 @@ version_flag = '-DREANIMATED_VERSION=' + reanimated_package_json["version"]
 debug_flag = is_release ? '-DNDEBUG' : ''
 ios_min_version = $config[:react_native_minor_version] >= 73 ? '13.4' : '9.0'
 
-module LegacyModule
-  def self.install_modules_dependencies(s)
-    using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
-    s.dependency "React-Core"
-    if $new_arch_enabled
-      s.dependency "React-RCTFabric"
-      s.dependency "React-Codegen"
-    end
-    s.dependency "RCT-Folly"
-    s.dependency "RCTRequired"
-    s.dependency "RCTTypeSafety"
-    s.dependency 'FBLazyVector'
-    if $config[:react_native_minor_version] <= 71
-      s.dependency 'FBReactNativeSpec'
-    end
-    s.dependency 'React-Core'
-    s.dependency 'React-CoreModules'
-    s.dependency 'React-Core/DevSupport'
-    if !$config[:is_tvos_target]
-      s.dependency 'React-RCTActionSheet'
-    end
-    s.dependency 'React-RCTNetwork'
-    s.dependency 'React-RCTAnimation'
-    s.dependency 'React-RCTLinking'
-    s.dependency 'React-RCTBlob'
-    s.dependency 'React-RCTSettings'
-    s.dependency 'React-RCTText'
-    s.dependency 'React-RCTImage'
-    s.dependency 'React-Core/RCTWebSocket'
-    s.dependency 'React-cxxreact'
-    s.dependency 'React-jsi'
-    s.dependency 'React-jsiexecutor'
-    s.dependency 'React-jsinspector'
-    s.dependency 'Yoga'
-    s.dependency 'DoubleConversion'
-    s.dependency 'glog'
-    if using_hermes && !$config[:is_tvos_target] && $config[:react_native_minor_version] >= 70
-      s.dependency 'React-hermes'
-      s.dependency 'hermes-engine'
-    end
-    s.dependency 'React-callinvoker'
-    if $config[:react_native_minor_version] >= 72 && !$new_arch_enabled
-      s.dependency 'React-RCTAppDelegate'
-    end
+def self.install_modules_dependencies_legacy(s)
+  using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
+  s.dependency "React-Core"
+  if $new_arch_enabled
+    s.dependency "React-RCTFabric"
+    s.dependency "React-Codegen"
+  end
+  s.dependency "RCT-Folly"
+  s.dependency "RCTRequired"
+  s.dependency "RCTTypeSafety"
+  s.dependency 'FBLazyVector'
+  if $config[:react_native_minor_version] <= 71
+    s.dependency 'FBReactNativeSpec'
+  end
+  s.dependency 'React-Core'
+  s.dependency 'React-CoreModules'
+  s.dependency 'React-Core/DevSupport'
+  if !$config[:is_tvos_target]
+    s.dependency 'React-RCTActionSheet'
+  end
+  s.dependency 'React-RCTNetwork'
+  s.dependency 'React-RCTAnimation'
+  s.dependency 'React-RCTLinking'
+  s.dependency 'React-RCTBlob'
+  s.dependency 'React-RCTSettings'
+  s.dependency 'React-RCTText'
+  s.dependency 'React-RCTImage'
+  s.dependency 'React-Core/RCTWebSocket'
+  s.dependency 'React-cxxreact'
+  s.dependency 'React-jsi'
+  s.dependency 'React-jsiexecutor'
+  s.dependency 'React-jsinspector'
+  s.dependency 'Yoga'
+  s.dependency 'DoubleConversion'
+  s.dependency 'glog'
+  if using_hermes && !$config[:is_tvos_target] && $config[:react_native_minor_version] >= 70
+    s.dependency 'React-hermes'
+    s.dependency 'hermes-engine'
+  end
+  s.dependency 'React-callinvoker'
+  if $config[:react_native_minor_version] >= 72 && !$new_arch_enabled
+    s.dependency 'React-RCTAppDelegate'
   end
 end
 
@@ -105,6 +103,6 @@ Pod::Spec.new do |s|
   if defined?(install_modules_dependencies()) != nil
     install_modules_dependencies(s)
   else
-    LegacyModule.install_modules_dependencies(s)
+    install_modules_dependencies_legacy(s)
   end
 end
