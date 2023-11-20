@@ -37,6 +37,7 @@ function stopObservingProgress(
 function createLayoutAnimationManager() {
   'worklet';
   const enteringAnimationForTag = new Map();
+  const layoutAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
 
   return {
@@ -62,11 +63,16 @@ function createLayoutAnimationManager() {
       if (type === LayoutAnimationType.ENTERING) {
         enteringAnimationForTag.set(tag, currentAnimation);
       } else if (type === LayoutAnimationType.LAYOUT) {
-        // When layout animation is requested, but entering is still running, we merge
+        // When layout animation is requested, but entering or previous layout is still running, we merge
         // new layout animation targets into the ongoing animation
         const enteringAnimation = enteringAnimationForTag.get(tag);
+        const layoutAnimation = layoutAnimationForTag.get(tag);
+        layoutAnimationForTag.set(tag, currentAnimation);
         if (enteringAnimation) {
           currentAnimation = { ...enteringAnimation, ...style.animations };
+        }
+        if (layoutAnimation) {
+          currentAnimation = { ...layoutAnimation, ...currentAnimation };
         }
       }
 
@@ -86,6 +92,7 @@ function createLayoutAnimationManager() {
         if (finished) {
           enteringAnimationForTag.delete(tag);
           mutableValuesForTag.delete(tag);
+          layoutAnimationForTag.delete(tag);
           const shouldRemoveView = type === LayoutAnimationType.EXITING;
           stopObservingProgress(tag, value, shouldRemoveView);
         }
