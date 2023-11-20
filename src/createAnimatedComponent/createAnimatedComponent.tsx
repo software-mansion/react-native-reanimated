@@ -458,8 +458,11 @@ export function createAnimatedComponent(
           ? (ref as HTMLElement)
           : findNodeHandle(ref as Component);
 
-        const { entering, sharedTransitionTag } = this.props;
-        if ((entering || sharedTransitionTag) && tag != null) {
+        const { layout, entering, exiting, sharedTransitionTag } = this.props;
+        if (
+          (layout || entering || exiting || sharedTransitionTag) &&
+          tag != null
+        ) {
           if (!shouldBeUseWeb()) {
             enableLayoutAnimations(true, false);
           }
