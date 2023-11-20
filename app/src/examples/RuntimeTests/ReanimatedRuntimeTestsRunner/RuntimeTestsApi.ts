@@ -2,36 +2,36 @@ import { makeMutable, runOnJS, runOnUI } from "react-native-reanimated";
 import { TestRunner } from "./TestRunner";
 import { TestComponent } from "./TestComponent";
 
-const RunnerState = new TestRunner();
+const testRunner = new TestRunner();
 
 export function describe(name: string, buildSuite: () => void) {
-  RunnerState.describe(name, buildSuite);
+  testRunner.describe(name, buildSuite);
 };
 
 export function beforeAll(job: () => void) {
-  RunnerState.beforeAll(job);
+  testRunner.beforeAll(job);
 }
 
 export function beforeEach(job: () => void) {
-  RunnerState.beforeEach(job);
+  testRunner.beforeEach(job);
 }
 
 export function afterEach(job: () => void) {
-  RunnerState.afterEach(job);
+  testRunner.afterEach(job);
 }
 
 export function afterAll(job: () => void) {
-  RunnerState.afterAll(job);
+  testRunner.afterAll(job);
 }
 
 export function test(name: string, testCase: () => void) {
-  RunnerState.test(name, testCase);
+  testRunner.test(name, testCase);
 };
 
 export async function render(component: any) {
-  const renderLock = RunnerState.getRenderLock();
+  const renderLock = testRunner.getRenderLock();
   renderLock.lock = true;
-  RunnerState.render(component);
+  testRunner.render(component);
   return waitForPropertyValueChange(renderLock, "lock");
 }
 
@@ -47,15 +47,15 @@ function waitForPropertyValueChange(targetObject, targetProperty, initialValue =
 }
 
 export function useTestRef(name: string): React.MutableRefObject<any> {
-  return RunnerState.useTestRef(name);
+  return testRunner.useTestRef(name);
 }
 
 export function getTestComponent(name: string): TestComponent {
-  return RunnerState.getTestComponent(name);
+  return testRunner.getTestComponent(name);
 }
 
 export async function runTests() {
-  await RunnerState.runTests();
+  await testRunner.runTests();
 }
 
 export async function wait(delay: number) {
@@ -65,12 +65,12 @@ export async function wait(delay: number) {
 }
 
 export function expect(value: any) {
-  return RunnerState.expect(value);
+  return testRunner.expect(value);
 };
 
 export function setConfig({ render }: { render: (component: any) => void }) {
-  RunnerState.configure({ render });
-  return RunnerState.getRenderLock();
+  testRunner.configure({ render });
+  return testRunner.getRenderLock();
 }
 
 const uiState: any = makeMutable(0);
