@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
-import { describe, test, expect, render, useTestRef, getTestComponent, wait, mockAnimationTimer, recordAnimationUpdates, beforeAll } from '../RuntimeTests';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, FadeIn } from 'react-native-reanimated';
+import { describe, test, expect, render, useTestRef, getTestComponent, wait, mockAnimationTimer, recordAnimationUpdates } from '../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { Snapshots } from './snapshots/Animations.snapshot';
 
 const AnimatedComponent = () => {
@@ -31,6 +31,20 @@ const AnimatedComponent = () => {
   );
 };
 
+const LayoutAnimation = () => {
+  const ref = useTestRef('AnimatedComponent')
+
+  return (
+    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: 'red' }}>
+      <Animated.View
+        ref={ref}
+        entering={FadeIn}
+        style={{ width: 50, height: 50, backgroundColor: 'black', margin: 30 }}
+      />
+    </View>
+  );
+};
+
 describe('Tests of animations', () => {
 
   test('withTiming - expect error', async () => {
@@ -53,6 +67,14 @@ describe('Tests of animations', () => {
     await render(<AnimatedComponent />);
     await wait(600);
     expect(updates.value).toMatchSnapshot(Snapshots.animation3);
+  });
+
+  test('layoutAnimation - entering', async () => {
+    await mockAnimationTimer();
+    const updates = await recordAnimationUpdates();
+    await render(<LayoutAnimation />);
+    await wait(600);
+    expect(updates.value).toMatchSnapshot(Snapshots.layoutAnimation);
   });
 
 });

@@ -1,168 +1,6 @@
-import { useRef } from "react";
-import { findNodeHandle } from "react-native";
-import { getViewProp, makeMutable, runOnJS, runOnUI } from "react-native-reanimated";
-
-type TestCase = {
-  name: string;
-  testCase: () => void;
-  componentsRefs: Record<string, React.MutableRefObject<any>>;
-  errors: string[];
-}
-type TestSuite = {
-  name: string;
-  buildSuite: () => void;
-  testCases: TestCase[];
-  beforeAll?: () => void;
-  afterAll?: () => void;
-  beforeEach?: () => void;
-  afterEach?: () => void;
-}
-let renderFnHolder: (component: any) => void = () => {};
-class TestRunner {
-  private testSuites: TestSuite[] = [];
-  private currentTestSuite: TestSuite | null = null;
-  private currentTestCase: TestCase | null = null;
-
-  public describe(name: string, buildSuite: () => void) {
-    this.testSuites.push({
-      name,
-      buildSuite,
-      testCases: [],
-    });
-  };
-
-  public test(name: string, testCase: () => void) {
-    if (!this.currentTestSuite) {
-      throw new Error("Undefined test suite context");
-    }
-    this.currentTestSuite.testCases.push({
-      name,
-      testCase,
-      componentsRefs: {},
-      errors: [],
-    });
-  };
-
-  public useTestRef(name: string): React.MutableRefObject<any> {
-    const ref = useRef();
-    if (!this.currentTestCase) {
-      throw new Error("Undefined test case context");
-    }
-    this.currentTestCase.componentsRefs[name] = ref;
-    return ref;
-  }
-
-  public getTestComponent(name: string): TestComponent {
-    if (!this.currentTestCase) {
-      throw new Error("Undefined test case context");
-    }
-    return new TestComponent(this.currentTestCase.componentsRefs[name]);
-  }
-
-  public async runTests() {
-    for (const testSuite of this.testSuites) {
-      this.currentTestSuite = testSuite;
-      console.log(`+ Running test suite: ${testSuite.name}`);
-      console.log(testSuite)
-      testSuite.buildSuite();
-      if (testSuite.beforeAll) {
-        await testSuite.beforeAll();
-      }
-      for (const testCase of testSuite.testCases) {
-        this.currentTestCase = testCase;
-        console.log(`\t - Running test case: ${testCase.name}`);
-        if (testSuite.beforeEach) {
-          await testSuite.beforeEach();
-        }
-        await testCase.testCase();
-        if (testCase.errors.length > 0) {
-          console.error(testCase.errors);
-          console.log("\t -----------------------------------------------");
-        } else {
-          console.log("\t ✅ OK");
-          console.log("\t -----------------------------------------------");
-        }
-        if (testSuite.afterEach) {
-          await testSuite.afterEach();
-        }
-        this.currentTestCase = null;
-        await render(null);
-      }
-      if (testSuite.afterAll) {
-        await testSuite.afterAll();
-      }
-      this.currentTestSuite = null;
-    }
-    this.testSuites = [];
-    await unmockAnimationTimer();
-    await stopRecordingAnimationUpdates();
-    console.log("End of tests run 🏁");
-  }
-
-  public expect(value: any) {
-    if (!this.currentTestCase) {
-      throw new Error("Undefined test case context");
-    }
-    const errors = this.currentTestCase?.errors;
-    return {
-      toBe: (expected: any) => {
-        if (value !== expected) {
-          errors.push(`Expected ${value} received ${expected}`);
-        }
-      },
-      toMatchSnapshot: (expected: any) => {
-        if (JSON.stringify(value) !== JSON.stringify(expected)) {
-          errors.push(`Expected ${JSON.stringify(value)} received ${JSON.stringify(expected)}`);
-        }
-      }
-    };
-  };
-
-  public beforeAll(job: () => void) {
-    if (!this.currentTestSuite) {
-      throw new Error("Undefined test suite context");
-    }
-    this.currentTestSuite.beforeAll = job;
-  }
-
-  public afterAll(job: () => void) {
-    if (!this.currentTestSuite) {
-      throw new Error("Undefined test suite context");
-    }
-    this.currentTestSuite.afterAll = job;
-  }
-
-  public beforeEach(job: () => void) {
-    if (!this.currentTestSuite) {
-      throw new Error("Undefined test suite context");
-    }
-    this.currentTestSuite.beforeEach = job;
-  }
-
-  public afterEach(job: () => void) {
-    if (!this.currentTestSuite) {
-      throw new Error("Undefined test suite context");
-    }
-    this.currentTestSuite.afterEach = job;
-  }
-}
-
-class TestComponent {
-  private ref: React.MutableRefObject<any>;
-  constructor(ref: React.MutableRefObject<any>) {
-    this.ref = ref;
-  }
-  public getStyle(propName) {
-    return this.ref.current.props.style[propName];
-  }
-  public async getAnimatedStyle(propName) {
-    const tag = findNodeHandle(this.ref.current) ?? -1;
-    return getViewProp(tag, propName);
-  }
-  public getTag() {
-    return findNodeHandle(this.ref.current) ?? -1;
-  }
-};
+import { makeMutable, runOnJS, runOnUI } from "react-native-reanimated";
+import { TestRunner } from "./TestRunner";
+import { TestComponent } from "./TestComponent";
 
 const RunnerState = new TestRunner();
 
@@ -190,10 +28,11 @@ export function test(name: string, testCase: () => void) {
   RunnerState.test(name, testCase);
 };
 
-export async function render(component) {
-  conditionalWaiting.lock = true;
-  renderFnHolder(component);
-  return waitForPropertyValueChange(conditionalWaiting, "lock");
+export async function render(component: any) {
+  const renderLock = RunnerState.getRenderLock();
+  renderLock.lock = true;
+  RunnerState.render(component);
+  return waitForPropertyValueChange(renderLock, "lock");
 }
 
 function waitForPropertyValueChange(targetObject, targetProperty, initialValue = true) {
@@ -229,12 +68,9 @@ export function expect(value: any) {
   return RunnerState.expect(value);
 };
 
-const conditionalWaiting = {
-  lock: false,
-};
 export function setConfig({ render }: { render: (component: any) => void }) {
-  renderFnHolder = render;
-  return conditionalWaiting;
+  RunnerState.configure({ render });
+  return RunnerState.getRenderLock();
 }
 
 const uiState: any = makeMutable(0);
@@ -358,6 +194,7 @@ export async function recordAnimationUpdates(mergeOperations = true) {
           updates.value[operation.tag].push(updates.value[operation.tag]);
         }
         updates.value = operations;
+        originalUpdateProps(operations);
       };
 
     if (global._IS_FABRIC) {
@@ -365,6 +202,29 @@ export async function recordAnimationUpdates(mergeOperations = true) {
     } else {
       global._updatePropsPaper = mockedUpdateProps;
     }
+
+    const originalNotifyAboutProgress = global._notifyAboutProgress;
+    global.originalNotifyAboutProgress = originalNotifyAboutProgress;
+    global._notifyAboutProgress = mergeOperations
+      ? (tag, value, isSharedTransition) => {
+        if (updates.value == null) {
+          updates.value = [];
+        }
+        updates.value.push({... value});
+        updates.value = [...updates.value];
+        originalNotifyAboutProgress(tag, value, isSharedTransition);
+      }
+      : (tag, value, isSharedTransition) => {
+        if (updates.value == null) {
+          updates.value = {};
+        }
+        if (updates.value[tag] == undefined) {
+          updates.value[tag] = [];
+        }
+        updates.value[tag].push(value);
+        updates.value = { ...updates.value };
+        originalNotifyAboutProgress(tag, value, isSharedTransition);
+      }
   });
   return updates;
 }
@@ -372,14 +232,17 @@ export async function recordAnimationUpdates(mergeOperations = true) {
 export async function stopRecordingAnimationUpdates() {
   await runOnUiSync(() => {
     "worklet";
-    if (!global.originalUpdateProps) {
-      return;
+    if (global.originalUpdateProps) {
+      if (global._IS_FABRIC) {
+        global._updatePropsFabric = global.originalUpdateProps;
+      } else {
+        global._updatePropsPaper = global.originalUpdateProps;
+      }
+      global.originalUpdateProps = undefined;
     }
-    if (global._IS_FABRIC) {
-      global._updatePropsFabric = global.originalUpdateProps;
-    } else {
-      global._updatePropsPaper = global.originalUpdateProps;
+    if (global.originalNotifyAboutProgress) {
+      global._notifyAboutProgress = global.originalNotifyAboutProgress;
+      global.originalNotifyAboutProgress = undefined;
     }
-    global.originalUpdateProps = undefined
   });
 }

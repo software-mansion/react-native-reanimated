@@ -111,7 +111,7 @@ import WorkletExample from './WorkletExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
-import RuntimeTestsRunner from './RuntimeTestsRunner/RuntimeTestsRunner';
+import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
 
 interface Example {
   icon?: string;
@@ -129,8 +129,8 @@ export const EXAMPLES: Record<string, Example> = {
   },
   RuntimeTests: {
     icon: '⚙️',
-    title: 'RuntimeTestsRunner',
-    screen: RuntimeTestsRunner,
+    title: 'RuntimeTestsExample',
+    screen: RuntimeTestsExample,
   },
   WorkletRuntimeExample: {
     icon: '🏃‍♂️',

@@ -1,23 +1,23 @@
-import { View, Button, StyleSheet } from 'react-native';
+import { View, Button, StyleSheet, Text } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { runTests, setConfig } from './RuntimeTests';
-import './tests/Animations.test';
+import { runTests, setConfig } from './RuntimeTestsApi';
 
-let conditionalWaiting;
+let renderLock: { lock: boolean } = { lock: false };
 export default function RuntimeTestsRunner() {
   const [component, renderComponent] = useState(false); 
   useEffect(() => {
-    if (conditionalWaiting) {
-      conditionalWaiting.lock = false;
+    if (renderLock) {
+      renderLock.lock = false;
     }
   }, [component]);
   return (
     <View style={styles.container}>
       <Button title="Run tests" onPress={async () => {
-        conditionalWaiting = setConfig({ render: renderComponent});
+        renderLock = setConfig({ render: renderComponent });
         await runTests();
       }} />
       { component }
+      { !component && <Text> Press "Run tests" button to start tests </Text> }
     </View>
   );
 }
