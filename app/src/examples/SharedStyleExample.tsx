@@ -12,7 +12,7 @@ export default function SharedStyleExample() {
 
   const [blueCounter, setBlueCounter] = useState<number>(0);
   const [greenCounter, setGreenCounter] = useState<number>(0);
-  const [itemList, setItemList] = useState<any>([]);
+  const [itemList, setItemList] = useState<React.ReactNode[]>([]);
   const [toggleState, setToggleState] = useState<boolean>(false);
 
   const config = {

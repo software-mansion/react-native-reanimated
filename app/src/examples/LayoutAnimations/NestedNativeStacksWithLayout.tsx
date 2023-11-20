@@ -2,11 +2,19 @@ import Animated, { SlideOutLeft, SlideOutRight } from 'react-native-reanimated';
 import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {
+  NativeStackScreenProps,
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
 
-const Stack = createNativeStackNavigator();
+type ParamList = {
+  First?: {};
+  Second?: {};
+};
 
-function First({ navigation }: { navigation: any }) {
+const Stack = createNativeStackNavigator<ParamList>();
+
+function First({ navigation }: NativeStackScreenProps<ParamList, 'First'>) {
   return (
     <>
       <Button title="Navigate" onPress={() => navigation.navigate('Second')} />
