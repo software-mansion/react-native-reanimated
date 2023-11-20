@@ -29,10 +29,7 @@ export function test(name: string, testCase: () => void) {
 };
 
 export async function render(component: any) {
-  const renderLock = testRunner.getRenderLock();
-  renderLock.lock = true;
-  testRunner.render(component);
-  return waitForPropertyValueChange(renderLock, "lock");
+  return testRunner.render(component);
 }
 
 function waitForPropertyValueChange(targetObject, targetProperty, initialValue = true) {
@@ -68,12 +65,10 @@ export function expect(value: any) {
   return testRunner.expect(value);
 };
 
-export function setConfig({ render }: { render: (component: any) => void }) {
-  testRunner.configure({ render });
-  return testRunner.getRenderLock();
+export function configure(config: any) {
+  return testRunner.configure(config);
 }
 
-const uiState: any = makeMutable(0);
 const lockObject = {
   lock: false
 }
@@ -81,19 +76,6 @@ function unlock() {
   lockObject.lock = false;
 }
 async function runOnUiSync(worklet: () => void) {
-  // uiState.value = 1;
-  // console.log("a")
-  // runOnUI(() => {
-  //   "worklet";
-  //   console.log("b")
-  //   worklet();
-  //   uiState._value = 2;
-  // })();
-  // while (uiState.value !== 2) {
-  //   console.log("waiting")
-  // }
-  // console.log("c")
-  // uiState.value = 0;
   lockObject.lock = true;
   runOnUI(() => {
     "worklet";

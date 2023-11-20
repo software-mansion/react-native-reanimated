@@ -1,6 +1,6 @@
 import { View, Button, StyleSheet, Text } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { runTests, setConfig } from './RuntimeTestsApi';
+import { runTests, configure } from './RuntimeTestsApi';
 
 let renderLock: { lock: boolean } = { lock: false };
 export default function RuntimeTestsRunner() {
@@ -13,7 +13,7 @@ export default function RuntimeTestsRunner() {
   return (
     <View style={styles.container}>
       <Button title="Run tests" onPress={async () => {
-        renderLock = setConfig({ render: renderComponent });
+        renderLock = configure({ render: renderComponent });
         await runTests();
       }} />
       { component }

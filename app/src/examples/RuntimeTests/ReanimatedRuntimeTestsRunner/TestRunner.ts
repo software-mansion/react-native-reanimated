@@ -10,16 +10,15 @@ export class TestRunner {
   private renderHook: (component: any) => void = () => {};
   private renderLock: { lock: boolean } = { lock: false };
 
-  public configure({ render }: { render: (component: any) => void }) {
-    this.renderHook = render;
-  }
-
-  public render(component: any) {
-    this.renderHook(component);
-  }
-
-  public getRenderLock() {
+  public configure(config: { render: (component: any) => void }) {
+    this.renderHook = config.render;
     return this.renderLock;
+  }
+
+  public async render(component: any) {
+    this.renderLock.lock = true;
+    this.renderHook(component);
+    return this.waitForPropertyValueChange(this.renderLock, "lock");
   }
 
   public describe(name: string, buildSuite: () => void) {
@@ -143,5 +142,16 @@ export class TestRunner {
       throw new Error("Undefined test suite context");
     }
     this.currentTestSuite.afterEach = job;
+  }
+
+  private waitForPropertyValueChange(targetObject, targetProperty, initialValue = true) {
+    return new Promise((resolve) => {
+      const interval = setInterval(() => {
+        if (targetObject[targetProperty] != initialValue) {
+          clearInterval(interval);
+          resolve(targetObject[targetProperty]);
+        }
+      }, 10);
+    });
   }
 }
