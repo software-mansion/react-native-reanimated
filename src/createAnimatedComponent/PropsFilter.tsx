@@ -9,7 +9,9 @@ import type {
   AnimatedComponentProps,
   AnimatedProps,
   InitialComponentProps,
-} from './utils';
+  IAnimatedComponentInternal,
+  IPropsFilter,
+} from './commonTypes';
 import { flattenArray, has } from './utils';
 import { StyleSheet } from 'react-native';
 
@@ -18,12 +20,12 @@ function dummyListener() {
   // event is used.
 }
 
-export class PropsFilter {
+export class PropsFilter implements IPropsFilter {
   private _initialStyle = {};
   private _isFirstRender = true;
 
   public filterNonAnimatedProps(
-    component: React.Component<unknown, unknown>
+    component: React.Component<unknown, unknown> & IAnimatedComponentInternal
   ): Record<string, unknown> {
     const inputProps =
       component.props as AnimatedComponentProps<InitialComponentProps>;

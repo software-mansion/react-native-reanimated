@@ -10,6 +10,7 @@ import type {
   ViewStyle,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  ImageProps,
 } from 'react-native';
 import { Button, View, Text, Image, ScrollView, FlatList } from 'react-native';
 import Animated, {
@@ -1461,6 +1462,17 @@ function AnimatedComponentStylePropTest() {
 }
 
 function UseAnimatedRefTest() {
+  function UseAnimatedRefTestClassComponent() {
+    const animatedRef = useAnimatedRef<React.Component<ImageProps>>();
+    const AnimatedImage = Animated.createAnimatedComponent(Image);
+    return (
+      <>
+        <AnimatedImage ref={animatedRef} source={{}} />
+        <Animated.Image ref={animatedRef} source={{}} />
+      </>
+    );
+  }
+
   function UseAnimatedRefTestFunctionComponent() {
     const FunctionComponent = (props: ViewProps) => {
       return <View {...props} />;

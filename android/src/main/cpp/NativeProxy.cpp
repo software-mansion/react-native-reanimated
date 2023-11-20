@@ -5,6 +5,9 @@
 #include <react/jni/JMessageQueueThread.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
+#ifdef RCT_NEW_ARCH_ENABLED
+#include <react/fabric/Binding.h>
+#endif
 
 #include <memory>
 #include <string>

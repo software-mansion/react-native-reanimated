@@ -425,6 +425,7 @@ var require_makeWorklet = __commonJS({
     }
     function makeArrayFromCapturedBindings(ast, fun) {
       const closure = /* @__PURE__ */ new Map();
+      const isLocationAssignedMap = /* @__PURE__ */ new Map();
       (0, core_1.traverse)(ast, {
         Identifier(path) {
           if (!path.isReferencedIdentifier()) {
@@ -452,6 +453,20 @@ var require_makeWorklet = __commonJS({
             currentScope = currentScope.parent;
           }
           closure.set(name, path.node);
+          isLocationAssignedMap.set(name, false);
+        }
+      });
+      fun.traverse({
+        Identifier(path) {
+          if (!path.isReferencedIdentifier()) {
+            return;
+          }
+          const node = closure.get(path.node.name);
+          if (!node || isLocationAssignedMap.get(path.node.name)) {
+            return;
+          }
+          node.loc = path.node.loc;
+          isLocationAssignedMap.set(path.node.name, true);
         }
       });
       return Array.from(closure.values());
@@ -494,12 +509,20 @@ var require_processIfWorkletFunction = __commonJS({
     }
     exports2.processIfWorkletFunction = processIfWorkletFunction;
     function processWorkletFunction(path, state) {
-      const newFun = (0, makeWorklet_1.makeWorklet)(path, state);
-      const replacement = (0, types_1.callExpression)(newFun, []);
+      const workletFactory = (0, makeWorklet_1.makeWorklet)(path, state);
+      const workletFactoryCall = (0, types_1.callExpression)(workletFactory, []);
+      const originalWorkletLocation = path.node.loc;
+      if (originalWorkletLocation) {
+        workletFactoryCall.callee.loc = {
+          start: originalWorkletLocation.start,
+          end: originalWorkletLocation.start
+        };
+      }
       const needDeclaration = (0, types_1.isScopable)(path.parent) || (0, types_1.isExportNamedDeclaration)(path.parent);
-      path.replaceWith("id" in path.node && path.node.id && needDeclaration ? (0, types_1.variableDeclaration)("const", [
-        (0, types_1.variableDeclarator)(path.node.id, replacement)
-      ]) : replacement);
+      const replacement = "id" in path.node && path.node.id && needDeclaration ? (0, types_1.variableDeclaration)("const", [
+        (0, types_1.variableDeclarator)(path.node.id, workletFactoryCall)
+      ]) : workletFactoryCall;
+      path.replaceWith(replacement);
     }
   }
 });

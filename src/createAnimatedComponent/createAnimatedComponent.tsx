@@ -28,12 +28,15 @@ import { getReduceMotionFromConfig } from '../reanimated2/animation/util';
 import { maybeBuild } from '../animationBuilder';
 import { SkipEnteringContext } from '../reanimated2/component/LayoutAnimationConfig';
 import type { AnimateProps } from '../reanimated2';
-import { JSPropUpdater } from './JSPropUpdater';
+import JSPropsUpdater from './JSPropsUpdater';
 import type {
   AnimatedComponentProps,
   AnimatedProps,
   InitialComponentProps,
-} from './utils';
+  AnimatedComponentRef,
+  IAnimatedComponentInternal,
+  ViewInfo,
+} from './commonTypes';
 import { has, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
 import {
@@ -42,7 +45,6 @@ import {
   isWeb,
   shouldBeUseWeb,
 } from '../reanimated2/PlatformChecker';
-import type { ViewInfo } from './InlinePropManager';
 import { InlinePropManager } from './InlinePropManager';
 import { PropsFilter } from './PropsFilter';
 import {
@@ -70,14 +72,8 @@ function isSameAnimatedStyle(
 const isSameAnimatedProps = isSameAnimatedStyle;
 
 type Options<P> = {
-  setNativeProps: (ref: ComponentRef, props: P) => void;
+  setNativeProps: (ref: AnimatedComponentRef, props: P) => void;
 };
-
-interface ComponentRef extends Component {
-  setNativeProps?: (props: Record<string, unknown>) => void;
-  getScrollableNode?: () => ComponentRef;
-  getAnimatableRef?: () => ComponentRef;
-}
 
 export function createAnimatedComponent<P extends object>(
   component: FunctionComponent<P>,
@@ -99,17 +95,18 @@ export function createAnimatedComponent(
     `Looks like you're passing a function component \`${Component.name}\` to \`createAnimatedComponent\` function which supports only class components. Please wrap your function component with \`React.forwardRef()\` or use a class component instead.`
   );
 
-  class AnimatedComponent extends React.Component<
-    AnimatedComponentProps<InitialComponentProps>
-  > {
+  class AnimatedComponent
+    extends React.Component<AnimatedComponentProps<InitialComponentProps>>
+    implements IAnimatedComponentInternal
+  {
     _styles: StyleProps[] | null = null;
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _viewTag = -1;
     _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
-    _component: ComponentRef | HTMLElement | null = null;
+    _component: AnimatedComponentRef | HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
-    _JSPropUpdater = new JSPropUpdater();
+    _jsPropsUpdater = new JSPropsUpdater();
     _InlinePropManager = new InlinePropManager();
     _PropsFilter = new PropsFilter();
     _viewInfo?: ViewInfo;
@@ -126,7 +123,7 @@ export function createAnimatedComponent(
 
     componentDidMount() {
       this._attachNativeEvents();
-      this._JSPropUpdater.addOnJSPropsChangeListener(this);
+      this._jsPropsUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
@@ -142,7 +139,7 @@ export function createAnimatedComponent(
 
     componentWillUnmount() {
       this._detachNativeEvents();
-      this._JSPropUpdater.removeOnJSPropsChangeListener(this);
+      this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
       this._InlinePropManager.detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
@@ -159,13 +156,13 @@ export function createAnimatedComponent(
     _getEventViewRef() {
       // Make sure to get the scrollable node for components that implement
       // `ScrollResponder.Mixin`.
-      return (this._component as ComponentRef)?.getScrollableNode
-        ? (this._component as ComponentRef).getScrollableNode?.()
+      return (this._component as AnimatedComponentRef)?.getScrollableNode
+        ? (this._component as AnimatedComponentRef).getScrollableNode?.()
         : this._component;
     }
 
     _attachNativeEvents() {
-      const node = this._getEventViewRef() as ComponentRef;
+      const node = this._getEventViewRef() as AnimatedComponentRef;
       let viewTag = null; // We set it only if needed
 
       for (const key in this.props) {
@@ -238,7 +235,7 @@ export function createAnimatedComponent(
           prop.current.reattachNeeded
         ) {
           if (viewTag === null) {
-            const node = this._getEventViewRef() as ComponentRef;
+            const node = this._getEventViewRef() as AnimatedComponentRef;
             viewTag = findNodeHandle(options?.setNativeProps ? this : node);
           }
           prop.current.registerForEvents(viewTag as number, key);
@@ -250,10 +247,10 @@ export function createAnimatedComponent(
     _updateFromNative(props: StyleProps) {
       if (options?.setNativeProps) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        options.setNativeProps(this._component as ComponentRef, props);
+        options.setNativeProps(this._component as AnimatedComponentRef, props);
       } else {
         // eslint-disable-next-line no-unused-expressions
-        (this._component as ComponentRef)?.setNativeProps?.(props);
+        (this._component as AnimatedComponentRef)?.setNativeProps?.(props);
       }
     }
 
@@ -268,8 +265,9 @@ export function createAnimatedComponent(
       let viewConfig;
       // Component can specify ref which should be animated when animated version of the component is created.
       // Otherwise, we animate the component itself.
-      const component = (this._component as ComponentRef)?.getAnimatableRef
-        ? (this._component as ComponentRef).getAnimatableRef?.()
+      const component = (this._component as AnimatedComponentRef)
+        ?.getAnimatableRef
+        ? (this._component as AnimatedComponentRef).getAnimatableRef?.()
         : this;
 
       if (IS_WEB) {

@@ -47,6 +47,7 @@ import GetViewPropExample from './GetViewPropExample';
 import IPodExample from './IPodExample';
 import ImageStackExample from './SharedElementTransitions/ImageStack';
 import InvertedFlatListExample from './InvertedFlatListExample';
+import JSPropsExample from './JSPropsExample';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
 import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
 import LettersExample from './LettersExample';
@@ -109,6 +110,8 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
+import WithClampExample from './WithClampExample';
+import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 
 interface Example {
   icon?: string;
@@ -138,6 +141,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🪛',
     title: 'Modify',
     screen: ModifyExample,
+  },
+  JSPropsExample: {
+    icon: '🟨',
+    title: 'JS props',
+    screen: JSPropsExample,
   },
 
   // About
@@ -403,6 +411,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Pendulum example',
     screen: PendulumExample,
   },
+  SpringClampExample: {
+    icon: '🗜',
+    title: 'Spring with Clamp',
+    screen: WithClampExample,
+  },
   ReducedMotionExample: {
     icon: '⏸️',
     title: 'Reduced Motion',
@@ -417,6 +430,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⌨',
     title: 'Log test',
     screen: LogExample,
+  },
+  WorkletFactoryCrash: {
+    icon: '🏭',
+    title: 'Worklet factory crash',
+    screen: WorkletFactoryCrash,
   },
 
   // Old examples

@@ -2,11 +2,12 @@
 
 import type { AnimationConfig, AnimationNames, CustomConfig } from './config';
 import { Animations } from './config';
-import type { AnimatedComponentProps } from '../../../createAnimatedComponent/utils';
+import type { AnimatedComponentProps } from '../../../createAnimatedComponent/commonTypes';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { StyleProps } from '../../commonTypes';
 import { createAnimationWithExistingTransform } from './createAnimation';
 import {
+  extractTransformFromStyle,
   getProcessedConfig,
   handleEnteringAnimation,
   handleExitingAnimation,
@@ -77,7 +78,7 @@ function chooseAction(
   animationConfig: AnimationConfig,
   element: HTMLElement,
   transitionData: TransitionData,
-  transform?: NonNullable<TransformsStyle['transform']>
+  transform: TransformsStyle['transform'] | undefined
 ) {
   switch (animationType) {
     case LayoutAnimationType.ENTERING:
@@ -128,7 +129,7 @@ export function startWebLayoutAnimation<
     return;
   }
 
-  const transform = (props.style as StyleProps)?.transform;
+  const transform = extractTransformFromStyle(props.style as StyleProps);
 
   const animationName = transform
     ? createAnimationWithExistingTransform(initialAnimationName, transform)

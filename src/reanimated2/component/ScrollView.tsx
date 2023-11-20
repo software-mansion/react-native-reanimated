@@ -24,10 +24,14 @@ export const AnimatedScrollView = forwardRef(
   (props: AnimatedScrollViewProps, ref: ForwardedRef<AnimatedScrollView>) => {
     const { scrollViewOffset, ...restProps } = props;
     const animatedRef = (
-      ref === null ? useAnimatedRef<ScrollView>() : ref
+      ref === null
+        ? // eslint-disable-next-line react-hooks/rules-of-hooks
+          useAnimatedRef<ScrollView>()
+        : ref
     ) as AnimatedRef<AnimatedScrollView>;
 
     if (scrollViewOffset) {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       useScrollViewOffset(animatedRef, scrollViewOffset);
     }
 

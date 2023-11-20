@@ -25,6 +25,7 @@ export function useScrollViewOffset(
   initialRef?: SharedValue<number>
 ): SharedValue<number> {
   const offsetRef = useRef(
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     initialRef !== undefined ? initialRef : useSharedValue(0)
   );
 
