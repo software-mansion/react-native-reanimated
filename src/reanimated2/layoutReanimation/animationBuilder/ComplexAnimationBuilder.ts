@@ -17,7 +17,7 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   dampingRatioV?: number;
   massV?: number;
   stiffnessV?: number;
-  overshootClampingV?: boolean;
+  overshootClampingV?: number;
   restDisplacementThresholdV?: number;
   restSpeedThresholdV?: number;
   initialValues?: StyleProps;
@@ -156,13 +156,13 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
    */
   static overshootClamping<T extends typeof ComplexAnimationBuilder>(
     this: T,
-    overshootClamping: boolean
+    overshootClamping: number
   ) {
     const instance = this.createInstance();
     return instance.overshootClamping(overshootClamping);
   }
 
-  overshootClamping(overshootClamping: boolean): this {
+  overshootClamping(overshootClamping: number): this {
     this.overshootClampingV = overshootClamping;
     return this;
   }
