@@ -42,6 +42,14 @@ export default function useClampPlayground() {
     />
   </>)
 
+
+  const resetOptions = () => {
+    setLowerBound(initialState.lowerBound);
+    setUpperBound(initialState.upperBound);
+    setLowerSpringToValue(initialState.lowerSpringToValue);
+    setUpperSpringToValue(initialState.upperSpringToValue);
+  };
+
   const code = `width: withClamp({
     min: ${lowerBound}
     max: ${upperBound}
@@ -54,6 +62,6 @@ export default function useClampPlayground() {
     code,
     controls,
     example,
-    // resetOptions,
+    resetOptions,
   };
 }
