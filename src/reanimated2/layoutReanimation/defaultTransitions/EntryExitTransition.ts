@@ -78,7 +78,6 @@ export class EntryExitTransition
           }
           exitingValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               animations.transform!.push({
                 [transformProp]: delayFunction(
                   delay,
@@ -135,16 +134,13 @@ export class EntryExitTransition
           }
           enteringValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               animations.transform!.push({
                 [transformProp]: delayFunction(
                   delay + exitingDuration,
                   withSequence(
                     withTiming(
                       enteringValues.initialValues.transform
-                        ? // TODO TYPESCRIPT
-                          // @ts-ignore Read similar comment above.
-                          enteringValues.initialValues.transform[index][
+                        ? enteringValues.initialValues.transform[index][
                             transformProp as keyof TransformArrayItem
                           ]
                         : 0,
@@ -175,8 +171,6 @@ export class EntryExitTransition
           ? exitingValues.initialValues.transform
           : []
       ).concat(
-        // TODO TYPESCRIPT
-        // @ts-ignore Read similar comment above.
         (Array.isArray(enteringValues.animations.transform)
           ? enteringValues.animations.transform
           : []
@@ -246,6 +240,14 @@ export class EntryExitTransition
   };
 }
 
+/**
+ * Lets you combine two layout animations into a layout transition. You can modify the behavior by chaining methods like `.delay(500)`.
+ *
+ * @param exiting - Layout animation used when components are removed from layout (eg. `FadeOut`).
+ * @param entering - Layout animation used when components are added to layout (eg. `FadeIn`).
+ * @returns A custom layout transition. You pass it to the `layout` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions#combine-transition
+ */
 export function combineTransition(
   exiting: BaseAnimationBuilder | typeof BaseAnimationBuilder,
   entering: BaseAnimationBuilder | typeof BaseAnimationBuilder

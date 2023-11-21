@@ -38,7 +38,7 @@ export function nativeShouldBeMock() {
 }
 
 export function isFabric() {
-  return !!global._IS_FABRIC;
+  return !!(global as localGlobal)._IS_FABRIC;
 }
 
 export function isWindowAvailable() {

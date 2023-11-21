@@ -85,8 +85,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
         }
         initialValues.transform.forEach((transformStyle, index) => {
           Object.keys(transformStyle).forEach((transformProp: string) => {
-            parsedKeyframes[index.toString() + '_transform:' + transformProp] =
-              [];
+            parsedKeyframes[makeKeyframeKey(index, transformProp)] = [];
           });
         });
       } else {
@@ -160,16 +159,14 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
             if (!Array.isArray(keyframe.transform)) {
               return;
             }
-            keyframe.transform.forEach(
-              (transformStyle: { [key: string]: any }, index) => {
-                Object.keys(transformStyle).forEach((transformProp: string) => {
-                  addKeyPointWith(
-                    index.toString() + '_transform:' + transformProp,
-                    transformStyle[transformProp]
-                  );
-                });
-              }
-            );
+            keyframe.transform.forEach((transformStyle, index) => {
+              Object.keys(transformStyle).forEach((transformProp: string) => {
+                addKeyPointWith(
+                  makeKeyframeKey(index, transformProp),
+                  transformStyle[transformProp as keyof typeof transformStyle]
+                );
+              });
+            });
           } else {
             addKeyPointWith(key, keyframe[key]);
           }
@@ -242,9 +239,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
                   ? keyframePoints[0].easing
                   : Easing.linear,
               })
-            : withSequence.apply(
-                this,
-                keyframePoints.map((keyframePoint: KeyframePoint) =>
+            : withSequence(
+                ...keyframePoints.map((keyframePoint: KeyframePoint) =>
                   withTiming(keyframePoint.value, {
                     duration: keyframePoint.duration,
                     easing: keyframePoint.easing
@@ -258,7 +254,6 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
           if (!('transform' in animations)) {
             animations.transform = [];
           }
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           animations.transform!.push(<TransformArrayItem>{
             [key.split(':')[1]]: animation,
           });
@@ -271,9 +266,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
           initialValues[key].forEach(
             (transformProp: Record<string, number | string>, index: number) => {
               Object.keys(transformProp).forEach((transformPropKey: string) => {
-                addAnimation(
-                  index.toString() + '_transform:' + transformPropKey
-                );
+                addAnimation(makeKeyframeKey(index, transformPropKey));
               });
             }
           );
@@ -288,6 +281,11 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       };
     };
   };
+}
+
+function makeKeyframeKey(index: number, transformProp: string) {
+  'worklet';
+  return `${index}_transform:${transformProp}`;
 }
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.

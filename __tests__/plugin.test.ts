@@ -1582,4 +1582,32 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
   });
+
+  describe('for web configuration', () => {
+    it('skips initData when omitNativeOnlyData option is set to true', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var foo = 'bar';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, {}, { omitNativeOnlyData: true });
+      expect(code).toHaveWorkletData(0);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('includes initData when omitNativeOnlyData option is set to false', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var foo = 'bar';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, {}, { omitNativeOnlyData: false });
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+  });
 });
