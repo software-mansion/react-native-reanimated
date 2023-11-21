@@ -5,6 +5,7 @@ import styles from './styles.module.css';
 import BrowserOnly from '@docusaurus/BrowserOnly';
 import CodeBlock from '@theme/CodeBlock';
 
+import useClampPlayground from './useClampPlayground';
 import useSpringPlayground from './useSpringPlayground';
 import useTimingPlayground from './useTimingPlayground';
 import useInterpolateColorPlayground from './useInterpolateColorPlayground';
@@ -23,6 +24,7 @@ import {
 } from '@mui/material';
 
 export {
+  useClampPlayground,
   useSpringPlayground,
   useTimingPlayground,
   useInterpolateColorPlayground,
