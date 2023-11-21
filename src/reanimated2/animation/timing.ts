@@ -16,6 +16,7 @@ import type {
  * @param duration - Length of the animation (in milliseconds). Defaults to 300.
  * @param easing - An easing function which defines the animation curve. Defaults to `Easing.inOut(Easing.quad)`.
  * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Defaults to `ReduceMotion.System`.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming#config-
  */
 interface TimingConfig {
   duration?: number;
