@@ -10,3 +10,26 @@ It was created to be used with [withSpring](/docs/animations/withSpring) animati
 import { useClampPlayground } from '@site/src/components/InteractivePlayground';
 
 <InteractivePlayground usePlayground={useClampPlayground} />
+
+### Arguments
+
+#### `config`
+
+A dictionary with following values:
+
+| Name             | Type Description |
+| ---------------- | ---------------- | ------------------------------------------------ |
+| min <Optional /> | `number`         | The lowest value your animation can ever reach   |
+| max <Optional /> | `number`         | The greatest value your animation can ever reach |
+
+#### `animation`
+
+The spring animation you want to clamp.
+
+<div className="platform-compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>
