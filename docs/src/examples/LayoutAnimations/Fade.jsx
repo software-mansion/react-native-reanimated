@@ -59,7 +59,7 @@ export default function App() {
   }, [showExiting]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { height: 55 * fadeAnimation.length }]}>
       {showExiting
         ? fadeAnimation.map((animation) => (
             <View
@@ -71,7 +71,7 @@ export default function App() {
         : fadeAnimation.map((animation, i) => (
             <Animated.View
               entering={animation.enteringAnimation.delay(DELAY * i)}
-              exiting={animation.exitingAnimation.delay(500 * i)}
+              exiting={animation.exitingAnimation.delay(DELAY * i)}
               key={animation.enteringName}
               style={[styles.box, styles.enteringBox]}>
               <Text style={styles.enteringText}>{animation.enteringName}</Text>

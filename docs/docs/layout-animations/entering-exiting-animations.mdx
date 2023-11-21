@@ -10,16 +10,10 @@ Reanimated comes with a bunch of predefined animations you can customize. For mo
 
 ## Fade
 
-<Row>
+import Fade from '@site/src/examples/LayoutAnimations/Fade';
+import FadeSrc from '!!raw-loader!@site/src/examples/LayoutAnimations/Fade';
 
-<ThemedVideo
-  sources={{
-    light: '/recordings/layout-animations/fade_light.mov',
-    dark: '/recordings/layout-animations/fade_dark.mov',
-  }}
-/>
-
-<div style={{flexGrow: 1}}>
+<InteractiveExample src={FadeSrc} component={<Fade />} />
 
 `FadeX` lets you create a fading animation.
 
@@ -30,10 +24,6 @@ function App() {
   return <Animated.View entering={FadeIn} exiting={FadeOut} />;
 }
 ```
-
-</div>
-
-</Row>
 
 Available fade animations:
 
