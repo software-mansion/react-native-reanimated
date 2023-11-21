@@ -92,12 +92,14 @@ export default function InteractivePlayground(
   );
 }
 
-interface RangeProps {
+interface RangeProps<Type extends number | [number, number]> {
   min: number;
   max: number;
   step?: number;
   value: number;
-  onChange: Dispatch<number>;
+  onChange: Type extends number
+    ? Dispatch<number>
+    : [Dispatch<number>, Dispatch<number>];
   label: string;
 }
 
@@ -132,7 +134,7 @@ export function Range({
   onChange,
   label,
   step = 1,
-}: RangeProps) {
+}: RangeProps<number>) {
   return (
     <>
       <div className={styles.row}>
@@ -159,6 +161,56 @@ export function Range({
         onChange={(e: Event & { target: HTMLInputElement }) =>
           onChange(parseFloat(e.target.value))
         }
+      />
+    </>
+  );
+}
+
+export function DoubleRange({
+  min,
+  max,
+  value,
+  onChange,
+  label,
+  step = 1,
+}: RangeProps<[number, number]>) {
+  return (
+    <>
+      <div className={styles.row}>
+        <label>{label}</label>
+        {[0, 1].map((idx) => {
+          return (
+            <TextField
+              type="number"
+              hiddenLabel
+              size="small"
+              inputProps={{ min: min, max: max, step: step }}
+              sx={TextFieldStyling}
+              value={value[idx]}
+              onChange={(e) => {
+                const newValue = parseFloat(e.target.value);
+                onChange[idx](
+                  newValue > max[idx]
+                    ? max[idx]
+                    : newValue <= min[idx]
+                    ? min[idx]
+                    : newValue
+                );
+              }}
+            />
+          );
+        })}
+      </div>
+      <Slider
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        sx={RangeStyling}
+        onChange={(e: Event & { target: HTMLInputElement }) => {
+          onChange[0](parseFloat(e.target.value[0]));
+          onChange[1](parseFloat(e.target.value[1]));
+        }}
       />
     </>
   );

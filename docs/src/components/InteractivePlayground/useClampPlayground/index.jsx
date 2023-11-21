@@ -1,17 +1,59 @@
-import React from 'react';
+import React, {useState} from 'react';
+import { DoubleRange } from '..';
 import Example from './Example';
 
 
+const initialState = {
+  lowerBound: 100,
+  upperBound:300,
+  lowerSpringToValue:150,
+  upperSpringToValue:190
+
+};
+
 export default function useClampPlayground() {
+  const [lowerBound, setLowerBound] = useState(initialState.lowerBound);
+  const [upperBound, setUpperBound] = useState(initialState.upperBound);
+
+  const [lowerSpringToValue, setLowerSpringToValue] = useState(initialState.lowerSpringToValue);
+  const [upperSpringToValue, setUpperSpringToValue] = useState(initialState.upperBound);
+
   const example = (
-    <Example options={{lowerBound: 100, upperBound:220, lowerSpringToValue:150, upperSprintToValue: 200}}/>
+    <Example options={{lowerBound: lowerBound, upperBound:upperBound, lowerSpringToValue, upperSpringToValue}}/>
   )
+  
+  const controls = (
+  <>
+    <DoubleRange
+      label="Clamp limits"
+      min={0}
+      max={400}
+      step={10}
+      value={[lowerBound, upperBound]}
+      onChange={[setLowerBound, setUpperBound]}
+    />
+    <DoubleRange
+      label="Scope of movement"
+      min={0}
+      max={400}
+      step={10}
+      value={[lowerSpringToValue, upperSpringToValue]}
+      onChange={[setLowerSpringToValue, setUpperSpringToValue]}
+    />
+  </>)
+
+  const code = `width: withClamp({
+    min: ${lowerBound}
+    max: ${upperBound}
+  },
+  withSpring(width.value, config)
+)
+`
 
   return {
-    // code,
-    // controls,
+    code,
+    controls,
     example,
     // resetOptions,
-    // additionalComponents: { chart },
   };
 }

@@ -9,7 +9,7 @@ import Animated, {
 
 const VIOLET = '#b58df1';
 const BORDER_WIDTH = 4;
-const FRAME_WIDTH = 300;
+const FRAME_WIDTH = 400;
 const CLAMP_MARKER_HEIGHT = 40;
 
 interface ClampPlaygroundOptions {
@@ -23,6 +23,7 @@ interface Props {
   options: ClampPlaygroundOptions;
 }
 export default function useClampPlayground({ options }): Props {
+  const toggle = useSharedValue(false);
   const width = useSharedValue(100);
 
   const config = {
@@ -38,8 +39,13 @@ export default function useClampPlayground({ options }): Props {
       ),
     };
   });
+  const defaultStyle = useAnimatedStyle(() => {
+    return {
+      width: withSpring(width.value, config),
+    };
+  });
 
-  function renderExample(testedStyle, description) {
+  function renderExample(testedStyle, description, showClampMarkers) {
     return (
       <View>
         <Text style={styles.text}>{description}</Text>
@@ -58,14 +64,16 @@ export default function useClampPlayground({ options }): Props {
                 },
               ]}
             />
-            <View
-              style={[
-                styles.clampMarker,
-                {
-                  width: options.lowerBound,
-                },
-              ]}
-            />
+            {showClampMarkers && (
+              <View
+                style={[
+                  styles.clampMarker,
+                  {
+                    width: options.lowerBound,
+                  },
+                ]}
+              />
+            )}
           </View>
           <Animated.View style={[styles.movingBox, testedStyle]} />
           <View>
@@ -79,16 +87,18 @@ export default function useClampPlayground({ options }): Props {
                 },
               ]}
             />
-            <View
-              style={[
-                styles.clampMarker,
-                {
-                  marginTop: -100,
-                  width: FRAME_WIDTH - options.upperBound,
-                  alignSelf: 'flex-end',
-                },
-              ]}
-            />
+            {showClampMarkers && (
+              <View
+                style={[
+                  styles.clampMarker,
+                  {
+                    marginTop: -100,
+                    width: FRAME_WIDTH - options.upperBound,
+                    alignSelf: 'flex-end',
+                  },
+                ]}
+              />
+            )}
           </View>
         </View>
       </View>
@@ -97,15 +107,16 @@ export default function useClampPlayground({ options }): Props {
 
   return (
     <View style={styles.container}>
-      {renderExample(clampedStyle, 'Clamped spring')}
+      {renderExample(clampedStyle, 'Clamped spring', true)}
+      {renderExample(defaultStyle, 'Default spring', false)}
 
       <Button
         title="toggle"
         onPress={() => {
-          width.value =
-            width.value === options.upperSpringToValue
-              ? options.lowerSpringToValue
-              : options.upperSpringToValue;
+          toggle.value = !toggle.value;
+          width.value = toggle.value
+            ? options.lowerSpringToValue
+            : options.upperSpringToValue;
         }}
       />
     </View>
@@ -136,11 +147,13 @@ const styles = StyleSheet.create({
   movingBox: {
     zIndex: 1,
     height: 100,
-    opacity: 0.5,
-    backgroundColor: 'black',
+    opacity: 1,
+    borderColor: '#FFE780',
+    borderWidth: 5,
   },
   text: {
     fontSize: 16,
     marginVertical: 4,
+    color: VIOLET,
   },
 });
