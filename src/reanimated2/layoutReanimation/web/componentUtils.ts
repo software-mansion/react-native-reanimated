@@ -302,16 +302,6 @@ export function handleExitingAnimation(
 
   setDummyPosition(dummy, snapshot);
 
-  const newRect = dummy.getBoundingClientRect();
-
-  // getBoundingClientRect returns DOMRect with position of the element with respect to document body.
-  // If react-navigation is used, `dummy` will be placed with wrong `top` position because of the header height.
-  // The trick below allows us to once again get position relative to body, and then calculate header height.
-  if (newRect.top !== snapshot.top) {
-    const headerHeight = Math.abs(newRect.top - snapshot.top);
-    dummy.style.top = `${snapshot.top - headerHeight}px`;
-  }
-
   const originalOnAnimationEnd = dummy.onanimationend;
 
   dummy.onanimationend = function (event: AnimationEvent) {

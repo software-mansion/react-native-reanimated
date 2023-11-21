@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, StyleSheet, View, Text } from 'react-native';
+import { Button, StyleSheet, View, Text, ViewStyle } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -61,7 +61,15 @@ export default function App({ options }): Props {
     };
   });
 
-  function renderExample(testedStyle, description, showClampMarkers) {
+  function Example({
+    testedStyle,
+    description,
+    showClampMarkers,
+  }: {
+    testedStyle: ViewStyle;
+    description: string;
+    showClampMarkers: boolean;
+  }) {
     return (
       <View
         style={{
@@ -106,8 +114,16 @@ export default function App({ options }): Props {
 
   return (
     <View style={styles.container}>
-      {renderExample(clampedStyle, 'Clamped spring', true)}
-      {renderExample(defaultStyle, 'Default spring', false)}
+      <Example
+        clampedStyle={clampedStyle}
+        description="Clamped spring"
+        showClampMarkers={true}
+      />
+      <Example
+        clampedStyle={defaultStyle}
+        description="Default spring"
+        showClampMarkers={false}
+      />
     </View>
   );
 }
