@@ -86,8 +86,8 @@ Pod::Spec.new do |s|
     "Common/cpp/hidden_headers/**"
   ]
 
-  gcc_debug_definitions =  "$(inherited)"
-  if config[:react_native_minor_version] >= 73 || !is_release
+  gcc_debug_definitions = "$(inherited)"
+  if $config[:react_native_minor_version] >= 73 || !is_release
     gcc_debug_definitions << " HERMES_ENABLE_DEBUGGER=1"
   end
 
