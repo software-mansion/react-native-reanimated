@@ -6,6 +6,7 @@ import Animated, {
   ZoomIn,
   LightSpeedInLeft,
   BounceIn,
+  AnimatedProps,
 } from 'react-native-reanimated';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
@@ -26,6 +27,8 @@ const platform = {
   ios: 'iOS',
   web: 'Web',
   android: 'Android',
+  macos: 'MacOS',
+  windows: 'Windows',
 }[Platform.OS];
 
 export default function App() {
@@ -84,7 +87,14 @@ function Summary({ onPress }) {
   );
 }
 
-function ListItem({ label, icon, isDone, index }) {
+interface ListItemProps {
+  label: string;
+  icon: string;
+  isDone: boolean;
+  index: number;
+}
+
+function ListItem({ label, icon, isDone, index }: ListItemProps) {
   return (
     <Animated.View
       style={styles.listItem}
@@ -112,7 +122,12 @@ function ListItem({ label, icon, isDone, index }) {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-function Button({ onPress, entering }) {
+interface ButtonProps {
+  onPress: () => void;
+  entering: AnimatedProps<Animated.View>['entering'];
+}
+
+function Button({ onPress, entering }: ButtonProps) {
   return (
     <AnimatedPressable
       style={styles.buttonContainer}
