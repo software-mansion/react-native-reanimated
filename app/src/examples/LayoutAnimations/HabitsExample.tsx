@@ -44,7 +44,11 @@ export default function App() {
   );
 }
 
-function Habits({ onPress }) {
+interface HabitsProps {
+  onPress: () => void;
+}
+
+function Habits({ onPress }: HabitsProps) {
   return (
     <>
       <Animated.Text entering={FadeInDown} style={styles.heading}>
@@ -69,7 +73,11 @@ function Habits({ onPress }) {
   );
 }
 
-function Summary({ onPress }) {
+interface SummaryProps {
+  onPress: () => void;
+}
+
+function Summary({ onPress }: SummaryProps) {
   return (
     <>
       <Animated.Text entering={FadeInDown} style={styles.heading}>
