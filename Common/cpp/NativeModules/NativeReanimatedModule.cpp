@@ -21,6 +21,7 @@
 #include "ShadowTreeCloner.h"
 #endif
 
+#include "AsyncQueue.h"
 #include "CollectionUtils.h"
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
@@ -178,6 +179,14 @@ jsi::Value NativeReanimatedModule::createWorkletRuntime(
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }
 
+jsi::Value NativeReanimatedModule::scheduleOnRuntime(
+    jsi::Runtime &rt,
+    const jsi::Value &workletRuntimeValue,
+    const jsi::Value &shareableWorkletValue) {
+  reanimated::scheduleOnRuntime(rt, workletRuntimeValue, shareableWorkletValue);
+  return jsi::Value::undefined();
+}
+
 jsi::Value NativeReanimatedModule::makeSynchronizedDataHolder(
     jsi::Runtime &rt,
     const jsi::Value &initialShareable) {
@@ -196,9 +205,7 @@ void NativeReanimatedModule::updateDataSynchronously(
 jsi::Value NativeReanimatedModule::getDataSynchronously(
     jsi::Runtime &rt,
     const jsi::Value &synchronizedDataHolderRef) {
-  auto dataHolder = extractShareableOrThrow<ShareableSynchronizedDataHolder>(
-      rt, synchronizedDataHolderRef);
-  return dataHolder->get(rt);
+  return reanimated::getDataSynchronously(rt, synchronizedDataHolderRef);
 }
 
 jsi::Value NativeReanimatedModule::makeShareableClone(
