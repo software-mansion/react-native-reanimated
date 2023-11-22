@@ -26,7 +26,7 @@ type withRepeatType = <T extends AnimatableValue>(
  * @param numberOfReps - The number of times the animation is going to be repeated. Defaults to 2.
  * @param reverse - Whether the animation should run in reverse every other repetition. Defaults to false.
  * @param callback - A function called on animation complete.
- * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting.
+ * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Default to `ReduceMotion.System`. - {@link ReduceMotion}
  * @returns An [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withRepeat
  */

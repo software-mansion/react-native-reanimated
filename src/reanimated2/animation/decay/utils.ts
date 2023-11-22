@@ -37,7 +37,7 @@ export interface InnerDecayAnimation
  * @param velocityFactor - Velocity multiplier. Defaults to 1.
  * @param rubberBandEffect - Makes the animation bounce over the limit specified in `clamp`. Defaults to `false`.
  * @param rubberBandFactor - Strength of the rubber band effect. Defaults to 0.6.
- * @param reduceMotion - determines how the animation responds to the device's reduced motion accessibility setting. Defaults to `ReduceMotion.System`.
+ * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Default to `ReduceMotion.System`. - {@link ReduceMotion}
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withDecay#config
  */
 export type DecayConfig = {
