@@ -1,12 +1,18 @@
 import React from 'react';
-import { Easing, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View, Text } from 'react-native';
 import Animated, {
   FadeInLeft,
   FadeInDown,
   ZoomIn,
+  LightSpeedInLeft,
+  BounceIn,
 } from 'react-native-reanimated';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faSquareCheck, faSquare } from '@fortawesome/free-solid-svg-icons';
+import {
+  faSquareCheck,
+  faSquare,
+  faCheck,
+} from '@fortawesome/free-solid-svg-icons';
 
 const data = [
   { label: 'Water plants', icon: '🌿', isDone: true },
@@ -16,9 +22,28 @@ const data = [
   { label: 'Cook dinner', icon: '👨‍🍳', isDone: true },
 ];
 
+const platform = {
+  ios: 'iOS',
+  web: 'Web',
+  android: 'Android',
+}[Platform.OS];
+
 export default function App() {
+  const [isHabits, toggle] = React.useReducer((s) => !s, true);
+
   return (
-    <View style={styles.container}>
+    <>
+      <View style={styles.container}>
+        {isHabits ? <Habits onPress={toggle} /> : <Summary onPress={toggle} />}
+      </View>
+      <Text style={styles.platform}>{platform}</Text>
+    </>
+  );
+}
+
+function Habits({ onPress }) {
+  return (
+    <>
       <Animated.Text entering={FadeInDown} style={styles.heading}>
         Your Habits
       </Animated.Text>
@@ -31,8 +56,31 @@ export default function App() {
           index={index}
         />
       ))}
-      <Button />
-    </View>
+      <Button
+        onPress={onPress}
+        entering={LightSpeedInLeft.delay(2000)
+          // .easing(Easing.inOut(Easing.quad)) // causes a crash on native
+          .duration(400)}
+      />
+    </>
+  );
+}
+
+function Summary({ onPress }) {
+  return (
+    <>
+      <Animated.Text entering={FadeInDown} style={styles.heading}>
+        Great job!
+      </Animated.Text>
+      <Animated.View entering={BounceIn} style={styles.checkmark}>
+        <FontAwesomeIcon icon={faCheck} size={64} color="white" />
+      </Animated.View>
+      <Animated.Text style={styles.label}>
+        {data.filter((item) => item.isDone).length} out of {data.length} habits
+        complete.
+      </Animated.Text>
+      <Button onPress={onPress} entering={FadeInDown.delay(1000)} />
+    </>
   );
 }
 
@@ -40,18 +88,18 @@ function ListItem({ label, icon, isDone, index }) {
   return (
     <Animated.View
       style={styles.listItem}
-      entering={FadeInLeft.delay(200 * index).duration(80)}>
+      entering={FadeInLeft.delay(150 * index).duration(80)}>
       <Animated.Text
-        entering={ZoomIn.delay(450 * index)}
+        entering={ZoomIn.delay(400 * index)}
         style={styles.listItemIcon}>
         {icon}
       </Animated.Text>
       <Animated.Text
         style={styles.listItemLabel}
-        entering={FadeInDown.delay(350 * index)}>
+        entering={FadeInDown.delay(300 * index)}>
         {label}
       </Animated.Text>
-      <Animated.View entering={FadeInLeft.delay(450 * index)}>
+      <Animated.View entering={FadeInLeft.delay(400 * index)}>
         <FontAwesomeIcon
           icon={isDone ? faSquareCheck : faSquare}
           size={32}
@@ -62,17 +110,20 @@ function ListItem({ label, icon, isDone, index }) {
   );
 }
 
-function Button() {
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+function Button({ onPress, entering }) {
   return (
-    <Animated.View
+    <AnimatedPressable
       style={styles.buttonContainer}
-      entering={FadeInDown.delay(2400)
-        // .easing(Easing.inOut(Easing.quad)) // causes a crash on native
-        .duration(400)}>
+      onPress={onPress}
+      entering={entering}
+      // exiting={FadeOut} // doesn't behave well on the web
+    >
       <Animated.View style={styles.button}>
         <Animated.Text style={styles.buttonText}>Continue</Animated.Text>
       </Animated.View>
-    </Animated.View>
+    </AnimatedPressable>
   );
 }
 
@@ -122,5 +173,32 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 20,
+    color: 'black',
+  },
+  checkmark: {
+    width: 150,
+    height: 150,
+    borderRadius: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    borderColor: 'white',
+    marginTop: 50,
+    marginBottom: 35,
+    borderWidth: 4,
+  },
+  label: {
+    fontSize: 24,
+    color: 'white',
+    textAlign: 'center',
+    marginVertical: 24,
+  },
+  platform: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    fontSize: 28,
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
