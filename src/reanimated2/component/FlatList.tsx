@@ -28,7 +28,6 @@ const createCellRendererComponent = (
   >
 ) => {
   const CellRendererComponent = (props: CellRendererComponentProps) => {
-    console.log(props.style);
     return (
       <AnimatedView
         // TODO TYPESCRIPT This is temporary cast is to get rid of .d.ts file.
