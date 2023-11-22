@@ -1,4 +1,5 @@
 'use strict';
+
 import './publicGlobals';
 
 export type { WorkletRuntime } from './core';
@@ -6,6 +7,7 @@ export {
   runOnJS,
   runOnUI,
   createWorkletRuntime,
+  runOnRuntime,
   makeMutable,
   makeShareableCloneRecursive,
   isReanimated3,
