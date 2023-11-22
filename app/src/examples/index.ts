@@ -97,6 +97,7 @@ import SetNativePropsExample from './SetNativePropsExample';
 import ShareablesExample from './ShareablesExample';
 import SharedStyleExample from './SharedStyleExample';
 import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
+import StackedLayoutAnimationExample from './LayoutAnimations/StackedLayoutAnimationExample';
 import SvgExample from './SvgExample';
 import SwipeableList from './LayoutAnimations/SwipeableList';
 import SwipeableListExample from './SwipeableListExample';
@@ -577,6 +578,10 @@ export const EXAMPLES: Record<string, Example> = {
   SwipeableList: {
     title: '[LA] Swipeable list',
     screen: SwipeableList,
+  },
+  StackedLayoutAnimationExample: {
+    title: '[LA] Stacked LayoutAnimation',
+    screen: StackedLayoutAnimationExample,
   },
   Modal: {
     title: '[LA] Modal',
