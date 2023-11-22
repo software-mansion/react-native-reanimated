@@ -131,6 +131,11 @@ export type AnimatedProps<Props extends object> = RestProps<Props> &
   AnimatedStyleProps<Props> &
   LayoutProps &
   SharedTransitionProps & {
+    /**
+     * Lets you animate component props.
+     *
+     * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
+     */
     animatedProps?: Partial<AnimatedPropsProp<Props>>;
   };
 
