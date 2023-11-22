@@ -8,12 +8,6 @@ import { shouldBeUseWeb } from '../PlatformChecker';
 
 export type DerivedValue<Value> = Readonly<SharedValue<Value>>;
 
-// @ts-expect-error This overload is required by our API.
-export function useDerivedValue<Value>(
-  updater: () => Value,
-  dependencies?: DependencyList
-): DerivedValue<Value>;
-
 /**
  * Lets you create new shared values based on existing ones while keeping them reactive.
  *
@@ -22,6 +16,12 @@ export function useDerivedValue<Value>(
  * @returns a new readonly shared value based on a value returned from the updater function
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useDerivedValue
  */
+// @ts-expect-error This overload is required by our API.
+export function useDerivedValue<Value>(
+  updater: () => Value,
+  dependencies?: DependencyList
+): DerivedValue<Value>;
+
 export function useDerivedValue<Value>(
   updater: WorkletFunction<[], Value>,
   dependencies?: DependencyList
