@@ -49,7 +49,9 @@ interface RecognizedPrefixSuffix {
   strippedValue: number;
 }
 
-function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
+export function recognizePrefixSuffix(
+  value: string | number
+): RecognizedPrefixSuffix {
   'worklet';
   if (typeof value === 'string') {
     const match = value.match(

@@ -1153,33 +1153,19 @@ PODS:
     - React-RCTFabric
     - ReactCommon/turbomodule/core
   - RNReanimated (3.5.0):
-    - DoubleConversion
-    - FBLazyVector
-    - glog
     - hermes-engine
-    - RCT-Folly
+    - RCT-Folly (= 2021.07.22.00)
     - RCTRequired
     - RCTTypeSafety
-    - React-callinvoker
     - React-Codegen
     - React-Core
-    - React-Core/DevSupport
-    - React-Core/RCTWebSocket
-    - React-CoreModules
-    - React-cxxreact
-    - React-hermes
-    - React-jsi
-    - React-jsiexecutor
-    - React-jsinspector
-    - React-RCTActionSheet
-    - React-RCTAnimation
-    - React-RCTBlob
+    - React-debug
+    - React-Fabric
+    - React-graphics
+    - React-NativeModulesApple
     - React-RCTFabric
-    - React-RCTImage
-    - React-RCTLinking
-    - React-RCTNetwork
-    - React-RCTSettings
-    - React-RCTText
+    - React-utils
+    - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
   - RNScreens (3.25.0):
@@ -1487,7 +1473,7 @@ SPEC CHECKSUMS:
   React-perflogger: e3596db7e753f51766bceadc061936ef1472edc3
   React-RCTActionSheet: 17ab132c748b4471012abbcdcf5befe860660485
   React-RCTAnimation: c8bbaab62be5817d2a31c36d5f2571e3f7dcf099
-  React-RCTAppDelegate: d43ecd62e3ff9a8d09eab3a05ce786d160786dfe
+  React-RCTAppDelegate: 7a68d7f49d93f4899acde16ff5050854602a6ca2
   React-RCTBlob: 1bcf3a0341eb8d6950009b1ddb8aefaf46996b8c
   React-RCTFabric: 2d72175df6e0e230a13ec2a7eef184ac0a122fd3
   React-RCTImage: 670a3486b532292649b1aef3ffddd0b495a5cee4
@@ -1505,7 +1491,7 @@ SPEC CHECKSUMS:
   RNCMaskedView: f7c74478c83c4fdfc5cf4df51f80c0dd5cf125c6
   RNCPicker: 529d564911e93598cc399b56cc0769ce3675f8c8
   RNGestureHandler: 039162c42c65de1228c58eb48be90c279bfde3f1
-  RNReanimated: 87385a5102be3fed4b2ffd4d78ed8b49cb1350cb
+  RNReanimated: 52790dde3755dc90bfecdb4df6653e83bbeac30d
   RNScreens: cba72a26a6c967765a8388fe85f78e7771012ca1
   RNSVG: df9aaada196f6a61c8e30dc55d41e6c108a954e7
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
@@ -1514,4 +1500,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 200355ebe627c91121916eeac614c78c24ec30b7
 
-COCOAPODS: 1.14.0
+COCOAPODS: 1.14.2
