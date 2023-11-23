@@ -89,11 +89,8 @@ const opacity = interpolate(
   sv.value,
   [0, 100],
   [0, 1],
-  // highlight-start
-  {
-    extrapolateLeft: Extrapolation.CLAMP,
-  }
-  //highlight-end
+  // highlight-next-line
+  { extrapolateLeft: Extrapolation.CLAMP }
 );
 ```
 
