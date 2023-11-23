@@ -6,8 +6,39 @@ import {
   stopRecordingAnimationUpdates,
   unmockAnimationTimer,
 } from './RuntimeTestsApi';
-import { makeMutable, runOnJS, runOnUI } from 'react-native-reanimated';
+import {
+  makeMutable,
+  runOnJS,
+  runOnUI,
+  AnimatedStyle,
+  StyleProps,
+} from 'react-native-reanimated';
 
+declare global {
+  var mockedAnimationTimestamp: number | undefined;
+  var originalRequestAnimationFrame: any; //TODO type
+  var originalGetAnimationTimestamp: any; //TODO type
+  var _getAnimationTimestamp: any; //TODO this is redundant
+  var __frameTimestamp: any; //TODO this is redundant
+  var _IS_FABRIC: boolean | undefined; //TODO this is redundant
+  var _updatePropsPaper: any; //TODO this is redundant
+  var _updatePropsFabric: any; //TODO this is redundant
+  var originalUpdateProps: any; //TODO type
+  var originalNotifyAboutProgress: any; //TODO type
+  var _notifyAboutProgress: any; //TODO this is redundant
+}
+
+interface PaperOperation {
+  tag: number;
+  name: string;
+  updates: StyleProps | AnimatedStyle<any>;
+}
+interface FabricOperation {
+  shadowNodeWrapper: {
+    __hostObjectShadowNodeWrapper: never;
+  };
+  updates: StyleProps | AnimatedStyle<any>;
+}
 export type LockObject = { lock: boolean };
 
 const Messages = {
@@ -163,8 +194,8 @@ export class TestRunner {
   }
 
   private waitForPropertyValueChange(
-    targetObject,
-    targetProperty,
+    targetObject: LockObject,
+    targetProperty: 'lock',
     initialValue = true
   ) {
     return new Promise((resolve) => {
@@ -200,7 +231,7 @@ export class TestRunner {
       global.originalUpdateProps = originalUpdateProps;
 
       const mockedUpdateProps = mergeOperations
-        ? (operations) => {
+        ? (operations: FabricOperation[]) => {
             if (updates.value == null) {
               updates.value = [];
             }
@@ -214,7 +245,7 @@ export class TestRunner {
             updates.value = [...updates.value];
             originalUpdateProps(operations);
           }
-        : (operations) => {
+        : (operations: PaperOperation[]) => {
             if (updates.value == null) {
               updates.value = {};
             }
@@ -237,19 +268,27 @@ export class TestRunner {
       const originalNotifyAboutProgress = global._notifyAboutProgress;
       global.originalNotifyAboutProgress = originalNotifyAboutProgress;
       global._notifyAboutProgress = mergeOperations
-        ? (tag, value, isSharedTransition) => {
-            if (updates.value == null) {
+        ? (
+            tag: number,
+            value: Record<string, unknown>,
+            isSharedTransition: boolean
+          ) => {
+            if (updates.value === null) {
               updates.value = [];
             }
             updates.value.push({ ...value });
             updates.value = [...updates.value];
             originalNotifyAboutProgress(tag, value, isSharedTransition);
           }
-        : (tag, value, isSharedTransition) => {
-            if (updates.value == null) {
+        : (
+            tag: number,
+            value: Record<string, unknown>,
+            isSharedTransition: boolean
+          ) => {
+            if (updates.value === null) {
               updates.value = {};
             }
-            if (updates.value[tag] == undefined) {
+            if (updates.value[tag] === undefined) {
               updates.value[tag] = [];
             }
             updates.value[tag].push(value);
@@ -286,12 +325,15 @@ export class TestRunner {
       global._getAnimationTimestamp = () => {
         const currentTimestamp = global.mockedAnimationTimestamp;
         global.__frameTimestamp = currentTimestamp;
+        if (!global?.mockedAnimationTimestamp) {
+          global.mockedAnimationTimestamp = 0;
+        }
         global.mockedAnimationTimestamp += 16;
         return currentTimestamp;
       };
       let originalRequestAnimationFrame = global.requestAnimationFrame;
       global.originalRequestAnimationFrame = originalRequestAnimationFrame;
-      (global as any).requestAnimationFrame = (callback) => {
+      (global as any).requestAnimationFrame = (callback: Function) => {
         originalRequestAnimationFrame(() => {
           callback(global._getAnimationTimestamp());
         });

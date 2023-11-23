@@ -6,10 +6,10 @@ export class TestComponent {
   constructor(ref: React.MutableRefObject<any>) {
     this.ref = ref;
   }
-  public getStyle(propName) {
+  public getStyle(propName: string) {
     return this.ref.current.props.style[propName];
   }
-  public async getAnimatedStyle(propName) {
+  public async getAnimatedStyle(propName: string) {
     const tag = findNodeHandle(this.ref.current) ?? -1;
     return getViewProp(tag, propName);
   }

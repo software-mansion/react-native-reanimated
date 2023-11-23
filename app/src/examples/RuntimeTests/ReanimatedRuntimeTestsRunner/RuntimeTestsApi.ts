@@ -75,6 +75,9 @@ export async function setAnimationTimestamp(timestamp: number) {
 export async function advanceAnimationByTime(time: number) {
   await testRunner.runOnUiSync(() => {
     'worklet';
+    if (!global.mockedAnimationTimestamp) {
+      global.mockedAnimationTimestamp = 0;
+    }
     global.mockedAnimationTimestamp += time;
   });
 }
@@ -82,6 +85,9 @@ export async function advanceAnimationByTime(time: number) {
 export async function advanceAnimationByFrames(frameCount: number) {
   await testRunner.runOnUiSync(() => {
     'worklet';
+    if (!global.mockedAnimationTimestamp) {
+      global.mockedAnimationTimestamp = 0;
+    }
     global.mockedAnimationTimestamp += frameCount * 16;
   });
 }
