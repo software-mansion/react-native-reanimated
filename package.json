@@ -185,8 +185,5 @@
       "typescript"
     ]
   },
-  "sideEffects": [
-    "./lib/reanimated2/core",
-    "./lib/index"
-  ]
+  "sideEffects": true
 }
