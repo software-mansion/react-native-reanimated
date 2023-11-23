@@ -7,11 +7,12 @@ import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { StyleProps } from '../../commonTypes';
 import { createAnimationWithExistingTransform } from './createAnimation';
 import {
+  extractTransformFromStyle,
   getProcessedConfig,
-  handleEnteringAnimation,
   handleExitingAnimation,
   handleLayoutTransition,
   makeElementVisible,
+  setElementAnimation,
 } from './componentUtils';
 import { areDOMRectsEqual } from './domUtils';
 import type { TransformsStyle } from 'react-native';
@@ -63,11 +64,11 @@ function chooseAction(
   animationConfig: AnimationConfig,
   element: HTMLElement,
   transitionData: TransitionData,
-  transform?: NonNullable<TransformsStyle['transform']>
+  transform: TransformsStyle['transform'] | undefined
 ) {
   switch (animationType) {
     case LayoutAnimationType.ENTERING:
-      handleEnteringAnimation(element, animationConfig);
+      setElementAnimation(element, animationConfig);
       break;
     case LayoutAnimationType.LAYOUT:
       transitionData.reversed = animationConfig.reversed;
@@ -109,7 +110,7 @@ function tryGetAnimationConfigWithTransform<
     return null;
   }
 
-  const transform = (props.style as StyleProps)?.transform;
+  const transform = extractTransformFromStyle(props.style as StyleProps);
 
   const animationName = transform
     ? createAnimationWithExistingTransform(initialAnimationName, transform)
@@ -117,8 +118,8 @@ function tryGetAnimationConfigWithTransform<
 
   const animationConfig = getProcessedConfig(
     animationName,
+    animationType,
     config as CustomConfig,
-    isLayoutTransition,
     initialAnimationName as AnimationNames
   );
 

@@ -19,6 +19,7 @@ import type { LayoutAnimationsManager } from './layoutReanimation/animationsMana
 import type { ProgressTransitionRegister } from './layoutReanimation/sharedTransitions';
 import type { UpdatePropsManager } from './UpdateProps';
 import type { callGuardDEV } from './initializers';
+import type { WorkletRuntime } from './runtimes';
 
 declare global {
   var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
@@ -46,9 +47,16 @@ declare global {
     dataHolder: ShareableSyncDataHolderRef<any>,
     data: ShareableRef<any>
   ) => void;
+  var _getDataSynchronously: <T>(
+    dataHolder: ShareableSyncDataHolderRef<T>
+  ) => ShareableRef<T>;
   var _scheduleOnJS: (
     fun: __ComplexWorkletFunction<A, R>,
     args?: unknown[]
+  ) => void;
+  var _scheduleOnRuntime: (
+    runtime: WorkletRuntime,
+    worklet: ShareableRef<() => void>
   ) => void;
   var _updatePropsPaper:
     | ((
@@ -102,4 +110,5 @@ declare global {
   var LayoutAnimationsManager: LayoutAnimationsManager;
   var UpdatePropsManager: UpdatePropsManager;
   var ProgressTransitionRegister: ProgressTransitionRegister;
+  var updateJSProps: (viewTag: number, props: Record<string, unknown>) => void;
 }

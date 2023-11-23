@@ -10,6 +10,7 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'prettier',
     'plugin:import/typescript',
+    'plugin:react-hooks/recommended',
   ],
   plugins: ['react', 'react-native', 'import', 'jest', '@typescript-eslint'],
   env: {

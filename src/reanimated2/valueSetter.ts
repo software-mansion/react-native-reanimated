@@ -2,7 +2,7 @@
 import type { AnimationObject, AnimatableValue } from './commonTypes';
 import type { Descriptor } from './hook/commonTypes';
 
-export function valueSetter(sv: any, value: any): void {
+export function valueSetter(sv: any, value: any, forceUpdate = false): void {
   'worklet';
   const previousAnimation = sv._animation;
   if (previousAnimation) {
@@ -23,7 +23,11 @@ export function valueSetter(sv: any, value: any): void {
     // and triggering the mappers that treat this value as an input
     // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)
     // built in animations that are not higher order(withTiming, withSpring) hold target value in .current
-    if (sv._value === animation.current && !animation.isHigherOrder) {
+    if (
+      sv._value === animation.current &&
+      !animation.isHigherOrder &&
+      !forceUpdate
+    ) {
       animation.callback && animation.callback(true);
       return;
     }
@@ -66,7 +70,7 @@ export function valueSetter(sv: any, value: any): void {
   } else {
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
-    if (sv._value === value) {
+    if (sv._value === value && !forceUpdate) {
       return;
     }
     sv._value = value as Descriptor | AnimatableValue;

@@ -79,7 +79,7 @@ export type LayoutAnimationFunction = (
 export type LayoutAnimationStartFunction = (
   tag: number,
   type: LayoutAnimationType,
-  yogaValues: LayoutAnimationsValues,
+  yogaValues: Partial<SharedTransitionAnimationsValues>,
   config: LayoutAnimationFunction
 ) => void;
 

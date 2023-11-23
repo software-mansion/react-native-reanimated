@@ -28,7 +28,7 @@ import { getReduceMotionFromConfig } from '../reanimated2/animation/util';
 import { maybeBuild } from '../animationBuilder';
 import { SkipEnteringContext } from '../reanimated2/component/LayoutAnimationConfig';
 import type { AnimateProps } from '../reanimated2';
-import { JSPropUpdater } from './JSPropUpdater';
+import JSPropsUpdater from './JSPropsUpdater';
 import type {
   AnimatedComponentProps,
   AnimatedProps,
@@ -106,7 +106,7 @@ export function createAnimatedComponent(
     animatedStyle: { value: StyleProps } = { value: {} };
     _component: AnimatedComponentRef | HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
-    _JSPropUpdater = new JSPropUpdater();
+    _jsPropsUpdater = new JSPropsUpdater();
     _InlinePropManager = new InlinePropManager();
     _PropsFilter = new PropsFilter();
     _viewInfo?: ViewInfo;
@@ -123,7 +123,7 @@ export function createAnimatedComponent(
 
     componentDidMount() {
       this._attachNativeEvents();
-      this._JSPropUpdater.addOnJSPropsChangeListener(this);
+      this._jsPropsUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
@@ -142,7 +142,7 @@ export function createAnimatedComponent(
 
     componentWillUnmount() {
       this._detachNativeEvents();
-      this._JSPropUpdater.removeOnJSPropsChangeListener(this);
+      this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
       this._InlinePropManager.detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);

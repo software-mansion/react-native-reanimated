@@ -9,13 +9,16 @@ import type {
   CustomConfig,
   WebEasingsNames,
 } from './config';
+import { convertTransformToString } from './animationParser';
 import type { TransitionData } from './animationParser';
 import { TransitionGenerator } from './createAnimation';
 import { scheduleAnimationCleanup } from './domUtils';
 import { _updatePropsJS } from '../../js-reanimated';
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { ReduceMotion } from '../../commonTypes';
+import type { StyleProps } from '../../commonTypes';
 import { useReducedMotion } from '../../hook/useReducedMotion';
+import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName = (
@@ -51,6 +54,7 @@ function getDelayFromConfig(config: CustomConfig): number {
 
 function getReducedMotionFromConfig(config: CustomConfig) {
   if (!config.reduceMotionV) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     return useReducedMotion();
   }
 
@@ -60,6 +64,7 @@ function getReducedMotionFromConfig(config: CustomConfig) {
     case ReduceMotion.Always:
       return true;
     default:
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       return useReducedMotion();
   }
 }
@@ -88,17 +93,39 @@ function getReversedFromConfig(config: CustomConfig) {
   return !!config.reversed;
 }
 
+export function extractTransformFromStyle(style: StyleProps) {
+  if (!style) {
+    return;
+  }
+
+  if (typeof style.transform === 'string') {
+    throw new Error('[Reanimated] String transform is currently unsupported.');
+  }
+
+  if (!Array.isArray(style)) {
+    return style.transform;
+  }
+
+  // Only last transform should be considered
+  for (let i = style.length - 1; i >= 0; --i) {
+    if (style[i].transform) {
+      return style[i].transform;
+    }
+  }
+}
+
 export function getProcessedConfig(
   animationName: string,
+  animationType: LayoutAnimationType,
   config: CustomConfig,
-  isLayoutTransition: boolean,
   initialAnimationName: AnimationNames
 ): AnimationConfig {
   return {
     animationName: animationName,
+    animationType: animationType,
     duration: getDurationFromConfig(
       config,
-      isLayoutTransition,
+      animationType === LayoutAnimationType.LAYOUT,
       initialAnimationName
     ),
     delay: getDelayFromConfig(config),
@@ -125,9 +152,10 @@ export function makeElementVisible(element: HTMLElement, delay: number) {
   }
 }
 
-function setElementAnimation(
+export function setElementAnimation(
   element: HTMLElement,
-  animationConfig: AnimationConfig
+  animationConfig: AnimationConfig,
+  existingTransform?: TransformsStyle['transform']
 ) {
   const { animationName, duration, delay, easing } = animationConfig;
 
@@ -148,24 +176,25 @@ function setElementAnimation(
 
   // Here we have to use `addEventListener` since element.onanimationcancel doesn't work on chrome
   element.onanimationstart = () => {
+    if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
+      _updatePropsJS(
+        { visibility: 'initial' },
+        { _component: element as ReanimatedHTMLElement }
+      );
+    }
+
     element.addEventListener('animationcancel', animationCancelHandler);
+    element.style.transform = convertTransformToString(existingTransform);
   };
 
   scheduleAnimationCleanup(animationName, duration + delay);
-}
-
-export function handleEnteringAnimation(
-  element: HTMLElement,
-  animationConfig: AnimationConfig
-) {
-  setElementAnimation(element, animationConfig);
 }
 
 export function handleLayoutTransition(
   element: HTMLElement,
   animationConfig: AnimationConfig,
   transitionData: TransitionData,
-  existingTransform?: NonNullable<TransformsStyle['transform']>
+  existingTransform: TransformsStyle['transform'] | undefined
 ) {
   const { animationName } = animationConfig;
 
@@ -192,7 +221,16 @@ export function handleLayoutTransition(
     existingTransform
   );
 
-  setElementAnimation(element, animationConfig);
+  const transformCopy = existingTransform
+    ? structuredClone(existingTransform)
+    : [];
+
+  // @ts-ignore `existingTransform` cannot be string because in that case
+  // we throw error in `extractTransformFromStyle`
+  transformCopy.push(transitionData);
+  element.style.transform = convertTransformToString(transformCopy);
+
+  setElementAnimation(element, animationConfig, existingTransform);
 }
 
 export function handleExitingAnimation(

@@ -12,7 +12,7 @@ export interface SharedValue<Value> {
   value: Value;
   addListener: (listenerID: number, listener: (value: any) => void) => void;
   removeListener: (listenerID: number) => void;
-  modify: (modifier: (value: any) => any) => void;
+  modify: (modifier?: (value: any) => any) => void;
 }
 
 // The below type is used for HostObjects returned by the JSI API that don't have
@@ -94,12 +94,12 @@ export type AnimatableValueObject = { [key: string]: Animatable };
 
 export type AnimatableValue = Animatable | AnimatableValueObject;
 
-export interface AnimationObject {
+export interface AnimationObject<T = AnimatableValue> {
   [key: string]: any;
   callback?: AnimationCallback;
-  current?: AnimatableValue;
-  toValue?: AnimationObject['current'];
-  startValue?: AnimationObject['current'];
+  current?: T;
+  toValue?: AnimationObject<T>['current'];
+  startValue?: AnimationObject<T>['current'];
   finished?: boolean;
   strippedCurrent?: number;
   cancelled?: boolean;

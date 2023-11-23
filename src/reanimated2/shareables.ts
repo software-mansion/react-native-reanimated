@@ -17,7 +17,7 @@ const USE_STUB_IMPLEMENTATION = shouldBeUseWeb();
 
 const _shareableCache = new WeakMap<
   Record<string, unknown>,
-  ShareableRef<any> | symbol
+  ShareableRef<unknown> | symbol
 >();
 // the below symbol is used to represent a mapping from the value to itself
 // this is used to allow for a converted shareable to be passed to makeShareableClone
@@ -36,7 +36,7 @@ function isHostObject(value: NonNullable<object>) {
 
 export function registerShareableMapping(
   shareable: any,
-  shareableRef?: ShareableRef<any>
+  shareableRef?: ShareableRef<unknown>
 ): void {
   if (USE_STUB_IMPLEMENTATION) {
     return;
@@ -203,6 +203,9 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
         }
 
         for (const [key, element] of Object.entries(value)) {
+          if (key === '__initData' && toAdapt.__initData !== undefined) {
+            continue;
+          }
           toAdapt[key] = makeShareableCloneRecursive(
             element,
             shouldPersistRemote,

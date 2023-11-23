@@ -1,73 +1,67 @@
 'use strict';
 import type { ForwardedRef } from 'react';
-import React, { Component, forwardRef } from 'react';
-import type { FlatListProps, LayoutChangeEvent } from 'react-native';
-import { FlatList, StyleSheet } from 'react-native';
+import React, { forwardRef } from 'react';
+import type {
+  FlatListProps,
+  LayoutChangeEvent,
+  StyleProp,
+  ViewStyle,
+} from 'react-native';
+import { FlatList } from 'react-native';
 import { AnimatedView } from './View';
 import { createAnimatedComponent } from '../../createAnimatedComponent';
 import type { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
-import type { StyleProps } from '../commonTypes';
-import type { AnimateProps } from '../helperTypes';
 import { LayoutAnimationConfig } from './LayoutAnimationConfig';
+import type { AnimatedProps, AnimatedStyle } from '../helperTypes';
 
-const AnimatedFlatList = createAnimatedComponent(FlatList as any) as any;
+const AnimatedFlatList = createAnimatedComponent(FlatList);
 
-interface AnimatedFlatListProps {
-  onLayout: (event: LayoutChangeEvent) => void;
-  // implicit `children` prop has been removed in @types/react^18.0.0
+interface CellRendererComponentProps {
+  onLayout?: ((event: LayoutChangeEvent) => void) | undefined;
   children: React.ReactNode;
-  inverted?: boolean;
-  horizontal?: boolean;
+  style?: StyleProp<AnimatedStyle<ViewStyle>>;
 }
 
-const createCellRenderer = (
-  itemLayoutAnimation?: ILayoutAnimationBuilder,
-  cellStyle?: StyleProps
+const createCellRendererComponent = (
+  itemLayoutAnimation?: ILayoutAnimationBuilder
 ) => {
-  const cellRenderer = (props: AnimatedFlatListProps) => {
+  const CellRendererComponent = (props: CellRendererComponentProps) => {
     return (
       <AnimatedView
         // TODO TYPESCRIPT This is temporary cast is to get rid of .d.ts file.
         layout={itemLayoutAnimation as any}
         onLayout={props.onLayout}
-        style={cellStyle}>
+        style={props.style}>
         {props.children}
       </AnimatedView>
     );
   };
 
-  return cellRenderer;
+  return CellRendererComponent;
 };
 
-interface ReanimatedFlatListPropsWithLayout<T> extends FlatListProps<T> {
+interface ReanimatedFlatListPropsWithLayout<T>
+  extends AnimatedProps<FlatListProps<T>> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
   skipEnteringExitingAnimations?: boolean;
 }
 
 export type FlatListPropsWithLayout<T> = ReanimatedFlatListPropsWithLayout<T>;
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-declare class ReanimatedFlatListClass<T> extends Component<
-  AnimateProps<ReanimatedFlatListPropsWithLayout<T>>
-> {
-  getNode(): FlatList;
-}
-
-interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
-  itemLayoutAnimation?: ILayoutAnimationBuilder;
-  skipEnteringExitingAnimations?: boolean;
+// Since createAnimatedComponent return type is ComponentClass that has the props of the argument,
+// but not things like NativeMethods, etc. we need to add them manually by extending the type.
+interface AnimatedFlatListComplement<T> extends FlatList<T> {
+  getNode(): FlatList<T>;
 }
 
 export const ReanimatedFlatList = forwardRef(
-  (props: ReanimatedFlatListProps<any>, ref: ForwardedRef<FlatList>) => {
+  (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    props: ReanimatedFlatListPropsWithLayout<any>,
+    ref: ForwardedRef<FlatList>
+  ) => {
     const { itemLayoutAnimation, skipEnteringExitingAnimations, ...restProps } =
       props;
-
-    const cellStyle = restProps?.inverted
-      ? restProps?.horizontal
-        ? styles.horizontallyInverted
-        : styles.verticallyInverted
-      : undefined;
 
     // Set default scrollEventThrottle, because user expects
     // to have continuous scroll events and
@@ -78,16 +72,16 @@ export const ReanimatedFlatList = forwardRef(
       restProps.scrollEventThrottle = 1;
     }
 
-    const cellRenderer = React.useMemo(
-      () => createCellRenderer(itemLayoutAnimation, cellStyle),
-      [cellStyle]
+    const CellRendererComponent = React.useMemo(
+      () => createCellRendererComponent(itemLayoutAnimation),
+      []
     );
 
     const animatedFlatList = (
       <AnimatedFlatList
         ref={ref}
         {...restProps}
-        CellRendererComponent={cellRenderer}
+        CellRendererComponent={CellRendererComponent}
       />
     );
 
@@ -101,12 +95,7 @@ export const ReanimatedFlatList = forwardRef(
       </LayoutAnimationConfig>
     );
   }
-) as unknown as ReanimatedFlatList<any>;
+);
 
-const styles = StyleSheet.create({
-  verticallyInverted: { transform: [{ scaleY: -1 }] },
-  horizontallyInverted: { transform: [{ scaleX: -1 }] },
-});
-
-export type ReanimatedFlatList<T> = typeof ReanimatedFlatListClass<T> &
-  FlatList<T>;
+export type ReanimatedFlatList<T> = typeof AnimatedFlatList &
+  AnimatedFlatListComplement<T>;

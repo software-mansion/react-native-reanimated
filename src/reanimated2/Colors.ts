@@ -121,7 +121,7 @@ function parsePercentage(str: string): number {
   return int / 100;
 }
 
-const names: any = makeShareable({
+const names: Record<string, number> = makeShareable({
   transparent: 0x00000000,
 
   // http://www.w3.org/TR/css3-color/#svg-color

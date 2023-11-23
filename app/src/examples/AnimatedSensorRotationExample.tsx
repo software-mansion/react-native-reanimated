@@ -16,7 +16,7 @@ export default function AnimatedSensorRotationExample() {
       transform: [
         { perspective: 100 },
         // https://developer.apple.com/documentation/coremotion/cmattitude#1669448
-        // A roll is a rotation around a longitudinal axis that passes through the device from its top to bottom.
+        // A pitch is a rotation around a lateral axis that passes through the device from side to side.
         // we are negating the value to make the behavior more as user would expect
         { rotateX: `${-pitch}rad` },
         // A roll is a rotation around a longitudinal axis that passes through the device from its top to bottom.

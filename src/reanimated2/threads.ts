@@ -154,17 +154,6 @@ export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
   };
 }
 
-if (__DEV__ && !SHOULD_BE_USE_WEB) {
-  const f = (() => {
-    'worklet';
-  }) as WorkletFunction<[], void>;
-  if (f.__workletHash === undefined) {
-    throw new Error(
-      `[Reanimated] Failed to create a worklet. See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet\` for more details.`
-    );
-  }
-}
-
 type ReleaseRemoteFunction<Args extends unknown[], ReturnValue> = {
   (...args: Args): ReturnValue;
 };
