@@ -28,10 +28,13 @@ function App() {
 ```typescript
 type AnimatableValue = number | string | number[];
 
-function withClamp<T extends number | string>(config: {
-  min?: T;
-  max?: T;
-}, clampedAnimation: T): T;
+function withClamp<T extends number | string>(
+  config: {
+    min?: T;
+    max?: T;
+  },
+  clampedAnimation: T
+): T;
 
 enum ReduceMotion {
   System = 'system',
