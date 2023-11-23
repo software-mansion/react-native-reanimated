@@ -5,8 +5,5 @@ import RuntimeTestsRunner from './ReanimatedRuntimeTestsRunner/RuntimeTestsRunne
 import './tests/Animations.test';
 
 export default function RuntimeTestsExample() {
-  return (
-    <RuntimeTestsRunner />
-  );
+  return <RuntimeTestsRunner />;
 }
-

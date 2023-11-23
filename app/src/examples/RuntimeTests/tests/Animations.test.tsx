@@ -1,12 +1,28 @@
+/* eslint-disable no-inline-styles/no-inline-styles */
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, FadeIn } from 'react-native-reanimated';
-import { describe, test, expect, render, useTestRef, getTestComponent, wait, mockAnimationTimer, recordAnimationUpdates } from '../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  FadeIn,
+} from 'react-native-reanimated';
+import {
+  describe,
+  test,
+  expect,
+  render,
+  useTestRef,
+  getTestComponent,
+  wait,
+  mockAnimationTimer,
+  recordAnimationUpdates,
+} from '../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { Snapshots } from './snapshots/Animations.snapshot';
 
 const AnimatedComponent = () => {
   const widthSV = useSharedValue(0);
-  const ref = useTestRef('AnimatedComponent')
+  const ref = useTestRef('AnimatedComponent');
 
   const style = useAnimatedStyle(() => {
     return {
@@ -16,7 +32,7 @@ const AnimatedComponent = () => {
 
   useEffect(() => {
     widthSV.value = 100;
-  }, []);
+  }, [widthSV]);
 
   return (
     <View style={{ flex: 1, flexDirection: 'column', backgroundColor: 'red' }}>
@@ -32,7 +48,7 @@ const AnimatedComponent = () => {
 };
 
 const LayoutAnimation = () => {
-  const ref = useTestRef('AnimatedComponent')
+  const ref = useTestRef('AnimatedComponent');
 
   return (
     <View style={{ flex: 1, flexDirection: 'column', backgroundColor: 'red' }}>
@@ -46,7 +62,6 @@ const LayoutAnimation = () => {
 };
 
 describe('Tests of animations', () => {
-
   test('withTiming - expect error', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('AnimatedComponent');
@@ -76,5 +91,4 @@ describe('Tests of animations', () => {
     await wait(600);
     expect(updates.value).toMatchSnapshot(Snapshots.layoutAnimation);
   });
-
 });

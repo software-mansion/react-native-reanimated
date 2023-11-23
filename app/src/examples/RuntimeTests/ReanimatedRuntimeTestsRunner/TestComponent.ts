@@ -1,5 +1,5 @@
-import { findNodeHandle } from "react-native";
-import { getViewProp } from "react-native-reanimated";
+import { findNodeHandle } from 'react-native';
+import { getViewProp } from 'react-native-reanimated';
 
 export class TestComponent {
   private ref: React.MutableRefObject<any>;
@@ -16,4 +16,4 @@ export class TestComponent {
   public getTag() {
     return findNodeHandle(this.ref.current) ?? -1;
   }
-};
+}

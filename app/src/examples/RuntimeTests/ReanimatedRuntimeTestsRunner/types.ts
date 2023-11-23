@@ -3,7 +3,7 @@ export type TestCase = {
   testCase: () => void;
   componentsRefs: Record<string, React.MutableRefObject<any>>;
   errors: string[];
-}
+};
 
 export type TestSuite = {
   name: string;
@@ -13,4 +13,4 @@ export type TestSuite = {
   afterAll?: () => void;
   beforeEach?: () => void;
   afterEach?: () => void;
-}
+};
