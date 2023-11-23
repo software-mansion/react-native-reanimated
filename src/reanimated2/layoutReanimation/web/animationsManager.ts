@@ -9,10 +9,10 @@ import { createAnimationWithExistingTransform } from './createAnimation';
 import {
   extractTransformFromStyle,
   getProcessedConfig,
-  handleEnteringAnimation,
   handleExitingAnimation,
   handleLayoutTransition,
   makeElementVisible,
+  setElementAnimation,
 } from './componentUtils';
 import { areDOMRectsEqual } from './domUtils';
 import type { TransformsStyle } from 'react-native';
@@ -82,7 +82,7 @@ function chooseAction(
 ) {
   switch (animationType) {
     case LayoutAnimationType.ENTERING:
-      handleEnteringAnimation(element, animationConfig);
+      setElementAnimation(element, animationConfig);
       break;
     case LayoutAnimationType.LAYOUT:
       transitionData.reversed = animationConfig.reversed;
@@ -137,8 +137,8 @@ export function startWebLayoutAnimation<
 
   const animationConfig = getProcessedConfig(
     animationName,
+    animationType,
     config as CustomConfig,
-    isLayoutTransition,
     initialAnimationName as AnimationNames
   );
 
