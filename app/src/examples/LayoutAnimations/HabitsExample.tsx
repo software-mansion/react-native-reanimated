@@ -9,11 +9,7 @@ import Animated, {
   AnimatedProps,
 } from 'react-native-reanimated';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import {
-  faSquareCheck,
-  faSquare,
-  faCheck,
-} from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faClose } from '@fortawesome/free-solid-svg-icons';
 
 const data = [
   { label: 'Water plants', icon: '🌿', isDone: true },
@@ -119,7 +115,7 @@ function ListItem({ label, icon, isDone, index }: ListItemProps) {
       </Animated.Text>
       <Animated.View entering={FadeInLeft.delay(400 * index)}>
         <FontAwesomeIcon
-          icon={isDone ? faSquareCheck : faSquare}
+          icon={isDone ? faCheck : faClose}
           size={32}
           color="white"
         />
