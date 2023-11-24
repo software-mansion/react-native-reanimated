@@ -207,7 +207,6 @@ export type AnimatedKeyboardInfo = {
 };
 
 /**
- *
  * @param x - A number representing X coordinate relative to the parent component.
  * @param y - A number representing Y coordinate relative to the parent component.
  * @param width - A number representing the width of the component.
