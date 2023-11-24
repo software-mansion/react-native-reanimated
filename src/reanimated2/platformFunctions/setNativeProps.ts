@@ -10,6 +10,13 @@ import type { AnimatedRef } from '../hook/commonTypes';
 import type { Component } from 'react';
 import { processColorsInProps } from '../Colors';
 
+/**
+ * Lets you imperatively update component properties. You should always reach for useAnimatedStyle and useAnimatedProps first when animating styles or properties.
+ *
+ * @param animatedRef - An [animated ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef#returns) connected to the component you'd want to update.
+ * @param updates - An object with properties you want to update.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/setNativeProps
+ */
 export let setNativeProps: <T extends Component>(
   animatedRef: AnimatedRef<T>,
   updates: StyleProps
