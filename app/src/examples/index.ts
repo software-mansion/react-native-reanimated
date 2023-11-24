@@ -437,9 +437,9 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Worklet factory crash',
     screen: WorkletFactoryCrash,
   },
-  LayoutAnimationsExample: {
+  HabitsExample: {
     icon: '🧑‍💻',
-    title: 'Layout animations example',
+    title: 'Habits',
     screen: HabitsExample,
   },
 
