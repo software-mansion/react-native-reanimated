@@ -22,6 +22,7 @@ const frameCallbackRegistry = new FrameCallbackRegistryJS();
  * @param callback - A function executed on every frame update.
  * @param autostart - Whether the callback should start automatically. Defaults to `true`.
  * @returns A frame callback object - {@link FrameCallback}.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/useFrameCallback
  */
 export function useFrameCallback(
   callback: (frameInfo: FrameInfo) => void,
