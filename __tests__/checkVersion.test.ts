@@ -14,12 +14,20 @@ describe('checkCppVersion', () => {
   });
 
   it('checks version successfully', () => {
-    expect(checkCppVersion).not.toThrow();
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    checkCppVersion();
+    expect(console.warn).not.toBeCalled();
+    jest.clearAllMocks();
   });
 
   it('throws error when version is undefined', () => {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
     delete global._REANIMATED_VERSION_CPP;
-    expect(checkCppVersion).toThrow();
+    checkCppVersion();
+    expect(console.warn).toBeCalled();
+    jest.clearAllMocks();
   });
 });
 
