@@ -22,7 +22,6 @@ function dummyListener() {
 
 export class PropsFilter implements IPropsFilter {
   private _initialStyle = {};
-  private _isFirstRender = true;
 
   public filterNonAnimatedProps(
     component: React.Component<unknown, unknown> & IAnimatedComponentInternal
@@ -39,7 +38,7 @@ export class PropsFilter implements IPropsFilter {
           if (style && style.viewDescriptors) {
             // this is how we recognize styles returned by useAnimatedStyle
             style.viewsRef.add(component);
-            if (this._isFirstRender) {
+            if (component._isFirstRender) {
               this._initialStyle = {
                 ...style.initial.value,
                 ...this._initialStyle,
@@ -48,7 +47,7 @@ export class PropsFilter implements IPropsFilter {
             }
             return this._initialStyle;
           } else if (hasInlineStyles(style)) {
-            return getInlineStyle(style, this._isFirstRender);
+            return getInlineStyle(style, component._isFirstRender);
           } else {
             return style;
           }
@@ -78,7 +77,7 @@ export class PropsFilter implements IPropsFilter {
           props[key] = dummyListener;
         }
       } else if (isSharedValue(value)) {
-        if (this._isFirstRender) {
+        if (component._isFirstRender) {
           props[key] = (value as SharedValue<unknown>).value;
         }
       } else if (key !== 'onGestureHandlerStateChange' || !isChromeDebugger()) {
@@ -86,11 +85,5 @@ export class PropsFilter implements IPropsFilter {
       }
     }
     return props;
-  }
-
-  public onRender() {
-    if (this._isFirstRender) {
-      this._isFirstRender = false;
-    }
   }
 }

@@ -18,6 +18,7 @@ import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { ReduceMotion } from '../../commonTypes';
 import type { StyleProps } from '../../commonTypes';
 import { useReducedMotion } from '../../hook/useReducedMotion';
+import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName = (
@@ -51,7 +52,7 @@ function getDelayFromConfig(config: CustomConfig): number {
       config.delayV! / 1000;
 }
 
-function getReducedMotionFromConfig(config: CustomConfig) {
+export function getReducedMotionFromConfig(config: CustomConfig) {
   if (!config.reduceMotionV) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     return useReducedMotion();
@@ -115,33 +116,42 @@ export function extractTransformFromStyle(style: StyleProps) {
 
 export function getProcessedConfig(
   animationName: string,
+  animationType: LayoutAnimationType,
   config: CustomConfig,
-  isLayoutTransition: boolean,
   initialAnimationName: AnimationNames
 ): AnimationConfig {
   return {
     animationName: animationName,
+    animationType: animationType,
     duration: getDurationFromConfig(
       config,
-      isLayoutTransition,
+      animationType === LayoutAnimationType.LAYOUT,
       initialAnimationName
     ),
     delay: getDelayFromConfig(config),
     easing: getEasingFromConfig(config),
-    reduceMotion: getReducedMotionFromConfig(config),
     callback: getCallbackFromConfig(config),
     reversed: getReversedFromConfig(config),
   };
 }
 
-export function makeElementVisible(element: HTMLElement) {
-  _updatePropsJS(
-    { visibility: 'initial' },
-    { _component: element as ReanimatedHTMLElement }
-  );
+export function makeElementVisible(element: HTMLElement, delay: number) {
+  if (delay === 0) {
+    _updatePropsJS(
+      { visibility: 'initial' },
+      { _component: element as ReanimatedHTMLElement }
+    );
+  } else {
+    setTimeout(() => {
+      _updatePropsJS(
+        { visibility: 'initial' },
+        { _component: element as ReanimatedHTMLElement }
+      );
+    }, delay * 1000);
+  }
 }
 
-function setElementAnimation(
+export function setElementAnimation(
   element: HTMLElement,
   animationConfig: AnimationConfig,
   existingTransform?: TransformsStyle['transform']
@@ -165,36 +175,18 @@ function setElementAnimation(
 
   // Here we have to use `addEventListener` since element.onanimationcancel doesn't work on chrome
   element.onanimationstart = () => {
+    if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
+      _updatePropsJS(
+        { visibility: 'initial' },
+        { _component: element as ReanimatedHTMLElement }
+      );
+    }
+
     element.addEventListener('animationcancel', animationCancelHandler);
     element.style.transform = convertTransformToString(existingTransform);
   };
 
   scheduleAnimationCleanup(animationName, duration + delay);
-}
-
-export function handleEnteringAnimation(
-  element: HTMLElement,
-  animationConfig: AnimationConfig
-) {
-  const { delay } = animationConfig;
-
-  // If `delay` === 0, value passed to `setTimeout` will be 0. However, `setTimeout` executes after given amount of time, not exactly after that time
-  // Because of that, we have to immediately toggle on the component when the delay is 0.
-  if (delay === 0) {
-    _updatePropsJS(
-      { visibility: 'initial' },
-      { _component: element as ReanimatedHTMLElement }
-    );
-  } else {
-    setTimeout(() => {
-      _updatePropsJS(
-        { visibility: 'initial' },
-        { _component: element as ReanimatedHTMLElement }
-      );
-    }, delay * 1000);
-  }
-
-  setElementAnimation(element, animationConfig);
 }
 
 export function handleLayoutTransition(
@@ -247,6 +239,9 @@ export function handleExitingAnimation(
   const parent = element.offsetParent;
   const dummy = element.cloneNode() as HTMLElement;
 
+  element.style.animationName = '';
+  element.style.visibility = 'hidden';
+
   // After cloning the element, we want to move all children from original element to its clone. This is because original element
   // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
   // Using element.cloneNode(true) doesn't solve the problem, because it creates copy of children and we won't be able to set their animations
@@ -260,7 +255,6 @@ export function handleExitingAnimation(
   parent?.appendChild(dummy);
 
   // We hide current element so only its copy with proper animation will be displayed
-  element.style.visibility = 'hidden';
 
   dummy.style.position = 'absolute';
   dummy.style.top = `${element.offsetTop}px`;
