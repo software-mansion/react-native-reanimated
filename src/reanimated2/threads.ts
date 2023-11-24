@@ -53,15 +53,9 @@ export const callMicrotasks = SHOULD_BE_USE_WEB
     }
   : callMicrotasksOnUIThread;
 
-// @ts-expect-error This overload is correct since it's what user sees in his code
-// before it's transformed by Reanimated Babel plugin.
-export function runOnUI<Args extends unknown[], ReturnValue>(
-  worklet: (...args: Args) => ReturnValue
-): (...args: Args) => void;
 /**
  * Lets you asynchronously run [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) functions on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
  *
- * @remarks
  * This method does not schedule the work immediately but instead waits for other worklets
  * to be scheduled within the same JS loop. It uses queueMicrotask to schedule all the worklets
  * at once making sure they will run within the same frame boundaries on the UI thread.
@@ -70,6 +64,12 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
  * @returns A function that accepts arguments for the function passed as the first argument.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI
  */
+// @ts-expect-error This overload is correct since it's what user sees in his code
+// before it's transformed by Reanimated Babel plugin.
+export function runOnUI<Args extends unknown[], ReturnValue>(
+  worklet: (...args: Args) => ReturnValue
+): (...args: Args) => void;
+
 export function runOnUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
