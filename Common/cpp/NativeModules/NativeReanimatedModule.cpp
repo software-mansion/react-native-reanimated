@@ -379,10 +379,6 @@ jsi::Value NativeReanimatedModule::registerSensor(
       sensorDataHandler);
 }
 
-std::shared_ptr<JSLogger> NativeReanimatedModule::getJSLogger() {
-  return jsLogger_;
-}
-
 void NativeReanimatedModule::unregisterSensor(
     jsi::Runtime &,
     const jsi::Value &sensorId) {

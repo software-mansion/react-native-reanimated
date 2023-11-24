@@ -117,7 +117,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &payload,
       double currentTime);
 
-  std::shared_ptr<JSLogger> getJSLogger();
+  inline std::shared_ptr<JSLogger> getJSLogger() const {
+    return jsLogger_;
+  }
 
 #ifdef RCT_NEW_ARCH_ENABLED
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
