@@ -64,9 +64,9 @@ export const withClamp = function <T extends number | string>(
           let newValue;
 
           if (strippedMax !== undefined && strippedMax < strippedValue) {
-            newValue = config.max;
+            newValue = strippedMax;
           } else if (strippedMin !== undefined && strippedMin > strippedValue) {
-            newValue = config.min;
+            newValue = strippedMin;
           } else {
             newValue = strippedValue;
           }
