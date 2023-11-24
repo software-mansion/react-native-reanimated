@@ -187,9 +187,9 @@ Offending code was: \`${getWorkletCode(value)}\``);
           }
           if (value.__stackDetails) {
             // `Error` type of value cannot be copied to the UI thread, so we
-            // remove it after we handled it in DEV mode or delete it to ignore it in RELEASE.
-            // Not removing this would cause an infinite loop in RELEASE and it just seems more elegant
-            // to handle it this way.
+            // remove it after we handled it in dev mode or delete it to ignore it in production mode.
+            // Not removing this would cause an infinite loop in production mode and it just
+            // seems more elegant to handle it this way.
             delete value.__stackDetails;
           }
           // to save on transferring static __initData field of worklet structure
