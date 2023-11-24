@@ -65,8 +65,8 @@ function addExistingTransform(
 /**
  *  Modifies default animation by preserving transformations that given element already contains.
  *
- * @param animationName - name of the animation to be modified (e.g. `FadeIn`).
- * @param existingTransform - transform values that element already contains.
+ * @param animationName - Name of the animation to be modified (e.g. `FadeIn`).
+ * @param existingTransform - Transform values that element already contains.
  * @returns Animation parsed to keyframe string.
  */
 export function createAnimationWithExistingTransform(

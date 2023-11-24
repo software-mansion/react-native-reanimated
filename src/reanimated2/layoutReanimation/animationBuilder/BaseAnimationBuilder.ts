@@ -27,7 +27,7 @@ export class BaseAnimationBuilder {
   /**
    * Lets you adjust the animation duration. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
    *
-   * @param durationMs - length of the animation (in milliseconds).
+   * @param durationMs - Length of the animation (in milliseconds).
    */
   static duration<T extends typeof BaseAnimationBuilder>(
     this: T,
@@ -45,7 +45,7 @@ export class BaseAnimationBuilder {
   /**
    * Lets you adjust the delay before the animation starts (in milliseconds). Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
    *
-   * @param durationMs - length of the animation (in milliseconds).
+   * @param delayMs - Delay before the animation starts (in milliseconds).
    */
   static delay<T extends typeof BaseAnimationBuilder>(
     this: T,
@@ -63,7 +63,7 @@ export class BaseAnimationBuilder {
   /**
    * The callback that will fire after the animation ends. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
    *
-   * @param callback - callback that will fire after the animation ends.
+   * @param callback - Callback that will fire after the animation ends.
    */
   static withCallback<T extends typeof BaseAnimationBuilder>(
     this: T,
