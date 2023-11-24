@@ -18,7 +18,7 @@ import type {
  * @param overshootClamping - Whether a spring can bounce over the `toValue`. Defaults to false.
  * @param restDisplacementThreshold - The displacement below which the spring will snap to toValue without further oscillations. Defaults to 0.01.
  * @param restSpeedThreshold - The speed in pixels per second from which the spring will snap to toValue without further oscillations. Defaults to 2.
- * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Default to `ReduceMotion.System`. - {@link ReduceMotion}
+ * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Default to `ReduceMotion.System` - {@link ReduceMotion}.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring/#config-
  */
 export type SpringConfig = {

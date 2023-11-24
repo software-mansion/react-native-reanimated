@@ -52,9 +52,9 @@ function validateConfig(config: DefaultDecayConfig): void {
 /**
  * Lets you create animations that mimic objects in motion.
  *
- * @param config - the decay animation configuration - {@link DecayConfig}
- * @param callback - a function called upon animation completion - {@link AnimationCallback}
- * @returns an [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation
+ * @param config - The decay animation configuration - {@link DecayConfig}.
+ * @param callback - A function called upon animation completion - {@link AnimationCallback}.
+ * @returns An [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withDecay
  */
 export const withDecay = function (

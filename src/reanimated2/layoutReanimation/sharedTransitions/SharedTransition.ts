@@ -286,7 +286,7 @@ export class SharedTransition {
   /**
    * Lets you adjust the behavior when the device's reduced motion accessibility setting is turned on. Other shared transition modifiers can be chained alongside this modifier.
    *
-   * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Default to `ReduceMotion.System`. - {@link ReduceMotion}
+   * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Default to `ReduceMotion.System` - {@link ReduceMotion}.
    * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
    * @experimental
    */
