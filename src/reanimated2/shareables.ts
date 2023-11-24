@@ -188,7 +188,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
             // Reanimated plugin.
             shouldWarnAboutBundleFlavor = false;
             console.warn(
-              `[Reanimated] Using dev bundle in a release app support is limited, it might lead to unexpected issues or errors. We plan to fix this in the future.
+              `[Reanimated] Using dev bundle in a release app support is limited, it might lead to unexpected issues or errors.
 See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#using-dev-bundle-in-a-release-app-build-is-not-supported\` for more details.`
             );
           }
