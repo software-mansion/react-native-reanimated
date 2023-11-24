@@ -51,7 +51,7 @@ import {
   startWebLayoutAnimation,
   tryActivateLayoutTransition,
   configureWebLayoutAnimations,
-  hasReducedMotion,
+  getReducedMotionFromConfig,
 } from '../reanimated2/layoutReanimation/web';
 import type { CustomConfig } from '../reanimated2/layoutReanimation/web/config';
 
@@ -132,7 +132,12 @@ export function createAnimatedComponent(
       if (IS_WEB) {
         configureWebLayoutAnimations();
 
-        if (hasReducedMotion(this.props.entering as CustomConfig)) {
+        if (!this.props.entering) {
+          this._isFirstRender = false;
+          return;
+        }
+
+        if (getReducedMotionFromConfig(this.props.entering as CustomConfig)) {
           this._isFirstRender = false;
           return;
         }
@@ -154,7 +159,11 @@ export function createAnimatedComponent(
       this._InlinePropManager.detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
 
-      if (IS_WEB && !hasReducedMotion(this.props.exiting as CustomConfig)) {
+      if (
+        IS_WEB &&
+        this.props.exiting &&
+        !getReducedMotionFromConfig(this.props.exiting as CustomConfig)
+      ) {
         startWebLayoutAnimation(
           this.props,
           this._component as HTMLElement,
@@ -413,7 +422,8 @@ export function createAnimatedComponent(
       if (
         IS_WEB &&
         snapshot !== null &&
-        !hasReducedMotion(this.props.layout as CustomConfig)
+        this.props.layout &&
+        !getReducedMotionFromConfig(this.props.layout as CustomConfig)
       ) {
         tryActivateLayoutTransition(
           this.props,
@@ -534,7 +544,7 @@ export function createAnimatedComponent(
         this._isFirstRender &&
         IS_WEB &&
         props.entering &&
-        !hasReducedMotion(props.entering as CustomConfig)
+        !getReducedMotionFromConfig(props.entering as CustomConfig)
       ) {
         props.style = {
           ...(props.style ?? {}),
