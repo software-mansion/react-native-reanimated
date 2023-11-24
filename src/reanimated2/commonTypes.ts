@@ -206,6 +206,16 @@ export type AnimatedKeyboardInfo = {
   state: SharedValue<KeyboardState>;
 };
 
+/**
+ *
+ * @param x - A number representing X coordinate relative to the parent component.
+ * @param y - A number representing Y coordinate relative to the parent component.
+ * @param width - A number representing the width of the component.
+ * @param height - A number representing the height of the component.
+ * @param pageX - A number representing X coordinate relative to the screen.
+ * @param pageY - A number representing Y coordinate relative to the screen.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/measure#returns
+ */
 export interface MeasuredDimensions {
   x: number;
   y: number;
@@ -220,9 +230,9 @@ export interface AnimatedKeyboardOptions {
 }
 
 /**
- * - `System` - If the `Reduce motion` accessibility setting is enabled on the device, disable the animation. Otherwise, enable the animation.
- * - `Always` - Disable the animation.
- * - `Never` - Enable the animation.
+ * @param System - If the `Reduce motion` accessibility setting is enabled on the device, disable the animation. Otherwise, enable the animation.
+ * @param Always - Disable the animation.
+ * @param Never - Enable the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility
  */
 export enum ReduceMotion {
