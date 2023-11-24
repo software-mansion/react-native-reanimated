@@ -9,7 +9,7 @@ export interface StyleProps extends ViewStyle, TextStyle {
 }
 
 /**
- * A value that can be used on both the [JavaScript thread](http://localhost:3000/react-native-reanimated/docs/fundamentals/glossary#javascript-thread) and the [UI thread](http://localhost:3000/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
+ * A value that can be used both on the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread) and the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
  *
  * Shared values are defined using [useSharedValue](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue) hook. You access and modify shared values by their `.value` property.
  */
