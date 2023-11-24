@@ -112,6 +112,7 @@ import WorkletRuntimeExample from './WorkletRuntimeExample';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
 import WithClampExample from './WithClampExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
+import HabitsExample from './LayoutAnimations/HabitsExample';
 
 interface Example {
   icon?: string;
@@ -435,6 +436,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🏭',
     title: 'Worklet factory crash',
     screen: WorkletFactoryCrash,
+  },
+  LayoutAnimationsExample: {
+    icon: '🧑‍💻',
+    title: 'Layout animations example',
+    screen: HabitsExample,
   },
 
   // Old examples

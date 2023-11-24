@@ -18,6 +18,7 @@ import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { ReduceMotion } from '../../commonTypes';
 import type { StyleProps } from '../../commonTypes';
 import { useReducedMotion } from '../../hook/useReducedMotion';
+import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName = (
@@ -115,15 +116,16 @@ export function extractTransformFromStyle(style: StyleProps) {
 
 export function getProcessedConfig(
   animationName: string,
+  animationType: LayoutAnimationType,
   config: CustomConfig,
-  isLayoutTransition: boolean,
   initialAnimationName: AnimationNames
 ): AnimationConfig {
   return {
     animationName: animationName,
+    animationType: animationType,
     duration: getDurationFromConfig(
       config,
-      isLayoutTransition,
+      animationType === LayoutAnimationType.LAYOUT,
       initialAnimationName
     ),
     delay: getDelayFromConfig(config),
@@ -134,14 +136,23 @@ export function getProcessedConfig(
   };
 }
 
-export function makeElementVisible(element: HTMLElement) {
-  _updatePropsJS(
-    { visibility: 'initial' },
-    { _component: element as ReanimatedHTMLElement }
-  );
+export function makeElementVisible(element: HTMLElement, delay: number) {
+  if (delay === 0) {
+    _updatePropsJS(
+      { visibility: 'initial' },
+      { _component: element as ReanimatedHTMLElement }
+    );
+  } else {
+    setTimeout(() => {
+      _updatePropsJS(
+        { visibility: 'initial' },
+        { _component: element as ReanimatedHTMLElement }
+      );
+    }, delay * 1000);
+  }
 }
 
-function setElementAnimation(
+export function setElementAnimation(
   element: HTMLElement,
   animationConfig: AnimationConfig,
   existingTransform?: TransformsStyle['transform']
@@ -165,36 +176,18 @@ function setElementAnimation(
 
   // Here we have to use `addEventListener` since element.onanimationcancel doesn't work on chrome
   element.onanimationstart = () => {
+    if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
+      _updatePropsJS(
+        { visibility: 'initial' },
+        { _component: element as ReanimatedHTMLElement }
+      );
+    }
+
     element.addEventListener('animationcancel', animationCancelHandler);
     element.style.transform = convertTransformToString(existingTransform);
   };
 
   scheduleAnimationCleanup(animationName, duration + delay);
-}
-
-export function handleEnteringAnimation(
-  element: HTMLElement,
-  animationConfig: AnimationConfig
-) {
-  const { delay } = animationConfig;
-
-  // If `delay` === 0, value passed to `setTimeout` will be 0. However, `setTimeout` executes after given amount of time, not exactly after that time
-  // Because of that, we have to immediately toggle on the component when the delay is 0.
-  if (delay === 0) {
-    _updatePropsJS(
-      { visibility: 'initial' },
-      { _component: element as ReanimatedHTMLElement }
-    );
-  } else {
-    setTimeout(() => {
-      _updatePropsJS(
-        { visibility: 'initial' },
-        { _component: element as ReanimatedHTMLElement }
-      );
-    }, delay * 1000);
-  }
-
-  setElementAnimation(element, animationConfig);
 }
 
 export function handleLayoutTransition(

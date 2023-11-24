@@ -132,9 +132,12 @@ export function createAnimatedComponent(
         startWebLayoutAnimation(
           this.props,
           this._component as HTMLElement,
-          LayoutAnimationType.ENTERING
+          LayoutAnimationType.ENTERING,
+          !!(this._isFirstRender && this.props.entering)
         );
       }
+
+      this._isFirstRender = false;
     }
 
     componentWillUnmount() {
@@ -507,7 +510,6 @@ export function createAnimatedComponent(
 
     render() {
       const props = this._PropsFilter.filterNonAnimatedProps(this);
-      this._PropsFilter.onRender();
 
       if (isJest()) {
         props.animatedStyle = this.animatedStyle;
@@ -517,7 +519,7 @@ export function createAnimatedComponent(
       // Because of that we can encounter a situation in which component is visible for a short amount of time, and later on animation triggers.
       // I've tested that on various browsers and devices and it did not happen to me. To be sure that it won't happen to someone else,
       // I've decided to hide component at first render. Its visibility is reset in `componentDidMount`.
-      if (IS_WEB && props.entering) {
+      if (this._isFirstRender && IS_WEB && props.entering) {
         props.style = {
           ...(props.style ?? {}),
           visibility: 'hidden', // Hide component until `componentDidMount` triggers

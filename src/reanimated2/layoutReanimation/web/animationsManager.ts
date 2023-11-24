@@ -9,10 +9,10 @@ import { createAnimationWithExistingTransform } from './createAnimation';
 import {
   extractTransformFromStyle,
   getProcessedConfig,
-  handleEnteringAnimation,
   handleExitingAnimation,
   handleLayoutTransition,
   makeElementVisible,
+  setElementAnimation,
 } from './componentUtils';
 import { areDOMRectsEqual } from './domUtils';
 import type { TransformsStyle } from 'react-native';
@@ -36,18 +36,12 @@ function chooseConfig<ComponentProps extends Record<string, unknown>>(
 
 function checkUndefinedAnimationFail(
   initialAnimationName: string,
-  isLayoutTransition: boolean,
-  hasEnteringAnimation: boolean,
-  element: HTMLElement
+  isLayoutTransition: boolean
 ) {
   // This prevents crashes if we try to set animations that are not defined.
   // We don't care about layout transitions since they're created dynamically
   if (initialAnimationName in Animations || isLayoutTransition) {
     return false;
-  }
-
-  if (hasEnteringAnimation) {
-    makeElementVisible(element);
   }
 
   console.warn(
@@ -57,17 +51,9 @@ function checkUndefinedAnimationFail(
   return true;
 }
 
-function checkReduceMotionFail(
-  animationConfig: AnimationConfig,
-  hasEnteringAnimation: boolean,
-  element: HTMLElement
-) {
+function checkReduceMotionFail(animationConfig: AnimationConfig) {
   if (!animationConfig.reduceMotion) {
     return false;
-  }
-
-  if (hasEnteringAnimation) {
-    makeElementVisible(element);
   }
 
   return true;
@@ -82,7 +68,7 @@ function chooseAction(
 ) {
   switch (animationType) {
     case LayoutAnimationType.ENTERING:
-      handleEnteringAnimation(element, animationConfig);
+      setElementAnimation(element, animationConfig);
       break;
     case LayoutAnimationType.LAYOUT:
       transitionData.reversed = animationConfig.reversed;
@@ -100,33 +86,28 @@ function chooseAction(
   }
 }
 
-export function startWebLayoutAnimation<
+function tryGetAnimationConfigWithTransform<
   ComponentProps extends Record<string, unknown>
 >(
   props: Readonly<AnimatedComponentProps<ComponentProps>>,
-  element: HTMLElement,
-  animationType: LayoutAnimationType,
-  transitionData?: TransitionData
+  animationType: LayoutAnimationType
 ) {
   const config = chooseConfig(animationType, props);
   if (!config) {
-    return;
+    return null;
   }
 
-  const hasEnteringAnimation = props.entering !== undefined;
   const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
   const initialAnimationName =
     typeof config === 'function' ? config.name : config.constructor.name;
 
   const shouldFail = checkUndefinedAnimationFail(
     initialAnimationName,
-    isLayoutTransition,
-    hasEnteringAnimation,
-    element
+    isLayoutTransition
   );
 
   if (shouldFail) {
-    return;
+    return null;
   }
 
   const transform = extractTransformFromStyle(props.style as StyleProps);
@@ -137,22 +118,51 @@ export function startWebLayoutAnimation<
 
   const animationConfig = getProcessedConfig(
     animationName,
+    animationType,
     config as CustomConfig,
-    isLayoutTransition,
     initialAnimationName as AnimationNames
   );
 
-  if (checkReduceMotionFail(animationConfig, hasEnteringAnimation, element)) {
-    return;
+  if (checkReduceMotionFail(animationConfig)) {
+    return null;
   }
 
-  chooseAction(
-    animationType,
-    animationConfig,
-    element,
-    transitionData as TransitionData,
-    transform
+  return { animationConfig, transform };
+}
+
+export function startWebLayoutAnimation<
+  ComponentProps extends Record<string, unknown>
+>(
+  props: Readonly<AnimatedComponentProps<ComponentProps>>,
+  element: HTMLElement,
+  animationType: LayoutAnimationType,
+  shouldMakeVisible = false,
+  transitionData?: TransitionData
+) {
+  let visibilityDelay = 0;
+
+  const maybeAnimationConfigWithTransform = tryGetAnimationConfigWithTransform(
+    props,
+    animationType
   );
+
+  if (maybeAnimationConfigWithTransform) {
+    const { animationConfig, transform } = maybeAnimationConfigWithTransform;
+
+    visibilityDelay = animationConfig.delay;
+
+    chooseAction(
+      animationType,
+      animationConfig,
+      element,
+      transitionData as TransitionData,
+      transform
+    );
+  }
+
+  if (shouldMakeVisible) {
+    makeElementVisible(element, visibilityDelay);
+  }
 }
 
 export function tryActivateLayoutTransition<
@@ -184,6 +194,7 @@ export function tryActivateLayoutTransition<
     props,
     element,
     LayoutAnimationType.LAYOUT,
+    false,
     transitionData
   );
 }
