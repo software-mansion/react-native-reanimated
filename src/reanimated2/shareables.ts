@@ -110,7 +110,9 @@ const VALID_ARRAY_VIEWS_NAMES = [
 const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // Below variable stores object that we process in makeShareableCloneRecursive at the specified depth.
 // We use it to check if later on the function reenters with the same object
-let processedObjectAtThresholdDepth: any;
+let processedObjectAtThresholdDepth: unknown;
+
+let shouldWarnAboutBundleFlavor = true;
 
 export function makeShareableCloneRecursive<T>(
   value: any,
@@ -179,16 +181,19 @@ Offending code was: \`${getWorkletCode(value)}\``);
               value.__workletHash,
               value.__stackDetails
             );
-            delete value.__stackDetails;
-          } else if (value.__stackDetails) {
+          } else if (shouldWarnAboutBundleFlavor && value.__stackDetails) {
             // Detected debug version of the worklet in release bundle. This
             // might lead to unexpected issues or errors. Probably one of user
             // dependencies provided transpiled code with debug version of the
             // Reanimated plugin.
-            throw new Error(
-              `[Reanimated] Using dev bundle in a release app build is not supported.
+            shouldWarnAboutBundleFlavor = false;
+            console.warn(
+              `[Reanimated] Using dev bundle in a release app support is limited, it might lead to unexpected issues or errors. We plan to fix this in the future.
 See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#using-dev-bundle-in-a-release-app-build-is-not-supported\` for more details.`
             );
+          }
+          if (value.__stackDetails) {
+            delete value.__stackDetails;
           }
           // to save on transferring static __initData field of worklet structure
           // we request shareable value to persist its UI counterpart. This means
