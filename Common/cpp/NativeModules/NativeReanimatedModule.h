@@ -117,6 +117,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &payload,
       double currentTime);
 
+  inline std::shared_ptr<JSLogger> getJSLogger() const {
+    return jsLogger_;
+  }
+
 #ifdef RCT_NEW_ARCH_ENABLED
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
 
@@ -185,6 +189,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   volatile bool renderRequested_{false};
   const std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
+  const std::shared_ptr<JSLogger> jsLogger_;
   LayoutAnimationsManager layoutAnimationsManager_;
 
 #ifdef RCT_NEW_ARCH_ENABLED
