@@ -52,7 +52,7 @@ function getDelayFromConfig(config: CustomConfig): number {
       config.delayV! / 1000;
 }
 
-function getReducedMotionFromConfig(config: CustomConfig) {
+export function getReducedMotionFromConfig(config: CustomConfig) {
   if (!config.reduceMotionV) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     return useReducedMotion();
@@ -130,7 +130,6 @@ export function getProcessedConfig(
     ),
     delay: getDelayFromConfig(config),
     easing: getEasingFromConfig(config),
-    reduceMotion: getReducedMotionFromConfig(config),
     callback: getCallbackFromConfig(config),
     reversed: getReversedFromConfig(config),
   };
@@ -240,6 +239,9 @@ export function handleExitingAnimation(
   const parent = element.offsetParent;
   const dummy = element.cloneNode() as HTMLElement;
 
+  element.style.animationName = '';
+  element.style.visibility = 'hidden';
+
   // After cloning the element, we want to move all children from original element to its clone. This is because original element
   // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
   // Using element.cloneNode(true) doesn't solve the problem, because it creates copy of children and we won't be able to set their animations
@@ -253,7 +255,6 @@ export function handleExitingAnimation(
   parent?.appendChild(dummy);
 
   // We hide current element so only its copy with proper animation will be displayed
-  element.style.visibility = 'hidden';
 
   dummy.style.position = 'absolute';
   dummy.style.top = `${element.offsetTop}px`;
