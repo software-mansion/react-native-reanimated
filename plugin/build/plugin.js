@@ -32,7 +32,9 @@ var require_utils = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.isRelease = void 0;
     function isRelease() {
-      return false;
+      var _a, _b;
+      const pattern = /(prod|release|stag[ei])/i;
+      return !!(((_a = process.env.BABEL_ENV) === null || _a === void 0 ? void 0 : _a.match(pattern)) || ((_b = process.env.NODE_ENV) === null || _b === void 0 ? void 0 : _b.match(pattern)));
     }
     exports2.isRelease = isRelease;
   }
