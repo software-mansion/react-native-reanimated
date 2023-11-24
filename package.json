@@ -167,7 +167,8 @@
   },
   "lint-staged": {
     "*.(js|ts|tsx)": [
-      "eslint --ext '.js,.ts,.tsx' src/ --ignore-pattern docs --ignore-pattern plugin --ignore-pattern .eslintrc.js --ignore-pattern jest.config.js --ignore-pattern __typetests__",
+      "eslint",
+      "eslint --quiet --ext '.js,.ts,.tsx' src/",
       "prettier --write"
     ],
     "plugin/**/*.ts": "yarn lint:plugin",

@@ -66,6 +66,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       jsi::Runtime &rt,
       const jsi::Value &name,
       const jsi::Value &initializer) override;
+  jsi::Value scheduleOnRuntime(
+      jsi::Runtime &rt,
+      const jsi::Value &workletRuntimeValue,
+      const jsi::Value &shareableWorkletValue) override;
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
@@ -164,6 +168,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
 #ifdef RCT_NEW_ARCH_ENABLED
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Object &props);
+  jsi::Value filterNonAnimatableProps(
+      jsi::Runtime &rt,
+      const jsi::Value &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
   const std::shared_ptr<MessageQueueThread> jsQueue_;
@@ -184,7 +191,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
-
+  std::unordered_set<std::string>
+      animatablePropNames_; // filled by configureProps
   std::shared_ptr<UIManager> uiManager_;
 
   // After app reload, surfaceId on iOS is still 1 but on Android it's 11.

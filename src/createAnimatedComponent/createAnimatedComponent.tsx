@@ -28,7 +28,7 @@ import { getReduceMotionFromConfig } from '../reanimated2/animation/util';
 import { maybeBuild } from '../animationBuilder';
 import { SkipEnteringContext } from '../reanimated2/component/LayoutAnimationConfig';
 import type { AnimateProps } from '../reanimated2';
-import { JSPropUpdater } from './JSPropUpdater';
+import JSPropsUpdater from './JSPropsUpdater';
 import type {
   AnimatedComponentProps,
   AnimatedProps,
@@ -113,7 +113,7 @@ export function createAnimatedComponent(
     animatedStyle: { value: StyleProps } = { value: {} };
     _component: AnimatedComponentRef | HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
-    _JSPropUpdater = new JSPropUpdater();
+    _jsPropsUpdater = new JSPropsUpdater();
     _InlinePropManager = new InlinePropManager();
     _PropsFilter = new PropsFilter();
     _viewInfo?: ViewInfo;
@@ -130,7 +130,7 @@ export function createAnimatedComponent(
 
     componentDidMount() {
       this._attachNativeEvents();
-      this._JSPropUpdater.addOnJSPropsChangeListener(this);
+      this._jsPropsUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
@@ -139,14 +139,17 @@ export function createAnimatedComponent(
         startWebLayoutAnimation(
           this.props,
           this._component as HTMLElement,
-          LayoutAnimationType.ENTERING
+          LayoutAnimationType.ENTERING,
+          !!(this._isFirstRender && this.props.entering)
         );
       }
+
+      this._isFirstRender = false;
     }
 
     componentWillUnmount() {
       this._detachNativeEvents();
-      this._JSPropUpdater.removeOnJSPropsChangeListener(this);
+      this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
       this._InlinePropManager.detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
@@ -514,7 +517,6 @@ export function createAnimatedComponent(
 
     render() {
       const props = this._PropsFilter.filterNonAnimatedProps(this);
-      this._PropsFilter.onRender();
 
       if (isJest()) {
         props.animatedStyle = this.animatedStyle;
@@ -524,7 +526,7 @@ export function createAnimatedComponent(
       // Because of that we can encounter a situation in which component is visible for a short amount of time, and later on animation triggers.
       // I've tested that on various browsers and devices and it did not happen to me. To be sure that it won't happen to someone else,
       // I've decided to hide component at first render. Its visibility is reset in `componentDidMount`.
-      if (IS_WEB && props.entering) {
+      if (this._isFirstRender && IS_WEB && props.entering) {
         props.style = {
           ...(props.style ?? {}),
           visibility: 'hidden', // Hide component until `componentDidMount` triggers

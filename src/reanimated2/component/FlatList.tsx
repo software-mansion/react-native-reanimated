@@ -1,22 +1,25 @@
 'use strict';
 import type { ForwardedRef } from 'react';
-import React, { Component, forwardRef } from 'react';
-import type { FlatListProps, LayoutChangeEvent } from 'react-native';
+import React, { forwardRef } from 'react';
+import type {
+  FlatListProps,
+  LayoutChangeEvent,
+  StyleProp,
+  ViewStyle,
+} from 'react-native';
 import { FlatList } from 'react-native';
 import { AnimatedView } from './View';
 import { createAnimatedComponent } from '../../createAnimatedComponent';
 import type { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
-import type { StyleProps } from '../commonTypes';
-import type { AnimateProps } from '../helperTypes';
 import { LayoutAnimationConfig } from './LayoutAnimationConfig';
+import type { AnimatedProps, AnimatedStyle } from '../helperTypes';
 
-const AnimatedFlatList = createAnimatedComponent(FlatList as any) as any;
+const AnimatedFlatList = createAnimatedComponent(FlatList);
 
 interface CellRendererComponentProps {
-  onLayout: (event: LayoutChangeEvent) => void;
-  // implicit `children` prop has been removed in @types/react^18.0.0
+  onLayout?: ((event: LayoutChangeEvent) => void) | undefined;
   children: React.ReactNode;
-  style?: StyleProps;
+  style?: StyleProp<AnimatedStyle<ViewStyle>>;
 }
 
 const createCellRendererComponent = (
@@ -37,27 +40,26 @@ const createCellRendererComponent = (
   return CellRendererComponent;
 };
 
-interface ReanimatedFlatListPropsWithLayout<T> extends FlatListProps<T> {
+interface ReanimatedFlatListPropsWithLayout<T>
+  extends AnimatedProps<FlatListProps<T>> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
   skipEnteringExitingAnimations?: boolean;
 }
 
 export type FlatListPropsWithLayout<T> = ReanimatedFlatListPropsWithLayout<T>;
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-declare class ReanimatedFlatListClass<T> extends Component<
-  AnimateProps<ReanimatedFlatListPropsWithLayout<T>>
-> {
-  getNode(): FlatList;
-}
-
-interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
-  itemLayoutAnimation?: ILayoutAnimationBuilder;
-  skipEnteringExitingAnimations?: boolean;
+// Since createAnimatedComponent return type is ComponentClass that has the props of the argument,
+// but not things like NativeMethods, etc. we need to add them manually by extending the type.
+interface AnimatedFlatListComplement<T> extends FlatList<T> {
+  getNode(): FlatList<T>;
 }
 
 export const ReanimatedFlatList = forwardRef(
-  (props: ReanimatedFlatListProps<any>, ref: ForwardedRef<FlatList>) => {
+  (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    props: ReanimatedFlatListPropsWithLayout<any>,
+    ref: ForwardedRef<FlatList>
+  ) => {
     const { itemLayoutAnimation, skipEnteringExitingAnimations, ...restProps } =
       props;
 
@@ -93,7 +95,7 @@ export const ReanimatedFlatList = forwardRef(
       </LayoutAnimationConfig>
     );
   }
-) as unknown as ReanimatedFlatList<any>;
+);
 
-export type ReanimatedFlatList<T> = typeof ReanimatedFlatListClass<T> &
-  FlatList<T>;
+export type ReanimatedFlatList<T> = typeof AnimatedFlatList &
+  AnimatedFlatListComplement<T>;

@@ -30,10 +30,10 @@ jobs:
         run: mkdir -p monorepo/packages
       - name: Create RootApp
         working-directory: monorepo
-        run: npx react-native@next init RootApp --skip-install ${{ env.REACT_NATIVE_TEMPLATE }}
+        run: npx react-native init RootApp --skip-install ${{ env.REACT_NATIVE_TEMPLATE }}
       - name: Create PackageApp
         working-directory: monorepo/packages
-        run: npx react-native@next init PackageApp --skip-install ${{ env.REACT_NATIVE_TEMPLATE }}
+        run: npx react-native init PackageApp --skip-install ${{ env.REACT_NATIVE_TEMPLATE }}
       - name: Setup monorepo
         working-directory: monorepo
         run: |
