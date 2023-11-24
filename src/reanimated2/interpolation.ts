@@ -1,11 +1,21 @@
 'use strict';
 
+/**
+ * Extrapolation type.
+ *
+ * @param IDENTITY - returns the provided value as is.
+ * @param CLAMP - clamps the value to the edge of the output range.
+ * @param EXTEND - predicts the values beyond the output range.
+ */
 export enum Extrapolation {
   IDENTITY = 'identity',
   CLAMP = 'clamp',
   EXTEND = 'extend',
 }
 
+/**
+ * Represents the possible values for extrapolation as a string.
+ */
 type ExtrapolationAsString = 'identity' | 'clamp' | 'extend';
 
 interface InterpolationNarrowedInput {
@@ -15,6 +25,9 @@ interface InterpolationNarrowedInput {
   rightEdgeOutput: number;
 }
 
+/**
+ * Allows to specify extrapolation for left and right edge of the interpolation.
+ */
 export interface ExtrapolationConfig {
   extrapolateLeft?: Extrapolation | string;
   extrapolateRight?: Extrapolation | string;
@@ -25,6 +38,9 @@ interface RequiredExtrapolationConfig {
   extrapolateRight: Extrapolation;
 }
 
+/**
+ * Configuration options for extrapolation.
+ */
 export type ExtrapolationType =
   | ExtrapolationConfig
   | Extrapolation
@@ -145,8 +161,16 @@ function internalInterpolate(
   return val;
 }
 
-// TODO: support default values in worklets:
-// e.g. function interpolate(x, input, output, type = Extrapolatation.CLAMP)
+/**
+ * Lets you map a value from one range to another using linear interpolation.
+ *
+ * @param value - A number from the `input` range that is going to be mapped to the `output` range.
+ * @param inputRange - An array of numbers specifying the input range of the interpolation.
+ * @param outputRange - An array of numbers specifying the output range of the interpolation.
+ * @param extrapolate - determines what happens when the `value` goes beyond the `input` range. Defaults to `Extrapolation.EXTEND` - {@link ExtrapolationType}
+ * @returns A mapped value within the output range.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/utilities/interpolate
+ */
 export function interpolate(
   x: number,
   input: readonly number[],
@@ -191,11 +215,13 @@ export function interpolate(
 }
 
 /**
- * `clamp` lets you limit a value within a specified range.
+ * Lets you limit a value within a specified range.
  *
  * @param value - A number that will be returned as long as the provided value is in range between `min` and `max`.
  * @param min - A number which will be returned when provided `value` is lower than `min`.
  * @param max - A number which will be returned when provided `value` is higher than `max`.
+ * @returns A number between min and max bounds.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/utilities/clamp/
  */
 export function clamp(value: number, min: number, max: number) {
   'worklet';
