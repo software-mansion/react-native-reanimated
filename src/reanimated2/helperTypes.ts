@@ -93,11 +93,32 @@ type RestProps<Props extends object> = {
 };
 
 type LayoutProps = {
+  /**
+   * Lets you animate the layout changes when components are added to or removed from the view hierarchy.
+   *
+   * You can use the predefined layout transitions (eg. `LinearTransition`, `FadingTransition`) or create your own ones.
+   *
+   * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions
+   */
   layout?:
     | BaseAnimationBuilder
     | LayoutAnimationFunction
     | typeof BaseAnimationBuilder;
+  /**
+   * Lets you animate an element when it's added to or removed from the view hierarchy.
+   *
+   * You can use the predefined entering animations (eg. `FadeIn`, `SlideInLeft`) or create your own ones.
+   *
+   * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations
+   */
   entering?: EntryOrExitLayoutType;
+  /**
+   * Lets you animate an element when it's added to or removed from the view hierarchy.
+   *
+   * You can use the predefined entering animations (eg. `FadeOut`, `SlideOutRight`) or create your own ones.
+   *
+   * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations
+   */
   exiting?: EntryOrExitLayoutType;
 };
 
