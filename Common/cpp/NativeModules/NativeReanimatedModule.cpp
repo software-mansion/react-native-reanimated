@@ -66,9 +66,8 @@ NativeReanimatedModule::NativeReanimatedModule(
         onRender(timestampMs);
       }),
       animatedSensorModule_(platformDepMethodsHolder),
-#ifndef NDEBUG
-      layoutAnimationsManager_(std::make_shared<JSLogger>(jsScheduler_)),
-#endif
+      jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
+      layoutAnimationsManager_(jsLogger_),
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
