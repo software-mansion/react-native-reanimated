@@ -533,6 +533,7 @@ export function createAnimatedComponent(
       if (
         this._isFirstRender &&
         IS_WEB &&
+        props.entering &&
         !hasReducedMotion(props.entering as CustomConfig)
       ) {
         props.style = {
