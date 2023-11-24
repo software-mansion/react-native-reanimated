@@ -154,11 +154,7 @@ export function createAnimatedComponent(
       this._InlinePropManager.detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
 
-      if (IS_WEB) {
-        if (hasReducedMotion(this.props.exiting as CustomConfig)) {
-          return;
-        }
-
+      if (IS_WEB && !hasReducedMotion(this.props.exiting as CustomConfig)) {
         startWebLayoutAnimation(
           this.props,
           this._component as HTMLElement,
@@ -407,18 +403,18 @@ export function createAnimatedComponent(
       _prevState: Readonly<unknown>,
       // This type comes straight from React
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      snapshot?: any
+      snapshot: DOMRect | null
     ) {
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
       // Snapshot won't be undefined because it comes from getSnapshotBeforeUpdate method
-      if (IS_WEB && snapshot !== null) {
-        if (hasReducedMotion(this.props.layout as CustomConfig)) {
-          return;
-        }
-
+      if (
+        IS_WEB &&
+        snapshot !== null &&
+        !hasReducedMotion(this.props.layout as CustomConfig)
+      ) {
         tryActivateLayoutTransition(
           this.props,
           this._component as HTMLElement,
