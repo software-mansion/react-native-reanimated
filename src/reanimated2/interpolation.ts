@@ -173,38 +173,38 @@ function internalInterpolate(
  */
 export function interpolate(
   x: number,
-  input: readonly number[],
-  output: readonly number[],
+  inputRange: readonly number[],
+  outputRange: readonly number[],
   type?: ExtrapolationType
 ): number {
   'worklet';
-  if (input.length < 2 || output.length < 2) {
+  if (inputRange.length < 2 || outputRange.length < 2) {
     throw new Error(
-      '[Reanimated] Interpolation input and output should contain at least two values.'
+      '[Reanimated] Interpolation input and output ranges should contain at least two values.'
     );
   }
 
   const extrapolationConfig = validateType(type);
-  const length = input.length;
+  const length = inputRange.length;
   const narrowedInput: InterpolationNarrowedInput = {
-    leftEdgeInput: input[0],
-    rightEdgeInput: input[1],
-    leftEdgeOutput: output[0],
-    rightEdgeOutput: output[1],
+    leftEdgeInput: inputRange[0],
+    rightEdgeInput: inputRange[1],
+    leftEdgeOutput: outputRange[0],
+    rightEdgeOutput: outputRange[1],
   };
   if (length > 2) {
-    if (x > input[length - 1]) {
-      narrowedInput.leftEdgeInput = input[length - 2];
-      narrowedInput.rightEdgeInput = input[length - 1];
-      narrowedInput.leftEdgeOutput = output[length - 2];
-      narrowedInput.rightEdgeOutput = output[length - 1];
+    if (x > inputRange[length - 1]) {
+      narrowedInput.leftEdgeInput = inputRange[length - 2];
+      narrowedInput.rightEdgeInput = inputRange[length - 1];
+      narrowedInput.leftEdgeOutput = outputRange[length - 2];
+      narrowedInput.rightEdgeOutput = outputRange[length - 1];
     } else {
       for (let i = 1; i < length; ++i) {
-        if (x <= input[i]) {
-          narrowedInput.leftEdgeInput = input[i - 1];
-          narrowedInput.rightEdgeInput = input[i];
-          narrowedInput.leftEdgeOutput = output[i - 1];
-          narrowedInput.rightEdgeOutput = output[i];
+        if (x <= inputRange[i]) {
+          narrowedInput.leftEdgeInput = inputRange[i - 1];
+          narrowedInput.rightEdgeInput = inputRange[i];
+          narrowedInput.leftEdgeOutput = outputRange[i - 1];
+          narrowedInput.rightEdgeOutput = outputRange[i];
           break;
         }
       }
