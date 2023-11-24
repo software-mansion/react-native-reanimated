@@ -236,7 +236,7 @@ export class SharedTransition {
    * Lets you create a custom shared transition animation. Other shared transition modifiers can be chained alongside this modifier.
    *
    * @param customAnimationFactory - Callback function that have to return an object with styles for the custom shared transition.
-   * @returns A `SharedTransition` object. Styles returned from this function need to be to the `sharedTransitionStyle` prop.
+   * @returns A {@link SharedTransition} object. Styles returned from this function need to be to the `sharedTransitionStyle` prop.
    * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
    * @experimental
    */
@@ -273,7 +273,7 @@ export class SharedTransition {
   /**
    * Whether the transition is progress-bound or not. Other shared transition modifiers can be chained alongside this modifier.
    *
-   * @param transitionType - Type of the transition. Configured with `SharedTransitionType` enum.
+   * @param transitionType - Type of the transition. Configured with {@link SharedTransitionType} enum.
    * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
    * @experimental
    */
