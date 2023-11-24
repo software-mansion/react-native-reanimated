@@ -3,7 +3,8 @@
 export {
   startWebLayoutAnimation,
   tryActivateLayoutTransition,
-  hasReducedMotion,
 } from './animationsManager';
+
+export { getReducedMotionFromConfig } from './componentUtils';
 
 export { configureWebLayoutAnimations } from './domUtils';
