@@ -12,6 +12,6 @@ namespace reanimated {
 std::string getReanimatedCppVersion();
 
 bool matchVersion(const std::string &, const std::string &);
-void checkJSVersion(jsi::Runtime &, std::shared_ptr<JSLogger>);
+void checkJSVersion(jsi::Runtime &, const std::shared_ptr<JSLogger> &);
 
 }; // namespace reanimated

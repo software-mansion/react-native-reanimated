@@ -187,7 +187,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   volatile bool renderRequested_{false};
   const std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
-  std::shared_ptr<JSLogger> jsLogger_;
+  const std::shared_ptr<JSLogger> jsLogger_;
   LayoutAnimationsManager layoutAnimationsManager_;
 
 #ifdef RCT_NEW_ARCH_ENABLED

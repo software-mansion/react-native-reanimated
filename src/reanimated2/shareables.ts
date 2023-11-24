@@ -112,8 +112,6 @@ const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // We use it to check if later on the function reenters with the same object
 let processedObjectAtThresholdDepth: unknown;
 
-let shouldWarnAboutBundleFlavor = true;
-
 let shouldWarnAboutMissingPluginVersion = true;
 
 export function makeShareableCloneRecursive<T>(
@@ -186,18 +184,12 @@ Offending code was: \`${getWorkletCode(value)}\``);
               value.__workletHash,
               value.__stackDetails
             );
-          } else if (shouldWarnAboutBundleFlavor && value.__stackDetails) {
-            // Detected debug version of the worklet in release bundle. This
-            // might lead to unexpected issues or errors. Probably one of user
-            // dependencies provided transpiled code with debug version of the
-            // Reanimated plugin.
-            shouldWarnAboutBundleFlavor = false;
-            console.warn(
-              `[Reanimated] Using dev bundle in a release app support is limited, it might lead to unexpected issues or errors.
-See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#using-dev-bundle-in-a-release-app-build-is-not-supported\` for more details.`
-            );
           }
           if (value.__stackDetails) {
+            // `Error` type of value cannot be copied to the UI thread, so we
+            // remove it after we handled it in DEV mode or delete it to ignore it in RELEASE.
+            // Not removing this would cause an infinite loop in RELEASE and it just seems more elegant
+            // to handle it this way.
             delete value.__stackDetails;
           }
           // to save on transferring static __initData field of worklet structure
