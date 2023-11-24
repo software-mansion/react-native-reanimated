@@ -3,9 +3,9 @@
 /**
  * Extrapolation type.
  *
- * @param IDENTITY - returns the provided value as is.
- * @param CLAMP - clamps the value to the edge of the output range.
- * @param EXTEND - predicts the values beyond the output range.
+ * @param IDENTITY - Returns the provided value as is.
+ * @param CLAMP - Clamps the value to the edge of the output range.
+ * @param EXTEND - Predicts the values beyond the output range.
  */
 export enum Extrapolation {
   IDENTITY = 'identity',
@@ -167,7 +167,7 @@ function internalInterpolate(
  * @param value - A number from the `input` range that is going to be mapped to the `output` range.
  * @param inputRange - An array of numbers specifying the input range of the interpolation.
  * @param outputRange - An array of numbers specifying the output range of the interpolation.
- * @param extrapolate - determines what happens when the `value` goes beyond the `input` range. Defaults to `Extrapolation.EXTEND` - {@link ExtrapolationType}
+ * @param extrapolate - determines what happens when the `value` goes beyond the `input` range. Defaults to `Extrapolation.EXTEND` - {@link ExtrapolationType}.
  * @returns A mapped value within the output range.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/utilities/interpolate
  */

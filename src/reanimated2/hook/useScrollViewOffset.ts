@@ -21,10 +21,10 @@ const scrollEventNames = [
 ];
 
 /**
- * Lets you synchronously get the current offset of a ScrollView.
+ * Lets you synchronously get the current offset of a `ScrollView`.
  *
- * @param animatedRef - an [animated ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef) attached to an Animated.ScrollView component
- * @returns a shared value which holds the current offset of the ScrollView
+ * @param animatedRef - An [animated ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef) attached to an Animated.ScrollView component.
+ * @returns A shared value which holds the current offset of the `ScrollView`.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollViewOffset
  */
 export function useScrollViewOffset(

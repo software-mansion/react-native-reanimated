@@ -40,7 +40,7 @@ const getTagValueFunction = IS_FABRIC
 /**
  * Lets you get a reference of a view.
  *
- * @returns an object with a current property which contains an instance of a component.
+ * @returns An object with a `.current` property which contains an instance of a component.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef
  */
 export function useAnimatedRef<

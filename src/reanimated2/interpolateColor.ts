@@ -193,7 +193,7 @@ const getInterpolateHSV = (
  * @param inputRange - An array of numbers specifying the input range of the interpolation.
  * @param outputRange - An array of output colors values (eg. "red", "#00FFCC", "rgba(255, 0, 0, 0.5)").
  * @param colorSpace - The color space to use for interpolation. Defaults to 'RGB'.
- * @param options - Additional options for interpolation - {@link InterpolationOptions}
+ * @param options - Additional options for interpolation - {@link InterpolationOptions}.
  * @returns The color after interpolation from within the output range in rgba(r, g, b, a) format.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/utilities/interpolateColor
  */

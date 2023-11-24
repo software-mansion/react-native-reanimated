@@ -7,8 +7,8 @@ import { makeMutable } from '../core';
 /**
  * Lets you define shared values in your components.
  *
- * @param initialValue - the value you want to be initially stored to a `.value` property
- * @returns a shared value with a single `.value` property initially set to the `initialValue`
+ * @param initialValue - The value you want to be initially stored to a `.value` property.
+ * @returns A shared value with a single `.value` property initially set to the `initialValue`.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue
  */
 export function useSharedValue<Value>(

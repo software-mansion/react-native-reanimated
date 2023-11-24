@@ -52,10 +52,10 @@ type withTimingType = <T extends AnimatableValue>(
 /**
  * Lets you create an animation based on duration and easing.
  *
- * @param toValue - the value on which the animation will come at rest - {@link AnimatableValue}
- * @param config - the timing animation configuration - {@link TimingConfig}
- * @param callback - a function called on animation complete - {@link AnimationCallback}
- * @returns an [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation
+ * @param toValue - The value on which the animation will come at rest - {@link AnimatableValue}.
+ * @param config - The timing animation configuration - {@link TimingConfig}.
+ * @param callback - A function called on animation complete - {@link AnimationCallback}.
+ * @returns An [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming
  */
 export const withTiming = function (
