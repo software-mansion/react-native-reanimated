@@ -38,12 +38,18 @@ interface Operation {
 
 export type LockObject = { lock: boolean };
 
-export const TEST_MESSAGES = {
+export const RUNTIME_TEST_ERRORS = {
   UNDEFINED_TEST_SUITE: 'Undefined test suite context',
   UNDEFINED_TEST_CASE: 'Undefined test case context',
   NO_MOCKED_TIMESTAMP:
     "Seems that you've forgot to call `mockAnimationTimer()`",
 };
+
+function logInFrame(text: string) {
+  console.log(`\t╔${'═'.repeat(text.length + 2)}╗`);
+  console.log(`\t║ ${text} ║`);
+  console.log(`\t╚${'═'.repeat(text.length + 2)}╝`);
+}
 
 export class TestRunner {
   private _testSuites: TestSuite[] = [];
@@ -77,13 +83,13 @@ export class TestRunner {
 
   private _assertTestSuite(test: TestSuite | null): asserts test is TestSuite {
     if (!test) {
-      throw new Error(TEST_MESSAGES.UNDEFINED_TEST_SUITE);
+      throw new Error(RUNTIME_TEST_ERRORS.UNDEFINED_TEST_SUITE);
     }
   }
 
   private _assertTestCase(test: TestCase | null): asserts test is TestCase {
     if (!test) {
-      throw new Error(TEST_MESSAGES.UNDEFINED_TEST_CASE);
+      throw new Error(RUNTIME_TEST_ERRORS.UNDEFINED_TEST_CASE);
     }
   }
 
@@ -113,24 +119,27 @@ export class TestRunner {
   public async runTests() {
     for (const testSuite of this._testSuites) {
       this._currentTestSuite = testSuite;
-      console.log(`+ Running test suite: ${testSuite.name}`);
-      console.log(testSuite);
+
+      logInFrame(`Running test suite: ${testSuite.name}`);
+
       testSuite.buildSuite();
       if (testSuite.beforeAll) {
         await testSuite.beforeAll();
       }
+
       for (const testCase of testSuite.testCases) {
         this._currentTestCase = testCase;
-        console.log(`\t - Running test case: ${testCase.name}`);
+
         if (testSuite.beforeEach) {
           await testSuite.beforeEach();
         }
         await testCase.testCase();
         if (testCase.errors.length > 0) {
-          console.error(testCase.errors);
+          console.log(`\t • ${testCase.name} ❌`);
+          console.error(`\t${testCase.errors}`);
           console.log('\t -----------------------------------------------');
         } else {
-          console.log('\t ✅ OK');
+          console.log(`\t • ${testCase.name} ✅`);
           console.log('\t -----------------------------------------------');
         }
         if (testSuite.afterEach) {
@@ -154,17 +163,24 @@ export class TestRunner {
     this._assertTestCase(this._currentTestCase);
     this._assertTestCase(this._currentTestCase);
     const errors = this._currentTestCase?.errors;
+
     return {
-      toBe: (expected: any) => {
-        if (value !== expected) {
-          errors.push(`Expected ${value} received ${expected}`);
+      toBe: (expected: string) => {
+        // Normalize this or we get errors like "Expected 100 received 100.0"
+        if (!Number.isNaN(Number(expected))) {
+          if (Number(value) !== Number(expected)) {
+            errors.push(`Expected ${expected} received ${value}`);
+          }
+        } else if (value !== expected) {
+          errors.push(`Expected ${expected} received ${value}`);
         }
       },
+
       toMatchSnapshot: (expected: any) => {
         if (JSON.stringify(value) !== JSON.stringify(expected)) {
           errors.push(
-            `Expected ${JSON.stringify(value)} received ${JSON.stringify(
-              expected
+            `Expected ${JSON.stringify(expected)} received ${JSON.stringify(
+              value
             )}`
           );
         }

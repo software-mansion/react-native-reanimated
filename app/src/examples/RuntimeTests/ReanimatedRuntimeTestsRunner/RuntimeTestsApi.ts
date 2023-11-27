@@ -1,4 +1,4 @@
-import { TEST_MESSAGES, TestRunner } from './TestRunner';
+import { RUNTIME_TEST_ERRORS, TestRunner } from './TestRunner';
 import { TestComponent } from './TestComponent';
 
 const testRunner = new TestRunner();
@@ -101,6 +101,6 @@ function assertMockedAnimationTimestamp(
   timestamp: number | undefined
 ): asserts timestamp is number {
   if (timestamp === undefined) {
-    console.error(TEST_MESSAGES.NO_MOCKED_TIMESTAMP);
+    console.error(RUNTIME_TEST_ERRORS.NO_MOCKED_TIMESTAMP);
   }
 }

@@ -2,6 +2,8 @@ package com.swmansion.reanimated;
 
 import static java.lang.Float.NaN;
 
+import android.content.res.Resources;
+import android.util.DisplayMetrics;
 import android.view.View;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.GuardedRunnable;
@@ -388,6 +390,13 @@ public class NodesManager implements EventDispatcherListener {
     compatibility.synchronouslyUpdateUIProps(viewTag, uiProps);
   }
 
+  public float convertPixelsToDp(float px) {
+    Resources resources = mContext.getResources();
+    DisplayMetrics metrics = resources.getDisplayMetrics();
+    float dp = (px / ((float) metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT));
+    return dp;
+  }
+
   public String obtainProp(int viewTag, String propName) {
     View view = mUIManager.resolveView(viewTag);
     String result =
@@ -398,6 +407,18 @@ public class NodesManager implements EventDispatcherListener {
     } else if (propName.equals("zIndex")) {
       Float zIndex = view.getElevation();
       result = Float.toString(zIndex);
+    } else if (propName.equals("width")) {
+      float width = convertPixelsToDp(view.getWidth());
+      result = Float.toString(width);
+    } else if (propName.equals("height")) {
+      int height = view.getHeight();
+      result = Integer.toString(height);
+    } else if (propName.equals("top")) {
+      int top = view.getTop();
+      result = Integer.toString(top);
+    } else if (propName.equals("left")) {
+      int left = view.getLeft();
+      result = Integer.toString(left);
     }
     return result;
   }
