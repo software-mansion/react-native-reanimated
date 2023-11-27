@@ -18,32 +18,31 @@ declare global {
   var mockedAnimationTimestamp: number | undefined;
   var originalRequestAnimationFrame: any; //TODO type
   var originalGetAnimationTimestamp: any; //TODO type
-  var _getAnimationTimestamp: any; //TODO this is redundant
-  var __frameTimestamp: any; //TODO this is redundant
-  var _IS_FABRIC: boolean | undefined; //TODO this is redundant
-  var _updatePropsPaper: any; //TODO this is redundant
-  var _updatePropsFabric: any; //TODO this is redundant
   var originalUpdateProps: any; //TODO type
   var originalNotifyAboutProgress: any; //TODO type
-  var _notifyAboutProgress: any; //TODO this is redundant
+
+  //TODO These types are already defined:
+  var _getAnimationTimestamp: any;
+  var __frameTimestamp: any;
+  var _IS_FABRIC: boolean | undefined;
+  var _updatePropsPaper: any;
+  var _updatePropsFabric: any;
+  var _notifyAboutProgress: any;
 }
 
-interface PaperOperation {
+interface Operation {
   tag: number;
   name: string;
   updates: StyleProps | AnimatedStyle<any>;
 }
-interface FabricOperation {
-  shadowNodeWrapper: {
-    __hostObjectShadowNodeWrapper: never;
-  };
-  updates: StyleProps | AnimatedStyle<any>;
-}
+
 export type LockObject = { lock: boolean };
 
-const Messages = {
+export const TEST_MESSAGES = {
   UNDEFINED_TEST_SUITE: 'Undefined test suite context',
   UNDEFINED_TEST_CASE: 'Undefined test case context',
+  NO_MOCKED_TIMESTAMP:
+    "Seems that you've forgot to call `mockAnimationTimer()`",
 };
 
 export class TestRunner {
@@ -53,7 +52,7 @@ export class TestRunner {
   private _renderHook: (component: any) => void = () => {};
   private _renderLock: LockObject = { lock: false };
 
-  private lockObject: LockObject = {
+  private _lockObject: LockObject = {
     lock: false,
   };
 
@@ -76,19 +75,20 @@ export class TestRunner {
     });
   }
 
-  private assertTestSuite(test: TestSuite | null): asserts test is TestSuite {
+  private _assertTestSuite(test: TestSuite | null): asserts test is TestSuite {
     if (!test) {
-      throw new Error(Messages.UNDEFINED_TEST_SUITE);
+      throw new Error(TEST_MESSAGES.UNDEFINED_TEST_SUITE);
     }
   }
-  private assertTestCase(test: TestCase | null): asserts test is TestCase {
+
+  private _assertTestCase(test: TestCase | null): asserts test is TestCase {
     if (!test) {
-      throw new Error(Messages.UNDEFINED_TEST_CASE);
+      throw new Error(TEST_MESSAGES.UNDEFINED_TEST_CASE);
     }
   }
 
   public test(name: string, testCase: () => void) {
-    this.assertTestSuite(this._currentTestSuite);
+    this._assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.testCases.push({
       name,
       testCase,
@@ -100,15 +100,13 @@ export class TestRunner {
   public useTestRef(name: string): React.MutableRefObject<any> {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const ref = useRef();
-    this.assertTestCase(this._currentTestCase);
+    this._assertTestCase(this._currentTestCase);
     this._currentTestCase.componentsRefs[name] = ref;
     return ref;
   }
 
   public getTestComponent(name: string): TestComponent {
-    if (!this._currentTestCase) {
-      throw new Error('Undefined test case context');
-    }
+    this._assertTestCase(this._currentTestCase);
     return new TestComponent(this._currentTestCase.componentsRefs[name]);
   }
 
@@ -153,7 +151,8 @@ export class TestRunner {
   }
 
   public expect(value: any) {
-    this.assertTestCase(this._currentTestCase);
+    this._assertTestCase(this._currentTestCase);
+    this._assertTestCase(this._currentTestCase);
     const errors = this._currentTestCase?.errors;
     return {
       toBe: (expected: any) => {
@@ -174,22 +173,22 @@ export class TestRunner {
   }
 
   public beforeAll(job: () => void) {
-    this.assertTestSuite(this._currentTestSuite);
+    this._assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.beforeAll = job;
   }
 
   public afterAll(job: () => void) {
-    this.assertTestSuite(this._currentTestSuite);
+    this._assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.afterAll = job;
   }
 
   public beforeEach(job: () => void) {
-    this.assertTestSuite(this._currentTestSuite);
+    this._assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.beforeEach = job;
   }
 
   public afterEach(job: () => void) {
-    this.assertTestSuite(this._currentTestSuite);
+    this._assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.afterEach = job;
   }
 
@@ -200,7 +199,7 @@ export class TestRunner {
   ) {
     return new Promise((resolve) => {
       const interval = setInterval(() => {
-        if (targetObject[targetProperty] != initialValue) {
+        if (targetObject[targetProperty] !== initialValue) {
           clearInterval(interval);
           resolve(targetObject[targetProperty]);
         }
@@ -209,19 +208,19 @@ export class TestRunner {
   }
 
   public async runOnUiSync(worklet: () => void) {
-    const unlock = () => (this.lockObject.lock = false);
+    const unlock = () => (this._lockObject.lock = false);
 
-    this.lockObject.lock = true;
+    this._lockObject.lock = true;
     runOnUI(() => {
       'worklet';
       worklet();
       runOnJS(unlock)();
     })();
-    await this.waitForPropertyValueChange(this.lockObject, 'lock', true);
+    await this.waitForPropertyValueChange(this._lockObject, 'lock', true);
   }
 
   public async recordAnimationUpdates(mergeOperations = true) {
-    const updates = makeMutable<any>(null);
+    const updates = makeMutable<Array<any> | null>(null);
 
     await this.runOnUiSync(() => {
       'worklet';
@@ -230,34 +229,27 @@ export class TestRunner {
         : global._updatePropsPaper;
       global.originalUpdateProps = originalUpdateProps;
 
-      const mockedUpdateProps = mergeOperations
-        ? (operations: FabricOperation[]) => {
-            if (updates.value == null) {
-              updates.value = [];
+      const mockedUpdateProps = (operations: Operation[]) => {
+        if (updates.value === null) {
+          updates.value = [];
+        }
+
+        if (mergeOperations) {
+          operations.forEach((operation) => {
+            updates?.value?.push(operation.updates);
+          });
+          updates.value = [...updates.value];
+        } else {
+          for (const operation of operations) {
+            if (updates.value[operation.tag] === undefined) {
+              updates.value[operation.tag] = [];
             }
-            const newUpdates: any = [];
-            for (const operation of operations) {
-              newUpdates.push(operation.updates);
-            }
-            for (const newUpdate of newUpdates) {
-              updates.value.push(newUpdate);
-            }
-            updates.value = [...updates.value];
-            originalUpdateProps(operations);
+            updates.value[operation.tag].push(updates.value[operation.tag]);
           }
-        : (operations: PaperOperation[]) => {
-            if (updates.value == null) {
-              updates.value = {};
-            }
-            for (const operation of operations) {
-              if (updates.value[operation.tag] == undefined) {
-                updates.value[operation.tag] = [];
-              }
-              updates.value[operation.tag].push(updates.value[operation.tag]);
-            }
-            updates.value = operations;
-            originalUpdateProps(operations);
-          };
+          updates.value = operations;
+        }
+        originalUpdateProps(operations);
+      };
 
       if (global._IS_FABRIC) {
         global._updatePropsFabric = mockedUpdateProps;
@@ -267,34 +259,26 @@ export class TestRunner {
 
       const originalNotifyAboutProgress = global._notifyAboutProgress;
       global.originalNotifyAboutProgress = originalNotifyAboutProgress;
-      global._notifyAboutProgress = mergeOperations
-        ? (
-            tag: number,
-            value: Record<string, unknown>,
-            isSharedTransition: boolean
-          ) => {
-            if (updates.value === null) {
-              updates.value = [];
-            }
-            updates.value.push({ ...value });
-            updates.value = [...updates.value];
-            originalNotifyAboutProgress(tag, value, isSharedTransition);
+      global._notifyAboutProgress = (
+        tag: number,
+        value: Record<string, unknown>,
+        isSharedTransition: boolean
+      ) => {
+        if (updates.value === null) {
+          updates.value = [];
+        }
+        if (mergeOperations) {
+          updates.value.push({ ...value });
+          updates.value = [...updates.value];
+        } else {
+          if (updates.value[tag] === undefined) {
+            updates.value[tag] = [];
           }
-        : (
-            tag: number,
-            value: Record<string, unknown>,
-            isSharedTransition: boolean
-          ) => {
-            if (updates.value === null) {
-              updates.value = {};
-            }
-            if (updates.value[tag] === undefined) {
-              updates.value[tag] = [];
-            }
-            updates.value[tag].push(value);
-            updates.value = { ...updates.value };
-            originalNotifyAboutProgress(tag, value, isSharedTransition);
-          };
+          updates.value[tag].push(value);
+          updates.value = { ...updates.value };
+        }
+        originalNotifyAboutProgress(tag, value, isSharedTransition);
+      };
     });
     return updates;
   }

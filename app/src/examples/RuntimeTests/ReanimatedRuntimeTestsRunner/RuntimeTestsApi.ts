@@ -1,4 +1,4 @@
-import { TestRunner } from './TestRunner';
+import { TEST_MESSAGES, TestRunner } from './TestRunner';
 import { TestComponent } from './TestComponent';
 
 const testRunner = new TestRunner();
@@ -68,6 +68,7 @@ export async function unmockAnimationTimer() {
 export async function setAnimationTimestamp(timestamp: number) {
   await testRunner.runOnUiSync(() => {
     'worklet';
+    assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
     global.mockedAnimationTimestamp = timestamp;
   });
 }
@@ -75,9 +76,7 @@ export async function setAnimationTimestamp(timestamp: number) {
 export async function advanceAnimationByTime(time: number) {
   await testRunner.runOnUiSync(() => {
     'worklet';
-    if (!global.mockedAnimationTimestamp) {
-      global.mockedAnimationTimestamp = 0;
-    }
+    assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
     global.mockedAnimationTimestamp += time;
   });
 }
@@ -85,9 +84,7 @@ export async function advanceAnimationByTime(time: number) {
 export async function advanceAnimationByFrames(frameCount: number) {
   await testRunner.runOnUiSync(() => {
     'worklet';
-    if (!global.mockedAnimationTimestamp) {
-      global.mockedAnimationTimestamp = 0;
-    }
+    assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
     global.mockedAnimationTimestamp += frameCount * 16;
   });
 }
@@ -98,4 +95,12 @@ export async function recordAnimationUpdates(mergeOperations = true) {
 
 export async function stopRecordingAnimationUpdates() {
   testRunner.stopRecordingAnimationUpdates();
+}
+
+function assertMockedAnimationTimestamp(
+  timestamp: number | undefined
+): asserts timestamp is number {
+  if (timestamp === undefined) {
+    console.error(TEST_MESSAGES.NO_MOCKED_TIMESTAMP);
+  }
 }

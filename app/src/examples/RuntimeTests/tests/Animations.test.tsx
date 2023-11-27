@@ -35,11 +35,12 @@ const AnimatedComponent = () => {
   }, [widthSV]);
 
   return (
-    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: 'red' }}>
+    <View
+      style={{ flex: 1, flexDirection: 'column', backgroundColor: 'beige' }}>
       <Animated.View
         ref={ref}
         style={[
-          { width: 0, height: 80, backgroundColor: 'black', margin: 30 },
+          { width: 0, height: 80, backgroundColor: 'chocolate', margin: 30 },
           style,
         ]}
       />
@@ -51,11 +52,17 @@ const LayoutAnimation = () => {
   const ref = useTestRef('AnimatedComponent');
 
   return (
-    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: 'red' }}>
+    <View
+      style={{ flex: 1, flexDirection: 'column', backgroundColor: 'beige' }}>
       <Animated.View
         ref={ref}
         entering={FadeIn}
-        style={{ width: 50, height: 50, backgroundColor: 'black', margin: 30 }}
+        style={{
+          width: 50,
+          height: 50,
+          backgroundColor: 'chocolate',
+          margin: 30,
+        }}
       />
     </View>
   );
