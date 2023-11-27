@@ -166,16 +166,23 @@ export class TestRunner {
 
     return {
       toBe: (expected: string) => {
-        // Normalize this or we get errors like "Expected 100 received 100.0"
+        if (value !== expected) {
+          errors.push(`Expected ${expected} received ${value}`);
+        }
+      },
+      /** Please notice that on Android we convert pixels to density independent pixels
+       *  where pixels are rounded to integer. Therefore we can expect small fractional
+       * error each time we get any length attribute from android
+       */
+      toBeCloseTo: (expected: string) => {
         if (!Number.isNaN(Number(expected))) {
-          if (Number(value) !== Number(expected)) {
+          if (Math.abs(Number(value) - Number(expected)) > 1) {
             errors.push(`Expected ${expected} received ${value}`);
           }
         } else if (value !== expected) {
           errors.push(`Expected ${expected} received ${value}`);
         }
       },
-
       toMatchSnapshot: (expected: any) => {
         if (JSON.stringify(value) !== JSON.stringify(expected)) {
           errors.push(

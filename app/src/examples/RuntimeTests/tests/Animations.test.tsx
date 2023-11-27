@@ -48,6 +48,9 @@ const AnimatedComponent = () => {
   );
 };
 
+const TOP = 41;
+const LEFT = 42;
+const MARGIN = 10;
 const LayoutAnimation = () => {
   const ref = useTestRef('AnimatedComponent');
 
@@ -58,10 +61,12 @@ const LayoutAnimation = () => {
         ref={ref}
         entering={FadeIn}
         style={{
+          top: TOP,
+          left: LEFT,
           width: 50,
           height: 50,
           backgroundColor: 'chocolate',
-          margin: 30,
+          margin: MARGIN,
         }}
       />
     </View>
@@ -73,14 +78,26 @@ describe('Tests of animations', () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('AnimatedComponent');
     await wait(600);
-    expect(await component.getAnimatedStyle('width')).toBe('123');
+    expect(await component.getAnimatedStyle('width')).toBeCloseTo('123');
   });
 
   test('withTiming - expect pass', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('AnimatedComponent');
     await wait(600);
-    expect(await component.getAnimatedStyle('width')).toBe('100');
+    expect(await component.getAnimatedStyle('width')).toBeCloseTo('100');
+  });
+
+  test('layoutAnimation - top & left', async () => {
+    await render(<LayoutAnimation />);
+    const component = getTestComponent('AnimatedComponent');
+    await wait(600);
+    expect(await component.getAnimatedStyle('top')).toBeCloseTo(
+      `${TOP + MARGIN}`
+    );
+    expect(await component.getAnimatedStyle('left')).toBeCloseTo(
+      `${LEFT + MARGIN}`
+    );
   });
 
   test('withTiming - match snapshot', async () => {
