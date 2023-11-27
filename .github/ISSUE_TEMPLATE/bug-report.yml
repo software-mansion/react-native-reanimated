@@ -106,7 +106,7 @@ body:
       label: Workflow
       description: How is your application managed?
       options:
-        - React Native 
+        - React Native
         - Expo Go
         - Expo Dev Client
 
@@ -136,7 +136,6 @@ body:
       options:
         - Debug mode
         - Release mode
-        - None
 
   - type: dropdown
     id: emulator
