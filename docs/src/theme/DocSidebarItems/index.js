@@ -6,9 +6,6 @@ import styles from './styles.module.css';
 
 const EXPERIMENTAL_APIs = ['shared-element-transitions/overview'];
 const NEW_APIS = [
-  'advanced/setNativeProps',
-  'threading/createWorkletRuntime',
-  'device/useReducedMotion',
   'animations/withClamp',
 ];
 // TODO this item should probably not receive the "activePath" props
