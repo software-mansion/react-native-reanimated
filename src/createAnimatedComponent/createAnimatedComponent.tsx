@@ -51,7 +51,9 @@ import {
   startWebLayoutAnimation,
   tryActivateLayoutTransition,
   configureWebLayoutAnimations,
+  getReducedMotionFromConfig,
 } from '../reanimated2/layoutReanimation/web';
+import type { CustomConfig } from '../reanimated2/layoutReanimation/web/config';
 
 const IS_WEB = isWeb();
 const IS_FABRIC = isFabric();
@@ -129,11 +131,21 @@ export function createAnimatedComponent(
 
       if (IS_WEB) {
         configureWebLayoutAnimations();
+
+        if (!this.props.entering) {
+          this._isFirstRender = false;
+          return;
+        }
+
+        if (getReducedMotionFromConfig(this.props.entering as CustomConfig)) {
+          this._isFirstRender = false;
+          return;
+        }
+
         startWebLayoutAnimation(
           this.props,
           this._component as HTMLElement,
-          LayoutAnimationType.ENTERING,
-          !!(this._isFirstRender && this.props.entering)
+          LayoutAnimationType.ENTERING
         );
       }
 
@@ -147,7 +159,11 @@ export function createAnimatedComponent(
       this._InlinePropManager.detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
 
-      if (IS_WEB) {
+      if (
+        IS_WEB &&
+        this.props.exiting &&
+        !getReducedMotionFromConfig(this.props.exiting as CustomConfig)
+      ) {
         startWebLayoutAnimation(
           this.props,
           this._component as HTMLElement,
@@ -396,14 +412,19 @@ export function createAnimatedComponent(
       _prevState: Readonly<unknown>,
       // This type comes straight from React
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      snapshot?: any
+      snapshot: DOMRect | null
     ) {
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
       // Snapshot won't be undefined because it comes from getSnapshotBeforeUpdate method
-      if (IS_WEB && snapshot !== null) {
+      if (
+        IS_WEB &&
+        snapshot !== null &&
+        this.props.layout &&
+        !getReducedMotionFromConfig(this.props.layout as CustomConfig)
+      ) {
         tryActivateLayoutTransition(
           this.props,
           this._component as HTMLElement,
@@ -519,7 +540,12 @@ export function createAnimatedComponent(
       // Because of that we can encounter a situation in which component is visible for a short amount of time, and later on animation triggers.
       // I've tested that on various browsers and devices and it did not happen to me. To be sure that it won't happen to someone else,
       // I've decided to hide component at first render. Its visibility is reset in `componentDidMount`.
-      if (this._isFirstRender && IS_WEB && props.entering) {
+      if (
+        this._isFirstRender &&
+        IS_WEB &&
+        props.entering &&
+        !getReducedMotionFromConfig(props.entering as CustomConfig)
+      ) {
         props.style = {
           ...(props.style ?? {}),
           visibility: 'hidden', // Hide component until `componentDidMount` triggers

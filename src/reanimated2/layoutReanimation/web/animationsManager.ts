@@ -51,14 +51,6 @@ function checkUndefinedAnimationFail(
   return true;
 }
 
-function checkReduceMotionFail(animationConfig: AnimationConfig) {
-  if (!animationConfig.reduceMotion) {
-    return false;
-  }
-
-  return true;
-}
-
 function chooseAction(
   animationType: LayoutAnimationType,
   animationConfig: AnimationConfig,
@@ -123,10 +115,6 @@ function tryGetAnimationConfigWithTransform<
     initialAnimationName as AnimationNames
   );
 
-  if (checkReduceMotionFail(animationConfig)) {
-    return null;
-  }
-
   return { animationConfig, transform };
 }
 
@@ -136,11 +124,8 @@ export function startWebLayoutAnimation<
   props: Readonly<AnimatedComponentProps<ComponentProps>>,
   element: HTMLElement,
   animationType: LayoutAnimationType,
-  shouldMakeVisible = false,
   transitionData?: TransitionData
 ) {
-  let visibilityDelay = 0;
-
   const maybeAnimationConfigWithTransform = tryGetAnimationConfigWithTransform(
     props,
     animationType
@@ -149,8 +134,6 @@ export function startWebLayoutAnimation<
   if (maybeAnimationConfigWithTransform) {
     const { animationConfig, transform } = maybeAnimationConfigWithTransform;
 
-    visibilityDelay = animationConfig.delay;
-
     chooseAction(
       animationType,
       animationConfig,
@@ -158,10 +141,8 @@ export function startWebLayoutAnimation<
       transitionData as TransitionData,
       transform
     );
-  }
-
-  if (shouldMakeVisible) {
-    makeElementVisible(element, visibilityDelay);
+  } else {
+    makeElementVisible(element, 0);
   }
 }
 
@@ -194,7 +175,6 @@ export function tryActivateLayoutTransition<
     props,
     element,
     LayoutAnimationType.LAYOUT,
-    false,
     transitionData
   );
 }
