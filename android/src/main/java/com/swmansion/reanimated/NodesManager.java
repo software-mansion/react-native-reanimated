@@ -401,24 +401,31 @@ public class NodesManager implements EventDispatcherListener {
     View view = mUIManager.resolveView(viewTag);
     String result =
         "error: unknown propName " + propName + ", currently supported: opacity, zIndex";
-    if (propName.equals("opacity")) {
-      Float opacity = view.getAlpha();
-      result = Float.toString(opacity);
-    } else if (propName.equals("zIndex")) {
-      Float zIndex = view.getElevation();
-      result = Float.toString(zIndex);
-    } else if (propName.equals("width")) {
-      float width = convertPixelsToDp(view.getWidth());
-      result = Float.toString(width);
-    } else if (propName.equals("height")) {
-      int height = view.getHeight();
-      result = Integer.toString(height);
-    } else if (propName.equals("top")) {
-      int top = view.getTop();
-      result = Integer.toString(top);
-    } else if (propName.equals("left")) {
-      int left = view.getLeft();
-      result = Integer.toString(left);
+
+    Float value = null;
+    switch (propName) {
+      case "opacity":
+        value = view.getAlpha();
+        break;
+      case "zIndex":
+        value = view.getElevation();
+        break;
+      case "width":
+        value = convertPixelsToDp(view.getWidth());
+        break;
+      case "height":
+        value = convertPixelsToDp(view.getHeight());
+        break;
+      case "top":
+        value = convertPixelsToDp(view.getTop());
+        break;
+      case "left":
+        value = convertPixelsToDp(view.getLeft());
+        break;
+    }
+
+    if (value != null) {
+      result = Float.toString(value);
     }
     return result;
   }
