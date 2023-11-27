@@ -109,16 +109,18 @@ export default function App({ options }): Props {
     <View style={styles.container}>
       {renderExample(clampedStyle, 'Clamped spring', true)}
       {renderExample(defaultStyle, 'Default spring', false)}
-
-      <Button
-        title="toggle"
-        onPress={() => {
-          toggle.value = !toggle.value;
-          width.value = toggle.value
-            ? options.lowerSpringToValue
-            : options.upperSpringToValue;
-        }}
-      />
+      <View style={styles.toggleButton}>
+        {' '}
+        <Button
+          title="toggle"
+          onPress={() => {
+            toggle.value = !toggle.value;
+            width.value = toggle.value
+              ? options.lowerSpringToValue
+              : options.upperSpringToValue;
+          }}
+        />
+      </View>
     </View>
   );
 }
@@ -157,5 +159,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginVertical: 4,
     color: VIOLET,
+  },
+  toggleButton: {
+    marginVertical: 20,
   },
 });

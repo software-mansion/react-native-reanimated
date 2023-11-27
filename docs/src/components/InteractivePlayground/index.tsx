@@ -92,14 +92,21 @@ export default function InteractivePlayground(
   );
 }
 
-interface RangeProps<Type extends number | [number, number]> {
+interface RangeProps {
   min: number;
   max: number;
   step?: number;
   value: number;
-  onChange: Type extends number
-    ? Dispatch<number>
-    : [Dispatch<number>, Dispatch<number>];
+  onChange: Dispatch<number>;
+  label: string;
+}
+
+interface DoubleRangeProps {
+  min: number;
+  max: number;
+  step?: number;
+  value: [number, number];
+  onChange: [Dispatch<number>, Dispatch<number>];
   label: string;
 }
 
@@ -134,7 +141,7 @@ export function Range({
   onChange,
   label,
   step = 1,
-}: RangeProps<number>) {
+}: RangeProps) {
   return (
     <>
       <div className={styles.row}>
@@ -173,7 +180,7 @@ export function DoubleRange({
   onChange,
   label,
   step = 1,
-}: RangeProps<[number, number]>) {
+}: DoubleRangeProps) {
   return (
     <>
       <div className={styles.row}>
@@ -184,6 +191,7 @@ export function DoubleRange({
               type="number"
               hiddenLabel
               size="small"
+              key={`${label}${idx}`}
               inputProps={{ min: min, max: max, step: step }}
               sx={TextFieldStyling}
               value={value[idx]}
