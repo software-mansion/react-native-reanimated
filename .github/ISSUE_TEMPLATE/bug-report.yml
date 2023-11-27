@@ -120,13 +120,23 @@ body:
         - Fabric (New Architecture)
 
   - type: dropdown
-    id: build-type
+    id: bundle-build-type
     attributes:
-      label: Build type
-      description: What mode your application is running?
+      label: JavaScript bundle build type
+      description: What is the type of your JavaScript bundle?
       options:
         - Debug mode
         - Release mode
+
+  - type: dropdown
+    id: app-build-type
+    attributes:
+      label: App build type
+      description: What is the type of your App build?
+      options:
+        - Debug mode
+        - Release mode
+        - None
 
   - type: dropdown
     id: emulator
