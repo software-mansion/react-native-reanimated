@@ -50,12 +50,12 @@ export default function useClampPlayground() {
     setUpperSpringToValue(initialState.upperSpringToValue);
   };
 
-  const code = `width: withClamp({
-    min: ${lowerBound}
-    max: ${upperBound}
-  },
-  withSpring(width.value, config)
-)
+  const code = `{
+  width: withClamp(
+    { min: ${lowerBound}, max: ${upperBound} },
+    withSpring(width.value)
+  ),
+}
 `
 
   return {

@@ -22,7 +22,7 @@ interface ClampPlaygroundOptions {
 interface Props {
   options: ClampPlaygroundOptions;
 }
-export default function useClampPlayground({ options }): Props {
+export default function App({ options }): Props {
   const toggle = useSharedValue(false);
   const width = useSharedValue(100);
 
@@ -127,6 +127,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: CLAMP_MARKER_HEIGHT,
   },
   toValueMarker: {
