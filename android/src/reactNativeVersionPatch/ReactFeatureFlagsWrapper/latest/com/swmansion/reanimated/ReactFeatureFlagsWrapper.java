@@ -4,7 +4,7 @@ import com.facebook.react.config.ReactFeatureFlags;
 
 public class ReactFeatureFlagsWrapper {
 
-  public static void setFlags(boolean enableMountHooks) {
+  public static void enableMountHooks() {
     ReactFeatureFlags.enableMountHooks = true;
   }
 

@@ -2,7 +2,7 @@ package com.swmansion.reanimated;
 
 public class ReactFeatureFlagsWrapper {
 
-  public static void setFlags(boolean enableMountHooks) {
+  public static void enableMountHooks() {
     // no-op
   }
 
