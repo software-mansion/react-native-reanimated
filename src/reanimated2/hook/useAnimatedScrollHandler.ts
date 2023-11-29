@@ -28,6 +28,8 @@ export type ScrollHandlerInternal = EventHandlerInternal<RNNativeScrollEvent>;
 /**
  * Lets you run callbacks on ScrollView events. Supports `onScroll`, `onBeginDrag`, `onEndDrag`, `onMomentumBegin`, and `onMomentumEnd` events.
  *
+ * These callbacks are automatically workletized and ran on the UI thread.
+ *
  * @param handlers - An object containing event handlers.
  * @param dependencies - An optional array of dependencies. Only relevant when using Reanimated without the Babel plugin on the Web.
  * @returns An object you need to pass to `onScroll` prop on the `Animated.ScrollView` component.
