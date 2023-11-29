@@ -3,64 +3,11 @@ id: BottomSheet
 sidebar_label: Bottom Sheet
 ---
 
-```tsx
-import { PropsWithChildren } from "react";
-import { Pressable, StyleSheet } from "react-native";
-import Animated, {
-  FadeIn,
-  FadeOut,
-  SlideInDown,
-  SlideOutDown,
-} from "react-native-reanimated";
 
-type BottomSheetProps = PropsWithChildren<{
-  isOpen: boolean;
-  toggleSheet: () => void;
-}>;
-const BottomSheet = ({ isOpen, toggleSheet, children }: BottomSheetProps) =>
-  isOpen ? (
-    <>
-      <Animated.View
-        style={styles.backdrop}
-        entering={FadeIn}
-        exiting={FadeOut}
-      >
-        <Pressable style={styles.flex} onPress={toggleSheet} />
-      </Animated.View>
-      <Animated.View
-        style={styles.sheet}
-        entering={SlideInDown}
-        exiting={SlideOutDown}
-      >
-        {children}
-      </Animated.View>
-    </>
-  ) : null;
+import BottomSheet from '@site/src/examples/BottomSheet';
+import BottomSheetSrc from '!!raw-loader!@site/src/examples/BottomSheet';
 
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
+<InteractiveExample src={BottomSheetSrc} component={<BottomSheet />} />
 
-  sheet: {
-    backgroundColor: "white",
-    padding: 16,
-    height: 200,
-    width: "100%",
-    position: "absolute",
-    bottom: 0,
-    borderTopRightRadius: 20,
-    borderTopLeftRadius: 20,
-    zIndex: 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
-    zIndex: 1,
-  },
-});
-
-export default BottomSheet;
-```
 
 See it live: https://snack.expo.dev/@majronman/bottom-sheet?platform=ios

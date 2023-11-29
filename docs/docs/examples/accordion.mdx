@@ -11,6 +11,7 @@ One important thing to note is that when using `SharedValue` to handle state, we
 
 Let's dive into the code to see how it works and how you can customize it for your specific needs.
 
+
 ```tsx
 import {
   View,
@@ -73,4 +74,8 @@ const AccordionItem = ({
 };
 ```
 
-See it live: https://snack.expo.dev/@majronman/accordion-item
+
+import Accordion from '@site/src/examples/Accordion';
+import AccordionSrc from '!!raw-loader!@site/src/examples/Accordion';
+
+<InteractiveExample src={AccordionSrc} component={<Accordion />} />
