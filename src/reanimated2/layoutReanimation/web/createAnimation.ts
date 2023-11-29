@@ -65,8 +65,8 @@ function addExistingTransform(
 /**
  *  Modifies default animation by preserving transformations that given element already contains.
  *
- * @param animationName Name of the animation to be modified (e.g. `FadeIn`).
- * @param existingTransform Transform values that element already contains.
+ * @param animationName - Name of the animation to be modified (e.g. `FadeIn`).
+ * @param existingTransform - Transform values that element already contains.
  * @returns Animation parsed to keyframe string.
  */
 export function createAnimationWithExistingTransform(
@@ -109,8 +109,8 @@ function generateNextCustomKeyframeName() {
 /**
  * Creates transition of given type, appends it to stylesheet and returns keyframe name.
  *
- * @param transitionType Type of transition (e.g. LINEAR).
- * @param transitionData Object containing data for transforms (translateX, scaleX,...).
+ * @param transitionType - Type of transition (e.g. LINEAR).
+ * @param transitionData - Object containing data for transforms (translateX, scaleX,...).
  * @returns Keyframe name that represents transition.
  */
 export function TransitionGenerator(
