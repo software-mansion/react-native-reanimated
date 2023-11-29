@@ -72,15 +72,34 @@ The `extrapolate` parameter determines what happens when the `value` goes beyond
 
 Available types:
 
-- `Extrapolation.CLAMP` - clamps the value to the edge of the output range.
 - `Extrapolation.EXTEND` - predicts the values beyond the output range.
+- `Extrapolation.CLAMP` - clamps the value to the edge of the output range.
 - `Extrapolation.IDENTITY` - returns the provided value as is.
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+<div style={{display: "flex", justifyContent: "center", textAlign: "center"}}>
+
+<div style={{ maxWidth: 320 }}>
+  <img src={useBaseUrl('/img/extrapolation/extend.png')} />
+  <p>EXTEND</p>
+</div>
+<div style={{ maxWidth: 320 }}>
+  <img src={useBaseUrl('/img/extrapolation/clamp.png')} />
+  <p>CLAMP</p>
+</div>
+<div style={{ maxWidth: 320 }}>
+  <img src={useBaseUrl('/img/extrapolation/identity.png')} />
+  <p>IDENTITY</p>
+</div>
+
+</div>
 
 This parameter also accepts string values:
 
+- `"extend"`
 - `"clamp"`
 - `"identity"`
-- `"extend"`
 
 By default, the `extrapolate` parameter applies the value passed to both edges of the range. To specify extrapolation to a particular edge, you can pass an object:
 
