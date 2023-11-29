@@ -4,7 +4,7 @@ sidebar_position: 3
 
 # withDecay
 
-`withDecay` lets you create animations that mimic objects in motion. The animation will start with the provided velocity and slow down over time according to the given deceleration rate until it stops.
+`withDecay` lets you create animations that mimic objects in motion with friction. The animation will start with the provided velocity and slow down over time according to the given deceleration rate until it stops.
 
 import DecayBasic from '@site/src/examples/DecayBasic';
 import DecayBasicSrc from '!!raw-loader!@site/src/examples/DecayBasic';
@@ -80,7 +80,7 @@ A function called on animation complete. In case the animation is cancelled, the
 
 ### Returns
 
-`withDecay` returns an [animation object](/docs/fundamentals/glossary#animation-object). It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](/docs/core/useAnimatedStyle).
+`withDecay` returns an [animation object](/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](/docs/core/useAnimatedStyle).
 
 ## Example
 

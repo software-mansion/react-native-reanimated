@@ -33,7 +33,7 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 Shared values are a driving factor of all your animations in Reanimated.
 
-They are defined using `useSharedValue` hook:
+They are defined using [`useSharedValue`](/docs/core/useSharedValue) hook:
 
 ```javascript
 import { useSharedValue } from 'react-native-reanimated';
@@ -110,6 +110,24 @@ function App() {
   return <Animated.View style={{ width }} />;
 }
 ```
+
+## Layout animation modifier
+
+Layout animation modifiers are methods used to customize layout animations.
+
+```jsx
+<Animated.View entering={FadeOutLeft.duration(500).easing(Easing.ease)} />
+```
+
+Reanimated comes with plenty of built-in layout animation modifiers. Some of them are:
+
+- `.duration(durationMs: number)` - the length of the animation (in milliseconds).
+- `.easing(easingFunction: EasingFunction)` - an easing function which defines the animation curve.
+- `.springify()` - enables the spring-based animation configuration.
+- `.damping(value: number)` - decides how quickly a spring stops moving.
+- `.withCallback(callback: (finished: boolean) => void)` - the callback that will fire after the animation ends.
+
+For a list of all available modifiers for each animation refer to the documentation of individual layout animation.
 
 ## Worklet
 
