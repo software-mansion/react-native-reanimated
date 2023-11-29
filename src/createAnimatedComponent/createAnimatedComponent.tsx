@@ -54,6 +54,7 @@ import {
   getReducedMotionFromConfig,
 } from '../reanimated2/layoutReanimation/web';
 import type { CustomConfig } from '../reanimated2/layoutReanimation/web/config';
+import type { FlatList, FlatListProps } from 'react-native';
 
 const IS_WEB = isWeb();
 const IS_FABRIC = isFabric();
@@ -77,6 +78,12 @@ type Options<P> = {
   setNativeProps: (ref: AnimatedComponentRef, props: P) => void;
 };
 
+function assertComponentIsComponent(
+  Component: ComponentType<InitialComponentProps> | typeof FlatList
+): asserts Component is ComponentType<InitialComponentProps> {
+  // In fact this assertion isn't true
+}
+
 /**
  * Lets you create an Animated version of any React Native component.
  *
@@ -84,6 +91,15 @@ type Options<P> = {
  * @returns A component that Reanimated is capable of animating.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent
  */
+
+/**
+ * @deprecated Please use Animated.FlatList instead.
+ */
+export function createAnimatedComponent(
+  component: typeof FlatList<unknown>,
+  options?: Options<any>
+): ComponentClass<AnimateProps<FlatListProps<unknown>>>;
+
 export function createAnimatedComponent<P extends object>(
   component: FunctionComponent<P>,
   options?: Options<P>
@@ -95,9 +111,11 @@ export function createAnimatedComponent<P extends object>(
 ): ComponentClass<AnimateProps<P>>;
 
 export function createAnimatedComponent(
-  Component: ComponentType<InitialComponentProps>,
+  Component: ComponentType<InitialComponentProps> | typeof FlatList,
   options?: Options<InitialComponentProps>
 ): any {
+  assertComponentIsComponent(Component);
+
   invariant(
     typeof Component !== 'function' ||
       (Component.prototype && Component.prototype.isReactComponent),
@@ -564,6 +582,7 @@ export function createAnimatedComponent(
         default: { collapsable: false },
       });
 
+      assertComponentIsComponent(Component);
       return (
         <Component
           {...props}
