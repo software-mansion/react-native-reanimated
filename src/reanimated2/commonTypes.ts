@@ -8,6 +8,11 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
+/**
+ * A value that can be used both on the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread) and the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
+ *
+ * Shared values are defined using [useSharedValue](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue) hook. You access and modify shared values by their `.value` property.
+ */
 export interface SharedValue<Value> {
   value: Value;
   addListener: (listenerID: number, listener: (value: any) => void) => void;
@@ -154,6 +159,9 @@ export type AnimatedSensor<T extends Value3D | ValueRotation> = {
   config: SensorConfig;
 };
 
+/**
+ * A function called upon animation completion. If the animation is cancelled, the callback will receive `false` as the argument; otherwise, it will receive `true`.
+ */
 export type AnimationCallback = (
   finished?: boolean,
   current?: AnimatableValue
@@ -203,6 +211,15 @@ export type AnimatedKeyboardInfo = {
   state: SharedValue<KeyboardState>;
 };
 
+/**
+ * @param x - A number representing X coordinate relative to the parent component.
+ * @param y - A number representing Y coordinate relative to the parent component.
+ * @param width - A number representing the width of the component.
+ * @param height - A number representing the height of the component.
+ * @param pageX - A number representing X coordinate relative to the screen.
+ * @param pageY - A number representing Y coordinate relative to the screen.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/measure#returns
+ */
 export interface MeasuredDimensions {
   x: number;
   y: number;
@@ -217,9 +234,10 @@ export interface AnimatedKeyboardOptions {
 }
 
 /**
- * - `System` - If the `Reduce motion` accessibility setting is enabled on the device, disable the animation. Otherwise, enable the animation.
- * - `Always` - Disable the animation.
- * - `Never` - Enable the animation.
+ * @param System - If the `Reduce motion` accessibility setting is enabled on the device, disable the animation. Otherwise, enable the animation.
+ * @param Always - Disable the animation.
+ * @param Never - Enable the animation.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility
  */
 export enum ReduceMotion {
   System = 'system',
@@ -230,7 +248,7 @@ export enum ReduceMotion {
 // THE LAND OF THE DEPRECATED
 
 /**
- * @deprecated
+ * @deprecated don't use
  */
 export interface __WorkletFunction {
   __closure?: Record<string, unknown>;
@@ -238,14 +256,14 @@ export interface __WorkletFunction {
 }
 
 /**
- * @deprecated
+ * @deprecated don't use
  */
 export interface __BasicWorkletFunction<T> extends __WorkletFunction {
   (): T;
 }
 
 /**
- * @deprecated
+ * @deprecated don't use
  */
 export interface __ComplexWorkletFunction<A extends any[], R>
   extends __WorkletFunction {
@@ -254,7 +272,7 @@ export interface __ComplexWorkletFunction<A extends any[], R>
 }
 
 /**
- * @deprecated
+ * @deprecated don't use
  */
 export interface __AdapterWorkletFunction extends __WorkletFunction {
   (value: NestedObject<string | number | AnimationObject>): void;

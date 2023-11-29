@@ -77,6 +77,13 @@ type Options<P> = {
   setNativeProps: (ref: AnimatedComponentRef, props: P) => void;
 };
 
+/**
+ * Lets you create an Animated version of any React Native component.
+ *
+ * @param component - The component you want to make animatable.
+ * @returns A component that Reanimated is capable of animating.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent
+ */
 export function createAnimatedComponent<P extends object>(
   component: FunctionComponent<P>,
   options?: Options<P>

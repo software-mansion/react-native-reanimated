@@ -42,6 +42,13 @@ function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
 // when the wrapper is unmounted to prevent the animation.
 // Since `ReactNode` can be a list of nodes, we wrap every child with our wrapper
 // so we are able to access its tag with `findNodeHandle`.
+/**
+ * A component that lets you skip entering and exiting animations.
+ *
+ * @param skipEntering - A boolean indicating whether children's entering animations should be skipped when `LayoutAnimationConfig` is mounted.
+ * @param skipExiting - A boolean indicating whether children's exiting animations should be skipped when LayoutAnimationConfig is unmounted.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-animation-config/
+ */
 export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps> {
   getMaybeWrappedChildren() {
     return Children.count(this.props.children) > 1 && this.props.skipExiting
