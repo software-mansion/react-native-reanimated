@@ -1152,7 +1152,7 @@ PODS:
     - React-Codegen
     - React-RCTFabric
     - ReactCommon/turbomodule/core
-  - RNReanimated (3.5.0):
+  - RNReanimated (3.6.0):
     - hermes-engine
     - RCT-Folly (= 2021.07.22.00)
     - RCTRequired
@@ -1489,7 +1489,7 @@ SPEC CHECKSUMS:
   React-perflogger: e3596db7e753f51766bceadc061936ef1472edc3
   React-RCTActionSheet: 17ab132c748b4471012abbcdcf5befe860660485
   React-RCTAnimation: c8bbaab62be5817d2a31c36d5f2571e3f7dcf099
-  React-RCTAppDelegate: 255f30d935cd51503bd8118c94682d877f8ac5db
+  React-RCTAppDelegate: 7a68d7f49d93f4899acde16ff5050854602a6ca2
   React-RCTBlob: 1bcf3a0341eb8d6950009b1ddb8aefaf46996b8c
   React-RCTFabric: 2d72175df6e0e230a13ec2a7eef184ac0a122fd3
   React-RCTImage: 670a3486b532292649b1aef3ffddd0b495a5cee4
@@ -1507,7 +1507,7 @@ SPEC CHECKSUMS:
   RNCMaskedView: f7c74478c83c4fdfc5cf4df51f80c0dd5cf125c6
   RNCPicker: 529d564911e93598cc399b56cc0769ce3675f8c8
   RNGestureHandler: 039162c42c65de1228c58eb48be90c279bfde3f1
-  RNReanimated: 52790dde3755dc90bfecdb4df6653e83bbeac30d
+  RNReanimated: e05f1022a1c9ab33e629038bc39481e74fa203cc
   RNScreens: 8e44ede8be80fbd17005680b7c86722a42d8dc73
   RNSVG: df9aaada196f6a61c8e30dc55d41e6c108a954e7
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17

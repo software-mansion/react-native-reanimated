@@ -17,7 +17,7 @@ export interface SharedValue<Value> {
   value: Value;
   addListener: (listenerID: number, listener: (value: any) => void) => void;
   removeListener: (listenerID: number) => void;
-  modify: (modifier?: (value: any) => any) => void;
+  modify: (modifier?: (value: any) => any, forceUpdate?: boolean) => void;
 }
 
 // The below type is used for HostObjects returned by the JSI API that don't have

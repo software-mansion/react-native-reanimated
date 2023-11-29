@@ -9,7 +9,6 @@ import { createAnimationWithExistingTransform } from './createAnimation';
 import {
   extractTransformFromStyle,
   getProcessedConfig,
-  getReducedMotionFromConfig,
   handleExitingAnimation,
   handleLayoutTransition,
   makeElementVisible,
@@ -33,10 +32,6 @@ function chooseConfig<ComponentProps extends Record<string, unknown>>(
       : null;
 
   return config;
-}
-
-export function hasReducedMotion(config: CustomConfig) {
-  return config && getReducedMotionFromConfig(config as CustomConfig);
 }
 
 function checkUndefinedAnimationFail(
