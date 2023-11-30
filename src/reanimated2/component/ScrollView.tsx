@@ -7,8 +7,10 @@ import { createAnimatedComponent } from '../../createAnimatedComponent';
 import type { SharedValue } from '../commonTypes';
 import type { AnimatedRef } from '../hook';
 import { useAnimatedRef, useScrollViewOffset } from '../hook';
+import type { AnimatedProps } from '../helperTypes';
 
-export interface AnimatedScrollViewProps extends ScrollViewProps {
+export interface AnimatedScrollViewProps
+  extends AnimatedProps<ScrollViewProps> {
   scrollViewOffset?: SharedValue<number>;
 }
 
