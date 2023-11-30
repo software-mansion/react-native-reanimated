@@ -1,7 +1,13 @@
 type CallTrucker = {
   UICallsCount: number;
   JSCallsCount: number;
-}
+};
+
+export type TrackerCallCount = {
+  name: string;
+  JS: number;
+  UI: number;
+};
 
 export type TestCase = {
   name: string;

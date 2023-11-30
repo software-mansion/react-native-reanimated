@@ -18,22 +18,28 @@ import {
   mockAnimationTimer,
   recordAnimationUpdates,
   callTracker,
-  callTrackerFn,
   getTrackerCallCount,
   registerValue,
   getRegisteredValue,
   Presets,
+  callTrackerFn,
 } from '../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { Snapshots } from './snapshots/Animations.snapshot';
+import { ComparisonMode } from '../ReanimatedRuntimeTestsRunner/TestRunner';
 
 const AnimatedComponent = () => {
   const widthSV = useSharedValue(0);
   const ref = useTestRef('AnimatedComponent');
 
   const style = useAnimatedStyle(() => {
-    callTracker('useAnimatedStyleTracker')
+    callTracker('useAnimatedStyleTracker');
     return {
-      width: withTiming(widthSV.value, { duration: 500 }, callTrackerFn('withTimingTracker')),
+      width: withTiming(
+        widthSV.value,
+        { duration: 500 },
+        callTrackerFn('withTimingTracker')
+      ),
+      opacity: 1,
     };
   });
 
@@ -47,7 +53,13 @@ const AnimatedComponent = () => {
       <Animated.View
         ref={ref}
         style={[
-          { width: 0, height: 80, backgroundColor: 'chocolate', margin: 30 },
+          {
+            width: 0,
+            opacity: 0,
+            height: 80,
+            backgroundColor: 'chocolate',
+            margin: 30,
+          },
           style,
         ]}
       />
@@ -91,21 +103,27 @@ describe('Tests of animations', () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('AnimatedComponent');
     await wait(600);
-    expect(await component.getAnimatedStyle('width')).toBeCloseTo('123');
+    expect(await component.getAnimatedStyle('width')).toBe(
+      '123',
+      ComparisonMode.DISTANCE
+    );
   });
 
   test('withTiming - expect pass', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('AnimatedComponent');
     await wait(600);
-    expect(await component.getAnimatedStyle('width')).toBeCloseTo('100');
+    expect(await component.getAnimatedStyle('width')).toBe(
+      '100',
+      ComparisonMode.DISTANCE
+    );
   });
 
   test('withTiming - expect callback call', async () => {
     await render(<AnimatedComponent />);
     await wait(600);
     expect(getTrackerCallCount('useAnimatedStyleTracker')).toBeCalled(3);
-    
+
     expect(getTrackerCallCount('useAnimatedStyleTracker')).toBeCalledUI(1);
     expect(getTrackerCallCount('useAnimatedStyleTracker')).toBeCalledJS(2);
 
@@ -118,8 +136,8 @@ describe('Tests of animations', () => {
       await render(null);
       await render(<SharedValueComponent initialValue={preset} />);
       const sharedValue = await getRegisteredValue('sv');
-      expect(sharedValue.onJS).toBe(preset);
-      expect(sharedValue.onUI).toBe(preset);
+      expect(sharedValue.onJS).toBe(preset, ComparisonMode.NUMBER);
+      expect(sharedValue.onUI).toBe(preset, ComparisonMode.NUMBER);
     }
   });
 
@@ -127,11 +145,23 @@ describe('Tests of animations', () => {
     await render(<LayoutAnimation />);
     const component = getTestComponent('AnimatedComponent');
     await wait(600);
-    expect(await component.getAnimatedStyle('top')).toBeCloseTo(
-      `${TOP + MARGIN}`
+    expect(await component.getAnimatedStyle('top')).toBe(
+      `${TOP + MARGIN}`,
+      ComparisonMode.NUMBER
     );
-    expect(await component.getAnimatedStyle('left')).toBeCloseTo(
-      `${LEFT + MARGIN}`
+    expect(await component.getAnimatedStyle('left')).toBe(
+      `${LEFT + MARGIN}`,
+      ComparisonMode.NUMBER
+    );
+  });
+
+  test('layoutAnimation - opacity', async () => {
+    await render(<AnimatedComponent />);
+    const component = getTestComponent('AnimatedComponent');
+    await wait(600);
+    expect(await component.getAnimatedStyle('opacity')).toBe(
+      `1`,
+      ComparisonMode.NUMBER
     );
   });
 
@@ -150,5 +180,4 @@ describe('Tests of animations', () => {
     await wait(600);
     expect(updates.value).toMatchSnapshot(Snapshots.layoutAnimation);
   });
-
 });

@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { TestCase, TestSuite } from './types';
+import { TestCase, TestSuite, TrackerCallCount } from './types';
 import { TestComponent } from './TestComponent';
 import {
   render,
@@ -13,6 +13,7 @@ import {
   StyleProps,
   runOnJS,
 } from 'react-native-reanimated';
+import { Platform } from 'react-native';
 
 declare global {
   var mockedAnimationTimestamp: number | undefined;
@@ -36,6 +37,12 @@ interface Operation {
   updates: StyleProps | AnimatedStyle<any>;
 }
 
+export enum ComparisonMode {
+  STRING = 'STRING',
+  DISTANCE = 'DISTANCE',
+  NUMBER = 'NUMBER',
+}
+
 export type LockObject = { lock: boolean };
 
 export const RUNTIME_TEST_ERRORS = {
@@ -49,6 +56,14 @@ function logInFrame(text: string) {
   console.log(`\t╔${'═'.repeat(text.length + 2)}╗`);
   console.log(`\t║ ${text} ║`);
   console.log(`\t╚${'═'.repeat(text.length + 2)}╝`);
+}
+
+function assertValueIsCallTracker(
+  value: any
+): asserts value is TrackerCallCount {
+  if (!('name' in value && 'JS' in value && 'UI' in value)) {
+    throw Error('Invalid value');
+  }
 }
 
 let callTrackerRegistryJS: Record<string, number> = {};
@@ -66,7 +81,7 @@ export class TestRunner {
   private _currentTestCase: TestCase | null = null;
   private _renderHook: (component: any) => void = () => {};
   private _renderLock: LockObject = { lock: false };
-  private _valueRegistry: Record<string, {value: any}> = {};
+  private _valueRegistry: Record<string, { value: any }> = {};
   private _wasRenderedNull: boolean = false;
 
   private _lockObject: LockObject = {
@@ -134,7 +149,7 @@ export class TestRunner {
         callTrackerRegistryUI.value[name] = 0;
       }
       callTrackerRegistryUI.value[name]++;
-      callTrackerRegistryUI.value = {...callTrackerRegistryUI.value};
+      callTrackerRegistryUI.value = { ...callTrackerRegistryUI.value };
     } else {
       callTrackerJS(name);
     }
@@ -161,7 +176,7 @@ export class TestRunner {
     };
   }
 
-  public getTrackerCallCount(name: string) {
+  public getTrackerCallCount(name: string): TrackerCallCount {
     return {
       name,
       JS: callTrackerRegistryJS[name] ?? 0,
@@ -221,28 +236,41 @@ export class TestRunner {
     console.log('End of tests run 🏁');
   }
 
-  public expect(value: any) {
+  public expect(value: TrackerCallCount | string) {
     this._assertTestCase(this._currentTestCase);
     this._assertTestCase(this._currentTestCase);
     const errors = this._currentTestCase?.errors;
 
     return {
-      toBe: (expected: any) => {
-        if (value !== expected) {
-          errors.push(`Expected ${expected} received ${value}`);
-        }
-      },
-      /** Please notice that on Android we convert pixels to density independent pixels
-       *  where pixels are rounded to integer. Therefore we can expect small fractional
-       * error each time we get any length attribute from android
-       */
-      toBeCloseTo: (expected: string) => {
-        if (!Number.isNaN(Number(expected))) {
-          if (Math.abs(Number(value) - Number(expected)) > 1) {
-            errors.push(`Expected ${expected} received ${value}`);
+      toBe: (expected: any, comparisonMode: ComparisonMode) => {
+        switch (comparisonMode) {
+          case ComparisonMode.STRING: {
+            if (value !== expected) {
+              errors.push(`Expected ${expected} received ${value}`);
+            }
+            break;
           }
-        } else if (value !== expected) {
-          errors.push(`Expected ${expected} received ${value}`);
+          case ComparisonMode.NUMBER: {
+            if (isNaN(Number(value)) || Number(value) !== Number(expected)) {
+              errors.push(`Expected ${expected} received ${value}`);
+            }
+            break;
+          }
+          case ComparisonMode.DISTANCE: {
+            const valueAsNumber = Number(value);
+            if (Platform.OS === 'ios') {
+              if (isNaN(valueAsNumber) || valueAsNumber !== Number(expected)) {
+                errors.push(`Expected ${expected} received ${value}`);
+              }
+            } else {
+              if (
+                isNaN(valueAsNumber) ||
+                Math.abs(valueAsNumber - Number(expected)) > 1
+              ) {
+                errors.push(`Expected ${expected}±1 received ${value}`);
+              }
+            }
+          }
         }
       },
       toMatchSnapshot: (expected: any) => {
@@ -255,6 +283,7 @@ export class TestRunner {
         }
       },
       toBeCalled: (times: number = 1) => {
+        assertValueIsCallTracker(value);
         const callsCount = value.UI + value.JS;
         if (callsCount !== times) {
           errors.push(
@@ -263,6 +292,7 @@ export class TestRunner {
         }
       },
       toBeCalledUI: (times: number) => {
+        assertValueIsCallTracker(value);
         if (value.UI !== times) {
           errors.push(
             `Expected ${value.name} to be called ${times} times on UI thread, but was called ${value.UI} times`
@@ -270,6 +300,7 @@ export class TestRunner {
         }
       },
       toBeCalledJS: (times: number) => {
+        assertValueIsCallTracker(value);
         if (value.JS !== times) {
           errors.push(
             `Expected ${value.name} to be called ${times} times on JS thread, but was called ${value.JS} times`

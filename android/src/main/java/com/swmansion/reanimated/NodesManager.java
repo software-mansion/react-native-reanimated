@@ -2,8 +2,6 @@ package com.swmansion.reanimated;
 
 import static java.lang.Float.NaN;
 
-import android.content.res.Resources;
-import android.util.DisplayMetrics;
 import android.view.View;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.GuardedRunnable;
@@ -20,6 +18,7 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.modules.core.ReactChoreographer;
 import com.facebook.react.uimanager.GuardedFrameCallback;
 import com.facebook.react.uimanager.IllegalViewOperationException;
+import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.ReactShadowNode;
 import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.UIImplementation;
@@ -31,6 +30,7 @@ import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -390,13 +390,6 @@ public class NodesManager implements EventDispatcherListener {
     compatibility.synchronouslyUpdateUIProps(viewTag, uiProps);
   }
 
-  public float convertPixelsToDp(float px) {
-    Resources resources = mContext.getResources();
-    DisplayMetrics metrics = resources.getDisplayMetrics();
-    float dp = (px / ((float) metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT));
-    return dp;
-  }
-
   public String obtainProp(int viewTag, String propName) {
     View view = mUIManager.resolveView(viewTag);
     String result =
@@ -411,22 +404,30 @@ public class NodesManager implements EventDispatcherListener {
         value = view.getElevation();
         break;
       case "width":
-        value = convertPixelsToDp(view.getWidth());
+        value = PixelUtil.toDIPFromPixel(view.getWidth());
         break;
       case "height":
-        value = convertPixelsToDp(view.getHeight());
+        value = PixelUtil.toDIPFromPixel(view.getHeight());
         break;
       case "top":
-        value = convertPixelsToDp(view.getTop());
+        value = PixelUtil.toDIPFromPixel(view.getTop());
         break;
       case "left":
-        value = convertPixelsToDp(view.getLeft());
+        value = PixelUtil.toDIPFromPixel(view.getLeft());
         break;
     }
 
+    List<String> floatProps = new ArrayList<>(Arrays.asList("opacity", "zIndex"));
+    List<String> intProps = new ArrayList<>(Arrays.asList("width", "height", "top", "left"));
+
     if (value != null) {
-      result = Float.toString(value);
+      if ((float) Math.round(value) == value || intProps.contains(propName)) {
+        result = Integer.toString(Math.round(value));
+      } else if (floatProps.contains(propName)) {
+        result = Float.toString(value);
+      }
     }
+
     return result;
   }
 
