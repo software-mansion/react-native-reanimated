@@ -17,10 +17,10 @@ import InterpolateSrc from '!!raw-loader!@site/src/examples/Interpolate';
 import { interpolate } from 'react-native-reanimated';
 
 function App() {
-  const animatedStyle = useAnimatedStyle(() => {
+  const animatedStyle = useAnimatedStyle(() => ({
     // highlight-next-line
     opacity: interpolate(sv.value, [0, 100], [0, 1], Extrapolation.CLAMP),
-  })
+  }))
 }
 ```
 
