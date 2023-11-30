@@ -87,7 +87,7 @@ type Options<P> = {
  */
 
 /**
- * @deprecated Please use Animated.FlatList instead.
+ * @deprecated Please use `Animated.FlatList` component instead of calling `Animated.createAnimatedComponent(FlatList)` manually.
  */
 // @ts-ignore This is required to create this overload, since type of createAnimatedComponent is incorrect and doesn't include typeof FlatList
 export function createAnimatedComponent(
