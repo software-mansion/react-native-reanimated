@@ -1,6 +1,6 @@
 /* eslint-disable no-inline-styles/no-inline-styles */
 import React, { useEffect } from 'react';
-import { View } from 'react-native';
+import { View, Text } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -17,6 +17,12 @@ import {
   wait,
   mockAnimationTimer,
   recordAnimationUpdates,
+  callTracker,
+  callTrackerFn,
+  getTrackerCallCount,
+  registerValue,
+  getRegisteredValue,
+  Presets,
 } from '../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { Snapshots } from './snapshots/Animations.snapshot';
 
@@ -25,8 +31,9 @@ const AnimatedComponent = () => {
   const ref = useTestRef('AnimatedComponent');
 
   const style = useAnimatedStyle(() => {
+    callTracker('useAnimatedStyleTracker')
     return {
-      width: withTiming(widthSV.value, { duration: 500 }),
+      width: withTiming(widthSV.value, { duration: 500 }, callTrackerFn('withTimingTracker')),
     };
   });
 
@@ -46,6 +53,12 @@ const AnimatedComponent = () => {
       />
     </View>
   );
+};
+
+const SharedValueComponent = ({ initialValue }: { initialValue: any }) => {
+  const sharedValue = useSharedValue(initialValue);
+  registerValue('sv', sharedValue);
+  return <Text>{sharedValue.value}</Text>;
 };
 
 const TOP = 41;
@@ -88,6 +101,28 @@ describe('Tests of animations', () => {
     expect(await component.getAnimatedStyle('width')).toBeCloseTo('100');
   });
 
+  test('withTiming - expect callback call', async () => {
+    await render(<AnimatedComponent />);
+    await wait(600);
+    expect(getTrackerCallCount('useAnimatedStyleTracker')).toBeCalled(3);
+    
+    expect(getTrackerCallCount('useAnimatedStyleTracker')).toBeCalledUI(1);
+    expect(getTrackerCallCount('useAnimatedStyleTracker')).toBeCalledJS(2);
+
+    expect(getTrackerCallCount('withTimingTracker')).toBeCalledUI(1);
+    expect(getTrackerCallCount('withTimingTracker')).toBeCalledJS(0);
+  });
+
+  test('withTiming - test number preset', async () => {
+    for (const preset of Presets.numbers) {
+      await render(null);
+      await render(<SharedValueComponent initialValue={preset} />);
+      const sharedValue = await getRegisteredValue('sv');
+      expect(sharedValue.onJS).toBe(preset);
+      expect(sharedValue.onUI).toBe(preset);
+    }
+  });
+
   test('layoutAnimation - top & left', async () => {
     await render(<LayoutAnimation />);
     const component = getTestComponent('AnimatedComponent');
@@ -115,4 +150,5 @@ describe('Tests of animations', () => {
     await wait(600);
     expect(updates.value).toMatchSnapshot(Snapshots.layoutAnimation);
   });
+
 });

@@ -8,10 +8,10 @@ import {
 } from './RuntimeTestsApi';
 import {
   makeMutable,
-  runOnJS,
   runOnUI,
   AnimatedStyle,
   StyleProps,
+  runOnJS,
 } from 'react-native-reanimated';
 
 declare global {
@@ -51,12 +51,23 @@ function logInFrame(text: string) {
   console.log(`\t╚${'═'.repeat(text.length + 2)}╝`);
 }
 
+let callTrackerRegistryJS: Record<string, number> = {};
+const callTrackerRegistryUI = makeMutable<Record<string, number>>({});
+function callTrackerJS(name: string) {
+  if (!callTrackerRegistryJS[name]) {
+    callTrackerRegistryJS[name] = 0;
+  }
+  callTrackerRegistryJS[name]++;
+}
+
 export class TestRunner {
   private _testSuites: TestSuite[] = [];
   private _currentTestSuite: TestSuite | null = null;
   private _currentTestCase: TestCase | null = null;
   private _renderHook: (component: any) => void = () => {};
   private _renderLock: LockObject = { lock: false };
+  private _valueRegistry: Record<string, {value: any}> = {};
+  private _wasRenderedNull: boolean = false;
 
   private _lockObject: LockObject = {
     lock: false,
@@ -68,6 +79,10 @@ export class TestRunner {
   }
 
   public async render(component: any) {
+    if (!component && this._wasRenderedNull) {
+      return;
+    }
+    this._wasRenderedNull = !component;
     this._renderLock.lock = true;
     this._renderHook(component);
     return this.waitForPropertyValueChange(this._renderLock, 'lock');
@@ -99,6 +114,7 @@ export class TestRunner {
       name,
       testCase,
       componentsRefs: {},
+      callsRegistry: {},
       errors: [],
     });
   }
@@ -109,6 +125,48 @@ export class TestRunner {
     this._assertTestCase(this._currentTestCase);
     this._currentTestCase.componentsRefs[name] = ref;
     return ref;
+  }
+
+  public callTracker(name: string) {
+    'worklet';
+    if (_WORKLET) {
+      if (!callTrackerRegistryUI.value[name]) {
+        callTrackerRegistryUI.value[name] = 0;
+      }
+      callTrackerRegistryUI.value[name]++;
+      callTrackerRegistryUI.value = {...callTrackerRegistryUI.value};
+    } else {
+      callTrackerJS(name);
+    }
+  }
+
+  public registerValue(name: string, value: any) {
+    'worklet';
+    this._valueRegistry[name] = value;
+  }
+
+  public async getRegisteredValue(name: string) {
+    const jsValue = this._valueRegistry[name].value;
+    const sharedValue = this._valueRegistry[name];
+    const valueContainer = makeMutable<any>(null);
+    await this.runOnUiBlocking(() => {
+      'worklet';
+      valueContainer.value = sharedValue.value;
+    });
+    const uiValue = valueContainer.value;
+    return {
+      name,
+      onJS: jsValue,
+      onUI: uiValue,
+    };
+  }
+
+  public getTrackerCallCount(name: string) {
+    return {
+      name,
+      JS: callTrackerRegistryJS[name] ?? 0,
+      UI: callTrackerRegistryUI.value[name] ?? 0,
+    };
   }
 
   public getTestComponent(name: string): TestComponent {
@@ -128,6 +186,8 @@ export class TestRunner {
       }
 
       for (const testCase of testSuite.testCases) {
+        callTrackerRegistryUI.value = {};
+        callTrackerRegistryJS = {};
         this._currentTestCase = testCase;
 
         if (testSuite.beforeEach) {
@@ -136,7 +196,9 @@ export class TestRunner {
         await testCase.testCase();
         if (testCase.errors.length > 0) {
           console.log(`\t • ${testCase.name} ❌`);
-          console.error(`\t${testCase.errors}`);
+          for (const error of testCase.errors) {
+            console.log(`\t\t${error}`);
+          }
           console.log('\t -----------------------------------------------');
         } else {
           console.log(`\t • ${testCase.name} ✅`);
@@ -165,7 +227,7 @@ export class TestRunner {
     const errors = this._currentTestCase?.errors;
 
     return {
-      toBe: (expected: string) => {
+      toBe: (expected: any) => {
         if (value !== expected) {
           errors.push(`Expected ${expected} received ${value}`);
         }
@@ -189,6 +251,28 @@ export class TestRunner {
             `Expected ${JSON.stringify(expected)} received ${JSON.stringify(
               value
             )}`
+          );
+        }
+      },
+      toBeCalled: (times: number = 1) => {
+        const callsCount = value.UI + value.JS;
+        if (callsCount !== times) {
+          errors.push(
+            `Expected ${value.name} to be called ${times} times, but was called ${callsCount} times`
+          );
+        }
+      },
+      toBeCalledUI: (times: number) => {
+        if (value.UI !== times) {
+          errors.push(
+            `Expected ${value.name} to be called ${times} times on UI thread, but was called ${value.UI} times`
+          );
+        }
+      },
+      toBeCalledJS: (times: number) => {
+        if (value.JS !== times) {
+          errors.push(
+            `Expected ${value.name} to be called ${times} times on JS thread, but was called ${value.JS} times`
           );
         }
       },
@@ -230,7 +314,7 @@ export class TestRunner {
     });
   }
 
-  public async runOnUiSync(worklet: () => void) {
+  public async runOnUiBlocking(worklet: () => void) {
     const unlock = () => (this._lockObject.lock = false);
 
     this._lockObject.lock = true;
@@ -245,7 +329,7 @@ export class TestRunner {
   public async recordAnimationUpdates(mergeOperations = true) {
     const updates = makeMutable<Array<any> | null>(null);
 
-    await this.runOnUiSync(() => {
+    await this.runOnUiBlocking(() => {
       'worklet';
       const originalUpdateProps = global._IS_FABRIC
         ? global._updatePropsFabric
@@ -307,7 +391,7 @@ export class TestRunner {
   }
 
   public async stopRecordingAnimationUpdates() {
-    await this.runOnUiSync(() => {
+    await this.runOnUiBlocking(() => {
       'worklet';
       if (global.originalUpdateProps) {
         if (global._IS_FABRIC) {
@@ -325,7 +409,7 @@ export class TestRunner {
   }
 
   async mockAnimationTimer() {
-    await this.runOnUiSync(() => {
+    await this.runOnUiBlocking(() => {
       'worklet';
       global.mockedAnimationTimestamp = 0;
       global.originalGetAnimationTimestamp = global._getAnimationTimestamp;
@@ -349,7 +433,7 @@ export class TestRunner {
   }
 
   async unmockAnimationTimer() {
-    await this.runOnUiSync(() => {
+    await this.runOnUiBlocking(() => {
       'worklet';
       if (global.originalGetAnimationTimestamp) {
         global._getAnimationTimestamp = global.originalGetAnimationTimestamp;

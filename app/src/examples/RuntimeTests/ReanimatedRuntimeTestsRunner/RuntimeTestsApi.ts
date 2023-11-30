@@ -1,5 +1,6 @@
 import { RUNTIME_TEST_ERRORS, TestRunner } from './TestRunner';
 import { TestComponent } from './TestComponent';
+export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
 
@@ -35,6 +36,32 @@ export function useTestRef(name: string): React.MutableRefObject<any> {
   return testRunner.useTestRef(name);
 }
 
+const callTrackerRef = testRunner.callTracker;
+export function callTracker(name: string) {
+  'worklet';
+  return callTrackerRef(name);
+}
+
+export function callTrackerFn(name: string) {
+  'worklet';
+  return () => {
+    'worklet';
+    callTrackerRef(name);
+  };
+}
+
+export function getTrackerCallCount(name: string) {
+  return testRunner.getTrackerCallCount(name);
+}
+
+export function registerValue(name: string, value: any) {
+  return testRunner.registerValue(name, value);
+}
+
+export async function getRegisteredValue(name: string) {
+  return await testRunner.getRegisteredValue(name);
+}
+
 export function getTestComponent(name: string): TestComponent {
   return testRunner.getTestComponent(name);
 }
@@ -66,7 +93,7 @@ export async function unmockAnimationTimer() {
 }
 
 export async function setAnimationTimestamp(timestamp: number) {
-  await testRunner.runOnUiSync(() => {
+  await testRunner.runOnUiBlocking(() => {
     'worklet';
     assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
     global.mockedAnimationTimestamp = timestamp;
@@ -74,7 +101,7 @@ export async function setAnimationTimestamp(timestamp: number) {
 }
 
 export async function advanceAnimationByTime(time: number) {
-  await testRunner.runOnUiSync(() => {
+  await testRunner.runOnUiBlocking(() => {
     'worklet';
     assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
     global.mockedAnimationTimestamp += time;
@@ -82,7 +109,7 @@ export async function advanceAnimationByTime(time: number) {
 }
 
 export async function advanceAnimationByFrames(frameCount: number) {
-  await testRunner.runOnUiSync(() => {
+  await testRunner.runOnUiBlocking(() => {
     'worklet';
     assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
     global.mockedAnimationTimestamp += frameCount * 16;
