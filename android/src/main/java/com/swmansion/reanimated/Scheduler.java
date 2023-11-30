@@ -47,5 +47,6 @@ public class Scheduler {
 
   public void deactivate() {
     mActive.set(false);
+    mHybridData.resetNative();
   }
 }
