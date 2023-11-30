@@ -140,12 +140,12 @@ export function createAnimatedComponent(
       if (IS_WEB) {
         configureWebLayoutAnimations();
 
+        saveSnapshot(this._component as HTMLElement);
+
         if (!this.props.entering) {
           this._isFirstRender = false;
           return;
         }
-
-        saveSnapshot(this._component as HTMLElement);
 
         if (getReducedMotionFromConfig(this.props.entering as CustomConfig)) {
           this._isFirstRender = false;
