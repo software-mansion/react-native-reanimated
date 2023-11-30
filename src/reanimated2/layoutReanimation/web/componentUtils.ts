@@ -135,6 +135,14 @@ export function getProcessedConfig(
   };
 }
 
+export function saveSnapshot(element: HTMLElement) {
+  // element.snapshot = element.getBoundingClientRect();
+  element.setAttribute(
+    'data-reanimated-snapshot',
+    JSON.stringify(element.getBoundingClientRect())
+  );
+}
+
 export function makeElementVisible(element: HTMLElement, delay: number) {
   if (delay === 0) {
     _updatePropsJS(
@@ -256,10 +264,23 @@ export function handleExitingAnimation(
 
   // We hide current element so only its copy with proper animation will be displayed
 
+  const snapshot = JSON.parse(
+    element.getAttribute('data-reanimated-snapshot')!
+  );
+
   dummy.style.position = 'absolute';
-  dummy.style.top = `${element.offsetTop}px`;
-  dummy.style.left = `${element.offsetLeft}px`;
+  dummy.style.top = `${snapshot.top}px`;
+  dummy.style.left = `${snapshot.left}px`;
+  dummy.style.width = `${snapshot.width}px`;
+  dummy.style.height = `${snapshot.height}px`;
   dummy.style.margin = '0px'; // tmpElement has absolute position, so margin is not necessary
+
+  const newRect = dummy.getBoundingClientRect();
+
+  if (newRect.top !== snapshot.top) {
+    const headerHeight = Math.abs(newRect.top - snapshot.top);
+    dummy.style.top = `${snapshot.top - headerHeight}px`;
+  }
 
   const originalOnAnimationEnd = dummy.onanimationend;
 

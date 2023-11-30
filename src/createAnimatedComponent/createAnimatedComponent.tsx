@@ -52,6 +52,7 @@ import {
   tryActivateLayoutTransition,
   configureWebLayoutAnimations,
   getReducedMotionFromConfig,
+  saveSnapshot,
 } from '../reanimated2/layoutReanimation/web';
 import type { CustomConfig } from '../reanimated2/layoutReanimation/web/config';
 
@@ -143,6 +144,8 @@ export function createAnimatedComponent(
           this._isFirstRender = false;
           return;
         }
+
+        saveSnapshot(this._component as HTMLElement);
 
         if (getReducedMotionFromConfig(this.props.entering as CustomConfig)) {
           this._isFirstRender = false;
@@ -424,6 +427,10 @@ export function createAnimatedComponent(
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+
+      if (IS_WEB) {
+        saveSnapshot(this._component as HTMLElement);
+      }
 
       // Snapshot won't be undefined because it comes from getSnapshotBeforeUpdate method
       if (
