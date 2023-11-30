@@ -78,12 +78,6 @@ type Options<P> = {
   setNativeProps: (ref: AnimatedComponentRef, props: P) => void;
 };
 
-function assertComponentIsComponent(
-  Component: ComponentType<InitialComponentProps> | typeof FlatList
-): asserts Component is ComponentType<InitialComponentProps> {
-  // In fact this assertion isn't true
-}
-
 /**
  * Lets you create an Animated version of any React Native component.
  *
@@ -95,6 +89,7 @@ function assertComponentIsComponent(
 /**
  * @deprecated Please use Animated.FlatList instead.
  */
+// @ts-ignore This is required to create this overload, since type of createAnimatedComponent is incorrect and doesn't include typeof FlatList
 export function createAnimatedComponent(
   component: typeof FlatList<unknown>,
   options?: Options<any>
@@ -111,11 +106,9 @@ export function createAnimatedComponent<P extends object>(
 ): ComponentClass<AnimateProps<P>>;
 
 export function createAnimatedComponent(
-  Component: ComponentType<InitialComponentProps> | typeof FlatList,
+  Component: ComponentType<InitialComponentProps>,
   options?: Options<InitialComponentProps>
 ): any {
-  assertComponentIsComponent(Component);
-
   invariant(
     typeof Component !== 'function' ||
       (Component.prototype && Component.prototype.isReactComponent),
@@ -582,7 +575,6 @@ export function createAnimatedComponent(
         default: { collapsable: false },
       });
 
-      assertComponentIsComponent(Component);
       return (
         <Component
           {...props}
