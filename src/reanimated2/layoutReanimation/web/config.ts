@@ -1,5 +1,6 @@
 'use strict';
 import type { ReduceMotion } from '../../commonTypes';
+import type { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import {
   BounceIn,
   BounceInData,
@@ -47,10 +48,10 @@ export type KeyframeDefinitions = Record<number, AnimationStyle>;
 
 export interface AnimationConfig {
   animationName: string;
+  animationType: LayoutAnimationType;
   duration: number;
   delay: number;
   easing: string;
-  reduceMotion: boolean;
   callback: AnimationCallback;
   reversed: boolean;
 }
