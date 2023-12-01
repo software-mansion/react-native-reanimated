@@ -120,7 +120,7 @@ body:
         - Fabric (New Architecture)
 
   - type: dropdown
-    id: Build type
+    id: build-type
     attributes:
       label: Build type
       description: What is the build configuration/variant of your native app and JavaScript bundle mode?
