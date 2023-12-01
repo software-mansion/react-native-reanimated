@@ -178,11 +178,14 @@ export function makeWorklet(
     );
   }
 
-  pathForStringDefinitions.insertBefore(
-    variableDeclaration('const', [
-      variableDeclarator(initDataId, initDataObjectExpression),
-    ])
-  );
+  const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
+  if (shouldIncludeInitData) {
+    pathForStringDefinitions.insertBefore(
+      variableDeclaration('const', [
+        variableDeclarator(initDataId, initDataObjectExpression),
+      ])
+    );
+  }
 
   assert(
     !isFunctionDeclaration(funExpression),
@@ -213,13 +216,6 @@ export function makeWorklet(
     expressionStatement(
       assignmentExpression(
         '=',
-        memberExpression(functionIdentifier, identifier('__initData'), false),
-        initDataId
-      )
-    ),
-    expressionStatement(
-      assignmentExpression(
-        '=',
         memberExpression(
           functionIdentifier,
           identifier('__workletHash'),
@@ -229,6 +225,18 @@ export function makeWorklet(
       )
     ),
   ];
+
+  if (shouldIncludeInitData) {
+    statements.push(
+      expressionStatement(
+        assignmentExpression(
+          '=',
+          memberExpression(functionIdentifier, identifier('__initData'), false),
+          initDataId
+        )
+      )
+    );
+  }
 
   if (!isRelease()) {
     statements.unshift(

@@ -31,6 +31,10 @@ export interface NativeReanimatedModule {
     name: string,
     initializer: ShareableRef<() => void>
   ): WorkletRuntime;
+  scheduleOnRuntime<T>(
+    workletRuntime: WorkletRuntime,
+    worklet: ShareableRef<T>
+  ): void;
   registerEventHandler<T>(
     eventHandler: ShareableRef<T>,
     eventName: string,
@@ -125,6 +129,16 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {
     return this.InnerNativeModule.createWorkletRuntime(name, initializer);
+  }
+
+  scheduleOnRuntime<T>(
+    workletRuntime: WorkletRuntime,
+    shareableWorklet: ShareableRef<T>
+  ) {
+    return this.InnerNativeModule.scheduleOnRuntime(
+      workletRuntime,
+      shareableWorklet
+    );
   }
 
   registerSensor(

@@ -6,6 +6,21 @@ import type {
   ReduceMotion,
 } from '../commonTypes';
 
+/**
+ * Spring animation configuration.
+ *
+ * @param mass - The weight of the spring. Reducing this value makes the animation faster. Defaults to 1.
+ * @param damping - How quickly a spring slows down. Higher damping means the spring will come to rest faster. Defaults to 10.
+ * @param duration - Length of the animation (in milliseconds). Defaults to 2000.
+ * @param dampingRatio - How damped the spring is. Value 1 means the spring is critically damped, and value \>1 means the spring is overdamped. Defaults to 0.5.
+ * @param stiffness - How bouncy the spring is. Defaults to 100.
+ * @param velocity - Initial velocity applied to the spring equation. Defaults to 0.
+ * @param overshootClamping - Whether a spring can bounce over the `toValue`. Defaults to false.
+ * @param restDisplacementThreshold - The displacement below which the spring will snap to toValue without further oscillations. Defaults to 0.01.
+ * @param restSpeedThreshold - The speed in pixels per second from which the spring will snap to toValue without further oscillations. Defaults to 2.
+ * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Default to `ReduceMotion.System` - {@link ReduceMotion}.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring/#config-
+ */
 export type SpringConfig = {
   stiffness?: number;
   overshootClamping?: boolean;

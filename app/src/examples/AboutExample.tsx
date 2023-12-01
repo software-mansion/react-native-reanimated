@@ -18,8 +18,8 @@ function getPlatformVersion() {
   return Platform.Version;
 }
 
-function getMode() {
-  return __DEV__ ? 'Debug' : 'Release';
+function getBundle() {
+  return __DEV__ ? 'dev' : 'production';
 }
 
 function getRuntime() {
@@ -54,7 +54,7 @@ export default function AboutExample() {
         {getPlatformVersion()}
       </Text>
       <Text style={styles.text}>
-        <Text style={styles.bold}>Build type:</Text> {getMode()}
+        <Text style={styles.bold}>Bundle:</Text> {getBundle()}
       </Text>
       {!isWeb() && (
         <>

@@ -47,6 +47,12 @@ global._scheduleOnJS = () => {
   );
 };
 
+global._scheduleOnRuntime = () => {
+  throw new Error(
+    '[Reanimated] _scheduleOnRuntime should never be called in JSReanimated.'
+  );
+};
+
 global._manageScreenTransition = () => {
   throw new Error(
     '[Reanimated] _manageScreenTransition should never be called in JSReanimated.'
