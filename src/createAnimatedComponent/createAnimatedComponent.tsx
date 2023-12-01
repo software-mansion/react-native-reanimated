@@ -52,6 +52,7 @@ import {
   tryActivateLayoutTransition,
   configureWebLayoutAnimations,
   getReducedMotionFromConfig,
+  saveSnapshot,
 } from '../reanimated2/layoutReanimation/web';
 import type { CustomConfig } from '../reanimated2/layoutReanimation/web/config';
 import type { FlatList, FlatListProps } from 'react-native';
@@ -150,12 +151,14 @@ export function createAnimatedComponent(
       if (IS_WEB) {
         configureWebLayoutAnimations();
 
-        if (!this.props.entering) {
-          this._isFirstRender = false;
-          return;
+        if (this.props.exiting) {
+          saveSnapshot(this._component as HTMLElement);
         }
 
-        if (getReducedMotionFromConfig(this.props.entering as CustomConfig)) {
+        if (
+          !this.props.entering ||
+          getReducedMotionFromConfig(this.props.entering as CustomConfig)
+        ) {
           this._isFirstRender = false;
           return;
         }
@@ -435,6 +438,10 @@ export function createAnimatedComponent(
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+
+      if (IS_WEB && this.props.exiting) {
+        saveSnapshot(this._component as HTMLElement);
+      }
 
       // Snapshot won't be undefined because it comes from getSnapshotBeforeUpdate method
       if (
