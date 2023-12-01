@@ -132,15 +132,6 @@ body:
         - Other (please specify)
 
   - type: dropdown
-    id: app-build-type
-    attributes:
-      label: App build type
-      description: What is the type of your App build?
-      options:
-        - Debug mode
-        - Release mode
-
-  - type: dropdown
     id: emulator
     attributes:
       label: Device
