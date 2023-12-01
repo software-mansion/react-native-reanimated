@@ -120,13 +120,16 @@ body:
         - Fabric (New Architecture)
 
   - type: dropdown
-    id: bundle-build-type
+    id: Build type
     attributes:
-      label: JavaScript bundle build type
-      description: What is the type of your JavaScript bundle?
+      label: Build type
+      description: What is the build configuration/variant of your native app and JavaScript bundle mode?
       options:
-        - Debug mode
-        - Release mode
+        - Debug app && Dev bundle
+        - Release app && Production bundle
+        - Debug app && Production bundle
+        - Release app && Dev bundle
+        - Other (please specify)
 
   - type: dropdown
     id: app-build-type
