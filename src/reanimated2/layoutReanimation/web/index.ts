@@ -5,6 +5,6 @@ export {
   tryActivateLayoutTransition,
 } from './animationsManager';
 
-export { getReducedMotionFromConfig } from './componentUtils';
+export { getReducedMotionFromConfig, saveSnapshot } from './componentUtils';
 
 export { configureWebLayoutAnimations } from './domUtils';

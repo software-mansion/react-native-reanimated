@@ -288,6 +288,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
 }
 
 function makeKeyframeKey(index: number, transformProp: string) {
+  'worklet';
   return `${index}_transform:${transformProp}`;
 }
 
