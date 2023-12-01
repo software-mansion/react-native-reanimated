@@ -110,7 +110,7 @@ export function extractTransformFromStyle(style: StyleProps) {
 
   // Only last transform should be considered
   for (let i = style.length - 1; i >= 0; --i) {
-    if (style[i].transform) {
+    if (style[i]?.transform) {
       return style[i].transform;
     }
   }
