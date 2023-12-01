@@ -125,10 +125,10 @@ body:
       label: Build type
       description: What is the build configuration/variant of your native app and JavaScript bundle mode?
       options:
-        - Debug app && Dev bundle
-        - Release app && Production bundle
-        - Debug app && Production bundle
-        - Release app && Dev bundle
+        - Debug app & dev bundle
+        - Release app & production bundle
+        - Debug app & production bundle
+        - Release app & dev bundle
         - Other (please specify)
 
   - type: dropdown
