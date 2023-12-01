@@ -151,14 +151,14 @@ export function createAnimatedComponent(
       if (IS_WEB) {
         configureWebLayoutAnimations();
 
-        saveSnapshot(this._component as HTMLElement);
-
-        if (!this.props.entering) {
-          this._isFirstRender = false;
-          return;
+        if (this.props.exiting) {
+          saveSnapshot(this._component as HTMLElement);
         }
 
-        if (getReducedMotionFromConfig(this.props.entering as CustomConfig)) {
+        if (
+          !this.props.entering ||
+          getReducedMotionFromConfig(this.props.entering as CustomConfig)
+        ) {
           this._isFirstRender = false;
           return;
         }
@@ -439,7 +439,7 @@ export function createAnimatedComponent(
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
-      if (IS_WEB) {
+      if (IS_WEB && this.props.exiting) {
         saveSnapshot(this._component as HTMLElement);
       }
 
