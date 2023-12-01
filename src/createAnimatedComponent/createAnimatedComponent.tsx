@@ -55,6 +55,7 @@ import {
   saveSnapshot,
 } from '../reanimated2/layoutReanimation/web';
 import type { CustomConfig } from '../reanimated2/layoutReanimation/web/config';
+import type { FlatList, FlatListProps } from 'react-native';
 
 const IS_WEB = isWeb();
 const IS_FABRIC = isFabric();
@@ -85,6 +86,16 @@ type Options<P> = {
  * @returns A component that Reanimated is capable of animating.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent
  */
+
+/**
+ * @deprecated Please use `Animated.FlatList` component instead of calling `Animated.createAnimatedComponent(FlatList)` manually.
+ */
+// @ts-ignore This is required to create this overload, since type of createAnimatedComponent is incorrect and doesn't include typeof FlatList
+export function createAnimatedComponent(
+  component: typeof FlatList<unknown>,
+  options?: Options<any>
+): ComponentClass<AnimateProps<FlatListProps<unknown>>>;
+
 export function createAnimatedComponent<P extends object>(
   component: FunctionComponent<P>,
   options?: Options<P>
