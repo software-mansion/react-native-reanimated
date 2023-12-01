@@ -136,7 +136,6 @@ export function getProcessedConfig(
 }
 
 export function saveSnapshot(element: HTMLElement) {
-  // element.snapshot = element.getBoundingClientRect();
   element.setAttribute(
     'data-reanimated-snapshot',
     JSON.stringify(element.getBoundingClientRect())
@@ -248,6 +247,7 @@ export function handleExitingAnimation(
   const dummy = element.cloneNode() as HTMLElement;
 
   element.style.animationName = '';
+  // We hide current element so only its copy with proper animation will be displayed
   element.style.visibility = 'hidden';
 
   // After cloning the element, we want to move all children from original element to its clone. This is because original element
@@ -261,8 +261,6 @@ export function handleExitingAnimation(
 
   setElementAnimation(dummy, animationConfig);
   parent?.appendChild(dummy);
-
-  // We hide current element so only its copy with proper animation will be displayed
 
   const snapshot = JSON.parse(
     element.getAttribute('data-reanimated-snapshot')!
