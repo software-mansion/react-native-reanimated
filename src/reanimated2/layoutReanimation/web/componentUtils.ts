@@ -20,6 +20,8 @@ import type { StyleProps } from '../../commonTypes';
 import { useReducedMotion } from '../../hook/useReducedMotion';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 
+const snapshots = new WeakMap();
+
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName = (
     config.easingV !== undefined &&
@@ -136,10 +138,7 @@ export function getProcessedConfig(
 }
 
 export function saveSnapshot(element: HTMLElement) {
-  element.setAttribute(
-    'data-reanimated-snapshot',
-    JSON.stringify(element.getBoundingClientRect())
-  );
+  snapshots.set(element, element.getBoundingClientRect());
 }
 
 export function makeElementVisible(element: HTMLElement, delay: number) {
@@ -262,9 +261,7 @@ export function handleExitingAnimation(
   setElementAnimation(dummy, animationConfig);
   parent?.appendChild(dummy);
 
-  const snapshot = JSON.parse(
-    element.getAttribute('data-reanimated-snapshot')!
-  );
+  const snapshot = snapshots.get(element);
 
   dummy.style.position = 'absolute';
   dummy.style.top = `${snapshot.top}px`;
