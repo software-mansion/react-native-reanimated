@@ -333,7 +333,7 @@ var require_makeWorklet = __commonJS({
       const functionIdentifier = (0, types_1.identifier)(functionName);
       const clone = (0, types_1.cloneNode)(fun.node);
       const funExpression = (0, types_1.isBlockStatement)(clone.body) ? (0, types_1.functionExpression)(null, clone.params, clone.body) : clone;
-      const [funString, sourceMapString] = (0, buildWorkletString_1.buildWorkletString)(transformed.ast, variables, functionName, transformed.map);
+      let [funString, sourceMapString] = (0, buildWorkletString_1.buildWorkletString)(transformed.ast, variables, functionName, transformed.map);
       (0, assert_1.strict)(funString, "[Reanimated] `funString` is undefined.");
       const workletHash = hash(funString);
       let lineOffset = 1;
@@ -352,6 +352,7 @@ var require_makeWorklet = __commonJS({
         let location = state.file.opts.filename;
         if (state.opts.relativeSourceLocation) {
           location = (0, path_1.relative)(state.cwd, location);
+          sourceMapString = sourceMapString === null || sourceMapString === void 0 ? void 0 : sourceMapString.replace(state.file.opts.filename, location);
         }
         initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("location"), (0, types_1.stringLiteral)(location)));
       }
