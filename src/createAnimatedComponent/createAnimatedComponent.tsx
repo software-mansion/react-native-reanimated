@@ -547,8 +547,7 @@ export function createAnimatedComponent(
     getSnapshotBeforeUpdate() {
       if (
         IS_WEB &&
-        this._component &&
-        (this._component as HTMLElement).getBoundingClientRect !== undefined
+        (this._component as HTMLElement)?.getBoundingClientRect !== undefined
       ) {
         return (this._component as HTMLElement).getBoundingClientRect();
       }
