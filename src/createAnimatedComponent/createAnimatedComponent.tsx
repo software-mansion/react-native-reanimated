@@ -546,7 +546,8 @@ export function createAnimatedComponent(
     // and later on, in componentDidUpdate, calculate translation for layout transition.
     getSnapshotBeforeUpdate() {
       if (
-        (this._component as HTMLElement).getBoundingClientRect !== undefined
+        IS_WEB &&
+        (this._component as HTMLElement)?.getBoundingClientRect !== undefined
       ) {
         return (this._component as HTMLElement).getBoundingClientRect();
       }

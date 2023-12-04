@@ -7,6 +7,7 @@ import Animated, {
   LightSpeedInLeft,
   BounceIn,
   AnimatedProps,
+  FadeOut,
 } from 'react-native-reanimated';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faCheck, faClose } from '@fortawesome/free-solid-svg-icons';
@@ -137,8 +138,7 @@ function Button({ onPress, entering }: ButtonProps) {
       style={styles.buttonContainer}
       onPress={onPress}
       entering={entering}
-      // exiting={FadeOut} // doesn't behave well on the web
-    >
+      exiting={FadeOut}>
       <Animated.View style={styles.button}>
         <Animated.Text style={styles.buttonText}>Continue</Animated.Text>
       </Animated.View>
