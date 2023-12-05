@@ -23,6 +23,7 @@ function computeEasingProgress(
 
 function easing(x: number): number {
   'worklet';
+  // based on https://easings.net/#easeOutQuart
   return 1 - Math.pow(1 - x, 5);
 }
 
@@ -44,13 +45,13 @@ function computeProgress(
 
 function maybeScheduleNextFrame(
   step: () => void,
-  isScreenReachDestination: boolean,
+  didScreenReachDestination: boolean,
   screenTransitionConfig: ScreenTransitionConfig,
   event: PanGestureHandlerEventPayload,
   isTransitionCanceled: boolean
 ) {
   'worklet';
-  if (!isScreenReachDestination) {
+  if (!didScreenReachDestination) {
     const stackTag = screenTransitionConfig.stackTag;
     const progress = computeProgress(
       screenTransitionConfig,
@@ -94,7 +95,7 @@ export function swipeSimulator(
     x: Math.abs(finalPosition.x - startingPosition.x),
     y: Math.abs(finalPosition.y - startingPosition.y),
   };
-  const isScreenReachDestination = {
+  const didScreenReachDestination = {
     x: false,
     y: false,
   };
@@ -116,16 +117,16 @@ export function swipeSimulator(
     }
   }
   if (isTransitionCanceled) {
-    const isScreenReachDestinationCheck = !lockAxis
+    const didScreenReachDestinationCheck = !lockAxis
       ? () => {
-          return isScreenReachDestination.x && isScreenReachDestination.y;
+          return didScreenReachDestination.x && didScreenReachDestination.y;
         }
       : lockAxis === 'x'
       ? () => {
-          return isScreenReachDestination.x;
+          return didScreenReachDestination.x;
         }
       : () => {
-          return isScreenReachDestination.y;
+          return didScreenReachDestination.y;
         };
     const computeFrame = () => {
       const progress = {
@@ -138,30 +139,30 @@ export function swipeSimulator(
         startingPosition.y - direction.y * distance.y * easing(progress.y);
       if (direction.x > 0) {
         if (event.translationX <= 0) {
-          isScreenReachDestination.x = true;
+          didScreenReachDestination.x = true;
           event.translationX = 0;
         }
       } else {
         if (event.translationX >= 0) {
-          isScreenReachDestination.x = true;
+          didScreenReachDestination.x = true;
           event.translationX = 0;
         }
       }
       if (direction.y > 0) {
         if (event.translationY <= 0) {
-          isScreenReachDestination.y = true;
+          didScreenReachDestination.y = true;
           event.translationY = 0;
         }
       } else {
         if (event.translationY >= 0) {
-          isScreenReachDestination.y = true;
+          didScreenReachDestination.y = true;
           event.translationY = 0;
         }
       }
       applyStyle(screenTransitionConfig, event);
       maybeScheduleNextFrame(
         computeFrame,
-        isScreenReachDestinationCheck(),
+        didScreenReachDestinationCheck(),
         screenTransitionConfig,
         event,
         isTransitionCanceled
@@ -180,30 +181,30 @@ export function swipeSimulator(
         startingPosition.y + direction.y * distance.y * easing(progress.y);
       if (direction.x > 0) {
         if (event.translationX >= screenSize.width) {
-          isScreenReachDestination.x = true;
+          didScreenReachDestination.x = true;
           event.translationX = screenSize.width;
         }
       } else {
         if (event.translationX <= -screenSize.width) {
-          isScreenReachDestination.x = true;
+          didScreenReachDestination.x = true;
           event.translationX = -screenSize.width;
         }
       }
       if (direction.y > 0) {
         if (event.translationY >= screenSize.height) {
-          isScreenReachDestination.y = true;
+          didScreenReachDestination.y = true;
           event.translationY = screenSize.height;
         }
       } else {
         if (event.translationY <= -screenSize.height) {
-          isScreenReachDestination.y = true;
+          didScreenReachDestination.y = true;
           event.translationY = -screenSize.height;
         }
       }
       applyStyle(screenTransitionConfig, event);
       maybeScheduleNextFrame(
         computeFrame,
-        isScreenReachDestination.x || isScreenReachDestination.y,
+        didScreenReachDestination.x || didScreenReachDestination.y,
         screenTransitionConfig,
         event,
         isTransitionCanceled

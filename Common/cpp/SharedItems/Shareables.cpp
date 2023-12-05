@@ -6,7 +6,7 @@ namespace reanimated {
 
 jsi::Function getValueUnpacker(jsi::Runtime &rt) {
   auto valueUnpacker = rt.global().getProperty(rt, "__valueUnpacker");
-  //  assert(valueUnpacker.isObject() && "valueUnpacker not found");
+  assert(valueUnpacker.isObject() && "valueUnpacker not found");
   return valueUnpacker.asObject(rt).asFunction(rt);
 }
 

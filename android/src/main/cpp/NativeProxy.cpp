@@ -493,7 +493,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
           const jsi::Value &param) -> jsi::Value {
     if (command == ScreenTransitionCommand::Start) {
       std::array<int, 2> screenTags = startScreenTransition(stackTag);
-      if (screenTags[0] > 0) {
+      if (screenTags[0] > -1) {
         jsi::Object screenTagsObject(rt);
         screenTagsObject.setProperty(rt, "topScreenTag", screenTags[0]);
         screenTagsObject.setProperty(rt, "belowTopScreenTag", screenTags[1]);

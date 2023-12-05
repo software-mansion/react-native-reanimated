@@ -43,7 +43,7 @@ public abstract class NativeProxyCommon {
   protected AndroidUIScheduler mAndroidUIScheduler;
   private ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
-  private final ScreenTransitionManager screenTransitionManager;
+  private ScreenTransitionManager screenTransitionManager;
   private ReanimatedKeyboardEventListener reanimatedKeyboardEventListener;
   private Long firstUptime = SystemClock.uptimeMillis();
   private boolean slowAnimationsEnabled = false;
@@ -68,14 +68,16 @@ public abstract class NativeProxyCommon {
     }
     gestureHandlerStateManager = tempHandlerStateManager;
 
-    ScreenTransitionManager tmpScreenTransitionManager;
+    ScreenTransitionManager tmpScreenTransitionManager = new ScreenTransitionManagerMock();
     try {
       Class<NativeModule> screensModuleClass =
           (Class<NativeModule>) Class.forName("com.swmansion.rnscreens.ScreensModule");
       tmpScreenTransitionManager =
           (ScreenTransitionManager) context.getNativeModule(screensModuleClass);
     } catch (ClassCastException | ClassNotFoundException e) {
-      tmpScreenTransitionManager = null;
+      Log.w(
+          "[REANIMATED]",
+          "Unable to find RNScreens module. If you don't want to use custom screen transition you can ignore this warning.");
     }
     screenTransitionManager = tmpScreenTransitionManager;
   }

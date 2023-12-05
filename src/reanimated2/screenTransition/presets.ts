@@ -77,9 +77,6 @@ const TwoDimensional: AnimatedScreenTransition = {
       transform: [
         { translateX: event.translationX },
         { translateY: event.translationY },
-        // {
-        //   scale: 1 - 0.3 * event.translationY / screenSize.height,
-        // },
       ],
     };
   },
