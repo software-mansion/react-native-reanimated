@@ -28,7 +28,7 @@ function addPxToTranslate(existingTransform: TransformType) {
     (transformProp: RNTransformProp) => {
       const newTransformProp: ReanimatedWebTransformProperties = {};
       for (const [key, value] of Object.entries(transformProp)) {
-        if (key.includes('translate')) {
+        if (key.includes('translate') && typeof value === 'number') {
           // @ts-ignore After many trials we decided to ignore this error - it says that we cannot use 'key' to index this object.
           // Sadly it doesn't go away after using cast `key as keyof TransformProperties`.
           newTransformProp[key] = `${value}px`;
