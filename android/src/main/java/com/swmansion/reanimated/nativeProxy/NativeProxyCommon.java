@@ -12,6 +12,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.devsupport.interfaces.DevSupportManager;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
@@ -281,18 +282,20 @@ public abstract class NativeProxyCommon {
   @DoNotStrip
   @SuppressWarnings("unused")
   protected int[] startScreenTransition(int stackTag) {
-    return screenTransitionManager.startTransition(stackTag);
+    WritableArray writableArray = screenTransitionManager.startTransition((double) stackTag);
+    assert(writableArray.size() >= 2);
+    return new int[] { writableArray.getInt(0), writableArray.getInt(1) };
   }
 
   @DoNotStrip
   @SuppressWarnings("unused")
   protected void updateScreenTransition(int stackTag, double progress) {
-    screenTransitionManager.updateTransition(stackTag, progress);
+    screenTransitionManager.updateTransition((double) stackTag, progress);
   }
 
   @DoNotStrip
   @SuppressWarnings("unused")
   protected void finishScreenTransition(int stackTag, boolean canceled) {
-    screenTransitionManager.finishTransition(stackTag, canceled);
+    screenTransitionManager.finishTransition((double) stackTag, canceled);
   }
 }
