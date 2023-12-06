@@ -290,4 +290,10 @@ export function handleExitingAnimation(
     // Given that this function overrides onAnimationEnd, it won't be null
     originalOnAnimationEnd?.call(this, event);
   };
+
+  dummy.addEventListener('animationcancel', () => {
+    if (parent?.contains(dummy)) {
+      parent.removeChild(dummy);
+    }
+  });
 }
