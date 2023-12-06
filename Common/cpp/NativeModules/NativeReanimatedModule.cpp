@@ -29,6 +29,8 @@
 #include "UIRuntimeDecorator.h"
 #include "WorkletEventHandler.h"
 
+#include <string>
+
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
 #endif
@@ -249,13 +251,35 @@ jsi::Value NativeReanimatedModule::getViewProp(
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-    ShadowNode::Shared shadowNode = shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
-    auto newestCloneOfShadowNode =
+  ShadowNode::Shared shadowNode =
+      shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
+  auto newestCloneOfShadowNode =
       uiManager_->getNewestCloneOfShadowNode(*shadowNode);
-    auto props = newestCloneOfShadowNode->getProps();
-    auto propValue = *props;
-    
-    throw std::runtime_error("[Reanimated] getViewProp is not implemented on Fabric yet");
+  Props::Shared props = newestCloneOfShadowNode->getProps();
+  auto staticProps = std::static_pointer_cast<const ViewProps>(props);
+  auto layoutableShadowNode =
+      traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
+
+  uiScheduler_->scheduleOnUI([=]() {
+    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+    const auto propNameValue =
+        jsi::String::createFromUtf8(uiRuntime, propNameStr);
+    std::string resultStr;
+    if (propNameStr.compare("width") == 0) {
+      resultStr =
+          std::to_string(layoutableShadowNode->layoutMetrics_.frame.size.width);
+    }
+    if (propNameStr.compare("opacity") == 0) {
+      resultStr = std::to_string(staticProps->opacity);
+    }
+    jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
+      const auto resultValue =
+          jsi::String::createFromUtf8(rnRuntime, resultStr);
+      funPtr->call(rnRuntime, resultValue);
+    });
+  });
+
+  return jsi::Value::undefined();
 
 #else
   const int viewTagInt = viewTag.asNumber();
