@@ -1,5 +1,11 @@
 import { useRef } from 'react';
-import { TestCase, TestSuite, TrackerCallCount } from './types';
+import {
+  ComparisonMode,
+  LockObject,
+  TestCase,
+  TestSuite,
+  TrackerCallCount,
+} from './types';
 import { TestComponent } from './TestComponent';
 import {
   render,
@@ -14,6 +20,12 @@ import {
   runOnJS,
 } from 'react-native-reanimated';
 import { Platform } from 'react-native';
+import {
+  RUNTIME_TEST_ERRORS,
+  color,
+  defaultTestErrorLog,
+  logInFrame,
+} from './logMessageUtils';
 
 declare global {
   var mockedAnimationTimestamp: number | undefined;
@@ -35,27 +47,6 @@ interface Operation {
   tag: number;
   name: string;
   updates: StyleProps | AnimatedStyle<any>;
-}
-
-export enum ComparisonMode {
-  STRING = 'STRING',
-  DISTANCE = 'DISTANCE',
-  NUMBER = 'NUMBER',
-}
-
-export type LockObject = { lock: boolean };
-
-export const RUNTIME_TEST_ERRORS = {
-  UNDEFINED_TEST_SUITE: 'Undefined test suite context',
-  UNDEFINED_TEST_CASE: 'Undefined test case context',
-  NO_MOCKED_TIMESTAMP:
-    "Seems that you've forgot to call `mockAnimationTimer()`",
-};
-
-function logInFrame(text: string) {
-  console.log(`\t╔${'═'.repeat(text.length + 2)}╗`);
-  console.log(`\t║ ${text} ║`);
-  console.log(`\t╚${'═'.repeat(text.length + 2)}╝`);
 }
 
 function assertValueIsCallTracker(
@@ -83,7 +74,6 @@ export class TestRunner {
   private _renderLock: LockObject = { lock: false };
   private _valueRegistry: Record<string, { value: any }> = {};
   private _wasRenderedNull: boolean = false;
-
   private _lockObject: LockObject = {
     lock: false,
   };
@@ -236,7 +226,7 @@ export class TestRunner {
     console.log('End of tests run 🏁');
   }
 
-  public expect(value: TrackerCallCount | string) {
+  public expect(value: TrackerCallCount | string | Array<unknown>) {
     this._assertTestCase(this._currentTestCase);
     this._assertTestCase(this._currentTestCase);
     const errors = this._currentTestCase?.errors;
@@ -246,13 +236,13 @@ export class TestRunner {
         switch (comparisonMode) {
           case ComparisonMode.STRING: {
             if (value !== expected) {
-              errors.push(`Expected ${expected} received ${value}`);
+              errors.push(defaultTestErrorLog(expected, value));
             }
             break;
           }
           case ComparisonMode.NUMBER: {
             if (isNaN(Number(value)) || Number(value) !== Number(expected)) {
-              errors.push(`Expected ${expected} received ${value}`);
+              errors.push(defaultTestErrorLog(expected, value));
             }
             break;
           }
@@ -260,21 +250,40 @@ export class TestRunner {
             const valueAsNumber = Number(value);
             if (Platform.OS === 'ios') {
               if (isNaN(valueAsNumber) || valueAsNumber !== Number(expected)) {
-                errors.push(`Expected ${expected} received ${value}`);
+                errors.push(defaultTestErrorLog(expected, value));
               }
             } else {
               if (
                 isNaN(valueAsNumber) ||
                 Math.abs(valueAsNumber - Number(expected)) > 1
               ) {
-                errors.push(`Expected ${expected}±1 received ${value}`);
+                errors.push(
+                  `Expected ${color(
+                    `${expected}±1`,
+                    'green'
+                  )} received ${value}`
+                );
               }
             }
           }
         }
       },
       toMatchSnapshot: (expected: any) => {
-        if (JSON.stringify(value) !== JSON.stringify(expected)) {
+        if (Array.isArray(value) && Array.isArray(value)) {
+          let errorString = '';
+          value.forEach((val, idx) => {
+            const expectedVal = expected[idx];
+            if (val !== expectedVal) {
+              errorString += `\t At index ${idx}\texpected\t${color(
+                `${JSON.stringify(expectedVal)}`,
+                'yellow'
+              )}\treceived\t${color(`${JSON.stringify(val)}`, 'yellow')}\n`;
+            }
+          });
+          if (errorString !== '') {
+            errors.push('Snapshot mismatch: \n' + errorString);
+          }
+        } else if (JSON.stringify(value) !== JSON.stringify(expected)) {
           errors.push(
             `Expected ${JSON.stringify(expected)} received ${JSON.stringify(
               value
@@ -287,7 +296,10 @@ export class TestRunner {
         const callsCount = value.UI + value.JS;
         if (callsCount !== times) {
           errors.push(
-            `Expected ${value.name} to be called ${times} times, but was called ${callsCount} times`
+            `Expected ${color(value.name, 'green')} to be called ${color(
+              times,
+              'green'
+            )} times, but was called ${color(callsCount, 'green')} times`
           );
         }
       },
@@ -295,7 +307,13 @@ export class TestRunner {
         assertValueIsCallTracker(value);
         if (value.UI !== times) {
           errors.push(
-            `Expected ${value.name} to be called ${times} times on UI thread, but was called ${value.UI} times`
+            `Expected ${color(value.name, 'green')} to be called ${color(
+              times,
+              'green'
+            )} times on ${color('UI thread', 'cyan')}, but was called ${color(
+              value.UI,
+              'green'
+            )} times`
           );
         }
       },
@@ -303,7 +321,13 @@ export class TestRunner {
         assertValueIsCallTracker(value);
         if (value.JS !== times) {
           errors.push(
-            `Expected ${value.name} to be called ${times} times on JS thread, but was called ${value.JS} times`
+            `Expected ${color(value.name, 'green')} to be called ${color(
+              times,
+              'green'
+            )} times on ${color('JS thread', 'cyan')}, but was called ${color(
+              value.JS,
+              'green'
+            )} times`
           );
         }
       },

@@ -1,7 +1,7 @@
 import { View, Button, StyleSheet, Text } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { runTests, configure } from './RuntimeTestsApi';
-import { LockObject } from './TestRunner';
+import { LockObject } from './types';
 
 let renderLock: LockObject = { lock: false };
 

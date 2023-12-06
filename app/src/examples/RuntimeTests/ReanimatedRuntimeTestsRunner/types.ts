@@ -26,3 +26,11 @@ export type TestSuite = {
   beforeEach?: () => void;
   afterEach?: () => void;
 };
+
+export enum ComparisonMode {
+  STRING = 'STRING',
+  DISTANCE = 'DISTANCE',
+  NUMBER = 'NUMBER',
+}
+
+export type LockObject = { lock: boolean };

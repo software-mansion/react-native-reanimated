@@ -25,7 +25,7 @@ import {
   callTrackerFn,
 } from '../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { Snapshots } from './snapshots/Animations.snapshot';
-import { ComparisonMode } from '../ReanimatedRuntimeTestsRunner/TestRunner';
+import { ComparisonMode } from '../ReanimatedRuntimeTestsRunner/types';
 
 const AnimatedComponent = () => {
   const widthSV = useSharedValue(0);

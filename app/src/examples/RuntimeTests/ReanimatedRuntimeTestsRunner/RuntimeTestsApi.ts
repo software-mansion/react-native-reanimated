@@ -1,5 +1,6 @@
-import { RUNTIME_TEST_ERRORS, TestRunner } from './TestRunner';
+import { TestRunner } from './TestRunner';
 import { TestComponent } from './TestComponent';
+import { RUNTIME_TEST_ERRORS } from './logMessageUtils';
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
