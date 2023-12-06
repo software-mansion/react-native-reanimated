@@ -58,10 +58,14 @@ if (shouldBeUseWeb()) {
   global._getAnimationTimestamp = () => performance.now();
 }
 
-export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
-  if (IS_FABRIC) {
+export function getViewProp<T>(
+  viewTag: number,
+  propName: string,
+  component?: React.Component // required on Fabric
+): Promise<T> {
+  if (IS_FABRIC && !component) {
     throw new Error(
-      '[Reanimated] `getViewProp` is not supported on Fabric yet.'
+      '[Reanimated] Function `getViewProp` requires component to be passed as an argument to work on Fabric'
     );
   }
 
@@ -69,6 +73,7 @@ export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
     return NativeReanimatedModule.getViewProp(
       viewTag,
       propName,
+      component,
       (result: T) => {
         if (typeof result === 'string' && result.substr(0, 6) === 'error:') {
           reject(result);

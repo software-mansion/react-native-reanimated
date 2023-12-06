@@ -1,6 +1,7 @@
 'use strict';
 import { NativeModules } from 'react-native';
 import type {
+  ShadowNodeWrapper,
   ShareableRef,
   ShareableSyncDataHolderRef,
   Value3D,
@@ -14,6 +15,9 @@ import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
 import type { WorkletRuntime } from '../runtimes';
 import { getValueUnpackerCode } from '../valueUnpacker';
+import { isFabric } from '../PlatformChecker';
+import type React from 'react';
+import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
@@ -40,6 +44,7 @@ export interface NativeReanimatedModule {
   getViewProp<T>(
     viewTag: number,
     propName: string,
+    shadowNodeWrapper?: ShadowNodeWrapper,
     callback?: (result: T) => void
   ): Promise<T>;
   enableLayoutAnimations(flag: boolean): void;
@@ -164,9 +169,20 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   getViewProp<T>(
     viewTag: number,
     propName: string,
+    component?: React.Component, // required on Fabric
     callback?: (result: T) => void
   ) {
-    return this.InnerNativeModule.getViewProp(viewTag, propName, callback);
+    let shadowNodeWrapper;
+    if (isFabric() && component) {
+      shadowNodeWrapper = getShadowNodeWrapperFromRef(component);
+    }
+    console.log('shadowNodeWrapper', shadowNodeWrapper);
+    return this.InnerNativeModule.getViewProp(
+      viewTag,
+      propName,
+      shadowNodeWrapper,
+      callback
+    );
   }
 
   configureLayoutAnimation(

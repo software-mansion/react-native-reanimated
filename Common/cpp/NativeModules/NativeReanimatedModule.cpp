@@ -241,15 +241,24 @@ jsi::Value NativeReanimatedModule::getViewProp(
     jsi::Runtime &rnRuntime,
     const jsi::Value &viewTag,
     const jsi::Value &propName,
+    const jsi::Value &shadowNodeWrapper,
     const jsi::Value &callback) {
-#ifdef RCT_NEW_ARCH_ENABLED
-  throw std::runtime_error(
-      "[Reanimated] getViewProp is not implemented on Fabric yet");
-#else
-  const int viewTagInt = viewTag.asNumber();
   const auto propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
   const auto funPtr = std::make_shared<jsi::Function>(
       callback.getObject(rnRuntime).asFunction(rnRuntime));
+
+#ifdef RCT_NEW_ARCH_ENABLED
+
+    ShadowNode::Shared shadowNode = shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
+    auto newestCloneOfShadowNode =
+      uiManager_->getNewestCloneOfShadowNode(*shadowNode);
+    auto props = newestCloneOfShadowNode->getProps();
+    auto propValue = *props;
+    
+    throw std::runtime_error("[Reanimated] getViewProp is not implemented on Fabric yet");
+
+#else
+  const int viewTagInt = viewTag.asNumber();
 
   uiScheduler_->scheduleOnUI([=]() {
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();

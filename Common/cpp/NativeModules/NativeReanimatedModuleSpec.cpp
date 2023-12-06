@@ -95,7 +95,7 @@ static jsi::Value SPEC_PREFIX(getViewProp)(
     size_t) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->getViewProp(
-          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
+          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]), std::move(args[3]));
   return jsi::Value::undefined();
 }
 

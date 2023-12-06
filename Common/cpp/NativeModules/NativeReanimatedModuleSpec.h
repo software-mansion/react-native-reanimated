@@ -64,6 +64,7 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &viewTag,
       const jsi::Value &propName,
+      const jsi::Value &shadowNodeWrapper,
       const jsi::Value &callback) = 0;
 
   // sensors
