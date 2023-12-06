@@ -1,5 +1,5 @@
 'use strict';
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { cancelAnimation } from '../animation';
 import type { SharedValue } from '../commonTypes';
 import { makeMutable } from '../core';
@@ -15,19 +15,11 @@ export function useSharedValue<Value>(
   initialValue: Value,
   oneWayReadsOnly = false
 ): SharedValue<Value> {
-  const ref = useRef<SharedValue<Value>>(
-    makeMutable(initialValue, oneWayReadsOnly)
-  );
-
-  if (ref.current === null) {
-    ref.current = makeMutable(initialValue, oneWayReadsOnly);
-  }
-
+  const [mutable] = useState(() => makeMutable(initialValue, oneWayReadsOnly));
   useEffect(() => {
     return () => {
-      cancelAnimation(ref.current);
+      cancelAnimation(mutable);
     };
-  }, []);
-
-  return ref.current;
+  }, [mutable]);
+  return mutable;
 }
