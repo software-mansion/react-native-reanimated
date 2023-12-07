@@ -28,7 +28,7 @@ type ListItemWithParent<T> = {
 };
 
 type ParamList = {
-  Screen1?: {};
+  Screen1?: object;
   Screen2: { sharedTransitionTag: string };
 };
 

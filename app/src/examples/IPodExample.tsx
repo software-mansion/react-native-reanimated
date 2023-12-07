@@ -178,7 +178,7 @@ function SongCover({
   itemTotalSize,
   borderMargin,
 }: SongCoverProps) {
-  const uas = useAnimatedStyle(() => {
+  const animatedStyle = useAnimatedStyle(() => {
     const style: {
       opacity?: number;
       marginLeft?: number;
@@ -202,7 +202,7 @@ function SongCover({
   });
 
   return (
-    <Animated.View style={[styles.item, uas]}>
+    <Animated.View style={[styles.item, animatedStyle]}>
       <View style={styles.cover}>
         <Text style={styles.noteText}>♪</Text>
       </View>

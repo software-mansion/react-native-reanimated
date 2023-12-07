@@ -11,17 +11,17 @@ import {
   Button,
   StyleSheet,
 } from 'react-native';
-import Animated, { SharedValue } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 const florence = require('./assets/florence.jpg');
 const countryside = require('./assets/countryside.jpg');
 const dawn = require('./assets/dawn.jpg');
 
 type ParamList = {
-  Screen1?: {};
-  Screen2?: {};
+  Screen1?: object;
+  Screen2?: object;
   Screen3: {
-    image: ImageSourcePropType | SharedValue<ImageSourcePropType>;
+    image: ImageSourcePropType;
     index: number;
   };
 };

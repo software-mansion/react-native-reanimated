@@ -19,7 +19,6 @@ import Animated, {
   FadeIn,
   runOnJS,
   SharedTransition,
-  SharedValue,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -35,7 +34,7 @@ const windowHeight = Dimensions.get('window').height;
 
 type Item = {
   id: string;
-  image: ImageSourcePropType | SharedValue<ImageSourcePropType>;
+  image: ImageSourcePropType;
   title: string;
 };
 

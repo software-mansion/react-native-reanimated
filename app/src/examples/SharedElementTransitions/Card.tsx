@@ -8,7 +8,7 @@ import {
 import Animated from 'react-native-reanimated';
 
 type ParamList = {
-  Screen1?: {};
+  Screen1?: object;
   Screen2: {
     title: string;
     sharedTransitionTag: string;
@@ -20,7 +20,7 @@ const photo = require('./assets/image.jpg');
 const Stack = createNativeStackNavigator<ParamList>();
 
 interface CardProps {
-  navigation: NativeStackNavigationProp<ParamList, keyof ParamList, undefined>;
+  navigation: NativeStackNavigationProp<ParamList>;
   title: string;
   transitionTag: string;
   isOpen?: boolean;
