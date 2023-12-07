@@ -192,7 +192,9 @@ export function setElementAnimation(
     element.style.transform = convertTransformToString(existingTransform);
   };
 
-  scheduleAnimationCleanup(animationName, duration + delay);
+  if (!(animationName in Animations)) {
+    scheduleAnimationCleanup(animationName, duration + delay);
+  }
 }
 
 export function handleLayoutTransition(
