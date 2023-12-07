@@ -45,7 +45,7 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <Animated.ScrollView style={styles.flexOne}>
       <Animated.View
-        style={(styles.greenBoxScreenOne, { transform: [{ scale: 0.4 }] })}
+        style={[styles.greenBoxScreenOne, { transform: [{ scale: 0.4 }] }]}
         sharedTransitionTag="tag"
         sharedTransitionStyle={transition}
       />
