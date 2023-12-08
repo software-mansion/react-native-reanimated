@@ -52,5 +52,6 @@ module.exports = {
       'error',
       { fixMixedExportsWithInlineTypeSpecifier: false },
     ],
+    '@typescript-eslint/no-non-null-assertion': 'off',
   },
 };

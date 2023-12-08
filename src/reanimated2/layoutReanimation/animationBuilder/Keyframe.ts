@@ -256,7 +256,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
           if (!('transform' in animations)) {
             animations.transform = [];
           }
-          animations.transform?.push(<TransformArrayItem>{
+          animations.transform!.push(<TransformArrayItem>{
             [key.split(':')[1]]: animation,
           });
         } else {
