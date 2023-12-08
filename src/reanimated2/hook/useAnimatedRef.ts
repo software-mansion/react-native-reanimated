@@ -9,16 +9,17 @@ import {
   makeShareableCloneRecursive,
   registerShareableMapping,
 } from '../shareables';
-import type { ScrollViewComponent } from 'react-native';
 import { Platform, findNodeHandle } from 'react-native';
+import type { ScrollView, FlatList } from 'react-native';
 import { isFabric } from '../PlatformChecker';
-import type { AnimatedComponentRef } from '../../createAnimatedComponent/commonTypes';
 
 const IS_FABRIC = isFabric();
 
 interface MaybeScrollableComponent extends Component {
-  getNativeScrollRef?: () => React.ElementRef<typeof ScrollViewComponent>;
-  getScrollableNode?: () => AnimatedComponentRef;
+  getNativeScrollRef?: FlatList['getNativeScrollRef'];
+  getScrollableNode?:
+    | ScrollView['getScrollableNode']
+    | FlatList['getScrollableNode'];
   viewConfig?: {
     uiViewClassName?: string;
   };
