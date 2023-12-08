@@ -20,11 +20,10 @@ import type { StyleProps } from '../../commonTypes';
 import { isReducedMotion } from '../../PlatformChecker';
 
 function getEasingFromConfig(config: CustomConfig): string {
-  const easingName = (
-    (config?.easingV?.name as string) in WebEasings
-      ? config.easingV?.name
-      : 'linear'
-  ) as WebEasingsNames;
+  const easingName =
+    config.easingV && config.easingV.name in WebEasings
+      ? (config.easingV.name as WebEasingsNames)
+      : 'linear';
 
   return `cubic-bezier(${WebEasings[easingName].toString()})`;
 }
