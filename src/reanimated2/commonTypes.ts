@@ -15,7 +15,7 @@ interface SharedValueInternals<T> {
   _value?: T | Descriptor | AnimatableValue;
 }
 
-export interface SharedValue<Value> {
+export interface SharedValue<Value = unknown> {
   value: Value;
   addListener: (listenerID: number, listener: (value: Value) => void) => void;
   removeListener: (listenerID: number) => void;
@@ -46,12 +46,16 @@ export type ShareableSyncDataHolderRef<T> = {
   __hostObjectShareableJSRefSyncDataHolder: T;
 };
 
-export type MapperRegistry<T> = {
+export type MapperInputs = unknown[];
+
+export type MapperOutputs = SharedValue[];
+
+export type MapperRegistry = {
   start: (
     mapperID: number,
     worklet: () => void,
-    inputs: Record<string, unknown>[],
-    outputs?: SharedValue<T>[]
+    inputs: MapperInputs,
+    outputs?: MapperOutputs
   ) => void;
   stop: (mapperID: number) => void;
 };
