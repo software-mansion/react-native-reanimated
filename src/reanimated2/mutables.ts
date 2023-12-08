@@ -112,7 +112,7 @@ export function makeMutable<Value>(
         );
       }
       value = newValue;
-      listeners?.forEach((listener) => {
+      listeners!.forEach((listener) => {
         listener(newValue);
       });
     },
@@ -144,7 +144,7 @@ export function makeMutable<Value>(
           '[Reanimated] Adding listeners is only possible on the UI runtime.'
         );
       }
-      listeners?.set(id, listener);
+      listeners!.set(id, listener);
     },
     removeListener: (id: number) => {
       if (!SHOULD_BE_USE_WEB) {
@@ -152,7 +152,7 @@ export function makeMutable<Value>(
           '[Reanimated] Removing listeners is only possible on the UI runtime.'
         );
       }
-      listeners?.delete(id);
+      listeners!.delete(id);
     },
     _isReanimatedSharedValue: true,
   };
