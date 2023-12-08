@@ -28,7 +28,7 @@ function measureFabric<T extends Component>(animatedRef: AnimatedRef<T>) {
   }
 
   const measured = _measureFabric!(viewTag as ShadowNodeWrapper);
-  if (measured == null) {
+  if (measured === null) {
     console.warn(
       `[Reanimated] The view with tag ${viewTag} has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
     );
