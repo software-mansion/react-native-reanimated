@@ -25,7 +25,9 @@ interface AnimatedScrollViewInterface extends ScrollView {
   getNode(): ScrollView;
 }
 
-const AnimatedScrollViewComponent = createAnimatedComponent(ScrollView);
+const AnimatedScrollViewComponent = createAnimatedComponent(
+  ScrollView as any
+) as any;
 
 export const AnimatedScrollView: AnimatedScrollView = forwardRef(
   (props: AnimatedScrollViewProps, ref: ForwardedRef<AnimatedScrollView>) => {
