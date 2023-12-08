@@ -4,6 +4,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  withDelay,
 } from 'react-native-reanimated';
 import React from 'react';
 import { ComparisonMode } from '../ReanimatedRuntimeTestsRunner/types';
@@ -21,7 +22,7 @@ import {
 } from '../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 
 const EXAMPLE_COLORS = {
-  coral: [0xff7f50ff, 'rgb(255,127,80)', '#ff7f50ff', 'coral'],
+  coral: [0xff7f50, 'rgb(255,127,80)', '#ff7f50', 'coral'],
   cornflowerblue: [0x6495ed, 'rgb(100,149,237)', '#6495ed', 'cornflowerblue'],
 };
 
@@ -42,10 +43,13 @@ const AnimatedComponent = ({
     callTracker('useAnimatedStyleTracker');
     return {
       width: withTiming(widthSV.value, { duration }, callTrackerFn('width')),
-      backgroundColor: withTiming(
-        colorSV.value,
-        { duration: duration * 2 },
-        callTrackerFn('color')
+      backgroundColor: withDelay(
+        100,
+        withTiming(
+          colorSV.value,
+          { duration: duration * 2 },
+          callTrackerFn('color')
+        )
       ),
       opacity: 1,
     };
@@ -77,12 +81,12 @@ const styles = StyleSheet.create({
 describe('With timing animation works with COLORS 🎨', () => {
   (
     [
-      ['color as string "cornflowerblue"', EXAMPLE_COLORS.cornflowerblue[0]],
-      ['color as hex number 0x6495ed', EXAMPLE_COLORS.cornflowerblue[1]],
+      ['color as hex number 0x6495ed', EXAMPLE_COLORS.cornflowerblue[0]],
       [
         'color as rgb string "rgb(100,149,237)"',
-        EXAMPLE_COLORS.cornflowerblue[2],
+        EXAMPLE_COLORS.cornflowerblue[1],
       ],
+      ['color as hex string "0x6495ed"', EXAMPLE_COLORS.cornflowerblue[2]],
       [
         'color as color string "cornflowerblue"',
         EXAMPLE_COLORS.cornflowerblue[3],
@@ -93,6 +97,10 @@ describe('With timing animation works with COLORS 🎨', () => {
     test(description, async () => {
       await render(<AnimatedComponent color2={color} />);
       const component = getTestComponent('AnimatedComponent');
+      expect(await component.getAnimatedStyle('backgroundColor')).toBe(
+        EXAMPLE_COLORS.coral[2],
+        ComparisonMode.COLOR
+      );
       await wait(600);
 
       expect(await component.getAnimatedStyle('backgroundColor')).toBe(
