@@ -286,10 +286,8 @@ export function createAnimatedComponent(
 
     _updateFromNative(props: StyleProps) {
       if (options?.setNativeProps) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         options.setNativeProps(this._component as AnimatedComponentRef, props);
       } else {
-        // eslint-disable-next-line no-unused-expressions
         (this._component as AnimatedComponentRef)?.setNativeProps?.(props);
       }
     }
@@ -418,11 +416,8 @@ export function createAnimatedComponent(
       // attach animatedProps property
       if (this.props.animatedProps?.viewDescriptors) {
         this.props.animatedProps.viewDescriptors.add({
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           tag: viewTag as number,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           name: viewName!,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           shadowNodeWrapper: shadowNodeWrapper!,
         });
       }
