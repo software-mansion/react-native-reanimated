@@ -65,11 +65,11 @@ import { useTimingPlayground } from '@site/src/components/InteractivePlayground'
 
 Available properties:
 
-| Name                      | Type           | Default                     | Description                                                                                                  |
-| ------------------------- | -------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| duration <Optional />     | `number`       | 300                         | Length of the animation (in milliseconds).                                                                   |
-| easing <Optional />       | `Easing`       | `Easing.inOut(Easing.quad)` | An easing function which defines the animation curve.                                                        |
-| reduceMotion <Optional /> | `ReduceMotion` | `ReduceMotion.System`       | A parameter that determines how the animation responds to the device's reduced motion accessibility setting. |
+| Name         | Type           | Default                     | Description                                                                                                  |
+| ------------ | -------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| duration     | `number`       | 300                         | Length of the animation (in milliseconds).                                                                   |
+| easing       | `Easing`       | `Easing.inOut(Easing.quad)` | An easing function which defines the animation curve.                                                        |
+| reduceMotion | `ReduceMotion` | `ReduceMotion.System`       | A parameter that determines how the animation responds to the device's reduced motion accessibility setting. |
 
 ##### `Easing`
 
@@ -124,7 +124,7 @@ A function called upon animation completion. If the animation is cancelled, the 
 
 ### Returns
 
-`withTiming` returns an [animation object](/docs/fundamentals/glossary#animation-object). It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](docs/core/useAnimatedStyle).
+`withTiming` returns an [animation object](/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](docs/core/useAnimatedStyle).
 
 ## Example
 

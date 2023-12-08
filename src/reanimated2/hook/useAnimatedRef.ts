@@ -38,8 +38,14 @@ const getTagValueFunction = IS_FABRIC
   ? getShadowNodeWrapperFromRef
   : findNodeHandle;
 
+/**
+ * Lets you get a reference of a view that you can use inside a worklet.
+ *
+ * @returns An object with a `.current` property which contains an instance of a component.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef
+ */
 export function useAnimatedRef<
-  TComponent extends MaybeScrollableComponent
+  TComponent extends Component
 >(): AnimatedRef<TComponent> {
   const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
   const viewName = useSharedValue<string>(null!);
@@ -56,7 +62,9 @@ export function useAnimatedRef<
         fun.current = component;
         // viewName is required only on iOS with Paper
         if (Platform.OS === 'ios' && !IS_FABRIC) {
-          viewName.value = component?.viewConfig?.uiViewClassName || 'RCTView';
+          viewName.value =
+            (component as MaybeScrollableComponent)?.viewConfig
+              ?.uiViewClassName || 'RCTView';
         }
       }
       return tag.value;

@@ -51,8 +51,12 @@ export function makeUIMutable<Value>(
     get _value(): Value {
       return value;
     },
-    modify: (modifier) => {
-      valueSetter(self, modifier !== undefined ? modifier(value) : value, true);
+    modify: (modifier, forceUpdate = true) => {
+      valueSetter(
+        self,
+        modifier !== undefined ? modifier(value) : value,
+        forceUpdate
+      );
     },
     addListener: (id: number, listener: Listener<Value>) => {
       listeners.set(id, listener);
@@ -125,16 +129,16 @@ export function makeMutable<Value>(
       return value;
     },
 
-    modify: (modifier) => {
+    modify: (modifier, forceUpdate = true) => {
       if (!SHOULD_BE_USE_WEB) {
         runOnUI(() => {
-          mutable.modify(modifier);
+          mutable.modify(modifier, forceUpdate);
         })();
       } else {
         valueSetter(
           mutable,
           modifier !== undefined ? modifier(mutable.value) : mutable.value,
-          true
+          forceUpdate
         );
       }
     },

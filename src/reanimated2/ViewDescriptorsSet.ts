@@ -32,7 +32,7 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
           descriptors.push(item);
         }
         return descriptors;
-      });
+      }, false);
     },
 
     remove: (viewTag: number) => {
@@ -45,7 +45,7 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
           descriptors.splice(index, 1);
         }
         return descriptors;
-      });
+      }, false);
     },
   };
   return data;

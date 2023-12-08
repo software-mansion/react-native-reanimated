@@ -9,6 +9,13 @@ import type {
   IExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
 
+/**
+ * Rotate to bottom from left edge. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
+ */
 export class RotateInDownLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
@@ -52,6 +59,13 @@ export class RotateInDownLeft
   };
 }
 
+/**
+ * Rotate to bottom from right edge. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
+ */
 export class RotateInDownRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
@@ -95,6 +109,13 @@ export class RotateInDownRight
   };
 }
 
+/**
+ * Rotate to top from left edge. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
+ */
 export class RotateInUpLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
@@ -138,6 +159,13 @@ export class RotateInUpLeft
   };
 }
 
+/**
+ * Rotate to top from right edge. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
+ */
 export class RotateInUpRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
@@ -181,6 +209,13 @@ export class RotateInUpRight
   };
 }
 
+/**
+ * Rotate to bottom from left edge. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
+ */
 export class RotateOutDownLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
@@ -236,6 +271,13 @@ export class RotateOutDownLeft
   };
 }
 
+/**
+ * Rotate to bottom from right edge. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
+ */
 export class RotateOutDownRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
@@ -291,6 +333,13 @@ export class RotateOutDownRight
   };
 }
 
+/**
+ * Rotate to top from left edge. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
+ */
 export class RotateOutUpLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
@@ -346,6 +395,13 @@ export class RotateOutUpLeft
   };
 }
 
+/**
+ * Rotate to top from right edge. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
+ */
 export class RotateOutUpRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
