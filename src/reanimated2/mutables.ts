@@ -1,11 +1,7 @@
 'use strict';
 import NativeReanimatedModule from './NativeReanimated';
 import { shouldBeUseWeb } from './PlatformChecker';
-import type {
-  SharedValue,
-  ShareableSyncDataHolderRef,
-  SharedValueWithInternals,
-} from './commonTypes';
+import type { ShareableSyncDataHolderRef, Mutable } from './commonTypes';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -16,16 +12,18 @@ import { valueSetter } from './valueSetter';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-export function makeUIMutable<T>(
-  initial: T,
-  syncDataHolder?: ShareableSyncDataHolderRef<T>
+type Listener<Value> = (newValue: Value) => void;
+
+export function makeUIMutable<Value>(
+  initial: Value,
+  syncDataHolder?: ShareableSyncDataHolderRef<Value>
 ) {
   'worklet';
 
-  const listeners = new Map();
+  const listeners = new Map<number, Listener<Value>>();
   let value = initial;
 
-  const self: SharedValueWithInternals<T> = {
+  const self: Mutable<Value> = {
     set value(newValue) {
       valueSetter(self, newValue);
     },
@@ -38,7 +36,7 @@ export function makeUIMutable<T>(
      * on the provided new value. All other places should only attempt to modify
      * the mutable by assigning to value prop directly.
      */
-    set _value(newValue: T) {
+    set _value(newValue: Value) {
       value = newValue;
       if (syncDataHolder) {
         _updateDataSynchronously(
@@ -50,13 +48,13 @@ export function makeUIMutable<T>(
         listener(newValue);
       });
     },
-    get _value(): T {
+    get _value(): Value {
       return value;
     },
     modify: (modifier) => {
       valueSetter(self, modifier !== undefined ? modifier(value) : value, true);
     },
-    addListener: (id: number, listener: (newValue: T) => void) => {
+    addListener: (id: number, listener: Listener<Value>) => {
       listeners.set(id, listener);
     },
     removeListener: (id: number) => {
@@ -68,12 +66,12 @@ export function makeUIMutable<T>(
   return self;
 }
 
-export function makeMutable<T>(
-  initial: T,
+export function makeMutable<Value>(
+  initial: Value,
   oneWayReadsOnly = false
-): SharedValue<T> {
-  let value: T = initial;
-  let syncDataHolder: ShareableSyncDataHolderRef<T> | undefined;
+): Mutable<Value> {
+  let value: Value = initial;
+  let syncDataHolder: ShareableSyncDataHolderRef<Value> | undefined;
   if (!oneWayReadsOnly && !SHOULD_BE_USE_WEB) {
     // updates are always synchronous when running on web or in Jest environment
     syncDataHolder = NativeReanimatedModule.makeSynchronizedDataHolder(
@@ -88,8 +86,10 @@ export function makeMutable<T>(
     },
   });
   // listeners can only work on JS thread on Web and jest environments
-  const listeners = SHOULD_BE_USE_WEB ? new Map() : undefined;
-  const mutable: SharedValueWithInternals<T> = {
+  const listeners = SHOULD_BE_USE_WEB
+    ? new Map<number, Listener<Value>>()
+    : undefined;
+  const mutable: Mutable<Value> = {
     set value(newValue) {
       if (SHOULD_BE_USE_WEB) {
         valueSetter(mutable, newValue);
@@ -105,7 +105,7 @@ export function makeMutable<T>(
       }
       return value;
     },
-    set _value(newValue: T) {
+    set _value(newValue: Value) {
       if (!SHOULD_BE_USE_WEB) {
         throw new Error(
           '[Reanimated] Setting `_value` directly is only possible on the UI runtime.'
@@ -116,7 +116,7 @@ export function makeMutable<T>(
         listener(newValue);
       });
     },
-    get _value(): T {
+    get _value(): Value {
       if (!SHOULD_BE_USE_WEB) {
         throw new Error(
           '[Reanimated] Reading from `_value` directly is only possible on the UI runtime.'
@@ -138,7 +138,7 @@ export function makeMutable<T>(
         );
       }
     },
-    addListener: (id: number, listener: (value: T) => void) => {
+    addListener: (id: number, listener: Listener<Value>) => {
       if (!SHOULD_BE_USE_WEB) {
         throw new Error(
           '[Reanimated] Adding listeners is only possible on the UI runtime.'

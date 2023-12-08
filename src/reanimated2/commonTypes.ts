@@ -9,12 +9,6 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
-interface SharedValueInternals<T = unknown> {
-  _isReanimatedSharedValue: true;
-  _animation?: AnimationObject | null;
-  _value?: T | Descriptor | AnimatableValue;
-}
-
 export interface SharedValue<Value = unknown> {
   value: Value;
   addListener: (listenerID: number, listener: (value: Value) => void) => void;
@@ -22,8 +16,11 @@ export interface SharedValue<Value = unknown> {
   modify: (modifier?: <T extends Value>(value: T) => T) => void;
 }
 
-export type SharedValueWithInternals<T = unknown> = SharedValue<T> &
-  SharedValueInternals<T>;
+export interface Mutable<Value = unknown> extends SharedValue<Value> {
+  _isReanimatedSharedValue: true;
+  _animation?: AnimationObject | null;
+  _value?: Value | Descriptor | AnimatableValue;
+}
 
 // The below type is used for HostObjects returned by the JSI API that don't have
 // any accessible fields or methods but can carry data that is accessed from the
