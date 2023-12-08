@@ -2,7 +2,7 @@
 import type { Component } from 'react';
 import { useRef } from 'react';
 import { useSharedValue } from './useSharedValue';
-import type { AnimatedRef } from './commonTypes';
+import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
 import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import {
@@ -10,15 +10,16 @@ import {
   registerShareableMapping,
 } from '../shareables';
 import { Platform, findNodeHandle } from 'react-native';
+import type { ScrollView, FlatList } from 'react-native';
 import { isFabric } from '../PlatformChecker';
 
 const IS_FABRIC = isFabric();
 
 interface MaybeScrollableComponent extends Component {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getNativeScrollRef?: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getScrollableNode?: any;
+  getNativeScrollRef?: FlatList['getNativeScrollRef'];
+  getScrollableNode?:
+    | ScrollView['getScrollableNode']
+    | FlatList['getScrollableNode'];
   viewConfig?: {
     uiViewClassName?: string;
   };
@@ -47,7 +48,7 @@ export function useAnimatedRef<
   TComponent extends Component
 >(): AnimatedRef<TComponent> {
   const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
-  const viewName = useSharedValue<string | null>(null);
+  const viewName = useSharedValue<string>(null!);
 
   const ref = useRef<AnimatedRef<TComponent>>();
 
@@ -74,7 +75,7 @@ export function useAnimatedRef<
     const remoteRef = makeShareableCloneRecursive({
       __init: () => {
         'worklet';
-        const f = () => tag.value;
+        const f: AnimatedRefOnUI = () => tag.value;
         f.viewName = viewName;
         return f;
       },
