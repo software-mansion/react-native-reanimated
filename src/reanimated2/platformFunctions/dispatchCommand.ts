@@ -20,7 +20,7 @@ function dispatchCommandFabric<T extends Component>(
   }
 
   const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
-  _dispatchCommandFabric?.(shadowNodeWrapper, commandName, args);
+  _dispatchCommandFabric!(shadowNodeWrapper, commandName, args);
 }
 
 function dispatchCommandPaper<T extends Component>(
@@ -34,7 +34,7 @@ function dispatchCommandPaper<T extends Component>(
   }
 
   const viewTag = animatedRef() as number;
-  _dispatchCommandPaper?.(viewTag, commandName, args);
+  _dispatchCommandPaper!(viewTag, commandName, args);
 }
 
 function dispatchCommandJest() {
