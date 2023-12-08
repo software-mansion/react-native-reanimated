@@ -29,7 +29,7 @@ if (shouldBeUseWeb()) {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
     processColorsInProps(updates);
-    global.UpdatePropsManager?.update(viewDescriptors, updates);
+    global.UpdatePropsManager!.update(viewDescriptors, updates);
   };
 }
 
@@ -77,7 +77,7 @@ const createUpdatePropsManager = isFabric()
           });
         },
         flush() {
-          _updatePropsFabric?.(operations);
+          _updatePropsFabric!(operations);
           operations.length = 0;
         },
       };
@@ -107,7 +107,7 @@ const createUpdatePropsManager = isFabric()
           });
         },
         flush() {
-          _updatePropsPaper?.(operations);
+          _updatePropsPaper!(operations);
           operations.length = 0;
         },
       };
