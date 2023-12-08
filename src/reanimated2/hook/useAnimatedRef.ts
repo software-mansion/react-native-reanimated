@@ -2,7 +2,7 @@
 import type { Component } from 'react';
 import { useRef } from 'react';
 import { useSharedValue } from './useSharedValue';
-import type { AnimatedRef } from './commonTypes';
+import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
 import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import {
@@ -42,7 +42,7 @@ export function useAnimatedRef<
   TComponent extends MaybeScrollableComponent
 >(): AnimatedRef<TComponent> {
   const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
-  const viewName = useSharedValue<string | null>(null);
+  const viewName = useSharedValue<string>(null!);
 
   const ref = useRef<AnimatedRef<TComponent>>();
 
@@ -67,7 +67,7 @@ export function useAnimatedRef<
     const remoteRef = makeShareableCloneRecursive({
       __init: () => {
         'worklet';
-        const f = () => tag.value;
+        const f: AnimatedRefOnUI = () => tag.value;
         f.viewName = viewName;
         return f;
       },

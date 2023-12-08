@@ -1,6 +1,6 @@
 'use strict';
 import type { Component } from 'react';
-import type { ShadowNodeWrapper } from '../commonTypes';
+import type { ShadowNodeWrapper, SharedValue } from '../commonTypes';
 import type {
   ImageStyle,
   NativeSyntheticEvent,
@@ -24,6 +24,11 @@ export interface AnimatedRef<T extends Component> {
     | ShadowNodeWrapper // Fabric
     | HTMLElement; // web
 }
+
+export type AnimatedRefOnUI = {
+  viewName: SharedValue<string>;
+  (): number | ShadowNodeWrapper | null;
+};
 
 type ReanimatedPayload = {
   eventName: string;

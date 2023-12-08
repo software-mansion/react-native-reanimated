@@ -6,28 +6,35 @@ import {
   shouldBeUseWeb,
 } from '../PlatformChecker';
 import { dispatchCommand } from './dispatchCommand';
-import type { AnimatedRef } from '../hook/commonTypes';
+import type { AnimatedRef, AnimatedRefOnUI } from '../hook/commonTypes';
 import type { Component } from 'react';
 
-export let scrollTo: <T extends Component>(
+type ScrollTo = <T extends Component>(
   animatedRef: AnimatedRef<T>,
   x: number,
   y: number,
   animated: boolean
 ) => void;
 
-function scrollToFabric<T extends Component>(
-  animatedRef: AnimatedRef<T>,
+export let scrollTo: ScrollTo;
+
+function scrollToFabric(
+  animatedRef: AnimatedRefOnUI,
   x: number,
   y: number,
   animated: boolean
 ) {
   'worklet';
-  dispatchCommand(animatedRef, 'scrollTo', [x, y, animated]);
+  dispatchCommand(
+    // This cast is needed to comply to dispatchCommand interface
+    animatedRef as unknown as AnimatedRef<Component>,
+    'scrollTo',
+    [x, y, animated]
+  );
 }
 
-function scrollToPaper<T extends Component>(
-  animatedRef: AnimatedRef<T>,
+function scrollToPaper(
+  animatedRef: AnimatedRefOnUI,
   x: number,
   y: number,
   animated: boolean
@@ -37,7 +44,6 @@ function scrollToPaper<T extends Component>(
     return;
   }
 
-  // Calling animatedRef on Paper returns a number (nativeTag)
   const viewTag = animatedRef() as number;
   _scrollToPaper!(viewTag, x, y, animated);
 }
@@ -59,10 +65,13 @@ function scrollToDefault() {
 }
 
 if (!shouldBeUseWeb()) {
+  // Those casts are actually correct since on Native platforms `AnimatedRef` is
+  // registered with `RegisterShareableMapping` as a different function than
+  // actual `AnimatedRef` and TypeScript cannot know that.
   if (isFabric()) {
-    scrollTo = scrollToFabric;
+    scrollTo = scrollToFabric as unknown as ScrollTo;
   } else {
-    scrollTo = scrollToPaper;
+    scrollTo = scrollToPaper as unknown as ScrollTo;
   }
 } else if (isJest()) {
   scrollTo = scrollToJest;

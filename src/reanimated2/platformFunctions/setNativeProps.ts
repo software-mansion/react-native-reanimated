@@ -6,17 +6,19 @@ import {
   isJest,
   shouldBeUseWeb,
 } from '../PlatformChecker';
-import type { AnimatedRef } from '../hook/commonTypes';
+import type { AnimatedRef, AnimatedRefOnUI } from '../hook/commonTypes';
 import type { Component } from 'react';
 import { processColorsInProps } from '../Colors';
 
-export let setNativeProps: <T extends Component>(
+type SetNativeProps = <T extends Component>(
   animatedRef: AnimatedRef<T>,
   updates: StyleProps
 ) => void;
 
-function setNativePropsFabric<T extends Component>(
-  animatedRef: AnimatedRef<T>,
+export let setNativeProps: SetNativeProps;
+
+function setNativePropsFabric(
+  animatedRef: AnimatedRefOnUI,
   updates: StyleProps
 ) {
   'worklet';
@@ -28,11 +30,11 @@ function setNativePropsFabric<T extends Component>(
   }
   const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
   processColorsInProps(updates);
-  _updatePropsFabric?.([{ shadowNodeWrapper, updates }]);
+  _updatePropsFabric!([{ shadowNodeWrapper, updates }]);
 }
 
-function setNativePropsPaper<T extends Component>(
-  animatedRef: AnimatedRef<T>,
+function setNativePropsPaper(
+  animatedRef: AnimatedRefOnUI,
   updates: StyleProps
 ) {
   'worklet';
@@ -43,9 +45,9 @@ function setNativePropsPaper<T extends Component>(
     return;
   }
   const tag = animatedRef() as number;
-  const name = (animatedRef as any).viewName.value;
+  const name = animatedRef.viewName.value;
   processColorsInProps(updates);
-  _updatePropsPaper?.([{ tag, name, updates }]);
+  _updatePropsPaper!([{ tag, name, updates }]);
 }
 
 function setNativePropsJest() {
@@ -65,10 +67,13 @@ function setNativePropsDefault() {
 }
 
 if (!shouldBeUseWeb()) {
+  // Those casts are actually correct since on Native platforms `AnimatedRef` is
+  // registered with `RegisterShareableMapping` as a different function than
+  // actual `AnimatedRef` and TypeScript cannot know that.
   if (isFabric()) {
-    setNativeProps = setNativePropsFabric;
+    setNativeProps = setNativePropsFabric as unknown as SetNativeProps;
   } else {
-    setNativeProps = setNativePropsPaper;
+    setNativeProps = setNativePropsPaper as unknown as SetNativeProps;
   }
 } else if (isJest()) {
   setNativeProps = setNativePropsJest;

@@ -6,14 +6,16 @@ import {
   isJest,
   shouldBeUseWeb,
 } from '../PlatformChecker';
-import type { AnimatedRef } from '../hook/commonTypes';
+import type { AnimatedRef, AnimatedRefOnUI } from '../hook/commonTypes';
 import type { Component } from 'react';
 
-export let measure: <T extends Component>(
+type Measure = <T extends Component>(
   animatedRef: AnimatedRef<T>
 ) => MeasuredDimensions | null;
 
-function measureFabric<T extends Component>(animatedRef: AnimatedRef<T>) {
+export let measure: Measure;
+
+function measureFabric(animatedRef: AnimatedRefOnUI) {
   'worklet';
   if (!_WORKLET) {
     return null;
@@ -48,7 +50,7 @@ function measureFabric<T extends Component>(animatedRef: AnimatedRef<T>) {
   }
 }
 
-function measurePaper<T extends Component>(animatedRef: AnimatedRef<T>) {
+function measurePaper(animatedRef: AnimatedRefOnUI) {
   'worklet';
   if (!_WORKLET) {
     return null;
@@ -101,10 +103,13 @@ function measureDefault() {
 }
 
 if (!shouldBeUseWeb()) {
+  // Those casts are actually correct since on Native platforms `AnimatedRef` is
+  // registered with `RegisterShareableMapping` as a different function than
+  // actual `AnimatedRef` and TypeScript cannot know that.
   if (isFabric()) {
-    measure = measureFabric;
+    measure = measureFabric as unknown as Measure;
   } else {
-    measure = measurePaper;
+    measure = measurePaper as unknown as Measure;
   }
 } else if (isJest()) {
   measure = measureJest;
