@@ -176,7 +176,6 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     if (isFabric() && component) {
       shadowNodeWrapper = getShadowNodeWrapperFromRef(component);
     }
-    console.log('shadowNodeWrapper', shadowNodeWrapper);
     return this.InnerNativeModule.getViewProp(
       viewTag,
       propName,

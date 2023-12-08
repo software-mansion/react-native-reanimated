@@ -2,6 +2,7 @@ package com.swmansion.reanimated;
 
 import static java.lang.Float.NaN;
 
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.GuardedRunnable;
@@ -27,6 +28,7 @@ import com.facebook.react.uimanager.UIManagerReanimatedHelper;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.facebook.react.views.view.ReactViewBackgroundDrawable;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
 import java.util.ArrayList;
@@ -393,7 +395,7 @@ public class NodesManager implements EventDispatcherListener {
   public String obtainProp(int viewTag, String propName) {
     View view = mUIManager.resolveView(viewTag);
     String result =
-        "error: unknown propName " + propName + ", currently supported: opacity, zIndex";
+        "error: unknown propName " + propName + ", currently supported: opacity, zIndex, width, height, top, left, backgroundColor";
 
     Float value = null;
     switch (propName) {
@@ -426,6 +428,17 @@ public class NodesManager implements EventDispatcherListener {
       } else if (floatProps.contains(propName)) {
         result = Float.toString(value);
       }
+    }
+    if (propName.equals("backgroundColor")){
+      Drawable background = view.getBackground();
+      int actualColor = -1;
+
+      if (background instanceof ReactViewBackgroundDrawable) {
+        actualColor = ((ReactViewBackgroundDrawable) background).getColor();
+        int a = 7;
+      }
+      result = String.format("#%06x", (0xFFFFFF & actualColor));
+
     }
 
     return result;

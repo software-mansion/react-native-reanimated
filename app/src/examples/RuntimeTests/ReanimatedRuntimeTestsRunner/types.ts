@@ -31,6 +31,7 @@ export enum ComparisonMode {
   STRING = 'STRING',
   DISTANCE = 'DISTANCE',
   NUMBER = 'NUMBER',
+  COLOR = 'COLOR',
 }
 
 export type LockObject = { lock: boolean };

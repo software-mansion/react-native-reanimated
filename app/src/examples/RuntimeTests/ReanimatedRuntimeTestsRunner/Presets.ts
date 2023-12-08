@@ -28,20 +28,19 @@ const BINARY_NOTATION = [
 
 const OCTADECIMAL_NOTATION = [0o123456, 0o111111112];
 
+// BigInt literals are not available when targeting lower than ES2020.
 const BIG_INTS = [
-  123456789123456789n,
-  0b0000000000000000000000000000001n,
-  0x1234567890abcdefn,
+  // 123456789123456789n,
+  // 0b0000000000000000000000000000001n,
+  // 0x1234567890abcdefn,
   BigInt(123456789123456789),
   BigInt(Number.MAX_VALUE),
-  BigInt('0b1111111111111111111111111111111111111111111111111111'),
+  // BigInt('0b1111111111111111111111111111111111111111111111111111'),
 ];
 
 const UNDERSCORE_SEPARATED_NUMBES = [
-  0b00_000_000_000_000_000_000_000_000_000_001,
-  -1.07808734473_36499e-3_9,
-  1_0_00000000.1234567,
-  0b000000000_000000000000000000_0001n,
+  0b00_000_000_000_000_000_000_000_000_000_001, -1.07808734473_36499e-3_9,
+  1_0_00000000.1234567, 0b000000000_000000000000000000_0001,
 ];
 
 const EXTREME_NUMBERS = [
@@ -148,8 +147,8 @@ const INT_ARRAYS = [
   // new Int32Array(new Int8Array([1, 2, 3, 4])),
   new Int32Array(iterable),
 
-  new BigInt64Array([21n, 31n]),
-  new BigUint64Array([21n, 31n]),
+  // new BigInt64Array([21n, 31n]),
+  // new BigUint64Array([21n, 31n]),
 ];
 
 const FLOAT_ARRAYS = [
@@ -164,12 +163,12 @@ const FLOAT_ARRAYS = [
   new Float64Array(iterable),
 ];
 
-const BIGINT_ARRAYS = [
-  new BigInt64Array(2),
-  // new BigInt64Array(new Int8Array([1, 2, 3, 4])),
-  new BigUint64Array(2),
-  // new BigUint64Array(new Int8Array([1, 2, 3, 4])),
-];
+// const BIGINT_ARRAYS = [
+//   new BigInt64Array(2),
+//   new BigInt64Array(new Int8Array([1, 2, 3, 4])),
+//   new BigUint64Array(2),
+//   new BigUint64Array(new Int8Array([1, 2, 3, 4])),
+// ];
 
 const MAX_SIZE_OF_ARRAY = 1000;
 
@@ -205,23 +204,17 @@ export const Presets = {
     ...INTEGERS,
     ...FLOATS,
     ...ENGINEERING_NOTATION,
-    // ...EXTREME_NUMBERS,
-    // ...NOT_NUMBERS,
-    // ...HEXADECIMAL_NOTATION,
-    // ...BINARY_NOTATION,
-    // ...OCTADECIMAL_NOTATION,
-    // ...BIG_INTS,
-    // ...UNDERSCORE_SEPARATED_NUMBES,
+    ...EXTREME_NUMBERS,
+    ...NOT_NUMBERS,
+    ...HEXADECIMAL_NOTATION,
+    ...BINARY_NOTATION,
+    ...OCTADECIMAL_NOTATION,
+    ...BIG_INTS,
+    ...UNDERSCORE_SEPARATED_NUMBES,
   ],
   symbols: SYMBOLS,
   regexps: REGEXPS,
   dates: DATES,
   objects: [...MAPS, ...SETS, ...OBJECTS, ...EMPTIES, ...FANCY_OBJECTS],
-  arrays: [
-    ...INT_ARRAYS,
-    ...UINT_ARRAYS,
-    ...FLOAT_ARRAYS,
-    ...BIGINT_ARRAYS,
-    ...ARRAYS,
-  ],
+  arrays: [...INT_ARRAYS, ...UINT_ARRAYS, ...FLOAT_ARRAYS, ...ARRAYS],
 };

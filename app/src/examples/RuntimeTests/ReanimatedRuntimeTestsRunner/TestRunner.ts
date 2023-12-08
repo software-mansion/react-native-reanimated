@@ -200,14 +200,12 @@ export class TestRunner {
         }
         await testCase.testCase();
         if (testCase.errors.length > 0) {
-          console.log(`\t • ${testCase.name} ❌`);
+          console.log(`\t❌ ${testCase.name} `);
           for (const error of testCase.errors) {
             console.log(`\t\t${error}`);
           }
-          console.log('\t -----------------------------------------------');
         } else {
-          console.log(`\t • ${testCase.name} ✅`);
-          console.log('\t -----------------------------------------------');
+          console.log(`\t✅ ${testCase.name}`);
         }
         if (testSuite.afterEach) {
           await testSuite.afterEach();
@@ -218,6 +216,7 @@ export class TestRunner {
       if (testSuite.afterAll) {
         await testSuite.afterAll();
       }
+      console.log('\n\n');
       this._currentTestSuite = null;
     }
     this._testSuites = [];
@@ -242,6 +241,19 @@ export class TestRunner {
           }
           case ComparisonMode.NUMBER: {
             if (isNaN(Number(value)) || Number(value) !== Number(expected)) {
+              errors.push(defaultTestErrorLog(expected, value));
+            }
+            break;
+          }
+          case ComparisonMode.COLOR: {
+            const colorRegex = new RegExp('^#?([a-f0-9]{6}|[a-f0-9]{3})$');
+            if (!colorRegex.test(expected)) {
+              throw Error(
+                `Invalid color format "${expected}", please use lowercase hex color (like #123abc) `
+              );
+            }
+
+            if (typeof value !== 'string' || value !== expected) {
               errors.push(defaultTestErrorLog(expected, value));
             }
             break;

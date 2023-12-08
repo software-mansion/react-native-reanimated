@@ -8,7 +8,8 @@ type validPropNames =
   | 'width'
   | 'height'
   | 'top'
-  | 'left';
+  | 'left'
+  | 'backgroundColor';
 export class TestComponent {
   private ref: React.MutableRefObject<any>;
   constructor(ref: React.MutableRefObject<any>) {

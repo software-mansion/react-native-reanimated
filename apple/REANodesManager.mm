@@ -517,12 +517,22 @@ using namespace facebook::react;
   }
 }
 
+- (NSString *)stringFromColor:(UIColor *)color
+{
+    const size_t totalComponents = CGColorGetNumberOfComponents(color.CGColor);
+    const CGFloat * components = CGColorGetComponents(color.CGColor);
+    return [NSString stringWithFormat:@"#%02x%02x%02x",
+            (int)(255 * components[MIN(0,totalComponents-2)]),
+            (int)(255 * components[MIN(1,totalComponents-2)]),
+            (int)(255 * components[MIN(2,totalComponents-2)])];
+}
+    
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName
 {
   REAUIView *view = [self.uiManager viewForReactTag:viewTag];
 
   NSString *result =
-      [NSString stringWithFormat:@"error: unknown propName %@, currently supported: opacity, zIndex", propName];
+      [NSString stringWithFormat:@"error: unknown propName %@, currently supported: opacity, zIndex, width, height, top, left, backgroundColor", propName];
 
   if ([propName isEqualToString:@"opacity"]) {
 #if !TARGET_OS_OSX
@@ -541,7 +551,12 @@ using namespace facebook::react;
   } else if ([propName isEqualToString:@"top"]) {
     result = [@(view.frame.origin.y) stringValue];
   } else if ([propName isEqualToString:@"left"]) {
-    result = [@(view.frame.origin.x) stringValue];
+      result = [@(view.frame.origin.x) stringValue];
+  } else if ([propName isEqualToString:@"backgroundColor"]) {
+
+      result = [self stringFromColor : view.
+        backgroundColor
+                ];
   }
 
   return result;
