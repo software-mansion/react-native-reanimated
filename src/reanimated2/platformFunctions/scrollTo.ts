@@ -39,7 +39,7 @@ function scrollToPaper<T extends Component>(
 
   // Calling animatedRef on Paper returns a number (nativeTag)
   const viewTag = animatedRef() as number;
-  _scrollToPaper?.(viewTag, x, y, animated);
+  _scrollToPaper!(viewTag, x, y, animated);
 }
 
 function scrollToJest() {
