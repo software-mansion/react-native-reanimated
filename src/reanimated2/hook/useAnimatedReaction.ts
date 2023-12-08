@@ -58,7 +58,7 @@ export function useAnimatedReaction<PreparedResult>(
       react(input, previous.value);
       previous.value = input;
     };
-    const mapperId = startMapper(fun, inputs, []);
+    const mapperId = startMapper(fun, inputs);
     return () => {
       stopMapper(mapperId);
     };

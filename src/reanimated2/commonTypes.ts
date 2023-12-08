@@ -26,8 +26,8 @@ export interface SharedValue<Value = unknown> {
 
 export interface Mutable<Value = unknown> extends SharedValue<Value> {
   _isReanimatedSharedValue: true;
-  _animation?: AnimationObject | null; // only in Native
-  _value: Value | Descriptor | AnimatableValue;
+  _animation?: AnimationObject | null;
+  _value?: Value | Descriptor | AnimatableValue;
 }
 
 // The below type is used for HostObjects returned by the JSI API that don't have
@@ -51,12 +51,16 @@ export type ShareableSyncDataHolderRef<T> = {
   __hostObjectShareableJSRefSyncDataHolder: T;
 };
 
+export type MapperRawInputs = unknown[];
+
+export type MapperOutputs = SharedValue[];
+
 export type MapperRegistry = {
   start: (
     mapperID: number,
     worklet: () => void,
-    inputs: SharedValue<any>[],
-    outputs?: SharedValue<any>[]
+    inputs: MapperRawInputs,
+    outputs?: MapperOutputs
   ) => void;
   stop: (mapperID: number) => void;
 };
