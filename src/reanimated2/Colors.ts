@@ -453,34 +453,26 @@ export const rgbaColor = (
   return c;
 };
 
-/* accepts parameters
- * r  Object = {r:x, g:y, b:z}
- * OR
- * r, g, b
- * 0 <= r, g, b <= 255
- * returns 0 <= h, s, v <= 1
+/**
+ *
+ * @param r - red value (0-255)
+ * @param g - green value (0-255)
+ * @param b - blue value (0-255)
+ * @returns \{h: hue (0-1), s: saturation (0-1), v: value (0-1)\}
  */
-export function RGBtoHSV(rgb: RGB): HSV;
-export function RGBtoHSV(r: number, g: number, b: number): HSV;
-export function RGBtoHSV(r: RGB | number, g?: number, b?: number): HSV {
+export function RGBtoHSV(r: number, g: number, b: number): HSV {
   'worklet';
-  if (typeof r === 'object') {
-    g = r.g;
-    b = r.b;
-    r = r.r;
-  }
-  // Typescript doesn't know that g and b are now sure to not be undefined
-  g = g as number;
-  b = b as number;
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
   const d = max - min;
   const s = max === 0 ? 0 : d / max;
   const v = max / 255;
 
-  let h;
+  let h = 0;
 
   switch (max) {
+    case min:
+      break;
     case r:
       h = g - b + d * (g < b ? 6 : 0);
       h /= 6 * d;
@@ -493,10 +485,6 @@ export function RGBtoHSV(r: RGB | number, g?: number, b?: number): HSV {
       h = r - g + d * 4;
       h /= 6 * d;
       break;
-    case min:
-    default:
-      h = 0;
-      break;
   }
 
   return {
@@ -506,26 +494,16 @@ export function RGBtoHSV(r: RGB | number, g?: number, b?: number): HSV {
   };
 }
 
-/* accepts parameters
- * h  Object = {h:x, s:y, v:z}
- * OR
- * h, s, v
- * 0 <= h, s, v <= 1
- * returns 0 <= r, g, b <= 255
+/**
+ *
+ * @param h - hue (0-1)
+ * @param s - saturation (0-1)
+ * @param v - value (0-1)
+ * @returns \{r: red (0-255), g: green (0-255), b: blue (0-255)\}
  */
-function HSVtoRGB(hsv: HSV): RGB;
-function HSVtoRGB(h: number, s: number, v: number): RGB;
-function HSVtoRGB(h: number | HSV, s?: number, v?: number) {
-  'worklet';
+function HSVtoRGB(h: number, s: number, v: number): RGB {
+  ('worklet');
   let r, g, b;
-  if (typeof h === 'object') {
-    s = h.s;
-    v = h.v;
-    h = h.h;
-  }
-  // Typescript doesn't know that g and b are now sure to not be undefined
-  v = v as number;
-  s = s as number;
 
   const i = Math.floor(h * 6);
   const f = h * 6 - i;
