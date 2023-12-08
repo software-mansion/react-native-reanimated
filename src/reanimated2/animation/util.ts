@@ -38,8 +38,7 @@ const IS_REDUCED_MOTION = isReducedMotion();
 
 if (__DEV__ && IS_REDUCED_MOTION) {
   console.warn(
-    `[Reanimated] Reduced Motion is enabled on the device. Animations will be disabled.
-    See: https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility`
+    `[Reanimated] Reduced motion setting is enabled on this device. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility.`
   );
 }
 
