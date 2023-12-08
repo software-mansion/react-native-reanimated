@@ -78,7 +78,7 @@ export class EntryExitTransition
           }
           exitingValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
-              animations.transform?.push({
+              animations.transform!.push({
                 [transformProp]: delayFunction(
                   delay,
                   withSequence(
@@ -134,7 +134,7 @@ export class EntryExitTransition
           }
           enteringValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
-              animations.transform?.push({
+              animations.transform!.push({
                 [transformProp]: delayFunction(
                   delay + exitingDuration,
                   withSequence(
