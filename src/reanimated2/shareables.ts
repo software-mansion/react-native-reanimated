@@ -15,10 +15,7 @@ import { jsVersion } from './platform-specific/jsVersion';
 // runnning the code on separate VMs.
 const USE_STUB_IMPLEMENTATION = shouldBeUseWeb();
 
-const _shareableCache = new WeakMap<
-  Record<string, unknown>,
-  ShareableRef<unknown> | symbol
->();
+const _shareableCache = new WeakMap<object, ShareableRef<unknown> | symbol>();
 // the below symbol is used to represent a mapping from the value to itself
 // this is used to allow for a converted shareable to be passed to makeShareableClone
 const _shareableFlag = Symbol('shareable flag');
@@ -35,7 +32,7 @@ function isHostObject(value: NonNullable<object>) {
 }
 
 export function registerShareableMapping(
-  shareable: any,
+  shareable: object,
   shareableRef?: ShareableRef<unknown>
 ): void {
   if (USE_STUB_IMPLEMENTATION) {
@@ -44,7 +41,7 @@ export function registerShareableMapping(
   _shareableCache.set(shareable, shareableRef || _shareableFlag);
 }
 
-function isPlainJSObject(object: object) {
+function isPlainJSObject(object: object): object is object {
   return Object.getPrototypeOf(object) === Object.prototype;
 }
 
@@ -61,7 +58,7 @@ const INACCESSIBLE_OBJECT = {
     return new Proxy(
       {},
       {
-        get: (_: any, prop: string | symbol) => {
+        get: (_: unknown, prop: string | symbol) => {
           if (
             prop === '_isReanimatedSharedValue' ||
             prop === '__remoteFunction'
@@ -351,7 +348,7 @@ export function makeShareableCloneOnUIRecursive<T>(
   return cloneRecursive(value);
 }
 
-export function makeShareable<T>(value: T): T {
+export function makeShareable<T extends object>(value: T): T {
   if (USE_STUB_IMPLEMENTATION) {
     return value;
   }

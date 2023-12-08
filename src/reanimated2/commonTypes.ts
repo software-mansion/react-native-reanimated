@@ -13,11 +13,14 @@ export interface StyleProps extends ViewStyle, TextStyle {
  *
  * Shared values are defined using [useSharedValue](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue) hook. You access and modify shared values by their `.value` property.
  */
-export interface SharedValue<Value> {
+export interface SharedValue<Value = unknown> {
   value: Value;
-  addListener: (listenerID: number, listener: (value: any) => void) => void;
+  addListener: (listenerID: number, listener: (value: Value) => void) => void;
   removeListener: (listenerID: number) => void;
-  modify: (modifier?: (value: any) => any, forceUpdate?: boolean) => void;
+  modify: (
+    modifier?: <T extends Value>(value: T) => T,
+    forceUpdate?: boolean
+  ) => void;
 }
 
 // The below type is used for HostObjects returned by the JSI API that don't have
