@@ -160,7 +160,7 @@ export function tryActivateLayoutTransition<
 >(
   props: Readonly<AnimatedComponentProps<ComponentProps>>,
   element: HTMLElement,
-  snapshot?: DOMRect
+  snapshot: DOMRect
 ) {
   if (!props.layout) {
     return;
@@ -168,7 +168,7 @@ export function tryActivateLayoutTransition<
 
   const rect = element.getBoundingClientRect();
 
-  if (!snapshot || areDOMRectsEqual(rect, snapshot)) {
+  if (areDOMRectsEqual(rect, snapshot)) {
     return;
   }
 

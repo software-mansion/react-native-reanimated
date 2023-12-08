@@ -46,7 +46,7 @@ export type ShareableSyncDataHolderRef<T> = {
   __hostObjectShareableJSRefSyncDataHolder: T;
 };
 
-export type MapperInputs = unknown[];
+export type MapperRawInputs = unknown[];
 
 export type MapperOutputs = SharedValue[];
 
@@ -54,7 +54,7 @@ export type MapperRegistry = {
   start: (
     mapperID: number,
     worklet: () => void,
-    inputs: MapperInputs,
+    inputs: MapperRawInputs,
     outputs?: MapperOutputs
   ) => void;
   stop: (mapperID: number) => void;
