@@ -27,7 +27,7 @@ import { removeFromPropsRegistry } from '../reanimated2/PropsRegistry';
 import { getReduceMotionFromConfig } from '../reanimated2/animation/util';
 import { maybeBuild } from '../animationBuilder';
 import { SkipEnteringContext } from '../reanimated2/component/LayoutAnimationConfig';
-import type { AnimatedProps as AnimateProps } from '../reanimated2';
+import type { AnimateProps } from '../reanimated2';
 import JSPropsUpdater from './JSPropsUpdater';
 import type {
   AnimatedComponentProps,
@@ -88,9 +88,7 @@ export function createAnimatedComponent<P extends object>(
 export function createAnimatedComponent(
   Component: ComponentType<InitialComponentProps>,
   options?: Options<InitialComponentProps>
-):
-  | FunctionComponent<AnimateProps<InitialComponentProps>>
-  | ComponentClass<AnimateProps<InitialComponentProps>> {
+): any {
   invariant(
     typeof Component !== 'function' ||
       (Component.prototype && Component.prototype.isReactComponent),
@@ -372,7 +370,7 @@ export function createAnimatedComponent(
         prevAnimatedProps &&
         !isSameAnimatedProps(prevAnimatedProps, this.props.animatedProps)
       ) {
-        prevAnimatedProps.viewDescriptors?.remove(viewTag as number);
+        prevAnimatedProps.viewDescriptors!.remove(viewTag as number);
       }
 
       // attach animatedProps property
@@ -542,10 +540,7 @@ export function createAnimatedComponent(
     Component.displayName || Component.name || 'Component'
   })`;
 
-  return React.forwardRef<
-    AnimatedComponentRef,
-    AnimatedComponentProps<AnimatedProps>
-  >((props, ref) => {
+  return React.forwardRef<Component>((props, ref) => {
     return (
       <AnimatedComponent
         {...props}
