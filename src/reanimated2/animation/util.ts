@@ -36,6 +36,13 @@ import { isReducedMotion, shouldBeUseWeb } from '../PlatformChecker';
 let IN_STYLE_UPDATER = false;
 const IS_REDUCED_MOTION = isReducedMotion();
 
+if (__DEV__ && IS_REDUCED_MOTION) {
+  console.warn(
+    `[Reanimated] Reduced Motion is enabled on the device. Animations will be disabled.
+    See: https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility`
+  );
+}
+
 export function initialUpdaterRun<T>(updater: () => T) {
   IN_STYLE_UPDATER = true;
   const result = updater();
