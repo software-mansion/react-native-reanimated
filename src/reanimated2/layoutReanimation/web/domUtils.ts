@@ -15,7 +15,10 @@ const animationNameList: string[] = [];
  *  If style element already exists, nothing happens.
  */
 export function configureWebLayoutAnimations() {
-  if (document?.getElementById(PREDEFINED_WEB_ANIMATIONS_ID) !== null) {
+  if (
+    document !== undefined &&
+    document.getElementById(PREDEFINED_WEB_ANIMATIONS_ID) !== null
+  ) {
     return;
   }
 
