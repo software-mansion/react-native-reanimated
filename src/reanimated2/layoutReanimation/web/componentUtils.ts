@@ -263,6 +263,7 @@ export function handleExitingAnimation(
 
   const snapshot = snapshots.get(element);
 
+  dummy.style.transform = '';
   dummy.style.position = 'absolute';
   dummy.style.top = `${snapshot.top}px`;
   dummy.style.left = `${snapshot.left}px`;
