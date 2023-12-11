@@ -17,7 +17,7 @@ const animationNameList: string[] = [];
  */
 export function configureWebLayoutAnimations() {
   if (
-    isWindowAvailable() &&
+    !isWindowAvailable() ||
     document.getElementById(PREDEFINED_WEB_ANIMATIONS_ID) !== null
   ) {
     return;
