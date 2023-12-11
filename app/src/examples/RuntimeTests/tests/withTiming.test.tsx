@@ -39,6 +39,7 @@ const AnimatedComponent = ({
   const colorSV = useSharedValue(color1);
   const ref = useTestRef('AnimatedComponent');
 
+  // @ts-ignore number is not a valid color
   const style = useAnimatedStyle(() => {
     callTracker('useAnimatedStyleTracker');
     return {
@@ -74,14 +75,16 @@ const styles = StyleSheet.create({
     opacity: 0,
     height: 80,
     margin: 30,
-    // backgroundColor: '#70a5e0',
   },
 });
 
 describe('With timing animation works with COLORS 🎨', () => {
   (
     [
-      ['color as hex number 0x6495ed', EXAMPLE_COLORS.cornflowerblue[0]],
+      [
+        'color as hex number 0x6495ed\n\t\t⚠️ This is not a valid color format, this behavior may be broken in the future\n\t',
+        EXAMPLE_COLORS.cornflowerblue[0],
+      ],
       [
         'color as rgb string "rgb(100,149,237)"',
         EXAMPLE_COLORS.cornflowerblue[1],
