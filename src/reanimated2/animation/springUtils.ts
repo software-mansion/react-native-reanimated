@@ -115,7 +115,8 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   return errorMessage === '';
 }
 
-function bisectRoot({
+// ts-prune-ignore-next This function is exported to be tested
+export function bisectRoot({
   min,
   max,
   func,
@@ -184,7 +185,7 @@ export function initialCalculations(
 export function scaleZetaToMatchClamps(
   animation: SpringAnimation,
   clamp: { min?: number; max?: number }
-) {
+): number {
   'worklet';
   const { zeta, toValue, startValue } = animation;
   const toValueNum = Number(toValue);
@@ -239,6 +240,7 @@ export function scaleZetaToMatchClamps(
   return Math.max(...zetaSatisfyingClamp, zeta);
 }
 
+/** Runs before initial */
 export function calculateNewMassToMatchDuration(
   x0: number,
   config: DefaultSpringConfig & SpringConfigInner,
