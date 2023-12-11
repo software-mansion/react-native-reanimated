@@ -1,5 +1,6 @@
 'use strict';
 
+import { isWindowAvailable } from '../../PlatformChecker';
 import { Animations } from './config';
 import type { AnimationNames } from './config';
 
@@ -16,7 +17,7 @@ const animationNameList: string[] = [];
  */
 export function configureWebLayoutAnimations() {
   if (
-    document !== undefined &&
+    isWindowAvailable() &&
     document.getElementById(PREDEFINED_WEB_ANIMATIONS_ID) !== null
   ) {
     return;
