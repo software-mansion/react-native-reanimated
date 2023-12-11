@@ -198,6 +198,7 @@ export function scaleZetaToMatchClamps(
       ? [clamp.min, clamp.max]
       : [clamp.max, clamp.min];
 
+
   /** The extrema we get from equation below are relative (we obtain a ratio),
    *  To get absolute extrema we convert it as follows:
    *
