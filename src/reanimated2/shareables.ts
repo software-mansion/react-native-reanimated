@@ -110,7 +110,9 @@ const VALID_ARRAY_VIEWS_NAMES = [
 const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // Below variable stores object that we process in makeShareableCloneRecursive at the specified depth.
 // We use it to check if later on the function reenters with the same object
-let processedObjectAtThresholdDepth: any;
+let processedObjectAtThresholdDepth: unknown;
+
+let shouldWarnAboutMissingPluginVersion = true;
 
 export function makeShareableCloneRecursive<T>(
   value: any,
@@ -167,9 +169,12 @@ export function makeShareableCloneRecursive<T>(
           if (__DEV__) {
             const babelVersion = value.__initData.version;
             if (babelVersion === undefined) {
-              throw new Error(`[Reanimated] Unknown version of Reanimated Babel plugin.
-See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#unknown-version-of-reanimated-babel-plugin\` for more details. 
-Offending code was: \`${getWorkletCode(value)}\``);
+              if (shouldWarnAboutMissingPluginVersion) {
+                shouldWarnAboutMissingPluginVersion = false;
+                console.warn(`[Reanimated] Unknown version of Reanimated Babel plugin.
+              See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#unknown-version-of-reanimated-babel-plugin\` for more details.
+              Offending code was: \`${getWorkletCode(value)}\``);
+              }
             } else if (babelVersion !== jsVersion) {
               throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}).        
 See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version\` for more details.
@@ -179,16 +184,13 @@ Offending code was: \`${getWorkletCode(value)}\``);
               value.__workletHash,
               value.__stackDetails
             );
+          }
+          if (value.__stackDetails) {
+            // `Error` type of value cannot be copied to the UI thread, so we
+            // remove it after we handled it in dev mode or delete it to ignore it in production mode.
+            // Not removing this would cause an infinite loop in production mode and it just
+            // seems more elegant to handle it this way.
             delete value.__stackDetails;
-          } else if (value.__stackDetails) {
-            // Detected debug version of the worklet in release bundle. This
-            // might lead to unexpected issues or errors. Probably one of user
-            // dependencies provided transpiled code with debug version of the
-            // Reanimated plugin.
-            throw new Error(
-              `[Reanimated] Using dev bundle in a release app build is not supported.
-See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#using-dev-bundle-in-a-release-app-build-is-not-supported\` for more details.`
-            );
           }
           // to save on transferring static __initData field of worklet structure
           // we request shareable value to persist its UI counterpart. This means

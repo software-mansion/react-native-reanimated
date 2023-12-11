@@ -36,6 +36,12 @@ import { isReducedMotion, shouldBeUseWeb } from '../PlatformChecker';
 let IN_STYLE_UPDATER = false;
 const IS_REDUCED_MOTION = isReducedMotion();
 
+if (__DEV__ && IS_REDUCED_MOTION) {
+  console.warn(
+    `[Reanimated] Reduced motion setting is enabled on this device. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility.`
+  );
+}
+
 export function initialUpdaterRun<T>(updater: () => T) {
   IN_STYLE_UPDATER = true;
   const result = updater();
@@ -493,6 +499,12 @@ export function defineAnimation<
   return create;
 }
 
+/**
+ * Lets you cancel a running animation paired to a shared value.
+ *
+ * @param sharedValue - The shared value of a running animation that you want to cancel.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/core/cancelAnimation
+ */
 export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running

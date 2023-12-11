@@ -50,14 +50,14 @@ import { Bezier } from './Bezier';
 export type EasingFunction = (t: number) => number;
 
 /**
- * @deprecated Please use `EasingFunction` type instead.
+ * @deprecated Please use {@link EasingFunction} type instead.
  */
 export type EasingFn = EasingFunction;
 
 export type EasingFunctionFactory = { factory: () => EasingFunction };
 
 /**
- * @deprecated Please use `EasingFunctionFactory` type instead.
+ * @deprecated Please use {@link EasingFunctionFactory} type instead.
  */
 export type EasingFactoryFn = EasingFunctionFactory;
 /**
@@ -153,7 +153,7 @@ function exp(t: number): number {
  * forth.
  *
  * Default bounciness is 1, which overshoots a little bit once. 0 bounciness
- * doesn't overshoot at all, and bounciness of N > 1 will overshoot about N
+ * doesn't overshoot at all, and bounciness of N \> 1 will overshoot about N
  * times.
  *
  * http://easings.net/#easeInElastic
