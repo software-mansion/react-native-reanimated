@@ -100,7 +100,6 @@ export default function AnimatedStyleUpdateExample() {
     };
   });
 
-
   const clampedStyleWithConfig = useAnimatedStyle(() => {
     return {
       width: withSpring(randomWidth.value, {
