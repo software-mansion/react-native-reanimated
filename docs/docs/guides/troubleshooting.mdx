@@ -139,6 +139,22 @@ See [Multiple versions of Reanimated were detected](#multiple-versions-of-reanim
 **Solution:** Please upgrade to a newer version of React Native or downgrade to an older version of Reanimated.
 See [the compatibility table](compatibility) for a full list of supported versions of React Native.
 
+## Warnings
+
+### Reduced motion setting is enabled on this device. Some animations will be disabled by default.
+
+**Problem:** This warning is displayed to avoid confusion that could arise when Reduced motion is enabled.
+
+**Solution:** This warning is only displayed in development mode, but if you wish to disable it you can add the following line to your project's root file.
+
+```js
+LogBox.ignoreLogs([
+  '[Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility.',
+]);
+```
+
+See [the accessibility overview](accessibility) to learn more about Reduced Motion.
+
 ## Threading issues
 
 ### Tried to synchronously call a non-worklet function on the UI thread
