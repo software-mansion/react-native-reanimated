@@ -145,11 +145,11 @@ See [the compatibility table](compatibility) for a full list of supported versio
 
 **Problem:** This warning is displayed to avoid confusion that could arise when Reduced motion is enabled.
 
-**Solution:** This warning is only displayed in development mode, but if you wish to disable it you can add the following line to your project's root file.
+**Solution:** Do nothing, this warning is safe to ignore as it is only displayed in development mode to avoid confusion. If you wish to disable it, you can add the following line to your project's root file:
 
 ```js
 LogBox.ignoreLogs([
-  '[Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility.',
+  '[Reanimated] Reduced motion setting is enabled on this device.',
 ]);
 ```
 
