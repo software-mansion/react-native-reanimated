@@ -105,7 +105,7 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
     config.clamp?.max &&
     config.clamp.min > config.clamp.max
   ) {
-    errorMessage += `, clamp.min should be lower than clamp.max, got clamp: {min:${config.clamp.min}, max:${config.clamp.max}} `;
+    errorMessage += `, clamp.min should be lower than clamp.max, got clamp: {min: ${config.clamp.min}, max: ${config.clamp.max}} `;
   }
 
   if (errorMessage !== '') {
@@ -197,6 +197,7 @@ export function scaleZetaToMatchClamps(
     toValueNum - startValue > 0
       ? [clamp.min, clamp.max]
       : [clamp.max, clamp.min];
+
   /** The extrema we get from equation below are relative (we obtain a ratio),
    *  To get absolute extrema we convert it as follows:
    *

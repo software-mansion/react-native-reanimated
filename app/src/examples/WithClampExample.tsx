@@ -19,7 +19,13 @@ const UPPER_BOUND = 220;
 const LOWER_SPRING_TO_VALUE = 150;
 const UPPER_SPRING_TO_VALUE = 200;
 
-function renderExample(testedStyle: ViewStyle, description: string) {
+function Example({
+  testedStyle,
+  description,
+}: {
+  testedStyle: ViewStyle;
+  description: string;
+}) {
   return (
     <>
       <Text style={styles.text}>{description}</Text>
@@ -85,7 +91,7 @@ export default function AnimatedStyleUpdateExample() {
     dampingRatio: 0.075,
   };
 
-  const clampedStyleWithHoc = useAnimatedStyle(() => {
+  const clampedStyleWithAnimationModifier = useAnimatedStyle(() => {
     return {
       width: withClamp(
         { min: LOWER_BOUND, max: UPPER_BOUND },
@@ -93,6 +99,7 @@ export default function AnimatedStyleUpdateExample() {
       ),
     };
   });
+
   const clampedStyleWithConfig = useAnimatedStyle(() => {
     return {
       width: withSpring(randomWidth.value, {
@@ -101,6 +108,7 @@ export default function AnimatedStyleUpdateExample() {
       }),
     };
   });
+
   const style = useAnimatedStyle(() => {
     return {
       width: withSpring(randomWidth.value, config),
@@ -122,12 +130,15 @@ export default function AnimatedStyleUpdateExample() {
 
   return (
     <View style={styles.container}>
-      {renderExample(clampedStyleWithHoc, 'Clamped spring with withClamp HOC')}
-      {renderExample(
-        clampedStyleWithConfig,
-        'Clamped spring with clamp config property'
-      )}
-      {renderExample(style, 'Default spring')}
+      <Example
+        testedStyle={clampedStyleWithAnimationModifier}
+        description="Clamped spring with withClamp HOC"
+      />
+      <Example
+        testedStyle={clampedStyleWithConfig}
+        description="Clamped spring with clamp config property"
+      />
+      <Example testedStyle={style} description="Default spring" />
       <Animated.View
         style={[
           { margin: 50, width: 50, height: 50, backgroundColor: 'teal' },
