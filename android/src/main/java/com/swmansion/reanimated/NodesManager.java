@@ -395,7 +395,9 @@ public class NodesManager implements EventDispatcherListener {
   public String obtainProp(int viewTag, String propName) {
     View view = mUIManager.resolveView(viewTag);
     String result =
-        "error: unknown propName " + propName + ", currently supported: opacity, zIndex, width, height, top, left, backgroundColor";
+        "error: unknown propName "
+            + propName
+            + ", currently supported: opacity, zIndex, width, height, top, left, backgroundColor";
 
     Float value = null;
     switch (propName) {
@@ -429,7 +431,7 @@ public class NodesManager implements EventDispatcherListener {
         result = Float.toString(value);
       }
     }
-    if (propName.equals("backgroundColor")){
+    if (propName.equals("backgroundColor")) {
       Drawable background = view.getBackground();
       int actualColor = -1;
 
@@ -438,7 +440,6 @@ public class NodesManager implements EventDispatcherListener {
         int a = 7;
       }
       result = String.format("#%06x", (0xFFFFFF & actualColor));
-
     }
 
     return result;
