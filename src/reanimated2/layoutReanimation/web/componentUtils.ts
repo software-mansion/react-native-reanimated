@@ -238,6 +238,31 @@ export function handleLayoutTransition(
   setElementAnimation(element, animationConfig, existingTransform);
 }
 
+function setDummyPosition(dummy: HTMLElement, snapshot: DOMRect) {
+  dummy.style.transform = '';
+  dummy.style.position = 'absolute';
+  dummy.style.top = `${snapshot.top}px`;
+  dummy.style.left = `${snapshot.left}px`;
+  dummy.style.width = `${snapshot.width}px`;
+  dummy.style.height = `${snapshot.height}px`;
+  dummy.style.margin = '0px'; // tmpElement has absolute position, so margin is not necessary
+
+  const newRect = dummy.getBoundingClientRect();
+
+  // getBoundingClientRect returns DOMRect with position of the element with respect to document body.
+  // However, using position `absolute` doesn't guarantee, that the dummy will be placed relative to body element.
+  // The trick below allows us to once again get position relative to body, by comparing snapshot with new position of the dummy.
+  if (newRect.top !== snapshot.top) {
+    const topDiff = Math.abs(newRect.top - snapshot.top);
+    dummy.style.top = `${snapshot.top - topDiff}px`;
+  }
+
+  if (newRect.left !== snapshot.left) {
+    const leftDiff = Math.abs(newRect.left - snapshot.left);
+    dummy.style.left = `${snapshot.left - leftDiff}px`;
+  }
+}
+
 export function handleExitingAnimation(
   element: HTMLElement,
   animationConfig: AnimationConfig
@@ -263,23 +288,7 @@ export function handleExitingAnimation(
 
   const snapshot = snapshots.get(element);
 
-  dummy.style.transform = '';
-  dummy.style.position = 'absolute';
-  dummy.style.top = `${snapshot.top}px`;
-  dummy.style.left = `${snapshot.left}px`;
-  dummy.style.width = `${snapshot.width}px`;
-  dummy.style.height = `${snapshot.height}px`;
-  dummy.style.margin = '0px'; // tmpElement has absolute position, so margin is not necessary
-
-  const newRect = dummy.getBoundingClientRect();
-
-  // getBoundingClientRect returns DOMRect with position of the element with respect to document body.
-  // If react-navigation is used, `dummy` will be placed with wrong `top` position because of the header height.
-  // The trick below allows us to once again get position relative to body, and then calculate header height.
-  if (newRect.top !== snapshot.top) {
-    const headerHeight = Math.abs(newRect.top - snapshot.top);
-    dummy.style.top = `${snapshot.top - headerHeight}px`;
-  }
+  setDummyPosition(dummy, snapshot);
 
   const originalOnAnimationEnd = dummy.onanimationend;
 
