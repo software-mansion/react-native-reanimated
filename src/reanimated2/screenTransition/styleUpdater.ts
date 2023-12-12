@@ -1,9 +1,17 @@
 'use strict';
+import { isFabric } from '../PlatformChecker';
 import updateProps from '../UpdateProps';
 import type {
   PanGestureHandlerEventPayload,
   ScreenTransitionConfig,
 } from './commonTypes';
+
+const IS_FABRIC = isFabric();
+
+const createViewDescriptor: (screenTag: number) => any
+  = IS_FABRIC
+  ? (screenTag) => ({ shadowNodeWrapper: screenTag })
+  : (screenTag) => ({ tag: screenTag, name: 'RCTView' });
 
 export function applyStyle(
   screenTransitionConfig: ScreenTransitionConfig,
@@ -16,7 +24,7 @@ export function applyStyle(
   const topScreenFrame = screenTransitionConfig.screenTransition.topScreenFrame;
   const topStyle = topScreenFrame(event, screenSize);
   const topScreenDescriptor = {
-    value: [{ tag: topScreenTag, name: 'RCTView' }],
+    value: [createViewDescriptor(topScreenTag)],
   };
   updateProps(topScreenDescriptor as any, topStyle, null as any);
   const belowTopScreenTag = screenTransitionConfig.belowTopScreenTag;
@@ -24,7 +32,7 @@ export function applyStyle(
     screenTransitionConfig.screenTransition.belowTopScreenFrame;
   const belowTopStyle = belowTopScreenFrame(event, screenSize);
   const belowTopScreenDescriptor = {
-    value: [{ tag: belowTopScreenTag, name: 'RCTView' }],
+    value: [createViewDescriptor(belowTopScreenTag)],
   };
   updateProps(belowTopScreenDescriptor as any, belowTopStyle, null as any);
 }

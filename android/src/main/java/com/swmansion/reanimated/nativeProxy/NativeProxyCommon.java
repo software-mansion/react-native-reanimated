@@ -16,7 +16,6 @@ import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.devsupport.interfaces.DevSupportManager;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
-import com.swmansion.common.ScreenTransitionManager;
 import com.swmansion.reanimated.AndroidUIScheduler;
 import com.swmansion.reanimated.BuildConfig;
 import com.swmansion.reanimated.NativeProxy;
@@ -44,7 +43,6 @@ public abstract class NativeProxyCommon {
   protected AndroidUIScheduler mAndroidUIScheduler;
   private ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
-  private ScreenTransitionManager screenTransitionManager;
   private ReanimatedKeyboardEventListener reanimatedKeyboardEventListener;
   private Long firstUptime = SystemClock.uptimeMillis();
   private boolean slowAnimationsEnabled = false;
@@ -68,19 +66,6 @@ public abstract class NativeProxyCommon {
       tempHandlerStateManager = null;
     }
     gestureHandlerStateManager = tempHandlerStateManager;
-
-    ScreenTransitionManager tmpScreenTransitionManager = new ScreenTransitionManagerMock();
-    try {
-      Class<NativeModule> screensModuleClass =
-          (Class<NativeModule>) Class.forName("com.swmansion.rnscreens.ScreensModule");
-      tmpScreenTransitionManager =
-          (ScreenTransitionManager) context.getNativeModule(screensModuleClass);
-    } catch (ClassCastException | ClassNotFoundException e) {
-      Log.w(
-          "[REANIMATED]",
-          "Unable to find RNScreens module. If you don't want to use custom screen transition you can ignore this warning.");
-    }
-    screenTransitionManager = tmpScreenTransitionManager;
   }
 
   protected native void installJSIBindings();
@@ -277,25 +262,5 @@ public abstract class NativeProxyCommon {
     if (!mNodesManager.isAnimationRunning()) {
       mNodesManager.performOperations();
     }
-  }
-
-  @DoNotStrip
-  @SuppressWarnings("unused")
-  protected int[] startScreenTransition(int stackTag) {
-    WritableArray writableArray = screenTransitionManager.startTransition((double) stackTag);
-    assert(writableArray.size() >= 2);
-    return new int[] { writableArray.getInt(0), writableArray.getInt(1) };
-  }
-
-  @DoNotStrip
-  @SuppressWarnings("unused")
-  protected void updateScreenTransition(int stackTag, double progress) {
-    screenTransitionManager.updateTransition((double) stackTag, progress);
-  }
-
-  @DoNotStrip
-  @SuppressWarnings("unused")
-  protected void finishScreenTransition(int stackTag, boolean canceled) {
-    screenTransitionManager.finishTransition((double) stackTag, canceled);
   }
 }

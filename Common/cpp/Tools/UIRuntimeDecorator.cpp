@@ -18,8 +18,7 @@ void UIRuntimeDecorator::decorate(
     const SetGestureStateFunction setGestureState,
     const ProgressLayoutAnimationFunction progressLayoutAnimation,
     const EndLayoutAnimationFunction endLayoutAnimation,
-    const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue,
-    const ManageScreenTransitionFunction manageScreenTransition) {
+    const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue) {
   uiRuntime.global().setProperty(uiRuntime, "_UI", true);
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -60,8 +59,6 @@ void UIRuntimeDecorator::decorate(
   jsi_utils::installJsiFunction(uiRuntime, "_setGestureState", setGestureState);
   jsi_utils::installJsiFunction(
       uiRuntime, "_maybeFlushUIUpdatesQueue", maybeFlushUIUpdatesQueue);
-  jsi_utils::installJsiFunction(
-      uiRuntime, "_manageScreenTransition", manageScreenTransition);
 }
 
 } // namespace reanimated

@@ -51,3 +51,13 @@ export enum ScreenTransitionCommand {
   Update = 2,
   Finish = 3,
 }
+
+export type RNScreensTurboModuleType = {
+  startTransition: (stackTag: number) => {
+    topScreenTag: number;
+    belowTopScreenTag: number;
+    canStartTransition: boolean;
+  };
+  updateTransition: (stackTag: number, progress: number) => void;
+  finishTransition: (stackTag: number, isCanceled: boolean) => void;
+}

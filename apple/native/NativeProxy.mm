@@ -265,12 +265,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
   // end keyboard events
 
-  auto manageScreenTransitionFunction = [REAScreensHelper getManageScreenTransitionFunction:bridge];
-  auto manageScreenTransitionFunctionWrapper =
-      [=](jsi::Runtime &rt, int command, int stackTag, const jsi::Value &param) -> jsi::Value {
-    return manageScreenTransitionFunction(rt, command, stackTag, param);
-  };
-
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -292,7 +286,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUIUpdatesQueueFunction,
-      manageScreenTransitionFunction,
   };
 
   auto nativeReanimatedModule =

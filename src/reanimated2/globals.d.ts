@@ -20,6 +20,7 @@ import type { ProgressTransitionRegister } from './layoutReanimation/sharedTrans
 import type { UpdatePropsManager } from './UpdateProps';
 import type { callGuardDEV } from './initializers';
 import type { WorkletRuntime } from './runtimes';
+import type { RNScreensTurboModuleType } from './screenTransition/commonTypes';
 
 declare global {
   var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
@@ -107,16 +108,9 @@ declare global {
   var __mapperRegistry: MapperRegistry;
   var __sensorContainer: SensorContainer;
   var _maybeFlushUIUpdatesQueue: () => void;
-  var _manageScreenTransition: (
-    command: number,
-    stackTag: number,
-    additionalParam: unknown
-  ) => {
-    topScreenTag: number;
-    belowTopScreenTag: number;
-  };
   var LayoutAnimationsManager: LayoutAnimationsManager;
   var UpdatePropsManager: UpdatePropsManager;
   var ProgressTransitionRegister: ProgressTransitionRegister;
   var updateJSProps: (viewTag: number, props: Record<string, unknown>) => void;
+  var RNScreensTurboModule: RNScreensTurboModuleType;
 }

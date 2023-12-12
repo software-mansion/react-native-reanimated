@@ -486,29 +486,6 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
     Finish = 3,
   };
 
-  auto manageScreenTransitionFunction =
-      [=](jsi::Runtime &rt,
-          int command,
-          int stackTag,
-          const jsi::Value &param) -> jsi::Value {
-    if (command == ScreenTransitionCommand::Start) {
-      std::array<int, 2> screenTags = startScreenTransition(stackTag);
-      if (screenTags[0] > -1) {
-        jsi::Object screenTagsObject(rt);
-        screenTagsObject.setProperty(rt, "topScreenTag", screenTags[0]);
-        screenTagsObject.setProperty(rt, "belowTopScreenTag", screenTags[1]);
-        return screenTagsObject;
-      }
-    } else if (command == ScreenTransitionCommand::Update) {
-      double progress = param.asNumber();
-      updateScreenTransition(stackTag, progress);
-    } else if (command == ScreenTransitionCommand::Finish) {
-      bool canceled = param.asBool();
-      finishScreenTransition(stackTag, canceled);
-    }
-    return jsi::Value::undefined();
-  };
-
   return {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -530,7 +507,6 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUiUpdatesQueueFunction,
-      manageScreenTransitionFunction,
   };
 }
 

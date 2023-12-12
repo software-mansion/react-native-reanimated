@@ -2,9 +2,11 @@
 import type {
   PanGestureHandlerEventPayload,
   ScreenTransitionConfig,
+  RNScreensTurboModuleType,
 } from './commonTypes';
-import { ScreenTransitionCommand } from './commonTypes';
 import { applyStyle } from './styleUpdater';
+
+const RNScreensTurboModule: RNScreensTurboModuleType = global.RNScreensTurboModule;
 
 function computeEasingProgress(
   startingTimestamp: number,
@@ -58,11 +60,7 @@ function maybeScheduleNextFrame(
       event,
       isTransitionCanceled
     );
-    global._manageScreenTransition(
-      ScreenTransitionCommand.Update,
-      stackTag,
-      progress
-    );
+    RNScreensTurboModule.updateTransition(stackTag, progress);
     requestAnimationFrame(step);
   } else {
     if (screenTransitionConfig.onFinishAnimation) {

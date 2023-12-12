@@ -28,8 +28,7 @@ class UIRuntimeDecorator {
       const SetGestureStateFunction setGestureState,
       const ProgressLayoutAnimationFunction progressLayoutAnimation,
       const EndLayoutAnimationFunction endLayoutAnimation,
-      const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue,
-      const ManageScreenTransitionFunction manageScreenTransition);
+      const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue);
 };
 
 } // namespace reanimated
