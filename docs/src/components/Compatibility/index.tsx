@@ -1,11 +1,11 @@
 import React from 'react';
 import styles from './styles.module.css';
 
-export function Supported() {
+export function Yes() {
   return <div className={styles.supported}>yes</div>;
 }
 
-export function NotSupported() {
+export function No() {
   return <div className={styles.notSupported}>no</div>;
 }
 
