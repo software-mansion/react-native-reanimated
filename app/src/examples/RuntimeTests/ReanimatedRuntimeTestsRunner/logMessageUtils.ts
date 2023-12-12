@@ -11,15 +11,15 @@ export function logInFrame(text: string) {
   console.log(`\t╚${'═'.repeat(text.length + 2)}╝`);
 }
 
-export function color(text: any, color: 'yellow' | 'cyan' | 'green') {
-  switch (color) {
-    case 'yellow':
-      return `\x1b[33m${text}\x1b[0m`;
-    case 'cyan':
-      return `\x1b[36m${text}\x1b[0m`;
-    case 'green':
-      return `\x1b[32m${text}\x1b[0m`;
-  }
+export function color(text: any, color: 'yellow' | 'cyan' | 'green' | 'red') {
+  const COLOR_CODES = {
+    red: '\x1b[31m',
+    green: '\x1b[32m',
+    yellow: '\x1b[33m',
+    cyan: '\x1b[36m',
+  };
+
+  return `${COLOR_CODES[color]}${text}\x1b[0m`;
 }
 
 export function defaultTestErrorLog(expected: any, received: any) {

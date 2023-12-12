@@ -200,12 +200,12 @@ export class TestRunner {
         }
         await testCase.testCase();
         if (testCase.errors.length > 0) {
-          console.log(`\t❌ ${testCase.name} `);
+          console.log(`\t${color('✖', 'red')} ${testCase.name} `);
           for (const error of testCase.errors) {
             console.log(`\t\t${error}`);
           }
         } else {
-          console.log(`\t✅ ${testCase.name}`);
+          console.log(`\t${color('✔', 'green')} ${testCase.name}`);
         }
         if (testSuite.afterEach) {
           await testSuite.afterEach();

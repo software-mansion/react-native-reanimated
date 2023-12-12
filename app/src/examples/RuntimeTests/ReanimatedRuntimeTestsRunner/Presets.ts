@@ -28,15 +28,7 @@ const BINARY_NOTATION = [
 
 const OCTADECIMAL_NOTATION = [0o123456, 0o111111112];
 
-// BigInt literals are not available when targeting lower than ES2020.
-const BIG_INTS = [
-  // 123456789123456789n,
-  // 0b0000000000000000000000000000001n,
-  // 0x1234567890abcdefn,
-  BigInt(123456789123456789),
-  BigInt(Number.MAX_VALUE),
-  // BigInt('0b1111111111111111111111111111111111111111111111111111'),
-];
+const BIG_INTS = [BigInt(123456789123456789), BigInt(Number.MAX_VALUE)];
 
 const UNDERSCORE_SEPARATED_NUMBES = [
   0b00_000_000_000_000_000_000_000_000_000_001, -1.07808734473_36499e-3_9,
@@ -51,20 +43,42 @@ const EXTREME_NUMBERS = [
   Number.EPSILON,
 ];
 
-const STRINGS = [
+const TYPICAL_STRINGS = [
   'Aaaaaaa\n \t\t \v aaaaaa',
   'Super long'.repeat(10000000),
   // eslint-disable-next-line no-new-wrappers
   new String('A String object'),
+  '',
   'A string primitive',
+];
+
+const EMOJI_STRINGS = [
   'Emoji consisting of multiple sub-emojis 👨‍👨‍👧‍👦',
   '👨‍👨‍👧‍👦',
   '😎',
+  '👩🏽‍🏫',
+];
+
+const COMMON_CHARS_AND_LIGATURES = [
+  'π',
+  'Number π is commonly used in math',
+  'π ≈ 3.14',
+  'The answer is 2±1',
+  'ff may be written with ligature ﬀ',
+  '1ﬆ May',
+  '1 / 2 = ½',
+  'Some fractions can be typed with single chars: ⅓, ⅔ and ½',
+  'Naïve',
+];
+
+const NON_DEFAULT_ALPHABETS = [
   '你好的話',
   'ሰላም ቃላት',
   'Բարև խոսքեր',
   'Cześć świecie!',
-  '',
+];
+
+const MISC_CHARACTERS = [
   '𝕳𝖊𝖑𝖑𝖔 𝖜𝖔𝖗𝖉',
   '​🇭​​🇪​​🇱​​🇱​​🇴​ ​🇼​​🇴​​🇷​​🇩',
   '🄷🄴🄻🄻🄾 🅆🄾🅁🄳',
@@ -111,22 +125,18 @@ const iterable = (function* () {
 
 const UINT_ARRAYS = [
   new Uint8Array(2),
-  // new Uint8Array(new Int8Array([1, 2, 3, 4])),
   new Uint8Array(iterable),
   new Uint8Array([1, 2, 3, 4, 5, 6]),
 
   new Uint8ClampedArray(2),
-  // new Uint8ClampedArray(new Int8Array([1, 2, 3, 4])),
   new Uint8ClampedArray(iterable),
   new Uint8ClampedArray([1, 2, 3, 4, 5, 6]),
 
   new Uint16Array(2),
-  // new Uint16Array(new Int8Array([1, 2, 3, 4])),
   new Uint16Array(iterable),
   new Uint16Array([1, 2, 3, 4, 5, 6]),
 
   new Uint32Array(2),
-  // new Uint32Array(new Int8Array([1, 2, 3, 4])),
   new Uint32Array(iterable),
   new Uint32Array([1, 2, 3, 4, 5, 6]),
 ];
@@ -134,41 +144,26 @@ const UINT_ARRAYS = [
 const INT_ARRAYS = [
   new Int8Array(2),
   new Int8Array([1, 2, 3, 4, 5, 6]),
-  // new Int8Array(new Int8Array([1, 2, 3, 4])),
   new Int8Array(iterable),
 
   new Int16Array(2),
   new Int16Array([1, 2, 3, 4, 5, 6]),
-  // new Int16Array(new Int8Array([1, 2, 3, 4])),
   new Int16Array(iterable),
 
   new Int32Array(2),
   new Int32Array([1, 2, 3, 4, 5, 6]),
-  // new Int32Array(new Int8Array([1, 2, 3, 4])),
   new Int32Array(iterable),
-
-  // new BigInt64Array([21n, 31n]),
-  // new BigUint64Array([21n, 31n]),
 ];
 
 const FLOAT_ARRAYS = [
   new Float32Array(2),
   new Float32Array([1, 2, 3, 4, 5, 6]),
-  // new Float32Array(new Int8Array([1, 2, 3, 4])),
   new Float32Array(iterable),
 
   new Float64Array(2),
   new Float64Array([1, 2, 3, 4, 5, 6]),
-  // new Float64Array(new Int8Array([1, 2, 3, 4])),
   new Float64Array(iterable),
 ];
-
-// const BIGINT_ARRAYS = [
-//   new BigInt64Array(2),
-//   new BigInt64Array(new Int8Array([1, 2, 3, 4])),
-//   new BigUint64Array(2),
-//   new BigUint64Array(new Int8Array([1, 2, 3, 4])),
-// ];
 
 const MAX_SIZE_OF_ARRAY = 1000;
 
@@ -211,6 +206,13 @@ export const Presets = {
     ...OCTADECIMAL_NOTATION,
     ...BIG_INTS,
     ...UNDERSCORE_SEPARATED_NUMBES,
+  ],
+  strings: [
+    ...TYPICAL_STRINGS,
+    ...EMOJI_STRINGS,
+    ...COMMON_CHARS_AND_LIGATURES,
+    ...NON_DEFAULT_ALPHABETS,
+    ...MISC_CHARACTERS,
   ],
   symbols: SYMBOLS,
   regexps: REGEXPS,
