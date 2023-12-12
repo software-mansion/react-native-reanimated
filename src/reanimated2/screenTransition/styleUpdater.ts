@@ -8,10 +8,15 @@ import type {
 
 const IS_FABRIC = isFabric();
 
-const createViewDescriptor: (screenTag: number) => any
-  = IS_FABRIC
-  ? (screenTag) => ({ shadowNodeWrapper: screenTag })
-  : (screenTag) => ({ tag: screenTag, name: 'RCTView' });
+const createViewDescriptor = IS_FABRIC
+  ? (screenTag: number) => {
+      'worklet';
+      return { shadowNodeWrapper: screenTag };
+    }
+  : (screenTag: number) => {
+      'worklet';
+      return { tag: screenTag, name: 'RCTView' };
+    };
 
 export function applyStyle(
   screenTransitionConfig: ScreenTransitionConfig,
