@@ -480,12 +480,6 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto maybeFlushUiUpdatesQueueFunction =
       bindThis(&NativeProxy::maybeFlushUIUpdatesQueue);
 
-  enum ScreenTransitionCommand {
-    Start = 1,
-    Update = 2,
-    Finish = 3,
-  };
-
   return {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -599,30 +593,6 @@ void NativeProxy::setupLayoutAnimations() {
           return -1;
         }
       });
-}
-
-std::array<int, 2> NativeProxy::startScreenTransition(int stackTag) {
-  static const auto method =
-      javaPart_->getClass()->getMethod<jni::JArrayInt(int)>(
-          "startScreenTransition");
-  auto screenTagsJava = method(javaPart_.get(), stackTag);
-  std::array<int, 2> screenTags{-1, -1};
-  auto tags = screenTagsJava->pin();
-  screenTags[0] = tags[0];
-  screenTags[1] = tags[1];
-  return screenTags;
-}
-
-void NativeProxy::updateScreenTransition(int stackTag, double progress) {
-  static const auto method =
-      getJniMethod<void(jint, jdouble)>("updateScreenTransition");
-  method(javaPart_.get(), stackTag, progress);
-}
-
-void NativeProxy::finishScreenTransition(int stackTag, bool canceled) {
-  static const auto method =
-      getJniMethod<void(jint, jboolean)>("finishScreenTransition");
-  method(javaPart_.get(), stackTag, canceled);
 }
 
 } // namespace reanimated

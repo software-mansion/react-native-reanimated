@@ -7,7 +7,6 @@
 #import <RNScreens/RNSScreenStack.h>
 #endif
 
-#import <React/RCTBridge.h>
 #import <RNReanimated/REAUIKit.h>
 
 @interface REAScreensHelper : NSObject

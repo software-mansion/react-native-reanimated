@@ -238,9 +238,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       int tag,
       const jsi::Object &newProps,
       bool isSharedTransition);
-  std::array<int, 2> startScreenTransition(int stackTag);
-  void updateScreenTransition(int stackTag, double progress);
-  void finishScreenTransition(int stackTag, bool canceled);
 
   /***
    * Wraps a method of `NativeProxy` in a function object capturing `this`
