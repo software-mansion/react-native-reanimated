@@ -225,6 +225,8 @@ export class TestRunner {
     console.log('End of tests run 🏁');
   }
 
+  // private expectHandler(condition: Boolean) {}
+
   public expect(value: TrackerCallCount | string | Array<unknown>) {
     this._assertTestCase(this._currentTestCase);
     this._assertTestCase(this._currentTestCase);
@@ -232,54 +234,41 @@ export class TestRunner {
 
     return {
       toBe: (expected: any, comparisonMode: ComparisonMode) => {
-        switch (comparisonMode) {
-          case ComparisonMode.STRING: {
-            if (value !== expected) {
-              errors.push(defaultTestErrorLog(expected, value));
-            }
-            break;
-          }
-          case ComparisonMode.NUMBER: {
-            if (isNaN(Number(value)) || Number(value) !== Number(expected)) {
-              errors.push(defaultTestErrorLog(expected, value));
-            }
-            break;
-          }
-          case ComparisonMode.COLOR: {
+        const CONDITIONS: { [Key: string]: (e: any, v: any) => Boolean } = {
+          [ComparisonMode.STRING]: (expected, value) => {
+            return value !== expected;
+          },
+          [ComparisonMode.NUMBER]: (e, v) => {
+            return isNaN(Number(v)) ? !isNaN(e) : Number(v) !== Number(e);
+          },
+          [ComparisonMode.COLOR]: (e, v) => {
             const colorRegex = new RegExp('^#?([a-f0-9]{6}|[a-f0-9]{3})$');
             if (!colorRegex.test(expected)) {
               throw Error(
-                `Invalid color format "${expected}", please use lowercase hex color (like #123abc) `
+                `Invalid color format "${e}", please use lowercase hex color (like #123abc) `
               );
             }
-
-            if (typeof value !== 'string' || value !== expected) {
-              errors.push(defaultTestErrorLog(expected, value));
-            }
-            break;
-          }
-          case ComparisonMode.DISTANCE: {
+            return typeof v !== 'string' || v !== e;
+          },
+          [ComparisonMode.DISTANCE]: () => {
             const valueAsNumber = Number(value);
             if (Platform.OS === 'ios') {
-              if (isNaN(valueAsNumber) || valueAsNumber !== Number(expected)) {
-                errors.push(defaultTestErrorLog(expected, value));
-              }
+              return isNaN(valueAsNumber) || valueAsNumber !== Number(expected);
             } else {
-              if (
+              return (
                 isNaN(valueAsNumber) ||
                 Math.abs(valueAsNumber - Number(expected)) > 1
-              ) {
-                errors.push(
-                  `Expected ${color(
-                    `${expected}±1`,
-                    'green'
-                  )} received ${value}`
-                );
-              }
+              );
             }
-          }
+          },
+        };
+
+        let testFailed = CONDITIONS[comparisonMode](expected, value);
+        if (testFailed) {
+          errors.push(defaultTestErrorLog(expected, value, comparisonMode));
         }
       },
+
       toMatchSnapshot: (expected: any) => {
         if (Array.isArray(value) && Array.isArray(value)) {
           let errorString = '';

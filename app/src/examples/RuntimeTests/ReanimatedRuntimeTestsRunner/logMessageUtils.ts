@@ -1,3 +1,5 @@
+import { ComparisonMode } from './types';
+
 export const RUNTIME_TEST_ERRORS = {
   UNDEFINED_TEST_SUITE: 'Undefined test suite context',
   UNDEFINED_TEST_CASE: 'Undefined test case context',
@@ -22,9 +24,13 @@ export function color(text: any, color: 'yellow' | 'cyan' | 'green' | 'red') {
   return `${COLOR_CODES[color]}${text}\x1b[0m`;
 }
 
-export function defaultTestErrorLog(expected: any, received: any) {
+export function defaultTestErrorLog(
+  expected: any,
+  received: any,
+  mode: ComparisonMode
+) {
   return `Expected ${color(expected, 'cyan')} received ${color(
     received,
     'cyan'
-  )}`;
+  )}, mode: ${color(mode, 'yellow')}`;
 }
