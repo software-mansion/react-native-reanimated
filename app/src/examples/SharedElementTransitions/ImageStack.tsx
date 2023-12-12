@@ -1,4 +1,3 @@
-import { ParamListBase } from '@react-navigation/native';
 import React from 'react';
 import {
   createNativeStackNavigator,
@@ -18,7 +17,16 @@ const florence = require('./assets/florence.jpg');
 const countryside = require('./assets/countryside.jpg');
 const dawn = require('./assets/dawn.jpg');
 
-const Stack = createNativeStackNavigator();
+type ParamList = {
+  Screen1?: object;
+  Screen2?: object;
+  Screen3: {
+    image: ImageSourcePropType;
+    index: number;
+  };
+};
+
+const Stack = createNativeStackNavigator<ParamList>();
 
 export function ImageStack({
   images,
@@ -78,7 +86,7 @@ export function ImageStack({
 
 export function ScreenOne({
   navigation,
-}: NativeStackScreenProps<ParamListBase>) {
+}: NativeStackScreenProps<ParamList, 'Screen1'>) {
   return (
     <View style={styles.container}>
       <Animated.Text sharedTransitionTag="t1" style={styles.text}>
@@ -86,7 +94,7 @@ export function ScreenOne({
       </Animated.Text>
       <Animated.Text sharedTransitionTag="t2">Or something</Animated.Text>
       <Animated.Text sharedTransitionTag="t3">I dunno</Animated.Text>
-      <Pressable onPress={() => navigation.navigate('Screen2')}>
+      <Pressable onPress={() => navigation.navigate('Screen2', {})}>
         <ImageStack
           images={[florence, countryside, dawn, florence, countryside, dawn]}
           collapsed
@@ -98,7 +106,7 @@ export function ScreenOne({
 
 export function ScreenTwo({
   navigation,
-}: NativeStackScreenProps<ParamListBase>) {
+}: NativeStackScreenProps<ParamList, 'Screen2'>) {
   return (
     <ScrollView style={styles.flexOne}>
       <Animated.Text sharedTransitionTag="t1" style={styles.text}>
@@ -119,8 +127,8 @@ export function ScreenTwo({
 export function ScreenThree({
   navigation,
   route,
-}: NativeStackScreenProps<ParamListBase>) {
-  const { image, index } = route.params as any;
+}: NativeStackScreenProps<ParamList, 'Screen3'>) {
+  const { image, index } = route.params;
   return (
     <View style={styles.flexOne}>
       <Animated.Image
