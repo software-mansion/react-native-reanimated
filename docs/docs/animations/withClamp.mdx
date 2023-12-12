@@ -28,12 +28,10 @@ function App() {
 ```typescript
 type AnimatableValue = number | string | number[];
 
-function withClamp= <T extends number | string>(
-    config: {
+function withClamp= <T extends number | string>( config: {
         min?: T;
         max?: T;
-    },
-    clampedAnimation: T): T;
+    }, clampedAnimation: T): T;
 
 enum ReduceMotion {
   System = 'system',
@@ -59,9 +57,17 @@ An object with following properties:
 
 The spring animation you want to clamp.
 
+```typescript
+const clampedStyleWithDelay = useAnimatedStyle(() => {
+  return {
+    width: withClamp({ min: 0, max: 100 }, withSpring(randomWidth.value)),
+  };
+});
+```
+
 ### Returns
 
-`withRepeat` returns an [animation object](/docs/fundamentals/glossary#animation-object). It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](docs/core/useAnimatedStyle).
+`withClamp` returns an [animation object](/docs/fundamentals/glossary#animation-object). It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](docs/core/useAnimatedStyle).
 
 <div className="platform-compatibility">
 

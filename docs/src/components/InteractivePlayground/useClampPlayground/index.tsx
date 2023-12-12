@@ -40,6 +40,7 @@ export default function useClampPlayground() {
         step={10}
         value={[lowerBound, upperBound]}
         onChange={[setLowerBound, setUpperBound]}
+        color="green"
       />
       <DoubleRange
         label="Final spring value"
@@ -48,6 +49,7 @@ export default function useClampPlayground() {
         step={10}
         value={[lowerSpringToValue, upperSpringToValue]}
         onChange={[setLowerSpringToValue, setUpperSpringToValue]}
+        color="yellow"
       />
     </>
   );
