@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { View, StyleSheet, Button } from 'react-native';
 import {
@@ -53,7 +54,7 @@ const customTransition: AnimatedScreenTransition = {
   },
 };
 
-const App = (): JSX.Element => (
+const ScreenAnimationExample = (): JSX.Element => (
   <GestureDetectorProvider>
     <Stack.Navigator
       screenOptions={{
@@ -96,4 +97,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default App;
+export default ScreenAnimationExample;
