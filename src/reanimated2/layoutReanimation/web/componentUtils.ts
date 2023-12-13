@@ -240,6 +240,36 @@ export function handleLayoutTransition(
   setElementAnimation(element, animationConfig, existingTransform);
 }
 
+function fixElementPosition(
+  element: HTMLElement,
+  parent: HTMLElement,
+  snapshot: DOMRect
+) {
+  const parentRect = parent.getBoundingClientRect();
+
+  const parentBorderTop = getComputedStyle(parent).borderTopWidth;
+  const parentBorderTopValue = parseInt(parentBorderTop.replace('px', ''));
+
+  const parentBorderLeft = getComputedStyle(parent).borderLeftWidth;
+  const parentBorderLeftValue = parseInt(parentBorderLeft.replace('px', ''));
+
+  const dummyRect = element.getBoundingClientRect();
+  // getBoundingClientRect returns DOMRect with position of the element with respect to document body.
+  // However, using position `absolute` doesn't guarantee, that the dummy will be placed relative to body element.
+  // The trick below allows us to once again get position relative to body, by comparing snapshot with new position of the dummy.
+  if (dummyRect.top !== snapshot.top) {
+    element.style.top = `${
+      snapshot.top - parentRect.top - parentBorderTopValue
+    }px`;
+  }
+
+  if (dummyRect.left !== snapshot.left) {
+    element.style.left = `${
+      snapshot.left - parentRect.left - parentBorderLeftValue
+    }px`;
+  }
+}
+
 function setDummyPosition(dummy: HTMLElement, snapshot: DOMRect) {
   dummy.style.transform = '';
   dummy.style.position = 'absolute';
@@ -249,20 +279,7 @@ function setDummyPosition(dummy: HTMLElement, snapshot: DOMRect) {
   dummy.style.height = `${snapshot.height}px`;
   dummy.style.margin = '0px'; // tmpElement has absolute position, so margin is not necessary
 
-  const newRect = dummy.getBoundingClientRect();
-
-  // getBoundingClientRect returns DOMRect with position of the element with respect to document body.
-  // However, using position `absolute` doesn't guarantee, that the dummy will be placed relative to body element.
-  // The trick below allows us to once again get position relative to body, by comparing snapshot with new position of the dummy.
-  if (newRect.top !== snapshot.top) {
-    const topDiff = Math.abs(newRect.top - snapshot.top);
-    dummy.style.top = `${snapshot.top - topDiff}px`;
-  }
-
-  if (newRect.left !== snapshot.left) {
-    const leftDiff = Math.abs(newRect.left - snapshot.left);
-    dummy.style.left = `${snapshot.left - leftDiff}px`;
-  }
+  fixElementPosition(dummy, dummy.parentElement!, snapshot);
 }
 
 export function handleExitingAnimation(
