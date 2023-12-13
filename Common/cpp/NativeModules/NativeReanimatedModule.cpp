@@ -338,6 +338,16 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimationBatch(
           config,
           "[Reanimated] Layout animation config must be an object.");
     }
+    if (batch[i].type != SHARED_ELEMENT_TRANSITION &&
+        batch[i].type != SHARED_ELEMENT_TRANSITION_PROGRESS) {
+      continue;
+    }
+    auto sharedTransitionTag = item.getProperty(rt, "sharedTransitionTag");
+    if (sharedTransitionTag.isUndefined()) {
+      batch[i].config = nullptr;
+    } else {
+      batch[i].sharedTransitionTag = sharedTransitionTag.asString(rt).utf8(rt);
+    }
   }
   layoutAnimationsManager_.configureAnimationBatch(batch);
   return jsi::Value::undefined();

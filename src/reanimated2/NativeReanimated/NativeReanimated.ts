@@ -14,6 +14,10 @@ import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
 import type { WorkletRuntime } from '../runtimes';
 import { getValueUnpackerCode } from '../valueUnpacker';
+import type {
+  SharedTransitionAnimationsFunction,
+  ProgressAnimationCallback,
+} from '../layoutReanimation/animationBuilder/commonTypes';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
@@ -66,7 +70,15 @@ export interface NativeReanimatedModule {
     layoutAnimationsBatch: {
       viewTag: number;
       type: LayoutAnimationType;
-      config: ShareableRef<Keyframe | LayoutAnimationFunction> | undefined;
+      config:
+        | ShareableRef<
+            | Keyframe
+            | LayoutAnimationFunction
+            | SharedTransitionAnimationsFunction
+            | ProgressAnimationCallback
+          >
+        | undefined;
+      sharedTransitionTag?: string;
     }[]
   ): void;
   setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
@@ -194,7 +206,15 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     layoutAnimationsBatch: {
       viewTag: number;
       type: LayoutAnimationType;
-      config: ShareableRef<Keyframe | LayoutAnimationFunction> | undefined;
+      config:
+        | ShareableRef<
+            | Keyframe
+            | LayoutAnimationFunction
+            | SharedTransitionAnimationsFunction
+            | ProgressAnimationCallback
+          >
+        | undefined;
+      sharedTransitionTag?: string;
     }[]
   ) {
     this.InnerNativeModule.configureLayoutAnimationBatch(layoutAnimationsBatch);

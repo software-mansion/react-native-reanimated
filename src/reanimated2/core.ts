@@ -196,41 +196,29 @@ export function enableLayoutAnimations(
   }
 }
 
-export function configureLayoutAnimations(
-  viewTag: number | HTMLElement,
-  type: LayoutAnimationType,
-  config:
-    | LayoutAnimationFunction
-    | Keyframe
-    | SharedTransitionAnimationsFunction
-    | ProgressAnimationCallback,
-  sharedTransitionTag = ''
-): void {
-  NativeReanimatedModule.configureLayoutAnimation(
-    viewTag as number, // On web this function is no-op, therefore we can cast viewTag to number
-    type,
-    sharedTransitionTag,
-    makeShareableCloneRecursive(config)
-  );
-}
-
 export function configureLayoutAnimationBatch(
   layoutAnimationsBatch: {
     viewTag: number;
     type: LayoutAnimationType;
-    config?: LayoutAnimationFunction | Keyframe;
+    config?:
+      | LayoutAnimationFunction
+      | Keyframe
+      | SharedTransitionAnimationsFunction
+      | ProgressAnimationCallback;
+    sharedTransitionTag?: string;
   }[]
 ): void {
   NativeReanimatedModule.configureLayoutAnimationBatch(
-    layoutAnimationsBatch.map((operation) => {
-      return {
-        viewTag: operation.viewTag,
-        type: operation.type,
-        config: operation.config
-          ? makeShareableCloneRecursive(operation.config)
-          : undefined,
-      };
-    })
+    layoutAnimationsBatch.map(
+      ({ viewTag, type, config, sharedTransitionTag }) => {
+        return {
+          viewTag,
+          type,
+          config: config ? makeShareableCloneRecursive(config) : undefined,
+          sharedTransitionTag,
+        };
+      }
+    )
   );
 }
 

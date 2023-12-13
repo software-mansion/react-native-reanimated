@@ -22,6 +22,7 @@ import BubblesExample from './BubblesExample';
 import CardExample from './SharedElementTransitions/Card';
 import Carousel from './LayoutAnimations/Carousel';
 import ChangeThemeExample from './LayoutAnimations/ChangeTheme';
+import ChangeThemeSharedExample from './SharedElementTransitions/ChangeTheme';
 import ChatHeadsExample from './ChatHeadsExample';
 import ChessboardExample from './ChessboardExample';
 import ColorExample from './ColorExample';
@@ -661,5 +662,9 @@ export const EXAMPLES: Record<string, Example> = {
   TransitionRestartExample: {
     title: '[SET] Transition Restart',
     screen: TransitionRestartExample,
+  },
+  ChangeThemeSharedExample: {
+    title: '[SET] Change theme',
+    screen: ChangeThemeSharedExample,
   },
 } as const;

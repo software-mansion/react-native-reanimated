@@ -25,6 +25,7 @@ struct LayoutAnimationConfig {
   int tag;
   LayoutAnimationType type;
   std::shared_ptr<Shareable> config;
+  std::string sharedTransitionTag;
 };
 
 class LayoutAnimationsManager {

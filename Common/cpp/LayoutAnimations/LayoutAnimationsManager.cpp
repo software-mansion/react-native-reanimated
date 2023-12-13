@@ -30,11 +30,46 @@ void LayoutAnimationsManager::configureAnimation(
 void LayoutAnimationsManager::configureAnimationBatch(
     std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-  for (auto [tag, type, config] : layoutAnimationsBatch) {
-    if (config == nullptr) {
-      getConfigsForType(type).erase(tag);
+  std::vector<LayoutAnimationConfig> sharedTransitionConfigs;
+  for (auto layoutAnimationConfig : layoutAnimationsBatch) {
+    auto [tag, type, config, sharedTransitionTag] = layoutAnimationConfig;
+    if (type == SHARED_ELEMENT_TRANSITION ||
+        type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
+      sharedTransitionAnimations_.erase(tag);
+      auto const &groupName = viewTagToSharedTag_[tag];
+      if (groupName.empty()) {
+        sharedTransitionConfigs.push_back(std::move(layoutAnimationConfig));
+        continue;
+      }
+      auto &group = sharedTransitionGroups_[groupName];
+      auto position = std::find(group.begin(), group.end(), tag);
+      if (position != group.end()) {
+        group.erase(position);
+      }
+      if (group.size() == 0) {
+        sharedTransitionGroups_.erase(groupName);
+      }
+      viewTagToSharedTag_.erase(tag);
+      ignoreProgressAnimationForTag_.erase(tag);
+      sharedTransitionConfigs.push_back(std::move(layoutAnimationConfig));
     } else {
-      getConfigsForType(type)[tag] = config;
+      if (config == nullptr) {
+        getConfigsForType(type).erase(tag);
+      } else {
+        getConfigsForType(type)[tag] = config;
+      }
+    }
+  }
+  for (auto [tag, type, config, sharedTransitionTag] :
+       sharedTransitionConfigs) {
+    if (config == nullptr) {
+      continue;
+    }
+    sharedTransitionGroups_[sharedTransitionTag].push_back(tag);
+    viewTagToSharedTag_[tag] = sharedTransitionTag;
+    getConfigsForType(SHARED_ELEMENT_TRANSITION)[tag] = config;
+    if (type == SHARED_ELEMENT_TRANSITION) {
+      ignoreProgressAnimationForTag_.insert(tag);
     }
   }
 }

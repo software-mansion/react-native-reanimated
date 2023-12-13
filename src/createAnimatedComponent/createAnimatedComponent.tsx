@@ -145,8 +145,8 @@ export function createAnimatedComponent(
       this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
       this._InlinePropManager.detachInlineProps();
+      this._configureSharedTransition(false, true);
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
-
       const exiting = this.props.exiting;
       if (IS_WEB) {
         startWebLayoutAnimation(
@@ -421,6 +421,12 @@ export function createAnimatedComponent(
       if (layout !== oldLayout) {
         this._configureLayoutTransition();
       }
+      if (
+        this.props.sharedTransitionTag !== undefined ||
+        prevProps.sharedTransitionTag !== undefined
+      ) {
+        this._configureSharedTransition(false);
+      }
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
@@ -446,6 +452,36 @@ export function createAnimatedComponent(
       updateLayoutAnimations(this._viewTag, LayoutAnimationType.LAYOUT, layout);
     }
 
+    _configureSharedTransition(init: boolean, defer = false) {
+      const { sharedTransitionTag } = this.props;
+      if (!IS_WEB) {
+        const sharedElementTransition =
+          this.props.sharedTransitionStyle ??
+          this._sharedElementTransition ??
+          new SharedTransition();
+        const reduceMotionInTransition = getReduceMotionFromConfig(
+          sharedElementTransition.getReduceMotion()
+        );
+        if (reduceMotionInTransition) {
+          return;
+        }
+        if (init) {
+          sharedElementTransition.registerTransition(
+            this._viewTag as number,
+            sharedTransitionTag,
+            defer
+          );
+        } else {
+          sharedElementTransition.updateTransition(
+            this._viewTag as number,
+            sharedTransitionTag,
+            defer
+          );
+        }
+        this._sharedElementTransition = sharedElementTransition;
+      }
+    }
+
     _setComponentRef = setAndForwardRef<Component | HTMLElement>({
       getForwardedRef: () =>
         this.props.forwardedRef as MutableRefObject<
@@ -458,6 +494,8 @@ export function createAnimatedComponent(
           ? (ref as HTMLElement)
           : findNodeHandle(ref as Component);
 
+        this._viewTag = tag as number;
+
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (
           (layout || entering || exiting || sharedTransitionTag) &&
@@ -466,6 +504,8 @@ export function createAnimatedComponent(
           if (!shouldBeUseWeb()) {
             enableLayoutAnimations(true, false);
           }
+
+          this._configureSharedTransition(true);
 
           const skipEntering = this.context?.current;
           if (entering && !skipEntering) {
@@ -478,20 +518,6 @@ export function createAnimatedComponent(
                 AnimatedComponent.displayName
               )
             );
-          }
-          if (sharedTransitionTag && !IS_WEB) {
-            const sharedElementTransition =
-              this.props.sharedTransitionStyle ?? new SharedTransition();
-            const reduceMotionInTransition = getReduceMotionFromConfig(
-              sharedElementTransition.getReduceMotion()
-            );
-            if (!reduceMotionInTransition) {
-              sharedElementTransition.registerTransition(
-                tag as number,
-                sharedTransitionTag
-              );
-              this._sharedElementTransition = sharedElementTransition;
-            }
           }
         }
 

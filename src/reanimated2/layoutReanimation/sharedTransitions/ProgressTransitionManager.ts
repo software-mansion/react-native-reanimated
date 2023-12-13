@@ -42,6 +42,19 @@ export class ProgressTransitionManager {
     this.registerEventHandlers();
   }
 
+  public updateProgressAnimation(
+    viewTag: number,
+    progressAnimation: ProgressAnimation
+  ) {
+    runOnUIImmediately(() => {
+      'worklet';
+      global.ProgressTransitionRegister.updateProgressAnimation(
+        viewTag,
+        progressAnimation
+      );
+    })();
+  }
+
   public removeProgressAnimation(viewTag: number) {
     this.unregisterEventHandlers();
     runOnUIImmediately(() => {
@@ -145,6 +158,12 @@ function createProgressTransitionRegister() {
         // there is no need to prevent cleaning on android
         isTransitionRestart = !IS_ANDROID;
       }
+      progressAnimations.set(viewTag, progressAnimation);
+    },
+    updateProgressAnimation: (
+      viewTag: number,
+      progressAnimation: ProgressAnimation
+    ) => {
       progressAnimations.set(viewTag, progressAnimation);
     },
     removeProgressAnimation: (viewTag: number) => {

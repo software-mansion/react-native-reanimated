@@ -29,6 +29,7 @@
   BOOL _isAsyncSharedTransitionConfigured;
   BOOL _isConfigured;
   BOOL _clearScreen;
+  REAUIView *_disappearingScreen;
 }
 
 /*
@@ -121,7 +122,10 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   if ([views count] > 0) {
     NSArray *sharedViews = [self sortViewsByTags:views];
-    _sharedElements = [self getSharedElementForCurrentTransition:sharedViews withNewElements:YES];
+    _sharedElements = [self getSharedElementForCurrentTransition:sharedViews
+                                                 withNewElements:YES
+                                                     withOffsetX:0
+                                                     withOffsetY:0];
     [self resolveAnimationType:_sharedElements isInteractive:NO];
     _isAsyncSharedTransitionConfigured = YES;
   }
@@ -169,11 +173,16 @@ static REASharedTransitionManager *_sharedTransitionManager;
   [self startSharedTransition:sharedElementToRestart];
 }
 
-- (BOOL)configureAndStartSharedTransitionForViews:(NSArray<REAUIView *> *)views isInteractive:(BOOL)isInteractive
+- (BOOL)configureAndStartSharedTransitionForViews:(NSArray<REAUIView *> *)views
+                                    isInteractive:(BOOL)isInteractive
+                                      withOffsetX:(double)offsetX
+                                      withOffsetY:(double)offsetY
 {
   NSArray *sharedViews = [self sortViewsByTags:views];
   NSArray<REASharedElement *> *sharedElements = [self getSharedElementForCurrentTransition:sharedViews
-                                                                           withNewElements:NO];
+                                                                           withNewElements:NO
+                                                                               withOffsetX:offsetX
+                                                                               withOffsetY:offsetY];
   if ([sharedElements count] == 0) {
     return NO;
   }
@@ -198,6 +207,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (NSMutableArray<REASharedElement *> *)getSharedElementForCurrentTransition:(NSArray *)sharedViews
                                                              withNewElements:(BOOL)addedNewScreen
+                                                                 withOffsetX:(double)offsetX
+                                                                 withOffsetY:(double)offsetY
 {
   NSMutableArray<REAUIView *> *newTransitionViews = [NSMutableArray new];
   NSMutableArray<REASharedElement *> *newSharedElements = [NSMutableArray new];
@@ -266,7 +277,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
       if (![screenUnderStackTop.reactTag isEqual:viewSourceParentScreen.reactTag] && !isInCurrentTransition) {
         continue;
       }
-    } else if (!addedNewScreen) {
+    } else if (!addedNewScreen && !isModal) {
       // is on top
       REAUIView *viewTargetParentScreen = [REAScreensHelper getScreenForView:viewTarget];
       // TODO macOS navigationController isn't available on macOS
@@ -282,7 +293,12 @@ static REASharedTransitionManager *_sharedTransitionManager;
       [_viewsToHide addObject:viewSource.reactTag];
     }
 
-    REASnapshot *sourceViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewSource];
+    REASnapshot *sourceViewSnapshot;
+    if (!addedNewScreen) {
+      sourceViewSnapshot = _snapshotRegistry[viewSource.reactTag];
+    } else {
+      sourceViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewSource];
+    }
     if (addedNewScreen && !_currentSharedTransitionViews[viewSource.reactTag]) {
       _snapshotRegistry[viewSource.reactTag] = sourceViewSnapshot;
     }
@@ -292,10 +308,10 @@ static REASharedTransitionManager *_sharedTransitionManager;
       targetViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewTarget];
       _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
     } else {
-      targetViewSnapshot = _snapshotRegistry[viewTarget.reactTag];
-      if (targetViewSnapshot == nil) {
-        targetViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewTarget];
-      }
+      targetViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewTarget
+                                                             withOffsetX:offsetX
+                                                             withOffsetY:offsetY
+                                                           withTransform:NO];
     }
 
     [newTransitionViews addObject:viewSource];
@@ -346,10 +362,12 @@ static REASharedTransitionManager *_sharedTransitionManager;
   dispatch_once(&onceToken, ^{
     SEL viewDidLayoutSubviewsSelector = @selector(viewDidLayoutSubviews);
     SEL notifyWillDisappearSelector = @selector(notifyWillDisappear);
+    SEL viewIsAppearingSelector = @selector(viewIsAppearing:);
     Class screenClass = [RNSScreen class];
     Class screenViewClass = [RNSScreenView class];
     BOOL allSelectorsAreAvailable = [RNSScreen instancesRespondToSelector:viewDidLayoutSubviewsSelector] &&
         [RNSScreenView instancesRespondToSelector:notifyWillDisappearSelector] &&
+        [RNSScreen instancesRespondToSelector:viewIsAppearingSelector] &&
         [RNSScreenView instancesRespondToSelector:@selector(isModal)]; // used by REAScreenHelper
 
     if (allSelectorsAreAvailable) {
@@ -361,10 +379,24 @@ static REASharedTransitionManager *_sharedTransitionManager;
                      forClass:screenViewClass
                          with:@selector(reanimated_notifyWillDisappear)
                     fromClass:[self class]];
+      [REAUtils swizzleMethod:viewIsAppearingSelector
+                     forClass:screenClass
+                         with:@selector(reanimated_viewIsAppearing:)
+                    fromClass:[self class]];
       _isConfigured = YES;
     }
   });
 #endif
+}
+
+- (void)setDisappearingScreen:(REAUIView *)view
+{
+  _disappearingScreen = view;
+}
+
+- (REAUIView *)getDissapearingScreen
+{
+  return _disappearingScreen;
 }
 
 - (void)reanimated_viewDidLayoutSubviews
@@ -379,7 +411,27 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   // call original method from react-native-screens, self == RNSScreenView
   [self reanimated_notifyWillDisappear];
-  [_sharedTransitionManager screenRemovedFromStack:(REAUIView *)self];
+  [_sharedTransitionManager makeSnapshotForScreenViews:(REAUIView *)self];
+  bool isModal = [REAScreensHelper isScreenModal:(REAUIView *)self];
+  if (isModal) {
+    [_sharedTransitionManager screenRemovedFromStack:(REAUIView *)self withOffsetX:0 withOffsetY:0];
+  } else {
+    [_sharedTransitionManager setDisappearingScreen:(REAUIView *)self];
+  }
+}
+
+- (void)reanimated_viewIsAppearing:(BOOL)animated
+{
+  // call original method from react-native-screens, self == RNSScreen
+  [self reanimated_viewIsAppearing:animated];
+  REAUIView *disappearingScreen = [_sharedTransitionManager getDissapearingScreen];
+  REAUIView *targetScreen = [self valueForKey:@"screenView"];
+  if (disappearingScreen != NULL) {
+    [_sharedTransitionManager screenRemovedFromStack:disappearingScreen
+                                         withOffsetX:-targetScreen.superview.frame.origin.x
+                                         withOffsetY:-targetScreen.superview.frame.origin.y];
+  }
+  [_sharedTransitionManager setDisappearingScreen:NULL];
 }
 
 - (void)screenAddedToStack:(REAUIView *)screen
@@ -389,7 +441,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
 }
 
-- (void)screenRemovedFromStack:(REAUIView *)screen
+- (void)screenRemovedFromStack:(REAUIView *)screen withOffsetX:(double)offsetX withOffsetY:(double)offsetY
 {
   _isStackDropped = NO;
   REAUIView *stack = [REAScreensHelper getStackForView:screen];
@@ -404,7 +456,10 @@ static REASharedTransitionManager *_sharedTransitionManager;
     bool shouldRunTransition = (isScreenRemovedFromReactTree || isTriggeredByGoBackButton) &&
         !(isInteractive && [_currentSharedTransitionViews count] > 0);
     if (shouldRunTransition) {
-      [self runSharedTransitionForSharedViewsOnScreen:screen isInteractive:isInteractive];
+      [self runSharedTransitionForSharedViewsOnScreen:screen
+                                        isInteractive:isInteractive
+                                          withOffsetX:offsetX
+                                          withOffsetY:offsetY];
     } else {
       [self makeSnapshotForScreenViews:screen];
     }
@@ -436,7 +491,10 @@ static REASharedTransitionManager *_sharedTransitionManager;
       return false;
     }
     if ([self->_animationManager hasAnimationForTag:viewTag type:SHARED_ELEMENT_TRANSITION]) {
-      REASnapshot *snapshot = [[REASnapshot alloc] initWithAbsolutePosition:(REAUIView *)view];
+      REASnapshot *snapshot = [[REASnapshot alloc] initWithAbsolutePosition:(REAUIView *)view
+                                                                withOffsetX:0
+                                                                withOffsetY:0
+                                                              withTransform:YES];
       self->_snapshotRegistry[viewTag] = snapshot;
     }
     return false;
@@ -487,7 +545,10 @@ static REASharedTransitionManager *_sharedTransitionManager;
   return NO;
 }
 
-- (void)runSharedTransitionForSharedViewsOnScreen:(REAUIView *)screen isInteractive:(BOOL)isInteractive
+- (void)runSharedTransitionForSharedViewsOnScreen:(REAUIView *)screen
+                                    isInteractive:(BOOL)isInteractive
+                                      withOffsetX:(double)offsetX
+                                      withOffsetY:(double)offsetY
 {
   NSMutableArray<REAUIView *> *removedViews = [NSMutableArray new];
   REANodeFind(screen, ^int(id<RCTComponent> view) {
@@ -496,7 +557,10 @@ static REASharedTransitionManager *_sharedTransitionManager;
     }
     return false;
   });
-  BOOL startedAnimation = [self configureAndStartSharedTransitionForViews:removedViews isInteractive:isInteractive];
+  BOOL startedAnimation = [self configureAndStartSharedTransitionForViews:removedViews
+                                                            isInteractive:isInteractive
+                                                              withOffsetX:offsetX
+                                                              withOffsetY:offsetY];
   if (startedAnimation) {
     _removedViews = removedViews;
   } else if (![self isInteractiveScreenChange:screen]) {
