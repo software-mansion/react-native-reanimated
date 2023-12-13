@@ -6,7 +6,8 @@ import type {
 } from './commonTypes';
 import { applyStyle } from './styleUpdater';
 
-const RNScreensTurboModule: RNScreensTurboModuleType = global.RNScreensTurboModule;
+const RNScreensTurboModule: RNScreensTurboModuleType =
+  global.RNScreensTurboModule;
 
 function computeEasingProgress(
   startingTimestamp: number,

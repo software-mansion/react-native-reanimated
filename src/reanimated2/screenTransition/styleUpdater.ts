@@ -1,6 +1,8 @@
 'use strict';
 import { isFabric } from '../PlatformChecker';
 import updateProps from '../UpdateProps';
+import type { ShadowNodeWrapper, SharedValue } from '../commonTypes';
+import type { Descriptor } from '../hook/commonTypes';
 import type {
   PanGestureHandlerEventPayload,
   ScreenTransitionConfig,
@@ -9,11 +11,11 @@ import type {
 const IS_FABRIC = isFabric();
 
 const createViewDescriptor = IS_FABRIC
-  ? (screenTag: number) => {
+  ? (screenTag: number | ShadowNodeWrapper) => {
       'worklet';
       return { shadowNodeWrapper: screenTag };
     }
-  : (screenTag: number) => {
+  : (screenTag: number | ShadowNodeWrapper) => {
       'worklet';
       return { tag: screenTag, name: 'RCTView' };
     };
@@ -25,19 +27,27 @@ export function applyStyle(
   'worklet';
   const screenSize = screenTransitionConfig.screenDimensions;
 
-  const topScreenTag = screenTransitionConfig.topScreenTag;
+  const topScreenId = screenTransitionConfig.topScreenId;
   const topScreenFrame = screenTransitionConfig.screenTransition.topScreenFrame;
   const topStyle = topScreenFrame(event, screenSize);
   const topScreenDescriptor = {
-    value: [createViewDescriptor(topScreenTag)],
+    value: [createViewDescriptor(topScreenId)],
   };
-  updateProps(topScreenDescriptor as any, topStyle, null as any);
-  const belowTopScreenTag = screenTransitionConfig.belowTopScreenTag;
+  updateProps(
+    topScreenDescriptor as SharedValue<Descriptor[]>,
+    topStyle,
+    undefined
+  );
+  const belowTopScreenId = screenTransitionConfig.belowTopScreenId;
   const belowTopScreenFrame =
     screenTransitionConfig.screenTransition.belowTopScreenFrame;
   const belowTopStyle = belowTopScreenFrame(event, screenSize);
   const belowTopScreenDescriptor = {
-    value: [createViewDescriptor(belowTopScreenTag)],
+    value: [createViewDescriptor(belowTopScreenId)],
   };
-  updateProps(belowTopScreenDescriptor as any, belowTopStyle, null as any);
+  updateProps(
+    belowTopScreenDescriptor as SharedValue<Descriptor[]>,
+    belowTopStyle,
+    undefined
+  );
 }

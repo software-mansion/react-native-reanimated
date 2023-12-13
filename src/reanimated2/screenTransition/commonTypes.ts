@@ -1,6 +1,10 @@
 'use strict';
 
-import type { MeasuredDimensions, SharedValue } from '../commonTypes';
+import type {
+  MeasuredDimensions,
+  ShadowNodeWrapper,
+  SharedValue,
+} from '../commonTypes';
 
 export type PanGestureHandlerEventPayload = {
   x: number;
@@ -35,8 +39,8 @@ export type GoBackGesture =
 
 export type ScreenTransitionConfig = {
   stackTag: number;
-  belowTopScreenTag: number;
-  topScreenTag: number;
+  belowTopScreenId: number | ShadowNodeWrapper;
+  topScreenId: number | ShadowNodeWrapper;
   screenTransition: AnimatedScreenTransition;
   sharedEvent: SharedValue<PanGestureHandlerEventPayload>;
   startingGesturePosition: SharedValue<PanGestureHandlerEventPayload>;
@@ -48,8 +52,8 @@ export type ScreenTransitionConfig = {
 
 export type RNScreensTurboModuleType = {
   startTransition: (stackTag: number) => {
-    topScreenTag: number;
-    belowTopScreenTag: number;
+    topScreenId: number | ShadowNodeWrapper;
+    belowTopScreenId: number | ShadowNodeWrapper;
     canStartTransition: boolean;
   };
   updateTransition: (stackTag: number, progress: number) => void;
