@@ -49,6 +49,10 @@ export function configureWebLayoutAnimations() {
 }
 
 export function insertWebAnimation(animationName: string, keyframe: string) {
+  if (!isWindowAvailable()) {
+    return;
+  }
+
   const styleTag = document.getElementById(
     CUSTOM_WEB_ANIMATIONS_ID
   ) as HTMLStyleElement;
@@ -77,6 +81,10 @@ export function insertWebAnimation(animationName: string, keyframe: string) {
 }
 
 function removeWebAnimation(animationName: string) {
+  if (!isWindowAvailable()) {
+    return;
+  }
+
   const styleTag = document.getElementById(
     CUSTOM_WEB_ANIMATIONS_ID
   ) as HTMLStyleElement;
