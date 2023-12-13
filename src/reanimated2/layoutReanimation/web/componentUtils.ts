@@ -192,7 +192,9 @@ export function setElementAnimation(
     element.style.transform = convertTransformToString(existingTransform);
   };
 
-  scheduleAnimationCleanup(animationName, duration + delay);
+  if (!(animationName in Animations)) {
+    scheduleAnimationCleanup(animationName, duration + delay);
+  }
 }
 
 export function handleLayoutTransition(
@@ -263,6 +265,7 @@ export function handleExitingAnimation(
 
   const snapshot = snapshots.get(element);
 
+  dummy.style.transform = '';
   dummy.style.position = 'absolute';
   dummy.style.top = `${snapshot.top}px`;
   dummy.style.left = `${snapshot.left}px`;
@@ -290,4 +293,10 @@ export function handleExitingAnimation(
     // Given that this function overrides onAnimationEnd, it won't be null
     originalOnAnimationEnd?.call(this, event);
   };
+
+  dummy.addEventListener('animationcancel', () => {
+    if (parent?.contains(dummy)) {
+      parent.removeChild(dummy);
+    }
+  });
 }

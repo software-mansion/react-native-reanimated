@@ -60,6 +60,10 @@ import type { FlatList, FlatListProps } from 'react-native';
 const IS_WEB = isWeb();
 const IS_FABRIC = isFabric();
 
+if (IS_WEB) {
+  configureWebLayoutAnimations();
+}
+
 function onlyAnimatedStyles(styles: StyleProps[]): StyleProps[] {
   return styles.filter((style) => style?.viewDescriptors);
 }
@@ -149,8 +153,6 @@ export function createAnimatedComponent(
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
       if (IS_WEB) {
-        configureWebLayoutAnimations();
-
         if (this.props.exiting) {
           saveSnapshot(this._component as HTMLElement);
         }
@@ -546,7 +548,8 @@ export function createAnimatedComponent(
     // and later on, in componentDidUpdate, calculate translation for layout transition.
     getSnapshotBeforeUpdate() {
       if (
-        (this._component as HTMLElement).getBoundingClientRect !== undefined
+        IS_WEB &&
+        (this._component as HTMLElement)?.getBoundingClientRect !== undefined
       ) {
         return (this._component as HTMLElement).getBoundingClientRect();
       }

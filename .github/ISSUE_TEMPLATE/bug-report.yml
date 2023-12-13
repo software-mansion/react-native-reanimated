@@ -106,7 +106,7 @@ body:
       label: Workflow
       description: How is your application managed?
       options:
-        - React Native 
+        - React Native
         - Expo Go
         - Expo Dev Client
 
@@ -123,10 +123,13 @@ body:
     id: build-type
     attributes:
       label: Build type
-      description: What mode your application is running?
+      description: What is the build configuration/variant of your native app and JavaScript bundle mode?
       options:
-        - Debug mode
-        - Release mode
+        - Debug app & dev bundle
+        - Release app & production bundle
+        - Debug app & production bundle
+        - Release app & dev bundle
+        - Other (please specify)
 
   - type: dropdown
     id: emulator

@@ -60,7 +60,7 @@ function chooseAction(
 ) {
   switch (animationType) {
     case LayoutAnimationType.ENTERING:
-      setElementAnimation(element, animationConfig);
+      setElementAnimation(element, animationConfig, transform);
       break;
     case LayoutAnimationType.LAYOUT:
       transitionData.reversed = animationConfig.reversed;
@@ -104,9 +104,10 @@ function tryGetAnimationConfigWithTransform<
 
   const transform = extractTransformFromStyle(props.style as StyleProps);
 
-  const animationName = transform
-    ? createAnimationWithExistingTransform(initialAnimationName, transform)
-    : initialAnimationName;
+  const animationName =
+    transform && animationType !== LayoutAnimationType.EXITING
+      ? createAnimationWithExistingTransform(initialAnimationName, transform)
+      : initialAnimationName;
 
   const animationConfig = getProcessedConfig(
     animationName,
