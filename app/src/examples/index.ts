@@ -123,11 +123,6 @@ interface Example {
 
 export const EXAMPLES: Record<string, Example> = {
   // Empty example for test purposes
-  ScreenAnimationExample: {
-    icon: '📺',
-    title: 'Screen animation',
-    screen: ScreenAnimationExample,
-  },
   EmptyExample: {
     icon: '👻',
     title: 'Empty',
@@ -223,6 +218,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🏎️',
     title: 'Update props performance',
     screen: UpdatePropsPerfExample,
+  },
+  ScreenAnimationExample: {
+    icon: '📺',
+    title: 'Screen animation',
+    screen: ScreenAnimationExample,
   },
 
   // Basic examples

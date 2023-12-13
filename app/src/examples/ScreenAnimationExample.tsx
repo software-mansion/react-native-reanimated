@@ -6,7 +6,10 @@ import {
 } from 'react-native-screens/native-stack';
 import { GestureDetectorProvider } from 'react-native-screens/gesture-handler';
 import { ParamListBase } from '@react-navigation/native';
-// import { ScreenTransition } from 'react-native-reanimated';
+import {
+  ScreenTransition,
+  AnimatedScreenTransition,
+} from 'react-native-reanimated';
 
 const MainScreen = ({ navigation }: NativeStackScreenProps<ParamListBase>) => (
   <View style={[styles.container, styles.screenA]}>
@@ -30,27 +33,25 @@ const ScreenC = ({ navigation }: NativeStackScreenProps<ParamListBase>) => (
 
 const Stack = createNativeStackNavigator();
 
-// const customTransition: AnimatedScreenTransition = {
-//   topScreenFrame: (event, screenSize) => {
-//     'worklet';
-//     const progress = event.translationX / screenSize.width;
-//     return {
-//       transform: [
-//         { translateX: event.translationX },
-//         { rotate: 20 * progress + 'deg' }
-//       ]
-//     };
-//   },
-//   belowTopScreenFrame: (event, screenSize) => {
-//     'worklet';
-//     const progress = event.translationX / screenSize.width;
-//     return {
-//       transform: [
-//         { scale: 0.7 + 0.3 * progress },
-//       ]
-//     };
-//   },
-// }
+const customTransition: AnimatedScreenTransition = {
+  topScreenFrame: (event, screenSize) => {
+    'worklet';
+    const progress = event.translationX / screenSize.width;
+    return {
+      transform: [
+        { translateX: event.translationX },
+        { rotate: 20 * progress + 'deg' },
+      ],
+    };
+  },
+  belowTopScreenFrame: (event, screenSize) => {
+    'worklet';
+    const progress = event.translationX / screenSize.width;
+    return {
+      transform: [{ scale: 0.7 + 0.3 * progress }],
+    };
+  },
+};
 
 const App = (): JSX.Element => (
   <GestureDetectorProvider>
@@ -65,12 +66,16 @@ const App = (): JSX.Element => (
         name="ScreenB"
         component={ScreenB}
         options={{
-          goBackGesture: 'swipeRight',
-          // transitionAnimation: ScreenTransition.SwipeRightFade,
-          // transitionAnimation: customTransition,
+          transitionAnimation: customTransition,
         }}
       />
-      <Stack.Screen name="ScreenC" component={ScreenC} />
+      <Stack.Screen
+        name="ScreenC"
+        component={ScreenC}
+        options={{
+          transitionAnimation: ScreenTransition.SwipeRightFade,
+        }}
+      />
     </Stack.Navigator>
   </GestureDetectorProvider>
 );
