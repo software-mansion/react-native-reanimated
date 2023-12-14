@@ -247,11 +247,13 @@ function fixElementPosition(
 ) {
   const parentRect = parent.getBoundingClientRect();
 
-  const parentBorderTop = getComputedStyle(parent).borderTopWidth;
-  const parentBorderTopValue = parseInt(parentBorderTop.replace('px', ''));
+  const parentBorderTopValue = parseInt(
+    getComputedStyle(parent).borderTopWidth
+  );
 
-  const parentBorderLeft = getComputedStyle(parent).borderLeftWidth;
-  const parentBorderLeftValue = parseInt(parentBorderLeft.replace('px', ''));
+  const parentBorderLeftValue = parseInt(
+    getComputedStyle(parent).borderLeftWidth
+  );
 
   const dummyRect = element.getBoundingClientRect();
   // getBoundingClientRect returns DOMRect with position of the element with respect to document body.
