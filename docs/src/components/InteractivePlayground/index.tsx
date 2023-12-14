@@ -122,29 +122,6 @@ const RangeStyling = {
   },
 };
 
-const YellowRangeStyling = {
-  // Used to highlight connection between the slider and given UI element
-  color: 'var(--swm-yellow-light-100)',
-  '& .MuiSlider-thumb': {
-    backgroundColor: 'var(--swm-yellow-light-100)',
-  },
-  '& .MuiSlider-rail': {
-    color: 'var(--swm-interactive-slider-rail)',
-    opacity: 1,
-  },
-};
-
-const GreenRangeStyling = {
-  color: 'var(--swm-green-dark-100)', // Used to highlight connection between the slider and given UI element
-  '& .MuiSlider-thumb': {
-    backgroundColor: 'var(--swm-green-dark-100)',
-  },
-  '& .MuiSlider-rail': {
-    color: 'var(--swm-interactive-slider-rail)',
-    opacity: 1,
-  },
-};
-
 const TextFieldStyling = {
   minWidth: 88,
   '& .MuiInputBase-input': {
@@ -206,13 +183,6 @@ export function DoubleRange({
   step = 1,
   color,
 }: DoubleRangeProps) {
-  const styling =
-    color === undefined
-      ? RangeStyling
-      : color === 'yellow'
-      ? YellowRangeStyling
-      : GreenRangeStyling;
-
   return (
     <>
       <div className={styles.row}>
@@ -246,7 +216,7 @@ export function DoubleRange({
         max={max}
         step={step}
         value={value}
-        sx={styling}
+        sx={RangeStyling}
         onChange={(e: Event & { target: HTMLInputElement }) => {
           onChange[0](parseFloat(e.target.value[0]));
           onChange[1](parseFloat(e.target.value[1]));
