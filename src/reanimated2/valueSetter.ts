@@ -60,7 +60,10 @@ export function valueSetter<Value>(
       const finished = animation.onFrame(animation, timestamp);
       animation.finished = true;
       animation.timestamp = timestamp;
-      mutable._value = animation.current;
+      // TODO TYPESCRIPT
+      // For now I'll assume that `animation.current` is always defined
+      // but actually need to dive into animations to understand it
+      mutable._value = animation.current!;
       if (finished) {
         animation.callback && animation.callback(true /* finished */);
       } else {
