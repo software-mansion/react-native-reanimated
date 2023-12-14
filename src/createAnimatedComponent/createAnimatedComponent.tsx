@@ -60,6 +60,10 @@ import type { FlatList, FlatListProps } from 'react-native';
 const IS_WEB = isWeb();
 const IS_FABRIC = isFabric();
 
+if (IS_WEB) {
+  configureWebLayoutAnimations();
+}
+
 function onlyAnimatedStyles(styles: StyleProps[]): StyleProps[] {
   return styles.filter((style) => style?.viewDescriptors);
 }
@@ -87,15 +91,7 @@ type Options<P> = {
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent
  */
 
-/**
- * @deprecated Please use `Animated.FlatList` component instead of calling `Animated.createAnimatedComponent(FlatList)` manually.
- */
-// @ts-ignore This is required to create this overload, since type of createAnimatedComponent is incorrect and doesn't include typeof FlatList
-export function createAnimatedComponent(
-  component: typeof FlatList<unknown>,
-  options?: Options<any>
-): ComponentClass<AnimateProps<FlatListProps<unknown>>>;
-
+// Don't change the order of overloads, since such a change breaks current behavior
 export function createAnimatedComponent<P extends object>(
   component: FunctionComponent<P>,
   options?: Options<P>
@@ -105,6 +101,22 @@ export function createAnimatedComponent<P extends object>(
   component: ComponentClass<P>,
   options?: Options<P>
 ): ComponentClass<AnimateProps<P>>;
+
+export function createAnimatedComponent<P extends object>(
+  // Actually ComponentType<P = {}> = ComponentClass<P> | FunctionComponent<P> but we need this overload too
+  // since some external components (like FastImage) are typed just as ComponentType
+  component: ComponentType<P>,
+  options?: Options<P>
+): FunctionComponent<AnimateProps<P>> | ComponentClass<AnimateProps<P>>;
+
+/**
+ * @deprecated Please use `Animated.FlatList` component instead of calling `Animated.createAnimatedComponent(FlatList)` manually.
+ */
+// @ts-ignore This is required to create this overload, since type of createAnimatedComponent is incorrect and doesn't include typeof FlatList
+export function createAnimatedComponent(
+  component: typeof FlatList<unknown>,
+  options?: Options<any>
+): ComponentClass<AnimateProps<FlatListProps<unknown>>>;
 
 export function createAnimatedComponent(
   Component: ComponentType<InitialComponentProps>,
@@ -149,8 +161,6 @@ export function createAnimatedComponent(
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
       if (IS_WEB) {
-        configureWebLayoutAnimations();
-
         if (this.props.exiting) {
           saveSnapshot(this._component as HTMLElement);
         }
