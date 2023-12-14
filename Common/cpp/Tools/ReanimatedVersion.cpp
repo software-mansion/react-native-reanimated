@@ -26,9 +26,9 @@ void injectReanimatedVersion(jsi::Runtime &rnRuntime) {
       jsi::String::createFromUtf8(rnRuntime, version));
 }
 
+#ifndef NDEBUG
 // This function is pretty much a copy of
 // `src/reanimated2/platform-specific/checkVersion.ts`.
-#ifndef NDEBUG
 bool matchVersion(const std::string &version1, const std::string &version2) {
   std::regex pattern("^\\d+\\.\\d+\\.\\d+$");
   if (std::regex_match(version1, pattern) &&
@@ -76,6 +76,16 @@ void checkJSVersion(
         "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-c-code-version-and-javascript-code-version` for more details.");
     return;
   }
+}
+#else // NDEBUG
+void checkJSVersion(
+    jsi::Runtime &rnRuntime,
+    const std::shared_ptr<JSLogger> &jsLogger) {
+  // NOOP
+}
+
+bool matchVersion(const std::string &version1, const std::string &version2) {
+  return true;
 }
 #endif // NDEBUG
 
