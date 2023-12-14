@@ -18,6 +18,14 @@ std::string getReanimatedCppVersion() {
   return std::string(REANIMATED_VERSION_STRING);
 }
 
+void injectReanimatedVersion(jsi::Runtime &rnRuntime) {
+  auto version = getReanimatedCppVersion();
+  rnRuntime.global().setProperty(
+      rnRuntime,
+      "_REANIMATED_VERSION_CPP",
+      jsi::String::createFromUtf8(rnRuntime, version));
+}
+
 // This function is pretty much a copy of
 // `src/reanimated2/platform-specific/checkVersion.ts`.
 #ifndef NDEBUG
@@ -68,11 +76,6 @@ void checkJSVersion(
         "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-c-code-version-and-javascript-code-version` for more details.");
     return;
   }
-
-  rnRuntime.global().setProperty(
-      rnRuntime,
-      "_REANIMATED_VERSION_CPP",
-      jsi::String::createFromUtf8(rnRuntime, cppVersion));
 }
 #endif // NDEBUG
 
