@@ -15,7 +15,7 @@ import { jsVersion } from './platform-specific/jsVersion';
 // runnning the code on separate VMs.
 const USE_STUB_IMPLEMENTATION = shouldBeUseWeb();
 
-const _shareableCache = new WeakMap<object, ShareableRef<unknown> | symbol>();
+const _shareableCache = new WeakMap<object, ShareableRef | symbol>();
 // the below symbol is used to represent a mapping from the value to itself
 // this is used to allow for a converted shareable to be passed to makeShareableClone
 const _shareableFlag = Symbol('shareable flag');
@@ -33,7 +33,7 @@ function isHostObject(value: NonNullable<object>) {
 
 export function registerShareableMapping(
   shareable: object,
-  shareableRef?: ShareableRef<unknown>
+  shareableRef?: ShareableRef
 ): void {
   if (USE_STUB_IMPLEMENTATION) {
     return;
