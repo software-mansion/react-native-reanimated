@@ -1,6 +1,6 @@
 'use strict';
 import type { Component } from 'react';
-import type { ShadowNodeWrapper, SharedValue } from '../commonTypes';
+import type { ShadowNodeWrapper } from '../commonTypes';
 import type {
   ImageStyle,
   NativeSyntheticEvent,
