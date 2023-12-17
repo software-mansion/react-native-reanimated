@@ -25,11 +25,6 @@ export interface AnimatedRef<T extends Component> {
     | HTMLElement; // web
 }
 
-export type AnimatedRefOnUI = {
-  viewName: SharedValue<string>;
-  (): number | ShadowNodeWrapper | null;
-};
-
 type ReanimatedPayload = {
   eventName: string;
 };
