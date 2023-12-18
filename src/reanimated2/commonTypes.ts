@@ -37,7 +37,7 @@ export interface Mutable<Value = unknown> extends SharedValue<Value> {
 // check other methods that may use them. However, this field is not actually defined
 // nor should be used for anything else as assigning any data to those objects will
 // throw an error.
-export type ShareableRef<T> = {
+export type ShareableRef<T = unknown> = {
   __hostObjectShareableJSRef: T;
 };
 
