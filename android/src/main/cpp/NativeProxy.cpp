@@ -36,7 +36,8 @@ NativeProxy::NativeProxy(
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    const std::string &valueUnpackerCode
 #ifdef RCT_NEW_ARCH_ENABLED
     ,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
@@ -50,7 +51,8 @@ NativeProxy::NativeProxy(
           jsCallInvoker,
           std::make_shared<JMessageQueueThread>(messageQueueThread),
           uiScheduler,
-          getPlatformDependentMethods())),
+          getPlatformDependentMethods(),
+          valueUnpackerCode)),
       layoutAnimations_(std::move(layoutAnimations)) {
 #ifdef RCT_NEW_ARCH_ENABLED
   const auto &uiManager =
@@ -85,7 +87,8 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
         jsCallInvokerHolder,
     jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
     jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    const std::string &valueUnpackerCode
 #ifdef RCT_NEW_ARCH_ENABLED
     ,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
@@ -100,7 +103,8 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       jsCallInvoker,
       uiScheduler,
       make_global(layoutAnimations),
-      messageQueueThread
+      messageQueueThread,
+      valueUnpackerCode
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
       fabricUIManager
