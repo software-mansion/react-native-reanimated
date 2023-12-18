@@ -288,8 +288,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       maybeFlushUIUpdatesQueueFunction,
   };
 
-  auto nativeReanimatedModule =
-      std::make_shared<NativeReanimatedModule>(rnRuntime, jsInvoker, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode);
+  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
+      rnRuntime, jsInvoker, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode);
 
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler

@@ -166,7 +166,11 @@ jsi::Value NativeReanimatedModule::createWorkletRuntime(
     const jsi::Value &name,
     const jsi::Value &initializer) {
   auto workletRuntime = std::make_shared<WorkletRuntime>(
-      rt, jsQueue_, jsScheduler_, name.asString(rt).utf8(rt), valueUnpackerCode_);
+      rt,
+      jsQueue_,
+      jsScheduler_,
+      name.asString(rt).utf8(rt),
+      valueUnpackerCode_);
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Reanimated] Initializer must be a worklet.");
   workletRuntime->runGuarded(initializerShareable);
