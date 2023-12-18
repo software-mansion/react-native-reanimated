@@ -155,13 +155,11 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
       jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-      const std::string &valueUnpackerCode
 #ifdef RCT_NEW_ARCH_ENABLED
-      ,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager
+          fabricUIManager,
 #endif
-      /**/);
+      const std::string &valueUnpackerCode);
   static void registerNatives();
 
   ~NativeProxy();
@@ -268,13 +266,11 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       const std::shared_ptr<UIScheduler> &uiScheduler,
       jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-      const std::string &valueUnpackerCode
 #ifdef RCT_NEW_ARCH_ENABLED
-      ,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager
+          fabricUIManager,
 #endif
-      /**/);
+      const std::string &valueUnpackerCode);
 };
 
 } // namespace reanimated

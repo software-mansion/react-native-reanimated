@@ -39,8 +39,8 @@ public class NativeProxy extends NativeProxyCommon {
                         mAndroidUIScheduler,
                         LayoutAnimations,
                         messageQueueThread,
-                        valueUnpackerCode,
-                        fabricUIManager);
+                        fabricUIManager,
+                        valueUnpackerCode);
         prepareLayoutAnimations(LayoutAnimations);
         installJSIBindings();
         if (BuildConfig.DEBUG) {
@@ -54,8 +54,8 @@ public class NativeProxy extends NativeProxyCommon {
             AndroidUIScheduler androidUIScheduler,
             LayoutAnimations LayoutAnimations,
             MessageQueueThread messageQueueThread,
-            String valueUnpackerCode,
-            FabricUIManager fabricUIManager);
+            FabricUIManager fabricUIManager,
+            String valueUnpackerCode);
 
     public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 
