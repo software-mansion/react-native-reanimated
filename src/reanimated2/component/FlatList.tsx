@@ -26,6 +26,7 @@ const createCellRendererComponent = (
   itemLayoutAnimation?: ILayoutAnimationBuilder
 ) => {
   const CellRendererComponent = (props: CellRendererComponentProps) => {
+    console.log(props.style);
     return (
       <AnimatedView
         // TODO TYPESCRIPT This is temporary cast is to get rid of .d.ts file.
@@ -42,9 +43,6 @@ const createCellRendererComponent = (
 
 interface ReanimatedFlatListPropsWithLayout<T>
   extends AnimatedProps<FlatListProps<T>> {
-  /**
-   * Lets you pass layout animation directly to the FlatList item.
-   */
   itemLayoutAnimation?: ILayoutAnimationBuilder;
   /**
    * Lets you skip entering and exiting animations of FlatList items when on FlatList mount or unmount.
