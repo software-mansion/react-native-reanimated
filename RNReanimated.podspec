@@ -64,6 +64,51 @@ def self.install_modules_dependencies_legacy(s)
 end
 
 Pod::Spec.new do |s|
+  
+  s.name         = "RNReanimated"
+  s.version      = reanimated_package_json["version"]
+  s.summary      = reanimated_package_json["description"]
+  s.description  = <<-DESC
+                  RNReanimated
+                   DESC
+  s.homepage     = "https://github.com/software-mansion/react-native-reanimated"
+  s.license      = "MIT"
+  s.author       = { "author" => "author@domain.cn" }
+  s.platforms    = { :ios => ios_min_version, :tvos => "9.0", :osx => "10.14" }
+  s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
+
+  s.source_files = [
+    "apple/**/*.{mm,h,m}",
+    "Common/cpp/**/*.{cpp,h}"
+  ]
+
+  s.preserve_paths = [
+    "Common/cpp/hidden_headers/**"
+  ]
+
+  s.pod_target_xcconfig = {
+    "USE_HEADERMAP" => "YES",
+    "DEFINES_MODULE" => "YES",
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_TARGET_SRCROOT)\" \"$(PODS_ROOT)/RCT-Folly\" \"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\" \"$(PODS_ROOT)/Headers/Private/Yoga\"",
+    "FRAMEWORK_SEARCH_PATHS" => "\"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes\"",
+    "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
+    "GCC_PREPROCESSOR_DEFINITIONS[config=Release]" => "$(inherited) NDEBUG=1",
+  }
+  s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags + ' -DHERMES_ENABLE_DEBUGGER'
+  s.xcconfig = {
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/RCT-Folly\" \"$(PODS_ROOT)/Headers/Public/React-hermes\" \"$(PODS_ROOT)/Headers/Public/hermes-engine\" \"$(PODS_ROOT)/#{$config[:react_native_common_dir]}\"",
+    "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags + " " + fabric_flags + " " + example_flag + " " + version_flag + " " + debug_flag
+  }
+  s.requires_arc = true
+  s.dependency "ReactCommon/turbomodule/core"
+  if defined?(install_modules_dependencies()) != nil
+    install_modules_dependencies(s)
+  else
+    install_modules_dependencies_legacy(s)
+  end
+end
+
+Pod::Spec.new do |s|
 
   s.name         = "RNReanimated"
   s.version      = reanimated_package_json["version"]
