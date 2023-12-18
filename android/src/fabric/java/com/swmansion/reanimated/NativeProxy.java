@@ -54,6 +54,7 @@ public class NativeProxy extends NativeProxyCommon {
             AndroidUIScheduler androidUIScheduler,
             LayoutAnimations LayoutAnimations,
             MessageQueueThread messageQueueThread,
+            String valueUnpackerCode,
             FabricUIManager fabricUIManager);
 
     public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
