@@ -1,10 +1,12 @@
-import { SharedValue } from './commonTypes';
+'use strict';
+import type { SharedValue } from './commonTypes';
 import { isJest } from './PlatformChecker';
 import { runOnUI } from './threads';
+import { isSharedValue } from './isSharedValue';
 
 const IS_JEST = isJest();
 
-export type Mapper = {
+type Mapper = {
   id: number;
   dirty: boolean;
   worklet: () => void;
@@ -12,12 +14,13 @@ export type Mapper = {
   outputs?: SharedValue<any>[];
 };
 
-export function createMapperRegistry() {
+function createMapperRegistry() {
   'worklet';
   const mappers = new Map();
   let sortedMappers: Mapper[] = [];
 
   let runRequested = false;
+  let processingMappers = false;
 
   function updateMappersOrder() {
     // sort mappers topologically
@@ -79,14 +82,22 @@ export function createMapperRegistry() {
 
   function mapperRun() {
     runRequested = false;
-    if (mappers.size !== sortedMappers.length) {
-      updateMappersOrder();
+    if (processingMappers) {
+      return;
     }
-    for (const mapper of sortedMappers) {
-      if (mapper.dirty) {
-        mapper.dirty = false;
-        mapper.worklet();
+    try {
+      processingMappers = true;
+      if (mappers.size !== sortedMappers.length) {
+        updateMappersOrder();
       }
+      for (const mapper of sortedMappers) {
+        if (mapper.dirty) {
+          mapper.dirty = false;
+          mapper.worklet();
+        }
+      }
+    } finally {
+      processingMappers = false;
     }
   }
 
@@ -100,7 +111,22 @@ export function createMapperRegistry() {
       // if they want to make any assertions on the effects of animations being run.
       mapperRun();
     } else if (!runRequested) {
-      queueMicrotask(mapperRun);
+      if (processingMappers) {
+        // In general, we should avoid having mappers trigger updates as this may
+        // result in unpredictable behavior. Specifically, the updated value can
+        // be read by mappers that run later in the same frame but previous mappers
+        // would access the old value. Updating mappers during the mapper-run phase
+        // breaks the order in which we should execute the mappers. However, doing
+        // that is still a possibility and there are some instances where people use
+        // the API in that way, hence we need to prevent mapper-run phase falling into
+        // an infinite loop. We do that by detecting when mapper-run is requested while
+        // we are already in mapper-run phase, and in that case we use `requestAnimationFrame`
+        // instead of `queueMicrotask` which will schedule mapper run for the next
+        // frame instead of queuing another set of updates in the same frame.
+        requestAnimationFrame(mapperRun);
+      } else {
+        queueMicrotask(mapperRun);
+      }
       runRequested = true;
     }
   }
@@ -113,7 +139,7 @@ export function createMapperRegistry() {
       for (const input of inputs) {
         input && extractInputs(input, resultArray);
       }
-    } else if (inputs.addListener) {
+    } else if (isSharedValue(inputs)) {
       resultArray.push(inputs);
     } else if (Object.getPrototypeOf(inputs) === Object.prototype) {
       // we only extract inputs recursively from "plain" objects here, if object
@@ -173,7 +199,6 @@ export function startMapper(
   const mapperID = (MAPPER_ID += 1);
 
   runOnUI(() => {
-    'worklet';
     let mapperRegistry = global.__mapperRegistry;
     if (mapperRegistry === undefined) {
       mapperRegistry = global.__mapperRegistry = createMapperRegistry();
@@ -186,7 +211,6 @@ export function startMapper(
 
 export function stopMapper(mapperID: number): void {
   runOnUI(() => {
-    'worklet';
     const mapperRegistry = global.__mapperRegistry;
     mapperRegistry?.stop(mapperID);
   })();

@@ -9,45 +9,22 @@
 #endif
 
 #include <cxxreact/MessageQueueThread.h>
-#include <jsi/decorator.h>
 #include <jsi/jsi.h>
 
 #include <memory>
-#include <utility>
+#include <string>
 
 namespace reanimated {
 
 using namespace facebook;
 using namespace react;
 
-struct AroundLock {
-  std::recursive_mutex mutex;
-  void before() {
-    mutex.lock();
-  }
-  void after() {
-    mutex.unlock();
-  }
-  std::unique_lock<std::recursive_mutex> lock() {
-    return std::unique_lock<std::recursive_mutex>(mutex);
-  }
-};
-
-class ReanimatedRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
- private:
-  AroundLock aroundLock_;
-  std::shared_ptr<jsi::Runtime> runtime_;
-
+class ReanimatedRuntime {
  public:
-  explicit ReanimatedRuntime(std::shared_ptr<jsi::Runtime> &&runtime)
-      : jsi::WithRuntimeDecorator<AroundLock>(*runtime, aroundLock_),
-        runtime_(std::move(runtime)) {}
-  std::unique_lock<std::recursive_mutex> lock() {
-    return aroundLock_.lock();
-  }
-  static std::shared_ptr<ReanimatedRuntime> make(
-      jsi::Runtime *rnRuntime,
-      const std::shared_ptr<MessageQueueThread> &jsQueue);
+  static std::shared_ptr<jsi::Runtime> make(
+      jsi::Runtime &rnRuntime,
+      const std::shared_ptr<MessageQueueThread> &jsQueue,
+      const std::string &name);
 };
 
 } // namespace reanimated

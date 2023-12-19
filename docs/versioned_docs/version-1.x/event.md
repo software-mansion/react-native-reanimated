@@ -6,15 +6,15 @@ sidebar_label: Event handling
 
 `react-native-reanimated`'s new syntax is possible to be used with `Animated.event`. Instead of providing only a mapping from event fields to animated nodes, it is allowed to write a function that takes reanimated values map as an input and return a block (or any other reanimated function) that will be then used to handle the event.
 
-This syntax allows for providing some post-processing for the event data that does not fit well as a dependency of other nodes we connect to `Animated.View` component props. [See example](https://github.com/software-mansion/react-native-reanimated/blob/main/Example/reanimated1/PanRotateAndZoom/index.js#L25)
+This syntax allows for providing some post-processing for the event data that does not fit well as a dependency of other nodes we connect to `Animated.View` component props. [See example](https://github.com/software-mansion/react-native-reanimated/blob/Reanimated2/Example/reanimated1/PanRotateAndZoom/index.js#L25)
 
 ```js
-import { event, set } from 'react-native-reanimated'
+import { event, set } from 'react-native-reanimated';
 
 this.onGestureEvent = event([
   {
     nativeEvent: {
-      translationX: x => set(this._x, x),
+      translationX: (x) => set(this._x, x),
     },
   },
 ]);

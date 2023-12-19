@@ -1,4 +1,4 @@
-/* global _WORKLET */
+'use strict';
 /**
  * Copied from:
  * react-native/Libraries/StyleSheet/normalizeColor.js
@@ -7,8 +7,9 @@
  */
 
 /* eslint no-bitwise: 0 */
-import { Platform } from 'react-native';
-import { makeRemote, makeShareable, isConfigured } from './core';
+import type { StyleProps } from './commonTypes';
+import { makeShareable } from './core';
+import { isAndroid, isWeb } from './PlatformChecker';
 
 interface RGB {
   r: number;
@@ -31,50 +32,16 @@ function call(...args: unknown[]): string {
   return '\\(\\s*(' + args.join(')\\s*,\\s*(') + ')\\s*\\)';
 }
 
-// matchers use RegExp objects which needs to be created separately on JS and on
-// the UI thread. We keep separate cache of Regexes for UI and JS using the below
-// objects, then pick the right cache in getMatchers() method.
-const jsCachedMatchers: Matchers = {};
-const uiCachedMatchers: Matchers = !isConfigured() ? {} : makeRemote({});
-type Matchers = {
-  rgb?: RegExp;
-  rgba?: RegExp;
-  hsl?: RegExp;
-  hsla?: RegExp;
-  hex3?: RegExp;
-  hex4?: RegExp;
-  hex5?: RegExp;
-  hex6?: RegExp;
-  hex8?: RegExp;
+const MATCHERS = {
+  rgb: new RegExp('rgb' + call(NUMBER, NUMBER, NUMBER)),
+  rgba: new RegExp('rgba' + call(NUMBER, NUMBER, NUMBER, NUMBER)),
+  hsl: new RegExp('hsl' + call(NUMBER, PERCENTAGE, PERCENTAGE)),
+  hsla: new RegExp('hsla' + call(NUMBER, PERCENTAGE, PERCENTAGE, NUMBER)),
+  hex3: /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/,
+  hex4: /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/,
+  hex6: /^#([0-9a-fA-F]{6})$/,
+  hex8: /^#([0-9a-fA-F]{8})$/,
 };
-function getMatchers(): Matchers {
-  'worklet';
-  const cachedMatchers: Matchers = _WORKLET
-    ? uiCachedMatchers
-    : jsCachedMatchers;
-  if (cachedMatchers.rgb === undefined) {
-    cachedMatchers.rgb = new RegExp('rgb' + call(NUMBER, NUMBER, NUMBER));
-    cachedMatchers.rgba = new RegExp(
-      'rgba' + call(NUMBER, NUMBER, NUMBER, NUMBER)
-    );
-    cachedMatchers.hsl = new RegExp(
-      'hsl' + call(NUMBER, PERCENTAGE, PERCENTAGE)
-    );
-    cachedMatchers.hsla = new RegExp(
-      'hsla' + call(NUMBER, PERCENTAGE, PERCENTAGE, NUMBER)
-    );
-    cachedMatchers.hex3 = /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/;
-    cachedMatchers.hex4 =
-      /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/;
-    cachedMatchers.hex6 = /^#([0-9a-fA-F]{6})$/;
-    cachedMatchers.hex8 = /^#([0-9a-fA-F]{8})$/;
-  }
-  return cachedMatchers;
-}
-// cachedMatchers is lazy loaded and it is frozen when worklet is being created,
-// it is possible to call getMatchers() when the object is frozen, then cachedMatchers
-// has no assigned regexes
-getMatchers();
 
 function hue2rgb(p: number, q: number, t: number): number {
   'worklet';
@@ -154,162 +121,181 @@ function parsePercentage(str: string): number {
   return int / 100;
 }
 
-const names: any = !isConfigured()
-  ? null
-  : makeShareable({
-      transparent: 0x00000000,
+const names: Record<string, number> = makeShareable({
+  transparent: 0x00000000,
 
-      // http://www.w3.org/TR/css3-color/#svg-color
-      aliceblue: 0xf0f8ffff,
-      antiquewhite: 0xfaebd7ff,
-      aqua: 0x00ffffff,
-      aquamarine: 0x7fffd4ff,
-      azure: 0xf0ffffff,
-      beige: 0xf5f5dcff,
-      bisque: 0xffe4c4ff,
-      black: 0x000000ff,
-      blanchedalmond: 0xffebcdff,
-      blue: 0x0000ffff,
-      blueviolet: 0x8a2be2ff,
-      brown: 0xa52a2aff,
-      burlywood: 0xdeb887ff,
-      burntsienna: 0xea7e5dff,
-      cadetblue: 0x5f9ea0ff,
-      chartreuse: 0x7fff00ff,
-      chocolate: 0xd2691eff,
-      coral: 0xff7f50ff,
-      cornflowerblue: 0x6495edff,
-      cornsilk: 0xfff8dcff,
-      crimson: 0xdc143cff,
-      cyan: 0x00ffffff,
-      darkblue: 0x00008bff,
-      darkcyan: 0x008b8bff,
-      darkgoldenrod: 0xb8860bff,
-      darkgray: 0xa9a9a9ff,
-      darkgreen: 0x006400ff,
-      darkgrey: 0xa9a9a9ff,
-      darkkhaki: 0xbdb76bff,
-      darkmagenta: 0x8b008bff,
-      darkolivegreen: 0x556b2fff,
-      darkorange: 0xff8c00ff,
-      darkorchid: 0x9932ccff,
-      darkred: 0x8b0000ff,
-      darksalmon: 0xe9967aff,
-      darkseagreen: 0x8fbc8fff,
-      darkslateblue: 0x483d8bff,
-      darkslategray: 0x2f4f4fff,
-      darkslategrey: 0x2f4f4fff,
-      darkturquoise: 0x00ced1ff,
-      darkviolet: 0x9400d3ff,
-      deeppink: 0xff1493ff,
-      deepskyblue: 0x00bfffff,
-      dimgray: 0x696969ff,
-      dimgrey: 0x696969ff,
-      dodgerblue: 0x1e90ffff,
-      firebrick: 0xb22222ff,
-      floralwhite: 0xfffaf0ff,
-      forestgreen: 0x228b22ff,
-      fuchsia: 0xff00ffff,
-      gainsboro: 0xdcdcdcff,
-      ghostwhite: 0xf8f8ffff,
-      gold: 0xffd700ff,
-      goldenrod: 0xdaa520ff,
-      gray: 0x808080ff,
-      green: 0x008000ff,
-      greenyellow: 0xadff2fff,
-      grey: 0x808080ff,
-      honeydew: 0xf0fff0ff,
-      hotpink: 0xff69b4ff,
-      indianred: 0xcd5c5cff,
-      indigo: 0x4b0082ff,
-      ivory: 0xfffff0ff,
-      khaki: 0xf0e68cff,
-      lavender: 0xe6e6faff,
-      lavenderblush: 0xfff0f5ff,
-      lawngreen: 0x7cfc00ff,
-      lemonchiffon: 0xfffacdff,
-      lightblue: 0xadd8e6ff,
-      lightcoral: 0xf08080ff,
-      lightcyan: 0xe0ffffff,
-      lightgoldenrodyellow: 0xfafad2ff,
-      lightgray: 0xd3d3d3ff,
-      lightgreen: 0x90ee90ff,
-      lightgrey: 0xd3d3d3ff,
-      lightpink: 0xffb6c1ff,
-      lightsalmon: 0xffa07aff,
-      lightseagreen: 0x20b2aaff,
-      lightskyblue: 0x87cefaff,
-      lightslategray: 0x778899ff,
-      lightslategrey: 0x778899ff,
-      lightsteelblue: 0xb0c4deff,
-      lightyellow: 0xffffe0ff,
-      lime: 0x00ff00ff,
-      limegreen: 0x32cd32ff,
-      linen: 0xfaf0e6ff,
-      magenta: 0xff00ffff,
-      maroon: 0x800000ff,
-      mediumaquamarine: 0x66cdaaff,
-      mediumblue: 0x0000cdff,
-      mediumorchid: 0xba55d3ff,
-      mediumpurple: 0x9370dbff,
-      mediumseagreen: 0x3cb371ff,
-      mediumslateblue: 0x7b68eeff,
-      mediumspringgreen: 0x00fa9aff,
-      mediumturquoise: 0x48d1ccff,
-      mediumvioletred: 0xc71585ff,
-      midnightblue: 0x191970ff,
-      mintcream: 0xf5fffaff,
-      mistyrose: 0xffe4e1ff,
-      moccasin: 0xffe4b5ff,
-      navajowhite: 0xffdeadff,
-      navy: 0x000080ff,
-      oldlace: 0xfdf5e6ff,
-      olive: 0x808000ff,
-      olivedrab: 0x6b8e23ff,
-      orange: 0xffa500ff,
-      orangered: 0xff4500ff,
-      orchid: 0xda70d6ff,
-      palegoldenrod: 0xeee8aaff,
-      palegreen: 0x98fb98ff,
-      paleturquoise: 0xafeeeeff,
-      palevioletred: 0xdb7093ff,
-      papayawhip: 0xffefd5ff,
-      peachpuff: 0xffdab9ff,
-      peru: 0xcd853fff,
-      pink: 0xffc0cbff,
-      plum: 0xdda0ddff,
-      powderblue: 0xb0e0e6ff,
-      purple: 0x800080ff,
-      rebeccapurple: 0x663399ff,
-      red: 0xff0000ff,
-      rosybrown: 0xbc8f8fff,
-      royalblue: 0x4169e1ff,
-      saddlebrown: 0x8b4513ff,
-      salmon: 0xfa8072ff,
-      sandybrown: 0xf4a460ff,
-      seagreen: 0x2e8b57ff,
-      seashell: 0xfff5eeff,
-      sienna: 0xa0522dff,
-      silver: 0xc0c0c0ff,
-      skyblue: 0x87ceebff,
-      slateblue: 0x6a5acdff,
-      slategray: 0x708090ff,
-      slategrey: 0x708090ff,
-      snow: 0xfffafaff,
-      springgreen: 0x00ff7fff,
-      steelblue: 0x4682b4ff,
-      tan: 0xd2b48cff,
-      teal: 0x008080ff,
-      thistle: 0xd8bfd8ff,
-      tomato: 0xff6347ff,
-      turquoise: 0x40e0d0ff,
-      violet: 0xee82eeff,
-      wheat: 0xf5deb3ff,
-      white: 0xffffffff,
-      whitesmoke: 0xf5f5f5ff,
-      yellow: 0xffff00ff,
-      yellowgreen: 0x9acd32ff,
-    });
+  // http://www.w3.org/TR/css3-color/#svg-color
+  aliceblue: 0xf0f8ffff,
+  antiquewhite: 0xfaebd7ff,
+  aqua: 0x00ffffff,
+  aquamarine: 0x7fffd4ff,
+  azure: 0xf0ffffff,
+  beige: 0xf5f5dcff,
+  bisque: 0xffe4c4ff,
+  black: 0x000000ff,
+  blanchedalmond: 0xffebcdff,
+  blue: 0x0000ffff,
+  blueviolet: 0x8a2be2ff,
+  brown: 0xa52a2aff,
+  burlywood: 0xdeb887ff,
+  burntsienna: 0xea7e5dff,
+  cadetblue: 0x5f9ea0ff,
+  chartreuse: 0x7fff00ff,
+  chocolate: 0xd2691eff,
+  coral: 0xff7f50ff,
+  cornflowerblue: 0x6495edff,
+  cornsilk: 0xfff8dcff,
+  crimson: 0xdc143cff,
+  cyan: 0x00ffffff,
+  darkblue: 0x00008bff,
+  darkcyan: 0x008b8bff,
+  darkgoldenrod: 0xb8860bff,
+  darkgray: 0xa9a9a9ff,
+  darkgreen: 0x006400ff,
+  darkgrey: 0xa9a9a9ff,
+  darkkhaki: 0xbdb76bff,
+  darkmagenta: 0x8b008bff,
+  darkolivegreen: 0x556b2fff,
+  darkorange: 0xff8c00ff,
+  darkorchid: 0x9932ccff,
+  darkred: 0x8b0000ff,
+  darksalmon: 0xe9967aff,
+  darkseagreen: 0x8fbc8fff,
+  darkslateblue: 0x483d8bff,
+  darkslategray: 0x2f4f4fff,
+  darkslategrey: 0x2f4f4fff,
+  darkturquoise: 0x00ced1ff,
+  darkviolet: 0x9400d3ff,
+  deeppink: 0xff1493ff,
+  deepskyblue: 0x00bfffff,
+  dimgray: 0x696969ff,
+  dimgrey: 0x696969ff,
+  dodgerblue: 0x1e90ffff,
+  firebrick: 0xb22222ff,
+  floralwhite: 0xfffaf0ff,
+  forestgreen: 0x228b22ff,
+  fuchsia: 0xff00ffff,
+  gainsboro: 0xdcdcdcff,
+  ghostwhite: 0xf8f8ffff,
+  gold: 0xffd700ff,
+  goldenrod: 0xdaa520ff,
+  gray: 0x808080ff,
+  green: 0x008000ff,
+  greenyellow: 0xadff2fff,
+  grey: 0x808080ff,
+  honeydew: 0xf0fff0ff,
+  hotpink: 0xff69b4ff,
+  indianred: 0xcd5c5cff,
+  indigo: 0x4b0082ff,
+  ivory: 0xfffff0ff,
+  khaki: 0xf0e68cff,
+  lavender: 0xe6e6faff,
+  lavenderblush: 0xfff0f5ff,
+  lawngreen: 0x7cfc00ff,
+  lemonchiffon: 0xfffacdff,
+  lightblue: 0xadd8e6ff,
+  lightcoral: 0xf08080ff,
+  lightcyan: 0xe0ffffff,
+  lightgoldenrodyellow: 0xfafad2ff,
+  lightgray: 0xd3d3d3ff,
+  lightgreen: 0x90ee90ff,
+  lightgrey: 0xd3d3d3ff,
+  lightpink: 0xffb6c1ff,
+  lightsalmon: 0xffa07aff,
+  lightseagreen: 0x20b2aaff,
+  lightskyblue: 0x87cefaff,
+  lightslategray: 0x778899ff,
+  lightslategrey: 0x778899ff,
+  lightsteelblue: 0xb0c4deff,
+  lightyellow: 0xffffe0ff,
+  lime: 0x00ff00ff,
+  limegreen: 0x32cd32ff,
+  linen: 0xfaf0e6ff,
+  magenta: 0xff00ffff,
+  maroon: 0x800000ff,
+  mediumaquamarine: 0x66cdaaff,
+  mediumblue: 0x0000cdff,
+  mediumorchid: 0xba55d3ff,
+  mediumpurple: 0x9370dbff,
+  mediumseagreen: 0x3cb371ff,
+  mediumslateblue: 0x7b68eeff,
+  mediumspringgreen: 0x00fa9aff,
+  mediumturquoise: 0x48d1ccff,
+  mediumvioletred: 0xc71585ff,
+  midnightblue: 0x191970ff,
+  mintcream: 0xf5fffaff,
+  mistyrose: 0xffe4e1ff,
+  moccasin: 0xffe4b5ff,
+  navajowhite: 0xffdeadff,
+  navy: 0x000080ff,
+  oldlace: 0xfdf5e6ff,
+  olive: 0x808000ff,
+  olivedrab: 0x6b8e23ff,
+  orange: 0xffa500ff,
+  orangered: 0xff4500ff,
+  orchid: 0xda70d6ff,
+  palegoldenrod: 0xeee8aaff,
+  palegreen: 0x98fb98ff,
+  paleturquoise: 0xafeeeeff,
+  palevioletred: 0xdb7093ff,
+  papayawhip: 0xffefd5ff,
+  peachpuff: 0xffdab9ff,
+  peru: 0xcd853fff,
+  pink: 0xffc0cbff,
+  plum: 0xdda0ddff,
+  powderblue: 0xb0e0e6ff,
+  purple: 0x800080ff,
+  rebeccapurple: 0x663399ff,
+  red: 0xff0000ff,
+  rosybrown: 0xbc8f8fff,
+  royalblue: 0x4169e1ff,
+  saddlebrown: 0x8b4513ff,
+  salmon: 0xfa8072ff,
+  sandybrown: 0xf4a460ff,
+  seagreen: 0x2e8b57ff,
+  seashell: 0xfff5eeff,
+  sienna: 0xa0522dff,
+  silver: 0xc0c0c0ff,
+  skyblue: 0x87ceebff,
+  slateblue: 0x6a5acdff,
+  slategray: 0x708090ff,
+  slategrey: 0x708090ff,
+  snow: 0xfffafaff,
+  springgreen: 0x00ff7fff,
+  steelblue: 0x4682b4ff,
+  tan: 0xd2b48cff,
+  teal: 0x008080ff,
+  thistle: 0xd8bfd8ff,
+  tomato: 0xff6347ff,
+  turquoise: 0x40e0d0ff,
+  violet: 0xee82eeff,
+  wheat: 0xf5deb3ff,
+  white: 0xffffffff,
+  whitesmoke: 0xf5f5f5ff,
+  yellow: 0xffff00ff,
+  yellowgreen: 0x9acd32ff,
+});
+
+// copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
+export const ColorProperties = makeShareable([
+  'backgroundColor',
+  'borderBottomColor',
+  'borderColor',
+  'borderLeftColor',
+  'borderRightColor',
+  'borderTopColor',
+  'borderStartColor',
+  'borderEndColor',
+  'borderBlockColor',
+  'borderBlockEndColor',
+  'borderBlockStartColor',
+  'color',
+  'shadowColor',
+  'textDecorationColor',
+  'tintColor',
+  'textShadowColor',
+  'overlayColor',
+]);
 
 function normalizeColor(color: unknown): number | null {
   'worklet';
@@ -325,12 +311,10 @@ function normalizeColor(color: unknown): number | null {
     return null;
   }
 
-  const matchers = getMatchers();
-
   let match: RegExpExecArray | null | undefined;
 
   // Ordered based on occurrences on Facebook codebase
-  if ((match = matchers?.hex6?.exec(color))) {
+  if ((match = MATCHERS.hex6.exec(color))) {
     return Number.parseInt(match[1] + 'ff', 16) >>> 0;
   }
 
@@ -338,7 +322,7 @@ function normalizeColor(color: unknown): number | null {
     return names[color];
   }
 
-  if ((match = matchers?.rgb?.exec(color))) {
+  if ((match = MATCHERS.rgb.exec(color))) {
     return (
       // b
       ((parse255(match[1]) << 24) | // r
@@ -349,7 +333,7 @@ function normalizeColor(color: unknown): number | null {
     );
   }
 
-  if ((match = matchers?.rgba?.exec(color))) {
+  if ((match = MATCHERS.rgba.exec(color))) {
     return (
       // b
       ((parse255(match[1]) << 24) | // r
@@ -360,7 +344,7 @@ function normalizeColor(color: unknown): number | null {
     );
   }
 
-  if ((match = matchers?.hex3?.exec(color))) {
+  if ((match = MATCHERS.hex3.exec(color))) {
     return (
       Number.parseInt(
         match[1] +
@@ -376,11 +360,11 @@ function normalizeColor(color: unknown): number | null {
   }
 
   // https://drafts.csswg.org/css-color-4/#hex-notation
-  if ((match = matchers?.hex8?.exec(color))) {
+  if ((match = MATCHERS.hex8.exec(color))) {
     return Number.parseInt(match[1], 16) >>> 0;
   }
 
-  if ((match = matchers?.hex4?.exec(color))) {
+  if ((match = MATCHERS.hex4.exec(color))) {
     return (
       Number.parseInt(
         match[1] +
@@ -396,7 +380,7 @@ function normalizeColor(color: unknown): number | null {
     );
   }
 
-  if ((match = matchers?.hsl?.exec(color))) {
+  if ((match = MATCHERS.hsl.exec(color))) {
     return (
       (hslToRgb(
         parse360(match[1]), // h
@@ -408,7 +392,7 @@ function normalizeColor(color: unknown): number | null {
     );
   }
 
-  if ((match = matchers?.hsla?.exec(color))) {
+  if ((match = MATCHERS.hsla.exec(color))) {
     return (
       (hslToRgb(
         parse360(match[1]), // h
@@ -443,6 +427,9 @@ export const blue = (c: number): number => {
   return c & 255;
 };
 
+const IS_WEB = isWeb();
+const IS_ANDROID = isAndroid();
+
 export const rgbaColor = (
   r: number,
   g: number,
@@ -450,7 +437,7 @@ export const rgbaColor = (
   alpha = 1
 ): number | string => {
   'worklet';
-  if (Platform.OS === 'web' || !_WORKLET) {
+  if (IS_WEB || !_WORKLET) {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
@@ -459,43 +446,32 @@ export const rgbaColor = (
     Math.round(r) * (1 << 16) +
     Math.round(g) * (1 << 8) +
     Math.round(b);
-  if (Platform.OS === 'android') {
+  if (IS_ANDROID) {
     // on Android color is represented as signed 32 bit int
     return c < (1 << 31) >>> 0 ? c : c - 4294967296; // 4294967296 == Math.pow(2, 32);
   }
   return c;
 };
 
-/* accepts parameters
- * r  Object = {r:x, g:y, b:z}
- * OR
- * r, g, b
- * 0 <= r, g, b <= 255
- * returns 0 <= h, s, v <= 1
+/**
+ *
+ * @param r - red value (0-255)
+ * @param g - green value (0-255)
+ * @param b - blue value (0-255)
+ * @returns \{h: hue (0-1), s: saturation (0-1), v: value (0-1)\}
  */
-export function RGBtoHSV(rgb: RGB): HSV;
-export function RGBtoHSV(r: number, g: number, b: number): HSV;
-export function RGBtoHSV(r: any, g?: any, b?: any): HSV {
+export function RGBtoHSV(r: number, g: number, b: number): HSV {
   'worklet';
-  /* eslint-disable */
-  if (arguments.length === 1) {
-    g = r.g;
-    b = r.b;
-    r = r.r;
-  }
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
   const d = max - min;
   const s = max === 0 ? 0 : d / max;
   const v = max / 255;
 
-  let h;
+  let h = 0;
 
   switch (max) {
-    default:
-    /* fallthrough */
     case min:
-      h = 0;
       break;
     case r:
       h = g - b + d * (g < b ? 6 : 0);
@@ -516,50 +492,42 @@ export function RGBtoHSV(r: any, g?: any, b?: any): HSV {
     s: s,
     v: v,
   };
-  /* eslint-enable */
 }
 
-/* accepts parameters
- * h  Object = {h:x, s:y, v:z}
- * OR
- * h, s, v
- * 0 <= h, s, v <= 1
- * returns 0 <= r, g, b <= 255
+/**
+ *
+ * @param h - hue (0-1)
+ * @param s - saturation (0-1)
+ * @param v - value (0-1)
+ * @returns \{r: red (0-255), g: green (0-255), b: blue (0-255)\}
  */
-function HSVtoRGB(hsv: HSV): RGB;
-function HSVtoRGB(h: number, s: number, v: number): RGB;
-function HSVtoRGB(h: any, s?: any, v?: any) {
-  'worklet';
-  /* eslint-disable */
-  var r, g, b, i, f, p, q, t;
-  if (arguments.length === 1) {
-    s = h.s;
-    v = h.v;
-    h = h.h;
-  }
-  i = Math.floor(h * 6);
-  f = h * 6 - i;
-  p = v * (1 - s);
-  q = v * (1 - f * s);
-  t = v * (1 - (1 - f) * s);
-  switch (i % 6) {
+function HSVtoRGB(h: number, s: number, v: number): RGB {
+  ('worklet');
+  let r, g, b;
+
+  const i = Math.floor(h * 6);
+  const f = h * 6 - i;
+  const p = v * (1 - s);
+  const q = v * (1 - f * s);
+  const t = v * (1 - (1 - f) * s);
+  switch ((i % 6) as 0 | 1 | 2 | 3 | 4 | 5) {
     case 0:
-      (r = v), (g = t), (b = p);
+      [r, g, b] = [v, t, p];
       break;
     case 1:
-      (r = q), (g = v), (b = p);
+      [r, g, b] = [q, v, p];
       break;
     case 2:
-      (r = p), (g = v), (b = t);
+      [r, g, b] = [p, v, t];
       break;
     case 3:
-      (r = p), (g = q), (b = v);
+      [r, g, b] = [p, q, v];
       break;
     case 4:
-      (r = t), (g = p), (b = v);
+      [r, g, b] = [t, p, v];
       break;
     case 5:
-      (r = v), (g = p), (b = q);
+      [r, g, b] = [v, p, q];
       break;
   }
   return {
@@ -567,7 +535,6 @@ function HSVtoRGB(h: any, s?: any, v?: any) {
     g: Math.round(g * 255),
     b: Math.round(b * 255),
   };
-  /* eslint-enable */
 }
 
 export const hsvToColor = (
@@ -581,9 +548,7 @@ export const hsvToColor = (
   return rgbaColor(r, g, b, a);
 };
 
-export function processColorInitially(
-  color: unknown
-): number | null | undefined {
+function processColorInitially(color: unknown): number | null | undefined {
   'worklet';
   if (color === null || color === undefined || typeof color === 'number') {
     return color;
@@ -622,7 +587,7 @@ export function processColor(color: unknown): number | null | undefined {
     return null;
   }
 
-  if (Platform.OS === 'android') {
+  if (IS_ANDROID) {
     // Android use 32 bit *signed* integer to represent the color
     // We utilize the fact that bitwise operations in JS also operates on
     // signed 32 bit integers, so that we can use those to convert from
@@ -631,6 +596,15 @@ export function processColor(color: unknown): number | null | undefined {
   }
 
   return normalizedColor;
+}
+
+export function processColorsInProps(props: StyleProps) {
+  'worklet';
+  for (const key in props) {
+    if (ColorProperties.includes(key)) {
+      props[key] = processColor(props[key]);
+    }
+  }
 }
 
 export type ParsedColorArray = [number, number, number, number];

@@ -5,9 +5,13 @@ on:
     paths:
       - '.github/workflows/docs-check.yml'
       - 'docs/**'
+  merge_group:
+    branches:
+      - main
 
 jobs:
   build:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     env:
       WORKING_DIRECTORY: docs
@@ -19,6 +23,9 @@ jobs:
         with:
           node-version: 16
           cache: 'yarn'
+      - name: Clear annotations
+        run: scripts/clear-annotations.sh
+
       - name: Install node dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn

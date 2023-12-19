@@ -4,8 +4,8 @@ import styles from './styles.module.css';
 import clsx from 'clsx';
 
 const BeforeAndAfter = ({ before, after }) => {
-  const [ currentWidth, setCurrentWidth] = useState(null)
-  
+  const [currentWidth, setCurrentWidth] = useState(null);
+
   useEffect(() => {
     function handleResize() {
       const { innerWidth } = window;
@@ -15,7 +15,7 @@ const BeforeAndAfter = ({ before, after }) => {
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [])
+  }, []);
 
   return (
     <div className={clsx(styles.container)}>

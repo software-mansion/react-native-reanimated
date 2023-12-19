@@ -35,11 +35,13 @@ sure you have added it.
 This error usually happens when in your project there exists more than one instance of Reanimated. It can occur when some of your dependency has installed Reanimated inside their own `node_modules` instead of using it as a peer dependency. In this case two different versions of Reanimated JS module try to install the same Native Module. You can resolve this problem manually by modifying your `package.json` file.
 
 You can check which libraries are using Reanimated, for example, with the command:
+
 ```bash
 npm why react-native-reanimated
-``` 
+```
 
 If you use `yarn` you should add [`resolution` property](https://classic.yarnpkg.com/lang/en/docs/selective-version-resolutions/).
+
 ```json
 "resolutions": {
   "react-native-reanimated": <Reanimated version>
@@ -47,6 +49,7 @@ If you use `yarn` you should add [`resolution` property](https://classic.yarnpkg
 ```
 
 If you use `npm` you should add [`overrides` property](https://docs.npmjs.com/cli/v8/configuring-npm/package-json#overrides).
+
 ```json
 "overrides": {
   "react-native-reanimated": <Reanimated version>
@@ -54,10 +57,13 @@ If you use `npm` you should add [`overrides` property](https://docs.npmjs.com/cl
 ```
 
 After that you need to run you package manager again
+
 ```bash
 yarn
 ```
+
 or
+
 ```bash
 npm install
 ```

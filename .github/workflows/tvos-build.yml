@@ -4,16 +4,27 @@ on:
     paths:
       - '.github/workflows/tvos-build.yml'
       - 'RNReanimated.podspec'
-      - 'ios/**'
+      - 'apple/**'
       - 'Common/**'
       - 'TVOSExample/package.json'
       - 'TVOSExample/ios/**'
+  merge_group:
+    branches:
+      - main
   push:
     branches:
       - main
+    paths:
+      - '.github/workflows/tvos-build.yml'
+      - 'RNReanimated.podspec'
+      - 'apple/**'
+      - 'Common/**'
+      - 'TVOSExample/package.json'
+      - 'TVOSExample/ios/**'
 
 jobs:
   build:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: macos-12
     env:
       WORKING_DIRECTORY: TVOSExample

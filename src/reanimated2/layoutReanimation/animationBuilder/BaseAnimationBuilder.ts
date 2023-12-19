@@ -1,50 +1,98 @@
+'use strict';
 import { withDelay } from '../../animation';
-import {
+import type {
   EntryExitAnimationFunction,
   AnimationFunction,
   LayoutAnimationFunction,
 } from './commonTypes';
 
+import { ReduceMotion } from '../../commonTypes';
+import { getReduceMotionFromConfig } from '../../animation/util';
+
 export class BaseAnimationBuilder {
   durationV?: number;
   delayV?: number;
+  reduceMotionV: ReduceMotion = ReduceMotion.System;
   randomizeDelay = false;
   callbackV?: (finished: boolean) => void;
 
-  static createInstance: () => BaseAnimationBuilder;
+  static createInstance: <T extends typeof BaseAnimationBuilder>(
+    this: T
+  ) => InstanceType<T>;
+
   build = (): EntryExitAnimationFunction | LayoutAnimationFunction => {
-    throw Error('Unimplemented method in child class.');
+    throw new Error('[Reanimated] Unimplemented method in child class.');
   };
 
-  static duration(durationMs: number): BaseAnimationBuilder {
+  /**
+   * Lets you adjust the animation duration. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param durationMs - Length of the animation (in milliseconds).
+   */
+  static duration<T extends typeof BaseAnimationBuilder>(
+    this: T,
+    durationMs: number
+  ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.duration(durationMs);
   }
 
-  duration(durationMs: number): BaseAnimationBuilder {
+  duration(durationMs: number): this {
     this.durationV = durationMs;
     return this;
   }
 
-  static delay(delayMs: number): BaseAnimationBuilder {
+  /**
+   * Lets you adjust the delay before the animation starts (in milliseconds). Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param delayMs - Delay before the animation starts (in milliseconds).
+   */
+  static delay<T extends typeof BaseAnimationBuilder>(
+    this: T,
+    delayMs: number
+  ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.delay(delayMs);
   }
 
-  delay(delayMs: number): BaseAnimationBuilder {
+  delay(delayMs: number): this {
     this.delayV = delayMs;
     return this;
   }
 
-  static withCallback(
+  /**
+   * The callback that will fire after the animation ends. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param callback - Callback that will fire after the animation ends.
+   */
+  static withCallback<T extends typeof BaseAnimationBuilder>(
+    this: T,
     callback: (finished: boolean) => void
-  ): BaseAnimationBuilder {
+  ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.withCallback(callback);
   }
 
-  withCallback(callback: (finsihed: boolean) => void): BaseAnimationBuilder {
+  withCallback(callback: (finished: boolean) => void): this {
     this.callbackV = callback;
+    return this;
+  }
+
+  /**
+   * Lets you adjust the behavior when the device's reduced motion accessibility setting is turned on.  Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Default to `ReduceMotion.System` - {@link ReduceMotion}.
+   */
+  static reduceMotion<T extends typeof BaseAnimationBuilder>(
+    this: T,
+    reduceMotion: ReduceMotion
+  ): InstanceType<T> {
+    const instance = this.createInstance();
+    return instance.reduceMotion(reduceMotion);
+  }
+
+  reduceMotion(reduceMotionV: ReduceMotion): this {
+    this.reduceMotionV = reduceMotionV;
     return this;
   }
 
@@ -57,12 +105,17 @@ export class BaseAnimationBuilder {
     return this.durationV ?? 300;
   }
 
-  static randomDelay(): BaseAnimationBuilder {
+  /**
+   * @deprecated Use `.delay()` with `Math.random()` instead
+   */
+  static randomDelay<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.randomDelay();
   }
 
-  randomDelay(): BaseAnimationBuilder {
+  randomDelay(): this {
     this.randomizeDelay = true;
     return this;
   }
@@ -74,17 +127,28 @@ export class BaseAnimationBuilder {
       : this.delayV ?? 0;
   }
 
+  getReduceMotion(): ReduceMotion {
+    return this.reduceMotionV;
+  }
+
   getDelayFunction(): AnimationFunction {
     const isDelayProvided = this.randomizeDelay || this.delayV;
+    const reduceMotion = this.getReduceMotion();
     return isDelayProvided
-      ? withDelay
+      ? (delay, animation) => {
+          'worklet';
+          return withDelay(delay, animation, reduceMotion);
+        }
       : (_, animation) => {
           'worklet';
+          animation.reduceMotion = getReduceMotionFromConfig(reduceMotion);
           return animation;
         };
   }
 
-  static build(): EntryExitAnimationFunction | LayoutAnimationFunction {
+  static build<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): EntryExitAnimationFunction | LayoutAnimationFunction {
     const instance = this.createInstance();
     return instance.build();
   }

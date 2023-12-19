@@ -1,3 +1,4 @@
+'use strict';
 import {
   hsvToColor,
   RGBtoHSV,
@@ -9,16 +10,21 @@ import {
   opacity,
 } from './Colors';
 import { makeMutable } from './core';
-import { interpolate } from './interpolation';
-import { SharedValue } from './commonTypes';
+import { Extrapolation, interpolate } from './interpolation';
+import type { SharedValue } from './commonTypes';
 import { useSharedValue } from './hook/useSharedValue';
 
-export const Extrapolate = {
-  EXTEND: 'extend',
-  CLAMP: 'clamp',
-  IDENTITY: 'identity',
-};
+/**
+ * @deprecated Please use Extrapolation instead
+ */
+export const Extrapolate = Extrapolation;
 
+/**
+ * Options for color interpolation.
+ *
+ * @param gamma - Gamma value used in gamma correction. Defaults to `2.2`.
+ * @param useCorrectedHSVInterpolation - Whether to reduce the number of colors the interpolation has to go through. Defaults to `true`.
+ */
 export type InterpolationOptions = {
   gamma?: number;
   useCorrectedHSVInterpolation?: boolean;
@@ -60,15 +66,20 @@ const interpolateColorsHSV = (
       }
     }
     h =
-      (interpolate(value, correctedInputRange, correctedH, Extrapolate.CLAMP) +
+      (interpolate(
+        value,
+        correctedInputRange,
+        correctedH,
+        Extrapolation.CLAMP
+      ) +
         1) %
       1;
   } else {
-    h = interpolate(value, inputRange, colors.h, Extrapolate.CLAMP);
+    h = interpolate(value, inputRange, colors.h, Extrapolation.CLAMP);
   }
-  const s = interpolate(value, inputRange, colors.s, Extrapolate.CLAMP);
-  const v = interpolate(value, inputRange, colors.v, Extrapolate.CLAMP);
-  const a = interpolate(value, inputRange, colors.a, Extrapolate.CLAMP);
+  const s = interpolate(value, inputRange, colors.s, Extrapolation.CLAMP);
+  const v = interpolate(value, inputRange, colors.v, Extrapolation.CLAMP);
+  const a = interpolate(value, inputRange, colors.a, Extrapolation.CLAMP);
   return hsvToColor(h, s, v, a);
 };
 
@@ -96,10 +107,10 @@ const interpolateColorsRGB = (
     outputG = toLinearSpace(outputG, gamma);
     outputB = toLinearSpace(outputB, gamma);
   }
-  const r = interpolate(value, inputRange, outputR, Extrapolate.CLAMP);
-  const g = interpolate(value, inputRange, outputG, Extrapolate.CLAMP);
-  const b = interpolate(value, inputRange, outputB, Extrapolate.CLAMP);
-  const a = interpolate(value, inputRange, colors.a, Extrapolate.CLAMP);
+  const r = interpolate(value, inputRange, outputR, Extrapolation.CLAMP);
+  const g = interpolate(value, inputRange, outputG, Extrapolation.CLAMP);
+  const b = interpolate(value, inputRange, outputB, Extrapolation.CLAMP);
+  const a = interpolate(value, inputRange, colors.a, Extrapolation.CLAMP);
   if (gamma === 1) {
     return rgbaColor(r, g, b, a);
   }
@@ -111,7 +122,7 @@ const interpolateColorsRGB = (
   );
 };
 
-interface InterpolateRGB {
+export interface InterpolateRGB {
   r: number[];
   g: number[];
   b: number[];
@@ -141,7 +152,7 @@ const getInterpolateRGB = (
   return { r, g, b, a };
 };
 
-interface InterpolateHSV {
+export interface InterpolateHSV {
   h: number[];
   s: number[];
   v: number[];
@@ -175,13 +186,40 @@ const getInterpolateHSV = (
   return { h, s, v, a };
 };
 
-export const interpolateColor = (
+/**
+ * Lets you map a value from a range of numbers to a range of colors using linear interpolation.
+ *
+ * @param value - A number from the `input` range that is going to be mapped to the color in the `output` range.
+ * @param inputRange - An array of numbers specifying the input range of the interpolation.
+ * @param outputRange - An array of output colors values (eg. "red", "#00FFCC", "rgba(255, 0, 0, 0.5)").
+ * @param colorSpace - The color space to use for interpolation. Defaults to 'RGB'.
+ * @param options - Additional options for interpolation - {@link InterpolationOptions}.
+ * @returns The color after interpolation from within the output range in rgba(r, g, b, a) format.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/utilities/interpolateColor
+ */
+export function interpolateColor(
+  value: number,
+  inputRange: readonly number[],
+  outputRange: readonly string[],
+  colorSpace?: 'RGB' | 'HSV',
+  options?: InterpolationOptions
+): string;
+
+export function interpolateColor(
+  value: number,
+  inputRange: readonly number[],
+  outputRange: readonly number[],
+  colorSpace?: 'RGB' | 'HSV',
+  options?: InterpolationOptions
+): number;
+
+export function interpolateColor(
   value: number,
   inputRange: readonly number[],
   outputRange: readonly (string | number)[],
   colorSpace: 'RGB' | 'HSV' = 'RGB',
   options: InterpolationOptions = {}
-): string | number => {
+): string | number {
   'worklet';
   if (colorSpace === 'HSV') {
     return interpolateColorsHSV(
@@ -199,9 +237,9 @@ export const interpolateColor = (
     );
   }
   throw new Error(
-    `Invalid color space provided: ${colorSpace}. Supported values are: ['RGB', 'HSV']`
+    `[Reanimated] Invalid color space provided: ${colorSpace}. Supported values are: ['RGB', 'HSV'].`
   );
-};
+}
 
 export enum ColorSpace {
   RGB = 0,
@@ -230,37 +268,3 @@ export function useInterpolateConfig(
     options,
   });
 }
-
-export const interpolateSharableColor = (
-  value: number,
-  interpolateConfig: SharedValue<InterpolateConfig>
-): string | number => {
-  'worklet';
-  let colors = interpolateConfig.value.cache.value;
-  if (interpolateConfig.value.colorSpace === ColorSpace.RGB) {
-    if (!colors) {
-      colors = getInterpolateRGB(interpolateConfig.value.outputRange);
-      interpolateConfig.value.cache.value = colors;
-    }
-    return interpolateColorsRGB(
-      value,
-      interpolateConfig.value.inputRange,
-      colors as InterpolateRGB,
-      interpolateConfig.value.options
-    );
-  } else if (interpolateConfig.value.colorSpace === ColorSpace.HSV) {
-    if (!colors) {
-      colors = getInterpolateHSV(interpolateConfig.value.outputRange);
-      interpolateConfig.value.cache.value = colors;
-    }
-    return interpolateColorsHSV(
-      value,
-      interpolateConfig.value.inputRange,
-      colors as InterpolateHSV,
-      interpolateConfig.value.options
-    );
-  }
-  throw new Error(
-    `Invalid color space provided: ${interpolateConfig.value.colorSpace}. Supported values are: ['RGB', 'HSV']`
-  );
-};

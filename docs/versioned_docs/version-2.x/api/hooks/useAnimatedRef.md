@@ -10,16 +10,16 @@ This hook provides extended functionality of a standard ref. You can assign it t
 
 ```js
 const Comp = () => {
-  const aref = useAnimatedRef()
+  const aref = useAnimatedRef();
 
   useDerivedValue(() => {
     const viewTag = aref();
     // ...
-  })
+  });
 
-  const componentRef = aref.current
+  const componentRef = aref.current;
   // ...
 
   return <View ref={aref} />;
-}
+};
 ```

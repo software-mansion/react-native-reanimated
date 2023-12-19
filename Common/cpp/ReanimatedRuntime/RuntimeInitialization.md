@@ -4,10 +4,11 @@ _Last updated_: 13/09/2022 by @Kwasow
 
 This document describes the current way of initializing Hermes and connecting
 it to the debugger. The work I did was mainly based on
-[HermesExecutorFactory.cpp](https://github.com/facebook/react-native/blob/main/ReactCommon/hermes/executor/HermesExecutorFactory.cpp)
+
+[HermesExecutorFactory.cpp](https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/hermes/executor/HermesExecutorFactory.cpp)
 from React Native.
 
-## Runtime initalization
+## Runtime initialization
 
 If you take a look at `NativeProxy` (both on Android and iOS) you'll find
 that it only makes a call to `ReanimatedRuntime::make(jsQueue)`. This
@@ -35,6 +36,7 @@ appended to the source code. The generated source map will be a base64 encoded
 json.
 
 A workletized function would look like this (after formattings):
+
 ```js
 function _f(number) {
   console.log(_WORKLET, number);
@@ -48,12 +50,7 @@ And the base64 string after decoding is:
 {
   "version": 3,
   "mappings": "AAasB,SAACA,EAAD,CAACA,MAAD,EAAoB;AAEtCC,SAAO,CAACC,GAARD,CAAYE,QAAZF,EAAsBD,MAAtBC;AAFkB",
-  "names": [
-    "number",
-    "console",
-    "log",
-    "_WORKLET"
-  ],
+  "names": ["number", "console", "log", "_WORKLET"],
   "sources": [
     "/Users/karol/Git/react-native-reanimated/FabricExample/src/WorkletExample.tsx"
   ],

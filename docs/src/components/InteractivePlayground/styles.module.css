@@ -1,0 +1,126 @@
+.wrapper {
+  display: flex;
+
+  justify-content: stretch;
+  align-items: center;
+}
+
+@media (max-width: 996px) {
+  .wrapper {
+    flex-direction: column;
+  }
+}
+
+.previewWrapper {
+  width: 100%;
+  overflow: hidden;
+}
+
+.container {
+  position: relative;
+  padding-bottom: 1.5em;
+  margin-bottom: 1em;
+
+  background-color: var(--swm-off-background);
+  border: 1px solid var(--swm-border);
+}
+
+.buttonContainer {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+
+  margin: 0.5em;
+  padding: 0.25em;
+
+  z-index: 1;
+}
+
+.controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0 1rem;
+  max-width: 350px;
+}
+
+.controlsInput {
+  font-family: var(--swm-body-font);
+}
+
+@media (max-width: 996px) {
+  .controls {
+    width: 75%;
+    max-width: none;
+  }
+}
+
+@media (max-width: 1280px) {
+  .controls {
+    flex: 1;
+    max-width: none;
+  }
+}
+
+.code {
+  display: flex;
+  flex: 1;
+  margin: 20px;
+  height: 100%;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.row input[type='range'],
+.row input[type='checkbox'] {
+  flex: 1;
+  margin: 0 0.5rem;
+}
+
+.codeWrapper {
+  display: flex;
+  flex: 1 1 auto;
+}
+
+@media (max-width: 996px) {
+  .codeWrapper {
+    width: 100%;
+  }
+}
+
+@media (max-width: 1280px) {
+  .codeWrapper {
+    flex: 1;
+  }
+}
+
+/* Prevent lines from overflowing from the code block */
+[class*='codeBlockLines'] {
+  width: 0;
+}
+
+.codeWrapper [class*='codeBlockContent'] {
+  flex: 1 1 auto;
+
+  background-color: var(--swm-background);
+}
+
+.codeWrapper [class*='codeBlockContent'] pre {
+  background-color: inherit;
+}
+
+/* Special case, where every code block should be formatted,
+ * except the code block in modifier playground. */
+.codeWrapper [class*='codeBlockContent'] pre code {
+  background-color: inherit;
+}
+
+.label {
+  width: 40px;
+  text-align: center;
+}

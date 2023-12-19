@@ -1,35 +1,31 @@
-const blacklist = require('metro-config/src/defaults/exclusionList');
 const path = require('path');
+const exclusionList = require('metro-config/src/defaults/exclusionList');
+const escape = require('escape-string-regexp');
+const pack = require('../package.json');
 
-const glob = require('glob-to-regexp');
+const root = path.resolve(__dirname, '..');
 
-function getBlacklist() {
-  const nodeModuleDirs = [
-    glob(`${path.resolve(__dirname, '..')}/node_modules/*`),
-    glob(`${path.resolve(__dirname, '..')}/docs/*`),
-    glob(`${path.resolve(__dirname, '..')}/e2e/*`),
-    glob(
-      `${path.resolve(__dirname)}/node_modules/*/node_modules/lodash.isequal/*`,
-    ),
-    glob(
-      `${path.resolve(
-        __dirname,
-      )}/node_modules/*/node_modules/hoist-non-react-statics/*`,
-    ),
-    glob(
-      `${path.resolve(
-        __dirname,
-      )}/node_modules/react-native/node_modules/@babel/*`,
-    ),
-  ];
-  return blacklist(nodeModuleDirs);
-}
+const modules = Object.keys(pack.peerDependencies);
 
 module.exports = {
+  projectRoot: __dirname,
+  watchFolders: [root],
+
+  // We need to make sure that only one version is loaded for peerDependencies
+  // So we exclude them at the root, and alias them to the versions in example's node_modules
   resolver: {
-    blacklistRE: getBlacklist(),
+    blacklistRE: exclusionList(
+      modules.map(
+        m => new RegExp(`^${escape(path.join(root, 'node_modules', m))}\\/.*$`),
+      ),
+    ),
+
+    extraNodeModules: modules.reduce((acc, name) => {
+      acc[name] = path.join(__dirname, 'node_modules', name);
+      return acc;
+    }, {}),
   },
-  watchFolders: [path.resolve(__dirname, '..')],
+
   transformer: {
     getTransformOptions: async () => ({
       transform: {

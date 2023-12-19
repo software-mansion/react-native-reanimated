@@ -1,15 +1,23 @@
+'use strict';
 import { useEffect, useRef } from 'react';
 import {
   makeMutable,
   subscribeForKeyboardEvents,
   unsubscribeFromKeyboardEvents,
 } from '../core';
-import {
+import type {
   AnimatedKeyboardInfo,
   AnimatedKeyboardOptions,
-  KeyboardState,
 } from '../commonTypes';
+import { KeyboardState } from '../commonTypes';
 
+/**
+ * Lets you synchronously get the position and state of the keyboard.
+ *
+ * @param options - An additional keyboard configuration options.
+ * @returns An object with the current keyboard `height` and `state` as [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedKeyboard
+ */
 export function useAnimatedKeyboard(
   options: AnimatedKeyboardOptions = { isStatusBarTranslucentAndroid: false }
 ): AnimatedKeyboardInfo {

@@ -1,15 +1,26 @@
+'use strict';
+import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
-import {
+import type {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
 
+/**
+ * Entry with change in rotation, scale, and opacity. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#pinwheel
+ */
 export class PinwheelIn
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): PinwheelIn {
-    return new PinwheelIn();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new PinwheelIn() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -19,7 +30,7 @@ export class PinwheelIn
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (_values) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -51,12 +62,21 @@ export class PinwheelIn
   };
 }
 
+/**
+ * Exit with change in rotation, scale, and opacity. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#pinwheel
+ */
 export class PinwheelOut
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): PinwheelOut {
-    return new PinwheelOut();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new PinwheelOut() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -66,7 +86,7 @@ export class PinwheelOut
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (_values) => {
+    return () => {
       'worklet';
       return {
         animations: {

@@ -1,59 +1,71 @@
-import {
+'use strict';
+import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
 } from '../animationBuilder/commonTypes';
 import { BaseAnimationBuilder } from '../animationBuilder';
-import { EasingFn, Easing } from '../../Easing';
+import type { EasingFunction } from '../../Easing';
+import { Easing } from '../../Easing';
 import { withTiming } from '../../animation';
 
+/**
+ * Layout transitions with a curved animation. You can modify the behavior by chaining methods like `.duration(500)` or `.delay(500)`.
+ *
+ * You pass it to the `layout` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions#fading-transition
+ */
 export class CurvedTransition
   extends BaseAnimationBuilder
   implements ILayoutAnimationBuilder
 {
-  easingXV: EasingFn = Easing.in(Easing.ease);
-  easingYV: EasingFn = Easing.out(Easing.ease);
-  easingWidthV: EasingFn = Easing.in(Easing.exp);
-  easingHeightV: EasingFn = Easing.out(Easing.exp);
-  static createInstance(): CurvedTransition {
-    return new CurvedTransition();
+  easingXV: EasingFunction = Easing.in(Easing.ease);
+  easingYV: EasingFunction = Easing.out(Easing.ease);
+  easingWidthV: EasingFunction = Easing.in(Easing.exp);
+  easingHeightV: EasingFunction = Easing.out(Easing.exp);
+
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new CurvedTransition() as InstanceType<T>;
   }
 
-  static easingX(easing: EasingFn): CurvedTransition {
+  static easingX(easing: EasingFunction): CurvedTransition {
     const instance = this.createInstance();
     return instance.easingX(easing);
   }
 
-  easingX(easing: EasingFn): CurvedTransition {
+  easingX(easing: EasingFunction): CurvedTransition {
     this.easingXV = easing;
     return this;
   }
 
-  static easingY(easing: EasingFn): CurvedTransition {
+  static easingY(easing: EasingFunction): CurvedTransition {
     const instance = this.createInstance();
     return instance.easingY(easing);
   }
 
-  easingY(easing: EasingFn): CurvedTransition {
+  easingY(easing: EasingFunction): CurvedTransition {
     this.easingYV = easing;
     return this;
   }
 
-  static easingWidth(easing: EasingFn): CurvedTransition {
+  static easingWidth(easing: EasingFunction): CurvedTransition {
     const instance = this.createInstance();
     return instance.easingWidth(easing);
   }
 
-  easingWidth(easing: EasingFn): CurvedTransition {
+  easingWidth(easing: EasingFunction): CurvedTransition {
     this.easingWidthV = easing;
     return this;
   }
 
-  static easingHeight(easing: EasingFn): CurvedTransition {
+  static easingHeight(easing: EasingFunction): CurvedTransition {
     const instance = this.createInstance();
     return instance.easingHeight(easing);
   }
 
-  easingHeight(easing: EasingFn): CurvedTransition {
+  easingHeight(easing: EasingFunction): CurvedTransition {
     this.easingHeightV = easing;
     return this;
   }

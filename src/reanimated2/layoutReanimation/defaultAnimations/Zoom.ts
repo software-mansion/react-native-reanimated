@@ -1,20 +1,32 @@
-import {
+'use strict';
+import type {
   IEntryExitAnimationBuilder,
   EntryExitAnimationFunction,
   EntryAnimationsValues,
   ExitAnimationsValues,
+  EntryExitAnimationsValues,
   AnimationConfigFunction,
   IEntryAnimationBuilder,
   IExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
+import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 
+/**
+ * Scale from center animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomIn
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): ZoomIn {
-    return new ZoomIn();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new ZoomIn() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -40,12 +52,21 @@ export class ZoomIn
   };
 }
 
+/**
+ * Scale from center with rotation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomInRotate
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): ZoomInRotate {
-    return new ZoomInRotate();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new ZoomInRotate() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -75,12 +96,21 @@ export class ZoomInRotate
   };
 }
 
+/**
+ * Scale from left animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomInLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): ZoomInLeft {
-    return new ZoomInLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new ZoomInLeft() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -90,7 +120,7 @@ export class ZoomInLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -109,12 +139,21 @@ export class ZoomInLeft
   };
 }
 
+/**
+ * Scale from right animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomInRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): ZoomInRight {
-    return new ZoomInRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new ZoomInRight() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -124,7 +163,7 @@ export class ZoomInRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -143,12 +182,21 @@ export class ZoomInRight
   };
 }
 
+/**
+ * Scale from top animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomInUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): ZoomInUp {
-    return new ZoomInUp();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new ZoomInUp() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -158,7 +206,7 @@ export class ZoomInUp
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -177,12 +225,21 @@ export class ZoomInUp
   };
 }
 
+/**
+ * Scale from bottom animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomInDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): ZoomInDown {
-    return new ZoomInDown();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new ZoomInDown() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -192,7 +249,7 @@ export class ZoomInDown
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -211,12 +268,21 @@ export class ZoomInDown
   };
 }
 
+/**
+ * Eased scale from top animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomInEasyUp
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static createInstance(): ZoomInEasyUp {
-    return new ZoomInEasyUp();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new ZoomInEasyUp() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
@@ -245,12 +311,21 @@ export class ZoomInEasyUp
   };
 }
 
+/**
+ * Eased scale from bottom animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomInEasyDown
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static createInstance(): ZoomInEasyDown {
-    return new ZoomInEasyDown();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new ZoomInEasyDown() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
@@ -279,12 +354,21 @@ export class ZoomInEasyDown
   };
 }
 
+/**
+ * Scale to center animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomOut
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): ZoomOut {
-    return new ZoomOut();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new ZoomOut() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -310,12 +394,21 @@ export class ZoomOut
   };
 }
 
+/**
+ * Scale to center with rotation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomOutRotate
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): ZoomOutRotate {
-    return new ZoomOutRotate();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new ZoomOutRotate() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -345,12 +438,21 @@ export class ZoomOutRotate
   };
 }
 
+/**
+ * Scale to left animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomOutLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): ZoomOutLeft {
-    return new ZoomOutLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new ZoomOutLeft() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -360,7 +462,7 @@ export class ZoomOutLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -384,12 +486,21 @@ export class ZoomOutLeft
   };
 }
 
+/**
+ * Scale to right animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomOutRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): ZoomOutRight {
-    return new ZoomOutRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new ZoomOutRight() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -399,7 +510,7 @@ export class ZoomOutRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -423,12 +534,21 @@ export class ZoomOutRight
   };
 }
 
+/**
+ * Scale to top animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomOutUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): ZoomOutUp {
-    return new ZoomOutUp();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new ZoomOutUp() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -438,7 +558,7 @@ export class ZoomOutUp
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -462,12 +582,21 @@ export class ZoomOutUp
   };
 }
 
+/**
+ * Scale to bottom animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomOutDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): ZoomOutDown {
-    return new ZoomOutDown();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new ZoomOutDown() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -477,7 +606,7 @@ export class ZoomOutDown
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -501,12 +630,21 @@ export class ZoomOutDown
   };
 }
 
+/**
+ * Eased scale to top animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomOutEasyUp
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static createInstance(): ZoomOutEasyUp {
-    return new ZoomOutEasyUp();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new ZoomOutEasyUp() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
@@ -540,12 +678,21 @@ export class ZoomOutEasyUp
   };
 }
 
+/**
+ * Eased scale to bottom animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
+ */
 export class ZoomOutEasyDown
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static createInstance(): ZoomOutEasyDown {
-    return new ZoomOutEasyDown();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new ZoomOutEasyDown() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {

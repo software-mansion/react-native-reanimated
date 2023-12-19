@@ -28,16 +28,20 @@ const App = () => {
   const sv1 = useSharedValue(0);
   const sv2 = useSharedValue(0);
 
-  const derived = useAnimatedReaction(() => {
-    return sv1.value * state;
-  }, (result, previous) => {
-    if (result !== previous) {
+  const derived = useAnimatedReaction(
+    () => {
+      return sv1.value * state;
+    },
+    (result, previous) => {
+      if (result !== previous) {
         sv2.value = result - 5;
-    }
-  }, dependencies);
+      }
+    },
+    dependencies
+  );
   //...
-  return <></>
-}
+  return <></>;
+};
 ```
 
 `dependencies` here may be:
@@ -57,7 +61,8 @@ useAnimatedReaction(
   () => {
     return x.value / 1.5;
   },
-  (data) => { // data holds what was returned from the first worklet's execution
+  (data) => {
+    // data holds what was returned from the first worklet's execution
     if (x2.value < maxX2) {
       x2.value = data;
     }

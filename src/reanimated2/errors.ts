@@ -1,3 +1,4 @@
+'use strict';
 type StackDetails = [Error, number, number];
 
 const _workletStackDetails = new Map<number, StackDetails>();
@@ -53,5 +54,6 @@ export function reportFatalErrorOnJS({
   error.name = 'ReanimatedError';
   // @ts-ignore React Native's ErrorUtils implementation extends the Error type with jsEngine field
   error.jsEngine = 'reanimated';
+  // @ts-ignore the reportFatalError method is an internal method of ErrorUtils not exposed in the type definitions
   global.ErrorUtils.reportFatalError(error);
 }

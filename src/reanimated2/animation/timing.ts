@@ -1,20 +1,34 @@
-import { Easing, EasingFn, EasingFactoryFn } from '../Easing';
-import { defineAnimation } from './util';
-import {
+'use strict';
+import type { EasingFunction, EasingFunctionFactory } from '../Easing';
+import { Easing } from '../Easing';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
+import type {
   Animation,
   AnimationCallback,
   Timestamp,
   AnimatableValue,
+  ReduceMotion,
 } from '../commonTypes';
 
+/**
+ * The timing animation configuration.
+ *
+ * @param duration - Length of the animation (in milliseconds). Defaults to 300.
+ * @param easing - An easing function which defines the animation curve. Defaults to `Easing.inOut(Easing.quad)`.
+ * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Default to `ReduceMotion.System` - {@link ReduceMotion}.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming#config-
+ */
 interface TimingConfig {
   duration?: number;
-  easing?: EasingFn | EasingFactoryFn;
+  reduceMotion?: ReduceMotion;
+  easing?: EasingFunction | EasingFunctionFactory;
 }
+
+export type WithTimingConfig = TimingConfig;
 
 export interface TimingAnimation extends Animation<TimingAnimation> {
   type: string;
-  easing: EasingFn;
+  easing: EasingFunction;
   startValue: AnimatableValue;
   startTime: Timestamp;
   progress: number;
@@ -22,13 +36,29 @@ export interface TimingAnimation extends Animation<TimingAnimation> {
   current: AnimatableValue;
 }
 
-export interface InnerTimingAnimation
+interface InnerTimingAnimation
   extends Omit<TimingAnimation, 'toValue' | 'current'> {
   toValue: number;
   current: number;
 }
 
-export function withTiming(
+// TODO TYPESCRIPT This is temporary type put in here to get rid of our .d.ts file
+type withTimingType = <T extends AnimatableValue>(
+  toValue: T,
+  userConfig?: TimingConfig,
+  callback?: AnimationCallback
+) => T;
+
+/**
+ * Lets you create an animation based on duration and easing.
+ *
+ * @param toValue - The value on which the animation will come at rest - {@link AnimatableValue}.
+ * @param config - The timing animation configuration - {@link TimingConfig}.
+ * @param callback - A function called on animation complete - {@link AnimationCallback}.
+ * @returns An [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming
+ */
+export const withTiming = function (
   toValue: AnimatableValue,
   userConfig?: TimingConfig,
   callback?: AnimationCallback
@@ -37,7 +67,7 @@ export function withTiming(
 
   return defineAnimation<TimingAnimation>(toValue, () => {
     'worklet';
-    const config: Required<TimingConfig> = {
+    const config: Required<Omit<TimingConfig, 'reduceMotion'>> = {
       duration: 300,
       easing: Easing.inOut(Easing.quad),
     };
@@ -106,6 +136,7 @@ export function withTiming(
       easing: () => 0,
       current: toValue,
       callback,
+      reduceMotion: getReduceMotionForAnimation(userConfig?.reduceMotion),
     } as TimingAnimation;
   });
-}
+} as withTimingType;

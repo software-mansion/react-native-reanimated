@@ -1,50 +1,14 @@
+'use strict';
 import { useEffect, useRef } from 'react';
-import { makeMutable, registerSensor, unregisterSensor } from '../core';
-import {
-  SensorType,
-  SharedValue,
+import { initializeSensor, registerSensor, unregisterSensor } from '../core';
+import type {
+  SensorConfig,
+  AnimatedSensor,
   Value3D,
   ValueRotation,
-  IOSReferenceFrame,
 } from '../commonTypes';
+import { SensorType, IOSReferenceFrame } from '../commonTypes';
 import { callMicrotasks } from '../threads';
-
-export type SensorConfig = {
-  interval: number | 'auto';
-  adjustToInterfaceOrientation: boolean;
-  iosReferenceFrame: IOSReferenceFrame;
-};
-
-export type AnimatedSensor = {
-  sensor: SharedValue<Value3D | ValueRotation>;
-  unregister: () => void;
-  isAvailable: boolean;
-  config: SensorConfig;
-};
-
-function initSensorData(
-  sensorType: SensorType
-): SharedValue<Value3D | ValueRotation> {
-  if (sensorType === SensorType.ROTATION) {
-    return makeMutable<Value3D | ValueRotation>({
-      qw: 0,
-      qx: 0,
-      qy: 0,
-      qz: 0,
-      yaw: 0,
-      pitch: 0,
-      roll: 0,
-      interfaceOrientation: 0,
-    });
-  } else {
-    return makeMutable<Value3D | ValueRotation>({
-      x: 0,
-      y: 0,
-      z: 0,
-      interfaceOrientation: 0,
-    });
-  }
-}
 
 // euler angles are in order ZXY, z = yaw, x = pitch, y = roll
 // https://github.com/mrdoob/three.js/blob/dev/src/math/Quaternion.js#L237
@@ -106,48 +70,64 @@ function adjustVectorToInterfaceOrientation(data: Value3D) {
   return data;
 }
 
+/**
+ * Lets you create animations based on data from the device's sensors.
+ *
+ * @param sensorType - Type of the sensor to use. Configured with {@link SensorType} enum.
+ * @param config - The sensor configuration - {@link SensorConfig}.
+ * @returns An object containing the sensor measurements [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) and a function to unregister the sensor
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedSensor
+ */
+export function useAnimatedSensor(
+  sensorType: SensorType.ROTATION,
+  userConfig?: Partial<SensorConfig>
+): AnimatedSensor<ValueRotation>;
+export function useAnimatedSensor(
+  sensorType: Exclude<SensorType, SensorType.ROTATION>,
+  userConfig?: Partial<SensorConfig>
+): AnimatedSensor<Value3D>;
 export function useAnimatedSensor(
   sensorType: SensorType,
   userConfig?: Partial<SensorConfig>
-): AnimatedSensor {
-  const ref = useRef<AnimatedSensor>({
-    sensor: initSensorData(sensorType),
+): AnimatedSensor<ValueRotation | Value3D> {
+  const config: SensorConfig = {
+    interval: 'auto',
+    adjustToInterfaceOrientation: true,
+    iosReferenceFrame: IOSReferenceFrame.Auto,
+    ...userConfig,
+  };
+  const ref = useRef<AnimatedSensor<Value3D | ValueRotation>>({
+    sensor: initializeSensor(sensorType, config),
     unregister: () => {
       // NOOP
     },
     isAvailable: false,
-    config: {
-      interval: 0,
-      adjustToInterfaceOrientation: true,
-      iosReferenceFrame: IOSReferenceFrame.Auto,
-    },
+    config: config,
   });
 
   useEffect(() => {
-    ref.current.config = {
-      interval: 'auto',
-      adjustToInterfaceOrientation: true,
-      iosReferenceFrame: IOSReferenceFrame.Auto,
+    const newConfig = {
+      ...config,
       ...userConfig,
     };
-    const sensorData = ref.current.sensor!;
-    const id = registerSensor(
-      sensorType,
-      ref.current.config.interval === 'auto' ? -1 : ref.current.config.interval,
-      ref.current.config.iosReferenceFrame,
-      (data) => {
-        'worklet';
-        if (ref.current.config.adjustToInterfaceOrientation) {
-          if (sensorType === SensorType.ROTATION) {
-            data = adjustRotationToInterfaceOrientation(data as ValueRotation);
-          } else {
-            data = adjustVectorToInterfaceOrientation(data as Value3D);
-          }
+    ref.current.sensor = initializeSensor(sensorType, newConfig);
+
+    const sensorData = ref.current.sensor;
+    const adjustToInterfaceOrientation =
+      ref.current.config.adjustToInterfaceOrientation;
+
+    const id = registerSensor(sensorType, config, (data) => {
+      'worklet';
+      if (adjustToInterfaceOrientation) {
+        if (sensorType === SensorType.ROTATION) {
+          data = adjustRotationToInterfaceOrientation(data as ValueRotation);
+        } else {
+          data = adjustVectorToInterfaceOrientation(data as Value3D);
         }
-        sensorData.value = data;
-        callMicrotasks();
       }
-    );
+      sensorData.value = data;
+      callMicrotasks();
+    });
 
     if (id !== -1) {
       // if sensor is available

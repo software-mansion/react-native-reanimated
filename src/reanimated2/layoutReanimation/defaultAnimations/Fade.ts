@@ -1,15 +1,26 @@
-import {
+'use strict';
+import type {
   IEntryExitAnimationBuilder,
   EntryExitAnimationFunction,
 } from '../animationBuilder/commonTypes';
+import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 
+/**
+ * Fade in animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ *  You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
+ */
 export class FadeIn
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeIn {
-    return new FadeIn();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeIn() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -19,7 +30,7 @@ export class FadeIn
     const initialValues = this.initialValues;
     const delay = this.getDelay();
 
-    return (_) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -35,12 +46,21 @@ export class FadeIn
   };
 }
 
+/**
+ * Fade from right animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
+ */
 export class FadeInRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeInRight {
-    return new FadeInRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeInRight() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -70,12 +90,21 @@ export class FadeInRight
   };
 }
 
+/**
+ * Fade from left animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
+ */
 export class FadeInLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeInLeft {
-    return new FadeInLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeInLeft() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -105,12 +134,21 @@ export class FadeInLeft
   };
 }
 
+/**
+ * Fade from top animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
+ */
 export class FadeInUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeInUp {
-    return new FadeInUp();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeInUp() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -140,12 +178,21 @@ export class FadeInUp
   };
 }
 
+/**
+ * Fade from bottom animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
+ */
 export class FadeInDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeInDown {
-    return new FadeInDown();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeInDown() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -175,12 +222,21 @@ export class FadeInDown
   };
 }
 
+/**
+ * Fade out animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
+ */
 export class FadeOut
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeOut {
-    return new FadeOut();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeOut() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -190,7 +246,7 @@ export class FadeOut
     const initialValues = this.initialValues;
     const delay = this.getDelay();
 
-    return (_) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -206,12 +262,21 @@ export class FadeOut
   };
 }
 
+/**
+ * Fade to right animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
+ */
 export class FadeOutRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeOutRight {
-    return new FadeOutRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeOutRight() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -241,12 +306,21 @@ export class FadeOutRight
   };
 }
 
+/**
+ * Fade to left animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
+ */
 export class FadeOutLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeOutLeft {
-    return new FadeOutLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeOutLeft() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -275,13 +349,21 @@ export class FadeOutLeft
     };
   };
 }
-
+/**
+ * Fade to top animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
+ */
 export class FadeOutUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeOutUp {
-    return new FadeOutUp();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeOutUp() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -311,12 +393,21 @@ export class FadeOutUp
   };
 }
 
+/**
+ * Fade to bottom animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
+ */
 export class FadeOutDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeOutDown {
-    return new FadeOutDown();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeOutDown() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {

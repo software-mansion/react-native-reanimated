@@ -4,9 +4,8 @@
     "baseUrl": ".",
     "paths": {
       "react-native-reanimated": ["../"],
-      "react": ["./node_modules/@types/react"],
-    },
+      "react": ["./node_modules/@types/react"]
+    }
   },
-  "exclude": [],
-  "include": ["react-native-reanimated-tests.tsx"]
+  "exclude": []
 }

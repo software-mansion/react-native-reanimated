@@ -30,13 +30,15 @@ module.exports = {
 If you use
 [playground](https://github.com/software-mansion-labs/reanimated-2-playground)
 app and want to start it in the browser just type:
+
 ```shell
 yarn web
 ```
 
-If you want to start the example applications from the 
+If you want to start the example applications from the
 [reanimated repository](https://github.com/software-mansion/react-native-reanimated)
 you need to run the following command inside the `Example` directory:
+
 ```shell
 yarn start-web
 ```
@@ -52,17 +54,14 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 
 module.exports = {
-  entry: [
-    'babel-polyfill', 
-    './index.js'
-  ],
+  entry: ['babel-polyfill', './index.js'],
   plugins: [
     new HtmlWebpackPlugin({
       filename: 'index.html',
       template: './index.html',
     }),
     new webpack.EnvironmentPlugin({ JEST_WORKER_ID: null }),
-    new webpack.DefinePlugin({ process: { env: {} } })
+    new webpack.DefinePlugin({ process: { env: {} } }),
   ],
   module: {
     rules: [
@@ -73,7 +72,7 @@ module.exports = {
           options: {
             presets: [
               '@babel/preset-react',
-              { plugins: ['@babel/plugin-proposal-class-properties'] }
+              { plugins: ['@babel/plugin-proposal-class-properties'] },
             ],
           },
         },
@@ -81,7 +80,7 @@ module.exports = {
     ],
   },
   resolve: {
-    alias: { 'react-native$': 'react-native-web', },
+    alias: { 'react-native$': 'react-native-web' },
     extensions: ['.web.js', '.js'],
   },
 };
@@ -109,7 +108,7 @@ For example:
 ```ts
 const sv = useSharedValue(0);
 const dv = useDerivedValue(
-  () => sv.value + 1, 
+  () => sv.value + 1,
   [sv] // dependency array here
 );
 ```
@@ -117,7 +116,6 @@ const dv = useDerivedValue(
 Be sure to pass the dependency itself (`sv`) and not `sv.value` to the dependency array.
 
 > Babel users will still need to install the `@babel/plugin-proposal-class-properties` plugin.
-
 
 ### ESLint Support
 
@@ -141,7 +139,7 @@ This assumes you've already installed the `react-hooks` eslint [plugin](https://
 If you're using ESLint autofix, the ESLint plugin may add `.value` to the dependency arrays, rather than the root dependency. In these cases, you should update the array yourself.
 
 ```tsx
-const sv = useSharedValue(0)
+const sv = useSharedValue(0);
 
 // 🚨 bad, sv.value is in the array
 const dv = useDerivedValue(() => sv.value, [sv.value]);
@@ -165,5 +163,5 @@ yarn add raf
 Add the following to the top of your `_app.tsx`:
 
 ```ts
-import 'raf/polyfill'
+import 'raf/polyfill';
 ```

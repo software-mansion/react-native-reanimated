@@ -1,6 +1,10 @@
-/* eslint-disable node/no-callback-literal */
+/* eslint-disable n/no-callback-literal */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
+'use strict';
+
+import { ReduceMotion, SensorType } from './commonTypes';
+
 const NOOP = () => {
   // noop
 };
@@ -8,6 +12,10 @@ const ID = (t) => t;
 const IMMEDIATE_CB_INVOCATION = (cb: () => unknown) => cb();
 
 class BaseAnimationMock {
+  createInstance() {
+    return this;
+  }
+
   duration(_: number) {
     return this;
   }
@@ -40,8 +48,60 @@ class BaseAnimationMock {
     return this;
   }
 
+  easing(_: (t: number) => number) {
+    return this;
+  }
+
+  rotate(_: string) {
+    return this;
+  }
+
+  mass(_: number) {
+    return this;
+  }
+
+  restDisplacementThreshold(_: number) {
+    return this;
+  }
+
+  restSpeedThreshold(_: number) {
+    return this;
+  }
+
+  overshootClamping(_: number) {
+    return this;
+  }
+
+  dampingRatio(_: number) {
+    return this;
+  }
+
+  getDelay() {
+    return 0;
+  }
+
+  getDelayFunction() {
+    return NOOP;
+  }
+
+  getDuration() {
+    return 300;
+  }
+
+  getReduceMotion() {
+    return ReduceMotion.System;
+  }
+
+  getAnimationAndConfig() {
+    return [NOOP, {}];
+  }
+
   build() {
     return () => ({ initialValues: {}, animations: {} });
+  }
+
+  reduceMotion(_: ReduceMotion) {
+    return this;
   }
 }
 
@@ -54,6 +114,32 @@ const ReanimatedV2 = {
   useAnimatedRef: () => ({ current: null }),
   useAnimatedReaction: NOOP,
   useAnimatedProps: IMMEDIATE_CB_INVOCATION,
+  ReduceMotion: ReduceMotion,
+  SensorType: SensorType,
+  useAnimatedSensor: () => ({
+    sensor: {
+      value: {
+        x: 0,
+        y: 0,
+        z: 0,
+        interfaceOrientation: 0,
+        qw: 0,
+        qx: 0,
+        qy: 0,
+        qz: 0,
+        yaw: 0,
+        pitch: 0,
+        roll: 0,
+      },
+    },
+    unregister: NOOP,
+    isAvailable: false,
+    config: {
+      interval: 0,
+      adjustToInterfaceOrientation: false,
+      iosReferenceFrame: 0,
+    },
+  }),
 
   withTiming: (toValue, _, cb) => {
     cb && cb(true);
@@ -99,6 +185,7 @@ const ReanimatedV2 = {
     bounce: ID,
     bezier: () => ({ factory: ID }),
     bezierFn: ID,
+    steps: ID,
     in: ID,
     out: ID,
     inOut: ID,
@@ -163,6 +250,7 @@ const ReanimatedV2 = {
   'ZoomOutEasyUp',
   'ZoomOutEasyDown',
 
+  'BounceIn',
   'BounceInDown',
   'BounceInUp',
   'BounceInLeft',

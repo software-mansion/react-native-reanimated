@@ -1,0 +1,113 @@
+.horse {
+  position: absolute;
+  right: 15vw;
+}
+
+.horseAnimation {
+  position: relative;
+  width: 400px;
+  height: 330px;
+}
+
+.horseAnimation svg {
+  position: absolute;
+
+  width: 100%;
+  height: 100%;
+
+  fill: var(--swm-landing-horse);
+  stroke: var(--swm-landing-horse);
+}
+
+@media (max-width: 996px) {
+  .horse {
+    right: 5vw;
+  }
+}
+
+@media (max-width: 768px) {
+  .horse {
+    display: flex;
+    position: static;
+    justify-content: center;
+    scale: 75%;
+  }
+
+  .horseAnimation {
+    width: 300px;
+    height: 248px;
+  }
+}
+
+@media (min-height: 768px) and (max-width: 768px) {
+  .horse {
+    display: flex;
+    position: static;
+    justify-content: center;
+    scale: 75%;
+  }
+}
+
+.variantAnimation {
+  visibility: hidden;
+  animation: 0.5s show infinite;
+}
+
+/* Each delay of animation (where delay is ~0.045) is multiplied by 2, 3, 4...,
+ * where the multiplier is a position of the frame (starting from the second frame).
+ */
+.variantB {
+  animation-delay: 0.05s;
+}
+
+.variantC {
+  animation-delay: 0.1s;
+}
+
+.variantD {
+  animation-delay: 0.15s;
+}
+
+.variantE {
+  animation-delay: 0.2s;
+}
+
+.variantF {
+  animation-delay: 0.25s;
+}
+
+.variantG {
+  animation-delay: 0.3s;
+}
+
+.variantH {
+  animation-delay: 0.35s;
+}
+
+.variantI {
+  animation-delay: 0.4s;
+}
+
+.variantJ {
+  animation-delay: 0.45s;
+}
+
+.variantK {
+  animation-delay: 0.5s;
+}
+
+@keyframes show {
+  0% {
+    visibility: visible;
+  }
+  /* 0.5 second divided by 11 frames. */
+  4.54% {
+    visibility: visible;
+  }
+  10% {
+    visibility: hidden;
+  }
+  100% {
+    visibility: hidden;
+  }
+}

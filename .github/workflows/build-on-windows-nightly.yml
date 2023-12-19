@@ -1,0 +1,30 @@
+name: Test build on Windows nightly
+on:
+  pull_request:
+    paths:
+      - .github/workflows/build-on-windows-nightly.yml
+  schedule:
+    - cron: '37 19 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: windows-latest
+    concurrency:
+      group: build-on-windows-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+      - name: Create React Native App
+        run: npx react-native init App
+      - name: Install Reanimated
+        working-directory: App
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
+      - name: Build Android App
+        working-directory: App/android
+        run: ./gradlew assembleDebug --console=plain

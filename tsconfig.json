@@ -13,7 +13,10 @@
     "esModuleInterop": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
+    "paths": {
+      "react-native-reanimated": ["./src"]
+    },
+    "resolveJsonModule": true
   },
-  "exclude": ["Example", "FabricExample", "TVOSExample", "WebExample", "docs"]
+  "include": ["src"]
 }

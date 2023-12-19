@@ -1,0 +1,10 @@
+name: Run nightly monorepo test
+on:
+  schedule:
+    - cron: '37 19 * * *' # at 21:37 every day
+  workflow_dispatch:
+
+jobs:
+  call-build-workflow-rea-v3:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    uses: ./.github/workflows/build-monorepo.yml

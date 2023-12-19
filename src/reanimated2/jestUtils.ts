@@ -1,11 +1,18 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
+'use strict';
+
+import { isJest } from './PlatformChecker';
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
     interface Matchers<R> {
       toHaveAnimatedStyle(
-        style: Record<string, unknown>[] | Record<string, unknown>
+        style: Record<string, unknown>[] | Record<string, unknown>,
+        config?: {
+          shouldMatchAllProps?: boolean;
+        }
       ): R;
     }
   }
@@ -23,7 +30,7 @@ const getAnimatedStyleFromObject = (style) => {
   return style.animatedStyle.current.value;
 };
 
-const getCurrentStyle = (received) => {
+const getCurrentStyle = (received): Record<string, any> => {
   const styleObject = received.props.style;
   let currentStyle = {};
   if (Array.isArray(styleObject)) {
@@ -73,7 +80,7 @@ const checkEqual = (currentStyle, expectStyle) => {
   return true;
 };
 
-const findStyleDiff = (current, expect, requireAllMatch) => {
+const findStyleDiff = (current, expect, shouldMatchAllProps) => {
   const diffs = [];
   let isEqual = true;
   for (const property in expect) {
@@ -88,7 +95,7 @@ const findStyleDiff = (current, expect, requireAllMatch) => {
   }
 
   if (
-    requireAllMatch &&
+    shouldMatchAllProps &&
     Object.keys(current).length !== Object.keys(expect).length
   ) {
     isEqual = false;
@@ -110,9 +117,13 @@ const compareStyle = (received, expectedStyle, config) => {
   if (!received.props.style) {
     return { message: () => message, pass: false };
   }
-  const { exact } = config;
+  const { shouldMatchAllProps } = config;
   const currentStyle = getCurrentStyle(received);
-  const { isEqual, diffs } = findStyleDiff(currentStyle, expectedStyle, exact);
+  const { isEqual, diffs } = findStyleDiff(
+    currentStyle,
+    expectedStyle,
+    shouldMatchAllProps
+  );
 
   if (isEqual) {
     return { message: () => 'ok', pass: true };
@@ -172,17 +183,25 @@ export const advanceAnimationByFrame = (count) => {
   jest.runOnlyPendingTimers();
 };
 
+const requireFunction = isJest()
+  ? require
+  : () => {
+      throw new Error(
+        '[Reanimated] `setUpTests` is available only in Jest environment.'
+      );
+    };
+
 export const setUpTests = (userConfig = {}) => {
   let expect = global.expect;
   if (expect === undefined) {
-    const expectModule = require('expect');
+    const expectModule = requireFunction('expect');
     expect = expectModule;
     // Starting from Jest 28, "expect" package uses named exports instead of default export.
     // So, requiring "expect" package doesn't give direct access to "expect" function anymore.
     // It gives access to the module object instead.
     // We use this info to detect if the project uses Jest 28 or higher.
     if (typeof expect === 'object') {
-      const jestGlobals = require('@jest/globals');
+      const jestGlobals = requireFunction('@jest/globals');
       expect = jestGlobals.expect;
     }
     if (expect === undefined || expect.extend === undefined) {
@@ -196,7 +215,6 @@ export const setUpTests = (userConfig = {}) => {
     ...config,
     ...userConfig,
   };
-
   expect.extend({
     toHaveAnimatedStyle(received, expectedStyle, config = {}) {
       return compareStyle(received, expectedStyle, config);

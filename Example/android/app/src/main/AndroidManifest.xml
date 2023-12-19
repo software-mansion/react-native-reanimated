@@ -8,7 +8,7 @@
       android:icon="@mipmap/ic_launcher"
       android:roundIcon="@mipmap/ic_launcher_round"
       android:allowBackup="false"
-      android:theme="@style/AppTheme">
+      android:theme="@style/Theme.App.Starting">
       <activity
         android:name=".MainActivity"
         android:label="@string/app_name"
@@ -21,5 +21,6 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+      <profileable android:shell="true" />
     </application>
 </manifest>

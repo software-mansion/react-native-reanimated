@@ -6,7 +6,7 @@ function Participant({
 }: {
   name: string;
   onRemove: () => void;
-}): React.ReactElement {
+}) {
   return (
     <View
       style={[styles.participantView]}>
@@ -16,7 +16,7 @@ function Participant({
   );
 }
 
-export default function AnimatedListExample(): React.ReactElement {
+export default function AnimatedListExample() {
   const [inputValue, setInputValue] = useState('');
   const [participantList, setParticipantList] = useState<EventParticipant[]>(
     []

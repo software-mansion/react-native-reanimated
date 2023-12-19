@@ -1,3 +1,4 @@
+'use strict';
 import { runOnUIImmediately } from '../threads';
 
 type CallbackDetails = {
@@ -15,7 +16,8 @@ export interface FrameCallbackRegistryUI {
   frameCallbackRegistry: Map<number, CallbackDetails>;
   activeFrameCallbacks: Set<number>;
   previousFrameTimestamp: number | null;
-  runCallbacks: () => void;
+  runCallbacks: (callId: number) => void;
+  nextCallId: number;
   registerFrameCallback: (
     callback: (frameInfo: FrameInfo) => void,
     callbackId: number
@@ -31,9 +33,13 @@ export const prepareUIRegistry = runOnUIImmediately(() => {
     frameCallbackRegistry: new Map<number, CallbackDetails>(),
     activeFrameCallbacks: new Set<number>(),
     previousFrameTimestamp: null,
+    nextCallId: 0,
 
-    runCallbacks() {
+    runCallbacks(callId) {
       const loop = (timestamp: number) => {
+        if (callId !== this.nextCallId) {
+          return;
+        }
         if (this.previousFrameTimestamp === null) {
           this.previousFrameTimestamp = timestamp;
         }
@@ -75,7 +81,7 @@ export const prepareUIRegistry = runOnUIImmediately(() => {
       // runCallback() should only be called after registering a callback,
       // so if there is only one active callback, then it means that there were
       // zero previously and the loop isn't running yet.
-      if (this.activeFrameCallbacks.size === 1) {
+      if (this.activeFrameCallbacks.size === 1 && callId === this.nextCallId) {
         requestAnimationFrame(loop);
       }
     },
@@ -101,12 +107,15 @@ export const prepareUIRegistry = runOnUIImmediately(() => {
       }
       if (state) {
         this.activeFrameCallbacks.add(callbackId);
-        this.runCallbacks();
+        this.runCallbacks(this.nextCallId);
       } else {
         const callback = this.frameCallbackRegistry.get(callbackId)!;
         callback.startTime = null;
 
         this.activeFrameCallbacks.delete(callbackId);
+        if (this.activeFrameCallbacks.size === 0) {
+          this.nextCallId += 1;
+        }
       }
     },
   };

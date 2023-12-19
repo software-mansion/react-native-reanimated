@@ -1,8 +1,8 @@
-import { AnimationObject, AnimatableValue } from './commonTypes';
-import { Descriptor } from './hook/commonTypes';
-export { stopMapper } from './mappers';
+'use strict';
+import type { AnimationObject, AnimatableValue } from './commonTypes';
+import type { Descriptor } from './hook/commonTypes';
 
-export function valueSetter(sv: any, value: any): void {
+export function valueSetter(sv: any, value: any, forceUpdate = false): void {
   'worklet';
   const previousAnimation = sv._animation;
   if (previousAnimation) {
@@ -23,7 +23,11 @@ export function valueSetter(sv: any, value: any): void {
     // and triggering the mappers that treat this value as an input
     // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)
     // built in animations that are not higher order(withTiming, withSpring) hold target value in .current
-    if (sv._value === animation.current && !animation.isHigherOrder) {
+    if (
+      sv._value === animation.current &&
+      !animation.isHigherOrder &&
+      !forceUpdate
+    ) {
       animation.callback && animation.callback(true);
       return;
     }
@@ -31,9 +35,20 @@ export function valueSetter(sv: any, value: any): void {
     const initializeAnimation = (timestamp: number) => {
       animation.onStart(animation, sv.value, timestamp, previousAnimation);
     };
-    const currentTimestamp = global.__frameTimestamp || performance.now();
+    const currentTimestamp =
+      global.__frameTimestamp || _getAnimationTimestamp();
     initializeAnimation(currentTimestamp);
-    const step = (timestamp: number) => {
+
+    const step = (newTimestamp: number) => {
+      // Function `requestAnimationFrame` adds callback to an array, all the callbacks are flushed with function `__flushAnimationFrame`
+      // Usually we flush them inside function `nativeRequestAnimationFrame` and then the given timestamp is the timestamp of end of the current frame.
+      // However function `__flushAnimationFrame` may also be called inside `registerEventHandler` - then we get actual timestamp which is earlier than the end of the frame.
+
+      const timestamp =
+        newTimestamp < (animation.timestamp || 0)
+          ? animation.timestamp
+          : newTimestamp;
+
       if (animation.cancelled) {
         animation.callback && animation.callback(false /* finished */);
         return;
@@ -55,7 +70,7 @@ export function valueSetter(sv: any, value: any): void {
   } else {
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
-    if (sv._value === value) {
+    if (sv._value === value && !forceUpdate) {
       return;
     }
     sv._value = value as Descriptor | AnimatableValue;

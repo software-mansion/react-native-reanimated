@@ -9,9 +9,21 @@ low level abstraction for the Animated library API to be built
 on top of and hence allow for much greater flexibility especially when it
 comes to gesture based interactions.
 
+### Nightly CI state
+
+[![Build nightly npm package](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-nightly-npm-package.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-nightly-npm-package.yml)
+[![Run nightly monorepo test](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-monorepo-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-monorepo-nightly.yml)
+[![Check static framework nightly build](https://github.com/software-mansion/react-native-reanimated/actions/workflows/check-static-framework-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/check-static-framework-nightly.yml)
+[![Check React Native nightly build](https://github.com/software-mansion/react-native-reanimated/actions/workflows/check-react-native-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/check-react-native-nightly.yml)
+[![Check Expo dev-client nightly build](https://github.com/software-mansion/react-native-reanimated/actions/workflows/check-expo-dev-client-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/check-expo-dev-client-nightly.yml)
+[![Check TypeScript nightly build](https://github.com/software-mansion/react-native-reanimated/actions/workflows/check-TS-react-native.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/check-TS-react-native.yml)
+[![Test V8 on Android nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-v8-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-v8-nightly.yml)
+[![Test build on Windows nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-on-windows-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-on-windows-nightly.yml)
+[![Validate urls in source code](https://github.com/software-mansion/react-native-reanimated/actions/workflows/detect-broken-urls-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/detect-broken-urls-nightly.yml)
+
 ## Installation
 
-Check out the [installation](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation) section of our docs for the detailed installation instructions.
+Check out the [installation](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#installation) section of our docs for the detailed installation instructions.
 
 ## Fabric
 
@@ -19,7 +31,7 @@ To learn how to use `react-native-reanimated` with Fabric architecture, head ove
 
 ## Documentation
 
-Check out our dedicated documentation page for info about this library, API reference and more: [https://docs.swmansion.com/react-native-reanimated/docs/](https://docs.swmansion.com/react-native-reanimated/docs/)
+Check out our dedicated documentation page for info about this library, API reference and more: [https://docs.swmansion.com/react-native-reanimated/](https://docs.swmansion.com/react-native-reanimated/)
 
 ## Examples
 

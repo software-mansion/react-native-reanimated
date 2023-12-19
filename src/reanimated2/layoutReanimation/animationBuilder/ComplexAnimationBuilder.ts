@@ -1,18 +1,20 @@
+'use strict';
 import { withTiming, withSpring } from '../../animation';
-import {
+import type {
   AnimationFunction,
   BaseBuilderAnimationConfig,
   LayoutAnimationAndConfig,
 } from './commonTypes';
-import { EasingFn } from '../../Easing';
+import type { EasingFunction } from '../../Easing';
 import { BaseAnimationBuilder } from './BaseAnimationBuilder';
-import { StyleProps } from '../../commonTypes';
+import type { StyleProps } from '../../commonTypes';
 
 export class ComplexAnimationBuilder extends BaseAnimationBuilder {
-  easingV?: EasingFn;
+  easingV?: EasingFunction;
   rotateV?: string;
   type?: AnimationFunction;
   dampingV?: number;
+  dampingRatioV?: number;
   massV?: number;
   stiffnessV?: number;
   overshootClampingV?: number;
@@ -20,110 +22,202 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   restSpeedThresholdV?: number;
   initialValues?: StyleProps;
 
-  static createInstance: () => ComplexAnimationBuilder;
+  static createInstance: <T extends typeof BaseAnimationBuilder>(
+    this: T
+  ) => InstanceType<T>;
 
-  static easing(easingFunction: EasingFn): ComplexAnimationBuilder {
+  /**
+   * Lets you change the easing curve of the animation. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param easingFunction - An easing function which defines the animation curve.
+   */
+  static easing<T extends typeof ComplexAnimationBuilder>(
+    this: T,
+    easingFunction: EasingFunction
+  ) {
     const instance = this.createInstance();
     return instance.easing(easingFunction);
   }
 
-  easing(easingFunction: EasingFn): ComplexAnimationBuilder {
+  easing(easingFunction: EasingFunction): this {
     this.easingV = easingFunction;
     return this;
   }
 
-  static rotate(degree: string): ComplexAnimationBuilder {
+  /**
+   * Lets you rotate the element. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param degree - The rotation degree.
+   */
+  static rotate<T extends typeof ComplexAnimationBuilder>(
+    this: T,
+    degree: string
+  ) {
     const instance = this.createInstance();
     return instance.rotate(degree);
   }
 
-  rotate(degree: string): ComplexAnimationBuilder {
+  rotate(degree: string): this {
     this.rotateV = degree;
     return this;
   }
 
-  static springify(): ComplexAnimationBuilder {
+  /**
+   * Enables the spring-based animation configuration. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param duration - An optional duration of the spring animation (in milliseconds).
+   */
+  static springify<T extends typeof ComplexAnimationBuilder>(
+    this: T,
+    duration?: number
+  ): ComplexAnimationBuilder {
     const instance = this.createInstance();
-    return instance.springify();
+    return instance.springify(duration);
   }
 
-  springify(): ComplexAnimationBuilder {
+  springify(duration?: number): this {
+    this.durationV = duration;
     this.type = withSpring as AnimationFunction;
     return this;
   }
 
-  static damping(damping: number): ComplexAnimationBuilder {
+  /**
+   * Lets you adjust the spring animation damping ratio. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param dampingRatio - How damped the spring is.
+   */
+  static dampingRatio<T extends typeof ComplexAnimationBuilder>(
+    this: T,
+    dampingRatio: number
+  ) {
+    const instance = this.createInstance();
+    return instance.dampingRatio(dampingRatio);
+  }
+
+  dampingRatio(value: number): this {
+    this.dampingRatioV = value;
+    return this;
+  }
+
+  /**
+   * Lets you adjust the spring animation damping. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param value - Decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster.
+   */
+  static damping<T extends typeof ComplexAnimationBuilder>(
+    this: T,
+    damping: number
+  ) {
     const instance = this.createInstance();
     return instance.damping(damping);
   }
 
-  damping(damping: number): ComplexAnimationBuilder {
+  damping(damping: number): this {
     this.dampingV = damping;
     return this;
   }
 
-  static mass(mass: number): ComplexAnimationBuilder {
+  /**
+   * Lets you adjust the spring animation mass. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param mass - The weight of the spring. Reducing this value makes the animation faster.
+   */
+  static mass<T extends typeof ComplexAnimationBuilder>(this: T, mass: number) {
     const instance = this.createInstance();
     return instance.mass(mass);
   }
 
-  mass(mass: number): ComplexAnimationBuilder {
+  mass(mass: number): this {
     this.massV = mass;
     return this;
   }
 
-  static stiffness(stiffness: number): ComplexAnimationBuilder {
+  /**
+   * Lets you adjust the stiffness of the spring animation. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param stiffness - How bouncy the spring is.
+   */
+  static stiffness<T extends typeof ComplexAnimationBuilder>(
+    this: T,
+    stiffness: number
+  ) {
     const instance = this.createInstance();
     return instance.stiffness(stiffness);
   }
 
-  stiffness(stiffness: number): ComplexAnimationBuilder {
+  stiffness(stiffness: number): this {
     this.stiffnessV = stiffness;
     return this;
   }
 
-  static overshootClamping(overshootClamping: number): ComplexAnimationBuilder {
+  /**
+   * Lets you adjust overshoot clamping of the spring. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param overshootClamping - Whether a spring can bounce over the final position.
+   */
+  static overshootClamping<T extends typeof ComplexAnimationBuilder>(
+    this: T,
+    overshootClamping: number
+  ) {
     const instance = this.createInstance();
     return instance.overshootClamping(overshootClamping);
   }
 
-  overshootClamping(overshootClamping: number): ComplexAnimationBuilder {
+  overshootClamping(overshootClamping: number): this {
     this.overshootClampingV = overshootClamping;
     return this;
   }
 
-  static restDisplacementThreshold(
+  /**
+   * Lets you adjust the rest displacement threshold of the spring animation. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param restDisplacementThreshold - The displacement below which the spring will snap to the designated position without further oscillations.
+   */
+  static restDisplacementThreshold<T extends typeof ComplexAnimationBuilder>(
+    this: T,
     restDisplacementThreshold: number
-  ): ComplexAnimationBuilder {
+  ) {
     const instance = this.createInstance();
     return instance.restDisplacementThreshold(restDisplacementThreshold);
   }
 
-  restDisplacementThreshold(
-    restDisplacementThreshold: number
-  ): ComplexAnimationBuilder {
+  restDisplacementThreshold(restDisplacementThreshold: number) {
     this.restDisplacementThresholdV = restDisplacementThreshold;
     return this;
   }
 
-  static restSpeedThreshold(
+  /**
+   * Lets you adjust the rest speed threshold of the spring animation. Can be chained alongside other [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param restSpeedThreshold - The speed in pixels per second from which the spring will snap to the designated position without further oscillations.
+   */
+  static restSpeedThreshold<T extends typeof ComplexAnimationBuilder>(
+    this: T,
     restSpeedThreshold: number
-  ): ComplexAnimationBuilder {
+  ) {
     const instance = this.createInstance();
     return instance.restSpeedThreshold(restSpeedThreshold);
   }
 
-  restSpeedThreshold(restSpeedThreshold: number): ComplexAnimationBuilder {
+  restSpeedThreshold(restSpeedThreshold: number): this {
     this.restSpeedThresholdV = restSpeedThreshold;
     return this;
   }
 
-  static withInitialValues(values: StyleProps): BaseAnimationBuilder {
+  /**
+   * Lets you override the initial config of the animation
+   *
+   * @param values - An object containing the styles to override.
+   */
+  static withInitialValues<T extends typeof ComplexAnimationBuilder>(
+    this: T,
+    values: StyleProps
+  ) {
     const instance = this.createInstance();
     return instance.withInitialValues(values);
   }
 
-  withInitialValues(values: StyleProps): BaseAnimationBuilder {
+  withInitialValues(values: StyleProps): this {
     this.initialValues = values;
     return this;
   }
@@ -134,6 +228,7 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
     const rotate = this.rotateV;
     const type = this.type ? this.type : (withTiming as AnimationFunction);
     const damping = this.dampingV;
+    const dampingRatio = this.dampingRatioV;
     const mass = this.massV;
     const stiffness = this.stiffnessV;
     const overshootClamping = this.overshootClampingV;
@@ -144,39 +239,38 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
 
     const config: BaseBuilderAnimationConfig = {};
 
-    if (type === withTiming) {
-      if (easing) {
-        config.easing = easing;
-      }
-      if (duration) {
-        config.duration = duration;
-      }
-      if (rotate) {
-        config.rotate = rotate;
-      }
-    } else {
-      if (damping) {
-        config.damping = damping;
-      }
-      if (mass) {
-        config.mass = mass;
-      }
-      if (stiffness) {
-        config.stiffness = stiffness;
-      }
-      if (overshootClamping) {
-        config.overshootClamping = overshootClamping;
-      }
-      if (restDisplacementThreshold) {
-        config.restDisplacementThreshold = restDisplacementThreshold;
-      }
-      if (restSpeedThreshold) {
-        config.restSpeedThreshold = restSpeedThreshold;
-      }
-      if (rotate) {
-        config.rotate = rotate;
+    function maybeSetConfigValue<Key extends keyof BaseBuilderAnimationConfig>(
+      value: BaseBuilderAnimationConfig[Key],
+      variableName: Key
+    ) {
+      if (value) {
+        config[variableName] = value;
       }
     }
+
+    if (type === withTiming) {
+      maybeSetConfigValue(easing, 'easing');
+    }
+
+    (
+      [
+        { variableName: 'damping', value: damping },
+        { variableName: 'dampingRatio', value: dampingRatio },
+        { variableName: 'mass', value: mass },
+        { variableName: 'stiffness', value: stiffness },
+        { variableName: 'overshootClamping', value: overshootClamping },
+        {
+          variableName: 'restDisplacementThreshold',
+          value: restDisplacementThreshold,
+        },
+        { variableName: 'restSpeedThreshold', value: restSpeedThreshold },
+        { variableName: 'duration', value: duration },
+        { variableName: 'rotate', value: rotate },
+      ] as const
+    ).forEach(({ value, variableName }) =>
+      maybeSetConfigValue(value, variableName)
+    );
+
     return [animation, config];
   }
 }

@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
+    paths: docs/**
 
 jobs:
   publish:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     steps:
       - name: Check out

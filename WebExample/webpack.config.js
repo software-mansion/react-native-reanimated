@@ -8,7 +8,7 @@ module.exports = async function (env, argv) {
         dangerouslyAddModulePathsToTranspile: ['react-native-reanimated'],
       },
     },
-    argv
+    argv,
   );
   return config;
 };

@@ -10,7 +10,7 @@ Determines the location on the screen, relative to the given view. It might be u
 
 #### animatedRef
 
-The product of [`useAnimatedRef`](../hooks/useAnimatedRef) is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread). This ref should be passed as a prop to the view relative to which we want to know coordinates.
+The product of [`useAnimatedRef`](/docs/2.x/api/hooks/useAnimatedRef) is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread). This ref should be passed as a prop to the view relative to which we want to know coordinates.
 
 #### x
 
@@ -36,14 +36,16 @@ const Comp = () => {
 
   const gestureHandler = useAnimatedGestureHandler({
     onEnd: (event) => {
-      getRelativeCoords(aref, event.absoluteX, event.absoluteY)
+      getRelativeCoords(aref, event.absoluteX, event.absoluteY);
     },
   });
 
-  return <View ref={aref}>
-    <PanGestureHandler onGestureEvent={gestureHandler}>
-      <Animated.View style={[styles.box]} />
-    </PanGestureHandler>
-  </View>;
+  return (
+    <View ref={aref}>
+      <PanGestureHandler onGestureEvent={gestureHandler}>
+        <Animated.View style={[styles.box]} />
+      </PanGestureHandler>
+    </View>
+  );
 };
 ```

@@ -8,23 +8,54 @@
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
-    "lint": "eslint --ext '.mdx,.md' .",
     "clear": "docusaurus clear",
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
-    "test": "jest"
+    "typecheck": "tsc --noEmit",
+    "lint": "prettier --check docs src versioned_docs versioned_docs",
+    "format": "prettier --write --list-different docs src versioned_docs versioned_docs"
   },
   "dependencies": {
-    "@docusaurus/core": "^2.3.1",
-    "@docusaurus/preset-classic": "^2.3.1",
-    "@docusaurus/theme-classic": "^2.3.1",
-    "@mdx-js/react": "^1.6.21",
-    "classnames": "^2.3.1",
-    "clsx": "^1.1.1",
-    "react": "^17.0.1",
+    "@babel/plugin-proposal-class-properties": "^7.18.6",
+    "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
+    "@babel/preset-env": "^7.20.2",
+    "@babel/preset-react": "^7.18.6",
+    "@babel/preset-typescript": "^7.21.0",
+    "@docusaurus/core": "^2.4.3",
+    "@docusaurus/plugin-debug": "^2.4.3",
+    "@docusaurus/preset-classic": "^2.4.3",
+    "@emotion/react": "^11.10.6",
+    "@emotion/styled": "^11.10.6",
+    "@mdx-js/react": "^1.6.22",
+    "@mui/material": "^5.12.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-expo": "^9.2.2",
+    "babel-preset-react-native": "^4.0.1",
+    "clsx": "^1.2.1",
+    "raf": "^3.4.1",
+    "raw-loader": "^4.0.2",
+    "react": "^17.0.2",
     "react-colorful": "^5.6.1",
-    "react-dom": "^17.0.1"
+    "react-dom": "^17.0.2",
+    "react-draggable": "^4.4.5",
+    "react-native": "^0.71.4",
+    "react-native-gesture-handler": "^2.13.2",
+    "react-native-reanimated": "^3.6.0-nightly-20231010-4a507b2c4",
+    "react-native-svg": "^13.14.0",
+    "react-native-web": "^0.18.12",
+    "source-map": "^0.7.4",
+    "source-map-loader": "^4.0.1",
+    "usehooks-ts": "^2.9.1"
+  },
+  "devDependencies": {
+    "@docusaurus/module-type-aliases": "^2.4.3",
+    "@tsconfig/docusaurus": "^1.0.7",
+    "copy-webpack-plugin": "^11.0.0",
+    "eslint-plugin-mdx": "^2.2.0",
+    "prettier": "^2.8.4",
+    "typescript": "^4.7.4",
+    "webpack-cli": "^5.0.1"
   },
   "browserslist": {
     "production": [
@@ -38,17 +69,7 @@
       "last 1 safari version"
     ]
   },
-  "devDependencies": {
-    "@babel/core": "^7.21.0",
-    "@babel/preset-env": "^7.20.2",
-    "@babel/preset-typescript": "^7.21.0",
-    "@docusaurus/module-type-aliases": "^2.3.1",
-    "@tsconfig/docusaurus": "^1.0.6",
-    "@types/jest": "^29.4.0",
-    "babel-jest": "^29.4.3",
-    "eslint": "^8.21.0",
-    "eslint-plugin-mdx": "^2.0.2",
-    "jest": "^29.4.3",
-    "typescript": "^4.7.4"
+  "engines": {
+    "node": ">=16.14"
   }
 }

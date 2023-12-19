@@ -1,6 +1,13 @@
+'use strict';
 import { Image } from 'react-native';
-import createAnimatedComponent from '../../createAnimatedComponent';
+import { createAnimatedComponent } from '../../createAnimatedComponent';
 
-const AnimatedImage = createAnimatedComponent(Image as any);
+// Since createAnimatedComponent return type is ComponentClass that has the props of the argument,
+// but not things like NativeMethods, etc. we need to add them manually by extending the type.
+interface AnimatedImageComplement extends Image {
+  getNode(): Image;
+}
 
-export default AnimatedImage;
+export const AnimatedImage = createAnimatedComponent(Image);
+
+export type AnimatedImage = typeof AnimatedImage & AnimatedImageComplement;

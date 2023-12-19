@@ -1,3 +1,4 @@
+'use strict';
 export * from './Flip';
 export * from './Stretch';
 export * from './Fade';

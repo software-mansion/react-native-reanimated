@@ -14,6 +14,20 @@ To show how event handling is done in Reanimated 2 we are going to lead you step
 
 Reanimated 2 integrates tightly with the [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/) package for the ability to define performant gesture-based interactions. We explain the library's APIs whenever we use bits of it in our examples, however, if you'd like to learn more about the gesture-handler outside of the context of reanimated, please visit the documentation website [here](https://docs.swmansion.com/react-native-gesture-handler/).
 
+For Android OS, be sure to wrap your app entry point with `<GestureHandlerRootView>` component from `react-native-gesture-handler` library to capture events properly.
+
+```js
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+export default function App() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      {/* content */}
+    </GestureHandlerRootView>
+  );
+}
+```
+
 Going back to the interaction example, we start by focusing on tap events only.
 
 ![](/docs/events/touch-final.gif)
@@ -29,9 +43,9 @@ const EventsExample = () => {
 };
 ```
 
-Here, we define a component with a shared value that tells us whether the view that we render is being pressed. We use the *TapGestureHandler* component from *react-native-gesture-handler* library to wrap the main View in order to tell the framework which of the rendered elements are interactive.
+Here, we define a component with a shared value that tells us whether the view that we render is being pressed. We use the _TapGestureHandler_ component from _react-native-gesture-handler_ library to wrap the main View in order to tell the framework which of the rendered elements are interactive.
 
-Next, we add an event handler to it — it will react to notifications about tap events from *TapGestureHandler*. For defining event handlers, Reanimated provides a hook that is specifically designed to work with the gesture-handler package, it is called *useAnimatedGestureHandler*.
+Next, we add an event handler to it — it will react to notifications about tap events from _TapGestureHandler_. For defining event handlers, Reanimated provides a hook that is specifically designed to work with the gesture-handler package, it is called _useAnimatedGestureHandler_.
 
 ```js
 const eventHandler = useAnimatedGestureHandler({
@@ -44,15 +58,15 @@ const eventHandler = useAnimatedGestureHandler({
 });
 ```
 
-This hook allows us for defining a number of worklets (e.g., onStart or onEnd), each of these will be used to process a different state in the gesture recognition process. In this example, we will use *onStart* worklet which is called when the gesture is started (we press the screen down), and *onEnd* that fires up when the gesture is ended (i.e., the finger is lifted from the screen). We use these two worklets to update shared value *pressed* accordingly (don't pay the attention to the arguments that are provided to the worklets, we will explain that later on).
+This hook allows us for defining a number of worklets (e.g., onStart or onEnd), each of these will be used to process a different state in the gesture recognition process. In this example, we will use _onStart_ worklet which is called when the gesture is started (we press the screen down), and _onEnd_ that fires up when the gesture is ended (i.e., the finger is lifted from the screen). We use these two worklets to update shared value _pressed_ accordingly (don't pay the attention to the arguments that are provided to the worklets, we will explain that later on).
 
-To connect the defined event handler with the gesture handler component, we now pass it to *TapGestureHandler* as an *onGestureEvent* property:
+To connect the defined event handler with the gesture handler component, we now pass it to _TapGestureHandler_ as an _onGestureEvent_ property:
 
 ```js
 <TapGestureHandler onGestureEvent={eventHandler}>
 ```
 
-Now all we have to do is to use the *useAnimatedStyle* hook in order to map the pressed shared value state to the view's styles. When pressed is true the dot's color will turn from *blue* to *yellow* and it will get bigger. On false both of those parameters will get back to their previous values.
+Now all we have to do is to use the _useAnimatedStyle_ hook in order to map the pressed shared value state to the view's styles. When pressed is true the dot's color will turn from _blue_ to _yellow_ and it will get bigger. On false both of those parameters will get back to their previous values.
 
 ```js
 const uas = useAnimatedStyle(() => {
@@ -63,7 +77,7 @@ const uas = useAnimatedStyle(() => {
 });
 ```
 
-Also don't forget to pass *animated style* to the *animated view*:
+Also don't forget to pass _animated style_ to the _animated view_:
 
 ```js
 <Animated.View style={[styles.ball, uas]} />
@@ -73,7 +87,7 @@ After incorporating the changes described above here is what you will see on the
 
 ![](/docs/events/touch-raw.gif)
 
-Reanimated 2 makes it very easy to animate between state changes. You can try adding *withSpring* or *withTiming* in *useAnimatedStyle* to make this interaction feel much more natural:
+Reanimated 2 makes it very easy to animate between state changes. You can try adding _withSpring_ or _withTiming_ in _useAnimatedStyle_ to make this interaction feel much more natural:
 
 ```js
 {
@@ -87,7 +101,7 @@ Reanimated 2 makes it very easy to animate between state changes. You can try ad
 
 ![](/docs/events/final.gif)
 
-In the previous example when we learned how to handle tap gestures, we only responded to events that indicated the start and the end of the gesture. This comes from the fact that tap is a discrete gesture, that is it triggers at a specific point in time when we know the gesture is recognized. If we are interested in handling a movement of a finger on the screen, we need to receive a continuous stream of touch events. For this purpose, *PanGestureHandler* from *react-native-gesture-handler* package can be used. *PanGestureHandler* not only reports down and up events (that we subscribed to with *onStart* and *onEnd* worklets), but also allows us to track the finger as you pan it around the screen. When the panning gesture is recognized it feeds a stream of touch events to *onActive* callback for the whole duration of the user interaction.
+In the previous example when we learned how to handle tap gestures, we only responded to events that indicated the start and the end of the gesture. This comes from the fact that tap is a discrete gesture, that is it triggers at a specific point in time when we know the gesture is recognized. If we are interested in handling a movement of a finger on the screen, we need to receive a continuous stream of touch events. For this purpose, _PanGestureHandler_ from _react-native-gesture-handler_ package can be used. _PanGestureHandler_ not only reports down and up events (that we subscribed to with _onStart_ and _onEnd_ worklets), but also allows us to track the finger as you pan it around the screen. When the panning gesture is recognized it feeds a stream of touch events to _onActive_ callback for the whole duration of the user interaction.
 
 ![](/docs/events/continous-gestures.png)
 
@@ -99,7 +113,7 @@ const x = useSharedValue(startingPosition);
 const y = useSharedValue(startingPosition);
 ```
 
-Now, to keep the values defined above in sync with the gesture, we modify *useAnimatedGestureHandler* behavior.
+Now, to keep the values defined above in sync with the gesture, we modify _useAnimatedGestureHandler_ behavior.
 
 ```js
 const eventHandler = useAnimatedGestureHandler({
@@ -118,9 +132,9 @@ const eventHandler = useAnimatedGestureHandler({
 });
 ```
 
-In the *onActive* method, we update coordinates using the event payload which is provided as the first argument. We use *translationX* and *translationY* that indicates the position of the finger relative to the place on the screen where the panning started. In *onEnd* call, when the user releases the finger, we animate the coordinates to the starting position.
+In the _onActive_ method, we update coordinates using the event payload which is provided as the first argument. We use _translationX_ and _translationY_ that indicates the position of the finger relative to the place on the screen where the panning started. In _onEnd_ call, when the user releases the finger, we animate the coordinates to the starting position.
 
-Don't forget to pass modified event handler to *PanGestureHandler*:
+Don't forget to pass modified event handler to _PanGestureHandler_:
 
 ```js
 <PanGestureHandler onGestureEvent={eventHandler}>
@@ -128,7 +142,7 @@ Don't forget to pass modified event handler to *PanGestureHandler*:
 </PanGestureHandler>
 ```
 
-The only thing left to do is to update *useAnimatedStyle* body such that x and y shared values are mapped to the view's transforms to position our view on the screen:
+The only thing left to do is to update _useAnimatedStyle_ body such that x and y shared values are mapped to the view's transforms to position our view on the screen:
 
 ```js
 const uas = useAnimatedStyle(() => {
@@ -145,7 +159,7 @@ const uas = useAnimatedStyle(() => {
 
 Let's now try to modify the above example to make the view stay in the place where we lift the finger up, then allow for it to be panned around from that place. This simple modification makes things a bit more trickier and the reason is that when the new gesture is started, the translation values it provides in the event payload are relative to the starting position of the gesture. As a result, we cannot just directly map the gesture translation to the view offset on the screen. One way to solve this is by making a temporary state where we can keep the starting offset of the view. For this purpose we can use the context argument that is provided to each of the gesture handler worklets. Context is just a Javascript object that is shared between all the callbacks. In other words, all methods defined as gesture handler callbacks receive the same instance of context object–you are free to store any data in it within the callback or read from the context directly.
 
-Here is how we can save the starting position in *onStart* callback using context:
+Here is how we can save the starting position in _onStart_ callback using context:
 
 ```js
 onStart: (event, ctx) => {
@@ -155,7 +169,7 @@ onStart: (event, ctx) => {
 },
 ```
 
-Then we can use it in *onActive* to compute the current position
+Then we can use it in _onActive_ to compute the current position
 
 ```js
 onActive: (event, ctx) => {
@@ -168,7 +182,7 @@ As you can see context may be really handy sparing us declaring additional varia
 
 ## Reanimated and react-native-gesture-handler
 
-You have already met *TapGestureHandler* and *PanGestureHandler* but there are many more. For instance, you can listen for pinch gestures with *PinchGestureHandler*. It allows you to track the distance between two fingers and uses that information to scale or zoom your content. The full list of available gesture handlers can be found [here](https://docs.swmansion.com/react-native-gesture-handler/docs/gesture-handlers/basics/about-handlers#available-gesture-handlers).
+You have already met _TapGestureHandler_ and _PanGestureHandler_ but there are many more. For instance, you can listen for pinch gestures with _PinchGestureHandler_. It allows you to track the distance between two fingers and uses that information to scale or zoom your content. The full list of available gesture handlers can be found [here](https://docs.swmansion.com/react-native-gesture-handler/docs/gesture-handlers/about-handlers#available-gesture-handlers).
 
 <div class="resp-container">
 <iframe class="resp-iframe"  gesture="media"  allow="encrypted-media" allowfullscreen src="https://www.youtube.com/embed/IdVnnIkNzGA">

@@ -1,53 +1,106 @@
+'use strict';
 import { NativeModules } from 'react-native';
-import { ShareableRef, Value3D, ValueRotation } from '../commonTypes';
-import {
+import type { ShareableRef, Value3D, ValueRotation } from '../commonTypes';
+import type {
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from '../layoutReanimation';
-import { checkVersion } from '../platform-specific/checkVersion';
+import { checkCppVersion } from '../platform-specific/checkCppVersion';
+import { jsVersion } from '../platform-specific/jsVersion';
+import type { WorkletRuntime } from '../runtimes';
+import { getValueUnpackerCode } from '../valueUnpacker';
 
-export class NativeReanimated {
-  native: boolean;
-  private InnerNativeModule: any;
-
-  constructor(native = true) {
-    if (global.__reanimatedModuleProxy === undefined && native) {
-      const { ReanimatedModule } = NativeModules;
-      ReanimatedModule?.installTurboModule();
-    }
-    this.InnerNativeModule = global.__reanimatedModuleProxy;
-    this.native = native;
-    if (native) {
-      if (this.InnerNativeModule === undefined) {
-        console.error(
-          `[Reanimated] The native part of Reanimated doesn't seem to be initialized. This could be caused by\n\
-  - not rebuilding the app after installing or upgrading Reanimated\n\
-  - trying to run Reanimated on an unsupported platform\n\
-  - running in a brownfield app without manually initializing the native library`
-        );
-        return;
-      }
-      checkVersion();
-    }
-  }
-
-  installCoreFunctions(
-    callGuard: <T extends Array<any>, U>(
-      fn: (...args: T) => U,
-      ...args: T
-    ) => void,
-    valueUnpacker: <T>(value: T) => T
-  ): void {
-    return this.InnerNativeModule.installCoreFunctions(
-      callGuard,
-      valueUnpacker
-    );
-  }
-
+// this is the type of `__reanimatedModuleProxy` which is injected using JSI
+export interface NativeReanimatedModule {
+  installValueUnpacker(valueUnpackerCode: string): void;
   makeShareableClone<T>(
     value: T,
     shouldPersistRemote: boolean
-  ): ShareableRef<T> {
+  ): ShareableRef<T>;
+  scheduleOnUI<T>(shareable: ShareableRef<T>): void;
+  executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R;
+  createWorkletRuntime(
+    name: string,
+    initializer: ShareableRef<() => void>
+  ): WorkletRuntime;
+  scheduleOnRuntime<T>(
+    workletRuntime: WorkletRuntime,
+    worklet: ShareableRef<T>
+  ): void;
+  registerEventHandler<T>(
+    eventHandler: ShareableRef<T>,
+    eventName: string,
+    emitterReactTag: number
+  ): number;
+  unregisterEventHandler(id: number): void;
+  getViewProp<T>(
+    viewTag: number,
+    propName: string,
+    callback?: (result: T) => void
+  ): Promise<T>;
+  enableLayoutAnimations(flag: boolean): void;
+  registerSensor(
+    sensorType: number,
+    interval: number,
+    iosReferenceFrame: number,
+    handler: ShareableRef<(data: Value3D | ValueRotation) => void>
+  ): number;
+  unregisterSensor(sensorId: number): void;
+  configureProps(uiProps: string[], nativeProps: string[]): void;
+  subscribeForKeyboardEvents(
+    handler: ShareableRef<number>,
+    isStatusBarTranslucent: boolean
+  ): number;
+  unsubscribeFromKeyboardEvents(listenerId: number): void;
+  configureLayoutAnimation(
+    viewTag: number,
+    type: LayoutAnimationType,
+    sharedTransitionTag: string,
+    config: ShareableRef<Keyframe | LayoutAnimationFunction>
+  ): void;
+  setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
+}
+
+function assertSingleReanimatedInstance() {
+  if (
+    global._REANIMATED_VERSION_JS !== undefined &&
+    global._REANIMATED_VERSION_JS !== jsVersion
+  ) {
+    throw new Error(
+      `[Reanimated] Another instance of Reanimated was detected.
+See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#another-instance-of-reanimated-was-detected\` for more details. Previous: ${global._REANIMATED_VERSION_JS}, current: ${jsVersion}.`
+    );
+  }
+  global._REANIMATED_VERSION_JS = jsVersion;
+}
+
+export class NativeReanimated {
+  private InnerNativeModule: NativeReanimatedModule;
+
+  constructor() {
+    // These checks have to split since version checking depend on the execution order
+    if (__DEV__) {
+      assertSingleReanimatedInstance();
+    }
+    if (global.__reanimatedModuleProxy === undefined) {
+      const { ReanimatedModule } = NativeModules;
+      ReanimatedModule?.installTurboModule();
+    }
+    if (global.__reanimatedModuleProxy === undefined) {
+      throw new Error(
+        `[Reanimated] Native part of Reanimated doesn't seem to be initialized.
+See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
+      );
+    }
+    if (__DEV__) {
+      checkCppVersion();
+    }
+
+    this.InnerNativeModule = global.__reanimatedModuleProxy;
+    this.InnerNativeModule.installValueUnpacker(getValueUnpackerCode());
+  }
+
+  makeShareableClone<T>(value: T, shouldPersistRemote: boolean) {
     return this.InnerNativeModule.makeShareableClone(
       value,
       shouldPersistRemote
@@ -58,15 +111,29 @@ export class NativeReanimated {
     return this.InnerNativeModule.scheduleOnUI(shareable);
   }
 
-  executeOnUIRuntimeSync<T>(shareable: ShareableRef<T>): T {
+  executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R {
     return this.InnerNativeModule.executeOnUIRuntimeSync(shareable);
   }
 
-  registerSensor<T>(
+  createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {
+    return this.InnerNativeModule.createWorkletRuntime(name, initializer);
+  }
+
+  scheduleOnRuntime<T>(
+    workletRuntime: WorkletRuntime,
+    shareableWorklet: ShareableRef<T>
+  ) {
+    return this.InnerNativeModule.scheduleOnRuntime(
+      workletRuntime,
+      shareableWorklet
+    );
+  }
+
+  registerSensor(
     sensorType: number,
     interval: number,
     iosReferenceFrame: number,
-    handler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
+    handler: ShareableRef<(data: Value3D | ValueRotation) => void>
   ) {
     return this.InnerNativeModule.registerSensor(
       sensorType,
@@ -81,21 +148,26 @@ export class NativeReanimated {
   }
 
   registerEventHandler<T>(
-    eventHash: string,
-    eventHandler: ShareableRef<T>
-  ): string {
-    return this.InnerNativeModule.registerEventHandler(eventHash, eventHandler);
+    eventHandler: ShareableRef<T>,
+    eventName: string,
+    emitterReactTag: number
+  ) {
+    return this.InnerNativeModule.registerEventHandler(
+      eventHandler,
+      eventName,
+      emitterReactTag
+    );
   }
 
-  unregisterEventHandler(id: string): void {
+  unregisterEventHandler(id: number) {
     return this.InnerNativeModule.unregisterEventHandler(id);
   }
 
   getViewProp<T>(
-    viewTag: string,
+    viewTag: number,
     propName: string,
     callback?: (result: T) => void
-  ): Promise<T> {
+  ) {
     return this.InnerNativeModule.getViewProp(viewTag, propName, callback);
   }
 
@@ -113,25 +185,32 @@ export class NativeReanimated {
     );
   }
 
-  enableLayoutAnimations(flag: boolean): void {
+  setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean) {
+    this.InnerNativeModule.setShouldAnimateExitingForTag(
+      viewTag,
+      shouldAnimate
+    );
+  }
+
+  enableLayoutAnimations(flag: boolean) {
     this.InnerNativeModule.enableLayoutAnimations(flag);
   }
 
-  configureProps(uiProps: string[], nativeProps: string[]): void {
+  configureProps(uiProps: string[], nativeProps: string[]) {
     this.InnerNativeModule.configureProps(uiProps, nativeProps);
   }
 
   subscribeForKeyboardEvents(
     handler: ShareableRef<number>,
     isStatusBarTranslucent: boolean
-  ): number {
+  ) {
     return this.InnerNativeModule.subscribeForKeyboardEvents(
       handler,
       isStatusBarTranslucent
     );
   }
 
-  unsubscribeFromKeyboardEvents(listenerId: number): void {
+  unsubscribeFromKeyboardEvents(listenerId: number) {
     this.InnerNativeModule.unsubscribeFromKeyboardEvents(listenerId);
   }
 }

@@ -29,8 +29,6 @@ target 'TVOSExample' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  pod 'RNReanimated', :path => '../../'
-
   target 'TVOSExampleTests' do
     inherit! :complete
     # Pods for testing
@@ -55,7 +53,6 @@ target 'TVOSExample-tvOS' do
     :app_path => "#{Dir.pwd}/.."
   )
   ENV["ReanimatedTVOSExample"] = "1"
-  pod 'RNReanimated', :path => '../../'
   
   target 'TVOSExample-tvOSTests' do
     inherit! :complete

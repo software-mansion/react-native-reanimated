@@ -1,12 +1,14 @@
-import NativeReanimatedModule from './NativeReanimated';
-import { SharedValue } from './commonTypes';
+'use strict';
+import { shouldBeUseWeb } from './PlatformChecker';
+import type { SharedValue } from './commonTypes';
 import {
   makeShareableCloneRecursive,
   registerShareableMapping,
 } from './shareables';
 import { executeOnUIRuntimeSync, runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
-export { stopMapper } from './mappers';
+
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 function uiValueGetter<T>(sharedValue: SharedValue<T>) {
   'worklet';
@@ -41,6 +43,13 @@ export function makeUIMutable<T>(initial: T) {
     get _value(): T {
       return value;
     },
+    modify: (modifier?: (value: T) => T, forceUpdate = true) => {
+      valueSetter(
+        self,
+        modifier !== undefined ? modifier(value) : value,
+        forceUpdate
+      );
+    },
     addListener: (id: number, listener: (newValue: T) => void) => {
       listeners.set(id, listener);
     },
@@ -62,28 +71,27 @@ export function makeMutable<T>(initial: T): SharedValue<T> {
     },
   });
   // listeners can only work on JS thread on Web and jest environments
-  const listeners = NativeReanimatedModule.native ? undefined : new Map();
+  const listeners = SHOULD_BE_USE_WEB ? new Map() : undefined;
   const mutable = {
     set value(newValue) {
-      if (NativeReanimatedModule.native) {
+      if (SHOULD_BE_USE_WEB) {
+        valueSetter(mutable, newValue);
+      } else {
         runOnUI(() => {
-          'worklet';
           mutable.value = newValue;
         })();
-      } else {
-        valueSetter(mutable, newValue);
       }
     },
     get value() {
-      if (NativeReanimatedModule.native) {
+      if (!SHOULD_BE_USE_WEB) {
         return executeOnUIRuntimeSync(uiValueGetter)(mutable);
       }
       return value;
     },
     set _value(newValue: T) {
-      if (NativeReanimatedModule.native) {
+      if (!SHOULD_BE_USE_WEB) {
         throw new Error(
-          'Setting `_value` directly is only possible on the UI runtime'
+          '[Reanimated] Setting `_value` directly is only possible on the UI runtime.'
         );
       }
       value = newValue;
@@ -92,29 +100,38 @@ export function makeMutable<T>(initial: T): SharedValue<T> {
       });
     },
     get _value(): T {
-      if (NativeReanimatedModule.native) {
+      if (!SHOULD_BE_USE_WEB) {
         throw new Error(
-          'Reading from `_value` directly is only possible on the UI runtime'
+          '[Reanimated] Reading from `_value` directly is only possible on the UI runtime.'
         );
       }
       return value;
     },
-    modify: (modifier: (value: T) => T) => {
-      runOnUI(() => {
-        'worklet';
-        mutable.value = modifier(mutable.value);
-      })();
+    modify: (modifier?: (value: T) => T, forceUpdate = true) => {
+      if (!SHOULD_BE_USE_WEB) {
+        runOnUI(() => {
+          mutable.modify(modifier, forceUpdate);
+        })();
+      } else {
+        valueSetter(
+          mutable,
+          modifier !== undefined ? modifier(mutable.value) : mutable.value,
+          forceUpdate
+        );
+      }
     },
     addListener: (id: number, listener: (value: T) => void) => {
-      if (NativeReanimatedModule.native) {
-        throw new Error('adding listeners is only possible on the UI runtime');
+      if (!SHOULD_BE_USE_WEB) {
+        throw new Error(
+          '[Reanimated] Adding listeners is only possible on the UI runtime.'
+        );
       }
       listeners!.set(id, listener);
     },
     removeListener: (id: number) => {
-      if (NativeReanimatedModule.native) {
+      if (!SHOULD_BE_USE_WEB) {
         throw new Error(
-          'removing listeners is only possible on the UI runtime'
+          '[Reanimated] Removing listeners is only possible on the UI runtime.'
         );
       }
       listeners!.delete(id);
