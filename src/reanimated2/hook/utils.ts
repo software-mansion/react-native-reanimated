@@ -42,8 +42,10 @@ export function areDependenciesEqual(
   prevDeps: DependencyList
 ) {
   function is(x: number, y: number) {
-    // eslint-disable-next-line no-self-compare
-    return (x === y && (x !== 0 || 1 / x === 1 / y)) || (x !== x && y !== y);
+    return (
+      (x === y && (x !== 0 || 1 / x === 1 / y)) ||
+      (Number.isNaN(x) && Number.isNaN(y))
+    );
   }
   const objectIs: (nextDeps: unknown, prevDeps: unknown) => boolean =
     typeof Object.is === 'function' ? Object.is : is;
@@ -83,8 +85,9 @@ export function isAnimated(prop: unknown) {
 // This function works because `Object.keys`
 // return empty array of primitives and on arrays
 // it returns array of its indices.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function shallowEqual(a: any, b: any) {
+export function shallowEqual<
+  T extends Record<string | number | symbol, unknown>
+>(a: T, b: T) {
   'worklet';
   const aKeys = Object.keys(a);
   const bKeys = Object.keys(b);
