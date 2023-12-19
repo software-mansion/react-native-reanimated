@@ -35,29 +35,37 @@ export default function App({ options }): Props {
 
   const clampedStyle = useAnimatedStyle(() => {
     return {
-      left: withClamp(
-        { min: options.lowerBound, max: options.upperBound },
-        withRepeat(
-          withSequence(
-            withDelay(2000, withSpring(BOX_STOP, config)),
-            withTiming(BOX_START, { duration: 0 })
+      transform: [
+        {
+          translateX: withClamp(
+            { min: options.lowerBound, max: options.upperBound },
+            withRepeat(
+              withSequence(
+                withDelay(2000, withSpring(BOX_STOP, config)),
+                withTiming(BOX_START, { duration: 0 })
+              ),
+              -1,
+              true
+            )
           ),
-          -1,
-          true
-        )
-      ),
+        },
+      ],
     };
   });
   const defaultStyle = useAnimatedStyle(() => {
     return {
-      left: withRepeat(
-        withSequence(
-          withDelay(2000, withSpring(200, config)),
-          withTiming(0, { duration: 0 })
-        ),
-        -1,
-        true
-      ),
+      transform: [
+        {
+          translateX: withRepeat(
+            withSequence(
+              withDelay(2000, withSpring(200, config)),
+              withTiming(0, { duration: 0 })
+            ),
+            -1,
+            true
+          ),
+        },
+      ],
     };
   });
 
