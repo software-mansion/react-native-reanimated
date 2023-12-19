@@ -78,7 +78,6 @@ export class EntryExitTransition
           }
           exitingValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               animations.transform!.push({
                 [transformProp]: delayFunction(
                   delay,
@@ -135,16 +134,13 @@ export class EntryExitTransition
           }
           enteringValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               animations.transform!.push({
                 [transformProp]: delayFunction(
                   delay + exitingDuration,
                   withSequence(
                     withTiming(
                       enteringValues.initialValues.transform
-                        ? // TODO TYPESCRIPT
-                          // @ts-ignore Read similar comment above.
-                          enteringValues.initialValues.transform[index][
+                        ? enteringValues.initialValues.transform[index][
                             transformProp as keyof TransformArrayItem
                           ]
                         : 0,
@@ -175,8 +171,6 @@ export class EntryExitTransition
           ? exitingValues.initialValues.transform
           : []
       ).concat(
-        // TODO TYPESCRIPT
-        // @ts-ignore Read similar comment above.
         (Array.isArray(enteringValues.animations.transform)
           ? enteringValues.animations.transform
           : []
