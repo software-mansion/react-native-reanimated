@@ -34,4 +34,4 @@ jobs:
         run: export USE_FRAMEWORKS=static NO_FLIPPER=1 RCT_NEW_ARCH_ENABLED=1 && pod install
       - name: Build app
         working-directory: app
-        run: npx react-native run-ios --no-packager
+        run: npx react-native run-ios
