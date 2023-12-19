@@ -54,14 +54,18 @@ export default function App({ options }): Props {
   });
   const defaultStyle = useAnimatedStyle(() => {
     return {
-      left: withRepeat(
-        withSequence(
-          withDelay(2000, withSpring(200, config)),
-          withTiming(0, { duration: 0 })
-        ),
-        -1,
-        true
-      ),
+      transform: [
+        {
+          translateX: withRepeat(
+            withSequence(
+              withDelay(2000, withSpring(200, config)),
+              withTiming(0, { duration: 0 })
+            ),
+            -1,
+            true
+          ),
+        },
+      ],
     };
   });
 
