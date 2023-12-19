@@ -1,11 +1,9 @@
 import React from 'react';
-import { Button, StyleSheet, View, Text, ViewStyle } from 'react-native';
+import { StyleSheet, View, Text, ViewStyle } from 'react-native';
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
   withClamp,
   withSpring,
-  cancelAnimation,
   withRepeat,
   withSequence,
   withTiming,
@@ -28,7 +26,7 @@ interface ClampPlaygroundOptions {
 interface Props {
   options: ClampPlaygroundOptions;
 }
-export default function App({ options }): Props {
+export default function App({ options }: Props) {
   const config = {
     damping: 3,
   };
@@ -123,12 +121,12 @@ export default function App({ options }): Props {
   return (
     <View style={styles.container}>
       <Example
-        clampedStyle={clampedStyle}
+        testedStyle={clampedStyle}
         description="Clamped spring"
         showClampMarkers={true}
       />
       <Example
-        clampedStyle={defaultStyle}
+        testedStyle={defaultStyle}
         description="Default spring"
         showClampMarkers={false}
       />
