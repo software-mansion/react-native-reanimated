@@ -290,6 +290,12 @@ export default class JSReanimated {
       '[Reanimated] configureProps is not available in JSReanimated.'
     );
   }
+
+  executeOnUIRuntimeSync<T, R>(_shareable: ShareableRef<T>): R {
+    throw new Error(
+      '[Reanimated] executeOnUIRuntimeSync is not available in JSReanimated.'
+    );
+  }
 }
 
 enum Platform {
