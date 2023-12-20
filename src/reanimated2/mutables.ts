@@ -15,6 +15,8 @@ function uiValueGetter<T>(sharedValue: SharedValue<T>): T {
   return sharedValue.value;
 }
 
+const getValueFromMutable = executeOnUIRuntimeSync(uiValueGetter);
+
 export function makeUIMutable<T>(initial: T) {
   'worklet';
 
@@ -84,7 +86,7 @@ export function makeMutable<T>(initial: T): SharedValue<T> {
     },
     get value(): T {
       if (!SHOULD_BE_USE_WEB) {
-        return executeOnUIRuntimeSync(uiValueGetter)(mutable) as T;
+        return getValueFromMutable(mutable) as T;
       }
       return value;
     },
