@@ -39,9 +39,6 @@ import { ZoomIn, ZoomInData, ZoomOut, ZoomOutData } from './animation/Zoom.web';
 
 import type { AnimationData, AnimationStyle } from './animationParser';
 
-// Since we cannot remove keyframe from DOM by its name, we have to store its id
-export const customAnimations = new Map<string, number>();
-
 export type AnimationCallback = ((finished: boolean) => void) | null;
 
 export type KeyframeDefinitions = Record<number, AnimationStyle>;
