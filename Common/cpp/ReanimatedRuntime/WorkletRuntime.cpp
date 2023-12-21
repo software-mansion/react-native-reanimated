@@ -37,9 +37,9 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
     jsi::Runtime &runtime,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name,
-    bool supportLocking,
+    WorkletRuntimeType workletRuntimeType,
     std::recursive_mutex *runtimeMutex) {
-  if (supportLocking) {
+  if (workletRuntimeType == WorkletRuntimeType::WithLocking) {
     return std::make_shared<LockableRuntime>(
         ReanimatedRuntime::make(runtime, jsQueue, name), runtimeMutex);
   } else {
