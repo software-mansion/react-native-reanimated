@@ -2,6 +2,7 @@
 
 import { isWindowAvailable } from '../../PlatformChecker';
 import { Animations } from './config';
+import { setDummyPosition, snapshots } from './componentUtils';
 import type { AnimationNames } from './config';
 
 const PREDEFINED_WEB_ANIMATIONS_ID = 'ReanimatedPredefinedWebAnimationsStyle';
@@ -129,6 +130,47 @@ export function scheduleAnimationCleanup(
   );
 
   setTimeout(() => removeWebAnimation(animationName), timeoutValue);
+}
+
+function addChild(child: HTMLElement, parent: Node) {
+  child.setAttribute('data-reanimatedRemoveAfterAnimation', 'true');
+  parent.appendChild(child);
+
+  console.log();
+  setDummyPosition(child, snapshots.get(child)!);
+
+  child.onanimationend = () => {
+    parent.removeChild(child);
+  };
+}
+
+function DFSVisit(node: HTMLElement, root: Node) {
+  if (
+    node.hasAttribute('data-reanimatedDummy') &&
+    !node.hasAttribute('data-reanimatedRemoveAfterAnimation')
+  ) {
+    addChild(node, root);
+    root = node;
+  }
+
+  for (let i = 0; i < node.children.length; ++i) {
+    DFSVisit(node.children[i] as HTMLElement, root);
+  }
+}
+
+export function setObserver() {
+  const observer = new MutationObserver((mutationsList) => {
+    const rootMutation = mutationsList[mutationsList.length - 1];
+
+    for (let i = 0; i < rootMutation.removedNodes.length; ++i) {
+      DFSVisit(
+        rootMutation.removedNodes[i] as HTMLElement,
+        rootMutation.target
+      );
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
 }
 
 export function areDOMRectsEqual(r1: DOMRect, r2: DOMRect) {

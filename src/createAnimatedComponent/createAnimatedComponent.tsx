@@ -56,12 +56,14 @@ import {
 } from '../reanimated2/layoutReanimation/web';
 import type { CustomConfig } from '../reanimated2/layoutReanimation/web/config';
 import type { FlatList, FlatListProps } from 'react-native';
+import { setObserver } from '../reanimated2/layoutReanimation/web/domUtils';
 
 const IS_WEB = isWeb();
 const IS_FABRIC = isFabric();
 
 if (IS_WEB) {
   configureWebLayoutAnimations();
+  setObserver();
 }
 
 function onlyAnimatedStyles(styles: StyleProps[]): StyleProps[] {

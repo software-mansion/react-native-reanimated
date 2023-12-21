@@ -20,7 +20,7 @@ import type { StyleProps } from '../../commonTypes';
 import { isReducedMotion } from '../../PlatformChecker';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 
-const snapshots = new WeakMap<HTMLElement, DOMRect>();
+export const snapshots = new WeakMap<HTMLElement, DOMRect>();
 
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName =
@@ -263,7 +263,7 @@ function fixElementPosition(
   }
 }
 
-function setDummyPosition(dummy: HTMLElement, snapshot: DOMRect) {
+export function setDummyPosition(dummy: HTMLElement, snapshot: DOMRect) {
   dummy.style.transform = '';
   dummy.style.position = 'absolute';
   dummy.style.top = `${snapshot.top}px`;
@@ -281,6 +281,7 @@ export function handleExitingAnimation(
 ) {
   const parent = element.offsetParent;
   const dummy = element.cloneNode() as HTMLElement;
+  dummy.setAttribute('data-reanimatedDummy', 'true');
 
   element.style.animationName = '';
   // We hide current element so only its copy with proper animation will be displayed
@@ -299,6 +300,7 @@ export function handleExitingAnimation(
   parent?.appendChild(dummy);
 
   const snapshot = snapshots.get(element)!;
+  snapshots.set(dummy, snapshot);
 
   setDummyPosition(dummy, snapshot);
 
