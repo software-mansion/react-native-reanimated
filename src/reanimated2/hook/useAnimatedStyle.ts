@@ -200,7 +200,6 @@ function styleUpdater(
 
   if (hasAnimations) {
     const frame = (timestamp: Timestamp) => {
-      // console.log('styleUpdater', timestamp)
       const { animations, last, isAnimationCancelled } = state;
       if (isAnimationCancelled) {
         state.isAnimationRunning = false;

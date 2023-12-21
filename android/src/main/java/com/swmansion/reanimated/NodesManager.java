@@ -437,7 +437,6 @@ public class NodesManager implements EventDispatcherListener {
 
       if (background instanceof ReactViewBackgroundDrawable) {
         actualColor = ((ReactViewBackgroundDrawable) background).getColor();
-        int a = 7;
       }
       result = String.format("#%06x", (0xFFFFFF & actualColor));
     }
