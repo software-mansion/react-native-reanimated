@@ -1,6 +1,5 @@
 'use strict';
 import type { ViewStyle, TextStyle } from 'react-native';
-import type { Descriptor } from './hook/commonTypes';
 
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
 export interface StyleProps extends ViewStyle, TextStyle {
@@ -26,8 +25,8 @@ export interface SharedValue<Value = unknown> {
 
 export interface Mutable<Value = unknown> extends SharedValue<Value> {
   _isReanimatedSharedValue: true;
-  _animation?: AnimationObject | null; // only in Native
-  _value: Value | Descriptor | AnimatableValue;
+  _animation?: AnimationObject<Value> | null; // only in Native
+  _value: Value;
 }
 
 // The below type is used for HostObjects returned by the JSI API that don't have

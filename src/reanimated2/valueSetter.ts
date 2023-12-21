@@ -1,6 +1,5 @@
 'use strict';
-import type { AnimationObject, AnimatableValue, Mutable } from './commonTypes';
-import type { Descriptor } from './hook/commonTypes';
+import type { AnimationObject, Mutable } from './commonTypes';
 
 export function valueSetter<Value>(
   mutable: Mutable<Value>,
@@ -19,10 +18,10 @@ export function valueSetter<Value>(
       typeof value === 'object' &&
       (value as unknown as AnimationObject).onFrame !== undefined)
   ) {
-    const animation: AnimationObject =
+    const animation: AnimationObject<Value> =
       typeof value === 'function'
-        ? (value as () => AnimationObject)()
-        : (value as unknown as AnimationObject);
+        ? (value as () => AnimationObject<Value>)()
+        : (value as unknown as AnimationObject<Value>);
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
     // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)
@@ -80,6 +79,6 @@ export function valueSetter<Value>(
     if (mutable._value === value && !forceUpdate) {
       return;
     }
-    mutable._value = value as Descriptor | AnimatableValue;
+    mutable._value = value;
   }
 }
