@@ -17,7 +17,7 @@ const animationNameList: string[] = [];
  */
 export function configureWebLayoutAnimations() {
   if (
-    !isWindowAvailable() ||
+    !isWindowAvailable() || // Without this check SSR crashes because document is undefined (NextExample on CI)
     document.getElementById(PREDEFINED_WEB_ANIMATIONS_ID) !== null
   ) {
     return;
@@ -49,6 +49,7 @@ export function configureWebLayoutAnimations() {
 }
 
 export function insertWebAnimation(animationName: string, keyframe: string) {
+  // Without this check SSR crashes because document is undefined (NextExample on CI)
   if (!isWindowAvailable()) {
     return;
   }
@@ -81,6 +82,7 @@ export function insertWebAnimation(animationName: string, keyframe: string) {
 }
 
 function removeWebAnimation(animationName: string) {
+  // Without this check SSR crashes because document is undefined (NextExample on CI)
   if (!isWindowAvailable()) {
     return;
   }

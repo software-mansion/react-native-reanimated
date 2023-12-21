@@ -10,21 +10,19 @@ WorkletRuntime::WorkletRuntime(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
-    const std::string &name)
+    const std::string &name,
+    const std::string &valueUnpackerCode)
     : runtime_(ReanimatedRuntime::make(rnRuntime, jsQueue, name)), name_(name) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
   WorkletRuntimeDecorator::decorate(rt, name, jsScheduler);
-}
 
-void WorkletRuntime::installValueUnpacker(
-    const std::string &valueUnpackerCode) {
-  jsi::Runtime &rt = *runtime_;
   auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
       "(" + valueUnpackerCode + "\n)");
-  auto valueUnpacker = rt.evaluateJavaScript(codeBuffer, "installValueUnpacker")
-                           .asObject(rt)
-                           .asFunction(rt);
+  auto valueUnpacker =
+      rt.evaluateJavaScript(codeBuffer, "WorkletRuntime::WorkletRuntime")
+          .asObject(rt)
+          .asFunction(rt);
   rt.global().setProperty(rt, "__valueUnpacker", valueUnpacker);
 }
 

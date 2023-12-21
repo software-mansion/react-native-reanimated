@@ -17,7 +17,6 @@ import { getValueUnpackerCode } from '../valueUnpacker';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
-  installValueUnpacker(valueUnpackerCode: string): void;
   makeShareableClone<T>(
     value: T,
     shouldPersistRemote: boolean
@@ -92,7 +91,8 @@ export class NativeReanimated {
     global._REANIMATED_VERSION_JS = jsVersion;
     if (global.__reanimatedModuleProxy === undefined) {
       const { ReanimatedModule } = NativeModules;
-      ReanimatedModule?.installTurboModule();
+      const valueUnpackerCode = getValueUnpackerCode();
+      ReanimatedModule?.installTurboModule(valueUnpackerCode);
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new Error(
@@ -103,9 +103,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     if (__DEV__) {
       checkCppVersion();
     }
-
     this.InnerNativeModule = global.__reanimatedModuleProxy;
-    this.InnerNativeModule.installValueUnpacker(getValueUnpackerCode());
   }
 
   makeShareableClone<T>(value: T, shouldPersistRemote: boolean) {

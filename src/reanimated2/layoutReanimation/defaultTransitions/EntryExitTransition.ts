@@ -8,7 +8,7 @@ import type {
 import { BaseAnimationBuilder } from '../animationBuilder';
 import { withSequence, withTiming } from '../../animation';
 import { FadeIn, FadeOut } from '../defaultAnimations/Fade';
-import type { AnimationObject } from '../../commonTypes';
+import type { AnimatableValue, AnimationObject } from '../../commonTypes';
 import type { TransformArrayItem } from '../../helperTypes';
 
 export class EntryExitTransition
@@ -78,7 +78,6 @@ export class EntryExitTransition
           }
           exitingValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               animations.transform!.push({
                 [transformProp]: delayFunction(
                   delay,
@@ -135,22 +134,24 @@ export class EntryExitTransition
           }
           enteringValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               animations.transform!.push({
                 [transformProp]: delayFunction(
                   delay + exitingDuration,
                   withSequence(
                     withTiming(
                       enteringValues.initialValues.transform
-                        ? // TODO TYPESCRIPT
-                          // @ts-ignore Read similar comment above.
-                          enteringValues.initialValues.transform[index][
+                        ? ((
+                            enteringValues.initialValues
+                              .transform as TransformArrayItem[]
+                          )[index][
                             transformProp as keyof TransformArrayItem
-                          ]
+                          ] as AnimatableValue)
                         : 0,
                       { duration: exitingDuration }
                     ),
-                    value[transformProp as keyof TransformArrayItem]
+                    value[
+                      transformProp as keyof TransformArrayItem
+                    ] as AnimatableValue
                   )
                 ),
               } as TransformArrayItem);
@@ -175,8 +176,6 @@ export class EntryExitTransition
           ? exitingValues.initialValues.transform
           : []
       ).concat(
-        // TODO TYPESCRIPT
-        // @ts-ignore Read similar comment above.
         (Array.isArray(enteringValues.animations.transform)
           ? enteringValues.animations.transform
           : []
