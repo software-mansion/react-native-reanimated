@@ -147,11 +147,11 @@ describe('Tests of animations', () => {
     await wait(600);
     expect(await component.getAnimatedStyle('top')).toBe(
       `${TOP + MARGIN}`,
-      ComparisonMode.NUMBER
+      ComparisonMode.DISTANCE
     );
     expect(await component.getAnimatedStyle('left')).toBe(
       `${LEFT + MARGIN}`,
-      ComparisonMode.NUMBER
+      ComparisonMode.DISTANCE
     );
   });
 

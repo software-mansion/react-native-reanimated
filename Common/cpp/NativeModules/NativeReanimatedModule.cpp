@@ -31,6 +31,8 @@
 #include "UIRuntimeDecorator.h"
 #include "WorkletEventHandler.h"
 
+#include <iomanip>
+#include <sstream>
 #include <string>
 
 #ifdef __ANDROID__
@@ -246,6 +248,13 @@ void NativeReanimatedModule::unregisterEventHandler(
       [=] { eventHandlerRegistry_->unregisterEventHandler(id); });
 }
 
+template <typename T>
+inline std::string int_to_hex(T val, size_t width = sizeof(T) * 2) {
+  std::stringstream ss;
+  ss << std::setfill('0') << std::setw(width) << std::hex << (val | 0);
+  return ss.str();
+}
+
 jsi::Value NativeReanimatedModule::getViewProp(
     jsi::Runtime &rnRuntime,
     const jsi::Value &viewTag,
@@ -275,10 +284,30 @@ jsi::Value NativeReanimatedModule::getViewProp(
     if (propNameStr.compare("width") == 0) {
       resultStr =
           std::to_string(layoutableShadowNode->layoutMetrics_.frame.size.width);
-    }
-    if (propNameStr.compare("opacity") == 0) {
+    } else if (propNameStr.compare("height") == 0) {
+      resultStr =
+          std::to_string(layoutableShadowNode->layoutMetrics_.frame.size.width);
+    } else if (propNameStr.compare("top") == 0) {
+      resultStr =
+          std::to_string(layoutableShadowNode->layoutMetrics_.frame.origin.y);
+    } else if (propNameStr.compare("left") == 0) {
+      resultStr =
+          std::to_string(layoutableShadowNode->layoutMetrics_.frame.origin.x);
+    } else if (propNameStr.compare("opacity") == 0) {
       resultStr = std::to_string(staticProps->opacity);
+    } else if (propNameStr.compare("zIndex") == 0) {
+      std::optional<int> zIndex = staticProps->zIndex;
+      if (zIndex) {
+        resultStr = std::to_string(*zIndex);
+      }
+    } else if (propNameStr.compare("backgroundColor") == 0) {
+      // This doesn't work yet
+      SharedColor color = staticProps->backgroundColor;
+      auto color_hex = int_to_hex(*color);
+
+      resultStr = color_hex;
     }
+
     jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
       const auto resultValue =
           jsi::String::createFromUtf8(rnRuntime, resultStr);

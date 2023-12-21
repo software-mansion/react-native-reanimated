@@ -104,7 +104,7 @@ describe('With timing animation works with COLORS 🎨', () => {
         EXAMPLE_COLORS.coral[2],
         ComparisonMode.COLOR
       );
-      await wait(600);
+      await wait(1000);
 
       expect(await component.getAnimatedStyle('backgroundColor')).toBe(
         EXAMPLE_COLORS.cornflowerblue[2],
