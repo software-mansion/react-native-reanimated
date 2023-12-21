@@ -11,12 +11,12 @@ import {
   getProcessedConfig,
   handleExitingAnimation,
   handleLayoutTransition,
-  makeElementVisible,
   setElementAnimation,
 } from './componentUtils';
 import { areDOMRectsEqual } from './domUtils';
 import type { TransformsStyle } from 'react-native';
 import type { TransitionData } from './animationParser';
+import { makeElementVisible } from './componentStyle';
 
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
   animationType: LayoutAnimationType,

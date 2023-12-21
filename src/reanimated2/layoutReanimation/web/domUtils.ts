@@ -1,8 +1,8 @@
 'use strict';
 
 import { isWindowAvailable } from '../../PlatformChecker';
+import { setDummyPosition, snapshots } from './componentStyle';
 import { Animations } from './config';
-import { setDummyPosition, snapshots } from './componentUtils';
 import type { AnimationNames } from './config';
 
 const PREDEFINED_WEB_ANIMATIONS_ID = 'ReanimatedPredefinedWebAnimationsStyle';
