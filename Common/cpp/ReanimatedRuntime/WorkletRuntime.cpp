@@ -67,7 +67,10 @@ WorkletRuntime::WorkletRuntime(
 }
 
 std::unique_lock<std::recursive_mutex> WorkletRuntime::lock() {
-  assert(supportsLocking_ && "Runtime doesn't support locking");
+  assert(
+      supportsLocking_ &&
+      ("[Reanimated] Runtime \"" + name_ + "\" doesn't support locking.")
+          .c_str());
   return std::unique_lock<std::recursive_mutex>(runtimeMutex_);
 }
 
