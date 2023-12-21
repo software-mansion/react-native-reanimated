@@ -26,9 +26,20 @@ function App() {
 <summary>Type definitions</summary>
 
 ```typescript
-type SharedValue<T> = { value: T };
+interface SharedValue<Value = unknown> {
+  value: Value;
+  addListener: (listenerID: number, listener: (value: Value) => void) => void;
+  removeListener: (listenerID: number) => void;
+  modify: (
+    modifier?: <T extends Value>(value: T) => T,
+    forceUpdate?: boolean
+  ) => void;
+}
 
-function useSharedValue<T>(initialValue: T): SharedValue<T>;
+function useSharedValue<Value>(
+  initialValue: Value,
+  oneWayReadsOnly?: boolean
+): SharedValue<Value>;
 ```
 
 </details>

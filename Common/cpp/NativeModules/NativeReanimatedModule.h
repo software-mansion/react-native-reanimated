@@ -36,13 +36,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const std::shared_ptr<CallInvoker> &jsInvoker,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      const PlatformDepMethodsHolder &platformDepMethodsHolder);
+      const PlatformDepMethodsHolder &platformDepMethodsHolder,
+      const std::string &valueUnpackerCode);
 
   ~NativeReanimatedModule();
-
-  void installValueUnpacker(
-      jsi::Runtime &rt,
-      const jsi::Value &valueUnpackerCode) override;
 
   jsi::Value makeShareableClone(
       jsi::Runtime &rt,

@@ -120,9 +120,10 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
-  public void initWithContext(ReactApplicationContext reactApplicationContext) {
+  public void initWithContext(
+      ReactApplicationContext reactApplicationContext, String valueUnpackerCode) {
     mReactApplicationContext = reactApplicationContext;
-    mNativeProxy = new NativeProxy(reactApplicationContext);
+    mNativeProxy = new NativeProxy(reactApplicationContext, valueUnpackerCode);
     mAnimationManager.setAndroidUIScheduler(getNativeProxy().getAndroidUIScheduler());
     compatibility = new ReaCompatibility(reactApplicationContext);
     compatibility.registerFabricEventListener(this);
