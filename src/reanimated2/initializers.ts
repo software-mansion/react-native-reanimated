@@ -14,10 +14,10 @@ const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 const IS_CHROME_DEBUGGER = isChromeDebugger();
 
 // callGuard is only used with debug builds
-export function callGuardDEV<T extends Array<unknown>, U extends void>(
-  fn: (...args: T) => U,
-  ...args: T
-): void {
+export function callGuardDEV<Args extends unknown[], ReturnValue>(
+  fn: (...args: Args) => ReturnValue,
+  ...args: Args
+): ReturnValue | void {
   'worklet';
   try {
     return fn(...args);

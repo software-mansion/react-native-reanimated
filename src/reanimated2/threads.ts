@@ -142,8 +142,8 @@ export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
     return NativeReanimatedModule.executeOnUIRuntimeSync(
       makeShareableCloneRecursive(() => {
         'worklet';
-        const ret = worklet(...args);
-        return makeShareableCloneOnUIRecursive(ret);
+        const result = worklet(...args);
+        return makeShareableCloneOnUIRecursive(result);
       })
     );
   };

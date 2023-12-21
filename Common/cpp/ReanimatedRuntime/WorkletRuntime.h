@@ -65,10 +65,10 @@ class WorkletRuntime : public jsi::HostObject,
   std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
 
  private:
+  std::recursive_mutex runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
-  std::recursive_mutex runtimeMutex_;
   bool supportsLocking_;
 };
 
