@@ -91,13 +91,13 @@ public class ReanimatedModule extends ReactContextBaseJavaModule
   }
 
   @ReactMethod(isBlockingSynchronousMethod = true)
-  public void installTurboModule() {
+  public void installTurboModule(String valueUnpackerCode) {
     // When debugging in chrome the JS context is not available.
     // https://github.com/facebook/react-native/blob/v0.67.0-rc.6/ReactAndroid/src/main/java/com/facebook/react/modules/blob/BlobCollector.java#L25
     Utils.isChromeDebugger = getReactApplicationContext().getJavaScriptContextHolder().get() == 0;
 
     if (!Utils.isChromeDebugger) {
-      this.getNodesManager().initWithContext(getReactApplicationContext());
+      this.getNodesManager().initWithContext(getReactApplicationContext(), valueUnpackerCode);
     } else {
       Log.w(
           "[REANIMATED]",
