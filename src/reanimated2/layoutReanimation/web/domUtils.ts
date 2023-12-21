@@ -159,6 +159,10 @@ function DFSVisit(node: HTMLElement, root: Node) {
 }
 
 export function setObserver() {
+  if (!isWindowAvailable()) {
+    return;
+  }
+
   const observer = new MutationObserver((mutationsList) => {
     const rootMutation = mutationsList[mutationsList.length - 1];
 
