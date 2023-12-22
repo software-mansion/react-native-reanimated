@@ -10,10 +10,10 @@ import { valueSetter } from './valueSetter';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-function uiValueGetter<T>(sharedValue: SharedValue<T>) {
+const uiValueGetter = executeOnUIRuntimeSync(<T>(sv: SharedValue<T>): T => {
   'worklet';
-  return sharedValue.value;
-}
+  return sv.value;
+});
 
 export function makeUIMutable<T>(initial: T) {
   'worklet';
@@ -82,9 +82,9 @@ export function makeMutable<T>(initial: T): SharedValue<T> {
         })();
       }
     },
-    get value() {
+    get value(): T {
       if (!SHOULD_BE_USE_WEB) {
-        return executeOnUIRuntimeSync(uiValueGetter)(mutable);
+        return uiValueGetter(mutable);
       }
       return value;
     },
