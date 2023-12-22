@@ -110,7 +110,7 @@ describe('babel plugin', () => {
         relativeSourceLocation: true,
       });
       console.log(code);
-      const matches = code?.match(/\.\.\/dev\/null/g);
+      const matches = code?.match(new RegExp(`..${MOCK_LOCATION}`, 'g'));
       expect(matches).toHaveLength(2);
     });
 
