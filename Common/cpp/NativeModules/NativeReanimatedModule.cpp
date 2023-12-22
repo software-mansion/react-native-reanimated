@@ -49,7 +49,8 @@ NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<CallInvoker> &jsInvoker,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<UIScheduler> &uiScheduler,
-    const PlatformDepMethodsHolder &platformDepMethodsHolder)
+    const PlatformDepMethodsHolder &platformDepMethodsHolder,
+    const std::string &valueUnpackerCode)
     : NativeReanimatedModuleSpec(jsInvoker),
       jsQueue_(jsQueue),
       jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsInvoker)),
@@ -59,7 +60,9 @@ NativeReanimatedModule::NativeReanimatedModule(
           jsQueue,
           jsScheduler_,
           "Reanimated UI runtime",
-          WorkletRuntimeType::WithLocking)),
+          WorkletRuntimeType::WithLocking,
+          valueUnpackerCode)),
+      valueUnpackerCode_(valueUnpackerCode),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       onRenderCallback_([this](const double timestampMs) {
@@ -133,13 +136,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction);
 }
 
-void NativeReanimatedModule::installValueUnpacker(
-    jsi::Runtime &rt,
-    const jsi::Value &valueUnpackerCode) {
-  valueUnpackerCode_ = valueUnpackerCode.asString(rt).utf8(rt);
-  uiWorkletRuntime_->installValueUnpacker(valueUnpackerCode_);
-}
-
 NativeReanimatedModule::~NativeReanimatedModule() {
   // event handler registry and frame callbacks store some JSI values from UI
   // runtime, so they have to go away before we tear down the runtime
@@ -190,8 +186,8 @@ jsi::Value NativeReanimatedModule::createWorkletRuntime(
       jsQueue_,
       jsScheduler_,
       name.asString(rt).utf8(rt),
-      WorkletRuntimeType::WithoutLocking);
-  workletRuntime->installValueUnpacker(valueUnpackerCode_);
+      WorkletRuntimeType::WithoutLocking,
+      valueUnpackerCode_);
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Reanimated] Initializer must be a worklet.");
   workletRuntime->runGuarded(initializerShareable);

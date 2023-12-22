@@ -52,7 +52,8 @@ WorkletRuntime::WorkletRuntime(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
-    WorkletRuntimeType type)
+    WorkletRuntimeType type,
+    const std::string &valueUnpackerCode)
     : runtime_(makeRuntime(
           rnRuntime,
           jsQueue,
@@ -64,6 +65,14 @@ WorkletRuntime::WorkletRuntime(
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
   WorkletRuntimeDecorator::decorate(rt, name, jsScheduler);
+
+  auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
+      "(" + valueUnpackerCode + "\n)");
+  auto valueUnpacker =
+      rt.evaluateJavaScript(codeBuffer, "WorkletRuntime::WorkletRuntime")
+          .asObject(rt)
+          .asFunction(rt);
+  rt.global().setProperty(rt, "__valueUnpacker", valueUnpacker);
 }
 
 std::unique_lock<std::recursive_mutex> WorkletRuntime::lock() {
@@ -72,17 +81,6 @@ std::unique_lock<std::recursive_mutex> WorkletRuntime::lock() {
       ("[Reanimated] Runtime \"" + name_ + "\" doesn't support locking.")
           .c_str());
   return std::unique_lock<std::recursive_mutex>(runtimeMutex_);
-}
-
-void WorkletRuntime::installValueUnpacker(
-    const std::string &valueUnpackerCode) {
-  jsi::Runtime &rt = *runtime_;
-  auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
-      "(" + valueUnpackerCode + "\n)");
-  auto valueUnpacker = rt.evaluateJavaScript(codeBuffer, "installValueUnpacker")
-                           .asObject(rt)
-                           .asFunction(rt);
-  rt.global().setProperty(rt, "__valueUnpacker", valueUnpacker);
 }
 
 jsi::Value WorkletRuntime::get(
