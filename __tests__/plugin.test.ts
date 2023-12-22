@@ -109,7 +109,7 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input, undefined, {
         relativeSourceLocation: true,
       });
-      console.log(code);
+
       const matches = code?.match(new RegExp(`..${MOCK_LOCATION}`, 'g'));
       expect(matches).toHaveLength(2);
     });
