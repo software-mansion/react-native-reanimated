@@ -293,7 +293,7 @@ export default class JSReanimated {
 
   executeOnUIRuntimeSync<T, R>(_shareable: ShareableRef<T>): R {
     throw new Error(
-      '[Reanimated] executeOnUIRuntimeSync is not available in JSReanimated.'
+      '[Reanimated] `executeOnUIRuntimeSync` is not available in JSReanimated.'
     );
   }
 }

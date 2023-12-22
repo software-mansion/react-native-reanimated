@@ -84,7 +84,7 @@ export function makeMutable<T>(initial: T): SharedValue<T> {
     },
     get value(): T {
       if (!SHOULD_BE_USE_WEB) {
-        return uiValueGetter(mutable) as T;
+        return uiValueGetter(mutable);
       }
       return value;
     },

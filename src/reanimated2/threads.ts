@@ -133,7 +133,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
 // @ts-expect-error Check `executeOnUIRuntimeSync` overload above.
 export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue
-): WorkletFunction<Args, ReturnValue>;
+): (...args: Args) => ReturnValue;
 
 export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>
