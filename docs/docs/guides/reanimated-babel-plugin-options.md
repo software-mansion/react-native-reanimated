@@ -1,12 +1,12 @@
 ---
 id: plugin-options
-title: 'Reanimated Babel plugin options'
-sidebar_label: 'Reanimated Babel plugin options'
+title: 'Options for Reanimated Babel Plugin'
+sidebar_label: 'Options for Reanimated Babel Plugin'
 ---
 
-# Reanimated Babel plugin options
+# Options for Reanimated Babel Plugin
 
-Our plugin comes with a few optional functionalities, some of which might be necessary to use advanced APIs:
+Our plugin offers several optional functionalities that you may need to employ advanced APIs:
 
 <details>
 <summary>Type definitions</summary>
@@ -24,7 +24,9 @@ interface ReanimatedPluginOptions {
 
 ## How to use
 
-It's a standard syntax for Babel plugins, you have to pass an object containing the options to the plugin in your `babel.config.js`. Example:
+Using this is straightforward for Babel plugins; you just need to pass an object containing the options to the plugin in your `babel.config.js` file.
+
+Here's an example:
 
 ```js {7}
 module.exports = {
@@ -48,13 +50,15 @@ module.exports = {
 
 ### relativeSourceLocation
 
-SEEMS TO BE SCUFFED ATM.
+Defaults to `false`.
 
-An option that defines what should be passed as a file location for a worklet's source map. Enabling this option will make the file paths relative to `process.cwd` where Babel executes - most likely your App's root. Defaults to `false`.
+This option dictates the passed file location for a worklet's source map. If you enable this option, the file paths will be relative to `process.cwd` (the current directory where Babel executes). This can be handy for Jest test snapshots to ensure consistent results across machines.
 
 ### disableInlineStylesWarning
 
-An option that disables QoL warning when using [inline shared values](/docs/fundamentals/glossary#animations-in-inline-styling) - when you accidentally do:
+Defaults to `false`.
+
+Turning on this option suppresses a helpful warning when you use [inline shared values](/docs/fundamentals/glossary#animations-in-inline-styling) and might unintentionally write:
 
 ```tsx
 import Animated, {useSharedValue} from 'react-native-reanimated';
@@ -65,7 +69,7 @@ function MyView(){
 }
 ```
 
-You will get a warning that you accessed `value` in inline prop usage and there's possible loss of reactivity. However, since there's no fail-safe mechanism to detect whether accessed property `value` comes from a Shared Value during Babel transpilation, this might be troublesome in some cases, e.g.
+You'll receive a warning about accessing `value` in an inline prop and the potential loss of reactivity that it causes. However, because there's no fail-safe mechanism that checks if the accessed property `value` comes from a Shared Value during Babel transpilation, it might cause problems:
 
 ```tsx
 import { View } from 'react-native';
@@ -78,13 +82,17 @@ interface MyProps {
 }
 
 function MyView({ taggedWidth }) {
-  return <View style={{ width: taggedWidth.value }} />; // This will trigger a false warning.
+  return <View style={{ width: taggedWidth.value }} />; // This triggers a false warning.
 }
 ```
 
+Enable this option to silence such false warnings.
+
 ### processNestedWorklets
 
-Experimental functionality that was created to support multithreading. To understand it, let's look at this example:
+Defaults to `false`.
+
+This experimental feature supports multithreading. Consider this example:
 
 ```tsx
 function outerWorklet() {
@@ -100,15 +108,17 @@ runOnUI(outerWorklet)();
 
 This example will result in an error. Let's quickly describe why:
 
-1. After the functions are created and their worklet factories resolved, `runOnUI` is called. This function firstly takes the worklet's data, loads it into the UI thread after some conversion and then schedules an asynchronous execution.
+1. Upon creating the functions and resolving their worklet factories, the `runOnUI` function is called. This function first takes the worklet's data, loads it into the UI thread after converting it, and then schedules an execution asynchronously.
 
-2. During execution, scheduled worklet calls `runOnSomeOtherThread` which does more-or-less the same as `runOnUI`, but targeting SomeOtherThread.
+2. During execution, the worklet scheduled for execution calls `runOnSomeOtherThread`. This action mirrors what `runOnUI` does, but targets SomeOtherThread.
 
-3. This will fail, because `outerWorklet` injected into UI thread was injected without worklet data of `innerWorklet`. It's an intentional optimization, since in the past we only had UI and JS threads and there wasn't a need to pass this extraneous data to other threads.
+3. This process fails because the injection of `outerWorklet` into the UI thread occurred without the `innerWorklet` worklet data, therefore it's not available for SomeOtherThread.
+
+If you enable this option, the system will workletize functions depth-first, avoiding the above-mentioned scenario and ensuring things operate correctly. Keep in mind that nesting worklets like in the provided example is only useful in threading.
 
 ### globals
 
-List of identifiers (objects) that will not be copied to the UI thread if a worklet needs it. Consider this example:
+This is a list of identifiers (objects) that will not be copied to the UI thread if a worklet requires them. For instance:
 
 ```tsx
 const someReference = 5;
@@ -118,7 +128,7 @@ function foo() {
 }
 ```
 
-`someReference` in this example is not available on the UI thread - therefore we have to copy it there, with correct scoping as well, for the worklet not to fail. However, in this case:
+In this example, `someReference` is not accessible on the UI thread. Consequently, we must copy it there, ensuring correct scoping, to keep the worklet from failing. But, consider this:
 
 ```tsx
 function bar() {
@@ -127,7 +137,7 @@ function bar() {
 }
 ```
 
-Identifier `null` is already present on the UI thread. Therefore there's no need to copy it and use a copied value there. While it doesn't seem particularly useful to not copy the value here, take a look at this example:
+Here, the identifier `null` is already accessible on the UI thread. Therefore, we don't need to copy it and use a copied value there. While it might not immediately seem particularly useful to avoid copying the value, consider the following case:
 
 ```tsx
 function setOnJS() {
@@ -156,13 +166,13 @@ function run() {
 }
 ```
 
-If `global` wasn't a whitelisted identifier in this case, you'd just get:
+Without `global` as a whitelisted identifier in this case, you'd only get:
 
 ```
 JS THREAD
 JS THREAD
 ```
 
-Because the whole (!) `global` object would be copied to the UI thread for `setOnUI` to then assign to this copy on it. Then, `readOnUI` would copy the `global` object once again and read from this copy.
+This output occurs because the entire `global` object (!) would be copied to the UI thread for it to be assigned by `setOnUI`. Then, `readOnUI` would again copy the `global` object and read from this copy.
 
-There is a [huge list of names whitelisted by default](https://github.com/software-mansion/react-native-reanimated/blob/main/plugin/src/globals.ts).
+There is a [huge list of identifiers whitelisted by default](https://github.com/software-mansion/react-native-reanimated/blob/main/plugin/src/globals.ts).
