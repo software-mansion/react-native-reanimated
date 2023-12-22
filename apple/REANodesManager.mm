@@ -208,6 +208,7 @@ using namespace facebook::react;
     _onAnimationCallbacks = [NSMutableArray new];
     _operationsInBatch = [NSMutableDictionary new];
     _componentUpdateBuffer = [NSMutableDictionary new];
+    // TODO: on new arch _uiManager is not inicialized so the _viewRegistry is also nil
     _viewRegistry = [_uiManager valueForKey:@"_viewRegistry"];
     _eventHandler = ^(id<RCTEvent> event) {
       // no-op

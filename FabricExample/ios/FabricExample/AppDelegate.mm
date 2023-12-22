@@ -1,6 +1,12 @@
 #import "AppDelegate.h"
 
 #import <React/RCTBundleURLProvider.h>
+#import <React/CoreModulesPlugins.h>
+#import <ReactCommon/RCTTurboModuleManager.h>
+#import <REATurboCppModule.h>
+
+@interface AppDelegate () <RCTTurboModuleManagerDelegate> {}
+@end
 
 @implementation AppDelegate
 
@@ -17,6 +23,22 @@
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
 {
   return [self getBundleURL];
+}
+
+- (BOOL)bridgelessEnabled
+{
+    return YES;
+}
+
+#pragma mark RCTTurboModuleManagerDelegate
+
+- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const std::string &)name
+                                                      jsInvoker:(std::shared_ptr<facebook::react::CallInvoker>)jsInvoker
+{
+  if (name == "REATurboCppModule") {
+    return std::make_shared<facebook::react::REATurboCppModule>(jsInvoker);
+  }
+  return nullptr;
 }
 
 - (NSURL *)getBundleURL
