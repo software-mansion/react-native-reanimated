@@ -79,7 +79,7 @@ export type LayoutAnimationFunction = (
 export type LayoutAnimationStartFunction = (
   tag: number,
   type: LayoutAnimationType,
-  yogaValues: LayoutAnimationsValues,
+  yogaValues: Partial<SharedTransitionAnimationsValues>,
   config: LayoutAnimationFunction
 ) => void;
 
@@ -137,6 +137,10 @@ export type CustomProgressAnimation = (
   progress: number
 ) => StyleProps;
 
+/**
+ * Used to configure the `.defaultTransitionType()` shared transition modifier.
+ * @experimental
+ */
 export enum SharedTransitionType {
   ANIMATION = 'animation',
   PROGRESS_ANIMATION = 'progressAnimation',

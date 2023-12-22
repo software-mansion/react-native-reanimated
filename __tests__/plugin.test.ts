@@ -1584,7 +1584,7 @@ describe('babel plugin', () => {
   });
 
   describe('for web configuration', () => {
-    it('skips initData when omitWorkletInitData option is set to true', () => {
+    it('skips initData when omitNativeOnlyData option is set to true', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -1592,12 +1592,12 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input, {}, { omitWorkletInitData: true });
+      const { code } = runPlugin(input, {}, { omitNativeOnlyData: true });
       expect(code).toHaveWorkletData(0);
       expect(code).toMatchSnapshot();
     });
 
-    it('includes initData when omitWorkletInitData option is set to false', () => {
+    it('includes initData when omitNativeOnlyData option is set to false', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -1605,7 +1605,7 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input, {}, { omitWorkletInitData: false });
+      const { code } = runPlugin(input, {}, { omitNativeOnlyData: false });
       expect(code).toHaveWorkletData(1);
       expect(code).toMatchSnapshot();
     });

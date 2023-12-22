@@ -5,6 +5,9 @@
 #include <react/jni/JMessageQueueThread.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
+#ifdef RCT_NEW_ARCH_ENABLED
+#include <react/fabric/Binding.h>
+#endif
 
 #include <memory>
 #include <string>
@@ -33,13 +36,12 @@ NativeProxy::NativeProxy(
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
 #ifdef RCT_NEW_ARCH_ENABLED
-    ,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-        fabricUIManager
+        fabricUIManager,
 #endif
-    )
+    const std::string &valueUnpackerCode)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       nativeReanimatedModule_(std::make_shared<NativeReanimatedModule>(
@@ -47,7 +49,8 @@ NativeProxy::NativeProxy(
           jsCallInvoker,
           std::make_shared<JMessageQueueThread>(messageQueueThread),
           uiScheduler,
-          getPlatformDependentMethods())),
+          getPlatformDependentMethods(),
+          valueUnpackerCode)),
       layoutAnimations_(std::move(layoutAnimations)) {
 #ifdef RCT_NEW_ARCH_ENABLED
   const auto &uiManager =
@@ -82,13 +85,12 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
         jsCallInvokerHolder,
     jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
     jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
 #ifdef RCT_NEW_ARCH_ENABLED
-    ,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-        fabricUIManager
+        fabricUIManager,
 #endif
-) {
+    const std::string &valueUnpackerCode) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto uiScheduler = androidUiScheduler->cthis()->getUIScheduler();
   return makeCxxInstance(
@@ -97,12 +99,11 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       jsCallInvoker,
       uiScheduler,
       make_global(layoutAnimations),
-      messageQueueThread
+      messageQueueThread,
 #ifdef RCT_NEW_ARCH_ENABLED
-      ,
-      fabricUIManager
+      fabricUIManager,
 #endif
-      /**/);
+      valueUnpackerCode);
 }
 
 #ifndef NDEBUG

@@ -244,6 +244,7 @@ android {
         if (REACT_NATIVE_MINOR_VERSION > 68) {
             prefab true
             prefabPublishing true
+            buildConfig true
         }
     }
 
@@ -363,6 +364,8 @@ android {
             if (REANIMATED_MAJOR_VERSION > 2) {
                 if (REACT_NATIVE_MINOR_VERSION <= 67) {
                     srcDirs += "src/reactNativeVersionPatch/messageQueueThread/67"
+                } else if (REACT_NATIVE_MINOR_VERSION <= 72) {
+                    srcDirs += "src/reactNativeVersionPatch/messageQueueThread/72"
                 } else {
                     srcDirs += "src/reactNativeVersionPatch/messageQueueThread/latest"
                 }
@@ -373,6 +376,15 @@ android {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/70"
             } else {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest"
+            }
+
+            // ReactFeatureFlags 
+            if (IS_NEW_ARCHITECTURE_ENABLED) {
+                if (REACT_NATIVE_MINOR_VERSION <= 72) {
+                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/72"
+                } else {
+                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/latest"
+                }
             }
         }
     }

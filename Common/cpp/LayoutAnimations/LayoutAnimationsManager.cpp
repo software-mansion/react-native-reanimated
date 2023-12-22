@@ -4,7 +4,6 @@
 
 #ifndef NDEBUG
 #include <utility>
-#include "JSLogger.h"
 #endif
 
 namespace reanimated {

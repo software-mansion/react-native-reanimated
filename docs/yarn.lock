@@ -10209,9 +10209,9 @@ react-dev-utils@^12.0.1:
     text-table "^0.2.0"
 
 react-devtools-core@^4.26.1:
-  version "4.27.2"
-  resolved "https://registry.yarnpkg.com/react-devtools-core/-/react-devtools-core-4.27.2.tgz#d20fc57e258c656eedabafc2c851d38b33583148"
-  integrity sha512-8SzmIkpO87alD7Xr6gWIEa1jHkMjawOZ+6egjazlnjB4UUcbnzGDf/vBJ4BzGuWWEM+pzrxuzsPpcMqlQkYK2g==
+  version "4.28.4"
+  resolved "https://registry.yarnpkg.com/react-devtools-core/-/react-devtools-core-4.28.4.tgz#fb8183eada77093f4c2f9830e664bf22255abe27"
+  integrity sha512-IUZKLv3CimeM07G3vX4H4loxVpByrzq3HvfTX7v9migalwvLs9ZY5D3S3pKR33U+GguYfBBdMMZyToFhsSE/iQ==
   dependencies:
     shell-quote "^1.6.1"
     ws "^7"
@@ -10317,10 +10317,10 @@ react-native-gradle-plugin@^0.71.16:
   resolved "https://registry.yarnpkg.com/react-native-gradle-plugin/-/react-native-gradle-plugin-0.71.16.tgz#822bb0c680e03b5df5aa65f2e5ffc2bc2930854a"
   integrity sha512-H2BjG2zk7B7Wii9sXvd9qhCVRQYDAHSWdMw9tscmZBqSP62DkIWEQSk4/B2GhQ4aK9ydVXgtqR6tBeg3yy8TSA==
 
-react-native-reanimated@^3.6.0-nightly-20231010-4a507b2c4:
-  version "3.6.0-nightly-20231010-4a507b2c4"
-  resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-3.6.0-nightly-20231010-4a507b2c4.tgz#6b5debc759a9c57c6b611636932977d01fb59353"
-  integrity sha512-RO5lkTOsOYX3pGF0UepRHnPSnOpnkj/f59uFQlWu/2+yOy+6IjG9F7dU0fJpumJFt6cSV2p7RUygofC9TrxMVA==
+react-native-reanimated@^3.6.0-nightly-20231120-1eb2acaa0:
+  version "3.6.0-nightly-20231120-1eb2acaa0"
+  resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-3.6.0-nightly-20231120-1eb2acaa0.tgz#0f3ae33f7ba1590d3cefc9e9cdd908b040a5f134"
+  integrity sha512-s836kPM2/SMR1347BYT0E95O7zR4NrNEN9B5ToeXxXRCXonydJcsSbecu5JuwcKIDv96ZPtwxHvjTMxzflJVEQ==
   dependencies:
     "@babel/plugin-transform-object-assign" "^7.16.7"
     "@babel/preset-typescript" "^7.16.7"

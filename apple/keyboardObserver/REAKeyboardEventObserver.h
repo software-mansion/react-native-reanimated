@@ -1,6 +1,3 @@
-#ifndef REAKeyboardEventManager_h
-#define REAKeyboardEventManager_h
-
 #import <React/RCTEventDispatcher.h>
 
 typedef void (^KeyboardEventListenerBlock)(int keyboardState, int height);
@@ -12,5 +9,3 @@ typedef void (^KeyboardEventListenerBlock)(int keyboardState, int height);
 - (void)unsubscribeFromKeyboardEvents:(int)listenerId;
 
 @end
-
-#endif /* REAKeyboardEventManager_h */
