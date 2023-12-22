@@ -1,5 +1,4 @@
 'use strict';
-import { NativeModules } from 'react-native';
 import type {
   ShareableRef,
   ShareableSyncDataHolderRef,
@@ -14,6 +13,8 @@ import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
 import type { WorkletRuntime } from '../runtimes';
 import { getValueUnpackerCode } from '../valueUnpacker';
+import NativeREATurboCppModule from '../../specs/NativeREATurboCppModule';
+import NativeReanimatedModule from '../../specs/NativeReanimatedModule';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
@@ -89,10 +90,12 @@ export class NativeReanimated {
     if (__DEV__) {
       assertSingleReanimatedInstance();
     }
+    const valueUnpackerCode = getValueUnpackerCode();
     if (global.__reanimatedModuleProxy === undefined) {
-      const { ReanimatedModule } = NativeModules;
-      const valueUnpackerCode = getValueUnpackerCode();
-      ReanimatedModule?.installTurboModule(valueUnpackerCode);
+      NativeReanimatedModule?.installTurboModule(valueUnpackerCode);
+    }
+    if (global.__reanimatedModuleProxy === undefined) {
+      NativeREATurboCppModule?.installBridgeless(valueUnpackerCode);
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new Error(
