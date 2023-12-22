@@ -60,5 +60,6 @@ module.exports = {
       { fixMixedExportsWithInlineTypeSpecifier: false },
     ],
     'tsdoc/syntax': 'error',
+    '@typescript-eslint/no-non-null-assertion': 'off',
   },
 };
