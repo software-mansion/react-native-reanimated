@@ -1609,5 +1609,68 @@ describe('babel plugin', () => {
       expect(code).toHaveWorkletData(1);
       expect(code).toMatchSnapshot();
     });
+
+    it('substitutes isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to true', () => {
+      const input = html`<script>
+        const x = isWeb();
+        const y = shouldBeUseWeb();
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        {},
+        { substituteWebPlatformChecks: true }
+      );
+      expect(code).toContain('var x = true;');
+      expect(code).toContain('var y = true;');
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to false", () => {
+      const input = html`<script>
+        const x = isWeb();
+        const y = shouldBeUseWeb();
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        {},
+        { substituteWebPlatformChecks: false }
+      );
+      expect(code).toContain('var x = isWeb();');
+      expect(code).toContain('var y = shouldBeUseWeb();');
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is undefined", () => {
+      const input = html`<script>
+        const x = isWeb();
+        const y = shouldBeUseWeb();
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('var x = isWeb();');
+      expect(code).toContain('var y = shouldBeUseWeb();');
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't substitute isWeb and shouldBeUseWeb in worklets", () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          const x = isWeb();
+          const y = shouldBeUseWeb();
+        }
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        {},
+        { substituteWebPlatformChecks: true }
+      );
+      expect(code).toContain('const x=isWeb();');
+      expect(code).toContain('const y=shouldBeUseWeb();');
+      expect(code).toMatchSnapshot();
+    });
   });
 });

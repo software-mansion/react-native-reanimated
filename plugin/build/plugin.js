@@ -978,6 +978,26 @@ var require_addCustomGlobals = __commonJS({
   }
 });
 
+// lib/substituteWebCallExpression.js
+var require_substituteWebCallExpression = __commonJS({
+  "lib/substituteWebCallExpression.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.substituteWebCallExpression = void 0;
+    var types_1 = require("@babel/types");
+    function substituteWebCallExpression(path) {
+      const callee = path.node.callee;
+      if ((0, types_1.isIdentifier)(callee)) {
+        const name = callee.name;
+        if (name === "isWeb" || name === "shouldBeUseWeb") {
+          path.replaceWith((0, types_1.booleanLiteral)(true));
+        }
+      }
+    }
+    exports2.substituteWebCallExpression = substituteWebCallExpression;
+  }
+});
+
 // lib/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
 var processForCalleesWorklets_1 = require_processForCalleesWorklets();
@@ -986,6 +1006,7 @@ var processInlineStylesWarning_1 = require_processInlineStylesWarning();
 var processIfCallback_1 = require_processIfCallback();
 var addCustomGlobals_1 = require_addCustomGlobals();
 var globals_1 = require_globals();
+var substituteWebCallExpression_1 = require_substituteWebCallExpression();
 module.exports = function() {
   function runWithTaggedExceptions(fun) {
     try {
@@ -1004,7 +1025,12 @@ module.exports = function() {
     visitor: {
       CallExpression: {
         enter(path, state) {
-          runWithTaggedExceptions(() => (0, processForCalleesWorklets_1.processForCalleesWorklets)(path, state));
+          runWithTaggedExceptions(() => {
+            (0, processForCalleesWorklets_1.processForCalleesWorklets)(path, state);
+            if (state.opts.substituteWebPlatformChecks) {
+              (0, substituteWebCallExpression_1.substituteWebCallExpression)(path);
+            }
+          });
         }
       },
       "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression": {
