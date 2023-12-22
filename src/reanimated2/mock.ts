@@ -1,4 +1,4 @@
-/* eslint-disable node/no-callback-literal */
+/* eslint-disable n/no-callback-literal */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 'use strict';
@@ -12,6 +12,10 @@ const ID = (t) => t;
 const IMMEDIATE_CB_INVOCATION = (cb: () => unknown) => cb();
 
 class BaseAnimationMock {
+  createInstance() {
+    return this;
+  }
+
   duration(_: number) {
     return this;
   }
@@ -46,6 +50,50 @@ class BaseAnimationMock {
 
   easing(_: (t: number) => number) {
     return this;
+  }
+
+  rotate(_: string) {
+    return this;
+  }
+
+  mass(_: number) {
+    return this;
+  }
+
+  restDisplacementThreshold(_: number) {
+    return this;
+  }
+
+  restSpeedThreshold(_: number) {
+    return this;
+  }
+
+  overshootClamping(_: number) {
+    return this;
+  }
+
+  dampingRatio(_: number) {
+    return this;
+  }
+
+  getDelay() {
+    return 0;
+  }
+
+  getDelayFunction() {
+    return NOOP;
+  }
+
+  getDuration() {
+    return 300;
+  }
+
+  getReduceMotion() {
+    return ReduceMotion.System;
+  }
+
+  getAnimationAndConfig() {
+    return [NOOP, {}];
   }
 
   build() {

@@ -17,7 +17,6 @@ import { getValueUnpackerCode } from '../valueUnpacker';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
-  installValueUnpacker(valueUnpackerCode: string): void;
   makeShareableClone<T>(
     value: T,
     shouldPersistRemote: boolean
@@ -31,6 +30,10 @@ export interface NativeReanimatedModule {
     name: string,
     initializer: ShareableRef<() => void>
   ): WorkletRuntime;
+  scheduleOnRuntime<T>(
+    workletRuntime: WorkletRuntime,
+    worklet: ShareableRef<T>
+  ): void;
   registerEventHandler<T>(
     eventHandler: ShareableRef<T>,
     eventName: string,
@@ -88,7 +91,8 @@ export class NativeReanimated {
     }
     if (global.__reanimatedModuleProxy === undefined) {
       const { ReanimatedModule } = NativeModules;
-      ReanimatedModule?.installTurboModule();
+      const valueUnpackerCode = getValueUnpackerCode();
+      ReanimatedModule?.installTurboModule(valueUnpackerCode);
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new Error(
@@ -99,9 +103,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     if (__DEV__) {
       checkCppVersion();
     }
-
     this.InnerNativeModule = global.__reanimatedModuleProxy;
-    this.InnerNativeModule.installValueUnpacker(getValueUnpackerCode());
   }
 
   makeShareableClone<T>(value: T, shouldPersistRemote: boolean) {
@@ -125,6 +127,16 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {
     return this.InnerNativeModule.createWorkletRuntime(name, initializer);
+  }
+
+  scheduleOnRuntime<T>(
+    workletRuntime: WorkletRuntime,
+    shareableWorklet: ShareableRef<T>
+  ) {
+    return this.InnerNativeModule.scheduleOnRuntime(
+      workletRuntime,
+      shareableWorklet
+    );
   }
 
   registerSensor(

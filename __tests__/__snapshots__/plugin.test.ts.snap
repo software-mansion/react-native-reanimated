@@ -28,8 +28,8 @@ var foo = function () {
     var baz = "worklet";
   };
   foo.__closure = {};
-  foo.__initData = _worklet_9810417751380_init_data;
   foo.__workletHash = 9810417751380;
+  foo.__initData = _worklet_9810417751380_init_data;
   foo.__stackDetails = _e;
   return foo;
 }();"
@@ -48,8 +48,8 @@ var foo = function () {
     return x + 2;
   };
   foo.__closure = {};
-  foo.__initData = _worklet_4679479961836_init_data;
   foo.__workletHash = 4679479961836;
+  foo.__initData = _worklet_4679479961836_init_data;
   foo.__stackDetails = _e;
   return foo;
 }();"
@@ -68,8 +68,8 @@ var foo = function () {
     return x + 2;
   };
   foo.__closure = {};
-  foo.__initData = _worklet_4679479961836_init_data;
   foo.__workletHash = 4679479961836;
+  foo.__initData = _worklet_4679479961836_init_data;
   foo.__stackDetails = _e;
   return foo;
 }();"
@@ -148,8 +148,8 @@ FadeIn.withCallback(function () {
     console.log('FadeIn with build after');
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_9297685979719_init_data;
   anonymous.__workletHash = 9297685979719;
+  anonymous.__initData = _worklet_9297685979719_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }()).build();"
@@ -168,8 +168,8 @@ new FadeIn().withCallback(function () {
     console.log('FadeIn with build after');
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_9297685979719_init_data;
   anonymous.__workletHash = 9297685979719;
+  anonymous.__initData = _worklet_9297685979719_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }()).build();"
@@ -188,8 +188,8 @@ FadeIn.build().withCallback(function () {
     console.log('FadeIn with build before');
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_7455148134810_init_data;
   anonymous.__workletHash = 7455148134810;
+  anonymous.__initData = _worklet_7455148134810_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }());"
@@ -208,8 +208,8 @@ new FadeIn().build().withCallback(function () {
     console.log('FadeIn with build before');
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_7455148134810_init_data;
   anonymous.__workletHash = 7455148134810;
+  anonymous.__initData = _worklet_7455148134810_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }());"
@@ -228,8 +228,8 @@ FadeIn.build().duration().withCallback(function () {
     console.log('FadeIn with build');
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_1134777276323_init_data;
   anonymous.__workletHash = 1134777276323;
+  anonymous.__initData = _worklet_1134777276323_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }());"
@@ -248,8 +248,8 @@ new FadeIn().build().duration().withCallback(function () {
     console.log('FadeIn with build');
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_1134777276323_init_data;
   anonymous.__workletHash = 1134777276323;
+  anonymous.__initData = _worklet_1134777276323_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }());"
@@ -268,8 +268,8 @@ FadeIn.withCallback(function () {
     console.log('FadeIn with AmogusIn after');
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_5878665076948_init_data;
   anonymous.__workletHash = 5878665076948;
+  anonymous.__initData = _worklet_5878665076948_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }()).AmogusIn();"
@@ -288,8 +288,8 @@ new FadeIn().withCallback(function () {
     console.log('FadeIn with AmogusIn after');
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_5878665076948_init_data;
   anonymous.__workletHash = 5878665076948;
+  anonymous.__initData = _worklet_5878665076948_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }()).AmogusIn();"
@@ -308,8 +308,8 @@ FadeIn.withCallback(function () {
     console.log('FadeIn');
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_7606417127287_init_data;
   anonymous.__workletHash = 7606417127287;
+  anonymous.__initData = _worklet_7606417127287_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }());"
@@ -328,8 +328,8 @@ new FadeIn().withCallback(function () {
     console.log('FadeIn');
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_7606417127287_init_data;
   anonymous.__workletHash = 7606417127287;
+  anonymous.__initData = _worklet_7606417127287_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }());"
@@ -354,8 +354,8 @@ var Foo = (0, _createClass2.default)(function Foo() {
       return x + 2;
     };
     anonymous.__closure = {};
-    anonymous.__initData = _worklet_16347365292089_init_data;
     anonymous.__workletHash = 16347365292089;
+    anonymous.__initData = _worklet_16347365292089_init_data;
     anonymous.__stackDetails = _e;
     return anonymous;
   }());
@@ -381,8 +381,8 @@ var Foo = (0, _createClass2.default)(function () {
   Foo.__closure = {
     _classCallCheck: _classCallCheck2.default
   };
-  Foo.__initData = _worklet_11052941891417_init_data;
   Foo.__workletHash = 11052941891417;
+  Foo.__initData = _worklet_11052941891417_init_data;
   Foo.__stackDetails = _e;
   return Foo;
 }());"
@@ -412,8 +412,8 @@ var Foo = function () {
       get.__closure = {
         x: x
       };
-      get.__initData = _worklet_13932542455552_init_data;
       get.__workletHash = 13932542455552;
+      get.__initData = _worklet_13932542455552_init_data;
       get.__stackDetails = _e;
       return get;
     }()
@@ -444,8 +444,8 @@ var Foo = function () {
         return x + 2;
       };
       bar.__closure = {};
-      bar.__initData = _worklet_16974800582491_init_data;
       bar.__workletHash = 16974800582491;
+      bar.__initData = _worklet_16974800582491_init_data;
       bar.__stackDetails = _e;
       return bar;
     }()
@@ -476,8 +476,8 @@ var Foo = function () {
         this.x = x + 2;
       };
       set.__closure = {};
-      set.__initData = _worklet_6451428689423_init_data;
       set.__workletHash = 6451428689423;
+      set.__initData = _worklet_6451428689423_init_data;
       set.__stackDetails = _e;
       return set;
     }()
@@ -506,8 +506,8 @@ var _worklet_16347365292089_init_data = {
     return x + 2;
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_16347365292089_init_data;
   anonymous.__workletHash = 16347365292089;
+  anonymous.__initData = _worklet_16347365292089_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }());"
@@ -535,8 +535,8 @@ var Foo = function () {
         return x + 2;
       };
       bar.__closure = {};
-      bar.__initData = _worklet_16974800582491_init_data;
       bar.__workletHash = 16974800582491;
+      bar.__initData = _worklet_16974800582491_init_data;
       bar.__stackDetails = _e;
       return bar;
     }()
@@ -567,8 +567,8 @@ var f = function () {
     x: x,
     objX: objX
   };
-  f.__initData = _worklet_3447562087488_init_data;
   f.__workletHash = 3447562087488;
+  f.__initData = _worklet_3447562087488_init_data;
   f.__stackDetails = _e;
   return f;
 }();"
@@ -587,8 +587,8 @@ var f = function () {
     console.log(arguments);
   };
   f.__closure = {};
-  f.__initData = _worklet_17093819837059_init_data;
   f.__workletHash = 17093819837059;
+  f.__initData = _worklet_17093819837059_init_data;
   f.__stackDetails = _e;
   return f;
 }();"
@@ -608,8 +608,8 @@ var f = function () {
     console.log(foo);
   };
   f.__closure = {};
-  f.__initData = _worklet_7141086932261_init_data;
   f.__workletHash = 7141086932261;
+  f.__initData = _worklet_7141086932261_init_data;
   f.__stackDetails = _e;
   return f;
 }();"
@@ -628,8 +628,8 @@ var f = function () {
     console.log('test');
   };
   f.__closure = {};
-  f.__initData = _worklet_13298016111221_init_data;
   f.__workletHash = 13298016111221;
+  f.__initData = _worklet_13298016111221_init_data;
   f.__stackDetails = _e;
   return f;
 }();"
@@ -653,8 +653,8 @@ var f = function () {
   f.__closure = {
     foo: foo
   };
-  f.__initData = _worklet_3750134465664_init_data;
   f.__workletHash = 3750134465664;
+  f.__initData = _worklet_3750134465664_init_data;
   f.__stackDetails = _e;
   return f;
 }();"
@@ -673,8 +673,8 @@ var foo = useAnimatedStyle(function () {
     var x = 1;
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_1852213185147_init_data;
   anonymous.__workletHash = 1852213185147;
+  anonymous.__initData = _worklet_1852213185147_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }());"
@@ -689,8 +689,8 @@ var foo = useAnimatedStyle(function () {
     var x = 1;
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_1852213185147_init_data;
   anonymous.__workletHash = 1852213185147;
+  anonymous.__initData = _worklet_1852213185147_init_data;
   return anonymous;
 }());"
 `;
@@ -704,8 +704,8 @@ var foo = useAnimatedStyle(function () {
     var x = 1;
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_1852213185147_init_data;
   anonymous.__workletHash = 1852213185147;
+  anonymous.__initData = _worklet_1852213185147_init_data;
   return anonymous;
 }());"
 `;
@@ -723,8 +723,8 @@ var foo = function () {
     return x + 2;
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_16347365292089_init_data;
   anonymous.__workletHash = 16347365292089;
+  anonymous.__initData = _worklet_16347365292089_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }();"
@@ -743,8 +743,8 @@ var foo = function () {
     return x + 2;
   };
   foo.__closure = {};
-  foo.__initData = _worklet_4679479961836_init_data;
   foo.__workletHash = 4679479961836;
+  foo.__initData = _worklet_4679479961836_init_data;
   foo.__stackDetails = _e;
   return foo;
 }();"
@@ -763,8 +763,8 @@ var foo = function () {
     return x + 2;
   };
   foo.__closure = {};
-  foo.__initData = _worklet_4679479961836_init_data;
   foo.__workletHash = 4679479961836;
+  foo.__initData = _worklet_4679479961836_init_data;
   foo.__stackDetails = _e;
   return foo;
 }();"
@@ -783,8 +783,8 @@ var foo = function () {
     return x + 2;
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_16347365292089_init_data;
   anonymous.__workletHash = 16347365292089;
+  anonymous.__initData = _worklet_16347365292089_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }();"
@@ -805,8 +805,8 @@ var animatedStyle = useAnimatedStyle(function () {
     };
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_9645206935615_init_data;
   anonymous.__workletHash = 9645206935615;
+  anonymous.__initData = _worklet_9645206935615_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }());"
@@ -827,8 +827,8 @@ var animatedStyle = useAnimatedStyle(function () {
     };
   };
   foo.__closure = {};
-  foo.__initData = _worklet_6275510763626_init_data;
   foo.__workletHash = 6275510763626;
+  foo.__initData = _worklet_6275510763626_init_data;
   foo.__stackDetails = _e;
   return foo;
 }());"
@@ -849,8 +849,8 @@ var animatedStyle = useAnimatedStyle(function () {
     };
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_9645206935615_init_data;
   anonymous.__workletHash = 9645206935615;
+  anonymous.__initData = _worklet_9645206935615_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }());"
@@ -928,8 +928,8 @@ useAnimatedScrollHandler(function () {
     console.log(event);
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_1022605193782_init_data;
   anonymous.__workletHash = 1022605193782;
+  anonymous.__initData = _worklet_1022605193782_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }());"
@@ -959,8 +959,8 @@ useAnimatedGestureHandler({
     var _e = [new global.Error(), 1, -27];
     var anonymous = function anonymous() {};
     anonymous.__closure = {};
-    anonymous.__initData = _worklet_14892326408241_init_data;
     anonymous.__workletHash = 14892326408241;
+    anonymous.__initData = _worklet_14892326408241_init_data;
     anonymous.__stackDetails = _e;
     return anonymous;
   }(),
@@ -968,8 +968,8 @@ useAnimatedGestureHandler({
     var _e = [new global.Error(), 1, -27];
     var anonymous = function anonymous() {};
     anonymous.__closure = {};
-    anonymous.__initData = _worklet_14892326408241_init_data2;
     anonymous.__workletHash = 14892326408241;
+    anonymous.__initData = _worklet_14892326408241_init_data2;
     anonymous.__stackDetails = _e;
     return anonymous;
   }(),
@@ -977,8 +977,8 @@ useAnimatedGestureHandler({
     var _e = [new global.Error(), 1, -27];
     var anonymous = function anonymous() {};
     anonymous.__closure = {};
-    anonymous.__initData = _worklet_14892326408241_init_data3;
     anonymous.__workletHash = 14892326408241;
+    anonymous.__initData = _worklet_14892326408241_init_data3;
     anonymous.__stackDetails = _e;
     return anonymous;
   }()
@@ -1021,8 +1021,8 @@ useAnimatedScrollHandler({
     var _e = [new global.Error(), 1, -27];
     var anonymous = function anonymous() {};
     anonymous.__closure = {};
-    anonymous.__initData = _worklet_14892326408241_init_data;
     anonymous.__workletHash = 14892326408241;
+    anonymous.__initData = _worklet_14892326408241_init_data;
     anonymous.__stackDetails = _e;
     return anonymous;
   }(),
@@ -1030,8 +1030,8 @@ useAnimatedScrollHandler({
     var _e = [new global.Error(), 1, -27];
     var anonymous = function anonymous() {};
     anonymous.__closure = {};
-    anonymous.__initData = _worklet_14892326408241_init_data2;
     anonymous.__workletHash = 14892326408241;
+    anonymous.__initData = _worklet_14892326408241_init_data2;
     anonymous.__stackDetails = _e;
     return anonymous;
   }(),
@@ -1039,8 +1039,8 @@ useAnimatedScrollHandler({
     var _e = [new global.Error(), 1, -27];
     var anonymous = function anonymous() {};
     anonymous.__closure = {};
-    anonymous.__initData = _worklet_14892326408241_init_data3;
     anonymous.__workletHash = 14892326408241;
+    anonymous.__initData = _worklet_14892326408241_init_data3;
     anonymous.__stackDetails = _e;
     return anonymous;
   }(),
@@ -1048,8 +1048,8 @@ useAnimatedScrollHandler({
     var _e = [new global.Error(), 1, -27];
     var anonymous = function anonymous() {};
     anonymous.__closure = {};
-    anonymous.__initData = _worklet_14892326408241_init_data4;
     anonymous.__workletHash = 14892326408241;
+    anonymous.__initData = _worklet_14892326408241_init_data4;
     anonymous.__stackDetails = _e;
     return anonymous;
   }(),
@@ -1057,8 +1057,8 @@ useAnimatedScrollHandler({
     var _e = [new global.Error(), 1, -27];
     var anonymous = function anonymous() {};
     anonymous.__closure = {};
-    anonymous.__initData = _worklet_14892326408241_init_data5;
     anonymous.__workletHash = 14892326408241;
+    anonymous.__initData = _worklet_14892326408241_init_data5;
     anonymous.__stackDetails = _e;
     return anonymous;
   }()
@@ -1078,8 +1078,8 @@ useAnimatedScrollHandler(function () {
     console.log(event);
   };
   foo.__closure = {};
-  foo.__initData = _worklet_14540236792163_init_data;
   foo.__workletHash = 14540236792163;
+  foo.__initData = _worklet_14540236792163_init_data;
   foo.__stackDetails = _e;
   return foo;
 }());"
@@ -1098,8 +1098,8 @@ useAnimatedScrollHandler(function () {
     console.log(event);
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_1022605193782_init_data;
   anonymous.__workletHash = 1022605193782;
+  anonymous.__initData = _worklet_1022605193782_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }());"
@@ -1119,8 +1119,8 @@ useAnimatedGestureHandler({
       console.log(event);
     };
     anonymous.__closure = {};
-    anonymous.__initData = _worklet_1022605193782_init_data;
     anonymous.__workletHash = 1022605193782;
+    anonymous.__initData = _worklet_1022605193782_init_data;
     anonymous.__stackDetails = _e;
     return anonymous;
   }()
@@ -1141,8 +1141,8 @@ useAnimatedGestureHandler({
       console.log(event);
     };
     onStart.__closure = {};
-    onStart.__initData = _worklet_338158776260_init_data;
     onStart.__workletHash = 338158776260;
+    onStart.__initData = _worklet_338158776260_init_data;
     onStart.__stackDetails = _e;
     return onStart;
   }()
@@ -1163,8 +1163,8 @@ useAnimatedGestureHandler({
       console.log(event);
     };
     onStart.__closure = {};
-    onStart.__initData = _worklet_338158776260_init_data;
     onStart.__workletHash = 338158776260;
+    onStart.__initData = _worklet_338158776260_init_data;
     onStart.__stackDetails = _e;
     return onStart;
   }()
@@ -1185,8 +1185,8 @@ useAnimatedGestureHandler({
       console.log(event);
     };
     anonymous.__closure = {};
-    anonymous.__initData = _worklet_1022605193782_init_data;
     anonymous.__workletHash = 1022605193782;
+    anonymous.__initData = _worklet_1022605193782_init_data;
     anonymous.__stackDetails = _e;
     return anonymous;
   }()
@@ -1207,8 +1207,8 @@ useAnimatedScrollHandler({
       console.log(event);
     };
     anonymous.__closure = {};
-    anonymous.__initData = _worklet_1022605193782_init_data;
     anonymous.__workletHash = 1022605193782;
+    anonymous.__initData = _worklet_1022605193782_init_data;
     anonymous.__stackDetails = _e;
     return anonymous;
   }()
@@ -1229,8 +1229,8 @@ useAnimatedGestureHandler({
       console.log(event);
     };
     onScroll.__closure = {};
-    onScroll.__initData = _worklet_947458829673_init_data;
     onScroll.__workletHash = 947458829673;
+    onScroll.__initData = _worklet_947458829673_init_data;
     onScroll.__stackDetails = _e;
     return onScroll;
   }()
@@ -1251,8 +1251,8 @@ useAnimatedScrollHandler({
       console.log(event);
     };
     onScroll.__closure = {};
-    onScroll.__initData = _worklet_947458829673_init_data;
     onScroll.__workletHash = 947458829673;
+    onScroll.__initData = _worklet_947458829673_init_data;
     onScroll.__stackDetails = _e;
     return onScroll;
   }()
@@ -1273,8 +1273,8 @@ useAnimatedScrollHandler({
       console.log(event);
     };
     anonymous.__closure = {};
-    anonymous.__initData = _worklet_1022605193782_init_data;
     anonymous.__workletHash = 1022605193782;
+    anonymous.__initData = _worklet_1022605193782_init_data;
     anonymous.__stackDetails = _e;
     return anonymous;
   }()
@@ -1322,8 +1322,8 @@ var foo = function () {
     var baz = [1].concat([2, 3], bar);
   };
   foo.__closure = {};
-  foo.__initData = _worklet_3161057533258_init_data;
   foo.__workletHash = 3161057533258;
+  foo.__initData = _worklet_3161057533258_init_data;
   foo.__stackDetails = _e;
   return foo;
 }();"
@@ -1345,8 +1345,8 @@ var foo = function () {
     console.log(args);
   };
   foo.__closure = {};
-  foo.__initData = _worklet_9866931756941_init_data;
   foo.__workletHash = 9866931756941;
+  foo.__initData = _worklet_9866931756941_init_data;
   foo.__stackDetails = _e;
   return foo;
 }();"
@@ -1368,8 +1368,8 @@ var foo = function () {
     (_console = console).log.apply(_console, (0, _toConsumableArray2.default)(arg));
   };
   foo.__closure = {};
-  foo.__initData = _worklet_2015887751437_init_data;
   foo.__workletHash = 2015887751437;
+  foo.__initData = _worklet_2015887751437_init_data;
   foo.__stackDetails = _e;
   return foo;
 }();"
@@ -1397,8 +1397,8 @@ var foo = function () {
     }, bar);
   };
   foo.__closure = {};
-  foo.__initData = _worklet_792186851025_init_data;
   foo.__workletHash = 792186851025;
+  foo.__initData = _worklet_792186851025_init_data;
   foo.__stackDetails = _e;
   return foo;
 }();"
@@ -1429,8 +1429,8 @@ var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
     console.log('onBegin');
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_15393478329680_init_data;
   anonymous.__workletHash = 15393478329680;
+  anonymous.__initData = _worklet_15393478329680_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }()).onStart(function () {
@@ -1439,8 +1439,8 @@ var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
     console.log('onStart');
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_12748187344900_init_data;
   anonymous.__workletHash = 12748187344900;
+  anonymous.__initData = _worklet_12748187344900_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }()).onEnd(function () {
@@ -1449,8 +1449,8 @@ var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
     console.log('onEnd');
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_232586479291_init_data;
   anonymous.__workletHash = 232586479291;
+  anonymous.__initData = _worklet_232586479291_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }());"
@@ -1469,8 +1469,8 @@ runOnUI(function () {
     console.log('Hello from the UI thread!');
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_15854903236968_init_data;
   anonymous.__workletHash = 15854903236968;
+  anonymous.__initData = _worklet_15854903236968_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }())();"
@@ -1489,8 +1489,8 @@ runOnUI(function () {
     console.log('Hello from the UI thread!');
   };
   hello.__closure = {};
-  hello.__initData = _worklet_5662051517689_init_data;
   hello.__workletHash = 5662051517689;
+  hello.__initData = _worklet_5662051517689_init_data;
   hello.__stackDetails = _e;
   return hello;
 }())();"
@@ -1509,8 +1509,8 @@ runOnUI(function () {
     console.log('Hello from the UI thread!');
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_15854903236968_init_data;
   anonymous.__workletHash = 15854903236968;
+  anonymous.__initData = _worklet_15854903236968_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }())();"
@@ -1537,8 +1537,8 @@ function App() {
       var _e = [new global.Error(), 1, -27];
       var onStart = function onStart() {};
       onStart.__closure = {};
-      onStart.__initData = _worklet_4434179069699_init_data;
       onStart.__workletHash = 4434179069699;
+      onStart.__initData = _worklet_4434179069699_init_data;
       onStart.__stackDetails = _e;
       return onStart;
     }()
@@ -1559,8 +1559,8 @@ function App() {
       var _e = [new global.Error(), 1, -27];
       var onStart = function onStart() {};
       onStart.__closure = {};
-      onStart.__initData = _worklet_4434179069699_init_data;
       onStart.__workletHash = 4434179069699;
+      onStart.__initData = _worklet_4434179069699_init_data;
       onStart.__stackDetails = _e;
       return onStart;
     }()
@@ -1581,8 +1581,8 @@ function App() {
       var _e = [new global.Error(), 1, -27];
       var onStart = function onStart() {};
       onStart.__closure = {};
-      onStart.__initData = _worklet_4434179069699_init_data;
       onStart.__workletHash = 4434179069699;
+      onStart.__initData = _worklet_4434179069699_init_data;
       onStart.__stackDetails = _e;
       return onStart;
     }()
@@ -1611,13 +1611,85 @@ function App() {
       onStart.__closure = {
         obj: obj
       };
-      onStart.__initData = _worklet_5519800181618_init_data;
       onStart.__workletHash = 5519800181618;
+      onStart.__initData = _worklet_5519800181618_init_data;
       onStart.__stackDetails = _e;
       return onStart;
     }()
   }, []);
 }"
+`;
+
+exports[`babel plugin for web configuration doesn't substitute isWeb and shouldBeUseWeb in worklets 1`] = `
+"var _worklet_8641000714901_init_data = {
+  code: "function foo(){const{isWeb,shouldBeUseWeb}=this.__closure;const x=isWeb();const y=shouldBeUseWeb();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), -3, -27];
+  var foo = function foo() {
+    var x = true;
+    var y = true;
+  };
+  foo.__closure = {
+    isWeb: isWeb,
+    shouldBeUseWeb: shouldBeUseWeb
+  };
+  foo.__workletHash = 8641000714901;
+  foo.__initData = _worklet_8641000714901_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
+exports[`babel plugin for web configuration doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to false 1`] = `
+"var x = isWeb();
+var y = shouldBeUseWeb();"
+`;
+
+exports[`babel plugin for web configuration doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is undefined 1`] = `
+"var x = isWeb();
+var y = shouldBeUseWeb();"
+`;
+
+exports[`babel plugin for web configuration includes initData when omitNativeOnlyData option is set to false 1`] = `
+"var _worklet_17472070642672_init_data = {
+  code: "function foo(){var foo='bar';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo = function foo() {
+    var foo = 'bar';
+  };
+  foo.__closure = {};
+  foo.__workletHash = 17472070642672;
+  foo.__initData = _worklet_17472070642672_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
+exports[`babel plugin for web configuration skips initData when omitNativeOnlyData option is set to true 1`] = `
+"var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo = function foo() {
+    var foo = 'bar';
+  };
+  foo.__closure = {};
+  foo.__workletHash = 17472070642672;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
+exports[`babel plugin for web configuration substitutes isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to true 1`] = `
+"var x = true;
+var y = true;"
 `;
 
 exports[`babel plugin for worklet nesting doesn't process nested worklets when disabled 1`] = `
@@ -1642,16 +1714,16 @@ var foo = function () {
         return x + 2;
       };
       bar.__closure = {};
-      bar.__initData = _worklet_16974800582491_init_data;
       bar.__workletHash = 16974800582491;
+      bar.__initData = _worklet_16974800582491_init_data;
       bar.__stackDetails = _e;
       return bar;
     }();
     return bar(x) + 1;
   };
   foo.__closure = {};
-  foo.__initData = _worklet_1678749606628_init_data;
   foo.__workletHash = 1678749606628;
+  foo.__initData = _worklet_1678749606628_init_data;
   foo.__stackDetails = _e;
   return foo;
 }();"
@@ -1680,8 +1752,8 @@ runOnUI(function () {
         console.log('Hello from JS thread');
       };
       anonymous.__closure = {};
-      anonymous.__initData = _worklet_13427774179957_init_data;
       anonymous.__workletHash = 13427774179957;
+      anonymous.__initData = _worklet_13427774179957_init_data;
       anonymous.__stackDetails = _e;
       return anonymous;
     }())();
@@ -1689,8 +1761,8 @@ runOnUI(function () {
   anonymous.__closure = {
     runOnJS: runOnJS
   };
-  anonymous.__initData = _worklet_16739363980177_init_data;
   anonymous.__workletHash = 16739363980177;
+  anonymous.__initData = _worklet_16739363980177_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }())();"
@@ -1729,8 +1801,8 @@ runOnUI(function () {
             console.log('Hello from UI thread again');
           };
           anonymous.__closure = {};
-          anonymous.__initData = _worklet_12364489264272_init_data;
           anonymous.__workletHash = 12364489264272;
+          anonymous.__initData = _worklet_12364489264272_init_data;
           anonymous.__stackDetails = _e;
           return anonymous;
         }())();
@@ -1738,8 +1810,8 @@ runOnUI(function () {
       anonymous.__closure = {
         runOnUI: runOnUI
       };
-      anonymous.__initData = _worklet_15780567630262_init_data;
       anonymous.__workletHash = 15780567630262;
+      anonymous.__initData = _worklet_15780567630262_init_data;
       anonymous.__stackDetails = _e;
       return anonymous;
     }())();
@@ -1748,8 +1820,8 @@ runOnUI(function () {
     runOnJS: runOnJS,
     runOnUI: runOnUI
   };
-  anonymous.__initData = _worklet_15024386663586_init_data;
   anonymous.__workletHash = 15024386663586;
+  anonymous.__initData = _worklet_15024386663586_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }())();"
@@ -1762,8 +1834,8 @@ exports[`babel plugin for worklet nesting transpiles nested worklets when enable
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_3868928021716_init_data = {
-  code: "function anonymous(){const{_worklet_14052814262791_init_data}=this.__closure;const bar=function(){const _e=[new global.Error(),1,-27];const anonymous=function(){console.log('bar');};anonymous.__closure={};anonymous.__initData=_worklet_14052814262791_init_data;anonymous.__workletHash=14052814262791;anonymous.__stackDetails=_e;return anonymous;}();bar();}",
+var _worklet_6747298666324_init_data = {
+  code: "function anonymous(){const{_worklet_14052814262791_init_data}=this.__closure;const bar=function(){const _e=[new global.Error(),1,-27];const anonymous=function(){console.log('bar');};anonymous.__closure={};anonymous.__workletHash=14052814262791;anonymous.__initData=_worklet_14052814262791_init_data;anonymous.__stackDetails=_e;return anonymous;}();bar();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1777,8 +1849,8 @@ var foo = function () {
         console.log('bar');
       };
       anonymous.__closure = {};
-      anonymous.__initData = _worklet_14052814262791_init_data;
       anonymous.__workletHash = 14052814262791;
+      anonymous.__initData = _worklet_14052814262791_init_data;
       anonymous.__stackDetails = _e;
       return anonymous;
     }();
@@ -1787,8 +1859,8 @@ var foo = function () {
   anonymous.__closure = {
     _worklet_14052814262791_init_data: _worklet_14052814262791_init_data
   };
-  anonymous.__initData = _worklet_3868928021716_init_data;
-  anonymous.__workletHash = 3868928021716;
+  anonymous.__workletHash = 6747298666324;
+  anonymous.__initData = _worklet_6747298666324_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }();"
@@ -1801,14 +1873,14 @@ exports[`babel plugin for worklet nesting transpiles nested worklets when enable
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_8693845262807_init_data = {
-  code: "function anonymous(){const{_worklet_744555119489_init_data}=this.__closure;const foobar=function(){const _e=[new global.Error(),1,-27];const anonymous=function(){console.log('foobar');};anonymous.__closure={};anonymous.__initData=_worklet_744555119489_init_data;anonymous.__workletHash=744555119489;anonymous.__stackDetails=_e;return anonymous;}();}",
+var _worklet_2165106463703_init_data = {
+  code: "function anonymous(){const{_worklet_744555119489_init_data}=this.__closure;const foobar=function(){const _e=[new global.Error(),1,-27];const anonymous=function(){console.log('foobar');};anonymous.__closure={};anonymous.__workletHash=744555119489;anonymous.__initData=_worklet_744555119489_init_data;anonymous.__stackDetails=_e;return anonymous;}();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_15147047293906_init_data = {
-  code: "function anonymous(){const{_worklet_744555119489_init_data,_worklet_8693845262807_init_data}=this.__closure;const bar=function(){const _e=[new global.Error(),-2,-27];const anonymous=function(){const foobar=function(){const _e=[new global.Error(),1,-27];const anonymous=function(){console.log('foobar');};anonymous.__closure={};anonymous.__initData=_worklet_744555119489_init_data;anonymous.__workletHash=744555119489;anonymous.__stackDetails=_e;return anonymous;}();};anonymous.__closure={_worklet_744555119489_init_data:_worklet_744555119489_init_data};anonymous.__initData=_worklet_8693845262807_init_data;anonymous.__workletHash=8693845262807;anonymous.__stackDetails=_e;return anonymous;}();bar();}",
+var _worklet_15490975732628_init_data = {
+  code: "function anonymous(){const{_worklet_744555119489_init_data,_worklet_2165106463703_init_data}=this.__closure;const bar=function(){const _e=[new global.Error(),-2,-27];const anonymous=function(){const foobar=function(){const _e=[new global.Error(),1,-27];const anonymous=function(){console.log('foobar');};anonymous.__closure={};anonymous.__workletHash=744555119489;anonymous.__initData=_worklet_744555119489_init_data;anonymous.__stackDetails=_e;return anonymous;}();};anonymous.__closure={_worklet_744555119489_init_data:_worklet_744555119489_init_data};anonymous.__workletHash=2165106463703;anonymous.__initData=_worklet_2165106463703_init_data;anonymous.__stackDetails=_e;return anonymous;}();bar();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1825,8 +1897,8 @@ var foo = function () {
             console.log('foobar');
           };
           anonymous.__closure = {};
-          anonymous.__initData = _worklet_744555119489_init_data;
           anonymous.__workletHash = 744555119489;
+          anonymous.__initData = _worklet_744555119489_init_data;
           anonymous.__stackDetails = _e;
           return anonymous;
         }();
@@ -1834,8 +1906,8 @@ var foo = function () {
       anonymous.__closure = {
         _worklet_744555119489_init_data: _worklet_744555119489_init_data
       };
-      anonymous.__initData = _worklet_8693845262807_init_data;
-      anonymous.__workletHash = 8693845262807;
+      anonymous.__workletHash = 2165106463703;
+      anonymous.__initData = _worklet_2165106463703_init_data;
       anonymous.__stackDetails = _e;
       return anonymous;
     }();
@@ -1843,10 +1915,10 @@ var foo = function () {
   };
   anonymous.__closure = {
     _worklet_744555119489_init_data: _worklet_744555119489_init_data,
-    _worklet_8693845262807_init_data: _worklet_8693845262807_init_data
+    _worklet_2165106463703_init_data: _worklet_2165106463703_init_data
   };
-  anonymous.__initData = _worklet_15147047293906_init_data;
-  anonymous.__workletHash = 15147047293906;
+  anonymous.__workletHash = 15490975732628;
+  anonymous.__initData = _worklet_15490975732628_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }();"
@@ -1880,8 +1952,8 @@ runOnUI(function () {
         console.log('Good morning from JS thread!');
       };
       anonymous.__closure = {};
-      anonymous.__initData = _worklet_2310082662475_init_data;
       anonymous.__workletHash = 2310082662475;
+      anonymous.__initData = _worklet_2310082662475_init_data;
       anonymous.__stackDetails = _e;
       return anonymous;
     }();
@@ -1891,8 +1963,8 @@ runOnUI(function () {
         console.log('Good afternoon from JS thread');
       };
       anonymous.__closure = {};
-      anonymous.__initData = _worklet_9108102051728_init_data;
       anonymous.__workletHash = 9108102051728;
+      anonymous.__initData = _worklet_9108102051728_init_data;
       anonymous.__stackDetails = _e;
       return anonymous;
     }();
@@ -1902,8 +1974,8 @@ runOnUI(function () {
   anonymous.__closure = {
     runOnJS: runOnJS
   };
-  anonymous.__initData = _worklet_4484193487608_init_data;
   anonymous.__workletHash = 4484193487608;
+  anonymous.__initData = _worklet_4484193487608_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }())();"
@@ -1922,8 +1994,8 @@ var f = function () {
     return true;
   };
   anonymous.__closure = {};
-  anonymous.__initData = _worklet_235615426006_init_data;
   anonymous.__workletHash = 235615426006;
+  anonymous.__initData = _worklet_235615426006_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }();"
@@ -1947,8 +2019,8 @@ var foo = function () {
   foo.__closure = {
     a: a
   };
-  foo.__initData = _worklet_210900050506_init_data;
   foo.__workletHash = 210900050506;
+  foo.__initData = _worklet_210900050506_init_data;
   foo.__stackDetails = _e;
   return foo;
 }();"
@@ -1978,8 +2050,8 @@ function Box() {
     anonymous.__closure = {
       offset: offset
     };
-    anonymous.__initData = _worklet_13769858944821_init_data;
     anonymous.__workletHash = 13769858944821;
+    anonymous.__initData = _worklet_13769858944821_init_data;
     anonymous.__stackDetails = _e;
     return anonymous;
   }());
