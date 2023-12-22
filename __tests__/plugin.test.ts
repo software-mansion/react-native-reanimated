@@ -1653,5 +1653,24 @@ describe('babel plugin', () => {
       expect(code).toContain('var y = shouldBeUseWeb();');
       expect(code).toMatchSnapshot();
     });
+
+    it("doesn't substitute isWeb and shouldBeUseWeb in worklets", () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          const x = isWeb();
+          const y = shouldBeUseWeb();
+        }
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        {},
+        { substituteWebPlatformChecks: true }
+      );
+      expect(code).toContain('const x=isWeb();');
+      expect(code).toContain('const y=shouldBeUseWeb();');
+      expect(code).toMatchSnapshot();
+    });
   });
 });

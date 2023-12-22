@@ -1620,6 +1620,30 @@ function App() {
 }"
 `;
 
+exports[`babel plugin for web configuration doesn't substitute isWeb and shouldBeUseWeb in worklets 1`] = `
+"var _worklet_8641000714901_init_data = {
+  code: "function foo(){const{isWeb,shouldBeUseWeb}=this.__closure;const x=isWeb();const y=shouldBeUseWeb();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), -3, -27];
+  var foo = function foo() {
+    var x = true;
+    var y = true;
+  };
+  foo.__closure = {
+    isWeb: isWeb,
+    shouldBeUseWeb: shouldBeUseWeb
+  };
+  foo.__workletHash = 8641000714901;
+  foo.__initData = _worklet_8641000714901_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
 exports[`babel plugin for web configuration doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to false 1`] = `
 "var x = isWeb();
 var y = shouldBeUseWeb();"
