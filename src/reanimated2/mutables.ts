@@ -158,14 +158,3 @@ export function makeMutable<T>(
   registerShareableMapping(mutable, handle);
   return mutable;
 }
-
-export function makeRemote<T extends object>(initial: T = {} as T): T {
-  const handle = makeShareableCloneRecursive({
-    __init: () => {
-      'worklet';
-      return initial;
-    },
-  });
-  registerShareableMapping(initial, handle);
-  return initial;
-}
