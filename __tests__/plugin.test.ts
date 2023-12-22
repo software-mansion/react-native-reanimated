@@ -1,6 +1,6 @@
 import { html } from 'code-tag';
 import plugin from '../plugin';
-import { TransformOptions, transformSync } from '@babel/core';
+import { BabelFileResult, TransformOptions, transformSync } from '@babel/core';
 import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
 import '../plugin/jestUtils';
@@ -95,6 +95,23 @@ describe('babel plugin', () => {
       expect(code).toContain(
         '\\"mappings\\":\\"AACQ,SAAAA,GAASA,CAAA,CAAG,CAEV,GAAI,CAAAA,GAAG,CAAG,KAAK,CACjB\\"'
       );
+    });
+
+    it('uses relative source location when `relativeSourceLocation` is set to `true`', () => {
+      process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '0'; // don't mock source maps
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var foo = 'bar';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, undefined, {
+        relativeSourceLocation: true,
+      });
+
+      const matches = code?.match(new RegExp(`..${MOCK_LOCATION}`, 'g'));
+      expect(matches).toHaveLength(2);
     });
 
     it('removes comments from worklets', () => {
