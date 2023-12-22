@@ -39,7 +39,9 @@ module.exports = {
         relativeSourceLocation: true,
         disableInlineStylesWarning: true,
         processNestedWorklets: true,
+        omitNativeOnlyData: true,
         globals: ['myObjectOnUI'],
+        substituteWebPlatformChecks: true,
       },
     ],
   ],
@@ -116,6 +118,12 @@ This example will result in an error. Let's quickly describe why:
 
 If you enable this option, the system will workletize functions depth-first, avoiding the above-mentioned scenario and ensuring things operate correctly. Keep in mind that nesting worklets like in the provided example is only useful in threading.
 
+### omitNativeOnlyData
+
+Defaults to false.
+
+This option comes in handy for Web apps. Because Babel ordinarily doesn't get information about the target platform, it includes worklet data in the bundle that only Native apps find relevant. If you enable this option, your bundle size will be smaller.
+
 ### globals
 
 This is a list of identifiers (objects) that will not be copied to the UI thread if a worklet requires them. For instance:
@@ -176,3 +184,7 @@ JS THREAD
 This output occurs because the entire `global` object (!) would be copied to the UI thread for it to be assigned by `setOnUI`. Then, `readOnUI` would again copy the `global` object and read from this copy.
 
 There is a [huge list of identifiers whitelisted by default](https://github.com/software-mansion/react-native-reanimated/blob/main/plugin/src/globals.ts).
+
+### substituteWebPlatformChecks
+
+This option can also be useful for Web apps. In Reanimated, we have numerous checks to determine the right function implementation for a specific target platform. Enabling this option changes all the checks that identify if the target is a Web app to `true`. This alteration can aid in tree-shaking and contribute to reducing the bundle size.
