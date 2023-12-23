@@ -118,6 +118,11 @@ export function makeMutable<T>(
     },
     get _value(): T {
       if (!SHOULD_BE_USE_WEB) {
+        if (new Error().stack?.includes('createInstance')) {
+          throw new Error(
+            "[Reanimated] Looks like you're passing animated style to a non-animated component."
+          );
+        }
         throw new Error(
           '[Reanimated] Reading from `_value` directly is only possible on the UI runtime.'
         );

@@ -23,7 +23,7 @@ export default function AnimatedStyleUpdateExample() {
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.box, style]} />
+      <View style={[styles.box, style]} />
       <Button
         title="toggle"
         onPress={() => {
