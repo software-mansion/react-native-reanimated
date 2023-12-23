@@ -3,13 +3,17 @@
 // @ts-nocheck
 'use strict';
 
+import type { WithSpringConfig, WithTimingConfig } from './animation';
+import type { DecayConfig } from './animation/decay/utils';
+import type { AnimatableValue, AnimationCallback } from './commonTypes';
 import { ReduceMotion, SensorType } from './commonTypes';
 
 const NOOP = () => {
   // noop
 };
-const ID = (t) => t;
-const IMMEDIATE_CB_INVOCATION = (cb: () => unknown) => cb();
+const NOOP_FACTORY = () => NOOP;
+const ID = <T>(t: T) => t;
+const IMMEDIATE_CALLBACK_INVOCATION = <T>(callback: () => T) => callback();
 
 class BaseAnimationMock {
   createInstance() {
@@ -106,14 +110,14 @@ class BaseAnimationMock {
 }
 
 const ReanimatedV2 = {
-  useSharedValue: (v) => ({ value: v }),
-  useDerivedValue: (a) => ({ value: a() }),
-  useAnimatedScrollHandler: () => NOOP,
-  useAnimatedGestureHandler: () => NOOP,
-  useAnimatedStyle: IMMEDIATE_CB_INVOCATION,
+  useSharedValue: <Value>(init: Value) => ({ value: init }),
+  useDerivedValue: <Value>(processor: () => Value) => ({ value: processor() }),
+  useAnimatedScrollHandler: NOOP_FACTORY,
+  useAnimatedGestureHandler: NOOP_FACTORY,
+  useAnimatedStyle: IMMEDIATE_CALLBACK_INVOCATION,
+  useAnimatedProps: IMMEDIATE_CALLBACK_INVOCATION,
   useAnimatedRef: () => ({ current: null }),
   useAnimatedReaction: NOOP,
-  useAnimatedProps: IMMEDIATE_CB_INVOCATION,
   ReduceMotion: ReduceMotion,
   SensorType: SensorType,
   useAnimatedSensor: () => ({
@@ -141,27 +145,31 @@ const ReanimatedV2 = {
     },
   }),
 
-  withTiming: (toValue, _, cb) => {
-    cb && cb(true);
+  withTiming: (
+    toValue: AnimatableValue,
+    _userConfig?: WithTimingConfig,
+    callback?: AnimationCallback
+  ) => {
+    callback?.(true);
     return toValue;
   },
-  withSpring: (toValue, _, cb) => {
-    cb && cb(true);
+  withSpring: (
+    toValue: AnimatableValue,
+    _userConfig?: WithSpringConfig,
+    callback?: AnimationCallback
+  ) => {
+    callback?.(true);
     return toValue;
   },
-  withDecay: (_, cb) => {
-    cb && cb(true);
+  withDecay: (_userConfig: DecayConfig, callback?: AnimationCallback) => {
+    callback?.(true);
     return 0;
   },
-  withDelay: (_, animationValue) => {
-    return animationValue;
+  withDelay: <T>(_delayMs: number, nextAnimation: T) => {
+    return nextAnimation;
   },
-  withSequence: (..._animations) => {
-    return 0;
-  },
-  withRepeat: (animation) => {
-    return animation;
-  },
+  withSequence: () => 0,
+  withRepeat: ID,
   cancelAnimation: NOOP,
   measure: () => ({
     x: 0,
@@ -195,9 +203,8 @@ const ReanimatedV2 = {
     CLAMP: 'clamp',
     IDENTITY: 'identity',
   },
-
-  runOnJS: (fn) => fn,
-  runOnUI: (fn) => fn,
+  runOnJS: ID,
+  runOnUI: ID,
 };
 
 [
