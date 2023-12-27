@@ -1,4 +1,5 @@
 import Animated, {
+  SharedValue,
   useAnimatedProps,
   useDerivedValue,
 } from 'react-native-reanimated';
@@ -13,12 +14,23 @@ import {
 } from './WeaveHelpers';
 
 import MaskedView from '@react-native-masked-view/masked-view';
-import React from 'react';
+import React, { PropsWithChildren } from 'react';
 
 const { width, height } = Dimensions.get('window');
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
-export default function Weave({ centerY, progress, isBack, children }: any) {
+export interface WeaveProps extends PropsWithChildren {
+  centerY: SharedValue<number>;
+  progress: SharedValue<number>;
+  isBack: SharedValue<boolean>;
+}
+
+export default function Weave({
+  centerY,
+  progress,
+  isBack,
+  children,
+}: WeaveProps) {
   const sideWidth = useDerivedValue(() => {
     const p1 = 0.2;
     const p2 = 0.8;

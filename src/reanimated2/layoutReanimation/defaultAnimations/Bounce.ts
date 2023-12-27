@@ -7,6 +7,14 @@ import type {
 import { withSequence, withTiming } from '../../animation';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
+
+/**
+ * Bounce entering animation. You can modify the behavior by chaining methods like `.delay(300)` or `.duration(100)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
+ */
 export class BounceIn
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -60,6 +68,13 @@ export class BounceIn
   };
 }
 
+/**
+ * Bounce from bottom animation. You can modify the behavior by chaining methods like `.delay(300)` or `.duration(100)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
+ */
 export class BounceInDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -117,6 +132,13 @@ export class BounceInDown
   };
 }
 
+/**
+ * Bounce from top animation. You can modify the behavior by chaining methods like `.delay(300)` or `.duration(100)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
+ */
 export class BounceInUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -170,6 +192,13 @@ export class BounceInUp
   };
 }
 
+/**
+ * Bounce from left animation. You can modify the behavior by chaining methods like `.delay(300)` or `.duration(100)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
+ */
 export class BounceInLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -223,6 +252,13 @@ export class BounceInLeft
   };
 }
 
+/**
+ * Bounce from right animation. You can modify the behavior by chaining methods like `.delay(300)` or `.duration(100)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
+ */
 export class BounceInRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -276,6 +312,13 @@ export class BounceInRight
   };
 }
 
+/**
+ * Bounce exiting animation. You can modify the behavior by chaining methods like `.delay(300)` or `.duration(100)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
+ */
 export class BounceOut
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -329,6 +372,13 @@ export class BounceOut
   };
 }
 
+/**
+ * Bounce to bottom animation. You can modify the behavior by chaining methods like `.delay(300)` or `.duration(100)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
+ */
 export class BounceOutDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -384,6 +434,13 @@ export class BounceOutDown
   };
 }
 
+/**
+ * Bounce to top animation. You can modify the behavior by chaining methods like `.delay(300)` or `.duration(100)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
+ */
 export class BounceOutUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -439,6 +496,13 @@ export class BounceOutUp
   };
 }
 
+/**
+ * Bounce to left animation. You can modify the behavior by chaining methods like `.delay(300)` or `.duration(100)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
+ */
 export class BounceOutLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -494,6 +558,13 @@ export class BounceOutLeft
   };
 }
 
+/**
+ * Bounce to right animation. You can modify the behavior by chaining methods like `.delay(300)` or `.duration(100)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
+ */
 export class BounceOutRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder

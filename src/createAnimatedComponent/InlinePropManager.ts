@@ -153,11 +153,8 @@ export class InlinePropManager implements IInlinePropManager {
         }
 
         this._inlinePropsViewDescriptors.add({
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           tag: viewTag as number,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           name: viewName!,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           shadowNodeWrapper: shadowNodeWrapper!,
         });
       }

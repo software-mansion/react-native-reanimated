@@ -107,7 +107,7 @@ export function makeWorklet(
     ? functionExpression(null, clone.params, clone.body)
     : clone;
 
-  const [funString, sourceMapString] = buildWorkletString(
+  let [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
     variables,
     functionName,
@@ -155,6 +155,11 @@ export function makeWorklet(
     let location = state.file.opts.filename;
     if (state.opts.relativeSourceLocation) {
       location = relative(state.cwd, location);
+      // It seems there is no designated option to use relative paths in generated sourceMap
+      sourceMapString = sourceMapString?.replace(
+        state.file.opts.filename,
+        location
+      );
     }
 
     initDataObjectExpression.properties.push(
@@ -178,11 +183,14 @@ export function makeWorklet(
     );
   }
 
-  pathForStringDefinitions.insertBefore(
-    variableDeclaration('const', [
-      variableDeclarator(initDataId, initDataObjectExpression),
-    ])
-  );
+  const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
+  if (shouldIncludeInitData) {
+    pathForStringDefinitions.insertBefore(
+      variableDeclaration('const', [
+        variableDeclarator(initDataId, initDataObjectExpression),
+      ])
+    );
+  }
 
   assert(
     !isFunctionDeclaration(funExpression),
@@ -213,13 +221,6 @@ export function makeWorklet(
     expressionStatement(
       assignmentExpression(
         '=',
-        memberExpression(functionIdentifier, identifier('__initData'), false),
-        initDataId
-      )
-    ),
-    expressionStatement(
-      assignmentExpression(
-        '=',
         memberExpression(
           functionIdentifier,
           identifier('__workletHash'),
@@ -229,6 +230,18 @@ export function makeWorklet(
       )
     ),
   ];
+
+  if (shouldIncludeInitData) {
+    statements.push(
+      expressionStatement(
+        assignmentExpression(
+          '=',
+          memberExpression(functionIdentifier, identifier('__initData'), false),
+          initDataId
+        )
+      )
+    );
+  }
 
   if (!isRelease()) {
     statements.unshift(

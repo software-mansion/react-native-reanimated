@@ -21,7 +21,7 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
   const data: ViewDescriptorsSet = {
     shareableViewDescriptors,
     add: (item: Descriptor) => {
-      shareableViewDescriptors.modify((descriptors: Descriptor[]) => {
+      shareableViewDescriptors.modify((descriptors) => {
         'worklet';
         const index = descriptors.findIndex(
           (descriptor) => descriptor.tag === item.tag
@@ -32,11 +32,11 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
           descriptors.push(item);
         }
         return descriptors;
-      });
+      }, false);
     },
 
     remove: (viewTag: number) => {
-      shareableViewDescriptors.modify((descriptors: Descriptor[]) => {
+      shareableViewDescriptors.modify((descriptors) => {
         'worklet';
         const index = descriptors.findIndex(
           (descriptor) => descriptor.tag === viewTag
@@ -45,7 +45,7 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
           descriptors.splice(index, 1);
         }
         return descriptors;
-      });
+      }, false);
     },
   };
   return data;
