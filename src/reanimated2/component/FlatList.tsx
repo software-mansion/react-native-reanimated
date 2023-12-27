@@ -60,19 +60,16 @@ interface AnimatedFlatListComplement<T> extends FlatList<T> {
   getNode(): FlatList<T>;
 }
 
-export const ReanimatedFlatList = forwardRef(
-  (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    props: ReanimatedFlatListPropsWithLayout<any>,
-    ref: ForwardedRef<FlatList>
-  ) => {
+// We need explicit any here, because this is the exact same type that is used in React Native types
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const FlatListForwardRefRender = <ItemT = any>(props: ReanimatedFlatListPropsWithLayout<ItemT>, ref: ForwardedRef<FlatList>) => {
     const { itemLayoutAnimation, skipEnteringExitingAnimations, ...restProps } =
       props;
 
     // Set default scrollEventThrottle, because user expects
     // to have continuous scroll events and
     // react-native defaults it to 50 for FlatLists.
-    // We set it to 1 so we have peace until
+    // We set it to 1, so we have peace until
     // there are 960 fps screens.
     if (!('scrollEventThrottle' in restProps)) {
       restProps.scrollEventThrottle = 1;
@@ -83,7 +80,8 @@ export const ReanimatedFlatList = forwardRef(
       []
     );
 
-    const animatedFlatList = (
+  const animatedFlatList = (
+    // @ts-expect-error We Can't easily make the result of createAnimatedComponent generic
       <AnimatedFlatList
         ref={ref}
         {...restProps}
@@ -101,7 +99,12 @@ export const ReanimatedFlatList = forwardRef(
       </LayoutAnimationConfig>
     );
   }
-);
+
+// We need explicit any here, because this is the exact same type that is used in React Native types
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const ReanimatedFlatList = forwardRef(FlatListForwardRefRender) as <ItemT = any>(props: ReanimatedFlatListPropsWithLayout<ItemT> & {
+  ref?: ForwardedRef<FlatList>
+}) => React.ReactElement;
 
 export type ReanimatedFlatList<T> = typeof AnimatedFlatList &
   AnimatedFlatListComplement<T>;
