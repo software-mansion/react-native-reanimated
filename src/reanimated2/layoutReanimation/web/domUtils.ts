@@ -133,24 +133,31 @@ export function scheduleAnimationCleanup(
 }
 
 function addChild(child: HTMLElement, parent: Node) {
+  const childSnapshot = snapshots.get(child);
+
+  if (!childSnapshot) {
+    console.error('[Reanimated] Failed to obtain snapshot.');
+    return;
+  }
+
   child.setAttribute('data-reanimatedRemoveAfterAnimation', 'true');
   parent.appendChild(child);
 
-  console.log();
-  setDummyPosition(child, snapshots.get(child)!);
+  setDummyPosition(child, childSnapshot);
 
   child.onanimationend = () => {
-    parent.removeChild(child);
+    if (parent.contains(child)) {
+      parent.removeChild(child);
+    }
   };
 }
 
 function DFSVisit(node: HTMLElement, root: Node) {
   if (
     node.hasAttribute('data-reanimatedDummy') &&
-    !node.hasAttribute('data-reanimatedRemoveAfterAnimation')
+    !node.hasAttribute('data-reanimatedRemoveAfterAnimation') // We use that so we don't end up in infinite loop
   ) {
     addChild(node, root);
-    root = node;
   }
 
   for (let i = 0; i < node.children.length; ++i) {
