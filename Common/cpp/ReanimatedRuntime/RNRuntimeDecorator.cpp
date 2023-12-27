@@ -32,7 +32,7 @@ void RNRuntimeDecorator::decorate(
 #ifndef NDEBUG
   checkJSVersion(rnRuntime, nativeReanimatedModule->getJSLogger());
 #endif // NDEBUG
-  injectReanimatedVersion(rnRuntime);
+  injectReanimatedCppVersion(rnRuntime);
 
   rnRuntime.global().setProperty(
       rnRuntime, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);

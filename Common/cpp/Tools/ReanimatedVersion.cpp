@@ -18,7 +18,7 @@ std::string getReanimatedCppVersion() {
   return std::string(REANIMATED_VERSION_STRING);
 }
 
-void injectReanimatedVersion(jsi::Runtime &rnRuntime) {
+void injectReanimatedCppVersion(jsi::Runtime &rnRuntime) {
   auto version = getReanimatedCppVersion();
   rnRuntime.global().setProperty(
       rnRuntime,
@@ -77,14 +77,16 @@ void checkJSVersion(
     return;
   }
 }
-#else // NDEBUG
+#else
 void checkJSVersion(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<JSLogger> &jsLogger) {
-  // NOOP
+  // In release builds we don't check the version, hence
+  // this function is a NOOP.
 }
 
 bool matchVersion(const std::string &version1, const std::string &version2) {
+  // Stub implementation for release builds.
   return true;
 }
 #endif // NDEBUG
