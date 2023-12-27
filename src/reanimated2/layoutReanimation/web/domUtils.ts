@@ -1,7 +1,7 @@
 'use strict';
 
 import { isWindowAvailable } from '../../PlatformChecker';
-import { setDummyPosition, snapshots } from './componentStyle';
+import { setDummyPosition, snapshots } from './dummyPosition';
 import { Animations } from './config';
 import type { AnimationNames } from './config';
 
