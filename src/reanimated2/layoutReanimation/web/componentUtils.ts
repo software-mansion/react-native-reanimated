@@ -247,6 +247,7 @@ export function handleExitingAnimation(
 
   dummy.onanimationend = function (event: AnimationEvent) {
     if (parent?.contains(dummy)) {
+      dummy.setAttribute('data-reanimatedRemoveAfterAnimation', 'true');
       parent.removeChild(dummy);
     }
 
@@ -256,6 +257,7 @@ export function handleExitingAnimation(
 
   dummy.addEventListener('animationcancel', () => {
     if (parent?.contains(dummy)) {
+      dummy.setAttribute('data-reanimatedRemoveAfterAnimation', 'true');
       parent.removeChild(dummy);
     }
   });
