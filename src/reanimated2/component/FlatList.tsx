@@ -62,10 +62,10 @@ interface AnimatedFlatListComplement<T> extends FlatList<T> {
 
 // We need explicit any here, because this is the exact same type that is used in React Native types
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const FlatListForwardRefRender = <ItemT = any,>(
-  props: ReanimatedFlatListPropsWithLayout<ItemT>,
+const FlatListForwardRefRender = function <Item>(
+  props: ReanimatedFlatListPropsWithLayout<Item>,
   ref: ForwardedRef<FlatList>
-) => {
+) {
   const { itemLayoutAnimation, skipEnteringExitingAnimations, ...restProps } =
     props;
 
@@ -84,7 +84,7 @@ const FlatListForwardRefRender = <ItemT = any,>(
   );
 
   const animatedFlatList = (
-    // @ts-expect-error We Can't easily make the result of createAnimatedComponent generic
+    // @ts-expect-error In its current type state, createAnimatedComponent cannot create generic components.
     <AnimatedFlatList
       ref={ref}
       {...restProps}
@@ -103,9 +103,9 @@ const FlatListForwardRefRender = <ItemT = any,>(
   );
 };
 
-// We need explicit any here, because this is the exact same type that is used in React Native types
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ReanimatedFlatList = forwardRef(FlatListForwardRefRender) as <
+  // We need explicit any here, because this is the exact same type that is used in React Native types.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ItemT = any
 >(
   props: ReanimatedFlatListPropsWithLayout<ItemT> & {

@@ -120,6 +120,16 @@ function AnimatedFlatListTest() {
       />
     );
   }
+
+  function AnimatedFlatListTestGenericParameter() {
+    return (
+      <>
+        <Animated.FlatList<string> data={['a', 'b']} renderItem={() => null} />
+        {/* @ts-expect-error Properly detects wrong generic type */}
+        <Animated.FlatList<string> data={[1, 2]} renderItem={() => null} />
+      </>
+    );
+  }
 }
 
 function MakeMutableTest() {
