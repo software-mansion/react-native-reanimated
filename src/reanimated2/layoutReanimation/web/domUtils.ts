@@ -146,10 +146,15 @@ function addChild(child: HTMLElement, parent: Node) {
 
   setDummyPosition(child, childSnapshot);
 
-  child.onanimationend = () => {
+  const originalOnAnimationEnd = child.onanimationend;
+
+  child.onanimationend = function (event: AnimationEvent) {
     if (parent.contains(child)) {
       parent.removeChild(child);
     }
+
+    // Given that this function overrides onAnimationEnd, it won't be null
+    originalOnAnimationEnd?.call(this, event);
   };
 }
 
