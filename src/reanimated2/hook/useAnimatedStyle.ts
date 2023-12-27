@@ -37,7 +37,7 @@ interface AnimatedState {
   isAnimationCancelled: boolean;
 }
 
-interface PropUpdaterData {
+interface AnimatedUpdaterData {
   initial: {
     value: AnimatedStyle<any>;
     updater: () => AnimatedStyle<any>;
@@ -410,8 +410,8 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
   adapters?: WorkletFunction | WorkletFunction[],
   isAnimatedProps = false
 ) {
-  const viewsRef: ViewRefSet<unknown> = useViewRefSet();
-  const propUpdaterData = useRef<PropUpdaterData>();
+  const viewsRef = useViewRefSet();
+  const animatedUpdaterData = useRef<AnimatedUpdaterData>();
   let inputs = Object.values(updater.__closure ?? {});
   if (SHOULD_BE_USE_WEB) {
     if (!inputs.length && dependencies?.length) {
@@ -442,12 +442,12 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   }
   adaptersHash && dependencies.push(adaptersHash);
 
-  if (!propUpdaterData.current) {
+  if (!animatedUpdaterData.current) {
     const initialStyle = initialUpdaterRun(updater);
     if (__DEV__) {
       validateAnimatedStyles(initialStyle);
     }
-    propUpdaterData.current = {
+    animatedUpdaterData.current = {
       initial: {
         value: initialStyle,
         updater,
@@ -462,9 +462,8 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     };
   }
 
-  const { initial, remoteState, viewDescriptors } = propUpdaterData.current;
+  const { initial, remoteState, viewDescriptors } = animatedUpdaterData.current;
   const shareableViewDescriptors = viewDescriptors.shareableViewDescriptors;
-  const maybeViewsRef = SHOULD_BE_USE_WEB ? viewsRef : undefined;
 
   dependencies.push(shareableViewDescriptors);
 
@@ -489,7 +488,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
           shareableViewDescriptors,
           updater,
           remoteState,
-          maybeViewsRef,
+          viewsRef,
           areAnimationsActive,
           jestAnimatedStyle,
           adaptersArray
@@ -502,7 +501,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
           shareableViewDescriptors,
           updaterFn,
           remoteState,
-          maybeViewsRef,
+          viewsRef,
           areAnimationsActive,
           isAnimatedProps
         );
@@ -520,8 +519,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     return () => {
       areAnimationsActive.value = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [areAnimationsActive]);
 
   checkSharedValueUsage(initial.value);
 
@@ -529,10 +527,10 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     return {
       viewDescriptors,
       initial,
-      maybeViewsRef,
+      viewsRef,
       animatedStyle: jestAnimatedStyle,
     };
   } else {
-    return { viewDescriptors, initial, viewsRef: maybeViewsRef };
+    return { viewDescriptors, initial, viewsRef };
   }
 }
