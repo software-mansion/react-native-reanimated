@@ -78,7 +78,6 @@ function assertSingleReanimatedInstance() {
 See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#another-instance-of-reanimated-was-detected\` for more details. Previous: ${global._REANIMATED_VERSION_JS}, current: ${jsVersion}.`
     );
   }
-  global._REANIMATED_VERSION_JS = jsVersion;
 }
 
 export class NativeReanimated {
@@ -89,6 +88,7 @@ export class NativeReanimated {
     if (__DEV__) {
       assertSingleReanimatedInstance();
     }
+    global._REANIMATED_VERSION_JS = jsVersion;
     if (global.__reanimatedModuleProxy === undefined) {
       const { ReanimatedModule } = NativeModules;
       const valueUnpackerCode = getValueUnpackerCode();

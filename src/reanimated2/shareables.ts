@@ -109,8 +109,6 @@ const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // We use it to check if later on the function reenters with the same object
 let processedObjectAtThresholdDepth: unknown;
 
-let shouldWarnAboutMissingPluginVersion = true;
-
 export function makeShareableCloneRecursive<T>(
   value: any,
   shouldPersistRemote = false,
@@ -165,14 +163,7 @@ export function makeShareableCloneRecursive<T>(
           // we are converting a worklet
           if (__DEV__) {
             const babelVersion = value.__initData.version;
-            if (babelVersion === undefined) {
-              if (shouldWarnAboutMissingPluginVersion) {
-                shouldWarnAboutMissingPluginVersion = false;
-                console.warn(`[Reanimated] Unknown version of Reanimated Babel plugin.
-              See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#unknown-version-of-reanimated-babel-plugin\` for more details.
-              Offending code was: \`${getWorkletCode(value)}\``);
-              }
-            } else if (babelVersion !== jsVersion) {
+            if (babelVersion !== undefined && babelVersion !== jsVersion) {
               throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}).        
 See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version\` for more details.
 Offending code was: \`${getWorkletCode(value)}\``);
