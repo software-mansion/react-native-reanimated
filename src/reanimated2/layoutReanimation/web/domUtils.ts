@@ -152,7 +152,7 @@ function addChild(child: HTMLElement, parent: Node) {
   };
 }
 
-function DFSVisit(node: HTMLElement, root: Node) {
+function findDescendantWithExitingAnimation(node: HTMLElement, root: Node) {
   if (
     node.hasAttribute('data-reanimatedDummy') &&
     !node.hasAttribute('data-reanimatedRemoveAfterAnimation') // We use that so we don't end up in infinite loop
@@ -161,7 +161,7 @@ function DFSVisit(node: HTMLElement, root: Node) {
   }
 
   for (let i = 0; i < node.children.length; ++i) {
-    DFSVisit(node.children[i] as HTMLElement, root);
+    findDescendantWithExitingAnimation(node.children[i] as HTMLElement, root);
   }
 }
 
@@ -174,7 +174,7 @@ export function setObserver() {
     const rootMutation = mutationsList[mutationsList.length - 1];
 
     for (let i = 0; i < rootMutation.removedNodes.length; ++i) {
-      DFSVisit(
+      findDescendantWithExitingAnimation(
         rootMutation.removedNodes[i] as HTMLElement,
         rootMutation.target
       );
