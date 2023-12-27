@@ -16,7 +16,9 @@ interface ReanimatedPluginOptions {
   relativeSourceLocation?: boolean;
   disableInlineStylesWarning?: boolean;
   processNestedWorklets?: boolean;
+  omitNativeOnlyData?: boolean;
   globals?: string[];
+  substituteWebPlatformChecks?: boolean;
 }
 ```
 
