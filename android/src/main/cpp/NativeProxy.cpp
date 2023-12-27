@@ -19,9 +19,7 @@
 #include "RNRuntimeDecorator.h"
 #include "ReanimatedJSIUtils.h"
 #include "ReanimatedRuntime.h"
-#ifndef NDEBUG
 #include "ReanimatedVersion.h"
-#endif // NDEBUG
 #include "WorkletRuntime.h"
 #include "WorkletRuntimeCollector.h"
 

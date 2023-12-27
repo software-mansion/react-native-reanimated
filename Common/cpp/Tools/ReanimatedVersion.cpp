@@ -18,9 +18,17 @@ std::string getReanimatedCppVersion() {
   return std::string(REANIMATED_VERSION_STRING);
 }
 
+void injectReanimatedCppVersion(jsi::Runtime &rnRuntime) {
+  auto version = getReanimatedCppVersion();
+  rnRuntime.global().setProperty(
+      rnRuntime,
+      "_REANIMATED_VERSION_CPP",
+      jsi::String::createFromUtf8(rnRuntime, version));
+}
+
+#ifndef NDEBUG
 // This function is pretty much a copy of
 // `src/reanimated2/platform-specific/checkVersion.ts`.
-#ifndef NDEBUG
 bool matchVersion(const std::string &version1, const std::string &version2) {
   std::regex pattern("^\\d+\\.\\d+\\.\\d+$");
   if (std::regex_match(version1, pattern) &&
@@ -68,11 +76,18 @@ void checkJSVersion(
         "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-c-code-version-and-javascript-code-version` for more details.");
     return;
   }
+}
+#else
+void checkJSVersion(
+    jsi::Runtime &rnRuntime,
+    const std::shared_ptr<JSLogger> &jsLogger) {
+  // In release builds we don't check the version, hence
+  // this function is a NOOP.
+}
 
-  rnRuntime.global().setProperty(
-      rnRuntime,
-      "_REANIMATED_VERSION_CPP",
-      jsi::String::createFromUtf8(rnRuntime, cppVersion));
+bool matchVersion(const std::string &version1, const std::string &version2) {
+  // Stub implementation for release builds.
+  return true;
 }
 #endif // NDEBUG
 
