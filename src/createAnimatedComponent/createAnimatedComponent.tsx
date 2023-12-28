@@ -52,11 +52,17 @@ import {
   tryActivateLayoutTransition,
   configureWebLayoutAnimations,
   getReducedMotionFromConfig,
+  saveSnapshot,
 } from '../reanimated2/layoutReanimation/web';
 import type { CustomConfig } from '../reanimated2/layoutReanimation/web/config';
+import type { FlatList, FlatListProps } from 'react-native';
 
 const IS_WEB = isWeb();
 const IS_FABRIC = isFabric();
+
+if (IS_WEB) {
+  configureWebLayoutAnimations();
+}
 
 function onlyAnimatedStyles(styles: StyleProps[]): StyleProps[] {
   return styles.filter((style) => style?.viewDescriptors);
@@ -84,6 +90,8 @@ type Options<P> = {
  * @returns A component that Reanimated is capable of animating.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent
  */
+
+// Don't change the order of overloads, since such a change breaks current behavior
 export function createAnimatedComponent<P extends object>(
   component: FunctionComponent<P>,
   options?: Options<P>
@@ -93,6 +101,22 @@ export function createAnimatedComponent<P extends object>(
   component: ComponentClass<P>,
   options?: Options<P>
 ): ComponentClass<AnimateProps<P>>;
+
+export function createAnimatedComponent<P extends object>(
+  // Actually ComponentType<P = {}> = ComponentClass<P> | FunctionComponent<P> but we need this overload too
+  // since some external components (like FastImage) are typed just as ComponentType
+  component: ComponentType<P>,
+  options?: Options<P>
+): FunctionComponent<AnimateProps<P>> | ComponentClass<AnimateProps<P>>;
+
+/**
+ * @deprecated Please use `Animated.FlatList` component instead of calling `Animated.createAnimatedComponent(FlatList)` manually.
+ */
+// @ts-ignore This is required to create this overload, since type of createAnimatedComponent is incorrect and doesn't include typeof FlatList
+export function createAnimatedComponent(
+  component: typeof FlatList<unknown>,
+  options?: Options<any>
+): ComponentClass<AnimateProps<FlatListProps<unknown>>>;
 
 export function createAnimatedComponent(
   Component: ComponentType<InitialComponentProps>,
@@ -137,14 +161,14 @@ export function createAnimatedComponent(
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
       if (IS_WEB) {
-        configureWebLayoutAnimations();
-
-        if (!this.props.entering) {
-          this._isFirstRender = false;
-          return;
+        if (this.props.exiting) {
+          saveSnapshot(this._component as HTMLElement);
         }
 
-        if (getReducedMotionFromConfig(this.props.entering as CustomConfig)) {
+        if (
+          !this.props.entering ||
+          getReducedMotionFromConfig(this.props.entering as CustomConfig)
+        ) {
           this._isFirstRender = false;
           return;
         }
@@ -272,10 +296,8 @@ export function createAnimatedComponent(
 
     _updateFromNative(props: StyleProps) {
       if (options?.setNativeProps) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         options.setNativeProps(this._component as AnimatedComponentRef, props);
       } else {
-        // eslint-disable-next-line no-unused-expressions
         (this._component as AnimatedComponentRef)?.setNativeProps?.(props);
       }
     }
@@ -404,11 +426,8 @@ export function createAnimatedComponent(
       // attach animatedProps property
       if (this.props.animatedProps?.viewDescriptors) {
         this.props.animatedProps.viewDescriptors.add({
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           tag: viewTag as number,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           name: viewName!,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           shadowNodeWrapper: shadowNodeWrapper!,
         });
       }
@@ -424,6 +443,10 @@ export function createAnimatedComponent(
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+
+      if (IS_WEB && this.props.exiting) {
+        saveSnapshot(this._component as HTMLElement);
+      }
 
       // Snapshot won't be undefined because it comes from getSnapshotBeforeUpdate method
       if (
@@ -528,7 +551,8 @@ export function createAnimatedComponent(
     // and later on, in componentDidUpdate, calculate translation for layout transition.
     getSnapshotBeforeUpdate() {
       if (
-        (this._component as HTMLElement).getBoundingClientRect !== undefined
+        IS_WEB &&
+        (this._component as HTMLElement)?.getBoundingClientRect !== undefined
       ) {
         return (this._component as HTMLElement).getBoundingClientRect();
       }

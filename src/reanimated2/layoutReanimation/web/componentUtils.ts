@@ -17,18 +17,16 @@ import { _updatePropsJS } from '../../js-reanimated';
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { ReduceMotion } from '../../commonTypes';
 import type { StyleProps } from '../../commonTypes';
-import { useReducedMotion } from '../../hook/useReducedMotion';
+import { isReducedMotion } from '../../PlatformChecker';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 
+const snapshots = new WeakMap<HTMLElement, DOMRect>();
+
 function getEasingFromConfig(config: CustomConfig): string {
-  const easingName = (
-    config.easingV !== undefined &&
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    config.easingV!.name in WebEasings
-      ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        config.easingV!.name
-      : 'linear'
-  ) as WebEasingsNames;
+  const easingName =
+    config.easingV && config.easingV.name in WebEasings
+      ? (config.easingV.name as WebEasingsNames)
+      : 'linear';
 
   return `cubic-bezier(${WebEasings[easingName].toString()})`;
 }
@@ -48,14 +46,12 @@ function getDelayFromConfig(config: CustomConfig): number {
 
   return shouldRandomizeDelay
     ? getRandomDelay(config.delayV)
-    : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      config.delayV! / 1000;
+    : config.delayV / 1000;
 }
 
 export function getReducedMotionFromConfig(config: CustomConfig) {
   if (!config.reduceMotionV) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return useReducedMotion();
+    return isReducedMotion();
   }
 
   switch (config.reduceMotionV) {
@@ -64,8 +60,7 @@ export function getReducedMotionFromConfig(config: CustomConfig) {
     case ReduceMotion.Always:
       return true;
     default:
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      return useReducedMotion();
+      return isReducedMotion();
   }
 }
 
@@ -79,14 +74,12 @@ function getDurationFromConfig(
     : Animations[animationName].duration;
 
   return config.durationV !== undefined
-    ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      config.durationV! / 1000
+    ? config.durationV / 1000
     : defaultDuration;
 }
 
 function getCallbackFromConfig(config: CustomConfig): AnimationCallback {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return config.callbackV !== undefined ? config.callbackV! : null;
+  return config.callbackV !== undefined ? config.callbackV : null;
 }
 
 function getReversedFromConfig(config: CustomConfig) {
@@ -108,7 +101,7 @@ export function extractTransformFromStyle(style: StyleProps) {
 
   // Only last transform should be considered
   for (let i = style.length - 1; i >= 0; --i) {
-    if (style[i].transform) {
+    if (style[i]?.transform) {
       return style[i].transform;
     }
   }
@@ -133,6 +126,10 @@ export function getProcessedConfig(
     callback: getCallbackFromConfig(config),
     reversed: getReversedFromConfig(config),
   };
+}
+
+export function saveSnapshot(element: HTMLElement) {
+  snapshots.set(element, element.getBoundingClientRect());
 }
 
 export function makeElementVisible(element: HTMLElement, delay: number) {
@@ -186,7 +183,9 @@ export function setElementAnimation(
     element.style.transform = convertTransformToString(existingTransform);
   };
 
-  scheduleAnimationCleanup(animationName, duration + delay);
+  if (!(animationName in Animations)) {
+    scheduleAnimationCleanup(animationName, duration + delay);
+  }
 }
 
 export function handleLayoutTransition(
@@ -232,6 +231,50 @@ export function handleLayoutTransition(
   setElementAnimation(element, animationConfig, existingTransform);
 }
 
+function fixElementPosition(
+  element: HTMLElement,
+  parent: HTMLElement,
+  snapshot: DOMRect
+) {
+  const parentRect = parent.getBoundingClientRect();
+
+  const parentBorderTopValue = parseInt(
+    getComputedStyle(parent).borderTopWidth
+  );
+
+  const parentBorderLeftValue = parseInt(
+    getComputedStyle(parent).borderLeftWidth
+  );
+
+  const dummyRect = element.getBoundingClientRect();
+  // getBoundingClientRect returns DOMRect with position of the element with respect to document body.
+  // However, using position `absolute` doesn't guarantee, that the dummy will be placed relative to body element.
+  // The trick below allows us to once again get position relative to body, by comparing snapshot with new position of the dummy.
+  if (dummyRect.top !== snapshot.top) {
+    element.style.top = `${
+      snapshot.top - parentRect.top - parentBorderTopValue
+    }px`;
+  }
+
+  if (dummyRect.left !== snapshot.left) {
+    element.style.left = `${
+      snapshot.left - parentRect.left - parentBorderLeftValue
+    }px`;
+  }
+}
+
+function setDummyPosition(dummy: HTMLElement, snapshot: DOMRect) {
+  dummy.style.transform = '';
+  dummy.style.position = 'absolute';
+  dummy.style.top = `${snapshot.top}px`;
+  dummy.style.left = `${snapshot.left}px`;
+  dummy.style.width = `${snapshot.width}px`;
+  dummy.style.height = `${snapshot.height}px`;
+  dummy.style.margin = '0px'; // tmpElement has absolute position, so margin is not necessary
+
+  fixElementPosition(dummy, dummy.parentElement!, snapshot);
+}
+
 export function handleExitingAnimation(
   element: HTMLElement,
   animationConfig: AnimationConfig
@@ -240,6 +283,7 @@ export function handleExitingAnimation(
   const dummy = element.cloneNode() as HTMLElement;
 
   element.style.animationName = '';
+  // We hide current element so only its copy with proper animation will be displayed
   element.style.visibility = 'hidden';
 
   // After cloning the element, we want to move all children from original element to its clone. This is because original element
@@ -254,12 +298,9 @@ export function handleExitingAnimation(
   setElementAnimation(dummy, animationConfig);
   parent?.appendChild(dummy);
 
-  // We hide current element so only its copy with proper animation will be displayed
+  const snapshot = snapshots.get(element)!;
 
-  dummy.style.position = 'absolute';
-  dummy.style.top = `${element.offsetTop}px`;
-  dummy.style.left = `${element.offsetLeft}px`;
-  dummy.style.margin = '0px'; // tmpElement has absolute position, so margin is not necessary
+  setDummyPosition(dummy, snapshot);
 
   const originalOnAnimationEnd = dummy.onanimationend;
 
@@ -271,4 +312,10 @@ export function handleExitingAnimation(
     // Given that this function overrides onAnimationEnd, it won't be null
     originalOnAnimationEnd?.call(this, event);
   };
+
+  dummy.addEventListener('animationcancel', () => {
+    if (parent?.contains(dummy)) {
+      parent.removeChild(dummy);
+    }
+  });
 }
