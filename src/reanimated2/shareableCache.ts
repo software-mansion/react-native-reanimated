@@ -2,6 +2,16 @@
 import { shouldBeUseWeb } from './PlatformChecker';
 import type { ShareableRef } from './commonTypes';
 
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+
+/**
+ * This symbol is used to represent a mapping from the value to itself.
+ *
+ * It's used to prevent converting a shareable that's already converted -
+ * for example a Shared Value that's in worklet's closure.
+ **/
+export const shareableFlag = Symbol('shareable flag');
+
 /*
 During a fast refresh, React holds the same instance of a Mutable
 (that's guaranteed by `useRef`) but `shareableCache` gets regenerated and thus
@@ -12,16 +22,6 @@ in `shareableCache` for a Mutable and tries to clone it as if it was a regular J
 There we use Object.entries to iterate over the keys which throws an error on accessing `_value`.
 For convenience we move this cache to a separate file so it doesn't scare us with red squiggles.
 */
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
-
-/**
- * This symbol is used to represent a mapping from the value to itself.
- *
- * It's used to prevent converting a shareable that's already converted -
- * for example a Shared Value that's in worklet's closure.
- **/
-export const shareableFlag = Symbol('shareable flag');
 
 const cache = SHOULD_BE_USE_WEB
   ? null
