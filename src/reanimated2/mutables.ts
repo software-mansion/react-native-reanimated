@@ -17,7 +17,7 @@ type Listener<Value> = (newValue: Value) => void;
 export function makeUIMutable<Value>(
   initial: Value,
   syncDataHolder?: ShareableSyncDataHolderRef<Value>
-) {
+): Mutable<Value> {
   'worklet';
 
   const listeners = new Map<number, Listener<Value>>();
