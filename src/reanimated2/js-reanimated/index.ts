@@ -28,6 +28,7 @@ if (isWeb()) {
 
   try {
     createTextShadowValue =
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       require('react-native-web/dist/exports/StyleSheet/preprocess').createTextShadowValue;
   } catch (e) {}
 }
@@ -43,6 +44,12 @@ global._makeShareableClone = () => {
 global._scheduleOnJS = () => {
   throw new Error(
     '[Reanimated] _scheduleOnJS should never be called in JSReanimated.'
+  );
+};
+
+global._scheduleOnRuntime = () => {
+  throw new Error(
+    '[Reanimated] _scheduleOnRuntime should never be called in JSReanimated.'
   );
 };
 
@@ -103,7 +110,9 @@ export const _updatePropsJS = (
         component._touchableNode.setAttribute(dashedKey, rawStyles[key]);
       });
     } else {
-      console.warn('It is not possible to manipulate component');
+      console.warn(
+        `[Reanimated] It's not possible to manipulate the component ${component}`
+      );
     }
   }
 };

@@ -19,7 +19,7 @@ public class NativeProxy extends NativeProxyCommon {
     @SuppressWarnings("unused")
     private final HybridData mHybridData;
 
-    public NativeProxy(ReactApplicationContext context) {
+    public NativeProxy(ReactApplicationContext context, String valueUnpackerCode) {
         super(context);
         var holder = context.getCatalystInstance().getJSCallInvokerHolder();
         LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
@@ -30,7 +30,8 @@ public class NativeProxy extends NativeProxyCommon {
                         (CallInvokerHolderImpl) holder,
                         mAndroidUIScheduler,
                         LayoutAnimations,
-                        messageQueueThread);
+                        messageQueueThread,
+                        valueUnpackerCode);
         prepareLayoutAnimations(LayoutAnimations);
         installJSIBindings();
         if (BuildConfig.DEBUG) {
@@ -43,7 +44,8 @@ public class NativeProxy extends NativeProxyCommon {
             CallInvokerHolderImpl jsCallInvokerHolder,
             AndroidUIScheduler androidUIScheduler,
             LayoutAnimations LayoutAnimations,
-            MessageQueueThread messageQueueThread);
+            MessageQueueThread messageQueueThread,
+            String valueUnpackerCode);
 
     public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 

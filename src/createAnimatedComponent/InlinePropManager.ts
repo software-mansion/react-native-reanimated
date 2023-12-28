@@ -1,26 +1,22 @@
 'use strict';
 import type { StyleProps } from '../reanimated2';
-import type { AnimatedComponentProps } from './utils';
+import type {
+  IAnimatedComponentInternal,
+  AnimatedComponentProps,
+  IInlinePropManager,
+  ViewInfo,
+} from './commonTypes';
 import { flattenArray } from './utils';
 import { makeViewDescriptorsSet } from '../reanimated2/ViewDescriptorsSet';
 import type {
   ViewDescriptorsSet,
   ViewRefSet,
 } from '../reanimated2/ViewDescriptorsSet';
-import type { ViewConfig } from '../ConfigHelper';
 import { adaptViewConfig } from '../ConfigHelper';
 import updateProps from '../reanimated2/UpdateProps';
 import { stopMapper, startMapper } from '../reanimated2/mappers';
 import { isSharedValue } from '../reanimated2/isSharedValue';
 import { shouldBeUseWeb } from '../reanimated2/PlatformChecker';
-import type { ShadowNodeWrapper } from '../reanimated2/commonTypes';
-
-export interface ViewInfo {
-  viewTag: number | HTMLElement | null;
-  viewName: string | null;
-  shadowNodeWrapper: ShadowNodeWrapper | null;
-  viewConfig: ViewConfig;
-}
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -132,13 +128,14 @@ export function getInlineStyle(
   return newStyle;
 }
 
-export class InlinePropManager {
+export class InlinePropManager implements IInlinePropManager {
   _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
   _inlinePropsMapperId: number | null = null;
   _inlineProps: StyleProps = {};
 
   public attachInlineProps(
-    animatedComponent: React.Component<unknown, unknown>,
+    animatedComponent: React.Component<unknown, unknown> &
+      IAnimatedComponentInternal,
     viewInfo: ViewInfo
   ) {
     const newInlineProps: Record<string, unknown> =
@@ -156,11 +153,8 @@ export class InlinePropManager {
         }
 
         this._inlinePropsViewDescriptors.add({
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           tag: viewTag as number,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           name: viewName!,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           shadowNodeWrapper: shadowNodeWrapper!,
         });
       }

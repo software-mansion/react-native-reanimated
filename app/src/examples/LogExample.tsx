@@ -4,7 +4,7 @@ import React from 'react';
 
 export default function LogExample() {
   const handlePress = () => {
-    function test(value: any, expected: string) {
+    function test(value: unknown, expected: string) {
       'worklet';
       // @ts-ignore _toString function is registered for UI runtime
       const actual = _toString(value);

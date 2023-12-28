@@ -12,34 +12,38 @@ without changing their names to point out what are their respective counterparts
 In the future this might change.
 */
 
-function TestUseAnimatedStyleStyle2() {
-  const sv = useSharedValue('0');
-  // @ts-expect-error properly detects illegal type
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      width: sv.value,
-    };
-  });
-  return <Animated.View style={animatedStyle} />;
+function UseAnimatedStyleTest() {
+  function UseAnimatedStyleTest2() {
+    const sv = useSharedValue('0');
+    // @ts-expect-error properly detects illegal type
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        width: sv.value,
+      };
+    });
+    return <Animated.View style={animatedStyle} />;
+  }
+
+  function UseAnimatedStyleTest4() {
+    const sv = useSharedValue({ width: '0' });
+    // @ts-expect-error properly detects illegal type
+    const animatedStyle = useAnimatedStyle(() => {
+      return sv.value;
+    });
+    return <Animated.View style={animatedStyle} />;
+  }
 }
 
-function TestUseAnimatedStyleStyle4() {
-  const sv = useSharedValue({ width: '0' });
-  // @ts-expect-error properly detects illegal type
-  const animatedStyle = useAnimatedStyle(() => {
-    return sv.value;
-  });
-  return <Animated.View style={animatedStyle} />;
-}
+function InlineStylesTest() {
+  function InlineStylesTest4() {
+    const sv = useSharedValue('0');
+    // @ts-expect-error properly detects illegal type
+    return <Animated.View style={{ width: sv }} />;
+  }
 
-function TestInlineStyles4() {
-  const sv = useSharedValue('0');
-  // @ts-expect-error properly detects illegal type
-  return <Animated.View style={{ width: sv }} />;
-}
-
-function TestInlineStyles6() {
-  const sv = useSharedValue({ width: '0' });
-  // @ts-expect-error properly detects illegal type
-  return <Animated.View style={sv} />;
+  function InlineStylesTest6() {
+    const sv = useSharedValue({ width: '0' });
+    // @ts-expect-error properly detects illegal type
+    return <Animated.View style={sv} />;
+  }
 }

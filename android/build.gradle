@@ -386,6 +386,15 @@ android {
                     srcDirs += "src/reactNativeVersionPatch/NativeProxy/latest"
                 }
             }
+            
+            // ReactFeatureFlags 
+            if (IS_NEW_ARCHITECTURE_ENABLED) {
+                if (REACT_NATIVE_MINOR_VERSION <= 72) {
+                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/72"
+                } else {
+                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/latest"
+                }
+            }
         }
     }
 }

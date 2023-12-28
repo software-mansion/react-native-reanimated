@@ -2,16 +2,17 @@
 
 import type { AnimationConfig, AnimationNames, CustomConfig } from './config';
 import { Animations } from './config';
-import type { AnimatedComponentProps } from '../../../createAnimatedComponent/utils';
+import type { AnimatedComponentProps } from '../../../createAnimatedComponent/commonTypes';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { StyleProps } from '../../commonTypes';
 import { createAnimationWithExistingTransform } from './createAnimation';
 import {
+  extractTransformFromStyle,
   getProcessedConfig,
-  handleEnteringAnimation,
   handleExitingAnimation,
   handleLayoutTransition,
   makeElementVisible,
+  setElementAnimation,
 } from './componentUtils';
 import { areDOMRectsEqual } from './domUtils';
 import type { TransformsStyle } from 'react-native';
@@ -35,18 +36,12 @@ function chooseConfig<ComponentProps extends Record<string, unknown>>(
 
 function checkUndefinedAnimationFail(
   initialAnimationName: string,
-  isLayoutTransition: boolean,
-  hasEnteringAnimation: boolean,
-  element: HTMLElement
+  isLayoutTransition: boolean
 ) {
   // This prevents crashes if we try to set animations that are not defined.
   // We don't care about layout transitions since they're created dynamically
   if (initialAnimationName in Animations || isLayoutTransition) {
     return false;
-  }
-
-  if (hasEnteringAnimation) {
-    makeElementVisible(element);
   }
 
   console.warn(
@@ -56,32 +51,16 @@ function checkUndefinedAnimationFail(
   return true;
 }
 
-function checkReduceMotionFail(
-  animationConfig: AnimationConfig,
-  hasEnteringAnimation: boolean,
-  element: HTMLElement
-) {
-  if (!animationConfig.reduceMotion) {
-    return false;
-  }
-
-  if (hasEnteringAnimation) {
-    makeElementVisible(element);
-  }
-
-  return true;
-}
-
 function chooseAction(
   animationType: LayoutAnimationType,
   animationConfig: AnimationConfig,
   element: HTMLElement,
   transitionData: TransitionData,
-  transform?: NonNullable<TransformsStyle['transform']>
+  transform: TransformsStyle['transform'] | undefined
 ) {
   switch (animationType) {
     case LayoutAnimationType.ENTERING:
-      handleEnteringAnimation(element, animationConfig);
+      setElementAnimation(element, animationConfig, transform);
       break;
     case LayoutAnimationType.LAYOUT:
       transitionData.reversed = animationConfig.reversed;
@@ -99,6 +78,47 @@ function chooseAction(
   }
 }
 
+function tryGetAnimationConfigWithTransform<
+  ComponentProps extends Record<string, unknown>
+>(
+  props: Readonly<AnimatedComponentProps<ComponentProps>>,
+  animationType: LayoutAnimationType
+) {
+  const config = chooseConfig(animationType, props);
+  if (!config) {
+    return null;
+  }
+
+  const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
+  const initialAnimationName =
+    typeof config === 'function' ? config.name : config.constructor.name;
+
+  const shouldFail = checkUndefinedAnimationFail(
+    initialAnimationName,
+    isLayoutTransition
+  );
+
+  if (shouldFail) {
+    return null;
+  }
+
+  const transform = extractTransformFromStyle(props.style as StyleProps);
+
+  const animationName =
+    transform && animationType !== LayoutAnimationType.EXITING
+      ? createAnimationWithExistingTransform(initialAnimationName, transform)
+      : initialAnimationName;
+
+  const animationConfig = getProcessedConfig(
+    animationName,
+    animationType,
+    config as CustomConfig,
+    initialAnimationName as AnimationNames
+  );
+
+  return { animationConfig, transform };
+}
+
 export function startWebLayoutAnimation<
   ComponentProps extends Record<string, unknown>
 >(
@@ -107,51 +127,24 @@ export function startWebLayoutAnimation<
   animationType: LayoutAnimationType,
   transitionData?: TransitionData
 ) {
-  const config = chooseConfig(animationType, props);
-  if (!config) {
-    return;
-  }
-
-  const hasEnteringAnimation = props.entering !== undefined;
-  const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
-  const initialAnimationName =
-    typeof config === 'function' ? config.name : config.constructor.name;
-
-  const shouldFail = checkUndefinedAnimationFail(
-    initialAnimationName,
-    isLayoutTransition,
-    hasEnteringAnimation,
-    element
+  const maybeAnimationConfigWithTransform = tryGetAnimationConfigWithTransform(
+    props,
+    animationType
   );
 
-  if (shouldFail) {
-    return;
+  if (maybeAnimationConfigWithTransform) {
+    const { animationConfig, transform } = maybeAnimationConfigWithTransform;
+
+    chooseAction(
+      animationType,
+      animationConfig,
+      element,
+      transitionData as TransitionData,
+      transform
+    );
+  } else {
+    makeElementVisible(element, 0);
   }
-
-  const transform = (props.style as StyleProps)?.transform;
-
-  const animationName = transform
-    ? createAnimationWithExistingTransform(initialAnimationName, transform)
-    : initialAnimationName;
-
-  const animationConfig = getProcessedConfig(
-    animationName,
-    config as CustomConfig,
-    isLayoutTransition,
-    initialAnimationName as AnimationNames
-  );
-
-  if (checkReduceMotionFail(animationConfig, hasEnteringAnimation, element)) {
-    return;
-  }
-
-  chooseAction(
-    animationType,
-    animationConfig,
-    element,
-    transitionData as TransitionData,
-    transform
-  );
 }
 
 export function tryActivateLayoutTransition<

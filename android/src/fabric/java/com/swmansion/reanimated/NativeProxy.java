@@ -1,7 +1,5 @@
 package com.swmansion.reanimated;
 
-import android.util.Log;
-
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -10,12 +8,10 @@ import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.internal.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.common.UIManagerType;
-import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 import com.swmansion.reanimated.nativeProxy.NativeProxyCommon;
 
-import java.lang.ref.WeakReference;
 import java.util.HashMap;
 
 public class NativeProxy extends NativeProxyCommon {
@@ -23,9 +19,9 @@ public class NativeProxy extends NativeProxyCommon {
     @SuppressWarnings("unused")
     private final HybridData mHybridData;
 
-    public NativeProxy(ReactApplicationContext context) {
+    public NativeProxy(ReactApplicationContext context, String valueUnpackerCode) {
         super(context);
-
+        ReactFeatureFlagsWrapper.enableMountHooks();
         CallInvokerHolderImpl holder =
                 (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
 
@@ -43,7 +39,8 @@ public class NativeProxy extends NativeProxyCommon {
                         mAndroidUIScheduler,
                         LayoutAnimations,
                         messageQueueThread,
-                        fabricUIManager);
+                        fabricUIManager,
+                        valueUnpackerCode);
         prepareLayoutAnimations(LayoutAnimations);
         installJSIBindings();
         if (BuildConfig.DEBUG) {
@@ -57,7 +54,8 @@ public class NativeProxy extends NativeProxyCommon {
             AndroidUIScheduler androidUIScheduler,
             LayoutAnimations LayoutAnimations,
             MessageQueueThread messageQueueThread,
-            FabricUIManager fabricUIManager);
+            FabricUIManager fabricUIManager,
+            String valueUnpackerCode);
 
     public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 

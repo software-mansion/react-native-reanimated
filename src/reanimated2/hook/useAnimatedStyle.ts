@@ -14,7 +14,7 @@ import {
 } from './utils';
 import type { DefaultStyle, DependencyList, Descriptor } from './commonTypes';
 import type { ViewDescriptorsSet, ViewRefSet } from '../ViewDescriptorsSet';
-import { makeViewDescriptorsSet, makeViewsRefSet } from '../ViewDescriptorsSet';
+import { makeViewDescriptorsSet, useViewRefSet } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import type {
   AnimationObject,
@@ -389,6 +389,14 @@ function checkSharedValueUsage(
   }
 }
 
+/**
+ * Lets you create a styles object, similar to StyleSheet styles, which can be animated using shared values.
+ *
+ * @param updater - A function returning an object with style properties you want to animate.
+ * @param dependencies - An optional array of dependencies. Only relevant when using Reanimated without the Babel plugin on the Web.
+ * @returns An animated style object which has to be passed to the `style` property of an Animated component you want to animate.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle
+ */
 // You cannot pass Shared Values to `useAnimatedStyle` directly.
 // @ts-expect-error This overload is required by our API.
 export function useAnimatedStyle<Style extends DefaultStyle>(
@@ -402,7 +410,7 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
   adapters?: WorkletFunction | WorkletFunction[],
   isAnimatedProps = false
 ) {
-  const viewsRef: ViewRefSet<unknown> = makeViewsRefSet();
+  const viewsRef: ViewRefSet<unknown> = useViewRefSet();
   const initRef = useRef<AnimationRef>();
   let inputs = Object.values(updater.__closure ?? {});
   if (SHOULD_BE_USE_WEB) {
