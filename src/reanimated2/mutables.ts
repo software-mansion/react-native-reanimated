@@ -108,7 +108,7 @@ export function makeMutable<T>(
     set _value(newValue: T) {
       if (!SHOULD_BE_USE_WEB) {
         throw new Error(
-          '[Reanimated] Setting `_value` directly is only possible on the UI runtime.'
+          '[Reanimated] Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
         );
       }
       value = newValue;
@@ -121,7 +121,7 @@ export function makeMutable<T>(
         return value;
       }
       throw new Error(
-        '[Reanimated] Reading from `_value` directly is only possible on the UI runtime.'
+        '[Reanimated] Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
       );
     },
     modify: (modifier?: (value: T) => T, forceUpdate = true) => {
