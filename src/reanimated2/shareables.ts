@@ -161,6 +161,10 @@ export function makeShareableCloneRecursive<T>(
         toAdapt = {};
         if (value.__workletHash !== undefined) {
           // we are converting a worklet
+          value.__closure =
+            typeof value.__closure === 'function'
+              ? value.__closure()
+              : value.__closure;
           if (__DEV__) {
             const babelVersion = value.__initData.version;
             if (babelVersion !== undefined && babelVersion !== jsVersion) {
@@ -328,9 +332,17 @@ export function makeShareableCloneOnUIRecursive<T>(
           value.map(cloneRecursive)
         ) as FlatShareableRef<T>;
       }
+      // if (value.__closure && typeof value.__closure === 'function') {
+      //   value.__closure = value.__closure();
+      // }
       const toAdapt: Record<string, FlatShareableRef<T>> = {};
       for (const [key, element] of Object.entries(value)) {
-        toAdapt[key] = cloneRecursive<T>(element);
+        if (key === '__closure' && typeof element === 'function') {
+          value.__closure = value.__closure();
+          toAdapt[key] = cloneRecursive(value.__closure);
+        } else {
+          toAdapt[key] = cloneRecursive<T>(element);
+        }
       }
       return _makeShareableClone(toAdapt) as FlatShareableRef<T>;
     }

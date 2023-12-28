@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { Button, StyleSheet, View, Text } from 'react-native';
+import { runOnUI } from 'react-native-reanimated';
 
 export default function App() {
   function handleOnPress() {
@@ -9,6 +10,7 @@ export default function App() {
       // @ts-expect-error
       unexistingVariable;
     }
+    runOnUI(badWorklet)();
   }
 
   return (

@@ -31,7 +31,11 @@ export function useAnimatedReaction<PreparedResult>(
 ) {
   const previous = useSharedValue<PreparedResult | null>(null, true);
 
-  let inputs = Object.values(prepare.__closure ?? {});
+  let inputs = Object.values(
+    typeof prepare.__closure === 'function'
+      ? prepare.__closure()
+      : prepare.__closure ?? {}
+  );
 
   if (shouldBeUseWeb()) {
     if (!inputs.length && dependencies?.length) {
@@ -42,8 +46,16 @@ export function useAnimatedReaction<PreparedResult>(
 
   if (dependencies === undefined) {
     dependencies = [
-      ...Object.values(prepare.__closure ?? {}),
-      ...Object.values(react.__closure ?? {}),
+      ...Object.values(
+        typeof prepare.__closure() === 'function'
+          ? prepare.__closure()
+          : prepare.__closure ?? {}
+      ),
+      ...Object.values(
+        typeof react.__closure() === 'function'
+          ? react.__closure()
+          : react.__closure ?? {}
+      ),
       prepare.__workletHash,
       react.__workletHash,
     ];

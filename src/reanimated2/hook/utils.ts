@@ -26,7 +26,10 @@ export function buildDependencies(
     dependencies = handlersList.map((handler) => {
       return {
         workletHash: handler.__workletHash,
-        closure: handler.__closure,
+        closure:
+          typeof handler.__closure === 'function'
+            ? handler.__closure()
+            : handler.__closure,
       };
     });
   } else {

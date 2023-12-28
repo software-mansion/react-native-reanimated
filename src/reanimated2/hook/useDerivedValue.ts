@@ -27,7 +27,11 @@ export function useDerivedValue<Value>(
   dependencies?: DependencyList
 ): DerivedValue<Value> {
   const initRef = useRef<SharedValue<Value> | null>(null);
-  let inputs = Object.values(updater.__closure ?? {});
+  let inputs = Object.values(
+    typeof updater.__closure === 'function'
+      ? updater.__closure()
+      : updater.__closure ?? {}
+  );
   if (shouldBeUseWeb()) {
     if (!inputs.length && dependencies?.length) {
       // let web work without a Babel/SWC plugin

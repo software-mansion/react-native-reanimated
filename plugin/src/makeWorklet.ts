@@ -12,6 +12,7 @@ import type {
 } from '@babel/types';
 import {
   arrayExpression,
+  arrowFunctionExpression,
   assignmentExpression,
   blockStatement,
   cloneNode,
@@ -211,10 +212,22 @@ export function makeWorklet(
       assignmentExpression(
         '=',
         memberExpression(functionIdentifier, identifier('__closure'), false),
-        objectExpression(
-          variables.map((variable) =>
-            objectProperty(identifier(variable.name), variable, false, true)
-          )
+        arrowFunctionExpression(
+          [],
+          blockStatement([
+            returnStatement(
+              objectExpression(
+                variables.map((variable) =>
+                  objectProperty(
+                    identifier(variable.name),
+                    variable,
+                    false,
+                    true
+                  )
+                )
+              )
+            ),
+          ])
         )
       )
     ),

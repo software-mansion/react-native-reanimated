@@ -83,7 +83,10 @@ if (__DEV__ && !shouldBeUseWeb()) {
   if (!('__workletHash' in valueUnpacker)) {
     throw new Error('[Reanimated] `valueUnpacker` is not a worklet');
   }
-  const closure = (valueUnpacker as ValueUnpacker).__closure;
+  const closure =
+    typeof (valueUnpacker as ValueUnpacker).__closure === 'function'
+      ? (valueUnpacker as ValueUnpacker).__closure()
+      : (valueUnpacker as ValueUnpacker).__closure;
   if (closure === undefined) {
     throw new Error('[Reanimated] `valueUnpacker` closure is undefined');
   }

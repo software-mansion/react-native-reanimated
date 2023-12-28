@@ -375,7 +375,9 @@ var require_makeWorklet = __commonJS({
         (0, types_1.variableDeclaration)("const", [
           (0, types_1.variableDeclarator)(functionIdentifier, funExpression)
         ]),
-        (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(functionIdentifier, (0, types_1.identifier)("__closure"), false), (0, types_1.objectExpression)(variables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), variable, false, true))))),
+        (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(functionIdentifier, (0, types_1.identifier)("__closure"), false), (0, types_1.arrowFunctionExpression)([], (0, types_1.blockStatement)([
+          (0, types_1.returnStatement)((0, types_1.objectExpression)(variables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), variable, false, true))))
+        ])))),
         (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(functionIdentifier, (0, types_1.identifier)("__workletHash"), false), (0, types_1.numericLiteral)(workletHash)))
       ];
       if (shouldIncludeInitData) {
