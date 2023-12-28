@@ -1,30 +1,36 @@
 'use strict';
-import type { AnimationObject, AnimatableValue } from './commonTypes';
-import type { Descriptor } from './hook/commonTypes';
+import type { AnimationObject, Mutable } from './commonTypes';
 
-export function valueSetter(sv: any, value: any, forceUpdate = false): void {
+export function valueSetter<Value>(
+  mutable: Mutable<Value>,
+  value: Value,
+  forceUpdate = false
+): void {
   'worklet';
-  const previousAnimation = sv._animation;
+  const previousAnimation = mutable._animation;
   if (previousAnimation) {
     previousAnimation.cancelled = true;
-    sv._animation = null;
+    mutable._animation = null;
   }
   if (
     typeof value === 'function' ||
     (value !== null &&
       typeof value === 'object' &&
-      (value as AnimationObject).onFrame !== undefined)
+      // TODO TYPESCRIPT fix this after fixing AnimationObject type
+      (value as unknown as AnimationObject).onFrame !== undefined)
   ) {
-    const animation: AnimationObject =
+    const animation: AnimationObject<Value> =
       typeof value === 'function'
-        ? (value as () => AnimationObject)()
-        : (value as AnimationObject);
+        ? // TODO TYPESCRIPT fix this after fixing AnimationObject type
+          (value as () => AnimationObject<Value>)()
+        : // TODO TYPESCRIPT fix this after fixing AnimationObject type
+          (value as unknown as AnimationObject<Value>);
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
     // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)
     // built in animations that are not higher order(withTiming, withSpring) hold target value in .current
     if (
-      sv._value === animation.current &&
+      mutable._value === animation.current &&
       !animation.isHigherOrder &&
       !forceUpdate
     ) {
@@ -33,7 +39,7 @@ export function valueSetter(sv: any, value: any, forceUpdate = false): void {
     }
     // animated set
     const initializeAnimation = (timestamp: number) => {
-      animation.onStart(animation, sv.value, timestamp, previousAnimation);
+      animation.onStart(animation, mutable.value, timestamp, previousAnimation);
     };
     const currentTimestamp =
       global.__frameTimestamp || _getAnimationTimestamp();
@@ -56,7 +62,10 @@ export function valueSetter(sv: any, value: any, forceUpdate = false): void {
       const finished = animation.onFrame(animation, timestamp);
       animation.finished = true;
       animation.timestamp = timestamp;
-      sv._value = animation.current;
+      // TODO TYPESCRIPT
+      // For now I'll assume that `animation.current` is always defined
+      // but actually need to dive into animations to understand it
+      mutable._value = animation.current!;
       if (finished) {
         animation.callback && animation.callback(true /* finished */);
       } else {
@@ -64,15 +73,15 @@ export function valueSetter(sv: any, value: any, forceUpdate = false): void {
       }
     };
 
-    sv._animation = animation;
+    mutable._animation = animation;
 
     step(currentTimestamp);
   } else {
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
-    if (sv._value === value && !forceUpdate) {
+    if (mutable._value === value && !forceUpdate) {
       return;
     }
-    sv._value = value as Descriptor | AnimatableValue;
+    mutable._value = value;
   }
 }
