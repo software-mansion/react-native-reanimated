@@ -117,12 +117,12 @@ export function makeMutable<T>(
       });
     },
     get _value(): T {
-      if (!SHOULD_BE_USE_WEB) {
-        throw new Error(
-          '[Reanimated] Reading from `_value` directly is only possible on the UI runtime.'
-        );
+      if (SHOULD_BE_USE_WEB) {
+        return value;
       }
-      return value;
+      throw new Error(
+        '[Reanimated] Reading from `_value` directly is only possible on the UI runtime.'
+      );
     },
     modify: (modifier?: (value: T) => T, forceUpdate = true) => {
       if (!SHOULD_BE_USE_WEB) {
