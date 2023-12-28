@@ -1,4 +1,5 @@
 'use strict';
+import { shouldBeUseWeb } from './PlatformChecker';
 import type { ShareableRef } from './commonTypes';
 
 /*
@@ -12,4 +13,32 @@ There we use Object.entries to iterate over the keys which throws an error on ac
 For convenience we move this cache to a separate file so it doesn't scare us with red squiggles.
 */
 
-export const shareableCache = new WeakMap<object, ShareableRef | symbol>();
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+
+/**
+ * This symbol is used to represent a mapping from the value to itself.
+ *
+ * It's used to prevent converting a shareable that's already converted -
+ * for example a Shared Value that's in worklet's closure.
+ **/
+export const shareableFlag = Symbol('shareable flag');
+
+const cache = SHOULD_BE_USE_WEB
+  ? null
+  : new WeakMap<object, ShareableRef | symbol>();
+
+export const shareableCache = cache
+  ? {
+      set(shareable: object, shareableRef?: ShareableRef): void {
+        cache.set(shareable, shareableRef || shareableFlag);
+      },
+      get: cache.get,
+    }
+  : {
+      set() {
+        // NOOP
+      },
+      get() {
+        return null;
+      },
+    };
