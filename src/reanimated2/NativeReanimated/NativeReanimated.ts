@@ -21,7 +21,6 @@ import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
-  installValueUnpacker(valueUnpackerCode: string): void;
   makeShareableClone<T>(
     value: T,
     shouldPersistRemote: boolean
@@ -84,7 +83,6 @@ function assertSingleReanimatedInstance() {
 See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#another-instance-of-reanimated-was-detected\` for more details. Previous: ${global._REANIMATED_VERSION_JS}, current: ${jsVersion}.`
     );
   }
-  global._REANIMATED_VERSION_JS = jsVersion;
 }
 
 export class NativeReanimated {
@@ -95,9 +93,11 @@ export class NativeReanimated {
     if (__DEV__) {
       assertSingleReanimatedInstance();
     }
+    global._REANIMATED_VERSION_JS = jsVersion;
     if (global.__reanimatedModuleProxy === undefined) {
       const { ReanimatedModule } = NativeModules;
-      ReanimatedModule?.installTurboModule();
+      const valueUnpackerCode = getValueUnpackerCode();
+      ReanimatedModule?.installTurboModule(valueUnpackerCode);
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new Error(
@@ -108,9 +108,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     if (__DEV__) {
       checkCppVersion();
     }
-
     this.InnerNativeModule = global.__reanimatedModuleProxy;
-    this.InnerNativeModule.installValueUnpacker(getValueUnpackerCode());
   }
 
   makeShareableClone<T>(value: T, shouldPersistRemote: boolean) {
