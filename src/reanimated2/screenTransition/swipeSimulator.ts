@@ -7,27 +7,25 @@ import type {
 import { applyStyle } from './styleUpdater';
 
 const RNScreensTurboModule: RNScreensTurboModuleType =
-  global.RNScreensTurboModule
-    ? global.RNScreensTurboModule
-    : {
-        startTransition: (_stackTag) => {
-          'worklet';
-          console.warn('[Reanimated] RNScreensTurboModule has not been found.');
-          return {
-            topScreenId: -1,
-            belowTopScreenId: -1,
-            canStartTransition: false,
-          };
-        },
-        updateTransition: (_stackTag, _progress) => {
-          'worklet';
-          console.warn('[Reanimated] RNScreensTurboModule has not been found.');
-        },
-        finishTransition: (_stackTag, _isCanceled) => {
-          'worklet';
-          console.warn('[Reanimated] RNScreensTurboModule has not been found.');
-        },
+  global.RNScreensTurboModule || {
+    startTransition: (_stackTag) => {
+      'worklet';
+      console.warn('[Reanimated] RNScreensTurboModule has not been found.');
+      return {
+        topScreenId: -1,
+        belowTopScreenId: -1,
+        canStartTransition: false,
       };
+    },
+    updateTransition: (_stackTag, _progress) => {
+      'worklet';
+      console.warn('[Reanimated] RNScreensTurboModule has not been found.');
+    },
+    finishTransition: (_stackTag, _isCanceled) => {
+      'worklet';
+      console.warn('[Reanimated] RNScreensTurboModule has not been found.');
+    },
+  };
 
 function computeEasingProgress(
   startingTimestamp: number,
@@ -56,10 +54,9 @@ function computeProgress(
   isTransitionCanceled: boolean
 ) {
   'worklet';
-  const screenWidth = screenTransitionConfig.screenDimensions.width;
-  const progressX = Math.abs(event.translationX / screenWidth);
-  const screenHeight = screenTransitionConfig.screenDimensions.height;
-  const progressY = Math.abs(event.translationY / screenHeight);
+  const screenDimensions = screenTransitionConfig.screenDimensions;
+  const progressX = Math.abs(event.translationX / screenDimensions.width);
+  const progressY = Math.abs(event.translationY / screenDimensions.height);
   const progress = isTransitionCanceled
     ? Math.max(progressX, progressY) / 2
     : Math.max(progressX, progressY);
@@ -83,10 +80,8 @@ function maybeScheduleNextFrame(
     );
     RNScreensTurboModule.updateTransition(stackTag, progress);
     requestAnimationFrame(step);
-  } else {
-    if (screenTransitionConfig.onFinishAnimation) {
-      screenTransitionConfig.onFinishAnimation();
-    }
+  } else if (screenTransitionConfig.onFinishAnimation) {
+    screenTransitionConfig.onFinishAnimation();
   }
 }
 
@@ -135,18 +130,17 @@ export function swipeSimulator(
       velocity.y = BASE_VELOCITY;
     }
   }
+
   if (isTransitionCanceled) {
-    const didScreenReachDestinationCheck = !lockAxis
-      ? () => {
-          return didScreenReachDestination.x && didScreenReachDestination.y;
-        }
-      : lockAxis === 'x'
-      ? () => {
-          return didScreenReachDestination.x;
-        }
-      : () => {
-          return didScreenReachDestination.y;
-        };
+    const didScreenReachDestinationCheck = () => {
+      if (!lockAxis) {
+        return didScreenReachDestination.x && didScreenReachDestination.y;
+      } else if (lockAxis === 'x') {
+        return didScreenReachDestination.x;
+      } else {
+        return didScreenReachDestination.y;
+      }
+    };
     const computeFrame = () => {
       const progress = {
         x: computeEasingProgress(startTimestamp, distance.x, velocity.x),
