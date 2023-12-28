@@ -16,12 +16,15 @@ export function valueSetter<Value>(
     typeof value === 'function' ||
     (value !== null &&
       typeof value === 'object' &&
+      // TODO TYPESCRIPT fix this after fixing AnimationObject type
       (value as unknown as AnimationObject).onFrame !== undefined)
   ) {
     const animation: AnimationObject<Value> =
       typeof value === 'function'
-        ? (value as () => AnimationObject<Value>)()
-        : (value as unknown as AnimationObject<Value>);
+        ? // TODO TYPESCRIPT fix this after fixing AnimationObject type
+          (value as () => AnimationObject<Value>)()
+        : // TODO TYPESCRIPT fix this after fixing AnimationObject type
+          (value as unknown as AnimationObject<Value>);
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
     // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)
