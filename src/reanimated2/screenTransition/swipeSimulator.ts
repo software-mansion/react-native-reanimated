@@ -7,7 +7,27 @@ import type {
 import { applyStyle } from './styleUpdater';
 
 const RNScreensTurboModule: RNScreensTurboModuleType =
-  global.RNScreensTurboModule;
+  global.RNScreensTurboModule
+    ? global.RNScreensTurboModule
+    : {
+        startTransition: (_stackTag) => {
+          'worklet';
+          console.warn('[Reanimated] RNScreensTurboModule has not been found.');
+          return {
+            topScreenId: -1,
+            belowTopScreenId: -1,
+            canStartTransition: false,
+          };
+        },
+        updateTransition: (_stackTag, _progress) => {
+          'worklet';
+          console.warn('[Reanimated] RNScreensTurboModule has not been found.');
+        },
+        finishTransition: (_stackTag, _isCanceled) => {
+          'worklet';
+          console.warn('[Reanimated] RNScreensTurboModule has not been found.');
+        },
+      };
 
 function computeEasingProgress(
   startingTimestamp: number,
