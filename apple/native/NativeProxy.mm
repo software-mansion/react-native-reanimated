@@ -97,7 +97,8 @@ static NSSet *convertProps(jsi::Runtime &rt, const jsi::Value &props)
 
 std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     RCTBridge *bridge,
-    const std::shared_ptr<CallInvoker> &jsInvoker)
+    const std::shared_ptr<CallInvoker> &jsInvoker,
+    const std::string &valueUnpackerCode)
 {
   REAModule *reaModule = [bridge moduleForClass:[REAModule class]];
 
@@ -288,8 +289,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       maybeFlushUIUpdatesQueueFunction,
   };
 
-  auto nativeReanimatedModule =
-      std::make_shared<NativeReanimatedModule>(rnRuntime, jsInvoker, jsQueue, uiScheduler, platformDepMethodsHolder);
+  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
+      rnRuntime, jsInvoker, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode);
 
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler

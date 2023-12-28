@@ -107,7 +107,7 @@ export function makeWorklet(
     ? functionExpression(null, clone.params, clone.body)
     : clone;
 
-  const [funString, sourceMapString] = buildWorkletString(
+  let [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
     variables,
     functionName,
@@ -155,6 +155,11 @@ export function makeWorklet(
     let location = state.file.opts.filename;
     if (state.opts.relativeSourceLocation) {
       location = relative(state.cwd, location);
+      // It seems there is no designated option to use relative paths in generated sourceMap
+      sourceMapString = sourceMapString?.replace(
+        state.file.opts.filename,
+        location
+      );
     }
 
     initDataObjectExpression.properties.push(
