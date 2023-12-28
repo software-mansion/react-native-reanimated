@@ -1,6 +1,6 @@
 import { html } from 'code-tag';
 import plugin from '../plugin';
-import { TransformOptions, transformSync } from '@babel/core';
+import { BabelFileResult, TransformOptions, transformSync } from '@babel/core';
 import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
 import '../plugin/jestUtils';
@@ -95,6 +95,23 @@ describe('babel plugin', () => {
       expect(code).toContain(
         '\\"mappings\\":\\"AACQ,SAAAA,GAASA,CAAA,CAAG,CAEV,GAAI,CAAAA,GAAG,CAAG,KAAK,CACjB\\"'
       );
+    });
+
+    it('uses relative source location when `relativeSourceLocation` is set to `true`', () => {
+      process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '0'; // don't mock source maps
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var foo = 'bar';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, undefined, {
+        relativeSourceLocation: true,
+      });
+
+      const matches = code?.match(new RegExp(`..${MOCK_LOCATION}`, 'g'));
+      expect(matches).toHaveLength(2);
     });
 
     it('removes comments from worklets', () => {
@@ -1607,6 +1624,69 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input, {}, { omitNativeOnlyData: false });
       expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('substitutes isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to true', () => {
+      const input = html`<script>
+        const x = isWeb();
+        const y = shouldBeUseWeb();
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        {},
+        { substituteWebPlatformChecks: true }
+      );
+      expect(code).toContain('var x = true;');
+      expect(code).toContain('var y = true;');
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to false", () => {
+      const input = html`<script>
+        const x = isWeb();
+        const y = shouldBeUseWeb();
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        {},
+        { substituteWebPlatformChecks: false }
+      );
+      expect(code).toContain('var x = isWeb();');
+      expect(code).toContain('var y = shouldBeUseWeb();');
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is undefined", () => {
+      const input = html`<script>
+        const x = isWeb();
+        const y = shouldBeUseWeb();
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('var x = isWeb();');
+      expect(code).toContain('var y = shouldBeUseWeb();');
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't substitute isWeb and shouldBeUseWeb in worklets", () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          const x = isWeb();
+          const y = shouldBeUseWeb();
+        }
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        {},
+        { substituteWebPlatformChecks: true }
+      );
+      expect(code).toContain('const x=isWeb();');
+      expect(code).toContain('const y=shouldBeUseWeb();');
       expect(code).toMatchSnapshot();
     });
   });
