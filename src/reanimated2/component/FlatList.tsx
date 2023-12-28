@@ -1,5 +1,4 @@
 'use strict';
-import type { ForwardedRef } from 'react';
 import React, { forwardRef } from 'react';
 import type {
   FlatListProps,
@@ -64,7 +63,7 @@ interface AnimatedFlatListComplement<T> extends FlatList<T> {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const FlatListForwardRefRender = function <Item>(
   props: ReanimatedFlatListPropsWithLayout<Item>,
-  ref: ForwardedRef<FlatList>
+  ref: React.ForwardedRef<FlatList>
 ) {
   const { itemLayoutAnimation, skipEnteringExitingAnimations, ...restProps } =
     props;
@@ -109,7 +108,7 @@ export const ReanimatedFlatList = forwardRef(FlatListForwardRefRender) as <
   ItemT = any
 >(
   props: ReanimatedFlatListPropsWithLayout<ItemT> & {
-    ref?: ForwardedRef<FlatList>;
+    ref?: React.ForwardedRef<FlatList>;
   }
 ) => React.ReactElement;
 
