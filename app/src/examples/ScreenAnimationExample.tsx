@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - It will be removed after release of rn-screens, because currently 'react-native-screens/gesture-handler' import doesn't exist.
 import React from 'react';
 import { View, StyleSheet, Button } from 'react-native';
 import {
@@ -41,7 +41,7 @@ const customTransition: AnimatedScreenTransition = {
     return {
       transform: [
         { translateX: event.translationX },
-        { rotate: 20 * progress + 'deg' },
+        { rotate: `${20 * progress}deg` },
       ],
     };
   },
@@ -66,16 +66,12 @@ const ScreenAnimationExample = (): JSX.Element => (
       <Stack.Screen
         name="ScreenB"
         component={ScreenB}
-        options={{
-          transitionAnimation: customTransition,
-        }}
+        options={{ transitionAnimation: customTransition }}
       />
       <Stack.Screen
         name="ScreenC"
         component={ScreenC}
-        options={{
-          transitionAnimation: ScreenTransition.SwipeRightFade,
-        }}
+        options={{ transitionAnimation: ScreenTransition.SwipeRightFade }}
       />
     </Stack.Navigator>
   </GestureDetectorProvider>

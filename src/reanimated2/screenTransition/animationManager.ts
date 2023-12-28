@@ -13,7 +13,6 @@ export function startScreenTransition(
   'worklet';
   const sharedEvent = screenTransitionConfig.sharedEvent;
   sharedEvent.addListener(screenTransitionConfig.stackTag, () => {
-    'worklet';
     applyStyle(screenTransitionConfig, sharedEvent.value);
   });
 }

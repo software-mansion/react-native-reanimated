@@ -2,10 +2,10 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import React from 'react';
 
-export default function BilliardExample() {
+export default function ScreenAnimationExample() {
   return (
     <View style={styles.container}>
-      <Text>not supported on web</Text>
+      <Text>Screen animation is not supported on web</Text>
     </View>
   );
 }

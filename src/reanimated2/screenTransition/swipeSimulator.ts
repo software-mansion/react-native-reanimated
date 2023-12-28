@@ -77,15 +77,15 @@ export function swipeSimulator(
 ) {
   'worklet';
   const screenSize = screenTransitionConfig.screenDimensions;
-  const startingTimestamp = _getAnimationTimestamp();
+  const startTimestamp = _getAnimationTimestamp();
   const isTransitionCanceled = screenTransitionConfig.isTransitionCanceled;
   const startingPosition = {
     x: event.translationX,
     y: event.translationY,
   };
   const direction = {
-    x: event.translationX > 0 ? 1 : -1,
-    y: event.translationY > 0 ? 1 : -1,
+    x: Math.sign(event.translationX),
+    y: Math.sign(event.translationY),
   };
   const finalPosition = isTransitionCanceled
     ? { x: 0, y: 0 }
@@ -129,8 +129,8 @@ export function swipeSimulator(
         };
     const computeFrame = () => {
       const progress = {
-        x: computeEasingProgress(startingTimestamp, distance.x, velocity.x),
-        y: computeEasingProgress(startingTimestamp, distance.y, velocity.y),
+        x: computeEasingProgress(startTimestamp, distance.x, velocity.x),
+        y: computeEasingProgress(startTimestamp, distance.y, velocity.y),
       };
       event.translationX =
         startingPosition.x - direction.x * distance.x * easing(progress.x);
@@ -171,8 +171,8 @@ export function swipeSimulator(
   } else {
     const computeFrame = () => {
       const progress = {
-        x: computeEasingProgress(startingTimestamp, distance.x, velocity.x),
-        y: computeEasingProgress(startingTimestamp, distance.y, velocity.y),
+        x: computeEasingProgress(startTimestamp, distance.x, velocity.x),
+        y: computeEasingProgress(startTimestamp, distance.y, velocity.y),
       };
       event.translationX =
         startingPosition.x + direction.x * distance.x * easing(progress.x);

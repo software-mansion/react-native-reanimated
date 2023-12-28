@@ -32,7 +32,6 @@
 #endif
 
 #import <RNReanimated/READisplayLink.h>
-#import <RNReanimated/REAScreensHelper.h>
 
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;

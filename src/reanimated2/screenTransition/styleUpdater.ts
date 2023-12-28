@@ -11,13 +11,13 @@ import type {
 const IS_FABRIC = isFabric();
 
 const createViewDescriptor = IS_FABRIC
-  ? (screenTag: number | ShadowNodeWrapper) => {
+  ? (screenId: number | ShadowNodeWrapper) => {
       'worklet';
-      return { shadowNodeWrapper: screenTag };
+      return { shadowNodeWrapper: screenId };
     }
-  : (screenTag: number | ShadowNodeWrapper) => {
+  : (screenId: number | ShadowNodeWrapper) => {
       'worklet';
-      return { tag: screenTag, name: 'RCTView' };
+      return { tag: screenId, name: 'RCTView' };
     };
 
 export function applyStyle(
@@ -38,6 +38,7 @@ export function applyStyle(
     topStyle,
     undefined
   );
+
   const belowTopScreenId = screenTransitionConfig.belowTopScreenId;
   const belowTopScreenFrame =
     screenTransitionConfig.screenTransition.belowTopScreenFrame;
