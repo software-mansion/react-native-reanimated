@@ -4,7 +4,7 @@
 import type {
   AnimatedComponentProps,
   InitialComponentProps,
-} from 'src/createAnimatedComponent/commonTypes';
+} from '../createAnimatedComponent/commonTypes';
 import { isJest } from './PlatformChecker';
 import type { DefaultStyle } from './hook/commonTypes';
 import type { StyleProp } from 'react-native';
