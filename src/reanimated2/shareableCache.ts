@@ -18,21 +18,21 @@ During a fast refresh, React holds the same instance of a Mutable
 becoming empty. This happens when editing the file that contains the definition of this cache.
 
 Because of it, `makeShareableCloneRecursive` can't find given mapping
-in `shareableCache` for a Mutable and tries to clone it as if it was a regular JS object.
-There we use Object.entries to iterate over the keys which throws an error on accessing `_value`.
-For convenience we move this cache to a separate file so it doesn't scare us with red squiggles.
+in `shareableCache` for the Mutable and tries to clone it as if it was a regular JS object.
+During cloning we use `Object.entries` to iterate over the keys which throws an error on accessing `_value`.
+For convenience we moved this cache to a separate file so it doesn't scare us with red squiggles.
 */
 
 const cache = SHOULD_BE_USE_WEB
   ? null
   : new WeakMap<object, ShareableRef | symbol>();
 
-export const shareableCache = cache
+export const shareableCache = SHOULD_BE_USE_WEB
   ? {
       set(shareable: object, shareableRef?: ShareableRef): void {
-        cache.set(shareable, shareableRef || shareableFlag);
+        cache!.set(shareable, shareableRef || shareableFlag);
       },
-      get: cache.get,
+      get: cache!.get,
     }
   : {
       set() {
