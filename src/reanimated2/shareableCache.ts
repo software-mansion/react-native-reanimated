@@ -29,16 +29,16 @@ const cache = SHOULD_BE_USE_WEB
 
 export const shareableCache = SHOULD_BE_USE_WEB
   ? {
-      set(shareable: object, shareableRef?: ShareableRef): void {
-        cache!.set(shareable, shareableRef || shareableFlag);
-      },
-      get: cache!.get,
-    }
-  : {
       set() {
         // NOOP
       },
       get() {
         return null;
       },
+    }
+  : {
+      set(shareable: object, shareableRef?: ShareableRef): void {
+        cache!.set(shareable, shareableRef || shareableFlag);
+      },
+      get: cache!.get,
     };
