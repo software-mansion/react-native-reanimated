@@ -121,12 +121,21 @@ function AnimatedFlatListTest() {
     );
   }
 
-  function AnimatedFlatListTestGenericParameter() {
+  function AnimatedFlatListTestGenericParameterPresence() {
     return (
       <>
         <Animated.FlatList<string> data={['a', 'b']} renderItem={() => null} />
         {/* @ts-expect-error Properly detects wrong generic type */}
         <Animated.FlatList<string> data={[1, 2]} renderItem={() => null} />
+      </>
+    );
+  }
+
+  function AnimatedFlatListTestGenericParameterDefaultsToAny() {
+    return (
+      <>
+        {/* @ts-expect-error Disable TypeScript item type inference */}
+        <Animated.FlatList renderItem={({ item }) => item.absurdProperty} />
       </>
     );
   }
