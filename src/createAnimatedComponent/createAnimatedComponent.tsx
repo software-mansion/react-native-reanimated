@@ -136,7 +136,7 @@ export function createAnimatedComponent(
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _viewTag = -1;
     _isFirstRender = true;
-    animatedStyle: { value: StyleProps } = { value: {} };
+    jestAnimatedStyle: { value: StyleProps } = { value: {} };
     _component: AnimatedComponentRef | HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
     _jsPropsUpdater = new JSPropsUpdater();
@@ -150,7 +150,7 @@ export function createAnimatedComponent(
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
       if (isJest()) {
-        this.animatedStyle = { value: {} };
+        this.jestAnimatedStyle = { value: {} };
       }
     }
 
@@ -407,11 +407,11 @@ export function createAnimatedComponent(
            * We can't update props object directly because TestObject contains a copy of props - look at render function:
            * const props = this._filterNonAnimatedProps(this.props);
            */
-          this.animatedStyle.value = {
-            ...this.animatedStyle.value,
+          this.jestAnimatedStyle.value = {
+            ...this.jestAnimatedStyle.value,
             ...style.initial.value,
           };
-          style.animatedStyle.current = this.animatedStyle;
+          style.jestAnimatedStyle.current = this.jestAnimatedStyle;
         }
       });
 
@@ -564,7 +564,7 @@ export function createAnimatedComponent(
       const props = this._PropsFilter.filterNonAnimatedProps(this);
 
       if (isJest()) {
-        props.animatedStyle = this.animatedStyle;
+        props.jestAnimatedStyle = this.jestAnimatedStyle;
       }
 
       // Layout animations on web are set inside `componentDidMount` method, which is called after first render.
