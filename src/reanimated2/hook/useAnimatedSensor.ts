@@ -110,13 +110,12 @@ export function useAnimatedSensor(
       ...config,
       ...userConfig,
     };
-    ref.current.sensor = initializeSensor(sensorType, newConfig);
 
-    const sensorData = ref.current.sensor;
-    const adjustToInterfaceOrientation =
-      ref.current.config.adjustToInterfaceOrientation;
+    const newSensor = initializeSensor(sensorType, newConfig);
+    const sensorData = newSensor;
+    const adjustToInterfaceOrientation = newConfig.adjustToInterfaceOrientation;
 
-    const id = registerSensor(sensorType, config, (data) => {
+    const id = registerSensor(sensorType, newConfig, (data) => {
       'worklet';
       if (adjustToInterfaceOrientation) {
         if (sensorType === SensorType.ROTATION) {
@@ -129,17 +128,13 @@ export function useAnimatedSensor(
       callMicrotasks();
     });
 
-    if (id !== -1) {
-      // if sensor is available
-      ref.current.unregister = () => unregisterSensor(id);
-      ref.current.isAvailable = true;
-    } else {
-      // if sensor is unavailable
-      ref.current.unregister = () => {
-        // NOOP
-      };
-      ref.current.isAvailable = false;
-    }
+    ref.current = {
+      sensor: newSensor,
+      unregister: id !== -1 ? () => unregisterSensor(id) : () => {
+      },
+      isAvailable: id !== -1,
+      config: newConfig,
+    };
 
     return () => {
       ref.current.unregister();
