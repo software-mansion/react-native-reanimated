@@ -335,8 +335,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
                        jsCallInvoker:(std::shared_ptr<facebook::react::CallInvoker>)jsCallInvoker
                    valueUnpackerCode:(jsi::String)valueUnpackerCode
 {
-  auto nativeReanimatedModule =
-      reanimated::createReanimatedModule(nil, jsCallInvoker, valueUnpackerCode.utf8(*jsiRuntime));
+  auto nativeReanimatedModule = reanimated::createReanimatedModuleBridgeless(
+      _moduleRegistry, *jsiRuntime, jsCallInvoker, valueUnpackerCode.utf8(*jsiRuntime));
   WorkletRuntimeCollector::install(*jsiRuntime);
 
 #if __has_include(<UIKit/UIAccessibility.h>)
