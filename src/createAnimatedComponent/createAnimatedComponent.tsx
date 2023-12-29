@@ -561,10 +561,10 @@ export function createAnimatedComponent(
     }
 
     render() {
-      const props = this._PropsFilter.filterNonAnimatedProps(this);
+      const filteredProps = this._PropsFilter.filterNonAnimatedProps(this);
 
       if (isJest()) {
-        props.jestAnimatedStyle = this.jestAnimatedStyle;
+        filteredProps.jestAnimatedStyle = this.jestAnimatedStyle;
       }
 
       // Layout animations on web are set inside `componentDidMount` method, which is called after first render.
@@ -574,11 +574,11 @@ export function createAnimatedComponent(
       if (
         this._isFirstRender &&
         IS_WEB &&
-        props.entering &&
-        !getReducedMotionFromConfig(props.entering as CustomConfig)
+        filteredProps.entering &&
+        !getReducedMotionFromConfig(filteredProps.entering as CustomConfig)
       ) {
-        props.style = {
-          ...(props.style ?? {}),
+        filteredProps.style = {
+          ...(filteredProps.style ?? {}),
           visibility: 'hidden', // Hide component until `componentDidMount` triggers
         };
       }
@@ -590,7 +590,7 @@ export function createAnimatedComponent(
 
       return (
         <Component
-          {...props}
+          {...filteredProps}
           // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
           // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
           ref={this._setComponentRef as (ref: Component) => void}
