@@ -6,9 +6,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import androidx.annotation.Nullable;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
+import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.ViewAtIndex;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
@@ -164,6 +166,16 @@ class ReaLayoutAnimator extends LayoutAnimationController {
       if (parentName.equals("RNSScreenStack")) {
         mAnimationsManager.cancelAnimationsInSubviews(view);
         super.deleteView(view, listener);
+        var eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag((ReactContext) view.getContext(), view.getId());
+        if (eventDispatcher != null) {
+          eventDispatcher.addListener(event -> {
+            // we schedule the start of transition for the ScreenWilDisappear event, so that the layout of the target screen is already calculated
+            // this allows us to make snapshots on the go, so that they are always up-to-date
+            if (event.getEventName().equals("topWillDisappear")) {
+              getAnimationsManager().notifyAboutScreenWillDisappear();
+            }
+          });
+        }
         return;
       }
     }

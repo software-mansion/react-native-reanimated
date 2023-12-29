@@ -38,6 +38,7 @@ void LayoutAnimationsManager::configureAnimationBatch(
       sharedTransitionAnimations_.erase(tag);
       auto const &groupName = viewTagToSharedTag_[tag];
       if (groupName.empty()) {
+        viewTagToSharedTag_.erase(tag);
         sharedTransitionConfigs.push_back(std::move(layoutAnimationConfig));
         continue;
       }

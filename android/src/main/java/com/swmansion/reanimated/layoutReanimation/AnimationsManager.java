@@ -724,6 +724,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mSharedTransitionManager.onViewsRemoval(tagsToDelete);
   }
 
+  public void notifyAboutScreenWillDisappear() {
+    mSharedTransitionManager.onScreenWillDisappear();
+  }
+
   public void makeSnapshotOfTopScreenViews(ViewGroup stack) {
     mSharedTransitionManager.doSnapshotForTopScreenViews(stack);
   }
