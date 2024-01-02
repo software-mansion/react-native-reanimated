@@ -141,7 +141,7 @@ function addChild(child: HTMLElement, parent: Node) {
   }
 
   // We use that so we don't end up in infinite loop
-  child.setAttribute('data-reanimatedRemoveAfterAnimation', 'true');
+  child.setAttribute('data-reanimatedRemovedAfterAnimation', 'true');
   parent.appendChild(child);
 
   setDummyPosition(child, childSnapshot);
@@ -161,7 +161,7 @@ function addChild(child: HTMLElement, parent: Node) {
 function findDescendantWithExitingAnimation(node: HTMLElement, root: Node) {
   if (
     node.hasAttribute('data-reanimatedDummy') &&
-    !node.hasAttribute('data-reanimatedRemoveAfterAnimation')
+    !node.hasAttribute('data-reanimatedRemovedAfterAnimation')
   ) {
     addChild(node, root);
   }
