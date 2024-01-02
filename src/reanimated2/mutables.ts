@@ -6,7 +6,7 @@ import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
-import { shareableMappingCache } from './shareableCache';
+import { shareableMappingCache } from './shareableMappingCache';
 import { runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
 

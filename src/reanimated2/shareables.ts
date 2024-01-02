@@ -8,7 +8,10 @@ import type {
 import { shouldBeUseWeb } from './PlatformChecker';
 import { registerWorkletStackDetails } from './errors';
 import { jsVersion } from './platform-specific/jsVersion';
-import { shareableMappingCache, shareableMappingFlag } from './shareableCache';
+import {
+  shareableMappingCache,
+  shareableMappingFlag,
+} from './shareableMappingCache';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used

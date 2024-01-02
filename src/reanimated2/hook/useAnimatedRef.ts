@@ -6,7 +6,7 @@ import type { AnimatedRef } from './commonTypes';
 import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { makeShareableCloneRecursive } from '../shareables';
-import { shareableMappingCache } from '../shareableCache';
+import { shareableMappingCache } from '../shareableMappingCache';
 import { Platform, findNodeHandle } from 'react-native';
 import { isFabric } from '../PlatformChecker';
 
