@@ -8,6 +8,7 @@ import type {
 import { shouldBeUseWeb } from './PlatformChecker';
 import { registerWorkletStackDetails } from './errors';
 import { jsVersion } from './platform-specific/jsVersion';
+import { shareableCache } from './shareableCache';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
@@ -15,7 +16,6 @@ import { jsVersion } from './platform-specific/jsVersion';
 // runnning the code on separate VMs.
 const USE_STUB_IMPLEMENTATION = shouldBeUseWeb();
 
-const _shareableCache = new WeakMap<object, ShareableRef | symbol>();
 // the below symbol is used to represent a mapping from the value to itself
 // this is used to allow for a converted shareable to be passed to makeShareableClone
 const _shareableFlag = Symbol('shareable flag');
@@ -38,7 +38,7 @@ export function registerShareableMapping(
   if (USE_STUB_IMPLEMENTATION) {
     return;
   }
-  _shareableCache.set(shareable, shareableRef || _shareableFlag);
+  shareableCache.set(shareable, shareableRef || _shareableFlag);
 }
 
 function isPlainJSObject(object: object): object is object {
@@ -138,7 +138,7 @@ export function makeShareableCloneRecursive<T>(
   const isTypeObject = type === 'object';
   const isTypeFunction = type === 'function';
   if ((isTypeObject || isTypeFunction) && value !== null) {
-    const cached = _shareableCache.get(value);
+    const cached = shareableCache.get(value);
     if (cached === _shareableFlag) {
       return value;
     } else if (cached !== undefined) {
@@ -249,7 +249,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
         // will get an appropriate error message.
         const inaccessibleObject =
           makeShareableCloneRecursive<T>(INACCESSIBLE_OBJECT);
-        _shareableCache.set(value, inaccessibleObject);
+        registerShareableMapping(value, inaccessibleObject);
         return inaccessibleObject;
       }
       if (__DEV__) {
@@ -265,8 +265,8 @@ Offending code was: \`${getWorkletCode(value)}\``);
         toAdapt,
         shouldPersistRemote
       );
-      _shareableCache.set(value, adopted);
-      _shareableCache.set(adopted, _shareableFlag);
+      registerShareableMapping(value, adopted);
+      registerShareableMapping(adopted);
       return adopted;
     }
   }
