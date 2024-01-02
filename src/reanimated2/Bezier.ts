@@ -44,8 +44,8 @@ function binarySubdivide(
   aX: number,
   aA: number,
   aB: number,
-  MX1: number,
-  MX2: number
+  mX1: number,
+  mX2: number
 ): number {
   'worklet';
   let currentX;
@@ -53,7 +53,7 @@ function binarySubdivide(
   let i = 0;
   do {
     currentT = aA + (aB - aA) / 2.0;
-    currentX = calcBezier(currentT, MX1, MX2) - aX;
+    currentX = calcBezier(currentT, mX1, mX2) - aX;
     if (currentX > 0.0) {
       aB = currentT;
     } else {
@@ -69,16 +69,16 @@ function binarySubdivide(
 function newtonRaphsonIterate(
   aX: number,
   aGuessT: number,
-  MX1: number,
-  MX2: number
+  mX1: number,
+  mX2: number
 ): number {
   'worklet';
   for (let i = 0; i < NEWTON_ITERATIONS; ++i) {
-    const currentSlope = getSlope(aGuessT, MX1, MX2);
+    const currentSlope = getSlope(aGuessT, mX1, mX2);
     if (currentSlope === 0.0) {
       return aGuessT;
     }
-    const currentX = calcBezier(aGuessT, MX1, MX2) - aX;
+    const currentX = calcBezier(aGuessT, mX1, mX2) - aX;
     aGuessT -= currentX / currentSlope;
   }
   return aGuessT;
