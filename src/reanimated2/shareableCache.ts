@@ -10,7 +10,7 @@ const SHOULD_BE_USE_WEB = shouldBeUseWeb();
  * It's used to prevent converting a shareable that's already converted -
  * for example a Shared Value that's in worklet's closure.
  **/
-export const shareableFlag = Symbol('shareable flag');
+export const shareableMappingFlag = Symbol('shareable flag');
 
 /*
 During a fast refresh, React holds the same instance of a Mutable
@@ -27,7 +27,7 @@ const cache = SHOULD_BE_USE_WEB
   ? null
   : new WeakMap<object, ShareableRef | symbol>();
 
-export const shareableCache = SHOULD_BE_USE_WEB
+export const shareableMappingCache = SHOULD_BE_USE_WEB
   ? {
       set() {
         // NOOP
@@ -38,7 +38,7 @@ export const shareableCache = SHOULD_BE_USE_WEB
     }
   : {
       set(shareable: object, shareableRef?: ShareableRef): void {
-        cache!.set(shareable, shareableRef || shareableFlag);
+        cache!.set(shareable, shareableRef || shareableMappingFlag);
       },
       get: cache!.get,
     };

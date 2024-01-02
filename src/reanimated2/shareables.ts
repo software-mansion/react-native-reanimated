@@ -8,7 +8,7 @@ import type {
 import { shouldBeUseWeb } from './PlatformChecker';
 import { registerWorkletStackDetails } from './errors';
 import { jsVersion } from './platform-specific/jsVersion';
-import { shareableCache, shareableFlag } from './shareableCache';
+import { shareableMappingCache, shareableMappingFlag } from './shareableCache';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
@@ -124,8 +124,8 @@ export function makeShareableCloneRecursive<T>(
   const isTypeObject = type === 'object';
   const isTypeFunction = type === 'function';
   if ((isTypeObject || isTypeFunction) && value !== null) {
-    const cached = shareableCache.get(value);
-    if (cached === shareableFlag) {
+    const cached = shareableMappingCache.get(value);
+    if (cached === shareableMappingFlag) {
       return value;
     } else if (cached !== undefined) {
       return cached as ShareableRef<T>;
@@ -197,7 +197,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
             return new RegExp(pattern, flags);
           },
         });
-        shareableCache.set(value, handle);
+        shareableMappingCache.set(value, handle);
         return handle as ShareableRef<T>;
       } else if (value instanceof ArrayBuffer) {
         toAdapt = value;
@@ -222,7 +222,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
             return new constructor(buffer);
           },
         });
-        shareableCache.set(value, handle);
+        shareableMappingCache.set(value, handle);
         return handle as ShareableRef<T>;
       } else {
         // This is reached for object types that are not of plain Object.prototype.
@@ -235,7 +235,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
         // will get an appropriate error message.
         const inaccessibleObject =
           makeShareableCloneRecursive<T>(INACCESSIBLE_OBJECT);
-        shareableCache.set(value, inaccessibleObject);
+        shareableMappingCache.set(value, inaccessibleObject);
         return inaccessibleObject;
       }
       if (__DEV__) {
@@ -251,8 +251,8 @@ Offending code was: \`${getWorkletCode(value)}\``);
         toAdapt,
         shouldPersistRemote
       );
-      shareableCache.set(value, adopted);
-      shareableCache.set(adopted);
+      shareableMappingCache.set(value, adopted);
+      shareableMappingCache.set(adopted);
       return adopted;
     }
   }
@@ -335,6 +335,6 @@ export function makeShareable<T extends object>(value: T): T {
       return value;
     },
   });
-  shareableCache.set(value, handle);
+  shareableMappingCache.set(value, handle);
   return value;
 }

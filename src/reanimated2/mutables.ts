@@ -6,7 +6,7 @@ import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
-import { shareableCache } from './shareableCache';
+import { shareableMappingCache } from './shareableCache';
 import { runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
 
@@ -81,7 +81,7 @@ export function makeMutable<Value>(
     syncDataHolder = NativeReanimatedModule.makeSynchronizedDataHolder(
       makeShareableCloneRecursive(value)
     );
-    shareableCache.set(syncDataHolder);
+    shareableMappingCache.set(syncDataHolder);
   }
   const handle = makeShareableCloneRecursive({
     __init: () => {
@@ -160,7 +160,7 @@ export function makeMutable<Value>(
     },
     _isReanimatedSharedValue: true,
   };
-  shareableCache.set(mutable, handle);
+  shareableMappingCache.set(mutable, handle);
   return mutable;
 }
 
@@ -171,6 +171,6 @@ export function makeRemote<T extends object>(initial: T = {} as T): T {
       return initial;
     },
   });
-  shareableCache.set(initial, handle);
+  shareableMappingCache.set(initial, handle);
   return initial;
 }
