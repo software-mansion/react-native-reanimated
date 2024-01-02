@@ -1,0 +1,20 @@
+name: Format Pull Request Description
+
+on:
+  pull_request:
+    types:
+      - opened
+
+jobs:
+  format-pull-request-description:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove comments from PR description
+        uses: actions/checkout@v3
+      - name: Update PR Description
+        uses: software-mansion-labs/pr-description@main
+        with:
+          content: ""
+          regex: "<!-- .* -->\n"
+          regexFlags: img
+          token: ${{ secrets.GITHUB_TOKEN }}
