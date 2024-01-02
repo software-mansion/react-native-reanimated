@@ -130,7 +130,8 @@ export function useAnimatedSensor(
 
     ref.current = {
       sensor: newSensor,
-      unregister: id !== -1 ? () => unregisterSensor(id) : () => {
+		  unregister: id !== -1 ? () => unregisterSensor(id) :  () => {
+        // NOOP
       },
       isAvailable: id !== -1,
       config: newConfig,
