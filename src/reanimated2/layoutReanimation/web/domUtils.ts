@@ -166,11 +166,7 @@ function findDescendantWithExitingAnimation(node: HTMLElement, root: Node) {
     addChild(node, root);
   }
 
-  const children = [];
-
-  for (let i = 0; i < node.children.length; ++i) {
-    children.push(node.children[i]);
-  }
+  const children = Array.from(node.children);
 
   for (let i = 0; i < children.length; ++i) {
     findDescendantWithExitingAnimation(children[i] as HTMLElement, root);
