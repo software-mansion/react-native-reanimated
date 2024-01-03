@@ -1,5 +1,4 @@
 'use strict';
-import type { ForwardedRef } from 'react';
 import React, { forwardRef } from 'react';
 import type {
   FlatListProps,
@@ -58,48 +57,58 @@ interface AnimatedFlatListComplement<T> extends FlatList<T> {
   getNode(): FlatList<T>;
 }
 
-export const ReanimatedFlatList = forwardRef(
-  (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    props: ReanimatedFlatListPropsWithLayout<any>,
-    ref: ForwardedRef<FlatList>
-  ) => {
-    const { itemLayoutAnimation, skipEnteringExitingAnimations, ...restProps } =
-      props;
+// We need explicit any here, because this is the exact same type that is used in React Native types.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const FlatListForwardRefRender = function <Item = any>(
+  props: ReanimatedFlatListPropsWithLayout<Item>,
+  ref: React.ForwardedRef<FlatList>
+) {
+  const { itemLayoutAnimation, skipEnteringExitingAnimations, ...restProps } =
+    props;
 
-    // Set default scrollEventThrottle, because user expects
-    // to have continuous scroll events and
-    // react-native defaults it to 50 for FlatLists.
-    // We set it to 1 so we have peace until
-    // there are 960 fps screens.
-    if (!('scrollEventThrottle' in restProps)) {
-      restProps.scrollEventThrottle = 1;
-    }
-
-    const CellRendererComponent = React.useMemo(
-      () => createCellRendererComponent(itemLayoutAnimation),
-      []
-    );
-
-    const animatedFlatList = (
-      <AnimatedFlatList
-        ref={ref}
-        {...restProps}
-        CellRendererComponent={CellRendererComponent}
-      />
-    );
-
-    if (skipEnteringExitingAnimations === undefined) {
-      return animatedFlatList;
-    }
-
-    return (
-      <LayoutAnimationConfig skipEntering skipExiting>
-        {animatedFlatList}
-      </LayoutAnimationConfig>
-    );
+  // Set default scrollEventThrottle, because user expects
+  // to have continuous scroll events and
+  // react-native defaults it to 50 for FlatLists.
+  // We set it to 1, so we have peace until
+  // there are 960 fps screens.
+  if (!('scrollEventThrottle' in restProps)) {
+    restProps.scrollEventThrottle = 1;
   }
-);
+
+  const CellRendererComponent = React.useMemo(
+    () => createCellRendererComponent(itemLayoutAnimation),
+    []
+  );
+
+  const animatedFlatList = (
+    // @ts-expect-error In its current type state, createAnimatedComponent cannot create generic components.
+    <AnimatedFlatList
+      ref={ref}
+      {...restProps}
+      CellRendererComponent={CellRendererComponent}
+    />
+  );
+
+  if (skipEnteringExitingAnimations === undefined) {
+    return animatedFlatList;
+  }
+
+  return (
+    <LayoutAnimationConfig skipEntering skipExiting>
+      {animatedFlatList}
+    </LayoutAnimationConfig>
+  );
+};
+
+export const ReanimatedFlatList = forwardRef(FlatListForwardRefRender) as <
+  // We need explicit any here, because this is the exact same type that is used in React Native types.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ItemT = any
+>(
+  props: ReanimatedFlatListPropsWithLayout<ItemT> & {
+    ref?: React.ForwardedRef<FlatList>;
+  }
+) => React.ReactElement;
 
 export type ReanimatedFlatList<T> = typeof AnimatedFlatList &
   AnimatedFlatListComplement<T>;
