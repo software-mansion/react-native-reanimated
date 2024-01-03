@@ -519,12 +519,16 @@ using namespace facebook::react;
 
 - (NSString *)stringFromColor:(UIColor *)color
 {
-  const size_t totalComponents = CGColorGetNumberOfComponents(color.CGColor);
-  const CGFloat *components = CGColorGetComponents(color.CGColor);
+  if
+#!TARGET_OS_OSX const size_t totalComponents = CGColorGetNumberOfComponents(color.CGColor);
+    const CGFloat *components = CGColorGetComponents(color.CGColor);
   return [NSString stringWithFormat:@"#%02x%02x%02x",
                                     (int)(255 * components[MIN(0, totalComponents - 2)]),
                                     (int)(255 * components[MIN(1, totalComponents - 2)]),
                                     (int)(255 * components[MIN(2, totalComponents - 2)])];
+#else
+return "Cant read color on macos"
+#endif
 }
 
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName
