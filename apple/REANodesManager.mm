@@ -368,7 +368,7 @@ using namespace facebook::react;
 #else
 - (void)enqueueUpdateViewOnNativeThread:(nonnull NSNumber *)reactTag
                                viewName:(NSString *)viewName
-                            nativeProps:(NSMutableDictionary *)nativeProps
+                            nativeProps:(NSMutableDictionary *_Nullable)nativeProps
                        trySynchronously:(BOOL)trySync
 {
   if (trySync) {
@@ -527,11 +527,11 @@ using namespace facebook::react;
                                     (int)(255 * components[MIN(1, totalComponents - 2)]),
                                     (int)(255 * components[MIN(2, totalComponents - 2)])];
 #else
-  return "Cant read color on macos"
+  return @"Cant read color on macos"
 #endif
 }
 
-- (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName
+- (NSString *_Nonnull)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName
 {
   REAUIView *view = [self.uiManager viewForReactTag:viewTag];
 
