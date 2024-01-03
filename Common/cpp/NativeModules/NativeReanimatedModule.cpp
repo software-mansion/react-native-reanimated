@@ -247,7 +247,7 @@ void NativeReanimatedModule::unregisterEventHandler(
       [=] { eventHandlerRegistry_->unregisterEventHandler(id); });
 }
 
-inline std::string int_to_hex(T val) {
+inline std::string int_to_hex(int val) {
   std::stringstream ss;
   ss << std::setfill('0') << std::setw(6) << std::hex << (val | 0);
   return "#" + ss.str();
