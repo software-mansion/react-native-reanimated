@@ -20,7 +20,7 @@ if (shouldBeUseWeb()) {
   updateProps = (_, updates, maybeViewRef, isAnimatedProps) => {
     'worklet';
     if (maybeViewRef) {
-      maybeViewRef.items.forEach((item, __) => {
+      maybeViewRef.items.forEach((item, _index) => {
         _updatePropsJS(updates, item, isAnimatedProps);
       });
     }

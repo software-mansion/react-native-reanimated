@@ -225,7 +225,7 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
       } else if (ArrayBuffer.isView(value)) {
         // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
         const buffer = value.buffer;
-        const typeName = value.constructor.name;
+        const arrayViewName = value.constructor.name;
         const handle = makeShareableCloneRecursive({
           __init: () => {
             'worklet';
@@ -314,34 +314,35 @@ export function makeShareableCloneOnUIRecursive<T>(
     // see more details in the comment where USE_STUB_IMPLEMENTATION is defined.
     return value;
   }
-  function cloneRecursive(innerValue: T): FlatShareableRef<T> {
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  function cloneRecursive(value: T): FlatShareableRef<T> {
     if (
-      (typeof innerValue === 'object' && innerValue !== null) ||
-      typeof innerValue === 'function'
+      (typeof value === 'object' && value !== null) ||
+      typeof value === 'function'
     ) {
-      if (isHostObject(innerValue)) {
+      if (isHostObject(value)) {
         // We call `_makeShareableClone` to wrap the provided HostObject
         // inside ShareableJSRef.
-        return _makeShareableClone(innerValue) as FlatShareableRef<T>;
+        return _makeShareableClone(value) as FlatShareableRef<T>;
       }
-      if (isRemoteFunction<T>(innerValue)) {
+      if (isRemoteFunction<T>(value)) {
         // RemoteFunctions are created by us therefore they are
         // a Shareable out of the box and there is no need to
         // call `_makeShareableClone`.
-        return innerValue.__remoteFunction;
+        return value.__remoteFunction;
       }
-      if (Array.isArray(innerValue)) {
+      if (Array.isArray(value)) {
         return _makeShareableClone(
-          innerValue.map(cloneRecursive)
+          value.map(cloneRecursive)
         ) as FlatShareableRef<T>;
       }
       const toAdapt: Record<string, FlatShareableRef<T>> = {};
-      for (const [key, element] of Object.entries(innerValue)) {
+      for (const [key, element] of Object.entries(value)) {
         toAdapt[key] = cloneRecursive(element);
       }
       return _makeShareableClone(toAdapt) as FlatShareableRef<T>;
     }
-    return _makeShareableClone(innerValue);
+    return _makeShareableClone(value);
   }
   return cloneRecursive(value);
 }

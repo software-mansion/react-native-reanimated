@@ -68,19 +68,20 @@ export const withSpring = ((
       animation: InnerSpringAnimation,
       now: Timestamp
     ): boolean {
-      const { innerToValue, startTimestamp, current } = animation;
+      // eslint-disable-next-line @typescript-eslint/no-shadow
+      const { toValue, startTimestamp, current } = animation;
 
       const timeFromStart = now - startTimestamp;
 
       if (config.useDuration && timeFromStart >= config.duration) {
-        animation.current = innerToValue;
+        animation.current = toValue;
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
         return true;
       }
 
       if (config.skipAnimation) {
-        animation.current = innerToValue;
+        animation.current = toValue;
         animation.lastTimestamp = 0;
         return true;
       }
@@ -91,7 +92,7 @@ export const withSpring = ((
 
       const t = deltaTime / 1000;
       const v0 = -velocity;
-      const x0 = innerToValue - current;
+      const x0 = toValue - current;
 
       const { zeta, omega0, omega1 } = animation;
 
@@ -123,7 +124,7 @@ export const withSpring = ((
 
       if (!config.useDuration && springIsNotInMove) {
         animation.velocity = 0;
-        animation.current = innerToValue;
+        animation.current = toValue;
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
         return true;

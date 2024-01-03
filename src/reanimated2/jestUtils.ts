@@ -113,11 +113,12 @@ const findStyleDiff = (current, expect, shouldMatchAllProps) => {
   return { isEqual, diffs };
 };
 
-const compareStyle = (received, expectedStyle, innerConfig) => {
+// eslint-disable-next-line @typescript-eslint/no-shadow
+const compareStyle = (received, expectedStyle, config) => {
   if (!received.props.style) {
     return { message: () => message, pass: false };
   }
-  const { shouldMatchAllProps } = innerConfig;
+  const { shouldMatchAllProps } = config;
   const currentStyle = getCurrentStyle(received);
   const { isEqual, diffs } = findStyleDiff(
     currentStyle,

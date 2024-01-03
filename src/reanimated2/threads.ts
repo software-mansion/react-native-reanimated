@@ -112,8 +112,9 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
         NativeReanimatedModule.scheduleOnUI(
           makeShareableCloneRecursive(() => {
             'worklet';
-            queue.forEach(([innerWorklet, innerArgs]) => {
-              innerWorklet(...innerArgs);
+            // eslint-disable-next-line @typescript-eslint/no-shadow
+            queue.forEach(([worklet, args]) => {
+              worklet(...args);
             });
             callMicrotasks();
           })

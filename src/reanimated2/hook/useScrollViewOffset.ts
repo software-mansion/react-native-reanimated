@@ -29,13 +29,13 @@ export function useScrollViewOffset(
     initialRef !== undefined ? initialRef : useSharedValue(0)
   );
 
-  const event = useEvent<RNNativeScrollEvent>(
-    (innerEvent: ReanimatedScrollEvent) => {
+  const eventHandler = useEvent<RNNativeScrollEvent>(
+    (event: ReanimatedScrollEvent) => {
       'worklet';
       offsetRef.current.value =
-        innerEvent.contentOffset.x === 0
-          ? innerEvent.contentOffset.y
-          : innerEvent.contentOffset.x;
+        event.contentOffset.x === 0
+          ? event.contentOffset.y
+          : event.contentOffset.x;
     },
     scrollEventNames
     // Read https://github.com/software-mansion/react-native-reanimated/pull/5056
@@ -44,10 +44,10 @@ export function useScrollViewOffset(
 
   useEffect(() => {
     const viewTag = findNodeHandle(animatedRef.current);
-    event.current?.registerForEvents(viewTag as number);
+    eventHandler.current?.registerForEvents(viewTag as number);
 
     return () => {
-      event.current?.unregisterFromEvents();
+      eventHandler.current?.unregisterFromEvents();
     };
   }, [animatedRef.current]);
 

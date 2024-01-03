@@ -202,9 +202,10 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     const delay = this.delayV;
     const reduceMotion = this.reduceMotionV;
     return delay
-      ? (innerDelay, animation) => {
+      ? // eslint-disable-next-line @typescript-eslint/no-shadow
+        (delay, animation) => {
           'worklet';
-          return withDelay(innerDelay, animation, reduceMotion);
+          return withDelay(delay, animation, reduceMotion);
         }
       : (_, animation) => {
           'worklet';

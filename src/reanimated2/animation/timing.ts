@@ -62,19 +62,19 @@ export const withTiming = function (
     }
 
     function timing(animation: InnerTimingAnimation, now: Timestamp): boolean {
-      const { toValue: innerToValue, startTime, startValue } = animation;
+      // eslint-disable-next-line @typescript-eslint/no-shadow
+      const { toValue, startTime, startValue } = animation;
       const runtime = now - startTime;
 
       if (runtime >= config.duration) {
         // reset startTime to avoid reusing finished animation config in `start` method
         animation.startTime = 0;
-        animation.current = innerToValue;
+        animation.current = toValue;
         return true;
       }
       const progress = animation.easing(runtime / config.duration);
       animation.current =
-        (startValue as number) +
-        (innerToValue - (startValue as number)) * progress;
+        (startValue as number) + (toValue - (startValue as number)) * progress;
       return false;
     }
 

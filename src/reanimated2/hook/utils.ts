@@ -38,8 +38,8 @@ export function buildDependencies(
 
 // This is supposed to work as useEffect comparison.
 export function areDependenciesEqual(
-  nextDeps: DependencyList,
-  prevDeps: DependencyList
+  nextDependencies: DependencyList,
+  prevDependencies: DependencyList
 ) {
   function is(x: number, y: number) {
     // eslint-disable-next-line no-self-compare
@@ -49,25 +49,21 @@ export function areDependenciesEqual(
     typeof Object.is === 'function' ? Object.is : is;
 
   function areHookInputsEqual(
-    innerNextDeps: DependencyList,
-    innerPrevDeps: DependencyList
+    nextDeps: DependencyList,
+    prevDeps: DependencyList
   ) {
-    if (
-      !innerNextDeps ||
-      !innerPrevDeps ||
-      innerPrevDeps.length !== innerNextDeps.length
-    ) {
+    if (!nextDeps || !prevDeps || prevDeps.length !== nextDeps.length) {
       return false;
     }
-    for (let i = 0; i < innerPrevDeps.length; ++i) {
-      if (!objectIs(innerNextDeps[i], innerPrevDeps[i])) {
+    for (let i = 0; i < prevDeps.length; ++i) {
+      if (!objectIs(nextDeps[i], prevDeps[i])) {
         return false;
       }
     }
     return true;
   }
 
-  return areHookInputsEqual(nextDeps, prevDeps);
+  return areHookInputsEqual(nextDependencies, prevDependencies);
 }
 
 export function isAnimated(prop: unknown) {

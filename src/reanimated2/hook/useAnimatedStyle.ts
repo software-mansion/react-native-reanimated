@@ -200,7 +200,8 @@ function styleUpdater(
 
   if (hasAnimations) {
     const frame = (timestamp: Timestamp) => {
-      const { animations: innerAnimations, last, isAnimationCancelled } = state;
+      // eslint-disable-next-line @typescript-eslint/no-shadow
+      const { animations, last, isAnimationCancelled } = state;
       if (isAnimationCancelled) {
         state.isAnimationRunning = false;
         return;
@@ -208,9 +209,9 @@ function styleUpdater(
 
       const updates: AnimatedStyle<any> = {};
       let allFinished = true;
-      for (const propName in innerAnimations) {
+      for (const propName in animations) {
         const finished = runAnimations(
-          innerAnimations[propName],
+          animations[propName],
           timestamp,
           propName,
           updates,
@@ -218,7 +219,7 @@ function styleUpdater(
         );
         if (finished) {
           last[propName] = updates[propName];
-          delete innerAnimations[propName];
+          delete animations[propName];
         } else {
           allFinished = false;
         }
@@ -290,7 +291,8 @@ function jestStyleUpdater(
   });
 
   function frame(timestamp: Timestamp) {
-    const { animations: innerAnimations, last, isAnimationCancelled } = state;
+    // eslint-disable-next-line @typescript-eslint/no-shadow
+    const { animations, last, isAnimationCancelled } = state;
     if (isAnimationCancelled) {
       state.isAnimationRunning = false;
       return;
@@ -298,9 +300,9 @@ function jestStyleUpdater(
 
     const updates: AnimatedStyle<any> = {};
     let allFinished = true;
-    Object.keys(innerAnimations).forEach((propName) => {
+    Object.keys(animations).forEach((propName) => {
       const finished = runAnimations(
-        innerAnimations[propName],
+        animations[propName],
         timestamp,
         propName,
         updates,
@@ -308,7 +310,7 @@ function jestStyleUpdater(
       );
       if (finished) {
         last[propName] = updates[propName];
-        delete innerAnimations[propName];
+        delete animations[propName];
       } else {
         allFinished = false;
       }
