@@ -249,10 +249,10 @@ void NativeReanimatedModule::unregisterEventHandler(
 }
 
 template <typename T>
-inline std::string int_to_hex(T val, size_t width = sizeof(T) * 2) {
+inline std::string int_to_hex(T val) {
   std::stringstream ss;
-  ss << std::setfill('0') << std::setw(width) << std::hex << (val | 0);
-  return ss.str();
+  ss << std::setfill('0') << std::setw(6) << std::hex << (val | 0);
+  return "#" + ss.str();
 }
 
 jsi::Value NativeReanimatedModule::getViewProp(
@@ -303,7 +303,7 @@ jsi::Value NativeReanimatedModule::getViewProp(
     } else if (propNameStr.compare("backgroundColor") == 0) {
       // This doesn't work yet
       SharedColor color = staticProps->backgroundColor;
-      auto color_hex = int_to_hex(*color);
+      auto color_hex = int_to_hex((0xFFFFFF & *color));
 
       resultStr = color_hex;
     }
