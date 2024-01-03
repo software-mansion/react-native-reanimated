@@ -40,5 +40,5 @@ export const shareableMappingCache = SHOULD_BE_USE_WEB
       set(shareable: object, shareableRef?: ShareableRef): void {
         cache!.set(shareable, shareableRef || shareableMappingFlag);
       },
-      get: cache!.get.bind(cache),
+      get: cache!.get,
     };
