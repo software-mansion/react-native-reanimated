@@ -1,3 +1,4 @@
+'use strict';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from '../commonTypes';
 import { makeRemote } from '../core';
@@ -38,6 +39,14 @@ export interface UseHandlerContext<Context extends Record<string, unknown>> {
   useWeb: boolean;
 }
 
+/**
+ * Lets you find out whether the event handler dependencies have changed.
+ *
+ * @param handlers - An object of event handlers.
+ * @param dependencies - An optional array of dependencies.
+ * @returns An object containing a boolean indicating whether the dependencies have changed, and a boolean indicating whether the code is running on the web.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/useHandler
+ */
 // @ts-expect-error This overload is required by our API.
 export function useHandler<
   Event extends object,

@@ -5,6 +5,7 @@ import styles from './styles.module.css';
 import BrowserOnly from '@docusaurus/BrowserOnly';
 import CodeBlock from '@theme/CodeBlock';
 
+import useClampPlayground from './useClampPlayground';
 import useSpringPlayground from './useSpringPlayground';
 import useTimingPlayground from './useTimingPlayground';
 import useInterpolateColorPlayground from './useInterpolateColorPlayground';
@@ -23,6 +24,7 @@ import {
 } from '@mui/material';
 
 export {
+  useClampPlayground,
   useSpringPlayground,
   useTimingPlayground,
   useInterpolateColorPlayground,
@@ -99,6 +101,16 @@ interface RangeProps {
   label: string;
 }
 
+interface DoubleRangeProps {
+  min: number;
+  max: number;
+  step?: number;
+  value: [number, number];
+  onChange: [Dispatch<number>, Dispatch<number>];
+  label: string;
+  color?: 'yellow' | 'green';
+}
+
 const RangeStyling = {
   color: 'var(--swm-interactive-slider)', // color of the main path of slider
   '& .MuiSlider-thumb': {
@@ -157,6 +169,58 @@ export function Range({
         onChange={(e: Event & { target: HTMLInputElement }) =>
           onChange(parseFloat(e.target.value))
         }
+      />
+    </>
+  );
+}
+
+export function DoubleRange({
+  min,
+  max,
+  value,
+  onChange,
+  label,
+  step = 1,
+  color,
+}: DoubleRangeProps) {
+  return (
+    <>
+      <div className={styles.row}>
+        <label>{label}</label>
+        {[0, 1].map((idx) => {
+          return (
+            <TextField
+              type="number"
+              hiddenLabel
+              size="small"
+              key={`${label}${idx}`}
+              inputProps={{ min: min, max: max, step: step }}
+              sx={TextFieldStyling}
+              value={value[idx]}
+              onChange={(e) => {
+                const newValue = parseFloat(e.target.value);
+                onChange[idx](
+                  newValue > max[idx]
+                    ? max[idx]
+                    : newValue <= min[idx]
+                    ? min[idx]
+                    : newValue
+                );
+              }}
+            />
+          );
+        })}
+      </div>
+      <Slider
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        sx={RangeStyling}
+        onChange={(e: Event & { target: HTMLInputElement }) => {
+          onChange[0](parseFloat(e.target.value[0]));
+          onChange[1](parseFloat(e.target.value[1]));
+        }}
       />
     </>
   );

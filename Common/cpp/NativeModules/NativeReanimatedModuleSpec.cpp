@@ -6,16 +6,6 @@
 
 namespace reanimated {
 
-static jsi::Value SPEC_PREFIX(installValueUnpacker)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->installValueUnpacker(rt, std::move(args[0]));
-  return jsi::Value::undefined();
-}
-
 // SharedValue
 
 static jsi::Value SPEC_PREFIX(makeShareableClone)(
@@ -66,6 +56,15 @@ static jsi::Value SPEC_PREFIX(createWorkletRuntime)(
     size_t) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->createWorkletRuntime(rt, std::move(args[0]), std::move(args[1]));
+}
+
+static jsi::Value SPEC_PREFIX(scheduleOnRuntime)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->scheduleOnRuntime(rt, std::move(args[0]), std::move(args[1]));
 }
 
 static jsi::Value SPEC_PREFIX(registerEventHandler)(
@@ -189,9 +188,6 @@ static jsi::Value SPEC_PREFIX(setShouldAnimateExiting)(
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
     std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
-  methodMap_["installValueUnpacker"] =
-      MethodMetadata{1, SPEC_PREFIX(installValueUnpacker)};
-
   methodMap_["makeShareableClone"] =
       MethodMetadata{2, SPEC_PREFIX(makeShareableClone)};
 
@@ -203,6 +199,8 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
   methodMap_["scheduleOnUI"] = MethodMetadata{1, SPEC_PREFIX(scheduleOnUI)};
   methodMap_["createWorkletRuntime"] =
       MethodMetadata{2, SPEC_PREFIX(createWorkletRuntime)};
+  methodMap_["scheduleOnRuntime"] =
+      MethodMetadata{2, SPEC_PREFIX(scheduleOnRuntime)};
 
   methodMap_["registerEventHandler"] =
       MethodMetadata{3, SPEC_PREFIX(registerEventHandler)};

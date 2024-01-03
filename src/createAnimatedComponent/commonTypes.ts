@@ -43,7 +43,7 @@ export interface IPropsFilter {
   ) => Record<string, unknown>;
 }
 
-export interface IJSPropUpdater {
+export interface IJSPropsUpdater {
   addOnJSPropsChangeListener(
     animatedComponent: React.Component<unknown, unknown> &
       IAnimatedComponentInternal
@@ -88,10 +88,10 @@ export interface IAnimatedComponentInternal {
   _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
   _viewTag: number;
   _isFirstRender: boolean;
-  animatedStyle: { value: StyleProps };
+  jestAnimatedStyle: { value: StyleProps };
   _component: AnimatedComponentRef | HTMLElement | null;
   _sharedElementTransition: SharedTransition | null;
-  _JSPropUpdater: IJSPropUpdater;
+  _jsPropsUpdater: IJSPropsUpdater;
   _InlinePropManager: IInlinePropManager;
   _PropsFilter: IPropsFilter;
   _viewInfo?: ViewInfo;

@@ -20,6 +20,13 @@ const scrollEventNames = [
   'onMomentumScrollEnd',
 ];
 
+/**
+ * Lets you synchronously get the current offset of a `ScrollView`.
+ *
+ * @param animatedRef - An [animated ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef) attached to an Animated.ScrollView component.
+ * @returns A shared value which holds the current offset of the `ScrollView`.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollViewOffset
+ */
 export function useScrollViewOffset(
   animatedRef: AnimatedRef<AnimatedScrollView>,
   initialRef?: SharedValue<number>

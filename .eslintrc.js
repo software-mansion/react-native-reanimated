@@ -12,7 +12,14 @@ module.exports = {
     'plugin:import/typescript',
     'plugin:react-hooks/recommended',
   ],
-  plugins: ['react', 'react-native', 'import', 'jest', '@typescript-eslint'],
+  plugins: [
+    'react',
+    'react-native',
+    'import',
+    'jest',
+    '@typescript-eslint',
+    'eslint-plugin-tsdoc',
+  ],
   env: {
     'react-native/react-native': true,
     'jest/globals': true,
@@ -53,5 +60,7 @@ module.exports = {
       'error',
       { fixMixedExportsWithInlineTypeSpecifier: false },
     ],
+    'tsdoc/syntax': 'error',
+    '@typescript-eslint/no-non-null-assertion': 'off',
   },
 };

@@ -23,7 +23,9 @@ import Animated, {
   withRepeat,
   withSequence,
   withDecay,
-} from '..';
+  useWorkletCallback,
+  runOnUI,
+} from '../..';
 
 function WithDecayComponentTest() {
   const x = useSharedValue(0);
@@ -335,4 +337,18 @@ function WithDelayTest() {
       <Animated.View style={[styles.box, animatedStyle]} />
     </PanGestureHandler>
   );
+}
+
+function UseWorkletCallbackTest() {
+  const workletCallback = useWorkletCallback((a: number, b: number) => {
+    return a + b;
+  }, []);
+
+  runOnUI(() => {
+    const res = workletCallback(1, 1);
+
+    console.log(res);
+  })();
+
+  return <Animated.View />;
 }
