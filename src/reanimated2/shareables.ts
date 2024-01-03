@@ -225,7 +225,7 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
       } else if (ArrayBuffer.isView(value)) {
         // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
         const buffer = value.buffer;
-        const arrayViewName = value.constructor.name;
+        const typeName = value.constructor.name;
         const handle = makeShareableCloneRecursive({
           __init: () => {
             'worklet';
