@@ -257,14 +257,15 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   }
 }
 
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)valueUnpackerCode)
 {
   facebook::jsi::Runtime *jsiRuntime = [self.bridge respondsToSelector:@selector(runtime)]
       ? reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime)
       : nullptr;
 
   if (jsiRuntime) {
-    auto nativeReanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
+    auto nativeReanimatedModule = reanimated::createReanimatedModule(
+        self.bridge, self.bridge.jsCallInvoker, std::string([valueUnpackerCode UTF8String]));
 
     jsi::Runtime &rnRuntime = *jsiRuntime;
     WorkletRuntimeCollector::install(rnRuntime);
