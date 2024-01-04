@@ -547,8 +547,7 @@ using namespace facebook::react;
   } else if ([propName isEqualToString:@"backgroundColor"]) {
 
 #if !TARGET_OS_OSX
-    UIColor color = view.backgroundColor
-
+    UIColor color = view.backgroundColor;
                     const size_t totalComponents = CGColorGetNumberOfComponents(color.CGColor);
     const CGFloat *components = CGColorGetComponents(color.CGColor);
     result = [NSString stringWithFormat:@"#%02x%02x%02x",
