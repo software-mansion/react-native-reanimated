@@ -35,7 +35,7 @@ function scrollToFabric(
 ) {
   'worklet';
   dispatchCommand(
-    // This cast is needed to comply to dispatchCommand interface
+    // This assertion is needed to comply to `dispatchCommand` interface
     animatedRef as unknown as AnimatedRef<Component>,
     'scrollTo',
     [x, y, animated]
@@ -74,9 +74,9 @@ function scrollToDefault() {
 }
 
 if (!shouldBeUseWeb()) {
-  // Those casts are actually correct since on Native platforms `AnimatedRef` is
-  // registered with `RegisterShareableMapping` as a different function than
-  // actual `AnimatedRef` and TypeScript cannot know that.
+  // Those assertions are actually correct since on Native platforms `AnimatedRef` is
+  // mapped as a different function in `shareableMappingCache` and
+  // TypeScript is not able to infer that.
   if (isFabric()) {
     scrollTo = scrollToFabric as unknown as ScrollTo;
   } else {

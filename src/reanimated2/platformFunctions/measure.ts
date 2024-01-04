@@ -110,9 +110,9 @@ function measureDefault() {
 }
 
 if (!shouldBeUseWeb()) {
-  // Those casts are actually correct since on Native platforms `AnimatedRef` is
-  // registered with `RegisterShareableMapping` as a different function than
-  // actual `AnimatedRef` and TypeScript cannot know that.
+  // Those assertions are actually correct since on Native platforms `AnimatedRef` is
+  // mapped as a different function in `shareableMappingCache` and
+  // TypeScript is not able to infer that.
   if (isFabric()) {
     measure = measureFabric as unknown as Measure;
   } else {
