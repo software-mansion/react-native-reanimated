@@ -1,63 +1,116 @@
 'use strict';
 
-import { Animations, customAnimations } from './config';
+import { isWindowAvailable } from '../../PlatformChecker';
+import { Animations } from './config';
 import type { AnimationNames } from './config';
 
-const WEB_ANIMATIONS_ID = 'ReanimatedWebAnimationsStyle';
+const PREDEFINED_WEB_ANIMATIONS_ID = 'ReanimatedPredefinedWebAnimationsStyle';
+const CUSTOM_WEB_ANIMATIONS_ID = 'ReanimatedCustomWebAnimationsStyle';
+
+// Since we cannot remove keyframe from DOM by its name, we have to store its id
+const animationNameToIndex = new Map<string, number>();
+const animationNameList: string[] = [];
 
 /**
  *  Creates `HTMLStyleElement`, inserts it into DOM and then inserts CSS rules into the stylesheet.
  *  If style element already exists, nothing happens.
  */
 export function configureWebLayoutAnimations() {
-  if (document.getElementById(WEB_ANIMATIONS_ID) !== null) {
+  if (
+    !isWindowAvailable() || // Without this check SSR crashes because document is undefined (NextExample on CI)
+    document.getElementById(PREDEFINED_WEB_ANIMATIONS_ID) !== null
+  ) {
     return;
   }
 
-  const style = document.createElement('style');
-  style.id = WEB_ANIMATIONS_ID;
+  const predefinedAnimationsStyleTag = document.createElement('style');
+  predefinedAnimationsStyleTag.id = PREDEFINED_WEB_ANIMATIONS_ID;
 
-  style.onload = () => {
-    if (!style.sheet) {
+  predefinedAnimationsStyleTag.onload = () => {
+    if (!predefinedAnimationsStyleTag.sheet) {
       console.error(
-        '[Reanimated] Failed to create layout animations stylesheet'
+        '[Reanimated] Failed to create layout animations stylesheet.'
       );
       return;
     }
 
     for (const animationName in Animations) {
-      style.sheet.insertRule(Animations[animationName as AnimationNames].style);
+      predefinedAnimationsStyleTag.sheet.insertRule(
+        Animations[animationName as AnimationNames].style
+      );
     }
   };
 
-  document.head.appendChild(style);
+  const customAnimationsStyleTag = document.createElement('style');
+  customAnimationsStyleTag.id = CUSTOM_WEB_ANIMATIONS_ID;
+
+  document.head.appendChild(predefinedAnimationsStyleTag);
+  document.head.appendChild(customAnimationsStyleTag);
 }
 
 export function insertWebAnimation(animationName: string, keyframe: string) {
+  // Without this check SSR crashes because document is undefined (NextExample on CI)
+  if (!isWindowAvailable()) {
+    return;
+  }
+
   const styleTag = document.getElementById(
-    WEB_ANIMATIONS_ID
+    CUSTOM_WEB_ANIMATIONS_ID
   ) as HTMLStyleElement;
 
   if (!styleTag.sheet) {
-    console.error('[Reanimated] Failed to create layout animations stylesheet');
+    console.error(
+      '[Reanimated] Failed to create layout animations stylesheet.'
+    );
     return;
   }
 
-  const customTransitionId = styleTag.sheet.insertRule(keyframe);
-  customAnimations.set(animationName, customTransitionId);
+  styleTag.sheet.insertRule(keyframe, 0);
+  animationNameList.unshift(animationName);
+  animationNameToIndex.set(animationName, 0);
+
+  for (let i = 1; i < animationNameList.length; ++i) {
+    const nextAnimationName = animationNameList[i];
+    const nextAnimationIndex = animationNameToIndex.get(nextAnimationName);
+
+    if (nextAnimationIndex === undefined) {
+      throw new Error('[Reanimated] Failed to obtain animation index.');
+    }
+
+    animationNameToIndex.set(animationNameList[i], nextAnimationIndex + 1);
+  }
 }
 
 function removeWebAnimation(animationName: string) {
-  if (!customAnimations.has(animationName)) {
+  // Without this check SSR crashes because document is undefined (NextExample on CI)
+  if (!isWindowAvailable()) {
     return;
   }
 
   const styleTag = document.getElementById(
-    WEB_ANIMATIONS_ID
+    CUSTOM_WEB_ANIMATIONS_ID
   ) as HTMLStyleElement;
 
-  styleTag.sheet?.deleteRule(customAnimations.get(animationName) as number);
-  customAnimations.delete(animationName);
+  const currentAnimationIndex = animationNameToIndex.get(animationName);
+
+  if (currentAnimationIndex === undefined) {
+    throw new Error('[Reanimated] Failed to obtain animation index.');
+  }
+
+  styleTag.sheet?.deleteRule(currentAnimationIndex);
+  animationNameList.splice(currentAnimationIndex, 1);
+  animationNameToIndex.delete(animationName);
+
+  for (let i = currentAnimationIndex; i < animationNameList.length; ++i) {
+    const nextAnimationName = animationNameList[i];
+    const nextAnimationIndex = animationNameToIndex.get(nextAnimationName);
+
+    if (nextAnimationIndex === undefined) {
+      throw new Error('[Reanimated] Failed to obtain animation index.');
+    }
+
+    animationNameToIndex.set(animationNameList[i], nextAnimationIndex - 1);
+  }
 }
 
 const timeoutScale = 1.25; // We use this value to enlarge timeout duration. It can prove useful if animation lags.

@@ -79,6 +79,7 @@ export const withTiming = function (
     }
 
     function timing(animation: InnerTimingAnimation, now: Timestamp): boolean {
+      // eslint-disable-next-line @typescript-eslint/no-shadow
       const { toValue, startTime, startValue } = animation;
       const runtime = now - startTime;
 
