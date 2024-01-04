@@ -60,6 +60,10 @@ import type { FlatList, FlatListProps } from 'react-native';
 const IS_WEB = isWeb();
 const IS_FABRIC = isFabric();
 
+if (IS_WEB) {
+  configureWebLayoutAnimations();
+}
+
 function onlyAnimatedStyles(styles: StyleProps[]): StyleProps[] {
   return styles.filter((style) => style?.viewDescriptors);
 }
@@ -87,15 +91,7 @@ type Options<P> = {
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent
  */
 
-/**
- * @deprecated Please use `Animated.FlatList` component instead of calling `Animated.createAnimatedComponent(FlatList)` manually.
- */
-// @ts-ignore This is required to create this overload, since type of createAnimatedComponent is incorrect and doesn't include typeof FlatList
-export function createAnimatedComponent(
-  component: typeof FlatList<unknown>,
-  options?: Options<any>
-): ComponentClass<AnimateProps<FlatListProps<unknown>>>;
-
+// Don't change the order of overloads, since such a change breaks current behavior
 export function createAnimatedComponent<P extends object>(
   component: FunctionComponent<P>,
   options?: Options<P>
@@ -105,6 +101,22 @@ export function createAnimatedComponent<P extends object>(
   component: ComponentClass<P>,
   options?: Options<P>
 ): ComponentClass<AnimateProps<P>>;
+
+export function createAnimatedComponent<P extends object>(
+  // Actually ComponentType<P = {}> = ComponentClass<P> | FunctionComponent<P> but we need this overload too
+  // since some external components (like FastImage) are typed just as ComponentType
+  component: ComponentType<P>,
+  options?: Options<P>
+): FunctionComponent<AnimateProps<P>> | ComponentClass<AnimateProps<P>>;
+
+/**
+ * @deprecated Please use `Animated.FlatList` component instead of calling `Animated.createAnimatedComponent(FlatList)` manually.
+ */
+// @ts-ignore This is required to create this overload, since type of createAnimatedComponent is incorrect and doesn't include typeof FlatList
+export function createAnimatedComponent(
+  component: typeof FlatList<unknown>,
+  options?: Options<any>
+): ComponentClass<AnimateProps<FlatListProps<unknown>>>;
 
 export function createAnimatedComponent(
   Component: ComponentType<InitialComponentProps>,
@@ -124,7 +136,7 @@ export function createAnimatedComponent(
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _viewTag = -1;
     _isFirstRender = true;
-    animatedStyle: { value: StyleProps } = { value: {} };
+    jestAnimatedStyle: { value: StyleProps } = { value: {} };
     _component: AnimatedComponentRef | HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
     _jsPropsUpdater = new JSPropsUpdater();
@@ -138,7 +150,7 @@ export function createAnimatedComponent(
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
       if (isJest()) {
-        this.animatedStyle = { value: {} };
+        this.jestAnimatedStyle = { value: {} };
       }
     }
 
@@ -149,8 +161,6 @@ export function createAnimatedComponent(
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
       if (IS_WEB) {
-        configureWebLayoutAnimations();
-
         if (this.props.exiting) {
           saveSnapshot(this._component as HTMLElement);
         }
@@ -397,11 +407,11 @@ export function createAnimatedComponent(
            * We can't update props object directly because TestObject contains a copy of props - look at render function:
            * const props = this._filterNonAnimatedProps(this.props);
            */
-          this.animatedStyle.value = {
-            ...this.animatedStyle.value,
+          this.jestAnimatedStyle.value = {
+            ...this.jestAnimatedStyle.value,
             ...style.initial.value,
           };
-          style.animatedStyle.current = this.animatedStyle;
+          style.jestAnimatedStyle.current = this.jestAnimatedStyle;
         }
       });
 
@@ -551,10 +561,10 @@ export function createAnimatedComponent(
     }
 
     render() {
-      const props = this._PropsFilter.filterNonAnimatedProps(this);
+      const filteredProps = this._PropsFilter.filterNonAnimatedProps(this);
 
       if (isJest()) {
-        props.animatedStyle = this.animatedStyle;
+        filteredProps.jestAnimatedStyle = this.jestAnimatedStyle;
       }
 
       // Layout animations on web are set inside `componentDidMount` method, which is called after first render.
@@ -564,11 +574,11 @@ export function createAnimatedComponent(
       if (
         this._isFirstRender &&
         IS_WEB &&
-        props.entering &&
-        !getReducedMotionFromConfig(props.entering as CustomConfig)
+        filteredProps.entering &&
+        !getReducedMotionFromConfig(filteredProps.entering as CustomConfig)
       ) {
-        props.style = {
-          ...(props.style ?? {}),
+        filteredProps.style = {
+          ...(filteredProps.style ?? {}),
           visibility: 'hidden', // Hide component until `componentDidMount` triggers
         };
       }
@@ -580,7 +590,7 @@ export function createAnimatedComponent(
 
       return (
         <Component
-          {...props}
+          {...filteredProps}
           // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
           // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
           ref={this._setComponentRef as (ref: Component) => void}

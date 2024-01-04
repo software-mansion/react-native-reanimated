@@ -1,5 +1,5 @@
 'use strict';
-import type { Component } from 'react';
+import type { Component, MutableRefObject } from 'react';
 import type { ShadowNodeWrapper, SharedValue } from '../commonTypes';
 import type {
   ImageStyle,
@@ -8,6 +8,8 @@ import type {
   ViewStyle,
   NativeScrollEvent,
 } from 'react-native';
+import type { ViewDescriptorsSet, ViewRefSet } from '../ViewDescriptorsSet';
+import type { AnimatedStyle } from '../helperTypes';
 
 export type DependencyList = Array<unknown> | undefined;
 
@@ -61,3 +63,20 @@ export type DefaultStyle = ViewStyle | ImageStyle | TextStyle;
 export type RNNativeScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
 
 export type ReanimatedScrollEvent = ReanimatedEvent<RNNativeScrollEvent>;
+
+export interface AnimatedStyleHandle<
+  Style extends DefaultStyle = DefaultStyle
+> {
+  viewDescriptors: ViewDescriptorsSet;
+  initial: {
+    value: AnimatedStyle<Style>;
+    updater: () => AnimatedStyle<Style>;
+  };
+  viewsRef: ViewRefSet<unknown>;
+}
+
+export interface JestAnimatedStyleHandle<
+  Style extends DefaultStyle = DefaultStyle
+> extends AnimatedStyleHandle<Style> {
+  jestAnimatedStyle: MutableRefObject<AnimatedStyle<Style>>;
+}

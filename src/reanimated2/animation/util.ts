@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-shadow */
 'use strict';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type { ParsedColorArray } from '../Colors';
@@ -38,7 +39,7 @@ const IS_REDUCED_MOTION = isReducedMotion();
 
 if (__DEV__ && IS_REDUCED_MOTION) {
   console.warn(
-    `[Reanimated] Reduced motion setting is enabled on this device. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility.`
+    `[Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device.`
   );
 }
 

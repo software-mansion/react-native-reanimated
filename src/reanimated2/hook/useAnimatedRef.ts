@@ -5,10 +5,8 @@ import { useSharedValue } from './useSharedValue';
 import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
 import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import {
-  makeShareableCloneRecursive,
-  registerShareableMapping,
-} from '../shareables';
+import { makeShareableCloneRecursive } from '../shareables';
+import { shareableMappingCache } from '../shareableMappingCache';
 import { Platform, findNodeHandle } from 'react-native';
 import type { ScrollView, FlatList } from 'react-native';
 import { isFabric } from '../PlatformChecker';
@@ -80,7 +78,7 @@ export function useAnimatedRef<
         return f;
       },
     });
-    registerShareableMapping(fun, remoteRef);
+    shareableMappingCache.set(fun, remoteRef);
     ref.current = fun;
   }
 

@@ -77,6 +77,7 @@ export const withSpring = ((
       animation: InnerSpringAnimation,
       now: Timestamp
     ): boolean {
+      // eslint-disable-next-line @typescript-eslint/no-shadow
       const { toValue, startTimestamp, current } = animation;
 
       const timeFromStart = now - startTimestamp;

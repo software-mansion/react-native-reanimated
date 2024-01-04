@@ -138,7 +138,7 @@ function createMapperRegistry() {
   }
 
   function extractInputs(
-    inputs: unknown | unknown[],
+    inputs: unknown,
     resultArray: MapperExtractedInputs
   ): MapperExtractedInputs {
     if (Array.isArray(inputs)) {
