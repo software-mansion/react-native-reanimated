@@ -8,17 +8,16 @@ import type {
 import { shouldBeUseWeb } from './PlatformChecker';
 import { registerWorkletStackDetails } from './errors';
 import { jsVersion } from './platform-specific/jsVersion';
-import { shareableCache } from './shareableCache';
+import {
+  shareableMappingCache,
+  shareableMappingFlag,
+} from './shareableMappingCache';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
 // instead of shareable references, because of the fact that we don't have to deal with
 // runnning the code on separate VMs.
-const USE_STUB_IMPLEMENTATION = shouldBeUseWeb();
-
-// the below symbol is used to represent a mapping from the value to itself
-// this is used to allow for a converted shareable to be passed to makeShareableClone
-const _shareableFlag = Symbol('shareable flag');
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 const MAGIC_KEY = 'REANIMATED_MAGIC_KEY';
 
@@ -29,16 +28,6 @@ function isHostObject(value: NonNullable<object>) {
   // We use the fact that host objects have broken implementation of `hasOwnProperty`
   // and hence return true for all `in` checks regardless of the key we ask for.
   return MAGIC_KEY in value;
-}
-
-export function registerShareableMapping(
-  shareable: object,
-  shareableRef?: ShareableRef
-): void {
-  if (USE_STUB_IMPLEMENTATION) {
-    return;
-  }
-  shareableCache.set(shareable, shareableRef || _shareableFlag);
 }
 
 function isPlainJSObject(object: object): object is object {
@@ -114,7 +103,7 @@ export function makeShareableCloneRecursive<T>(
   shouldPersistRemote = false,
   depth = 0
 ): ShareableRef<T> {
-  if (USE_STUB_IMPLEMENTATION) {
+  if (SHOULD_BE_USE_WEB) {
     return value;
   }
   if (depth >= DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
@@ -138,8 +127,8 @@ export function makeShareableCloneRecursive<T>(
   const isTypeObject = type === 'object';
   const isTypeFunction = type === 'function';
   if ((isTypeObject || isTypeFunction) && value !== null) {
-    const cached = shareableCache.get(value);
-    if (cached === _shareableFlag) {
+    const cached = shareableMappingCache.get(value);
+    if (cached === shareableMappingFlag) {
       return value;
     } else if (cached !== undefined) {
       return cached as ShareableRef<T>;
@@ -211,7 +200,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
             return new RegExp(pattern, flags);
           },
         });
-        registerShareableMapping(value, handle);
+        shareableMappingCache.set(value, handle);
         return handle as ShareableRef<T>;
       } else if (value instanceof ArrayBuffer) {
         toAdapt = value;
@@ -236,7 +225,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
             return new constructor(buffer);
           },
         });
-        registerShareableMapping(value, handle);
+        shareableMappingCache.set(value, handle);
         return handle as ShareableRef<T>;
       } else {
         // This is reached for object types that are not of plain Object.prototype.
@@ -249,7 +238,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
         // will get an appropriate error message.
         const inaccessibleObject =
           makeShareableCloneRecursive<T>(INACCESSIBLE_OBJECT);
-        registerShareableMapping(value, inaccessibleObject);
+        shareableMappingCache.set(value, inaccessibleObject);
         return inaccessibleObject;
       }
       if (__DEV__) {
@@ -265,8 +254,8 @@ Offending code was: \`${getWorkletCode(value)}\``);
         toAdapt,
         shouldPersistRemote
       );
-      registerShareableMapping(value, adopted);
-      registerShareableMapping(adopted);
+      shareableMappingCache.set(value, adopted);
+      shareableMappingCache.set(adopted);
       return adopted;
     }
   }
@@ -302,7 +291,7 @@ export function makeShareableCloneOnUIRecursive<T>(
   value: T
 ): FlatShareableRef<T> {
   'worklet';
-  if (USE_STUB_IMPLEMENTATION) {
+  if (SHOULD_BE_USE_WEB) {
     // @ts-ignore web is an interesting place where we don't run a secondary VM on the UI thread
     // see more details in the comment where USE_STUB_IMPLEMENTATION is defined.
     return value;
@@ -340,7 +329,7 @@ export function makeShareableCloneOnUIRecursive<T>(
 }
 
 export function makeShareable<T extends object>(value: T): T {
-  if (USE_STUB_IMPLEMENTATION) {
+  if (SHOULD_BE_USE_WEB) {
     return value;
   }
   const handle = makeShareableCloneRecursive({
@@ -349,6 +338,6 @@ export function makeShareable<T extends object>(value: T): T {
       return value;
     },
   });
-  registerShareableMapping(value, handle);
+  shareableMappingCache.set(value, handle);
   return value;
 }
