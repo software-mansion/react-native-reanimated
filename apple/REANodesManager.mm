@@ -556,7 +556,7 @@ using namespace facebook::react;
                                         (int)(255 * components[MIN(1, totalComponents - 2)]),
                                         (int)(255 * components[MIN(2, totalComponents - 2)])];
 #else
-    result = @"Cant get background color on macos"
+    result = @"Cant get background color on macos";
 
 #endif
   }
