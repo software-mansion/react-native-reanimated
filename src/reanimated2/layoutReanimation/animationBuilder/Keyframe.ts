@@ -163,9 +163,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
               Object.keys(transformStyle).forEach((transformProp: string) => {
                 addKeyPointWith(
                   makeKeyframeKey(index, transformProp),
-                  transformStyle[
-                    transformProp as keyof typeof transformStyle
-                  ] as number | string
+                  transformStyle[transformProp as keyof typeof transformStyle]
                 );
               });
             });
