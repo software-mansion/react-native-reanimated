@@ -119,6 +119,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
         NativeReanimatedModule.scheduleOnUI(
           makeShareableCloneRecursive(() => {
             'worklet';
+            // eslint-disable-next-line @typescript-eslint/no-shadow
             queue.forEach(([worklet, args]) => {
               worklet(...args);
             });

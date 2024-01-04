@@ -207,19 +207,19 @@ Offending code was: \`${getWorkletCode(value)}\``);
       } else if (ArrayBuffer.isView(value)) {
         // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
         const buffer = value.buffer;
-        const type = value.constructor.name;
+        const typeName = value.constructor.name;
         const handle = makeShareableCloneRecursive({
           __init: () => {
             'worklet';
-            if (!VALID_ARRAY_VIEWS_NAMES.includes(type)) {
+            if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
               throw new Error(
-                `[Reanimated] Invalid array view name \`${type}\`.`
+                `[Reanimated] Invalid array view name \`${typeName}\`.`
               );
             }
-            const constructor = global[type as keyof typeof global];
+            const constructor = global[typeName as keyof typeof global];
             if (constructor === undefined) {
               throw new Error(
-                `[Reanimated] Constructor for \`${type}\` not found.`
+                `[Reanimated] Constructor for \`${typeName}\` not found.`
               );
             }
             return new constructor(buffer);
@@ -296,7 +296,8 @@ export function makeShareableCloneOnUIRecursive<T>(
     // see more details in the comment where USE_STUB_IMPLEMENTATION is defined.
     return value;
   }
-  function cloneRecursive<T>(value: T): FlatShareableRef<T> {
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  function cloneRecursive(value: T): FlatShareableRef<T> {
     if (
       (typeof value === 'object' && value !== null) ||
       typeof value === 'function'
@@ -319,7 +320,7 @@ export function makeShareableCloneOnUIRecursive<T>(
       }
       const toAdapt: Record<string, FlatShareableRef<T>> = {};
       for (const [key, element] of Object.entries(value)) {
-        toAdapt[key] = cloneRecursive<T>(element);
+        toAdapt[key] = cloneRecursive(element);
       }
       return _makeShareableClone(toAdapt) as FlatShareableRef<T>;
     }
