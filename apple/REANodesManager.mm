@@ -517,87 +517,80 @@ using namespace facebook::react;
   }
 }
 
+- (NSString *)stringFromColor:(UIColor *)color
 {
-#if !TARGET_OS_OSX
-  -(NSString *)stringFromColor : (UIColor *)color
-  {
-    const size_t totalComponents = CGColorGetNumberOfComponents(color.CGColor);
-    const CGFloat *components = CGColorGetComponents(color.CGColor);
+  const size_t totalComponents = CGColorGetNumberOfComponents(color.CGColor);
+  const CGFloat *components = CGColorGetComponents(color.CGColor);
   return [NSString stringWithFormat:@"#%02x%02x%02x",
                                     (int)(255 * components[MIN(0, totalComponents - 2)]),
                                     (int)(255 * components[MIN(1, totalComponents - 2)]),
-  }                          (int)(255 * components[MIN(2, totalComponents - 2)])];
-#else
-  -(NSString *)stringFromColor : (id)color // UIColor is not supported, so let's map it to "any" type
-  {
-    return @"Cant read color on macos";
-  }
-#endif
+                                    (int)(255 * components[MIN(2, totalComponents - 2)])];
+}
 
-  -(NSString *_Nonnull)obtainProp : (nonnull NSNumber *)viewTag propName : (nonnull NSString *)propName
-  {
-    REAUIView *view = [self.uiManager viewForReactTag:viewTag];
+- (NSString *_Nonnull)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName
+{
+  REAUIView *view = [self.uiManager viewForReactTag:viewTag];
 
-    NSString *result = [NSString
-        stringWithFormat:
-            @"error: unknown propName %@, currently supported: opacity, zIndex, width, height, top, left, backgroundColor",
-            propName];
+  NSString *result = [NSString
+      stringWithFormat:
+          @"error: unknown propName %@, currently supported: opacity, zIndex, width, height, top, left, backgroundColor",
+          propName];
 
-    if ([propName isEqualToString:@"opacity"]) {
+  if ([propName isEqualToString:@"opacity"]) {
 #if !TARGET_OS_OSX
-      CGFloat alpha = view.alpha;
+    CGFloat alpha = view.alpha;
 #else
-      CGFloat alpha = view.alphaValue;
+    CGFloat alpha = view.alphaValue;
 #endif
-      result = [@(alpha) stringValue];
-    } else if ([propName isEqualToString:@"zIndex"]) {
-      NSInteger zIndex = view.reactZIndex;
-      result = [@(zIndex) stringValue];
-    } else if ([propName isEqualToString:@"width"]) {
-      result = [@(view.frame.size.width) stringValue];
-    } else if ([propName isEqualToString:@"height"]) {
-      result = [@(view.frame.size.height) stringValue];
-    } else if ([propName isEqualToString:@"top"]) {
-      result = [@(view.frame.origin.y) stringValue];
-    } else if ([propName isEqualToString:@"left"]) {
-      result = [@(view.frame.origin.x) stringValue];
-    } else if ([propName isEqualToString:@"backgroundColor"]) {
-      result = [self stringFromColor:view.backgroundColor];
-    }
-
-    return result;
+    result = [@(alpha) stringValue];
+  } else if ([propName isEqualToString:@"zIndex"]) {
+    NSInteger zIndex = view.reactZIndex;
+    result = [@(zIndex) stringValue];
+  } else if ([propName isEqualToString:@"width"]) {
+    result = [@(view.frame.size.width) stringValue];
+  } else if ([propName isEqualToString:@"height"]) {
+    result = [@(view.frame.size.height) stringValue];
+  } else if ([propName isEqualToString:@"top"]) {
+    result = [@(view.frame.origin.y) stringValue];
+  } else if ([propName isEqualToString:@"left"]) {
+    result = [@(view.frame.origin.x) stringValue];
+  } else if ([propName isEqualToString:@"backgroundColor"]) {
+    result = [self stringFromColor:view.backgroundColor];
   }
 
-  -(void)maybeFlushUpdateBuffer
-  {
-    RCTAssertUIManagerQueue();
-    bool shouldFlushUpdateBuffer = atomic_load(&_shouldFlushUpdateBuffer);
-    if (!shouldFlushUpdateBuffer) {
-      return;
-    }
+  return result;
+}
 
-    __weak __typeof__(self) weakSelf = self;
-    [_uiManager
-        addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, REAUIView *> *viewRegistry) {
-          __typeof__(self) strongSelf = weakSelf;
-          if (strongSelf == nil) {
-            return;
-          }
-          atomic_store(&strongSelf->_shouldFlushUpdateBuffer, false);
-          NSMutableDictionary *componentUpdateBuffer = [strongSelf->_componentUpdateBuffer copy];
-          strongSelf->_componentUpdateBuffer = [NSMutableDictionary new];
-          for (NSNumber *tag in componentUpdateBuffer) {
-            ComponentUpdate *componentUpdate = componentUpdateBuffer[tag];
-            if (componentUpdate == Nil) {
-              continue;
-            }
-            [strongSelf updateProps:componentUpdate.props
-                      ofViewWithTag:componentUpdate.viewTag
-                           withName:componentUpdate.viewName];
-          }
-          [strongSelf performOperations];
-        }];
+- (void)maybeFlushUpdateBuffer
+{
+  RCTAssertUIManagerQueue();
+  bool shouldFlushUpdateBuffer = atomic_load(&_shouldFlushUpdateBuffer);
+  if (!shouldFlushUpdateBuffer) {
+    return;
   }
+
+  __weak __typeof__(self) weakSelf = self;
+  [_uiManager
+      addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, REAUIView *> *viewRegistry) {
+        __typeof__(self) strongSelf = weakSelf;
+        if (strongSelf == nil) {
+          return;
+        }
+        atomic_store(&strongSelf->_shouldFlushUpdateBuffer, false);
+        NSMutableDictionary *componentUpdateBuffer = [strongSelf->_componentUpdateBuffer copy];
+        strongSelf->_componentUpdateBuffer = [NSMutableDictionary new];
+        for (NSNumber *tag in componentUpdateBuffer) {
+          ComponentUpdate *componentUpdate = componentUpdateBuffer[tag];
+          if (componentUpdate == Nil) {
+            continue;
+          }
+          [strongSelf updateProps:componentUpdate.props
+                    ofViewWithTag:componentUpdate.viewTag
+                         withName:componentUpdate.viewName];
+        }
+        [strongSelf performOperations];
+      }];
+}
 
 #endif // RCT_NEW_ARCH_ENABLED
 
