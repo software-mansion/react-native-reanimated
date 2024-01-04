@@ -27,6 +27,9 @@ export interface AnimatedRef<T extends Component> {
     | HTMLElement; // web
 }
 
+/**
+ * In Native implementation `AnimatedRef` is mapped to a handle of this type.
+ */
 export type AnimatedRefOnUI = {
   viewName: SharedValue<string>;
   (): number | ShadowNodeWrapper | null;
