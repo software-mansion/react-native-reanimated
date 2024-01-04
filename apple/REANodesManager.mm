@@ -3,6 +3,7 @@
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REAUIKit.h>
 #import <React/RCTConvert.h>
+#import <UIKit/UIKit.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <React/RCTComponentViewRegistry.h>
