@@ -3,7 +3,6 @@
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REAUIKit.h>
 #import <React/RCTConvert.h>
-#import <UIKit/UIKit.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <React/RCTComponentViewRegistry.h>
@@ -518,9 +517,9 @@ using namespace facebook::react;
   }
 }
 
-- (NSString *)stringFromColor:(UIColor *)color
 {
 #if !TARGET_OS_OSX
+- (NSString *)stringFromColor:(UIColor *)color
   const size_t totalComponents = CGColorGetNumberOfComponents(color.CGColor);
   const CGFloat *components = CGColorGetComponents(color.CGColor);
   return [NSString stringWithFormat:@"#%02x%02x%02x",
@@ -528,6 +527,7 @@ using namespace facebook::react;
                                     (int)(255 * components[MIN(1, totalComponents - 2)]),
                                     (int)(255 * components[MIN(2, totalComponents - 2)])];
 #else
+- (NSString *)stringFromColor:(id)color //UIColor is not supported, so let's map it to "any" type
   return @"Cant read color on macos";
 #endif
 }
