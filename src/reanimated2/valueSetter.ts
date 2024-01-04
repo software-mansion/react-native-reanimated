@@ -1,6 +1,5 @@
 'use strict';
-import type { AnimationObject, AnimatableValue, Mutable } from './commonTypes';
-import type { Descriptor } from './hook/commonTypes';
+import type { AnimationObject, Mutable } from './commonTypes';
 
 export function valueSetter<Value>(
   mutable: Mutable<Value>,
@@ -17,12 +16,15 @@ export function valueSetter<Value>(
     typeof value === 'function' ||
     (value !== null &&
       typeof value === 'object' &&
+      // TODO TYPESCRIPT fix this after fixing AnimationObject type
       (value as unknown as AnimationObject).onFrame !== undefined)
   ) {
-    const animation: AnimationObject =
+    const animation: AnimationObject<Value> =
       typeof value === 'function'
-        ? (value as () => AnimationObject)()
-        : (value as unknown as AnimationObject);
+        ? // TODO TYPESCRIPT fix this after fixing AnimationObject type
+          (value as () => AnimationObject<Value>)()
+        : // TODO TYPESCRIPT fix this after fixing AnimationObject type
+          (value as unknown as AnimationObject<Value>);
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
     // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)
@@ -60,7 +62,10 @@ export function valueSetter<Value>(
       const finished = animation.onFrame(animation, timestamp);
       animation.finished = true;
       animation.timestamp = timestamp;
-      mutable._value = animation.current;
+      // TODO TYPESCRIPT
+      // For now I'll assume that `animation.current` is always defined
+      // but actually need to dive into animations to understand it
+      mutable._value = animation.current!;
       if (finished) {
         animation.callback && animation.callback(true /* finished */);
       } else {
@@ -77,6 +82,6 @@ export function valueSetter<Value>(
     if (mutable._value === value && !forceUpdate) {
       return;
     }
-    mutable._value = value as Descriptor | AnimatableValue;
+    mutable._value = value;
   }
 }

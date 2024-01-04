@@ -5,8 +5,8 @@ import type { ShareableSyncDataHolderRef, Mutable } from './commonTypes';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
-  registerShareableMapping,
 } from './shareables';
+import { shareableMappingCache } from './shareableMappingCache';
 import { runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
 
@@ -17,7 +17,7 @@ type Listener<Value> = (newValue: Value) => void;
 export function makeUIMutable<Value>(
   initial: Value,
   syncDataHolder?: ShareableSyncDataHolderRef<Value>
-) {
+): Mutable<Value> {
   'worklet';
 
   const listeners = new Map<number, Listener<Value>>();
@@ -81,7 +81,7 @@ export function makeMutable<Value>(
     syncDataHolder = NativeReanimatedModule.makeSynchronizedDataHolder(
       makeShareableCloneRecursive(value)
     );
-    registerShareableMapping(syncDataHolder);
+    shareableMappingCache.set(syncDataHolder);
   }
   const handle = makeShareableCloneRecursive({
     __init: () => {
@@ -112,7 +112,7 @@ export function makeMutable<Value>(
     set _value(newValue: Value) {
       if (!SHOULD_BE_USE_WEB) {
         throw new Error(
-          '[Reanimated] Setting `_value` directly is only possible on the UI runtime.'
+          '[Reanimated] Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
         );
       }
       value = newValue;
@@ -121,12 +121,12 @@ export function makeMutable<Value>(
       });
     },
     get _value(): Value {
-      if (!SHOULD_BE_USE_WEB) {
-        throw new Error(
-          '[Reanimated] Reading from `_value` directly is only possible on the UI runtime.'
-        );
+      if (SHOULD_BE_USE_WEB) {
+        return value;
       }
-      return value;
+      throw new Error(
+        '[Reanimated] Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
+      );
     },
 
     modify: (modifier, forceUpdate = true) => {
@@ -160,7 +160,7 @@ export function makeMutable<Value>(
     },
     _isReanimatedSharedValue: true,
   };
-  registerShareableMapping(mutable, handle);
+  shareableMappingCache.set(mutable, handle);
   return mutable;
 }
 
@@ -171,6 +171,6 @@ export function makeRemote<T extends object>(initial: T = {} as T): T {
       return initial;
     },
   });
-  registerShareableMapping(initial, handle);
+  shareableMappingCache.set(initial, handle);
   return initial;
 }
