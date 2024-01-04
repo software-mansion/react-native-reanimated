@@ -207,19 +207,19 @@ Offending code was: \`${getWorkletCode(value)}\``);
       } else if (ArrayBuffer.isView(value)) {
         // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
         const buffer = value.buffer;
-        const arrayViewName = value.constructor.name;
+        const typeName = value.constructor.name;
         const handle = makeShareableCloneRecursive({
           __init: () => {
             'worklet';
-            if (!VALID_ARRAY_VIEWS_NAMES.includes(arrayViewName)) {
+            if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
               throw new Error(
-                `[Reanimated] Invalid array view name \`${arrayViewName}\`.`
+                `[Reanimated] Invalid array view name \`${typeName}\`.`
               );
             }
-            const constructor = global[arrayViewName as keyof typeof global];
+            const constructor = global[typeName as keyof typeof global];
             if (constructor === undefined) {
               throw new Error(
-                `[Reanimated] Constructor for \`${arrayViewName}\` not found.`
+                `[Reanimated] Constructor for \`${typeName}\` not found.`
               );
             }
             return new constructor(buffer);
