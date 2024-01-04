@@ -1,6 +1,5 @@
 name: Bug report
 description: Report an issue with Reanimated here.
-labels: 'Needs review'
 body:
   - type: markdown
     attributes:
