@@ -4,25 +4,45 @@ sidebar_position: 2
 
 # useScrollViewOffset
 
-:::info
-This page was ported from an old version of the documentation.
-
-As we're rewriting the documentation some of the pages might be a little outdated.
-:::
-
 This hook allows you to create animations based on the offset of a `ScrollView`.
 The hook automatically detects if the `ScrollView` is horizontal or vertical.
 
-```ts
-useScrollViewOffset(aref: RefObject<Animated.ScrollView>) => [SharedValue<number>]
+## Reference
+
+```tsx
+import { useAnimatedRef, useScrollViewOffset } from 'react-native-reanimated';
+
+function App() {
+  const animatedRef = useAnimatedRef<RefObject<ScrollView>>();
+  const scrollOffset = useScrollViewOffset(animatedRef);
+
+  return <ScrollView ref={animatedRef}>{/* ... */}</ScrollView>;
+}
 ```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function useScrollViewOffset(
+  animatedRef: AnimatedRef<AnimatedScrollView>,
+  initialRef?: SharedValue<number>
+): SharedValue<number>;
+```
+
+</details>
 
 ### Arguments
 
-#### `aref` [RefObject&lt;Animated.ScrollView&gt;]
+#### `animatedRef`
 
 An Animated reference to a `ScrollView`. The reference should be passed to the
 appropriate `ScrollView` in the `ref` prop.
+
+#### `initialRef` <Optional/>
+
+An optional shared value to be updated with the scroll offset. If not provided
+a new shared value will be created internally.
 
 ### Returns
 
@@ -30,32 +50,15 @@ A shared value which holds the current offset of the `ScrollView`.
 
 ## Example
 
-```jsx
-function ScrollViewOffsetExample() {
-  const aref = useAnimatedRef<Animated.ScrollView>();
-  const scrollHandler = useScrollViewOffset(aref);
+import ScrollViewOffset from '@site/src/examples/ScrollViewOffset';
+import ScrollViewOffsetSrc from '!!raw-loader!@site/src/examples/ScrollViewOffset';
 
-  useAnimatedStyle(() => {
-    console.log(scrollHandler.value);
-    return {};
-  });
+<InteractiveExample
+  src={ScrollViewOffsetSrc}
+  component={<ScrollViewOffset />}
+  showCode
+/>
 
-  return (
-    <>
-      <View style={styles.positionView}>
-        <Text>Test</Text>
-      </View>
-      <View style={styles.divider} />
-      <Animated.ScrollView
-        ref={aref}
-        style={styles.scrollView}>
-        {[...Array(100)].map((_, i) => (
-          <Text key={i} style={styles.text}>
-            {i}
-          </Text>
-        ))}
-      </Animated.ScrollView>
-    </>
-  );
-}
-```
+:::info
+This example does not currently work on Web.
+:::
