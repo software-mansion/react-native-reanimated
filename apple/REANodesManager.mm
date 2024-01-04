@@ -517,16 +517,6 @@ using namespace facebook::react;
   }
 }
 
-- (NSString *)stringFromColor:(UIColor *)color
-{
-  const size_t totalComponents = CGColorGetNumberOfComponents(color.CGColor);
-  const CGFloat *components = CGColorGetComponents(color.CGColor);
-  return [NSString stringWithFormat:@"#%02x%02x%02x",
-                                    (int)(255 * components[MIN(0, totalComponents - 2)]),
-                                    (int)(255 * components[MIN(1, totalComponents - 2)]),
-                                    (int)(255 * components[MIN(2, totalComponents - 2)])];
-}
-
 - (NSString *_Nonnull)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName
 {
   REAUIView *view = [self.uiManager viewForReactTag:viewTag];
@@ -555,7 +545,20 @@ using namespace facebook::react;
   } else if ([propName isEqualToString:@"left"]) {
     result = [@(view.frame.origin.x) stringValue];
   } else if ([propName isEqualToString:@"backgroundColor"]) {
-    result = [self stringFromColor:view.backgroundColor];
+
+#if !TARGET_OS_OSX
+    UIColor color = view.backgroundColor
+
+                    const size_t totalComponents = CGColorGetNumberOfComponents(color.CGColor);
+    const CGFloat *components = CGColorGetComponents(color.CGColor);
+    result = [NSString stringWithFormat:@"#%02x%02x%02x",
+                                        (int)(255 * components[MIN(0, totalComponents - 2)]),
+                                        (int)(255 * components[MIN(1, totalComponents - 2)]),
+                                        (int)(255 * components[MIN(2, totalComponents - 2)])];
+#else
+    result = @"Cant get background color on macos"
+
+#endif
   }
 
   return result;
