@@ -8,7 +8,6 @@ const onFuncPrefixMatchingCreate = (context) => {
   const { include = [], exclude = [] } = options[0] || {};
   return {
     Identifier: (node) => {
-      console.log('DUPA');
       if (
         node.parent.init &&
         node.parent.init.type === 'ArrowFunctionExpression'
