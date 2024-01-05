@@ -7,8 +7,10 @@ void UIRuntimeDecorator::decorate(
     jsi::Runtime &uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
     const RemoveFromPropsRegistryFunction removeFromPropsRegistry,
+    const ObtainPropFabricFunction obtainPropFabricFunction,
 #else
     const ScrollToFunction scrollTo,
+    const ObtainPropFunction obtainPropFunction,
 #endif
     const UpdatePropsFunction updateProps,
     const MeasureFunction measure,
@@ -59,6 +61,23 @@ void UIRuntimeDecorator::decorate(
   jsi_utils::installJsiFunction(uiRuntime, "_setGestureState", setGestureState);
   jsi_utils::installJsiFunction(
       uiRuntime, "_maybeFlushUIUpdatesQueue", maybeFlushUIUpdatesQueue);
+  jsi_utils::installJsiFunction(
+    uiRuntime,
+    "_obtainProp",
+#ifdef RCT_NEW_ARCH_ENABLED
+    [obtainPropFabricFunction](
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &propName
+    ) {
+      return obtainPropFabricFunction(rt, shadowNodeWrapper, propName.asString(rt));
+    }
+#else
+    [obtainPropFunction](jsi::Runtime &rt, int viewTag, const jsi::Value &name) {
+      return obtainPropFunction(rt, viewTag, name.asString(rt));
+    }
+#endif // RCT_NEW_ARCH_ENABLED
+  );
 }
 
 } // namespace reanimated

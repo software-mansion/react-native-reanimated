@@ -77,6 +77,16 @@ export async function wait(delay: number) {
   });
 }
 
+const notifyFn = testRunner.notify;
+export async function notify(name: string) {
+  'worklet';
+  return notifyFn(name);
+}
+
+export async function waitForNotify(name: string) {
+  return testRunner.waitForNotify(name);
+}
+
 export function expect(value: any) {
   return testRunner.expect(value);
 }
@@ -117,8 +127,8 @@ export async function advanceAnimationByFrames(frameCount: number) {
   });
 }
 
-export async function recordAnimationUpdates(mergeOperations = true) {
-  return testRunner.recordAnimationUpdates(mergeOperations);
+export async function recordAnimationUpdates() {
+  return testRunner.recordAnimationUpdates();
 }
 
 export async function stopRecordingAnimationUpdates() {
@@ -128,6 +138,7 @@ export async function stopRecordingAnimationUpdates() {
 function assertMockedAnimationTimestamp(
   timestamp: number | undefined
 ): asserts timestamp is number {
+  'worklet';
   if (timestamp === undefined) {
     throw new Error(RUNTIME_TEST_ERRORS.NO_MOCKED_TIMESTAMP);
   }

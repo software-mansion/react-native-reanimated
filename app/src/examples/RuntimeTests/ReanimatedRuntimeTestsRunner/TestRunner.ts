@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import {
   ComparisonMode,
   LockObject,
+  Operation,
   TestCase,
   TestSuite,
   TrackerCallCount,
@@ -15,8 +16,6 @@ import {
 import {
   makeMutable,
   runOnUI,
-  AnimatedStyle,
-  StyleProps,
   runOnJS,
 } from 'react-native-reanimated';
 import { Platform } from 'react-native';
@@ -26,6 +25,7 @@ import {
   defaultTestErrorLog,
   logInFrame,
 } from './logMessageUtils';
+import { createUpdatesContainer } from './UpdatesContainer';
 
 declare global {
   var mockedAnimationTimestamp: number | undefined;
@@ -41,12 +41,6 @@ declare global {
   var _updatePropsPaper: any;
   var _updatePropsFabric: any;
   var _notifyAboutProgress: any;
-}
-
-interface Operation {
-  tag: number;
-  name: string;
-  updates: StyleProps | AnimatedStyle<any>;
 }
 
 function assertValueIsCallTracker(
@@ -66,6 +60,11 @@ function callTrackerJS(name: string) {
   callTrackerRegistryJS[name]++;
 }
 
+const notificationRegistry: Record<string, boolean> = {};
+function notifyJS(name: string) {
+  notificationRegistry[name] = true;
+}
+
 export class TestRunner {
   private _testSuites: TestSuite[] = [];
   private _currentTestSuite: TestSuite | null = null;
@@ -77,6 +76,26 @@ export class TestRunner {
   private _lockObject: LockObject = {
     lock: false,
   };
+  
+  public notify(name: string) {
+    'worklet';
+    if (_WORKLET) {
+      runOnJS(notifyJS)(name);
+    } else {
+      notifyJS(name)
+    }
+  }
+
+  public async waitForNotify(name: string) {
+    return new Promise((resolve) => {
+      const interval = setInterval(() => {
+        if (notificationRegistry[name]) {
+          clearInterval(interval);
+          resolve(true);
+        }
+      }, 10);
+    });
+  }
 
   public configure(config: { render: (component: any) => void }) {
     this._renderHook = config.render;
@@ -212,6 +231,8 @@ export class TestRunner {
         }
         this._currentTestCase = null;
         await render(null);
+        await unmockAnimationTimer();
+        await stopRecordingAnimationUpdates();
       }
       if (testSuite.afterAll) {
         await testSuite.afterAll();
@@ -220,8 +241,6 @@ export class TestRunner {
       this._currentTestSuite = null;
     }
     this._testSuites = [];
-    await unmockAnimationTimer();
-    await stopRecordingAnimationUpdates();
     console.log('End of tests run 🏁');
   }
 
@@ -275,7 +294,7 @@ export class TestRunner {
           let errorString = '';
           value.forEach((val, idx) => {
             const expectedVal = expected[idx];
-            if (val !== expectedVal) {
+            if (JSON.stringify(expectedVal) !== JSON.stringify(val)) {
               errorString += `\t At index ${idx}\texpected\t${color(
                 `${JSON.stringify(expectedVal)}`,
                 'yellow'
@@ -293,6 +312,7 @@ export class TestRunner {
           );
         }
       },
+
       toBeCalled: (times: number = 1) => {
         assertValueIsCallTracker(value);
         const callsCount = value.UI + value.JS;
@@ -305,6 +325,7 @@ export class TestRunner {
           );
         }
       },
+
       toBeCalledUI: (times: number) => {
         assertValueIsCallTracker(value);
         if (value.UI !== times) {
@@ -319,6 +340,7 @@ export class TestRunner {
           );
         }
       },
+
       toBeCalledJS: (times: number) => {
         assertValueIsCallTracker(value);
         if (value.JS !== times) {
@@ -333,7 +355,40 @@ export class TestRunner {
           );
         }
       },
-    };
+
+      toMatchNativeSnapshots: (
+        nativeSnapshots: Array<Record<string, unknown>>
+      ) => {
+        const jsUpdates = value as Array<Record<string, unknown>>;
+        for (let i = 0; i < jsUpdates.length; i++) {
+          const jsUpdate = jsUpdates[i];
+          const nativeUpdate = nativeSnapshots[i + 1];
+          const keys = Object.keys(jsUpdate);
+          for (const key of keys) {
+            const jsValue = jsUpdate[key];
+            const nativeValue = nativeUpdate[key];
+            let detectedMismatch = false;
+            if (typeof jsValue === 'number') {
+              if (
+                Math.round(jsValue) !== Math.round(nativeValue as number) 
+                && Math.abs(jsValue - (nativeValue as number)) > 1
+              ) {
+                detectedMismatch = true;
+              }
+            } else {
+              if (jsValue !== nativeValue) {
+                detectedMismatch = true;
+              }
+            }
+            if (detectedMismatch) {
+              errors.push(
+                `Expected ${color(jsValue,'green')} to match ${color(nativeValue, 'green')}`
+              );
+            }
+          }
+        }
+      }
+    }
   }
 
   public beforeAll(job: () => void) {
@@ -383,8 +438,10 @@ export class TestRunner {
     await this.waitForPropertyValueChange(this._lockObject, 'lock', true);
   }
 
-  public async recordAnimationUpdates(mergeOperations = true) {
-    const updates = makeMutable<Array<any> | null>(null);
+  public async recordAnimationUpdates() {
+    const updatesContainer = createUpdatesContainer(this);
+    const recordAnimationUpdates = updatesContainer.pushAnimationUpdates;
+    const recordLayoutAnimationUpdates = updatesContainer.pushLayoutAnimationUpdates;
 
     await this.runOnUiBlocking(() => {
       'worklet';
@@ -394,24 +451,7 @@ export class TestRunner {
       global.originalUpdateProps = originalUpdateProps;
 
       const mockedUpdateProps = (operations: Operation[]) => {
-        if (updates.value === null) {
-          updates.value = [];
-        }
-
-        if (mergeOperations) {
-          operations.forEach((operation) => {
-            updates?.value?.push(operation.updates);
-          });
-          updates.value = [...updates.value];
-        } else {
-          for (const operation of operations) {
-            if (updates.value[operation.tag] === undefined) {
-              updates.value[operation.tag] = [];
-            }
-            updates.value[operation.tag].push(updates.value[operation.tag]);
-          }
-          updates.value = operations;
-        }
+        recordAnimationUpdates(operations);
         originalUpdateProps(operations);
       };
 
@@ -428,23 +468,11 @@ export class TestRunner {
         value: Record<string, unknown>,
         isSharedTransition: boolean
       ) => {
-        if (updates.value === null) {
-          updates.value = [];
-        }
-        if (mergeOperations) {
-          updates.value.push({ ...value });
-          updates.value = [...updates.value];
-        } else {
-          if (updates.value[tag] === undefined) {
-            updates.value[tag] = [];
-          }
-          updates.value[tag].push(value);
-          updates.value = { ...updates.value };
-        }
+        recordLayoutAnimationUpdates(tag, value);
         originalNotifyAboutProgress(tag, value, isSharedTransition);
       };
     });
-    return updates;
+    return updatesContainer;
   }
 
   public async stopRecordingAnimationUpdates() {

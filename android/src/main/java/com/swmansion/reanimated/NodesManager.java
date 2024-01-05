@@ -394,7 +394,12 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public String obtainProp(int viewTag, String propName) {
-    View view = mUIManager.resolveView(viewTag);
+    View view = null;
+    try {
+      view = mUIManager.resolveView(viewTag);
+    } catch (Exception e) {
+      return "unknown";
+    }
     String result =
         "error: unknown propName "
             + propName

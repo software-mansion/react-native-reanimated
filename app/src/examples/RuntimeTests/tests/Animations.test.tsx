@@ -6,6 +6,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   FadeIn,
+  runOnUI,
 } from 'react-native-reanimated';
 import {
   describe,
@@ -23,6 +24,8 @@ import {
   getRegisteredValue,
   Presets,
   callTrackerFn,
+  notify,
+  waitForNotify
 } from '../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { Snapshots } from './snapshots/Animations.snapshot';
 import { ComparisonMode } from '../ReanimatedRuntimeTestsRunner/types';
@@ -39,7 +42,6 @@ const AnimatedComponent = () => {
         { duration: 500 },
         callTrackerFn('withTimingTracker')
       ),
-      opacity: 1,
     };
   });
 
@@ -55,7 +57,52 @@ const AnimatedComponent = () => {
         style={[
           {
             width: 0,
-            opacity: 0,
+            height: 80,
+            backgroundColor: 'chocolate',
+            margin: 30,
+          },
+          style,
+        ]}
+      />
+    </View>
+  );
+};
+
+const AnimatedComponent2 = () => {
+  const widthSV = useSharedValue(0);
+  const ref = useTestRef('AnimatedComponent');
+
+  const style = useAnimatedStyle(() => {
+    return {
+      width: withTiming(
+        widthSV.value,
+        { duration: 500 },
+      ),
+    };
+  });
+
+  
+  useEffect(() => {
+    widthSV.value = 100;
+
+    setTimeout(() => {
+      notify('notifyJS');
+      runOnUI(() => {
+        notify('notifyUI');
+      })();
+    }, 1000);
+
+    
+  }, [widthSV]);
+
+  return (
+    <View
+      style={{ flex: 1, flexDirection: 'column', backgroundColor: 'beige' }}>
+      <Animated.View
+        ref={ref}
+        style={[
+          {
+            width: 0,
             height: 80,
             backgroundColor: 'chocolate',
             margin: 30,
@@ -99,6 +146,7 @@ const LayoutAnimation = () => {
 };
 
 describe('Tests of animations', () => {
+
   test('withTiming - expect error', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('AnimatedComponent');
@@ -156,7 +204,7 @@ describe('Tests of animations', () => {
   });
 
   test('layoutAnimation - opacity', async () => {
-    await render(<AnimatedComponent />);
+    await render(<LayoutAnimation />);
     const component = getTestComponent('AnimatedComponent');
     await wait(600);
     expect(await component.getAnimatedStyle('opacity')).toBe(
@@ -167,17 +215,30 @@ describe('Tests of animations', () => {
 
   test('withTiming - match snapshot', async () => {
     await mockAnimationTimer();
-    const updates = await recordAnimationUpdates();
+    const updatesContainer = await recordAnimationUpdates();
     await render(<AnimatedComponent />);
-    await wait(600);
-    expect(updates.value).toMatchSnapshot(Snapshots.animation3);
+    await wait(1000);
+    expect(updatesContainer.getUpdates()).toMatchSnapshot(Snapshots.animation3);
+    expect(updatesContainer.getUpdates()).toMatchNativeSnapshots(await updatesContainer.getNativeSnapshots());
   });
 
   test('layoutAnimation - entering', async () => {
     await mockAnimationTimer();
-    const updates = await recordAnimationUpdates();
+    const updatesContainer = await recordAnimationUpdates();
     await render(<LayoutAnimation />);
     await wait(600);
-    expect(updates.value).toMatchSnapshot(Snapshots.layoutAnimation);
+    expect(updatesContainer.getUpdates()).toMatchSnapshot(Snapshots.layoutAnimation);
   });
+
+  test('withTiming - notify', async () => {
+    await render(<AnimatedComponent2 />);
+    const component = getTestComponent('AnimatedComponent');
+    await waitForNotify('notifyJS');
+    await waitForNotify('notifyUI');
+    expect(await component.getAnimatedStyle('width')).toBe(
+      '100',
+      ComparisonMode.DISTANCE
+    );
+  });
+
 });

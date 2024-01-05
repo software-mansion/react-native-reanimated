@@ -1,3 +1,8 @@
+import {
+  AnimatedStyle,
+  StyleProps,
+} from 'react-native-reanimated';
+
 type CallTrucker = {
   UICallsCount: number;
   JSCallsCount: number;
@@ -35,3 +40,10 @@ export enum ComparisonMode {
 }
 
 export type LockObject = { lock: boolean };
+
+export interface Operation {
+  tag?: number;
+  shadowNodeWrapper?: any;
+  name: string;
+  updates: StyleProps | AnimatedStyle<any>;
+}

@@ -115,6 +115,17 @@ NativeReanimatedModule::NativeReanimatedModule(
                              const jsi::Value &argsValue) {
     this->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
   };
+  
+  auto obtainPropFabric = [this](
+   jsi::Runtime &rt,
+   const jsi::Value &shadowNodeWrapper,
+   const jsi::Value &propName
+  ) {
+    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+    const auto propNameStr = propName.asString(rt).utf8(rt);
+    std::string resultStr = getPropFromShadowNode(uiRuntime, propNameStr, shadowNodeWrapper);
+    return jsi::String::createFromUtf8(rt, resultStr);
+  };
 #endif
 
   jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
@@ -122,11 +133,13 @@ NativeReanimatedModule::NativeReanimatedModule(
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
       removeFromPropsRegistry,
+      obtainPropFabric,
       updateProps,
       measure,
       dispatchCommand,
 #else
       platformDepMethodsHolder.scrollToFunction,
+      platformDepMethodsHolder.obtainPropFunction,
       platformDepMethodsHolder.updatePropsFunction,
       platformDepMethodsHolder.measureFunction,
       platformDepMethodsHolder.dispatchCommandFunction,
@@ -254,6 +267,47 @@ inline std::string int_to_hex(T val, size_t width = sizeof(T) * 2) {
   return ss.str();
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
+
+std::string NativeReanimatedModule::getPropFromShadowNode(
+  jsi::Runtime &rt,
+  const std::string &propName,
+  const jsi::Value &shadowNodeWrapper
+) {
+  ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  auto newestCloneOfShadowNode =
+      uiManager_->getNewestCloneOfShadowNode(*shadowNode);
+  Props::Shared props = newestCloneOfShadowNode->getProps();
+  auto staticProps = std::static_pointer_cast<const ViewProps>(props);
+  auto layoutableShadowNode = traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
+  const auto &frame = layoutableShadowNode->layoutMetrics_.frame;
+  std::string resultStr;
+  if (propName.compare("width") == 0) {
+    resultStr = std::to_string(frame.size.width);
+  } else if (propName.compare("height") == 0) {
+    resultStr = std::to_string(frame.size.width);
+  } else if (propName.compare("top") == 0) {
+    resultStr = std::to_string(frame.origin.y);
+  } else if (propName.compare("left") == 0) {
+    resultStr = std::to_string(frame.origin.x);
+  } else if (propName.compare("opacity") == 0) {
+    resultStr = std::to_string(staticProps->opacity);
+  } else if (propName.compare("zIndex") == 0) {
+    std::optional<int> zIndex = staticProps->zIndex;
+    if (zIndex) {
+      resultStr = std::to_string(*zIndex);
+    }
+  } else if (propName.compare("backgroundColor") == 0) {
+    // This doesn't work yet
+    SharedColor color = staticProps->backgroundColor;
+    auto color_hex = int_to_hex(*color);
+    resultStr = color_hex;
+  }
+  return resultStr;
+}
+
+#endif
+
 jsi::Value NativeReanimatedModule::getViewProp(
     jsi::Runtime &rnRuntime,
     const jsi::Value &viewTag,
@@ -265,47 +319,9 @@ jsi::Value NativeReanimatedModule::getViewProp(
       callback.getObject(rnRuntime).asFunction(rnRuntime));
 
 #ifdef RCT_NEW_ARCH_ENABLED
-
-  ShadowNode::Shared shadowNode =
-      shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
-  auto newestCloneOfShadowNode =
-      uiManager_->getNewestCloneOfShadowNode(*shadowNode);
-  Props::Shared props = newestCloneOfShadowNode->getProps();
-  auto staticProps = std::static_pointer_cast<const ViewProps>(props);
-  auto layoutableShadowNode =
-      traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
-
-  uiScheduler_->scheduleOnUI([=]() {
+  uiScheduler_->scheduleOnUI([=, &shadowNodeWrapper]() {
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
-    const auto propNameValue =
-        jsi::String::createFromUtf8(uiRuntime, propNameStr);
-    std::string resultStr;
-    if (propNameStr.compare("width") == 0) {
-      resultStr =
-          std::to_string(layoutableShadowNode->layoutMetrics_.frame.size.width);
-    } else if (propNameStr.compare("height") == 0) {
-      resultStr =
-          std::to_string(layoutableShadowNode->layoutMetrics_.frame.size.width);
-    } else if (propNameStr.compare("top") == 0) {
-      resultStr =
-          std::to_string(layoutableShadowNode->layoutMetrics_.frame.origin.y);
-    } else if (propNameStr.compare("left") == 0) {
-      resultStr =
-          std::to_string(layoutableShadowNode->layoutMetrics_.frame.origin.x);
-    } else if (propNameStr.compare("opacity") == 0) {
-      resultStr = std::to_string(staticProps->opacity);
-    } else if (propNameStr.compare("zIndex") == 0) {
-      std::optional<int> zIndex = staticProps->zIndex;
-      if (zIndex) {
-        resultStr = std::to_string(*zIndex);
-      }
-    } else if (propNameStr.compare("backgroundColor") == 0) {
-      // This doesn't work yet
-      SharedColor color = staticProps->backgroundColor;
-      auto color_hex = int_to_hex(*color);
-
-      resultStr = color_hex;
-    }
+    std::string resultStr = getPropFromShadowNode(uiRuntime, propNameStr, shadowNodeWrapper);
 
     jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
       const auto resultValue =
