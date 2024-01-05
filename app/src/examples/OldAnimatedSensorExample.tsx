@@ -7,9 +7,9 @@ import Animated, {
 import { View, Button, StyleSheet } from 'react-native';
 
 export default function OldAnimatedSensorExample() {
-  const animatedSensor = useAnimatedSensor(SensorType.GRAVITY);
+  const { sensor } = useAnimatedSensor(SensorType.GRAVITY);
   const style = useAnimatedStyle(() => {
-    const { x, y } = animatedSensor.sensor.value;
+    const { x, y } = sensor.value;
     return {
       transform: [{ translateX: x * 5 }, { translateY: y * 5 }],
     };
@@ -17,10 +17,7 @@ export default function OldAnimatedSensorExample() {
 
   return (
     <View style={componentStyle.container}>
-      <Button
-        title={'log data'}
-        onPress={() => console.log(animatedSensor.sensor.value)}
-      />
+      <Button title="log data" onPress={() => console.log(sensor.value)} />
       <Animated.View style={componentStyle.rect}>
         <Animated.View style={[componentStyle.square, style]} />
       </Animated.View>

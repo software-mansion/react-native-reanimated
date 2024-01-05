@@ -54,13 +54,13 @@ export default function VolumeExample() {
   const x = useSharedValue(50);
   const vx = useSharedValue(0);
 
-  const animatedSensor = useAnimatedSensor(SensorType.GRAVITY);
+  const { sensor } = useAnimatedSensor(SensorType.GRAVITY);
 
   useFrameCallback(({ timeSincePreviousFrame: dt }) => {
     if (dt == null) {
       return;
     }
-    const ax = animatedSensor.sensor.value.x * 0.0001;
+    const ax = sensor.value.x * 0.0001;
     vx.value += ax * dt;
     x.value += vx.value * dt;
     x.value = Math.min(100, Math.max(0, x.value));
@@ -85,7 +85,7 @@ export default function VolumeExample() {
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ rotate: `${animatedSensor.sensor.value.x * 2}deg` }],
+      transform: [{ rotate: `${sensor.value.x * 2}deg` }],
     };
   });
 

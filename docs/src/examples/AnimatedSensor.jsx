@@ -9,15 +9,15 @@ import Animated, {
 
 export default function App() {
   // highlight-next-line
-  const gravity = useAnimatedSensor(SensorType.GRAVITY);
+  const { sensor } = useAnimatedSensor(SensorType.GRAVITY);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [
         // highlight-next-line
-        { translateX: withSpring(gravity.sensor.value.x * 20) },
+        { translateX: withSpring(sensor.value.x * 20) },
         // highlight-next-line
-        { translateY: withSpring(gravity.sensor.value.y * 20) },
+        { translateY: withSpring(sensor.value.y * 20) },
       ],
     };
   });

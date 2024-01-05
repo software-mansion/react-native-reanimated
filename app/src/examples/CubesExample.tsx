@@ -201,7 +201,7 @@ const sidesColors = [
 ];
 
 function CubeWithEulerAngles() {
-  const animatedSensor = useAnimatedSensor(SensorType.ROTATION, {
+  const { sensor } = useAnimatedSensor(SensorType.ROTATION, {
     iosReferenceFrame: IOSReferenceFrame.XArbitraryZVertical,
     adjustToInterfaceOrientation: true,
   });
@@ -209,9 +209,9 @@ function CubeWithEulerAngles() {
   const sidesStyles = sidesRotations.map((rotation, i) =>
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useAnimatedStyle(() => {
-      const pitch = animatedSensor.sensor.value.pitch;
-      const roll = animatedSensor.sensor.value.roll;
-      const yaw = animatedSensor.sensor.value.yaw;
+      const pitch = sensor.value.pitch;
+      const roll = sensor.value.roll;
+      const yaw = sensor.value.yaw;
 
       const sideLength = 100;
       const origin = { x: 0, y: 0, z: -sideLength / 2 };
@@ -240,7 +240,7 @@ function CubeWithEulerAngles() {
 }
 
 function CubeWithQuaternions() {
-  const animatedSensor = useAnimatedSensor(SensorType.ROTATION, {
+  const { sensor } = useAnimatedSensor(SensorType.ROTATION, {
     adjustToInterfaceOrientation: true,
   });
 
@@ -252,7 +252,7 @@ function CubeWithQuaternions() {
 
       const q0 = eulerToQuaternion(-rotation[0], -rotation[1], rotation[2]);
 
-      const { qx, qy, qz, qw } = animatedSensor.sensor.value;
+      const { qx, qy, qz, qw } = sensor.value;
       const q1 = [-qx, qy, -qz, qw];
 
       const q = multiplyQuaternions(q0, q1);
@@ -279,12 +279,12 @@ function CubeWithQuaternions() {
 }
 
 export default function CubesExample() {
-  const animatedSensor = useAnimatedSensor(SensorType.ROTATION, {
+  const { sensor } = useAnimatedSensor(SensorType.ROTATION, {
     adjustToInterfaceOrientation: true,
   });
 
   const compassStyle = useAnimatedStyle(() => {
-    const yaw = animatedSensor.sensor.value.yaw;
+    const yaw = sensor.value.yaw;
 
     return {
       transform: [{ rotate: `${yaw}rad` }],
@@ -293,10 +293,7 @@ export default function CubesExample() {
 
   return (
     <View style={componentStyle.container}>
-      <Button
-        title={'log data'}
-        onPress={() => console.log(animatedSensor.sensor.value)}
-      />
+      <Button title="log data" onPress={() => console.log(sensor.value)} />
       <View style={componentStyle.cubesContainer}>
         <CubeWithQuaternions />
         <CubeWithEulerAngles />

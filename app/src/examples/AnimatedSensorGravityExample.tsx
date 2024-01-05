@@ -8,12 +8,12 @@ import { StyleSheet, Text, View } from 'react-native';
 import React from 'react';
 
 export default function AnimatedSensorGravityExample() {
-  const gravity = useAnimatedSensor(SensorType.GRAVITY);
+  const { sensor } = useAnimatedSensor(SensorType.GRAVITY);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      top: -gravity.sensor.value.y * 300,
-      left: gravity.sensor.value.x * 200,
+      top: -sensor.value.y * 300,
+      left: sensor.value.x * 200,
     };
   });
 

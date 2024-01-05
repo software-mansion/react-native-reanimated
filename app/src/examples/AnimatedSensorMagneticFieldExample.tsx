@@ -10,10 +10,10 @@ import React from 'react';
 const BOX_SIZE = 150;
 
 export default function AnimatedSensorMagneticFieldExample() {
-  const magneticField = useAnimatedSensor(SensorType.MAGNETIC_FIELD);
+  const { sensor } = useAnimatedSensor(SensorType.MAGNETIC_FIELD);
 
   const animatedStyle = useAnimatedStyle(() => {
-    const { x, y } = magneticField.sensor.value;
+    const { x, y } = sensor.value;
     const angle = (Math.atan2(y, x) * 180) / Math.PI;
     return {
       transform: [{ rotateZ: `${angle}deg` }, { translateY: BOX_SIZE / 2 }],

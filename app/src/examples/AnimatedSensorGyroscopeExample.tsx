@@ -14,14 +14,14 @@ const OFFSET_Y = 100; // in px
 const OFFSET_Z = 180; // in degrees
 
 export default function AnimatedSensorGyroscopeExample() {
-  const gyroscope = useAnimatedSensor(SensorType.GYROSCOPE);
+  const { sensor } = useAnimatedSensor(SensorType.GYROSCOPE);
 
   const xOffset = useSharedValue(-OFFSET_X);
   const yOffset = useSharedValue(0);
   const zOffset = useSharedValue(0);
 
   const animatedStyle = useAnimatedStyle(() => {
-    const { x, y, z } = gyroscope.sensor.value;
+    const { x, y, z } = sensor.value;
     // The x vs y here seems wrong but is the way to make it feel right to the user
     xOffset.value = clamp(xOffset.value + y, -OFFSET_X * 2, OFFSET_X / 4);
     yOffset.value = clamp(yOffset.value - x, -OFFSET_Y, OFFSET_Y);

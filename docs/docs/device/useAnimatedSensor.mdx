@@ -24,10 +24,10 @@ import { useAnimatedSensorPlayground } from '@site/src/components/InteractivePla
 import { useAnimatedSensor, SensorType } from 'react-native-reanimated';
 
 function App() {
-  const gyroscope = useAnimatedSensor(SensorType.GYROSCOPE);
+  const { sensor } = useAnimatedSensor(SensorType.GYROSCOPE);
 
   useDerivedValue(() => {
-    const { x, y, z } = gyroscope.sensor.value;
+    const { x, y, z } = sensor.value;
   });
 }
 ```
@@ -215,6 +215,8 @@ import AnimatedSensorSrc from '!!raw-loader!@site/src/examples/AnimatedSensor';
 - Most of the sensors operate in resolutions up to 100Hz.
 
 - You can read the sensor data on both [UI thread](/docs/fundamentals/glossary#ui-thread) and [JavaScript thread](/docs/fundamentals/glossary#javascript-thread).
+
+- Remember to use the destructuring pattern when calling `useAnimatedSensor`. Passing the whole returned object to a worklet may cause unexpected behavior.
 
 ## Platform compatibility
 

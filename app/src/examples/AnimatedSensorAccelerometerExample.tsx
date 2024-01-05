@@ -13,14 +13,14 @@ const OFFSET_X = 100; // in px
 const OFFSET_Y = 100; // in px
 
 export default function AnimatedSensorAccelerometerExample() {
-  const accelerometer = useAnimatedSensor(SensorType.ACCELEROMETER);
+  const { sensor } = useAnimatedSensor(SensorType.ACCELEROMETER);
 
   const xOffset = useSharedValue(-OFFSET_X);
   const yOffset = useSharedValue(0);
   const zOffset = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => {
-    const { x, y, z } = accelerometer.sensor.value;
+    const { x, y, z } = sensor.value;
     xOffset.value = clamp(xOffset.value - x, -OFFSET_X * 2, OFFSET_X / 4);
     yOffset.value = clamp(yOffset.value - y, -OFFSET_Y, OFFSET_Y);
     zOffset.value = clamp(zOffset.value + z * 0.1, 0.5, 2);
