@@ -241,14 +241,28 @@ Offending code was: \`${getWorkletCode(value)}\``);
         shareableMappingCache.set(value, inaccessibleObject);
         return inaccessibleObject;
       }
-      if (__DEV__) {
-        // we freeze objects that are transformed to shareable. This should help
-        // detect issues when someone modifies data after it's been converted to
-        // shareable. Meaning that they may be doing a faulty assumption in their
-        // code expecting that the updates are going to automatically populate to
+      if (__DEV__ && !isHostObject(value) && isPlainJSObject(value)) {
+        // We freeze objects that are transformed to a Shareable with a meaningful warning.
+        // This should help detect issues when someone modifies data after it's been converted.
+        // Meaning that they may be doing a faulty assumption in their
+        // code expecting that the updates are going to automatically propagate to
         // the object sent to the UI thread. If the user really wants some objects
-        // to be mutable they should use shared values instead.
-        Object.freeze(value);
+        // to be mutable they should use Shared Values instead.
+        Object.entries(value).forEach(([key, element]) => {
+          Object.defineProperty(value, key, {
+            get() {
+              return element;
+            },
+            set() {
+              console.warn(
+                `[Reanimated] Tried to modify key \`${key}\` of an object which has been already passed to a worklet. See 
+https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-modify-key-of-an-object-which-has-been-converted-to-a-shareable 
+for more details.`
+              );
+            },
+          });
+        });
+        Object.preventExtensions(value);
       }
       const adopted = NativeReanimatedModule.makeShareableClone(
         toAdapt,
