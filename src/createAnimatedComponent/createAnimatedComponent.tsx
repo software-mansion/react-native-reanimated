@@ -145,7 +145,9 @@ export function createAnimatedComponent(
       this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
       this._InlinePropManager.detachInlineProps();
-      this._configureSharedTransition(false, true);
+      if (this.props.sharedTransitionTag) {
+        this._configureSharedTransition(false, true);
+      }
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
       const exiting = this.props.exiting;
       if (IS_WEB) {
@@ -505,7 +507,9 @@ export function createAnimatedComponent(
             enableLayoutAnimations(true, false);
           }
 
-          this._configureSharedTransition(true);
+          if (sharedTransitionTag) {
+            this._configureSharedTransition(true);
+          }
 
           const skipEntering = this.context?.current;
           if (entering && !skipEntering) {
