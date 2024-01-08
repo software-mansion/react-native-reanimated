@@ -23,6 +23,12 @@ export interface SharedValue<Value = unknown> {
   ) => void;
 }
 
+export interface Mutable<Value = unknown> extends SharedValue<Value> {
+  _isReanimatedSharedValue: true;
+  _animation?: AnimationObject<Value> | null; // only in Native
+  _value: Value;
+}
+
 // The below type is used for HostObjects returned by the JSI API that don't have
 // any accessible fields or methods but can carry data that is accessed from the
 // c++ side. We add a field to the type to make it possible for typescript to recognize

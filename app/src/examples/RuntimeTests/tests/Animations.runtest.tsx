@@ -208,7 +208,7 @@ describe('Tests of animations', () => {
     const component = getTestComponent('AnimatedComponent');
     await wait(600);
     expect(await component.getAnimatedStyle('opacity')).toBe(
-      `1`,
+      '1',
       ComparisonMode.NUMBER
     );
   });

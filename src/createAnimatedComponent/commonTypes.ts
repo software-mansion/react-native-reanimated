@@ -88,7 +88,7 @@ export interface IAnimatedComponentInternal {
   _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
   _viewTag: number;
   _isFirstRender: boolean;
-  animatedStyle: { value: StyleProps };
+  jestAnimatedStyle: { value: StyleProps };
   _component: AnimatedComponentRef | HTMLElement | null;
   _sharedElementTransition: SharedTransition | null;
   _jsPropsUpdater: IJSPropsUpdater;

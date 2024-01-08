@@ -260,11 +260,10 @@ void NativeReanimatedModule::unregisterEventHandler(
       [=] { eventHandlerRegistry_->unregisterEventHandler(id); });
 }
 
-template <typename T>
-inline std::string int_to_hex(T val, size_t width = sizeof(T) * 2) {
+inline std::string int_to_hex(int val) {
   std::stringstream ss;
-  ss << std::setfill('0') << std::setw(width) << std::hex << (val | 0);
-  return ss.str();
+  ss << std::setfill('0') << std::setw(6) << std::hex << (val | 0);
+  return "#" + ss.str();
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
