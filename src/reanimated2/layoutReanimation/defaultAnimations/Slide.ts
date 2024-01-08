@@ -20,6 +20,8 @@ export class SlideInRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static className = 'SlideInRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -63,6 +65,8 @@ export class SlideInLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static className = 'SlideInLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -106,6 +110,8 @@ export class SlideOutRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static className = 'SlideOutRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -155,6 +161,8 @@ export class SlideOutLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static className = 'SlideOutLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -204,6 +212,8 @@ export class SlideInUp
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static className = 'SlideInUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -247,6 +257,8 @@ export class SlideInDown
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static className = 'SlideInDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -290,6 +302,8 @@ export class SlideOutUp
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static className = 'SlideOutUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -336,6 +350,8 @@ export class SlideOutDown
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static className = 'SlideOutDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {

@@ -23,6 +23,8 @@ export class ZoomIn
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static className = 'ZoomIn';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -63,6 +65,8 @@ export class ZoomInRotate
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static className = 'ZoomInRotate';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -107,6 +111,8 @@ export class ZoomInLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static className = 'ZoomInLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -150,6 +156,8 @@ export class ZoomInRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static className = 'ZoomInRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -193,6 +201,8 @@ export class ZoomInUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static className = 'ZoomInUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -236,6 +246,8 @@ export class ZoomInDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static className = 'ZoomInDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -279,6 +291,8 @@ export class ZoomInEasyUp
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static className = 'ZoomInEasyUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -322,6 +336,8 @@ export class ZoomInEasyDown
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static className = 'ZoomInEasyDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -365,6 +381,8 @@ export class ZoomOut
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static className = 'ZoomOut';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -405,6 +423,8 @@ export class ZoomOutRotate
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static className = 'ZoomOutRotate';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -449,6 +469,8 @@ export class ZoomOutLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static className = 'ZoomOutLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -497,6 +519,8 @@ export class ZoomOutRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static className = 'ZoomOutRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -545,6 +569,8 @@ export class ZoomOutUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static className = 'ZoomOutUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -593,6 +619,8 @@ export class ZoomOutDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static className = 'ZoomOutDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -641,6 +669,8 @@ export class ZoomOutEasyUp
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static className = 'ZoomOutEasyUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -689,6 +719,8 @@ export class ZoomOutEasyDown
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static className = 'ZoomOutEasyDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {

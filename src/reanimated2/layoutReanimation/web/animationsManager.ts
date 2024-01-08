@@ -91,7 +91,11 @@ function tryGetAnimationConfigWithTransform<
 
   const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
   const initialAnimationName =
-    typeof config === 'function' ? config.name : config.constructor.name;
+    typeof config === 'function'
+      ? // @ts-expect-error ignore for now
+        config.className
+      : // @ts-expect-error ignore for now
+        config.constructor.className;
 
   const shouldFail = checkUndefinedAnimationFail(
     initialAnimationName,
