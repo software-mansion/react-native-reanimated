@@ -1,7 +1,4 @@
-import {
-  AnimatedStyle,
-  StyleProps,
-} from 'react-native-reanimated';
+import { AnimatedStyle, StyleProps } from 'react-native-reanimated';
 
 type CallTrucker = {
   UICallsCount: number;

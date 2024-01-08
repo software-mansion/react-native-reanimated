@@ -13,11 +13,7 @@ import {
   stopRecordingAnimationUpdates,
   unmockAnimationTimer,
 } from './RuntimeTestsApi';
-import {
-  makeMutable,
-  runOnUI,
-  runOnJS,
-} from 'react-native-reanimated';
+import { makeMutable, runOnUI, runOnJS } from 'react-native-reanimated';
 import { Platform } from 'react-native';
 import {
   RUNTIME_TEST_ERRORS,
@@ -41,6 +37,7 @@ declare global {
   var _updatePropsPaper: any;
   var _updatePropsFabric: any;
   var _notifyAboutProgress: any;
+  var _obtainProp: any;
 }
 
 function assertValueIsCallTracker(
@@ -76,13 +73,13 @@ export class TestRunner {
   private _lockObject: LockObject = {
     lock: false,
   };
-  
+
   public notify(name: string) {
     'worklet';
     if (_WORKLET) {
       runOnJS(notifyJS)(name);
     } else {
-      notifyJS(name)
+      notifyJS(name);
     }
   }
 
@@ -370,8 +367,8 @@ export class TestRunner {
             let detectedMismatch = false;
             if (typeof jsValue === 'number') {
               if (
-                Math.round(jsValue) !== Math.round(nativeValue as number) 
-                && Math.abs(jsValue - (nativeValue as number)) > 1
+                Math.round(jsValue) !== Math.round(nativeValue as number) &&
+                Math.abs(jsValue - (nativeValue as number)) > 1
               ) {
                 detectedMismatch = true;
               }
@@ -382,13 +379,16 @@ export class TestRunner {
             }
             if (detectedMismatch) {
               errors.push(
-                `Expected ${color(jsValue,'green')} to match ${color(nativeValue, 'green')}`
+                `Expected ${color(jsValue, 'green')} to match ${color(
+                  nativeValue,
+                  'green'
+                )}`
               );
             }
           }
         }
-      }
-    }
+      },
+    };
   }
 
   public beforeAll(job: () => void) {
@@ -441,7 +441,8 @@ export class TestRunner {
   public async recordAnimationUpdates() {
     const updatesContainer = createUpdatesContainer(this);
     const recordAnimationUpdates = updatesContainer.pushAnimationUpdates;
-    const recordLayoutAnimationUpdates = updatesContainer.pushLayoutAnimationUpdates;
+    const recordLayoutAnimationUpdates =
+      updatesContainer.pushLayoutAnimationUpdates;
 
     await this.runOnUiBlocking(() => {
       'worklet';

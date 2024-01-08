@@ -137,12 +137,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue);
 
   void initializeFabric(const std::shared_ptr<UIManager> &uiManager);
-  
+
   std::string getPropFromShadowNode(
-    jsi::Runtime &rt,
-    const std::string &propName,
-    const jsi::Value &shadowNodeWrapper
-  );
+      jsi::Runtime &rt,
+      const std::string &propName,
+      const jsi::Value &shadowNodeWrapper);
 #endif
 
   jsi::Value registerSensor(

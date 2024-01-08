@@ -25,7 +25,7 @@ import {
   Presets,
   callTrackerFn,
   notify,
-  waitForNotify
+  waitForNotify,
 } from '../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { Snapshots } from './snapshots/Animations.snapshot';
 import { ComparisonMode } from '../ReanimatedRuntimeTestsRunner/types';
@@ -74,14 +74,10 @@ const AnimatedComponent2 = () => {
 
   const style = useAnimatedStyle(() => {
     return {
-      width: withTiming(
-        widthSV.value,
-        { duration: 500 },
-      ),
+      width: withTiming(widthSV.value, { duration: 500 }),
     };
   });
 
-  
   useEffect(() => {
     widthSV.value = 100;
 
@@ -91,8 +87,6 @@ const AnimatedComponent2 = () => {
         notify('notifyUI');
       })();
     }, 1000);
-
-    
   }, [widthSV]);
 
   return (
@@ -146,7 +140,6 @@ const LayoutAnimation = () => {
 };
 
 describe('Tests of animations', () => {
-
   test('withTiming - expect error', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('AnimatedComponent');
@@ -219,7 +212,9 @@ describe('Tests of animations', () => {
     await render(<AnimatedComponent />);
     await wait(1000);
     expect(updatesContainer.getUpdates()).toMatchSnapshot(Snapshots.animation3);
-    expect(updatesContainer.getUpdates()).toMatchNativeSnapshots(await updatesContainer.getNativeSnapshots());
+    expect(updatesContainer.getUpdates()).toMatchNativeSnapshots(
+      await updatesContainer.getNativeSnapshots()
+    );
   });
 
   test('layoutAnimation - entering', async () => {
@@ -227,7 +222,9 @@ describe('Tests of animations', () => {
     const updatesContainer = await recordAnimationUpdates();
     await render(<LayoutAnimation />);
     await wait(600);
-    expect(updatesContainer.getUpdates()).toMatchSnapshot(Snapshots.layoutAnimation);
+    expect(updatesContainer.getUpdates()).toMatchSnapshot(
+      Snapshots.layoutAnimation
+    );
   });
 
   test('withTiming - notify', async () => {
@@ -240,5 +237,4 @@ describe('Tests of animations', () => {
       ComparisonMode.DISTANCE
     );
   });
-
 });

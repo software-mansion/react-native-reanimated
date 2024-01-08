@@ -1,6 +1,4 @@
-import {
-  makeMutable,
-} from 'react-native-reanimated';
+import { makeMutable } from 'react-native-reanimated';
 import { Operation } from './types';
 import { TestRunner } from './TestRunner';
 
@@ -8,29 +6,35 @@ type UpdateInfo = {
   tag: number;
   shadowNodeWrapper?: unknown;
   update: Record<string, unknown>;
-}; 
+};
 
 export function createUpdatesContainer(testRunner: TestRunner) {
+  const jsUpdates = makeMutable<
+    Array<{
+      tag: number;
+      shadowNodeWrapper?: unknown;
+      update: Record<string, unknown>;
+    }>
+  >([]);
+  const nativeSnapshots = makeMutable<
+    Array<{
+      tag: number;
+      shadowNodeWrapper?: unknown;
+      snapshot: Record<string, unknown>;
+      jsUpdateIndex: number;
+    }>
+  >([]);
 
-  const jsUpdates = makeMutable<Array<{
-    tag: number;
-    shadowNodeWrapper?: unknown;
-    update: Record<string, unknown>;
-  }>>([]);
-  const nativeSnapshots = makeMutable<Array<{
-    tag: number;
-    shadowNodeWrapper?: unknown;
-    snapshot: Record<string, unknown>;
-    jsUpdateIndex: number;
-  }>>([]);
-
-  function _makeNativeSnapshot(updateInfos: UpdateInfo[], jsUpdateIndex: number) {
+  function _makeNativeSnapshot(
+    updateInfos: UpdateInfo[],
+    jsUpdateIndex: number
+  ) {
     'worklet';
     const isFabric = global._IS_FABRIC;
     nativeSnapshots.modify((value) => {
-      'worklet'
+      'worklet';
       for (const updateInfo of updateInfos) {
-        const snapshot = {};
+        const snapshot: Record<string, unknown> = {};
         const propsToUpdate = Object.keys(updateInfo.update);
         for (const prop of propsToUpdate) {
           snapshot[prop] = global._obtainProp(
@@ -42,7 +46,7 @@ export function createUpdatesContainer(testRunner: TestRunner) {
           tag: updateInfo.tag,
           shadowNodeWrapper: updateInfo.shadowNodeWrapper,
           snapshot: snapshot,
-          jsUpdateIndex
+          jsUpdateIndex,
         });
       }
       return value;
@@ -53,7 +57,7 @@ export function createUpdatesContainer(testRunner: TestRunner) {
     'worklet';
     const info: {
       tag: number;
-      shadowNodeWrapper: unknown
+      shadowNodeWrapper: unknown;
       update: Record<string, unknown>;
     }[] = [];
     for (const operation of operations) {
@@ -69,8 +73,8 @@ export function createUpdatesContainer(testRunner: TestRunner) {
   function pushAnimationUpdates(operations: Operation[]) {
     'worklet';
     _makeNativeSnapshot(
-      _extractInfoFromUpdates(operations), 
-      jsUpdates.value.length - 1,
+      _extractInfoFromUpdates(operations),
+      jsUpdates.value.length - 1
     );
     jsUpdates.modify((updates) => {
       for (const operation of operations) {
@@ -84,20 +88,20 @@ export function createUpdatesContainer(testRunner: TestRunner) {
     });
   }
 
-  function pushLayoutAnimationUpdates(tag: number, update: Record<string, unknown>) {
+  function pushLayoutAnimationUpdates(
+    tag: number,
+    update: Record<string, unknown>
+  ) {
     'worklet';
     if (global._IS_FABRIC) {
       // layout animation doesn't work on Fabric yet
       return;
     }
-    _makeNativeSnapshot(
-      [{tag, update}], 
-      jsUpdates.value.length - 1,
-    );
+    _makeNativeSnapshot([{ tag, update }], jsUpdates.value.length - 1);
     jsUpdates.modify((updates) => {
       updates.push({
         tag,
-        update: {...update},
+        update: { ...update },
       });
       return updates;
     });
@@ -111,7 +115,7 @@ export function createUpdatesContainer(testRunner: TestRunner) {
       }
     } else {
       for (const updateRequest of jsUpdates.value) {
-        const filteredUpdate = {};
+        const filteredUpdate: Record<string, unknown> = {};
         for (const prop of propsNames) {
           filteredUpdate[prop] = updateRequest.update[prop];
         }
@@ -125,14 +129,17 @@ export function createUpdatesContainer(testRunner: TestRunner) {
     if (jsUpdates.value.length === nativeSnapshots.value.length) {
       await testRunner.runOnUiBlocking(() => {
         'worklet';
-        const lastSnapshot = nativeSnapshots.value[nativeSnapshots.value.length - 1];
+        const lastSnapshot =
+          nativeSnapshots.value[nativeSnapshots.value.length - 1];
         _makeNativeSnapshot(
-          [{
-            tag: lastSnapshot.tag,
-            shadowNodeWrapper: lastSnapshot.shadowNodeWrapper,
-            update: lastSnapshot.snapshot
-          }],
-          jsUpdates.value.length - 1,
+          [
+            {
+              tag: lastSnapshot.tag,
+              shadowNodeWrapper: lastSnapshot.shadowNodeWrapper,
+              update: lastSnapshot.snapshot,
+            },
+          ],
+          jsUpdates.value.length - 1
         );
       });
     }
@@ -144,7 +151,7 @@ export function createUpdatesContainer(testRunner: TestRunner) {
       }
     } else {
       for (const nativeSnapshot of nativeSnapshots.value) {
-        const filteredSnapshot = {};
+        const filteredSnapshot: Record<string, unknown> = {};
         for (const prop of propsNames) {
           filteredSnapshot[prop] = nativeSnapshot.snapshot[prop];
         }
@@ -159,5 +166,5 @@ export function createUpdatesContainer(testRunner: TestRunner) {
     pushLayoutAnimationUpdates,
     getUpdates,
     getNativeSnapshots,
-  }
+  };
 }

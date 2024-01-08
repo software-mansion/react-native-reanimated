@@ -26,12 +26,10 @@ using UpdatePropsFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
 using RemoveFromPropsRegistryFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &viewTags)>;
-using ObtainPropFabricFunction =
-  std::function<jsi::Value(
-    jsi::Runtime &rt, 
-    const jsi::Value &shadowNodeWrapper, 
-    const jsi::Value &propName
-  )>;
+using ObtainPropFabricFunction = std::function<jsi::Value(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &propName)>;
 using DispatchCommandFunction = std::function<void(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,
