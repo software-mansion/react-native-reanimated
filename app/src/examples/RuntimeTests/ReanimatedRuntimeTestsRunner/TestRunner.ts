@@ -182,6 +182,13 @@ export class TestRunner {
   }
 
   public async runTests() {
+    const summary = {
+      passed: 0,
+      failed: 0,
+      failedTests: Array<string>(),
+      startTime: Date.now(),
+      endTime: 0,
+    };
     for (const testSuite of this._testSuites) {
       this._currentTestSuite = testSuite;
 
@@ -202,11 +209,14 @@ export class TestRunner {
         }
         await testCase.testCase();
         if (testCase.errors.length > 0) {
+          summary.failed++;
+          summary.failedTests.push(testCase.name);
           console.log(`\t${color('✖', 'red')} ${testCase.name} `);
           for (const error of testCase.errors) {
             console.log(`\t\t${error}`);
           }
         } else {
+          summary.passed++;
           console.log(`\t${color('✔', 'green')} ${testCase.name}`);
         }
         if (testSuite.afterEach) {
@@ -225,6 +235,8 @@ export class TestRunner {
     }
     this._testSuites = [];
     console.log('End of tests run 🏁');
+    summary.endTime = Date.now();
+    this.printSummary(summary);
   }
 
   public expect(
@@ -376,5 +388,34 @@ export class TestRunner {
         global.mockedAnimationTimestamp = undefined;
       }
     });
+  }
+
+  printSummary(summary: {
+    passed: number;
+    failed: number;
+    failedTests: Array<string>;
+    startTime: number;
+    endTime: number;
+  }) {
+    console.log('\n');
+    console.log(
+      `🧮 Tests summary: ${color(summary.passed, 'green')} passed, ${color(
+        summary.failed,
+        'red'
+      )} failed`
+    );
+    console.log(
+      `⏱️  Total time: ${
+        Math.round(((summary.endTime - summary.startTime) / 1000) * 100) / 100
+      }s`
+    );
+    if (summary.failed > 0) {
+      console.log('❌ Failed tests:');
+      for (const failedTest of summary.failedTests) {
+        console.log(`\t- ${failedTest}`);
+      }
+    } else {
+      console.log('✅ All tests passed!');
+    }
   }
 }

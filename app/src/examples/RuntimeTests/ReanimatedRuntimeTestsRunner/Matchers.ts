@@ -31,7 +31,6 @@ export class Matchers {
       },
       [ComparisonMode.COLOR]: (e, v) => {
         const colorRegex = new RegExp('^#?([a-f0-9]{6}|[a-f0-9]{3})$');
-        console.log('COLOR', v);
         if (!colorRegex.test(expectedValue as string)) {
           throw Error(
             `Invalid color format "${e}", please use lowercase hex color (like #123abc) `
