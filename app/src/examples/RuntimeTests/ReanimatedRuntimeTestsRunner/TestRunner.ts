@@ -1,6 +1,5 @@
 import { useRef } from 'react';
 import {
-  ComparisonMode,
   LockObject,
   Operation,
   TestCase,
@@ -14,14 +13,9 @@ import {
   unmockAnimationTimer,
 } from './RuntimeTestsApi';
 import { makeMutable, runOnUI, runOnJS } from 'react-native-reanimated';
-import { Platform } from 'react-native';
-import {
-  RUNTIME_TEST_ERRORS,
-  color,
-  defaultTestErrorLog,
-  logInFrame,
-} from './logMessageUtils';
+import { RUNTIME_TEST_ERRORS, color, logInFrame } from './logMessageUtils';
 import { createUpdatesContainer } from './UpdatesContainer';
+import { Matchers } from './Matchers';
 
 declare global {
   var mockedAnimationTimestamp: number | undefined;
@@ -38,14 +32,6 @@ declare global {
   var _updatePropsFabric: any;
   var _notifyAboutProgress: any;
   var _obtainProp: any;
-}
-
-function assertValueIsCallTracker(
-  value: any
-): asserts value is TrackerCallCount {
-  if (!('name' in value && 'JS' in value && 'UI' in value)) {
-    throw Error('Invalid value');
-  }
 }
 
 let callTrackerRegistryJS: Record<string, number> = {};
@@ -241,154 +227,11 @@ export class TestRunner {
     console.log('End of tests run 🏁');
   }
 
-  // private expectHandler(condition: Boolean) {}
-
-  public expect(value: TrackerCallCount | string | Array<unknown>) {
+  public expect(
+    currentValue: TrackerCallCount | string | Array<unknown>
+  ): Matchers {
     this._assertTestCase(this._currentTestCase);
-    this._assertTestCase(this._currentTestCase);
-    const errors = this._currentTestCase?.errors;
-
-    return {
-      toBe: (expected: any, comparisonMode: ComparisonMode) => {
-        const CONDITIONS: { [Key: string]: (e: any, v: any) => Boolean } = {
-          [ComparisonMode.STRING]: (expected, value) => {
-            return value !== expected;
-          },
-          [ComparisonMode.NUMBER]: (e, v) => {
-            return isNaN(Number(v)) ? !isNaN(e) : Number(v) !== Number(e);
-          },
-          [ComparisonMode.COLOR]: (e, v) => {
-            const colorRegex = new RegExp('^#?([a-f0-9]{6}|[a-f0-9]{3})$');
-            console.log('COLOR', v);
-            if (!colorRegex.test(expected)) {
-              throw Error(
-                `Invalid color format "${e}", please use lowercase hex color (like #123abc) `
-              );
-            }
-            return typeof v !== 'string' || v !== e;
-          },
-          [ComparisonMode.DISTANCE]: () => {
-            const valueAsNumber = Number(value);
-            if (Platform.OS === 'ios') {
-              return isNaN(valueAsNumber) || valueAsNumber !== Number(expected);
-            } else {
-              return (
-                isNaN(valueAsNumber) ||
-                Math.abs(valueAsNumber - Number(expected)) > 1
-              );
-            }
-          },
-        };
-
-        let testFailed = CONDITIONS[comparisonMode](expected, value);
-        if (testFailed) {
-          errors.push(defaultTestErrorLog(expected, value, comparisonMode));
-        }
-      },
-
-      toMatchSnapshot: (expected: any) => {
-        if (Array.isArray(value) && Array.isArray(value)) {
-          let errorString = '';
-          value.forEach((val, idx) => {
-            const expectedVal = expected[idx];
-            if (JSON.stringify(expectedVal) !== JSON.stringify(val)) {
-              errorString += `\t At index ${idx}\texpected\t${color(
-                `${JSON.stringify(expectedVal)}`,
-                'yellow'
-              )}\treceived\t${color(`${JSON.stringify(val)}`, 'yellow')}\n`;
-            }
-          });
-          if (errorString !== '') {
-            errors.push('Snapshot mismatch: \n' + errorString);
-          }
-        } else if (JSON.stringify(value) !== JSON.stringify(expected)) {
-          errors.push(
-            `Expected ${JSON.stringify(expected)} received ${JSON.stringify(
-              value
-            )}`
-          );
-        }
-      },
-
-      toBeCalled: (times: number = 1) => {
-        assertValueIsCallTracker(value);
-        const callsCount = value.UI + value.JS;
-        if (callsCount !== times) {
-          errors.push(
-            `Expected ${color(value.name, 'green')} to be called ${color(
-              times,
-              'green'
-            )} times, but was called ${color(callsCount, 'green')} times`
-          );
-        }
-      },
-
-      toBeCalledUI: (times: number) => {
-        assertValueIsCallTracker(value);
-        if (value.UI !== times) {
-          errors.push(
-            `Expected ${color(value.name, 'green')} to be called ${color(
-              times,
-              'green'
-            )} times on ${color('UI thread', 'cyan')}, but was called ${color(
-              value.UI,
-              'green'
-            )} times`
-          );
-        }
-      },
-
-      toBeCalledJS: (times: number) => {
-        assertValueIsCallTracker(value);
-        if (value.JS !== times) {
-          errors.push(
-            `Expected ${color(value.name, 'green')} to be called ${color(
-              times,
-              'green'
-            )} times on ${color('JS thread', 'cyan')}, but was called ${color(
-              value.JS,
-              'green'
-            )} times`
-          );
-        }
-      },
-
-      toMatchNativeSnapshots: (
-        nativeSnapshots: Array<Record<string, unknown>>
-      ) => {
-        const jsUpdates = value as Array<Record<string, unknown>>;
-        for (let i = 0; i < jsUpdates.length; i++) {
-          const jsUpdate = jsUpdates[i];
-          const nativeUpdate = nativeSnapshots[i + 1];
-          const keys = Object.keys(jsUpdate);
-          for (const key of keys) {
-            const jsValue = jsUpdate[key];
-            const nativeValue = nativeUpdate[key];
-            let detectedMismatch = false;
-            if (typeof jsValue === 'number') {
-              if (
-                Math.round(jsValue) !== Math.round(nativeValue as number) &&
-                Math.abs(jsValue - (nativeValue as number)) > 1
-              ) {
-                detectedMismatch = true;
-              }
-            } else {
-              if (jsValue !== nativeValue) {
-                detectedMismatch = true;
-              }
-            }
-            if (detectedMismatch) {
-              errors.push(
-                `Expected ${color(jsValue, 'green')} to match ${color(
-                  nativeValue,
-                  'green'
-                )}`
-              );
-            }
-          }
-        }
-      },
-    };
+    return new Matchers(currentValue, this._currentTestCase);
   }
 
   public beforeAll(job: () => void) {
