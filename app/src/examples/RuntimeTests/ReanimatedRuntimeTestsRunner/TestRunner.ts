@@ -199,7 +199,7 @@ export class TestRunner {
     const summary = {
       passed: 0,
       failed: 0,
-      failedTests: Array<string>(),
+      failedTests: [] as Array<string>,
       startTime: Date.now(),
       endTime: 0,
     };
