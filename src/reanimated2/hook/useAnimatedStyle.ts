@@ -206,6 +206,7 @@ function styleUpdater(
 
   if (hasAnimations) {
     const frame = (timestamp: Timestamp) => {
+      // eslint-disable-next-line @typescript-eslint/no-shadow
       const { animations, last, isAnimationCancelled } = state;
       if (isAnimationCancelled) {
         state.isAnimationRunning = false;
@@ -296,6 +297,7 @@ function jestStyleUpdater(
   });
 
   function frame(timestamp: Timestamp) {
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     const { animations, last, isAnimationCancelled } = state;
     if (isAnimationCancelled) {
       state.isAnimationRunning = false;

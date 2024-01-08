@@ -95,6 +95,7 @@ const findStyleDiff = (
     Object.keys(current).length !== Object.keys(expected).length
   ) {
     isEqual = false;
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     let property: keyof DefaultStyle;
     for (property in current) {
       if (expected[property] === undefined) {

@@ -360,6 +360,7 @@ export function decomposeMatrix(
   const sy = matrix[15] * norm3d(matrix[1], matrix[5], matrix[9]);
   const sz = matrix[15] * norm3d(matrix[2], matrix[6], matrix[10]);
 
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   const scaleMatrix: AffineMatrix = [
     [sx, 0, 0, 0],
     [0, sy, 0, 0],
@@ -390,6 +391,7 @@ export function decomposeMatrixIntoMatricesAndAngles(
   matrix: AffineMatrixFlat | AffineMatrix
 ): TansformMatrixDecompositionWithAngles {
   'worklet';
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   const { scaleMatrix, rotationMatrix, translationMatrix, skewMatrix } =
     decomposeMatrix(matrix);
 

@@ -77,14 +77,14 @@ function extractSharedValuesMapFromProps(
         if (!style) {
           return;
         }
-        for (const [key, styleValue] of Object.entries(style)) {
+        for (const [styleKey, styleValue] of Object.entries(style)) {
           if (isSharedValue(styleValue)) {
-            inlineProps[key] = styleValue;
+            inlineProps[styleKey] = styleValue;
           } else if (
-            key === 'transform' &&
+            styleKey === 'transform' &&
             isInlineStyleTransform(styleValue)
           ) {
-            inlineProps[key] = styleValue;
+            inlineProps[styleKey] = styleValue;
           }
         }
       });
