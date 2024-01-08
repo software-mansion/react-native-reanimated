@@ -368,7 +368,7 @@ using namespace facebook::react;
 #else
 - (void)enqueueUpdateViewOnNativeThread:(nonnull NSNumber *)reactTag
                                viewName:(NSString *)viewName
-                            nativeProps:(NSMutableDictionary *_Nullable)nativeProps
+                            nativeProps:(NSMutableDictionary *)nativeProps
                        trySynchronously:(BOOL)trySync
 {
   if (trySync) {
