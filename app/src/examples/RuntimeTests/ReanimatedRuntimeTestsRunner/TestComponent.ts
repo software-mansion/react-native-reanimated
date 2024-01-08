@@ -10,6 +10,7 @@ type validPropNames =
   | 'top'
   | 'left'
   | 'backgroundColor';
+
 export class TestComponent {
   private ref: React.MutableRefObject<any>;
   constructor(ref: React.MutableRefObject<any>) {
@@ -19,10 +20,12 @@ export class TestComponent {
   public getStyle(propName: string) {
     return this.ref.current.props.style[propName];
   }
+
   public async getAnimatedStyle(propName: validPropNames) {
     const tag = findNodeHandle(this.ref.current) ?? -1;
     return getViewProp(tag, propName, this.ref.current);
   }
+
   public getTag() {
     return findNodeHandle(this.ref.current) ?? -1;
   }

@@ -19,19 +19,33 @@ import { Matchers } from './Matchers';
 
 declare global {
   var mockedAnimationTimestamp: number | undefined;
-  var originalRequestAnimationFrame: any; //TODO type
-  var originalGetAnimationTimestamp: any; //TODO type
-  var originalUpdateProps: any; //TODO type
-  var originalNotifyAboutProgress: any; //TODO type
-
-  //TODO These types are already defined:
-  var _getAnimationTimestamp: any;
-  var __frameTimestamp: any;
+  var originalRequestAnimationFrame:
+    | ((callback: (timestamp: number) => void) => void)
+    | undefined;
+  var originalGetAnimationTimestamp: (() => number) | undefined;
+  var originalUpdateProps: ((operations: Operation[]) => void) | undefined;
+  var originalNotifyAboutProgress:
+    | ((
+        tag: number,
+        value: Record<string, unknown>,
+        isSharedTransition: boolean
+      ) => void)
+    | undefined;
+  var originalFlushAnimationFrame:
+    | ((frameTimestamp: number) => void)
+    | undefined;
+  var _getAnimationTimestamp: () => number;
+  var __frameTimestamp: number | undefined;
   var _IS_FABRIC: boolean | undefined;
-  var _updatePropsPaper: any;
-  var _updatePropsFabric: any;
-  var _notifyAboutProgress: any;
-  var _obtainProp: any;
+  var _updatePropsPaper: (operations: Operation[]) => void;
+  var _updatePropsFabric: (operations: Operation[]) => void;
+  var _notifyAboutProgress: (
+    tag: number,
+    value: Record<string, unknown>,
+    isSharedTransition: boolean
+  ) => void;
+  function _obtainProp(componentHandler: unknown, propName: string): string;
+  var __flushAnimationFrame: (frameTimestamp: number) => void;
 }
 
 let callTrackerRegistryJS: Record<string, number> = {};
@@ -354,21 +368,27 @@ export class TestRunner {
       'worklet';
       global.mockedAnimationTimestamp = 0;
       global.originalGetAnimationTimestamp = global._getAnimationTimestamp;
+
       global._getAnimationTimestamp = () => {
-        const currentTimestamp = global.mockedAnimationTimestamp;
-        global.__frameTimestamp = currentTimestamp;
-        if (!global?.mockedAnimationTimestamp) {
-          global.mockedAnimationTimestamp = 0;
+        if (!global.mockedAnimationTimestamp) {
+          throw new Error("Animation timestamp wasn't initialized");
         }
-        global.mockedAnimationTimestamp += 16;
-        return currentTimestamp;
+        return global.mockedAnimationTimestamp;
       };
+
       let originalRequestAnimationFrame = global.requestAnimationFrame;
       global.originalRequestAnimationFrame = originalRequestAnimationFrame;
       (global as any).requestAnimationFrame = (callback: Function) => {
         originalRequestAnimationFrame(() => {
           callback(global._getAnimationTimestamp());
         });
+      };
+
+      global.originalFlushAnimationFrame = global.__flushAnimationFrame;
+      global.__flushAnimationFrame = (_frameTimestamp: number) => {
+        global.mockedAnimationTimestamp! += 16;
+        global.__frameTimestamp = global.mockedAnimationTimestamp;
+        global.originalFlushAnimationFrame!(global.mockedAnimationTimestamp!);
       };
     });
   }
@@ -381,8 +401,13 @@ export class TestRunner {
         global.originalGetAnimationTimestamp = undefined;
       }
       if (global.originalRequestAnimationFrame) {
-        global.requestAnimationFrame = global.originalRequestAnimationFrame;
+        (global.requestAnimationFrame as any) =
+          global.originalRequestAnimationFrame;
         global.originalRequestAnimationFrame = undefined;
+      }
+      if (global.originalFlushAnimationFrame) {
+        global.__flushAnimationFrame = global.originalFlushAnimationFrame;
+        global.originalFlushAnimationFrame = undefined;
       }
       if (global.mockedAnimationTimestamp) {
         global.mockedAnimationTimestamp = undefined;
@@ -417,5 +442,6 @@ export class TestRunner {
     } else {
       console.log('✅ All tests passed!');
     }
+    console.log('\n');
   }
 }
