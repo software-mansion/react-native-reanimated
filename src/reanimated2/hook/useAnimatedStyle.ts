@@ -12,7 +12,13 @@ import {
   shallowEqual,
   validateAnimatedStyles,
 } from './utils';
-import type { DefaultStyle, DependencyList, Descriptor } from './commonTypes';
+import type {
+  AnimatedStyleHandle,
+  DefaultStyle,
+  DependencyList,
+  Descriptor,
+  JestAnimatedStyleHandle,
+} from './commonTypes';
 import type { ViewDescriptorsSet, ViewRefSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet, useViewRefSet } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
@@ -200,6 +206,7 @@ function styleUpdater(
 
   if (hasAnimations) {
     const frame = (timestamp: Timestamp) => {
+      // eslint-disable-next-line @typescript-eslint/no-shadow
       const { animations, last, isAnimationCancelled } = state;
       if (isAnimationCancelled) {
         state.isAnimationRunning = false;
@@ -290,6 +297,7 @@ function jestStyleUpdater(
   });
 
   function frame(timestamp: Timestamp) {
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     const { animations, last, isAnimationCancelled } = state;
     if (isAnimationCancelled) {
       state.isAnimationRunning = false;
@@ -409,7 +417,7 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
   dependencies?: DependencyList | null,
   adapters?: WorkletFunction | WorkletFunction[],
   isAnimatedProps = false
-) {
+): AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style> {
   const viewsRef: ViewRefSet<unknown> = useViewRefSet();
   const initRef = useRef<AnimationRef>();
   let inputs = Object.values(updater.__closure ?? {});
@@ -432,7 +440,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     : [];
   const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
   const animationsActive = useSharedValue<boolean>(true);
-  const animatedStyle: MutableRefObject<Style> = useRef<Style>({} as Style);
+  const jestAnimatedStyle: MutableRefObject<Style> = useRef<Style>({} as Style);
 
   // build dependencies
   if (!dependencies) {
@@ -489,7 +497,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
           remoteState,
           maybeViewRef,
           animationsActive,
-          animatedStyle,
+          jestAnimatedStyle,
           adaptersArray
         );
       };
@@ -522,7 +530,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   checkSharedValueUsage(initial.value);
 
   if (isJest()) {
-    return { viewDescriptors, initial, viewsRef, animatedStyle };
+    return { viewDescriptors, initial, viewsRef, jestAnimatedStyle };
   } else {
     return { viewDescriptors, initial, viewsRef };
   }

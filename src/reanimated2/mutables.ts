@@ -1,27 +1,27 @@
 'use strict';
 import { shouldBeUseWeb } from './PlatformChecker';
-import type { SharedValue } from './commonTypes';
-import {
-  makeShareableCloneRecursive,
-  registerShareableMapping,
-} from './shareables';
+import type { Mutable } from './commonTypes';
+import { makeShareableCloneRecursive } from './shareables';
+import { shareableMappingCache } from './shareableMappingCache';
 import { executeOnUIRuntimeSync, runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-const uiValueGetter = executeOnUIRuntimeSync(<T>(sv: SharedValue<T>): T => {
+const uiValueGetter = executeOnUIRuntimeSync(<T>(sv: Mutable<T>): T => {
   'worklet';
   return sv.value;
 });
 
-export function makeUIMutable<T>(initial: T) {
+type Listener<Value> = (newValue: Value) => void;
+
+export function makeUIMutable<Value>(initial: Value): Mutable<Value> {
   'worklet';
 
-  const listeners = new Map();
+  const listeners = new Map<number, Listener<Value>>();
   let value = initial;
 
-  const self = {
+  const self: Mutable<Value> = {
     set value(newValue) {
       valueSetter(self, newValue);
     },
@@ -34,23 +34,23 @@ export function makeUIMutable<T>(initial: T) {
      * on the provided new value. All other places should only attempt to modify
      * the mutable by assigning to value prop directly.
      */
-    set _value(newValue: T) {
+    set _value(newValue: Value) {
       value = newValue;
       listeners.forEach((listener) => {
         listener(newValue);
       });
     },
-    get _value(): T {
+    get _value(): Value {
       return value;
     },
-    modify: (modifier?: (value: T) => T, forceUpdate = true) => {
+    modify: (modifier, forceUpdate = true) => {
       valueSetter(
         self,
         modifier !== undefined ? modifier(value) : value,
         forceUpdate
       );
     },
-    addListener: (id: number, listener: (newValue: T) => void) => {
+    addListener: (id: number, listener: Listener<Value>) => {
       listeners.set(id, listener);
     },
     removeListener: (id: number) => {
@@ -62,8 +62,8 @@ export function makeUIMutable<T>(initial: T) {
   return self;
 }
 
-export function makeMutable<T>(initial: T): SharedValue<T> {
-  let value: T = initial;
+export function makeMutable<Value>(initial: Value): Mutable<Value> {
+  let value: Value = initial;
   const handle = makeShareableCloneRecursive({
     __init: () => {
       'worklet';
@@ -71,8 +71,10 @@ export function makeMutable<T>(initial: T): SharedValue<T> {
     },
   });
   // listeners can only work on JS thread on Web and jest environments
-  const listeners = SHOULD_BE_USE_WEB ? new Map() : undefined;
-  const mutable = {
+  const listeners = SHOULD_BE_USE_WEB
+    ? new Map<number, Listener<Value>>()
+    : undefined;
+  const mutable: Mutable<Value> = {
     set value(newValue) {
       if (SHOULD_BE_USE_WEB) {
         valueSetter(mutable, newValue);
@@ -82,16 +84,16 @@ export function makeMutable<T>(initial: T): SharedValue<T> {
         })();
       }
     },
-    get value(): T {
+    get value(): Value {
       if (!SHOULD_BE_USE_WEB) {
         return uiValueGetter(mutable);
       }
       return value;
     },
-    set _value(newValue: T) {
+    set _value(newValue: Value) {
       if (!SHOULD_BE_USE_WEB) {
         throw new Error(
-          '[Reanimated] Setting `_value` directly is only possible on the UI runtime.'
+          '[Reanimated] Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
         );
       }
       value = newValue;
@@ -99,15 +101,16 @@ export function makeMutable<T>(initial: T): SharedValue<T> {
         listener(newValue);
       });
     },
-    get _value(): T {
-      if (!SHOULD_BE_USE_WEB) {
-        throw new Error(
-          '[Reanimated] Reading from `_value` directly is only possible on the UI runtime.'
-        );
+    get _value(): Value {
+      if (SHOULD_BE_USE_WEB) {
+        return value;
       }
-      return value;
+      throw new Error(
+        '[Reanimated] Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
+      );
     },
-    modify: (modifier?: (value: T) => T, forceUpdate = true) => {
+
+    modify: (modifier, forceUpdate = true) => {
       if (!SHOULD_BE_USE_WEB) {
         runOnUI(() => {
           mutable.modify(modifier, forceUpdate);
@@ -120,7 +123,7 @@ export function makeMutable<T>(initial: T): SharedValue<T> {
         );
       }
     },
-    addListener: (id: number, listener: (value: T) => void) => {
+    addListener: (id: number, listener: Listener<Value>) => {
       if (!SHOULD_BE_USE_WEB) {
         throw new Error(
           '[Reanimated] Adding listeners is only possible on the UI runtime.'
@@ -138,7 +141,7 @@ export function makeMutable<T>(initial: T): SharedValue<T> {
     },
     _isReanimatedSharedValue: true,
   };
-  registerShareableMapping(mutable, handle);
+  shareableMappingCache.set(mutable, handle);
   return mutable;
 }
 
@@ -149,6 +152,6 @@ export function makeRemote<T extends object>(initial: T = {} as T): T {
       return initial;
     },
   });
-  registerShareableMapping(initial, handle);
+  shareableMappingCache.set(initial, handle);
   return initial;
 }
