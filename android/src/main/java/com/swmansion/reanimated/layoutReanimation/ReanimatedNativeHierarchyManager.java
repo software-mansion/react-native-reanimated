@@ -276,7 +276,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       if (container != null && viewManagerName.equals("RNSScreen") && mReaLayoutAnimator != null) {
         boolean hasHeader = checkIfTopScreenHasHeader((ViewGroup) container);
         if (!hasHeader || !container.isLayoutRequested()) {
-          mReaLayoutAnimator.getAnimationsManager().screenDidLayout();
+          mReaLayoutAnimator.getAnimationsManager().screenDidLayout(container);
         }
       }
       View view = resolveView(tag);

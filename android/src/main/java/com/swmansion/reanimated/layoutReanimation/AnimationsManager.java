@@ -712,8 +712,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     return new Point(fromPoint.x - toPoint[0], fromPoint.y - toPoint[1]);
   }
 
-  public void screenDidLayout() {
-    mSharedTransitionManager.screenDidLayout();
+  public void screenDidLayout(View view) {
+    mSharedTransitionManager.screenDidLayout(view);
   }
 
   public void viewDidLayout(View view) {

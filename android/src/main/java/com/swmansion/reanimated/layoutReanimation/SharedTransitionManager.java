@@ -8,8 +8,12 @@ import android.view.ViewParent;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.PixelUtil;
+import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
+import com.facebook.react.uimanager.events.Event;
+import com.facebook.react.uimanager.events.EventDispatcher;
+import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.views.view.ReactViewGroup;
 import com.swmansion.reanimated.Utils;
 import java.util.ArrayList;
@@ -44,6 +48,23 @@ public class SharedTransitionManager {
   private boolean mIsTransitionPrepared = false;
   private final Set<Integer> mTagsToCleanup = new HashSet<>();
 
+  class MyEventDispatchListener implements EventDispatcherListener{
+// this idea is not finished yet
+    private EventDispatcher mEventDispatcher;
+    public MyEventDispatchListener(EventDispatcher eventDispatcher){
+      mEventDispatcher = eventDispatcher;
+    }
+
+    @Override
+    public void onEventDispatch(Event event) {
+      if (event.getEventName().equals("topWillAppear")) {
+        tryStartSharedTransitionForViews(mAddedSharedViews, true);
+        mAddedSharedViews.clear();
+        mEventDispatcher.removeListener(this);
+      }
+    }
+  }
+
   public SharedTransitionManager(AnimationsManager animationsManager) {
     mAnimationsManager = animationsManager;
   }
@@ -61,13 +82,19 @@ public class SharedTransitionManager {
     return mCurrentSharedTransitionViews.get(tag);
   }
 
-  protected void screenDidLayout() {
-    tryStartSharedTransitionForViews(mAddedSharedViews, true);
-    mAddedSharedViews.clear();
+  protected void screenDidLayout(View view) {
+    if (mAddedSharedViews.isEmpty()){
+      return;
+    }
+    var eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag((ReactContext) view.getContext(), view.getId());
+    if (eventDispatcher != null) {
+      eventDispatcher.addListener(new MyEventDispatchListener(eventDispatcher));
+    }
   }
 
   protected void viewDidLayout(View view) {
-    maybeRestartAnimationWithNewLayout(view);
+    // this was causing problems when I moved the start of transition to the willAppear event handler
+//    maybeRestartAnimationWithNewLayout(view);
   }
 
   protected void onViewsRemoval(int[] tagsToDelete) {
