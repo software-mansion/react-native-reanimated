@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
-import Animated, { useSharedValue, useAnimatedStyle } from '..';
+import Animated, { useSharedValue, useAnimatedStyle } from '../..';
 
 /*
 This file is needed because our code depends on types of React Native

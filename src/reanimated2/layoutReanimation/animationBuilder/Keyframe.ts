@@ -163,9 +163,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
               Object.keys(transformStyle).forEach((transformProp: string) => {
                 addKeyPointWith(
                   makeKeyframeKey(index, transformProp),
-                  transformStyle[
-                    transformProp as keyof typeof transformStyle
-                  ] as number | string
+                  transformStyle[transformProp as keyof typeof transformStyle]
                 );
               });
             });
@@ -201,7 +199,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     const delay = this.delayV;
     const reduceMotion = this.reduceMotionV;
     return delay
-      ? (delay, animation) => {
+      ? // eslint-disable-next-line @typescript-eslint/no-shadow
+        (delay, animation) => {
           'worklet';
           return withDelay(delay, animation, reduceMotion);
         }
