@@ -12,7 +12,10 @@
 #endif
 
 #include <functional>
+#include <iomanip>
 #include <memory>
+#include <sstream>
+#include <string>
 #include <thread>
 #include <unordered_map>
 
@@ -30,10 +33,6 @@
 #include "Shareables.h"
 #include "UIRuntimeDecorator.h"
 #include "WorkletEventHandler.h"
-
-#include <iomanip>
-#include <sstream>
-#include <string>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
@@ -116,10 +115,10 @@ NativeReanimatedModule::NativeReanimatedModule(
     this->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
   };
 
-  auto obtainPropFabric = [this](
-                              jsi::Runtime &rt,
-                              const jsi::Value &shadowNodeWrapper,
-                              const jsi::Value &propName) {
+  auto obtainProp = [this](
+                        jsi::Runtime &rt,
+                        const jsi::Value &shadowNodeWrapper,
+                        const jsi::Value &propName) {
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
     const auto propNameStr = propName.asString(rt).utf8(rt);
     std::string resultStr =
@@ -133,7 +132,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
       removeFromPropsRegistry,
-      obtainPropFabric,
+      obtainProp,
       updateProps,
       measure,
       dispatchCommand,
@@ -281,26 +280,23 @@ std::string NativeReanimatedModule::getPropFromShadowNode(
       traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
   const auto &frame = layoutableShadowNode->layoutMetrics_.frame;
   std::string resultStr;
-  if (propName.compare("width") == 0) {
+  if (propName == "width") {
     resultStr = std::to_string(frame.size.width);
-  } else if (propName.compare("height") == 0) {
+  } else if (propName == "height") {
     resultStr = std::to_string(frame.size.width);
-  } else if (propName.compare("top") == 0) {
+  } else if (propName == "top") {
     resultStr = std::to_string(frame.origin.y);
-  } else if (propName.compare("left") == 0) {
+  } else if (propName == "left") {
     resultStr = std::to_string(frame.origin.x);
-  } else if (propName.compare("opacity") == 0) {
+  } else if (propName == "opacity") {
     resultStr = std::to_string(staticProps->opacity);
-  } else if (propName.compare("zIndex") == 0) {
+  } else if (propName == "zIndex") {
     std::optional<int> zIndex = staticProps->zIndex;
     if (zIndex) {
       resultStr = std::to_string(*zIndex);
     }
-  } else if (propName.compare("backgroundColor") == 0) {
-    // This doesn't work yet
-    SharedColor color = staticProps->backgroundColor;
-    auto color_hex = int_to_hex(*color);
-    resultStr = color_hex;
+  } else if (propName == "backgroundColor") {
+    resultStr = int_to_hex(*staticProps->backgroundColor);
   }
   return resultStr;
 }

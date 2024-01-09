@@ -62,6 +62,15 @@ function notifyJS(name: string) {
   notificationRegistry[name] = true;
 }
 
+function assertMockedAnimationTimestamp(
+  timestamp: number | undefined
+): asserts timestamp is number {
+  'worklet';
+  if (timestamp === undefined) {
+    throw new Error(RUNTIME_TEST_ERRORS.NO_MOCKED_TIMESTAMP);
+  }
+}
+
 export class TestRunner {
   private _testSuites: TestSuite[] = [];
   private _currentTestSuite: TestSuite | null = null;
@@ -295,9 +304,8 @@ export class TestRunner {
     });
   }
 
-  public async runOnUiBlocking(worklet: () => void) {
+  async runOnUiBlocking(worklet: () => void) {
     const unlock = () => (this._lockObject.lock = false);
-
     this._lockObject.lock = true;
     runOnUI(() => {
       'worklet';
@@ -363,14 +371,13 @@ export class TestRunner {
     });
   }
 
-  async mockAnimationTimer() {
+  public async mockAnimationTimer() {
     await this.runOnUiBlocking(() => {
       'worklet';
       global.mockedAnimationTimestamp = 0;
       global.originalGetAnimationTimestamp = global._getAnimationTimestamp;
-
       global._getAnimationTimestamp = () => {
-        if (!global.mockedAnimationTimestamp) {
+        if (global.mockedAnimationTimestamp === undefined) {
           throw new Error("Animation timestamp wasn't initialized");
         }
         return global.mockedAnimationTimestamp;
@@ -393,7 +400,31 @@ export class TestRunner {
     });
   }
 
-  async unmockAnimationTimer() {
+  public async setAnimationTimestamp(timestamp: number) {
+    await this.runOnUiBlocking(() => {
+      'worklet';
+      assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
+      global.mockedAnimationTimestamp = timestamp;
+    });
+  }
+
+  public async advanceAnimationByTime(time: number) {
+    await this.runOnUiBlocking(() => {
+      'worklet';
+      assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
+      global.mockedAnimationTimestamp += time;
+    });
+  }
+
+  public async advanceAnimationByFrames(frameCount: number) {
+    await this.runOnUiBlocking(() => {
+      'worklet';
+      assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
+      global.mockedAnimationTimestamp += frameCount * 16;
+    });
+  }
+
+  public async unmockAnimationTimer() {
     await this.runOnUiBlocking(() => {
       'worklet';
       if (global.originalGetAnimationTimestamp) {
@@ -415,7 +446,13 @@ export class TestRunner {
     });
   }
 
-  printSummary(summary: {
+  public wait(delay: number) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, delay);
+    });
+  }
+
+  private printSummary(summary: {
     passed: number;
     failed: number;
     failedTests: Array<string>;

@@ -181,12 +181,14 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   getViewProp<T>(
     viewTag: number,
     propName: string,
-    component?: React.Component, // required on Fabric
+    component: React.Component | undefined, // required on Fabric
     callback?: (result: T) => void
   ) {
     let shadowNodeWrapper;
-    if (isFabric() && component) {
-      shadowNodeWrapper = getShadowNodeWrapperFromRef(component);
+    if (isFabric()) {
+      shadowNodeWrapper = getShadowNodeWrapperFromRef(
+        component as React.Component
+      );
     }
     return this.InnerNativeModule.getViewProp(
       viewTag,

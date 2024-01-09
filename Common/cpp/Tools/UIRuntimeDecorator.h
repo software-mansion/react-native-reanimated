@@ -17,11 +17,10 @@ class UIRuntimeDecorator {
       jsi::Runtime &uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
       const RemoveFromPropsRegistryFunction removeFromPropsRegistry,
-      const ObtainPropFabricFunction obtainPropFabricFunction,
 #else
       const ScrollToFunction scrollTo,
-      const ObtainPropFunction obtainPropFunction,
 #endif
+      const ObtainPropFunction obtainPropFunction,
       const UpdatePropsFunction updateProps,
       const MeasureFunction measure,
       const DispatchCommandFunction dispatchCommand,

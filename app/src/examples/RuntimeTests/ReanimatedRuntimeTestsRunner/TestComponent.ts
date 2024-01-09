@@ -12,10 +12,7 @@ type validPropNames =
   | 'backgroundColor';
 
 export class TestComponent {
-  private ref: React.MutableRefObject<any>;
-  constructor(ref: React.MutableRefObject<any>) {
-    this.ref = ref;
-  }
+  constructor(private ref: React.MutableRefObject<any>) {}
 
   public getStyle(propName: string) {
     return this.ref.current.props.style[propName];

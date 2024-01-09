@@ -68,7 +68,7 @@ const AnimatedComponent = () => {
   );
 };
 
-const AnimatedComponent2 = () => {
+const AnimatedComponentWithNotify = () => {
   const widthSV = useSharedValue(0);
   const ref = useTestRef('AnimatedComponent');
 
@@ -228,7 +228,7 @@ describe('Tests of animations', () => {
   });
 
   test('withTiming - notify', async () => {
-    await render(<AnimatedComponent2 />);
+    await render(<AnimatedComponentWithNotify />);
     const component = getTestComponent('AnimatedComponent');
     await waitForNotify('notifyJS');
     await waitForNotify('notifyUI');

@@ -1,6 +1,5 @@
 import { TestRunner } from './TestRunner';
 import { TestComponent } from './TestComponent';
-import { RUNTIME_TEST_ERRORS } from './logMessageUtils';
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
@@ -37,17 +36,17 @@ export function useTestRef(name: string): React.MutableRefObject<any> {
   return testRunner.useTestRef(name);
 }
 
-const callTrackerRef = testRunner.callTracker;
+const testRunnerCallTrackerFn = testRunner.callTracker;
 export function callTracker(name: string) {
   'worklet';
-  return callTrackerRef(name);
+  return testRunnerCallTrackerFn(name);
 }
 
 export function callTrackerFn(name: string) {
   'worklet';
   return () => {
     'worklet';
-    callTrackerRef(name);
+    testRunnerCallTrackerFn(name);
   };
 }
 
@@ -72,15 +71,13 @@ export async function runTests() {
 }
 
 export async function wait(delay: number) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, delay);
-  });
+  return testRunner.wait(delay);
 }
 
-const notifyFn = testRunner.notify;
+const testRunnerNotifyFn = testRunner.notify;
 export async function notify(name: string) {
   'worklet';
-  return notifyFn(name);
+  return testRunnerNotifyFn(name);
 }
 
 export async function waitForNotify(name: string) {
@@ -96,35 +93,23 @@ export function configure(config: any) {
 }
 
 export async function mockAnimationTimer() {
-  testRunner.mockAnimationTimer();
+  await testRunner.mockAnimationTimer();
 }
 
 export async function unmockAnimationTimer() {
-  testRunner.unmockAnimationTimer();
+  await testRunner.unmockAnimationTimer();
 }
 
 export async function setAnimationTimestamp(timestamp: number) {
-  await testRunner.runOnUiBlocking(() => {
-    'worklet';
-    assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
-    global.mockedAnimationTimestamp = timestamp;
-  });
+  await testRunner.setAnimationTimestamp(timestamp);
 }
 
 export async function advanceAnimationByTime(time: number) {
-  await testRunner.runOnUiBlocking(() => {
-    'worklet';
-    assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
-    global.mockedAnimationTimestamp += time;
-  });
+  await testRunner.advanceAnimationByTime(time);
 }
 
 export async function advanceAnimationByFrames(frameCount: number) {
-  await testRunner.runOnUiBlocking(() => {
-    'worklet';
-    assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
-    global.mockedAnimationTimestamp += frameCount * 16;
-  });
+  await testRunner.advanceAnimationByFrames(frameCount);
 }
 
 export async function recordAnimationUpdates() {
@@ -133,13 +118,4 @@ export async function recordAnimationUpdates() {
 
 export async function stopRecordingAnimationUpdates() {
   testRunner.stopRecordingAnimationUpdates();
-}
-
-function assertMockedAnimationTimestamp(
-  timestamp: number | undefined
-): asserts timestamp is number {
-  'worklet';
-  if (timestamp === undefined) {
-    throw new Error(RUNTIME_TEST_ERRORS.NO_MOCKED_TIMESTAMP);
-  }
 }

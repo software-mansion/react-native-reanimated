@@ -32,7 +32,6 @@ import com.facebook.react.views.view.ReactViewBackgroundDrawable;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -394,60 +393,57 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public String obtainProp(int viewTag, String propName) {
-    View view = null;
+    View view;
     try {
       view = mUIManager.resolveView(viewTag);
     } catch (Exception e) {
       return "unknown";
     }
-    String result =
-        "error: unknown propName "
-            + propName
-            + ", currently supported: opacity, zIndex, width, height, top, left, backgroundColor";
-
-    Float value = null;
     switch (propName) {
       case "opacity":
-        value = view.getAlpha();
-        break;
+        {
+          return Float.toString(view.getAlpha());
+        }
       case "zIndex":
-        value = view.getElevation();
-        break;
+        {
+          return Float.toString(view.getElevation());
+        }
       case "width":
-        value = PixelUtil.toDIPFromPixel(view.getWidth());
-        break;
+        {
+          float width = PixelUtil.toDIPFromPixel(view.getWidth());
+          return Float.toString(width);
+        }
       case "height":
-        value = PixelUtil.toDIPFromPixel(view.getHeight());
-        break;
+        {
+          float height = PixelUtil.toDIPFromPixel(view.getHeight());
+          return Float.toString(height);
+        }
       case "top":
-        value = PixelUtil.toDIPFromPixel(view.getTop());
-        break;
+        {
+          float top = PixelUtil.toDIPFromPixel(view.getTop());
+          return Float.toString(top);
+        }
       case "left":
-        value = PixelUtil.toDIPFromPixel(view.getLeft());
-        break;
+        {
+          float left = PixelUtil.toDIPFromPixel(view.getLeft());
+          return Float.toString(left);
+        }
+      case "backgroundColor":
+        {
+          Drawable background = view.getBackground();
+          if (!(background instanceof ReactViewBackgroundDrawable)) {
+            return "unknown";
+          }
+          int actualColor = ((ReactViewBackgroundDrawable) background).getColor();
+          return String.format("#%06x", (0xFFFFFF & actualColor));
+        }
+      default:
+        {
+          return "error: unknown propName "
+              + propName
+              + ", currently supported: opacity, zIndex, width, height, top, left, backgroundColor";
+        }
     }
-
-    List<String> floatProps = new ArrayList<>(Arrays.asList("opacity", "zIndex"));
-    List<String> intProps = new ArrayList<>(Arrays.asList("width", "height", "top", "left"));
-
-    if (value != null) {
-      if ((float) Math.round(value) == value || intProps.contains(propName)) {
-        result = Integer.toString(Math.round(value));
-      } else if (floatProps.contains(propName)) {
-        result = Float.toString(value);
-      }
-    }
-    if (propName.equals("backgroundColor")) {
-      Drawable background = view.getBackground();
-      int actualColor = -1;
-
-      if (background instanceof ReactViewBackgroundDrawable) {
-        actualColor = ((ReactViewBackgroundDrawable) background).getColor();
-      }
-      result = String.format("#%06x", (0xFFFFFF & actualColor));
-    }
-
-    return result;
   }
 
   private static WritableMap copyReadableMap(ReadableMap map) {
