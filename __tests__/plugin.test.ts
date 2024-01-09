@@ -132,6 +132,18 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
+    it('supports generators', () => {
+      const input = html`<script>
+        function* foo() {
+          'worklet';
+          yield 'hello';
+          yield 'world';
+        }
+      </script>`;
+      const { code } = runPlugin(input);
+      expect(code).toContain('var foo = function* foo() {');
+    });
+
     it('supports recursive calls', () => {
       const input = html`<script>
         const a = 1;
