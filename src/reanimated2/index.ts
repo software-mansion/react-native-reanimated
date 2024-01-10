@@ -1,4 +1,5 @@
 'use strict';
+
 import './publicGlobals';
 
 export type { WorkletRuntime } from './core';
@@ -6,6 +7,7 @@ export {
   runOnJS,
   runOnUI,
   createWorkletRuntime,
+  runOnRuntime,
   makeMutable,
   makeShareableCloneRecursive,
   isReanimated3,
@@ -78,7 +80,7 @@ export type {
 } from './interpolateColor';
 export {
   /**
-   * @deprecated Please use `Extrapolation` instead.
+   * @deprecated Please use {@link Extrapolation} instead.
    */
   Extrapolate,
   ColorSpace,

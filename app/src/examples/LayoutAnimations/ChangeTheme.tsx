@@ -82,7 +82,7 @@ function List() {
         contentContainerStyle={[styles.contentContainer]}
         decelerationRate="fast"
         data={data}
-        keyExtractor={(item) => item}
+        keyExtractor={(item) => item.toString()}
         renderItem={(item) => (
           <Animated.View
             entering={layoutAnimations.entering}

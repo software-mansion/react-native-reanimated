@@ -8,6 +8,7 @@ import Animated, {
   scrollTo,
   useDerivedValue,
   useAnimatedRef,
+  SharedValue,
 } from 'react-native-reanimated';
 import {
   PanGestureHandler,
@@ -41,8 +42,7 @@ export default function PinExample() {
   );
 }
 
-function getDigit(number: Animated.SharedValue<number>, i: number) {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+function useDigit(number: SharedValue<number>, i: number) {
   return useDerivedValue(() => {
     return Math.floor(number.value / 10 ** i) % 10;
   });
@@ -53,14 +53,20 @@ function NumberDisplay({ number }: { number: Animated.SharedValue<number> }) {
     <View style={styles.numberContainerOuter}>
       <View style={styles.numberContainerInner}>
         {indices.map((i) => {
-          return <Digit digit={getDigit(number, i)} key={i} />;
+          return <Digit number={number} index={i} key={i} />;
         })}
       </View>
     </View>
   );
 }
 
-function Digit({ digit }: { digit: Animated.SharedValue<number> }) {
+type DigitProps = {
+  number: SharedValue<number>;
+  index: number;
+};
+
+function Digit({ number, index }: DigitProps) {
+  const digit = useDigit(number, index);
   const aref = useAnimatedRef<Animated.ScrollView>();
 
   useDerivedValue(() => {

@@ -47,6 +47,12 @@ global._scheduleOnJS = () => {
   );
 };
 
+global._scheduleOnRuntime = () => {
+  throw new Error(
+    '[Reanimated] _scheduleOnRuntime should never be called in JSReanimated.'
+  );
+};
+
 interface JSReanimatedComponent {
   previousStyle: StyleProps;
   setNativeProps?: (style: StyleProps) => void;

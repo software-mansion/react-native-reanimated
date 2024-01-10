@@ -36,13 +36,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const std::shared_ptr<CallInvoker> &jsInvoker,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      const PlatformDepMethodsHolder &platformDepMethodsHolder);
+      const PlatformDepMethodsHolder &platformDepMethodsHolder,
+      const std::string &valueUnpackerCode);
 
   ~NativeReanimatedModule();
-
-  void installValueUnpacker(
-      jsi::Runtime &rt,
-      const jsi::Value &valueUnpackerCode) override;
 
   jsi::Value makeShareableClone(
       jsi::Runtime &rt,
@@ -66,6 +63,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       jsi::Runtime &rt,
       const jsi::Value &name,
       const jsi::Value &initializer) override;
+  jsi::Value scheduleOnRuntime(
+      jsi::Runtime &rt,
+      const jsi::Value &workletRuntimeValue,
+      const jsi::Value &shareableWorkletValue) override;
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
@@ -115,6 +116,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const int emitterReactTag,
       const jsi::Value &payload,
       double currentTime);
+
+  inline std::shared_ptr<JSLogger> getJSLogger() const {
+    return jsLogger_;
+  }
 
 #ifdef RCT_NEW_ARCH_ENABLED
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
@@ -184,6 +189,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   volatile bool renderRequested_{false};
   const std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
+  const std::shared_ptr<JSLogger> jsLogger_;
   LayoutAnimationsManager layoutAnimationsManager_;
 
 #ifdef RCT_NEW_ARCH_ENABLED

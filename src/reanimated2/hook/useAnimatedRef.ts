@@ -5,10 +5,8 @@ import { useSharedValue } from './useSharedValue';
 import type { AnimatedRef } from './commonTypes';
 import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import {
-  makeShareableCloneRecursive,
-  registerShareableMapping,
-} from '../shareables';
+import { makeShareableCloneRecursive } from '../shareables';
+import { shareableMappingCache } from '../shareableMappingCache';
 import { Platform, findNodeHandle } from 'react-native';
 import { isFabric } from '../PlatformChecker';
 
@@ -37,6 +35,12 @@ const getTagValueFunction = IS_FABRIC
   ? getShadowNodeWrapperFromRef
   : findNodeHandle;
 
+/**
+ * Lets you get a reference of a view that you can use inside a worklet.
+ *
+ * @returns An object with a `.current` property which contains an instance of a component.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef
+ */
 export function useAnimatedRef<
   TComponent extends Component
 >(): AnimatedRef<TComponent> {
@@ -73,7 +77,7 @@ export function useAnimatedRef<
         return f;
       },
     });
-    registerShareableMapping(fun, remoteRef);
+    shareableMappingCache.set(fun, remoteRef);
     ref.current = fun;
   }
 

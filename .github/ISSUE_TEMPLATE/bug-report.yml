@@ -1,6 +1,5 @@
 name: Bug report
 description: Report an issue with Reanimated here.
-labels: 'Needs review'
 body:
   - type: markdown
     attributes:
@@ -57,7 +56,7 @@ body:
     attributes:
       label: Reanimated version
       description: What version of react-native-reanimated are you using?
-      placeholder: 2.9.0
+      placeholder: 3.6.1
     validations:
       required: true
 
@@ -66,7 +65,7 @@ body:
     attributes:
       label: React Native version
       description: What version of react-native are you using?
-      placeholder: 0.69.0
+      placeholder: 0.73.1
     validations:
       required: true
 
@@ -106,7 +105,7 @@ body:
       label: Workflow
       description: How is your application managed?
       options:
-        - React Native 
+        - React Native
         - Expo Go
         - Expo Dev Client
 
@@ -123,10 +122,13 @@ body:
     id: build-type
     attributes:
       label: Build type
-      description: What mode your application is running?
+      description: What is the build configuration/variant of your native app and JavaScript bundle mode?
       options:
-        - Debug mode
-        - Release mode
+        - Debug app & dev bundle
+        - Release app & production bundle
+        - Debug app & production bundle
+        - Release app & dev bundle
+        - Other (please specify)
 
   - type: dropdown
     id: emulator
