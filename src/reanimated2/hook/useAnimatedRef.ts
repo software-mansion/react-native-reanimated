@@ -2,21 +2,22 @@
 import type { Component } from 'react';
 import { useRef } from 'react';
 import { useSharedValue } from './useSharedValue';
-import type { AnimatedRef } from './commonTypes';
+import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
 import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { makeShareableCloneRecursive } from '../shareables';
 import { shareableMappingCache } from '../shareableMappingCache';
 import { Platform, findNodeHandle } from 'react-native';
+import type { ScrollView, FlatList } from 'react-native';
 import { isFabric } from '../PlatformChecker';
 
 const IS_FABRIC = isFabric();
 
 interface MaybeScrollableComponent extends Component {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getNativeScrollRef?: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getScrollableNode?: any;
+  getNativeScrollRef?: FlatList['getNativeScrollRef'];
+  getScrollableNode?:
+    | ScrollView['getScrollableNode']
+    | FlatList['getScrollableNode'];
   viewConfig?: {
     uiViewClassName?: string;
   };
@@ -69,15 +70,15 @@ export function useAnimatedRef<
 
     fun.current = null;
 
-    const remoteRef = makeShareableCloneRecursive({
+    const animatedRefShareableHandle = makeShareableCloneRecursive({
       __init: () => {
         'worklet';
-        const f = () => tag.value;
+        const f: AnimatedRefOnUI = () => tag.value;
         f.viewName = viewName;
         return f;
       },
     });
-    shareableMappingCache.set(fun, remoteRef);
+    shareableMappingCache.set(fun, animatedRefShareableHandle);
     ref.current = fun;
   }
 
