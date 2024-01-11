@@ -70,7 +70,7 @@ export function useAnimatedRef<
 
     fun.current = null;
 
-    const remoteRef = makeShareableCloneRecursive({
+    const animatedRefShareableHandle = makeShareableCloneRecursive({
       __init: () => {
         'worklet';
         const f: AnimatedRefOnUI = () => tag.value;
@@ -78,7 +78,7 @@ export function useAnimatedRef<
         return f;
       },
     });
-    shareableMappingCache.set(fun, remoteRef);
+    shareableMappingCache.set(fun, animatedRefShareableHandle);
     ref.current = fun;
   }
 

@@ -6,7 +6,11 @@ import {
   isJest,
   shouldBeUseWeb,
 } from '../PlatformChecker';
-import type { AnimatedRef, AnimatedRefOnUI } from '../hook/commonTypes';
+import type {
+  AnimatedRef,
+  AnimatedRefOnJS,
+  AnimatedRefOnUI,
+} from '../hook/commonTypes';
 import type { Component } from 'react';
 
 type DispatchCommand = <T extends Component>(
@@ -26,7 +30,7 @@ type DispatchCommand = <T extends Component>(
 export let dispatchCommand: DispatchCommand;
 
 function dispatchCommandFabric(
-  animatedRef: AnimatedRefOnUI,
+  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
   commandName: string,
   args: Array<unknown> = []
 ) {
@@ -40,7 +44,7 @@ function dispatchCommandFabric(
 }
 
 function dispatchCommandPaper(
-  animatedRef: AnimatedRefOnUI,
+  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
   commandName: string,
   args: Array<unknown> = []
 ) {
