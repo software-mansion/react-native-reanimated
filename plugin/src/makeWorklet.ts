@@ -104,7 +104,7 @@ export function makeWorklet(
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
-    ? functionExpression(null, clone.params, clone.body)
+    ? functionExpression(null, clone.params, clone.body, clone.generator)
     : clone;
 
   let [funString, sourceMapString] = buildWorkletString(
