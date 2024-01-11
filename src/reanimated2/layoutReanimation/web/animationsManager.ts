@@ -89,13 +89,15 @@ function tryGetAnimationConfigWithTransform<
     return null;
   }
 
+  type ConstructorWithStaticContext = {
+    className: string;
+  } & typeof config.constructor;
+
   const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
   const initialAnimationName =
     typeof config === 'function'
-      ? // @ts-expect-error ignore for now
-        config.className
-      : // @ts-expect-error ignore for now
-        config.constructor.className;
+      ? config.className
+      : (config.constructor as ConstructorWithStaticContext).className;
 
   const shouldFail = checkUndefinedAnimationFail(
     initialAnimationName,
