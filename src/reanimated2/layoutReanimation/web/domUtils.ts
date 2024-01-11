@@ -1,5 +1,6 @@
 'use strict';
 
+import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { isWindowAvailable } from '../../PlatformChecker';
 import { setDummyPosition, snapshots } from './componentStyle';
 import { Animations } from './config';
@@ -11,6 +12,8 @@ const CUSTOM_WEB_ANIMATIONS_ID = 'ReanimatedCustomWebAnimationsStyle';
 // Since we cannot remove keyframe from DOM by its name, we have to store its id
 const animationNameToIndex = new Map<string, number>();
 const animationNameList: string[] = [];
+
+let isObserverSet = false;
 
 /**
  *  Creates `HTMLStyleElement`, inserts it into DOM and then inserts CSS rules into the stylesheet.
@@ -132,7 +135,7 @@ export function scheduleAnimationCleanup(
   setTimeout(() => removeWebAnimation(animationName), timeoutValue);
 }
 
-function addChild(child: HTMLElement, parent: Node) {
+function reattachElementToAncestor(child: ReanimatedHTMLElement, parent: Node) {
   const childSnapshot = snapshots.get(child);
 
   if (!childSnapshot) {
@@ -141,7 +144,7 @@ function addChild(child: HTMLElement, parent: Node) {
   }
 
   // We use that so we don't end up in infinite loop
-  child.setAttribute('data-reanimatedRemovedAfterAnimation', 'true');
+  child.removedAfterAnimation = true;
   parent.appendChild(child);
 
   setDummyPosition(child, childSnapshot);
@@ -149,41 +152,63 @@ function addChild(child: HTMLElement, parent: Node) {
   const originalOnAnimationEnd = child.onanimationend;
 
   child.onanimationend = function (event: AnimationEvent) {
-    if (parent.contains(child)) {
-      parent.removeChild(child);
-    }
+    parent.removeChild(child);
 
     // Given that this function overrides onAnimationEnd, it won't be null
     originalOnAnimationEnd?.call(this, event);
   };
 }
 
-function findDescendantWithExitingAnimation(node: HTMLElement, root: Node) {
-  if (
-    node.hasAttribute('data-reanimatedDummy') &&
-    !node.hasAttribute('data-reanimatedRemovedAfterAnimation')
-  ) {
-    addChild(node, root);
+function findDescendantWithExitingAnimation(
+  node: ReanimatedHTMLElement,
+  root: Node
+) {
+  if (node.reanimatedDummy && node.removedAfterAnimation === undefined) {
+    reattachElementToAncestor(node, root);
   }
 
   const children = Array.from(node.children);
 
   for (let i = 0; i < children.length; ++i) {
-    findDescendantWithExitingAnimation(children[i] as HTMLElement, root);
+    findDescendantWithExitingAnimation(
+      children[i] as ReanimatedHTMLElement,
+      root
+    );
   }
 }
 
-export function setObserver() {
-  if (!isWindowAvailable()) {
+function checkIfScreenWasChanged(mutationTarget: ReanimatedHTMLElement) {
+  let reactFiberKey = '';
+  for (const key of Object.keys(mutationTarget)) {
+    if (key.startsWith('__reactFiber')) {
+      reactFiberKey = key;
+      break;
+    }
+  }
+
+  return (
+    (mutationTarget as any)[reactFiberKey]?.child?.memoizedProps?.navigation !==
+    undefined
+  );
+}
+
+export function addHTMLMutationObserver() {
+  if (!isWindowAvailable() || isObserverSet) {
     return;
   }
+
+  isObserverSet = true;
 
   const observer = new MutationObserver((mutationsList) => {
     const rootMutation = mutationsList[mutationsList.length - 1];
 
+    if (checkIfScreenWasChanged(rootMutation.target as ReanimatedHTMLElement)) {
+      return;
+    }
+
     for (let i = 0; i < rootMutation.removedNodes.length; ++i) {
       findDescendantWithExitingAnimation(
-        rootMutation.removedNodes[i] as HTMLElement,
+        rootMutation.removedNodes[i] as ReanimatedHTMLElement,
         rootMutation.target
       );
     }

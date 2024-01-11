@@ -219,8 +219,8 @@ export function handleExitingAnimation(
   animationConfig: AnimationConfig
 ) {
   const parent = element.offsetParent;
-  const dummy = element.cloneNode() as HTMLElement;
-  dummy.setAttribute('data-reanimatedDummy', 'true');
+  const dummy = element.cloneNode() as ReanimatedHTMLElement;
+  dummy.reanimatedDummy = true;
 
   element.style.animationName = '';
   // We hide current element so only its copy with proper animation will be displayed
@@ -247,7 +247,7 @@ export function handleExitingAnimation(
 
   dummy.onanimationend = function (event: AnimationEvent) {
     if (parent?.contains(dummy)) {
-      dummy.setAttribute('data-reanimatedRemovedAfterAnimation', 'true');
+      dummy.removedAfterAnimation = true;
       parent.removeChild(dummy);
     }
 
@@ -257,7 +257,7 @@ export function handleExitingAnimation(
 
   dummy.addEventListener('animationcancel', () => {
     if (parent?.contains(dummy)) {
-      dummy.setAttribute('data-reanimatedRemovedAfterAnimation', 'true');
+      dummy.removedAfterAnimation = true;
       parent.removeChild(dummy);
     }
   });
