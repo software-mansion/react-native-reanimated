@@ -14,5 +14,6 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true
-  }
+  },
+  "include": ["legacy/**/*", "common/**/*", "0.72+/**/*"]
 }

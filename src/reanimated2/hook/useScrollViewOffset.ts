@@ -36,7 +36,7 @@ export function useScrollViewOffset(
     initialRef !== undefined ? initialRef : useSharedValue(0)
   );
 
-  const event = useEvent<RNNativeScrollEvent>(
+  const eventHandler = useEvent<RNNativeScrollEvent>(
     (event: ReanimatedScrollEvent) => {
       'worklet';
       offsetRef.current.value =
@@ -51,10 +51,10 @@ export function useScrollViewOffset(
 
   useEffect(() => {
     const viewTag = findNodeHandle(animatedRef.current);
-    event.current?.registerForEvents(viewTag as number);
+    eventHandler.current?.registerForEvents(viewTag as number);
 
     return () => {
-      event.current?.unregisterFromEvents();
+      eventHandler.current?.unregisterFromEvents();
     };
   }, [animatedRef.current]);
 

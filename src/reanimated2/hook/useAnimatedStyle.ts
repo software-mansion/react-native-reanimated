@@ -12,7 +12,13 @@ import {
   shallowEqual,
   validateAnimatedStyles,
 } from './utils';
-import type { DefaultStyle, DependencyList, Descriptor } from './commonTypes';
+import type {
+  AnimatedStyleHandle,
+  DefaultStyle,
+  DependencyList,
+  Descriptor,
+  JestAnimatedStyleHandle,
+} from './commonTypes';
 import type { ViewDescriptorsSet, ViewRefSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet, useViewRefSet } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
@@ -200,6 +206,7 @@ function styleUpdater(
 
   if (hasAnimations) {
     const frame = (timestamp: Timestamp) => {
+      // eslint-disable-next-line @typescript-eslint/no-shadow
       const { animations, last, isAnimationCancelled } = state;
       if (isAnimationCancelled) {
         state.isAnimationRunning = false;
@@ -290,6 +297,7 @@ function jestStyleUpdater(
   });
 
   function frame(timestamp: Timestamp) {
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     const { animations, last, isAnimationCancelled } = state;
     if (isAnimationCancelled) {
       state.isAnimationRunning = false;
@@ -409,8 +417,8 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
   dependencies?: DependencyList | null,
   adapters?: WorkletFunction | WorkletFunction[],
   isAnimatedProps = false
-) {
-  const viewsRef = useViewRefSet();
+): AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style> {
+  const viewsRef: ViewRefSet<unknown> | undefined = useViewRefSet();
   const animatedUpdaterData = useRef<AnimatedUpdaterData>();
   let inputs = Object.values(updater.__closure ?? {});
   if (SHOULD_BE_USE_WEB) {
@@ -524,12 +532,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   checkSharedValueUsage(initial.value);
 
   if (isJest()) {
-    return {
-      viewDescriptors,
-      initial,
-      viewsRef,
-      animatedStyle: jestAnimatedStyle,
-    };
+    return { viewDescriptors, initial, viewsRef, jestAnimatedStyle };
   } else {
     return { viewDescriptors, initial, viewsRef };
   }
