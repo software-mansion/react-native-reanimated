@@ -177,17 +177,36 @@ function findDescendantWithExitingAnimation(
   }
 }
 
-function checkIfScreenWasChanged(mutationTarget: ReanimatedHTMLElement) {
-  let reactFiberKey = '';
+type FiberNodeKey = `__reactFiber${string}`;
+
+interface FiberNode {
+  memoizedProps?: {
+    navigation?: unknown;
+  };
+
+  child?: FiberNode;
+}
+
+type WithFiberNode = {
+  [key: FiberNodeKey]: FiberNode;
+};
+
+type MaybeWithFiberNode = Partial<WithFiberNode>;
+
+function checkIfScreenWasChanged(
+  mutationTarget: ReanimatedHTMLElement & MaybeWithFiberNode
+) {
+  let reactFiberKey: FiberNodeKey = '__reactFiber';
+
   for (const key of Object.keys(mutationTarget)) {
     if (key.startsWith('__reactFiber')) {
-      reactFiberKey = key;
+      reactFiberKey = key as FiberNodeKey;
       break;
     }
   }
 
   return (
-    (mutationTarget as any)[reactFiberKey]?.child?.memoizedProps?.navigation !==
+    mutationTarget[reactFiberKey]?.child?.memoizedProps?.navigation !==
     undefined
   );
 }
@@ -202,7 +221,11 @@ export function addHTMLMutationObserver() {
   const observer = new MutationObserver((mutationsList) => {
     const rootMutation = mutationsList[mutationsList.length - 1];
 
-    if (checkIfScreenWasChanged(rootMutation.target as ReanimatedHTMLElement)) {
+    if (
+      checkIfScreenWasChanged(
+        rootMutation.target as ReanimatedHTMLElement & MaybeWithFiberNode
+      )
+    ) {
       return;
     }
 
