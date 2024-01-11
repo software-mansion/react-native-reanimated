@@ -46,7 +46,7 @@ export function useAnimatedRef<
   TComponent extends Component
 >(): AnimatedRef<TComponent> {
   const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
-  const viewName = useSharedValue<string>('viewName placeholder');
+  const viewName = useSharedValue<string | null>(null);
 
   const ref = useRef<AnimatedRef<TComponent>>();
 
