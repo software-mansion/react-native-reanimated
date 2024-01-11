@@ -6,7 +6,11 @@ import {
   shouldBeUseWeb,
 } from '../PlatformChecker';
 import { dispatchCommand } from './dispatchCommand';
-import type { AnimatedRef, AnimatedRefOnUI } from '../hook/commonTypes';
+import type {
+  AnimatedRef,
+  AnimatedRefOnJS,
+  AnimatedRefOnUI,
+} from '../hook/commonTypes';
 import type { Component } from 'react';
 
 type ScrollTo = <T extends Component>(
@@ -28,7 +32,7 @@ type ScrollTo = <T extends Component>(
 export let scrollTo: ScrollTo;
 
 function scrollToFabric(
-  animatedRef: AnimatedRefOnUI,
+  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
   x: number,
   y: number,
   animated: boolean
@@ -43,7 +47,7 @@ function scrollToFabric(
 }
 
 function scrollToPaper(
-  animatedRef: AnimatedRefOnUI,
+  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
   x: number,
   y: number,
   animated: boolean

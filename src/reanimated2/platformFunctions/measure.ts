@@ -6,7 +6,11 @@ import {
   isJest,
   shouldBeUseWeb,
 } from '../PlatformChecker';
-import type { AnimatedRef, AnimatedRefOnUI } from '../hook/commonTypes';
+import type {
+  AnimatedRef,
+  AnimatedRefOnJS,
+  AnimatedRefOnUI,
+} from '../hook/commonTypes';
 import type { Component } from 'react';
 
 type Measure = <T extends Component>(
@@ -22,7 +26,7 @@ type Measure = <T extends Component>(
  */
 export let measure: Measure;
 
-function measureFabric(animatedRef: AnimatedRefOnUI) {
+function measureFabric(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
   'worklet';
   if (!_WORKLET) {
     return null;
@@ -57,7 +61,7 @@ function measureFabric(animatedRef: AnimatedRefOnUI) {
   }
 }
 
-function measurePaper(animatedRef: AnimatedRefOnUI) {
+function measurePaper(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
   'worklet';
   if (!_WORKLET) {
     return null;

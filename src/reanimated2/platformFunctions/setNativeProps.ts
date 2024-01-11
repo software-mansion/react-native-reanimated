@@ -6,7 +6,11 @@ import {
   isJest,
   shouldBeUseWeb,
 } from '../PlatformChecker';
-import type { AnimatedRef, AnimatedRefOnUI } from '../hook/commonTypes';
+import type {
+  AnimatedRef,
+  AnimatedRefOnJS,
+  AnimatedRefOnUI,
+} from '../hook/commonTypes';
 import type { Component } from 'react';
 import { processColorsInProps } from '../Colors';
 
@@ -24,7 +28,7 @@ type SetNativeProps = <T extends Component>(
 export let setNativeProps: SetNativeProps;
 
 function setNativePropsFabric(
-  animatedRef: AnimatedRefOnUI,
+  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
   updates: StyleProps
 ) {
   'worklet';
@@ -40,7 +44,7 @@ function setNativePropsFabric(
 }
 
 function setNativePropsPaper(
-  animatedRef: AnimatedRefOnUI,
+  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
   updates: StyleProps
 ) {
   'worklet';
@@ -51,7 +55,7 @@ function setNativePropsPaper(
     return;
   }
   const tag = animatedRef() as number;
-  const name = animatedRef.viewName.value;
+  const name = (animatedRef as AnimatedRefOnUI).viewName.value;
   processColorsInProps(updates);
   _updatePropsPaper!([{ tag, name, updates }]);
 }
