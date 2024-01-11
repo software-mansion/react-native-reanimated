@@ -1690,4 +1690,36 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
   });
+
+  describe('for generators', () => {
+    it('makes a generator worklet factory', () => {
+      const input = html`<script>
+        function* foo() {
+          'worklet';
+          yield 'hello';
+          yield 'world';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('var foo = function* foo() {');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('makes a generator worklet string', () => {
+      const input = html`<script>
+        function* foo() {
+          'worklet';
+          yield 'hello';
+          yield 'world';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain(
+        `code: "function*foo(){yield'hello';yield'world';}"`
+      );
+      expect(code).toMatchSnapshot();
+    });
+  });
 });

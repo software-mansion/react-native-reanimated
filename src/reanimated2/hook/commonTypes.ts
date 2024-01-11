@@ -1,6 +1,6 @@
 'use strict';
 import type { Component, MutableRefObject } from 'react';
-import type { ShadowNodeWrapper } from '../commonTypes';
+import type { ShadowNodeWrapper, SharedValue } from '../commonTypes';
 import type {
   ImageStyle,
   NativeSyntheticEvent,
@@ -20,12 +20,26 @@ export interface Descriptor {
 }
 
 export interface AnimatedRef<T extends Component> {
-  current: T | null;
   (component?: T):
     | number // Paper
     | ShadowNodeWrapper // Fabric
     | HTMLElement; // web
+  current: T | null;
 }
+
+// Might make that type generic if it's ever needed.
+export type AnimatedRefOnJS = AnimatedRef<Component>;
+
+/**
+ * `AnimatedRef` is mapped to this type on the UI thread via a shareable handle.
+ */
+export type AnimatedRefOnUI = {
+  (): number | ShadowNodeWrapper | null;
+  /**
+   * @remarks `viewName` is required only on iOS with Paper and it's value is null on other platforms.
+   */
+  viewName: SharedValue<string | null>;
+};
 
 type ReanimatedPayload = {
   eventName: string;
