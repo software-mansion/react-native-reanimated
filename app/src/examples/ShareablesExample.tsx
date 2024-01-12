@@ -193,10 +193,6 @@ function DataViewDemo() {
   return <Button title="DataView" onPress={handlePress} />;
 }
 
-declare global {
-  var _dummyHostObject: { prop: number } | undefined;
-}
-
 function FreezingShareables() {
   const navigation =
     useNavigation<NativeStackNavigationProp<StackParams, 'Freezing'>>();
@@ -238,6 +234,10 @@ function FreezingShareables() {
       <Button title="Go to creating" onPress={() => navigation.goBack()} />
     </View>
   );
+}
+
+declare global {
+  var _dummyHostObject: { prop: number } | undefined;
 }
 
 function tryModifyLockedArray() {
