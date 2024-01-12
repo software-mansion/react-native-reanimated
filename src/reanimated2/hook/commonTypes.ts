@@ -81,7 +81,10 @@ export interface AnimatedStyleHandle<
     value: AnimatedStyle<Style>;
     updater: () => AnimatedStyle<Style>;
   };
-  viewsRef: ViewRefSet<unknown>;
+  /**
+   * @remarks `viewsRef` is only defined in Web implementation.
+   */
+  viewsRef: ViewRefSet<unknown> | undefined;
 }
 
 export interface JestAnimatedStyleHandle<
