@@ -19,7 +19,7 @@ export class BounceIn
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'BounceIn';
+  static presetName = 'BounceIn';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -81,7 +81,7 @@ export class BounceInDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'BounceInDown';
+  static presetName = 'BounceInDown';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -147,7 +147,7 @@ export class BounceInUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'BounceInUp';
+  static presetName = 'BounceInUp';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -209,7 +209,7 @@ export class BounceInLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'BounceInLeft';
+  static presetName = 'BounceInLeft';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -271,7 +271,7 @@ export class BounceInRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'BounceInRight';
+  static presetName = 'BounceInRight';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -333,7 +333,7 @@ export class BounceOut
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'BounceOut';
+  static presetName = 'BounceOut';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -395,7 +395,7 @@ export class BounceOutDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'BounceOutDown';
+  static presetName = 'BounceOutDown';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -459,7 +459,7 @@ export class BounceOutUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'BounceOutUp';
+  static presetName = 'BounceOutUp';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -523,7 +523,7 @@ export class BounceOutLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'BounceOutLeft';
+  static presetName = 'BounceOutLeft';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -587,7 +587,7 @@ export class BounceOutRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'BounceOutRight';
+  static presetName = 'BounceOutRight';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T

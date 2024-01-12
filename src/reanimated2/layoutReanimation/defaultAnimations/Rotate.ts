@@ -20,7 +20,7 @@ export class RotateInDownLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static className = 'RotateInDownLeft';
+  static presetName = 'RotateInDownLeft';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -72,7 +72,7 @@ export class RotateInDownRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static className = 'RotateInDownRight';
+  static presetName = 'RotateInDownRight';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -124,7 +124,7 @@ export class RotateInUpLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static className = 'RotateInUpLeft';
+  static presetName = 'RotateInUpLeft';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -176,7 +176,7 @@ export class RotateInUpRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static className = 'RotateInUpRight';
+  static presetName = 'RotateInUpRight';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -228,7 +228,7 @@ export class RotateOutDownLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static className = 'RotateOutDownLeft';
+  static presetName = 'RotateOutDownLeft';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -292,7 +292,7 @@ export class RotateOutDownRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static className = 'RotateOutDownRight';
+  static presetName = 'RotateOutDownRight';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -356,7 +356,7 @@ export class RotateOutUpLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static className = 'RotateOutUpLeft';
+  static presetName = 'RotateOutUpLeft';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -420,7 +420,7 @@ export class RotateOutUpRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static className = 'RotateOutUpRight';
+  static presetName = 'RotateOutUpRight';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T

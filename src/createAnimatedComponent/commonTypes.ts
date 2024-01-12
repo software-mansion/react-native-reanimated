@@ -54,8 +54,8 @@ export interface IJSPropsUpdater {
   ): void;
 }
 
-type LayoutAnimationStaticContext = {
-  className: string;
+export type LayoutAnimationStaticContext = {
+  presetName: string;
 };
 
 export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {

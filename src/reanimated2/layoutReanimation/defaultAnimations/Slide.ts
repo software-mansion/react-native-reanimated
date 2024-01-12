@@ -20,7 +20,7 @@ export class SlideInRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static className = 'SlideInRight';
+  static presetName = 'SlideInRight';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -65,7 +65,7 @@ export class SlideInLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static className = 'SlideInLeft';
+  static presetName = 'SlideInLeft';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -110,7 +110,7 @@ export class SlideOutRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static className = 'SlideOutRight';
+  static presetName = 'SlideOutRight';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -161,7 +161,7 @@ export class SlideOutLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static className = 'SlideOutLeft';
+  static presetName = 'SlideOutLeft';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -212,7 +212,7 @@ export class SlideInUp
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static className = 'SlideInUp';
+  static presetName = 'SlideInUp';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -257,7 +257,7 @@ export class SlideInDown
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static className = 'SlideInDown';
+  static presetName = 'SlideInDown';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -302,7 +302,7 @@ export class SlideOutUp
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static className = 'SlideOutUp';
+  static presetName = 'SlideOutUp';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -350,7 +350,7 @@ export class SlideOutDown
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static className = 'SlideOutDown';
+  static presetName = 'SlideOutDown';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T

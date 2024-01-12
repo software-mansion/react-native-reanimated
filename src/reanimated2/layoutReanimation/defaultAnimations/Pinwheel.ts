@@ -17,7 +17,7 @@ export class PinwheelIn
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'PinwheelIn';
+  static presetName = 'PinwheelIn';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -75,7 +75,7 @@ export class PinwheelOut
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'PinwheelOut';
+  static presetName = 'PinwheelOut';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T

@@ -18,7 +18,7 @@ export class RollInLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'RollInLeft';
+  static presetName = 'RollInLeft';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -66,7 +66,7 @@ export class RollInRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'RollInRight';
+  static presetName = 'RollInRight';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -111,7 +111,7 @@ export class RollOutLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'RollOutLeft';
+  static presetName = 'RollOutLeft';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -161,7 +161,7 @@ export class RollOutRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'RollOutRight';
+  static presetName = 'RollOutRight';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T

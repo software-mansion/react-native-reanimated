@@ -23,7 +23,7 @@ export class ZoomIn
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'ZoomIn';
+  static presetName = 'ZoomIn';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -65,7 +65,7 @@ export class ZoomInRotate
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'ZoomInRotate';
+  static presetName = 'ZoomInRotate';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -111,7 +111,7 @@ export class ZoomInLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'ZoomInLeft';
+  static presetName = 'ZoomInLeft';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -156,7 +156,7 @@ export class ZoomInRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'ZoomInRight';
+  static presetName = 'ZoomInRight';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -201,7 +201,7 @@ export class ZoomInUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'ZoomInUp';
+  static presetName = 'ZoomInUp';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -246,7 +246,7 @@ export class ZoomInDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'ZoomInDown';
+  static presetName = 'ZoomInDown';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -291,7 +291,7 @@ export class ZoomInEasyUp
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static className = 'ZoomInEasyUp';
+  static presetName = 'ZoomInEasyUp';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -336,7 +336,7 @@ export class ZoomInEasyDown
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static className = 'ZoomInEasyDown';
+  static presetName = 'ZoomInEasyDown';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -381,7 +381,7 @@ export class ZoomOut
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'ZoomOut';
+  static presetName = 'ZoomOut';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -423,7 +423,7 @@ export class ZoomOutRotate
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'ZoomOutRotate';
+  static presetName = 'ZoomOutRotate';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -469,7 +469,7 @@ export class ZoomOutLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'ZoomOutLeft';
+  static presetName = 'ZoomOutLeft';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -519,7 +519,7 @@ export class ZoomOutRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'ZoomOutRight';
+  static presetName = 'ZoomOutRight';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -569,7 +569,7 @@ export class ZoomOutUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'ZoomOutUp';
+  static presetName = 'ZoomOutUp';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -619,7 +619,7 @@ export class ZoomOutDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'ZoomOutDown';
+  static presetName = 'ZoomOutDown';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -669,7 +669,7 @@ export class ZoomOutEasyUp
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static className = 'ZoomOutEasyUp';
+  static presetName = 'ZoomOutEasyUp';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -719,7 +719,7 @@ export class ZoomOutEasyDown
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static className = 'ZoomOutEasyDown';
+  static presetName = 'ZoomOutEasyDown';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T

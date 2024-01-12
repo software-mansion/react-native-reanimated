@@ -17,7 +17,7 @@ export class StretchInX
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'StretchInX';
+  static presetName = 'StretchInX';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -59,7 +59,7 @@ export class StretchInY
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'StretchInY';
+  static presetName = 'StretchInY';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -101,7 +101,7 @@ export class StretchOutX
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'StretchOutX';
+  static presetName = 'StretchOutX';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -143,7 +143,7 @@ export class StretchOutY
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'StretchOutY';
+  static presetName = 'StretchOutY';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T

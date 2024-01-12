@@ -22,7 +22,7 @@ export class FlipInXUp
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static className = 'FlipInXUp';
+  static presetName = 'FlipInXUp';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -72,7 +72,7 @@ export class FlipInYLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static className = 'FlipInYLeft';
+  static presetName = 'FlipInYLeft';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -122,7 +122,7 @@ export class FlipInXDown
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static className = 'FlipInXDown';
+  static presetName = 'FlipInXDown';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -172,7 +172,7 @@ export class FlipInYRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static className = 'FlipInYRight';
+  static presetName = 'FlipInYRight';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -222,7 +222,7 @@ export class FlipInEasyX
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'FlipInEasyX';
+  static presetName = 'FlipInEasyX';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -267,7 +267,7 @@ export class FlipInEasyY
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'FlipInEasyY';
+  static presetName = 'FlipInEasyY';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -312,7 +312,7 @@ export class FlipOutXUp
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static className = 'FlipOutXUp';
+  static presetName = 'FlipOutXUp';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -367,7 +367,7 @@ export class FlipOutYLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static className = 'FlipOutYLeft';
+  static presetName = 'FlipOutYLeft';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -422,7 +422,7 @@ export class FlipOutXDown
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static className = 'FlipOutXDown';
+  static presetName = 'FlipOutXDown';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -477,7 +477,7 @@ export class FlipOutYRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static className = 'FlipOutYRight';
+  static presetName = 'FlipOutYRight';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -532,7 +532,7 @@ export class FlipOutEasyX
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'FlipOutEasyX';
+  static presetName = 'FlipOutEasyX';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -577,7 +577,7 @@ export class FlipOutEasyY
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'FlipOutEasyY';
+  static presetName = 'FlipOutEasyY';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T

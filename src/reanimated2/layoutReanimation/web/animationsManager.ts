@@ -2,7 +2,10 @@
 
 import type { AnimationConfig, AnimationNames, CustomConfig } from './config';
 import { Animations } from './config';
-import type { AnimatedComponentProps } from '../../../createAnimatedComponent/commonTypes';
+import type {
+  AnimatedComponentProps,
+  LayoutAnimationStaticContext,
+} from '../../../createAnimatedComponent/commonTypes';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { StyleProps } from '../../commonTypes';
 import { createAnimationWithExistingTransform } from './createAnimation';
@@ -89,15 +92,14 @@ function tryGetAnimationConfigWithTransform<
     return null;
   }
 
-  type ConstructorWithStaticContext = {
-    className: string;
-  } & typeof config.constructor;
+  type ConstructorWithStaticContext = LayoutAnimationStaticContext &
+    typeof config.constructor;
 
   const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
   const initialAnimationName =
     typeof config === 'function'
-      ? config.className
-      : (config.constructor as ConstructorWithStaticContext).className;
+      ? config.presetName
+      : (config.constructor as ConstructorWithStaticContext).presetName;
 
   const shouldFail = checkUndefinedAnimationFail(
     initialAnimationName,

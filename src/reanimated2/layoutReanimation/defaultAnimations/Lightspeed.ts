@@ -19,7 +19,7 @@ export class LightSpeedInRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'LightSpeedInRight';
+  static presetName = 'LightSpeedInRight';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -81,7 +81,7 @@ export class LightSpeedInLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'LightSpeedInLeft';
+  static presetName = 'LightSpeedInLeft';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -143,7 +143,7 @@ export class LightSpeedOutRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'LightSpeedOutRight';
+  static presetName = 'LightSpeedOutRight';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -197,7 +197,7 @@ export class LightSpeedOutLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static className = 'LightSpeedOutLeft';
+  static presetName = 'LightSpeedOutLeft';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
