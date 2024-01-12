@@ -29,6 +29,7 @@
   BOOL _isAsyncSharedTransitionConfigured;
   BOOL _isConfigured;
   BOOL _clearScreen;
+  BOOL _isInteractive;
   REAUIView *_disappearingScreen;
 }
 
@@ -392,11 +393,22 @@ static REASharedTransitionManager *_sharedTransitionManager;
 - (void)setDisappearingScreen:(REAUIView *)view
 {
   _disappearingScreen = view;
+  _isInteractive = [_sharedTransitionManager isInteractiveScreenChange:view];
 }
 
-- (REAUIView *)getDissapearingScreen
+- (REAUIView *)getDisappearingScreen
 {
   return _disappearingScreen;
+}
+
+- (void)setIsInteractive:(BOOL)isInteractive
+{
+  _isInteractive = isInteractive;
+}
+
+- (BOOL)getIsInteractive
+{
+  return _isInteractive;
 }
 
 - (void)reanimated_viewDidLayoutSubviews
@@ -414,6 +426,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   [_sharedTransitionManager makeSnapshotForScreenViews:(REAUIView *)self];
   bool isModal = [REAScreensHelper isScreenModal:(REAUIView *)self];
   if (isModal) {
+    [_sharedTransitionManager setIsInteractive:[_sharedTransitionManager isInteractiveScreenChange:(REAUIView *)self]];
     [_sharedTransitionManager screenRemovedFromStack:(REAUIView *)self withOffsetX:0 withOffsetY:0];
   } else {
     [_sharedTransitionManager setDisappearingScreen:(REAUIView *)self];
@@ -424,7 +437,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   // call original method from react-native-screens, self == RNSScreen
   [self reanimated_viewIsAppearing:animated];
-  REAUIView *disappearingScreen = [_sharedTransitionManager getDissapearingScreen];
+  REAUIView *disappearingScreen = [_sharedTransitionManager getDisappearingScreen];
   REAUIView *targetScreen = [self valueForKey:@"screenView"];
   if (disappearingScreen != NULL) {
     [_sharedTransitionManager screenRemovedFromStack:disappearingScreen
@@ -447,8 +460,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
   REAUIView *stack = [REAScreensHelper getStackForView:screen];
   bool isModal = [REAScreensHelper isScreenModal:screen];
   bool isRemovedInParentStack = [self isRemovedFromHigherStack:screen];
+  bool isInteractive = [self getIsInteractive];
   if ((stack != nil || isModal) && !isRemovedInParentStack) {
-    bool isInteractive = [self isInteractiveScreenChange:screen];
     // screen is removed from React tree (navigation.navigate(<screenName>))
     bool isScreenRemovedFromReactTree = [self isScreen:screen outsideStack:stack];
     // click on button goBack on native header
@@ -465,7 +478,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     }
   } else {
     // removed stack
-    if (![self isInteractiveScreenChange:screen]) {
+    if (!isInteractive) {
       [self clearConfigForStackNow:stack];
     } else {
       _isStackDropped = YES;
