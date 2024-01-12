@@ -1722,4 +1722,34 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
   });
+
+  describe('for async functions', () => {
+    it('makes an async worklet factory', () => {
+      const input = html`<script>
+        async function foo() {
+          'worklet';
+          await Promise.resolve();
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('asyncToGenerator');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('makes an async worklet string', () => {
+      const input = html`<script>
+        async function foo() {
+          'worklet';
+          await Promise.resolve();
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain(
+        `code: "async function foo(){await Promise.resolve();}"`
+      );
+      expect(code).toMatchSnapshot();
+    });
+  });
 });

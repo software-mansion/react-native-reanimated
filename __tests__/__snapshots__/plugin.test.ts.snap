@@ -335,6 +335,60 @@ new FadeIn().withCallback(function () {
 }());"
 `;
 
+exports[`babel plugin for async functions makes an async worklet factory 1`] = `
+"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _asyncToGenerator2 = _interopRequireDefault(require("@babel/runtime/helpers/asyncToGenerator"));
+var _worklet_2720353136439_init_data = {
+  code: "async function foo(){await Promise.resolve();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo = function () {
+    var _ref = (0, _asyncToGenerator2.default)(function* () {
+      yield Promise.resolve();
+    });
+    return function foo() {
+      return _ref.apply(this, arguments);
+    };
+  }();
+  foo.__closure = {};
+  foo.__workletHash = 2720353136439;
+  foo.__initData = _worklet_2720353136439_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
+exports[`babel plugin for async functions makes an async worklet string 1`] = `
+"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _asyncToGenerator2 = _interopRequireDefault(require("@babel/runtime/helpers/asyncToGenerator"));
+var _worklet_2720353136439_init_data = {
+  code: "async function foo(){await Promise.resolve();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo = function () {
+    var _ref = (0, _asyncToGenerator2.default)(function* () {
+      yield Promise.resolve();
+    });
+    return function foo() {
+      return _ref.apply(this, arguments);
+    };
+  }();
+  foo.__closure = {};
+  foo.__workletHash = 2720353136439;
+  foo.__initData = _worklet_2720353136439_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
 exports[`babel plugin for class worklets workletizes class field 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
