@@ -249,7 +249,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
       );
       shareableMappingCache.set(value, adapted);
       shareableMappingCache.set(adapted);
-      return adapted as ShareableRef<T>;
+      return adapted;
     }
   }
   return NativeReanimatedModule.makeShareableClone(value, shouldPersistRemote);
