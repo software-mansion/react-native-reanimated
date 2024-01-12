@@ -1,9 +1,38 @@
-import { Button, StyleSheet, View } from 'react-native';
+import { Button, Text, StyleSheet, View } from 'react-native';
 
 import React from 'react';
-import { runOnJS, runOnUI } from 'react-native-reanimated';
+import {
+  makeShareableCloneRecursive,
+  runOnJS,
+  runOnUI,
+} from 'react-native-reanimated';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
+import {
+  NativeStackNavigationProp,
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
+
+type StackParams = {
+  Creating: undefined;
+  Freezing: undefined;
+};
+
+const Stack = createNativeStackNavigator<StackParams>();
 
 export default function ShareablesExample() {
+  return (
+    <NavigationContainer independent={true}>
+      <Stack.Navigator>
+        <Stack.Screen name="Creating" component={CreatingShareables} />
+        <Stack.Screen name="Freezing" component={FreezingShareables} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+
+function CreatingShareables() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<StackParams, 'Creating'>>();
   return (
     <View style={styles.container}>
       <CyclicObjectDemo />
@@ -13,6 +42,11 @@ export default function ShareablesExample() {
       <TypedArrayDemo />
       <BigIntTypedArrayDemo />
       <DataViewDemo />
+      <View style={styles.bar} />
+      <Button
+        title="Go to freezing"
+        onPress={() => navigation.navigate('Freezing')}
+      />
     </View>
   );
 }
@@ -159,10 +193,151 @@ function DataViewDemo() {
   return <Button title="DataView" onPress={handlePress} />;
 }
 
+declare global {
+  var _dummyHostObject: { prop: number } | undefined;
+}
+
+function FreezingShareables() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<StackParams, 'Freezing'>>();
+
+  return (
+    <View style={styles.container}>
+      <Button
+        title={'Try modify locked array'}
+        onPress={tryModifyLockedArray}
+      />
+      <Text>
+        Host object {globalThis._dummyHostObject ? 'is' : 'NOT'} present!
+      </Text>
+      <Button
+        title={'Try modify locked host object'}
+        onPress={tryModifyLockedHostObject}
+      />
+      <Button
+        title={'Try modify locked plain object'}
+        onPress={tryModifyLockedPlainObject}
+      />
+      <Button
+        title={'Try modify locked regex'}
+        onPress={tryModifyLockedRegexLiteral}
+      />
+      <Button
+        title={'Try modify locked regex instance'}
+        onPress={tryModifyLockedRegexInstance}
+      />
+      <Button
+        title={'Try modify locked array buffer'}
+        onPress={tryModifyLockedArrayBuffer}
+      />
+      <Button
+        title={'Try modify locked int32 array'}
+        onPress={tryModifyLockedInt32Array}
+      />
+      <View style={styles.bar} />
+      <Button title="Go to creating" onPress={() => navigation.goBack()} />
+    </View>
+  );
+}
+
+function tryModifyLockedArray() {
+  const arr = [1, 2, 3];
+  makeShareableCloneRecursive(arr);
+  arr[0] = 2; // should warn beacuse it's frozen
+}
+
+/*
+Add this to the native code for the below example to work (e.g. in RNRuntimeDecorator):
+
+ class DummyHostObject : public jsi::HostObject {
+   public:
+    double prop;
+
+    explicit DummyHostObject(double prop) : prop(prop) {}
+
+    jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override {
+      auto name = propName.utf8(rt);
+      if (name == "prop") {
+        return jsi::Value(prop);
+      }
+      return jsi::Value::undefined();
+    }
+
+    void set(
+        jsi::Runtime &rt,
+        const jsi::PropNameID &propName,
+        const jsi::Value &value) override {
+      auto name = propName.utf8(rt);
+      if (name == "prop") {
+        prop = value.getNumber();
+      }
+    }
+
+    std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override {
+      std::vector<jsi::PropNameID> result;
+      result.push_back(jsi::PropNameID::forUtf8(rt, "prop"));
+      return result;
+    }
+  };
+
+  ...
+
+  rnRuntime.global().setProperty(
+    rnRuntime, "_dummyHostObject", jsi::Object::createFromHostObject(rnRuntime, std::make_shared<DummyHostObject>(42)) );
+*/
+function tryModifyLockedHostObject() {
+  const hostObject = globalThis._dummyHostObject;
+  if (!hostObject) {
+    return;
+  }
+  makeShareableCloneRecursive(hostObject);
+  hostObject.prop = 2; // shouldn't warn because it's not frozen
+}
+
+function tryModifyLockedPlainObject() {
+  const obj = {
+    a: 1,
+  };
+  makeShareableCloneRecursive(null);
+  obj.a = 2; // should warn because it's frozen
+}
+
+function tryModifyLockedRegexLiteral() {
+  const regexLiteral = /a/;
+  makeShareableCloneRecursive(regexLiteral);
+  // @ts-expect-error
+  regexLiteral.regexProp = 2; // shouldn't warn because it's not frozen
+}
+
+function tryModifyLockedRegexInstance() {
+  const regexInstance = new RegExp('a');
+  makeShareableCloneRecursive(regexInstance);
+  // @ts-expect-error
+  regexInstance.regexProp = 2; // shouldn't warn because it's not frozen
+}
+
+function tryModifyLockedArrayBuffer() {
+  const arrayBuffer = new ArrayBuffer(8);
+  makeShareableCloneRecursive(arrayBuffer);
+  // @ts-expect-error
+  arrayBuffer.arrayBufferProp = 2; // shouldn't warn because it's not frozen
+}
+
+function tryModifyLockedInt32Array() {
+  const int32Array = new Int32Array(2);
+  makeShareableCloneRecursive(int32Array);
+  int32Array[1] = 2; // shouldn't warn because it's not frozen
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  bar: {
+    width: '50%',
+    height: 2,
+    backgroundColor: 'black',
   },
 });

@@ -138,9 +138,11 @@ export function makeShareableCloneRecursive<T>(
         toAdapt = value.map((element) =>
           makeShareableCloneRecursive(element, shouldPersistRemote, depth + 1)
         );
+        lockObjectIfDev(value);
       } else if (isTypeFunction && value.__workletHash === undefined) {
         // this is a remote function
         toAdapt = value;
+        lockObjectIfDev(value);
       } else if (isHostObject(value)) {
         // for host objects we pass the reference to the object as shareable and
         // then recreate new host object wrapping the same instance on the UI thread.
@@ -191,6 +193,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
             depth + 1
           );
         }
+        lockObjectIfDev(value);
       } else if (value instanceof RegExp) {
         const pattern = value.source;
         const flags = value.flags;
@@ -200,7 +203,6 @@ Offending code was: \`${getWorkletCode(value)}\``);
             return new RegExp(pattern, flags);
           },
         });
-        shareableMappingCache.set(value, handle);
         return handle as ShareableRef<T>;
       } else if (value instanceof ArrayBuffer) {
         toAdapt = value;
@@ -241,36 +243,13 @@ Offending code was: \`${getWorkletCode(value)}\``);
         shareableMappingCache.set(value, inaccessibleObject);
         return inaccessibleObject;
       }
-      if (__DEV__ && !isHostObject(value) && isPlainJSObject(value)) {
-        // We freeze objects that are transformed to a Shareable with a meaningful warning.
-        // This should help detect issues when someone modifies data after it's been converted.
-        // Meaning that they may be doing a faulty assumption in their
-        // code expecting that the updates are going to automatically propagate to
-        // the object sent to the UI thread. If the user really wants some objects
-        // to be mutable they should use Shared Values instead.
-        Object.entries(value).forEach(([key, element]) => {
-          Object.defineProperty(value, key, {
-            get() {
-              return element;
-            },
-            set() {
-              console.warn(
-                `[Reanimated] Tried to modify key \`${key}\` of an object which has been already passed to a worklet. See 
-https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-modify-key-of-an-object-which-has-been-converted-to-a-shareable 
-for more details.`
-              );
-            },
-          });
-        });
-        Object.preventExtensions(value);
-      }
-      const adopted = NativeReanimatedModule.makeShareableClone(
+      const adapted = NativeReanimatedModule.makeShareableClone(
         toAdapt,
         shouldPersistRemote
       );
-      shareableMappingCache.set(value, adopted);
-      shareableMappingCache.set(adopted);
-      return adopted;
+      shareableMappingCache.set(value, adapted);
+      shareableMappingCache.set(adapted);
+      return adapted as ShareableRef<T>;
     }
   }
   return NativeReanimatedModule.makeShareableClone(value, shouldPersistRemote);
@@ -299,6 +278,39 @@ function isRemoteFunction<T>(value: {
 }): value is RemoteFunction<T> {
   'worklet';
   return !!value.__remoteFunction;
+}
+
+/**
+ * We freeze
+ * - plain JS objects,
+ * - arrays,
+ *
+ * that are transformed to a shareable with a meaningful warning.
+ * This should help detect issues when someone modifies data after it's been converted.
+ * Meaning that they may be doing a faulty assumption in their
+ * code expecting that the updates are going to automatically propagate to
+ * the object sent to the UI thread. If the user really wants some objects
+ * to be mutable they should use shared values instead.
+ */
+function lockObjectIfDev<T extends object>(value: T) {
+  if (!__DEV__) {
+    return;
+  }
+  Object.entries(value).forEach(([key, element]) => {
+    Object.defineProperty(value, key, {
+      get() {
+        return element;
+      },
+      set() {
+        console.warn(
+          `[Reanimated] Tried to modify key \`${key}\` of an object which has been already passed to a worklet. See 
+https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-modify-key-of-an-object-which-has-been-converted-to-a-shareable 
+for more details.`
+        );
+      },
+    });
+  });
+  Object.preventExtensions(value);
 }
 
 export function makeShareableCloneOnUIRecursive<T>(

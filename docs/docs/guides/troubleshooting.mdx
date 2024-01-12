@@ -155,11 +155,11 @@ LogBox.ignoreLogs([
 
 See [the accessibility overview](accessibility) to learn more about Reduced Motion.
 
-### Tried to modify key of an object which has been converted to a Shareable.
+### Tried to modify key of an object which has been converted to a shareable.
 
-**Problem:** This warning is displayed to inform the user that a Shared Value should be used or an object used in a worklet should be accessed more granularly.
+**Problem:** This warning is displayed to inform the user that a shared value should be used or an object used in a worklet should be accessed more granularly.
 
-#### 1. Not using Shared Values.
+#### 1. Not using shared values.
 
 You might get this warning when you do something along the lines of:
 
@@ -176,7 +176,7 @@ obj.prop = 2; // Warning: Tried to modify key `prop` of an object which has been
 runOnUI(worklet)();
 ```
 
-and expect the results to be `1` and `2`. However, the results will be `1` and `1` because `obj` is not a Shared Value and is only copied to UI runtime once. Therefore, in development builds, we make the object immutable and add this warning after copying it to signal that it's not a valid use of Reanimated. To fix this, you should use a Shared Value instead:
+and expect the results to be `1` and `2`. However, the results will be `1` and `1` because `obj` is not a shared value and is only copied to UI runtime once. Therefore, in development builds, we make the object immutable and add this warning after copying it to signal that it's not a valid use of Reanimated. To fix this, you should use a shared value instead:
 
 **Solution:**
 
