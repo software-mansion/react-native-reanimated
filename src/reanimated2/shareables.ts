@@ -138,11 +138,12 @@ export function makeShareableCloneRecursive<T>(
         toAdapt = value.map((element) =>
           makeShareableCloneRecursive(element, shouldPersistRemote, depth + 1)
         );
-        lockObjectIfDev(value);
+        freezeObjectIfDev(value);
       } else if (isTypeFunction && value.__workletHash === undefined) {
         // this is a remote function
         toAdapt = value;
-        lockObjectIfDev(value);
+        console.log('Remote function');
+        freezeObjectIfDev(value);
       } else if (isHostObject(value)) {
         // for host objects we pass the reference to the object as shareable and
         // then recreate new host object wrapping the same instance on the UI thread.
@@ -193,7 +194,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
             depth + 1
           );
         }
-        lockObjectIfDev(value);
+        freezeObjectIfDev(value);
       } else if (value instanceof RegExp) {
         const pattern = value.source;
         const flags = value.flags;
@@ -293,7 +294,7 @@ function isRemoteFunction<T>(value: {
  * the object sent to the UI thread. If the user really wants some objects
  * to be mutable they should use shared values instead.
  */
-function lockObjectIfDev<T extends object>(value: T) {
+function freezeObjectIfDev<T extends object>(value: T) {
   if (!__DEV__) {
     return;
   }

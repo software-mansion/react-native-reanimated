@@ -203,6 +203,10 @@ function FreezingShareables() {
         title={'Try modify locked array'}
         onPress={tryModifyLockedArray}
       />
+      <Button
+        title={'Try modify remote function'}
+        onPress={tryModifyRemoteFunction}
+      />
       <Text>
         Host object {globalThis._dummyHostObject ? 'is' : 'NOT'} present!
       </Text>
@@ -244,6 +248,13 @@ function tryModifyLockedArray() {
   const arr = [1, 2, 3];
   makeShareableCloneRecursive(arr);
   arr[0] = 2; // should warn beacuse it's frozen
+}
+
+function tryModifyRemoteFunction() {
+  const foo = () => {};
+  foo.bar = 1;
+  makeShareableCloneRecursive(foo);
+  foo.bar = 2; // should warn because it's frozen
 }
 
 /*
@@ -298,7 +309,7 @@ function tryModifyLockedPlainObject() {
   const obj = {
     a: 1,
   };
-  makeShareableCloneRecursive(null);
+  makeShareableCloneRecursive(obj);
   obj.a = 2; // should warn because it's frozen
 }
 
