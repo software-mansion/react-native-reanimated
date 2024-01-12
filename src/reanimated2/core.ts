@@ -31,7 +31,7 @@ export { runOnJS, runOnUI } from './threads';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export type { WorkletRuntime } from './runtimes';
 export { makeShareable, makeShareableCloneRecursive } from './shareables';
-export { makeMutable, makeRemote } from './mutables';
+export { makeMutable } from './mutables';
 
 const IS_FABRIC = isFabric();
 
