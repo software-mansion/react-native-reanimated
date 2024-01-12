@@ -21,6 +21,7 @@ import type {
 } from './layoutReanimation';
 import { initializeUIRuntime } from './initializers';
 import type {
+  LayoutAnimationBatchItem,
   ProgressAnimationCallback,
   SharedTransitionAnimationsFunction,
 } from './layoutReanimation/animationBuilder/commonTypes';
@@ -215,23 +216,9 @@ export function configureLayoutAnimations(
 }
 
 export function configureLayoutAnimationBatch(
-  layoutAnimationsBatch: {
-    viewTag: number;
-    type: LayoutAnimationType;
-    config?: LayoutAnimationFunction | Keyframe;
-  }[]
+  layoutAnimationsBatch: LayoutAnimationBatchItem[]
 ): void {
-  NativeReanimatedModule.configureLayoutAnimationBatch(
-    layoutAnimationsBatch.map((operation) => {
-      return {
-        viewTag: operation.viewTag,
-        type: operation.type,
-        config: operation.config
-          ? makeShareableCloneRecursive(operation.config)
-          : undefined,
-      };
-    })
-  );
+  NativeReanimatedModule.configureLayoutAnimationBatch(layoutAnimationsBatch);
 }
 
 export function setShouldAnimateExitingForTag(

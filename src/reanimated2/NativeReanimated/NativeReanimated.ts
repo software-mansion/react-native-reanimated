@@ -14,6 +14,7 @@ import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
 import type { WorkletRuntime } from '../runtimes';
 import { getValueUnpackerCode } from '../valueUnpacker';
+import type { LayoutAnimationBatchItem } from '../layoutReanimation/animationBuilder/commonTypes';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
@@ -203,11 +204,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 
   configureLayoutAnimationBatch(
-    layoutAnimationsBatch: {
-      viewTag: number;
-      type: LayoutAnimationType;
-      config: ShareableRef<Keyframe | LayoutAnimationFunction> | undefined;
-    }[]
+    layoutAnimationsBatch: LayoutAnimationBatchItem[]
   ) {
     this.InnerNativeModule.configureLayoutAnimationBatch(layoutAnimationsBatch);
   }

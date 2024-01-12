@@ -1,25 +1,21 @@
 'use strict';
 import { shouldBeUseWeb } from './PlatformChecker';
-import { configureLayoutAnimationBatch } from './core';
+import {
+  configureLayoutAnimationBatch,
+  makeShareableCloneRecursive,
+} from './core';
 import type {
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from './layoutReanimation';
+import type { LayoutAnimationBatchItem } from './layoutReanimation/animationBuilder/commonTypes';
 
 function createUpdateManager() {
-  const animations: {
-    viewTag: number;
-    type: LayoutAnimationType;
-    config?: Keyframe | LayoutAnimationFunction;
-  }[] = [];
+  const animations: LayoutAnimationBatchItem[] = [];
 
   return {
-    update(config: {
-      viewTag: number;
-      type: LayoutAnimationType;
-      config?: Keyframe | LayoutAnimationFunction;
-    }) {
-      animations.push(config);
+    update(batchItem: LayoutAnimationBatchItem) {
+      animations.push(batchItem);
       if (animations.length === 1) {
         setImmediate(this.flush);
       }
@@ -44,5 +40,9 @@ if (shouldBeUseWeb()) {
 } else {
   const updateLayoutAnimationsManager = createUpdateManager();
   updateLayoutAnimations = (viewTag, type, config) =>
-    updateLayoutAnimationsManager.update({ viewTag, type, config });
+    updateLayoutAnimationsManager.update({
+      viewTag,
+      type,
+      config: config ? makeShareableCloneRecursive(config) : undefined,
+    });
 }
