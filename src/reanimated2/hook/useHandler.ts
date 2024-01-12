@@ -1,7 +1,6 @@
 'use strict';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from '../commonTypes';
-import { makeRemote } from '../core';
 import { isWeb, isJest } from '../PlatformChecker';
 import type { DependencyList, ReanimatedEvent } from './commonTypes';
 import { areDependenciesEqual, buildDependencies } from './utils';
@@ -66,7 +65,7 @@ export function useHandler<
   const initRef = useRef<ContextWithDependencies<Context> | null>(null);
   if (initRef.current === null) {
     initRef.current = {
-      context: makeRemote<Context>({} as Context),
+      context: {} as Context,
       savedDependencies: [],
     };
   }

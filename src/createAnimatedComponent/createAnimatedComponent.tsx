@@ -247,9 +247,7 @@ export function createAnimatedComponent(
     _detachStyles() {
       if (IS_WEB && this._styles !== null) {
         for (const style of this._styles) {
-          if (style?.viewsRef) {
-            style.viewsRef.remove(this);
-          }
+          style.viewsRef.delete(this);
         }
       } else if (this._viewTag !== -1 && this._styles !== null) {
         for (const style of this._styles) {
