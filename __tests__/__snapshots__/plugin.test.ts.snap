@@ -856,6 +856,48 @@ var animatedStyle = useAnimatedStyle(function () {
 }());"
 `;
 
+exports[`babel plugin for generators makes a generator worklet factory 1`] = `
+"var _worklet_4939499253486_init_data = {
+  code: "function*foo(){yield'hello';yield'world';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo = function* foo() {
+    yield 'hello';
+    yield 'world';
+  };
+  foo.__closure = {};
+  foo.__workletHash = 4939499253486;
+  foo.__initData = _worklet_4939499253486_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
+exports[`babel plugin for generators makes a generator worklet string 1`] = `
+"var _worklet_4939499253486_init_data = {
+  code: "function*foo(){yield'hello';yield'world';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo = function* foo() {
+    yield 'hello';
+    yield 'world';
+  };
+  foo.__closure = {};
+  foo.__workletHash = 4939499253486;
+  foo.__initData = _worklet_4939499253486_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
 exports[`babel plugin for inline styles doesn't show a warning if user writes something like style={styles.value} 1`] = `
 "function App() {
   return React.createElement(Animated.View, {

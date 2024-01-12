@@ -38,8 +38,8 @@ export function buildDependencies(
 
 // This is supposed to work as useEffect comparison.
 export function areDependenciesEqual(
-  nextDeps: DependencyList,
-  prevDeps: DependencyList
+  nextDependencies: DependencyList,
+  prevDependencies: DependencyList
 ) {
   function is(x: number, y: number) {
     return (
@@ -65,7 +65,7 @@ export function areDependenciesEqual(
     return true;
   }
 
-  return areHookInputsEqual(nextDeps, prevDeps);
+  return areHookInputsEqual(nextDependencies, prevDependencies);
 }
 
 export function isAnimated(prop: unknown) {
