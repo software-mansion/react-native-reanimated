@@ -282,8 +282,9 @@ function isRemoteFunction<T>(value: {
 
 /**
  * We freeze
- * - plain JS objects,
  * - arrays,
+ * - remote functions,
+ * - plain JS objects,
  *
  * that are transformed to a shareable with a meaningful warning.
  * This should help detect issues when someone modifies data after it's been converted.
