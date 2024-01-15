@@ -18,6 +18,12 @@ namespace reanimated {
 
 using namespace facebook;
 
+struct LayoutAnimationConfig {
+  int tag;
+  LayoutAnimationType type;
+  std::shared_ptr<Shareable> config;
+};
+
 class LayoutAnimationsManager {
  public:
   explicit LayoutAnimationsManager(const std::shared_ptr<JSLogger> &jsLogger)
@@ -27,6 +33,8 @@ class LayoutAnimationsManager {
       LayoutAnimationType type,
       const std::string &sharedTransitionTag,
       std::shared_ptr<Shareable> config);
+  void configureAnimationBatch(
+      std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
   void setShouldAnimateExiting(int tag, bool value);
   bool shouldAnimateExiting(int tag, bool shouldAnimate);
   bool hasLayoutAnimation(int tag, LayoutAnimationType type);

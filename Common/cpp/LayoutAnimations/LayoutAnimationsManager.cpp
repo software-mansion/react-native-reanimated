@@ -27,6 +27,18 @@ void LayoutAnimationsManager::configureAnimation(
   }
 }
 
+void LayoutAnimationsManager::configureAnimationBatch(
+    std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
+  auto lock = std::unique_lock<std::mutex>(animationsMutex_);
+  for (auto [tag, type, config] : layoutAnimationsBatch) {
+    if (config == nullptr) {
+      getConfigsForType(type).erase(tag);
+    } else {
+      getConfigsForType(type)[tag] = config;
+    }
+  }
+}
+
 void LayoutAnimationsManager::setShouldAnimateExiting(int tag, bool value) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   shouldAnimateExitingForTag_[tag] = value;
