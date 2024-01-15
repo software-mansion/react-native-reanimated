@@ -19,6 +19,7 @@ import { ReduceMotion } from '../../commonTypes';
 import type { StyleProps } from '../../commonTypes';
 import { isReducedMotion } from '../../PlatformChecker';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
+import type { ReanimatedSnapshot } from './componentStyle';
 import { setDummyPosition, snapshots } from './componentStyle';
 
 function getEasingFromConfig(config: CustomConfig): string {
@@ -128,7 +129,17 @@ export function getProcessedConfig(
 }
 
 export function saveSnapshot(element: HTMLElement) {
-  snapshots.set(element, element.getBoundingClientRect());
+  const rect = element.getBoundingClientRect();
+
+  const snapshot: ReanimatedSnapshot = {
+    top: rect.top,
+    left: rect.left,
+    width: rect.width,
+    height: rect.height,
+    lastScroll: getElementScrollValue(element),
+  };
+
+  snapshots.set(element, snapshot);
 }
 
 export function setElementAnimation(
@@ -214,6 +225,20 @@ export function handleLayoutTransition(
   setElementAnimation(element, animationConfig, existingTransform);
 }
 
+function getElementScrollValue(element: HTMLElement) {
+  let current: HTMLElement | null = element;
+
+  while (current) {
+    if (current.scrollTop !== 0) {
+      return current.scrollTop;
+    }
+
+    current = current.parentElement;
+  }
+
+  return 0;
+}
+
 export function handleExitingAnimation(
   element: HTMLElement,
   animationConfig: AnimationConfig
@@ -239,6 +264,15 @@ export function handleExitingAnimation(
   parent?.appendChild(dummy);
 
   const snapshot = snapshots.get(element)!;
+
+  const scroll = getElementScrollValue(element);
+
+  if (scroll !== snapshot.lastScroll) {
+    const diff = snapshot.lastScroll - scroll;
+    snapshot.lastScroll = scroll;
+    snapshot.top += diff;
+  }
+
   snapshots.set(dummy, snapshot);
 
   setDummyPosition(dummy, snapshot);
