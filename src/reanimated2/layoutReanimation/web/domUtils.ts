@@ -212,7 +212,7 @@ function checkIfScreenWasChanged(
 }
 
 export function addHTMLMutationObserver() {
-  if (!isWindowAvailable() || isObserverSet) {
+  if (isObserverSet || !isWindowAvailable()) {
     return;
   }
 
