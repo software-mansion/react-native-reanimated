@@ -1,56 +1,29 @@
 'use strict';
 import { shouldBeUseWeb } from './PlatformChecker';
-import { configureLayoutAnimationBatch } from './core';
+import {
+  configureLayoutAnimationBatch,
+  makeShareableCloneRecursive,
+} from './core';
 import type {
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from './layoutReanimation';
 import type {
-  SharedTransitionAnimationsFunction,
+  LayoutAnimationBatchItem,
   ProgressAnimationCallback,
+  SharedTransitionAnimationsFunction,
 } from './layoutReanimation/animationBuilder/commonTypes';
 
 function createUpdateManager() {
-  const animations: {
-    viewTag: number;
-    type: LayoutAnimationType;
-    config?:
-      | Keyframe
-      | LayoutAnimationFunction
-      | SharedTransitionAnimationsFunction
-      | ProgressAnimationCallback;
-    sharedTransitionTag?: string;
-  }[] = [];
-
-  const deferredAnimations: {
-    viewTag: number;
-    type: LayoutAnimationType;
-    config?:
-      | Keyframe
-      | LayoutAnimationFunction
-      | SharedTransitionAnimationsFunction
-      | ProgressAnimationCallback;
-    sharedTransitionTag?: string;
-  }[] = [];
+  const animations: LayoutAnimationBatchItem[] = [];
+  const deferredAnimations: LayoutAnimationBatchItem[] = [];
 
   return {
-    update(
-      config: {
-        viewTag: number;
-        type: LayoutAnimationType;
-        config?:
-          | Keyframe
-          | LayoutAnimationFunction
-          | SharedTransitionAnimationsFunction
-          | ProgressAnimationCallback;
-        sharedTransitionTag?: string;
-      },
-      defer?: boolean
-    ) {
+    update(batchItem: LayoutAnimationBatchItem, defer?: boolean) {
       if (defer) {
-        deferredAnimations.push(config);
+        deferredAnimations.push(batchItem);
       } else {
-        animations.push(config);
+        animations.push(batchItem);
       }
       if (animations.length + deferredAnimations.length === 1) {
         setImmediate(this.flush);
@@ -93,7 +66,7 @@ if (shouldBeUseWeb()) {
       {
         viewTag,
         type,
-        config,
+        config: config ? makeShareableCloneRecursive(config) : undefined,
         sharedTransitionTag,
       },
       defer

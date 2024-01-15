@@ -95,7 +95,7 @@ var require_buildWorkletString = __commonJS({
       const expression = (0, types_1.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
       (0, assert_1.strict)("params" in expression, "'params' property is undefined in 'expression'");
       (0, assert_1.strict)((0, types_1.isBlockStatement)(expression.body), "[Reanimated] `expression.body` is not a `BlockStatement`");
-      const workletFunction = (0, types_1.functionExpression)((0, types_1.identifier)(name), expression.params, expression.body);
+      const workletFunction = (0, types_1.functionExpression)((0, types_1.identifier)(name), expression.params, expression.body, expression.generator, expression.async);
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "[Reanimated] `inputMap` is undefined.");
       const includeSourceMap = !(0, utils_1.isRelease)();
@@ -256,8 +256,10 @@ var require_globals = __commonJS({
       "_log",
       "_toString",
       "_scheduleOnJS",
+      "_scheduleOnRuntime",
       "_makeShareableClone",
       "_updateDataSynchronously",
+      "_getDataSynchronously",
       "_updatePropsPaper",
       "_updatePropsFabric",
       "_removeFromPropsRegistry",
@@ -330,8 +332,8 @@ var require_makeWorklet = __commonJS({
       const functionName = makeWorkletName(fun);
       const functionIdentifier = (0, types_1.identifier)(functionName);
       const clone = (0, types_1.cloneNode)(fun.node);
-      const funExpression = (0, types_1.isBlockStatement)(clone.body) ? (0, types_1.functionExpression)(null, clone.params, clone.body) : clone;
-      const [funString, sourceMapString] = (0, buildWorkletString_1.buildWorkletString)(transformed.ast, variables, functionName, transformed.map);
+      const funExpression = (0, types_1.isBlockStatement)(clone.body) ? (0, types_1.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
+      let [funString, sourceMapString] = (0, buildWorkletString_1.buildWorkletString)(transformed.ast, variables, functionName, transformed.map);
       (0, assert_1.strict)(funString, "[Reanimated] `funString` is undefined.");
       const workletHash = hash(funString);
       let lineOffset = 1;
@@ -350,6 +352,7 @@ var require_makeWorklet = __commonJS({
         let location = state.file.opts.filename;
         if (state.opts.relativeSourceLocation) {
           location = (0, path_1.relative)(state.cwd, location);
+          sourceMapString = sourceMapString === null || sourceMapString === void 0 ? void 0 : sourceMapString.replace(state.file.opts.filename, location);
         }
         initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("location"), (0, types_1.stringLiteral)(location)));
       }
@@ -976,6 +979,26 @@ var require_addCustomGlobals = __commonJS({
   }
 });
 
+// lib/substituteWebCallExpression.js
+var require_substituteWebCallExpression = __commonJS({
+  "lib/substituteWebCallExpression.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.substituteWebCallExpression = void 0;
+    var types_1 = require("@babel/types");
+    function substituteWebCallExpression(path) {
+      const callee = path.node.callee;
+      if ((0, types_1.isIdentifier)(callee)) {
+        const name = callee.name;
+        if (name === "isWeb" || name === "shouldBeUseWeb") {
+          path.replaceWith((0, types_1.booleanLiteral)(true));
+        }
+      }
+    }
+    exports2.substituteWebCallExpression = substituteWebCallExpression;
+  }
+});
+
 // lib/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
 var processForCalleesWorklets_1 = require_processForCalleesWorklets();
@@ -984,6 +1007,7 @@ var processInlineStylesWarning_1 = require_processInlineStylesWarning();
 var processIfCallback_1 = require_processIfCallback();
 var addCustomGlobals_1 = require_addCustomGlobals();
 var globals_1 = require_globals();
+var substituteWebCallExpression_1 = require_substituteWebCallExpression();
 module.exports = function() {
   function runWithTaggedExceptions(fun) {
     try {
@@ -1002,7 +1026,12 @@ module.exports = function() {
     visitor: {
       CallExpression: {
         enter(path, state) {
-          runWithTaggedExceptions(() => (0, processForCalleesWorklets_1.processForCalleesWorklets)(path, state));
+          runWithTaggedExceptions(() => {
+            (0, processForCalleesWorklets_1.processForCalleesWorklets)(path, state);
+            if (state.opts.substituteWebPlatformChecks) {
+              (0, substituteWebCallExpression_1.substituteWebCallExpression)(path);
+            }
+          });
         }
       },
       "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression": {

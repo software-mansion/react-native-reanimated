@@ -15,23 +15,16 @@ import type {
   ValueRotation,
 } from './commonTypes';
 import { makeShareableCloneRecursive } from './shareables';
-import type {
-  LayoutAnimationFunction,
-  LayoutAnimationType,
-} from './layoutReanimation';
 import { initializeUIRuntime } from './initializers';
-import type {
-  ProgressAnimationCallback,
-  SharedTransitionAnimationsFunction,
-} from './layoutReanimation/animationBuilder/commonTypes';
+import type { LayoutAnimationBatchItem } from './layoutReanimation/animationBuilder/commonTypes';
 import { SensorContainer } from './SensorContainer';
 
 export { startMapper, stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
-export { createWorkletRuntime } from './runtimes';
+export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export type { WorkletRuntime } from './runtimes';
 export { makeShareable, makeShareableCloneRecursive } from './shareables';
-export { makeMutable, makeRemote } from './mutables';
+export { makeMutable } from './mutables';
 
 const IS_FABRIC = isFabric();
 
@@ -197,29 +190,9 @@ export function enableLayoutAnimations(
 }
 
 export function configureLayoutAnimationBatch(
-  layoutAnimationsBatch: {
-    viewTag: number;
-    type: LayoutAnimationType;
-    config?:
-      | LayoutAnimationFunction
-      | Keyframe
-      | SharedTransitionAnimationsFunction
-      | ProgressAnimationCallback;
-    sharedTransitionTag?: string;
-  }[]
+  layoutAnimationsBatch: LayoutAnimationBatchItem[]
 ): void {
-  NativeReanimatedModule.configureLayoutAnimationBatch(
-    layoutAnimationsBatch.map(
-      ({ viewTag, type, config, sharedTransitionTag }) => {
-        return {
-          viewTag,
-          type,
-          config: config ? makeShareableCloneRecursive(config) : undefined,
-          sharedTransitionTag,
-        };
-      }
-    )
-  );
+  NativeReanimatedModule.configureLayoutAnimationBatch(layoutAnimationsBatch);
 }
 
 export function setShouldAnimateExitingForTag(

@@ -20,6 +20,13 @@ const scrollEventNames = [
   'onMomentumScrollEnd',
 ];
 
+/**
+ * Lets you synchronously get the current offset of a `ScrollView`.
+ *
+ * @param animatedRef - An [animated ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef) attached to an Animated.ScrollView component.
+ * @returns A shared value which holds the current offset of the `ScrollView`.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollViewOffset
+ */
 export function useScrollViewOffset(
   animatedRef: AnimatedRef<AnimatedScrollView>,
   initialRef?: SharedValue<number>
@@ -29,7 +36,7 @@ export function useScrollViewOffset(
     initialRef !== undefined ? initialRef : useSharedValue(0)
   );
 
-  const event = useEvent<RNNativeScrollEvent>(
+  const eventHandler = useEvent<RNNativeScrollEvent>(
     (event: ReanimatedScrollEvent) => {
       'worklet';
       offsetRef.current.value =
@@ -44,10 +51,10 @@ export function useScrollViewOffset(
 
   useEffect(() => {
     const viewTag = findNodeHandle(animatedRef.current);
-    event.current?.registerForEvents(viewTag as number);
+    eventHandler.current?.registerForEvents(viewTag as number);
 
     return () => {
-      event.current?.unregisterFromEvents();
+      eventHandler.current?.unregisterFromEvents();
     };
   }, [animatedRef.current]);
 

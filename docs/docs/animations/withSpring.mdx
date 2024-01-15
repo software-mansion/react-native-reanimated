@@ -81,7 +81,7 @@ Available properties:
 | overshootClamping         | `boolean`      | false                 | Whether a spring can bounce over the `toValue`.                                                                           |
 | restDisplacementThreshold | `number`       | 0.01                  | The displacement below which the spring will snap to `toValue` without further oscillations.                              |
 | restSpeedThreshold        | `number`       | 2                     | The speed in pixels per second from which the spring will snap to `toValue` without further oscillations.                 |
-| reduceMotion <Optional /> | `ReduceMotion` | `ReduceMotion.System` | A parameter that determines how the animation responds to the device's reduced motion accessibility setting.              |
+| reduceMotion              | `ReduceMotion` | `ReduceMotion.System` | A parameter that determines how the animation responds to the device's reduced motion accessibility setting.              |
 
 :::info
 The `mass` and `damping` (physics-based) properties can't be used at the same time as `duration` and `dampingRatio` (duration-based).
@@ -95,7 +95,7 @@ A function called upon animation completion. If the animation is cancelled, the 
 
 ### Returns
 
-`withSpring` returns an [animation object](/docs/fundamentals/glossary#animation-object). It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](docs/core/useAnimatedStyle).
+`withSpring` returns an [animation object](/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](docs/core/useAnimatedStyle).
 
 ## Example
 

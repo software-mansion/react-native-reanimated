@@ -22,10 +22,6 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   explicit NativeReanimatedModuleSpec(std::shared_ptr<CallInvoker> jsInvoker);
 
  public:
-  virtual void installValueUnpacker(
-      jsi::Runtime &rt,
-      const jsi::Value &valueUnpackerCode) = 0;
-
   // SharedValue
   virtual jsi::Value makeShareableClone(
       jsi::Runtime &rt,
@@ -48,6 +44,10 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &name,
       const jsi::Value &initializer) = 0;
+  virtual jsi::Value scheduleOnRuntime(
+      jsi::Runtime &rt,
+      const jsi::Value &workletRuntimeValue,
+      const jsi::Value &shareableWorkletValue) = 0;
 
   // events
   virtual jsi::Value registerEventHandler(

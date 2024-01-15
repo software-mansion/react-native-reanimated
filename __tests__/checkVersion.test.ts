@@ -14,12 +14,18 @@ describe('checkCppVersion', () => {
   });
 
   it('checks version successfully', () => {
-    expect(checkCppVersion).not.toThrow();
+    jest.spyOn(console, 'warn').mockImplementation();
+    checkCppVersion();
+    expect(console.warn).not.toBeCalled();
+    jest.clearAllMocks();
   });
 
   it('throws error when version is undefined', () => {
+    jest.spyOn(console, 'warn').mockImplementation();
     delete global._REANIMATED_VERSION_CPP;
-    expect(checkCppVersion).toThrow();
+    checkCppVersion();
+    expect(console.warn).toBeCalled();
+    jest.clearAllMocks();
   });
 });
 
