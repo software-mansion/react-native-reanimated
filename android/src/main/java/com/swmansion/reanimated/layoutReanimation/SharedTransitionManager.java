@@ -48,10 +48,11 @@ public class SharedTransitionManager {
   private boolean mIsTransitionPrepared = false;
   private final Set<Integer> mTagsToCleanup = new HashSet<>();
 
-  class MyEventDispatchListener implements EventDispatcherListener{
-// this idea is not finished yet
+  class MyEventDispatchListener implements EventDispatcherListener {
+    // this idea is not finished yet
     private EventDispatcher mEventDispatcher;
-    public MyEventDispatchListener(EventDispatcher eventDispatcher){
+
+    public MyEventDispatchListener(EventDispatcher eventDispatcher) {
       mEventDispatcher = eventDispatcher;
     }
 
@@ -83,18 +84,21 @@ public class SharedTransitionManager {
   }
 
   protected void screenDidLayout(View view) {
-    if (mAddedSharedViews.isEmpty()){
+    if (mAddedSharedViews.isEmpty()) {
       return;
     }
-    var eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag((ReactContext) view.getContext(), view.getId());
+    var eventDispatcher =
+        UIManagerHelper.getEventDispatcherForReactTag(
+            (ReactContext) view.getContext(), view.getId());
     if (eventDispatcher != null) {
       eventDispatcher.addListener(new MyEventDispatchListener(eventDispatcher));
     }
   }
 
   protected void viewDidLayout(View view) {
-    // this was causing problems when I moved the start of transition to the willAppear event handler
-//    maybeRestartAnimationWithNewLayout(view);
+    // this was causing problems when I moved the start of transition to the willAppear event
+    // handler
+    //    maybeRestartAnimationWithNewLayout(view);
   }
 
   protected void onViewsRemoval(int[] tagsToDelete) {
@@ -173,13 +177,13 @@ public class SharedTransitionManager {
         sharedElementsToRestart, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION);
   }
 
-  protected boolean prepareSharedTransition(List<View> sharedViews, boolean withNewElements){
+  protected boolean prepareSharedTransition(List<View> sharedViews, boolean withNewElements) {
     if (sharedViews.isEmpty()) {
       return false;
     }
     sortViewsByTags(sharedViews);
     List<SharedElement> sharedElements =
-            getSharedElementsForCurrentTransition(sharedViews, withNewElements);
+        getSharedElementsForCurrentTransition(sharedViews, withNewElements);
     if (sharedElements.isEmpty()) {
       return false;
     }
@@ -189,21 +193,21 @@ public class SharedTransitionManager {
     return true;
   }
 
-  protected void onScreenWillDisappear(){
-    if (!mIsTransitionPrepared){
+  protected void onScreenWillDisappear() {
+    if (!mIsTransitionPrepared) {
       return;
     }
     mIsTransitionPrepared = false;
-    for (var sharedElement:  mSharedElementsWithAnimation){
+    for (var sharedElement : mSharedElementsWithAnimation) {
       sharedElement.targetViewSnapshot = new Snapshot(sharedElement.targetView);
     }
-    for (var sharedElement:  mSharedElementsWithProgress){
+    for (var sharedElement : mSharedElementsWithProgress) {
       sharedElement.targetViewSnapshot = new Snapshot(sharedElement.targetView);
     }
 
     startPreparedTransitions();
 
-    for (var tag: mTagsToCleanup){
+    for (var tag : mTagsToCleanup) {
       mNativeMethodsHolder.clearAnimationConfig(tag);
     }
     mTagsToCleanup.clear();
@@ -211,18 +215,18 @@ public class SharedTransitionManager {
 
   private boolean tryStartSharedTransitionForViews(
       List<View> sharedViews, boolean withNewElements) {
-    if (!prepareSharedTransition(sharedViews, withNewElements)){
+    if (!prepareSharedTransition(sharedViews, withNewElements)) {
       return false;
     }
     startPreparedTransitions();
     return true;
   }
 
-  private void startPreparedTransitions(){
+  private void startPreparedTransitions() {
     startSharedTransition(
-            mSharedElementsWithAnimation, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION);
+        mSharedElementsWithAnimation, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION);
     startSharedTransition(
-            mSharedElementsWithProgress, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION_PROGRESS);
+        mSharedElementsWithProgress, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION_PROGRESS);
   }
 
   private void sortViewsByTags(List<View> views) {
@@ -403,8 +407,9 @@ public class SharedTransitionManager {
         mSharedTransitionParent.put(viewSource.getId(), (View) viewSource.getParent());
         mSharedTransitionInParentIndex.put(viewSource.getId(), childIndex);
         var childrenIndicesSet = mSharedViewChildrenIndices.get(parentTag);
-        if (childrenIndicesSet == null){
-          mSharedViewChildrenIndices.put(parentTag, new TreeSet<>(Collections.singleton(childIndex)));
+        if (childrenIndicesSet == null) {
+          mSharedViewChildrenIndices.put(
+              parentTag, new TreeSet<>(Collections.singleton(childIndex)));
         } else {
           childrenIndicesSet.add(childIndex);
         }
@@ -468,7 +473,7 @@ public class SharedTransitionManager {
       // here we calculate how many children with smaller indices have not been reinserted yet
       int childIndexOffset = childIndicesSet.headSet(childIndex).size();
       childIndicesSet.remove(childIndex);
-      if (childIndicesSet.isEmpty()){
+      if (childIndicesSet.isEmpty()) {
         mSharedViewChildrenIndices.remove(parentTag);
       }
       childIndex -= childIndexOffset;

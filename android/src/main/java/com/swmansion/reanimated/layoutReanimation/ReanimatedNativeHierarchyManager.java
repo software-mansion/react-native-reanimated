@@ -166,15 +166,19 @@ class ReaLayoutAnimator extends LayoutAnimationController {
       if (parentName.equals("RNSScreenStack")) {
         mAnimationsManager.cancelAnimationsInSubviews(view);
         super.deleteView(view, listener);
-        var eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag((ReactContext) view.getContext(), view.getId());
+        var eventDispatcher =
+            UIManagerHelper.getEventDispatcherForReactTag(
+                (ReactContext) view.getContext(), view.getId());
         if (eventDispatcher != null) {
-          eventDispatcher.addListener(event -> {
-            // we schedule the start of transition for the ScreenWilDisappear event, so that the layout of the target screen is already calculated
-            // this allows us to make snapshots on the go, so that they are always up-to-date
-            if (event.getEventName().equals("topWillDisappear")) {
-              getAnimationsManager().notifyAboutScreenWillDisappear();
-            }
-          });
+          eventDispatcher.addListener(
+              event -> {
+                // we schedule the start of transition for the ScreenWilDisappear event, so that the
+                // layout of the target screen is already calculated
+                // this allows us to make snapshots on the go, so that they are always up-to-date
+                if (event.getEventName().equals("topWillDisappear")) {
+                  getAnimationsManager().notifyAboutScreenWillDisappear();
+                }
+              });
         }
         return;
       }
