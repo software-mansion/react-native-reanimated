@@ -1,0 +1,14 @@
+.dangerMark {
+  display: flex;
+  padding: 0.125rem 0.375rem;
+}
+
+.badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 0.125rem 0.375rem;
+    background-color: var(--swm-admonition-color-caution);
+  }
