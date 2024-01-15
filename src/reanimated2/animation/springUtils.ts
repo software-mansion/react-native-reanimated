@@ -207,13 +207,15 @@ export function scaleZetaToMatchClamps(
    *    - otherwise
    */
 
-  const relativeExtremum1 = secondBound
-    ? Math.abs((secondBound - toValueNum) / (toValueNum - startValue))
-    : undefined;
+  const relativeExtremum1 =
+    secondBound !== undefined
+      ? Math.abs((secondBound - toValueNum) / (toValueNum - startValue))
+      : undefined;
 
-  const relativeExtremum2 = firstBound
-    ? Math.abs((firstBound - toValueNum) / (toValueNum - startValue))
-    : undefined;
+  const relativeExtremum2 =
+    firstBound !== undefined
+      ? Math.abs((firstBound - toValueNum) / (toValueNum - startValue))
+      : undefined;
 
   /** Use this formula http://hyperphysics.phy-astr.gsu.edu/hbase/oscda.html to calculate
    *  first two extrema. These extrema are located where cos = +- 1
