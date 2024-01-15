@@ -64,7 +64,8 @@ export function buildWorkletString(
     identifier(name),
     expression.params,
     expression.body,
-    expression.generator
+    expression.generator,
+    expression.async
   );
 
   const code = generate(workletFunction).code;

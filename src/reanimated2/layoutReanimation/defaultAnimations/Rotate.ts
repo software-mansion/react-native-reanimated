@@ -20,6 +20,8 @@ export class RotateInDownLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'RotateInDownLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -70,6 +72,8 @@ export class RotateInDownRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'RotateInDownRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -120,6 +124,8 @@ export class RotateInUpLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'RotateInUpLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -170,6 +176,8 @@ export class RotateInUpRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'RotateInUpRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -220,6 +228,8 @@ export class RotateOutDownLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'RotateOutDownLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -282,6 +292,8 @@ export class RotateOutDownRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'RotateOutDownRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -344,6 +356,8 @@ export class RotateOutUpLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'RotateOutUpLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -406,6 +420,8 @@ export class RotateOutUpRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'RotateOutUpRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
