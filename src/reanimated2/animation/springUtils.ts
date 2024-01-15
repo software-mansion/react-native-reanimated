@@ -203,7 +203,7 @@ export function scaleZetaToMatchClamps(
    *
    *  AbsoluteExtremum = startValue ± RelativeExtremum * (toValue - startValue)
    *  Where ± denotes:
-   *    + if extremum is over the target and signum = +1
+   *    + if extremum is over the target
    *    - otherwise
    */
 
@@ -224,12 +224,15 @@ export function scaleZetaToMatchClamps(
    *     Math.exp(-zeta * 2 * Math.PI);  (before the target)
    */
 
-  const newZeta1 = relativeExtremum1
-    ? Math.abs(Math.log(relativeExtremum1) / Math.PI)
-    : undefined;
-  const newZeta2 = relativeExtremum2
-    ? Math.abs(Math.log(relativeExtremum2) / (2 * Math.PI))
-    : undefined;
+  const newZeta1 =
+    relativeExtremum1 !== undefined
+      ? Math.abs(Math.log(relativeExtremum1) / Math.PI)
+      : undefined;
+
+  const newZeta2 =
+    relativeExtremum2 !== undefined
+      ? Math.abs(Math.log(relativeExtremum2) / (2 * Math.PI))
+      : undefined;
 
   const zetaSatisfyingClamp = [newZeta1, newZeta2].filter(
     (x: number | undefined): x is number => x !== undefined
