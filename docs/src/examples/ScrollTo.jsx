@@ -1,6 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, View, Text, ScrollView } from 'react-native';
-import {
+import { Button, View, Text, StyleSheet } from 'react-native';
+import Animated, {
   useAnimatedRef,
   useDerivedValue,
   useSharedValue,
@@ -12,46 +12,42 @@ const ITEM_SIZE = 100;
 const ITEM_MARGIN = 10;
 
 export default function App() {
-  const aref = useAnimatedRef();
+  const animatedRef = useAnimatedRef();
   const scroll = useSharedValue(0);
 
   useDerivedValue(() => {
-    scrollTo(aref, 0, scroll.value * (ITEM_SIZE + 2 * ITEM_MARGIN), true);
+    // highlight-start
+    scrollTo(
+      animatedRef,
+      0,
+      scroll.value * (ITEM_SIZE + 2 * ITEM_MARGIN),
+      true
+    );
+    // highlight-end
   });
 
   const items = Array.from(Array(ITEM_COUNT).keys());
 
   return (
-    <View style={{ flex: 1, flexDirection: 'column' }}>
-      <Incrementor increment={1} scroll={scroll} />
-      <View
-        style={{ width: '100%', height: (ITEM_SIZE + 2 * ITEM_MARGIN) * 2 }}>
-        <ScrollView ref={aref} style={{ backgroundColor: 'orange' }}>
+    <View style={styles.container}>
+      <Incrementor increment={-1} scroll={scroll} />
+      <View style={styles.boxWrapper}>
+        <Animated.ScrollView ref={animatedRef}>
           {items.map((_, i) => (
-            <View
-              key={i}
-              style={{
-                backgroundColor: 'white',
-                aspectRatio: 1,
-                width: ITEM_SIZE,
-                margin: ITEM_MARGIN,
-                justifyContent: 'center',
-                alignContent: 'center',
-              }}>
+            <View key={i} style={styles.box}>
               <Text style={{ textAlign: 'center' }}>{i}</Text>
             </View>
           ))}
-        </ScrollView>
+        </Animated.ScrollView>
       </View>
-
-      <Incrementor increment={-1} scroll={scroll} />
+      <Incrementor increment={1} scroll={scroll} />
     </View>
   );
 }
 
 const Incrementor = ({ increment, scroll }) => (
-  <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-    <TouchableOpacity
+  <View style={styles.buttonWrapper}>
+    <Button
       onPress={() => {
         scroll.value =
           scroll.value + increment > 0
@@ -59,10 +55,34 @@ const Incrementor = ({ increment, scroll }) => (
             : ITEM_COUNT - 1 + increment;
 
         if (scroll.value >= ITEM_COUNT - 2) scroll.value = 0;
-      }}>
-      <Text>{`Scroll ${Math.abs(increment)} ${
-        increment > 0 ? 'down' : 'up'
-      }`}</Text>
-    </TouchableOpacity>
+      }}
+      title={`Scroll ${Math.abs(increment)} ${increment > 0 ? 'down' : 'up'}`}
+    />
   </View>
 );
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  buttonWrapper: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  box: {
+    width: ITEM_SIZE,
+    height: ITEM_SIZE,
+    margin: ITEM_MARGIN,
+    borderRadius: 15,
+    backgroundColor: '#b58df1',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  boxWrapper: {
+    width: '100%',
+    height: 250,
+    alignItems: 'center',
+  },
+});

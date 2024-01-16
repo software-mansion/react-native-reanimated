@@ -4,19 +4,21 @@ sidebar_position: 2
 
 # useScrollViewOffset
 
-This hook allows you to create animations based on the offset of a `ScrollView`.
+`useScrollViewOffset` lets you to create animations based on the offset of a `ScrollView`.
 The hook automatically detects if the `ScrollView` is horizontal or vertical.
 
 ## Reference
 
 ```tsx
-import { useAnimatedRef, useScrollViewOffset } from 'react-native-reanimated';
+import { useScrollViewOffset } from 'react-native-reanimated';
 
 function App() {
-  const animatedRef = useAnimatedRef<RefObject<ScrollView>>();
+  const animatedRef = useAnimatedRef();
+  // highlight-next-line
   const scrollOffset = useScrollViewOffset(animatedRef);
-
-  return <ScrollView ref={animatedRef}>{/* ... */}</ScrollView>;
+  return (
+    <Animated.ScrollView ref={animatedRef}>{/* ... */}</Animated.ScrollView>
+  );
 }
 ```
 
@@ -36,17 +38,15 @@ function useScrollViewOffset(
 
 #### `animatedRef`
 
-An Animated reference to a `ScrollView`. The reference should be passed to the
-appropriate `ScrollView` in the `ref` prop.
+An [animated ref](/docs/core/useAnimatedRef#returns) connected to the ScrollView component you'd want to scroll on. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
 
 #### `initialRef` <Optional/>
 
-An optional shared value to be updated with the scroll offset. If not provided
-a new shared value will be created internally.
+An optional shared value to be updated with the scroll offset. If not provided a new shared value will be created internally.
 
 ### Returns
 
-A shared value which holds the current offset of the `ScrollView`.
+`useScrollViewOffset` returns a [shared value](/docs/fundamentals/glossary#shared-value) which holds the current offset of the `ScrollView`.
 
 ## Example
 
@@ -59,6 +59,12 @@ import ScrollViewOffsetSrc from '!!raw-loader!@site/src/examples/ScrollViewOffse
   showCode
 />
 
-:::info
-This example does not currently work on Web.
-:::
+## Platform compatibility
+
+<div className="platform-compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ❌  |
+
+</div>
