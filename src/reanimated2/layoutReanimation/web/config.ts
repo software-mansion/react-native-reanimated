@@ -1,5 +1,6 @@
 'use strict';
 import type { ReduceMotion } from '../../commonTypes';
+import type { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import {
   BounceIn,
   BounceInData,
@@ -38,17 +39,14 @@ import { ZoomIn, ZoomInData, ZoomOut, ZoomOutData } from './animation/Zoom.web';
 
 import type { AnimationData } from './animationParser';
 
-// Since we cannot remove keyframe from DOM by its name, we have to store its id
-export const customAnimations = new Map<string, number>();
-
 export type AnimationCallback = ((finished: boolean) => void) | null;
 
 export interface AnimationConfig {
   animationName: string;
+  animationType: LayoutAnimationType;
   duration: number;
   delay: number;
   easing: string;
-  reduceMotion: boolean;
   callback: AnimationCallback;
   reversed: boolean;
 }

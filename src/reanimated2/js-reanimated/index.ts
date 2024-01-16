@@ -47,6 +47,12 @@ global._scheduleOnJS = () => {
   );
 };
 
+global._scheduleOnRuntime = () => {
+  throw new Error(
+    '[Reanimated] _scheduleOnRuntime should never be called in JSReanimated.'
+  );
+};
+
 interface JSReanimatedComponent {
   previousStyle: StyleProps;
   setNativeProps?: (style: StyleProps) => void;
@@ -64,6 +70,8 @@ export interface ReanimatedHTMLElement extends HTMLElement {
   _touchableNode: {
     setAttribute: (key: string, props: unknown) => void;
   };
+  reanimatedDummy?: boolean;
+  removedAfterAnimation?: boolean;
 }
 
 export const _updatePropsJS = (

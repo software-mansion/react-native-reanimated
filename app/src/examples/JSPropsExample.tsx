@@ -195,5 +195,7 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
     position: 'absolute',
     color: 'black',
+    pointerEvents: 'none',
+    textAlign: 'center',
   },
 });

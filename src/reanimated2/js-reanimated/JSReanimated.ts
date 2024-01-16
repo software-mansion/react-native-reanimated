@@ -12,10 +12,9 @@ import type {
   ValueRotation,
 } from '../commonTypes';
 import { SensorType } from '../commonTypes';
-import type { WorkletRuntime } from '../runtimes';
 import type { WebSensor } from './WebSensor';
-
 import { mockedRequestAnimationFrame } from '../mockedRequestAnimationFrame';
+import type { WorkletRuntime } from '../runtimes';
 
 // In Node.js environments (like when static rendering with Expo Router)
 // requestAnimationFrame is unavailable, so we use our mock.
@@ -47,6 +46,12 @@ export default class JSReanimated {
   ): WorkletRuntime {
     throw new Error(
       '[Reanimated] createWorkletRuntime is not available in JSReanimated.'
+    );
+  }
+
+  scheduleOnRuntime() {
+    throw new Error(
+      '[Reanimated] scheduleOnRuntime is not available in JSReanimated.'
     );
   }
 
@@ -84,6 +89,10 @@ export default class JSReanimated {
   }
 
   configureLayoutAnimation() {
+    // no-op
+  }
+
+  configureLayoutAnimationBatch() {
     // no-op
   }
 
