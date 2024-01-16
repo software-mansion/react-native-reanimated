@@ -41,9 +41,16 @@ export function convertAnimationObjectToKeyframes(
   let keyframe = `@keyframes ${animationObject.name} { `;
 
   for (const [timestamp, style] of Object.entries(animationObject.style)) {
-    keyframe += `${timestamp}% { `;
+    const step =
+      timestamp === 'from' ? 0 : timestamp === 'to' ? 100 : timestamp;
+
+    keyframe += `${step}% { `;
 
     for (const [property, values] of Object.entries(style)) {
+      if (property === 'easing') {
+        continue;
+      }
+
       if (property !== 'transform') {
         keyframe += `${property}: ${values}; `;
         continue;
