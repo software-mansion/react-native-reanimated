@@ -556,7 +556,8 @@ var require_processForCalleesWorklets = __commonJS({
       ["withSpring", [2]],
       ["withDecay", [1]],
       ["withRepeat", [3]],
-      ["runOnUI", [0]]
+      ["runOnUI", [0]],
+      ["executeOnUIRuntimeSync", [0]]
     ]);
     var objectHooks = /* @__PURE__ */ new Set([
       "useAnimatedGestureHandler",

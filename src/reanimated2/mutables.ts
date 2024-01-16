@@ -84,7 +84,6 @@ export function makeMutable<Value>(initial: Value): Mutable<Value> {
         return value;
       }
       const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
-        'worklet';
         return sv.value;
       });
       return uiValueGetter(mutable);
