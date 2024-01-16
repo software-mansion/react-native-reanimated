@@ -144,14 +144,3 @@ export function makeMutable<Value>(initial: Value): Mutable<Value> {
   shareableMappingCache.set(mutable, handle);
   return mutable;
 }
-
-export function makeRemote<T extends object>(initial: T = {} as T): T {
-  const handle = makeShareableCloneRecursive({
-    __init: () => {
-      'worklet';
-      return initial;
-    },
-  });
-  shareableMappingCache.set(initial, handle);
-  return initial;
-}

@@ -319,6 +319,32 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
   return jsi::Value::undefined();
 }
 
+jsi::Value NativeReanimatedModule::configureLayoutAnimationBatch(
+    jsi::Runtime &rt,
+    const jsi::Value &layoutAnimationsBatch) {
+  auto array = layoutAnimationsBatch.asObject(rt).asArray(rt);
+  size_t length = array.size(rt);
+  std::vector<LayoutAnimationConfig> batch(length);
+  for (int i = 0; i < length; i++) {
+    auto item = array.getValueAtIndex(rt, i).asObject(rt);
+    auto &batchItem = batch[i];
+    batchItem.tag = item.getProperty(rt, "viewTag").asNumber();
+    batchItem.type = static_cast<LayoutAnimationType>(
+        item.getProperty(rt, "type").asNumber());
+    auto config = item.getProperty(rt, "config");
+    if (config.isUndefined()) {
+      batchItem.config = nullptr;
+    } else {
+      batchItem.config = extractShareableOrThrow<ShareableObject>(
+          rt,
+          config,
+          "[Reanimated] Layout animation config must be an object.");
+    }
+  }
+  layoutAnimationsManager_.configureAnimationBatch(batch);
+  return jsi::Value::undefined();
+}
+
 void NativeReanimatedModule::setShouldAnimateExiting(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,

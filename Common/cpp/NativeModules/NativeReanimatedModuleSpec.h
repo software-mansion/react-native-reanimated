@@ -98,6 +98,10 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       const jsi::Value &sharedTransitionTag,
       const jsi::Value &config) = 0;
 
+  virtual jsi::Value configureLayoutAnimationBatch(
+      jsi::Runtime &rt,
+      const jsi::Value &layoutAnimationsBatch) = 0;
+
   virtual void setShouldAnimateExiting(
       jsi::Runtime &rt,
       const jsi::Value &viewTag,

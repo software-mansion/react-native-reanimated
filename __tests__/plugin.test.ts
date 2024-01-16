@@ -1690,4 +1690,66 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
   });
+
+  describe('for generators', () => {
+    it('makes a generator worklet factory', () => {
+      const input = html`<script>
+        function* foo() {
+          'worklet';
+          yield 'hello';
+          yield 'world';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('var foo = function* foo() {');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('makes a generator worklet string', () => {
+      const input = html`<script>
+        function* foo() {
+          'worklet';
+          yield 'hello';
+          yield 'world';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain(
+        `code: "function*foo(){yield'hello';yield'world';}"`
+      );
+      expect(code).toMatchSnapshot();
+    });
+  });
+
+  describe('for async functions', () => {
+    it('makes an async worklet factory', () => {
+      const input = html`<script>
+        async function foo() {
+          'worklet';
+          await Promise.resolve();
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('asyncToGenerator');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('makes an async worklet string', () => {
+      const input = html`<script>
+        async function foo() {
+          'worklet';
+          await Promise.resolve();
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain(
+        `code: "async function foo(){await Promise.resolve();}"`
+      );
+      expect(code).toMatchSnapshot();
+    });
+  });
 });

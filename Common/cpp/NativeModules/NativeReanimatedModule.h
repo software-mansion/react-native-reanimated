@@ -86,6 +86,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &type,
       const jsi::Value &sharedTransitionTag,
       const jsi::Value &config) override;
+  jsi::Value configureLayoutAnimationBatch(
+      jsi::Runtime &rt,
+      const jsi::Value &layoutAnimationsBatch) override;
   void setShouldAnimateExiting(
       jsi::Runtime &rt,
       const jsi::Value &viewTag,

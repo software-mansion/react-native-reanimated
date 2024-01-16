@@ -54,7 +54,7 @@ declare global {
     | ((
         operations: {
           tag: number;
-          name: string;
+          name: string | null;
           updates: StyleProps | AnimatedStyle<any>;
         }[]
       ) => void)
