@@ -1,41 +1,63 @@
 import React from 'react';
-import { View, Text, ScrollView } from 'react-native';
-import {
+import { View, Text, StyleSheet, TextInput } from 'react-native';
+import Animated, {
+  useAnimatedProps,
   useAnimatedRef,
   useDerivedValue,
   useScrollViewOffset,
 } from 'react-native-reanimated';
-import AnimatedText from '../components/AnimatedText';
 
 export default function App() {
-  const aref = useAnimatedRef();
-  const scrollHandler = useScrollViewOffset(aref);
-  const text = useDerivedValue(() => scrollHandler.value.toFixed(1));
+  const animatedRef = useAnimatedRef();
+  // highlight-start
+  const offset = useScrollViewOffset(animatedRef);
+  const text = useDerivedValue(() => `offset: ${offset.value.toFixed(1)}`);
+  // highlight-end
 
   return (
-    <View style={{ height: 300, flexDirection: 'column' }}>
+    <View style={styles.container}>
       <AnimatedText text={text} />
-      <ScrollView
-        ref={aref}
-        style={{ backgroundColor: 'orange' }}
-        // Note: `scrollEventThrottle` is required as the default value of `0`
-        // means that the offset is only updated once per gesture
-        scrollEventThrottle={1}>
+      <Animated.ScrollView ref={animatedRef}>
         {Array.from({ length: 10 }).map((_, i) => (
-          <View
-            key={i}
-            style={{
-              backgroundColor: 'white',
-              aspectRatio: 1,
-              width: 100,
-              margin: 10,
-              justifyContent: 'center',
-              alignContent: 'center',
-            }}>
-            <Text style={{ textAlign: 'center' }}>{i}</Text>
+          <View key={i} style={styles.box}>
+            <Text style={styles.center}>{i}</Text>
           </View>
         ))}
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    height: 250,
+  },
+  box: {
+    width: 100,
+    height: 100,
+    margin: 10,
+    borderRadius: 15,
+    backgroundColor: '#b58df1',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  center: {
+    textAlign: 'center',
+  },
+});
+
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+Animated.addWhitelistedNativeProps({ text: true });
+
+function AnimatedText({ text, ...props }) {
+  const animatedProps = useAnimatedProps(() => ({ text: text.value }));
+  return (
+    <AnimatedTextInput
+      editable={false}
+      {...props}
+      value={text.value}
+      animatedProps={animatedProps}
+    />
   );
 }

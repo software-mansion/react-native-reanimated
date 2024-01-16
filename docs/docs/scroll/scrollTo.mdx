@@ -4,28 +4,25 @@ sidebar_position: 1
 
 # scrollTo
 
-Provides synchronous scroll on the UI thread to a given offset using an animated ref to a scroll view. This allows performing smooth scrolling without lags (which might have otherwise occurred when it was asynchronous and based on lots of events).
+`scrollTo` lets you synchronously scroll to a given X or Y offset.
 
 ## Reference
 
 ```tsx
-import {
-  useAnimatedRef,
-  useSharedValue,
-  useDerivedValue,
-  scrollTo,
-} from 'react-native-reanimated';
+import { scrollTo } from 'react-native-reanimated';
 
 function App() {
-  const animatedRef = useAnimatedRef<RefObject<ScrollView>>();
+  const animatedRef = useAnimatedRef();
   const scrollY = useSharedValue(0);
 
   useDerivedValue(() => {
-    // Scroll the view in sync with the shared value
+    // highlight-next-line
     scrollTo(animatedRef, 0, scrollY.value, true);
   });
 
-  return <ScrollView ref={animatedRef}>{/* ... */}</ScrollView>;
+  return (
+    <Animated.ScrollView ref={animatedRef}>{/* ... */}</Animated.ScrollView>
+  );
 }
 ```
 
@@ -47,23 +44,23 @@ function scrollTo<T extends Component>(
 
 #### `animatedRef`
 
-The product of [`useAnimatedRef`](/docs/core/useAnimatedRef) which is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread).
+An [animated ref](/docs/core/useAnimatedRef#returns) connected to the ScrollView component you'd want to scroll on. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
 
 #### `x`
 
-Corresponds to the pixel along the horizontal axis of the element that you want displayed in the upper left.
+Value in pixels to scroll to on the horizontal X axis.
 
 #### `y`
 
-Corresponds to the pixel along the vertical axis of the element that you want displayed in the upper left.
+Value in pixels to scroll to on the vertical Y axis.
 
 #### `animated`
 
-Indicates whether the scroll should be smooth (`true`) or instant (`false`).
+Whether the scroll should be smooth (`true`) or instant (`false`).
 
 ### Returns
 
-`void`
+`scrollTo` returns `undefined`.
 
 ## Example
 
@@ -71,3 +68,17 @@ import ScrollTo from '@site/src/examples/ScrollTo';
 import ScrollToSrc from '!!raw-loader!@site/src/examples/ScrollTo';
 
 <InteractiveExample src={ScrollToSrc} component={<ScrollTo />} />
+
+## Remarks
+
+- The `scrollTo` function can only be called from [the UI thread](/docs/fundamentals/glossary#ui-thread).
+
+## Platform compatibility
+
+<div className="platform-compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>
