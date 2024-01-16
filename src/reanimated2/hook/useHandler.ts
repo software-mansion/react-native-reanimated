@@ -4,6 +4,7 @@ import type { WorkletFunction } from '../commonTypes';
 import { isWeb, isJest } from '../PlatformChecker';
 import type { DependencyList, ReanimatedEvent } from './commonTypes';
 import { areDependenciesEqual, buildDependencies } from './utils';
+import { makeShareable } from '../shareables';
 
 interface GeneralHandler<
   Event extends object,
@@ -64,8 +65,9 @@ export function useHandler<
 ): UseHandlerContext<Context> {
   const initRef = useRef<ContextWithDependencies<Context> | null>(null);
   if (initRef.current === null) {
+    const context = makeShareable({} as Context);
     initRef.current = {
-      context: {} as Context,
+      context,
       savedDependencies: [],
     };
   }
