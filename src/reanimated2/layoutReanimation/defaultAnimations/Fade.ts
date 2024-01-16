@@ -17,6 +17,7 @@ export class FadeIn
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeIn';
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -57,6 +58,8 @@ export class FadeInRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeInRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -101,6 +104,8 @@ export class FadeInLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeInLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -145,6 +150,8 @@ export class FadeInUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeInUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -189,6 +196,8 @@ export class FadeInDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeInDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -233,6 +242,8 @@ export class FadeOut
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeOut';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -273,6 +284,8 @@ export class FadeOutRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeOutRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -317,6 +330,8 @@ export class FadeOutLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeOutLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -360,6 +375,8 @@ export class FadeOutUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeOutUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -404,6 +421,8 @@ export class FadeOutDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeOutDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
