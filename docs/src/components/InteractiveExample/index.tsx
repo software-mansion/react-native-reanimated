@@ -5,7 +5,7 @@ import { useCopyToClipboard } from 'usehooks-ts';
 import BrowserOnly from '@docusaurus/BrowserOnly';
 import CodeBlock from '@theme/CodeBlock';
 import AnimableIcon, { Animation } from '@site/src/components/AnimableIcon';
-import { useReduceMotion } from 'react-reduce-motion';
+import { useReducedMotion } from 'react-native-reanimated';
 import ReducedMotionWarning from '../ReducedMotionWarning';
 
 import Copy from '@site/static/img/copy.svg';
@@ -38,7 +38,7 @@ export default function InteractiveExample({
     setKey(key + 1);
   };
 
-  const prefersReducedMotion = useReduceMotion();
+  const prefersReducedMotion = useReducedMotion();
 
   return (
     <BrowserOnly fallback={<div>Loading...</div>}>

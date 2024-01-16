@@ -4,7 +4,7 @@ import styles from './styles.module.css';
 
 import BrowserOnly from '@docusaurus/BrowserOnly';
 import CodeBlock from '@theme/CodeBlock';
-import { useReduceMotion } from 'react-reduce-motion';
+import { useReducedMotion } from 'react-native-reanimated';
 import ReducedMotionWarning from '../ReducedMotionWarning';
 
 import useClampPlayground from './useClampPlayground';
@@ -56,7 +56,7 @@ export default function InteractivePlayground(
     resetOptions();
   };
 
-  const prefersReducedMotion = useReduceMotion();
+  const prefersReducedMotion = useReducedMotion();
 
   return (
     <BrowserOnly fallback={<div>Loading...</div>}>
