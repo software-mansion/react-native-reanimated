@@ -264,7 +264,6 @@ export function handleExitingAnimation(
   parent?.appendChild(dummy);
 
   const snapshot = snapshots.get(element)!;
-  snapshots.set(dummy, snapshot);
 
   const scroll = getElementScrollValue(element);
 
