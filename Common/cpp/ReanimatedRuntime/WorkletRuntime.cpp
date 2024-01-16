@@ -32,8 +32,8 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
       std::shared_ptr<jsi::Runtime> &runtime,
       const std::shared_ptr<std::recursive_mutex> &runtimeMutex)
       : jsi::WithRuntimeDecorator<AroundLock>(*runtime, aroundLock_),
-        runtime_(std::move(runtime)),
-        aroundLock_(runtimeMutex) {}
+        aroundLock_(runtimeMutex),
+        runtime_(std::move(runtime)) {}
 };
 
 static std::shared_ptr<jsi::Runtime> makeRuntime(
