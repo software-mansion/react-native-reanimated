@@ -8,11 +8,6 @@ import { valueSetter } from './valueSetter';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-const uiValueGetter = executeOnUIRuntimeSync(<T>(sv: Mutable<T>): T => {
-  'worklet';
-  return sv.value;
-});
-
 type Listener<Value> = (newValue: Value) => void;
 
 export function makeUIMutable<Value>(initial: Value): Mutable<Value> {
@@ -85,10 +80,14 @@ export function makeMutable<Value>(initial: Value): Mutable<Value> {
       }
     },
     get value(): Value {
-      if (!SHOULD_BE_USE_WEB) {
-        return uiValueGetter(mutable);
+      if (SHOULD_BE_USE_WEB) {
+        return value;
       }
-      return value;
+      const uiValueGetter = executeOnUIRuntimeSync(<T>(sv: Mutable<T>): T => {
+        'worklet';
+        return sv.value;
+      });
+      return uiValueGetter(mutable);
     },
     set _value(newValue: Value) {
       if (!SHOULD_BE_USE_WEB) {

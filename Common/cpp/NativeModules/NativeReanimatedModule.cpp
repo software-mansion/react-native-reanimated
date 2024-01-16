@@ -60,7 +60,7 @@ NativeReanimatedModule::NativeReanimatedModule(
           jsQueue,
           jsScheduler_,
           "Reanimated UI runtime",
-          WorkletRuntimeType::WithLocking,
+          true /* supportsLocking */,
           valueUnpackerCode)),
       valueUnpackerCode_(valueUnpackerCode),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
@@ -165,16 +165,7 @@ void NativeReanimatedModule::scheduleOnUI(
 jsi::Value NativeReanimatedModule::executeOnUIRuntimeSync(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {
-  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
-      rt,
-      worklet,
-      "[Reanimated] Only worklets can be executed synchronously on UI runtime.");
-  auto lock = uiWorkletRuntime_->lock();
-  jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
-  auto result = uiWorkletRuntime_->runGuarded(shareableWorklet);
-  auto shareableResult = extractShareableOrThrow(uiRuntime, result);
-  lock.unlock();
-  return shareableResult->getJSValue(rt);
+  return uiWorkletRuntime_->executeSync(rt, worklet);
 }
 
 jsi::Value NativeReanimatedModule::createWorkletRuntime(
@@ -186,7 +177,7 @@ jsi::Value NativeReanimatedModule::createWorkletRuntime(
       jsQueue_,
       jsScheduler_,
       name.asString(rt).utf8(rt),
-      WorkletRuntimeType::WithoutLocking,
+      false /* supportsLocking */,
       valueUnpackerCode_);
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Reanimated] Initializer must be a worklet.");

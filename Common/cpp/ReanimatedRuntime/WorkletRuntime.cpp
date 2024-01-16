@@ -8,42 +8,45 @@
 
 namespace reanimated {
 
-struct AroundLock {
-  std::recursive_mutex *mutex;
-  void before() {
-    mutex->lock();
+class AroundLock {
+  const std::shared_ptr<std::recursive_mutex> mutex_;
+
+ public:
+  explicit AroundLock(const std::shared_ptr<std::recursive_mutex> &mutex)
+      : mutex_(mutex) {}
+
+  void before() const {
+    mutex_->lock();
   }
-  void after() {
-    mutex->unlock();
+  void after() const {
+    mutex_->unlock();
   }
 };
 
 class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
- private:
   AroundLock aroundLock_;
   std::shared_ptr<jsi::Runtime> runtime_;
 
  public:
   explicit LockableRuntime(
-      std::shared_ptr<jsi::Runtime> &&runtime,
-      std::recursive_mutex *runtimeMutex)
+      std::shared_ptr<jsi::Runtime> &runtime,
+      const std::shared_ptr<std::recursive_mutex> &runtimeMutex)
       : jsi::WithRuntimeDecorator<AroundLock>(*runtime, aroundLock_),
-        runtime_(std::move(runtime)) {
-    aroundLock_.mutex = runtimeMutex;
-  }
+        runtime_(std::move(runtime)),
+        aroundLock_(runtimeMutex) {}
 };
 
 static std::shared_ptr<jsi::Runtime> makeRuntime(
     jsi::Runtime &runtime,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name,
-    WorkletRuntimeType workletRuntimeType,
-    std::recursive_mutex *runtimeMutex) {
-  if (workletRuntimeType == WorkletRuntimeType::WithLocking) {
-    return std::make_shared<LockableRuntime>(
-        ReanimatedRuntime::make(runtime, jsQueue, name), runtimeMutex);
+    const bool supportsLocking,
+    const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
+  auto reanimatedRuntime = ReanimatedRuntime::make(runtime, jsQueue, name);
+  if (supportsLocking) {
+    return std::make_shared<LockableRuntime>(reanimatedRuntime, runtimeMutex);
   } else {
-    return ReanimatedRuntime::make(runtime, jsQueue, name);
+    return reanimatedRuntime;
   }
 }
 
@@ -52,16 +55,17 @@ WorkletRuntime::WorkletRuntime(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
-    WorkletRuntimeType type,
+    const bool supportsLocking,
     const std::string &valueUnpackerCode)
-    : runtime_(makeRuntime(
+    : runtimeMutex_(std::make_shared<std::recursive_mutex>()),
+      runtime_(makeRuntime(
           rnRuntime,
           jsQueue,
           name,
-          WorkletRuntimeType::WithLocking,
-          &runtimeMutex_)),
+          supportsLocking,
+          runtimeMutex_)),
       name_(name),
-      supportsLocking_(type == WorkletRuntimeType::WithLocking) {
+      supportsLocking_(supportsLocking) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
   WorkletRuntimeDecorator::decorate(rt, name, jsScheduler);
@@ -75,12 +79,23 @@ WorkletRuntime::WorkletRuntime(
   rt.global().setProperty(rt, "__valueUnpacker", valueUnpacker);
 }
 
-std::unique_lock<std::recursive_mutex> WorkletRuntime::lock() {
+jsi::Value WorkletRuntime::executeSync(
+    jsi::Runtime &rt,
+    const jsi::Value &worklet) const {
   assert(
       supportsLocking_ &&
       ("[Reanimated] Runtime \"" + name_ + "\" doesn't support locking.")
           .c_str());
-  return std::unique_lock<std::recursive_mutex>(runtimeMutex_);
+  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
+      rt,
+      worklet,
+      "[Reanimated] Only worklets can be executed synchronously on UI runtime.");
+  auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+  jsi::Runtime &uiRuntime = getJSIRuntime();
+  auto result = runGuarded(shareableWorklet);
+  auto shareableResult = extractShareableOrThrow(uiRuntime, result);
+  lock.unlock();
+  return shareableResult->getJSValue(rt);
 }
 
 jsi::Value WorkletRuntime::get(

@@ -18,8 +18,6 @@ using namespace react;
 
 namespace reanimated {
 
-enum WorkletRuntimeType { WithLocking, WithoutLocking };
-
 class WorkletRuntime : public jsi::HostObject,
                        public std::enable_shared_from_this<WorkletRuntime> {
  public:
@@ -28,14 +26,12 @@ class WorkletRuntime : public jsi::HostObject,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::string &name,
-      WorkletRuntimeType type,
+      const bool supportsLocking,
       const std::string &valueUnpackerCode);
 
   jsi::Runtime &getJSIRuntime() const {
     return *runtime_;
   }
-
-  std::unique_lock<std::recursive_mutex> lock();
 
   template <typename... Args>
   inline jsi::Value runGuarded(
@@ -55,6 +51,8 @@ class WorkletRuntime : public jsi::HostObject,
         [=, self = shared_from_this()] { self->runGuarded(shareableWorklet); });
   }
 
+  jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
+
   std::string toString() const {
     return "[WorkletRuntime \"" + name_ + "\"]";
   }
@@ -64,11 +62,11 @@ class WorkletRuntime : public jsi::HostObject,
   std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
 
  private:
-  std::recursive_mutex runtimeMutex_;
+  const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
-  bool supportsLocking_;
+  const bool supportsLocking_;
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on
