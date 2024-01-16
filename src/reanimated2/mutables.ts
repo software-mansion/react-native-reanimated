@@ -83,7 +83,7 @@ export function makeMutable<Value>(initial: Value): Mutable<Value> {
       if (SHOULD_BE_USE_WEB) {
         return value;
       }
-      const uiValueGetter = executeOnUIRuntimeSync(<T>(sv: Mutable<T>): T => {
+      const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
         'worklet';
         return sv.value;
       });
