@@ -92,6 +92,10 @@ export default class JSReanimated {
     // no-op
   }
 
+  configureLayoutAnimationBatch() {
+    // no-op
+  }
+
   setShouldAnimateExitingForTag() {
     // no-op
   }
