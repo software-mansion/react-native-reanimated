@@ -269,9 +269,8 @@ export function handleExitingAnimation(
   const scroll = getElementScrollValue(element);
 
   if (scroll !== snapshot.lastScroll) {
-    const diff = snapshot.lastScroll - scroll;
+    snapshot.top += snapshot.lastScroll - scroll;
     snapshot.lastScroll = scroll;
-    snapshot.top += diff;
   }
 
   snapshots.set(dummy, snapshot);
