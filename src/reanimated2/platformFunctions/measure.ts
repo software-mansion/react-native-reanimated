@@ -43,17 +43,17 @@ function measureFabric(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
   const measured = _measureFabric!(viewTag as ShadowNodeWrapper);
   if (measured === null) {
     console.warn(
-      `[Reanimated] The view with tag ${viewTag} has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
+      `[Reanimated] The view with tag ${viewTag?.toString()} has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
     );
     return null;
   } else if (measured.x === -1234567) {
     console.warn(
-      `[Reanimated] The view with tag ${viewTag} returned an invalid measurement response. Please make sure the view is currently rendered.`
+      `[Reanimated] The view with tag ${viewTag?.toString()} returned an invalid measurement response. Please make sure the view is currently rendered.`
     );
     return null;
   } else if (isNaN(measured.x)) {
     console.warn(
-      `[Reanimated] The view with tag ${viewTag} gets view-flattened on Android. To disable view-flattening, set \`collapsable={false}\` on this component.`
+      `[Reanimated] The view with tag ${viewTag?.toString()} gets view-flattened on Android. To disable view-flattening, set \`collapsable={false}\` on this component.`
     );
     return null;
   } else {
@@ -78,17 +78,17 @@ function measurePaper(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
   const measured = _measurePaper!(viewTag as number);
   if (measured === null) {
     console.warn(
-      `[Reanimated] The view with tag ${viewTag} has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
+      `[Reanimated] The view with tag ${viewTag?.toString()} has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
     );
     return null;
   } else if (measured.x === -1234567) {
     console.warn(
-      `[Reanimated] The view with tag ${viewTag} returned an invalid measurement response. Please make sure the view is currently rendered.`
+      `[Reanimated] The view with tag ${viewTag?.toString()} returned an invalid measurement response. Please make sure the view is currently rendered.`
     );
     return null;
   } else if (isNaN(measured.x)) {
     console.warn(
-      `[Reanimated] The view with tag ${viewTag} gets view-flattened on Android. To disable view-flattening, set \`collapsable={false}\` on this component.`
+      `[Reanimated] The view with tag ${viewTag?.toString()} gets view-flattened on Android. To disable view-flattening, set \`collapsable={false}\` on this component.`
     );
     return null;
   } else {

@@ -63,6 +63,7 @@ declare global {
         operations: {
           tag: number;
           name: string | null;
+          // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
           updates: StyleProps | AnimatedStyle<any>;
         }[]
       ) => void)
@@ -71,6 +72,7 @@ declare global {
     | ((
         operations: {
           shadowNodeWrapper: ShadowNodeWrapper;
+          // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
           updates: StyleProps | AnimatedStyle<any>;
         }[]
       ) => void)

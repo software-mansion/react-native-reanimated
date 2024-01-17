@@ -66,6 +66,7 @@ export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return new Promise((resolve, reject) => {
     return NativeReanimatedModule.getViewProp(
       viewTag,

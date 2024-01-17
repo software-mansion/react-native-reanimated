@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 'use strict';
 import type { MutableRefObject } from 'react';
 import { processColorsInProps } from './Colors';
@@ -29,7 +30,7 @@ if (shouldBeUseWeb()) {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
     processColorsInProps(updates);
-    global.UpdatePropsManager!.update(viewDescriptors, updates);
+    global.UpdatePropsManager.update(viewDescriptors, updates);
   };
 }
 
@@ -72,6 +73,7 @@ const createUpdatePropsManager = isFabric()
               updates,
             });
             if (operations.length === 1) {
+              // eslint-disable-next-line @typescript-eslint/unbound-method
               queueMicrotask(this.flush);
             }
           });
@@ -102,6 +104,7 @@ const createUpdatePropsManager = isFabric()
               updates,
             });
             if (operations.length === 1) {
+              // eslint-disable-next-line @typescript-eslint/unbound-method
               queueMicrotask(this.flush);
             }
           });

@@ -138,7 +138,7 @@
     "babel-plugin-module-resolver": "^5.0.0",
     "clang-format": "^1.6.0",
     "code-tag": "^1.1.0",
-    "eslint": "^8.55.0",
+    "eslint": "^8.56.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-import-resolver-babel-module": "^5.3.1",
