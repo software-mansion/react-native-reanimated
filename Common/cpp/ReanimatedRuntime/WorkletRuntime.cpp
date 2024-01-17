@@ -18,6 +18,7 @@ class AroundLock {
   void before() const {
     mutex_->lock();
   }
+
   void after() const {
     mutex_->unlock();
   }
