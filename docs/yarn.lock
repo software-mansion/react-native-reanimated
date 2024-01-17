@@ -10396,11 +10396,6 @@ react-proxy@^1.1.7:
     lodash "^4.6.1"
     react-deep-force-update "^1.0.0"
 
-react-reduce-motion@^2.0.2:
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/react-reduce-motion/-/react-reduce-motion-2.0.2.tgz#cbe136f808a31e2c80f16660ce0f3156bb1e2be3"
-  integrity sha512-4E5oIMIb8PIfeKR9NJtkHTRCukSdkCkvlhsq+nB03CgIWnrX3wyM46LUlKxdHcFUyzmaGUD04BjkIxRFqtccLg==
-
 react-refresh@^0.4.0:
   version "0.4.3"
   resolved "https://registry.yarnpkg.com/react-refresh/-/react-refresh-0.4.3.tgz#966f1750c191672e76e16c2efa569150cc73ab53"
