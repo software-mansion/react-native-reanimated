@@ -17,12 +17,13 @@ type BottomSheetProps = PropsWithChildren<{
   toggleSheet: () => void;
   duration?: number;
 }>;
-const BottomSheet = ({
+
+function BottomSheet({
   isOpen,
   toggleSheet,
   duration = 500,
   children,
-}: BottomSheetProps) => {
+}: BottomSheetProps) {
   const height = useSharedValue(0);
   const progress = useDerivedValue(() =>
     withTiming(isOpen.value ? 0 : 1, { duration })
@@ -55,11 +56,9 @@ const BottomSheet = ({
       </Animated.View>
     </>
   );
-};
+}
 
 const sheetStyles = StyleSheet.create({
-  flex: { flex: 1 },
-
   sheet: {
     backgroundColor: 'white',
     padding: 16,
@@ -79,7 +78,7 @@ const sheetStyles = StyleSheet.create({
   },
 });
 
-function BottomSheetScreen() {
+export default function App() {
   const isOpen = useSharedValue(false);
 
   const toggleSheet = () => {
@@ -103,7 +102,9 @@ function BottomSheetScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
+  flex: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     height: 500,
@@ -119,5 +120,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-
-export default BottomSheetScreen;
