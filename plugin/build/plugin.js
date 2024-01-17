@@ -95,7 +95,7 @@ var require_buildWorkletString = __commonJS({
       const expression = (0, types_1.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
       (0, assert_1.strict)("params" in expression, "'params' property is undefined in 'expression'");
       (0, assert_1.strict)((0, types_1.isBlockStatement)(expression.body), "[Reanimated] `expression.body` is not a `BlockStatement`");
-      const workletFunction = (0, types_1.functionExpression)((0, types_1.identifier)(name), expression.params, expression.body);
+      const workletFunction = (0, types_1.functionExpression)((0, types_1.identifier)(name), expression.params, expression.body, expression.generator, expression.async);
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "[Reanimated] `inputMap` is undefined.");
       const includeSourceMap = !(0, utils_1.isRelease)();
@@ -256,8 +256,8 @@ var require_globals = __commonJS({
       "_log",
       "_toString",
       "_scheduleOnJS",
+      "_scheduleOnRuntime",
       "_makeShareableClone",
-      "_updateDataSynchronously",
       "_updatePropsPaper",
       "_updatePropsFabric",
       "_removeFromPropsRegistry",
@@ -330,8 +330,8 @@ var require_makeWorklet = __commonJS({
       const functionName = makeWorkletName(fun);
       const functionIdentifier = (0, types_1.identifier)(functionName);
       const clone = (0, types_1.cloneNode)(fun.node);
-      const funExpression = (0, types_1.isBlockStatement)(clone.body) ? (0, types_1.functionExpression)(null, clone.params, clone.body) : clone;
-      const [funString, sourceMapString] = (0, buildWorkletString_1.buildWorkletString)(transformed.ast, variables, functionName, transformed.map);
+      const funExpression = (0, types_1.isBlockStatement)(clone.body) ? (0, types_1.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
+      let [funString, sourceMapString] = (0, buildWorkletString_1.buildWorkletString)(transformed.ast, variables, functionName, transformed.map);
       (0, assert_1.strict)(funString, "[Reanimated] `funString` is undefined.");
       const workletHash = hash(funString);
       let lineOffset = 1;
@@ -350,6 +350,7 @@ var require_makeWorklet = __commonJS({
         let location = state.file.opts.filename;
         if (state.opts.relativeSourceLocation) {
           location = (0, path_1.relative)(state.cwd, location);
+          sourceMapString = sourceMapString === null || sourceMapString === void 0 ? void 0 : sourceMapString.replace(state.file.opts.filename, location);
         }
         initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("location"), (0, types_1.stringLiteral)(location)));
       }
@@ -360,9 +361,12 @@ var require_makeWorklet = __commonJS({
       if (shouldInjectVersion) {
         initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("version"), (0, types_1.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)));
       }
-      pathForStringDefinitions.insertBefore((0, types_1.variableDeclaration)("const", [
-        (0, types_1.variableDeclarator)(initDataId, initDataObjectExpression)
-      ]));
+      const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
+      if (shouldIncludeInitData) {
+        pathForStringDefinitions.insertBefore((0, types_1.variableDeclaration)("const", [
+          (0, types_1.variableDeclarator)(initDataId, initDataObjectExpression)
+        ]));
+      }
       (0, assert_1.strict)(!(0, types_1.isFunctionDeclaration)(funExpression), "[Reanimated] `funExpression` is a `FunctionDeclaration`.");
       (0, assert_1.strict)(!(0, types_1.isObjectMethod)(funExpression), "[Reanimated] `funExpression` is an `ObjectMethod`.");
       const statements = [
@@ -370,9 +374,11 @@ var require_makeWorklet = __commonJS({
           (0, types_1.variableDeclarator)(functionIdentifier, funExpression)
         ]),
         (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(functionIdentifier, (0, types_1.identifier)("__closure"), false), (0, types_1.objectExpression)(variables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), variable, false, true))))),
-        (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(functionIdentifier, (0, types_1.identifier)("__initData"), false), initDataId)),
         (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(functionIdentifier, (0, types_1.identifier)("__workletHash"), false), (0, types_1.numericLiteral)(workletHash)))
       ];
+      if (shouldIncludeInitData) {
+        statements.push((0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(functionIdentifier, (0, types_1.identifier)("__initData"), false), initDataId)));
+      }
       if (!(0, utils_1.isRelease)()) {
         statements.unshift((0, types_1.variableDeclaration)("const", [
           (0, types_1.variableDeclarator)((0, types_1.identifier)("_e"), (0, types_1.arrayExpression)([
@@ -425,6 +431,7 @@ var require_makeWorklet = __commonJS({
     }
     function makeArrayFromCapturedBindings(ast, fun) {
       const closure = /* @__PURE__ */ new Map();
+      const isLocationAssignedMap = /* @__PURE__ */ new Map();
       (0, core_1.traverse)(ast, {
         Identifier(path) {
           if (!path.isReferencedIdentifier()) {
@@ -452,6 +459,20 @@ var require_makeWorklet = __commonJS({
             currentScope = currentScope.parent;
           }
           closure.set(name, path.node);
+          isLocationAssignedMap.set(name, false);
+        }
+      });
+      fun.traverse({
+        Identifier(path) {
+          if (!path.isReferencedIdentifier()) {
+            return;
+          }
+          const node = closure.get(path.node.name);
+          if (!node || isLocationAssignedMap.get(path.node.name)) {
+            return;
+          }
+          node.loc = path.node.loc;
+          isLocationAssignedMap.set(path.node.name, true);
         }
       });
       return Array.from(closure.values());
@@ -494,12 +515,20 @@ var require_processIfWorkletFunction = __commonJS({
     }
     exports2.processIfWorkletFunction = processIfWorkletFunction;
     function processWorkletFunction(path, state) {
-      const newFun = (0, makeWorklet_1.makeWorklet)(path, state);
-      const replacement = (0, types_1.callExpression)(newFun, []);
+      const workletFactory = (0, makeWorklet_1.makeWorklet)(path, state);
+      const workletFactoryCall = (0, types_1.callExpression)(workletFactory, []);
+      const originalWorkletLocation = path.node.loc;
+      if (originalWorkletLocation) {
+        workletFactoryCall.callee.loc = {
+          start: originalWorkletLocation.start,
+          end: originalWorkletLocation.start
+        };
+      }
       const needDeclaration = (0, types_1.isScopable)(path.parent) || (0, types_1.isExportNamedDeclaration)(path.parent);
-      path.replaceWith("id" in path.node && path.node.id && needDeclaration ? (0, types_1.variableDeclaration)("const", [
-        (0, types_1.variableDeclarator)(path.node.id, replacement)
-      ]) : replacement);
+      const replacement = "id" in path.node && path.node.id && needDeclaration ? (0, types_1.variableDeclaration)("const", [
+        (0, types_1.variableDeclarator)(path.node.id, workletFactoryCall)
+      ]) : workletFactoryCall;
+      path.replaceWith(replacement);
     }
   }
 });
@@ -527,7 +556,8 @@ var require_processForCalleesWorklets = __commonJS({
       ["withSpring", [2]],
       ["withDecay", [1]],
       ["withRepeat", [3]],
-      ["runOnUI", [0]]
+      ["runOnUI", [0]],
+      ["executeOnUIRuntimeSync", [0]]
     ]);
     var objectHooks = /* @__PURE__ */ new Set([
       "useAnimatedGestureHandler",
@@ -948,6 +978,26 @@ var require_addCustomGlobals = __commonJS({
   }
 });
 
+// lib/substituteWebCallExpression.js
+var require_substituteWebCallExpression = __commonJS({
+  "lib/substituteWebCallExpression.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.substituteWebCallExpression = void 0;
+    var types_1 = require("@babel/types");
+    function substituteWebCallExpression(path) {
+      const callee = path.node.callee;
+      if ((0, types_1.isIdentifier)(callee)) {
+        const name = callee.name;
+        if (name === "isWeb" || name === "shouldBeUseWeb") {
+          path.replaceWith((0, types_1.booleanLiteral)(true));
+        }
+      }
+    }
+    exports2.substituteWebCallExpression = substituteWebCallExpression;
+  }
+});
+
 // lib/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
 var processForCalleesWorklets_1 = require_processForCalleesWorklets();
@@ -956,6 +1006,7 @@ var processInlineStylesWarning_1 = require_processInlineStylesWarning();
 var processIfCallback_1 = require_processIfCallback();
 var addCustomGlobals_1 = require_addCustomGlobals();
 var globals_1 = require_globals();
+var substituteWebCallExpression_1 = require_substituteWebCallExpression();
 module.exports = function() {
   function runWithTaggedExceptions(fun) {
     try {
@@ -974,7 +1025,12 @@ module.exports = function() {
     visitor: {
       CallExpression: {
         enter(path, state) {
-          runWithTaggedExceptions(() => (0, processForCalleesWorklets_1.processForCalleesWorklets)(path, state));
+          runWithTaggedExceptions(() => {
+            (0, processForCalleesWorklets_1.processForCalleesWorklets)(path, state);
+            if (state.opts.substituteWebPlatformChecks) {
+              (0, substituteWebCallExpression_1.substituteWebCallExpression)(path);
+            }
+          });
         }
       },
       "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression": {

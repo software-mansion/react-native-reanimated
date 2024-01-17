@@ -1,5 +1,5 @@
 'use strict';
-import type { StyleProps, SharedValue } from '../reanimated2';
+import type { StyleProps } from '../reanimated2';
 import { isSharedValue } from '../reanimated2';
 import { isChromeDebugger } from '../reanimated2/PlatformChecker';
 import WorkletEventHandler from '../reanimated2/WorkletEventHandler';
@@ -9,7 +9,9 @@ import type {
   AnimatedComponentProps,
   AnimatedProps,
   InitialComponentProps,
-} from './utils';
+  IAnimatedComponentInternal,
+  IPropsFilter,
+} from './commonTypes';
 import { flattenArray, has } from './utils';
 import { StyleSheet } from 'react-native';
 
@@ -18,12 +20,11 @@ function dummyListener() {
   // event is used.
 }
 
-export class PropsFilter {
+export class PropsFilter implements IPropsFilter {
   private _initialStyle = {};
-  private _isFirstRender = true;
 
   public filterNonAnimatedProps(
-    component: React.Component<unknown, unknown>
+    component: React.Component<unknown, unknown> & IAnimatedComponentInternal
   ): Record<string, unknown> {
     const inputProps =
       component.props as AnimatedComponentProps<InitialComponentProps>;
@@ -36,8 +37,8 @@ export class PropsFilter {
         const processedStyle: StyleProps = styles.map((style) => {
           if (style && style.viewDescriptors) {
             // this is how we recognize styles returned by useAnimatedStyle
-            style.viewsRef.add(component);
-            if (this._isFirstRender) {
+            style.viewsRef?.add(component);
+            if (component._isFirstRender) {
               this._initialStyle = {
                 ...style.initial.value,
                 ...this._initialStyle,
@@ -46,7 +47,7 @@ export class PropsFilter {
             }
             return this._initialStyle;
           } else if (hasInlineStyles(style)) {
-            return getInlineStyle(style, this._isFirstRender);
+            return getInlineStyle(style, component._isFirstRender);
           } else {
             return style;
           }
@@ -57,8 +58,9 @@ export class PropsFilter {
           AnimatedComponentProps<AnimatedProps>
         >;
         if (animatedProp.initial !== undefined) {
-          Object.keys(animatedProp.initial.value).forEach((key) => {
-            props[key] = animatedProp.initial?.value[key];
+          Object.keys(animatedProp.initial.value).forEach((initialValueKey) => {
+            props[initialValueKey] =
+              animatedProp.initial?.value[initialValueKey];
             animatedProp.viewsRef?.add(component);
           });
         }
@@ -76,19 +78,13 @@ export class PropsFilter {
           props[key] = dummyListener;
         }
       } else if (isSharedValue(value)) {
-        if (this._isFirstRender) {
-          props[key] = (value as SharedValue<unknown>).value;
+        if (component._isFirstRender) {
+          props[key] = value.value;
         }
       } else if (key !== 'onGestureHandlerStateChange' || !isChromeDebugger()) {
         props[key] = value;
       }
     }
     return props;
-  }
-
-  public onRender() {
-    if (this._isFirstRender) {
-      this._isFirstRender = false;
-    }
   }
 }

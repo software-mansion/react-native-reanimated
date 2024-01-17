@@ -9,10 +9,19 @@ import type {
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 
+/**
+ * Slide from right animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
+ */
 export class SlideInRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'SlideInRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -45,10 +54,19 @@ export class SlideInRight
   };
 }
 
+/**
+ * Slide from left animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
+ */
 export class SlideInLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'SlideInLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -81,10 +99,19 @@ export class SlideInLeft
   };
 }
 
+/**
+ * Slide to right animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
+ */
 export class SlideOutRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'SlideOutRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -123,10 +150,19 @@ export class SlideOutRight
   };
 }
 
+/**
+ * Slide to left animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
+ */
 export class SlideOutLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'SlideOutLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -165,10 +201,19 @@ export class SlideOutLeft
   };
 }
 
+/**
+ * Slide from top animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
+ */
 export class SlideInUp
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'SlideInUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -201,10 +246,19 @@ export class SlideInUp
   };
 }
 
+/**
+ * Slide from bottom animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
+ */
 export class SlideInDown
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'SlideInDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -237,10 +291,19 @@ export class SlideInDown
   };
 }
 
+/**
+ * Slide to top animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
+ */
 export class SlideOutUp
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'SlideOutUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -276,10 +339,19 @@ export class SlideOutUp
   };
 }
 
+/**
+ * Slide to bottom animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
+ */
 export class SlideOutDown
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'SlideOutDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {

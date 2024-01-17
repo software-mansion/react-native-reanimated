@@ -13,10 +13,7 @@ import '../reanimated2/layoutReanimation/animationsManager';
 import invariant from 'invariant';
 import { adaptViewConfig } from '../ConfigHelper';
 import { RNRenderer } from '../reanimated2/platform-specific/RNRenderer';
-import {
-  configureLayoutAnimations,
-  enableLayoutAnimations,
-} from '../reanimated2/core';
+import { enableLayoutAnimations } from '../reanimated2/core';
 import {
   SharedTransition,
   LayoutAnimationType,
@@ -28,12 +25,15 @@ import { getReduceMotionFromConfig } from '../reanimated2/animation/util';
 import { maybeBuild } from '../animationBuilder';
 import { SkipEnteringContext } from '../reanimated2/component/LayoutAnimationConfig';
 import type { AnimateProps } from '../reanimated2';
-import { JSPropUpdater } from './JSPropUpdater';
+import JSPropsUpdater from './JSPropsUpdater';
 import type {
   AnimatedComponentProps,
   AnimatedProps,
   InitialComponentProps,
-} from './utils';
+  AnimatedComponentRef,
+  IAnimatedComponentInternal,
+  ViewInfo,
+} from './commonTypes';
 import { has, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
 import {
@@ -42,17 +42,26 @@ import {
   isWeb,
   shouldBeUseWeb,
 } from '../reanimated2/PlatformChecker';
-import type { ViewInfo } from './InlinePropManager';
 import { InlinePropManager } from './InlinePropManager';
 import { PropsFilter } from './PropsFilter';
 import {
   startWebLayoutAnimation,
   tryActivateLayoutTransition,
   configureWebLayoutAnimations,
+  getReducedMotionFromConfig,
+  saveSnapshot,
 } from '../reanimated2/layoutReanimation/web';
+import { updateLayoutAnimations } from '../reanimated2/UpdateLayoutAnimations';
+import type { CustomConfig } from '../reanimated2/layoutReanimation/web/config';
+import type { FlatList, FlatListProps } from 'react-native';
+import { addHTMLMutationObserver } from '../reanimated2/layoutReanimation/web/domUtils';
 
 const IS_WEB = isWeb();
 const IS_FABRIC = isFabric();
+
+if (IS_WEB) {
+  configureWebLayoutAnimations();
+}
 
 function onlyAnimatedStyles(styles: StyleProps[]): StyleProps[] {
   return styles.filter((style) => style?.viewDescriptors);
@@ -70,15 +79,18 @@ function isSameAnimatedStyle(
 const isSameAnimatedProps = isSameAnimatedStyle;
 
 type Options<P> = {
-  setNativeProps: (ref: ComponentRef, props: P) => void;
+  setNativeProps: (ref: AnimatedComponentRef, props: P) => void;
 };
 
-interface ComponentRef extends Component {
-  setNativeProps?: (props: Record<string, unknown>) => void;
-  getScrollableNode?: () => ComponentRef;
-  getAnimatableRef?: () => ComponentRef;
-}
+/**
+ * Lets you create an Animated version of any React Native component.
+ *
+ * @param component - The component you want to make animatable.
+ * @returns A component that Reanimated is capable of animating.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent
+ */
 
+// Don't change the order of overloads, since such a change breaks current behavior
 export function createAnimatedComponent<P extends object>(
   component: FunctionComponent<P>,
   options?: Options<P>
@@ -88,6 +100,22 @@ export function createAnimatedComponent<P extends object>(
   component: ComponentClass<P>,
   options?: Options<P>
 ): ComponentClass<AnimateProps<P>>;
+
+export function createAnimatedComponent<P extends object>(
+  // Actually ComponentType<P = {}> = ComponentClass<P> | FunctionComponent<P> but we need this overload too
+  // since some external components (like FastImage) are typed just as ComponentType
+  component: ComponentType<P>,
+  options?: Options<P>
+): FunctionComponent<AnimateProps<P>> | ComponentClass<AnimateProps<P>>;
+
+/**
+ * @deprecated Please use `Animated.FlatList` component instead of calling `Animated.createAnimatedComponent(FlatList)` manually.
+ */
+// @ts-ignore This is required to create this overload, since type of createAnimatedComponent is incorrect and doesn't include typeof FlatList
+export function createAnimatedComponent(
+  component: typeof FlatList<unknown>,
+  options?: Options<any>
+): ComponentClass<AnimateProps<FlatListProps<unknown>>>;
 
 export function createAnimatedComponent(
   Component: ComponentType<InitialComponentProps>,
@@ -99,17 +127,18 @@ export function createAnimatedComponent(
     `Looks like you're passing a function component \`${Component.name}\` to \`createAnimatedComponent\` function which supports only class components. Please wrap your function component with \`React.forwardRef()\` or use a class component instead.`
   );
 
-  class AnimatedComponent extends React.Component<
-    AnimatedComponentProps<InitialComponentProps>
-  > {
+  class AnimatedComponent
+    extends React.Component<AnimatedComponentProps<InitialComponentProps>>
+    implements IAnimatedComponentInternal
+  {
     _styles: StyleProps[] | null = null;
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _viewTag = -1;
     _isFirstRender = true;
-    animatedStyle: { value: StyleProps } = { value: {} };
-    _component: ComponentRef | HTMLElement | null = null;
+    jestAnimatedStyle: { value: StyleProps } = { value: {} };
+    _component: AnimatedComponentRef | HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
-    _JSPropUpdater = new JSPropUpdater();
+    _jsPropsUpdater = new JSPropsUpdater();
     _InlinePropManager = new InlinePropManager();
     _PropsFilter = new PropsFilter();
     _viewInfo?: ViewInfo;
@@ -120,52 +149,94 @@ export function createAnimatedComponent(
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
       if (isJest()) {
-        this.animatedStyle = { value: {} };
+        this.jestAnimatedStyle = { value: {} };
       }
     }
 
     componentDidMount() {
       this._attachNativeEvents();
-      this._JSPropUpdater.addOnJSPropsChangeListener(this);
+      this._jsPropsUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
+      const layout = this.props.layout;
+      if (layout) {
+        this._configureLayoutTransition();
+      }
+
       if (IS_WEB) {
-        configureWebLayoutAnimations();
+        if (this.props.exiting) {
+          saveSnapshot(this._component as HTMLElement);
+        }
+
+        if (
+          !this.props.entering ||
+          getReducedMotionFromConfig(this.props.entering as CustomConfig)
+        ) {
+          this._isFirstRender = false;
+          return;
+        }
+
         startWebLayoutAnimation(
           this.props,
           this._component as HTMLElement,
           LayoutAnimationType.ENTERING
         );
       }
+
+      this._isFirstRender = false;
     }
 
     componentWillUnmount() {
       this._detachNativeEvents();
-      this._JSPropUpdater.removeOnJSPropsChangeListener(this);
+      this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
       this._InlinePropManager.detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
 
-      if (IS_WEB) {
+      const exiting = this.props.exiting;
+      if (
+        IS_WEB &&
+        this.props.exiting &&
+        !getReducedMotionFromConfig(this.props.exiting as CustomConfig)
+      ) {
+        addHTMLMutationObserver();
+
         startWebLayoutAnimation(
           this.props,
           this._component as HTMLElement,
           LayoutAnimationType.EXITING
         );
+      } else if (exiting) {
+        const reduceMotionInExiting =
+          'getReduceMotion' in exiting &&
+          typeof exiting.getReduceMotion === 'function'
+            ? getReduceMotionFromConfig(exiting.getReduceMotion())
+            : getReduceMotionFromConfig();
+        if (!reduceMotionInExiting) {
+          updateLayoutAnimations(
+            this._viewTag,
+            LayoutAnimationType.EXITING,
+            maybeBuild(
+              exiting,
+              this.props?.style,
+              AnimatedComponent.displayName
+            )
+          );
+        }
       }
     }
 
     _getEventViewRef() {
       // Make sure to get the scrollable node for components that implement
       // `ScrollResponder.Mixin`.
-      return (this._component as ComponentRef)?.getScrollableNode
-        ? (this._component as ComponentRef).getScrollableNode?.()
+      return (this._component as AnimatedComponentRef)?.getScrollableNode
+        ? (this._component as AnimatedComponentRef).getScrollableNode?.()
         : this._component;
     }
 
     _attachNativeEvents() {
-      const node = this._getEventViewRef() as ComponentRef;
+      const node = this._getEventViewRef() as AnimatedComponentRef;
       let viewTag = null; // We set it only if needed
 
       for (const key in this.props) {
@@ -197,9 +268,7 @@ export function createAnimatedComponent(
     _detachStyles() {
       if (IS_WEB && this._styles !== null) {
         for (const style of this._styles) {
-          if (style?.viewsRef) {
-            style.viewsRef.remove(this);
-          }
+          style.viewsRef.remove(this);
         }
       } else if (this._viewTag !== -1 && this._styles !== null) {
         for (const style of this._styles) {
@@ -238,7 +307,7 @@ export function createAnimatedComponent(
           prop.current.reattachNeeded
         ) {
           if (viewTag === null) {
-            const node = this._getEventViewRef() as ComponentRef;
+            const node = this._getEventViewRef() as AnimatedComponentRef;
             viewTag = findNodeHandle(options?.setNativeProps ? this : node);
           }
           prop.current.registerForEvents(viewTag as number, key);
@@ -249,11 +318,9 @@ export function createAnimatedComponent(
 
     _updateFromNative(props: StyleProps) {
       if (options?.setNativeProps) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        options.setNativeProps(this._component as ComponentRef, props);
+        options.setNativeProps(this._component as AnimatedComponentRef, props);
       } else {
-        // eslint-disable-next-line no-unused-expressions
-        (this._component as ComponentRef)?.setNativeProps?.(props);
+        (this._component as AnimatedComponentRef)?.setNativeProps?.(props);
       }
     }
 
@@ -268,8 +335,9 @@ export function createAnimatedComponent(
       let viewConfig;
       // Component can specify ref which should be animated when animated version of the component is created.
       // Otherwise, we animate the component itself.
-      const component = (this._component as ComponentRef)?.getAnimatableRef
-        ? (this._component as ComponentRef).getAnimatableRef?.()
+      const component = (this._component as AnimatedComponentRef)
+        ?.getAnimatableRef
+        ? (this._component as AnimatedComponentRef).getAnimatableRef?.()
         : this;
 
       if (IS_WEB) {
@@ -361,11 +429,11 @@ export function createAnimatedComponent(
            * We can't update props object directly because TestObject contains a copy of props - look at render function:
            * const props = this._filterNonAnimatedProps(this.props);
            */
-          this.animatedStyle.value = {
-            ...this.animatedStyle.value,
+          this.jestAnimatedStyle.value = {
+            ...this.jestAnimatedStyle.value,
             ...style.initial.value,
           };
-          style.animatedStyle.current = this.animatedStyle;
+          style.jestAnimatedStyle.current = this.jestAnimatedStyle;
         }
       });
 
@@ -380,11 +448,8 @@ export function createAnimatedComponent(
       // attach animatedProps property
       if (this.props.animatedProps?.viewDescriptors) {
         this.props.animatedProps.viewDescriptors.add({
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           tag: viewTag as number,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           name: viewName!,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           shadowNodeWrapper: shadowNodeWrapper!,
         });
       }
@@ -395,20 +460,45 @@ export function createAnimatedComponent(
       _prevState: Readonly<unknown>,
       // This type comes straight from React
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      snapshot?: any
+      snapshot: DOMRect | null
     ) {
+      const layout = this.props.layout;
+      const oldLayout = prevProps.layout;
+      if (layout !== oldLayout) {
+        this._configureLayoutTransition();
+      }
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
+      if (IS_WEB && this.props.exiting) {
+        saveSnapshot(this._component as HTMLElement);
+      }
+
       // Snapshot won't be undefined because it comes from getSnapshotBeforeUpdate method
-      if (IS_WEB && snapshot !== null) {
+      if (
+        IS_WEB &&
+        snapshot !== null &&
+        this.props.layout &&
+        !getReducedMotionFromConfig(this.props.layout as CustomConfig)
+      ) {
         tryActivateLayoutTransition(
           this.props,
           this._component as HTMLElement,
           snapshot
         );
       }
+    }
+
+    _configureLayoutTransition() {
+      const layout = this.props.layout
+        ? maybeBuild(
+            this.props.layout,
+            undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */,
+            AnimatedComponent.displayName
+          )
+        : undefined;
+      updateLayoutAnimations(this._viewTag, LayoutAnimationType.LAYOUT, layout);
     }
 
     _setComponentRef = setAndForwardRef<Component | HTMLElement>({
@@ -431,21 +521,11 @@ export function createAnimatedComponent(
           if (!shouldBeUseWeb()) {
             enableLayoutAnimations(true, false);
           }
-          if (layout) {
-            configureLayoutAnimations(
-              tag,
-              LayoutAnimationType.LAYOUT,
-              maybeBuild(
-                layout,
-                undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */,
-                AnimatedComponent.displayName
-              )
-            );
-          }
+
           const skipEntering = this.context?.current;
           if (entering && !skipEntering) {
-            configureLayoutAnimations(
-              tag,
+            updateLayoutAnimations(
+              tag as number,
               LayoutAnimationType.ENTERING,
               maybeBuild(
                 entering,
@@ -453,24 +533,6 @@ export function createAnimatedComponent(
                 AnimatedComponent.displayName
               )
             );
-          }
-          if (exiting) {
-            const reduceMotionInExiting =
-              'getReduceMotion' in exiting &&
-              typeof exiting.getReduceMotion === 'function'
-                ? getReduceMotionFromConfig(exiting.getReduceMotion())
-                : getReduceMotionFromConfig();
-            if (!reduceMotionInExiting) {
-              configureLayoutAnimations(
-                tag,
-                LayoutAnimationType.EXITING,
-                maybeBuild(
-                  exiting,
-                  this.props?.style,
-                  AnimatedComponent.displayName
-                )
-              );
-            }
           }
           if (sharedTransitionTag && !IS_WEB) {
             const sharedElementTransition =
@@ -499,7 +561,8 @@ export function createAnimatedComponent(
     // and later on, in componentDidUpdate, calculate translation for layout transition.
     getSnapshotBeforeUpdate() {
       if (
-        (this._component as HTMLElement).getBoundingClientRect !== undefined
+        IS_WEB &&
+        (this._component as HTMLElement)?.getBoundingClientRect !== undefined
       ) {
         return (this._component as HTMLElement).getBoundingClientRect();
       }
@@ -508,20 +571,24 @@ export function createAnimatedComponent(
     }
 
     render() {
-      const props = this._PropsFilter.filterNonAnimatedProps(this);
-      this._PropsFilter.onRender();
+      const filteredProps = this._PropsFilter.filterNonAnimatedProps(this);
 
       if (isJest()) {
-        props.animatedStyle = this.animatedStyle;
+        filteredProps.jestAnimatedStyle = this.jestAnimatedStyle;
       }
 
       // Layout animations on web are set inside `componentDidMount` method, which is called after first render.
       // Because of that we can encounter a situation in which component is visible for a short amount of time, and later on animation triggers.
       // I've tested that on various browsers and devices and it did not happen to me. To be sure that it won't happen to someone else,
       // I've decided to hide component at first render. Its visibility is reset in `componentDidMount`.
-      if (IS_WEB && props.entering) {
-        props.style = {
-          ...(props.style ?? {}),
+      if (
+        this._isFirstRender &&
+        IS_WEB &&
+        filteredProps.entering &&
+        !getReducedMotionFromConfig(filteredProps.entering as CustomConfig)
+      ) {
+        filteredProps.style = {
+          ...(filteredProps.style ?? {}),
           visibility: 'hidden', // Hide component until `componentDidMount` triggers
         };
       }
@@ -533,7 +600,7 @@ export function createAnimatedComponent(
 
       return (
         <Component
-          {...props}
+          {...filteredProps}
           // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
           // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
           ref={this._setComponentRef as (ref: Component) => void}

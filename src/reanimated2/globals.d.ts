@@ -6,7 +6,6 @@ import type {
   MeasuredDimensions,
   MapperRegistry,
   ShareableRef,
-  ShareableSyncDataHolderRef,
   ShadowNodeWrapper,
   __ComplexWorkletFunction,
   FlatShareableRef,
@@ -19,6 +18,7 @@ import type { LayoutAnimationsManager } from './layoutReanimation/animationsMana
 import type { ProgressTransitionRegister } from './layoutReanimation/sharedTransitions';
 import type { UpdatePropsManager } from './UpdateProps';
 import type { callGuardDEV } from './initializers';
+import type { WorkletRuntime } from './runtimes';
 
 declare global {
   var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
@@ -32,7 +32,7 @@ declare global {
     | ((js: string, sourceURL: string, sourceMap: string) => any)
     | undefined;
   var evalWithSourceUrl: ((js: string, sourceURL: string) => any) | undefined;
-  var _log: (s: string) => void;
+  var _log: (value: unknown) => void;
   var _toString: (value: unknown) => string;
   var _notifyAboutProgress: (
     tag: number,
@@ -42,19 +42,19 @@ declare global {
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
   var _makeShareableClone: <T>(value: T) => FlatShareableRef<T>;
-  var _updateDataSynchronously: (
-    dataHolder: ShareableSyncDataHolderRef<any>,
-    data: ShareableRef<any>
-  ) => void;
   var _scheduleOnJS: (
     fun: __ComplexWorkletFunction<A, R>,
     args?: unknown[]
+  ) => void;
+  var _scheduleOnRuntime: (
+    runtime: WorkletRuntime,
+    worklet: ShareableRef<() => void>
   ) => void;
   var _updatePropsPaper:
     | ((
         operations: {
           tag: number;
-          name: string;
+          name: string | null;
           updates: StyleProps | AnimatedStyle<any>;
         }[]
       ) => void)
@@ -102,4 +102,5 @@ declare global {
   var LayoutAnimationsManager: LayoutAnimationsManager;
   var UpdatePropsManager: UpdatePropsManager;
   var ProgressTransitionRegister: ProgressTransitionRegister;
+  var updateJSProps: (viewTag: number, props: Record<string, unknown>) => void;
 }

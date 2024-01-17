@@ -70,6 +70,14 @@ function adjustVectorToInterfaceOrientation(data: Value3D) {
   return data;
 }
 
+/**
+ * Lets you create animations based on data from the device's sensors.
+ *
+ * @param sensorType - Type of the sensor to use. Configured with {@link SensorType} enum.
+ * @param config - The sensor configuration - {@link SensorConfig}.
+ * @returns An object containing the sensor measurements [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) and a function to unregister the sensor
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedSensor
+ */
 export function useAnimatedSensor(
   sensorType: SensorType.ROTATION,
   userConfig?: Partial<SensorConfig>
@@ -81,7 +89,7 @@ export function useAnimatedSensor(
 export function useAnimatedSensor(
   sensorType: SensorType,
   userConfig?: Partial<SensorConfig>
-): AnimatedSensor<ValueRotation | Value3D> {
+): AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D> {
   const config: SensorConfig = {
     interval: 'auto',
     adjustToInterfaceOrientation: true,
@@ -138,5 +146,5 @@ export function useAnimatedSensor(
     };
   }, [sensorType, userConfig]);
 
-  return ref.current;
+  return ref.current as AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D>;
 }

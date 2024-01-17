@@ -8,11 +8,25 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
-export interface SharedValue<Value> {
+/**
+ * A value that can be used both on the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread) and the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
+ *
+ * Shared values are defined using [useSharedValue](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue) hook. You access and modify shared values by their `.value` property.
+ */
+export interface SharedValue<Value = unknown> {
   value: Value;
-  addListener: (listenerID: number, listener: (value: any) => void) => void;
+  addListener: (listenerID: number, listener: (value: Value) => void) => void;
   removeListener: (listenerID: number) => void;
-  modify: (modifier?: (value: any) => any) => void;
+  modify: (
+    modifier?: <T extends Value>(value: T) => T,
+    forceUpdate?: boolean
+  ) => void;
+}
+
+export interface Mutable<Value = unknown> extends SharedValue<Value> {
+  _isReanimatedSharedValue: true;
+  _animation?: AnimationObject<Value> | null; // only in Native
+  _value: Value;
 }
 
 // The below type is used for HostObjects returned by the JSI API that don't have
@@ -22,7 +36,7 @@ export interface SharedValue<Value> {
 // check other methods that may use them. However, this field is not actually defined
 // nor should be used for anything else as assigning any data to those objects will
 // throw an error.
-export type ShareableRef<T> = {
+export type ShareableRef<T = unknown> = {
   __hostObjectShareableJSRef: T;
 };
 
@@ -32,16 +46,16 @@ export type FlatShareableRef<T> = T extends ShareableRef<infer U>
   ? ShareableRef<U>
   : ShareableRef<T>;
 
-export type ShareableSyncDataHolderRef<T> = {
-  __hostObjectShareableJSRefSyncDataHolder: T;
-};
+export type MapperRawInputs = unknown[];
+
+export type MapperOutputs = SharedValue[];
 
 export type MapperRegistry = {
   start: (
     mapperID: number,
     worklet: () => void,
-    inputs: SharedValue<any>[],
-    outputs?: SharedValue<any>[]
+    inputs: MapperRawInputs,
+    outputs?: MapperOutputs
   ) => void;
   stop: (mapperID: number) => void;
 };
@@ -94,12 +108,12 @@ export type AnimatableValueObject = { [key: string]: Animatable };
 
 export type AnimatableValue = Animatable | AnimatableValueObject;
 
-export interface AnimationObject {
+export interface AnimationObject<T = AnimatableValue> {
   [key: string]: any;
   callback?: AnimationCallback;
-  current?: AnimatableValue;
-  toValue?: AnimationObject['current'];
-  startValue?: AnimationObject['current'];
+  current?: T;
+  toValue?: AnimationObject<T>['current'];
+  startValue?: AnimationObject<T>['current'];
   finished?: boolean;
   strippedCurrent?: number;
   cancelled?: boolean;
@@ -154,6 +168,9 @@ export type AnimatedSensor<T extends Value3D | ValueRotation> = {
   config: SensorConfig;
 };
 
+/**
+ * A function called upon animation completion. If the animation is cancelled, the callback will receive `false` as the argument; otherwise, it will receive `true`.
+ */
 export type AnimationCallback = (
   finished?: boolean,
   current?: AnimatableValue
@@ -203,6 +220,15 @@ export type AnimatedKeyboardInfo = {
   state: SharedValue<KeyboardState>;
 };
 
+/**
+ * @param x - A number representing X coordinate relative to the parent component.
+ * @param y - A number representing Y coordinate relative to the parent component.
+ * @param width - A number representing the width of the component.
+ * @param height - A number representing the height of the component.
+ * @param pageX - A number representing X coordinate relative to the screen.
+ * @param pageY - A number representing Y coordinate relative to the screen.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/measure#returns
+ */
 export interface MeasuredDimensions {
   x: number;
   y: number;
@@ -217,9 +243,10 @@ export interface AnimatedKeyboardOptions {
 }
 
 /**
- * - `System` - If the `Reduce motion` accessibility setting is enabled on the device, disable the animation. Otherwise, enable the animation.
- * - `Always` - Disable the animation.
- * - `Never` - Enable the animation.
+ * @param System - If the `Reduce motion` accessibility setting is enabled on the device, disable the animation. Otherwise, enable the animation.
+ * @param Always - Disable the animation.
+ * @param Never - Enable the animation.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility
  */
 export enum ReduceMotion {
   System = 'system',
@@ -230,7 +257,7 @@ export enum ReduceMotion {
 // THE LAND OF THE DEPRECATED
 
 /**
- * @deprecated
+ * @deprecated don't use
  */
 export interface __WorkletFunction {
   __closure?: Record<string, unknown>;
@@ -238,14 +265,14 @@ export interface __WorkletFunction {
 }
 
 /**
- * @deprecated
+ * @deprecated don't use
  */
 export interface __BasicWorkletFunction<T> extends __WorkletFunction {
   (): T;
 }
 
 /**
- * @deprecated
+ * @deprecated don't use
  */
 export interface __ComplexWorkletFunction<A extends any[], R>
   extends __WorkletFunction {
@@ -254,7 +281,7 @@ export interface __ComplexWorkletFunction<A extends any[], R>
 }
 
 /**
- * @deprecated
+ * @deprecated don't use
  */
 export interface __AdapterWorkletFunction extends __WorkletFunction {
   (value: NestedObject<string | number | AnimationObject>): void;

@@ -6,16 +6,6 @@
 
 namespace reanimated {
 
-static jsi::Value SPEC_PREFIX(installValueUnpacker)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->installValueUnpacker(rt, std::move(args[0]));
-  return jsi::Value::undefined();
-}
-
 // SharedValue
 
 static jsi::Value SPEC_PREFIX(makeShareableClone)(
@@ -25,26 +15,6 @@ static jsi::Value SPEC_PREFIX(makeShareableClone)(
     size_t) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->makeShareableClone(rt, std::move(args[0]), std::move(args[1]));
-}
-
-// Sync methods
-
-static jsi::Value SPEC_PREFIX(makeSynchronizedDataHolder)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->makeSynchronizedDataHolder(rt, std::move(args[0]));
-}
-
-static jsi::Value SPEC_PREFIX(getDataSynchronously)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->getDataSynchronously(rt, std::move(args[0]));
 }
 
 // scheduler
@@ -59,6 +29,15 @@ static jsi::Value SPEC_PREFIX(scheduleOnUI)(
   return jsi::Value::undefined();
 }
 
+static jsi::Value SPEC_PREFIX(executeOnUIRuntimeSync)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->executeOnUIRuntimeSync(rt, std::move(args[0]));
+}
+
 static jsi::Value SPEC_PREFIX(createWorkletRuntime)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -66,6 +45,15 @@ static jsi::Value SPEC_PREFIX(createWorkletRuntime)(
     size_t) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->createWorkletRuntime(rt, std::move(args[0]), std::move(args[1]));
+}
+
+static jsi::Value SPEC_PREFIX(scheduleOnRuntime)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->scheduleOnRuntime(rt, std::move(args[0]), std::move(args[1]));
 }
 
 static jsi::Value SPEC_PREFIX(registerEventHandler)(
@@ -176,6 +164,15 @@ static jsi::Value SPEC_PREFIX(configureLayoutAnimation)(
           std::move(args[3]));
 }
 
+static jsi::Value SPEC_PREFIX(configureLayoutAnimationBatch)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->configureLayoutAnimationBatch(rt, std::move(args[0]));
+}
+
 static jsi::Value SPEC_PREFIX(setShouldAnimateExiting)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -187,22 +184,18 @@ static jsi::Value SPEC_PREFIX(setShouldAnimateExiting)(
 }
 
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
-    std::shared_ptr<CallInvoker> jsInvoker)
+    const std::shared_ptr<CallInvoker> &jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
-  methodMap_["installValueUnpacker"] =
-      MethodMetadata{1, SPEC_PREFIX(installValueUnpacker)};
-
   methodMap_["makeShareableClone"] =
       MethodMetadata{2, SPEC_PREFIX(makeShareableClone)};
 
-  methodMap_["makeSynchronizedDataHolder"] =
-      MethodMetadata{1, SPEC_PREFIX(makeSynchronizedDataHolder)};
-  methodMap_["getDataSynchronously"] =
-      MethodMetadata{1, SPEC_PREFIX(getDataSynchronously)};
-
   methodMap_["scheduleOnUI"] = MethodMetadata{1, SPEC_PREFIX(scheduleOnUI)};
+  methodMap_["executeOnUIRuntimeSync"] =
+      MethodMetadata{1, SPEC_PREFIX(executeOnUIRuntimeSync)};
   methodMap_["createWorkletRuntime"] =
       MethodMetadata{2, SPEC_PREFIX(createWorkletRuntime)};
+  methodMap_["scheduleOnRuntime"] =
+      MethodMetadata{2, SPEC_PREFIX(scheduleOnRuntime)};
 
   methodMap_["registerEventHandler"] =
       MethodMetadata{3, SPEC_PREFIX(registerEventHandler)};
@@ -223,6 +216,8 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
 
   methodMap_["configureLayoutAnimation"] =
       MethodMetadata{4, SPEC_PREFIX(configureLayoutAnimation)};
+  methodMap_["configureLayoutAnimationBatch"] =
+      MethodMetadata{1, SPEC_PREFIX(configureLayoutAnimationBatch)};
   methodMap_["setShouldAnimateExitingForTag"] =
       MethodMetadata{2, SPEC_PREFIX(setShouldAnimateExiting)};
 }

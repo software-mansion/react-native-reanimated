@@ -20,7 +20,7 @@ if (shouldBeUseWeb()) {
   updateProps = (_, updates, maybeViewRef, isAnimatedProps) => {
     'worklet';
     if (maybeViewRef) {
-      maybeViewRef.items.forEach((item, _) => {
+      maybeViewRef.items.forEach((item, _index) => {
         _updatePropsJS(updates, item, isAnimatedProps);
       });
     }
@@ -29,7 +29,6 @@ if (shouldBeUseWeb()) {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
     processColorsInProps(updates);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     global.UpdatePropsManager!.update(viewDescriptors, updates);
   };
 }
@@ -78,7 +77,6 @@ const createUpdatePropsManager = isFabric()
           });
         },
         flush() {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           _updatePropsFabric!(operations);
           operations.length = 0;
         },
@@ -109,7 +107,6 @@ const createUpdatePropsManager = isFabric()
           });
         },
         flush() {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           _updatePropsPaper!(operations);
           operations.length = 0;
         },

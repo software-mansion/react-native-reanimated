@@ -104,10 +104,16 @@ export function makeWorklet(
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
-    ? functionExpression(null, clone.params, clone.body)
+    ? functionExpression(
+        null,
+        clone.params,
+        clone.body,
+        clone.generator,
+        clone.async
+      )
     : clone;
 
-  const [funString, sourceMapString] = buildWorkletString(
+  let [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
     variables,
     functionName,
@@ -155,6 +161,11 @@ export function makeWorklet(
     let location = state.file.opts.filename;
     if (state.opts.relativeSourceLocation) {
       location = relative(state.cwd, location);
+      // It seems there is no designated option to use relative paths in generated sourceMap
+      sourceMapString = sourceMapString?.replace(
+        state.file.opts.filename,
+        location
+      );
     }
 
     initDataObjectExpression.properties.push(
@@ -178,11 +189,14 @@ export function makeWorklet(
     );
   }
 
-  pathForStringDefinitions.insertBefore(
-    variableDeclaration('const', [
-      variableDeclarator(initDataId, initDataObjectExpression),
-    ])
-  );
+  const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
+  if (shouldIncludeInitData) {
+    pathForStringDefinitions.insertBefore(
+      variableDeclaration('const', [
+        variableDeclarator(initDataId, initDataObjectExpression),
+      ])
+    );
+  }
 
   assert(
     !isFunctionDeclaration(funExpression),
@@ -213,13 +227,6 @@ export function makeWorklet(
     expressionStatement(
       assignmentExpression(
         '=',
-        memberExpression(functionIdentifier, identifier('__initData'), false),
-        initDataId
-      )
-    ),
-    expressionStatement(
-      assignmentExpression(
-        '=',
         memberExpression(
           functionIdentifier,
           identifier('__workletHash'),
@@ -229,6 +236,18 @@ export function makeWorklet(
       )
     ),
   ];
+
+  if (shouldIncludeInitData) {
+    statements.push(
+      expressionStatement(
+        assignmentExpression(
+          '=',
+          memberExpression(functionIdentifier, identifier('__initData'), false),
+          initDataId
+        )
+      )
+    );
+  }
 
   if (!isRelease()) {
     statements.unshift(
@@ -319,6 +338,7 @@ function makeArrayFromCapturedBindings(
   fun: NodePath<WorkletizableFunction>
 ) {
   const closure = new Map<string, Identifier>();
+  const isLocationAssignedMap = new Map<string, boolean>();
 
   // this traversal looks for variables to capture
   traverse(ast, {
@@ -368,6 +388,30 @@ function makeArrayFromCapturedBindings(
         currentScope = currentScope.parent;
       }
       closure.set(name, path.node);
+      isLocationAssignedMap.set(name, false);
+    },
+  });
+
+  /*
+  For reasons I don't exactly understand, the above traversal will cause the whole 
+  bundle to crash if we traversed original node instead of generated
+  AST. This is why we need to traverse it again, but this time we set
+  location for each identifier that was captured to their original counterpart, since
+  AST has its location set relative as if it was a separate file.
+  */
+  fun.traverse({
+    Identifier(path) {
+      // So it won't refer to something like:
+      // const obj = {unexistingVariable: 1};
+      if (!path.isReferencedIdentifier()) {
+        return;
+      }
+      const node = closure.get(path.node.name);
+      if (!node || isLocationAssignedMap.get(path.node.name)) {
+        return;
+      }
+      node.loc = path.node.loc;
+      isLocationAssignedMap.set(path.node.name, true);
     },
   });
 
