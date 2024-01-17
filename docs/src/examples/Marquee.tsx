@@ -44,7 +44,7 @@ const TranslatedElement = ({
 }: TranslatedElementProps) => {
   const style = useAnimatedStyle(() => {
     return {
-      position: 'absolute',
+      ...styles.animatedStyle,
       left: (index - 1) * childrenWidth,
       transform: [
         {
@@ -168,7 +168,7 @@ function MarqueeScreen() {
         <View style={styles.flex} />
         <Marquee reverse={reverse}>
           <Image
-            style={{ width: 200, height: 200 }}
+            style={styles.image}
             source={{
               uri: 'https://upload.wikimedia.org/wikipedia/en/e/ed/Nyan_cat_250px_frame.PNG',
             }}
@@ -181,17 +181,30 @@ function MarqueeScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
+  flex: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
   toggleButton: {
-    backgroundColor: '#fac',
+    backgroundColor: 'var(--swm-purple-light-60)',
     padding: 12,
     borderRadius: 48,
     marginBottom: 24,
   },
-  safeArea: { alignItems: 'center', justifyContent: 'center', flex: 1 },
+  safeArea: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  image: {
+    width: 200,
+    height: 200,
+  },
+  animatedStyle: {
+    position: 'absolute',
+  },
 });
 
 export default MarqueeScreen;
