@@ -32,6 +32,10 @@ module.exports = {
     },
   },
   rules: {
+    '@typescript-eslint/no-explicit-any': 'warn',
+
+    'object-shorthand': 'off',
+
     curly: 'error',
     'no-case-declarations': 'error',
     '@typescript-eslint/no-shadow': 'error',
