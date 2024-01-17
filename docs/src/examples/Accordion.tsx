@@ -14,6 +14,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import React from 'react';
+import { Button } from '@mui/material';
 
 type AccordionProps = ViewProps & {
   isExpanded: SharedValue<boolean>;
@@ -42,19 +43,12 @@ const AccordionItem = ({
   return (
     <Animated.View
       key={`accordionItem_${viewKey}`}
-      style={[
-        {
-          width: '100%',
-          overflow: 'hidden',
-        },
-        bodyStyle,
-        style,
-      ]}>
+      style={[styles.animatedView, bodyStyle, style]}>
       <View
         onLayout={(e) => {
           height.value = e.nativeEvent.layout.height;
         }}
-        style={{ width: '100%', position: 'absolute' }}>
+        style={styles.view}>
         {children}
       </View>
     </Animated.View>
@@ -95,9 +89,9 @@ const AccordionScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.topPart}>
-        <TouchableOpacity style={styles.button} onPress={onPress}>
-          <Text style={styles.buttonText}>Click me</Text>
-        </TouchableOpacity>
+        <Button onClick={onPress} style={styles.button}>
+          Click me
+        </Button>
       </View>
 
       <View style={styles.bottomPart}>
@@ -118,19 +112,17 @@ const styles = StyleSheet.create({
   },
   bottomPart: {
     flex: 1,
-
     justifyContent: 'center',
     alignItems: 'center',
   },
   button: {
     backgroundColor: '#6F2FE2',
-    padding: 12,
+    color: '#E9E8E7',
+    textTransform: 'none',
+    padding: 10,
     borderRadius: 24,
     alignSelf: 'center',
     marginBottom: 64,
-  },
-  buttonText: {
-    color: '#E9E8E7',
   },
   counters: {
     justifyContent: 'center',
@@ -144,8 +136,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 32,
   },
-  image: { width: 200, height: 200 },
-  parent: { width: 200 },
+  image: {
+    width: 200,
+    height: 200,
+  },
+  parent: {
+    width: 200,
+  },
+  view: {
+    width: '100%',
+    position: 'absolute',
+  },
+  animatedView: {
+    width: '100%',
+    overflow: 'hidden',
+  },
 });
 
 export default AccordionScreen;

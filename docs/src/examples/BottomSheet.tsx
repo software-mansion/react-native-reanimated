@@ -1,11 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import 'react-native-gesture-handler';
-
-// import { SafeAreaView } from 'react-native-safe-area-context';
-
 import { useSharedValue } from 'react-native-reanimated';
-
 import { PropsWithChildren } from 'react';
 import { TouchableOpacity } from 'react-native';
 import Animated, {
@@ -117,7 +113,11 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 48,
   },
-  safeArea: { alignItems: 'center', justifyContent: 'center', flex: 1 },
+  safeArea: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
 });
 
 export default BottomSheetScreen;
