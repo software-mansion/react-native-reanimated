@@ -119,6 +119,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
         NativeReanimatedModule.scheduleOnUI(
           makeShareableCloneRecursive(() => {
             'worklet';
+            // eslint-disable-next-line @typescript-eslint/no-shadow
             queue.forEach(([worklet, args]) => {
               worklet(...args);
             });
@@ -127,6 +128,25 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
         );
       });
     }
+  };
+}
+
+// @ts-expect-error Check `executeOnUIRuntimeSync` overload above.
+export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
+  worklet: (...args: Args) => ReturnValue
+): (...args: Args) => ReturnValue;
+
+export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
+  worklet: WorkletFunction<Args, ReturnValue>
+): (...args: Args) => ReturnValue {
+  return (...args) => {
+    return NativeReanimatedModule.executeOnUIRuntimeSync(
+      makeShareableCloneRecursive(() => {
+        'worklet';
+        const result = worklet(...args);
+        return makeShareableCloneOnUIRecursive(result);
+      })
+    );
   };
 }
 

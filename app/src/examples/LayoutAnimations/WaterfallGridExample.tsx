@@ -98,11 +98,14 @@ export function WaterfallGrid({
     }
     setPoks(poks);
   }, [dims, setPoks, pokemons]);
+  const layoutTransition = useMemo(
+    () => getLayoutTranistion(transition),
+    [transition]
+  );
   const [cardsMemo, height] = useMemo<[Array<JSX.Element>, number]>(() => {
     if (poks.length === 0) {
       return [[], 0];
     }
-    const layoutTransition = getLayoutTranistion(transition);
     const cardsResult: Array<JSX.Element> = [];
     const heights = new Array(columns).fill(0);
     for (const pok of poks) {
@@ -139,7 +142,7 @@ export function WaterfallGrid({
       );
     }
     return [cardsResult, Math.max(...heights) + margin / 2];
-  }, [poks, columns, transition, width]);
+  }, [poks, columns, layoutTransition, width]);
   return (
     <View onLayout={handleOnLayout} style={styles.flexOne}>
       {cardsMemo.length === 0 && <Text> Loading </Text>}
@@ -179,7 +182,6 @@ export default function WaterfallGridExample() {
         </Picker>
       </View>
       <WaterfallGrid
-        key={selectedTransition}
         columns={3}
         pokemons={10}
         transition={selectedTransition}

@@ -21,17 +21,18 @@ import type {
 } from './layoutReanimation';
 import { initializeUIRuntime } from './initializers';
 import type {
+  LayoutAnimationBatchItem,
   ProgressAnimationCallback,
   SharedTransitionAnimationsFunction,
 } from './layoutReanimation/animationBuilder/commonTypes';
 import { SensorContainer } from './SensorContainer';
 
 export { startMapper, stopMapper } from './mappers';
-export { runOnJS, runOnUI } from './threads';
+export { runOnJS, runOnUI, executeOnUIRuntimeSync } from './threads';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export type { WorkletRuntime } from './runtimes';
 export { makeShareable, makeShareableCloneRecursive } from './shareables';
-export { makeMutable, makeRemote } from './mutables';
+export { makeMutable } from './mutables';
 
 const IS_FABRIC = isFabric();
 
@@ -212,6 +213,12 @@ export function configureLayoutAnimations(
     sharedTransitionTag,
     makeShareableCloneRecursive(config)
   );
+}
+
+export function configureLayoutAnimationBatch(
+  layoutAnimationsBatch: LayoutAnimationBatchItem[]
+): void {
+  NativeReanimatedModule.configureLayoutAnimationBatch(layoutAnimationsBatch);
 }
 
 export function setShouldAnimateExitingForTag(

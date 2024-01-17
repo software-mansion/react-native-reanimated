@@ -95,7 +95,7 @@ var require_buildWorkletString = __commonJS({
       const expression = (0, types_1.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
       (0, assert_1.strict)("params" in expression, "'params' property is undefined in 'expression'");
       (0, assert_1.strict)((0, types_1.isBlockStatement)(expression.body), "[Reanimated] `expression.body` is not a `BlockStatement`");
-      const workletFunction = (0, types_1.functionExpression)((0, types_1.identifier)(name), expression.params, expression.body);
+      const workletFunction = (0, types_1.functionExpression)((0, types_1.identifier)(name), expression.params, expression.body, expression.generator, expression.async);
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "[Reanimated] `inputMap` is undefined.");
       const includeSourceMap = !(0, utils_1.isRelease)();
@@ -258,8 +258,6 @@ var require_globals = __commonJS({
       "_scheduleOnJS",
       "_scheduleOnRuntime",
       "_makeShareableClone",
-      "_updateDataSynchronously",
-      "_getDataSynchronously",
       "_updatePropsPaper",
       "_updatePropsFabric",
       "_removeFromPropsRegistry",
@@ -332,7 +330,7 @@ var require_makeWorklet = __commonJS({
       const functionName = makeWorkletName(fun);
       const functionIdentifier = (0, types_1.identifier)(functionName);
       const clone = (0, types_1.cloneNode)(fun.node);
-      const funExpression = (0, types_1.isBlockStatement)(clone.body) ? (0, types_1.functionExpression)(null, clone.params, clone.body) : clone;
+      const funExpression = (0, types_1.isBlockStatement)(clone.body) ? (0, types_1.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
       let [funString, sourceMapString] = (0, buildWorkletString_1.buildWorkletString)(transformed.ast, variables, functionName, transformed.map);
       (0, assert_1.strict)(funString, "[Reanimated] `funString` is undefined.");
       const workletHash = hash(funString);
@@ -558,7 +556,8 @@ var require_processForCalleesWorklets = __commonJS({
       ["withSpring", [2]],
       ["withDecay", [1]],
       ["withRepeat", [3]],
-      ["runOnUI", [0]]
+      ["runOnUI", [0]],
+      ["executeOnUIRuntimeSync", [0]]
     ]);
     var objectHooks = /* @__PURE__ */ new Set([
       "useAnimatedGestureHandler",

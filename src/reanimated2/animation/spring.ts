@@ -19,6 +19,7 @@ import {
   underDampedSpringCalculations,
   criticallyDampedSpringCalculations,
   isAnimationTerminatingCalculation,
+  scaleZetaToMatchClamps,
   checkIfConfigIsValid,
 } from './springUtils';
 
@@ -58,6 +59,7 @@ export const withSpring = ((
       duration: 2000,
       dampingRatio: 0.5,
       reduceMotion: undefined,
+      clamp: undefined,
     } as const;
 
     const config: DefaultSpringConfig & SpringConfigInner = {
@@ -77,6 +79,7 @@ export const withSpring = ((
       animation: InnerSpringAnimation,
       now: Timestamp
     ): boolean {
+      // eslint-disable-next-line @typescript-eslint/no-shadow
       const { toValue, startTimestamp, current } = animation;
 
       const timeFromStart = now - startTimestamp;
@@ -209,6 +212,10 @@ export const withSpring = ((
         animation.zeta = zeta;
         animation.omega0 = omega0;
         animation.omega1 = omega1;
+
+        if (config.clamp !== undefined) {
+          animation.zeta = scaleZetaToMatchClamps(animation, config.clamp);
+        }
       }
 
       animation.lastTimestamp = previousAnimation?.lastTimestamp || now;
