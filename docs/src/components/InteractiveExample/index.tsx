@@ -47,9 +47,7 @@ export default function InteractiveExample({
           className={`${styles.container} ${larger && styles.largerContainer} 
           ${!showPreview ? styles.code : ''}`}
           data-ispreview={showPreview}>
-          {!!showPreview && !!prefersReducedMotion ? (
-            <ReducedMotionWarning />
-          ) : null}
+          {showPreview && prefersReducedMotion && <ReducedMotionWarning />}
           <div
             className={clsx(
               styles.buttonsContainer,
