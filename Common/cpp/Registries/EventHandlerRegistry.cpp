@@ -6,7 +6,7 @@
 namespace reanimated {
 
 void EventHandlerRegistry::registerEventHandler(
-    std::shared_ptr<WorkletEventHandler> eventHandler) {
+    const std::shared_ptr<WorkletEventHandler> &eventHandler) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   const auto &eventName = eventHandler->getEventName();
   auto handlerId = eventHandler->getHandlerId();
@@ -21,7 +21,7 @@ void EventHandlerRegistry::registerEventHandler(
   eventHandlers[handlerId] = eventHandler;
 }
 
-void EventHandlerRegistry::unregisterEventHandler(uint64_t id) {
+void EventHandlerRegistry::unregisterEventHandler(const uint64_t id) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   auto handlerIt = eventHandlers.find(id);
   if (handlerIt != eventHandlers.end()) {

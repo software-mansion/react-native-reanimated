@@ -195,7 +195,7 @@ static jsi::Value SPEC_PREFIX(setShouldAnimateExiting)(
 }
 
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
-    std::shared_ptr<CallInvoker> jsInvoker)
+    const std::shared_ptr<CallInvoker> &jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
   methodMap_["makeShareableClone"] =
       MethodMetadata{2, SPEC_PREFIX(makeShareableClone)};
