@@ -1,10 +1,11 @@
+import React from 'react';
 import {
   Image,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
   ViewProps,
+  Button,
+  SafeAreaView,
 } from 'react-native';
 import Animated, {
   SharedValue,
@@ -13,8 +14,6 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import React from 'react';
-import { Button } from '@mui/material';
 
 type AccordionProps = ViewProps & {
   isExpanded: SharedValue<boolean>;
@@ -80,26 +79,24 @@ const Parent = ({ open }: ParentProps) => {
   );
 };
 
-const AccordionScreen = () => {
+export default function App() {
   const open = useSharedValue(false);
   const onPress = () => {
     open.value = !open.value;
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.topPart}>
-        <Button onClick={onPress} style={styles.button}>
-          Click me
-        </Button>
+        <Button onPress={onPress} title="Click me" />
       </View>
 
       <View style={styles.bottomPart}>
         <Parent open={open} />
       </View>
-    </View>
+    </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -114,27 +111,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  button: {
-    backgroundColor: '#6F2FE2',
-    color: '#E9E8E7',
-    textTransform: 'none',
-    padding: 10,
-    borderRadius: 24,
-    alignSelf: 'center',
-    marginBottom: 64,
-  },
-  counters: {
-    justifyContent: 'center',
-    padding: 24,
-    flex: 1,
-  },
-  row: {
-    flexDirection: 'row',
-  },
-  header: {
-    textAlign: 'center',
-    fontSize: 32,
   },
   image: {
     width: 200,
@@ -152,5 +128,3 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 });
-
-export default AccordionScreen;
