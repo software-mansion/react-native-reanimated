@@ -54,6 +54,7 @@ import {
 import { updateLayoutAnimations } from '../reanimated2/UpdateLayoutAnimations';
 import type { CustomConfig } from '../reanimated2/layoutReanimation/web/config';
 import type { FlatList, FlatListProps } from 'react-native';
+import { addHTMLMutationObserver } from '../reanimated2/layoutReanimation/web/domUtils';
 
 const IS_WEB = isWeb();
 const IS_FABRIC = isFabric();
@@ -202,6 +203,8 @@ export function createAnimatedComponent(
         this.props.exiting &&
         !getReducedMotionFromConfig(this.props.exiting as CustomConfig)
       ) {
+        addHTMLMutationObserver();
+
         startWebLayoutAnimation(
           this.props,
           this._component as HTMLElement,

@@ -19,7 +19,8 @@ namespace reanimated {
 
 class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
  protected:
-  explicit NativeReanimatedModuleSpec(std::shared_ptr<CallInvoker> jsInvoker);
+  explicit NativeReanimatedModuleSpec(
+      const std::shared_ptr<CallInvoker> &jsInvoker);
 
  public:
   // SharedValue
