@@ -1,8 +1,6 @@
-const { onFuncPrefixMatchingCreate } = require('./funcPrefixMatching');
+const onFuncPrefixMatchingCreate = require('./funcPrefixMatching');
 module.exports = {
   rules: {
-    'func-prefix-matching': {
-      create: onFuncPrefixMatchingCreate,
-    },
+    'func-prefix-matching': onFuncPrefixMatchingCreate,
   },
 };
