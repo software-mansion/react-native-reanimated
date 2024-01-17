@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  ViewStyle,
-} from 'react-native';
+import { Button, Image, StyleSheet, View, ViewStyle } from 'react-native';
 import 'react-native-gesture-handler';
 import Animated, {
   SharedValue,
@@ -42,9 +35,8 @@ const TranslatedElement = ({
   offset,
   childrenWidth,
 }: TranslatedElementProps) => {
-  const style = useAnimatedStyle(() => {
+  const animatedStyle = useAnimatedStyle(() => {
     return {
-      ...styles.animatedStyle,
       left: (index - 1) * childrenWidth,
       transform: [
         {
@@ -53,10 +45,14 @@ const TranslatedElement = ({
       ],
     };
   });
-  return <Animated.View style={style}>{children}</Animated.View>;
+  return (
+    <Animated.View style={[styles.animatedStyle, animatedStyle]}>
+      {children}
+    </Animated.View>
+  );
 };
 
-const getIndicesArray = (length: number) => Array.from({ length }, (x, i) => i);
+const getIndicesArray = (length: number) => Array.from({ length }, (_, i) => i);
 
 type ClonerProps = {
   count: number;
@@ -159,13 +155,7 @@ function MarqueeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.safeArea}>
-        <View style={styles.flex} />
-        <Pressable
-          style={styles.toggleButton}
-          onPress={() => setReverse((v) => !v)}>
-          <Text>Reverse</Text>
-        </Pressable>
-        <View style={styles.flex} />
+        <Button onPress={() => setReverse((v) => !v)} title="Reverse" />
         <Marquee reverse={reverse}>
           <Image
             style={styles.image}
@@ -174,24 +164,14 @@ function MarqueeScreen() {
             }}
           />
         </Marquee>
-        <View style={styles.flex} />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-  },
   container: {
     flex: 1,
-  },
-  toggleButton: {
-    backgroundColor: 'var(--swm-purple-light-60)',
-    padding: 12,
-    borderRadius: 48,
-    marginBottom: 24,
   },
   safeArea: {
     alignItems: 'center',
