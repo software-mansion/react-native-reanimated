@@ -127,7 +127,8 @@ class ShareableJSRef : public jsi::HostObject {
   const std::shared_ptr<Shareable> value_;
 
  public:
-  explicit ShareableJSRef(std::shared_ptr<Shareable> value) : value_(value) {}
+  explicit ShareableJSRef(const std::shared_ptr<Shareable> &value)
+      : value_(value) {}
 
   virtual ~ShareableJSRef();
 
