@@ -28,7 +28,7 @@ import type {
 import { SensorContainer } from './SensorContainer';
 
 export { startMapper, stopMapper } from './mappers';
-export { runOnJS, runOnUI } from './threads';
+export { runOnJS, runOnUI, executeOnUIRuntimeSync } from './threads';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export type { WorkletRuntime } from './runtimes';
 export { makeShareable, makeShareableCloneRecursive } from './shareables';
