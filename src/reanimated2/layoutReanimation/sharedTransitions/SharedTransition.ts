@@ -202,10 +202,6 @@ export class SharedTransition {
         }
       }
 
-      // if (animationFactory) {
-      //   animations = { ...animations, ...animationFactory(values) };
-      // }
-
       for (const propName in animations) {
         if (propName === 'transform') {
           initialValues.transformMatrix = values.currentTransformMatrix;
@@ -216,8 +212,6 @@ export class SharedTransition {
           initialValues[propName] = values[keyToCurrentValue];
         }
       }
-
-      // console.log('animations', Object.keys(animations));
 
       return { initialValues, animations };
     };
