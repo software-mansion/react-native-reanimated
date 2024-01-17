@@ -42,7 +42,7 @@ export class StretchInX
           transform: [{ scaleX: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -84,7 +84,7 @@ export class StretchInY
           transform: [{ scaleY: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -126,7 +126,7 @@ export class StretchOutX
           transform: [{ scaleX: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -168,7 +168,7 @@ export class StretchOutY
           transform: [{ scaleY: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };

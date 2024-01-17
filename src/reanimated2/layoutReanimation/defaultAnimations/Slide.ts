@@ -48,7 +48,7 @@ export class SlideInRight
           originX: values.targetOriginX + values.windowWidth,
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -93,7 +93,7 @@ export class SlideInLeft
           originX: values.targetOriginX - values.windowWidth,
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -144,7 +144,7 @@ export class SlideOutRight
           originX: values.currentOriginX,
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -195,7 +195,7 @@ export class SlideOutLeft
           originX: values.currentOriginX,
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -240,7 +240,7 @@ export class SlideInUp
           originY: -values.windowHeight,
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -285,7 +285,7 @@ export class SlideInDown
           originY: values.targetOriginY + values.windowHeight,
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -333,7 +333,7 @@ export class SlideOutUp
           ),
         },
         initialValues: { originY: values.currentOriginY, ...initialValues },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -381,7 +381,7 @@ export class SlideOutDown
           ),
         },
         initialValues: { originY: values.currentOriginY, ...initialValues },
-        callback: callback,
+        callback,
       };
     };
   };

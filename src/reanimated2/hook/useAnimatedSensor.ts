@@ -106,7 +106,7 @@ export function useAnimatedSensor(
       // NOOP
     },
     isAvailable: false,
-    config: config,
+    config,
   });
 
   useEffect(() => {

@@ -39,7 +39,7 @@ module.exports = {
     '@typescript-eslint/no-unsafe-argument': 'off',
 
     '@typescript-eslint/no-explicit-any': 'warn',
-    'object-shorthand': 'off',
+    'object-shorthand': 'error',
 
     curly: 'error',
     'no-case-declarations': 'error',
