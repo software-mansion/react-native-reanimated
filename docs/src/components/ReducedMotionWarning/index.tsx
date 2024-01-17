@@ -18,7 +18,7 @@ export default function ReducedMotionWarning() {
         Some of the animations may be skipped.{' '}
         <Link
           className={styles.link}
-          to="https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility#reduced-motion-in-animations">
+          to="/docs/guides/accessibility#reduced-motion-in-animations">
           Learn more
         </Link>
       </p>
