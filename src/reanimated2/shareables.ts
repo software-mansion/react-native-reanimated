@@ -98,6 +98,8 @@ const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // We use it to check if later on the function reenters with the same object
 let processedObjectAtThresholdDepth: unknown;
 
+let workletCounter = 0;
+
 export function makeShareableCloneRecursive<T>(
   value: any,
   shouldPersistRemote = false,
@@ -150,6 +152,7 @@ export function makeShareableCloneRecursive<T>(
         toAdapt = {};
         if (value.__workletHash !== undefined) {
           // we are converting a worklet
+          value.__workletID = workletCounter++;
           if (__DEV__) {
             const babelVersion = value.__initData.version;
             if (babelVersion !== undefined && babelVersion !== jsVersion) {

@@ -3,6 +3,7 @@ import type {
   MapperRawInputs,
   MapperOutputs,
   SharedValue,
+  MapperRegistry,
 } from './commonTypes';
 import { isJest } from './PlatformChecker';
 import { runOnUI } from './threads';
@@ -20,7 +21,7 @@ type Mapper = {
   outputs?: MapperOutputs;
 };
 
-function createMapperRegistry() {
+function createMapperRegistry(): MapperRegistry {
   'worklet';
   const mappers = new Map<number, Mapper>();
   let sortedMappers: Mapper[] = [];

@@ -4,24 +4,26 @@ import type { WorkletFunction } from './commonTypes';
 
 function valueUnpacker(objectToUnpack: any, category?: string): any {
   'worklet';
-  let workletsCache = global.__workletsCache;
+  let unboundWorkletCache = global.__unboundWorkletCache;
+  let workletInstanceCache = global.__workletInstanceCache;
   let handleCache = global.__handleCache;
-  if (workletsCache === undefined) {
+  if (unboundWorkletCache === undefined) {
     // init
-    workletsCache = global.__workletsCache = new Map();
+    unboundWorkletCache = global.__unboundWorkletCache = new Map();
+    workletInstanceCache = global.__workletInstanceCache = new Map();
     handleCache = global.__handleCache = new WeakMap();
   }
   const workletHash = objectToUnpack.__workletHash;
   if (workletHash !== undefined) {
-    let workletFun = workletsCache.get(workletHash);
-    if (workletFun === undefined) {
+    let workletCode = unboundWorkletCache.get(workletHash);
+    if (workletCode === undefined) {
       const initData = objectToUnpack.__initData;
       if (global.evalWithSourceMap) {
         // if the runtime (hermes only for now) supports loading source maps
         // we want to use the proper filename for the location as it guarantees
         // that debugger understands and loads the source code of the file where
         // the worklet is defined.
-        workletFun = global.evalWithSourceMap(
+        workletCode = global.evalWithSourceMap(
           '(' + initData.code + '\n)',
           initData.location,
           initData.sourceMap
@@ -31,22 +33,27 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
         // can pass source url when evaluating the worklet. Now, instead of using
         // the actual file location we use worklet hash, as it the allows us to
         // properly symbolicate traces (see errors.ts for details)
-        workletFun = global.evalWithSourceUrl(
+        workletCode = global.evalWithSourceUrl(
           '(' + initData.code + '\n)',
           `worklet_${workletHash}`
         ) as (...args: any[]) => any;
       } else {
         // in release we use the regular eval to save on JSI calls
         // eslint-disable-next-line no-eval
-        workletFun = eval('(' + initData.code + '\n)') as (
+        workletCode = eval('(' + initData.code + '\n)') as (
           ...args: any[]
         ) => any;
       }
-      workletsCache.set(workletHash, workletFun);
+
+      unboundWorkletCache.set(workletHash, workletCode);
     }
-    const functionInstance = workletFun.bind(objectToUnpack);
-    objectToUnpack._recur = functionInstance;
-    return functionInstance;
+    let workletInstance = workletInstanceCache.get(objectToUnpack?.__workletID);
+    if (workletInstance === undefined) {
+      workletInstance = workletCode.bind(objectToUnpack);
+      workletInstanceCache.set(objectToUnpack.__workletID, workletInstance);
+      objectToUnpack._recur = workletInstance;
+    }
+    return workletInstance;
   } else if (objectToUnpack.__init) {
     let value = handleCache!.get(objectToUnpack);
     if (value === undefined) {

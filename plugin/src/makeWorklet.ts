@@ -379,6 +379,8 @@ function makeArrayFromCapturedBindings(
         return;
       }
 
+      // This bit of code checks if the variable is declared in the scope
+      // eg. directly or as a parameter. If it is, we don't want to capture it.
       let currentScope = path.scope;
 
       while (currentScope != null) {
