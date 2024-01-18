@@ -59,8 +59,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
@@ -110,7 +110,7 @@ public class NodesManager implements EventDispatcherListener {
 
   private RCTEventEmitter mCustomEventHandler;
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
-  private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
+  private LinkedBlockingQueue<CopiedEvent> mEventQueue = new LinkedBlockingQueue<>();
   private boolean mWantRunUpdates;
 
   public double currentFrameTimeMs;
