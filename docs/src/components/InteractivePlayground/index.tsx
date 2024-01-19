@@ -62,7 +62,7 @@ export default function InteractivePlayground(
     <BrowserOnly fallback={<div>Loading...</div>}>
       {() => (
         <div className={styles.container}>
-          { prefersReducedMotion && <ReducedMotionWarning /> }
+          {prefersReducedMotion && <ReducedMotionWarning />}
           <div className={styles.buttonContainer}>
             <AnimableIcon
               icon={<Reset />}
