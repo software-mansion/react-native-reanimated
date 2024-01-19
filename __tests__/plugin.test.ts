@@ -1,6 +1,6 @@
 import { html } from 'code-tag';
 import plugin from '../plugin';
-import { BabelFileResult, TransformOptions, transformSync } from '@babel/core';
+import { TransformOptions, transformSync } from '@babel/core';
 import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
 import '../plugin/jestUtils';
