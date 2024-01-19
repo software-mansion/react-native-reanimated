@@ -14,7 +14,9 @@ import HorseVariantJ from '@site/static/img/horse/10.svg';
 import HorseVariantK from '@site/static/img/horse/11.svg';
 import clsx from 'clsx';
 
-const HeroHorse = () => {
+import { useReducedMotion } from 'react-native-reanimated';
+
+const HeroHorseAnimated = () => {
   return (
     <div className={styles.horse}>
       <div className={styles.horseAnimation}>
@@ -52,6 +54,22 @@ const HeroHorse = () => {
       </div>
     </div>
   );
+};
+
+const StaticHorse = () => {
+  return (
+    <div className={styles.horse}>
+      <div className={styles.horseAnimation}>
+        <HorseVariantH />
+      </div>
+    </div>
+  );
+};
+
+const HeroHorse = () => {
+  const prefersReducedMotion = useReducedMotion();
+
+  return prefersReducedMotion ? <StaticHorse /> : <HeroHorseAnimated />;
 };
 
 export default HeroHorse;
