@@ -1,6 +1,7 @@
-const onFuncPrefixMatchingCreate = require('./funcPrefixMatching');
+const noAnimatedStyleToNonAnimatedComponent = require('./noAnimatedStyleToNonAnimatedComponent');
 module.exports = {
   rules: {
-    'func-prefix-matching': onFuncPrefixMatchingCreate,
+    'animated-style-non-animated-component':
+      noAnimatedStyleToNonAnimatedComponent,
   },
 };

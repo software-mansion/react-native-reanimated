@@ -10,6 +10,6 @@ module.exports = {
     'react-native/no-unused-styles': 'error',
     'react-native/no-raw-text': 'off', // This rule is great, we don't enable it because of its performance. If we ever find similar rule we should enable it.
     'react-native/no-single-element-style-arrays': 'error',
-    'demo-eslint-plugin/func-prefix-matching': 'warn',
+    'demo-eslint-plugin/animated-style-non-animated-component': 'warn',
   },
 };
