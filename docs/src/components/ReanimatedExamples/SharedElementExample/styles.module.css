@@ -1,0 +1,86 @@
+.container {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+}
+
+.tile {
+  width: 160px;
+  height: 230px;
+  background-color: var(--swm-off-white);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+[data-theme='dark'] .tile {
+  background-color: var(--swm-light-off-navy);
+}
+
+.ball {
+  width: 60px;
+  height: 60px;
+  background-color: var(--swm-purple-light-100);
+  border-radius: 50%;
+}
+
+[data-theme='dark'] .ball {
+  background-color: var(--swm-purple-dark-80);
+}
+
+.container > div:first-child > .ball {
+  animation: moveRightAndBack 4s infinite;
+}
+
+.container > div:nth-child(2) > .ball {
+  animation: moveLeftAndBack 4s infinite;
+}
+
+@media (max-widh: 768px) {
+  .tile {
+    width: 100px;
+    height: 150px;
+  }
+  .ball {
+    height: 50px;
+    width: 50px;
+  }
+}
+@media (max-width: 520px) {
+  .container {
+    gap: 1.5rem;
+  }
+  .tile {
+    width: 90px;
+    height: 140px;
+  }
+  .ball {
+    height: 40px;
+    width: 40px;
+  }
+}
+
+@keyframes moveRightAndBack {
+  0%,
+  100% {
+    left: 100%;
+    transform: translateX(0%);
+  }
+  50% {
+    left: 50%;
+    transform: translateX(calc(250% + 32px));
+  }
+}
+
+@keyframes moveLeftAndBack {
+  0%,
+  100% {
+    right: 50%;
+    transform: translateX(calc(-250% - 32px));
+  }
+  50% {
+    right: 100%;
+    transform: translateX(0%);
+  }
+}

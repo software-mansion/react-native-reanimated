@@ -1,0 +1,142 @@
+.animationsSectionWrapper {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.animationsSectionWrapper > div:first-child {
+  margin-bottom: 7.5rem;
+  background-color: #f5eeff40;
+  width: 100%;
+  height: 23rem;
+  padding: 3rem 7.5rem 3rem 7.5rem;
+}
+[data-theme='dark'] .animationsSectionWrapper > div:first-child {
+  background-color: #473d6840;
+}
+
+.animationsSection {
+  width: 100%;
+  font-size: 1.25rem;
+  color: #fcfcff;
+  font-family: var(--swm-title-font);
+  display: flex;
+  gap: 6rem;
+}
+
+.animationsSection > div:first-child {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.animationsSection h4 {
+  color: #fcfcff;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.animationsSection p {
+  font-weight: 400;
+  margin: 0;
+}
+
+.animationsSection a {
+  color: #fcfcff;
+  font-weight: 500;
+  border: 1px solid #fcfcff;
+  padding: 1rem 1.5rem 1rem 1.5rem;
+  justify-content: center;
+  width: auto;
+  display: flex;
+  max-width: 12.5rem;
+}
+
+.animationsSectionButtonArrow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-left: 1rem;
+}
+
+.interactiveCodeBlock {
+  flex: 1;
+}
+
+.interactiveCodeBlock > div:first-child {
+  margin: 0;
+}
+
+.interactiveCodeBlock [class*='codeBlockLines'] {
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+
+.interactiveCodeBlock [class*='codeBlockContent'] code {
+  background-color: var(--swm-off-background);
+  padding: 1.5rem 2rem;
+  height: auto;
+  border: none;
+}
+
+@media (max-width: 1200px) {
+  .animationsSection {
+    flex-direction: row;
+    gap: 2rem;
+  }
+  .animationsSectionWrapper > div:first-child {
+    margin-bottom: 4rem;
+  }
+  .animationsSection > div:first-child {
+    gap: 2rem;
+  }
+  .animationsSectionWrapper > div:first-child {
+    padding: 3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .animationsSection {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 2rem;
+  }
+  .animationsSection a {
+    max-width: 100%;
+  }
+  .interactiveCodeBlock [class*='codeBlockContent'] {
+    width: 100%;
+  }
+  .animationsSectionWrapper > div:first-child {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 390px) {
+  .animationsSectionWrapper {
+    height: auto;
+  }
+  .animationsSectionWrapper > div:first-child {
+    margin-bottom: 2.5rem;
+  }
+  .animationsSection {
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .animationsSection a {
+    margin-bottom: 5.5rem;
+  }
+  .animationsSection > div:first-child {
+    gap: 1rem;
+  }
+  .animationsSectionWrapper > div:first-child {
+    padding: 2rem;
+  }
+  .interactiveCodeBlock [class*='codeBlockContent'] code {
+    padding: 1.5rem;
+  }
+}

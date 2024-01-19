@@ -1,0 +1,10 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: center;
+  contain: content;
+  align-items: center;
+  background-color: none;
+  margin-bottom: var(--ifm-leading);
+}

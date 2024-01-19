@@ -1,0 +1,40 @@
+.background {
+  background: linear-gradient(180deg, #782aeb 0%, #ff6259 100%);
+  margin-top: -1rem;
+  margin-bottom: -1rem;
+  height: fit-content;
+}
+
+[data-theme='dark'] .background {
+  background: linear-gradient(
+    180deg,
+    #6a539a -0.35%,
+    #b07eff -0.34%,
+    #ff7774 100%
+  );
+}
+
+.backgroundWrapper {
+  position: relative;
+  display: flex;
+}
+
+.topWave > svg:first-child,
+.bottomWave > svg:first-child {
+  display: none;
+}
+
+.topWave > svg:nth-child(2),
+.bottomWave > svg:nth-child(2) {
+  display: block;
+}
+
+[data-theme='dark'] .topWave > svg:first-child,
+[data-theme='dark'] .bottomWave > svg:first-child {
+  display: block;
+}
+
+[data-theme='dark'] .topWave > svg:nth-child(2),
+[data-theme='dark'] .bottomWave > svg:nth-child(2) {
+  display: none;
+}

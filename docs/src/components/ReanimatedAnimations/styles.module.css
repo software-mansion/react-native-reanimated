@@ -1,0 +1,106 @@
+.animationsContainer {
+  color: #fcfcff;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 15.75rem;
+  margin-top: -8.5rem;
+}
+
+.animationsContainer h3 {
+  color: #fcfcff;
+  font-size: var(--swm-h2-font-size);
+}
+
+.animationsContainer h5 {
+  color: #fcfcff;
+  font-size: 1.25rem;
+}
+
+.animationsContainer > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  margin-bottom: 7.5rem;
+}
+
+.animationsContainer {
+  position: relative;
+}
+
+.dotsContainer {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 5%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.showDots {
+  opacity: 1;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #fcfcff80;
+  margin: 14px 0;
+  transition: all 0.3s ease-in-out;
+}
+
+.dot.active {
+  background-color: var(--swm-red-light-100);
+}
+
+@media (max-width: 1350px) {
+  .animationsContainer {
+    padding: 0 7rem;
+  }
+  .dotsContainer {
+    right: 50px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .animationsContainer {
+    padding: 0 3rem;
+    margin-top: -4rem;
+  }
+  .dotsContainer {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .animationsContainer {
+    padding: 0 2rem;
+    margin-top: -1.5rem;
+  }
+}
+
+@media (max-width: 390px) {
+  .animationsContainer {
+    padding: 1.5rem;
+  }
+  .animationsContainer > div:first-child {
+    margin-bottom: 7rem;
+    gap: 1.5rem;
+  }
+  .animationsContainer h3 {
+    font-size: 1.5rem;
+  }
+
+  .animationsContainer h5 {
+    font-size: 1.125rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .dotsContainer {
+    display: inline;
+  }
+}
