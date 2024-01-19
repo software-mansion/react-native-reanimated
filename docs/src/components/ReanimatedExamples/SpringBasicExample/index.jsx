@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useColorMode } from '@docusaurus/theme-common';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -8,6 +9,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 export default function App({ initialOffset = 200 }) {
+  const colorModeStyles =
+    useColorMode().colorMode === 'dark' ? darkStyles : lightStyles;
   const offset = useSharedValue(initialOffset);
 
   const animatedStyles = useAnimatedStyle(() => ({
@@ -20,10 +23,24 @@ export default function App({ initialOffset = 200 }) {
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.box, animatedStyles]} />
+      <Animated.View
+        style={[styles.box, animatedStyles, colorModeStyles.box]}
+      />
     </View>
   );
 }
+
+const darkStyles = StyleSheet.create({
+  box: {
+    backgroundColor: 'var(--swm-purple-dark-80)',
+  },
+});
+
+const lightStyles = StyleSheet.create({
+  box: {
+    backgroundColor: 'var(--swm-purple-light-100)',
+  },
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -36,6 +53,5 @@ const styles = StyleSheet.create({
     height: 120,
     width: 120,
     borderRadius: 100,
-    backgroundColor: 'var(--swm-purple-light-100)',
   },
 });

@@ -23,6 +23,8 @@ const sections = [
       return <Animated.View style={{ ...styles.box, width }} />
      }`,
     component: <SpringBasicExample />,
+    tabletComponent: <SpringBasicExample initialOffset={100} />,
+    mobileComponent: <SpringBasicExample initialOffset={35} />,
     docsLink:
       'https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/your-first-animation',
   },
@@ -140,6 +142,8 @@ const ReanimatedAnimations = () => {
                 code={section.code}
                 component={section.component}
                 docsLink={section.docsLink}
+                mobileComponent={section.mobileComponent ?? null}
+                tabletComponent={section.tabletComponent ?? null}
                 idx={idx}
               />
             </Fragment>

@@ -1,5 +1,6 @@
-import React, { Fragment, useState } from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { useColorMode } from '@docusaurus/theme-common';
 import Animated, {
   FadeInLeft,
   FadeInDown,
@@ -7,12 +8,44 @@ import Animated, {
   BounceIn,
   FlipOutYRight,
 } from 'react-native-reanimated';
-import Cross from '@site/static/img/examples/cross.svg';
+import Cross from './Cross';
 
 const data = [{ label: 'A' }, { label: 'B' }, { label: 'C' }, { label: 'D' }];
 
+function mergeStyles(baseStyles, colorModeStyles) {
+  return StyleSheet.create({
+    container: {
+      ...baseStyles.container,
+      ...colorModeStyles.container,
+    },
+    listItem: {
+      ...baseStyles.listItem,
+      ...colorModeStyles.listItem,
+    },
+    listItemLabel: {
+      ...baseStyles.listItemLabel,
+      ...colorModeStyles.listItemLabel,
+    },
+    listItemIcon: {
+      ...baseStyles.listItemIcon,
+      ...colorModeStyles.listItemIcon,
+    },
+    button: {
+      ...baseStyles.button,
+      ...colorModeStyles.button,
+    },
+    buttonText: {
+      ...baseStyles.buttonText,
+      ...colorModeStyles.buttonText,
+    },
+  });
+}
+
 export default function App() {
   const [displayedItems, setDisplayedItems] = useState([data[0]]);
+  const colorModeStyles =
+    useColorMode().colorMode === 'dark' ? darkStyles : lightStyles;
+  const styles = mergeStyles(baseStyles, colorModeStyles);
 
   const addItem = () => {
     if (displayedItems.length < data.length) {
@@ -37,13 +70,14 @@ export default function App() {
           displayedItems={displayedItems}
           onAddItem={addItem}
           onRemoveItem={removeItem}
+          styles={styles}
         />
       </View>
     </>
   );
 }
 
-function Items({ displayedItems, onAddItem, onRemoveItem }) {
+function Items({ displayedItems, onAddItem, onRemoveItem, styles }) {
   return (
     <>
       <View>
@@ -54,6 +88,7 @@ function Items({ displayedItems, onAddItem, onRemoveItem }) {
               onRemove={() => onRemoveItem(index)}
               index={index}
               key={index}
+              styles={styles}
             />
           </Animated.View>
         ))}
@@ -61,12 +96,13 @@ function Items({ displayedItems, onAddItem, onRemoveItem }) {
       <Button
         onPress={onAddItem}
         entering={BounceIn.delay(250).duration(400)}
+        styles={styles}
       />
     </>
   );
 }
 
-function ListItem({ label, onRemove, index }) {
+function ListItem({ label, onRemove, styles }) {
   return (
     <Animated.View style={styles.listItem} entering={FadeInLeft.delay(150)}>
       <Animated.Text
@@ -75,7 +111,7 @@ function ListItem({ label, onRemove, index }) {
         {label}
       </Animated.Text>
       <Animated.Text entering={ZoomIn.delay(400)} style={styles.listItemIcon}>
-        <Cross onClick={onRemove} />
+        <Cross color={styles.listItemIcon['color']} onClick={onRemove} />
       </Animated.Text>
     </Animated.View>
   );
@@ -83,7 +119,7 @@ function ListItem({ label, onRemove, index }) {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-function Button({ onPress, entering }) {
+function Button({ onPress, entering, styles }) {
   return (
     <AnimatedPressable
       style={styles.buttonContainer}
@@ -98,12 +134,49 @@ function Button({ onPress, entering }) {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
+  listItem: {
+    backgroundColor: 'var(--swm-off-white)',
+  },
+  listItemLabel: {
+    color: 'var(--swm-purple-light-100)',
+  },
+  listItemIcon: {
+    color: 'var(--swm-purple-light-100)',
+  },
+  button: {
+    backgroundColor: 'var(--swm-purple-light-100)',
+  },
+  buttonText: {
+    color: 'var(--swm-off-white)',
+  },
+});
+
+const darkStyles = StyleSheet.create({
+  listItem: {
+    backgroundColor: 'var(--swm-light-off-navy)',
+  },
+  listItemLabel: {
+    color: 'var(--swm-purple-dark-80)',
+  },
+  listItemIcon: {
+    color: 'var(--swm-purple-dark-80)',
+  },
+  button: {
+    backgroundColor: 'var(--swm-purple-dark-80)',
+  },
+  buttonText: {
+    color: 'var(--swm-light-off-navy)',
+  },
+});
+
+const baseStyles = StyleSheet.create({
   container: {
     flex: 1,
     height: '100%',
     display: 'flex',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
   heading: {
     fontSize: 40,
@@ -117,7 +190,6 @@ const styles = StyleSheet.create({
     padding: '.5rem',
     width: 230,
     paddingHorizontal: '1.5rem',
-    backgroundColor: 'var(--swm-off-white)',
     marginBottom: 10,
     alignItems: 'center',
     borderRadius: 16,
@@ -126,14 +198,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 500,
     flex: 1,
-    color: 'var(--swm-purple-light-100)',
   },
   buttonContainer: {
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
   button: {
-    backgroundColor: 'var(--swm-purple-light-100)',
     borderRadius: 16,
     paddingHorizontal: '2rem',
     paddingVertical: '0.5rem',
@@ -141,6 +211,5 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
-    color: 'var(--swm-off-white)',
   },
 });

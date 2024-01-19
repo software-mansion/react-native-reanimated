@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useColorMode } from '@docusaurus/theme-common';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -14,6 +15,8 @@ import {
 const SIZE = 120;
 
 export default function App() {
+  const colorModeStyles =
+    useColorMode().colorMode === 'dark' ? darkStyles : lightStyles;
   const offset = useSharedValue(0);
   const width = useSharedValue(0);
 
@@ -44,12 +47,26 @@ export default function App() {
     <GestureHandlerRootView style={styles.container}>
       <View onLayout={onLayout} style={styles.wrapper}>
         <GestureDetector gesture={pan}>
-          <Animated.View style={[styles.box, animatedStyles]} />
+          <Animated.View
+            style={[styles.box, animatedStyles, colorModeStyles.box]}
+          />
         </GestureDetector>
       </View>
     </GestureHandlerRootView>
   );
 }
+
+const lightStyles = StyleSheet.create({
+  box: {
+    backgroundColor: 'var(--swm-purple-light-100)',
+  },
+});
+
+const darkStyles = StyleSheet.create({
+  box: {
+    backgroundColor: 'var(--swm-purple-dark-80)',
+  },
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -70,7 +87,6 @@ const styles = StyleSheet.create({
     cursor: 'grab',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'var(--swm-purple-light-100)',
     borderRadius: 8,
   },
 });

@@ -92,10 +92,19 @@
     margin-bottom: 4rem;
   }
   .animationsSection > div:first-child {
-    gap: 2rem;
+    gap: 1.5rem;
   }
   .animationsSectionWrapper > div:first-child {
     padding: 3rem;
+  }
+}
+
+@media (min-width: 769px) {
+  .exampleContainerMobile {
+    display: none;
+  }
+  .exampleContainerRegular {
+    display: block;
   }
 }
 
@@ -112,7 +121,14 @@
     width: 100%;
   }
   .animationsSectionWrapper > div:first-child {
+    margin-bottom: 2rem;
     padding: 2rem;
+  }
+  .exampleContainerMobile {
+    display: block;
+  }
+  .exampleContainerRegular {
+    display: none;
   }
 }
 
