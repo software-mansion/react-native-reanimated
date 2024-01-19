@@ -3,11 +3,11 @@ function onFuncPrefixMatchingCreate(context) {
     JSXOpeningElement: (node) => {
       const componentName =
         node?.name?.type === 'JSXIdentifier' ? node.name?.name : 'Component';
+      const sourceCode = context.getSourceCode();
+      const tokensBefore = sourceCode.getTokensBefore(node);
 
       function isVariableDefinedAs(variableName, expectedToken) {
         let isAnimated = false;
-        const sourceCode = context.getSourceCode();
-        const tokensBefore = sourceCode.getTokensBefore(node);
         const variableNameTokenIds = [];
 
         tokensBefore.forEach((token, idx) => {
