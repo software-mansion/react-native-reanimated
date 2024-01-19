@@ -10,6 +10,7 @@ interface Props {
   docsLink: string;
   component: React.ReactNode;
   code: string;
+  idx: number;
 }
 
 export default function ReanimatedAnimationsSection({
@@ -18,11 +19,12 @@ export default function ReanimatedAnimationsSection({
   docsLink,
   component,
   code,
+  idx,
 }: Props) {
   return (
     <div className={styles.animationsSectionWrapper}>
       <div>
-        <InteractiveExampleComponent key={1} component={component} />
+        <InteractiveExampleComponent idx={idx} component={component} />
       </div>
       <div className={styles.animationsSection}>
         <div>

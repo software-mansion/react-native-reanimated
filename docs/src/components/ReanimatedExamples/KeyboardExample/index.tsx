@@ -7,7 +7,6 @@ export default function KeyboardExample() {
   for (let i = 1; i <= 35; i++) {
     keys.push(<div key={i} className={styles.key} />);
   }
-  console.log(keys);
 
   return (
     <div className={styles.container}>

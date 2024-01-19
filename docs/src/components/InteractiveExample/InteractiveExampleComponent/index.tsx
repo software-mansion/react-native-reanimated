@@ -5,15 +5,15 @@ import styles from './styles.module.css';
 
 interface Props {
   component: React.ReactNode;
-  key: number;
+  idx: number;
 }
 
-export default function InteractiveExampleComponent({ component, key }: Props) {
+export default function InteractiveExampleComponent({ component, idx }: Props) {
   return (
     <BrowserOnly fallback={<div>Loading...</div>}>
       {() => (
         <div className={styles.container}>
-          <React.Fragment key={key}>{component}</React.Fragment>
+          <React.Fragment key={idx}>{component}</React.Fragment>
         </div>
       )}
     </BrowserOnly>

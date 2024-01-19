@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import { useState, useRef, useEffect } from 'react';
 import styles from './styles.module.css';
 
@@ -133,13 +133,16 @@ const ReanimatedAnimations = () => {
         </div>
         <div ref={containerRef}>
           {sections.map((section, idx) => (
-            <ReanimatedAnimationsSection
-              title={section.title}
-              body={section.body}
-              code={section.code}
-              component={section.component}
-              docsLink={section.docsLink}
-            />
+            <Fragment key={idx}>
+              <ReanimatedAnimationsSection
+                title={section.title}
+                body={section.body}
+                code={section.code}
+                component={section.component}
+                docsLink={section.docsLink}
+                idx={idx}
+              />
+            </Fragment>
           ))}
         </div>
         <div

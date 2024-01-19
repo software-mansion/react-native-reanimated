@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { Fragment, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   FadeInLeft,
@@ -50,10 +50,10 @@ function Items({ displayedItems, onAddItem, onRemoveItem }) {
         {displayedItems.map((item, index) => (
           <Animated.View exiting={FlipOutYRight.duration(400)}>
             <ListItem
-              key={index}
               label={item.label}
               onRemove={() => onRemoveItem(index)}
               index={index}
+              key={index}
             />
           </Animated.View>
         ))}

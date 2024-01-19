@@ -56,6 +56,13 @@
   background-color: var(--swm-red-light-100);
 }
 
+[data-theme='dark'] .dot {
+  background-color: #fcfcff40;
+}
+[data-theme='dark'] .dot.active {
+  background-color: var(--swm-purple-dark-40);
+}
+
 @media (max-width: 1350px) {
   .animationsContainer {
     padding: 0 7rem;
