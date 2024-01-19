@@ -60,7 +60,7 @@ const StaticHorse = () => {
   return (
     <div className={styles.horse}>
       <div className={styles.horseAnimation}>
-        <HorseVariantH />
+        <HorseVariantE />
       </div>
     </div>
   );
