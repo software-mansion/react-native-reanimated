@@ -13,8 +13,6 @@ export default function SpringBasicExample({ initialOffset = 200 }) {
     useColorMode().colorMode === 'dark' ? darkStyles : lightStyles;
   const offset = useSharedValue(initialOffset);
 
-  console.log('Initial offset: ', initialOffset);
-
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],
   }));

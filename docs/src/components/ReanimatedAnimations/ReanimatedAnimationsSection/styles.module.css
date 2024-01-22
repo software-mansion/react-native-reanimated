@@ -35,7 +35,7 @@
 }
 
 .animationsSection h4 {
-  color: #fcfcff;
+  color: var(--swm-white);
   font-size: 1.5rem;
   font-weight: 600;
 }
@@ -90,7 +90,6 @@
 
 .interactiveCodeBlock [class*='codeBlockLines'] {
   font-size: 14px;
-  /* TODO : to use or not to use */
   white-space: pre-wrap;
 }
 

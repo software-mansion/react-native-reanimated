@@ -85,6 +85,7 @@
   /* Black & White palette, mainly for background settings */
   --swm-off-white: #f8f9ff;
   --swm-white: #fcfcff;
+  --swm-white-transparent: #fcfcff40;
 
   --swm-light-off-navy: #30354a;
   --swm-off-navy: #272b3c;

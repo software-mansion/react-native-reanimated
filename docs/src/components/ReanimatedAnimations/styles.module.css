@@ -61,7 +61,7 @@
 }
 
 [data-theme='dark'] .dot {
-  background-color: #fcfcff40;
+  background-color: var(--swm-off-transparent);
 }
 [data-theme='dark'] .dot.active {
   background-color: var(--swm-purple-dark-40);

@@ -82,7 +82,7 @@ function Items({ displayedItems, onAddItem, onRemoveItem, styles }) {
     <>
       <View>
         {displayedItems.map((item, index) => (
-          <Animated.View exiting={FlipOutYRight.duration(400)}>
+          <Animated.View key={index} exiting={FlipOutYRight.duration(400)}>
             <ListItem
               label={item.label}
               onRemove={() => onRemoveItem(index)}
