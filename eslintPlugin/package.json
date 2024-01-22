@@ -4,8 +4,12 @@
   "license": "MIT",
   "types": "lib/typescript/index",
   "scripts": {},
-  "dependencies": {
-    "@typescript-eslint/parser": "^6.19.0",
-    "@typescript-eslint/utils": "^6.19.0"
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "@typescript-eslint/parser": "^6.19.1",
+    "@typescript-eslint/utils": "^6.19.1",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3"
   }
 }
