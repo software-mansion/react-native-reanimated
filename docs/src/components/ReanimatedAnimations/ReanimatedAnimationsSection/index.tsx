@@ -3,6 +3,8 @@ import CodeBlock from '@theme/CodeBlock';
 import styles from './styles.module.css';
 import InteractiveExampleComponent from '../../InteractiveExample/InteractiveExampleComponent';
 import HomepageButton from '@site/src/components/HomepageButton';
+import useScreenSize from '@site/src/hooks/useScreenSize';
+import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
 
 const MOBILE_SIZE = 420;
 const TABLET_SIZE = 860;
@@ -30,28 +32,25 @@ export default function ReanimatedAnimationsSection({
   label,
   idx,
 }: Props) {
-  const [isMobileView, setIsMobileView] = useState(
-    window.innerWidth <= MOBILE_SIZE
-  );
-  const [isTabletView, setIsTabletView] = useState(
-    window.innerWidth <= TABLET_SIZE
-  );
+  const { windowWidth } =
+    ExecutionEnvironment.canUseViewport && useScreenSize();
+  const [isMobileView, setIsMobileView] = useState(windowWidth <= MOBILE_SIZE);
+  const [isTabletView, setIsTabletView] = useState(windowWidth <= TABLET_SIZE);
   const [componentToRender, setComponentToRender] = useState(component);
 
   const [key, setKey] = useState(0);
 
   useEffect(() => {
     const handleResize = () => {
-      const innerWidth = window.innerWidth;
-      setIsMobileView(innerWidth <= MOBILE_SIZE);
-      setIsTabletView(innerWidth <= TABLET_SIZE && innerWidth > MOBILE_SIZE);
+      setIsMobileView(windowWidth <= MOBILE_SIZE);
+      setIsTabletView(windowWidth <= TABLET_SIZE && windowWidth > MOBILE_SIZE);
 
-      if (innerWidth <= MOBILE_SIZE && mobileComponent !== undefined) {
+      if (windowWidth <= MOBILE_SIZE && mobileComponent !== undefined) {
         setKey(key + 1);
         setComponentToRender(mobileComponent);
       } else if (
-        innerWidth <= TABLET_SIZE &&
-        innerWidth > MOBILE_SIZE &&
+        windowWidth <= TABLET_SIZE &&
+        windowWidth > MOBILE_SIZE &&
         tabletComponent !== undefined
       ) {
         setKey(key + 1);
@@ -61,8 +60,6 @@ export default function ReanimatedAnimationsSection({
         setComponentToRender(component);
       }
     };
-
-    console.log('Resize: ', window.innerWidth);
 
     window.addEventListener('resize', handleResize);
 

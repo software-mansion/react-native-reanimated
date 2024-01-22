@@ -1,5 +1,7 @@
 import React, { Fragment } from 'react';
 import { useState, useRef, useEffect } from 'react';
+import useScreenSize from '@site/src/hooks/useScreenSize';
+import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
 import clsx from 'clsx';
 import styles from './styles.module.css';
 
@@ -11,6 +13,7 @@ import DecayBasicExample from '../../components/ReanimatedExamples/DecayBasicExa
 import FadeTileExample from '../../components/ReanimatedExamples/FadeTileExample';
 import SharedElementExample from '../ReanimatedExamples/SharedElementExample';
 import KeyboardExample from '../ReanimatedExamples/KeyboardExample';
+import BrowserOnly from '@docusaurus/BrowserOnly';
 
 const sections = [
   {
@@ -101,6 +104,8 @@ useDerivedValue(() => {
 const ReanimatedAnimations = () => {
   const [activeSection, setActiveSection] = useState(-1);
   const containerRef = useRef(null);
+  const { windowWidth } =
+    ExecutionEnvironment.canUseViewport && useScreenSize();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -108,7 +113,7 @@ const ReanimatedAnimations = () => {
 
       const containerTop = containerRef.current.getBoundingClientRect().top;
 
-      const sectionHeight = window.innerHeight;
+      const sectionHeight = windowWidth;
 
       const currentSection =
         containerTop < 100 &&
