@@ -1,0 +1,11 @@
+{
+  "name": "eslintPlugin",
+  "version": "1.0.0",
+  "license": "MIT",
+  "types": "lib/typescript/index",
+  "scripts": {},
+  "dependencies": {
+    "@typescript-eslint/parser": "^6.19.0",
+    "@typescript-eslint/utils": "^6.19.0"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": true,
+    "preserveSymlinks": true,
+    "jsx": "react-native",
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src"],
+}

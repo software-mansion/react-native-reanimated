@@ -3,7 +3,7 @@ module.exports = {
   extends: '@react-native',
   plugins: [
     'eslint-plugin-no-inline-styles',
-    'reanimated',
+    // 'reanimated',
     'reanimated-type-checked',
   ],
   rules: {

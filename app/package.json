@@ -32,8 +32,8 @@
     "react-native-web": "~0.18.12"
   },
   "devDependencies": {
-    "eslint-plugin-reanimated": "link:../eslintPlugin/no-type-check",
-    "eslint-plugin-reanimated-type-checked": "link:../eslintPlugin/type-checked",
+    "eslint-plugin-reanimated": "link:../eslintPlugin/src/no-type-check",
+    "eslint-plugin-reanimated-type-checked": "link:../eslintPlugin/src/type-checked",
     "@tsconfig/react-native": "^3.0.0",
     "@types/d3-shape": "^3.1.1",
     "eslint": "^8.36.0",
