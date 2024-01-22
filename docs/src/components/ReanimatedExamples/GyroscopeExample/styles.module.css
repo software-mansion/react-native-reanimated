@@ -2,7 +2,7 @@
   position: relative;
   width: 150px;
   height: 150px;
-  background-color: var(--swm-off-white);
+  background-color: var(--swm-white);
   border-radius: 20px;
   animation: moveBox 4s ease-in-out infinite;
 }

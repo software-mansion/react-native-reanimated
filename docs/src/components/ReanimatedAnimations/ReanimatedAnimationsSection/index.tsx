@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import CodeBlock from '@theme/CodeBlock';
 import styles from './styles.module.css';
 import InteractiveExampleComponent from '../../InteractiveExample/InteractiveExampleComponent';
-import ArrowRight from '@site/static/img/examples/arrow-right-light.svg';
+import HomepageButton from '@site/src/components/HomepageButton';
+
+const MOBILE_SIZE = 420;
+const TABLET_SIZE = 860;
 
 interface Props {
   title: string;
@@ -12,6 +15,7 @@ interface Props {
   mobileComponent: React.ReactNode;
   tabletComponent: React.ReactNode;
   code: string;
+  label?: string;
   idx: number;
 }
 
@@ -23,52 +27,69 @@ export default function ReanimatedAnimationsSection({
   mobileComponent,
   tabletComponent,
   code,
+  label,
   idx,
 }: Props) {
-  const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 420);
-  const [isTabletView, setIsTabletView] = useState(window.innerWidth <= 860);
+  const [isMobileView, setIsMobileView] = useState(
+    window.innerWidth <= MOBILE_SIZE
+  );
+  const [isTabletView, setIsTabletView] = useState(
+    window.innerWidth <= TABLET_SIZE
+  );
+  const [componentToRender, setComponentToRender] = useState(component);
+
+  const [key, setKey] = useState(0);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobileView(window.innerWidth <= 420);
-      setIsTabletView(window.innerWidth <= 860 && window.innerWidth > 420);
+      const innerWidth = window.innerWidth;
+      setIsMobileView(innerWidth <= MOBILE_SIZE);
+      setIsTabletView(innerWidth <= TABLET_SIZE && innerWidth > MOBILE_SIZE);
+
+      if (innerWidth <= MOBILE_SIZE && mobileComponent !== undefined) {
+        setKey(key + 1);
+        setComponentToRender(mobileComponent);
+      } else if (
+        innerWidth <= TABLET_SIZE &&
+        innerWidth > MOBILE_SIZE &&
+        tabletComponent !== undefined
+      ) {
+        setKey(key + 1);
+        setComponentToRender(tabletComponent);
+      } else {
+        setKey(key + 1);
+        setComponentToRender(component);
+      }
     };
+
+    console.log('Resize: ', window.innerWidth);
 
     window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [isMobileView, isTabletView]);
 
   return (
-    <div className={styles.animationsSectionWrapper}>
-      {mobileComponent !== null && !!isMobileView && !isTabletView && (
-        <div>
-          <InteractiveExampleComponent idx={idx} component={mobileComponent} />
-        </div>
-      )}
-      {tabletComponent !== null && !!isTabletView && (
-        <div>
-          <InteractiveExampleComponent idx={idx} component={tabletComponent} />
-        </div>
-      )}
-      {((!isMobileView && !isTabletView) ||
-        (!mobileComponent && !tabletComponent)) && (
-        <div>
-          <InteractiveExampleComponent idx={idx} component={component} />
-        </div>
-      )}
+    <div id={idx.toString()} className={styles.animationsSectionWrapper}>
+      <div>
+        <InteractiveExampleComponent
+          idx={key}
+          label={label}
+          component={componentToRender}
+        />
+      </div>
       <div className={styles.animationsSection}>
         <div>
           <h4>{title}</h4>
           <p>{body}</p>
-          <a href={docsLink}>
-            <p>Check docs</p>
-            <div className={styles.animationsSectionButtonArrow}>
-              <ArrowRight />
-            </div>
-          </a>
+          <HomepageButton
+            backgroundStyling={styles.backgroundStyling}
+            borderStyling={styles.borderStyling}
+            href={docsLink}
+            title="Check docs"
+          />
         </div>
 
         <div className={styles.interactiveCodeBlock}>

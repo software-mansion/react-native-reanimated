@@ -8,3 +8,8 @@
   background-color: none;
   margin-bottom: var(--ifm-leading);
 }
+
+.label {
+  text-align: center;
+  font-size: 1rem;
+}

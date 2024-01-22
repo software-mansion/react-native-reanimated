@@ -1,8 +1,8 @@
 .animationsContainer {
   color: #fcfcff;
   margin: 0 auto;
-  width: 100%;
-  padding: 0 15.75rem;
+  width: 60%;
+  margin: 0 auto;
   margin-top: -8.5rem;
 }
 
@@ -52,6 +52,10 @@
   transition: all 0.3s ease-in-out;
 }
 
+.dot:hover {
+  cursor: pointer;
+}
+
 .dot.active {
   background-color: var(--swm-red-light-100);
 }
@@ -63,9 +67,9 @@
   background-color: var(--swm-purple-dark-40);
 }
 
-@media (max-width: 1350px) {
+@media (max-width: 1440px) {
   .animationsContainer {
-    padding: 0 7rem;
+    width: 75%;
   }
   .dotsContainer {
     right: 50px;
@@ -74,7 +78,6 @@
 
 @media (max-width: 1024px) {
   .animationsContainer {
-    padding: 0 3rem;
     margin-top: -4rem;
   }
   .dotsContainer {
@@ -84,7 +87,7 @@
 
 @media (max-width: 768px) {
   .animationsContainer {
-    padding: 0 2rem;
+    width: 80%;
     margin-top: -1.5rem;
   }
 }

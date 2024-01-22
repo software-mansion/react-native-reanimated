@@ -8,10 +8,12 @@ import Animated, {
   withRepeat,
 } from 'react-native-reanimated';
 
-export default function App({ initialOffset = 200 }) {
+export default function SpringBasicExample({ initialOffset = 200 }) {
   const colorModeStyles =
     useColorMode().colorMode === 'dark' ? darkStyles : lightStyles;
   const offset = useSharedValue(initialOffset);
+
+  console.log('Initial offset: ', initialOffset);
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],

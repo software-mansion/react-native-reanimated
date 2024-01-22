@@ -7,7 +7,7 @@
 .tile {
   width: 160px;
   height: 230px;
-  background-color: var(--swm-off-white);
+  background-color: var(--swm-white);
   border-radius: 16px;
   overflow: hidden;
   display: flex;
@@ -21,20 +21,14 @@
 .ball {
   width: 60px;
   height: 60px;
+  position: absolute;
   background-color: var(--swm-purple-light-100);
+  animation: moveRightAndBack 4s infinite;
   border-radius: 50%;
 }
 
 [data-theme='dark'] .ball {
   background-color: var(--swm-purple-dark-80);
-}
-
-.container > div:first-child > .ball {
-  animation: moveRightAndBack 4s infinite;
-}
-
-.container > div:nth-child(2) > .ball {
-  animation: moveLeftAndBack 4s infinite;
 }
 
 @media (max-widh: 768px) {
@@ -58,29 +52,26 @@
   .ball {
     height: 40px;
     width: 40px;
+    animation: moveRightAndBackMobile 4s infinite;
   }
 }
 
 @keyframes moveRightAndBack {
   0%,
   100% {
-    left: 100%;
     transform: translateX(0%);
   }
   50% {
-    left: 50%;
-    transform: translateX(calc(250% + 32px));
+    transform: translateX(320%);
   }
 }
 
-@keyframes moveLeftAndBack {
+@keyframes moveRightAndBackMobile {
   0%,
   100% {
-    right: 50%;
-    transform: translateX(calc(-250% - 32px));
+    transform: translateX(0%);
   }
   50% {
-    right: 100%;
-    transform: translateX(0%);
+    transform: translateX(285%);
   }
 }

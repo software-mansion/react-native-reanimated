@@ -1,5 +1,6 @@
 import React, { Fragment } from 'react';
 import { useState, useRef, useEffect } from 'react';
+import clsx from 'clsx';
 import styles from './styles.module.css';
 
 import ReanimatedAnimationsBackground from '@site/src/components/ReanimatedAnimations/ReanimatedAnimationsBackground';
@@ -16,12 +17,12 @@ const sections = [
     title: 'Animations',
     body: 'Animate every React Native prop on iOS, Android and the Web up to 120 fps.',
     code: `function App() {
-      const width = useSharedValue(100);
-      const handlePress = () => {
-        width.value = withSpring(width.value + 50);
-      };
-      return <Animated.View style={{ ...styles.box, width }} />
-     }`,
+  const width = useSharedValue(100);
+  const handlePress = () => {
+    width.value = withSpring(width.value + 50);
+  };
+  return <Animated.View style={{ ...styles.box, width }} />
+}`,
     component: <SpringBasicExample />,
     tabletComponent: <SpringBasicExample initialOffset={100} />,
     mobileComponent: <SpringBasicExample initialOffset={35} />,
@@ -33,16 +34,17 @@ const sections = [
     body: 'Gesture smoothly thanks to Reanimated’s integration with React Native Gesture Handler.',
     code: `import { Gesture, GestureDetector } from “react-native-gesture-handler”;
  
-      function App() {
-        const pan = Gesture.Pan();
+function App() {
+  const pan = Gesture.Pan();
 
-        return (
-          <GestureDetector gesture={pan}>
-            <Animated.View />
-        </GestureDetector>
-        );
-      }`,
+  return (
+    <GestureDetector gesture={pan}>
+      <Animated.View />
+    </GestureDetector>
+  );
+}`,
     component: <DecayBasicExample />,
+    label: 'Grab and drag the square',
     docsLink:
       'https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/handling-gestures',
   },
@@ -50,8 +52,8 @@ const sections = [
     title: 'Layout animations',
     body: 'Animate views when they are added and removed from the view hierarchy. Just like that.',
     code: `function App() {
-      return <Animated.View entering={FadeIn} exiting={FadeOut} />;
-    }`,
+  return <Animated.View entering={FadeIn} exiting={FadeOut} />;
+}`,
     component: <FadeTileExample />,
     docsLink:
       'https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations',
@@ -61,9 +63,9 @@ const sections = [
     body: 'Connect your animations to a gyroscope or accelerometer with just one hook. It’s that easy.',
     code: `const gyroscope = useAnimatedSensor(SensorType.GYROSCOPE);
 
-    useDerivedValue(() => {
-      const { x, y, z } = gyroscope.sensor.value;
-    });`,
+useDerivedValue(() => {
+  const { x, y, z } = gyroscope.sensor.value;
+});`,
     component: <GyroscopeExample />,
     docsLink:
       'https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedSensor',
@@ -72,12 +74,12 @@ const sections = [
     title: 'Keyboard-based animations',
     body: 'Create animations based on the device keyboard state and position.',
     code: `function App() {
-      const keyboard = useAnimatedKeyboard();
-      const animatedStyle = useAnimatedStyle(() => ({
-        transform: [{ translateY: -keyboard.height.value }],
-      });
-      //...
-     }`,
+  const keyboard = useAnimatedKeyboard();
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -keyboard.height.value }],
+  });
+  //...
+}`,
     component: <KeyboardExample />,
     docsLink:
       'https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedKeyboard',
@@ -86,10 +88,10 @@ const sections = [
     title: 'Shared Element Transitions',
     body: 'Seamlessly animate elements between navigation screens with a single line of code.',
     code: `function App() {
-      <Animated.View
-       sharedTransitionTag="hero-element"
-      />
-    }`,
+  <Animated.View
+  sharedTransitionTag="hero-element"
+  />
+}`,
     component: <SharedElementExample />,
     docsLink:
       'https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview',
@@ -123,16 +125,23 @@ const ReanimatedAnimations = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+
+  const scrollToElement = (id: string) => {
+    var elmnt = document.getElementById(id);
+    elmnt.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <ReanimatedAnimationsBackground>
       <div className={styles.animationsContainer}>
-        <div>
+        {/* Copy hidden for now */}
+        {/* <div>
           <h3>Play with the animations!</h3>
           <h5>
             Check out the animations and check how you can implement it to your
             product.
           </h5>
-        </div>
+        </div> */}
         <div ref={containerRef}>
           {sections.map((section, idx) => (
             <Fragment key={idx}>
@@ -141,24 +150,28 @@ const ReanimatedAnimations = () => {
                 body={section.body}
                 code={section.code}
                 component={section.component}
+                label={section.label}
                 docsLink={section.docsLink}
-                mobileComponent={section.mobileComponent ?? null}
-                tabletComponent={section.tabletComponent ?? null}
+                mobileComponent={section.mobileComponent}
+                tabletComponent={section.tabletComponent}
                 idx={idx}
               />
             </Fragment>
           ))}
         </div>
         <div
-          className={`${styles.dotsContainer} ${
+          className={clsx(
+            styles.dotsContainer,
             activeSection !== -1 ? styles.showDots : ''
-          }`}>
+          )}>
           {sections.map((_, idx) => (
             <div
               key={idx}
-              className={`${styles.dot} ${
+              onClick={() => scrollToElement(idx.toString())}
+              className={clsx(
+                styles.dot,
                 activeSection === idx && styles.active
-              }`}
+              )}
             />
           ))}
         </div>

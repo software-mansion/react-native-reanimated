@@ -14,7 +14,7 @@ import {
 
 const SIZE = 120;
 
-export default function App() {
+export default function DecayBasicExample() {
   const colorModeStyles =
     useColorMode().colorMode === 'dark' ? darkStyles : lightStyles;
   const offset = useSharedValue(0);

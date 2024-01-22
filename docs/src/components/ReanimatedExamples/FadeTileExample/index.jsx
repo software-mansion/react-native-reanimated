@@ -136,7 +136,7 @@ function Button({ onPress, entering, styles }) {
 
 const lightStyles = StyleSheet.create({
   listItem: {
-    backgroundColor: 'var(--swm-off-white)',
+    backgroundColor: 'var(--swm-white)',
   },
   listItemLabel: {
     color: 'var(--swm-purple-light-100)',
@@ -148,7 +148,7 @@ const lightStyles = StyleSheet.create({
     backgroundColor: 'var(--swm-purple-light-100)',
   },
   buttonText: {
-    color: 'var(--swm-off-white)',
+    color: 'var(--swm-white)',
   },
 });
 

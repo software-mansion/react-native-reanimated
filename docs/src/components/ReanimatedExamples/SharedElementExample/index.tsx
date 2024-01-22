@@ -7,9 +7,7 @@ export default function SharedElementExample() {
       <div className={styles.tile}>
         <div className={styles.ball} />
       </div>
-      <div className={styles.tile}>
-        <div className={styles.ball} />
-      </div>
+      <div className={styles.tile}></div>
     </div>
   );
 }

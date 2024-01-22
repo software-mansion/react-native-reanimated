@@ -11,7 +11,7 @@
 }
 
 .tile:first-child {
-  background-color: var(--swm-off-white);
+  background-color: var(--swm-white);
 }
 
 [data-theme='dark'] .tile:first-child {
@@ -29,7 +29,7 @@
 .keyboard {
   width: 250px;
   padding: 1rem;
-  background-color: var(--swm-off-white);
+  background-color: var(--swm-white);
   border-radius: 15.6px;
   display: flex;
   flex-wrap: wrap;
