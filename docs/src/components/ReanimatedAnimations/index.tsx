@@ -1,7 +1,5 @@
 import React, { Fragment } from 'react';
 import { useState, useRef, useEffect } from 'react';
-import useScreenSize from '@site/src/hooks/useScreenSize';
-import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
 import clsx from 'clsx';
 import styles from './styles.module.css';
 
@@ -13,7 +11,6 @@ import DecayBasicExample from '../../components/ReanimatedExamples/DecayBasicExa
 import FadeTileExample from '../../components/ReanimatedExamples/FadeTileExample';
 import SharedElementExample from '../ReanimatedExamples/SharedElementExample';
 import KeyboardExample from '../ReanimatedExamples/KeyboardExample';
-import BrowserOnly from '@docusaurus/BrowserOnly';
 
 const sections = [
   {
@@ -58,6 +55,7 @@ function App() {
   return <Animated.View entering={FadeIn} exiting={FadeOut} />;
 }`,
     component: <FadeTileExample />,
+    mobileComponent: <FadeTileExample isMobile={true} />,
     docsLink:
       'https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations',
   },
@@ -90,10 +88,9 @@ useDerivedValue(() => {
   {
     title: 'Shared Element Transitions',
     body: 'Seamlessly animate elements between navigation screens with a single line of code.',
+
     code: `function App() {
-  <Animated.View
-  sharedTransitionTag="hero-element"
-  />
+  return <Animated.View sharedTransitionTag="hero-element" />
 }`,
     component: <SharedElementExample />,
     docsLink:
@@ -103,25 +100,43 @@ useDerivedValue(() => {
 
 const ReanimatedAnimations = () => {
   const [activeSection, setActiveSection] = useState(-1);
+  const initialScrollPosition = useRef(null);
   const containerRef = useRef(null);
-  const { windowWidth } =
-    ExecutionEnvironment.canUseViewport && useScreenSize();
+
+  const scrollToElement = (id: string) => {
+    var elmnt = document.getElementById(id);
+    elmnt.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   useEffect(() => {
     const handleScroll = () => {
-      if (!containerRef.current) return;
-
       const containerTop = containerRef.current.getBoundingClientRect().top;
 
-      const sectionHeight = windowWidth;
+      if (containerTop < 200) {
+        initialScrollPosition.current = Math.abs(containerTop);
 
-      const currentSection =
-        containerTop < 100 &&
-        Math.abs(containerTop) < (sections.length - 0.75) * sectionHeight
-          ? Math.floor(Math.abs(containerTop) / (sectionHeight - 75))
-          : -1;
-
-      setActiveSection(currentSection);
+        const currentSectionIndex = sections.findIndex((_, idx) => {
+          const sectionRef = document.getElementById(idx.toString());
+          if (sectionRef) {
+            const sectionTop = sectionRef.offsetTop;
+            const height = sectionRef.offsetHeight;
+            const sectionBottom = sectionTop + height;
+            return (
+              initialScrollPosition.current + 0.15 * height >= sectionTop &&
+              initialScrollPosition.current < sectionBottom
+            );
+          }
+          return false;
+        });
+        if (containerRef.current.getBoundingClientRect().bottom - 600 < 0) {
+          setActiveSection(-1);
+        } else {
+          setActiveSection(currentSectionIndex);
+        }
+      } else {
+        initialScrollPosition.current = null;
+        setActiveSection(-1);
+      }
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -130,11 +145,6 @@ const ReanimatedAnimations = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
-
-  const scrollToElement = (id: string) => {
-    var elmnt = document.getElementById(id);
-    elmnt.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
 
   return (
     <ReanimatedAnimationsBackground>

@@ -12,40 +12,42 @@ import Cross from './Cross';
 
 const data = [{ label: 'A' }, { label: 'B' }, { label: 'C' }, { label: 'D' }];
 
-function mergeStyles(baseStyles, colorModeStyles) {
+function mergeStyles(baseStyles, additionalStyles) {
   return StyleSheet.create({
     container: {
       ...baseStyles.container,
-      ...colorModeStyles.container,
+      ...additionalStyles.container,
     },
     listItem: {
       ...baseStyles.listItem,
-      ...colorModeStyles.listItem,
+      ...additionalStyles.listItem,
     },
     listItemLabel: {
       ...baseStyles.listItemLabel,
-      ...colorModeStyles.listItemLabel,
+      ...additionalStyles.listItemLabel,
     },
     listItemIcon: {
       ...baseStyles.listItemIcon,
-      ...colorModeStyles.listItemIcon,
+      ...additionalStyles.listItemIcon,
     },
     button: {
       ...baseStyles.button,
-      ...colorModeStyles.button,
+      ...additionalStyles.button,
     },
     buttonText: {
       ...baseStyles.buttonText,
-      ...colorModeStyles.buttonText,
+      ...additionalStyles.buttonText,
     },
   });
 }
 
-export default function App() {
+export default function App({ isMobile = false }) {
   const [displayedItems, setDisplayedItems] = useState([data[0]]);
   const colorModeStyles =
     useColorMode().colorMode === 'dark' ? darkStyles : lightStyles;
-  const styles = mergeStyles(baseStyles, colorModeStyles);
+  const styles = isMobile
+    ? mergeStyles(mergeStyles(baseStyles, colorModeStyles), mobileStyles)
+    : mergeStyles(mergeStyles(baseStyles, laptopStyles), colorModeStyles);
 
   const addItem = () => {
     if (displayedItems.length < data.length) {
@@ -170,6 +172,18 @@ const darkStyles = StyleSheet.create({
   },
 });
 
+const mobileStyles = StyleSheet.create({
+  listItem: {
+    width: 170,
+  },
+});
+
+const laptopStyles = StyleSheet.create({
+  listItem: {
+    width: 230,
+  },
+});
+
 const baseStyles = StyleSheet.create({
   container: {
     flex: 1,
@@ -188,7 +202,6 @@ const baseStyles = StyleSheet.create({
     flexDirection: 'row',
     fontFamily: 'var(--swm-body-font)',
     padding: '.5rem',
-    width: 230,
     paddingHorizontal: '1.5rem',
     marginBottom: 10,
     alignItems: 'center',

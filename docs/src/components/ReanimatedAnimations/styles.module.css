@@ -47,7 +47,7 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background-color: #fcfcff80;
+  background-color: var(--swm-white-transparent-dark);
   margin: 14px 0;
   transition: all 0.3s ease-in-out;
 }
@@ -61,7 +61,7 @@
 }
 
 [data-theme='dark'] .dot {
-  background-color: var(--swm-off-transparent);
+  background-color: var(--swm-white-transparent-light);
 }
 [data-theme='dark'] .dot.active {
   background-color: var(--swm-purple-dark-40);

@@ -43,7 +43,7 @@
 }
 @media (max-width: 520px) {
   .container {
-    gap: 1.5rem;
+    gap: 1rem;
   }
   .tile {
     width: 90px;
@@ -72,6 +72,6 @@
     transform: translateX(0%);
   }
   50% {
-    transform: translateX(285%);
+    transform: translateX(270%);
   }
 }

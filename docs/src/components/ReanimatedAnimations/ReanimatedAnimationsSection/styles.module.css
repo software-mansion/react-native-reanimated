@@ -1,8 +1,8 @@
 .animationsSectionWrapper {
-  height: 100vh;
   width: 100%;
   display: flex;
   flex-direction: column;
+  margin-bottom: 4rem;
   align-items: center;
   justify-content: center;
 }
@@ -113,21 +113,10 @@
   }
   .animationsSectionWrapper > div:first-child {
     margin-bottom: 4rem;
+    padding: 3rem;
   }
   .animationsSection > div:first-child {
     gap: 1.5rem;
-  }
-  .animationsSectionWrapper > div:first-child {
-    padding: 3rem;
-  }
-}
-
-@media (min-width: 769px) {
-  .exampleContainerMobile {
-    display: none;
-  }
-  .exampleContainerRegular {
-    display: block;
   }
 }
 
@@ -136,21 +125,15 @@
     display: flex;
     gap: 2rem;
   }
-  .button {
-    max-width: 100%;
-  }
-  .interactiveCodeBlock [class*='codeBlockContent'] {
-    width: 100%;
+  .animationsSectionWrapper {
+    margin-bottom: 2rem;
   }
   .animationsSectionWrapper > div:first-child {
     margin-bottom: 2rem;
     padding: 2rem;
   }
-  .exampleContainerMobile {
-    display: block;
-  }
-  .exampleContainerRegular {
-    display: none;
+  .interactiveCodeBlock [class*='codeBlockContent'] {
+    width: 100%;
   }
 }
 
