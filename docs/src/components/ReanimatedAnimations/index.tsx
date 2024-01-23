@@ -32,7 +32,7 @@ const sections = [
   {
     title: 'Gestures',
     body: 'Gesture smoothly thanks to Reanimated’s integration with React Native Gesture Handler.',
-    code: `import { Gesture, GestureDetector } from “react-native-gesture-handler”;
+    code: `import { Gesture, GestureDetector } from ?"react-native-gesture-handler";
  
 function App() {
   const pan = Gesture.Pan();
@@ -104,8 +104,8 @@ const ReanimatedAnimations = () => {
   const containerRef = useRef(null);
 
   const scrollToElement = (id: string) => {
-    var elmnt = document.getElementById(id);
-    elmnt.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const element = document.getElementById(id);
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   useEffect(() => {

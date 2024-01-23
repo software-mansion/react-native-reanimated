@@ -1,5 +1,5 @@
 .animationsContainer {
-  color: #fcfcff;
+  color: var(--swm-white);
   margin: 0 auto;
   width: 60%;
   margin: 0 auto;
@@ -7,12 +7,12 @@
 }
 
 .animationsContainer h3 {
-  color: #fcfcff;
+  color: var(--swm-white);
   font-size: var(--swm-h2-font-size);
 }
 
 .animationsContainer h5 {
-  color: #fcfcff;
+  color: var(--swm-white);
   font-size: 1.25rem;
 }
 
