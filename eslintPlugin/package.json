@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "license": "MIT",
   "types": "lib/typescript/index",
-  "scripts": {},
+  "scripts": {
+    "build": "tsc"
+  },
   "dependencies": {},
   "devDependencies": {
     "@types/node": "^20.11.5",
