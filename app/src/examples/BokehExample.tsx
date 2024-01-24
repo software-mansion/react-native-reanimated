@@ -1,4 +1,4 @@
-import {
+import Animated, {
   Easing,
   useAnimatedStyle,
   useReducedMotion,
@@ -69,23 +69,7 @@ function Circle() {
     };
   }, []);
 
-  const nonAnimatedStyle = {
-    backgroundColor: 'red',
-  };
-  const animatedStyleCopy = animatedStyle;
-  const sv = useSharedValue('red');
-
-  return (
-    <>
-      <View style={nonAnimatedStyle} />
-      <View style={animatedStyleCopy} />
-      <View style={animatedStyle} />
-      <View style={[nonAnimatedStyle, animatedStyle]} />
-      <View style={[nonAnimatedStyle, animatedStyle]} />]
-      <View style={{ backgroundColor: sv }} />
-      <View style={{ backgroundColor: 'sv' }} />
-    </>
-  );
+  return <Animated.View style={[styles.bokeh, animatedStyle]} />;
 }
 
 interface BokehProps {
@@ -117,5 +101,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'black',
     overflow: 'hidden',
+  },
+  bokeh: {
+    position: 'absolute',
+    borderRadius: 9999,
   },
 });
