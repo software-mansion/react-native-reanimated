@@ -67,6 +67,7 @@ import ModifyExample from './ModifyExample';
 import MountingUnmounting from './LayoutAnimations/MountingUnmounting';
 import NativeModals from './LayoutAnimations/NativeModals';
 import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksWithLayout';
+import NestedRotationExample from './SharedElementTransitions/NestedRotation';
 import NestedStacksExample from './SharedElementTransitions/NestedStacks';
 import NestedTest from './LayoutAnimations/Nested';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
@@ -672,5 +673,9 @@ export const EXAMPLES: Record<string, Example> = {
   ChangeThemeSharedExample: {
     title: '[SET] Change theme',
     screen: ChangeThemeSharedExample,
+  },
+  NestedRotationSharedExample: {
+    title: '[SET] Nested Transforms',
+    screen: NestedRotationExample,
   },
 } as const;

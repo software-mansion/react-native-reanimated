@@ -311,8 +311,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     } else {
       targetViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewTarget
                                                              withOffsetX:offsetX
-                                                             withOffsetY:offsetY
-                                                           withTransform:NO];
+                                                             withOffsetY:offsetY];
     }
 
     [newTransitionViews addObject:viewSource];
@@ -506,8 +505,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     if ([self->_animationManager hasAnimationForTag:viewTag type:SHARED_ELEMENT_TRANSITION]) {
       REASnapshot *snapshot = [[REASnapshot alloc] initWithAbsolutePosition:(REAUIView *)view
                                                                 withOffsetX:0
-                                                                withOffsetY:0
-                                                              withTransform:YES];
+                                                                withOffsetY:0];
       self->_snapshotRegistry[viewTag] = snapshot;
     }
     return false;
@@ -689,8 +687,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
                                        isSharedTransition:YES];
       float originXByParent = [viewSourcePreviousSnapshot.values[@"originXByParent"] floatValue];
       float originYByParent = [viewSourcePreviousSnapshot.values[@"originYByParent"] floatValue];
-      CGRect frame = CGRectMake(originXByParent, originYByParent, view.frame.size.width, view.frame.size.height);
-      [view setFrame:frame];
+      float height = [viewSourcePreviousSnapshot.values[@"height"] floatValue];
+      float width = [viewSourcePreviousSnapshot.values[@"width"] floatValue];
+      [view setCenter:CGPointMake(originXByParent + width / 2.0, originYByParent + height / 2.0)];
     }
     [_sharedTransitionParent removeObjectForKey:viewTag];
     [_sharedTransitionInParentIndex removeObjectForKey:viewTag];
@@ -789,8 +788,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   NSMutableDictionary *workletValues = [_animationManager prepareDataForLayoutAnimatingWorklet:currentValues
                                                                                   targetValues:targetValues];
-  workletValues[@"currentTransformMatrix"] = currentValues[@"transformMatrix"];
-  workletValues[@"targetTransformMatrix"] = targetValues[@"transformMatrix"];
+  workletValues[@"currentTransformMatrix"] = currentValues[@"combinedTransformMatrix"];
+  workletValues[@"targetTransformMatrix"] = targetValues[@"combinedTransformMatrix"];
   workletValues[@"currentBorderRadius"] = currentValues[@"borderRadius"];
   workletValues[@"targetBorderRadius"] = targetValues[@"borderRadius"];
   return workletValues;
