@@ -89,6 +89,12 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
           });
         }
 
+        if (
+          isVariableDefinedAs(componentName, 'Animated') ||
+          isVariableDefinedAs(componentName, 'createAnimatedComponent')
+        ) {
+          return;
+        }
         const styleAttribute = node.attributes
           .map((attribute) => {
             return attribute.type === AST_NODE_TYPES.JSXAttribute &&
