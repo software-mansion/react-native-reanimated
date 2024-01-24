@@ -39,27 +39,15 @@ export class ProgressTransitionManager {
         progressAnimation
       );
     })();
+
     this.registerEventHandlers();
   }
 
-  public updateProgressAnimation(
-    viewTag: number,
-    progressAnimation: ProgressAnimation
-  ) {
-    runOnUIImmediately(() => {
-      'worklet';
-      global.ProgressTransitionRegister.updateProgressAnimation(
-        viewTag,
-        progressAnimation
-      );
-    })();
-  }
-
-  public removeProgressAnimation(viewTag: number) {
+  public removeProgressAnimation(viewTag: number, defer = true) {
     this.unregisterEventHandlers();
     runOnUIImmediately(() => {
       'worklet';
-      global.ProgressTransitionRegister.removeProgressAnimation(viewTag);
+      global.ProgressTransitionRegister.removeProgressAnimation(viewTag, defer);
     })();
   }
 
@@ -160,19 +148,17 @@ function createProgressTransitionRegister() {
       }
       progressAnimations.set(viewTag, progressAnimation);
     },
-    updateProgressAnimation: (
-      viewTag: number,
-      progressAnimation: ProgressAnimation
-    ) => {
-      progressAnimations.set(viewTag, progressAnimation);
-    },
-    removeProgressAnimation: (viewTag: number) => {
+    removeProgressAnimation: (viewTag: number, defer: boolean) => {
       if (currentTransitions.size > 0) {
         // there is no need to prevent cleaning on android
         isTransitionRestart = !IS_ANDROID;
       }
       // Remove the animation config after the transition is finished
-      toRemove.add(viewTag);
+      if (defer) {
+        toRemove.add(viewTag);
+      } else {
+        progressAnimations.delete(viewTag);
+      }
     },
     onTransitionStart: (
       viewTag: number,

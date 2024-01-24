@@ -193,9 +193,9 @@ export function createAnimatedComponent(
       this._detachStyles();
       this._InlinePropManager.detachInlineProps();
       if (this.props.sharedTransitionTag) {
-        this._configureSharedTransition(false, true);
+        this._configureSharedTransition(true);
       }
-      this._sharedElementTransition?.unregisterTransition(this._viewTag);
+      this._sharedElementTransition?.unregisterTransition(this._viewTag, true);
 
       const exiting = this.props.exiting;
       if (
@@ -474,7 +474,7 @@ export function createAnimatedComponent(
         this.props.sharedTransitionTag !== undefined ||
         prevProps.sharedTransitionTag !== undefined
       ) {
-        this._configureSharedTransition(false);
+        this._configureSharedTransition();
       }
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
@@ -510,34 +510,29 @@ export function createAnimatedComponent(
       updateLayoutAnimations(this._viewTag, LayoutAnimationType.LAYOUT, layout);
     }
 
-    _configureSharedTransition(init: boolean, defer = false) {
-      const { sharedTransitionTag } = this.props;
-      if (!IS_WEB) {
-        const sharedElementTransition =
-          this.props.sharedTransitionStyle ??
-          this._sharedElementTransition ??
-          new SharedTransition();
-        const reduceMotionInTransition = getReduceMotionFromConfig(
-          sharedElementTransition.getReduceMotion()
-        );
-        if (reduceMotionInTransition) {
-          return;
-        }
-        if (init) {
-          sharedElementTransition.registerTransition(
-            this._viewTag as number,
-            sharedTransitionTag,
-            defer
-          );
-        } else {
-          sharedElementTransition.updateTransition(
-            this._viewTag as number,
-            sharedTransitionTag,
-            defer
-          );
-        }
-        this._sharedElementTransition = sharedElementTransition;
+    _configureSharedTransition(defer = false) {
+      if (IS_WEB) {
+        return;
       }
+      const { sharedTransitionTag } = this.props;
+      if (!sharedTransitionTag) {
+        this._sharedElementTransition?.unregisterTransition(
+          this._viewTag,
+          defer
+        );
+        this._sharedElementTransition = null;
+        return;
+      }
+      const sharedElementTransition =
+        this.props.sharedTransitionStyle ??
+        this._sharedElementTransition ??
+        new SharedTransition();
+      sharedElementTransition.registerTransition(
+        this._viewTag,
+        sharedTransitionTag,
+        defer
+      );
+      this._sharedElementTransition = sharedElementTransition;
     }
 
     _setComponentRef = setAndForwardRef<Component | HTMLElement>({
@@ -564,7 +559,7 @@ export function createAnimatedComponent(
           }
 
           if (sharedTransitionTag) {
-            this._configureSharedTransition(true);
+            this._configureSharedTransition();
           }
 
           const skipEntering = this.context?.current;

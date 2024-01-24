@@ -15,6 +15,7 @@ import type { StyleProps } from '../../commonTypes';
 import { ReduceMotion } from '../../commonTypes';
 import { ProgressTransitionManager } from './ProgressTransitionManager';
 import { updateLayoutAnimations } from '../../UpdateLayoutAnimations';
+import { getReduceMotionFromConfig } from '../../animation/util';
 
 const SUPPORTED_PROPS = [
   'width',
@@ -80,36 +81,13 @@ export class SharedTransition {
 
   public registerTransition(
     viewTag: number,
-    sharedTransitionTag?: string,
+    sharedTransitionTag: string,
     defer = false
-  ): void {
-    this.configureTransition(viewTag, sharedTransitionTag, defer, true);
-  }
-
-  public updateTransition(
-    viewTag: number,
-    sharedTransitionTag?: string,
-    defer = false
-  ): void {
-    this.configureTransition(viewTag, sharedTransitionTag, defer, false);
-  }
-
-  public unregisterTransition(viewTag: number): void {
-    SharedTransition._progressTransitionManager.removeProgressAnimation(
-      viewTag
-    );
-  }
-
-  public getReduceMotion(): ReduceMotion {
-    return this._reduceMotion;
-  }
-
-  private configureTransition(
-    viewTag: number,
-    sharedTransitionTag?: string,
-    defer = false,
-    init = false
   ) {
+    if (getReduceMotionFromConfig(this.getReduceMotion())) {
+      return;
+    }
+
     const transitionAnimation = this.getTransitionAnimation();
     const progressAnimation = this.getProgressAnimation();
     if (!this._defaultTransitionType) {
@@ -130,17 +108,32 @@ export class SharedTransition {
       sharedTransitionTag,
       defer
     );
-    if (init) {
-      SharedTransition._progressTransitionManager.addProgressAnimation(
-        viewTag,
-        progressAnimation
-      );
-    } else {
-      SharedTransition._progressTransitionManager.updateProgressAnimation(
-        viewTag,
-        progressAnimation
-      );
-    }
+    SharedTransition._progressTransitionManager.addProgressAnimation(
+      viewTag,
+      progressAnimation
+    );
+  }
+
+  public unregisterTransition(viewTag: number, defer = false): void {
+    const layoutAnimationType =
+      this._defaultTransitionType === SharedTransitionType.ANIMATION
+        ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION
+        : LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS;
+    updateLayoutAnimations(
+      viewTag,
+      layoutAnimationType,
+      undefined,
+      undefined,
+      defer
+    );
+    SharedTransition._progressTransitionManager.removeProgressAnimation(
+      viewTag,
+      defer
+    );
+  }
+
+  public getReduceMotion(): ReduceMotion {
+    return this._reduceMotion;
   }
 
   private getTransitionAnimation(): SharedTransitionAnimationsFunction {

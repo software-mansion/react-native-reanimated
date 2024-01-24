@@ -16,6 +16,9 @@ import type {
 
 function createUpdateManager() {
   const animations: LayoutAnimationBatchItem[] = [];
+  // When a stack is rerendered we reconfigure all the shared elements.
+  // To do that we want them to appear in our batch in the correct order,
+  // so we defer some of the updates to appear at the end of the batch.
   const deferredAnimations: LayoutAnimationBatchItem[] = [];
 
   return {
