@@ -26,6 +26,7 @@ class WorkletRuntime : public jsi::HostObject,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::string &name,
+      const bool supportsLocking,
       const std::string &valueUnpackerCode);
 
   jsi::Runtime &getJSIRuntime() const {
@@ -33,11 +34,11 @@ class WorkletRuntime : public jsi::HostObject,
   }
 
   template <typename... Args>
-  inline void runGuarded(
+  inline jsi::Value runGuarded(
       const std::shared_ptr<ShareableWorklet> &shareableWorklet,
       Args &&...args) const {
     jsi::Runtime &rt = *runtime_;
-    runOnRuntimeGuarded(
+    return runOnRuntimeGuarded(
         rt, shareableWorklet->getJSValue(rt), std::forward<Args>(args)...);
   }
 
@@ -50,6 +51,8 @@ class WorkletRuntime : public jsi::HostObject,
         [=, self = shared_from_this()] { self->runGuarded(shareableWorklet); });
   }
 
+  jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
+
   std::string toString() const {
     return "[WorkletRuntime \"" + name_ + "\"]";
   }
@@ -59,9 +62,11 @@ class WorkletRuntime : public jsi::HostObject,
   std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
 
  private:
+  const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
+  const bool supportsLocking_;
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on

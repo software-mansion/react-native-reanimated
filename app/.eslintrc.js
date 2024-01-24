@@ -11,5 +11,6 @@ module.exports = {
     'react-native/no-raw-text': 'off', // This rule is great, we don't enable it because of its performance. If we ever find similar rule we should enable it.
     'react-native/no-single-element-style-arrays': 'error',
     'reanimated/animated-style-non-animated-component': 'warn',
+    'react/jsx-fragments': ['error', 'syntax'],
   },
 };
