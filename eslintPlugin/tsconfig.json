@@ -2,14 +2,15 @@
   "compilerOptions": {
     "baseUrl": ".",
     "preserveSymlinks": true,
-    "target": "es6",
     "jsx": "react-native",
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "outDir": "./public",
+    "rootDir": "./src"
   },
-  "include": ["src"],
+  // "include": ["src", "lib"],
 }
