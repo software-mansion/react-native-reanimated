@@ -58,18 +58,13 @@ function Circle() {
   });
 
   const animatedStyle = useAnimatedStyle(() => {
-    const size = 100 + power * 250;
     return {
-      backgroundColor: `hsl(${hue.value}, 100%, 50%)`,
       width: size,
       height: size,
-      top: top.value - size / 2,
-      left: left.value - size / 2,
-      opacity: 0.1 + (1 - power) * 0.1,
     };
   }, []);
 
-  return <Animated.View style={[styles.bokeh, animatedStyle]} />;
+  return <View style={animatedStyle} />;
 }
 
 interface BokehProps {

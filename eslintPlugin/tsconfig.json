@@ -5,12 +5,13 @@
     "jsx": "react-native",
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "outDir": "./public",
-    "rootDir": "./src"
+    "rootDir": "."
   },
   // "include": ["src", "lib"],
 }

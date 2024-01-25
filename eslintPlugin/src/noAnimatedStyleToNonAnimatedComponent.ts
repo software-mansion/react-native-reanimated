@@ -138,7 +138,7 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
   },
   meta: {
     docs: {
-      recommended: 'error',
+      recommended: 'recommended',
       description: 'Avoid looping over enums.',
     },
     messages: {
