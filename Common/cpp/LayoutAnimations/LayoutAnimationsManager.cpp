@@ -8,25 +8,6 @@
 
 namespace reanimated {
 
-void LayoutAnimationsManager::configureAnimation(
-    const int tag,
-    const LayoutAnimationType type,
-    const std::string &sharedTransitionTag,
-    const std::shared_ptr<Shareable> &config) {
-  auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-  if (type == SHARED_ELEMENT_TRANSITION ||
-      type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
-    sharedTransitionGroups_[sharedTransitionTag].push_back(tag);
-    viewTagToSharedTag_[tag] = sharedTransitionTag;
-    getConfigsForType(SHARED_ELEMENT_TRANSITION)[tag] = config;
-    if (type == SHARED_ELEMENT_TRANSITION) {
-      ignoreProgressAnimationForTag_.insert(tag);
-    }
-  } else {
-    getConfigsForType(type)[tag] = config;
-  }
-}
-
 void LayoutAnimationsManager::configureAnimationBatch(
     const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);

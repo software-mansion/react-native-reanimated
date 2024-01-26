@@ -6,10 +6,6 @@ import type {
   Value3D,
   ValueRotation,
 } from '../commonTypes';
-import type {
-  LayoutAnimationFunction,
-  LayoutAnimationType,
-} from '../layoutReanimation';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
 import type { WorkletRuntime } from '../runtimes';
@@ -60,12 +56,6 @@ export interface NativeReanimatedModule {
     isStatusBarTranslucent: boolean
   ): number;
   unsubscribeFromKeyboardEvents(listenerId: number): void;
-  configureLayoutAnimation(
-    viewTag: number,
-    type: LayoutAnimationType,
-    sharedTransitionTag: string,
-    config: ShareableRef<Keyframe | LayoutAnimationFunction>
-  ): void;
   configureLayoutAnimationBatch(
     layoutAnimationsBatch: LayoutAnimationBatchItem[]
   ): void;
@@ -183,20 +173,6 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     callback?: (result: T) => void
   ) {
     return this.InnerNativeModule.getViewProp(viewTag, propName, callback);
-  }
-
-  configureLayoutAnimation(
-    viewTag: number,
-    type: LayoutAnimationType,
-    sharedTransitionTag: string,
-    config: ShareableRef<Keyframe | LayoutAnimationFunction>
-  ) {
-    this.InnerNativeModule.configureLayoutAnimation(
-      viewTag,
-      type,
-      sharedTransitionTag,
-      config
-    );
   }
 
   configureLayoutAnimationBatch(

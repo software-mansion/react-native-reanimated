@@ -88,10 +88,6 @@ export default class JSReanimated {
     }
   }
 
-  configureLayoutAnimation() {
-    // no-op
-  }
-
   configureLayoutAnimationBatch() {
     // no-op
   }

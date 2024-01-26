@@ -29,11 +29,6 @@ class LayoutAnimationsManager {
  public:
   explicit LayoutAnimationsManager(const std::shared_ptr<JSLogger> &jsLogger)
       : jsLogger_(jsLogger) {}
-  void configureAnimation(
-      const int tag,
-      const LayoutAnimationType type,
-      const std::string &sharedTransitionTag,
-      const std::shared_ptr<Shareable> &config);
   void configureAnimationBatch(
       const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
   void setShouldAnimateExiting(const int tag, const bool value);
