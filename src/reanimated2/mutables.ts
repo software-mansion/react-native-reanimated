@@ -1,23 +1,16 @@
 'use strict';
-import NativeReanimatedModule from './NativeReanimated';
 import { shouldBeUseWeb } from './PlatformChecker';
-import type { ShareableSyncDataHolderRef, Mutable } from './commonTypes';
-import {
-  makeShareableCloneOnUIRecursive,
-  makeShareableCloneRecursive,
-} from './shareables';
+import type { Mutable } from './commonTypes';
+import { makeShareableCloneRecursive } from './shareables';
 import { shareableMappingCache } from './shareableMappingCache';
-import { runOnUI } from './threads';
+import { executeOnUIRuntimeSync, runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 type Listener<Value> = (newValue: Value) => void;
 
-export function makeUIMutable<Value>(
-  initial: Value,
-  syncDataHolder?: ShareableSyncDataHolderRef<Value>
-): Mutable<Value> {
+export function makeUIMutable<Value>(initial: Value): Mutable<Value> {
   'worklet';
 
   const listeners = new Map<number, Listener<Value>>();
@@ -38,12 +31,6 @@ export function makeUIMutable<Value>(
      */
     set _value(newValue: Value) {
       value = newValue;
-      if (syncDataHolder) {
-        _updateDataSynchronously(
-          syncDataHolder,
-          makeShareableCloneOnUIRecursive(newValue)
-        );
-      }
       listeners.forEach((listener) => {
         listener(newValue);
       });
@@ -70,23 +57,12 @@ export function makeUIMutable<Value>(
   return self;
 }
 
-export function makeMutable<Value>(
-  initial: Value,
-  oneWayReadsOnly = false
-): Mutable<Value> {
+export function makeMutable<Value>(initial: Value): Mutable<Value> {
   let value: Value = initial;
-  let syncDataHolder: ShareableSyncDataHolderRef<Value> | undefined;
-  if (!oneWayReadsOnly && !SHOULD_BE_USE_WEB) {
-    // updates are always synchronous when running on web or in Jest environment
-    syncDataHolder = NativeReanimatedModule.makeSynchronizedDataHolder(
-      makeShareableCloneRecursive(value)
-    );
-    shareableMappingCache.set(syncDataHolder);
-  }
   const handle = makeShareableCloneRecursive({
     __init: () => {
       'worklet';
-      return makeUIMutable(initial, syncDataHolder);
+      return makeUIMutable(initial);
     },
   });
   // listeners can only work on JS thread on Web and jest environments
@@ -103,11 +79,14 @@ export function makeMutable<Value>(
         })();
       }
     },
-    get value() {
-      if (syncDataHolder) {
-        return NativeReanimatedModule.getDataSynchronously(syncDataHolder);
+    get value(): Value {
+      if (SHOULD_BE_USE_WEB) {
+        return value;
       }
-      return value;
+      const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
+        return sv.value;
+      });
+      return uiValueGetter(mutable);
     },
     set _value(newValue: Value) {
       if (!SHOULD_BE_USE_WEB) {

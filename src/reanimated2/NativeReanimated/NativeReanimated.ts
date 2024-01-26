@@ -1,11 +1,6 @@
 'use strict';
 import { NativeModules } from 'react-native';
-import type {
-  ShareableRef,
-  ShareableSyncDataHolderRef,
-  Value3D,
-  ValueRotation,
-} from '../commonTypes';
+import type { ShareableRef, Value3D, ValueRotation } from '../commonTypes';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
 import type { WorkletRuntime } from '../runtimes';
@@ -18,11 +13,8 @@ export interface NativeReanimatedModule {
     value: T,
     shouldPersistRemote: boolean
   ): ShareableRef<T>;
-  makeSynchronizedDataHolder<T>(
-    valueRef: ShareableRef<T>
-  ): ShareableSyncDataHolderRef<T>;
-  getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>): T;
   scheduleOnUI<T>(shareable: ShareableRef<T>): void;
+  executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R;
   createWorkletRuntime(
     name: string,
     initializer: ShareableRef<() => void>
@@ -107,16 +99,12 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     );
   }
 
-  makeSynchronizedDataHolder<T>(valueRef: ShareableRef<T>) {
-    return this.InnerNativeModule.makeSynchronizedDataHolder(valueRef);
-  }
-
-  getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>) {
-    return this.InnerNativeModule.getDataSynchronously(ref);
-  }
-
   scheduleOnUI<T>(shareable: ShareableRef<T>) {
     return this.InnerNativeModule.scheduleOnUI(shareable);
+  }
+
+  executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R {
+    return this.InnerNativeModule.executeOnUIRuntimeSync(shareable);
   }
 
   createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {

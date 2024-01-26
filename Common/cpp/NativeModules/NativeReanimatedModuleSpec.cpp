@@ -17,26 +17,6 @@ static jsi::Value SPEC_PREFIX(makeShareableClone)(
       ->makeShareableClone(rt, std::move(args[0]), std::move(args[1]));
 }
 
-// Sync methods
-
-static jsi::Value SPEC_PREFIX(makeSynchronizedDataHolder)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->makeSynchronizedDataHolder(rt, std::move(args[0]));
-}
-
-static jsi::Value SPEC_PREFIX(getDataSynchronously)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->getDataSynchronously(rt, std::move(args[0]));
-}
-
 // scheduler
 
 static jsi::Value SPEC_PREFIX(scheduleOnUI)(
@@ -47,6 +27,15 @@ static jsi::Value SPEC_PREFIX(scheduleOnUI)(
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->scheduleOnUI(rt, std::move(args[0]));
   return jsi::Value::undefined();
+}
+
+static jsi::Value SPEC_PREFIX(executeOnUIRuntimeSync)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->executeOnUIRuntimeSync(rt, std::move(args[0]));
 }
 
 static jsi::Value SPEC_PREFIX(createWorkletRuntime)(
@@ -186,12 +175,9 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
   methodMap_["makeShareableClone"] =
       MethodMetadata{2, SPEC_PREFIX(makeShareableClone)};
 
-  methodMap_["makeSynchronizedDataHolder"] =
-      MethodMetadata{1, SPEC_PREFIX(makeSynchronizedDataHolder)};
-  methodMap_["getDataSynchronously"] =
-      MethodMetadata{1, SPEC_PREFIX(getDataSynchronously)};
-
   methodMap_["scheduleOnUI"] = MethodMetadata{1, SPEC_PREFIX(scheduleOnUI)};
+  methodMap_["executeOnUIRuntimeSync"] =
+      MethodMetadata{1, SPEC_PREFIX(executeOnUIRuntimeSync)};
   methodMap_["createWorkletRuntime"] =
       MethodMetadata{2, SPEC_PREFIX(createWorkletRuntime)};
   methodMap_["scheduleOnRuntime"] =
