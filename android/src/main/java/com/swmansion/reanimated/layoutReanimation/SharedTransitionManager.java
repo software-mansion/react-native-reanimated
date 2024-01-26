@@ -48,11 +48,10 @@ public class SharedTransitionManager {
   private boolean mIsTransitionPrepared = false;
   private final Set<Integer> mTagsToCleanup = new HashSet<>();
 
-  class MyEventDispatchListener implements EventDispatcherListener {
-    // this idea is not finished yet
-    private EventDispatcher mEventDispatcher;
+  class TopWillAppearListener implements EventDispatcherListener {
+    private final EventDispatcher mEventDispatcher;
 
-    public MyEventDispatchListener(EventDispatcher eventDispatcher) {
+    public TopWillAppearListener(EventDispatcher eventDispatcher) {
       mEventDispatcher = eventDispatcher;
     }
 
@@ -91,7 +90,7 @@ public class SharedTransitionManager {
         UIManagerHelper.getEventDispatcherForReactTag(
             (ReactContext) view.getContext(), view.getId());
     if (eventDispatcher != null) {
-      eventDispatcher.addListener(new MyEventDispatchListener(eventDispatcher));
+      eventDispatcher.addListener(new TopWillAppearListener(eventDispatcher));
     }
   }
 
