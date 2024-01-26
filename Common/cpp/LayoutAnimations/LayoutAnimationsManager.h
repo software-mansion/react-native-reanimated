@@ -50,6 +50,7 @@ class LayoutAnimationsManager {
 #endif
 
  private:
+  void clearSharedTransitionConfig(const int tag);
   std::unordered_map<int, std::shared_ptr<Shareable>> &getConfigsForType(
       const LayoutAnimationType type);
 

@@ -16,23 +16,7 @@ void LayoutAnimationsManager::configureAnimationBatch(
     auto [tag, type, config, sharedTransitionTag] = layoutAnimationConfig;
     if (type == SHARED_ELEMENT_TRANSITION ||
         type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
-      sharedTransitionAnimations_.erase(tag);
-      auto const &groupName = viewTagToSharedTag_[tag];
-      if (groupName.empty()) {
-        viewTagToSharedTag_.erase(tag);
-        sharedTransitionConfigs.push_back(std::move(layoutAnimationConfig));
-        continue;
-      }
-      auto &group = sharedTransitionGroups_[groupName];
-      auto position = std::find(group.begin(), group.end(), tag);
-      if (position != group.end()) {
-        group.erase(position);
-      }
-      if (group.size() == 0) {
-        sharedTransitionGroups_.erase(groupName);
-      }
-      viewTagToSharedTag_.erase(tag);
-      ignoreProgressAnimationForTag_.erase(tag);
+      clearSharedTransitionConfig(tag);
       sharedTransitionConfigs.push_back(std::move(layoutAnimationConfig));
     } else {
       if (config == nullptr) {
@@ -83,12 +67,9 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
   return collection::contains(getConfigsForType(type), tag);
 }
 
-void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
-  auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-  enteringAnimations_.erase(tag);
-  exitingAnimations_.erase(tag);
-  layoutAnimations_.erase(tag);
-  shouldAnimateExitingForTag_.erase(tag);
+void LayoutAnimationsManager::clearSharedTransitionConfig(const int tag) {
+  // here we don't lock the mutex, since this function is only supposed to be
+  // used as a helper
 #ifndef NDEBUG
   const auto &pair = viewsScreenSharedTagMap_[tag];
   screenSharedTagSet_.erase(pair);
@@ -98,6 +79,7 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
   sharedTransitionAnimations_.erase(tag);
   auto const &groupName = viewTagToSharedTag_[tag];
   if (groupName.empty()) {
+    viewTagToSharedTag_.erase(tag);
     return;
   }
   auto &group = sharedTransitionGroups_[groupName];
@@ -110,6 +92,15 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
   }
   viewTagToSharedTag_.erase(tag);
   ignoreProgressAnimationForTag_.erase(tag);
+}
+
+void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
+  auto lock = std::unique_lock<std::mutex>(animationsMutex_);
+  enteringAnimations_.erase(tag);
+  exitingAnimations_.erase(tag);
+  layoutAnimations_.erase(tag);
+  shouldAnimateExitingForTag_.erase(tag);
+  clearSharedTransitionConfig(tag);
 }
 
 void LayoutAnimationsManager::startLayoutAnimation(
