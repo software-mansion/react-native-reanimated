@@ -153,10 +153,11 @@ function createProgressTransitionRegister() {
         // there is no need to prevent cleaning on android
         isTransitionRestart = !IS_ANDROID;
       }
-      // Remove the animation config after the transition is finished
       if (defer) {
+        // Remove the animation config after the transition is finished
         toRemove.add(viewTag);
       } else {
+        // if the animation is removed, without ever being started, it can be removed immediately
         progressAnimations.delete(viewTag);
       }
     },
