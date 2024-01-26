@@ -142,7 +142,7 @@ function createProgressTransitionRegister() {
       viewTag: number,
       progressAnimation: ProgressAnimation
     ) => {
-      if (currentTransitions.size > 0) {
+      if (currentTransitions.size > 0 && !progressAnimations.has(viewTag)) {
         // there is no need to prevent cleaning on android
         isTransitionRestart = !IS_ANDROID;
       }
