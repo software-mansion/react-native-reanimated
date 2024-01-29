@@ -1,6 +1,6 @@
 name: Check Expo dev-client nightly build
 on:
-  workflow_dispatch:
+  workflow_call:
 
 jobs:
   check-expo-dev-client-next-availability:

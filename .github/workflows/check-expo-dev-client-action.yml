@@ -11,5 +11,5 @@ on:
 
 jobs:
   call-check-expo-dev-client-workflow:
-  if: github.repository == 'software-mansion/react-native-reanimated'
-  uses: ./.github/workflows/check-expo-dev-client.yml
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    uses: ./.github/workflows/check-expo-dev-client.yml
