@@ -7,8 +7,6 @@ jobs:
   check-expo-dev-client-next-availability:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out reanimated repository
-        uses: actions/checkout@v3
       - name: Check Expo dev-client next availability
         id: check-next-availability
         run: |
