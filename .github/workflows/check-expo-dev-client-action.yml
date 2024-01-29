@@ -46,7 +46,7 @@ jobs:
         run: pod install
       - name: Build app
         working-directory: app
-        run: yarn react-native run-ios --simulator='iPhone 14'
+        run: npx react-native run-ios
 
   build_android:
     if: github.repository == 'software-mansion/react-native-reanimated'
