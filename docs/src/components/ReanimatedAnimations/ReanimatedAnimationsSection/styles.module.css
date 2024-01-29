@@ -90,7 +90,6 @@
 
 .interactiveCodeBlock [class*='codeBlockLines'] {
   font-size: 14px;
-  white-space: pre-wrap;
 }
 
 .interactiveCodeBlock [class*='codeBlockContent'] code {

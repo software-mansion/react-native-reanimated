@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Easing, Pressable, StyleSheet, View } from 'react-native';
 import { useColorMode } from '@docusaurus/theme-common';
 import Animated, {
   FadeInLeft,
@@ -84,7 +84,7 @@ function Items({ displayedItems, onAddItem, onRemoveItem, styles }) {
     <>
       <View>
         {displayedItems.map((item, index) => (
-          <Animated.View key={index} exiting={FlipOutYRight.duration(200)}>
+          <Animated.View key={index} exiting={FlipOutYRight.duration(250)}>
             <ListItem
               label={item.label}
               onRemove={() => onRemoveItem(index)}
@@ -106,13 +106,15 @@ function Items({ displayedItems, onAddItem, onRemoveItem, styles }) {
 
 function ListItem({ label, onRemove, styles }) {
   return (
-    <Animated.View style={styles.listItem} entering={FadeInLeft.delay(150)}>
+    <Animated.View
+      style={styles.listItem}
+      entering={FadeInLeft.delay(50).duration(100)}>
       <Animated.Text
         style={styles.listItemLabel}
-        entering={FadeInDown.delay(150)}>
+        entering={FadeInDown.delay(50).easing(Easing.ease)}>
         {label}
       </Animated.Text>
-      <Animated.Text entering={ZoomIn.delay(200)} style={styles.listItemIcon}>
+      <Animated.Text entering={ZoomIn.delay(100)} style={styles.listItemIcon}>
         <Cross color={styles.listItemIcon['color']} onClick={onRemove} />
       </Animated.Text>
     </Animated.View>

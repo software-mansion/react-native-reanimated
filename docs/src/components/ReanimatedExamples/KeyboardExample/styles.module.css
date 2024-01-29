@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  animation: moveUpAndBack 2s infinite;
+  animation: moveUpAndBack 3.5s infinite;
 }
 .tile {
   width: 250px;
@@ -82,10 +82,14 @@
   @keyframes moveUpAndBack {
     0%,
     10%,
+    20%,
+    90%,
     100% {
       transform: translateY(52%);
     }
 
+    70%,
+    40%,
     50%,
     60% {
       transform: translateY(0%);

@@ -18,6 +18,10 @@
   );
 }
 
+.bottomWave {
+  margin-bottom: -4rem;
+}
+
 .backgroundWrapper {
   position: relative;
   display: flex;

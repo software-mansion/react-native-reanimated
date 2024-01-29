@@ -23,7 +23,7 @@
   height: 60px;
   position: absolute;
   background-color: var(--swm-purple-light-100);
-  animation: moveRightAndBack 2s infinite;
+  animation: moveRightAndBack 2.5s infinite;
   border-radius: 50%;
 }
 
@@ -52,7 +52,7 @@
   .ball {
     height: 40px;
     width: 40px;
-    animation: moveRightAndBackMobile 4s infinite;
+    animation: moveRightAndBackMobile 2.5s infinite;
   }
 }
 
@@ -60,9 +60,11 @@
   0%,
   100% {
     transform: translateX(0%);
+    border-radius: 100%;
   }
   50% {
     transform: translateX(320%);
+    border-radius: 0;
   }
 }
 
@@ -70,8 +72,10 @@
   0%,
   100% {
     transform: translateX(0%);
+    border-radius: 100%;
   }
   50% {
     transform: translateX(270%);
+    border-radius: 0;
   }
 }
