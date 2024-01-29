@@ -73,12 +73,11 @@ const createUpdatePropsManager = isFabric()
               updates,
             });
             if (operations.length === 1) {
-              // eslint-disable-next-line @typescript-eslint/unbound-method
               queueMicrotask(this.flush);
             }
           });
         },
-        flush() {
+        flush(this: void) {
           _updatePropsFabric!(operations);
           operations.length = 0;
         },
@@ -104,12 +103,11 @@ const createUpdatePropsManager = isFabric()
               updates,
             });
             if (operations.length === 1) {
-              // eslint-disable-next-line @typescript-eslint/unbound-method
               queueMicrotask(this.flush);
             }
           });
         },
-        flush() {
+        flush(this: void) {
           _updatePropsPaper!(operations);
           operations.length = 0;
         },
