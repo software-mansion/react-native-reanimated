@@ -24,12 +24,9 @@ jobs:
   check-expo-dev-client-next:
     needs: check-expo-dev-client-next-availability
     if: needs.check-expo-dev-client-next-availability.outputs.hasNext == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Using next version of expo-dev-client
-        uses: ./.github/workflows/check-expo-dev-client-action.yml
-        with:
-          expo-dev-client-dist-tag: next
+    uses: ./.github/workflows/check-expo-dev-client-action.yml
+    with:
+      expo-dev-client-dist-tag: next
 
   check-expo-dev-client-latest:
     uses: ./.github/workflows/check-expo-dev-client-action.yml
