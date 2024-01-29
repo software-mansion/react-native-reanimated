@@ -1,6 +1,6 @@
 name: Check Expo dev-client nightly build
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       expo-dev-client-dist-tag:
         required: true
