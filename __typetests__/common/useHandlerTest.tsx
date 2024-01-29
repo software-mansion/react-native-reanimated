@@ -28,10 +28,7 @@ function UseHandlerTest() {
         'worklet';
         const { onScroll } = handlers;
         if (onScroll && event.eventName.endsWith('onScroll')) {
-          context.eventName = context.eventName
-            ? // eslint-disable-next-line @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-base-to-string
-              context.eventName + event.eventName + useWeb
-            : event.eventName + useWeb;
+          context.eventName = event.eventName + useWeb;
           onScroll(event);
         }
       },
@@ -63,10 +60,7 @@ function UseHandlerTest() {
         'worklet';
         const { onScroll } = handlers;
         if (onScroll && event.eventName.endsWith('onScroll')) {
-          context.eventName = context.eventName
-            ? // eslint-disable-next-line @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-base-to-string
-              context.eventName + event.eventName + useWeb
-            : event.eventName + useWeb;
+          context.eventName = event.eventName + useWeb;
           // @ts-expect-error Works with `ReanimatedEvent` only.
           onScroll(event);
         }
@@ -98,10 +92,7 @@ function UseHandlerTest() {
         'worklet';
         const { onScroll } = handlers;
         if (onScroll && event.eventName.endsWith('onScroll')) {
-          context.eventName = context.eventName
-            ? // eslint-disable-next-line @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-base-to-string
-              context.eventName + event.eventName + useWeb
-            : event.eventName + useWeb;
+          context.eventName = event.eventName + useWeb;
           onScroll(event);
         }
       },
