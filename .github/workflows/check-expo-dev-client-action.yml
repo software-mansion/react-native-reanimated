@@ -46,7 +46,7 @@ jobs:
         run: pod install
       - name: Build app
         working-directory: app
-        run: npx react-native run-ios
+        run: npx react-native run-ios --terminal terminal
 
   build_android:
     if: github.repository == 'software-mansion/react-native-reanimated'
