@@ -4,7 +4,7 @@
   height: 150px;
   background-color: var(--swm-white);
   border-radius: 20px;
-  animation: moveBox 4s ease-in-out infinite;
+  animation: moveBox 2s ease-in-out infinite;
 }
 
 .rollingBall {
@@ -15,7 +15,7 @@
   height: 60px;
   border-radius: 50%;
   background-color: var(--swm-purple-light-100);
-  animation: rollBall 4s ease-in-out infinite;
+  animation: rollBall 2s ease-in-out infinite;
 }
 
 [data-theme='dark'] .rollingBall {

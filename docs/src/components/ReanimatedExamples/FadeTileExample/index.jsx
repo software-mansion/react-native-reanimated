@@ -84,7 +84,7 @@ function Items({ displayedItems, onAddItem, onRemoveItem, styles }) {
     <>
       <View>
         {displayedItems.map((item, index) => (
-          <Animated.View key={index} exiting={FlipOutYRight.duration(400)}>
+          <Animated.View key={index} exiting={FlipOutYRight.duration(200)}>
             <ListItem
               label={item.label}
               onRemove={() => onRemoveItem(index)}
@@ -97,7 +97,7 @@ function Items({ displayedItems, onAddItem, onRemoveItem, styles }) {
       </View>
       <Button
         onPress={onAddItem}
-        entering={BounceIn.delay(250).duration(400)}
+        entering={BounceIn.delay(250).duration(200)}
         styles={styles}
       />
     </>
@@ -109,10 +109,10 @@ function ListItem({ label, onRemove, styles }) {
     <Animated.View style={styles.listItem} entering={FadeInLeft.delay(150)}>
       <Animated.Text
         style={styles.listItemLabel}
-        entering={FadeInDown.delay(300)}>
+        entering={FadeInDown.delay(150)}>
         {label}
       </Animated.Text>
-      <Animated.Text entering={ZoomIn.delay(400)} style={styles.listItemIcon}>
+      <Animated.Text entering={ZoomIn.delay(200)} style={styles.listItemIcon}>
         <Cross color={styles.listItemIcon['color']} onClick={onRemove} />
       </Animated.Text>
     </Animated.View>

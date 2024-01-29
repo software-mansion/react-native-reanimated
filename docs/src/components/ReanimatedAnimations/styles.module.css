@@ -93,9 +93,6 @@
 }
 
 @media (max-width: 390px) {
-  .animationsContainer {
-    padding: 1.5rem;
-  }
   .animationsContainer > div:first-child {
     margin-bottom: 7rem;
     gap: 1.5rem;

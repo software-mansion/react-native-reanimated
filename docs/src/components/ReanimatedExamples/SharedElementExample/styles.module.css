@@ -23,7 +23,7 @@
   height: 60px;
   position: absolute;
   background-color: var(--swm-purple-light-100);
-  animation: moveRightAndBack 4s infinite;
+  animation: moveRightAndBack 2s infinite;
   border-radius: 50%;
 }
 
