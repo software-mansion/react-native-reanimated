@@ -1,0 +1,15 @@
+name: Check Expo dev-client nightly build
+on:
+  pull_request:
+    paths:
+      - .github/workflows/check-expo-dev-client-action.yml
+      - .github/workflows/check-expo-dev-client-nightly.yml
+      - .github/workflows/check-expo-dev-client.yml
+  schedule:
+    - cron: '0 0 * * *' # after publishing new nightly version on NPM
+  workflow_dispatch:
+
+jobs:
+  call-check-expo-dev-client-workflow:
+  if: github.repository == 'software-mansion/react-native-reanimated'
+  uses: ./.github/workflows/check-expo-dev-client.yml

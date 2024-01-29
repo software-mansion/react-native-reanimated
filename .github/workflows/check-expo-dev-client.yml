@@ -1,0 +1,21 @@
+name: Check Expo dev-client nightly build
+on:
+  workflow_dispatch:
+
+jobs:
+  check-expo-dev-client-next-availability:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Expo dev-client next availability
+        continue-on-error: true
+        run: npm dist-tag ls expo-dev-client | grep next
+        id: check-next-availability
+      - name: Run next build
+        if: steps.check-next-availability.outcome == 'success'
+        uses: ./.github/workflows/check-expo-dev-client-action.yml
+        with:
+          expo_dev_client_version: next
+      - name: Run latest build
+        uses: ./.github/workflows/check-expo-dev-client-action.yml
+        with:
+          expo_dev_client_version: latest
