@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check Expo dev-client next availability
+        continue-on-error: true
         run: npm dist-tag ls expo-dev-client | grep next
         id: check-next-availability
       - name: Run next build
