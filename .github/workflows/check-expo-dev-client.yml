@@ -6,6 +6,8 @@ jobs:
   check-expo-dev-client-next-availability:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out reanimated repository
+        uses: actions/checkout@v4
       - name: Check Expo dev-client next availability
         continue-on-error: true
         run: npm dist-tag ls expo-dev-client | grep next
