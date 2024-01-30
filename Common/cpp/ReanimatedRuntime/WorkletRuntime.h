@@ -66,7 +66,7 @@ class WorkletRuntime : public jsi::HostObject,
   const std::shared_ptr<jsi::Runtime> runtime_;
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
-  const bool supportsLocking_;
+  [[maybe_unused]] const bool supportsLocking_;
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on
