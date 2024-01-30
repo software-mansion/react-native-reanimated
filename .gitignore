@@ -54,8 +54,8 @@ apple/Pods/
 lib/
 react-native-reanimated-tests.js
 
-# eclipse
-*.settings**
+# Eclipse
+.settings/
 
 # plugin
 plugin/build/plugin.js.map
