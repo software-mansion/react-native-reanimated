@@ -13,5 +13,4 @@
     "outDir": "./public",
     "rootDir": "."
   },
-  // "include": ["src", "lib"],
 }
