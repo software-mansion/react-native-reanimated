@@ -23,7 +23,7 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Check out reanimated repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: 'reanimated_repo'
       - name: Create Expo app
@@ -61,7 +61,7 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Check out reanimated repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: 'reanimated_repo'
       - name: Create Expo app
