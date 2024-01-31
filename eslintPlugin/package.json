@@ -4,8 +4,7 @@
   "license": "MIT",
   "types": "lib/typescript/index",
   "scripts": {
-    "build": "tsc",
-    "test": "yarn build; jest"
+    "build": "tsc"
   },
   "dependencies": {},
   "devDependencies": {
