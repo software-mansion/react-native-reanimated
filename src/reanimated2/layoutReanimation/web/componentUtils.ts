@@ -127,6 +127,10 @@ export function getProcessedConfig(
   };
 }
 
+export function saveSnapshot(element: HTMLElement) {
+  snapshots.set(element, element.getBoundingClientRect());
+}
+
 export function setElementAnimation(
   element: HTMLElement,
   animationConfig: AnimationConfig,
@@ -218,7 +222,7 @@ export function handleExitingAnimation(
   const dummy = element.cloneNode() as ReanimatedHTMLElement;
   dummy.reanimatedDummy = true;
 
-  const snapshot = element.getBoundingClientRect();
+  const snapshot = snapshots.get(element) ?? element.getBoundingClientRect();
 
   element.style.animationName = '';
   // We hide current element so only its copy with proper animation will be displayed

@@ -3,6 +3,7 @@
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { isWindowAvailable } from '../../PlatformChecker';
 import { setDummyPosition, snapshots } from './componentStyle';
+import { saveSnapshot } from './componentUtils';
 import { Animations } from './config';
 import type { AnimationNames } from './config';
 
@@ -238,6 +239,26 @@ export function addHTMLMutationObserver() {
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
+}
+
+// multiple resizeObservers are slow
+// https://groups.google.com/a/chromium.org/g/blink-dev/c/z6ienONUb5A/m/F5-VcUZtBAAJ?pli=1
+let resizeObserver: ResizeObserver | undefined;
+export function addHTMLResizeObserver(element: HTMLElement) {
+  if (!isWindowAvailable()) {
+    return;
+  }
+  if (!resizeObserver) {
+    resizeObserver = new ResizeObserver((entries) => {
+      entries.forEach((entry) => {
+        saveSnapshot(entry.target as HTMLElement);
+      });
+    });
+  }
+  const clear = () => resizeObserver?.unobserve(element);
+  resizeObserver.observe(element);
+
+  return { clear };
 }
 
 export function areDOMRectsEqual(r1: DOMRect, r2: DOMRect) {

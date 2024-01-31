@@ -53,7 +53,10 @@ import {
 import { updateLayoutAnimations } from '../reanimated2/UpdateLayoutAnimations';
 import type { CustomConfig } from '../reanimated2/layoutReanimation/web/config';
 import type { FlatList, FlatListProps } from 'react-native';
-import { addHTMLMutationObserver } from '../reanimated2/layoutReanimation/web/domUtils';
+import {
+  addHTMLMutationObserver,
+  addHTMLResizeObserver,
+} from '../reanimated2/layoutReanimation/web/domUtils';
 
 const IS_WEB = isWeb();
 const IS_FABRIC = isFabric();
@@ -141,6 +144,7 @@ export function createAnimatedComponent(
     _InlinePropManager = new InlinePropManager();
     _PropsFilter = new PropsFilter();
     _viewInfo?: ViewInfo;
+    _clearHTMLResizeObserver?: () => void;
     static displayName: string;
     static contextType = SkipEnteringContext;
     context!: React.ContextType<typeof SkipEnteringContext>;
@@ -183,6 +187,7 @@ export function createAnimatedComponent(
     }
 
     componentWillUnmount() {
+      this._clearHTMLResizeObserver?.();
       this._detachNativeEvents();
       this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
@@ -492,6 +497,19 @@ export function createAnimatedComponent(
       updateLayoutAnimations(this._viewTag, LayoutAnimationType.LAYOUT, layout);
     }
 
+    _observeLayout(ref: AnimatedComponentRef | HTMLElement | null) {
+      if (IS_WEB) {
+        this._clearHTMLResizeObserver?.();
+        if (this.props.exiting) {
+          if (ref != null) {
+            this._clearHTMLResizeObserver = addHTMLResizeObserver(
+              ref as HTMLElement
+            )?.clear;
+          }
+        }
+      }
+    }
+
     _setComponentRef = setAndForwardRef<Component | HTMLElement>({
       getForwardedRef: () =>
         this.props.forwardedRef as MutableRefObject<
@@ -543,6 +561,7 @@ export function createAnimatedComponent(
 
         if (ref !== this._component) {
           this._component = ref;
+          this._observeLayout(ref);
         }
       },
     });
