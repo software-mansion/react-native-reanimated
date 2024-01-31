@@ -55,7 +55,7 @@ export function maybeBuild(
         `[Reanimated] ${
           commonProperties.length === 1 ? 'Property' : 'Properties: '
         } "${commonProperties.join(
-          ','
+          ', '
         )}" of ${displayName} may be overwritten with layout animation. Please create a wrapper with the layout animation you want to apply.`
       );
     }
