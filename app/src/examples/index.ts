@@ -77,6 +77,7 @@ import OverlappingBoxesExample from './OverlappingBoxesExample';
 import PagerExample from './CustomHandler/PagerExample';
 import PendulumExample from './PendulumExample';
 import PinExample from './PinExample';
+import PlanetsExample from './PlanetsExample';
 import ProfilesExample from './SharedElementTransitions/Profiles';
 import ProgressTransitionExample from './SharedElementTransitions/ProgressTransition';
 import RainbowExample from './RainbowExample';
@@ -262,6 +263,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🟢',
     title: 'Animated SVG circle',
     screen: SvgExample,
+  },
+  PlanetsExample: {
+    icon: '🪐',
+    title: 'Planets',
+    screen: PlanetsExample,
   },
   BouncingBoxExample: {
     icon: '📦',
