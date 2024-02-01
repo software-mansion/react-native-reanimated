@@ -1,5 +1,3 @@
-import React from 'react';
-import { SafeAreaView, StyleSheet, Text } from 'react-native';
 import Animated, {
   clamp,
   measure,
@@ -7,6 +5,9 @@ import Animated, {
   useAnimatedStyle,
   useScrollViewOffset,
 } from 'react-native-reanimated';
+import { SafeAreaView, StyleSheet, Text } from 'react-native';
+
+import React from 'react';
 
 export default function ArticleProgressExample() {
   const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
@@ -49,8 +50,10 @@ export default function ArticleProgressExample() {
   return (
     <SafeAreaView>
       <Animated.View style={[styles.progressBar, progressBarAnimatedStyle]} />
-      <Animated.ScrollView ref={scrollViewRef} style={styles.scrollView}>
-        <Text ref={textRef}>{LOREM_IPSUM.repeat(3)}</Text>
+      <Animated.ScrollView ref={scrollViewRef}>
+        <Text ref={textRef} style={styles.text}>
+          {LOREM_IPSUM}
+        </Text>
       </Animated.ScrollView>
     </SafeAreaView>
   );
@@ -61,8 +64,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'limegreen',
     height: 8,
   },
-  scrollView: {
-    padding: 16,
+  text: {
+    marginHorizontal: 16,
   },
 });
 
