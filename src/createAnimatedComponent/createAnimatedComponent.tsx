@@ -34,7 +34,7 @@ import type {
   IAnimatedComponentInternal,
   ViewInfo,
 } from './commonTypes';
-import { has, flattenArray } from './utils';
+import { has, flattenArray, disposableCallback } from './utils';
 import setAndForwardRef from './setAndForwardRef';
 import {
   isFabric,
@@ -49,6 +49,7 @@ import {
   tryActivateLayoutTransition,
   configureWebLayoutAnimations,
   getReducedMotionFromConfig,
+  saveSnapshot,
 } from '../reanimated2/layoutReanimation/web';
 import { updateLayoutAnimations } from '../reanimated2/UpdateLayoutAnimations';
 import type { CustomConfig } from '../reanimated2/layoutReanimation/web/config';
@@ -168,10 +169,15 @@ export function createAnimatedComponent(
       }
 
       if (IS_WEB) {
+        if (this.props.exiting) {
+          saveSnapshot(this._component as HTMLElement);
+        }
+
         if (
           !this.props.entering ||
           getReducedMotionFromConfig(this.props.entering as CustomConfig)
         ) {
+          this._observeLayout(this._component);
           this._isFirstRender = false;
           return;
         }
@@ -179,7 +185,11 @@ export function createAnimatedComponent(
         startWebLayoutAnimation(
           this.props,
           this._component as HTMLElement,
-          LayoutAnimationType.ENTERING
+          LayoutAnimationType.ENTERING,
+          undefined,
+          () => {
+            this._observeLayout(this._component);
+          }
         );
       }
 
@@ -187,6 +197,7 @@ export function createAnimatedComponent(
     }
 
     componentWillUnmount() {
+      this._observeLayout.dispose();
       this._clearHTMLResizeObserver?.();
       this._detachNativeEvents();
       this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
@@ -497,18 +508,23 @@ export function createAnimatedComponent(
       updateLayoutAnimations(this._viewTag, LayoutAnimationType.LAYOUT, layout);
     }
 
-    _observeLayout(ref: AnimatedComponentRef | HTMLElement | null) {
-      if (IS_WEB) {
-        this._clearHTMLResizeObserver?.();
-        if (this.props.exiting) {
-          if (ref != null) {
-            this._clearHTMLResizeObserver = addHTMLResizeObserver(
-              ref as HTMLElement
-            )?.clear;
+    _observeLayout = disposableCallback(
+      (ref: AnimatedComponentRef | HTMLElement | null) => {
+        if (IS_WEB) {
+          if (this._isFirstRender) {
+            return;
+          }
+          this._clearHTMLResizeObserver?.();
+          if (this.props.exiting) {
+            if (ref != null) {
+              this._clearHTMLResizeObserver = addHTMLResizeObserver(
+                ref as HTMLElement
+              )?.clear;
+            }
           }
         }
       }
-    }
+    );
 
     _setComponentRef = setAndForwardRef<Component | HTMLElement>({
       getForwardedRef: () =>
