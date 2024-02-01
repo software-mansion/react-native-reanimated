@@ -23,6 +23,7 @@ import CardExample from './SharedElementTransitions/Card';
 import Carousel from './LayoutAnimations/Carousel';
 import ChangeThemeExample from './LayoutAnimations/ChangeTheme';
 import ChatHeadsExample from './ChatHeadsExample';
+import ChessExample from './ChessExample';
 import ChessboardExample from './ChessboardExample';
 import ColorExample from './ColorExample';
 import ColorInterpolationExample from './ColorInterpolationExample';
@@ -357,6 +358,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🦑',
     title: 'forwardRef & useImperativeHandle',
     screen: RefExample,
+  },
+  ChessExample: {
+    icon: '♟️',
+    title: 'Chess',
+    screen: ChessExample,
   },
   ChessboardExample: {
     icon: '♟️',
