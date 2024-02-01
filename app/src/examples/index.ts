@@ -1,4 +1,5 @@
 import AboutExample from './AboutExample';
+import AmountExample from './AmountExample';
 import AnimatableRefExample from './AnimatableRefExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import AnimatedListExample from './LayoutAnimations/AnimatedList';
@@ -227,6 +228,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⏬',
     title: 'Animate inner component',
     screen: AnimatableRefExample,
+  },
+  AmountExample: {
+    icon: '📈',
+    title: 'Amount',
+    screen: AmountExample,
   },
   CounterExample: {
     icon: '🎰',
