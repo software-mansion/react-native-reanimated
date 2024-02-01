@@ -14,6 +14,7 @@ export {
   isConfigured,
   enableLayoutAnimations,
   getViewProp,
+  executeOnUIRuntimeSync,
 } from './core';
 export type {
   GestureHandlers,

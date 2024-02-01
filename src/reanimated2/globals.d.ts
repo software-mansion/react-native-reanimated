@@ -6,7 +6,6 @@ import type {
   MeasuredDimensions,
   MapperRegistry,
   ShareableRef,
-  ShareableSyncDataHolderRef,
   ShadowNodeWrapper,
   __ComplexWorkletFunction,
   FlatShareableRef,
@@ -43,13 +42,6 @@ declare global {
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
   var _makeShareableClone: <T>(value: T) => FlatShareableRef<T>;
-  var _updateDataSynchronously: (
-    dataHolder: ShareableSyncDataHolderRef<any>,
-    data: ShareableRef<any>
-  ) => void;
-  var _getDataSynchronously: <T>(
-    dataHolder: ShareableSyncDataHolderRef<T>
-  ) => ShareableRef<T>;
   var _scheduleOnJS: (
     fun: __ComplexWorkletFunction<A, R>,
     args?: unknown[]
@@ -62,7 +54,7 @@ declare global {
     | ((
         operations: {
           tag: number;
-          name: string;
+          name: string | null;
           updates: StyleProps | AnimatedStyle<any>;
         }[]
       ) => void)

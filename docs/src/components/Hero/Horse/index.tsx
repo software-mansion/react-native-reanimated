@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './styles.module.css';
+import { useReducedMotion } from 'react-native-reanimated';
 
 import HorseVariantA from '@site/static/img/horse/1.svg';
 import HorseVariantB from '@site/static/img/horse/2.svg';
@@ -49,6 +50,7 @@ const HeroHorse = () => {
         <HorseVariantK
           className={clsx(styles.variantAnimation, styles.variantK)}
         />
+        <HorseVariantE className={styles.reducedMotionOnly} />
       </div>
     </div>
   );

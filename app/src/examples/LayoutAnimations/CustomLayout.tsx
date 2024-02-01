@@ -6,9 +6,9 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Button, StyleSheet, Text, View } from 'react-native';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
-function CustomLayoutTransiton(): LayoutAnimationFunction {
+function CustomLayoutTransition(): LayoutAnimationFunction {
   const isEven = makeMutable(1);
   return (values) => {
     'worklet';
@@ -44,9 +44,10 @@ function CustomLayoutTransiton(): LayoutAnimationFunction {
 }
 
 function Box({ label, state }: { label: string; state: boolean }) {
+  const layoutTransition = useMemo(CustomLayoutTransition, []);
   return (
     <Animated.View
-      layout={CustomLayoutTransiton()}
+      layout={layoutTransition}
       style={[styles.box, { height: state ? 30 : 60 }]}>
       <Text> {label} </Text>
     </Animated.View>

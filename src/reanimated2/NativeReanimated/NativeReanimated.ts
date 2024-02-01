@@ -3,7 +3,6 @@ import { NativeModules } from 'react-native';
 import type {
   ShadowNodeWrapper,
   ShareableRef,
-  ShareableSyncDataHolderRef,
   Value3D,
   ValueRotation,
 } from '../commonTypes';
@@ -18,6 +17,7 @@ import { getValueUnpackerCode } from '../valueUnpacker';
 import { isFabric } from '../PlatformChecker';
 import type React from 'react';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
+import type { LayoutAnimationBatchItem } from '../layoutReanimation/animationBuilder/commonTypes';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
@@ -25,11 +25,8 @@ export interface NativeReanimatedModule {
     value: T,
     shouldPersistRemote: boolean
   ): ShareableRef<T>;
-  makeSynchronizedDataHolder<T>(
-    valueRef: ShareableRef<T>
-  ): ShareableSyncDataHolderRef<T>;
-  getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>): T;
   scheduleOnUI<T>(shareable: ShareableRef<T>): void;
+  executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R;
   createWorkletRuntime(
     name: string,
     initializer: ShareableRef<() => void>
@@ -69,6 +66,13 @@ export interface NativeReanimatedModule {
     type: LayoutAnimationType,
     sharedTransitionTag: string,
     config: ShareableRef<Keyframe | LayoutAnimationFunction>
+  ): void;
+  configureLayoutAnimationBatch(
+    layoutAnimationsBatch: {
+      viewTag: number;
+      type: LayoutAnimationType;
+      config: ShareableRef<Keyframe | LayoutAnimationFunction> | undefined;
+    }[]
   ): void;
   setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
 }
@@ -118,16 +122,12 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     );
   }
 
-  makeSynchronizedDataHolder<T>(valueRef: ShareableRef<T>) {
-    return this.InnerNativeModule.makeSynchronizedDataHolder(valueRef);
-  }
-
-  getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>) {
-    return this.InnerNativeModule.getDataSynchronously(ref);
-  }
-
   scheduleOnUI<T>(shareable: ShareableRef<T>) {
     return this.InnerNativeModule.scheduleOnUI(shareable);
+  }
+
+  executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R {
+    return this.InnerNativeModule.executeOnUIRuntimeSync(shareable);
   }
 
   createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {
@@ -210,6 +210,12 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       sharedTransitionTag,
       config
     );
+  }
+
+  configureLayoutAnimationBatch(
+    layoutAnimationsBatch: LayoutAnimationBatchItem[]
+  ) {
+    this.InnerNativeModule.configureLayoutAnimationBatch(layoutAnimationsBatch);
   }
 
   setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean) {

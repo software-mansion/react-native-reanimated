@@ -32,8 +32,9 @@ class EventHandlerRegistry {
   std::mutex instanceMutex;
 
  public:
-  void registerEventHandler(std::shared_ptr<WorkletEventHandler> eventHandler);
-  void unregisterEventHandler(uint64_t id);
+  void registerEventHandler(
+      const std::shared_ptr<WorkletEventHandler> &eventHandler);
+  void unregisterEventHandler(const uint64_t id);
 
   void processEvent(
       const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,

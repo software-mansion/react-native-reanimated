@@ -36,7 +36,9 @@ enum TurboModuleMethodValueKind {
  */
 class JSI_EXPORT TurboModule : public facebook::jsi::HostObject {
  public:
-  TurboModule(const std::string &name, std::shared_ptr<CallInvoker> jsInvoker);
+  TurboModule(
+      const std::string &name,
+      const std::shared_ptr<CallInvoker> &jsInvoker);
   virtual ~TurboModule();
 
   facebook::jsi::Value get(
@@ -44,7 +46,7 @@ class JSI_EXPORT TurboModule : public facebook::jsi::HostObject {
       const facebook::jsi::PropNameID &propName) override;
 
   const std::string name_;
-  std::shared_ptr<CallInvoker> jsInvoker_;
+  const std::shared_ptr<CallInvoker> jsInvoker_;
 
  protected:
   struct MethodMetadata {
