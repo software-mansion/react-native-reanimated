@@ -18,20 +18,25 @@ import { makeWorkletFactoryCall } from './processIfWorkletFunction';
 import type { ReanimatedPluginPass } from './types';
 import { WorkletizableFunction } from './types';
 
+/**
+ *
+ * @returns `true` if the function was workletized, `false` otherwise.
+ */
 export function processIfWithWorkletDirective(
   path: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
-): void {
+): boolean {
   if (!isBlockStatement(path.node.body)) {
     // If the function body is not a block statement we can safely assume that it's not a worklet
     // since it's the case of an arrow function with immediate return
     // eg. `const foo = () => 1;`
-    return;
+    return false;
   }
   if (!hasWorkletDirective(path.node.body.directives)) {
-    return;
+    return false;
   }
   processWorklet(path, state);
+  return true;
 }
 
 /**

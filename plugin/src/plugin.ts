@@ -43,8 +43,8 @@ module.exports = function (): PluginItem {
           state: ReanimatedPluginPass
         ) {
           runWithTaggedExceptions(() => {
-            processIfWithWorkletDirective(path, state);
-            processIfAutoworkletizableCallback(path, state);
+            processIfWithWorkletDirective(path, state) ||
+              processIfAutoworkletizableCallback(path, state);
           });
         },
       },

@@ -534,12 +534,13 @@ var require_processIfWorkletNode = __commonJS({
     var types_2 = require_types();
     function processIfWithWorkletDirective(path, state) {
       if (!(0, types_12.isBlockStatement)(path.node.body)) {
-        return;
+        return false;
       }
       if (!hasWorkletDirective(path.node.body.directives)) {
-        return;
+        return false;
       }
       processWorklet(path, state);
+      return true;
     }
     exports2.processIfWithWorkletDirective = processIfWithWorkletDirective;
     function processWorklet(path, state) {
@@ -974,7 +975,9 @@ var require_processIfCallback = __commonJS({
     function processIfAutoworkletizableCallback(path, state) {
       if ((0, isGestureHandlerEventCallback_1.isGestureHandlerEventCallback)(path) || (0, isLayoutAnimationCallback_1.isLayoutAnimationCallback)(path)) {
         (0, processIfWorkletNode_12.processWorklet)(path, state);
+        return true;
       }
+      return false;
     }
     exports2.processIfAutoworkletizableCallback = processIfAutoworkletizableCallback;
   }
@@ -1057,8 +1060,7 @@ module.exports = function() {
       [types_1.WorkletizableFunction]: {
         enter(path, state) {
           runWithTaggedExceptions(() => {
-            (0, processIfWorkletNode_1.processIfWithWorkletDirective)(path, state);
-            (0, processIfCallback_1.processIfAutoworkletizableCallback)(path, state);
+            (0, processIfWorkletNode_1.processIfWithWorkletDirective)(path, state) || (0, processIfCallback_1.processIfAutoworkletizableCallback)(path, state);
           });
         }
       },
