@@ -48,8 +48,8 @@ function Circle() {
       backgroundColor: `hsl(${hue.value},100%,50%)`,
       width: size,
       height: size,
-      top: top.value,
       left: left.value,
+      top: top.value,
     }),
     []
   );
