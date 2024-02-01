@@ -49,3 +49,7 @@ jobs:
         run: git diff
       - name: Test
         run: yarn jest plugin
+
+      - name: Check Example App bundling
+        working-directory: Example
+        run: yarn && yarn react-native bundle --reset-cache --entry-file='App.tsx' --dev=true --platform='ios' > /dev/null
