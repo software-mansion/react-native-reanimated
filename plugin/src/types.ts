@@ -26,9 +26,6 @@ export interface ReanimatedPluginPass {
   [key: string]: unknown;
 }
 
-export const ExplicitWorklet =
-  'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression';
-
 export type WorkletizableFunction =
   | FunctionDeclaration
   | FunctionExpression

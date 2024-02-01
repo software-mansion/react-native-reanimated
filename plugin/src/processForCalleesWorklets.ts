@@ -30,7 +30,7 @@ const objectHooks = new Set([
   'useAnimatedScrollHandler',
 ]);
 
-export function autoworkletizeCalleesWorklets(
+export function processCalleesAutoworkletizableCallbacks(
   path: NodePath<CallExpression>,
   state: ReanimatedPluginPass
 ): void {

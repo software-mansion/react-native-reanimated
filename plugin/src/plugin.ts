@@ -1,6 +1,6 @@
 import type { PluginItem, NodePath } from '@babel/core';
 import type { CallExpression } from '@babel/types';
-import { autoworkletizeCalleesWorklets } from './processForCalleesWorklets';
+import { processCalleesAutoworkletizableCallbacks } from './processForCalleesWorklets';
 import { WorkletizableFunction } from './types';
 import type { ReanimatedPluginPass } from './types';
 import { processIfWithWorkletDirective } from './processIfWorkletNode';
@@ -30,7 +30,7 @@ module.exports = function (): PluginItem {
       CallExpression: {
         enter(path: NodePath<CallExpression>, state: ReanimatedPluginPass) {
           runWithTaggedExceptions(() => {
-            autoworkletizeCalleesWorklets(path, state);
+            processCalleesAutoworkletizableCallbacks(path, state);
             if (state.opts.substituteWebPlatformChecks) {
               substituteWebCallExpression(path);
             }

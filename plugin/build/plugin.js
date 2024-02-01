@@ -30,8 +30,7 @@ var require_types = __commonJS({
   "lib/types.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.isWorkletizableFunctionType = exports2.WorkletizableFunction = exports2.ExplicitWorklet = void 0;
-    exports2.ExplicitWorklet = "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression";
+    exports2.isWorkletizableFunctionType = exports2.WorkletizableFunction = void 0;
     exports2.WorkletizableFunction = "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod";
     function isWorkletizableFunctionType(path) {
       return path.isFunctionDeclaration() || path.isFunctionExpression() || path.isArrowFunctionExpression() || path.isObjectMethod();
@@ -588,7 +587,7 @@ var require_processForCalleesWorklets = __commonJS({
   "lib/processForCalleesWorklets.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.autoworkletizeCalleesWorklets = void 0;
+    exports2.processCalleesAutoworkletizableCallbacks = void 0;
     var types_12 = require("@babel/types");
     var types_2 = require_types();
     var assert_1 = require("assert");
@@ -613,7 +612,7 @@ var require_processForCalleesWorklets = __commonJS({
       "useAnimatedGestureHandler",
       "useAnimatedScrollHandler"
     ]);
-    function autoworkletizeCalleesWorklets(path, state) {
+    function processCalleesAutoworkletizableCallbacks(path, state) {
       const callee = (0, types_12.isSequenceExpression)(path.node.callee) ? path.node.callee.expressions[path.node.callee.expressions.length - 1] : path.node.callee;
       const name = "name" in callee ? callee.name : "property" in callee && "name" in callee.property ? callee.property.name : void 0;
       if (name === void 0) {
@@ -637,7 +636,7 @@ var require_processForCalleesWorklets = __commonJS({
         processArguments(path, indices, state);
       }
     }
-    exports2.autoworkletizeCalleesWorklets = autoworkletizeCalleesWorklets;
+    exports2.processCalleesAutoworkletizableCallbacks = processCalleesAutoworkletizableCallbacks;
     function processObjectHook(path, state) {
       const properties = path.get("properties");
       for (const property of properties) {
@@ -1050,7 +1049,7 @@ module.exports = function() {
       CallExpression: {
         enter(path, state) {
           runWithTaggedExceptions(() => {
-            (0, processForCalleesWorklets_1.autoworkletizeCalleesWorklets)(path, state);
+            (0, processForCalleesWorklets_1.processCalleesAutoworkletizableCallbacks)(path, state);
             if (state.opts.substituteWebPlatformChecks) {
               (0, substituteWebCallExpression_1.substituteWebCallExpression)(path);
             }
