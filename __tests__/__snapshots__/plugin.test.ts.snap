@@ -804,6 +804,28 @@ var foo = function () {
 }();"
 `;
 
+exports[`babel plugin for explicit worklets workletizes ObjectMethod 1`] = `
+"var _worklet_16974800582491_init_data = {
+  code: "function bar(x){return x+2;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = {
+  bar: function () {
+    var _e = [new global.Error(), 1, -27];
+    var bar = function bar(x) {
+      return x + 2;
+    };
+    bar.__closure = {};
+    bar.__workletHash = 16974800582491;
+    bar.__initData = _worklet_16974800582491_init_data;
+    bar.__stackDetails = _e;
+    return bar;
+  }()
+};"
+`;
+
 exports[`babel plugin for explicit worklets workletizes named FunctionExpression 1`] = `
 "var _worklet_4679479961836_init_data = {
   code: "function foo(x){return x+2;}",
