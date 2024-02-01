@@ -133,7 +133,8 @@ export function startWebLayoutAnimation<
   props: Readonly<AnimatedComponentProps<ComponentProps>>,
   element: HTMLElement,
   animationType: LayoutAnimationType,
-  transitionData?: TransitionData
+  transitionData?: TransitionData,
+  onAnimationEnd?: (finished: boolean) => void
 ) {
   const maybeAnimationConfigWithTransform = tryGetAnimationConfigWithTransform(
     props,
@@ -145,7 +146,13 @@ export function startWebLayoutAnimation<
 
     chooseAction(
       animationType,
-      animationConfig,
+      {
+        ...animationConfig,
+        callback: (finished) => {
+          animationConfig.callback?.(finished);
+          onAnimationEnd?.(finished);
+        },
+      },
       element,
       transitionData as TransitionData,
       transform
