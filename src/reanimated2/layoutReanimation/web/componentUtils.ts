@@ -136,7 +136,7 @@ export function saveSnapshot(element: HTMLElement) {
     left: rect.left,
     width: rect.width,
     height: rect.height,
-    lastScroll: getElementScrollValue(element),
+    lastScrollOffset: getElementScrollValue(element),
   };
 
   snapshots.set(element, snapshot);
@@ -267,9 +267,8 @@ export function handleExitingAnimation(
 
   const scroll = getElementScrollValue(element);
 
-  if (scroll !== snapshot.lastScroll) {
-    snapshot.top += snapshot.lastScroll - scroll;
-    snapshot.lastScroll = scroll;
+  if (scroll !== snapshot.lastScrollOffset) {
+    snapshot.top += snapshot.lastScrollOffset - scroll;
   }
 
   snapshots.set(dummy, snapshot);

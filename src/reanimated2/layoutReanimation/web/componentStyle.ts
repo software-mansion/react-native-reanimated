@@ -8,7 +8,7 @@ export interface ReanimatedSnapshot {
   left: number;
   width: number;
   height: number;
-  lastScroll: number;
+  lastScrollOffset: number;
 }
 
 export const snapshots = new WeakMap<HTMLElement, ReanimatedSnapshot>();
