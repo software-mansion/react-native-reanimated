@@ -33,3 +33,20 @@ export const has = <K extends string>(
   }
   return false;
 };
+
+type DisposableCallback<T extends (...args: any[]) => any> = {
+  (...args: Parameters<T>): ReturnType<T>;
+  dispose: () => void;
+};
+export function disposableCallback<T extends (...args: any[]) => any>(
+  callback: T
+) {
+  let disposed = false;
+  const wrapped = ((...args: Parameters<T>) =>
+    callback(...args)) as DisposableCallback<T>;
+  wrapped.dispose = () => {
+    disposed = true;
+  };
+
+  return wrapped;
+}
