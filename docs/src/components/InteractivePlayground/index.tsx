@@ -4,6 +4,8 @@ import styles from './styles.module.css';
 
 import BrowserOnly from '@docusaurus/BrowserOnly';
 import CodeBlock from '@theme/CodeBlock';
+import { useReducedMotion } from 'react-native-reanimated';
+import ReducedMotionWarning from '../ReducedMotionWarning';
 
 import useClampPlayground from './useClampPlayground';
 import useSpringPlayground from './useSpringPlayground';
@@ -54,10 +56,13 @@ export default function InteractivePlayground(
     resetOptions();
   };
 
+  const prefersReducedMotion = useReducedMotion();
+
   return (
     <BrowserOnly fallback={<div>Loading...</div>}>
       {() => (
         <div className={styles.container}>
+          {prefersReducedMotion && <ReducedMotionWarning />}
           <div className={styles.buttonContainer}>
             <AnimableIcon
               icon={<Reset />}
