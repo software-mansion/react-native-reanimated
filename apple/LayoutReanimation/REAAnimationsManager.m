@@ -250,7 +250,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   if (needsViewPositionUpdate) {
     CGPoint newCenter = CGPointMake(centerX, centerY);
     if (convertFromAbsolute) {
-      REAUIView *window = UIApplication.sharedApplication.keyWindow;
+      REAUIView *window = RCTKeyWindow();
       CGPoint convertedCenter = [window convertPoint:newCenter toView:view.superview];
       view.center = convertedCenter;
     } else {
