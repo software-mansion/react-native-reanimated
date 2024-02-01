@@ -29,7 +29,7 @@ export function useAnimatedReaction<PreparedResult>(
   >,
   dependencies?: DependencyList
 ) {
-  const previous = useSharedValue<PreparedResult | null>(null, true);
+  const previous = useSharedValue<PreparedResult | null>(null);
 
   let inputs = Object.values(prepare.__closure ?? {});
 
