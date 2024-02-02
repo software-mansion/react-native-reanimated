@@ -1,9 +1,4 @@
-import {
-  ESLintUtils,
-  AST_NODE_TYPES,
-  TSESLint,
-  TSESTree,
-} from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, TSESLint, TSESTree } from '@typescript-eslint/utils';
 
 const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
   create: function (context) {

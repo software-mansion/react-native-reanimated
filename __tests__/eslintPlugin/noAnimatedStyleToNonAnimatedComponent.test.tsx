@@ -1,5 +1,5 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
-import noAnimatedStyleToNonAnimatedComponent from '../src/noAnimatedStyleToNonAnimatedComponent';
+import noAnimatedStyleToNonAnimatedComponent from '../../eslintPlugin/src/noAnimatedStyleToNonAnimatedComponent';
 
 const ruleTester = new RuleTester({
   parserOptions: {

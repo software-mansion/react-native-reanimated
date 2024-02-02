@@ -5,8 +5,8 @@
   "types": "lib/typescript/index",
   "scripts": {
     "test": "yarn jest",
-    "bundle":"yarn esbuild ./public/index.js --external:espree --external:@typescript-eslint --platform=node --bundle --outfile=./index.js",
-    "build": "yarn tsc; yarn bundle; rm -f ./public/*"
+    "bundle": "yarn esbuild ./public/index.js --external:espree --external:@typescript-eslint --platform=node --bundle --outfile=./index.js",
+    "build": "yarn tsc; yarn bundle; rm -rf ./public/*"
   },
   "dependencies": {
     "esbuild": "^0.20.0"

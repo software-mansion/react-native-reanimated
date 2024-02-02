@@ -6,12 +6,12 @@
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "NodeNext",
-    "module": "NodeNext",
+    "module":"NodeNext",
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "outDir": "./public",
     "rootDir": "./src"
   },
-  "exclude":["__tests__"]
+
 }
