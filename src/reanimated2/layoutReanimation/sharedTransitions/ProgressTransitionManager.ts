@@ -174,7 +174,7 @@ function createProgressTransitionRegister() {
         const snapshot = snapshots.get(
           viewTag
         )! as SharedTransitionAnimationsValues;
-        progressAnimation!(viewTag, snapshot, progress);
+        progressAnimation(viewTag, snapshot, progress);
       }
     },
     onAndroidFinishTransitioning: () => {

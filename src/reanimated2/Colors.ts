@@ -487,11 +487,7 @@ export function RGBtoHSV(r: number, g: number, b: number): HSV {
       break;
   }
 
-  return {
-    h: h,
-    s: s,
-    v: v,
-  };
+  return { h, s, v };
 }
 
 /**

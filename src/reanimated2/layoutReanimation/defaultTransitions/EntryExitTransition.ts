@@ -239,7 +239,7 @@ export class EntryExitTransition
           ),
           ...animations,
         },
-        callback: callback,
+        callback,
       };
     };
   };

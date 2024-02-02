@@ -69,7 +69,7 @@ export class JumpingTransition
           width: delayFunction(delay, withTiming(values.targetWidth, config)),
           height: delayFunction(delay, withTiming(values.targetHeight, config)),
         },
-        callback: callback,
+        callback,
       };
     };
   };

@@ -41,7 +41,7 @@ export class FadeIn
           opacity: 0,
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -87,7 +87,7 @@ export class FadeInRight
           transform: [{ translateX: 25 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -133,7 +133,7 @@ export class FadeInLeft
           transform: [{ translateX: -25 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -179,7 +179,7 @@ export class FadeInUp
           transform: [{ translateY: -25 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -225,7 +225,7 @@ export class FadeInDown
           transform: [{ translateY: 25 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -267,7 +267,7 @@ export class FadeOut
           opacity: 1,
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -313,7 +313,7 @@ export class FadeOutRight
           transform: [{ translateX: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -359,7 +359,7 @@ export class FadeOutLeft
           transform: [{ translateX: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -404,7 +404,7 @@ export class FadeOutUp
           transform: [{ translateY: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -450,7 +450,7 @@ export class FadeOutDown
           transform: [{ translateY: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };

@@ -15,7 +15,7 @@ import HorseVariantJ from '@site/static/img/horse/10.svg';
 import HorseVariantK from '@site/static/img/horse/11.svg';
 import clsx from 'clsx';
 
-const AnimatedHorse = () => {
+const HeroHorse = () => {
   return (
     <div className={styles.horse}>
       <div className={styles.horseAnimation}>
@@ -50,25 +50,10 @@ const AnimatedHorse = () => {
         <HorseVariantK
           className={clsx(styles.variantAnimation, styles.variantK)}
         />
+        <HorseVariantE className={styles.reducedMotionOnly} />
       </div>
     </div>
   );
-};
-
-const StaticHorse = () => {
-  return (
-    <div className={styles.horse}>
-      <div className={styles.horseAnimation}>
-        <HorseVariantE />
-      </div>
-    </div>
-  );
-};
-
-const HeroHorse = () => {
-  const prefersReducedMotion = useReducedMotion();
-
-  return prefersReducedMotion ? <StaticHorse /> : <AnimatedHorse />;
 };
 
 export default HeroHorse;

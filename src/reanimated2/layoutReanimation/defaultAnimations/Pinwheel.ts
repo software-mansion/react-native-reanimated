@@ -58,7 +58,7 @@ export class PinwheelIn
           ],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -116,7 +116,7 @@ export class PinwheelOut
           ],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };

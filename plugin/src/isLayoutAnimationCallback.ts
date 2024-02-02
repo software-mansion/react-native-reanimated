@@ -1,10 +1,5 @@
 import type { NodePath } from '@babel/core';
-import type {
-  FunctionDeclaration,
-  FunctionExpression,
-  ArrowFunctionExpression,
-  Expression,
-} from '@babel/types';
+import type { Expression } from '@babel/types';
 import {
   isIdentifier,
   isCallExpression,
@@ -12,6 +7,7 @@ import {
   isExpression,
   isNewExpression,
 } from '@babel/types';
+import type { WorkletizableFunction } from './types';
 
 const EntryExitAnimations = new Set([
   'BounceIn',
@@ -152,10 +148,8 @@ const LayoutAnimationsChainableMethods = new Set([
 const LayoutAnimationsCallbacks = new Set(['withCallback']);
 
 export function isLayoutAnimationCallback(
-  path: NodePath<
-    FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
-  >
-) {
+  path: NodePath<WorkletizableFunction>
+): boolean {
   return (
     isCallExpression(path.parent) &&
     isExpression(path.parent.callee) &&
@@ -163,7 +157,7 @@ export function isLayoutAnimationCallback(
   );
 }
 
-function isLayoutAnimationCallbackMethod(exp: Expression) {
+function isLayoutAnimationCallbackMethod(exp: Expression): boolean {
   return (
     isMemberExpression(exp) &&
     isIdentifier(exp.property) &&
@@ -172,7 +166,7 @@ function isLayoutAnimationCallbackMethod(exp: Expression) {
   );
 }
 
-function isLayoutAnimationsChainableOrNewOperator(exp: Expression) {
+function isLayoutAnimationsChainableOrNewOperator(exp: Expression): boolean {
   if (isIdentifier(exp) && LayoutAnimations.has(exp.name)) {
     return true;
   } else if (
