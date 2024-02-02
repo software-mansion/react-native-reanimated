@@ -55,7 +55,7 @@ export class RotateInDownLeft
           ],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -107,7 +107,7 @@ export class RotateInDownRight
           ],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -159,7 +159,7 @@ export class RotateInUpLeft
           ],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -211,7 +211,7 @@ export class RotateInUpRight
           ],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -275,7 +275,7 @@ export class RotateOutDownLeft
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -339,7 +339,7 @@ export class RotateOutDownRight
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -403,7 +403,7 @@ export class RotateOutUpLeft
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -467,7 +467,7 @@ export class RotateOutUpRight
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };

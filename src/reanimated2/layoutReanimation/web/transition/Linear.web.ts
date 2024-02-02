@@ -5,7 +5,7 @@ export function LinearTransition(name: string, transitionData: TransitionData) {
   const { translateX, translateY, scaleX, scaleY } = transitionData;
 
   const linearTransition = {
-    name: name,
+    name,
     style: {
       0: {
         transform: [
