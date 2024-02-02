@@ -998,6 +998,56 @@ var require_substituteWebCallExpression = __commonJS({
   }
 });
 
+// lib/processIfWorkletFile.js
+var require_processIfWorkletFile = __commonJS({
+  "lib/processIfWorkletFile.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.processIfWorkletFile = void 0;
+    var types_1 = require("@babel/types");
+    function processIfWorkletFile(path) {
+      if (path.node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {
+        processWorkletFile(path);
+        path.node.directives = path.node.directives.filter((functionDirective) => functionDirective.value.value !== "worklet");
+      }
+    }
+    exports2.processIfWorkletFile = processIfWorkletFile;
+    function processWorkletFile(path) {
+      path.get("body").forEach((bodyPath) => {
+        if (bodyPath.isVariableDeclaration()) {
+          processVariableDeclaration(bodyPath);
+        }
+      });
+      path.traverse({
+        FunctionDeclaration(subPath) {
+          appendWorkletDirective(subPath.node.body);
+        }
+      });
+    }
+    function processVariableDeclaration(path) {
+      path.get("declarations").forEach((declaration) => {
+        const initPath = declaration.get("init");
+        if (initPath.isFunctionExpression()) {
+          appendWorkletDirective(initPath.node.body);
+        } else if (initPath.isArrowFunctionExpression()) {
+          const bodyPath = initPath.get("body");
+          if (bodyPath.isBlockStatement()) {
+            appendWorkletDirective(bodyPath.node);
+          } else {
+            bodyPath.replaceWith((0, types_1.blockStatement)([(0, types_1.returnStatement)(bodyPath.node)]));
+            appendWorkletDirective(bodyPath.node);
+          }
+        }
+      });
+    }
+    function appendWorkletDirective(node) {
+      if (!node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {
+        node.directives.push((0, types_1.directive)((0, types_1.directiveLiteral)("worklet")));
+      }
+    }
+  }
+});
+
 // lib/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
 var processForCalleesWorklets_1 = require_processForCalleesWorklets();
@@ -1007,6 +1057,7 @@ var processIfCallback_1 = require_processIfCallback();
 var addCustomGlobals_1 = require_addCustomGlobals();
 var globals_1 = require_globals();
 var substituteWebCallExpression_1 = require_substituteWebCallExpression();
+var processIfWorkletFile_1 = require_processIfWorkletFile();
 module.exports = function() {
   function runWithTaggedExceptions(fun) {
     try {
@@ -1025,6 +1076,9 @@ module.exports = function() {
     visitor: {
       CallExpression: {
         enter(path, state) {
+          if (state.opts.onlyAddWorkletDirectives) {
+            return;
+          }
           runWithTaggedExceptions(() => {
             (0, processForCalleesWorklets_1.processForCalleesWorklets)(path, state);
             if (state.opts.substituteWebPlatformChecks) {
@@ -1035,6 +1089,9 @@ module.exports = function() {
       },
       "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression": {
         enter(path, state) {
+          if (state.opts.onlyAddWorkletDirectives) {
+            return;
+          }
           runWithTaggedExceptions(() => {
             (0, processIfWorkletNode_1.processIfWorkletNode)(path, state);
             (0, processIfCallback_1.processIfCallback)(path, state);
@@ -1043,7 +1100,17 @@ module.exports = function() {
       },
       JSXAttribute: {
         enter(path, state) {
+          if (state.opts.disableInlineStylesWarning) {
+            return;
+          }
           runWithTaggedExceptions(() => (0, processInlineStylesWarning_1.processInlineStylesWarning)(path, state));
+        }
+      },
+      Program: {
+        enter(path) {
+          runWithTaggedExceptions(() => {
+            (0, processIfWorkletFile_1.processIfWorkletFile)(path);
+          });
         }
       }
     }

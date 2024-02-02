@@ -1,5 +1,4 @@
 import type { PluginItem, NodePath } from '@babel/core';
-import type { CallExpression } from '@babel/types';
 import { processForCalleesWorklets } from './processForCalleesWorklets';
 import type { ExplicitWorklet, ReanimatedPluginPass } from './types';
 import { processIfWorkletNode } from './processIfWorkletNode';
@@ -8,6 +7,7 @@ import { processIfCallback } from './processIfCallback';
 import { addCustomGlobals } from './addCustomGlobals';
 import { initializeGlobals } from './globals';
 import { substituteWebCallExpression } from './substituteWebCallExpression';
+import { processIfWorkletFile } from './processIfWorkletFile';
 
 module.exports = function (): PluginItem {
   function runWithTaggedExceptions(fun: () => void) {
@@ -27,7 +27,10 @@ module.exports = function (): PluginItem {
     },
     visitor: {
       CallExpression: {
-        enter(path: NodePath<CallExpression>, state: ReanimatedPluginPass) {
+        enter(path, state: ReanimatedPluginPass) {
+          if (state.opts.onlyAddWorkletDirectives) {
+            return;
+          }
           runWithTaggedExceptions(() => {
             processForCalleesWorklets(path, state);
             if (state.opts.substituteWebPlatformChecks) {
@@ -38,6 +41,9 @@ module.exports = function (): PluginItem {
       },
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
         enter(path: NodePath<ExplicitWorklet>, state: ReanimatedPluginPass) {
+          if (state.opts.onlyAddWorkletDirectives) {
+            return;
+          }
           runWithTaggedExceptions(() => {
             processIfWorkletNode(path, state);
             processIfCallback(path, state);
@@ -46,9 +52,19 @@ module.exports = function (): PluginItem {
       },
       JSXAttribute: {
         enter(path, state) {
+          if (state.opts.disableInlineStylesWarning) {
+            return;
+          }
           runWithTaggedExceptions(() =>
             processInlineStylesWarning(path, state)
           );
+        },
+      },
+      Program: {
+        enter(path) {
+          runWithTaggedExceptions(() => {
+            processIfWorkletFile(path);
+          });
         },
       },
     },

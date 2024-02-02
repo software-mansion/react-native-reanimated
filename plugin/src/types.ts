@@ -13,6 +13,7 @@ export interface ReanimatedPluginOptions {
   omitNativeOnlyData?: boolean;
   globals?: string[];
   substituteWebPlatformChecks?: boolean;
+  onlyAddWorkletDirectives?: boolean;
 }
 
 export interface ReanimatedPluginPass {
