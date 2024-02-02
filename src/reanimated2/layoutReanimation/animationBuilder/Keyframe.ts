@@ -85,8 +85,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
         }
         initialValues.transform.forEach((transformStyle, index) => {
           Object.keys(transformStyle).forEach((transformProp: string) => {
-            parsedKeyframes[index.toString() + '_transform:' + transformProp] =
-              [];
+            parsedKeyframes[makeKeyframeKey(index, transformProp)] = [];
           });
         });
       } else {
@@ -132,8 +131,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       }
       parsedKeyframes[key].push({
         duration: getAnimationDuration(key, currentKeyPoint),
-        value: value,
-        easing: easing,
+        value,
+        easing,
       });
     };
     animationKeyPoints
@@ -160,22 +159,23 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
             if (!Array.isArray(keyframe.transform)) {
               return;
             }
-            keyframe.transform.forEach(
-              (transformStyle: { [key: string]: any }, index) => {
-                Object.keys(transformStyle).forEach((transformProp: string) => {
-                  addKeyPointWith(
-                    index.toString() + '_transform:' + transformProp,
-                    transformStyle[transformProp]
-                  );
-                });
-              }
-            );
+            keyframe.transform.forEach((transformStyle, index) => {
+              Object.keys(transformStyle).forEach((transformProp: string) => {
+                addKeyPointWith(
+                  makeKeyframeKey(index, transformProp),
+                  transformStyle[
+                    transformProp as keyof typeof transformStyle
+                  ] as number | string // Here we assume that user has passed props of proper type.
+                  // I don't think it's worthwhile to check if he passed i.e. `Animated.Node`.
+                );
+              });
+            });
           } else {
             addKeyPointWith(key, keyframe[key]);
           }
         });
       });
-    return { initialValues: initialValues, keyframes: parsedKeyframes };
+    return { initialValues, keyframes: parsedKeyframes };
   }
 
   duration(durationMs: number): InnerKeyframe {
@@ -202,7 +202,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     const delay = this.delayV;
     const reduceMotion = this.reduceMotionV;
     return delay
-      ? (delay, animation) => {
+      ? // eslint-disable-next-line @typescript-eslint/no-shadow
+        (delay, animation) => {
           'worklet';
           return withDelay(delay, animation, reduceMotion);
         }
@@ -242,9 +243,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
                   ? keyframePoints[0].easing
                   : Easing.linear,
               })
-            : withSequence.apply(
-                this,
-                keyframePoints.map((keyframePoint: KeyframePoint) =>
+            : withSequence(
+                ...keyframePoints.map((keyframePoint: KeyframePoint) =>
                   withTiming(keyframePoint.value, {
                     duration: keyframePoint.duration,
                     easing: keyframePoint.easing
@@ -258,7 +258,6 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
           if (!('transform' in animations)) {
             animations.transform = [];
           }
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           animations.transform!.push(<TransformArrayItem>{
             [key.split(':')[1]]: animation,
           });
@@ -271,9 +270,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
           initialValues[key].forEach(
             (transformProp: Record<string, number | string>, index: number) => {
               Object.keys(transformProp).forEach((transformPropKey: string) => {
-                addAnimation(
-                  index.toString() + '_transform:' + transformPropKey
-                );
+                addAnimation(makeKeyframeKey(index, transformPropKey));
               });
             }
           );
@@ -282,12 +279,17 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
         }
       });
       return {
-        animations: animations,
-        initialValues: initialValues,
-        callback: callback,
+        animations,
+        initialValues,
+        callback,
       };
     };
   };
+}
+
+function makeKeyframeKey(index: number, transformProp: string) {
+  'worklet';
+  return `${index}_transform:${transformProp}`;
 }
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.

@@ -6,16 +6,35 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  TouchableWithoutFeedbackProps,
+  ListRenderItemInfo,
 } from 'react-native';
-import { ParamListBase } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import Animated from 'react-native-reanimated';
 
-const Stack = createNativeStackNavigator();
-const DATA = [
+type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
+
+type Item = {
+  id: string;
+  title: string;
+};
+
+type ListItemWithParent<T> = {
+  item: T;
+  parentItem: ListRenderItemInfo<T>;
+};
+
+type ParamList = {
+  Screen1?: object;
+  Screen2: { sharedTransitionTag: string };
+};
+
+const Stack = createNativeStackNavigator<ParamList>();
+
+const DATA: Item[] = [
   { id: 'a1', title: 'a1' },
   { id: 'a2', title: 'a2' },
   { id: 'a3', title: 'a3' },
@@ -28,7 +47,11 @@ const DATA = [
 ];
 const photo = require('./assets/image.jpg');
 
-const Item = ({ item, parentItem, onPress }: any) => (
+interface ItemProps extends ListItemWithParent<Item> {
+  onPress: TouchableWithoutFeedbackProps['onPress'];
+}
+
+const Item = ({ item, parentItem, onPress }: ItemProps) => (
   <TouchableOpacity onPress={onPress}>
     <Text style={styles.title}>{item.title}</Text>
     <Animated.View
@@ -43,8 +66,8 @@ const Item = ({ item, parentItem, onPress }: any) => (
   </TouchableOpacity>
 );
 
-function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
-  const renderItem = ({ item, parentItem }: any) => {
+function Screen1({ navigation }: NativeStackScreenProps<ParamList, 'Screen1'>) {
+  const renderItem = ({ item, parentItem }: ListItemWithParent<Item>) => {
     return (
       <Item
         item={item}
@@ -62,12 +85,14 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
     <View style={styles.flexOne}>
       <FlatList
         data={[...new Array(3)]}
-        renderItem={(parentItem) => (
+        renderItem={(parentItem: ListItemWithParent<Item>['parentItem']) => (
           <FlatList
             data={DATA}
-            renderItem={(item: any) => {
+            renderItem={(
+              item: Optional<ListItemWithParent<Item>, 'parentItem'>
+            ) => {
               item.parentItem = parentItem;
-              return renderItem(item);
+              return renderItem(item as ListItemWithParent<Item>);
             }}
             keyExtractor={(item) => item.id}
             horizontal={true}
@@ -78,7 +103,10 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen2({ route, navigation }: any) {
+function Screen2({
+  route,
+  navigation,
+}: NativeStackScreenProps<ParamList, 'Screen2'>) {
   return (
     <View style={styles.flexOne}>
       <Button title="go back" onPress={() => navigation.navigate('Screen1')} />

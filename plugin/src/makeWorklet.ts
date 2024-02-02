@@ -47,7 +47,7 @@ import { isRelease } from './utils';
 const REAL_VERSION = require('../../package.json').version;
 const MOCK_VERSION = 'x.y.z';
 
-export function makeWorklet(
+export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
 ): FunctionExpression {
@@ -104,10 +104,16 @@ export function makeWorklet(
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
-    ? functionExpression(null, clone.params, clone.body)
+    ? functionExpression(
+        null,
+        clone.params,
+        clone.body,
+        clone.generator,
+        clone.async
+      )
     : clone;
 
-  const [funString, sourceMapString] = buildWorkletString(
+  let [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
     variables,
     functionName,
@@ -155,6 +161,11 @@ export function makeWorklet(
     let location = state.file.opts.filename;
     if (state.opts.relativeSourceLocation) {
       location = relative(state.cwd, location);
+      // It seems there is no designated option to use relative paths in generated sourceMap
+      sourceMapString = sourceMapString?.replace(
+        state.file.opts.filename,
+        location
+      );
     }
 
     initDataObjectExpression.properties.push(
@@ -178,11 +189,14 @@ export function makeWorklet(
     );
   }
 
-  pathForStringDefinitions.insertBefore(
-    variableDeclaration('const', [
-      variableDeclarator(initDataId, initDataObjectExpression),
-    ])
-  );
+  const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
+  if (shouldIncludeInitData) {
+    pathForStringDefinitions.insertBefore(
+      variableDeclaration('const', [
+        variableDeclarator(initDataId, initDataObjectExpression),
+      ])
+    );
+  }
 
   assert(
     !isFunctionDeclaration(funExpression),
@@ -213,13 +227,6 @@ export function makeWorklet(
     expressionStatement(
       assignmentExpression(
         '=',
-        memberExpression(functionIdentifier, identifier('__initData'), false),
-        initDataId
-      )
-    ),
-    expressionStatement(
-      assignmentExpression(
-        '=',
         memberExpression(
           functionIdentifier,
           identifier('__workletHash'),
@@ -229,6 +236,18 @@ export function makeWorklet(
       )
     ),
   ];
+
+  if (shouldIncludeInitData) {
+    statements.push(
+      expressionStatement(
+        assignmentExpression(
+          '=',
+          memberExpression(functionIdentifier, identifier('__initData'), false),
+          initDataId
+        )
+      )
+    );
+  }
 
   if (!isRelease()) {
     statements.unshift(
@@ -268,7 +287,7 @@ export function makeWorklet(
   return newFun;
 }
 
-function removeWorkletDirective(fun: NodePath<WorkletizableFunction>) {
+function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {
   fun.traverse({
     DirectiveLiteral(path) {
       if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
@@ -278,13 +297,13 @@ function removeWorkletDirective(fun: NodePath<WorkletizableFunction>) {
   });
 }
 
-function shouldMockVersion() {
+function shouldMockVersion(): boolean {
   // We don't want to pollute tests with current version number so we mock it
   // for all tests (except one)
   return process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION === '1';
 }
 
-function hash(str: string) {
+function hash(str: string): number {
   let i = str.length;
   let hash1 = 5381;
   let hash2 = 52711;
@@ -301,7 +320,7 @@ function hash(str: string) {
   return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
 }
 
-function makeWorkletName(fun: NodePath<WorkletizableFunction>) {
+function makeWorkletName(fun: NodePath<WorkletizableFunction>): string {
   if (isObjectMethod(fun.node) && isIdentifier(fun.node.key)) {
     return fun.node.key.name;
   }
@@ -317,8 +336,9 @@ function makeWorkletName(fun: NodePath<WorkletizableFunction>) {
 function makeArrayFromCapturedBindings(
   ast: BabelFile,
   fun: NodePath<WorkletizableFunction>
-) {
+): Identifier[] {
   const closure = new Map<string, Identifier>();
+  const isLocationAssignedMap = new Map<string, boolean>();
 
   // this traversal looks for variables to capture
   traverse(ast, {
@@ -368,6 +388,30 @@ function makeArrayFromCapturedBindings(
         currentScope = currentScope.parent;
       }
       closure.set(name, path.node);
+      isLocationAssignedMap.set(name, false);
+    },
+  });
+
+  /*
+  For reasons I don't exactly understand, the above traversal will cause the whole 
+  bundle to crash if we traversed original node instead of generated
+  AST. This is why we need to traverse it again, but this time we set
+  location for each identifier that was captured to their original counterpart, since
+  AST has its location set relative as if it was a separate file.
+  */
+  fun.traverse({
+    Identifier(path) {
+      // So it won't refer to something like:
+      // const obj = {unexistingVariable: 1};
+      if (!path.isReferencedIdentifier()) {
+        return;
+      }
+      const node = closure.get(path.node.name);
+      if (!node || isLocationAssignedMap.get(path.node.name)) {
+        return;
+      }
+      node.loc = path.node.loc;
+      isLocationAssignedMap.set(path.node.name, true);
     },
   });
 

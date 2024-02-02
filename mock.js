@@ -38,6 +38,7 @@ const Reanimated = {
 
   interpolate: NOOP,
   interpolateColor: NOOP,
+  clamp: NOOP,
   createAnimatedComponent: (Component) => Component,
   addWhitelistedUIProps: NOOP,
   addWhitelistedNativeProps: NOOP,

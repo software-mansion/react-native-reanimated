@@ -1,14 +1,13 @@
 'use strict';
-import type { ViewProps } from 'react-native';
 import { View } from 'react-native';
 import { createAnimatedComponent } from '../../createAnimatedComponent';
-import { Component } from 'react';
-import type { AnimateProps } from '../helperTypes';
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-declare class AnimatedViewClass extends Component<AnimateProps<ViewProps>> {
+// Since createAnimatedComponent return type is ComponentClass that has the props of the argument,
+// but not things like NativeMethods, etc. we need to add them manually by extending the type.
+interface AnimatedViewComplement extends View {
   getNode(): View;
 }
-export type AnimatedView = typeof AnimatedViewClass & View;
 
 export const AnimatedView = createAnimatedComponent(View);
+
+export type AnimatedView = typeof AnimatedView & AnimatedViewComplement;

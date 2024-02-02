@@ -1,11 +1,8 @@
 #pragma once
 
+#include "JSLogger.h"
 #include "LayoutAnimationType.h"
 #include "Shareables.h"
-
-#ifndef NDEBUG
-#include "JSLogger.h"
-#endif
 
 #include <jsi/jsi.h>
 #include <stdio.h>
@@ -21,28 +18,34 @@ namespace reanimated {
 
 using namespace facebook;
 
+struct LayoutAnimationConfig {
+  int tag;
+  LayoutAnimationType type;
+  std::shared_ptr<Shareable> config;
+};
+
 class LayoutAnimationsManager {
  public:
-#ifndef NDEBUG
   explicit LayoutAnimationsManager(const std::shared_ptr<JSLogger> &jsLogger)
       : jsLogger_(jsLogger) {}
-#endif
   void configureAnimation(
-      int tag,
-      LayoutAnimationType type,
+      const int tag,
+      const LayoutAnimationType type,
       const std::string &sharedTransitionTag,
-      std::shared_ptr<Shareable> config);
-  void setShouldAnimateExiting(int tag, bool value);
-  bool shouldAnimateExiting(int tag, bool shouldAnimate);
-  bool hasLayoutAnimation(int tag, LayoutAnimationType type);
+      const std::shared_ptr<Shareable> &config);
+  void configureAnimationBatch(
+      const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
+  void setShouldAnimateExiting(const int tag, const bool value);
+  bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
+  bool hasLayoutAnimation(const int tag, const LayoutAnimationType type);
   void startLayoutAnimation(
       jsi::Runtime &rt,
-      int tag,
-      LayoutAnimationType type,
+      const int tag,
+      const LayoutAnimationType type,
       const jsi::Object &values);
-  void clearLayoutAnimationConfig(int tag);
-  void cancelLayoutAnimation(jsi::Runtime &rt, int tag);
-  int findPrecedingViewTagForTransition(int tag);
+  void clearLayoutAnimationConfig(const int tag);
+  void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
+  int findPrecedingViewTagForTransition(const int tag);
 #ifndef NDEBUG
   std::string getScreenSharedTagPairString(
       const int screenTag,
@@ -52,10 +55,10 @@ class LayoutAnimationsManager {
 
  private:
   std::unordered_map<int, std::shared_ptr<Shareable>> &getConfigsForType(
-      LayoutAnimationType type);
+      const LayoutAnimationType type);
 
-#ifndef NDEBUG
   std::shared_ptr<JSLogger> jsLogger_;
+#ifndef NDEBUG
   // This set's function is to detect duplicate sharedTags on a single screen
   // it contains strings in form: "reactScreenTag:sharedTag"
   std::unordered_set<std::string> screenSharedTagSet_;

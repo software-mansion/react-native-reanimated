@@ -1,12 +1,14 @@
 import type { PluginItem, NodePath } from '@babel/core';
 import type { CallExpression } from '@babel/types';
-import { processForCalleesWorklets } from './processForCalleesWorklets';
-import type { ExplicitWorklet, ReanimatedPluginPass } from './types';
-import { processIfWorkletNode } from './processIfWorkletNode';
+import { processCalleesAutoworkletizableCallbacks } from './processForCalleesWorklets';
+import { WorkletizableFunction } from './types';
+import type { ReanimatedPluginPass } from './types';
+import { processIfWithWorkletDirective } from './processIfWorkletNode';
 import { processInlineStylesWarning } from './processInlineStylesWarning';
-import { processIfCallback } from './processIfCallback';
+import { processIfAutoworkletizableCallback } from './processIfCallback';
 import { addCustomGlobals } from './addCustomGlobals';
 import { initializeGlobals } from './globals';
+import { substituteWebCallExpression } from './substituteWebCallExpression';
 
 module.exports = function (): PluginItem {
   function runWithTaggedExceptions(fun: () => void) {
@@ -27,14 +29,22 @@ module.exports = function (): PluginItem {
     visitor: {
       CallExpression: {
         enter(path: NodePath<CallExpression>, state: ReanimatedPluginPass) {
-          runWithTaggedExceptions(() => processForCalleesWorklets(path, state));
+          runWithTaggedExceptions(() => {
+            processCalleesAutoworkletizableCallbacks(path, state);
+            if (state.opts.substituteWebPlatformChecks) {
+              substituteWebCallExpression(path);
+            }
+          });
         },
       },
-      'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
-        enter(path: NodePath<ExplicitWorklet>, state: ReanimatedPluginPass) {
+      [WorkletizableFunction]: {
+        enter(
+          path: NodePath<WorkletizableFunction>,
+          state: ReanimatedPluginPass
+        ) {
           runWithTaggedExceptions(() => {
-            processIfWorkletNode(path, state);
-            processIfCallback(path, state);
+            processIfWithWorkletDirective(path, state) ||
+              processIfAutoworkletizableCallback(path, state);
           });
         },
       },

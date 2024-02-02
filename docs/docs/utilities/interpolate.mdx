@@ -4,112 +4,136 @@ sidebar_position: 1
 
 # interpolate
 
-:::info
-This page was ported from an old version of the documentation.
+`interpolate` lets you map a value from one range to another using linear interpolation.
 
-As we're rewriting the documentation some of the pages might be a little outdated.
-:::
+import Interpolate from '@site/src/examples/Interpolate';
+import InterpolateSrc from '!!raw-loader!@site/src/examples/Interpolate';
 
-Sometimes you need to map a value from one range to another. This is where you should use the `interpolate` function which approximates values between points in the output range and lets you map a value inside the input range to a corresponding approximation in the output range. It also supports a few types of Extrapolation to enable mapping outside the range.
+<InteractiveExample src={InterpolateSrc} component={<Interpolate />} />
+
+## Reference
+
+```javascript
+import { interpolate } from 'react-native-reanimated';
+
+function App() {
+  const animatedStyle = useAnimatedStyle(() => ({
+    // highlight-next-line
+    opacity: interpolate(sv.value, [0, 100], [0, 1], Extrapolation.CLAMP),
+  }));
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+enum Extrapolation {
+  IDENTITY = 'identity',
+  CLAMP = 'clamp',
+  EXTEND = 'extend',
+}
+
+type ExtrapolationAsString = 'identity' | 'clamp' | 'extend';
+
+export type ExtrapolationType =
+  | ExtrapolationConfig
+  | Extrapolation
+  | ExtrapolationAsString
+  | undefined;
+
+function interpolate(
+  value: number,
+  input: readonly number[],
+  output: readonly number[],
+  extrapolate?: ExtrapolationType
+): number;
+```
+
+</details>
 
 ### Arguments
 
-#### `value` [Float]
+#### `value`
 
-Value from within the input range that should be mapped to a value from the output range.
+A number from the `input` range that is going to be mapped to the `output` range.
 
-#### `input range` [Float[]]
+#### `input`
 
-An array of Floats that contains points that indicate the range of the input value. Values in the input range should be increasing.
+An array of numbers specifying the input range of the interpolation.
 
-#### `output range` [Float[]]
+#### `output`
 
-An array of Floats that contains points that indicate the range of the output value. It should have at least the same number of points as the input range.
+An array of numbers specifying the output range of the interpolation. It should have at least the same number of points as the input range.
 
-#### `extrapolation type` [Object | String]
+#### `extrapolate` <Optional/>
 
-Can be either an object or a string. If an object is passed it should specify extrapolation explicitly for the right and left sides. If extrapolation for a side is not provided, it defaults to `Extrapolation.EXTEND`. Example extrapolation type object:
+The `extrapolate` parameter determines what happens when the `value` goes beyond the `input` range. Defaults to `Extrapolation.EXTEND`.
 
-```js
-const extrapolation = {
-  extrapolateLeft: Extrapolation.CLAMP,
-  extrapolateRight: Extrapolation.IDENTITY,
-};
+Available types:
+
+- `Extrapolation.EXTEND` - predicts the values beyond the output range.
+- `Extrapolation.CLAMP` - clamps the value to the edge of the output range.
+- `Extrapolation.IDENTITY` - returns the provided value as is.
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+<div style={{display: "flex", justifyContent: "center", textAlign: "center"}}>
+
+<div style={{ maxWidth: 320 }}>
+  <img src={useBaseUrl('/img/extrapolation/extend.png')} />
+  <p>EXTEND</p>
+</div>
+<div style={{ maxWidth: 320 }}>
+  <img src={useBaseUrl('/img/extrapolation/clamp.png')} />
+  <p>CLAMP</p>
+</div>
+<div style={{ maxWidth: 320 }}>
+  <img src={useBaseUrl('/img/extrapolation/identity.png')} />
+  <p>IDENTITY</p>
+</div>
+
+</div>
+
+This parameter also accepts string values:
+
+- `"extend"`
+- `"clamp"`
+- `"identity"`
+
+By default, the `extrapolate` parameter applies the value passed to both edges of the range. To specify extrapolation to a particular edge, you can pass an object:
+
+```javascript
+const opacity = interpolate(
+  sv.value,
+  [0, 100],
+  [0, 1],
+  // highlight-next-line
+  { extrapolateLeft: Extrapolation.CLAMP }
+);
 ```
-
-If a string is provided, the provided extrapolation type is applied to both sides.
-
-:::info
-Available extrapolation types:
-
-- `Extrapolation.CLAMP` - clamps the value to the edge of the output range
-- `Extrapolation.IDENTITY` - returns the value that is being interpolated
-- `Extrapolation.EXTEND` - approximates the value even outside of the range
-
-Available extrapolation string values:
-
-- `clamp`
-- `identity`
-- `extend`
-
-:::
 
 ### Returns
 
-`interpolate` returns the value after interpolation from within the output range.
+`interpolate` returns a mapped value within the output range.
 
 ## Example
 
-```jsx
-import React from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedScrollHandler,
-  useAnimatedStyle,
-  interpolate,
-  Extrapolation,
-} from 'react-native-reanimated';
+import InterpolateRotation from '@site/src/examples/InterpolateRotation';
+import InterpolateRotationSrc from '!!raw-loader!@site/src/examples/InterpolateRotation';
 
-export const HEADER_IMAGE_HEIGHT = Dimensions.get('window').width / 3;
+<InteractiveExample
+  src={InterpolateRotationSrc}
+  component={<InterpolateRotation />}
+  label="Grab and drag any of the squares. The dashed lines indicate the range of the interpolation."
+/>
 
-export default function Test() {
-  const scrollY = useSharedValue(0);
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (e) => {
-      scrollY.value = e.contentOffset.y;
-    },
-  });
-  const animatedStyles = useAnimatedStyle(() => {
-    const scale = interpolate(scrollY.value, [-100, 0], [2, 1], {
-      extrapolateRight: Extrapolation.CLAMP,
-    });
+## Platform compatibility
 
-    return {
-      transform: [{ scale: scale }],
-    };
-  });
+<div className="platform-compatibility">
 
-  return (
-    <View style={{ flex: 1, alignItems: 'center' }}>
-      <Animated.View
-        style={[
-          {
-            position: 'absolute',
-            top: 20,
-            left: 0,
-            width: 20,
-            height: 20,
-            backgroundColor: 'blue',
-          },
-          animatedStyles,
-        ]}
-      />
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
 
-      <Animated.ScrollView
-        style={StyleSheet.absoluteFill}
-        onScroll={scrollHandler}></Animated.ScrollView>
-    </View>
-  );
-}
-```
+</div>

@@ -1,7 +1,7 @@
 'use strict';
 import type { TransformArrayItem } from '../../helperTypes';
 import type { EasingFunction } from '../../Easing';
-import type { StyleProps } from '../../commonTypes';
+import type { ShareableRef, StyleProps } from '../../commonTypes';
 
 export type LayoutAnimationsOptions =
   | 'originX'
@@ -137,6 +137,10 @@ export type CustomProgressAnimation = (
   progress: number
 ) => StyleProps;
 
+/**
+ * Used to configure the `.defaultTransitionType()` shared transition modifier.
+ * @experimental
+ */
 export enum SharedTransitionType {
   ANIMATION = 'animation',
   PROGRESS_ANIMATION = 'progressAnimation',
@@ -149,3 +153,9 @@ export type EntryExitAnimationsValues =
 export type StylePropsWithArrayTransform = StyleProps & {
   transform?: TransformArrayItem[];
 };
+
+export interface LayoutAnimationBatchItem {
+  viewTag: number;
+  type: LayoutAnimationType;
+  config: ShareableRef<Keyframe | LayoutAnimationFunction> | undefined;
+}

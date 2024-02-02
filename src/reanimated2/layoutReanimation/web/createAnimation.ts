@@ -21,10 +21,8 @@ function addPxToTranslate(
 ) {
   type RNTransformProp = (typeof existingTransform)[number];
 
-  if (typeof existingTransform === 'string') {
-    throw new Error('[Reanimated] String transform is unsupported.');
-  }
-
+  // @ts-ignore `existingTransform` cannot be string because in that case
+  // we throw error in `extractTransformFromStyle`
   const newTransform = existingTransform.map(
     (transformProp: RNTransformProp) => {
       const newTransformProp: ReanimatedWebTransformProperties = {};
@@ -67,8 +65,8 @@ function addExistingTransform(
 /**
  *  Modifies default animation by preserving transformations that given element already contains.
  *
- * @param animationName Name of the animation to be modified (e.g. `FadeIn`).
- * @param existingTransform Transform values that element already contains.
+ * @param animationName - Name of the animation to be modified (e.g. `FadeIn`).
+ * @param existingTransform - Transform values that element already contains.
  * @returns Animation parsed to keyframe string.
  */
 export function createAnimationWithExistingTransform(
@@ -91,10 +89,6 @@ export function createAnimationWithExistingTransform(
 
   newAnimationData.name = keyframeName;
 
-  if (typeof existingTransform === 'string') {
-    throw new Error('[Reanimated] String transform is currently unsupported.');
-  }
-
   const newTransform = addPxToTranslate(existingTransform);
 
   addExistingTransform(newAnimationData, newTransform);
@@ -115,14 +109,14 @@ function generateNextCustomKeyframeName() {
 /**
  * Creates transition of given type, appends it to stylesheet and returns keyframe name.
  *
- * @param transitionType Type of transition (e.g. LINEAR).
- * @param transitionData Object containing data for transforms (translateX, scaleX,...).
+ * @param transitionType - Type of transition (e.g. LINEAR).
+ * @param transitionData - Object containing data for transforms (translateX, scaleX,...).
  * @returns Keyframe name that represents transition.
  */
 export function TransitionGenerator(
   transitionType: TransitionType,
   transitionData: TransitionData,
-  existingTransform?: NonNullable<TransformsStyle['transform']>
+  existingTransform: TransformsStyle['transform'] | undefined
 ) {
   const transitionKeyframeName = generateNextCustomKeyframeName();
   let transitionObject;

@@ -8,6 +8,13 @@ import type { EasingFunction } from '../../Easing';
 import { Easing } from '../../Easing';
 import { withTiming } from '../../animation';
 
+/**
+ * Layout transitions with a curved animation. You can modify the behavior by chaining methods like `.duration(500)` or `.delay(500)`.
+ *
+ * You pass it to the `layout` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions#fading-transition
+ */
 export class CurvedTransition
   extends BaseAnimationBuilder
   implements ILayoutAnimationBuilder
@@ -115,7 +122,7 @@ export class CurvedTransition
             })
           ),
         },
-        callback: callback,
+        callback,
       };
     };
   };

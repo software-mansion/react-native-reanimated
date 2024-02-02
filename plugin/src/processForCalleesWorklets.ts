@@ -1,10 +1,10 @@
 import type { NodePath } from '@babel/core';
 import type { CallExpression, ObjectExpression } from '@babel/types';
 import { isSequenceExpression } from '@babel/types';
+import { isWorkletizableFunctionType } from './types';
 import type { ReanimatedPluginPass } from './types';
-import { processWorkletObjectMethod } from './processWorkletObjectMethod';
-import { processIfWorkletFunction } from './processIfWorkletFunction';
 import { strict as assert } from 'assert';
+import { processWorklet } from './processIfWorkletNode';
 
 const functionArgsToWorkletize = new Map([
   ['useFrameCallback', [0]],
@@ -22,6 +22,7 @@ const functionArgsToWorkletize = new Map([
   ['withRepeat', [3]],
   // scheduling functions
   ['runOnUI', [0]],
+  ['executeOnUIRuntimeSync', [0]],
 ]);
 
 const objectHooks = new Set([
@@ -29,10 +30,10 @@ const objectHooks = new Set([
   'useAnimatedScrollHandler',
 ]);
 
-export function processForCalleesWorklets(
+export function processCalleesAutoworkletizableCallbacks(
   path: NodePath<CallExpression>,
   state: ReanimatedPluginPass
-) {
+): void {
   const callee = isSequenceExpression(path.node.callee)
     ? path.node.callee.expressions[path.node.callee.expressions.length - 1]
     : path.node.callee;
@@ -50,17 +51,19 @@ export function processForCalleesWorklets(
   }
 
   if (objectHooks.has(name)) {
-    const workletToProcess = path.get('arguments.0');
+    const maybeWorklet = path.get('arguments.0');
     assert(
-      !Array.isArray(workletToProcess),
+      !Array.isArray(maybeWorklet),
       '[Reanimated] `workletToProcess` is an array.'
     );
-    if (workletToProcess.isObjectExpression()) {
-      processObjectHook(workletToProcess, state);
+    if (maybeWorklet.isObjectExpression()) {
+      processObjectHook(maybeWorklet, state);
       // useAnimatedScrollHandler can take a function as an argument instead of an ObjectExpression
       // but useAnimatedGestureHandler can't
     } else if (name === 'useAnimatedScrollHandler') {
-      processIfWorkletFunction(workletToProcess, state);
+      if (isWorkletizableFunctionType(maybeWorklet)) {
+        processWorklet(maybeWorklet, state);
+      }
     }
   } else {
     const indices = functionArgsToWorkletize.get(name);
@@ -74,17 +77,19 @@ export function processForCalleesWorklets(
 function processObjectHook(
   path: NodePath<ObjectExpression>,
   state: ReanimatedPluginPass
-) {
+): void {
   const properties = path.get('properties');
   for (const property of properties) {
     if (property.isObjectMethod()) {
-      processWorkletObjectMethod(property, state);
+      processWorklet(property, state);
     } else if (property.isObjectProperty()) {
       const value = property.get('value');
-      processIfWorkletFunction(value, state);
+      if (isWorkletizableFunctionType(value)) {
+        processWorklet(value, state);
+      }
     } else {
       throw new Error(
-        `[Reanimated] '${property.type}' as to-be workletized arguments is not supported for object hooks.`
+        `[Reanimated] '${property.type}' as to-be workletized argument is not supported for object hooks.`
       );
     }
   }
@@ -94,14 +99,16 @@ function processArguments(
   path: NodePath<CallExpression>,
   indices: number[],
   state: ReanimatedPluginPass
-) {
+): void {
   const argumentsArray = path.get('arguments');
   indices.forEach((index) => {
-    const argumentToWorkletize = argumentsArray[index];
-    if (!argumentToWorkletize) {
+    const maybeWorklet = argumentsArray[index];
+    if (!maybeWorklet) {
       // workletizable argument doesn't always have to be specified
       return;
     }
-    processIfWorkletFunction(argumentToWorkletize, state);
+    if (isWorkletizableFunctionType(maybeWorklet)) {
+      processWorklet(maybeWorklet, state);
+    }
   });
 }

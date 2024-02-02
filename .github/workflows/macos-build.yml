@@ -2,19 +2,29 @@ name: Test macOS build
 on:
   pull_request:
     paths:
-      - '.github/workflows/macos-build.yml'
-      - 'RNReanimated.podspec'
-      - 'apple/**'
-      - 'Common/**'
-      - 'MacOSExample/package.json'
-      - 'MacOSExample/ios/**'
-      - 'MacOSExample/macos/**'
+      - .github/workflows/macos-build.yml
+      - RNReanimated.podspec
+      - scripts/reanimated_utils.rb
+      - apple/**
+      - Common/**
+      - MacOSExample/package.json
+      - MacOSExample/ios/**
+      - MacOSExample/macos/**
   merge_group:
     branches:
       - main
   push:
     branches:
       - main
+    paths:
+      - .github/workflows/macos-build.yml
+      - RNReanimated.podspec
+      - scripts/reanimated_utils.rb
+      - apple/**
+      - Common/**
+      - MacOSExample/package.json
+      - MacOSExample/ios/**
+      - MacOSExample/macos/**
 
 jobs:
   build:
@@ -27,7 +37,7 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Restore Reanimated node_modules from cache
         uses: actions/cache@v3

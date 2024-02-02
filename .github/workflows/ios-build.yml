@@ -21,7 +21,7 @@ on:
       - .github/workflows/ios-build.yml
       - RNReanimated.podspec
       - scripts/reanimated_utils.rb
-      - ios/**
+      - apple/**
       - Common/**
       - Example/package.json
       - Example/ios/**
@@ -41,7 +41,7 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Restore Reanimated node_modules from cache
         uses: actions/cache@v3

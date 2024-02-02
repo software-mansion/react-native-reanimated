@@ -33,7 +33,9 @@ function validateConfig(config: DefaultDecayConfig): void {
     }
     if (config.clamp.length !== 2) {
       throw new Error(
-        `[Reanimated] \`clamp array\` must contain 2 items but is given ${config.clamp.length}.`
+        `[Reanimated] \`clamp array\` must contain 2 items but is given ${
+          config.clamp.length as number
+        }.`
       );
     }
   }
@@ -49,6 +51,14 @@ function validateConfig(config: DefaultDecayConfig): void {
   }
 }
 
+/**
+ * Lets you create animations that mimic objects in motion with friction.
+ *
+ * @param config - The decay animation configuration - {@link DecayConfig}.
+ * @param callback - A function called upon animation completion - {@link AnimationCallback}.
+ * @returns An [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withDecay
+ */
 export const withDecay = function (
   userConfig: DecayConfig,
   callback?: AnimationCallback

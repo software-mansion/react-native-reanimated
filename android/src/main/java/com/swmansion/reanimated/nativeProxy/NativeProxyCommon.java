@@ -227,7 +227,6 @@ public abstract class NativeProxyCommon {
 
   public void onCatalystInstanceDestroy() {
     mAndroidUIScheduler.deactivate();
-    getHybridData().resetNative();
   }
 
   public void prepareLayoutAnimations(LayoutAnimations layoutAnimations) {

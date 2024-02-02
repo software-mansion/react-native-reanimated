@@ -4,7 +4,7 @@ on:
     paths:
       - .github/workflows/check-expo-dev-client-nightly.yml
   schedule:
-    - cron: '37 19 * * *'
+    - cron: '0 0 * * *' # after publishing new nightly version on NPM
   workflow_dispatch:
 
 env:
@@ -23,7 +23,7 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Check out reanimated repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: 'reanimated_repo'
       - name: Create Expo app
@@ -38,7 +38,7 @@ jobs:
         run: npx expo prebuild
       - name: Install Reanimated
         working-directory: app
-        run: npm install github:software-mansion/react-native-reanimated#${{ github.ref }}
+        run: npm install react-native-reanimated@nightly
       - name: Set Fabric
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
         run: node ${{ env.SCRIPT_PATH }} setupFabricIOS
@@ -61,7 +61,7 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Check out reanimated repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: 'reanimated_repo'
       - name: Create Expo app
@@ -76,7 +76,7 @@ jobs:
         run: npx expo prebuild
       - name: Install Reanimated
         working-directory: app
-        run: npm install github:software-mansion/react-native-reanimated
+        run: npm install react-native-reanimated@nightly
       - name: Set Fabric
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
         run: node ${{ env.SCRIPT_PATH }} setupFabricAndroid

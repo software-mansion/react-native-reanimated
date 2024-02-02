@@ -53,16 +53,23 @@ export const callMicrotasks = SHOULD_BE_USE_WEB
     }
   : callMicrotasksOnUIThread;
 
+/**
+ * Lets you asynchronously run [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) functions on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
+ *
+ * This method does not schedule the work immediately but instead waits for other worklets
+ * to be scheduled within the same JS loop. It uses queueMicrotask to schedule all the worklets
+ * at once making sure they will run within the same frame boundaries on the UI thread.
+ *
+ * @param fun - A reference to a function you want to execute on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI) from the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
+ * @returns A function that accepts arguments for the function passed as the first argument.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI
+ */
 // @ts-expect-error This overload is correct since it's what user sees in his code
 // before it's transformed by Reanimated Babel plugin.
 export function runOnUI<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue
 ): (...args: Args) => void;
-/**
- * Schedule a worklet to execute on the UI runtime. This method does not schedule the work immediately but instead
- * waits for other worklets to be scheduled within the same JS loop. It uses queueMicrotask to schedule all the worklets
- * at once making sure they will run within the same frame boundaries on the UI thread.
- */
+
 export function runOnUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
@@ -112,6 +119,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
         NativeReanimatedModule.scheduleOnUI(
           makeShareableCloneRecursive(() => {
             'worklet';
+            // eslint-disable-next-line @typescript-eslint/no-shadow
             queue.forEach(([worklet, args]) => {
               worklet(...args);
             });
@@ -120,6 +128,25 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
         );
       });
     }
+  };
+}
+
+// @ts-expect-error Check `executeOnUIRuntimeSync` overload above.
+export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
+  worklet: (...args: Args) => ReturnValue
+): (...args: Args) => ReturnValue;
+
+export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
+  worklet: WorkletFunction<Args, ReturnValue>
+): (...args: Args) => ReturnValue {
+  return (...args) => {
+    return NativeReanimatedModule.executeOnUIRuntimeSync(
+      makeShareableCloneRecursive(() => {
+        'worklet';
+        const result = worklet(...args);
+        return makeShareableCloneOnUIRecursive(result);
+      })
+    );
   };
 }
 
@@ -175,8 +202,12 @@ function runWorkletOnJS<Args extends unknown[], ReturnValue>(
 }
 
 /**
- * Returns a function that can be called to be executed asynchronously on both
- * UI and JS threads.
+ * Lets you asynchronously run non-[workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) functions that couldn't otherwise run on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
+ * This applies to most external libraries as they don't have their functions marked with "worklet"; directive.
+ *
+ * @param fun - A reference to a function you want to execute on the JavaScript thread from the UI thread.
+ * @returns A function that accepts arguments for the function passed as the first argument.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnJS
  */
 export function runOnJS<Args extends unknown[], ReturnValue>(
   fun:

@@ -16,11 +16,10 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: checkout
-        uses: actions/checkout@v3
-      - name: Use Node.js 16
-        uses: actions/setup-node@v3
+        uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 16
           cache: 'yarn'
       - name: Clear annotations
         run: scripts/clear-annotations.sh
@@ -34,5 +33,7 @@ jobs:
         run: yarn find-unused-code:js
       - name: Find circular dependencies
         run: yarn circular_dependency_check
+      - name: Check use strict
+        run: yarn use_strict_check
       - name: Run jest unit tests
         run: yarn test:unit
