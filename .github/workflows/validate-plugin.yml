@@ -10,19 +10,22 @@ on:
   push:
     branches:
       - main
+    paths:
+      - '.github/workflows/validate-plugin.yml'
+      - 'plugin/**'
 jobs:
   check:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     concurrency:
       group: plugin-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-      - name: Use Node.js 16
-        uses: actions/setup-node@v3
+        uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 16
           cache: 'yarn'
       - name: Clear annotations
         run: scripts/clear-annotations.sh
@@ -34,7 +37,7 @@ jobs:
         run: yarn
       - name: Check types
         working-directory: plugin
-        run: yarn type:check
+        run: yarn type:check:src
       - name: Lint and format
         working-directory: plugin
         run: yarn lint
@@ -45,4 +48,8 @@ jobs:
         if: failure() && steps.diff.outcome == 'failure'
         run: git diff
       - name: Test
-        run: yarn jest
+        run: yarn jest plugin
+
+      - name: Check Example App bundling
+        working-directory: Example
+        run: yarn && yarn react-native bundle --reset-cache --entry-file='App.tsx' --bundle-output='/dev/null' --dev=true --platform='ios'

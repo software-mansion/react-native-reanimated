@@ -1,147 +1,49 @@
-/** @type {import('@docusaurus/types').DocusaurusConfig} */
+// @ts-check
+// Note: type annotations allow type checking and IDEs autocompletion
 
-const prismConfig = {
-  plain: {
-    color: '#ffffff',
-    backgroundColor: '#001a72',
-  },
-  styles: [
-    {
-      types: ['comment'],
-      style: {
-        color: '#aaaaaa',
-        fontStyle: 'italic',
-      },
-    },
-    {
-      types: ['string'],
-      style: {
-        color: '#ffffff',
-      },
-    },
-    {
-      types: ['punctuation'],
-      style: {
-        color: '#ffee86',
-      },
-    },
-    {
-      types: ['variable', 'constant', 'builtin', 'attr-name'],
-      style: {
-        color: '#a3b8ff',
-      },
-    },
-    {
-      types: ['number', 'operator'],
-      style: {
-        color: '#ffaaa8',
-      },
-    },
-    {
-      types: ['keyword'],
-      style: {
-        color: '#8ed3ef',
-      },
-    },
-    {
-      types: ['char'],
-      style: {
-        color: '#a3b8ff',
-      },
-    },
-    {
-      types: ['tag'],
-      style: {
-        color: '#ffaaa8',
-      },
-    },
-    {
-      types: ['function'],
-      style: {
-        color: '#a3b8ff',
-      },
-    },
-  ],
-};
-/*
-In swizzled components look for "SWM -" string to see our modifications
-*/
+const lightCodeTheme = require('./src/theme/CodeBlock/highlighting-light.js');
+const darkCodeTheme = require('./src/theme/CodeBlock/highlighting-dark.js');
 
-module.exports = {
+const webpack = require('webpack');
+
+/** @type {import('@docusaurus/types').Config} */
+const config = {
   title: 'React Native Reanimated',
-  tagline: "React Native's Animated library reimplemented",
+  favicon: 'img/favicon.ico',
+
+  // Set the production url of your site here
   url: 'https://docs.swmansion.com',
+
+  // Change this to /react-native-reanimated/ when deploying to GitHub pages
   baseUrl: '/react-native-reanimated/',
+
+  // GitHub pages deployment config.
+  // If you aren't using GitHub pages, you don't need these.
+  organizationName: 'software-mansion', // Usually your GitHub org/user name.
+  projectName: 'react-native-reanimated', // Usually your repo name.
+
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/SWM_Fav_192x192.png',
-  organizationName: 'software-mansion',
-  customFields: {
-    shortTitle: 'Reanimated',
+  onBrokenMarkdownLinks: 'throw',
+
+  // Even if you don't use internalization, you can use this field to set useful
+  // metadata like html lang. For example, if your site is Chinese, you may want
+  // to replace "en" with "zh-Hans".
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en'],
   },
-  projectName: 'react-native-reanimated',
-  themeConfig: {
-    algolia: {
-      appId: 'CHLGM6BFRG',
-      apiKey: 'b87befadf62b27ce46142fee664e9c9c',
-      indexName: 'react-native-reanimated',
-      // contextualSearch: true, // doesn't work for some reason
-    },
-    colorMode: {
-      disableSwitch: true,
-    },
-    navbar: {
-      title: 'React Native Reanimated',
-      items: [
-        {
-          type: 'doc',
-          position: 'right',
-          docId: 'fundamentals/about',
-          label: 'Docs',
-        },
-        {
-          type: 'docsVersionDropdown',
-          position: 'right',
-        },
-        {
-          type: 'search',
-          position: 'right',
-        },
-        {
-          className: 'github-navbar-logo',
-          href: 'https://github.com/software-mansion/react-native-reanimated/',
-          label: 'Github',
-          position: 'right',
-        },
-      ],
-    },
-    footer: {
-      logo: {
-        alt: 'Software Mansion',
-        src: 'img/swmLogo.svg',
-        href: 'https://swmansion.com/',
-      },
-    },
-    prism: {
-      theme: prismConfig,
-    },
-    announcementBar: {
-      id: 'reanimated-beta-docs',
-      content:
-        "We're working on a full documentation rewrite. Check out the <a target='_blank' rel='noopener noreferrer' href='https://reanimated-beta-docs.swmansion.com/'>New Reanimated Docs</a> and <a target='_blank' rel='noopener noreferrer' href='https://github.com/software-mansion-labs/reanimated-beta-docs/discussions/12'>share your feedback</a> with us!",
-      backgroundColor: '#FFFFFF',
-      textColor: '#001A72',
-      isCloseable: false,
-    },
-  },
+
   presets: [
     [
-      '@docusaurus/preset-classic',
-      {
+      'classic',
+      /** @type {import('@docusaurus/preset-classic').Options} */
+      ({
         docs: {
-          path: 'docs',
+          breadcrumbs: false,
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: undefined, // hide edit button
+          sidebarCollapsible: false,
+          editUrl:
+            'https://github.com/software-mansion/react-native-reanimated/tree/main/docs',
           lastVersion: 'current', // <- this makes 3.x docs as default
           versions: {
             current: {
@@ -150,13 +52,103 @@ module.exports = {
           },
         },
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: require.resolve('./src/css/index.css'),
         },
         googleAnalytics: {
           trackingID: 'UA-41044622-6',
           anonymizeIP: true,
         },
-      },
+      }),
     ],
   ],
+
+  themeConfig:
+    /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
+    ({
+      image: 'img/og-image.png',
+      metadata: [
+        { name: 'og:image:width', content: '1200' },
+        { name: 'og:image:height', content: '630' },
+      ],
+      navbar: {
+        title: 'React Native Reanimated',
+        hideOnScroll: true,
+        logo: {
+          alt: 'React Native Reanimated',
+          src: 'img/logo.svg',
+          srcDark: 'img/logo-dark.svg',
+        },
+        items: [
+          {
+            type: 'docsVersionDropdown',
+            position: 'right',
+            dropdownActiveClassDisabled: true,
+          },
+          {
+            href: 'https://github.com/software-mansion/react-native-reanimated/',
+            position: 'right',
+            className: 'header-github',
+            'aria-label': 'GitHub repository',
+          },
+        ],
+      },
+      footer: {
+        style: 'light',
+        links: [],
+        copyright:
+          'All trademarks and copyrights belong to their respective owners.',
+      },
+      prism: {
+        theme: lightCodeTheme,
+        darkTheme: darkCodeTheme,
+      },
+      algolia: {
+        appId: 'CHLGM6BFRG',
+        apiKey: 'b87befadf62b27ce46142fee664e9c9c',
+        indexName: 'react-native-reanimated',
+      },
+    }),
+  plugins: [
+    ...[
+      process.env.NODE_ENV === 'production' && '@docusaurus/plugin-debug',
+    ].filter(Boolean),
+    async function reanimatedDocusaurusPlugin(context, options) {
+      return {
+        name: 'react-native-reanimated/docusaurus-plugin',
+        configureWebpack(config, isServer, utils) {
+          const processMock = !isServer ? { process: { env: {} } } : {};
+
+          const raf = require('raf');
+          raf.polyfill();
+
+          return {
+            mergeStrategy: {
+              'resolve.extensions': 'prepend',
+            },
+            plugins: [
+              new webpack.DefinePlugin({
+                ...processMock,
+                __DEV__: 'false',
+                setImmediate: () => {},
+              }),
+            ],
+            module: {
+              rules: [
+                {
+                  test: /\.txt/,
+                  type: 'asset/source',
+                },
+              ],
+            },
+            resolve: {
+              alias: { 'react-native$': 'react-native-web' },
+              extensions: ['.web.js', '...'],
+            },
+          };
+        },
+      };
+    },
+  ],
 };
+
+module.exports = config;

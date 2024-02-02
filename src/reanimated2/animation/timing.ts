@@ -1,15 +1,26 @@
+'use strict';
 import type { EasingFunction, EasingFunctionFactory } from '../Easing';
 import { Easing } from '../Easing';
-import { defineAnimation } from './util';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
 import type {
   Animation,
   AnimationCallback,
   Timestamp,
   AnimatableValue,
+  ReduceMotion,
 } from '../commonTypes';
 
+/**
+ * The timing animation configuration.
+ *
+ * @param duration - Length of the animation (in milliseconds). Defaults to 300.
+ * @param easing - An easing function which defines the animation curve. Defaults to `Easing.inOut(Easing.quad)`.
+ * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Default to `ReduceMotion.System` - {@link ReduceMotion}.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming#config-
+ */
 interface TimingConfig {
   duration?: number;
+  reduceMotion?: ReduceMotion;
   easing?: EasingFunction | EasingFunctionFactory;
 }
 
@@ -38,6 +49,15 @@ type withTimingType = <T extends AnimatableValue>(
   callback?: AnimationCallback
 ) => T;
 
+/**
+ * Lets you create an animation based on duration and easing.
+ *
+ * @param toValue - The value on which the animation will come at rest - {@link AnimatableValue}.
+ * @param config - The timing animation configuration - {@link TimingConfig}.
+ * @param callback - A function called on animation complete - {@link AnimationCallback}.
+ * @returns An [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming
+ */
 export const withTiming = function (
   toValue: AnimatableValue,
   userConfig?: TimingConfig,
@@ -47,7 +67,7 @@ export const withTiming = function (
 
   return defineAnimation<TimingAnimation>(toValue, () => {
     'worklet';
-    const config: Required<TimingConfig> = {
+    const config: Required<Omit<TimingConfig, 'reduceMotion'>> = {
       duration: 300,
       easing: Easing.inOut(Easing.quad),
     };
@@ -59,6 +79,7 @@ export const withTiming = function (
     }
 
     function timing(animation: InnerTimingAnimation, now: Timestamp): boolean {
+      // eslint-disable-next-line @typescript-eslint/no-shadow
       const { toValue, startTime, startValue } = animation;
       const runtime = now - startTime;
 
@@ -116,6 +137,7 @@ export const withTiming = function (
       easing: () => 0,
       current: toValue,
       callback,
+      reduceMotion: getReduceMotionForAnimation(userConfig?.reduceMotion),
     } as TimingAnimation;
   });
 } as withTimingType;

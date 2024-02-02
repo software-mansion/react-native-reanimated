@@ -5,6 +5,7 @@ import {
   FlatList,
   Linking,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -28,17 +29,24 @@ import {
   PathConfigMap,
   useNavigation,
 } from '@react-navigation/native';
+import {
+  StackNavigationProp,
+  createStackNavigator,
+} from '@react-navigation/stack';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXAMPLES } from './examples';
 import React from 'react';
+import { useReducedMotion } from 'react-native-reanimated';
 
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
   Home: undefined;
 };
 
 interface HomeScreenProps {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
+  navigation:
+    | StackNavigationProp<RootStackParamList, 'Home'>
+    | NativeStackNavigationProp<RootStackParamList, 'Home'>;
 }
 
 const EXAMPLES_NAMES = Object.keys(EXAMPLES) as (keyof typeof EXAMPLES)[];
@@ -99,6 +107,15 @@ interface ItemProps {
 }
 
 function Item({ icon, title, onPress }: ItemProps) {
+  if (Platform.OS === 'macos') {
+    return (
+      <Pressable style={styles.button} onPress={onPress}>
+        {icon && <Text style={styles.title}>{icon + '  '}</Text>}
+        <Text style={styles.title}>{title}</Text>
+      </Pressable>
+    );
+  }
+
   return (
     <RectButton style={styles.button} onPress={onPress}>
       {icon && <Text style={styles.title}>{icon + '  '}</Text>}
@@ -111,7 +128,10 @@ function ItemSeparator() {
   return <View style={styles.separator} />;
 }
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+const Stack =
+  Platform.OS === 'macos'
+    ? createStackNavigator<RootStackParamList>()
+    : createNativeStackNavigator<RootStackParamList>();
 
 const linking = {
   prefixes: [],
@@ -146,7 +166,11 @@ export default function App() {
       try {
         const initialUrl = await Linking.getInitialURL();
 
-        if (Platform.OS !== 'web' && initialUrl == null) {
+        if (
+          Platform.OS !== 'web' &&
+          Platform.OS !== 'macos' &&
+          initialUrl == null
+        ) {
           // Only restore state if there's no deep link and we're not on web
           const savedStateString = await AsyncStorage.getItem(PERSISTENCE_KEY);
           const state = savedStateString
@@ -166,6 +190,8 @@ export default function App() {
       restoreState();
     }
   }, [isReady]);
+
+  const shouldReduceMotion = useReducedMotion();
 
   if (!isReady) {
     return (
@@ -199,6 +225,7 @@ export default function App() {
               name={name}
               component={EXAMPLES[name].screen}
               options={{
+                animation: shouldReduceMotion ? 'fade' : 'default',
                 headerTitle: EXAMPLES[name].title,
                 title: EXAMPLES[name].title,
                 headerLeft: Platform.OS === 'web' ? BackButton : undefined,

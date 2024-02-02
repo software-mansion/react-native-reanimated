@@ -1,10 +1,10 @@
+'use strict';
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
 
-import { startMapper, stopMapper, makeRemote } from '../core';
+import { startMapper, stopMapper } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animation';
-import NativeReanimatedModule from '../NativeReanimated';
 import { useSharedValue } from './useSharedValue';
 import {
   buildWorkletsHash,
@@ -12,35 +12,30 @@ import {
   shallowEqual,
   validateAnimatedStyles,
 } from './utils';
-import type { DependencyList, Descriptor } from './commonTypes';
+import type {
+  AnimatedStyleHandle,
+  DefaultStyle,
+  DependencyList,
+  Descriptor,
+  JestAnimatedStyleHandle,
+} from './commonTypes';
 import type { ViewDescriptorsSet, ViewRefSet } from '../ViewDescriptorsSet';
-import { makeViewDescriptorsSet, makeViewsRefSet } from '../ViewDescriptorsSet';
+import { makeViewDescriptorsSet, useViewRefSet } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import type {
   AnimationObject,
   Timestamp,
-  AdapterWorkletFunction,
-  BasicWorkletFunction,
-  BasicWorkletFunctionOptional,
   NestedObjectValues,
   SharedValue,
   StyleProps,
+  __AdapterWorkletFunction,
+  __BasicWorkletFunction,
+  WorkletFunction,
 } from '../commonTypes';
-import type {
-  ImageStyle,
-  RegisteredStyle,
-  TextStyle,
-  ViewStyle,
-} from 'react-native';
 import type { AnimatedStyle } from '../helperTypes';
 import { isWorklet } from '../utils';
 
-export interface AnimatedStyleResult {
-  viewDescriptors: ViewDescriptorsSet;
-  initial: AnimatedStyle<any>;
-  viewsRef: ViewRefSet<any>;
-  animatedStyle?: MutableRefObject<AnimatedStyle<any>>;
-}
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 interface AnimatedState {
   last: AnimatedStyle<any>;
@@ -49,7 +44,7 @@ interface AnimatedState {
   isAnimationCancelled: boolean;
 }
 
-interface AnimationRef {
+interface AnimatedUpdaterData {
   initial: {
     value: AnimatedStyle<any>;
     updater: () => AnimatedStyle<any>;
@@ -181,10 +176,11 @@ function runAnimations(
 
 function styleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: BasicWorkletFunction<AnimatedStyle<any>>,
+  updater: __BasicWorkletFunction<AnimatedStyle<any>>,
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
-  animationsActive: SharedValue<boolean>
+  animationsActive: SharedValue<boolean>,
+  isAnimatedProps = false
 ): void {
   'worklet';
   const animations = state.animations ?? {};
@@ -198,7 +194,7 @@ function styleUpdater(
   for (const key in newValues) {
     const value = newValues[key];
     if (isAnimated(value)) {
-      frameTimestamp = global.__frameTimestamp || performance.now();
+      frameTimestamp = global.__frameTimestamp || _getAnimationTimestamp();
       prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
@@ -211,6 +207,7 @@ function styleUpdater(
 
   if (hasAnimations) {
     const frame = (timestamp: Timestamp) => {
+      // eslint-disable-next-line @typescript-eslint/no-shadow
       const { animations, last, isAnimationCancelled } = state;
       if (isAnimationCancelled) {
         state.isAnimationRunning = false;
@@ -261,7 +258,7 @@ function styleUpdater(
     state.animations = [];
 
     if (!shallowEqual(oldValues, newValues)) {
-      updateProps(viewDescriptors, newValues, maybeViewRef);
+      updateProps(viewDescriptors, newValues, maybeViewRef, isAnimatedProps);
     }
   }
   state.last = newValues;
@@ -269,12 +266,12 @@ function styleUpdater(
 
 function jestStyleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: BasicWorkletFunction<AnimatedStyle<any>>,
+  updater: __BasicWorkletFunction<AnimatedStyle<any>>,
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
   animatedStyle: MutableRefObject<AnimatedStyle<any>>,
-  adapters: AdapterWorkletFunction[] = []
+  adapters: __AdapterWorkletFunction[] = []
 ): void {
   'worklet';
   const animations: AnimatedStyle<any> = state.animations ?? {};
@@ -293,7 +290,7 @@ function jestStyleUpdater(
   Object.keys(newValues).forEach((key) => {
     const value = newValues[key];
     if (isAnimated(value)) {
-      frameTimestamp = global.__frameTimestamp || performance.now();
+      frameTimestamp = global.__frameTimestamp || _getAnimationTimestamp();
       prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
@@ -301,6 +298,7 @@ function jestStyleUpdater(
   });
 
   function frame(timestamp: Timestamp) {
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     const { animations, last, isAnimationCancelled } = state;
     if (isAnimationCancelled) {
       state.isAnimationRunning = false;
@@ -395,56 +393,55 @@ function checkSharedValueUsage(
   ) {
     // if shared value is passed insted of its value, throw an error
     throw new Error(
-      `invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
+      `[Reanimated] Invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
     );
   }
 }
 
-// This type is kept for backward compatibility.
-export type AnimatedStyleProp<T> =
-  | AnimatedStyle<T>
-  | RegisteredStyle<AnimatedStyle<T>>;
+/**
+ * Lets you create a styles object, similar to StyleSheet styles, which can be animated using shared values.
+ *
+ * @param updater - A function returning an object with style properties you want to animate.
+ * @param dependencies - An optional array of dependencies. Only relevant when using Reanimated without the Babel plugin on the Web.
+ * @returns An animated style object which has to be passed to the `style` property of an Animated component you want to animate.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle
+ */
+// You cannot pass Shared Values to `useAnimatedStyle` directly.
+// @ts-expect-error This overload is required by our API.
+export function useAnimatedStyle<Style extends DefaultStyle>(
+  updater: () => Style,
+  dependencies?: DependencyList | null
+): Style;
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type useAnimatedStyleType = <
-  T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
->(
-  updater: () => T,
-  deps?: DependencyList | null
-) => T;
-
-export const useAnimatedStyle = function <T extends AnimatedStyle<any>>(
-  // animated style cannot be an array
-  updater: BasicWorkletFunction<T extends Array<unknown> ? never : T>,
-  dependencies?: DependencyList,
-  adapters?: AdapterWorkletFunction | AdapterWorkletFunction[]
-): AnimatedStyleResult {
-  const viewsRef: ViewRefSet<any> = makeViewsRefSet();
-  const initRef = useRef<AnimationRef>();
+export function useAnimatedStyle<Style extends DefaultStyle>(
+  updater: WorkletFunction<[], Style>,
+  dependencies?: DependencyList | null,
+  adapters?: WorkletFunction | WorkletFunction[],
+  isAnimatedProps = false
+): AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style> {
+  const viewsRef: ViewRefSet<unknown> | undefined = useViewRefSet();
+  const animatedUpdaterData = useRef<AnimatedUpdaterData>();
   let inputs = Object.values(updater.__closure ?? {});
-  if (shouldBeUseWeb()) {
+  if (SHOULD_BE_USE_WEB) {
     if (!inputs.length && dependencies?.length) {
-      // let web work without a Babel/SWC plugin
+      // let web work without a Babel plugin
       inputs = dependencies;
     }
     if (__DEV__ && !inputs.length && !dependencies && !isWorklet(updater)) {
       throw new Error(
-        `useAnimatedStyle was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel/SWC plugin.
-
-For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/web-support#web-without-a-babel-plugin`
+        `[Reanimated] \`useAnimatedStyle\` was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel plugin.
+For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin\`.`
       );
     }
   }
-  const adaptersArray: AdapterWorkletFunction[] = adapters
+  const adaptersArray = adapters
     ? Array.isArray(adapters)
       ? adapters
       : [adapters]
     : [];
   const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
-  const animationsActive = useSharedValue<boolean>(true);
-  const animatedStyle: MutableRefObject<AnimatedStyle<any>> = useRef<
-    AnimatedStyle<any>
-  >({});
+  const areAnimationsActive = useSharedValue<boolean>(true);
+  const jestAnimatedStyle = useRef<Style>({} as Style);
 
   // build dependencies
   if (!dependencies) {
@@ -454,55 +451,55 @@ For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/
   }
   adaptersHash && dependencies.push(adaptersHash);
 
-  if (!initRef.current) {
-    const initialStyle: AnimatedStyle<any> = initialUpdaterRun(updater);
-    validateAnimatedStyles(initialStyle);
-    initRef.current = {
+  if (!animatedUpdaterData.current) {
+    const initialStyle = initialUpdaterRun(updater);
+    if (__DEV__) {
+      validateAnimatedStyles(initialStyle);
+    }
+    animatedUpdaterData.current = {
       initial: {
         value: initialStyle,
-        updater: updater,
+        updater,
       },
-      remoteState: makeRemote<AnimatedState>({
+      remoteState: {
         last: initialStyle,
         animations: {},
         isAnimationCancelled: false,
         isAnimationRunning: false,
-      }),
+      },
       viewDescriptors: makeViewDescriptorsSet(),
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const { initial, remoteState, viewDescriptors } = initRef.current!;
-  const sharableViewDescriptors = viewDescriptors.sharableViewDescriptors;
-  const maybeViewRef = NativeReanimatedModule.native ? undefined : viewsRef;
+  const { initial, remoteState, viewDescriptors } = animatedUpdaterData.current;
+  const shareableViewDescriptors = viewDescriptors.shareableViewDescriptors;
 
-  dependencies.push(sharableViewDescriptors);
+  dependencies.push(shareableViewDescriptors);
 
   useEffect(() => {
     let fun;
-    let updaterFn = updater as BasicWorkletFunctionOptional<T>;
+    let updaterFn = updater;
     if (adapters) {
-      updaterFn = () => {
+      updaterFn = (() => {
         'worklet';
         const newValues = updater();
         adaptersArray.forEach((adapter) => {
           adapter(newValues);
         });
         return newValues;
-      };
+      }) as WorkletFunction<[], Style>;
     }
 
     if (isJest()) {
       fun = () => {
         'worklet';
         jestStyleUpdater(
-          sharableViewDescriptors,
+          shareableViewDescriptors,
           updater,
           remoteState,
-          maybeViewRef,
-          animationsActive,
-          animatedStyle,
+          viewsRef,
+          areAnimationsActive,
+          jestAnimatedStyle,
           adaptersArray
         );
       };
@@ -510,11 +507,12 @@ For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/
       fun = () => {
         'worklet';
         styleUpdater(
-          sharableViewDescriptors,
+          shareableViewDescriptors,
           updaterFn,
           remoteState,
-          maybeViewRef,
-          animationsActive
+          viewsRef,
+          areAnimationsActive,
+          isAnimatedProps
         );
       };
     }
@@ -522,21 +520,21 @@ For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/
     return () => {
       stopMapper(mapperId);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, dependencies);
 
   useEffect(() => {
-    animationsActive.value = true;
+    areAnimationsActive.value = true;
     return () => {
-      animationsActive.value = false;
+      areAnimationsActive.value = false;
     };
-  }, []);
+  }, [areAnimationsActive]);
 
   checkSharedValueUsage(initial.value);
 
   if (isJest()) {
-    return { viewDescriptors, initial, viewsRef, animatedStyle };
+    return { viewDescriptors, initial, viewsRef, jestAnimatedStyle };
   } else {
     return { viewDescriptors, initial, viewsRef };
   }
-  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
-} as useAnimatedStyleType;
+}

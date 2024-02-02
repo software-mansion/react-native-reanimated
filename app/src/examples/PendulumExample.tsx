@@ -46,7 +46,7 @@ function InputField({ fieldName, value, setValue }: FieldDefinition) {
   );
 }
 
-export default function SpringExample(): React.ReactElement {
+export default function SpringExample() {
   const pendulumSwing = useSharedValue(0);
   const offset = useSharedValue({ x: 0, y: 0 });
   const [useConfigWithDuration, setUseConfigWithDuration] = useState(true);
@@ -166,20 +166,16 @@ export default function SpringExample(): React.ReactElement {
           </Animated.View>
         </View>
       </GestureDetector>
-      <React.Fragment>
-        {fields.map((item) => {
-          return (
-            <InputField
-              fieldName={item.fieldName}
-              value={item.value}
-              setValue={(value) => {
-                item.setValue(value);
-              }}
-              key={item.fieldName}
-            />
-          );
-        })}
-      </React.Fragment>
+      {fields.map((item) => {
+        return (
+          <InputField
+            fieldName={item.fieldName}
+            value={item.value}
+            setValue={item.setValue}
+            key={item.fieldName}
+          />
+        );
+      })}
     </GestureHandlerRootView>
   );
 }

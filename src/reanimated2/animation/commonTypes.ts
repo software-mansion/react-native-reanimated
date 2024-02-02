@@ -1,3 +1,4 @@
+'use strict';
 import type {
   StyleProps,
   AnimatableValue,
@@ -13,6 +14,12 @@ export interface HigherOrderAnimation {
 }
 
 export type NextAnimation<T extends AnimationObject> = T | (() => T);
+
+export interface ClampAnimation
+  extends Animation<ClampAnimation>,
+    HigherOrderAnimation {
+  current: AnimatableValue;
+}
 
 export interface DelayAnimation
   extends Animation<DelayAnimation>,

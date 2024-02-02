@@ -41,7 +41,6 @@ function eulerToMatrix(pitch: number, roll: number, yaw: number) {
   ];
 }
 
-// copied from https://github.com/facebook/react-native/blob/main/Libraries/Utilities/MatrixMath.js
 function createIdentityMatrix() {
   'worklet';
   return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];

@@ -1,31 +1,62 @@
-import type { Animation, AnimatableValue, Timestamp } from '../commonTypes';
+'use strict';
+import type {
+  Animation,
+  AnimatableValue,
+  Timestamp,
+  ReduceMotion,
+} from '../commonTypes';
 
+/**
+ * Spring animation configuration.
+ *
+ * @param mass - The weight of the spring. Reducing this value makes the animation faster. Defaults to 1.
+ * @param damping - How quickly a spring slows down. Higher damping means the spring will come to rest faster. Defaults to 10.
+ * @param duration - Length of the animation (in milliseconds). Defaults to 2000.
+ * @param dampingRatio - How damped the spring is. Value 1 means the spring is critically damped, and value \>1 means the spring is overdamped. Defaults to 0.5.
+ * @param stiffness - How bouncy the spring is. Defaults to 100.
+ * @param velocity - Initial velocity applied to the spring equation. Defaults to 0.
+ * @param overshootClamping - Whether a spring can bounce over the `toValue`. Defaults to false.
+ * @param restDisplacementThreshold - The displacement below which the spring will snap to toValue without further oscillations. Defaults to 0.01.
+ * @param restSpeedThreshold - The speed in pixels per second from which the spring will snap to toValue without further oscillations. Defaults to 2.
+ * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Default to `ReduceMotion.System` - {@link ReduceMotion}.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring/#config-
+ */
 export type SpringConfig = {
   stiffness?: number;
   overshootClamping?: boolean;
   restDisplacementThreshold?: number;
   restSpeedThreshold?: number;
   velocity?: number;
+  reduceMotion?: ReduceMotion;
 } & (
   | {
       mass?: number;
       damping?: number;
       duration?: never;
       dampingRatio?: never;
+      clamp?: never;
     }
   | {
       mass?: never;
       damping?: never;
       duration?: number;
       dampingRatio?: number;
+      clamp?: { min?: number; max?: number };
     }
 );
 
+// This type contains all the properties from SpringConfig, which are changed to be required,
+// except for optional 'reduceMotion' and 'clamp'
+export type DefaultSpringConfig = {
+  [K in keyof Required<SpringConfig>]: K extends 'reduceMotion' | 'clamp'
+    ? Required<SpringConfig>[K] | undefined
+    : Required<SpringConfig>[K];
+};
 export type WithSpringConfig = SpringConfig;
 
 export interface SpringConfigInner {
   useDuration: boolean;
-  configIsInvalid: boolean;
+  skipAnimation: boolean;
 }
 
 export interface SpringAnimation extends Animation<SpringAnimation> {
@@ -45,8 +76,46 @@ export interface InnerSpringAnimation
   toValue: number;
   current: number;
 }
+export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
+  'worklet';
+  let errorMessage = '';
+  (
+    [
+      'stiffness',
+      'damping',
+      'dampingRatio',
+      'restDisplacementThreshold',
+      'restSpeedThreshold',
+      'mass',
+    ] as const
+  ).forEach((prop) => {
+    const value = config[prop];
+    if (value <= 0) {
+      errorMessage += `, ${prop} must be grater than zero but got ${value}`;
+    }
+  });
 
-function bisectRoot({
+  if (config.duration < 0) {
+    errorMessage += `, duration can't be negative, got ${config.duration}`;
+  }
+
+  if (
+    config.clamp?.min &&
+    config.clamp?.max &&
+    config.clamp.min > config.clamp.max
+  ) {
+    errorMessage += `, clamp.min should be lower than clamp.max, got clamp: {min: ${config.clamp.min}, max: ${config.clamp.max}} `;
+  }
+
+  if (errorMessage !== '') {
+    console.warn('[Reanimated] Invalid spring config' + errorMessage);
+  }
+
+  return errorMessage === '';
+}
+
+// ts-prune-ignore-next This function is exported to be tested
+export function bisectRoot({
   min,
   max,
   func,
@@ -76,7 +145,7 @@ function bisectRoot({
 
 export function initialCalculations(
   mass = 0,
-  config: Record<keyof SpringConfig, any> & SpringConfigInner
+  config: DefaultSpringConfig & SpringConfigInner
 ): {
   zeta: number;
   omega0: number;
@@ -84,7 +153,7 @@ export function initialCalculations(
 } {
   'worklet';
 
-  if (config.configIsInvalid) {
+  if (config.skipAnimation) {
     return { zeta: 0, omega0: 0, omega1: 0 };
   }
 
@@ -109,13 +178,80 @@ export function initialCalculations(
   }
 }
 
+/** We make an assumption that we can manipulate zeta without changing duration of movement.
+ *  According to theory this change is small and tests shows that we can indeed ignore it.
+ */
+export function scaleZetaToMatchClamps(
+  animation: SpringAnimation,
+  clamp: { min?: number; max?: number }
+): number {
+  'worklet';
+  const { zeta, toValue, startValue } = animation;
+  const toValueNum = Number(toValue);
+
+  if (toValueNum === startValue) {
+    return zeta;
+  }
+
+  const [firstBound, secondBound] =
+    toValueNum - startValue > 0
+      ? [clamp.min, clamp.max]
+      : [clamp.max, clamp.min];
+
+  /** The extrema we get from equation below are relative (we obtain a ratio),
+   *  To get absolute extrema we convert it as follows:
+   *
+   *  AbsoluteExtremum = startValue ± RelativeExtremum * (toValue - startValue)
+   *  Where ± denotes:
+   *    + if extremum is over the target
+   *    - otherwise
+   */
+
+  const relativeExtremum1 =
+    secondBound !== undefined
+      ? Math.abs((secondBound - toValueNum) / (toValueNum - startValue))
+      : undefined;
+
+  const relativeExtremum2 =
+    firstBound !== undefined
+      ? Math.abs((firstBound - toValueNum) / (toValueNum - startValue))
+      : undefined;
+
+  /** Use this formula http://hyperphysics.phy-astr.gsu.edu/hbase/oscda.html to calculate
+   *  first two extrema. These extrema are located where cos = +- 1
+   *
+   *  Therefore the first two extrema are:
+   *
+   *     Math.exp(-zeta * Math.PI);      (over the target)
+   *     Math.exp(-zeta * 2 * Math.PI);  (before the target)
+   */
+
+  const newZeta1 =
+    relativeExtremum1 !== undefined
+      ? Math.abs(Math.log(relativeExtremum1) / Math.PI)
+      : undefined;
+
+  const newZeta2 =
+    relativeExtremum2 !== undefined
+      ? Math.abs(Math.log(relativeExtremum2) / (2 * Math.PI))
+      : undefined;
+
+  const zetaSatisfyingClamp = [newZeta1, newZeta2].filter(
+    (x: number | undefined): x is number => x !== undefined
+  );
+  // The bigger is zeta the smaller are bounces, we return the biggest one
+  // because it should satisfy all conditions
+  return Math.max(...zetaSatisfyingClamp, zeta);
+}
+
+/** Runs before initial */
 export function calculateNewMassToMatchDuration(
   x0: number,
-  config: Record<keyof SpringConfig, any> & SpringConfigInner,
+  config: DefaultSpringConfig & SpringConfigInner,
   v0: number
 ) {
   'worklet';
-  if (config.configIsInvalid) {
+  if (config.skipAnimation) {
     return 0;
   }
 
@@ -227,10 +363,7 @@ export function underDampedSpringCalculations(
 
 export function isAnimationTerminatingCalculation(
   animation: InnerSpringAnimation,
-  config: Partial<SpringConfig> &
-    Required<
-      Pick<SpringConfig, 'restSpeedThreshold' | 'restDisplacementThreshold'>
-    >
+  config: DefaultSpringConfig
 ): {
   isOvershooting: boolean;
   isVelocity: boolean;

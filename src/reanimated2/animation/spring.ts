@@ -1,4 +1,5 @@
-import { defineAnimation } from './util';
+'use strict';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
 import type {
   Animation,
   AnimationCallback,
@@ -10,6 +11,7 @@ import type {
   SpringAnimation,
   InnerSpringAnimation,
   SpringConfigInner,
+  DefaultSpringConfig,
 } from './springUtils';
 import {
   initialCalculations,
@@ -17,6 +19,8 @@ import {
   underDampedSpringCalculations,
   criticallyDampedSpringCalculations,
   isAnimationTerminatingCalculation,
+  scaleZetaToMatchClamps,
+  checkIfConfigIsValid,
 } from './springUtils';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
@@ -26,6 +30,15 @@ type withSpringType = <T extends AnimatableValue>(
   callback?: AnimationCallback
 ) => T;
 
+/**
+ * Lets you create spring-based animations.
+ *
+ * @param toValue - the value at which the animation will come to rest - {@link AnimatableValue}
+ * @param config - the spring animation configuration - {@link SpringConfig}
+ * @param callback - a function called on animation complete - {@link AnimationCallback}
+ * @returns an [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring
+ */
 export const withSpring = ((
   toValue: AnimatableValue,
   userConfig?: SpringConfig,
@@ -35,7 +48,7 @@ export const withSpring = ((
 
   return defineAnimation<SpringAnimation>(toValue, () => {
     'worklet';
-    const defaultConfig: Record<keyof SpringConfig, any> = {
+    const defaultConfig: DefaultSpringConfig = {
       damping: 10,
       mass: 1,
       stiffness: 100,
@@ -45,56 +58,43 @@ export const withSpring = ((
       velocity: 0,
       duration: 2000,
       dampingRatio: 0.5,
+      reduceMotion: undefined,
+      clamp: undefined,
     } as const;
 
-    const config: Record<keyof SpringConfig, any> & SpringConfigInner = {
+    const config: DefaultSpringConfig & SpringConfigInner = {
       ...defaultConfig,
       ...userConfig,
       useDuration: !!(userConfig?.duration || userConfig?.dampingRatio),
-      configIsInvalid: false,
+      skipAnimation: false,
     };
 
-    if (
-      [
-        config.stiffness,
-        config.damping,
-        config.duration,
-        config.dampingRatio,
-        config.restDisplacementThreshold,
-        config.restSpeedThreshold,
-      ].some((x) => x <= 0) ||
-      config.mass === 0
-    ) {
-      config.configIsInvalid = true;
-      console.warn(
-        "You have provided invalid spring animation configuration! \n Value of stiffness, damping, duration and damping ratio must be greater than zero, and mass can't equal zero."
-      );
+    config.skipAnimation = !checkIfConfigIsValid(config);
+
+    if (config.duration === 0) {
+      config.skipAnimation = true;
     }
 
     function springOnFrame(
       animation: InnerSpringAnimation,
       now: Timestamp
     ): boolean {
+      // eslint-disable-next-line @typescript-eslint/no-shadow
       const { toValue, startTimestamp, current } = animation;
 
       const timeFromStart = now - startTimestamp;
 
       if (config.useDuration && timeFromStart >= config.duration) {
         animation.current = toValue;
-
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
         return true;
       }
 
-      if (config.configIsInvalid) {
-        // We don't animate wrong config
-        if (config.useDuration) return false;
-        else {
-          animation.current = toValue;
-          animation.lastTimestamp = 0;
-          return true;
-        }
+      if (config.skipAnimation) {
+        animation.current = toValue;
+        animation.lastTimestamp = 0;
+        return true;
       }
       const { lastTimestamp, velocity } = animation;
 
@@ -212,6 +212,10 @@ export const withSpring = ((
         animation.zeta = zeta;
         animation.omega0 = omega0;
         animation.omega1 = omega1;
+
+        if (config.clamp !== undefined) {
+          animation.zeta = scaleZetaToMatchClamps(animation, config.clamp);
+        }
       }
 
       animation.lastTimestamp = previousAnimation?.lastTimestamp || now;
@@ -234,6 +238,7 @@ export const withSpring = ((
       zeta: 0,
       omega0: 0,
       omega1: 0,
+      reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
     } as SpringAnimation;
   });
 }) as withSpringType;

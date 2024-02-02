@@ -1,0 +1,9 @@
+.featureList {
+  display: flex;
+}
+
+@media (max-width: 996px) {
+  .featureList {
+    flex-direction: column;
+  }
+}

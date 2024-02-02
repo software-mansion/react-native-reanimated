@@ -67,7 +67,10 @@ function processTransformPropertyForInlineStylesWarning(
 ) {
   if (isArrayExpression(path.node)) {
     const elements = path.get('elements');
-    assert(Array.isArray(elements), "'elements' should be an array");
+    assert(
+      Array.isArray(elements),
+      '[Reanimated] `elements` should be an array.'
+    );
     for (const element of elements) {
       if (element.isObjectExpression()) {
         processStyleObjectForInlineStylesWarning(element);
@@ -114,10 +117,16 @@ export function processInlineStylesWarning(
 
   const expression = path.get('value').get('expression');
   // style={[{...}, {...}]}
-  assert(!Array.isArray(expression), "'expression' should not be an array");
+  assert(
+    !Array.isArray(expression),
+    '[Reanimated] `expression` should not be an array.'
+  );
   if (expression.isArrayExpression()) {
     const elements = expression.get('elements');
-    assert(Array.isArray(elements), "'elements' should be an array");
+    assert(
+      Array.isArray(elements),
+      '[Reanimated] `elements` should be an array.'
+    );
     for (const element of elements) {
       if (element.isObjectExpression()) {
         processStyleObjectForInlineStylesWarning(element);

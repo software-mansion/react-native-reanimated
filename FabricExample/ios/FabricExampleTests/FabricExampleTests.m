@@ -33,7 +33,7 @@
   BOOL foundElement = NO;
 
   __block NSString *redboxError = nil;
-#ifdef DEBUG
+#ifndef NDEBUG
   RCTSetLogFunction(
       ^(RCTLogLevel level, RCTLogSource source, NSString *fileName, NSNumber *lineNumber, NSString *message) {
         if (level >= RCTLogLevelError) {
@@ -55,7 +55,7 @@
                                   }];
   }
 
-#ifdef DEBUG
+#ifndef NDEBUG
   RCTSetLogFunction(RCTDefaultLogFunction);
 #endif
 

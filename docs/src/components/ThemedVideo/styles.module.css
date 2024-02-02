@@ -1,0 +1,16 @@
+.container {
+  display: 'flex';
+  margin: '16px 0';
+}
+
+.themedVideo {
+  display: none;
+}
+
+[data-theme='light'] .themedVideo--light {
+  display: initial;
+}
+
+[data-theme='dark'] .themedVideo--dark {
+  display: initial;
+}

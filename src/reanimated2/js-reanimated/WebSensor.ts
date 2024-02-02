@@ -1,3 +1,4 @@
+'use strict';
 export declare class WebSensor {
   start: () => void;
   stop: () => void;

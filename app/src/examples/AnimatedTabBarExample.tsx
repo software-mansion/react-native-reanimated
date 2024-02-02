@@ -4,7 +4,7 @@ import Animated, {
   useAnimatedStyle,
   useDerivedValue,
   interpolate,
-  Extrapolate,
+  Extrapolation,
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
@@ -129,7 +129,7 @@ function Button({
         position + width / 2,
       ],
       [1, 0, 0, 1],
-      Extrapolate.CLAMP
+      Extrapolation.CLAMP
     );
     return {
       opacity: visibility,
@@ -238,7 +238,7 @@ const tabBarStyles = StyleSheet.create({
   },
 });
 
-export default function AnimatedTabBarExample(): React.ReactElement {
+export default function AnimatedTabBarExample() {
   return (
     <View style={tabBarStyles.container}>
       <View style={tabBarStyles.dummyPusher} />

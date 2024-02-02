@@ -3,7 +3,7 @@ import { Button, View, StyleSheet } from 'react-native';
 import React, { useState } from 'react';
 import Svg, { Path } from 'react-native-svg';
 
-export default function OlympicAnimation(): React.ReactElement {
+export default function OlympicAnimation() {
   const [show, setShow] = useState(true);
 
   const blueRingAnimation = new Keyframe({

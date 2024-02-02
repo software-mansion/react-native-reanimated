@@ -137,7 +137,7 @@ function Box({ color }: { color: string }) {
   return <View style={[{ backgroundColor: color }, styles.box]} />;
 }
 
-export default function ScrollableViewExample(): React.ReactElement {
+export default function ScrollableViewExample() {
   const headerHeight = useHeaderHeight();
 
   const height =

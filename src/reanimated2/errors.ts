@@ -1,3 +1,4 @@
+'use strict';
 type StackDetails = [Error, number, number];
 
 const _workletStackDetails = new Map<number, StackDetails>();

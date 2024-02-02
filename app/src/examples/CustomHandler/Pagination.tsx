@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
-  Extrapolate,
+  Extrapolation,
   interpolate,
   useAnimatedStyle,
 } from 'react-native-reanimated';
@@ -12,14 +12,14 @@ function PaginationElement({
 }: {
   position: Animated.SharedValue<number>;
   slideIndex: number;
-}): React.ReactElement {
+}) {
   const inputRange = [slideIndex - 1, slideIndex, slideIndex + 1];
   const dotAnimatedStyle = useAnimatedStyle(() => {
     const width = interpolate(
       position.value,
       inputRange,
       [4, 40, 4],
-      Extrapolate.CLAMP
+      Extrapolation.CLAMP
     );
 
     return { width };
@@ -29,7 +29,7 @@ function PaginationElement({
       position.value,
       inputRange,
       [0.4, 1, 0.4],
-      Extrapolate.CLAMP
+      Extrapolation.CLAMP
     );
 
     return { opacity };
@@ -49,7 +49,7 @@ export function Pagination({
 }: {
   numberOfSlides: number;
   position: Animated.SharedValue<number>;
-}): React.ReactElement {
+}) {
   return (
     <View style={styles.pagination}>
       {Array(numberOfSlides)

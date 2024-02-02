@@ -1,16 +1,13 @@
-import type { ImageProps } from 'react-native';
+'use strict';
 import { Image } from 'react-native';
-import createAnimatedComponent from '../../createAnimatedComponent';
-import { Component } from 'react';
-import type { AnimateProps } from '../helperTypes';
+import { createAnimatedComponent } from '../../createAnimatedComponent';
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-declare class AnimatedImageClass extends Component<AnimateProps<ImageProps>> {
+// Since createAnimatedComponent return type is ComponentClass that has the props of the argument,
+// but not things like NativeMethods, etc. we need to add them manually by extending the type.
+interface AnimatedImageComplement extends Image {
   getNode(): Image;
 }
 
-export type AnimatedImage = typeof AnimatedImageClass & Image;
+export const AnimatedImage = createAnimatedComponent(Image);
 
-export const AnimatedImage = createAnimatedComponent(
-  Image as any
-) as unknown as AnimatedImage; // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
+export type AnimatedImage = typeof AnimatedImage & AnimatedImageComplement;

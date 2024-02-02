@@ -29,7 +29,7 @@ If you want to build the plugin but without using explicit `yarn`, do `yarn gene
 
 ### Why do we need this plugin?
 
-Reanimated is all about executing the code directly on the UI thread whenever possible to avoid expensive and troublesome communication between those two threads. Since UI and JS (React-Native) contexts are separate, we somehow need to pass the functions (and their arguments) from the JS thread to the UI thread. That's why we need **worklets**. If you haven't yet, we strongly recommend reading [the official documentation on worklets](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/worklets/) first.
+Reanimated is all about executing the code directly on the UI thread whenever possible to avoid expensive and troublesome communication between those two threads. Since UI and JS (React-Native) contexts are separate, we somehow need to pass the functions (and their arguments) from the JS thread to the UI thread. That's why we need **worklets**. If you haven't yet, we strongly recommend reading [the official documentation on worklets](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary/#worklet) first.
 
 ### What is a worklet?
 
@@ -103,7 +103,7 @@ Some use cases might've been overlooked and on the other hand - some might work 
 
 ## Plugin's applications
 
-To get some more information about certain edge cases or use cases not listed here, try looking them up in our [tests](https://github.com/software-mansion/react-native-reanimated/blob/main/__tests__/plugin.test.js).
+To get some more information about certain edge cases or use cases not listed here, try looking them up in our [tests](https://github.com/software-mansion/react-native-reanimated/blob/main/__tests__/plugin.test.ts).
 
 ### What can be a worklet?
 
@@ -164,7 +164,7 @@ function foo() {
 
 ### Inline styles support
 
-For more information read [official docs](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animations/#animations-in-inline-styles).
+For more information read [official docs](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary/#animations-in-inline-styling).
 
 ### How to debug Reanimated Babel plugin?
 
@@ -179,18 +179,16 @@ This flowchart represents the high-level logic of our plugin's control flow. It'
 ```mermaid
 flowchart TB
 node([ASTnode])
-iv([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/injectVersion.ts'>injectVersion</a><br><i>only once</i>])
 pw([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processForCalleesWorklets.ts'>processForCalleesWorklets</a>])
 pwsbw{{should be workletized?}}
 pwgwa([get workletizable arguments])
 pwn([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processIfWorkletNode.ts'>processIfWorkletNode</a>])
 pwnsbw{{should be workletized?}}
-pgh([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processIfGestureHandlerEventCallbackFunctionNode.ts'>processIfGestureHandlerEventCallbackFunctionNode</a>])
+pgh([<a href='https://github.com/software-mansion/react-native-reanimated/blob/main/plugin/src/processIfCallback.ts'>processIfCallback</a>])
 pghsbw{{should be workletized?}}
 pwf([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processIfWorkletFunction.ts'>processIfWorkletFunction</a>])
 pwom([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processWorkletObjectMethod.ts'>processWorkletObjectMethod</a>])
 pisw([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processInlineStylesWarning.ts'>processInlineStylesWarning</a>])
-node-->|isDirectiveLiteral|iv
 node-->|isCallExpression|pw
 node-->|isArrowFunctionExpression|pwn
 node-->|isFunctionDeclaration|pwn

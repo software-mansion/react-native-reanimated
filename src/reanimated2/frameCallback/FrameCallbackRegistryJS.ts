@@ -1,3 +1,4 @@
+'use strict';
 import { runOnUI } from '../core';
 import type { FrameInfo } from './FrameCallbackRegistryUI';
 import { prepareUIRegistry } from './FrameCallbackRegistryUI';

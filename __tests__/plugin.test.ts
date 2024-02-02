@@ -26,6 +26,7 @@ function runPlugin(
   assert(transformed);
   return transformed;
 }
+
 describe('babel plugin', () => {
   beforeEach(() => {
     process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '1';
@@ -94,6 +95,23 @@ describe('babel plugin', () => {
       expect(code).toContain(
         '\\"mappings\\":\\"AACQ,SAAAA,GAASA,CAAA,CAAG,CAEV,GAAI,CAAAA,GAAG,CAAG,KAAK,CACjB\\"'
       );
+    });
+
+    it('uses relative source location when `relativeSourceLocation` is set to `true`', () => {
+      process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '0'; // don't mock source maps
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var foo = 'bar';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, undefined, {
+        relativeSourceLocation: true,
+      });
+
+      const matches = code?.match(new RegExp(`..${MOCK_LOCATION}`, 'g'));
+      expect(matches).toHaveLength(2);
     });
 
     it('removes comments from worklets', () => {
@@ -217,7 +235,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't capture globals", () => {
+    it("doesn't capture default globals", () => {
       const input = html`<script>
         function f() {
           'worklet';
@@ -243,34 +261,49 @@ describe('babel plugin', () => {
       expect(closureBindings).toEqual([]);
       expect(code).toMatchSnapshot();
     });
-  });
 
-  it("doesn't capture arguments", () => {
-    const input = html`<script>
-      function f(a, b, c) {
-        'worklet';
-        console.log(arguments);
-      }
-    </script>`;
+    it("doesn't capture custom globals", () => {
+      const input = html`<script>
+        const foo = 42;
 
-    const { code } = runPlugin(input);
-    expect(code).toContain('_f.__closure = {};');
-    expect(code).toMatchSnapshot();
-  });
+        function f() {
+          'worklet';
+          console.log(foo);
+        }
+      </script>`;
 
-  it("doesn't capture objects' properties", () => {
-    const input = html`<script>
-      const foo = { bar: 42 };
+      const { code } = runPlugin(input, undefined, { globals: ['foo'] });
+      expect(code).toContain('f.__closure = {};');
+      expect(code).toMatchSnapshot();
+    });
 
-      function f() {
-        'worklet';
-        console.log(foo.bar);
-      }
-    </script>`;
+    it("doesn't capture arguments", () => {
+      const input = html`<script>
+        function f(a, b, c) {
+          'worklet';
+          console.log(arguments);
+        }
+      </script>`;
 
-    const { code } = runPlugin(input);
-    expect(code).toContain('foo: foo');
-    expect(code).toMatchSnapshot();
+      const { code } = runPlugin(input);
+      expect(code).toContain('f.__closure = {};');
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't capture objects' properties", () => {
+      const input = html`<script>
+        const foo = { bar: 42 };
+
+        function f() {
+          'worklet';
+          console.log(foo.bar);
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('foo: foo');
+      expect(code).toMatchSnapshot();
+    });
   });
 
   describe('for explicit worklets', () => {
@@ -327,6 +360,21 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
       expect(code).not.toContain("'worklet';");
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ObjectMethod', () => {
+      const input = html`<script>
+        const foo = {
+          bar(x) {
+            'worklet';
+            return x + 2;
+          },
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
       expect(code).toMatchSnapshot();
     });
   });
@@ -1039,110 +1087,112 @@ describe('babel plugin', () => {
     });
   });
 
-  describe('is indempotent for common cases', () => {
-    function resultIsIdempotent(input: string) {
-      const firstResult = runPlugin(input).code;
-      assert(firstResult);
-      const secondResult = runPlugin(firstResult).code;
-      return firstResult === secondResult;
-    }
+  describe('is indempotent', () => {
+    it('for common cases', () => {
+      function resultIsIdempotent(input: string) {
+        const firstResult = runPlugin(input).code;
+        assert(firstResult);
+        const secondResult = runPlugin(firstResult).code;
+        return firstResult === secondResult;
+      }
 
-    const input1 = html`<script>
-      const foo = useAnimatedStyle(() => {
-        const x = 1;
-      });
-    </script>`;
-    expect(resultIsIdempotent(input1)).toBe(true);
-
-    const input2 = html`<script>
-      const foo = useAnimatedStyle(() => {
-        const bar = useAnimatedStyle(() => {
+      const input1 = html`<script>
+        const foo = useAnimatedStyle(() => {
           const x = 1;
         });
-      });
-    </script>`;
-    expect(resultIsIdempotent(input2)).toBe(true);
+      </script>`;
+      expect(resultIsIdempotent(input1)).toBe(true);
 
-    const input3 = html`<script>
-      const foo = useAnimatedStyle(function named() {
-        const bar = useAnimatedStyle(function named() {
-          const x = 1;
+      const input2 = html`<script>
+        const foo = useAnimatedStyle(() => {
+          const bar = useAnimatedStyle(() => {
+            const x = 1;
+          });
         });
-      });
-    </script>`;
-    expect(resultIsIdempotent(input3)).toBe(true);
+      </script>`;
+      expect(resultIsIdempotent(input2)).toBe(true);
 
-    const input4 = html`<script>
-      const foo = (x) => {
-        return () => {
-          'worklet';
-          return x;
-        };
-      };
-    </script>`;
-    expect(resultIsIdempotent(input4)).toBe(true);
+      const input3 = html`<script>
+        const foo = useAnimatedStyle(function named() {
+          const bar = useAnimatedStyle(function named() {
+            const x = 1;
+          });
+        });
+      </script>`;
+      expect(resultIsIdempotent(input3)).toBe(true);
 
-    const input5 = html`<script>
-      const foo = useAnimatedStyle({
-        method() {
-          'worklet';
-          const x = 1;
-        },
-      });
-    </script>`;
-    expect(resultIsIdempotent(input5)).toBe(true);
-
-    const input6 = html`<script>
-      const foo = () => {
-        'worklet';
-        return useAnimatedStyle(() => {
+      const input4 = html`<script>
+        const foo = (x) => {
           return () => {
             'worklet';
-            return 1;
+            return x;
           };
-        });
-      };
-    </script>`;
-    expect(resultIsIdempotent(input6)).toBe(true);
+        };
+      </script>`;
+      expect(resultIsIdempotent(input4)).toBe(true);
 
-    const input7 = html`<script>
-      const x = useAnimatedGestureHandler({
-        onStart: () => {
-          return useAnimatedStyle(() => {
-            return 1;
-          });
-        },
-      });
-    </script>`;
-    expect(resultIsIdempotent(input7)).toBe(true);
-
-    const input8 = html`<script>
-      const x = useAnimatedGestureHandler({
-        onStart: () => {
-          return useAnimatedGestureHandler({
-            onStart: () => {
-              return 1;
-            },
-          });
-        },
-      });
-    </script>`;
-    expect(resultIsIdempotent(input8)).toBe(true);
-
-    const input9 = html`<script>
-      Gesture.Pan.onStart(
-        useAnimatedStyle(() => {
-          return () => {
+      const input5 = html`<script>
+        const foo = useAnimatedStyle({
+          method() {
             'worklet';
-            Gesture.Pan.onStart(() => {
+            const x = 1;
+          },
+        });
+      </script>`;
+      expect(resultIsIdempotent(input5)).toBe(true);
+
+      const input6 = html`<script>
+        const foo = () => {
+          'worklet';
+          return useAnimatedStyle(() => {
+            return () => {
               'worklet';
               return 1;
+            };
+          });
+        };
+      </script>`;
+      expect(resultIsIdempotent(input6)).toBe(true);
+
+      const input7 = html`<script>
+        const x = useAnimatedGestureHandler({
+          onStart: () => {
+            return useAnimatedStyle(() => {
+              return 1;
             });
-          };
-        })
-      );
-    </script>`;
-    expect(resultIsIdempotent(input9)).toBe(true);
+          },
+        });
+      </script>`;
+      expect(resultIsIdempotent(input7)).toBe(true);
+
+      const input8 = html`<script>
+        const x = useAnimatedGestureHandler({
+          onStart: () => {
+            return useAnimatedGestureHandler({
+              onStart: () => {
+                return 1;
+              },
+            });
+          },
+        });
+      </script>`;
+      expect(resultIsIdempotent(input8)).toBe(true);
+
+      const input9 = html`<script>
+        Gesture.Pan.onStart(
+          useAnimatedStyle(() => {
+            return () => {
+              'worklet';
+              Gesture.Pan.onStart(() => {
+                'worklet';
+                return 1;
+              });
+            };
+          })
+        );
+      </script>`;
+      expect(resultIsIdempotent(input9)).toBe(true);
+    });
   });
 
   describe('for Layout Animations', () => {
@@ -1439,6 +1489,16 @@ describe('babel plugin', () => {
       expect(code).not.toContain('version: ');
       expect(code).toMatchSnapshot();
     });
+
+    it('throws a tagged exception when worklet processing fails', () => {
+      const input = html`<script>
+        const foo = useAnimatedStyle(() => {
+          return <Image />;
+        });
+      </script>`;
+
+      expect(() => runPlugin(input)).toThrow('[Reanimated]');
+    });
   });
 
   describe('for worklet nesting', () => {
@@ -1551,6 +1611,159 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input, {}, { processNestedWorklets: true });
 
       expect(code).toHaveWorkletData(3);
+      expect(code).toMatchSnapshot();
+    });
+  });
+
+  describe('for web configuration', () => {
+    it('skips initData when omitNativeOnlyData option is set to true', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var foo = 'bar';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, {}, { omitNativeOnlyData: true });
+      expect(code).toHaveWorkletData(0);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('includes initData when omitNativeOnlyData option is set to false', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var foo = 'bar';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, {}, { omitNativeOnlyData: false });
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('substitutes isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to true', () => {
+      const input = html`<script>
+        const x = isWeb();
+        const y = shouldBeUseWeb();
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        {},
+        { substituteWebPlatformChecks: true }
+      );
+      expect(code).toContain('var x = true;');
+      expect(code).toContain('var y = true;');
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to false", () => {
+      const input = html`<script>
+        const x = isWeb();
+        const y = shouldBeUseWeb();
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        {},
+        { substituteWebPlatformChecks: false }
+      );
+      expect(code).toContain('var x = isWeb();');
+      expect(code).toContain('var y = shouldBeUseWeb();');
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is undefined", () => {
+      const input = html`<script>
+        const x = isWeb();
+        const y = shouldBeUseWeb();
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('var x = isWeb();');
+      expect(code).toContain('var y = shouldBeUseWeb();');
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't substitute isWeb and shouldBeUseWeb in worklets", () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          const x = isWeb();
+          const y = shouldBeUseWeb();
+        }
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        {},
+        { substituteWebPlatformChecks: true }
+      );
+      expect(code).toContain('const x=isWeb();');
+      expect(code).toContain('const y=shouldBeUseWeb();');
+      expect(code).toMatchSnapshot();
+    });
+  });
+
+  describe('for generators', () => {
+    it('makes a generator worklet factory', () => {
+      const input = html`<script>
+        function* foo() {
+          'worklet';
+          yield 'hello';
+          yield 'world';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('var foo = function* foo() {');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('makes a generator worklet string', () => {
+      const input = html`<script>
+        function* foo() {
+          'worklet';
+          yield 'hello';
+          yield 'world';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain(
+        `code: "function*foo(){yield'hello';yield'world';}"`
+      );
+      expect(code).toMatchSnapshot();
+    });
+  });
+
+  describe('for async functions', () => {
+    it('makes an async worklet factory', () => {
+      const input = html`<script>
+        async function foo() {
+          'worklet';
+          await Promise.resolve();
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('asyncToGenerator');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('makes an async worklet string', () => {
+      const input = html`<script>
+        async function foo() {
+          'worklet';
+          await Promise.resolve();
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain(
+        `code: "async function foo(){await Promise.resolve();}"`
+      );
       expect(code).toMatchSnapshot();
     });
   });

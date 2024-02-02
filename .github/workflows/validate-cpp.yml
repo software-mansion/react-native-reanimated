@@ -8,14 +8,14 @@ on:
       - '.github/workflows/validate-cpp.yml'
       - 'scripts/cpplint.sh'
       - 'Common/cpp/**'
-      - 'ios/native/**'
+      - 'apple/native/**'
       - 'android/src/main/cpp/**'
   pull_request:
     paths:
       - '.github/workflows/validate-cpp.yml'
       - 'scripts/cpplint.sh'
       - 'Common/cpp/**'
-      - 'ios/native/**'
+      - 'apple/native/**'
       - 'android/src/main/cpp/**'
   merge_group:
     branches:
@@ -23,6 +23,7 @@ on:
 
 jobs:
   lint:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     name: cpplint
     runs-on: ubuntu-latest
     strategy:
@@ -30,7 +31,7 @@ jobs:
         python-version: [3.7]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -45,3 +46,7 @@ jobs:
       - name: Run cpplint
         run: |
           scripts/cpplint.sh
+
+      - name: Disallow DEBUG macros
+        run: |
+          ! egrep -r '(#if DEBUG|#ifdef DEBUG)' Common/cpp apple android/src/main/cpp

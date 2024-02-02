@@ -8,7 +8,7 @@ Use this hook to create a reference to a JavaScript value that can be shared wit
 
 Shared Values serve a similar purpose to React Native's [`Animated.Value`s](https://reactnative.dev/docs/animatedvalue).
 They can carry data, provide a way to react to changes, and also drive animations.
-If you aren't familiar with the concept of Shared Values in Reanimated v2, please check [Shared Values guide](../../fundamentals/shared-values) first.
+If you aren't familiar with the concept of Shared Values in Reanimated v2, please check [Shared Values guide](/docs/2.x/fundamentals/shared-values) first.
 
 When shared value reference is created using this hook, it can be accessed and modified by worklets.
 Shared Values can also be modified from the React Native thread directly, in which case the update is going to be asynchronous.

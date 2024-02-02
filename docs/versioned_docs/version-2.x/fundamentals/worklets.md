@@ -75,11 +75,9 @@ The method provided to the hook will be turned into a worklet and executed on th
 
 ```js
 const style = useAnimatedStyle(() => {
-  console.log("Running on the UI thread");
+  console.log('Running on the UI thread');
   return {
-    opacity: 0.5
+    opacity: 0.5,
   };
 });
 ```
-
-

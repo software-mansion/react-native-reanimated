@@ -1,59 +1,84 @@
+'use strict';
 import type { Component } from 'react';
 import { useRef } from 'react';
 import { useSharedValue } from './useSharedValue';
-import type { AnimatedRef } from './commonTypes';
+import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
 import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import {
-  makeShareableCloneRecursive,
-  registerShareableMapping,
-} from '../shareables';
-import { findNodeHandle } from 'react-native';
+import { makeShareableCloneRecursive } from '../shareables';
+import { shareableMappingCache } from '../shareableMappingCache';
+import { Platform, findNodeHandle } from 'react-native';
+import type { ScrollView, FlatList } from 'react-native';
+import { isFabric } from '../PlatformChecker';
+
+const IS_FABRIC = isFabric();
+
 interface MaybeScrollableComponent extends Component {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getNativeScrollRef?: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getScrollableNode?: any;
+  getNativeScrollRef?: FlatList['getNativeScrollRef'];
+  getScrollableNode?:
+    | ScrollView['getScrollableNode']
+    | FlatList['getScrollableNode'];
+  viewConfig?: {
+    uiViewClassName?: string;
+  };
 }
 
 function getComponentOrScrollable(component: MaybeScrollableComponent) {
-  if (global._IS_FABRIC && component.getNativeScrollRef) {
+  if (IS_FABRIC && component.getNativeScrollRef) {
     return component.getNativeScrollRef();
-  } else if (!global._IS_FABRIC && component.getScrollableNode) {
+  } else if (!IS_FABRIC && component.getScrollableNode) {
     return component.getScrollableNode();
   }
   return component;
 }
 
-const getTagValueFunction = global._IS_FABRIC
+const getTagValueFunction = IS_FABRIC
   ? getShadowNodeWrapperFromRef
   : findNodeHandle;
 
+/**
+ * Lets you get a reference of a view that you can use inside a worklet.
+ *
+ * @returns An object with a `.current` property which contains an instance of a component.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef
+ */
 export function useAnimatedRef<
-  T extends MaybeScrollableComponent
->(): AnimatedRef<T> {
+  TComponent extends Component
+>(): AnimatedRef<TComponent> {
   const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
-  const ref = useRef<AnimatedRef<T>>();
+  const viewName = useSharedValue<string | null>(null);
+
+  const ref = useRef<AnimatedRef<TComponent>>();
 
   if (!ref.current) {
-    const fun: AnimatedRef<T> = <AnimatedRef<T>>((component) => {
+    const fun: AnimatedRef<TComponent> = <AnimatedRef<TComponent>>((
+      component
+    ) => {
       // enters when ref is set by attaching to a component
       if (component) {
         tag.value = getTagValueFunction(getComponentOrScrollable(component));
         fun.current = component;
+        // viewName is required only on iOS with Paper
+        if (Platform.OS === 'ios' && !IS_FABRIC) {
+          viewName.value =
+            (component as MaybeScrollableComponent)?.viewConfig
+              ?.uiViewClassName || 'RCTView';
+        }
       }
       return tag.value;
     });
 
     fun.current = null;
 
-    const remoteRef = makeShareableCloneRecursive({
+    const animatedRefShareableHandle = makeShareableCloneRecursive({
       __init: () => {
         'worklet';
-        return () => tag.value;
+        const f: AnimatedRefOnUI = () => tag.value;
+        f.viewName = viewName;
+        return f;
       },
     });
-    registerShareableMapping(fun, remoteRef);
+    shareableMappingCache.set(fun, animatedRefShareableHandle);
     ref.current = fun;
   }
 

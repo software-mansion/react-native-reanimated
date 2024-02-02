@@ -19,31 +19,36 @@ public class NativeProxy extends NativeProxyCommon {
     @SuppressWarnings("unused")
     private final HybridData mHybridData;
 
-    public NativeProxy(ReactApplicationContext context) {
+    public NativeProxy(ReactApplicationContext context, String valueUnpackerCode) {
         super(context);
         CallInvokerHolderImpl holder =
                 (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
         LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
+        ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
         mHybridData =
                 initHybrid(
                         context.getJavaScriptContextHolder().get(),
                         holder,
                         mAndroidUIScheduler,
-                        LayoutAnimations);
+                        LayoutAnimations,
+                        messageQueueThread,
+                        valueUnpackerCode);
         prepareLayoutAnimations(LayoutAnimations);
-        ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
-        installJSIBindings(messageQueueThread);
+        installJSIBindings();
+        if (BuildConfig.DEBUG) {
+            checkCppVersion();
+        }
     }
 
     private native HybridData initHybrid(
             long jsContext,
             CallInvokerHolderImpl jsCallInvokerHolder,
             AndroidUIScheduler androidUIScheduler,
-            LayoutAnimations LayoutAnimations);
+            LayoutAnimations LayoutAnimations,
+            MessageQueueThread messageQueueThread,
+            String valueUnpackerCode);
 
-    private native void installJSIBindings(MessageQueueThread messageQueueThread);
-
-    public native boolean isAnyHandlerWaitingForEvent(String eventName);
+    public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 
     public native void performOperations();
 
@@ -70,6 +75,15 @@ public class NativeProxy extends NativeProxyCommon {
                     }
                     layoutAnimations.startAnimationForTag(tag, type, preparedValues);
                 }
+            }
+
+            @Override
+            public boolean shouldAnimateExiting(int tag, boolean shouldAnimate) {
+                LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
+                if (layoutAnimations != null) {
+                    return layoutAnimations.shouldAnimateExiting(tag, shouldAnimate);
+                }
+                return false;
             }
 
             @Override

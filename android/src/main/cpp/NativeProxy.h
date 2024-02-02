@@ -2,6 +2,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/fabric/JFabricUIManager.h>
+#include <react/renderer/scheduler/Scheduler.h>
 #endif
 
 #include <ReactCommon/CallInvokerHolder.h>
@@ -23,11 +24,6 @@
 #include "LayoutAnimations.h"
 #include "NativeReanimatedModule.h"
 #include "UIScheduler.h"
-
-#ifdef RCT_NEW_ARCH_ENABLED
-#include "PropsRegistry.h"
-#include "ReanimatedCommitHook.h"
-#endif
 
 namespace reanimated {
 
@@ -157,13 +153,13 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
           jsCallInvokerHolder,
       jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
-      jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations
+      jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
+      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
 #ifdef RCT_NEW_ARCH_ENABLED
-      ,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager
+          fabricUIManager,
 #endif
-      /**/);
+      const std::string &valueUnpackerCode);
   static void registerNatives();
 
   ~NativeProxy();
@@ -172,36 +168,31 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
-  std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
-  std::shared_ptr<UIScheduler> uiScheduler_;
+#ifndef NDEBUG
+  void checkJavaVersion(jsi::Runtime &);
+  void injectCppVersion();
+#endif // NDEBUG
 #ifdef RCT_NEW_ARCH_ENABLED
-  std::shared_ptr<PropsRegistry> propsRegistry_;
-  std::shared_ptr<UIManager> uiManager_;
-  std::shared_ptr<ReanimatedCommitHook> commitHook_;
-
-// removed temporary, new event listener mechanism need fix on the RN side
-// std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
-// std::shared_ptr<EventListener> eventListener_;
+  // removed temporarily, event listener mechanism needs to be fixed on RN side
+  // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
+  // std::shared_ptr<EventListener> eventListener_;
 #endif
+  void installJSIBindings();
 #ifdef RCT_NEW_ARCH_ENABLED
-  void installJSIBindings(
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-      jni::alias_ref<JFabricUIManager::javaobject> fabricUIManager);
   void synchronouslyUpdateUIProps(
       jsi::Runtime &rt,
       Tag viewTag,
       const jsi::Object &props);
-#else
-  void installJSIBindings(
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread);
 #endif
   PlatformDepMethodsHolder getPlatformDependentMethods();
   void setupLayoutAnimations();
 
-  double getCurrentTime();
-  bool isAnyHandlerWaitingForEvent(std::string);
+  double getAnimationTimestamp();
+  bool isAnyHandlerWaitingForEvent(
+      const std::string &eventName,
+      const int emitterReactTag);
   void performOperations();
   bool getIsReducedMotion();
   void requestRender(std::function<void(double)> onRender, jsi::Runtime &rt);
@@ -242,6 +233,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jni::alias_ref<react::WritableMap> event);
 
   void progressLayoutAnimation(
+      jsi::Runtime &rt,
       int tag,
       const jsi::Object &newProps,
       bool isSharedTransition);
@@ -272,13 +264,13 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations
+      jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
+      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
 #ifdef RCT_NEW_ARCH_ENABLED
-      ,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager
+          fabricUIManager,
 #endif
-      /**/);
+      const std::string &valueUnpackerCode);
 };
 
 } // namespace reanimated

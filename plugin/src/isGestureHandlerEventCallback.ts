@@ -6,10 +6,9 @@ import {
   isMemberExpression,
   isExpression,
 } from '@babel/types';
-import { ExplicitWorklet } from './types';
+import type { WorkletizableFunction } from './types';
 
 const gestureHandlerGestureObjects = new Set([
-  // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gestureObjects.ts
   'Tap',
   'Pan',
   'Pinch',
@@ -22,6 +21,7 @@ const gestureHandlerGestureObjects = new Set([
   'Race',
   'Simultaneous',
   'Exclusive',
+  'Hover',
 ]);
 
 const gestureHandlerBuilderMethods = new Set([
@@ -84,7 +84,9 @@ const gestureHandlerBuilderMethods = new Set([
     arguments: [fun3]
   )
   */
-export function isGestureHandlerEventCallback(path: NodePath<ExplicitWorklet>) {
+export function isGestureHandlerEventCallback(
+  path: NodePath<WorkletizableFunction>
+): boolean {
   return (
     isCallExpression(path.parent) &&
     isExpression(path.parent.callee) &&
@@ -92,7 +94,7 @@ export function isGestureHandlerEventCallback(path: NodePath<ExplicitWorklet>) {
   );
 }
 
-function isGestureObjectEventCallbackMethod(exp: Expression) {
+function isGestureObjectEventCallbackMethod(exp: Expression): boolean {
   // Checks if node matches the pattern `Gesture.Foo()[*].onBar`
   // where `[*]` represents any number of method calls.
   return (
@@ -103,7 +105,7 @@ function isGestureObjectEventCallbackMethod(exp: Expression) {
   );
 }
 
-function containsGestureObject(exp: Expression) {
+function containsGestureObject(exp: Expression): boolean {
   // Checks if node matches the pattern `Gesture.Foo()[*]`
   // where `[*]` represents any number of chained method calls, like `.something(42)`.
 
@@ -124,7 +126,7 @@ function containsGestureObject(exp: Expression) {
   return false;
 }
 
-function isGestureObject(exp: Expression) {
+function isGestureObject(exp: Expression): boolean {
   // Checks if node matches `Gesture.Tap()` or similar.
   /*
   node: CallExpression(

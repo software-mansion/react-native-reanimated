@@ -25,34 +25,32 @@ class PropsRegistry {
 
   void remove(const Tag tag);
 
-  void setLastReanimatedRoot(
-      RootShadowNode::Shared const &lastReanimatedRoot) noexcept {
-    // TODO: synchronize with mutex?
-    lastReanimatedRoot_ = lastReanimatedRoot;
+  void pleaseSkipReanimatedCommit() {
+    shouldReanimatedSkipCommit_ = true;
   }
 
-  bool isLastReanimatedRoot(
-      RootShadowNode::Shared const &newRootShadowNode) const noexcept {
-    // TODO: synchronize with mutex?
-    return newRootShadowNode == lastReanimatedRoot_;
+  bool shouldReanimatedSkipCommit() {
+#if REACT_NATIVE_MINOR_VERSION >= 73
+    // In RN 0.73+ we have a mount hook that will properly unset this flag
+    // after a non-Reanimated commit.
+    return shouldReanimatedSkipCommit_;
+#else
+    return shouldReanimatedSkipCommit_.exchange(false);
+#endif
   }
 
-  void pleaseSkipCommit() {
-    letMeIn_ = true;
+#if REACT_NATIVE_MINOR_VERSION >= 73
+  void resetReanimatedSkipCommitFlag() {
+    shouldReanimatedSkipCommit_ = false;
   }
-
-  bool shouldSkipCommit() {
-    return letMeIn_.exchange(false);
-  }
+#endif
 
  private:
   std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>> map_;
 
   mutable std::mutex mutex_; // Protects `map_`.
 
-  RootShadowNode::Shared lastReanimatedRoot_;
-
-  std::atomic<bool> letMeIn_;
+  std::atomic<bool> shouldReanimatedSkipCommit_;
 };
 
 } // namespace reanimated

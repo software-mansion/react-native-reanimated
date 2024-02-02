@@ -21,7 +21,7 @@ When negative, the animation will be repeated forever (until the shared value is
 
 Specify whether we should attempt to reverse the animation every other repetition.
 When `true`, this will cause the animation to run from the current value to the destination, after that the same animation will run in the reverse direction.
-Note that this option will only work when the provided animation is a plain, non-modified animation like [`withTiming`](withTiming.md) or [`withSpring`](withSpring.md).
+Note that this option will only work when the provided animation is a plain, non-modified animation like [`withTiming`](/docs/2.x/api/animations/withTiming) or [`withSpring`](/docs/2.x/api/animations/withSpring).
 The option is not supported for animation wrapped using other animation modifiers like `withDelay` or `withSequence`.
 
 #### `callback` [function]\(optional\)
@@ -31,7 +31,7 @@ In case the animation is cancelled, the callback will receive `false` as the arg
 
 ### Returns
 
-This method returns an animation object. It can be either assigned directly to a Shared Value or can be used as a value for a style object returned from [`useAnimatedStyle`](../hooks/useAnimatedStyle.md).
+This method returns an animation object. It can be either assigned directly to a Shared Value or can be used as a value for a style object returned from [`useAnimatedStyle`](/docs/2.x/api/hooks/useAnimatedStyle).
 
 ## Example
 

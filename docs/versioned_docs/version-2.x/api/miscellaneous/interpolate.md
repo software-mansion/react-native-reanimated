@@ -30,24 +30,26 @@ Can be either an object or a string. If an object is passed it should specify ex
 
 ```js
 const extrapolation = {
-    extrapolateLeft: Extrapolation.CLAMP,
-    extrapolateRight: Extrapolation.IDENTITY
-}
+  extrapolateLeft: Extrapolation.CLAMP,
+  extrapolateRight: Extrapolation.IDENTITY,
+};
 ```
 
 If a string is provided, the provided extrapolation type is applied to both sides.
 
 :::info
 Available extrapolation types:
-* `Extrapolation.CLAMP` - clamps the value to the edge of the output range
-* `Extrapolation.IDENTITY` - returns the value that is being interpolated
-* `Extrapolation.EXTEND` - approximates the value even outside of the range
+
+- `Extrapolation.CLAMP` - clamps the value to the edge of the output range
+- `Extrapolation.IDENTITY` - returns the value that is being interpolated
+- `Extrapolation.EXTEND` - approximates the value even outside of the range
 
 Available extrapolation string values:
-* `clamp`
-* `identity`
-* `extend`
-:::
+
+- `clamp`
+- `identity`
+- `extend`
+  :::
 
 ### Returns
 
@@ -75,7 +77,9 @@ export default function Test() {
     },
   });
   const animatedStyles = useAnimatedStyle(() => {
-    const scale = interpolate(scrollY.value, [-100, 0], [2, 1], { extrapolateRight: Extrapolation.CLAMP });
+    const scale = interpolate(scrollY.value, [-100, 0], [2, 1], {
+      extrapolateRight: Extrapolation.CLAMP,
+    });
 
     return {
       transform: [{ scale: scale }],

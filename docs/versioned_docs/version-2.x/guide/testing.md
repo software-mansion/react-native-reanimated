@@ -1,7 +1,7 @@
 ---
 id: testing
-title: "Testing with Jest"
-sidebar_label: "Testing with Jest"
+title: 'Testing with Jest'
+sidebar_label: 'Testing with Jest'
 ---
 
 Reanimated test mocks use web implementation of Reanimated2. Before you begin using Reanimated mocks you need some setup actions.
@@ -9,12 +9,15 @@ Reanimated test mocks use web implementation of Reanimated2. Before you begin us
 ## Setup
 
 Add the following line to your `jest-setup.js` file:
+
 ```js
 require('react-native-reanimated').setUpTests();
 ```
+
 `setUpTests()` can take optional config argument. Default config is `{ fps: 60 }`, setting framerate to 60fps.
 
 To be sure, check if your `jest.config.js` file contains:
+
 ```js
 ...
 preset: 'react-native',
@@ -33,12 +36,16 @@ If you have custom babel configuration for testing, make sure that Reanimated's 
 ## API
 
 #### Style checker
+
 - Checking equality of selected styles with current component styles
+
   #### `expect(component).toHaveAnimatedStyle(expectedStyle)`
+
   `component` - tested component
   `expectedStyle` - contains expected styles of testing component, for example `{ width: 100 }`
 
 - Checking equality of all current component styles with expected styles
+
   #### `expect(component).toHaveAnimatedStyle(expectedStyle, {exact: true})`
 
 - You can get all styles of tested component by using `getDefaultStyle`
@@ -46,19 +53,25 @@ If you have custom babel configuration for testing, make sure that Reanimated's 
   `component` - tested component
 
 #### Timers
+
 You can use jest timers to control animation
+
 ```js
 jest.useFakeTimers(); // jest.useFakeTimers('legacy') for jest >= 27
 // call animation
 jest.runAllTimers();
 ```
+
 If you want more control over animation, you can use Reanimated wrapper for timers:
+
 ```js
 withReanimatedTimer(() => {
   // call animation
-})
+});
 ```
+
 Inside of `withReanimatedTimer` you can use `advanceAnimationByTime(timeInMs)` or `advanceAnimationByFrame(amountOfFrames)` functions
+
 - Advance animation by a specified number of frames. You can specify the running duration of the animation and check the value of styles afterward.
   #### `advanceAnimationByTime(timeInMs)`
   `timeInMs` - the duration specifying for how long animation should be advanced forward. Should have an integer value.
@@ -91,8 +104,9 @@ test('stop in a middle of animation', () => {
 ```
 
 More example tests you can see in our repository
-- [SharedValue.test.js](https://github.com/software-mansion/react-native-reanimated/tree/main/__tests__/SharedValue.test.js)
-- [Animation.test.js](https://github.com/software-mansion/react-native-reanimated/tree/main/__tests__/Animation.test.js)
+
+- [SharedValue.test.js](https://github.com/software-mansion/react-native-reanimated/blob/main/__tests__/SharedValue.test.tsx)
+- [Animation.test.js](https://github.com/software-mansion/react-native-reanimated/blob/main/__tests__/Animation.test.tsx)
 
 ## Recommended testing library
 

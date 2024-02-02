@@ -55,7 +55,7 @@ const data: Data[] = [
   },
 ];
 
-export default function SwipeableListExample(): React.ReactElement {
+export default function SwipeableListExample() {
   function onRemove() {
     Alert.alert('Removed');
   }

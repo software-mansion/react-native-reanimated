@@ -126,7 +126,7 @@ type ButtonProps = {
   children: string;
 };
 
-function Button({ onPress, children }: ButtonProps): React.ReactElement {
+function Button({ onPress, children }: ButtonProps) {
   return (
     <TouchableOpacity onPress={onPress}>
       <View style={styles.button}>
@@ -136,7 +136,7 @@ function Button({ onPress, children }: ButtonProps): React.ReactElement {
   );
 }
 
-export default function ReactionsCounterExample(): React.ReactElement {
+export default function ReactionsCounterExample() {
   const [others, setOthers] = React.useState(3);
   const [you, setYou] = React.useState(false);
 

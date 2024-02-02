@@ -1,3 +1,4 @@
+'use strict';
 /**
  * Copied from:
  * react-native/Libraries/StyleSheet/normalizeColor.js
@@ -6,6 +7,7 @@
  */
 
 /* eslint no-bitwise: 0 */
+import type { StyleProps } from './commonTypes';
 import { makeShareable } from './core';
 import { isAndroid, isWeb } from './PlatformChecker';
 
@@ -119,7 +121,7 @@ function parsePercentage(str: string): number {
   return int / 100;
 }
 
-const names: any = makeShareable({
+const names: Record<string, number> = makeShareable({
   transparent: 0x00000000,
 
   // http://www.w3.org/TR/css3-color/#svg-color
@@ -273,6 +275,27 @@ const names: any = makeShareable({
   yellow: 0xffff00ff,
   yellowgreen: 0x9acd32ff,
 });
+
+// copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
+export const ColorProperties = makeShareable([
+  'backgroundColor',
+  'borderBottomColor',
+  'borderColor',
+  'borderLeftColor',
+  'borderRightColor',
+  'borderTopColor',
+  'borderStartColor',
+  'borderEndColor',
+  'borderBlockColor',
+  'borderBlockEndColor',
+  'borderBlockStartColor',
+  'color',
+  'shadowColor',
+  'textDecorationColor',
+  'tintColor',
+  'textShadowColor',
+  'overlayColor',
+]);
 
 function normalizeColor(color: unknown): number | null {
   'worklet';
@@ -430,36 +453,25 @@ export const rgbaColor = (
   return c;
 };
 
-/* accepts parameters
- * r  Object = {r:x, g:y, b:z}
- * OR
- * r, g, b
- * 0 <= r, g, b <= 255
- * returns 0 <= h, s, v <= 1
+/**
+ *
+ * @param r - red value (0-255)
+ * @param g - green value (0-255)
+ * @param b - blue value (0-255)
+ * @returns \{h: hue (0-1), s: saturation (0-1), v: value (0-1)\}
  */
-export function RGBtoHSV(rgb: RGB): HSV;
-export function RGBtoHSV(r: number, g: number, b: number): HSV;
-export function RGBtoHSV(r: any, g?: any, b?: any): HSV {
+export function RGBtoHSV(r: number, g: number, b: number): HSV {
   'worklet';
-  /* eslint-disable */
-  if (arguments.length === 1) {
-    g = r.g;
-    b = r.b;
-    r = r.r;
-  }
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
   const d = max - min;
   const s = max === 0 ? 0 : d / max;
   const v = max / 255;
 
-  let h;
+  let h = 0;
 
   switch (max) {
-    default:
-    /* fallthrough */
     case min:
-      h = 0;
       break;
     case r:
       h = g - b + d * (g < b ? 6 : 0);
@@ -480,50 +492,42 @@ export function RGBtoHSV(r: any, g?: any, b?: any): HSV {
     s: s,
     v: v,
   };
-  /* eslint-enable */
 }
 
-/* accepts parameters
- * h  Object = {h:x, s:y, v:z}
- * OR
- * h, s, v
- * 0 <= h, s, v <= 1
- * returns 0 <= r, g, b <= 255
+/**
+ *
+ * @param h - hue (0-1)
+ * @param s - saturation (0-1)
+ * @param v - value (0-1)
+ * @returns \{r: red (0-255), g: green (0-255), b: blue (0-255)\}
  */
-function HSVtoRGB(hsv: HSV): RGB;
-function HSVtoRGB(h: number, s: number, v: number): RGB;
-function HSVtoRGB(h: any, s?: any, v?: any) {
-  'worklet';
-  /* eslint-disable */
-  var r, g, b, i, f, p, q, t;
-  if (arguments.length === 1) {
-    s = h.s;
-    v = h.v;
-    h = h.h;
-  }
-  i = Math.floor(h * 6);
-  f = h * 6 - i;
-  p = v * (1 - s);
-  q = v * (1 - f * s);
-  t = v * (1 - (1 - f) * s);
-  switch (i % 6) {
+function HSVtoRGB(h: number, s: number, v: number): RGB {
+  ('worklet');
+  let r, g, b;
+
+  const i = Math.floor(h * 6);
+  const f = h * 6 - i;
+  const p = v * (1 - s);
+  const q = v * (1 - f * s);
+  const t = v * (1 - (1 - f) * s);
+  switch ((i % 6) as 0 | 1 | 2 | 3 | 4 | 5) {
     case 0:
-      (r = v), (g = t), (b = p);
+      [r, g, b] = [v, t, p];
       break;
     case 1:
-      (r = q), (g = v), (b = p);
+      [r, g, b] = [q, v, p];
       break;
     case 2:
-      (r = p), (g = v), (b = t);
+      [r, g, b] = [p, v, t];
       break;
     case 3:
-      (r = p), (g = q), (b = v);
+      [r, g, b] = [p, q, v];
       break;
     case 4:
-      (r = t), (g = p), (b = v);
+      [r, g, b] = [t, p, v];
       break;
     case 5:
-      (r = v), (g = p), (b = q);
+      [r, g, b] = [v, p, q];
       break;
   }
   return {
@@ -531,7 +535,6 @@ function HSVtoRGB(h: any, s?: any, v?: any) {
     g: Math.round(g * 255),
     b: Math.round(b * 255),
   };
-  /* eslint-enable */
 }
 
 export const hsvToColor = (
@@ -545,9 +548,7 @@ export const hsvToColor = (
   return rgbaColor(r, g, b, a);
 };
 
-export function processColorInitially(
-  color: unknown
-): number | null | undefined {
+function processColorInitially(color: unknown): number | null | undefined {
   'worklet';
   if (color === null || color === undefined || typeof color === 'number') {
     return color;
@@ -595,6 +596,15 @@ export function processColor(color: unknown): number | null | undefined {
   }
 
   return normalizedColor;
+}
+
+export function processColorsInProps(props: StyleProps) {
+  'worklet';
+  for (const key in props) {
+    if (ColorProperties.includes(key)) {
+      props[key] = processColor(props[key]);
+    }
+  }
 }
 
 export type ParsedColorArray = [number, number, number, number];

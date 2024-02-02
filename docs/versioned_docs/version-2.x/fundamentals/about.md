@@ -4,14 +4,6 @@ title: About React Native Reanimated
 sidebar_label: About
 ---
 
-:::info
-
-This is a documentation website of Reanimated 2 stable release.
-
-If you are looking for Reanimated 1 docs [please follow this link](https://docs.swmansion.com/react-native-reanimated/docs/1.x/).
-
-:::
-
 :::caution
 
 Reanimated v2 only supports `react-native` `0.62+`
@@ -86,7 +78,9 @@ Below we highlight some of the problems that we are aware of (in most cases we a
   and `RCTVirtualText` is a virtual component.
 
 ### Sponsors
+
 We really appreciate our sponsors! Thanks to them we can develop our library and make the React Native world a better place. Special thanks for:
+
 <div class="community-holder-container">
 
   <div class="community-holder-container-item">

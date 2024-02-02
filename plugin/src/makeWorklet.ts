@@ -40,27 +40,28 @@ import {
 import { strict as assert } from 'assert';
 import { relative } from 'path';
 import { buildWorkletString } from './buildWorkletString';
-import { globals } from './commonObjects';
+import { globals } from './globals';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { isRelease } from './utils';
 
 const REAL_VERSION = require('../../package.json').version;
 const MOCK_VERSION = 'x.y.z';
 
-export function makeWorklet(
+export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
 ): FunctionExpression {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
-  const functionName = makeWorkletName(fun);
-
   removeWorkletDirective(fun);
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
-  assert(state.file.opts.filename, "'state.file.opts.filename' is undefined");
+  assert(
+    state.file.opts.filename,
+    '[Reanimated] `state.file.opts.filename` is undefined.'
+  );
 
   const codeObject = generate(fun.node, {
     sourceMaps: true,
@@ -93,24 +94,32 @@ export function makeWorklet(
     inputSourceMap: codeObject.map,
   });
 
-  assert(transformed, "'transformed' is undefined");
-  assert(transformed.ast, "'transformed.ast' is undefined");
+  assert(transformed, '[Reanimated] `transformed` is undefined.');
+  assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
   const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
 
-  const privateFunctionId = identifier('_f');
+  const functionName = makeWorkletName(fun);
+  const functionIdentifier = identifier(functionName);
+
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
-    ? functionExpression(null, clone.params, clone.body)
+    ? functionExpression(
+        null,
+        clone.params,
+        clone.body,
+        clone.generator,
+        clone.async
+      )
     : clone;
 
-  const [funString, sourceMapString] = buildWorkletString(
+  let [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
     variables,
     functionName,
     transformed.map
   );
-  assert(funString, "'funString' is undefined");
+  assert(funString, '[Reanimated] `funString` is undefined.');
   const workletHash = hash(funString);
 
   let lineOffset = 1;
@@ -126,10 +135,13 @@ export function makeWorklet(
   const pathForStringDefinitions = fun.parentPath.isProgram()
     ? fun
     : fun.findParent((path) => isProgram(path.parentPath));
-  assert(pathForStringDefinitions, "'pathForStringDefinitions' is null");
+  assert(
+    pathForStringDefinitions,
+    '[Reanimated] `pathForStringDefinitions` is null.'
+  );
   assert(
     pathForStringDefinitions.parentPath,
-    "'pathForStringDefinitions.parentPath' is null"
+    '[Reanimated] `pathForStringDefinitions.parentPath` is null.'
   );
 
   const initDataId =
@@ -149,6 +161,11 @@ export function makeWorklet(
     let location = state.file.opts.filename;
     if (state.opts.relativeSourceLocation) {
       location = relative(state.cwd, location);
+      // It seems there is no designated option to use relative paths in generated sourceMap
+      sourceMapString = sourceMapString?.replace(
+        state.file.opts.filename,
+        location
+      );
     }
 
     initDataObjectExpression.properties.push(
@@ -172,31 +189,34 @@ export function makeWorklet(
     );
   }
 
-  pathForStringDefinitions.insertBefore(
-    variableDeclaration('const', [
-      variableDeclarator(initDataId, initDataObjectExpression),
-    ])
-  );
+  const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
+  if (shouldIncludeInitData) {
+    pathForStringDefinitions.insertBefore(
+      variableDeclaration('const', [
+        variableDeclarator(initDataId, initDataObjectExpression),
+      ])
+    );
+  }
 
   assert(
     !isFunctionDeclaration(funExpression),
-    "'funExpression' is a 'FunctionDeclaration'"
+    '[Reanimated] `funExpression` is a `FunctionDeclaration`.'
   );
   assert(
     !isObjectMethod(funExpression),
-    "'funExpression' is an 'ObjectMethod'"
+    '[Reanimated] `funExpression` is an `ObjectMethod`.'
   );
 
   const statements: Array<
     VariableDeclaration | ExpressionStatement | ReturnStatement
   > = [
     variableDeclaration('const', [
-      variableDeclarator(privateFunctionId, funExpression),
+      variableDeclarator(functionIdentifier, funExpression),
     ]),
     expressionStatement(
       assignmentExpression(
         '=',
-        memberExpression(privateFunctionId, identifier('__closure'), false),
+        memberExpression(functionIdentifier, identifier('__closure'), false),
         objectExpression(
           variables.map((variable) =>
             objectProperty(identifier(variable.name), variable, false, true)
@@ -207,18 +227,27 @@ export function makeWorklet(
     expressionStatement(
       assignmentExpression(
         '=',
-        memberExpression(privateFunctionId, identifier('__initData'), false),
-        initDataId
-      )
-    ),
-    expressionStatement(
-      assignmentExpression(
-        '=',
-        memberExpression(privateFunctionId, identifier('__workletHash'), false),
+        memberExpression(
+          functionIdentifier,
+          identifier('__workletHash'),
+          false
+        ),
         numericLiteral(workletHash)
       )
     ),
   ];
+
+  if (shouldIncludeInitData) {
+    statements.push(
+      expressionStatement(
+        assignmentExpression(
+          '=',
+          memberExpression(functionIdentifier, identifier('__initData'), false),
+          initDataId
+        )
+      )
+    );
+  }
 
   if (!isRelease()) {
     statements.unshift(
@@ -241,7 +270,7 @@ export function makeWorklet(
         assignmentExpression(
           '=',
           memberExpression(
-            privateFunctionId,
+            functionIdentifier,
             identifier('__stackDetails'),
             false
           ),
@@ -251,14 +280,14 @@ export function makeWorklet(
     );
   }
 
-  statements.push(returnStatement(privateFunctionId));
+  statements.push(returnStatement(functionIdentifier));
 
   const newFun = functionExpression(undefined, [], blockStatement(statements));
 
   return newFun;
 }
 
-function removeWorkletDirective(fun: NodePath<WorkletizableFunction>) {
+function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {
   fun.traverse({
     DirectiveLiteral(path) {
       if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
@@ -268,13 +297,13 @@ function removeWorkletDirective(fun: NodePath<WorkletizableFunction>) {
   });
 }
 
-function shouldMockVersion() {
+function shouldMockVersion(): boolean {
   // We don't want to pollute tests with current version number so we mock it
   // for all tests (except one)
   return process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION === '1';
 }
 
-function hash(str: string) {
+function hash(str: string): number {
   let i = str.length;
   let hash1 = 5381;
   let hash2 = 52711;
@@ -291,11 +320,11 @@ function hash(str: string) {
   return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
 }
 
-function makeWorkletName(fun: NodePath<WorkletizableFunction>) {
-  if (isObjectMethod(fun.node) && 'name' in fun.node.key) {
+function makeWorkletName(fun: NodePath<WorkletizableFunction>): string {
+  if (isObjectMethod(fun.node) && isIdentifier(fun.node.key)) {
     return fun.node.key.name;
   }
-  if (isFunctionDeclaration(fun.node) && fun.node.id) {
+  if (isFunctionDeclaration(fun.node) && isIdentifier(fun.node.id)) {
     return fun.node.id.name;
   }
   if (isFunctionExpression(fun.node) && isIdentifier(fun.node.id)) {
@@ -307,8 +336,9 @@ function makeWorkletName(fun: NodePath<WorkletizableFunction>) {
 function makeArrayFromCapturedBindings(
   ast: BabelFile,
   fun: NodePath<WorkletizableFunction>
-) {
+): Identifier[] {
   const closure = new Map<string, Identifier>();
+  const isLocationAssignedMap = new Map<string, boolean>();
 
   // this traversal looks for variables to capture
   traverse(ast, {
@@ -358,6 +388,30 @@ function makeArrayFromCapturedBindings(
         currentScope = currentScope.parent;
       }
       closure.set(name, path.node);
+      isLocationAssignedMap.set(name, false);
+    },
+  });
+
+  /*
+  For reasons I don't exactly understand, the above traversal will cause the whole 
+  bundle to crash if we traversed original node instead of generated
+  AST. This is why we need to traverse it again, but this time we set
+  location for each identifier that was captured to their original counterpart, since
+  AST has its location set relative as if it was a separate file.
+  */
+  fun.traverse({
+    Identifier(path) {
+      // So it won't refer to something like:
+      // const obj = {unexistingVariable: 1};
+      if (!path.isReferencedIdentifier()) {
+        return;
+      }
+      const node = closure.get(path.node.name);
+      if (!node || isLocationAssignedMap.get(path.node.name)) {
+        return;
+      }
+      node.loc = path.node.loc;
+      isLocationAssignedMap.set(path.node.name, true);
     },
   });
 

@@ -67,7 +67,7 @@ function AnimatedView() {
   );
 }
 
-export default function ModalNewAPI(): React.ReactElement {
+export default function ModalNewAPI() {
   const [show, setShow] = useState(false);
   return (
     <View style={styles.reverse}>

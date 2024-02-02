@@ -1,3 +1,4 @@
+'use strict';
 type FixedLengthArray<
   T,
   L extends number,
@@ -255,7 +256,9 @@ function assertVectorsHaveEqualLengths(a: number[], b: number[]) {
   'worklet';
   if (__DEV__ && a.length !== b.length) {
     throw new Error(
-      `Cannot calculate inner product of two vectors of different lengths. Length of ${a} is ${a.length} and length of ${b} is ${b.length}.`
+      `[Reanimated] Cannot calculate inner product of two vectors of different lengths. Length of ${a.toString()} is ${
+        a.length
+      } and length of ${b.toString()} is ${b.length}.`
     );
   }
 }
@@ -345,7 +348,7 @@ export function decomposeMatrix(
 
   // normalize matrix
   if (matrix[15] === 0) {
-    throw new Error('Invalid transform matrix!');
+    throw new Error('[Reanimated] Invalid transform matrix.');
   }
   matrix.forEach((_, i) => (matrix[i] /= matrix[15]));
 
@@ -359,6 +362,7 @@ export function decomposeMatrix(
   const sy = matrix[15] * norm3d(matrix[1], matrix[5], matrix[9]);
   const sz = matrix[15] * norm3d(matrix[2], matrix[6], matrix[10]);
 
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   const scaleMatrix: AffineMatrix = [
     [sx, 0, 0, 0],
     [0, sy, 0, 0],
@@ -389,6 +393,7 @@ export function decomposeMatrixIntoMatricesAndAngles(
   matrix: AffineMatrixFlat | AffineMatrix
 ): TansformMatrixDecompositionWithAngles {
   'worklet';
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   const { scaleMatrix, rotationMatrix, translationMatrix, skewMatrix } =
     decomposeMatrix(matrix);
 

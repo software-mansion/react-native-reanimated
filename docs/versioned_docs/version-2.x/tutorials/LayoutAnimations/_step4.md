@@ -1,6 +1,6 @@
 ```jsx {3,17}
 import Animated, {
-  LightSpeedInLeft, 
+  LightSpeedInLeft,
   LightSpeedOutRight
   Layout
 } from 'react-native-reanimated';
@@ -11,7 +11,7 @@ function Participant({
 }: {
   name: string;
   onRemove: () => void;
-}): React.ReactElement {
+}) {
   return (
     <Animated.View
       entering={LightSpeedInLeft}

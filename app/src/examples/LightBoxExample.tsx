@@ -5,7 +5,7 @@ import Animated, {
   runOnUI,
   useAnimatedGestureHandler,
   interpolate,
-  Extrapolate,
+  Extrapolation,
   withTiming,
   Easing,
   runOnJS,
@@ -145,14 +145,14 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
         translateY.value,
         [-200, 0, 200],
         [0.65, 1, 0.65],
-        Extrapolate.CLAMP
+        Extrapolation.CLAMP
       );
 
       backdropOpacity.value = interpolate(
         translateY.value,
         [-100, 0, 100],
         [0, 1, 0],
-        Extrapolate.CLAMP
+        Extrapolation.CLAMP
       );
     },
 
@@ -182,7 +182,7 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
 
   const imageStyles = useAnimatedStyle(() => {
     const interpolateProgress = (range: [number, number]) =>
-      interpolate(animationProgress.value, [0, 1], range, Extrapolate.CLAMP);
+      interpolate(animationProgress.value, [0, 1], range, Extrapolation.CLAMP);
 
     const top = translateY.value + interpolateProgress([y, targetY.value]);
     const left = translateX.value + interpolateProgress([x, targetX.value]);
@@ -237,7 +237,7 @@ const images: ExampleImage[] = Array.from({ length: 30 }, (_, index) => {
   };
 });
 
-export default function LightBoxExample(): React.ReactElement {
+export default function LightBoxExample() {
   const [activeImage, setActiveImage] = useState<ActiveExampleImage | null>(
     null
   );

@@ -7,8 +7,9 @@ import Animated, {
   useAnimatedRef,
   scrollTo,
   useAnimatedGestureHandler,
-  Extrapolate,
+  Extrapolation,
   interpolate,
+  SharedValue,
 } from 'react-native-reanimated';
 import {
   PanGestureHandler,
@@ -40,7 +41,7 @@ const BIG_BALL_SIZE = 200;
 const SMALL_BALL_SIZE = 50;
 const INNER_BALL_SIZE = BIG_BALL_SIZE - SMALL_BALL_SIZE * 2;
 
-export default function IPodExample(): React.ReactElement {
+export default function IPodExample() {
   const position = useSharedValue(0);
   const animatedRef = useAnimatedRef<Animated.ScrollView>();
 
@@ -119,7 +120,7 @@ export default function IPodExample(): React.ReactElement {
         position.value + sign * dist * 5,
         arr,
         arr,
-        Extrapolate.CLAMP
+        Extrapolation.CLAMP
       );
       scrollTo(animatedRef, position.value, 0, false);
     },
@@ -137,37 +138,16 @@ export default function IPodExample(): React.ReactElement {
         showsHorizontalScrollIndicator={false}
         onScroll={scrollHandler}>
         {data.map(({ artist, song }, i) => {
-          // eslint-disable-next-line react-hooks/rules-of-hooks
-          const uas = useAnimatedStyle(() => {
-            const style: {
-              opacity?: number;
-              marginLeft?: number;
-              marginRight?: number;
-            } = {};
-            const itemDistance =
-              Math.abs(position.value - i * itemTotalSize) / itemTotalSize;
-            let opacity = 1;
-            if (itemDistance >= 0.5) {
-              opacity = 0.3;
-            } else if (itemDistance > 3) {
-              opacity = 0;
-            }
-            style.opacity = opacity;
-            if (i === 0) {
-              style.marginLeft = borderMargin;
-            } else if (i === data.length - 1) {
-              style.marginRight = borderMargin;
-            }
-            return style;
-          });
           return (
-            <Animated.View key={i} style={[styles.item, uas]}>
-              <View style={styles.cover}>
-                <Text style={styles.noteText}>♪</Text>
-              </View>
-              <Text style={styles.label}>{artist}</Text>
-              <Text style={[styles.label, styles.songLabel]}>{song}</Text>
-            </Animated.View>
+            <SongCover
+              artist={artist}
+              song={song}
+              index={i}
+              position={position}
+              itemTotalSize={itemTotalSize}
+              borderMargin={borderMargin}
+              key={i}
+            />
           );
         })}
       </Animated.ScrollView>
@@ -178,6 +158,57 @@ export default function IPodExample(): React.ReactElement {
         </Animated.View>
       </PanGestureHandler>
     </View>
+  );
+}
+
+type SongCoverProps = {
+  artist: string;
+  song: string;
+  index: number;
+  position: SharedValue<number>;
+  itemTotalSize: number;
+  borderMargin: number;
+};
+
+function SongCover({
+  artist,
+  song,
+  index,
+  position,
+  itemTotalSize,
+  borderMargin,
+}: SongCoverProps) {
+  const animatedStyle = useAnimatedStyle(() => {
+    const style: {
+      opacity?: number;
+      marginLeft?: number;
+      marginRight?: number;
+    } = {};
+    const itemDistance =
+      Math.abs(position.value - index * itemTotalSize) / itemTotalSize;
+    let opacity = 1;
+    if (itemDistance >= 0.5) {
+      opacity = 0.3;
+    } else if (itemDistance > 3) {
+      opacity = 0;
+    }
+    style.opacity = opacity;
+    if (index === 0) {
+      style.marginLeft = borderMargin;
+    } else if (index === data.length - 1) {
+      style.marginRight = borderMargin;
+    }
+    return style;
+  });
+
+  return (
+    <Animated.View style={[styles.item, animatedStyle]}>
+      <View style={styles.cover}>
+        <Text style={styles.noteText}>♪</Text>
+      </View>
+      <Text style={styles.label}>{artist}</Text>
+      <Text style={[styles.label, styles.songLabel]}>{song}</Text>
+    </Animated.View>
   );
 }
 

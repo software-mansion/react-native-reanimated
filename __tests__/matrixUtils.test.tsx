@@ -180,9 +180,7 @@ describe('Matrix util functions', () => {
         [1, 1, 1, 1],
         [1, 1, 1, 0],
       ];
-      expect(() => decomposeMatrix(incorrectMatrix)).toThrowError(
-        new Error('Invalid transform matrix!')
-      );
+      expect(() => decomposeMatrix(incorrectMatrix)).toThrowError();
     });
 
     it('Decompose identity into identities', () => {

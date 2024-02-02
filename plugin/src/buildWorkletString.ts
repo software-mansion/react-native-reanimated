@@ -29,7 +29,7 @@ import { strict as assert } from 'assert';
 import * as convertSourceMap from 'convert-source-map';
 import * as fs from 'fs';
 import { isRelease } from './utils';
-import { WorkletizableFunction } from './types';
+import type { WorkletizableFunction } from './types';
 
 const MOCK_SOURCE_MAP = 'mock source map';
 
@@ -45,7 +45,7 @@ export function buildWorkletString(
     fun.program.body.find((obj) => isExpressionStatement(obj)) ||
     undefined) as FunctionDeclaration | ExpressionStatement | undefined;
 
-  assert(draftExpression, "'draftExpression' is undefined");
+  assert(draftExpression, '[Reanimated] `draftExpression` is undefined.');
 
   const expression = isFunctionDeclaration(draftExpression)
     ? draftExpression
@@ -57,18 +57,20 @@ export function buildWorkletString(
   );
   assert(
     isBlockStatement(expression.body),
-    "'expression.body' is not a 'BlockStatement'"
+    '[Reanimated] `expression.body` is not a `BlockStatement`'
   );
 
   const workletFunction = functionExpression(
     identifier(name),
     expression.params,
-    expression.body
+    expression.body,
+    expression.generator,
+    expression.async
   );
 
   const code = generate(workletFunction).code;
 
-  assert(inputMap, "'inputMap' is undefined");
+  assert(inputMap, '[Reanimated] `inputMap` is undefined.');
 
   const includeSourceMap = !isRelease();
 
@@ -95,7 +97,7 @@ export function buildWorkletString(
     comments: false,
   });
 
-  assert(transformed, "'transformed' is null");
+  assert(transformed, '[Reanimated] `transformed` is null.');
 
   let sourceMap;
   if (includeSourceMap) {

@@ -56,4 +56,4 @@ Use `Transition.Change` component to specify how components' which properties ge
 
 ## How to use it
 
-This API is still experimental and is a subject to change. Please refer to our [Example app](https://github.com/software-mansion/react-native-reanimated/tree/main/Example/reanimated1/transitions) to see how it can be used in practice in the current shape.
+This API is still experimental and is a subject to change. Please refer to our [Example app](https://github.com/software-mansion/react-native-reanimated/tree/Reanimated2/Example/reanimated1/transitions) to see how it can be used in practice in the current shape.

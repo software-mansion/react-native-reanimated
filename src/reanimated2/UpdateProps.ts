@@ -1,59 +1,36 @@
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
+'use strict';
 import type { MutableRefObject } from 'react';
-import { processColor } from './Colors';
+import { processColorsInProps } from './Colors';
 import type { ShadowNodeWrapper, SharedValue, StyleProps } from './commonTypes';
 import type { AnimatedStyle } from './helperTypes';
-import { makeShareable } from './core';
 import type { Descriptor } from './hook/commonTypes';
 import { _updatePropsJS } from './js-reanimated';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
 import type { ViewRefSet } from './ViewDescriptorsSet';
 import { runOnUIImmediately } from './threads';
-
-// copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
-const colorProps = [
-  'backgroundColor',
-  'borderBottomColor',
-  'borderColor',
-  'borderLeftColor',
-  'borderRightColor',
-  'borderTopColor',
-  'borderStartColor',
-  'borderEndColor',
-  'color',
-  'shadowColor',
-  'textDecorationColor',
-  'tintColor',
-  'textShadowColor',
-  'overlayColor',
-];
-
-export const ColorProperties = makeShareable(colorProps);
 
 let updateProps: (
   viewDescriptor: SharedValue<Descriptor[]>,
   updates: StyleProps | AnimatedStyle<any>,
-  maybeViewRef: ViewRefSet<any> | undefined
+  maybeViewRef: ViewRefSet<any> | undefined,
+  isAnimatedProps?: boolean
 ) => void;
 
 if (shouldBeUseWeb()) {
-  updateProps = (_, updates, maybeViewRef) => {
+  updateProps = (_, updates, maybeViewRef, isAnimatedProps) => {
     'worklet';
     if (maybeViewRef) {
-      maybeViewRef.items.forEach((item, _) => {
-        _updatePropsJS(updates, item);
+      maybeViewRef.items.forEach((item, _index) => {
+        _updatePropsJS(updates, item, isAnimatedProps);
       });
     }
   };
 } else {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
-    for (const key in updates) {
-      if (ColorProperties.indexOf(key) !== -1) {
-        updates[key] = processColor(updates[key]);
-      }
-    }
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    global.UpdatePropsManager!.update(viewDescriptors, updates);
+    processColorsInProps(updates);
+    global.UpdatePropsManager.update(viewDescriptors, updates);
   };
 }
 
@@ -77,7 +54,7 @@ export const updatePropsJestWrapper = (
 
 export default updateProps;
 
-const createUpdatePropsManager = global._IS_FABRIC
+const createUpdatePropsManager = isFabric()
   ? () => {
       'worklet';
       // Fabric
@@ -100,8 +77,7 @@ const createUpdatePropsManager = global._IS_FABRIC
             }
           });
         },
-        flush() {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        flush(this: void) {
           _updatePropsFabric!(operations);
           operations.length = 0;
         },
@@ -131,18 +107,36 @@ const createUpdatePropsManager = global._IS_FABRIC
             }
           });
         },
-        flush() {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        flush(this: void) {
           _updatePropsPaper!(operations);
           operations.length = 0;
         },
       };
     };
 
-runOnUIImmediately(() => {
-  'worklet';
-  global.UpdatePropsManager = createUpdatePropsManager();
-})();
+if (shouldBeUseWeb()) {
+  const maybeThrowError = () => {
+    // Jest attempts to access a property of this object to check if it is a Jest mock
+    // so we can't throw an error in the getter.
+    if (!isJest()) {
+      throw new Error(
+        '[Reanimated] `UpdatePropsManager` is not available on non-native platform.'
+      );
+    }
+  };
+  global.UpdatePropsManager = new Proxy({} as UpdatePropsManager, {
+    get: maybeThrowError,
+    set: () => {
+      maybeThrowError();
+      return false;
+    },
+  });
+} else {
+  runOnUIImmediately(() => {
+    'worklet';
+    global.UpdatePropsManager = createUpdatePropsManager();
+  })();
+}
 
 export interface UpdatePropsManager {
   update(

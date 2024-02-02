@@ -7,9 +7,10 @@ on:
 
 jobs:
   call-build-workflow-rea-v3:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     uses: ./.github/workflows/build-npm-package-action.yml
     with:
-      version: nightly
+      option: --nightly
       publish_on_npm: true
     secrets:
       NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}

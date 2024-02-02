@@ -21,7 +21,7 @@ function Box({ label, state }: { label: string; state: boolean }) {
   );
 }
 
-export default function SpringLayoutAnimation(): React.ReactElement {
+export default function SpringLayoutAnimation() {
   const [state, setState] = useState(true);
   return (
     <View style={styles.marginTop}>

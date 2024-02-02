@@ -16,12 +16,12 @@ import React from 'react';
 
 const BOX_SIZE = 50;
 
-function NestedView(): React.ReactElement {
+function NestedView() {
   useAnimatedKeyboard();
   return <View style={styles.nestedView} />;
 }
 
-export default function AnimatedKeyboardExample(): React.ReactElement {
+export default function AnimatedKeyboardExample() {
   const keyboard = useAnimatedKeyboard();
   const OPENING = KeyboardState.OPENING;
   const style = useAnimatedStyle(() => {

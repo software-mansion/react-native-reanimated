@@ -1,41 +1,40 @@
+'use strict';
 import { NativeModules } from 'react-native';
-import type {
-  ShareableRef,
-  ShareableSyncDataHolderRef,
-  Value3D,
-  ValueRotation,
-} from '../commonTypes';
+import type { ShareableRef, Value3D, ValueRotation } from '../commonTypes';
 import type {
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from '../layoutReanimation';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
+import { jsVersion } from '../platform-specific/jsVersion';
+import type { WorkletRuntime } from '../runtimes';
+import { getValueUnpackerCode } from '../valueUnpacker';
+import type { LayoutAnimationBatchItem } from '../layoutReanimation/animationBuilder/commonTypes';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
-  installCoreFunctions(
-    callGuard: <T extends Array<unknown>, U>(
-      fn: (...args: T) => U,
-      ...args: T
-    ) => void,
-    valueUnpacker: <T>(value: T) => T
-  ): void;
   makeShareableClone<T>(
     value: T,
     shouldPersistRemote: boolean
   ): ShareableRef<T>;
-  makeSynchronizedDataHolder<T>(
-    valueRef: ShareableRef<T>
-  ): ShareableSyncDataHolderRef<T>;
-  getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>): T;
   scheduleOnUI<T>(shareable: ShareableRef<T>): void;
+  executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R;
+  createWorkletRuntime(
+    name: string,
+    initializer: ShareableRef<() => void>
+  ): WorkletRuntime;
+  scheduleOnRuntime<T>(
+    workletRuntime: WorkletRuntime,
+    worklet: ShareableRef<T>
+  ): void;
   registerEventHandler<T>(
-    eventHash: string,
-    eventHandler: ShareableRef<T>
+    eventHandler: ShareableRef<T>,
+    eventName: string,
+    emitterReactTag: number
   ): number;
   unregisterEventHandler(id: number): void;
   getViewProp<T>(
-    viewTag: string,
+    viewTag: number,
     propName: string,
     callback?: (result: T) => void
   ): Promise<T>;
@@ -59,40 +58,52 @@ export interface NativeReanimatedModule {
     sharedTransitionTag: string,
     config: ShareableRef<Keyframe | LayoutAnimationFunction>
   ): void;
+  configureLayoutAnimationBatch(
+    layoutAnimationsBatch: {
+      viewTag: number;
+      type: LayoutAnimationType;
+      config: ShareableRef<Keyframe | LayoutAnimationFunction> | undefined;
+    }[]
+  ): void;
+  setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
+}
+
+function assertSingleReanimatedInstance() {
+  if (
+    global._REANIMATED_VERSION_JS !== undefined &&
+    global._REANIMATED_VERSION_JS !== jsVersion
+  ) {
+    throw new Error(
+      `[Reanimated] Another instance of Reanimated was detected.
+See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#another-instance-of-reanimated-was-detected\` for more details. Previous: ${global._REANIMATED_VERSION_JS}, current: ${jsVersion}.`
+    );
+  }
 }
 
 export class NativeReanimated {
-  native = true;
   private InnerNativeModule: NativeReanimatedModule;
 
   constructor() {
+    // These checks have to split since version checking depend on the execution order
+    if (__DEV__) {
+      assertSingleReanimatedInstance();
+    }
+    global._REANIMATED_VERSION_JS = jsVersion;
     if (global.__reanimatedModuleProxy === undefined) {
       const { ReanimatedModule } = NativeModules;
-      ReanimatedModule?.installTurboModule();
+      const valueUnpackerCode = getValueUnpackerCode();
+      ReanimatedModule?.installTurboModule(valueUnpackerCode);
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new Error(
-        `[Reanimated] The native part of Reanimated doesn't seem to be initialized. This could be caused by\n\
-- not rebuilding the app after installing or upgrading Reanimated\n\
-- trying to run Reanimated on an unsupported platform\n\
-- running in a brownfield app without manually initializing the native library`
+        `[Reanimated] Native part of Reanimated doesn't seem to be initialized.
+See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    checkCppVersion();
+    if (__DEV__) {
+      checkCppVersion();
+    }
     this.InnerNativeModule = global.__reanimatedModuleProxy;
-  }
-
-  installCoreFunctions(
-    callGuard: <T extends Array<unknown>, U>(
-      fn: (...args: T) => U,
-      ...args: T
-    ) => void,
-    valueUnpacker: <T>(value: T) => T
-  ) {
-    return this.InnerNativeModule.installCoreFunctions(
-      callGuard,
-      valueUnpacker
-    );
   }
 
   makeShareableClone<T>(value: T, shouldPersistRemote: boolean) {
@@ -102,16 +113,26 @@ export class NativeReanimated {
     );
   }
 
-  makeSynchronizedDataHolder<T>(valueRef: ShareableRef<T>) {
-    return this.InnerNativeModule.makeSynchronizedDataHolder(valueRef);
-  }
-
-  getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>) {
-    return this.InnerNativeModule.getDataSynchronously(ref);
-  }
-
   scheduleOnUI<T>(shareable: ShareableRef<T>) {
     return this.InnerNativeModule.scheduleOnUI(shareable);
+  }
+
+  executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R {
+    return this.InnerNativeModule.executeOnUIRuntimeSync(shareable);
+  }
+
+  createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {
+    return this.InnerNativeModule.createWorkletRuntime(name, initializer);
+  }
+
+  scheduleOnRuntime<T>(
+    workletRuntime: WorkletRuntime,
+    shareableWorklet: ShareableRef<T>
+  ) {
+    return this.InnerNativeModule.scheduleOnRuntime(
+      workletRuntime,
+      shareableWorklet
+    );
   }
 
   registerSensor(
@@ -132,8 +153,16 @@ export class NativeReanimated {
     return this.InnerNativeModule.unregisterSensor(sensorId);
   }
 
-  registerEventHandler<T>(eventHash: string, eventHandler: ShareableRef<T>) {
-    return this.InnerNativeModule.registerEventHandler(eventHash, eventHandler);
+  registerEventHandler<T>(
+    eventHandler: ShareableRef<T>,
+    eventName: string,
+    emitterReactTag: number
+  ) {
+    return this.InnerNativeModule.registerEventHandler(
+      eventHandler,
+      eventName,
+      emitterReactTag
+    );
   }
 
   unregisterEventHandler(id: number) {
@@ -141,7 +170,7 @@ export class NativeReanimated {
   }
 
   getViewProp<T>(
-    viewTag: string,
+    viewTag: number,
     propName: string,
     callback?: (result: T) => void
   ) {
@@ -159,6 +188,19 @@ export class NativeReanimated {
       type,
       sharedTransitionTag,
       config
+    );
+  }
+
+  configureLayoutAnimationBatch(
+    layoutAnimationsBatch: LayoutAnimationBatchItem[]
+  ) {
+    this.InnerNativeModule.configureLayoutAnimationBatch(layoutAnimationsBatch);
+  }
+
+  setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean) {
+    this.InnerNativeModule.setShouldAnimateExitingForTag(
+      viewTag,
+      shouldAnimate
     );
   }
 

@@ -1,21 +1,28 @@
-import type { SharedValue } from './commonTypes';
+'use strict';
+import type {
+  MapperRawInputs,
+  MapperOutputs,
+  SharedValue,
+} from './commonTypes';
 import { isJest } from './PlatformChecker';
 import { runOnUI } from './threads';
-import { isSharedValue } from './utils';
+import { isSharedValue } from './isSharedValue';
 
 const IS_JEST = isJest();
+
+type MapperExtractedInputs = SharedValue[];
 
 type Mapper = {
   id: number;
   dirty: boolean;
   worklet: () => void;
-  inputs: SharedValue<any>[];
-  outputs?: SharedValue<any>[];
+  inputs: MapperExtractedInputs;
+  outputs?: MapperOutputs;
 };
 
 function createMapperRegistry() {
   'worklet';
-  const mappers = new Map();
+  const mappers = new Map<number, Mapper>();
   let sortedMappers: Mapper[] = [];
 
   let runRequested = false;
@@ -84,17 +91,20 @@ function createMapperRegistry() {
     if (processingMappers) {
       return;
     }
-    processingMappers = true;
-    if (mappers.size !== sortedMappers.length) {
-      updateMappersOrder();
-    }
-    for (const mapper of sortedMappers) {
-      if (mapper.dirty) {
-        mapper.dirty = false;
-        mapper.worklet();
+    try {
+      processingMappers = true;
+      if (mappers.size !== sortedMappers.length) {
+        updateMappersOrder();
       }
+      for (const mapper of sortedMappers) {
+        if (mapper.dirty) {
+          mapper.dirty = false;
+          mapper.worklet();
+        }
+      }
+    } finally {
+      processingMappers = false;
     }
-    processingMappers = false;
   }
 
   function maybeRequestUpdates() {
@@ -128,9 +138,9 @@ function createMapperRegistry() {
   }
 
   function extractInputs(
-    inputs: any,
-    resultArray: SharedValue<any>[]
-  ): SharedValue<any>[] {
+    inputs: unknown,
+    resultArray: MapperExtractedInputs
+  ): MapperExtractedInputs {
     if (Array.isArray(inputs)) {
       for (const input of inputs) {
         input && extractInputs(input, resultArray);
@@ -141,7 +151,7 @@ function createMapperRegistry() {
       // we only extract inputs recursively from "plain" objects here, if object
       // is of a derivative class (e.g. HostObject on web, or Map) we don't scan
       // it recursively
-      for (const element of Object.values(inputs)) {
+      for (const element of Object.values(inputs as Record<string, unknown>)) {
         element && extractInputs(element, resultArray);
       }
     }
@@ -152,10 +162,10 @@ function createMapperRegistry() {
     start: (
       mapperID: number,
       worklet: () => void,
-      inputs: SharedValue<any>[],
-      outputs?: SharedValue<any>[]
+      inputs: MapperRawInputs,
+      outputs?: MapperOutputs
     ) => {
-      const mapper = {
+      const mapper: Mapper = {
         id: mapperID,
         dirty: true,
         worklet,
@@ -189,8 +199,8 @@ let MAPPER_ID = 9999;
 
 export function startMapper(
   worklet: () => void,
-  inputs: any[] = [],
-  outputs: any[] = []
+  inputs: MapperRawInputs = [],
+  outputs: MapperOutputs = []
 ): number {
   const mapperID = (MAPPER_ID += 1);
 

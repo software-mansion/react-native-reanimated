@@ -1,16 +1,20 @@
+'use strict';
 import { jsVersion } from './jsVersion';
 
 export function checkCppVersion() {
   const cppVersion = global._REANIMATED_VERSION_CPP;
   if (cppVersion === undefined) {
-    throw new Error(
-      `[Reanimated] Couldn't determine the version of the native part of Reanimated. Did you forget to re-build the app after upgrading react-native-reanimated? If you use Expo Go, you must use the exact version which is bundled into Expo SDK.`
+    console.warn(
+      `[Reanimated] Couldn't determine the version of the native part of Reanimated.
+    See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#couldnt-determine-the-version-of-the-native-part-of-reanimated\` for more details.`
     );
+    return;
   }
   const ok = matchVersion(jsVersion, cppVersion);
   if (!ok) {
     throw new Error(
-      `[Reanimated] Mismatch between JavaScript part (${jsVersion}) and native part of Reanimated (${cppVersion}). Did you forget to re-build the app after upgrading react-native-reanimated? If you use Expo Go, you must downgrade to ${cppVersion} which is bundled into Expo SDK.`
+      `[Reanimated] Mismatch between JavaScript part and native part of Reanimated (${jsVersion} vs ${cppVersion}).
+    See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-javascript-part-and-native-part-of-reanimated\` for more details.`
     );
   }
 }

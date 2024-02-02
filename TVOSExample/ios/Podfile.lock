@@ -322,7 +322,7 @@ PODS:
     - React-jsi (= 0.69.8-0)
     - React-logger (= 0.69.8-0)
     - React-perflogger (= 0.69.8-0)
-  - RNReanimated (3.4.0):
+  - RNReanimated (3.6.0):
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
@@ -348,7 +348,7 @@ PODS:
     - React-RCTText
     - ReactCommon/turbomodule/core
     - Yoga
-  - SocketRocket (0.6.0)
+  - SocketRocket (0.6.1)
   - Yoga (1.14.0)
   - YogaKit (1.18.1):
     - Yoga
@@ -496,9 +496,9 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  boost: a7c83b31436843459a1961bfd74b96033dc77234
+  boost: 0ed1b9a58a27b2f7885dc9f279bc3b341f44512b
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
-  DoubleConversion: 1d2f3470dfd56717030d0855f8332361bbd85236
+  DoubleConversion: 234abba95e31cc2aada0cf3b97cdb11bc5b90575
   FBLazyVector: cac88c410ace16c7e80d77741d4cc00821f75dda
   FBReactNativeSpec: 221ab8eae9ca9fb680a38b11ea18ea0e82daa3fb
   Flipper: 26fc4b7382499f1281eb8cb921e5c3ad6de91fe0
@@ -511,10 +511,10 @@ SPEC CHECKSUMS:
   Flipper-RSocket: d9d9ade67cbecf6ac10730304bf5607266dd2541
   FlipperKit: cbdee19bdd4e7f05472a66ce290f1b729ba3cb86
   fmt: 135c0c55547979f715b56dfa54037ececa96d07a
-  glog: 5b768715ae7bf8149e9d269089c22585cee27eb7
+  glog: a2ded9bf28f0cb2fce90ad21eb419299a500ff6c
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   OpenSSL-Universal: ebc357f1e6bc71fa463ccb2fe676756aff50e88c
-  RCT-Folly: 5b616707d7d51519bd8d59b3e11f15df58f54df7
+  RCT-Folly: 6955e7728b76277c5df5a5aba37ee1ff1dd99976
   RCTRequired: d4e120145b845a1a9d438358b1a756d9ca625aac
   RCTTypeSafety: fbbc51a5b16ed60305d004a2ce324186936ac0e7
   React: d355eb3b5ab69640f5500fcd29ed438e119209e4
@@ -538,11 +538,11 @@ SPEC CHECKSUMS:
   React-RCTText: e2934b40d4375044329dfeb25bd1dd29d746732d
   React-runtimeexecutor: a30b74989ee4642b061c9543ba03b5434f7e67fd
   ReactCommon: 7c314443ae0231621001d149b6f8d6f5069a40a0
-  RNReanimated: 8b0a94fe94692c7b857074ec3ea75f2d241ca89b
-  SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
+  RNReanimated: 3908de928e34a39886f7a765d3ef54806974e80e
+  SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: b235f0e235cb33113f65992ccd88b9d082ac04f5
   YogaKit: 1e22bf2228b3a5ac8cc88965153061ae92c494b5
 
 PODFILE CHECKSUM: 7f78374eef3ebfe51be4a689d935acd27287c5d2
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.14.2

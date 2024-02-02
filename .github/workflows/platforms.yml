@@ -5,14 +5,14 @@ on:
 
 jobs:
   main:
-    if: ${{ !contains(github.event.issue.labels.*.name, 'Maintainer issue') }}
+    if: ${{ github.repository == 'software-mansion/react-native-reanimated' && !contains(github.event.issue.labels.*.name, 'Maintainer issue') }}
     runs-on: ubuntu-latest
     concurrency:
       group: platforms-${{ github.event.issue.number }}
       cancel-in-progress: true
     steps:
       - name: Checkout Actions
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'software-mansion-labs/swmansion-bot'
           ref: stable

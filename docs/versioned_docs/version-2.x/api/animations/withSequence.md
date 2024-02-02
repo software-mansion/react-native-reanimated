@@ -16,7 +16,7 @@ The animations to be run in sequence.
 
 ### Returns
 
-This method returns an animation object. It can be either assigned directly to a Shared Value or can be used as a value for a style object returned from [`useAnimatedStyle`](../hooks/useAnimatedStyle).
+This method returns an animation object. It can be either assigned directly to a Shared Value or can be used as a value for a style object returned from [`useAnimatedStyle`](/docs/2.x/api/hooks/useAnimatedStyle).
 
 ## Example
 
@@ -25,6 +25,5 @@ We start a sequence of timing animations: first from 0 to 70 and then back to 0.
 The sequence will will result in the value returning to the original position.
 
 ```js
-sharedValue.value = withSequence(withTiming(70), withTiming(0))
+sharedValue.value = withSequence(withTiming(70), withTiming(0));
 ```
-

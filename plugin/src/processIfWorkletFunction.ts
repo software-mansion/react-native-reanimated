@@ -1,50 +1,49 @@
-import type { NodePath, Node } from '@babel/core';
-import {
-  callExpression,
-  isScopable,
-  isExportNamedDeclaration,
-  variableDeclaration,
-  variableDeclarator,
-} from '@babel/types';
-import type { ExplicitWorklet, ReanimatedPluginPass } from './types';
-import { makeWorklet } from './makeWorklet';
+import type { NodePath } from '@babel/core';
+import { callExpression } from '@babel/types';
+import type { CallExpression } from '@babel/types';
+import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
+import { makeWorkletFactory } from './makeWorklet';
 
-// Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
-// with a workletized version of itself.
-
-export function processIfWorkletFunction(
-  path: NodePath<Node>,
+export function makeWorkletFactoryCall(
+  path: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
-) {
-  if (
-    path.isFunctionDeclaration() ||
-    path.isFunctionExpression() ||
-    path.isArrowFunctionExpression()
-  ) {
-    processWorkletFunction(path, state);
-  }
+): CallExpression {
+  const workletFactory = makeWorkletFactory(path, state);
+
+  const workletFactoryCall = callExpression(workletFactory, []);
+
+  addStackTraceDataToWorkletFactory(path, workletFactoryCall);
+
+  const replacement = workletFactoryCall;
+
+  return replacement;
 }
 
-function processWorkletFunction(
-  path: NodePath<ExplicitWorklet>,
-  state: ReanimatedPluginPass
-) {
-  const newFun = makeWorklet(path, state);
+/* 
+  If for some reason the code of the worklet is so bad that it
+  causes the worklet factory to crash, eg.:
 
-  const replacement = callExpression(newFun, []);
+  function foo() {
+    'worklet'
+    unexistingVariable;
+  };
 
-  // we check if function needs to be assigned to variable declaration.
-  // This is needed if function definition directly in a scope. Some other ways
-  // where function definition can be used is for example with variable declaration:
-  // const ggg = function foo() { }
-  // ^ in such a case we don't need to define variable for the function
-  const needDeclaration =
-    isScopable(path.parent) || isExportNamedDeclaration(path.parent);
-  path.replaceWith(
-    'id' in path.node && path.node.id && needDeclaration
-      ? variableDeclaration('const', [
-          variableDeclarator(path.node.id, replacement),
-        ])
-      : replacement
-  );
+  Such function will cause the factory to crash on closure creation because
+  of reference to `unexistingVariable`.
+  
+  With this we are able to give a meaningful stack trace - we use `start` twice on purpose, since
+  crashing on the factory leads to its end on the stack trace - the closing bracket. It's more
+  approachable this way, when it points to the start of the original function.
+  */
+function addStackTraceDataToWorkletFactory(
+  path: NodePath<WorkletizableFunction>,
+  workletFactoryCall: CallExpression
+): void {
+  const originalWorkletLocation = path.node.loc;
+  if (originalWorkletLocation) {
+    workletFactoryCall.callee.loc = {
+      start: originalWorkletLocation.start,
+      end: originalWorkletLocation.start,
+    };
+  }
 }

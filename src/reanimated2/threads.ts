@@ -1,6 +1,7 @@
+'use strict';
 import NativeReanimatedModule from './NativeReanimated';
 import { isJest, shouldBeUseWeb } from './PlatformChecker';
-import type { ComplexWorkletFunction } from './commonTypes';
+import type { WorkletFunction } from './commonTypes';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -8,9 +9,12 @@ import {
 import { isWorklet } from './utils';
 
 const IS_JEST = isJest();
-const IS_NATIVE = !shouldBeUseWeb();
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-let _runOnUIQueue: Array<[ComplexWorkletFunction<any[], any>, any[]]> = [];
+/**
+ * An array of [worklet, args] pairs.
+ * */
+let _runOnUIQueue: Array<[WorkletFunction<unknown[], unknown>, unknown[]]> = [];
 
 export function setupMicrotasks() {
   'worklet';
@@ -44,28 +48,40 @@ function callMicrotasksOnUIThread() {
   global.__callMicrotasks();
 }
 
-export const callMicrotasks = IS_NATIVE
-  ? callMicrotasksOnUIThread
-  : () => {
+export const callMicrotasks = SHOULD_BE_USE_WEB
+  ? () => {
       // on web flushing is a noop as immediates are handled by the browser
-    };
+    }
+  : callMicrotasksOnUIThread;
 
 /**
- * Schedule a worklet to execute on the UI runtime. This method does not schedule the work immediately but instead
- * waits for other worklets to be scheduled within the same JS loop. It uses queueMicrotask to schedule all the worklets
+ * Lets you asynchronously run [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) functions on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
+ *
+ * This method does not schedule the work immediately but instead waits for other worklets
+ * to be scheduled within the same JS loop. It uses queueMicrotask to schedule all the worklets
  * at once making sure they will run within the same frame boundaries on the UI thread.
+ *
+ * @param fun - A reference to a function you want to execute on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI) from the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
+ * @returns A function that accepts arguments for the function passed as the first argument.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI
  */
-export function runOnUI<A extends any[], R>(
-  fun: ComplexWorkletFunction<A, R>
-): (...args: A) => void {
+// @ts-expect-error This overload is correct since it's what user sees in his code
+// before it's transformed by Reanimated Babel plugin.
+export function runOnUI<Args extends unknown[], ReturnValue>(
+  worklet: (...args: Args) => ReturnValue
+): (...args: Args) => void;
+
+export function runOnUI<Args extends unknown[], ReturnValue>(
+  worklet: WorkletFunction<Args, ReturnValue>
+): (...args: Args) => void {
   'worklet';
-  if (__DEV__ && IS_NATIVE && _WORKLET) {
+  if (__DEV__ && !SHOULD_BE_USE_WEB && _WORKLET) {
     throw new Error(
-      'runOnUI() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
+      '[Reanimated] `runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && IS_NATIVE && !isWorklet(fun)) {
-    throw new Error('runOnUI() can only be used on worklets');
+  if (__DEV__ && !SHOULD_BE_USE_WEB && worklet.__workletHash === undefined) {
+    throw new Error('[Reanimated] `runOnUI` can only be used on worklets.');
   }
   return (...args) => {
     if (IS_JEST) {
@@ -95,7 +111,8 @@ export function runOnUI<A extends any[], R>(
       makeShareableCloneRecursive(fun);
       makeShareableCloneRecursive(args);
     }
-    _runOnUIQueue.push([fun, args]);
+    //
+    _runOnUIQueue.push([worklet as WorkletFunction<unknown[], unknown>, args]);
     if (_runOnUIQueue.length === 1) {
       queueMicrotask(() => {
         const queue = _runOnUIQueue;
@@ -103,6 +120,7 @@ export function runOnUI<A extends any[], R>(
         NativeReanimatedModule.scheduleOnUI(
           makeShareableCloneRecursive(() => {
             'worklet';
+            // eslint-disable-next-line @typescript-eslint/no-shadow
             queue.forEach(([worklet, args]) => {
               worklet(...args);
             });
@@ -114,20 +132,45 @@ export function runOnUI<A extends any[], R>(
   };
 }
 
+// @ts-expect-error Check `executeOnUIRuntimeSync` overload above.
+export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
+  worklet: (...args: Args) => ReturnValue
+): (...args: Args) => ReturnValue;
+
+export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
+  worklet: WorkletFunction<Args, ReturnValue>
+): (...args: Args) => ReturnValue {
+  return (...args) => {
+    return NativeReanimatedModule.executeOnUIRuntimeSync(
+      makeShareableCloneRecursive(() => {
+        'worklet';
+        const result = worklet(...args);
+        return makeShareableCloneOnUIRecursive(result);
+      })
+    );
+  };
+}
+
+// @ts-expect-error Check `runOnUI` overload above.
+export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
+  worklet: (...args: Args) => ReturnValue
+): WorkletFunction<Args, ReturnValue>;
 /**
  * Schedule a worklet to execute on the UI runtime skipping batching mechanism.
  */
-export function runOnUIImmediately<A extends any[], R>(
-  fun: ComplexWorkletFunction<A, R>
-): (...args: A) => void {
+export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
+  worklet: WorkletFunction<Args, ReturnValue>
+): (...args: Args) => void {
   'worklet';
-  if (__DEV__ && IS_NATIVE && _WORKLET) {
+  if (__DEV__ && !SHOULD_BE_USE_WEB && _WORKLET) {
     throw new Error(
-      'runOnUIImmediately() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
+      '[Reanimated] `runOnUIImmediately` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && IS_NATIVE && !isWorklet(fun)) {
-    throw new Error('runOnUIImmediately() can only be used on worklets');
+  if (__DEV__ && !SHOULD_BE_USE_WEB && worklet.__workletHash === undefined) {
+    throw new Error(
+      '[Reanimated] `runOnUIImmediately` can only be used on worklets.'
+    );
   }
   return (...args) => {
     NativeReanimatedModule.scheduleOnUI(
@@ -139,51 +182,77 @@ export function runOnUIImmediately<A extends any[], R>(
   };
 }
 
-if (__DEV__ && IS_NATIVE) {
-  const f = () => {
-    'worklet';
-  };
-  // @ts-ignore plugin
-  if (!isWorklet(f)) {
-    throw new Error(
-      'Failed to create a worklet. Did you forget to add Reanimated Babel plugin in babel.config.js? See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation#babel-plugin.'
-    );
-  }
-}
+type ReleaseRemoteFunction<Args extends unknown[], ReturnValue> = {
+  (...args: Args): ReturnValue;
+};
 
-function runWorkletOnJS<A extends any[], R>(
-  worklet: ComplexWorkletFunction<A, R>,
-  ...args: A
+type DevRemoteFunction<Args extends unknown[], ReturnValue> = {
+  __remoteFunction: (...args: Args) => ReturnValue;
+};
+
+type RemoteFunction<Args extends unknown[], ReturnValue> =
+  | ReleaseRemoteFunction<Args, ReturnValue>
+  | DevRemoteFunction<Args, ReturnValue>;
+
+function runWorkletOnJS<Args extends unknown[], ReturnValue>(
+  worklet: WorkletFunction<Args, ReturnValue>,
+  ...args: Args
 ): void {
   // remote function that calls a worklet synchronously on the JS runtime
   worklet(...args);
 }
 
-export function runOnJS<A extends any[], R>(
-  fun: ComplexWorkletFunction<A, R>
-): (...args: A) => void {
+/**
+ * Lets you asynchronously run non-[workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) functions that couldn't otherwise run on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
+ * This applies to most external libraries as they don't have their functions marked with "worklet"; directive.
+ *
+ * @param fun - A reference to a function you want to execute on the JavaScript thread from the UI thread.
+ * @returns A function that accepts arguments for the function passed as the first argument.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnJS
+ */
+export function runOnJS<Args extends unknown[], ReturnValue>(
+  fun:
+    | ((...args: Args) => ReturnValue)
+    | RemoteFunction<Args, ReturnValue>
+    | WorkletFunction<Args, ReturnValue>
+): (...args: Args) => void {
   'worklet';
-  if (!IS_NATIVE || !_WORKLET) {
+  type FunWorklet = Extract<typeof fun, WorkletFunction<Args, ReturnValue>>;
+  type FunDevRemote = Extract<typeof fun, DevRemoteFunction<Args, ReturnValue>>;
+  if (SHOULD_BE_USE_WEB || !_WORKLET) {
     // if we are already on the JS thread, we just schedule the worklet on the JS queue
-    return (...args) => queueMicrotask(args.length ? () => fun(...args) : fun);
+    return (...args) =>
+      queueMicrotask(
+        args.length
+          ? () => (fun as (...args: Args) => ReturnValue)(...args)
+          : (fun as () => ReturnValue)
+      );
   }
-  if (isWorklet(fun)) {
-    // if `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
-    // and pass the worklet as a first argument followed by original arguments
-    return (...args) => runOnJS(runWorkletOnJS<A, R>)(fun, ...args);
+  if ((fun as FunWorklet).__workletHash) {
+    // If `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
+    // and pass the worklet as a first argument followed by original arguments.
+
+    return (...args) =>
+      runOnJS(runWorkletOnJS<Args, ReturnValue>)(
+        fun as WorkletFunction<Args, ReturnValue>,
+        ...args
+      );
   }
-  if (fun.__remoteFunction) {
-    // in development mode the function provided as `fun` throws an error message
+  if ((fun as FunDevRemote).__remoteFunction) {
+    // In development mode the function provided as `fun` throws an error message
     // such that when someone accidentally calls it directly on the UI runtime, they
     // see that they should use `runOnJS` instead. To facilitate that we put the
-    // reference to the original remote function in the `__remoteFunction` property.
-    fun = fun.__remoteFunction;
+    // reference to the original remote function in the `__functionInDEV` property.
+    fun = (fun as FunDevRemote).__remoteFunction;
   }
   return (...args) => {
     _scheduleOnJS(
-      fun,
+      fun as
+        | ((...args: Args) => ReturnValue)
+        | WorkletFunction<Args, ReturnValue>,
       args.length > 0
-        ? (makeShareableCloneOnUIRecursive(args) as unknown as unknown[])
+        ? // TODO TYPESCRIPT this cast is terrible but will be fixed
+          (makeShareableCloneOnUIRecursive(args) as unknown as unknown[])
         : undefined
     );
   };

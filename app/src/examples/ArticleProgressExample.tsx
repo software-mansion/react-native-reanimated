@@ -1,11 +1,13 @@
-import React from 'react';
-import { SafeAreaView, StyleSheet } from 'react-native';
 import Animated, {
+  clamp,
   measure,
   useAnimatedRef,
   useAnimatedStyle,
   useScrollViewOffset,
 } from 'react-native-reanimated';
+import { SafeAreaView, StyleSheet, Text } from 'react-native';
+
+import React from 'react';
 
 export default function ArticleProgressExample() {
   const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
@@ -14,27 +16,33 @@ export default function ArticleProgressExample() {
 
   const progressBarAnimatedStyle = useAnimatedStyle(() => {
     const measuredText = measure(textRef);
-    if (measuredText === null) {
+    if (
+      measuredText === null ||
+      measuredText.height === 0 ||
+      Number.isNaN(measuredText.height)
+    ) {
       return { width: 0 };
     }
 
     const measuredScroll = measure(scrollViewRef);
-    if (measuredScroll === null) {
+    if (
+      measuredScroll === null ||
+      measuredScroll.width === 0 ||
+      measuredScroll.height === 0 ||
+      Number.isNaN(measuredScroll.width) ||
+      Number.isNaN(measuredScroll.height)
+    ) {
       return { width: 0 };
     }
 
+    const currentOffset = scrollHandler.value;
     const maxOffset = measuredText.height - measuredScroll.height;
 
-    // We need this, because the useScrollViewOffset hook reports the offset of
-    // the top of the view.
-    const scrollViewHeightOffset =
-      (measuredScroll.height / maxOffset) * scrollHandler.value;
+    const progress = currentOffset / maxOffset;
+    const clampedProgress = clamp(progress, 0, 1);
 
-    const width = Math.max(
-      ((scrollHandler.value + scrollViewHeightOffset) / measuredText.height) *
-        measuredScroll.width,
-      0
-    );
+    const maxWidth = measuredScroll.width;
+    const width = clampedProgress * maxWidth;
 
     return { width };
   }, []);
@@ -42,8 +50,10 @@ export default function ArticleProgressExample() {
   return (
     <SafeAreaView>
       <Animated.View style={[styles.progressBar, progressBarAnimatedStyle]} />
-      <Animated.ScrollView ref={scrollViewRef} style={styles.articleScrollView}>
-        <Animated.Text ref={textRef}>{loremIpsum}</Animated.Text>
+      <Animated.ScrollView ref={scrollViewRef}>
+        <Text ref={textRef} style={styles.text}>
+          {LOREM_IPSUM}
+        </Text>
       </Animated.ScrollView>
     </SafeAreaView>
   );
@@ -51,15 +61,15 @@ export default function ArticleProgressExample() {
 
 const styles = StyleSheet.create({
   progressBar: {
-    backgroundColor: 'red',
-    height: 5,
+    backgroundColor: 'limegreen',
+    height: 8,
   },
-  articleScrollView: {
-    padding: 16,
+  text: {
+    marginHorizontal: 16,
   },
 });
 
-const loremIpsum = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque sit amet ultrices nisl. Sed aliquam vel justo ut maximus. Ut lacinia odio id metus pulvinar, sed imperdiet risus tincidunt. Pellentesque dapibus rutrum metus nec consequat. Nunc ligula turpis, aliquet quis feugiat eu, aliquet ut metus. Maecenas et pellentesque massa, tempor bibendum eros. Duis tempus, mi nec consectetur tempor, mauris nibh volutpat turpis, eu dictum nunc ipsum et lectus. Duis dictum, urna eget imperdiet ullamcorper, urna orci posuere magna, vel consectetur ipsum urna id urna. Vestibulum mollis ex rutrum pulvinar mollis. Morbi vitae dictum velit. Mauris congue nibh at egestas aliquam. Morbi et odio at ligula ullamcorper pellentesque.
+const LOREM_IPSUM = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque sit amet ultrices nisl. Sed aliquam vel justo ut maximus. Ut lacinia odio id metus pulvinar, sed imperdiet risus tincidunt. Pellentesque dapibus rutrum metus nec consequat. Nunc ligula turpis, aliquet quis feugiat eu, aliquet ut metus. Maecenas et pellentesque massa, tempor bibendum eros. Duis tempus, mi nec consectetur tempor, mauris nibh volutpat turpis, eu dictum nunc ipsum et lectus. Duis dictum, urna eget imperdiet ullamcorper, urna orci posuere magna, vel consectetur ipsum urna id urna. Vestibulum mollis ex rutrum pulvinar mollis. Morbi vitae dictum velit. Mauris congue nibh at egestas aliquam. Morbi et odio at ligula ullamcorper pellentesque.
 
 In volutpat lacus gravida faucibus ultricies. Etiam nibh sem, tincidunt in ipsum non, volutpat ultrices tortor. Fusce vitae velit lorem. Aliquam ut consectetur sapien. Donec tempus placerat vehicula. Nulla sit amet nisi vitae lacus aliquet pulvinar. Integer at magna posuere, placerat justo ac, rutrum nisl. Fusce tortor enim, laoreet in ligula sit amet, tristique tincidunt arcu. Integer quis libero malesuada, facilisis lorem eu, volutpat metus.
 

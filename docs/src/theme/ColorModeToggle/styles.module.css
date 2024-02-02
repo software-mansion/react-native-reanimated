@@ -1,0 +1,77 @@
+.toggle {
+  height: var(--swm-logo-height);
+  width: calc(2 * var(--swm-logo-height));
+
+  margin-right: 0;
+}
+
+.toggleButton {
+  -webkit-tap-highlight-color: transparent;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 100%;
+  height: 100%;
+
+  border: 1px solid var(--swm-color-mode-enabled);
+  border-radius: 0;
+  box-shadow: none;
+
+  transition: background var(--ifm-transition-fast);
+}
+
+.toggleButton:hover {
+  background: var(--ifm-color-emphasis-200);
+}
+
+.toggleButtonLanding.toggleButton:hover {
+  background: var(--swm-navy-light-20);
+}
+
+.toggleButtonLanding {
+  border: 1px solid var(--swm-color-mode-enabled-landing);
+}
+
+.toggleButtonDisabled {
+  cursor: not-allowed;
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 1;
+  height: 100%;
+
+  color: var(--swm-color-mode-disabled-color);
+}
+
+.iconContainer svg {
+  width: 65%;
+  height: 65%;
+}
+
+.iconLandingContainer {
+  color: var(--swm-color-mode-disabled-color-landing);
+}
+
+.darkIconContainer {
+  flex: 1;
+  height: 100%;
+  transform: scaleX(-1);
+}
+
+[data-theme='dark'] .darkToggleIcon,
+[data-theme='light'] .lightToggleIcon {
+  color: var(--ifm-font-color-base);
+  background-color: var(--swm-color-mode-enabled);
+}
+
+[data-theme='dark'] .iconLandingContainer.darkToggleIcon,
+[data-theme='light'] .iconLandingContainer.lightToggleIcon {
+  color: var(--swm-color-mode-enabled-color-landing);
+  background-color: var(--swm-color-mode-enabled-landing);
+}

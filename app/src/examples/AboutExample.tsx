@@ -18,12 +18,23 @@ function getPlatformVersion() {
   return Platform.Version;
 }
 
-function getMode() {
-  return __DEV__ ? 'Debug' : 'Release';
+function getBundle() {
+  return __DEV__ ? 'dev' : 'production';
 }
 
 function getRuntime() {
-  return 'HermesInternal' in global ? 'Hermes' : 'JSC'; // TODO: V8
+  if ('HermesInternal' in global) {
+    const version =
+      // @ts-ignore this is fine
+      global.HermesInternal?.getRuntimeProperties?.()['OSS Release Version'];
+    return `Hermes (${version})`;
+  }
+  if ('_v8runtime' in global) {
+    // @ts-ignore this is fine
+    const version = global._v8runtime().version;
+    return `V8 (${version})`;
+  }
+  return 'JSC';
 }
 
 function getArchitecture() {
@@ -43,7 +54,7 @@ export default function AboutExample() {
         {getPlatformVersion()}
       </Text>
       <Text style={styles.text}>
-        <Text style={styles.bold}>Build type:</Text> {getMode()}
+        <Text style={styles.bold}>Bundle:</Text> {getBundle()}
       </Text>
       {!isWeb() && (
         <>

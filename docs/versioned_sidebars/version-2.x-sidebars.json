@@ -12,7 +12,6 @@
         "fundamentals/events",
         "fundamentals/custom_events",
         "fundamentals/layout_animations",
-        "fundamentals/architecture",
         "fundamentals/migration",
         "fundamentals/web-support",
         "fundamentals/troubleshooting"
@@ -72,17 +71,12 @@
     {
       "type": "category",
       "label": "Guides",
-      "items": [
-        "guide/testing",
-        "guide/debugging"
-      ]
+      "items": ["guide/testing", "guide/debugging"]
     },
     {
       "type": "category",
       "label": "Tutorials",
-      "items": [
-        "tutorials/LayoutAnimations/layoutAnimations"
-      ]
+      "items": ["tutorials/LayoutAnimations/layoutAnimations"]
     },
     {
       "type": "doc",

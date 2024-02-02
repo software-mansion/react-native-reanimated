@@ -5,7 +5,7 @@ import Animated, {
   useAnimatedGestureHandler,
   cancelAnimation,
   interpolate,
-  Extrapolate,
+  Extrapolation,
   withSpring,
 } from 'react-native-reanimated';
 import {
@@ -30,8 +30,8 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function LiquidSwipe(): React.ReactElement {
-  const isBack = useSharedValue(0);
+export default function LiquidSwipe() {
+  const isBack = useSharedValue(false);
   const centerY = useSharedValue(initialWaveCenter);
   const progress = useSharedValue(0);
 
@@ -59,25 +59,20 @@ export default function LiquidSwipe(): React.ReactElement {
           event.translationX,
           [0, maxDist],
           [1, 0],
-          Extrapolate.CLAMP
+          Extrapolation.CLAMP
         );
       } else {
         progress.value = interpolate(
           event.translationX,
           [-maxDist, 0],
           [0.4, 0],
-          Extrapolate.CLAMP
+          Extrapolation.CLAMP
         );
       }
     },
     onEnd: () => {
-      let goBack: number;
-      if (isBack.value) {
-        goBack = progress.value > 0.5 ? 1 : 0;
-      } else {
-        // TODO: want to use a boolean here
-        goBack = progress.value > 0.2 ? 1 : 0;
-      }
+      const threshold = isBack.value ? 0.5 : 0.2;
+      const goBack = progress.value > threshold;
       centerY.value = withSpring(initialWaveCenter);
       progress.value = withSpring(goBack ? 1 : 0, {}, () => {
         isBack.value = goBack;

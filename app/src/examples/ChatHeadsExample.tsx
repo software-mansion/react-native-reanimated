@@ -6,6 +6,7 @@ import Animated, {
   useAnimatedGestureHandler,
   useDerivedValue,
   withSpring,
+  clamp,
 } from 'react-native-reanimated';
 import {
   PanGestureHandler,
@@ -40,9 +41,6 @@ function ChatHeads({
       const width = windowWidth - 100 - 40; // minus margins & width
       const height = windowHeight - 100 - 40; // minus margins & height
       const toss = 0.2;
-      function clamp(value: number, min: number, max: number) {
-        return Math.min(Math.max(value, min), max);
-      }
       const targetX = clamp(transX.value + toss * event.velocityX, 0, width);
       const targetY = clamp(transY.value + toss * event.velocityY, 0, height);
       // return;
@@ -157,7 +155,7 @@ function Followers({
   );
 }
 
-export default function ChatHeadsExample(): React.ReactElement {
+export default function ChatHeadsExample() {
   return (
     <View style={styles.container}>
       <ChatHeads>

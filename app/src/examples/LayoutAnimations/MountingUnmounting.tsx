@@ -40,7 +40,7 @@ function SWMLogo() {
   );
 }
 
-export default function MountingUnmounting(): React.ReactElement {
+export default function MountingUnmounting() {
   const [show, setShow] = useState(false);
   return (
     <View style={styles.columnReverse}>

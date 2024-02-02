@@ -1,5 +1,6 @@
+'use strict';
 import NativeReanimatedModule from './NativeReanimated';
-import { nativeShouldBeMock, isWeb } from './PlatformChecker';
+import { isWeb, shouldBeUseWeb, isFabric } from './PlatformChecker';
 import type {
   AnimatedKeyboardOptions,
   SensorConfig,
@@ -15,20 +16,21 @@ import type {
 } from './layoutReanimation';
 import { initializeUIRuntime } from './initializers';
 import type {
+  LayoutAnimationBatchItem,
   ProgressAnimationCallback,
   SharedTransitionAnimationsFunction,
 } from './layoutReanimation/animationBuilder/commonTypes';
 import { SensorContainer } from './SensorContainer';
 
 export { startMapper, stopMapper } from './mappers';
-export { runOnJS, runOnUI } from './threads';
-export { makeShareable } from './shareables';
-export { makeMutable, makeRemote } from './mutables';
+export { runOnJS, runOnUI, executeOnUIRuntimeSync } from './threads';
+export { createWorkletRuntime, runOnRuntime } from './runtimes';
+export type { WorkletRuntime } from './runtimes';
+export { makeShareable, makeShareableCloneRecursive } from './shareables';
+export { makeMutable } from './mutables';
 
-export type ReanimatedConsole = Pick<
-  Console,
-  'debug' | 'log' | 'warn' | 'info' | 'error'
->;
+const IS_FABRIC = isFabric();
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /**
  * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1
@@ -47,18 +49,20 @@ export const isReanimated3 = () => true;
 export const isConfigured = isReanimated3;
 
 // this is for web implementation
-global._WORKLET = false;
-global._log = function (s: string) {
-  console.log(s);
-};
+if (SHOULD_BE_USE_WEB) {
+  global._WORKLET = false;
+  global._log = console.log;
+  global._getAnimationTimestamp = () => performance.now();
+}
 
-export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
-  if (global._IS_FABRIC) {
+export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
+  if (IS_FABRIC) {
     throw new Error(
-      '[react-native-reanimated] `getViewProp` is not supported on Fabric yet'
+      '[Reanimated] `getViewProp` is not supported on Fabric yet.'
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return new Promise((resolve, reject) => {
     return NativeReanimatedModule.getViewProp(
       viewTag,
@@ -74,7 +78,7 @@ export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
   });
 }
 
-export function getSensorContainer(): SensorContainer {
+function getSensorContainer(): SensorContainer {
   if (!global.__sensorContainer) {
     global.__sensorContainer = new SensorContainer();
   }
@@ -82,8 +86,9 @@ export function getSensorContainer(): SensorContainer {
 }
 
 export function registerEventHandler<T>(
-  eventHash: string,
-  eventHandler: (event: T) => void
+  eventHandler: (event: T) => void,
+  eventName: string,
+  emitterReactTag = -1
 ): number {
   function handleAndFlushAnimationFrame(eventTimestamp: number, event: T) {
     'worklet';
@@ -93,8 +98,9 @@ export function registerEventHandler<T>(
     global.__frameTimestamp = undefined;
   }
   return NativeReanimatedModule.registerEventHandler(
-    eventHash,
-    makeShareableCloneRecursive(handleAndFlushAnimationFrame)
+    makeShareableCloneRecursive(handleAndFlushAnimationFrame),
+    eventName,
+    emitterReactTag
   );
 }
 
@@ -110,7 +116,7 @@ export function subscribeForKeyboardEvents(
   // via registerEventHandler. For now we are copying the code from there.
   function handleAndFlushAnimationFrame(state: number, height: number) {
     'worklet';
-    const now = performance.now();
+    const now = _getAnimationTimestamp();
     global.__frameTimestamp = now;
     eventHandler(state, height);
     global.__flushAnimationFrame(now);
@@ -189,7 +195,7 @@ export function enableLayoutAnimations(
 }
 
 export function configureLayoutAnimations(
-  viewTag: number,
+  viewTag: number | HTMLElement,
   type: LayoutAnimationType,
   config:
     | LayoutAnimationFunction
@@ -199,15 +205,34 @@ export function configureLayoutAnimations(
   sharedTransitionTag = ''
 ): void {
   NativeReanimatedModule.configureLayoutAnimation(
-    viewTag,
+    viewTag as number, // On web this function is no-op, therefore we can cast viewTag to number
     type,
     sharedTransitionTag,
     makeShareableCloneRecursive(config)
   );
 }
 
-export function configureProps(uiProps: string[], nativeProps: string[]): void {
-  if (!nativeShouldBeMock()) {
+export function configureLayoutAnimationBatch(
+  layoutAnimationsBatch: LayoutAnimationBatchItem[]
+): void {
+  NativeReanimatedModule.configureLayoutAnimationBatch(layoutAnimationsBatch);
+}
+
+export function setShouldAnimateExitingForTag(
+  viewTag: number | HTMLElement,
+  shouldAnimate: boolean
+) {
+  NativeReanimatedModule.setShouldAnimateExitingForTag(
+    viewTag as number,
+    shouldAnimate
+  );
+}
+
+export function jsiConfigureProps(
+  uiProps: string[],
+  nativeProps: string[]
+): void {
+  if (!SHOULD_BE_USE_WEB) {
     NativeReanimatedModule.configureProps(uiProps, nativeProps);
   }
 }

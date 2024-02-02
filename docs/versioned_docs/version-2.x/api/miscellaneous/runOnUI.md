@@ -24,22 +24,18 @@ import { View, Button } from 'react-native';
 import React from 'react';
 
 export default function App() {
+  const someWorklet = (greeting) => {
+    'worklet';
+    console.log(greeting, 'From the UI thread');
+  };
 
-    const someWorklet = (greeting) => {
-        'worklet';
-        console.log(greeting, 'From the UI thread');
-    }
-
-    const onPress = () => {
-        runOnUI(someWorklet)('Howdy');
-    }
+  const onPress = () => {
+    runOnUI(someWorklet)('Howdy');
+  };
 
   return (
     <View>
-      <Button
-        title="toggle"
-        onPress={onPress}
-      />
+      <Button title="toggle" onPress={onPress} />
     </View>
   );
 }

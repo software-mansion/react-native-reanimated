@@ -1,16 +1,15 @@
+'use strict';
 import type {
   ILayoutAnimationBuilder,
   LayoutAnimationsValues,
   LayoutAnimationFunction,
+  StylePropsWithArrayTransform,
 } from '../animationBuilder/commonTypes';
 import { BaseAnimationBuilder } from '../animationBuilder';
 import { withSequence, withTiming } from '../../animation';
 import { FadeIn, FadeOut } from '../defaultAnimations/Fade';
-import type {
-  StyleProps,
-  TransformProperty,
-  AnimationObject,
-} from '../../commonTypes';
+import type { AnimatableValue, AnimationObject } from '../../commonTypes';
+import type { TransformArrayItem } from '../../helperTypes';
 
 export class EntryExitTransition
   extends BaseAnimationBuilder
@@ -68,30 +67,41 @@ export class EntryExitTransition
       'worklet';
       const enteringValues = enteringAnimation(values);
       const exitingValues = exitingAnimation(values);
-      const animations: StyleProps = {
+      const animations: StylePropsWithArrayTransform = {
         transform: [],
       };
 
       for (const prop of Object.keys(exitingValues.animations)) {
         if (prop === 'transform') {
-          exitingValues.animations[prop]?.forEach((value, index) => {
+          if (!Array.isArray(exitingValues.animations.transform)) {
+            continue;
+          }
+          exitingValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
-              animations.transform?.push({
+              animations.transform!.push({
                 [transformProp]: delayFunction(
                   delay,
                   withSequence(
-                    value[transformProp as keyof TransformProperty],
+                    value[transformProp as keyof TransformArrayItem],
                     withTiming(
                       exitingValues.initialValues.transform
-                        ? exitingValues.initialValues.transform[index][
-                            transformProp as keyof TransformProperty
+                        ? // TODO TYPESCRIPT
+                          // @ts-ignore This line of code fails tragically
+                          // in newer versions of React Native, where they have
+                          // narrowed down the type of `transform` even further.
+                          // Since this piece of code improperly typed anyway
+                          // (e.g. it assumes types from RN Animated here) I'd rather
+                          // fix it in the future when types for animations
+                          // are properly defined.
+                          exitingValues.initialValues.transform[index][
+                            transformProp
                           ]
                         : 0,
                       { duration: 0 }
                     )
                   )
                 ),
-              } as TransformProperty);
+              } as TransformArrayItem);
             }
           });
         } else {
@@ -119,24 +129,32 @@ export class EntryExitTransition
       }
       for (const prop of Object.keys(enteringValues.animations)) {
         if (prop === 'transform') {
-          enteringValues.animations[prop]?.forEach((value, index) => {
+          if (!Array.isArray(enteringValues.animations.transform)) {
+            continue;
+          }
+          enteringValues.animations.transform.forEach((value, index) => {
             for (const transformProp of Object.keys(value)) {
-              animations.transform?.push({
+              animations.transform!.push({
                 [transformProp]: delayFunction(
                   delay + exitingDuration,
                   withSequence(
                     withTiming(
                       enteringValues.initialValues.transform
-                        ? enteringValues.initialValues.transform[index][
-                            transformProp as keyof TransformProperty
-                          ]
+                        ? ((
+                            enteringValues.initialValues
+                              .transform as TransformArrayItem[]
+                          )[index][
+                            transformProp as keyof TransformArrayItem
+                          ] as AnimatableValue)
                         : 0,
                       { duration: exitingDuration }
                     ),
-                    value[transformProp as keyof TransformProperty]
+                    value[
+                      transformProp as keyof TransformArrayItem
+                    ] as AnimatableValue
                   )
                 ),
-              } as TransformProperty);
+              } as TransformArrayItem);
             }
           });
         } else if (animations[prop] !== undefined) {
@@ -154,9 +172,14 @@ export class EntryExitTransition
       }
 
       const mergedTransform = (
-        exitingValues.initialValues.transform ?? []
+        Array.isArray(exitingValues.initialValues.transform)
+          ? exitingValues.initialValues.transform
+          : []
       ).concat(
-        (enteringValues.animations.transform ?? []).map((value) => {
+        (Array.isArray(enteringValues.animations.transform)
+          ? enteringValues.animations.transform
+          : []
+        ).map((value) => {
           const objectKeys = Object.keys(value);
           if (objectKeys?.length < 1) {
             console.error(
@@ -164,23 +187,26 @@ export class EntryExitTransition
             );
             return value;
           }
+
           const transformProp = objectKeys[0];
-          const current = (
-            value[transformProp as keyof TransformProperty] as AnimationObject
-          ).current;
+          const current =
+            // TODO TYPESCRIPT
+            // @ts-ignore Read similar comment above.
+            (value[transformProp] as AnimationObject).current;
           if (typeof current === 'string') {
-            if (current.includes('deg'))
+            if (current.includes('deg')) {
               return {
                 [transformProp]: '0deg',
-              } as unknown as TransformProperty;
-            else
+              } as unknown as TransformArrayItem;
+            } else {
               return {
                 [transformProp]: '0',
-              } as unknown as TransformProperty;
+              } as unknown as TransformArrayItem;
+            }
           } else if (transformProp.includes('translate')) {
-            return { [transformProp]: 0 } as unknown as TransformProperty;
+            return { [transformProp]: 0 } as unknown as TransformArrayItem;
           } else {
-            return { [transformProp]: 1 } as unknown as TransformProperty;
+            return { [transformProp]: 1 } as unknown as TransformArrayItem;
           }
         })
       );
@@ -219,6 +245,14 @@ export class EntryExitTransition
   };
 }
 
+/**
+ * Lets you combine two layout animations into a layout transition. You can modify the behavior by chaining methods like `.delay(500)`.
+ *
+ * @param exiting - Layout animation used when components are removed from layout (eg. `FadeOut`).
+ * @param entering - Layout animation used when components are added to layout (eg. `FadeIn`).
+ * @returns A custom layout transition. You pass it to the `layout` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions#combine-transition
+ */
 export function combineTransition(
   exiting: BaseAnimationBuilder | typeof BaseAnimationBuilder,
   entering: BaseAnimationBuilder | typeof BaseAnimationBuilder

@@ -1,7 +1,12 @@
+'use strict';
 import { runOnUIImmediately } from '../../threads';
-import type { ProgressAnimation } from '../animationBuilder/commonTypes';
+import type {
+  ProgressAnimation,
+  SharedTransitionAnimationsValues,
+} from '../animationBuilder/commonTypes';
 import { registerEventHandler, unregisterEventHandler } from '../../core';
 import { Platform } from 'react-native';
+import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
 
 type TransitionProgressEvent = {
   closing: number;
@@ -10,6 +15,8 @@ type TransitionProgressEvent = {
   progress: number;
   target: number;
 };
+
+const IS_ANDROID = Platform.OS === 'android';
 
 export class ProgressTransitionManager {
   private _sharedElementCount = 0;
@@ -48,10 +55,9 @@ export class ProgressTransitionManager {
     const eventHandler = this._eventHandler;
     if (!eventHandler.isRegistered) {
       eventHandler.isRegistered = true;
-      const eventPrefix = Platform.OS === 'android' ? 'on' : 'top';
+      const eventPrefix = IS_ANDROID ? 'on' : 'top';
       let lastProgressValue = -1;
       eventHandler.onTransitionProgress = registerEventHandler(
-        eventPrefix + 'TransitionProgress',
         (event: TransitionProgressEvent) => {
           'worklet';
           const progress = event.progress;
@@ -63,39 +69,31 @@ export class ProgressTransitionManager {
           }
           lastProgressValue = progress;
           global.ProgressTransitionRegister.frame(progress);
-        }
+        },
+        eventPrefix + 'TransitionProgress'
       );
-      eventHandler.onAppear = registerEventHandler(
-        eventPrefix + 'Appear',
-        () => {
-          'worklet';
-          global.ProgressTransitionRegister.onTransitionEnd();
-        }
-      );
+      eventHandler.onAppear = registerEventHandler(() => {
+        'worklet';
+        global.ProgressTransitionRegister.onTransitionEnd();
+      }, eventPrefix + 'Appear');
 
-      if (Platform.OS === 'android') {
+      if (IS_ANDROID) {
         // onFinishTransitioning event is available only on Android and
         // is used to handle closing modals
-        eventHandler.onDisappear = registerEventHandler(
-          'onFinishTransitioning',
-          () => {
-            'worklet';
-            global.ProgressTransitionRegister.onAndroidFinishTransitioning();
-          }
-        );
+        eventHandler.onDisappear = registerEventHandler(() => {
+          'worklet';
+          global.ProgressTransitionRegister.onAndroidFinishTransitioning();
+        }, 'onFinishTransitioning');
       } else if (Platform.OS === 'ios') {
         // topDisappear event is required to handle closing modals on iOS
-        eventHandler.onDisappear = registerEventHandler('topDisappear', () => {
+        eventHandler.onDisappear = registerEventHandler(() => {
           'worklet';
           global.ProgressTransitionRegister.onTransitionEnd(true);
-        });
-        eventHandler.onSwipeDismiss = registerEventHandler(
-          'topGestureCancel',
-          () => {
-            'worklet';
-            global.ProgressTransitionRegister.onTransitionEnd();
-          }
-        );
+        }, 'topDisappear');
+        eventHandler.onSwipeDismiss = registerEventHandler(() => {
+          'worklet';
+          global.ProgressTransitionRegister.onTransitionEnd();
+        }, 'topGestureCancel');
       }
     }
   }
@@ -128,26 +126,40 @@ export class ProgressTransitionManager {
 function createProgressTransitionRegister() {
   'worklet';
   const progressAnimations = new Map<number, ProgressAnimation>();
-  const snapshots = new Map<number, any>();
+  const snapshots = new Map<
+    number,
+    Partial<SharedTransitionAnimationsValues>
+  >();
   const currentTransitions = new Set<number>();
   const toRemove = new Set<number>();
+
+  let skipCleaning = false;
+  let isTransitionRestart = false;
 
   const progressTransitionManager = {
     addProgressAnimation: (
       viewTag: number,
       progressAnimation: ProgressAnimation
     ) => {
+      if (currentTransitions.size > 0) {
+        // there is no need to prevent cleaning on android
+        isTransitionRestart = !IS_ANDROID;
+      }
       progressAnimations.set(viewTag, progressAnimation);
     },
     removeProgressAnimation: (viewTag: number) => {
-      if (progressAnimations.size > 1) {
-        // Remove the animation config after the transition is finished
-        toRemove.add(viewTag);
-      } else {
-        progressAnimations.delete(viewTag);
+      if (currentTransitions.size > 0) {
+        // there is no need to prevent cleaning on android
+        isTransitionRestart = !IS_ANDROID;
       }
+      // Remove the animation config after the transition is finished
+      toRemove.add(viewTag);
     },
-    onTransitionStart: (viewTag: number, snapshot: any) => {
+    onTransitionStart: (
+      viewTag: number,
+      snapshot: Partial<SharedTransitionAnimationsValues>
+    ) => {
+      skipCleaning = isTransitionRestart;
       snapshots.set(viewTag, snapshot);
       currentTransitions.add(viewTag);
       // set initial style for re-parented components
@@ -156,8 +168,13 @@ function createProgressTransitionRegister() {
     frame: (progress: number) => {
       for (const viewTag of currentTransitions) {
         const progressAnimation = progressAnimations.get(viewTag);
-        const snapshot = snapshots.get(viewTag);
-        progressAnimation!(viewTag, snapshot, progress);
+        if (!progressAnimation) {
+          continue;
+        }
+        const snapshot = snapshots.get(
+          viewTag
+        )! as SharedTransitionAnimationsValues;
+        progressAnimation(viewTag, snapshot, progress);
       }
     },
     onAndroidFinishTransitioning: () => {
@@ -167,14 +184,29 @@ function createProgressTransitionRegister() {
       }
     },
     onTransitionEnd: (removeViews = false) => {
+      if (currentTransitions.size === 0) {
+        toRemove.clear();
+        return;
+      }
+      if (skipCleaning) {
+        skipCleaning = false;
+        isTransitionRestart = false;
+        return;
+      }
       for (const viewTag of currentTransitions) {
         _notifyAboutEnd(viewTag, removeViews);
       }
       currentTransitions.clear();
+      if (isTransitionRestart) {
+        // on transition restart, progressAnimations should be saved
+        // because they potentially can be used in the next transition
+        return;
+      }
       snapshots.clear();
       if (toRemove.size > 0) {
         for (const viewTag of toRemove) {
           progressAnimations.delete(viewTag);
+          _notifyAboutEnd(viewTag, removeViews);
         }
         toRemove.clear();
       }
@@ -183,10 +215,32 @@ function createProgressTransitionRegister() {
   return progressTransitionManager;
 }
 
-runOnUIImmediately(() => {
-  'worklet';
-  global.ProgressTransitionRegister = createProgressTransitionRegister();
-})();
+if (shouldBeUseWeb()) {
+  const maybeThrowError = () => {
+    // Jest attempts to access a property of this object to check if it is a Jest mock
+    // so we can't throw an error in the getter.
+    if (!isJest()) {
+      throw new Error(
+        '[Reanimated] `ProgressTransitionRegister` is not available on non-native platform.'
+      );
+    }
+  };
+  global.ProgressTransitionRegister = new Proxy(
+    {} as ProgressTransitionRegister,
+    {
+      get: maybeThrowError,
+      set: () => {
+        maybeThrowError();
+        return false;
+      },
+    }
+  );
+} else {
+  runOnUIImmediately(() => {
+    'worklet';
+    global.ProgressTransitionRegister = createProgressTransitionRegister();
+  })();
+}
 
 export type ProgressTransitionRegister = ReturnType<
   typeof createProgressTransitionRegister

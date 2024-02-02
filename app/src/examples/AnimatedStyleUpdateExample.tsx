@@ -7,7 +7,7 @@ import Animated, {
 import { View, Button, StyleSheet } from 'react-native';
 import React from 'react';
 
-export default function AnimatedStyleUpdateExample(): React.ReactElement {
+export default function AnimatedStyleUpdateExample() {
   const randomWidth = useSharedValue(10);
 
   const config = {

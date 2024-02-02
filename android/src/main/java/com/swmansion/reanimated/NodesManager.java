@@ -120,9 +120,10 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
-  public void initWithContext(ReactApplicationContext reactApplicationContext) {
+  public void initWithContext(
+      ReactApplicationContext reactApplicationContext, String valueUnpackerCode) {
     mReactApplicationContext = reactApplicationContext;
-    mNativeProxy = new NativeProxy(reactApplicationContext);
+    mNativeProxy = new NativeProxy(reactApplicationContext, valueUnpackerCode);
     mAnimationManager.setAndroidUIScheduler(getNativeProxy().getAndroidUIScheduler());
     compatibility = new ReaCompatibility(reactApplicationContext);
     compatibility.registerFabricEventListener(this);
@@ -203,7 +204,9 @@ public class NodesManager implements EventDispatcherListener {
 
   public void performOperations() {
     if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
-      mNativeProxy.performOperations();
+      if (mNativeProxy != null) {
+        mNativeProxy.performOperations();
+      }
     } else if (!mOperationsInBatch.isEmpty()) {
       final Queue<NativeUpdateOperation> copiedOperationsQueue = mOperationsInBatch;
       mOperationsInBatch = new LinkedList<>();
@@ -302,18 +305,18 @@ public class NodesManager implements EventDispatcherListener {
 
   @Override
   public void onEventDispatch(Event event) {
+    if (mNativeProxy == null) {
+      return;
+    }
     // Events can be dispatched from any thread so we have to make sure handleEvent is run from the
     // UI thread.
     if (UiThreadUtil.isOnUiThread()) {
       handleEvent(event);
       performOperations();
     } else {
-      boolean shouldSaveEvent = false;
       String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
       int viewTag = event.getViewTag();
-      String key = viewTag + eventName;
-
-      shouldSaveEvent |= mNativeProxy != null && mNativeProxy.isAnyHandlerWaitingForEvent(key);
+      boolean shouldSaveEvent = mNativeProxy.isAnyHandlerWaitingForEvent(eventName, viewTag);
       if (shouldSaveEvent) {
         mEventQueue.offer(new CopiedEvent(event));
       }
@@ -430,7 +433,7 @@ public class NodesManager implements EventDispatcherListener {
           copy.pushArray(copyReadableArray(array.getArray(i)));
           break;
         default:
-          throw new IllegalStateException("Unknown type of ReadableArray");
+          throw new IllegalStateException("[Reanimated] Unknown type of ReadableArray.");
       }
     }
     return copy;
@@ -462,7 +465,7 @@ public class NodesManager implements EventDispatcherListener {
         propMap.putMap(key, (ReadableMap) value);
       }
     } else {
-      throw new IllegalStateException("Unknown type of animated value");
+      throw new IllegalStateException("[Reanimated] Unknown type of animated value.");
     }
   }
 }
