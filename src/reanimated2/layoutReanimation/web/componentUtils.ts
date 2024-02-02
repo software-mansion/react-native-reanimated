@@ -19,7 +19,7 @@ import { ReduceMotion } from '../../commonTypes';
 import type { StyleProps } from '../../commonTypes';
 import { isReducedMotion } from '../../PlatformChecker';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
-import type { ReanimatedSnapshot } from './componentStyle';
+import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
 import { setDummyPosition, snapshots } from './componentStyle';
 
 function getEasingFromConfig(config: CustomConfig): string {
@@ -136,7 +136,7 @@ export function saveSnapshot(element: HTMLElement) {
     left: rect.left,
     width: rect.width,
     height: rect.height,
-    lastScrollOffset: getElementScrollValue(element),
+    scrollOffsets: getElementScrollValue(element),
   };
 
   snapshots.set(element, snapshot);
@@ -225,18 +225,35 @@ export function handleLayoutTransition(
   setElementAnimation(element, animationConfig, existingTransform);
 }
 
-function getElementScrollValue(element: HTMLElement) {
+function getElementScrollValue(element: HTMLElement): ScrollOffsets {
   let current: HTMLElement | null = element;
+
+  const scrollOffsets: ScrollOffsets = {
+    scrollTopOffset: 0,
+    scrollLeftOffset: 0,
+  };
 
   while (current) {
     if (current.scrollTop !== 0) {
-      return current.scrollTop;
+      scrollOffsets.scrollTopOffset = current.scrollTop;
+      break;
     }
 
     current = current.parentElement;
   }
 
-  return 0;
+  current = element;
+
+  while (current) {
+    if (current.scrollLeft !== 0) {
+      scrollOffsets.scrollLeftOffset = current.scrollLeft;
+      break;
+    }
+
+    current = current.parentElement;
+  }
+
+  return scrollOffsets;
 }
 
 export function handleExitingAnimation(
@@ -265,10 +282,20 @@ export function handleExitingAnimation(
 
   const snapshot = snapshots.get(element)!;
 
-  const scroll = getElementScrollValue(element);
+  const scrollOffsets = getElementScrollValue(element);
 
-  if (scroll !== snapshot.lastScrollOffset) {
-    snapshot.top += snapshot.lastScrollOffset - scroll;
+  if (
+    scrollOffsets.scrollTopOffset !== snapshot.scrollOffsets.scrollTopOffset
+  ) {
+    snapshot.top +=
+      snapshot.scrollOffsets.scrollTopOffset - scrollOffsets.scrollTopOffset;
+  }
+
+  if (
+    scrollOffsets.scrollLeftOffset !== snapshot.scrollOffsets.scrollLeftOffset
+  ) {
+    snapshot.left +=
+      snapshot.scrollOffsets.scrollLeftOffset - scrollOffsets.scrollLeftOffset;
   }
 
   snapshots.set(dummy, snapshot);
