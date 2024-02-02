@@ -13,4 +13,5 @@
     "outDir": "./public",
     "rootDir": "./src"
   },
+  "exclude":["__tests__"]
 }

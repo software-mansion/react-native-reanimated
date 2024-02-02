@@ -69,7 +69,11 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
                 context.report({
                   node,
                   messageId: 'sharedValue',
-                  data: { propertyName, propertyValue: variableName },
+                  data: {
+                    propertyName,
+                    propertyValue: variableName,
+                    componentName,
+                  },
                 });
               }
             }
@@ -143,7 +147,7 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
     },
     messages: {
       sharedValue:
-        "Property  '{{propertyName} : {{propertyValue}}' is using a sharedValue '{{propertyValue}}', but was used in a default component. Replace your {{componentName}} with an Animated.{{componentName}}",
+        "Property  '{{propertyName}}: {{propertyValue}}' is using a sharedValue '{{propertyValue}}', but was used in a default component. Replace your {{componentName}} with an Animated.{{componentName}}",
       animatedStyle:
         "Style '{{variableName}}' is an animated style, but was used in a default component. Replace your '{{componentName}}' with an Animated.{{componentName}}",
     },
