@@ -17,7 +17,6 @@ function createUpdateManager() {
     update(batchItem: LayoutAnimationBatchItem) {
       animations.push(batchItem);
       if (animations.length === 1) {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
         setImmediate(this.flush);
       }
     },
