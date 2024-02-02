@@ -256,7 +256,9 @@ function assertVectorsHaveEqualLengths(a: number[], b: number[]) {
   'worklet';
   if (__DEV__ && a.length !== b.length) {
     throw new Error(
-      `[Reanimated] Cannot calculate inner product of two vectors of different lengths. Length of ${a} is ${a.length} and length of ${b} is ${b.length}.`
+      `[Reanimated] Cannot calculate inner product of two vectors of different lengths. Length of ${a.toString()} is ${
+        a.length
+      } and length of ${b.toString()} is ${b.length}.`
     );
   }
 }
