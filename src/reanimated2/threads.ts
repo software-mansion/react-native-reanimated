@@ -6,7 +6,7 @@ import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
-import { isWorklet } from './utils';
+import { isWorklet } from './commonTypes';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -80,7 +80,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       '[Reanimated] `runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && !SHOULD_BE_USE_WEB && worklet.__workletHash === undefined) {
+  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorklet(worklet)) {
     throw new Error('[Reanimated] `runOnUI` can only be used on worklets.');
   }
   return (...args) => {
@@ -97,7 +97,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       NativeReanimatedModule.scheduleOnUI(
         makeShareableCloneRecursive(() => {
           'worklet';
-          fun(...args);
+          worklet(...args);
         })
       );
       return;
@@ -108,11 +108,10 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       // situation when conversion is only done via microtask queue. This does not
       // make the app particularily less efficient as converted objects are cached
       // and for a given worklet the conversion only happens once.
-      makeShareableCloneRecursive(fun);
+      makeShareableCloneRecursive(worklet);
       makeShareableCloneRecursive(args);
     }
-    //
-    _runOnUIQueue.push([worklet as WorkletFunction<unknown[], unknown>, args]);
+    _runOnUIQueue.push([worklet as WorkletFunction, args]);
     if (_runOnUIQueue.length === 1) {
       queueMicrotask(() => {
         const queue = _runOnUIQueue;
@@ -176,7 +175,7 @@ export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
     NativeReanimatedModule.scheduleOnUI(
       makeShareableCloneRecursive(() => {
         'worklet';
-        fun(...args);
+        worklet(...args);
       })
     );
   };

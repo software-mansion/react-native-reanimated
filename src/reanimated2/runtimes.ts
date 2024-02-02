@@ -1,5 +1,5 @@
 'use strict';
-import type { __ComplexWorkletFunction, WorkletFunction } from './commonTypes';
+import type { WorkletFunction } from './commonTypes';
 import { setupCallGuard, setupConsole } from './initializers';
 import NativeReanimatedModule from './NativeReanimated';
 import { shouldBeUseWeb } from './PlatformChecker';
@@ -23,10 +23,16 @@ export type WorkletRuntime = {
  * @returns WorkletRuntime which is a jsi::HostObject\<reanimated::WorkletRuntime\> - {@link WorkletRuntime}
  * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/createWorkletRuntime
  */
+// @ts-expect-error Check `runOnUI` overload.
 export function createWorkletRuntime(
   name: string,
-  initializer?: __ComplexWorkletFunction<[], void>
-) {
+  initializer?: () => void
+): WorkletRuntime;
+
+export function createWorkletRuntime(
+  name: string,
+  initializer?: WorkletFunction<[], void>
+): WorkletRuntime {
   return NativeReanimatedModule.createWorkletRuntime(
     name,
     makeShareableCloneRecursive(() => {

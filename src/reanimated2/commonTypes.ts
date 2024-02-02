@@ -60,6 +60,12 @@ export type MapperRegistry = {
   stop: (mapperID: number) => void;
 };
 
+export type WorkletStackDetails = [
+  error: Error,
+  lineOffset: number,
+  columnOffset: number
+];
+
 type WorkletClosure = Record<string, unknown>;
 
 interface WorkletInitDataCommon {
@@ -85,13 +91,31 @@ interface WorkletBaseRelease extends WorkletBaseCommon {
 
 interface WorkletBaseDev extends WorkletBaseCommon {
   __initData: WorkletInitDataDev;
-  __stackDetails: Error;
+  /**
+   * `__stackDetails` is removed after parsing.
+   */
+  __stackDetails?: WorkletStackDetails;
 }
 
 export type WorkletFunction<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown
 > = ((...args: Args) => ReturnValue) & (WorkletBaseRelease | WorkletBaseDev);
+
+export function isWorklet<
+  BuildType extends WorkletBaseDev | WorkletBaseRelease = WorkletBaseDev
+>(value: unknown): value is WorkletFunction & BuildType {
+  return (value as Record<string, unknown>).__workletHash as boolean;
+}
+
+export type AnimatedPropsAdapterFunction = (
+  props: Record<string, unknown>
+) => void;
+
+export type AnimatedPropsAdapterWorklet = WorkletFunction<
+  [props: Record<string, unknown>],
+  void
+>;
 
 export interface NestedObject<T> {
   [key: string]: NestedObjectValues<T>;
@@ -252,37 +276,4 @@ export enum ReduceMotion {
   System = 'system',
   Always = 'always',
   Never = 'never',
-}
-
-// THE LAND OF THE DEPRECATED
-
-/**
- * @deprecated don't use
- */
-export interface __WorkletFunction {
-  __closure?: Record<string, unknown>;
-  __workletHash?: number;
-}
-
-/**
- * @deprecated don't use
- */
-export interface __BasicWorkletFunction<T> extends __WorkletFunction {
-  (): T;
-}
-
-/**
- * @deprecated don't use
- */
-export interface __ComplexWorkletFunction<A extends any[], R>
-  extends __WorkletFunction {
-  (...args: A): R;
-  __remoteFunction?: (...args: A) => R;
-}
-
-/**
- * @deprecated don't use
- */
-export interface __AdapterWorkletFunction extends __WorkletFunction {
-  (value: NestedObject<string | number | AnimationObject>): void;
 }

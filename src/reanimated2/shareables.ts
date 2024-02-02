@@ -1,9 +1,10 @@
 'use strict';
 import NativeReanimatedModule from './NativeReanimated';
+import { isWorklet } from './commonTypes';
 import type {
   ShareableRef,
   FlatShareableRef,
-  __WorkletFunction,
+  WorkletFunction,
 } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
 import { registerWorkletStackDetails } from './errors';
@@ -158,7 +159,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
             }
             registerWorkletStackDetails(
               value.__workletHash,
-              value.__stackDetails
+              value.__stackDetails!
             );
           }
           if (value.__stackDetails) {
@@ -263,7 +264,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
 
 const WORKLET_CODE_THRESHOLD = 255;
 
-function getWorkletCode(value: __WorkletFunction) {
+function getWorkletCode(value: WorkletFunction) {
   // @ts-ignore this is fine
   const code = value?.__initData?.code;
   if (!code) {

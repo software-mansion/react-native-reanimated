@@ -28,12 +28,12 @@ import type {
   NestedObjectValues,
   SharedValue,
   StyleProps,
-  __AdapterWorkletFunction,
-  __BasicWorkletFunction,
   WorkletFunction,
+  AnimatedPropsAdapterFunction,
+  AnimatedPropsAdapterWorklet,
 } from '../commonTypes';
 import type { AnimatedStyle } from '../helperTypes';
-import { isWorklet } from '../utils';
+import { isWorklet } from '../commonTypes';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -176,7 +176,7 @@ function runAnimations(
 
 function styleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: __BasicWorkletFunction<AnimatedStyle<any>>,
+  updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
@@ -266,12 +266,12 @@ function styleUpdater(
 
 function jestStyleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: __BasicWorkletFunction<AnimatedStyle<any>>,
+  updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
   animatedStyle: MutableRefObject<AnimatedStyle<any>>,
-  adapters: __AdapterWorkletFunction[] = []
+  adapters: AnimatedPropsAdapterFunction[]
 ): void {
   'worklet';
   const animations: AnimatedStyle<any> = state.animations ?? {};
@@ -414,9 +414,11 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
 ): Style;
 
 export function useAnimatedStyle<Style extends DefaultStyle>(
-  updater: WorkletFunction<[], Style>,
+  updater:
+    | WorkletFunction<[], Style>
+    | ((() => Style) & Record<string, unknown>),
   dependencies?: DependencyList | null,
-  adapters?: WorkletFunction | WorkletFunction[],
+  adapters?: AnimatedPropsAdapterWorklet | AnimatedPropsAdapterWorklet[] | null,
   isAnimatedProps = false
 ): AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style> {
   const viewsRef: ViewRefSet<unknown> | undefined = useViewRefSet();
@@ -484,7 +486,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
         'worklet';
         const newValues = updater();
         adaptersArray.forEach((adapter) => {
-          adapter(newValues);
+          adapter(newValues as Record<string, unknown>);
         });
         return newValues;
       }) as WorkletFunction<[], Style>;
