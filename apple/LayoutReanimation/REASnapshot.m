@@ -28,7 +28,7 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
 
 - (void)makeSnapshotForView:(REAUIView *)view useAbsolutePositionOnly:(BOOL)useAbsolutePositionOnly
 {
-  REAUIView *mainWindow = RCTKeyWindow();
+  REAUIView *mainWindow = (REAUIView* )RCTKeyWindow();
   CGPoint absolutePosition = [[view superview] convertPoint:view.center toView:nil];
   _values = [NSMutableDictionary new];
 #if TARGET_OS_OSX
