@@ -1,11 +1,6 @@
 'use strict';
 import NativeReanimatedModule from './NativeReanimated';
-import {
-  nativeShouldBeMock,
-  isWeb,
-  shouldBeUseWeb,
-  isFabric,
-} from './PlatformChecker';
+import { isWeb, shouldBeUseWeb, isFabric } from './PlatformChecker';
 import type {
   AnimatedKeyboardOptions,
   SensorConfig,
@@ -28,13 +23,14 @@ import type {
 import { SensorContainer } from './SensorContainer';
 
 export { startMapper, stopMapper } from './mappers';
-export { runOnJS, runOnUI } from './threads';
+export { runOnJS, runOnUI, executeOnUIRuntimeSync } from './threads';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export type { WorkletRuntime } from './runtimes';
 export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export { makeMutable } from './mutables';
 
 const IS_FABRIC = isFabric();
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /**
  * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1
@@ -53,7 +49,7 @@ export const isReanimated3 = () => true;
 export const isConfigured = isReanimated3;
 
 // this is for web implementation
-if (shouldBeUseWeb()) {
+if (SHOULD_BE_USE_WEB) {
   global._WORKLET = false;
   global._log = console.log;
   global._getAnimationTimestamp = () => performance.now();
@@ -236,7 +232,7 @@ export function jsiConfigureProps(
   uiProps: string[],
   nativeProps: string[]
 ): void {
-  if (!nativeShouldBeMock()) {
+  if (!SHOULD_BE_USE_WEB) {
     NativeReanimatedModule.configureProps(uiProps, nativeProps);
   }
 }

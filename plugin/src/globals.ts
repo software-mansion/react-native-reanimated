@@ -120,8 +120,6 @@ export const defaultGlobals = new Set([
   '_scheduleOnJS',
   '_scheduleOnRuntime',
   '_makeShareableClone',
-  '_updateDataSynchronously',
-  '_getDataSynchronously',
   '_updatePropsPaper',
   '_updatePropsFabric',
   '_removeFromPropsRegistry',

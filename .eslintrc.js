@@ -37,10 +37,8 @@ module.exports = {
     '@typescript-eslint/no-unsafe-return': 'off',
     '@typescript-eslint/no-unsafe-assignment': 'off',
     '@typescript-eslint/no-unsafe-argument': 'off',
-
     '@typescript-eslint/no-explicit-any': 'warn',
     'object-shorthand': 'error',
-
     curly: 'error',
     'no-case-declarations': 'error',
     '@typescript-eslint/no-shadow': 'error',

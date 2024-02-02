@@ -60,6 +60,7 @@ NativeReanimatedModule::NativeReanimatedModule(
           jsQueue,
           jsScheduler_,
           "Reanimated UI runtime",
+          true /* supportsLocking */,
           valueUnpackerCode)),
       valueUnpackerCode_(valueUnpackerCode),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
@@ -161,6 +162,12 @@ void NativeReanimatedModule::scheduleOnUI(
   });
 }
 
+jsi::Value NativeReanimatedModule::executeOnUIRuntimeSync(
+    jsi::Runtime &rt,
+    const jsi::Value &worklet) {
+  return uiWorkletRuntime_->executeSync(rt, worklet);
+}
+
 jsi::Value NativeReanimatedModule::createWorkletRuntime(
     jsi::Runtime &rt,
     const jsi::Value &name,
@@ -170,6 +177,7 @@ jsi::Value NativeReanimatedModule::createWorkletRuntime(
       jsQueue_,
       jsScheduler_,
       name.asString(rt).utf8(rt),
+      false /* supportsLocking */,
       valueUnpackerCode_);
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Reanimated] Initializer must be a worklet.");
@@ -183,27 +191,6 @@ jsi::Value NativeReanimatedModule::scheduleOnRuntime(
     const jsi::Value &shareableWorkletValue) {
   reanimated::scheduleOnRuntime(rt, workletRuntimeValue, shareableWorkletValue);
   return jsi::Value::undefined();
-}
-
-jsi::Value NativeReanimatedModule::makeSynchronizedDataHolder(
-    jsi::Runtime &rt,
-    const jsi::Value &initialShareable) {
-  auto dataHolder =
-      std::make_shared<ShareableSynchronizedDataHolder>(rt, initialShareable);
-  return dataHolder->getJSValue(rt);
-}
-
-void NativeReanimatedModule::updateDataSynchronously(
-    jsi::Runtime &rt,
-    const jsi::Value &synchronizedDataHolderRef,
-    const jsi::Value &newData) {
-  reanimated::updateDataSynchronously(rt, synchronizedDataHolderRef, newData);
-}
-
-jsi::Value NativeReanimatedModule::getDataSynchronously(
-    jsi::Runtime &rt,
-    const jsi::Value &synchronizedDataHolderRef) {
-  return reanimated::getDataSynchronously(rt, synchronizedDataHolderRef);
 }
 
 jsi::Value NativeReanimatedModule::makeShareableClone(

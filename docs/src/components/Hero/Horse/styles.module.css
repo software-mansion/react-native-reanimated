@@ -48,9 +48,23 @@
   }
 }
 
+.reducedMotionOnly {
+  visibility: hidden;
+}
+
 .variantAnimation {
   visibility: hidden;
   animation: 0.5s show infinite;
+}
+
+@media (prefers-reduced-motion) {
+  .reducedMotionOnly {
+    visibility: visible;
+  }
+  .variantAnimation {
+    visibility: hidden;
+    animation: none;
+  }
 }
 
 /* Each delay of animation (where delay is ~0.045) is multiplied by 2, 3, 4...,

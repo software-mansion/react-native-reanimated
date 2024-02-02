@@ -78,7 +78,7 @@ const createUpdatePropsManager = isFabric()
             }
           });
         },
-        flush() {
+        flush(this: void) {
           _updatePropsFabric!(operations);
           operations.length = 0;
         },
@@ -109,7 +109,7 @@ const createUpdatePropsManager = isFabric()
             }
           });
         },
-        flush() {
+        flush(this: void) {
           _updatePropsPaper!(operations);
           operations.length = 0;
         },
