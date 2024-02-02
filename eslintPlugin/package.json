@@ -4,9 +4,12 @@
   "license": "MIT",
   "types": "lib/typescript/index",
   "scripts": {
-    "build": "tsc"
+    "pre-build": "tsc",
+    "build": "yarn tsc; yarn esbuild ./public/index.js --external:espree --external:@typescript-eslint --platform=node --bundle --outfile=build/index.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "esbuild": "^0.20.0"
+  },
   "devDependencies": {
     "@types/jest": "^29.5.11",
     "@types/node": "^20.11.5",

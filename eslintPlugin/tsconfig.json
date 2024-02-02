@@ -11,6 +11,6 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "outDir": "./public",
-    "rootDir": "."
+    "rootDir": "./src"
   },
 }
