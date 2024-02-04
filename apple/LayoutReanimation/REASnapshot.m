@@ -1,9 +1,9 @@
 #import <Foundation/Foundation.h>
 #import <RNReanimated/REAScreensHelper.h>
 #import <RNReanimated/REASnapshot.h>
+#import <React/RCTUtils.h>
 #import <React/RCTView.h>
 #import <React/UIView+React.h>
-#import <React/RCTUtils.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -28,7 +28,7 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
 
 - (void)makeSnapshotForView:(REAUIView *)view useAbsolutePositionOnly:(BOOL)useAbsolutePositionOnly
 {
-  REAUIView *mainWindow = (REAUIView* )RCTKeyWindow();
+  REAUIView *mainWindow = (REAUIView *)RCTKeyWindow();
   CGPoint absolutePosition = [[view superview] convertPoint:view.center toView:nil];
   _values = [NSMutableDictionary new];
 #if TARGET_OS_OSX
