@@ -49,7 +49,7 @@ index c346c4e..6bde55f 100644
          ${BOX2D_LIB}
  )
 diff --git a/node_modules/react-native-box2d/android/build.gradle b/node_modules/react-native-box2d/android/build.gradle
-index 41726f4..0580d5d 100644
+index 41726f4..11416f9 100644
 --- a/node_modules/react-native-box2d/android/build.gradle
 +++ b/node_modules/react-native-box2d/android/build.gradle
 @@ -51,7 +51,7 @@ def reactNativeArchitectures() {
@@ -72,6 +72,15 @@ index 41726f4..0580d5d 100644
    defaultConfig {
      minSdkVersion 21
      targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
+@@ -176,7 +178,7 @@ def thirdPartyVersionsFile = new File("${androidSourcesDir.toString()}/ReactAndr
+ def thirdPartyVersions = new Properties()
+ thirdPartyVersions.load(new FileInputStream(thirdPartyVersionsFile))
+ 
+-def BOOST_VERSION = thirdPartyVersions["BOOST_VERSION"]
++def BOOST_VERSION = "1_83_0"
+ def boost_file = new File(downloadsDir, "boost_${BOOST_VERSION}.tar.gz")
+ def DOUBLE_CONVERSION_VERSION = thirdPartyVersions["DOUBLE_CONVERSION_VERSION"]
+ def double_conversion_file = new File(downloadsDir, "double-conversion-${DOUBLE_CONVERSION_VERSION}.tar.gz")
 @@ -342,8 +344,8 @@ def nativeBuildDependsOn(dependsOnTask, variant) {
  
  afterEvaluate {
