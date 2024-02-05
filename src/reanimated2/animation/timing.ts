@@ -81,6 +81,7 @@ export const withTiming = function (
     }
   }
 
+
   return defineAnimation<TimingAnimation>(toValue, () => {
     'worklet';
     const config: Required<Omit<TimingConfig, 'reduceMotion'>> = {
