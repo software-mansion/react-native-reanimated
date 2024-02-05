@@ -21,7 +21,10 @@ export class Matchers {
     }
   }
 
-  public toBe(expectedValue: TestValue, comparisonMode: ComparisonMode) {
+  public toBe(
+    expectedValue: TestValue,
+    comparisonMode = ComparisonMode.DISTANCE
+  ) {
     const CONDITIONS: { [Key: string]: (e: any, v: any) => Boolean } = {
       [ComparisonMode.STRING]: (expected, value) => {
         return value !== expected;
@@ -64,16 +67,54 @@ export class Matchers {
     }
   }
 
+  public toBeCalled(times: number = 1) {
+    this.assertValueIsCallTracker(this.currentValue);
+    const callsCount = this.currentValue.UI + this.currentValue.JS;
+    if (callsCount !== times) {
+      const name = color(this.currentValue.name, 'green');
+      const expected = color(times, 'green');
+      const received = color(callsCount, 'red');
+      this.testCase.errors.push(
+        `Expected ${name} to be called ${expected} times, but was called ${received} times`
+      );
+    }
+  }
+
+  public toBeCalledUI(times: number) {
+    this.assertValueIsCallTracker(this.currentValue);
+    if (this.currentValue.UI !== times) {
+      const name = color(this.currentValue.name, 'green');
+      const threadName = color('UI thread', 'cyan');
+      const expected = color(times, 'green');
+      const received = color(this.currentValue.UI, 'red');
+      this.testCase.errors.push(
+        `Expected ${name} to be called ${expected} times on ${threadName}, but was called ${received} times`
+      );
+    }
+  }
+
+  public toBeCalledJS(times: number) {
+    this.assertValueIsCallTracker(this.currentValue);
+    if (this.currentValue.JS !== times) {
+      const name = color(this.currentValue.name, 'green');
+      const threadName = color('UI thread', 'cyan');
+      const expected = color(times, 'green');
+      const received = color(this.currentValue.UI, 'red');
+      this.testCase.errors.push(
+        `Expected ${name} to be called ${expected} times on ${threadName}, but was called ${received} times`
+      );
+    }
+  }
+
   public toMatchSnapshot(expectedValue: TestValue) {
     if (Array.isArray(expectedValue) && Array.isArray(expectedValue)) {
       let errorString = '';
       (this.currentValue as any).forEach((val: any, idx: number) => {
         const expectedVal = expectedValue[idx];
         if (JSON.stringify(expectedVal) !== JSON.stringify(val)) {
-          errorString += `\t At index ${idx}\texpected\t${color(
-            `${JSON.stringify(expectedVal)}`,
-            'yellow'
-          )}\treceived\t${color(`${JSON.stringify(val)}`, 'yellow')}\n`;
+          const expected = color(`${JSON.stringify(expectedVal)}`, 'green');
+          const received = color(`${JSON.stringify(val)}`, 'red');
+          errorString += `\tAt index ${idx}:\n\t\texpected: ${expected}\n\t\treceived: ${received}\n`;
         }
       });
       if (errorString !== '') {
@@ -90,55 +131,10 @@ export class Matchers {
     }
   }
 
-  public toBeCalled(times: number = 1) {
-    this.assertValueIsCallTracker(this.currentValue);
-    const callsCount = this.currentValue.UI + this.currentValue.JS;
-    if (callsCount !== times) {
-      this.testCase.errors.push(
-        `Expected ${color(
-          this.currentValue.name,
-          'green'
-        )} to be called ${color(times, 'green')} times, but was called ${color(
-          callsCount,
-          'green'
-        )} times`
-      );
-    }
-  }
-
-  public toBeCalledUI(times: number) {
-    this.assertValueIsCallTracker(this.currentValue);
-    if (this.currentValue.UI !== times) {
-      this.testCase.errors.push(
-        `Expected ${color(
-          this.currentValue.name,
-          'green'
-        )} to be called ${color(times, 'green')} times on ${color(
-          'UI thread',
-          'cyan'
-        )}, but was called ${color(this.currentValue.UI, 'green')} times`
-      );
-    }
-  }
-
-  public toBeCalledJS(times: number) {
-    this.assertValueIsCallTracker(this.currentValue);
-    if (this.currentValue.JS !== times) {
-      this.testCase.errors.push(
-        `Expected ${color(
-          this.currentValue.name,
-          'green'
-        )} to be called ${color(times, 'green')} times on ${color(
-          'JS thread',
-          'cyan'
-        )}, but was called ${color(this.currentValue.JS, 'green')} times`
-      );
-    }
-  }
-
   public toMatchNativeSnapshots(
     nativeSnapshots: Array<Record<string, unknown>>
   ) {
+    let errorString = '';
     const jsUpdates = this.currentValue as Array<Record<string, unknown>>;
     for (let i = 0; i < jsUpdates.length; i++) {
       const jsUpdate = jsUpdates[i];
@@ -161,14 +157,14 @@ export class Matchers {
           }
         }
         if (detectedMismatch) {
-          this.testCase.errors.push(
-            `Expected ${color(jsValue, 'green')} to match ${color(
-              nativeValue,
-              'green'
-            )}`
-          );
+          const expected = color(jsValue, 'green');
+          const received = color(nativeValue, 'red');
+          errorString += `\tAt index ${i}, value of prop ${key}:\n\t\texpected: ${expected}\n\t\treceived: ${received}\n`;
         }
       }
+    }
+    if (errorString !== '') {
+      this.testCase.errors.push('Native snapshot mismatch: \n' + errorString);
     }
   }
 }

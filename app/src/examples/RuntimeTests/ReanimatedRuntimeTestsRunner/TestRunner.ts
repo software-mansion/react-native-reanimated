@@ -234,13 +234,13 @@ export class TestRunner {
         if (testCase.errors.length > 0) {
           summary.failed++;
           summary.failedTests.push(testCase.name);
-          console.log(`\t${color('✖', 'red')} ${testCase.name} `);
+          console.log(`${color('✖', 'red')} ${testCase.name} `);
           for (const error of testCase.errors) {
-            console.log(`\t\t${error}`);
+            console.log(`\t${error}`);
           }
         } else {
           summary.passed++;
-          console.log(`\t${color('✔', 'green')} ${testCase.name}`);
+          console.log(`${color('✔', 'green')} ${testCase.name}`);
         }
         if (testSuite.afterEach) {
           await testSuite.afterEach();

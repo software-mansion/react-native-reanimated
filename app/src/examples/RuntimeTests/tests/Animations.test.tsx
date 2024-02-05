@@ -144,20 +144,14 @@ describe('Tests of animations', () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('AnimatedComponent');
     await wait(600);
-    expect(await component.getAnimatedStyle('width')).toBe(
-      '123',
-      ComparisonMode.DISTANCE
-    );
+    expect(await component.getAnimatedStyle('width')).toBe('123');
   });
 
   test('withTiming - expect pass', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('AnimatedComponent');
     await wait(600);
-    expect(await component.getAnimatedStyle('width')).toBe(
-      '100',
-      ComparisonMode.DISTANCE
-    );
+    expect(await component.getAnimatedStyle('width')).toBe('100');
   });
 
   test('withTiming - expect callback call', async () => {
@@ -186,24 +180,15 @@ describe('Tests of animations', () => {
     await render(<LayoutAnimation />);
     const component = getTestComponent('AnimatedComponent');
     await wait(600);
-    expect(await component.getAnimatedStyle('top')).toBe(
-      `${TOP + MARGIN}`,
-      ComparisonMode.DISTANCE
-    );
-    expect(await component.getAnimatedStyle('left')).toBe(
-      `${LEFT + MARGIN}`,
-      ComparisonMode.DISTANCE
-    );
+    expect(await component.getAnimatedStyle('top')).toBe(`${TOP + MARGIN}`);
+    expect(await component.getAnimatedStyle('left')).toBe(`${LEFT + MARGIN}`);
   });
 
   test('layoutAnimation - opacity', async () => {
     await render(<LayoutAnimation />);
     const component = getTestComponent('AnimatedComponent');
     await wait(600);
-    expect(await component.getAnimatedStyle('opacity')).toBe(
-      '1',
-      ComparisonMode.NUMBER
-    );
+    expect(await component.getAnimatedStyle('opacity')).toBe('1');
   });
 
   test('withTiming - match snapshot', async () => {
@@ -232,9 +217,6 @@ describe('Tests of animations', () => {
     const component = getTestComponent('AnimatedComponent');
     await waitForNotify('notifyJS');
     await waitForNotify('notifyUI');
-    expect(await component.getAnimatedStyle('width')).toBe(
-      '100',
-      ComparisonMode.DISTANCE
-    );
+    expect(await component.getAnimatedStyle('width')).toBe('100');
   });
 });
