@@ -114,8 +114,8 @@ export function getProcessedConfig(
   initialAnimationName: AnimationNames
 ): AnimationConfig {
   return {
-    animationName: animationName,
-    animationType: animationType,
+    animationName,
+    animationType,
     duration: getDurationFromConfig(
       config,
       animationType === LayoutAnimationType.LAYOUT,

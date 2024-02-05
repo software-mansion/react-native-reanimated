@@ -49,7 +49,7 @@ export class RollInLeft
           ],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -94,7 +94,7 @@ export class RollInRight
           transform: [{ translateX: values.windowWidth }, { rotate: '180deg' }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -144,7 +144,7 @@ export class RollOutLeft
           transform: [{ translateX: 0 }, { rotate: '0deg' }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -194,7 +194,7 @@ export class RollOutRight
           transform: [{ translateX: 0 }, { rotate: '0deg' }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };

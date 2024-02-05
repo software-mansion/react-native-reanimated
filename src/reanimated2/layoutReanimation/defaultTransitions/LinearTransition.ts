@@ -50,7 +50,7 @@ export class LinearTransition
           width: delayFunction(delay, animation(values.targetWidth, config)),
           height: delayFunction(delay, animation(values.targetHeight, config)),
         },
-        callback: callback,
+        callback,
       };
     };
   };

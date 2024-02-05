@@ -1,14 +1,20 @@
 import type { NodePath } from '@babel/core';
 import { isGestureHandlerEventCallback } from './isGestureHandlerEventCallback';
-import { processIfWorkletFunction } from './processIfWorkletFunction';
 import { isLayoutAnimationCallback } from './isLayoutAnimationCallback';
-import type { ExplicitWorklet, ReanimatedPluginPass } from './types';
+import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
+import { processWorklet } from './processIfWorkletNode';
 
-export function processIfCallback(
-  path: NodePath<ExplicitWorklet>,
+/**
+ *
+ * @returns `true` if the function was workletized, `false` otherwise.
+ */
+export function processIfAutoworkletizableCallback(
+  path: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
-) {
+): boolean {
   if (isGestureHandlerEventCallback(path) || isLayoutAnimationCallback(path)) {
-    processIfWorkletFunction(path, state);
+    processWorklet(path, state);
+    return true;
   }
+  return false;
 }
