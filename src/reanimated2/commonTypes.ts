@@ -105,7 +105,7 @@ export type WorkletFunction<
 export function isWorklet<
   BuildType extends WorkletBaseDev | WorkletBaseRelease = WorkletBaseDev
 >(value: unknown): value is WorkletFunction & BuildType {
-  return (value as Record<string, unknown>).__workletHash as boolean;
+  return !!(value as Record<string, unknown>).__workletHash;
 }
 
 export type AnimatedPropsAdapterFunction = (
