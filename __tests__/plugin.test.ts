@@ -1,6 +1,6 @@
 import { html } from 'code-tag';
 import plugin from '../plugin';
-import { BabelFileResult, TransformOptions, transformSync } from '@babel/core';
+import { TransformOptions, transformSync } from '@babel/core';
 import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
 import '../plugin/jestUtils';
@@ -360,6 +360,21 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
       expect(code).not.toContain("'worklet';");
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ObjectMethod', () => {
+      const input = html`<script>
+        const foo = {
+          bar(x) {
+            'worklet';
+            return x + 2;
+          },
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
       expect(code).toMatchSnapshot();
     });
   });

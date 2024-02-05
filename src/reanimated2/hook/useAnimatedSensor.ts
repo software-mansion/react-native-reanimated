@@ -7,7 +7,11 @@ import type {
   Value3D,
   ValueRotation,
 } from '../commonTypes';
-import { SensorType, IOSReferenceFrame } from '../commonTypes';
+import {
+  SensorType,
+  IOSReferenceFrame,
+  InterfaceOrientation,
+} from '../commonTypes';
 import { callMicrotasks } from '../threads';
 
 // euler angles are in order ZXY, z = yaw, x = pitch, y = roll
@@ -32,15 +36,15 @@ function eulerToQuaternion(pitch: number, roll: number, yaw: number) {
 function adjustRotationToInterfaceOrientation(data: ValueRotation) {
   'worklet';
   const { interfaceOrientation, pitch, roll, yaw } = data;
-  if (interfaceOrientation === 90) {
+  if (interfaceOrientation === InterfaceOrientation.ROTATION_90) {
     data.pitch = roll;
     data.roll = -pitch;
     data.yaw = yaw - Math.PI / 2;
-  } else if (interfaceOrientation === 270) {
+  } else if (interfaceOrientation === InterfaceOrientation.ROTATION_270) {
     data.pitch = -roll;
     data.roll = pitch;
     data.yaw = yaw + Math.PI / 2;
-  } else if (interfaceOrientation === 180) {
+  } else if (interfaceOrientation === InterfaceOrientation.ROTATION_180) {
     data.pitch *= -1;
     data.roll *= -1;
     data.yaw *= -1;
@@ -57,13 +61,13 @@ function adjustRotationToInterfaceOrientation(data: ValueRotation) {
 function adjustVectorToInterfaceOrientation(data: Value3D) {
   'worklet';
   const { interfaceOrientation, x, y } = data;
-  if (interfaceOrientation === 90) {
+  if (interfaceOrientation === InterfaceOrientation.ROTATION_90) {
     data.x = -y;
     data.y = x;
-  } else if (interfaceOrientation === 270) {
+  } else if (interfaceOrientation === InterfaceOrientation.ROTATION_270) {
     data.x = y;
     data.y = -x;
-  } else if (interfaceOrientation === 180) {
+  } else if (interfaceOrientation === InterfaceOrientation.ROTATION_180) {
     data.x *= -1;
     data.y *= -1;
   }
@@ -102,7 +106,7 @@ export function useAnimatedSensor(
       // NOOP
     },
     isAvailable: false,
-    config: config,
+    config,
   });
 
   useEffect(() => {
