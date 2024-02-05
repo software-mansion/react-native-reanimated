@@ -55,7 +55,7 @@ export class FlipInXUp
             { translateY: delayFunction(delay, animation(0, config)) },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -105,7 +105,7 @@ export class FlipInYLeft
             { translateX: delayFunction(delay, animation(0, config)) },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -155,7 +155,7 @@ export class FlipInXDown
             { translateY: delayFunction(delay, animation(0, config)) },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -205,7 +205,7 @@ export class FlipInYRight
             { translateX: delayFunction(delay, animation(0, config)) },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -250,7 +250,7 @@ export class FlipInEasyX
             { rotateX: delayFunction(delay, animation('0deg', config)) },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -295,7 +295,7 @@ export class FlipInEasyY
             { rotateY: delayFunction(delay, animation('0deg', config)) },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -350,7 +350,7 @@ export class FlipOutXUp
             },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -405,7 +405,7 @@ export class FlipOutYLeft
             },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -460,7 +460,7 @@ export class FlipOutXDown
             },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -515,7 +515,7 @@ export class FlipOutYRight
             },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -560,7 +560,7 @@ export class FlipOutEasyX
             { rotateX: delayFunction(delay, animation('90deg', config)) },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -605,7 +605,7 @@ export class FlipOutEasyY
             { rotateY: delayFunction(delay, animation('90deg', config)) },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };

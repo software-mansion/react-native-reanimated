@@ -20,7 +20,7 @@ function createUpdateManager() {
         setImmediate(this.flush);
       }
     },
-    flush() {
+    flush(this: void) {
       configureLayoutAnimationBatch(animations);
       animations.length = 0;
     },

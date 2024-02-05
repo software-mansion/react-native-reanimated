@@ -55,6 +55,7 @@ declare global {
         operations: {
           tag: number;
           name: string | null;
+          // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
           updates: StyleProps | AnimatedStyle<any>;
         }[]
       ) => void)
@@ -63,14 +64,17 @@ declare global {
     | ((
         operations: {
           shadowNodeWrapper: ShadowNodeWrapper;
+          // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
           updates: StyleProps | AnimatedStyle<any>;
         }[]
       ) => void)
     | undefined;
   var _removeFromPropsRegistry: (viewTags: number[]) => void | undefined;
-  var _measurePaper: ((viewTag: number) => MeasuredDimensions) | undefined;
+  var _measurePaper:
+    | ((viewTag: number | null) => MeasuredDimensions)
+    | undefined;
   var _measureFabric:
-    | ((shadowNodeWrapper: ShadowNodeWrapper) => MeasuredDimensions)
+    | ((shadowNodeWrapper: ShadowNodeWrapper | null) => MeasuredDimensions)
     | undefined;
   var _scrollToPaper:
     | ((viewTag: number, x: number, y: number, animated: boolean) => void)

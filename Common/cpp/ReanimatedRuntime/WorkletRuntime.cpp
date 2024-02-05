@@ -65,8 +65,10 @@ WorkletRuntime::WorkletRuntime(
           name,
           supportsLocking,
           runtimeMutex_)),
-      name_(name),
-      supportsLocking_(supportsLocking) {
+#ifndef NDEBUG
+      supportsLocking_(supportsLocking),
+#endif
+      name_(name) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
   WorkletRuntimeDecorator::decorate(rt, name, jsScheduler);

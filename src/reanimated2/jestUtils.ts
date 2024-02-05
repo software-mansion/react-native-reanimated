@@ -198,8 +198,8 @@ type ToHaveAnimatedStyleConfig = {
 };
 
 export const setUpTests = (userFramerateConfig = {}) => {
-  let expect = (global as typeof global & { expect: jest.Expect })
-    .expect as jest.Expect;
+  let expect: jest.Expect = (global as typeof global & { expect: jest.Expect })
+    .expect;
   if (expect === undefined) {
     const expectModule = requireFunction('expect');
     expect = expectModule;

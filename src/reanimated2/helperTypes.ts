@@ -34,9 +34,9 @@ export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
 >;
 
-type MaybeSharedValue<Value> = Value | Value extends AnimatableValue
-  ? SharedValue<Value>
-  : never;
+type MaybeSharedValue<Value> =
+  | Value
+  | (Value extends AnimatableValue ? SharedValue<Value> : never);
 
 type MaybeSharedValueRecursive<Value> = Value extends (infer Item)[]
   ? SharedValue<Item[]> | (MaybeSharedValueRecursive<Item> | Item)[]

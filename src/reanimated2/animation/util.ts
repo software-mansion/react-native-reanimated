@@ -180,6 +180,8 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     if (previousAnimation && previousAnimation !== animation) {
       previousAnimation.current =
         (previousAnimation.__prefix ?? '') +
+        // FIXME
+        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
         previousAnimation.current +
         (previousAnimation.__suffix ?? '');
     }

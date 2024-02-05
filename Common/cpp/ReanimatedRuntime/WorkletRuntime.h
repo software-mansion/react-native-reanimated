@@ -64,9 +64,11 @@ class WorkletRuntime : public jsi::HostObject,
  private:
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
+#ifndef NDEBUG
+  const bool supportsLocking_;
+#endif
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
-  [[maybe_unused]] const bool supportsLocking_;
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on

@@ -19,6 +19,7 @@ import { ReduceMotion } from '../../commonTypes';
 import type { StyleProps } from '../../commonTypes';
 import { isReducedMotion } from '../../PlatformChecker';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
+import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
 import { setDummyPosition, snapshots } from './componentStyle';
 
 function getEasingFromConfig(config: CustomConfig): string {
@@ -113,8 +114,8 @@ export function getProcessedConfig(
   initialAnimationName: AnimationNames
 ): AnimationConfig {
   return {
-    animationName: animationName,
-    animationType: animationType,
+    animationName,
+    animationType,
     duration: getDurationFromConfig(
       config,
       animationType === LayoutAnimationType.LAYOUT,
@@ -128,7 +129,17 @@ export function getProcessedConfig(
 }
 
 export function saveSnapshot(element: HTMLElement) {
-  snapshots.set(element, element.getBoundingClientRect());
+  const rect = element.getBoundingClientRect();
+
+  const snapshot: ReanimatedSnapshot = {
+    top: rect.top,
+    left: rect.left,
+    width: rect.width,
+    height: rect.height,
+    scrollOffsets: getElementScrollValue(element),
+  };
+
+  snapshots.set(element, snapshot);
 }
 
 export function setElementAnimation(
@@ -214,6 +225,29 @@ export function handleLayoutTransition(
   setElementAnimation(element, animationConfig, existingTransform);
 }
 
+function getElementScrollValue(element: HTMLElement): ScrollOffsets {
+  let current: HTMLElement | null = element;
+
+  const scrollOffsets: ScrollOffsets = {
+    scrollTopOffset: 0,
+    scrollLeftOffset: 0,
+  };
+
+  while (current) {
+    if (current.scrollTop !== 0 && scrollOffsets.scrollTopOffset === 0) {
+      scrollOffsets.scrollTopOffset = current.scrollTop;
+    }
+
+    if (current.scrollLeft !== 0 && scrollOffsets.scrollLeftOffset === 0) {
+      scrollOffsets.scrollLeftOffset = current.scrollLeft;
+    }
+
+    current = current.parentElement;
+  }
+
+  return scrollOffsets;
+}
+
 export function handleExitingAnimation(
   element: HTMLElement,
   animationConfig: AnimationConfig
@@ -239,6 +273,28 @@ export function handleExitingAnimation(
   parent?.appendChild(dummy);
 
   const snapshot = snapshots.get(element)!;
+
+  const scrollOffsets = getElementScrollValue(element);
+
+  // Scroll does not trigger snapshoting, therefore if we start exiting animation after
+  // scrolling through parent component, dummy will end up in wrong place. In order to fix that
+  // we keep last known scroll position in snapshot and then adjust dummy position based on
+  // last known scroll offset and current scroll offset
+
+  const currentScrollTopOffset = scrollOffsets.scrollTopOffset;
+  const lastScrollTopOffset = snapshot.scrollOffsets.scrollTopOffset;
+
+  if (currentScrollTopOffset !== lastScrollTopOffset) {
+    snapshot.top += lastScrollTopOffset - currentScrollTopOffset;
+  }
+
+  const currentScrollLeftOffset = scrollOffsets.scrollLeftOffset;
+  const lastScrollLeftOffset = snapshot.scrollOffsets.scrollLeftOffset;
+
+  if (currentScrollLeftOffset !== lastScrollLeftOffset) {
+    snapshot.left += lastScrollLeftOffset - currentScrollLeftOffset;
+  }
+
   snapshots.set(dummy, snapshot);
 
   setDummyPosition(dummy, snapshot);

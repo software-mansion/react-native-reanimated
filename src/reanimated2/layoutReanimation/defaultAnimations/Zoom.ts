@@ -48,7 +48,7 @@ export class ZoomIn
           transform: [{ scale: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -91,10 +91,10 @@ export class ZoomInRotate
           ],
         },
         initialValues: {
-          transform: [{ scale: 0 }, { rotate: rotate }],
+          transform: [{ scale: 0 }, { rotate }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -139,7 +139,7 @@ export class ZoomInLeft
           transform: [{ translateX: -values.windowWidth }, { scale: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -184,7 +184,7 @@ export class ZoomInRight
           transform: [{ translateX: values.windowWidth }, { scale: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -229,7 +229,7 @@ export class ZoomInUp
           transform: [{ translateY: -values.windowHeight }, { scale: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -274,7 +274,7 @@ export class ZoomInDown
           transform: [{ translateY: values.windowHeight }, { scale: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -319,7 +319,7 @@ export class ZoomInEasyUp
           transform: [{ translateY: -values.targetHeight }, { scale: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -364,7 +364,7 @@ export class ZoomInEasyDown
           transform: [{ translateY: values.targetHeight }, { scale: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -406,7 +406,7 @@ export class ZoomOut
           transform: [{ scale: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -452,7 +452,7 @@ export class ZoomOutRotate
           transform: [{ scale: 1 }, { rotate: '0' }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -502,7 +502,7 @@ export class ZoomOutLeft
           transform: [{ translateX: 0 }, { scale: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -552,7 +552,7 @@ export class ZoomOutRight
           transform: [{ translateX: 0 }, { scale: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -602,7 +602,7 @@ export class ZoomOutUp
           transform: [{ translateY: 0 }, { scale: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -652,7 +652,7 @@ export class ZoomOutDown
           transform: [{ translateY: 0 }, { scale: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -702,7 +702,7 @@ export class ZoomOutEasyUp
           transform: [{ translateY: 0 }, { scale: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -752,7 +752,7 @@ export class ZoomOutEasyDown
           transform: [{ translateY: 0 }, { scale: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
