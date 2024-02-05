@@ -1,11 +1,11 @@
 import Animated, {
-  // Easing,
+  Easing,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { StyleSheet, View, Easing } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import React from 'react';
 

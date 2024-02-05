@@ -65,14 +65,16 @@ export const withTiming = function (
 ): Animation<TimingAnimation> {
   'worklet';
 
-  if (userConfig?.easing && !('__workletHash' in userConfig?.easing)) {
-    throw new Error(
-      `[Reanimated] The easing function${
-        'name' in userConfig?.easing ? ` '${userConfig?.easing.name}'` : ''
-      } provided to 'withTiming' is not a worklet. Are you sure you didn't import it from react-native? `
-    );
+  if (userConfig?.easing) {
+    const { easing } = userConfig;
+    if (!('__workletHash' in easing)) {
+      throw new Error(
+        `[Reanimated] The easing function${
+          'name' in easing ? ` '${easing.name}'` : ''
+        } provided to 'withTiming' is not a worklet. Are you sure you didn't import it from react-native? `
+      );
+    }
   }
-
   return defineAnimation<TimingAnimation>(toValue, () => {
     'worklet';
     const config: Required<Omit<TimingConfig, 'reduceMotion'>> = {
