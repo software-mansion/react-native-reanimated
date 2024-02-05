@@ -85,4 +85,4 @@ jobs:
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}
-        run: npx react-native@latest run-ios --simulator="iPhone 14 Pro" --mode Debug --verbose --terminal /bin/zsh
+        run: npx react-native run-ios
