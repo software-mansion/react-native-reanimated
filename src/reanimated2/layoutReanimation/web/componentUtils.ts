@@ -234,20 +234,12 @@ function getElementScrollValue(element: HTMLElement): ScrollOffsets {
   };
 
   while (current) {
-    if (current.scrollTop !== 0) {
+    if (current.scrollTop !== 0 && scrollOffsets.scrollTopOffset === 0) {
       scrollOffsets.scrollTopOffset = current.scrollTop;
-      break;
     }
 
-    current = current.parentElement;
-  }
-
-  current = element;
-
-  while (current) {
-    if (current.scrollLeft !== 0) {
+    if (current.scrollLeft !== 0 && scrollOffsets.scrollLeftOffset === 0) {
       scrollOffsets.scrollLeftOffset = current.scrollLeft;
-      break;
     }
 
     current = current.parentElement;
