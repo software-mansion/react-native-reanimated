@@ -233,6 +233,7 @@ const ReanimatedV2 = {
   'SlideInUp',
   'SlideInDown',
   'SlideOutUp',
+  'SlideOutDown',
 
   'ZoomInRotate',
   'ZoomInLeft',
