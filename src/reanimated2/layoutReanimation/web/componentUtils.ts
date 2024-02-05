@@ -284,18 +284,23 @@ export function handleExitingAnimation(
 
   const scrollOffsets = getElementScrollValue(element);
 
-  if (
-    scrollOffsets.scrollTopOffset !== snapshot.scrollOffsets.scrollTopOffset
-  ) {
-    snapshot.top +=
-      snapshot.scrollOffsets.scrollTopOffset - scrollOffsets.scrollTopOffset;
+  // Scroll does not trigger snapshoting, therefore if we start exiting animation after
+  // scrolling through parent component, dummy will end up in wrong place. In order to fix that
+  // we keep last known scroll position in snapshot and then adjust dummy position based on
+  // last known scroll offset and current scroll offset
+
+  const currentScrollTopOffset = scrollOffsets.scrollTopOffset;
+  const lastScrollTopOffset = snapshot.scrollOffsets.scrollTopOffset;
+
+  if (currentScrollTopOffset !== lastScrollTopOffset) {
+    snapshot.top += lastScrollTopOffset - currentScrollTopOffset;
   }
 
-  if (
-    scrollOffsets.scrollLeftOffset !== snapshot.scrollOffsets.scrollLeftOffset
-  ) {
-    snapshot.left +=
-      snapshot.scrollOffsets.scrollLeftOffset - scrollOffsets.scrollLeftOffset;
+  const currentScrollLeftOffset = scrollOffsets.scrollLeftOffset;
+  const lastScrollLeftOffset = snapshot.scrollOffsets.scrollLeftOffset;
+
+  if (currentScrollLeftOffset !== lastScrollLeftOffset) {
+    snapshot.left += lastScrollLeftOffset - currentScrollLeftOffset;
   }
 
   snapshots.set(dummy, snapshot);
