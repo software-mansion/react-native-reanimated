@@ -71,16 +71,15 @@ export const withTiming = function (
     const isWorklet: boolean = !!(
       easing as unknown as { __workletHash: number }
     )?.__workletHash;
-    const functionName = typeof easing === 'function' ? easing?.name : '';
+    const functionName = typeof easing === 'function' ? easing?.name + ' ' : '';
     const isBound = functionName.startsWith('bound');
 
     if (!isBound && isFunction && !isWorklet) {
       throw new Error(
-        `[Reanimated] The easing function ${functionName} provided to 'withTiming' is not a worklet. Are you sure you didn't import it from react-native? `
+        `[Reanimated] The easing function ${functionName}provided to \`withTiming\` is not a worklet. Are you sure you didn't import it from react-native? `
       );
     }
   }
-
 
   return defineAnimation<TimingAnimation>(toValue, () => {
     'worklet';
