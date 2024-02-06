@@ -27,6 +27,9 @@
 
 namespace reanimated {
 
+//    inline jsi::Runtime *bridgelessRnRuntime;
+//    inline std::shared_ptr<facebook::react::CallInvoker> bridgelessCallInvoker;
+
 using namespace facebook;
 using namespace facebook::jni;
 

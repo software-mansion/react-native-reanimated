@@ -94,8 +94,14 @@ public class ReanimatedModule extends ReactContextBaseJavaModule
   public void installTurboModule(String valueUnpackerCode) {
     // When debugging in chrome the JS context is not available.
     // https://github.com/facebook/react-native/blob/v0.67.0-rc.6/ReactAndroid/src/main/java/com/facebook/react/modules/blob/BlobCollector.java#L25
-    Utils.isChromeDebugger = getReactApplicationContext().getJavaScriptContextHolder().get() == 0;
-
+    try {
+      Utils.isChromeDebugger = getReactApplicationContext().getJavaScriptContextHolder().get() == 0;
+    } catch (Exception e) {
+      Log.w(
+              "[REANIMATED]",
+              "React Application Context is not available. Ignore this if you are using bridgeless mode");
+      return;
+    }
     if (!Utils.isChromeDebugger) {
       this.getNodesManager().initWithContext(getReactApplicationContext(), valueUnpackerCode);
     } else {

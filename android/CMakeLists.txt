@@ -44,6 +44,7 @@ set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
 
 file(GLOB_RECURSE SOURCES_COMMON CONFIGURE_DEPENDS "${COMMON_SRC_DIR}/cpp/**.cpp")
 file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp")
+file(GLOB tm_generated_SRC CONFIGURE_DEPENDS *.cpp ${CMAKE_SOURCE_DIR}/build/generated/source/codegen/jni/react/renderer/components/rnreanimated/rnreanimatedJSI-generated.cpp)
 
 if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
     # Consume shared libraries and headers from prefabs
@@ -70,6 +71,7 @@ add_library(
         ${SOURCES_ANDROID}
         ${INCLUDE_JSI_CPP}
         ${INCLUDE_JSIDYNAMIC_CPP}
+        ${tm_generated_SRC}
 )
 
 # includes
@@ -87,7 +89,17 @@ target_include_directories(
         "${COMMON_SRC_DIR}/cpp/SharedItems"
         "${COMMON_SRC_DIR}/cpp/Tools"
         "${SRC_DIR}/main/cpp"
+        # move to new arch
 )
+
+
+if(${IS_NEW_ARCHITECTURE_ENABLED})
+    target_include_directories(
+        ${PACKAGE_NAME}
+        PRIVATE
+        "${CMAKE_SOURCE_DIR}/build/generated/source/codegen/jni/react/renderer/components/rnreanimated"
+    )
+endif()
 
 if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
     target_include_directories(
@@ -310,6 +322,9 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
         ReactAndroid::react_render_scheduler
         ReactAndroid::react_render_uimanager
         ReactAndroid::rrc_view
+        ReactAndroid::react_nativemodule_core
+        ReactAndroid::turbomodulejsijni
+        ReactAndroid::react_newarchdefaults
     )
 endif()
 

@@ -75,6 +75,7 @@ public class LayoutAnimations {
       return mWeakAnimationsManager.get();
     }
 
+    // see how it works on bridgeless
     ReactApplicationContext context = mContext.get();
     if (context == null) {
       return null;
