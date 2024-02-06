@@ -75,7 +75,7 @@ function measurePaper(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
     return null;
   }
 
-  const measured = _measurePaper!(viewTag as number);
+  const measured = global._measurePaper!(viewTag as number);
   if (measured === null) {
     console.warn(
       `[Reanimated] The view with tag ${
