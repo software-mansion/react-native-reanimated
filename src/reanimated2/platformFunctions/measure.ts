@@ -28,7 +28,7 @@ export let measure: Measure;
 
 function measureFabric(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
   'worklet';
-  if (!_WORKLET) {
+  if (!global._WORKLET) {
     return null;
   }
 
@@ -63,7 +63,7 @@ function measureFabric(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
 
 function measurePaper(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
   'worklet';
-  if (!_WORKLET) {
+  if (!global._WORKLET) {
     return null;
   }
 

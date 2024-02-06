@@ -53,7 +53,7 @@ function scrollToPaper(
   animated: boolean
 ) {
   'worklet';
-  if (!_WORKLET) {
+  if (!global._WORKLET) {
     return;
   }
 

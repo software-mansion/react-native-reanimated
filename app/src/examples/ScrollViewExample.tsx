@@ -5,7 +5,7 @@ import React from 'react';
 
 export default function ScrollViewExample() {
   const scrollHandler = useAnimatedScrollHandler((event) => {
-    console.log(_WORKLET, event.contentOffset.y);
+    console.log(global._WORKLET, event.contentOffset.y);
   });
 
   return (

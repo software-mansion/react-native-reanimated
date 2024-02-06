@@ -32,7 +32,7 @@ function setNativePropsFabric(
   updates: StyleProps
 ) {
   'worklet';
-  if (!_WORKLET) {
+  if (!global._WORKLET) {
     console.warn(
       '[Reanimated] setNativeProps() can only be used on the UI runtime.'
     );
@@ -48,7 +48,7 @@ function setNativePropsPaper(
   updates: StyleProps
 ) {
   'worklet';
-  if (!_WORKLET) {
+  if (!global._WORKLET) {
     console.warn(
       '[Reanimated] setNativeProps() can only be used on the UI runtime.'
     );

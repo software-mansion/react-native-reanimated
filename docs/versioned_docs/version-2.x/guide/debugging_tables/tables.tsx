@@ -7,7 +7,7 @@ import styles from './styles.module.css';
       - react-native: 0.69.3
       - empty app generated using the typescript template
       - added reanimated only
-      - tested: scrollTo, measure, useAnimatedSensor, console logs with _WORKLET
+      - tested: scrollTo, measure, useAnimatedSensor, console logs with global._WORKLET
     - Android:
       - Device: Pixel 5 API 32
     - iOS:

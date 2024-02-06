@@ -13,13 +13,13 @@ export default function ScrollToExample() {
   const aref = useAnimatedRef<Animated.ScrollView>();
 
   const scrollFromJS = () => {
-    console.log(_WORKLET);
+    console.log(global._WORKLET);
     aref.current?.scrollTo({ y: Math.random() * 2000, animated });
   };
 
   const scrollFromUI = () => {
     runOnUI(() => {
-      console.log(_WORKLET);
+      console.log(global._WORKLET);
       scrollTo(aref, 0, Math.random() * 2000, animated);
     })();
   };

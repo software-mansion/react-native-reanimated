@@ -495,7 +495,7 @@ export function defineAnimation<
     return animation;
   };
 
-  if (_WORKLET || SHOULD_BE_USE_WEB) {
+  if (global._WORKLET || SHOULD_BE_USE_WEB) {
     return create();
   }
   // @ts-ignore: eslint-disable-line
