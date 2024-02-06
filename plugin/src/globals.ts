@@ -111,27 +111,6 @@ export const defaultGlobals = new Set([
 
   // Hermes
   'HermesInternal',
-
-  // Reanimated
-  '_WORKLET',
-  '_IS_FABRIC',
-  '_log',
-  '_toString',
-  '_scheduleOnJS',
-  '_scheduleOnRuntime',
-  '_makeShareableClone',
-  '_updatePropsPaper',
-  '_updatePropsFabric',
-  '_removeFromPropsRegistry',
-  '_measurePaper',
-  '_measureFabric',
-  '_scrollToPaper',
-  '_dispatchCommandPaper',
-  '_dispatchCommandFabric',
-  '_setGestureState',
-  '_notifyAboutProgress',
-  '_notifyAboutEnd',
-  '_getAnimationTimestamp',
 ]);
 
 export let globals: Set<string>;

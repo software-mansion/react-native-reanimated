@@ -264,26 +264,7 @@ var require_globals = __commonJS({
       "requestAnimationFrame",
       "setImmediate",
       "arguments",
-      "HermesInternal",
-      "_WORKLET",
-      "_IS_FABRIC",
-      "_log",
-      "_toString",
-      "_scheduleOnJS",
-      "_scheduleOnRuntime",
-      "_makeShareableClone",
-      "_updatePropsPaper",
-      "_updatePropsFabric",
-      "_removeFromPropsRegistry",
-      "_measurePaper",
-      "_measureFabric",
-      "_scrollToPaper",
-      "_dispatchCommandPaper",
-      "_dispatchCommandFabric",
-      "_setGestureState",
-      "_notifyAboutProgress",
-      "_notifyAboutEnd",
-      "_getAnimationTimestamp"
+      "HermesInternal"
     ]);
     function initializeGlobals() {
       exports2.globals = new Set(exports2.defaultGlobals);
