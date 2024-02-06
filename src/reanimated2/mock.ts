@@ -15,20 +15,25 @@ import { ColorSpace, Extrapolate } from './interpolateColor';
 import { Extrapolation } from './interpolation';
 import { SharedTransitionType } from './layoutReanimation';
 
-const NOOP = () => {
-  // noop
-};
+const NOOP = () => {};
 const NOOP_FACTORY = () => NOOP;
 const ID = <T>(t: T) => t;
 const IMMEDIATE_CALLBACK_INVOCATION = <T>(callback: () => T) => callback();
+const NOOP_PROXY_FACTORY = () =>
+  new Proxy(
+    {},
+    {
+      get: NOOP,
+    }
+  );
 
 const hook = {
   useAnimatedProps: IMMEDIATE_CALLBACK_INVOCATION,
-  useEvent: NOOP_FACTORY, // ?
-  useHandler: NOOP_FACTORY, // ?
-  useWorkletCallback: NOOP_FACTORY, // ?
+  useEvent: NOOP_PROXY_FACTORY, // should be fine?
+  useHandler: NOOP_PROXY_FACTORY, // should be fine?
+  useWorkletCallback: ID,
   useSharedValue: <Value>(init: Value) => ({ value: init }),
-  useReducedMotion: () => false, // ?
+  useReducedMotion: NOOP, // should be fine?
   useAnimatedStyle: IMMEDIATE_CALLBACK_INVOCATION,
   useAnimatedGestureHandler: NOOP_FACTORY,
   useAnimatedReaction: NOOP,
@@ -59,9 +64,9 @@ const hook = {
       iosReferenceFrame: 0,
     },
   }),
-  useFrameCallback: NOOP_FACTORY, // ?
-  useAnimatedKeyboard: NOOP_FACTORY, // ?
-  useScrollViewOffset: NOOP_FACTORY, // ?
+  useFrameCallback: IMMEDIATE_CALLBACK_INVOCATION, // should be fine?
+  useAnimatedKeyboard: () => ({ height: 0, state: 0 }),
+  useScrollViewOffset: () => ({ value: 0 }), // should be fine?
 };
 
 const animation = {
