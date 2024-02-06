@@ -58,7 +58,7 @@ function scrollToPaper(
   }
 
   const viewTag = animatedRef() as number;
-  _scrollToPaper!(viewTag, x, y, animated);
+  global._scrollToPaper!(viewTag, x, y, animated);
 }
 
 function scrollToJest() {

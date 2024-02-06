@@ -13,7 +13,7 @@ function setGestureStateNative(handlerTag: number, newState: number) {
     );
     return;
   }
-  _setGestureState(handlerTag, newState);
+  global._setGestureState(handlerTag, newState);
 }
 
 function setGestureStateJest() {
