@@ -1,5 +1,5 @@
 'use strict';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { initializeSensor, registerSensor, unregisterSensor } from '../core';
 import type {
   SensorConfig,
@@ -94,12 +94,15 @@ export function useAnimatedSensor(
   sensorType: SensorType,
   userConfig?: Partial<SensorConfig>
 ): AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D> {
-  const config: SensorConfig = {
-    interval: 'auto',
-    adjustToInterfaceOrientation: true,
-    iosReferenceFrame: IOSReferenceFrame.Auto,
-    ...userConfig,
-  };
+  const config: SensorConfig = useMemo(
+    () => ({
+      interval: 'auto',
+      adjustToInterfaceOrientation: true,
+      iosReferenceFrame: IOSReferenceFrame.Auto,
+      ...userConfig,
+    }),
+    [userConfig]
+  );
   const ref = useRef<AnimatedSensor<Value3D | ValueRotation>>({
     sensor: initializeSensor(sensorType, config),
     unregister: () => {
@@ -110,11 +113,14 @@ export function useAnimatedSensor(
   });
 
   useEffect(() => {
-    const newConfig = {
-      ...config,
-      ...userConfig,
+    ref.current = {
+      sensor: initializeSensor(sensorType, config),
+      unregister: () => {
+        // NOOP
+      },
+      isAvailable: false,
+      config,
     };
-    ref.current.sensor = initializeSensor(sensorType, newConfig);
 
     const sensorData = ref.current.sensor;
     const adjustToInterfaceOrientation =
@@ -148,7 +154,7 @@ export function useAnimatedSensor(
     return () => {
       ref.current.unregister();
     };
-  }, [sensorType, userConfig]);
+  }, [sensorType, config]);
 
   return ref.current as AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D>;
 }
