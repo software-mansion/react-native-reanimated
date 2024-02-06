@@ -1,4 +1,5 @@
 'use strict';
+import { isWorklet } from './commonTypes';
 import type { WorkletFunction } from './commonTypes';
 import { setupCallGuard, setupConsole } from './initializers';
 import NativeReanimatedModule from './NativeReanimated';
@@ -57,7 +58,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
   'worklet';
-  if (__DEV__ && !SHOULD_BE_USE_WEB && worklet.__workletHash === undefined) {
+  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorklet(worklet)) {
     throw new Error(
       '[Reanimated] The function passed to `runOnRuntime` is not a worklet.' +
         (_WORKLET

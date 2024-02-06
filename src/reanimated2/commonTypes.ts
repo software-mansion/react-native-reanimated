@@ -102,9 +102,18 @@ export type WorkletFunction<
   ReturnValue = unknown
 > = ((...args: Args) => ReturnValue) & (WorkletBaseRelease | WorkletBaseDev);
 
+/**
+ * This function works well on the JS thread performance-wise, since the JIT can inline it.
+ * However, on other threads it will not get optimized and we will get a function call overhead.
+ */
 export function isWorklet<
+  Args extends unknown[] = unknown[],
+  ReturnValue = unknown,
   BuildType extends WorkletBaseDev | WorkletBaseRelease = WorkletBaseDev
->(value: unknown): value is WorkletFunction & BuildType {
+>(value: unknown): value is WorkletFunction<Args, ReturnValue> & BuildType {
+  'worklet';
+  // Since host objects always return true for `in` operator, we have to use dot notation to check if the property exists.
+  // See https://github.com/facebook/hermes/blob/340726ef8cf666a7cce75bc60b02fa56b3e54560/lib/VM/JSObject.cpp#L1276.
   return !!(value as Record<string, unknown>).__workletHash;
 }
 

@@ -4,9 +4,11 @@ import type { DependencyList, UseAnimatedStyleInternal } from './commonTypes';
 import { shouldBeUseWeb } from '../PlatformChecker';
 import type { AnimatedPropsAdapterFunction } from '../commonTypes';
 
+// TODO: we should make sure that when useAP is used we are not assigning styles
+
 type UseAnimatedProps = <Props extends object>(
   updater: () => Partial<Props>,
-  deps?: DependencyList | null,
+  dependencies?: DependencyList | null,
   adapters?:
     | AnimatedPropsAdapterFunction
     | AnimatedPropsAdapterFunction[]
