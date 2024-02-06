@@ -7,7 +7,7 @@ export default function LogExample() {
     function test(value: unknown, expected: string) {
       'worklet';
       // @ts-ignore _toString function is registered for UI runtime
-      const actual = _toString(value);
+      const actual = global._toString(value);
       // @ts-ignore _log function is registered for UI runtime
       global._log(actual);
       if (actual !== expected) {
