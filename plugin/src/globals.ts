@@ -131,7 +131,6 @@ export const defaultGlobals = new Set([
   '_setGestureState',
   '_notifyAboutProgress',
   '_notifyAboutEnd',
-  '_runOnUIQueue',
   '_getAnimationTimestamp',
 ]);
 
