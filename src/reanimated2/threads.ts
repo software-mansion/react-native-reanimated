@@ -245,7 +245,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
     fun = (fun as FunDevRemote).__remoteFunction;
   }
   return (...args) => {
-    _scheduleOnJS(
+    global._scheduleOnJS(
       fun as
         | ((...args: Args) => ReturnValue)
         | WorkletFunction<Args, ReturnValue>,
