@@ -78,7 +78,7 @@ const createUpdatePropsManager = isFabric()
           });
         },
         flush(this: void) {
-          _updatePropsFabric!(operations);
+          global._updatePropsFabric!(operations);
           operations.length = 0;
         },
       };
