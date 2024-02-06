@@ -40,7 +40,7 @@ function setNativePropsFabric(
   }
   const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
   processColorsInProps(updates);
-  _updatePropsFabric!([{ shadowNodeWrapper, updates }]);
+  global._updatePropsFabric!([{ shadowNodeWrapper, updates }]);
 }
 
 function setNativePropsPaper(
@@ -57,7 +57,7 @@ function setNativePropsPaper(
   const tag = animatedRef() as number;
   const name = (animatedRef as AnimatedRefOnUI).viewName.value;
   processColorsInProps(updates);
-  _updatePropsPaper!([{ tag, name, updates }]);
+  global._updatePropsPaper!([{ tag, name, updates }]);
 }
 
 function setNativePropsJest() {
