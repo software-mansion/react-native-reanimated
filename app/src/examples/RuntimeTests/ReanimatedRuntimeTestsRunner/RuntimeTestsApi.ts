@@ -1,4 +1,4 @@
-import React from 'react';
+import { Component, ReactElement } from 'react';
 import { TestRunner } from './TestRunner';
 import { TestComponent } from './TestComponent';
 import type { SharedValue } from 'react-native-reanimated';
@@ -32,9 +32,7 @@ export function test(name: string, testCase: () => void) {
   testRunner.test(name, testCase);
 }
 
-export async function render(
-  component: React.ReactElement<React.Component> | null
-) {
+export async function render(component: ReactElement<Component> | null) {
   return testRunner.render(component);
 }
 

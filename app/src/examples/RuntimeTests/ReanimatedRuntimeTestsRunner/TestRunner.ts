@@ -1,9 +1,12 @@
-import { useRef } from 'react';
-import {
+import { Component, MutableRefObject, ReactElement, useRef } from 'react';
+import type {
   LockObject,
   Operation,
+  SharedValueSnapshot,
   TestCase,
+  TestConfiguration,
   TestSuite,
+  TestSummary,
   TestValue,
   TrackerCallCount,
 } from './types';
@@ -19,40 +22,14 @@ import {
   runOnJS,
   SharedValue,
 } from 'react-native-reanimated';
-import { RUNTIME_TEST_ERRORS, color, logInFrame } from './logMessageUtils';
+import { color, logInFrame } from './LogMessageUtils';
 import { createUpdatesContainer } from './UpdatesContainer';
 import { Matchers } from './Matchers';
-
-declare global {
-  var mockedAnimationTimestamp: number | undefined;
-  var originalRequestAnimationFrame:
-    | ((callback: (timestamp: number) => void) => void)
-    | undefined;
-  var originalGetAnimationTimestamp: (() => number) | undefined;
-  var originalUpdateProps: ((operations: Operation[]) => void) | undefined;
-  var originalNotifyAboutProgress:
-    | ((
-        tag: number,
-        value: Record<string, unknown>,
-        isSharedTransition: boolean
-      ) => void)
-    | undefined;
-  var originalFlushAnimationFrame:
-    | ((frameTimestamp: number) => void)
-    | undefined;
-  var _getAnimationTimestamp: () => number;
-  var __frameTimestamp: number | undefined;
-  var _IS_FABRIC: boolean | undefined;
-  var _updatePropsPaper: (operations: Operation[]) => void;
-  var _updatePropsFabric: (operations: Operation[]) => void;
-  var _notifyAboutProgress: (
-    tag: number,
-    value: Record<string, unknown>,
-    isSharedTransition: boolean
-  ) => void;
-  function _obtainProp(componentHandler: unknown, propName: string): string;
-  var __flushAnimationFrame: (frameTimestamp: number) => void;
-}
+import {
+  assertMockedAnimationTimestamp,
+  assertTestCase,
+  assertTestSuite,
+} from './Asserts';
 
 let callTrackerRegistryJS: Record<string, number> = {};
 const callTrackerRegistryUI = makeMutable<Record<string, number>>({});
@@ -68,22 +45,14 @@ function notifyJS(name: string) {
   notificationRegistry[name] = true;
 }
 
-function assertMockedAnimationTimestamp(
-  timestamp: number | undefined
-): asserts timestamp is number {
-  'worklet';
-  if (timestamp === undefined) {
-    throw new Error(RUNTIME_TEST_ERRORS.NO_MOCKED_TIMESTAMP);
-  }
-}
-
 export class TestRunner {
   private _testSuites: TestSuite[] = [];
   private _currentTestSuite: TestSuite | null = null;
   private _currentTestCase: TestCase | null = null;
-  private _renderHook: (component: any) => void = () => {};
+  private _renderHook: (component: ReactElement<Component> | null) => void =
+    () => {};
   private _renderLock: LockObject = { lock: false };
-  private _valueRegistry: Record<string, { value: unknown }> = {};
+  private _valueRegistry: Record<string, SharedValue> = {};
   private _wasRenderedNull: boolean = false;
   private _lockObject: LockObject = {
     lock: false,
@@ -109,12 +78,12 @@ export class TestRunner {
     });
   }
 
-  public configure(config: { render: (component: any) => void }) {
+  public configure(config: TestConfiguration) {
     this._renderHook = config.render;
     return this._renderLock;
   }
 
-  public async render(component: any) {
+  public async render(component: ReactElement<Component> | null) {
     if (!component && this._wasRenderedNull) {
       return;
     }
@@ -136,35 +105,21 @@ export class TestRunner {
     });
   }
 
-  private _assertTestSuite(test: TestSuite | null): asserts test is TestSuite {
-    if (!test) {
-      throw new Error(RUNTIME_TEST_ERRORS.UNDEFINED_TEST_SUITE);
-    }
-  }
-
-  private _assertTestCase(test: TestCase | null): asserts test is TestCase {
-    if (!test) {
-      throw new Error(RUNTIME_TEST_ERRORS.UNDEFINED_TEST_CASE);
-    }
-  }
-
-  public test(name: string, testCase: () => void) {
-    this._assertTestSuite(this._currentTestSuite);
+  public test(name: string, run: () => void) {
+    assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.testCases.push({
       name,
-      testCase,
+      run,
       componentsRefs: {},
       callsRegistry: {},
       errors: [],
     });
   }
 
-  public useTestRef(
-    name: string
-  ): React.MutableRefObject<React.Component | null> {
+  public useTestRef(name: string): MutableRefObject<Component | null> {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const ref = useRef(null);
-    this._assertTestCase(this._currentTestCase);
+    assertTestCase(this._currentTestCase);
     this._currentTestCase.componentsRefs[name] = ref;
     return ref;
   }
@@ -182,15 +137,15 @@ export class TestRunner {
     }
   }
 
-  public registerValue(name: string, value: { value: unknown }) {
+  public registerValue(name: string, value: SharedValue) {
     'worklet';
     this._valueRegistry[name] = value;
   }
 
-  public async getRegisteredValue(name: string): Promise<TrackerCallCount> {
-    const jsValue = this._valueRegistry[name].value as number;
-    const sharedValue = this._valueRegistry[name] as SharedValue<number>;
-    const valueContainer = makeMutable<number>(0);
+  public async getRegisteredValue(name: string): Promise<SharedValueSnapshot> {
+    const jsValue = this._valueRegistry[name].value;
+    const sharedValue = this._valueRegistry[name];
+    const valueContainer = makeMutable<unknown>(null);
     await this.runOnUiBlocking(() => {
       'worklet';
       valueContainer.value = sharedValue.value;
@@ -198,8 +153,8 @@ export class TestRunner {
     const uiValue = valueContainer.value;
     return {
       name,
-      onJS: jsValue,
-      onUI: uiValue,
+      onJS: jsValue as TestValue,
+      onUI: uiValue as TestValue,
     };
   }
 
@@ -212,12 +167,13 @@ export class TestRunner {
   }
 
   public getTestComponent(name: string): TestComponent {
-    this._assertTestCase(this._currentTestCase);
-    return new TestComponent(this._currentTestCase.componentsRefs[name]);
+    assertTestCase(this._currentTestCase);
+    const componentRef = this._currentTestCase.componentsRefs[name];
+    return new TestComponent(componentRef);
   }
 
   public async runTests() {
-    const summary = {
+    const summary: TestSummary = {
       passed: 0,
       failed: 0,
       failedTests: [] as Array<string>,
@@ -225,48 +181,7 @@ export class TestRunner {
       endTime: 0,
     };
     for (const testSuite of this._testSuites) {
-      this._currentTestSuite = testSuite;
-
-      logInFrame(`Running test suite: ${testSuite.name}`);
-
-      testSuite.buildSuite();
-      if (testSuite.beforeAll) {
-        await testSuite.beforeAll();
-      }
-
-      for (const testCase of testSuite.testCases) {
-        callTrackerRegistryUI.value = {};
-        callTrackerRegistryJS = {};
-        this._currentTestCase = testCase;
-
-        if (testSuite.beforeEach) {
-          await testSuite.beforeEach();
-        }
-        await testCase.testCase();
-        if (testCase.errors.length > 0) {
-          summary.failed++;
-          summary.failedTests.push(testCase.name);
-          console.log(`${color('✖', 'red')} ${testCase.name} `);
-          for (const error of testCase.errors) {
-            console.log(`\t${error}`);
-          }
-        } else {
-          summary.passed++;
-          console.log(`${color('✔', 'green')} ${testCase.name}`);
-        }
-        if (testSuite.afterEach) {
-          await testSuite.afterEach();
-        }
-        this._currentTestCase = null;
-        await render(null);
-        await unmockAnimationTimer();
-        await stopRecordingAnimationUpdates();
-      }
-      if (testSuite.afterAll) {
-        await testSuite.afterAll();
-      }
-      console.log('\n\n');
-      this._currentTestSuite = null;
+      await this.runTestSuite(testSuite, summary);
     }
     this._testSuites = [];
     console.log('End of tests run 🏁');
@@ -274,28 +189,91 @@ export class TestRunner {
     this.printSummary(summary);
   }
 
+  private async runTestSuite(testSuite: TestSuite, summary: TestSummary) {
+    this._currentTestSuite = testSuite;
+
+    logInFrame(`Running test suite: ${testSuite.name}`);
+
+    testSuite.buildSuite();
+    if (testSuite.beforeAll) {
+      await testSuite.beforeAll();
+    }
+
+    for (const testCase of testSuite.testCases) {
+      await this.runTestCase(testSuite, testCase, summary);
+    }
+
+    if (testSuite.afterAll) {
+      await testSuite.afterAll();
+    }
+    console.log('\n\n');
+    this._currentTestSuite = null;
+  }
+
+  private async runTestCase(
+    testSuite: TestSuite,
+    testCase: TestCase,
+    summary: TestSummary
+  ) {
+    callTrackerRegistryUI.value = {};
+    callTrackerRegistryJS = {};
+    this._currentTestCase = testCase;
+
+    if (testSuite.beforeEach) {
+      await testSuite.beforeEach();
+    }
+
+    await testCase.run();
+    this.showTestCaseSummary(testCase, summary);
+
+    if (testSuite.afterEach) {
+      await testSuite.afterEach();
+    }
+
+    this._currentTestCase = null;
+    await render(null);
+    await unmockAnimationTimer();
+    await stopRecordingAnimationUpdates();
+  }
+
+  private showTestCaseSummary(testCase: TestCase, summary: TestSummary) {
+    if (testCase.errors.length > 0) {
+      summary.failed++;
+      summary.failedTests.push(testCase.name);
+      const mark = color('✖', 'red');
+      console.log(`${mark} ${testCase.name} `);
+      for (const error of testCase.errors) {
+        console.log(`\t${error}`);
+      }
+    } else {
+      summary.passed++;
+      const mark = color('✔', 'green');
+      console.log(`${mark} ${testCase.name}`);
+    }
+  }
+
   public expect(currentValue: TestValue): Matchers {
-    this._assertTestCase(this._currentTestCase);
+    assertTestCase(this._currentTestCase);
     return new Matchers(currentValue, this._currentTestCase);
   }
 
   public beforeAll(job: () => void) {
-    this._assertTestSuite(this._currentTestSuite);
+    assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.beforeAll = job;
   }
 
   public afterAll(job: () => void) {
-    this._assertTestSuite(this._currentTestSuite);
+    assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.afterAll = job;
   }
 
   public beforeEach(job: () => void) {
-    this._assertTestSuite(this._currentTestSuite);
+    assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.beforeEach = job;
   }
 
   public afterEach(job: () => void) {
-    this._assertTestSuite(this._currentTestSuite);
+    assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.afterEach = job;
   }
 
@@ -314,7 +292,7 @@ export class TestRunner {
     });
   }
 
-  async runOnUiBlocking(worklet: () => void) {
+  public async runOnUiBlocking(worklet: () => void) {
     const unlock = () => (this._lockObject.lock = false);
     this._lockObject.lock = true;
     runOnUI(() => {

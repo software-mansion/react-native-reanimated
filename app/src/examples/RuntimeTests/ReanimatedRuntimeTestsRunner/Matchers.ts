@@ -1,10 +1,16 @@
-import { color, defaultTestErrorLog } from './logMessageUtils';
-import { ComparisonMode, TestCase, TestValue, TrackerCallCount } from './types';
+import { color, defaultTestErrorLog } from './LogMessageUtils';
+import {
+  ComparisonMode,
+  OperationUpdate,
+  TestCase,
+  TestValue,
+  TrackerCallCount,
+} from './types';
 
 const ERROR_DISTANCE = 0.5;
 
 const COMPARATORS: {
-  [Key: string]: (expected: TestValue, value: TestValue) => Boolean;
+  [Key: string]: (expected: TestValue, value: TestValue) => boolean;
 } = {
   [ComparisonMode.STRING]: (expected, value) => {
     return value === expected;
@@ -30,6 +36,61 @@ const COMPARATORS: {
       !isNaN(valueAsNumber) &&
       Math.abs(valueAsNumber - Number(expected)) < ERROR_DISTANCE
     );
+  },
+  [ComparisonMode.ARRAY]: (expected, value) => {
+    if (!Array.isArray(expected) || !Array.isArray(value)) {
+      return false;
+    }
+    if (expected.length !== value.length) {
+      return false;
+    }
+    for (let i = 0; i < expected.length; i++) {
+      if (
+        !COMPARATORS[ComparisonMode.AUTO](
+          expected[i] as TestValue,
+          value[i] as TestValue
+        )
+      ) {
+        return false;
+      }
+    }
+    return true;
+  },
+  [ComparisonMode.OBJECT]: (expected, value) => {
+    if (typeof expected !== 'object' || typeof value !== 'object') {
+      return false;
+    }
+    const expectedKeys = Object.keys(expected);
+    const valueKeys = Object.keys(value);
+    if (expectedKeys.length !== valueKeys.length) {
+      return false;
+    }
+    for (const key of expectedKeys) {
+      if (
+        !COMPARATORS[ComparisonMode.AUTO](
+          expected[key as keyof typeof expected],
+          value[key as keyof typeof value]
+        )
+      ) {
+        return false;
+      }
+    }
+    return true;
+  },
+  [ComparisonMode.AUTO]: (expected, value) => {
+    if (typeof expected === 'number') {
+      return COMPARATORS[ComparisonMode.DISTANCE](expected, value);
+    }
+    if (typeof expected === 'string') {
+      return COMPARATORS[ComparisonMode.STRING](expected, value);
+    }
+    if (Array.isArray(expected)) {
+      return COMPARATORS[ComparisonMode.ARRAY](expected, value);
+    }
+    if (typeof expected === 'object') {
+      return COMPARATORS[ComparisonMode.OBJECT](expected, value);
+    }
+    return expected === value;
   },
 };
 
@@ -98,73 +159,106 @@ export class Matchers {
     }
   }
 
-  public toMatchSnapshot(expectedValue: TestValue) {
-    if (Array.isArray(expectedValue)) {
-      let errorString = '';
-      (this.currentValue as Array<unknown>).forEach(
-        (val: unknown, idx: number) => {
-          const expectedVal = expectedValue[idx];
-          if (JSON.stringify(expectedVal) !== JSON.stringify(val)) {
-            const expected = color(`${JSON.stringify(expectedVal)}`, 'green');
-            const received = color(`${JSON.stringify(val)}`, 'red');
-            errorString += `\tAt index ${idx}:\n\t\texpected: ${expected}\n\t\treceived: ${received}\n`;
-          }
+  public toMatchSnapshot(expectedSnapshots: Array<Record<string, unknown>>) {
+    const capturedSnapshots = this.currentValue as Array<
+      Record<string, unknown>
+    >;
+    if (capturedSnapshots.length !== expectedSnapshots.length) {
+      const errorMessage = this.formatMismatchLengthErrorMessage(
+        expectedSnapshots.length,
+        capturedSnapshots.length
+      );
+      this.testCase.errors.push(errorMessage);
+    }
+    let errorString = '';
+    expectedSnapshots.forEach(
+      (expectedSnapshots: Record<string, unknown>, index: number) => {
+        const capturedSnapshot = capturedSnapshots[index];
+        const isEquals = COMPARATORS[ComparisonMode.AUTO];
+        if (!isEquals(expectedSnapshots, capturedSnapshot)) {
+          const expected = color(
+            `${JSON.stringify(expectedSnapshots)}`,
+            'green'
+          );
+          const received = color(`${JSON.stringify(capturedSnapshot)}`, 'red');
+          errorString += `\tAt index ${index}:\n\t\texpected: ${expected}\n\t\treceived: ${received}\n`;
         }
-      );
-      if (errorString !== '') {
-        this.testCase.errors.push('Snapshot mismatch: \n' + errorString);
       }
-    } else if (
-      JSON.stringify(this.currentValue) !== JSON.stringify(expectedValue)
-    ) {
-      this.testCase.errors.push(
-        `Expected ${JSON.stringify(expectedValue)} received ${JSON.stringify(
-          this.currentValue
-        )}`
-      );
+    );
+    if (errorString !== '') {
+      this.testCase.errors.push('Snapshot mismatch: \n' + errorString);
     }
   }
 
-  public toMatchNativeSnapshots(
-    nativeSnapshots: Array<Record<string, unknown>>
-  ) {
+  public toMatchNativeSnapshots(nativeSnapshots: Array<OperationUpdate>) {
     /* 
       The TestRunner can collect two types of snapshots:
       - JS snapshots: animation updates sent via `_updateProps`
       - Native snapshots: snapshots obtained from the native side via `getViewProp`
-      Updates applied through `_updateProps` are not synchronously applied to the native side. Instead, they are batched and applied at the end of each frame. Therefore, it is not allowed to take a native snapshot immediately after the `_updateProps` call. To address this issue, we need to wait for the next frame before capturing the native snapshot. That's why native snapshots are one frame behind JS snapshots. To account for this delay, one additional native snapshot is taken during the execution of the `toMatchNativeSnapshots` function.
+      Updates applied through `_updateProps` are not synchronously applied to the native side. Instead, they are batched and applied at the end of each frame. Therefore, it is not allowed to take a native snapshot immediately after the `_updateProps` call. To address this issue, we need to wait for the next frame before capturing the native snapshot. That's why native snapshots are one frame behind JS snapshots. To account for this delay, one additional native snapshot is taken during the execution of the `getNativeSnapshots` function.
     */
     let errorString = '';
-    const jsUpdates = this.currentValue as Array<Record<string, unknown>>;
+    const jsUpdates = this.currentValue as Array<OperationUpdate>;
     for (let i = 0; i < jsUpdates.length; i++) {
-      const jsUpdate = jsUpdates[i];
-      const nativeUpdate = nativeSnapshots[i + 1];
-      const keys = Object.keys(jsUpdate);
-      for (const key of keys) {
-        const jsValue = jsUpdate[key];
-        const nativeValue = nativeUpdate[key];
-        let detectedMismatch = false;
-        if (typeof jsValue === 'number') {
-          if (
-            Math.round(jsValue) !== Math.round(nativeValue as number) &&
-            Math.abs(jsValue - (nativeValue as number)) > 1
-          ) {
-            detectedMismatch = true;
-          }
-        } else {
-          if (jsValue !== nativeValue) {
-            detectedMismatch = true;
-          }
-        }
-        if (detectedMismatch) {
-          const expected = color(jsValue as string, 'green');
-          const received = color(nativeValue as string, 'red');
-          errorString += `\tAt index ${i}, value of prop ${key}:\n\t\texpected: ${expected}\n\t\treceived: ${received}\n`;
-        }
-      }
+      errorString += this.compareJsAndNativeSnapshot(
+        jsUpdates,
+        nativeSnapshots,
+        i
+      );
+    }
+    if (jsUpdates.length !== nativeSnapshots.length - 1) {
+      errorString += `Expected ${jsUpdates.length} snapshots, but received ${
+        nativeSnapshots.length - 1
+      } snapshots\n`;
     }
     if (errorString !== '') {
       this.testCase.errors.push('Native snapshot mismatch: \n' + errorString);
     }
+  }
+
+  private compareJsAndNativeSnapshot(
+    jsSnapshots: Array<OperationUpdate>,
+    nativeSnapshots: Array<OperationUpdate>,
+    i: number
+  ) {
+    let errorString = '';
+    const jsSnapshot = jsSnapshots[i];
+    const nativeSnapshot = nativeSnapshots[i + 1];
+    const keys = Object.keys(jsSnapshot);
+    for (const key of keys) {
+      const typedKey = key as keyof OperationUpdate;
+      const jsValue = jsSnapshot[typedKey];
+      const nativeValue = nativeSnapshot[typedKey];
+      const isEqual = COMPARATORS[ComparisonMode.AUTO];
+      if (!isEqual(jsValue, nativeValue)) {
+        errorString += this.formatSnapshotErrorMessage(
+          jsValue,
+          nativeValue,
+          key,
+          i
+        );
+      }
+    }
+    return errorString;
+  }
+
+  private formatSnapshotErrorMessage(
+    jsValue: TestValue,
+    nativeValue: TestValue,
+    propName: string,
+    index: number
+  ) {
+    const expected = color(jsValue, 'green');
+    const received = color(nativeValue, 'red');
+    return `\tAt index ${index}, value of prop ${propName}:\n\t\texpected: ${expected}\n\t\treceived: ${received}\n`;
+  }
+
+  private formatMismatchLengthErrorMessage(
+    expectedLength: number,
+    receivedLength: number
+  ) {
+    const expected = color(expectedLength, 'green');
+    const received = color(receivedLength, 'red');
+    return `Expected ${expected} snapshots, but received ${received} snapshots\n`;
   }
 }

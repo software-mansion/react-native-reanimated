@@ -1,11 +1,11 @@
 import { makeMutable } from 'react-native-reanimated';
-import { Operation } from './types';
+import { Operation, OperationUpdate } from './types';
 import { TestRunner } from './TestRunner';
 
 type UpdateInfo = {
   tag: number;
   shadowNodeWrapper?: unknown;
-  update: Record<string, unknown>;
+  update: OperationUpdate;
 };
 
 export function createUpdatesContainer(testRunner: TestRunner) {
@@ -13,7 +13,7 @@ export function createUpdatesContainer(testRunner: TestRunner) {
     Array<{
       tag: number;
       shadowNodeWrapper?: unknown;
-      update: Record<string, unknown>;
+      update: OperationUpdate;
     }>
   >([]);
   const nativeSnapshots = makeMutable<
@@ -58,7 +58,7 @@ export function createUpdatesContainer(testRunner: TestRunner) {
     const info: {
       tag: number;
       shadowNodeWrapper: unknown;
-      update: Record<string, unknown>;
+      update: OperationUpdate;
     }[] = [];
     for (const operation of operations) {
       info.push({
@@ -108,16 +108,17 @@ export function createUpdatesContainer(testRunner: TestRunner) {
   }
 
   function getUpdates(propsNames: string[] = []) {
-    const updates: Record<string, unknown>[] = [];
+    const updates: OperationUpdate[] = [];
     if (propsNames.length === 0) {
       for (const updateRequest of jsUpdates.value) {
         updates.push(updateRequest.update);
       }
     } else {
       for (const updateRequest of jsUpdates.value) {
-        const filteredUpdate: Record<string, unknown> = {};
+        const filteredUpdate: Record<string, OperationUpdate> = {};
         for (const prop of propsNames) {
-          filteredUpdate[prop] = updateRequest.update[prop];
+          filteredUpdate[prop] =
+            updateRequest.update[prop as keyof OperationUpdate];
         }
         updates.push(filteredUpdate);
       }
@@ -144,7 +145,7 @@ export function createUpdatesContainer(testRunner: TestRunner) {
       });
     }
 
-    const snapshots: Record<string, unknown>[] = [];
+    const snapshots: OperationUpdate[] = [];
     if (propsNames.length === 0) {
       for (const nativeSnapshot of nativeSnapshots.value) {
         snapshots.push(nativeSnapshot.snapshot);
