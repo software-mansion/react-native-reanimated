@@ -51,7 +51,7 @@ using DispatchCommandFunction = std::function<void(
 using MeasureFunction =
     std::function<std::vector<std::pair<std::string, double>>(int)>;
 using ObtainPropFunction =
-    std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>;
+    std::function<jsi::Value(jsi::Runtime &, const int, const jsi::Value &)>;
 
 #endif // RCT_NEW_ARCH_ENABLED
 

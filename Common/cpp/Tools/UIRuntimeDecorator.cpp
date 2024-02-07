@@ -60,22 +60,7 @@ void UIRuntimeDecorator::decorate(
   jsi_utils::installJsiFunction(uiRuntime, "_setGestureState", setGestureState);
   jsi_utils::installJsiFunction(
       uiRuntime, "_maybeFlushUIUpdatesQueue", maybeFlushUIUpdatesQueue);
-  jsi_utils::installJsiFunction(
-      uiRuntime,
-      "_obtainProp",
-#ifdef RCT_NEW_ARCH_ENABLED
-      [obtainPropFunction](
-          jsi::Runtime &rt,
-          const jsi::Value &shadowNodeWrapper,
-          const jsi::Value &propName) {
-        return obtainPropFunction(rt, shadowNodeWrapper, propName.asString(rt));
-      });
-#else
-      [obtainPropFunction](
-          jsi::Runtime &rt, int viewTag, const jsi::Value &propName) {
-        return obtainPropFunction(rt, viewTag, propName.asString(rt));
-      });
-#endif // RCT_NEW_ARCH_ENABLED
+  jsi_utils::installJsiFunction(uiRuntime, "_obtainProp", obtainPropFunction);
 }
 
 } // namespace reanimated

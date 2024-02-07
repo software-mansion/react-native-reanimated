@@ -320,7 +320,7 @@ jsi::Value NativeReanimatedModule::getViewProp(
 
   uiScheduler_->scheduleOnUI([=]() {
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
-    const auto propNameValue =
+    const jsi::Value propNameValue =
         jsi::String::createFromUtf8(uiRuntime, propNameStr);
     const auto resultValue =
         obtainPropFunction_(uiRuntime, viewTagInt, propNameValue);
