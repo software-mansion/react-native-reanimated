@@ -1,6 +1,7 @@
 'use strict';
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
+
 import { startMapper, stopMapper } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animation';
