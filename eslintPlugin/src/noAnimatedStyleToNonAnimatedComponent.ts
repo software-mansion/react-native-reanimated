@@ -27,12 +27,9 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
               attribute.type === AST_NODE_TYPES.JSXAttribute &&
               attribute.name.name === 'style'
             );
-          });
+          }) as TSESTree.JSXAttribute | undefined;
 
-          if (
-            styleAttribute === undefined ||
-            styleAttribute.type === AST_NODE_TYPES.JSXSpreadAttribute
-          ) {
+          if (styleAttribute === undefined) {
             return;
           }
 
