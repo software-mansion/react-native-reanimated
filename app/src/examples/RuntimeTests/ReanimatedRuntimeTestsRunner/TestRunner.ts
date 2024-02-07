@@ -54,7 +54,7 @@ export class TestRunner {
   private _renderLock: LockObject = { lock: false };
   private _valueRegistry: Record<string, SharedValue> = {};
   private _wasRenderedNull: boolean = false;
-  private _lockObject: LockObject = {
+  private _threadLock: LockObject = {
     lock: false,
   };
 
@@ -293,14 +293,14 @@ export class TestRunner {
   }
 
   public async runOnUiBlocking(worklet: () => void) {
-    const unlock = () => (this._lockObject.lock = false);
-    this._lockObject.lock = true;
+    const unlock = () => (this._threadLock.lock = false);
+    this._threadLock.lock = true;
     runOnUI(() => {
       'worklet';
       worklet();
       runOnJS(unlock)();
     })();
-    await this.waitForPropertyValueChange(this._lockObject, 'lock', true);
+    await this.waitForPropertyValueChange(this._threadLock, 'lock', true);
   }
 
   public async recordAnimationUpdates() {

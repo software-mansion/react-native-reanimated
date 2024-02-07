@@ -127,11 +127,12 @@ export function createUpdatesContainer(testRunner: TestRunner) {
   }
 
   async function getNativeSnapshots(propsNames: string[] = []) {
-    if (jsUpdates.value.length === nativeSnapshots.value.length) {
+    const nativeSnapshotsCount = nativeSnapshots.value.length;
+    const jsUpdatesCount = jsUpdates.value.length;
+    if (jsUpdatesCount === nativeSnapshotsCount) {
       await testRunner.runOnUiBlocking(() => {
         'worklet';
-        const lastSnapshot =
-          nativeSnapshots.value[nativeSnapshots.value.length - 1];
+        const lastSnapshot = nativeSnapshots.value[nativeSnapshotsCount - 1];
         _makeNativeSnapshot(
           [
             {
@@ -140,7 +141,7 @@ export function createUpdatesContainer(testRunner: TestRunner) {
               update: lastSnapshot.snapshot,
             },
           ],
-          jsUpdates.value.length - 1
+          jsUpdatesCount - 1
         );
       });
     }
