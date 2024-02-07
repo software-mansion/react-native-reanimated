@@ -1,39 +1,43 @@
 /* eslint-disable n/no-callback-literal */
 'use strict';
 
-import type { WithSpringConfig, WithTimingConfig } from './animation';
-import type { DecayConfig } from './animation/decay/utils';
-import type { AnimatableValue, AnimationCallback } from './commonTypes';
+import type {
+  WithSpringConfig,
+  WithTimingConfig,
+  WithDecayConfig,
+  AnimatableValue,
+  AnimationCallback,
+} from './reanimated2';
 import {
   IOSReferenceFrame,
   InterfaceOrientation,
   KeyboardState,
   ReduceMotion,
   SensorType,
-} from './commonTypes';
-import { ColorSpace, Extrapolate } from './interpolateColor';
-import { Extrapolation } from './interpolation';
-import { SharedTransitionType } from './layoutReanimation';
+  ColorSpace,
+  Extrapolation,
+  SharedTransitionType,
+} from './reanimated2';
+import {
+  View as ViewRN,
+  Text as TextRN,
+  Image as ImageRN,
+  Animated as AnimatedRN,
+  processColor as processColorRN,
+} from 'react-native';
 
 const NOOP = () => {};
 const NOOP_FACTORY = () => NOOP;
 const ID = <T>(t: T) => t;
 const IMMEDIATE_CALLBACK_INVOCATION = <T>(callback: () => T) => callback();
-const NOOP_PROXY_FACTORY = () =>
-  new Proxy(
-    {},
-    {
-      get: NOOP,
-    }
-  );
 
 const hook = {
   useAnimatedProps: IMMEDIATE_CALLBACK_INVOCATION,
-  useEvent: NOOP_PROXY_FACTORY, // should be fine?
-  useHandler: NOOP_PROXY_FACTORY, // should be fine?
+  // useEvent: ADD ME IF NEEDED
+  // useHandler: ADD ME IF NEEDED
   useWorkletCallback: ID,
   useSharedValue: <Value>(init: Value) => ({ value: init }),
-  useReducedMotion: NOOP, // should be fine?
+  // useReducedMotion: ADD ME IF NEEDED
   useAnimatedStyle: IMMEDIATE_CALLBACK_INVOCATION,
   useAnimatedGestureHandler: NOOP_FACTORY,
   useAnimatedReaction: NOOP,
@@ -64,16 +68,16 @@ const hook = {
       iosReferenceFrame: 0,
     },
   }),
-  useFrameCallback: IMMEDIATE_CALLBACK_INVOCATION, // should be fine?
+  // useFrameCallback: ADD ME IF NEEDED
   useAnimatedKeyboard: () => ({ height: 0, state: 0 }),
-  useScrollViewOffset: () => ({ value: 0 }), // should be fine?
+  // useScrollViewOffset: ADD ME IF NEEDED
 };
 
 const animation = {
   cancelAnimation: NOOP,
-  defineAnimation: NOOP_FACTORY, // ?
-  withClamp: NOOP_FACTORY, // ?
-  withDecay: (_userConfig: DecayConfig, callback?: AnimationCallback) => {
+  // defineAnimation: ADD ME IF NEEDED
+  // withClamp: ADD ME IF NEEDED
+  withDecay: (_userConfig: WithDecayConfig, callback?: AnimationCallback) => {
     callback?.(true);
     return 0;
   },
@@ -102,15 +106,16 @@ const animation = {
 
 const interpolation = {
   Extrapolation,
-  interpolate: ID, // ?
-  clamp: ID, // ?
+  interpolate: NOOP,
+  clamp: NOOP,
 };
 
 const interpolateColor = {
-  Extrapolate,
+  Extrapolate: Extrapolation,
+  Extrapolation,
   ColorSpace,
-  interpolateColor: ID, // ?
-  useInterpolateConfig: NOOP_FACTORY, // ?
+  interpolateColor: NOOP,
+  // useInterpolateConfig: ADD ME IF NEEDED
 };
 
 const Easing = {
@@ -144,21 +149,21 @@ const platformFunctions = {
     pageX: 0,
     pageY: 0,
   }),
-  dispatchCommand: NOOP, // ?
-  scrollTo: NOOP, // ?
-  setGestureState: NOOP, // ?
-  setNativeProps: NOOP, // ?
-  getRelativeCoords: ID, // ?
+  // dispatchCommand: ADD ME IF NEEDED
+  // scrollTo: ADD ME IF NEEDED
+  // setGestureState: ADD ME IF NEEDED
+  // setNativeProps: ADD ME IF NEEDED
+  // getRelativeCoords: ADD ME IF NEEDED
 };
 
 const Colors = {
-  isColor: () => true, // ?
-  processColor: ID, // ?
-  convertToRGBA: ID, // ?
+  // isColor: ADD ME IF NEEDED
+  processColor: processColorRN,
+  // convertToRGBA: ADD ME IF NEEDED
 };
 
 const PropAdapters = {
-  createAnimatedPropAdapter: NOOP_FACTORY, // ?
+  // createAnimatedPropAdapter: ADD ME IF NEEDED
 };
 
 class BaseAnimationMock {
@@ -259,9 +264,9 @@ const core = {
   makeMutable: ID,
   makeShareableCloneRecursive: ID,
   isReanimated3: () => true,
-  isConfigured: () => true, // ?
+  // isConfigured: ADD ME IF NEEDED
   enableLayoutAnimations: NOOP,
-  getViewProp: ID, // ?
+  // getViewProp: ADD ME IF NEEDED
 };
 
 const layoutReanimation = {
@@ -364,14 +369,14 @@ const layoutReanimation = {
   JumpingTransition: new BaseAnimationMock(),
   CurvedTransition: new BaseAnimationMock(),
   EntryExitTransition: new BaseAnimationMock(),
-  combineTransitions: ID, // ?
+  // combineTransitions: ADD ME IF NEEDED
   // SET
-  SharedTransition: new BaseAnimationMock(), // ?
+  // SharedTransition: ADD ME IF NEEDED
   SharedTransitionType,
 };
 
 const isSharedValue = {
-  isSharedValue: () => true, // ?
+  // isSharedValue: ADD ME IF NEEDED
 };
 
 const commonTypes = {
@@ -383,18 +388,33 @@ const commonTypes = {
 };
 
 const pluginUtils = {
-  getUseOfValueInStyleWarning: NOOP, // ?
+  // getUseOfValueInStyleWarning: ADD ME IF NEEDED
 };
 
-// const jestUtils ???
+// const jestUtils = ADD ME IF NEEDED
 
 const LayoutAnimationConfig = {
-  LayoutAnimationConfig: NOOP_FACTORY, // ?
+  // LayoutAnimationConfig: ADD ME IF NEEDED
 };
 
 const mappers = {
-  startMapper: NOOP, // ?
-  stopMapper: NOOP, // ?
+  // startMapper: ADD ME IF NEEDED
+  // stopMapper: ADD ME IF NEEDED
+};
+
+const Animated = {
+  View: ViewRN,
+  Text: TextRN,
+  Image: ImageRN,
+  ScrollView: AnimatedRN.ScrollView,
+  FlatList: AnimatedRN.FlatList,
+  Extrapolate: Extrapolation,
+  interpolate: NOOP,
+  interpolateColor: NOOP,
+  clamp: NOOP,
+  createAnimatedComponent: ID,
+  addWhitelistedUIProps: NOOP,
+  addWhitelistedNativeProps: NOOP,
 };
 
 const Reanimated = {
@@ -416,5 +436,7 @@ const Reanimated = {
 };
 
 module.exports = {
+  __esModule: true,
   ...Reanimated,
+  default: Animated,
 };
