@@ -7,11 +7,19 @@ module.exports = {
   },
   extends: [
     'standard',
-    'plugin:@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended-type-checked',
     'prettier',
     'plugin:import/typescript',
+    'plugin:react-hooks/recommended',
   ],
-  plugins: ['react', 'react-native', 'import', 'jest', '@typescript-eslint'],
+  plugins: [
+    'react',
+    'react-native',
+    'import',
+    'jest',
+    '@typescript-eslint',
+    'eslint-plugin-tsdoc',
+  ],
   env: {
     'react-native/react-native': true,
     'jest/globals': true,
@@ -24,13 +32,21 @@ module.exports = {
     },
   },
   rules: {
+    '@typescript-eslint/no-unsafe-call': 'off',
+    '@typescript-eslint/no-unsafe-member-access': 'off',
+    '@typescript-eslint/no-unsafe-return': 'off',
+    '@typescript-eslint/no-unsafe-assignment': 'off',
+    '@typescript-eslint/no-unsafe-argument': 'off',
+    '@typescript-eslint/no-explicit-any': 'warn',
+    'object-shorthand': 'error',
     curly: 'error',
+    'no-case-declarations': 'error',
+    '@typescript-eslint/no-shadow': 'error',
     'import/no-unresolved': 'error',
     'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
     'react/jsx-uses-vars': 'error',
     'react/jsx-uses-react': 'error',
     'no-use-before-define': 'off',
-    '@typescript-eslint/no-use-before-define': 'off', // TODO consider enabling this (currently it reports styles defined at the bottom of the file)
     '@typescript-eslint/ban-ts-comment': [
       'error',
       {
@@ -51,5 +67,7 @@ module.exports = {
       'error',
       { fixMixedExportsWithInlineTypeSpecifier: false },
     ],
+    'tsdoc/syntax': 'error',
+    '@typescript-eslint/no-non-null-assertion': 'off',
   },
 };

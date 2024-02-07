@@ -6316,9 +6316,9 @@ flux@^4.0.1:
     fbjs "^3.0.1"
 
 follow-redirects@^1.0.0, follow-redirects@^1.14.7:
-  version "1.15.2"
-  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.15.2.tgz#b460864144ba63f2681096f274c4e57026da2c13"
-  integrity sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==
+  version "1.15.4"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.15.4.tgz#cdc7d308bf6493126b17ea2191ea0ccf3e535adf"
+  integrity sha512-Cr4D/5wlrb0z9dgERpUL3LrmPKVDsETIJhaCMeDfuFYcqa5bldGV6wBsAN6X/vxlXQtFBMrXdXxdL8CbDTGniw==
 
 for-in@^1.0.2:
   version "1.0.2"
@@ -10317,10 +10317,10 @@ react-native-gradle-plugin@^0.71.16:
   resolved "https://registry.yarnpkg.com/react-native-gradle-plugin/-/react-native-gradle-plugin-0.71.16.tgz#822bb0c680e03b5df5aa65f2e5ffc2bc2930854a"
   integrity sha512-H2BjG2zk7B7Wii9sXvd9qhCVRQYDAHSWdMw9tscmZBqSP62DkIWEQSk4/B2GhQ4aK9ydVXgtqR6tBeg3yy8TSA==
 
-react-native-reanimated@^3.6.0-nightly-20231010-4a507b2c4:
-  version "3.6.0-nightly-20231010-4a507b2c4"
-  resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-3.6.0-nightly-20231010-4a507b2c4.tgz#6b5debc759a9c57c6b611636932977d01fb59353"
-  integrity sha512-RO5lkTOsOYX3pGF0UepRHnPSnOpnkj/f59uFQlWu/2+yOy+6IjG9F7dU0fJpumJFt6cSV2p7RUygofC9TrxMVA==
+react-native-reanimated@^3.7.0-nightly-20240130-720fefba7:
+  version "3.7.0-nightly-20240130-720fefba7"
+  resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-3.7.0-nightly-20240130-720fefba7.tgz#752de6f5de6aa53964e56d7ec896f8059511d356"
+  integrity sha512-cXIeR26lSg6BZ7UfOHQDticrtHhpRRLWL5AguIiMGnbSJbKfvgLOmPl1G9LI7JdKgLwCEARZb9UC6x+5MB4gXw==
   dependencies:
     "@babel/plugin-transform-object-assign" "^7.16.7"
     "@babel/preset-typescript" "^7.16.7"

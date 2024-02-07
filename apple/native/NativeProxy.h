@@ -8,7 +8,8 @@ namespace reanimated {
 
 std::shared_ptr<reanimated::NativeReanimatedModule> createReanimatedModule(
     RCTBridge *bridge,
-    const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker);
+    const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker,
+    const std::string &valueUnpackerCode);
 
 }
 

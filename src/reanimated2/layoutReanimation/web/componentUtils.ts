@@ -9,23 +9,24 @@ import type {
   CustomConfig,
   WebEasingsNames,
 } from './config';
+import { convertTransformToString } from './animationParser';
 import type { TransitionData } from './animationParser';
 import { TransitionGenerator } from './createAnimation';
 import { scheduleAnimationCleanup } from './domUtils';
 import { _updatePropsJS } from '../../js-reanimated';
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { ReduceMotion } from '../../commonTypes';
-import { useReducedMotion } from '../../hook/useReducedMotion';
+import type { StyleProps } from '../../commonTypes';
+import { isReducedMotion } from '../../PlatformChecker';
+import { LayoutAnimationType } from '../animationBuilder/commonTypes';
+import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
+import { setDummyPosition, snapshots } from './componentStyle';
 
 function getEasingFromConfig(config: CustomConfig): string {
-  const easingName = (
-    config.easingV !== undefined &&
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    config.easingV!.name in WebEasings
-      ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        config.easingV!.name
-      : 'linear'
-  ) as WebEasingsNames;
+  const easingName =
+    config.easingV && config.easingV.name in WebEasings
+      ? (config.easingV.name as WebEasingsNames)
+      : 'linear';
 
   return `cubic-bezier(${WebEasings[easingName].toString()})`;
 }
@@ -45,13 +46,12 @@ function getDelayFromConfig(config: CustomConfig): number {
 
   return shouldRandomizeDelay
     ? getRandomDelay(config.delayV)
-    : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      config.delayV! / 1000;
+    : config.delayV / 1000;
 }
 
-function getReducedMotionFromConfig(config: CustomConfig) {
+export function getReducedMotionFromConfig(config: CustomConfig) {
   if (!config.reduceMotionV) {
-    return useReducedMotion();
+    return isReducedMotion();
   }
 
   switch (config.reduceMotionV) {
@@ -60,7 +60,7 @@ function getReducedMotionFromConfig(config: CustomConfig) {
     case ReduceMotion.Always:
       return true;
     default:
-      return useReducedMotion();
+      return isReducedMotion();
   }
 }
 
@@ -74,51 +74,78 @@ function getDurationFromConfig(
     : Animations[animationName].duration;
 
   return config.durationV !== undefined
-    ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      config.durationV! / 1000
+    ? config.durationV / 1000
     : defaultDuration;
 }
 
 function getCallbackFromConfig(config: CustomConfig): AnimationCallback {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return config.callbackV !== undefined ? config.callbackV! : null;
+  return config.callbackV !== undefined ? config.callbackV : null;
 }
 
 function getReversedFromConfig(config: CustomConfig) {
   return !!config.reversed;
 }
 
+export function extractTransformFromStyle(style: StyleProps) {
+  if (!style) {
+    return;
+  }
+
+  if (typeof style.transform === 'string') {
+    throw new Error('[Reanimated] String transform is currently unsupported.');
+  }
+
+  if (!Array.isArray(style)) {
+    return style.transform;
+  }
+
+  // Only last transform should be considered
+  for (let i = style.length - 1; i >= 0; --i) {
+    if (style[i]?.transform) {
+      return style[i].transform;
+    }
+  }
+}
+
 export function getProcessedConfig(
   animationName: string,
+  animationType: LayoutAnimationType,
   config: CustomConfig,
-  isLayoutTransition: boolean,
   initialAnimationName: AnimationNames
 ): AnimationConfig {
   return {
-    animationName: animationName,
+    animationName,
+    animationType,
     duration: getDurationFromConfig(
       config,
-      isLayoutTransition,
+      animationType === LayoutAnimationType.LAYOUT,
       initialAnimationName
     ),
     delay: getDelayFromConfig(config),
     easing: getEasingFromConfig(config),
-    reduceMotion: getReducedMotionFromConfig(config),
     callback: getCallbackFromConfig(config),
     reversed: getReversedFromConfig(config),
   };
 }
 
-export function makeElementVisible(element: HTMLElement) {
-  _updatePropsJS(
-    { visibility: 'initial' },
-    { _component: element as ReanimatedHTMLElement }
-  );
+export function saveSnapshot(element: HTMLElement) {
+  const rect = element.getBoundingClientRect();
+
+  const snapshot: ReanimatedSnapshot = {
+    top: rect.top,
+    left: rect.left,
+    width: rect.width,
+    height: rect.height,
+    scrollOffsets: getElementScrollValue(element),
+  };
+
+  snapshots.set(element, snapshot);
 }
 
-function setElementAnimation(
+export function setElementAnimation(
   element: HTMLElement,
-  animationConfig: AnimationConfig
+  animationConfig: AnimationConfig,
+  existingTransform?: TransformsStyle['transform']
 ) {
   const { animationName, duration, delay, easing } = animationConfig;
 
@@ -139,42 +166,27 @@ function setElementAnimation(
 
   // Here we have to use `addEventListener` since element.onanimationcancel doesn't work on chrome
   element.onanimationstart = () => {
-    element.addEventListener('animationcancel', animationCancelHandler);
-  };
-
-  scheduleAnimationCleanup(animationName, duration + delay);
-}
-
-export function handleEnteringAnimation(
-  element: HTMLElement,
-  animationConfig: AnimationConfig
-) {
-  const { delay } = animationConfig;
-
-  // If `delay` === 0, value passed to `setTimeout` will be 0. However, `setTimeout` executes after given amount of time, not exactly after that time
-  // Because of that, we have to immediately toggle on the component when the delay is 0.
-  if (delay === 0) {
-    _updatePropsJS(
-      { visibility: 'initial' },
-      { _component: element as ReanimatedHTMLElement }
-    );
-  } else {
-    setTimeout(() => {
+    if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
       _updatePropsJS(
         { visibility: 'initial' },
         { _component: element as ReanimatedHTMLElement }
       );
-    }, delay * 1000);
-  }
+    }
 
-  setElementAnimation(element, animationConfig);
+    element.addEventListener('animationcancel', animationCancelHandler);
+    element.style.transform = convertTransformToString(existingTransform);
+  };
+
+  if (!(animationName in Animations)) {
+    scheduleAnimationCleanup(animationName, duration + delay);
+  }
 }
 
 export function handleLayoutTransition(
   element: HTMLElement,
   animationConfig: AnimationConfig,
   transitionData: TransitionData,
-  existingTransform?: NonNullable<TransformsStyle['transform']>
+  existingTransform: TransformsStyle['transform'] | undefined
 ) {
   const { animationName } = animationConfig;
 
@@ -201,7 +213,39 @@ export function handleLayoutTransition(
     existingTransform
   );
 
-  setElementAnimation(element, animationConfig);
+  const transformCopy = existingTransform
+    ? structuredClone(existingTransform)
+    : [];
+
+  // @ts-ignore `existingTransform` cannot be string because in that case
+  // we throw error in `extractTransformFromStyle`
+  transformCopy.push(transitionData);
+  element.style.transform = convertTransformToString(transformCopy);
+
+  setElementAnimation(element, animationConfig, existingTransform);
+}
+
+function getElementScrollValue(element: HTMLElement): ScrollOffsets {
+  let current: HTMLElement | null = element;
+
+  const scrollOffsets: ScrollOffsets = {
+    scrollTopOffset: 0,
+    scrollLeftOffset: 0,
+  };
+
+  while (current) {
+    if (current.scrollTop !== 0 && scrollOffsets.scrollTopOffset === 0) {
+      scrollOffsets.scrollTopOffset = current.scrollTop;
+    }
+
+    if (current.scrollLeft !== 0 && scrollOffsets.scrollLeftOffset === 0) {
+      scrollOffsets.scrollLeftOffset = current.scrollLeft;
+    }
+
+    current = current.parentElement;
+  }
+
+  return scrollOffsets;
 }
 
 export function handleExitingAnimation(
@@ -209,7 +253,12 @@ export function handleExitingAnimation(
   animationConfig: AnimationConfig
 ) {
   const parent = element.offsetParent;
-  const dummy = element.cloneNode() as HTMLElement;
+  const dummy = element.cloneNode() as ReanimatedHTMLElement;
+  dummy.reanimatedDummy = true;
+
+  element.style.animationName = '';
+  // We hide current element so only its copy with proper animation will be displayed
+  element.style.visibility = 'hidden';
 
   // After cloning the element, we want to move all children from original element to its clone. This is because original element
   // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
@@ -223,22 +272,49 @@ export function handleExitingAnimation(
   setElementAnimation(dummy, animationConfig);
   parent?.appendChild(dummy);
 
-  // We hide current element so only its copy with proper animation will be displayed
-  element.style.visibility = 'hidden';
+  const snapshot = snapshots.get(element)!;
 
-  dummy.style.position = 'absolute';
-  dummy.style.top = `${element.offsetTop}px`;
-  dummy.style.left = `${element.offsetLeft}px`;
-  dummy.style.margin = '0px'; // tmpElement has absolute position, so margin is not necessary
+  const scrollOffsets = getElementScrollValue(element);
+
+  // Scroll does not trigger snapshoting, therefore if we start exiting animation after
+  // scrolling through parent component, dummy will end up in wrong place. In order to fix that
+  // we keep last known scroll position in snapshot and then adjust dummy position based on
+  // last known scroll offset and current scroll offset
+
+  const currentScrollTopOffset = scrollOffsets.scrollTopOffset;
+  const lastScrollTopOffset = snapshot.scrollOffsets.scrollTopOffset;
+
+  if (currentScrollTopOffset !== lastScrollTopOffset) {
+    snapshot.top += lastScrollTopOffset - currentScrollTopOffset;
+  }
+
+  const currentScrollLeftOffset = scrollOffsets.scrollLeftOffset;
+  const lastScrollLeftOffset = snapshot.scrollOffsets.scrollLeftOffset;
+
+  if (currentScrollLeftOffset !== lastScrollLeftOffset) {
+    snapshot.left += lastScrollLeftOffset - currentScrollLeftOffset;
+  }
+
+  snapshots.set(dummy, snapshot);
+
+  setDummyPosition(dummy, snapshot);
 
   const originalOnAnimationEnd = dummy.onanimationend;
 
   dummy.onanimationend = function (event: AnimationEvent) {
     if (parent?.contains(dummy)) {
+      dummy.removedAfterAnimation = true;
       parent.removeChild(dummy);
     }
 
     // Given that this function overrides onAnimationEnd, it won't be null
     originalOnAnimationEnd?.call(this, event);
   };
+
+  dummy.addEventListener('animationcancel', () => {
+    if (parent?.contains(dummy)) {
+      dummy.removedAfterAnimation = true;
+      parent.removeChild(dummy);
+    }
+  });
 }

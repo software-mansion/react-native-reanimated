@@ -31,10 +31,14 @@ import { Transition } from 'react-native-reanimated';
 
 ### 3. Customize the animation
 
-Different type of layout transitions can be customized differently. For the complete list of option please refer to the paragraph specific to the particular animation type.
+Different type of layout transitions can be customized differently. For the complete list of option please refer to the paragraph specific to the particular animation type. We recommend using builders outside of components or with `useMemo` to ensure the best performance.
 
 ```js
-    <AnimatedComponent layout={Transition.duration(3000).otherModifier()} >
+const transition = Transition.duration(3000).otherModifier();
+
+function App() {
+  return <AnimatedComponent layout={transition} />;
+}
 ```
 
 ## Predefined Transitions
@@ -43,7 +47,7 @@ Below we listed all of the currently available predefined layout transitions. Ea
 
 If you cannot find an transition that suits you then you can create a custom one. If you think that the animation should be here, please open an issue or create a pull request.
 
-### Layout
+### Linear transition
 
 Linear transition, animates both position and dimension in the same way.
 
@@ -107,8 +111,6 @@ Fading transition, animates the opacity of component, so it will disappear with 
 - `reduceMotion` determines how the animation responds to the device's reduced motion accessibility setting.
 
 #### Example
-
-{" "}
 
 <video
   src="https://user-images.githubusercontent.com/48885911/134477879-e697aa03-b94d-4a65-b076-5ec3800310e3.mov"

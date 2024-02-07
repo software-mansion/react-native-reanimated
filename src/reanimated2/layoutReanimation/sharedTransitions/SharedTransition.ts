@@ -29,6 +29,12 @@ type AnimationFactory = (
   values: SharedTransitionAnimationsValues
 ) => StyleProps;
 
+/**
+ * A SharedTransition builder class.
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
+ * @experimental
+ */
 export class SharedTransition {
   private _customAnimationFactory: AnimationFactory | null = null;
   private _animation: SharedTransitionAnimationsFunction | null = null;
@@ -197,8 +203,8 @@ export class SharedTransition {
         if (propertyName === 'transform') {
           // this is not the perfect solution, but at this moment it just interpolates the whole
           // matrix instead of interpolating scale, translate, rotate, etc. separately
-          const currentMatrix = values.currentTransformMatrix as number[];
-          const targetMatrix = values.targetTransformMatrix as number[];
+          const currentMatrix = values.currentTransformMatrix;
+          const targetMatrix = values.targetTransformMatrix;
           const newMatrix = new Array(9);
           for (let i = 0; i < 9; i++) {
             newMatrix[i] =
@@ -224,31 +230,67 @@ export class SharedTransition {
     };
   }
 
-  // static builder methods
+  // static builder methods i.e. shared transition modifiers
 
+  /**
+   * Lets you create a custom shared transition animation. Other shared transition modifiers can be chained alongside this modifier.
+   *
+   * @param customAnimationFactory - Callback function that have to return an object with styles for the custom shared transition.
+   * @returns A {@link SharedTransition} object. Styles returned from this function need to be to the `sharedTransitionStyle` prop.
+   * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
+   * @experimental
+   */
   public static custom(
     customAnimationFactory: AnimationFactory
   ): SharedTransition {
     return new SharedTransition().custom(customAnimationFactory);
   }
 
+  /**
+   * Lets you change the duration of the shared transition. Other shared transition modifiers can be chained alongside this modifier.
+   *
+   * @param duration - The duration of the shared transition animation in milliseconds.
+   * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
+   * @experimental
+   */
   public static duration(duration: number): SharedTransition {
     return new SharedTransition().duration(duration);
   }
 
+  /**
+   * Lets you create a shared transition animation bound to the progress between navigation screens. Other shared transition modifiers can be chained alongside this modifier.
+   *
+   * @param progressAnimationCallback - A callback called with the current progress value on every animation frame. It should return an object with styles for the shared transition.
+   * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
+   * @experimental
+   */
   public static progressAnimation(
     progressAnimationCallback: CustomProgressAnimation
   ): SharedTransition {
     return new SharedTransition().progressAnimation(progressAnimationCallback);
   }
 
+  /**
+   * Whether the transition is progress-bound or not. Other shared transition modifiers can be chained alongside this modifier.
+   *
+   * @param transitionType - Type of the transition. Configured with {@link SharedTransitionType} enum.
+   * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
+   * @experimental
+   */
   public static defaultTransitionType(
     transitionType: SharedTransitionType
   ): SharedTransition {
     return new SharedTransition().defaultTransitionType(transitionType);
   }
 
-  public static reduceMotion(_reduceMotion: ReduceMotion): SharedTransition {
-    return new SharedTransition().reduceMotion(_reduceMotion);
+  /**
+   * Lets you adjust the behavior when the device's reduced motion accessibility setting is turned on. Other shared transition modifiers can be chained alongside this modifier.
+   *
+   * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Default to `ReduceMotion.System` - {@link ReduceMotion}.
+   * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
+   * @experimental
+   */
+  public static reduceMotion(reduceMotion: ReduceMotion): SharedTransition {
+    return new SharedTransition().reduceMotion(reduceMotion);
   }
 }

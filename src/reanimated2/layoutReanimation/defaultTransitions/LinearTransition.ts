@@ -6,6 +6,13 @@ import type {
   LayoutAnimationFunction,
 } from '../animationBuilder/commonTypes';
 
+/**
+ * Linearly transforms the layout from one position to another. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ *
+ * You pass it to the `layout` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ *
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions#linear-transition
+ */
 export class LinearTransition
   extends ComplexAnimationBuilder
   implements ILayoutAnimationBuilder
@@ -43,13 +50,13 @@ export class LinearTransition
           width: delayFunction(delay, animation(values.targetWidth, config)),
           height: delayFunction(delay, animation(values.targetHeight, config)),
         },
-        callback: callback,
+        callback,
       };
     };
   };
 }
 
-// This export is unofficially deprecated because it's
-// name makes little sense - should be something among the lines of
-// `DefaultLayoutTransition` but it's so long!
+/**
+ * @deprecated Please use {@link LinearTransition} instead.
+ */
 export const Layout = LinearTransition;

@@ -8,6 +8,10 @@ Entering/Exiting animations let you animate elements when they are added to or r
 
 Reanimated comes with a bunch of predefined animations you can customize. For more advanced use-cases, you can use [Keyframes](/docs/layout-animations/keyframe-animations) or create your own [custom entering/exiting animations](/docs/layout-animations/custom-animations).
 
+## Remarks
+
+- We recommend using layout animation builders outside of components or with `useMemo` to ensure the best performance.
+
 ## Fade
 
 <Row>
@@ -1354,6 +1358,6 @@ ZoomIn.delay(500)
 
 | Android | iOS | Web |
 | ------- | --- | --- |
-| ✅      | ✅  | ❌  |
+| ✅      | ✅  | ✅  |
 
 </div>

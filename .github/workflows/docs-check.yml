@@ -17,11 +17,10 @@ jobs:
       WORKING_DIRECTORY: docs
     steps:
       - name: Check out
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Use Node.js 16
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 16
           cache: 'yarn'
       - name: Clear annotations
         run: scripts/clear-annotations.sh

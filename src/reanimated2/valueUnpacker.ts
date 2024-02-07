@@ -48,10 +48,10 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
     objectToUnpack._recur = functionInstance;
     return functionInstance;
   } else if (objectToUnpack.__init) {
-    let value = handleCache!.get(objectToUnpack);
+    let value = handleCache.get(objectToUnpack);
     if (value === undefined) {
       value = objectToUnpack.__init();
-      handleCache!.set(objectToUnpack, value);
+      handleCache.set(objectToUnpack, value);
     }
     return value;
   } else if (category === 'RemoteFunction') {
