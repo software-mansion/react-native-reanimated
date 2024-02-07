@@ -31,7 +31,7 @@ on:
 jobs:
   build:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: macos-12
+    runs-on: macos-13
     strategy:
       matrix:
         working-directory: [Example, FabricExample]
@@ -85,4 +85,4 @@ jobs:
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}
-        run: npx react-native run-ios
+        run: npx react-native run-ios --no-packager
