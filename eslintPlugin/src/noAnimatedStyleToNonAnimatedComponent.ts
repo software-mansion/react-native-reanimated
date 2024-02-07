@@ -22,20 +22,21 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
           ) {
             return;
           }
-          const styleAttribute = node.attributes
-            .map((attribute) => {
-              return attribute.type === AST_NODE_TYPES.JSXAttribute &&
-                attribute.name.name === 'style'
-                ? [attribute]
-                : [];
-            })
-            .flat();
+          const styleAttribute = node.attributes.find((attribute) => {
+            return (
+              attribute.type === AST_NODE_TYPES.JSXAttribute &&
+              attribute.name.name === 'style'
+            );
+          });
 
-          if (styleAttribute.length == 0) {
+          if (
+            styleAttribute === undefined ||
+            styleAttribute.type === AST_NODE_TYPES.JSXSpreadAttribute
+          ) {
             return;
           }
 
-          const styleValue = styleAttribute[0].value; // assume no duplicate props
+          const styleValue = styleAttribute.value; // assume no duplicate props
           if (
             styleValue === null ||
             styleValue.type === AST_NODE_TYPES.Literal
