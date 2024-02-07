@@ -1,3 +1,4 @@
+import { Dispatch, ReactNode, SetStateAction } from 'react';
 import { AnimatedStyle, StyleProps } from 'react-native-reanimated';
 
 type CallTrucker = {
@@ -11,8 +12,8 @@ type ShadowNodeWrapper = {
 
 export type TrackerCallCount = {
   name: string;
-  JS: number;
-  UI: number;
+  onJS: number;
+  onUI: number;
 };
 
 export type TestCase = {
@@ -56,3 +57,7 @@ export type TestValue =
   | number
   | bigint
   | Record<string, unknown>;
+
+export type TestConfiguration = {
+  render: Dispatch<SetStateAction<ReactNode | null>>;
+};

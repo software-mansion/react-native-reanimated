@@ -4,6 +4,7 @@ import {
   Operation,
   TestCase,
   TestSuite,
+  TestValue,
   TrackerCallCount,
 } from './types';
 import { TestComponent } from './TestComponent';
@@ -12,7 +13,12 @@ import {
   stopRecordingAnimationUpdates,
   unmockAnimationTimer,
 } from './RuntimeTestsApi';
-import { makeMutable, runOnUI, runOnJS } from 'react-native-reanimated';
+import {
+  makeMutable,
+  runOnUI,
+  runOnJS,
+  SharedValue,
+} from 'react-native-reanimated';
 import { RUNTIME_TEST_ERRORS, color, logInFrame } from './logMessageUtils';
 import { createUpdatesContainer } from './UpdatesContainer';
 import { Matchers } from './Matchers';
@@ -153,9 +159,11 @@ export class TestRunner {
     });
   }
 
-  public useTestRef(name: string): React.MutableRefObject<any> {
+  public useTestRef(
+    name: string
+  ): React.MutableRefObject<React.Component | null> {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const ref = useRef();
+    const ref = useRef(null);
     this._assertTestCase(this._currentTestCase);
     this._currentTestCase.componentsRefs[name] = ref;
     return ref;
@@ -179,10 +187,10 @@ export class TestRunner {
     this._valueRegistry[name] = value;
   }
 
-  public async getRegisteredValue(name: string) {
-    const jsValue = this._valueRegistry[name].value;
-    const sharedValue = this._valueRegistry[name];
-    const valueContainer = makeMutable<any>(null);
+  public async getRegisteredValue(name: string): Promise<TrackerCallCount> {
+    const jsValue = this._valueRegistry[name].value as number;
+    const sharedValue = this._valueRegistry[name] as SharedValue<number>;
+    const valueContainer = makeMutable<number>(0);
     await this.runOnUiBlocking(() => {
       'worklet';
       valueContainer.value = sharedValue.value;
@@ -198,8 +206,8 @@ export class TestRunner {
   public getTrackerCallCount(name: string): TrackerCallCount {
     return {
       name,
-      JS: callTrackerRegistryJS[name] ?? 0,
-      UI: callTrackerRegistryUI.value[name] ?? 0,
+      onJS: callTrackerRegistryJS[name] ?? 0,
+      onUI: callTrackerRegistryUI.value[name] ?? 0,
     };
   }
 
@@ -266,9 +274,7 @@ export class TestRunner {
     this.printSummary(summary);
   }
 
-  public expect(
-    currentValue: TrackerCallCount | string | Array<unknown>
-  ): Matchers {
+  public expect(currentValue: TestValue): Matchers {
     this._assertTestCase(this._currentTestCase);
     return new Matchers(currentValue, this._currentTestCase);
   }

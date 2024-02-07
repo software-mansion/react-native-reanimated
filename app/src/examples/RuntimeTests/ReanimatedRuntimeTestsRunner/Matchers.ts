@@ -41,7 +41,7 @@ export class Matchers {
   ): asserts value is TrackerCallCount {
     if (
       typeof value !== 'object' ||
-      !('name' in value && 'JS' in value && 'UI' in value)
+      !('name' in value && 'onJS' in value && 'onUI' in value)
     ) {
       throw Error('Invalid value');
     }
@@ -61,7 +61,7 @@ export class Matchers {
 
   public toBeCalled(times = 1) {
     this.assertValueIsCallTracker(this.currentValue);
-    const callsCount = this.currentValue.UI + this.currentValue.JS;
+    const callsCount = this.currentValue.onUI + this.currentValue.onJS;
     if (callsCount !== times) {
       const name = color(this.currentValue.name, 'green');
       const expected = color(times, 'green');
@@ -74,11 +74,11 @@ export class Matchers {
 
   public toBeCalledUI(times = 1) {
     this.assertValueIsCallTracker(this.currentValue);
-    if (this.currentValue.UI !== times) {
+    if (this.currentValue.onUI !== times) {
       const name = color(this.currentValue.name, 'green');
       const threadName = color('UI thread', 'cyan');
       const expected = color(times, 'green');
-      const received = color(this.currentValue.UI, 'red');
+      const received = color(this.currentValue.onUI, 'red');
       this.testCase.errors.push(
         `Expected ${name} to be called ${expected} times on ${threadName}, but was called ${received} times`
       );
@@ -87,11 +87,11 @@ export class Matchers {
 
   public toBeCalledJS(times = 1) {
     this.assertValueIsCallTracker(this.currentValue);
-    if (this.currentValue.JS !== times) {
+    if (this.currentValue.onJS !== times) {
       const name = color(this.currentValue.name, 'green');
       const threadName = color('UI thread', 'cyan');
       const expected = color(times, 'green');
-      const received = color(this.currentValue.UI, 'red');
+      const received = color(this.currentValue.onUI, 'red');
       this.testCase.errors.push(
         `Expected ${name} to be called ${expected} times on ${threadName}, but was called ${received} times`
       );

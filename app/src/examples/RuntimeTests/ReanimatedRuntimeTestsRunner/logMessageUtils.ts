@@ -32,8 +32,8 @@ export function defaultTestErrorLog(
   received: TestValue,
   mode: ComparisonMode
 ) {
-  return `Expected ${color(expected, 'cyan')} received ${color(
-    received,
-    'cyan'
-  )}, mode: ${color(mode, 'yellow')}`;
+  const coloredExpected = color(expected, 'green');
+  const coloredReceived = color(received, 'red');
+  const coloredMode = color(mode, 'yellow');
+  return `Expected ${coloredExpected} received ${coloredReceived}, mode: ${coloredMode}`;
 }

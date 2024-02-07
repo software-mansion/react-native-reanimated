@@ -22,7 +22,7 @@ export class TestComponent {
     return this.ref.current.props.style[propName];
   }
 
-  public async getAnimatedStyle(propName: validPropNames) {
+  public async getAnimatedStyle(propName: validPropNames): Promise<string> {
     const tag = findNodeHandle(this.ref.current) ?? -1;
     return getViewProp(tag, propName, this.ref.current);
   }

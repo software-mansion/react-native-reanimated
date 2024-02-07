@@ -1,12 +1,12 @@
 import { View, Button, StyleSheet, Text } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import { runTests, configure } from './RuntimeTestsApi';
 import { LockObject } from './types';
 
 let renderLock: LockObject = { lock: false };
 
 export default function RuntimeTestsRunner() {
-  const [component, setComponent] = useState(null);
+  const [component, setComponent] = useState<ReactNode | null>(null);
   useEffect(() => {
     if (renderLock) {
       renderLock.lock = false;

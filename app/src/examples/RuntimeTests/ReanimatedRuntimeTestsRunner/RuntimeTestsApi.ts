@@ -1,6 +1,9 @@
+import React from 'react';
 import { TestRunner } from './TestRunner';
 import { TestComponent } from './TestComponent';
-import React from 'react';
+import type { SharedValue } from 'react-native-reanimated';
+import { TestConfiguration, TestValue } from './types';
+
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
@@ -39,7 +42,7 @@ export async function clearRenderOutput() {
   return testRunner.clearRenderOutput();
 }
 
-export function useTestRef(name: string): React.MutableRefObject<any> {
+export function useTestRef(name: string) {
   return testRunner.useTestRef(name);
 }
 
@@ -61,7 +64,7 @@ export function getTrackerCallCount(name: string) {
   return testRunner.getTrackerCallCount(name);
 }
 
-export function registerValue(name: string, value: { value: unknown }) {
+export function registerValue(name: string, value: SharedValue) {
   return testRunner.registerValue(name, value);
 }
 
@@ -91,11 +94,11 @@ export async function waitForNotify(name: string) {
   return testRunner.waitForNotify(name);
 }
 
-export function expect(value: any) {
+export function expect(value: TestValue) {
   return testRunner.expect(value);
 }
 
-export function configure(config: any) {
+export function configure(config: TestConfiguration) {
   return testRunner.configure(config);
 }
 
