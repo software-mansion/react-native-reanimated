@@ -132,7 +132,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void initializeFabric(const std::shared_ptr<UIManager> &uiManager);
 
-  std::string getPropFromShadowNode(
+  std::string obtainPropFromShadowNode(
       jsi::Runtime &rt,
       const std::string &propName,
       const jsi::Value &shadowNodeWrapper);

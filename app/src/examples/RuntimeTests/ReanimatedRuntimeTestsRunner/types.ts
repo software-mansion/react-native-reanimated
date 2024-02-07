@@ -5,6 +5,10 @@ type CallTrucker = {
   JSCallsCount: number;
 };
 
+type ShadowNodeWrapper = {
+  __hostObjectShadowNodeWrapper: never;
+};
+
 export type TrackerCallCount = {
   name: string;
   JS: number;
@@ -40,7 +44,15 @@ export type LockObject = { lock: boolean };
 
 export interface Operation {
   tag?: number;
-  shadowNodeWrapper?: any;
+  shadowNodeWrapper?: ShadowNodeWrapper;
   name: string;
   updates: StyleProps | AnimatedStyle<any>;
 }
+
+export type TestValue =
+  | TrackerCallCount
+  | string
+  | Array<unknown>
+  | number
+  | bigint
+  | Record<string, unknown>;

@@ -6,7 +6,7 @@ import { LockObject } from './types';
 let renderLock: LockObject = { lock: false };
 
 export default function RuntimeTestsRunner() {
-  const [component, renderComponent] = useState(false);
+  const [component, setComponent] = useState(null);
   useEffect(() => {
     if (renderLock) {
       renderLock.lock = false;
@@ -17,12 +17,11 @@ export default function RuntimeTestsRunner() {
       <Button
         title="Run tests"
         onPress={async () => {
-          renderLock = configure({ render: renderComponent });
+          renderLock = configure({ render: setComponent });
           await runTests();
         }}
       />
-      {component}
-      {!component && <Text> Press "Run tests" button to start tests </Text>}
+      {component || <Text> Press "Run tests" button to start tests </Text>}
     </View>
   );
 }

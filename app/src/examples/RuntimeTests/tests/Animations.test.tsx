@@ -26,6 +26,7 @@ import {
   callTrackerFn,
   notify,
   waitForNotify,
+  clearRenderOutput,
 } from '../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { Snapshots } from './snapshots/Animations.snapshot';
 import { ComparisonMode } from '../ReanimatedRuntimeTestsRunner/types';
@@ -34,7 +35,7 @@ const AnimatedComponent = () => {
   const widthSV = useSharedValue(0);
   const ref = useTestRef('AnimatedComponent');
 
-  const style = useAnimatedStyle(() => {
+  const animatedStyle = useAnimatedStyle(() => {
     callTracker('useAnimatedStyleTracker');
     return {
       width: withTiming(
@@ -61,7 +62,7 @@ const AnimatedComponent = () => {
             backgroundColor: 'chocolate',
             margin: 30,
           },
-          style,
+          animatedStyle,
         ]}
       />
     </View>
@@ -111,7 +112,7 @@ const AnimatedComponentWithNotify = () => {
 const SharedValueComponent = ({ initialValue }: { initialValue: any }) => {
   const sharedValue = useSharedValue(initialValue);
   registerValue('sv', sharedValue);
-  return <Text>{sharedValue.value}</Text>;
+  return <Text>{initialValue}</Text>;
 };
 
 const TOP = 41;
@@ -168,7 +169,10 @@ describe('Tests of animations', () => {
 
   test('withTiming - test number preset', async () => {
     for (const preset of Presets.numbers) {
-      await render(null);
+      /*
+        This test checks the value of sharedValue after the component mounts. Therefore, we need to clear the render output to ensure that a new component will be fully mounted, not just rerendered.
+      */
+      await clearRenderOutput();
       await render(<SharedValueComponent initialValue={preset} />);
       const sharedValue = await getRegisteredValue('sv');
       expect(sharedValue.onJS).toBe(preset, ComparisonMode.NUMBER);

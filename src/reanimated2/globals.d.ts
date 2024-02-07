@@ -107,4 +107,8 @@ declare global {
   var UpdatePropsManager: UpdatePropsManager;
   var ProgressTransitionRegister: ProgressTransitionRegister;
   var updateJSProps: (viewTag: number, props: Record<string, unknown>) => void;
+  var _obtainProps: (
+    viewId: number | ShadowNodeWrapper,
+    propName: string
+  ) => string;
 }

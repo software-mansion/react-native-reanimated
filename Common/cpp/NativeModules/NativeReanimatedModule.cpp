@@ -123,7 +123,7 @@ NativeReanimatedModule::NativeReanimatedModule(
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
     const auto propNameStr = propName.asString(rt).utf8(rt);
     std::string resultStr =
-        getPropFromShadowNode(uiRuntime, propNameStr, shadowNodeWrapper);
+        obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNodeWrapper);
     return jsi::String::createFromUtf8(rt, resultStr);
   };
 #endif
@@ -254,7 +254,7 @@ inline std::string int_to_hex(int val) {
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-std::string NativeReanimatedModule::getPropFromShadowNode(
+std::string NativeReanimatedModule::obtainPropFromShadowNode(
     jsi::Runtime &rt,
     const std::string &propName,
     const jsi::Value &shadowNodeWrapper) {
@@ -304,7 +304,7 @@ jsi::Value NativeReanimatedModule::getViewProp(
   uiScheduler_->scheduleOnUI([=, &shadowNodeWrapper]() {
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
     std::string resultStr =
-        getPropFromShadowNode(uiRuntime, propNameStr, shadowNodeWrapper);
+        obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNodeWrapper);
 
     jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
       const auto resultValue =

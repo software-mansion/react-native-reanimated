@@ -77,7 +77,7 @@ export class TestRunner {
   private _currentTestCase: TestCase | null = null;
   private _renderHook: (component: any) => void = () => {};
   private _renderLock: LockObject = { lock: false };
-  private _valueRegistry: Record<string, { value: any }> = {};
+  private _valueRegistry: Record<string, { value: unknown }> = {};
   private _wasRenderedNull: boolean = false;
   private _lockObject: LockObject = {
     lock: false,
@@ -116,6 +116,10 @@ export class TestRunner {
     this._renderLock.lock = true;
     this._renderHook(component);
     return this.waitForPropertyValueChange(this._renderLock, 'lock');
+  }
+
+  public async clearRenderOutput() {
+    return await this.render(null);
   }
 
   public describe(name: string, buildSuite: () => void) {
@@ -170,7 +174,7 @@ export class TestRunner {
     }
   }
 
-  public registerValue(name: string, value: any) {
+  public registerValue(name: string, value: { value: unknown }) {
     'worklet';
     this._valueRegistry[name] = value;
   }

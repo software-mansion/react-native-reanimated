@@ -1,4 +1,4 @@
-import { ComparisonMode } from './types';
+import { ComparisonMode, TestValue } from './types';
 
 export const RUNTIME_TEST_ERRORS = {
   UNDEFINED_TEST_SUITE: 'Undefined test suite context',
@@ -13,7 +13,10 @@ export function logInFrame(text: string) {
   console.log(`\t╚${'═'.repeat(text.length + 2)}╝`);
 }
 
-export function color(text: any, color: 'yellow' | 'cyan' | 'green' | 'red') {
+export function color(
+  value: TestValue,
+  color: 'yellow' | 'cyan' | 'green' | 'red'
+) {
   const COLOR_CODES = {
     red: '\x1b[31m',
     green: '\x1b[32m',
@@ -21,12 +24,12 @@ export function color(text: any, color: 'yellow' | 'cyan' | 'green' | 'red') {
     cyan: '\x1b[36m',
   };
 
-  return `${COLOR_CODES[color]}${text}\x1b[0m`;
+  return `${COLOR_CODES[color]}${value}\x1b[0m`;
 }
 
 export function defaultTestErrorLog(
-  expected: any,
-  received: any,
+  expected: TestValue,
+  received: TestValue,
   mode: ComparisonMode
 ) {
   return `Expected ${color(expected, 'cyan')} received ${color(

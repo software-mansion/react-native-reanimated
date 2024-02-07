@@ -1,22 +1,48 @@
-import { Platform } from 'react-native';
 import { color, defaultTestErrorLog } from './logMessageUtils';
-import { ComparisonMode, TestCase, TrackerCallCount } from './types';
+import { ComparisonMode, TestCase, TestValue, TrackerCallCount } from './types';
 
-type TestValue =
-  | TrackerCallCount
-  | string
-  | Array<unknown>
-  | number
-  | bigint
-  | Record<string, unknown>;
+const ERROR_DISTANCE = 0.5;
+
+const COMPARATORS: {
+  [Key: string]: (expected: TestValue, value: TestValue) => Boolean;
+} = {
+  [ComparisonMode.STRING]: (expected, value) => {
+    return value === expected;
+  },
+  [ComparisonMode.NUMBER]: (expected, value) => {
+    const bothAreNumbers =
+      typeof value === 'number' && typeof expected === 'number';
+    const bothAreNaN = bothAreNumbers && isNaN(value) && isNaN(expected);
+    return bothAreNaN || value === expected;
+  },
+  [ComparisonMode.COLOR]: (expected, value) => {
+    const colorRegex = new RegExp('^#?([a-f0-9]{6}|[a-f0-9]{3})$');
+    if (!colorRegex.test(expected as string)) {
+      throw Error(
+        `Invalid color format "${expected}", please use lowercase hex color (like #123abc)`
+      );
+    }
+    return typeof value === 'string' && value === expected;
+  },
+  [ComparisonMode.DISTANCE]: (expected, value) => {
+    const valueAsNumber = Number(value);
+    return (
+      !isNaN(valueAsNumber) &&
+      Math.abs(valueAsNumber - Number(expected)) < ERROR_DISTANCE
+    );
+  },
+};
 
 export class Matchers {
   constructor(private currentValue: TestValue, private testCase: TestCase) {}
 
   private assertValueIsCallTracker(
-    value: any
+    value: TrackerCallCount | TestValue
   ): asserts value is TrackerCallCount {
-    if (!('name' in value && 'JS' in value && 'UI' in value)) {
+    if (
+      typeof value !== 'object' ||
+      !('name' in value && 'JS' in value && 'UI' in value)
+    ) {
       throw Error('Invalid value');
     }
   }
@@ -25,49 +51,15 @@ export class Matchers {
     expectedValue: TestValue,
     comparisonMode = ComparisonMode.DISTANCE
   ) {
-    const CONDITIONS: { [Key: string]: (e: any, v: any) => Boolean } = {
-      [ComparisonMode.STRING]: (expected, value) => {
-        return value !== expected;
-      },
-      [ComparisonMode.NUMBER]: (e, v) => {
-        return isNaN(Number(v)) ? !isNaN(e) : Number(v) !== Number(e);
-      },
-      [ComparisonMode.COLOR]: (e, v) => {
-        const colorRegex = new RegExp('^#?([a-f0-9]{6}|[a-f0-9]{3})$');
-        if (!colorRegex.test(expectedValue as string)) {
-          throw Error(
-            `Invalid color format "${e}", please use lowercase hex color (like #123abc) `
-          );
-        }
-        return typeof v !== 'string' || v !== e;
-      },
-      [ComparisonMode.DISTANCE]: () => {
-        const valueAsNumber = Number(this.currentValue);
-        if (Platform.OS === 'ios') {
-          return (
-            isNaN(valueAsNumber) || valueAsNumber !== Number(expectedValue)
-          );
-        } else {
-          return (
-            isNaN(valueAsNumber) ||
-            Math.abs(valueAsNumber - Number(expectedValue)) > 1
-          );
-        }
-      },
-    };
-
-    let testFailed = CONDITIONS[comparisonMode](
-      expectedValue,
-      this.currentValue
-    );
-    if (testFailed) {
+    const isEqual = COMPARATORS[comparisonMode];
+    if (!isEqual(expectedValue, this.currentValue)) {
       this.testCase.errors.push(
         defaultTestErrorLog(expectedValue, this.currentValue, comparisonMode)
       );
     }
   }
 
-  public toBeCalled(times: number = 1) {
+  public toBeCalled(times = 1) {
     this.assertValueIsCallTracker(this.currentValue);
     const callsCount = this.currentValue.UI + this.currentValue.JS;
     if (callsCount !== times) {
@@ -80,7 +72,7 @@ export class Matchers {
     }
   }
 
-  public toBeCalledUI(times: number) {
+  public toBeCalledUI(times = 1) {
     this.assertValueIsCallTracker(this.currentValue);
     if (this.currentValue.UI !== times) {
       const name = color(this.currentValue.name, 'green');
@@ -93,7 +85,7 @@ export class Matchers {
     }
   }
 
-  public toBeCalledJS(times: number) {
+  public toBeCalledJS(times = 1) {
     this.assertValueIsCallTracker(this.currentValue);
     if (this.currentValue.JS !== times) {
       const name = color(this.currentValue.name, 'green');
@@ -107,16 +99,18 @@ export class Matchers {
   }
 
   public toMatchSnapshot(expectedValue: TestValue) {
-    if (Array.isArray(expectedValue) && Array.isArray(expectedValue)) {
+    if (Array.isArray(expectedValue)) {
       let errorString = '';
-      (this.currentValue as any).forEach((val: any, idx: number) => {
-        const expectedVal = expectedValue[idx];
-        if (JSON.stringify(expectedVal) !== JSON.stringify(val)) {
-          const expected = color(`${JSON.stringify(expectedVal)}`, 'green');
-          const received = color(`${JSON.stringify(val)}`, 'red');
-          errorString += `\tAt index ${idx}:\n\t\texpected: ${expected}\n\t\treceived: ${received}\n`;
+      (this.currentValue as Array<unknown>).forEach(
+        (val: unknown, idx: number) => {
+          const expectedVal = expectedValue[idx];
+          if (JSON.stringify(expectedVal) !== JSON.stringify(val)) {
+            const expected = color(`${JSON.stringify(expectedVal)}`, 'green');
+            const received = color(`${JSON.stringify(val)}`, 'red');
+            errorString += `\tAt index ${idx}:\n\t\texpected: ${expected}\n\t\treceived: ${received}\n`;
+          }
         }
-      });
+      );
       if (errorString !== '') {
         this.testCase.errors.push('Snapshot mismatch: \n' + errorString);
       }
@@ -134,6 +128,12 @@ export class Matchers {
   public toMatchNativeSnapshots(
     nativeSnapshots: Array<Record<string, unknown>>
   ) {
+    /* 
+      The TestRunner can collect two types of snapshots:
+      - JS snapshots: animation updates sent via `_updateProps`
+      - Native snapshots: snapshots obtained from the native side via `getViewProp`
+      Updates applied through `_updateProps` are not synchronously applied to the native side. Instead, they are batched and applied at the end of each frame. Therefore, it is not allowed to take a native snapshot immediately after the `_updateProps` call. To address this issue, we need to wait for the next frame before capturing the native snapshot. That's why native snapshots are one frame behind JS snapshots. To account for this delay, one additional native snapshot is taken during the execution of the `toMatchNativeSnapshots` function.
+    */
     let errorString = '';
     const jsUpdates = this.currentValue as Array<Record<string, unknown>>;
     for (let i = 0; i < jsUpdates.length; i++) {
@@ -157,8 +157,8 @@ export class Matchers {
           }
         }
         if (detectedMismatch) {
-          const expected = color(jsValue, 'green');
-          const received = color(nativeValue, 'red');
+          const expected = color(jsValue as string, 'green');
+          const received = color(nativeValue as string, 'red');
           errorString += `\tAt index ${i}, value of prop ${key}:\n\t\texpected: ${expected}\n\t\treceived: ${received}\n`;
         }
       }

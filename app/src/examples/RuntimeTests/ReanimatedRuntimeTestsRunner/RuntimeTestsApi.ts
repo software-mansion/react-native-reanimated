@@ -1,5 +1,6 @@
 import { TestRunner } from './TestRunner';
 import { TestComponent } from './TestComponent';
+import React from 'react';
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
@@ -28,8 +29,14 @@ export function test(name: string, testCase: () => void) {
   testRunner.test(name, testCase);
 }
 
-export async function render(component: any) {
+export async function render(
+  component: React.ReactElement<React.Component> | null
+) {
   return testRunner.render(component);
+}
+
+export async function clearRenderOutput() {
+  return testRunner.clearRenderOutput();
 }
 
 export function useTestRef(name: string): React.MutableRefObject<any> {
@@ -54,7 +61,7 @@ export function getTrackerCallCount(name: string) {
   return testRunner.getTrackerCallCount(name);
 }
 
-export function registerValue(name: string, value: any) {
+export function registerValue(name: string, value: { value: unknown }) {
   return testRunner.registerValue(name, value);
 }
 
