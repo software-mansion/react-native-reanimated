@@ -254,6 +254,11 @@ export enum ReduceMotion {
   Never = 'never',
 }
 
+export interface AnimationBounds {
+  start: AnimatableValue;
+  end: AnimatableValue;
+}
+
 // THE LAND OF THE DEPRECATED
 
 /**

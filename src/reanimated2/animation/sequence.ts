@@ -7,6 +7,7 @@ import type {
   AnimationObject,
   ReduceMotion,
   Timestamp,
+  AnimationBounds,
 } from '../commonTypes';
 
 /**
@@ -57,6 +58,18 @@ export function withSequence(
       } as SequenceAnimation;
     });
   }
+
+  const initialAnimationBounds: AnimationBounds[] = _animations.map((a) => {
+    return typeof a === 'function'
+      ? {
+          start: (a() as AnimationObject).startValue as AnimatableValue,
+          end: (a() as AnimationObject).toValue as AnimatableValue,
+        }
+      : {
+          start: (a as AnimationObject).startValue as AnimatableValue,
+          end: (a as AnimationObject).toValue as AnimatableValue,
+        };
+  });
 
   return defineAnimation<SequenceAnimation>(
     _animations[0] as SequenceAnimation,
@@ -140,10 +153,18 @@ export function withSequence(
           ] as SequenceAnimation;
         }
 
+        // Detect re-render
+        const hasBeenInterrupted =
+          value !== initialAnimationBounds[animation.animationIndex].start &&
+          value !== initialAnimationBounds[animation.animationIndex].end;
+        const startingValue = hasBeenInterrupted
+          ? initialAnimationBounds[animation.animationIndex].start
+          : value;
+
         const currentAnimation = animations[animation.animationIndex];
         currentAnimation.onStart(
           currentAnimation,
-          value,
+          startingValue,
           now,
           previousAnimation
         );

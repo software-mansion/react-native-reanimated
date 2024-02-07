@@ -6,6 +6,7 @@ import type {
   AnimatableValue,
   AnimationObject,
   ReduceMotion,
+  AnimationBounds,
 } from '../commonTypes';
 import type { DelayAnimation } from './commonTypes';
 
@@ -31,6 +32,21 @@ export const withDelay = function <T extends AnimationObject>(
   reduceMotion?: ReduceMotion
 ): Animation<DelayAnimation> {
   'worklet';
+
+  const initialAnimationBounds: AnimationBounds =
+    typeof _nextAnimation === 'function'
+      ? {
+          start: (_nextAnimation() as AnimationObject)
+            .startValue as AnimatableValue,
+          end: (_nextAnimation() as AnimationObject).toValue as AnimatableValue,
+        }
+      : {
+          start: (_nextAnimation as AnimationObject)
+            .startValue as AnimatableValue,
+          end: (_nextAnimation as AnimationObject).toValue as AnimatableValue,
+        };
+  let didResetAfterInterruption = false;
+
   return defineAnimation<DelayAnimation, T>(
     _nextAnimation,
     (): DelayAnimation => {
@@ -62,7 +78,12 @@ export const withDelay = function <T extends AnimationObject>(
           const finished =
             previousAnimation.finished ||
             previousAnimation.onFrame(previousAnimation, now);
-          animation.current = previousAnimation.current;
+          // We need to prevent setting previous animation value when there was an interruption - so that it can reset properly
+          if (didResetAfterInterruption) {
+            didResetAfterInterruption = false;
+          } else {
+            animation.current = previousAnimation.current;
+          }
           if (finished) {
             animation.previousAnimation = null;
           }
@@ -76,9 +97,18 @@ export const withDelay = function <T extends AnimationObject>(
         now: Timestamp,
         previousAnimation: Animation<any> | null
       ): void {
+        // Detect re-render
+        const hasBeenInterrupted =
+          value !== initialAnimationBounds.start &&
+          value !== initialAnimationBounds.end;
+        didResetAfterInterruption = hasBeenInterrupted;
+
+        animation.current = hasBeenInterrupted
+          ? initialAnimationBounds.start
+          : value;
         animation.startTime = now;
         animation.started = false;
-        animation.current = value;
+
         if (previousAnimation === animation) {
           animation.previousAnimation = previousAnimation.previousAnimation;
         } else {

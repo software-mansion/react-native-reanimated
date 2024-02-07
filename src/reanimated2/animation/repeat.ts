@@ -7,6 +7,7 @@ import type {
   Timestamp,
   AnimationObject,
   ReduceMotion,
+  AnimationBounds,
 } from '../commonTypes';
 import type { RepeatAnimation } from './commonTypes';
 
@@ -38,6 +39,19 @@ export const withRepeat = function <T extends AnimationObject>(
   reduceMotion?: ReduceMotion
 ): Animation<RepeatAnimation> {
   'worklet';
+
+  const initialAnimationBounds: AnimationBounds =
+    typeof _nextAnimation === 'function'
+      ? {
+          start: (_nextAnimation() as AnimationObject)
+            .startValue as AnimatableValue,
+          end: (_nextAnimation() as AnimationObject).toValue as AnimatableValue,
+        }
+      : {
+          start: (_nextAnimation as AnimationObject)
+            .startValue as AnimatableValue,
+          end: (_nextAnimation as AnimationObject).toValue as AnimatableValue,
+        };
 
   return defineAnimation<RepeatAnimation, T>(
     _nextAnimation,
@@ -100,7 +114,14 @@ export const withRepeat = function <T extends AnimationObject>(
         now: Timestamp,
         previousAnimation: Animation<any> | null
       ): void {
-        animation.startValue = value;
+        // Detect re-render
+        const hasBeenInterrupted =
+          value !== initialAnimationBounds.start &&
+          value !== initialAnimationBounds.end;
+        const startingValue = hasBeenInterrupted
+          ? initialAnimationBounds.start
+          : value;
+        animation.startValue = startingValue;
         animation.reps = 0;
 
         // child animations inherit the setting, unless they already have it defined
@@ -119,7 +140,12 @@ export const withRepeat = function <T extends AnimationObject>(
           animation.current = animation.startValue;
           animation.onFrame = () => true;
         } else {
-          nextAnimation.onStart(nextAnimation, value, now, previousAnimation);
+          nextAnimation.onStart(
+            nextAnimation,
+            startingValue,
+            now,
+            previousAnimation
+          );
         }
       }
 
