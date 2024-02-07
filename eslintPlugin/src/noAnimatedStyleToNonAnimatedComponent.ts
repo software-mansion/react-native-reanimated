@@ -14,7 +14,9 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
         main();
         function main() {
           if (
-            isVariableDefinedAs(componentName, 'Animated') || //TODO allow to customize rule and provide custom import name
+            isVariableDefinedAs(componentName, 'Animated') ||
+            // People tend to import `Animated` as `Reanimated`.
+            //TODO parse imports to detect actual import name
             isVariableDefinedAs(componentName, 'Reanimated') ||
             isVariableDefinedAs(componentName, 'createAnimatedComponent')
           ) {
@@ -42,7 +44,7 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
           }
 
           if (styleValue.type === AST_NODE_TYPES.JSXSpreadChild) {
-            return; //TODO Ignore this for now
+            return; //Ignore this for now (and maybe for ever, since its not a common use case)
           }
 
           const styleExpression = styleValue.expression;
@@ -81,7 +83,7 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
               ╭───────────┬───────┬───────┬───────┬─────────────╮
               │ Code      │ const │   a   │   =   │ sharedValue │
               ├───────────┼───────┼───────┼───────┼─────────────┤
-              │ Token     │ idx   │ idx+1 │ idx+2 │ idx+3       │
+              │ Token     │ idx-1 │ idx   │ idx+1 │ idx+2       │
               ╰───────────┴───────┴───────┴───────┴─────────────╯
              */
             if (tokensBefore[idx + 2].value === expectedToken) {
@@ -158,7 +160,8 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
   meta: {
     docs: {
       recommended: 'recommended',
-      description: 'Avoid looping over enums.',
+      description:
+        "Don't pass a reanimated animated style into a non-animated component.",
     },
     messages: {
       sharedValue:
