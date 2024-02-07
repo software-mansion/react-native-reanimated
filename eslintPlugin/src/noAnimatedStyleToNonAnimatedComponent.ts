@@ -11,6 +11,57 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
         const tokensBefore = sourceCode.getTokensBefore(node);
         const componentName = node?.name?.name;
 
+        main();
+        function main() {
+          if (
+            isVariableDefinedAs(componentName, 'Animated') || //TODO allow to customize rule and provide custom import name
+            isVariableDefinedAs(componentName, 'Reanimated') ||
+            isVariableDefinedAs(componentName, 'createAnimatedComponent')
+          ) {
+            return;
+          }
+          const styleAttribute = node.attributes
+            .map((attribute) => {
+              return attribute.type === AST_NODE_TYPES.JSXAttribute &&
+                attribute.name.name === 'style'
+                ? [attribute]
+                : [];
+            })
+            .flat();
+
+          if (styleAttribute.length == 0) {
+            return;
+          }
+
+          const styleValue = styleAttribute[0].value; // assume no duplicate props
+          if (
+            styleValue === null ||
+            styleValue.type === AST_NODE_TYPES.Literal
+          ) {
+            return; //incorrect styles
+          }
+
+          if (styleValue.type === AST_NODE_TYPES.JSXSpreadChild) {
+            return; //TODO Ignore this for now
+          }
+
+          const styleExpression = styleValue.expression;
+          switch (styleExpression.type) {
+            case AST_NODE_TYPES.Identifier: // style={myVariable}
+              checkIdentifierNodeForBeingAnimated(styleExpression);
+              break;
+            case AST_NODE_TYPES.ArrayExpression: // style={[style1, style2]}
+              checkArrayNodeForBeingAnimated(styleExpression);
+              break;
+            case AST_NODE_TYPES.ObjectExpression: //style={{backgroundColor:'pink'}}
+              checkObjectNodeForBeingAnimated(styleExpression);
+              break;
+            case AST_NODE_TYPES.MemberExpression: //style={{backgroundColor:styles.myStyle}}
+              //We assume that all member expressions are correct
+              break;
+          }
+        }
+
         function isVariableDefinedAs(
           variableName: string,
           expectedToken: string
@@ -25,6 +76,14 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
           });
 
           variableNameTokenIds.forEach((idx) => {
+            /** 
+              Lets count tokens from variable name to its definition:
+              ╭───────────┬───────┬───────┬───────┬─────────────╮
+              │ Code      │ const │   a   │   =   │ sharedValue │
+              ├───────────┼───────┼───────┼───────┼─────────────┤
+              │ Token     │ idx   │ idx+1 │ idx+2 │ idx+3       │
+              ╰───────────┴───────┴───────┴───────┴─────────────╯
+             */
             if (tokensBefore[idx + 2].value === expectedToken) {
               isAnimated = true;
             }
@@ -32,7 +91,9 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
           return isAnimated;
         }
 
-        function checkIdentifierNode(styleExpression: TSESTree.Identifier) {
+        function checkIdentifierNodeForBeingAnimated(
+          styleExpression: TSESTree.Identifier
+        ) {
           const variableName = styleExpression.name;
 
           const isAnimatedStyle = isVariableDefinedAs(
@@ -49,7 +110,9 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
           }
         }
 
-        function checkObjectNode(styleExpression: TSESTree.ObjectExpression) {
+        function checkObjectNodeForBeingAnimated(
+          styleExpression: TSESTree.ObjectExpression
+        ) {
           const properties = styleExpression.properties;
           properties.forEach((property) => {
             if (property.type === AST_NODE_TYPES.SpreadElement) {
@@ -75,62 +138,19 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
           });
         }
 
-        function checkArrayNode(styleExpression: TSESTree.ArrayExpression) {
+        function checkArrayNodeForBeingAnimated(
+          styleExpression: TSESTree.ArrayExpression
+        ) {
           const arrayNodes = styleExpression.elements;
           arrayNodes.forEach((node) => {
             if (node?.type === 'Identifier') {
-              checkIdentifierNode(node);
+              checkIdentifierNodeForBeingAnimated(node);
             } else if (node?.type === 'ArrayExpression') {
-              checkArrayNode(node);
+              checkArrayNodeForBeingAnimated(node);
             } else if (node?.type === 'ObjectExpression') {
-              checkObjectNode(node);
+              checkObjectNodeForBeingAnimated(node);
             }
           });
-        }
-
-        if (
-          isVariableDefinedAs(componentName, 'Animated') ||
-          isVariableDefinedAs(componentName, 'createAnimatedComponent')
-        ) {
-          return;
-        }
-        const styleAttribute = node.attributes
-          .map((attribute) => {
-            return attribute.type === AST_NODE_TYPES.JSXAttribute &&
-              attribute.name.name === 'style'
-              ? [attribute]
-              : [];
-          })
-          .flat();
-
-        if (styleAttribute.length == 0) {
-          return;
-        }
-
-        const styleValue = styleAttribute[0].value; // assume no duplicate props
-        if (styleValue === null || styleValue.type === AST_NODE_TYPES.Literal) {
-          return; //incorrect styles
-        }
-
-        if (styleValue.type === AST_NODE_TYPES.JSXSpreadChild) {
-          return; //TODO Ignore this for now
-        }
-
-        const styleExpression = styleValue.expression;
-        switch (styleExpression.type) {
-          case AST_NODE_TYPES.Identifier: // style={myVariable}
-            checkIdentifierNode(styleExpression);
-            break;
-
-          case AST_NODE_TYPES.ArrayExpression: // style={[style1, style2]}
-            checkArrayNode(styleExpression);
-            break;
-          case AST_NODE_TYPES.ObjectExpression: //style={{backgroundColor:'pink'}}
-            checkObjectNode(styleExpression);
-            break;
-          case AST_NODE_TYPES.MemberExpression:
-          //style={{backgroundColor:styles.myStyle}}
-          //We assume that all member expressions are correct
         }
       },
     };
