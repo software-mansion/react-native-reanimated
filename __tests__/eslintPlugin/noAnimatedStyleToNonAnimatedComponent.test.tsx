@@ -1,5 +1,5 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
-import noAnimatedStyleToNonAnimatedComponent from '../../eslintPlugin/src/noAnimatedStyleToNonAnimatedComponent';
+import { rules } from '../../eslintPlugin';
 
 const ruleTester = new RuleTester({
   parserOptions: {
@@ -46,7 +46,7 @@ const sharedValueError2 = {
   },
 } as const;
 
-ruleTester.run('Test rule 1', noAnimatedStyleToNonAnimatedComponent, {
+ruleTester.run('Test rule 1', rules['animated-style-non-animated-component'], {
   valid: [
     'const a = 7',
     `${animatedStyle}
