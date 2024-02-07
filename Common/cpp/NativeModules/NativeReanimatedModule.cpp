@@ -122,8 +122,10 @@ NativeReanimatedModule::NativeReanimatedModule(
                         const jsi::Value &propName) {
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
     const auto propNameStr = propName.asString(rt).utf8(rt);
+    const ShadowNode::Shared shadowNode =
+        shadowNodeFromValue(rt, shadowNodeWrapper);
     std::string resultStr =
-        obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNodeWrapper);
+        obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
     return jsi::String::createFromUtf8(rt, resultStr);
   };
 #endif
@@ -257,8 +259,7 @@ inline std::string int_to_hex(int val) {
 std::string NativeReanimatedModule::obtainPropFromShadowNode(
     jsi::Runtime &rt,
     const std::string &propName,
-    const jsi::Value &shadowNodeWrapper) {
-  ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+    const ShadowNode::Shared &shadowNode) {
   auto newestCloneOfShadowNode =
       uiManager_->getNewestCloneOfShadowNode(*shadowNode);
   Props::Shared props = newestCloneOfShadowNode->getProps();
@@ -299,12 +300,13 @@ jsi::Value NativeReanimatedModule::getViewProp(
   const auto propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
   const auto funPtr = std::make_shared<jsi::Function>(
       callback.getObject(rnRuntime).asFunction(rnRuntime));
-
+  const ShadowNode::Shared shadowNode =
+      shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
 #ifdef RCT_NEW_ARCH_ENABLED
-  uiScheduler_->scheduleOnUI([=, &shadowNodeWrapper]() {
+  uiScheduler_->scheduleOnUI([=]() {
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
     std::string resultStr =
-        obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNodeWrapper);
+        obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
 
     jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
       const auto resultValue =

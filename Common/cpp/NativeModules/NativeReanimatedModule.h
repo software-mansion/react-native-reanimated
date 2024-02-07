@@ -135,7 +135,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   std::string obtainPropFromShadowNode(
       jsi::Runtime &rt,
       const std::string &propName,
-      const jsi::Value &shadowNodeWrapper);
+      const ShadowNode::Shared &shadowNode);
 #endif
 
   jsi::Value registerSensor(
