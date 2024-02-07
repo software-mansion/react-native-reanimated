@@ -255,8 +255,8 @@ export enum ReduceMotion {
 }
 
 export interface AnimationBounds {
-  start: AnimatableValue;
-  end: AnimatableValue;
+  start: AnimatableValue | undefined;
+  end: AnimatableValue | undefined;
 }
 
 // THE LAND OF THE DEPRECATED

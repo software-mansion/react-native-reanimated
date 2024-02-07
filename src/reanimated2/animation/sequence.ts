@@ -59,16 +59,12 @@ export function withSequence(
     });
   }
 
-  const initialAnimationBounds: AnimationBounds[] = _animations.map((a) => {
-    return typeof a === 'function'
-      ? {
-          start: (a() as AnimationObject).startValue as AnimatableValue,
-          end: (a() as AnimationObject).toValue as AnimatableValue,
-        }
-      : {
-          start: (a as AnimationObject).startValue as AnimatableValue,
-          end: (a as AnimationObject).toValue as AnimatableValue,
-        };
+  const initialAnimationBounds: AnimationBounds[] = _animations.map((anim) => {
+    const a = typeof anim === 'function' ? anim() : anim;
+    return {
+      start: a.startValue,
+      end: a.toValue,
+    };
   });
 
   return defineAnimation<SequenceAnimation>(

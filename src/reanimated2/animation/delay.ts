@@ -33,18 +33,12 @@ export const withDelay = function <T extends AnimationObject>(
 ): Animation<DelayAnimation> {
   'worklet';
 
-  const initialAnimationBounds: AnimationBounds =
-    typeof _nextAnimation === 'function'
-      ? {
-          start: (_nextAnimation() as AnimationObject)
-            .startValue as AnimatableValue,
-          end: (_nextAnimation() as AnimationObject).toValue as AnimatableValue,
-        }
-      : {
-          start: (_nextAnimation as AnimationObject)
-            .startValue as AnimatableValue,
-          end: (_nextAnimation as AnimationObject).toValue as AnimatableValue,
-        };
+  const a =
+    typeof _nextAnimation === 'function' ? _nextAnimation() : _nextAnimation;
+  const initialAnimationBounds: AnimationBounds = {
+    start: a.startValue,
+    end: a.toValue,
+  };
   let didResetAfterInterruption = false;
 
   return defineAnimation<DelayAnimation, T>(

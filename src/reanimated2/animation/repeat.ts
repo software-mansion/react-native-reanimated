@@ -40,18 +40,12 @@ export const withRepeat = function <T extends AnimationObject>(
 ): Animation<RepeatAnimation> {
   'worklet';
 
-  const initialAnimationBounds: AnimationBounds =
-    typeof _nextAnimation === 'function'
-      ? {
-          start: (_nextAnimation() as AnimationObject)
-            .startValue as AnimatableValue,
-          end: (_nextAnimation() as AnimationObject).toValue as AnimatableValue,
-        }
-      : {
-          start: (_nextAnimation as AnimationObject)
-            .startValue as AnimatableValue,
-          end: (_nextAnimation as AnimationObject).toValue as AnimatableValue,
-        };
+  const a =
+    typeof _nextAnimation === 'function' ? _nextAnimation() : _nextAnimation;
+  const initialAnimationBounds: AnimationBounds = {
+    start: a.startValue,
+    end: a.toValue,
+  };
 
   return defineAnimation<RepeatAnimation, T>(
     _nextAnimation,
@@ -119,7 +113,7 @@ export const withRepeat = function <T extends AnimationObject>(
           value !== initialAnimationBounds.start &&
           value !== initialAnimationBounds.end;
         const startingValue = hasBeenInterrupted
-          ? initialAnimationBounds.start
+          ? initialAnimationBounds.start ?? value
           : value;
         animation.startValue = startingValue;
         animation.reps = 0;
