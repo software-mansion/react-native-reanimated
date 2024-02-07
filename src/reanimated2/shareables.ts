@@ -329,8 +329,12 @@ export function makeShareableCloneOnUIRecursive<T>(
   return cloneRecursive(value);
 }
 
-export function makeShareable<T extends object>(value: T): T {
-  if (SHOULD_BE_USE_WEB) {
+function makeShareableJS<T extends object>(value: T): T {
+  return value;
+}
+
+function makeShareableNative<T extends object>(value: T): T {
+  if (shareableMappingCache.get(value)) {
     return value;
   }
   const handle = makeShareableCloneRecursive({
@@ -342,3 +346,12 @@ export function makeShareable<T extends object>(value: T): T {
   shareableMappingCache.set(value, handle);
   return value;
 }
+
+/**
+ * This function creates a value on UI with persistent state - changes to it on the UI
+ * thread will be seen by all worklets. Use it when you want to create a value
+ * that is read and written only on the UI thread.
+ */
+export const makeShareable = SHOULD_BE_USE_WEB
+  ? makeShareableJS
+  : makeShareableNative;
