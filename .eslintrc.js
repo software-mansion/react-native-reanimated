@@ -33,6 +33,7 @@ module.exports = {
   },
   rules: {
     curly: 'error',
+    '@typescript-eslint/no-explicit-any': 'warn',
     'import/no-unresolved': 'error',
     'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
     'react/jsx-uses-vars': 'error',
