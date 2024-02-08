@@ -1,5 +1,5 @@
 'use strict';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useRef } from 'react';
 import type {
   FlatListProps,
   LayoutChangeEvent,
@@ -22,13 +22,15 @@ interface CellRendererComponentProps {
 }
 
 const createCellRendererComponent = (
-  itemLayoutAnimation?: ILayoutAnimationBuilder
+  itemLayoutAnimationRef?: React.MutableRefObject<
+    ILayoutAnimationBuilder | undefined
+  >
 ) => {
   const CellRendererComponent = (props: CellRendererComponentProps) => {
     return (
       <AnimatedView
         // TODO TYPESCRIPT This is temporary cast is to get rid of .d.ts file.
-        layout={itemLayoutAnimation as any}
+        layout={itemLayoutAnimationRef?.current as any}
         onLayout={props.onLayout}
         style={props.style}>
         {props.children}
@@ -77,9 +79,12 @@ const FlatListForwardRefRender = function <Item = any>(
     restProps.scrollEventThrottle = 1;
   }
 
+  const itemLayoutAnimationRef = useRef(itemLayoutAnimation);
+  itemLayoutAnimationRef.current = itemLayoutAnimation;
+
   const CellRendererComponent = React.useMemo(
-    () => createCellRendererComponent(itemLayoutAnimation),
-    []
+    () => createCellRendererComponent(itemLayoutAnimationRef),
+    [itemLayoutAnimationRef]
   );
 
   const animatedFlatList = (

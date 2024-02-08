@@ -8,33 +8,48 @@
 
 namespace reanimated {
 
-void LayoutAnimationsManager::configureAnimation(
-    int tag,
-    LayoutAnimationType type,
-    const std::string &sharedTransitionTag,
-    std::shared_ptr<Shareable> config) {
+void LayoutAnimationsManager::configureAnimationBatch(
+    const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-  if (type == SHARED_ELEMENT_TRANSITION ||
-      type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
+  std::vector<LayoutAnimationConfig> sharedTransitionConfigs;
+  for (auto layoutAnimationConfig : layoutAnimationsBatch) {
+    auto [tag, type, config, sharedTransitionTag] = layoutAnimationConfig;
+    if (type == SHARED_ELEMENT_TRANSITION ||
+        type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
+      clearSharedTransitionConfig(tag);
+      sharedTransitionConfigs.push_back(std::move(layoutAnimationConfig));
+    } else {
+      if (config == nullptr) {
+        getConfigsForType(type).erase(tag);
+      } else {
+        getConfigsForType(type)[tag] = config;
+      }
+    }
+  }
+  for (auto [tag, type, config, sharedTransitionTag] :
+       sharedTransitionConfigs) {
+    if (config == nullptr) {
+      continue;
+    }
     sharedTransitionGroups_[sharedTransitionTag].push_back(tag);
     viewTagToSharedTag_[tag] = sharedTransitionTag;
     getConfigsForType(SHARED_ELEMENT_TRANSITION)[tag] = config;
     if (type == SHARED_ELEMENT_TRANSITION) {
       ignoreProgressAnimationForTag_.insert(tag);
     }
-  } else {
-    getConfigsForType(type)[tag] = config;
   }
 }
 
-void LayoutAnimationsManager::setShouldAnimateExiting(int tag, bool value) {
+void LayoutAnimationsManager::setShouldAnimateExiting(
+    const int tag,
+    const bool value) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   shouldAnimateExitingForTag_[tag] = value;
 }
 
 bool LayoutAnimationsManager::shouldAnimateExiting(
-    int tag,
-    bool shouldAnimate) {
+    const int tag,
+    const bool shouldAnimate) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   return collection::contains(shouldAnimateExitingForTag_, tag)
       ? shouldAnimateExitingForTag_[tag]
@@ -42,8 +57,8 @@ bool LayoutAnimationsManager::shouldAnimateExiting(
 }
 
 bool LayoutAnimationsManager::hasLayoutAnimation(
-    int tag,
-    LayoutAnimationType type) {
+    const int tag,
+    const LayoutAnimationType type) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   if (type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
     auto end = ignoreProgressAnimationForTag_.end();
@@ -52,12 +67,9 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
   return collection::contains(getConfigsForType(type), tag);
 }
 
-void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
-  auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-  enteringAnimations_.erase(tag);
-  exitingAnimations_.erase(tag);
-  layoutAnimations_.erase(tag);
-  shouldAnimateExitingForTag_.erase(tag);
+void LayoutAnimationsManager::clearSharedTransitionConfig(const int tag) {
+  // here we don't lock the mutex, since this function is only supposed to be
+  // used as a helper
 #ifndef NDEBUG
   const auto &pair = viewsScreenSharedTagMap_[tag];
   screenSharedTagSet_.erase(pair);
@@ -67,6 +79,7 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   sharedTransitionAnimations_.erase(tag);
   auto const &groupName = viewTagToSharedTag_[tag];
   if (groupName.empty()) {
+    viewTagToSharedTag_.erase(tag);
     return;
   }
   auto &group = sharedTransitionGroups_[groupName];
@@ -81,10 +94,19 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   ignoreProgressAnimationForTag_.erase(tag);
 }
 
+void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
+  auto lock = std::unique_lock<std::mutex>(animationsMutex_);
+  enteringAnimations_.erase(tag);
+  exitingAnimations_.erase(tag);
+  layoutAnimations_.erase(tag);
+  shouldAnimateExitingForTag_.erase(tag);
+  clearSharedTransitionConfig(tag);
+}
+
 void LayoutAnimationsManager::startLayoutAnimation(
     jsi::Runtime &rt,
-    int tag,
-    LayoutAnimationType type,
+    const int tag,
+    const LayoutAnimationType type,
     const jsi::Object &values) {
   std::shared_ptr<Shareable> config, viewShareable;
   {
@@ -107,7 +129,9 @@ void LayoutAnimationsManager::startLayoutAnimation(
       config->getJSValue(rt));
 }
 
-void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, int tag) {
+void LayoutAnimationsManager::cancelLayoutAnimation(
+    jsi::Runtime &rt,
+    const int tag) const {
   jsi::Value layoutAnimationRepositoryAsValue =
       rt.global()
           .getPropertyAsObject(rt, "global")
@@ -125,7 +149,7 @@ void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, int tag) {
   which has been added to that group directly before the one that we
   provide as an argument.
 */
-int LayoutAnimationsManager::findPrecedingViewTagForTransition(int tag) {
+int LayoutAnimationsManager::findPrecedingViewTagForTransition(const int tag) {
   auto const &groupName = viewTagToSharedTag_[tag];
   auto const &group = sharedTransitionGroups_[groupName];
   auto position = std::find(group.begin(), group.end(), tag);
@@ -161,8 +185,8 @@ void LayoutAnimationsManager::checkDuplicateSharedTag(
 }
 #endif // NDEBUG
 
-std::unordered_map<int, std::shared_ptr<Shareable>>
-    &LayoutAnimationsManager::getConfigsForType(LayoutAnimationType type) {
+std::unordered_map<int, std::shared_ptr<Shareable>> &
+LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
   switch (type) {
     case ENTERING:
       return enteringAnimations_;

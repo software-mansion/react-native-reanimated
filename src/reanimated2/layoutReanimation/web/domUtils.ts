@@ -1,6 +1,8 @@
 'use strict';
 
+import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { isWindowAvailable } from '../../PlatformChecker';
+import { setDummyPosition, snapshots } from './componentStyle';
 import { Animations } from './config';
 import type { AnimationNames } from './config';
 
@@ -10,6 +12,8 @@ const CUSTOM_WEB_ANIMATIONS_ID = 'ReanimatedCustomWebAnimationsStyle';
 // Since we cannot remove keyframe from DOM by its name, we have to store its id
 const animationNameToIndex = new Map<string, number>();
 const animationNameList: string[] = [];
+
+let isObserverSet = false;
 
 /**
  *  Creates `HTMLStyleElement`, inserts it into DOM and then inserts CSS rules into the stylesheet.
@@ -129,6 +133,111 @@ export function scheduleAnimationCleanup(
   );
 
   setTimeout(() => removeWebAnimation(animationName), timeoutValue);
+}
+
+function reattachElementToAncestor(child: ReanimatedHTMLElement, parent: Node) {
+  const childSnapshot = snapshots.get(child);
+
+  if (!childSnapshot) {
+    console.error('[Reanimated] Failed to obtain snapshot.');
+    return;
+  }
+
+  // We use that so we don't end up in infinite loop
+  child.removedAfterAnimation = true;
+  parent.appendChild(child);
+
+  setDummyPosition(child, childSnapshot);
+
+  const originalOnAnimationEnd = child.onanimationend;
+
+  child.onanimationend = function (event: AnimationEvent) {
+    parent.removeChild(child);
+
+    // Given that this function overrides onAnimationEnd, it won't be null
+    originalOnAnimationEnd?.call(this, event);
+  };
+}
+
+function findDescendantWithExitingAnimation(
+  node: ReanimatedHTMLElement,
+  root: Node
+) {
+  if (node.reanimatedDummy && node.removedAfterAnimation === undefined) {
+    reattachElementToAncestor(node, root);
+  }
+
+  const children = Array.from(node.children);
+
+  for (let i = 0; i < children.length; ++i) {
+    findDescendantWithExitingAnimation(
+      children[i] as ReanimatedHTMLElement,
+      root
+    );
+  }
+}
+
+type FiberNodeKey = `__reactFiber${string}`;
+
+interface FiberNode {
+  memoizedProps?: {
+    navigation?: unknown;
+  };
+
+  child?: FiberNode;
+}
+
+type WithFiberNode = {
+  [key: FiberNodeKey]: FiberNode;
+};
+
+type MaybeWithFiberNode = Partial<WithFiberNode>;
+
+function checkIfScreenWasChanged(
+  mutationTarget: ReanimatedHTMLElement & MaybeWithFiberNode
+) {
+  let reactFiberKey: FiberNodeKey = '__reactFiber';
+
+  for (const key of Object.keys(mutationTarget)) {
+    if (key.startsWith('__reactFiber')) {
+      reactFiberKey = key as FiberNodeKey;
+      break;
+    }
+  }
+
+  return (
+    mutationTarget[reactFiberKey]?.child?.memoizedProps?.navigation !==
+    undefined
+  );
+}
+
+export function addHTMLMutationObserver() {
+  if (isObserverSet || !isWindowAvailable()) {
+    return;
+  }
+
+  isObserverSet = true;
+
+  const observer = new MutationObserver((mutationsList) => {
+    const rootMutation = mutationsList[mutationsList.length - 1];
+
+    if (
+      checkIfScreenWasChanged(
+        rootMutation.target as ReanimatedHTMLElement & MaybeWithFiberNode
+      )
+    ) {
+      return;
+    }
+
+    for (let i = 0; i < rootMutation.removedNodes.length; ++i) {
+      findDescendantWithExitingAnimation(
+        rootMutation.removedNodes[i] as ReanimatedHTMLElement,
+        rootMutation.target
+      );
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
 }
 
 export function areDOMRectsEqual(r1: DOMRect, r2: DOMRect) {

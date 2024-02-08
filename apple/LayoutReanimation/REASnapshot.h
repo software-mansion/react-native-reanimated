@@ -9,6 +9,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)init:(REAUIView *)view;
 - (instancetype)initWithAbsolutePosition:(REAUIView *)view;
+- (instancetype)initWithAbsolutePosition:(REAUIView *)view withOffsetX:(double)offsetX withOffsetY:(double)offsetY;
 
 @end
 

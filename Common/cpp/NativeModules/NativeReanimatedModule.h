@@ -46,18 +46,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &value,
       const jsi::Value &shouldRetainRemote) override;
 
-  jsi::Value makeSynchronizedDataHolder(
-      jsi::Runtime &rt,
-      const jsi::Value &initialShareable) override;
-  jsi::Value getDataSynchronously(
-      jsi::Runtime &rt,
-      const jsi::Value &synchronizedDataHolderRef) override;
-  void updateDataSynchronously(
-      jsi::Runtime &rt,
-      const jsi::Value &synchronizedDataHolderRef,
-      const jsi::Value &newData);
-
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
+  jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
+      override;
 
   jsi::Value createWorkletRuntime(
       jsi::Runtime &rt,
@@ -89,12 +80,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps) override;
-  jsi::Value configureLayoutAnimation(
+  jsi::Value configureLayoutAnimationBatch(
       jsi::Runtime &rt,
-      const jsi::Value &viewTag,
-      const jsi::Value &type,
-      const jsi::Value &sharedTransitionTag,
-      const jsi::Value &config) override;
+      const jsi::Value &layoutAnimationsBatch) override;
   void setShouldAnimateExiting(
       jsi::Runtime &rt,
       const jsi::Value &viewTag,

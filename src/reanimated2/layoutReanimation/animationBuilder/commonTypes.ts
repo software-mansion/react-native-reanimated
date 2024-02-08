@@ -1,7 +1,7 @@
 'use strict';
 import type { TransformArrayItem } from '../../helperTypes';
 import type { EasingFunction } from '../../Easing';
-import type { StyleProps } from '../../commonTypes';
+import type { ShareableRef, StyleProps } from '../../commonTypes';
 
 export type LayoutAnimationsOptions =
   | 'originX'
@@ -153,3 +153,17 @@ export type EntryExitAnimationsValues =
 export type StylePropsWithArrayTransform = StyleProps & {
   transform?: TransformArrayItem[];
 };
+
+export interface LayoutAnimationBatchItem {
+  viewTag: number;
+  type: LayoutAnimationType;
+  config:
+    | ShareableRef<
+        | Keyframe
+        | LayoutAnimationFunction
+        | SharedTransitionAnimationsFunction
+        | ProgressAnimationCallback
+      >
+    | undefined;
+  sharedTransitionTag?: string;
+}
