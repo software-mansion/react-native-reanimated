@@ -300,9 +300,9 @@ jsi::Value NativeReanimatedModule::getViewProp(
   const auto propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
   const auto funPtr = std::make_shared<jsi::Function>(
       callback.getObject(rnRuntime).asFunction(rnRuntime));
+#ifdef RCT_NEW_ARCH_ENABLED
   const ShadowNode::Shared shadowNode =
       shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
-#ifdef RCT_NEW_ARCH_ENABLED
   uiScheduler_->scheduleOnUI([=]() {
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
     std::string resultStr =
