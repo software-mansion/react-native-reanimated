@@ -16,7 +16,7 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
           if (
             isVariableDefinedAs(componentName, 'Animated') ||
             // People tend to import `Animated` as `Reanimated`.
-            //TODO parse imports to detect actual import name
+            // TODO parse imports to detect actual import name
             isVariableDefinedAs(componentName, 'Reanimated') ||
             isVariableDefinedAs(componentName, 'createAnimatedComponent')
           ) {
@@ -42,7 +42,7 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
           }
 
           if (styleValue.type === AST_NODE_TYPES.JSXSpreadChild) {
-            return; //Ignore this for now (and maybe for ever, since its not a common use case)
+            return; // Ignore this for now (and maybe forever, since its not a common use case)
           }
 
           const styleExpression = styleValue.expression;
@@ -53,11 +53,11 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
             case AST_NODE_TYPES.ArrayExpression: // style={[style1, style2]}
               checkArrayNodeForBeingAnimated(styleExpression);
               break;
-            case AST_NODE_TYPES.ObjectExpression: //style={{backgroundColor:'pink'}}
+            case AST_NODE_TYPES.ObjectExpression: // style={{backgroundColor:'pink'}}
               checkObjectNodeForBeingAnimated(styleExpression);
               break;
-            case AST_NODE_TYPES.MemberExpression: //style={{backgroundColor:styles.myStyle}}
-              //We assume that all member expressions are correct
+            case AST_NODE_TYPES.MemberExpression: // style={{backgroundColor:styles.myStyle}}
+              // We assume that all member expressions are correct
               break;
           }
         }
@@ -66,7 +66,6 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
           variableName: string,
           expectedToken: string
         ) {
-          let isAnimated = false;
           const variableNameTokenIds: Array<number> = [];
 
           tokensBefore.forEach((token, idx) => {
@@ -75,20 +74,18 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
             }
           });
 
-          variableNameTokenIds.forEach((idx) => {
-            /** 
-              Lets count tokens from variable name to its definition:
-              ╭───────────┬───────┬───────┬───────┬─────────────╮
-              │ Code      │ const │   a   │   =   │ sharedValue │
-              ├───────────┼───────┼───────┼───────┼─────────────┤
-              │ Token     │ idx-1 │ idx   │ idx+1 │ idx+2       │
-              ╰───────────┴───────┴───────┴───────┴─────────────╯
+          return variableNameTokenIds.some(
+            (idx) =>
+              /* 
+              Lets count tokens from variable name to its definition, e.g.:
+              ╭───────────┬───────┬───────┬───────┬────────────────╮
+              │ Code      │ const │  sv   │   =   │ useSharedValue │
+              ├───────────┼───────┼───────┼───────┼────────────────┤
+              │ Token     │ idx-1 │ idx   │ idx+1 │      idx+2     │
+              ╰───────────┴───────┴───────┴───────┴────────────────╯
              */
-            if (tokensBefore[idx + 2].value === expectedToken) {
-              isAnimated = true;
-            }
-          });
-          return isAnimated;
+              tokensBefore[idx + 2].value === expectedToken
+          );
         }
 
         function checkIdentifierNodeForBeingAnimated(
@@ -163,9 +160,9 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
     },
     messages: {
       sharedValue:
-        "Property  '{{propertyName}}: {{propertyValue}}' is using a sharedValue '{{propertyValue}}', but was used in a default component. Replace your {{componentName}} with an Animated.{{componentName}}",
+        "Property  '{{propertyName}}: {{propertyValue}}' is using a shared value '{{propertyValue}}', but was used in a default component. Replace {{componentName}} with an animated component from Reanimated.",
       animatedStyle:
-        "Style '{{variableName}}' is an animated style, but was used in a default component. Replace your '{{componentName}}' with an Animated.{{componentName}}",
+        "Style '{{variableName}}' is an animated style, but was used in a default component. Replace your '{{componentName}}' with an animated component from Reanimated.",
     },
     type: 'suggestion',
     schema: [],
