@@ -46,76 +46,96 @@ const sharedValueError2 = {
   },
 } as const;
 
-ruleTester.run('Test rule 1', rules['animated-style-non-animated-component'], {
-  valid: [
-    'const a = 7',
+/**
+ * Correct code correctly classified as satisfying the rule
+ */
+const trueNegative = [
+  'const a = 7',
+  `${animatedStyle}
+return <Animated.View style={animatedStyle}/>
+`,
+  '<View style={ someStyle } />',
+  '<View style={{ width }} />',
+  '<View style={{ width: someValue }} />',
+  `const widthSv = useSharedValue(45);
+  <View style={{ width }} />`,
+  `const width = useSharedValue(45);
+<View style={{ width:100 }} />`,
+  `const width = useSharedValue(45);
+const myWidth = 100;
+
+<View style={{ width:myWidth }} />`,
+];
+
+/**
+ * Incorrect code incorrectly classified as satisfying the rule
+ */
+const falseNegative = [
+  `import { Animated } from 'react-native';
+
+  export default function EmptyExample() {
+    ${animatedStyle}
+    return (<Animated.View style={animatedStyle}/>)
+  }
+  `,
+  `
+  export default function EmptyExample() {
+    ${animatedStyle}
+    const animatedStyle2 = animatedStyle;
+    return (<Animated.View style={animatedStyle2}/>)
+  }`,
+  `
+  export default function EmptyExample() {
+    const widthSv = useSharedValue(45);
+    const widthSv2 = widthSv;
+    return (<Animated.View style={{width: widthSv2}}/>)
+  }`,
+];
+
+/**
+ * Incorrect code correctly classified as not satisfying the rule
+ */
+const truePositive = [
+  ...[
     `${animatedStyle}
-    return <Animated.View style={animatedStyle}/>
-    `,
-    '<View style={{ width }} />',
+  return <View style={animatedStyle}/>;
+`,
+    `${animatedStyle}
+  return <View style={[animatedStyle]}/>;
+`,
+    `${animatedStyle}
+return <View style={[someOtherStyle, animatedStyle]}/>;
+`,
+  ].map((code) => {
+    return { code, errors: [animatedStyleError] };
+  }),
+
+  ...[
     `const widthSv = useSharedValue(45);
-    <View style={{ width }} />`,
-    `const width = useSharedValue(45);
-    <View style={{ width:100 }} />`,
-    `const width = useSharedValue(45);
-    <View style={{ width:myWidth }} />`,
-  ],
-  invalid: [
-    {
-      code: `
-      ${animatedStyle}
-      return <View style={animatedStyle}/>;
-    `,
-      errors: [animatedStyleError],
-    },
-    {
-      code: `
-      ${animatedStyle}
-      return <View style={[animatedStyle]}/>;
-    `,
-      errors: [animatedStyleError],
-    },
-    {
-      code: `
-      ${animatedStyle}
-      return <View style={[someOtherStyle, animatedStyle]}/>;
-    `,
-      errors: [animatedStyleError],
-    },
-    {
-      code: `
-    const widthSv = useSharedValue(45);
-    return <View style={{ width: widthSv }} />;
-    `,
-      errors: [sharedValueError1],
-    },
-    {
-      code: `
-    const widthSv = useSharedValue(45);
-    return <View style={{ width: widthSv, height:100}} />;
-    `,
-      errors: [sharedValueError1],
-    },
-    {
-      code: `
-    const widthSv = useSharedValue(45);
+  return <View style={{ width: widthSv }} />;
+  `,
+    `const widthSv = useSharedValue(45);
+  return <View style={{ width: widthSv, height:100}} />;
+  `,
+    `const widthSv = useSharedValue(45);
     return <View style={[{ width: widthSv, height:100}, someOtherStyle]} />;
-    `,
-      errors: [sharedValueError1],
-    },
-    {
-      code: `
-    const width = useSharedValue(45);
-    return <View style={{ width }} />;
-    `,
-      errors: [sharedValueError2],
-    },
-    {
-      code: `
-    const width = useSharedValue(45);
-    return <View style={{ height, width, color:'red' }} />;
-    `,
-      errors: [sharedValueError2],
-    },
-  ],
+  `,
+  ].map((code) => {
+    return { code, errors: [sharedValueError1] };
+  }),
+
+  ...[
+    `const width = useSharedValue(45);
+  return <View style={{ width }} />;`,
+    `const width = useSharedValue(45);
+  return <View style={{ height, width, color:'red' }} />;`,
+  ].map((code) => {
+    return { code, errors: [sharedValueError2] };
+  }),
+];
+
+const ruleName = 'animated-style-non-animated-component';
+ruleTester.run(`Test rule ${ruleName}`, rules[ruleName], {
+  valid: [...trueNegative, ...falseNegative],
+  invalid: [...truePositive, ...truePositive],
 });

@@ -4,9 +4,13 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
   create: function (context) {
     return {
       JSXOpeningElement(node: TSESTree.JSXOpeningElement) {
-        if (node.name.type === AST_NODE_TYPES.JSXMemberExpression) return; // Property-like namespace syntax <Animated.View>
-        if (node.name.type === AST_NODE_TYPES.JSXNamespacedName) return; // XML-based namespace syntax: <Animated:View>
-
+        if (node.name.type === AST_NODE_TYPES.JSXMemberExpression) {
+          return; // Property-like namespace syntax <Animated.View>
+        }
+        if (node.name.type === AST_NODE_TYPES.JSXNamespacedName) {
+          return; // XML-based namespace syntax: <Animated:View>
+          // We include it although its not a supported syntax in React-Native
+        }
         const sourceCode = context.getSourceCode();
         const tokensBefore = sourceCode.getTokensBefore(node);
         const componentName = node?.name?.name;
