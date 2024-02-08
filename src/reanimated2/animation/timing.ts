@@ -73,15 +73,16 @@ export const withTiming = function (
       const isWorklet: boolean = !!(
         easing as unknown as { __workletHash: number }
       )?.__workletHash;
-      const functionName =
-        typeof easing === 'function' ? easing?.name + ' ' : '';
+      const functionName = typeof easing === 'function' ? easing?.name : '';
       /** When calling `withTiming` on UI we don't pass worklets directly, but we
       bound them first. This happens, for example, when animating with keyframes */
       const isBound = functionName.startsWith('bound');
 
       if (!isBound && isFunction && !isWorklet) {
         throw new Error(
-          `[Reanimated] The easing function ${functionName}provided to \`withTiming\` is not a worklet. Are you sure you didn't import it from react-native? `
+          `[Reanimated] The easing function ${
+            functionName ? `\`${functionName}\` ` : ''
+          }provided to \`withTiming\` is not a worklet. Are you sure you didn't import it from react-native? `
         );
       }
     }
