@@ -75,6 +75,10 @@ export const withTiming = function (
       )?.__workletHash;
       const functionName =
         typeof easing === 'function' ? easing?.name + ' ' : '';
+      console.log('\tTIMING', functionName);
+      /** When calling `withTiming` on UI we don't pass worklets directly, but we
+       * bound them first. This happens, for example, when animating with keyframes
+       *  */
       const isBound = functionName.startsWith('bound');
 
       if (!isBound && isFunction && !isWorklet) {
