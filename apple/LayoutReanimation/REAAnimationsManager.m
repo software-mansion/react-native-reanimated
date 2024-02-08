@@ -250,7 +250,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   if (needsViewPositionUpdate) {
     CGPoint newCenter = CGPointMake(centerX, centerY);
     if (convertFromAbsolute) {
-#if TARGET_OS_MAC
+#if TARGET_OS_OSX
       REAUIView *window = UIApplication.sharedApplication.keyWindow;
 #else
       REAUIView *window = RCTKeyWindow();
