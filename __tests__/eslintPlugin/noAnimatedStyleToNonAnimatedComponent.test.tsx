@@ -134,8 +134,29 @@ return <View style={[someOtherStyle, animatedStyle]}/>;
   }),
 ];
 
+const falsePositive = [
+  {
+    code: `
+import MyCustomAnimatedComponent from './MyCustomAnimatedComponent';
+export default function EmptyExample() {
+  ${animatedStyle}
+  return (<MyCustomAnimatedComponent style={animatedStyle}/>)
+}
+`,
+    errors: [
+      {
+        messageId: 'animatedStyle',
+        data: {
+          componentName: 'MyCustomAnimatedComponent',
+          variableName: 'animatedStyle',
+        },
+      },
+    ],
+  },
+];
+
 const ruleName = 'animated-style-non-animated-component';
 ruleTester.run(`Test rule ${ruleName}`, rules[ruleName], {
   valid: [...trueNegative, ...falseNegative],
-  invalid: [...truePositive, ...truePositive],
+  invalid: [...truePositive, ...falsePositive],
 });
