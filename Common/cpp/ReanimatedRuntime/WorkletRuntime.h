@@ -25,20 +25,20 @@ class WorkletRuntime : public jsi::HostObject,
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
-      const std::string &name);
-
-  void installValueUnpacker(const std::string &valueUnpackerCode);
+      const std::string &name,
+      const bool supportsLocking,
+      const std::string &valueUnpackerCode);
 
   jsi::Runtime &getJSIRuntime() const {
     return *runtime_;
   }
 
   template <typename... Args>
-  inline void runGuarded(
+  inline jsi::Value runGuarded(
       const std::shared_ptr<ShareableWorklet> &shareableWorklet,
       Args &&...args) const {
     jsi::Runtime &rt = *runtime_;
-    runOnRuntimeGuarded(
+    return runOnRuntimeGuarded(
         rt, shareableWorklet->getJSValue(rt), std::forward<Args>(args)...);
   }
 
@@ -51,6 +51,8 @@ class WorkletRuntime : public jsi::HostObject,
         [=, self = shared_from_this()] { self->runGuarded(shareableWorklet); });
   }
 
+  jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
+
   std::string toString() const {
     return "[WorkletRuntime \"" + name_ + "\"]";
   }
@@ -60,7 +62,11 @@ class WorkletRuntime : public jsi::HostObject,
   std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
 
  private:
+  const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
+#ifndef NDEBUG
+  const bool supportsLocking_;
+#endif
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
 };

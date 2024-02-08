@@ -23,7 +23,7 @@ export function flattenArray<T>(array: NestedArray<T>): T[] {
 export const has = <K extends string>(
   key: K,
   x: unknown
-): x is typeof x & { [key in K]: unknown } => {
+): x is { [key in K]: unknown } => {
   if (typeof x === 'function' || typeof x === 'object') {
     if (x === null || x === undefined) {
       return false;

@@ -13,7 +13,7 @@ env:
 jobs:
   build_ios:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: macos-12
+    runs-on: macos-13
     strategy:
       matrix:
         react-native-architecture: ['Paper', 'Fabric']
@@ -23,7 +23,7 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Check out reanimated repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: 'reanimated_repo'
       - name: Create Expo app
@@ -61,7 +61,7 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Check out reanimated repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: 'reanimated_repo'
       - name: Create Expo app

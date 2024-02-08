@@ -94,7 +94,7 @@ export class SequencedTransition
             )
           ),
         },
-        callback: callback,
+        callback,
       };
     };
   };

@@ -335,6 +335,60 @@ new FadeIn().withCallback(function () {
 }());"
 `;
 
+exports[`babel plugin for async functions makes an async worklet factory 1`] = `
+"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _asyncToGenerator2 = _interopRequireDefault(require("@babel/runtime/helpers/asyncToGenerator"));
+var _worklet_2720353136439_init_data = {
+  code: "async function foo(){await Promise.resolve();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo = function () {
+    var _ref = (0, _asyncToGenerator2.default)(function* () {
+      yield Promise.resolve();
+    });
+    return function foo() {
+      return _ref.apply(this, arguments);
+    };
+  }();
+  foo.__closure = {};
+  foo.__workletHash = 2720353136439;
+  foo.__initData = _worklet_2720353136439_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
+exports[`babel plugin for async functions makes an async worklet string 1`] = `
+"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _asyncToGenerator2 = _interopRequireDefault(require("@babel/runtime/helpers/asyncToGenerator"));
+var _worklet_2720353136439_init_data = {
+  code: "async function foo(){await Promise.resolve();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo = function () {
+    var _ref = (0, _asyncToGenerator2.default)(function* () {
+      yield Promise.resolve();
+    });
+    return function foo() {
+      return _ref.apply(this, arguments);
+    };
+  }();
+  foo.__closure = {};
+  foo.__workletHash = 2720353136439;
+  foo.__initData = _worklet_2720353136439_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
 exports[`babel plugin for class worklets workletizes class field 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
@@ -750,6 +804,28 @@ var foo = function () {
 }();"
 `;
 
+exports[`babel plugin for explicit worklets workletizes ObjectMethod 1`] = `
+"var _worklet_16974800582491_init_data = {
+  code: "function bar(x){return x+2;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = {
+  bar: function () {
+    var _e = [new global.Error(), 1, -27];
+    var bar = function bar(x) {
+      return x + 2;
+    };
+    bar.__closure = {};
+    bar.__workletHash = 16974800582491;
+    bar.__initData = _worklet_16974800582491_init_data;
+    bar.__stackDetails = _e;
+    return bar;
+  }()
+};"
+`;
+
 exports[`babel plugin for explicit worklets workletizes named FunctionExpression 1`] = `
 "var _worklet_4679479961836_init_data = {
   code: "function foo(x){return x+2;}",
@@ -854,6 +930,48 @@ var animatedStyle = useAnimatedStyle(function () {
   anonymous.__stackDetails = _e;
   return anonymous;
 }());"
+`;
+
+exports[`babel plugin for generators makes a generator worklet factory 1`] = `
+"var _worklet_4939499253486_init_data = {
+  code: "function*foo(){yield'hello';yield'world';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo = function* foo() {
+    yield 'hello';
+    yield 'world';
+  };
+  foo.__closure = {};
+  foo.__workletHash = 4939499253486;
+  foo.__initData = _worklet_4939499253486_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
+exports[`babel plugin for generators makes a generator worklet string 1`] = `
+"var _worklet_4939499253486_init_data = {
+  code: "function*foo(){yield'hello';yield'world';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo = function* foo() {
+    yield 'hello';
+    yield 'world';
+  };
+  foo.__closure = {};
+  foo.__workletHash = 4939499253486;
+  foo.__initData = _worklet_4939499253486_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
 `;
 
 exports[`babel plugin for inline styles doesn't show a warning if user writes something like style={styles.value} 1`] = `
@@ -1620,6 +1738,40 @@ function App() {
 }"
 `;
 
+exports[`babel plugin for web configuration doesn't substitute isWeb and shouldBeUseWeb in worklets 1`] = `
+"var _worklet_8641000714901_init_data = {
+  code: "function foo(){const{isWeb,shouldBeUseWeb}=this.__closure;const x=isWeb();const y=shouldBeUseWeb();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), -3, -27];
+  var foo = function foo() {
+    var x = true;
+    var y = true;
+  };
+  foo.__closure = {
+    isWeb: isWeb,
+    shouldBeUseWeb: shouldBeUseWeb
+  };
+  foo.__workletHash = 8641000714901;
+  foo.__initData = _worklet_8641000714901_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
+exports[`babel plugin for web configuration doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to false 1`] = `
+"var x = isWeb();
+var y = shouldBeUseWeb();"
+`;
+
+exports[`babel plugin for web configuration doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is undefined 1`] = `
+"var x = isWeb();
+var y = shouldBeUseWeb();"
+`;
+
 exports[`babel plugin for web configuration includes initData when omitNativeOnlyData option is set to false 1`] = `
 "var _worklet_17472070642672_init_data = {
   code: "function foo(){var foo='bar';}",
@@ -1651,6 +1803,11 @@ exports[`babel plugin for web configuration skips initData when omitNativeOnlyDa
   foo.__stackDetails = _e;
   return foo;
 }();"
+`;
+
+exports[`babel plugin for web configuration substitutes isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to true 1`] = `
+"var x = true;
+var y = true;"
 `;
 
 exports[`babel plugin for worklet nesting doesn't process nested worklets when disabled 1`] = `
@@ -1691,20 +1848,20 @@ var foo = function () {
 `;
 
 exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnJS in runOnUI 1`] = `
-"var _worklet_16739363980177_init_data = {
-  code: "function anonymous(){const{runOnJS}=this.__closure;console.log('Hello from UI thread');runOnJS(function(){'worklet';console.log('Hello from JS thread');})();}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-var _worklet_13427774179957_init_data = {
+"var _worklet_13427774179957_init_data = {
   code: "function anonymous(){console.log('Hello from JS thread');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
+var _worklet_12029053563916_init_data = {
+  code: "function anonymous(){const{runOnJS,_worklet_13427774179957_init_data}=this.__closure;console.log('Hello from UI thread');runOnJS(function(){const _e=[new global.Error(),1,-27];const anonymous=function(){console.log('Hello from JS thread');};anonymous.__closure={};anonymous.__workletHash=13427774179957;anonymous.__initData=_worklet_13427774179957_init_data;anonymous.__stackDetails=_e;return anonymous;}())();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
 runOnUI(function () {
-  var _e = [new global.Error(), -2, -27];
+  var _e = [new global.Error(), -3, -27];
   var anonymous = function anonymous() {
     console.log('Hello from UI thread');
     runOnJS(function () {
@@ -1720,24 +1877,25 @@ runOnUI(function () {
     }())();
   };
   anonymous.__closure = {
-    runOnJS: runOnJS
+    runOnJS: runOnJS,
+    _worklet_13427774179957_init_data: _worklet_13427774179957_init_data
   };
-  anonymous.__workletHash = 16739363980177;
-  anonymous.__initData = _worklet_16739363980177_init_data;
+  anonymous.__workletHash = 12029053563916;
+  anonymous.__initData = _worklet_12029053563916_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }())();"
 `;
 
 exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnUI in runOnJS in runOnUI 1`] = `
-"var _worklet_15024386663586_init_data = {
-  code: "function anonymous(){const{runOnJS,runOnUI}=this.__closure;console.log('Hello from UI thread');runOnJS(function(){'worklet';console.log('Hello from JS thread');runOnUI(function(){console.log('Hello from UI thread again');})();})();}",
+"var _worklet_15780567630262_init_data = {
+  code: "function anonymous(){const{runOnUI}=this.__closure;console.log('Hello from JS thread');runOnUI(function(){console.log('Hello from UI thread again');})();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_15780567630262_init_data = {
-  code: "function anonymous(){const{runOnUI}=this.__closure;console.log('Hello from JS thread');runOnUI(function(){console.log('Hello from UI thread again');})();}",
+var _worklet_10673554115844_init_data = {
+  code: "function anonymous(){const{runOnJS,runOnUI,_worklet_15780567630262_init_data}=this.__closure;console.log('Hello from UI thread');runOnJS(function(){const _e=[new global.Error(),-2,-27];const anonymous=function(){console.log('Hello from JS thread');runOnUI(function(){console.log('Hello from UI thread again');})();};anonymous.__closure={runOnUI:runOnUI};anonymous.__workletHash=15780567630262;anonymous.__initData=_worklet_15780567630262_init_data;anonymous.__stackDetails=_e;return anonymous;}())();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1749,7 +1907,7 @@ var _worklet_12364489264272_init_data = {
   version: "x.y.z"
 };
 runOnUI(function () {
-  var _e = [new global.Error(), -3, -27];
+  var _e = [new global.Error(), -4, -27];
   var anonymous = function anonymous() {
     console.log('Hello from UI thread');
     runOnJS(function () {
@@ -1779,10 +1937,11 @@ runOnUI(function () {
   };
   anonymous.__closure = {
     runOnJS: runOnJS,
-    runOnUI: runOnUI
+    runOnUI: runOnUI,
+    _worklet_15780567630262_init_data: _worklet_15780567630262_init_data
   };
-  anonymous.__workletHash = 15024386663586;
-  anonymous.__initData = _worklet_15024386663586_init_data;
+  anonymous.__workletHash = 10673554115844;
+  anonymous.__initData = _worklet_10673554115844_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }())();"
@@ -1886,13 +2045,7 @@ var foo = function () {
 `;
 
 exports[`babel plugin for worklet nesting transpiles worklets with functions defined on UI thread to run them on JS 1`] = `
-"var _worklet_4484193487608_init_data = {
-  code: "function anonymous(){const{runOnJS}=this.__closure;const a=function(){'worklet';console.log('Good morning from JS thread!');};const b=function(){'worklet';console.log('Good afternoon from JS thread');};const func=Math.random()<0.5?a:b;runOnJS(func)();}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-var _worklet_2310082662475_init_data = {
+"var _worklet_2310082662475_init_data = {
   code: "function anonymous(){console.log('Good morning from JS thread!');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
@@ -1904,8 +2057,14 @@ var _worklet_9108102051728_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
+var _worklet_7385395288732_init_data = {
+  code: "function anonymous(){const{_worklet_2310082662475_init_data,_worklet_9108102051728_init_data,runOnJS}=this.__closure;const a=function(){const _e=[new global.Error(),1,-27];const anonymous=function(){console.log('Good morning from JS thread!');};anonymous.__closure={};anonymous.__workletHash=2310082662475;anonymous.__initData=_worklet_2310082662475_init_data;anonymous.__stackDetails=_e;return anonymous;}();const b=function(){const _e=[new global.Error(),1,-27];const anonymous=function(){console.log('Good afternoon from JS thread');};anonymous.__closure={};anonymous.__workletHash=9108102051728;anonymous.__initData=_worklet_9108102051728_init_data;anonymous.__stackDetails=_e;return anonymous;}();const func=Math.random()<0.5?a:b;runOnJS(func)();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
 runOnUI(function () {
-  var _e = [new global.Error(), -2, -27];
+  var _e = [new global.Error(), -4, -27];
   var anonymous = function anonymous() {
     var a = function () {
       var _e = [new global.Error(), 1, -27];
@@ -1933,10 +2092,12 @@ runOnUI(function () {
     runOnJS(func)();
   };
   anonymous.__closure = {
+    _worklet_2310082662475_init_data: _worklet_2310082662475_init_data,
+    _worklet_9108102051728_init_data: _worklet_9108102051728_init_data,
     runOnJS: runOnJS
   };
-  anonymous.__workletHash = 4484193487608;
-  anonymous.__initData = _worklet_4484193487608_init_data;
+  anonymous.__workletHash = 7385395288732;
+  anonymous.__initData = _worklet_7385395288732_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
 }())();"

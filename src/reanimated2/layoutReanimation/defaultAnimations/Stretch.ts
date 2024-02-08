@@ -17,6 +17,8 @@ export class StretchInX
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'StretchInX';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -40,7 +42,7 @@ export class StretchInX
           transform: [{ scaleX: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -57,6 +59,8 @@ export class StretchInY
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'StretchInY';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -80,7 +84,7 @@ export class StretchInY
           transform: [{ scaleY: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -97,6 +101,8 @@ export class StretchOutX
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'StretchOutX';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -120,7 +126,7 @@ export class StretchOutX
           transform: [{ scaleX: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -137,6 +143,8 @@ export class StretchOutY
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'StretchOutY';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -160,7 +168,7 @@ export class StretchOutY
           transform: [{ scaleY: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };

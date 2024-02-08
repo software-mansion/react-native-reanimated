@@ -97,6 +97,23 @@ describe('babel plugin', () => {
       );
     });
 
+    it('uses relative source location when `relativeSourceLocation` is set to `true`', () => {
+      process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '0'; // don't mock source maps
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var foo = 'bar';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, undefined, {
+        relativeSourceLocation: true,
+      });
+
+      const matches = code?.match(new RegExp(`..${MOCK_LOCATION}`, 'g'));
+      expect(matches).toHaveLength(2);
+    });
+
     it('removes comments from worklets', () => {
       const input = html`<script>
         const f = () => {
@@ -343,6 +360,21 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
       expect(code).not.toContain("'worklet';");
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ObjectMethod', () => {
+      const input = html`<script>
+        const foo = {
+          bar(x) {
+            'worklet';
+            return x + 2;
+          },
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
       expect(code).toMatchSnapshot();
     });
   });
@@ -1607,6 +1639,131 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input, {}, { omitNativeOnlyData: false });
       expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('substitutes isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to true', () => {
+      const input = html`<script>
+        const x = isWeb();
+        const y = shouldBeUseWeb();
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        {},
+        { substituteWebPlatformChecks: true }
+      );
+      expect(code).toContain('var x = true;');
+      expect(code).toContain('var y = true;');
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to false", () => {
+      const input = html`<script>
+        const x = isWeb();
+        const y = shouldBeUseWeb();
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        {},
+        { substituteWebPlatformChecks: false }
+      );
+      expect(code).toContain('var x = isWeb();');
+      expect(code).toContain('var y = shouldBeUseWeb();');
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is undefined", () => {
+      const input = html`<script>
+        const x = isWeb();
+        const y = shouldBeUseWeb();
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('var x = isWeb();');
+      expect(code).toContain('var y = shouldBeUseWeb();');
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't substitute isWeb and shouldBeUseWeb in worklets", () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          const x = isWeb();
+          const y = shouldBeUseWeb();
+        }
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        {},
+        { substituteWebPlatformChecks: true }
+      );
+      expect(code).toContain('const x=isWeb();');
+      expect(code).toContain('const y=shouldBeUseWeb();');
+      expect(code).toMatchSnapshot();
+    });
+  });
+
+  describe('for generators', () => {
+    it('makes a generator worklet factory', () => {
+      const input = html`<script>
+        function* foo() {
+          'worklet';
+          yield 'hello';
+          yield 'world';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('var foo = function* foo() {');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('makes a generator worklet string', () => {
+      const input = html`<script>
+        function* foo() {
+          'worklet';
+          yield 'hello';
+          yield 'world';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain(
+        `code: "function*foo(){yield'hello';yield'world';}"`
+      );
+      expect(code).toMatchSnapshot();
+    });
+  });
+
+  describe('for async functions', () => {
+    it('makes an async worklet factory', () => {
+      const input = html`<script>
+        async function foo() {
+          'worklet';
+          await Promise.resolve();
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('asyncToGenerator');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('makes an async worklet string', () => {
+      const input = html`<script>
+        async function foo() {
+          'worklet';
+          await Promise.resolve();
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain(
+        `code: "async function foo(){await Promise.resolve();}"`
+      );
       expect(code).toMatchSnapshot();
     });
   });

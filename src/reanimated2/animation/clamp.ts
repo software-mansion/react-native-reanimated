@@ -73,7 +73,7 @@ export const withClamp = function <T extends number | string>(
 
           animation.current =
             typeof animationToClamp.current === 'number'
-              ? (newValue as number)
+              ? newValue
               : `${prefix === undefined ? '' : prefix}${newValue}${
                   suffix === undefined ? '' : suffix
                 }`;

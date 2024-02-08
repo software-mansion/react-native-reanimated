@@ -10,6 +10,6 @@ module.exports = {
         },
       },
     ],
-    '../plugin',
+    ['../plugin', {processNestedWorklets: true}],
   ],
 };

@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import { makeMutable } from './core';
 import type { SharedValue } from './commonTypes';
 import type { Descriptor } from './hook/commonTypes';
+import { shouldBeUseWeb } from './PlatformChecker';
 
 export interface ViewRefSet<T> {
   items: Set<T>;
@@ -21,7 +22,7 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
   const data: ViewDescriptorsSet = {
     shareableViewDescriptors,
     add: (item: Descriptor) => {
-      shareableViewDescriptors.modify((descriptors: Descriptor[]) => {
+      shareableViewDescriptors.modify((descriptors) => {
         'worklet';
         const index = descriptors.findIndex(
           (descriptor) => descriptor.tag === item.tag
@@ -36,7 +37,7 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
     },
 
     remove: (viewTag: number) => {
-      shareableViewDescriptors.modify((descriptors: Descriptor[]) => {
+      shareableViewDescriptors.modify((descriptors) => {
         'worklet';
         const index = descriptors.findIndex(
           (descriptor) => descriptor.tag === viewTag
@@ -51,7 +52,18 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
   return data;
 }
 
-export function useViewRefSet<T>(): ViewRefSet<T> {
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+
+export const useViewRefSet = SHOULD_BE_USE_WEB
+  ? useViewRefSetJS
+  : useViewRefSetNative;
+
+function useViewRefSetNative() {
+  // Stub native implementation.
+  return undefined;
+}
+
+function useViewRefSetJS<T>(): ViewRefSet<T> {
   const ref = useRef<ViewRefSet<T> | null>(null);
   if (ref.current === null) {
     const data: ViewRefSet<T> = {

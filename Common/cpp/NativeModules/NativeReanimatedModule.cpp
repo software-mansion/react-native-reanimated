@@ -49,7 +49,8 @@ NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<CallInvoker> &jsInvoker,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<UIScheduler> &uiScheduler,
-    const PlatformDepMethodsHolder &platformDepMethodsHolder)
+    const PlatformDepMethodsHolder &platformDepMethodsHolder,
+    const std::string &valueUnpackerCode)
     : NativeReanimatedModuleSpec(jsInvoker),
       jsQueue_(jsQueue),
       jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsInvoker)),
@@ -58,7 +59,10 @@ NativeReanimatedModule::NativeReanimatedModule(
           rnRuntime,
           jsQueue,
           jsScheduler_,
-          "Reanimated UI runtime")),
+          "Reanimated UI runtime",
+          true /* supportsLocking */,
+          valueUnpackerCode)),
+      valueUnpackerCode_(valueUnpackerCode),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       onRenderCallback_([this](const double timestampMs) {
@@ -132,13 +136,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction);
 }
 
-void NativeReanimatedModule::installValueUnpacker(
-    jsi::Runtime &rt,
-    const jsi::Value &valueUnpackerCode) {
-  valueUnpackerCode_ = valueUnpackerCode.asString(rt).utf8(rt);
-  uiWorkletRuntime_->installValueUnpacker(valueUnpackerCode_);
-}
-
 NativeReanimatedModule::~NativeReanimatedModule() {
   // event handler registry and frame callbacks store some JSI values from UI
   // runtime, so they have to go away before we tear down the runtime
@@ -165,13 +162,23 @@ void NativeReanimatedModule::scheduleOnUI(
   });
 }
 
+jsi::Value NativeReanimatedModule::executeOnUIRuntimeSync(
+    jsi::Runtime &rt,
+    const jsi::Value &worklet) {
+  return uiWorkletRuntime_->executeSync(rt, worklet);
+}
+
 jsi::Value NativeReanimatedModule::createWorkletRuntime(
     jsi::Runtime &rt,
     const jsi::Value &name,
     const jsi::Value &initializer) {
   auto workletRuntime = std::make_shared<WorkletRuntime>(
-      rt, jsQueue_, jsScheduler_, name.asString(rt).utf8(rt));
-  workletRuntime->installValueUnpacker(valueUnpackerCode_);
+      rt,
+      jsQueue_,
+      jsScheduler_,
+      name.asString(rt).utf8(rt),
+      false /* supportsLocking */,
+      valueUnpackerCode_);
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Reanimated] Initializer must be a worklet.");
   workletRuntime->runGuarded(initializerShareable);
@@ -184,27 +191,6 @@ jsi::Value NativeReanimatedModule::scheduleOnRuntime(
     const jsi::Value &shareableWorkletValue) {
   reanimated::scheduleOnRuntime(rt, workletRuntimeValue, shareableWorkletValue);
   return jsi::Value::undefined();
-}
-
-jsi::Value NativeReanimatedModule::makeSynchronizedDataHolder(
-    jsi::Runtime &rt,
-    const jsi::Value &initialShareable) {
-  auto dataHolder =
-      std::make_shared<ShareableSynchronizedDataHolder>(rt, initialShareable);
-  return dataHolder->getJSValue(rt);
-}
-
-void NativeReanimatedModule::updateDataSynchronously(
-    jsi::Runtime &rt,
-    const jsi::Value &synchronizedDataHolderRef,
-    const jsi::Value &newData) {
-  reanimated::updateDataSynchronously(rt, synchronizedDataHolderRef, newData);
-}
-
-jsi::Value NativeReanimatedModule::getDataSynchronously(
-    jsi::Runtime &rt,
-    const jsi::Value &synchronizedDataHolderRef) {
-  return reanimated::getDataSynchronously(rt, synchronizedDataHolderRef);
 }
 
 jsi::Value NativeReanimatedModule::makeShareableClone(
@@ -321,6 +307,32 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
           rt,
           config,
           "[Reanimated] Layout animation config must be an object."));
+  return jsi::Value::undefined();
+}
+
+jsi::Value NativeReanimatedModule::configureLayoutAnimationBatch(
+    jsi::Runtime &rt,
+    const jsi::Value &layoutAnimationsBatch) {
+  auto array = layoutAnimationsBatch.asObject(rt).asArray(rt);
+  size_t length = array.size(rt);
+  std::vector<LayoutAnimationConfig> batch(length);
+  for (int i = 0; i < length; i++) {
+    auto item = array.getValueAtIndex(rt, i).asObject(rt);
+    auto &batchItem = batch[i];
+    batchItem.tag = item.getProperty(rt, "viewTag").asNumber();
+    batchItem.type = static_cast<LayoutAnimationType>(
+        item.getProperty(rt, "type").asNumber());
+    auto config = item.getProperty(rt, "config");
+    if (config.isUndefined()) {
+      batchItem.config = nullptr;
+    } else {
+      batchItem.config = extractShareableOrThrow<ShareableObject>(
+          rt,
+          config,
+          "[Reanimated] Layout animation config must be an object.");
+    }
+  }
+  layoutAnimationsManager_.configureAnimationBatch(batch);
   return jsi::Value::undefined();
 }
 

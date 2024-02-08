@@ -8,20 +8,16 @@ import type {
 import { shouldBeUseWeb } from './PlatformChecker';
 import { registerWorkletStackDetails } from './errors';
 import { jsVersion } from './platform-specific/jsVersion';
+import {
+  shareableMappingCache,
+  shareableMappingFlag,
+} from './shareableMappingCache';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
 // instead of shareable references, because of the fact that we don't have to deal with
 // runnning the code on separate VMs.
-const USE_STUB_IMPLEMENTATION = shouldBeUseWeb();
-
-const _shareableCache = new WeakMap<
-  Record<string, unknown>,
-  ShareableRef<unknown> | symbol
->();
-// the below symbol is used to represent a mapping from the value to itself
-// this is used to allow for a converted shareable to be passed to makeShareableClone
-const _shareableFlag = Symbol('shareable flag');
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 const MAGIC_KEY = 'REANIMATED_MAGIC_KEY';
 
@@ -34,17 +30,7 @@ function isHostObject(value: NonNullable<object>) {
   return MAGIC_KEY in value;
 }
 
-export function registerShareableMapping(
-  shareable: any,
-  shareableRef?: ShareableRef<unknown>
-): void {
-  if (USE_STUB_IMPLEMENTATION) {
-    return;
-  }
-  _shareableCache.set(shareable, shareableRef || _shareableFlag);
-}
-
-function isPlainJSObject(object: object) {
+function isPlainJSObject(object: object): object is object {
   return Object.getPrototypeOf(object) === Object.prototype;
 }
 
@@ -61,7 +47,7 @@ const INACCESSIBLE_OBJECT = {
     return new Proxy(
       {},
       {
-        get: (_: any, prop: string | symbol) => {
+        get: (_: unknown, prop: string | symbol) => {
           if (
             prop === '_isReanimatedSharedValue' ||
             prop === '__remoteFunction'
@@ -112,14 +98,12 @@ const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // We use it to check if later on the function reenters with the same object
 let processedObjectAtThresholdDepth: unknown;
 
-let shouldWarnAboutMissingPluginVersion = true;
-
 export function makeShareableCloneRecursive<T>(
   value: any,
   shouldPersistRemote = false,
   depth = 0
 ): ShareableRef<T> {
-  if (USE_STUB_IMPLEMENTATION) {
+  if (SHOULD_BE_USE_WEB) {
     return value;
   }
   if (depth >= DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
@@ -143,8 +127,8 @@ export function makeShareableCloneRecursive<T>(
   const isTypeObject = type === 'object';
   const isTypeFunction = type === 'function';
   if ((isTypeObject || isTypeFunction) && value !== null) {
-    const cached = _shareableCache.get(value);
-    if (cached === _shareableFlag) {
+    const cached = shareableMappingCache.get(value);
+    if (cached === shareableMappingFlag) {
       return value;
     } else if (cached !== undefined) {
       return cached as ShareableRef<T>;
@@ -168,14 +152,7 @@ export function makeShareableCloneRecursive<T>(
           // we are converting a worklet
           if (__DEV__) {
             const babelVersion = value.__initData.version;
-            if (babelVersion === undefined) {
-              if (shouldWarnAboutMissingPluginVersion) {
-                shouldWarnAboutMissingPluginVersion = false;
-                console.warn(`[Reanimated] Unknown version of Reanimated Babel plugin.
-              See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#unknown-version-of-reanimated-babel-plugin\` for more details.
-              Offending code was: \`${getWorkletCode(value)}\``);
-              }
-            } else if (babelVersion !== jsVersion) {
+            if (babelVersion !== undefined && babelVersion !== jsVersion) {
               throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}).        
 See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version\` for more details.
 Offending code was: \`${getWorkletCode(value)}\``);
@@ -223,32 +200,32 @@ Offending code was: \`${getWorkletCode(value)}\``);
             return new RegExp(pattern, flags);
           },
         });
-        registerShareableMapping(value, handle);
+        shareableMappingCache.set(value, handle);
         return handle as ShareableRef<T>;
       } else if (value instanceof ArrayBuffer) {
         toAdapt = value;
       } else if (ArrayBuffer.isView(value)) {
         // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
         const buffer = value.buffer;
-        const type = value.constructor.name;
+        const typeName = value.constructor.name;
         const handle = makeShareableCloneRecursive({
           __init: () => {
             'worklet';
-            if (!VALID_ARRAY_VIEWS_NAMES.includes(type)) {
+            if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
               throw new Error(
-                `[Reanimated] Invalid array view name \`${type}\`.`
+                `[Reanimated] Invalid array view name \`${typeName}\`.`
               );
             }
-            const constructor = global[type as keyof typeof global];
+            const constructor = global[typeName as keyof typeof global];
             if (constructor === undefined) {
               throw new Error(
-                `[Reanimated] Constructor for \`${type}\` not found.`
+                `[Reanimated] Constructor for \`${typeName}\` not found.`
               );
             }
             return new constructor(buffer);
           },
         });
-        registerShareableMapping(value, handle);
+        shareableMappingCache.set(value, handle);
         return handle as ShareableRef<T>;
       } else {
         // This is reached for object types that are not of plain Object.prototype.
@@ -261,7 +238,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
         // will get an appropriate error message.
         const inaccessibleObject =
           makeShareableCloneRecursive<T>(INACCESSIBLE_OBJECT);
-        _shareableCache.set(value, inaccessibleObject);
+        shareableMappingCache.set(value, inaccessibleObject);
         return inaccessibleObject;
       }
       if (__DEV__) {
@@ -277,8 +254,8 @@ Offending code was: \`${getWorkletCode(value)}\``);
         toAdapt,
         shouldPersistRemote
       );
-      _shareableCache.set(value, adopted);
-      _shareableCache.set(adopted, _shareableFlag);
+      shareableMappingCache.set(value, adopted);
+      shareableMappingCache.set(adopted);
       return adopted;
     }
   }
@@ -314,12 +291,13 @@ export function makeShareableCloneOnUIRecursive<T>(
   value: T
 ): FlatShareableRef<T> {
   'worklet';
-  if (USE_STUB_IMPLEMENTATION) {
+  if (SHOULD_BE_USE_WEB) {
     // @ts-ignore web is an interesting place where we don't run a secondary VM on the UI thread
     // see more details in the comment where USE_STUB_IMPLEMENTATION is defined.
     return value;
   }
-  function cloneRecursive<T>(value: T): FlatShareableRef<T> {
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  function cloneRecursive(value: T): FlatShareableRef<T> {
     if (
       (typeof value === 'object' && value !== null) ||
       typeof value === 'function'
@@ -342,7 +320,7 @@ export function makeShareableCloneOnUIRecursive<T>(
       }
       const toAdapt: Record<string, FlatShareableRef<T>> = {};
       for (const [key, element] of Object.entries(value)) {
-        toAdapt[key] = cloneRecursive<T>(element);
+        toAdapt[key] = cloneRecursive(element);
       }
       return _makeShareableClone(toAdapt) as FlatShareableRef<T>;
     }
@@ -351,8 +329,12 @@ export function makeShareableCloneOnUIRecursive<T>(
   return cloneRecursive(value);
 }
 
-export function makeShareable<T>(value: T): T {
-  if (USE_STUB_IMPLEMENTATION) {
+function makeShareableJS<T extends object>(value: T): T {
+  return value;
+}
+
+function makeShareableNative<T extends object>(value: T): T {
+  if (shareableMappingCache.get(value)) {
     return value;
   }
   const handle = makeShareableCloneRecursive({
@@ -361,6 +343,15 @@ export function makeShareable<T>(value: T): T {
       return value;
     },
   });
-  registerShareableMapping(value, handle);
+  shareableMappingCache.set(value, handle);
   return value;
 }
+
+/**
+ * This function creates a value on UI with persistent state - changes to it on the UI
+ * thread will be seen by all worklets. Use it when you want to create a value
+ * that is read and written only on the UI thread.
+ */
+export const makeShareable = SHOULD_BE_USE_WEB
+  ? makeShareableJS
+  : makeShareableNative;

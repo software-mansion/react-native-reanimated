@@ -1,5 +1,5 @@
 'use strict';
-import type { StyleProps, SharedValue } from '../reanimated2';
+import type { StyleProps } from '../reanimated2';
 import { isSharedValue } from '../reanimated2';
 import { isChromeDebugger } from '../reanimated2/PlatformChecker';
 import WorkletEventHandler from '../reanimated2/WorkletEventHandler';
@@ -37,7 +37,7 @@ export class PropsFilter implements IPropsFilter {
         const processedStyle: StyleProps = styles.map((style) => {
           if (style && style.viewDescriptors) {
             // this is how we recognize styles returned by useAnimatedStyle
-            style.viewsRef.add(component);
+            style.viewsRef?.add(component);
             if (component._isFirstRender) {
               this._initialStyle = {
                 ...style.initial.value,
@@ -58,8 +58,9 @@ export class PropsFilter implements IPropsFilter {
           AnimatedComponentProps<AnimatedProps>
         >;
         if (animatedProp.initial !== undefined) {
-          Object.keys(animatedProp.initial.value).forEach((key) => {
-            props[key] = animatedProp.initial?.value[key];
+          Object.keys(animatedProp.initial.value).forEach((initialValueKey) => {
+            props[initialValueKey] =
+              animatedProp.initial?.value[initialValueKey];
             animatedProp.viewsRef?.add(component);
           });
         }
@@ -78,7 +79,7 @@ export class PropsFilter implements IPropsFilter {
         }
       } else if (isSharedValue(value)) {
         if (component._isFirstRender) {
-          props[key] = (value as SharedValue<unknown>).value;
+          props[key] = value.value;
         }
       } else if (key !== 'onGestureHandlerStateChange' || !isChromeDebugger()) {
         props[key] = value;

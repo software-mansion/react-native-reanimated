@@ -131,8 +131,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       }
       parsedKeyframes[key].push({
         duration: getAnimationDuration(key, currentKeyPoint),
-        value: value,
-        easing: easing,
+        value,
+        easing,
       });
     };
     animationKeyPoints
@@ -163,7 +163,10 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
               Object.keys(transformStyle).forEach((transformProp: string) => {
                 addKeyPointWith(
                   makeKeyframeKey(index, transformProp),
-                  transformStyle[transformProp as keyof typeof transformStyle]
+                  transformStyle[
+                    transformProp as keyof typeof transformStyle
+                  ] as number | string // Here we assume that user has passed props of proper type.
+                  // I don't think it's worthwhile to check if he passed i.e. `Animated.Node`.
                 );
               });
             });
@@ -172,7 +175,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
           }
         });
       });
-    return { initialValues: initialValues, keyframes: parsedKeyframes };
+    return { initialValues, keyframes: parsedKeyframes };
   }
 
   duration(durationMs: number): InnerKeyframe {
@@ -199,7 +202,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     const delay = this.delayV;
     const reduceMotion = this.reduceMotionV;
     return delay
-      ? (delay, animation) => {
+      ? // eslint-disable-next-line @typescript-eslint/no-shadow
+        (delay, animation) => {
           'worklet';
           return withDelay(delay, animation, reduceMotion);
         }
@@ -275,9 +279,9 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
         }
       });
       return {
-        animations: animations,
-        initialValues: initialValues,
-        callback: callback,
+        animations,
+        initialValues,
+        callback,
       };
     };
   };

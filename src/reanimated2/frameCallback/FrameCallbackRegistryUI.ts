@@ -91,7 +91,7 @@ export const prepareUIRegistry = runOnUIImmediately(() => {
       callbackId: number
     ) {
       this.frameCallbackRegistry.set(callbackId, {
-        callback: callback,
+        callback,
         startTime: null,
       });
     },

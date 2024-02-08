@@ -122,7 +122,7 @@ export class CurvedTransition
             })
           ),
         },
-        callback: callback,
+        callback,
       };
     };
   };

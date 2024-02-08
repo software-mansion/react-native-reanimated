@@ -36,31 +36,19 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const std::shared_ptr<CallInvoker> &jsInvoker,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      const PlatformDepMethodsHolder &platformDepMethodsHolder);
+      const PlatformDepMethodsHolder &platformDepMethodsHolder,
+      const std::string &valueUnpackerCode);
 
   ~NativeReanimatedModule();
-
-  void installValueUnpacker(
-      jsi::Runtime &rt,
-      const jsi::Value &valueUnpackerCode) override;
 
   jsi::Value makeShareableClone(
       jsi::Runtime &rt,
       const jsi::Value &value,
       const jsi::Value &shouldRetainRemote) override;
 
-  jsi::Value makeSynchronizedDataHolder(
-      jsi::Runtime &rt,
-      const jsi::Value &initialShareable) override;
-  jsi::Value getDataSynchronously(
-      jsi::Runtime &rt,
-      const jsi::Value &synchronizedDataHolderRef) override;
-  void updateDataSynchronously(
-      jsi::Runtime &rt,
-      const jsi::Value &synchronizedDataHolderRef,
-      const jsi::Value &newData);
-
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
+  jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
+      override;
 
   jsi::Value createWorkletRuntime(
       jsi::Runtime &rt,
@@ -98,6 +86,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &type,
       const jsi::Value &sharedTransitionTag,
       const jsi::Value &config) override;
+  jsi::Value configureLayoutAnimationBatch(
+      jsi::Runtime &rt,
+      const jsi::Value &layoutAnimationsBatch) override;
   void setShouldAnimateExiting(
       jsi::Runtime &rt,
       const jsi::Value &viewTag,

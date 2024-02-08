@@ -1,4 +1,4 @@
-import type { BabelFile } from '@babel/core';
+import type { BabelFile, NodePath } from '@babel/core';
 import type {
   FunctionDeclaration,
   FunctionExpression,
@@ -12,6 +12,7 @@ export interface ReanimatedPluginOptions {
   processNestedWorklets?: boolean;
   omitNativeOnlyData?: boolean;
   globals?: string[];
+  substituteWebPlatformChecks?: boolean;
 }
 
 export interface ReanimatedPluginPass {
@@ -25,9 +26,22 @@ export interface ReanimatedPluginPass {
   [key: string]: unknown;
 }
 
-export type ExplicitWorklet =
+export type WorkletizableFunction =
   | FunctionDeclaration
   | FunctionExpression
-  | ArrowFunctionExpression;
+  | ArrowFunctionExpression
+  | ObjectMethod;
 
-export type WorkletizableFunction = ExplicitWorklet | ObjectMethod;
+export const WorkletizableFunction =
+  'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod';
+
+export function isWorkletizableFunctionType(
+  path: NodePath
+): path is NodePath<WorkletizableFunction> {
+  return (
+    path.isFunctionDeclaration() ||
+    path.isFunctionExpression() ||
+    path.isArrowFunctionExpression() ||
+    path.isObjectMethod()
+  );
+}

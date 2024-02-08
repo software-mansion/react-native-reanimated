@@ -8,7 +8,7 @@ import type {
 import { BaseAnimationBuilder } from '../animationBuilder';
 import { withSequence, withTiming } from '../../animation';
 import { FadeIn, FadeOut } from '../defaultAnimations/Fade';
-import type { AnimationObject } from '../../commonTypes';
+import type { AnimatableValue, AnimationObject } from '../../commonTypes';
 import type { TransformArrayItem } from '../../helperTypes';
 
 export class EntryExitTransition
@@ -140,13 +140,18 @@ export class EntryExitTransition
                   withSequence(
                     withTiming(
                       enteringValues.initialValues.transform
-                        ? enteringValues.initialValues.transform[index][
+                        ? ((
+                            enteringValues.initialValues
+                              .transform as TransformArrayItem[]
+                          )[index][
                             transformProp as keyof TransformArrayItem
-                          ]
+                          ] as AnimatableValue)
                         : 0,
                       { duration: exitingDuration }
                     ),
-                    value[transformProp as keyof TransformArrayItem]
+                    value[
+                      transformProp as keyof TransformArrayItem
+                    ] as AnimatableValue
                   )
                 ),
               } as TransformArrayItem);
@@ -234,7 +239,7 @@ export class EntryExitTransition
           ),
           ...animations,
         },
-        callback: callback,
+        callback,
       };
     };
   };

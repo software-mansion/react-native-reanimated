@@ -10,7 +10,7 @@ export function SequencedTransition(
   const scaleValue = reversed ? `1,${scaleX}` : `${scaleY},1`;
 
   const sequencedTransition = {
-    name: name,
+    name,
     style: {
       0: {
         transform: [

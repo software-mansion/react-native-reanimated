@@ -43,8 +43,8 @@ export class FadingTransition
           opacity: delayFunction(
             delay,
             withSequence(
-              withTiming(0, { duration: duration }),
-              withTiming(1, { duration: duration })
+              withTiming(0, { duration }),
+              withTiming(1, { duration })
             )
           ),
           originX: delayFunction(
@@ -64,7 +64,7 @@ export class FadingTransition
             withTiming(values.targetHeight, { duration: 50 })
           ),
         },
-        callback: callback,
+        callback,
       };
     };
   };

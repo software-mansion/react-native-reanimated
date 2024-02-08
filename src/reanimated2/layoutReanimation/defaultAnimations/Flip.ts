@@ -22,6 +22,8 @@ export class FlipInXUp
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'FlipInXUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -53,7 +55,7 @@ export class FlipInXUp
             { translateY: delayFunction(delay, animation(0, config)) },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -70,6 +72,8 @@ export class FlipInYLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'FlipInYLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -101,7 +105,7 @@ export class FlipInYLeft
             { translateX: delayFunction(delay, animation(0, config)) },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -118,6 +122,8 @@ export class FlipInXDown
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'FlipInXDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -149,7 +155,7 @@ export class FlipInXDown
             { translateY: delayFunction(delay, animation(0, config)) },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -166,6 +172,8 @@ export class FlipInYRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'FlipInYRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -197,7 +205,7 @@ export class FlipInYRight
             { translateX: delayFunction(delay, animation(0, config)) },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -214,6 +222,8 @@ export class FlipInEasyX
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FlipInEasyX';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -240,7 +250,7 @@ export class FlipInEasyX
             { rotateX: delayFunction(delay, animation('0deg', config)) },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -257,6 +267,8 @@ export class FlipInEasyY
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FlipInEasyY';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -283,7 +295,7 @@ export class FlipInEasyY
             { rotateY: delayFunction(delay, animation('0deg', config)) },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -300,6 +312,8 @@ export class FlipOutXUp
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'FlipOutXUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -336,7 +350,7 @@ export class FlipOutXUp
             },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -353,6 +367,8 @@ export class FlipOutYLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'FlipOutYLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -389,7 +405,7 @@ export class FlipOutYLeft
             },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -406,6 +422,8 @@ export class FlipOutXDown
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'FlipOutXDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -442,7 +460,7 @@ export class FlipOutXDown
             },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -459,6 +477,8 @@ export class FlipOutYRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'FlipOutYRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -495,7 +515,7 @@ export class FlipOutYRight
             },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -512,6 +532,8 @@ export class FlipOutEasyX
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FlipOutEasyX';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -538,7 +560,7 @@ export class FlipOutEasyX
             { rotateX: delayFunction(delay, animation('90deg', config)) },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -555,6 +577,8 @@ export class FlipOutEasyY
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FlipOutEasyY';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -581,7 +605,7 @@ export class FlipOutEasyY
             { rotateY: delayFunction(delay, animation('90deg', config)) },
           ],
         },
-        callback: callback,
+        callback,
       };
     };
   };

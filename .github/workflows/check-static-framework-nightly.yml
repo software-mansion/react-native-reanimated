@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: macos-12
+    runs-on: macos-13
     strategy:
       matrix:
         react-native-architecture: ['Paper', 'Fabric']
@@ -34,4 +34,4 @@ jobs:
         run: export USE_FRAMEWORKS=static NO_FLIPPER=1 RCT_NEW_ARCH_ENABLED=1 && pod install
       - name: Build app
         working-directory: app
-        run: npx react-native run-ios
+        run: npx react-native run-ios --no-packager

@@ -9,10 +9,10 @@
 namespace reanimated {
 
 void LayoutAnimationsManager::configureAnimation(
-    int tag,
-    LayoutAnimationType type,
+    const int tag,
+    const LayoutAnimationType type,
     const std::string &sharedTransitionTag,
-    std::shared_ptr<Shareable> config) {
+    const std::shared_ptr<Shareable> &config) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   if (type == SHARED_ELEMENT_TRANSITION ||
       type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
@@ -27,14 +27,28 @@ void LayoutAnimationsManager::configureAnimation(
   }
 }
 
-void LayoutAnimationsManager::setShouldAnimateExiting(int tag, bool value) {
+void LayoutAnimationsManager::configureAnimationBatch(
+    const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
+  auto lock = std::unique_lock<std::mutex>(animationsMutex_);
+  for (auto [tag, type, config] : layoutAnimationsBatch) {
+    if (config == nullptr) {
+      getConfigsForType(type).erase(tag);
+    } else {
+      getConfigsForType(type)[tag] = config;
+    }
+  }
+}
+
+void LayoutAnimationsManager::setShouldAnimateExiting(
+    const int tag,
+    const bool value) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   shouldAnimateExitingForTag_[tag] = value;
 }
 
 bool LayoutAnimationsManager::shouldAnimateExiting(
-    int tag,
-    bool shouldAnimate) {
+    const int tag,
+    const bool shouldAnimate) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   return collection::contains(shouldAnimateExitingForTag_, tag)
       ? shouldAnimateExitingForTag_[tag]
@@ -42,8 +56,8 @@ bool LayoutAnimationsManager::shouldAnimateExiting(
 }
 
 bool LayoutAnimationsManager::hasLayoutAnimation(
-    int tag,
-    LayoutAnimationType type) {
+    const int tag,
+    const LayoutAnimationType type) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   if (type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
     auto end = ignoreProgressAnimationForTag_.end();
@@ -52,7 +66,7 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
   return collection::contains(getConfigsForType(type), tag);
 }
 
-void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
+void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   enteringAnimations_.erase(tag);
   exitingAnimations_.erase(tag);
@@ -83,8 +97,8 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
 
 void LayoutAnimationsManager::startLayoutAnimation(
     jsi::Runtime &rt,
-    int tag,
-    LayoutAnimationType type,
+    const int tag,
+    const LayoutAnimationType type,
     const jsi::Object &values) {
   std::shared_ptr<Shareable> config, viewShareable;
   {
@@ -107,7 +121,9 @@ void LayoutAnimationsManager::startLayoutAnimation(
       config->getJSValue(rt));
 }
 
-void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, int tag) {
+void LayoutAnimationsManager::cancelLayoutAnimation(
+    jsi::Runtime &rt,
+    const int tag) const {
   jsi::Value layoutAnimationRepositoryAsValue =
       rt.global()
           .getPropertyAsObject(rt, "global")
@@ -125,7 +141,7 @@ void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, int tag) {
   which has been added to that group directly before the one that we
   provide as an argument.
 */
-int LayoutAnimationsManager::findPrecedingViewTagForTransition(int tag) {
+int LayoutAnimationsManager::findPrecedingViewTagForTransition(const int tag) {
   auto const &groupName = viewTagToSharedTag_[tag];
   auto const &group = sharedTransitionGroups_[groupName];
   auto position = std::find(group.begin(), group.end(), tag);
@@ -161,8 +177,8 @@ void LayoutAnimationsManager::checkDuplicateSharedTag(
 }
 #endif // NDEBUG
 
-std::unordered_map<int, std::shared_ptr<Shareable>>
-    &LayoutAnimationsManager::getConfigsForType(LayoutAnimationType type) {
+std::unordered_map<int, std::shared_ptr<Shareable>> &
+LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
   switch (type) {
     case ENTERING:
       return enteringAnimations_;
