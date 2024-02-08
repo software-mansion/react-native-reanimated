@@ -498,7 +498,7 @@ export function RGBtoHSV(r: number, g: number, b: number): HSV {
  * @returns \{r: red (0-255), g: green (0-255), b: blue (0-255)\}
  */
 function HSVtoRGB(h: number, s: number, v: number): RGB {
-  ('worklet');
+  'worklet';
   let r, g, b;
 
   const i = Math.floor(h * 6);
