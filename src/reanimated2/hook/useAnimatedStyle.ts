@@ -2,7 +2,7 @@
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
 
-import { startMapper, stopMapper } from '../core';
+import { makeShareable, startMapper, stopMapper } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animation';
 import { useSharedValue } from './useSharedValue';
@@ -460,12 +460,12 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
         value: initialStyle,
         updater,
       },
-      remoteState: {
+      remoteState: makeShareable({
         last: initialStyle,
         animations: {},
         isAnimationCancelled: false,
         isAnimationRunning: false,
-      },
+      }),
       viewDescriptors: makeViewDescriptorsSet(),
     };
   }
