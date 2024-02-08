@@ -100,14 +100,12 @@ export const KeyboardAvoidingView = forwardRef<
 
       switch (behavior) {
         case 'height': {
-          const style =
-            bottomHeight > 0
-              ? {
-                  height: bottomHeight,
-                  flex: 0,
-                }
-              : {};
-          return style;
+          return bottomHeight > 0
+            ? {
+                height: bottomHeight,
+                flex: 0,
+              }
+            : {};
         }
         case 'position': {
           return {
