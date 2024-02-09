@@ -246,7 +246,9 @@ export function createAnimatedComponent(
           prop.current instanceof WorkletEventHandler
         ) {
           if (viewTag === null) {
-            viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+            viewTag = IS_WEB
+              ? this._component
+              : findNodeHandle(options?.setNativeProps ? this : node);
           }
           prop.current.registerForEvents(viewTag as number, key);
         }
@@ -308,7 +310,10 @@ export function createAnimatedComponent(
         ) {
           if (viewTag === null) {
             const node = this._getEventViewRef() as AnimatedComponentRef;
-            viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+
+            viewTag = IS_WEB
+              ? this._component
+              : findNodeHandle(options?.setNativeProps ? this : node);
           }
           prop.current.registerForEvents(viewTag as number, key);
           prop.current.reattachNeeded = false;
