@@ -94,15 +94,28 @@ export function useAnimatedSensor(
   sensorType: SensorType,
   userConfig?: Partial<SensorConfig>
 ): AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D> {
+  const userConfigRef = useRef(userConfig);
+
+  const hasConfigChanged =
+    userConfigRef.current?.adjustToInterfaceOrientation !==
+      userConfig?.adjustToInterfaceOrientation ||
+    userConfigRef.current?.interval !== userConfig?.interval ||
+    userConfigRef.current?.iosReferenceFrame !== userConfig?.iosReferenceFrame;
+
+  if (hasConfigChanged) {
+    userConfigRef.current = userConfig;
+  }
+
   const config: SensorConfig = useMemo(
     () => ({
       interval: 'auto',
       adjustToInterfaceOrientation: true,
       iosReferenceFrame: IOSReferenceFrame.Auto,
-      ...userConfig,
+      ...userConfigRef.current,
     }),
-    [userConfig]
+    [userConfigRef.current]
   );
+
   const ref = useRef<AnimatedSensor<Value3D | ValueRotation>>({
     sensor: initializeSensor(sensorType, config),
     unregister: () => {
