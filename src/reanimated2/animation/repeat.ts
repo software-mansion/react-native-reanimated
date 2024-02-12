@@ -7,7 +7,6 @@ import type {
   Timestamp,
   AnimationObject,
   ReduceMotion,
-  AnimationBounds,
 } from '../commonTypes';
 import type { RepeatAnimation } from './commonTypes';
 
@@ -40,12 +39,10 @@ export const withRepeat = function <T extends AnimationObject>(
 ): Animation<RepeatAnimation> {
   'worklet';
 
-  const a =
-    typeof _nextAnimation === 'function' ? _nextAnimation() : _nextAnimation;
-  const initialAnimationBounds: AnimationBounds = {
-    start: a.startValue,
-    end: a.toValue,
-  };
+  const initialAnimationStart =
+    typeof _nextAnimation === 'function'
+      ? _nextAnimation().startValue
+      : _nextAnimation.startValue;
 
   return defineAnimation<RepeatAnimation, T>(
     _nextAnimation,
@@ -109,12 +106,11 @@ export const withRepeat = function <T extends AnimationObject>(
         previousAnimation: Animation<any> | null
       ): void {
         // Detect re-render
-        const hasBeenInterrupted =
-          value !== initialAnimationBounds.start &&
-          value !== initialAnimationBounds.end;
-        const startingValue = hasBeenInterrupted
-          ? initialAnimationBounds.start ?? value
-          : value;
+        const hasBeenInterrupted = value !== initialAnimationStart;
+        const startingValue =
+          hasBeenInterrupted && initialAnimationStart !== undefined
+            ? initialAnimationStart
+            : value;
         animation.startValue = startingValue;
         animation.reps = 0;
 

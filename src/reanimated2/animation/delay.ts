@@ -6,7 +6,6 @@ import type {
   AnimatableValue,
   AnimationObject,
   ReduceMotion,
-  AnimationBounds,
 } from '../commonTypes';
 import type { DelayAnimation } from './commonTypes';
 
@@ -33,12 +32,10 @@ export const withDelay = function <T extends AnimationObject>(
 ): Animation<DelayAnimation> {
   'worklet';
 
-  const a =
-    typeof _nextAnimation === 'function' ? _nextAnimation() : _nextAnimation;
-  const initialAnimationBounds: AnimationBounds = {
-    start: a.startValue,
-    end: a.toValue,
-  };
+  const initialAnimationStart =
+    typeof _nextAnimation === 'function'
+      ? _nextAnimation().startValue
+      : _nextAnimation.startValue;
   let didResetAfterInterruption = false;
 
   return defineAnimation<DelayAnimation, T>(
@@ -92,14 +89,10 @@ export const withDelay = function <T extends AnimationObject>(
         previousAnimation: Animation<any> | null
       ): void {
         // Detect re-render
-        const hasBeenInterrupted =
-          value !== initialAnimationBounds.start &&
-          value !== initialAnimationBounds.end;
+        const hasBeenInterrupted = value !== initialAnimationStart;
         didResetAfterInterruption = hasBeenInterrupted;
 
-        animation.current = hasBeenInterrupted
-          ? initialAnimationBounds.start
-          : value;
+        animation.current = hasBeenInterrupted ? initialAnimationStart : value;
         animation.startTime = now;
         animation.started = false;
 

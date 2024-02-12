@@ -254,11 +254,6 @@ export enum ReduceMotion {
   Never = 'never',
 }
 
-export interface AnimationBounds {
-  start: AnimatableValue | undefined;
-  end: AnimatableValue | undefined;
-}
-
 // THE LAND OF THE DEPRECATED
 
 /**
