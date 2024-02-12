@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 'use strict';
 import type { MutableRefObject } from 'react';
 import { processColorsInProps } from './Colors';
@@ -20,7 +21,7 @@ if (shouldBeUseWeb()) {
   updateProps = (_, updates, maybeViewRef, isAnimatedProps) => {
     'worklet';
     if (maybeViewRef) {
-      maybeViewRef.items.forEach((item, _) => {
+      maybeViewRef.items.forEach((item, _index) => {
         _updatePropsJS(updates, item, isAnimatedProps);
       });
     }
@@ -29,7 +30,7 @@ if (shouldBeUseWeb()) {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
     processColorsInProps(updates);
-    global.UpdatePropsManager!.update(viewDescriptors, updates);
+    global.UpdatePropsManager.update(viewDescriptors, updates);
   };
 }
 
@@ -76,7 +77,7 @@ const createUpdatePropsManager = isFabric()
             }
           });
         },
-        flush() {
+        flush(this: void) {
           _updatePropsFabric!(operations);
           operations.length = 0;
         },
@@ -106,7 +107,7 @@ const createUpdatePropsManager = isFabric()
             }
           });
         },
-        flush() {
+        flush(this: void) {
           _updatePropsPaper!(operations);
           operations.length = 0;
         },

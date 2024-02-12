@@ -20,6 +20,8 @@ export class SlideInRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'SlideInRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -46,7 +48,7 @@ export class SlideInRight
           originX: values.targetOriginX + values.windowWidth,
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -63,6 +65,8 @@ export class SlideInLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'SlideInLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -89,7 +93,7 @@ export class SlideInLeft
           originX: values.targetOriginX - values.windowWidth,
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -106,6 +110,8 @@ export class SlideOutRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'SlideOutRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -138,7 +144,7 @@ export class SlideOutRight
           originX: values.currentOriginX,
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -155,6 +161,8 @@ export class SlideOutLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'SlideOutLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -187,7 +195,7 @@ export class SlideOutLeft
           originX: values.currentOriginX,
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -204,6 +212,8 @@ export class SlideInUp
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'SlideInUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -230,7 +240,7 @@ export class SlideInUp
           originY: -values.windowHeight,
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -247,6 +257,8 @@ export class SlideInDown
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'SlideInDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -273,7 +285,7 @@ export class SlideInDown
           originY: values.targetOriginY + values.windowHeight,
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -290,6 +302,8 @@ export class SlideOutUp
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'SlideOutUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -319,7 +333,7 @@ export class SlideOutUp
           ),
         },
         initialValues: { originY: values.currentOriginY, ...initialValues },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -336,6 +350,8 @@ export class SlideOutDown
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'SlideOutDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -365,7 +381,7 @@ export class SlideOutDown
           ),
         },
         initialValues: { originY: values.currentOriginY, ...initialValues },
-        callback: callback,
+        callback,
       };
     };
   };

@@ -34,18 +34,21 @@ export type SpringConfig = {
       damping?: number;
       duration?: never;
       dampingRatio?: never;
+      clamp?: never;
     }
   | {
       mass?: never;
       damping?: never;
       duration?: number;
       dampingRatio?: number;
+      clamp?: { min?: number; max?: number };
     }
 );
 
-// This type contains all the properties from SpringConfig, which are changed to be required, except for optional 'reduceMotion'
+// This type contains all the properties from SpringConfig, which are changed to be required,
+// except for optional 'reduceMotion' and 'clamp'
 export type DefaultSpringConfig = {
-  [K in keyof Required<SpringConfig>]: K extends 'reduceMotion'
+  [K in keyof Required<SpringConfig>]: K extends 'reduceMotion' | 'clamp'
     ? Required<SpringConfig>[K] | undefined
     : Required<SpringConfig>[K];
 };
@@ -96,6 +99,14 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
     errorMessage += `, duration can't be negative, got ${config.duration}`;
   }
 
+  if (
+    config.clamp?.min &&
+    config.clamp?.max &&
+    config.clamp.min > config.clamp.max
+  ) {
+    errorMessage += `, clamp.min should be lower than clamp.max, got clamp: {min: ${config.clamp.min}, max: ${config.clamp.max}} `;
+  }
+
   if (errorMessage !== '') {
     console.warn('[Reanimated] Invalid spring config' + errorMessage);
   }
@@ -103,7 +114,8 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   return errorMessage === '';
 }
 
-function bisectRoot({
+// ts-prune-ignore-next This function is exported to be tested
+export function bisectRoot({
   min,
   max,
   func,
@@ -166,6 +178,73 @@ export function initialCalculations(
   }
 }
 
+/** We make an assumption that we can manipulate zeta without changing duration of movement.
+ *  According to theory this change is small and tests shows that we can indeed ignore it.
+ */
+export function scaleZetaToMatchClamps(
+  animation: SpringAnimation,
+  clamp: { min?: number; max?: number }
+): number {
+  'worklet';
+  const { zeta, toValue, startValue } = animation;
+  const toValueNum = Number(toValue);
+
+  if (toValueNum === startValue) {
+    return zeta;
+  }
+
+  const [firstBound, secondBound] =
+    toValueNum - startValue > 0
+      ? [clamp.min, clamp.max]
+      : [clamp.max, clamp.min];
+
+  /** The extrema we get from equation below are relative (we obtain a ratio),
+   *  To get absolute extrema we convert it as follows:
+   *
+   *  AbsoluteExtremum = startValue ± RelativeExtremum * (toValue - startValue)
+   *  Where ± denotes:
+   *    + if extremum is over the target
+   *    - otherwise
+   */
+
+  const relativeExtremum1 =
+    secondBound !== undefined
+      ? Math.abs((secondBound - toValueNum) / (toValueNum - startValue))
+      : undefined;
+
+  const relativeExtremum2 =
+    firstBound !== undefined
+      ? Math.abs((firstBound - toValueNum) / (toValueNum - startValue))
+      : undefined;
+
+  /** Use this formula http://hyperphysics.phy-astr.gsu.edu/hbase/oscda.html to calculate
+   *  first two extrema. These extrema are located where cos = +- 1
+   *
+   *  Therefore the first two extrema are:
+   *
+   *     Math.exp(-zeta * Math.PI);      (over the target)
+   *     Math.exp(-zeta * 2 * Math.PI);  (before the target)
+   */
+
+  const newZeta1 =
+    relativeExtremum1 !== undefined
+      ? Math.abs(Math.log(relativeExtremum1) / Math.PI)
+      : undefined;
+
+  const newZeta2 =
+    relativeExtremum2 !== undefined
+      ? Math.abs(Math.log(relativeExtremum2) / (2 * Math.PI))
+      : undefined;
+
+  const zetaSatisfyingClamp = [newZeta1, newZeta2].filter(
+    (x: number | undefined): x is number => x !== undefined
+  );
+  // The bigger is zeta the smaller are bounces, we return the biggest one
+  // because it should satisfy all conditions
+  return Math.max(...zetaSatisfyingClamp, zeta);
+}
+
+/** Runs before initial */
 export function calculateNewMassToMatchDuration(
   x0: number,
   config: DefaultSpringConfig & SpringConfigInner,

@@ -20,6 +20,8 @@ export class RotateInDownLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'RotateInDownLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -53,7 +55,7 @@ export class RotateInDownLeft
           ],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -70,6 +72,8 @@ export class RotateInDownRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'RotateInDownRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -103,7 +107,7 @@ export class RotateInDownRight
           ],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -120,6 +124,8 @@ export class RotateInUpLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'RotateInUpLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -153,7 +159,7 @@ export class RotateInUpLeft
           ],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -170,6 +176,8 @@ export class RotateInUpRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'RotateInUpRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -203,7 +211,7 @@ export class RotateInUpRight
           ],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -220,6 +228,8 @@ export class RotateOutDownLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'RotateOutDownLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -265,7 +275,7 @@ export class RotateOutDownLeft
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -282,6 +292,8 @@ export class RotateOutDownRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'RotateOutDownRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -327,7 +339,7 @@ export class RotateOutDownRight
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -344,6 +356,8 @@ export class RotateOutUpLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'RotateOutUpLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -389,7 +403,7 @@ export class RotateOutUpLeft
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -406,6 +420,8 @@ export class RotateOutUpRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'RotateOutUpRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -451,7 +467,7 @@ export class RotateOutUpRight
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };

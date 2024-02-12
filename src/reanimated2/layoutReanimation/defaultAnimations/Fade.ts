@@ -17,6 +17,7 @@ export class FadeIn
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeIn';
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -40,7 +41,7 @@ export class FadeIn
           opacity: 0,
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -57,6 +58,8 @@ export class FadeInRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeInRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -84,7 +87,7 @@ export class FadeInRight
           transform: [{ translateX: 25 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -101,6 +104,8 @@ export class FadeInLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeInLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -128,7 +133,7 @@ export class FadeInLeft
           transform: [{ translateX: -25 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -145,6 +150,8 @@ export class FadeInUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeInUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -172,7 +179,7 @@ export class FadeInUp
           transform: [{ translateY: -25 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -189,6 +196,8 @@ export class FadeInDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeInDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -216,7 +225,7 @@ export class FadeInDown
           transform: [{ translateY: 25 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -233,6 +242,8 @@ export class FadeOut
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeOut';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -256,7 +267,7 @@ export class FadeOut
           opacity: 1,
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -273,6 +284,8 @@ export class FadeOutRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeOutRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -300,7 +313,7 @@ export class FadeOutRight
           transform: [{ translateX: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -317,6 +330,8 @@ export class FadeOutLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeOutLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -344,7 +359,7 @@ export class FadeOutLeft
           transform: [{ translateX: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -360,6 +375,8 @@ export class FadeOutUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeOutUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -387,7 +404,7 @@ export class FadeOutUp
           transform: [{ translateY: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -404,6 +421,8 @@ export class FadeOutDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'FadeOutDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -431,7 +450,7 @@ export class FadeOutDown
           transform: [{ translateY: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };

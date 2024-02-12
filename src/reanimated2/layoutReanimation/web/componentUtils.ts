@@ -19,8 +19,8 @@ import { ReduceMotion } from '../../commonTypes';
 import type { StyleProps } from '../../commonTypes';
 import { isReducedMotion } from '../../PlatformChecker';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
-
-const snapshots = new WeakMap<HTMLElement, DOMRect>();
+import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
+import { setDummyPosition, snapshots } from './componentStyle';
 
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName =
@@ -114,8 +114,8 @@ export function getProcessedConfig(
   initialAnimationName: AnimationNames
 ): AnimationConfig {
   return {
-    animationName: animationName,
-    animationType: animationType,
+    animationName,
+    animationType,
     duration: getDurationFromConfig(
       config,
       animationType === LayoutAnimationType.LAYOUT,
@@ -129,23 +129,17 @@ export function getProcessedConfig(
 }
 
 export function saveSnapshot(element: HTMLElement) {
-  snapshots.set(element, element.getBoundingClientRect());
-}
+  const rect = element.getBoundingClientRect();
 
-export function makeElementVisible(element: HTMLElement, delay: number) {
-  if (delay === 0) {
-    _updatePropsJS(
-      { visibility: 'initial' },
-      { _component: element as ReanimatedHTMLElement }
-    );
-  } else {
-    setTimeout(() => {
-      _updatePropsJS(
-        { visibility: 'initial' },
-        { _component: element as ReanimatedHTMLElement }
-      );
-    }, delay * 1000);
-  }
+  const snapshot: ReanimatedSnapshot = {
+    top: rect.top,
+    left: rect.left,
+    width: rect.width,
+    height: rect.height,
+    scrollOffsets: getElementScrollValue(element),
+  };
+
+  snapshots.set(element, snapshot);
 }
 
 export function setElementAnimation(
@@ -231,48 +225,27 @@ export function handleLayoutTransition(
   setElementAnimation(element, animationConfig, existingTransform);
 }
 
-function fixElementPosition(
-  element: HTMLElement,
-  parent: HTMLElement,
-  snapshot: DOMRect
-) {
-  const parentRect = parent.getBoundingClientRect();
+function getElementScrollValue(element: HTMLElement): ScrollOffsets {
+  let current: HTMLElement | null = element;
 
-  const parentBorderTopValue = parseInt(
-    getComputedStyle(parent).borderTopWidth
-  );
+  const scrollOffsets: ScrollOffsets = {
+    scrollTopOffset: 0,
+    scrollLeftOffset: 0,
+  };
 
-  const parentBorderLeftValue = parseInt(
-    getComputedStyle(parent).borderLeftWidth
-  );
+  while (current) {
+    if (current.scrollTop !== 0 && scrollOffsets.scrollTopOffset === 0) {
+      scrollOffsets.scrollTopOffset = current.scrollTop;
+    }
 
-  const dummyRect = element.getBoundingClientRect();
-  // getBoundingClientRect returns DOMRect with position of the element with respect to document body.
-  // However, using position `absolute` doesn't guarantee, that the dummy will be placed relative to body element.
-  // The trick below allows us to once again get position relative to body, by comparing snapshot with new position of the dummy.
-  if (dummyRect.top !== snapshot.top) {
-    element.style.top = `${
-      snapshot.top - parentRect.top - parentBorderTopValue
-    }px`;
+    if (current.scrollLeft !== 0 && scrollOffsets.scrollLeftOffset === 0) {
+      scrollOffsets.scrollLeftOffset = current.scrollLeft;
+    }
+
+    current = current.parentElement;
   }
 
-  if (dummyRect.left !== snapshot.left) {
-    element.style.left = `${
-      snapshot.left - parentRect.left - parentBorderLeftValue
-    }px`;
-  }
-}
-
-function setDummyPosition(dummy: HTMLElement, snapshot: DOMRect) {
-  dummy.style.transform = '';
-  dummy.style.position = 'absolute';
-  dummy.style.top = `${snapshot.top}px`;
-  dummy.style.left = `${snapshot.left}px`;
-  dummy.style.width = `${snapshot.width}px`;
-  dummy.style.height = `${snapshot.height}px`;
-  dummy.style.margin = '0px'; // tmpElement has absolute position, so margin is not necessary
-
-  fixElementPosition(dummy, dummy.parentElement!, snapshot);
+  return scrollOffsets;
 }
 
 export function handleExitingAnimation(
@@ -280,7 +253,8 @@ export function handleExitingAnimation(
   animationConfig: AnimationConfig
 ) {
   const parent = element.offsetParent;
-  const dummy = element.cloneNode() as HTMLElement;
+  const dummy = element.cloneNode() as ReanimatedHTMLElement;
+  dummy.reanimatedDummy = true;
 
   element.style.animationName = '';
   // We hide current element so only its copy with proper animation will be displayed
@@ -300,12 +274,36 @@ export function handleExitingAnimation(
 
   const snapshot = snapshots.get(element)!;
 
+  const scrollOffsets = getElementScrollValue(element);
+
+  // Scroll does not trigger snapshoting, therefore if we start exiting animation after
+  // scrolling through parent component, dummy will end up in wrong place. In order to fix that
+  // we keep last known scroll position in snapshot and then adjust dummy position based on
+  // last known scroll offset and current scroll offset
+
+  const currentScrollTopOffset = scrollOffsets.scrollTopOffset;
+  const lastScrollTopOffset = snapshot.scrollOffsets.scrollTopOffset;
+
+  if (currentScrollTopOffset !== lastScrollTopOffset) {
+    snapshot.top += lastScrollTopOffset - currentScrollTopOffset;
+  }
+
+  const currentScrollLeftOffset = scrollOffsets.scrollLeftOffset;
+  const lastScrollLeftOffset = snapshot.scrollOffsets.scrollLeftOffset;
+
+  if (currentScrollLeftOffset !== lastScrollLeftOffset) {
+    snapshot.left += lastScrollLeftOffset - currentScrollLeftOffset;
+  }
+
+  snapshots.set(dummy, snapshot);
+
   setDummyPosition(dummy, snapshot);
 
   const originalOnAnimationEnd = dummy.onanimationend;
 
   dummy.onanimationend = function (event: AnimationEvent) {
     if (parent?.contains(dummy)) {
+      dummy.removedAfterAnimation = true;
       parent.removeChild(dummy);
     }
 
@@ -315,6 +313,7 @@ export function handleExitingAnimation(
 
   dummy.addEventListener('animationcancel', () => {
     if (parent?.contains(dummy)) {
+      dummy.removedAfterAnimation = true;
       parent.removeChild(dummy);
     }
   });

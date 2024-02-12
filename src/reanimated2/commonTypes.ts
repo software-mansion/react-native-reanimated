@@ -23,6 +23,12 @@ export interface SharedValue<Value = unknown> {
   ) => void;
 }
 
+export interface Mutable<Value = unknown> extends SharedValue<Value> {
+  _isReanimatedSharedValue: true;
+  _animation?: AnimationObject<Value> | null; // only in Native
+  _value: Value;
+}
+
 // The below type is used for HostObjects returned by the JSI API that don't have
 // any accessible fields or methods but can carry data that is accessed from the
 // c++ side. We add a field to the type to make it possible for typescript to recognize
@@ -40,16 +46,16 @@ export type FlatShareableRef<T> = T extends ShareableRef<infer U>
   ? ShareableRef<U>
   : ShareableRef<T>;
 
-export type ShareableSyncDataHolderRef<T> = {
-  __hostObjectShareableJSRefSyncDataHolder: T;
-};
+export type MapperRawInputs = unknown[];
+
+export type MapperOutputs = SharedValue[];
 
 export type MapperRegistry = {
   start: (
     mapperID: number,
     worklet: () => void,
-    inputs: SharedValue<any>[],
-    outputs?: SharedValue<any>[]
+    inputs: MapperRawInputs,
+    outputs?: MapperOutputs
   ) => void;
   stop: (mapperID: number) => void;
 };

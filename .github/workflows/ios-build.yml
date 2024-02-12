@@ -31,7 +31,7 @@ on:
 jobs:
   build:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: macos-12
+    runs-on: macos-13
     strategy:
       matrix:
         working-directory: [Example, FabricExample]
@@ -41,7 +41,7 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Restore Reanimated node_modules from cache
         uses: actions/cache@v3
@@ -85,4 +85,4 @@ jobs:
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}
-        run: npx react-native run-ios
+        run: npx react-native run-ios --no-packager

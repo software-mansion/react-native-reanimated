@@ -6,46 +6,32 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Dimensions, StyleSheet, View } from 'react-native';
-
-import React from 'react';
+import React, { useState } from 'react';
 
 const { width, height } = Dimensions.get('window');
 
-function getRandomWidth() {
-  return Math.random() * width;
-}
-
-function getRandomHeight() {
-  return Math.random() * height;
-}
-
-function getRandomHue() {
-  return 100 + Math.random() * 100;
-}
-
-function getRandomPositionDiff() {
-  return -100 + Math.random() * 200;
-}
-
-function getRandomHueDiff() {
-  return Math.random() * 100;
+function randBetween(min: number, max: number) {
+  return min + Math.random() * (max - min);
 }
 
 function Circle() {
-  const left = useSharedValue(getRandomWidth());
-  const top = useSharedValue(getRandomHeight());
-  const hue = useSharedValue(getRandomHue());
-
   const shouldReduceMotion = useReducedMotion();
 
-  const duration = 2000 + Math.random() * 1000;
-  const power = Math.random();
+  const [power] = useState(randBetween(0, 1));
+  const [duration] = useState(randBetween(2000, 3000));
+
+  const size = 100 + power * 250;
+  const opacity = 0.1 + (1 - power) * 0.1;
   const config = { duration, easing: Easing.linear };
 
+  const left = useSharedValue(randBetween(0, width) - size / 2);
+  const top = useSharedValue(randBetween(0, height) - size / 2);
+  const hue = useSharedValue(randBetween(100, 200));
+
   const update = () => {
-    left.value = withTiming(left.value + getRandomPositionDiff(), config);
-    top.value = withTiming(top.value + getRandomPositionDiff(), config);
-    hue.value = withTiming(hue.value + getRandomHueDiff(), config);
+    left.value = withTiming(left.value + randBetween(-100, 100), config);
+    top.value = withTiming(top.value + randBetween(-100, 100), config);
+    hue.value = withTiming(hue.value + randBetween(0, 100), config);
   };
 
   React.useEffect(() => {
@@ -57,19 +43,18 @@ function Circle() {
     return () => clearInterval(id);
   });
 
-  const animatedStyle = useAnimatedStyle(() => {
-    const size = 100 + power * 250;
-    return {
-      backgroundColor: `hsl(${hue.value}, 100%, 50%)`,
+  const animatedStyle = useAnimatedStyle(
+    () => ({
+      backgroundColor: `hsl(${hue.value},100%,50%)`,
       width: size,
       height: size,
-      top: top.value - size / 2,
-      left: left.value - size / 2,
-      opacity: 0.1 + (1 - power) * 0.1,
-    };
-  }, []);
+      left: left.value,
+      top: top.value,
+    }),
+    []
+  );
 
-  return <Animated.View style={[styles.bokeh, animatedStyle]} />;
+  return <Animated.View style={[styles.circle, { opacity }, animatedStyle]} />;
 }
 
 interface BokehProps {
@@ -102,8 +87,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',
     overflow: 'hidden',
   },
-  bokeh: {
+  circle: {
     position: 'absolute',
-    borderRadius: 9999,
+    borderRadius: 999,
   },
 });
