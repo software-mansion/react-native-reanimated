@@ -103,7 +103,7 @@ export function useAnimatedSensor(
     userConfigRef.current?.iosReferenceFrame !== userConfig?.iosReferenceFrame;
 
   if (hasConfigChanged) {
-    userConfigRef.current = userConfig;
+    userConfigRef.current = { ...userConfig };
   }
 
   const config: SensorConfig = useMemo(
