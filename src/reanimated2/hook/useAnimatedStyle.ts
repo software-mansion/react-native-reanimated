@@ -74,7 +74,7 @@ function prepareAnimation(
     const animation = animatedProp;
 
     let value = animation.current;
-    if (lastValue !== undefined) {
+    if (lastValue !== undefined && lastValue !== null) {
       if (typeof lastValue === 'object') {
         if (lastValue.value !== undefined) {
           // previously it was a shared value
