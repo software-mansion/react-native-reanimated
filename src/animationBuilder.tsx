@@ -26,42 +26,40 @@ const mockTargetValues: LayoutAnimationsValues = {
   currentBorderRadius: 0,
 };
 
+function getCommonProperties(
+  layoutStyle: StyleProps,
+  secondStyle: StyleProps | Array<StyleProps>
+) {
+  const secondStyleFlat = Array.isArray(secondStyle)
+    ? secondStyle.flat()
+    : [secondStyle];
+
+  let commonKeys: Array<string> = [];
+  secondStyleFlat.forEach((s) => {
+    if ('initial' in s) {
+      s = s.initial.value;
+    }
+
+    const commonStyleKeys = Object.keys(s).filter((key) => key in layoutStyle);
+    commonKeys = commonKeys.concat(...commonStyleKeys);
+  });
+  return commonKeys;
+}
+
 function maybeReportOverwrittenProperties(
   layoutAnimationStyle: StyleProps,
   style: NestedArray<StyleProps>,
   displayName: string
 ) {
-  function getCommonProperties(
-    layoutStyle: object,
-    secondStyle: object | Array<object>
-  ) {
-    const secondStyleFlat = Array.isArray(secondStyle)
-      ? secondStyle.flat()
-      : [secondStyle];
-    const commonKeys: Array<string> = [];
-
-    secondStyleFlat.forEach((s) => {
-      if ('initial' in s) {
-        s = s.initial.value;
-      }
-
-      const commonStyleKeys = Object.keys(s).filter((key) =>
-        Object.prototype.hasOwnProperty.call(layoutStyle, key)
-      );
-      commonKeys.push(...commonStyleKeys);
-    });
-    return commonKeys;
-  }
-
   const commonProperties = getCommonProperties(layoutAnimationStyle, style);
 
   if (commonProperties.length > 0) {
     console.warn(
       `[Reanimated] ${
-        commonProperties.length === 1 ? 'Property' : 'Properties: '
+        commonProperties.length === 1 ? 'Property' : 'Properties'
       } "${commonProperties.join(
         ', '
-      )}" of ${displayName} may be overwritten with layout animation. Please create a wrapper with the layout animation you want to apply.`
+      )}" of ${displayName} may be overwritten by a layout animation. Please wrap your component with an animated view and apply the layout animation on the wrapper.`
     );
   }
 }
@@ -83,12 +81,11 @@ export function maybeBuild(
   if (isAnimationBuilder(layoutAnimationOrBuilder)) {
     const animationFactory = layoutAnimationOrBuilder.build();
     const layoutAnimation = animationFactory(mockTargetValues);
-    const layoutAnimationStyle = layoutAnimation.animations;
 
-    if (__DEV__) {
+    if (__DEV__ && style) {
       maybeReportOverwrittenProperties(
-        layoutAnimationStyle,
-        style || {},
+        layoutAnimation.animations,
+        style,
         displayName
       );
     }
