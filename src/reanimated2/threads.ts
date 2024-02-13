@@ -74,7 +74,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
   'worklet';
-  if (__DEV__ && !SHOULD_BE_USE_WEB && global._WORKLET) {
+  if (__DEV__ && !SHOULD_BE_USE_WEB && _WORKLET) {
     throw new Error(
       '[Reanimated] `runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
@@ -161,7 +161,7 @@ export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
   'worklet';
-  if (__DEV__ && !SHOULD_BE_USE_WEB && global._WORKLET) {
+  if (__DEV__ && !SHOULD_BE_USE_WEB && _WORKLET) {
     throw new Error(
       '[Reanimated] `runOnUIImmediately` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
@@ -218,7 +218,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
   'worklet';
   type FunWorklet = Extract<typeof fun, WorkletFunction<Args, ReturnValue>>;
   type FunDevRemote = Extract<typeof fun, DevRemoteFunction<Args, ReturnValue>>;
-  if (SHOULD_BE_USE_WEB || !global._WORKLET) {
+  if (SHOULD_BE_USE_WEB || !_WORKLET) {
     // if we are already on the JS thread, we just schedule the worklet on the JS queue
     return (...args) =>
       queueMicrotask(

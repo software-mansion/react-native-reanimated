@@ -54,12 +54,12 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
   if (__DEV__ && !SHOULD_BE_USE_WEB && worklet.__workletHash === undefined) {
     throw new Error(
       '[Reanimated] The function passed to `runOnRuntime` is not a worklet.' +
-        (global._WORKLET
+        (_WORKLET
           ? ' Please make sure that `processNestedWorklets` option in Reanimated Babel plugin is enabled.'
           : '')
     );
   }
-  if (global._WORKLET) {
+  if (_WORKLET) {
     return (...args) =>
       global._scheduleOnRuntime(
         workletRuntime,

@@ -186,7 +186,7 @@ var require_globals = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.initializeGlobals = exports2.globals = exports2.defaultGlobals = void 0;
-    exports2.defaultGlobals = /* @__PURE__ */ new Set([
+    var notCapturedIdentifiers = [
       "globalThis",
       "Infinity",
       "NaN",
@@ -264,8 +264,31 @@ var require_globals = __commonJS({
       "requestAnimationFrame",
       "setImmediate",
       "arguments",
-      "HermesInternal"
-    ]);
+      "HermesInternal",
+      "_WORKLET"
+    ];
+    var notCapturedIdentifiers_DEPRECATED = [
+      "_IS_FABRIC",
+      "_log",
+      "_toString",
+      "_scheduleOnJS",
+      "_scheduleOnRuntime",
+      "_makeShareableClone",
+      "_updatePropsPaper",
+      "_updatePropsFabric",
+      "_removeFromPropsRegistry",
+      "_measurePaper",
+      "_measureFabric",
+      "_scrollToPaper",
+      "_dispatchCommandPaper",
+      "_dispatchCommandFabric",
+      "_setGestureState",
+      "_notifyAboutProgress",
+      "_notifyAboutEnd",
+      "_runOnUIQueue",
+      "_getAnimationTimestamp"
+    ];
+    exports2.defaultGlobals = new Set(notCapturedIdentifiers.concat(notCapturedIdentifiers_DEPRECATED));
     function initializeGlobals() {
       exports2.globals = new Set(exports2.defaultGlobals);
     }

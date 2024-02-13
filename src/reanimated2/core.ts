@@ -50,7 +50,7 @@ export const isConfigured = isReanimated3;
 
 // this is for web implementation
 if (SHOULD_BE_USE_WEB) {
-  global._WORKLET = false;
+  _WORKLET = false;
   global._log = console.log;
   global._getAnimationTimestamp = () => performance.now();
 }

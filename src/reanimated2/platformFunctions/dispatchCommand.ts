@@ -35,7 +35,7 @@ function dispatchCommandFabric(
   args: Array<unknown> = []
 ) {
   'worklet';
-  if (!global._WORKLET) {
+  if (!_WORKLET) {
     return;
   }
 
@@ -49,7 +49,7 @@ function dispatchCommandPaper(
   args: Array<unknown> = []
 ) {
   'worklet';
-  if (!global._WORKLET) {
+  if (!_WORKLET) {
     return;
   }
 
