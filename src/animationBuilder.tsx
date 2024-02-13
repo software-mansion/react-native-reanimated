@@ -41,7 +41,7 @@ function getCommonProperties(
     }
 
     const commonStyleKeys = Object.keys(s).filter((key) => key in layoutStyle);
-    commonKeys = commonKeys.concat(...commonStyleKeys);
+    commonKeys = commonKeys.concat(commonStyleKeys);
   });
   return commonKeys;
 }
