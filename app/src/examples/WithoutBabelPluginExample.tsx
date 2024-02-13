@@ -14,9 +14,10 @@ import { StyleSheet, Text, View } from 'react-native';
 enableExperimentalWebImplementation(true);
 
 function isBabelPluginEnabled() {
-  'inject Reanimated Babel plugin version';
-  // @ts-ignore
-  return global._REANIMATED_VERSION_BABEL_PLUGIN !== undefined;
+  function worklet() {
+    'worklet';
+  }
+  return '__workletHash' in worklet;
 }
 
 export default function WithoutBabelPluginExample() {
