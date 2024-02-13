@@ -1,6 +1,11 @@
 'use strict';
 import type { Component, MutableRefObject } from 'react';
-import type { ShadowNodeWrapper, SharedValue } from '../commonTypes';
+import type {
+  AnimatedPropsAdapterFunction,
+  ShadowNodeWrapper,
+  SharedValue,
+  WorkletFunction,
+} from '../commonTypes';
 import type {
   ImageStyle,
   NativeSyntheticEvent,
@@ -92,3 +97,13 @@ export interface JestAnimatedStyleHandle<
 > extends AnimatedStyleHandle<Style> {
   jestAnimatedStyle: MutableRefObject<AnimatedStyle<Style>>;
 }
+
+export type UseAnimatedStyleInternal<Style extends DefaultStyle> = (
+  updater: WorkletFunction<[], Style> | (() => Style),
+  dependencies?: DependencyList | null,
+  adapters?:
+    | AnimatedPropsAdapterFunction
+    | AnimatedPropsAdapterFunction[]
+    | null,
+  isAnimatedProps?: boolean
+) => AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style>;

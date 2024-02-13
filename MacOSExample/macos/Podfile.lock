@@ -391,7 +391,7 @@ PODS:
     - React-Core
   - RNCPicker (2.5.1):
     - React-Core
-  - RNReanimated (3.6.0):
+  - RNReanimated (3.7.0):
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
     - ReactCommon/turbomodule/core
@@ -577,11 +577,11 @@ SPEC CHECKSUMS:
   ReactCommon: 6f2738740f0a5677dc3554112d49ce10d2b0a576
   RNCAsyncStorage: c913ede1fa163a71cea118ed4670bbaaa4b511bb
   RNCPicker: 529d564911e93598cc399b56cc0769ce3675f8c8
-  RNReanimated: 71dba8af3fcf22b055c801febf963fd3f3da6f73
+  RNReanimated: da28bc2e61e8455253020fc5cf8945ee559e087f
   RNSVG: d00c8f91c3cbf6d476451313a18f04d220d4f396
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Yoga: b01d8e70b1bc0e88b40040a7d9c50fdadb1054b9
 
 PODFILE CHECKSUM: b964368aafa7380114b03271f85998831a6e0f0b
 
-COCOAPODS: 1.14.2
+COCOAPODS: 1.14.3
