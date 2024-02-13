@@ -87,7 +87,7 @@ import MeasureBasicSrc from '!!raw-loader!@site/src/examples/MeasureBasic';
 function App() {
   const animatedStyles = useAnimatedStyle(() => {
     // highlight-next-line
-    if (global._WORKLET) {
+    if (_WORKLET) {
       // safely use measure
       const measurement = measure(animatedRef);
     }

@@ -23,7 +23,7 @@ import React from 'react';
 function RunOnUIDemo() {
   const someWorklet = (x: number) => {
     'worklet';
-    console.log(global._WORKLET, x); // _WORKLET should be true
+    console.log(_WORKLET, x); // _WORKLET should be true
   };
 
   const handlePress = () => {
@@ -35,12 +35,12 @@ function RunOnUIDemo() {
 
 function RunOnUIRunOnJSDemo() {
   const someFunction = (x: number) => {
-    console.log(global._WORKLET, x); // _WORKLET should be false
+    console.log(_WORKLET, x); // _WORKLET should be false
   };
 
   const someWorklet = (x: number) => {
     'worklet';
-    console.log(global._WORKLET, x); // _WORKLET should be true
+    console.log(_WORKLET, x); // _WORKLET should be true
     runOnJS(someFunction)(x);
   };
 
@@ -55,11 +55,11 @@ function UseDerivedValueRunOnJSDemo() {
   const sv = useSharedValue(0);
 
   const someFunction = (x: number) => {
-    console.log(global._WORKLET, x); // _WORKLET should be false
+    console.log(_WORKLET, x); // _WORKLET should be false
   };
 
   useDerivedValue(() => {
-    console.log(global._WORKLET, sv.value);
+    console.log(_WORKLET, sv.value);
     runOnJS(someFunction)(sv.value);
   });
 
@@ -117,7 +117,7 @@ function ThrowErrorFromUseAnimatedStyleDemo() {
   const sv = useSharedValue(0);
 
   useAnimatedStyle(() => {
-    if (!global._WORKLET || sv.value === 0) {
+    if (!_WORKLET || sv.value === 0) {
       return {}; // prevent throwing error on first render or from JS context
     }
     throw new Error('Hello world from useAnimatedStyle!');
@@ -136,7 +136,7 @@ function ThrowErrorFromUseDerivedValueDemo() {
   const sv = useSharedValue(0);
 
   useDerivedValue(() => {
-    if (!global._WORKLET || sv.value === 0) {
+    if (!_WORKLET || sv.value === 0) {
       return {}; // prevent throwing error on first render or from JS context
     }
     throw new Error('Hello world from useDerivedValue!');
@@ -226,7 +226,7 @@ function ThrowErrorFromUseScrollViewOffsetDemo() {
   const offset = useScrollViewOffset(aref);
 
   useAnimatedStyle(() => {
-    if (global._WORKLET && offset.value > 0) {
+    if (_WORKLET && offset.value > 0) {
       throw Error('Hello world from useScrollViewOffset');
     }
     return {};

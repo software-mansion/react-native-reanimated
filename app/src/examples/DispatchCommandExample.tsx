@@ -13,25 +13,25 @@ export default function DispatchCommandExample() {
   const aref = useAnimatedRef<TextInput>();
 
   const focusFromJS = () => {
-    console.log(global._WORKLET);
+    console.log(_WORKLET);
     aref.current?.focus();
   };
 
   const blurFromJS = () => {
-    console.log(global._WORKLET);
+    console.log(_WORKLET);
     aref.current?.blur();
   };
 
   const focusFromUI = () => {
     runOnUI(() => {
-      console.log(global._WORKLET);
+      console.log(_WORKLET);
       dispatchCommand(aref, 'focus');
     })();
   };
 
   const blurFromUI = () => {
     runOnUI(() => {
-      console.log(global._WORKLET);
+      console.log(_WORKLET);
       dispatchCommand(aref, 'blur');
     })();
   };

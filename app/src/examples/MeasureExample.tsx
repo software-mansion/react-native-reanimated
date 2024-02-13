@@ -24,13 +24,13 @@ export default function MeasureExample() {
 
   const handleMeasureFromJS = () => {
     aref.current?.measure?.((x, y, width, height, pageX, pageY) =>
-      console.log(global._WORKLET, { x, y, width, height, pageX, pageY })
+      console.log(_WORKLET, { x, y, width, height, pageX, pageY })
     );
   };
 
   const handleMeasureFromUI = () => {
     runOnUI(() => {
-      console.log(global._WORKLET, '', measure(aref));
+      console.log(_WORKLET, '', measure(aref));
     })();
   };
 
