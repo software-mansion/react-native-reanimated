@@ -2,7 +2,7 @@
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
 
-import { startMapper, stopMapper } from '../core';
+import { makeShareable, startMapper, stopMapper } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animation';
 import { useSharedValue } from './useSharedValue';
@@ -28,11 +28,12 @@ import type {
   NestedObjectValues,
   SharedValue,
   StyleProps,
-  __AdapterWorkletFunction,
-  __BasicWorkletFunction,
   WorkletFunction,
+  AnimatedPropsAdapterFunction,
+  AnimatedPropsAdapterWorklet,
 } from '../commonTypes';
 import type { AnimatedStyle } from '../helperTypes';
+import { isWorklet } from '../commonTypes';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -74,7 +75,7 @@ function prepareAnimation(
     const animation = animatedProp;
 
     let value = animation.current;
-    if (lastValue !== undefined) {
+    if (lastValue !== undefined && lastValue !== null) {
       if (typeof lastValue === 'object') {
         if (lastValue.value !== undefined) {
           // previously it was a shared value
@@ -175,7 +176,7 @@ function runAnimations(
 
 function styleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: __BasicWorkletFunction<AnimatedStyle<any>>,
+  updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
@@ -265,12 +266,12 @@ function styleUpdater(
 
 function jestStyleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: __BasicWorkletFunction<AnimatedStyle<any>>,
+  updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
   animatedStyle: MutableRefObject<AnimatedStyle<any>>,
-  adapters: __AdapterWorkletFunction[] = []
+  adapters: AnimatedPropsAdapterFunction[]
 ): void {
   'worklet';
   const animations: AnimatedStyle<any> = state.animations ?? {};
@@ -413,9 +414,11 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
 ): Style;
 
 export function useAnimatedStyle<Style extends DefaultStyle>(
-  updater: WorkletFunction<[], Style>,
+  updater:
+    | WorkletFunction<[], Style>
+    | ((() => Style) & Record<string, unknown>),
   dependencies?: DependencyList | null,
-  adapters?: WorkletFunction | WorkletFunction[],
+  adapters?: AnimatedPropsAdapterWorklet | AnimatedPropsAdapterWorklet[] | null,
   isAnimatedProps = false
 ): AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style> {
   const viewsRef: ViewRefSet<unknown> | undefined = useViewRefSet();
@@ -426,7 +429,7 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
       // let web work without a Babel plugin
       inputs = dependencies;
     }
-    if (__DEV__ && !inputs.length && !dependencies && !updater.__workletHash) {
+    if (__DEV__ && !inputs.length && !dependencies && !isWorklet(updater)) {
       throw new Error(
         `[Reanimated] \`useAnimatedStyle\` was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel plugin.
 For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin\`.`
@@ -460,12 +463,12 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
         value: initialStyle,
         updater,
       },
-      remoteState: {
+      remoteState: makeShareable({
         last: initialStyle,
         animations: {},
         isAnimationCancelled: false,
         isAnimationRunning: false,
-      },
+      }),
       viewDescriptors: makeViewDescriptorsSet(),
     };
   }
@@ -483,7 +486,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
         'worklet';
         const newValues = updater();
         adaptersArray.forEach((adapter) => {
-          adapter(newValues);
+          adapter(newValues as Record<string, unknown>);
         });
         return newValues;
       }) as WorkletFunction<[], Style>;
