@@ -37,7 +37,7 @@ function getCommonProperties(
   let commonKeys: Array<string> = [];
   secondStyleFlat.forEach((s) => {
     if ('initial' in s) {
-      s = s.initial.value;
+      s = s.initial.value; // Include properties of animated style
     }
 
     const commonStyleKeys = Object.keys(s).filter((key) => key in layoutStyle);
