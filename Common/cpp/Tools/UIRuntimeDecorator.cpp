@@ -60,7 +60,11 @@ void UIRuntimeDecorator::decorate(
   jsi_utils::installJsiFunction(uiRuntime, "_setGestureState", setGestureState);
   jsi_utils::installJsiFunction(
       uiRuntime, "_maybeFlushUIUpdatesQueue", maybeFlushUIUpdatesQueue);
-  jsi_utils::installJsiFunction(uiRuntime, "_obtainProp", obtainPropFunction);
+
+  jsi_utils::installJsiFunction(
+      uiRuntime, "_obtainPropFabric", obtainPropFunction);
+  jsi_utils::installJsiFunction(
+      uiRuntime, "_obtainPropPaper", obtainPropFunction);
 }
 
 } // namespace reanimated

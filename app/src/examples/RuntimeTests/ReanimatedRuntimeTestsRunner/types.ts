@@ -113,7 +113,11 @@ declare global {
     value: Record<string, unknown>,
     isSharedTransition: boolean
   ) => void;
-  function _obtainProp(componentHandler: unknown, propName: string): string;
+  var _obtainPropPaper: (viewId: number, propName: string) => string;
+  var _obtainPropFabric: (
+    shadowNodeWrapper: unknown,
+    propName: string
+  ) => string;
   var __flushAnimationFrame: (frameTimestamp: number) => void;
 }
 

@@ -216,7 +216,11 @@ describe('withTiming, test CALLBACKS', () => {
 });
 
 const styles = StyleSheet.create({
-  container: { flex: 1, flexDirection: 'column', backgroundColor: 'beige' },
+  container: {
+    flex: 1,
+    flexDirection: 'column',
+    backgroundColor: 'beige',
+  },
   animatedBox: {
     width: 0,
     opacity: 0,

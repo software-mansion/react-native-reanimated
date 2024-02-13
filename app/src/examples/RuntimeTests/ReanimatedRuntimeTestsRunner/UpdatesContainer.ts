@@ -37,10 +37,9 @@ export function createUpdatesContainer(testRunner: TestRunner) {
         const snapshot: Record<string, unknown> = {};
         const propsToUpdate = Object.keys(updateInfo.update);
         for (const prop of propsToUpdate) {
-          snapshot[prop] = global._obtainProp(
-            isFabric ? updateInfo.shadowNodeWrapper : updateInfo.tag,
-            prop
-          );
+          snapshot[prop] = isFabric
+            ? global._obtainPropFabric(updateInfo?.shadowNodeWrapper, prop)
+            : global._obtainPropPaper(updateInfo?.tag, prop);
         }
         value.push({
           tag: updateInfo.tag,
