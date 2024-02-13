@@ -531,9 +531,15 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
 
   checkSharedValueUsage(initial.value);
 
-  if (isJest()) {
-    return { viewDescriptors, initial, viewsRef, jestAnimatedStyle };
-  } else {
-    return { viewDescriptors, initial, viewsRef };
+  const animatedStyleHandle = useRef<
+    AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style> | null
+  >(null);
+
+  if (!animatedStyleHandle.current) {
+    animatedStyleHandle.current = isJest()
+      ? { viewDescriptors, initial, viewsRef, jestAnimatedStyle }
+      : { initial, viewsRef, viewDescriptors };
   }
+
+  return animatedStyleHandle.current;
 }
