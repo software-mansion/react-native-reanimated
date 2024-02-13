@@ -2,9 +2,11 @@ import type { NodePath } from '@babel/core';
 import type { CallExpression, ObjectExpression } from '@babel/types';
 import { isSequenceExpression } from '@babel/types';
 import { isWorkletizableFunctionType } from './types';
-import type { ReanimatedPluginPass } from './types';
+import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { strict as assert } from 'assert';
-import { processWorklet } from './processIfWorkletNode';
+import { processWorklet } from './workletSubstitution';
+import { isGestureHandlerEventCallback } from './gestureHandlerAutoworkletization';
+import { isLayoutAnimationCallback } from './layoutAnimationAutoworkletization';
 
 const functionArgsToWorkletize = new Map([
   ['useFrameCallback', [0]],
@@ -29,6 +31,21 @@ const objectHooks = new Set([
   'useAnimatedGestureHandler',
   'useAnimatedScrollHandler',
 ]);
+
+/**
+ *
+ * @returns `true` if the function was workletized, `false` otherwise.
+ */
+export function processIfAutoworkletizableCallback(
+  path: NodePath<WorkletizableFunction>,
+  state: ReanimatedPluginPass
+): boolean {
+  if (isGestureHandlerEventCallback(path) || isLayoutAnimationCallback(path)) {
+    processWorklet(path, state);
+    return true;
+  }
+  return false;
+}
 
 export function processCalleesAutoworkletizableCallbacks(
   path: NodePath<CallExpression>,
