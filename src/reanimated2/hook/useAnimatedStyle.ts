@@ -421,7 +421,6 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
   const viewsRef: ViewRefSet<unknown> | undefined = useViewRefSet();
   const animatedUpdaterData = useRef<AnimatedUpdaterData>();
   let inputs = Object.values(updater.__closure ?? {});
-
   if (SHOULD_BE_USE_WEB) {
     if (!inputs.length && dependencies?.length) {
       // let web work without a Babel plugin
