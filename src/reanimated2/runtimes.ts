@@ -68,7 +68,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
   }
   if (_WORKLET) {
     return (...args) =>
-      _scheduleOnRuntime(
+      global._scheduleOnRuntime(
         workletRuntime,
         makeShareableCloneOnUIRecursive(() => {
           'worklet';

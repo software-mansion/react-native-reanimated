@@ -56,7 +56,7 @@ export class SharedTransition {
     this._customProgressAnimation = (viewTag, values, progress) => {
       'worklet';
       const newStyles = progressAnimationCallback(values, progress);
-      _notifyAboutProgress(viewTag, newStyles, true);
+      global._notifyAboutProgress(viewTag, newStyles, true);
     };
     return this;
   }
@@ -226,7 +226,7 @@ export class SharedTransition {
             progress * (targetValue - currentValue) + currentValue;
         }
       }
-      _notifyAboutProgress(viewTag, newStyles, true);
+      global._notifyAboutProgress(viewTag, newStyles, true);
     };
   }
 
