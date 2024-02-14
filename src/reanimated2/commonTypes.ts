@@ -103,8 +103,25 @@ export type WorkletFunction<
 > = ((...args: Args) => ReturnValue) & (WorkletBaseRelease | WorkletBaseDev);
 
 /**
+ * This function allows you to determine if a given function is a worklet. It only works
+ * with Reanimated Babel plugin enabled. Unless you are doing something with internals of
+ * Reanimated you shouldn't need to use this function.
+ *
+ * ### Note
+ * Do not call it before the worklet is declared, as it will always return false then. E.g.:
+ *
+ * ```ts
+ * isWorklet(myWorklet); // Will always return false.
+ *
+ * function myWorklet() {
+ *   'worklet';
+ * };
+ * ```
+ *
+ * ### Maintainer note
  * This function works well on the JS thread performance-wise, since the JIT can inline it.
  * However, on other threads it will not get optimized and we will get a function call overhead.
+ * We want to change in in the future, but it's not feasible at the moment.
  */
 export function isWorklet<
   Args extends unknown[] = unknown[],
