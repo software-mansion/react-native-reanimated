@@ -11,6 +11,9 @@ import type {
   RNNativeScrollEvent,
   ReanimatedScrollEvent,
 } from './commonTypes';
+import { isWeb } from '../PlatformChecker';
+
+const IS_WEB = isWeb();
 
 const scrollEventNames = [
   'onScroll',
@@ -50,7 +53,10 @@ export function useScrollViewOffset(
   ) as unknown as EventHandlerInternal<ReanimatedScrollEvent>;
 
   useEffect(() => {
-    const viewTag = findNodeHandle(animatedRef.current);
+    const viewTag = IS_WEB
+      ? animatedRef.current
+      : findNodeHandle(animatedRef.current);
+
     eventHandler.current?.registerForEvents(viewTag as number);
 
     return () => {

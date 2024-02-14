@@ -3,12 +3,15 @@ import type { WorkletFunction } from '../commonTypes';
 import type { DependencyList } from './commonTypes';
 
 // Builds one big hash from multiple worklets' hashes.
-export function buildWorkletsHash(
-  worklets: Record<string, WorkletFunction> | WorkletFunction[]
+export function buildWorkletsHash<Args extends unknown[], ReturnValue>(
+  worklets:
+    | Record<string, WorkletFunction<Args, ReturnValue>>
+    | WorkletFunction<Args, ReturnValue>[]
 ) {
   // For arrays `Object.values` returns the array itself.
   return Object.values(worklets).reduce(
-    (acc, worklet: WorkletFunction) => acc + worklet.__workletHash.toString(),
+    (acc, worklet: WorkletFunction<Args, ReturnValue>) =>
+      acc + worklet.__workletHash.toString(),
     ''
   );
 }

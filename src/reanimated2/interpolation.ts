@@ -75,9 +75,11 @@ function isExtrapolate(value: string): value is Extrapolation {
   'worklet';
 
   return (
+    /* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
     value === Extrapolation.EXTEND ||
     value === Extrapolation.CLAMP ||
     value === Extrapolation.IDENTITY
+    /* eslint-enable @typescript-eslint/no-unsafe-enum-comparison */
   );
 }
 

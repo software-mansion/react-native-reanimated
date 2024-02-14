@@ -67,17 +67,6 @@ function onlyAnimatedStyles(styles: StyleProps[]): StyleProps[] {
   return styles.filter((style) => style?.viewDescriptors);
 }
 
-function isSameAnimatedStyle(
-  style1?: StyleProps,
-  style2?: StyleProps
-): boolean {
-  // We cannot use equality check to compare useAnimatedStyle outputs directly.
-  // Instead, we can compare its viewsRefs.
-  return style1?.viewsRef === style2?.viewsRef;
-}
-
-const isSameAnimatedProps = isSameAnimatedStyle;
-
 type Options<P> = {
   setNativeProps: (ref: AnimatedComponentRef, props: P) => void;
 };
@@ -246,7 +235,9 @@ export function createAnimatedComponent(
           prop.current instanceof WorkletEventHandler
         ) {
           if (viewTag === null) {
-            viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+            viewTag = IS_WEB
+              ? this._component
+              : findNodeHandle(options?.setNativeProps ? this : node);
           }
           prop.current.registerForEvents(viewTag as number, key);
         }
@@ -308,7 +299,10 @@ export function createAnimatedComponent(
         ) {
           if (viewTag === null) {
             const node = this._getEventViewRef() as AnimatedComponentRef;
-            viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+
+            viewTag = IS_WEB
+              ? this._component
+              : findNodeHandle(options?.setNativeProps ? this : node);
           }
           prop.current.registerForEvents(viewTag as number, key);
           prop.current.reattachNeeded = false;
@@ -401,14 +395,12 @@ export function createAnimatedComponent(
         const hasOneSameStyle =
           styles.length === 1 &&
           prevStyles.length === 1 &&
-          isSameAnimatedStyle(styles[0], prevStyles[0]);
+          styles[0] === prevStyles[0];
 
         if (!hasOneSameStyle) {
           // otherwise, remove each style that is not present in new styles
           for (const prevStyle of prevStyles) {
-            const isPresent = styles.some((style) =>
-              isSameAnimatedStyle(style, prevStyle)
-            );
+            const isPresent = styles.some((style) => style === prevStyle);
             if (!isPresent) {
               prevStyle.viewDescriptors.remove(viewTag);
             }
@@ -438,10 +430,7 @@ export function createAnimatedComponent(
       });
 
       // detach old animatedProps
-      if (
-        prevAnimatedProps &&
-        !isSameAnimatedProps(prevAnimatedProps, this.props.animatedProps)
-      ) {
+      if (prevAnimatedProps && prevAnimatedProps !== this.props.animatedProps) {
         prevAnimatedProps.viewDescriptors!.remove(viewTag as number);
       }
 

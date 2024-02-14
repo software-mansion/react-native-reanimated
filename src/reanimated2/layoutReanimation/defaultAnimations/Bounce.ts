@@ -64,7 +64,7 @@ export class BounceIn
           transform: [{ scale: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -130,7 +130,7 @@ export class BounceInDown
           ],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -192,7 +192,7 @@ export class BounceInUp
           transform: [{ translateY: -values.windowHeight }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -254,7 +254,7 @@ export class BounceInLeft
           transform: [{ translateX: -values.windowWidth }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -316,7 +316,7 @@ export class BounceInRight
           transform: [{ translateX: values.windowWidth }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -378,7 +378,7 @@ export class BounceOut
           transform: [{ scale: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -442,7 +442,7 @@ export class BounceOutDown
           transform: [{ translateY: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -506,7 +506,7 @@ export class BounceOutUp
           transform: [{ translateY: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -570,7 +570,7 @@ export class BounceOutLeft
           transform: [{ translateX: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -634,7 +634,7 @@ export class BounceOutRight
           transform: [{ translateX: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
