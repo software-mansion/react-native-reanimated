@@ -121,7 +121,7 @@ export type WorkletFunction<
  * ### Maintainer note
  * This function works well on the JS thread performance-wise, since the JIT can inline it.
  * However, on other threads it will not get optimized and we will get a function call overhead.
- * We want to change in in the future, but it's not feasible at the moment.
+ * We want to change it in the future, but it's not feasible at the moment.
  */
 export function isWorklet<
   Args extends unknown[] = unknown[],
