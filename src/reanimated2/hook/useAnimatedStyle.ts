@@ -194,7 +194,8 @@ function styleUpdater(
   for (const key in newValues) {
     const value = newValues[key];
     if (isAnimated(value)) {
-      frameTimestamp = global.__frameTimestamp || _getAnimationTimestamp();
+      frameTimestamp =
+        global.__frameTimestamp || global._getAnimationTimestamp();
       prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
@@ -290,7 +291,8 @@ function jestStyleUpdater(
   Object.keys(newValues).forEach((key) => {
     const value = newValues[key];
     if (isAnimated(value)) {
-      frameTimestamp = global.__frameTimestamp || _getAnimationTimestamp();
+      frameTimestamp =
+        global.__frameTimestamp || global._getAnimationTimestamp();
       prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
