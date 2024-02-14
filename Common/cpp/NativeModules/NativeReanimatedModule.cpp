@@ -122,8 +122,7 @@ NativeReanimatedModule::NativeReanimatedModule(
                         const jsi::Value &propName) {
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
     const auto propNameStr = propName.asString(rt).utf8(rt);
-    const ShadowNode::Shared shadowNode =
-        shadowNodeFromValue(rt, shadowNodeWrapper);
+    auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
     std::string resultStr =
         obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
     return jsi::String::createFromUtf8(rt, resultStr);
@@ -262,8 +261,8 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
     const ShadowNode::Shared &shadowNode) {
   auto newestCloneOfShadowNode =
       uiManager_->getNewestCloneOfShadowNode(*shadowNode);
-  Props::Shared props = newestCloneOfShadowNode->getProps();
-  auto staticProps = std::static_pointer_cast<const ViewProps>(props);
+  auto props = newestCloneOfShadowNode->getProps();
+  auto viewProps = std::static_pointer_cast<const ViewProps>(props);
   auto layoutableShadowNode =
       traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
   const auto &frame = layoutableShadowNode->layoutMetrics_.frame;
@@ -277,14 +276,14 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
   } else if (propName == "left") {
     resultStr = std::to_string(frame.origin.x);
   } else if (propName == "opacity") {
-    resultStr = std::to_string(staticProps->opacity);
+    resultStr = std::to_string(viewProps->opacity);
   } else if (propName == "zIndex") {
-    std::optional<int> zIndex = staticProps->zIndex;
+    std::optional<int> zIndex = viewProps->zIndex;
     if (zIndex) {
       resultStr = std::to_string(*zIndex);
     }
   } else if (propName == "backgroundColor") {
-    resultStr = int_to_hex(*staticProps->backgroundColor);
+    resultStr = int_to_hex(*viewProps->backgroundColor);
   }
   return resultStr;
 }
@@ -301,8 +300,7 @@ jsi::Value NativeReanimatedModule::getViewProp(
   const auto funPtr = std::make_shared<jsi::Function>(
       callback.getObject(rnRuntime).asFunction(rnRuntime));
 #ifdef RCT_NEW_ARCH_ENABLED
-  const ShadowNode::Shared shadowNode =
-      shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
+  auto shadowNode = shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
   uiScheduler_->scheduleOnUI([=]() {
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
     std::string resultStr =
@@ -314,7 +312,6 @@ jsi::Value NativeReanimatedModule::getViewProp(
       funPtr->call(rnRuntime, resultValue);
     });
   });
-
   return jsi::Value::undefined();
 
 #else
