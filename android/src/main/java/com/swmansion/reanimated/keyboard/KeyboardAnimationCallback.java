@@ -21,6 +21,9 @@ public class KeyboardAnimationCallback extends WindowInsetsAnimationCompat.Callb
   public WindowInsetsAnimationCompat.BoundsCompat onStart(
       @NonNull WindowInsetsAnimationCompat animation,
       @NonNull WindowInsetsAnimationCompat.BoundsCompat bounds) {
+    if (!isKeyboardAnimation(animation)) {
+      return bounds;
+    }
     keyboard.onAnimationStart();
     notifyAboutKeyboardChange.call();
     return super.onStart(animation, bounds);
@@ -31,6 +34,16 @@ public class KeyboardAnimationCallback extends WindowInsetsAnimationCompat.Callb
   public WindowInsetsCompat onProgress(
       @NonNull WindowInsetsCompat insets,
       @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
+    boolean isAnyKeyboardAnimation = false;
+    for (WindowInsetsAnimationCompat animation : runningAnimations) {
+      if (isKeyboardAnimation(animation)) {
+        isAnyKeyboardAnimation = true;
+        break;
+      }
+    }
+    if (!isAnyKeyboardAnimation) {
+      return insets;
+    }
     keyboard.updateHeight(insets);
     notifyAboutKeyboardChange.call();
     return insets;
@@ -38,7 +51,14 @@ public class KeyboardAnimationCallback extends WindowInsetsAnimationCompat.Callb
 
   @Override
   public void onEnd(@NonNull WindowInsetsAnimationCompat animation) {
+    if (!isKeyboardAnimation(animation)) {
+      return;
+    }
     keyboard.onAnimationEnd();
     notifyAboutKeyboardChange.call();
+  }
+
+  private boolean isKeyboardAnimation(@NonNull WindowInsetsAnimationCompat animation) {
+    return (animation.getTypeMask() & WindowInsetsCompat.Type.ime()) != 0;
   }
 }
