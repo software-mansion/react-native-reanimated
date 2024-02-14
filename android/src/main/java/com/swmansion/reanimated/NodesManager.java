@@ -397,52 +397,38 @@ public class NodesManager implements EventDispatcherListener {
     try {
       view = mUIManager.resolveView(viewTag);
     } catch (Exception e) {
-      return "unable to resolve view";
+      throw new IllegalStateException("[Reanimated] Unable to resolve view");
     }
+
     switch (propName) {
       case "opacity":
-        {
-          return Float.toString(view.getAlpha());
-        }
+        return Float.toString(view.getAlpha());
       case "zIndex":
-        {
-          return Float.toString(view.getElevation());
-        }
+        return Float.toString(view.getElevation());
       case "width":
-        {
-          float width = PixelUtil.toDIPFromPixel(view.getWidth());
-          return Float.toString(width);
-        }
+        float width = PixelUtil.toDIPFromPixel(view.getWidth());
+        return Float.toString(width);
       case "height":
-        {
-          float height = PixelUtil.toDIPFromPixel(view.getHeight());
-          return Float.toString(height);
-        }
+        float height = PixelUtil.toDIPFromPixel(view.getHeight());
+        return Float.toString(height);
       case "top":
-        {
-          float top = PixelUtil.toDIPFromPixel(view.getTop());
-          return Float.toString(top);
-        }
+        float top = PixelUtil.toDIPFromPixel(view.getTop());
+        return Float.toString(top);
       case "left":
-        {
-          float left = PixelUtil.toDIPFromPixel(view.getLeft());
-          return Float.toString(left);
-        }
+        float left = PixelUtil.toDIPFromPixel(view.getLeft());
+        return Float.toString(left);
       case "backgroundColor":
-        {
-          Drawable background = view.getBackground();
-          if (!(background instanceof ReactViewBackgroundDrawable)) {
-            return "unable to resolve background color";
-          }
-          int actualColor = ((ReactViewBackgroundDrawable) background).getColor();
-          return String.format("#%06x", (0xFFFFFF & actualColor));
+        Drawable background = view.getBackground();
+        if (!(background instanceof ReactViewBackgroundDrawable)) {
+          return "unable to resolve background color";
         }
+        int actualColor = ((ReactViewBackgroundDrawable) background).getColor();
+        return String.format("#%06x", (0xFFFFFF & actualColor));
       default:
-        {
-          return "error: unknown propName "
-              + propName
-              + ", currently supported: opacity, zIndex, width, height, top, left, backgroundColor";
-        }
+        throw new IllegalArgumentException(
+            "[Reanimated] Attempted to get  unsupported property"
+                + propName
+                + " with function 'getViewProp'");
     }
   }
 

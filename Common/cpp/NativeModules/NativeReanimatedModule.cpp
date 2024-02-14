@@ -120,6 +120,7 @@ NativeReanimatedModule::NativeReanimatedModule(
                         jsi::Runtime &rt,
                         const jsi::Value &shadowNodeWrapper,
                         const jsi::Value &propName) {
+    // TODO Move this implementation
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
     const auto propNameStr = propName.asString(rt).utf8(rt);
     auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
@@ -266,26 +267,28 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
   auto layoutableShadowNode =
       traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
   const auto &frame = layoutableShadowNode->layoutMetrics_.frame;
-  std::string resultStr;
+
   if (propName == "width") {
-    resultStr = std::to_string(frame.size.width);
+    return std::to_string(frame.size.width);
   } else if (propName == "height") {
-    resultStr = std::to_string(frame.size.width);
+    return std::to_string(frame.size.width);
   } else if (propName == "top") {
-    resultStr = std::to_string(frame.origin.y);
+    return std::to_string(frame.origin.y);
   } else if (propName == "left") {
-    resultStr = std::to_string(frame.origin.x);
+    return std::to_string(frame.origin.x);
   } else if (propName == "opacity") {
-    resultStr = std::to_string(viewProps->opacity);
+    return std::to_string(viewProps->opacity);
   } else if (propName == "zIndex") {
     std::optional<int> zIndex = viewProps->zIndex;
     if (zIndex) {
-      resultStr = std::to_string(*zIndex);
+      return std::to_string(*zIndex);
     }
   } else if (propName == "backgroundColor") {
-    resultStr = int_to_hex(*viewProps->backgroundColor);
+    return int_to_hex(*viewProps->backgroundColor);
   }
-  return resultStr;
+
+  return "Getting property '" + propName +
+      "' with function 'getViewProp' is not supported";
 }
 
 #endif
