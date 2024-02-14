@@ -180,6 +180,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   }
 
   _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:_surfacePresenter];
+  _animationsManager = [[REAAnimationsManager alloc] initWithUIManager:bridge.uiManager];
 }
 
 #else

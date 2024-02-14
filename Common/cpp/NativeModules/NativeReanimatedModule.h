@@ -151,14 +151,14 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &listenerId) override;
 
   inline LayoutAnimationsManager &layoutAnimationsManager() {
-    return layoutAnimationsManager_;
+    return *layoutAnimationsManager_;
   }
 
   inline jsi::Runtime &getUIRuntime() {
     return uiWorkletRuntime_->getJSIRuntime();
   }
 
- private:
+ public:
   void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -181,7 +181,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   const std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
   const std::shared_ptr<JSLogger> jsLogger_;
-  LayoutAnimationsManager layoutAnimationsManager_;
+  std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
 
 #ifdef RCT_NEW_ARCH_ENABLED
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;

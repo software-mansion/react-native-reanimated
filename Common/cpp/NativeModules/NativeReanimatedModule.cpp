@@ -19,6 +19,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "ReanimatedCommitMarker.h"
 #include "ShadowTreeCloner.h"
+#include <react/renderer/scheduler/Scheduler.h>
 #endif
 
 #include "AsyncQueue.h"
@@ -30,7 +31,7 @@
 #include "Shareables.h"
 #include "UIRuntimeDecorator.h"
 #include "WorkletEventHandler.h"
-
+#include "NativeReanimatedModule.h"
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
 #endif
@@ -71,7 +72,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       }),
       animatedSensorModule_(platformDepMethodsHolder),
       jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
-      layoutAnimationsManager_(jsLogger_),
+      layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>(jsLogger_)),
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
@@ -299,7 +300,7 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
     const jsi::Value &type,
     const jsi::Value &sharedTransitionTag,
     const jsi::Value &config) {
-  layoutAnimationsManager_.configureAnimation(
+  layoutAnimationsManager_->configureAnimation(
       viewTag.asNumber(),
       static_cast<LayoutAnimationType>(type.asNumber()),
       sharedTransitionTag.asString(rt).utf8(rt),
@@ -332,7 +333,7 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimationBatch(
           "[Reanimated] Layout animation config must be an object.");
     }
   }
-  layoutAnimationsManager_.configureAnimationBatch(batch);
+  layoutAnimationsManager_->configureAnimationBatch(batch);
   return jsi::Value::undefined();
 }
 
@@ -340,7 +341,7 @@ void NativeReanimatedModule::setShouldAnimateExiting(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
     const jsi::Value &shouldAnimate) {
-  layoutAnimationsManager_.setShouldAnimateExiting(
+  layoutAnimationsManager_->setShouldAnimateExiting(
       viewTag.asNumber(), shouldAnimate.getBool());
 }
 
@@ -703,11 +704,62 @@ jsi::Value NativeReanimatedModule::measure(
   return result;
 }
 
+
+
 void NativeReanimatedModule::initializeFabric(
     const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
+  Scheduler* scheduler = (Scheduler*)uiManager->getDelegate();
+  auto lap = std::make_shared<LayoutAnimationsProxy>(layoutAnimationsManager_, this);
+  EventListener el = [this, lap](const RawEvent& event){
+    if (event.type == "topLayout"){
+      if (!event.eventTarget){
+        return false;
+      }
+      auto tag = event.eventTarget->getTag();
+      {
+        std::unique_lock<std::mutex>(lap->mutex);
+        if(lap->createdViews_ && lap->createdViews_->contains(tag)){
+          lap->createdViews_->erase(tag);
+          if (layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::ENTERING))
+          {
+            printf("entering");
+          }
+        }
+        if(lap->modifiedViews_ && lap->modifiedViews_->contains(tag)){
+          if (layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::LAYOUT))
+          {
+            auto current = lap->modifiedViews_->at(tag), target = lap->modifiedViewsTarget_->at(tag);
+            Values currentValues, targetValues;
+            currentValues.x = current.layoutMetrics.frame.origin.x;
+            currentValues.y = current.layoutMetrics.frame.origin.y;
+            currentValues.width = current.layoutMetrics.frame.size.width;
+            currentValues.height = current.layoutMetrics.frame.size.height;
+            auto layout = event.eventPayload->asJSIValue(getUIRuntime()).asObject(getUIRuntime()).getProperty(getUIRuntime(), "layout").asObject(getUIRuntime());
+            targetValues.x=layout.getProperty(getUIRuntime(), "x").asNumber();
+            targetValues.y=layout.getProperty(getUIRuntime(), "y").asNumber();
+            targetValues.width=layout.getProperty(getUIRuntime(), "width").asNumber();
+            targetValues.height=layout.getProperty(getUIRuntime(), "height").asNumber();
+//            targetValues.x = target.layoutMetrics.frame.origin.x;
+//            targetValues.y = target.layoutMetrics.frame.origin.y;
+//            targetValues.width = target.layoutMetrics.frame.size.width;
+//            targetValues.height = target.layoutMetrics.frame.size.height;
+            lap->startLayoutLayoutAnimation(tag, currentValues, targetValues);
+          }
+          lap->modifiedViews_->erase(tag);
+          lap->modifiedViewsTarget_->erase(tag);
+        }
+        
+      }
+//      layoutAnimationsManager_.startLayoutAnimation(getUIRuntime(), event.eventTarget->getTag(), LayoutAnimationType::ENTERING, nullptr);
+//      jsi::Object layout = std::dynamic_pointer_cast<const ValueFactoryEventPayload>(event.eventPayload)->asJSIValue(getUIRuntime()).asObject(getUIRuntime());
+//      std::printf("hello");
+    }
+    return false;
+  };
+  scheduler->addEventListener(std::make_shared<EventListener>(el));
   commitHook_ =
-      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
+      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_, lap);
 #if REACT_NATIVE_MINOR_VERSION >= 73
   mountHook_ =
       std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);

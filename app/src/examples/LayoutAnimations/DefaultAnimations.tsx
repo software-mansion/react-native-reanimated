@@ -104,13 +104,17 @@ const AnimatedBlock = ({
     <View style={styles.animatedBox}>
       {show ? (
         <TouchableWithoutFeedback onPress={() => setShow(!show)}>
-          <Animated.View style={styles.animatedBlock} {...animatedStyle}>
+          <Animated.View
+            onLayout={() => {}}
+            style={styles.animatedBlock}
+            {...animatedStyle}>
             <Text style={styles.animatedText}>{name}</Text>
           </Animated.View>
         </TouchableWithoutFeedback>
       ) : null}
       {!show ? (
         <Animated.View
+          onLayout={() => {}}
           entering={
             'entering' in animatedStyle ? undefined : FadeIn.delay(350)
           }>
@@ -128,7 +132,7 @@ const AnimatedBlock = ({
 export default function DefaultAnimations() {
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.groupText}>Fade in</Text>
+      {/* <Text style={styles.groupText}>Fade in</Text>
       <AnimatedBlock name="FadeIn" animatedStyle={{ entering: FadeIn }} />
       <AnimatedBlock
         name="FadeInRight"
@@ -142,9 +146,9 @@ export default function DefaultAnimations() {
       <AnimatedBlock
         name="FadeInDown"
         animatedStyle={{ entering: FadeInDown }}
-      />
+      /> */}
 
-      <Text style={styles.groupText}>Fade out</Text>
+      {/* <Text style={styles.groupText}>Fade out</Text>
       <AnimatedBlock
         name="FadeOut"
         animatedStyle={{ exiting: FadeOut }}
@@ -159,13 +163,13 @@ export default function DefaultAnimations() {
           }),
         }}
         defaultShow={true}
-      />
+      /> */}
       <AnimatedBlock
         name="FadeOutLeft"
         animatedStyle={{ exiting: FadeOutLeft }}
         defaultShow={true}
       />
-      <AnimatedBlock
+      {/* <AnimatedBlock
         name="FadeOutUp"
         animatedStyle={{ exiting: FadeOutUp }}
         defaultShow={true}
@@ -174,8 +178,8 @@ export default function DefaultAnimations() {
         name="FadeOutDown"
         animatedStyle={{ exiting: FadeOutDown }}
         defaultShow={true}
-      />
-
+      /> */}
+      {/* 
       <Text style={styles.groupText}>Bounce in</Text>
       <AnimatedBlock name="BounceIn" animatedStyle={{ entering: BounceIn }} />
       <AnimatedBlock
@@ -497,7 +501,7 @@ export default function DefaultAnimations() {
         name="RollOutRight"
         animatedStyle={{ exiting: RollOutRight }}
         defaultShow
-      />
+      /> */}
     </ScrollView>
   );
 }

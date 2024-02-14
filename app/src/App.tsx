@@ -226,7 +226,8 @@ export default function App() {
               component={EXAMPLES[name].screen}
               options={{
                 animation: shouldReduceMotion ? 'fade' : 'default',
-                headerTitle: EXAMPLES[name].title,
+                headerShown: false,
+                // headerTitle: EXAMPLES[name].title,
                 title: EXAMPLES[name].title,
                 headerLeft: Platform.OS === 'web' ? BackButton : undefined,
               }}

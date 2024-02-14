@@ -518,6 +518,8 @@ export function createAnimatedComponent(
           ? (ref as HTMLElement)
           : findNodeHandle(ref as Component);
 
+        this._viewTag = tag as number;
+
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (
           (layout || entering || exiting || sharedTransitionTag) &&
@@ -551,6 +553,25 @@ export function createAnimatedComponent(
                 sharedTransitionTag
               );
               this._sharedElementTransition = sharedElementTransition;
+            }
+          }
+          if (exiting) {
+            console.log(tag);
+            const reduceMotionInExiting =
+              'getReduceMotion' in exiting &&
+              typeof exiting.getReduceMotion === 'function'
+                ? getReduceMotionFromConfig(exiting.getReduceMotion())
+                : getReduceMotionFromConfig();
+            if (!reduceMotionInExiting) {
+              updateLayoutAnimations(
+                tag as number,
+                LayoutAnimationType.EXITING,
+                maybeBuild(
+                  exiting,
+                  this.props?.style,
+                  AnimatedComponent.displayName
+                )
+              );
             }
           }
         }

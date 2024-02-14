@@ -197,16 +197,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt, props);
     [nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
+#endif
 
-  auto progressLayoutAnimation = [=](jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool isSharedTransition) {
-    // noop
-  };
-
-  auto endLayoutAnimation = [=](int tag, bool removeView) {
-    // noop
-  };
-
-#else
   // Layout Animations start
   REAAnimationsManager *animationsManager = reaModule.animationsManager;
   __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
@@ -222,15 +214,14 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [weakAnimationsManager endLayoutAnimationForTag:@(tag) removeView:removeView];
   };
 
-  auto configurePropsFunction = [reaModule](
-                                    jsi::Runtime &rt, const jsi::Value &uiProps, const jsi::Value &nativeProps) {
-    NSSet *uiPropsSet = convertProps(rt, uiProps);
-    NSSet *nativePropsSet = convertProps(rt, nativeProps);
-    [reaModule.nodesManager configureUiProps:uiPropsSet andNativeProps:nativePropsSet];
-  };
+//  auto configurePropsFunction = [reaModule](
+//                                    jsi::Runtime &rt, const jsi::Value &uiProps, const jsi::Value &nativeProps) {
+//    NSSet *uiPropsSet = convertProps(rt, uiProps);
+//    NSSet *nativePropsSet = convertProps(rt, nativeProps);
+//    [reaModule.nodesManager configureUiProps:uiPropsSet andNativeProps:nativePropsSet];
+//  };
 
   // Layout Animations end
-#endif
 
   auto getAnimationTimestamp = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
 
@@ -309,7 +300,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       nativeReanimatedModule->performOperations();
     }
   }];
-#else
   // Layout Animation callbacks setup
   [animationsManager
       setAnimationStartingBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values) {
@@ -363,6 +353,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       nativeReanimatedModule->layoutAnimationsManager().cancelLayoutAnimation(rt, [tag intValue]);
     }
   }];
+  
+#else
 
   [animationsManager setFindPrecedingViewTagForTransitionBlock:^NSNumber *_Nullable(NSNumber *_Nonnull tag) {
     if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {

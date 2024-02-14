@@ -20,6 +20,7 @@ function startObservingProgress(
   const isSharedTransition =
     animationType === LayoutAnimationType.SHARED_ELEMENT_TRANSITION;
   sharedValue.addListener(tag + TAG_OFFSET, () => {
+    console.log(sharedValue.value);
     _notifyAboutProgress(tag, sharedValue.value, isSharedTransition);
   });
 }
@@ -55,6 +56,7 @@ function createLayoutAnimationManager() {
         global.ProgressTransitionRegister.onTransitionStart(tag, yogaValues);
         return;
       }
+      console.log('start', tag, type, yogaValues, config);
 
       const style = config(yogaValues);
       let currentAnimation = style.animations;
