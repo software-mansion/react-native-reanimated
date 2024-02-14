@@ -21,8 +21,8 @@ import com.swmansion.reanimated.NativeProxy;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.ReanimatedModule;
 import com.swmansion.reanimated.Utils;
+import com.swmansion.reanimated.keyboard.KeyboardJSCallbackWrapper;
 import com.swmansion.reanimated.keyboard.KeyboardAnimationManager;
-import com.swmansion.reanimated.keyboard.KeyboardWorkletWrapper;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
@@ -214,9 +214,9 @@ public abstract class NativeProxyCommon {
 
   @DoNotStrip
   public int subscribeForKeyboardEvents(
-      KeyboardWorkletWrapper keyboardWorkletWrapper, boolean isStatusBarTranslucent) {
+      KeyboardJSCallbackWrapper jsCallbackWrapper, boolean isStatusBarTranslucent) {
     return keyboardAnimationManager.subscribeForKeyboardUpdates(
-        keyboardWorkletWrapper, isStatusBarTranslucent);
+        jsCallbackWrapper, isStatusBarTranslucent);
   }
 
   @DoNotStrip

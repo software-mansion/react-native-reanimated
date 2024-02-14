@@ -117,25 +117,27 @@ class SensorSetter : public HybridClass<SensorSetter> {
   std::function<void(double[], int)> callback_;
 };
 
-class KeyboardWorkletWrapper : public HybridClass<KeyboardWorkletWrapper> {
+class KeyboardJSCallbackWrapper
+    : public HybridClass<KeyboardJSCallbackWrapper> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/keyboard/KeyboardWorkletWrapper;";
+      "Lcom/swmansion/reanimated/keyboard/KeyboardJSCallbackWrapper;";
 
-  void invoke(int keyboardState, int height) {
+  void callCallback(int keyboardState, int height) {
     callback_(keyboardState, height);
   }
 
   static void registerNatives() {
     javaClassStatic()->registerNatives({
-        makeNativeMethod("invoke", KeyboardWorkletWrapper::invoke),
+        makeNativeMethod(
+            "callCallback", KeyboardJSCallbackWrapper::callCallback),
     });
   }
 
  private:
   friend HybridBase;
 
-  explicit KeyboardWorkletWrapper(std::function<void(int, int)> callback)
+  explicit KeyboardJSCallbackWrapper(std::function<void(int, int)> callback)
       : callback_(std::move(callback)) {}
 
   std::function<void(int, int)> callback_;

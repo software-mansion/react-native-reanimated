@@ -10,39 +10,42 @@ interface NotifyAboutKeyboardChangeFunction {
 }
 
 public class KeyboardAnimationManager {
-  private int mNextListenerId = 0;
-  private final HashMap<Integer, KeyboardWorkletWrapper> mListeners = new HashMap<>();
-  private final Keyboard mKeyboard = new Keyboard();
-  private final WindowsInsetsManager mWindowsInsetsManager;
+  private int nextListenerId = 0;
+  private final HashMap<Integer, KeyboardJSCallbackWrapper> listeners = new HashMap<>();
+  private final Keyboard keyboard = new Keyboard();
+  private final WindowsInsetsManager windowsInsetsManager;
 
   public KeyboardAnimationManager(WeakReference<ReactApplicationContext> reactContext) {
-    mWindowsInsetsManager =
-        new WindowsInsetsManager(reactContext, mKeyboard, this::notifyAboutKeyboardChange);
+    windowsInsetsManager = new WindowsInsetsManager(
+      reactContext,
+      keyboard,
+      this::notifyAboutKeyboardChange
+    );
   }
 
   public int subscribeForKeyboardUpdates(
-      KeyboardWorkletWrapper callback, boolean isStatusBarTranslucent) {
-    int listenerId = mNextListenerId++;
-    if (mListeners.isEmpty()) {
-      KeyboardAnimationCallback keyboardAnimationCallback =
-          new KeyboardAnimationCallback(mKeyboard, this::notifyAboutKeyboardChange);
-      mWindowsInsetsManager.startObservingChanges(
-          keyboardAnimationCallback, isStatusBarTranslucent);
+    KeyboardJSCallbackWrapper callback,
+    boolean isStatusBarTranslucent
+  ) {
+    int listenerId = nextListenerId++;
+    if (listeners.isEmpty()) {
+      KeyboardAnimationCallback keyboardAnimationCallback = new KeyboardAnimationCallback(keyboard, this::notifyAboutKeyboardChange);
+      windowsInsetsManager.startObservingChanges(keyboardAnimationCallback, isStatusBarTranslucent);
     }
-    mListeners.put(listenerId, callback);
+    listeners.put(listenerId, callback);
     return listenerId;
   }
 
   public void unsubscribeFromKeyboardUpdates(int listenerId) {
-    mListeners.remove(listenerId);
-    if (mListeners.isEmpty()) {
-      mWindowsInsetsManager.stopObservingChanges();
+    listeners.remove(listenerId);
+    if (listeners.isEmpty()) {
+      windowsInsetsManager.stopObservingChanges();
     }
   }
 
   public void notifyAboutKeyboardChange() {
-    for (KeyboardWorkletWrapper listener : mListeners.values()) {
-      listener.invoke(mKeyboard.getState().asInt(), mKeyboard.getHeight());
+    for (KeyboardJSCallbackWrapper listener : listeners.values()) {
+      listener.callCallback(keyboard.getState().asInt(), keyboard.getHeight());
     }
   }
 }
