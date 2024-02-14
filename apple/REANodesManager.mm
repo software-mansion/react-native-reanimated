@@ -554,8 +554,7 @@ using namespace facebook::react;
     int b = 255 * components[MIN(2, totalComponents - 2)];
     result = [NSString stringWithFormat:@"#%02x%02x%02x", r, g, b];
 #else
-    result = @"Cant get background color on macos";
-
+    result = @"Getting background color with function 'getViewProp' is not supported on macOS";
 #endif
   }
 
