@@ -58,9 +58,12 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   // views
   virtual jsi::Value getViewProp(
       jsi::Runtime &rt,
-      const jsi::Value &viewTag,
-      const jsi::Value &propName,
+#ifdef RCT_NEW_ARCH_ENABLED
       const jsi::Value &shadowNodeWrapper,
+#else
+      const jsi::Value &viewTag,
+#endif
+      const jsi::Value &propName,
       const jsi::Value &callback) = 0;
 
   // sensors

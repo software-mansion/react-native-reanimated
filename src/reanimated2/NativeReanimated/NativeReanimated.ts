@@ -42,9 +42,8 @@ export interface NativeReanimatedModule {
   ): number;
   unregisterEventHandler(id: number): void;
   getViewProp<T>(
-    viewTag: number,
+    viewTagOrShadowNodeWrapper: number | ShadowNodeWrapper,
     propName: string,
-    shadowNodeWrapper?: ShadowNodeWrapper,
     callback?: (result: T) => void
   ): Promise<T>;
   enableLayoutAnimations(flag: boolean): void;
@@ -189,13 +188,14 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       shadowNodeWrapper = getShadowNodeWrapperFromRef(
         component as React.Component
       );
+      return this.InnerNativeModule.getViewProp(
+        shadowNodeWrapper,
+        propName,
+        callback
+      );
     }
-    return this.InnerNativeModule.getViewProp(
-      viewTag,
-      propName,
-      shadowNodeWrapper,
-      callback
-    );
+
+    return this.InnerNativeModule.getViewProp(viewTag, propName, callback);
   }
 
   configureLayoutAnimation(

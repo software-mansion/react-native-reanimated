@@ -120,13 +120,7 @@ NativeReanimatedModule::NativeReanimatedModule(
                         jsi::Runtime &rt,
                         const jsi::Value &shadowNodeWrapper,
                         const jsi::Value &propName) {
-    // TODO Move this implementation
-    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
-    const auto propNameStr = propName.asString(rt).utf8(rt);
-    const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-    std::string resultStr =
-        obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
-    return jsi::String::createFromUtf8(rt, resultStr);
+    return this->obtainProp(rt, shadowNodeWrapper, propName);
   };
 #endif
 
@@ -293,16 +287,16 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
 
 #endif
 
+#ifdef RCT_NEW_ARCH_ENABLED
+
 jsi::Value NativeReanimatedModule::getViewProp(
     jsi::Runtime &rnRuntime,
-    const jsi::Value &viewTag,
-    const jsi::Value &propName,
     const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &propName,
     const jsi::Value &callback) {
   const auto propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
   const auto funPtr = std::make_shared<jsi::Function>(
       callback.getObject(rnRuntime).asFunction(rnRuntime));
-#ifdef RCT_NEW_ARCH_ENABLED
   const auto shadowNode = shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
   uiScheduler_->scheduleOnUI([=]() {
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
@@ -316,8 +310,19 @@ jsi::Value NativeReanimatedModule::getViewProp(
     });
   });
   return jsi::Value::undefined();
+}
 
 #else
+
+jsi::Value NativeReanimatedModule::getViewProp(
+    jsi::Runtime &rnRuntime,
+    const jsi::Value &viewTag,
+    const jsi::Value &propName,
+    const jsi::Value &callback) {
+  const auto propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
+  const auto funPtr = std::make_shared<jsi::Function>(
+      callback.getObject(rnRuntime).asFunction(rnRuntime));
+
   const int viewTagInt = viewTag.asNumber();
 
   uiScheduler_->scheduleOnUI([=]() {
@@ -334,10 +339,10 @@ jsi::Value NativeReanimatedModule::getViewProp(
       funPtr->call(rnRuntime, resultValue);
     });
   });
-
   return jsi::Value::undefined();
-#endif
 }
+
+#endif
 
 jsi::Value NativeReanimatedModule::enableLayoutAnimations(
     jsi::Runtime &,
@@ -733,6 +738,18 @@ void NativeReanimatedModule::dispatchCommand(
   std::string commandName = stringFromValue(rt, commandNameValue);
   folly::dynamic args = commandArgsFromValue(rt, argsValue);
   uiManager_->dispatchCommand(shadowNode, commandName, args);
+}
+
+jsi::String NativeReanimatedModule::obtainProp(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &propName) {
+  jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+  const auto propNameStr = propName.asString(rt).utf8(rt);
+  const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  std::string resultStr =
+      obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
+  return jsi::String::createFromUtf8(rt, resultStr);
 }
 
 jsi::Value NativeReanimatedModule::measure(

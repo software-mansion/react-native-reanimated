@@ -70,9 +70,12 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   jsi::Value getViewProp(
       jsi::Runtime &rt,
-      const jsi::Value &viewTag,
-      const jsi::Value &propName,
+#ifdef RCT_NEW_ARCH_ENABLED
       const jsi::Value &shadowNodeWrapper,
+#else
+      const jsi::Value &viewTag,
+#endif
+      const jsi::Value &propName,
       const jsi::Value &callback) override;
 
   jsi::Value enableLayoutAnimations(jsi::Runtime &rt, const jsi::Value &config)
@@ -127,6 +130,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &shadowNodeValue,
       const jsi::Value &commandNameValue,
       const jsi::Value &argsValue);
+
+  jsi::String obtainProp(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &propName);
 
   jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue);
 
