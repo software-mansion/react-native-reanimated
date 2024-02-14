@@ -16,20 +16,16 @@ public class KeyboardAnimationManager {
   private final WindowsInsetsManager windowsInsetsManager;
 
   public KeyboardAnimationManager(WeakReference<ReactApplicationContext> reactContext) {
-    windowsInsetsManager = new WindowsInsetsManager(
-      reactContext,
-      keyboard,
-      this::notifyAboutKeyboardChange
-    );
+    windowsInsetsManager =
+        new WindowsInsetsManager(reactContext, keyboard, this::notifyAboutKeyboardChange);
   }
 
   public int subscribeForKeyboardUpdates(
-    KeyboardJSCallbackWrapper callback,
-    boolean isStatusBarTranslucent
-  ) {
+      KeyboardJSCallbackWrapper callback, boolean isStatusBarTranslucent) {
     int listenerId = nextListenerId++;
     if (listeners.isEmpty()) {
-      KeyboardAnimationCallback keyboardAnimationCallback = new KeyboardAnimationCallback(keyboard, this::notifyAboutKeyboardChange);
+      KeyboardAnimationCallback keyboardAnimationCallback =
+          new KeyboardAnimationCallback(keyboard, this::notifyAboutKeyboardChange);
       windowsInsetsManager.startObservingChanges(keyboardAnimationCallback, isStatusBarTranslucent);
     }
     listeners.put(listenerId, callback);

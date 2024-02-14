@@ -20,10 +20,9 @@ public class WindowsInsetsManager {
   private final NotifyAboutKeyboardChangeFunction notifyAboutKeyboardChange;
 
   public WindowsInsetsManager(
-    WeakReference<ReactApplicationContext> reactContext,
-    Keyboard keyboard,
-    NotifyAboutKeyboardChangeFunction notifyAboutKeyboardChange
-  ) {
+      WeakReference<ReactApplicationContext> reactContext,
+      Keyboard keyboard,
+      NotifyAboutKeyboardChangeFunction notifyAboutKeyboardChange) {
     this.reactContext = reactContext;
     this.keyboard = keyboard;
     this.notifyAboutKeyboardChange = notifyAboutKeyboardChange;
@@ -38,9 +37,7 @@ public class WindowsInsetsManager {
   }
 
   public void startObservingChanges(
-    KeyboardAnimationCallback keyboardAnimationCallback,
-    boolean isStatusBarTranslucent
-  ) {
+      KeyboardAnimationCallback keyboardAnimationCallback, boolean isStatusBarTranslucent) {
     this.isStatusBarTranslucent = isStatusBarTranslucent;
     updateWindowDecor(false);
     ViewCompat.setOnApplyWindowInsetsListener(getRootView(), this::onApplyWindowInsetsListener);
@@ -56,9 +53,8 @@ public class WindowsInsetsManager {
   }
 
   private void updateWindowDecor(boolean decorFitsSystemWindow) {
-    new Handler(Looper.getMainLooper()).post(
-      () -> WindowCompat.setDecorFitsSystemWindows(getWindow(), decorFitsSystemWindow)
-    );
+    new Handler(Looper.getMainLooper())
+        .post(() -> WindowCompat.setDecorFitsSystemWindows(getWindow(), decorFitsSystemWindow));
   }
 
   private WindowInsetsCompat onApplyWindowInsetsListener(View view, WindowInsetsCompat insets) {
@@ -73,8 +69,7 @@ public class WindowsInsetsManager {
   private void setWindowInsets(WindowInsetsCompat insets) {
     int paddingBottom = 0;
     boolean isOldPaperImplementation =
-      !BuildConfig.IS_NEW_ARCHITECTURE_ENABLED
-      && BuildConfig.REACT_NATIVE_MINOR_VERSION < 70;
+        !BuildConfig.IS_NEW_ARCHITECTURE_ENABLED && BuildConfig.REACT_NATIVE_MINOR_VERSION < 70;
     if (isOldPaperImplementation) {
       int navigationBarTypeMask = WindowInsetsCompat.Type.navigationBars();
       paddingBottom = insets.getInsets(navigationBarTypeMask).bottom;
@@ -85,17 +80,19 @@ public class WindowsInsetsManager {
   }
 
   private void updateInsets(int paddingTop, int paddingBottom) {
-    new Handler(Looper.getMainLooper()).post(() -> {
-      FrameLayout.LayoutParams params = getLayoutParams(paddingTop, paddingBottom);
-      int actionBarId = androidx.appcompat.R.id.action_bar_root;
-      View actionBarRootView = getRootView().findViewById(actionBarId);
-      actionBarRootView.setLayoutParams(params);
-    });
+    new Handler(Looper.getMainLooper())
+        .post(
+            () -> {
+              FrameLayout.LayoutParams params = getLayoutParams(paddingTop, paddingBottom);
+              int actionBarId = androidx.appcompat.R.id.action_bar_root;
+              View actionBarRootView = getRootView().findViewById(actionBarId);
+              actionBarRootView.setLayoutParams(params);
+            });
   }
 
   private FrameLayout.LayoutParams getLayoutParams(int paddingTop, int paddingBottom) {
-    int matchParent = FrameLayout.LayoutParams.MATCH_PARENT;
-    FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(matchParent, matchParent);
+    int matchParentFlag = FrameLayout.LayoutParams.MATCH_PARENT;
+    FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(matchParentFlag, matchParentFlag);
     if (isStatusBarTranslucent) {
       params.setMargins(0, 0, 0, 0);
     } else {
