@@ -4,9 +4,9 @@ import Layout from '@theme/Layout';
 import styles from './index.module.css';
 import HomepageStartScreen from '@site/src/components/Hero/StartScreen';
 import ReanimatedFeatures from '@site/src/components/ReanimatedFeatures';
-import ReanimatedAnimations from '@site/src/components/ReanimatedAnimations';
-import ReanimatedTestimonials from '@site/src/components/ReanimatedTestimonials';
-import ReanimatedSponsors from '@site/src/components/ReanimatedSponsors';
+import Animations from '@site/src/components/Animations';
+import Testimonials from '@site/src/components/Testimonials';
+import Sponsors from '@site/src/components/Sponsors';
 
 export default function Home(): JSX.Element {
   return (
@@ -14,9 +14,9 @@ export default function Home(): JSX.Element {
       <div className={styles.landingContainer}>
         <HomepageStartScreen />
         <ReanimatedFeatures />
-        <ReanimatedAnimations />
-        <ReanimatedTestimonials />
-        <ReanimatedSponsors />
+        <Animations />
+        <Testimonials />
+        <Sponsors />
       </div>
     </Layout>
   );

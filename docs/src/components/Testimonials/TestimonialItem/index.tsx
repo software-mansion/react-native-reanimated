@@ -1,5 +1,4 @@
 import React, { PropsWithChildren } from 'react';
-import clsx from 'clsx';
 import styles from './styles.module.css';
 import QuoteIcon from './QuoteIcon';
 import { useColorMode } from '@docusaurus/theme-common';
@@ -15,13 +14,7 @@ interface Props extends PropsWithChildren {
   image: TestimonialImageProps;
 }
 
-const GestureTestimonialItem = ({
-  author,
-  company,
-  image,
-  link,
-  children,
-}: Props) => {
+const TestimonialItem = ({ author, company, image, link, children }: Props) => {
   return (
     <a href={link} target="_blank" className={styles.testimonialItem}>
       <QuoteIcon
@@ -46,4 +39,4 @@ const GestureTestimonialItem = ({
   );
 };
 
-export default GestureTestimonialItem;
+export default TestimonialItem;

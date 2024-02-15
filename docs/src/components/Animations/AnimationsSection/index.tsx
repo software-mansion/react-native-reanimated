@@ -21,7 +21,7 @@ interface Props {
   idx: number;
 }
 
-export default function ReanimatedAnimationsSection({
+export default function AnimationsSection({
   title,
   body,
   docsLink,
