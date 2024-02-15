@@ -14,7 +14,7 @@ import type {
   CallExpression,
   FunctionDeclaration,
 } from '@babel/types';
-import { makeWorkletFactoryCall } from './processIfWorkletFunction';
+import { makeWorkletFactoryCall } from './workletFactoryCall';
 import type { ReanimatedPluginPass } from './types';
 import { WorkletizableFunction } from './types';
 

@@ -1,14 +1,16 @@
 import type { PluginItem, NodePath } from '@babel/core';
 import type { CallExpression } from '@babel/types';
-import { processCalleesAutoworkletizableCallbacks } from './processForCalleesWorklets';
+import {
+  processIfAutoworkletizableCallback,
+  processCalleesAutoworkletizableCallbacks,
+} from './autoworkletization';
 import { WorkletizableFunction } from './types';
 import type { ReanimatedPluginPass } from './types';
-import { processIfWithWorkletDirective } from './processIfWorkletNode';
-import { processInlineStylesWarning } from './processInlineStylesWarning';
-import { processIfAutoworkletizableCallback } from './processIfCallback';
-import { addCustomGlobals } from './addCustomGlobals';
+import { processIfWithWorkletDirective } from './workletSubstitution';
+import { processInlineStylesWarning } from './inlineStylesWarning';
+import { addCustomGlobals } from './utils';
 import { initializeGlobals } from './globals';
-import { substituteWebCallExpression } from './substituteWebCallExpression';
+import { substituteWebCallExpression } from './webOptimization';
 
 module.exports = function (): PluginItem {
   function runWithTaggedExceptions(fun: () => void) {
