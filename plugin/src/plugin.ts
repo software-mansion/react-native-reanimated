@@ -3,6 +3,7 @@ import type { CallExpression } from '@babel/types';
 import {
   processIfAutoworkletizableCallback,
   processCalleesAutoworkletizableCallbacks,
+  processIfRequestedWorkletization,
 } from './autoworkletization';
 import { WorkletizableFunction } from './types';
 import type { ReanimatedPluginPass } from './types';
@@ -46,7 +47,8 @@ module.exports = function (): PluginItem {
         ) {
           runWithTaggedExceptions(() => {
             processIfWithWorkletDirective(path, state) ||
-              processIfAutoworkletizableCallback(path, state);
+              processIfAutoworkletizableCallback(path, state) ||
+              processIfRequestedWorkletization(path, state);
           });
         },
       },

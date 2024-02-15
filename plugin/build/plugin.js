@@ -813,7 +813,7 @@ var require_autoworkletization = __commonJS({
   "lib/autoworkletization.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.processCalleesAutoworkletizableCallbacks = exports2.processIfAutoworkletizableCallback = void 0;
+    exports2.processCalleesAutoworkletizableCallbacks = exports2.processIfAutoworkletizableCallback = exports2.processIfRequestedWorkletization = void 0;
     var types_12 = require("@babel/types");
     var types_2 = require_types();
     var assert_1 = require("assert");
@@ -840,6 +840,27 @@ var require_autoworkletization = __commonJS({
       "useAnimatedGestureHandler",
       "useAnimatedScrollHandler"
     ]);
+    function processIfRequestedWorkletization(path, state) {
+      var _a;
+      if (!state.opts.autoworkletizationRequests || !state.filename || !path.isFunctionDeclaration()) {
+        return false;
+      }
+      const functionName = (_a = path.node.id) === null || _a === void 0 ? void 0 : _a.name;
+      if (!functionName) {
+        return false;
+      }
+      const filename = Object.keys(state.opts.autoworkletizationRequests).find((key) => state.filename.includes(key));
+      if (!filename) {
+        return false;
+      }
+      const requests = state.opts.autoworkletizationRequests[filename];
+      if (requests.includes(functionName)) {
+        (0, workletSubstitution_12.processWorklet)(path, state);
+        return true;
+      }
+      return false;
+    }
+    exports2.processIfRequestedWorkletization = processIfRequestedWorkletization;
     function processIfAutoworkletizableCallback(path, state) {
       if ((0, gestureHandlerAutoworkletization_1.isGestureHandlerEventCallback)(path) || (0, layoutAnimationAutoworkletization_1.isLayoutAnimationCallback)(path)) {
         (0, workletSubstitution_12.processWorklet)(path, state);
@@ -1042,7 +1063,7 @@ module.exports = function() {
       [types_1.WorkletizableFunction]: {
         enter(path, state) {
           runWithTaggedExceptions(() => {
-            (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state) || (0, autoworkletization_1.processIfAutoworkletizableCallback)(path, state);
+            (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state) || (0, autoworkletization_1.processIfAutoworkletizableCallback)(path, state) || (0, autoworkletization_1.processIfRequestedWorkletization)(path, state);
           });
         }
       },

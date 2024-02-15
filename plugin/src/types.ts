@@ -13,6 +13,7 @@ export interface ReanimatedPluginOptions {
   omitNativeOnlyData?: boolean;
   globals?: string[];
   substituteWebPlatformChecks?: boolean;
+  autoworkletizationRequests?: Record<string, string[]>;
 }
 
 export interface ReanimatedPluginPass {

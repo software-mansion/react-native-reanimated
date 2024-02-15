@@ -32,6 +32,36 @@ const objectHooks = new Set([
   'useAnimatedScrollHandler',
 ]);
 
+export function processIfRequestedWorkletization(
+  path: NodePath<WorkletizableFunction>,
+  state: ReanimatedPluginPass
+): boolean {
+  if (
+    !state.opts.autoworkletizationRequests ||
+    !state.filename ||
+    !path.isFunctionDeclaration()
+  ) {
+    return false;
+  }
+  const functionName = path.node.id?.name;
+  if (!functionName) {
+    return false;
+  }
+  const filename = Object.keys(state.opts.autoworkletizationRequests).find(
+    (key) => state.filename!.includes(key)
+  );
+  if (!filename) {
+    return false;
+  }
+  const requests = state.opts.autoworkletizationRequests[filename];
+  if (requests.includes(functionName)) {
+    processWorklet(path, state);
+    return true;
+  }
+
+  return false;
+}
+
 /**
  *
  * @returns `true` if the function was workletized, `false` otherwise.
