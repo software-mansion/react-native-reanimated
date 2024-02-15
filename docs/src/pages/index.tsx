@@ -6,6 +6,7 @@ import HomepageStartScreen from '@site/src/components/Hero/StartScreen';
 import ReanimatedFeatures from '@site/src/components/ReanimatedFeatures';
 import ReanimatedAnimations from '../components/ReanimatedAnimations';
 import ReanimatedSponsors from '@site/src/components/ReanimatedSponsors';
+import ReanimtedTestimonials from '@site/src/components/ReanimatedTestimonials';
 
 export default function Home(): JSX.Element {
   return (
@@ -14,6 +15,7 @@ export default function Home(): JSX.Element {
         <HomepageStartScreen />
         <ReanimatedFeatures />
         <ReanimatedAnimations />
+        <ReanimtedTestimonials />
         <ReanimatedSponsors />
       </div>
     </Layout>

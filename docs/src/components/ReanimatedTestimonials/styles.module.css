@@ -1,0 +1,43 @@
+.testimonialsContainer {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  gap: 5rem;
+  width: 60%;
+  margin: 0 auto;
+}
+
+@media (max-width: 1440px) {
+  .testimonialsContainer {
+    width: 75%;
+  }
+}
+
+@media (max-width: 768px) {
+  .testimonialsContainer {
+    width: 80%;
+    margin-top: 2rem;
+  }
+}
+
+.title {
+  font-size: var(--swm-h2-font-size);
+}
+
+@media (min-width: 1750px) {
+  .testimonialsContainer {
+    margin-top: -10rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .testimonialsContainer {
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .title {
+    font-size: 24px;
+  }
+}

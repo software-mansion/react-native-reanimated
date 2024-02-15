@@ -54,6 +54,7 @@
 
 .dot:hover {
   cursor: pointer;
+  background-color: var(--swm-red-light-100);
 }
 
 .dot.active {
