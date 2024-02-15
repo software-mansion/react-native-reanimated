@@ -4,7 +4,8 @@ import Layout from '@theme/Layout';
 import styles from './index.module.css';
 import HomepageStartScreen from '@site/src/components/Hero/StartScreen';
 import ReanimatedFeatures from '@site/src/components/ReanimatedFeatures';
-import ReanimatedAnimations from '../components/ReanimatedAnimations';
+import ReanimatedAnimations from '@site/src/components/ReanimatedAnimations';
+import ReanimatedTestimonials from '@site/src/components/ReanimatedTestimonials';
 import ReanimatedSponsors from '@site/src/components/ReanimatedSponsors';
 
 export default function Home(): JSX.Element {
@@ -14,6 +15,7 @@ export default function Home(): JSX.Element {
         <HomepageStartScreen />
         <ReanimatedFeatures />
         <ReanimatedAnimations />
+        <ReanimatedTestimonials />
         <ReanimatedSponsors />
       </div>
     </Layout>
