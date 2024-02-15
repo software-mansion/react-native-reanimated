@@ -58,7 +58,7 @@ export function withSequence(
     });
   }
 
-  const initialAnimationStarts = _animations.map((animationObject) => {
+  const initialAnimationStartValues = _animations.map((animationObject) => {
     return typeof animationObject === 'function'
       ? animationObject().startValue
       : animationObject.startValue;
@@ -147,7 +147,8 @@ export function withSequence(
         }
 
         // Detect re-render
-        const animationStart = initialAnimationStarts[animation.animationIndex];
+        const animationStart =
+          initialAnimationStartValues[animation.animationIndex];
         const hasBeenInterrupted = value !== animationStart;
         const startingValue = hasBeenInterrupted ? animationStart : value;
 

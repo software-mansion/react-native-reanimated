@@ -39,7 +39,7 @@ export const withRepeat = function <T extends AnimationObject>(
 ): Animation<RepeatAnimation> {
   'worklet';
 
-  const initialAnimationStart =
+  const initialAnimationStartValue =
     typeof _nextAnimation === 'function'
       ? _nextAnimation().startValue
       : _nextAnimation.startValue;
@@ -106,10 +106,10 @@ export const withRepeat = function <T extends AnimationObject>(
         previousAnimation: Animation<any> | null
       ): void {
         // Detect re-render
-        const hasBeenInterrupted = value !== initialAnimationStart;
+        const hasBeenInterrupted = value !== initialAnimationStartValue;
         const startingValue =
-          hasBeenInterrupted && initialAnimationStart !== undefined
-            ? initialAnimationStart
+          hasBeenInterrupted && initialAnimationStartValue !== undefined
+            ? initialAnimationStartValue
             : value;
         animation.startValue = startingValue;
         animation.reps = 0;

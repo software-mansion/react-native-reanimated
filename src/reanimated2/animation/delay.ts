@@ -32,11 +32,11 @@ export const withDelay = function <T extends AnimationObject>(
 ): Animation<DelayAnimation> {
   'worklet';
 
-  const initialAnimationStart =
+  const initialAnimationStartValue =
     typeof _nextAnimation === 'function'
       ? _nextAnimation().startValue
       : _nextAnimation.startValue;
-  let didResetAfterInterruption = false;
+  let shouldSkipNextValueSet = false;
 
   return defineAnimation<DelayAnimation, T>(
     _nextAnimation,
@@ -69,12 +69,14 @@ export const withDelay = function <T extends AnimationObject>(
           const finished =
             previousAnimation.finished ||
             previousAnimation.onFrame(previousAnimation, now);
+
           // We need to prevent setting previous animation value when there was an interruption - so that it can reset properly
-          if (didResetAfterInterruption) {
-            didResetAfterInterruption = false;
+          if (shouldSkipNextValueSet) {
+            shouldSkipNextValueSet = false;
           } else {
             animation.current = previousAnimation.current;
           }
+
           if (finished) {
             animation.previousAnimation = null;
           }
@@ -89,10 +91,12 @@ export const withDelay = function <T extends AnimationObject>(
         previousAnimation: Animation<any> | null
       ): void {
         // Detect re-render
-        const hasBeenInterrupted = value !== initialAnimationStart;
-        didResetAfterInterruption = hasBeenInterrupted;
+        const hasBeenInterrupted = value !== initialAnimationStartValue;
+        shouldSkipNextValueSet = hasBeenInterrupted;
 
-        animation.current = hasBeenInterrupted ? initialAnimationStart : value;
+        animation.current = hasBeenInterrupted
+          ? initialAnimationStartValue
+          : value;
         animation.startTime = now;
         animation.started = false;
 
