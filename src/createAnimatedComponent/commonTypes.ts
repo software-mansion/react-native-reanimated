@@ -54,25 +54,35 @@ export interface IJSPropsUpdater {
   ): void;
 }
 
+export type LayoutAnimationStaticContext = {
+  presetName: string;
+};
+
 export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
   forwardedRef?: Ref<Component>;
   style?: NestedArray<StyleProps>;
   animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
   animatedStyle?: StyleProps;
-  layout?:
+  layout?: (
     | BaseAnimationBuilder
     | ILayoutAnimationBuilder
-    | typeof BaseAnimationBuilder;
-  entering?:
+    | typeof BaseAnimationBuilder
+  ) &
+    LayoutAnimationStaticContext;
+  entering?: (
     | BaseAnimationBuilder
     | typeof BaseAnimationBuilder
     | EntryExitAnimationFunction
-    | Keyframe;
-  exiting?:
+    | Keyframe
+  ) &
+    LayoutAnimationStaticContext;
+  exiting?: (
     | BaseAnimationBuilder
     | typeof BaseAnimationBuilder
     | EntryExitAnimationFunction
-    | Keyframe;
+    | Keyframe
+  ) &
+    LayoutAnimationStaticContext;
   sharedTransitionTag?: string;
   sharedTransitionStyle?: SharedTransition;
 };
