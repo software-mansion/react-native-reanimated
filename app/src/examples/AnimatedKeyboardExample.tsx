@@ -1,70 +1,37 @@
-import Animated, {
-  KeyboardState,
-  useAnimatedKeyboard,
-  useAnimatedStyle,
-} from 'react-native-reanimated';
-import {
-  Button,
-  Keyboard,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
-
-import React from 'react';
-
-const BOX_SIZE = 50;
-
-function NestedView() {
-  useAnimatedKeyboard();
-  return <View style={styles.nestedView} />;
-}
+import { StyleSheet, TextInput, Text, View, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
 
 export default function AnimatedKeyboardExample() {
-  const keyboard = useAnimatedKeyboard();
-  const OPENING = KeyboardState.OPENING;
-  const style = useAnimatedStyle(() => {
-    const color = keyboard.state.value === OPENING ? 'red' : 'blue';
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
-    return {
-      backgroundColor: color,
-    };
-  });
-  const translateStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateY: -keyboard.height.value }],
-    };
-  });
-  const [shouldShowNestedView, setShouldShowNestedView] = React.useState(false);
+  useEffect(() => {
+    const initialViewportHeight = visualViewport.height;
+
+    if (visualViewport) {
+      visualViewport.onresize = () => {
+        setKeyboardHeight(initialViewportHeight - visualViewport.height);
+        console.log(initialViewportHeight - visualViewport.height);
+      };
+    }
+  }, []);
+
+  const onInputPress = () => {};
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      keyboardDismissMode="interactive"
-      scrollEnabled={false}>
-      <Animated.View style={[styles.box, style]} />
-      <Button
-        title="Toggle nested view"
-        onPress={() => {
-          setShouldShowNestedView(!shouldShowNestedView);
-        }}
-      />
-      {shouldShowNestedView ? <NestedView /> : null}
-      <Animated.View style={translateStyle}>
-        <Button
-          title="Dismiss"
-          onPress={() => {
-            Keyboard.dismiss();
-          }}
-        />
-        <TextInput style={styles.textInput} autoCorrect />
-      </Animated.View>
+    <ScrollView style={styles.flexOne}>
+      <View style={styles.container}>
+        <Text>Keyboard height is: {keyboardHeight}</Text>
+        <TextInput style={styles.textInput} onFocus={onInputPress} />
+        <View style={styles.measuringBox} />
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  flexOne: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     flexDirection: 'column',
@@ -72,17 +39,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 70,
   },
-  box: { width: BOX_SIZE, height: BOX_SIZE, marginBottom: 100 },
   textInput: {
+    flex: 1,
     borderColor: 'blue',
     borderStyle: 'solid',
     borderWidth: 2,
     height: 60,
     width: 200,
+    marginVertical: 30,
   },
-  nestedView: {
-    width: 100,
-    height: 100,
-    backgroundColor: '#ffff00',
+  measuringBox: {
+    width: 300,
+    height: 300,
+    borderColor: 'purple',
+    borderWidth: 2,
   },
 });
