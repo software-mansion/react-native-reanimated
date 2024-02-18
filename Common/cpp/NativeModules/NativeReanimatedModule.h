@@ -36,36 +36,28 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const std::shared_ptr<CallInvoker> &jsInvoker,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      const PlatformDepMethodsHolder &platformDepMethodsHolder);
+      const PlatformDepMethodsHolder &platformDepMethodsHolder,
+      const std::string &valueUnpackerCode);
 
   ~NativeReanimatedModule();
-
-  void installValueUnpacker(
-      jsi::Runtime &rt,
-      const jsi::Value &valueUnpackerCode) override;
 
   jsi::Value makeShareableClone(
       jsi::Runtime &rt,
       const jsi::Value &value,
       const jsi::Value &shouldRetainRemote) override;
 
-  jsi::Value makeSynchronizedDataHolder(
-      jsi::Runtime &rt,
-      const jsi::Value &initialShareable) override;
-  jsi::Value getDataSynchronously(
-      jsi::Runtime &rt,
-      const jsi::Value &synchronizedDataHolderRef) override;
-  void updateDataSynchronously(
-      jsi::Runtime &rt,
-      const jsi::Value &synchronizedDataHolderRef,
-      const jsi::Value &newData);
-
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
+  jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
+      override;
 
   jsi::Value createWorkletRuntime(
       jsi::Runtime &rt,
       const jsi::Value &name,
       const jsi::Value &initializer) override;
+  jsi::Value scheduleOnRuntime(
+      jsi::Runtime &rt,
+      const jsi::Value &workletRuntimeValue,
+      const jsi::Value &shareableWorkletValue) override;
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
@@ -94,6 +86,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &type,
       const jsi::Value &sharedTransitionTag,
       const jsi::Value &config) override;
+  jsi::Value configureLayoutAnimationBatch(
+      jsi::Runtime &rt,
+      const jsi::Value &layoutAnimationsBatch) override;
   void setShouldAnimateExiting(
       jsi::Runtime &rt,
       const jsi::Value &viewTag,
@@ -112,6 +107,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const int emitterReactTag,
       const jsi::Value &payload,
       double currentTime);
+
+  inline std::shared_ptr<JSLogger> getJSLogger() const {
+    return jsLogger_;
+  }
 
 #ifdef RCT_NEW_ARCH_ENABLED
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
@@ -164,6 +163,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
 #ifdef RCT_NEW_ARCH_ENABLED
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Object &props);
+  jsi::Value filterNonAnimatableProps(
+      jsi::Runtime &rt,
+      const jsi::Value &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
   const std::shared_ptr<MessageQueueThread> jsQueue_;
@@ -178,13 +180,15 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   volatile bool renderRequested_{false};
   const std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
+  const std::shared_ptr<JSLogger> jsLogger_;
   LayoutAnimationsManager layoutAnimationsManager_;
 
 #ifdef RCT_NEW_ARCH_ENABLED
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
-
+  std::unordered_set<std::string>
+      animatablePropNames_; // filled by configureProps
   std::shared_ptr<UIManager> uiManager_;
 
   // After app reload, surfaceId on iOS is still 1 but on Android it's 11.
@@ -210,7 +214,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   const KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;
 
-#ifdef DEBUG
+#ifndef NDEBUG
   SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;
 #endif
 };

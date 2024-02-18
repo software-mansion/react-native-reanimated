@@ -1,4 +1,5 @@
 'use strict';
+
 import './publicGlobals';
 
 export type { WorkletRuntime } from './core';
@@ -6,12 +7,14 @@ export {
   runOnJS,
   runOnUI,
   createWorkletRuntime,
+  runOnRuntime,
   makeMutable,
   makeShareableCloneRecursive,
   isReanimated3,
   isConfigured,
   enableLayoutAnimations,
   getViewProp,
+  executeOnUIRuntimeSync,
 } from './core';
 export type {
   GestureHandlers,
@@ -60,12 +63,13 @@ export type {
 export {
   cancelAnimation,
   defineAnimation,
-  withTiming,
-  withSpring,
+  withClamp,
   withDecay,
   withDelay,
   withRepeat,
   withSequence,
+  withSpring,
+  withTiming,
 } from './animation';
 export type { ExtrapolationConfig, ExtrapolationType } from './interpolation';
 export { Extrapolation, interpolate, clamp } from './interpolation';
@@ -77,7 +81,7 @@ export type {
 } from './interpolateColor';
 export {
   /**
-   * @deprecated Please use `Extrapolation` instead.
+   * @deprecated Please use {@link Extrapolation} instead.
    */
   Extrapolate,
   ColorSpace,
@@ -91,13 +95,15 @@ export type {
   EasingFactoryFn,
 } from './Easing';
 export { Easing } from './Easing';
+export type { ComponentCoords } from './platformFunctions';
 export {
   measure,
   dispatchCommand,
   scrollTo,
   setGestureState,
-} from './NativeMethods';
-export { setNativeProps } from './SetNativeProps';
+  setNativeProps,
+  getRelativeCoords,
+} from './platformFunctions';
 export type { ParsedColorArray } from './Colors';
 export { isColor, processColor, convertToRGBA } from './Colors';
 export { createAnimatedPropAdapter } from './PropAdapters';
@@ -216,8 +222,7 @@ export {
   SharedTransition,
   SharedTransitionType,
 } from './layoutReanimation';
-export type { ComponentCoords } from './utils';
-export { getRelativeCoords, isSharedValue } from './utils';
+export { isSharedValue } from './isSharedValue';
 export type {
   StyleProps,
   SharedValue,
@@ -240,6 +245,7 @@ export {
   InterfaceOrientation,
   KeyboardState,
   ReduceMotion,
+  isWorklet,
 } from './commonTypes';
 export type { FrameInfo } from './frameCallback';
 export { getUseOfValueInStyleWarning } from './pluginUtils';

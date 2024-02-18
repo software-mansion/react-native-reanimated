@@ -1,53 +1,5 @@
 'use strict';
-import type { Ref, Component } from 'react';
-import type {
-  StyleProps,
-  BaseAnimationBuilder,
-  ILayoutAnimationBuilder,
-  EntryExitAnimationFunction,
-  SharedTransition,
-  SharedValue,
-} from '../reanimated2';
-import type {
-  ViewDescriptorsSet,
-  ViewRefSet,
-} from '../reanimated2/ViewDescriptorsSet';
-
-export interface AnimatedProps extends Record<string, unknown> {
-  viewDescriptors?: ViewDescriptorsSet;
-  viewsRef?: ViewRefSet<unknown>;
-  initial?: SharedValue<StyleProps>;
-}
-
-export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
-  forwardedRef?: Ref<Component>;
-  style?: NestedArray<StyleProps>;
-  animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
-  animatedStyle?: StyleProps;
-  layout?:
-    | BaseAnimationBuilder
-    | ILayoutAnimationBuilder
-    | typeof BaseAnimationBuilder;
-  entering?:
-    | BaseAnimationBuilder
-    | typeof BaseAnimationBuilder
-    | EntryExitAnimationFunction
-    | Keyframe;
-  exiting?:
-    | BaseAnimationBuilder
-    | typeof BaseAnimationBuilder
-    | EntryExitAnimationFunction
-    | Keyframe;
-  sharedTransitionTag?: string;
-  sharedTransitionStyle?: SharedTransition;
-};
-
-type NestedArray<T> = T | NestedArray<T>[];
-
-export interface InitialComponentProps extends Record<string, unknown> {
-  ref?: Ref<Component>;
-  collapsable?: boolean;
-}
+import type { NestedArray } from './commonTypes';
 
 export function flattenArray<T>(array: NestedArray<T>): T[] {
   if (!Array.isArray(array)) {
@@ -71,7 +23,7 @@ export function flattenArray<T>(array: NestedArray<T>): T[] {
 export const has = <K extends string>(
   key: K,
   x: unknown
-): x is typeof x & { [key in K]: unknown } => {
+): x is { [key in K]: unknown } => {
   if (typeof x === 'function' || typeof x === 'object') {
     if (x === null || x === undefined) {
       return false;

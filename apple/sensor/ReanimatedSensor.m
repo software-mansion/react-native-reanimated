@@ -1,6 +1,6 @@
 #import <RNReanimated/ReanimatedSensor.h>
 
-#if !TARGET_OS_TV && !TARGET_OS_OSX
+#if !TARGET_OS_TV && !TARGET_OS_OSX && !TARGET_OS_VISION
 @implementation ReanimatedSensor
 
 - (instancetype)init:(ReanimatedSensorType)sensorType

@@ -14,13 +14,13 @@ namespace reanimated {
 
 jsi::Function getValueUnpacker(jsi::Runtime &rt);
 
-#ifdef DEBUG
+#ifndef NDEBUG
 jsi::Function getCallGuard(jsi::Runtime &rt);
-#endif // DEBUG
+#endif // NDEBUG
 
 // If possible, please use `WorkletRuntime::runGuarded` instead.
 template <typename... Args>
-inline void runOnRuntimeGuarded(
+inline jsi::Value runOnRuntimeGuarded(
     jsi::Runtime &rt,
     const jsi::Value &function,
     Args &&...args) {
@@ -28,10 +28,10 @@ inline void runOnRuntimeGuarded(
   // function directly. CallGuard provides a way of capturing exceptions in
   // JavaScript and propagating them to the main React Native thread such that
   // they can be presented using RN's LogBox.
-#ifdef DEBUG
-  getCallGuard(rt).call(rt, function, args...);
+#ifndef NDEBUG
+  return getCallGuard(rt).call(rt, function, args...);
 #else
-  function.asObject(rt).asFunction(rt).call(rt, args...);
+  return function.asObject(rt).asFunction(rt).call(rt, args...);
 #endif
 }
 
@@ -74,16 +74,16 @@ class Shareable {
     BooleanType,
     NumberType,
     // SymbolType, TODO
-    // BigIntType, TODO
+    BigIntType,
     StringType,
     ObjectType,
     ArrayType,
     WorkletType,
     RemoteFunctionType,
     HandleType,
-    SynchronizedDataHolder,
     HostObjectType,
     HostFunctionType,
+    ArrayBufferType,
   };
 
   explicit Shareable(ValueType valueType) : valueType_(valueType) {}
@@ -123,10 +123,11 @@ class RetainingShareable : virtual public BaseClass {
 
 class ShareableJSRef : public jsi::HostObject {
  private:
-  std::shared_ptr<Shareable> value_;
+  const std::shared_ptr<Shareable> value_;
 
  public:
-  explicit ShareableJSRef(std::shared_ptr<Shareable> value) : value_(value) {}
+  explicit ShareableJSRef(const std::shared_ptr<Shareable> &value)
+      : value_(value) {}
 
   virtual ~ShareableJSRef();
 
@@ -146,11 +147,6 @@ jsi::Value makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
     const jsi::Value &shouldRetainRemote);
-
-void updateDataSynchronously(
-    jsi::Runtime &rt,
-    const jsi::Value &synchronizedDataHolderRef,
-    const jsi::Value &newData);
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
@@ -202,7 +198,7 @@ class ShareableHostObject : public Shareable {
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
-  std::shared_ptr<jsi::HostObject> hostObject_;
+  const std::shared_ptr<jsi::HostObject> hostObject_;
 };
 
 class ShareableHostFunction : public Shareable {
@@ -218,9 +214,31 @@ class ShareableHostFunction : public Shareable {
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
-  jsi::HostFunctionType hostFunction_;
-  std::string name_;
-  unsigned int paramCount_;
+  const jsi::HostFunctionType hostFunction_;
+  const std::string name_;
+  const unsigned int paramCount_;
+};
+
+class ShareableArrayBuffer : public Shareable {
+ public:
+  ShareableArrayBuffer(
+      jsi::Runtime &rt,
+#if REACT_NATIVE_MINOR_VERSION >= 72
+      const jsi::ArrayBuffer &arrayBuffer
+#else
+      jsi::ArrayBuffer arrayBuffer
+#endif
+      )
+      : Shareable(ArrayBufferType),
+        data_(
+            arrayBuffer.data(rt),
+            arrayBuffer.data(rt) + arrayBuffer.size(rt)) {
+  }
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::vector<uint8_t> data_;
 };
 
 class ShareableWorklet : public ShareableObject {
@@ -272,37 +290,6 @@ class ShareableHandle : public Shareable {
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 };
 
-class ShareableSynchronizedDataHolder
-    : public Shareable,
-      public std::enable_shared_from_this<ShareableSynchronizedDataHolder> {
- private:
-  std::shared_ptr<Shareable> data_;
-  std::mutex dataAccessMutex_; // Protects `data_`.
-  jsi::Runtime *primaryRuntime_;
-  jsi::Runtime *secondaryRuntime_;
-  std::unique_ptr<jsi::Value> primaryValue_;
-  std::unique_ptr<jsi::Value> secondaryValue_;
-
- public:
-  ShareableSynchronizedDataHolder(
-      jsi::Runtime &rt,
-      const jsi::Value &initialValue)
-      : Shareable(SynchronizedDataHolder),
-        data_(extractShareableOrThrow(rt, initialValue)),
-        primaryRuntime_(&rt) {}
-
-  ~ShareableSynchronizedDataHolder() {
-    cleanupIfRuntimeExists(primaryRuntime_, primaryValue_);
-    cleanupIfRuntimeExists(secondaryRuntime_, secondaryValue_);
-  }
-
-  jsi::Value get(jsi::Runtime &rt);
-
-  void set(jsi::Runtime &rt, const jsi::Value &data);
-
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
-};
-
 class ShareableString : public Shareable {
  public:
   explicit ShareableString(const std::string &string)
@@ -311,8 +298,21 @@ class ShareableString : public Shareable {
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
-  std::string data_;
+  const std::string data_;
 };
+
+#if REACT_NATIVE_MINOR_VERSION >= 71
+class ShareableBigInt : public Shareable {
+ public:
+  explicit ShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint)
+      : Shareable(BigIntType), string_(bigint.toString(rt).utf8(rt)) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::string string_;
+};
+#endif
 
 class ShareableScalar : public Shareable {
  public:

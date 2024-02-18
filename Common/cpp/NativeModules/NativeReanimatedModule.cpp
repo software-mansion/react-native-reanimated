@@ -6,6 +6,9 @@
 #endif
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
+#if REACT_NATIVE_MINOR_VERSION >= 73 && defined(RCT_NEW_ARCH_ENABLED)
+#include <react/utils/CoreFeatures.h>
+#endif
 #endif
 
 #include <functional>
@@ -14,11 +17,12 @@
 #include <unordered_map>
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#include "FabricUtils.h"
 #include "ReanimatedCommitMarker.h"
 #include "ShadowTreeCloner.h"
 #endif
 
+#include "AsyncQueue.h"
+#include "CollectionUtils.h"
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
 #include "JSScheduler.h"
@@ -31,11 +35,12 @@
 #include <fbjni/fbjni.h>
 #endif
 
-#ifdef DEBUG
-#include "JSLogger.h"
-#endif
-
 using namespace facebook;
+
+#if REACT_NATIVE_MINOR_VERSION >= 73 && defined(RCT_NEW_ARCH_ENABLED)
+// Android can't find the definition of this static field
+bool CoreFeatures::useNativeState;
+#endif
 
 namespace reanimated {
 
@@ -44,7 +49,8 @@ NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<CallInvoker> &jsInvoker,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<UIScheduler> &uiScheduler,
-    const PlatformDepMethodsHolder &platformDepMethodsHolder)
+    const PlatformDepMethodsHolder &platformDepMethodsHolder,
+    const std::string &valueUnpackerCode)
     : NativeReanimatedModuleSpec(jsInvoker),
       jsQueue_(jsQueue),
       jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsInvoker)),
@@ -53,7 +59,10 @@ NativeReanimatedModule::NativeReanimatedModule(
           rnRuntime,
           jsQueue,
           jsScheduler_,
-          "Reanimated UI runtime")),
+          "Reanimated UI runtime",
+          true /* supportsLocking */,
+          valueUnpackerCode)),
+      valueUnpackerCode_(valueUnpackerCode),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       onRenderCallback_([this](const double timestampMs) {
@@ -61,9 +70,8 @@ NativeReanimatedModule::NativeReanimatedModule(
         onRender(timestampMs);
       }),
       animatedSensorModule_(platformDepMethodsHolder),
-#ifdef DEBUG
-      layoutAnimationsManager_(std::make_shared<JSLogger>(jsScheduler_)),
-#endif
+      jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
+      layoutAnimationsManager_(jsLogger_),
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
@@ -128,13 +136,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction);
 }
 
-void NativeReanimatedModule::installValueUnpacker(
-    jsi::Runtime &rt,
-    const jsi::Value &valueUnpackerCode) {
-  valueUnpackerCode_ = valueUnpackerCode.asString(rt).utf8(rt);
-  uiWorkletRuntime_->installValueUnpacker(valueUnpackerCode_);
-}
-
 NativeReanimatedModule::~NativeReanimatedModule() {
   // event handler registry and frame callbacks store some JSI values from UI
   // runtime, so they have to go away before we tear down the runtime
@@ -161,40 +162,35 @@ void NativeReanimatedModule::scheduleOnUI(
   });
 }
 
+jsi::Value NativeReanimatedModule::executeOnUIRuntimeSync(
+    jsi::Runtime &rt,
+    const jsi::Value &worklet) {
+  return uiWorkletRuntime_->executeSync(rt, worklet);
+}
+
 jsi::Value NativeReanimatedModule::createWorkletRuntime(
     jsi::Runtime &rt,
     const jsi::Value &name,
     const jsi::Value &initializer) {
   auto workletRuntime = std::make_shared<WorkletRuntime>(
-      rt, jsQueue_, jsScheduler_, name.asString(rt).utf8(rt));
-  workletRuntime->installValueUnpacker(valueUnpackerCode_);
+      rt,
+      jsQueue_,
+      jsScheduler_,
+      name.asString(rt).utf8(rt),
+      false /* supportsLocking */,
+      valueUnpackerCode_);
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Reanimated] Initializer must be a worklet.");
   workletRuntime->runGuarded(initializerShareable);
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }
 
-jsi::Value NativeReanimatedModule::makeSynchronizedDataHolder(
+jsi::Value NativeReanimatedModule::scheduleOnRuntime(
     jsi::Runtime &rt,
-    const jsi::Value &initialShareable) {
-  auto dataHolder =
-      std::make_shared<ShareableSynchronizedDataHolder>(rt, initialShareable);
-  return dataHolder->getJSValue(rt);
-}
-
-void NativeReanimatedModule::updateDataSynchronously(
-    jsi::Runtime &rt,
-    const jsi::Value &synchronizedDataHolderRef,
-    const jsi::Value &newData) {
-  reanimated::updateDataSynchronously(rt, synchronizedDataHolderRef, newData);
-}
-
-jsi::Value NativeReanimatedModule::getDataSynchronously(
-    jsi::Runtime &rt,
-    const jsi::Value &synchronizedDataHolderRef) {
-  auto dataHolder = extractShareableOrThrow<ShareableSynchronizedDataHolder>(
-      rt, synchronizedDataHolderRef);
-  return dataHolder->get(rt);
+    const jsi::Value &workletRuntimeValue,
+    const jsi::Value &shareableWorkletValue) {
+  reanimated::scheduleOnRuntime(rt, workletRuntimeValue, shareableWorkletValue);
+  return jsi::Value::undefined();
 }
 
 jsi::Value NativeReanimatedModule::makeShareableClone(
@@ -279,11 +275,16 @@ jsi::Value NativeReanimatedModule::configureProps(
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps) {
 #ifdef RCT_NEW_ARCH_ENABLED
-  (void)uiProps; // unused variable on Fabric
-  jsi::Array array = nativeProps.asObject(rt).asArray(rt);
-  for (size_t i = 0; i < array.size(rt); ++i) {
-    std::string name = array.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+  auto uiPropsArray = uiProps.asObject(rt).asArray(rt);
+  for (size_t i = 0; i < uiPropsArray.size(rt); ++i) {
+    auto name = uiPropsArray.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    animatablePropNames_.insert(name);
+  }
+  auto nativePropsArray = nativeProps.asObject(rt).asArray(rt);
+  for (size_t i = 0; i < nativePropsArray.size(rt); ++i) {
+    auto name = nativePropsArray.getValueAtIndex(rt, i).asString(rt).utf8(rt);
     nativePropNames_.insert(name);
+    animatablePropNames_.insert(name);
   }
 #else
   configurePropsPlatformFunction_(rt, uiProps, nativeProps);
@@ -309,12 +310,38 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
   return jsi::Value::undefined();
 }
 
+jsi::Value NativeReanimatedModule::configureLayoutAnimationBatch(
+    jsi::Runtime &rt,
+    const jsi::Value &layoutAnimationsBatch) {
+  auto array = layoutAnimationsBatch.asObject(rt).asArray(rt);
+  size_t length = array.size(rt);
+  std::vector<LayoutAnimationConfig> batch(length);
+  for (int i = 0; i < length; i++) {
+    auto item = array.getValueAtIndex(rt, i).asObject(rt);
+    auto &batchItem = batch[i];
+    batchItem.tag = item.getProperty(rt, "viewTag").asNumber();
+    batchItem.type = static_cast<LayoutAnimationType>(
+        item.getProperty(rt, "type").asNumber());
+    auto config = item.getProperty(rt, "config");
+    if (config.isUndefined()) {
+      batchItem.config = nullptr;
+    } else {
+      batchItem.config = extractShareableOrThrow<ShareableObject>(
+          rt,
+          config,
+          "[Reanimated] Layout animation config must be an object.");
+    }
+  }
+  layoutAnimationsManager_.configureAnimationBatch(batch);
+  return jsi::Value::undefined();
+}
+
 void NativeReanimatedModule::setShouldAnimateExiting(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
     const jsi::Value &shouldAnimate) {
   layoutAnimationsManager_.setShouldAnimateExiting(
-      viewTag.asNumber(), shouldAnimate.asBool());
+      viewTag.asNumber(), shouldAnimate.getBool());
 }
 
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
@@ -390,6 +417,29 @@ bool NativeReanimatedModule::isThereAnyLayoutProp(
   }
   return false;
 }
+
+jsi::Value NativeReanimatedModule::filterNonAnimatableProps(
+    jsi::Runtime &rt,
+    const jsi::Value &props) {
+  jsi::Object nonAnimatableProps(rt);
+  bool hasAnyNonAnimatableProp = false;
+  const jsi::Object &propsObject = props.asObject(rt);
+  const jsi::Array &propNames = propsObject.getPropertyNames(rt);
+  for (size_t i = 0; i < propNames.size(rt); ++i) {
+    const std::string &propName =
+        propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    if (!collection::contains(animatablePropNames_, propName)) {
+      hasAnyNonAnimatableProp = true;
+      const auto &propNameStr = propName.c_str();
+      const jsi::Value &propValue = propsObject.getProperty(rt, propNameStr);
+      nonAnimatableProps.setProperty(rt, propNameStr, propValue);
+    }
+  }
+  if (!hasAnyNonAnimatableProp) {
+    return jsi::Value::undefined();
+  }
+  return nonAnimatableProps;
+}
 #endif // RCT_NEW_ARCH_ENABLED
 
 bool NativeReanimatedModule::handleEvent(
@@ -417,16 +467,20 @@ bool NativeReanimatedModule::handleRawEvent(
     // just ignore this event, because it's an event on unmounted component
     return false;
   }
-  const std::string &type = rawEvent.type;
-  const ValueFactory &payloadFactory = rawEvent.payloadFactory;
 
   int tag = eventTarget->getTag();
-  std::string eventType = type;
+  auto eventType = rawEvent.type;
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
   }
   jsi::Runtime &rt = uiWorkletRuntime_->getJSIRuntime();
+#if REACT_NATIVE_MINOR_VERSION >= 73
+  const auto &eventPayload = rawEvent.eventPayload;
+  jsi::Value payload = eventPayload->asJSIValue(rt);
+#else
+  const auto &payloadFactory = rawEvent.payloadFactory;
   jsi::Value payload = payloadFactory(rt);
+#endif
 
   auto res = handleEvent(eventType, tag, std::move(payload), currentTime);
   // TODO: we should call performOperations conditionally if event is handled
@@ -487,6 +541,22 @@ void NativeReanimatedModule::performOperations() {
     }
   }
 
+  for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+    const jsi::Value &nonAnimatableProps = filterNonAnimatableProps(rt, *props);
+    if (nonAnimatableProps.isUndefined()) {
+      continue;
+    }
+    Tag viewTag = shadowNode->getTag();
+    jsi::Value maybeJSPropsUpdater =
+        rt.global().getProperty(rt, "updateJSProps");
+    assert(
+        maybeJSPropsUpdater.isObject() &&
+        "[Reanimated] `updateJSProps` not found");
+    jsi::Function jsPropsUpdater =
+        maybeJSPropsUpdater.asObject(rt).asFunction(rt);
+    jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
+  }
+
   bool hasLayoutUpdates = false;
   for (const auto &[shadowNode, props] : copiedOperationsQueue) {
     if (isThereAnyLayoutProp(rt, props->asObject(rt))) {
@@ -528,8 +598,6 @@ void NativeReanimatedModule::performOperations() {
           auto rootNode =
               oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
-          ShadowTreeCloner shadowTreeCloner{*uiManager_, surfaceId_};
-
           for (const auto &[shadowNode, props] : copiedOperationsQueue) {
             const ShadowNodeFamily &family = shadowNode->getFamily();
             react_native_assert(family.getSurfaceId() == surfaceId_);
@@ -543,7 +611,7 @@ void NativeReanimatedModule::performOperations() {
             }
 #endif
 
-            auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+            auto newRootNode = cloneShadowTreeWithNewProps(
                 rootNode, family, RawProps(rt, *props));
 
             if (newRootNode == nullptr) {
@@ -641,7 +709,8 @@ void NativeReanimatedModule::initializeFabric(
   commitHook_ =
       std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
 #if REACT_NATIVE_MINOR_VERSION >= 73
-  mountHook_ = std::make_shared<ReanimatedMountHook>(propsRegistry, uiManager_);
+  mountHook_ =
+      std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
 #endif
 }
 #endif // RCT_NEW_ARCH_ENABLED

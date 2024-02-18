@@ -44,7 +44,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   REAShouldAnimateExitingBlock _shouldAnimateExiting;
   REAAnimationRemovingBlock _clearAnimationConfigForTag;
   REASharedTransitionManager *_sharedTransitionManager;
-#ifdef DEBUG
+#ifndef NDEBUG
   REACheckDuplicateSharedTagBlock _checkDuplicateSharedTag;
 #endif
 }
@@ -93,7 +93,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     _clearAnimationConfigForTag = ^(NSNumber *tag) {
       // default implementation, this block will be replaced by a setter
     };
-#ifdef DEBUG
+#ifndef NDEBUG
     _checkDuplicateSharedTag = ^(REAUIView *view, NSNumber *viewTag) {
       // default implementation, this block will be replaced by a setter
     };
@@ -132,7 +132,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   _clearAnimationConfigForTag = clearAnimation;
 }
 
-#ifdef DEBUG
+#ifndef NDEBUG
 - (void)setCheckDuplicateSharedTagBlock:(REACheckDuplicateSharedTagBlock)checkDuplicateSharedTag
 {
   _checkDuplicateSharedTag = checkDuplicateSharedTag;
@@ -250,7 +250,11 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   if (needsViewPositionUpdate) {
     CGPoint newCenter = CGPointMake(centerX, centerY);
     if (convertFromAbsolute) {
+#if TARGET_OS_OSX
       REAUIView *window = UIApplication.sharedApplication.keyWindow;
+#else
+      REAUIView *window = RCTKeyWindow();
+#endif
       CGPoint convertedCenter = [window convertPoint:newCenter toView:view.superview];
       view.center = convertedCenter;
     } else {
@@ -567,7 +571,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   if (_hasAnimationForTag(viewTag, SHARED_ELEMENT_TRANSITION)) {
     if (type == ENTERING) {
       [_sharedTransitionManager notifyAboutNewView:view];
-#ifdef DEBUG
+#ifndef NDEBUG
       _checkDuplicateSharedTag(view, viewTag);
 #endif
     } else {

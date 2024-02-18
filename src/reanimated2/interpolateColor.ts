@@ -19,6 +19,12 @@ import { useSharedValue } from './hook/useSharedValue';
  */
 export const Extrapolate = Extrapolation;
 
+/**
+ * Options for color interpolation.
+ *
+ * @param gamma - Gamma value used in gamma correction. Defaults to `2.2`.
+ * @param useCorrectedHSVInterpolation - Whether to reduce the number of colors the interpolation has to go through. Defaults to `true`.
+ */
 export type InterpolationOptions = {
   gamma?: number;
   useCorrectedHSVInterpolation?: boolean;
@@ -180,6 +186,17 @@ const getInterpolateHSV = (
   return { h, s, v, a };
 };
 
+/**
+ * Lets you map a value from a range of numbers to a range of colors using linear interpolation.
+ *
+ * @param value - A number from the `input` range that is going to be mapped to the color in the `output` range.
+ * @param inputRange - An array of numbers specifying the input range of the interpolation.
+ * @param outputRange - An array of output colors values (eg. "red", "#00FFCC", "rgba(255, 0, 0, 0.5)").
+ * @param colorSpace - The color space to use for interpolation. Defaults to 'RGB'.
+ * @param options - Additional options for interpolation - {@link InterpolationOptions}.
+ * @returns The color after interpolation from within the output range in rgba(r, g, b, a) format.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/utilities/interpolateColor
+ */
 export function interpolateColor(
   value: number,
   inputRange: readonly number[],
@@ -220,7 +237,9 @@ export function interpolateColor(
     );
   }
   throw new Error(
-    `[Reanimated] Invalid color space provided: ${colorSpace}. Supported values are: ['RGB', 'HSV'].`
+    `[Reanimated] Invalid color space provided: ${
+      colorSpace as string
+    }. Supported values are: ['RGB', 'HSV'].`
   );
 }
 

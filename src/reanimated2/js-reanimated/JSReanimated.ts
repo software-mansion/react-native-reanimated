@@ -5,17 +5,11 @@ import {
   isWeb,
   isWindowAvailable,
 } from '../PlatformChecker';
-import type {
-  ShareableRef,
-  ShareableSyncDataHolderRef,
-  Value3D,
-  ValueRotation,
-} from '../commonTypes';
+import type { ShareableRef, Value3D, ValueRotation } from '../commonTypes';
 import { SensorType } from '../commonTypes';
-import type { WorkletRuntime } from '../runtimes';
 import type { WebSensor } from './WebSensor';
-
-import { mockedRequestAnimationFrame } from '../utils';
+import { mockedRequestAnimationFrame } from '../mockedRequestAnimationFrame';
+import type { WorkletRuntime } from '../runtimes';
 
 // In Node.js environments (like when static rendering with Expo Router)
 // requestAnimationFrame is unavailable, so we use our mock.
@@ -50,6 +44,12 @@ export default class JSReanimated {
     );
   }
 
+  scheduleOnRuntime() {
+    throw new Error(
+      '[Reanimated] scheduleOnRuntime is not available in JSReanimated.'
+    );
+  }
+
   registerEventHandler<T>(
     _eventHandler: ShareableRef<T>,
     _eventName: string,
@@ -68,13 +68,13 @@ export default class JSReanimated {
       console.warn(
         '[Reanimated] Layout Animations are not supported on web yet.'
       );
-    } else if (isChromeDebugger()) {
-      console.warn(
-        '[Reanimated] Layout Animations are no-ops when using Chrome Debugger.'
-      );
     } else if (isJest()) {
       console.warn(
         '[Reanimated] Layout Animations are no-ops when using Jest.'
+      );
+    } else if (isChromeDebugger()) {
+      console.warn(
+        '[Reanimated] Layout Animations are no-ops when using Chrome Debugger.'
       );
     } else {
       console.warn(
@@ -84,6 +84,10 @@ export default class JSReanimated {
   }
 
   configureLayoutAnimation() {
+    // no-op
+  }
+
+  configureLayoutAnimationBatch() {
     // no-op
   }
 
@@ -208,13 +212,13 @@ export default class JSReanimated {
       console.warn(
         '[Reanimated] useAnimatedKeyboard is not available on web yet.'
       );
-    } else if (isChromeDebugger()) {
-      console.warn(
-        '[Reanimated] useAnimatedKeyboard is not available when using Chrome Debugger.'
-      );
     } else if (isJest()) {
       console.warn(
         '[Reanimated] useAnimatedKeyboard is not available when using Jest.'
+      );
+    } else if (isChromeDebugger()) {
+      console.warn(
+        '[Reanimated] useAnimatedKeyboard is not available when using Chrome Debugger.'
       );
     } else {
       console.warn(
@@ -275,20 +279,6 @@ export default class JSReanimated {
     }
   }
 
-  makeSynchronizedDataHolder<T>(
-    _valueRef: ShareableRef<T>
-  ): ShareableSyncDataHolderRef<T> {
-    throw new Error(
-      '[Reanimated] makeSynchronizedDataHolder is not available in JSReanimated.'
-    );
-  }
-
-  getDataSynchronously<T>(_ref: ShareableSyncDataHolderRef<T>): T {
-    throw new Error(
-      '[Reanimated] getDataSynchronously is not available in JSReanimated.'
-    );
-  }
-
   getViewProp<T>(
     _viewTag: number,
     _propName: string,
@@ -302,6 +292,12 @@ export default class JSReanimated {
   configureProps() {
     throw new Error(
       '[Reanimated] configureProps is not available in JSReanimated.'
+    );
+  }
+
+  executeOnUIRuntimeSync<T, R>(_shareable: ShareableRef<T>): R {
+    throw new Error(
+      '[Reanimated] `executeOnUIRuntimeSync` is not available in JSReanimated.'
     );
   }
 }

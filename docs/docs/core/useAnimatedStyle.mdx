@@ -35,11 +35,13 @@ function App() {
 <summary>Type definitions</summary>
 
 ```typescript
-type AnimatedStyleProp<T> = AnimateStyle<T> | RegisteredStyle<AnimateStyle<T>>;
+type DefaultStyle = ViewStyle | ImageStyle | TextStyle;
+type DependencyList = Array<unknown> | undefined;
 
-function useAnimatedStyle<
-  T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
->(updater: () => T, dependencies?: DependencyList | null): T;
+export function useAnimatedStyle<Style extends DefaultStyle>(
+  updater: () => Style,
+  dependencies?: DependencyList | null
+): Style;
 ```
 
 </details>
@@ -60,6 +62,8 @@ Only relevant when using Reanimated [without the Babel plugin on the Web](https:
 
 `useAnimatedStyle` returns an animated style object which has to be passed to the `style` property of an [Animated component](/docs/fundamentals/glossary#animated-component) that you want to animate.
 
+`useAnimatedStyle` mimics the behavior of `StyleSheet` as much as possible. `updater` callback returns a value that looks like a regular style object in which you can also use shared values.
+
 ## Example
 
 import AnimatingStyles from '@site/src/examples/AnimatingStyles';
@@ -73,26 +77,24 @@ import AnimatingStylesSrc from '!!raw-loader!@site/src/examples/AnimatingStyles'
 
 ## Remarks
 
-- The callback passed to the `useAnimatedStyle` is first run on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) and immediately after on the [UI thread](/docs/fundamentals/glossary#ui-thread). Some functions like [`measure`](/docs/advanced/measure) and [`scrollTo`](/docs/scroll/scrollTo) have implementations only on the UI thread. To safely use them inside of `useAnimatedStyle` callback add a check to your code:
+- Mutating shared values in `useAnimatedStyle`'s callback is an undefined behavior which may lead to infinite loops.
 
 <Indent>
 
 ```jsx
 function App() {
+  const sv = useSharedValue(0);
   const animatedStyles = useAnimatedStyle(() => {
     // highlight-next-line
-    if (!_WORKLET) {
-      return { offset: 0 };
-    }
-
-    // safely use measure or scrollTo functions
+    sv.value = withTiming(1); // Don't do this!
+    return { opacity: sv.value };
   });
 }
 ```
 
 </Indent>
 
-- Make sure not to mutate shared values in `useAnimatedStyle`'s callback. In many cases this can cause an infinite loop.
+- You can apply the value returned from `useAnimatedStyle` only to `Animated` components. Passing the animated styles to non-animated component will result in an error.
 
 - Only define the dynamic part of your styles with `useAnimatedStyle` and keep the static ones separately using `StyleSheet` API or (if you really have to) with inline styles. That way you avoid lots of unnecessary style recalculations. Static and dynamic styles can be easily merged using the `[]` syntax:
 
@@ -119,11 +121,30 @@ const styles = StyleSheet.create({
 
 </Indent>
 
-- You can share animated props between components to avoid code duplication.
+- You can share animated styles between components to avoid code duplication.
+
+- The callback passed to the `useAnimatedStyle` is first run on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) and immediately after on the [UI thread](/docs/fundamentals/glossary#ui-thread). This may cause an error if you write your code as if it's running on UI thread only. To avoid this, you can use the `global._WORKLET` variable to check if the code is running on the UI thread:
+
+<Indent>
+
+```jsx
+function App() {
+  const animatedStyles = useAnimatedStyle(() => {
+    // highlight-next-line
+    if (global._WORKLET) {
+      // UI thread only code
+    } else {
+      // JS thread fallback code
+    }
+  });
+}
+```
+
+</Indent>
 
 ## Platform compatibility
 
-<div className="compatibility">
+<div className="platform-compatibility">
 
 | Android | iOS | Web |
 | ------- | --- | --- |

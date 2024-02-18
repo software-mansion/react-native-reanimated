@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-shadow */
 'use strict';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type { ParsedColorArray } from '../Colors';
@@ -36,6 +37,12 @@ import { isReducedMotion, shouldBeUseWeb } from '../PlatformChecker';
 let IN_STYLE_UPDATER = false;
 const IS_REDUCED_MOTION = isReducedMotion();
 
+if (__DEV__ && IS_REDUCED_MOTION) {
+  console.warn(
+    `[Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device.`
+  );
+}
+
 export function initialUpdaterRun<T>(updater: () => T) {
   IN_STYLE_UPDATER = true;
   const result = updater();
@@ -49,7 +56,9 @@ interface RecognizedPrefixSuffix {
   strippedValue: number;
 }
 
-function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
+export function recognizePrefixSuffix(
+  value: string | number
+): RecognizedPrefixSuffix {
   'worklet';
   if (typeof value === 'string') {
     const match = value.match(
@@ -171,6 +180,8 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     if (previousAnimation && previousAnimation !== animation) {
       previousAnimation.current =
         (previousAnimation.__prefix ?? '') +
+        // FIXME
+        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
         previousAnimation.current +
         (previousAnimation.__suffix ?? '');
     }
@@ -467,7 +478,7 @@ type AnimationToDecoration<
   ? Record<string, unknown>
   : U | (() => U) | AnimatableValue;
 
-const IS_NATIVE = !shouldBeUseWeb();
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 export function defineAnimation<
   T extends AnimationObject | StyleLayoutAnimation, // type that's supposed to be returned
@@ -484,13 +495,19 @@ export function defineAnimation<
     return animation;
   };
 
-  if (_WORKLET || !IS_NATIVE) {
+  if (_WORKLET || SHOULD_BE_USE_WEB) {
     return create();
   }
   // @ts-ignore: eslint-disable-line
   return create;
 }
 
+/**
+ * Lets you cancel a running animation paired to a shared value.
+ *
+ * @param sharedValue - The shared value of a running animation that you want to cancel.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/core/cancelAnimation
+ */
 export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running

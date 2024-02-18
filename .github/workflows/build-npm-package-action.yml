@@ -3,8 +3,8 @@ name: Build npm package
 on:
   workflow_call:
     inputs:
-      version:
-        required: true
+      option:
+        required: false
         type: string
       ref:
         required: false
@@ -25,35 +25,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          node-version: 20
           registry-url: https://registry.npmjs.org/
       - name: Clear annotations
         run: scripts/clear-annotations.sh
 
       - name: Set up JDK 11
+        if: ${{ inputs.ref == 'Reanimated2' }}
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
           java-version: '11'
 
       - name: Install NDK
+        if: ${{ inputs.ref == 'Reanimated2' }}
         uses: nttld/setup-ndk@v1
         id: setup-ndk
         with:
           ndk-version: r21d
 
       - name: Build package
+        id: build
         env:
           ANDROID_NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: >-
-          ./createNPMPackage.sh ${{ inputs.version }} 2> build.log
+          ./createNPMPackage.sh ${{ inputs.option }} 2> build.log
 
       - name: Check if any node_modules were packed
         id: node_modules
@@ -82,7 +85,7 @@ jobs:
       - run: echo "PACKAGE_NAME=$(ls -l | egrep -o "react-native-reanimated-(.*)(=?\.tgz)")" >> $GITHUB_ENV
 
       - name: Upload npm package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }}
           path: '*.tgz'
@@ -93,7 +96,7 @@ jobs:
 
       - name: Upload Android build folder
         if: ${{ inputs.upload_binaries }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: android-build-output
           path: android-build-output.zip

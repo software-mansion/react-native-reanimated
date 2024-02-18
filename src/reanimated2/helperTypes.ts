@@ -23,7 +23,6 @@ import type {
 } from './layoutReanimation/animationBuilder/commonTypes';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
-import type { DependencyList } from './hook/commonTypes';
 
 export type TransformArrayItem = Extract<
   TransformsStyle['transform'],
@@ -34,9 +33,9 @@ export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
 >;
 
-type MaybeSharedValue<Value> = Value | Value extends AnimatableValue
-  ? SharedValue<Value>
-  : never;
+type MaybeSharedValue<Value> =
+  | Value
+  | (Value extends AnimatableValue ? SharedValue<Value> : never);
 
 type MaybeSharedValueRecursive<Value> = Value extends (infer Item)[]
   ? SharedValue<Item[]> | (MaybeSharedValueRecursive<Item> | Item)[]
@@ -93,16 +92,53 @@ type RestProps<Props extends object> = {
 };
 
 type LayoutProps = {
+  /**
+   * Lets you animate the layout changes when components are added to or removed from the view hierarchy.
+   *
+   * You can use the predefined layout transitions (eg. `LinearTransition`, `FadingTransition`) or create your own ones.
+   *
+   * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions
+   */
   layout?:
     | BaseAnimationBuilder
     | LayoutAnimationFunction
     | typeof BaseAnimationBuilder;
+  /**
+   * Lets you animate an element when it's added to or removed from the view hierarchy.
+   *
+   * You can use the predefined entering animations (eg. `FadeIn`, `SlideInLeft`) or create your own ones.
+   *
+   * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations
+   */
   entering?: EntryOrExitLayoutType;
+  /**
+   * Lets you animate an element when it's added to or removed from the view hierarchy.
+   *
+   * You can use the predefined entering animations (eg. `FadeOut`, `SlideOutRight`) or create your own ones.
+   *
+   * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations
+   */
   exiting?: EntryOrExitLayoutType;
 };
 
 type SharedTransitionProps = {
+  /**
+   * Lets you animate components between two navigation screens.
+   *
+   * Assign the same `sharedTransitionTag` to [animated components](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component) on two different navigation screens to create a shared transition.
+   *
+   * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
+   * @experimental
+   */
   sharedTransitionTag?: string;
+  /**
+   * Lets you create a custom shared transition animation.
+   *
+   * Used alongside `SharedTransition.custom()` method.
+   *
+   * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
+   * @experimental
+   */
   sharedTransitionStyle?: SharedTransition;
 };
 
@@ -115,22 +151,13 @@ export type AnimatedProps<Props extends object> = RestProps<Props> &
   AnimatedStyleProps<Props> &
   LayoutProps &
   SharedTransitionProps & {
+    /**
+     * Lets you animate component props.
+     *
+     * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
+     */
     animatedProps?: Partial<AnimatedPropsProp<Props>>;
   };
-
-export type AnimatedPropsAdapterFunction = (
-  props: Record<string, unknown>
-) => void;
-
-export type useAnimatedPropsType = <Props extends object>(
-  updater: () => Partial<Props>,
-  deps?: DependencyList | null,
-  adapters?:
-    | AnimatedPropsAdapterFunction
-    | AnimatedPropsAdapterFunction[]
-    | null,
-  isAnimatedProps?: boolean
-) => Partial<Props>;
 
 // THE LAND OF THE DEPRECATED
 
@@ -150,12 +177,12 @@ export type AdaptTransforms<T> = {
 };
 
 /**
- * @deprecated Please use `TransformArrayItem` type instead.
+ * @deprecated Please use {@link TransformArrayItem} type instead.
  */
 export type TransformStyleTypes = TransformArrayItem;
 
 /**
- * @deprecated Please use `AnimatedStyle` type instead.
+ * @deprecated Please use {@link AnimatedStyle} type instead.
  */
 export type AnimateStyle<Style = DefaultStyle> = AnimatedStyle<Style>;
 
@@ -174,6 +201,6 @@ export type AnimatedStyleProp<T> =
   | RegisteredStyle<AnimatedStyle<T>>;
 
 /**
- * @deprecated Please use `AnimatedProps` type instead.
+ * @deprecated Please use {@link AnimatedProps} type instead.
  */
 export type AnimateProps<Props extends object> = AnimatedProps<Props>;

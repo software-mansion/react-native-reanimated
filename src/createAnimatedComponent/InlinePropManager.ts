@@ -1,27 +1,24 @@
 'use strict';
 import type { StyleProps } from '../reanimated2';
-import type { AnimatedComponentProps } from './utils';
+import type {
+  IAnimatedComponentInternal,
+  AnimatedComponentProps,
+  IInlinePropManager,
+  ViewInfo,
+} from './commonTypes';
 import { flattenArray } from './utils';
 import { makeViewDescriptorsSet } from '../reanimated2/ViewDescriptorsSet';
 import type {
   ViewDescriptorsSet,
   ViewRefSet,
 } from '../reanimated2/ViewDescriptorsSet';
-import type { ViewConfig } from '../ConfigHelper';
 import { adaptViewConfig } from '../ConfigHelper';
 import updateProps from '../reanimated2/UpdateProps';
 import { stopMapper, startMapper } from '../reanimated2/mappers';
-import { isSharedValue } from '../reanimated2/utils';
+import { isSharedValue } from '../reanimated2/isSharedValue';
 import { shouldBeUseWeb } from '../reanimated2/PlatformChecker';
 
-export interface ViewInfo {
-  viewTag: number | HTMLElement | null;
-  viewName: string | null;
-  shadowNodeWrapper: object | null;
-  viewConfig: ViewConfig;
-}
-
-const IS_NATIVE = !shouldBeUseWeb();
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 function isInlineStyleTransform(transform: unknown): boolean {
   if (!Array.isArray(transform)) {
@@ -80,14 +77,14 @@ function extractSharedValuesMapFromProps(
         if (!style) {
           return;
         }
-        for (const [key, styleValue] of Object.entries(style)) {
+        for (const [styleKey, styleValue] of Object.entries(style)) {
           if (isSharedValue(styleValue)) {
-            inlineProps[key] = styleValue;
+            inlineProps[styleKey] = styleValue;
           } else if (
-            key === 'transform' &&
+            styleKey === 'transform' &&
             isInlineStyleTransform(styleValue)
           ) {
-            inlineProps[key] = styleValue;
+            inlineProps[styleKey] = styleValue;
           }
         }
       });
@@ -131,13 +128,14 @@ export function getInlineStyle(
   return newStyle;
 }
 
-export class InlinePropManager {
+export class InlinePropManager implements IInlinePropManager {
   _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
   _inlinePropsMapperId: number | null = null;
   _inlineProps: StyleProps = {};
 
   public attachInlineProps(
-    animatedComponent: React.Component<unknown, unknown>,
+    animatedComponent: React.Component<unknown, unknown> &
+      IAnimatedComponentInternal,
     viewInfo: ViewInfo
   ) {
     const newInlineProps: Record<string, unknown> =
@@ -155,21 +153,17 @@ export class InlinePropManager {
         }
 
         this._inlinePropsViewDescriptors.add({
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           tag: viewTag as number,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           name: viewName!,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           shadowNodeWrapper: shadowNodeWrapper!,
         });
       }
       const shareableViewDescriptors =
         this._inlinePropsViewDescriptors.shareableViewDescriptors;
 
-      const maybeViewRef = IS_NATIVE
-        ? undefined
-        : ({ items: new Set([animatedComponent]) } as ViewRefSet<unknown>); // see makeViewsRefSet
-
+      const maybeViewRef = SHOULD_BE_USE_WEB
+        ? ({ items: new Set([animatedComponent]) } as ViewRefSet<unknown>) // see makeViewsRefSet
+        : undefined;
       const updaterFunction = () => {
         'worklet';
         const update = getInlinePropsUpdate(newInlineProps);

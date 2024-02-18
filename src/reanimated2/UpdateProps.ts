@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 'use strict';
 import type { MutableRefObject } from 'react';
 import { processColorsInProps } from './Colors';
@@ -5,7 +6,7 @@ import type { ShadowNodeWrapper, SharedValue, StyleProps } from './commonTypes';
 import type { AnimatedStyle } from './helperTypes';
 import type { Descriptor } from './hook/commonTypes';
 import { _updatePropsJS } from './js-reanimated';
-import { isJest, shouldBeUseWeb } from './PlatformChecker';
+import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
 import type { ViewRefSet } from './ViewDescriptorsSet';
 import { runOnUIImmediately } from './threads';
 
@@ -20,7 +21,7 @@ if (shouldBeUseWeb()) {
   updateProps = (_, updates, maybeViewRef, isAnimatedProps) => {
     'worklet';
     if (maybeViewRef) {
-      maybeViewRef.items.forEach((item, _) => {
+      maybeViewRef.items.forEach((item, _index) => {
         _updatePropsJS(updates, item, isAnimatedProps);
       });
     }
@@ -29,8 +30,7 @@ if (shouldBeUseWeb()) {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
     processColorsInProps(updates);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    global.UpdatePropsManager!.update(viewDescriptors, updates);
+    global.UpdatePropsManager.update(viewDescriptors, updates);
   };
 }
 
@@ -54,7 +54,7 @@ export const updatePropsJestWrapper = (
 
 export default updateProps;
 
-const createUpdatePropsManager = global._IS_FABRIC
+const createUpdatePropsManager = isFabric()
   ? () => {
       'worklet';
       // Fabric
@@ -77,9 +77,8 @@ const createUpdatePropsManager = global._IS_FABRIC
             }
           });
         },
-        flush() {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          _updatePropsFabric!(operations);
+        flush(this: void) {
+          global._updatePropsFabric!(operations);
           operations.length = 0;
         },
       };
@@ -108,9 +107,8 @@ const createUpdatePropsManager = global._IS_FABRIC
             }
           });
         },
-        flush() {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          _updatePropsPaper!(operations);
+        flush(this: void) {
+          global._updatePropsPaper!(operations);
           operations.length = 0;
         },
       };

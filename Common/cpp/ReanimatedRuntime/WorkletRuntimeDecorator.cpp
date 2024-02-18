@@ -2,6 +2,7 @@
 #include "JSISerializer.h"
 #include "ReanimatedJSIUtils.h"
 #include "Shareables.h"
+#include "WorkletRuntime.h"
 
 #ifdef ANDROID
 #include "Logger.h"
@@ -40,7 +41,7 @@ void WorkletRuntimeDecorator::decorate(
 #endif // RCT_NEW_ARCH_ENABLED
   rt.global().setProperty(rt, "_IS_FABRIC", isFabric);
 
-#ifdef DEBUG
+#ifndef NDEBUG
   auto evalWithSourceUrl = [](jsi::Runtime &rt,
                               const jsi::Value &thisValue,
                               const jsi::Value *args,
@@ -117,12 +118,12 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt,
-      "_updateDataSynchronously",
+      "_scheduleOnRuntime",
       [](jsi::Runtime &rt,
-         const jsi::Value &synchronizedDataHolderRef,
-         const jsi::Value &newData) {
-        return reanimated::updateDataSynchronously(
-            rt, synchronizedDataHolderRef, newData);
+         const jsi::Value &workletRuntimeValue,
+         const jsi::Value &shareableWorkletValue) {
+        reanimated::scheduleOnRuntime(
+            rt, workletRuntimeValue, shareableWorkletValue);
       });
 
   jsi::Object performance(rt);

@@ -13,7 +13,7 @@
 #import <RNReanimated/ReanimatedRuntime.h>
 #import <RNReanimated/ReanimatedSensorContainer.h>
 
-#ifdef DEBUG
+#ifndef NDEBUG
 #import <RNReanimated/REAScreensHelper.h>
 #endif
 
@@ -96,7 +96,8 @@ static NSSet *convertProps(jsi::Runtime &rt, const jsi::Value &props)
 
 std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     RCTBridge *bridge,
-    const std::shared_ptr<CallInvoker> &jsInvoker)
+    const std::shared_ptr<CallInvoker> &jsInvoker,
+    const std::string &valueUnpackerCode)
 {
   REAModule *reaModule = [bridge moduleForClass:[REAModule class]];
 
@@ -287,8 +288,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       maybeFlushUIUpdatesQueueFunction,
   };
 
-  auto nativeReanimatedModule =
-      std::make_shared<NativeReanimatedModule>(rnRuntime, jsInvoker, jsQueue, uiScheduler, platformDepMethodsHolder);
+  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
+      rnRuntime, jsInvoker, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode);
 
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
@@ -371,7 +372,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
     return nil;
   }];
-#ifdef DEBUG
+#ifndef NDEBUG
   [animationsManager setCheckDuplicateSharedTagBlock:^(REAUIView *view, NSNumber *_Nonnull viewTag) {
     if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
       REAUIView *screen = [REAScreensHelper getScreenForView:(REAUIView *)view];
@@ -380,7 +381,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       nativeReanimatedModule->layoutAnimationsManager().checkDuplicateSharedTag([viewTag intValue], screenTag);
     }
   }];
-#endif // DEBUG
+#endif // NDEBUG
 
 #endif
 

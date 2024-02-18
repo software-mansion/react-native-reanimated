@@ -14,3 +14,15 @@ yarn dev
 yarn build
 yarn start
 ```
+
+- analyze the bundle with Next Bundle Analyzer. It will create a report and open it in your browser.
+
+```
+yarn build:analyze
+```
+
+- build the project without minification. This is useful when you want to manually review the created bundle.
+
+```
+yarn build:disable-minification
+```

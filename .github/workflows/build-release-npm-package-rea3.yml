@@ -7,5 +7,3 @@ jobs:
   call-build-workflow-rea-v3:
     if: github.repository == 'software-mansion/react-native-reanimated'
     uses: ./.github/workflows/build-npm-package-action.yml
-    with:
-      version: release

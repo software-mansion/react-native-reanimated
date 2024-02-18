@@ -31,7 +31,7 @@ jobs:
         python-version: [3.7]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -46,3 +46,7 @@ jobs:
       - name: Run cpplint
         run: |
           scripts/cpplint.sh
+
+      - name: Disallow DEBUG macros
+        run: |
+          ! egrep -r '(#if DEBUG|#ifdef DEBUG)' Common/cpp apple android/src/main/cpp

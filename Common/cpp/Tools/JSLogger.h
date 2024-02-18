@@ -1,5 +1,3 @@
-#ifdef DEBUG
-
 #pragma once
 
 #include "JSScheduler.h"
@@ -20,5 +18,3 @@ class JSLogger {
 };
 
 } // namespace reanimated
-
-#endif // DEBUG
