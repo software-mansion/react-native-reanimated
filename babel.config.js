@@ -9,7 +9,7 @@ module.exports = {
       },
     ],
     '@babel/preset-typescript',
-    'module:metro-react-native-babel-preset',
+    'module:@react-native/babel-preset',
   ],
   plugins: [
     '@babel/plugin-proposal-class-properties',
