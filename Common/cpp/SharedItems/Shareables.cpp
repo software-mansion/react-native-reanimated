@@ -235,8 +235,9 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
   if (&rt == runtime_) {
     return jsi::Value(rt, *function_);
   } else {
-    auto remoteFunction = ShareableJSRef::newHostObject(rt, shared_from_this());
-    jsi::Function wrapperFunction = jsi::Function::createFromHostFunction(
+    const auto remoteFunction =
+        ShareableJSRef::newHostObject(rt, shared_from_this());
+    auto wrapperFunction = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "wrapperFunction"),
         0,
