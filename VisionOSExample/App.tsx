@@ -1,3 +1,3 @@
-import BokehExample from '../app/src/examples/BokehExample';
+import App from '../app';
 
-export default BokehExample;
+export default App;

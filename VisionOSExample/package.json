@@ -12,9 +12,18 @@
   },
   "dependencies": {
     "@callstack/react-native-visionos": "0.73.5",
+    "@react-native-async-storage/async-storage": "^1.22.0",
+    "@react-native-community/slider": "^4.5.0",
+    "@react-navigation/native": "^6.1.10",
+    "@react-navigation/native-stack": "^6.9.18",
     "react": "18.2.0",
     "react-native": "0.73.4",
-    "react-native-reanimated": "link:../"
+    "react-native-gesture-handler": "^2.15.0",
+    "react-native-pager-view": "callstack/react-native-pager-view#d0b77b33140e5492cfd6438b55f80bdf957dd9c5",
+    "react-native-reanimated": "link:../",
+    "react-native-safe-area-context": "^4.9.0",
+    "react-native-screens": "software-mansion/react-native-screens#0a10a07ab602bb379f50eaf70d32ed20e5a9e2b1",
+    "react-native-svg": "software-mansion/react-native-svg#871549cca494ec3fe64763ac0fc448fd0a65e45a"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
