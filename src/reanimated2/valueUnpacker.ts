@@ -6,11 +6,9 @@ import type { WorkletFunction } from './commonTypes';
 function valueUnpacker(objectToUnpack: any, category?: string): any {
   'worklet';
   let workletsCache = global.__workletsCache;
-  let handleCache = global.__handleCache;
   if (workletsCache === undefined) {
     // init
     workletsCache = global.__workletsCache = new Map();
-    handleCache = global.__handleCache = new WeakMap();
   }
   const workletHash = objectToUnpack.__workletHash;
   if (workletHash !== undefined) {
