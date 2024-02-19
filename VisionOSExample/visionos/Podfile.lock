@@ -1085,6 +1085,11 @@ PODS:
     - React-jsi (= 0.73.5)
     - React-logger (= 0.73.5)
     - React-perflogger (= 0.73.5)
+  - RNReanimated (3.7.0):
+    - glog
+    - RCT-Folly (= 2022.05.16.00)
+    - React-Core
+    - ReactCommon/turbomodule/core
   - SocketRocket (0.7.0.1)
   - Yoga (1.14.0)
 
@@ -1142,6 +1147,7 @@ DEPENDENCIES:
   - "React-runtimescheduler (from `../node_modules/@callstack/react-native-visionos/ReactCommon/react/renderer/runtimescheduler`)"
   - "React-utils (from `../node_modules/@callstack/react-native-visionos/ReactCommon/react/utils`)"
   - "ReactCommon/turbomodule/core (from `../node_modules/@callstack/react-native-visionos/ReactCommon`)"
+  - RNReanimated (from `../node_modules/react-native-reanimated`)
   - "SocketRocket (from `../node_modules/@callstack/react-native-visionos/third-party-podspecs/SocketRocket.podspec`)"
   - "Yoga (from `../node_modules/@callstack/react-native-visionos/ReactCommon/yoga`)"
 
@@ -1249,6 +1255,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@callstack/react-native-visionos/ReactCommon/react/utils"
   ReactCommon:
     :path: "../node_modules/@callstack/react-native-visionos/ReactCommon"
+  RNReanimated:
+    :path: "../node_modules/react-native-reanimated"
   SocketRocket:
     :podspec: "../node_modules/@callstack/react-native-visionos/third-party-podspecs/SocketRocket.podspec"
   Yoga:
@@ -1306,6 +1314,7 @@ SPEC CHECKSUMS:
   React-runtimescheduler: 449dc0df3f04c02a5cefc259eaa28938f83aa646
   React-utils: 8839766799e2e746fd2c6509dda2e6dd9e7b2405
   ReactCommon: 69bcfe1862bc3c11d3f8a4874eb99c6ac11501b5
+  RNReanimated: 7d6d32f238f914f13d9d6fb45c0aef557f7f901e
   SocketRocket: 0ba3e799f983d2dfa878777017659ef6c866e5c6
   Yoga: f2afede735c095ff0ecffacf92154915c085abf4
 
