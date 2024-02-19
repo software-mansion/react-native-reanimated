@@ -288,9 +288,9 @@ jsi::Value ShareableWorklet::toJSValue(jsi::Runtime &rt) {
         rt, workletsCache, workletHash, workletFun);
   }
 
-  auto functionInstance = workletFun.asObject(rt)
-                              .getPropertyAsFunction(rt, "bind")
-                              .callWithThis(rt, workletFun.asObject(rt), obj);
+  const auto workletFunObj = workletFun.asObject(rt);
+  auto functionInstance = workletFunObj.getPropertyAsFunction(rt, "bind")
+                              .callWithThis(rt, workletFunObj, obj);
   obj.setProperty(rt, "_recur", functionInstance);
 
   return functionInstance;
