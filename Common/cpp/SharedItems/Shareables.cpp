@@ -235,11 +235,10 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
   if (&rt == runtime_) {
     return jsi::Value(rt, *function_);
   } else {
-    auto shareableJSRef = ShareableJSRef::newHostObject(rt, shared_from_this());
-#ifndef NDEBUG
-    jsi::Function fun = jsi::Function::createFromHostFunction(
+    auto remoteFunction = ShareableJSRef::newHostObject(rt, shared_from_this());
+    jsi::Function wrapperFunction = jsi::Function::createFromHostFunction(
         rt,
-        jsi::PropNameID::forAscii(rt, "fun"),
+        jsi::PropNameID::forAscii(rt, "wrapperFunction"),
         0,
         [this](
             jsi::Runtime &rt,
@@ -256,11 +255,8 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
           ss << " on the UI thread. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.";
           throw jsi::JSError(rt, ss.str());
         });
-    fun.setProperty(rt, "__remoteFunction", shareableJSRef);
-    return fun;
-#else
-    return shareableJSRef;
-#endif
+    wrapperFunction.setProperty(rt, "__remoteFunction", remoteFunction);
+    return wrapperFunction;
   }
 }
 
