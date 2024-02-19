@@ -1,5 +1,7 @@
 #include "Shareables.h"
 
+#include <sstream>
+
 using namespace facebook;
 
 namespace reanimated {
@@ -233,13 +235,31 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
   if (&rt == runtime_) {
     return jsi::Value(rt, *function_);
   } else {
+    auto shareableJSRef = ShareableJSRef::newHostObject(rt, shared_from_this());
 #ifndef NDEBUG
-    return getValueUnpacker(rt).call(
+    jsi::Function fun = jsi::Function::createFromHostFunction(
         rt,
-        ShareableJSRef::newHostObject(rt, shared_from_this()),
-        jsi::String::createFromAscii(rt, "RemoteFunction"));
+        jsi::PropNameID::forAscii(rt, "fun"),
+        0,
+        [this](
+            jsi::Runtime &rt,
+            const jsi::Value &thisValue,
+            const jsi::Value *args,
+            size_t count) -> jsi::Value {
+          std::stringstream ss;
+          ss << "[Reanimated] Tried to synchronously call a non-worklet ";
+          if (name_.empty()) {
+            ss << "anonymous function";
+          } else {
+            ss << "function `" << name_ << '`';
+          }
+          ss << " on the UI thread. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.";
+          throw jsi::JSError(rt, ss.str());
+        });
+    fun.setProperty(rt, "__remoteFunction", shareableJSRef);
+    return fun;
 #else
-    return ShareableJSRef::newHostObject(rt, shared_from_this());
+    return shareableJSRef;
 #endif
   }
 }
