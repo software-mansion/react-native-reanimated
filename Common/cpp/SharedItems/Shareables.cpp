@@ -257,8 +257,8 @@ static inline jsi::Object getHandleCache(jsi::Runtime &rt) {
 
 jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
   if (initializer_ != nullptr) {
-    auto initializerValue = initializer_->getJSValue(rt);
-    auto handleCache = getHandleCache(rt);
+    const auto initializerValue = initializer_->getJSValue(rt);
+    const auto handleCache = getHandleCache(rt);
     auto remoteValue =
         handleCache.getPropertyAsFunction(rt, "get").callWithThis(
             rt, handleCache, initializerValue);
