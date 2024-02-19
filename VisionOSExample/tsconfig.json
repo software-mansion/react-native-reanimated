@@ -1,10 +1,11 @@
 {
-  "extends": "@react-native/typescript-config/tsconfig.json",
-  "exclude": [
-    "**/Pods/**",
-    "node_modules",
-    "babel.config.js",
-    "metro.config.js",
-    "jest.config.js"
-  ]
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "react-native-reanimated": ["../"],
+      "react": ["./node_modules/@types/react"]
+    }
+  },
+  "exclude": []
 }
