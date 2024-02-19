@@ -244,14 +244,28 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
   }
 }
 
+static inline jsi::Object getHandleCache(jsi::Runtime &rt) {
+  constexpr auto key = "__handleCache";
+  auto value = rt.global().getProperty(rt, key);
+  if (value.isUndefined()) {
+    value = rt.global().getPropertyAsFunction(rt, "WeakMap").callAsConstructor(rt);
+    rt.global().setProperty(rt, key, value);
+  }
+  return value.asObject(rt);
+}
+
 jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
   if (initializer_ != nullptr) {
-    auto initObj = initializer_->getJSValue(rt);
-    remoteValue_ =
-        std::make_unique<jsi::Value>(getValueUnpacker(rt).call(rt, initObj));
+    auto initializerValue = initializer_->getJSValue(rt);
+    auto handleCache = getHandleCache(rt);
+    auto remoteValue = handleCache.getPropertyAsFunction(rt, "get").callWithThis(rt, handleCache, initializerValue);
+    if (remoteValue.isUndefined()) {
+      remoteValue = initializerValue.asObject(rt).getPropertyAsFunction(rt, "__init").call(rt);
+      handleCache.getPropertyAsFunction(rt, "set").callWithThis(rt, handleCache, initializerValue, remoteValue);
+    }
+    remoteValue_ = std::make_unique<jsi::Value>(std::move(remoteValue));
     remoteRuntime_ = &rt;
-    initializer_ = nullptr; // we can release ref to initializer as this
-    // method should be called at most once
+    initializer_ = nullptr; // we can release ref to initializer since __init should be called at most once
   }
   return jsi::Value(rt, *remoteValue_);
 }
