@@ -93,7 +93,6 @@ declare global {
   var __frameTimestamp: number | undefined;
   var __flushAnimationFrame: (timestamp: number) => void;
   var __workletsCache: Map<string, any>;
-  var __handleCache: WeakMap<object, any>;
   var __callMicrotasks: () => void;
   var __mapperRegistry: MapperRegistry;
   var __sensorContainer: SensorContainer;
