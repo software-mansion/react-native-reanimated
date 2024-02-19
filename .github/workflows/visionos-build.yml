@@ -1,0 +1,84 @@
+name: Test visionOS build
+on:
+  pull_request:
+    paths:
+      - .github/workflows/visionos-build.yml
+      - RNReanimated.podspec
+      - scripts/reanimated_utils.rb
+      - apple/**
+      - Common/**
+      - VisionOSExample/package.json
+      - VisionOSExample/visionos/**
+  merge_group:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/visionos-build.yml
+      - RNReanimated.podspec
+      - scripts/reanimated_utils.rb
+      - apple/**
+      - Common/**
+      - VisionOSExample/package.json
+      - VisionOSExample/visionos/**
+
+jobs:
+  build:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: macos-13
+    env:
+      WORKING_DIRECTORY: VisionOSExample
+    concurrency:
+      group: visionos-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Restore Reanimated node_modules from cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-visionos-node-modules-reanimated-${{ hashFiles('yarn.lock') }}
+          restore-keys: ${{ runner.os }}-visionos-node-modules-reanimated-
+
+      - name: Install Reanimated node_modules
+        run: yarn install --frozen-lockfile
+
+      - name: Restore app node_modules from cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.WORKING_DIRECTORY }}/node_modules
+          key: ${{ runner.os }}-visionos-node-modules-${{ env.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/yarn.lock', env.WORKING_DIRECTORY)) }}
+          restore-keys: ${{ runner.os }}-visionos-node-modules-${{ env.WORKING_DIRECTORY }}-
+
+      - name: Install app node_modules
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: yarn install --frozen-lockfile
+
+      - name: Restore Pods from cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env.WORKING_DIRECTORY }}/visionos/Pods
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods
+          key: ${{ runner.os }}-visionos-pods-${{ env.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/visionos/Podfile.lock', env.WORKING_DIRECTORY)) }}
+
+      - name: Install Pods
+        working-directory: ${{ env.WORKING_DIRECTORY }}/visionos
+        run: pod install
+
+      - name: Restore build artifacts from cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env.WORKING_DIRECTORY }}/visionos/build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-visionos-build-${{ env.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/visionos/Podfile.lock', env.WORKING_DIRECTORY)) }}
+
+      - name: Build app
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: yarn visionos
