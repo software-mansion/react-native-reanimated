@@ -18,19 +18,16 @@ interface LettersProps {
 function Letters({ text }: LettersProps) {
   return (
     <Animated.View style={styles.line}>
-      {splitLetters(text).map(({ char, key }, index) => {
-        console.log(index);
-        return (
-          <Animated.Text
-            key={key}
-            style={styles.text}
-            entering={FadeIn.duration(500).delay(index)}
-            exiting={FadeOut.duration(500).delay(index)}
-            layout={Layout.duration(Math.random() * 700 + 200).delay(index)}>
-            {char}
-          </Animated.Text>
-        );
-      })}
+      {splitLetters(text).map(({ char, key }, index) => (
+        <Animated.Text
+          key={key}
+          style={styles.text}
+          entering={FadeIn.duration(500).delay(index)}
+          exiting={FadeOut.duration(500).delay(index)}
+          layout={Layout.duration(Math.random() * 700 + 200).delay(index)}>
+          {char}
+        </Animated.Text>
+      ))}
     </Animated.View>
   );
 }
