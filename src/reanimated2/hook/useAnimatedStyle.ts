@@ -194,7 +194,8 @@ function styleUpdater(
   for (const key in newValues) {
     const value = newValues[key];
     if (isAnimated(value)) {
-      frameTimestamp = global.__frameTimestamp || _getAnimationTimestamp();
+      frameTimestamp =
+        global.__frameTimestamp || global._getAnimationTimestamp();
       prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
@@ -290,7 +291,8 @@ function jestStyleUpdater(
   Object.keys(newValues).forEach((key) => {
     const value = newValues[key];
     if (isAnimated(value)) {
-      frameTimestamp = global.__frameTimestamp || _getAnimationTimestamp();
+      frameTimestamp =
+        global.__frameTimestamp || global._getAnimationTimestamp();
       prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
@@ -534,9 +536,15 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
 
   checkSharedValueUsage(initial.value);
 
-  if (isJest()) {
-    return { viewDescriptors, initial, viewsRef, jestAnimatedStyle };
-  } else {
-    return { viewDescriptors, initial, viewsRef };
+  const animatedStyleHandle = useRef<
+    AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style> | null
+  >(null);
+
+  if (!animatedStyleHandle.current) {
+    animatedStyleHandle.current = isJest()
+      ? { viewDescriptors, initial, viewsRef, jestAnimatedStyle }
+      : { initial, viewsRef, viewDescriptors };
   }
+
+  return animatedStyleHandle.current;
 }
