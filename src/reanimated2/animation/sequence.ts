@@ -149,8 +149,8 @@ export function withSequence(
         // Detect re-render
         const animationStart =
           initialAnimationStartValues[animation.animationIndex];
-        const hasBeenInterrupted = value !== animationStart;
-        const startingValue = hasBeenInterrupted ? animationStart : value;
+        const wasInterrupted = value !== animationStart;
+        const startingValue = wasInterrupted ? animationStart : value;
 
         const currentAnimation = animations[animation.animationIndex];
         currentAnimation.onStart(

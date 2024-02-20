@@ -91,10 +91,10 @@ export const withDelay = function <T extends AnimationObject>(
         previousAnimation: Animation<any> | null
       ): void {
         // Detect re-render
-        const hasBeenInterrupted = value !== initialAnimationStartValue;
-        shouldSkipNextValueSet = hasBeenInterrupted;
+        const wasInterrupted = value !== initialAnimationStartValue;
+        shouldSkipNextValueSet = wasInterrupted;
 
-        animation.current = hasBeenInterrupted
+        animation.current = wasInterrupted
           ? initialAnimationStartValue
           : value;
         animation.startTime = now;

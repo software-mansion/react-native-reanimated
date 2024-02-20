@@ -106,9 +106,11 @@ export const withRepeat = function <T extends AnimationObject>(
         previousAnimation: Animation<any> | null
       ): void {
         // Detect re-render
-        const hasBeenInterrupted = value !== initialAnimationStartValue;
+        const wasInterrupted = value !== initialAnimationStartValue;
+        // We check for undefined only because 2nd argument of onStart can't be undefined
+        // initialAnimationStartValue shouldn't be undefined, but it is taken from AnimationObject's .startValue field which can be
         const startingValue =
-          hasBeenInterrupted && initialAnimationStartValue !== undefined
+          wasInterrupted && initialAnimationStartValue !== undefined
             ? initialAnimationStartValue
             : value;
         animation.startValue = startingValue;
