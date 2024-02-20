@@ -111,7 +111,7 @@ export type WorkletFunction<
  * Do not call it before the worklet is declared, as it will always return false then. E.g.:
  *
  * ```ts
- * isWorklet(myWorklet); // Will always return false.
+ * isWorkletized(myWorklet); // Will always return false.
  *
  * function myWorklet() {
  *   'worklet';
@@ -123,7 +123,7 @@ export type WorkletFunction<
  * However, on other threads it will not get optimized and we will get a function call overhead.
  * We want to change it in the future, but it's not feasible at the moment.
  */
-export function isWorklet<
+export function isWorkletized<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown,
   BuildType extends WorkletBaseDev | WorkletBaseRelease = WorkletBaseDev
