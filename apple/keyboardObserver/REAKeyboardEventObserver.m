@@ -86,15 +86,14 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   _animtionStart = 0;
 }
 
-- (CGFloat)estimateCurrentKeyboardHeightDiringAppearing
+- (float)estimateProgressForDuration:(float)keyboardAnimationDuration
+                                  a1:(float)a1
+                                  a2:(float)a2
+                                  b1:(float)b1
+                                  b2:(float)b2
+                                  c1:(float)c1
+                                  c2:(float)c2
 {
-  float keyboardAnimationDuration = 0.5;
-  float a1 = 1;
-  float a2 = 5.1;
-  float b1 = 1.6;
-  float b2 = 7.6;
-  float c1 = 0.2;
-  float c2 = 2.4;
   CFTimeInterval elapsedTime = _displayLink.targetTimestamp - _animtionStart;
   float timeProgress = elapsedTime / keyboardAnimationDuration;
   if (timeProgress > 1) {
@@ -102,26 +101,21 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   }
   float x = timeProgress;
   float progress = 1 - a1 * pow(1 - x, a2) - b1 * x * pow(1 - x, b2) - c1 * pow(x, 2) * pow(1 - x, c2);
+  return progress;
+}
+
+- (CGFloat)estimateCurrentKeyboardHeightDiringAppearing
+{
+  // Values comes from estimation: https://www.desmos.com/calculator/clhzejf5bs
+  float progress = [self estimateProgressForDuration:0.5 a1:1 a2:5.1 b1:1.6 b2:7.6 c1:0.2 c2:2.4];
   float currentKeyboardHeight = _targetKeyboardHeight * progress;
   return currentKeyboardHeight;
 }
 
 - (CGFloat)estimateCurrentKeyboardHeightDiringDisappearing
 {
-  float keyboardAnimationDuration = 0.45;
-  float a1 = 1;
-  float a2 = 5.5;
-  float b1 = 2.5;
-  float b2 = 6.4;
-  float c1 = 1.6;
-  float c2 = 3.3;
-  CFTimeInterval elapsedTime = _displayLink.targetTimestamp - _animtionStart;
-  float timeProgress = elapsedTime / keyboardAnimationDuration;
-  if (timeProgress > 1) {
-    timeProgress = 1;
-  }
-  float x = timeProgress;
-  float progress = 1 - a1 * pow(1 - x, a2) - b1 * x * pow(1 - x, b2) - c1 * pow(x, 2) * pow(1 - x, c2);
+  // Values comes from estimation: https://www.desmos.com/calculator/d3v550ofzs
+  float progress = [self estimateProgressForDuration:0.45 a1:1 a2:5.5 b1:2.5 b2:6.4 c1:1.6 c2:3.3];
   float currentKeyboardHeight = _targetKeyboardHeight * (1 - progress);
   return currentKeyboardHeight;
 }
@@ -129,11 +123,17 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 - (void)updateKeyboardFrame
 {
   if (_animtionStart == 0) {
+    // DisplayLink animations usually start later than CAAnimations.
     _animtionStart = _displayLink.targetTimestamp - _displayLink.duration;
   }
   CAAnimation *positionAnimation = [_measuringView.layer animationForKey:@"position"];
   float caAnimationBeginTime = [[positionAnimation valueForKey:@"beginTime"] floatValue];
   if (caAnimationBeginTime != 0) {
+    /*
+      CAAnimations have their own timers, and synchronizing with their timer produces
+      better visual effects. The CAAnimation timer is only available from the second
+      frame of the animation.
+    */
     _animtionStart = caAnimationBeginTime;
   }
 
