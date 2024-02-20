@@ -1,10 +1,9 @@
 'use strict';
-import { NativeModules } from 'react-native';
 import type {
   ShadowNodeWrapper,
-  ShareableRef,
   Value3D,
   ValueRotation,
+  ShareableRef,
 } from '../commonTypes';
 import type {
   LayoutAnimationFunction,
@@ -18,6 +17,7 @@ import { isFabric } from '../PlatformChecker';
 import type React from 'react';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import type { LayoutAnimationBatchItem } from '../layoutReanimation/animationBuilder/commonTypes';
+import ReanimatedModule from '../../specs/NativeReanimatedModule';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
@@ -98,7 +98,6 @@ export class NativeReanimated {
     }
     global._REANIMATED_VERSION_JS = jsVersion;
     if (global.__reanimatedModuleProxy === undefined) {
-      const { ReanimatedModule } = NativeModules;
       const valueUnpackerCode = getValueUnpackerCode();
       ReanimatedModule?.installTurboModule(valueUnpackerCode);
     }
