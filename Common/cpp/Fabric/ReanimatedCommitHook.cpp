@@ -73,7 +73,23 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
         std::unique_lock<std::mutex>(lap_->mutex);
         for (auto &mutation: mutations){
           if (mutation.type == ShadowViewMutation::Create){
+            lap_->tagToNativeID_->insert_or_assign(mutation.newChildShadowView.tag, mutation.newChildShadowView.props->nativeId);
+            lap_->transferConfigFromNativeTag(mutation.newChildShadowView.tag);
+            auto child = findChild(rootNode, mutation.newChildShadowView.tag);
+            lap_->createdNodes_->insert_or_assign(mutation.newChildShadowView.tag, child);
             lap_->createdViews_->insert_or_assign(mutation.newChildShadowView.tag, mutation.newChildShadowView);
+//            rootNode = rootNode->cloneTree(child->getFamily(), [](const ShadowNode& node){
+//              ShadowNode::Unshared newNode = node.clone({});
+//              auto lNode = dynamic_pointer_cast<LayoutableShadowNode>(newNode);
+//              lNode->setLayoutMetrics(LayoutMetrics{0,0,10,0});
+//              return lNode;
+//            });
+//            if (lap_->layoutAnimationsManager_->hasLayoutAnimation(mutation.newChildShadowView.tag, LayoutAnimationType::ENTERING)){
+////              auto child = findChild(rootNode, mutation.newChildShadowView.tag);
+//              folly::dynamic x = folly::dynamic::object();
+//              x.insert("marginTop", 100.0);
+//              rootNode = cloneShadowTreeWithNewProps(rootNode, child->getFamily(), RawProps(x));
+//            }
           } else if (mutation.type == ShadowViewMutation::Remove){
             lap_->removedViews_->insert_or_assign(mutation.oldChildShadowView.tag, mutation.oldChildShadowView);
             if (lap_->layoutAnimationsManager_->hasLayoutAnimation(mutation.oldChildShadowView.tag, LayoutAnimationType::EXITING)){
@@ -98,8 +114,10 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 //              rootNode = oldRootShadowNode->ShadowNode::clone({});
             }
           } else if (mutation.type == ShadowViewMutation::Update){
-            lap_->modifiedViews_->insert_or_assign(mutation.newChildShadowView.tag, mutation.oldChildShadowView);
-            lap_->modifiedViewsTarget_->insert_or_assign(mutation.newChildShadowView.tag, mutation.newChildShadowView);
+            lap_->modifiedViews_->insert_or_assign(mutation.newChildShadowView.tag, findChild(oldRootShadowNode, mutation.oldChildShadowView.tag));
+//            auto child = findChild(oldRootShadowNode, mutation.oldChildShadowView.tag);
+//            auto& lChild = static_cast<const YogaLayoutableShadowNode&>(*child);
+            lap_->modifiedViewsTarget_->insert_or_assign(mutation.newChildShadowView.tag, findChild(rootNode, mutation.newChildShadowView.tag));
           }
         }
         

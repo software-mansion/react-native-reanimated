@@ -6,14 +6,17 @@ import type {
   FunctionComponent,
   MutableRefObject,
 } from 'react';
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import { findNodeHandle, Platform } from 'react-native';
 import WorkletEventHandler from '../reanimated2/WorkletEventHandler';
 import '../reanimated2/layoutReanimation/animationsManager';
 import invariant from 'invariant';
 import { adaptViewConfig } from '../ConfigHelper';
 import { RNRenderer } from '../reanimated2/platform-specific/RNRenderer';
-import { enableLayoutAnimations } from '../reanimated2/core';
+import {
+  configureLayoutAnimations,
+  enableLayoutAnimations,
+} from '../reanimated2/core';
 import {
   SharedTransition,
   LayoutAnimationType,
@@ -117,6 +120,8 @@ export function createAnimatedComponent(
   options?: Options<any>
 ): ComponentClass<AnimateProps<FlatListProps<unknown>>>;
 
+let id = 0;
+
 export function createAnimatedComponent(
   Component: ComponentType<InitialComponentProps>,
   options?: Options<InitialComponentProps>
@@ -145,11 +150,26 @@ export function createAnimatedComponent(
     static displayName: string;
     static contextType = SkipEnteringContext;
     context!: React.ContextType<typeof SkipEnteringContext>;
+    nativeID = id++;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
       if (isJest()) {
         this.jestAnimatedStyle = { value: {} };
+      }
+      const entering = this.props.entering;
+      if (entering) {
+        configureLayoutAnimations(
+          this.nativeID,
+          LayoutAnimationType.ENTERING,
+          maybeBuild(entering, this.props?.style, AnimatedComponent.displayName)
+        );
+
+        // updateLayoutAnimations(
+        //   this.nativeID,
+        //   LayoutAnimationType.ENTERING,
+        //   maybeBuild(entering, this.props?.style, AnimatedComponent.displayName)
+        // );
       }
     }
 
@@ -518,6 +538,7 @@ export function createAnimatedComponent(
           ? (ref as HTMLElement)
           : findNodeHandle(ref as Component);
 
+        console.log('setLocalRef', tag);
         this._viewTag = tag as number;
 
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
@@ -626,6 +647,8 @@ export function createAnimatedComponent(
 
       return (
         <Component
+          nativeID={`${this.nativeID}`}
+          onLayout={() => {}}
           {...filteredProps}
           // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
           // After spending some time trying to figure out what to do with this problem, we decided to leave it this way

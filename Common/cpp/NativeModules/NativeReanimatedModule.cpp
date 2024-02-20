@@ -720,31 +720,52 @@ void NativeReanimatedModule::initializeFabric(
       {
         std::unique_lock<std::mutex>(lap->mutex);
         if(lap->createdViews_ && lap->createdViews_->contains(tag)){
+          auto view = lap->createdViews_->at(tag);
+          auto node = lap->createdNodes_->at(tag);
           lap->createdViews_->erase(tag);
+          lap->createdNodes_->erase(tag);
+//          if (!lap->tagToNativeID_->contains(tag)){
+//            return false;
+//          }
+//          auto nativeIDString = lap->tagToNativeID_->at(tag);
+//          if (nativeIDString.empty()){
+//            return false;
+//          }
+//          auto nativeID = stoi(nativeIDString);
+          printf("entering %d\n", tag);
           if (layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::ENTERING))
           {
             printf("entering");
-          }
-        }
-        if(lap->modifiedViews_ && lap->modifiedViews_->contains(tag)){
-          if (layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::LAYOUT))
-          {
-            auto current = lap->modifiedViews_->at(tag), target = lap->modifiedViewsTarget_->at(tag);
             Values currentValues, targetValues;
-            currentValues.x = current.layoutMetrics.frame.origin.x;
-            currentValues.y = current.layoutMetrics.frame.origin.y;
-            currentValues.width = current.layoutMetrics.frame.size.width;
-            currentValues.height = current.layoutMetrics.frame.size.height;
             auto layout = event.eventPayload->asJSIValue(getUIRuntime()).asObject(getUIRuntime()).getProperty(getUIRuntime(), "layout").asObject(getUIRuntime());
             targetValues.x=layout.getProperty(getUIRuntime(), "x").asNumber();
             targetValues.y=layout.getProperty(getUIRuntime(), "y").asNumber();
             targetValues.width=layout.getProperty(getUIRuntime(), "width").asNumber();
             targetValues.height=layout.getProperty(getUIRuntime(), "height").asNumber();
-//            targetValues.x = target.layoutMetrics.frame.origin.x;
-//            targetValues.y = target.layoutMetrics.frame.origin.y;
-//            targetValues.width = target.layoutMetrics.frame.size.width;
-//            targetValues.height = target.layoutMetrics.frame.size.height;
+//            lap->startAnimationWithWrapper(node, tag, LayoutAnimationType::ENTERING, targetValues);
+            lap->startAnimation(tag, LayoutAnimationType::ENTERING, targetValues);
+          }
+        }
+        if(lap->modifiedViews_ && lap->modifiedViews_->contains(tag)){
+          if (layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::LAYOUT))
+          {
+            auto current = lap->modifiedViews_->at(tag);
+            auto& currentNode = static_cast<const YogaLayoutableShadowNode&>(*current);
+            auto target = lap->modifiedViewsTarget_->at(tag);
+            auto& targetNode = static_cast<const YogaLayoutableShadowNode&>(*target);
+            Values currentValues, targetValues;
+            auto lm = currentNode.getLayoutMetrics();
+            currentValues.x = lm.frame.origin.x;
+            currentValues.y = lm.frame.origin.y;
+            currentValues.width = lm.frame.size.width;
+            currentValues.height = lm.frame.size.height;
+            auto layout = event.eventPayload->asJSIValue(getUIRuntime()).asObject(getUIRuntime()).getProperty(getUIRuntime(), "layout").asObject(getUIRuntime());
+            targetValues.x=layout.getProperty(getUIRuntime(), "x").asNumber();
+            targetValues.y=layout.getProperty(getUIRuntime(), "y").asNumber();
+            targetValues.width=layout.getProperty(getUIRuntime(), "width").asNumber();
+            targetValues.height=layout.getProperty(getUIRuntime(), "height").asNumber();
             lap->startLayoutLayoutAnimation(tag, currentValues, targetValues);
+//            lap->startLayoutLayoutAnimationWithWrapper(target, tag, LayoutAnimationType::LAYOUT, currentValues, targetValues);
           }
           lap->modifiedViews_->erase(tag);
           lap->modifiedViewsTarget_->erase(tag);
