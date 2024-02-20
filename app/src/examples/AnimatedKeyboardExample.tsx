@@ -4,16 +4,16 @@ import {
   View,
   Dimensions,
   Text,
-  // useWindowDimensions,
+  useWindowDimensions,
 } from 'react-native';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
 
-export const useKeyboardHeight = () => {
+const useKeyboardHeightViewport = () => {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   useEffect(() => {
@@ -30,27 +30,41 @@ export const useKeyboardHeight = () => {
   return keyboardHeight;
 };
 
+const useKeyboardHeightDimensions = () => {
+  const [initialHeight, setInitialHeight] = useState(0);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const dimensions = useWindowDimensions();
+
+  useEffect(() => {
+    setInitialHeight(Dimensions.get('window').height);
+  }, []);
+
+  useEffect(() => {
+    setKeyboardHeight(initialHeight - dimensions.height);
+  }, [dimensions, initialHeight]);
+
+  return keyboardHeight;
+};
+
 export default function AnimatedKeyboardExample() {
-  const keyboardHeight = useKeyboardHeight();
+  const keyboardHeight = useKeyboardHeightDimensions(); //useKeyboardHeightViewport();
   const [text, setText] = useState('');
 
   const sv = useSharedValue(550);
 
   useEffect(() => {
-    setText(`current keyboard height is ${keyboardHeight}`);
-    sv.value = withTiming(550 - keyboardHeight, { duration: 100 });
+    setText(`Current keyboard height is ${keyboardHeight}`);
+    sv.value = withTiming(550 - keyboardHeight, { duration: 0 });
   }, [keyboardHeight, sv]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return { height: sv.value };
   });
 
-  const onInputFocus = () => {};
-
   return (
     <Animated.View style={[styles.container, animatedStyle]}>
       <Text>{text}</Text>
-      <TextInput style={styles.textInput} onFocus={onInputFocus} />
+      <TextInput style={styles.textInput} />
       <View style={styles.measuringBox} />
     </Animated.View>
   );
