@@ -3,9 +3,7 @@ import TopWave from './TopWave';
 import BottomWave from './BottomWave';
 import styles from './styles.module.css';
 
-export default function ReanimatedAnimationsBackground({
-  children,
-}: PropsWithChildren) {
+export default function AnimationsBackground({ children }: PropsWithChildren) {
   // first TopWave is in Dark Mode, same with Bottom Wave
   return (
     <div>

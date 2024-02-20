@@ -305,7 +305,7 @@ export function makeShareableCloneOnUIRecursive<T>(
       if (isHostObject(value)) {
         // We call `_makeShareableClone` to wrap the provided HostObject
         // inside ShareableJSRef.
-        return _makeShareableClone(value) as FlatShareableRef<T>;
+        return global._makeShareableClone(value) as FlatShareableRef<T>;
       }
       if (isRemoteFunction<T>(value)) {
         // RemoteFunctions are created by us therefore they are
@@ -314,7 +314,7 @@ export function makeShareableCloneOnUIRecursive<T>(
         return value.__remoteFunction;
       }
       if (Array.isArray(value)) {
-        return _makeShareableClone(
+        return global._makeShareableClone(
           value.map(cloneRecursive)
         ) as FlatShareableRef<T>;
       }
@@ -322,9 +322,9 @@ export function makeShareableCloneOnUIRecursive<T>(
       for (const [key, element] of Object.entries(value)) {
         toAdapt[key] = cloneRecursive(element);
       }
-      return _makeShareableClone(toAdapt) as FlatShareableRef<T>;
+      return global._makeShareableClone(toAdapt) as FlatShareableRef<T>;
     }
-    return _makeShareableClone(value);
+    return global._makeShareableClone(value);
   }
   return cloneRecursive(value);
 }
