@@ -19,6 +19,8 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   NSMutableDictionary *_listeners;
   READisplayLink *_displayLink;
   KeyboardState _state;
+  CFTimeInterval _animtionStart;
+  float _targetKeyboardHeight;
 }
 
 - (instancetype)init
@@ -27,7 +29,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   _listeners = [[NSMutableDictionary alloc] init];
   _nextListenerId = @0;
   _state = UNKNOWN;
-
+  _animtionStart = 0;
   NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
 
   [notificationCenter addObserver:self
@@ -81,20 +83,78 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 - (void)runUpdater
 {
   [[self getDisplayLink] setPaused:NO];
-  [self updateKeyboardFrame];
+  _animtionStart = 0;
+  //  [self updateKeyboardFrame];
+}
+
+- (CGFloat)estimateCurrentKeyboardHeightDiringAppearing
+{
+  float keyboardAnimationDuration = 0.5;
+  float a1 = 1;
+  float a2 = 5.1;
+  float b1 = 1.6;
+  float b2 = 7.6;
+  float c1 = 0.2;
+  float c2 = 2.4;
+  CFTimeInterval elapsedTime = _displayLink.targetTimestamp - _animtionStart;
+  float timeProgress = elapsedTime / keyboardAnimationDuration;
+  if (timeProgress > 1) {
+    timeProgress = 1;
+  }
+  float x = timeProgress;
+  float progress = 1 - a1 * pow(1 - x, a2) - b1 * x * pow(1 - x, b2) - c1 * pow(x, 2) * pow(1 - x, c2);
+  float currentKeyboardHeight = _targetKeyboardHeight * progress;
+  return currentKeyboardHeight;
+}
+
+- (CGFloat)estimateCurrentKeyboardHeightDiringDisappearing
+{
+  float keyboardAnimationDuration = 0.45;
+  float a1 = 1;
+  float a2 = 5.5;
+  float b1 = 2.5;
+  float b2 = 6.4;
+  float c1 = 1.6;
+  float c2 = 3.3;
+  CFTimeInterval elapsedTime = _displayLink.targetTimestamp - _animtionStart;
+  float timeProgress = elapsedTime / keyboardAnimationDuration;
+  if (timeProgress > 1) {
+    timeProgress = 1;
+  }
+  float x = timeProgress;
+  float progress = 1 - a1 * pow(1 - x, a2) - b1 * x * pow(1 - x, b2) - c1 * pow(x, 2) * pow(1 - x, c2);
+  float currentKeyboardHeight = _targetKeyboardHeight * (1 - progress);
+  return currentKeyboardHeight;
 }
 
 - (void)updateKeyboardFrame
 {
-  BOOL isAnimatingKeyboardChange = _measuringView.layer.presentationLayer.animationKeys.count != 0;
-  CGRect measuringFrame =
-      isAnimatingKeyboardChange ? _measuringView.layer.presentationLayer.frame : _measuringView.frame;
-  CGFloat keyboardHeight = measuringFrame.size.height;
+  if (_animtionStart == 0) {
+    _animtionStart = _displayLink.targetTimestamp - _displayLink.duration;
+  }
+  CAAnimation *positionAnimation = [_measuringView.layer animationForKey:@"position"];
+  float caAnimationBeginTime = [[positionAnimation valueForKey:@"beginTime"] floatValue];
+  if (caAnimationBeginTime != 0) {
+    _animtionStart = caAnimationBeginTime;
+  }
 
+  CGFloat keyboardHeight = 0;
+  if (_state == OPENING) {
+    keyboardHeight = [self estimateCurrentKeyboardHeightDiringAppearing];
+  } else if (_state == CLOSING) {
+    keyboardHeight = [self estimateCurrentKeyboardHeightDiringDisappearing];
+  }
+
+  BOOL isAnimatingKeyboardChange = _measuringView.layer.presentationLayer.animationKeys.count != 0;
   if (!isAnimatingKeyboardChange) {
     // measuring view is no longer running an animation, we should settle in OPEN/CLOSE state
     if (_state == OPENING || _state == CLOSING) {
       _state = _state == OPENING ? OPEN : CLOSED;
+    }
+    if (_state == OPEN) {
+      keyboardHeight = _targetKeyboardHeight;
+    } else if (_state == CLOSED) {
+      keyboardHeight = 0;
     }
     // stop display link updates if no animation is running
     [[self getDisplayLink] setPaused:YES];
@@ -117,6 +177,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   CGFloat endHeight = windowSize.height - endFrame.origin.y;
 
   if (endHeight > 0 && _state != OPEN) {
+    _targetKeyboardHeight = endHeight;
     _state = OPENING;
   } else if (endHeight == 0 && _state != CLOSED) {
     _state = CLOSING;
