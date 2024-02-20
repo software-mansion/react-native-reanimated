@@ -7,9 +7,9 @@ export default function LogExample() {
     function test(value: unknown, expected: string) {
       'worklet';
       // @ts-ignore _toString function is registered for UI runtime
-      const actual = _toString(value);
+      const actual = global._toString(value);
       // @ts-ignore _log function is registered for UI runtime
-      _log(actual);
+      global._log(actual);
       if (actual !== expected) {
         throw new Error(`Test failed, expected "${expected}", got "${actual}"`);
       }
@@ -49,7 +49,7 @@ export default function LogExample() {
       test(isFinite, '[Function isFinite]');
       test(Object, '[Function Object]');
       // @ts-ignore _log function is registered for UI runtime
-      test(_log, '[jsi::HostFunction _log]');
+      test(global._log, '[jsi::HostFunction _log]');
       // test(Math, '[Math]'); // TODO: how to detect the Math object?
 
       {

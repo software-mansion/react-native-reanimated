@@ -5,6 +5,7 @@
   --swm-navy-light-40: #919fcf;
   --swm-navy-light-20: #c1c6e5;
   --swm-navy-light-10: #eef0ff;
+  --swm-navy-light-transparent: #33488e40;
 
   --swm-navy-dark-140: #1b2445;
   --swm-navy-dark-120: #122154;
@@ -64,6 +65,7 @@
 
   --swm-red-dark-140: #5a3b46;
   --swm-red-dark-120: #914f55;
+  --swm-red-dark-110: #c86364;
   --swm-red-dark-100: #ff7774;
   --swm-red-dark-80: #ff8b88;
   --swm-red-dark-60: #ffb4b2;

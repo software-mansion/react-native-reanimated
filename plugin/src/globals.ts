@@ -1,4 +1,4 @@
-export const defaultGlobals = new Set([
+const notCapturedIdentifiers = [
   // Based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
 
   // Note that objects' properties don't need to be listed since we always only capture the whole object,
@@ -114,6 +114,18 @@ export const defaultGlobals = new Set([
 
   // Reanimated
   '_WORKLET',
+];
+
+/**
+ * @deprecated Since we moved on to using `global.` prefix in Reanimated, we don't need to
+ * capture these identifiers anymore. However, for safety reasons and 3rd party libraries,
+ * we still keep them in the list.
+ *
+ * `_WORKLET` is the only exception since it's a part of the public API.
+ */
+// eslint-disable-next-line camelcase
+const notCapturedIdentifiers_DEPRECATED = [
+  // Reanimated
   '_IS_FABRIC',
   '_log',
   '_toString',
@@ -133,7 +145,11 @@ export const defaultGlobals = new Set([
   '_notifyAboutEnd',
   '_runOnUIQueue',
   '_getAnimationTimestamp',
-]);
+];
+
+export const defaultGlobals = new Set(
+  notCapturedIdentifiers.concat(notCapturedIdentifiers_DEPRECATED)
+);
 
 export let globals: Set<string>;
 

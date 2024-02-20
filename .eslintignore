@@ -5,3 +5,4 @@ plugin/*
 eslintrc.js
 jest.config.js
 eslintPlugin/*
+mock.js
