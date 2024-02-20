@@ -28,21 +28,26 @@ const mockTargetValues: LayoutAnimationsValues = {
 
 function getCommonProperties(
   layoutStyle: StyleProps,
-  secondStyle: StyleProps | Array<StyleProps>
+  componentStyle: StyleProps | Array<StyleProps>
 ) {
-  const secondStyleFlat = Array.isArray(secondStyle)
-    ? secondStyle.flat()
-    : [secondStyle];
+  let componentStyleFlat = Array.isArray(componentStyle)
+    ? componentStyle.flat()
+    : [componentStyle];
 
-  let commonKeys: Array<string> = [];
-  secondStyleFlat.forEach((s) => {
-    if ('initial' in s) {
-      s = s.initial.value; // Include properties of animated style
-    }
+  componentStyleFlat = componentStyleFlat.map((style) =>
+    'initial' in style
+      ? style.initial.value // Include properties of animated style
+      : style
+  );
 
-    const commonStyleKeys = Object.keys(s).filter((key) => key in layoutStyle);
-    commonKeys = commonKeys.concat(commonStyleKeys);
-  });
+  const componentStylesKeys = componentStyleFlat.flatMap((style) =>
+    Object.keys(style)
+  );
+
+  const commonKeys = Object.keys(layoutStyle).filter((key) =>
+    componentStylesKeys.includes(key)
+  );
+
   return commonKeys;
 }
 
