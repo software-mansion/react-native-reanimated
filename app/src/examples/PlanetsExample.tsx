@@ -27,6 +27,16 @@ function useLoop(toValue: number = 1, duration: number = 1000) {
   return sv;
 }
 
+const baseDuration = 6000;
+const baseSemiMajorAxeLength = 3 * 25;
+
+function getDurationForRadius(radius: number) {
+  const kepler =
+    Math.pow(baseDuration, 2) / Math.pow(baseSemiMajorAxeLength, 3);
+
+  return Math.sqrt(Math.pow(radius * 3, 3) * kepler);
+}
+
 interface PlanetProps {
   radius: number;
   size: number;
@@ -50,8 +60,8 @@ function Planet({ radius, size, color, duration, theta }: PlanetProps) {
 
     // rotate by theta
     const thetaRad = theta * (Math.PI / 180);
-    const cx = x * Math.cos(thetaRad) - y * Math.sin(thetaRad);
-    const cy = x * Math.sin(thetaRad) + y * Math.cos(thetaRad);
+    const cx = `${x * Math.cos(thetaRad) - y * Math.sin(thetaRad)}`;
+    const cy = `${x * Math.sin(thetaRad) + y * Math.cos(thetaRad)}`;
 
     return { cx, cy };
   });
@@ -96,28 +106,28 @@ export default function PlanetsExample() {
           radius={25}
           size={5}
           theta={-15}
-          duration={3000}
+          duration={getDurationForRadius(25)}
           color="tomato"
         />
         <Planet
           radius={35}
           size={10}
           theta={-15}
-          duration={10000}
+          duration={getDurationForRadius(35)}
           color="limegreen"
         />
         <Planet
           radius={45}
           size={7}
           theta={-15}
-          duration={5000}
+          duration={getDurationForRadius(45)}
           color="dodgerblue"
         />
         <Planet
           radius={55}
           size={8}
           theta={-15}
-          duration={8000}
+          duration={getDurationForRadius(55)}
           color="fuchsia"
         />
         <TopSun />
