@@ -521,44 +521,46 @@ using namespace facebook::react;
 {
   REAUIView *view = [self.uiManager viewForReactTag:viewTag];
 
-  NSString *result = [NSString
-      stringWithFormat:
-          @"error: unknown propName %@, currently supported: opacity, zIndex, width, height, top, left, backgroundColor",
-          propName];
-
   if ([propName isEqualToString:@"opacity"]) {
 #if !TARGET_OS_OSX
     CGFloat alpha = view.alpha;
 #else
     CGFloat alpha = view.alphaValue;
 #endif
-    result = [@(alpha) stringValue];
+    return [@(alpha) stringValue];
   } else if ([propName isEqualToString:@"zIndex"]) {
     NSInteger zIndex = view.reactZIndex;
-    result = [@(zIndex) stringValue];
+    return [@(zIndex) stringValue];
   } else if ([propName isEqualToString:@"width"]) {
-    result = [@(view.frame.size.width) stringValue];
+    return [@(view.frame.size.width) stringValue];
   } else if ([propName isEqualToString:@"height"]) {
-    result = [@(view.frame.size.height) stringValue];
+    return [@(view.frame.size.height) stringValue];
   } else if ([propName isEqualToString:@"top"]) {
-    result = [@(view.frame.origin.y) stringValue];
+    return [@(view.frame.origin.y) stringValue];
   } else if ([propName isEqualToString:@"left"]) {
-    result = [@(view.frame.origin.x) stringValue];
+    return [@(view.frame.origin.x) stringValue];
   } else if ([propName isEqualToString:@"backgroundColor"]) {
 #if !TARGET_OS_OSX
     UIColor *color = view.backgroundColor;
-    const size_t totalComponents = CGColorGetNumberOfComponents(color.CGColor);
-    const CGFloat *components = CGColorGetComponents(color.CGColor);
-    int r = 255 * components[MIN(0, totalComponents - 2)];
-    int g = 255 * components[MIN(1, totalComponents - 2)];
-    int b = 255 * components[MIN(2, totalComponents - 2)];
-    result = [NSString stringWithFormat:@"#%02x%02x%02x", r, g, b];
 #else
-    result = @"Getting background color with function 'getViewProp' is not supported on macOS";
+    NSColor *color = view.backgroundColor;
 #endif
+    if (color != nil) {
+      const size_t totalComponents = CGColorGetNumberOfComponents(color.CGColor);
+      const CGFloat *components = CGColorGetComponents(color.CGColor);
+      int r = 255 * components[MIN(0, totalComponents - 2)];
+      int g = 255 * components[MIN(1, totalComponents - 2)];
+      int b = 255 * components[MIN(2, totalComponents - 2)];
+      return [NSString stringWithFormat:@"#%02x%02x%02x", r, g, b];
+    } else {
+      return @"Invalid background color is 'nil'";
+    }
   }
 
-  return result;
+  return [NSString
+      stringWithFormat:
+          @"error: unknown propName %@, currently supported: opacity, zIndex, width, height, top, left, backgroundColor",
+          propName];
 }
 
 - (void)maybeFlushUpdateBuffer
