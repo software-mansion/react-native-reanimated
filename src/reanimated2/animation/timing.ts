@@ -74,8 +74,7 @@ export const withTiming = function (
         easing as unknown as { __workletHash: number }
       )?.__workletHash;
       const functionName = typeof easing === 'function' ? easing?.name : '';
-      /** When calling `withTiming` on UI we don't pass worklets directly, but we
-      bound them first. This happens, for example, when animating with keyframes */
+      /** Worklets ran on UI thread are bound first. Therefore if a function wasn't bound it cannot be a worklet. See `valueUnpacker` code for reference. */
       const isBound = functionName.startsWith('bound');
 
       if (!isBound && isFunction && !isWorklet) {
