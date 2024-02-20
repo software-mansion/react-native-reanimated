@@ -84,7 +84,6 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 {
   [[self getDisplayLink] setPaused:NO];
   _animtionStart = 0;
-  //  [self updateKeyboardFrame];
 }
 
 - (CGFloat)estimateCurrentKeyboardHeightDiringAppearing
