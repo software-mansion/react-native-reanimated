@@ -12,7 +12,10 @@ import type {
 import type { StyleProps } from '../../commonTypes';
 import type { TransformArrayItem } from '../../helperTypes';
 import { ReduceMotion } from '../../commonTypes';
-import { getReduceMotionFromConfig } from '../../animation/util';
+import {
+  assertEasingIsWorklet,
+  getReduceMotionFromConfig,
+} from '../../animation/util';
 
 interface KeyframePoint {
   duration: number;
@@ -124,6 +127,9 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       currentKeyPoint: number;
       easing?: EasingFunction;
     }): void => {
+      if (__DEV__ && easing) {
+        assertEasingIsWorklet(easing);
+      }
       if (!(key in parsedKeyframes)) {
         throw new Error(
           "[Reanimated] Keyframe can contain only that set of properties that were provide with initial values (keyframe 0 or 'from')"

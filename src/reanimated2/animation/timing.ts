@@ -1,7 +1,11 @@
 'use strict';
 import type { EasingFunction, EasingFunctionFactory } from '../Easing';
 import { Easing } from '../Easing';
-import { defineAnimation, getReduceMotionForAnimation } from './util';
+import {
+  assertEasingIsWorklet,
+  defineAnimation,
+  getReduceMotionForAnimation,
+} from './util';
 import type {
   Animation,
   AnimationCallback,
@@ -65,26 +69,8 @@ export const withTiming = function (
 ): Animation<TimingAnimation> {
   'worklet';
 
-  if (__DEV__) {
-    // validate config
-    if (userConfig?.easing) {
-      const { easing } = userConfig;
-      const isFunction: boolean = typeof easing === 'function';
-      const isWorklet: boolean = !!(
-        easing as unknown as { __workletHash: number }
-      )?.__workletHash;
-      const functionName = typeof easing === 'function' ? easing?.name : '';
-      /** Worklets ran on UI thread are bound first. Therefore if a function wasn't bound it cannot be a worklet. See `valueUnpacker` code for reference. */
-      const isBound = functionName.startsWith('bound');
-
-      if (!isBound && isFunction && !isWorklet) {
-        throw new Error(
-          `[Reanimated] The easing function ${
-            functionName ? `\`${functionName}\` ` : ''
-          }provided to \`withTiming\` is not a worklet. Are you sure you didn't import it from react-native? `
-        );
-      }
-    }
+  if (__DEV__ && userConfig?.easing) {
+    assertEasingIsWorklet(userConfig?.easing);
   }
 
   return defineAnimation<TimingAnimation>(toValue, () => {

@@ -9,7 +9,7 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-import { ReduceMotion } from '../commonTypes';
+import { ReduceMotion, isWorklet } from '../commonTypes';
 import type {
   SharedValue,
   AnimatableValue,
@@ -33,6 +33,7 @@ import {
   getRotationMatrix,
 } from './transformationMatrix/matrixUtils';
 import { isReducedMotion, shouldBeUseWeb } from '../PlatformChecker';
+import type { EasingFunction, EasingFunctionFactory } from '../Easing';
 
 let IN_STYLE_UPDATER = false;
 const IS_REDUCED_MOTION = isReducedMotion();
@@ -41,6 +42,24 @@ if (__DEV__ && IS_REDUCED_MOTION) {
   console.warn(
     `[Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device.`
   );
+}
+
+export function assertEasingIsWorklet(
+  easing: EasingFunction | EasingFunctionFactory
+) {
+  'worklet';
+  const isFunction: boolean = typeof easing === 'function';
+  const functionName = typeof easing === 'function' ? easing?.name : '';
+  /** Worklets ran on UI thread are bound first. Therefore if a function wasn't bound it cannot be a worklet. See `valueUnpacker` code for reference. */
+  const isBound = functionName.startsWith('bound');
+
+  if (!isBound && isFunction && !isWorklet(easing)) {
+    throw new Error(
+      `[Reanimated] The easing function ${
+        functionName ? `\`${functionName}\` ` : ''
+      }provided to \`withTiming\` is not a worklet. Are you sure you didn't import it from react-native? `
+    );
+  }
 }
 
 export function initialUpdaterRun<T>(updater: () => T) {
