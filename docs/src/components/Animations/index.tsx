@@ -3,12 +3,12 @@ import { useState, useRef, useEffect } from 'react';
 import clsx from 'clsx';
 import styles from './styles.module.css';
 
-import ReanimatedAnimationsBackground from '@site/src/components/ReanimatedAnimations/ReanimatedAnimationsBackground';
-import ReanimatedAnimationsSection from '@site/src/components/ReanimatedAnimations/ReanimatedAnimationsSection';
+import AnimationsBackground from '@site/src/components/Animations/AnimationsBackground';
+import AnimationsSection from '@site/src/components/Animations/AnimationsSection';
 import GyroscopeExample from '@site/src/components/ReanimatedExamples/GyroscopeExample';
-import SpringBasicExample from '../../components/ReanimatedExamples/SpringBasicExample';
-import DecayBasicExample from '../../components/ReanimatedExamples/DecayBasicExample';
-import FadeTileExample from '../../components/ReanimatedExamples/FadeTileExample';
+import SpringBasicExample from '../ReanimatedExamples/SpringBasicExample';
+import DecayBasicExample from '../ReanimatedExamples/DecayBasicExample';
+import FadeTileExample from '../ReanimatedExamples/FadeTileExample';
 import SharedElementExample from '../ReanimatedExamples/SharedElementExample';
 import KeyboardExample from '../ReanimatedExamples/KeyboardExample';
 
@@ -98,7 +98,7 @@ useDerivedValue(() => {
   },
 ];
 
-const ReanimatedAnimations = () => {
+const Animations = () => {
   const [activeSection, setActiveSection] = useState(-1);
   const initialScrollPosition = useRef(null);
   const containerRef = useRef(null);
@@ -147,7 +147,7 @@ const ReanimatedAnimations = () => {
   }, []);
 
   return (
-    <ReanimatedAnimationsBackground>
+    <AnimationsBackground>
       <div className={styles.animationsContainer}>
         {/* Copy hidden for now */}
         {/* <div>
@@ -160,7 +160,7 @@ const ReanimatedAnimations = () => {
         <div ref={containerRef}>
           {sections.map((section, idx) => (
             <Fragment key={idx}>
-              <ReanimatedAnimationsSection
+              <AnimationsSection
                 title={section.title}
                 body={section.body}
                 code={section.code}
@@ -191,8 +191,8 @@ const ReanimatedAnimations = () => {
           ))}
         </div>
       </div>
-    </ReanimatedAnimationsBackground>
+    </AnimationsBackground>
   );
 };
 
-export default ReanimatedAnimations;
+export default Animations;

@@ -1,0 +1,113 @@
+.testimonialItem {
+  background-color: var(--swm-red-light-20);
+  box-shadow: -12px 12px 0px var(--swm-red-light-100);
+  padding: 1.5em;
+  position: relative;
+  width: 100%;
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+  max-width: calc(50% - 3.5rem / 2);
+  transition: 0.2s ease-in-out;
+}
+
+@media (max-width: 996px) {
+  .testimonialItem {
+    max-width: 100%;
+    min-height: 0;
+  }
+}
+.testimonialItem:hover {
+  text-decoration: none;
+  background-color: var(--swm-red-light-40);
+  box-shadow: -12px 12px 0px var(--swm-red-light-100);
+}
+
+.testimonialItem:hover .testimonialAuthorPhoto {
+  background-color: black;
+}
+.testimonialItem:hover .testimonialAuthorPhoto > img {
+  opacity: 0.8;
+}
+
+.testimonialBody {
+  margin: 0;
+}
+
+.quoteIcon {
+  position: absolute;
+  right: 0;
+  top: 0;
+  transform: translate(10%, -20%);
+}
+
+@media (max-width: 420px) {
+  .quoteIcon {
+    scale: 0.8;
+    transform: translate(30%, -40%);
+  }
+}
+
+[data-theme='dark'] .testimonialItem {
+  background-color: var(--swm-red-dark-100);
+  box-shadow: -12px 12px 0px var(--swm-red-dark-120);
+}
+[data-theme='dark'] .testimonialItem:hover {
+  background-color: var(--swm-red-dark-110);
+  box-shadow: -12px 12px 0px var(--swm-red-dark-120);
+}
+
+[data-theme='dark'] .testimonialAuthorName,
+[data-theme='dark'] .testimonialCompany,
+[data-theme='dark'] .testimonialBody {
+  color: var(--swm-off-white);
+}
+
+.testimonialAuthor {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+
+.testimonialAuthorInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.testimonialAuthorName {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.testimonialAuthorPhoto {
+  flex-shrink: 0;
+  background-color: black;
+}
+
+.testimonialAuthorPhoto,
+.testimonialAuthorPhoto > img {
+  border-radius: 50%;
+  width: 4rem;
+  height: 4rem;
+}
+
+.testimonialAuthorPhoto > img {
+  object-fit: cover;
+  opacity: 1;
+  transition: 0.2s ease-in-out;
+  object-position: top center;
+}
+
+.testimonialCompany {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--swm-navy-light-60);
+  text-transform: uppercase;
+}
+
+@media (max-width: 420px) {
+  .featureTitle {
+    font-size: 20px;
+  }
+}
