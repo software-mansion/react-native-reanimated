@@ -322,7 +322,7 @@ PODS:
     - React-jsi (= 0.69.8-0)
     - React-logger (= 0.69.8-0)
     - React-perflogger (= 0.69.8-0)
-  - RNReanimated (3.7.0):
+  - RNReanimated (3.7.1):
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
@@ -496,7 +496,7 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  boost: 0ed1b9a58a27b2f7885dc9f279bc3b341f44512b
+  boost: a7c83b31436843459a1961bfd74b96033dc77234
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
   DoubleConversion: 234abba95e31cc2aada0cf3b97cdb11bc5b90575
   FBLazyVector: cac88c410ace16c7e80d77741d4cc00821f75dda
@@ -511,7 +511,7 @@ SPEC CHECKSUMS:
   Flipper-RSocket: d9d9ade67cbecf6ac10730304bf5607266dd2541
   FlipperKit: cbdee19bdd4e7f05472a66ce290f1b729ba3cb86
   fmt: 135c0c55547979f715b56dfa54037ececa96d07a
-  glog: a2ded9bf28f0cb2fce90ad21eb419299a500ff6c
+  glog: bac6d5aa2990176cc22d0432fb3e28805d580aeb
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   OpenSSL-Universal: ebc357f1e6bc71fa463ccb2fe676756aff50e88c
   RCT-Folly: 6955e7728b76277c5df5a5aba37ee1ff1dd99976
@@ -538,7 +538,7 @@ SPEC CHECKSUMS:
   React-RCTText: e2934b40d4375044329dfeb25bd1dd29d746732d
   React-runtimeexecutor: a30b74989ee4642b061c9543ba03b5434f7e67fd
   ReactCommon: 7c314443ae0231621001d149b6f8d6f5069a40a0
-  RNReanimated: e777d3867b72297695d0e05be84b5897ac0b7355
+  RNReanimated: c133c84bcb6774237d8418bdbba8966a22308c5b
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: b235f0e235cb33113f65992ccd88b9d082ac04f5
   YogaKit: 1e22bf2228b3a5ac8cc88965153061ae92c494b5
