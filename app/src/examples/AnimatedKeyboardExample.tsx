@@ -1,56 +1,80 @@
-import { StyleSheet, TextInput, Text, View, ScrollView } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import {
+  StyleSheet,
+  TextInput,
+  View,
+  Dimensions,
+  Text,
+  // useWindowDimensions,
+} from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 
-export default function AnimatedKeyboardExample() {
+export const useKeyboardHeight = () => {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   useEffect(() => {
-    const initialViewportHeight = visualViewport.height;
-
-    if (visualViewport) {
-      visualViewport.onresize = () => {
-        setKeyboardHeight(initialViewportHeight - visualViewport.height);
-        console.log(initialViewportHeight - visualViewport.height);
-      };
+    const initialHeight = Dimensions.get('window').height;
+    function onResize() {
+      setKeyboardHeight(initialHeight - visualViewport.height);
     }
+    const resizeListener = visualViewport?.addEventListener('resize', onResize);
+    return () => {
+      resizeListener.remove();
+    };
   }, []);
 
-  const onInputPress = () => {};
+  return keyboardHeight;
+};
+
+export default function AnimatedKeyboardExample() {
+  const keyboardHeight = useKeyboardHeight();
+  const [text, setText] = useState('');
+
+  const sv = useSharedValue(550);
+
+  useEffect(() => {
+    setText(`current keyboard height is ${keyboardHeight}`);
+    sv.value = withTiming(550 - keyboardHeight, { duration: 100 });
+  }, [keyboardHeight, sv]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return { height: sv.value };
+  });
+
+  const onInputFocus = () => {};
 
   return (
-    <ScrollView style={styles.flexOne}>
-      <View style={styles.container}>
-        <Text>Keyboard height is: {keyboardHeight}</Text>
-        <TextInput style={styles.textInput} onFocus={onInputPress} />
-        <View style={styles.measuringBox} />
-      </View>
-    </ScrollView>
+    <Animated.View style={[styles.container, animatedStyle]}>
+      <Text>{text}</Text>
+      <TextInput style={styles.textInput} onFocus={onInputFocus} />
+      <View style={styles.measuringBox} />
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  flexOne: {
-    flex: 1,
-  },
   container: {
-    flex: 1,
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 70,
+    borderWidth: 5,
+    borderColor: 'green',
   },
   textInput: {
     flex: 1,
     borderColor: 'blue',
     borderStyle: 'solid',
     borderWidth: 2,
-    height: 60,
     width: 200,
     marginVertical: 30,
   },
   measuringBox: {
     width: 300,
-    height: 300,
+    flex: 5,
     borderColor: 'purple',
     borderWidth: 2,
   },
