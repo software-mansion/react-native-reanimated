@@ -94,9 +94,7 @@ export const withDelay = function <T extends AnimationObject>(
         const wasInterrupted = value !== initialAnimationStartValue;
         shouldSkipNextValueSet = wasInterrupted;
 
-        animation.current = wasInterrupted
-          ? initialAnimationStartValue
-          : value;
+        animation.current = wasInterrupted ? initialAnimationStartValue : value;
         animation.startTime = now;
         animation.started = false;
 
