@@ -54,6 +54,7 @@
 
 .dot:hover {
   cursor: pointer;
+  background-color: var(--swm-red-light-100);
 }
 
 .dot.active {
@@ -63,6 +64,11 @@
 [data-theme='dark'] .dot {
   background-color: var(--swm-white-transparent-light);
 }
+
+[data-theme='dark'] .dot:hover {
+  background-color: var(--swm-purple-dark-40);
+}
+
 [data-theme='dark'] .dot.active {
   background-color: var(--swm-purple-dark-40);
 }

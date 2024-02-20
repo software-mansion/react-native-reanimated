@@ -194,7 +194,7 @@ function createProgressTransitionRegister() {
         return;
       }
       for (const viewTag of currentTransitions) {
-        _notifyAboutEnd(viewTag, removeViews);
+        global._notifyAboutEnd(viewTag, removeViews);
       }
       currentTransitions.clear();
       if (isTransitionRestart) {
@@ -206,7 +206,7 @@ function createProgressTransitionRegister() {
       if (toRemove.size > 0) {
         for (const viewTag of toRemove) {
           progressAnimations.delete(viewTag);
-          _notifyAboutEnd(viewTag, removeViews);
+          global._notifyAboutEnd(viewTag, removeViews);
         }
         toRemove.clear();
       }

@@ -9,9 +9,10 @@ import { makeShareableCloneRecursive } from '../shareables';
 import { shareableMappingCache } from '../shareableMappingCache';
 import { Platform, findNodeHandle } from 'react-native';
 import type { ScrollView, FlatList } from 'react-native';
-import { isFabric } from '../PlatformChecker';
+import { isFabric, isWeb } from '../PlatformChecker';
 
 const IS_FABRIC = isFabric();
+const IS_WEB = isWeb();
 
 interface MaybeScrollableComponent extends Component {
   getNativeScrollRef?: FlatList['getNativeScrollRef'];
@@ -56,7 +57,9 @@ export function useAnimatedRef<
     ) => {
       // enters when ref is set by attaching to a component
       if (component) {
-        tag.value = getTagValueFunction(getComponentOrScrollable(component));
+        tag.value = IS_WEB
+          ? getComponentOrScrollable(component)
+          : getTagValueFunction(getComponentOrScrollable(component));
         fun.current = component;
         // viewName is required only on iOS with Paper
         if (Platform.OS === 'ios' && !IS_FABRIC) {
