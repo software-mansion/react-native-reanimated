@@ -35,7 +35,11 @@ export default function CounterExample() {
       <View style={styles.buttons}>
         <Button onPress={handleToggle} title="Toggle" />
       </View>
-      <AnimatedTextInput animatedProps={animatedProps} style={styles.text} />
+      <AnimatedTextInput
+        animatedProps={animatedProps}
+        style={styles.text}
+        editable={false}
+      />
     </>
   );
 }
