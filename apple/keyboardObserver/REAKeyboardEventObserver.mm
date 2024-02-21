@@ -20,7 +20,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   NSMutableDictionary *_listeners;
   READisplayLink *_displayLink;
   KeyboardState _state;
-  CFTimeInterval _animtionStart;
+  CFTimeInterval _animtionStartTimestamp;
   float _targetKeyboardHeight;
 }
 
@@ -30,7 +30,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   _listeners = [[NSMutableDictionary alloc] init];
   _nextListenerId = @0;
   _state = UNKNOWN;
-  _animtionStart = 0;
+  _animtionStartTimestamp = 0;
   NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
 
   [notificationCenter addObserver:self
@@ -84,7 +84,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 - (void)runUpdater
 {
   [[self getDisplayLink] setPaused:NO];
-  _animtionStart = 0;
+  _animtionStartTimestamp = 0;
   [self updateKeyboardFrame:true];
 }
 
@@ -102,7 +102,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
                                   c1:(float)c1
                                   c2:(float)c2
 {
-  CFTimeInterval elapsedTime = _displayLink.targetTimestamp - _animtionStart;
+  CFTimeInterval elapsedTime = _displayLink.targetTimestamp - _animtionStartTimestamp;
   float timeProgress = elapsedTime / keyboardAnimationDuration;
   if (timeProgress > 1) {
     timeProgress = 1;
@@ -130,9 +130,9 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
 - (float)getAnimatingKeyboardHeight
 {
-  if (_animtionStart == 0) {
+  if (_animtionStartTimestamp == 0) {
     // DisplayLink animations usually start later than CAAnimations.
-    _animtionStart = _displayLink.targetTimestamp - _displayLink.duration;
+    _animtionStartTimestamp = _displayLink.targetTimestamp - _displayLink.duration;
   }
   CAAnimation *positionAnimation = [_measuringView.layer animationForKey:@"position"];
   float caAnimationBeginTime = [[positionAnimation valueForKey:@"beginTime"] floatValue];
@@ -142,7 +142,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
       better visual effects. The CAAnimation timer is only available from the second
       frame of the animation.
     */
-    _animtionStart = caAnimationBeginTime;
+    _animtionStartTimestamp = caAnimationBeginTime;
   }
 
   CGFloat keyboardHeight = 0;
