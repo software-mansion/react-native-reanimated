@@ -40,6 +40,7 @@ class LayoutAnimationsManager {
       const LayoutAnimationType type,
       const jsi::Object &values);
   void clearLayoutAnimationConfig(const int tag);
+  void clearSharedTransitionConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   int findPrecedingViewTagForTransition(const int tag);
 #ifndef NDEBUG
@@ -50,7 +51,6 @@ class LayoutAnimationsManager {
 #endif
 
  private:
-  void clearSharedTransitionConfig(const int tag);
   std::unordered_map<int, std::shared_ptr<Shareable>> &getConfigsForType(
       const LayoutAnimationType type);
 
@@ -72,7 +72,7 @@ class LayoutAnimationsManager {
   std::unordered_map<std::string, std::vector<int>> sharedTransitionGroups_;
   std::unordered_map<int, std::string> viewTagToSharedTag_;
   std::unordered_map<int, bool> shouldAnimateExitingForTag_;
-  mutable std::mutex
+  mutable std::recursive_mutex
       animationsMutex_; // Protects `enteringAnimations_`, `exitingAnimations_`,
   // `layoutAnimations_`, `viewSharedValues_` and `shouldAnimateExitingForTag_`.
 };

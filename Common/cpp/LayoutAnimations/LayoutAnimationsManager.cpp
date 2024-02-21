@@ -10,7 +10,7 @@ namespace reanimated {
 
 void LayoutAnimationsManager::configureAnimationBatch(
     const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
-  auto lock = std::unique_lock<std::mutex>(animationsMutex_);
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   std::vector<LayoutAnimationConfig> sharedTransitionConfigs;
   for (auto layoutAnimationConfig : layoutAnimationsBatch) {
     auto [tag, type, config, sharedTransitionTag] = layoutAnimationConfig;
@@ -43,14 +43,14 @@ void LayoutAnimationsManager::configureAnimationBatch(
 void LayoutAnimationsManager::setShouldAnimateExiting(
     const int tag,
     const bool value) {
-  auto lock = std::unique_lock<std::mutex>(animationsMutex_);
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   shouldAnimateExitingForTag_[tag] = value;
 }
 
 bool LayoutAnimationsManager::shouldAnimateExiting(
     const int tag,
     const bool shouldAnimate) {
-  auto lock = std::unique_lock<std::mutex>(animationsMutex_);
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   return collection::contains(shouldAnimateExitingForTag_, tag)
       ? shouldAnimateExitingForTag_[tag]
       : shouldAnimate;
@@ -59,7 +59,7 @@ bool LayoutAnimationsManager::shouldAnimateExiting(
 bool LayoutAnimationsManager::hasLayoutAnimation(
     const int tag,
     const LayoutAnimationType type) {
-  auto lock = std::unique_lock<std::mutex>(animationsMutex_);
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   if (type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
     auto end = ignoreProgressAnimationForTag_.end();
     return ignoreProgressAnimationForTag_.find(tag) == end;
@@ -68,8 +68,7 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
 }
 
 void LayoutAnimationsManager::clearSharedTransitionConfig(const int tag) {
-  // here we don't lock the mutex, since this function is only supposed to be
-  // used as a helper
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
 #ifndef NDEBUG
   const auto &pair = viewsScreenSharedTagMap_[tag];
   screenSharedTagSet_.erase(pair);
@@ -95,7 +94,7 @@ void LayoutAnimationsManager::clearSharedTransitionConfig(const int tag) {
 }
 
 void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
-  auto lock = std::unique_lock<std::mutex>(animationsMutex_);
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   enteringAnimations_.erase(tag);
   exitingAnimations_.erase(tag);
   layoutAnimations_.erase(tag);
@@ -110,7 +109,7 @@ void LayoutAnimationsManager::startLayoutAnimation(
     const jsi::Object &values) {
   std::shared_ptr<Shareable> config, viewShareable;
   {
-    auto lock = std::unique_lock<std::mutex>(animationsMutex_);
+    auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
     config = getConfigsForType(type)[tag];
   }
   // TODO: cache the following!!

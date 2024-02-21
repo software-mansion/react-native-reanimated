@@ -704,7 +704,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     [_removedViews removeObject:view];
   }
   if ([_removedViews containsObject:view]) {
-    [_animationManager clearAnimationConfigForTag:viewTag];
+    [_animationManager clearSharedTransitionConfigForTag:viewTag];
   }
   if (_removedViewRegistry[view.reactTag]) {
     return;
@@ -736,7 +736,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   if (viewTag != nil) {
     [_snapshotRegistry removeObjectForKey:viewTag];
-    [_animationManager clearAnimationConfigForTag:viewTag];
+    [_animationManager clearSharedTransitionConfigForTag:viewTag];
   }
 }
 

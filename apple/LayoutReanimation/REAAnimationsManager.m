@@ -43,6 +43,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   REAHasAnimationBlock _hasAnimationForTag;
   REAShouldAnimateExitingBlock _shouldAnimateExiting;
   REAAnimationRemovingBlock _clearAnimationConfigForTag;
+  REASharedTransitionRemovingBlock _clearSharedTransitionConfigForTag;
   REASharedTransitionManager *_sharedTransitionManager;
 #ifndef NDEBUG
   REACheckDuplicateSharedTagBlock _checkDuplicateSharedTag;
@@ -130,6 +131,11 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)setAnimationRemovingBlock:(REAAnimationRemovingBlock)clearAnimation
 {
   _clearAnimationConfigForTag = clearAnimation;
+}
+
+- (void)setSharedTransitionRemovingBlock:(REASharedTransitionRemovingBlock)clearSharedTransition
+{
+  _clearSharedTransitionConfigForTag = clearSharedTransition;
 }
 
 #ifndef NDEBUG
@@ -605,6 +611,11 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)clearAnimationConfigForTag:(NSNumber *)tag
 {
   _clearAnimationConfigForTag(tag);
+}
+
+- (void)clearSharedTransitionConfigForTag:(NSNumber *)tag
+{
+  _clearSharedTransitionConfigForTag(tag);
 }
 
 - (void)startAnimationForTag:(NSNumber *)tag type:(LayoutAnimationType)type yogaValues:(NSDictionary *)yogaValues
