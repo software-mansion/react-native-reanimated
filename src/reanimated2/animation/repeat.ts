@@ -39,11 +39,6 @@ export const withRepeat = function <T extends AnimationObject>(
 ): Animation<RepeatAnimation> {
   'worklet';
 
-  const initialAnimationStartValue =
-    typeof _nextAnimation === 'function'
-      ? _nextAnimation().startValue
-      : _nextAnimation.startValue;
-
   return defineAnimation<RepeatAnimation, T>(
     _nextAnimation,
     (): RepeatAnimation => {
@@ -53,6 +48,8 @@ export const withRepeat = function <T extends AnimationObject>(
         typeof _nextAnimation === 'function'
           ? _nextAnimation()
           : _nextAnimation;
+
+      const initialAnimationStartValue = nextAnimation.startValue;
 
       function repeat(animation: RepeatAnimation, now: Timestamp): boolean {
         const finished = nextAnimation.onFrame(nextAnimation, now);

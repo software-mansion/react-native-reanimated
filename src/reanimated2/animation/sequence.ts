@@ -58,12 +58,6 @@ export function withSequence(
     });
   }
 
-  const initialAnimationStartValues = _animations.map((animationObject) => {
-    return typeof animationObject === 'function'
-      ? animationObject().startValue
-      : animationObject.startValue;
-  });
-
   return defineAnimation<SequenceAnimation>(
     _animations[0] as SequenceAnimation,
     () => {
@@ -74,6 +68,10 @@ export function withSequence(
         result.finished = false;
         return result;
       });
+
+      const initialAnimationStartValues = animations.map(
+        (animationObject) => animationObject.startValue
+      );
 
       function findNextNonReducedMotionAnimationIndex(index: number) {
         // the last animation is returned even if reduced motion is enabled,

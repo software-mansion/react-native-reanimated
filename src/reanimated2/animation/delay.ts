@@ -32,12 +32,6 @@ export const withDelay = function <T extends AnimationObject>(
 ): Animation<DelayAnimation> {
   'worklet';
 
-  const initialAnimationStartValue =
-    typeof _nextAnimation === 'function'
-      ? _nextAnimation().startValue
-      : _nextAnimation.startValue;
-  let shouldSkipNextValueSet = false;
-
   return defineAnimation<DelayAnimation, T>(
     _nextAnimation,
     (): DelayAnimation => {
@@ -46,6 +40,9 @@ export const withDelay = function <T extends AnimationObject>(
         typeof _nextAnimation === 'function'
           ? _nextAnimation()
           : _nextAnimation;
+
+      const initialAnimationStartValue = nextAnimation.startValue;
+      let shouldSkipNextValueSet = false;
 
       function delay(animation: DelayAnimation, now: Timestamp): boolean {
         const { startTime, started, previousAnimation } = animation;
