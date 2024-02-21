@@ -1,6 +1,7 @@
 #import <Foundation/Foundation.h>
 #import <RNReanimated/READisplayLink.h>
 #import <RNReanimated/REAKeyboardEventObserver.h>
+#import <RNReanimated/REATimer.h>
 #import <RNReanimated/REAUIKit.h>
 #import <React/RCTDefines.h>
 #import <React/RCTUIManager.h>
@@ -84,6 +85,13 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 {
   [[self getDisplayLink] setPaused:NO];
   _animtionStart = 0;
+  [self updateKeyboardFrame:true];
+}
+
+- (float)getTargetTimestamp
+{
+  float targetTimestamp = _displayLink.targetTimestamp;
+  return reanimated::calculateTimestampWithSlowAnimations(targetTimestamp) * 1000;
 }
 
 - (float)estimateProgressForDuration:(float)keyboardAnimationDuration
@@ -104,7 +112,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   return progress;
 }
 
-- (CGFloat)estimateCurrentKeyboardHeightDiringAppearing
+- (CGFloat)estimateCurrentKeyboardHeightDuringAppearing
 {
   // Values comes from estimation: https://www.desmos.com/calculator/clhzejf5bs
   float progress = [self estimateProgressForDuration:0.5 a1:1 a2:5.1 b1:1.6 b2:7.6 c1:0.2 c2:2.4];
@@ -112,7 +120,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   return currentKeyboardHeight;
 }
 
-- (CGFloat)estimateCurrentKeyboardHeightDiringDisappearing
+- (CGFloat)estimateCurrentKeyboardHeightDuringDisappearing
 {
   // Values comes from estimation: https://www.desmos.com/calculator/d3v550ofzs
   float progress = [self estimateProgressForDuration:0.45 a1:1 a2:5.5 b1:2.5 b2:6.4 c1:1.6 c2:3.3];
@@ -120,7 +128,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   return currentKeyboardHeight;
 }
 
-- (void)updateKeyboardFrame
+- (float)getAnimatingKeyboardHeight
 {
   if (_animtionStart == 0) {
     // DisplayLink animations usually start later than CAAnimations.
@@ -139,21 +147,42 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
   CGFloat keyboardHeight = 0;
   if (_state == OPENING) {
-    keyboardHeight = [self estimateCurrentKeyboardHeightDiringAppearing];
+    keyboardHeight = [self estimateCurrentKeyboardHeightDuringAppearing];
   } else if (_state == CLOSING) {
-    keyboardHeight = [self estimateCurrentKeyboardHeightDiringDisappearing];
+    keyboardHeight = [self estimateCurrentKeyboardHeightDuringDisappearing];
   }
+  return keyboardHeight;
+}
 
-  BOOL isAnimatingKeyboardChange = _measuringView.layer.presentationLayer.animationKeys.count != 0;
-  if (!isAnimatingKeyboardChange) {
+- (float)getStaticKeyboardHeight
+{
+  CGRect measuringFrame = _measuringView.frame;
+  CGFloat keyboardHeight = measuringFrame.size.height;
+  return keyboardHeight;
+}
+
+- (void)updateKeyboardFrame
+{
+  [self updateKeyboardFrame:false];
+}
+
+- (void)updateKeyboardFrame:(bool)useStaticHeight
+{
+  bool isKeyboardAnimationRunning = _measuringView.layer.presentationLayer.animationKeys.count != 0;
+  CGFloat keyboardHeight = 0;
+  if (isKeyboardAnimationRunning && !useStaticHeight) {
+    /*
+      _state != OPEN indicates that we don't want to use estimators if the keyboard type
+      has been changed, for example, from QWERTY to emoji.
+    */
+    keyboardHeight = [self getAnimatingKeyboardHeight];
+  } else {
     // measuring view is no longer running an animation, we should settle in OPEN/CLOSE state
     if (_state == OPENING || _state == CLOSING) {
       _state = _state == OPENING ? OPEN : CLOSED;
     }
-    if (_state == OPEN) {
-      keyboardHeight = _targetKeyboardHeight;
-    } else if (_state == CLOSED) {
-      keyboardHeight = 0;
+    if (_state == OPEN || _state == CLOSED) {
+      keyboardHeight = [self getStaticKeyboardHeight];
     }
     // stop display link updates if no animation is running
     [[self getDisplayLink] setPaused:YES];
