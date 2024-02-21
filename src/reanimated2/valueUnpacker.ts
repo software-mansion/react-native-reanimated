@@ -3,7 +3,7 @@ import { shouldBeUseWeb } from './PlatformChecker';
 import { isWorklet } from './commonTypes';
 import type { WorkletFunction } from './commonTypes';
 
-function valueUnpacker(objectToUnpack: any, category?: string): any {
+function valueUnpacker(objectToUnpack: any): any {
   'worklet';
   let workletsCache = global.__workletsCache;
   let handleCache = global.__handleCache;
@@ -60,10 +60,7 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
   }
 }
 
-type ValueUnpacker = WorkletFunction<
-  [objectToUnpack: any, category?: string],
-  any
->;
+type ValueUnpacker = WorkletFunction<[objectToUnpack: any], any>;
 
 if (__DEV__ && !shouldBeUseWeb()) {
   const testWorklet = (() => {
