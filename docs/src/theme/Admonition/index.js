@@ -5,8 +5,7 @@ import Translate from '@docusaurus/Translate';
 import ThemedImage from '@theme/ThemedImage';
 import styles from './styles.module.css';
 
-import Danger from '/static/img/danger.svg';
-import DangerDark from '/static/img/danger-dark.svg';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 
 const AdmonitionConfigs = {
   note: {
@@ -79,8 +78,9 @@ export default function Admonition(props) {
   const titleLabel = title ?? typeConfig.label;
 
   const dangerIcon = {
-    light: 
-  }
+    light: useBaseUrl('/img/danger.svg'),
+    dark: useBaseUrl('/img/danger-dark.svg'),
+  };
 
   return (
     <div
@@ -93,7 +93,7 @@ export default function Admonition(props) {
       )}>
       <div className={styles.admonitionHeading}>
         <div className={styles.admonitionIcon}>
-          <ThemedImage sources={}
+          <ThemedImage sources={dangerIcon} />
         </div>
 
         {titleLabel}
