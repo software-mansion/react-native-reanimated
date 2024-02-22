@@ -11,15 +11,5 @@ module.exports = {
     '@babel/preset-typescript',
     'module:@react-native/babel-preset',
   ],
-  plugins: [
-    '@babel/plugin-proposal-class-properties',
-    '@babel/plugin-proposal-private-methods',
-    ['./plugin', { disableInlineStylesWarning: true }],
-    [
-      '@babel/plugin-transform-react-jsx',
-      {
-        runtime: 'classic',
-      },
-    ],
-  ],
+  plugins: [['./plugin', { disableInlineStylesWarning: true }]],
 };
