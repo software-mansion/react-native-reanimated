@@ -20,11 +20,10 @@
 }
 
 .admonitionIcon {
-  display: inline-block;
+  display: flex;
   margin-right: 0.4em;
 
   width: 21px;
-  height: 27px;
 }
 
 .admonitionIcon svg {
