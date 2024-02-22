@@ -263,6 +263,7 @@ export enum KeyboardState {
   OPEN = 2,
   CLOSING = 3,
   CLOSED = 4,
+  FLOATING = 5,
 }
 
 export type AnimatedKeyboardInfo = {
