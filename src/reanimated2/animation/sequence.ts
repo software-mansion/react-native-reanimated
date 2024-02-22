@@ -69,6 +69,10 @@ export function withSequence(
         return result;
       });
 
+      const initialAnimationStartValues = animations.map(
+        (animationObject) => animationObject.startValue
+      );
+
       function findNextNonReducedMotionAnimationIndex(index: number) {
         // the last animation is returned even if reduced motion is enabled,
         // because we want the sequence to finish at the right spot
@@ -140,10 +144,16 @@ export function withSequence(
           ] as SequenceAnimation;
         }
 
+        // Detect re-render
+        const animationStart =
+          initialAnimationStartValues[animation.animationIndex];
+        const wasInterrupted = value !== animationStart;
+        const startingValue = wasInterrupted ? animationStart : value;
+
         const currentAnimation = animations[animation.animationIndex];
         currentAnimation.onStart(
           currentAnimation,
-          value,
+          startingValue,
           now,
           previousAnimation
         );

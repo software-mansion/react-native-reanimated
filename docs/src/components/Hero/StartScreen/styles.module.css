@@ -43,6 +43,11 @@
   color: var(--swm-landing-heading);
 }
 
+.buttonContainer {
+  display: flex;
+  justify-content: flex-start;
+}
+
 @media (max-width: 768px) {
   .headingLabel {
     font-size: 26px;

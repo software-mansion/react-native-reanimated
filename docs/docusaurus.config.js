@@ -92,6 +92,11 @@ const config = {
           },
         ],
       },
+      announcementBar: {
+        content: ' ',
+        backgroundColor: '#03c',
+        textColor: '#fff',
+      },
       footer: {
         style: 'light',
         links: [],
