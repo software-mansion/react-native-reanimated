@@ -324,6 +324,9 @@ var require_workletFactory = __commonJS({
     var utils_12 = require_utils();
     var REAL_VERSION = require("../../package.json").version;
     var MOCK_VERSION = "x.y.z";
+    var workletStringTransformPresets = [
+      require.resolve("@babel/preset-typescript")
+    ];
     var workletStringTransformPlugins = [
       require.resolve("@babel/plugin-transform-shorthand-properties"),
       require.resolve("@babel/plugin-transform-arrow-functions"),
@@ -344,7 +347,7 @@ var require_workletFactory = __commonJS({
       codeObject.code = "(" + ((0, types_12.isObjectMethod)(fun) ? "function " : "") + codeObject.code + "\n)";
       const transformed = (0, core_1.transformSync)(codeObject.code, {
         filename: state.file.opts.filename,
-        presets: [require.resolve("@babel/preset-typescript")],
+        presets: workletStringTransformPresets,
         plugins: workletStringTransformPlugins,
         ast: true,
         babelrc: false,

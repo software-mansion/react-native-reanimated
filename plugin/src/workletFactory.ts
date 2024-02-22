@@ -47,6 +47,10 @@ import { isRelease } from './utils';
 const REAL_VERSION = require('../../package.json').version;
 const MOCK_VERSION = 'x.y.z';
 
+const workletStringTransformPresets = [
+  require.resolve('@babel/preset-typescript'),
+];
+
 const workletStringTransformPlugins = [
   require.resolve('@babel/plugin-transform-shorthand-properties'),
   require.resolve('@babel/plugin-transform-arrow-functions'),
@@ -88,7 +92,7 @@ export function makeWorkletFactory(
 
   const transformed = transformSync(codeObject.code, {
     filename: state.file.opts.filename,
-    presets: [require.resolve('@babel/preset-typescript')],
+    presets: workletStringTransformPresets,
     plugins: workletStringTransformPlugins,
     ast: true,
     babelrc: false,
