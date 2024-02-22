@@ -9,7 +9,7 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-import { ReduceMotion, isWorklet } from '../commonTypes';
+import { ReduceMotion, isWorkletFunction } from '../commonTypes';
 import type {
   SharedValue,
   AnimatableValue,
@@ -58,7 +58,7 @@ export function assertEasingIsWorklet(
   /* Worklets ran on UI thread are bound first. Therefore if a function wasn't bound it cannot be a worklet. See `valueUnpacker` code for reference. */
   const isBound = functionName.startsWith('bound');
 
-  if (!isBound && isFunction && !isWorklet(easing)) {
+  if (!isBound && isFunction && !isWorkletFunction(easing)) {
     throw new Error(
       `[Reanimated] The easing function ${
         functionName ? `\`${functionName}\` ` : ''
