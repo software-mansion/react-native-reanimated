@@ -91,11 +91,11 @@
   },
   "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
   "dependencies": {
-    "@babel/plugin-transform-arrow-functions": "^7.23.3",
-    "@babel/plugin-transform-nullish-coalescing-operator": "^7.23.4",
-    "@babel/plugin-transform-optional-chaining": "^7.23.4",
-    "@babel/plugin-transform-shorthand-properties": "^7.23.3",
-    "@babel/plugin-transform-template-literals": "^7.23.3",
+    "@babel/plugin-transform-arrow-functions": "^7.0.0-0",
+    "@babel/plugin-transform-nullish-coalescing-operator": "^7.0.0-0",
+    "@babel/plugin-transform-optional-chaining": "^7.0.0-0",
+    "@babel/plugin-transform-shorthand-properties": "^7.0.0-0",
+    "@babel/plugin-transform-template-literals": "^7.0.0-0",
     "@babel/preset-typescript": "^7.16.7",
     "convert-source-map": "^2.0.0",
     "invariant": "^2.2.4"
