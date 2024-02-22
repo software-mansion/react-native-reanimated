@@ -89,7 +89,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 {
   // for floating keyboard we always return 0 height
   if (_state == FLOATING) {
-    // make sure tht state = FLOATING, height = 0 gets emitted only once
+    // make sure that state = FLOATING, height = 0 gets emitted only once
     [[self getDisplayLink] setPaused:YES];
     
     for (NSString *key in _listeners.allKeys) {
