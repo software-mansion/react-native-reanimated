@@ -1,5 +1,5 @@
 import Animated, {
-  isWorkletized,
+  isWorkletFunction,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -18,7 +18,7 @@ function isBabelPluginEnabled() {
   function worklet() {
     'worklet';
   }
-  return isWorkletized(worklet);
+  return isWorkletFunction(worklet);
 }
 
 export default function WithoutBabelPluginExample() {
