@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useThemeConfig } from '@docusaurus/theme-common';
 import { useAnnouncementBar } from '@docusaurus/theme-common/internal';
 import AnnouncementBarCloseButton from '@theme/AnnouncementBar/CloseButton';
@@ -7,7 +7,27 @@ import styles from './styles.module.css';
 export default function AnnouncementBar() {
   const { announcementBar } = useThemeConfig();
   const { isActive, close } = useAnnouncementBar();
-  if (!isActive) {
+  const [isPageLoaded, setIsPageLoaded] = useState(
+    document.readyState === 'complete'
+  );
+
+  useEffect(() => {
+    const handlePageLoad = () => {
+      setIsPageLoaded(true);
+    };
+
+    if (document.readyState === 'complete') {
+      setIsPageLoaded(true);
+    } else {
+      window.addEventListener('load', handlePageLoad);
+    }
+
+    return () => {
+      window.removeEventListener('load', handlePageLoad);
+    };
+  }, []);
+
+  if (!isPageLoaded || !isActive) {
     return null;
   }
 
