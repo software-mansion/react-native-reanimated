@@ -32,7 +32,7 @@ import {
   subtractMatrices,
   getRotationMatrix,
 } from './transformationMatrix/matrixUtils';
-import { isReducedMotion, shouldBeUseWeb } from '../PlatformChecker';
+import { isReducedMotion, isWeb, shouldBeUseWeb } from '../PlatformChecker';
 import type { EasingFunction, EasingFunctionFactory } from '../Easing';
 
 let IN_STYLE_UPDATER = false;
@@ -48,9 +48,14 @@ export function assertEasingIsWorklet(
   easing: EasingFunction | EasingFunctionFactory
 ) {
   'worklet';
+
+  if (isWeb()) {
+    /* It is possible to run reanimated on web without plugin, so let's skip this check on web */
+    return true;
+  }
   const isFunction: boolean = typeof easing === 'function';
   const functionName = typeof easing === 'function' ? easing?.name : '';
-  /** Worklets ran on UI thread are bound first. Therefore if a function wasn't bound it cannot be a worklet. See `valueUnpacker` code for reference. */
+  /* Worklets ran on UI thread are bound first. Therefore if a function wasn't bound it cannot be a worklet. See `valueUnpacker` code for reference. */
   const isBound = functionName.startsWith('bound');
 
   if (!isBound && isFunction && !isWorklet(easing)) {
