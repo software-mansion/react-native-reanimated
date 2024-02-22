@@ -324,6 +324,16 @@ var require_workletFactory = __commonJS({
     var utils_12 = require_utils();
     var REAL_VERSION = require("../../package.json").version;
     var MOCK_VERSION = "x.y.z";
+    var workletStringTransformPlugins = [
+      require.resolve("@babel/plugin-transform-shorthand-properties"),
+      require.resolve("@babel/plugin-transform-arrow-functions"),
+      require.resolve("@babel/plugin-transform-optional-chaining"),
+      require.resolve("@babel/plugin-transform-nullish-coalescing-operator"),
+      [
+        require.resolve("@babel/plugin-transform-template-literals"),
+        { loose: true }
+      ]
+    ];
     function makeWorkletFactory(fun, state) {
       removeWorkletDirective(fun);
       (0, assert_1.strict)(state.file.opts.filename, "[Reanimated] `state.file.opts.filename` is undefined.");
@@ -335,16 +345,7 @@ var require_workletFactory = __commonJS({
       const transformed = (0, core_1.transformSync)(codeObject.code, {
         filename: state.file.opts.filename,
         presets: [require.resolve("@babel/preset-typescript")],
-        plugins: [
-          require.resolve("@babel/plugin-transform-shorthand-properties"),
-          require.resolve("@babel/plugin-transform-arrow-functions"),
-          require.resolve("@babel/plugin-proposal-optional-chaining"),
-          require.resolve("@babel/plugin-proposal-nullish-coalescing-operator"),
-          [
-            require.resolve("@babel/plugin-transform-template-literals"),
-            { loose: true }
-          ]
-        ],
+        plugins: workletStringTransformPlugins,
         ast: true,
         babelrc: false,
         configFile: false,

@@ -47,6 +47,17 @@ import { isRelease } from './utils';
 const REAL_VERSION = require('../../package.json').version;
 const MOCK_VERSION = 'x.y.z';
 
+const workletStringTransformPlugins = [
+  require.resolve('@babel/plugin-transform-shorthand-properties'),
+  require.resolve('@babel/plugin-transform-arrow-functions'),
+  require.resolve('@babel/plugin-transform-optional-chaining'),
+  require.resolve('@babel/plugin-transform-nullish-coalescing-operator'),
+  [
+    require.resolve('@babel/plugin-transform-template-literals'),
+    { loose: true },
+  ],
+];
+
 export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
@@ -78,16 +89,7 @@ export function makeWorkletFactory(
   const transformed = transformSync(codeObject.code, {
     filename: state.file.opts.filename,
     presets: [require.resolve('@babel/preset-typescript')],
-    plugins: [
-      require.resolve('@babel/plugin-transform-shorthand-properties'),
-      require.resolve('@babel/plugin-transform-arrow-functions'),
-      require.resolve('@babel/plugin-proposal-optional-chaining'),
-      require.resolve('@babel/plugin-proposal-nullish-coalescing-operator'),
-      [
-        require.resolve('@babel/plugin-transform-template-literals'),
-        { loose: true },
-      ],
-    ],
+    plugins: workletStringTransformPlugins,
     ast: true,
     babelrc: false,
     configFile: false,
