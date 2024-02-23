@@ -200,38 +200,38 @@ function FreezingShareables() {
   return (
     <View style={styles.container}>
       <Button
-        title={'Try modify converted array'}
+        title="Try modify converted array"
         onPress={tryModifyConvertedArray}
       />
       <Button
-        title={'Try modify converted remote function'}
+        title="Try modify converted remote function"
         onPress={tryModifyConvertedRemoteFunction}
       />
       <Text>
         Host object {globalThis._dummyHostObject ? 'is' : 'NOT'} present!
       </Text>
       <Button
-        title={'Try modify converted host object'}
+        title="Try modify converted host object"
         onPress={tryModifyConvertedHostObject}
       />
       <Button
-        title={'Try modify converted plain object'}
+        title="Try modify converted plain object"
         onPress={tryModifyConvertedPlainObject}
       />
       <Button
-        title={'Try modify converted regex'}
+        title="Try modify converted regex literal"
         onPress={tryModifyConvertedRegexLiteral}
       />
       <Button
-        title={'Try modify converted regex instance'}
+        title="Try modify converted RegExp instance"
         onPress={tryModifyConvertedRegexInstance}
       />
       <Button
-        title={'Try modify converted array buffer'}
+        title="Try modify converted ArrayBuffer"
         onPress={tryModifyConvertedArrayBuffer}
       />
       <Button
-        title={'Try modify converted int32 array'}
+        title="Try modify converted Int32Array"
         onPress={tryModifyConvertedInt32Array}
       />
       <View style={styles.bar} />
