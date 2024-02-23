@@ -33,7 +33,7 @@ import type {
   AnimatedPropsAdapterWorklet,
 } from '../commonTypes';
 import type { AnimatedStyle } from '../helperTypes';
-import { isWorklet } from '../commonTypes';
+import { isWorkletFunction } from '../commonTypes';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -431,7 +431,12 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
       // let web work without a Babel plugin
       inputs = dependencies;
     }
-    if (__DEV__ && !inputs.length && !dependencies && !isWorklet(updater)) {
+    if (
+      __DEV__ &&
+      !inputs.length &&
+      !dependencies &&
+      !isWorkletFunction(updater)
+    ) {
       throw new Error(
         `[Reanimated] \`useAnimatedStyle\` was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel plugin.
 For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin\`.`
