@@ -1018,7 +1018,7 @@ module.exports = function() {
     try {
       fun();
     } catch (e) {
-      throw new Error("[Reanimated] Babel plugin exception: " + e);
+      throw new Error(`[Reanimated] Babel plugin exception: ${e}`);
     }
   }
   return {
