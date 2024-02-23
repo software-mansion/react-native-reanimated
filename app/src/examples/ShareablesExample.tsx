@@ -200,39 +200,39 @@ function FreezingShareables() {
   return (
     <View style={styles.container}>
       <Button
-        title={'Try modify locked array'}
-        onPress={tryModifyLockedArray}
+        title={'Try modify converted array'}
+        onPress={tryModifyConvertedArray}
       />
       <Button
-        title={'Try modify remote function'}
-        onPress={tryModifyRemoteFunction}
+        title={'Try modify converted remote function'}
+        onPress={tryModifyConvertedRemoteFunction}
       />
       <Text>
         Host object {globalThis._dummyHostObject ? 'is' : 'NOT'} present!
       </Text>
       <Button
-        title={'Try modify locked host object'}
-        onPress={tryModifyLockedHostObject}
+        title={'Try modify converted host object'}
+        onPress={tryModifyConvertedHostObject}
       />
       <Button
-        title={'Try modify locked plain object'}
-        onPress={tryModifyLockedPlainObject}
+        title={'Try modify converted plain object'}
+        onPress={tryModifyConvertedPlainObject}
       />
       <Button
-        title={'Try modify locked regex'}
-        onPress={tryModifyLockedRegexLiteral}
+        title={'Try modify converted regex'}
+        onPress={tryModifyConvertedRegexLiteral}
       />
       <Button
-        title={'Try modify locked regex instance'}
-        onPress={tryModifyLockedRegexInstance}
+        title={'Try modify converted regex instance'}
+        onPress={tryModifyConvertedRegexInstance}
       />
       <Button
-        title={'Try modify locked array buffer'}
-        onPress={tryModifyLockedArrayBuffer}
+        title={'Try modify converted array buffer'}
+        onPress={tryModifyConvertedArrayBuffer}
       />
       <Button
-        title={'Try modify locked int32 array'}
-        onPress={tryModifyLockedInt32Array}
+        title={'Try modify converted int32 array'}
+        onPress={tryModifyConvertedInt32Array}
       />
       <View style={styles.bar} />
       <Button title="Go to creating" onPress={() => navigation.goBack()} />
@@ -240,17 +240,13 @@ function FreezingShareables() {
   );
 }
 
-declare global {
-  var _dummyHostObject: { prop: number } | undefined;
-}
-
-function tryModifyLockedArray() {
+function tryModifyConvertedArray() {
   const arr = [1, 2, 3];
   makeShareableCloneRecursive(arr);
   arr[0] = 2; // should warn beacuse it's frozen
 }
 
-function tryModifyRemoteFunction() {
+function tryModifyConvertedRemoteFunction() {
   const foo = () => {};
   foo.bar = 1;
   makeShareableCloneRecursive(foo);
@@ -296,16 +292,24 @@ Add this to the native code for the below example to work (e.g. in RNRuntimeDeco
   rnRuntime.global().setProperty(
     rnRuntime, "_dummyHostObject", jsi::Object::createFromHostObject(rnRuntime, std::make_shared<DummyHostObject>(42)) );
 */
-function tryModifyLockedHostObject() {
+
+declare global {
+  var _dummyHostObject: { prop: number } | undefined;
+}
+
+function tryModifyConvertedHostObject() {
   const hostObject = globalThis._dummyHostObject;
   if (!hostObject) {
+    console.warn(
+      'You need to inject the host object first for this check to work.'
+    );
     return;
   }
   makeShareableCloneRecursive(hostObject);
   hostObject.prop = 2; // shouldn't warn because it's not frozen
 }
 
-function tryModifyLockedPlainObject() {
+function tryModifyConvertedPlainObject() {
   const obj = {
     a: 1,
   };
@@ -313,28 +317,28 @@ function tryModifyLockedPlainObject() {
   obj.a = 2; // should warn because it's frozen
 }
 
-function tryModifyLockedRegexLiteral() {
+function tryModifyConvertedRegexLiteral() {
   const regexLiteral = /a/;
   makeShareableCloneRecursive(regexLiteral);
   // @ts-expect-error
   regexLiteral.regexProp = 2; // shouldn't warn because it's not frozen
 }
 
-function tryModifyLockedRegexInstance() {
+function tryModifyConvertedRegexInstance() {
   const regexInstance = new RegExp('a');
   makeShareableCloneRecursive(regexInstance);
   // @ts-expect-error
   regexInstance.regexProp = 2; // shouldn't warn because it's not frozen
 }
 
-function tryModifyLockedArrayBuffer() {
+function tryModifyConvertedArrayBuffer() {
   const arrayBuffer = new ArrayBuffer(8);
   makeShareableCloneRecursive(arrayBuffer);
   // @ts-expect-error
   arrayBuffer.arrayBufferProp = 2; // shouldn't warn because it's not frozen
 }
 
-function tryModifyLockedInt32Array() {
+function tryModifyConvertedInt32Array() {
   const int32Array = new Int32Array(2);
   makeShareableCloneRecursive(int32Array);
   int32Array[1] = 2; // shouldn't warn because it's not frozen

@@ -142,7 +142,6 @@ export function makeShareableCloneRecursive<T>(
       } else if (isTypeFunction && value.__workletHash === undefined) {
         // this is a remote function
         toAdapt = value;
-        console.log('Remote function');
         freezeObjectIfDev(value);
       } else if (isHostObject(value)) {
         // for host objects we pass the reference to the object as shareable and
@@ -204,6 +203,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
             return new RegExp(pattern, flags);
           },
         });
+        shareableMappingCache.set(value, handle);
         return handle as ShareableRef<T>;
       } else if (value instanceof ArrayBuffer) {
         toAdapt = value;

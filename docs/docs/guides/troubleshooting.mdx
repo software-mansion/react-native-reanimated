@@ -193,7 +193,7 @@ and expect the results to be `1` and `2`. However, the results will be `1` and `
  runOnUI(worklet)();
 -obj.prop = 2; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
 +sv.value = { prop: 2 }; // Everything is fine here.
-+// Keep in mind that you cannot modify the property directly with `sv.value.prop = 2`
++// Keep in mind that you cannot modify the property directly with `sv.value.prop = 2` unless you use the `modify` method.
  runOnUI(worklet)();
 ```
 
