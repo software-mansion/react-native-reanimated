@@ -44,18 +44,20 @@ if (__DEV__ && IS_REDUCED_MOTION) {
   );
 }
 
+const SHOULD_BE_USE_WEB = SHOULD_BE_USE_WEB();
+
 export function assertEasingIsWorklet(
   easing: EasingFunction | EasingFunctionFactory
 ) {
   'worklet';
 
-  if (isWeb()) {
+  if (SHOULD_BE_USE_WEB) {
     /* It is possible to run reanimated on web without plugin, so let's skip this check on web */
     return true;
   }
   const isFunction: boolean = typeof easing === 'function';
   const functionName = typeof easing === 'function' ? easing?.name : '';
-  /* Worklets ran on UI thread are bound first. Therefore if a function wasn't bound it cannot be a worklet. See `valueUnpacker` code for reference. */
+  /* Just checking with `isWorkletFunction` is not sufficient in case of keyframe animations. Therefore, we also check for binding. */
   const isBound = functionName.startsWith('bound');
 
   if (!isBound && isFunction && !isWorkletFunction(easing)) {
