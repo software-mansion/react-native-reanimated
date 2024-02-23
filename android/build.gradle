@@ -567,7 +567,7 @@ if (REACT_NATIVE_MINOR_VERSION < 71) {
     task downloadBoost(dependsOn: resolveBoost, type: Download) {
         def transformedVersion = BOOST_VERSION.replace("_", ".")
         def artifactLocalName = "boost_${BOOST_VERSION}.tar.gz"
-        def srcUrl = "https://boostorg.jfrog.io/artifactory/main/release/${transformedVersion}/source/${artifactLocalName}"
+        def srcUrl = "https://archives.boost.io/release/${transformedVersion}/source/${artifactLocalName}"
         if (REACT_NATIVE_MINOR_VERSION < 69) {
             srcUrl = "https://github.com/react-native-community/boost-for-react-native/releases/download/v${transformedVersion}-0/${artifactLocalName}"
         }

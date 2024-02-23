@@ -7,7 +7,7 @@ module.exports = {
   },
   extends: [
     'standard',
-    'plugin:@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended-type-checked',
     'prettier',
     'plugin:import/typescript',
     'plugin:react-hooks/recommended',
@@ -32,6 +32,13 @@ module.exports = {
     },
   },
   rules: {
+    '@typescript-eslint/no-unsafe-call': 'off',
+    '@typescript-eslint/no-unsafe-member-access': 'off',
+    '@typescript-eslint/no-unsafe-return': 'off',
+    '@typescript-eslint/no-unsafe-assignment': 'off',
+    '@typescript-eslint/no-unsafe-argument': 'off',
+    '@typescript-eslint/no-explicit-any': 'warn',
+    'object-shorthand': 'error',
     curly: 'error',
     'no-case-declarations': 'error',
     '@typescript-eslint/no-shadow': 'error',
@@ -40,6 +47,7 @@ module.exports = {
     'react/jsx-uses-vars': 'error',
     'react/jsx-uses-react': 'error',
     'no-use-before-define': 'off',
+    '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/ban-ts-comment': [
       'error',
       {

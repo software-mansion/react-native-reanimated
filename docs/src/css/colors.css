@@ -5,6 +5,7 @@
   --swm-navy-light-40: #919fcf;
   --swm-navy-light-20: #c1c6e5;
   --swm-navy-light-10: #eef0ff;
+  --swm-navy-light-transparent: #33488e40;
 
   --swm-navy-dark-140: #1b2445;
   --swm-navy-dark-120: #122154;
@@ -20,6 +21,7 @@
   --swm-purple-light-60: #d1bbf3;
   --swm-purple-light-40: #e8dafc;
   --swm-purple-light-20: #f5eeff;
+  --swm-purple-light-transparent: #f5eeff40;
 
   --swm-purple-dark-140: #473d68;
   --swm-purple-dark-120: #6a539a;
@@ -27,6 +29,7 @@
   --swm-purple-dark-80: #c49ffe;
   --swm-purple-dark-60: #d0b2ff;
   --swm-purple-dark-40: #e9dbff;
+  --swm-purple-dark-transparent: #473d6840;
 
   --swm-blue-light-100: #38acdd;
   --swm-blue-light-80: #5bb9e0;
@@ -62,6 +65,7 @@
 
   --swm-red-dark-140: #5a3b46;
   --swm-red-dark-120: #914f55;
+  --swm-red-dark-110: #c86364;
   --swm-red-dark-100: #ff7774;
   --swm-red-dark-80: #ff8b88;
   --swm-red-dark-60: #ffb4b2;
@@ -83,6 +87,8 @@
   /* Black & White palette, mainly for background settings */
   --swm-off-white: #f8f9ff;
   --swm-white: #fcfcff;
+  --swm-white-transparent-light: #fcfcff40;
+  --swm-white-transparent-dark: #fcfcff80;
 
   --swm-light-off-navy: #30354a;
   --swm-off-navy: #272b3c;

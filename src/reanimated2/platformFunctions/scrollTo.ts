@@ -6,8 +6,19 @@ import {
   shouldBeUseWeb,
 } from '../PlatformChecker';
 import { dispatchCommand } from './dispatchCommand';
-import type { AnimatedRef } from '../hook/commonTypes';
+import type {
+  AnimatedRef,
+  AnimatedRefOnJS,
+  AnimatedRefOnUI,
+} from '../hook/commonTypes';
 import type { Component } from 'react';
+
+type ScrollTo = <T extends Component>(
+  animatedRef: AnimatedRef<T>,
+  x: number,
+  y: number,
+  animated: boolean
+) => void;
 
 /**
  * Lets you synchronously scroll to a given position of a `ScrollView`.
@@ -18,25 +29,25 @@ import type { Component } from 'react';
  * @param animated - Whether the scrolling should be smooth or instant.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/scroll/scrollTo
  */
-export let scrollTo: <T extends Component>(
-  animatedRef: AnimatedRef<T>,
-  x: number,
-  y: number,
-  animated: boolean
-) => void;
+export let scrollTo: ScrollTo;
 
-function scrollToFabric<T extends Component>(
-  animatedRef: AnimatedRef<T>,
+function scrollToFabric(
+  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
   x: number,
   y: number,
   animated: boolean
 ) {
   'worklet';
-  dispatchCommand(animatedRef as any, 'scrollTo', [x, y, animated]);
+  dispatchCommand(
+    // This assertion is needed to comply to `dispatchCommand` interface
+    animatedRef as unknown as AnimatedRef<Component>,
+    'scrollTo',
+    [x, y, animated]
+  );
 }
 
-function scrollToPaper<T extends Component>(
-  animatedRef: AnimatedRef<T>,
+function scrollToPaper(
+  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
   x: number,
   y: number,
   animated: boolean
@@ -46,10 +57,8 @@ function scrollToPaper<T extends Component>(
     return;
   }
 
-  // Calling animatedRef on Paper returns a number (nativeTag)
-  const viewTag = (animatedRef as any)() as number;
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  _scrollToPaper!(viewTag, x, y, animated);
+  const viewTag = animatedRef() as number;
+  global._scrollToPaper!(viewTag, x, y, animated);
 }
 
 function scrollToJest() {
@@ -69,10 +78,13 @@ function scrollToDefault() {
 }
 
 if (!shouldBeUseWeb()) {
+  // Those assertions are actually correct since on Native platforms `AnimatedRef` is
+  // mapped as a different function in `shareableMappingCache` and
+  // TypeScript is not able to infer that.
   if (isFabric()) {
-    scrollTo = scrollToFabric;
+    scrollTo = scrollToFabric as unknown as ScrollTo;
   } else {
-    scrollTo = scrollToPaper;
+    scrollTo = scrollToPaper as unknown as ScrollTo;
   }
 } else if (isJest()) {
   scrollTo = scrollToJest;

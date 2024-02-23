@@ -6,10 +6,18 @@ import {
   isJest,
   shouldBeUseWeb,
 } from '../PlatformChecker';
-import type { AnimatedRef } from '../hook/commonTypes';
+import type {
+  AnimatedRef,
+  AnimatedRefOnJS,
+  AnimatedRefOnUI,
+} from '../hook/commonTypes';
 import type { Component } from 'react';
 import { processColorsInProps } from '../Colors';
 
+type SetNativeProps = <T extends Component>(
+  animatedRef: AnimatedRef<T>,
+  updates: StyleProps
+) => void;
 /**
  * Lets you imperatively update component properties. You should always reach for [useAnimatedStyle](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle) and [useAnimatedProps](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) first when animating styles or properties.
  *
@@ -17,13 +25,10 @@ import { processColorsInProps } from '../Colors';
  * @param updates - An object with properties you want to update.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/setNativeProps
  */
-export let setNativeProps: <T extends Component>(
-  animatedRef: AnimatedRef<T>,
-  updates: StyleProps
-) => void;
+export let setNativeProps: SetNativeProps;
 
-function setNativePropsFabric<T extends Component>(
-  animatedRef: AnimatedRef<T>,
+function setNativePropsFabric(
+  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
   updates: StyleProps
 ) {
   'worklet';
@@ -33,14 +38,13 @@ function setNativePropsFabric<T extends Component>(
     );
     return;
   }
-  const shadowNodeWrapper = (animatedRef as any)() as ShadowNodeWrapper;
+  const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
   processColorsInProps(updates);
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  _updatePropsFabric!([{ shadowNodeWrapper, updates }]);
+  global._updatePropsFabric!([{ shadowNodeWrapper, updates }]);
 }
 
-function setNativePropsPaper<T extends Component>(
-  animatedRef: AnimatedRef<T>,
+function setNativePropsPaper(
+  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
   updates: StyleProps
 ) {
   'worklet';
@@ -50,11 +54,10 @@ function setNativePropsPaper<T extends Component>(
     );
     return;
   }
-  const tag = (animatedRef as any)() as number;
-  const name = (animatedRef as any).viewName.value;
+  const tag = animatedRef() as number;
+  const name = (animatedRef as AnimatedRefOnUI).viewName.value;
   processColorsInProps(updates);
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  _updatePropsPaper!([{ tag, name, updates }]);
+  global._updatePropsPaper!([{ tag, name, updates }]);
 }
 
 function setNativePropsJest() {
@@ -74,10 +77,13 @@ function setNativePropsDefault() {
 }
 
 if (!shouldBeUseWeb()) {
+  // Those assertions are actually correct since on Native platforms `AnimatedRef` is
+  // mapped as a different function in `shareableMappingCache` and
+  // TypeScript is not able to infer that.
   if (isFabric()) {
-    setNativeProps = setNativePropsFabric;
+    setNativeProps = setNativePropsFabric as unknown as SetNativeProps;
   } else {
-    setNativeProps = setNativePropsPaper;
+    setNativeProps = setNativePropsPaper as unknown as SetNativeProps;
   }
 } else if (isJest()) {
   setNativeProps = setNativePropsJest;

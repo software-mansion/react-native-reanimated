@@ -14,6 +14,7 @@ export {
   isConfigured,
   enableLayoutAnimations,
   getViewProp,
+  executeOnUIRuntimeSync,
 } from './core';
 export type {
   GestureHandlers,
@@ -244,6 +245,7 @@ export {
   InterfaceOrientation,
   KeyboardState,
   ReduceMotion,
+  isWorkletFunction,
 } from './commonTypes';
 export type { FrameInfo } from './frameCallback';
 export { getUseOfValueInStyleWarning } from './pluginUtils';

@@ -4,58 +4,67 @@ sidebar_position: 2
 
 # useScrollViewOffset
 
-:::info
-This page was ported from an old version of the documentation.
-
-As we're rewriting the documentation some of the pages might be a little outdated.
-:::
-
-This hook allows you to create animations based on the offset of a `ScrollView`.
+`useScrollViewOffset` lets you to create animations based on the offset of a `ScrollView`.
 The hook automatically detects if the `ScrollView` is horizontal or vertical.
 
-```ts
-useScrollViewOffset(aref: RefObject<Animated.ScrollView>) => [SharedValue<number>]
-```
+## Reference
 
-### Arguments
+```tsx
+import { useScrollViewOffset } from 'react-native-reanimated';
 
-#### `aref` [RefObject&lt;Animated.ScrollView&gt;]
-
-An Animated reference to a `ScrollView`. The reference should be passed to the
-appropriate `ScrollView` in the `ref` prop.
-
-### Returns
-
-A shared value which holds the current offset of the `ScrollView`.
-
-## Example
-
-```jsx
-function ScrollViewOffsetExample() {
-  const aref = useAnimatedRef<Animated.ScrollView>();
-  const scrollHandler = useScrollViewOffset(aref);
-
-  useAnimatedStyle(() => {
-    console.log(scrollHandler.value);
-    return {};
-  });
-
+function App() {
+  const animatedRef = useAnimatedRef();
+  // highlight-next-line
+  const scrollOffset = useScrollViewOffset(animatedRef);
   return (
-    <>
-      <View style={styles.positionView}>
-        <Text>Test</Text>
-      </View>
-      <View style={styles.divider} />
-      <Animated.ScrollView
-        ref={aref}
-        style={styles.scrollView}>
-        {[...Array(100)].map((_, i) => (
-          <Text key={i} style={styles.text}>
-            {i}
-          </Text>
-        ))}
-      </Animated.ScrollView>
-    </>
+    <Animated.ScrollView ref={animatedRef}>{/* ... */}</Animated.ScrollView>
   );
 }
 ```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function useScrollViewOffset(
+  animatedRef: AnimatedRef<AnimatedScrollView>,
+  initialRef?: SharedValue<number>
+): SharedValue<number>;
+```
+
+</details>
+
+### Arguments
+
+#### `animatedRef`
+
+An [animated ref](/docs/core/useAnimatedRef#returns) connected to the ScrollView component you'd want to scroll on. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
+
+#### `initialRef` <Optional/>
+
+An optional shared value to be updated with the scroll offset. If not provided a new shared value will be created internally.
+
+### Returns
+
+`useScrollViewOffset` returns a [shared value](/docs/fundamentals/glossary#shared-value) which holds the current offset of the `ScrollView`.
+
+## Example
+
+import ScrollViewOffset from '@site/src/examples/ScrollViewOffset';
+import ScrollViewOffsetSrc from '!!raw-loader!@site/src/examples/ScrollViewOffset';
+
+<InteractiveExample
+  src={ScrollViewOffsetSrc}
+  component={<ScrollViewOffset />}
+  showCode
+/>
+
+## Platform compatibility
+
+<div className="platform-compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ❌  |
+
+</div>

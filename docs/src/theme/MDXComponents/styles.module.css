@@ -3,7 +3,6 @@
   box-shadow: -8px 8px 0 var(--swm-details-background);
 
   color: var(--swm-details-color);
-  padding: 1.5em 2em;
 }
 
 .details a {
@@ -15,6 +14,7 @@
   align-items: center;
   cursor: pointer;
   list-style: none;
+  padding: 1.5em 2em;
 }
 
 .details > summary > p {
@@ -42,8 +42,7 @@
 }
 
 .collapsibleContent {
-  margin-top: 1rem;
-  padding-top: 0.5rem;
+  padding: 0 2em 1.5em 2em;
 }
 
 .collapsibleContent > *:last-child {

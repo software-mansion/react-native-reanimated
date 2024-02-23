@@ -70,9 +70,12 @@ export interface ReanimatedHTMLElement extends HTMLElement {
   _touchableNode: {
     setAttribute: (key: string, props: unknown) => void;
   };
+  reanimatedDummy?: boolean;
+  removedAfterAnimation?: boolean;
 }
 
 export const _updatePropsJS = (
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   updates: StyleProps | AnimatedStyle<any>,
   viewRef: { _component?: JSReanimatedComponent | ReanimatedHTMLElement },
   isAnimatedProps?: boolean
@@ -110,8 +113,10 @@ export const _updatePropsJS = (
         component._touchableNode.setAttribute(dashedKey, rawStyles[key]);
       });
     } else {
+      const componentName =
+        'className' in component ? component?.className : '';
       console.warn(
-        `[Reanimated] It's not possible to manipulate the component ${component}`
+        `[Reanimated] It's not possible to manipulate the component ${componentName}`
       );
     }
   }

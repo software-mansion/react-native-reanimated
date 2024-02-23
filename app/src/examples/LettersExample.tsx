@@ -44,7 +44,7 @@ export default function LettersExample() {
   useEffect(() => {
     const id = setInterval(() => {
       setState((s) => !s);
-    }, 2000);
+    }, 3500);
     return () => clearInterval(id);
   }, []);
 

@@ -1,5 +1,5 @@
 'use strict';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { initializeSensor, registerSensor, unregisterSensor } from '../core';
 import type {
   SensorConfig,
@@ -7,7 +7,11 @@ import type {
   Value3D,
   ValueRotation,
 } from '../commonTypes';
-import { SensorType, IOSReferenceFrame } from '../commonTypes';
+import {
+  SensorType,
+  IOSReferenceFrame,
+  InterfaceOrientation,
+} from '../commonTypes';
 import { callMicrotasks } from '../threads';
 
 // euler angles are in order ZXY, z = yaw, x = pitch, y = roll
@@ -32,15 +36,15 @@ function eulerToQuaternion(pitch: number, roll: number, yaw: number) {
 function adjustRotationToInterfaceOrientation(data: ValueRotation) {
   'worklet';
   const { interfaceOrientation, pitch, roll, yaw } = data;
-  if (interfaceOrientation === 90) {
+  if (interfaceOrientation === InterfaceOrientation.ROTATION_90) {
     data.pitch = roll;
     data.roll = -pitch;
     data.yaw = yaw - Math.PI / 2;
-  } else if (interfaceOrientation === 270) {
+  } else if (interfaceOrientation === InterfaceOrientation.ROTATION_270) {
     data.pitch = -roll;
     data.roll = pitch;
     data.yaw = yaw + Math.PI / 2;
-  } else if (interfaceOrientation === 180) {
+  } else if (interfaceOrientation === InterfaceOrientation.ROTATION_180) {
     data.pitch *= -1;
     data.roll *= -1;
     data.yaw *= -1;
@@ -57,13 +61,13 @@ function adjustRotationToInterfaceOrientation(data: ValueRotation) {
 function adjustVectorToInterfaceOrientation(data: Value3D) {
   'worklet';
   const { interfaceOrientation, x, y } = data;
-  if (interfaceOrientation === 90) {
+  if (interfaceOrientation === InterfaceOrientation.ROTATION_90) {
     data.x = -y;
     data.y = x;
-  } else if (interfaceOrientation === 270) {
+  } else if (interfaceOrientation === InterfaceOrientation.ROTATION_270) {
     data.x = y;
     data.y = -x;
-  } else if (interfaceOrientation === 180) {
+  } else if (interfaceOrientation === InterfaceOrientation.ROTATION_180) {
     data.x *= -1;
     data.y *= -1;
   }
@@ -89,28 +93,47 @@ export function useAnimatedSensor(
 export function useAnimatedSensor(
   sensorType: SensorType,
   userConfig?: Partial<SensorConfig>
-): AnimatedSensor<ValueRotation | Value3D> {
-  const config: SensorConfig = {
-    interval: 'auto',
-    adjustToInterfaceOrientation: true,
-    iosReferenceFrame: IOSReferenceFrame.Auto,
-    ...userConfig,
-  };
+): AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D> {
+  const userConfigRef = useRef(userConfig);
+
+  const hasConfigChanged =
+    userConfigRef.current?.adjustToInterfaceOrientation !==
+      userConfig?.adjustToInterfaceOrientation ||
+    userConfigRef.current?.interval !== userConfig?.interval ||
+    userConfigRef.current?.iosReferenceFrame !== userConfig?.iosReferenceFrame;
+
+  if (hasConfigChanged) {
+    userConfigRef.current = { ...userConfig };
+  }
+
+  const config: SensorConfig = useMemo(
+    () => ({
+      interval: 'auto',
+      adjustToInterfaceOrientation: true,
+      iosReferenceFrame: IOSReferenceFrame.Auto,
+      ...userConfigRef.current,
+    }),
+    [userConfigRef.current]
+  );
+
   const ref = useRef<AnimatedSensor<Value3D | ValueRotation>>({
     sensor: initializeSensor(sensorType, config),
     unregister: () => {
       // NOOP
     },
     isAvailable: false,
-    config: config,
+    config,
   });
 
   useEffect(() => {
-    const newConfig = {
-      ...config,
-      ...userConfig,
+    ref.current = {
+      sensor: initializeSensor(sensorType, config),
+      unregister: () => {
+        // NOOP
+      },
+      isAvailable: false,
+      config,
     };
-    ref.current.sensor = initializeSensor(sensorType, newConfig);
 
     const sensorData = ref.current.sensor;
     const adjustToInterfaceOrientation =
@@ -144,7 +167,7 @@ export function useAnimatedSensor(
     return () => {
       ref.current.unregister();
     };
-  }, [sensorType, userConfig]);
+  }, [sensorType, config]);
 
-  return ref.current;
+  return ref.current as AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D>;
 }

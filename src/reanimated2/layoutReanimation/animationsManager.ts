@@ -20,7 +20,7 @@ function startObservingProgress(
   const isSharedTransition =
     animationType === LayoutAnimationType.SHARED_ELEMENT_TRANSITION;
   sharedValue.addListener(tag + TAG_OFFSET, () => {
-    _notifyAboutProgress(tag, sharedValue.value, isSharedTransition);
+    global._notifyAboutProgress(tag, sharedValue.value, isSharedTransition);
   });
 }
 
@@ -31,12 +31,12 @@ function stopObservingProgress(
 ): void {
   'worklet';
   sharedValue.removeListener(tag + TAG_OFFSET);
-  _notifyAboutEnd(tag, removeView);
+  global._notifyAboutEnd(tag, removeView);
 }
 
 function createLayoutAnimationManager() {
   'worklet';
-  const enteringAnimationForTag = new Map();
+  const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
 
   return {
@@ -59,16 +59,13 @@ function createLayoutAnimationManager() {
       const style = config(yogaValues);
       let currentAnimation = style.animations;
 
-      if (type === LayoutAnimationType.ENTERING) {
-        enteringAnimationForTag.set(tag, currentAnimation);
-      } else if (type === LayoutAnimationType.LAYOUT) {
-        // When layout animation is requested, but entering is still running, we merge
-        // new layout animation targets into the ongoing animation
-        const enteringAnimation = enteringAnimationForTag.get(tag);
-        if (enteringAnimation) {
-          currentAnimation = { ...enteringAnimation, ...style.animations };
-        }
+      // When layout animation is requested, but a previous one is still running, we merge
+      // new layout animation targets into the ongoing animation
+      const previousAnimation = currentAnimationForTag.get(tag);
+      if (previousAnimation) {
+        currentAnimation = { ...previousAnimation, ...style.animations };
       }
+      currentAnimationForTag.set(tag, currentAnimation);
 
       let value = mutableValuesForTag.get(tag);
       if (value === undefined) {
@@ -84,7 +81,7 @@ function createLayoutAnimationManager() {
 
       animation.callback = (finished?: boolean) => {
         if (finished) {
-          enteringAnimationForTag.delete(tag);
+          currentAnimationForTag.delete(tag);
           mutableValuesForTag.delete(tag);
           const shouldRemoveView = type === LayoutAnimationType.EXITING;
           stopObservingProgress(tag, value, shouldRemoveView);

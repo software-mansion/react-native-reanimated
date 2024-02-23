@@ -121,7 +121,7 @@ function PerformanceNowDemo() {
     runOnUI(() => {
       console.log('UI', performance.now());
       // @ts-ignore it works
-      console.log('AT', _getAnimationTimestamp());
+      console.log('AT', global._getAnimationTimestamp());
     })();
   };
 

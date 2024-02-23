@@ -33,7 +33,9 @@ function validateConfig(config: DefaultDecayConfig): void {
     }
     if (config.clamp.length !== 2) {
       throw new Error(
-        `[Reanimated] \`clamp array\` must contain 2 items but is given ${config.clamp.length}.`
+        `[Reanimated] \`clamp array\` must contain 2 items but is given ${
+          config.clamp.length as number
+        }.`
       );
     }
   }

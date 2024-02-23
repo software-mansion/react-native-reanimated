@@ -1,6 +1,6 @@
 import { html } from 'code-tag';
 import plugin from '../plugin';
-import { BabelFileResult, TransformOptions, transformSync } from '@babel/core';
+import { TransformOptions, transformSync } from '@babel/core';
 import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
 import '../plugin/jestUtils';
@@ -360,6 +360,21 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
       expect(code).not.toContain("'worklet';");
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ObjectMethod', () => {
+      const input = html`<script>
+        const foo = {
+          bar(x) {
+            'worklet';
+            return x + 2;
+          },
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
       expect(code).toMatchSnapshot();
     });
   });
@@ -1687,6 +1702,68 @@ describe('babel plugin', () => {
       );
       expect(code).toContain('const x=isWeb();');
       expect(code).toContain('const y=shouldBeUseWeb();');
+      expect(code).toMatchSnapshot();
+    });
+  });
+
+  describe('for generators', () => {
+    it('makes a generator worklet factory', () => {
+      const input = html`<script>
+        function* foo() {
+          'worklet';
+          yield 'hello';
+          yield 'world';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('var foo = function* foo() {');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('makes a generator worklet string', () => {
+      const input = html`<script>
+        function* foo() {
+          'worklet';
+          yield 'hello';
+          yield 'world';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain(
+        `code: "function*foo(){yield'hello';yield'world';}"`
+      );
+      expect(code).toMatchSnapshot();
+    });
+  });
+
+  describe('for async functions', () => {
+    it('makes an async worklet factory', () => {
+      const input = html`<script>
+        async function foo() {
+          'worklet';
+          await Promise.resolve();
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('asyncToGenerator');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('makes an async worklet string', () => {
+      const input = html`<script>
+        async function foo() {
+          'worklet';
+          await Promise.resolve();
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain(
+        `code: "async function foo(){await Promise.resolve();}"`
+      );
       expect(code).toMatchSnapshot();
     });
   });

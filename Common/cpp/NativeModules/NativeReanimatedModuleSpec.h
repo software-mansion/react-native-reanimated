@@ -19,7 +19,8 @@ namespace reanimated {
 
 class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
  protected:
-  explicit NativeReanimatedModuleSpec(std::shared_ptr<CallInvoker> jsInvoker);
+  explicit NativeReanimatedModuleSpec(
+      const std::shared_ptr<CallInvoker> &jsInvoker);
 
  public:
   // SharedValue
@@ -28,16 +29,11 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       const jsi::Value &value,
       const jsi::Value &shouldRetainRemote) = 0;
 
-  // Synchronized data objects
-  virtual jsi::Value makeSynchronizedDataHolder(
-      jsi::Runtime &rt,
-      const jsi::Value &initialShareable) = 0;
-  virtual jsi::Value getDataSynchronously(
-      jsi::Runtime &rt,
-      const jsi::Value &synchronizedDataHolderRef) = 0;
-
   // Scheduling
   virtual void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) = 0;
+  virtual jsi::Value executeOnUIRuntimeSync(
+      jsi::Runtime &rt,
+      const jsi::Value &worklet) = 0;
 
   // Worklet runtime
   virtual jsi::Value createWorkletRuntime(
@@ -102,6 +98,10 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       const jsi::Value &type,
       const jsi::Value &sharedTransitionTag,
       const jsi::Value &config) = 0;
+
+  virtual jsi::Value configureLayoutAnimationBatch(
+      jsi::Runtime &rt,
+      const jsi::Value &layoutAnimationsBatch) = 0;
 
   virtual void setShouldAnimateExiting(
       jsi::Runtime &rt,
