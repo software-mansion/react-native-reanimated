@@ -5759,12 +5759,8 @@ react-native-gradle-plugin@^0.0.7:
   integrity sha512-+4JpbIx42zGTONhBTIXSyfyHICHC29VTvhkkoUOJAh/XHPEixpuBduYgf6Y4y9wsN1ARlQhBBoptTvXvAFQf5g==
 
 "react-native-reanimated@link:..":
-  version "3.7.0"
-  dependencies:
-    "@babel/plugin-transform-object-assign" "^7.16.7"
-    "@babel/preset-typescript" "^7.16.7"
-    convert-source-map "^2.0.0"
-    invariant "^2.2.4"
+  version "0.0.0"
+  uid ""
 
 "react-native@npm:react-native-tvos@0.69.8-0":
   version "0.69.8-0"
