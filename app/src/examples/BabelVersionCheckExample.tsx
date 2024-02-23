@@ -22,25 +22,13 @@ function longOffender() {
 }
 
 export default function BabelVersionCheckExample() {
-  const handlePress1 = () => {
-    // @ts-ignore this is fine
-    shortOffender.__initData.version = undefined;
-    runOnUI(shortOffender)();
-  };
-
-  const handlePress2 = () => {
-    // @ts-ignore this is fine
-    longOffender.__initData.version = undefined;
-    runOnUI(longOffender)();
-  };
-
-  const handlePress3 = () => {
+  const forceErrorWithShortWorklet = () => {
     // @ts-ignore this is fine
     shortOffender.__initData.version = 'x.y.z';
     runOnUI(shortOffender)();
   };
 
-  const handlePress4 = () => {
+  const forceErrorWithLongWorklet = () => {
     // @ts-ignore this is fine
     longOffender.__initData.version = 'x.y.z';
     runOnUI(longOffender)();
@@ -48,10 +36,14 @@ export default function BabelVersionCheckExample() {
 
   return (
     <View style={styles.container}>
-      <Button onPress={handlePress1} title="Unknown version short worklet" />
-      <Button onPress={handlePress2} title="Unknown version long worklet" />
-      <Button onPress={handlePress3} title="Wrong version short worklet" />
-      <Button onPress={handlePress4} title="Wrong version long worklet" />
+      <Button
+        onPress={forceErrorWithShortWorklet}
+        title="Wrong version in short worklet"
+      />
+      <Button
+        onPress={forceErrorWithLongWorklet}
+        title="Wrong version in long worklet"
+      />
     </View>
   );
 }
