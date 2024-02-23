@@ -1,6 +1,6 @@
 'use strict';
 import { shouldBeUseWeb } from './PlatformChecker';
-import { isWorklet } from './commonTypes';
+import { isWorkletFunction } from './commonTypes';
 import type { WorkletFunction } from './commonTypes';
 
 function valueUnpacker(objectToUnpack: any, category?: string): any {
@@ -76,12 +76,12 @@ if (__DEV__ && !shouldBeUseWeb()) {
   const testWorklet = (() => {
     'worklet';
   }) as WorkletFunction<[], void>;
-  if (!isWorklet(testWorklet)) {
+  if (!isWorkletFunction(testWorklet)) {
     throw new Error(
       `[Reanimated] Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
     );
   }
-  if (!isWorklet(valueUnpacker)) {
+  if (!isWorkletFunction(valueUnpacker)) {
     throw new Error('[Reanimated] `valueUnpacker` is not a worklet');
   }
   const closure = (valueUnpacker as ValueUnpacker).__closure;
