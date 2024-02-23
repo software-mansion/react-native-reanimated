@@ -113,6 +113,7 @@ import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
+import KeyboardAvoidingViewExample from './KeyboardAvoidingView';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
 import WithClampExample from './WithClampExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
@@ -280,6 +281,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📦',
     title: 'Bouncing box',
     screen: BouncingBoxExample,
+  },
+  KeyboardAvoidingViewExample: {
+    icon: '⌨️',
+    title: 'KeyboardAvoidingView',
+    screen: KeyboardAvoidingViewExample,
   },
   AnimatedKeyboardExample: {
     icon: '⌨️',
