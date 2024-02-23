@@ -34,7 +34,9 @@
     "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular src lib",
     "use_strict_check": "node ./scripts/validate-use-strict.js",
     "plugin": "cd plugin && yarn && cd ..",
-    "app": "cd app && yarn && cd .."
+    "app": "cd app && yarn && cd ..",
+    "run-example:ios": "cd Example && yarn && cd ios && bundle install && bundle exec pod install && open ReanimatedExample.xcworkspace && cd .. && yarn start --reset-cache",
+    "run-fabric-example:ios": "cd FabricExample && yarn && cd ios && bundle install && bundle exec pod install && open FabricExample.xcworkspace && cd .. && yarn start --reset-cache"
   },
   "main": "lib/module/index",
   "module": "lib/module/index",
