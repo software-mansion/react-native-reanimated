@@ -1,4 +1,4 @@
-import { Button, Text, StyleSheet, View } from 'react-native';
+import { Button, StyleSheet, View, TurboModuleRegistry } from 'react-native';
 
 import React from 'react';
 import {
@@ -207,9 +207,6 @@ function FreezingShareables() {
         title="Try modify converted remote function"
         onPress={tryModifyConvertedRemoteFunction}
       />
-      <Text>
-        Host object {globalThis._dummyHostObject ? 'is' : 'NOT'} present!
-      </Text>
       <Button
         title="Try modify converted host object"
         onPress={tryModifyConvertedHostObject}
@@ -253,59 +250,14 @@ function tryModifyConvertedRemoteFunction() {
   foo.bar = 2; // should warn because it's frozen
 }
 
-/*
-Add this to the native code for the below example to work (e.g. in RNRuntimeDecorator):
-
- class DummyHostObject : public jsi::HostObject {
-   public:
-    double prop;
-
-    explicit DummyHostObject(double prop) : prop(prop) {}
-
-    jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override {
-      auto name = propName.utf8(rt);
-      if (name == "prop") {
-        return jsi::Value(prop);
-      }
-      return jsi::Value::undefined();
-    }
-
-    void set(
-        jsi::Runtime &rt,
-        const jsi::PropNameID &propName,
-        const jsi::Value &value) override {
-      auto name = propName.utf8(rt);
-      if (name == "prop") {
-        prop = value.getNumber();
-      }
-    }
-
-    std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override {
-      std::vector<jsi::PropNameID> result;
-      result.push_back(jsi::PropNameID::forUtf8(rt, "prop"));
-      return result;
-    }
-  };
-
-  ...
-
-  rnRuntime.global().setProperty(
-    rnRuntime, "_dummyHostObject", jsi::Object::createFromHostObject(rnRuntime, std::make_shared<DummyHostObject>(42)) );
-*/
-
-declare global {
-  var _dummyHostObject: { prop: number } | undefined;
-}
-
 function tryModifyConvertedHostObject() {
-  const hostObject = globalThis._dummyHostObject;
+  const hostObject = TurboModuleRegistry.get('Clipboard');
   if (!hostObject) {
-    console.warn(
-      'You need to inject the host object first for this check to work.'
-    );
+    console.warn('No host object found.');
     return;
   }
   makeShareableCloneRecursive(hostObject);
+  // @ts-expect-error
   hostObject.prop = 2; // shouldn't warn because it's not frozen
 }
 
