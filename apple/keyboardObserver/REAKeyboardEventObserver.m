@@ -129,17 +129,19 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   CGRect screenBounds = [[UIScreen mainScreen]bounds];
   Boolean isBeginFrameDetached =
     CGRectGetWidth(beginFrame) != CGRectGetWidth(screenBounds) ||
-    CGRectGetMaxY(beginFrame) != CGRectGetMaxY(screenBounds);
+    (CGRectGetMaxY(beginFrame) != CGRectGetMaxY(screenBounds) &&
+     CGRectGetMinY(beginFrame) != CGRectGetMaxY(screenBounds));
   Boolean isEndFrameDetached =
     CGRectGetWidth(screenBounds) != CGRectGetWidth(endFrame) ||
-    CGRectGetMaxY(endFrame) != CGRectGetMaxY(screenBounds);
-  
+    (CGRectGetMaxY(endFrame) != CGRectGetMaxY(screenBounds) &&
+     CGRectGetMinY(endFrame) != CGRectGetMaxY(screenBounds));
   // variables determining keyboard height's change
   CGFloat beginHeight = 0;
   CGFloat endHeight = 0;
   
+  // it is worth noting, that the begin/end frames taken from userInfo will never be in state non-detached/detached - they transition from both non-detached to instantly both detached
   if (isBeginFrameDetached && isEndFrameDetached) {
-    // transition from normal to detached keyboard
+    //detached keyboard frame changes
     _state = DETACHED;
     beginHeight = 0;
     endHeight = 0;
