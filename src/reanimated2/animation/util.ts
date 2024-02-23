@@ -32,7 +32,7 @@ import {
   subtractMatrices,
   getRotationMatrix,
 } from './transformationMatrix/matrixUtils';
-import { isReducedMotion, isWeb, shouldBeUseWeb } from '../PlatformChecker';
+import { isReducedMotion, shouldBeUseWeb } from '../PlatformChecker';
 import type { EasingFunction, EasingFunctionFactory } from '../Easing';
 
 let IN_STYLE_UPDATER = false;
@@ -44,7 +44,7 @@ if (__DEV__ && IS_REDUCED_MOTION) {
   );
 }
 
-const SHOULD_BE_USE_WEB = SHOULD_BE_USE_WEB();
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 export function assertEasingIsWorklet(
   easing: EasingFunction | EasingFunctionFactory
@@ -503,8 +503,6 @@ type AnimationToDecoration<
 > = T extends StyleLayoutAnimation
   ? Record<string, unknown>
   : U | (() => U) | AnimatableValue;
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 export function defineAnimation<
   T extends AnimationObject | StyleLayoutAnimation, // type that's supposed to be returned
