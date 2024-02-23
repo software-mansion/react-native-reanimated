@@ -83,4 +83,4 @@ jobs:
 
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn tvos --no-packager
+        run: yarn tvos
