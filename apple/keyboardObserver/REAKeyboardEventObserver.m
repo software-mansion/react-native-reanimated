@@ -11,7 +11,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   OPEN = 2,
   CLOSING = 3,
   CLOSED = 4,
-  FLOATING = 5,
+  DETACHED = 5,
 };
 
 @implementation REAKeyboardEventObserver {
@@ -87,9 +87,9 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
 - (void)updateKeyboardFrame
 {
-  // for floating keyboard we always return 0 height
-  if (_state == FLOATING) {
-    // make sure that state = FLOATING, height = 0 gets emitted only once
+  // for detached keyboard we always return 0 height
+  if (_state == DETACHED) {
+    // make sure that state = DETACHED, height = 0 gets emitted only once
     [[self getDisplayLink] setPaused:YES];
     
     for (NSString *key in _listeners.allKeys) {
@@ -125,31 +125,31 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   NSTimeInterval animationDuration = [[userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
   CGSize windowSize = [[[UIApplication sharedApplication] delegate] window].frame.size;
 
-  // compute checks for floating keyboard
+  // compute checks for detached keyboard
   CGRect screenBounds = [[UIScreen mainScreen]bounds];
-  Boolean isBeginFrameFloating =
-    CGRectGetMaxX(screenBounds) != CGRectGetMaxX(beginFrame) ||
-    CGRectGetWidth(screenBounds) != CGRectGetWidth(beginFrame);
-  Boolean isEndFrameFloating =
-    CGRectGetMaxX(screenBounds) != CGRectGetMaxX(endFrame) ||
-    CGRectGetWidth(screenBounds) != CGRectGetWidth(endFrame);
+  Boolean isBeginFrameDetached =
+    CGRectGetWidth(beginFrame) != CGRectGetWidth(screenBounds) ||
+    CGRectGetMaxY(beginFrame) != CGRectGetMaxY(screenBounds);
+  Boolean isEndFrameDetached =
+    CGRectGetWidth(screenBounds) != CGRectGetWidth(endFrame) ||
+    CGRectGetMaxY(endFrame) != CGRectGetMaxY(screenBounds);
   
   // variables determining keyboard height's change
   CGFloat beginHeight = 0;
   CGFloat endHeight = 0;
   
-  if (isBeginFrameFloating && isEndFrameFloating) {
-    // transition from normal to floating keyboard
-    _state = FLOATING;
+  if (isBeginFrameDetached && isEndFrameDetached) {
+    // transition from normal to detached keyboard
+    _state = DETACHED;
     beginHeight = 0;
     endHeight = 0;
-  } else if (isBeginFrameFloating && !isEndFrameFloating) {
-    // transition from floating to normal keyboard
+  } else if (isBeginFrameDetached && !isEndFrameDetached) {
+    // transition from detached to normal keyboard
     // since keyboard changes we set the state to OPENING
     _state = OPENING;
     beginHeight = 0;
     endHeight = windowSize.height - endFrame.origin.y;
-  } else if(!isBeginFrameFloating && !isEndFrameFloating) {
+  } else if(!isBeginFrameDetached && !isEndFrameDetached) {
     // normal keyboard frame changes
     beginHeight = windowSize.height - beginFrame.origin.y;
     endHeight = windowSize.height - endFrame.origin.y;
