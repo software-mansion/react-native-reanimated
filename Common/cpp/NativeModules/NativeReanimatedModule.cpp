@@ -242,13 +242,12 @@ void NativeReanimatedModule::unregisterEventHandler(
       [=] { eventHandlerRegistry_->unregisterEventHandler(id); });
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
 static inline std::string intColorToHex(const int val) {
   std::stringstream ss;
   ss << '#' << std::setfill('0') << std::setw(6) << std::hex << (val);
   return ss.str();
 }
-
-#ifdef RCT_NEW_ARCH_ENABLED
 
 std::string NativeReanimatedModule::obtainPropFromShadowNode(
     jsi::Runtime &rt,
