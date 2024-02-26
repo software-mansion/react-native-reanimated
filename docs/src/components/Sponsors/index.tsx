@@ -4,7 +4,7 @@ import styles from './styles.module.css';
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-const ReanimatedSponsors = () => {
+const Sponsors = () => {
   const sponsorsLogos = {
     expo: {
       light: useBaseUrl('/img/expo.svg'),
@@ -39,4 +39,4 @@ const ReanimatedSponsors = () => {
   );
 };
 
-export default ReanimatedSponsors;
+export default Sponsors;

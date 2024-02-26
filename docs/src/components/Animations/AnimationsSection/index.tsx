@@ -21,7 +21,7 @@ interface Props {
   idx: number;
 }
 
-export default function ReanimatedAnimationsSection({
+export default function AnimationsSection({
   title,
   body,
   docsLink,
@@ -81,12 +81,14 @@ export default function ReanimatedAnimationsSection({
         <div>
           <h4>{title}</h4>
           <p>{body}</p>
-          <HomepageButton
-            backgroundStyling={styles.backgroundStyling}
-            borderStyling={styles.borderStyling}
-            href={docsLink}
-            title="Check docs"
-          />
+          <div className={styles.buttonContainer}>
+            <HomepageButton
+              backgroundStyling={styles.backgroundStyling}
+              borderStyling={styles.borderStyling}
+              href={docsLink}
+              title="Check docs"
+            />
+          </div>
         </div>
 
         <div className={styles.interactiveCodeBlock}>

@@ -47,6 +47,7 @@ module.exports = {
     'react/jsx-uses-vars': 'error',
     'react/jsx-uses-react': 'error',
     'no-use-before-define': 'off',
+    '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/ban-ts-comment': [
       'error',
       {

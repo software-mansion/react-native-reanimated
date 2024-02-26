@@ -11,43 +11,41 @@
     "test": "jest"
   },
   "dependencies": {
-    "@babel/plugin-proposal-export-namespace-from": "^7.17.12",
-    "@react-native-async-storage/async-storage": "^1.19.3",
-    "@react-native-community/slider": "^4.4.3",
-    "@react-native-masked-view/masked-view": "^0.3.0",
-    "@react-native-picker/picker": "^2.5.1",
-    "@react-navigation/native": "^6.1.8",
-    "@react-navigation/native-stack": "^6.9.14",
-    "@react-navigation/stack": "^6.3.18",
+    "@react-native-async-storage/async-storage": "^1.22.0",
+    "@react-native-community/slider": "^4.5.0",
+    "@react-native-masked-view/masked-view": "^0.3.1",
+    "@react-native-picker/picker": "^2.6.1",
+    "@react-navigation/native": "^6.1.10",
+    "@react-navigation/native-stack": "^6.9.18",
+    "@react-navigation/stack": "^6.3.21",
     "react": "18.2.0",
-    "react-native": "0.72.6",
-    "react-native-gesture-handler": "^2.13.2",
-    "react-native-macos": "^0.72.1",
-    "react-native-pager-view": "^5.4.25",
+    "react-native": "0.73.4",
+    "react-native-gesture-handler": "^2.15.0",
+    "react-native-macos": "^0.73.0-0",
+    "react-native-pager-view": "^6.2.3",
     "react-native-reanimated": "link:../",
-    "react-native-safe-area-context": "^4.7.2",
-    "react-native-screens": "^3.27.0",
-    "react-native-svg": "^13.14.0"
+    "react-native-safe-area-context": "^4.9.0",
+    "react-native-screens": "^3.29.0",
+    "react-native-svg": "^14.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@babel/preset-env": "^7.20.0",
     "@babel/runtime": "^7.20.0",
-    "@react-native-community/eslint-config": "^3.2.0",
-    "@react-native/metro-config": "^0.72.11",
-    "@tsconfig/react-native": "^2.0.2",
-    "@types/jest": "^29.2.1",
-    "@types/react": "^18.0.24",
+    "@react-native/babel-preset": "0.73.21",
+    "@react-native/eslint-config": "0.73.2",
+    "@react-native/metro-config": "0.73.5",
+    "@react-native/typescript-config": "0.73.1",
+    "@types/react": "^18.2.6",
     "@types/react-test-renderer": "^18.0.0",
-    "babel-jest": "^29.2.1",
+    "babel-jest": "^29.6.3",
     "eslint": "^8.19.0",
-    "jest": "^29.2.1",
-    "metro-react-native-babel-preset": "0.76.8",
-    "prettier": "^2.4.1",
+    "jest": "^29.6.3",
+    "prettier": "2.8.8",
     "react-test-renderer": "18.2.0",
-    "typescript": "4.8.4"
+    "typescript": "5.0.4"
   },
-  "jest": {
-    "preset": "react-native"
+  "engines": {
+    "node": ">=18"
   }
 }

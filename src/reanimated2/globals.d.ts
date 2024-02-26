@@ -24,7 +24,6 @@ declare global {
   var _IS_FABRIC: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_JS: string | undefined;
-  var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
   var __reanimatedModuleProxy: NativeReanimatedModule | undefined;
   var __callGuardDEV: typeof callGuardDEV | undefined;
   var evalWithSourceMap:
