@@ -45,6 +45,8 @@ void UIRuntimeDecorator::decorate(
         }
         return resultObject;
       });
+  jsi_utils::installJsiFunction(
+      uiRuntime, "_obtainPropPaper", obtainPropFunction);
 #endif // RCT_NEW_ARCH_ENABLED
 
   jsi_utils::installJsiFunction(
@@ -63,8 +65,6 @@ void UIRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       uiRuntime, "_obtainPropFabric", obtainPropFunction);
-  jsi_utils::installJsiFunction(
-      uiRuntime, "_obtainPropPaper", obtainPropFunction);
 }
 
 } // namespace reanimated

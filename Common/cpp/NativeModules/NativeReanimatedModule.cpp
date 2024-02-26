@@ -274,10 +274,10 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
     return std::to_string(viewProps->opacity);
   } else if (propName == "zIndex") {
     if (viewProps->zIndex.has_value()) {
-      return std::to_string(*zIndex);
+      return std::to_string(*viewProps->zIndex);
     }
   } else if (propName == "backgroundColor") {
-    return int_to_hex(*viewProps->backgroundColor);
+    return intColorToHex(*viewProps->backgroundColor);
   }
 
   return "Getting property '" + propName +
