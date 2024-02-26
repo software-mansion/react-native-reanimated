@@ -33,7 +33,7 @@ import type {
   AnimatedPropsAdapterWorklet,
 } from '../commonTypes';
 import type { AnimatedStyle } from '../helperTypes';
-import { isWorklet } from '../commonTypes';
+import { isWorkletFunction } from '../commonTypes';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -194,7 +194,8 @@ function styleUpdater(
   for (const key in newValues) {
     const value = newValues[key];
     if (isAnimated(value)) {
-      frameTimestamp = global.__frameTimestamp || _getAnimationTimestamp();
+      frameTimestamp =
+        global.__frameTimestamp || global._getAnimationTimestamp();
       prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
@@ -290,7 +291,8 @@ function jestStyleUpdater(
   Object.keys(newValues).forEach((key) => {
     const value = newValues[key];
     if (isAnimated(value)) {
-      frameTimestamp = global.__frameTimestamp || _getAnimationTimestamp();
+      frameTimestamp =
+        global.__frameTimestamp || global._getAnimationTimestamp();
       prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
@@ -429,7 +431,12 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
       // let web work without a Babel plugin
       inputs = dependencies;
     }
-    if (__DEV__ && !inputs.length && !dependencies && !isWorklet(updater)) {
+    if (
+      __DEV__ &&
+      !inputs.length &&
+      !dependencies &&
+      !isWorkletFunction(updater)
+    ) {
       throw new Error(
         `[Reanimated] \`useAnimatedStyle\` was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel plugin.
 For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin\`.`
@@ -534,9 +541,15 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
 
   checkSharedValueUsage(initial.value);
 
-  if (isJest()) {
-    return { viewDescriptors, initial, viewsRef, jestAnimatedStyle };
-  } else {
-    return { viewDescriptors, initial, viewsRef };
+  const animatedStyleHandle = useRef<
+    AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style> | null
+  >(null);
+
+  if (!animatedStyleHandle.current) {
+    animatedStyleHandle.current = isJest()
+      ? { viewDescriptors, initial, viewsRef, jestAnimatedStyle }
+      : { initial, viewsRef, viewDescriptors };
   }
+
+  return animatedStyleHandle.current;
 }

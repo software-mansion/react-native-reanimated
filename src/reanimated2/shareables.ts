@@ -1,6 +1,6 @@
 'use strict';
 import NativeReanimatedModule from './NativeReanimated';
-import { isWorklet } from './commonTypes';
+import { isWorkletFunction } from './commonTypes';
 import type {
   ShareableRef,
   FlatShareableRef,
@@ -139,7 +139,7 @@ export function makeShareableCloneRecursive<T>(
         toAdapt = value.map((element) =>
           makeShareableCloneRecursive(element, shouldPersistRemote, depth + 1)
         );
-      } else if (isTypeFunction && !isWorklet(value)) {
+      } else if (isTypeFunction && !isWorkletFunction(value)) {
         // this is a remote function
         toAdapt = value;
       } else if (isHostObject(value)) {
@@ -149,7 +149,7 @@ export function makeShareableCloneRecursive<T>(
         toAdapt = value;
       } else if (isPlainJSObject(value) || isTypeFunction) {
         toAdapt = {};
-        if (isWorklet(value)) {
+        if (isWorkletFunction(value)) {
           if (__DEV__) {
             const babelVersion = value.__initData.version;
             if (babelVersion !== undefined && babelVersion !== jsVersion) {
@@ -305,7 +305,7 @@ export function makeShareableCloneOnUIRecursive<T>(
       if (isHostObject(value)) {
         // We call `_makeShareableClone` to wrap the provided HostObject
         // inside ShareableJSRef.
-        return _makeShareableClone(value) as FlatShareableRef<T>;
+        return global._makeShareableClone(value) as FlatShareableRef<T>;
       }
       if (isRemoteFunction<T>(value)) {
         // RemoteFunctions are created by us therefore they are
@@ -314,7 +314,7 @@ export function makeShareableCloneOnUIRecursive<T>(
         return value.__remoteFunction;
       }
       if (Array.isArray(value)) {
-        return _makeShareableClone(
+        return global._makeShareableClone(
           value.map(cloneRecursive)
         ) as FlatShareableRef<T>;
       }
@@ -322,9 +322,9 @@ export function makeShareableCloneOnUIRecursive<T>(
       for (const [key, element] of Object.entries(value)) {
         toAdapt[key] = cloneRecursive(element);
       }
-      return _makeShareableClone(toAdapt) as FlatShareableRef<T>;
+      return global._makeShareableClone(toAdapt) as FlatShareableRef<T>;
     }
-    return _makeShareableClone(value);
+    return global._makeShareableClone(value);
   }
   return cloneRecursive(value);
 }

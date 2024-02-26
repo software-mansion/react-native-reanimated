@@ -6,7 +6,7 @@ import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
-import { isWorklet } from './commonTypes';
+import { isWorkletFunction } from './commonTypes';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -80,7 +80,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       '[Reanimated] `runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorklet(worklet)) {
+  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
     throw new Error('[Reanimated] `runOnUI` can only be used on worklets.');
   }
   return (...args) => {
@@ -166,7 +166,7 @@ export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
       '[Reanimated] `runOnUIImmediately` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorklet(worklet)) {
+  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
     throw new Error(
       '[Reanimated] `runOnUIImmediately` can only be used on worklets.'
     );
@@ -226,7 +226,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
           : (fun as () => ReturnValue)
       );
   }
-  if (isWorklet<Args, ReturnValue>(fun)) {
+  if (isWorkletFunction<Args, ReturnValue>(fun)) {
     // If `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
     // and pass the worklet as a first argument followed by original arguments.
 
@@ -244,7 +244,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
     fun = (fun as FunDevRemote).__remoteFunction;
   }
   return (...args) => {
-    _scheduleOnJS(
+    global._scheduleOnJS(
       fun as
         | ((...args: Args) => ReturnValue)
         | WorkletFunction<Args, ReturnValue>,

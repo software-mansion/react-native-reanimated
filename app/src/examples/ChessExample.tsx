@@ -15,6 +15,7 @@ import React from 'react';
 
 const N = 8; // number of rows and cols
 const FIELD_SIZE = 40; // size of a single field in pixels
+const CHESSMAN_SIZE = 30; // size of a chessman in pixels
 
 function Chessboard() {
   return (
@@ -206,16 +207,16 @@ const styles = StyleSheet.create({
     width: FIELD_SIZE,
     height: FIELD_SIZE,
     position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   chessmanText: {
-    fontSize: FIELD_SIZE,
-    width: FIELD_SIZE,
-    height: FIELD_SIZE,
-    lineHeight: FIELD_SIZE,
-    textAlign: 'center',
+    fontSize: CHESSMAN_SIZE,
   },
   chessmanTextBlack: {
     color: 'black',
+    textShadowColor: 'white',
+    textShadowRadius: 4,
   },
   chessmanTextWhite: {
     textShadowColor: 'black',

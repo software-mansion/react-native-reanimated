@@ -20,7 +20,7 @@ function startObservingProgress(
   const isSharedTransition =
     animationType === LayoutAnimationType.SHARED_ELEMENT_TRANSITION;
   sharedValue.addListener(tag + TAG_OFFSET, () => {
-    _notifyAboutProgress(tag, sharedValue.value, isSharedTransition);
+    global._notifyAboutProgress(tag, sharedValue.value, isSharedTransition);
   });
 }
 
@@ -31,7 +31,7 @@ function stopObservingProgress(
 ): void {
   'worklet';
   sharedValue.removeListener(tag + TAG_OFFSET);
-  _notifyAboutEnd(tag, removeView);
+  global._notifyAboutEnd(tag, removeView);
 }
 
 function createLayoutAnimationManager() {
