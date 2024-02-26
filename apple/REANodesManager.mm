@@ -545,16 +545,15 @@ using namespace facebook::react;
 #else
     NSColor *color = view.backgroundColor;
 #endif
-    if (color != nil) {
-      const size_t totalComponents = CGColorGetNumberOfComponents(color.CGColor);
-      const CGFloat *components = CGColorGetComponents(color.CGColor);
-      int r = 255 * components[MIN(0, totalComponents - 2)];
-      int g = 255 * components[MIN(1, totalComponents - 2)];
-      int b = 255 * components[MIN(2, totalComponents - 2)];
-      return [NSString stringWithFormat:@"#%02x%02x%02x", r, g, b];
-    } else {
-      return @"Invalid background color is 'nil'";
+    if (color == nil) {
+      return @"nil";
     }
+    const size_t totalComponents = CGColorGetNumberOfComponents(color.CGColor);
+    const CGFloat *components = CGColorGetComponents(color.CGColor);
+    int r = 255 * components[MIN(0, totalComponents - 2)];
+    int g = 255 * components[MIN(1, totalComponents - 2)];
+    int b = 255 * components[MIN(2, totalComponents - 2)];
+    return [NSString stringWithFormat:@"#%02x%02x%02x", r, g, b];
   }
 
   return [NSString

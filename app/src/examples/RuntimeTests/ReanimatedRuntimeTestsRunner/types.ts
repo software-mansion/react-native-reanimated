@@ -113,7 +113,7 @@ declare global {
     value: Record<string, unknown>,
     isSharedTransition: boolean
   ) => void;
-  var _obtainPropPaper: (viewId: number, propName: string) => string;
+  var _obtainPropPaper: (viewTag: number, propName: string) => string;
   var _obtainPropFabric: (
     shadowNodeWrapper: unknown,
     propName: string

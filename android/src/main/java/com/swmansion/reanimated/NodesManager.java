@@ -406,17 +406,13 @@ public class NodesManager implements EventDispatcherListener {
       case "zIndex":
         return Float.toString(view.getElevation());
       case "width":
-        float width = PixelUtil.toDIPFromPixel(view.getWidth());
-        return Float.toString(width);
+        return Float.toString(PixelUtil.toDIPFromPixel(view.getWidth()));
       case "height":
-        float height = PixelUtil.toDIPFromPixel(view.getHeight());
-        return Float.toString(height);
+        return Float.toString(PixelUtil.toDIPFromPixel(view.getHeight()));
       case "top":
-        float top = PixelUtil.toDIPFromPixel(view.getTop());
-        return Float.toString(top);
+        return Float.toString(PixelUtil.toDIPFromPixel(view.getTop()));
       case "left":
-        float left = PixelUtil.toDIPFromPixel(view.getLeft());
-        return Float.toString(left);
+        return Float.toString(PixelUtil.toDIPFromPixel(view.getLeft()));
       case "backgroundColor":
         Drawable background = view.getBackground();
         if (!(background instanceof ReactViewBackgroundDrawable)) {
@@ -426,9 +422,9 @@ public class NodesManager implements EventDispatcherListener {
         return String.format("#%06x", (0xFFFFFF & actualColor));
       default:
         throw new IllegalArgumentException(
-            "[Reanimated] Attempted to get  unsupported property"
+            "[Reanimated] Attempted to get unsupported property"
                 + propName
-                + " with function 'getViewProp'");
+                + " with function `getViewProp`");
     }
   }
 

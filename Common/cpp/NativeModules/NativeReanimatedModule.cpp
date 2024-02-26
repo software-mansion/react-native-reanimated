@@ -242,9 +242,9 @@ void NativeReanimatedModule::unregisterEventHandler(
       [=] { eventHandlerRegistry_->unregisterEventHandler(id); });
 }
 
-inline std::string int_to_hex(int val) {
+static inline std::string intColorToHex(const int val) {
   std::stringstream ss;
-  ss << '#' << std::setfill('0') << std::setw(6) << std::hex << (val | 0);
+  ss << '#' << std::setfill('0') << std::setw(6) << std::hex << (val);
   return ss.str();
 }
 
@@ -265,7 +265,7 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
   if (propName == "width") {
     return std::to_string(frame.size.width);
   } else if (propName == "height") {
-    return std::to_string(frame.size.width);
+    return std::to_string(frame.size.height);
   } else if (propName == "top") {
     return std::to_string(frame.origin.y);
   } else if (propName == "left") {
@@ -273,8 +273,7 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
   } else if (propName == "opacity") {
     return std::to_string(viewProps->opacity);
   } else if (propName == "zIndex") {
-    std::optional<int> zIndex = viewProps->zIndex;
-    if (zIndex) {
+    if (viewProps->zIndex.has_value()) {
       return std::to_string(*zIndex);
     }
   } else if (propName == "backgroundColor") {
@@ -284,10 +283,6 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
   return "Getting property '" + propName +
       "' with function 'getViewProp' is not supported";
 }
-
-#endif
-
-#ifdef RCT_NEW_ARCH_ENABLED
 
 jsi::Value NativeReanimatedModule::getViewProp(
     jsi::Runtime &rnRuntime,
@@ -300,7 +295,7 @@ jsi::Value NativeReanimatedModule::getViewProp(
   const auto shadowNode = shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
   uiScheduler_->scheduleOnUI([=]() {
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
-    std::string resultStr =
+    const auto resultStr =
         obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
 
     jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
@@ -747,7 +742,7 @@ jsi::String NativeReanimatedModule::obtainProp(
   jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
   const auto propNameStr = propName.asString(rt).utf8(rt);
   const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  std::string resultStr =
+  const auto resultStr =
       obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
   return jsi::String::createFromUtf8(rt, resultStr);
 }
