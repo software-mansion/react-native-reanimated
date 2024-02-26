@@ -258,7 +258,7 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
 
   if (propName == "width" || propName == "height" || propName == "top" ||
       propName == "left") {
-    // These pops are calculated from frame
+    // These props are calculated from frame
     auto layoutableShadowNode =
         traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
     const auto &frame = layoutableShadowNode->layoutMetrics_.frame;
@@ -273,7 +273,7 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
       return std::to_string(frame.origin.x);
     }
   } else {
-    // These pops are calculated from viewProps
+    // These props are calculated from viewProps
     auto props = newestCloneOfShadowNode->getProps();
     auto viewProps = std::static_pointer_cast<const ViewProps>(props);
     if (propName == "opacity") {
