@@ -63,78 +63,82 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
       
 //  auto createdViews = std::make_shared<std::map<Tag, ShadowView&>>();
       
-//  for (auto &mutation: mutations){
-//    if (mutation.type == ShadowViewMutation::Create){
-//      createdViews->insert_or_assign(mutation.newChildShadowView.tag, mutation.newChildShadowView);
-//    }
+      for (auto &mutation: mutations){
+        if (mutation.type == ShadowViewMutation::Create){
+          lap_->tagToNativeID_->insert_or_assign(mutation.newChildShadowView.tag, mutation.newChildShadowView.props->nativeId);
+          lap_->transferConfigFromNativeTag(mutation.newChildShadowView.tag);
+        }
+      }
 //  }
       auto rootNode = newRootShadowNode->ShadowNode::clone(ShadowNodeFragment{});
-      {
-        std::unique_lock<std::mutex>(lap_->mutex);
-        for (auto &mutation: mutations){
-          if (mutation.type == ShadowViewMutation::Create){
-            lap_->tagToNativeID_->insert_or_assign(mutation.newChildShadowView.tag, mutation.newChildShadowView.props->nativeId);
-            lap_->transferConfigFromNativeTag(mutation.newChildShadowView.tag);
-            auto child = findChild(rootNode, mutation.newChildShadowView.tag);
-            lap_->createdNodes_->insert_or_assign(mutation.newChildShadowView.tag, child);
-            lap_->createdViews_->insert_or_assign(mutation.newChildShadowView.tag, mutation.newChildShadowView);
-//            rootNode = rootNode->cloneTree(child->getFamily(), [](const ShadowNode& node){
-//              ShadowNode::Unshared newNode = node.clone({});
-//              auto lNode = dynamic_pointer_cast<LayoutableShadowNode>(newNode);
-//              lNode->setLayoutMetrics(LayoutMetrics{0,0,10,0});
-//              return lNode;
-//            });
-//            if (lap_->layoutAnimationsManager_->hasLayoutAnimation(mutation.newChildShadowView.tag, LayoutAnimationType::ENTERING)){
-////              auto child = findChild(rootNode, mutation.newChildShadowView.tag);
-//              folly::dynamic x = folly::dynamic::object();
-//              x.insert("marginTop", 100.0);
-//              rootNode = cloneShadowTreeWithNewProps(rootNode, child->getFamily(), RawProps(x));
+//      {
+//        std::unique_lock<std::mutex>(lap_->mutex);
+//        for (auto &mutation: mutations){
+//          if (mutation.type == ShadowViewMutation::Create){
+//            lap_->tagToNativeID_->insert_or_assign(mutation.newChildShadowView.tag, mutation.newChildShadowView.props->nativeId);
+//            lap_->transferConfigFromNativeTag(mutation.newChildShadowView.tag);
+//            auto child = findChild(rootNode, mutation.newChildShadowView.tag);
+//            lap_->createdNodes_->insert_or_assign(mutation.newChildShadowView.tag, child);
+//            lap_->createdViews_->insert_or_assign(mutation.newChildShadowView.tag, mutation.newChildShadowView);
+////            rootNode = rootNode->cloneTree(child->getFamily(), [](const ShadowNode& node){
+////              ShadowNode::Unshared newNode = node.clone({});
+////              auto lNode = dynamic_pointer_cast<LayoutableShadowNode>(newNode);
+////              lNode->setLayoutMetrics(LayoutMetrics{0,0,10,0});
+////              return lNode;
+////            });
+////            if (lap_->layoutAnimationsManager_->hasLayoutAnimation(mutation.newChildShadowView.tag, LayoutAnimationType::ENTERING)){
+//////              auto child = findChild(rootNode, mutation.newChildShadowView.tag);
+////              folly::dynamic x = folly::dynamic::object();
+////              x.insert("marginTop", 100.0);
+////              rootNode = cloneShadowTreeWithNewProps(rootNode, child->getFamily(), RawProps(x));
+////            }
+//          } else if (mutation.type == ShadowViewMutation::Remove){
+//            lap_->removedViews_->insert_or_assign(mutation.oldChildShadowView.tag, mutation.oldChildShadowView);
+//            if (lap_->layoutAnimationsManager_->hasLayoutAnimation(mutation.oldChildShadowView.tag, LayoutAnimationType::EXITING)){
+////              auto parent = findChild(rootNode, mutation.parentShadowView.tag);
+//              auto child = findChild(oldRootShadowNode, mutation.oldChildShadowView.tag);
+////              auto childParentTag = child->getFamily().parent_.lock()->tag_;
+////              auto parent = child ->getFamily().getAncestors()
+//              auto oldParent = findParent(oldRootShadowNode, mutation.oldChildShadowView.tag);
+//              auto oldParentTag = oldParent->getTag();
+//              auto parent = findChild(rootNode, oldParentTag);
+//              if (!parent){
+//                continue;
+//              }
+//              rootNode = rootNode->cloneTree(parent->getFamily(), [child](const ShadowNode& node){
+//                auto children = node.getChildren();
+//                children.push_back(child);
+////                auto cloneParentTag = clone->getFamily().parent_.lock()->tag_;
+////                auto child0ParentTag = children[0]->getFamily().parent_.lock()->tag_;
+//                ShadowNode::Unshared newNode = node.clone({ShadowNodeFragment::propsPlaceholder(), std::make_shared<ShadowNode::ListOfShared>(children)});
+//                return newNode;
+//              });
+////              rootNode = oldRootShadowNode->ShadowNode::clone({});
 //            }
-          } else if (mutation.type == ShadowViewMutation::Remove){
-            lap_->removedViews_->insert_or_assign(mutation.oldChildShadowView.tag, mutation.oldChildShadowView);
-            if (lap_->layoutAnimationsManager_->hasLayoutAnimation(mutation.oldChildShadowView.tag, LayoutAnimationType::EXITING)){
-//              auto parent = findChild(rootNode, mutation.parentShadowView.tag);
-              auto child = findChild(oldRootShadowNode, mutation.oldChildShadowView.tag);
-//              auto childParentTag = child->getFamily().parent_.lock()->tag_;
-//              auto parent = child ->getFamily().getAncestors()
-              auto oldParent = findParent(oldRootShadowNode, mutation.oldChildShadowView.tag);
-              auto oldParentTag = oldParent->getTag();
-              auto parent = findChild(rootNode, oldParentTag);
-              if (!parent){
-                continue;
-              }
-              rootNode = rootNode->cloneTree(parent->getFamily(), [child](const ShadowNode& node){
-                auto children = node.getChildren();
-                children.push_back(child);
-//                auto cloneParentTag = clone->getFamily().parent_.lock()->tag_;
-//                auto child0ParentTag = children[0]->getFamily().parent_.lock()->tag_;
-                ShadowNode::Unshared newNode = node.clone({ShadowNodeFragment::propsPlaceholder(), std::make_shared<ShadowNode::ListOfShared>(children)});
-                return newNode;
-              });
-//              rootNode = oldRootShadowNode->ShadowNode::clone({});
-            }
-          } else if (mutation.type == ShadowViewMutation::Update){
-            lap_->modifiedViews_->insert_or_assign(mutation.newChildShadowView.tag, findChild(oldRootShadowNode, mutation.oldChildShadowView.tag));
-//            auto child = findChild(oldRootShadowNode, mutation.oldChildShadowView.tag);
-//            auto& lChild = static_cast<const YogaLayoutableShadowNode&>(*child);
-            lap_->modifiedViewsTarget_->insert_or_assign(mutation.newChildShadowView.tag, findChild(rootNode, mutation.newChildShadowView.tag));
-          }
-        }
-        
-        for (auto kv: *(lap_->removedViews_)){
-          if (lap_->layoutAnimationsManager_->hasLayoutAnimation(kv.first, LayoutAnimationType::EXITING))
-          {
-            Values values;
-            values.x = kv.second.layoutMetrics.frame.origin.x;
-            values.y = kv.second.layoutMetrics.frame.origin.y;
-            values.width = kv.second.layoutMetrics.frame.size.width;
-            values.height = kv.second.layoutMetrics.frame.size.height;
-            lap_->startAnimation(kv.first, LayoutAnimationType::EXITING, values);
-            printf("exiting");
-          }
-        }
-        lap_->removedViews_->clear();
-      }
+//          } else if (mutation.type == ShadowViewMutation::Update){
+//            lap_->modifiedNodes_->insert_or_assign(mutation.newChildShadowView.tag, findChild(oldRootShadowNode, mutation.oldChildShadowView.tag));
+//            lap_->modifiedViews_->insert_or_assign(mutation.newChildShadowView.tag, mutation.oldChildShadowView);
+////            auto child = findChild(oldRootShadowNode, mutation.oldChildShadowView.tag);
+////            auto& lChild = static_cast<const YogaLayoutableShadowNode&>(*child);
+//            lap_->modifiedNodesTarget_->insert_or_assign(mutation.newChildShadowView.tag, findChild(rootNode, mutation.newChildShadowView.tag));
+////            lap_->modifiedViewsTarget_->insert_or_assign(mutation.newChildShadowView.tag, );
+//          }
+//        }
+//        
+////        for (auto kv: *(lap_->removedViews_)){
+////          if (lap_->layoutAnimationsManager_->hasLayoutAnimation(kv.first, LayoutAnimationType::EXITING))
+////          {
+////            Values values;
+////            values.x = kv.second.layoutMetrics.frame.origin.x;
+////            values.y = kv.second.layoutMetrics.frame.origin.y;
+////            values.width = kv.second.layoutMetrics.frame.size.width;
+////            values.height = kv.second.layoutMetrics.frame.size.height;
+////            lap_->startAnimation(kv.first, LayoutAnimationType::EXITING, values);
+////            printf("exiting");
+////          }
+////        }
+//        lap_->removedViews_->clear();
+//      }
 
   if (ReanimatedCommitMarker::isReanimatedCommit()) {
     // ShadowTree commited by Reanimated, no need to apply updates from

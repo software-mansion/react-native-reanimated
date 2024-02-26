@@ -13,7 +13,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include "ShadowNode.h"
+//#include "ShadowNode.h"
 
 namespace reanimated {
 
@@ -44,12 +44,12 @@ class LayoutAnimationsManager {
       const int tag,
       const LayoutAnimationType type,
       const jsi::Object &values);
-  void startLayoutAnimationWithWrapper(
-      jsi::Runtime &rt,
-      facebook::react::ShadowNode::Shared node,
-      const int tag,
-      const LayoutAnimationType type,
-                                       const jsi::Object &values);
+//  void startLayoutAnimationWithWrapper(
+//      jsi::Runtime &rt,
+//      facebook::react::ShadowNode::Shared node,
+//      const int tag,
+//      const LayoutAnimationType type,
+//                                       const jsi::Object &values);
   void clearLayoutAnimationConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   int findPrecedingViewTagForTransition(const int tag);

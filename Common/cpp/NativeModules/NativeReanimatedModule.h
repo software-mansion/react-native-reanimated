@@ -190,6 +190,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   std::unordered_set<std::string>
       animatablePropNames_; // filled by configureProps
   std::shared_ptr<UIManager> uiManager_;
+  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
 
   // After app reload, surfaceId on iOS is still 1 but on Android it's 11.
   // We can store surfaceId of the most recent ShadowNode as a workaround.

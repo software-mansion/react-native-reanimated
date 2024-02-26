@@ -113,6 +113,15 @@ NativeReanimatedModule::NativeReanimatedModule(
                              const jsi::Value &argsValue) {
     this->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
   };
+  ProgressLayoutAnimationFunction progressLayoutAnimation = [this](jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool isSharedTransition){
+    layoutAnimationsProxy_->progressLayoutAnimation(tag, newStyle);
+    uiManager_->getShadowTreeRegistry().enumerate([](const ShadowTree& shadowTree, bool&){
+      shadowTree.notifyDelegatesOfUpdates();
+    });
+  };
+  EndLayoutAnimationFunction endLayoutAnimation = [this](int tag, bool shouldRemove){
+    layoutAnimationsProxy_->endLayoutAniamtion(tag, shouldRemove);
+  };
 #endif
 
   jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
@@ -132,8 +141,13 @@ NativeReanimatedModule::NativeReanimatedModule(
       requestAnimationFrame,
       platformDepMethodsHolder.getAnimationTimestamp,
       platformDepMethodsHolder.setGestureStateFunction,
+#ifdef RCT_NEW_ARCH_ENABLED
+      progressLayoutAnimation,
+      endLayoutAnimation,
+#else
       platformDepMethodsHolder.progressLayoutAnimation,
       platformDepMethodsHolder.endLayoutAnimation,
+#endif
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction);
 }
 
@@ -709,78 +723,90 @@ jsi::Value NativeReanimatedModule::measure(
 void NativeReanimatedModule::initializeFabric(
     const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
+  uiManager->setAnimationDelegate(nullptr);
   Scheduler* scheduler = (Scheduler*)uiManager->getDelegate();
-  auto lap = std::make_shared<LayoutAnimationsProxy>(layoutAnimationsManager_, this);
-  EventListener el = [this, lap](const RawEvent& event){
-    if (event.type == "topLayout"){
-      if (!event.eventTarget){
-        return false;
-      }
-      auto tag = event.eventTarget->getTag();
-      {
-        std::unique_lock<std::mutex>(lap->mutex);
-        if(lap->createdViews_ && lap->createdViews_->contains(tag)){
-          auto view = lap->createdViews_->at(tag);
-          auto node = lap->createdNodes_->at(tag);
-          lap->createdViews_->erase(tag);
-          lap->createdNodes_->erase(tag);
-//          if (!lap->tagToNativeID_->contains(tag)){
-//            return false;
-//          }
-//          auto nativeIDString = lap->tagToNativeID_->at(tag);
-//          if (nativeIDString.empty()){
-//            return false;
-//          }
-//          auto nativeID = stoi(nativeIDString);
-          printf("entering %d\n", tag);
-          if (layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::ENTERING))
-          {
-            printf("entering");
-            Values currentValues, targetValues;
-            auto layout = event.eventPayload->asJSIValue(getUIRuntime()).asObject(getUIRuntime()).getProperty(getUIRuntime(), "layout").asObject(getUIRuntime());
-            targetValues.x=layout.getProperty(getUIRuntime(), "x").asNumber();
-            targetValues.y=layout.getProperty(getUIRuntime(), "y").asNumber();
-            targetValues.width=layout.getProperty(getUIRuntime(), "width").asNumber();
-            targetValues.height=layout.getProperty(getUIRuntime(), "height").asNumber();
-//            lap->startAnimationWithWrapper(node, tag, LayoutAnimationType::ENTERING, targetValues);
-            lap->startAnimation(tag, LayoutAnimationType::ENTERING, targetValues);
-          }
-        }
-        if(lap->modifiedViews_ && lap->modifiedViews_->contains(tag)){
-          if (layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::LAYOUT))
-          {
-            auto current = lap->modifiedViews_->at(tag);
-            auto& currentNode = static_cast<const YogaLayoutableShadowNode&>(*current);
-            auto target = lap->modifiedViewsTarget_->at(tag);
-            auto& targetNode = static_cast<const YogaLayoutableShadowNode&>(*target);
-            Values currentValues, targetValues;
-            auto lm = currentNode.getLayoutMetrics();
-            currentValues.x = lm.frame.origin.x;
-            currentValues.y = lm.frame.origin.y;
-            currentValues.width = lm.frame.size.width;
-            currentValues.height = lm.frame.size.height;
-            auto layout = event.eventPayload->asJSIValue(getUIRuntime()).asObject(getUIRuntime()).getProperty(getUIRuntime(), "layout").asObject(getUIRuntime());
-            targetValues.x=layout.getProperty(getUIRuntime(), "x").asNumber();
-            targetValues.y=layout.getProperty(getUIRuntime(), "y").asNumber();
-            targetValues.width=layout.getProperty(getUIRuntime(), "width").asNumber();
-            targetValues.height=layout.getProperty(getUIRuntime(), "height").asNumber();
-            lap->startLayoutLayoutAnimation(tag, currentValues, targetValues);
-//            lap->startLayoutLayoutAnimationWithWrapper(target, tag, LayoutAnimationType::LAYOUT, currentValues, targetValues);
-          }
-          lap->modifiedViews_->erase(tag);
-          lap->modifiedViewsTarget_->erase(tag);
-        }
-        
-      }
-//      layoutAnimationsManager_.startLayoutAnimation(getUIRuntime(), event.eventTarget->getTag(), LayoutAnimationType::ENTERING, nullptr);
-//      jsi::Object layout = std::dynamic_pointer_cast<const ValueFactoryEventPayload>(event.eventPayload)->asJSIValue(getUIRuntime()).asObject(getUIRuntime());
-//      std::printf("hello");
-    }
-    return false;
-  };
-  scheduler->addEventListener(std::make_shared<EventListener>(el));
+  auto cdr = scheduler->getContextContainer()->at<std::weak_ptr<const ComponentDescriptorRegistry>>("ComponentDescriptorRegistry_DO_NOT_USE_PRETTY_PLEASE");
+  
+  layoutAnimationsProxy_ = std::make_shared<LayoutAnimationsProxy>(layoutAnimationsManager_, this, cdr.lock(), scheduler->getContextContainer());
+  uiManager->getShadowTreeRegistry().enumerate([this](const ShadowTree& shadowTree, bool& stop){
+    shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(layoutAnimationsProxy_);
+  });
+  
+  // old
+//  Scheduler* scheduler = (Scheduler*)uiManager->getDelegate();
+//  EventListener el = [this](const RawEvent& event){
+//    if (event.type == "topLayout"){
+//      if (!event.eventTarget){
+//        return false;
+//      }
+//      auto tag = event.eventTarget->getTag();
+//      {
+//        std::unique_lock<std::mutex>(lap->mutex);
+//        if(lap->createdViews_ && lap->createdViews_->contains(tag)){
+//          auto view = lap->createdViews_->at(tag);
+//          auto node = lap->createdNodes_->at(tag);
+//          lap->createdViews_->erase(tag);
+//          lap->createdNodes_->erase(tag);
+////          if (!lap->tagToNativeID_->contains(tag)){
+////            return false;
+////          }
+////          auto nativeIDString = lap->tagToNativeID_->at(tag);
+////          if (nativeIDString.empty()){
+////            return false;
+////          }
+////          auto nativeID = stoi(nativeIDString);
+//          printf("entering %d\n", tag);
+////          if (layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::ENTERING))
+////          {
+////            printf("entering");
+////            Values currentValues, targetValues;
+////            auto layout = event.eventPayload->asJSIValue(getUIRuntime()).asObject(getUIRuntime()).getProperty(getUIRuntime(), "layout").asObject(getUIRuntime());
+////            targetValues.x=layout.getProperty(getUIRuntime(), "x").asNumber();
+////            targetValues.y=layout.getProperty(getUIRuntime(), "y").asNumber();
+////            targetValues.width=layout.getProperty(getUIRuntime(), "width").asNumber();
+////            targetValues.height=layout.getProperty(getUIRuntime(), "height").asNumber();
+//////            lap->startAnimationWithWrapper(node, tag, LayoutAnimationType::ENTERING, targetValues);
+////            lap->startAnimation(tag, LayoutAnimationType::ENTERING, targetValues);
+////          }
+//        }
+////        if(lap->modifiedViews_ && lap->modifiedViews_->contains(tag)){
+////          if (layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::LAYOUT))
+////          {
+////            auto current = lap->modifiedNodes_->at(tag);
+////            auto& currentNode = static_cast<const YogaLayoutableShadowNode&>(*current);
+////            auto target = lap->modifiedNodesTarget_->at(tag);
+////            auto& targetNode = static_cast<const YogaLayoutableShadowNode&>(*target);
+////            auto currentView = lap->modifiedViews_->at(tag);
+////            Values currentValues, targetValues;
+////            auto lm = currentNode.getLayoutMetrics();
+////            auto deltaX = currentView.layoutMetrics.frame.origin.x - lm.frame.origin.x;
+////            auto deltaY = currentView.layoutMetrics.frame.origin.y - lm.frame.origin.y;
+////            currentValues.x = lm.frame.origin.x + deltaX;
+////            currentValues.y = lm.frame.origin.y + deltaY;
+////            currentValues.width = lm.frame.size.width;
+////            currentValues.height = lm.frame.size.height;
+////            auto layout = event.eventPayload->asJSIValue(getUIRuntime()).asObject(getUIRuntime()).getProperty(getUIRuntime(), "layout").asObject(getUIRuntime());
+////            targetValues.x=layout.getProperty(getUIRuntime(), "x").asNumber() + deltaX;
+////            targetValues.y=layout.getProperty(getUIRuntime(), "y").asNumber() + deltaY;
+////            targetValues.width=layout.getProperty(getUIRuntime(), "width").asNumber();
+////            targetValues.height=layout.getProperty(getUIRuntime(), "height").asNumber();
+////            lap->startLayoutLayoutAnimation(tag, currentValues, targetValues);
+//////            lap->startLayoutLayoutAnimationWithWrapper(target, tag, LayoutAnimationType::LAYOUT, currentValues, targetValues);
+////          }
+////          lap->modifiedViews_->erase(tag);
+////          lap->modifiedViewsTarget_->erase(tag);
+////        }
+//        
+//      }
+////      layoutAnimationsManager_.startLayoutAnimation(getUIRuntime(), event.eventTarget->getTag(), LayoutAnimationType::ENTERING, nullptr);
+////      jsi::Object layout = std::dynamic_pointer_cast<const ValueFactoryEventPayload>(event.eventPayload)->asJSIValue(getUIRuntime()).asObject(getUIRuntime());
+////      std::printf("hello");
+//    }
+//    return false;
+//  };
+//  scheduler->addEventListener(std::make_shared<EventListener>(el));
   commitHook_ =
-      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_, lap);
+      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_, layoutAnimationsProxy_);
 #if REACT_NATIVE_MINOR_VERSION >= 73
   mountHook_ =
       std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);

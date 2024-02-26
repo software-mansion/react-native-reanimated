@@ -6,7 +6,7 @@
 #include <memory>
 
 #include "PropsRegistry.h"
-#include "ShadowView.h"
+#include <react/renderer/mounting/ShadowView.h>
 #include "LayoutAnimationsProxy.h"
 
 using namespace facebook::react;

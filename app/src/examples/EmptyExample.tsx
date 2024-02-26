@@ -1,4 +1,4 @@
-import { Button, StyleSheet, View } from 'react-native';
+import { Button, StyleSheet, View, Text } from 'react-native';
 import Animated, {
   BounceIn,
   BounceInUp,
@@ -9,11 +9,12 @@ import Animated, {
   FadingTransition,
   LayoutAnimationFunction,
   LinearTransition,
+  runOnUI,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import React, { useEffect } from 'react';
+import React, { useEffect, useLayoutEffect } from 'react';
 
 const custom: LayoutAnimationFunction = (values) => {
   'worklet';
@@ -42,6 +43,7 @@ export default function EmptyExample() {
   const [show, setShow] = React.useState(true);
   const [show2, setShow2] = React.useState(false);
   const [refresher, setRefresher] = React.useState(false);
+  const [x, setX] = React.useState(0);
   const sv = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -54,12 +56,23 @@ export default function EmptyExample() {
   //   sv.value = withTiming(100, { duration: 1000 });
   // }, [sv]);
 
+  useLayoutEffect(() => {
+    console.log('layout effect');
+    // runOnUIImmediately(() => {
+    //   'worklet';
+    //   console.log('halo from worklet');
+    // })();
+    setX((x) => ++x);
+    // setImmediate(() => console.log('setImmediate'));
+  }, [show2]);
+
   return (
     <View style={styles.container}>
       {/* <View style={styles.box} /> */}
       {/* <Animated.View style={[styles.box, animatedStyle]} /> */}
       <Button title="toggle" onPress={() => setShow(!show)} />
       <Button title="toggle" onPress={() => setShow2(!show2)} />
+      <Text>{x}</Text>
       {/* <Button
         title="start"
         onPress={() => {
@@ -77,7 +90,7 @@ export default function EmptyExample() {
       )}
       {show2 && (
         <Animated.View
-          entering={FadeInUp}
+          entering={FadeInUp.duration(10000)}
           // onLayout={() => {}}
           layout={LinearTransition}
           onTouchStart={() => setRefresher(!refresher)}
@@ -93,7 +106,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     marginTop: 200,
-    backgroundColor: 'black',
+    backgroundColor: 'pink',
     // justifyContent: 'center',
   },
   box: {
@@ -107,6 +120,60 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     backgroundColor: 'blue',
-    opacity: 0.5,
+    // opacity: 0.5,
   },
 });
+
+// import React, { useState } from 'react';
+// import {
+//   LayoutAnimation,
+//   Platform,
+//   StyleSheet,
+//   Text,
+//   TouchableOpacity,
+//   UIManager,
+//   View,
+// } from 'react-native';
+
+// if (
+//   Platform.OS === 'android' &&
+//   UIManager.setLayoutAnimationEnabledExperimental
+// ) {
+//   UIManager.setLayoutAnimationEnabledExperimental(true);
+// }
+// const App = () => {
+//   const [expanded, setExpanded] = useState(false);
+
+//   return (
+//     <View style={style.container}>
+//       <TouchableOpacity
+//         onPress={() => {
+//           LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
+//           setExpanded(!expanded);
+//         }}>
+//         <Text>Press me to {expanded ? 'collapse' : 'expand'}!</Text>
+//       </TouchableOpacity>
+//       {expanded && (
+//         <View style={style.tile}>
+//           <Text>I disappear sometimes!</Text>
+//         </View>
+//       )}
+//     </View>
+//   );
+// };
+
+// const style = StyleSheet.create({
+//   tile: {
+//     backgroundColor: 'lightgrey',
+//     borderWidth: 0.5,
+//     borderColor: '#d6d7da',
+//   },
+//   container: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     overflow: 'hidden',
+//   },
+// });
+
+// export default App;

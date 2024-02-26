@@ -99,6 +99,8 @@ if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
         "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
         "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
         "${REACT_NATIVE_DIR}/ReactCommon/yoga"
+        "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/componentregistry"
+        "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/core"
     )
 else()
     file(GLOB LIBFBJNI_INCLUDE_DIR ${FBJNI_HEADERS_DIR})
@@ -307,6 +309,7 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
         ReactAndroid::react_debug
         ReactAndroid::react_render_core
         ReactAndroid::react_render_mounting
+        ReactAndroid::react_render_componentregistry
         ReactAndroid::react_render_scheduler
         ReactAndroid::react_render_uimanager
         ReactAndroid::rrc_view
