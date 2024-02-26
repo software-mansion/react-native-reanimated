@@ -1,5 +1,5 @@
 'use strict';
-import { useRef } from 'react';
+import { useMemo } from 'react';
 import { makeMutable } from './core';
 import type { SharedValue } from './commonTypes';
 import type { Descriptor } from './hook/commonTypes';
@@ -64,22 +64,18 @@ function useViewRefSetNative() {
 }
 
 function useViewRefSetJS<T>(): ViewRefSet<T> {
-  const ref = useRef<ViewRefSet<T> | null>(null);
-  if (ref.current === null) {
-    const data: ViewRefSet<T> = {
-      items: new Set(),
-
+  const viewRefSet = useMemo(
+    () => ({
+      items: new Set<T>(),
       add: (item: T) => {
-        if (data.items.has(item)) return;
-        data.items.add(item);
+        viewRefSet.items.add(item);
       },
-
       remove: (item: T) => {
-        data.items.delete(item);
+        viewRefSet.items.delete(item);
       },
-    };
-    ref.current = data;
-  }
+    }),
+    []
+  );
 
-  return ref.current;
+  return viewRefSet;
 }
