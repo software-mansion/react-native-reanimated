@@ -256,32 +256,41 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
     const ShadowNode::Shared &shadowNode) {
   auto newestCloneOfShadowNode =
       uiManager_->getNewestCloneOfShadowNode(*shadowNode);
-  auto props = newestCloneOfShadowNode->getProps();
-  auto viewProps = std::static_pointer_cast<const ViewProps>(props);
-  auto layoutableShadowNode =
-      traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
-  const auto &frame = layoutableShadowNode->layoutMetrics_.frame;
 
-  if (propName == "width") {
-    return std::to_string(frame.size.width);
-  } else if (propName == "height") {
-    return std::to_string(frame.size.height);
-  } else if (propName == "top") {
-    return std::to_string(frame.origin.y);
-  } else if (propName == "left") {
-    return std::to_string(frame.origin.x);
-  } else if (propName == "opacity") {
-    return std::to_string(viewProps->opacity);
-  } else if (propName == "zIndex") {
-    if (viewProps->zIndex.has_value()) {
-      return std::to_string(*viewProps->zIndex);
+  if (propName == "width" || propName == "height" || propName == "top" ||
+      propName == "left") {
+    // These pops are calculated from frame
+    auto layoutableShadowNode =
+        traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
+    const auto &frame = layoutableShadowNode->layoutMetrics_.frame;
+
+    if (propName == "width") {
+      return std::to_string(frame.size.width);
+    } else if (propName == "height") {
+      return std::to_string(frame.size.height);
+    } else if (propName == "top") {
+      return std::to_string(frame.origin.y);
+    } else if (propName == "left") {
+      return std::to_string(frame.origin.x);
     }
-  } else if (propName == "backgroundColor") {
-    return intColorToHex(*viewProps->backgroundColor);
+  } else {
+    // These pops are calculated from viewProps
+    auto props = newestCloneOfShadowNode->getProps();
+    auto viewProps = std::static_pointer_cast<const ViewProps>(props);
+    if (propName == "opacity") {
+      return std::to_string(viewProps->opacity);
+    } else if (propName == "zIndex") {
+      if (viewProps->zIndex.has_value()) {
+        return std::to_string(*viewProps->zIndex);
+      }
+    } else if (propName == "backgroundColor") {
+      return intColorToHex(*viewProps->backgroundColor);
+    }
   }
 
-  return "Getting property '" + propName +
-      "' with function 'getViewProp' is not supported";
+  throw std::runtime_error(std::string(
+      "Getting property '" + propName +
+      "' with function 'getViewProp' is not supported"));
 }
 
 jsi::Value NativeReanimatedModule::getViewProp(
@@ -537,10 +546,11 @@ bool NativeReanimatedModule::handleRawEvent(
     double currentTime) {
   const EventTarget *eventTarget = rawEvent.eventTarget.get();
   if (eventTarget == nullptr) {
-    // after app reload scrollview is unmounted and its content offset is set to
-    // 0 and view is thrown into recycle pool setting content offset triggers
-    // scroll event eventTarget is null though, because it's unmounting we can
-    // just ignore this event, because it's an event on unmounted component
+    // after app reload scrollview is unmounted and its content offset is set
+    // to 0 and view is thrown into recycle pool setting content offset
+    // triggers scroll event eventTarget is null though, because it's
+    // unmounting we can just ignore this event, because it's an event on
+    // unmounted component
     return false;
   }
 
@@ -561,8 +571,8 @@ bool NativeReanimatedModule::handleRawEvent(
   auto res = handleEvent(eventType, tag, std::move(payload), currentTime);
   // TODO: we should call performOperations conditionally if event is handled
   // (res == true), but for now handleEvent always returns false. Thankfully,
-  // performOperations does not trigger a lot of code if there is nothing to be
-  // done so this is fine for now.
+  // performOperations does not trigger a lot of code if there is nothing to
+  // be done so this is fine for now.
   performOperations();
   return res;
 }
@@ -607,8 +617,8 @@ void NativeReanimatedModule::performOperations() {
       tagsToRemove_.clear();
     }
 
-    // Even if only non-layout props are changed, we need to store the update in
-    // PropsRegistry anyway so that React doesn't overwrite it in the next
+    // Even if only non-layout props are changed, we need to store the update
+    // in PropsRegistry anyway so that React doesn't overwrite it in the next
     // render. Currently, only opacity and transform are treated in a special
     // way but backgroundColor, shadowOpacity etc. would get overwritten (see
     // `_propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN`).
@@ -654,9 +664,9 @@ void NativeReanimatedModule::performOperations() {
   if (propsRegistry_->shouldReanimatedSkipCommit()) {
     // It may happen that `performOperations` is called on the UI thread
     // while React Native tries to commit a new tree on the JS thread.
-    // In this case, we should skip the commit here and let React Native do it.
-    // The commit will include the current values from PropsRegistry
-    // which will be applied in ReanimatedCommitHook.
+    // In this case, we should skip the commit here and let React Native do
+    // it. The commit will include the current values from PropsRegistry which
+    // will be applied in ReanimatedCommitHook.
     return;
   }
 
@@ -679,9 +689,10 @@ void NativeReanimatedModule::performOperations() {
             react_native_assert(family.getSurfaceId() == surfaceId_);
 
 #if REACT_NATIVE_MINOR_VERSION >= 73
-            // Fix for catching nullptr returned from commit hook was introduced
-            // in 0.72.4 but we have only check for minor version of React
-            // Native so enable that optimization in React Native >= 0.73
+            // Fix for catching nullptr returned from commit hook was
+            // introduced in 0.72.4 but we have only check for minor version
+            // of React Native so enable that optimization in React Native >=
+            // 0.73
             if (propsRegistry_->shouldReanimatedSkipCommit()) {
               return nullptr;
             }
@@ -757,9 +768,9 @@ jsi::Value NativeReanimatedModule::measure(
       *shadowNode, nullptr, {/* .includeTransform = */ true});
 
   if (layoutMetrics == EmptyLayoutMetrics) {
-    // Originally, in this case React Native returns `{0, 0, 0, 0, 0, 0}`, most
-    // likely due to the type of measure callback function which accepts just an
-    // array of numbers (not null). In Reanimated, `measure` returns
+    // Originally, in this case React Native returns `{0, 0, 0, 0, 0, 0}`,
+    // most likely due to the type of measure callback function which accepts
+    // just an array of numbers (not null). In Reanimated, `measure` returns
     // `MeasuredDimensions | null`.
     return jsi::Value::null();
   }
