@@ -22,6 +22,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   KeyboardState _state;
   CFTimeInterval _animtionStartTimestamp;
   float _targetKeyboardHeight;
+  REAUIView *_keyboardView;
 }
 
 - (instancetype)init
@@ -81,11 +82,17 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
 #else
 
+- (void)runListeners:(float)keyboardHeight
+{
+  for (NSString *key in _listeners.allKeys) {
+    ((KeyboardEventListenerBlock)_listeners[key])(_state, keyboardHeight);
+  }
+}
+
 - (void)runUpdater
 {
   [[self getDisplayLink] setPaused:NO];
   _animtionStartTimestamp = 0;
-  [self updateKeyboardFrame:true];
 }
 
 - (float)getTargetTimestamp
@@ -104,9 +111,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 {
   CFTimeInterval elapsedTime = _displayLink.targetTimestamp - _animtionStartTimestamp;
   float timeProgress = elapsedTime / keyboardAnimationDuration;
-  if (timeProgress > 1) {
-    timeProgress = 1;
-  }
+  timeProgress = fmax(fmin(timeProgress, 1), 0);
   float x = timeProgress;
   float progress = 1 - a1 * pow(1 - x, a2) - b1 * x * pow(1 - x, b2) - c1 * pow(x, 2) * pow(1 - x, c2);
   return progress;
@@ -163,18 +168,9 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
 - (void)updateKeyboardFrame
 {
-  [self updateKeyboardFrame:false];
-}
-
-- (void)updateKeyboardFrame:(bool)useStaticHeight
-{
-  bool isKeyboardAnimationRunning = _measuringView.layer.presentationLayer.animationKeys.count != 0;
   CGFloat keyboardHeight = 0;
-  if (isKeyboardAnimationRunning && !useStaticHeight) {
-    /*
-      _state != OPEN indicates that we don't want to use estimators if the keyboard type
-      has been changed, for example, from QWERTY to emoji.
-    */
+  bool isKeyboardAnimationRunning = [self hasAnyAnimation:_measuringView];
+  if (isKeyboardAnimationRunning) {
     keyboardHeight = [self getAnimatingKeyboardHeight];
   } else {
     // measuring view is no longer running an animation, we should settle in OPEN/CLOSE state
@@ -187,10 +183,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
     // stop display link updates if no animation is running
     [[self getDisplayLink] setPaused:YES];
   }
-
-  for (NSString *key in _listeners.allKeys) {
-    ((KeyboardEventListenerBlock)_listeners[key])(_state, keyboardHeight);
-  }
+  [self runListeners:keyboardHeight];
 }
 
 - (void)keyboardWillChangeFrame:(NSNotification *)notification
@@ -210,13 +203,18 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   } else if (endHeight == 0 && _state != CLOSED) {
     _state = CLOSING;
   }
-
-  _measuringView.frame = CGRectMake(0, -1, 0, beginHeight);
-  [UIView animateWithDuration:animationDuration
-                   animations:^{
-                     self->_measuringView.frame = CGRectMake(0, -1, 0, endHeight);
-                   }];
-  [self runUpdater];
+  auto keyboardView = [self getKeyboardView];
+  bool hasKeyboardAniamtion = [self hasAnyAnimation:keyboardView];
+  if (hasKeyboardAniamtion) {
+    _measuringView.frame = CGRectMake(0, -1, 0, beginHeight);
+    [UIView animateWithDuration:animationDuration
+                     animations:^{
+                       self->_measuringView.frame = CGRectMake(0, -1, 0, endHeight);
+                     }];
+    [self runUpdater];
+  } else {
+    [self runListeners:endHeight];
+  }
 }
 
 - (int)subscribeForKeyboardEvents:(KeyboardEventListenerBlock)listener
@@ -262,6 +260,36 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
     self->_displayLink = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
   });
+}
+
+- (bool)hasAnyAnimation:(REAUIView *)view
+{
+  return view.layer.presentationLayer.animationKeys.count != 0;
+  ;
+}
+
+- (REAUIView *_Nullable)findClass:(NSString *)className inViewsList:(NSArray<REAUIView *> *)viewList
+{
+  for (UIWindow *view in viewList) {
+    if ([NSStringFromClass([view class]) isEqual:className]) {
+      return view;
+    }
+  }
+  return nil;
+}
+
+// Inspired by:
+// https://stackoverflow.com/questions/32598490/show-uiview-with-buttons-over-keyboard-like-in-skype-viber-messengers-swift-i
+- (REAUIView *_Nullable)getKeyboardView
+{
+  if (_keyboardView) {
+    return _keyboardView;
+  }
+  NSArray<UIWindow *> *windows = [UIApplication sharedApplication].windows;
+  auto widow = [self findClass:@"UITextEffectsWindow" inViewsList:windows];
+  auto keyboardContainer = [self findClass:@"UIInputSetContainerView" inViewsList:widow.subviews];
+  _keyboardView = [self findClass:@"UIInputSetHostView" inViewsList:keyboardContainer.subviews];
+  return _keyboardView;
 }
 
 #endif
