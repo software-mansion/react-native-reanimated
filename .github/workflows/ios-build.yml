@@ -75,7 +75,9 @@ jobs:
 
       - name: Install Pods
         working-directory: ${{ matrix.working-directory }}/ios
-        run: pod install
+        run: |
+          bundler install
+          bundler exec pod install
 
       - name: Restore build artifacts from cache
         uses: actions/cache@v3

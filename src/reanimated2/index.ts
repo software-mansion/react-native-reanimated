@@ -245,6 +245,7 @@ export {
   InterfaceOrientation,
   KeyboardState,
   ReduceMotion,
+  isWorkletFunction,
 } from './commonTypes';
 export type { FrameInfo } from './frameCallback';
 export { getUseOfValueInStyleWarning } from './pluginUtils';

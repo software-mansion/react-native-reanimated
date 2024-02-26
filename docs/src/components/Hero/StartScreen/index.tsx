@@ -20,10 +20,12 @@ const StartScreen = () => {
           </div>
           <div className={styles.lowerHeading}>
             <Horse />
-            <HomepageButton
-              href="/react-native-reanimated/docs/fundamentals/getting-started"
-              title="Get started"
-            />
+            <div className={styles.buttonContainer}>
+              <HomepageButton
+                href="/react-native-reanimated/docs/fundamentals/getting-started"
+                title="Get started"
+              />
+            </div>
           </div>
         </div>
       </div>

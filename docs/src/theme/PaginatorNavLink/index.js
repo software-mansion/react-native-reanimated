@@ -2,32 +2,20 @@ import React from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import styles from './styles.module.css';
-
-import ArrowLeft from '@site/static/img/arrow-left.svg';
-import ArrowRight from '@site/static/img/arrow-right.svg';
-
-import ArrowLeftDark from '@site/static/img/arrow-left-dark.svg';
-import ArrowRightDark from '@site/static/img/arrow-right-dark.svg';
-import { useColorMode } from '@docusaurus/theme-common';
-
-const arrows = {
-  left: {
-    light: <ArrowLeft />,
-    dark: <ArrowLeftDark />,
-  },
-
-  right: {
-    light: <ArrowRight />,
-    dark: <ArrowRightDark />,
-  },
-};
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 
 export default function PaginatorNavLink(props) {
   const { permalink, title, subLabel, isNext } = props;
-  const { colorMode } = useColorMode();
 
-  const matchDirectedArrow = (isNextPaginator) => {
-    return isNextPaginator ? arrows['right'] : arrows['left'];
+  const rightArrow = {
+    light: useBaseUrl('/img/arrow-right.svg'),
+    dark: useBaseUrl('/img/arrow-right-dark.svg'),
+  };
+
+  const leftArrow = {
+    light: useBaseUrl('/img/arrow-left.svg'),
+    dark: useBaseUrl('/img/arrow-left-dark.svg'),
   };
 
   return (
@@ -45,7 +33,7 @@ export default function PaginatorNavLink(props) {
             isNext ? styles.paginationNext : styles.paginationPrevious
           )}>
           <div className={styles.paginationArrow}>
-            {matchDirectedArrow(isNext)[colorMode]}
+            <ThemedImage sources={isNext ? rightArrow : leftArrow} />
           </div>
           <div className="pagination-nav__sublabel">{subLabel}</div>
         </div>
