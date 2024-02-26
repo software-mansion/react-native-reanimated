@@ -49,8 +49,6 @@ export const withRepeat = function <T extends AnimationObject>(
           ? _nextAnimation()
           : _nextAnimation;
 
-      const initialAnimationStartValue = nextAnimation.startValue;
-
       function repeat(animation: RepeatAnimation, now: Timestamp): boolean {
         const finished = nextAnimation.onFrame(nextAnimation, now);
         animation.current = nextAnimation.current;
@@ -102,15 +100,7 @@ export const withRepeat = function <T extends AnimationObject>(
         now: Timestamp,
         previousAnimation: Animation<any> | null
       ): void {
-        // Detect re-render
-        const wasInterrupted = value !== initialAnimationStartValue;
-        // We check for undefined only because 2nd argument of onStart can't be undefined
-        // initialAnimationStartValue shouldn't be undefined, but it is taken from AnimationObject's .startValue field which can be
-        const startingValue =
-          wasInterrupted && initialAnimationStartValue !== undefined
-            ? initialAnimationStartValue
-            : value;
-        animation.startValue = startingValue;
+        animation.startValue = value;
         animation.reps = 0;
 
         // child animations inherit the setting, unless they already have it defined
@@ -129,12 +119,7 @@ export const withRepeat = function <T extends AnimationObject>(
           animation.current = animation.startValue;
           animation.onFrame = () => true;
         } else {
-          nextAnimation.onStart(
-            nextAnimation,
-            startingValue,
-            now,
-            previousAnimation
-          );
+          nextAnimation.onStart(nextAnimation, value, now, previousAnimation);
         }
       }
 
