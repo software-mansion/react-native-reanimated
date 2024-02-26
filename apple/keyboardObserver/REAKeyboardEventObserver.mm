@@ -20,7 +20,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   NSMutableDictionary *_listeners;
   READisplayLink *_displayLink;
   KeyboardState _state;
-  CFTimeInterval _animtionStartTimestamp;
+  CFTimeInterval _animationStartTimestamp;
   float _targetKeyboardHeight;
   REAUIView *_keyboardView;
 }
@@ -31,7 +31,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   _listeners = [[NSMutableDictionary alloc] init];
   _nextListenerId = @0;
   _state = UNKNOWN;
-  _animtionStartTimestamp = 0;
+  _animationStartTimestamp = 0;
   NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
 
   [notificationCenter addObserver:self
@@ -92,7 +92,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 - (void)runUpdater
 {
   [[self getDisplayLink] setPaused:NO];
-  _animtionStartTimestamp = 0;
+  _animationStartTimestamp = 0;
 }
 
 - (float)getTargetTimestamp
@@ -109,7 +109,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
                                   c1:(float)c1
                                   c2:(float)c2
 {
-  CFTimeInterval elapsedTime = _displayLink.targetTimestamp - _animtionStartTimestamp;
+  CFTimeInterval elapsedTime = _displayLink.targetTimestamp - _animationStartTimestamp;
   float timeProgress = elapsedTime / keyboardAnimationDuration;
   timeProgress = fmax(fmin(timeProgress, 1), 0);
   float x = timeProgress;
@@ -117,7 +117,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   return progress;
 }
 
-- (CGFloat)estimateCurrentKeyboardHeightDuringAppearing
+- (CGFloat)estimateAppearingKeyboardHeight
 {
   // Values comes from estimation: https://www.desmos.com/calculator/clhzejf5bs
   float progress = [self estimateProgressForDuration:0.5 a1:1 a2:5.1 b1:1.6 b2:7.6 c1:0.2 c2:2.4];
@@ -125,7 +125,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   return currentKeyboardHeight;
 }
 
-- (CGFloat)estimateCurrentKeyboardHeightDuringDisappearing
+- (CGFloat)estimateDisappearingKeyboardHeight
 {
   // Values comes from estimation: https://www.desmos.com/calculator/d3v550ofzs
   float progress = [self estimateProgressForDuration:0.45 a1:1 a2:5.5 b1:2.5 b2:6.4 c1:1.6 c2:3.3];
@@ -135,9 +135,9 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
 - (float)getAnimatingKeyboardHeight
 {
-  if (_animtionStartTimestamp == 0) {
+  if (_animationStartTimestamp == 0) {
     // DisplayLink animations usually start later than CAAnimations.
-    _animtionStartTimestamp = _displayLink.targetTimestamp - _displayLink.duration;
+    _animationStartTimestamp = _displayLink.targetTimestamp - _displayLink.duration;
   }
   CAAnimation *positionAnimation = [_measuringView.layer animationForKey:@"position"];
   float caAnimationBeginTime = [[positionAnimation valueForKey:@"beginTime"] floatValue];
@@ -147,14 +147,14 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
       better visual effects. The CAAnimation timer is only available from the second
       frame of the animation.
     */
-    _animtionStartTimestamp = caAnimationBeginTime;
+    _animationStartTimestamp = caAnimationBeginTime;
   }
 
   CGFloat keyboardHeight = 0;
   if (_state == OPENING) {
-    keyboardHeight = [self estimateCurrentKeyboardHeightDuringAppearing];
+    keyboardHeight = [self estimateAppearingKeyboardHeight];
   } else if (_state == CLOSING) {
-    keyboardHeight = [self estimateCurrentKeyboardHeightDuringDisappearing];
+    keyboardHeight = [self estimateDisappearingKeyboardHeight];
   }
   return keyboardHeight;
 }
@@ -204,8 +204,8 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
     _state = CLOSING;
   }
   auto keyboardView = [self getKeyboardView];
-  bool hasKeyboardAniamtion = [self hasAnyAnimation:keyboardView];
-  if (hasKeyboardAniamtion) {
+  bool hasKeyboardAnimation = [self hasAnyAnimation:keyboardView];
+  if (hasKeyboardAnimation) {
     _measuringView.frame = CGRectMake(0, -1, 0, beginHeight);
     [UIView animateWithDuration:animationDuration
                      animations:^{
@@ -278,16 +278,15 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   return nil;
 }
 
-// Inspired by:
-// https://stackoverflow.com/questions/32598490/show-uiview-with-buttons-over-keyboard-like-in-skype-viber-messengers-swift-i
+// Inspired by: https://stackoverflow.com/questions/32598490
 - (REAUIView *_Nullable)getKeyboardView
 {
   if (_keyboardView) {
     return _keyboardView;
   }
   NSArray<UIWindow *> *windows = [UIApplication sharedApplication].windows;
-  auto widow = [self findClass:@"UITextEffectsWindow" inViewsList:windows];
-  auto keyboardContainer = [self findClass:@"UIInputSetContainerView" inViewsList:widow.subviews];
+  auto window = [self findClass:@"UITextEffectsWindow" inViewsList:windows];
+  auto keyboardContainer = [self findClass:@"UIInputSetContainerView" inViewsList:window.subviews];
   _keyboardView = [self findClass:@"UIInputSetHostView" inViewsList:keyboardContainer.subviews];
   return _keyboardView;
 }
