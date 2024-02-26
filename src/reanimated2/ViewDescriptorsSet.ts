@@ -64,7 +64,7 @@ function useViewRefSetNative() {
 }
 
 function useViewRefSetJS<T>(): ViewRefSet<T> {
-  const viewRefSet = useMemo(
+  const viewRefSet = useMemo<ViewRefSet<T>>(
     () => ({
       items: new Set<T>(),
       add: (item: T) => {
