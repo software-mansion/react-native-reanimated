@@ -42,7 +42,7 @@ export function valueSetter<Value>(
       animation.onStart(animation, mutable.value, timestamp, previousAnimation);
     };
     const currentTimestamp =
-      global.__frameTimestamp || _getAnimationTimestamp();
+      global.__frameTimestamp || global._getAnimationTimestamp();
     initializeAnimation(currentTimestamp);
 
     const step = (newTimestamp: number) => {
