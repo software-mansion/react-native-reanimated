@@ -6,8 +6,8 @@ import com.facebook.react.uimanager.PixelUtil;
 public class Keyboard {
   private KeyboardState state;
   private int height = 0;
-  private final int contentTypeMask = WindowInsetsCompat.Type.ime();
-  private final int systemBarTypeMask = WindowInsetsCompat.Type.systemBars();
+  private static final int CONTENT_TYPE_MASK = WindowInsetsCompat.Type.ime();
+  private static final int SYSTEM_BAR_TYPE_MASK = WindowInsetsCompat.Type.systemBars();
 
   public KeyboardState getState() {
     return state;
@@ -18,8 +18,8 @@ public class Keyboard {
   }
 
   public void updateHeight(WindowInsetsCompat insets) {
-    int contentBottomInset = insets.getInsets(contentTypeMask).bottom;
-    int systemBarBottomInset = insets.getInsets(systemBarTypeMask).bottom;
+    int contentBottomInset = insets.getInsets(CONTENT_TYPE_MASK).bottom;
+    int systemBarBottomInset = insets.getInsets(SYSTEM_BAR_TYPE_MASK).bottom;
     int keyboardHeightDip = contentBottomInset - systemBarBottomInset;
     height = (int) PixelUtil.toDIPFromPixel(Math.max(0, keyboardHeightDip));
   }
