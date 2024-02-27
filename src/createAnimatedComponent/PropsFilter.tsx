@@ -54,10 +54,8 @@ export class PropsFilter implements IPropsFilter {
         });
         props[key] = StyleSheet.flatten(processedStyle);
       } else if (key === 'animatedProps') {
-        const animatedProp = inputProps.animatedProps as Partial<
-          AnimatedComponentProps<AnimatedProps>
-        >;
-        if (animatedProp.initial !== undefined) {
+        const animatedProp = inputProps.animatedProps as Partial<AnimatedProps>;
+        if (animatedProp !== null && animatedProp.initial !== undefined) {
           Object.keys(animatedProp.initial.value).forEach((initialValueKey) => {
             props[initialValueKey] =
               animatedProp.initial?.value[initialValueKey];

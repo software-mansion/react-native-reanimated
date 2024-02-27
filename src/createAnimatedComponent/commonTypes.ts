@@ -16,11 +16,15 @@ import type { SkipEnteringContext } from '../reanimated2/component/LayoutAnimati
 import type { ShadowNodeWrapper } from '../reanimated2/commonTypes';
 import type { ViewConfig } from '../ConfigHelper';
 
-export interface AnimatedProps extends Record<string, unknown> {
+interface AnimatedPropsInterface extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;
   viewsRef?: ViewRefSet<unknown>;
   initial?: SharedValue<StyleProps>;
 }
+/** Type null is included only in our DEV types, not in PROD ones
+ * Which means that its not exposed in our API, but we still want to correctly handle situation if null is passed anyway
+ * see AnimatedProps in src/reanimated2/helperTypes.ts */
+export type AnimatedProps = null | AnimatedPropsInterface;
 
 export interface ViewInfo {
   viewTag: number | HTMLElement | null;
@@ -58,34 +62,35 @@ export type LayoutAnimationStaticContext = {
   presetName: string;
 };
 
-export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
-  forwardedRef?: Ref<Component>;
-  style?: NestedArray<StyleProps>;
-  animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
-  animatedStyle?: StyleProps;
-  layout?: (
-    | BaseAnimationBuilder
-    | ILayoutAnimationBuilder
-    | typeof BaseAnimationBuilder
-  ) &
-    LayoutAnimationStaticContext;
-  entering?: (
-    | BaseAnimationBuilder
-    | typeof BaseAnimationBuilder
-    | EntryExitAnimationFunction
-    | Keyframe
-  ) &
-    LayoutAnimationStaticContext;
-  exiting?: (
-    | BaseAnimationBuilder
-    | typeof BaseAnimationBuilder
-    | EntryExitAnimationFunction
-    | Keyframe
-  ) &
-    LayoutAnimationStaticContext;
-  sharedTransitionTag?: string;
-  sharedTransitionStyle?: SharedTransition;
-};
+export type AnimatedComponentProps<P extends null | Record<string, unknown>> =
+  P & {
+    forwardedRef?: Ref<Component>;
+    style?: NestedArray<StyleProps>;
+    animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
+    animatedStyle?: StyleProps;
+    layout?: (
+      | BaseAnimationBuilder
+      | ILayoutAnimationBuilder
+      | typeof BaseAnimationBuilder
+    ) &
+      LayoutAnimationStaticContext;
+    entering?: (
+      | BaseAnimationBuilder
+      | typeof BaseAnimationBuilder
+      | EntryExitAnimationFunction
+      | Keyframe
+    ) &
+      LayoutAnimationStaticContext;
+    exiting?: (
+      | BaseAnimationBuilder
+      | typeof BaseAnimationBuilder
+      | EntryExitAnimationFunction
+      | Keyframe
+    ) &
+      LayoutAnimationStaticContext;
+    sharedTransitionTag?: string;
+    sharedTransitionStyle?: SharedTransition;
+  };
 
 export interface AnimatedComponentRef extends Component {
   setNativeProps?: (props: Record<string, unknown>) => void;
