@@ -353,11 +353,11 @@ int NativeProxy::subscribeForKeyboardEvents(
     std::function<void(int, int)> callback,
     bool isStatusBarTranslucent) {
   static const auto method =
-      getJniMethod<int(KeyboardJSCallbackWrapper::javaobject, bool)>(
+      getJniMethod<int(KeyboardWorkletWrapper::javaobject, bool)>(
           "subscribeForKeyboardEvents");
   return method(
       javaPart_.get(),
-      KeyboardJSCallbackWrapper::newObjectCxxArgs(std::move(callback)).get(),
+      KeyboardWorkletWrapper::newObjectCxxArgs(std::move(callback)).get(),
       isStatusBarTranslucent);
 }
 

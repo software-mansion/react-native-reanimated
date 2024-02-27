@@ -22,7 +22,7 @@ import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.ReanimatedModule;
 import com.swmansion.reanimated.Utils;
 import com.swmansion.reanimated.keyboard.KeyboardAnimationManager;
-import com.swmansion.reanimated.keyboard.KeyboardJSCallbackWrapper;
+import com.swmansion.reanimated.keyboard.KeyboardWorkletWrapper;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
@@ -214,7 +214,7 @@ public abstract class NativeProxyCommon {
 
   @DoNotStrip
   public int subscribeForKeyboardEvents(
-      KeyboardJSCallbackWrapper jsCallbackWrapper, boolean isStatusBarTranslucent) {
+      KeyboardWorkletWrapper jsCallbackWrapper, boolean isStatusBarTranslucent) {
     return keyboardAnimationManager.subscribeForKeyboardUpdates(
         jsCallbackWrapper, isStatusBarTranslucent);
   }

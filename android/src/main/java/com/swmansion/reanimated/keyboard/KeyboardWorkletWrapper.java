@@ -4,13 +4,13 @@ import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 
 @DoNotStrip
-public class KeyboardJSCallbackWrapper {
+public class KeyboardWorkletWrapper {
   @DoNotStrip private final HybridData mHybridData;
 
   @DoNotStrip
-  private KeyboardJSCallbackWrapper(HybridData hybridData) {
+  private KeyboardWorkletWrapper(HybridData hybridData) {
     mHybridData = hybridData;
   }
 
-  public native void callCallback(int keyboardState, int height);
+  public native void invoke(int keyboardState, int height);
 }
