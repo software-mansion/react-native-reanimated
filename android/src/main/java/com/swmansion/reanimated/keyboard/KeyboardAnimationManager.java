@@ -11,7 +11,7 @@ interface NotifyAboutKeyboardChangeFunction {
 
 public class KeyboardAnimationManager {
   private int nextListenerId = 0;
-  private final HashMap<Integer, KeyboardJSCallbackWrapper> listeners = new HashMap<>();
+  private final HashMap<Integer, KeyboardWorkletWrapper> listeners = new HashMap<>();
   private final Keyboard keyboard = new Keyboard();
   private final WindowsInsetsManager windowsInsetsManager;
 
@@ -21,7 +21,7 @@ public class KeyboardAnimationManager {
   }
 
   public int subscribeForKeyboardUpdates(
-      KeyboardJSCallbackWrapper callback, boolean isStatusBarTranslucent) {
+      KeyboardWorkletWrapper callback, boolean isStatusBarTranslucent) {
     int listenerId = nextListenerId++;
     if (listeners.isEmpty()) {
       KeyboardAnimationCallback keyboardAnimationCallback =
@@ -40,8 +40,8 @@ public class KeyboardAnimationManager {
   }
 
   public void notifyAboutKeyboardChange() {
-    for (KeyboardJSCallbackWrapper listener : listeners.values()) {
-      listener.callCallback(keyboard.getState().asInt(), keyboard.getHeight());
+    for (KeyboardWorkletWrapper listener : listeners.values()) {
+      listener.invoke(keyboard.getState().asInt(), keyboard.getHeight());
     }
   }
 }
