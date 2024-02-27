@@ -18,6 +18,8 @@ export class RollInLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'RollInLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -47,7 +49,7 @@ export class RollInLeft
           ],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -64,6 +66,8 @@ export class RollInRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'RollInRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -90,7 +94,7 @@ export class RollInRight
           transform: [{ translateX: values.windowWidth }, { rotate: '180deg' }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -107,6 +111,8 @@ export class RollOutLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'RollOutLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -138,7 +144,7 @@ export class RollOutLeft
           transform: [{ translateX: 0 }, { rotate: '0deg' }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -155,6 +161,8 @@ export class RollOutRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'RollOutRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -186,7 +194,7 @@ export class RollOutRight
           transform: [{ translateX: 0 }, { rotate: '0deg' }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };

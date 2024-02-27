@@ -2,7 +2,10 @@
 
 import type { AnimationConfig, AnimationNames, CustomConfig } from './config';
 import { Animations } from './config';
-import type { AnimatedComponentProps } from '../../../createAnimatedComponent/commonTypes';
+import type {
+  AnimatedComponentProps,
+  LayoutAnimationStaticContext,
+} from '../../../createAnimatedComponent/commonTypes';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { StyleProps } from '../../commonTypes';
 import { createAnimationWithExistingTransform } from './createAnimation';
@@ -11,12 +14,12 @@ import {
   getProcessedConfig,
   handleExitingAnimation,
   handleLayoutTransition,
-  makeElementVisible,
   setElementAnimation,
 } from './componentUtils';
 import { areDOMRectsEqual } from './domUtils';
 import type { TransformsStyle } from 'react-native';
 import type { TransitionData } from './animationParser';
+import { makeElementVisible } from './componentStyle';
 
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
   animationType: LayoutAnimationType,
@@ -89,9 +92,14 @@ function tryGetAnimationConfigWithTransform<
     return null;
   }
 
+  type ConstructorWithStaticContext = LayoutAnimationStaticContext &
+    typeof config.constructor;
+
   const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
   const initialAnimationName =
-    typeof config === 'function' ? config.name : config.constructor.name;
+    typeof config === 'function'
+      ? config.presetName
+      : (config.constructor as ConstructorWithStaticContext).presetName;
 
   const shouldFail = checkUndefinedAnimationFail(
     initialAnimationName,

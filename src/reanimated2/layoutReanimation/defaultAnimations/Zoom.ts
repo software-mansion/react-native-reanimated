@@ -23,6 +23,8 @@ export class ZoomIn
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'ZoomIn';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -46,7 +48,7 @@ export class ZoomIn
           transform: [{ scale: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -63,6 +65,8 @@ export class ZoomInRotate
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'ZoomInRotate';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -87,10 +91,10 @@ export class ZoomInRotate
           ],
         },
         initialValues: {
-          transform: [{ scale: 0 }, { rotate: rotate }],
+          transform: [{ scale: 0 }, { rotate }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -107,6 +111,8 @@ export class ZoomInLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'ZoomInLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -133,7 +139,7 @@ export class ZoomInLeft
           transform: [{ translateX: -values.windowWidth }, { scale: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -150,6 +156,8 @@ export class ZoomInRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'ZoomInRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -176,7 +184,7 @@ export class ZoomInRight
           transform: [{ translateX: values.windowWidth }, { scale: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -193,6 +201,8 @@ export class ZoomInUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'ZoomInUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -219,7 +229,7 @@ export class ZoomInUp
           transform: [{ translateY: -values.windowHeight }, { scale: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -236,6 +246,8 @@ export class ZoomInDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'ZoomInDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -262,7 +274,7 @@ export class ZoomInDown
           transform: [{ translateY: values.windowHeight }, { scale: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -279,6 +291,8 @@ export class ZoomInEasyUp
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'ZoomInEasyUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -305,7 +319,7 @@ export class ZoomInEasyUp
           transform: [{ translateY: -values.targetHeight }, { scale: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -322,6 +336,8 @@ export class ZoomInEasyDown
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
+  static presetName = 'ZoomInEasyDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -348,7 +364,7 @@ export class ZoomInEasyDown
           transform: [{ translateY: values.targetHeight }, { scale: 0 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -365,6 +381,8 @@ export class ZoomOut
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'ZoomOut';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -388,7 +406,7 @@ export class ZoomOut
           transform: [{ scale: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -405,6 +423,8 @@ export class ZoomOutRotate
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'ZoomOutRotate';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -432,7 +452,7 @@ export class ZoomOutRotate
           transform: [{ scale: 1 }, { rotate: '0' }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -449,6 +469,8 @@ export class ZoomOutLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'ZoomOutLeft';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -480,7 +502,7 @@ export class ZoomOutLeft
           transform: [{ translateX: 0 }, { scale: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -497,6 +519,8 @@ export class ZoomOutRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'ZoomOutRight';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -528,7 +552,7 @@ export class ZoomOutRight
           transform: [{ translateX: 0 }, { scale: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -545,6 +569,8 @@ export class ZoomOutUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'ZoomOutUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -576,7 +602,7 @@ export class ZoomOutUp
           transform: [{ translateY: 0 }, { scale: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -593,6 +619,8 @@ export class ZoomOutDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
+  static presetName = 'ZoomOutDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -624,7 +652,7 @@ export class ZoomOutDown
           transform: [{ translateY: 0 }, { scale: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -641,6 +669,8 @@ export class ZoomOutEasyUp
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'ZoomOutEasyUp';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -672,7 +702,7 @@ export class ZoomOutEasyUp
           transform: [{ translateY: 0 }, { scale: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };
@@ -689,6 +719,8 @@ export class ZoomOutEasyDown
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
+  static presetName = 'ZoomOutEasyDown';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -720,7 +752,7 @@ export class ZoomOutEasyDown
           transform: [{ translateY: 0 }, { scale: 1 }],
           ...initialValues,
         },
-        callback: callback,
+        callback,
       };
     };
   };

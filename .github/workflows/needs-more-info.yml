@@ -12,7 +12,7 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Checkout Actions
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'software-mansion-labs/swmansion-bot'
           ref: stable

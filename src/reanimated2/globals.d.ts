@@ -6,9 +6,7 @@ import type {
   MeasuredDimensions,
   MapperRegistry,
   ShareableRef,
-  ShareableSyncDataHolderRef,
   ShadowNodeWrapper,
-  __ComplexWorkletFunction,
   FlatShareableRef,
 } from './commonTypes';
 import type { AnimatedStyle } from './helperTypes';
@@ -27,7 +25,6 @@ declare global {
   var _IS_FABRIC: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_JS: string | undefined;
-  var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
   var __reanimatedModuleProxy: NativeReanimatedModule | undefined;
   var __callGuardDEV: typeof callGuardDEV | undefined;
   var evalWithSourceMap:
@@ -44,17 +41,7 @@ declare global {
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
   var _makeShareableClone: <T>(value: T) => FlatShareableRef<T>;
-  var _updateDataSynchronously: (
-    dataHolder: ShareableSyncDataHolderRef<any>,
-    data: ShareableRef<any>
-  ) => void;
-  var _getDataSynchronously: <T>(
-    dataHolder: ShareableSyncDataHolderRef<T>
-  ) => ShareableRef<T>;
-  var _scheduleOnJS: (
-    fun: __ComplexWorkletFunction<A, R>,
-    args?: unknown[]
-  ) => void;
+  var _scheduleOnJS: (fun: (...args: A) => R, args?: A) => void;
   var _scheduleOnRuntime: (
     runtime: WorkletRuntime,
     worklet: ShareableRef<() => void>
@@ -63,7 +50,8 @@ declare global {
     | ((
         operations: {
           tag: number;
-          name: string;
+          name: string | null;
+          // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
           updates: StyleProps | AnimatedStyle<any>;
         }[]
       ) => void)
@@ -72,14 +60,17 @@ declare global {
     | ((
         operations: {
           shadowNodeWrapper: ShadowNodeWrapper;
+          // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
           updates: StyleProps | AnimatedStyle<any>;
         }[]
       ) => void)
     | undefined;
   var _removeFromPropsRegistry: (viewTags: number[]) => void | undefined;
-  var _measurePaper: ((viewTag: number) => MeasuredDimensions) | undefined;
+  var _measurePaper:
+    | ((viewTag: number | null) => MeasuredDimensions)
+    | undefined;
   var _measureFabric:
-    | ((shadowNodeWrapper: ShadowNodeWrapper) => MeasuredDimensions)
+    | ((shadowNodeWrapper: ShadowNodeWrapper | null) => MeasuredDimensions)
     | undefined;
   var _scrollToPaper:
     | ((viewTag: number, x: number, y: number, animated: boolean) => void)

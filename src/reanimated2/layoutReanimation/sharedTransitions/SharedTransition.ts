@@ -56,7 +56,7 @@ export class SharedTransition {
     this._customProgressAnimation = (viewTag, values, progress) => {
       'worklet';
       const newStyles = progressAnimationCallback(values, progress);
-      _notifyAboutProgress(viewTag, newStyles, true);
+      global._notifyAboutProgress(viewTag, newStyles, true);
     };
     return this;
   }
@@ -203,8 +203,8 @@ export class SharedTransition {
         if (propertyName === 'transform') {
           // this is not the perfect solution, but at this moment it just interpolates the whole
           // matrix instead of interpolating scale, translate, rotate, etc. separately
-          const currentMatrix = values.currentTransformMatrix as number[];
-          const targetMatrix = values.targetTransformMatrix as number[];
+          const currentMatrix = values.currentTransformMatrix;
+          const targetMatrix = values.targetTransformMatrix;
           const newMatrix = new Array(9);
           for (let i = 0; i < 9; i++) {
             newMatrix[i] =
@@ -226,7 +226,7 @@ export class SharedTransition {
             progress * (targetValue - currentValue) + currentValue;
         }
       }
-      _notifyAboutProgress(viewTag, newStyles, true);
+      global._notifyAboutProgress(viewTag, newStyles, true);
     };
   }
 

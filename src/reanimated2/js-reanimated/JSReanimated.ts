@@ -5,12 +5,7 @@ import {
   isWeb,
   isWindowAvailable,
 } from '../PlatformChecker';
-import type {
-  ShareableRef,
-  ShareableSyncDataHolderRef,
-  Value3D,
-  ValueRotation,
-} from '../commonTypes';
+import type { ShareableRef, Value3D, ValueRotation } from '../commonTypes';
 import { SensorType } from '../commonTypes';
 import type { WebSensor } from './WebSensor';
 import { mockedRequestAnimationFrame } from '../mockedRequestAnimationFrame';
@@ -89,6 +84,10 @@ export default class JSReanimated {
   }
 
   configureLayoutAnimation() {
+    // no-op
+  }
+
+  configureLayoutAnimationBatch() {
     // no-op
   }
 
@@ -280,20 +279,6 @@ export default class JSReanimated {
     }
   }
 
-  makeSynchronizedDataHolder<T>(
-    _valueRef: ShareableRef<T>
-  ): ShareableSyncDataHolderRef<T> {
-    throw new Error(
-      '[Reanimated] makeSynchronizedDataHolder is not available in JSReanimated.'
-    );
-  }
-
-  getDataSynchronously<T>(_ref: ShareableSyncDataHolderRef<T>): T {
-    throw new Error(
-      '[Reanimated] getDataSynchronously is not available in JSReanimated.'
-    );
-  }
-
   getViewProp<T>(
     _viewTag: number,
     _propName: string,
@@ -307,6 +292,12 @@ export default class JSReanimated {
   configureProps() {
     throw new Error(
       '[Reanimated] configureProps is not available in JSReanimated.'
+    );
+  }
+
+  executeOnUIRuntimeSync<T, R>(_shareable: ShareableRef<T>): R {
+    throw new Error(
+      '[Reanimated] `executeOnUIRuntimeSync` is not available in JSReanimated.'
     );
   }
 }
