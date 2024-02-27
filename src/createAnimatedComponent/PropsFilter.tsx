@@ -8,7 +8,6 @@ import { hasInlineStyles, getInlineStyle } from './InlinePropManager';
 import type {
   AnimatedComponentProps,
   AnimatedProps,
-  InitialComponentProps,
   IAnimatedComponentInternal,
   IPropsFilter,
 } from './commonTypes';
@@ -26,8 +25,7 @@ export class PropsFilter implements IPropsFilter {
   public filterNonAnimatedProps(
     component: React.Component<unknown, unknown> & IAnimatedComponentInternal
   ): Record<string, unknown> {
-    const inputProps =
-      component.props as AnimatedComponentProps<InitialComponentProps>;
+    const inputProps = component.safeProps;
     const props: Record<string, unknown> = {};
     for (const key in inputProps) {
       const value = inputProps[key];
@@ -54,8 +52,10 @@ export class PropsFilter implements IPropsFilter {
         });
         props[key] = StyleSheet.flatten(processedStyle);
       } else if (key === 'animatedProps') {
-        const animatedProp = inputProps.animatedProps as Partial<AnimatedProps>;
-        if (animatedProp !== null && animatedProp.initial !== undefined) {
+        const animatedProp = inputProps.animatedProps as Partial<
+          AnimatedComponentProps<AnimatedProps>
+        >;
+        if (animatedProp.initial !== undefined) {
           Object.keys(animatedProp.initial.value).forEach((initialValueKey) => {
             props[initialValueKey] =
               animatedProp.initial?.value[initialValueKey];

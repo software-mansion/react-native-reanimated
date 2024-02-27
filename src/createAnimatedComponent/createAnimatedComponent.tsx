@@ -135,8 +135,19 @@ export function createAnimatedComponent(
     static contextType = SkipEnteringContext;
     context!: React.ContextType<typeof SkipEnteringContext>;
 
+    // Copy of props with some of the values updated
+    safeProps: AnimatedComponentProps<InitialComponentProps>;
+
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
+      this.safeProps = { ...props };
+
+      const animatedProps = this.safeProps.animatedProps;
+      this.safeProps.animatedProps =
+        animatedProps === null || animatedProps === undefined
+          ? {}
+          : animatedProps;
+
       if (isJest()) {
         this.jestAnimatedStyle = { value: {} };
       }
@@ -148,26 +159,26 @@ export function createAnimatedComponent(
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
-      const layout = this.props.layout;
+      const layout = this.safeProps.layout;
       if (layout) {
         this._configureLayoutTransition();
       }
 
       if (IS_WEB) {
-        if (this.props.exiting) {
+        if (this.safeProps.exiting) {
           saveSnapshot(this._component as HTMLElement);
         }
 
         if (
-          !this.props.entering ||
-          getReducedMotionFromConfig(this.props.entering as CustomConfig)
+          !this.safeProps.entering ||
+          getReducedMotionFromConfig(this.safeProps.entering as CustomConfig)
         ) {
           this._isFirstRender = false;
           return;
         }
 
         startWebLayoutAnimation(
-          this.props,
+          this.safeProps,
           this._component as HTMLElement,
           LayoutAnimationType.ENTERING
         );
@@ -183,16 +194,16 @@ export function createAnimatedComponent(
       this._InlinePropManager.detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
 
-      const exiting = this.props.exiting;
+      const exiting = this.safeProps.exiting;
       if (
         IS_WEB &&
-        this.props.exiting &&
-        !getReducedMotionFromConfig(this.props.exiting as CustomConfig)
+        this.safeProps.exiting &&
+        !getReducedMotionFromConfig(this.safeProps.exiting as CustomConfig)
       ) {
         addHTMLMutationObserver();
 
         startWebLayoutAnimation(
-          this.props,
+          this.safeProps,
           this._component as HTMLElement,
           LayoutAnimationType.EXITING
         );
@@ -208,7 +219,7 @@ export function createAnimatedComponent(
             LayoutAnimationType.EXITING,
             maybeBuild(
               exiting,
-              this.props?.style,
+              this.safeProps?.style,
               AnimatedComponent.displayName
             )
           );
@@ -228,8 +239,8 @@ export function createAnimatedComponent(
       const node = this._getEventViewRef() as AnimatedComponentRef;
       let viewTag = null; // We set it only if needed
 
-      for (const key in this.props) {
-        const prop = this.props[key];
+      for (const key in this.safeProps) {
+        const prop = this.safeProps[key];
         if (
           has('current', prop) &&
           prop.current instanceof WorkletEventHandler
@@ -245,8 +256,8 @@ export function createAnimatedComponent(
     }
 
     _detachNativeEvents() {
-      for (const key in this.props) {
-        const prop = this.props[key];
+      for (const key in this.safeProps) {
+        const prop = this.safeProps[key];
         if (
           has('current', prop) &&
           prop.current instanceof WorkletEventHandler
@@ -265,8 +276,8 @@ export function createAnimatedComponent(
         for (const style of this._styles) {
           style.viewDescriptors.remove(this._viewTag);
         }
-        if (this.props.animatedProps?.viewDescriptors) {
-          this.props.animatedProps.viewDescriptors.remove(this._viewTag);
+        if (this.safeProps.animatedProps?.viewDescriptors) {
+          this.safeProps.animatedProps.viewDescriptors.remove(this._viewTag);
         }
         if (IS_FABRIC) {
           removeFromPropsRegistry(this._viewTag);
@@ -278,7 +289,7 @@ export function createAnimatedComponent(
       prevProps: AnimatedComponentProps<InitialComponentProps>
     ) {
       for (const key in prevProps) {
-        const prop = this.props[key];
+        const prop = this.safeProps[key];
         if (
           has('current', prop) &&
           prop.current instanceof WorkletEventHandler &&
@@ -290,8 +301,8 @@ export function createAnimatedComponent(
 
       let viewTag = null;
 
-      for (const key in this.props) {
-        const prop = this.props[key];
+      for (const key in this.safeProps) {
+        const prop = this.safeProps[key];
         if (
           has('current', prop) &&
           prop.current instanceof WorkletEventHandler &&
@@ -368,21 +379,21 @@ export function createAnimatedComponent(
     }
 
     _attachAnimatedStyles() {
-      const styles = this.props.style
-        ? onlyAnimatedStyles(flattenArray<StyleProps>(this.props.style))
+      const styles = this.safeProps.style
+        ? onlyAnimatedStyles(flattenArray<StyleProps>(this.safeProps.style))
         : [];
       const prevStyles = this._styles;
       this._styles = styles;
 
       const prevAnimatedProps = this._animatedProps;
-      this._animatedProps = this.props.animatedProps;
+      this._animatedProps = this.safeProps.animatedProps;
 
       const { viewTag, viewName, shadowNodeWrapper, viewConfig } =
         this._getViewInfo();
 
       // update UI props whitelist for this view
       const hasReanimated2Props =
-        this.props.animatedProps?.viewDescriptors || styles.length;
+        this.safeProps.animatedProps?.viewDescriptors || styles.length;
       if (hasReanimated2Props && viewConfig) {
         adaptViewConfig(viewConfig);
       }
@@ -419,7 +430,7 @@ export function createAnimatedComponent(
            * We need to connect Jest's TestObject instance whose contains just props object
            * with the updateProps() function where we update the properties of the component.
            * We can't update props object directly because TestObject contains a copy of props - look at render function:
-           * const props = this._filterNonAnimatedProps(this.props);
+           * const props = this._filterNonAnimatedProps(this.safeProps);
            */
           this.jestAnimatedStyle.value = {
             ...this.jestAnimatedStyle.value,
@@ -430,13 +441,16 @@ export function createAnimatedComponent(
       });
 
       // detach old animatedProps
-      if (prevAnimatedProps && prevAnimatedProps !== this.props.animatedProps) {
+      if (
+        prevAnimatedProps &&
+        prevAnimatedProps !== this.safeProps.animatedProps
+      ) {
         prevAnimatedProps.viewDescriptors!.remove(viewTag as number);
       }
 
       // attach animatedProps property
-      if (this.props.animatedProps?.viewDescriptors) {
-        this.props.animatedProps.viewDescriptors.add({
+      if (this.safeProps.animatedProps?.viewDescriptors) {
+        this.safeProps.animatedProps.viewDescriptors.add({
           tag: viewTag as number,
           name: viewName!,
           shadowNodeWrapper: shadowNodeWrapper!,
@@ -451,7 +465,7 @@ export function createAnimatedComponent(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       snapshot: DOMRect | null
     ) {
-      const layout = this.props.layout;
+      const layout = this.safeProps.layout;
       const oldLayout = prevProps.layout;
       if (layout !== oldLayout) {
         this._configureLayoutTransition();
@@ -460,7 +474,7 @@ export function createAnimatedComponent(
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
-      if (IS_WEB && this.props.exiting) {
+      if (IS_WEB && this.safeProps.exiting) {
         saveSnapshot(this._component as HTMLElement);
       }
 
@@ -468,11 +482,11 @@ export function createAnimatedComponent(
       if (
         IS_WEB &&
         snapshot !== null &&
-        this.props.layout &&
-        !getReducedMotionFromConfig(this.props.layout as CustomConfig)
+        this.safeProps.layout &&
+        !getReducedMotionFromConfig(this.safeProps.layout as CustomConfig)
       ) {
         tryActivateLayoutTransition(
-          this.props,
+          this.safeProps,
           this._component as HTMLElement,
           snapshot
         );
@@ -480,9 +494,9 @@ export function createAnimatedComponent(
     }
 
     _configureLayoutTransition() {
-      const layout = this.props.layout
+      const layout = this.safeProps.layout
         ? maybeBuild(
-            this.props.layout,
+            this.safeProps.layout,
             undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */,
             AnimatedComponent.displayName
           )
@@ -492,7 +506,7 @@ export function createAnimatedComponent(
 
     _setComponentRef = setAndForwardRef<Component | HTMLElement>({
       getForwardedRef: () =>
-        this.props.forwardedRef as MutableRefObject<
+        this.safeProps.forwardedRef as MutableRefObject<
           Component<Record<string, unknown>, Record<string, unknown>, unknown>
         >,
       setLocalRef: (ref) => {
@@ -502,7 +516,8 @@ export function createAnimatedComponent(
           ? (ref as HTMLElement)
           : findNodeHandle(ref as Component);
 
-        const { layout, entering, exiting, sharedTransitionTag } = this.props;
+        const { layout, entering, exiting, sharedTransitionTag } =
+          this.safeProps;
         if (
           (layout || entering || exiting || sharedTransitionTag) &&
           tag != null
@@ -518,14 +533,14 @@ export function createAnimatedComponent(
               LayoutAnimationType.ENTERING,
               maybeBuild(
                 entering,
-                this.props?.style,
+                this.safeProps?.style,
                 AnimatedComponent.displayName
               )
             );
           }
           if (sharedTransitionTag && !IS_WEB) {
             const sharedElementTransition =
-              this.props.sharedTransitionStyle ?? new SharedTransition();
+              this.safeProps.sharedTransitionStyle ?? new SharedTransition();
             const reduceMotionInTransition = getReduceMotionFromConfig(
               sharedElementTransition.getReduceMotion()
             );
