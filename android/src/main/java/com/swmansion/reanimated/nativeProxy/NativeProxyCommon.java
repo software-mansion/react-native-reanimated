@@ -214,9 +214,9 @@ public abstract class NativeProxyCommon {
 
   @DoNotStrip
   public int subscribeForKeyboardEvents(
-      KeyboardWorkletWrapper jsCallbackWrapper, boolean isStatusBarTranslucent) {
+      KeyboardWorkletWrapper keyboardWorkletWrapper, boolean isStatusBarTranslucent) {
     return keyboardAnimationManager.subscribeForKeyboardUpdates(
-        jsCallbackWrapper, isStatusBarTranslucent);
+        keyboardWorkletWrapper, isStatusBarTranslucent);
   }
 
   @DoNotStrip
