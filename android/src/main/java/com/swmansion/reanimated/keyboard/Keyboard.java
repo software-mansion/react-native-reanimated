@@ -28,6 +28,11 @@ public class Keyboard {
         hasNavigationBar ? contentBottomInset - systemBarBottomInset : contentBottomInset;
     int keyboardHeight = (int) PixelUtil.toDIPFromPixel(Math.max(0, keyboardHeightDip));
     if (keyboardHeight == 0 && mState == KeyboardState.OPEN) {
+      /*
+      When the keyboard opening animation is canceled, for one frame the insets show a keyboard
+      height of 0, causing a jump of the keyboard. We can avoid it by ignoring that frame and
+      calling the listeners on the following frame.
+      */
       return;
     }
     mHeight = keyboardHeight;
