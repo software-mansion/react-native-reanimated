@@ -42,6 +42,11 @@ using namespace reanimated;
 - (void)_tryAndHandleError:(dispatch_block_t)block;
 @end
 
+
+//@interface RCTRuntimeExecutor (RCTTurboModule)
+//- (RuntimeExecutor)_runtimeExecutor;
+//@end
+
 #ifdef RCT_NEW_ARCH_ENABLED
 static __strong REAInitializerRCTFabricSurface *reaSurface;
 #else
@@ -51,6 +56,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 @implementation REAModule {
 #ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTSurfacePresenter *_surfacePresenter;
+//    RCTRuntimeExecutor *_runtimeExecutor;
   std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule_;
 #else
   NSMutableArray<AnimatedOperation> *_operations;
@@ -60,6 +66,9 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 #endif
   bool hasListeners;
 }
+
+@synthesize moduleRegistry = _moduleRegistry;
+@synthesize runtimeExecutor = _runtimeExecutor;
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
@@ -148,6 +157,48 @@ RCT_EXPORT_MODULE(ReanimatedModule);
     }
   });
 }
+
+#pragma mark-- bridgeless methods
+
+#ifdef RCT_NEW_ARCH_ENABLED
+
+/*
+ * Taken from RCTNativeAnimatedTurboModule:
+ * In bridgeless mode, `setBridge` is never called during initializtion. Instead this selector is invoked via
+ * BridgelessTurboModuleSetup.
+ */
+- (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
+{
+  _surfacePresenter = surfacePresenter;
+}
+
+- (void)setRuntimeExecutor:(RCTRuntimeExecutor *)runtimeExecutor
+{
+  _runtimeExecutor = runtimeExecutor;
+}
+
+- (void)initialize
+{
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(handleJavaScriptDidLoadNotification:)
+                                               name:RCTJavaScriptDidLoadNotification
+                                             object:nil];
+
+  [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
+  // TODO: it seems like it is not used on new arch anyway
+  //[bridge.uiManager.observerCoordinator addObserver:self];
+#ifndef NDEBUG
+  if (reaSurface == nil) {
+    // we need only one instance because SurfacePresenter is the same during the application lifetime
+    reaSurface = [[REAInitializerRCTFabricSurface alloc] init];
+    [_surfacePresenter registerSurface:reaSurface];
+  }
+  reaSurface.reaModule = self;
+#endif
+  _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:nil surfacePresenter:_surfacePresenter];
+}
+
+#endif
 
 - (void)setBridge:(RCTBridge *)bridge
 {
@@ -259,9 +310,35 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)valueUnpackerCode)
 {
-  facebook::jsi::Runtime *jsiRuntime = [self.bridge respondsToSelector:@selector(runtime)]
-      ? reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime)
-      : nullptr;
+    
+#ifdef RCT_NEW_ARCH_ENABLED
+//    executeSynchronouslyOnSameThread_CAN_DEADLOCK(([_runtimeExecutor getRuntimeExecutor]), ^(jsi::Runtime &runtime){
+    RCTCxxBridge *cxxBridge = (RCTCxxBridge *)[RCTBridge currentBridge];
+    auto &runtime = *(jsi::Runtime *)cxxBridge.runtime;
+   
+    auto nativeReanimatedModule = reanimated::createReanimatedModuleBridgeless(
+        _moduleRegistry, runtime, /* jsCallInvoker */ nil, std::string([valueUnpackerCode UTF8String]));
+    WorkletRuntimeCollector::install(runtime);
+
+  #if __has_include(<UIKit/UIAccessibility.h>)
+    auto isReducedMotion = UIAccessibilityIsReduceMotionEnabled();
+  #else
+    auto isReducedMotion = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
+  #endif
+
+    RNRuntimeDecorator::decorate(runtime, nativeReanimatedModule, isReducedMotion);
+
+    self->weakNativeReanimatedModule_ = nativeReanimatedModule;
+    if (self->_surfacePresenter != nil) {
+      // reload, uiManager is null right now, we need to wait for `installReanimatedAfterReload`
+      [self injectDependencies:runtime];
+    }
+  return nil;
+#else
+
+    facebook::jsi::Runtime *jsiRuntime = [self.bridge respondsToSelector:@selector(runtime)]
+        ? reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime)
+        : nullptr;
 
   if (jsiRuntime) {
     auto nativeReanimatedModule = reanimated::createReanimatedModule(
@@ -277,17 +354,18 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 #endif
 
     RNRuntimeDecorator::decorate(rnRuntime, nativeReanimatedModule, isReducedMotion);
-
-#ifdef RCT_NEW_ARCH_ENABLED
-    weakNativeReanimatedModule_ = nativeReanimatedModule;
-    if (_surfacePresenter != nil) {
-      // reload, uiManager is null right now, we need to wait for `installReanimatedAfterReload`
-      [self injectDependencies:rnRuntime];
-    }
-#endif // RCT_NEW_ARCH_ENABLED
   }
 
   return nil;
+#endif
 }
+
+#ifdef RCT_NEW_ARCH_ENABLED
+- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
+    (const facebook::react::ObjCTurboModule::InitParams &)params
+{
+  return std::make_shared<facebook::react::NativeReanimatedModuleSpecJSI>(params);
+}
+#endif // RCT_NEW_ARCH_ENABLED
 
 @end

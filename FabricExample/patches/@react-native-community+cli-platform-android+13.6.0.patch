@@ -1,0 +1,12 @@
+diff --git a/node_modules/@react-native-community/cli-platform-android/native_modules.gradle b/node_modules/@react-native-community/cli-platform-android/native_modules.gradle
+index 58492ea..d03521c 100644
+--- a/node_modules/@react-native-community/cli-platform-android/native_modules.gradle
++++ b/node_modules/@react-native-community/cli-platform-android/native_modules.gradle
+@@ -298,6 +298,7 @@ class ReactNativeModules {
+         if (it.cxxModuleCMakeListsModuleName != null) {
+           autolinkedLibraries += "\n${it.cxxModuleCMakeListsModuleName}"
+         }
++        autolinkedLibraries
+       }.minus(null).join('\n  ')
+     }
+ 

@@ -22,7 +22,7 @@ ShadowNode::Unshared cloneShadowTreeWithNewProps(
   PropsParserContext propsParserContext{
       source->getSurfaceId(), *source->getContextContainer()};
   const auto props = source->getComponentDescriptor().cloneProps(
-      propsParserContext, source->getProps(), rawProps);
+      propsParserContext, source->getProps(), std::move(rawProps));
 
   auto newChildNode = source->clone({/* .props = */ props});
 

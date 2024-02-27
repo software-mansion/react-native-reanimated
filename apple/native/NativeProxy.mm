@@ -388,4 +388,129 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   return nativeReanimatedModule;
 }
 
+std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
+    RCTModuleRegistry *moduleRegistry,
+    jsi::Runtime &runtime,
+    const std::shared_ptr<CallInvoker> &jsInvoker,
+    const std::string &valueUnpackerCode)
+{
+  REAModule *reaModule = [moduleRegistry moduleForName:"ReanimatedModule"];
+
+  id<RNGestureHandlerStateManager> gestureHandlerStateManager = nil;
+  auto setGestureStateFunction = [gestureHandlerStateManager, moduleRegistry](int handlerTag, int newState) mutable {
+    if (gestureHandlerStateManager == nil) {
+      gestureHandlerStateManager = [moduleRegistry moduleForName:"RNGestureHandlerModule"];
+    }
+
+    setGestureState(gestureHandlerStateManager, handlerTag, newState);
+  };
+
+  auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
+    throw error;
+  });
+
+  std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
+
+  auto nodesManager = reaModule.nodesManager;
+
+  auto maybeFlushUIUpdatesQueueFunction = [nodesManager]() { [nodesManager maybeFlushUIUpdatesQueue]; };
+
+  auto requestRender = [nodesManager](std::function<void(double)> onRender, jsi::Runtime &rt) {
+    [nodesManager postOnAnimation:^(READisplayLink *displayLink) {
+#if !TARGET_OS_OSX
+      auto targetTimestamp = displayLink.targetTimestamp;
+#else
+      // TODO macOS targetTimestamp isn't available on macOS
+      auto targetTimestamp = displayLink.timestamp + displayLink.duration;
+#endif
+      double frameTimestamp = calculateTimestampWithSlowAnimations(targetTimestamp) * 1000;
+      onRender(frameTimestamp);
+    }];
+  };
+
+  auto synchronouslyUpdateUIPropsFunction = [nodesManager](jsi::Runtime &rt, Tag tag, const jsi::Object &props) {
+    NSNumber *viewTag = @(tag);
+    NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt, props);
+    [nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
+  };
+
+  auto progressLayoutAnimation = [=](jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool isSharedTransition) {
+    // noop
+  };
+
+  auto endLayoutAnimation = [=](int tag, bool removeView) {
+    // noop
+  };
+
+  auto getAnimationTimestamp = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
+
+  // sensors
+  ReanimatedSensorContainer *reanimatedSensorContainer = [[ReanimatedSensorContainer alloc] init];
+  auto registerSensorFunction =
+      [=](int sensorType, int interval, int iosReferenceFrame, std::function<void(double[], int)> setter) -> int {
+    return [reanimatedSensorContainer registerSensor:(ReanimatedSensorType)sensorType
+                                            interval:interval
+                                   iosReferenceFrame:iosReferenceFrame
+                                              setter:^(double *data, int orientationDegrees) {
+                                                setter(data, orientationDegrees);
+                                              }];
+  };
+
+  auto unregisterSensorFunction = [=](int sensorId) { [reanimatedSensorContainer unregisterSensor:sensorId]; };
+  // end sensors
+
+  // keyboard events
+
+  REAKeyboardEventObserver *keyboardObserver = [[REAKeyboardEventObserver alloc] init];
+  auto subscribeForKeyboardEventsFunction =
+      [=](std::function<void(int keyboardState, int height)> keyboardEventDataUpdater, bool isStatusBarTranslucent) {
+        // ignore isStatusBarTranslucent - it's Android only
+        return [keyboardObserver subscribeForKeyboardEvents:^(int keyboardState, int height) {
+          keyboardEventDataUpdater(keyboardState, height);
+        }];
+      };
+
+  auto unsubscribeFromKeyboardEventsFunction = [=](int listenerId) {
+    [keyboardObserver unsubscribeFromKeyboardEvents:listenerId];
+  };
+  // end keyboard events
+
+  PlatformDepMethodsHolder platformDepMethodsHolder = {
+      requestRender,
+      synchronouslyUpdateUIPropsFunction,
+      getAnimationTimestamp,
+      progressLayoutAnimation,
+      endLayoutAnimation,
+      registerSensorFunction,
+      unregisterSensorFunction,
+      setGestureStateFunction,
+      subscribeForKeyboardEventsFunction,
+      unsubscribeFromKeyboardEventsFunction,
+      maybeFlushUIUpdatesQueueFunction,
+  };
+
+  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
+      runtime, jsInvoker, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode);
+
+  [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
+    // handles RCTEvents from RNGestureHandler
+    std::string eventName = [event.eventName UTF8String];
+    int emitterReactTag = [event.viewTag intValue];
+    id eventData = [event arguments][2];
+    jsi::Runtime &uiRuntime = nativeReanimatedModule->getUIRuntime();
+    jsi::Value payload = convertObjCObjectToJSIValue(uiRuntime, eventData);
+    double currentTime = CACurrentMediaTime() * 1000;
+    nativeReanimatedModule->handleEvent(eventName, emitterReactTag, payload, currentTime);
+  }];
+
+  std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule = nativeReanimatedModule; // to avoid retain cycle
+  [reaModule.nodesManager registerPerformOperations:^() {
+    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+      nativeReanimatedModule->performOperations();
+    }
+  }];
+
+  return nativeReanimatedModule;
+}
+
 } // namespace reanimated

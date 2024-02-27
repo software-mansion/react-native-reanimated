@@ -186,6 +186,11 @@
       "typescript"
     ]
   },
+  "codegenConfig": {
+    "name": "rnreanimated",
+    "type": "modules",
+    "jsSrcsDir": "./src/specs"
+  },
   "sideEffects": [
     "./lib/reanimated2/core",
     "./lib/index"

@@ -1,9 +1,6 @@
 #include "NativeReanimatedModule.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#if REACT_NATIVE_MINOR_VERSION >= 72
-#include <react/renderer/core/TraitCast.h>
-#endif
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 #if REACT_NATIVE_MINOR_VERSION >= 73 && defined(RCT_NEW_ARCH_ENABLED)
@@ -39,7 +36,7 @@ using namespace facebook;
 
 #if REACT_NATIVE_MINOR_VERSION >= 73 && defined(RCT_NEW_ARCH_ENABLED)
 // Android can't find the definition of this static field
-bool CoreFeatures::useNativeState;
+//bool CoreFeatures::useNativeState;
 #endif
 
 namespace reanimated {
@@ -679,7 +676,7 @@ jsi::Value NativeReanimatedModule::measure(
       uiManager_->getNewestCloneOfShadowNode(*shadowNode);
 
   auto layoutableShadowNode =
-      traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
+    dynamic_cast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
   facebook::react::Point originRelativeToParent =
       layoutableShadowNode != nullptr
       ? layoutableShadowNode->getLayoutMetrics().frame.origin

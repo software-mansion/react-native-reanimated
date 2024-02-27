@@ -1,5 +1,4 @@
 'use strict';
-import { NativeModules } from 'react-native';
 import type { ShareableRef, Value3D, ValueRotation } from '../commonTypes';
 import type {
   LayoutAnimationFunction,
@@ -10,6 +9,7 @@ import { jsVersion } from '../platform-specific/jsVersion';
 import type { WorkletRuntime } from '../runtimes';
 import { getValueUnpackerCode } from '../valueUnpacker';
 import type { LayoutAnimationBatchItem } from '../layoutReanimation/animationBuilder/commonTypes';
+import NativeReanimatedModule from '../../specs/NativeReanimatedModule';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
@@ -90,9 +90,8 @@ export class NativeReanimated {
     }
     global._REANIMATED_VERSION_JS = jsVersion;
     if (global.__reanimatedModuleProxy === undefined) {
-      const { ReanimatedModule } = NativeModules;
       const valueUnpackerCode = getValueUnpackerCode();
-      ReanimatedModule?.installTurboModule(valueUnpackerCode);
+      NativeReanimatedModule?.installTurboModule(valueUnpackerCode);
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new Error(
