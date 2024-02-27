@@ -6,47 +6,46 @@ import androidx.core.view.WindowInsetsCompat;
 import com.facebook.react.uimanager.PixelUtil;
 
 public class Keyboard {
-  private KeyboardState state;
-  private int height = 0;
-  private int activeTransitionCounter = 0;
-  private final int contentTypeMask = WindowInsetsCompat.Type.ime();
-  private final int systemBarTypeMask = WindowInsetsCompat.Type.systemBars();
+  private KeyboardState mState;
+  private int mHeight = 0;
+  private int mActiveTransitionCounter = 0;
+  private final int mContentTypeMask = WindowInsetsCompat.Type.ime();
+  private final int mSystemBarTypeMask = WindowInsetsCompat.Type.systemBars();
 
   public KeyboardState getState() {
-    return state;
+    return mState;
   }
 
   public int getHeight() {
-    return height;
+    return mHeight;
   }
 
   public void updateHeight(WindowInsetsCompat insets) {
-    int contentBottomInset = insets.getInsets(contentTypeMask).bottom;
-    int systemBarBottomInset = insets.getInsets(systemBarTypeMask).bottom;
+    int contentBottomInset = insets.getInsets(mContentTypeMask).bottom;
+    int systemBarBottomInset = insets.getInsets(mSystemBarTypeMask).bottom;
     boolean hasNavigationBar = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_HOME);
     int keyboardHeightDip =
         hasNavigationBar ? contentBottomInset - systemBarBottomInset : contentBottomInset;
     int keyboardHeight = (int) PixelUtil.toDIPFromPixel(Math.max(0, keyboardHeightDip));
-    if (keyboardHeight == 0 && state == KeyboardState.OPEN) {
+    if (keyboardHeight == 0 && mState == KeyboardState.OPEN) {
       return;
     }
-    height = keyboardHeight;
+    mHeight = keyboardHeight;
   }
 
   public void onAnimationStart() {
-    if (activeTransitionCounter > 0) {
-      boolean isOpening = state == KeyboardState.OPENING;
-      state = isOpening ? KeyboardState.CLOSING : KeyboardState.OPENING;
+    if (mActiveTransitionCounter > 0) {
+      mState = mState == KeyboardState.OPENING ? KeyboardState.CLOSING : KeyboardState.OPENING;
     } else {
-      state = height == 0 ? KeyboardState.OPENING : KeyboardState.CLOSING;
+      mState = mHeight == 0 ? KeyboardState.OPENING : KeyboardState.CLOSING;
     }
-    activeTransitionCounter++;
+    mActiveTransitionCounter++;
   }
 
   public void onAnimationEnd() {
-    activeTransitionCounter--;
-    if (activeTransitionCounter == 0) {
-      state = height == 0 ? KeyboardState.CLOSED : KeyboardState.OPEN;
+    mActiveTransitionCounter--;
+    if (mActiveTransitionCounter == 0) {
+      mState = mHeight == 0 ? KeyboardState.CLOSED : KeyboardState.OPEN;
     }
   }
 }

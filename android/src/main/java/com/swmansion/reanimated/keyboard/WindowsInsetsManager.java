@@ -14,22 +14,22 @@ import java.lang.ref.WeakReference;
 
 public class WindowsInsetsManager {
 
-  private boolean isStatusBarTranslucent = false;
-  private final WeakReference<ReactApplicationContext> reactContext;
-  private final Keyboard keyboard;
-  private final NotifyAboutKeyboardChangeFunction notifyAboutKeyboardChange;
+  private boolean mIsStatusBarTranslucent = false;
+  private final WeakReference<ReactApplicationContext> mReactContext;
+  private final Keyboard mKeyboard;
+  private final NotifyAboutKeyboardChangeFunction mNotifyAboutKeyboardChange;
 
   public WindowsInsetsManager(
       WeakReference<ReactApplicationContext> reactContext,
       Keyboard keyboard,
       NotifyAboutKeyboardChangeFunction notifyAboutKeyboardChange) {
-    this.reactContext = reactContext;
-    this.keyboard = keyboard;
-    this.notifyAboutKeyboardChange = notifyAboutKeyboardChange;
+    mReactContext = reactContext;
+    mKeyboard = keyboard;
+    mNotifyAboutKeyboardChange = notifyAboutKeyboardChange;
   }
 
   private Window getWindow() {
-    return reactContext.get().getCurrentActivity().getWindow();
+    return mReactContext.get().getCurrentActivity().getWindow();
   }
 
   private View getRootView() {
@@ -38,14 +38,14 @@ public class WindowsInsetsManager {
 
   public void startObservingChanges(
       KeyboardAnimationCallback keyboardAnimationCallback, boolean isStatusBarTranslucent) {
-    this.isStatusBarTranslucent = isStatusBarTranslucent;
+    mIsStatusBarTranslucent = isStatusBarTranslucent;
     updateWindowDecor(false);
     ViewCompat.setOnApplyWindowInsetsListener(getRootView(), this::onApplyWindowInsetsListener);
     ViewCompat.setWindowInsetsAnimationCallback(getRootView(), keyboardAnimationCallback);
   }
 
   public void stopObservingChanges() {
-    updateWindowDecor(!isStatusBarTranslucent);
+    updateWindowDecor(!mIsStatusBarTranslucent);
     updateInsets(0, 0);
     View rootView = getRootView();
     ViewCompat.setWindowInsetsAnimationCallback(rootView, null);
@@ -58,9 +58,9 @@ public class WindowsInsetsManager {
   }
 
   private WindowInsetsCompat onApplyWindowInsetsListener(View view, WindowInsetsCompat insets) {
-    if (keyboard.getState() == KeyboardState.OPEN) {
-      keyboard.updateHeight(insets);
-      notifyAboutKeyboardChange.call();
+    if (mKeyboard.getState() == KeyboardState.OPEN) {
+      mKeyboard.updateHeight(insets);
+      mNotifyAboutKeyboardChange.call();
     }
     setWindowInsets(insets);
     return insets;
@@ -94,7 +94,7 @@ public class WindowsInsetsManager {
     int matchParentFlag = FrameLayout.LayoutParams.MATCH_PARENT;
     FrameLayout.LayoutParams params =
         new FrameLayout.LayoutParams(matchParentFlag, matchParentFlag);
-    if (isStatusBarTranslucent) {
+    if (mIsStatusBarTranslucent) {
       params.setMargins(0, 0, 0, 0);
     } else {
       params.setMargins(0, paddingTop, 0, paddingBottom);
