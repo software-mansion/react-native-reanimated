@@ -8,6 +8,7 @@ import java.util.List;
 public class KeyboardAnimationCallback extends WindowInsetsAnimationCompat.Callback {
   private final Keyboard mKeyboard;
   private final NotifyAboutKeyboardChangeFunction mNotifyAboutKeyboardChange;
+  private static final int CONTENT_TYPE_MASK = WindowInsetsCompat.Type.ime();
 
   public KeyboardAnimationCallback(
       Keyboard keyboard, NotifyAboutKeyboardChangeFunction notifyAboutKeyboardChange) {
@@ -57,6 +58,6 @@ public class KeyboardAnimationCallback extends WindowInsetsAnimationCompat.Callb
   }
 
   private static boolean isKeyboardAnimation(@NonNull WindowInsetsAnimationCompat animation) {
-    return (animation.getTypeMask() & WindowInsetsCompat.Type.ime()) != 0;
+    return (animation.getTypeMask() & CONTENT_TYPE_MASK) != 0;
   }
 }
