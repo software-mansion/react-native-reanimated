@@ -1,6 +1,6 @@
 namespace reanimated {
 
-CGFloat SimAnimationDragCoefficient(void);
+CGFloat getUIAnimationDragCoefficient(void);
 CFTimeInterval calculateTimestampWithSlowAnimations(CFTimeInterval currentTimestamp);
 
 } // namespace reanimated

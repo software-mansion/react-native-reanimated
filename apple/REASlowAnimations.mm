@@ -1,11 +1,11 @@
-#import <RNReanimated/REATimer.h>
+#import <RNReanimated/REASlowAnimations.h>
 #if TARGET_IPHONE_SIMULATOR
 #import <dlfcn.h>
 #endif
 
 namespace reanimated {
 
-CGFloat SimAnimationDragCoefficient(void)
+CGFloat getUIAnimationDragCoefficient(void)
 {
   static float (*UIAnimationDragCoefficient)(void) = NULL;
 #if TARGET_IPHONE_SIMULATOR
@@ -21,9 +21,9 @@ CFTimeInterval calculateTimestampWithSlowAnimations(CFTimeInterval currentTimest
 {
 #if TARGET_IPHONE_SIMULATOR
   static CFTimeInterval dragCoefChangedTimestamp = CACurrentMediaTime();
-  static CGFloat previousDragCoef = SimAnimationDragCoefficient();
+  static CGFloat previousDragCoef = getUIAnimationDragCoefficient();
 
-  const CGFloat dragCoef = SimAnimationDragCoefficient();
+  const CGFloat dragCoef = getUIAnimationDragCoefficient();
   if (previousDragCoef != dragCoef) {
     previousDragCoef = dragCoef;
     dragCoefChangedTimestamp = CACurrentMediaTime();
