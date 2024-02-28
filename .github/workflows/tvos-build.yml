@@ -43,7 +43,7 @@ jobs:
           restore-keys: ${{ runner.os }}-node-modules-reanimated-
 
       - name: Install Reanimated node_modules
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Restore app node_modules from cache
         uses: actions/cache@v3
@@ -54,7 +54,7 @@ jobs:
 
       - name: Install app node_modules
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Restore Pods from cache
         uses: actions/cache@v3
