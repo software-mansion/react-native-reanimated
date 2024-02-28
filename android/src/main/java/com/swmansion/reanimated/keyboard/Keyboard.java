@@ -6,6 +6,7 @@ import com.facebook.react.uimanager.PixelUtil;
 public class Keyboard {
   private KeyboardState mState;
   private int mHeight = 0;
+  private int mActiveTransitionCounter = 0;
   private static final int CONTENT_TYPE_MASK = WindowInsetsCompat.Type.ime();
   private static final int SYSTEM_BAR_TYPE_MASK = WindowInsetsCompat.Type.systemBars();
 
@@ -25,10 +26,18 @@ public class Keyboard {
   }
 
   public void onAnimationStart() {
-    mState = mHeight == 0 ? KeyboardState.OPENING : KeyboardState.CLOSING;
+    if (mActiveTransitionCounter > 0) {
+      mState = mState == KeyboardState.OPENING ? KeyboardState.CLOSING : KeyboardState.OPENING;
+    } else {
+      mState = mHeight == 0 ? KeyboardState.OPENING : KeyboardState.CLOSING;
+    }
+    mActiveTransitionCounter++;
   }
 
   public void onAnimationEnd() {
-    mState = mHeight == 0 ? KeyboardState.CLOSED : KeyboardState.OPEN;
+    mActiveTransitionCounter--;
+    if (mActiveTransitionCounter == 0) {
+      mState = mHeight == 0 ? KeyboardState.CLOSED : KeyboardState.OPEN;
+    }
   }
 }
