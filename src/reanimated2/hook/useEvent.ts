@@ -50,9 +50,11 @@ export function useEvent<Event extends object, Context = never>(
 ): EventHandlerInternal<Event> {
   const initRef = useRef<EventHandlerInternal<Event>>(null!);
   if (initRef.current === null) {
-    initRef.current = {
-      workletEventHandler: new WorkletEventHandler<Event>(handler, eventNames),
-    };
+    const workletEventHandler = new WorkletEventHandler<Event>(
+      handler,
+      eventNames
+    );
+    initRef.current = { workletEventHandler };
   } else if (rebuild) {
     const workletEventHandler = initRef.current.workletEventHandler;
     workletEventHandler.updateWorklet(handler);
