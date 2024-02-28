@@ -6,14 +6,14 @@ import androidx.core.view.WindowInsetsCompat;
 import java.util.List;
 
 public class KeyboardAnimationCallback extends WindowInsetsAnimationCompat.Callback {
-  private final Keyboard keyboard;
-  private final NotifyAboutKeyboardChangeFunction notifyAboutKeyboardChange;
+  private final Keyboard mKeyboard;
+  private final NotifyAboutKeyboardChangeFunction mNotifyAboutKeyboardChange;
 
   public KeyboardAnimationCallback(
       Keyboard keyboard, NotifyAboutKeyboardChangeFunction notifyAboutKeyboardChange) {
     super(WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_CONTINUE_ON_SUBTREE);
-    this.notifyAboutKeyboardChange = notifyAboutKeyboardChange;
-    this.keyboard = keyboard;
+    mNotifyAboutKeyboardChange = notifyAboutKeyboardChange;
+    mKeyboard = keyboard;
   }
 
   @NonNull
@@ -21,8 +21,8 @@ public class KeyboardAnimationCallback extends WindowInsetsAnimationCompat.Callb
   public WindowInsetsAnimationCompat.BoundsCompat onStart(
       @NonNull WindowInsetsAnimationCompat animation,
       @NonNull WindowInsetsAnimationCompat.BoundsCompat bounds) {
-    keyboard.onAnimationStart();
-    notifyAboutKeyboardChange.call();
+    mKeyboard.onAnimationStart();
+    mNotifyAboutKeyboardChange.call();
     return super.onStart(animation, bounds);
   }
 
@@ -31,14 +31,14 @@ public class KeyboardAnimationCallback extends WindowInsetsAnimationCompat.Callb
   public WindowInsetsCompat onProgress(
       @NonNull WindowInsetsCompat insets,
       @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
-    keyboard.updateHeight(insets);
-    notifyAboutKeyboardChange.call();
+    mKeyboard.updateHeight(insets);
+    mNotifyAboutKeyboardChange.call();
     return insets;
   }
 
   @Override
   public void onEnd(@NonNull WindowInsetsAnimationCompat animation) {
-    keyboard.onAnimationEnd();
-    notifyAboutKeyboardChange.call();
+    mKeyboard.onAnimationEnd();
+    mNotifyAboutKeyboardChange.call();
   }
 }

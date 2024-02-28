@@ -7,13 +7,13 @@ public enum KeyboardState {
   CLOSING(3),
   CLOSED(4);
 
-  private final int value;
+  private final int mValue;
 
   KeyboardState(int value) {
-    this.value = value;
+    mValue = value;
   }
 
   public int asInt() {
-    return value;
+    return mValue;
   }
 }
