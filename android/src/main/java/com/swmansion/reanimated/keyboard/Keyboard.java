@@ -21,8 +21,16 @@ public class Keyboard {
   public void updateHeight(WindowInsetsCompat insets) {
     int contentBottomInset = insets.getInsets(CONTENT_TYPE_MASK).bottom;
     int systemBarBottomInset = insets.getInsets(SYSTEM_BAR_TYPE_MASK).bottom;
-    int keyboardHeightDip = contentBottomInset - systemBarBottomInset;
-    mHeight = (int) PixelUtil.toDIPFromPixel(Math.max(0, keyboardHeightDip));
+    int keyboardHeightDip = Math.max(0, contentBottomInset - systemBarBottomInset);
+    if (keyboardHeightDip == 0 && mState == KeyboardState.OPEN) {
+      /*
+      When the keyboard is being canceling, for one frame the insets show a keyboard height of 0,
+      causing a jump of the keyboard. We can avoid it by ignoring that frame and calling
+      the listeners on the following frame.
+      */
+      return;
+    }
+    mHeight = (int) PixelUtil.toDIPFromPixel(keyboardHeightDip);
   }
 
   public void onAnimationStart() {
