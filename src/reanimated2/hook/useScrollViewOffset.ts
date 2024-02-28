@@ -57,12 +57,13 @@ export function useScrollViewOffset(
       ? animatedRef.current
       : findNodeHandle(animatedRef.current);
 
-    eventHandler.current?.registerForEvents(viewTag as number);
+    eventHandler.workletEventHandler.registerForEvents(viewTag as number);
 
     return () => {
-      eventHandler.current?.unregisterFromEvents();
+      eventHandler.workletEventHandler?.unregisterFromEvents();
     };
-  }, [animatedRef.current]);
+    // TODO dependencies
+  }, [animatedRef.current, eventHandler]);
 
   return offsetRef.current;
 }
