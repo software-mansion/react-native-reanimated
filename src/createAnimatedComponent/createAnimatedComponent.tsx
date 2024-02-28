@@ -305,7 +305,6 @@ export function createAnimatedComponent(
               : findNodeHandle(options?.setNativeProps ? this : node);
           }
           prop.current.registerForEvents(viewTag as number, key);
-          prop.current.reattachNeeded = false;
         }
       }
     }
