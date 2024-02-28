@@ -47,6 +47,7 @@ export {
   useFrameCallback,
   useAnimatedKeyboard,
   useScrollViewOffset,
+  useLayoutWorklet,
 } from './hook';
 export type {
   DelayAnimation,
