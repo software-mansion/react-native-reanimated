@@ -13,10 +13,10 @@ public class KeyboardAnimationManager {
   private int mNextListenerId = 0;
   private final HashMap<Integer, KeyboardWorkletWrapper> mListeners = new HashMap<>();
   private final Keyboard mKeyboard = new Keyboard();
-  private final WindowsInsetsManager windowsInsetsManager;
+  private final WindowsInsetsManager mWindowsInsetsManager;
 
   public KeyboardAnimationManager(WeakReference<ReactApplicationContext> reactContext) {
-    windowsInsetsManager =
+    mWindowsInsetsManager =
         new WindowsInsetsManager(reactContext, mKeyboard, this::notifyAboutKeyboardChange);
   }
 
@@ -26,7 +26,8 @@ public class KeyboardAnimationManager {
     if (mListeners.isEmpty()) {
       KeyboardAnimationCallback keyboardAnimationCallback =
           new KeyboardAnimationCallback(mKeyboard, this::notifyAboutKeyboardChange);
-      windowsInsetsManager.startObservingChanges(keyboardAnimationCallback, isStatusBarTranslucent);
+      mWindowsInsetsManager.startObservingChanges(
+          keyboardAnimationCallback, isStatusBarTranslucent);
     }
     mListeners.put(listenerId, callback);
     return listenerId;
@@ -35,7 +36,7 @@ public class KeyboardAnimationManager {
   public void unsubscribeFromKeyboardUpdates(int listenerId) {
     mListeners.remove(listenerId);
     if (mListeners.isEmpty()) {
-      windowsInsetsManager.stopObservingChanges();
+      mWindowsInsetsManager.stopObservingChanges();
     }
   }
 
