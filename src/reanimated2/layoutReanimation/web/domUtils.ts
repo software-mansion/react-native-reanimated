@@ -163,6 +163,10 @@ function findDescendantWithExitingAnimation(
   node: ReanimatedHTMLElement,
   root: Node
 ) {
+  if (!(node instanceof HTMLElement)) {
+    return;
+  }
+
   if (node.reanimatedDummy && node.removedAfterAnimation === undefined) {
     reattachElementToAncestor(node, root);
   }
