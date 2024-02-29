@@ -1,6 +1,7 @@
 #import <Foundation/Foundation.h>
 #import <RNReanimated/READisplayLink.h>
 #import <RNReanimated/REAKeyboardEventObserver.h>
+#import <RNReanimated/REASlowAnimations.h>
 #import <RNReanimated/REAUIKit.h>
 #import <React/RCTDefines.h>
 #import <React/RCTUIManager.h>
@@ -19,6 +20,9 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   NSMutableDictionary *_listeners;
   READisplayLink *_displayLink;
   KeyboardState _state;
+  CFTimeInterval _animationStartTimestamp;
+  float _targetKeyboardHeight;
+  REAUIView *_keyboardView;
 }
 
 - (instancetype)init
@@ -27,7 +31,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   _listeners = [[NSMutableDictionary alloc] init];
   _nextListenerId = @0;
   _state = UNKNOWN;
-
+  _animationStartTimestamp = 0;
   NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
 
   [notificationCenter addObserver:self
@@ -78,31 +82,108 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
 #else
 
+- (void)runListeners:(float)keyboardHeight
+{
+  for (NSString *key in _listeners.allKeys) {
+    ((KeyboardEventListenerBlock)_listeners[key])(_state, keyboardHeight);
+  }
+}
+
 - (void)runUpdater
 {
   [[self getDisplayLink] setPaused:NO];
-  [self updateKeyboardFrame];
+  _animationStartTimestamp = 0;
+}
+
+- (float)getTargetTimestamp
+{
+  float targetTimestamp = _displayLink.targetTimestamp;
+  return reanimated::calculateTimestampWithSlowAnimations(targetTimestamp) * 1000;
+}
+
+- (float)estimateProgressForDuration:(float)keyboardAnimationDuration
+                                  a1:(float)a1
+                                  a2:(float)a2
+                                  b1:(float)b1
+                                  b2:(float)b2
+                                  c1:(float)c1
+                                  c2:(float)c2
+{
+  CFTimeInterval elapsedTime = _displayLink.targetTimestamp - _animationStartTimestamp;
+  float timeProgress = elapsedTime / keyboardAnimationDuration;
+  timeProgress = fmax(fmin(timeProgress, 1), 0);
+  float x = timeProgress;
+  float progress = 1 - a1 * pow(1 - x, a2) - b1 * x * pow(1 - x, b2) - c1 * pow(x, 2) * pow(1 - x, c2);
+  return progress;
+}
+
+- (CGFloat)estimateOpeningKeyboardHeight
+{
+  // Values comes from estimation: https://www.desmos.com/calculator/clhzejf5bs
+  float progress = [self estimateProgressForDuration:0.5 a1:1 a2:5.1 b1:1.6 b2:7.6 c1:0.2 c2:2.4];
+  float currentKeyboardHeight = _targetKeyboardHeight * progress;
+  return currentKeyboardHeight;
+}
+
+- (CGFloat)estimateClosingKeyboardHeight
+{
+  // Values comes from estimation: https://www.desmos.com/calculator/d3v550ofzs
+  float progress = [self estimateProgressForDuration:0.45 a1:1 a2:5.5 b1:2.5 b2:6.4 c1:1.6 c2:3.3];
+  float currentKeyboardHeight = _targetKeyboardHeight * (1 - progress);
+  return currentKeyboardHeight;
+}
+
+- (float)getAnimatingKeyboardHeight
+{
+  if (_animationStartTimestamp == 0) {
+    // DisplayLink animations usually start later than CAAnimations.
+    _animationStartTimestamp = _displayLink.targetTimestamp - _displayLink.duration;
+  }
+  CAAnimation *positionAnimation = [_measuringView.layer animationForKey:@"position"];
+  float caAnimationBeginTime = [[positionAnimation valueForKey:@"beginTime"] floatValue];
+  if (caAnimationBeginTime != 0) {
+    /*
+      CAAnimations have their own timers, and synchronizing with their timer produces
+      better visual effects. The CAAnimation timer is only available from the second
+      frame of the animation.
+    */
+    _animationStartTimestamp = caAnimationBeginTime;
+  }
+
+  CGFloat keyboardHeight = 0;
+  if (_state == OPENING) {
+    keyboardHeight = [self estimateOpeningKeyboardHeight];
+  } else if (_state == CLOSING) {
+    keyboardHeight = [self estimateClosingKeyboardHeight];
+  }
+  return keyboardHeight;
+}
+
+- (float)getStaticKeyboardHeight
+{
+  CGRect measuringFrame = _measuringView.frame;
+  CGFloat keyboardHeight = measuringFrame.size.height;
+  return keyboardHeight;
 }
 
 - (void)updateKeyboardFrame
 {
-  BOOL isAnimatingKeyboardChange = _measuringView.layer.presentationLayer.animationKeys.count != 0;
-  CGRect measuringFrame =
-      isAnimatingKeyboardChange ? _measuringView.layer.presentationLayer.frame : _measuringView.frame;
-  CGFloat keyboardHeight = measuringFrame.size.height;
-
-  if (!isAnimatingKeyboardChange) {
+  CGFloat keyboardHeight = 0;
+  bool isKeyboardAnimationRunning = [self hasAnyAnimation:_measuringView];
+  if (isKeyboardAnimationRunning) {
+    keyboardHeight = [self getAnimatingKeyboardHeight];
+  } else {
     // measuring view is no longer running an animation, we should settle in OPEN/CLOSE state
     if (_state == OPENING || _state == CLOSING) {
       _state = _state == OPENING ? OPEN : CLOSED;
     }
+    if (_state == OPEN || _state == CLOSED) {
+      keyboardHeight = [self getStaticKeyboardHeight];
+    }
     // stop display link updates if no animation is running
     [[self getDisplayLink] setPaused:YES];
   }
-
-  for (NSString *key in _listeners.allKeys) {
-    ((KeyboardEventListenerBlock)_listeners[key])(_state, keyboardHeight);
-  }
+  [self runListeners:keyboardHeight];
 }
 
 - (void)keyboardWillChangeFrame:(NSNotification *)notification
@@ -117,17 +198,23 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   CGFloat endHeight = windowSize.height - endFrame.origin.y;
 
   if (endHeight > 0 && _state != OPEN) {
+    _targetKeyboardHeight = endHeight;
     _state = OPENING;
   } else if (endHeight == 0 && _state != CLOSED) {
     _state = CLOSING;
   }
-
-  _measuringView.frame = CGRectMake(0, -1, 0, beginHeight);
-  [UIView animateWithDuration:animationDuration
-                   animations:^{
-                     self->_measuringView.frame = CGRectMake(0, -1, 0, endHeight);
-                   }];
-  [self runUpdater];
+  auto keyboardView = [self getKeyboardView];
+  bool hasKeyboardAnimation = [self hasAnyAnimation:keyboardView];
+  if (hasKeyboardAnimation) {
+    _measuringView.frame = CGRectMake(0, -1, 0, beginHeight);
+    [UIView animateWithDuration:animationDuration
+                     animations:^{
+                       self->_measuringView.frame = CGRectMake(0, -1, 0, endHeight);
+                     }];
+    [self runUpdater];
+  } else {
+    [self runListeners:endHeight];
+  }
 }
 
 - (int)subscribeForKeyboardEvents:(KeyboardEventListenerBlock)listener
@@ -173,6 +260,35 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
     self->_displayLink = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
   });
+}
+
+- (bool)hasAnyAnimation:(REAUIView *)view
+{
+  return view.layer.presentationLayer.animationKeys.count != 0;
+  ;
+}
+
+- (REAUIView *_Nullable)findClass:(NSString *)className inViewsList:(NSArray<REAUIView *> *)viewList
+{
+  for (UIWindow *view in viewList) {
+    if ([NSStringFromClass([view class]) isEqual:className]) {
+      return view;
+    }
+  }
+  return nil;
+}
+
+// Inspired by: https://stackoverflow.com/questions/32598490
+- (REAUIView *_Nullable)getKeyboardView
+{
+  if (_keyboardView) {
+    return _keyboardView;
+  }
+  NSArray<UIWindow *> *windows = [UIApplication sharedApplication].windows;
+  auto window = [self findClass:@"UITextEffectsWindow" inViewsList:windows];
+  auto keyboardContainer = [self findClass:@"UIInputSetContainerView" inViewsList:window.subviews];
+  _keyboardView = [self findClass:@"UIInputSetHostView" inViewsList:keyboardContainer.subviews];
+  return _keyboardView;
 }
 
 #endif
