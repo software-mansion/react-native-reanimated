@@ -140,13 +140,19 @@ export function createAnimatedComponent(
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
-      this.safeProps = { ...props };
 
-      const animatedProps = this.safeProps.animatedProps;
-      this.safeProps.animatedProps =
-        animatedProps === null || animatedProps === undefined
-          ? {}
-          : animatedProps;
+      const animatedProps = this.props.animatedProps;
+      const invalidAnimatedProps =
+        'animatedProps' in this.props &&
+        (animatedProps === null || animatedProps === undefined);
+
+      if (invalidAnimatedProps) {
+        this.safeProps = { ...props };
+        this.safeProps.animatedProps = {};
+      } else {
+        /** Don't create a deep copy of props if it's not needed */
+        this.safeProps = this.props;
+      }
 
       if (isJest()) {
         this.jestAnimatedStyle = { value: {} };
