@@ -163,6 +163,8 @@ function findDescendantWithExitingAnimation(
   node: ReanimatedHTMLElement,
   root: Node
 ) {
+  // Node could be something else than HTMLElement, for example TextNode (treated as plain text, not as HTML object),
+  // therefore it won't have children prop and calling Array.from(node.children) will cause error.
   if (!(node instanceof HTMLElement)) {
     return;
   }
