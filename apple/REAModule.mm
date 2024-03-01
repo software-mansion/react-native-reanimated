@@ -290,4 +290,12 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
   return nil;
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
+- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
+    (const facebook::react::ObjCTurboModule::InitParams &)params
+{
+  return std::make_shared<facebook::react::NativeReanimatedModuleSpecJSI>(params);
+}
+#endif // RCT_NEW_ARCH_ENABLED
+
 @end
