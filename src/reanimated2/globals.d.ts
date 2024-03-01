@@ -32,6 +32,7 @@ declare global {
     | ((js: string, sourceURL: string, sourceMap: string) => any)
     | undefined;
   var evalWithSourceUrl: ((js: string, sourceURL: string) => any) | undefined;
+  var _hasNativeState: (value: unknown) => boolean;
   var _log: (value: unknown) => void;
   var _toString: (value: unknown) => string;
   var _notifyAboutProgress: (

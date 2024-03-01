@@ -198,6 +198,9 @@ ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
     auto value = extractShareableOrThrow(rt, object.getProperty(rt, key));
     data_.emplace_back(key.utf8(rt), value);
   }
+  if (object.hasNativeState(rt)) {
+    nativeState_ = object.getNativeState(rt);
+  }
 }
 
 jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
@@ -205,6 +208,9 @@ jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
   for (size_t i = 0, size = data_.size(); i < size; i++) {
     obj.setProperty(
         rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
+  }
+  if (nativeState_) {
+    obj.setNativeState(rt, nativeState_);
   }
   return obj;
 }

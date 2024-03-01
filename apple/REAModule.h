@@ -1,8 +1,8 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <React/RCTInitializing.h>
-#import <rnreanimated/rnreanimated.h>
-#import <ReactCommon/RCTRuntimeExecutor.h>
 #import <React/RCTRuntimeExecutorModule.h>
+#import <ReactCommon/RCTRuntimeExecutor.h>
+#import <rnreanimated/rnreanimated.h>
 #else
 #import <React/RCTBridgeModule.h>
 #endif

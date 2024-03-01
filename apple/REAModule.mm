@@ -42,11 +42,6 @@ using namespace reanimated;
 - (void)_tryAndHandleError:(dispatch_block_t)block;
 @end
 
-
-//@interface RCTRuntimeExecutor (RCTTurboModule)
-//- (RuntimeExecutor)_runtimeExecutor;
-//@end
-
 #ifdef RCT_NEW_ARCH_ENABLED
 static __strong REAInitializerRCTFabricSurface *reaSurface;
 #else
@@ -56,7 +51,6 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 @implementation REAModule {
 #ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTSurfacePresenter *_surfacePresenter;
-//    RCTRuntimeExecutor *_runtimeExecutor;
   std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule_;
 #else
   NSMutableArray<AnimatedOperation> *_operations;
@@ -68,7 +62,9 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 }
 
 @synthesize moduleRegistry = _moduleRegistry;
+#ifdef RCT_NEW_ARCH_ENABLED
 @synthesize runtimeExecutor = _runtimeExecutor;
+#endif // RCT_NEW_ARCH_ENABLED
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
@@ -170,11 +166,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
 {
   _surfacePresenter = surfacePresenter;
-}
-
-- (void)setRuntimeExecutor:(RCTRuntimeExecutor *)runtimeExecutor
-{
-  _runtimeExecutor = runtimeExecutor;
 }
 
 - (void)initialize
@@ -310,21 +301,26 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)valueUnpackerCode)
 {
-    
+#if __has_include(<UIKit/UIAccessibility.h>)
+  auto isReducedMotion = UIAccessibilityIsReduceMotionEnabled();
+#else
+  auto isReducedMotion = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
+#endif
+  if (!self.bridge) {
 #ifdef RCT_NEW_ARCH_ENABLED
-//    executeSynchronouslyOnSameThread_CAN_DEADLOCK(([_runtimeExecutor getRuntimeExecutor]), ^(jsi::Runtime &runtime){
     RCTCxxBridge *cxxBridge = (RCTCxxBridge *)[RCTBridge currentBridge];
     auto &runtime = *(jsi::Runtime *)cxxBridge.runtime;
-   
-    auto nativeReanimatedModule = reanimated::createReanimatedModuleBridgeless(
-        _moduleRegistry, runtime, /* jsCallInvoker */ nil, std::string([valueUnpackerCode UTF8String]));
-    WorkletRuntimeCollector::install(runtime);
+    auto executorFunction = ([executor = _runtimeExecutor](std::function<void(jsi::Runtime & runtime)> &&callback) {
+      // Convert to Objective-C block so it can be captured properly.
+      __block auto callbackBlock = callback;
 
-  #if __has_include(<UIKit/UIAccessibility.h>)
-    auto isReducedMotion = UIAccessibilityIsReduceMotionEnabled();
-  #else
-    auto isReducedMotion = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
-  #endif
+      [executor execute:^(jsi::Runtime &runtime) {
+        callbackBlock(runtime);
+      }];
+    });
+    auto nativeReanimatedModule = reanimated::createReanimatedModuleBridgeless(
+        _moduleRegistry, runtime, std::string([valueUnpackerCode UTF8String]), executorFunction);
+    WorkletRuntimeCollector::install(runtime);
 
     RNRuntimeDecorator::decorate(runtime, nativeReanimatedModule, isReducedMotion);
 
@@ -333,31 +329,23 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
       // reload, uiManager is null right now, we need to wait for `installReanimatedAfterReload`
       [self injectDependencies:runtime];
     }
-  return nil;
-#else
-
+    return @YES;
+#endif // RCT_NEW_ARCH_ENABLED
+  } else {
     facebook::jsi::Runtime *jsiRuntime = [self.bridge respondsToSelector:@selector(runtime)]
         ? reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime)
         : nullptr;
 
-  if (jsiRuntime) {
-    auto nativeReanimatedModule = reanimated::createReanimatedModule(
-        self.bridge, self.bridge.jsCallInvoker, std::string([valueUnpackerCode UTF8String]));
+    if (jsiRuntime) {
+      auto nativeReanimatedModule = reanimated::createReanimatedModule(
+          self.bridge, self.bridge.jsCallInvoker, std::string([valueUnpackerCode UTF8String]));
 
-    jsi::Runtime &rnRuntime = *jsiRuntime;
-    WorkletRuntimeCollector::install(rnRuntime);
-
-#if __has_include(<UIKit/UIAccessibility.h>)
-    auto isReducedMotion = UIAccessibilityIsReduceMotionEnabled();
-#else
-    auto isReducedMotion = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
-#endif
-
-    RNRuntimeDecorator::decorate(rnRuntime, nativeReanimatedModule, isReducedMotion);
+      jsi::Runtime &rnRuntime = *jsiRuntime;
+      WorkletRuntimeCollector::install(rnRuntime);
+      RNRuntimeDecorator::decorate(rnRuntime, nativeReanimatedModule, isReducedMotion);
+    }
   }
-
-  return nil;
-#endif
+  return @YES;
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED

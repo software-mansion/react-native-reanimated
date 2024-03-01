@@ -289,7 +289,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
-      rnRuntime, jsInvoker, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode);
+      rnRuntime, jsInvoker, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode, nullptr);
 
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
@@ -388,11 +388,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   return nativeReanimatedModule;
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
 std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &runtime,
-    const std::shared_ptr<CallInvoker> &jsInvoker,
-    const std::string &valueUnpackerCode)
+    const std::string &valueUnpackerCode,
+    std::function<void(std::function<void(jsi::Runtime &runtime)> &&callback)> runtimeExecutor)
 {
   REAModule *reaModule = [moduleRegistry moduleForName:"ReanimatedModule"];
 
@@ -401,7 +402,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
     if (gestureHandlerStateManager == nil) {
       gestureHandlerStateManager = [moduleRegistry moduleForName:"RNGestureHandlerModule"];
     }
-
     setGestureState(gestureHandlerStateManager, handlerTag, newState);
   };
 
@@ -490,7 +490,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
   };
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
-      runtime, jsInvoker, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode);
+      runtime, nullptr, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode, runtimeExecutor);
 
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
@@ -512,5 +512,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
 
   return nativeReanimatedModule;
 }
+#endif // RCT_NEW_ARCH_ENABLED
 
 } // namespace reanimated

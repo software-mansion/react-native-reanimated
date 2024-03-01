@@ -1,5 +1,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
+#include <utility>
+
 #include "ShadowTreeCloner.h"
 
 namespace reanimated {

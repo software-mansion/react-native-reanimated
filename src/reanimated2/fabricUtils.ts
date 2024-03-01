@@ -1,45 +1,42 @@
 'use strict';
 /* eslint-disable camelcase */
 
-import { isFabric } from './PlatformChecker';
 import type { ShadowNodeWrapper } from './commonTypes';
 
-interface HostInstance {
-  __internalInstanceHandle: {
-    stateNode: {
-      node: ShadowNodeWrapper;
-    };
-  };
-}
-
-let findHostInstance_DEPRECATED: (ref: React.Component) => HostInstance;
-let getInternalInstanceHandleFromPublicInstance: (ref: any) => {
-  stateNode: { node: any };
+let findHostInstance_DEPRECATED: (ref: unknown) => void;
+let getInternalInstanceHandleFromPublicInstance: (ref: unknown) => {
+  stateNode: { node: unknown };
 };
 
 export function getShadowNodeWrapperFromRef(
   ref: React.Component
 ): ShadowNodeWrapper {
-  if (!findHostInstance_DEPRECATED && isFabric()) {
+  // load findHostInstance_DEPRECATED lazily because it may not be available before render
+  if (findHostInstance_DEPRECATED === undefined) {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       findHostInstance_DEPRECATED =
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-member-access
         require('react-native/Libraries/Renderer/shims/ReactFabric').findHostInstance_DEPRECATED;
     } catch (e) {
-      throw new Error(
-        '[Reanimated] Cannot import `findHostInstance_DEPRECATED`.'
-      );
+      findHostInstance_DEPRECATED = (_ref: unknown) => null;
     }
   }
-  
+
   // load findHostInstance_DEPRECATED lazily because it may not be available before render
   if (getInternalInstanceHandleFromPublicInstance === undefined) {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       getInternalInstanceHandleFromPublicInstance =
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        require('react-native/Libraries/ReactNative/ReactFabricPublicInstance/ReactFabricPublicInstance').getInternalInstanceHandleFromPublicInstance;
+        // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-member-access
+        require('react-native/Libraries/ReactNative/ReactFabricPublicInstance/ReactFabricPublicInstance')
+          .getInternalInstanceHandleFromPublicInstance ??
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
+        ((_ref: any) => _ref._internalInstanceHandle);
     } catch (e) {
-      '[Reanimated] Cannot import `getInternalInstanceHandleFromPublicInstance`.'
+      getInternalInstanceHandleFromPublicInstance = (_ref: any) =>
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
+        _ref._internalInstanceHandle;
     }
   }
 

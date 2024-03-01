@@ -11,9 +11,11 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.UIManager;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.modules.core.ReactChoreographer;
 import com.facebook.react.uimanager.GuardedFrameCallback;
@@ -89,7 +91,7 @@ public class NodesManager implements EventDispatcherListener {
   protected final UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
   private final AtomicBoolean mCallbackPosted = new AtomicBoolean();
   private final ReactContext mContext;
-  private final UIManagerModule mUIManager;
+  private final UIManager mUIManager;
   private ReactApplicationContext mReactApplicationContext;
   private RCTEventEmitter mCustomEventHandler = new NoopEventHandler();
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
@@ -109,13 +111,13 @@ public class NodesManager implements EventDispatcherListener {
     return mAnimationManager;
   }
 
-  public void onCatalystInstanceDestroy() {
+  public void onInvalidate() {
     if (mAnimationManager != null) {
-      mAnimationManager.onCatalystInstanceDestroy();
+      mAnimationManager.onInvalidate();
     }
 
     if (mNativeProxy != null) {
-      mNativeProxy.onCatalystInstanceDestroy();
+      mNativeProxy.onInvalidate();
       mNativeProxy = null;
     }
   }
@@ -144,9 +146,13 @@ public class NodesManager implements EventDispatcherListener {
 
   public NodesManager(ReactContext context) {
     mContext = context;
-    mUIManager = context.getNativeModule(UIManagerModule.class);
-    mUIImplementation = mUIManager.getUIImplementation();
-    mCustomEventNamesResolver = mUIManager.getDirectEventNamesResolver();
+    mUIManager =
+        context.isBridgeless()
+            ? context.getFabricUIManager()
+            : context.getNativeModule(UIManagerModule.class);
+    mUIImplementation =
+        context.isBridgeless() ? null : ((UIManagerModule) mUIManager).getUIImplementation();
+    mCustomEventNamesResolver = mUIManager::resolveCustomDirectEventName;
     mEventEmitter = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
 
     mReactChoreographer = ReactChoreographer.getInstance();
@@ -166,7 +172,11 @@ public class NodesManager implements EventDispatcherListener {
     // Events are handled in the native modules thread in the `onEventDispatch()` method.
     // This method indirectly uses `mChoreographerCallback` which was created after event
     // registration, creating race condition
-    mUIManager.getEventDispatcher().addListener(this);
+    if (context.isBridgeless()) {
+      ((FabricUIManager) mUIManager).getEventDispatcher().addListener(this);
+    } else {
+      ((UIManagerModule) mUIManager).getEventDispatcher().addListener(this);
+    }
 
     mAnimationManager = new AnimationsManager(mContext, mUIManager);
   }
@@ -227,7 +237,8 @@ public class NodesManager implements EventDispatcherListener {
                 NativeUpdateOperation op = copiedOperationsQueue.remove();
                 ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
                 if (shadowNode != null) {
-                  mUIManager.updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
+                  ((UIManagerModule) mUIManager)
+                      .updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
                 }
               }
               if (queueWasEmpty) {

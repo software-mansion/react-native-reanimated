@@ -11,8 +11,6 @@ import { Platform, findNodeHandle } from 'react-native';
 import type { ScrollView, FlatList } from 'react-native';
 import { isFabric } from '../PlatformChecker';
 
-const IS_FABRIC = isFabric();
-
 interface MaybeScrollableComponent extends Component {
   getNativeScrollRef?: FlatList['getNativeScrollRef'];
   getScrollableNode?:
@@ -24,17 +22,13 @@ interface MaybeScrollableComponent extends Component {
 }
 
 function getComponentOrScrollable(component: MaybeScrollableComponent) {
-  if (IS_FABRIC && component.getNativeScrollRef) {
+  if (isFabric() && component.getNativeScrollRef) {
     return component.getNativeScrollRef();
-  } else if (!IS_FABRIC && component.getScrollableNode) {
+  } else if (!isFabric() && component.getScrollableNode) {
     return component.getScrollableNode();
   }
   return component;
 }
-
-const getTagValueFunction = IS_FABRIC
-  ? getShadowNodeWrapperFromRef
-  : findNodeHandle;
 
 /**
  * Lets you get a reference of a view that you can use inside a worklet.
@@ -56,10 +50,13 @@ export function useAnimatedRef<
     ) => {
       // enters when ref is set by attaching to a component
       if (component) {
+        const getTagValueFunction = isFabric()
+          ? getShadowNodeWrapperFromRef
+          : findNodeHandle;
         tag.value = getTagValueFunction(getComponentOrScrollable(component));
         fun.current = component;
         // viewName is required only on iOS with Paper
-        if (Platform.OS === 'ios' && !IS_FABRIC) {
+        if (Platform.OS === 'ios' && !isFabric()) {
           viewName.value =
             (component as MaybeScrollableComponent)?.viewConfig
               ?.uiViewClassName || 'RCTView';

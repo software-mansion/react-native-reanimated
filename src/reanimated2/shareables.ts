@@ -146,6 +146,8 @@ export function makeShareableCloneRecursive<T>(
         // then recreate new host object wrapping the same instance on the UI thread.
         // there is no point of iterating over keys as we do for regular objects.
         toAdapt = value;
+      } else if (isPlainJSObject(value) && global._hasNativeState(value)) {
+        toAdapt = value;
       } else if (isPlainJSObject(value) || isTypeFunction) {
         toAdapt = {};
         if (value.__workletHash !== undefined) {

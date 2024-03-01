@@ -65,6 +65,11 @@ void WorkletRuntimeDecorator::decorate(
 #endif
 
   jsi_utils::installJsiFunction(
+      rt, "_hasNativeState", [](jsi::Runtime &rt, const jsi::Value &value) {
+        return value.asObject(rt).hasNativeState(rt);
+      });
+
+  jsi_utils::installJsiFunction(
       rt, "_toString", [](jsi::Runtime &rt, const jsi::Value &value) {
         return jsi::String::createFromUtf8(rt, stringifyJSIValue(rt, value));
       });

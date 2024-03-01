@@ -34,9 +34,9 @@
 
 using namespace facebook;
 
-#if REACT_NATIVE_MINOR_VERSION >= 73 && defined(RCT_NEW_ARCH_ENABLED)
+#if REACT_NATIVE_MINOR_VERSION == 73 && defined(RCT_NEW_ARCH_ENABLED)
 // Android can't find the definition of this static field
-//bool CoreFeatures::useNativeState;
+bool CoreFeatures::useNativeState;
 #endif
 
 namespace reanimated {
@@ -47,10 +47,13 @@ NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
-    const std::string &valueUnpackerCode)
+    const std::string &valueUnpackerCode,
+    std::function<void(std::function<void(jsi::Runtime &runtime)> &&callback)>
+        runtimeExecutor)
     : NativeReanimatedModuleSpec(jsInvoker),
       jsQueue_(jsQueue),
-      jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsInvoker)),
+      jsScheduler_(
+          std::make_shared<JSScheduler>(rnRuntime, jsInvoker, runtimeExecutor)),
       uiScheduler_(uiScheduler),
       uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
           rnRuntime,
@@ -660,7 +663,6 @@ jsi::Value NativeReanimatedModule::measure(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue) {
   // based on implementation from UIManagerBinding.cpp
-
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
   auto layoutMetrics = uiManager_->getRelativeLayoutMetrics(
       *shadowNode, nullptr, {/* .includeTransform = */ true});
@@ -676,7 +678,7 @@ jsi::Value NativeReanimatedModule::measure(
       uiManager_->getNewestCloneOfShadowNode(*shadowNode);
 
   auto layoutableShadowNode =
-    dynamic_cast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
+      dynamic_cast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
   facebook::react::Point originRelativeToParent =
       layoutableShadowNode != nullptr
       ? layoutableShadowNode->getLayoutMetrics().frame.origin

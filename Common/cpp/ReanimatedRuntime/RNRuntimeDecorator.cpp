@@ -1,4 +1,5 @@
 #include "RNRuntimeDecorator.h"
+#include "ReanimatedJSIUtils.h"
 #include "ReanimatedVersion.h"
 
 namespace reanimated {
@@ -28,6 +29,13 @@ void RNRuntimeDecorator::decorate(
   constexpr auto isFabric = false;
 #endif // RCT_NEW_ARCH_ENABLED
   rnRuntime.global().setProperty(rnRuntime, "_IS_FABRIC", isFabric);
+
+  jsi_utils::installJsiFunction(
+      rnRuntime,
+      "_hasNativeState",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return value.asObject(rt).hasNativeState(rt);
+      });
 
 #ifndef NDEBUG
   checkJSVersion(rnRuntime, nativeReanimatedModule->getJSLogger());
