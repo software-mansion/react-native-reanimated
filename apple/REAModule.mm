@@ -62,9 +62,9 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 }
 
 @synthesize moduleRegistry = _moduleRegistry;
-#ifdef RCT_NEW_ARCH_ENABLED
+#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
 @synthesize runtimeExecutor = _runtimeExecutor;
-#endif // RCT_NEW_ARCH_ENABLED
+#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
@@ -307,7 +307,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
   auto isReducedMotion = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
 #endif
   if (!self.bridge) {
-#ifdef RCT_NEW_ARCH_ENABLED
+#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
     RCTCxxBridge *cxxBridge = (RCTCxxBridge *)[RCTBridge currentBridge];
     auto &runtime = *(jsi::Runtime *)cxxBridge.runtime;
     auto executorFunction = ([executor = _runtimeExecutor](std::function<void(jsi::Runtime & runtime)> &&callback) {
@@ -324,13 +324,12 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 
     RNRuntimeDecorator::decorate(runtime, nativeReanimatedModule, isReducedMotion);
 
-    self->weakNativeReanimatedModule_ = nativeReanimatedModule;
-    if (self->_surfacePresenter != nil) {
+    weakNativeReanimatedModule_ = nativeReanimatedModule;
+    if (_surfacePresenter != nil) {
       // reload, uiManager is null right now, we need to wait for `installReanimatedAfterReload`
       [self injectDependencies:runtime];
     }
-    return @YES;
-#endif // RCT_NEW_ARCH_ENABLED
+#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
   } else {
     facebook::jsi::Runtime *jsiRuntime = [self.bridge respondsToSelector:@selector(runtime)]
         ? reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime)
@@ -343,6 +342,13 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
       jsi::Runtime &rnRuntime = *jsiRuntime;
       WorkletRuntimeCollector::install(rnRuntime);
       RNRuntimeDecorator::decorate(rnRuntime, nativeReanimatedModule, isReducedMotion);
+#ifdef RCT_NEW_ARCH_ENABLED
+      weakNativeReanimatedModule_ = nativeReanimatedModule;
+      if (self->_surfacePresenter != nil) {
+        // reload, uiManager is null right now, we need to wait for `installReanimatedAfterReload`
+        [self injectDependencies:rnRuntime];
+      }
+#endif // RCT_NEW_ARCH_ENABLED
     }
   }
   return @YES;

@@ -16,7 +16,7 @@ import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.internal.turbomodule.core.interfaces.TurboModule;
+import com.facebook.react.turbomodule.core.interfaces.TurboModule;
 import javax.annotation.Nonnull;
 
 public abstract class NativeReanimatedModuleSpec extends ReactContextBaseJavaModule implements TurboModule {
