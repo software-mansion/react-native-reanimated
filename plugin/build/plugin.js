@@ -267,6 +267,7 @@ var require_globals = __commonJS({
       "HermesInternal",
       "_WORKLET",
       "_IS_FABRIC",
+      "_hasNativeState",
       "_log",
       "_toString",
       "_scheduleOnJS",

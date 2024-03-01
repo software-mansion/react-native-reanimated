@@ -7,14 +7,12 @@
     "ios": "react-native run-ios",
     "lint": "eslint --max-warnings=0 .",
     "start": "react-native start",
-    "test": "jest",
-    "postinstall": "patch-package"
+    "test": "jest"
   },
   "dependencies": {
     "@babel/plugin-transform-export-namespace-from": "^7.22.11",
-    "postinstall-postinstall": "^2.1.0",
     "react": "18.2.0",
-    "react-native": "0.74.0-rc.0",
+    "react-native": "0.74.0-rc.1",
     "react-native-reanimated": "link:../"
   },
   "devDependencies": {
@@ -30,7 +28,6 @@
     "babel-jest": "^29.6.3",
     "eslint": "^8.19.0",
     "jest": "^29.6.3",
-    "patch-package": "^8.0.0",
     "prettier": "2.8.8",
     "react-test-renderer": "18.2.0",
     "typescript": "5.0.4"
