@@ -1,5 +1,7 @@
 package com.swmansion.reanimated.keyboard;
 
+import android.view.KeyCharacterMap;
+import android.view.KeyEvent;
 import androidx.core.view.WindowInsetsCompat;
 import com.facebook.react.uimanager.PixelUtil;
 
@@ -21,8 +23,11 @@ public class Keyboard {
   public void updateHeight(WindowInsetsCompat insets) {
     int contentBottomInset = insets.getInsets(CONTENT_TYPE_MASK).bottom;
     int systemBarBottomInset = insets.getInsets(SYSTEM_BAR_TYPE_MASK).bottom;
-    int keyboardHeightDip = Math.max(0, contentBottomInset - systemBarBottomInset);
-    if (keyboardHeightDip == 0 && mState == KeyboardState.OPEN) {
+    boolean hasNavigationBar = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_HOME);
+    int keyboardHeightDip =
+        hasNavigationBar ? contentBottomInset - systemBarBottomInset : contentBottomInset;
+    int keyboardHeight = (int) PixelUtil.toDIPFromPixel(Math.max(0, keyboardHeightDip));
+    if (keyboardHeight == 0 && mState == KeyboardState.OPEN) {
       /*
       When the keyboard is being canceling, for one frame the insets show a keyboard height of 0,
       causing a jump of the keyboard. We can avoid it by ignoring that frame and calling
