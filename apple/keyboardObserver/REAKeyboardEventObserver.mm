@@ -123,7 +123,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 - (CGFloat)estimateOpeningKeyboardHeight
 {
   /*
-    Curve parameters comes from estimation: https://www.desmos.com/calculator/ufy5rbucpd
+    Curve parameters come from estimation: https://www.desmos.com/calculator/ufy5rbucpd
     Animation takes 30 frames, which is 0.48 seconds at 60 fps.
   */
   float progress = [self estimateProgressForDuration:0.48 a1:1 a2:4.62 b1:2.44 b2:9.82 c1:0.22 c2:2.09];
@@ -135,7 +135,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 - (CGFloat)estimateClosingKeyboardHeight
 {
   /*
-    Curve parameters comes from estimation: https://www.desmos.com/calculator/vhrhdaopyq
+    Curve parameters come from estimation: https://www.desmos.com/calculator/vhrhdaopyq
     Animation takes 31 frames, which is 0.496 seconds at 60 fps.
   */
   float progress = [self estimateProgressForDuration:0.496 a1:1 a2:5.65 b1:2.74 b2:8.38 c1:0.93 c2:3.29];
