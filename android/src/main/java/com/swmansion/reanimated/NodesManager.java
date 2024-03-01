@@ -109,13 +109,13 @@ public class NodesManager implements EventDispatcherListener {
     return mAnimationManager;
   }
 
-  public void onCatalystInstanceDestroy() {
+  public void onInvalidate() {
     if (mAnimationManager != null) {
-      mAnimationManager.onCatalystInstanceDestroy();
+      mAnimationManager.onInvalidate();
     }
 
     if (mNativeProxy != null) {
-      mNativeProxy.onCatalystInstanceDestroy();
+      mNativeProxy.onInvalidate();
       mNativeProxy = null;
     }
   }
