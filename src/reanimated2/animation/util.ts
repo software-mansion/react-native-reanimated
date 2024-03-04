@@ -50,13 +50,11 @@ export function assertEasingIsWorklet(
   easing: EasingFunction | EasingFunctionFactory
 ) {
   'worklet';
-
   if (SHOULD_BE_USE_WEB) {
     /* It is possible to run reanimated on web without plugin, so let's skip this check on web */
     return true;
   }
   const isFunction: boolean = typeof easing === 'function';
-
   if (isFunction && !isWorkletFunction(easing)) {
     throw new Error(
       `[Reanimated] The easing function provided to \`withTiming\` is not a worklet. Are you sure you didn't import it from react-native? `
