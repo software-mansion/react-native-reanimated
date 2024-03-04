@@ -56,15 +56,10 @@ export function assertEasingIsWorklet(
     return true;
   }
   const isFunction: boolean = typeof easing === 'function';
-  const functionName = typeof easing === 'function' ? easing?.name : '';
-  /* Just checking with `isWorkletFunction` is not sufficient in case of keyframe animations. Therefore, we also check for binding. */
-  const isBound = functionName.startsWith('bound');
 
-  if (!isBound && isFunction && !isWorkletFunction(easing)) {
+  if (isFunction && !isWorkletFunction(easing)) {
     throw new Error(
-      `[Reanimated] The easing function ${
-        functionName ? `\`${functionName}\` ` : ''
-      }provided to \`withTiming\` is not a worklet. Are you sure you didn't import it from react-native? `
+      `[Reanimated] The easing function provided to \`withTiming\` is not a worklet. Are you sure you didn't import it from react-native? `
     );
   }
 }

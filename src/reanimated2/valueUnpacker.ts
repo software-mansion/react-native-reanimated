@@ -46,6 +46,8 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
       workletsCache.set(workletHash, workletFun);
     }
     const functionInstance = workletFun.bind(objectToUnpack);
+    functionInstance.__workletHash = workletHash;
+
     objectToUnpack._recur = functionInstance;
     return functionInstance;
   } else if (objectToUnpack.__init) {
