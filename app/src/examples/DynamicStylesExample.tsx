@@ -9,28 +9,34 @@ import Animated, {
 } from 'react-native-reanimated';
 
 export default function DynamicStylesExample() {
-  const [extraStyle, setState] = React.useState(false);
+  const [extraStyle, setExtraStyle] = React.useState(false);
   const [rerender, setRerender] = React.useState(false);
+
   const widthShared = useSharedValue(80);
   const backgroundColorShared = useSharedValue<string>('rgb(255,127,63)');
   const transformScaleYShared = useSharedValue(1);
-  const animatedStyle = useAnimatedStyle(() => ({ width: widthShared.value }));
-  const animatedStyle2 = useAnimatedStyle(() => {
+
+  const animatedWidthStyle = useAnimatedStyle(() => ({
+    width: widthShared.value,
+  }));
+  const animatedBackgroundColorStyle = useAnimatedStyle(() => {
     return {
       backgroundColor: backgroundColorShared.value,
     };
   });
 
   function handleChangeProps() {
-    setState(!extraStyle);
+    setExtraStyle((extraStyle) => !extraStyle);
   }
+
   function handleAnimate() {
     widthShared.value = withTiming(Math.random() * 160);
-    backgroundColorShared.value = withTiming(
-      `rgb(${Math.random() * 256},${Math.random() * 256},${
-        Math.random() * 256
-      })`
-    );
+
+    const r = Math.random() * 256;
+    const g = Math.random() * 256;
+    const b = Math.random() * 256;
+
+    backgroundColorShared.value = withTiming(`rgb(${r},${g},${b})`);
     transformScaleYShared.value = withTiming(Math.random());
   }
 
@@ -51,11 +57,7 @@ export default function DynamicStylesExample() {
             style={[
               styles.box,
               { width: widthShared },
-              extraStyle
-                ? {
-                    backgroundColor: backgroundColorShared,
-                  }
-                : null,
+              extraStyle ? { backgroundColor: backgroundColorShared } : null,
             ]}
           />
 
@@ -105,10 +107,6 @@ export default function DynamicStylesExample() {
               { backgroundColor: backgroundColorShared },
             ]}
           />
-        </View>
-        <View style={styles.container}>
-          {/* ----------------------- USE ANIMATED STYLE ----------------------------- */}
-
           <Text>useAnimatedStyle</Text>
 
           <Text>Same length array</Text>
@@ -116,8 +114,8 @@ export default function DynamicStylesExample() {
             accessible={rerender}
             style={[
               styles.box,
-              animatedStyle,
-              extraStyle ? animatedStyle2 : null,
+              animatedWidthStyle,
+              extraStyle ? animatedBackgroundColorStyle : null,
             ]}
           />
           <Text>Different length array</Text>
@@ -125,8 +123,8 @@ export default function DynamicStylesExample() {
             accessible={rerender}
             style={
               extraStyle
-                ? [styles.box, animatedStyle, animatedStyle2]
-                : [styles.box, animatedStyle]
+                ? [styles.box, animatedWidthStyle, animatedBackgroundColorStyle]
+                : [styles.box, animatedWidthStyle]
             }
           />
           <Text>Same length extra plain style array</Text>
@@ -134,8 +132,8 @@ export default function DynamicStylesExample() {
             accessible={rerender}
             style={[
               styles.box,
-              animatedStyle,
-              extraStyle ? animatedStyle2 : null,
+              animatedWidthStyle,
+              extraStyle ? animatedBackgroundColorStyle : null,
               extraStyle ? styles.radius : null,
             ]}
           />
@@ -144,21 +142,28 @@ export default function DynamicStylesExample() {
             accessible={rerender}
             style={
               extraStyle
-                ? [styles.box, animatedStyle, animatedStyle2, styles.radius]
-                : [styles.box, animatedStyle]
+                ? [
+                    styles.box,
+                    animatedWidthStyle,
+                    animatedBackgroundColorStyle,
+                    styles.radius,
+                  ]
+                : [styles.box, animatedWidthStyle]
             }
           />
           <Text>Two animated styles independent of state</Text>
           <Animated.View
             accessible={rerender}
-            style={[styles.box, animatedStyle, animatedStyle2]}
+            style={[
+              styles.box,
+              animatedWidthStyle,
+              animatedBackgroundColorStyle,
+            ]}
           />
         </View>
       </View>
 
-      <Text>
-        {extraStyle ? 'extra animated style' : 'no extra animated style'}
-      </Text>
+      <Text>{extraStyle ? '' : 'no '}extra animated style</Text>
       <Button title="Add/remove animated style" onPress={handleChangeProps} />
       <Button title="Force rerender" onPress={handleForceRerender} />
       <Button title="Animate" onPress={handleAnimate} />
