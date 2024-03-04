@@ -2,30 +2,12 @@
 import type {
   PanGestureHandlerEventPayload,
   ScreenTransitionConfig,
-  RNScreensTurboModuleType,
+  LockAxis,
 } from './commonTypes';
 import { applyStyle } from './styleUpdater';
+import { RNScreensTurboModule } from './RNScreensTurboModule';
 
-const RNScreensTurboModule: RNScreensTurboModuleType =
-  global.RNScreensTurboModule || {
-    startTransition: (_stackTag) => {
-      'worklet';
-      console.warn('[Reanimated] RNScreensTurboModule has not been found.');
-      return {
-        topScreenId: -1,
-        belowTopScreenId: -1,
-        canStartTransition: false,
-      };
-    },
-    updateTransition: (_stackTag, _progress) => {
-      'worklet';
-      console.warn('[Reanimated] RNScreensTurboModule has not been found.');
-    },
-    finishTransition: (_stackTag, _isCanceled) => {
-      'worklet';
-      console.warn('[Reanimated] RNScreensTurboModule has not been found.');
-    },
-  };
+const BASE_VELOCITY = 300;
 
 function computeEasingProgress(
   startingTimestamp: number,
@@ -51,15 +33,14 @@ function easing(x: number): number {
 function computeProgress(
   screenTransitionConfig: ScreenTransitionConfig,
   event: PanGestureHandlerEventPayload,
-  isTransitionCanceled: boolean
+  isTransitionCancelled: boolean
 ) {
   'worklet';
   const screenDimensions = screenTransitionConfig.screenDimensions;
   const progressX = Math.abs(event.translationX / screenDimensions.width);
   const progressY = Math.abs(event.translationY / screenDimensions.height);
-  const progress = isTransitionCanceled
-    ? Math.max(progressX, progressY) / 2
-    : Math.max(progressX, progressY);
+  const maxProgress = Math.max(progressX, progressY);
+  const progress = isTransitionCancelled ? maxProgress / 2 : maxProgress;
   return progress;
 }
 
@@ -68,7 +49,7 @@ function maybeScheduleNextFrame(
   didScreenReachDestination: boolean,
   screenTransitionConfig: ScreenTransitionConfig,
   event: PanGestureHandlerEventPayload,
-  isTransitionCanceled: boolean
+  isTransitionCancelled: boolean
 ) {
   'worklet';
   if (!didScreenReachDestination) {
@@ -76,24 +57,24 @@ function maybeScheduleNextFrame(
     const progress = computeProgress(
       screenTransitionConfig,
       event,
-      isTransitionCanceled
+      isTransitionCancelled
     );
     RNScreensTurboModule.updateTransition(stackTag, progress);
     requestAnimationFrame(step);
-  } else if (screenTransitionConfig.onFinishAnimation) {
-    screenTransitionConfig.onFinishAnimation();
+  } else {
+    screenTransitionConfig.onFinishAnimation?.();
   }
 }
 
-export function swipeSimulator(
+export function getSwipeSimulator(
   event: PanGestureHandlerEventPayload,
   screenTransitionConfig: ScreenTransitionConfig,
-  lockAxis?: 'x' | 'y' | undefined
+  lockAxis?: LockAxis
 ) {
   'worklet';
-  const screenSize = screenTransitionConfig.screenDimensions;
+  const screenDimensions = screenTransitionConfig.screenDimensions;
   const startTimestamp = _getAnimationTimestamp();
-  const isTransitionCanceled = screenTransitionConfig.isTransitionCanceled;
+  const { isTransitionCancelled } = screenTransitionConfig;
   const startingPosition = {
     x: event.translationX,
     y: event.translationY,
@@ -102,9 +83,12 @@ export function swipeSimulator(
     x: Math.sign(event.translationX),
     y: Math.sign(event.translationY),
   };
-  const finalPosition = isTransitionCanceled
+  const finalPosition = isTransitionCancelled
     ? { x: 0, y: 0 }
-    : { x: direction.x * screenSize.width, y: direction.y * screenSize.height };
+    : {
+        x: direction.x * screenDimensions.width,
+        y: direction.y * screenDimensions.height,
+      };
   const distance = {
     x: Math.abs(finalPosition.x - startingPosition.x),
     y: Math.abs(finalPosition.y - startingPosition.y),
@@ -113,7 +97,6 @@ export function swipeSimulator(
     x: false,
     y: false,
   };
-  const BASE_VELOCITY = 300;
   const velocity = { x: BASE_VELOCITY, y: BASE_VELOCITY };
   if (lockAxis === 'x') {
     velocity.y = 0;
@@ -131,17 +114,17 @@ export function swipeSimulator(
     }
   }
 
-  if (isTransitionCanceled) {
-    const didScreenReachDestinationCheck = () => {
-      if (!lockAxis) {
-        return didScreenReachDestination.x && didScreenReachDestination.y;
-      } else if (lockAxis === 'x') {
+  if (isTransitionCancelled) {
+    function didScreenReachDestinationCheck() {
+      if (lockAxis === 'x') {
         return didScreenReachDestination.x;
-      } else {
+      } else if (lockAxis === 'y') {
         return didScreenReachDestination.y;
+      } else {
+        return didScreenReachDestination.x && didScreenReachDestination.y;
       }
-    };
-    const computeFrame = () => {
+    }
+    function computeFrame() {
       const progress = {
         x: computeEasingProgress(startTimestamp, distance.x, velocity.x),
         y: computeEasingProgress(startTimestamp, distance.y, velocity.y),
@@ -178,12 +161,12 @@ export function swipeSimulator(
         didScreenReachDestinationCheck(),
         screenTransitionConfig,
         event,
-        isTransitionCanceled
+        isTransitionCancelled
       );
-    };
+    }
     return computeFrame;
   } else {
-    const computeFrame = () => {
+    function computeFrame() {
       const progress = {
         x: computeEasingProgress(startTimestamp, distance.x, velocity.x),
         y: computeEasingProgress(startTimestamp, distance.y, velocity.y),
@@ -193,25 +176,25 @@ export function swipeSimulator(
       event.translationY =
         startingPosition.y + direction.y * distance.y * easing(progress.y);
       if (direction.x > 0) {
-        if (event.translationX >= screenSize.width) {
+        if (event.translationX >= screenDimensions.width) {
           didScreenReachDestination.x = true;
-          event.translationX = screenSize.width;
+          event.translationX = screenDimensions.width;
         }
       } else {
-        if (event.translationX <= -screenSize.width) {
+        if (event.translationX <= -screenDimensions.width) {
           didScreenReachDestination.x = true;
-          event.translationX = -screenSize.width;
+          event.translationX = -screenDimensions.width;
         }
       }
       if (direction.y > 0) {
-        if (event.translationY >= screenSize.height) {
+        if (event.translationY >= screenDimensions.height) {
           didScreenReachDestination.y = true;
-          event.translationY = screenSize.height;
+          event.translationY = screenDimensions.height;
         }
       } else {
-        if (event.translationY <= -screenSize.height) {
+        if (event.translationY <= -screenDimensions.height) {
           didScreenReachDestination.y = true;
-          event.translationY = -screenSize.height;
+          event.translationY = -screenDimensions.height;
         }
       }
       applyStyle(screenTransitionConfig, event);
@@ -220,9 +203,9 @@ export function swipeSimulator(
         didScreenReachDestination.x || didScreenReachDestination.y,
         screenTransitionConfig,
         event,
-        isTransitionCanceled
+        isTransitionCancelled
       );
-    };
+    }
     return computeFrame;
   }
 }

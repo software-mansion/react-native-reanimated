@@ -10,45 +10,47 @@ import type {
 
 const IS_FABRIC = isFabric();
 
+function createViewDescriptorPaper(screenId: number | ShadowNodeWrapper) {
+  'worklet';
+  return { tag: screenId, name: 'RCTView' };
+}
+function createViewDescriptorFabric(screenId: number | ShadowNodeWrapper) {
+  'worklet';
+  return { shadowNodeWrapper: screenId };
+}
 const createViewDescriptor = IS_FABRIC
-  ? (screenId: number | ShadowNodeWrapper) => {
-      'worklet';
-      return { shadowNodeWrapper: screenId };
-    }
-  : (screenId: number | ShadowNodeWrapper) => {
-      'worklet';
-      return { tag: screenId, name: 'RCTView' };
-    };
+  ? createViewDescriptorFabric
+  : createViewDescriptorPaper;
 
 export function applyStyle(
   screenTransitionConfig: ScreenTransitionConfig,
   event: PanGestureHandlerEventPayload
 ) {
   'worklet';
-  const screenSize = screenTransitionConfig.screenDimensions;
+  const screenDimensions = screenTransitionConfig.screenDimensions;
 
   const topScreenId = screenTransitionConfig.topScreenId;
   const topScreenFrame = screenTransitionConfig.screenTransition.topScreenFrame;
-  const topStyle = topScreenFrame(event, screenSize);
+  const topScreenStyle = topScreenFrame(event, screenDimensions);
   const topScreenDescriptor = {
     value: [createViewDescriptor(topScreenId)],
   };
   updateProps(
     topScreenDescriptor as SharedValue<Descriptor[]>,
-    topStyle,
+    topScreenStyle,
     undefined
   );
 
   const belowTopScreenId = screenTransitionConfig.belowTopScreenId;
   const belowTopScreenFrame =
     screenTransitionConfig.screenTransition.belowTopScreenFrame;
-  const belowTopStyle = belowTopScreenFrame(event, screenSize);
+  const belowTopScreenStyle = belowTopScreenFrame(event, screenDimensions);
   const belowTopScreenDescriptor = {
     value: [createViewDescriptor(belowTopScreenId)],
   };
   updateProps(
     belowTopScreenDescriptor as SharedValue<Descriptor[]>,
-    belowTopStyle,
+    belowTopScreenStyle,
     undefined
   );
 }

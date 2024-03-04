@@ -103,5 +103,5 @@ declare global {
   var UpdatePropsManager: UpdatePropsManager;
   var ProgressTransitionRegister: ProgressTransitionRegister;
   var updateJSProps: (viewTag: number, props: Record<string, unknown>) => void;
-  var RNScreensTurboModule: RNScreensTurboModuleType;
+  var RNScreensTurboModule: RNScreensTurboModuleType | undefined;
 }

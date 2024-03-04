@@ -20,11 +20,11 @@ export type PanGestureHandlerEventPayload = {
 export type AnimatedScreenTransition = {
   topScreenFrame: (
     event: PanGestureHandlerEventPayload,
-    screenSize: MeasuredDimensions
+    screenDimensions: MeasuredDimensions
   ) => Record<string, unknown>;
   belowTopScreenFrame: (
     event: PanGestureHandlerEventPayload,
-    screenSize: MeasuredDimensions
+    screenDimensions: MeasuredDimensions
   ) => Record<string, unknown>;
 };
 
@@ -45,7 +45,7 @@ export type ScreenTransitionConfig = {
   sharedEvent: SharedValue<PanGestureHandlerEventPayload>;
   startingGesturePosition: SharedValue<PanGestureHandlerEventPayload>;
   onFinishAnimation?: () => void;
-  isTransitionCanceled: boolean;
+  isTransitionCancelled: boolean;
   goBackGesture: GoBackGesture;
   screenDimensions: MeasuredDimensions;
 };
@@ -57,5 +57,7 @@ export type RNScreensTurboModuleType = {
     canStartTransition: boolean;
   };
   updateTransition: (stackTag: number, progress: number) => void;
-  finishTransition: (stackTag: number, isCanceled: boolean) => void;
+  finishTransition: (stackTag: number, isCancelled: boolean) => void;
 };
+
+export type LockAxis = 'x' | 'y' | undefined;

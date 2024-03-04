@@ -2,10 +2,10 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import React from 'react';
 
-export default function ScreenAnimationExample() {
+export default function ScreenTransitionExample() {
   return (
     <View style={styles.container}>
-      <Text>Screen animation is not supported on web</Text>
+      <Text>Screen transition example is not supported on web</Text>
     </View>
   );
 }

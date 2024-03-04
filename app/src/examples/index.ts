@@ -114,7 +114,7 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
-// import ScreenAnimationExample from './ScreenAnimationExample';
+// import ScreenTransitionExample from './ScreenTransitionExample';
 import WithClampExample from './WithClampExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import HabitsExample from './LayoutAnimations/HabitsExample';
@@ -223,10 +223,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Update props performance',
     screen: UpdatePropsPerfExample,
   },
-  // ScreenAnimationExample: {
+  // ScreenTransitionExample: {
   //   icon: '📺',
-  //   title: 'Screen animation',
-  //   screen: ScreenAnimationExample,
+  //   title: 'Screen transition',
+  //   screen: ScreenTransitionExample,
   // },
 
   // Basic examples
