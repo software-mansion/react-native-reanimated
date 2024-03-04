@@ -278,7 +278,7 @@ class ShareableHandle : public Shareable {
   // since the final value is taken from a cache on the runtime which guarantees
   // sequential access.
   std::unique_ptr<ShareableObject> initializer_;
-  std::unique_ptr<jsi::Value> remoteValue_ = nullptr;
+  std::unique_ptr<jsi::Value> remoteValue_;
   jsi::Runtime *remoteRuntime_;
 
  public:
