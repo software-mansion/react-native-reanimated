@@ -150,7 +150,7 @@ const platformFunctions = {
     pageY: 0,
   }),
   // dispatchCommand: ADD ME IF NEEDED
-  // scrollTo: ADD ME IF NEEDED
+  scrollTo: NOOP,
   // setGestureState: ADD ME IF NEEDED
   // setNativeProps: ADD ME IF NEEDED
   // getRelativeCoords: ADD ME IF NEEDED
