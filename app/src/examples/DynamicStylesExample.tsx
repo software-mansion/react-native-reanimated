@@ -14,7 +14,6 @@ export default function DynamicStylesExample() {
 
   const widthShared = useSharedValue(80);
   const backgroundColorShared = useSharedValue<string>('rgb(255,127,63)');
-  const transformScaleYShared = useSharedValue(1);
 
   const animatedWidthStyle = useAnimatedStyle(() => ({
     width: widthShared.value,
@@ -30,14 +29,17 @@ export default function DynamicStylesExample() {
   }
 
   function handleAnimate() {
-    widthShared.value = withTiming(Math.random() * 160);
+    widthShared.value = withTiming((Math.random() * 160) / 2 + 40, {
+      duration: 1000,
+    });
 
     const r = Math.random() * 256;
     const g = Math.random() * 256;
     const b = Math.random() * 256;
 
-    backgroundColorShared.value = withTiming(`rgb(${r},${g},${b})`);
-    transformScaleYShared.value = withTiming(Math.random());
+    backgroundColorShared.value = withTiming(`rgb(${r},${g},${b})`, {
+      duration: 1500,
+    });
   }
 
   function handleForceRerender() {
@@ -46,12 +48,12 @@ export default function DynamicStylesExample() {
 
   return (
     <View style={styles.container}>
-      <Text>State: {String(rerender)}</Text>
-      <View style={styles.row}>
-        <View style={styles.container}>
-          <Text>InlineStyles</Text>
+      <Text style={styles.text}>State: {String(rerender)}</Text>
+      <View style={styles.columnContainer}>
+        <View style={styles.column}>
+          <Text style={styles.text}>InlineStyles</Text>
 
-          <Text>Same length array</Text>
+          <Text style={styles.text}>Same length array</Text>
           <Animated.View
             accessible={rerender}
             style={[
@@ -61,7 +63,7 @@ export default function DynamicStylesExample() {
             ]}
           />
 
-          <Text>Different length array</Text>
+          <Text style={styles.text}>Different length array</Text>
           <Animated.View
             accessible={rerender}
             style={
@@ -74,7 +76,7 @@ export default function DynamicStylesExample() {
                 : [styles.box, { width: widthShared }]
             }
           />
-          <Text>Same length extra plain style array</Text>
+          <Text style={styles.text}>Same length extra plain style array</Text>
           <Animated.View
             accessible={rerender}
             style={[
@@ -84,7 +86,9 @@ export default function DynamicStylesExample() {
               extraStyle ? styles.radius : null,
             ]}
           />
-          <Text>Different length extra plain style array</Text>
+          <Text style={styles.text}>
+            Different length extra plain style array
+          </Text>
           <Animated.View
             accessible={rerender}
             style={
@@ -98,7 +102,9 @@ export default function DynamicStylesExample() {
                 : [styles.box, { width: widthShared }]
             }
           />
-          <Text>Two animated styles independent of state</Text>
+          <Text style={styles.text}>
+            Two animated styles independent of state
+          </Text>
           <Animated.View
             accessible={rerender}
             style={[
@@ -107,9 +113,11 @@ export default function DynamicStylesExample() {
               { backgroundColor: backgroundColorShared },
             ]}
           />
-          <Text>useAnimatedStyle</Text>
+        </View>
+        <View style={styles.column}>
+          <Text style={styles.text}>useAnimatedStyle</Text>
 
-          <Text>Same length array</Text>
+          <Text style={styles.text}>Same length array</Text>
           <Animated.View
             accessible={rerender}
             style={[
@@ -118,7 +126,7 @@ export default function DynamicStylesExample() {
               extraStyle ? animatedBackgroundColorStyle : null,
             ]}
           />
-          <Text>Different length array</Text>
+          <Text style={styles.text}>Different length array</Text>
           <Animated.View
             accessible={rerender}
             style={
@@ -127,7 +135,7 @@ export default function DynamicStylesExample() {
                 : [styles.box, animatedWidthStyle]
             }
           />
-          <Text>Same length extra plain style array</Text>
+          <Text style={styles.text}>Same length extra plain style array</Text>
           <Animated.View
             accessible={rerender}
             style={[
@@ -137,7 +145,9 @@ export default function DynamicStylesExample() {
               extraStyle ? styles.radius : null,
             ]}
           />
-          <Text>Different length extra plain style array</Text>
+          <Text style={styles.text}>
+            Different length extra plain style array
+          </Text>
           <Animated.View
             accessible={rerender}
             style={
@@ -151,7 +161,9 @@ export default function DynamicStylesExample() {
                 : [styles.box, animatedWidthStyle]
             }
           />
-          <Text>Two animated styles independent of state</Text>
+          <Text style={styles.text}>
+            Two animated styles independent of state
+          </Text>
           <Animated.View
             accessible={rerender}
             style={[
@@ -163,7 +175,9 @@ export default function DynamicStylesExample() {
         </View>
       </View>
 
-      <Text>{extraStyle ? '' : 'no '}extra animated style</Text>
+      <Text style={styles.text}>
+        {extraStyle ? '' : 'no '}extra animated style
+      </Text>
       <Button title="Add/remove animated style" onPress={handleChangeProps} />
       <Button title="Force rerender" onPress={handleForceRerender} />
       <Button title="Animate" onPress={handleAnimate} />
@@ -177,8 +191,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  row: {
+  columnContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
   },
   box: {
     height: 50,
@@ -186,6 +202,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   radius: {
-    borderRadius: 20,
+    borderWidth: 10,
+  },
+  column: {
+    maxWidth: '50%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  text: {
+    maxWidth: 180,
+    textAlign: 'center',
   },
 });
