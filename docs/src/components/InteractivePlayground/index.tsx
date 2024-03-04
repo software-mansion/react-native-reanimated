@@ -4,10 +4,14 @@ import styles from './styles.module.css';
 
 import BrowserOnly from '@docusaurus/BrowserOnly';
 import CodeBlock from '@theme/CodeBlock';
+import { useReducedMotion } from 'react-native-reanimated';
+import ReducedMotionWarning from '../ReducedMotionWarning';
 
+import useClampPlayground from './useClampPlayground';
 import useSpringPlayground from './useSpringPlayground';
 import useTimingPlayground from './useTimingPlayground';
 import useInterpolateColorPlayground from './useInterpolateColorPlayground';
+import useAnimatedSensorPlayground from './useAnimatedSensorPlayground';
 
 import Reset from '@site/static/img/reset.svg';
 import ResetDark from '@site/static/img/reset-dark.svg';
@@ -22,9 +26,11 @@ import {
 } from '@mui/material';
 
 export {
+  useClampPlayground,
   useSpringPlayground,
   useTimingPlayground,
   useInterpolateColorPlayground,
+  useAnimatedSensorPlayground,
 };
 
 interface InteractivePlaygroundProps {
@@ -33,7 +39,7 @@ interface InteractivePlaygroundProps {
     code: string;
     controls: string;
     resetOptions: () => {};
-    additionalComponents: { section; chart };
+    additionalComponents?: { section; chart };
   };
 }
 
@@ -50,10 +56,13 @@ export default function InteractivePlayground(
     resetOptions();
   };
 
+  const prefersReducedMotion = useReducedMotion();
+
   return (
     <BrowserOnly fallback={<div>Loading...</div>}>
       {() => (
         <div className={styles.container}>
+          {prefersReducedMotion && <ReducedMotionWarning />}
           <div className={styles.buttonContainer}>
             <AnimableIcon
               icon={<Reset />}
@@ -70,11 +79,11 @@ export default function InteractivePlayground(
           <div className={styles.previewWrapper}>
             <React.Fragment key={key}>{example}</React.Fragment>
           </div>
-          {additionalComponents.section}
+          {additionalComponents?.section}
           <div className={styles.wrapper}>
             <div className={styles.controls}>
               {controls}
-              {additionalComponents.chart}
+              {additionalComponents?.chart}
             </div>
             <div className={styles.codeWrapper}>
               <CodeBlock className={styles.code} language="javascript">
@@ -95,6 +104,16 @@ interface RangeProps {
   value: number;
   onChange: Dispatch<number>;
   label: string;
+}
+
+interface DoubleRangeProps {
+  min: number;
+  max: number;
+  step?: number;
+  value: [number, number];
+  onChange: [Dispatch<number>, Dispatch<number>];
+  label: string;
+  color?: 'yellow' | 'green';
 }
 
 const RangeStyling = {
@@ -160,6 +179,58 @@ export function Range({
   );
 }
 
+export function DoubleRange({
+  min,
+  max,
+  value,
+  onChange,
+  label,
+  step = 1,
+  color,
+}: DoubleRangeProps) {
+  return (
+    <>
+      <div className={styles.row}>
+        <label>{label}</label>
+        {[0, 1].map((idx) => {
+          return (
+            <TextField
+              type="number"
+              hiddenLabel
+              size="small"
+              key={`${label}${idx}`}
+              inputProps={{ min: min, max: max, step: step }}
+              sx={TextFieldStyling}
+              value={value[idx]}
+              onChange={(e) => {
+                const newValue = parseFloat(e.target.value);
+                onChange[idx](
+                  newValue > max[idx]
+                    ? max[idx]
+                    : newValue <= min[idx]
+                    ? min[idx]
+                    : newValue
+                );
+              }}
+            />
+          );
+        })}
+      </div>
+      <Slider
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        sx={RangeStyling}
+        onChange={(e: Event & { target: HTMLInputElement }) => {
+          onChange[0](parseFloat(e.target.value[0]));
+          onChange[1](parseFloat(e.target.value[1]));
+        }}
+      />
+    </>
+  );
+}
+
 interface CheckboxProps {
   value: boolean;
   onChange: Dispatch<boolean>;
@@ -195,6 +266,7 @@ interface SelectProps {
   label: string;
   options: string[];
   disabled?: boolean;
+  disabledOptions?: string[];
 }
 
 const SelectStyling = {
@@ -213,6 +285,7 @@ export function SelectOption({
   label,
   options,
   disabled,
+  disabledOptions,
 }: SelectProps) {
   return (
     <div className={styles.row}>
@@ -227,6 +300,7 @@ export function SelectOption({
             <MenuItem
               key={option}
               value={option}
+              disabled={disabledOptions?.includes(option)}
               sx={{ color: 'text.secondary' }}>
               {option}
             </MenuItem>

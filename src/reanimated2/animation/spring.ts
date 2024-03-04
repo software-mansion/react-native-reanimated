@@ -19,6 +19,7 @@ import {
   underDampedSpringCalculations,
   criticallyDampedSpringCalculations,
   isAnimationTerminatingCalculation,
+  scaleZetaToMatchClamps,
   checkIfConfigIsValid,
 } from './springUtils';
 
@@ -29,6 +30,15 @@ type withSpringType = <T extends AnimatableValue>(
   callback?: AnimationCallback
 ) => T;
 
+/**
+ * Lets you create spring-based animations.
+ *
+ * @param toValue - the value at which the animation will come to rest - {@link AnimatableValue}
+ * @param config - the spring animation configuration - {@link SpringConfig}
+ * @param callback - a function called on animation complete - {@link AnimationCallback}
+ * @returns an [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring
+ */
 export const withSpring = ((
   toValue: AnimatableValue,
   userConfig?: SpringConfig,
@@ -49,6 +59,7 @@ export const withSpring = ((
       duration: 2000,
       dampingRatio: 0.5,
       reduceMotion: undefined,
+      clamp: undefined,
     } as const;
 
     const config: DefaultSpringConfig & SpringConfigInner = {
@@ -68,6 +79,7 @@ export const withSpring = ((
       animation: InnerSpringAnimation,
       now: Timestamp
     ): boolean {
+      // eslint-disable-next-line @typescript-eslint/no-shadow
       const { toValue, startTimestamp, current } = animation;
 
       const timeFromStart = now - startTimestamp;
@@ -200,6 +212,10 @@ export const withSpring = ((
         animation.zeta = zeta;
         animation.omega0 = omega0;
         animation.omega1 = omega1;
+
+        if (config.clamp !== undefined) {
+          animation.zeta = scaleZetaToMatchClamps(animation, config.clamp);
+        }
       }
 
       animation.lastTimestamp = previousAnimation?.lastTimestamp || now;

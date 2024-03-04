@@ -27,11 +27,12 @@
     "react-native-pager-view": "^5.4.25",
     "react-native-reanimated": "link:../",
     "react-native-safe-area-context": "^4.7.2",
-    "react-native-screens": "^3.25.0",
+    "react-native-screens": "^3.27.0",
     "react-native-svg": "^13.14.0",
     "react-native-web": "~0.18.12"
   },
   "devDependencies": {
+    "eslint-plugin-reanimated": "link:../eslintPlugin",
     "@tsconfig/react-native": "^3.0.0",
     "@types/d3-shape": "^3.1.1",
     "eslint": "^8.36.0",

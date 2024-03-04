@@ -1,7 +1,9 @@
 'use strict';
 import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
 
-export let setGestureState: (handlerTag: number, newState: number) => void;
+type SetGestureState = (handlerTag: number, newState: number) => void;
+
+export let setGestureState: SetGestureState;
 
 function setGestureStateNative(handlerTag: number, newState: number) {
   'worklet';
@@ -11,7 +13,7 @@ function setGestureStateNative(handlerTag: number, newState: number) {
     );
     return;
   }
-  _setGestureState(handlerTag, newState);
+  global._setGestureState(handlerTag, newState);
 }
 
 function setGestureStateJest() {

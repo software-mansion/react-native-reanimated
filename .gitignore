@@ -2,7 +2,8 @@
 .DS_Store
 
 # Xcode
-build/
+apple/build
+ios/build
 *.pbxuser
 !default.pbxuser
 *.mode1v3
@@ -21,6 +22,7 @@ DerivedData
 project.xcworkspace
 
 # Android/IJ
+android/build
 *.iml
 .idea
 .gradle
@@ -52,9 +54,9 @@ apple/Pods/
 lib/
 react-native-reanimated-tests.js
 
-# eclipse
-*.settings**
+# Eclipse
+.settings/
 
 # plugin
-!plugin/build/plugin.js
+plugin/build/plugin.js.map
 plugin/types

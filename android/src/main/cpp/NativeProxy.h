@@ -2,6 +2,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/fabric/JFabricUIManager.h>
+#include <react/renderer/scheduler/Scheduler.h>
 #endif
 
 #include <ReactCommon/CallInvokerHolder.h>
@@ -116,27 +117,25 @@ class SensorSetter : public HybridClass<SensorSetter> {
   std::function<void(double[], int)> callback_;
 };
 
-class KeyboardEventDataUpdater : public HybridClass<KeyboardEventDataUpdater> {
+class KeyboardWorkletWrapper : public HybridClass<KeyboardWorkletWrapper> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/nativeProxy/KeyboardEventDataUpdater;";
+      "Lcom/swmansion/reanimated/keyboard/KeyboardWorkletWrapper;";
 
-  void keyboardEventDataUpdater(int keyboardState, int height) {
+  void invoke(int keyboardState, int height) {
     callback_(keyboardState, height);
   }
 
   static void registerNatives() {
     javaClassStatic()->registerNatives({
-        makeNativeMethod(
-            "keyboardEventDataUpdater",
-            KeyboardEventDataUpdater::keyboardEventDataUpdater),
+        makeNativeMethod("invoke", KeyboardWorkletWrapper::invoke),
     });
   }
 
  private:
   friend HybridBase;
 
-  explicit KeyboardEventDataUpdater(std::function<void(int, int)> callback)
+  explicit KeyboardWorkletWrapper(std::function<void(int, int)> callback)
       : callback_(std::move(callback)) {}
 
   std::function<void(int, int)> callback_;
@@ -153,13 +152,12 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
           jsCallInvokerHolder,
       jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
       jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
+      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
 #ifdef RCT_NEW_ARCH_ENABLED
-      ,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager
+          fabricUIManager,
 #endif
-      /**/);
+      const std::string &valueUnpackerCode);
   static void registerNatives();
 
   ~NativeProxy();
@@ -206,7 +204,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       std::function<void(double[], int)> setter);
   void unregisterSensor(int sensorId);
   int subscribeForKeyboardEvents(
-      std::function<void(int, int)> keyboardEventDataUpdater,
+      std::function<void(int, int)> callback,
       bool isStatusBarTranslucent);
   void unsubscribeFromKeyboardEvents(int listenerId);
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -265,13 +263,12 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
+      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
 #ifdef RCT_NEW_ARCH_ENABLED
-      ,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager
+          fabricUIManager,
 #endif
-      /**/);
+      const std::string &valueUnpackerCode);
 };
 
 } // namespace reanimated

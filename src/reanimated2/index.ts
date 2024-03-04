@@ -1,4 +1,5 @@
 'use strict';
+
 import './publicGlobals';
 
 export type { WorkletRuntime } from './core';
@@ -6,12 +7,14 @@ export {
   runOnJS,
   runOnUI,
   createWorkletRuntime,
+  runOnRuntime,
   makeMutable,
   makeShareableCloneRecursive,
   isReanimated3,
   isConfigured,
   enableLayoutAnimations,
   getViewProp,
+  executeOnUIRuntimeSync,
 } from './core';
 export type {
   GestureHandlers,
@@ -60,12 +63,13 @@ export type {
 export {
   cancelAnimation,
   defineAnimation,
-  withTiming,
-  withSpring,
+  withClamp,
   withDecay,
   withDelay,
   withRepeat,
   withSequence,
+  withSpring,
+  withTiming,
 } from './animation';
 export type { ExtrapolationConfig, ExtrapolationType } from './interpolation';
 export { Extrapolation, interpolate, clamp } from './interpolation';
@@ -77,7 +81,7 @@ export type {
 } from './interpolateColor';
 export {
   /**
-   * @deprecated Please use `Extrapolation` instead.
+   * @deprecated Please use {@link Extrapolation} instead.
    */
   Extrapolate,
   ColorSpace,
@@ -241,6 +245,7 @@ export {
   InterfaceOrientation,
   KeyboardState,
   ReduceMotion,
+  isWorkletFunction,
 } from './commonTypes';
 export type { FrameInfo } from './frameCallback';
 export { getUseOfValueInStyleWarning } from './pluginUtils';

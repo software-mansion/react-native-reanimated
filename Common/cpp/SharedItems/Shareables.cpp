@@ -69,9 +69,9 @@ jsi::Value makeShareableClone(
       shareable =
           std::make_shared<ShareableArrayBuffer>(rt, object.getArrayBuffer(rt));
     } else if (object.isHostObject(rt)) {
-      assert(
-          !object.isHostObject<ShareableJSRef>(rt) &&
-          "[Reanimated] Provided value is already an instance of ShareableJSRef.");
+      if (object.isHostObject<ShareableJSRef>(rt)) {
+        return object;
+      }
       shareable =
           std::make_shared<ShareableHostObject>(rt, object.getHostObject(rt));
     } else {
@@ -108,15 +108,6 @@ jsi::Value makeShareableClone(
         "[Reanimated] Attempted to convert an unsupported value type.");
   }
   return ShareableJSRef::newHostObject(rt, shareable);
-}
-
-void updateDataSynchronously(
-    jsi::Runtime &rt,
-    const jsi::Value &synchronizedDataHolderRef,
-    const jsi::Value &newData) {
-  auto dataHolder = extractShareableOrThrow<ShareableSynchronizedDataHolder>(
-      rt, synchronizedDataHolderRef);
-  dataHolder->set(rt, newData);
 }
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
@@ -263,42 +254,6 @@ jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
     // method should be called at most once
   }
   return jsi::Value(rt, *remoteValue_);
-}
-
-jsi::Value ShareableSynchronizedDataHolder::get(jsi::Runtime &rt) {
-  std::unique_lock<std::mutex> read_lock(dataAccessMutex_);
-  if (&rt == primaryRuntime_) {
-    if (primaryValue_ != nullptr) {
-      return jsi::Value(rt, *primaryValue_);
-    }
-    auto value = data_->getJSValue(rt);
-    primaryValue_ = std::make_unique<jsi::Value>(rt, value);
-    return value;
-  }
-  if (secondaryValue_ == nullptr) {
-    auto value = data_->getJSValue(rt);
-    secondaryValue_ = std::make_unique<jsi::Value>(rt, value);
-    secondaryRuntime_ = &rt;
-    return value;
-  }
-  if (&rt == secondaryRuntime_) {
-    return jsi::Value(rt, *secondaryValue_);
-  }
-  throw std::runtime_error(
-      "[Reanimated] ShareableSynchronizedDataHolder supports only RN or UI runtime");
-}
-
-void ShareableSynchronizedDataHolder::set(
-    jsi::Runtime &rt,
-    const jsi::Value &data) {
-  std::unique_lock<std::mutex> write_lock(dataAccessMutex_);
-  data_ = extractShareableOrThrow(rt, data);
-  primaryValue_.reset();
-  secondaryValue_.reset();
-}
-
-jsi::Value ShareableSynchronizedDataHolder::toJSValue(jsi::Runtime &rt) {
-  return ShareableJSRef::newHostObject(rt, shared_from_this());
 }
 
 jsi::Value ShareableString::toJSValue(jsi::Runtime &rt) {

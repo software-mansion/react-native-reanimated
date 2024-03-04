@@ -5,7 +5,7 @@ export function FadingTransition(name: string, transitionData: TransitionData) {
   const { translateX, translateY, scaleX, scaleY } = transitionData;
 
   const fadingTransition = {
-    name: name,
+    name,
     style: {
       0: {
         opacity: 1,

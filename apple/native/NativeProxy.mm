@@ -8,6 +8,7 @@
 #import <RNReanimated/REAMessageThread.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
+#import <RNReanimated/REASlowAnimations.h>
 #import <RNReanimated/REASwizzledUIManager.h>
 #import <RNReanimated/RNGestureHandlerStateManager.h>
 #import <RNReanimated/ReanimatedRuntime.h>
@@ -48,41 +49,6 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-static CGFloat SimAnimationDragCoefficient(void)
-{
-  static float (*UIAnimationDragCoefficient)(void) = NULL;
-#if TARGET_IPHONE_SIMULATOR
-  static dispatch_once_t onceToken;
-  dispatch_once(&onceToken, ^{
-    UIAnimationDragCoefficient = (float (*)(void))dlsym(RTLD_DEFAULT, "UIAnimationDragCoefficient");
-  });
-#endif
-  return UIAnimationDragCoefficient ? UIAnimationDragCoefficient() : 1.f;
-}
-
-static CFTimeInterval calculateTimestampWithSlowAnimations(CFTimeInterval currentTimestamp)
-{
-#if TARGET_IPHONE_SIMULATOR
-  static CFTimeInterval dragCoefChangedTimestamp = CACurrentMediaTime();
-  static CGFloat previousDragCoef = SimAnimationDragCoefficient();
-
-  const CGFloat dragCoef = SimAnimationDragCoefficient();
-  if (previousDragCoef != dragCoef) {
-    previousDragCoef = dragCoef;
-    dragCoefChangedTimestamp = CACurrentMediaTime();
-  }
-
-  const bool areSlowAnimationsEnabled = dragCoef != 1.f;
-  if (areSlowAnimationsEnabled) {
-    return (dragCoefChangedTimestamp + (currentTimestamp - dragCoefChangedTimestamp) / dragCoef);
-  } else {
-    return currentTimestamp;
-  }
-#else
-  return currentTimestamp;
-#endif
-}
-
 static NSSet *convertProps(jsi::Runtime &rt, const jsi::Value &props)
 {
   NSMutableSet *propsSet = [[NSMutableSet alloc] init];
@@ -96,7 +62,8 @@ static NSSet *convertProps(jsi::Runtime &rt, const jsi::Value &props)
 
 std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     RCTBridge *bridge,
-    const std::shared_ptr<CallInvoker> &jsInvoker)
+    const std::shared_ptr<CallInvoker> &jsInvoker,
+    const std::string &valueUnpackerCode)
 {
   REAModule *reaModule = [bridge moduleForClass:[REAModule class]];
 
@@ -287,8 +254,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       maybeFlushUIUpdatesQueueFunction,
   };
 
-  auto nativeReanimatedModule =
-      std::make_shared<NativeReanimatedModule>(rnRuntime, jsInvoker, jsQueue, uiScheduler, platformDepMethodsHolder);
+  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
+      rnRuntime, jsInvoker, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode);
 
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler

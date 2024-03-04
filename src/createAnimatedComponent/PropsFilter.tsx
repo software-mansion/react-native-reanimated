@@ -1,7 +1,7 @@
 'use strict';
 
 import { shallowEqual } from '../reanimated2/hook/utils';
-import type { StyleProps, SharedValue } from '../reanimated2';
+import type { StyleProps } from '../reanimated2';
 import { isSharedValue } from '../reanimated2';
 import { isChromeDebugger } from '../reanimated2/PlatformChecker';
 import WorkletEventHandler from '../reanimated2/WorkletEventHandler';
@@ -11,7 +11,9 @@ import type {
   AnimatedComponentProps,
   AnimatedProps,
   InitialComponentProps,
-} from './utils';
+  IAnimatedComponentInternal,
+  IPropsFilter,
+} from './commonTypes';
 import { flattenArray, has } from './utils';
 import { StyleSheet } from 'react-native';
 
@@ -20,13 +22,13 @@ function dummyListener() {
   // event is used.
 }
 
-export class PropsFilter {
+export class PropsFilter implements IPropsFilter {
   private _initialStyle = {};
   private _previousProps: React.Component['props'] | null = null;
   private _requiresPropInitialization = true;
 
   public filterNonAnimatedProps(
-    component: React.Component<unknown, unknown>
+    component: React.Component<unknown, unknown> & IAnimatedComponentInternal
   ): Record<string, unknown> {
     const inputProps =
       component.props as AnimatedComponentProps<InitialComponentProps>;
@@ -70,8 +72,9 @@ export class PropsFilter {
           AnimatedComponentProps<AnimatedProps>
         >;
         if (animatedProp.initial !== undefined) {
-          Object.keys(animatedProp.initial.value).forEach((key) => {
-            props[key] = animatedProp.initial?.value[key];
+          Object.keys(animatedProp.initial.value).forEach((initialValueKey) => {
+            props[initialValueKey] =
+              animatedProp.initial?.value[initialValueKey];
             animatedProp.viewsRef?.add(component);
           });
         }
@@ -90,7 +93,7 @@ export class PropsFilter {
         }
       } else if (isSharedValue(value)) {
         if (this._requiresPropInitialization) {
-          props[key] = (value as SharedValue<unknown>).value;
+          props[key] = value.value;
         }
       } else if (key !== 'onGestureHandlerStateChange' || !isChromeDebugger()) {
         props[key] = value;
