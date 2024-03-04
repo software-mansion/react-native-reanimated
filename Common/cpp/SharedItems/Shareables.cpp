@@ -226,7 +226,8 @@ jsi::Value ShareableWorklet::toJSValue(jsi::Runtime &rt) {
           [](const auto &item) { return item.first == "__workletHash"; }) &&
       "ShareableWorklet doesn't have `__workletHash` property");
   jsi::Value obj = ShareableObject::toJSValue(rt);
-  return getValueUnpacker(rt).call(rt, obj);
+  return getValueUnpacker(rt).call(
+      rt, obj, jsi::String::createFromAscii(rt, "Worklet"));
 }
 
 jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
@@ -245,13 +246,14 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
 }
 
 jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
-  if (initializer_ != nullptr) {
+  if (remoteValue_ == nullptr) {
     auto initObj = initializer_->getJSValue(rt);
-    remoteValue_ =
-        std::make_unique<jsi::Value>(getValueUnpacker(rt).call(rt, initObj));
+    if (remoteValue_ != nullptr) {
+      jsi::String::createFromAscii(rt, "Handle");
+    }
+    remoteValue_ = std::make_unique<jsi::Value>(getValueUnpacker(rt).call(
+        rt, initObj, jsi::String::createFromAscii(rt, "Handle")));
     remoteRuntime_ = &rt;
-    initializer_ = nullptr; // we can release ref to initializer as this
-    // method should be called at most once
   }
   return jsi::Value(rt, *remoteValue_);
 }
