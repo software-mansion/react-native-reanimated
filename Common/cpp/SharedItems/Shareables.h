@@ -277,14 +277,14 @@ class ShareableHandle : public Shareable {
   // initialized in parallel on multiple threads. However this is not a problem,
   // since the final value is taken from a cache on the runtime which guarantees
   // sequential access.
-  std::shared_ptr<ShareableObject> initializer_;
+  std::unique_ptr<ShareableObject> initializer_;
   std::unique_ptr<jsi::Value> remoteValue_ = nullptr;
   jsi::Runtime *remoteRuntime_;
 
  public:
   ShareableHandle(jsi::Runtime &rt, const jsi::Object &initializerObject)
       : Shareable(HandleType),
-        initializer_(std::make_shared<ShareableObject>(rt, initializerObject)) {
+        initializer_(std::make_unique<ShareableObject>(rt, initializerObject)) {
   }
 
   ~ShareableHandle() {
