@@ -20,11 +20,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Reanimated node_modules
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Install NextExample node_modules
         working-directory: NextExample
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Compile production build
         working-directory: NextExample
