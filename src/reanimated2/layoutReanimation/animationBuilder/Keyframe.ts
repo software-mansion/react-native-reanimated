@@ -146,7 +146,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
         }
         const keyframe: KeyframeProps = this.definitions[keyPoint];
         const easing = keyframe.easing;
-
+        delete keyframe.easing;
         const addKeyPointWith = (key: string, value: string | number) =>
           addKeyPoint({
             key,
@@ -154,7 +154,6 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
             currentKeyPoint: parseInt(keyPoint),
             easing,
           });
-
         Object.keys(keyframe).forEach((key: string) => {
           if (key === 'transform') {
             if (!Array.isArray(keyframe.transform)) {
@@ -172,9 +171,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
               });
             });
           } else {
-            if (key !== 'easing') {
-              addKeyPointWith(key, keyframe[key]);
-            }
+            addKeyPointWith(key, keyframe[key]);
           }
         });
       });
