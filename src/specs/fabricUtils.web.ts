@@ -13,4 +13,4 @@ const TurboModuleRegistry = {
   getEnforcing,
 };
 
-export default TurboModuleRegistry;
+export { TurboModuleRegistry };
