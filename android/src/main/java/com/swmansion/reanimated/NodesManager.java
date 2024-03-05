@@ -109,13 +109,13 @@ public class NodesManager implements EventDispatcherListener {
     return mAnimationManager;
   }
 
-  public void onInvalidate() {
+  public void invalidate() {
     if (mAnimationManager != null) {
-      mAnimationManager.onInvalidate();
+      mAnimationManager.invalidate();
     }
 
     if (mNativeProxy != null) {
-      mNativeProxy.onInvalidate();
+      mNativeProxy.invalidate();
       mNativeProxy = null;
     }
   }

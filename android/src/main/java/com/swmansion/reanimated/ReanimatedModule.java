@@ -120,7 +120,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule
     super.invalidate();
 
     if (mNodesManager != null) {
-      mNodesManager.onInvalidate();
+      mNodesManager.invalidate();
     }
   }
 }
