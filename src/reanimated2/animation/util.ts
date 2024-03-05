@@ -47,17 +47,17 @@ if (__DEV__ && IS_REDUCED_MOTION) {
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 export function assertEasingIsWorklet(
-  easing: EasingFunction | EasingFunctionFactory
+  easing: EasingFunction | EasingFunctionFactory,
+  functionName: string
 ) {
   'worklet';
   if (SHOULD_BE_USE_WEB) {
     /* It is possible to run reanimated on web without plugin, so let's skip this check on web */
     return true;
   }
-  const isFunction: boolean = typeof easing === 'function';
-  if (isFunction && !isWorkletFunction(easing)) {
+  if (!isWorkletFunction(easing)) {
     throw new Error(
-      `[Reanimated] The easing function provided to \`withTiming\` is not a worklet. Are you sure you didn't import it from react-native? `
+      `[Reanimated] The easing function provided to \`${functionName}\` is not a worklet. Are you sure you didn't import it from react-native? `
     );
   }
 }

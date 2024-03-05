@@ -128,7 +128,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       easing?: EasingFunction;
     }): void => {
       if (__DEV__ && easing) {
-        assertEasingIsWorklet(easing);
+        assertEasingIsWorklet(easing, 'Keyframe');
       }
       if (!(key in parsedKeyframes)) {
         throw new Error(

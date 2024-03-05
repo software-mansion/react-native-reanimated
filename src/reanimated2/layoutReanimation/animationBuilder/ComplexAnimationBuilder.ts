@@ -42,7 +42,7 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
 
   easing(easingFunction: EasingFunction): this {
     if (__DEV__) {
-      assertEasingIsWorklet(easingFunction);
+      assertEasingIsWorklet(easingFunction, 'animation');
     }
     this.easingV = easingFunction;
     return this;
