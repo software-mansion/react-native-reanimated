@@ -6,11 +6,9 @@ import type { WorkletFunction } from './commonTypes';
 function valueUnpacker(objectToUnpack: any, category?: string): any {
   'worklet';
   let workletsCache = global.__workletsCache;
-  let handleCache = global.__handleCache;
   if (workletsCache === undefined) {
     // init
     workletsCache = global.__workletsCache = new Map();
-    handleCache = global.__handleCache = new WeakMap();
   }
   const workletHash = objectToUnpack.__workletHash;
   if (workletHash !== undefined) {
@@ -48,13 +46,6 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
     const functionInstance = workletFun.bind(objectToUnpack);
     objectToUnpack._recur = functionInstance;
     return functionInstance;
-  } else if (objectToUnpack.__init) {
-    let value = handleCache.get(objectToUnpack);
-    if (value === undefined) {
-      value = objectToUnpack.__init();
-      handleCache.set(objectToUnpack, value);
-    }
-    return value;
   } else if (category === 'RemoteFunction') {
     const fun = () => {
       throw new Error(`[Reanimated] Tried to synchronously call a non-worklet function on the UI thread.
