@@ -45,7 +45,7 @@ export type ScreenTransitionConfig = {
   sharedEvent: SharedValue<PanGestureHandlerEventPayload>;
   startingGesturePosition: SharedValue<PanGestureHandlerEventPayload>;
   onFinishAnimation?: () => void;
-  isTransitionCancelled: boolean;
+  isTransitionCanceled: boolean;
   goBackGesture: GoBackGesture;
   screenDimensions: MeasuredDimensions;
 };
@@ -57,7 +57,7 @@ export type RNScreensTurboModuleType = {
     canStartTransition: boolean;
   };
   updateTransition: (stackTag: number, progress: number) => void;
-  finishTransition: (stackTag: number, isCancelled: boolean) => void;
+  finishTransition: (stackTag: number, isCanceled: boolean) => void;
 };
 
 export type LockAxis = 'x' | 'y' | undefined;

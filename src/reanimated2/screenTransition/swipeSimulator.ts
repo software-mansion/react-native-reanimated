@@ -33,14 +33,14 @@ function easing(x: number): number {
 function computeProgress(
   screenTransitionConfig: ScreenTransitionConfig,
   event: PanGestureHandlerEventPayload,
-  isTransitionCancelled: boolean
+  isTransitionCanceled: boolean
 ) {
   'worklet';
   const screenDimensions = screenTransitionConfig.screenDimensions;
   const progressX = Math.abs(event.translationX / screenDimensions.width);
   const progressY = Math.abs(event.translationY / screenDimensions.height);
   const maxProgress = Math.max(progressX, progressY);
-  const progress = isTransitionCancelled ? maxProgress / 2 : maxProgress;
+  const progress = isTransitionCanceled ? maxProgress / 2 : maxProgress;
   return progress;
 }
 
@@ -49,7 +49,7 @@ function maybeScheduleNextFrame(
   didScreenReachDestination: boolean,
   screenTransitionConfig: ScreenTransitionConfig,
   event: PanGestureHandlerEventPayload,
-  isTransitionCancelled: boolean
+  isTransitionCanceled: boolean
 ) {
   'worklet';
   if (!didScreenReachDestination) {
@@ -57,7 +57,7 @@ function maybeScheduleNextFrame(
     const progress = computeProgress(
       screenTransitionConfig,
       event,
-      isTransitionCancelled
+      isTransitionCanceled
     );
     RNScreensTurboModule.updateTransition(stackTag, progress);
     requestAnimationFrame(step);
@@ -74,7 +74,7 @@ export function getSwipeSimulator(
   'worklet';
   const screenDimensions = screenTransitionConfig.screenDimensions;
   const startTimestamp = _getAnimationTimestamp();
-  const { isTransitionCancelled } = screenTransitionConfig;
+  const { isTransitionCanceled } = screenTransitionConfig;
   const startingPosition = {
     x: event.translationX,
     y: event.translationY,
@@ -83,7 +83,7 @@ export function getSwipeSimulator(
     x: Math.sign(event.translationX),
     y: Math.sign(event.translationY),
   };
-  const finalPosition = isTransitionCancelled
+  const finalPosition = isTransitionCanceled
     ? { x: 0, y: 0 }
     : {
         x: direction.x * screenDimensions.width,
@@ -114,7 +114,7 @@ export function getSwipeSimulator(
     }
   }
 
-  if (isTransitionCancelled) {
+  if (isTransitionCanceled) {
     function didScreenReachDestinationCheck() {
       if (lockAxis === 'x') {
         return didScreenReachDestination.x;
@@ -161,7 +161,7 @@ export function getSwipeSimulator(
         didScreenReachDestinationCheck(),
         screenTransitionConfig,
         event,
-        isTransitionCancelled
+        isTransitionCanceled
       );
     }
     return computeFrame;
@@ -203,7 +203,7 @@ export function getSwipeSimulator(
         didScreenReachDestination.x || didScreenReachDestination.y,
         screenTransitionConfig,
         event,
-        isTransitionCancelled
+        isTransitionCanceled
       );
     }
     return computeFrame;
