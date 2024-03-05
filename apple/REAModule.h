@@ -2,7 +2,7 @@
 #import <rnreanimated/rnreanimated.h>
 #else
 #import <React/RCTBridgeModule.h>
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 #import <RNReanimated/REAAnimationsManager.h>
 #import <RNReanimated/REANodesManager.h>
 #import <React/RCTEventDispatcher.h>
@@ -16,7 +16,7 @@
                        <NativeReanimatedModuleSpec,
 #else
                        <RCTBridgeModule,
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
                         RCTEventDispatcherObserver,
                         RCTUIManagerObserver>
 
@@ -25,6 +25,6 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 - (void)installReanimatedAfterReload;
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 @end
