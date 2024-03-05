@@ -117,11 +117,11 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   }
 
   @Override
-  public void onCatalystInstanceDestroy() {
-    super.onCatalystInstanceDestroy();
+  public void invalidate() {
+    super.invalidate();
 
     if (mNodesManager != null) {
-      mNodesManager.onCatalystInstanceDestroy();
+      mNodesManager.invalidate();
     }
   }
 }
