@@ -393,13 +393,6 @@ android {
                 }
             }
 
-            // NodesManager
-            if (REACT_NATIVE_MINOR_VERSION <= 73) {
-                srcDirs += "src/reactNativeVersionPatch/FabricUIManager/73"
-            } else {
-                srcDirs += "src/reactNativeVersionPatch/FabricUIManager/latest"
-            }
-
             // RuntimeExecutor
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 if (REACT_NATIVE_MINOR_VERSION <= 73) {

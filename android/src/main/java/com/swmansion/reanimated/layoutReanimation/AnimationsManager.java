@@ -67,7 +67,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mSharedTransitionManager = new SharedTransitionManager(this);
   }
 
-  public void onInvalidate() {
+  public void invalidate() {
     isCatalystInstanceDestroyed = true;
     mNativeMethodsHolder = null;
     mContext = null;

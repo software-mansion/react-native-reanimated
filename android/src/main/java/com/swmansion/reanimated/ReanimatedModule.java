@@ -20,22 +20,18 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
 
   public static final String NAME = "ReanimatedModule";
 
-  @Override
   public void didDispatchMountItems(@NonNull UIManager uiManager) {
     // Keep: Required for UIManagerListener
   }
 
-  @Override
   public void didMountItems(@NonNull UIManager uiManager) {
     // Keep: Required for UIManagerListener
   }
 
-  @Override
   public void didScheduleMountItems(@NonNull UIManager uiManager) {
     // Keep: Required for UIManagerListener
   }
 
-  @Override
   public void willDispatchViewUpdates(@NonNull UIManager uiManager) {
     if (mOperations.isEmpty()) {
       return;
@@ -54,7 +50,6 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
     }
   }
 
-  @Override
   public void willMountItems(@NonNull UIManager uiManager) {}
 
   private interface UIThreadOperation {
@@ -166,7 +161,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
     super.invalidate();
 
     if (mNodesManager != null) {
-      mNodesManager.onInvalidate();
+      mNodesManager.invalidate();
     }
   }
 }
