@@ -1,3 +1,4 @@
+'use strict';
 import type { TurboModule } from 'react-native';
 
 function get<T extends TurboModule>(_name: string): T | null {
