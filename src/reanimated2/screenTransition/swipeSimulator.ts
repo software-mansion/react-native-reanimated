@@ -124,7 +124,7 @@ export function getSwipeSimulator(
         return didScreenReachDestination.x && didScreenReachDestination.y;
       }
     }
-    function computeFrame() {
+    const computeFrame = () => {
       const progress = {
         x: computeEasingProgress(startTimestamp, distance.x, velocity.x),
         y: computeEasingProgress(startTimestamp, distance.y, velocity.y),
@@ -166,7 +166,7 @@ export function getSwipeSimulator(
     }
     return computeFrame;
   } else {
-    function computeFrame() {
+    const computeFrame = () => {
       const progress = {
         x: computeEasingProgress(startTimestamp, distance.x, velocity.x),
         y: computeEasingProgress(startTimestamp, distance.y, velocity.y),
