@@ -1,0 +1,30 @@
+.selectionBox {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+
+  background: var(--swm-white);
+  border: 2px solid var(--swm-landing-heading-selected-border);
+
+  cursor: grab;
+}
+
+.selectionBox:active {
+  cursor: grabbing;
+}
+
+.boxUpper {
+  top: -6px;
+}
+
+.boxLower {
+  bottom: -14px;
+}
+
+.boxLeft {
+  left: -14px;
+}
+
+.boxRight {
+  right: -14px;
+}
