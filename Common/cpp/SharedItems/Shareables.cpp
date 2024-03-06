@@ -252,7 +252,7 @@ jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
         rt, initObj, jsi::String::createFromAscii(rt, "Handle")));
 
     std::unique_lock<std::mutex> lock(initializationMutex_, std::try_to_lock);
-    if (lock.owns_lock()) {
+    if (lock.owns_lock() && remoteValue_ == nullptr) {
       remoteValue_ = std::move(value);
       remoteRuntime_ = &rt;
     }
