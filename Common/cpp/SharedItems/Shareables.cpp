@@ -251,8 +251,8 @@ jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
     auto value = std::make_unique<jsi::Value>(getValueUnpacker(rt).call(
         rt, initObj, jsi::String::createFromAscii(rt, "Handle")));
 
-    std::unique_lock<std::mutex> lock(initializationMutex_, std::try_to_lock);
-    if (lock.owns_lock() && remoteValue_ == nullptr) {
+    std::unique_lock<std::mutex> lock(initializationMutex_);
+    if (remoteValue_ == nullptr) {
       remoteValue_ = std::move(value);
       remoteRuntime_ = &rt;
     }
