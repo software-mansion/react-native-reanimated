@@ -4,7 +4,7 @@ import type {
   ScreenTransitionConfig,
   LockAxis,
 } from './commonTypes';
-import { applyStyle } from './styleUpdater';
+import { applyStyle, applyStyleForBelowTopScreen } from './styleUpdater';
 import { RNScreensTurboModule } from './RNScreensTurboModule';
 
 const BASE_VELOCITY = 300;
@@ -124,6 +124,13 @@ export function getSwipeSimulator(
         return didScreenReachDestination.x && didScreenReachDestination.y;
       }
     }
+
+    function restoreOriginalStyleForBelowTopScreen() {
+      event.translationX = direction.x * screenDimensions.width;
+      event.translationY = direction.y * screenDimensions.height;
+      applyStyleForBelowTopScreen(screenTransitionConfig, event)
+    }
+    
     const computeFrame = () => {
       const progress = {
         x: computeEasingProgress(startTimestamp, distance.x, velocity.x),
@@ -156,9 +163,13 @@ export function getSwipeSimulator(
         }
       }
       applyStyle(screenTransitionConfig, event);
+      const finished = didScreenReachDestinationCheck();
+      if (finished) {
+        restoreOriginalStyleForBelowTopScreen();
+      }
       maybeScheduleNextFrame(
         computeFrame,
-        didScreenReachDestinationCheck(),
+        finished,
         screenTransitionConfig,
         event,
         isTransitionCanceled

@@ -22,15 +22,13 @@ const createViewDescriptor = IS_FABRIC
   ? createViewDescriptorFabric
   : createViewDescriptorPaper;
 
-export function applyStyle(
+export function applyStyleForTopScreen(
   screenTransitionConfig: ScreenTransitionConfig,
   event: PanGestureHandlerEventPayload
 ) {
   'worklet';
-  const screenDimensions = screenTransitionConfig.screenDimensions;
-
-  const topScreenId = screenTransitionConfig.topScreenId;
-  const topScreenFrame = screenTransitionConfig.screenTransition.topScreenFrame;
+  const { screenDimensions, topScreenId, screenTransition } = screenTransitionConfig;
+  const { topScreenFrame } = screenTransition;
   const topScreenStyle = topScreenFrame(event, screenDimensions);
   const topScreenDescriptor = {
     value: [createViewDescriptor(topScreenId)],
@@ -40,10 +38,15 @@ export function applyStyle(
     topScreenStyle,
     undefined
   );
+}
 
-  const belowTopScreenId = screenTransitionConfig.belowTopScreenId;
-  const belowTopScreenFrame =
-    screenTransitionConfig.screenTransition.belowTopScreenFrame;
+export function applyStyleForBelowTopScreen(
+  screenTransitionConfig: ScreenTransitionConfig,
+  event: PanGestureHandlerEventPayload
+) {
+  'worklet';
+  const { screenDimensions, belowTopScreenId, screenTransition } = screenTransitionConfig;
+  const { belowTopScreenFrame } = screenTransition;
   const belowTopScreenStyle = belowTopScreenFrame(event, screenDimensions);
   const belowTopScreenDescriptor = {
     value: [createViewDescriptor(belowTopScreenId)],
@@ -53,4 +56,13 @@ export function applyStyle(
     belowTopScreenStyle,
     undefined
   );
+}
+
+export function applyStyle(
+  screenTransitionConfig: ScreenTransitionConfig,
+  event: PanGestureHandlerEventPayload
+) {
+  'worklet';
+  applyStyleForTopScreen(screenTransitionConfig, event);
+  applyStyleForBelowTopScreen(screenTransitionConfig, event);
 }
