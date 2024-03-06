@@ -133,8 +133,7 @@ export function isWorkletFunction<
   // See https://github.com/facebook/hermes/blob/340726ef8cf666a7cce75bc60b02fa56b3e54560/lib/VM/JSObject.cpp#L1276.
   return (
     typeof value === 'function' &&
-    '__workletHash' in value &&
-    !!value.__workletHash
+    !!(value as Record<string, unknown>).__workletHash;
   );
 }
 
