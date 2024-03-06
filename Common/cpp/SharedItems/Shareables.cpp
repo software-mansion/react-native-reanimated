@@ -248,9 +248,14 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
 jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
   if (remoteValue_ == nullptr) {
     auto initObj = initializer_->getJSValue(rt);
-    remoteValue_ = std::make_unique<jsi::Value>(getValueUnpacker(rt).call(
+    auto value = std::make_unique<jsi::Value>(getValueUnpacker(rt).call(
         rt, initObj, jsi::String::createFromAscii(rt, "Handle")));
-    remoteRuntime_ = &rt;
+
+    std::unique_lock<std::mutex> lock(initializationMutex_, std::try_to_lock);
+    if (lock.owns_lock()) {
+      remoteValue_ = std::move(value);
+      remoteRuntime_ = &rt;
+    }
   }
   return jsi::Value(rt, *remoteValue_);
 }
