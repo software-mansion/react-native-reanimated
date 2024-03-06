@@ -226,7 +226,8 @@ jsi::Value ShareableWorklet::toJSValue(jsi::Runtime &rt) {
           [](const auto &item) { return item.first == "__workletHash"; }) &&
       "ShareableWorklet doesn't have `__workletHash` property");
   jsi::Value obj = ShareableObject::toJSValue(rt);
-  return getValueUnpacker(rt).call(rt, obj);
+  return getValueUnpacker(rt).call(
+      rt, obj, jsi::String::createFromAscii(rt, "Worklet"));
 }
 
 jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
@@ -245,13 +246,23 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
 }
 
 jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
-  if (initializer_ != nullptr) {
+  if (remoteValue_ == nullptr) {
     auto initObj = initializer_->getJSValue(rt);
-    remoteValue_ =
-        std::make_unique<jsi::Value>(getValueUnpacker(rt).call(rt, initObj));
-    remoteRuntime_ = &rt;
-    initializer_ = nullptr; // we can release ref to initializer as this
-    // method should be called at most once
+    auto value = std::make_unique<jsi::Value>(getValueUnpacker(rt).call(
+        rt, initObj, jsi::String::createFromAscii(rt, "Handle")));
+
+    // We are locking the initialization here since the thread that is
+    // initalizing can be pre-empted on runtime lock. E.g.
+    // UI thread can be pre-empted on initialization of a shared value and then
+    // JS thread can try to access the shared value, locking the whole runtime.
+    // If we put the lock on `getValueUnpacker` part (basically any part that
+    // requires runtime) we would get a deadlock since UI thread would never
+    // release it.
+    std::unique_lock<std::mutex> lock(initializationMutex_);
+    if (remoteValue_ == nullptr) {
+      remoteValue_ = std::move(value);
+      remoteRuntime_ = &rt;
+    }
   }
   return jsi::Value(rt, *remoteValue_);
 }
