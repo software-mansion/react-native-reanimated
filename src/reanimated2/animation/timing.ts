@@ -70,7 +70,7 @@ export const withTiming = function (
   'worklet';
 
   if (__DEV__ && userConfig?.easing) {
-    assertEasingIsWorklet(userConfig?.easing, 'withTiming');
+    assertEasingIsWorklet(userConfig?.easing);
   }
 
   return defineAnimation<TimingAnimation>(toValue, () => {

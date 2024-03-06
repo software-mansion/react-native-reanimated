@@ -47,8 +47,7 @@ if (__DEV__ && IS_REDUCED_MOTION) {
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 export function assertEasingIsWorklet(
-  easing: EasingFunction | EasingFunctionFactory,
-  functionName: string
+  easing: EasingFunction | EasingFunctionFactory
 ) {
   'worklet';
   if (SHOULD_BE_USE_WEB) {
@@ -57,7 +56,7 @@ export function assertEasingIsWorklet(
   }
   if (!isWorkletFunction(easing)) {
     throw new Error(
-      `[Reanimated] The easing function provided to \`${functionName}\` is not a worklet. Are you sure you didn't import it from react-native? `
+      `[Reanimated] The easing function is not a worklet. Are you sure you didn't import it from react-native? `
     );
   }
 }

@@ -132,8 +132,9 @@ export function isWorkletFunction<
   // Since host objects always return true for `in` operator, we have to use dot notation to check if the property exists.
   // See https://github.com/facebook/hermes/blob/340726ef8cf666a7cce75bc60b02fa56b3e54560/lib/VM/JSObject.cpp#L1276.
   return (
-    !!(value as Record<string, unknown>).__workletHash &&
-    typeof value === 'function'
+    typeof value === 'function' &&
+    '__workletHash' in value &&
+    !!value.__workletHash
   );
 }
 

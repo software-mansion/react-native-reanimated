@@ -1,11 +1,32 @@
-import { Text, StyleSheet, View } from 'react-native';
-
+import Animated, {
+  useSharedValue,
+  withTiming,
+  useAnimatedStyle,
+  // Easing, <- this should be the correct import
+} from 'react-native-reanimated';
+import { View, Button, StyleSheet, Easing } from 'react-native';
 import React from 'react';
 
-export default function EmptyExample() {
+export default function AnimatedStyleUpdateExample() {
+  const randomWidth = useSharedValue(10);
+
+  const style = useAnimatedStyle(() => {
+    return {
+      width: withTiming(randomWidth.value, {
+        easing: Easing.linear,
+      }),
+    };
+  });
+
   return (
     <View style={styles.container}>
-      <Text>Hello world!</Text>
+      <Animated.View style={[styles.box, style]} />
+      <Button
+        title="toggle"
+        onPress={() => {
+          randomWidth.value = Math.random() * 350;
+        }}
+      />
     </View>
   );
 }
@@ -13,7 +34,12 @@ export default function EmptyExample() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: 'column',
+  },
+  box: {
+    width: 100,
+    height: 80,
+    backgroundColor: 'black',
+    margin: 30,
   },
 });
