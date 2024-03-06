@@ -3,6 +3,7 @@
 #else
 #import <React/RCTBridgeModule.h>
 #endif // RCT_NEW_ARCH_ENABLED
+
 #import <RNReanimated/REAAnimationsManager.h>
 #import <RNReanimated/REANodesManager.h>
 #import <React/RCTEventDispatcher.h>
@@ -25,6 +26,6 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 - (void)installReanimatedAfterReload;
-#endif // RCT_NEW_ARCH_ENABLED
+#endif
 
 @end
