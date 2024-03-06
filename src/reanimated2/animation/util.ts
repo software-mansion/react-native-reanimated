@@ -48,15 +48,11 @@ const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 export function assertEasingIsWorklet(
   easing: EasingFunction | EasingFunctionFactory
-) {
+): void {
   'worklet';
-  if (_WORKLET) {
-    // If 'assertEasingIsWorklet' is called on UI runtime then easing is a copy and it is not a worklet
-    return true;
-  }
   if (SHOULD_BE_USE_WEB) {
     // It is possible to run reanimated on web without plugin, so let's skip this check on web
-    return true;
+    return;
   }
   if (!isWorkletFunction(easing)) {
     throw new Error(
