@@ -52,9 +52,8 @@ export function useScrollViewOffset(
     // for more information about this cast.
   ) as unknown as EventHandlerInternal<ReanimatedScrollEvent>;
 
-  const component = animatedRef.current;
-
   useEffect(() => {
+    const component = animatedRef.current;
     const viewTag = IS_WEB ? component : findNodeHandle(component);
 
     eventHandler.workletEventHandler.registerForEvents(viewTag as number);
@@ -62,7 +61,11 @@ export function useScrollViewOffset(
     return () => {
       eventHandler.workletEventHandler?.unregisterFromEvents();
     };
-  }, [component, eventHandler]);
+    // React here has a problem with `animatedRef.current` since a Ref .current
+    // field shouldn't be used as a dependency. However, in this case we have
+    // to do it this way.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animatedRef, animatedRef.current, eventHandler]);
 
   return offsetRef.current;
 }
