@@ -9,6 +9,7 @@
   padding: 2px 10px 8px;
   color: var(--swm-landing-heading-selected);
   line-height: 1;
+  z-index: 1;
 
   /* normally one would do this with border dashed but that doesn't allow for modifying spacing between dashes */
   /* prettier-ignore */
@@ -21,4 +22,11 @@
 
 .selectionContainer {
   position: relative;
+  text-align: center;
+}
+
+.movableHeader {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }

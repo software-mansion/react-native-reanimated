@@ -7,24 +7,31 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const selectionContainerRef = useRef(null);
-  const [sizeStyles, setSizeStyles] = useState({ width: null, height: null });
-  const [positionStyles, setPositionStyles] = useState({ top: 0, left: 0 });
-  const [minSizeStyles, setMinSizeStyles] = useState({
-    minWidth: 0,
-    minHeight: 0,
+  const [positionStyles, setPositionStyles] = useState({
+    top: 0,
+    left: 0,
+    width: null,
+    height: null,
+  });
+  const [constantStyles, setConstantStyles] = useState({
+    minWidth: null,
+    minHeight: null,
+    setAbsolute: false,
   });
 
   useEffect(() => {
-    const currentWidth = selectionContainerRef.current.clientWidth;
-    const currentHeight = selectionContainerRef.current.clientHeight;
-
-    setMinSizeStyles({
-      minWidth: currentWidth,
-      minHeight: currentHeight,
+    const rect = selectionContainerRef.current.getBoundingClientRect();
+    console.log(rect);
+    setPositionStyles({
+      top: 0, // rect.top,
+      left: 0, // rect.left,
+      width: rect.width,
+      height: rect.height,
     });
-    setSizeStyles({
-      width: currentWidth,
-      height: currentHeight,
+    setConstantStyles({
+      minWidth: rect.width,
+      minHeight: rect.height,
+      setAbsolute: true,
     });
   }, []);
 
@@ -53,21 +60,34 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
     setPositionStyles({
       left: positionStyles.left + positionAdjustment.x,
       top: positionStyles.top + positionAdjustment.y,
-    });
-    setSizeStyles({
-      width: sizeStyles.width + position.deltaX * resizingDirection.x,
-      height: sizeStyles.height + position.deltaY * resizingDirection.y,
+      width: positionStyles.width + position.deltaX * resizingDirection.x,
+      height: positionStyles.height + position.deltaY * resizingDirection.y,
     });
   };
+
+  const textScale = {
+    x: positionStyles.width / constantStyles.minWidth,
+    y: positionStyles.height / constantStyles.minHeight,
+  };
+
+  let smallerScale = textScale.x < textScale.y ? textScale.x : textScale.y;
+  if (smallerScale < 1) smallerScale = 1;
 
   return (
     <span
       className={clsx(styles.headingLabel, styles.selection)}
-      style={positionStyles}>
+      style={{
+        transform: `translate(${positionStyles.left}px, ${positionStyles.top}px)`,
+        position: constantStyles.setAbsolute ? 'absolute' : 'relative',
+      }}>
       <div
         className={styles.selectionContainer}
         ref={selectionContainerRef}
-        style={{ ...sizeStyles, ...minSizeStyles }}>
+        style={{
+          width: positionStyles.width,
+          height: positionStyles.height,
+          ...constantStyles,
+        }}>
         <SelectionBox
           propagationFunction={positionPropagator}
           cornerIdentifier={CornerIdEnum.TOP_LEFT}></SelectionBox>
@@ -80,7 +100,14 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
         <SelectionBox
           propagationFunction={positionPropagator}
           cornerIdentifier={CornerIdEnum.BOTTOM_RIGHT}></SelectionBox>
-        {children}
+        <span
+          className={styles.movableHeader}
+          style={{
+            position: constantStyles.setAbsolute ? 'absolute' : 'relative',
+            transform: `translate(-50%, -50%) scale(${smallerScale})`,
+          }}>
+          {children}
+        </span>
       </div>
     </span>
   );

@@ -16,6 +16,14 @@
   height: fit-content;
 }
 
+.headingColumn {
+  display: inline-flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+  width: max-content;
+}
+
 .headingLabel {
   font-family: var(--swm-title-landing-font);
   font-size: 64px;
@@ -39,7 +47,7 @@
 
   margin-top: 32px;
   margin-bottom: 56px;
-  width: 600px;
+  width: fit-content;
   color: var(--swm-landing-heading);
 }
 
