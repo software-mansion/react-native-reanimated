@@ -117,6 +117,7 @@ import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimatio
 import WithClampExample from './WithClampExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import HabitsExample from './LayoutAnimations/HabitsExample';
+import MemoExample from './MemoExample';
 
 interface Example {
   icon?: string;
@@ -151,6 +152,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🟨',
     title: 'JS props',
     screen: JSPropsExample,
+  },
+  MemoExample: {
+    icon: '🧠',
+    title: 'Memo',
+    screen: MemoExample,
   },
 
   // About

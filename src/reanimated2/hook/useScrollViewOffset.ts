@@ -52,17 +52,17 @@ export function useScrollViewOffset(
     // for more information about this cast.
   ) as unknown as EventHandlerInternal<ReanimatedScrollEvent>;
 
-  useEffect(() => {
-    const viewTag = IS_WEB
-      ? animatedRef.current
-      : findNodeHandle(animatedRef.current);
+  const component = animatedRef.current;
 
-    eventHandler.current?.registerForEvents(viewTag as number);
+  useEffect(() => {
+    const viewTag = IS_WEB ? component : findNodeHandle(component);
+
+    eventHandler.workletEventHandler.registerForEvents(viewTag as number);
 
     return () => {
-      eventHandler.current?.unregisterFromEvents();
+      eventHandler.workletEventHandler?.unregisterFromEvents();
     };
-  }, [animatedRef.current]);
+  }, [component, eventHandler]);
 
   return offsetRef.current;
 }
