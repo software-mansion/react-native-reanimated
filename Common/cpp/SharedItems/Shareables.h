@@ -279,7 +279,7 @@ class ShareableHandle : public Shareable {
   // sequential access.
   std::unique_ptr<ShareableObject> initializer_;
   std::unique_ptr<jsi::Value> remoteValue_;
-  std::mutex initializationMutex_;
+  mutable std::mutex initializationMutex_;
   jsi::Runtime *remoteRuntime_;
 
  public:
