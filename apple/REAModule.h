@@ -26,6 +26,6 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 - (void)installReanimatedAfterReload;
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 @end
