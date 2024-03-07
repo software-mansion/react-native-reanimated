@@ -1,6 +1,8 @@
 'use strict';
 
 import type { TransformsStyle } from 'react-native';
+import { WebEasings } from './config';
+import type { WebEasingsNames } from './config';
 
 export interface ReanimatedWebTransformProperties {
   translateX?: string;
@@ -48,6 +50,13 @@ export function convertAnimationObjectToKeyframes(
 
     for (const [property, values] of Object.entries(style)) {
       if (property === 'easing') {
+        const easingName = (
+          values.name in WebEasings ? values.name : 'linear'
+        ) as WebEasingsNames;
+
+        keyframe += `animation-timing-function: cubic-bezier(${WebEasings[
+          easingName
+        ].toString()});`;
         continue;
       }
 
