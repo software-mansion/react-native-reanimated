@@ -24,9 +24,10 @@ const SelectionBox: React.FC<{
   useEffect(() => {
     setClassList(
       cornerIdentifier == CornerIdEnum.CENTER
-        ? clsx(styles.movableHeader)
+        ? clsx(styles.movableHeader, styles.movable)
         : clsx(
             styles.selectionBox,
+            styles.movable,
             cornerIdentifier == CornerIdEnum.BOTTOM_LEFT ||
               cornerIdentifier == CornerIdEnum.BOTTOM_RIGHT
               ? styles.boxLower
@@ -38,6 +39,8 @@ const SelectionBox: React.FC<{
           )
     );
   }, []);
+
+  console.log('Rendering SelectionBox');
 
   // use animation with the destination being cursor position
   // todo: detach the grabbed box from website layout, it hinders it's free flow

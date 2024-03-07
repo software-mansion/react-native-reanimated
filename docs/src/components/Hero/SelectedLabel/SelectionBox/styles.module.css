@@ -1,3 +1,11 @@
+.movable {
+  cursor: grab;
+}
+
+.movable:active {
+  cursor: grabbing;
+}
+
 .selectionBox {
   position: absolute;
   width: 12px;
@@ -7,12 +15,10 @@
   background: var(--swm-white);
   border: 2px solid var(--swm-landing-heading-selected-border);
 
-  cursor: grab;
   transition: scale 50ms ease-in-out;
 }
 
 .selectionBox:active {
-  cursor: grabbing;
   scale: 1.35;
 }
 

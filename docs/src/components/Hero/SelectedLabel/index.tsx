@@ -6,18 +6,56 @@ import SelectionBox, { CornerIdEnum } from './SelectionBox';
 const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const selectionRef = useRef(null);
   const selectionContainerRef = useRef(null);
-  const [positionStyles, setPositionStyles] = useState({
+  const textLabelRef = useRef(null);
+
+  const positionStyles = {
     top: 0,
     left: 0,
     width: null,
     height: null,
-  });
+  };
+  const setPositionStyles = (newPositionStyles: {
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  }) => {
+    // save changes
+    positionStyles.top = newPositionStyles.top;
+    positionStyles.left = newPositionStyles.left;
+    positionStyles.width = newPositionStyles.width;
+    positionStyles.height = newPositionStyles.height;
+
+    // apply changes to refs
+    selectionRef.current.style.transform = `translate(${positionStyles.left}px, ${positionStyles.top}px)`;
+    selectionContainerRef.current.style.width = `${positionStyles.width}px`;
+    selectionContainerRef.current.style.height = `${positionStyles.height}px`;
+  };
+
+  const textScale = {
+    x: 1,
+    y: 1,
+  };
+  const applyTextScale = () => {
+    textLabelRef.current.style.transform = `translate(-50%, -50%) scale(${textScale.x}, ${textScale.y})`;
+  };
+
   const [constantStyles, setConstantStyles] = useState({
     initialWidth: null,
     initialHeight: null,
     setAbsolute: false,
   });
+
+  useEffect(() => {
+    const rect = selectionContainerRef.current.getBoundingClientRect();
+    setConstantStyles({
+      initialWidth: rect.width,
+      initialHeight: rect.height,
+      setAbsolute: true,
+    });
+  }, []);
 
   useEffect(() => {
     const rect = selectionContainerRef.current.getBoundingClientRect();
@@ -27,12 +65,7 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
       width: rect.width,
       height: rect.height,
     });
-    setConstantStyles({
-      initialWidth: rect.width,
-      initialHeight: rect.height,
-      setAbsolute: true,
-    });
-  }, []);
+  }, [constantStyles]);
 
   let positionPropagator = (
     position: { x: number; y: number },
@@ -86,26 +119,32 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
       width: positionStyles.width + sizeChange.x,
       height: positionStyles.height + sizeChange.y,
     });
+
+    // these magic numbers are a result of disparity between font's apparent and actual size
+    textScale.x =
+      (positionStyles.width / constantStyles.initialWidth) * 0.96 + 0.04;
+    textScale.y =
+      (positionStyles.height / constantStyles.initialHeight) * 1.255 - 0.255;
+
+    if (textScale.x < 0) textScale.x = 0;
+    if (textScale.y < 0) textScale.y = 0;
+
+    applyTextScale();
   };
 
-  const textScale = {
-    x: (positionStyles.width / constantStyles.initialWidth) * 0.94 + 0.06,
-    y: (positionStyles.height / constantStyles.initialHeight) * 1.1 - 0.1,
-  };
-
-  if (textScale.x < 0) textScale.x = 0;
-  if (textScale.y < 0) textScale.y = 0;
+  console.log('Rendering SelectedLabel');
 
   return (
     <span
+      ref={selectionRef}
       className={clsx(styles.headingLabel, styles.selection)}
       style={{
         transform: `translate(${positionStyles.left}px, ${positionStyles.top}px)`,
         position: constantStyles.setAbsolute ? 'absolute' : 'relative',
       }}>
       <div
-        className={styles.selectionContainer}
         ref={selectionContainerRef}
+        className={styles.selectionContainer}
         style={{
           width: positionStyles.width,
           height: positionStyles.height,
@@ -126,6 +165,7 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
           propagationFunction={positionPropagator}
           cornerIdentifier={CornerIdEnum.CENTER}>
           <span
+            ref={textLabelRef}
             style={{
               position: constantStyles.setAbsolute ? 'absolute' : 'relative',
               transform: `translate(-50%, -50%) scale(${textScale.x}, ${textScale.y})`,
