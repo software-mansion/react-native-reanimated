@@ -53,7 +53,7 @@ type GestureHandler<
 > = (
   eventPayload: ReanimatedEvent<Event>,
   context: Context,
-  isCancelledOrFailed?: boolean
+  isCanceledOrFailed?: boolean
 ) => void;
 
 export interface GestureHandlers<
