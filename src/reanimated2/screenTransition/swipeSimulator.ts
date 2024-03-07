@@ -128,9 +128,9 @@ export function getSwipeSimulator(
     function restoreOriginalStyleForBelowTopScreen() {
       event.translationX = direction.x * screenDimensions.width;
       event.translationY = direction.y * screenDimensions.height;
-      applyStyleForBelowTopScreen(screenTransitionConfig, event)
+      applyStyleForBelowTopScreen(screenTransitionConfig, event);
     }
-    
+
     const computeFrame = () => {
       const progress = {
         x: computeEasingProgress(startTimestamp, distance.x, velocity.x),
@@ -174,7 +174,7 @@ export function getSwipeSimulator(
         event,
         isTransitionCanceled
       );
-    }
+    };
     return computeFrame;
   } else {
     const computeFrame = () => {
@@ -216,7 +216,7 @@ export function getSwipeSimulator(
         event,
         isTransitionCanceled
       );
-    }
+    };
     return computeFrame;
   }
 }

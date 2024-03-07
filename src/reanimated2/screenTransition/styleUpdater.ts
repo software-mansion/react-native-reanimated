@@ -27,7 +27,8 @@ export function applyStyleForTopScreen(
   event: PanGestureHandlerEventPayload
 ) {
   'worklet';
-  const { screenDimensions, topScreenId, screenTransition } = screenTransitionConfig;
+  const { screenDimensions, topScreenId, screenTransition } =
+    screenTransitionConfig;
   const { topScreenFrame } = screenTransition;
   const topScreenStyle = topScreenFrame(event, screenDimensions);
   const topScreenDescriptor = {
@@ -45,7 +46,8 @@ export function applyStyleForBelowTopScreen(
   event: PanGestureHandlerEventPayload
 ) {
   'worklet';
-  const { screenDimensions, belowTopScreenId, screenTransition } = screenTransitionConfig;
+  const { screenDimensions, belowTopScreenId, screenTransition } =
+    screenTransitionConfig;
   const { belowTopScreenFrame } = screenTransition;
   const belowTopScreenStyle = belowTopScreenFrame(event, screenDimensions);
   const belowTopScreenDescriptor = {

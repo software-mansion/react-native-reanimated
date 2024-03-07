@@ -36,6 +36,10 @@ export function finishScreenTransition(
   const { stackTag, sharedEvent, goBackGesture } = screenTransitionConfig;
   sharedEvent.removeListener(stackTag);
   const lockAxis = getLockAxis(goBackGesture);
-  const step = getSwipeSimulator(sharedEvent.value, screenTransitionConfig, lockAxis);
+  const step = getSwipeSimulator(
+    sharedEvent.value,
+    screenTransitionConfig,
+    lockAxis
+  );
   step();
 }
