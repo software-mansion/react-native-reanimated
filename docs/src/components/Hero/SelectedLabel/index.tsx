@@ -36,7 +36,7 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   let positionPropagator = (
-    position: { deltaX: number; deltaY: number },
+    position: { x: number; y: number },
     cornerIdentifier: CornerIdEnum
   ) => {
     // changing selectionContainer will automatically adjust position of selectionBoxes as well
@@ -45,23 +45,23 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
       cornerIdentifier == CornerIdEnum.BOTTOM_LEFT ||
       cornerIdentifier == CornerIdEnum.TOP_LEFT;
     const dirVertical =
-      cornerIdentifier == CornerIdEnum.BOTTOM_LEFT ||
-      cornerIdentifier == CornerIdEnum.BOTTOM_RIGHT;
+      cornerIdentifier == CornerIdEnum.TOP_LEFT ||
+      cornerIdentifier == CornerIdEnum.TOP_RIGHT;
 
     const positionAdjustment = {
-      x: dirHorizontal ? position.deltaX : 0,
-      y: dirVertical ? 0 : position.deltaY,
+      x: dirHorizontal ? position.x : 0,
+      y: dirVertical ? position.y : 0,
     };
     const resizingDirection = {
       x: dirHorizontal ? -1 : 1,
-      y: dirVertical ? 1 : -1,
+      y: dirVertical ? -1 : 1,
     };
 
     setPositionStyles({
       left: positionStyles.left + positionAdjustment.x,
       top: positionStyles.top + positionAdjustment.y,
-      width: positionStyles.width + position.deltaX * resizingDirection.x,
-      height: positionStyles.height + position.deltaY * resizingDirection.y,
+      width: positionStyles.width + position.x * resizingDirection.x,
+      height: positionStyles.height + position.y * resizingDirection.y,
     });
   };
 
