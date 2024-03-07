@@ -54,9 +54,7 @@ export function convertAnimationObjectToKeyframes(
           values.name in WebEasings ? values.name : 'linear'
         ) as WebEasingsNames;
 
-        keyframe += `animation-timing-function: cubic-bezier(${WebEasings[
-          easingName
-        ].toString()});`;
+        keyframe += `animation-timing-function: cubic-bezier(${WebEasings[easingName].toString()});`;
         continue;
       }
 
