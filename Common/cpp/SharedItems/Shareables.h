@@ -273,8 +273,13 @@ class ShareableRemoteFunction
 
 class ShareableHandle : public Shareable {
  private:
+  // We don't release the initializer since the handle can get
+  // initialized in parallel on multiple threads. However this is not a problem,
+  // since the final value is taken from a cache on the runtime which guarantees
+  // sequential access.
   std::unique_ptr<ShareableObject> initializer_;
   std::unique_ptr<jsi::Value> remoteValue_;
+  mutable std::mutex initializationMutex_;
   jsi::Runtime *remoteRuntime_;
 
  public:

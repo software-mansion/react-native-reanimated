@@ -1,6 +1,6 @@
 'use strict';
 import NativeReanimatedModule from './NativeReanimated';
-import { isWorklet } from './commonTypes';
+import { isWorkletFunction } from './commonTypes';
 import type {
   ShareableRef,
   FlatShareableRef,
@@ -31,7 +31,7 @@ function isHostObject(value: NonNullable<object>) {
   return MAGIC_KEY in value;
 }
 
-function isPlainJSObject(object: object): object is object {
+function isPlainJSObject(object: object) {
   return Object.getPrototypeOf(object) === Object.prototype;
 }
 
@@ -139,7 +139,7 @@ export function makeShareableCloneRecursive<T>(
         toAdapt = value.map((element) =>
           makeShareableCloneRecursive(element, shouldPersistRemote, depth + 1)
         );
-      } else if (isTypeFunction && !isWorklet(value)) {
+      } else if (isTypeFunction && !isWorkletFunction(value)) {
         // this is a remote function
         toAdapt = value;
       } else if (isHostObject(value)) {
@@ -149,7 +149,7 @@ export function makeShareableCloneRecursive<T>(
         toAdapt = value;
       } else if (isPlainJSObject(value) || isTypeFunction) {
         toAdapt = {};
-        if (isWorklet(value)) {
+        if (isWorkletFunction(value)) {
           if (__DEV__) {
             const babelVersion = value.__initData.version;
             if (babelVersion !== undefined && babelVersion !== jsVersion) {

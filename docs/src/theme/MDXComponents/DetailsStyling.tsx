@@ -1,8 +1,4 @@
-import {
-  useCollapsible,
-  useColorMode,
-  Collapsible,
-} from '@docusaurus/theme-common';
+import { useCollapsible, Collapsible } from '@docusaurus/theme-common';
 
 import clsx from 'clsx';
 import React from 'react';
@@ -10,16 +6,19 @@ import { useRef, useState } from 'react';
 
 import styles from './styles.module.css';
 import useIsBrowser from '@docusaurus/useIsBrowser';
-
-import Arrow from '@site/static/img/Arrow.svg';
-import ArrowDark from '@site/static/img/Arrow-dark.svg';
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 
 const DetailsStyling = ({ summary, children, ...props }): JSX.Element => {
   const isBrowser = useIsBrowser();
-  const { colorMode } = useColorMode();
   const { collapsed, setCollapsed } = useCollapsible({
     initialState: !props.open,
   });
+
+  const arrowIcon = {
+    light: useBaseUrl('/img/Arrow.svg'),
+    dark: useBaseUrl('img/Arrow-dark.svg'),
+  };
 
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const [open, setOpen] = useState(props.open);
@@ -65,11 +64,7 @@ const DetailsStyling = ({ summary, children, ...props }): JSX.Element => {
         }
       }}>
       <summary>
-        {colorMode === 'light' ? (
-          <Arrow className={styles.arrow} />
-        ) : (
-          <ArrowDark className={styles.arrow} />
-        )}
+        <ThemedImage sources={arrowIcon} className={styles.arrow} />
 
         <p>{extractedSummaryElement}</p>
       </summary>
