@@ -22,7 +22,7 @@ const createViewDescriptor = IS_FABRIC
   ? createViewDescriptorFabric
   : createViewDescriptorPaper;
 
-export function applyStyleForTopScreen(
+function applyStyleForTopScreen(
   screenTransitionConfig: ScreenTransitionConfig,
   event: PanGestureHandlerEventPayload
 ) {
