@@ -28,6 +28,7 @@ import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
+import com.swmansion.reanimated.nativeProxy.NativeProxy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -355,8 +356,8 @@ public class NodesManager implements EventDispatcherListener {
     try {
       View view = mUIManager.resolveView(viewTag);
       if (view == null) return;
-    } catch (Exception e) {
-      return;
+    } catch (IllegalViewOperationException e) {
+        return;
     }
 
     // TODO: update PropsNode to use this method instead of its own way of updating props
