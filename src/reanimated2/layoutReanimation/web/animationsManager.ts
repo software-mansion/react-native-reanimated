@@ -48,16 +48,11 @@ function chooseConfig<ComponentProps extends Record<string, unknown>>(
 
 function checkUndefinedAnimationFail(
   initialAnimationName: string,
-  isLayoutTransition: boolean,
-  isCustomKeyframe: boolean
+  needsCustomization: boolean
 ) {
   // This prevents crashes if we try to set animations that are not defined.
   // We don't care about layout transitions or custom keyframes since they're created dynamically
-  if (
-    initialAnimationName in Animations ||
-    isLayoutTransition ||
-    isCustomKeyframe
-  ) {
+  if (initialAnimationName in Animations || needsCustomization) {
     return false;
   }
 
@@ -118,8 +113,7 @@ function tryGetAnimationConfigWithTransform<
 
   const shouldFail = checkUndefinedAnimationFail(
     initialAnimationName,
-    isLayoutTransition,
-    isCustomKeyframe
+    isLayoutTransition || isCustomKeyframe
   );
 
   if (shouldFail) {
