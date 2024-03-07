@@ -14,14 +14,13 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
     height: null,
   });
   const [constantStyles, setConstantStyles] = useState({
-    minWidth: null,
-    minHeight: null,
+    initialWidth: null,
+    initialHeight: null,
     setAbsolute: false,
   });
 
   useEffect(() => {
     const rect = selectionContainerRef.current.getBoundingClientRect();
-    console.log(rect);
     setPositionStyles({
       top: 0, // rect.top,
       left: 0, // rect.left,
@@ -29,8 +28,8 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
       height: rect.height,
     });
     setConstantStyles({
-      minWidth: rect.width,
-      minHeight: rect.height,
+      initialWidth: rect.width,
+      initialHeight: rect.height,
       setAbsolute: true,
     });
   }, []);
@@ -56,22 +55,46 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
       x: dirHorizontal ? -1 : 1,
       y: dirVertical ? -1 : 1,
     };
+    const sizeChange = {
+      x: position.x * resizingDirection.x,
+      y: position.y * resizingDirection.y,
+    };
+
+    // adjust variables when dragging the center
+    if (cornerIdentifier == CornerIdEnum.CENTER) {
+      positionAdjustment.x = sizeChange.x;
+      positionAdjustment.y = sizeChange.y;
+      sizeChange.x = 0;
+      sizeChange.y = 0;
+    }
+
+    // stop overreduction in size
+    if (positionStyles.width + sizeChange.x < 0)
+      sizeChange.x = -positionStyles.width;
+    if (positionStyles.height + sizeChange.y < 0)
+      sizeChange.y = -positionStyles.height;
+
+    // stop dragging a minimized object
+    if (positionStyles.width - positionAdjustment.x < 0)
+      positionAdjustment.x = 0;
+    if (positionStyles.height - positionAdjustment.y < 0)
+      positionAdjustment.y = 0;
 
     setPositionStyles({
       left: positionStyles.left + positionAdjustment.x,
       top: positionStyles.top + positionAdjustment.y,
-      width: positionStyles.width + position.x * resizingDirection.x,
-      height: positionStyles.height + position.y * resizingDirection.y,
+      width: positionStyles.width + sizeChange.x,
+      height: positionStyles.height + sizeChange.y,
     });
   };
 
   const textScale = {
-    x: positionStyles.width / constantStyles.minWidth,
-    y: positionStyles.height / constantStyles.minHeight,
+    x: (positionStyles.width / constantStyles.initialWidth) * 0.94 + 0.06,
+    y: (positionStyles.height / constantStyles.initialHeight) * 1.1 - 0.1,
   };
 
-  let smallerScale = textScale.x < textScale.y ? textScale.x : textScale.y;
-  if (smallerScale < 1) smallerScale = 1;
+  if (textScale.x < 0) textScale.x = 0;
+  if (textScale.y < 0) textScale.y = 0;
 
   return (
     <span
@@ -86,7 +109,6 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
         style={{
           width: positionStyles.width,
           height: positionStyles.height,
-          ...constantStyles,
         }}>
         <SelectionBox
           propagationFunction={positionPropagator}
@@ -100,14 +122,18 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
         <SelectionBox
           propagationFunction={positionPropagator}
           cornerIdentifier={CornerIdEnum.BOTTOM_RIGHT}></SelectionBox>
-        <span
-          className={styles.movableHeader}
-          style={{
-            position: constantStyles.setAbsolute ? 'absolute' : 'relative',
-            transform: `translate(-50%, -50%) scale(${smallerScale})`,
-          }}>
-          {children}
-        </span>
+        <SelectionBox
+          propagationFunction={positionPropagator}
+          cornerIdentifier={CornerIdEnum.CENTER}>
+          <span
+            style={{
+              position: constantStyles.setAbsolute ? 'absolute' : 'relative',
+              transform: `translate(-50%, -50%) scale(${textScale.x}, ${textScale.y})`,
+              userSelect: 'none',
+            }}>
+            {children}
+          </span>
+        </SelectionBox>
       </div>
     </span>
   );
