@@ -28,7 +28,6 @@ import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
-import com.swmansion.reanimated.nativeProxy.NativeProxy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
