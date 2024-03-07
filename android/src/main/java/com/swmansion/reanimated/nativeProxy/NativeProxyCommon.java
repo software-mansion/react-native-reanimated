@@ -226,7 +226,7 @@ public abstract class NativeProxyCommon {
 
   protected abstract HybridData getHybridData();
 
-  public void onCatalystInstanceDestroy() {
+  public void invalidate() {
     mAndroidUIScheduler.deactivate();
   }
 
