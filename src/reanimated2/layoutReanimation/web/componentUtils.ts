@@ -1,14 +1,15 @@
 'use strict';
 
 import type { TransformsStyle } from 'react-native';
-import { Animations, TransitionType, WebEasings } from './config';
+import { Animations, TransitionType } from './config';
 import type {
   AnimationCallback,
   AnimationConfig,
   AnimationNames,
   CustomConfig,
-  WebEasingsNames,
 } from './config';
+import { WebEasings } from './';
+import type { WebEasingsNames } from './';
 import { convertTransformToString } from './animationParser';
 import type { TransitionData } from './animationParser';
 import { TransitionGenerator } from './createAnimation';
