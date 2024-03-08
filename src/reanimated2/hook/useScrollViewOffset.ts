@@ -11,6 +11,9 @@ import type {
   RNNativeScrollEvent,
   ReanimatedScrollEvent,
 } from './commonTypes';
+import { isWeb } from '../PlatformChecker';
+
+const IS_WEB = isWeb();
 
 const scrollEventNames = [
   'onScroll',
@@ -50,13 +53,19 @@ export function useScrollViewOffset(
   ) as unknown as EventHandlerInternal<ReanimatedScrollEvent>;
 
   useEffect(() => {
-    const viewTag = findNodeHandle(animatedRef.current);
-    eventHandler.current?.registerForEvents(viewTag as number);
+    const component = animatedRef.current;
+    const viewTag = IS_WEB ? component : findNodeHandle(component);
+
+    eventHandler.workletEventHandler.registerForEvents(viewTag as number);
 
     return () => {
-      eventHandler.current?.unregisterFromEvents();
+      eventHandler.workletEventHandler?.unregisterFromEvents();
     };
-  }, [animatedRef.current]);
+    // React here has a problem with `animatedRef.current` since a Ref .current
+    // field shouldn't be used as a dependency. However, in this case we have
+    // to do it this way.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animatedRef, animatedRef.current, eventHandler]);
 
   return offsetRef.current;
 }

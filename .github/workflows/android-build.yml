@@ -39,11 +39,11 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4
 
-      - name: Setup Java 11
+      - name: Setup Java 17
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: 11
+          java-version: 17
 
       - name: Restore Reanimated node_modules from cache
         uses: actions/cache@v3
@@ -53,7 +53,7 @@ jobs:
           restore-keys: ${{ runner.os }}-android-node-modules-reanimated-
 
       - name: Install Reanimated node_modules
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Restore app node_modules from cache
         uses: actions/cache@v3
@@ -64,7 +64,7 @@ jobs:
 
       - name: Install app node_modules
         working-directory: ${{ matrix.working-directory }}
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}/android

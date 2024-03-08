@@ -3,7 +3,20 @@
 import { _updatePropsJS } from '../../js-reanimated';
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
 
-export const snapshots = new WeakMap<HTMLElement, DOMRect>();
+export interface ReanimatedSnapshot {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+  scrollOffsets: ScrollOffsets;
+}
+
+export interface ScrollOffsets {
+  scrollTopOffset: number;
+  scrollLeftOffset: number;
+}
+
+export const snapshots = new WeakMap<HTMLElement, ReanimatedSnapshot>();
 
 export function makeElementVisible(element: HTMLElement, delay: number) {
   if (delay === 0) {
@@ -24,7 +37,7 @@ export function makeElementVisible(element: HTMLElement, delay: number) {
 function fixElementPosition(
   element: HTMLElement,
   parent: HTMLElement,
-  snapshot: DOMRect
+  snapshot: ReanimatedSnapshot
 ) {
   const parentRect = parent.getBoundingClientRect();
 
@@ -53,7 +66,10 @@ function fixElementPosition(
   }
 }
 
-export function setDummyPosition(dummy: HTMLElement, snapshot: DOMRect) {
+export function setDummyPosition(
+  dummy: HTMLElement,
+  snapshot: ReanimatedSnapshot
+) {
   dummy.style.transform = '';
   dummy.style.position = 'absolute';
   dummy.style.top = `${snapshot.top}px`;

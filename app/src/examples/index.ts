@@ -1,4 +1,5 @@
 import AboutExample from './AboutExample';
+import AmountExample from './AmountExample';
 import AnimatableRefExample from './AnimatableRefExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import AnimatedListExample from './LayoutAnimations/AnimatedList';
@@ -24,6 +25,7 @@ import Carousel from './LayoutAnimations/Carousel';
 import ChangeThemeExample from './LayoutAnimations/ChangeTheme';
 import ChangeThemeSharedExample from './SharedElementTransitions/ChangeTheme';
 import ChatHeadsExample from './ChatHeadsExample';
+import ChessExample from './ChessExample';
 import ChessboardExample from './ChessboardExample';
 import ColorExample from './ColorExample';
 import ColorInterpolationExample from './ColorInterpolationExample';
@@ -79,6 +81,7 @@ import OverlappingBoxesExample from './OverlappingBoxesExample';
 import PagerExample from './CustomHandler/PagerExample';
 import PendulumExample from './PendulumExample';
 import PinExample from './PinExample';
+import PlanetsExample from './PlanetsExample';
 import ProfilesExample from './SharedElementTransitions/Profiles';
 import ProgressTransitionExample from './SharedElementTransitions/ProgressTransition';
 import RainbowExample from './RainbowExample';
@@ -116,6 +119,7 @@ import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimatio
 import WithClampExample from './WithClampExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import HabitsExample from './LayoutAnimations/HabitsExample';
+import MemoExample from './MemoExample';
 
 interface Example {
   icon?: string;
@@ -150,6 +154,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🟨',
     title: 'JS props',
     screen: JSPropsExample,
+  },
+  MemoExample: {
+    icon: '🧠',
+    title: 'Memo',
+    screen: MemoExample,
   },
 
   // About
@@ -230,6 +239,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Animate inner component',
     screen: AnimatableRefExample,
   },
+  AmountExample: {
+    icon: '📈',
+    title: 'Amount',
+    screen: AmountExample,
+  },
   CounterExample: {
     icon: '🎰',
     title: 'Counter',
@@ -264,6 +278,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🟢',
     title: 'Animated SVG circle',
     screen: SvgExample,
+  },
+  PlanetsExample: {
+    icon: '🪐',
+    title: 'Planets',
+    screen: PlanetsExample,
   },
   BouncingBoxExample: {
     icon: '📦',
@@ -359,6 +378,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🦑',
     title: 'forwardRef & useImperativeHandle',
     screen: RefExample,
+  },
+  ChessExample: {
+    icon: '♟️',
+    title: 'Chess',
+    screen: ChessExample,
   },
   ChessboardExample: {
     icon: '♟️',

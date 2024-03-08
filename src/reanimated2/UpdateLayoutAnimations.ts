@@ -32,7 +32,7 @@ function createUpdateManager() {
         setImmediate(this.flush);
       }
     },
-    flush() {
+    flush(this: void) {
       configureLayoutAnimationBatch(animations.concat(deferredAnimations));
       animations.length = 0;
       deferredAnimations.length = 0;
