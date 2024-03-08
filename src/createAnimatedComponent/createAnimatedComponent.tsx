@@ -499,7 +499,7 @@ export function createAnimatedComponent(
       updateLayoutAnimations(this._viewTag, LayoutAnimationType.LAYOUT, layout);
     }
 
-    _configureSharedTransition(defer = false) {
+    _configureSharedTransition(isUnmounting = false) {
       if (IS_WEB) {
         return;
       }
@@ -507,7 +507,7 @@ export function createAnimatedComponent(
       if (!sharedTransitionTag) {
         this._sharedElementTransition?.unregisterTransition(
           this._viewTag,
-          defer
+          isUnmounting
         );
         this._sharedElementTransition = null;
         return;
@@ -519,7 +519,7 @@ export function createAnimatedComponent(
       sharedElementTransition.registerTransition(
         this._viewTag,
         sharedTransitionTag,
-        defer
+        isUnmounting
       );
       this._sharedElementTransition = sharedElementTransition;
     }

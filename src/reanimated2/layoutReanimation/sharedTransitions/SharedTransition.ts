@@ -82,7 +82,7 @@ export class SharedTransition {
   public registerTransition(
     viewTag: number,
     sharedTransitionTag: string,
-    defer = false
+    isUnmounting = false
   ) {
     if (getReduceMotionFromConfig(this.getReduceMotion())) {
       return;
@@ -106,7 +106,7 @@ export class SharedTransition {
       layoutAnimationType,
       transitionAnimation,
       sharedTransitionTag,
-      defer
+      isUnmounting
     );
     SharedTransition._progressTransitionManager.addProgressAnimation(
       viewTag,
@@ -114,7 +114,7 @@ export class SharedTransition {
     );
   }
 
-  public unregisterTransition(viewTag: number, defer = false): void {
+  public unregisterTransition(viewTag: number, isUnmounting = false): void {
     const layoutAnimationType =
       this._defaultTransitionType === SharedTransitionType.ANIMATION
         ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION
@@ -124,11 +124,11 @@ export class SharedTransition {
       layoutAnimationType,
       undefined,
       undefined,
-      defer
+      isUnmounting
     );
     SharedTransition._progressTransitionManager.removeProgressAnimation(
       viewTag,
-      defer
+      isUnmounting
     );
   }
 
