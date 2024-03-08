@@ -37,14 +37,13 @@ import type { EasingFunction, EasingFunctionFactory } from '../Easing';
 
 let IN_STYLE_UPDATER = false;
 const IS_REDUCED_MOTION = isReducedMotion();
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 if (__DEV__ && IS_REDUCED_MOTION) {
   console.warn(
     `[Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device.`
   );
 }
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 export function assertEasingIsWorklet(
   easing: EasingFunction | EasingFunctionFactory

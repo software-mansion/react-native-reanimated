@@ -133,7 +133,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
         );
       }
 
-      if (__DEV__ && easing) {
+      if (__DEV__ && easing && !_WORKLET) {
         assertEasingIsWorklet(easing);
       }
 
