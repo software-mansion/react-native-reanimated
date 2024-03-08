@@ -65,13 +65,15 @@ export class PropsFilter implements IPropsFilter {
           });
         }
       } else if (
-        has('current', value) &&
-        value.current instanceof WorkletEventHandler
+        has('workletEventHandler', value) &&
+        value.workletEventHandler instanceof WorkletEventHandler
       ) {
-        if (value.current.eventNames.length > 0) {
-          value.current.eventNames.forEach((eventName) => {
-            props[eventName] = has('listeners', value.current)
-              ? (value.current.listeners as Record<string, unknown>)[eventName]
+        if (value.workletEventHandler.eventNames.length > 0) {
+          value.workletEventHandler.eventNames.forEach((eventName) => {
+            props[eventName] = has('listeners', value.workletEventHandler)
+              ? (
+                  value.workletEventHandler.listeners as Record<string, unknown>
+                )[eventName]
               : dummyListener;
           });
         } else {

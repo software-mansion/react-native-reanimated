@@ -1,5 +1,6 @@
 'use strict';
 import { shouldBeUseWeb } from './PlatformChecker';
+import { isWorkletFunction } from './commonTypes';
 import type { WorkletFunction } from './commonTypes';
 
 function valueUnpacker(objectToUnpack: any, category?: string): any {
@@ -47,7 +48,7 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
     const functionInstance = workletFun.bind(objectToUnpack);
     objectToUnpack._recur = functionInstance;
     return functionInstance;
-  } else if (objectToUnpack.__init) {
+  } else if (objectToUnpack.__init !== undefined) {
     let value = handleCache.get(objectToUnpack);
     if (value === undefined) {
       value = objectToUnpack.__init();
@@ -62,7 +63,11 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
     fun.__remoteFunction = objectToUnpack;
     return fun;
   } else {
-    throw new Error('[Reanimated] Data type not recognized by value unpacker.');
+    throw new Error(
+      `[Reanimated] Data type in category "${category}" not recognized by value unpacker: "${_toString(
+        objectToUnpack
+      )}".`
+    );
   }
 }
 
@@ -75,12 +80,12 @@ if (__DEV__ && !shouldBeUseWeb()) {
   const testWorklet = (() => {
     'worklet';
   }) as WorkletFunction<[], void>;
-  if (testWorklet.__workletHash === undefined) {
+  if (!isWorkletFunction(testWorklet)) {
     throw new Error(
       `[Reanimated] Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
     );
   }
-  if (!('__workletHash' in valueUnpacker)) {
+  if (!isWorkletFunction(valueUnpacker)) {
     throw new Error('[Reanimated] `valueUnpacker` is not a worklet');
   }
   const closure = (valueUnpacker as ValueUnpacker).__closure;

@@ -23,7 +23,6 @@ import type {
 } from './layoutReanimation/animationBuilder/commonTypes';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
-import type { DependencyList } from './hook/commonTypes';
 
 export type TransformArrayItem = Extract<
   TransformsStyle['transform'],
@@ -159,20 +158,6 @@ export type AnimatedProps<Props extends object> = RestProps<Props> &
      */
     animatedProps?: Partial<AnimatedPropsProp<Props>>;
   };
-
-export type AnimatedPropsAdapterFunction = (
-  props: Record<string, unknown>
-) => void;
-
-export type useAnimatedPropsType = <Props extends object>(
-  updater: () => Partial<Props>,
-  deps?: DependencyList | null,
-  adapters?:
-    | AnimatedPropsAdapterFunction
-    | AnimatedPropsAdapterFunction[]
-    | null,
-  isAnimatedProps?: boolean
-) => Partial<Props>;
 
 // THE LAND OF THE DEPRECATED
 

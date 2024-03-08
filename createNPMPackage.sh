@@ -1,6 +1,6 @@
 #!/bin/bash
 
-yarn install --frozen-lockfile
+yarn install --immutable
 yarn bob build
 
 PREVIOUS_VERSION=$(node scripts/set-reanimated-version.js $@)

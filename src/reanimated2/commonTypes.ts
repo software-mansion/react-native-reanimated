@@ -60,6 +60,12 @@ export type MapperRegistry = {
   stop: (mapperID: number) => void;
 };
 
+export type WorkletStackDetails = [
+  error: Error,
+  lineOffset: number,
+  columnOffset: number
+];
+
 type WorkletClosure = Record<string, unknown>;
 
 interface WorkletInitDataCommon {
@@ -85,13 +91,57 @@ interface WorkletBaseRelease extends WorkletBaseCommon {
 
 interface WorkletBaseDev extends WorkletBaseCommon {
   __initData: WorkletInitDataDev;
-  __stackDetails: Error;
+  /**
+   * `__stackDetails` is removed after parsing.
+   */
+  __stackDetails?: WorkletStackDetails;
 }
 
 export type WorkletFunction<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown
 > = ((...args: Args) => ReturnValue) & (WorkletBaseRelease | WorkletBaseDev);
+
+/**
+ * This function allows you to determine if a given function is a worklet. It only works
+ * with Reanimated Babel plugin enabled. Unless you are doing something with internals of
+ * Reanimated you shouldn't need to use this function.
+ *
+ * ### Note
+ * Do not call it before the worklet is declared, as it will always return false then. E.g.:
+ *
+ * ```ts
+ * isWorkletFunction(myWorklet); // Will always return false.
+ *
+ * function myWorklet() {
+ *   'worklet';
+ * };
+ * ```
+ *
+ * ### Maintainer note
+ * This function works well on the JS thread performance-wise, since the JIT can inline it.
+ * However, on other threads it will not get optimized and we will get a function call overhead.
+ * We want to change it in the future, but it's not feasible at the moment.
+ */
+export function isWorkletFunction<
+  Args extends unknown[] = unknown[],
+  ReturnValue = unknown,
+  BuildType extends WorkletBaseDev | WorkletBaseRelease = WorkletBaseDev
+>(value: unknown): value is WorkletFunction<Args, ReturnValue> & BuildType {
+  'worklet';
+  // Since host objects always return true for `in` operator, we have to use dot notation to check if the property exists.
+  // See https://github.com/facebook/hermes/blob/340726ef8cf666a7cce75bc60b02fa56b3e54560/lib/VM/JSObject.cpp#L1276.
+  return !!(value as Record<string, unknown>).__workletHash;
+}
+
+export type AnimatedPropsAdapterFunction = (
+  props: Record<string, unknown>
+) => void;
+
+export type AnimatedPropsAdapterWorklet = WorkletFunction<
+  [props: Record<string, unknown>],
+  void
+>;
 
 export interface NestedObject<T> {
   [key: string]: NestedObjectValues<T>;
@@ -252,37 +302,4 @@ export enum ReduceMotion {
   System = 'system',
   Always = 'always',
   Never = 'never',
-}
-
-// THE LAND OF THE DEPRECATED
-
-/**
- * @deprecated don't use
- */
-export interface __WorkletFunction {
-  __closure?: Record<string, unknown>;
-  __workletHash?: number;
-}
-
-/**
- * @deprecated don't use
- */
-export interface __BasicWorkletFunction<T> extends __WorkletFunction {
-  (): T;
-}
-
-/**
- * @deprecated don't use
- */
-export interface __ComplexWorkletFunction<A extends any[], R>
-  extends __WorkletFunction {
-  (...args: A): R;
-  __remoteFunction?: (...args: A) => R;
-}
-
-/**
- * @deprecated don't use
- */
-export interface __AdapterWorkletFunction extends __WorkletFunction {
-  (value: NestedObject<string | number | AnimationObject>): void;
 }
