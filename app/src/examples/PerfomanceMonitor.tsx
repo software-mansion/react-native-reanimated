@@ -113,6 +113,7 @@ function UiPerformance() {
       circularBuffer.current = createCircularDoublesBuffer(100);
     }
 
+    timestamp = Math.round(timestamp);
     const buffer = circularBuffer.current;
     const previousTimestamp = buffer.front() ?? timestamp;
     const droppedTimestamp = buffer.push(timestamp);
