@@ -85,9 +85,9 @@ export function maybeBuild(
 
   if (isAnimationBuilder(layoutAnimationOrBuilder)) {
     const animationFactory = layoutAnimationOrBuilder.build();
-    const layoutAnimation = animationFactory(mockTargetValues);
 
     if (__DEV__ && style) {
+      const layoutAnimation = animationFactory(mockTargetValues);
       maybeReportOverwrittenProperties(
         layoutAnimation.animations,
         style,
@@ -95,7 +95,7 @@ export function maybeBuild(
       );
     }
 
-    return layoutAnimationOrBuilder.build();
+    return animationFactory;
   } else {
     return layoutAnimationOrBuilder;
   }

@@ -48,7 +48,7 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
     const functionInstance = workletFun.bind(objectToUnpack);
     objectToUnpack._recur = functionInstance;
     return functionInstance;
-  } else if (objectToUnpack.__init) {
+  } else if (objectToUnpack.__init !== undefined) {
     let value = handleCache.get(objectToUnpack);
     if (value === undefined) {
       value = objectToUnpack.__init();
@@ -63,7 +63,11 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
     fun.__remoteFunction = objectToUnpack;
     return fun;
   } else {
-    throw new Error('[Reanimated] Data type not recognized by value unpacker.');
+    throw new Error(
+      `[Reanimated] Data type in category "${category}" not recognized by value unpacker: "${_toString(
+        objectToUnpack
+      )}".`
+    );
   }
 }
 

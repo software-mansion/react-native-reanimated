@@ -31,7 +31,7 @@ function isHostObject(value: NonNullable<object>) {
   return MAGIC_KEY in value;
 }
 
-function isPlainJSObject(object: object): object is object {
+function isPlainJSObject(object: object) {
   return Object.getPrototypeOf(object) === Object.prototype;
 }
 
