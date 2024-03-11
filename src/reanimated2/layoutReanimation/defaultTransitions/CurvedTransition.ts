@@ -37,7 +37,7 @@ export class CurvedTransition
   }
 
   easingX(easing: EasingFunction): CurvedTransition {
-    if (__DEV__ && !_WORKLET) {
+    if (__DEV__) {
       assertEasingIsWorklet(easing);
     }
     this.easingXV = easing;
@@ -50,7 +50,7 @@ export class CurvedTransition
   }
 
   easingY(easing: EasingFunction): CurvedTransition {
-    if (__DEV__ && !_WORKLET) {
+    if (__DEV__) {
       assertEasingIsWorklet(easing);
     }
     this.easingYV = easing;
@@ -63,7 +63,7 @@ export class CurvedTransition
   }
 
   easingWidth(easing: EasingFunction): CurvedTransition {
-    if (__DEV__ && !_WORKLET) {
+    if (__DEV__) {
       assertEasingIsWorklet(easing);
     }
     this.easingWidthV = easing;
@@ -76,7 +76,7 @@ export class CurvedTransition
   }
 
   easingHeight(easing: EasingFunction): CurvedTransition {
-    if (__DEV__ && !_WORKLET) {
+    if (__DEV__) {
       assertEasingIsWorklet(easing);
     }
     this.easingHeightV = easing;

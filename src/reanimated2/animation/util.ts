@@ -49,6 +49,11 @@ export function assertEasingIsWorklet(
   easing: EasingFunction | EasingFunctionFactory
 ): void {
   'worklet';
+  if (_WORKLET) {
+    // If this is called on UI (for example from gesture handler with worklets), we don't get easing,
+    // but its bound copy, which is not a worklet. We don't want to throw any error then.
+    return;
+  }
   if (SHOULD_BE_USE_WEB) {
     // It is possible to run reanimated on web without plugin, so let's skip this check on web
     return;

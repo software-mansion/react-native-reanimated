@@ -69,7 +69,7 @@ export const withTiming = function (
 ): Animation<TimingAnimation> {
   'worklet';
 
-  if (__DEV__ && userConfig?.easing && !_WORKLET) {
+  if (__DEV__ && userConfig?.easing) {
     assertEasingIsWorklet(userConfig?.easing);
   }
 
