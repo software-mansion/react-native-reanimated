@@ -6,6 +6,7 @@ import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
+import { isWorkletFunction } from './commonTypes';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -79,7 +80,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       '[Reanimated] `runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && !SHOULD_BE_USE_WEB && worklet.__workletHash === undefined) {
+  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
     throw new Error('[Reanimated] `runOnUI` can only be used on worklets.');
   }
   return (...args) => {
@@ -110,8 +111,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       makeShareableCloneRecursive(worklet);
       makeShareableCloneRecursive(args);
     }
-    //
-    _runOnUIQueue.push([worklet as WorkletFunction<unknown[], unknown>, args]);
+    _runOnUIQueue.push([worklet as WorkletFunction, args]);
     if (_runOnUIQueue.length === 1) {
       queueMicrotask(() => {
         const queue = _runOnUIQueue;
@@ -166,7 +166,7 @@ export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
       '[Reanimated] `runOnUIImmediately` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && !SHOULD_BE_USE_WEB && worklet.__workletHash === undefined) {
+  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
     throw new Error(
       '[Reanimated] `runOnUIImmediately` can only be used on worklets.'
     );
@@ -216,7 +216,6 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
     | WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
   'worklet';
-  type FunWorklet = Extract<typeof fun, WorkletFunction<Args, ReturnValue>>;
   type FunDevRemote = Extract<typeof fun, DevRemoteFunction<Args, ReturnValue>>;
   if (SHOULD_BE_USE_WEB || !_WORKLET) {
     // if we are already on the JS thread, we just schedule the worklet on the JS queue
@@ -227,7 +226,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
           : (fun as () => ReturnValue)
       );
   }
-  if ((fun as FunWorklet).__workletHash) {
+  if (isWorkletFunction<Args, ReturnValue>(fun)) {
     // If `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
     // and pass the worklet as a first argument followed by original arguments.
 
@@ -241,11 +240,11 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
     // In development mode the function provided as `fun` throws an error message
     // such that when someone accidentally calls it directly on the UI runtime, they
     // see that they should use `runOnJS` instead. To facilitate that we put the
-    // reference to the original remote function in the `__functionInDEV` property.
+    // reference to the original remote function in the `__remoteFunction` property.
     fun = (fun as FunDevRemote).__remoteFunction;
   }
   return (...args) => {
-    _scheduleOnJS(
+    global._scheduleOnJS(
       fun as
         | ((...args: Args) => ReturnValue)
         | WorkletFunction<Args, ReturnValue>,

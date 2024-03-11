@@ -40,7 +40,7 @@ function measureFabric(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
     return null;
   }
 
-  const measured = _measureFabric!(viewTag as ShadowNodeWrapper);
+  const measured = global._measureFabric!(viewTag as ShadowNodeWrapper);
   if (measured === null) {
     console.warn(
       `[Reanimated] The view has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
@@ -75,7 +75,7 @@ function measurePaper(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
     return null;
   }
 
-  const measured = _measurePaper!(viewTag as number);
+  const measured = global._measurePaper!(viewTag as number);
   if (measured === null) {
     console.warn(
       `[Reanimated] The view with tag ${

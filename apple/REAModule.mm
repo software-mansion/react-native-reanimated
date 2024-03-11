@@ -9,12 +9,12 @@
 #import <React/RCTSurfaceView.h>
 #if REACT_NATIVE_MINOR_VERSION < 73
 #import <React/RCTRuntimeExecutorFromBridge.h>
-#endif
-#endif
+#endif // REACT_NATIVE_MINOR_VERSION < 73
+#endif // RCT_NEW_ARCH_ENABLED
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <RNReanimated/REAInitializerRCTFabricSurface.h>
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAModule.h>
@@ -28,7 +28,7 @@
 
 #if __has_include(<UIKit/UIAccessibility.h>)
 #import <UIKit/UIAccessibility.h>
-#endif
+#endif // __has_include(<UIKit/UIAccessibility.h>)
 
 using namespace facebook::react;
 using namespace reanimated;
@@ -46,7 +46,7 @@ using namespace reanimated;
 static __strong REAInitializerRCTFabricSurface *reaSurface;
 #else
 typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 @implementation REAModule {
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -54,10 +54,10 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
   std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule_;
 #else
   NSMutableArray<AnimatedOperation> *_operations;
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 #ifndef NDEBUG
   SingleInstanceChecker<REAModule> singleInstanceChecker_;
-#endif
+#endif // NDEBUG
   bool hasListeners;
 }
 
@@ -79,7 +79,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
 #ifdef RCT_NEW_ARCH_ENABLED
   [[NSNotificationCenter defaultCenter] removeObserver:self];
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
   [_nodesManager invalidate];
   [super invalidate];
 }
@@ -213,7 +213,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
     [_surfacePresenter registerSurface:reaSurface];
   }
   reaSurface.reaModule = self;
-#endif
+#endif // NDEBUG
 
   if (_surfacePresenter == nil) {
     // _surfacePresenter will be set in installReanimatedAfterReload

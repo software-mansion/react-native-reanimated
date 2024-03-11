@@ -74,7 +74,7 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/software-mansion/react-native-reanimated"
   s.license      = "MIT"
   s.author       = { "author" => "author@domain.cn" }
-  s.platforms    = { :ios => ios_min_version, :tvos => "9.0", :osx => "10.14" }
+  s.platforms    = { :ios => ios_min_version, :tvos => "9.0", :osx => "10.14", :visionos => "1.0" }
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
   s.source_files = [

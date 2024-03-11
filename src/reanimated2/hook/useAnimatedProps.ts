@@ -1,15 +1,38 @@
 'use strict';
 import { useAnimatedStyle } from './useAnimatedStyle';
-import type { DependencyList } from './commonTypes';
-import type {
-  AnimatedPropsAdapterFunction,
-  useAnimatedPropsType,
-} from '../helperTypes';
+import type { DependencyList, UseAnimatedStyleInternal } from './commonTypes';
 import { shouldBeUseWeb } from '../PlatformChecker';
+import type { AnimatedPropsAdapterFunction } from '../commonTypes';
 
 // TODO: we should make sure that when useAP is used we are not assigning styles
-// when you need styles to animated you should always use useAS
-// TODO TYPESCRIPT This is a temporary cast to get rid of .d.ts file.
+
+type UseAnimatedProps = <Props extends object>(
+  updater: () => Partial<Props>,
+  dependencies?: DependencyList | null,
+  adapters?:
+    | AnimatedPropsAdapterFunction
+    | AnimatedPropsAdapterFunction[]
+    | null,
+  isAnimatedProps?: boolean
+) => Partial<Props>;
+
+function useAnimatedPropsJS<Props extends object>(
+  updater: () => Props,
+  deps?: DependencyList | null,
+  adapters?:
+    | AnimatedPropsAdapterFunction
+    | AnimatedPropsAdapterFunction[]
+    | null
+) {
+  return (useAnimatedStyle as UseAnimatedStyleInternal<Props>)(
+    updater,
+    deps,
+    adapters,
+    true
+  );
+}
+
+const useAnimatedPropsNative = useAnimatedStyle;
 
 /**
  * Lets you create an animated props object which can be animated using shared values.
@@ -20,24 +43,6 @@ import { shouldBeUseWeb } from '../PlatformChecker';
  * @returns An animated props object which has to be passed to `animatedProps` property of an Animated component that you want to animate.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
  */
-export let useAnimatedProps: useAnimatedPropsType;
-
-if (shouldBeUseWeb()) {
-  useAnimatedProps = function <T extends object>(
-    updater: () => Partial<T>,
-    deps?: DependencyList | null,
-    adapters?:
-      | AnimatedPropsAdapterFunction
-      | AnimatedPropsAdapterFunction[]
-      | null
-  ) {
-    return (useAnimatedStyle as useAnimatedPropsType)(
-      updater,
-      deps,
-      adapters,
-      true
-    );
-  };
-} else {
-  useAnimatedProps = useAnimatedStyle as useAnimatedPropsType;
-}
+export const useAnimatedProps: UseAnimatedProps = shouldBeUseWeb()
+  ? (useAnimatedPropsJS as UseAnimatedProps)
+  : useAnimatedPropsNative;

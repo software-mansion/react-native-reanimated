@@ -529,7 +529,11 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   if (!_isSharedTransitionActive) {
     _isSharedTransitionActive = YES;
+#if TARGET_OS_OSX
     REAUIView *mainWindow = UIApplication.sharedApplication.keyWindow;
+#else
+    REAUIView *mainWindow = (REAUIView *)RCTKeyWindow();
+#endif
     if (_transitionContainer == nil) {
       _transitionContainer = [REAUIView new];
     }

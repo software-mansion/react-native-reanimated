@@ -9,7 +9,7 @@ import { jsVersion } from '../platform-specific/jsVersion';
 import type { WorkletRuntime } from '../runtimes';
 import { getValueUnpackerCode } from '../valueUnpacker';
 import type { LayoutAnimationBatchItem } from '../layoutReanimation/animationBuilder/commonTypes';
-import NativeReanimatedModule from '../../specs/NativeReanimatedModule';
+import ReanimatedModule from '../../specs/NativeReanimatedModule';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
@@ -91,7 +91,7 @@ export class NativeReanimated {
     global._REANIMATED_VERSION_JS = jsVersion;
     if (global.__reanimatedModuleProxy === undefined) {
       const valueUnpackerCode = getValueUnpackerCode();
-      NativeReanimatedModule?.installTurboModule(valueUnpackerCode);
+      ReanimatedModule?.installTurboModule(valueUnpackerCode);
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new Error(

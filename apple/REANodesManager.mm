@@ -12,15 +12,15 @@
 #import <react/renderer/uimanager/UIManager.h>
 #else
 #import <stdatomic.h>
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 #if __has_include(<RNScreens/RNSScreenStackHeaderConfig.h>)
 #import <RNScreens/RNSScreenStackHeaderConfig.h>
-#endif
+#endif // __has_include(<RNScreens/RNSScreenStackHeaderConfig.h>)
 
 #ifdef RCT_NEW_ARCH_ENABLED
 using namespace facebook::react;
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 // Interface below has been added in order to use private methods of RCTUIManager,
 // RCTUIManager#UpdateView is a React Method which is exported to JS but in
@@ -148,7 +148,7 @@ using namespace facebook::react;
 
 @end
 
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 @implementation REANodesManager {
   READisplayLink *_displayLink;
@@ -166,7 +166,7 @@ using namespace facebook::react;
 #else
   NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
   volatile atomic_bool _shouldFlushUpdateBuffer;
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 }
 
 - (READisplayLink *)getDisplayLink
@@ -177,7 +177,7 @@ using namespace facebook::react;
     _displayLink = [READisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
 #if !TARGET_OS_OSX
     _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
-#endif
+#endif // TARGET_OS_OSX
     [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
   }
   return _displayLink;
@@ -226,7 +226,7 @@ using namespace facebook::react;
     _viewRegistry = [_uiManager valueForKey:@"_viewRegistry"];
     _shouldFlushUpdateBuffer = false;
   }
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
   [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) {
     [displayLink setPaused:YES];
   }];
@@ -247,7 +247,7 @@ using namespace facebook::react;
 {
   _surfacePresenter = surfacePresenter;
 }
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 - (void)operationsBatchDidComplete
 {
@@ -279,7 +279,7 @@ using namespace facebook::react;
 {
   _performOperations = performOperations;
 }
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 - (void)startUpdatingOnAnimationFrame
 {
@@ -360,7 +360,7 @@ using namespace facebook::react;
     }
   }
   _wantRunUpdates = NO;
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -378,7 +378,7 @@ using namespace facebook::react;
     [uiManager updateView:reactTag viewName:viewName props:nativeProps];
   }];
 }
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 - (void)dispatchEvent:(id<RCTEvent>)event
 {
@@ -406,7 +406,7 @@ using namespace facebook::react;
   _uiProps = uiPropsSet;
   _nativeProps = nativePropsSet;
 }
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 - (BOOL)isNativeViewMounted:(NSNumber *)viewTag
 {
@@ -418,7 +418,7 @@ using namespace facebook::react;
   if ([view isKindOfClass:[RNSScreenStackHeaderConfig class]]) {
     return ((RNSScreenStackHeaderConfig *)view).screenView != nil;
   }
-#endif
+#endif // __has_include(<RNScreens/RNSScreenStackHeaderConfig.h>)
   return NO;
 }
 
@@ -529,7 +529,7 @@ using namespace facebook::react;
     CGFloat alpha = view.alpha;
 #else
     CGFloat alpha = view.alphaValue;
-#endif
+#endif // TARGET_OS_OSX
     result = [@(alpha) stringValue];
   } else if ([propName isEqualToString:@"zIndex"]) {
     NSInteger zIndex = view.reactZIndex;

@@ -40,7 +40,7 @@ function dispatchCommandFabric(
   }
 
   const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
-  _dispatchCommandFabric!(shadowNodeWrapper, commandName, args);
+  global._dispatchCommandFabric!(shadowNodeWrapper, commandName, args);
 }
 
 function dispatchCommandPaper(
@@ -54,7 +54,7 @@ function dispatchCommandPaper(
   }
 
   const viewTag = animatedRef() as number;
-  _dispatchCommandPaper!(viewTag, commandName, args);
+  global._dispatchCommandPaper!(viewTag, commandName, args);
 }
 
 function dispatchCommandJest() {

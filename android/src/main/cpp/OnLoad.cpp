@@ -13,6 +13,6 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
     reanimated::AndroidUIScheduler::registerNatives();
     reanimated::LayoutAnimations::registerNatives();
     reanimated::SensorSetter::registerNatives();
-    reanimated::KeyboardEventDataUpdater::registerNatives();
+    reanimated::KeyboardWorkletWrapper::registerNatives();
   });
 }
