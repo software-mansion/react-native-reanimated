@@ -57,7 +57,6 @@ import type { FlatList, FlatListProps } from 'react-native';
 import { addHTMLMutationObserver } from '../reanimated2/layoutReanimation/web/domUtils';
 
 const IS_WEB = isWeb();
-const IS_FABRIC = isFabric();
 
 if (IS_WEB) {
   configureWebLayoutAnimations();
@@ -277,7 +276,7 @@ export function createAnimatedComponent(
         if (this.props.animatedProps?.viewDescriptors) {
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
-        if (IS_FABRIC) {
+        if (isFabric()) {
           removeFromPropsRegistry(this._viewTag);
         }
       }
@@ -365,7 +364,7 @@ export function createAnimatedComponent(
 
         viewConfig = hostInstance?.viewConfig;
 
-        if (IS_FABRIC) {
+        if (isFabric()) {
           shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
         }
       }

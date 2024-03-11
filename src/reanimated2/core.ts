@@ -29,7 +29,6 @@ export type { WorkletRuntime } from './runtimes';
 export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export { makeMutable } from './mutables';
 
-const IS_FABRIC = isFabric();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /**
@@ -56,7 +55,7 @@ if (SHOULD_BE_USE_WEB) {
 }
 
 export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
-  if (IS_FABRIC) {
+  if (isFabric()) {
     throw new Error(
       '[Reanimated] `getViewProp` is not supported on Fabric yet.'
     );
