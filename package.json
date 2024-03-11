@@ -171,6 +171,14 @@
       "typescript"
     ]
   },
+  "codegenConfig": {
+    "name": "rnreanimated",
+    "type": "modules",
+    "jsSrcsDir": "./src/specs",
+    "android": {
+      "javaPackageName": "com.swmansion.reanimated"
+    }
+  },
   "sideEffects": [
     "./lib/reanimated2/core",
     "./lib/index"

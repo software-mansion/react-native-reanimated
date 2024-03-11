@@ -1,9 +1,6 @@
 'use strict';
-import {
-  NativeEventEmitter,
-  NativeModules,
-  findNodeHandle,
-} from 'react-native';
+import { NativeEventEmitter, Platform, findNodeHandle } from 'react-native';
+import type { NativeModule } from 'react-native';
 import { shouldBeUseWeb } from '../reanimated2/PlatformChecker';
 import type { StyleProps } from '../reanimated2';
 import { runOnJS, runOnUIImmediately } from '../reanimated2/threads';
@@ -13,6 +10,7 @@ import type {
   IJSPropsUpdater,
   InitialComponentProps,
 } from './commonTypes';
+import NativeReanimatedModule from '../specs/NativeReanimatedModule';
 
 interface ListenerData {
   viewTag: number;
@@ -27,7 +25,10 @@ class JSPropsUpdaterPaper implements IJSPropsUpdater {
 
   constructor() {
     this._reanimatedEventEmitter = new NativeEventEmitter(
-      NativeModules.ReanimatedModule
+      // NativeEventEmitter only uses this parameter on iOS.
+      Platform.OS === 'ios'
+        ? (NativeReanimatedModule as unknown as NativeModule)
+        : undefined
     );
   }
 
