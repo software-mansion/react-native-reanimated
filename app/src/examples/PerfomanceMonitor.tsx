@@ -87,11 +87,24 @@ function fps(renderTimeInMs: number) {
 }
 
 function JsPerformance() {
-  const [jsFps, setJsFps] = useState<string | null>(null);
-
+  const totalRenderTime = useSharedValue(0);
+  const circularBuffer = createCircularDoublesBuffer(100);
+  const [jsFps, setJsFps] = useState<string | null>(null)
+  
   useEffect(() => {
     loopAnimationFrame((lastTime, time) => {
-      return setJsFps(fps(time - lastTime));
+      const timestamp = Math.round(time);
+      const previousTimestamp = Math.round(lastTime) ?? timestamp;
+
+      const droppedTimestamp = circularBuffer.push(timestamp);
+      const nextToDrop = circularBuffer.back()!;
+  
+      const delta = timestamp - previousTimestamp;
+      const droppedDelta = droppedTimestamp !== null ? nextToDrop - droppedTimestamp : 0;
+      totalRenderTime.value += delta - droppedDelta;
+      const currentFps = fps(totalRenderTime.value / circularBuffer.count);
+      
+      return setJsFps(currentFps);
     });
   }, []);
 
