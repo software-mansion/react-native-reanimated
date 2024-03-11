@@ -35,7 +35,7 @@ function getCommonProperties(
     : [componentStyle];
 
   componentStyleFlat = componentStyleFlat.map((style) =>
-    'initial' in style
+    style && 'initial' in style
       ? style.initial.value // Include properties of animated style
       : style
   );
