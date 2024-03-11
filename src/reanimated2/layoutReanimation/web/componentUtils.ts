@@ -8,8 +8,8 @@ import type {
   AnimationNames,
   CustomConfig,
 } from './config';
-import { WebEasings } from './';
-import type { WebEasingsNames } from './';
+import { WebEasings } from './Easing.web';
+import type { WebEasingsNames } from './Easing.web';
 import { convertTransformToString } from './animationParser';
 import type { TransitionData } from './animationParser';
 import { TransitionGenerator } from './createAnimation';

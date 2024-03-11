@@ -1,8 +1,8 @@
 'use strict';
 
 import type { TransformsStyle } from 'react-native';
-import { WebEasings } from './';
-import type { WebEasingsNames } from './';
+import { WebEasings } from './Easing.web';
+import type { WebEasingsNames } from './Easing.web';
 
 export interface ReanimatedWebTransformProperties {
   translateX?: string;
