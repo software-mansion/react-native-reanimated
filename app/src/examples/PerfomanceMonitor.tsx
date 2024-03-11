@@ -83,14 +83,14 @@ function loopAnimationFrame(fn: (lastTime: number, time: number) => void) {
 
 function fps(renderTimeInMs: number) {
   'worklet';
-  return ((1 / renderTimeInMs) * 1000).toFixed(3);
+  return ((1 / renderTimeInMs) * 1000).toFixed(1);
 }
 
 function JsPerformance() {
   const totalRenderTime = useSharedValue(0);
   const circularBuffer = createCircularDoublesBuffer(100);
-  const [jsFps, setJsFps] = useState<string | null>(null)
-  
+  const [jsFps, setJsFps] = useState<string | null>(null);
+
   useEffect(() => {
     loopAnimationFrame((lastTime, time) => {
       const timestamp = Math.round(time);
@@ -98,20 +98,30 @@ function JsPerformance() {
 
       const droppedTimestamp = circularBuffer.push(timestamp);
       const nextToDrop = circularBuffer.back()!;
-  
+
       const delta = timestamp - previousTimestamp;
-      const droppedDelta = droppedTimestamp !== null ? nextToDrop - droppedTimestamp : 0;
+      const droppedDelta =
+        droppedTimestamp !== null ? nextToDrop - droppedTimestamp : 0;
       totalRenderTime.value += delta - droppedDelta;
       const currentFps = fps(totalRenderTime.value / circularBuffer.count);
-      
+
       return setJsFps(currentFps);
     });
   }, []);
 
+  const animatedProps = useAnimatedProps(() => {
+    const text = jsFps ?? 'N/A';
+    return { text, defaultValue: text };
+  });
+
   return (
-    <View>
-      <Text>JS FPS</Text>
-      <Text style={styles.text}>{jsFps ?? 'N/A'}</Text>
+    <View style={styles.container}>
+      <Text style={styles.headers}>JS FPS</Text>
+      <AnimatedTextInput
+        style={styles.text}
+        animatedProps={animatedProps}
+        editable={false}
+      />
     </View>
   );
 }
@@ -145,8 +155,8 @@ function UiPerformance() {
   });
 
   return (
-    <View>
-      <Text>UI FPS</Text>
+    <View style={styles.container}>
+      <Text style={styles.headers}>UI FPS</Text>
       <AnimatedTextInput
         style={styles.text}
         animatedProps={animatedProps}
@@ -197,18 +207,21 @@ export function PerformanceMonitor() {
 const styles = StyleSheet.create({
   monitor: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 8,
     borderWidth: 1,
     padding: 8,
     position: 'absolute',
-    backgroundColor: '#fff',
+    backgroundColor: '#fffa',
     zIndex: 1000,
   },
+  headers: {
+    fontSize: 12,
+  },
   text: {
-    width: 50,
+    fontSize: 16,
   },
   container: {
-    flex: 1,
+    width: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },
