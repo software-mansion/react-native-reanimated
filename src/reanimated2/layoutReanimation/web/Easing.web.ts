@@ -1,3 +1,5 @@
+'use strict';
+
 // Those are the easings that can be implemented using Bezier curves.
 // Others should be done as CSS animations
 export const WebEasings = {
