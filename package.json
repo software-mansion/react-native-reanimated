@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "3.7.0",
+  "version": "3.8.0",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "test": "yarn run format:js && yarn run lint:js && yarn run test:unit",
@@ -34,9 +34,7 @@
     "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular src lib",
     "use_strict_check": "node ./scripts/validate-use-strict.js",
     "plugin": "cd plugin && yarn && cd ..",
-    "app": "cd app && yarn && cd ..",
-    "run-example:ios": "cd Example && yarn && cd ios && bundle install && bundle exec pod install && open ReanimatedExample.xcworkspace && cd .. && yarn start --reset-cache",
-    "run-fabric-example:ios": "cd FabricExample && yarn && cd ios && bundle install && bundle exec pod install && open FabricExample.xcworkspace && cd .. && yarn start --reset-cache"
+    "app": "cd app && yarn && cd .."
   },
   "main": "lib/module/index",
   "module": "lib/module/index",

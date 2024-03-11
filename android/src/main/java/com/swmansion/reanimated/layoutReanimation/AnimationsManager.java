@@ -44,7 +44,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   private HashSet<Integer> mAncestorsToRemove = new HashSet<>();
   private HashMap<Integer, Runnable> mCallbacks = new HashMap<>();
   private ReanimatedNativeHierarchyManager mReanimatedNativeHierarchyManager;
-  private boolean isCatalystInstanceDestroyed;
+  private boolean isInvalidated;
   private SharedTransitionManager mSharedTransitionManager;
 
   public void setReanimatedNativeHierarchyManager(
@@ -63,12 +63,12 @@ public class AnimationsManager implements ViewHierarchyObserver {
   public AnimationsManager(ReactContext context, UIManagerModule uiManagerModule) {
     mContext = context;
     mUIManager = uiManagerModule;
-    isCatalystInstanceDestroyed = false;
+    isInvalidated = false;
     mSharedTransitionManager = new SharedTransitionManager(this);
   }
 
-  public void onCatalystInstanceDestroy() {
-    isCatalystInstanceDestroyed = true;
+  public void invalidate() {
+    isInvalidated = true;
     mNativeMethodsHolder = null;
     mContext = null;
     mUIManager = null;
@@ -80,7 +80,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   @Override
   public void onViewRemoval(View view, ViewGroup parent, Runnable callback) {
-    if (isCatalystInstanceDestroyed) {
+    if (isInvalidated) {
       return;
     }
     Integer tag = view.getId();
@@ -93,7 +93,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   @Override
   public void onViewCreate(View view, ViewGroup parent, Snapshot after) {
-    if (isCatalystInstanceDestroyed) {
+    if (isInvalidated) {
       return;
     }
     maybeRegisterSharedView(view);
@@ -118,7 +118,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   @Override
   public void onViewUpdate(View view, Snapshot before, Snapshot after) {
-    if (isCatalystInstanceDestroyed) {
+    if (isInvalidated) {
       return;
     }
     int tag = view.getId();
@@ -649,7 +649,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
       mReanimatedNativeHierarchyManager.publicDropView(view);
     }
 
-    if (parent != null) {
+    // this removal might be redundant, however we decided to keep it for now to avoid introducing
+    // breaking changes
+    if (parent != null && parent.indexOfChild(view) != -1) {
       parent.removeView(view);
     }
   }
