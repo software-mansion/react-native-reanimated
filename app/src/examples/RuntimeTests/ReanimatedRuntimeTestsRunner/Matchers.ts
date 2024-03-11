@@ -22,10 +22,7 @@ export class Matchers {
     }
   }
 
-  public toBe(
-    expectedValue: TestValue,
-    comparisonMode = ComparisonMode.DISTANCE
-  ) {
+  public toBe(expectedValue: TestValue, comparisonMode = ComparisonMode.AUTO) {
     const isEqual = getComparator(comparisonMode);
     if (!isEqual(expectedValue, this.currentValue)) {
       this.testCase.errors.push(

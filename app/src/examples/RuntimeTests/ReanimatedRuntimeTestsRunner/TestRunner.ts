@@ -146,7 +146,7 @@ export class TestRunner {
     const jsValue = this._valueRegistry[name].value;
     const sharedValue = this._valueRegistry[name];
     const valueContainer = makeMutable<unknown>(null);
-    await this.runOnUiBlocking(() => {
+    await this.runOnUIBlocking(() => {
       'worklet';
       valueContainer.value = sharedValue.value;
     });
@@ -292,7 +292,7 @@ export class TestRunner {
     });
   }
 
-  public async runOnUiBlocking(worklet: () => void) {
+  public async runOnUIBlocking(worklet: () => void) {
     const unlock = () => (this._threadLock.lock = false);
     this._threadLock.lock = true;
     runOnUI(() => {
@@ -309,7 +309,7 @@ export class TestRunner {
     const recordLayoutAnimationUpdates =
       updatesContainer.pushLayoutAnimationUpdates;
 
-    await this.runOnUiBlocking(() => {
+    await this.runOnUIBlocking(() => {
       'worklet';
       const originalUpdateProps = global._IS_FABRIC
         ? global._updatePropsFabric
@@ -342,7 +342,7 @@ export class TestRunner {
   }
 
   public async stopRecordingAnimationUpdates() {
-    await this.runOnUiBlocking(() => {
+    await this.runOnUIBlocking(() => {
       'worklet';
       if (global.originalUpdateProps) {
         if (global._IS_FABRIC) {
@@ -360,7 +360,7 @@ export class TestRunner {
   }
 
   public async mockAnimationTimer() {
-    await this.runOnUiBlocking(() => {
+    await this.runOnUIBlocking(() => {
       'worklet';
       global.mockedAnimationTimestamp = 0;
       global.originalGetAnimationTimestamp = global._getAnimationTimestamp;
@@ -389,7 +389,7 @@ export class TestRunner {
   }
 
   public async setAnimationTimestamp(timestamp: number) {
-    await this.runOnUiBlocking(() => {
+    await this.runOnUIBlocking(() => {
       'worklet';
       assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
       global.mockedAnimationTimestamp = timestamp;
@@ -397,7 +397,7 @@ export class TestRunner {
   }
 
   public async advanceAnimationByTime(time: number) {
-    await this.runOnUiBlocking(() => {
+    await this.runOnUIBlocking(() => {
       'worklet';
       assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
       global.mockedAnimationTimestamp += time;
@@ -405,7 +405,7 @@ export class TestRunner {
   }
 
   public async advanceAnimationByFrames(frameCount: number) {
-    await this.runOnUiBlocking(() => {
+    await this.runOnUIBlocking(() => {
       'worklet';
       assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
       global.mockedAnimationTimestamp += frameCount * 16;
@@ -413,7 +413,7 @@ export class TestRunner {
   }
 
   public async unmockAnimationTimer() {
-    await this.runOnUiBlocking(() => {
+    await this.runOnUIBlocking(() => {
       'worklet';
       if (global.originalGetAnimationTimestamp) {
         global._getAnimationTimestamp = global.originalGetAnimationTimestamp;

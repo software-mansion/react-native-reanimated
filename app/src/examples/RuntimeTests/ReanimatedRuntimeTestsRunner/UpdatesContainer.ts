@@ -129,7 +129,7 @@ export function createUpdatesContainer(testRunner: TestRunner) {
     const nativeSnapshotsCount = nativeSnapshots.value.length;
     const jsUpdatesCount = jsUpdates.value.length;
     if (jsUpdatesCount === nativeSnapshotsCount) {
-      await testRunner.runOnUiBlocking(() => {
+      await testRunner.runOnUIBlocking(() => {
         'worklet';
         const lastSnapshot = nativeSnapshots.value[nativeSnapshotsCount - 1];
         _makeNativeSnapshot(

@@ -1,6 +1,6 @@
 import { ComparisonMode, TestValue } from './types';
 
-const ERROR_DISTANCE = 0.5;
+const DISTANCE_TOLERANCE = 0.5;
 
 const COMPARATORS: {
   [Key: string]: (expected: TestValue, value: TestValue) => boolean;
@@ -17,20 +17,24 @@ const COMPARATORS: {
   },
 
   [ComparisonMode.COLOR]: (expected, value) => {
+    if (typeof value !== 'string' || typeof expected !== 'string') {
+      return false;
+    }
+    const expectedUnified = expected.toLowerCase();
     const colorRegex = new RegExp('^#?([a-f0-9]{6}|[a-f0-9]{3})$');
-    if (!colorRegex.test(expected as string)) {
+    if (!colorRegex.test(expectedUnified)) {
       throw Error(
-        `Invalid color format "${expected}", please use lowercase hex color (like #123abc)`
+        `Invalid color format "${expectedUnified}", please use hex color (like #123abc)`
       );
     }
-    return typeof value === 'string' && value === expected;
+    return value === expected;
   },
 
   [ComparisonMode.DISTANCE]: (expected, value) => {
     const valueAsNumber = Number(value);
     return (
       !isNaN(valueAsNumber) &&
-      Math.abs(valueAsNumber - Number(expected)) < ERROR_DISTANCE
+      Math.abs(valueAsNumber - Number(expected)) < DISTANCE_TOLERANCE
     );
   },
 
