@@ -130,6 +130,10 @@ def toPlatformFileString(String path) {
   return path
 }
 
+if (isNewArchitectureEnabled()) {
+    apply plugin: "com.facebook.react"
+}
+
 def reactNativeRootDir = resolveReactNativeDirectory()
 
 def reactProperties = new Properties()
