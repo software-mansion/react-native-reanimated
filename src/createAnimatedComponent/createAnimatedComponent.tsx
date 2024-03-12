@@ -248,15 +248,15 @@ export function createAnimatedComponent(
       for (const key in this.safeProps) {
         const prop = this.safeProps[key];
         if (
-          has('current', prop) &&
-          prop.current instanceof WorkletEventHandler
+          has('workletEventHandler', prop) &&
+          prop.workletEventHandler instanceof WorkletEventHandler
         ) {
           if (viewTag === null) {
             viewTag = IS_WEB
               ? this._component
               : findNodeHandle(options?.setNativeProps ? this : node);
           }
-          prop.current.registerForEvents(viewTag as number, key);
+          prop.workletEventHandler.registerForEvents(viewTag as number, key);
         }
       }
     }
@@ -265,10 +265,10 @@ export function createAnimatedComponent(
       for (const key in this.safeProps) {
         const prop = this.safeProps[key];
         if (
-          has('current', prop) &&
-          prop.current instanceof WorkletEventHandler
+          has('workletEventHandler', prop) &&
+          prop.workletEventHandler instanceof WorkletEventHandler
         ) {
-          prop.current.unregisterFromEvents();
+          prop.workletEventHandler.unregisterFromEvents();
         }
       }
     }
@@ -297,11 +297,11 @@ export function createAnimatedComponent(
       for (const key in prevProps) {
         const prop = this.safeProps[key];
         if (
-          has('current', prop) &&
-          prop.current instanceof WorkletEventHandler &&
-          prop.current.reattachNeeded
+          has('workletEventHandler', prop) &&
+          prop.workletEventHandler instanceof WorkletEventHandler &&
+          prop.workletEventHandler.reattachNeeded
         ) {
-          prop.current.unregisterFromEvents();
+          prop.workletEventHandler.unregisterFromEvents();
         }
       }
 
@@ -310,9 +310,9 @@ export function createAnimatedComponent(
       for (const key in this.safeProps) {
         const prop = this.safeProps[key];
         if (
-          has('current', prop) &&
-          prop.current instanceof WorkletEventHandler &&
-          prop.current.reattachNeeded
+          has('workletEventHandler', prop) &&
+          prop.workletEventHandler instanceof WorkletEventHandler &&
+          prop.workletEventHandler.reattachNeeded
         ) {
           if (viewTag === null) {
             const node = this._getEventViewRef() as AnimatedComponentRef;
@@ -321,8 +321,8 @@ export function createAnimatedComponent(
               ? this._component
               : findNodeHandle(options?.setNativeProps ? this : node);
           }
-          prop.current.registerForEvents(viewTag as number, key);
-          prop.current.reattachNeeded = false;
+          prop.workletEventHandler.registerForEvents(viewTag as number, key);
+          prop.workletEventHandler.reattachNeeded = false;
         }
       }
     }

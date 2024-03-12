@@ -1,5 +1,4 @@
 'use strict';
-import type { MutableRefObject } from 'react';
 import { useRef } from 'react';
 import WorkletEventHandler from '../WorkletEventHandler';
 import type { ReanimatedEvent } from './commonTypes';
@@ -17,9 +16,9 @@ export type EventHandlerProcessed<
   Context extends Record<string, unknown> = never
 > = (event: Event, context?: Context) => void;
 
-export type EventHandlerInternal<Event extends object> = MutableRefObject<
-  WorkletEventHandler<Event>
->;
+export type EventHandlerInternal<Event extends object> = {
+  workletEventHandler: WorkletEventHandler<Event>;
+};
 
 /**
  * Lets you run a function whenever a specified native event occurs.
@@ -49,13 +48,18 @@ export function useEvent<Event extends object, Context = never>(
   eventNames: string[] = [],
   rebuild = false
 ): EventHandlerInternal<Event> {
-  const initRef = useRef<WorkletEventHandler<Event> | null>(null);
+  const initRef = useRef<EventHandlerInternal<Event>>(null!);
   if (initRef.current === null) {
-    initRef.current = new WorkletEventHandler<Event>(handler, eventNames);
+    const workletEventHandler = new WorkletEventHandler<Event>(
+      handler,
+      eventNames
+    );
+    initRef.current = { workletEventHandler };
   } else if (rebuild) {
-    initRef.current.updateWorklet(handler);
+    const workletEventHandler = initRef.current.workletEventHandler;
+    workletEventHandler.updateWorklet(handler);
+    initRef.current = { workletEventHandler };
   }
 
-  // We cast it since we don't want to expose initial null value outside.
-  return initRef as EventHandlerInternal<Event>;
+  return initRef.current;
 }
