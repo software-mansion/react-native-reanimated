@@ -29,7 +29,6 @@ export type { WorkletRuntime } from './runtimes';
 export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export { makeMutable } from './mutables';
 
-const IS_FABRIC = isFabric();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /**
@@ -60,7 +59,7 @@ export function getViewProp<T>(
   propName: string,
   component?: React.Component // required on Fabric
 ): Promise<T> {
-  if (IS_FABRIC && !component) {
+  if (isFabric() && !component) {
     throw new Error(
       '[Reanimated] Function `getViewProp` requires a component to be passed as an argument on Fabric.'
     );
