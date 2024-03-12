@@ -517,7 +517,7 @@ using namespace facebook::react;
   }
 }
 
-- (NSString *_Nonnull)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName
+- (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName
 {
   REAUIView *view = [self.uiManager viewForReactTag:viewTag];
 

@@ -56,7 +56,7 @@ typedef void (^REAPerformOperations)();
                                viewName:(NSString *)viewName
                             nativeProps:(NSMutableDictionary *)nativeProps
                        trySynchronously:(BOOL)trySync;
-- (NSString * _Nonnull)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName;
+- (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName;
 #endif // RCT_NEW_ARCH_ENABLED
 - (void)maybeFlushUIUpdatesQueue;
 
