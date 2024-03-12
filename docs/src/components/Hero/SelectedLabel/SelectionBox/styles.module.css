@@ -11,10 +11,8 @@
   width: 12px;
   height: 12px;
   z-index: 2;
-
   background: var(--swm-white);
   border: 2px solid var(--swm-landing-heading-selected-border);
-
   transition: scale 50ms ease-in-out;
 }
 
