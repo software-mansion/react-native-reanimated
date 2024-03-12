@@ -527,7 +527,7 @@ using namespace facebook::react;
 #else
     CGFloat alpha = view.alphaValue;
 #endif // TARGET_OS_OSX
-    result = [@(alpha) stringValue];
+    return [@(alpha) stringValue];
   } else if ([propName isEqualToString:@"zIndex"]) {
     NSInteger zIndex = view.reactZIndex;
     return [@(zIndex) stringValue];
