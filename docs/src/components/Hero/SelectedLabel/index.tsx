@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import React, { useEffect, useRef, useState } from 'react';
 import styles from './styles.module.css';
-import SelectionBox, { CornerIdEnum } from './SelectionBox';
+import SelectionBox, { DraggableId } from './SelectionBox';
 
 const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -67,26 +67,26 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
     });
   }, [constantStyles]);
 
-  let positionPropagator = (
+  const positionPropagator = (
     position: { x: number; y: number },
-    cornerIdentifier: CornerIdEnum
+    draggableIdentifier: DraggableId
   ) => {
     // changing selectionContainer will automatically adjust position of selectionBoxes as well
     // all changes are done through css
-    const dirHorizontal =
-      cornerIdentifier == CornerIdEnum.BOTTOM_LEFT ||
-      cornerIdentifier == CornerIdEnum.TOP_LEFT;
-    const dirVertical =
-      cornerIdentifier == CornerIdEnum.TOP_LEFT ||
-      cornerIdentifier == CornerIdEnum.TOP_RIGHT;
+    const isHorizontal =
+      draggableIdentifier == DraggableId.BOTTOM_LEFT ||
+      draggableIdentifier == DraggableId.TOP_LEFT;
+    const isVertical =
+      draggableIdentifier == DraggableId.TOP_LEFT ||
+      draggableIdentifier == DraggableId.TOP_RIGHT;
 
     const positionAdjustment = {
-      x: dirHorizontal ? position.x : 0,
-      y: dirVertical ? position.y : 0,
+      x: isHorizontal ? position.x : 0,
+      y: isVertical ? position.y : 0,
     };
     const resizingDirection = {
-      x: dirHorizontal ? -1 : 1,
-      y: dirVertical ? -1 : 1,
+      x: isHorizontal ? -1 : 1,
+      y: isVertical ? -1 : 1,
     };
     const sizeChange = {
       x: position.x * resizingDirection.x,
@@ -94,7 +94,7 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
     };
 
     // adjust variables when dragging the center
-    if (cornerIdentifier == CornerIdEnum.CENTER) {
+    if (draggableIdentifier == DraggableId.CENTER) {
       positionAdjustment.x = sizeChange.x;
       positionAdjustment.y = sizeChange.y;
       sizeChange.x = 0;
@@ -132,43 +132,34 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
     applyTextScale();
   };
 
-  console.log('Rendering SelectedLabel');
-
   return (
     <span
       ref={selectionRef}
       className={clsx(styles.headingLabel, styles.selection)}
       style={{
-        transform: `translate(${positionStyles.left}px, ${positionStyles.top}px)`,
         position: constantStyles.setAbsolute ? 'absolute' : 'relative',
       }}>
-      <div
-        ref={selectionContainerRef}
-        className={styles.selectionContainer}
-        style={{
-          width: positionStyles.width,
-          height: positionStyles.height,
-        }}>
+      <div ref={selectionContainerRef} className={styles.selectionContainer}>
         <SelectionBox
           propagationFunction={positionPropagator}
-          cornerIdentifier={CornerIdEnum.TOP_LEFT}></SelectionBox>
+          draggableIdentifier={DraggableId.TOP_LEFT}></SelectionBox>
         <SelectionBox
           propagationFunction={positionPropagator}
-          cornerIdentifier={CornerIdEnum.TOP_RIGHT}></SelectionBox>
+          draggableIdentifier={DraggableId.TOP_RIGHT}></SelectionBox>
         <SelectionBox
           propagationFunction={positionPropagator}
-          cornerIdentifier={CornerIdEnum.BOTTOM_LEFT}></SelectionBox>
+          draggableIdentifier={DraggableId.BOTTOM_LEFT}></SelectionBox>
         <SelectionBox
           propagationFunction={positionPropagator}
-          cornerIdentifier={CornerIdEnum.BOTTOM_RIGHT}></SelectionBox>
+          draggableIdentifier={DraggableId.BOTTOM_RIGHT}></SelectionBox>
         <SelectionBox
           propagationFunction={positionPropagator}
-          cornerIdentifier={CornerIdEnum.CENTER}>
+          draggableIdentifier={DraggableId.CENTER}>
           <span
             ref={textLabelRef}
             style={{
               position: constantStyles.setAbsolute ? 'absolute' : 'relative',
-              transform: `translate(-50%, -50%) scale(${textScale.x}, ${textScale.y})`,
+              transform: `translate(-50%, -50%)`,
               userSelect: 'none',
             }}>
             {children}

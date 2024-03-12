@@ -1,9 +1,9 @@
 import clsx from 'clsx';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import styles from './styles.module.css';
 import Draggable from 'react-draggable';
 
-export enum CornerIdEnum {
+export enum DraggableId {
   TOP_LEFT,
   TOP_RIGHT,
   BOTTOM_LEFT,
@@ -14,42 +14,39 @@ export enum CornerIdEnum {
 const SelectionBox: React.FC<{
   propagationFunction: (
     position: { x: number; y: number },
-    cornerIdentifier: CornerIdEnum
+    draggableIdentifier: DraggableId
   ) => void;
-  cornerIdentifier: CornerIdEnum;
+  draggableIdentifier: DraggableId;
   children?: React.ReactNode;
-}> = ({ propagationFunction, cornerIdentifier, children }) => {
+}> = ({ propagationFunction, draggableIdentifier, children }) => {
   const [classList, setClassList] = useState('');
 
   useEffect(() => {
     setClassList(
-      cornerIdentifier == CornerIdEnum.CENTER
+      draggableIdentifier == DraggableId.CENTER
         ? clsx(styles.movableHeader, styles.movable)
         : clsx(
             styles.selectionBox,
             styles.movable,
-            cornerIdentifier == CornerIdEnum.BOTTOM_LEFT ||
-              cornerIdentifier == CornerIdEnum.BOTTOM_RIGHT
+            draggableIdentifier == DraggableId.BOTTOM_LEFT ||
+              draggableIdentifier == DraggableId.BOTTOM_RIGHT
               ? styles.boxLower
               : styles.boxUpper,
-            cornerIdentifier == CornerIdEnum.BOTTOM_LEFT ||
-              cornerIdentifier == CornerIdEnum.TOP_LEFT
+            draggableIdentifier == DraggableId.BOTTOM_LEFT ||
+              draggableIdentifier == DraggableId.TOP_LEFT
               ? styles.boxLeft
               : styles.boxRight
           )
     );
-  }, []);
-
-  console.log('Rendering SelectionBox');
+  }, [draggableIdentifier]);
 
   // use animation with the destination being cursor position
-  // todo: detach the grabbed box from website layout, it hinders it's free flow
   return (
     <Draggable
       onDrag={(event: any) => {
         propagationFunction(
           { x: event.movementX, y: event.movementY },
-          cornerIdentifier
+          draggableIdentifier
         );
       }}
       allowAnyClick={false}
