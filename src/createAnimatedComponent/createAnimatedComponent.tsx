@@ -135,7 +135,6 @@ export function createAnimatedComponent(
     static contextType = SkipEnteringContext;
     context!: React.ContextType<typeof SkipEnteringContext>;
 
-    // Copy of props with some of the values updated
     safeProps: {
       animatedProps: Partial<AnimatedComponentProps<AnimatedProps>>;
     };
