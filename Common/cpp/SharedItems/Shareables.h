@@ -188,7 +188,9 @@ class ShareableObject : public Shareable {
   std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data_;
 
  private:
+#if REACT_NATIVE_MINOR_VERSION >= 71
   std::shared_ptr<jni::NativeState> nativeState_ = nullptr;
+#endif
 };
 
 class ShareableHostObject : public Shareable {

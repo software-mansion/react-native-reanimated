@@ -198,9 +198,11 @@ ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
     auto value = extractShareableOrThrow(rt, object.getProperty(rt, key));
     data_.emplace_back(key.utf8(rt), value);
   }
+#if REACT_NATIVE_MINOR_VERSION >= 71
   if (object.hasNativeState(rt)) {
     nativeState_ = object.getNativeState(rt);
   }
+#endif
 }
 
 jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
@@ -209,9 +211,11 @@ jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
     obj.setProperty(
         rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
   }
+#if REACT_NATIVE_MINOR_VERSION >= 71
   if (nativeState_ != nullptr) {
     obj.setNativeState(rt, nativeState_);
   }
+#endif
   return obj;
 }
 
