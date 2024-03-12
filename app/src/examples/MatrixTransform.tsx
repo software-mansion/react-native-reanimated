@@ -3,7 +3,14 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import { SafeAreaView, Button, View, StyleSheet, Platform } from 'react-native';
+import {
+  SafeAreaView,
+  Button,
+  View,
+  StyleSheet,
+  Platform,
+  Text,
+} from 'react-native';
 import React, { useRef } from 'react';
 
 const TRANSFORM_MATRICES = [
@@ -46,21 +53,36 @@ export default function MatrixTransform() {
   }, [matrix, matrix2, currentTransformIndex]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Button onPress={handlePress} title="GO GO matrix" />
-      <Animated.View style={[styles.bigBox, styles.blue, matrixTransforms]}>
-        <Animated.View style={[styles.smallBox, styles.lime]} />
-      </Animated.View>
-      <View style={styles.spacer} />
-      <Animated.View style={[styles.bigBox, styles.orange, matrixTransforms2]}>
-        <Animated.View style={[styles.smallBox, styles.red]} />
-      </Animated.View>
+    <SafeAreaView style={styles.flexOne}>
+      <Button onPress={handlePress} title="Animate transform matrix" />
+      <View style={styles.flexOne}>
+        <View style={styles.textContainer}>
+          <Text style={styles.text}>
+            Extract all transforms (rotation, scale and translation) and animate
+            separately (the default behavior)
+          </Text>
+        </View>
+        <Animated.View style={[styles.bigBox, styles.blue, matrixTransforms]}>
+          <Animated.View style={[styles.smallBox, styles.lime]} />
+        </Animated.View>
+      </View>
+      <View style={styles.flexOne}>
+        <View style={styles.textContainer}>
+          <Text style={styles.text}>
+            Apply linear animation to each value of matrix
+          </Text>
+        </View>
+        <Animated.View
+          style={[styles.bigBox, styles.orange, matrixTransforms2]}>
+          <Animated.View style={[styles.smallBox, styles.red]} />
+        </Animated.View>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  flexOne: {
     flex: 1,
   },
   bigBox: {
@@ -71,8 +93,13 @@ const styles = StyleSheet.create({
     borderRadius: Platform.select({ ios: 10, android: 0 }),
     marginLeft: 100,
   },
-  spacer: {
-    height: 100,
+  textContainer: {
+    width: '100%',
+    backgroundColor: 'cornflowerblue',
+  },
+  text: {
+    fontSize: 16,
+    marginVertical: 4,
   },
   smallBox: {
     width: 40,
