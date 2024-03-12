@@ -5,13 +5,16 @@ import Animated, {
 } from 'react-native-reanimated';
 import {
   SafeAreaView,
-  Button,
   View,
   StyleSheet,
   Platform,
   Text,
+  TouchableOpacity,
 } from 'react-native';
 import React, { useRef } from 'react';
+
+const NAVY = '#001A72';
+const LIGHT_NAVY = '#C1C6E5';
 
 const TRANSFORM_MATRICES = [
   [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2],
@@ -54,7 +57,9 @@ export default function MatrixTransform() {
 
   return (
     <SafeAreaView style={styles.flexOne}>
-      <Button onPress={handlePress} title="Animate transform matrix" />
+      <TouchableOpacity onPress={handlePress} style={styles.button}>
+        <Text style={styles.buttonText}>Animate transform matrix</Text>
+      </TouchableOpacity>
       <View style={styles.flexOne}>
         <View style={styles.textContainer}>
           <Text style={styles.text}>
@@ -95,11 +100,25 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     width: '100%',
-    backgroundColor: 'cornflowerblue',
+    borderTopWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: NAVY,
+    backgroundColor: LIGHT_NAVY,
   },
   text: {
-    fontSize: 16,
-    marginVertical: 4,
+    fontSize: 15,
+    color: NAVY,
+    margin: 10,
+  },
+  button: {
+    height: 40,
+    backgroundColor: NAVY,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontSize: 20,
+    color: 'white',
   },
   smallBox: {
     width: 40,
