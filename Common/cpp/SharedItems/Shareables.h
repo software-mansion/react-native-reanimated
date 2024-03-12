@@ -189,7 +189,7 @@ class ShareableObject : public Shareable {
 
  private:
 #if REACT_NATIVE_MINOR_VERSION >= 71
-  std::shared_ptr<jni::NativeState> nativeState_ = nullptr;
+  std::shared_ptr<jsi::NativeState> nativeState_ = nullptr;
 #endif
 };
 
