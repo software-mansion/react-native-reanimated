@@ -139,7 +139,7 @@ export class InlinePropManager implements IInlinePropManager {
     viewInfo: ViewInfo
   ) {
     const newInlineProps: Record<string, unknown> =
-      extractSharedValuesMapFromProps(animatedComponent.safeProps);
+      extractSharedValuesMapFromProps(animatedComponent.props);
     const hasChanged = inlinePropsHasChanged(newInlineProps, this._inlineProps);
 
     if (hasChanged) {
