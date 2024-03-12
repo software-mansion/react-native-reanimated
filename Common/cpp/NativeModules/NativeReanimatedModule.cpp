@@ -288,8 +288,8 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
   }
 
   throw std::runtime_error(std::string(
-      "Getting property '" + propName +
-      "' with function 'getViewProp' is not supported"));
+      "Getting property `" + propName +
+      "` with function `getViewProp` is not supported"));
 }
 
 jsi::Value NativeReanimatedModule::getViewProp(
