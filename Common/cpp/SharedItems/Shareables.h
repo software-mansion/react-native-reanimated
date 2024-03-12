@@ -186,6 +186,9 @@ class ShareableObject : public Shareable {
 
  protected:
   std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data_;
+
+ private:
+  std::shared_ptr<jni::NativeState> nativeState_ = nullptr;
 };
 
 class ShareableHostObject : public Shareable {
