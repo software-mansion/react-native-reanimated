@@ -6,7 +6,6 @@ namespace reanimated {
 
 void LayoutAnimationsProxy::startAnimation(const int tag, const LayoutAnimationType type, Values values) const{
   printf("start aniamtion %f %f %f %f", values.x, values.y, values.width, values.height);
-  // czemu to sie psuje bez schedulowania???
   nativeReanimatedModule_->uiScheduler_->scheduleOnUI([values, this, tag, type](){
     jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
     jsi::Object yogaValues(rt);
@@ -18,20 +17,7 @@ void LayoutAnimationsProxy::startAnimation(const int tag, const LayoutAnimationT
   });
 }
 
-//void LayoutAnimationsProxy::startAnimationWithWrapper(ShadowNode::Shared node, const int tag, const LayoutAnimationType type, Values values){
-//  printf("start aniamtion %f %f %f %f", values.x, values.y, values.width, values.height);
-//  nativeReanimatedModule_->uiScheduler_->scheduleOnUI([values, this, tag, type, node](){
-//    jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
-//    jsi::Object yogaValues(rt);
-//    yogaValues.setProperty(rt, "originX", values.x);
-//    yogaValues.setProperty(rt, "originY", values.y);
-//    yogaValues.setProperty(rt, "width", values.width);
-//    yogaValues.setProperty(rt, "height", values.height);
-//    nativeReanimatedModule_->layoutAnimationsManager().startLayoutAnimationWithWrapper(rt, node, tag, type, yogaValues);
-//  });
-//}
-
-void LayoutAnimationsProxy::startLayoutLayoutAnimation(const int tag, Values currentValues, Values targetValues){
+void LayoutAnimationsProxy::startLayoutLayoutAnimation(const int tag, Values currentValues, Values targetValues) const{
   nativeReanimatedModule_->uiScheduler_->scheduleOnUI([currentValues, targetValues, this, tag](){
     jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
     jsi::Object yogaValues(rt);
@@ -46,22 +32,6 @@ void LayoutAnimationsProxy::startLayoutLayoutAnimation(const int tag, Values cur
     nativeReanimatedModule_->layoutAnimationsManager().startLayoutAnimation(rt, tag, LayoutAnimationType::LAYOUT, yogaValues);
   });
 }
-
-//void LayoutAnimationsProxy::startLayoutLayoutAnimationWithWrapper(ShadowNode::Shared node, const int tag, const LayoutAnimationType type, Values currentValues, Values targetValues){
-//  nativeReanimatedModule_->uiScheduler_->scheduleOnUI([currentValues, targetValues, this, tag, type, node](){
-//    jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
-//    jsi::Object yogaValues(rt);
-//    yogaValues.setProperty(rt, "currentOriginX", currentValues.x);
-//    yogaValues.setProperty(rt, "currentOriginY", currentValues.y);
-//    yogaValues.setProperty(rt, "currentWidth", currentValues.width);
-//    yogaValues.setProperty(rt, "currentHeight", currentValues.height);
-//    yogaValues.setProperty(rt, "targetOriginX", targetValues.x);
-//    yogaValues.setProperty(rt, "targetOriginY", targetValues.y);
-//    yogaValues.setProperty(rt, "targetWidth", targetValues.width);
-//    yogaValues.setProperty(rt, "targetHeight", targetValues.height);
-//    nativeReanimatedModule_->layoutAnimationsManager().startLayoutAnimationWithWrapper(rt, node, tag, type, yogaValues);
-//  });
-//}
 
 void LayoutAnimationsProxy::transferConfigFromNativeTag(const int tag){
   if (!tagToNativeID_->contains(tag)){
@@ -86,10 +56,21 @@ void LayoutAnimationsProxy::transferConfigFromNativeTag(const int tag){
 void LayoutAnimationsProxy::progressLayoutAnimation(int tag, const jsi::Object &newStyle){
 //  auto newProps = RawProps(nativeReanimatedModule_->getUIRuntime(), jsi::Value(nativeReanimatedModule_->getUIRuntime(), newStyle));
   auto newProps = std::make_shared<RawProps>(nativeReanimatedModule_->getUIRuntime(), jsi::Value(nativeReanimatedModule_->getUIRuntime(), newStyle));
-  layoutAnimationsRegistry_.props_.insert_or_assign(tag, newProps);
+  X x;
+  x.rawProps = newProps;
+  LayoutMetrics lm;
+  
+  lm.frame.origin.x = newStyle.hasProperty(nativeReanimatedModule_->getUIRuntime(), "originX") ? newStyle.getProperty(nativeReanimatedModule_->getUIRuntime(), "originX").asNumber() : -1;
+  lm.frame.origin.y = newStyle.hasProperty(nativeReanimatedModule_->getUIRuntime(), "originY") ? newStyle.getProperty(nativeReanimatedModule_->getUIRuntime(), "originY").asNumber() : -1;
+  lm.frame.size.width = newStyle.hasProperty(nativeReanimatedModule_->getUIRuntime(), "width") ? newStyle.getProperty(nativeReanimatedModule_->getUIRuntime(), "width").asNumber() : -1;
+  lm.frame.size.height = newStyle.hasProperty(nativeReanimatedModule_->getUIRuntime(), "height") ? newStyle.getProperty(nativeReanimatedModule_->getUIRuntime(), "height").asNumber() : -1;
+  
+  x.layoutMetrics = lm;
+  layoutAnimationsRegistry_.props_.insert_or_assign(tag, x);
 }
 
 void LayoutAnimationsProxy::endLayoutAniamtion(int tag, bool shouldRemove){
+  layoutAnimations_.erase(tag);
   layoutAnimationsRegistry_.props_.erase(tag);
   layoutAnimationsRegistry_.removedViews_.insert(tag);
 }
@@ -106,48 +87,184 @@ LayoutAnimationsProxy::getComponentDescriptorForShadowView(
   return componentDescriptorRegistry_->at(shadowView.componentHandle);
 }
 
-std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(SurfaceId surfaceId, MountingTransaction::Number transactionNumber, const TransactionTelemetry& telemetry, ShadowViewMutationList mutations) const {
+//static inline bool shouldFirstComeBeforeSecondRemovesOnly(
+//    const ShadowViewMutation& lhs,
+//    const ShadowViewMutation& rhs) noexcept {
+//  // Make sure that removes on the same level are sorted - highest indices must
+//  // come first.
+//  return (lhs.type == ShadowViewMutation::Type::Remove &&
+//          lhs.type == rhs.type) &&
+//      (lhs.parentShadowView.tag == rhs.parentShadowView.tag) &&
+//      (lhs.index > rhs.index);
+//}
+
+static inline bool shouldFirstComeBeforeSecondMutation(
+    const ShadowViewMutation& lhs,
+    const ShadowViewMutation& rhs) noexcept {
+  if (lhs.type != rhs.type) {
+    // Deletes always come last
+    if (lhs.type == ShadowViewMutation::Type::Delete) {
+      return false;
+    }
+    if (rhs.type == ShadowViewMutation::Type::Delete) {
+      return true;
+    }
+
+    // Remove comes before insert
+    if (lhs.type == ShadowViewMutation::Type::Remove &&
+        rhs.type == ShadowViewMutation::Type::Insert) {
+      return true;
+    }
+    if (rhs.type == ShadowViewMutation::Type::Remove &&
+        lhs.type == ShadowViewMutation::Type::Insert) {
+      return false;
+    }
+
+    // Create comes before insert
+    if (lhs.type == ShadowViewMutation::Type::Create &&
+        rhs.type == ShadowViewMutation::Type::Insert) {
+      return true;
+    }
+    if (rhs.type == ShadowViewMutation::Type::Create &&
+        lhs.type == ShadowViewMutation::Type::Insert) {
+      return false;
+    }
+  } else {
+    // Make sure that removes on the same level are sorted - highest indices
+    // must come first.
+    if (lhs.type == ShadowViewMutation::Type::Remove &&
+        lhs.parentShadowView.tag == rhs.parentShadowView.tag) {
+      if (lhs.index > rhs.index) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
+
+  return false;
+}
+
+void LayoutAnimationsProxy::addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList& mutations) const{
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
+  for (auto& [tag, x]: layoutAnimationsRegistry_.props_){
+    auto rawProps = x.rawProps;
+    if (!layoutAnimations_.contains(tag)){
+      continue;
+    }
+    auto& la = layoutAnimations_.at(tag);
+    auto& previous = la.current;
+    auto& finalView = la.end;
+    auto parent = la.parent;
+    auto newView = std::make_shared<ShadowView>(*finalView);
+    auto newProps = getComponentDescriptorForShadowView(*newView).cloneProps(propsParserContext, newView->props, *rawProps);
+    newView->props = newProps;
+    auto f = x.layoutMetrics.frame;
+    if (f.size.width != -1){
+      newView->layoutMetrics.frame.size.width = f.size.width;
+    }
+    if (f.size.height != -1){
+      newView->layoutMetrics.frame.size.height = f.size.height;
+    }
+    if (f.origin.x != -1){
+      newView->layoutMetrics.frame.origin.x = f.origin.x;
+    }
+    if (f.origin.y != -1){
+      newView->layoutMetrics.frame.origin.y = f.origin.y;
+    }
+    
+    
+    if (!la.initialMutations.empty()){
+      for (auto mutation: la.initialMutations){
+        mutation.newChildShadowView = *newView;
+        mutations.push_back(mutation);
+      }
+      la.initialMutations.clear();
+    } else {
+      mutations.push_back(ShadowViewMutation::UpdateMutation(*previous, *newView, parent));
+    }
+    la.current = newView;
+  }
+  layoutAnimationsRegistry_.props_.clear();
+  std::stable_sort(
+      mutations.begin(),
+      mutations.end(),
+      &shouldFirstComeBeforeSecondMutation);
+}
+
+std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(SurfaceId surfaceId, MountingTransaction::Number transactionNumber, const TransactionTelemetry& telemetry, ShadowViewMutationList mutations) const {
+  
 //  std::unordered_map<Tag, const RawProps*> propsMap = layoutAnimationsRegistry_.props_;
+  ShadowViewMutationList filteredMutations;
+  
   for (auto& mutation: mutations){
     switch (mutation.type) {
-      case ShadowViewMutation::Type::Insert: {
+      case ShadowViewMutation::Type::Create: {
         if (!layoutAnimationsManager_->hasLayoutAnimation(mutation.newChildShadowView.tag, LayoutAnimationType::ENTERING)){
+          filteredMutations.push_back(mutation);
           continue;
         }
         startAnimation(mutation.newChildShadowView.tag, LayoutAnimationType::ENTERING, Values(mutation.newChildShadowView));
-        auto rawProps = layoutAnimationsRegistry_.props_.at(mutation.newChildShadowView.tag);
-//        if (mutation.type == ShadowViewMutation::Type::Insert){
-        layoutAnimationsRegistry_.props_.erase(mutation.newChildShadowView.tag);
-//        }
-        ShadowView finalView = ShadowView(mutation.newChildShadowView);
-        ShadowView current = ShadowView(finalView);
-        auto newProps = getComponentDescriptorForShadowView(mutation.newChildShadowView).cloneProps(propsParserContext, current.props, *rawProps);
-        current.props = newProps;
-        mutation.newChildShadowView = current;
-        layoutAnimationsRegistry_.previousShadowViews_.insert_or_assign(mutation.newChildShadowView.tag, current);
-        layoutAnimationsRegistry_.shadowViews_.insert_or_assign(mutation.newChildShadowView.tag, finalView);
-        layoutAnimationsRegistry_.parentShadowViews_.insert_or_assign(mutation.newChildShadowView.tag, mutation.parentShadowView);
+        auto finalView = std::make_shared<ShadowView>(mutation.newChildShadowView);
+        auto current = std::make_shared<ShadowView>(mutation.oldChildShadowView);
+        LayoutAnimation la{finalView, current, mutation.oldChildShadowView, mutation.parentShadowView, {mutation}};
+        layoutAnimations_.insert_or_assign(mutation.newChildShadowView.tag, la);
+        break;
+      }
+        
+      case ShadowViewMutation::Type::Insert:{
+        if (layoutAnimations_.contains(mutation.newChildShadowView.tag)){
+          layoutAnimations_.at(mutation.newChildShadowView.tag).initialMutations.push_back(mutation);
+        } else {
+          filteredMutations.push_back(mutation);
+        }
+        break;
+      }
+        
+      case ShadowViewMutation::Type::Update:{
+        if (!layoutAnimationsManager_->hasLayoutAnimation(mutation.newChildShadowView.tag, LayoutAnimationType::LAYOUT)){
+          filteredMutations.push_back(mutation);
+          continue;
+        }
+        startLayoutLayoutAnimation(mutation.newChildShadowView.tag, Values(mutation.oldChildShadowView), Values(mutation.newChildShadowView));
+        auto finalView = std::make_shared<ShadowView>(mutation.newChildShadowView);
+        auto current = std::make_shared<ShadowView>(mutation.oldChildShadowView);
+        LayoutAnimation la{finalView, current, mutation.oldChildShadowView, mutation.parentShadowView, {}};
+        layoutAnimations_.insert_or_assign(mutation.newChildShadowView.tag, la);
+        break;
+      }
+        
+      case ShadowViewMutation::Type::Remove: {
+        if (!layoutAnimationsManager_->hasLayoutAnimation(mutation.oldChildShadowView.tag, LayoutAnimationType::EXITING)){
+          filteredMutations.push_back(mutation);
+          continue;
+        }
+        startAnimation(mutation.oldChildShadowView.tag, LayoutAnimationType::EXITING, Values(mutation.oldChildShadowView));
+        auto finalView = std::make_shared<ShadowView>(mutation.oldChildShadowView);
+        auto current = std::make_shared<ShadowView>(mutation.oldChildShadowView);
+        LayoutAnimation la{finalView, current, mutation.oldChildShadowView, mutation.parentShadowView, {}};
+        layoutAnimations_.insert_or_assign(mutation.oldChildShadowView.tag, la);
+        break;
+      }
+        
+      case ShadowViewMutation::Type::Delete: {
+        if (layoutAnimations_.contains(mutation.oldChildShadowView.tag)){
+//          layoutAnimations_.at(mutation.oldChildShadowView.tag).initialMutations.push_back(mutation);
+        } else {
+          filteredMutations.push_back(mutation);
+        }
         break;
       }
         
       default:
-        break;
+        filteredMutations.push_back(mutation);
     }
   }
-  for (auto& [tag, rawProps]: layoutAnimationsRegistry_.props_){
-    auto& previous = layoutAnimationsRegistry_.previousShadowViews_.at(tag);
-    auto& finalView = layoutAnimationsRegistry_.shadowViews_.at(tag);
-    auto& parent = layoutAnimationsRegistry_.parentShadowViews_.at(tag);
-
-    auto newView = ShadowView(finalView);
-    auto newProps = getComponentDescriptorForShadowView(finalView).cloneProps(propsParserContext, finalView.props, *rawProps);
-    newView.props = newProps;
-
-    mutations.push_back(ShadowViewMutation::UpdateMutation(previous, newView, parent));
-  }
-  layoutAnimationsRegistry_.props_.clear();
-  return MountingTransaction{surfaceId, transactionNumber, std::move(mutations), telemetry};
+  
+  addOngoingAnimations(surfaceId, filteredMutations);
+  
+//  layoutAnimationsRegistry_.props_.clear();
+  return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 
 bool LayoutAnimationsProxy::shouldOverridePullTransaction() const {
