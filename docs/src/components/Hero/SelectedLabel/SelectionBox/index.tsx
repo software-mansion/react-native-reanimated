@@ -38,7 +38,7 @@ const SelectionBox: React.FC<{
               : styles.boxRight
           )
     );
-  }, [draggableIdentifier]);
+  }, []);
 
   // use animation with the destination being cursor position
   return (

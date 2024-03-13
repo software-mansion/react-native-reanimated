@@ -108,11 +108,12 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
       sizeChange.y = -positionStyles.height;
 
     // stop dragging a minimized object
-    if (positionStyles.width - positionAdjustment.x < 0)
-      positionAdjustment.x = 0;
-    if (positionStyles.height - positionAdjustment.y < 0)
-      positionAdjustment.y = 0;
-
+    if (draggableIdentifier !== DraggableId.CENTER) {
+      if (positionStyles.width - positionAdjustment.x < 0)
+        positionAdjustment.x = 0;
+      if (positionStyles.height - positionAdjustment.y < 0)
+        positionAdjustment.y = 0;
+    }
     setPositionStyles({
       left: positionStyles.left + positionAdjustment.x,
       top: positionStyles.top + positionAdjustment.y,
@@ -121,10 +122,16 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
     });
 
     // these magic numbers are a result of disparity between font's apparent and actual size
+    const scaleOffsetX = 0.96;
+    const scaleOffsetY = 1.255;
+
+    // this is a limit with offset function, initial scale is 1.0, but it converges into x=0.96 and y=1.255
     textScale.x =
-      (positionStyles.width / constantStyles.initialWidth) * 0.96 + 0.04;
+      positionStyles.width / constantStyles.initialWidth 
+      * scaleOffsetX - scaleOffsetX + 1.0;
     textScale.y =
-      (positionStyles.height / constantStyles.initialHeight) * 1.255 - 0.255;
+      positionStyles.height / constantStyles.initialHeight 
+      * scaleOffsetY - scaleOffsetY + 1.0;
 
     if (textScale.x < 0) textScale.x = 0;
     if (textScale.y < 0) textScale.y = 0;
