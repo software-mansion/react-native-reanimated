@@ -35,10 +35,6 @@
   color: var(--swm-landing-heading);
 }
 
-.headingLabel span {
-  margin-right: 8px;
-}
-
 .subheadingLabel {
   font-family: var(--swm-title-landing-font);
   font-size: 32px;

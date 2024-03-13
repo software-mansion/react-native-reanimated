@@ -3,8 +3,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import styles from './styles.module.css';
 import SelectionBox, { DraggableId } from './SelectionBox';
 
-const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
+const SelectedLabel: React.FC<{ children: React.ReactNode, isInteractive: Boolean }> = ({
   children,
+  isInteractive = false
 }) => {
   const selectionRef = useRef(null);
   const selectionContainerRef = useRef(null);
@@ -50,6 +51,10 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     const rect = selectionContainerRef.current.getBoundingClientRect();
+    
+    if (!isInteractive)
+      return;
+
     setConstantStyles({
       initialWidth: rect.width,
       initialHeight: rect.height,
@@ -59,6 +64,10 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     const rect = selectionContainerRef.current.getBoundingClientRect();
+
+    if (!isInteractive)
+      return;
+
     setPositionStyles({
       top: 0, // rect.top,
       left: 0, // rect.left,
@@ -71,6 +80,8 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
     position: { x: number; y: number },
     draggableIdentifier: DraggableId
   ) => {
+    if (!isInteractive)
+      return;
     // changing selectionContainer will automatically adjust position of selectionBoxes as well
     // all changes are done through css
     const isHorizontal =
@@ -145,19 +156,24 @@ const SelectedLabel: React.FC<{ children: React.ReactNode }> = ({
       <div ref={selectionContainerRef} className={styles.selectionContainer}>
         <SelectionBox
           propagationFunction={positionPropagator}
-          draggableIdentifier={DraggableId.TOP_LEFT}></SelectionBox>
+          draggableIdentifier={DraggableId.TOP_LEFT}
+          isInteractive={isInteractive}></SelectionBox>
         <SelectionBox
           propagationFunction={positionPropagator}
-          draggableIdentifier={DraggableId.TOP_RIGHT}></SelectionBox>
+          draggableIdentifier={DraggableId.TOP_RIGHT}
+          isInteractive={isInteractive}></SelectionBox>
         <SelectionBox
           propagationFunction={positionPropagator}
-          draggableIdentifier={DraggableId.BOTTOM_LEFT}></SelectionBox>
+          draggableIdentifier={DraggableId.BOTTOM_LEFT}
+          isInteractive={isInteractive}></SelectionBox>
         <SelectionBox
           propagationFunction={positionPropagator}
-          draggableIdentifier={DraggableId.BOTTOM_RIGHT}></SelectionBox>
+          draggableIdentifier={DraggableId.BOTTOM_RIGHT}
+          isInteractive={isInteractive}></SelectionBox>
         <SelectionBox
           propagationFunction={positionPropagator}
-          draggableIdentifier={DraggableId.CENTER}>
+          draggableIdentifier={DraggableId.CENTER}
+          isInteractive={isInteractive}>
           <span
             ref={textLabelRef}
             style={{

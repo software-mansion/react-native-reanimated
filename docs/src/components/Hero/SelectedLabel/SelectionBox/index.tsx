@@ -14,30 +14,37 @@ export enum DraggableId {
 const SelectionBox: React.FC<{
   propagationFunction: (
     position: { x: number; y: number },
-    draggableIdentifier: DraggableId
+    draggableIdentifier: DraggableId,
   ) => void;
   draggableIdentifier: DraggableId;
   children?: React.ReactNode;
-}> = ({ propagationFunction, draggableIdentifier, children }) => {
-  const [classList, setClassList] = useState('');
+  isInteractive: Boolean;
+}> = ({ propagationFunction, draggableIdentifier, children, isInteractive }) => {
+  let defaultState: string;
+
+  if (draggableIdentifier !== DraggableId.CENTER) {
+    defaultState = clsx(
+      styles.selectionBox,
+      draggableIdentifier == DraggableId.BOTTOM_LEFT ||
+        draggableIdentifier == DraggableId.BOTTOM_RIGHT
+        ? styles.boxLower
+        : styles.boxUpper,
+      draggableIdentifier == DraggableId.BOTTOM_LEFT ||
+        draggableIdentifier == DraggableId.TOP_LEFT
+        ? styles.boxLeft
+        : styles.boxRight
+    );
+  }
+
+  const [classList, setClassList] = useState(defaultState);
 
   useEffect(() => {
-    setClassList(
-      draggableIdentifier == DraggableId.CENTER
-        ? clsx(styles.movableHeader, styles.movable)
-        : clsx(
-            styles.selectionBox,
-            styles.movable,
-            draggableIdentifier == DraggableId.BOTTOM_LEFT ||
-              draggableIdentifier == DraggableId.BOTTOM_RIGHT
-              ? styles.boxLower
-              : styles.boxUpper,
-            draggableIdentifier == DraggableId.BOTTOM_LEFT ||
-              draggableIdentifier == DraggableId.TOP_LEFT
-              ? styles.boxLeft
-              : styles.boxRight
-          )
-    );
+    // if interactivity is enabled, center CENTER after re-render
+    if (draggableIdentifier === DraggableId.CENTER && isInteractive) {
+      setClassList(clsx(
+        styles.movableHeader, styles.movable
+      ));
+    }
   }, [draggableIdentifier]);
 
   // use animation with the destination being cursor position
@@ -51,7 +58,7 @@ const SelectionBox: React.FC<{
       }}
       allowAnyClick={false}
       axis={'none'}>
-      <div className={classList}>{children}</div>
+      <div className={clsx(isInteractive ? styles.movable : '', classList)}>{children}</div>
     </Draggable>
   );
 };

@@ -16,11 +16,11 @@
   transition: scale 50ms ease-in-out;
 }
 
-.selectionBox:active {
+.movable.selectionBox:active {
   scale: 1.35;
 }
 
-.selectionBox:hover {
+.movable.selectionBox:hover {
   scale: 1.35;
 }
 

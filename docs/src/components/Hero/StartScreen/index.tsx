@@ -19,7 +19,7 @@ const StartScreen = () => {
                   Beyond the limitations
                 </h2>
               </div>
-              <SelectedLabel>Reanimated</SelectedLabel>
+              <SelectedLabel isInteractive={true}>Reanimated</SelectedLabel>
             </h1>
           </div>
           <div className={styles.lowerHeading}>
