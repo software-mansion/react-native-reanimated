@@ -129,12 +129,14 @@ const SelectedLabel: React.FC<{
 
     // these magic numbers are a result of disparity between font's apparent and actual size
     const sizeOffsetX = 0.98;
-    const sizeOffsetY = 1.250;
+    const sizeOffsetY = 1.25;
 
     // scale starts at 1 and as it gets larger approaches sizeOffset
+    // prettier-ignore
     textScale.x =
       (positionStyles.width / constantStyles.initialWidth) 
       * sizeOffsetX - sizeOffsetX + 1;
+    // prettier-ignore
     textScale.y =
       (positionStyles.height / constantStyles.initialHeight) 
       * sizeOffsetY - sizeOffsetY + 1;
@@ -152,8 +154,7 @@ const SelectedLabel: React.FC<{
       style={{
         position: constantStyles.isTextInteractive ? 'absolute' : 'relative',
       }}>
-      <div ref={selectionContainerRef} 
-        className={styles.selectionContainer}>
+      <div ref={selectionContainerRef} className={styles.selectionContainer}>
         <SelectionBox
           propagationFunction={positionPropagator}
           draggableIdentifier={DraggableId.TOP_LEFT}
@@ -177,12 +178,10 @@ const SelectedLabel: React.FC<{
           <span
             ref={textLabelRef}
             className={clsx(
+              isInteractive ? styles.preInteractiveHeaderText : null,
               constantStyles.isTextInteractive
                 ? styles.interactiveHeaderText
-                : styles.headerText,
-              isInteractive
-                ? styles.preInteractiveHeaderText
-                : null
+                : styles.headerText
             )}>
             {children}
           </span>
