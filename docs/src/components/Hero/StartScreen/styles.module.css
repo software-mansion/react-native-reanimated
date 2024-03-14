@@ -35,6 +35,10 @@
   color: var(--swm-landing-heading);
 }
 
+.rnLabel {
+  margin-right: 10px;
+}
+
 .subheadingLabel {
   font-family: var(--swm-title-landing-font);
   font-size: 32px;

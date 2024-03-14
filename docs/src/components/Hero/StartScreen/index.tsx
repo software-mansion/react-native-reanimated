@@ -13,14 +13,12 @@ const StartScreen = () => {
         <div className={styles.heading}>
           <div className={styles.upperHeading}>
             <h1 className={styles.headingLabel}>
-              <div className={styles.headingColumn}>
-                <span>React Native</span>
-                <h2 className={styles.subheadingLabel}>
-                  Beyond the limitations
-                </h2>
-              </div>
-              <SelectedLabel isInteractive={true}>Reanimated</SelectedLabel>
+                <span className={styles.rnLabel}>React Native</span>
+                <SelectedLabel isInteractive={true}>Reanimated</SelectedLabel>
             </h1>
+            <h2 className={styles.subheadingLabel}>
+              Beyond the limitations
+            </h2>
           </div>
           <div className={styles.lowerHeading}>
             <Horse />
