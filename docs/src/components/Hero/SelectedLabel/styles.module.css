@@ -25,11 +25,6 @@
   text-align: center;
 }
 
-.movableHeader {
-  left: 50%;
-  top: 50%;
-}
-
 .headerText {
   position: relative;
 }
@@ -40,4 +35,14 @@
   left: 50%;
   top: 50%;
   user-select: none;
+}
+
+.preInteractiveHeaderText {
+  margin-right: 30px;
+}
+
+@media (max-width: 768px) {
+  .preInteractiveHeaderText {
+    margin-right: 8px;
+  }  
 }

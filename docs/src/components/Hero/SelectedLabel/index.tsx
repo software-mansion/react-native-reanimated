@@ -179,11 +179,11 @@ const SelectedLabel: React.FC<{
             className={clsx(
               constantStyles.isTextInteractive
                 ? styles.interactiveHeaderText
-                : styles.headerText
-            )}
-            style={{
-              marginRight: isInteractive ? 30 : null,
-            }}>
+                : styles.headerText,
+              isInteractive
+                ? styles.preInteractiveHeaderText
+                : null
+            )}>
             {children}
           </span>
         </SelectionBox>
