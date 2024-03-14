@@ -57,9 +57,12 @@ export function useAnimatedRef<
     ) => {
       // enters when ref is set by attaching to a component
       if (component) {
-        tag.value = IS_WEB
-          ? getComponentOrScrollable(component)
-          : getTagValueFunction(getComponentOrScrollable(component));
+        fun.getTag = () => {
+          return IS_WEB
+            ? getComponentOrScrollable(component)
+            : getTagValueFunction(getComponentOrScrollable(component));
+        };
+        tag.value = fun.getTag();
         fun.current = component;
         // viewName is required only on iOS with Paper
         if (Platform.OS === 'ios' && !IS_FABRIC) {

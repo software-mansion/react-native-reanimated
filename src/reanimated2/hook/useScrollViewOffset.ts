@@ -1,7 +1,6 @@
 'use strict';
 import { useEffect, useRef } from 'react';
 import type { SharedValue } from '../commonTypes';
-import { findNodeHandle } from 'react-native';
 import type { EventHandlerInternal } from './useEvent';
 import { useEvent } from './useEvent';
 import { useSharedValue } from './useSharedValue';
@@ -11,9 +10,6 @@ import type {
   RNNativeScrollEvent,
   ReanimatedScrollEvent,
 } from './commonTypes';
-import { isWeb } from '../PlatformChecker';
-
-const IS_WEB = isWeb();
 
 const scrollEventNames = [
   'onScroll',
@@ -53,10 +49,9 @@ export function useScrollViewOffset(
   ) as unknown as EventHandlerInternal<ReanimatedScrollEvent>;
 
   useEffect(() => {
-    const component = animatedRef.current;
-    const viewTag = IS_WEB ? component : findNodeHandle(component);
+    const viewTag = animatedRef.getTag();
 
-    eventHandler.workletEventHandler.registerForEvents(viewTag as number);
+    eventHandler.workletEventHandler.registerForEvents(viewTag);
 
     return () => {
       eventHandler.workletEventHandler?.unregisterFromEvents();
