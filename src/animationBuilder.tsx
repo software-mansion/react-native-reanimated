@@ -35,7 +35,6 @@ function getCommonProperties(
     : [componentStyle];
   
   componentStyleFlat = componentStyleFlat.filter(Boolean);
-  
   componentStyleFlat = componentStyleFlat.map((style) =>
     'initial' in style
       ? style.initial.value // Include properties of animated style
