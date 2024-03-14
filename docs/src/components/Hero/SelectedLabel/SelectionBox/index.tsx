@@ -25,38 +25,39 @@ const SelectionBox: React.FC<{
   children,
   isInteractive,
 }) => {
-  let classList = clsx(
-    styles.selectionBox,
-    draggableIdentifier == DraggableId.BOTTOM_LEFT ||
-      draggableIdentifier == DraggableId.BOTTOM_RIGHT
-      ? styles.boxLower
-      : styles.boxUpper,
-    draggableIdentifier == DraggableId.BOTTOM_LEFT ||
-      draggableIdentifier == DraggableId.TOP_LEFT
-      ? styles.boxLeft
-      : styles.boxRight
-  );
+    const isBottom = draggableIdentifier == DraggableId.BOTTOM_LEFT ||
+      draggableIdentifier == DraggableId.BOTTOM_RIGHT;
+    const isLeft = draggableIdentifier == DraggableId.BOTTOM_LEFT ||
+      draggableIdentifier == DraggableId.TOP_LEFT;
+    const isCenter = draggableIdentifier === DraggableId.CENTER;
 
-  if (draggableIdentifier === DraggableId.CENTER) {
-    classList = clsx(styles.centerDraggable);
-  }
+    let classList = clsx(
+      styles.selectionBox,
+      isBottom
+        ? styles.boxLower
+        : styles.boxUpper,
+      isLeft
+        ? styles.boxLeft
+        : styles.boxRight
+    );
 
-  // use animation with the destination being cursor position
-  return (
-    <Draggable
-      onDrag={(event: any) => {
-        propagationFunction(
-          { x: event.movementX, y: event.movementY },
-          draggableIdentifier
-        );
-      }}
-      allowAnyClick={false}
-      axis={'none'}>
-      <div className={clsx(isInteractive ? styles.movable : '', classList)}>
-        {children}
-      </div>
-    </Draggable>
-  );
-};
+    classList = isCenter ? clsx(styles.centerDraggable) : classList;
+
+    return (
+      <Draggable
+        onDrag={(event: any) => {
+          propagationFunction(
+            { x: event.movementX, y: event.movementY },
+            draggableIdentifier
+          );
+        }}
+        allowAnyClick={false}
+        axis={'none'}>
+        <div className={clsx(isInteractive ? styles.movable : '', classList)}>
+          {children}
+        </div>
+      </Draggable>
+    );
+  };
 
 export default SelectionBox;
