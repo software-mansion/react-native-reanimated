@@ -14,10 +14,14 @@
   /* normally one would do this with border dashed but that doesn't allow for modifying spacing between dashes */
   /* prettier-ignore */
   background:
-    linear-gradient(to right, var(--swm-landing-heading-selected-border) 50%, transparent 0%) top/var(--swm-dash-spacing) var(--swm-dash-width) repeat-x, /* top */
-    linear-gradient(var(--swm-landing-heading-selected-border) 50%, transparent 0%) right/var(--swm-dash-width) var(--swm-dash-spacing) repeat-y, /* right */
-    linear-gradient(to right, var(--swm-landing-heading-selected-border) 50%, transparent 0%) bottom/var(--swm-dash-spacing) var(--swm-dash-width) repeat-x, /* bottom */
-    linear-gradient(var(--swm-landing-heading-selected-border) 50%, transparent 0%) left/var(--swm-dash-width) var(--swm-dash-spacing) repeat-y; /* left */
+    linear-gradient(to right, var(--swm-landing-heading-selected-border) 50%, transparent 0%) top/var(--swm-dash-spacing) var(--swm-dash-width) repeat-x,
+    /* top */
+    linear-gradient(var(--swm-landing-heading-selected-border) 50%, transparent 0%) right/var(--swm-dash-width) var(--swm-dash-spacing) repeat-y,
+    /* right */
+    linear-gradient(to right, var(--swm-landing-heading-selected-border) 50%, transparent 0%) bottom/var(--swm-dash-spacing) var(--swm-dash-width) repeat-x,
+    /* bottom */
+    linear-gradient(var(--swm-landing-heading-selected-border) 50%, transparent 0%) left/var(--swm-dash-width) var(--swm-dash-spacing) repeat-y;
+  /* left */
 }
 
 .selectionContainer {
@@ -37,7 +41,7 @@
   user-select: none;
 }
 
-.preInteractiveHeaderText {
+.preEnabledTextInteractivity {
   margin-right: 30px;
 }
 
