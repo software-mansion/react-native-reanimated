@@ -128,8 +128,8 @@ const SelectedLabel: React.FC<{
     });
 
     // these magic numbers are a result of disparity between font's apparent and actual size
-    const sizeOffsetX = 0.93;
-    const sizeOffsetY = 1.255;
+    const sizeOffsetX = 0.98;
+    const sizeOffsetY = 1.250;
 
     // scale starts at 1 and as it gets larger approaches sizeOffset
     textScale.x =
@@ -152,7 +152,8 @@ const SelectedLabel: React.FC<{
       style={{
         position: constantStyles.isTextInteractive ? 'absolute' : 'relative',
       }}>
-      <div ref={selectionContainerRef} className={styles.selectionContainer}>
+      <div ref={selectionContainerRef} 
+        className={styles.selectionContainer}>
         <SelectionBox
           propagationFunction={positionPropagator}
           draggableIdentifier={DraggableId.TOP_LEFT}
@@ -179,7 +180,10 @@ const SelectedLabel: React.FC<{
               constantStyles.isTextInteractive
                 ? styles.interactiveHeaderText
                 : styles.headerText
-            )}>
+            )}
+            style={{
+              marginRight: isInteractive ? 30 : null,
+            }}>
             {children}
           </span>
         </SelectionBox>
