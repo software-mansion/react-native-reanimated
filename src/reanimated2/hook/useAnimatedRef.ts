@@ -11,7 +11,6 @@ import { Platform, findNodeHandle } from 'react-native';
 import type { ScrollView, FlatList } from 'react-native';
 import { isFabric, isWeb } from '../PlatformChecker';
 
-const IS_FABRIC = isFabric();
 const IS_WEB = isWeb();
 
 interface MaybeScrollableComponent extends Component {
@@ -25,15 +24,15 @@ interface MaybeScrollableComponent extends Component {
 }
 
 function getComponentOrScrollable(component: MaybeScrollableComponent) {
-  if (IS_FABRIC && component.getNativeScrollRef) {
+  if (isFabric() && component.getNativeScrollRef) {
     return component.getNativeScrollRef();
-  } else if (!IS_FABRIC && component.getScrollableNode) {
+  } else if (!isFabric() && component.getScrollableNode) {
     return component.getScrollableNode();
   }
   return component;
 }
 
-const getTagValueFunction = IS_FABRIC
+const getTagValueFunction = isFabric()
   ? getShadowNodeWrapperFromRef
   : findNodeHandle;
 
@@ -65,7 +64,7 @@ export function useAnimatedRef<
         tag.value = fun.getTag();
         fun.current = component;
         // viewName is required only on iOS with Paper
-        if (Platform.OS === 'ios' && !IS_FABRIC) {
+        if (Platform.OS === 'ios' && !isFabric()) {
           viewName.value =
             (component as MaybeScrollableComponent)?.viewConfig
               ?.uiViewClassName || 'RCTView';
