@@ -33,15 +33,17 @@ function getCommonProperties(
   let componentStyleFlat = Array.isArray(componentStyle)
     ? componentStyle.flat()
     : [componentStyle];
-
+  
+  componentStyleFlat = componentStyleFlat.filter(Boolean);
+  
   componentStyleFlat = componentStyleFlat.map((style) =>
-    style && 'initial' in style
+    'initial' in style
       ? style.initial.value // Include properties of animated style
       : style
   );
 
   const componentStylesKeys = componentStyleFlat.flatMap((style) =>
-    style && Object.keys(style)
+    Object.keys(style)
   );
 
   const commonKeys = Object.keys(layoutStyle).filter((key) =>
