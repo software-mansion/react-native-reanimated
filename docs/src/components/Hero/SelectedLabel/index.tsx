@@ -3,10 +3,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import styles from './styles.module.css';
 import SelectionBox, { DraggableId } from './SelectionBox';
 
-const SelectedLabel: React.FC<{ children: React.ReactNode, isInteractive: Boolean }> = ({
-  children,
-  isInteractive = false
-}) => {
+const SelectedLabel: React.FC<{
+  children: React.ReactNode;
+  isInteractive: Boolean;
+}> = ({ children, isInteractive = false }) => {
   const selectionRef = useRef(null);
   const selectionContainerRef = useRef(null);
   const textLabelRef = useRef(null);
@@ -49,9 +49,8 @@ const SelectedLabel: React.FC<{ children: React.ReactNode, isInteractive: Boolea
     isTextInteractive: false,
   });
 
-  useEffect(() => {    
-    if (!isInteractive)
-      return;
+  useEffect(() => {
+    if (!isInteractive) return;
 
     const rect = selectionContainerRef.current.getBoundingClientRect();
     setConstantStyles({
@@ -62,8 +61,7 @@ const SelectedLabel: React.FC<{ children: React.ReactNode, isInteractive: Boolea
   }, []);
 
   useEffect(() => {
-    if (!isInteractive)
-      return;
+    if (!isInteractive) return;
 
     const rect = selectionContainerRef.current.getBoundingClientRect();
     setPositionStyles({
@@ -78,23 +76,22 @@ const SelectedLabel: React.FC<{ children: React.ReactNode, isInteractive: Boolea
     position: { x: number; y: number },
     draggableIdentifier: DraggableId
   ) => {
-    if (!isInteractive)
-      return;
+    if (!isInteractive) return;
 
-    const isHorizontal =
+    const horizontalSide =
       draggableIdentifier == DraggableId.BOTTOM_LEFT ||
       draggableIdentifier == DraggableId.TOP_LEFT;
-    const isVertical =
+    const verticalSide =
       draggableIdentifier == DraggableId.TOP_LEFT ||
       draggableIdentifier == DraggableId.TOP_RIGHT;
 
     const positionAdjustment = {
-      x: isHorizontal ? position.x : 0,
-      y: isVertical ? position.y : 0,
+      x: horizontalSide ? position.x : 0,
+      y: verticalSide ? position.y : 0,
     };
     const resizingDirection = {
-      x: isHorizontal ? -1 : 1,
-      y: isVertical ? -1 : 1,
+      x: horizontalSide ? -1 : 1,
+      y: verticalSide ? -1 : 1,
     };
     const sizeChange = {
       x: position.x * resizingDirection.x,
@@ -133,11 +130,14 @@ const SelectedLabel: React.FC<{ children: React.ReactNode, isInteractive: Boolea
     // these magic numbers are a result of disparity between font's apparent and actual size
     const sizeOffsetX = 0.93;
     const sizeOffsetY = 1.255;
+
     // scale starts at 1 and as it gets larger approaches sizeOffset
     textScale.x =
-      (positionStyles.width / constantStyles.initialWidth) * sizeOffsetX - sizeOffsetX + 1;
+      (positionStyles.width / constantStyles.initialWidth) 
+      * sizeOffsetX - sizeOffsetX + 1;
     textScale.y =
-      (positionStyles.height / constantStyles.initialHeight) * sizeOffsetY - sizeOffsetY + 1;
+      (positionStyles.height / constantStyles.initialHeight) 
+      * sizeOffsetY - sizeOffsetY + 1;
 
     if (textScale.x < 0) textScale.x = 0;
     if (textScale.y < 0) textScale.y = 0;
@@ -176,7 +176,9 @@ const SelectedLabel: React.FC<{ children: React.ReactNode, isInteractive: Boolea
           <span
             ref={textLabelRef}
             className={clsx(
-              constantStyles.isTextInteractive ? styles.interactiveHeaderText : styles.headerText
+              constantStyles.isTextInteractive
+                ? styles.interactiveHeaderText
+                : styles.headerText
             )}>
             {children}
           </span>
