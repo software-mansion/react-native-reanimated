@@ -46,31 +46,29 @@ const SelectedLabel: React.FC<{ children: React.ReactNode, isInteractive: Boolea
   const [constantStyles, setConstantStyles] = useState({
     initialWidth: null,
     initialHeight: null,
-    setAbsolute: false,
+    isTextInteractive: false,
   });
 
-  useEffect(() => {
-    const rect = selectionContainerRef.current.getBoundingClientRect();
-    
+  useEffect(() => {    
     if (!isInteractive)
       return;
 
+    const rect = selectionContainerRef.current.getBoundingClientRect();
     setConstantStyles({
       initialWidth: rect.width,
       initialHeight: rect.height,
-      setAbsolute: true,
+      isTextInteractive: true,
     });
   }, []);
 
   useEffect(() => {
-    const rect = selectionContainerRef.current.getBoundingClientRect();
-
     if (!isInteractive)
       return;
 
+    const rect = selectionContainerRef.current.getBoundingClientRect();
     setPositionStyles({
-      top: 0, // rect.top,
-      left: 0, // rect.left,
+      top: 0,
+      left: 0,
       width: rect.width,
       height: rect.height,
     });
@@ -82,8 +80,7 @@ const SelectedLabel: React.FC<{ children: React.ReactNode, isInteractive: Boolea
   ) => {
     if (!isInteractive)
       return;
-    // changing selectionContainer will automatically adjust position of selectionBoxes as well
-    // all changes are done through css
+
     const isHorizontal =
       draggableIdentifier == DraggableId.BOTTOM_LEFT ||
       draggableIdentifier == DraggableId.TOP_LEFT;
@@ -125,6 +122,7 @@ const SelectedLabel: React.FC<{ children: React.ReactNode, isInteractive: Boolea
       if (positionStyles.height - positionAdjustment.y < 0)
         positionAdjustment.y = 0;
     }
+
     setPositionStyles({
       left: positionStyles.left + positionAdjustment.x,
       top: positionStyles.top + positionAdjustment.y,
@@ -133,8 +131,9 @@ const SelectedLabel: React.FC<{ children: React.ReactNode, isInteractive: Boolea
     });
 
     // these magic numbers are a result of disparity between font's apparent and actual size
-    const sizeOffsetX = 0.96;
+    const sizeOffsetX = 0.93;
     const sizeOffsetY = 1.255;
+    // scale starts at 1 and as it gets larger approaches sizeOffset
     textScale.x =
       (positionStyles.width / constantStyles.initialWidth) * sizeOffsetX - sizeOffsetX + 1;
     textScale.y =
@@ -151,7 +150,7 @@ const SelectedLabel: React.FC<{ children: React.ReactNode, isInteractive: Boolea
       ref={selectionRef}
       className={clsx(styles.headingLabel, styles.selection)}
       style={{
-        position: constantStyles.setAbsolute ? 'absolute' : 'relative',
+        position: constantStyles.isTextInteractive ? 'absolute' : 'relative',
       }}>
       <div ref={selectionContainerRef} className={styles.selectionContainer}>
         <SelectionBox
@@ -176,11 +175,9 @@ const SelectedLabel: React.FC<{ children: React.ReactNode, isInteractive: Boolea
           isInteractive={isInteractive}>
           <span
             ref={textLabelRef}
-            style={{
-              position: constantStyles.setAbsolute ? 'absolute' : 'relative',
-              transform: `translate(-50%, -50%)`,
-              userSelect: 'none',
-            }}>
+            className={clsx(
+              constantStyles.isTextInteractive ? styles.interactiveHeaderText : styles.headerText
+            )}>
             {children}
           </span>
         </SelectionBox>

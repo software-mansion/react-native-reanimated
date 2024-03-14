@@ -20,10 +20,10 @@ const SelectionBox: React.FC<{
   children?: React.ReactNode;
   isInteractive: Boolean;
 }> = ({ propagationFunction, draggableIdentifier, children, isInteractive }) => {
-  let defaultState: string;
+  let classList: string;
 
   if (draggableIdentifier !== DraggableId.CENTER) {
-    defaultState = clsx(
+    classList = clsx(
       styles.selectionBox,
       draggableIdentifier == DraggableId.BOTTOM_LEFT ||
         draggableIdentifier == DraggableId.BOTTOM_RIGHT
@@ -34,18 +34,11 @@ const SelectionBox: React.FC<{
         ? styles.boxLeft
         : styles.boxRight
     );
+  } else {
+    classList = clsx(
+      styles.centerDraggable
+    );
   }
-
-  const [classList, setClassList] = useState(defaultState);
-
-  useEffect(() => {
-    // if interactivity is enabled, center CENTER after re-render
-    if (draggableIdentifier === DraggableId.CENTER && isInteractive) {
-      setClassList(clsx(
-        styles.movableHeader, styles.movable
-      ));
-    }
-  }, [draggableIdentifier]);
 
   // use animation with the destination being cursor position
   return (
