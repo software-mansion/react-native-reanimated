@@ -2,50 +2,49 @@ import clsx from 'clsx';
 import React, { useEffect, useRef } from 'react';
 import styles from './styles.module.css';
 import SelectionBox, { DraggableId } from './SelectionBox';
+import {
+  DynamicStyles,
+  StaticStyles,
+  computeSelectionStyles,
+  computeTextStyles,
+} from './utils';
 
 const SelectedLabel: React.FC<{
   children: React.ReactNode;
   isInteractive: Boolean;
 }> = ({ children, isInteractive = false }) => {
-  type PositionStyles = {
-    top: number;
-    left: number;
-    width: number;
-    height: number;
-  };
-
   // DOM refs
   const selectionRef = useRef(null);
   const selectionContainerRef = useRef(null);
   const textLabelRef = useRef(null);
 
   // Render-persistent label positioning styles
-  const positionStyles = useRef<PositionStyles>({
+  const dynamicStyles = useRef<DynamicStyles>({
     top: 0,
     left: 0,
     width: null,
     height: null,
   });
 
-  const constantStyles = useRef({
+  const staticStyles = useRef<StaticStyles>({
     initialWidth: null,
     initialHeight: null,
     enabledTextInteractivity: false,
   });
 
-  const applyPositionStyles = (newPositionStyles: PositionStyles) => {
-    const currentPositionStyles = positionStyles.current;
+  const applyDynamicStyles = (newDynamicStyles: DynamicStyles) => {
+    const currentDynamicStyles = dynamicStyles.current;
 
     // save changes
-    currentPositionStyles.top = newPositionStyles.top;
-    currentPositionStyles.left = newPositionStyles.left;
-    currentPositionStyles.width = newPositionStyles.width;
-    currentPositionStyles.height = newPositionStyles.height;
+    currentDynamicStyles.top = newDynamicStyles.top;
+    currentDynamicStyles.left = newDynamicStyles.left;
+    currentDynamicStyles.width = newDynamicStyles.width;
+    currentDynamicStyles.height = newDynamicStyles.height;
 
     // apply changes to refs
-    selectionRef.current.style.transform = `translate(${currentPositionStyles.left}px, ${currentPositionStyles.top}px)`;
-    selectionContainerRef.current.style.width = `${currentPositionStyles.width}px`;
-    selectionContainerRef.current.style.height = `${currentPositionStyles.height}px`;
+    selectionRef.current.style.transform = `translate(${currentDynamicStyles.left}px, ${currentDynamicStyles.top}px)`;
+    selectionContainerRef.current.style.width = `${currentDynamicStyles.width}px`;
+    selectionContainerRef.current.style.height = `${currentDynamicStyles.height}px`;
   };
 
   const applyTextScale = (scaleObject: { x: number; y: number }) => {
@@ -56,13 +55,13 @@ const SelectedLabel: React.FC<{
     if (!isInteractive) return;
 
     let rect = selectionContainerRef.current.getBoundingClientRect();
-    constantStyles.current = {
+    staticStyles.current = {
       initialWidth: rect.width,
       initialHeight: rect.height,
       enabledTextInteractivity: true,
     };
 
-    applyPositionStyles({
+    applyDynamicStyles({
       top: 0,
       left: 0,
       width: rect.width,
@@ -70,96 +69,22 @@ const SelectedLabel: React.FC<{
     });
   }, []);
 
-  const computeSelectionStyles = (
-    position: { x: number; y: number },
-    draggableIdentifier: DraggableId
-  ) => {
-    const isLeft =
-      draggableIdentifier === DraggableId.BOTTOM_LEFT ||
-      draggableIdentifier === DraggableId.TOP_LEFT;
-    const isTop =
-      draggableIdentifier === DraggableId.TOP_LEFT ||
-      draggableIdentifier === DraggableId.TOP_RIGHT;
-    const isCenter = draggableIdentifier === DraggableId.CENTER;
-
-    // depedning on whether draggable is on left, right, top or bottom,
-    // we want to either resize, or move and resize our object
-    const positionAdjustment = {
-      x: isLeft ? position.x : 0,
-      y: isTop ? position.y : 0,
-    };
-
-    const sizeChange = {
-      x: isLeft ? -position.x : position.x,
-      y: isTop ? -position.y : position.y,
-    };
-
-    // adjust variables when dragging the center
-    if (isCenter) {
-      positionAdjustment.x = sizeChange.x;
-      positionAdjustment.y = sizeChange.y;
-      sizeChange.x = 0;
-      sizeChange.y = 0;
-    }
-
-    const currentPositionStyles = positionStyles.current;
-
-    // stop overreduction in size
-    if (currentPositionStyles.width + sizeChange.x < 0)
-      sizeChange.x = -currentPositionStyles.width;
-    if (currentPositionStyles.height + sizeChange.y < 0)
-      sizeChange.y = -currentPositionStyles.height;
-
-    // stop dragging a minimized object
-    if (!isCenter) {
-      if (currentPositionStyles.width - positionAdjustment.x < 0)
-        positionAdjustment.x = 0;
-      if (currentPositionStyles.height - positionAdjustment.y < 0)
-        positionAdjustment.y = 0;
-    }
-
-    applyPositionStyles({
-      left: currentPositionStyles.left + positionAdjustment.x,
-      top: currentPositionStyles.top + positionAdjustment.y,
-      width: currentPositionStyles.width + sizeChange.x,
-      height: currentPositionStyles.height + sizeChange.y,
-    });
-  };
-
-  const computeTextStyles = () => {
-    // these magic numbers are a result of disparity between font's apparent and actual size
-    const sizeOffsetX = 0.99;
-    const sizeOffsetY = 1.21;
-
-    // scale starts at 1 and as it gets larger approaches sizeOffset
-    const textScale = {
-      x:
-        (positionStyles.current.width / constantStyles.current.initialWidth) *
-          sizeOffsetX -
-        sizeOffsetX +
-        1,
-      y:
-        (positionStyles.current.height / constantStyles.current.initialHeight) *
-          sizeOffsetY -
-        sizeOffsetY +
-        1,
-    };
-
-    // prevent text overadjustment
-    if (textScale.x < 0) textScale.x = 0;
-    if (textScale.y < 0) textScale.y = 0;
-
-    applyTextScale(textScale);
-  };
-
   const movementPropagator = (
     movementDelta: { x: number; y: number },
     draggableIdentifier: DraggableId
   ) => {
     if (!isInteractive) return;
 
-    computeSelectionStyles(movementDelta, draggableIdentifier);
-    computeTextStyles();
+    applyDynamicStyles(
+      computeSelectionStyles(
+        movementDelta,
+        draggableIdentifier,
+        dynamicStyles.current
+      )
+    );
+    applyTextScale(
+      computeTextStyles(dynamicStyles.current, staticStyles.current)
+    );
   };
 
   return (
@@ -167,7 +92,7 @@ const SelectedLabel: React.FC<{
       ref={selectionRef}
       className={clsx(styles.headingLabel, styles.selection)}
       style={{
-        position: constantStyles.current.enabledTextInteractivity
+        position: staticStyles.current.enabledTextInteractivity
           ? 'absolute'
           : 'relative',
       }}>
@@ -196,7 +121,7 @@ const SelectedLabel: React.FC<{
             ref={textLabelRef}
             className={clsx(
               isInteractive ? styles.preEnabledTextInteractivity : null,
-              constantStyles.current.enabledTextInteractivity
+              staticStyles.current.enabledTextInteractivity
                 ? styles.interactiveHeaderText
                 : styles.headerText
             )}>
