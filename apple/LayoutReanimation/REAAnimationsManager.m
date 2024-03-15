@@ -470,7 +470,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   // since it's removed from the React tree, we won't
   // start new animations for it, and might as well remove
   // the layout animation config now
-  _clearAnimationConfigForTag(view.reactTag);
+  if ([_sharedTransitionManager canClearAnimationConfig:view.reactTag]) {
+    _clearAnimationConfigForTag(view.reactTag);
+  }
 
   if (!wantAnimateExit) {
     return NO;
@@ -548,6 +550,11 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   return [[REASnapshot alloc] init:view];
 }
 
+- (REASnapshot *)prepareSnapshotWithAbsolutPositionForView:(REAUIView *)view
+{
+  return [[REASnapshot alloc] initWithAbsolutePosition:view];
+}
+
 - (void)removeAnimationsFromSubtree:(REAUIView *)view
 {
   REANodeFind(view, ^int(id<RCTComponent> view) {
@@ -573,7 +580,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     _enteringViewTargetValues[[view reactTag]] = [[REASnapshot alloc] init:view];
     [self setNewProps:before.values forView:view];
   }
-
+  if ([NSStringFromClass([view class]) isEqual:@"RNSScreenView"]) {
+    [_sharedTransitionManager notifyAboutNewScreenAddedInUIManager];
+  }
   if (_hasAnimationForTag(viewTag, SHARED_ELEMENT_TRANSITION)) {
     if (type == ENTERING) {
       [_sharedTransitionManager notifyAboutNewView:view];
@@ -589,6 +598,21 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)viewsDidLayout
 {
   [_sharedTransitionManager viewsDidLayout];
+}
+
+- (void)viewsWillRemove:(NSArray<REAUIView *> *)viewsToRemove
+{
+  [_sharedTransitionManager viewsWillRemove:viewsToRemove];
+}
+
+- (void)viewsDidRemoved:(NSArray<REAUIView *> *)removedViews
+{
+  [_sharedTransitionManager viewsDidRemoved:removedViews];
+}
+
+- (void)notifyAboutAffectedViewTags:(NSArray<NSNumber *> *)affectedViewTags
+{
+  [_sharedTransitionManager notifyAboutAffectedViewTags:affectedViewTags];
 }
 
 - (void)setFindPrecedingViewTagForTransitionBlock:

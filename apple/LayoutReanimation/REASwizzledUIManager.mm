@@ -1,4 +1,5 @@
 #import <RNReanimated/FeaturesConfig.h>
+#import <RNReanimated/REASharedTransitionManager.h>
 #import <RNReanimated/REASwizzledUIManager.h>
 #import <RNReanimated/REAUIKit.h>
 #import <RNReanimated/REAUtils.h>
@@ -103,6 +104,7 @@ std::atomic<bool> hasPendingBlocks;
       UIViewController *controller = ((REAUIView *)container).reactViewController;
       UIViewController *parentController = ((REAUIView *)container).superview.reactViewController;
       containerIsRootOfViewController = controller != parentController;
+      [originalSelf.animationsManager viewsWillRemove:(NSArray<REAUIView *> *)permanentlyRemovedChildren];
     }
 
     // we check if the container we`re removing from is a root view
@@ -131,6 +133,9 @@ std::atomic<bool> hasPendingBlocks;
 
   if (!isLayoutAnimationEnabled) {
     return;
+  }
+  if ([container isKindOfClass:[REAUIView class]]) {
+    [originalSelf.animationsManager viewsDidRemoved:(NSArray<REAUIView *> *)permanentlyRemovedChildren];
   }
 
   if (containerIsRootOfViewController) {
@@ -231,6 +236,14 @@ std::atomic<bool> hasPendingBlocks;
       });
     }
   }
+
+  NSMutableArray *affectedViewTags = [NSMutableArray new];
+  for (RCTShadowView *shadowView in affectedShadowViews) {
+    [affectedViewTags addObject:shadowView.reactTag];
+  }
+  RCTExecuteOnMainQueue(^{
+    [originalSelf.animationsManager notifyAboutAffectedViewTags:affectedViewTags];
+  });
 
   // Perform layout (possibly animated)
   return ^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, REAUIView *> *viewRegistry) {

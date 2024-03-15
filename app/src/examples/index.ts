@@ -135,6 +135,15 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Empty',
     screen: EmptyExample,
   },
+  CardExample: {
+    title: '[SET] Card',
+    screen: CardExample,
+  },
+  CustomTransitionExample: {
+    title: '[SET] Custom transition',
+    screen: CustomTransitionExample,
+  },
+  
   WorkletRuntimeExample: {
     icon: '🏃‍♂️',
     title: 'Worklet runtime',
