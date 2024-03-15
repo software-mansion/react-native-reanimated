@@ -1,5 +1,10 @@
 'use strict';
-import type { ShareableRef, Value3D, ValueRotation } from '../commonTypes';
+import type {
+  ShadowNodeWrapper,
+  Value3D,
+  ValueRotation,
+  ShareableRef,
+} from '../commonTypes';
 import type {
   LayoutAnimationFunction,
   LayoutAnimationType,
@@ -8,6 +13,9 @@ import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
 import type { WorkletRuntime } from '../runtimes';
 import { getValueUnpackerCode } from '../valueUnpacker';
+import { isFabric } from '../PlatformChecker';
+import type React from 'react';
+import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import type { LayoutAnimationBatchItem } from '../layoutReanimation/animationBuilder/commonTypes';
 import ReanimatedModule from '../../specs/NativeReanimatedModule';
 
@@ -34,7 +42,7 @@ export interface NativeReanimatedModule {
   ): number;
   unregisterEventHandler(id: number): void;
   getViewProp<T>(
-    viewTag: number,
+    viewTagOrShadowNodeWrapper: number | ShadowNodeWrapper,
     propName: string,
     callback?: (result: T) => void
   ): Promise<T>;
@@ -171,8 +179,21 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   getViewProp<T>(
     viewTag: number,
     propName: string,
+    component: React.Component | undefined, // required on Fabric
     callback?: (result: T) => void
   ) {
+    let shadowNodeWrapper;
+    if (isFabric()) {
+      shadowNodeWrapper = getShadowNodeWrapperFromRef(
+        component as React.Component
+      );
+      return this.InnerNativeModule.getViewProp(
+        shadowNodeWrapper,
+        propName,
+        callback
+      );
+    }
+
     return this.InnerNativeModule.getViewProp(viewTag, propName, callback);
   }
 

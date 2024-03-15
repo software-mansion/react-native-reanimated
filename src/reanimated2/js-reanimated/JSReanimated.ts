@@ -282,6 +282,7 @@ export default class JSReanimated {
   getViewProp<T>(
     _viewTag: number,
     _propName: string,
+    _component?: React.Component,
     _callback?: (result: T) => void
   ): Promise<T> {
     throw new Error(
