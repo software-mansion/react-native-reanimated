@@ -44,3 +44,21 @@
 .boxRight {
   right: -15px;
 }
+
+@media (max-width: 768px) {
+  .boxUpper {
+    top: -11px;
+  }
+
+  .boxLower {
+    bottom: -13px;
+  }
+
+  .boxLeft {
+    left: -7px;
+  }
+
+  .boxRight {
+    right: -7px;
+  }
+}

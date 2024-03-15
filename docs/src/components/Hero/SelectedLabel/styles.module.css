@@ -46,7 +46,21 @@
 }
 
 @media (max-width: 768px) {
+  :root {
+    --swm-dash-spacing: 20px;
+  }
+
+  .selection {
+    padding: 6px 2px 8px;
+    display: block;
+    margin: 6px 0;
+  }
+
+  .headerText {
+    margin: 0 10px;
+  }
+
   .preInteractiveHeaderText {
-    margin-right: 8px;
+    margin-right: 0;
   }
 }
