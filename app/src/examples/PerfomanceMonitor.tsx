@@ -3,6 +3,7 @@ import { Text, TextInput, StyleSheet, View } from 'react-native';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import Animated, {
+  SharedValue,
   useAnimatedProps,
   useAnimatedStyle,
   useFrameCallback,
@@ -81,36 +82,59 @@ function loopAnimationFrame(fn: (lastTime: number, time: number) => void) {
   loop();
 }
 
-function fps(renderTimeInMs: number) {
+function getFps(renderTimeInMs: number): string {
   'worklet';
-  return ((1 / renderTimeInMs) * 1000).toFixed(1);
+  return ((1 / renderTimeInMs) * 1000).toFixed(1).toString();
+}
+
+function getTimeDelta(
+  timestamp: number,
+  previousTimestamp: number | null
+): number {
+  'worklet';
+  return previousTimestamp !== null ? timestamp - previousTimestamp : 0;
+}
+
+function completeBufferRoutine(
+  buffer: CircularBuffer,
+  timestamp: number,
+  previousTimestamp: number,
+  totalRenderTime: SharedValue<number>
+) {
+  'worklet';
+  timestamp = Math.round(timestamp);
+  previousTimestamp = Math.round(previousTimestamp) ?? timestamp;
+
+  const droppedTimestamp = buffer.push(timestamp);
+  const nextToDrop = buffer.back()!;
+
+  const delta = getTimeDelta(timestamp, previousTimestamp);
+  const droppedDelta = getTimeDelta(nextToDrop, droppedTimestamp);
+
+  totalRenderTime.value += delta - droppedDelta;
+  return getFps(totalRenderTime.value / buffer.count);
 }
 
 function JsPerformance() {
+  const jsFps = useSharedValue<string | null>(null);
   const totalRenderTime = useSharedValue(0);
   const circularBuffer = createCircularDoublesBuffer(100);
-  const [jsFps, setJsFps] = useState<string | null>(null);
 
   useEffect(() => {
     loopAnimationFrame((lastTime, time) => {
-      const timestamp = Math.round(time);
-      const previousTimestamp = Math.round(lastTime) ?? timestamp;
+      const currentFps = completeBufferRoutine(
+        circularBuffer,
+        time,
+        lastTime,
+        totalRenderTime
+      );
 
-      const droppedTimestamp = circularBuffer.push(timestamp);
-      const nextToDrop = circularBuffer.back()!;
-
-      const delta = timestamp - previousTimestamp;
-      const droppedDelta =
-        droppedTimestamp !== null ? nextToDrop - droppedTimestamp : 0;
-      totalRenderTime.value += delta - droppedDelta;
-      const currentFps = fps(totalRenderTime.value / circularBuffer.count);
-
-      return setJsFps(currentFps);
+      jsFps.value = currentFps;
     });
   }, []);
 
   const animatedProps = useAnimatedProps(() => {
-    const text = jsFps ?? 'N/A';
+    const text = jsFps.value ?? 'N/A';
     return { text, defaultValue: text };
   });
 
@@ -135,18 +159,14 @@ function UiPerformance() {
     if (circularBuffer.current === null) {
       circularBuffer.current = createCircularDoublesBuffer(100);
     }
-
-    timestamp = Math.round(timestamp);
-    const buffer = circularBuffer.current;
-    const previousTimestamp = buffer.front() ?? timestamp;
-    const droppedTimestamp = buffer.push(timestamp);
-    const nextToDrop = buffer.back()!;
-
-    const delta = timestamp - previousTimestamp;
-    const droppedDelta =
-      droppedTimestamp !== null ? nextToDrop - droppedTimestamp : 0;
-    totalRenderTime.value += delta - droppedDelta;
-    uiFps.value = fps(totalRenderTime.value / buffer.count);
+    const previousTimestamp = circularBuffer.current.front() ?? timestamp;
+    const currentFps = completeBufferRoutine(
+      circularBuffer.current,
+      timestamp,
+      previousTimestamp,
+      totalRenderTime
+    );
+    uiFps.value = currentFps;
   });
 
   const animatedProps = useAnimatedProps(() => {
