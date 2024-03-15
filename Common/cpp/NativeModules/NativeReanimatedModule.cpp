@@ -377,23 +377,6 @@ jsi::Value NativeReanimatedModule::configureProps(
   return jsi::Value::undefined();
 }
 
-jsi::Value NativeReanimatedModule::configureLayoutAnimation(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTag,
-    const jsi::Value &type,
-    const jsi::Value &sharedTransitionTag,
-    const jsi::Value &config) {
-  layoutAnimationsManager_.configureAnimation(
-      viewTag.asNumber(),
-      static_cast<LayoutAnimationType>(type.asNumber()),
-      sharedTransitionTag.asString(rt).utf8(rt),
-      extractShareableOrThrow<ShareableObject>(
-          rt,
-          config,
-          "[Reanimated] Layout animation config must be an object."));
-  return jsi::Value::undefined();
-}
-
 jsi::Value NativeReanimatedModule::configureLayoutAnimationBatch(
     jsi::Runtime &rt,
     const jsi::Value &layoutAnimationsBatch) {
@@ -414,6 +397,16 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimationBatch(
           rt,
           config,
           "[Reanimated] Layout animation config must be an object.");
+    }
+    if (batch[i].type != SHARED_ELEMENT_TRANSITION &&
+        batch[i].type != SHARED_ELEMENT_TRANSITION_PROGRESS) {
+      continue;
+    }
+    auto sharedTransitionTag = item.getProperty(rt, "sharedTransitionTag");
+    if (sharedTransitionTag.isUndefined()) {
+      batch[i].config = nullptr;
+    } else {
+      batch[i].sharedTransitionTag = sharedTransitionTag.asString(rt).utf8(rt);
     }
   }
   layoutAnimationsManager_.configureAnimationBatch(batch);

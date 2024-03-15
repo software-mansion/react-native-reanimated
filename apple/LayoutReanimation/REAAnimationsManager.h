@@ -20,6 +20,7 @@ typedef BOOL (^REAShouldAnimateExitingBlock)(NSNumber *_Nonnull tag, BOOL should
 typedef void (
     ^REAAnimationStartingBlock)(NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull yogaValues);
 typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
+typedef void (^REASharedTransitionRemovingBlock)(NSNumber *_Nonnull tag);
 #ifndef NDEBUG
 typedef void (^REACheckDuplicateSharedTagBlock)(REAUIView *view, NSNumber *_Nonnull viewTag);
 #endif
@@ -35,6 +36,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
 - (void)setHasAnimationBlock:(REAHasAnimationBlock)hasAnimation;
 - (void)setShouldAnimateExitingBlock:(REAShouldAnimateExitingBlock)shouldAnimateExiting;
 - (void)setAnimationRemovingBlock:(REAAnimationRemovingBlock)clearAnimation;
+- (void)setSharedTransitionRemovingBlock:(REASharedTransitionRemovingBlock)clearSharedTransition;
 #ifndef NDEBUG
 - (void)setCheckDuplicateSharedTagBlock:(REACheckDuplicateSharedTagBlock)checkDuplicateSharedTag;
 #endif
@@ -61,6 +63,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
 - (REAUIView *)viewForTag:(NSNumber *)tag;
 - (BOOL)hasAnimationForTag:(NSNumber *)tag type:(LayoutAnimationType)type;
 - (void)clearAnimationConfigForTag:(NSNumber *)tag;
+- (void)clearSharedTransitionConfigForTag:(NSNumber *)tag;
 - (void)startAnimationForTag:(NSNumber *)tag type:(LayoutAnimationType)type yogaValues:(NSDictionary *)yogaValues;
 - (void)onScreenRemoval:(REAUIView *)screen stack:(REAUIView *)stack;
 
