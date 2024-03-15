@@ -13,11 +13,16 @@ export type StaticStyles = {
   enabledTextInteractivity: boolean;
 };
 
+export type TextScaleStyles = {
+  x: number;
+  y: number;
+};
+
 export const computeSelectionStyles = (
   position: { x: number; y: number },
   draggableIdentifier: DraggableId,
   dynamicStyles
-) => {
+): DynamicStyles => {
   const isLeft =
     draggableIdentifier === DraggableId.BOTTOM_LEFT ||
     draggableIdentifier === DraggableId.TOP_LEFT;
@@ -71,7 +76,7 @@ export const computeSelectionStyles = (
 export const computeTextStyles = (
   dynamicStyles: DynamicStyles,
   staticStyles: StaticStyles
-) => {
+): TextScaleStyles => {
   // these magic numbers are a result of disparity between font's apparent and actual size
   const sizeOffsetX = 0.99;
   const sizeOffsetY = 1.21;

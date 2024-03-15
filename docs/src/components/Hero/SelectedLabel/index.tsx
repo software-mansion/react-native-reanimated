@@ -5,6 +5,7 @@ import SelectionBox, { DraggableId } from './SelectionBox';
 import {
   DynamicStyles,
   StaticStyles,
+  TextScaleStyles,
   computeSelectionStyles,
   computeTextStyles,
 } from './utils';
@@ -47,7 +48,7 @@ const SelectedLabel: React.FC<{
     selectionContainerRef.current.style.height = `${currentDynamicStyles.height}px`;
   };
 
-  const applyTextScale = (scaleObject: { x: number; y: number }) => {
+  const applyTextScale = (scaleObject: TextScaleStyles) => {
     textLabelRef.current.style.transform = `translate(-50%, -50%) scale(${scaleObject.x}, ${scaleObject.y})`;
   };
 
@@ -88,14 +89,7 @@ const SelectedLabel: React.FC<{
   };
 
   return (
-    <span
-      ref={selectionRef}
-      className={clsx(styles.headingLabel, styles.selection)}
-      style={{
-        position: staticStyles.current.enabledTextInteractivity
-          ? 'absolute'
-          : 'relative',
-      }}>
+    <span ref={selectionRef} className={styles.selection}>
       <div ref={selectionContainerRef} className={styles.selectionContainer}>
         <SelectionBox
           propagationFunction={movementPropagator}
