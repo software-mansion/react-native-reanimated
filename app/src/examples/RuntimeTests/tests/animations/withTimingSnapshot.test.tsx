@@ -143,7 +143,7 @@ describe('withTiming snapshots 📸, test EASING', () => {
   (
     [
       {
-        easing: Easing.back(4.75),
+        easing: Easing.back(4.5),
         message: 'Easing.back(4.75)',
         snapshotName: 'back1',
       },
@@ -161,6 +161,9 @@ describe('withTiming snapshots 📸, test EASING', () => {
       await wait(1200);
       const updates = updatesContainer.getUpdates();
       expect(updates).toMatchSnapshot(Snapshots[snapshotName]);
+      expect(updates).toMatchNativeSnapshots(
+        await updatesContainer.getNativeSnapshots()
+      );
     });
   });
 });

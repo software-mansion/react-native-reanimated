@@ -16,6 +16,8 @@ import {
   useTestRef,
   getTestComponent,
   wait,
+  mockAnimationTimer,
+  recordAnimationUpdates,
   callTracker,
   getTrackerCallCount,
   registerValue,
@@ -26,6 +28,7 @@ import {
   waitForNotify,
   clearRenderOutput,
 } from '../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+import { Snapshots } from './snapshots/Animations.snapshot';
 import { ComparisonMode } from '../ReanimatedRuntimeTestsRunner/types';
 
 const AnimatedComponent = () => {
@@ -190,6 +193,27 @@ describe('Tests of animations', () => {
     const component = getTestComponent('AnimatedComponent');
     await wait(600);
     expect(await component.getAnimatedStyle('opacity')).toBe('1');
+  });
+
+  test('withTiming - match snapshot', async () => {
+    await mockAnimationTimer();
+    const updatesContainer = await recordAnimationUpdates();
+    await render(<AnimatedComponent />);
+    await wait(1000);
+    expect(updatesContainer.getUpdates()).toMatchSnapshot(Snapshots.animation3);
+    expect(updatesContainer.getUpdates()).toMatchNativeSnapshots(
+      await updatesContainer.getNativeSnapshots()
+    );
+  });
+
+  test('layoutAnimation - entering', async () => {
+    await mockAnimationTimer();
+    const updatesContainer = await recordAnimationUpdates();
+    await render(<LayoutAnimation />);
+    await wait(600);
+    expect(updatesContainer.getUpdates()).toMatchSnapshot(
+      Snapshots.layoutAnimation
+    );
   });
 
   test('withTiming - notify', async () => {
