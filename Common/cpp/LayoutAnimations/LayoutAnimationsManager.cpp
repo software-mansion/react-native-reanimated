@@ -13,7 +13,8 @@ void LayoutAnimationsManager::configureAnimationBatch(
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   std::vector<LayoutAnimationConfig> sharedTransitionConfigs;
   for (auto layoutAnimationConfig : layoutAnimationsBatch) {
-    auto [tag, type, config, sharedTransitionTag] = layoutAnimationConfig;
+    const auto &[tag, type, config, sharedTransitionTag] =
+        layoutAnimationConfig;
     if (type == SHARED_ELEMENT_TRANSITION ||
         type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
       clearSharedTransitionConfig(tag);
@@ -26,7 +27,7 @@ void LayoutAnimationsManager::configureAnimationBatch(
       }
     }
   }
-  for (auto [tag, type, config, sharedTransitionTag] :
+  for (const auto &[tag, type, config, sharedTransitionTag] :
        sharedTransitionConfigs) {
     if (config == nullptr) {
       continue;

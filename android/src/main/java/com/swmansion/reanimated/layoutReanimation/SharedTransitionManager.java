@@ -86,7 +86,7 @@ public class SharedTransitionManager {
     if (mAddedSharedViews.isEmpty()) {
       return;
     }
-    var eventDispatcher =
+    EventDispatcher eventDispatcher =
         UIManagerHelper.getEventDispatcherForReactTag(
             (ReactContext) view.getContext(), view.getId());
     if (eventDispatcher != null) {
@@ -197,16 +197,16 @@ public class SharedTransitionManager {
       return;
     }
     mIsTransitionPrepared = false;
-    for (var sharedElement : mSharedElementsWithAnimation) {
+    for (SharedElement sharedElement : mSharedElementsWithAnimation) {
       sharedElement.targetViewSnapshot = new Snapshot(sharedElement.targetView);
     }
-    for (var sharedElement : mSharedElementsWithProgress) {
+    for (SharedElement sharedElement : mSharedElementsWithProgress) {
       sharedElement.targetViewSnapshot = new Snapshot(sharedElement.targetView);
     }
 
     startPreparedTransitions();
 
-    for (var tag : mTagsToCleanup) {
+    for (Integer tag : mTagsToCleanup) {
       mNativeMethodsHolder.clearAnimationConfig(tag);
     }
     mTagsToCleanup.clear();

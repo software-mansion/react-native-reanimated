@@ -118,6 +118,7 @@ import WorkletRuntimeExample from './WorkletRuntimeExample';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
 import WithClampExample from './WithClampExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
+import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
 import HabitsExample from './LayoutAnimations/HabitsExample';
 import MemoExample from './MemoExample';
 
@@ -135,6 +136,7 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Empty',
     screen: EmptyExample,
   },
+  
   CardExample: {
     title: '[SET] Card',
     screen: CardExample,
@@ -144,6 +146,11 @@ export const EXAMPLES: Record<string, Example> = {
     screen: CustomTransitionExample,
   },
   
+  RuntimeTests: {
+    icon: '⚙️',
+    title: 'RuntimeTestsExample',
+    screen: RuntimeTestsExample,
+  },
   WorkletRuntimeExample: {
     icon: '🏃‍♂️',
     title: 'Worklet runtime',

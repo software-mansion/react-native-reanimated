@@ -21,7 +21,6 @@ export type { WorkletRuntime } from './runtimes';
 export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export { makeMutable } from './mutables';
 
-const IS_FABRIC = isFabric();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /**
@@ -47,10 +46,14 @@ if (SHOULD_BE_USE_WEB) {
   global._getAnimationTimestamp = () => performance.now();
 }
 
-export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
-  if (IS_FABRIC) {
+export function getViewProp<T>(
+  viewTag: number,
+  propName: string,
+  component?: React.Component // required on Fabric
+): Promise<T> {
+  if (isFabric() && !component) {
     throw new Error(
-      '[Reanimated] `getViewProp` is not supported on Fabric yet.'
+      '[Reanimated] Function `getViewProp` requires a component to be passed as an argument on Fabric.'
     );
   }
 
@@ -59,6 +62,7 @@ export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
     return NativeReanimatedModule.getViewProp(
       viewTag,
       propName,
+      component,
       (result: T) => {
         if (typeof result === 'string' && result.substr(0, 6) === 'error:') {
           reject(result);
