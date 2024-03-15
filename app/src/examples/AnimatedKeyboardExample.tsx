@@ -28,10 +28,14 @@ export default function AnimatedKeyboardExample() {
     const color = keyboard.state.value === OPENING ? 'red' : 'blue';
 
     return {
+      height: keyboard.height.value,
       backgroundColor: color,
     };
   });
   const translateStyle = useAnimatedStyle(() => {
+    console.log(
+      `STATE: ${keyboard.state.value}, HEIGHT: ${keyboard.height.value}`
+    );
     return {
       transform: [{ translateY: -keyboard.height.value }],
     };
@@ -42,7 +46,7 @@ export default function AnimatedKeyboardExample() {
     <ScrollView
       contentContainerStyle={styles.container}
       keyboardDismissMode="interactive"
-      scrollEnabled={false}>
+      scrollEnabled={true}>
       <Animated.View style={[styles.box, style]} />
       <Button
         title="Toggle nested view"

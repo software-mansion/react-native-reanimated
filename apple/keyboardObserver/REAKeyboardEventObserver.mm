@@ -12,6 +12,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   OPEN = 2,
   CLOSING = 3,
   CLOSED = 4,
+  DETACHED = 5,
 };
 
 @implementation REAKeyboardEventObserver {
@@ -201,6 +202,31 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   NSDictionary *userInfo = [notification userInfo];
   CGRect beginFrame = [[userInfo objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue];
   CGRect endFrame = [[userInfo objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+
+  // compute checks for detached keyboard
+  Boolean isBeginFrameDetached = [self isFrameDetached:beginFrame];
+  Boolean isEndFrameDetached = [self isFrameDetached:endFrame];
+  Boolean isAttachedFrameChange = !isBeginFrameDetached && !isEndFrameDetached;
+  
+  if (isAttachedFrameChange) {
+    [self handleAttachedKeyboardFrameChange:notification];
+  } else {
+    [self handleDetachedKeyboardFrameChange:notification];
+  }
+}
+
+- (Boolean) isFrameDetached:(CGRect)frame {
+  CGRect screenBounds = [[UIScreen mainScreen]bounds];
+  return 
+    CGRectGetWidth(frame) != CGRectGetWidth(screenBounds) ||
+    (CGRectGetMaxY(frame) != CGRectGetMaxY(screenBounds) &&
+    CGRectGetMinY(frame) != CGRectGetMaxY(screenBounds));
+}
+
+- (void) handleAttachedKeyboardFrameChange:(NSNotification *)notification {
+  NSDictionary *userInfo = [notification userInfo];
+  CGRect beginFrame = [[userInfo objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue];
+  CGRect endFrame = [[userInfo objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
   NSTimeInterval animationDuration = [[userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
   CGSize windowSize = [[[UIApplication sharedApplication] delegate] window].frame.size;
 
@@ -234,6 +260,38 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   } else {
     [self runListeners:_targetKeyboardHeight];
   }
+}
+
+- (void) handleDetachedKeyboardFrameChange:(NSNotification *)notification {
+  NSDictionary *userInfo = [notification userInfo];
+  CGRect beginFrame = [[userInfo objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue];
+  CGRect endFrame = [[userInfo objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+  CGSize windowSize = [[[UIApplication sharedApplication] delegate] window].frame.size;
+  CGRect screenBounds = [[UIScreen mainScreen]bounds];
+  
+  // compute checks for detached keyboard
+  Boolean isBeginFrameDetached = [self isFrameDetached:beginFrame];
+  Boolean isEndFrameDetached = [self isFrameDetached:endFrame];
+  
+  if (isBeginFrameDetached && isEndFrameDetached) {
+    // detached keyboard frame changes
+    _state = DETACHED;
+    _initialKeyboardHeight = 0;
+    _targetKeyboardHeight = 0;
+  } else if (isBeginFrameDetached && !isEndFrameDetached) {
+    // transitioning from detached to attached
+    _state = CGRectGetMaxY(endFrame) > CGRectGetMaxY(screenBounds) ? CLOSING : OPENING;
+    _initialKeyboardHeight = 0;
+    _targetKeyboardHeight = windowSize.height - endFrame.origin.y;
+  } else {
+    // opening keyboard that was in detached mode before closing
+    _state = DETACHED;
+    _initialKeyboardHeight = 0;
+    _targetKeyboardHeight = 0;
+  }
+  
+  _measuringView.frame = CGRectMake(0, -1, 0, _targetKeyboardHeight);
+  [self runUpdater];
 }
 
 - (int)subscribeForKeyboardEvents:(KeyboardEventListenerBlock)listener
@@ -337,11 +395,13 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
                         change:(NSDictionary<NSKeyValueChangeKey, id> *)change
                        context:(void *)context
 {
-  if ([keyPath isEqualToString:@"center"]) {
-    CGPoint oldKeyboardFrame = [change[NSKeyValueChangeOldKey] CGPointValue];
-    CGPoint newKeyboardFrame = [change[NSKeyValueChangeNewKey] CGPointValue];
-    [self updateKeyboardHeightDuringInteractiveDismiss:oldKeyboardFrame newKeyboardFrame:newKeyboardFrame];
-  }
+// commenting this makes detached keyboard transitions work, but interactive dismiss stops working :(
+  
+//  if ([keyPath isEqualToString:@"center"]) {
+//    CGPoint oldKeyboardFrame = [change[NSKeyValueChangeOldKey] CGPointValue];
+//    CGPoint newKeyboardFrame = [change[NSKeyValueChangeNewKey] CGPointValue];
+//    [self updateKeyboardHeightDuringInteractiveDismiss:oldKeyboardFrame newKeyboardFrame:newKeyboardFrame];
+//  }
 }
 
 - (bool)hasAnyAnimation:(REAUIView *)view
