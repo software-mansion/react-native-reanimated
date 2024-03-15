@@ -15,6 +15,7 @@ import com.facebook.react.uimanager.ViewAtIndex;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.uimanager.ViewManagerRegistry;
+import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.uimanager.layoutanimation.LayoutAnimationController;
 import com.facebook.react.uimanager.layoutanimation.LayoutAnimationListener;
 import com.swmansion.reanimated.ReanimatedModule;
@@ -166,7 +167,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
       if (parentName.equals("RNSScreenStack")) {
         mAnimationsManager.cancelAnimationsInSubviews(view);
         super.deleteView(view, listener);
-        var eventDispatcher =
+        EventDispatcher eventDispatcher =
             UIManagerHelper.getEventDispatcherForReactTag(
                 (ReactContext) view.getContext(), view.getId());
         if (eventDispatcher != null) {
