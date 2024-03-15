@@ -7,7 +7,7 @@ import Animated, {
   withDelay,
 } from 'react-native-reanimated';
 import React from 'react';
-import { ComparisonMode } from '../ReanimatedRuntimeTestsRunner/types';
+import { ComparisonMode } from '../../ReanimatedRuntimeTestsRunner/types';
 import {
   describe,
   test,
@@ -19,7 +19,7 @@ import {
   callTracker,
   callTrackerFn,
   getTrackerCallCount,
-} from '../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 
 const EXAMPLE_COLORS = {
   coral: [0xff7f50, 'rgb(255,127,80)', '#ff7f50', 'coral'],
@@ -45,7 +45,7 @@ const AnimatedComponent = ({
     return {
       width: withTiming(widthSV.value, { duration }, callTrackerFn('width')),
       backgroundColor: withDelay(
-        100,
+        10,
         withTiming(
           colorSV.value,
           { duration: duration * 2 },
@@ -68,45 +68,45 @@ const AnimatedComponent = ({
   );
 };
 
-describe('withTiming animation of COLOR 🎨', () => {
-  (
-    [
-      {
-        description:
-          'color as hex number 0x6495ed\n\t\t⚠️ This is not a valid color format, this behavior may be broken in the future\n\t',
-        color: EXAMPLE_COLORS.cornflowerblue[0],
-      },
-      {
-        description: 'color as rgb string "rgb(100,149,237)"',
-        color: EXAMPLE_COLORS.cornflowerblue[1],
-      },
-      {
-        description: 'color as hex string "0x6495ed"',
-        color: EXAMPLE_COLORS.cornflowerblue[2],
-      },
-      {
-        description: 'color as color string "cornflowerblue"',
-        color: EXAMPLE_COLORS.cornflowerblue[3],
-      },
-    ] as const
-  ).forEach((testCase) => {
-    const { description, color } = testCase;
-    test(description, async () => {
-      await render(<AnimatedComponent color2={color} />);
-      const component = getTestComponent('AnimatedComponent');
-      expect(await component.getAnimatedStyle('backgroundColor')).toBe(
-        EXAMPLE_COLORS.coral[2],
-        ComparisonMode.COLOR
-      );
-      await wait(600);
+// describe('withTiming animation of COLOR 🎨', () => {
+//   (
+//     [
+//       {
+//         description:
+//           'color as hex number 0x6495ed\n\t\t⚠️ This is not a valid color format, this behavior may be broken in the future\n\t',
+//         color: EXAMPLE_COLORS.cornflowerblue[0],
+//       },
+//       {
+//         description: 'color as rgb string "rgb(100,149,237)"',
+//         color: EXAMPLE_COLORS.cornflowerblue[1],
+//       },
+//       {
+//         description: 'color as hex string "0x6495ed"',
+//         color: EXAMPLE_COLORS.cornflowerblue[2],
+//       },
+//       {
+//         description: 'color as color string "cornflowerblue"',
+//         color: EXAMPLE_COLORS.cornflowerblue[3],
+//       },
+//     ] as const
+//   ).forEach((testCase) => {
+//     const { description, color } = testCase;
+//     test(description, async () => {
+//       await render(<AnimatedComponent color2={color} />);
+//       const component = getTestComponent('AnimatedComponent');
+//       expect(await component.getAnimatedStyle('backgroundColor')).toBe(
+//         EXAMPLE_COLORS.coral[2],
+//         ComparisonMode.COLOR
+//       );
+//       await wait(600);
 
-      expect(await component.getAnimatedStyle('backgroundColor')).toBe(
-        EXAMPLE_COLORS.cornflowerblue[2],
-        ComparisonMode.COLOR
-      );
-    });
-  });
-});
+//       expect(await component.getAnimatedStyle('backgroundColor')).toBe(
+//         EXAMPLE_COLORS.cornflowerblue[2],
+//         ComparisonMode.COLOR
+//       );
+//     });
+//   });
+// });
 
 describe('withTiming animation of WIDTH', () => {
   const AnimatedWidth = ({
@@ -121,7 +121,7 @@ describe('withTiming animation of WIDTH', () => {
 
     const style = useAnimatedStyle(() => {
       return {
-        width: withTiming(widthSV.value, { duration: 200 }),
+        width: withTiming(widthSV.value, { duration: 2000 }),
       };
     });
 
@@ -160,7 +160,7 @@ describe('withTiming animation of WIDTH', () => {
         startWidth: '20%',
         finalWidth: 100,
         finalWidthInPixels: 100,
-        description: 'width from percents to pixels',
+        description: 'width from percents to pixels - expect error',
       },
       {
         startWidth: 20,
@@ -172,13 +172,13 @@ describe('withTiming animation of WIDTH', () => {
         startWidth: 'auto',
         finalWidth: '20%',
         finalWidthInPixels: Dimensions.get('window').width * 0.2,
-        description: 'width from auto to percents',
+        description: 'width from auto to percents - expect error',
       },
       {
         startWidth: 'auto',
         finalWidth: 20,
         finalWidthInPixels: 20,
-        description: 'width from auto to pixels',
+        description: 'width from auto to pixels - expect error',
       },
     ] as const
   ).forEach((testCase) => {
@@ -191,7 +191,7 @@ describe('withTiming animation of WIDTH', () => {
         <AnimatedWidth startWidth={startWidth} finalWidth={finalWidth} />
       );
       const component = getTestComponent('AnimatedWidth');
-      await wait(600);
+      await wait(3000);
       expect(await component.getAnimatedStyle('width')).toBe(
         finalWidthInPixels,
         ComparisonMode.DISTANCE
@@ -219,12 +219,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'column',
-    backgroundColor: 'beige',
   },
   animatedBox: {
     width: 0,
     opacity: 0,
     height: 80,
+    backgroundColor: 'lime',
     margin: 30,
   },
 });

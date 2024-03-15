@@ -1,5 +1,9 @@
 import { getComparator } from './Comparators';
-import { color, defaultTestErrorLog } from './LogMessageUtils';
+import {
+  appendWhiteSpaceToMatchLength,
+  color,
+  defaultTestErrorLog,
+} from './LogMessageUtils';
 import {
   ComparisonMode,
   OperationUpdate,
@@ -106,7 +110,12 @@ export class Matchers {
       The TestRunner can collect two types of snapshots:
       - JS snapshots: animation updates sent via `_updateProps`
       - Native snapshots: snapshots obtained from the native side via `getViewProp`
-      Updates applied through `_updateProps` are not synchronously applied to the native side. Instead, they are batched and applied at the end of each frame. Therefore, it is not allowed to take a native snapshot immediately after the `_updateProps` call. To address this issue, we need to wait for the next frame before capturing the native snapshot. That's why native snapshots are one frame behind JS snapshots. To account for this delay, one additional native snapshot is taken during the execution of the `getNativeSnapshots` function.
+      Updates applied through `_updateProps` are not synchronously applied to the native side.
+      Instead, they are batched and applied at the end of each frame. Therefore, it is not allowed
+      to take a native snapshot immediately after the `_updateProps` call. To address this issue,
+      we need to wait for the next frame before capturing the native snapshot.
+      That's why native snapshots are one frame behind JS snapshots. To account for this delay,
+      one additional native snapshot is taken during the execution of the `getNativeSnapshots` function.
     */
     let errorString = '';
     const jsUpdates = this.currentValue as Array<OperationUpdate>;
@@ -161,7 +170,10 @@ export class Matchers {
   ) {
     const expected = color(jsValue, 'green');
     const received = color(nativeValue, 'red');
-    return `\tAt index ${index}, value of prop ${propName}:\n\t\texpected: ${expected}\n\t\treceived: ${received}\n`;
+    return `\tIndex ${index} ${propName}\t expected: ${appendWhiteSpaceToMatchLength(
+      expected,
+      30
+    )} received: ${appendWhiteSpaceToMatchLength(received, 30)}\n`;
   }
 
   private formatMismatchLengthErrorMessage(
