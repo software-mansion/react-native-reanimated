@@ -256,12 +256,14 @@ class ShareableRemoteFunction
       public std::enable_shared_from_this<ShareableRemoteFunction> {
  private:
   jsi::Runtime *runtime_;
+  const std::string name_;
   std::unique_ptr<jsi::Value> function_;
 
  public:
   ShareableRemoteFunction(jsi::Runtime &rt, jsi::Function &&function)
       : Shareable(RemoteFunctionType),
         runtime_(&rt),
+        name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
         function_(std::make_unique<jsi::Value>(rt, std::move(function))) {}
 
   ~ShareableRemoteFunction() {

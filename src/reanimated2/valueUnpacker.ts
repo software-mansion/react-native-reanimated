@@ -3,7 +3,7 @@ import { shouldBeUseWeb } from './PlatformChecker';
 import { isWorkletFunction } from './commonTypes';
 import type { WorkletFunction } from './commonTypes';
 
-function valueUnpacker(objectToUnpack: any, category?: string): any {
+function valueUnpacker(objectToUnpack: any): any {
   'worklet';
   let workletsCache = global.__workletsCache;
   let handleCache = global.__handleCache;
@@ -55,13 +55,6 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
       handleCache.set(objectToUnpack, value);
     }
     return value;
-  } else if (category === 'RemoteFunction') {
-    const fun = () => {
-      throw new Error(`[Reanimated] Tried to synchronously call a non-worklet function on the UI thread.
-See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread\` for more details.`);
-    };
-    fun.__remoteFunction = objectToUnpack;
-    return fun;
   } else {
     throw new Error(
       `[Reanimated] Data type in category "${category}" not recognized by value unpacker: "${_toString(
@@ -71,10 +64,7 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
   }
 }
 
-type ValueUnpacker = WorkletFunction<
-  [objectToUnpack: any, category?: string],
-  any
->;
+type ValueUnpacker = WorkletFunction<[objectToUnpack: any], any>;
 
 if (__DEV__ && !shouldBeUseWeb()) {
   const testWorklet = (() => {
