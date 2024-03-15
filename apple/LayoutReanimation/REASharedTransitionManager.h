@@ -15,5 +15,10 @@
 - (NSDictionary *)prepareDataForWorklet:(NSMutableDictionary *)currentValues
                            targetValues:(NSMutableDictionary *)targetValues;
 - (void)onScreenRemoval:(REAUIView *)screen stack:(REAUIView *)stack;
+- (void)viewsWillRemove:(NSArray<REAUIView *> *)viewsToRemove;
+- (void)viewsDidRemoved:(NSArray<REAUIView *> *)removedViews;
+- (void)notifyAboutNewScreenAddedInUIManager;
+- (void)notifyAboutAffectedViewTags:(NSArray<NSNumber *> *)affectedViewTags;
+- (bool)canClearAnimationConfig:(NSNumber *)viewTag;
 
 @end
