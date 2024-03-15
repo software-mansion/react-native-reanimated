@@ -3,8 +3,8 @@ import RuntimeTestsRunner from './ReanimatedRuntimeTestsRunner/RuntimeTestsRunne
 
 // load tests
 // import './tests/Animations.test';
-import './tests/animations/withTimingSnapshot.test';
-// import './tests/animations/withTiming.test';
+import './tests/animations/withTiming/easingSnapshots.test';
+import './tests/animations/withTiming/withTiming.test';
 
 export default function RuntimeTestsExample() {
   return <RuntimeTestsRunner />;

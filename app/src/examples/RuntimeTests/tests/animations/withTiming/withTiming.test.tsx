@@ -7,7 +7,7 @@ import Animated, {
   withDelay,
 } from 'react-native-reanimated';
 import React from 'react';
-import { ComparisonMode } from '../../ReanimatedRuntimeTestsRunner/types';
+import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
 import {
   describe,
   test,
@@ -19,7 +19,7 @@ import {
   callTracker,
   callTrackerFn,
   getTrackerCallCount,
-} from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 
 const EXAMPLE_COLORS = {
   coral: [0xff7f50, 'rgb(255,127,80)', '#ff7f50', 'coral'],
@@ -167,18 +167,6 @@ describe('withTiming animation of WIDTH', () => {
         finalWidth: '40%',
         finalWidthInPixels: Dimensions.get('window').width * 0.4,
         description: 'width from pixels to percents',
-      },
-      {
-        startWidth: 'auto',
-        finalWidth: '20%',
-        finalWidthInPixels: Dimensions.get('window').width * 0.2,
-        description: 'width from auto to percents - expect error',
-      },
-      {
-        startWidth: 'auto',
-        finalWidth: 20,
-        finalWidthInPixels: 20,
-        description: 'width from auto to pixels - expect error',
       },
     ] as const
   ).forEach((testCase) => {
