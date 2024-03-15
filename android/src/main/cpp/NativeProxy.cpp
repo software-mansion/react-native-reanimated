@@ -216,12 +216,12 @@ void NativeProxy::maybeFlushUIUpdatesQueue() {
 jsi::Value NativeProxy::obtainProp(
     jsi::Runtime &rt,
     const int viewTag,
-    const jsi::String &propName) {
+    const jsi::Value &propName) {
   static const auto method =
       getJniMethod<jni::local_ref<JString>(int, jni::local_ref<JString>)>(
           "obtainProp");
   local_ref<JString> propNameJStr =
-      jni::make_jstring(propName.utf8(rt).c_str());
+      jni::make_jstring(propName.asString(rt).utf8(rt).c_str());
   auto result = method(javaPart_.get(), viewTag, propNameJStr);
   std::string str = result->toStdString();
   return jsi::Value(rt, jsi::String::createFromAscii(rt, str));

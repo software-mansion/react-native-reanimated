@@ -102,4 +102,9 @@ declare global {
   var UpdatePropsManager: UpdatePropsManager;
   var ProgressTransitionRegister: ProgressTransitionRegister;
   var updateJSProps: (viewTag: number, props: Record<string, unknown>) => void;
+  var _obtainPropPaper: (viewTag: number, propName: string) => string;
+  var _obtainPropFabric: (
+    shadowNodeWrapper: ShadowNodeWrapper,
+    propName: string
+  ) => string;
 }
