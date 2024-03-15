@@ -16,15 +16,6 @@
   height: fit-content;
 }
 
-.headingColumn {
-  display: inline-flex;
-  flex-direction: column;
-  padding: 0;
-  margin: 0;
-  width: max-content;
-  margin-right: 8px;
-}
-
 .headingLabel {
   font-family: var(--swm-title-landing-font);
   font-size: 64px;
@@ -60,11 +51,6 @@
 @media (max-width: 768px) {
   .headingLabel {
     font-size: 26px;
-  }
-
-  .headingColumn {
-    flex-direction: column-reverse;
-    width: 100%;
   }
 
   .subheadingLabel {
@@ -115,8 +101,13 @@
     flex-direction: column;
     justify-content: space-between;
 
-    margin-top: 64px;
+    margin-top: 22px;
     height: 100%;
+  }
+
+  .subheadingLabel {
+    margin-top: 64px;
+    margin-bottom: 24px;
   }
 
   .foregroundLabel {
