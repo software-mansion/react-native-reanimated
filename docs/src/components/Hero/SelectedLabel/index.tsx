@@ -12,7 +12,7 @@ import {
 
 const SelectedLabel: React.FC<{
   children: React.ReactNode;
-  isInteractive: Boolean;
+  isInteractive: boolean;
 }> = ({ children, isInteractive = false }) => {
   // DOM refs
   const selectionRef = useRef(null);
@@ -68,7 +68,7 @@ const SelectedLabel: React.FC<{
       width: rect.width,
       height: rect.height,
     });
-  }, []);
+  }, [isInteractive]);
 
   const movementPropagator = (
     movementDelta: { x: number; y: number },
@@ -87,6 +87,13 @@ const SelectedLabel: React.FC<{
       computeTextStyles(dynamicStyles.current, staticStyles.current)
     );
   };
+
+  const classList = clsx(
+    isInteractive ? styles.preEnabledTextInteractivity : null,
+    staticStyles.current.enabledTextInteractivity
+      ? styles.interactiveHeaderText
+      : styles.headerText
+  );
 
   return (
     <span ref={selectionRef} className={styles.selection}>
@@ -111,14 +118,7 @@ const SelectedLabel: React.FC<{
           propagationFunction={movementPropagator}
           draggableIdentifier={DraggableId.CENTER}
           isInteractive={isInteractive}>
-          <span
-            ref={textLabelRef}
-            className={clsx(
-              isInteractive ? styles.preEnabledTextInteractivity : null,
-              staticStyles.current.enabledTextInteractivity
-                ? styles.interactiveHeaderText
-                : styles.headerText
-            )}>
+          <span ref={textLabelRef} className={classList}>
             {children}
           </span>
         </SelectionBox>

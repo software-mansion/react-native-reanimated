@@ -11,6 +11,34 @@ export enum DraggableId {
   CENTER,
 }
 
+const getClassListByIdentifier = (
+  identifier: DraggableId,
+  isInteractive: boolean
+) => {
+  const isBottom =
+    identifier == DraggableId.BOTTOM_LEFT ||
+    identifier == DraggableId.BOTTOM_RIGHT;
+  const isLeft =
+    identifier == DraggableId.BOTTOM_LEFT || identifier == DraggableId.TOP_LEFT;
+  const isCenter = identifier === DraggableId.CENTER;
+
+  let classList = styles.centerDraggable;
+
+  if (!isCenter) {
+    classList = clsx(
+      styles.selectionBox,
+      isBottom ? styles.boxLower : styles.boxUpper,
+      isLeft ? styles.boxLeft : styles.boxRight
+    );
+  }
+
+  if (isInteractive) {
+    classList = clsx(classList, styles.movable);
+  }
+
+  return classList;
+};
+
 const SelectionBox: React.FC<{
   propagationFunction: (
     movementDelta: { x: number; y: number },
@@ -18,28 +46,17 @@ const SelectionBox: React.FC<{
   ) => void;
   draggableIdentifier: DraggableId;
   children?: React.ReactNode;
-  isInteractive: Boolean;
+  isInteractive: boolean;
 }> = ({
   propagationFunction,
   draggableIdentifier,
   children,
   isInteractive,
 }) => {
-  const isBottom =
-    draggableIdentifier == DraggableId.BOTTOM_LEFT ||
-    draggableIdentifier == DraggableId.BOTTOM_RIGHT;
-  const isLeft =
-    draggableIdentifier == DraggableId.BOTTOM_LEFT ||
-    draggableIdentifier == DraggableId.TOP_LEFT;
-  const isCenter = draggableIdentifier === DraggableId.CENTER;
-
-  let classList = clsx(
-    styles.selectionBox,
-    isBottom ? styles.boxLower : styles.boxUpper,
-    isLeft ? styles.boxLeft : styles.boxRight
+  const classList = getClassListByIdentifier(
+    draggableIdentifier,
+    isInteractive
   );
-
-  classList = isCenter ? clsx(styles.centerDraggable) : classList;
 
   return (
     <Draggable
@@ -51,9 +68,7 @@ const SelectionBox: React.FC<{
       }}
       allowAnyClick={false}
       axis={'none'}>
-      <div className={clsx(isInteractive ? styles.movable : '', classList)}>
-        {children}
-      </div>
+      <div className={classList}>{children}</div>
     </Draggable>
   );
 };
