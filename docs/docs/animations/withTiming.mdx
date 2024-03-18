@@ -54,6 +54,26 @@ enum ReduceMotion {
 #### `toValue`
 
 The value on which the animation will come at rest.
+There are many possible types for `toValue`, currently the following kinds of values are supported:
+
+* **colors** - we support wide range of color formats:
+  * hex numbers - `0xff1234`
+  * rgb - `rgb(100,50,0)`
+  * rgba - `rgba(255,105,180,0)`
+  * hsl - `hsl(0, 50%, 50%)`
+  * hex strings - `#53575E`
+  * css color names - `dodgerblue`
+* **numbers**
+* **suffixed numbers** - strings being a number with a unit, like `"100%"` or `"90deg"`
+* **objects** - object with properties that will be animated separately
+* **array** - array of values, each value will be animated separately.
+* **transformation matrix** - each array of exactly 16 numerical values is by default 
+animated as a transformation matrix. It means that we don't apply the animation to each value separately.
+Instead we decompose the transformation matrix into matrices of 3 basic transformations - rotation, scale and translation.
+Then we animate each of these 3 transforms separately.
+
+Please mind, that `toValue` and the animated shared value should share the same category
+(for example you can't animate width from 100px to 50%)
 
 #### `config` <Optional />
 
