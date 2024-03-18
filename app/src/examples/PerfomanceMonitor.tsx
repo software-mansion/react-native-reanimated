@@ -1,6 +1,6 @@
 import { Text, TextInput, StyleSheet, View } from 'react-native';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
 import Animated, {
   SharedValue,
@@ -33,8 +33,8 @@ function createCircularDoublesBuffer(size: number) {
     },
 
     front(): number | null {
-      const atLeastOne = this.count >= 1;
-      if (atLeastOne) {
+      const notEmpty = this.count > 0;
+      if (notEmpty) {
         const current = this.next - 1;
         const index = current < 0 ? this.size - 1 : current;
         return this.buffer[index];
@@ -43,11 +43,8 @@ function createCircularDoublesBuffer(size: number) {
     },
 
     back(): number | null {
-      const atLeastOne = this.count >= 1;
-      if (atLeastOne) {
-        return this.buffer[this.next];
-      }
-      return null;
+      const notEmpty = this.count > 0;
+      return notEmpty ? this.buffer[this.next] : null;
     },
 
     reduce<T>(fn: (acc: T, value: number) => T, initial: T) {
