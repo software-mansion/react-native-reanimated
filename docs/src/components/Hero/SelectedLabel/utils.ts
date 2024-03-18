@@ -17,6 +17,9 @@ export type TextScaleStyles = {
   y: number;
 };
 
+const SCALING_OFFSET_X = 1.0;
+const SCALING_OFFSET_Y = 1.22;
+
 export const computeSelectionStyles = (
   position: { x: number; y: number },
   draggableIdentifier: DraggableId,
@@ -77,18 +80,18 @@ export const computeTextStyles = (
   staticStyles: StaticStyles
 ): TextScaleStyles => {
   // these magic numbers are a result of disparity between font's apparent and actual size
-  const sizeOffsetX = 1.0;
-  const sizeOffsetY = 1.22;
+  const scaleOffsetX = SCALING_OFFSET_X;
+  const scaleOffsetY = SCALING_OFFSET_Y;
 
   // scale starts at 1 and as it gets larger approaches sizeOffset
   const textScale = {
     x:
-      (dynamicStyles.width / staticStyles.initialWidth) * sizeOffsetX -
-      sizeOffsetX +
+      (dynamicStyles.width / staticStyles.initialWidth) * scaleOffsetX -
+      scaleOffsetX +
       1,
     y:
-      (dynamicStyles.height / staticStyles.initialHeight) * sizeOffsetY -
-      sizeOffsetY +
+      (dynamicStyles.height / staticStyles.initialHeight) * scaleOffsetY -
+      scaleOffsetY +
       1,
   };
 
