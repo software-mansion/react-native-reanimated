@@ -1,16 +1,13 @@
 import { Text, TextInput, StyleSheet, View } from 'react-native';
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import Animated, {
   SharedValue,
   useAnimatedProps,
-  useAnimatedStyle,
   useFrameCallback,
   useSharedValue,
-} from 'react-native-reanimated';
-
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+} from '../../..';
 
 type CircularBuffer = ReturnType<typeof createCircularDoublesBuffer>;
 function createCircularDoublesBuffer(size: number) {
@@ -57,7 +54,7 @@ function createCircularDoublesBuffer(size: number) {
       }
       return acc;
     },
-  } as const;
+  };
 }
 
 Animated.addWhitelistedNativeProps({ text: true });
@@ -184,40 +181,11 @@ function UiPerformance() {
 }
 
 export function PerformanceMonitor() {
-  const lastPosition = useSharedValue({ xOffset: 0, yOffset: 0 });
-  const position = useSharedValue({ x: 0, y: 0 });
-  const move = useMemo(
-    () =>
-      Gesture.Pan()
-        .onChange((e) => {
-          const { xOffset, yOffset } = lastPosition.value;
-
-          position.value = {
-            x: xOffset + e.translationX,
-            y: yOffset + e.translationY,
-          };
-        })
-        .onEnd(() => {
-          const { x: lastX, y: lastY } = position.value;
-
-          lastPosition.value = { xOffset: lastX, yOffset: lastY };
-        }),
-    [lastPosition, position]
-  );
-  const positionStyle = useAnimatedStyle(() => {
-    const { x, y } = position.value;
-    return {
-      transform: [{ translateX: x }, { translateY: y }],
-    };
-  });
-
   return (
-    <GestureDetector gesture={move}>
-      <Animated.View style={[styles.monitor, positionStyle]}>
-        <JsPerformance />
-        <UiPerformance />
-      </Animated.View>
-    </GestureDetector>
+    <Animated.View style={[styles.monitor]}>
+      <JsPerformance />
+      <UiPerformance />
+    </Animated.View>
   );
 }
 

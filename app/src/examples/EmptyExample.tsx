@@ -1,12 +1,10 @@
 import { Text, StyleSheet, View } from 'react-native';
 
 import React from 'react';
-import { PerformanceMonitor } from './PerfomanceMonitor';
 
 export default function EmptyExample() {
   return (
     <View style={styles.container}>
-      <PerformanceMonitor />
       <Text>Hello world!</Text>
     </View>
   );

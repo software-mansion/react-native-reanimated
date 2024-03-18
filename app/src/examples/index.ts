@@ -118,6 +118,7 @@ import WithClampExample from './WithClampExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import HabitsExample from './LayoutAnimations/HabitsExample';
 import MemoExample from './MemoExample';
+import PerformanceMonitorExample from './PerfomanceMonitorExample';
 
 interface Example {
   icon?: string;
@@ -466,6 +467,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🧑‍💻',
     title: 'Habits',
     screen: HabitsExample,
+  },
+  PerformanceMonitorExample: {
+    icon: '⏱️',
+    title: 'Performance monitor',
+    screen: PerformanceMonitorExample,
   },
 
   // Old examples

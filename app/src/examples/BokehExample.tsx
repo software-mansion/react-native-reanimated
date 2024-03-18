@@ -7,7 +7,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import React, { useState } from 'react';
-import { PerformanceMonitor } from './PerfomanceMonitor';
 
 const { width, height } = Dimensions.get('window');
 
@@ -75,7 +74,6 @@ function Bokeh({ count }: BokehProps) {
 export default function BokehExample() {
   return (
     <View style={styles.container}>
-      <PerformanceMonitor />
       <Bokeh count={100} />
     </View>
   );
