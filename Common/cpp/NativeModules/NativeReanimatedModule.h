@@ -84,12 +84,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps) override;
-  jsi::Value configureLayoutAnimation(
-      jsi::Runtime &rt,
-      const jsi::Value &viewTag,
-      const jsi::Value &type,
-      const jsi::Value &sharedTransitionTag,
-      const jsi::Value &config) override;
   jsi::Value configureLayoutAnimationBatch(
       jsi::Runtime &rt,
       const jsi::Value &layoutAnimationsBatch) override;
