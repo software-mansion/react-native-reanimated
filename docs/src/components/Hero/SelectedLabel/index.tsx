@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import styles from './styles.module.css';
 import SelectionBox, { DraggableId } from './SelectionBox';
 import {
@@ -17,7 +17,7 @@ const SelectedLabel: React.FC<{
   // DOM refs
   const selectionRef = useRef(null);
   const selectionContainerRef = useRef(null);
-  const textLabelRef = useRef(null);
+  const textLabelRef = useRef<HTMLSpanElement | null>(null);
 
   // Render-persistent label positioning styles
   const dynamicStyles = useRef<DynamicStyles>({
@@ -31,9 +31,6 @@ const SelectedLabel: React.FC<{
     initialWidth: null,
     initialHeight: null,
   });
-
-  const [enabledTextInteractivity, setEnabledTextInteractivity] =
-    useState(false);
 
   const applyDynamicStyles = (newDynamicStyles: DynamicStyles) => {
     const currentDynamicStyles = dynamicStyles.current;
@@ -63,14 +60,14 @@ const SelectedLabel: React.FC<{
       initialHeight: rect.height,
     };
 
-    setEnabledTextInteractivity(true);
-
     applyDynamicStyles({
       top: 0,
       left: 0,
       width: rect.width,
       height: rect.height,
     });
+
+    textLabelRef.current.className = clsx(styles.interactiveHeaderText);
   }, [isInteractive]);
 
   const movementPropagator = (
@@ -91,10 +88,7 @@ const SelectedLabel: React.FC<{
     );
   };
 
-  const classList = clsx(
-    isInteractive ? styles.preEnabledTextInteractivity : null,
-    enabledTextInteractivity ? styles.interactiveHeaderText : styles.headerText
-  );
+  const classList = styles.headerText;
 
   return (
     <span ref={selectionRef} className={styles.selection}>

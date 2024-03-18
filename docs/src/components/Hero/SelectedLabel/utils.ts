@@ -77,8 +77,8 @@ export const computeTextStyles = (
   staticStyles: StaticStyles
 ): TextScaleStyles => {
   // these magic numbers are a result of disparity between font's apparent and actual size
-  const sizeOffsetX = 0.99;
-  const sizeOffsetY = 1.21;
+  const sizeOffsetX = 1.0;
+  const sizeOffsetY = 1.22;
 
   // scale starts at 1 and as it gets larger approaches sizeOffset
   const textScale = {
