@@ -10,16 +10,8 @@ import type {
   ValueRotation,
 } from './commonTypes';
 import { makeShareableCloneRecursive } from './shareables';
-import type {
-  LayoutAnimationFunction,
-  LayoutAnimationType,
-} from './layoutReanimation';
 import { initializeUIRuntime } from './initializers';
-import type {
-  LayoutAnimationBatchItem,
-  ProgressAnimationCallback,
-  SharedTransitionAnimationsFunction,
-} from './layoutReanimation/animationBuilder/commonTypes';
+import type { LayoutAnimationBatchItem } from './layoutReanimation/animationBuilder/commonTypes';
 import { SensorContainer } from './SensorContainer';
 
 export { startMapper, stopMapper } from './mappers';
@@ -196,24 +188,6 @@ export function enableLayoutAnimations(
     featuresConfig.enableLayoutAnimations = flag;
     NativeReanimatedModule.enableLayoutAnimations(flag);
   }
-}
-
-export function configureLayoutAnimations(
-  viewTag: number | HTMLElement,
-  type: LayoutAnimationType,
-  config:
-    | LayoutAnimationFunction
-    | Keyframe
-    | SharedTransitionAnimationsFunction
-    | ProgressAnimationCallback,
-  sharedTransitionTag = ''
-): void {
-  NativeReanimatedModule.configureLayoutAnimation(
-    viewTag as number, // On web this function is no-op, therefore we can cast viewTag to number
-    type,
-    sharedTransitionTag,
-    makeShareableCloneRecursive(config)
-  );
 }
 
 export function configureLayoutAnimationBatch(

@@ -714,8 +714,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     return new Point(fromPoint.x - toPoint[0], fromPoint.y - toPoint[1]);
   }
 
-  public void screenDidLayout() {
-    mSharedTransitionManager.screenDidLayout();
+  public void screenDidLayout(View view) {
+    mSharedTransitionManager.screenDidLayout(view);
   }
 
   public void viewDidLayout(View view) {
@@ -724,6 +724,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   public void notifyAboutViewsRemoval(int[] tagsToDelete) {
     mSharedTransitionManager.onViewsRemoval(tagsToDelete);
+  }
+
+  public void notifyAboutScreenWillDisappear() {
+    mSharedTransitionManager.onScreenWillDisappear();
   }
 
   public void makeSnapshotOfTopScreenViews(ViewGroup stack) {

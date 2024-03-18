@@ -322,6 +322,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
   }];
 
+  [animationsManager setSharedTransitionRemovingBlock:^(NSNumber *_Nonnull tag) {
+    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+      nativeReanimatedModule->layoutAnimationsManager().clearSharedTransitionConfig([tag intValue]);
+    }
+  }];
+
   [animationsManager setCancelAnimationBlock:^(NSNumber *_Nonnull tag) {
     if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
       jsi::Runtime &rt = nativeReanimatedModule->getUIRuntime();
