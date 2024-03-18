@@ -65,7 +65,7 @@ describe('withTiming snapshots 📸, test EASING', () => {
 
       ...(
         [
-          ['back', [[0]]],
+          ['back', [[0], [4.75]]],
           [
             'bezier',
             [
@@ -124,6 +124,11 @@ describe('withTiming snapshots 📸, test EASING', () => {
         message: 'Easing.inOut(Easing.elastic(10))',
         snapshotName: 'inOut',
       },
+      {
+        easing: Easing.inOut(Easing.elastic(10)),
+        message: 'Easing.inOut(Easing.elastic(10))',
+        snapshotName: 'inOut',
+      },
     ] as const
   ).forEach(({ easing, message, snapshotName }: TestExample) => {
     test(message, async () => {
@@ -134,33 +139,9 @@ describe('withTiming snapshots 📸, test EASING', () => {
       const updates = updatesContainer.getUpdates();
       expect(updates).toMatchSnapshot(Snapshots[snapshotName]);
       expect(updates).toMatchNativeSnapshots(
-        await updatesContainer.getNativeSnapshots()
+        await updatesContainer.getNativeSnapshots(),
+        true
       );
-    });
-  });
-
-  // Don't check native snapshot if animation has negative width
-  (
-    [
-      {
-        easing: Easing.back(4.75),
-        message: 'Easing.back(4.75)',
-        snapshotName: 'back1',
-      },
-      {
-        easing: Easing.out(Easing.elastic(10)),
-        message: 'Easing.out(Easing.elastic(10))',
-        snapshotName: 'out',
-      },
-    ] as const
-  ).forEach(({ easing, message, snapshotName }: TestExample) => {
-    test(message, async () => {
-      await mockAnimationTimer();
-      const updatesContainer = await recordAnimationUpdates();
-      await render(<AnimatedComponent easing={easing} />);
-      await wait(1200);
-      const updates = updatesContainer.getUpdates();
-      expect(updates).toMatchSnapshot(Snapshots[snapshotName]);
     });
   });
 });
