@@ -26,8 +26,8 @@
   color: var(--swm-landing-heading);
 }
 
-.headingLabel span {
-  margin-right: 8px;
+.rnLabel {
+  margin-right: 10px;
 }
 
 .subheadingLabel {
@@ -39,7 +39,7 @@
 
   margin-top: 32px;
   margin-bottom: 56px;
-  width: 600px;
+  width: fit-content;
   color: var(--swm-landing-heading);
 }
 
@@ -101,8 +101,13 @@
     flex-direction: column;
     justify-content: space-between;
 
-    margin-top: 64px;
+    margin-top: 22px;
     height: 100%;
+  }
+
+  .subheadingLabel {
+    margin-top: 64px;
+    margin-bottom: 24px;
   }
 
   .foregroundLabel {
