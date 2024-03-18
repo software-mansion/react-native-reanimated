@@ -147,9 +147,7 @@ export function createAnimatedComponent(
       this.safeProps =
         animatedProps === null || animatedProps === undefined
           ? { animatedProps: {} }
-          : {
-              animatedProps,
-            };
+          : { animatedProps };
 
       if (isJest()) {
         this.jestAnimatedStyle = { value: {} };
