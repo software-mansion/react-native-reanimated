@@ -1,5 +1,5 @@
 'use strict';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import type { SharedValue } from '../commonTypes';
 import { findNodeHandle } from 'react-native';
 import type { EventHandlerInternal } from './useEvent';
@@ -52,20 +52,45 @@ export function useScrollViewOffset(
     // for more information about this cast.
   ) as unknown as EventHandlerInternal<ReanimatedScrollEvent>;
 
+  const webEventHandler = useCallback(() => {
+    'worklet';
+    const element = animatedRef.current as unknown as HTMLElement;
+
+    // scrollLeft is the X axis scrolled offset, works properly also with RTL layout
+    offsetRef.current.value =
+      element.scrollLeft === 0 ? element.scrollTop : element.scrollLeft;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animatedRef, animatedRef.current]);
+
+  const currentEventHandler = IS_WEB ? webEventHandler : eventHandler;
+
   useEffect(() => {
     const component = animatedRef.current;
-    const viewTag = IS_WEB ? component : findNodeHandle(component);
-
-    eventHandler.workletEventHandler.registerForEvents(viewTag as number);
+    if (IS_WEB) {
+      (component as unknown as HTMLElement).addEventListener(
+        'scroll',
+        webEventHandler
+      );
+    } else {
+      const viewTag = findNodeHandle(component);
+      eventHandler.workletEventHandler.registerForEvents(viewTag as number);
+    }
 
     return () => {
-      eventHandler.workletEventHandler?.unregisterFromEvents();
+      if (IS_WEB) {
+        (component as unknown as HTMLElement).removeEventListener(
+          'scroll',
+          webEventHandler
+        );
+      } else {
+        eventHandler.workletEventHandler?.unregisterFromEvents();
+      }
     };
     // React here has a problem with `animatedRef.current` since a Ref .current
     // field shouldn't be used as a dependency. However, in this case we have
     // to do it this way.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [animatedRef, animatedRef.current, eventHandler]);
+  }, [animatedRef, animatedRef.current, currentEventHandler]);
 
   return offsetRef.current;
 }
