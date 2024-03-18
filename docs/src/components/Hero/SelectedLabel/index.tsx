@@ -88,8 +88,6 @@ const SelectedLabel: React.FC<{
     );
   };
 
-  const classList = styles.headerText;
-
   return (
     <span ref={selectionRef} className={styles.selection}>
       <div ref={selectionContainerRef} className={styles.selectionContainer}>
@@ -113,7 +111,7 @@ const SelectedLabel: React.FC<{
           propagationFunction={movementPropagator}
           draggableIdentifier={DraggableId.CENTER}
           isInteractive={isInteractive}>
-          <span ref={textLabelRef} className={classList}>
+          <span ref={textLabelRef} className={styles.headerText}>
             {children}
           </span>
         </SelectionBox>
