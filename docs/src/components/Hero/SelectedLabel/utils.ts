@@ -10,7 +10,6 @@ export type DynamicStyles = {
 export type StaticStyles = {
   initialWidth: number;
   initialHeight: number;
-  enabledTextInteractivity: boolean;
 };
 
 export type TextScaleStyles = {

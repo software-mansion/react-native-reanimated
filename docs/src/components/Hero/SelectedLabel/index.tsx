@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styles from './styles.module.css';
 import SelectionBox, { DraggableId } from './SelectionBox';
 import {
@@ -30,8 +30,10 @@ const SelectedLabel: React.FC<{
   const staticStyles = useRef<StaticStyles>({
     initialWidth: null,
     initialHeight: null,
-    enabledTextInteractivity: false,
   });
+
+  const [enabledTextInteractivity, setEnabledTextInteractivity] =
+    useState(false);
 
   const applyDynamicStyles = (newDynamicStyles: DynamicStyles) => {
     const currentDynamicStyles = dynamicStyles.current;
@@ -59,8 +61,9 @@ const SelectedLabel: React.FC<{
     staticStyles.current = {
       initialWidth: rect.width,
       initialHeight: rect.height,
-      enabledTextInteractivity: true,
     };
+
+    setEnabledTextInteractivity(true);
 
     applyDynamicStyles({
       top: 0,
@@ -90,9 +93,7 @@ const SelectedLabel: React.FC<{
 
   const classList = clsx(
     isInteractive ? styles.preEnabledTextInteractivity : null,
-    staticStyles.current.enabledTextInteractivity
-      ? styles.interactiveHeaderText
-      : styles.headerText
+    enabledTextInteractivity ? styles.interactiveHeaderText : styles.headerText
   );
 
   return (
