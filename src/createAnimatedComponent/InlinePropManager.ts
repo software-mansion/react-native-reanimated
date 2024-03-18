@@ -132,15 +132,15 @@ export class InlinePropManager implements IInlinePropManager {
   _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
   _inlinePropsMapperId: number | null = null;
   _inlineProps: StyleProps = {};
-  private _animatedComponent: AnimatedComponent;
+  private _component: AnimatedComponent;
 
-  constructor(animatedComponent: AnimatedComponent) {
-    this._animatedComponent = animatedComponent;
+  constructor(component: AnimatedComponent) {
+    this._component = component;
   }
 
   public attachInlineProps(viewInfo: ViewInfo) {
     const newInlineProps: Record<string, unknown> =
-      extractSharedValuesMapFromProps(this._animatedComponent.props);
+      extractSharedValuesMapFromProps(this._component.props);
     const hasChanged = inlinePropsHasChanged(newInlineProps, this._inlineProps);
 
     if (hasChanged) {
@@ -163,7 +163,7 @@ export class InlinePropManager implements IInlinePropManager {
         this._inlinePropsViewDescriptors.shareableViewDescriptors;
 
       const maybeViewRef = SHOULD_BE_USE_WEB
-        ? ({ items: new Set([this._animatedComponent]) } as ViewRefSet<unknown>) // see makeViewsRefSet
+        ? ({ items: new Set([this._component]) } as ViewRefSet<unknown>) // see makeViewsRefSet
         : undefined;
       const updaterFunction = () => {
         'worklet';
