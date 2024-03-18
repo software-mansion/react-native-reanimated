@@ -350,6 +350,8 @@ export function createAnimatedComponent(
         }
 
         // TODO Move each implentation to separate function so it's not that bloated here.
+        // Theoretically I could just add another underscoe to each property dynamically
+        // but it's ugly af.
         if (isFabric()) {
           viewName = hostInstance?._viewConfig?.uiViewClassName;
           viewTag = hostInstance?.__nativeTag;
