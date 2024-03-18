@@ -348,18 +348,23 @@ export function createAnimatedComponent(
             '[Reanimated] Cannot find host instance for this component. Maybe it renders nothing?'
           );
         }
-        // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
-        viewTag = hostInstance?._nativeTag;
-        /**
-         * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/Components/ScrollView/ScrollViewNativeComponent.js#L24).
-         * The name we're looking for is in the field named uiViewClassName.
-         */
-        viewName = hostInstance?.viewConfig?.uiViewClassName;
 
-        viewConfig = hostInstance?.viewConfig;
-
+        // TODO Move each implentation to separate function so it's not that bloated here.
         if (isFabric()) {
+          viewName = hostInstance?._viewConfig?.uiViewClassName;
+          viewTag = hostInstance?.__nativeTag;
+          viewConfig = hostInstance?._viewConfig;
           shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
+        } else {
+          // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
+          viewTag = hostInstance?._nativeTag;
+          /**
+           * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/Components/ScrollView/ScrollViewNativeComponent.js#L24).
+           * The name we're looking for is in the field named uiViewClassName.
+           */
+          viewName = hostInstance?.viewConfig?.uiViewClassName;
+
+          viewConfig = hostInstance?.viewConfig;
         }
       }
       this._viewInfo = { viewTag, viewName, shadowNodeWrapper, viewConfig };
