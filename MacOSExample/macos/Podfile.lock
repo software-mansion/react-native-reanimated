@@ -1023,7 +1023,7 @@ PODS:
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
-  - RNReanimated (3.7.0):
+  - RNReanimated (3.8.0):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
@@ -1203,11 +1203,11 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 0686b6af8cbd638c784fea5afb789be66699823c
-  DoubleConversion: acaf5db79676d2e9119015819153f0f99191de12
+  DoubleConversion: ca54355f8932558971f6643521d62b9bc8231cee
   FBLazyVector: 9e95e675585cbd797f26a822067734b77f4ec385
   FBReactNativeSpec: 7a2f7ed68ebf798bb5f368669661b99308a7be2d
   fmt: 03574da4b7ba40de39da59677ca66610ce8c4a02
-  glog: 6df0a3d6e2750a50609471fd1a01fd2948d405b5
+  glog: 3a72874c0322c7caf24931d3a2777cb7a3090529
   RCT-Folly: 68e9c0fd4c0f05964afd447041d3ac2d67298f27
   RCTRequired: 77fb29acf9a1c537e9a594b44ed432e9f2ce0d28
   RCTTypeSafety: 21000635672480770c9a0d2afdc11a834929e76f
@@ -1252,10 +1252,10 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: c43e6d71e13bb4748503797784839e0fbbf89d56
   RNCPicker: b18aaf30df596e9b1738e7c1f9ee55402a229dca
   RNGestureHandler: deda62b8339496ba721a45e0f3e2d7a319932cee
-  RNReanimated: 2968b282b438bf64c913f0a21ffb814cb8940ada
+  RNReanimated: 08caa2e96df9722a17d953f8b04493fd0dda5ce0
   RNSVG: ba3e7232f45e34b7b47e74472386cf4e1a676d0a
   SocketRocket: f6c6249082c011e6de2de60ed641ef8bbe0cfac9
-  Yoga: 966a20b9c82e88a1a5c530e6acc8033630f3bfe9
+  Yoga: baf2d98db486f4bf41682b25dfca69ebaa5826e3
 
 PODFILE CHECKSUM: bc6f61f87c0dc3e6c1b90a39188b38c3dcd174b0
 

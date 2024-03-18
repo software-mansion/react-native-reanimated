@@ -17,6 +17,11 @@ import {
   ColorSpace,
   Extrapolation,
   SharedTransitionType,
+  withReanimatedTimer,
+  advanceAnimationByTime,
+  advanceAnimationByFrame,
+  setUpTests,
+  getAnimatedStyle,
 } from './reanimated2';
 import {
   View as ViewRN,
@@ -150,7 +155,7 @@ const platformFunctions = {
     pageY: 0,
   }),
   // dispatchCommand: ADD ME IF NEEDED
-  // scrollTo: ADD ME IF NEEDED
+  scrollTo: NOOP,
   // setGestureState: ADD ME IF NEEDED
   // setNativeProps: ADD ME IF NEEDED
   // getRelativeCoords: ADD ME IF NEEDED
@@ -391,7 +396,13 @@ const pluginUtils = {
   // getUseOfValueInStyleWarning: ADD ME IF NEEDED
 };
 
-// const jestUtils = ADD ME IF NEEDED
+const jestUtils = {
+  withReanimatedTimer,
+  advanceAnimationByTime,
+  advanceAnimationByFrame,
+  setUpTests,
+  getAnimatedStyle,
+};
 
 const LayoutAnimationConfig = {
   // LayoutAnimationConfig: ADD ME IF NEEDED
@@ -431,6 +442,7 @@ const Reanimated = {
   ...isSharedValue,
   ...commonTypes,
   ...pluginUtils,
+  ...jestUtils,
   ...LayoutAnimationConfig,
   ...mappers,
 };

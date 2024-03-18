@@ -2,6 +2,7 @@ package com.swmansion.reanimated;
 
 import static java.lang.Float.NaN;
 
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.GuardedRunnable;
@@ -18,6 +19,7 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.modules.core.ReactChoreographer;
 import com.facebook.react.uimanager.GuardedFrameCallback;
 import com.facebook.react.uimanager.IllegalViewOperationException;
+import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.ReactShadowNode;
 import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.UIImplementation;
@@ -26,6 +28,7 @@ import com.facebook.react.uimanager.UIManagerReanimatedHelper;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.facebook.react.views.view.ReactViewBackgroundDrawable;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
 import java.util.ArrayList;
@@ -109,13 +112,13 @@ public class NodesManager implements EventDispatcherListener {
     return mAnimationManager;
   }
 
-  public void onCatalystInstanceDestroy() {
+  public void invalidate() {
     if (mAnimationManager != null) {
-      mAnimationManager.onCatalystInstanceDestroy();
+      mAnimationManager.invalidate();
     }
 
     if (mNativeProxy != null) {
-      mNativeProxy.onCatalystInstanceDestroy();
+      mNativeProxy.invalidate();
       mNativeProxy = null;
     }
   }
@@ -390,17 +393,39 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public String obtainProp(int viewTag, String propName) {
-    View view = mUIManager.resolveView(viewTag);
-    String result =
-        "error: unknown propName " + propName + ", currently supported: opacity, zIndex";
-    if (propName.equals("opacity")) {
-      Float opacity = view.getAlpha();
-      result = Float.toString(opacity);
-    } else if (propName.equals("zIndex")) {
-      Float zIndex = view.getElevation();
-      result = Float.toString(zIndex);
+    View view;
+    try {
+      view = mUIManager.resolveView(viewTag);
+    } catch (Exception e) {
+      throw new IllegalStateException("[Reanimated] Unable to resolve view");
     }
-    return result;
+
+    switch (propName) {
+      case "opacity":
+        return Float.toString(view.getAlpha());
+      case "zIndex":
+        return Float.toString(view.getElevation());
+      case "width":
+        return Float.toString(PixelUtil.toDIPFromPixel(view.getWidth()));
+      case "height":
+        return Float.toString(PixelUtil.toDIPFromPixel(view.getHeight()));
+      case "top":
+        return Float.toString(PixelUtil.toDIPFromPixel(view.getTop()));
+      case "left":
+        return Float.toString(PixelUtil.toDIPFromPixel(view.getLeft()));
+      case "backgroundColor":
+        Drawable background = view.getBackground();
+        if (!(background instanceof ReactViewBackgroundDrawable)) {
+          return "unable to resolve background color";
+        }
+        int actualColor = ((ReactViewBackgroundDrawable) background).getColor();
+        return String.format("#%06x", (0xFFFFFF & actualColor));
+      default:
+        throw new IllegalArgumentException(
+            "[Reanimated] Attempted to get unsupported property"
+                + propName
+                + " with function `getViewProp`");
+    }
   }
 
   private static WritableMap copyReadableMap(ReadableMap map) {

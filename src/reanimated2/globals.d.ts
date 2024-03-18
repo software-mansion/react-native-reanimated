@@ -104,4 +104,9 @@ declare global {
   var ProgressTransitionRegister: ProgressTransitionRegister;
   var updateJSProps: (viewTag: number, props: Record<string, unknown>) => void;
   var RNScreensTurboModule: RNScreensTurboModuleType | undefined;
+  var _obtainPropPaper: (viewTag: number, propName: string) => string;
+  var _obtainPropFabric: (
+    shadowNodeWrapper: ShadowNodeWrapper,
+    propName: string
+  ) => string;
 }
