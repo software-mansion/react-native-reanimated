@@ -30,28 +30,17 @@ export interface ViewInfo {
 }
 
 export interface IInlinePropManager {
-  attachInlineProps(
-    animatedComponent: React.Component<unknown, unknown>,
-    viewInfo: ViewInfo
-  ): void;
+  attachInlineProps(viewInfo: ViewInfo): void;
   detachInlineProps(): void;
 }
 
 export interface IPropsFilter {
-  filterNonAnimatedProps: (
-    component: React.Component<unknown, unknown> & IAnimatedComponentInternal
-  ) => Record<string, unknown>;
+  filterNonAnimatedProps: () => Record<string, unknown>;
 }
 
 export interface IJSPropsUpdater {
-  addOnJSPropsChangeListener(
-    animatedComponent: React.Component<unknown, unknown> &
-      IAnimatedComponentInternal
-  ): void;
-  removeOnJSPropsChangeListener(
-    animatedComponent: React.Component<unknown, unknown> &
-      IAnimatedComponentInternal
-  ): void;
+  addOnJSPropsChangeListener(): void;
+  removeOnJSPropsChangeListener(): void;
 }
 
 export type LayoutAnimationStaticContext = {
@@ -101,12 +90,17 @@ export interface IAnimatedComponentInternal {
   jestAnimatedStyle: { value: StyleProps };
   _component: AnimatedComponentRef | HTMLElement | null;
   _sharedElementTransition: SharedTransition | null;
-  _jsPropsUpdater: IJSPropsUpdater;
+  _JSPropsUpdater: IJSPropsUpdater;
   _InlinePropManager: IInlinePropManager;
   _PropsFilter: IPropsFilter;
   _viewInfo?: ViewInfo;
   context: React.ContextType<typeof SkipEnteringContext>;
 }
+
+export type AnimatedComponent = React.Component<
+  AnimatedComponentProps<InitialComponentProps>
+> &
+  IAnimatedComponentInternal;
 
 export type NestedArray<T> = T | NestedArray<T>[];
 

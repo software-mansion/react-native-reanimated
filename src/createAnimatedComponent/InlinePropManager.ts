@@ -1,7 +1,7 @@
 'use strict';
 import type { StyleProps } from '../reanimated2';
 import type {
-  IAnimatedComponentInternal,
+  AnimatedComponent,
   AnimatedComponentProps,
   IInlinePropManager,
   ViewInfo,
@@ -132,14 +132,15 @@ export class InlinePropManager implements IInlinePropManager {
   _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
   _inlinePropsMapperId: number | null = null;
   _inlineProps: StyleProps = {};
+  private _animatedComponent: AnimatedComponent;
 
-  public attachInlineProps(
-    animatedComponent: React.Component<unknown, unknown> &
-      IAnimatedComponentInternal,
-    viewInfo: ViewInfo
-  ) {
+  constructor(animatedComponent: AnimatedComponent) {
+    this._animatedComponent = animatedComponent;
+  }
+
+  public attachInlineProps(viewInfo: ViewInfo) {
     const newInlineProps: Record<string, unknown> =
-      extractSharedValuesMapFromProps(animatedComponent.props);
+      extractSharedValuesMapFromProps(this._animatedComponent.props);
     const hasChanged = inlinePropsHasChanged(newInlineProps, this._inlineProps);
 
     if (hasChanged) {
@@ -162,7 +163,7 @@ export class InlinePropManager implements IInlinePropManager {
         this._inlinePropsViewDescriptors.shareableViewDescriptors;
 
       const maybeViewRef = SHOULD_BE_USE_WEB
-        ? ({ items: new Set([animatedComponent]) } as ViewRefSet<unknown>) // see makeViewsRefSet
+        ? ({ items: new Set([this._animatedComponent]) } as ViewRefSet<unknown>) // see makeViewsRefSet
         : undefined;
       const updaterFunction = () => {
         'worklet';

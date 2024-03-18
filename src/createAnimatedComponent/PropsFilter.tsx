@@ -9,8 +9,8 @@ import type {
   AnimatedComponentProps,
   AnimatedProps,
   InitialComponentProps,
-  IAnimatedComponentInternal,
   IPropsFilter,
+  AnimatedComponent,
 } from './commonTypes';
 import { flattenArray, has } from './utils';
 import { StyleSheet } from 'react-native';
@@ -22,12 +22,15 @@ function dummyListener() {
 
 export class PropsFilter implements IPropsFilter {
   private _initialStyle = {};
+  private _component: AnimatedComponent;
 
-  public filterNonAnimatedProps(
-    component: React.Component<unknown, unknown> & IAnimatedComponentInternal
-  ): Record<string, unknown> {
-    const inputProps =
-      component.props as AnimatedComponentProps<InitialComponentProps>;
+  constructor(component: AnimatedComponent) {
+    this._component = component;
+  }
+
+  public filterNonAnimatedProps(): Record<string, unknown> {
+    const inputProps = this._component
+      .props as AnimatedComponentProps<InitialComponentProps>;
     const props: Record<string, unknown> = {};
     for (const key in inputProps) {
       const value = inputProps[key];
@@ -37,8 +40,8 @@ export class PropsFilter implements IPropsFilter {
         const processedStyle: StyleProps = styles.map((style) => {
           if (style && style.viewDescriptors) {
             // this is how we recognize styles returned by useAnimatedStyle
-            style.viewsRef?.add(component);
-            if (component._isFirstRender) {
+            style.viewsRef?.add(this._component);
+            if (this._component._isFirstRender) {
               this._initialStyle = {
                 ...style.initial.value,
                 ...this._initialStyle,
@@ -47,7 +50,7 @@ export class PropsFilter implements IPropsFilter {
             }
             return this._initialStyle;
           } else if (hasInlineStyles(style)) {
-            return getInlineStyle(style, component._isFirstRender);
+            return getInlineStyle(style, this._component._isFirstRender);
           } else {
             return style;
           }
@@ -61,7 +64,7 @@ export class PropsFilter implements IPropsFilter {
           Object.keys(animatedProp.initial.value).forEach((initialValueKey) => {
             props[initialValueKey] =
               animatedProp.initial?.value[initialValueKey];
-            animatedProp.viewsRef?.add(component);
+            animatedProp.viewsRef?.add(this._component);
           });
         }
       } else if (
@@ -80,7 +83,7 @@ export class PropsFilter implements IPropsFilter {
           props[key] = dummyListener;
         }
       } else if (isSharedValue(value)) {
-        if (component._isFirstRender) {
+        if (this._component._isFirstRender) {
           props[key] = value.value;
         }
       } else if (key !== 'onGestureHandlerStateChange' || !isChromeDebugger()) {

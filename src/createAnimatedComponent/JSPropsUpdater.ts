@@ -4,12 +4,7 @@ import type { NativeModule } from 'react-native';
 import { shouldBeUseWeb } from '../reanimated2/PlatformChecker';
 import type { StyleProps } from '../reanimated2';
 import { runOnJS, runOnUIImmediately } from '../reanimated2/threads';
-import type {
-  AnimatedComponentProps,
-  IAnimatedComponentInternal,
-  IJSPropsUpdater,
-  InitialComponentProps,
-} from './commonTypes';
+import type { AnimatedComponent, IJSPropsUpdater } from './commonTypes';
 import NativeReanimatedModule from '../specs/NativeReanimatedModule';
 
 interface ListenerData {
@@ -22,24 +17,24 @@ const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 class JSPropsUpdaterPaper implements IJSPropsUpdater {
   private static _tagToComponentMapping = new Map();
   private _reanimatedEventEmitter: NativeEventEmitter;
+  private _animatedComponent: AnimatedComponent;
 
-  constructor() {
+  constructor(animatedComponent: AnimatedComponent) {
     this._reanimatedEventEmitter = new NativeEventEmitter(
       // NativeEventEmitter only uses this parameter on iOS.
       Platform.OS === 'ios'
         ? (NativeReanimatedModule as unknown as NativeModule)
         : undefined
     );
+    this._animatedComponent = animatedComponent;
   }
 
-  public addOnJSPropsChangeListener(
-    animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
-  ) {
-    const viewTag = findNodeHandle(animatedComponent);
-    JSPropsUpdaterPaper._tagToComponentMapping.set(viewTag, animatedComponent);
+  public addOnJSPropsChangeListener() {
+    const viewTag = findNodeHandle(this._animatedComponent);
+    JSPropsUpdaterPaper._tagToComponentMapping.set(
+      viewTag,
+      this._animatedComponent
+    );
     if (JSPropsUpdaterPaper._tagToComponentMapping.size === 1) {
       const listener = (data: ListenerData) => {
         const component = JSPropsUpdaterPaper._tagToComponentMapping.get(
@@ -54,13 +49,8 @@ class JSPropsUpdaterPaper implements IJSPropsUpdater {
     }
   }
 
-  public removeOnJSPropsChangeListener(
-    animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
-  ) {
-    const viewTag = findNodeHandle(animatedComponent);
+  public removeOnJSPropsChangeListener() {
+    const viewTag = findNodeHandle(this._animatedComponent);
     JSPropsUpdaterPaper._tagToComponentMapping.delete(viewTag);
     if (JSPropsUpdaterPaper._tagToComponentMapping.size === 0) {
       this._reanimatedEventEmitter.removeAllListeners(
@@ -73,13 +63,14 @@ class JSPropsUpdaterPaper implements IJSPropsUpdater {
 class JSPropsUpdaterFabric implements IJSPropsUpdater {
   private static _tagToComponentMapping = new Map();
   private static isInitialized = false;
+  private _component: AnimatedComponent;
 
-  constructor() {
+  constructor(component: AnimatedComponent) {
     if (!JSPropsUpdaterFabric.isInitialized) {
       const updater = (viewTag: number, props: unknown) => {
-        const component =
+        const componentToUpdate =
           JSPropsUpdaterFabric._tagToComponentMapping.get(viewTag);
-        component?._updateFromNative(props);
+        componentToUpdate?._updateFromNative(props);
       };
       runOnUIImmediately(() => {
         'worklet';
@@ -89,51 +80,32 @@ class JSPropsUpdaterFabric implements IJSPropsUpdater {
       })();
       JSPropsUpdaterFabric.isInitialized = true;
     }
+    this._component = component;
   }
 
-  public addOnJSPropsChangeListener(
-    animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
-  ) {
+  public addOnJSPropsChangeListener() {
     if (!JSPropsUpdaterFabric.isInitialized) {
       return;
     }
-    const viewTag = findNodeHandle(animatedComponent);
-    JSPropsUpdaterFabric._tagToComponentMapping.set(viewTag, animatedComponent);
+    const viewTag = findNodeHandle(this._component);
+    JSPropsUpdaterFabric._tagToComponentMapping.set(viewTag, this._component);
   }
 
-  public removeOnJSPropsChangeListener(
-    animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
-  ) {
+  public removeOnJSPropsChangeListener() {
     if (!JSPropsUpdaterFabric.isInitialized) {
       return;
     }
-    const viewTag = findNodeHandle(animatedComponent);
+    const viewTag = findNodeHandle(this._component);
     JSPropsUpdaterFabric._tagToComponentMapping.delete(viewTag);
   }
 }
 
 class JSPropsUpdaterWeb implements IJSPropsUpdater {
-  public addOnJSPropsChangeListener(
-    _animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
-  ) {
+  public addOnJSPropsChangeListener() {
     // noop
   }
 
-  public removeOnJSPropsChangeListener(
-    _animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
-  ) {
+  public removeOnJSPropsChangeListener() {
     // noop
   }
 }

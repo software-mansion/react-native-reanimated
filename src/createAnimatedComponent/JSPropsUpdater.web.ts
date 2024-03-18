@@ -1,26 +1,12 @@
 'use strict';
-import type {
-  AnimatedComponentProps,
-  IAnimatedComponentInternal,
-  InitialComponentProps,
-} from './commonTypes';
+import type { IJSPropsUpdater } from './commonTypes';
 
-export default class JSPropsUpdaterWeb {
-  public addOnJSPropsChangeListener(
-    _animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
-  ) {
+export default class JSPropsUpdaterWeb implements IJSPropsUpdater {
+  public addOnJSPropsChangeListener() {
     // noop
   }
 
-  public removeOnJSPropsChangeListener(
-    _animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
-  ) {
+  public removeOnJSPropsChangeListener() {
     // noop
   }
 }

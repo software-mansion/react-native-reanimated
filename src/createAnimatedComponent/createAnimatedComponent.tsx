@@ -33,6 +33,9 @@ import type {
   AnimatedComponentRef,
   IAnimatedComponentInternal,
   ViewInfo,
+  IInlinePropManager,
+  IJSPropsUpdater,
+  IPropsFilter,
 } from './commonTypes';
 import { has, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
@@ -126,9 +129,9 @@ export function createAnimatedComponent(
     jestAnimatedStyle: { value: StyleProps } = { value: {} };
     _component: AnimatedComponentRef | HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
-    _jsPropsUpdater = new JSPropsUpdater();
-    _InlinePropManager = new InlinePropManager();
-    _PropsFilter = new PropsFilter();
+    _JSPropsUpdater: IJSPropsUpdater;
+    _InlinePropManager: IInlinePropManager;
+    _PropsFilter: IPropsFilter;
     _viewInfo?: ViewInfo;
     static displayName: string;
     static contextType = SkipEnteringContext;
@@ -139,13 +142,16 @@ export function createAnimatedComponent(
       if (isJest()) {
         this.jestAnimatedStyle = { value: {} };
       }
+      this._InlinePropManager = new InlinePropManager(this);
+      this._JSPropsUpdater = new JSPropsUpdater(this);
+      this._PropsFilter = new PropsFilter(this);
     }
 
     componentDidMount() {
       this._attachNativeEvents();
-      this._jsPropsUpdater.addOnJSPropsChangeListener(this);
+      this._JSPropsUpdater.addOnJSPropsChangeListener();
       this._attachAnimatedStyles();
-      this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+      this._InlinePropManager.attachInlineProps(this._getViewInfo());
 
       const layout = this.props.layout;
       if (layout) {
@@ -177,7 +183,7 @@ export function createAnimatedComponent(
 
     componentWillUnmount() {
       this._detachNativeEvents();
-      this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
+      this._JSPropsUpdater.removeOnJSPropsChangeListener();
       this._detachStyles();
       this._InlinePropManager.detachInlineProps();
       if (this.props.sharedTransitionTag) {
@@ -466,7 +472,7 @@ export function createAnimatedComponent(
       }
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
-      this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+      this._InlinePropManager.attachInlineProps(this._getViewInfo());
 
       if (IS_WEB && this.props.exiting) {
         saveSnapshot(this._component as HTMLElement);
@@ -585,7 +591,7 @@ export function createAnimatedComponent(
     }
 
     render() {
-      const filteredProps = this._PropsFilter.filterNonAnimatedProps(this);
+      const filteredProps = this._PropsFilter.filterNonAnimatedProps();
 
       if (isJest()) {
         filteredProps.jestAnimatedStyle = this.jestAnimatedStyle;
