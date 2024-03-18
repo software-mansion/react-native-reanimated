@@ -15,8 +15,8 @@ const SelectedLabel: React.FC<{
   isInteractive: boolean;
 }> = ({ children, isInteractive = false }) => {
   // DOM refs
-  const selectionRef = useRef(null);
-  const selectionContainerRef = useRef(null);
+  const selectionRef = useRef<HTMLSpanElement | null>(null);
+  const selectionContainerRef = useRef<HTMLDivElement | null>(null);
   const textLabelRef = useRef<HTMLSpanElement | null>(null);
 
   // Render-persistent label positioning styles
