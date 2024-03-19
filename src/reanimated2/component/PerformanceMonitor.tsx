@@ -1,12 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { Text, TextInput, StyleSheet } from 'react-native';
+import { Text, TextInput, StyleSheet, View } from 'react-native';
 
-import type { SharedValue } from '../commonTypes';
 import type { FrameInfo } from '../frameCallback';
+import type { SharedValue } from '../commonTypes';
 import { useSharedValue, useAnimatedProps, useFrameCallback } from '../hook';
 import { createAnimatedComponent } from '../../createAnimatedComponent';
 import { addWhitelistedNativeProps } from '../../ConfigHelper';
-import { View } from '../../Animated';
 
 type CircularBuffer = ReturnType<typeof createCircularDoublesBuffer>;
 function createCircularDoublesBuffer(size: number) {
