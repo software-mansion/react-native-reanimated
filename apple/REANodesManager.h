@@ -3,7 +3,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <React/RCTSurfacePresenterStub.h>
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 #import <RNReanimated/READisplayLink.h>
 
@@ -33,7 +33,7 @@ typedef void (^REAPerformOperations)();
                       surfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter;
 #else
 - (instancetype)initWithModule:(REAModule *)reanimatedModule uiManager:(RCTUIManager *)uiManager;
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 - (void)invalidate;
 - (void)operationsBatchDidComplete;
 
@@ -57,7 +57,7 @@ typedef void (^REAPerformOperations)();
                             nativeProps:(NSMutableDictionary *)nativeProps
                        trySynchronously:(BOOL)trySync;
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName;
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 - (void)maybeFlushUIUpdatesQueue;
 
 @end

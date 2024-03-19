@@ -23,6 +23,7 @@ import BubblesExample from './BubblesExample';
 import CardExample from './SharedElementTransitions/Card';
 import Carousel from './LayoutAnimations/Carousel';
 import ChangeThemeExample from './LayoutAnimations/ChangeTheme';
+import ChangeThemeSharedExample from './SharedElementTransitions/ChangeTheme';
 import ChatHeadsExample from './ChatHeadsExample';
 import ChessExample from './ChessExample';
 import ChessboardExample from './ChessboardExample';
@@ -68,6 +69,7 @@ import ModifyExample from './ModifyExample';
 import MountingUnmounting from './LayoutAnimations/MountingUnmounting';
 import NativeModals from './LayoutAnimations/NativeModals';
 import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksWithLayout';
+import NestedRotationExample from './SharedElementTransitions/NestedRotation';
 import NestedStacksExample from './SharedElementTransitions/NestedStacks';
 import NestedTest from './LayoutAnimations/Nested';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
@@ -117,7 +119,9 @@ import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimatio
 import DynamicStylesExample from './DynamicStylesExample';
 import WithClampExample from './WithClampExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
+import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
 import HabitsExample from './LayoutAnimations/HabitsExample';
+import MemoExample from './MemoExample';
 
 interface Example {
   icon?: string;
@@ -132,6 +136,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
+  },
+  RuntimeTests: {
+    icon: '⚙️',
+    title: 'RuntimeTestsExample',
+    screen: RuntimeTestsExample,
   },
   WorkletRuntimeExample: {
     icon: '🏃‍♂️',
@@ -152,6 +161,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🟨',
     title: 'JS props',
     screen: JSPropsExample,
+  },
+  MemoExample: {
+    icon: '🧠',
+    title: 'Memo',
+    screen: MemoExample,
   },
 
   // About
@@ -691,5 +705,13 @@ export const EXAMPLES: Record<string, Example> = {
   TransitionRestartExample: {
     title: '[SET] Transition Restart',
     screen: TransitionRestartExample,
+  },
+  ChangeThemeSharedExample: {
+    title: '[SET] Change theme',
+    screen: ChangeThemeSharedExample,
+  },
+  NestedRotationSharedExample: {
+    title: '[SET] Nested Transforms',
+    screen: NestedRotationExample,
   },
 } as const;

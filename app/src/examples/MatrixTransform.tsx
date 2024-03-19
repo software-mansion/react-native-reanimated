@@ -3,8 +3,18 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import { SafeAreaView, Button, View, StyleSheet, Platform } from 'react-native';
+import {
+  SafeAreaView,
+  View,
+  StyleSheet,
+  Platform,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 import React, { useRef } from 'react';
+
+const NAVY = '#001A72';
+const LIGHT_NAVY = '#C1C6E5';
 
 const TRANSFORM_MATRICES = [
   [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2],
@@ -46,21 +56,38 @@ export default function MatrixTransform() {
   }, [matrix, matrix2, currentTransformIndex]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Button onPress={handlePress} title="GO GO matrix" />
-      <Animated.View style={[styles.bigBox, styles.blue, matrixTransforms]}>
-        <Animated.View style={[styles.smallBox, styles.lime]} />
-      </Animated.View>
-      <View style={styles.spacer} />
-      <Animated.View style={[styles.bigBox, styles.orange, matrixTransforms2]}>
-        <Animated.View style={[styles.smallBox, styles.red]} />
-      </Animated.View>
+    <SafeAreaView style={styles.flexOne}>
+      <TouchableOpacity onPress={handlePress} style={styles.button}>
+        <Text style={styles.buttonText}>Animate transform matrix</Text>
+      </TouchableOpacity>
+      <View style={styles.flexOne}>
+        <View style={styles.textContainer}>
+          <Text style={styles.text}>
+            Extract all transforms (rotation, scale and translation) and animate
+            separately (the default behavior)
+          </Text>
+        </View>
+        <Animated.View style={[styles.bigBox, styles.blue, matrixTransforms]}>
+          <Animated.View style={[styles.smallBox, styles.lime]} />
+        </Animated.View>
+      </View>
+      <View style={styles.flexOne}>
+        <View style={styles.textContainer}>
+          <Text style={styles.text}>
+            Apply linear animation to each value of matrix
+          </Text>
+        </View>
+        <Animated.View
+          style={[styles.bigBox, styles.orange, matrixTransforms2]}>
+          <Animated.View style={[styles.smallBox, styles.red]} />
+        </Animated.View>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  flexOne: {
     flex: 1,
   },
   bigBox: {
@@ -71,8 +98,27 @@ const styles = StyleSheet.create({
     borderRadius: Platform.select({ ios: 10, android: 0 }),
     marginLeft: 100,
   },
-  spacer: {
-    height: 100,
+  textContainer: {
+    width: '100%',
+    borderTopWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: NAVY,
+    backgroundColor: LIGHT_NAVY,
+  },
+  text: {
+    fontSize: 15,
+    color: NAVY,
+    margin: 10,
+  },
+  button: {
+    height: 40,
+    backgroundColor: NAVY,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontSize: 20,
+    color: 'white',
   },
   smallBox: {
     width: 40,
