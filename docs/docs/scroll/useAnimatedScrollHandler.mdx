@@ -36,7 +36,7 @@ Optional array of values which changes cause this hook to receive updated values
 
 Example:
 
-````js {11}
+```js {11}
 const App = () => {
   const [state, setState] = useState(0);
   const sv = useSharedValue(0);
@@ -105,7 +105,7 @@ function ScrollExample() {
     </View>
   );
 }
-````
+```
 
 If we are interested in receiving drag or momentum events instead of passing a single worklet object we can pass an object of worklets.
 Below for convenience, we only show how the `scrollHandler` should be defined in such a case.
