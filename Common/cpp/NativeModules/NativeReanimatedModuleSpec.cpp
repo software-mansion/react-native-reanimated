@@ -14,7 +14,8 @@ static jsi::Value SPEC_PREFIX(makeShareableClone)(
     const jsi::Value *args,
     size_t) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->makeShareableClone(rt, std::move(args[0]), std::move(args[1]));
+      ->makeShareableClone(
+          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
 }
 
 // scheduler
