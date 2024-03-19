@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { Text, TextInput, StyleSheet } from 'react-native';
 
-import { SharedValue } from '../commonTypes';
-import { FrameInfo } from '../frameCallback';
+import type { SharedValue } from '../commonTypes';
+import type { FrameInfo } from '../frameCallback';
 import { useSharedValue, useAnimatedProps, useFrameCallback } from '../hook';
 import { createAnimatedComponent } from '../../createAnimatedComponent';
 import { addWhitelistedNativeProps } from '../../ConfigHelper';
@@ -15,7 +15,7 @@ function createCircularDoublesBuffer(size: number) {
   return {
     next: 0 as number,
     buffer: new Float32Array(size),
-    size: size,
+    size,
     count: 0 as number,
 
     push(value: number): number | null {
@@ -114,7 +114,7 @@ function JsPerformance() {
 
       jsFps.value = currentFps;
     });
-  }, []);
+  });
 
   const animatedProps = useAnimatedProps(() => {
     const text = jsFps.value ?? 'N/A';
