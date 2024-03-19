@@ -3,11 +3,12 @@ import { Text, TextInput, StyleSheet, View } from 'react-native';
 import React, { useEffect, useRef } from 'react';
 
 import Animated, {
+  FrameInfo,
   SharedValue,
   useAnimatedProps,
   useFrameCallback,
   useSharedValue,
-} from '../../..';
+} from '../../../src';
 
 type CircularBuffer = ReturnType<typeof createCircularDoublesBuffer>;
 function createCircularDoublesBuffer(size: number) {
@@ -43,20 +44,10 @@ function createCircularDoublesBuffer(size: number) {
       const notEmpty = this.count > 0;
       return notEmpty ? this.buffer[this.next] : null;
     },
-
-    reduce<T>(fn: (acc: T, value: number) => T, initial: T) {
-      let i = 0;
-      let acc = initial;
-      while (i < this.count) {
-        const offset = (this.next + i) % this.size;
-        acc = fn(acc, this.buffer[offset]);
-        ++i;
-      }
-      return acc;
-    },
   };
 }
 
+const DEFAULT_BUFFER_SIZE = 60;
 Animated.addWhitelistedNativeProps({ text: true });
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -78,7 +69,7 @@ function loopAnimationFrame(fn: (lastTime: number, time: number) => void) {
 
 function getFps(renderTimeInMs: number): string {
   'worklet';
-  return ((1 / renderTimeInMs) * 1000).toFixed(1).toString();
+  return (1000 / renderTimeInMs).toFixed(1);
 }
 
 function getTimeDelta(
@@ -112,7 +103,7 @@ function completeBufferRoutine(
 function JsPerformance() {
   const jsFps = useSharedValue<string | null>(null);
   const totalRenderTime = useSharedValue(0);
-  const circularBuffer = createCircularDoublesBuffer(100);
+  const circularBuffer = createCircularDoublesBuffer(DEFAULT_BUFFER_SIZE);
 
   useEffect(() => {
     loopAnimationFrame((lastTime, time) => {
@@ -149,9 +140,9 @@ function UiPerformance() {
   const totalRenderTime = useSharedValue(0);
   const circularBuffer = useRef<CircularBuffer | null>(null);
 
-  useFrameCallback(({ timestamp }) => {
+  useFrameCallback(({ timestamp }: FrameInfo) => {
     if (circularBuffer.current === null) {
-      circularBuffer.current = createCircularDoublesBuffer(100);
+      circularBuffer.current = createCircularDoublesBuffer(DEFAULT_BUFFER_SIZE);
     }
     const previousTimestamp = circularBuffer.current.front() ?? timestamp;
     const currentFps = completeBufferRoutine(
