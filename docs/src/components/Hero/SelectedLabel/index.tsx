@@ -15,9 +15,9 @@ const SelectedLabel: React.FC<{
   isInteractive: boolean;
 }> = ({ children, isInteractive = false }) => {
   // DOM refs
-  const selectionRef = useRef(null);
-  const selectionContainerRef = useRef(null);
-  const textLabelRef = useRef(null);
+  const selectionRef = useRef<HTMLSpanElement | null>(null);
+  const selectionContainerRef = useRef<HTMLDivElement | null>(null);
+  const textLabelRef = useRef<HTMLSpanElement | null>(null);
 
   // Render-persistent label positioning styles
   const dynamicStyles = useRef<DynamicStyles>({
@@ -30,7 +30,6 @@ const SelectedLabel: React.FC<{
   const staticStyles = useRef<StaticStyles>({
     initialWidth: null,
     initialHeight: null,
-    enabledTextInteractivity: false,
   });
 
   const applyDynamicStyles = (newDynamicStyles: DynamicStyles) => {
@@ -59,7 +58,6 @@ const SelectedLabel: React.FC<{
     staticStyles.current = {
       initialWidth: rect.width,
       initialHeight: rect.height,
-      enabledTextInteractivity: true,
     };
 
     applyDynamicStyles({
@@ -68,6 +66,8 @@ const SelectedLabel: React.FC<{
       width: rect.width,
       height: rect.height,
     });
+
+    textLabelRef.current.className = clsx(styles.interactiveHeaderText);
   }, [isInteractive]);
 
   const movementPropagator = (
@@ -87,13 +87,6 @@ const SelectedLabel: React.FC<{
       computeTextStyles(dynamicStyles.current, staticStyles.current)
     );
   };
-
-  const classList = clsx(
-    isInteractive ? styles.preEnabledTextInteractivity : null,
-    staticStyles.current.enabledTextInteractivity
-      ? styles.interactiveHeaderText
-      : styles.headerText
-  );
 
   return (
     <span ref={selectionRef} className={styles.selection}>
@@ -118,7 +111,7 @@ const SelectedLabel: React.FC<{
           propagationFunction={movementPropagator}
           draggableIdentifier={DraggableId.CENTER}
           isInteractive={isInteractive}>
-          <span ref={textLabelRef} className={classList}>
+          <span ref={textLabelRef} className={styles.headerText}>
             {children}
           </span>
         </SelectionBox>
