@@ -12,7 +12,10 @@
 #endif
 
 #include <functional>
+#include <iomanip>
 #include <memory>
+#include <sstream>
+#include <string>
 #include <thread>
 #include <unordered_map>
 
@@ -112,6 +115,13 @@ NativeReanimatedModule::NativeReanimatedModule(
                              const jsi::Value &argsValue) {
     this->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
   };
+
+  auto obtainProp = [this](
+                        jsi::Runtime &rt,
+                        const jsi::Value &shadowNodeWrapper,
+                        const jsi::Value &propName) {
+    return this->obtainProp(rt, shadowNodeWrapper, propName);
+  };
 #endif
 
   jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
@@ -119,11 +129,13 @@ NativeReanimatedModule::NativeReanimatedModule(
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
       removeFromPropsRegistry,
+      obtainProp,
       updateProps,
       measure,
       dispatchCommand,
 #else
       platformDepMethodsHolder.scrollToFunction,
+      platformDepMethodsHolder.obtainPropFunction,
       platformDepMethodsHolder.updatePropsFunction,
       platformDepMethodsHolder.measureFunction,
       platformDepMethodsHolder.dispatchCommandFunction,
@@ -232,23 +244,95 @@ void NativeReanimatedModule::unregisterEventHandler(
       [=] { eventHandlerRegistry_->unregisterEventHandler(id); });
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
+static inline std::string intColorToHex(const int val) {
+  std::stringstream ss;
+  ss << '#' << std::setfill('0') << std::setw(6) << std::hex << (val);
+  return ss.str();
+}
+
+std::string NativeReanimatedModule::obtainPropFromShadowNode(
+    jsi::Runtime &rt,
+    const std::string &propName,
+    const ShadowNode::Shared &shadowNode) {
+  auto newestCloneOfShadowNode =
+      uiManager_->getNewestCloneOfShadowNode(*shadowNode);
+
+  if (propName == "width" || propName == "height" || propName == "top" ||
+      propName == "left") {
+    // These props are calculated from frame
+    auto layoutableShadowNode =
+        traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
+    const auto &frame = layoutableShadowNode->layoutMetrics_.frame;
+
+    if (propName == "width") {
+      return std::to_string(frame.size.width);
+    } else if (propName == "height") {
+      return std::to_string(frame.size.height);
+    } else if (propName == "top") {
+      return std::to_string(frame.origin.y);
+    } else if (propName == "left") {
+      return std::to_string(frame.origin.x);
+    }
+  } else {
+    // These props are calculated from viewProps
+    auto props = newestCloneOfShadowNode->getProps();
+    auto viewProps = std::static_pointer_cast<const ViewProps>(props);
+    if (propName == "opacity") {
+      return std::to_string(viewProps->opacity);
+    } else if (propName == "zIndex") {
+      if (viewProps->zIndex.has_value()) {
+        return std::to_string(*viewProps->zIndex);
+      }
+    } else if (propName == "backgroundColor") {
+      return intColorToHex(*viewProps->backgroundColor);
+    }
+  }
+
+  throw std::runtime_error(std::string(
+      "Getting property `" + propName +
+      "` with function `getViewProp` is not supported"));
+}
+
+jsi::Value NativeReanimatedModule::getViewProp(
+    jsi::Runtime &rnRuntime,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &propName,
+    const jsi::Value &callback) {
+  const auto propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
+  const auto funPtr = std::make_shared<jsi::Function>(
+      callback.getObject(rnRuntime).asFunction(rnRuntime));
+  const auto shadowNode = shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
+  uiScheduler_->scheduleOnUI([=]() {
+    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+    const auto resultStr =
+        obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
+
+    jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
+      const auto resultValue =
+          jsi::String::createFromUtf8(rnRuntime, resultStr);
+      funPtr->call(rnRuntime, resultValue);
+    });
+  });
+  return jsi::Value::undefined();
+}
+
+#else
+
 jsi::Value NativeReanimatedModule::getViewProp(
     jsi::Runtime &rnRuntime,
     const jsi::Value &viewTag,
     const jsi::Value &propName,
     const jsi::Value &callback) {
-#ifdef RCT_NEW_ARCH_ENABLED
-  throw std::runtime_error(
-      "[Reanimated] getViewProp is not implemented on Fabric yet");
-#else
-  const int viewTagInt = viewTag.asNumber();
   const auto propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
   const auto funPtr = std::make_shared<jsi::Function>(
       callback.getObject(rnRuntime).asFunction(rnRuntime));
 
+  const int viewTagInt = viewTag.asNumber();
+
   uiScheduler_->scheduleOnUI([=]() {
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
-    const auto propNameValue =
+    const jsi::Value propNameValue =
         jsi::String::createFromUtf8(uiRuntime, propNameStr);
     const auto resultValue =
         obtainPropFunction_(uiRuntime, viewTagInt, propNameValue);
@@ -260,10 +344,10 @@ jsi::Value NativeReanimatedModule::getViewProp(
       funPtr->call(rnRuntime, resultValue);
     });
   });
-
   return jsi::Value::undefined();
-#endif
 }
+
+#endif
 
 jsi::Value NativeReanimatedModule::enableLayoutAnimations(
     jsi::Runtime &,
@@ -295,23 +379,6 @@ jsi::Value NativeReanimatedModule::configureProps(
   return jsi::Value::undefined();
 }
 
-jsi::Value NativeReanimatedModule::configureLayoutAnimation(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTag,
-    const jsi::Value &type,
-    const jsi::Value &sharedTransitionTag,
-    const jsi::Value &config) {
-  layoutAnimationsManager_.configureAnimation(
-      viewTag.asNumber(),
-      static_cast<LayoutAnimationType>(type.asNumber()),
-      sharedTransitionTag.asString(rt).utf8(rt),
-      extractShareableOrThrow<ShareableObject>(
-          rt,
-          config,
-          "[Reanimated] Layout animation config must be an object."));
-  return jsi::Value::undefined();
-}
-
 jsi::Value NativeReanimatedModule::configureLayoutAnimationBatch(
     jsi::Runtime &rt,
     const jsi::Value &layoutAnimationsBatch) {
@@ -332,6 +399,16 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimationBatch(
           rt,
           config,
           "[Reanimated] Layout animation config must be an object.");
+    }
+    if (batch[i].type != SHARED_ELEMENT_TRANSITION &&
+        batch[i].type != SHARED_ELEMENT_TRANSITION_PROGRESS) {
+      continue;
+    }
+    auto sharedTransitionTag = item.getProperty(rt, "sharedTransitionTag");
+    if (sharedTransitionTag.isUndefined()) {
+      batch[i].config = nullptr;
+    } else {
+      batch[i].sharedTransitionTag = sharedTransitionTag.asString(rt).utf8(rt);
     }
   }
   layoutAnimationsManager_.configureAnimationBatch(batch);
@@ -463,10 +540,11 @@ bool NativeReanimatedModule::handleRawEvent(
     double currentTime) {
   const EventTarget *eventTarget = rawEvent.eventTarget.get();
   if (eventTarget == nullptr) {
-    // after app reload scrollview is unmounted and its content offset is set to
-    // 0 and view is thrown into recycle pool setting content offset triggers
-    // scroll event eventTarget is null though, because it's unmounting we can
-    // just ignore this event, because it's an event on unmounted component
+    // after app reload scrollview is unmounted and its content offset is set
+    // to 0 and view is thrown into recycle pool setting content offset
+    // triggers scroll event eventTarget is null though, because it's
+    // unmounting we can just ignore this event, because it's an event on
+    // unmounted component
     return false;
   }
 
@@ -487,8 +565,8 @@ bool NativeReanimatedModule::handleRawEvent(
   auto res = handleEvent(eventType, tag, std::move(payload), currentTime);
   // TODO: we should call performOperations conditionally if event is handled
   // (res == true), but for now handleEvent always returns false. Thankfully,
-  // performOperations does not trigger a lot of code if there is nothing to be
-  // done so this is fine for now.
+  // performOperations does not trigger a lot of code if there is nothing to
+  // be done so this is fine for now.
   performOperations();
   return res;
 }
@@ -533,8 +611,8 @@ void NativeReanimatedModule::performOperations() {
       tagsToRemove_.clear();
     }
 
-    // Even if only non-layout props are changed, we need to store the update in
-    // PropsRegistry anyway so that React doesn't overwrite it in the next
+    // Even if only non-layout props are changed, we need to store the update
+    // in PropsRegistry anyway so that React doesn't overwrite it in the next
     // render. Currently, only opacity and transform are treated in a special
     // way but backgroundColor, shadowOpacity etc. would get overwritten (see
     // `_propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN`).
@@ -580,9 +658,9 @@ void NativeReanimatedModule::performOperations() {
   if (propsRegistry_->shouldReanimatedSkipCommit()) {
     // It may happen that `performOperations` is called on the UI thread
     // while React Native tries to commit a new tree on the JS thread.
-    // In this case, we should skip the commit here and let React Native do it.
-    // The commit will include the current values from PropsRegistry
-    // which will be applied in ReanimatedCommitHook.
+    // In this case, we should skip the commit here and let React Native do
+    // it. The commit will include the current values from PropsRegistry which
+    // will be applied in ReanimatedCommitHook.
     return;
   }
 
@@ -605,9 +683,10 @@ void NativeReanimatedModule::performOperations() {
             react_native_assert(family.getSurfaceId() == surfaceId_);
 
 #if REACT_NATIVE_MINOR_VERSION >= 73
-            // Fix for catching nullptr returned from commit hook was introduced
-            // in 0.72.4 but we have only check for minor version of React
-            // Native so enable that optimization in React Native >= 0.73
+            // Fix for catching nullptr returned from commit hook was
+            // introduced in 0.72.4 but we have only check for minor version
+            // of React Native so enable that optimization in React Native >=
+            // 0.73
             if (propsRegistry_->shouldReanimatedSkipCommit()) {
               return nullptr;
             }
@@ -661,6 +740,18 @@ void NativeReanimatedModule::dispatchCommand(
   uiManager_->dispatchCommand(shadowNode, commandName, args);
 }
 
+jsi::String NativeReanimatedModule::obtainProp(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &propName) {
+  jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+  const auto propNameStr = propName.asString(rt).utf8(rt);
+  const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  const auto resultStr =
+      obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
+  return jsi::String::createFromUtf8(rt, resultStr);
+}
+
 jsi::Value NativeReanimatedModule::measure(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue) {
@@ -671,9 +762,9 @@ jsi::Value NativeReanimatedModule::measure(
       *shadowNode, nullptr, {/* .includeTransform = */ true});
 
   if (layoutMetrics == EmptyLayoutMetrics) {
-    // Originally, in this case React Native returns `{0, 0, 0, 0, 0, 0}`, most
-    // likely due to the type of measure callback function which accepts just an
-    // array of numbers (not null). In Reanimated, `measure` returns
+    // Originally, in this case React Native returns `{0, 0, 0, 0, 0, 0}`,
+    // most likely due to the type of measure callback function which accepts
+    // just an array of numbers (not null). In Reanimated, `measure` returns
     // `MeasuredDimensions | null`.
     return jsi::Value::null();
   }
