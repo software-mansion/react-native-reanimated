@@ -36,7 +36,7 @@ Optional array of values which changes cause this hook to receive updated values
 
 Example:
 
-```js {11}
+````js {11}
 const App = () => {
   const [state, setState] = useState(0);
   const sv = useSharedValue(0);
@@ -52,7 +52,7 @@ const App = () => {
   //...
   return <></>;
 };
-```
+```ś
 
 `dependencies` here may be:
 
@@ -65,6 +65,7 @@ const App = () => {
 The hook returns a handler object that can be hooked into a scrollable container.
 Note that in order for the handler to be properly triggered, you should use containers that are wrapped with `Animated` (e.g. `Animated.ScrollView` and not just `ScrollView`).
 The handler should be passed under `onScroll` parameter regardless of whether it is configured to receive only scroll or also momentum or drag events.
+Handlers are not supposed to be passed to multiple components, you need a separate handler for each scrollable container.
 
 ## Example
 
@@ -104,7 +105,7 @@ function ScrollExample() {
     </View>
   );
 }
-```
+````
 
 If we are interested in receiving drag or momentum events instead of passing a single worklet object we can pass an object of worklets.
 Below for convenience, we only show how the `scrollHandler` should be defined in such a case.
