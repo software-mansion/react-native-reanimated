@@ -34,6 +34,7 @@ function useScrollViewOffsetJS(
     // eslint-disable-next-line react-hooks/rules-of-hooks
     initialRef !== undefined ? initialRef : useSharedValue(0)
   );
+  const scrollRef = useRef<AnimatedScrollView | null>(null);
 
   const eventHandler = useCallback(() => {
     'worklet';
@@ -45,6 +46,12 @@ function useScrollViewOffsetJS(
   }, [animatedRef, animatedRef.current]);
 
   useEffect(() => {
+    // We need to make sure that listener for old animatedRef value is removed
+    if(scrollRef.current !== null) {
+      (scrollRef.current as unknown as HTMLElement).removeEventListener('scroll', eventHandler);
+    }
+    scrollRef.current = animatedRef.current;
+
     const element = animatedRef.current as unknown as HTMLElement;
     element.addEventListener('scroll', eventHandler);
     return () => {
