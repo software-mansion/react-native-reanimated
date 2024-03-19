@@ -1,3 +1,5 @@
+'use strict';
+
 import React, { useEffect, useRef } from 'react';
 import { Text, TextInput, StyleSheet, View } from 'react-native';
 
