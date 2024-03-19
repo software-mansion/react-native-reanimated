@@ -1,14 +1,12 @@
-import { Text, TextInput, StyleSheet, View } from 'react-native';
-
 import React, { useEffect, useRef } from 'react';
+import { Text, TextInput, StyleSheet } from 'react-native';
 
-import Animated, {
-  FrameInfo,
-  SharedValue,
-  useAnimatedProps,
-  useFrameCallback,
-  useSharedValue,
-} from '../../../src';
+import { SharedValue } from '../commonTypes';
+import { FrameInfo } from '../frameCallback';
+import { useSharedValue, useAnimatedProps, useFrameCallback } from '../hook';
+import { createAnimatedComponent } from '../../createAnimatedComponent';
+import { addWhitelistedNativeProps } from '../../ConfigHelper';
+import { View } from '../../Animated';
 
 type CircularBuffer = ReturnType<typeof createCircularDoublesBuffer>;
 function createCircularDoublesBuffer(size: number) {
@@ -48,8 +46,8 @@ function createCircularDoublesBuffer(size: number) {
 }
 
 const DEFAULT_BUFFER_SIZE = 60;
-Animated.addWhitelistedNativeProps({ text: true });
-const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+addWhitelistedNativeProps({ text: true });
+const AnimatedTextInput = createAnimatedComponent(TextInput);
 
 function loopAnimationFrame(fn: (lastTime: number, time: number) => void) {
   let lastTime = 0;
@@ -173,10 +171,10 @@ function UiPerformance() {
 
 export function PerformanceMonitor() {
   return (
-    <Animated.View style={[styles.monitor]}>
+    <View style={[styles.monitor]}>
       <JsPerformance />
       <UiPerformance />
-    </Animated.View>
+    </View>
   );
 }
 
