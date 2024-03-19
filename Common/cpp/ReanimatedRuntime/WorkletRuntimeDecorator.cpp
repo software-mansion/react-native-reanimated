@@ -84,9 +84,14 @@ void WorkletRuntimeDecorator::decorate(
       });
 
   jsi_utils::installJsiFunction(
-      rt, "_makeShareableClone", [](jsi::Runtime &rt, const jsi::Value &value) {
+      rt,
+      "_makeShareableClone",
+      [](jsi::Runtime &rt,
+         const jsi::Value &value,
+         const jsi::Value &nativeStateSource) {
         auto shouldRetainRemote = jsi::Value::undefined();
-        return reanimated::makeShareableClone(rt, value, shouldRetainRemote);
+        return reanimated::makeShareableClone(
+            rt, value, shouldRetainRemote, nativeStateSource);
       });
 
   jsi_utils::installJsiFunction(

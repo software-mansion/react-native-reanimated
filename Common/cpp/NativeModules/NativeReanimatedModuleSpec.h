@@ -27,7 +27,8 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   virtual jsi::Value makeShareableClone(
       jsi::Runtime &rt,
       const jsi::Value &value,
-      const jsi::Value &shouldRetainRemote) = 0;
+      const jsi::Value &shouldRetainRemote,
+      const jsi::Value &nativeStateSource) = 0;
 
   // Scheduling
   virtual void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) = 0;
