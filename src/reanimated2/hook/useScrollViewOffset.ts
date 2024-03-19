@@ -47,8 +47,11 @@ function useScrollViewOffsetJS(
 
   useEffect(() => {
     // We need to make sure that listener for old animatedRef value is removed
-    if(scrollRef.current !== null) {
-      (scrollRef.current as unknown as HTMLElement).removeEventListener('scroll', eventHandler);
+    if (scrollRef.current !== null) {
+      (scrollRef.current as unknown as HTMLElement).removeEventListener(
+        'scroll',
+        eventHandler
+      );
     }
     scrollRef.current = animatedRef.current;
 
