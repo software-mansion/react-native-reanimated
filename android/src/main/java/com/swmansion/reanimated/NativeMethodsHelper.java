@@ -1,5 +1,9 @@
 package com.swmansion.reanimated;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.HashMap;
 import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.util.Log;
@@ -36,6 +40,54 @@ public class NativeMethodsHelper {
     return result;
   }
 
+
+  private static final Map<Class<?>, Method> abortAnimationMethodCache = new HashMap<>();
+
+  private static void interruptScrollMomentum(View view, boolean isHorizontal) {
+      Class<?> viewClass = view.getClass();
+      Method abortAnimationMethod = abortAnimationMethodCache.get(viewClass);
+
+      if (abortAnimationMethod == null && !abortAnimationMethodCache.containsKey(viewClass)) {
+          try {
+              abortAnimationMethod = viewClass.getMethod("abortAnimation");
+              abortAnimationMethodCache.put(viewClass, abortAnimationMethod);
+          } catch (NoSuchMethodException e) {
+              abortAnimationMethodCache.put(viewClass, null); // Cache the fact that the method doesn't exist
+          }
+      }
+
+      if (abortAnimationMethod != null) {
+          try {
+              abortAnimationMethod.invoke(view);
+              return;  // Successfully called abortAnimation, so exit.
+          } catch (IllegalAccessException | InvocationTargetException e) {}
+      }
+
+      // Fallback
+      if (isHorizontal) {
+          ((ReactHorizontalScrollView) view).smoothScrollBy(0, 0);
+          return;
+      }
+      ((ReactScrollView) view).smoothScrollBy(0, 0);
+  }
+
+  private static void handleScroll(View view, int x, int y, boolean isHorizontal, boolean animated) {
+    if (!animated) {
+        interruptScrollMomentum(view, isHorizontal);
+        view.scrollTo(x, y);
+        return;
+    }
+
+    if (isHorizontal) {
+        ((ReactHorizontalScrollView) view).smoothScrollTo(x, y);
+        return;
+    }
+
+    ((ReactScrollView) view).smoothScrollTo(x, y);
+  }
+
+
+
   public static void scrollTo(View view, double argX, double argY, boolean animated) {
     int x = Math.round(PixelUtil.toPixelFromDIP(argX));
     int y = Math.round(PixelUtil.toPixelFromDIP(argY));
@@ -53,17 +105,10 @@ public class NativeMethodsHelper {
       }
     }
 
-    if (animated) {
       final View finalView = view;
-      if (isHorizontal) {
-        view.post(() -> ((ReactHorizontalScrollView) finalView).smoothScrollTo(x, y));
-      } else {
-        view.post(() -> ((ReactScrollView) finalView).smoothScrollTo(x, y));
-      }
-    } else {
-      view.scrollTo(x, y);
-    }
-  }
+      view.post(() -> handleScroll(finalView, x, y, isHorizontal, animated));
+}
+
 
   private static ReactScrollView findScrollView(ReactSwipeRefreshLayout view) {
     for (int i = 0; i < view.getChildCount(); i++) {
