@@ -252,14 +252,19 @@ Offending code was: \`${getWorkletCode(value)}\``);
       }
       const adopted = NativeReanimatedModule.makeShareableClone(
         toAdapt,
-        shouldPersistRemote
+        shouldPersistRemote,
+        value
       );
       shareableMappingCache.set(value, adopted);
       shareableMappingCache.set(adopted);
       return adopted;
     }
   }
-  return NativeReanimatedModule.makeShareableClone(value, shouldPersistRemote);
+  return NativeReanimatedModule.makeShareableClone(
+    value,
+    shouldPersistRemote,
+    undefined
+  );
 }
 
 const WORKLET_CODE_THRESHOLD = 255;
@@ -305,7 +310,10 @@ export function makeShareableCloneOnUIRecursive<T>(
       if (isHostObject(value)) {
         // We call `_makeShareableClone` to wrap the provided HostObject
         // inside ShareableJSRef.
-        return global._makeShareableClone(value) as FlatShareableRef<T>;
+        return global._makeShareableClone(
+          value,
+          undefined
+        ) as FlatShareableRef<T>;
       }
       if (isRemoteFunction<T>(value)) {
         // RemoteFunctions are created by us therefore they are
@@ -315,16 +323,17 @@ export function makeShareableCloneOnUIRecursive<T>(
       }
       if (Array.isArray(value)) {
         return global._makeShareableClone(
-          value.map(cloneRecursive)
+          value.map(cloneRecursive),
+          undefined
         ) as FlatShareableRef<T>;
       }
       const toAdapt: Record<string, FlatShareableRef<T>> = {};
       for (const [key, element] of Object.entries(value)) {
         toAdapt[key] = cloneRecursive(element);
       }
-      return global._makeShareableClone(toAdapt) as FlatShareableRef<T>;
+      return global._makeShareableClone(toAdapt, value) as FlatShareableRef<T>;
     }
-    return global._makeShareableClone(value);
+    return global._makeShareableClone(value, undefined);
   }
   return cloneRecursive(value);
 }
