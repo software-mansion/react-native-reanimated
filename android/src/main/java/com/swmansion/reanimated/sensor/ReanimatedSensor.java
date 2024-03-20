@@ -17,7 +17,7 @@ public class ReanimatedSensor {
   Sensor sensor;
   ReanimatedSensorType sensorType;
   int interval;
-  public static final int MINIMAL_UNPRIVILEGED_INTERVAL = 8;
+  private static final int MINIMAL_UNPRIVILEGED_SAMPLING_RATE = 8;
 
   ReanimatedSensor(
       WeakReference<ReactApplicationContext> reactContext,
@@ -30,7 +30,7 @@ public class ReanimatedSensor {
     sensorManager =
         (SensorManager) reactContext.get().getSystemService(reactContext.get().SENSOR_SERVICE);
     this.sensorType = sensorType;
-    this.interval = Math.max(interval, MINIMAL_UNPRIVILEGED_INTERVAL);
+    this.interval = Math.max(interval, MINIMAL_UNPRIVILEGED_SAMPLING_RATE);
   }
 
   boolean initialize() {
