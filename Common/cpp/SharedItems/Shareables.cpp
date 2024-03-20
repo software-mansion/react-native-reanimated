@@ -41,7 +41,8 @@ jsi::Function getCallGuard(jsi::Runtime &rt) {
 jsi::Value makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
-    const jsi::Value &shouldRetainRemote) {
+    const jsi::Value &shouldRetainRemote,
+    const jsi::Value &nativeStateSource) {
   std::shared_ptr<Shareable> shareable;
   if (value.isObject()) {
     auto object = value.asObject(rt);
@@ -76,10 +77,11 @@ jsi::Value makeShareableClone(
           std::make_shared<ShareableHostObject>(rt, object.getHostObject(rt));
     } else {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
-        shareable =
-            std::make_shared<RetainingShareable<ShareableObject>>(rt, object);
+        shareable = std::make_shared<RetainingShareable<ShareableObject>>(
+            rt, object, nativeStateSource);
       } else {
-        shareable = std::make_shared<ShareableObject>(rt, object);
+        shareable =
+            std::make_shared<ShareableObject>(rt, object, nativeStateSource);
       }
     }
   } else if (value.isString()) {
@@ -202,7 +204,20 @@ ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
   if (object.hasNativeState(rt)) {
     nativeState_ = object.getNativeState(rt);
   }
-#endif // REACT_NATIVE_MINOR_VERSION >= 71
+#endif
+}
+
+ShareableObject::ShareableObject(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const jsi::Value &nativeStateSource)
+    : ShareableObject(rt, object) {
+#if REACT_NATIVE_MINOR_VERSION >= 71
+  if (nativeStateSource.isObject() &&
+      nativeStateSource.asObject(rt).hasNativeState(rt)) {
+    nativeState_ = nativeStateSource.asObject(rt).getNativeState(rt);
+  }
+#endif
 }
 
 jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
@@ -212,10 +227,10 @@ jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
         rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
   }
 #if REACT_NATIVE_MINOR_VERSION >= 71
-  if (nativeState_) {
+  if (nativeState_ != nullptr) {
     obj.setNativeState(rt, nativeState_);
   }
-#endif // REACT_NATIVE_MINOR_VERSION >= 71
+#endif
   return obj;
 }
 

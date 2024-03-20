@@ -349,9 +349,6 @@ export function createAnimatedComponent(
           );
         }
 
-        // TODO Move each implementation to separate function so it's not that bloated here.
-        // Theoretically I could just add another underscore to each property dynamically
-        // but it does not sound good either.
         const viewInfo = getViewInfo(hostInstance);
         viewTag = viewInfo.viewTag;
         viewName = viewInfo.viewName;
