@@ -30,7 +30,11 @@ public class ReanimatedSensor {
     sensorManager =
         (SensorManager) reactContext.get().getSystemService(reactContext.get().SENSOR_SERVICE);
     this.sensorType = sensorType;
-    this.interval = Math.max(interval, MINIMAL_UNPRIVILEGED_SAMPLING_RATE);
+    if (interval == -1) {
+      this.interval = MINIMAL_UNPRIVILEGED_SAMPLING_RATE;
+    } else {
+      this.interval = interval;
+    }
   }
 
   boolean initialize() {
