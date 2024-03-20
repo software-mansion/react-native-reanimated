@@ -57,7 +57,6 @@ import type { FlatList, FlatListProps } from 'react-native';
 import { addHTMLMutationObserver } from '../reanimated2/layoutReanimation/web/domUtils';
 
 const IS_WEB = isWeb();
-const IS_FABRIC = isFabric();
 
 if (IS_WEB) {
   configureWebLayoutAnimations();
@@ -268,7 +267,7 @@ export function createAnimatedComponent(
         if (this.props.animatedProps?.viewDescriptors) {
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
-        if (IS_FABRIC) {
+        if (isFabric()) {
           removeFromPropsRegistry(this._viewTag);
         }
       }
@@ -349,19 +348,14 @@ export function createAnimatedComponent(
             '[Reanimated] Cannot find host instance for this component. Maybe it renders nothing?'
           );
         }
-        // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
-        viewTag = hostInstance?._nativeTag;
-        /**
-         * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/Components/ScrollView/ScrollViewNativeComponent.js#L24).
-         * The name we're looking for is in the field named uiViewClassName.
-         */
-        viewName = hostInstance?.viewConfig?.uiViewClassName;
 
-        viewConfig = hostInstance?.viewConfig;
-
-        if (IS_FABRIC) {
-          shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
-        }
+        const viewInfo = getViewInfo(hostInstance);
+        viewTag = viewInfo.viewTag;
+        viewName = viewInfo.viewName;
+        viewConfig = viewInfo.viewConfig;
+        shadowNodeWrapper = isFabric()
+          ? getShadowNodeWrapperFromRef(this)
+          : null;
       }
       this._viewInfo = { viewTag, viewName, shadowNodeWrapper, viewConfig };
       return this._viewInfo;
@@ -611,4 +605,41 @@ export function createAnimatedComponent(
       />
     );
   });
+}
+
+// This is a makeshift solution to handle both 0.73 and 0.74 versions of React Native.
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let getViewInfo = (element: any) => {
+  if (element._nativeTag) {
+    getViewInfo = getViewInfo73;
+    return getViewInfo73(element);
+  } else if (element.__nativeTag) {
+    getViewInfo = getViewInfo74;
+    return getViewInfo74(element);
+  }
+  return getViewInfo73(element);
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getViewInfo73(element: any) {
+  return {
+    // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
+    viewName: element?.viewConfig?.uiViewClassName,
+    /**
+     * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/Components/ScrollView/ScrollViewNativeComponent.js#L24).
+     * The name we're looking for is in the field named uiViewClassName.
+     */
+    viewTag: element?._nativeTag,
+    viewConfig: element?.viewConfig,
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getViewInfo74(element: any) {
+  return {
+    viewName: element?._viewConfig?.uiViewClassName,
+    viewTag: element?.__nativeTag,
+    viewConfig: element?._viewConfig,
+  };
 }

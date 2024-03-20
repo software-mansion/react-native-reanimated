@@ -61,6 +61,8 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
   bool hasListeners;
 }
 
+@synthesize moduleRegistry = _moduleRegistry;
+
 RCT_EXPORT_MODULE(ReanimatedModule);
 
 #ifdef RCT_NEW_ARCH_ENABLED

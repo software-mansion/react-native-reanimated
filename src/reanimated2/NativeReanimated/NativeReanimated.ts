@@ -15,7 +15,8 @@ import ReanimatedModule from '../../specs/NativeReanimatedModule';
 export interface NativeReanimatedModule {
   makeShareableClone<T>(
     value: T,
-    shouldPersistRemote: boolean
+    shouldPersistRemote: boolean,
+    nativeStateSource?: object
   ): ShareableRef<T>;
   scheduleOnUI<T>(shareable: ShareableRef<T>): void;
   executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R;
@@ -105,10 +106,15 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.InnerNativeModule = global.__reanimatedModuleProxy;
   }
 
-  makeShareableClone<T>(value: T, shouldPersistRemote: boolean) {
+  makeShareableClone<T>(
+    value: T,
+    shouldPersistRemote: boolean,
+    nativeStateSource?: object
+  ) {
     return this.InnerNativeModule.makeShareableClone(
       value,
-      shouldPersistRemote
+      shouldPersistRemote,
+      nativeStateSource
     );
   }
 

@@ -11,6 +11,7 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.UIManager;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
@@ -21,8 +22,10 @@ import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.ReactShadowNode;
 import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.UIImplementation;
+import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerReanimatedHelper;
+import com.facebook.react.uimanager.common.UIManagerType;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
@@ -33,6 +36,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -81,7 +85,7 @@ public class NodesManager implements EventDispatcherListener {
     void onAnimationFrame(double timestampMs);
   }
 
-  private AnimationsManager mAnimationManager;
+  private final AnimationsManager mAnimationManager;
   private final UIImplementation mUIImplementation;
   private final DeviceEventManagerModule.RCTDeviceEventEmitter mEventEmitter;
   private final ReactChoreographer mReactChoreographer;
@@ -89,7 +93,7 @@ public class NodesManager implements EventDispatcherListener {
   protected final UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
   private final AtomicBoolean mCallbackPosted = new AtomicBoolean();
   private final ReactContext mContext;
-  private final UIManagerModule mUIManager;
+  private final UIManager mUIManager;
   private ReactApplicationContext mReactApplicationContext;
   private RCTEventEmitter mCustomEventHandler = new NoopEventHandler();
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
@@ -144,9 +148,15 @@ public class NodesManager implements EventDispatcherListener {
 
   public NodesManager(ReactContext context) {
     mContext = context;
-    mUIManager = context.getNativeModule(UIManagerModule.class);
-    mUIImplementation = mUIManager.getUIImplementation();
-    mCustomEventNamesResolver = mUIManager.getDirectEventNamesResolver();
+    int uiManagerType =
+        BuildConfig.IS_NEW_ARCHITECTURE_ENABLED ? UIManagerType.FABRIC : UIManagerType.DEFAULT;
+    mUIManager = UIManagerHelper.getUIManager(context, uiManagerType);
+    assert mUIManager != null;
+    mUIImplementation =
+        mUIManager instanceof UIManagerModule
+            ? ((UIManagerModule) mUIManager).getUIImplementation()
+            : null;
+    mCustomEventNamesResolver = mUIManager::resolveCustomDirectEventName;
     mEventEmitter = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
 
     mReactChoreographer = ReactChoreographer.getInstance();
@@ -166,7 +176,8 @@ public class NodesManager implements EventDispatcherListener {
     // Events are handled in the native modules thread in the `onEventDispatch()` method.
     // This method indirectly uses `mChoreographerCallback` which was created after event
     // registration, creating race condition
-    mUIManager.getEventDispatcher().addListener(this);
+    Objects.requireNonNull(UIManagerHelper.getEventDispatcher(context, uiManagerType))
+        .addListener(this);
 
     mAnimationManager = new AnimationsManager(mContext, mUIManager);
   }
@@ -227,7 +238,8 @@ public class NodesManager implements EventDispatcherListener {
                 NativeUpdateOperation op = copiedOperationsQueue.remove();
                 ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
                 if (shadowNode != null) {
-                  mUIManager.updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
+                  ((UIManagerModule) mUIManager)
+                      .updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
                 }
               }
               if (queueWasEmpty) {
