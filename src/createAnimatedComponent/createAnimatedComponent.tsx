@@ -616,14 +616,11 @@ export function createAnimatedComponent(
 let getViewInfo = (element: any) => {
   if (element._nativeTag) {
     getViewInfo = getViewInfo73;
-    console.log('setting getViewInfo to 73');
     return getViewInfo73(element);
   } else if (element.__nativeTag) {
     getViewInfo = getViewInfo74;
-    console.log('setting getViewInfo to 74');
     return getViewInfo74(element);
   }
-  console.log('failed to set getViewInfo');
   return getViewInfo73(element);
 };
 
