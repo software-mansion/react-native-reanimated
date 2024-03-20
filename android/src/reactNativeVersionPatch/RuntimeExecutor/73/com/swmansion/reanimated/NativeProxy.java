@@ -71,36 +71,48 @@ public class NativeProxy extends NativeProxyCommon {
     public static NativeMethodsHolder createNativeMethodsHolder(LayoutAnimations layoutAnimations) {
         return new NativeMethodsHolder() {
             @Override
-            public void startAnimation(int tag, int type, HashMap<String, Object> values) {}
+            public void startAnimation(int tag, int type, HashMap<String, Object> values) {
+              // NOT IMPLEMENTED
+            }
 
             @Override
             public boolean isLayoutAnimationEnabled() {
+              // NOT IMPLEMENTED
                 return false;
             }
 
             @Override
             public int findPrecedingViewTagForTransition(int tag) {
+              // NOT IMPLEMENTED
                 return -1;
             }
 
             @Override
             public boolean shouldAnimateExiting(int tag, boolean shouldAnimate) {
+              // NOT IMPLEMENTED
                 return false;
             }
 
             @Override
             public boolean hasAnimation(int tag, int type) {
+              // NOT IMPLEMENTED
                 return false;
             }
 
             @Override
-            public void clearAnimationConfig(int tag) {}
+            public void clearAnimationConfig(int tag) {
+              // NOT IMPLEMENTED
+            }
 
             @Override
-            public void cancelAnimation(int tag) {}
+            public void cancelAnimation(int tag) {
+              // NOT IMPLEMENTED
+            }
 
             @Override
-            public void checkDuplicateSharedTag(int viewTag, int screenTag) {}
+            public void checkDuplicateSharedTag(int viewTag, int screenTag) {
+              // NOT IMPLEMENTED
+            }
         };
     }
 }
