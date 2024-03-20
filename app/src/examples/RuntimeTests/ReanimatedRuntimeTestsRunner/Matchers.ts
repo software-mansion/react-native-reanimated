@@ -22,14 +22,50 @@ export class Matchers {
     }
   }
 
-  public toBe(expectedValue: TestValue, comparisonMode = ComparisonMode.AUTO) {
+  private toBeMatcher(
+    expectedValue: TestValue,
+    currentValue: TestValue,
+    comparisonMode = ComparisonMode.AUTO
+  ) {
     const isEqual = getComparator(comparisonMode);
-    if (!isEqual(expectedValue, this.currentValue)) {
-      this.testCase.errors.push(
-        defaultTestErrorLog(expectedValue, this.currentValue, comparisonMode)
-      );
-    }
+    return {
+      pass: isEqual(expectedValue, currentValue),
+      message: defaultTestErrorLog(expectedValue, currentValue, comparisonMode),
+      messageNegated: defaultTestErrorLog(
+        expectedValue,
+        currentValue,
+        comparisonMode,
+        true
+      ),
+    };
   }
+
+  public makeThrowingMatcher(matcher, isNot) {
+    return (expectedValue, ...args) => {
+      const { pass, message, messageNegated } = matcher(
+        expectedValue,
+        this.currentValue,
+        ...args
+      );
+      if ((!pass && !isNot) || (pass && isNot)) {
+        this.testCase.errors.push(isNot ? messageNegated : message);
+      }
+    };
+  }
+
+  public toBe = this.makeThrowingMatcher(this.toBeMatcher, false);
+
+  public not = {
+    toBe: this.makeThrowingMatcher(this.toBeMatcher, true),
+  };
+  // public toBe(expectedValue: TestValue, comparisonMode = ComparisonMode.AUTO) {
+  //   const isEqual = getComparator(comparisonMode);
+  //   if (!isEqual(expectedValue, this.currentValue)) {
+  //     this.testCase.errors.push(
+  //       defaultTestErrorLog(expectedValue, this.currentValue, comparisonMode)
+  //     );
+  //   }
+  // }
 
   public toBeCalled(times = 1) {
     this.assertValueIsCallTracker(this.currentValue);

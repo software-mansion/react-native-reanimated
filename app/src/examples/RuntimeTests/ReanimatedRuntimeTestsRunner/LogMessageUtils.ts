@@ -30,10 +30,13 @@ export function color(
 export function defaultTestErrorLog(
   expected: TestValue,
   received: TestValue,
-  mode: ComparisonMode
+  mode: ComparisonMode,
+  negated = false
 ) {
   const coloredExpected = color(expected, 'green');
   const coloredReceived = color(received, 'red');
   const coloredMode = color(mode, 'yellow');
-  return `Expected ${coloredExpected} received ${coloredReceived}, mode: ${coloredMode}`;
+  return `Expected${
+    negated ? ' NOT' : ''
+  } ${coloredExpected} received ${coloredReceived}, mode: ${coloredMode}`;
 }
