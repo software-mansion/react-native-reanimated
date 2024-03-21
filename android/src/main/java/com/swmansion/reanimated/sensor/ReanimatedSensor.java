@@ -17,7 +17,7 @@ public class ReanimatedSensor {
   Sensor sensor;
   ReanimatedSensorType sensorType;
   int interval;
-  private static final int MINIMAL_UNPRIVILEGED_SAMPLING_RATE = 8;
+  private static final int DEFAULT_INTERVAL = 8;
 
   ReanimatedSensor(
       WeakReference<ReactApplicationContext> reactContext,
