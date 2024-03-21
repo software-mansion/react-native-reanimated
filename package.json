@@ -38,7 +38,7 @@
   },
   "main": "lib/module/index",
   "module": "lib/module/index",
-  "react-native": "src/index",
+  "react-native": "lib/module/index",
   "source": "src/index",
   "types": "lib/typescript/index",
   "files": [
