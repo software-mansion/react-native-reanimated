@@ -41,6 +41,9 @@ void RNRuntimeDecorator::decorate(
 #endif // REACT_NATIVE_MINOR_VERSION >= 71
       });
 
+  rnRuntime.global().setProperty(
+      rnRuntime, "_IS_BRIDGELESS", nativeReanimatedModule->isBridgeless());
+
 #ifndef NDEBUG
   checkJSVersion(rnRuntime, nativeReanimatedModule->getJSLogger());
 #endif // NDEBUG

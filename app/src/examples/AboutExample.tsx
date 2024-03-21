@@ -68,6 +68,10 @@ export default function AboutExample() {
             <Text style={styles.bold}>RN version:</Text>{' '}
             {getReactNativeVersion()}
           </Text>
+          <Text style={styles.text}>
+            <Text style={styles.bold}>Bridgeless enabled:</Text>{' '}
+            {(global as any)._IS_BRIDGELESS ? 'yes' : 'no'}
+          </Text>
         </>
       )}
     </View>
