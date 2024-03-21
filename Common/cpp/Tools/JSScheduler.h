@@ -17,7 +17,7 @@ class JSScheduler {
       : rnRuntime_(rnRuntime), jsCallInvoker_(jsCallInvoker) {}
   void scheduleOnJS(std::function<void(jsi::Runtime &rt)> job);
 
- protected:
+ public:
   jsi::Runtime &rnRuntime_;
   const std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
 };
