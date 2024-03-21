@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Button } from 'react-native';
 import Animated, {
   useAnimatedProps,
   useAnimatedRef,
@@ -11,19 +11,31 @@ export default function App() {
   const animatedRef = useAnimatedRef();
   // highlight-start
   const offset = useScrollViewOffset(animatedRef);
-  const text = useDerivedValue(() => `offset: ${offset.value.toFixed(1)}`);
+  const text = useDerivedValue(
+    () => `Scroll offset: ${offset.value.toFixed(1)}`
+  );
   // highlight-end
+  const [scrollHorizontal, setScrollHorizontal] = React.useState(false);
 
   return (
     <View style={styles.container}>
       <AnimatedText text={text} />
-      <Animated.ScrollView ref={animatedRef}>
+      <Animated.ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        ref={animatedRef}
+        horizontal={scrollHorizontal}>
         {Array.from({ length: 10 }).map((_, i) => (
           <View key={i} style={styles.box}>
             <Text style={styles.center}>{i}</Text>
           </View>
         ))}
       </Animated.ScrollView>
+      <Button
+        title={`Toggle scroll to ${
+          scrollHorizontal ? 'vertical' : 'horizontal'
+        }`}
+        onPress={() => setScrollHorizontal(!scrollHorizontal)}></Button>
     </View>
   );
 }
@@ -31,7 +43,16 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
+  },
+  scroll: {
+    borderWidth: 1,
+    borderColor: 'gray',
     height: 250,
+    width: 250,
+    margin: 20,
+  },
+  scrollContent: {
+    alignItems: 'center',
   },
   box: {
     width: 100,
