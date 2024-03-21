@@ -172,7 +172,7 @@ function UiPerformance() {
 
 export function PerformanceMonitor() {
   return (
-    <View style={[styles.monitor]}>
+    <View style={styles.monitor}>
       <JsPerformance />
       <UiPerformance />
     </View>
