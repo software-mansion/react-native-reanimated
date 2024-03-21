@@ -59,6 +59,10 @@ import ScrollViewOffsetSrc from '!!raw-loader!@site/src/examples/ScrollViewOffse
   showCode
 />
 
+## Remarks
+
+- You can pass the `animatedRef` argument conditionally and hook will correctly return values basing on the ScrollView component it is connected to: `useScrollViewOffset(someState ? someScrollRefA : someScrollRefB)`.
+
 ## Platform compatibility
 
 <div className="platform-compatibility">
