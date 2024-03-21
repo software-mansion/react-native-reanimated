@@ -42,9 +42,7 @@ void RNRuntimeDecorator::decorate(
       });
 
   rnRuntime.global().setProperty(
-      rnRuntime,
-      "_IS_BRIDGELESS",
-      nativeReanimatedModule->jsScheduler_->jsCallInvoker_ == nullptr);
+      rnRuntime, "_IS_BRIDGELESS", nativeReanimatedModule->isBridgeless());
 
 #ifndef NDEBUG
   checkJSVersion(rnRuntime, nativeReanimatedModule->getJSLogger());
