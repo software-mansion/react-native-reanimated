@@ -116,6 +116,7 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
+import DynamicStylesExample from './DynamicStylesExample';
 import WithClampExample from './WithClampExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
@@ -464,6 +465,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⌨',
     title: 'Log test',
     screen: LogExample,
+  },
+  DynamicStylesExample: {
+    icon: '🧨',
+    title: 'Dynamically appending/removing styles',
+    screen: DynamicStylesExample,
   },
   WorkletFactoryCrash: {
     icon: '🏭',

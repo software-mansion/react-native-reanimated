@@ -146,7 +146,8 @@ class ShareableJSRef : public jsi::HostObject {
 jsi::Value makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
-    const jsi::Value &shouldRetainRemote);
+    const jsi::Value &shouldRetainRemote,
+    const jsi::Value &nativeStateSource);
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
@@ -182,10 +183,18 @@ class ShareableObject : public Shareable {
  public:
   ShareableObject(jsi::Runtime &rt, const jsi::Object &object);
 
+  ShareableObject(
+      jsi::Runtime &rt,
+      const jsi::Object &object,
+      const jsi::Value &nativeStateSource);
+
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
   std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data_;
+#if REACT_NATIVE_MINOR_VERSION >= 71
+  std::shared_ptr<jsi::NativeState> nativeState_;
+#endif
 };
 
 class ShareableHostObject : public Shareable {

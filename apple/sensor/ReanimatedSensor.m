@@ -48,7 +48,7 @@
   [_motionManager
       startGyroUpdatesToQueue:[NSOperationQueue mainQueue]
                   withHandler:^(CMGyroData *sensorData, NSError *error) {
-                    double currentTime = [[NSProcessInfo processInfo] systemUptime];
+                    double currentTime = CACurrentMediaTime() * 1000;
                     if (currentTime - self->_lastTimestamp < self->_interval) {
                       return;
                     }
@@ -69,7 +69,7 @@
   [_motionManager startAccelerometerUpdates];
   [_motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue mainQueue]
                                        withHandler:^(CMAccelerometerData *sensorData, NSError *error) {
-                                         double currentTime = [[NSProcessInfo processInfo] systemUptime];
+                                         double currentTime = CACurrentMediaTime() * 1000;
                                          if (currentTime - self->_lastTimestamp < self->_interval) {
                                            return;
                                          }
@@ -96,7 +96,7 @@
   [_motionManager
       startDeviceMotionUpdatesToQueue:[NSOperationQueue mainQueue]
                           withHandler:^(CMDeviceMotion *sensorData, NSError *error) {
-                            double currentTime = [[NSProcessInfo processInfo] systemUptime];
+                            double currentTime = CACurrentMediaTime() * 1000;
                             if (currentTime - self->_lastTimestamp < self->_interval) {
                               return;
                             }
@@ -121,7 +121,7 @@
   [_motionManager
       startMagnetometerUpdatesToQueue:[NSOperationQueue mainQueue]
                           withHandler:^(CMMagnetometerData *sensorData, NSError *error) {
-                            double currentTime = [[NSProcessInfo processInfo] systemUptime];
+                            double currentTime = CACurrentMediaTime() * 1000;
                             if (currentTime - self->_lastTimestamp < self->_interval) {
                               return;
                             }
@@ -157,7 +157,7 @@
   [_motionManager startDeviceMotionUpdatesUsingReferenceFrame:(1 << _referenceFrame)
                                                       toQueue:[NSOperationQueue mainQueue]
                                                   withHandler:^(CMDeviceMotion *sensorData, NSError *error) {
-                                                    double currentTime = [[NSProcessInfo processInfo] systemUptime];
+                                                    double currentTime = CACurrentMediaTime() * 1000;
                                                     if (currentTime - self->_lastTimestamp < self->_interval) {
                                                       return;
                                                     }

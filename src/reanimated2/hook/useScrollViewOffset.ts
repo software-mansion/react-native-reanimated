@@ -1,5 +1,5 @@
 'use strict';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import type { SharedValue } from '../commonTypes';
 import { findNodeHandle } from 'react-native';
 import type { EventHandlerInternal } from './useEvent';
@@ -15,14 +15,6 @@ import { isWeb } from '../PlatformChecker';
 
 const IS_WEB = isWeb();
 
-const scrollEventNames = [
-  'onScroll',
-  'onScrollBeginDrag',
-  'onScrollEndDrag',
-  'onMomentumScrollBegin',
-  'onMomentumScrollEnd',
-];
-
 /**
  * Lets you synchronously get the current offset of a `ScrollView`.
  *
@@ -30,7 +22,62 @@ const scrollEventNames = [
  * @returns A shared value which holds the current offset of the `ScrollView`.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollViewOffset
  */
-export function useScrollViewOffset(
+export const useScrollViewOffset = IS_WEB
+  ? useScrollViewOffsetJS
+  : useScrollViewOffsetNative;
+
+function useScrollViewOffsetJS(
+  animatedRef: AnimatedRef<AnimatedScrollView>,
+  initialRef?: SharedValue<number>
+): SharedValue<number> {
+  const offsetRef = useRef(
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    initialRef !== undefined ? initialRef : useSharedValue(0)
+  );
+  const scrollRef = useRef<AnimatedScrollView | null>(null);
+
+  const eventHandler = useCallback(() => {
+    'worklet';
+    const element = animatedRef.current as unknown as HTMLElement;
+    // scrollLeft is the X axis scrolled offset, works properly also with RTL layout
+    offsetRef.current.value =
+      element.scrollLeft === 0 ? element.scrollTop : element.scrollLeft;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animatedRef, animatedRef.current]);
+
+  useEffect(() => {
+    // We need to make sure that listener for old animatedRef value is removed
+    if (scrollRef.current !== null) {
+      (scrollRef.current as unknown as HTMLElement).removeEventListener(
+        'scroll',
+        eventHandler
+      );
+    }
+    scrollRef.current = animatedRef.current;
+
+    const element = animatedRef.current as unknown as HTMLElement;
+    element.addEventListener('scroll', eventHandler);
+    return () => {
+      element.removeEventListener('scroll', eventHandler);
+    };
+    // React here has a problem with `animatedRef.current` since a Ref .current
+    // field shouldn't be used as a dependency. However, in this case we have
+    // to do it this way.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animatedRef, animatedRef.current, eventHandler]);
+
+  return offsetRef.current;
+}
+
+const scrollNativeEventNames = [
+  'onScroll',
+  'onScrollBeginDrag',
+  'onScrollEndDrag',
+  'onMomentumScrollBegin',
+  'onMomentumScrollEnd',
+];
+
+function useScrollViewOffsetNative(
   animatedRef: AnimatedRef<AnimatedScrollView>,
   initialRef?: SharedValue<number>
 ): SharedValue<number> {
@@ -47,7 +94,7 @@ export function useScrollViewOffset(
           ? event.contentOffset.y
           : event.contentOffset.x;
     },
-    scrollEventNames
+    scrollNativeEventNames
     // Read https://github.com/software-mansion/react-native-reanimated/pull/5056
     // for more information about this cast.
   ) as unknown as EventHandlerInternal<ReanimatedScrollEvent>;
