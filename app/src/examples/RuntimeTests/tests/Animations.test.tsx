@@ -214,7 +214,9 @@ describe('Tests of animations', () => {
     const updatesContainer = await recordAnimationUpdates();
     await render(<AnimatedComponent />);
     await wait(1000);
-    expect(updatesContainer.getUpdates()).toMatchSnapshot(Snapshots.animation3);
+    expect(updatesContainer.getUpdates()).toMatchSnapshots(
+      Snapshots.animation3
+    );
     expect(updatesContainer.getUpdates()).toMatchNativeSnapshots(
       await updatesContainer.getNativeSnapshots()
     );
@@ -225,7 +227,7 @@ describe('Tests of animations', () => {
     const updatesContainer = await recordAnimationUpdates();
     await render(<LayoutAnimation />);
     await wait(600);
-    expect(updatesContainer.getUpdates()).toMatchSnapshot(
+    expect(updatesContainer.getUpdates()).toMatchSnapshots(
       Snapshots.layoutAnimation
     );
   });

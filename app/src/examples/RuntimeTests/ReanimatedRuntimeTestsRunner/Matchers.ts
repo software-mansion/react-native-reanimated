@@ -137,7 +137,7 @@ export class Matchers {
     toBeCalledJS: this.makeThrowingMatcher(Matchers._toBeCalledJSMatcher, true),
   };
 
-  public toMatchSnapshot(expectedSnapshots: Array<Record<string, unknown>>) {
+  public toMatchSnapshots(expectedSnapshots: Array<Record<string, unknown>>) {
     const capturedSnapshots = this._currentValue as Array<
       Record<string, unknown>
     >;
