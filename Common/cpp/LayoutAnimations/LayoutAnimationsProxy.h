@@ -30,12 +30,16 @@ struct Values{
 };
 
 struct MutationNode{
-  std::unordered_set<std::shared_ptr<MutationNode>> children;
+  std::vector<std::shared_ptr<MutationNode>> children;
   std::shared_ptr<MutationNode> parent;
+  Tag tag;
+  ShadowViewMutation mutation;
+  int animatedChildrenCount = 0;
+  MutationNode(ShadowViewMutation& mutation): mutation(mutation){
+  }
 };
 
 struct LayoutAnimation {
-  int index;
   std::shared_ptr<ShadowView> end, current;
   ShadowView start, parent;
   ShadowViewMutationList initialMutations;
@@ -56,6 +60,7 @@ struct LayoutAnimationRegistry{
 };
 
 struct LayoutAnimationsProxy : public MountingOverrideDelegate{
+//  std::shared_ptr<MutationNode> fakeRoot = std::make_shared<MutationNode>();
   mutable std::unordered_map<Tag, std::shared_ptr<MutationNode>> nodeForTag;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   mutable ShadowViewMutationList cleanupMutations;
@@ -91,6 +96,10 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   
   void takeIndex(Tag parentTag, int index) const;
   void dropIndex(Tag parentTag, int index) const;
+  void removeRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList& mutations) const;
+  bool startAnimationsRecursively(std::shared_ptr<MutationNode> node, bool shouldRemoveSubviewsWithoutAnimations, ShadowViewMutationList& mutations) const;
+  void endAnimationsRecursively(std::shared_ptr<MutationNode> node) const;
+  void maybeDropAncestors(std::shared_ptr<MutationNode> node) const;
   
   // MountingOverrideDelegate
   
