@@ -121,6 +121,9 @@ NativeReanimatedModule::NativeReanimatedModule(
   };
   EndLayoutAnimationFunction endLayoutAnimation = [this](int tag, bool shouldRemove){
     layoutAnimationsProxy_->endLayoutAniamtion(tag, shouldRemove);
+    uiManager_->getShadowTreeRegistry().enumerate([](const ShadowTree& shadowTree, bool&){
+      shadowTree.notifyDelegatesOfUpdates();
+    });
   };
 #endif
 

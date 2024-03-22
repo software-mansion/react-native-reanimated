@@ -29,11 +29,18 @@ struct Values{
   }
 };
 
+struct MutationNode{
+  std::unordered_set<std::shared_ptr<MutationNode>> children;
+  std::shared_ptr<MutationNode> parent;
+};
+
 struct LayoutAnimation {
+  int index;
   std::shared_ptr<ShadowView> end, current;
   ShadowView start, parent;
   ShadowViewMutationList initialMutations;
-  LayoutAnimation(std::shared_ptr<ShadowView> end, std::shared_ptr<ShadowView> current, ShadowView& start, ShadowView parent, ShadowViewMutationList initialMutations):end(end), current(current), start(start), parent(parent), initialMutations(initialMutations){}
+  ShadowViewMutationList cleanupMutations;
+  LayoutAnimation(std::shared_ptr<ShadowView> end, std::shared_ptr<ShadowView> current, ShadowView& start, ShadowView parent, ShadowViewMutationList initialMutations, ShadowViewMutationList cleanupMutations):end(end), current(current), start(start), parent(parent), initialMutations(initialMutations), cleanupMutations(cleanupMutations){}
   LayoutAnimation& operator=(const LayoutAnimation& other){
     this->end = other.end;
     return *this;
@@ -45,12 +52,14 @@ struct LayoutAnimationRegistry{
   mutable std::unordered_map<Tag, ShadowView> shadowViews_;
   mutable std::unordered_map<Tag, ShadowView> previousShadowViews_;
   mutable std::unordered_map<Tag, ShadowView> parentShadowViews_;
-  
   std::unordered_set<Tag> removedViews_;
 };
 
 struct LayoutAnimationsProxy : public MountingOverrideDelegate{
+  mutable std::unordered_map<Tag, std::shared_ptr<MutationNode>> nodeForTag;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
+  mutable ShadowViewMutationList cleanupMutations;
+  mutable std::unordered_map<Tag, std::shared_ptr<std::unordered_set<int>>> indices;
   std::mutex mutex;
   std::shared_ptr<std::map<Tag, ShadowNode::Shared>> createdNodes_ = std::make_shared<std::map<Tag, ShadowNode::Shared>>();
   std::shared_ptr<std::map<Tag, ShadowView>> createdViews_ = std::make_shared<std::map<Tag, ShadowView>>();
@@ -77,6 +86,11 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   const ComponentDescriptor& getComponentDescriptorForShadowView(const ShadowView& shadowView) const;
   
   void addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList& mutations) const;
+  void updateIndexForMutation(ShadowViewMutation &mutation) const;
+  void updateIndices(ShadowViewMutation &mutation) const;
+  
+  void takeIndex(Tag parentTag, int index) const;
+  void dropIndex(Tag parentTag, int index) const;
   
   // MountingOverrideDelegate
   
