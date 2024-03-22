@@ -8,10 +8,20 @@ import {
   TrackerCallCount,
 } from './types';
 
-export class Matchers {
-  constructor(private currentValue: TestValue, private testCase: TestCase) {}
+type MatcherFunction = (
+  currentValue: TestValue,
+  expectedValue: TestValue,
+  ...additionalArgs
+) => {
+  pass: boolean;
+  message: string;
+  messageNegated?: string;
+};
 
-  private assertValueIsCallTracker(
+export class Matchers {
+  constructor(private _currentValue: TestValue, private _testCase: TestCase) {}
+
+  private static _assertValueIsCallTracker(
     value: TrackerCallCount | TestValue
   ): asserts value is TrackerCallCount {
     if (
@@ -22,11 +32,11 @@ export class Matchers {
     }
   }
 
-  private toBeMatcher(
-    expectedValue: TestValue,
+  private static _toBeMatcher: MatcherFunction = (
     currentValue: TestValue,
+    expectedValue: TestValue,
     comparisonMode = ComparisonMode.AUTO
-  ) {
+  ) => {
     const isEqual = getComparator(comparisonMode);
     return {
       pass: isEqual(expectedValue, currentValue),
@@ -38,76 +48,90 @@ export class Matchers {
         true
       ),
     };
-  }
+  };
 
-  public makeThrowingMatcher(matcher, isNot) {
+  private static _toBeCalledMatcher: MatcherFunction = (
+    currentValue: TestValue,
+    times = 1
+  ) => {
+    Matchers._assertValueIsCallTracker(currentValue);
+    const callsCount = currentValue.onUI + currentValue.onJS;
+    const name = color(currentValue.name, 'green');
+    const expected = color(times, 'green');
+    const received = color(callsCount, 'red');
+    return {
+      pass: callsCount === times,
+      message: `Expected ${name} to be called ${expected} times, but was called ${received} times`,
+      messageNegated: `Expected ${name} NOT to be called ${expected} times`,
+    };
+  };
+
+  private static _toBeCalledUIMatcher: MatcherFunction = (
+    currentValue: TestValue,
+    times = 1
+  ) => {
+    Matchers._assertValueIsCallTracker(currentValue);
+    const callsCount = currentValue.onUI;
+    const name = color(currentValue.name, 'green');
+    const threadName = color('UI thread', 'cyan');
+    const expected = color(times, 'green');
+    const received = color(callsCount, 'red');
+
+    return {
+      pass: callsCount === times,
+      message: `Expected ${name} to be called ${expected} times on ${threadName}, but was called ${received} times`,
+      messageNegated: `Expected ${name} NOT to be called ${expected} times on ${threadName}`,
+    };
+  };
+
+  private static _toBeCalledJSMatcher: MatcherFunction = (
+    currentValue: TestValue,
+    times = 1
+  ) => {
+    Matchers._assertValueIsCallTracker(currentValue);
+    Matchers._assertValueIsCallTracker(currentValue);
+    const callsCount = currentValue.onJS;
+    const name = color(currentValue.name, 'green');
+    const threadName = color('JS thread', 'cyan');
+    const expected = color(times, 'green');
+    const received = color(callsCount, 'red');
+
+    return {
+      pass: callsCount === times,
+      message: `Expected ${name} to be called ${expected} times on ${threadName}, but was called ${received} times`,
+      messageNegated: `Expected ${name} NOT to be called ${expected} times on ${threadName}`,
+    };
+  };
+
+  private makeThrowingMatcher(matcher: MatcherFunction, isNot = false) {
     return (expectedValue, ...args) => {
       const { pass, message, messageNegated } = matcher(
+        this._currentValue,
         expectedValue,
-        this.currentValue,
         ...args
       );
       if ((!pass && !isNot) || (pass && isNot)) {
-        this.testCase.errors.push(isNot ? messageNegated : message);
+        this._testCase.errors.push(
+          isNot && messageNegated ? messageNegated : message
+        );
       }
     };
   }
 
-  public toBe = this.makeThrowingMatcher(this.toBeMatcher, false);
+  public toBe = this.makeThrowingMatcher(Matchers._toBeMatcher);
+  public toBeCalled = this.makeThrowingMatcher(Matchers._toBeCalledMatcher);
+  public toBeCalledUI = this.makeThrowingMatcher(Matchers._toBeCalledUIMatcher);
+  public toBeCalledJS = this.makeThrowingMatcher(Matchers._toBeCalledJSMatcher);
 
   public not = {
-    toBe: this.makeThrowingMatcher(this.toBeMatcher, true),
+    toBe: this.makeThrowingMatcher(Matchers._toBeMatcher, true),
+    toBeCalled: this.makeThrowingMatcher(Matchers._toBeCalledMatcher, true),
+    toBeCalledUI: this.makeThrowingMatcher(Matchers._toBeCalledUIMatcher, true),
+    toBeCalledJS: this.makeThrowingMatcher(Matchers._toBeCalledJSMatcher, true),
   };
-  // public toBe(expectedValue: TestValue, comparisonMode = ComparisonMode.AUTO) {
-  //   const isEqual = getComparator(comparisonMode);
-  //   if (!isEqual(expectedValue, this.currentValue)) {
-  //     this.testCase.errors.push(
-  //       defaultTestErrorLog(expectedValue, this.currentValue, comparisonMode)
-  //     );
-  //   }
-  // }
-
-  public toBeCalled(times = 1) {
-    this.assertValueIsCallTracker(this.currentValue);
-    const callsCount = this.currentValue.onUI + this.currentValue.onJS;
-    if (callsCount !== times) {
-      const name = color(this.currentValue.name, 'green');
-      const expected = color(times, 'green');
-      const received = color(callsCount, 'red');
-      this.testCase.errors.push(
-        `Expected ${name} to be called ${expected} times, but was called ${received} times`
-      );
-    }
-  }
-
-  public toBeCalledUI(times = 1) {
-    this.assertValueIsCallTracker(this.currentValue);
-    if (this.currentValue.onUI !== times) {
-      const name = color(this.currentValue.name, 'green');
-      const threadName = color('UI thread', 'cyan');
-      const expected = color(times, 'green');
-      const received = color(this.currentValue.onUI, 'red');
-      this.testCase.errors.push(
-        `Expected ${name} to be called ${expected} times on ${threadName}, but was called ${received} times`
-      );
-    }
-  }
-
-  public toBeCalledJS(times = 1) {
-    this.assertValueIsCallTracker(this.currentValue);
-    if (this.currentValue.onJS !== times) {
-      const name = color(this.currentValue.name, 'green');
-      const threadName = color('UI thread', 'cyan');
-      const expected = color(times, 'green');
-      const received = color(this.currentValue.onUI, 'red');
-      this.testCase.errors.push(
-        `Expected ${name} to be called ${expected} times on ${threadName}, but was called ${received} times`
-      );
-    }
-  }
 
   public toMatchSnapshot(expectedSnapshots: Array<Record<string, unknown>>) {
-    const capturedSnapshots = this.currentValue as Array<
+    const capturedSnapshots = this._currentValue as Array<
       Record<string, unknown>
     >;
     if (capturedSnapshots.length !== expectedSnapshots.length) {
@@ -115,7 +139,7 @@ export class Matchers {
         expectedSnapshots.length,
         capturedSnapshots.length
       );
-      this.testCase.errors.push(errorMessage);
+      this._testCase.errors.push(errorMessage);
     }
     let errorString = '';
     expectedSnapshots.forEach(
@@ -133,7 +157,7 @@ export class Matchers {
       }
     );
     if (errorString !== '') {
-      this.testCase.errors.push('Snapshot mismatch: \n' + errorString);
+      this._testCase.errors.push('Snapshot mismatch: \n' + errorString);
     }
   }
 
@@ -145,7 +169,7 @@ export class Matchers {
       Updates applied through `_updateProps` are not synchronously applied to the native side. Instead, they are batched and applied at the end of each frame. Therefore, it is not allowed to take a native snapshot immediately after the `_updateProps` call. To address this issue, we need to wait for the next frame before capturing the native snapshot. That's why native snapshots are one frame behind JS snapshots. To account for this delay, one additional native snapshot is taken during the execution of the `getNativeSnapshots` function.
     */
     let errorString = '';
-    const jsUpdates = this.currentValue as Array<OperationUpdate>;
+    const jsUpdates = this._currentValue as Array<OperationUpdate>;
     for (let i = 0; i < jsUpdates.length; i++) {
       errorString += this.compareJsAndNativeSnapshot(
         jsUpdates,
@@ -159,7 +183,7 @@ export class Matchers {
       } snapshots\n`;
     }
     if (errorString !== '') {
-      this.testCase.errors.push('Native snapshot mismatch: \n' + errorString);
+      this._testCase.errors.push('Native snapshot mismatch: \n' + errorString);
     }
   }
 
