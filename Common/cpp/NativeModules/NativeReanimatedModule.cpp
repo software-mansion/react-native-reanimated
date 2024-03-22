@@ -208,8 +208,10 @@ jsi::Value NativeReanimatedModule::scheduleOnRuntime(
 jsi::Value NativeReanimatedModule::makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
-    const jsi::Value &shouldRetainRemote) {
-  return reanimated::makeShareableClone(rt, value, shouldRetainRemote);
+    const jsi::Value &shouldRetainRemote,
+    const jsi::Value &nativeStateSource) {
+  return reanimated::makeShareableClone(
+      rt, value, shouldRetainRemote, nativeStateSource);
 }
 
 jsi::Value NativeReanimatedModule::registerEventHandler(

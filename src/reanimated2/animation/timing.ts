@@ -1,7 +1,11 @@
 'use strict';
 import type { EasingFunction, EasingFunctionFactory } from '../Easing';
 import { Easing } from '../Easing';
-import { defineAnimation, getReduceMotionForAnimation } from './util';
+import {
+  assertEasingIsWorklet,
+  defineAnimation,
+  getReduceMotionForAnimation,
+} from './util';
 import type {
   Animation,
   AnimationCallback,
@@ -64,6 +68,10 @@ export const withTiming = function (
   callback?: AnimationCallback
 ): Animation<TimingAnimation> {
   'worklet';
+
+  if (__DEV__ && userConfig?.easing) {
+    assertEasingIsWorklet(userConfig.easing);
+  }
 
   return defineAnimation<TimingAnimation>(toValue, () => {
     'worklet';
