@@ -148,6 +148,20 @@ describe('Tests of animations', () => {
     expect(await component.getAnimatedStyle('width')).toBe('123');
   });
 
+  test('withTiming - not - expect error', async () => {
+    await render(<AnimatedComponent />);
+    const component = getTestComponent('AnimatedComponent');
+    await wait(600);
+    expect(await component.getAnimatedStyle('width')).not.toBe('100');
+  });
+
+  test('withTiming - with not', async () => {
+    await render(<AnimatedComponent />);
+    const component = getTestComponent('AnimatedComponent');
+    await wait(600);
+    expect(await component.getAnimatedStyle('width')).not.toBe('123');
+  });
+
   test('withTiming - expect pass', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('AnimatedComponent');

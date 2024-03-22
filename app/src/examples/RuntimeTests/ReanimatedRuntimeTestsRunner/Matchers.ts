@@ -11,7 +11,7 @@ import {
 type MatcherFunction = (
   currentValue: TestValue,
   expectedValue: TestValue,
-  ...additionalArgs
+  ...additionalArgs: Array<unknown>
 ) => {
   pass: boolean;
   message: string;
@@ -35,9 +35,16 @@ export class Matchers {
   private static _toBeMatcher: MatcherFunction = (
     currentValue: TestValue,
     expectedValue: TestValue,
-    comparisonMode = ComparisonMode.AUTO
+    comparisonModeUnknown: unknown
   ) => {
+    const comparisonMode: ComparisonMode =
+      typeof comparisonModeUnknown === 'string' &&
+      comparisonModeUnknown in ComparisonMode
+        ? (comparisonModeUnknown as ComparisonMode)
+        : ComparisonMode.AUTO;
+
     const isEqual = getComparator(comparisonMode);
+
     return {
       pass: isEqual(expectedValue, currentValue),
       message: defaultTestErrorLog(expectedValue, currentValue, comparisonMode),
@@ -104,7 +111,7 @@ export class Matchers {
   };
 
   private makeThrowingMatcher(matcher: MatcherFunction, isNot = false) {
-    return (expectedValue, ...args) => {
+    return (expectedValue: TestValue, ...args: Array<unknown>) => {
       const { pass, message, messageNegated } = matcher(
         this._currentValue,
         expectedValue,
