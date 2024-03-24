@@ -85,7 +85,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
-          platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
+          platformDepMethodsHolder.unsubscribeFromKeyboardEvents),
+      isBridgeless_(jsInvoker == nullptr) {
   auto requestAnimationFrame =
       [this](jsi::Runtime &rt, const jsi::Value &callback) {
         this->requestAnimationFrame(rt, callback);

@@ -195,14 +195,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
   [super setBridge:bridge];
 
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(handleJavaScriptDidLoadNotification:)
-                                               name:RCTJavaScriptDidLoadNotification
-                                             object:nil];
-
-  [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
-  [bridge.uiManager.observerCoordinator addObserver:self];
-
   // only within the first loading `self.bridge.surfacePresenter` exists
   // during the reload `self.bridge.surfacePresenter` is null
   _surfacePresenter = self.bridge.surfacePresenter;

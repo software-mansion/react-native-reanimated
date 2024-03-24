@@ -161,6 +161,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     return uiWorkletRuntime_->getJSIRuntime();
   }
 
+  inline bool isBridgeless() const {
+    return isBridgeless_;
+  }
+
  private:
   void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
 
@@ -220,6 +224,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 #ifndef NDEBUG
   SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;
 #endif
+  const bool isBridgeless_;
 };
 
 } // namespace reanimated
