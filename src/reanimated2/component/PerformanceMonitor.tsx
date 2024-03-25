@@ -96,26 +96,32 @@ function completeBufferRoutine(
   const droppedDelta = getTimeDelta(nextToDrop, droppedTimestamp);
 
   totalRenderTime.value += delta - droppedDelta;
+
   return getFps(totalRenderTime.value / buffer.count);
 }
 
 function JsPerformance() {
   const jsFps = useSharedValue<string | null>(null);
   const totalRenderTime = useSharedValue(0);
-  const circularBuffer = createCircularDoublesBuffer(DEFAULT_BUFFER_SIZE);
+  const circularBuffer = useRef<CircularBuffer>(
+    createCircularDoublesBuffer(DEFAULT_BUFFER_SIZE)
+  );
 
   useEffect(() => {
-    loopAnimationFrame((lastTime, time) => {
+    loopAnimationFrame((_, timestamp) => {
+      timestamp = Math.round(timestamp);
+      const previousTimestamp = circularBuffer.current.front() ?? timestamp;
+
       const currentFps = completeBufferRoutine(
-        circularBuffer,
-        Math.round(time),
-        Math.round(lastTime),
+        circularBuffer.current,
+        timestamp,
+        previousTimestamp,
         totalRenderTime
       );
 
       jsFps.value = currentFps;
     });
-  });
+  }, []);
 
   const animatedProps = useAnimatedProps(() => {
     const text = jsFps.value ?? 'N/A';
