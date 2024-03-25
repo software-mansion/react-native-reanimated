@@ -22,17 +22,13 @@ struct LayoutAnimationConfig {
   int tag;
   LayoutAnimationType type;
   std::shared_ptr<Shareable> config;
+  std::string sharedTransitionTag;
 };
 
 class LayoutAnimationsManager {
  public:
   explicit LayoutAnimationsManager(const std::shared_ptr<JSLogger> &jsLogger)
       : jsLogger_(jsLogger) {}
-  void configureAnimation(
-      const int tag,
-      const LayoutAnimationType type,
-      const std::string &sharedTransitionTag,
-      const std::shared_ptr<Shareable> &config);
   void configureAnimationBatch(
       const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
   void setShouldAnimateExiting(const int tag, const bool value);
@@ -44,6 +40,7 @@ class LayoutAnimationsManager {
       const LayoutAnimationType type,
       const jsi::Object &values);
   void clearLayoutAnimationConfig(const int tag);
+  void clearSharedTransitionConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   int findPrecedingViewTagForTransition(const int tag);
 #ifndef NDEBUG
@@ -75,7 +72,7 @@ class LayoutAnimationsManager {
   std::unordered_map<std::string, std::vector<int>> sharedTransitionGroups_;
   std::unordered_map<int, std::string> viewTagToSharedTag_;
   std::unordered_map<int, bool> shouldAnimateExitingForTag_;
-  mutable std::mutex
+  mutable std::recursive_mutex
       animationsMutex_; // Protects `enteringAnimations_`, `exitingAnimations_`,
   // `layoutAnimations_`, `viewSharedValues_` and `shouldAnimateExitingForTag_`.
 };
