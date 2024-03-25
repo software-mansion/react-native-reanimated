@@ -40,7 +40,10 @@ declare global {
   ) => void;
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
-  var _makeShareableClone: <T>(value: T) => FlatShareableRef<T>;
+  var _makeShareableClone: <T>(
+    value: T,
+    nativeStateSource?: object
+  ) => FlatShareableRef<T>;
   var _scheduleOnJS: (fun: (...args: A) => R, args?: A) => void;
   var _scheduleOnRuntime: (
     runtime: WorkletRuntime,

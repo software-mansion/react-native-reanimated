@@ -44,7 +44,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   jsi::Value makeShareableClone(
       jsi::Runtime &rt,
       const jsi::Value &value,
-      const jsi::Value &shouldRetainRemote) override;
+      const jsi::Value &shouldRetainRemote,
+      const jsi::Value &nativeStateSource) override;
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
   jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)

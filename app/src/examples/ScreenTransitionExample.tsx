@@ -5,12 +5,17 @@ import {
   createNativeStackNavigator,
   NativeStackScreenProps,
 } from 'react-native-screens/native-stack';
-import { GestureDetectorProvider } from 'react-native-screens/gesture-handler';
 import { ParamListBase } from '@react-navigation/native';
 import {
   ScreenTransition,
   AnimatedScreenTransition,
 } from 'react-native-reanimated';
+
+// This is a temporary workaround until react-native-screens release with 'react-native-screens/gesture-handler' import.
+// import { GestureDetectorProvider } from 'react-native-screens/gesture-handler';
+function GestureDetectorProvider({ children }) {
+  return children;
+}
 
 function MainScreen({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (

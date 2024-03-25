@@ -116,12 +116,13 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
-// import ScreenTransitionExample from './ScreenTransitionExample';
+import DynamicStylesExample from './DynamicStylesExample';
 import WithClampExample from './WithClampExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
 import HabitsExample from './LayoutAnimations/HabitsExample';
 import MemoExample from './MemoExample';
+import ScreenTransitionExample from './ScreenTransitionExample';
 
 interface Example {
   icon?: string;
@@ -237,11 +238,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Update props performance',
     screen: UpdatePropsPerfExample,
   },
-  // ScreenTransitionExample: {
-  //   icon: '📺',
-  //   title: 'Screen transition',
-  //   screen: ScreenTransitionExample,
-  // },
+  ScreenTransitionExample: {
+    icon: '📺',
+    title: 'Screen transition',
+    screen: ScreenTransitionExample,
+  },
 
   // Basic examples
 
@@ -469,6 +470,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⌨',
     title: 'Log test',
     screen: LogExample,
+  },
+  DynamicStylesExample: {
+    icon: '🧨',
+    title: 'Dynamically appending/removing styles',
+    screen: DynamicStylesExample,
   },
   WorkletFactoryCrash: {
     icon: '🏭',
