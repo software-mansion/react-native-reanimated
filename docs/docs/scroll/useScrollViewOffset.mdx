@@ -38,8 +38,7 @@ function useScrollViewOffset(
 
 #### `animatedRef`
 
-An [animated ref](/docs/core/useAnimatedRef#returns) connected to the ScrollView component you'd want to scroll on. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component and
-mustn't be changed dynamically.
+An [animated ref](/docs/core/useAnimatedRef#returns) connected to the ScrollView component you'd want to scroll on. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
 
 #### `initialRef` <Optional/>
 
@@ -48,6 +47,10 @@ An optional shared value to be updated with the scroll offset. If not provided a
 ### Returns
 
 `useScrollViewOffset` returns a [shared value](/docs/fundamentals/glossary#shared-value) which holds the current offset of the `ScrollView`.
+
+### Remarks
+
+The `animatedRef` passed to the hook mustn't be changed dynamically.
 
 ## Example
 
