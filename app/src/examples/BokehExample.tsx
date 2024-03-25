@@ -1,94 +1,134 @@
+import React from 'react';
+import { StyleSheet, Text } from 'react-native';
 import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
-  withTiming,
+  useAnimatedStyle,
+  useAnimatedScrollHandler,
+  interpolate,
 } from 'react-native-reanimated';
-import { Dimensions, StyleSheet, View } from 'react-native';
-import React, { useState } from 'react';
 
-const { width, height } = Dimensions.get('window');
+const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-function randBetween(min: number, max: number) {
-  return min + Math.random() * (max - min);
-}
+const cardSize = 200;
+const cardMargin = 10;
+const cardInterval = cardSize + cardMargin * 2;
 
-function Circle() {
-  const shouldReduceMotion = useReducedMotion();
-
-  const [power] = useState(randBetween(0, 1));
-  const [duration] = useState(randBetween(2000, 3000));
-
-  const size = 100 + power * 250;
-  const opacity = 0.1 + (1 - power) * 0.1;
-  const config = { duration, easing: Easing.linear };
-
-  const left = useSharedValue(randBetween(0, width) - size / 2);
-  const top = useSharedValue(randBetween(0, height) - size / 2);
-  const hue = useSharedValue(randBetween(100, 200));
-
-  const update = () => {
-    left.value = withTiming(left.value + randBetween(-100, 100), config);
-    top.value = withTiming(top.value + randBetween(-100, 100), config);
-    hue.value = withTiming(hue.value + randBetween(0, 100), config);
-  };
-
-  React.useEffect(() => {
-    update();
-    if (shouldReduceMotion) {
-      return;
-    }
-    const id = setInterval(update, duration);
-    return () => clearInterval(id);
-  });
-
-  const animatedStyle = useAnimatedStyle(
-    () => ({
-      backgroundColor: `hsl(${hue.value},100%,50%)`,
-      width: size,
-      height: size,
-      left: left.value,
-      top: top.value,
-    }),
-    []
-  );
-
-  return <Animated.View style={[styles.circle, { opacity }, animatedStyle]} />;
-}
-
-interface BokehProps {
-  count: number;
-}
-
-function Bokeh({ count }: BokehProps) {
+export default function InvertedFlatListExample() {
   return (
     <>
-      {[...Array(count)].map((_, i) => (
-        <Circle key={i} />
-      ))}
+      <List />
+      <List horizontal />
     </>
   );
 }
 
-export default function BokehExample() {
+function List({ horizontal }: { horizontal?: boolean }) {
+  const [scrollViewSize, setScrollViewSize] = React.useState(200);
+  const scrollPosition = useSharedValue(0);
+  const isScrolling = useSharedValue(false);
+
+  const scrollHandler = useAnimatedScrollHandler(
+    {
+      onScroll: (event) => {
+        scrollPosition.value = horizontal
+          ? event.contentOffset.x
+          : event.contentOffset.y;
+      },
+      onBeginDrag: () => {
+        isScrolling.value = true;
+      },
+      onEndDrag: () => {
+        isScrolling.value = false;
+      },
+    },
+    [horizontal]
+  );
+
+  const inset = (scrollViewSize - cardInterval) / 2;
+  const containerPadding = horizontal
+    ? { paddingHorizontal: inset }
+    : { paddingVertical: inset };
+
   return (
-    <View style={styles.container}>
-      <Bokeh count={100} />
-    </View>
+    <Animated.SectionList
+      style={styles.container}
+      contentContainerStyle={[styles.contentContainer, containerPadding]}
+      // inverted
+      snapToInterval={cardInterval}
+      decelerationRate="fast"
+      horizontal={horizontal}
+      sections={[{ title: 'DIGITS', data: digits }]}
+      renderItem={({ item, index }) => (
+        <Item index={index} item={item} scrollPosition={scrollPosition} />
+      )}
+      onScroll={scrollHandler}
+      scrollEventThrottle={1}
+      onLayout={(event) =>
+        horizontal
+          ? event.nativeEvent.layout.width
+          : event.nativeEvent.layout.height
+      }
+    />
+  );
+}
+
+function Item({
+  item,
+  index,
+  scrollPosition,
+}: {
+  item: number;
+  index: number;
+  scrollPosition: Animated.SharedValue<number>;
+}) {
+  const style = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          scale: interpolate(
+            scrollPosition.value,
+            [
+              (index - 1) * cardInterval,
+              index * cardInterval,
+              (index + 1) * cardInterval,
+            ],
+            [0, 1, 0],
+            'clamp'
+          ),
+        },
+      ],
+    };
+  });
+
+  return (
+    <Animated.View style={[styles.card, style]}>
+      <Text style={styles.text}>{item}</Text>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    margin: 10,
+  },
+  contentContainer: {
+    alignItems: 'center',
+  },
+  card: {
+    width: cardSize,
+    height: cardSize,
+    backgroundColor: 'white',
+    borderRadius: 5,
+    borderColor: '#eee',
+    borderWidth: 1,
+    margin: cardMargin,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'black',
-    overflow: 'hidden',
   },
-  circle: {
-    position: 'absolute',
-    borderRadius: 999,
+  text: {
+    fontSize: 32,
   },
 });

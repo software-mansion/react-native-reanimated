@@ -22,6 +22,7 @@ export { AnimatedView as View } from './reanimated2/component/View';
 export { AnimatedScrollView as ScrollView } from './reanimated2/component/ScrollView';
 export { AnimatedImage as Image } from './reanimated2/component/Image';
 export { ReanimatedFlatList as FlatList } from './reanimated2/component/FlatList';
+export { ReanimatedSectionList as SectionList } from './reanimated2/component/SectionList';
 export {
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
