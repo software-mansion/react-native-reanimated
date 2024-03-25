@@ -15,7 +15,7 @@ export default function App() {
     () => `Scroll offset: ${offset.value.toFixed(1)}`
   );
   // highlight-end
-  const [scrollHorizontal, setScrollHorizontal] = React.useState(false);
+  const [isScrollHorizontal, setIsScrollHorizontal] = React.useState(false);
 
   return (
     <View style={styles.container}>
@@ -24,7 +24,7 @@ export default function App() {
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         ref={animatedRef}
-        horizontal={scrollHorizontal}>
+        horizontal={isScrollHorizontal}>
         {Array.from({ length: 10 }).map((_, i) => (
           <View key={i} style={styles.box}>
             <Text style={styles.center}>{i}</Text>
@@ -33,9 +33,10 @@ export default function App() {
       </Animated.ScrollView>
       <Button
         title={`Toggle scroll to ${
-          scrollHorizontal ? 'vertical' : 'horizontal'
+          isScrollHorizontal ? 'vertical' : 'horizontal'
         }`}
-        onPress={() => setScrollHorizontal(!scrollHorizontal)}></Button>
+        onPress={() => setIsScrollHorizontal(!isScrollHorizontal)}
+      />
     </View>
   );
 }
