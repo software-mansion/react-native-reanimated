@@ -273,3 +273,13 @@ export type {
 export type { AnimatedScrollViewProps } from './component/ScrollView';
 export type { FlatListPropsWithLayout } from './component/FlatList';
 export { startMapper, stopMapper } from './mappers';
+export {
+  startScreenTransition,
+  finishScreenTransition,
+  ScreenTransition,
+} from './screenTransition';
+export type {
+  AnimatedScreenTransition,
+  GoBackGesture,
+  ScreenTransitionConfig,
+} from './screenTransition';
