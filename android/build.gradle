@@ -378,7 +378,7 @@ android {
             // ReanimatedUIManager & ReanimatedUIImplementation 
             if (REACT_NATIVE_MINOR_VERSION <= 70) {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/70"
-            } else if (REACT_NATIVE_MINOR_VERSION <= 73) {
+            } else if (REACT_NATIVE_MINOR_VERSION == 73) {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/73"
             } else {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest"

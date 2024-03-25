@@ -39,7 +39,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
     final ArrayList<UIThreadOperation> operations = mOperations;
     mOperations = new ArrayList<>();
     if (uiManager instanceof FabricUIManager) {
-      ((FabricUIManager) uiManager)
+      uiManager
           .addUIBlock(
               uiBlockViewResolver -> {
                 NodesManager nodesManager = getNodesManager();
@@ -50,7 +50,9 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
     }
   }
 
-  public void willMountItems(@NonNull UIManager uiManager) {}
+  public void willMountItems(@NonNull UIManager uiManager) {
+    // Keep: Required for UIManagerListener
+  }
 
   private interface UIThreadOperation {
     void execute(NodesManager nodesManager);
