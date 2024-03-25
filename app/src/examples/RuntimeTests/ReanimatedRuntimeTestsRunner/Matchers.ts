@@ -19,6 +19,7 @@ type MatcherFunction = (
 };
 
 export class Matchers {
+  private _negation = false;
   constructor(private _currentValue: TestValue, private _testCase: TestCase) {}
 
   private static _assertValueIsCallTracker(
@@ -110,16 +111,16 @@ export class Matchers {
     };
   };
 
-  private makeThrowingMatcher(matcher: MatcherFunction, isNot = false) {
+  private makeThrowingMatcher(matcher: MatcherFunction) {
     return (expectedValue: TestValue, ...args: Array<unknown>) => {
       const { pass, message, messageNegated } = matcher(
         this._currentValue,
         expectedValue,
         ...args
       );
-      if ((!pass && !isNot) || (pass && isNot)) {
+      if ((!pass && !this._negation) || (pass && this._negation)) {
         this._testCase.errors.push(
-          isNot && messageNegated ? messageNegated : message
+          this._negation && messageNegated ? messageNegated : message
         );
       }
     };
@@ -130,12 +131,10 @@ export class Matchers {
   public toBeCalledUI = this.makeThrowingMatcher(Matchers._toBeCalledUIMatcher);
   public toBeCalledJS = this.makeThrowingMatcher(Matchers._toBeCalledJSMatcher);
 
-  public not = {
-    toBe: this.makeThrowingMatcher(Matchers._toBeMatcher, true),
-    toBeCalled: this.makeThrowingMatcher(Matchers._toBeCalledMatcher, true),
-    toBeCalledUI: this.makeThrowingMatcher(Matchers._toBeCalledUIMatcher, true),
-    toBeCalledJS: this.makeThrowingMatcher(Matchers._toBeCalledJSMatcher, true),
-  };
+  get not() {
+    this._negation = true;
+    return this;
+  }
 
   public toMatchSnapshots(expectedSnapshots: Array<Record<string, unknown>>) {
     const capturedSnapshots = this._currentValue as Array<
