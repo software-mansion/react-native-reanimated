@@ -23,10 +23,10 @@ const IS_WEB = isWeb();
  * @see https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollViewOffset
  */
 export const useScrollViewOffset = IS_WEB
-  ? useScrollViewOffsetJS
+  ? useScrollViewOffsetWeb
   : useScrollViewOffsetNative;
 
-function useScrollViewOffsetJS(
+function useScrollViewOffsetWeb(
   animatedRef: AnimatedRef<AnimatedScrollView>,
   initialRef?: SharedValue<number>
 ): SharedValue<number> {
@@ -85,6 +85,7 @@ function useScrollViewOffsetNative(
     // eslint-disable-next-line react-hooks/rules-of-hooks
     initialRef !== undefined ? initialRef : useSharedValue(0)
   );
+  const scrollRef = useRef<AnimatedScrollView | null>(null);
 
   const eventHandler = useEvent<RNNativeScrollEvent>(
     (event: ReanimatedScrollEvent) => {
@@ -100,11 +101,15 @@ function useScrollViewOffsetNative(
   ) as unknown as EventHandlerInternal<ReanimatedScrollEvent>;
 
   useEffect(() => {
+    // We need to make sure that listener for old animatedRef value is removed
+    if (scrollRef.current !== null) {
+      eventHandler.workletEventHandler?.unregisterFromEvents();
+    }
+    scrollRef.current = animatedRef.current;
+
     const component = animatedRef.current;
-    const viewTag = IS_WEB ? component : findNodeHandle(component);
-
+    const viewTag = findNodeHandle(component);
     eventHandler.workletEventHandler.registerForEvents(viewTag as number);
-
     return () => {
       eventHandler.workletEventHandler?.unregisterFromEvents();
     };
