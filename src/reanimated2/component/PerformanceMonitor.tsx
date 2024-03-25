@@ -1,7 +1,7 @@
 'use strict';
 
-import React, { useEffect, useMemo, useRef } from 'react';
-import { Text, TextInput, StyleSheet, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { TextInput, StyleSheet, View } from 'react-native';
 
 import type { FrameInfo } from '../frameCallback';
 import type { SharedValue } from '../commonTypes';
@@ -124,13 +124,12 @@ function JsPerformance() {
   }, []);
 
   const animatedProps = useAnimatedProps(() => {
-    const text = jsFps.value ?? 'N/A';
+    const text = 'JS: ' + jsFps.value ?? 'N/A';
     return { text, defaultValue: text };
   });
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headers}>JS FPS</Text>
       <AnimatedTextInput
         style={styles.text}
         animatedProps={animatedProps}
@@ -164,13 +163,12 @@ function UiPerformance() {
   });
 
   const animatedProps = useAnimatedProps(() => {
-    const text = uiFps.value ?? 'N/A';
+    const text = 'UI: ' + uiFps.value ?? 'N/A';
     return { text, defaultValue: text };
   });
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headers}>UI FPS</Text>
       <AnimatedTextInput
         style={styles.text}
         animatedProps={animatedProps}
@@ -192,22 +190,25 @@ export function PerformanceMonitor() {
 const styles = StyleSheet.create({
   monitor: {
     flexDirection: 'row',
-    gap: 8,
-    borderWidth: 1,
-    padding: 8,
     position: 'absolute',
-    backgroundColor: '#fffa',
+    backgroundColor: '#0006',
     zIndex: 1000,
   },
-  headers: {
-    fontSize: 12,
+  header: {
+    fontSize: 14,
+    color: '#ffff',
+    paddingHorizontal: 5,
   },
   text: {
-    fontSize: 16,
+    fontSize: 13,
+    color: '#ffff',
+    fontFamily: 'monospace',
+    paddingHorizontal: 3,
   },
   container: {
-    width: 40,
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
   },
 });
