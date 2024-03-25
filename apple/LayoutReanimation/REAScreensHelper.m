@@ -69,6 +69,26 @@
   return [view isKindOfClass:[RNSScreen class]] == YES;
 }
 
++ (bool)isStackChanged:(REAUIView *)view
+{
+  NSMutableArray<REAUIView *> *screens = [NSMutableArray new];
+  REAUIView *currentView = view;
+  while (currentView.reactSuperview != nil) {
+    if ([currentView isKindOfClass:[RNSScreenView class]]) {
+      [screens addObject:currentView];
+    }
+    currentView = currentView.reactSuperview;
+  }
+  for (int i = 1; i < [screens count]; i++) {
+    REAUIView *screen = screens[i];
+    REAUIView *topViewController = screen.reactViewController.navigationController.topViewController.view;
+    if (topViewController != screen) {
+      return true;
+    }
+  }
+  return false;
+}
+
 #else
 
 + (REAUIView *)getScreenForView:(REAUIView *)view
@@ -97,6 +117,11 @@
 }
 
 + (bool)isRNSScreenType:(REAUIView *)screen
+{
+  return false;
+}
+
++ (bool)isStackChanged:(REAUIView *)view
 {
   return false;
 }

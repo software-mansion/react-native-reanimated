@@ -427,14 +427,18 @@ static REASharedTransitionManager *_sharedTransitionManager;
     // check valid target screen configuration
     int screensCount = [stack.reactSubviews count];
     if (addedNewScreen && !isModal) {
-      // is under top
-      if (screensCount < 2) {
-        continue;
-      }
-      REAUIView *viewSourceParentScreen = [REAScreensHelper getScreenForView:viewSource];
-      REAUIView *screenUnderStackTop = stack.reactSubviews[screensCount - 2];
-      if (![screenUnderStackTop.reactTag isEqual:viewSourceParentScreen.reactTag] && !isInCurrentTransition) {
-        continue;
+      REAUIView *sourceStack = [REAScreensHelper getStackForView:viewSource];
+      REAUIView *targetStack = [REAScreensHelper getStackForView:viewTarget];
+      if (sourceStack == targetStack) {
+        // is under top
+        if (screensCount < 2) {
+          continue;
+        }
+        REAUIView *viewSourceParentScreen = [REAScreensHelper getScreenForView:viewSource];
+        REAUIView *screenUnderStackTop = stack.reactSubviews[screensCount - 2];
+        if (![screenUnderStackTop.reactTag isEqual:viewSourceParentScreen.reactTag] && !isInCurrentTransition) {
+          continue;
+        }
       }
     } else if (!addedNewScreen && !isModal) {
       // is on top
@@ -597,17 +601,36 @@ static REASharedTransitionManager *_sharedTransitionManager;
   REAUIView *disappearingScreen = [_sharedTransitionManager getDisappearingScreen];
   REAUIView *targetScreen = [self valueForKey:@"screenView"];
   if (disappearingScreen != NULL) {
+    float transitionViewOffsetX = 0;
+    if ([REAScreensHelper getStackForView:disappearingScreen] != [REAScreensHelper getStackForView:targetScreen]) {
+      transitionViewOffsetX = [_sharedTransitionManager getTransitionViewOffset:targetScreen];
+    }
     [_sharedTransitionManager screenRemovedFromStack:disappearingScreen
-                                         withOffsetX:-targetScreen.superview.frame.origin.x
-                                         withOffsetY:-targetScreen.superview.frame.origin.y];
+                                         withOffsetX:-(targetScreen.superview.frame.origin.x + transitionViewOffsetX)
+                                         withOffsetY:-(targetScreen.superview.frame.origin.y)];
   }
   [_sharedTransitionManager setDisappearingScreen:NULL];
+}
+
+- (float)getTransitionViewOffset:(REAUIView *)screen
+{
+  float x = 0;
+  REAUIView *currentView = screen;
+  while (currentView.superview != nil) {
+    REAUIView *maybeView = (REAUIView *)currentView.superview.superview;
+    if ([maybeView isKindOfClass:NSClassFromString(@"UINavigationTransitionView")]) {
+      CGPoint transitionViewOffset = currentView.frame.origin;
+      x += transitionViewOffset.x;
+    }
+    currentView = currentView.superview;
+  }
+  return x;
 }
 
 - (void)screenAddedToStack:(REAUIView *)screen
 {
   if (screen.superview != nil) {
-    [self runAsyncSharedTransition];
+    [self runAsyncSharedTransition:screen];
   }
 }
 
@@ -625,7 +648,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
     bool isTriggeredByGoBackButton = [self isScreen:screen onTopOfStack:stack];
     bool shouldRunTransition = (isScreenRemovedFromReactTree || isTriggeredByGoBackButton) &&
         !(isInteractive && [_currentSharedTransitionViews count] > 0);
-    if (shouldRunTransition) {
+    bool isStackChanged = [REAScreensHelper isStackChanged:screen];
+    if (shouldRunTransition && !isStackChanged) {
       [self runSharedTransitionForSharedViewsOnScreen:screen
                                         isInteractive:isInteractive
                                           withOffsetX:offsetX
@@ -739,13 +763,18 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
 }
 
-- (void)runAsyncSharedTransition
+- (void)runAsyncSharedTransition:(REAUIView *)screen
 {
   if ([_sharedElements count] == 0 || !_isAsyncSharedTransitionConfigured) {
     return;
   }
   for (REASharedElement *sharedElement in _sharedElements) {
     REAUIView *viewTarget = sharedElement.targetView;
+    REAUIView *viewScreen = [REAScreensHelper getScreenForView:viewTarget];
+    if (viewScreen != screen) {
+      // just wait for the next layout computation for your screen
+      return;
+    }
     REASnapshot *targetViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewTarget];
     _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
     sharedElement.targetViewSnapshot = targetViewSnapshot;

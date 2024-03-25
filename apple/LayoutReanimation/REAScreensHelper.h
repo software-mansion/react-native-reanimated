@@ -17,5 +17,6 @@
 + (REAUIView *)getScreenWrapper:(REAUIView *)view;
 + (int)getScreenType:(REAUIView *)screen;
 + (bool)isRNSScreenType:(REAUIView *)screen;
++ (bool)isStackChanged:(REAUIView *)view;
 
 @end
