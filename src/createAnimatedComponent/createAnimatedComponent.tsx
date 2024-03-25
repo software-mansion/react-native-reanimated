@@ -641,8 +641,8 @@ let getViewInfo = (element: any) => {
     getViewInfo = getViewInfo73;
     return getViewInfo73(element);
   } else if (element.__nativeTag) {
-    getViewInfo = getViewInfo74;
-    return getViewInfo74(element);
+    getViewInfo = getViewInfoLatest;
+    return getViewInfoLatest(element);
   }
   return getViewInfo73(element);
 };
@@ -662,7 +662,7 @@ function getViewInfo73(element: any) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getViewInfo74(element: any) {
+function getViewInfoLatest(element: any) {
   return {
     viewName: element?._viewConfig?.uiViewClassName,
     viewTag: element?.__nativeTag,
