@@ -123,6 +123,7 @@ import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
 import HabitsExample from './LayoutAnimations/HabitsExample';
 import MemoExample from './MemoExample';
 import PerformanceMonitorExample from './PerfomanceMonitorExample';
+import ScreenTransitionExample from './ScreenTransitionExample';
 
 interface Example {
   icon?: string;
@@ -132,7 +133,6 @@ interface Example {
 
 export const EXAMPLES: Record<string, Example> = {
   // Empty example for test purposes
-
   EmptyExample: {
     icon: '👻',
     title: 'Empty',
@@ -238,6 +238,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🏎️',
     title: 'Update props performance',
     screen: UpdatePropsPerfExample,
+  },
+  ScreenTransitionExample: {
+    icon: '📺',
+    title: 'Screen transition',
+    screen: ScreenTransitionExample,
   },
 
   // Basic examples
