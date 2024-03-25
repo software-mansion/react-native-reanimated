@@ -106,6 +106,7 @@ export interface IAnimatedComponentInternal {
   _PropsFilter: IPropsFilter;
   _viewInfo?: ViewInfo;
   context: React.ContextType<typeof SkipEnteringContext>;
+  safeProps: AnimatedComponentProps<InitialComponentProps>;
 }
 
 export type NestedArray<T> = T | NestedArray<T>[];
