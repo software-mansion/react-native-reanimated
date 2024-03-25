@@ -1,6 +1,6 @@
 'use strict';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Text, TextInput, StyleSheet, View } from 'react-native';
 
 import type { FrameInfo } from '../frameCallback';
@@ -108,8 +108,8 @@ function JsPerformance() {
     loopAnimationFrame((lastTime, time) => {
       const currentFps = completeBufferRoutine(
         circularBuffer,
-        time,
-        lastTime,
+        Math.round(time),
+        Math.round(lastTime),
         totalRenderTime
       );
 
@@ -137,19 +137,23 @@ function JsPerformance() {
 function UiPerformance() {
   const uiFps = useSharedValue<string | null>(null);
   const totalRenderTime = useSharedValue(0);
-  const circularBuffer = useRef<CircularBuffer | null>(null);
+  const circularBuffer = useSharedValue<CircularBuffer | null>(null);
 
   useFrameCallback(({ timestamp }: FrameInfo) => {
-    if (circularBuffer.current === null) {
-      circularBuffer.current = createCircularDoublesBuffer(DEFAULT_BUFFER_SIZE);
+    if (circularBuffer.value === null) {
+      circularBuffer.value = createCircularDoublesBuffer(DEFAULT_BUFFER_SIZE);
     }
-    const previousTimestamp = circularBuffer.current.front() ?? timestamp;
+
+    timestamp = Math.round(timestamp);
+    const previousTimestamp = circularBuffer.value.front() ?? timestamp;
+
     const currentFps = completeBufferRoutine(
-      circularBuffer.current,
+      circularBuffer.value,
       timestamp,
       previousTimestamp,
       totalRenderTime
     );
+
     uiFps.value = currentFps;
   });
 
