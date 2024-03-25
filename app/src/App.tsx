@@ -39,8 +39,8 @@ import { EXAMPLES } from './examples';
 import React from 'react';
 import { useReducedMotion } from 'react-native-reanimated';
 
-function isFabric() {
-  return !!(global as any)._IS_FABRIC;
+function isFabric(): boolean {
+  return !!(global as Record<string, unknown>)._IS_FABRIC;
 }
 
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {

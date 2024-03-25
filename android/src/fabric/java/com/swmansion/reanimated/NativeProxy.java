@@ -3,7 +3,6 @@ package com.swmansion.reanimated;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.RuntimeExecutor;
 import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
@@ -24,7 +23,6 @@ public class NativeProxy extends NativeProxyCommon {
         super(context);
         ReactFeatureFlagsWrapper.enableMountHooks();
         CallInvokerHolderImpl holder =
-                context.isBridgeless() ? null :
                 (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
 
         FabricUIManager fabricUIManager =
@@ -42,7 +40,6 @@ public class NativeProxy extends NativeProxyCommon {
                         LayoutAnimations,
                         messageQueueThread,
                         fabricUIManager,
-                        context.getRuntimeExecutor(),
                         valueUnpackerCode);
         prepareLayoutAnimations(LayoutAnimations);
         installJSIBindings();
@@ -58,7 +55,6 @@ public class NativeProxy extends NativeProxyCommon {
             LayoutAnimations LayoutAnimations,
             MessageQueueThread messageQueueThread,
             FabricUIManager fabricUIManager,
-            RuntimeExecutor runtimeExecutor,
             String valueUnpackerCode);
 
     public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);

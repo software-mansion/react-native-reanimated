@@ -38,8 +38,6 @@ NativeProxy::NativeProxy(
 #ifdef RCT_NEW_ARCH_ENABLED
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager,
-    std::function<void(std::function<void(jsi::Runtime &runtime)> &&callback)>
-        runtimeExecutor,
 #endif
     const std::string &valueUnpackerCode)
     : javaPart_(jni::make_global(jThis)),
@@ -50,12 +48,7 @@ NativeProxy::NativeProxy(
           std::make_shared<JMessageQueueThread>(messageQueueThread),
           uiScheduler,
           getPlatformDependentMethods(),
-          valueUnpackerCode,
-#ifdef RCT_NEW_ARCH_ENABLED
-          runtimeExecutor)),
-#else
-          nullptr)),
-#endif
+          valueUnpackerCode)),
       layoutAnimations_(std::move(layoutAnimations)) {
 #ifdef RCT_NEW_ARCH_ENABLED
   const auto &uiManager =
@@ -94,18 +87,10 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 #ifdef RCT_NEW_ARCH_ENABLED
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager,
-    jni::alias_ref<react::JRuntimeExecutor::javaobject> runtimeExecutorHolder,
 #endif
     const std::string &valueUnpackerCode) {
-  auto jsCallInvoker = jsCallInvokerHolder == nullptr
-      ? nullptr
-      : jsCallInvokerHolder->cthis()->getCallInvoker();
+  auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto uiScheduler = androidUiScheduler->cthis()->getUIScheduler();
-#ifdef RCT_NEW_ARCH_ENABLED
-  auto runtimeExecutor = runtimeExecutorHolder == nullptr
-      ? nullptr
-      : runtimeExecutorHolder->cthis()->get();
-#endif
   return makeCxxInstance(
       jThis,
       (jsi::Runtime *)jsContext,
@@ -115,7 +100,6 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       messageQueueThread,
 #ifdef RCT_NEW_ARCH_ENABLED
       fabricUIManager,
-      runtimeExecutor,
 #endif
       valueUnpackerCode);
 }

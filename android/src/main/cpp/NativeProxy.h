@@ -2,7 +2,6 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/fabric/JFabricUIManager.h>
-#include <react/jni/JRuntimeExecutor.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #endif
 
@@ -157,7 +156,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 #ifdef RCT_NEW_ARCH_ENABLED
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager,
-      jni::alias_ref<react::JRuntimeExecutor::javaobject> runtimeExecutorHolder,
 #endif
       const std::string &valueUnpackerCode);
   static void registerNatives();
@@ -269,8 +267,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 #ifdef RCT_NEW_ARCH_ENABLED
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager,
-      std::function<void(std::function<void(jsi::Runtime &runtime)> &&callback)>
-          runtimeExecutor,
 #endif
       const std::string &valueUnpackerCode);
 };

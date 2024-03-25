@@ -37,9 +37,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
-      const std::string &valueUnpackerCode,
-      std::function<void(std::function<void(jsi::Runtime &runtime)> &&callback)>
-          runtimeExecutor);
+      const std::string &valueUnpackerCode);
 
   ~NativeReanimatedModule();
 

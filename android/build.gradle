@@ -392,16 +392,6 @@ android {
                     srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/latest"
                 }
             }
-
-            // RuntimeExecutor
-            if (IS_NEW_ARCHITECTURE_ENABLED) {
-                if (REACT_NATIVE_MINOR_VERSION <= 73) {
-                    srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/73"
-                } else {
-                    srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/latest"
-                }
-            }
-
         }
     }
 }
