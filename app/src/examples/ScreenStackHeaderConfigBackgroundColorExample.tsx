@@ -21,7 +21,7 @@ import React from 'react';
 
 const AnimatedScreenStackHeaderConfig = Animated.createAnimatedComponent(
   Platform.OS === 'web'
-    ? React.forwardRef(ScreenStackHeaderConfig)
+    ? React.forwardRef(ScreenStackHeaderConfig as any)
     : ScreenStackHeaderConfig
 );
 Animated.addWhitelistedNativeProps({ title: true });
