@@ -18,11 +18,11 @@ export type PanGestureHandlerEventPayload = {
 };
 
 export type AnimatedScreenTransition = {
-  topScreenFrame: (
+  topScreenStyle: (
     event: PanGestureHandlerEventPayload,
     screenDimensions: MeasuredDimensions
   ) => Record<string, unknown>;
-  belowTopScreenFrame: (
+  belowTopScreenStyle: (
     event: PanGestureHandlerEventPayload,
     screenDimensions: MeasuredDimensions
   ) => Record<string, unknown>;
