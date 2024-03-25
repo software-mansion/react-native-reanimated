@@ -30,6 +30,7 @@ export interface AnimatedRef<T extends Component> {
     | ShadowNodeWrapper // Fabric
     | HTMLElement; // web
   current: T | null;
+  getTag: () => number;
 }
 
 // Might make that type generic if it's ever needed.
