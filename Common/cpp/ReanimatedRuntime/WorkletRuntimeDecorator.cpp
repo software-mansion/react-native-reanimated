@@ -65,15 +65,6 @@ void WorkletRuntimeDecorator::decorate(
 #endif
 
   jsi_utils::installJsiFunction(
-      rt, "_hasNativeState", [](jsi::Runtime &rt, const jsi::Value &value) {
-#if REACT_NATIVE_MINOR_VERSION >= 71
-        return value.asObject(rt).hasNativeState(rt);
-#else
-        return false;
-#endif // REACT_NATIVE_MINOR_VERSION >= 71
-      });
-
-  jsi_utils::installJsiFunction(
       rt, "_toString", [](jsi::Runtime &rt, const jsi::Value &value) {
         return jsi::String::createFromUtf8(rt, stringifyJSIValue(rt, value));
       });

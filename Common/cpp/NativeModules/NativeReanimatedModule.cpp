@@ -259,8 +259,8 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
   if (propName == "width" || propName == "height" || propName == "top" ||
       propName == "left") {
     // These props are calculated from frame
-    auto layoutableShadowNode =
-        traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
+    auto layoutableShadowNode = dynamic_cast<LayoutableShadowNode const *>(
+        newestCloneOfShadowNode.get());
     const auto &frame = layoutableShadowNode->layoutMetrics_.frame;
 
     if (propName == "width") {

@@ -35,12 +35,6 @@ if (isWeb()) {
 
 const reanimatedJS = new JSReanimated();
 
-global._hasNativeState = () => {
-  throw new Error(
-    '[Reanimated] _hasNativeState should never be called in JSReanimated.'
-  );
-};
-
 global._makeShareableClone = () => {
   throw new Error(
     '[Reanimated] _makeShareableClone should never be called in JSReanimated.'

@@ -127,7 +127,6 @@ const notCapturedIdentifiers = [
 const notCapturedIdentifiers_DEPRECATED = [
   // Reanimated
   '_IS_FABRIC',
-  '_hasNativeState',
   '_log',
   '_toString',
   '_scheduleOnJS',

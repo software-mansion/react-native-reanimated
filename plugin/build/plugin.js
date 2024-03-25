@@ -128,7 +128,6 @@ var require_globals = __commonJS({
     ];
     var notCapturedIdentifiers_DEPRECATED = [
       "_IS_FABRIC",
-      "_hasNativeState",
       "_log",
       "_toString",
       "_scheduleOnJS",
