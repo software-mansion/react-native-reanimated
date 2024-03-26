@@ -1,5 +1,5 @@
 import { getComparator } from './Comparators';
-import { color, defaultTestErrorLog } from './LogMessageUtils';
+import { color } from './LogMessageUtils';
 import {
   ComparisonMode,
   OperationUpdate,
@@ -15,7 +15,6 @@ type MatcherFunction = (
 ) => {
   pass: boolean;
   message: string;
-  messageNegated?: string;
 };
 
 export class Matchers {
@@ -33,7 +32,7 @@ export class Matchers {
     }
   }
 
-  private static _toBeMatcher: MatcherFunction = (
+  private _toBeMatcher: MatcherFunction = (
     currentValue: TestValue,
     expectedValue: TestValue,
     comparisonModeUnknown: unknown
@@ -46,19 +45,19 @@ export class Matchers {
 
     const isEqual = getComparator(comparisonMode);
 
+    const coloredExpected = color(expectedValue, 'green');
+    const coloredReceived = color(currentValue, 'red');
+    const coloredMode = color(comparisonMode, 'yellow');
+
     return {
       pass: isEqual(expectedValue, currentValue),
-      message: defaultTestErrorLog(expectedValue, currentValue, comparisonMode),
-      messageNegated: defaultTestErrorLog(
-        expectedValue,
-        currentValue,
-        comparisonMode,
-        true
-      ),
+      message: `Expected${
+        this._negation ? ' NOT' : ''
+      } ${coloredExpected} received ${coloredReceived}, mode: ${coloredMode}`,
     };
   };
 
-  private static _toBeCalledMatcher: MatcherFunction = (
+  private _toBeCalledMatcher: MatcherFunction = (
     currentValue: TestValue,
     times = 1
   ) => {
@@ -69,12 +68,13 @@ export class Matchers {
     const received = color(callsCount, 'red');
     return {
       pass: callsCount === times,
-      message: `Expected ${name} to be called ${expected} times, but was called ${received} times`,
-      messageNegated: `Expected ${name} NOT to be called ${expected} times`,
+      message: `Expected ${name}${
+        this._negation ? ' NOT' : ''
+      } to be called ${expected} times, but was called ${received} times`,
     };
   };
 
-  private static _toBeCalledUIMatcher: MatcherFunction = (
+  private _toBeCalledUIMatcher: MatcherFunction = (
     currentValue: TestValue,
     times = 1
   ) => {
@@ -87,12 +87,13 @@ export class Matchers {
 
     return {
       pass: callsCount === times,
-      message: `Expected ${name} to be called ${expected} times on ${threadName}, but was called ${received} times`,
-      messageNegated: `Expected ${name} NOT to be called ${expected} times on ${threadName}`,
+      message: `Expected ${name}${
+        this._negation ? ' NOT' : ''
+      } to be called ${expected} times on ${threadName}, but was called ${received} times`,
     };
   };
 
-  private static _toBeCalledJSMatcher: MatcherFunction = (
+  private _toBeCalledJSMatcher: MatcherFunction = (
     currentValue: TestValue,
     times = 1
   ) => {
@@ -106,30 +107,29 @@ export class Matchers {
 
     return {
       pass: callsCount === times,
-      message: `Expected ${name} to be called ${expected} times on ${threadName}, but was called ${received} times`,
-      messageNegated: `Expected ${name} NOT to be called ${expected} times on ${threadName}`,
+      message: `Expected ${name}${
+        this._negation ? ' NOT' : ''
+      } to be called ${expected} times on ${threadName}, but was called ${received} times`,
     };
   };
 
   private makeThrowingMatcher(matcher: MatcherFunction) {
     return (expectedValue: TestValue, ...args: Array<unknown>) => {
-      const { pass, message, messageNegated } = matcher(
+      const { pass, message } = matcher(
         this._currentValue,
         expectedValue,
         ...args
       );
       if ((!pass && !this._negation) || (pass && this._negation)) {
-        this._testCase.errors.push(
-          this._negation && messageNegated ? messageNegated : message
-        );
+        this._testCase.errors.push(message);
       }
     };
   }
 
-  public toBe = this.makeThrowingMatcher(Matchers._toBeMatcher);
-  public toBeCalled = this.makeThrowingMatcher(Matchers._toBeCalledMatcher);
-  public toBeCalledUI = this.makeThrowingMatcher(Matchers._toBeCalledUIMatcher);
-  public toBeCalledJS = this.makeThrowingMatcher(Matchers._toBeCalledJSMatcher);
+  public toBe = this.makeThrowingMatcher(this._toBeMatcher);
+  public toBeCalled = this.makeThrowingMatcher(this._toBeCalledMatcher);
+  public toBeCalledUI = this.makeThrowingMatcher(this._toBeCalledUIMatcher);
+  public toBeCalledJS = this.makeThrowingMatcher(this._toBeCalledJSMatcher);
 
   get not() {
     this._negation = true;

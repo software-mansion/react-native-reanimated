@@ -1,4 +1,4 @@
-import { ComparisonMode, TestValue } from './types';
+import { TestValue } from './types';
 
 export const RUNTIME_TEST_ERRORS = {
   UNDEFINED_TEST_SUITE: 'Undefined test suite context',
@@ -25,18 +25,4 @@ export function color(
   };
 
   return `${COLOR_CODES[color]}${value}\x1b[0m`;
-}
-
-export function defaultTestErrorLog(
-  expected: TestValue,
-  received: TestValue,
-  mode: ComparisonMode,
-  negated = false
-) {
-  const coloredExpected = color(expected, 'green');
-  const coloredReceived = color(received, 'red');
-  const coloredMode = color(mode, 'yellow');
-  return `Expected${
-    negated ? ' NOT' : ''
-  } ${coloredExpected} received ${coloredReceived}, mode: ${coloredMode}`;
 }
