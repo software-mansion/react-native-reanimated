@@ -5872,10 +5872,9 @@ react-is@^17.0.1:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-17.0.2.tgz#e691d4a8e9c789365655539ab372762b0efb54f0"
   integrity sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==
 
-react-native-gesture-handler@^2.16.0-rc.0:
-  version "2.16.0-rc.0"
-  resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-2.16.0-rc.0.tgz#ed9bbd7840fe84446402ec1d26c65e8e3ab07323"
-  integrity sha512-7y7UKLnDBq5BndVZQed1BC0CtXSVYg27XNL6Fu2vhmkvxVPtsHFOW1XMMCVajIi4ySnf4JNO/LbEQeOlJVXsYQ==
+"react-native-gesture-handler@git+https://github.com/software-mansion/react-native-gesture-handler.git#6808ca355af71ca2f1f6653b50e389c8b564c8ba":
+  version "2.15.0"
+  resolved "git+https://github.com/software-mansion/react-native-gesture-handler.git#6808ca355af71ca2f1f6653b50e389c8b564c8ba"
   dependencies:
     "@egjs/hammerjs" "^2.0.17"
     hoist-non-react-statics "^3.3.0"
