@@ -98,7 +98,6 @@ export class Matchers {
     times = 1
   ) => {
     Matchers._assertValueIsCallTracker(currentValue);
-    Matchers._assertValueIsCallTracker(currentValue);
     const callsCount = currentValue.onJS;
     const name = color(currentValue.name, 'green');
     const threadName = color('JS thread', 'cyan');
@@ -113,7 +112,7 @@ export class Matchers {
     };
   };
 
-  private makeThrowingMatcher(matcher: MatcherFunction) {
+  private decorateMatcher(matcher: MatcherFunction) {
     return (expectedValue: TestValue, ...args: Array<unknown>) => {
       const { pass, message } = matcher(
         this._currentValue,
@@ -126,10 +125,10 @@ export class Matchers {
     };
   }
 
-  public toBe = this.makeThrowingMatcher(this._toBeMatcher);
-  public toBeCalled = this.makeThrowingMatcher(this._toBeCalledMatcher);
-  public toBeCalledUI = this.makeThrowingMatcher(this._toBeCalledUIMatcher);
-  public toBeCalledJS = this.makeThrowingMatcher(this._toBeCalledJSMatcher);
+  public toBe = this.decorateMatcher(this._toBeMatcher);
+  public toBeCalled = this.decorateMatcher(this._toBeCalledMatcher);
+  public toBeCalledUI = this.decorateMatcher(this._toBeCalledUIMatcher);
+  public toBeCalledJS = this.decorateMatcher(this._toBeCalledJSMatcher);
 
   get not() {
     this._negation = true;
