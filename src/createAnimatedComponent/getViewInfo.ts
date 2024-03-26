@@ -1,3 +1,4 @@
+'use strict';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // This is a makeshift solution to handle both 0.73 and 0.74 versions of React Native.
