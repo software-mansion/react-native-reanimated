@@ -1,5 +1,5 @@
 'use strict';
-import React, { forwardRef, useRef } from 'react';
+import React, { forwardRef, useRef, useState } from 'react';
 import type {
   FlatListProps,
   LayoutChangeEvent,
@@ -12,8 +12,10 @@ import { createAnimatedComponent } from '../../createAnimatedComponent';
 import type { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
 import { LayoutAnimationConfig } from './LayoutAnimationConfig';
 import type { AnimatedProps, AnimatedStyle } from '../helperTypes';
+import { isAndroid } from '../PlatformChecker';
 
 const AnimatedFlatList = createAnimatedComponent(FlatList);
+const IS_ANDROID = isAndroid();
 
 interface CellRendererComponentProps {
   onLayout?: ((event: LayoutChangeEvent) => void) | undefined;
@@ -67,8 +69,25 @@ const FlatListForwardRefRender = function <Item = any>(
   props: ReanimatedFlatListPropsWithLayout<Item>,
   ref: React.ForwardedRef<FlatList>
 ) {
-  const { itemLayoutAnimation, skipEnteringExitingAnimations, ...restProps } =
-    props;
+  const [height, setHeight] = useState(0);
+  const {
+    itemLayoutAnimation,
+    skipEnteringExitingAnimations,
+    onLayout,
+    contentContainerStyle,
+    ...restProps
+  } = props;
+
+  /** Temporary (or not?) fix of https://github.com/software-mansion/react-native-reanimated/issues/5728
+  The bug occurs only on android, when itemLayoutAnimation is provided and height is not hardcoded.
+  To solve it, read actual height and define it */
+  const heightIsNotHardcoded =
+    !contentContainerStyle ||
+    !('height' in contentContainerStyle) ||
+    contentContainerStyle.height === undefined;
+
+  const temporaryFixAndroidBug =
+    IS_ANDROID && itemLayoutAnimation !== undefined && heightIsNotHardcoded;
 
   // Set default scrollEventThrottle, because user expects
   // to have continuous scroll events and
@@ -91,6 +110,21 @@ const FlatListForwardRefRender = function <Item = any>(
     // @ts-expect-error In its current type state, createAnimatedComponent cannot create generic components.
     <AnimatedFlatList
       ref={ref}
+      onLayout={
+        temporaryFixAndroidBug
+          ? (event: LayoutChangeEvent) => {
+              if (onLayout && typeof onLayout === 'function') {
+                onLayout(event);
+              }
+              setHeight(event.nativeEvent.layout.height);
+            }
+          : onLayout
+      }
+      contentContainerStyle={
+        temporaryFixAndroidBug
+          ? [{ height }, contentContainerStyle]
+          : contentContainerStyle
+      }
       {...restProps}
       CellRendererComponent={CellRendererComponent}
     />
