@@ -12,6 +12,7 @@ import { createAnimatedComponent } from '../../createAnimatedComponent';
 import type { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
 import { LayoutAnimationConfig } from './LayoutAnimationConfig';
 import type { AnimatedProps, AnimatedStyle } from '../helperTypes';
+import ScrollViewStickyHeaderWithForwardedRef from './StickyHeader';
 
 const AnimatedSectionList = createAnimatedComponent(SectionList);
 
@@ -94,6 +95,7 @@ const SectionListForwardRefRender = function <Item = any>(
       ref={ref}
       {...restProps}
       CellRendererComponent={CellRendererComponent}
+      StickyHeaderComponent={ScrollViewStickyHeaderWithForwardedRef}
     />
   );
 

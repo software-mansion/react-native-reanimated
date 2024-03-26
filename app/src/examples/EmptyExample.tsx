@@ -7,7 +7,12 @@ import {
   StatusBar,
   TouchableOpacity,
 } from 'react-native';
-import Animated, { LinearTransition } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  Layout,
+  LightSpeedOutRight,
+  LinearTransition,
+} from 'react-native-reanimated';
 
 interface Section {
   key: string;
@@ -18,7 +23,7 @@ interface Section {
 const INITIAL_DATA: Array<Section> = [
   {
     key: '0',
-    title: 'ONE',
+    title: 'BLUE',
     data: [
       'lightblue',
       'powderblue',
@@ -33,7 +38,7 @@ const INITIAL_DATA: Array<Section> = [
   },
   {
     key: '1',
-    title: 'TWO',
+    title: 'GREEN',
     data: [
       'darkseagreen',
       'mediumseagreen',
@@ -45,17 +50,43 @@ const INITIAL_DATA: Array<Section> = [
   },
   {
     key: '2',
-    title: 'THREE',
+    title: 'GOLD',
     data: ['gold', 'orange', 'sandybrown', 'darkorange'],
   },
 ];
 
-function getRandomColor(): string {
-  return '#' + Math.floor(Math.random() * 16777215).toString(16);
+function getRandomColor(color: 'GREEN' | 'BLUE' | 'GOLD'): string {
+  let h = 0;
+  if (color === 'BLUE') {
+    h = 230 + Math.floor((0.5 - Math.random()) * 20);
+  }
+  if (color === 'GREEN') {
+    h = 130 + Math.floor((0.5 - Math.random()) * 50);
+  }
+  if (color === 'GOLD') {
+    h = 40 + Math.floor((0.5 - Math.random()) * 20);
+  }
+
+  const s = Math.floor(Math.random() * 80) + 20;
+  const l = Math.floor(Math.random() * 80) + 20;
+  return 'hsl(' + h + ', ' + s + '%, ' + l + '%)';
 }
 
 export default function App() {
   const [data, setData] = useState<Array<Section>>(INITIAL_DATA);
+
+  function addRandomColor(sectionKey, sectionName) {
+    const dataCopy = [...data];
+    dataCopy[sectionKey].data.push(getRandomColor(sectionName));
+    setData(dataCopy);
+  }
+  function removeColor(sectionKey, colorToRemove) {
+    const dataCopy = [...data];
+    dataCopy[sectionKey].data = dataCopy[sectionKey].data.filter((color) => {
+      return color !== colorToRemove;
+    });
+    setData(dataCopy);
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -63,24 +94,31 @@ export default function App() {
         stickySectionHeadersEnabled
         sections={data}
         itemLayoutAnimation={LinearTransition}
-        keyExtractor={(item: unknown, index: number) => String(item) + index}
-        renderItem={({ item }) => (
-          <View style={[styles.item, { backgroundColor: item }]}>
-            <Text style={styles.title}>{item}</Text>
+        keyExtractor={(item: unknown) => String(item)}
+        renderItem={({ item, section: { key } }) => (
+          <Animated.View
+            entering={FadeIn}
+            exiting={LightSpeedOutRight}
+            layout={Layout.springify()}>
+            <TouchableOpacity
+              style={[styles.item, { backgroundColor: item as string }]}
+              onPress={() => {
+                removeColor(key, item);
+              }}>
+              <Text style={styles.title}>{item as string}</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+        renderSectionHeader={({ section: { title } }) => (
+          <View style={styles.header}>
+            <Text style={styles.headerText}>{title}</Text>
           </View>
         )}
-        renderSectionHeader={({
-          section: { title },
-        }: {
-          section: { title: string };
-        }) => <Text style={styles.header}>{title}</Text>}
-        renderSectionFooter={({ section: { key } }) => (
+        renderSectionFooter={({ section: { key, title } }) => (
           <TouchableOpacity
             style={styles.item}
             onPress={() => {
-              const dataCopy = [...data];
-              dataCopy[key].data.push(getRandomColor());
-              setData(dataCopy);
+              addRandomColor(key, title);
             }}>
             <Text style={styles.title}>Add random color</Text>
           </TouchableOpacity>
@@ -97,21 +135,26 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
   item: {
-    backgroundColor: 'powderblue',
+    backgroundColor: 'gray',
     alignItems: 'center',
     borderRadius: 30,
     padding: 15,
     marginVertical: 8,
   },
   header: {
-    fontSize: 32,
-    padding: 10,
     backgroundColor: 'black',
+    opacity: 0.8,
     borderColor: 'white',
     color: 'white',
     textAlign: 'center',
     borderWidth: 3,
     borderRadius: 30,
+  },
+  headerText: {
+    fontSize: 32,
+    padding: 10,
+    color: 'white',
+    textAlign: 'center',
   },
   title: {
     fontSize: 24,
