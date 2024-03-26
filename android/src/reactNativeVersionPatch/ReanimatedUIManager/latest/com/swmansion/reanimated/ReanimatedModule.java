@@ -1,14 +1,12 @@
 package com.swmansion.reanimated;
 
 import android.util.Log;
-import androidx.annotation.NonNull;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.UIManager;
-import com.facebook.react.bridge.UIManagerListener;
-import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.module.annotations.ReactModule;
+import com.facebook.react.uimanager.NativeViewHierarchyManager;
+import com.facebook.react.uimanager.UIBlock;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerModuleListener;
 import java.util.ArrayList;
@@ -16,43 +14,9 @@ import javax.annotation.Nullable;
 
 @ReactModule(name = ReanimatedModule.NAME)
 public class ReanimatedModule extends NativeReanimatedModuleSpec
-    implements LifecycleEventListener, UIManagerModuleListener, UIManagerListener {
+    implements LifecycleEventListener, UIManagerModuleListener {
 
   public static final String NAME = "ReanimatedModule";
-
-  public void didDispatchMountItems(@NonNull UIManager uiManager) {
-    // Keep: Required for UIManagerListener
-  }
-
-  public void didMountItems(@NonNull UIManager uiManager) {
-    // Keep: Required for UIManagerListener
-  }
-
-  public void didScheduleMountItems(@NonNull UIManager uiManager) {
-    // Keep: Required for UIManagerListener
-  }
-
-  public void willDispatchViewUpdates(@NonNull UIManager uiManager) {
-    if (mOperations.isEmpty()) {
-      return;
-    }
-    final ArrayList<UIThreadOperation> operations = mOperations;
-    mOperations = new ArrayList<>();
-    if (uiManager instanceof FabricUIManager) {
-      uiManager
-          .addUIBlock(
-              uiBlockViewResolver -> {
-                NodesManager nodesManager = getNodesManager();
-                for (UIThreadOperation operation : operations) {
-                  operation.execute(nodesManager);
-                }
-              });
-    }
-  }
-
-  public void willMountItems(@NonNull UIManager uiManager) {
-    // Keep: Required for UIManagerListener
-  }
 
   private interface UIThreadOperation {
     void execute(NodesManager nodesManager);
@@ -68,18 +32,9 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   @Override
   public void initialize() {
     ReactApplicationContext reactCtx = getReactApplicationContext();
-
-    if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
-      UIManager uiManager = reactCtx.getFabricUIManager();
-      if (uiManager instanceof FabricUIManager) {
-        ((FabricUIManager) uiManager).addUIManagerEventListener(this);
-      }
-      reactCtx.addLifecycleEventListener(this);
-    } else {
-      UIManagerModule uiManager = reactCtx.getNativeModule(UIManagerModule.class);
-      reactCtx.addLifecycleEventListener(this);
-      uiManager.addUIManagerListener(this);
-    }
+    UIManagerModule uiManager = reactCtx.getNativeModule(UIManagerModule.class);
+    reactCtx.addLifecycleEventListener(this);
+    uiManager.addUIManagerListener(this);
   }
 
   @Override
@@ -109,10 +64,13 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
     final ArrayList<UIThreadOperation> operations = mOperations;
     mOperations = new ArrayList<>();
     uiManager.addUIBlock(
-        nativeViewHierarchyManager -> {
-          NodesManager nodesManager = getNodesManager();
-          for (UIThreadOperation operation : operations) {
-            operation.execute(nodesManager);
+        new UIBlock() {
+          @Override
+          public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
+            NodesManager nodesManager = getNodesManager();
+            for (UIThreadOperation operation : operations) {
+              operation.execute(nodesManager);
+            }
           }
         });
   }
