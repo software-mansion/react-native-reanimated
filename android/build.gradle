@@ -380,7 +380,7 @@ android {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/70"
             } else if (REACT_NATIVE_MINOR_VERSION <= 73) {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/73"
-            } else if (IS_NEW_ARCHITECTURE_ENABLED) {
+            } else {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest"
             }
 
