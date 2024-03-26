@@ -378,10 +378,12 @@ android {
             // ReanimatedUIManager & ReanimatedUIImplementation 
             if (REACT_NATIVE_MINOR_VERSION <= 70) {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/70"
-            } else if (REACT_NATIVE_MINOR_VERSION == 73) {
+            } else if (REACT_NATIVE_MINOR_VERSION <= 73) {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/73"
+            } else if (IS_NEW_ARCHITECTURE_ENABLED) {
+                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest-fabric"
             } else {
-                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest"
+                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest-paper"
             }
 
             // ReactFeatureFlags 
