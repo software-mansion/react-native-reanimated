@@ -1708,6 +1708,11 @@
   resolved "https://registry.yarnpkg.com/@react-native-masked-view/masked-view/-/masked-view-0.3.1.tgz#5bd76f17004a6ccbcec03856893777ee91f23d29"
   integrity sha512-uVm8U6nwFIlUd1iDIB5cS+lDadApKR+l8k4k84d9hn+GN4lzAIJhUZ9syYX7c022MxNgAlbxoFLt0pqKoyaAGg==
 
+"@react-native-picker/picker@^2.7.0":
+  version "2.7.0"
+  resolved "https://registry.yarnpkg.com/@react-native-picker/picker/-/picker-2.7.0.tgz#b88605dde333854d4015ee8861b624267c25d687"
+  integrity sha512-QWxfYPMyaCxWwJ9VoiWX4enQ0OZA7Q0O4f5n86b03LqnVyTNVYBnt4dYDTROfDUT9NhlS7Vqy0B3OV4pfyyG1g==
+
 "@react-native/assets-registry@0.74.75":
   version "0.74.75"
   resolved "https://registry.yarnpkg.com/@react-native/assets-registry/-/assets-registry-0.74.75.tgz#58779e2a2dd0f012ad4286ef4cd5f59c53cf7cf6"
