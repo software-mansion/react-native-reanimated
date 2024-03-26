@@ -13,6 +13,7 @@
     "@react-native-async-storage/async-storage": "^1.22.3",
     "@react-native-community/slider": "^4.5.0",
     "@react-native-masked-view/masked-view": "^0.3.1",
+    "@react-native-picker/picker": "^2.7.0",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
     "react": "18.2.0",
