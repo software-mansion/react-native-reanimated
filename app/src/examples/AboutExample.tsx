@@ -6,6 +6,10 @@ function isWeb() {
   return Platform.OS === 'web';
 }
 
+function isBridgeless() {
+  return (global as Record<string, unknown>)._IS_BRIDGELESS;
+}
+
 function getPlatform() {
   if (isWeb()) {
     return 'web';
@@ -70,7 +74,7 @@ export default function AboutExample() {
           </Text>
           <Text style={styles.text}>
             <Text style={styles.bold}>Bridgeless enabled:</Text>{' '}
-            {(global as any)._IS_BRIDGELESS ? 'yes' : 'no'}
+            {isBridgeless() ? 'yes' : 'no'}
           </Text>
         </>
       )}
