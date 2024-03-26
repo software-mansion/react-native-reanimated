@@ -10,5 +10,6 @@ module.exports = {
   ],
   rules: {
     'curly': 'error',
+    '@typescript-eslint/no-non-null-assertion': 'off',
   },
   ignorePatterns: ['**/*.d.ts','jestUtils.ts']};
