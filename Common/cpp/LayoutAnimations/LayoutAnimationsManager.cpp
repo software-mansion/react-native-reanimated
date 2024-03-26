@@ -153,6 +153,7 @@ void LayoutAnimationsManager::startLayoutAnimation(
 void LayoutAnimationsManager::cancelLayoutAnimation(
     jsi::Runtime &rt,
     const int tag) const {
+      printf("trying to cancel animation for %d\n", tag);
   jsi::Value layoutAnimationRepositoryAsValue =
       rt.global()
           .getPropertyAsObject(rt, "global")

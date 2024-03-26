@@ -35,8 +35,10 @@ struct MutationNode{
   Tag tag;
   ShadowViewMutation mutation;
   int animatedChildrenCount = 0;
-  MutationNode(ShadowViewMutation& mutation): mutation(mutation){
-  }
+  bool isAnimatingExit = false;
+  bool isDone = false;
+  bool isExiting = true;
+  MutationNode(ShadowViewMutation& mutation): mutation(mutation){}
 };
 
 struct LayoutAnimation {
