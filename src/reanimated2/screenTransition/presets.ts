@@ -3,13 +3,13 @@
 import type { AnimatedScreenTransition } from './commonTypes';
 
 const SwipeRight: AnimatedScreenTransition = {
-  topScreenFrame: (event) => {
+  topScreenStyle: (event) => {
     'worklet';
     return {
       transform: [{ translateX: event.translationX }],
     };
   },
-  belowTopScreenFrame: (event, screenSize) => {
+  belowTopScreenStyle: (event, screenSize) => {
     'worklet';
     return {
       transform: [
@@ -20,13 +20,13 @@ const SwipeRight: AnimatedScreenTransition = {
 };
 
 const SwipeLeft: AnimatedScreenTransition = {
-  topScreenFrame: (event) => {
+  topScreenStyle: (event) => {
     'worklet';
     return {
       transform: [{ translateX: event.translationX }],
     };
   },
-  belowTopScreenFrame: (event, screenSize) => {
+  belowTopScreenStyle: (event, screenSize) => {
     'worklet';
     return {
       transform: [
@@ -37,13 +37,13 @@ const SwipeLeft: AnimatedScreenTransition = {
 };
 
 const SwipeDown: AnimatedScreenTransition = {
-  topScreenFrame: (event) => {
+  topScreenStyle: (event) => {
     'worklet';
     return {
       transform: [{ translateY: event.translationY }],
     };
   },
-  belowTopScreenFrame: (event, screenSize) => {
+  belowTopScreenStyle: (event, screenSize) => {
     'worklet';
     return {
       transform: [
@@ -54,13 +54,13 @@ const SwipeDown: AnimatedScreenTransition = {
 };
 
 const SwipeUp: AnimatedScreenTransition = {
-  topScreenFrame: (event) => {
+  topScreenStyle: (event) => {
     'worklet';
     return {
       transform: [{ translateY: event.translationY }],
     };
   },
-  belowTopScreenFrame: (event, screenSize) => {
+  belowTopScreenStyle: (event, screenSize) => {
     'worklet';
     return {
       transform: [
@@ -71,7 +71,7 @@ const SwipeUp: AnimatedScreenTransition = {
 };
 
 const TwoDimensional: AnimatedScreenTransition = {
-  topScreenFrame: (event, _screenSize) => {
+  topScreenStyle: (event, _screenSize) => {
     'worklet';
     return {
       transform: [
@@ -80,46 +80,46 @@ const TwoDimensional: AnimatedScreenTransition = {
       ],
     };
   },
-  belowTopScreenFrame: (_event, _screenSize) => {
+  belowTopScreenStyle: (_event, _screenSize) => {
     'worklet';
     return {};
   },
 };
 
 const Horizontal: AnimatedScreenTransition = {
-  topScreenFrame: (event, _screenSize) => {
+  topScreenStyle: (event, _screenSize) => {
     'worklet';
     return {
       transform: [{ translateX: event.translationX }],
     };
   },
-  belowTopScreenFrame: (_event, _screenSize) => {
+  belowTopScreenStyle: (_event, _screenSize) => {
     'worklet';
     return {};
   },
 };
 
 const Vertical: AnimatedScreenTransition = {
-  topScreenFrame: (event, _screenSize) => {
+  topScreenStyle: (event, _screenSize) => {
     'worklet';
     return {
       transform: [{ translateY: event.translationY }],
     };
   },
-  belowTopScreenFrame: (_event, _screenSize) => {
+  belowTopScreenStyle: (_event, _screenSize) => {
     'worklet';
     return {};
   },
 };
 
 const SwipeRightFade: AnimatedScreenTransition = {
-  topScreenFrame: (event, screenSize) => {
+  topScreenStyle: (event, screenSize) => {
     'worklet';
     return {
       opacity: 1 - Math.abs(event.translationX / screenSize.width),
     };
   },
-  belowTopScreenFrame: (_event, _screenSize) => {
+  belowTopScreenStyle: (_event, _screenSize) => {
     'worklet';
     return {};
   },
