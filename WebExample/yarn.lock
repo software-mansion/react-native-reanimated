@@ -8120,16 +8120,8 @@ react-is@^17.0.1:
     prop-types "^15.7.2"
 
 "react-native-reanimated@link:..":
-  version "3.8.0"
-  dependencies:
-    "@babel/plugin-transform-arrow-functions" "^7.0.0-0"
-    "@babel/plugin-transform-nullish-coalescing-operator" "^7.0.0-0"
-    "@babel/plugin-transform-optional-chaining" "^7.0.0-0"
-    "@babel/plugin-transform-shorthand-properties" "^7.0.0-0"
-    "@babel/plugin-transform-template-literals" "^7.0.0-0"
-    "@babel/preset-typescript" "^7.16.7"
-    convert-source-map "^2.0.0"
-    invariant "^2.2.4"
+  version "0.0.0"
+  uid ""
 
 react-native-web@~0.19.10:
   version "0.19.10"
