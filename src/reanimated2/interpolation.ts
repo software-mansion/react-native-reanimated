@@ -135,7 +135,9 @@ function internalInterpolate(
   'worklet';
   const { leftEdgeInput, rightEdgeInput, leftEdgeOutput, rightEdgeOutput } =
     narrowedInput;
-  if (rightEdgeInput - leftEdgeInput === 0) return leftEdgeOutput;
+  if (rightEdgeInput - leftEdgeInput === 0) {
+    return leftEdgeOutput;
+  }
   const progress = (x - leftEdgeInput) / (rightEdgeInput - leftEdgeInput);
   const val = leftEdgeOutput + progress * (rightEdgeOutput - leftEdgeOutput);
   const coef = rightEdgeOutput >= leftEdgeOutput ? 1 : -1;
