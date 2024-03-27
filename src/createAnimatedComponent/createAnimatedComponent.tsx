@@ -8,7 +8,7 @@ import type {
 } from 'react';
 import React from 'react';
 import { findNodeHandle, Platform } from 'react-native';
-import WorkletEventHandler from '../reanimated2/WorkletEventHandler';
+import { WorkletEventHandler } from '../reanimated2/WorkletEventHandler';
 import '../reanimated2/layoutReanimation/animationsManager';
 import invariant from 'invariant';
 import { adaptViewConfig } from '../ConfigHelper';
@@ -55,6 +55,7 @@ import { updateLayoutAnimations } from '../reanimated2/UpdateLayoutAnimations';
 import type { CustomConfig } from '../reanimated2/layoutReanimation/web/config';
 import type { FlatList, FlatListProps } from 'react-native';
 import { addHTMLMutationObserver } from '../reanimated2/layoutReanimation/web/domUtils';
+import type { IWorkletEventHandler } from 'src/reanimated2/hook/commonTypes';
 
 const IS_WEB = isWeb();
 
@@ -253,8 +254,46 @@ export function createAnimatedComponent(
           has('workletEventHandler', prop) &&
           prop.workletEventHandler instanceof WorkletEventHandler
         ) {
-          prop.workletEventHandler.unregisterFromEvents();
+          prop.workletEventHandler.unregisterFromEvents(
+            this._getViewInfo().viewTag as number
+          );
         }
+      }
+    }
+
+    _updateNativeEvents(
+      prevProps: AnimatedComponentProps<InitialComponentProps>
+    ) {
+      let previousHandler: IWorkletEventHandler<Event> | undefined;
+      let newHandler: IWorkletEventHandler<Event> | undefined;
+
+      // Get previous handler
+      for (const key in prevProps) {
+        const prop = prevProps[key];
+        if (
+          has('workletEventHandler', prop) &&
+          prop.workletEventHandler instanceof WorkletEventHandler
+        ) {
+          previousHandler = prop.workletEventHandler;
+        }
+      }
+
+      // Get new handler
+      for (const key in this.props) {
+        const prop = this.props[key];
+        if (
+          has('workletEventHandler', prop) &&
+          prop.workletEventHandler instanceof WorkletEventHandler
+        ) {
+          newHandler = prop.workletEventHandler;
+        }
+      }
+
+      if (previousHandler !== newHandler) {
+        // Handler changed, we need to unregister from the previous one and register to the new one
+        const viewTag = this._getViewInfo().viewTag as number;
+        previousHandler?.unregisterFromEvents(viewTag);
+        newHandler?.registerForEvents(viewTag);
       }
     }
 
@@ -272,42 +311,6 @@ export function createAnimatedComponent(
         }
         if (isFabric()) {
           removeFromPropsRegistry(this._viewTag);
-        }
-      }
-    }
-
-    _reattachNativeEvents(
-      prevProps: AnimatedComponentProps<InitialComponentProps>
-    ) {
-      for (const key in prevProps) {
-        const prop = this.props[key];
-        if (
-          has('workletEventHandler', prop) &&
-          prop.workletEventHandler instanceof WorkletEventHandler &&
-          prop.workletEventHandler.reattachNeeded
-        ) {
-          prop.workletEventHandler.unregisterFromEvents();
-        }
-      }
-
-      let viewTag = null;
-
-      for (const key in this.props) {
-        const prop = this.props[key];
-        if (
-          has('workletEventHandler', prop) &&
-          prop.workletEventHandler instanceof WorkletEventHandler &&
-          prop.workletEventHandler.reattachNeeded
-        ) {
-          if (viewTag === null) {
-            const node = this._getEventViewRef() as AnimatedComponentRef;
-
-            viewTag = IS_WEB
-              ? this._component
-              : findNodeHandle(options?.setNativeProps ? this : node);
-          }
-          prop.workletEventHandler.registerForEvents(viewTag as number, key);
-          prop.workletEventHandler.reattachNeeded = false;
         }
       }
     }
@@ -464,7 +467,7 @@ export function createAnimatedComponent(
       ) {
         this._configureSharedTransition();
       }
-      this._reattachNativeEvents(prevProps);
+      this._updateNativeEvents(prevProps);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
