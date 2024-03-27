@@ -141,8 +141,18 @@ const getInterpolateRGB = (
   for (let i = 0; i < colors.length; ++i) {
     const color = colors[i];
     const processedColor = processColor(color);
-    // explicit check in case if processedColor is 0
-    if (processedColor !== null && processedColor !== undefined) {
+
+    if (typeof processedColor === 'object' && processedColor !== null) {
+      r.push(processedColor.r);
+      g.push(processedColor.g);
+      b.push(processedColor.b);
+      a.push(processedColor.a);
+    } else if (
+      processedColor !== null &&
+      processedColor !== undefined &&
+      typeof processedColor !== 'object'
+    ) {
+      // explicit check in case if processedColor is 0
       r.push(red(processedColor));
       g.push(green(processedColor));
       b.push(blue(processedColor));
