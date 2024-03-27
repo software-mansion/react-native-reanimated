@@ -14,13 +14,13 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
+import com.facebook.react.bridge.UIManager;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.IViewManagerWithChildren;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.RootView;
-import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
 import com.swmansion.reanimated.AndroidUIScheduler;
 import com.swmansion.reanimated.Utils;
@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
 public class AnimationsManager implements ViewHierarchyObserver {
   private WeakReference<AndroidUIScheduler> mWeakAndroidUIScheduler;
   private ReactContext mContext;
-  private UIManagerModule mUIManager;
+  private UIManager mUIManager;
   private NativeMethodsHolder mNativeMethodsHolder;
 
   private HashSet<Integer> mEnteringViews = new HashSet<>();
@@ -60,9 +60,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mWeakAndroidUIScheduler = new WeakReference<>(androidUIScheduler);
   }
 
-  public AnimationsManager(ReactContext context, UIManagerModule uiManagerModule) {
+  public AnimationsManager(ReactContext context, UIManager uiManager) {
     mContext = context;
-    mUIManager = uiManagerModule;
+    mUIManager = uiManager;
     isInvalidated = false;
     mSharedTransitionManager = new SharedTransitionManager(this);
   }
