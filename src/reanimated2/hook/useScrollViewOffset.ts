@@ -28,19 +28,17 @@ export const useScrollViewOffset = IS_WEB
 
 function useScrollViewOffsetWeb(
   animatedRef: AnimatedRef<AnimatedScrollView>,
-  initialRef?: SharedValue<number>
+  providedOffset?: SharedValue<number>
 ): SharedValue<number> {
-  const offsetRef = useRef(
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    initialRef !== undefined ? initialRef : useSharedValue(0)
-  );
+  const internalOffset = useSharedValue(0);
+  const offset = useRef(providedOffset ?? internalOffset).current;
   const scrollRef = useRef<AnimatedScrollView | null>(null);
 
   const eventHandler = useCallback(() => {
     'worklet';
     const element = animatedRef.current as unknown as HTMLElement;
     // scrollLeft is the X axis scrolled offset, works properly also with RTL layout
-    offsetRef.current.value =
+    offset.value =
       element.scrollLeft === 0 ? element.scrollTop : element.scrollLeft;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animatedRef, animatedRef.current]);
@@ -66,7 +64,7 @@ function useScrollViewOffsetWeb(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animatedRef, animatedRef.current, eventHandler]);
 
-  return offsetRef.current;
+  return offset;
 }
 
 const scrollNativeEventNames = [
@@ -79,18 +77,16 @@ const scrollNativeEventNames = [
 
 function useScrollViewOffsetNative(
   animatedRef: AnimatedRef<AnimatedScrollView>,
-  initialRef?: SharedValue<number>
+  providedOffset?: SharedValue<number>
 ): SharedValue<number> {
-  const offsetRef = useRef(
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    initialRef !== undefined ? initialRef : useSharedValue(0)
-  );
+  const internalOffset = useSharedValue(0);
+  const offset = useRef(providedOffset ?? internalOffset).current;
   const scrollRef = useRef<AnimatedScrollView | null>(null);
 
   const eventHandler = useEvent<RNNativeScrollEvent>(
     (event: ReanimatedScrollEvent) => {
       'worklet';
-      offsetRef.current.value =
+      offset.value =
         event.contentOffset.x === 0
           ? event.contentOffset.y
           : event.contentOffset.x;
@@ -119,5 +115,5 @@ function useScrollViewOffsetNative(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animatedRef, animatedRef.current, eventHandler]);
 
-  return offsetRef.current;
+  return offset;
 }
