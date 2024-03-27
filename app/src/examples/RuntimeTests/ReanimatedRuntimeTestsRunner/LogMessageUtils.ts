@@ -13,6 +13,15 @@ export function logInFrame(text: string) {
   console.log(`\t╚${'═'.repeat(text.length + 2)}╝`);
 }
 
+export function appendWhiteSpaceToMatchLength(
+  message: string | number,
+  length: number
+) {
+  const messageStr = message.toString();
+  const messageLen = messageStr.length;
+  return `${messageStr}${' '.repeat(length - messageLen)}`;
+}
+
 export function color(
   value: TestValue,
   color: 'yellow' | 'cyan' | 'green' | 'red'

@@ -2,6 +2,7 @@ module.exports = {
   root: true,
   extends: '@react-native',
   plugins: ['eslint-plugin-no-inline-styles', 'reanimated'],
+  ignorePatterns: ['**/*.snapshot.ts'],
   rules: {
     '@typescript-eslint/no-use-before-define': 'off',
     '@typescript-eslint/no-shadow': 'off',
