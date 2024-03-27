@@ -4,13 +4,12 @@
 
 namespace reanimated {
 
-void LayoutAnimationsProxy::startAnimation(
+void LayoutAnimationsProxy::startEnteringAnimation(
     const int tag,
-    const LayoutAnimationType type,
     Values values) const {
-  printf("start animation for tag %d\n", tag);
+  printf("start entering animation for tag %d\n", tag);
   nativeReanimatedModule_->uiScheduler_->scheduleOnUI(
-      [values, this, tag, type]() {
+      [values, this, tag]() {
         jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
         jsi::Object yogaValues(rt);
         yogaValues.setProperty(rt, "originX", values.x);
@@ -18,7 +17,24 @@ void LayoutAnimationsProxy::startAnimation(
         yogaValues.setProperty(rt, "width", values.width);
         yogaValues.setProperty(rt, "height", values.height);
         nativeReanimatedModule_->layoutAnimationsManager().startLayoutAnimation(
-            rt, tag, type, yogaValues);
+            rt, tag, LayoutAnimationType::ENTERING, yogaValues);
+      });
+}
+
+void LayoutAnimationsProxy::startExitingAnimation(
+    const int tag,
+    Values values) const {
+  printf("start exiting animation for tag %d\n", tag);
+  nativeReanimatedModule_->uiScheduler_->scheduleOnUI(
+      [values, this, tag]() {
+        jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
+        jsi::Object yogaValues(rt);
+        yogaValues.setProperty(rt, "originX", values.x);
+        yogaValues.setProperty(rt, "originY", values.y);
+        yogaValues.setProperty(rt, "width", values.width);
+        yogaValues.setProperty(rt, "height", values.height);
+        nativeReanimatedModule_->layoutAnimationsManager().startLayoutAnimation(
+            rt, tag, LayoutAnimationType::EXITING, yogaValues);
       });
 }
 
@@ -110,7 +126,10 @@ void LayoutAnimationsProxy::endLayoutAniamtion(int tag, bool shouldRemove) {
       auto node = nodeForTag.at(tag);
       endAnimationsRecursively(node);
       if (node->parent){
-        maybeDropAncestors(node->parent);
+        maybeDropAncestors(node->parent, node);
+      }
+      if (node->root){
+        node->root->removeChild(node);
       }
     }
   }
@@ -135,8 +154,9 @@ void LayoutAnimationsProxy::endAnimationsRecursively(std::shared_ptr<MutationNod
   cleanupMutations.push_back(ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
 }
 
-void LayoutAnimationsProxy::maybeDropAncestors(std::shared_ptr<MutationNode> node) const{
+void LayoutAnimationsProxy::maybeDropAncestors(std::shared_ptr<MutationNode> node, std::shared_ptr<MutationNode> child) const{
   node->animatedChildrenCount--;
+  node->removeChild(child);
   if (!node -> animatedChildrenCount){
     nodeForTag.erase(node->tag);
     cleanupMutations.push_back(node->mutation);
@@ -144,7 +164,10 @@ void LayoutAnimationsProxy::maybeDropAncestors(std::shared_ptr<MutationNode> nod
     updateIndices(node->mutation);
     cleanupMutations.push_back(ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
     if (node->parent){
-      maybeDropAncestors(node->parent);
+      maybeDropAncestors(node->parent, node);
+    }
+    if (node->root){
+      node->root->removeChild(node);
     }
   }
 }
@@ -278,6 +301,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     MountingTransaction::Number transactionNumber,
     const TransactionTelemetry &telemetry,
     ShadowViewMutationList mutations) const {
+      printf("\n pullTransaction\n");
   //  std::unordered_map<Tag, const RawProps*> propsMap =
   //  layoutAnimationsRegistry_.props_;
   ShadowViewMutationList filteredMutations;
@@ -297,7 +321,17 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
       auto tag = mutation.oldChildShadowView.tag;
       auto parentTag = mutation.parentShadowView.tag;
       if (!nodeForTag.contains(tag)) {
-        nodeForTag.insert_or_assign(tag, std::make_shared<MutationNode>(mutation));
+        if (rootNodeForTag.contains(tag)){
+          auto rootNode = rootNodeForTag.at(tag);
+          rootNodeForTag.erase(tag);
+          auto node = std::make_shared<MutationNode>(mutation, *rootNode);
+          for (auto subNode: node->children){
+            subNode->parent = node;
+          }
+          nodeForTag.insert_or_assign(tag, node);
+        } else {
+          nodeForTag.insert_or_assign(tag, std::make_shared<MutationNode>(mutation));
+        }
       }
       auto &node = nodeForTag.at(tag);
       node->tag = tag;
@@ -307,6 +341,14 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
         parent->children.push_back(node);
         node->parent = parent;
       } else {
+        if (!rootNodeForTag.contains(parentTag)){
+          auto rootNode = std::make_shared<RootNode>();
+          rootNode->tag = parentTag;
+          rootNodeForTag.insert_or_assign(parentTag, rootNode);
+        }
+        auto rootNode = rootNodeForTag.at(parentTag);
+        rootNode->children.push_back(node);
+        node->root = rootNode;
         roots.insert(node);
       }
     }
@@ -323,13 +365,14 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   std::unordered_set<Tag> reorderedTags;
 
   for (auto &node : roots) {
-    if (node->mutation.oldChildShadowView.traits.check(facebook::react::ShadowNodeTraits::RootNodeKind)) {
-      removeRecursively(node, filteredMutations);
-    } else if (!startAnimationsRecursively(node, true, filteredMutations)) {
-      filteredMutations.push_back(node->mutation);
-      updateIndices(node->mutation);
-      filteredMutations.push_back(ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
-    }
+      if (node->mutation.oldChildShadowView.traits.check(facebook::react::ShadowNodeTraits::RootNodeKind)) {
+//        removeRecursively(node, filteredMutations);
+        endAnimationsRecursively(node);
+      } else if (!startAnimationsRecursively(node, true, filteredMutations)) {
+        filteredMutations.push_back(node->mutation);
+        updateIndices(node->mutation);
+        filteredMutations.push_back(ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
+      }
   }
 
   // loop
@@ -358,9 +401,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
           filteredMutations.push_back(mutation);
           continue;
         }
-        startAnimation(
+        startEnteringAnimation(
             mutation.newChildShadowView.tag,
-            LayoutAnimationType::ENTERING,
             Values(mutation.newChildShadowView));
         auto finalView =
             std::make_shared<ShadowView>(mutation.newChildShadowView);
@@ -478,7 +520,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(std::shared_ptr<MutationN
   bool wantAnimateExit = hasExitAnimation || hasAnimatedChildren;
 
   if (hasExitAnimation) {
-    startAnimation(node->tag, LayoutAnimationType::EXITING, Values(node->mutation.oldChildShadowView));
+    startExitingAnimation(node->tag, Values(node->mutation.oldChildShadowView));
     node->isExiting = true;
     auto &mutation = node->mutation;
     auto finalView = std::make_shared<ShadowView>(mutation.oldChildShadowView);

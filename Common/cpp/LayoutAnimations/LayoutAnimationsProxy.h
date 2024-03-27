@@ -29,9 +29,12 @@ struct Values{
   }
 };
 
+struct RootNode;
+
 struct MutationNode{
   std::vector<std::shared_ptr<MutationNode>> children;
   std::shared_ptr<MutationNode> parent;
+  std::shared_ptr<RootNode> root = nullptr;
   Tag tag;
   ShadowViewMutation mutation;
   int animatedChildrenCount = 0;
@@ -39,7 +42,33 @@ struct MutationNode{
   bool isDone = false;
   bool isExiting = true;
   MutationNode(ShadowViewMutation& mutation): mutation(mutation){}
+  MutationNode(ShadowViewMutation& mutation, RootNode& root);
+  void removeChild(std::shared_ptr<MutationNode> child){
+    for (int i=0; i<children.size(); i++){
+      if (children[i]->tag == child->tag){
+        children.erase(children.begin()+i);
+        break;
+      }
+    }
+  }
 };
+
+struct RootNode{
+  std::vector<std::shared_ptr<MutationNode>> children;
+  Tag tag;
+  void removeChild(std::shared_ptr<MutationNode> child){
+    for (int i=0; i<children.size(); i++){
+      if (children[i]->tag == child->tag){
+        children.erase(children.begin()+i);
+        break;
+      }
+    }
+  }
+};
+
+MutationNode::MutationNode(ShadowViewMutation& mutation, RootNode& root): mutation(mutation), children(std::move(root.children)), tag(root.tag){}
+
+
 
 struct LayoutAnimation {
   std::shared_ptr<ShadowView> end, current;
@@ -63,6 +92,7 @@ struct LayoutAnimationRegistry{
 
 struct LayoutAnimationsProxy : public MountingOverrideDelegate{
 //  std::shared_ptr<MutationNode> fakeRoot = std::make_shared<MutationNode>();
+  mutable std::unordered_map<Tag, std::shared_ptr<RootNode>> rootNodeForTag;
   mutable std::unordered_map<Tag, std::shared_ptr<MutationNode>> nodeForTag;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   mutable ShadowViewMutationList cleanupMutations;
@@ -82,8 +112,9 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   NativeReanimatedModule* nativeReanimatedModule_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
   LayoutAnimationsProxy(std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_, NativeReanimatedModule* n, SharedComponentDescriptorRegistry componentDescriptorRegistry_, ContextContainer::Shared contextContainer_): layoutAnimationsManager_(layoutAnimationsManager_), contextContainer_(contextContainer_), nativeReanimatedModule_(n),  componentDescriptorRegistry_(componentDescriptorRegistry_){}
-  void startAnimation(const int tag,
-                      const LayoutAnimationType type,
+  void startEnteringAnimation(const int tag,
+                      Values values) const;
+  void startExitingAnimation(const int tag,
                       Values values) const;
   void startLayoutLayoutAnimation(const int tag,
                       Values currentValues, Values targetValues) const;
@@ -101,7 +132,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   void removeRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList& mutations) const;
   bool startAnimationsRecursively(std::shared_ptr<MutationNode> node, bool shouldRemoveSubviewsWithoutAnimations, ShadowViewMutationList& mutations) const;
   void endAnimationsRecursively(std::shared_ptr<MutationNode> node) const;
-  void maybeDropAncestors(std::shared_ptr<MutationNode> node) const;
+  void maybeDropAncestors(std::shared_ptr<MutationNode> node, std::shared_ptr<MutationNode> child) const;
   
   // MountingOverrideDelegate
   
