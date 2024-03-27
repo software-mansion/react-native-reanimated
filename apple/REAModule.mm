@@ -170,12 +170,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 - (void)initialize
 {
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(handleJavaScriptDidLoadNotification:)
-                                               name:RCTJavaScriptDidLoadNotification
-                                             object:nil];
-
-  [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
   // TODO: it seems like it is not used on new arch anyway
   //[bridge.uiManager.observerCoordinator addObserver:self];
 #ifndef NDEBUG
@@ -194,14 +188,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)setBridge:(RCTBridge *)bridge
 {
   [super setBridge:bridge];
-
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(handleJavaScriptDidLoadNotification:)
-                                               name:RCTJavaScriptDidLoadNotification
-                                             object:nil];
-
-  [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
-  [bridge.uiManager.observerCoordinator addObserver:self];
 
   // only within the first loading `self.bridge.surfacePresenter` exists
   // during the reload `self.bridge.surfacePresenter` is null
