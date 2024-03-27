@@ -66,9 +66,9 @@ function loopAnimationFrame(fn: (lastTime: number, time: number) => void) {
   loop();
 }
 
-function getFps(renderTimeInMs: number): string {
+function getFps(renderTimeInMs: number): number {
   'worklet';
-  return (1000 / renderTimeInMs).toFixed(1);
+  return 1000 / renderTimeInMs;
 }
 
 function getTimeDelta(
@@ -84,7 +84,7 @@ function completeBufferRoutine(
   timestamp: number,
   previousTimestamp: number,
   totalRenderTime: SharedValue<number>
-) {
+): number {
   'worklet';
   timestamp = Math.round(timestamp);
   previousTimestamp = Math.round(previousTimestamp) ?? timestamp;
@@ -119,7 +119,9 @@ function JsPerformance() {
         totalRenderTime
       );
 
-      jsFps.value = currentFps;
+      // JS fps have to be measured every 2nd frame,
+      // thus 2x multiplication has to occur here
+      jsFps.value = (currentFps * 2).toFixed(0);
     });
   }, []);
 
@@ -159,7 +161,7 @@ function UiPerformance() {
       totalRenderTime
     );
 
-    uiFps.value = currentFps;
+    uiFps.value = currentFps.toFixed(0);
   });
 
   const animatedProps = useAnimatedProps(() => {

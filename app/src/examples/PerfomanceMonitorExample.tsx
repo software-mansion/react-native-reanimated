@@ -24,16 +24,12 @@ export default function PerformanceMonitorExample() {
     ])
   );
 
-  const [currentExample, setCurrentExample] = useState(<EmptyExample />);
-
-  const setElementByExample = (example: Examples) => {
-    setCurrentExample(exampleElements.current.get(example)!);
-  };
+  const [currentExample, setCurrentExample] = useState(Examples.Empty);
 
   return (
     <>
       <PerformanceMonitor />
-      {currentExample}
+      {exampleElements.current.get(currentExample)!}
       <View style={styles.buttonContainer}>
         {[
           Examples.Empty,
@@ -44,7 +40,7 @@ export default function PerformanceMonitorExample() {
           <Pressable
             key={element}
             style={styles.button}
-            onPress={() => setElementByExample(element)}>
+            onPress={() => setCurrentExample(element)}>
             <Text>{element}</Text>
           </Pressable>
         ))}
