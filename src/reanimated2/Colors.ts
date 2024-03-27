@@ -23,7 +23,7 @@ interface HSV {
   v: number;
 }
 
-export interface ColorObject {
+interface ColorObject {
   r: number;
   g: number;
   b: number;
