@@ -366,9 +366,7 @@ android {
 
             // messageQueueThread
             if (REANIMATED_MAJOR_VERSION > 2) {
-                if (REACT_NATIVE_MINOR_VERSION <= 67) {
-                    srcDirs += "src/reactNativeVersionPatch/messageQueueThread/67"
-                } else if (REACT_NATIVE_MINOR_VERSION <= 72) {
+                if (REACT_NATIVE_MINOR_VERSION <= 72) {
                     srcDirs += "src/reactNativeVersionPatch/messageQueueThread/72"
                 } else {
                     srcDirs += "src/reactNativeVersionPatch/messageQueueThread/latest"
@@ -376,9 +374,7 @@ android {
             }
 
             // ReanimatedUIManager & ReanimatedUIImplementation 
-            if (REACT_NATIVE_MINOR_VERSION <= 70) {
-                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/70"
-            } else if (REACT_NATIVE_MINOR_VERSION <= 73) {
+            if (REACT_NATIVE_MINOR_VERSION <= 73) {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/73"
             } else {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest"

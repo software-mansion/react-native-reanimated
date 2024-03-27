@@ -4,10 +4,13 @@
 // This is a makeshift solution to handle both 0.73 and 0.74 versions of React Native.
 
 export let getViewInfo = (element: any) => {
-  if (element._nativeTag) {
+  if (element._nativeTag !== undefined && element.__nativeTag !== null) {
     getViewInfo = getViewInfo73;
     return getViewInfo73(element);
-  } else if (element.__nativeTag) {
+  } else if (
+    element.__nativeTag !== undefined &&
+    element.__nativeTag !== null
+  ) {
     getViewInfo = getViewInfoLatest;
     return getViewInfoLatest(element);
   }
