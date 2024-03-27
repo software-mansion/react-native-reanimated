@@ -155,6 +155,86 @@ LogBox.ignoreLogs([
 
 See [the accessibility overview](accessibility) to learn more about Reduced Motion.
 
+### Tried to modify key of an object which has been converted to a shareable.
+
+**Problem:** This warning is displayed to inform the user that a shared value should be used or an object used in a worklet should be accessed more granularly.
+
+#### 1. Not using shared values.
+
+You might get this warning when you do something along the lines of:
+
+```js
+const obj = { prop: 1 };
+
+function worklet() {
+  'worklet';
+  console.log(obj.prop);
+}
+
+runOnUI(worklet)();
+obj.prop = 2; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
+runOnUI(worklet)();
+```
+
+and expect the results to be `1` and `2`. However, the results will be `1` and `1` because `obj` is not a shared value and is only copied to UI runtime once. Therefore, in development builds, we make the object immutable and add this warning after copying it to signal that it's not a valid use of Reanimated. To fix this, you should use a shared value instead:
+
+**Solution:**
+
+```diff
+-const obj = { prop: 1 };
++const sv = useSharedValue({ prop: 1 });
+
+ function worklet() {
+   'worklet';
+-  console.log(obj.prop);
++  console.log(sv.value.prop);
+ }
+
+ runOnUI(worklet)();
+-obj.prop = 2; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
++sv.value = { prop: 2 }; // Everything is fine here.
++// Keep in mind that you cannot modify the property directly with `sv.value.prop = 2` unless you use the `modify` method.
+ runOnUI(worklet)();
+```
+
+#### 2. Not accessing object properties granularly.
+
+When you access an object property in a worklet, you might do something like this:
+
+```js
+const obj = { propAccessedInWorklet: 1, propNotAccessedInWorklet: 2 };
+
+function worklet() {
+  'worklet';
+  console.log(obj.propAccessedInWorklet);
+}
+
+runOnUI(worklet)();
+obj.propNotAccessedInWorklet = 3; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
+```
+
+The warning is displayed due to the mechanism explained in the previous case. Since we copy the whole object `obj` instead its accessed properties, it's immutable.
+
+**Solution:**
+
+Assign accessed properties to variables beforehand and use those in the worklet:
+
+```diff
+ const obj = { propAccessedInWorklet: 1, propNotAccessedInWorklet: 2 };
+
++const propAccessedInWorklet = obj.propAccessedInWorklet;
++
+ function worklet() {
+   'worklet';
+-  console.log(obj.propAccessedInWorklet);
++  console.log(propAccessedInWorklet);
+ }
+
+ runOnUI(worklet)();
+-obj.propNotAccessedInWorklet = 3; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
++obj.propNotAccessedInWorklet = 3; // Everything is fine here.
+```
+
 ## Threading issues
 
 ### Tried to synchronously call a non-worklet function on the UI thread
