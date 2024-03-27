@@ -9,24 +9,7 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.module.annotations.ReactModule;
-import com.facebook.react.uimanager.events.EventDispatcher;
 import java.util.List;
-
-class ReaUiImplementationProvider extends UIImplementationProvider {
-
-  @Override
-  UIImplementation createUIImplementation(
-      ReactApplicationContext reactContext,
-      ViewManagerRegistry viewManagerRegistry,
-      EventDispatcher eventDispatcher,
-      int minTimeLeftInFrameForNonBatchedOperationMs) {
-    return new com.facebook.react.uimanager.ReanimatedUIImplementation(
-        reactContext,
-        viewManagerRegistry,
-        eventDispatcher,
-        minTimeLeftInFrameForNonBatchedOperationMs);
-  }
-}
 
 @ReactModule(name = UIManagerModule.NAME)
 public class ReanimatedUIManager extends UIManagerModule {
@@ -35,11 +18,7 @@ public class ReanimatedUIManager extends UIManagerModule {
       ReactApplicationContext reactContext,
       List<ViewManager> viewManagersList,
       int minTimeLeftInFrameForNonBatchedOperationMs) {
-    super(
-        reactContext,
-        viewManagersList,
-        new ReaUiImplementationProvider(),
-        minTimeLeftInFrameForNonBatchedOperationMs);
+    super(reactContext, viewManagersList, minTimeLeftInFrameForNonBatchedOperationMs);
   }
 
   public void onBatchComplete() {
