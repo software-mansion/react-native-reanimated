@@ -162,7 +162,6 @@ function DataViewDemo() {
 
 function ErrorDemo() {
   const handlePress = () => {
-    // const e = new Error('error message');
     const e = new Error('error message');
     console.log(_WORKLET ? 'UI' : 'RN', e instanceof Error);
     console.log(_WORKLET ? 'UI' : 'RN', String(e));
