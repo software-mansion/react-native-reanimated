@@ -13,6 +13,7 @@ export default function ShareablesExample() {
       <TypedArrayDemo />
       <BigIntTypedArrayDemo />
       <DataViewDemo />
+      <ErrorDemo />
     </View>
   );
 }
@@ -157,6 +158,23 @@ function DataViewDemo() {
   };
 
   return <Button title="DataView" onPress={handlePress} />;
+}
+
+function ErrorDemo() {
+  const handlePress = () => {
+    // const e = new Error('error message');
+    const e = new Error('error message');
+    console.log(_WORKLET ? 'UI' : 'RN', e instanceof Error);
+    console.log(_WORKLET ? 'UI' : 'RN', String(e));
+    console.log(_WORKLET ? 'UI' : 'RN', e.stack?.length);
+    runOnUI(() => {
+      console.log(_WORKLET ? 'UI' : 'RN', e instanceof Error);
+      console.log(_WORKLET ? 'UI' : 'RN', String(e));
+      console.log(_WORKLET ? 'UI' : 'RN', e.stack?.length);
+    })();
+  };
+
+  return <Button title="Error" onPress={handlePress} />;
 }
 
 const styles = StyleSheet.create({
