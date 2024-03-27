@@ -29,8 +29,8 @@ function applyStyleForTopScreen(
   'worklet';
   const { screenDimensions, topScreenId, screenTransition } =
     screenTransitionConfig;
-  const { topScreenFrame } = screenTransition;
-  const topScreenStyle = topScreenFrame(event, screenDimensions);
+  const { topScreenStyle: computeTopScreenStyle } = screenTransition;
+  const topScreenStyle = computeTopScreenStyle(event, screenDimensions);
   const topScreenDescriptor = {
     value: [createViewDescriptor(topScreenId)],
   };
@@ -48,8 +48,11 @@ export function applyStyleForBelowTopScreen(
   'worklet';
   const { screenDimensions, belowTopScreenId, screenTransition } =
     screenTransitionConfig;
-  const { belowTopScreenFrame } = screenTransition;
-  const belowTopScreenStyle = belowTopScreenFrame(event, screenDimensions);
+  const { belowTopScreenStyle: computeBelowTopScreenStyle } = screenTransition;
+  const belowTopScreenStyle = computeBelowTopScreenStyle(
+    event,
+    screenDimensions
+  );
   const belowTopScreenDescriptor = {
     value: [createViewDescriptor(belowTopScreenId)],
   };

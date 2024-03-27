@@ -23,24 +23,22 @@ const IS_WEB = isWeb();
  * @see https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollViewOffset
  */
 export const useScrollViewOffset = IS_WEB
-  ? useScrollViewOffsetJS
+  ? useScrollViewOffsetWeb
   : useScrollViewOffsetNative;
 
-function useScrollViewOffsetJS(
+function useScrollViewOffsetWeb(
   animatedRef: AnimatedRef<AnimatedScrollView>,
-  initialRef?: SharedValue<number>
+  providedOffset?: SharedValue<number>
 ): SharedValue<number> {
-  const offsetRef = useRef(
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    initialRef !== undefined ? initialRef : useSharedValue(0)
-  );
+  const internalOffset = useSharedValue(0);
+  const offset = useRef(providedOffset ?? internalOffset).current;
   const scrollRef = useRef<AnimatedScrollView | null>(null);
 
   const eventHandler = useCallback(() => {
     'worklet';
     const element = animatedRef.current as unknown as HTMLElement;
     // scrollLeft is the X axis scrolled offset, works properly also with RTL layout
-    offsetRef.current.value =
+    offset.value =
       element.scrollLeft === 0 ? element.scrollTop : element.scrollLeft;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animatedRef, animatedRef.current]);
@@ -66,7 +64,7 @@ function useScrollViewOffsetJS(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animatedRef, animatedRef.current, eventHandler]);
 
-  return offsetRef.current;
+  return offset;
 }
 
 const scrollNativeEventNames = [
@@ -79,17 +77,16 @@ const scrollNativeEventNames = [
 
 function useScrollViewOffsetNative(
   animatedRef: AnimatedRef<AnimatedScrollView>,
-  initialRef?: SharedValue<number>
+  providedOffset?: SharedValue<number>
 ): SharedValue<number> {
-  const offsetRef = useRef(
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    initialRef !== undefined ? initialRef : useSharedValue(0)
-  );
+  const internalOffset = useSharedValue(0);
+  const offset = useRef(providedOffset ?? internalOffset).current;
+  const scrollRef = useRef<AnimatedScrollView | null>(null);
 
   const eventHandler = useEvent<RNNativeScrollEvent>(
     (event: ReanimatedScrollEvent) => {
       'worklet';
-      offsetRef.current.value =
+      offset.value =
         event.contentOffset.x === 0
           ? event.contentOffset.y
           : event.contentOffset.x;
@@ -100,13 +97,17 @@ function useScrollViewOffsetNative(
   ) as unknown as EventHandlerInternal<ReanimatedScrollEvent>;
 
   useEffect(() => {
+    // We need to make sure that listener for old animatedRef value is removed
+    if (scrollRef.current !== null) {
+      eventHandler.workletEventHandler.unregisterFromEvents();
+    }
+    scrollRef.current = animatedRef.current;
+
     const component = animatedRef.current;
-    const viewTag = IS_WEB ? component : findNodeHandle(component);
-
+    const viewTag = findNodeHandle(component);
     eventHandler.workletEventHandler.registerForEvents(viewTag as number);
-
     return () => {
-      eventHandler.workletEventHandler?.unregisterFromEvents();
+      eventHandler.workletEventHandler.unregisterFromEvents();
     };
     // React here has a problem with `animatedRef.current` since a Ref .current
     // field shouldn't be used as a dependency. However, in this case we have
@@ -114,5 +115,5 @@ function useScrollViewOffsetNative(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animatedRef, animatedRef.current, eventHandler]);
 
-  return offsetRef.current;
+  return offset;
 }

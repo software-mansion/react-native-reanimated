@@ -52,7 +52,7 @@ function ScreenC({ navigation }: NativeStackScreenProps<ParamListBase>) {
 const Stack = createNativeStackNavigator();
 
 const customTransition: AnimatedScreenTransition = {
-  topScreenFrame: (event, screenSize) => {
+  topScreenStyle: (event, screenSize) => {
     'worklet';
     const progress = event.translationX / screenSize.width;
     return {
@@ -62,7 +62,7 @@ const customTransition: AnimatedScreenTransition = {
       ],
     };
   },
-  belowTopScreenFrame: (event, screenSize) => {
+  belowTopScreenStyle: (event, screenSize) => {
     'worklet';
     const progress = event.translationX / screenSize.width;
     return {

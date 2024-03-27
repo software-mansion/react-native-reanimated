@@ -2059,6 +2059,7 @@
     serve-static "^1.13.1"
     temp-dir "^2.0.0"
     ws "^6.2.2"
+    ws "^6.2.2"
 
 "@react-native/eslint-config@^0.72.2":
   version "0.72.2"
