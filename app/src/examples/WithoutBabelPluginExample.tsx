@@ -42,7 +42,6 @@ function WithBabel() {
         { scale: withSpring(isPressed.value ? 1.2 : 1) },
       ],
       backgroundColor: isPressed.value ? 'blue' : 'navy',
-      // cursor: isPressed.value ? 'grabbing' : 'grab', // doesn't exist anymore??
     };
   });
 
@@ -102,7 +101,6 @@ export function WithoutBabel() {
         { scale: withSpring(isPressed.value ? 1.2 : 1) },
       ],
       backgroundColor: isPressed.value ? 'pink' : 'hotpink',
-      // cursor: isPressed.value ? 'grabbing' : 'grab', // doesn't exist anymore??
     };
   }, [isPressed, offset, stateObject, stateBoolean, stateNumber]);
 
