@@ -400,12 +400,12 @@ public class SharedTransitionManager {
     for (SharedElement sharedElement : sharedElements) {
       View viewSource = sharedElement.sourceView;
       if (!mSharedTransitionParent.containsKey(viewSource.getId())) {
-        var parent = (ViewGroup) viewSource.getParent();
+        ViewGroup parent = (ViewGroup) viewSource.getParent();
         int parentTag = parent.getId();
         int childIndex = parent.indexOfChild(viewSource);
         mSharedTransitionParent.put(viewSource.getId(), (View) viewSource.getParent());
         mSharedTransitionInParentIndex.put(viewSource.getId(), childIndex);
-        var childrenIndicesSet = mSharedViewChildrenIndices.get(parentTag);
+        SortedSet<Integer> childrenIndicesSet = mSharedViewChildrenIndices.get(parentTag);
         if (childrenIndicesSet == null) {
           mSharedViewChildrenIndices.put(
               parentTag, new TreeSet<>(Collections.singleton(childIndex)));
@@ -468,7 +468,7 @@ public class SharedTransitionManager {
       int childIndex = mSharedTransitionInParentIndex.get(viewTag);
       ViewGroup parentViewGroup = ((ViewGroup) parentView);
       int parentTag = parentViewGroup.getId();
-      var childIndicesSet = mSharedViewChildrenIndices.get(parentTag);
+      SortedSet<Integer> childIndicesSet = mSharedViewChildrenIndices.get(parentTag);
       // here we calculate how many children with smaller indices have not been reinserted yet
       int childIndexOffset = childIndicesSet.headSet(childIndex).size();
       childIndicesSet.remove(childIndex);
