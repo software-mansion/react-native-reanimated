@@ -8,6 +8,8 @@ export default function ShareablesExample() {
     <View style={styles.container}>
       <CyclicObjectDemo />
       <InaccessibleObjectDemo />
+      <RemoteNamedFunctionSyncCallDemo />
+      <RemoteAnonymousFunctionSyncCallDemo />
       <BigIntDemo />
       <ArrayBufferDemo />
       <TypedArrayDemo />
@@ -42,6 +44,32 @@ function InaccessibleObjectDemo() {
   };
 
   return <Button title="Inaccessible object" onPress={handlePress} />;
+}
+
+function RemoteNamedFunctionSyncCallDemo() {
+  const handlePress = () => {
+    function foo() {}
+    runOnUI(() => {
+      foo();
+    })();
+  };
+
+  return (
+    <Button title="Remote named function sync call" onPress={handlePress} />
+  );
+}
+
+function RemoteAnonymousFunctionSyncCallDemo() {
+  const handlePress = () => {
+    const foo = true ? () => {} : () => {};
+    runOnUI(() => {
+      foo();
+    })();
+  };
+
+  return (
+    <Button title="Remote anonymous function sync call" onPress={handlePress} />
+  );
 }
 
 function BigIntDemo() {
