@@ -62,16 +62,7 @@ void WorkletRuntimeDecorator::decorate(
           jsi::PropNameID::forAscii(rt, "evalWithSourceUrl"),
           1,
           evalWithSourceUrl));
-#endif
-
-  jsi_utils::installJsiFunction(
-      rt, "_hasNativeState", [](jsi::Runtime &rt, const jsi::Value &value) {
-#if REACT_NATIVE_MINOR_VERSION >= 71
-        return value.asObject(rt).hasNativeState(rt);
-#else
-        return false;
-#endif // REACT_NATIVE_MINOR_VERSION >= 71
-      });
+#endif // NDEBUG
 
   jsi_utils::installJsiFunction(
       rt, "_toString", [](jsi::Runtime &rt, const jsi::Value &value) {

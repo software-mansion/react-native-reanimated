@@ -14,7 +14,6 @@ export function getShadowNodeWrapperFromRef(
   // load findHostInstance_DEPRECATED lazily because it may not be available before render
   if (findHostInstance_DEPRECATED === undefined) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       findHostInstance_DEPRECATED =
         require('react-native/Libraries/Renderer/shims/ReactFabric').findHostInstance_DEPRECATED;
     } catch (e) {

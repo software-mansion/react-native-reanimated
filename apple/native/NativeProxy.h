@@ -16,7 +16,7 @@ std::shared_ptr<reanimated::NativeReanimatedModule>
 createReanimatedModuleBridgeless(
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &runtime,
-    const std::string &valueUnpąackerCode,
+    const std::string &valueUnpackerCode,
     std::function<void(std::function<void(jsi::Runtime &runtime)> &&callback)>
         runtimeExecutor);
 #endif // RCT_NEW_ARCH_ENABLED
