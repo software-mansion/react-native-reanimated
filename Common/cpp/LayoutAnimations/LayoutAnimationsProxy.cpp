@@ -12,10 +12,10 @@ void LayoutAnimationsProxy::startEnteringAnimation(
       [values, this, tag]() {
         jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
         jsi::Object yogaValues(rt);
-        yogaValues.setProperty(rt, "originX", values.x);
-        yogaValues.setProperty(rt, "originY", values.y);
-        yogaValues.setProperty(rt, "width", values.width);
-        yogaValues.setProperty(rt, "height", values.height);
+        yogaValues.setProperty(rt, "targetOriginX", values.x);
+        yogaValues.setProperty(rt, "targetOriginY", values.y);
+        yogaValues.setProperty(rt, "targetWidth", values.width);
+        yogaValues.setProperty(rt, "targetHeight", values.height);
         nativeReanimatedModule_->layoutAnimationsManager().startLayoutAnimation(
             rt, tag, LayoutAnimationType::ENTERING, yogaValues);
       });
@@ -29,10 +29,10 @@ void LayoutAnimationsProxy::startExitingAnimation(
       [values, this, tag]() {
         jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
         jsi::Object yogaValues(rt);
-        yogaValues.setProperty(rt, "originX", values.x);
-        yogaValues.setProperty(rt, "originY", values.y);
-        yogaValues.setProperty(rt, "width", values.width);
-        yogaValues.setProperty(rt, "height", values.height);
+        yogaValues.setProperty(rt, "currentOriginX", values.x);
+        yogaValues.setProperty(rt, "currentOriginY", values.y);
+        yogaValues.setProperty(rt, "currentWidth", values.width);
+        yogaValues.setProperty(rt, "currentHeight", values.height);
         nativeReanimatedModule_->layoutAnimationsManager().startLayoutAnimation(
             rt, tag, LayoutAnimationType::EXITING, yogaValues);
       });
@@ -318,6 +318,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
       removedTags.insert(mutation.oldChildShadowView.tag);
     }
     if (mutation.type == ShadowViewMutation::Remove && removedTags.contains(mutation.oldChildShadowView.tag)) {
+      updateIndexForMutation(mutation);
       auto tag = mutation.oldChildShadowView.tag;
       auto parentTag = mutation.parentShadowView.tag;
       if (!nodeForTag.contains(tag)) {
@@ -377,7 +378,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
   // loop
   for (auto &mutation : mutations) {
-    updateIndexForMutation(mutation);
+    
     switch (mutation.type) {
         // INSERT (w/o REMOVE) -- animate entering | override mutation - opacity
         // 0
@@ -394,6 +395,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
         break;
       }
       case ShadowViewMutation::Type::Insert: {
+        updateIndexForMutation(mutation);
         updateIndices(mutation);
         if (!layoutAnimationsManager_->hasLayoutAnimation(
                 mutation.newChildShadowView.tag,
@@ -453,6 +455,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
         // index as used by us
       case ShadowViewMutation::Type::Remove: {
         if (!removedTags.contains(mutation.oldChildShadowView.tag)){
+          updateIndexForMutation(mutation);
           filteredMutations.push_back(mutation);
           updateIndices(mutation);
         }
@@ -549,6 +552,8 @@ void LayoutAnimationsProxy::updateIndexForMutation(
     return;
   }
   int k = mutation.index, i = 0;
+      
+      int tag = mutation.type == ShadowViewMutation::Insert ? mutation.newChildShadowView.tag : mutation.oldChildShadowView.tag;
 
   if (!indices.contains(mutation.parentShadowView.tag)) {
     return;
@@ -566,7 +571,7 @@ void LayoutAnimationsProxy::updateIndexForMutation(
     k--;
     i++;
   }
-
+  printf("update index for %d in %d: %d -> %d\n", tag, mutation.parentShadowView.tag, mutation.index, i);
   mutation.index = i;
 }
 
