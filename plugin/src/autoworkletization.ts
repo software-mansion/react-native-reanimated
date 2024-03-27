@@ -15,6 +15,7 @@ const functionArgsToWorkletize = new Map([
   ['createAnimatedPropAdapter', [0]],
   ['useDerivedValue', [0]],
   ['useAnimatedScrollHandler', [0]],
+  ['useLayoutWorklet', [0]],
   ['useAnimatedReaction', [0, 1]],
   ['useWorkletCallback', [0]],
   // animations' callbacks
@@ -77,7 +78,10 @@ export function processCalleesAutoworkletizableCallbacks(
       processObjectHook(maybeWorklet, state);
       // useAnimatedScrollHandler can take a function as an argument instead of an ObjectExpression
       // but useAnimatedGestureHandler can't
-    } else if (name === 'useAnimatedScrollHandler') {
+    } else if (
+      name === 'useAnimatedScrollHandler' ||
+      name === 'useLayoutWorklet'
+    ) {
       if (isWorkletizableFunctionType(maybeWorklet)) {
         processWorklet(maybeWorklet, state);
       }

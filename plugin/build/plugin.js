@@ -831,6 +831,7 @@ var require_autoworkletization = __commonJS({
       ["createAnimatedPropAdapter", [0]],
       ["useDerivedValue", [0]],
       ["useAnimatedScrollHandler", [0]],
+      ["useLayoutWorklet", [0]],
       ["useAnimatedReaction", [0, 1]],
       ["useWorkletCallback", [0]],
       ["withTiming", [2]],
@@ -863,7 +864,7 @@ var require_autoworkletization = __commonJS({
         (0, assert_1.strict)(!Array.isArray(maybeWorklet), "[Reanimated] `workletToProcess` is an array.");
         if (maybeWorklet.isObjectExpression()) {
           processObjectHook(maybeWorklet, state);
-        } else if (name === "useAnimatedScrollHandler") {
+        } else if (name === "useAnimatedScrollHandler" || name === "useLayoutWorklet") {
           if ((0, types_2.isWorkletizableFunctionType)(maybeWorklet)) {
             (0, workletSubstitution_12.processWorklet)(maybeWorklet, state);
           }
