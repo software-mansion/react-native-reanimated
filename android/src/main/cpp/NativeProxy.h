@@ -213,7 +213,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   // nothing
 #else
   jsi::Value
-  obtainProp(jsi::Runtime &rt, const int viewTag, const jsi::String &propName);
+  obtainProp(jsi::Runtime &rt, const int viewTag, const jsi::Value &propName);
   void configureProps(
       jsi::Runtime &rt,
       const jsi::Value &uiProps,

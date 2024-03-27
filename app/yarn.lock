@@ -1605,10 +1605,9 @@ react-native-box2d@^0.2.5:
   resolved "https://registry.yarnpkg.com/react-native-box2d/-/react-native-box2d-0.2.5.tgz#4baa407d28c3feb956d9a9bc31e8f24eefe5fb79"
   integrity sha512-+Qaf/LMDsodJn3BAIk5hohOb76gXV2krMrWtfENGD+YjRMhO2Du0ylwj1Qu2a8YUTyfd6YB5jmgeU4N27eX3MQ==
 
-react-native-gesture-handler@^2.16.0-rc.0:
-  version "2.16.0-rc.0"
-  resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-2.16.0-rc.0.tgz#ed9bbd7840fe84446402ec1d26c65e8e3ab07323"
-  integrity sha512-7y7UKLnDBq5BndVZQed1BC0CtXSVYg27XNL6Fu2vhmkvxVPtsHFOW1XMMCVajIi4ySnf4JNO/LbEQeOlJVXsYQ==
+"react-native-gesture-handler@git+https://github.com/software-mansion/react-native-gesture-handler.git#6808ca355af71ca2f1f6653b50e389c8b564c8ba":
+  version "2.15.0"
+  resolved "git+https://github.com/software-mansion/react-native-gesture-handler.git#6808ca355af71ca2f1f6653b50e389c8b564c8ba"
   dependencies:
     "@egjs/hammerjs" "^2.0.17"
     hoist-non-react-statics "^3.3.0"
@@ -1625,10 +1624,10 @@ react-native-pager-view@^6.2.3:
   version "0.0.0"
   uid ""
 
-react-native-safe-area-context@4.10.0-rc.0:
-  version "4.10.0-rc.0"
-  resolved "https://registry.yarnpkg.com/react-native-safe-area-context/-/react-native-safe-area-context-4.10.0-rc.0.tgz#b2e07b0d3a18740e2597efdaf8ba859300abf09a"
-  integrity sha512-3Mia0GAXLuHRcg1sQD6J6OAMjGEshzQL+Zo8CLTQJ4Yhb9XRqI9vBj0r/7OVHIL7y/g4MHC+YFBvwQ7yY1AFWg==
+react-native-safe-area-context@4.10.0-rc.1:
+  version "4.10.0-rc.1"
+  resolved "https://registry.yarnpkg.com/react-native-safe-area-context/-/react-native-safe-area-context-4.10.0-rc.1.tgz#414c23cd1b2004724a0421dd71536be9343fe76b"
+  integrity sha512-DOzh3rh6TBuPcaAkRtlBjZ18E4zQfCqgtrZtzLsFJTvKSJsONIansl87rrfq5m1DxUHzryhXGP3vU1WYsGh5vg==
 
 "react-native-screens@git+https://github.com/software-mansion/react-native-screens.git#ddf267a4ce157dc60fa0bb94e8096c4d99f7e878":
   version "3.29.0"

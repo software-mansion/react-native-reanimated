@@ -282,7 +282,7 @@
 {
     self.fingerTipRemovalScheduled = NO;
 
-    NSTimeInterval now = [[NSProcessInfo processInfo] systemUptime];
+    NSTimeInterval now = CACurrentMediaTime() * 1000;
     const CGFloat REMOVAL_DELAY = 0.2;
 
     for (MBFingerTipView *touchView in [self.overlayWindow subviews])

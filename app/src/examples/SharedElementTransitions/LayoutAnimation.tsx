@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { Button, View, StyleSheet } from 'react-native';
-import type { ButtonProps } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
@@ -10,11 +9,6 @@ import Animated, { SlideInLeft, SlideOutLeft } from 'react-native-reanimated';
 
 const photo = require('./assets/image.jpg');
 const Stack = createNativeStackNavigator();
-const AnimatedButton = Animated.createAnimatedComponent(
-  React.forwardRef((props: ButtonProps, ref: React.ForwardedRef<Button>) => (
-    <Button {...props} ref={ref} />
-  ))
-);
 
 function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
@@ -58,12 +52,12 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
         tempor est eu auctor. Praesent vitae mi at risus dapibus vulputate ac
         quis ipsum. Nunc tincidunt risus quam, et sagittis neque hendrerit et.
       </Animated.Text>
-      <AnimatedButton
-        title="go back"
-        entering={SlideInLeft.delay(1000)}
-        exiting={SlideOutLeft}
-        onPress={() => navigation.navigate('Screen1')}
-      />
+      <Animated.View entering={SlideInLeft.delay(1000)} exiting={SlideOutLeft}>
+        <Button
+          title="go back"
+          onPress={() => navigation.navigate('Screen1')}
+        />
+      </Animated.View>
     </View>
   );
 }

@@ -55,6 +55,7 @@ import { updateLayoutAnimations } from '../reanimated2/UpdateLayoutAnimations';
 import type { CustomConfig } from '../reanimated2/layoutReanimation/web/config';
 import type { FlatList, FlatListProps } from 'react-native';
 import { addHTMLMutationObserver } from '../reanimated2/layoutReanimation/web/domUtils';
+import { getViewInfo } from './getViewInfo';
 
 const IS_WEB = isWeb();
 
@@ -180,7 +181,10 @@ export function createAnimatedComponent(
       this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
       this._InlinePropManager.detachInlineProps();
-      this._sharedElementTransition?.unregisterTransition(this._viewTag);
+      if (this.props.sharedTransitionTag) {
+        this._configureSharedTransition(true);
+      }
+      this._sharedElementTransition?.unregisterTransition(this._viewTag, true);
 
       const exiting = this.props.exiting;
       if (
@@ -450,6 +454,12 @@ export function createAnimatedComponent(
       if (layout !== oldLayout) {
         this._configureLayoutTransition();
       }
+      if (
+        this.props.sharedTransitionTag !== undefined ||
+        prevProps.sharedTransitionTag !== undefined
+      ) {
+        this._configureSharedTransition();
+      }
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
@@ -484,6 +494,31 @@ export function createAnimatedComponent(
       updateLayoutAnimations(this._viewTag, LayoutAnimationType.LAYOUT, layout);
     }
 
+    _configureSharedTransition(isUnmounting = false) {
+      if (IS_WEB) {
+        return;
+      }
+      const { sharedTransitionTag } = this.props;
+      if (!sharedTransitionTag) {
+        this._sharedElementTransition?.unregisterTransition(
+          this._viewTag,
+          isUnmounting
+        );
+        this._sharedElementTransition = null;
+        return;
+      }
+      const sharedElementTransition =
+        this.props.sharedTransitionStyle ??
+        this._sharedElementTransition ??
+        new SharedTransition();
+      sharedElementTransition.registerTransition(
+        this._viewTag,
+        sharedTransitionTag,
+        isUnmounting
+      );
+      this._sharedElementTransition = sharedElementTransition;
+    }
+
     _setComponentRef = setAndForwardRef<Component | HTMLElement>({
       getForwardedRef: () =>
         this.props.forwardedRef as MutableRefObject<
@@ -496,6 +531,8 @@ export function createAnimatedComponent(
           ? (ref as HTMLElement)
           : findNodeHandle(ref as Component);
 
+        this._viewTag = tag as number;
+
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (
           (layout || entering || exiting || sharedTransitionTag) &&
@@ -503,6 +540,10 @@ export function createAnimatedComponent(
         ) {
           if (!shouldBeUseWeb()) {
             enableLayoutAnimations(true, false);
+          }
+
+          if (sharedTransitionTag) {
+            this._configureSharedTransition();
           }
 
           const skipEntering = this.context?.current;
@@ -516,20 +557,6 @@ export function createAnimatedComponent(
                 AnimatedComponent.displayName
               )
             );
-          }
-          if (sharedTransitionTag && !IS_WEB) {
-            const sharedElementTransition =
-              this.props.sharedTransitionStyle ?? new SharedTransition();
-            const reduceMotionInTransition = getReduceMotionFromConfig(
-              sharedElementTransition.getReduceMotion()
-            );
-            if (!reduceMotionInTransition) {
-              sharedElementTransition.registerTransition(
-                tag as number,
-                sharedTransitionTag
-              );
-              this._sharedElementTransition = sharedElementTransition;
-            }
           }
         }
 

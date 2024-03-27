@@ -1,0 +1,64 @@
+.movable {
+  cursor: grab;
+}
+
+.movable:active {
+  cursor: grabbing;
+}
+
+.selectionBox {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  z-index: 2;
+  background: var(--swm-white);
+  border: 2px solid var(--swm-landing-heading-selected-border);
+  transition: scale 50ms ease-in-out;
+}
+
+.movable.selectionBox:active {
+  scale: 1.35;
+}
+
+.movable.selectionBox:hover {
+  scale: 1.35;
+}
+
+.centerDraggable {
+  width: 100%;
+  height: 100%;
+}
+
+.boxUpper {
+  top: -7px;
+}
+
+.boxLower {
+  bottom: -13px;
+}
+
+.boxLeft {
+  left: -15px;
+}
+
+.boxRight {
+  right: -15px;
+}
+
+@media (max-width: 768px) {
+  .boxUpper {
+    top: -11px;
+  }
+
+  .boxLower {
+    bottom: -13px;
+  }
+
+  .boxLeft {
+    left: -7px;
+  }
+
+  .boxRight {
+    right: -7px;
+  }
+}

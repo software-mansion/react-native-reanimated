@@ -26,6 +26,10 @@ using UpdatePropsFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
 using RemoveFromPropsRegistryFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &viewTags)>;
+using ObtainPropFunction = std::function<jsi::Value(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &propName)>;
 using DispatchCommandFunction = std::function<void(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,
@@ -46,13 +50,13 @@ using DispatchCommandFunction = std::function<void(
     const jsi::Value &argsValue)>;
 using MeasureFunction =
     std::function<std::vector<std::pair<std::string, double>>(int)>;
+using ObtainPropFunction =
+    std::function<jsi::Value(jsi::Runtime &, const int, const jsi::Value &)>;
 
 #endif // RCT_NEW_ARCH_ENABLED
 
 using RequestRenderFunction =
     std::function<void(std::function<void(const double)>, jsi::Runtime &)>;
-using ObtainPropFunction =
-    std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>;
 using GetAnimationTimestampFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction =
