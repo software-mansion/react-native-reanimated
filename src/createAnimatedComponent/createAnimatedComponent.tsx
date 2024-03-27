@@ -55,7 +55,7 @@ import { updateLayoutAnimations } from '../reanimated2/UpdateLayoutAnimations';
 import type { CustomConfig } from '../reanimated2/layoutReanimation/web/config';
 import type { FlatList, FlatListProps } from 'react-native';
 import { addHTMLMutationObserver } from '../reanimated2/layoutReanimation/web/domUtils';
-import type { IWorkletEventHandler } from 'src/reanimated2/hook/commonTypes';
+import type { IWorkletEventHandler } from '../reanimated2/hook/commonTypes';
 import { getViewInfo } from './getViewInfo';
 
 const IS_WEB = isWeb();
