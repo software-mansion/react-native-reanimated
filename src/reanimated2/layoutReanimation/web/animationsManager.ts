@@ -1,6 +1,11 @@
 'use strict';
 
-import type { AnimationConfig, AnimationNames, CustomConfig } from './config';
+import type {
+  AnimationConfig,
+  AnimationNames,
+  CustomConfig,
+  KeyframeDefinitions,
+} from './config';
 import { Animations } from './config';
 import type {
   AnimatedComponentProps,
@@ -8,7 +13,10 @@ import type {
 } from '../../../createAnimatedComponent/commonTypes';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { StyleProps } from '../../commonTypes';
-import { createAnimationWithExistingTransform } from './createAnimation';
+import {
+  createAnimationWithExistingTransform,
+  createCustomKeyFrameAnimation,
+} from './createAnimation';
 import {
   extractTransformFromStyle,
   getProcessedConfig,
@@ -19,6 +27,7 @@ import {
 import { areDOMRectsEqual } from './domUtils';
 import type { TransformsStyle } from 'react-native';
 import type { TransitionData } from './animationParser';
+import { Keyframe } from '../animationBuilder';
 import { makeElementVisible } from './componentStyle';
 
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
@@ -39,11 +48,11 @@ function chooseConfig<ComponentProps extends Record<string, unknown>>(
 
 function checkUndefinedAnimationFail(
   initialAnimationName: string,
-  isLayoutTransition: boolean
+  needsCustomization: boolean
 ) {
   // This prevents crashes if we try to set animations that are not defined.
-  // We don't care about layout transitions since they're created dynamically
-  if (initialAnimationName in Animations || isLayoutTransition) {
+  // We don't care about layout transitions or custom keyframes since they're created dynamically
+  if (initialAnimationName in Animations || needsCustomization) {
     return false;
   }
 
@@ -96,6 +105,7 @@ function tryGetAnimationConfigWithTransform<
     typeof config.constructor;
 
   const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
+  const isCustomKeyframe = config instanceof Keyframe;
   const initialAnimationName =
     typeof config === 'function'
       ? config.presetName
@@ -103,7 +113,7 @@ function tryGetAnimationConfigWithTransform<
 
   const shouldFail = checkUndefinedAnimationFail(
     initialAnimationName,
-    isLayoutTransition
+    isLayoutTransition || isCustomKeyframe
   );
 
   if (shouldFail) {
@@ -112,15 +122,24 @@ function tryGetAnimationConfigWithTransform<
 
   const transform = extractTransformFromStyle(props.style as StyleProps);
 
-  const animationName =
-    transform && animationType !== LayoutAnimationType.EXITING
+  let animationName = initialAnimationName;
+
+  if (isCustomKeyframe) {
+    animationName = createCustomKeyFrameAnimation(
+      (config as CustomConfig).definitions as KeyframeDefinitions,
+      transform
+    );
+  } else {
+    animationName = transform
       ? createAnimationWithExistingTransform(initialAnimationName, transform)
       : initialAnimationName;
+  }
 
   const animationConfig = getProcessedConfig(
     animationName,
     animationType,
     config as CustomConfig,
+    isLayoutTransition || isCustomKeyframe,
     initialAnimationName as AnimationNames
   );
 

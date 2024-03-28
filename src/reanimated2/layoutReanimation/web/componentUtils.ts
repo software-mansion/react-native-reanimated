@@ -1,14 +1,15 @@
 'use strict';
 
 import type { TransformsStyle } from 'react-native';
-import { Animations, TransitionType, WebEasings } from './config';
+import { Animations, TransitionType } from './config';
 import type {
   AnimationCallback,
   AnimationConfig,
   AnimationNames,
   CustomConfig,
-  WebEasingsNames,
 } from './config';
+import { WebEasings } from './Easing.web';
+import type { WebEasingsNames } from './Easing.web';
 import { convertTransformToString } from './animationParser';
 import type { TransitionData } from './animationParser';
 import { TransitionGenerator } from './createAnimation';
@@ -66,10 +67,10 @@ export function getReducedMotionFromConfig(config: CustomConfig) {
 
 function getDurationFromConfig(
   config: CustomConfig,
-  isLayoutTransition: boolean,
+  needsCustomization: boolean,
   animationName: AnimationNames
 ): number {
-  const defaultDuration = isLayoutTransition
+  const defaultDuration = needsCustomization
     ? 0.3
     : Animations[animationName].duration;
 
@@ -111,6 +112,7 @@ export function getProcessedConfig(
   animationName: string,
   animationType: LayoutAnimationType,
   config: CustomConfig,
+  needsCustomization: boolean,
   initialAnimationName: AnimationNames
 ): AnimationConfig {
   return {
@@ -118,7 +120,7 @@ export function getProcessedConfig(
     animationType,
     duration: getDurationFromConfig(
       config,
-      animationType === LayoutAnimationType.LAYOUT,
+      needsCustomization,
       initialAnimationName
     ),
     delay: getDelayFromConfig(config),
