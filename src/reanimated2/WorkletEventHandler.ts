@@ -10,26 +10,21 @@ import { shouldBeUseWeb } from './PlatformChecker';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-type EventHandlerRegistration = {
-  id: number;
-  viewTag: number;
-};
-
 class WorkletEventHandlerNative<Event extends object>
   implements IWorkletEventHandler<Event>
 {
-  worklet: (event: ReanimatedEvent<Event>) => void;
   eventNames: string[];
-  viewTags: Set<number>;
-  registrations: EventHandlerRegistration[];
+  #worklet: (event: ReanimatedEvent<Event>) => void;
+  #viewTags: Set<number>;
+  #registrations: Map<number, number[]>; // keys are viewTags, values are arrays of registration ID's for each viewTag
   constructor(
     worklet: (event: ReanimatedEvent<Event>) => void,
     eventNames: string[] = []
   ) {
-    this.worklet = worklet;
+    this.#worklet = worklet;
     this.eventNames = eventNames;
-    this.viewTags = new Set<number>();
-    this.registrations = [];
+    this.#viewTags = new Set<number>();
+    this.#registrations = new Map<number, number[]>();
   }
 
   updateEventHandler(
@@ -37,53 +32,101 @@ class WorkletEventHandlerNative<Event extends object>
     newEvents: string[]
   ): void {
     // Update worklet and event names
-    this.worklet = newWorklet;
+    this.#worklet = newWorklet;
     this.eventNames = newEvents;
 
     // Detach all events
-    this.registrations.forEach((registration) => {
-      unregisterEventHandler(registration.id);
+    this.#registrations.forEach((registrationIDs, tag) => {
+      registrationIDs.forEach((id) => {
+        unregisterEventHandler(id);
+      });
+      this.#registrations.set(tag, []);
     });
-    this.registrations = [];
 
     // Attach new events with new worklet
-    this.registrations = this.eventNames.flatMap((eventName) => {
-      return Array.from(this.viewTags).map((tag) => {
-        return {
-          id: registerEventHandler(this.worklet, eventName, tag),
-          viewTag: tag,
-        };
+    Array.from(this.#viewTags).forEach((tag) => {
+      const newRegistrations = this.eventNames.map((eventName) => {
+        return registerEventHandler(this.#worklet, eventName, tag);
       });
+      this.#registrations.set(tag, newRegistrations);
     });
   }
 
   registerForEvents(viewTag: number, fallbackEventName?: string): void {
-    this.viewTags.add(viewTag);
+    this.#viewTags.add(viewTag);
 
-    this.registrations = this.registrations.concat(
-      this.eventNames.map((eventName) => {
-        return {
-          id: registerEventHandler(this.worklet, eventName, viewTag),
-          viewTag,
-        };
-      })
-    );
+    const newRegistrations = this.eventNames.map((eventName) => {
+      return registerEventHandler(this.#worklet, eventName, viewTag);
+    });
+    this.#registrations.set(viewTag, newRegistrations);
 
     if (this.eventNames.length === 0 && fallbackEventName) {
-      this.registrations.push({
-        id: registerEventHandler(this.worklet, fallbackEventName, viewTag),
-        viewTag,
-      });
+      const newRegistration = registerEventHandler(
+        this.#worklet,
+        fallbackEventName,
+        viewTag
+      );
+      this.#registrations.set(viewTag, [newRegistration]);
     }
   }
 
   unregisterFromEvents(viewTag: number): void {
-    this.viewTags.delete(viewTag);
-    this.registrations.forEach((registration) => {
-      if (registration.viewTag === viewTag) {
-        unregisterEventHandler(registration.id);
-      }
+    this.#viewTags.delete(viewTag);
+    this.#registrations.get(viewTag)?.forEach((id) => {
+      unregisterEventHandler(id);
     });
+    this.#registrations.delete(viewTag);
+  }
+}
+
+class WorkletEventHandlerWeb<Event extends object>
+  implements IWorkletEventHandler<Event>
+{
+  eventNames: string[];
+  #worklet: (event: ReanimatedEvent<Event>) => void;
+  #listeners:
+    | Record<string, (event: ReanimatedEvent<ReanimatedEvent<Event>>) => void>
+    | Record<string, (event: JSEvent<Event>) => void>;
+
+  constructor(
+    worklet: (event: ReanimatedEvent<Event>) => void,
+    eventNames: string[] = []
+  ) {
+    this.#worklet = worklet;
+    this.eventNames = eventNames;
+    this.#listeners = {};
+    this.setupWebListeners();
+  }
+
+  setupWebListeners() {
+    this.#listeners = this.eventNames.reduce(
+      (
+        acc: Record<string, (event: JSEvent<Event>) => void>,
+        eventName: string
+      ) => {
+        acc[eventName] = jsListener(eventName, this.#worklet);
+        return acc;
+      },
+      {}
+    );
+  }
+
+  updateEventHandler(
+    newWorklet: (event: ReanimatedEvent<Event>) => void,
+    newEvents: string[]
+  ): void {
+    // Update worklet and event names
+    this.#worklet = newWorklet;
+    this.eventNames = newEvents;
+    this.setupWebListeners();
+  }
+
+  registerForEvents(_viewTag: number, _fallbackEventName?: string): void {
+    // noop
+  }
+
+  unregisterFromEvents(_viewTag: number): void {
+    // noop
   }
 }
 
@@ -98,57 +141,6 @@ function jsListener<Event extends object>(
   return (evt: JSEvent<Event>) => {
     handler({ ...evt.nativeEvent, eventName } as ReanimatedEvent<Event>);
   };
-}
-
-class WorkletEventHandlerWeb<Event extends object>
-  implements IWorkletEventHandler<Event>
-{
-  worklet: (event: ReanimatedEvent<Event>) => void;
-  eventNames: string[];
-  listeners:
-    | Record<string, (event: ReanimatedEvent<ReanimatedEvent<Event>>) => void>
-    | Record<string, (event: JSEvent<Event>) => void>;
-
-  constructor(
-    worklet: (event: ReanimatedEvent<Event>) => void,
-    eventNames: string[] = []
-  ) {
-    this.worklet = worklet;
-    this.eventNames = eventNames;
-    this.listeners = {};
-    this.setupWebListeners();
-  }
-
-  setupWebListeners() {
-    this.listeners = this.eventNames.reduce(
-      (
-        acc: Record<string, (event: JSEvent<Event>) => void>,
-        eventName: string
-      ) => {
-        acc[eventName] = jsListener(eventName, this.worklet);
-        return acc;
-      },
-      {}
-    );
-  }
-
-  updateEventHandler(
-    newWorklet: (event: ReanimatedEvent<Event>) => void,
-    newEvents: string[]
-  ): void {
-    // Update worklet and event names
-    this.worklet = newWorklet;
-    this.eventNames = newEvents;
-    this.setupWebListeners();
-  }
-
-  registerForEvents(_viewTag: number, _fallbackEventName?: string): void {
-    // noop
-  }
-
-  unregisterFromEvents(_viewTag: number): void {
-    // noop
-  }
 }
 
 export const WorkletEventHandler = SHOULD_BE_USE_WEB

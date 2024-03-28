@@ -255,9 +255,7 @@ export function createAnimatedComponent(
           has('workletEventHandler', prop) &&
           prop.workletEventHandler instanceof WorkletEventHandler
         ) {
-          prop.workletEventHandler.unregisterFromEvents(
-            this._getViewInfo().viewTag as number
-          );
+          prop.workletEventHandler.unregisterFromEvents(this._viewTag);
         }
       }
     }
@@ -265,36 +263,26 @@ export function createAnimatedComponent(
     _updateNativeEvents(
       prevProps: AnimatedComponentProps<InitialComponentProps>
     ) {
-      let previousHandler: IWorkletEventHandler<Event> | undefined;
-      let newHandler: IWorkletEventHandler<Event> | undefined;
-
-      // Get previous handler
+      // Unregister from previous handlers
       for (const key in prevProps) {
         const prop = prevProps[key];
         if (
           has('workletEventHandler', prop) &&
           prop.workletEventHandler instanceof WorkletEventHandler
         ) {
-          previousHandler = prop.workletEventHandler;
+          prop.workletEventHandler.unregisterFromEvents(this._viewTag);
         }
       }
 
-      // Get new handler
+      // Register for new handlers
       for (const key in this.props) {
         const prop = this.props[key];
         if (
           has('workletEventHandler', prop) &&
           prop.workletEventHandler instanceof WorkletEventHandler
         ) {
-          newHandler = prop.workletEventHandler;
+          prop.workletEventHandler.registerForEvents(this._viewTag);
         }
-      }
-
-      if (previousHandler !== newHandler) {
-        // Handler changed, we need to unregister from the previous one and register to the new one
-        const viewTag = this._getViewInfo().viewTag as number;
-        previousHandler?.unregisterFromEvents(viewTag);
-        newHandler?.registerForEvents(viewTag);
       }
     }
 

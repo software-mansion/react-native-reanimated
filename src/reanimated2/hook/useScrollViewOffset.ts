@@ -82,6 +82,7 @@ function useScrollViewOffsetNative(
   const internalOffset = useSharedValue(0);
   const offset = useRef(providedOffset ?? internalOffset).current;
   const scrollRef = useRef<AnimatedScrollView | null>(null);
+  const scrollRefTag = useRef<number | null>(null);
 
   const eventHandler = useEvent<RNNativeScrollEvent>(
     (event: ReanimatedScrollEvent) => {
@@ -99,15 +100,22 @@ function useScrollViewOffsetNative(
   useEffect(() => {
     // We need to make sure that listener for old animatedRef value is removed
     if (scrollRef.current !== null) {
-      const oldTag = findNodeHandle(scrollRef.current);
-      eventHandler.workletEventHandler.unregisterFromEvents(oldTag as number);
+      eventHandler.workletEventHandler.unregisterFromEvents(
+        scrollRefTag.current as number
+      );
     }
-    scrollRef.current = animatedRef.current;
 
-    const viewTag = findNodeHandle(animatedRef.current);
-    eventHandler.workletEventHandler.registerForEvents(viewTag as number);
+    // Store the ref and viewTag for future cleanup
+    scrollRef.current = animatedRef.current;
+    scrollRefTag.current = findNodeHandle(scrollRef.current);
+
+    eventHandler.workletEventHandler.registerForEvents(
+      scrollRefTag.current as number
+    );
     return () => {
-      eventHandler.workletEventHandler.unregisterFromEvents(viewTag as number);
+      eventHandler.workletEventHandler.unregisterFromEvents(
+        scrollRefTag.current as number
+      );
     };
     // React here has a problem with `animatedRef.current` since a Ref .current
     // field shouldn't be used as a dependency. However, in this case we have
