@@ -41,8 +41,8 @@ function mergeStyles(baseStyles, additionalStyles) {
   });
 }
 
-let nextLetter = 'A'
-const LIST_SIZE = 4
+let nextLetter = 'A';
+const LIST_SIZE = 4;
 
 export default function App({ isMobile = false }) {
   const [displayedItems, setDisplayedItems] = useState([nextLetter]);
@@ -54,7 +54,7 @@ export default function App({ isMobile = false }) {
 
   const addItem = () => {
     if (displayedItems.length < LIST_SIZE) {
-      nextLetter = String.fromCharCode(nextLetter.charCodeAt(0) + 1)
+      nextLetter = String.fromCharCode(nextLetter.charCodeAt(0) + 1);
       setDisplayedItems([...displayedItems, nextLetter]);
     }
   };
@@ -90,7 +90,7 @@ function Items({ displayedItems, onAddItem, onRemoveItem, styles }) {
               label={item}
               onRemove={() => onRemoveItem(index)}
               index={index}
-              key={item} 
+              key={item}
               styles={styles}
             />
           </Animated.View>
@@ -131,8 +131,7 @@ function Button({ onPress, entering, styles }) {
       style={styles.buttonContainer}
       onPress={onPress}
       entering={entering}
-      exiting={FadeOut}
-    >
+      exiting={FadeOut}>
       <Animated.View style={styles.button}>
         <Animated.Text style={styles.buttonText}>Add</Animated.Text>
       </Animated.View>
