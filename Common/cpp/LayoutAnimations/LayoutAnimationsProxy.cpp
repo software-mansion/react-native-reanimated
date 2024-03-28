@@ -3,6 +3,7 @@
 #include "NativeReanimatedModule.h"
 
 namespace reanimated {
+MutationNode::MutationNode(ShadowViewMutation& mutation, RootNode& root): children(std::move(root.children)), tag(root.tag), mutation(mutation){}
 
 void LayoutAnimationsProxy::startEnteringAnimation(
     const int tag,
@@ -16,6 +17,8 @@ void LayoutAnimationsProxy::startEnteringAnimation(
         yogaValues.setProperty(rt, "targetOriginY", values.y);
         yogaValues.setProperty(rt, "targetWidth", values.width);
         yogaValues.setProperty(rt, "targetHeight", values.height);
+        yogaValues.setProperty(rt, "windowWidth", windowWidth);
+        yogaValues.setProperty(rt, "windowHeight", windowHeight);
         nativeReanimatedModule_->layoutAnimationsManager().startLayoutAnimation(
             rt, tag, LayoutAnimationType::ENTERING, yogaValues);
       });
@@ -33,6 +36,8 @@ void LayoutAnimationsProxy::startExitingAnimation(
         yogaValues.setProperty(rt, "currentOriginY", values.y);
         yogaValues.setProperty(rt, "currentWidth", values.width);
         yogaValues.setProperty(rt, "currentHeight", values.height);
+        yogaValues.setProperty(rt, "windowWidth", windowWidth);
+        yogaValues.setProperty(rt, "windowHeight", windowHeight);
         nativeReanimatedModule_->layoutAnimationsManager().startLayoutAnimation(
             rt, tag, LayoutAnimationType::EXITING, yogaValues);
       });
@@ -55,6 +60,8 @@ void LayoutAnimationsProxy::startLayoutLayoutAnimation(
         yogaValues.setProperty(rt, "targetOriginY", targetValues.y);
         yogaValues.setProperty(rt, "targetWidth", targetValues.width);
         yogaValues.setProperty(rt, "targetHeight", targetValues.height);
+        yogaValues.setProperty(rt, "windowWidth", windowWidth);
+        yogaValues.setProperty(rt, "windowHeight", windowHeight);
         nativeReanimatedModule_->layoutAnimationsManager().startLayoutAnimation(
             rt, tag, LayoutAnimationType::LAYOUT, yogaValues);
       });
@@ -369,7 +376,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
       if (node->mutation.oldChildShadowView.traits.check(facebook::react::ShadowNodeTraits::RootNodeKind)) {
 //        removeRecursively(node, filteredMutations);
         endAnimationsRecursively(node);
-      } else if (!startAnimationsRecursively(node, true, filteredMutations)) {
+      } else if (!startAnimationsRecursively(node, true, true, filteredMutations)) {
         filteredMutations.push_back(node->mutation);
         updateIndices(node->mutation);
         filteredMutations.push_back(ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
@@ -378,6 +385,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
   // loop
   for (auto &mutation : mutations) {
+    if (mutation.parentShadowView.tag == 1){
+      windowWidth = mutation.parentShadowView.layoutMetrics.frame.size.width;
+      windowHeight = mutation.parentShadowView.layoutMetrics.frame.size.height;
+    }
     
     switch (mutation.type) {
         // INSERT (w/o REMOVE) -- animate entering | override mutation - opacity
@@ -503,15 +514,18 @@ void LayoutAnimationsProxy::removeRecursively(std::shared_ptr<MutationNode> node
   nodeForTag.erase(node->tag);
 }
 
-bool LayoutAnimationsProxy::startAnimationsRecursively(std::shared_ptr<MutationNode> node, bool shouldRemoveSubviewsWithoutAnimations, ShadowViewMutationList& mutations) const{
-  bool hasExitAnimation = layoutAnimationsManager_->hasLayoutAnimation(node->tag, LayoutAnimationType::EXITING);
+bool LayoutAnimationsProxy::startAnimationsRecursively(std::shared_ptr<MutationNode> node, bool shouldRemoveSubviewsWithoutAnimations, bool shouldAnimate, ShadowViewMutationList& mutations) const{
+  if (!std::strcmp(node->mutation.oldChildShadowView.componentName, "RNSScreenStack") || !std::strcmp(node->mutation.oldChildShadowView.componentName, "RNSScreen")){
+    shouldAnimate = false;
+  }
+  bool hasExitAnimation = shouldAnimate && layoutAnimationsManager_->hasLayoutAnimation(node->tag, LayoutAnimationType::EXITING);
   bool hasAnimatedChildren = false;
   
   shouldRemoveSubviewsWithoutAnimations = shouldRemoveSubviewsWithoutAnimations && !hasExitAnimation;
 
   for (auto it = node->children.rbegin(); it != node->children.rend(); it++){
     auto &subNode = *it;
-    if (startAnimationsRecursively(subNode, shouldRemoveSubviewsWithoutAnimations, mutations)){
+    if (startAnimationsRecursively(subNode, shouldRemoveSubviewsWithoutAnimations, shouldAnimate, mutations)){
       node->animatedChildrenCount++;
       hasAnimatedChildren = true;
     } else if (shouldRemoveSubviewsWithoutAnimations) {

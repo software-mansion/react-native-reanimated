@@ -1,5 +1,4 @@
 #pragma once
-
 #include "LayoutAnimationsManager.h"
 #include "PropsRegistry.h"
 #include <react/renderer/mounting/ShadowView.h>
@@ -66,8 +65,6 @@ struct RootNode{
   }
 };
 
-MutationNode::MutationNode(ShadowViewMutation& mutation, RootNode& root): mutation(mutation), children(std::move(root.children)), tag(root.tag){}
-
 
 
 struct LayoutAnimation {
@@ -92,6 +89,7 @@ struct LayoutAnimationRegistry{
 
 struct LayoutAnimationsProxy : public MountingOverrideDelegate{
 //  std::shared_ptr<MutationNode> fakeRoot = std::make_shared<MutationNode>();
+  mutable double windowWidth, windowHeight;
   mutable std::unordered_map<Tag, std::shared_ptr<RootNode>> rootNodeForTag;
   mutable std::unordered_map<Tag, std::shared_ptr<MutationNode>> nodeForTag;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
@@ -130,7 +128,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   void takeIndex(Tag parentTag, int index) const;
   void dropIndex(Tag parentTag, int index) const;
   void removeRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList& mutations) const;
-  bool startAnimationsRecursively(std::shared_ptr<MutationNode> node, bool shouldRemoveSubviewsWithoutAnimations, ShadowViewMutationList& mutations) const;
+  bool startAnimationsRecursively(std::shared_ptr<MutationNode> node, bool shouldRemoveSubviewsWithoutAnimations, bool shouldAnimate, ShadowViewMutationList& mutations) const;
   void endAnimationsRecursively(std::shared_ptr<MutationNode> node) const;
   void maybeDropAncestors(std::shared_ptr<MutationNode> node, std::shared_ptr<MutationNode> child) const;
   
