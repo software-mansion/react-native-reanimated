@@ -29,6 +29,7 @@
     "@emotion/styled": "^11.10.6",
     "@mdx-js/react": "^1.6.22",
     "@mui/material": "^5.12.0",
+    "@shopify/flash-list": "^1.6.3",
     "babel-polyfill": "^6.26.0",
     "babel-preset-expo": "^9.2.2",
     "babel-preset-react-native": "^4.0.1",
