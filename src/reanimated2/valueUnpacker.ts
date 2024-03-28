@@ -3,7 +3,11 @@ import { shouldBeUseWeb } from './PlatformChecker';
 import { isWorkletFunction } from './commonTypes';
 import type { WorkletFunction } from './commonTypes';
 
-function valueUnpacker(objectToUnpack: any, category?: string): any {
+function valueUnpacker(
+  objectToUnpack: any,
+  category?: string,
+  remoteFunctionName?: string
+): any {
   'worklet';
   let workletsCache = global.__workletsCache;
   let handleCache = global.__handleCache;
@@ -57,8 +61,11 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
     return value;
   } else if (category === 'RemoteFunction') {
     const fun = () => {
-      throw new Error(`[Reanimated] Tried to synchronously call a non-worklet function on the UI thread.
-See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread\` for more details.`);
+      const label = remoteFunctionName
+        ? `function \`${remoteFunctionName}\``
+        : 'anonymous function';
+      throw new Error(`[Reanimated] Tried to synchronously call a non-worklet ${label} on the UI thread.
+See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
     };
     fun.__remoteFunction = objectToUnpack;
     return fun;

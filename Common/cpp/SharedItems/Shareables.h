@@ -265,13 +265,20 @@ class ShareableRemoteFunction
       public std::enable_shared_from_this<ShareableRemoteFunction> {
  private:
   jsi::Runtime *runtime_;
+#ifndef NDEBUG
+  const std::string name_;
+#endif
   std::unique_ptr<jsi::Value> function_;
 
  public:
   ShareableRemoteFunction(jsi::Runtime &rt, jsi::Function &&function)
       : Shareable(RemoteFunctionType),
         runtime_(&rt),
-        function_(std::make_unique<jsi::Value>(rt, std::move(function))) {}
+#ifndef NDEBUG
+        name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
+#endif
+        function_(std::make_unique<jsi::Value>(rt, std::move(function))) {
+  }
 
   ~ShareableRemoteFunction() {
     cleanupIfRuntimeExists(runtime_, function_);

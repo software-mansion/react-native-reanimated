@@ -263,7 +263,8 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
     return getValueUnpacker(rt).call(
         rt,
         ShareableJSRef::newHostObject(rt, shared_from_this()),
-        jsi::String::createFromAscii(rt, "RemoteFunction"));
+        jsi::String::createFromAscii(rt, "RemoteFunction"),
+        jsi::String::createFromUtf8(rt, name_));
 #else
     return ShareableJSRef::newHostObject(rt, shared_from_this());
 #endif
