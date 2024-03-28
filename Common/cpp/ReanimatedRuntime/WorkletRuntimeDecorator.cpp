@@ -62,7 +62,7 @@ void WorkletRuntimeDecorator::decorate(
           jsi::PropNameID::forAscii(rt, "evalWithSourceUrl"),
           1,
           evalWithSourceUrl));
-#endif
+#endif // NDEBUG
 
   jsi_utils::installJsiFunction(
       rt, "_toString", [](jsi::Runtime &rt, const jsi::Value &value) {

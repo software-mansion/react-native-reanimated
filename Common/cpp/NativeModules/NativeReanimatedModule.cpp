@@ -50,10 +50,12 @@ NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
-    const std::string &valueUnpackerCode)
+    const std::string &valueUnpackerCode,
+    RuntimeExecutor runtimeExecutor)
     : NativeReanimatedModuleSpec(jsInvoker),
       jsQueue_(jsQueue),
-      jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsInvoker)),
+      jsScheduler_(
+          std::make_shared<JSScheduler>(rnRuntime, jsInvoker, runtimeExecutor)),
       uiScheduler_(uiScheduler),
       uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
           rnRuntime,
@@ -754,7 +756,6 @@ jsi::Value NativeReanimatedModule::measure(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue) {
   // based on implementation from UIManagerBinding.cpp
-
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
   auto layoutMetrics = uiManager_->getRelativeLayoutMetrics(
       *shadowNode, nullptr, {/* .includeTransform = */ true});
