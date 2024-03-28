@@ -5,7 +5,7 @@ import Animated, {
   useDerivedValue,
   useSharedValue,
 } from 'react-native-reanimated';
-import PagerView, { PageScrollState } from 'react-native-pager-view';
+import PagerView from 'react-native-pager-view';
 
 import { AnimatedText } from './AnimatedText';
 import { Pagination } from './Pagination';
@@ -27,7 +27,7 @@ const SLIDES = [
 
 export default function PagerExample() {
   const scrollPosition = useSharedValue(0);
-  const scrollState = useSharedValue<PageScrollState>('idle');
+  const scrollState = useSharedValue<'idle' | 'dragging' | 'settling'>('idle');
   const currentPage = useSharedValue(0);
   const stringifiedCurrentPage = useDerivedValue(() => {
     return `${currentPage.value + 1}`;
