@@ -65,8 +65,6 @@ struct RootNode{
   }
 };
 
-
-
 struct LayoutAnimation {
   std::shared_ptr<ShadowView> end, current;
   ShadowView start, parent;
@@ -79,43 +77,24 @@ struct LayoutAnimation {
   }
 };
 
-struct LayoutAnimationRegistry{
-  mutable std::unordered_map<Tag, X> props_;
-  mutable std::unordered_map<Tag, ShadowView> shadowViews_;
-  mutable std::unordered_map<Tag, ShadowView> previousShadowViews_;
-  mutable std::unordered_map<Tag, ShadowView> parentShadowViews_;
-  std::unordered_set<Tag> removedViews_;
-};
-
 struct LayoutAnimationsProxy : public MountingOverrideDelegate{
-//  std::shared_ptr<MutationNode> fakeRoot = std::make_shared<MutationNode>();
   mutable double windowWidth, windowHeight;
   mutable std::unordered_map<Tag, std::shared_ptr<RootNode>> rootNodeForTag;
   mutable std::unordered_map<Tag, std::shared_ptr<MutationNode>> nodeForTag;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   mutable ShadowViewMutationList cleanupMutations;
   mutable std::unordered_map<Tag, std::shared_ptr<std::unordered_set<int>>> indices;
+  mutable std::unordered_map<Tag, X> props_;
   std::mutex mutex;
-  std::shared_ptr<std::map<Tag, ShadowNode::Shared>> createdNodes_ = std::make_shared<std::map<Tag, ShadowNode::Shared>>();
-  std::shared_ptr<std::map<Tag, ShadowView>> createdViews_ = std::make_shared<std::map<Tag, ShadowView>>();
-  std::shared_ptr<std::map<Tag, ShadowView>> removedViews_ = std::make_shared<std::map<Tag, ShadowView>>();
-  std::shared_ptr<std::map<Tag, ShadowView>> modifiedViews_ = std::make_shared<std::map<Tag, ShadowView>>();
-  std::shared_ptr<std::map<Tag, ShadowNode::Shared>> modifiedNodes_ = std::make_shared<std::map<Tag, ShadowNode::Shared>>();
-  std::shared_ptr<std::map<Tag,  ShadowView>> modifiedViewsTarget_ = std::make_shared<std::map<Tag,  ShadowView>>();
-  std::shared_ptr<std::map<Tag,  ShadowNode::Shared>> modifiedNodesTarget_ = std::make_shared<std::map<Tag,  ShadowNode::Shared>>();
   std::shared_ptr<std::map<Tag, std::string>> tagToNativeID_ = std::make_shared<std::map<Tag, std::string>>();
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   ContextContainer::Shared contextContainer_;
-  LayoutAnimationRegistry layoutAnimationsRegistry_;
   NativeReanimatedModule* nativeReanimatedModule_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
   LayoutAnimationsProxy(std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_, NativeReanimatedModule* n, SharedComponentDescriptorRegistry componentDescriptorRegistry_, ContextContainer::Shared contextContainer_): layoutAnimationsManager_(layoutAnimationsManager_), contextContainer_(contextContainer_), nativeReanimatedModule_(n),  componentDescriptorRegistry_(componentDescriptorRegistry_){}
-  void startEnteringAnimation(const int tag,
-                      Values values) const;
-  void startExitingAnimation(const int tag,
-                      Values values) const;
-  void startLayoutLayoutAnimation(const int tag,
-                      Values currentValues, Values targetValues) const;
+  void startEnteringAnimation(const int tag, Values values) const;
+  void startExitingAnimation(const int tag, Values values) const;
+  void startLayoutLayoutAnimation(const int tag, Values currentValues, Values targetValues) const;
   void transferConfigFromNativeTag(const int tag);
   void progressLayoutAnimation(int tag, const jsi::Object &newStyle);
   void endLayoutAniamtion(int tag, bool shouldRemove);

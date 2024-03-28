@@ -123,7 +123,7 @@ void LayoutAnimationsProxy::progressLayoutAnimation(
       : -1;
 
   x.layoutMetrics = lm;
-  layoutAnimationsRegistry_.props_.insert_or_assign(tag, x);
+  props_.insert_or_assign(tag, x);
 }
 
 void LayoutAnimationsProxy::endLayoutAniamtion(int tag, bool shouldRemove) {
@@ -141,8 +141,7 @@ void LayoutAnimationsProxy::endLayoutAniamtion(int tag, bool shouldRemove) {
     }
   }
   layoutAnimations_.erase(tag);
-  layoutAnimationsRegistry_.props_.erase(tag);
-  layoutAnimationsRegistry_.removedViews_.insert(tag);
+  props_.erase(tag);
 }
 
 void LayoutAnimationsProxy::endAnimationsRecursively(std::shared_ptr<MutationNode> node) const{
@@ -254,7 +253,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     SurfaceId surfaceId,
     ShadowViewMutationList &mutations) const {
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
-  for (auto &[tag, x] : layoutAnimationsRegistry_.props_) {
+  for (auto &[tag, x] : props_) {
     auto rawProps = x.rawProps;
     if (!layoutAnimations_.contains(tag)) {
       continue;
@@ -295,7 +294,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     }
     la.current = newView;
   }
-  layoutAnimationsRegistry_.props_.clear();
+  props_.clear();
   mutations.insert(
       mutations.end(), cleanupMutations.begin(), cleanupMutations.end());
   cleanupMutations.clear();
