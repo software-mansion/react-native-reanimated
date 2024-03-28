@@ -4,13 +4,13 @@ import { useColorMode } from '@docusaurus/theme-common';
 import Animated, {
   FadeInLeft,
   FadeInDown,
+  FadeOut,
   ZoomIn,
   BounceIn,
   FlipOutYRight,
+  LinearTransition,
 } from 'react-native-reanimated';
 import Cross from './Cross';
-
-const data = [{ label: 'A' }, { label: 'B' }, { label: 'C' }, { label: 'D' }];
 
 function mergeStyles(baseStyles, additionalStyles) {
   return StyleSheet.create({
@@ -41,8 +41,11 @@ function mergeStyles(baseStyles, additionalStyles) {
   });
 }
 
+let nextLetter = 'A'
+const LIST_SIZE = 4
+
 export default function App({ isMobile = false }) {
-  const [displayedItems, setDisplayedItems] = useState([data[0]]);
+  const [displayedItems, setDisplayedItems] = useState([nextLetter]);
   const colorModeStyles =
     useColorMode().colorMode === 'dark' ? darkStyles : lightStyles;
   const styles = isMobile
@@ -50,17 +53,15 @@ export default function App({ isMobile = false }) {
     : mergeStyles(mergeStyles(baseStyles, laptopStyles), colorModeStyles);
 
   const addItem = () => {
-    if (displayedItems.length < data.length) {
-      const nextItemIndex = displayedItems.length;
-      const nextItem = data[nextItemIndex];
-
-      setDisplayedItems([...displayedItems, nextItem]);
+    if (displayedItems.length < LIST_SIZE) {
+      nextLetter = String.fromCharCode(nextLetter.charCodeAt(0) + 1)
+      setDisplayedItems([...displayedItems, nextLetter]);
     }
   };
 
   const removeItem = (indexToRemove) => {
     const updatedItems = displayedItems.filter(
-      (item, index) => index !== indexToRemove
+      (_, index) => index !== indexToRemove
     );
 
     setDisplayedItems(updatedItems);
@@ -84,12 +85,12 @@ function Items({ displayedItems, onAddItem, onRemoveItem, styles }) {
     <>
       <View>
         {displayedItems.map((item, index) => (
-          <Animated.View key={index} exiting={FlipOutYRight.duration(250)}>
+          <Animated.View key={item} exiting={FlipOutYRight.duration(250)}>
             <ListItem
-              label={item.label}
+              label={item}
               onRemove={() => onRemoveItem(index)}
               index={index}
-              key={index}
+              key={item} 
               styles={styles}
             />
           </Animated.View>
@@ -108,7 +109,8 @@ function ListItem({ label, onRemove, styles }) {
   return (
     <Animated.View
       style={styles.listItem}
-      entering={FadeInLeft.delay(50).duration(100)}>
+      entering={FadeInLeft.delay(50).duration(100)}
+      layout={LinearTransition.delay(100)}>
       <Animated.Text
         style={styles.listItemLabel}
         entering={FadeInDown.delay(50).easing(Easing.ease)}>
@@ -129,7 +131,7 @@ function Button({ onPress, entering, styles }) {
       style={styles.buttonContainer}
       onPress={onPress}
       entering={entering}
-      // exiting={FadeOut} // doesn't behave well on the web
+      exiting={FadeOut}
     >
       <Animated.View style={styles.button}>
         <Animated.Text style={styles.buttonText}>Add</Animated.Text>
