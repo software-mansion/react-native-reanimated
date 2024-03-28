@@ -7,7 +7,10 @@ import type {
 import { applyStyle, applyStyleForBelowTopScreen } from './styleUpdater';
 import { RNScreensTurboModule } from './RNScreensTurboModule';
 
-const BASE_VELOCITY = 300;
+const BASE_VELOCITY = 400;
+const ADDITIONAL_VELOCITY_FACTOR_X = 400;
+const ADDITIONAL_VELOCITY_FACTOR_Y = 500;
+const ADDITIONAL_VELOCITY_FACTOR_XY = 600;
 
 function computeEasingProgress(
   startingTimestamp: number,
@@ -100,17 +103,30 @@ export function getSwipeSimulator(
   const velocity = { x: BASE_VELOCITY, y: BASE_VELOCITY };
   if (lockAxis === 'x') {
     velocity.y = 0;
+    velocity.x +=
+      (ADDITIONAL_VELOCITY_FACTOR_X * distance.x) / screenDimensions.width;
   } else if (lockAxis === 'y') {
     velocity.x = 0;
+    velocity.y +=
+      (ADDITIONAL_VELOCITY_FACTOR_Y * distance.y) / screenDimensions.height;
   } else {
+    const euclideanDistance = Math.sqrt(distance.x ** 2 + distance.y ** 2);
+    const screenDiagonal = Math.sqrt(
+      screenDimensions.width ** 2 + screenDimensions.height ** 2
+    );
+    const velocityVectorLength =
+      BASE_VELOCITY +
+      (ADDITIONAL_VELOCITY_FACTOR_XY * euclideanDistance) / screenDiagonal;
     if (Math.abs(startingPosition.x) > Math.abs(startingPosition.y)) {
-      velocity.x = BASE_VELOCITY;
+      velocity.x = velocityVectorLength;
       velocity.y =
-        BASE_VELOCITY * Math.abs(startingPosition.y / startingPosition.x);
+        velocityVectorLength *
+        Math.abs(startingPosition.y / startingPosition.x);
     } else {
       velocity.x =
-        BASE_VELOCITY * Math.abs(startingPosition.x / startingPosition.y);
-      velocity.y = BASE_VELOCITY;
+        velocityVectorLength *
+        Math.abs(startingPosition.x / startingPosition.y);
+      velocity.y = velocityVectorLength;
     }
   }
 
