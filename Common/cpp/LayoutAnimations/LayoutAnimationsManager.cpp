@@ -122,34 +122,6 @@ void LayoutAnimationsManager::startLayoutAnimation(
       config->getJSValue(rt));
 }
 
-//void LayoutAnimationsManager::startLayoutAnimationWithWrapper(
-//    jsi::Runtime &rt,
-//    facebook::react::ShadowNode::Shared node,
-//    const int tag,
-//    const LayoutAnimationType type,
-//    const jsi::Object &values) {
-//  std::shared_ptr<Shareable> config, viewShareable;
-//  {
-//    auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-//    config = getConfigsForType(type)[tag];
-//  }
-//  // TODO: cache the following!!
-//  jsi::Value layoutAnimationRepositoryAsValue =
-//      rt.global()
-//          .getPropertyAsObject(rt, "global")
-//          .getProperty(rt, "LayoutAnimationsManager");
-//  jsi::Function startAnimationForTag =
-//      layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(
-//          rt, "start2");
-//  startAnimationForTag.call(
-//      rt,
-//      facebook::react::valueFromShadowNode(rt, node),
-//      jsi::Value(tag),
-//      jsi::Value(static_cast<int>(type)),
-//      values,
-//      config->getJSValue(rt));
-//}
-
 void LayoutAnimationsManager::cancelLayoutAnimation(
     jsi::Runtime &rt,
     const int tag) const {
