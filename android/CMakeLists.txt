@@ -74,9 +74,15 @@ add_library(
 
 # includes
 
+if(NOT DEFINED CHECK_HEADERS)
+  set(INCLUDE_MODE "PRIVATE")
+else()
+  set(INCLUDE_MODE "PUBLIC")
+endif()
+
 target_include_directories(
         ${PACKAGE_NAME}
-        PRIVATE
+        ${INCLUDE_MODE}
         "${COMMON_SRC_DIR}/cpp/AnimatedSensor"
         "${COMMON_SRC_DIR}/cpp/Fabric"
         "${COMMON_SRC_DIR}/cpp/hidden_headers"
@@ -92,7 +98,7 @@ target_include_directories(
 if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
     target_include_directories(
         ${PACKAGE_NAME}
-        PRIVATE
+        ${INCLUDE_MODE}
         "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
         "${REACT_NATIVE_DIR}/ReactCommon"
         "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
@@ -104,7 +110,7 @@ else()
     file(GLOB LIBFBJNI_INCLUDE_DIR ${FBJNI_HEADERS_DIR})
     target_include_directories(
         ${PACKAGE_NAME}
-        PRIVATE
+        ${INCLUDE_MODE}
         "${LIBFBJNI_INCLUDE_DIR}"
         "${BUILD_DIR}/third-party-ndk/boost/boost_${BOOST_VERSION}"
         "${BUILD_DIR}/third-party-ndk/double-conversion"
@@ -215,7 +221,7 @@ if(${JS_RUNTIME} STREQUAL "hermes")
         # Bundled Hermes from module `com.facebook.react:hermes-engine` or project `:ReactAndroid:hermes-engine`
         target_include_directories(
             ${PACKAGE_NAME}
-            PRIVATE
+            ${INCLUDE_MODE}
             "${JS_RUNTIME_DIR}/API"
             "${JS_RUNTIME_DIR}/public"
         )
@@ -224,7 +230,7 @@ if(${JS_RUNTIME} STREQUAL "hermes")
         # From `hermes-engine` npm package
         target_include_directories(
             ${PACKAGE_NAME}
-            PRIVATE
+            ${INCLUDE_MODE}
             "${JS_RUNTIME_DIR}/android/include"
         )
         set(HERMES_LIB "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}/libhermes.so")
@@ -267,7 +273,7 @@ elseif(${JS_RUNTIME} STREQUAL "v8")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_V8=1")
     target_include_directories(
             ${PACKAGE_NAME}
-            PRIVATE
+            ${INCLUDE_MODE}
             "${JS_RUNTIME_DIR}/src"
     )
     file (GLOB V8_SO_DIR "${JS_RUNTIME_DIR}/android/build/intermediates/library_jni/*/jni/${ANDROID_ABI}")
@@ -317,3 +323,21 @@ endif()
 # when any of the following variables is not used in some build configuration.
 set (ignoreMe "${JS_RUNTIME_DIR}")
 set (ignoreMe "${BOOST_VERSION}")
+
+if(DEFINED CHECK_HEADERS)
+  file(GLOB_RECURSE HEADER_FILES CONFIGURE_DEPENDS "${COMMON_SRC_DIR}/**.h")
+  foreach(header ${HEADER_FILES})
+    get_filename_component(header_name ${header} NAME)
+    get_filename_component(directory ${header} DIRECTORY)
+    string(REPLACE ".h" ".cpp" CPP_FILE ${header_name})
+
+    # Create cpp file with include of the header
+    file(WRITE ${CMAKE_BINARY_DIR}/headers_check/${CPP_FILE} "#include \"${header}\"\n")
+
+    add_library(${header_name}_test ${CMAKE_BINARY_DIR}/headers_check/${CPP_FILE})
+    target_link_directories(${header_name}_test PRIVATE ${directory})
+    target_link_libraries(${header_name}_test ${PACKAGE_NAME})
+
+    add_test(NAME ${header_name}_test COMMAND ${header_name}_test)
+  endforeach()
+endif()
