@@ -24,8 +24,7 @@ class JSScheduler {
  protected:
   jsi::Runtime &rnRuntime_;
   const std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
-  std::function<void(std::function<void(jsi::Runtime &runtime)> &&callback)>
-      runtimeExecutor_;
+  RuntimeExecutor runtimeExecutor_;
 };
 
 } // namespace reanimated

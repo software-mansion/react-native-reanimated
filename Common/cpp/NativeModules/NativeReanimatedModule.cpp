@@ -51,8 +51,7 @@ NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
     const std::string &valueUnpackerCode,
-    std::function<void(std::function<void(jsi::Runtime &runtime)> &&callback)>
-        runtimeExecutor)
+    RuntimeExecutor runtimeExecutor)
     : NativeReanimatedModuleSpec(jsInvoker),
       jsQueue_(jsQueue),
       jsScheduler_(

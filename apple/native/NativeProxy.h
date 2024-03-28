@@ -17,8 +17,7 @@ createReanimatedModuleBridgeless(
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &runtime,
     const std::string &valueUnpackerCode,
-    std::function<void(std::function<void(jsi::Runtime &runtime)> &&callback)>
-        runtimeExecutor);
+    RuntimeExecutor runtimeExecutor);
 #endif // RCT_NEW_ARCH_ENABLED
 } // namespace reanimated
 

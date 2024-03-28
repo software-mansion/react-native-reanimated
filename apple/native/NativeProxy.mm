@@ -364,7 +364,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &runtime,
     const std::string &valueUnpackerCode,
-    std::function<void(std::function<void(jsi::Runtime &runtime)> &&callback)> runtimeExecutor)
+    RuntimeExecutor runtimeExecutor)
 {
   REAModule *reaModule = [moduleRegistry moduleForName:"ReanimatedModule"];
 
