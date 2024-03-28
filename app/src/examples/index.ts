@@ -122,6 +122,7 @@ import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
 import HabitsExample from './LayoutAnimations/HabitsExample';
 import MemoExample from './MemoExample';
+import PerformanceMonitorExample from './PerfomanceMonitorExample';
 import ScreenTransitionExample from './ScreenTransitionExample';
 
 interface Example {
@@ -492,6 +493,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Habits',
     screen: HabitsExample,
     missingOnFabric: true,
+  },
+  PerformanceMonitorExample: {
+    icon: '⏱️',
+    title: 'Performance monitor',
+    screen: PerformanceMonitorExample,
   },
 
   // Old examples
