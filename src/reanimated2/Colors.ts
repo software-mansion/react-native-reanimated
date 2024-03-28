@@ -23,6 +23,15 @@ interface HSV {
   v: number;
 }
 
+interface ColorObject {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+  space?: string;
+}
+
+const COLOR_SPACE = 'display-p3|srgb';
 const NUMBER: string = '[-+]?\\d*\\.?\\d+';
 const PERCENTAGE = NUMBER + '%';
 
@@ -45,6 +54,13 @@ function commaSeparatedCall(...args: (RegExp | string)[]) {
 }
 
 const MATCHERS = {
+  color: new RegExp(
+    'color(' +
+      call(COLOR_SPACE, NUMBER, NUMBER, NUMBER) +
+      '|' +
+      callWithSlashSeparator(COLOR_SPACE, NUMBER, NUMBER, NUMBER, NUMBER) +
+      ')'
+  ),
   rgb: new RegExp('rgb' + call(NUMBER, NUMBER, NUMBER)),
   rgba: new RegExp(
     'rgba(' +
@@ -341,7 +357,7 @@ export const ColorProperties = makeShareable([
   'overlayColor',
 ]);
 
-export function normalizeColor(color: unknown): number | null {
+export function normalizeColor(color: unknown): number | null | ColorObject {
   'worklet';
 
   if (typeof color === 'number') {
@@ -349,6 +365,39 @@ export function normalizeColor(color: unknown): number | null {
       return color;
     }
     return null;
+  }
+
+  if (
+    // handle object with alpha
+    typeof color === 'object' &&
+    color !== null &&
+    'r' in color &&
+    'g' in color &&
+    'b' in color &&
+    'a' in color &&
+    typeof color.r === 'number' &&
+    typeof color.g === 'number' &&
+    typeof color.b === 'number' &&
+    typeof color.a === 'number'
+  ) {
+    return color as ColorObject;
+  }
+
+  if (
+    // Handle object without alpha
+    typeof color === 'object' &&
+    color !== null &&
+    'r' in color &&
+    'g' in color &&
+    'b' in color &&
+    typeof color.r === 'number' &&
+    typeof color.g === 'number' &&
+    typeof color.b === 'number'
+  ) {
+    return {
+      ...color,
+      a: 1,
+    } as ColorObject;
   }
 
   if (typeof color !== 'string') {
@@ -483,6 +532,24 @@ export function normalizeColor(color: unknown): number | null {
         0x000000ff) >>> // a
       0
     );
+  }
+
+  if ((match = MATCHERS.color.exec(color))) {
+    return match[2]
+      ? {
+          space: match[2],
+          r: parseFloat(match[3]),
+          g: parseFloat(match[4]),
+          b: parseFloat(match[5]),
+          a: 1,
+        }
+      : {
+          space: match[6],
+          r: parseFloat(match[7]),
+          g: parseFloat(match[8]),
+          b: parseFloat(match[9]),
+          a: parseFloat(match[10]),
+        };
   }
 
   return null;
@@ -625,7 +692,9 @@ export const hsvToColor = (
   return rgbaColor(r, g, b, a);
 };
 
-function processColorInitially(color: unknown): number | null | undefined {
+function processColorInitially(
+  color: unknown
+): number | null | ColorObject | undefined {
   'worklet';
   if (color === null || color === undefined || typeof color === 'number') {
     return color;
@@ -635,6 +704,10 @@ function processColorInitially(color: unknown): number | null | undefined {
 
   if (normalizedColor === null || normalizedColor === undefined) {
     return undefined;
+  }
+
+  if (typeof normalizedColor === 'object' && normalizedColor !== null) {
+    return normalizedColor;
   }
 
   if (typeof normalizedColor !== 'number') {
@@ -653,11 +726,17 @@ export function isColor(value: unknown): boolean {
   return processColorInitially(value) != null;
 }
 
-export function processColor(color: unknown): number | null | undefined {
+export function processColor(
+  color: unknown
+): number | null | ColorObject | undefined {
   'worklet';
   let normalizedColor = processColorInitially(color);
   if (normalizedColor === null || normalizedColor === undefined) {
     return undefined;
+  }
+
+  if (typeof normalizedColor === 'object') {
+    return normalizedColor;
   }
 
   if (typeof normalizedColor !== 'number') {
@@ -689,6 +768,16 @@ export type ParsedColorArray = [number, number, number, number];
 export function convertToRGBA(color: unknown): ParsedColorArray {
   'worklet';
   const processedColor = processColorInitially(color)!; // argb;
+
+  if (typeof processedColor === 'object') {
+    return [
+      processedColor.r,
+      processedColor.g,
+      processedColor.b,
+      processedColor.a,
+    ];
+  }
+
   const a = (processedColor >>> 24) / 255;
   const r = ((processedColor << 8) >>> 24) / 255;
   const g = ((processedColor << 16) >>> 24) / 255;
