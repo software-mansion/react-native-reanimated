@@ -86,7 +86,7 @@ class WorkletEventHandlerWeb<Event extends object>
   listeners:
     | Record<string, (event: ReanimatedEvent<ReanimatedEvent<Event>>) => void>
     | Record<string, (event: JSEvent<Event>) => void>;
-  
+
   #worklet: (event: ReanimatedEvent<Event>) => void;
 
   constructor(
