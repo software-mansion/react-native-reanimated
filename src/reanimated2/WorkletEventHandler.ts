@@ -83,10 +83,11 @@ class WorkletEventHandlerWeb<Event extends object>
   implements IWorkletEventHandler<Event>
 {
   eventNames: string[];
-  #worklet: (event: ReanimatedEvent<Event>) => void;
-  #listeners:
+  listeners:
     | Record<string, (event: ReanimatedEvent<ReanimatedEvent<Event>>) => void>
     | Record<string, (event: JSEvent<Event>) => void>;
+  
+  #worklet: (event: ReanimatedEvent<Event>) => void;
 
   constructor(
     worklet: (event: ReanimatedEvent<Event>) => void,
@@ -94,12 +95,12 @@ class WorkletEventHandlerWeb<Event extends object>
   ) {
     this.#worklet = worklet;
     this.eventNames = eventNames;
-    this.#listeners = {};
+    this.listeners = {};
     this.setupWebListeners();
   }
 
   setupWebListeners() {
-    this.#listeners = this.eventNames.reduce(
+    this.listeners = this.eventNames.reduce(
       (
         acc: Record<string, (event: JSEvent<Event>) => void>,
         eventName: string
