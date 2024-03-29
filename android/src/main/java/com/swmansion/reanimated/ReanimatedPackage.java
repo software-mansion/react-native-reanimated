@@ -28,6 +28,7 @@ import java.util.Map;
       ReanimatedUIManager.class,
     })
 public class ReanimatedPackage extends TurboReactPackage implements ReactPackage {
+
   @Override
   public NativeModule getModule(String name, ReactApplicationContext reactContext) {
     if (name.equals(ReanimatedModule.NAME)) {

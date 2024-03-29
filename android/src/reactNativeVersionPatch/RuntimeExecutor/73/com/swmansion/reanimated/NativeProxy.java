@@ -40,7 +40,6 @@ public class NativeProxy extends NativeProxyCommon {
                         LayoutAnimations,
                         messageQueueThread,
                         fabricUIManager,
-                        null,
                         valueUnpackerCode);
         prepareLayoutAnimations(LayoutAnimations);
         installJSIBindings();
@@ -56,7 +55,6 @@ public class NativeProxy extends NativeProxyCommon {
             LayoutAnimations LayoutAnimations,
             MessageQueueThread messageQueueThread,
             FabricUIManager fabricUIManager,
-            RuntimeExecutor runtimeExecutor,
             String valueUnpackerCode);
 
     public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
