@@ -262,25 +262,37 @@ export function createAnimatedComponent(
     _updateNativeEvents(
       prevProps: AnimatedComponentProps<InitialComponentProps>
     ) {
-      // Unregister from previous handlers
       for (const key in prevProps) {
-        const prop = prevProps[key];
+        const prevProp = prevProps[key];
         if (
-          has('workletEventHandler', prop) &&
-          prop.workletEventHandler instanceof WorkletEventHandler
+          has('workletEventHandler', prevProp) &&
+          prevProp.workletEventHandler instanceof WorkletEventHandler
         ) {
-          prop.workletEventHandler.unregisterFromEvents(this._viewTag);
+          const newProp = this.props[key];
+          if (newProp === null) {
+            // Prop got deleted
+            prevProp.workletEventHandler.unregisterFromEvents(this._viewTag);
+          } else if (
+            has('workletEventHandler', newProp) &&
+            newProp.workletEventHandler instanceof WorkletEventHandler &&
+            newProp.workletEventHandler !== prevProp.workletEventHandler
+          ) {
+            // Prop got changed
+            prevProp.workletEventHandler.unregisterFromEvents(this._viewTag);
+            newProp.workletEventHandler.registerForEvents(this._viewTag);
+          }
         }
       }
 
-      // Register for new handlers
       for (const key in this.props) {
-        const prop = this.props[key];
+        const newProp = this.props[key];
         if (
-          has('workletEventHandler', prop) &&
-          prop.workletEventHandler instanceof WorkletEventHandler
+          has('workletEventHandler', newProp) &&
+          newProp.workletEventHandler instanceof WorkletEventHandler &&
+          prevProps[key] === null
         ) {
-          prop.workletEventHandler.registerForEvents(this._viewTag);
+          // Prop got added
+          newProp.workletEventHandler.registerForEvents(this._viewTag);
         }
       }
     }
