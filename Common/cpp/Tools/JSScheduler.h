@@ -5,6 +5,7 @@
 #include <jsi/jsi.h>
 
 #include <memory>
+#include <utility>
 
 using namespace facebook;
 using namespace react;
