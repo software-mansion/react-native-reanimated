@@ -809,6 +809,7 @@ jsi::Value NativeReanimatedModule::measure(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue) {
   // based on implementation from UIManagerBinding.cpp
+
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
   auto layoutMetrics = uiManager_->getRelativeLayoutMetrics(
       *shadowNode, nullptr, {/* .includeTransform = */ true});

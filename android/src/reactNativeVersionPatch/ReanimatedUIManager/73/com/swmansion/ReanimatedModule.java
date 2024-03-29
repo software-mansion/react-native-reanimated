@@ -15,6 +15,7 @@ import javax.annotation.Nullable;
 @ReactModule(name = ReanimatedModule.NAME)
 public class ReanimatedModule extends NativeReanimatedModuleSpec
     implements LifecycleEventListener, UIManagerModuleListener {
+
   public static final String NAME = "ReanimatedModule";
 
   private interface UIThreadOperation {
@@ -62,16 +63,16 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
     }
     final ArrayList<UIThreadOperation> operations = mOperations;
     mOperations = new ArrayList<>();
-    uiManager.addUIBlock(new UIBlock() {
-      @Override
-      public void execute(
-          NativeViewHierarchyManager nativeViewHierarchyManager) {
-        NodesManager nodesManager = getNodesManager();
-        for (UIThreadOperation operation : operations) {
-          operation.execute(nodesManager);
-        }
-      }
-    });
+    uiManager.addUIBlock(
+        new UIBlock() {
+          @Override
+          public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
+            NodesManager nodesManager = getNodesManager();
+            for (UIThreadOperation operation : operations) {
+              operation.execute(nodesManager);
+            }
+          }
+        });
   }
 
   @Override
@@ -92,12 +93,10 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   public boolean installTurboModule(String valueUnpackerCode) {
     // When debugging in chrome the JS context is not available.
     // https://github.com/facebook/react-native/blob/v0.67.0-rc.6/ReactAndroid/src/main/java/com/facebook/react/modules/blob/BlobCollector.java#L25
-    Utils.isChromeDebugger =
-        getReactApplicationContext().getJavaScriptContextHolder().get() == 0;
+    Utils.isChromeDebugger = getReactApplicationContext().getJavaScriptContextHolder().get() == 0;
 
     if (!Utils.isChromeDebugger) {
-      this.getNodesManager().initWithContext(
-          getReactApplicationContext(), valueUnpackerCode);
+      this.getNodesManager().initWithContext(getReactApplicationContext(), valueUnpackerCode);
       return true;
     } else {
       Log.w(
