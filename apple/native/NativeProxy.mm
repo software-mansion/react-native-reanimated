@@ -254,7 +254,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
-      rnRuntime, jsInvoker, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode, nullptr);
+      rnRuntime, jsInvoker, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode);
 
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
@@ -359,7 +359,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   return nativeReanimatedModule;
 }
 
-#ifdef RCT_NEW_ARCH_ENABLED
+#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
 std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &runtime,
@@ -461,7 +461,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
   };
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
-      runtime, nullptr, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode, runtimeExecutor);
+      runtime, runtimeExecutor, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode);
 
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
@@ -483,6 +483,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
 
   return nativeReanimatedModule;
 }
-#endif // RCT_NEW_ARCH_ENABLED
+#endif REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
 
 } // namespace reanimated

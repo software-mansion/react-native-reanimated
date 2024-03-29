@@ -38,8 +38,6 @@ NativeProxy::NativeProxy(
 #ifdef RCT_NEW_ARCH_ENABLED
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager,
-    std::function<void(std::function<void(jsi::Runtime &runtime)> &&callback)>
-        runtimeExecutor,
 #endif
     const std::string &valueUnpackerCode)
     : javaPart_(jni::make_global(jThis)),
@@ -50,14 +48,43 @@ NativeProxy::NativeProxy(
           std::make_shared<JMessageQueueThread>(messageQueueThread),
           uiScheduler,
           getPlatformDependentMethods(),
-          valueUnpackerCode,
-#ifdef RCT_NEW_ARCH_ENABLED
-          runtimeExecutor)),
-#else
-          nullptr)),
-#endif
+          valueUnpackerCode)),
       layoutAnimations_(std::move(layoutAnimations)) {
 #ifdef RCT_NEW_ARCH_ENABLED
+  commonInit(fabricUIManager);
+#endif // RCT_NEW_ARCH_ENABLED
+}
+
+#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+NativeProxy::NativeProxy(
+    jni::alias_ref<NativeProxy::javaobject> jThis,
+    jsi::Runtime *rnRuntime,
+    RuntimeExecutor runtimeExecutor,
+    const std::shared_ptr<UIScheduler> &uiScheduler,
+    jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+        fabricUIManager,
+
+    const std::string &valueUnpackerCode)
+    : javaPart_(jni::make_global(jThis)),
+      rnRuntime_(rnRuntime),
+      nativeReanimatedModule_(std::make_shared<NativeReanimatedModule>(
+          *rnRuntime,
+          runtimeExecutor,
+          std::make_shared<JMessageQueueThread>(messageQueueThread),
+          uiScheduler,
+          getPlatformDependentMethods(),
+          valueUnpackerCode)),
+      layoutAnimations_(std::move(layoutAnimations)) {
+  commonInit(fabricUIManager);
+}
+#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
+
+#ifdef RCT_NEW_ARCH_ENABLED
+void NativeProxy::commonInit(
+    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+        &fabricUIManager) {
   const auto &uiManager =
       fabricUIManager->getBinding()->getScheduler()->getUIManager();
   nativeReanimatedModule_->initializeFabric(uiManager);
@@ -70,8 +97,8 @@ NativeProxy::NativeProxy(
   //     });
   // reactScheduler_ = binding->getScheduler();
   // reactScheduler_->addEventListener(eventListener_);
-#endif
 }
+#endif // RCT_NEW_ARCH_ENABLED
 
 NativeProxy::~NativeProxy() {
   // removed temporary, new event listener mechanism need fix on the RN side
@@ -94,18 +121,10 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 #ifdef RCT_NEW_ARCH_ENABLED
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager,
-    jni::alias_ref<react::JRuntimeExecutor::javaobject> runtimeExecutorHolder,
 #endif
     const std::string &valueUnpackerCode) {
-  auto jsCallInvoker = jsCallInvokerHolder == nullptr
-      ? nullptr
-      : jsCallInvokerHolder->cthis()->getCallInvoker();
+  auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto uiScheduler = androidUiScheduler->cthis()->getUIScheduler();
-#ifdef RCT_NEW_ARCH_ENABLED
-  auto runtimeExecutor = runtimeExecutorHolder == nullptr
-      ? nullptr
-      : runtimeExecutorHolder->cthis()->get();
-#endif
   return makeCxxInstance(
       jThis,
       (jsi::Runtime *)jsContext,
@@ -115,10 +134,34 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       messageQueueThread,
 #ifdef RCT_NEW_ARCH_ENABLED
       fabricUIManager,
-      runtimeExecutor,
 #endif
       valueUnpackerCode);
 }
+
+#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybridBridgeless(
+    jni::alias_ref<jhybridobject> jThis,
+    jlong jsContext,
+    jni::alias_ref<react::JRuntimeExecutor::javaobject> runtimeExecutorHolder,
+    jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
+    jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+        fabricUIManager,
+    const std::string &valueUnpackerCode) {
+  auto uiScheduler = androidUiScheduler->cthis()->getUIScheduler();
+  auto runtimeExecutor = runtimeExecutorHolder->cthis()->get();
+  return makeCxxInstance(
+      jThis,
+      (jsi::Runtime *)jsContext,
+      runtimeExecutor,
+      uiScheduler,
+      make_global(layoutAnimations),
+      messageQueueThread,
+      fabricUIManager,
+      valueUnpackerCode);
+}
+#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
 
 #ifndef NDEBUG
 void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
@@ -193,13 +236,18 @@ bool NativeProxy::getIsReducedMotion() {
 }
 
 void NativeProxy::registerNatives() {
-  registerHybrid(
-      {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
-       makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
-       makeNativeMethod(
-           "isAnyHandlerWaitingForEvent",
-           NativeProxy::isAnyHandlerWaitingForEvent),
-       makeNativeMethod("performOperations", NativeProxy::performOperations)});
+  registerHybrid({
+    makeNativeMethod("initHybrid", NativeProxy::initHybrid),
+#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+        makeNativeMethod(
+            "initHybridBridgeless", NativeProxy::initHybridBridgeless),
+#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+        makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
+        makeNativeMethod(
+            "isAnyHandlerWaitingForEvent",
+            NativeProxy::isAnyHandlerWaitingForEvent),
+        makeNativeMethod("performOperations", NativeProxy::performOperations)
+  });
 }
 
 void NativeProxy::requestRender(

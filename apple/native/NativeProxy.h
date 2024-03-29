@@ -11,14 +11,14 @@ std::shared_ptr<reanimated::NativeReanimatedModule> createReanimatedModule(
     const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker,
     const std::string &valueUnpackerCode);
 
-#ifdef RCT_NEW_ARCH_ENABLED
+#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
 std::shared_ptr<reanimated::NativeReanimatedModule>
 createReanimatedModuleBridgeless(
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &runtime,
     const std::string &valueUnpackerCode,
     RuntimeExecutor runtimeExecutor);
-#endif // RCT_NEW_ARCH_ENABLED
+#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
 } // namespace reanimated
 
 #endif
