@@ -269,7 +269,7 @@ export function createAnimatedComponent(
           prevProp.workletEventHandler instanceof WorkletEventHandler
         ) {
           const newProp = this.props[key];
-          if (newProp === null) {
+          if (!newProp) {
             // Prop got deleted
             prevProp.workletEventHandler.unregisterFromEvents(this._viewTag);
           } else if (
@@ -289,7 +289,7 @@ export function createAnimatedComponent(
         if (
           has('workletEventHandler', newProp) &&
           newProp.workletEventHandler instanceof WorkletEventHandler &&
-          prevProps[key] === null
+          !prevProps[key]
         ) {
           // Prop got added
           newProp.workletEventHandler.registerForEvents(this._viewTag);
