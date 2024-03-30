@@ -216,12 +216,12 @@ void NativeProxy::maybeFlushUIUpdatesQueue() {
 jsi::Value NativeProxy::obtainProp(
     jsi::Runtime &rt,
     const int viewTag,
-    const jsi::String &propName) {
+    const jsi::Value &propName) {
   static const auto method =
       getJniMethod<jni::local_ref<JString>(int, jni::local_ref<JString>)>(
           "obtainProp");
   local_ref<JString> propNameJStr =
-      jni::make_jstring(propName.utf8(rt).c_str());
+      jni::make_jstring(propName.asString(rt).utf8(rt).c_str());
   auto result = method(javaPart_.get(), viewTag, propNameJStr);
   std::string str = result->toStdString();
   return jsi::Value(rt, jsi::String::createFromAscii(rt, str));
@@ -350,16 +350,14 @@ void NativeProxy::setGestureState(int handlerTag, int newState) {
 }
 
 int NativeProxy::subscribeForKeyboardEvents(
-    std::function<void(int, int)> keyboardEventDataUpdater,
+    std::function<void(int, int)> callback,
     bool isStatusBarTranslucent) {
   static const auto method =
-      getJniMethod<int(KeyboardEventDataUpdater::javaobject, bool)>(
+      getJniMethod<int(KeyboardWorkletWrapper::javaobject, bool)>(
           "subscribeForKeyboardEvents");
   return method(
       javaPart_.get(),
-      KeyboardEventDataUpdater::newObjectCxxArgs(
-          std::move(keyboardEventDataUpdater))
-          .get(),
+      KeyboardWorkletWrapper::newObjectCxxArgs(std::move(callback)).get(),
       isStatusBarTranslucent);
 }
 

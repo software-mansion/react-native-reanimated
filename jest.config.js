@@ -7,6 +7,7 @@ module.exports = {
     'MacOSExample',
     'TVOSExample',
     'VisionOSExample',
+    'app',
     'docs',
     'lib',
     '.eslintrc',

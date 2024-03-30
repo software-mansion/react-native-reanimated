@@ -111,7 +111,7 @@ export type WorkletFunction<
  * Do not call it before the worklet is declared, as it will always return false then. E.g.:
  *
  * ```ts
- * isWorklet(myWorklet); // Will always return false.
+ * isWorkletFunction(myWorklet); // Will always return false.
  *
  * function myWorklet() {
  *   'worklet';
@@ -123,7 +123,7 @@ export type WorkletFunction<
  * However, on other threads it will not get optimized and we will get a function call overhead.
  * We want to change it in the future, but it's not feasible at the moment.
  */
-export function isWorklet<
+export function isWorkletFunction<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown,
   BuildType extends WorkletBaseDev | WorkletBaseRelease = WorkletBaseDev
@@ -131,7 +131,10 @@ export function isWorklet<
   'worklet';
   // Since host objects always return true for `in` operator, we have to use dot notation to check if the property exists.
   // See https://github.com/facebook/hermes/blob/340726ef8cf666a7cce75bc60b02fa56b3e54560/lib/VM/JSObject.cpp#L1276.
-  return !!(value as Record<string, unknown>).__workletHash;
+  return (
+    typeof value === 'function' &&
+    !!(value as unknown as Record<string, unknown>).__workletHash
+  );
 }
 
 export type AnimatedPropsAdapterFunction = (

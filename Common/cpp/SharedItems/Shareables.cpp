@@ -41,7 +41,8 @@ jsi::Function getCallGuard(jsi::Runtime &rt) {
 jsi::Value makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
-    const jsi::Value &shouldRetainRemote) {
+    const jsi::Value &shouldRetainRemote,
+    const jsi::Value &nativeStateSource) {
   std::shared_ptr<Shareable> shareable;
   if (value.isObject()) {
     auto object = value.asObject(rt);
@@ -76,10 +77,11 @@ jsi::Value makeShareableClone(
           std::make_shared<ShareableHostObject>(rt, object.getHostObject(rt));
     } else {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
-        shareable =
-            std::make_shared<RetainingShareable<ShareableObject>>(rt, object);
+        shareable = std::make_shared<RetainingShareable<ShareableObject>>(
+            rt, object, nativeStateSource);
       } else {
-        shareable = std::make_shared<ShareableObject>(rt, object);
+        shareable =
+            std::make_shared<ShareableObject>(rt, object, nativeStateSource);
       }
     }
   } else if (value.isString()) {
@@ -198,6 +200,24 @@ ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
     auto value = extractShareableOrThrow(rt, object.getProperty(rt, key));
     data_.emplace_back(key.utf8(rt), value);
   }
+#if REACT_NATIVE_MINOR_VERSION >= 71
+  if (object.hasNativeState(rt)) {
+    nativeState_ = object.getNativeState(rt);
+  }
+#endif
+}
+
+ShareableObject::ShareableObject(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const jsi::Value &nativeStateSource)
+    : ShareableObject(rt, object) {
+#if REACT_NATIVE_MINOR_VERSION >= 71
+  if (nativeStateSource.isObject() &&
+      nativeStateSource.asObject(rt).hasNativeState(rt)) {
+    nativeState_ = nativeStateSource.asObject(rt).getNativeState(rt);
+  }
+#endif
 }
 
 jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
@@ -206,6 +226,11 @@ jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
     obj.setProperty(
         rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
   }
+#if REACT_NATIVE_MINOR_VERSION >= 71
+  if (nativeState_ != nullptr) {
+    obj.setNativeState(rt, nativeState_);
+  }
+#endif
   return obj;
 }
 
@@ -226,7 +251,8 @@ jsi::Value ShareableWorklet::toJSValue(jsi::Runtime &rt) {
           [](const auto &item) { return item.first == "__workletHash"; }) &&
       "ShareableWorklet doesn't have `__workletHash` property");
   jsi::Value obj = ShareableObject::toJSValue(rt);
-  return getValueUnpacker(rt).call(rt, obj);
+  return getValueUnpacker(rt).call(
+      rt, obj, jsi::String::createFromAscii(rt, "Worklet"));
 }
 
 jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
@@ -237,7 +263,8 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
     return getValueUnpacker(rt).call(
         rt,
         ShareableJSRef::newHostObject(rt, shared_from_this()),
-        jsi::String::createFromAscii(rt, "RemoteFunction"));
+        jsi::String::createFromAscii(rt, "RemoteFunction"),
+        jsi::String::createFromUtf8(rt, name_));
 #else
     return ShareableJSRef::newHostObject(rt, shared_from_this());
 #endif
@@ -245,13 +272,23 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
 }
 
 jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
-  if (initializer_ != nullptr) {
+  if (remoteValue_ == nullptr) {
     auto initObj = initializer_->getJSValue(rt);
-    remoteValue_ =
-        std::make_unique<jsi::Value>(getValueUnpacker(rt).call(rt, initObj));
-    remoteRuntime_ = &rt;
-    initializer_ = nullptr; // we can release ref to initializer as this
-    // method should be called at most once
+    auto value = std::make_unique<jsi::Value>(getValueUnpacker(rt).call(
+        rt, initObj, jsi::String::createFromAscii(rt, "Handle")));
+
+    // We are locking the initialization here since the thread that is
+    // initalizing can be pre-empted on runtime lock. E.g.
+    // UI thread can be pre-empted on initialization of a shared value and then
+    // JS thread can try to access the shared value, locking the whole runtime.
+    // If we put the lock on `getValueUnpacker` part (basically any part that
+    // requires runtime) we would get a deadlock since UI thread would never
+    // release it.
+    std::unique_lock<std::mutex> lock(initializationMutex_);
+    if (remoteValue_ == nullptr) {
+      remoteValue_ = std::move(value);
+      remoteRuntime_ = &rt;
+    }
   }
   return jsi::Value(rt, *remoteValue_);
 }

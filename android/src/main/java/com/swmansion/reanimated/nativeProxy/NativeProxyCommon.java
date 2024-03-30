@@ -21,7 +21,8 @@ import com.swmansion.reanimated.NativeProxy;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.ReanimatedModule;
 import com.swmansion.reanimated.Utils;
-import com.swmansion.reanimated.keyboardObserver.ReanimatedKeyboardEventListener;
+import com.swmansion.reanimated.keyboard.KeyboardAnimationManager;
+import com.swmansion.reanimated.keyboard.KeyboardWorkletWrapper;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
@@ -42,7 +43,7 @@ public abstract class NativeProxyCommon {
   protected AndroidUIScheduler mAndroidUIScheduler;
   private ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
-  private ReanimatedKeyboardEventListener reanimatedKeyboardEventListener;
+  private KeyboardAnimationManager keyboardAnimationManager;
   private Long firstUptime = SystemClock.uptimeMillis();
   private boolean slowAnimationsEnabled = false;
   protected String cppVersion = null;
@@ -51,7 +52,7 @@ public abstract class NativeProxyCommon {
     mAndroidUIScheduler = new AndroidUIScheduler(context);
     mContext = new WeakReference<>(context);
     reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
-    reanimatedKeyboardEventListener = new ReanimatedKeyboardEventListener(mContext);
+    keyboardAnimationManager = new KeyboardAnimationManager(mContext);
     addDevMenuOption();
 
     GestureHandlerStateManager tempHandlerStateManager;
@@ -213,19 +214,19 @@ public abstract class NativeProxyCommon {
 
   @DoNotStrip
   public int subscribeForKeyboardEvents(
-      KeyboardEventDataUpdater keyboardEventDataUpdater, boolean isStatusBarTranslucent) {
-    return reanimatedKeyboardEventListener.subscribeForKeyboardEvents(
-        keyboardEventDataUpdater, isStatusBarTranslucent);
+      KeyboardWorkletWrapper keyboardWorkletWrapper, boolean isStatusBarTranslucent) {
+    return keyboardAnimationManager.subscribeForKeyboardUpdates(
+        keyboardWorkletWrapper, isStatusBarTranslucent);
   }
 
   @DoNotStrip
   public void unsubscribeFromKeyboardEvents(int listenerId) {
-    reanimatedKeyboardEventListener.unsubscribeFromKeyboardEvents(listenerId);
+    keyboardAnimationManager.unsubscribeFromKeyboardUpdates(listenerId);
   }
 
   protected abstract HybridData getHybridData();
 
-  public void onCatalystInstanceDestroy() {
+  public void invalidate() {
     mAndroidUIScheduler.deactivate();
   }
 
