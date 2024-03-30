@@ -393,7 +393,6 @@ exports[`babel plugin for class worklets workletizes class field 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
 var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
 var _worklet_16347365292089_init_data = {
   code: "function anonymous(x){return x+2;}",
   location: "/dev/null",
@@ -402,7 +401,7 @@ var _worklet_16347365292089_init_data = {
 };
 var Foo = (0, _createClass2.default)(function Foo() {
   (0, _classCallCheck2.default)(this, Foo);
-  (0, _defineProperty2.default)(this, "bar", function () {
+  this.bar = function () {
     var _e = [new global.Error(), 1, -27];
     var anonymous = function anonymous(x) {
       return x + 2;
@@ -412,7 +411,7 @@ var Foo = (0, _createClass2.default)(function Foo() {
     anonymous.__initData = _worklet_16347365292089_init_data;
     anonymous.__stackDetails = _e;
     return anonymous;
-  }());
+  }();
 });"
 `;
 
@@ -544,7 +543,6 @@ exports[`babel plugin for class worklets workletizes static class field 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
 var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
 var Foo = (0, _createClass2.default)(function Foo() {
   (0, _classCallCheck2.default)(this, Foo);
 });
@@ -554,7 +552,7 @@ var _worklet_16347365292089_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-(0, _defineProperty2.default)(Foo, "bar", function () {
+Foo.bar = function () {
   var _e = [new global.Error(), 1, -27];
   var anonymous = function anonymous(x) {
     return x + 2;
@@ -564,7 +562,7 @@ var _worklet_16347365292089_init_data = {
   anonymous.__initData = _worklet_16347365292089_init_data;
   anonymous.__stackDetails = _e;
   return anonymous;
-}());"
+}();"
 `;
 
 exports[`babel plugin for class worklets workletizes static method 1`] = `
@@ -975,16 +973,18 @@ var foo = function () {
 `;
 
 exports[`babel plugin for inline styles doesn't show a warning if user writes something like style={styles.value} 1`] = `
-"function App() {
-  return React.createElement(Animated.View, {
+"var _jsxRuntime = require("react/jsx-runtime");
+function App() {
+  return (0, _jsxRuntime.jsx)(Animated.View, {
     style: styles.value
   });
 }"
 `;
 
 exports[`babel plugin for inline styles shows a warning if user uses .value inside inline style 1`] = `
-"function App() {
-  return React.createElement(Animated.View, {
+"var _jsxRuntime = require("react/jsx-runtime");
+function App() {
+  return (0, _jsxRuntime.jsx)(Animated.View, {
     style: {
       width: function () {
         console.warn(require("react-native-reanimated").getUseOfValueInStyleWarning());
@@ -996,8 +996,9 @@ exports[`babel plugin for inline styles shows a warning if user uses .value insi
 `;
 
 exports[`babel plugin for inline styles shows a warning if user uses .value inside inline style, style array 1`] = `
-"function App() {
-  return React.createElement(Animated.View, {
+"var _jsxRuntime = require("react/jsx-runtime");
+function App() {
+  return (0, _jsxRuntime.jsx)(Animated.View, {
     style: [style, {
       width: function () {
         console.warn(require("react-native-reanimated").getUseOfValueInStyleWarning());
@@ -1009,8 +1010,9 @@ exports[`babel plugin for inline styles shows a warning if user uses .value insi
 `;
 
 exports[`babel plugin for inline styles shows a warning if user uses .value inside inline style, transforms 1`] = `
-"function App() {
-  return React.createElement(Animated.View, {
+"var _jsxRuntime = require("react/jsx-runtime");
+function App() {
+  return (0, _jsxRuntime.jsx)(Animated.View, {
     style: {
       transform: [{
         translateX: function () {
@@ -1414,8 +1416,9 @@ exports[`babel plugin for react-native-gesture-handler doesn't transform standar
 exports[`babel plugin for react-native-gesture-handler doesn't workletize irrelevant chained gesture object callback functions 1`] = `"var foo = Gesture.Tap().toString();"`;
 
 exports[`babel plugin for react-native-gesture-handler transforms spread operator in Animated component 1`] = `
-"function App() {
-  return React.createElement(Animated.View, {
+"var _jsxRuntime = require("react/jsx-runtime");
+function App() {
+  return (0, _jsxRuntime.jsx)(Animated.View, {
     style: [style, Object.assign({}, styles.container, {
       width: function () {
         console.warn(require("react-native-reanimated").getUseOfValueInStyleWarning());
@@ -2150,6 +2153,7 @@ var foo = function () {
 
 exports[`babel plugin generally transforms 1`] = `
 "var _reactNativeReanimated = _interopRequireWildcard(require("react-native-reanimated"));
+var _jsxRuntime = require("react/jsx-runtime");
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 var _worklet_13769858944821_init_data = {
@@ -2177,13 +2181,15 @@ function Box() {
     anonymous.__stackDetails = _e;
     return anonymous;
   }());
-  return React.createElement(React.Fragment, null, React.createElement(_reactNativeReanimated.default.View, {
-    style: [styles.box, animatedStyles]
-  }), React.createElement(Button, {
-    onPress: function onPress() {
-      return offset.value = Math.random();
-    },
-    title: "Move"
-  }));
+  return (0, _jsxRuntime.jsxs)(_jsxRuntime.Fragment, {
+    children: [(0, _jsxRuntime.jsx)(_reactNativeReanimated.default.View, {
+      style: [styles.box, animatedStyles]
+    }), (0, _jsxRuntime.jsx)(Button, {
+      onPress: function onPress() {
+        return offset.value = Math.random();
+      },
+      title: "Move"
+    })]
+  });
 }"
 `;

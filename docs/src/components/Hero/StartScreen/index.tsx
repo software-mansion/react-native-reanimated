@@ -13,17 +13,19 @@ const StartScreen = () => {
         <div className={styles.heading}>
           <div className={styles.upperHeading}>
             <h1 className={styles.headingLabel}>
-              <span>React Native</span>
-              <SelectedLabel>Reanimated</SelectedLabel>
+              <span className={styles.rnLabel}>React Native</span>
+              <SelectedLabel isInteractive={true}>Reanimated</SelectedLabel>
             </h1>
             <h2 className={styles.subheadingLabel}>Beyond the limitations</h2>
           </div>
           <div className={styles.lowerHeading}>
             <Horse />
-            <HomepageButton
-              href="/react-native-reanimated/docs/fundamentals/getting-started"
-              title="Get started"
-            />
+            <div className={styles.buttonContainer}>
+              <HomepageButton
+                href="/react-native-reanimated/docs/fundamentals/getting-started"
+                title="Get started"
+              />
+            </div>
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import Animated, {
-  isWorklet,
+  isWorkletFunction,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -18,7 +18,7 @@ function isBabelPluginEnabled() {
   function worklet() {
     'worklet';
   }
-  return isWorklet(worklet);
+  return isWorkletFunction(worklet);
 }
 
 export default function WithoutBabelPluginExample() {
@@ -42,7 +42,6 @@ function WithBabel() {
         { scale: withSpring(isPressed.value ? 1.2 : 1) },
       ],
       backgroundColor: isPressed.value ? 'blue' : 'navy',
-      cursor: isPressed.value ? 'grabbing' : 'grab',
     };
   });
 
@@ -102,7 +101,6 @@ export function WithoutBabel() {
         { scale: withSpring(isPressed.value ? 1.2 : 1) },
       ],
       backgroundColor: isPressed.value ? 'pink' : 'hotpink',
-      cursor: isPressed.value ? 'grabbing' : 'grab',
     };
   }, [isPressed, offset, stateObject, stateBoolean, stateNumber]);
 

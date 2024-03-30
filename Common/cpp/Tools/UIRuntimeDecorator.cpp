@@ -10,6 +10,7 @@ void UIRuntimeDecorator::decorate(
 #else
     const ScrollToFunction scrollTo,
 #endif
+    const ObtainPropFunction obtainPropFunction,
     const UpdatePropsFunction updateProps,
     const MeasureFunction measure,
     const DispatchCommandFunction dispatchCommand,
@@ -44,6 +45,8 @@ void UIRuntimeDecorator::decorate(
         }
         return resultObject;
       });
+  jsi_utils::installJsiFunction(
+      uiRuntime, "_obtainPropPaper", obtainPropFunction);
 #endif // RCT_NEW_ARCH_ENABLED
 
   jsi_utils::installJsiFunction(
@@ -59,6 +62,9 @@ void UIRuntimeDecorator::decorate(
   jsi_utils::installJsiFunction(uiRuntime, "_setGestureState", setGestureState);
   jsi_utils::installJsiFunction(
       uiRuntime, "_maybeFlushUIUpdatesQueue", maybeFlushUIUpdatesQueue);
+
+  jsi_utils::installJsiFunction(
+      uiRuntime, "_obtainPropFabric", obtainPropFunction);
 }
 
 } // namespace reanimated
