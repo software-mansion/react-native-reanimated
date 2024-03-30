@@ -39,6 +39,10 @@ import { EXAMPLES } from './examples';
 import React from 'react';
 import { useReducedMotion } from 'react-native-reanimated';
 
+function isFabric(): boolean {
+  return !!(global as Record<string, unknown>)._IS_FABRIC;
+}
+
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
   Home: undefined;
 };
@@ -91,6 +95,7 @@ function HomeScreen({ navigation }: HomeScreenProps) {
           icon={EXAMPLES[name].icon}
           title={EXAMPLES[name].title}
           onPress={() => navigation.navigate(name)}
+          missingOnFabric={EXAMPLES[name].missingOnFabric}
         />
       )}
       renderScrollComponent={(props) => <ScrollView {...props} />}
@@ -104,12 +109,17 @@ interface ItemProps {
   icon?: string;
   title: string;
   onPress: () => void;
+  missingOnFabric?: boolean;
 }
 
-function Item({ icon, title, onPress }: ItemProps) {
+function Item({ icon, title, onPress, missingOnFabric }: ItemProps) {
+  const isDisabled = missingOnFabric && isFabric();
   if (Platform.OS === 'macos') {
     return (
-      <Pressable style={styles.button} onPress={onPress}>
+      <Pressable
+        style={[styles.button, isDisabled && styles.disabledButton]}
+        onPress={onPress}
+        disabled={isDisabled}>
         {icon && <Text style={styles.title}>{icon + '  '}</Text>}
         <Text style={styles.title}>{title}</Text>
       </Pressable>
@@ -117,7 +127,10 @@ function Item({ icon, title, onPress }: ItemProps) {
   }
 
   return (
-    <RectButton style={styles.button} onPress={onPress}>
+    <RectButton
+      style={[styles.button, isDisabled && styles.disabledButton]}
+      onPress={onPress}
+      enabled={!isDisabled}>
       {icon && <Text style={styles.title}>{icon + '  '}</Text>}
       <Text style={styles.title}>{title}</Text>
     </RectButton>
@@ -260,6 +273,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
+  },
+  disabledButton: {
+    backgroundColor: 'grey',
+    opacity: 0.5,
   },
   title: {
     fontSize: 16,

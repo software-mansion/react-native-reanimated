@@ -8,6 +8,7 @@ import type {
 import type { EasingFunction } from '../../Easing';
 import { BaseAnimationBuilder } from './BaseAnimationBuilder';
 import type { StyleProps } from '../../commonTypes';
+import { assertEasingIsWorklet } from '../../animation/util';
 
 export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   easingV?: EasingFunction;
@@ -40,6 +41,9 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   }
 
   easing(easingFunction: EasingFunction): this {
+    if (__DEV__) {
+      assertEasingIsWorklet(easingFunction);
+    }
     this.easingV = easingFunction;
     return this;
   }

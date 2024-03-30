@@ -17,6 +17,7 @@ public class ReanimatedSensor {
   Sensor sensor;
   ReanimatedSensorType sensorType;
   int interval;
+  private static final int DEFAULT_INTERVAL = 8;
 
   ReanimatedSensor(
       WeakReference<ReactApplicationContext> reactContext,
@@ -30,7 +31,7 @@ public class ReanimatedSensor {
         (SensorManager) reactContext.get().getSystemService(reactContext.get().SENSOR_SERVICE);
     this.sensorType = sensorType;
     if (interval == -1) {
-      this.interval = SensorManager.SENSOR_DELAY_UI;
+      this.interval = DEFAULT_INTERVAL;
     } else {
       this.interval = interval;
     }

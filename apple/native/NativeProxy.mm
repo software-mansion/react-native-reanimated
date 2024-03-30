@@ -8,6 +8,7 @@
 #import <RNReanimated/REAMessageThread.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
+#import <RNReanimated/REASlowAnimations.h>
 #import <RNReanimated/REASwizzledUIManager.h>
 #import <RNReanimated/RNGestureHandlerStateManager.h>
 #import <RNReanimated/ReanimatedRuntime.h>
@@ -47,41 +48,6 @@ namespace reanimated {
 
 using namespace facebook;
 using namespace react;
-
-static CGFloat SimAnimationDragCoefficient(void)
-{
-  static float (*UIAnimationDragCoefficient)(void) = NULL;
-#if TARGET_IPHONE_SIMULATOR
-  static dispatch_once_t onceToken;
-  dispatch_once(&onceToken, ^{
-    UIAnimationDragCoefficient = (float (*)(void))dlsym(RTLD_DEFAULT, "UIAnimationDragCoefficient");
-  });
-#endif
-  return UIAnimationDragCoefficient ? UIAnimationDragCoefficient() : 1.f;
-}
-
-static CFTimeInterval calculateTimestampWithSlowAnimations(CFTimeInterval currentTimestamp)
-{
-#if TARGET_IPHONE_SIMULATOR
-  static CFTimeInterval dragCoefChangedTimestamp = CACurrentMediaTime();
-  static CGFloat previousDragCoef = SimAnimationDragCoefficient();
-
-  const CGFloat dragCoef = SimAnimationDragCoefficient();
-  if (previousDragCoef != dragCoef) {
-    previousDragCoef = dragCoef;
-    dragCoefChangedTimestamp = CACurrentMediaTime();
-  }
-
-  const bool areSlowAnimationsEnabled = dragCoef != 1.f;
-  if (areSlowAnimationsEnabled) {
-    return (dragCoefChangedTimestamp + (currentTimestamp - dragCoefChangedTimestamp) / dragCoef);
-  } else {
-    return currentTimestamp;
-  }
-#else
-  return currentTimestamp;
-#endif
-}
 
 static NSSet *convertProps(jsi::Runtime &rt, const jsi::Value &props)
 {
@@ -156,9 +122,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
-  auto obtainPropFunction = [reaModule](
-                                jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
-    NSString *propNameConverted = [NSString stringWithFormat:@"%s", propName.utf8(rt).c_str()];
+  auto obtainPropFunction = [reaModule](jsi::Runtime &rt, const int viewTag, const jsi::Value &propName) -> jsi::Value {
+    NSString *propNameConverted = [NSString stringWithFormat:@"%s", propName.asString(rt).utf8(rt).c_str()];
     std::string resultStr = std::string([[reaModule.nodesManager obtainProp:[NSNumber numberWithInt:viewTag]
                                                                    propName:propNameConverted] UTF8String]);
     jsi::Value val = jsi::String::createFromUtf8(rt, resultStr);
@@ -354,6 +319,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   [animationsManager setAnimationRemovingBlock:^(NSNumber *_Nonnull tag) {
     if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
       nativeReanimatedModule->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
+    }
+  }];
+
+  [animationsManager setSharedTransitionRemovingBlock:^(NSNumber *_Nonnull tag) {
+    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+      nativeReanimatedModule->layoutAnimationsManager().clearSharedTransitionConfig([tag intValue]);
     }
   }];
 

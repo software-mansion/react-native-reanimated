@@ -9,7 +9,6 @@ import Animated from 'react-native-reanimated';
 
 const photo = require('./assets/image.jpg');
 const Stack = createNativeStackNavigator();
-const AnimatedButton = Animated.createAnimatedComponent(Button);
 
 function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
@@ -66,10 +65,7 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
         sharedTransitionTag="placeholder1"
         style={styles.greenBoxScreenTwo}
       />
-      <AnimatedButton
-        title="go back"
-        onPress={() => navigation.navigate('Screen1')}
-      />
+      <Button title="go back" onPress={() => navigation.navigate('Screen1')} />
     </View>
   );
 }

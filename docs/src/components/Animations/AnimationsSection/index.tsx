@@ -81,12 +81,14 @@ export default function AnimationsSection({
         <div>
           <h4>{title}</h4>
           <p>{body}</p>
-          <HomepageButton
-            backgroundStyling={styles.backgroundStyling}
-            borderStyling={styles.borderStyling}
-            href={docsLink}
-            title="Check docs"
-          />
+          <div className={styles.buttonContainer}>
+            <HomepageButton
+              backgroundStyling={styles.backgroundStyling}
+              borderStyling={styles.borderStyling}
+              href={docsLink}
+              title="Check docs"
+            />
+          </div>
         </div>
 
         <div className={styles.interactiveCodeBlock}>

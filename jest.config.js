@@ -3,6 +3,7 @@ module.exports = {
   modulePathIgnorePatterns: [
     'Example',
     'FabricExample',
+    'app',
     'docs',
     'lib',
     '.eslintrc',

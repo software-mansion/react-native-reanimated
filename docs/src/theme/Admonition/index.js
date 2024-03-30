@@ -1,11 +1,11 @@
 import React from 'react';
 import clsx from 'clsx';
-import { ThemeClassNames, useColorMode } from '@docusaurus/theme-common';
+import { ThemeClassNames } from '@docusaurus/theme-common';
 import Translate from '@docusaurus/Translate';
+import ThemedImage from '@theme/ThemedImage';
 import styles from './styles.module.css';
 
-import Danger from '/static/img/danger.svg';
-import DangerDark from '/static/img/danger-dark.svg';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 
 const AdmonitionConfigs = {
   note: {
@@ -68,7 +68,6 @@ const aliases = {
 };
 
 export default function Admonition(props) {
-  const { colorMode } = useColorMode();
   const {
     children,
     type,
@@ -77,6 +76,11 @@ export default function Admonition(props) {
   } = processAdmonitionProps(props);
   const typeConfig = getAdmonitionConfig(type);
   const titleLabel = title ?? typeConfig.label;
+
+  const dangerIcon = {
+    light: useBaseUrl('/img/danger.svg'),
+    dark: useBaseUrl('/img/danger-dark.svg'),
+  };
 
   return (
     <div
@@ -89,7 +93,7 @@ export default function Admonition(props) {
       )}>
       <div className={styles.admonitionHeading}>
         <div className={styles.admonitionIcon}>
-          {colorMode === 'light' ? <Danger /> : <DangerDark />}
+          <ThemedImage sources={dangerIcon} />
         </div>
 
         {titleLabel}

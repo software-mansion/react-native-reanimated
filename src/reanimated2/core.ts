@@ -10,16 +10,8 @@ import type {
   ValueRotation,
 } from './commonTypes';
 import { makeShareableCloneRecursive } from './shareables';
-import type {
-  LayoutAnimationFunction,
-  LayoutAnimationType,
-} from './layoutReanimation';
 import { initializeUIRuntime } from './initializers';
-import type {
-  LayoutAnimationBatchItem,
-  ProgressAnimationCallback,
-  SharedTransitionAnimationsFunction,
-} from './layoutReanimation/animationBuilder/commonTypes';
+import type { LayoutAnimationBatchItem } from './layoutReanimation/animationBuilder/commonTypes';
 import { SensorContainer } from './SensorContainer';
 
 export { startMapper, stopMapper } from './mappers';
@@ -29,7 +21,6 @@ export type { WorkletRuntime } from './runtimes';
 export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export { makeMutable } from './mutables';
 
-const IS_FABRIC = isFabric();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /**
@@ -55,10 +46,14 @@ if (SHOULD_BE_USE_WEB) {
   global._getAnimationTimestamp = () => performance.now();
 }
 
-export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
-  if (IS_FABRIC) {
+export function getViewProp<T>(
+  viewTag: number,
+  propName: string,
+  component?: React.Component // required on Fabric
+): Promise<T> {
+  if (isFabric() && !component) {
     throw new Error(
-      '[Reanimated] `getViewProp` is not supported on Fabric yet.'
+      '[Reanimated] Function `getViewProp` requires a component to be passed as an argument on Fabric.'
     );
   }
 
@@ -67,6 +62,7 @@ export function getViewProp<T>(viewTag: number, propName: string): Promise<T> {
     return NativeReanimatedModule.getViewProp(
       viewTag,
       propName,
+      component,
       (result: T) => {
         if (typeof result === 'string' && result.substr(0, 6) === 'error:') {
           reject(result);
@@ -192,24 +188,6 @@ export function enableLayoutAnimations(
     featuresConfig.enableLayoutAnimations = flag;
     NativeReanimatedModule.enableLayoutAnimations(flag);
   }
-}
-
-export function configureLayoutAnimations(
-  viewTag: number | HTMLElement,
-  type: LayoutAnimationType,
-  config:
-    | LayoutAnimationFunction
-    | Keyframe
-    | SharedTransitionAnimationsFunction
-    | ProgressAnimationCallback,
-  sharedTransitionTag = ''
-): void {
-  NativeReanimatedModule.configureLayoutAnimation(
-    viewTag as number, // On web this function is no-op, therefore we can cast viewTag to number
-    type,
-    sharedTransitionTag,
-    makeShareableCloneRecursive(config)
-  );
 }
 
 export function configureLayoutAnimationBatch(
