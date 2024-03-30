@@ -124,6 +124,7 @@ import HabitsExample from './LayoutAnimations/HabitsExample';
 import MemoExample from './MemoExample';
 import PerformanceMonitorExample from './PerfomanceMonitorExample';
 import ScreenTransitionExample from './ScreenTransitionExample';
+import ComposedScrollHandler from './ComposedScrollHandler';
 
 interface Example {
   icon?: string;
@@ -340,6 +341,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🗣',
     title: 'useFrameCallback',
     screen: FrameCallbackExample,
+  },
+  ComposedScrollHandler: {
+    icon: '🔀',
+    title: 'useComposedScrollHandler',
+    screen: ComposedScrollHandler,
   },
   ScrollViewExample: {
     icon: '📜',
