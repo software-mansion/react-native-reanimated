@@ -3,7 +3,6 @@ package com.swmansion.reanimated;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.RuntimeExecutor;
 import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
@@ -23,7 +22,8 @@ public class NativeProxy extends NativeProxyCommon {
     public NativeProxy(ReactApplicationContext context, String valueUnpackerCode) {
         super(context);
         ReactFeatureFlagsWrapper.enableMountHooks();
-        CallInvokerHolderImpl holder = (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
+        CallInvokerHolderImpl holder =
+                (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
 
         FabricUIManager fabricUIManager =
                 (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
@@ -70,46 +70,46 @@ public class NativeProxy extends NativeProxyCommon {
         return new NativeMethodsHolder() {
             @Override
             public void startAnimation(int tag, int type, HashMap<String, Object> values) {
-              // NOT IMPLEMENTED
+                // NOT IMPLEMENTED
             }
 
             @Override
             public boolean isLayoutAnimationEnabled() {
-              // NOT IMPLEMENTED
+                // NOT IMPLEMENTED
                 return false;
             }
 
             @Override
             public int findPrecedingViewTagForTransition(int tag) {
-              // NOT IMPLEMENTED
+                // NOT IMPLEMENTED
                 return -1;
             }
 
             @Override
             public boolean shouldAnimateExiting(int tag, boolean shouldAnimate) {
-              // NOT IMPLEMENTED
+                // NOT IMPLEMENTED
                 return false;
             }
 
             @Override
             public boolean hasAnimation(int tag, int type) {
-              // NOT IMPLEMENTED
+                // NOT IMPLEMENTED
                 return false;
             }
 
             @Override
             public void clearAnimationConfig(int tag) {
-              // NOT IMPLEMENTED
+                // NOT IMPLEMENTED
             }
 
             @Override
             public void cancelAnimation(int tag) {
-              // NOT IMPLEMENTED
+                // NOT IMPLEMENTED
             }
 
             @Override
             public void checkDuplicateSharedTag(int viewTag, int screenTag) {
-              // NOT IMPLEMENTED
+                // NOT IMPLEMENTED
             }
         };
     }

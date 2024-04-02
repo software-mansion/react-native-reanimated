@@ -26,7 +26,7 @@
 #endif // REACT_NATIVE_MINOR_VERSION >= 74
 #else
                        <RCTBridgeModule,
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
                         RCTEventDispatcherObserver,
                         RCTUIManagerObserver>
 

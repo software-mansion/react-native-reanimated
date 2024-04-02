@@ -135,7 +135,7 @@ NativeReanimatedModule::NativeReanimatedModule(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
           platformDepMethodsHolder.unsubscribeFromKeyboardEvents),
-      isBridgeless_(false) {
+      isBridgeless_(true) {
   commonInit(platformDepMethodsHolder);
 }
 #endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)

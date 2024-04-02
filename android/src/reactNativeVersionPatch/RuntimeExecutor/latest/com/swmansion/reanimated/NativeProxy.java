@@ -37,9 +37,10 @@ public class NativeProxy extends NativeProxyCommon {
 
 
         if (context.isBridgeless()) {
+            RuntimeExecutor runtimeExecutor = context.getRuntimeExecutor();
             mHybridData = initHybridBridgeless(
               Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
-              context.getRuntimeExecutor(),
+              runtimeExecutor,
               mAndroidUIScheduler,
               LayoutAnimations,
               messageQueueThread,
