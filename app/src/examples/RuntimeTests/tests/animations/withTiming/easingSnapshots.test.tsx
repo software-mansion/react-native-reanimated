@@ -137,7 +137,7 @@ describe('withTiming snapshots 📸, test EASING', () => {
       await render(<AnimatedComponent easing={easing} />);
       await wait(1200);
       const updates = updatesContainer.getUpdates();
-      expect(updates).toMatchSnapshot(Snapshots[snapshotName]);
+      expect(updates).toMatchSnapshots(Snapshots[snapshotName]);
       expect(updates).toMatchNativeSnapshots(
         await updatesContainer.getNativeSnapshots(),
         true
