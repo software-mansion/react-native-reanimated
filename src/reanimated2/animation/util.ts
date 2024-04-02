@@ -58,10 +58,15 @@ export function assertEasingIsWorklet(
     // It is possible to run reanimated on web without plugin, so let's skip this check on web
     return;
   }
-  if (!isWorkletFunction(easing)) {
-    throw new Error(
-      '[Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.'
-    );
+
+  if ('factory' in easing) {
+    assertEasingIsWorklet(easing.factory());
+  } else {
+    if (!isWorkletFunction(easing)) {
+      throw new Error(
+        '[Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.'
+      );
+    }
   }
 }
 
