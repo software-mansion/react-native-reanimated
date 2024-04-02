@@ -44,7 +44,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   jsi::Value makeShareableClone(
       jsi::Runtime &rt,
       const jsi::Value &value,
-      const jsi::Value &shouldRetainRemote) override;
+      const jsi::Value &shouldRetainRemote,
+      const jsi::Value &nativeStateSource) override;
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
   jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
@@ -166,6 +167,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     return uiWorkletRuntime_->getJSIRuntime();
   }
 
+  inline bool isBridgeless() const {
+    return isBridgeless_;
+  }
+
  private:
   void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
 
@@ -225,6 +230,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 #ifndef NDEBUG
   SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;
 #endif
+  const bool isBridgeless_;
 };
 
 } // namespace reanimated

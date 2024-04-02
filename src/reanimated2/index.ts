@@ -257,6 +257,7 @@ export {
   getAnimatedStyle,
 } from './jestUtils';
 export { LayoutAnimationConfig } from './component/LayoutAnimationConfig';
+export { PerformanceMonitor } from './component/PerformanceMonitor';
 export type {
   Adaptable,
   AdaptTransforms,
@@ -273,3 +274,13 @@ export type {
 export type { AnimatedScrollViewProps } from './component/ScrollView';
 export type { FlatListPropsWithLayout } from './component/FlatList';
 export { startMapper, stopMapper } from './mappers';
+export {
+  startScreenTransition,
+  finishScreenTransition,
+  ScreenTransition,
+} from './screenTransition';
+export type {
+  AnimatedScreenTransition,
+  GoBackGesture,
+  ScreenTransitionConfig,
+} from './screenTransition';

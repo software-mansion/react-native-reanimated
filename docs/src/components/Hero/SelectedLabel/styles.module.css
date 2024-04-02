@@ -31,6 +31,7 @@
 
 .headerText {
   position: relative;
+  margin-right: 4px;
 }
 
 .interactiveHeaderText {
@@ -39,10 +40,6 @@
   left: 50%;
   top: 50%;
   user-select: none;
-}
-
-.preEnabledTextInteractivity {
-  margin-right: 24px;
 }
 
 @media (max-width: 768px) {

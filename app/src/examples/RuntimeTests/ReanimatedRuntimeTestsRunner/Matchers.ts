@@ -1,9 +1,5 @@
 import { getComparator } from './Comparators';
-import {
-  appendWhiteSpaceToMatchLength,
-  color,
-  defaultTestErrorLog,
-} from './LogMessageUtils';
+import { appendWhiteSpaceToMatchLength, color } from './LogMessageUtils';
 import {
   ComparisonMode,
   OperationUpdate,
@@ -12,10 +8,20 @@ import {
   TrackerCallCount,
 } from './types';
 
-export class Matchers {
-  constructor(private currentValue: TestValue, private testCase: TestCase) {}
+type MatcherFunction = (
+  currentValue: TestValue,
+  expectedValue: TestValue,
+  ...additionalArgs: Array<unknown>
+) => {
+  pass: boolean;
+  message: string;
+};
 
-  private assertValueIsCallTracker(
+export class Matchers {
+  private _negation = false;
+  constructor(private _currentValue: TestValue, private _testCase: TestCase) {}
+
+  private static _assertValueIsCallTracker(
     value: TrackerCallCount | TestValue
   ): asserts value is TrackerCallCount {
     if (
@@ -26,56 +32,111 @@ export class Matchers {
     }
   }
 
-  public toBe(expectedValue: TestValue, comparisonMode = ComparisonMode.AUTO) {
+  private _toBeMatcher: MatcherFunction = (
+    currentValue: TestValue,
+    expectedValue: TestValue,
+    comparisonModeUnknown: unknown
+  ) => {
+    const comparisonMode: ComparisonMode =
+      typeof comparisonModeUnknown === 'string' &&
+      comparisonModeUnknown in ComparisonMode
+        ? (comparisonModeUnknown as ComparisonMode)
+        : ComparisonMode.AUTO;
+
     const isEqual = getComparator(comparisonMode);
-    if (!isEqual(expectedValue, this.currentValue)) {
-      this.testCase.errors.push(
-        defaultTestErrorLog(expectedValue, this.currentValue, comparisonMode)
+
+    const coloredExpected = color(expectedValue, 'green');
+    const coloredReceived = color(currentValue, 'red');
+    const coloredMode = color(comparisonMode, 'yellow');
+
+    return {
+      pass: isEqual(expectedValue, currentValue),
+      message: `Expected${
+        this._negation ? ' NOT' : ''
+      } ${coloredExpected} received ${coloredReceived}, mode: ${coloredMode}`,
+    };
+  };
+
+  private _toBeCalledMatcher: MatcherFunction = (
+    currentValue: TestValue,
+    times = 1
+  ) => {
+    Matchers._assertValueIsCallTracker(currentValue);
+    const callsCount = currentValue.onUI + currentValue.onJS;
+    const name = color(currentValue.name, 'green');
+    const expected = color(times, 'green');
+    const received = color(callsCount, 'red');
+    return {
+      pass: callsCount === times,
+      message: `Expected ${name}${
+        this._negation ? ' NOT' : ''
+      } to be called ${expected} times, but was called ${received} times`,
+    };
+  };
+
+  private _toBeCalledUIMatcher: MatcherFunction = (
+    currentValue: TestValue,
+    times = 1
+  ) => {
+    Matchers._assertValueIsCallTracker(currentValue);
+    const callsCount = currentValue.onUI;
+    const name = color(currentValue.name, 'green');
+    const threadName = color('UI thread', 'cyan');
+    const expected = color(times, 'green');
+    const received = color(callsCount, 'red');
+
+    return {
+      pass: callsCount === times,
+      message: `Expected ${name}${
+        this._negation ? ' NOT' : ''
+      } to be called ${expected} times on ${threadName}, but was called ${received} times`,
+    };
+  };
+
+  private _toBeCalledJSMatcher: MatcherFunction = (
+    currentValue: TestValue,
+    times = 1
+  ) => {
+    Matchers._assertValueIsCallTracker(currentValue);
+    const callsCount = currentValue.onJS;
+    const name = color(currentValue.name, 'green');
+    const threadName = color('JS thread', 'cyan');
+    const expected = color(times, 'green');
+    const received = color(callsCount, 'red');
+
+    return {
+      pass: callsCount === times,
+      message: `Expected ${name}${
+        this._negation ? ' NOT' : ''
+      } to be called ${expected} times on ${threadName}, but was called ${received} times`,
+    };
+  };
+
+  private decorateMatcher(matcher: MatcherFunction) {
+    return (expectedValue: TestValue, ...args: Array<unknown>) => {
+      const { pass, message } = matcher(
+        this._currentValue,
+        expectedValue,
+        ...args
       );
-    }
+      if ((!pass && !this._negation) || (pass && this._negation)) {
+        this._testCase.errors.push(message);
+      }
+    };
   }
 
-  public toBeCalled(times = 1) {
-    this.assertValueIsCallTracker(this.currentValue);
-    const callsCount = this.currentValue.onUI + this.currentValue.onJS;
-    if (callsCount !== times) {
-      const name = color(this.currentValue.name, 'green');
-      const expected = color(times, 'green');
-      const received = color(callsCount, 'red');
-      this.testCase.errors.push(
-        `Expected ${name} to be called ${expected} times, but was called ${received} times`
-      );
-    }
+  public toBe = this.decorateMatcher(this._toBeMatcher);
+  public toBeCalled = this.decorateMatcher(this._toBeCalledMatcher);
+  public toBeCalledUI = this.decorateMatcher(this._toBeCalledUIMatcher);
+  public toBeCalledJS = this.decorateMatcher(this._toBeCalledJSMatcher);
+
+  get not() {
+    this._negation = true;
+    return this;
   }
 
-  public toBeCalledUI(times = 1) {
-    this.assertValueIsCallTracker(this.currentValue);
-    if (this.currentValue.onUI !== times) {
-      const name = color(this.currentValue.name, 'green');
-      const threadName = color('UI thread', 'cyan');
-      const expected = color(times, 'green');
-      const received = color(this.currentValue.onUI, 'red');
-      this.testCase.errors.push(
-        `Expected ${name} to be called ${expected} times on ${threadName}, but was called ${received} times`
-      );
-    }
-  }
-
-  public toBeCalledJS(times = 1) {
-    this.assertValueIsCallTracker(this.currentValue);
-    if (this.currentValue.onJS !== times) {
-      const name = color(this.currentValue.name, 'green');
-      const threadName = color('UI thread', 'cyan');
-      const expected = color(times, 'green');
-      const received = color(this.currentValue.onUI, 'red');
-      this.testCase.errors.push(
-        `Expected ${name} to be called ${expected} times on ${threadName}, but was called ${received} times`
-      );
-    }
-  }
-
-  public toMatchSnapshot(expectedSnapshots: Array<Record<string, unknown>>) {
-    const capturedSnapshots = this.currentValue as Array<
+  public toMatchSnapshots(expectedSnapshots: Array<Record<string, unknown>>) {
+    const capturedSnapshots = this._currentValue as Array<
       Record<string, unknown>
     >;
     if (capturedSnapshots.length !== expectedSnapshots.length) {
@@ -83,7 +144,7 @@ export class Matchers {
         expectedSnapshots.length,
         capturedSnapshots.length
       );
-      this.testCase.errors.push(errorMessage);
+      this._testCase.errors.push(errorMessage);
     }
     let errorString = '';
     expectedSnapshots.forEach(
@@ -101,7 +162,7 @@ export class Matchers {
       }
     );
     if (errorString !== '') {
-      this.testCase.errors.push('Snapshot mismatch: \n' + errorString);
+      this._testCase.errors.push('Snapshot mismatch: \n' + errorString);
     }
   }
 
@@ -121,7 +182,7 @@ export class Matchers {
     expectNegativeMismatch = false
   ) {
     let errorString = '';
-    const jsUpdates = this.currentValue as Array<OperationUpdate>;
+    const jsUpdates = this._currentValue as Array<OperationUpdate>;
     for (let i = 0; i < jsUpdates.length; i++) {
       errorString += this.compareJsAndNativeSnapshot(
         jsUpdates,
@@ -137,7 +198,7 @@ export class Matchers {
       } snapshots\n`;
     }
     if (errorString !== '') {
-      this.testCase.errors.push('Native snapshot mismatch: \n' + errorString);
+      this._testCase.errors.push('Native snapshot mismatch: \n' + errorString);
     }
   }
 
