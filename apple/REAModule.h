@@ -5,9 +5,9 @@
 #import <ReactCommon/RCTRuntimeExecutor.h>
 #endif // REACT_NATIVE_MINOR_VERSION >= 74
 #import <rnreanimated/rnreanimated.h>
-#else
+#else // RCT_NEW_ARCH_ENABLED
 #import <React/RCTBridgeModule.h>
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 #import <React/RCTEventDispatcher.h>
 #import <React/RCTEventEmitter.h>
 #import <React/RCTUIManager.h>
