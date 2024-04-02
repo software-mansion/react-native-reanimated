@@ -10,6 +10,19 @@ import { shouldBeUseWeb } from './PlatformChecker';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
+type JSEvent<Event extends object> = NativeSyntheticEvent<EventPayload<Event>>;
+// In JS implementation (e.g. for web) we don't use Reanimated's
+// event emitter, therefore we have to handle here
+// the event that came from React Native and convert it.
+function jsListener<Event extends object>(
+  eventName: string,
+  handler: (event: ReanimatedEvent<Event>) => void
+) {
+  return (evt: JSEvent<Event>) => {
+    handler({ ...evt.nativeEvent, eventName } as ReanimatedEvent<Event>);
+  };
+}
+
 class WorkletEventHandlerNative<Event extends object>
   implements IWorkletEventHandler<Event>
 {
@@ -36,11 +49,11 @@ class WorkletEventHandlerNative<Event extends object>
     this.eventNames = newEvents;
 
     // Detach all events
-    this.#registrations.forEach((registrationIDs, tag) => {
+    this.#registrations.forEach((registrationIDs, _tag) => {
       registrationIDs.forEach((id) => {
         unregisterEventHandler(id);
       });
-      this.#registrations.set(tag, []);
+      // No need to remove registrationIDs from map, since it gets overwritten when attaching
     });
 
     // Attach new events with new worklet
@@ -100,16 +113,10 @@ class WorkletEventHandlerWeb<Event extends object>
   }
 
   setupWebListeners() {
-    this.listeners = this.eventNames.reduce(
-      (
-        acc: Record<string, (event: JSEvent<Event>) => void>,
-        eventName: string
-      ) => {
-        acc[eventName] = jsListener(eventName, this.#worklet);
-        return acc;
-      },
-      {}
-    );
+    this.listeners = {};
+    this.eventNames.forEach((eventName) => {
+      this.listeners[eventName] = jsListener(eventName, this.#worklet);
+    });
   }
 
   updateEventHandler(
@@ -129,19 +136,6 @@ class WorkletEventHandlerWeb<Event extends object>
   unregisterFromEvents(_viewTag: number): void {
     // noop
   }
-}
-
-type JSEvent<Event extends object> = NativeSyntheticEvent<EventPayload<Event>>;
-// In JS implementation (e.g. for web) we don't use Reanimated's
-// event emitter, therefore we have to handle here
-// the event that came from React Native and convert it.
-function jsListener<Event extends object>(
-  eventName: string,
-  handler: (event: ReanimatedEvent<Event>) => void
-) {
-  return (evt: JSEvent<Event>) => {
-    handler({ ...evt.nativeEvent, eventName } as ReanimatedEvent<Event>);
-  };
 }
 
 export const WorkletEventHandler = SHOULD_BE_USE_WEB

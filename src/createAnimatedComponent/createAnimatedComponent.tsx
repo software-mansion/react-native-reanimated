@@ -259,6 +259,24 @@ export function createAnimatedComponent(
       }
     }
 
+    _detachStyles() {
+      if (IS_WEB && this._styles !== null) {
+        for (const style of this._styles) {
+          style.viewsRef.remove(this);
+        }
+      } else if (this._viewTag !== -1 && this._styles !== null) {
+        for (const style of this._styles) {
+          style.viewDescriptors.remove(this._viewTag);
+        }
+        if (this.props.animatedProps?.viewDescriptors) {
+          this.props.animatedProps.viewDescriptors.remove(this._viewTag);
+        }
+        if (isFabric()) {
+          removeFromPropsRegistry(this._viewTag);
+        }
+      }
+    }
+
     _updateNativeEvents(
       prevProps: AnimatedComponentProps<InitialComponentProps>
     ) {
@@ -293,24 +311,6 @@ export function createAnimatedComponent(
         ) {
           // Prop got added
           newProp.workletEventHandler.registerForEvents(this._viewTag);
-        }
-      }
-    }
-
-    _detachStyles() {
-      if (IS_WEB && this._styles !== null) {
-        for (const style of this._styles) {
-          style.viewsRef.remove(this);
-        }
-      } else if (this._viewTag !== -1 && this._styles !== null) {
-        for (const style of this._styles) {
-          style.viewDescriptors.remove(this._viewTag);
-        }
-        if (this.props.animatedProps?.viewDescriptors) {
-          this.props.animatedProps.viewDescriptors.remove(this._viewTag);
-        }
-        if (isFabric()) {
-          removeFromPropsRegistry(this._viewTag);
         }
       }
     }
