@@ -29,7 +29,6 @@ const EXAMPLE_COLORS = {
 const AnimatedComponent = ({
   color1 = EXAMPLE_COLORS.coral[3],
   color2 = EXAMPLE_COLORS.cornflowerblue[3],
-  duration = 200,
 }: {
   color1?: string | number;
   color2?: string | number;
@@ -43,14 +42,14 @@ const AnimatedComponent = ({
   const style = useAnimatedStyle(() => {
     callTracker('useAnimatedStyleTracker');
     return {
-      width: withTiming(widthSV.value, { duration }, callTrackerFn('width')),
+      width: withTiming(
+        widthSV.value,
+        { duration: 200 },
+        callTrackerFn('width')
+      ),
       backgroundColor: withDelay(
         10,
-        withTiming(
-          colorSV.value,
-          { duration: duration * 2 },
-          callTrackerFn('color')
-        )
+        withTiming(colorSV.value, { duration: 400 }, callTrackerFn('color'))
       ),
       opacity: 1,
     };
