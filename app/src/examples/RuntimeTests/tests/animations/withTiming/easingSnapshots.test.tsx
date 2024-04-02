@@ -48,100 +48,91 @@ const AnimatedComponent = ({
     </View>
   );
 };
-interface TestExample {
-  easing: EasingFunction | EasingFunctionFactory | undefined;
-  message: string;
-  snapshotName: keyof typeof Snapshots;
+
+async function getSnaphotUpdates(
+  easingFn: EasingFunction | EasingFunctionFactory | undefined
+) {
+  await mockAnimationTimer();
+  const updatesContainer = await recordAnimationUpdates();
+  await render(<AnimatedComponent easing={easingFn} />);
+  await wait(1200);
+  const updates = updatesContainer.getUpdates();
+  const nativeUpdates = await updatesContainer.getNativeSnapshots();
+  return [updates, nativeUpdates];
 }
 
 describe('withTiming snapshots 📸, test EASING', () => {
+  test('No easing function', async () => {
+    const [updates, nativeUpdates] = await getSnaphotUpdates(undefined);
+    expect(updates).toMatchSnapshots(Snapshots.noEasing);
+    expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
+  });
+
   (
     [
-      {
-        easing: undefined,
-        message: 'no easing function',
-        snapshotName: 'noEasing',
-      },
-
-      ...(
+      ['back', [[0], [4.75]]],
+      [
+        'bezier',
         [
-          ['back', [[0], [4.75]]],
-          [
-            'bezier',
-            [
-              [0.25, 0.1, 0.25, 1],
-              [0.93, 2, 0.08, -0.96],
-            ],
-          ],
-          ['elastic', [[0], [10]]],
-          ['poly', [[1.5], [10], [5.5], [4]]],
-          [
-            'steps',
-            [
-              [7, true],
-              [1.5, true],
-              [1.5, false],
-            ],
-          ],
-        ] as const
-      ).flatMap(([easingName, argArray]) => {
-        return argArray.map((args, idx) => {
-          return {
-            // @ts-ignore this code throws an error, some Easing function don't accept multiple arguments
-            easing: Easing[easingName](...args),
-            message: `Easing.${easingName}(${args.join(',')})`,
-            snapshotName: `${easingName}${idx}` as keyof typeof Snapshots,
-          };
-        });
-      }),
-
-      // Easing functions without any parameters
-      ...(
+          [0.25, 0.1, 0.25, 1],
+          [0.93, 2, 0.08, -0.96],
+        ],
+      ],
+      ['elastic', [[0], [10]]],
+      ['poly', [[1.5], [10], [5.5], [4]]],
+      [
+        'steps',
         [
-          'bounce',
-          'circle',
-          'cubic',
-          'ease',
-          'exp',
-          'linear',
-          'quad',
-          'sin',
-        ] as const
-      ).map((easingName) => {
-        return {
-          easing: Easing[easingName],
-          message: `Easing.${easingName}`,
-          snapshotName: easingName,
-        };
-      }),
-      {
-        easing: Easing.in(Easing.elastic(10)),
-        message: 'Easing.in(Easing.elastic(10))',
-        snapshotName: 'in',
-      },
-      {
-        easing: Easing.inOut(Easing.elastic(10)),
-        message: 'Easing.inOut(Easing.elastic(10))',
-        snapshotName: 'inOut',
-      },
-      {
-        easing: Easing.inOut(Easing.elastic(10)),
-        message: 'Easing.inOut(Easing.elastic(10))',
-        snapshotName: 'inOut',
-      },
+          [7, true],
+          [1.5, true],
+          [1.5, false],
+        ],
+      ],
     ] as const
-  ).forEach(({ easing, message, snapshotName }: TestExample) => {
-    test(message, async () => {
-      await mockAnimationTimer();
-      const updatesContainer = await recordAnimationUpdates();
-      await render(<AnimatedComponent easing={easing} />);
-      await wait(1200);
-      const updates = updatesContainer.getUpdates();
-      expect(updates).toMatchSnapshots(Snapshots[snapshotName]);
-      expect(updates).toMatchNativeSnapshots(
-        await updatesContainer.getNativeSnapshots(),
-        true
+  ).forEach((testArray) => {
+    const [easingName, argumentSets] = testArray;
+
+    argumentSets.forEach((argumentSet, idx: number) => {
+      //@ts-ignore This error is because various easing functions accept different number of arguments
+      const easing = Easing[easingName](...argumentSet);
+      const message = `Easing.${easingName}(${argumentSet.join(',')})`;
+      const snapshotName = `${easingName}${idx}` as keyof typeof Snapshots;
+
+      test(message, async () => {
+        const [updates, nativeUpdates] = await getSnaphotUpdates(easing);
+        expect(updates).toMatchSnapshots(Snapshots[snapshotName]);
+        expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
+      });
+    });
+  });
+
+  (
+    [
+      'bounce',
+      'circle',
+      'cubic',
+      'ease',
+      'exp',
+      'linear',
+      'quad',
+      'sin',
+    ] as const
+  ).forEach((easingName) => {
+    test(`Easing.${easingName}`, async () => {
+      const [updates, nativeUpdates] = await getSnaphotUpdates(
+        Easing[easingName]
       );
+      expect(updates).toMatchSnapshots(Snapshots[easingName]);
+      expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
+    });
+  });
+
+  (['in', 'inOut'] as const).forEach((easingName) => {
+    test(`Easing.${easingName}(Easing.elastic(10))`, async () => {
+      const easing = Easing[easingName](Easing.elastic(10));
+      const [updates, nativeUpdates] = await getSnaphotUpdates(easing);
+      expect(updates).toMatchSnapshots(Snapshots[easingName]);
+      expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
     });
   });
 });
