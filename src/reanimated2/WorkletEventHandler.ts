@@ -27,14 +27,14 @@ class WorkletEventHandlerNative<Event extends object>
   implements IWorkletEventHandler<Event>
 {
   eventNames: string[];
-  #worklet: (event: ReanimatedEvent<Event>) => void;
+  worklet: (event: ReanimatedEvent<Event>) => void;
   #viewTags: Set<number>;
   #registrations: Map<number, number[]>; // keys are viewTags, values are arrays of registration ID's for each viewTag
   constructor(
     worklet: (event: ReanimatedEvent<Event>) => void,
     eventNames: string[] = []
   ) {
-    this.#worklet = worklet;
+    this.worklet = worklet;
     this.eventNames = eventNames;
     this.#viewTags = new Set<number>();
     this.#registrations = new Map<number, number[]>();
@@ -45,7 +45,7 @@ class WorkletEventHandlerNative<Event extends object>
     newEvents: string[]
   ): void {
     // Update worklet and event names
-    this.#worklet = newWorklet;
+    this.worklet = newWorklet;
     this.eventNames = newEvents;
 
     // Detach all events
@@ -59,7 +59,7 @@ class WorkletEventHandlerNative<Event extends object>
     // Attach new events with new worklet
     Array.from(this.#viewTags).forEach((tag) => {
       const newRegistrations = this.eventNames.map((eventName) => {
-        return registerEventHandler(this.#worklet, eventName, tag);
+        return registerEventHandler(this.worklet, eventName, tag);
       });
       this.#registrations.set(tag, newRegistrations);
     });
@@ -69,13 +69,13 @@ class WorkletEventHandlerNative<Event extends object>
     this.#viewTags.add(viewTag);
 
     const newRegistrations = this.eventNames.map((eventName) => {
-      return registerEventHandler(this.#worklet, eventName, viewTag);
+      return registerEventHandler(this.worklet, eventName, viewTag);
     });
     this.#registrations.set(viewTag, newRegistrations);
 
     if (this.eventNames.length === 0 && fallbackEventName) {
       const newRegistration = registerEventHandler(
-        this.#worklet,
+        this.worklet,
         fallbackEventName,
         viewTag
       );
@@ -100,13 +100,13 @@ class WorkletEventHandlerWeb<Event extends object>
     | Record<string, (event: ReanimatedEvent<ReanimatedEvent<Event>>) => void>
     | Record<string, (event: JSEvent<Event>) => void>;
 
-  #worklet: (event: ReanimatedEvent<Event>) => void;
+  worklet: (event: ReanimatedEvent<Event>) => void;
 
   constructor(
     worklet: (event: ReanimatedEvent<Event>) => void,
     eventNames: string[] = []
   ) {
-    this.#worklet = worklet;
+    this.worklet = worklet;
     this.eventNames = eventNames;
     this.listeners = {};
     this.setupWebListeners();
@@ -115,7 +115,7 @@ class WorkletEventHandlerWeb<Event extends object>
   setupWebListeners() {
     this.listeners = {};
     this.eventNames.forEach((eventName) => {
-      this.listeners[eventName] = jsListener(eventName, this.#worklet);
+      this.listeners[eventName] = jsListener(eventName, this.worklet);
     });
   }
 
@@ -124,7 +124,7 @@ class WorkletEventHandlerWeb<Event extends object>
     newEvents: string[]
   ): void {
     // Update worklet and event names
-    this.#worklet = newWorklet;
+    this.worklet = newWorklet;
     this.eventNames = newEvents;
     this.setupWebListeners();
   }
