@@ -26,6 +26,15 @@ export const useScrollViewOffset = IS_WEB
   ? useScrollViewOffsetWeb
   : useScrollViewOffsetNative;
 
+function getWebScrollableElement(
+  scrollComponent: AnimatedScrollView | null
+): HTMLElement {
+  return (
+    (scrollComponent?.getScrollableNode() as unknown as HTMLElement) ??
+    scrollComponent
+  );
+}
+
 function useScrollViewOffsetWeb(
   animatedRef: AnimatedRef<AnimatedScrollView>,
   providedOffset?: SharedValue<number>
@@ -36,7 +45,7 @@ function useScrollViewOffsetWeb(
 
   const eventHandler = useCallback(() => {
     'worklet';
-    const element = animatedRef.current as unknown as HTMLElement;
+    const element = getWebScrollableElement(animatedRef.current);
     // scrollLeft is the X axis scrolled offset, works properly also with RTL layout
     offset.value =
       element.scrollLeft === 0 ? element.scrollTop : element.scrollLeft;
@@ -46,14 +55,14 @@ function useScrollViewOffsetWeb(
   useEffect(() => {
     // We need to make sure that listener for old animatedRef value is removed
     if (scrollRef.current !== null) {
-      (scrollRef.current as unknown as HTMLElement).removeEventListener(
+      getWebScrollableElement(scrollRef.current).removeEventListener(
         'scroll',
         eventHandler
       );
     }
     scrollRef.current = animatedRef.current;
 
-    const element = animatedRef.current as unknown as HTMLElement;
+    const element = getWebScrollableElement(animatedRef.current);
     element.addEventListener('scroll', eventHandler);
     return () => {
       element.removeEventListener('scroll', eventHandler);
