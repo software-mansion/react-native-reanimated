@@ -122,16 +122,18 @@ import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
 import HabitsExample from './LayoutAnimations/HabitsExample';
 import MemoExample from './MemoExample';
+import PerformanceMonitorExample from './PerfomanceMonitorExample';
+import ScreenTransitionExample from './ScreenTransitionExample';
 
 interface Example {
   icon?: string;
   title: string;
   screen: React.FC;
+  missingOnFabric?: boolean;
 }
 
 export const EXAMPLES: Record<string, Example> = {
   // Empty example for test purposes
-
   EmptyExample: {
     icon: '👻',
     title: 'Empty',
@@ -197,6 +199,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎱',
     title: 'Billiard',
     screen: BilliardExample,
+    missingOnFabric: true,
   },
   EmojiWaterfallExample: {
     icon: '💸',
@@ -227,6 +230,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📖',
     title: 'Letters',
     screen: LettersExample,
+    missingOnFabric: true,
   },
   SetNativePropsExample: {
     icon: '🪄',
@@ -238,6 +242,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Update props performance',
     screen: UpdatePropsPerfExample,
   },
+  ScreenTransitionExample: {
+    icon: '📺',
+    title: 'Screen transition',
+    screen: ScreenTransitionExample,
+  },
 
   // Basic examples
 
@@ -245,6 +254,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⏬',
     title: 'Animate inner component',
     screen: AnimatableRefExample,
+    missingOnFabric: true,
   },
   AmountExample: {
     icon: '📈',
@@ -435,6 +445,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '☕',
     title: 'Progress transition',
     screen: ProgressTransitionExample,
+    missingOnFabric: true,
   },
   MatrixExample: {
     icon: '🧮',
@@ -460,6 +471,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔎',
     title: 'getViewProp',
     screen: GetViewPropExample,
+    missingOnFabric: true,
   },
   LogExample: {
     icon: '⌨',
@@ -480,6 +492,12 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🧑‍💻',
     title: 'Habits',
     screen: HabitsExample,
+    missingOnFabric: true,
+  },
+  PerformanceMonitorExample: {
+    icon: '⏱️',
+    title: 'Performance monitor',
+    screen: PerformanceMonitorExample,
   },
 
   // Old examples
@@ -495,6 +513,7 @@ export const EXAMPLES: Record<string, Example> = {
   AnimatedTabBarExample: {
     title: 'Tab bar',
     screen: AnimatedTabBarExample,
+    missingOnFabric: true,
   },
   ChatHeadsExample: {
     title: 'Chat heads',
@@ -554,102 +573,127 @@ export const EXAMPLES: Record<string, Example> = {
   DeleteAncestorOfExiting: {
     title: '[LA] Deleting view with an exiting animation',
     screen: DeleteAncestorOfExiting,
+    missingOnFabric: true,
   },
   NestedNativeStacksWithLayout: {
     title: '[LA] Nested NativeStacks with layout',
     screen: NestedNativeStacksWithLayout,
+    missingOnFabric: true,
   },
   BasicLayoutAnimation: {
     title: '[LA] Basic layout animation',
     screen: BasicLayoutAnimation,
+    missingOnFabric: true,
   },
   BasicNestedAnimation: {
     title: '[LA] Basic nested animation',
     screen: BasicNestedAnimation,
+    missingOnFabric: true,
   },
   BasicNestedLayoutAnimation: {
     title: '[LA] Basic nested layout animation',
     screen: BasicNestedLayoutAnimation,
+    missingOnFabric: true,
   },
   NestedLayoutAnimations: {
     title: '[LA] Nested layout animations',
     screen: NestedTest,
+    missingOnFabric: true,
   },
   CombinedLayoutAnimations: {
     title: '[LA] Entering and Exiting with Layout',
     screen: CombinedTest,
+    missingOnFabric: true,
   },
   DefaultAnimations: {
     title: '[LA] Default layout animations',
     screen: DefaultAnimations,
+    missingOnFabric: true,
   },
   DefaultTransitions: {
     title: '[LA] Default layout transitions',
     screen: WaterfallGridExample,
+    missingOnFabric: true,
   },
   KeyframeAnimation: {
     title: '[LA] Keyframe animation',
     screen: KeyframeAnimation,
+    missingOnFabric: true,
   },
   ParticipantList: {
     title: '[LA] Participant List',
     screen: AnimatedListExample,
+    missingOnFabric: true,
   },
   OlympicAnimation: {
     title: '[LA] Olympic animation',
     screen: OlympicAnimation,
+    missingOnFabric: true,
   },
   CustomLayoutAnimation: {
     title: '[LA] Custom layout animation',
     screen: CustomLayoutAnimationScreen,
+    missingOnFabric: true,
   },
   ModalNewAPI: {
     title: '[LA] ModalNewAPI',
     screen: ModalNewAPI,
+    missingOnFabric: true,
   },
   SpringLayoutAnimation: {
     title: '[LA] Spring Layout Animation',
     screen: SpringLayoutAnimation,
+    missingOnFabric: true,
   },
   MountingUnmounting: {
     title: '[LA] Mounting Unmounting',
     screen: MountingUnmounting,
+    missingOnFabric: true,
   },
   ReactionsCounterExample: {
     title: '[LA] Reactions counter',
     screen: ReactionsCounterExample,
+    missingOnFabric: true,
   },
   SwipeableList: {
     title: '[LA] Swipeable list',
     screen: SwipeableList,
+    missingOnFabric: true,
   },
   Modal: {
     title: '[LA] Modal',
     screen: Modal,
+    missingOnFabric: true,
   },
   NativeModals: {
     title: '[LA] Native modals (RN and Screens)',
     screen: NativeModals,
+    missingOnFabric: true,
   },
   Carousel: {
     title: '[LA] Carousel',
     screen: Carousel,
+    missingOnFabric: true,
   },
   ReducedMotionLayoutExample: {
     title: '[LA] Reduced Motion',
     screen: ReducedMotionLayoutExample,
+    missingOnFabric: true,
   },
   NestedLayoutAnimationConfig: {
     title: '[LA] Nested LayoutAnimationConfig',
     screen: NestedLayoutAnimationConfig,
+    missingOnFabric: true,
   },
   FlatListSkipEnteringExiting: {
     title: '[LA] FlatList skip entering & exiting',
     screen: FlatListSkipEnteringExiting,
+    missingOnFabric: true,
   },
   ChangeTheme: {
     title: '[LA] Change theme',
     screen: ChangeThemeExample,
+    missingOnFabric: true,
   },
 
   // Shared Element Transitions
@@ -657,54 +701,67 @@ export const EXAMPLES: Record<string, Example> = {
   CardExample: {
     title: '[SET] Card',
     screen: CardExample,
+    missingOnFabric: true,
   },
   CustomTransitionExample: {
     title: '[SET] Custom transition',
     screen: CustomTransitionExample,
+    missingOnFabric: true,
   },
   LayoutAnimationExample: {
     title: '[SET] Layout Animation',
     screen: LayoutAnimationExample,
+    missingOnFabric: true,
   },
   ManyScreensExample: {
     title: '[SET] Many screens',
     screen: ManyScreensExample,
+    missingOnFabric: true,
   },
   ManyTagsExample: {
     title: '[SET] Many tags',
     screen: ManyTagsExample,
+    missingOnFabric: true,
   },
   NestedStacksExample: {
     title: '[SET] Nested stacks',
     screen: NestedStacksExample,
+    missingOnFabric: true,
   },
   ModalsExample: {
     title: '[SET] Modals',
     screen: ModalsExample,
+    missingOnFabric: true,
   },
   FlatListExample: {
     title: '[SET] FlatList',
     screen: FlatListExample,
+    missingOnFabric: true,
   },
   ImageStackExample: {
     title: '[SET] Image Stack',
     screen: ImageStackExample,
+    missingOnFabric: true,
   },
   RestoreStateExample: {
     title: '[SET] Restore State',
     screen: RestoreStateExample,
+    missingOnFabric: true,
   },
   DuplicateTagsExample: {
     title: '[SET] Duplicate Tags',
     screen: DuplicateTagsExample,
+    missingOnFabric: true,
   },
   ReducedMotionSharedExample: {
     title: '[SET] Reduced Motion',
     screen: ReducedMotionSharedExample,
+    missingOnFabric: true,
   },
   TransitionRestartExample: {
     title: '[SET] Transition Restart',
     screen: TransitionRestartExample,
+    missingOnFabric: true,
   },
   ChangeThemeSharedExample: {
     title: '[SET] Change theme',

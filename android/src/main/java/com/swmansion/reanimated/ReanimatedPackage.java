@@ -11,9 +11,9 @@ import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMarker;
 import com.facebook.react.module.annotations.ReactModule;
+import com.facebook.react.module.annotations.ReactModuleList;
 import com.facebook.react.module.model.ReactModuleInfo;
 import com.facebook.react.module.model.ReactModuleInfoProvider;
-import com.facebook.react.turbomodule.core.interfaces.TurboModule;
 import com.facebook.react.uimanager.ReanimatedUIManager;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
@@ -22,6 +22,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@ReactModuleList(
+    nativeModules = {
+      ReanimatedModule.class,
+      ReanimatedUIManager.class,
+    })
 public class ReanimatedPackage extends TurboReactPackage implements ReactPackage {
 
   @Override
@@ -55,7 +60,7 @@ public class ReanimatedPackage extends TurboReactPackage implements ReactPackage
               reactModule.needsEagerInit(),
               reactModule.hasConstants(),
               reactModule.isCxxModule(),
-              TurboModule.class.isAssignableFrom(moduleClass)));
+              BuildConfig.IS_NEW_ARCHITECTURE_ENABLED));
     }
 
     return new ReactModuleInfoProvider() {

@@ -6,6 +6,10 @@ function isWeb() {
   return Platform.OS === 'web';
 }
 
+function isBridgeless() {
+  return (global as Record<string, unknown>)._IS_BRIDGELESS;
+}
+
 function getPlatform() {
   if (isWeb()) {
     return 'web';
@@ -67,6 +71,10 @@ export default function AboutExample() {
           <Text style={styles.text}>
             <Text style={styles.bold}>RN version:</Text>{' '}
             {getReactNativeVersion()}
+          </Text>
+          <Text style={styles.text}>
+            <Text style={styles.bold}>Bridgeless enabled:</Text>{' '}
+            {isBridgeless() ? 'yes' : 'no'}
           </Text>
         </>
       )}
