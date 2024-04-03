@@ -47,9 +47,9 @@ function isLegacyFabricInstance(maybeInstance: any): boolean {
   );
 }
 
-function useMergeRefs<Instance>(...refs: any) {
+function useMergeRefs<InstanceT>(...refs: any) {
   return useCallback(
-    (current: Instance | null) => {
+    (current: InstanceT | null) => {
       for (const ref of refs) {
         if (ref != null) {
           if (typeof ref === 'function') {
@@ -71,6 +71,12 @@ function ScrollViewStickyHeader(props: any, forwardedRef: any) {
     hiddenOnScroll,
     scrollAnimatedValue,
     nextHeaderLayoutY: _nextHeaderLayoutY,
+  }: {
+    inverted: boolean;
+    scrollViewHeight: number;
+    hiddenOnScroll: boolean;
+    scrollAnimatedValue: Animated.Value;
+    nextHeaderLayoutY: number;
   } = props;
 
   const [measured, setMeasured] = useState<boolean>(false);
@@ -126,7 +132,7 @@ function ScrollViewStickyHeader(props: any, forwardedRef: any) {
   });
 
   const haveReceivedInitialZeroTranslateY = useRef<boolean>(true);
-  const translateYDebounceTimer = useRef(null);
+  const translateYDebounceTimer = useRef<null | NodeJS.Timeout>(null);
 
   useEffect(() => {
     if (translateY !== 0 && translateY != null) {
@@ -148,22 +154,25 @@ function ScrollViewStickyHeader(props: any, forwardedRef: any) {
   //    your finger, the hit-detection moves from the Android
   //    platform to JS, so we need the ShadowTree to have knowledge
   //    of the current position.
-  const animatedValueListener = useCallback(({ value }) => {
-    const debounceTimeout: number = Platform.OS === 'android' ? 15 : 64;
-    // When the AnimatedInterpolation is recreated, it always initializes
-    // to a value of zero and emits a value change of 0 to its listeners.
-    if (value === 0 && !haveReceivedInitialZeroTranslateY.current) {
-      haveReceivedInitialZeroTranslateY.current = true;
-      return;
-    }
-    if (translateYDebounceTimer.current != null) {
-      clearTimeout(translateYDebounceTimer.current);
-    }
-    translateYDebounceTimer.current = setTimeout(
-      () => setTranslateY(value),
-      debounceTimeout
-    );
-  }, []);
+  const animatedValueListener = useCallback(
+    ({ value }: { value: number | null }) => {
+      const debounceTimeout: number = Platform.OS === 'android' ? 15 : 64;
+      // When the AnimatedInterpolation is recreated, it always initializes
+      // to a value of zero and emits a value change of 0 to its listeners.
+      if (value === 0 && !haveReceivedInitialZeroTranslateY.current) {
+        haveReceivedInitialZeroTranslateY.current = true;
+        return;
+      }
+      if (translateYDebounceTimer.current != null) {
+        clearTimeout(translateYDebounceTimer.current);
+      }
+      translateYDebounceTimer.current = setTimeout(
+        () => setTranslateY(value),
+        debounceTimeout
+      );
+    },
+    []
+  );
 
   useEffect(() => {
     const inputRange: Array<number> = [-1, 0];
@@ -241,7 +250,7 @@ function ScrollViewStickyHeader(props: any, forwardedRef: any) {
     }
 
     // add the event listener
-    let animatedListenerId;
+    let animatedListenerId: string;
     if (isFabric) {
       animatedListenerId = newAnimatedTranslateY.addListener(
         animatedValueListener

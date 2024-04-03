@@ -15,8 +15,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 interface Section {
-  key: string;
-  title: string;
+  key: `${number}`;
+  title: Colors;
   data: Array<String>;
 }
 
@@ -55,7 +55,9 @@ const INITIAL_DATA: Array<Section> = [
   },
 ];
 
-function getRandomColor(color: 'GREEN' | 'BLUE' | 'GOLD'): string {
+type Colors = 'GREEN' | 'BLUE' | 'GOLD';
+
+function getRandomColor(color: Colors): string {
   let h = 0;
   if (color === 'BLUE') {
     h = 230 + Math.floor((0.5 - Math.random()) * 20);
@@ -75,12 +77,19 @@ function getRandomColor(color: 'GREEN' | 'BLUE' | 'GOLD'): string {
 export default function App() {
   const [data, setData] = useState<Array<Section>>(INITIAL_DATA);
 
-  function addRandomColor(sectionKey, sectionName) {
+  function addRandomColor(sectionKey: string | undefined, sectionName: Colors) {
+    if (sectionKey === undefined) {
+      return;
+    }
     const dataCopy = [...data];
     dataCopy[sectionKey].data.push(getRandomColor(sectionName));
     setData(dataCopy);
   }
-  function removeColor(sectionKey, colorToRemove) {
+  function removeColor(sectionKey: string | undefined, colorToRemove: string) {
+    if (sectionKey === undefined) {
+      return;
+    }
+
     const dataCopy = [...data];
     dataCopy[sectionKey].data = dataCopy[sectionKey].data.filter((color) => {
       return color !== colorToRemove;
@@ -103,7 +112,7 @@ export default function App() {
             <TouchableOpacity
               style={[styles.item, { backgroundColor: item as string }]}
               onPress={() => {
-                removeColor(key, item);
+                removeColor(key, item as string);
               }}>
               <Text style={styles.title}>{item as string}</Text>
             </TouchableOpacity>
