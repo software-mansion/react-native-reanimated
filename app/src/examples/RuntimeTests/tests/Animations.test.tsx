@@ -148,6 +148,20 @@ describe('Tests of animations', () => {
     expect(await component.getAnimatedStyle('width')).toBe('123');
   });
 
+  test('withTiming - not - expect error', async () => {
+    await render(<AnimatedComponent />);
+    const component = getTestComponent('AnimatedComponent');
+    await wait(600);
+    expect(await component.getAnimatedStyle('width')).not.toBe('100');
+  });
+
+  test('withTiming - with not', async () => {
+    await render(<AnimatedComponent />);
+    const component = getTestComponent('AnimatedComponent');
+    await wait(600);
+    expect(await component.getAnimatedStyle('width')).not.toBe('123');
+  });
+
   test('withTiming - expect pass', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('AnimatedComponent');
@@ -200,7 +214,9 @@ describe('Tests of animations', () => {
     const updatesContainer = await recordAnimationUpdates();
     await render(<AnimatedComponent />);
     await wait(1000);
-    expect(updatesContainer.getUpdates()).toMatchSnapshot(Snapshots.animation3);
+    expect(updatesContainer.getUpdates()).toMatchSnapshots(
+      Snapshots.animation3
+    );
     expect(updatesContainer.getUpdates()).toMatchNativeSnapshots(
       await updatesContainer.getNativeSnapshots()
     );
@@ -211,7 +227,7 @@ describe('Tests of animations', () => {
     const updatesContainer = await recordAnimationUpdates();
     await render(<LayoutAnimation />);
     await wait(600);
-    expect(updatesContainer.getUpdates()).toMatchSnapshot(
+    expect(updatesContainer.getUpdates()).toMatchSnapshots(
       Snapshots.layoutAnimation
     );
   });

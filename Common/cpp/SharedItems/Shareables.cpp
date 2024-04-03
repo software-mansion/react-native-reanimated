@@ -41,7 +41,8 @@ jsi::Function getCallGuard(jsi::Runtime &rt) {
 jsi::Value makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
-    const jsi::Value &shouldRetainRemote) {
+    const jsi::Value &shouldRetainRemote,
+    const jsi::Value &nativeStateSource) {
   std::shared_ptr<Shareable> shareable;
   if (value.isObject()) {
     auto object = value.asObject(rt);
@@ -76,10 +77,11 @@ jsi::Value makeShareableClone(
           std::make_shared<ShareableHostObject>(rt, object.getHostObject(rt));
     } else {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
-        shareable =
-            std::make_shared<RetainingShareable<ShareableObject>>(rt, object);
+        shareable = std::make_shared<RetainingShareable<ShareableObject>>(
+            rt, object, nativeStateSource);
       } else {
-        shareable = std::make_shared<ShareableObject>(rt, object);
+        shareable =
+            std::make_shared<ShareableObject>(rt, object, nativeStateSource);
       }
     }
   } else if (value.isString()) {
@@ -198,6 +200,24 @@ ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
     auto value = extractShareableOrThrow(rt, object.getProperty(rt, key));
     data_.emplace_back(key.utf8(rt), value);
   }
+#if REACT_NATIVE_MINOR_VERSION >= 71
+  if (object.hasNativeState(rt)) {
+    nativeState_ = object.getNativeState(rt);
+  }
+#endif
+}
+
+ShareableObject::ShareableObject(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const jsi::Value &nativeStateSource)
+    : ShareableObject(rt, object) {
+#if REACT_NATIVE_MINOR_VERSION >= 71
+  if (nativeStateSource.isObject() &&
+      nativeStateSource.asObject(rt).hasNativeState(rt)) {
+    nativeState_ = nativeStateSource.asObject(rt).getNativeState(rt);
+  }
+#endif
 }
 
 jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
@@ -206,6 +226,11 @@ jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
     obj.setProperty(
         rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
   }
+#if REACT_NATIVE_MINOR_VERSION >= 71
+  if (nativeState_ != nullptr) {
+    obj.setNativeState(rt, nativeState_);
+  }
+#endif
   return obj;
 }
 
@@ -238,7 +263,8 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
     return getValueUnpacker(rt).call(
         rt,
         ShareableJSRef::newHostObject(rt, shared_from_this()),
-        jsi::String::createFromAscii(rt, "RemoteFunction"));
+        jsi::String::createFromAscii(rt, "RemoteFunction"),
+        jsi::String::createFromUtf8(rt, name_));
 #else
     return ShareableJSRef::newHostObject(rt, shared_from_this());
 #endif

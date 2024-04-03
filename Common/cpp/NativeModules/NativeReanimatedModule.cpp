@@ -1,9 +1,6 @@
 #include "NativeReanimatedModule.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#if REACT_NATIVE_MINOR_VERSION >= 72
-#include <react/renderer/core/TraitCast.h>
-#endif
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 #if REACT_NATIVE_MINOR_VERSION >= 73 && defined(RCT_NEW_ARCH_ENABLED)
@@ -40,7 +37,7 @@
 
 using namespace facebook;
 
-#if REACT_NATIVE_MINOR_VERSION >= 73 && defined(RCT_NEW_ARCH_ENABLED)
+#if REACT_NATIVE_MINOR_VERSION == 73 && defined(RCT_NEW_ARCH_ENABLED)
 // Android can't find the definition of this static field
 bool CoreFeatures::useNativeState;
 #endif
@@ -88,7 +85,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
-          platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
+          platformDepMethodsHolder.unsubscribeFromKeyboardEvents),
+      isBridgeless_(jsInvoker == nullptr) {
   auto requestAnimationFrame =
       [this](jsi::Runtime &rt, const jsi::Value &callback) {
         this->requestAnimationFrame(rt, callback);
@@ -208,8 +206,10 @@ jsi::Value NativeReanimatedModule::scheduleOnRuntime(
 jsi::Value NativeReanimatedModule::makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
-    const jsi::Value &shouldRetainRemote) {
-  return reanimated::makeShareableClone(rt, value, shouldRetainRemote);
+    const jsi::Value &shouldRetainRemote,
+    const jsi::Value &nativeStateSource) {
+  return reanimated::makeShareableClone(
+      rt, value, shouldRetainRemote, nativeStateSource);
 }
 
 jsi::Value NativeReanimatedModule::registerEventHandler(
@@ -259,8 +259,8 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
   if (propName == "width" || propName == "height" || propName == "top" ||
       propName == "left") {
     // These props are calculated from frame
-    auto layoutableShadowNode =
-        traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
+    auto layoutableShadowNode = dynamic_cast<LayoutableShadowNode const *>(
+        newestCloneOfShadowNode.get());
     const auto &frame = layoutableShadowNode->layoutMetrics_.frame;
 
     if (propName == "width") {
@@ -377,23 +377,6 @@ jsi::Value NativeReanimatedModule::configureProps(
   return jsi::Value::undefined();
 }
 
-jsi::Value NativeReanimatedModule::configureLayoutAnimation(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTag,
-    const jsi::Value &type,
-    const jsi::Value &sharedTransitionTag,
-    const jsi::Value &config) {
-  layoutAnimationsManager_.configureAnimation(
-      viewTag.asNumber(),
-      static_cast<LayoutAnimationType>(type.asNumber()),
-      sharedTransitionTag.asString(rt).utf8(rt),
-      extractShareableOrThrow<ShareableObject>(
-          rt,
-          config,
-          "[Reanimated] Layout animation config must be an object."));
-  return jsi::Value::undefined();
-}
-
 jsi::Value NativeReanimatedModule::configureLayoutAnimationBatch(
     jsi::Runtime &rt,
     const jsi::Value &layoutAnimationsBatch) {
@@ -414,6 +397,16 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimationBatch(
           rt,
           config,
           "[Reanimated] Layout animation config must be an object.");
+    }
+    if (batch[i].type != SHARED_ELEMENT_TRANSITION &&
+        batch[i].type != SHARED_ELEMENT_TRANSITION_PROGRESS) {
+      continue;
+    }
+    auto sharedTransitionTag = item.getProperty(rt, "sharedTransitionTag");
+    if (sharedTransitionTag.isUndefined()) {
+      batch[i].config = nullptr;
+    } else {
+      batch[i].sharedTransitionTag = sharedTransitionTag.asString(rt).utf8(rt);
     }
   }
   layoutAnimationsManager_.configureAnimationBatch(batch);
@@ -777,7 +770,7 @@ jsi::Value NativeReanimatedModule::measure(
       uiManager_->getNewestCloneOfShadowNode(*shadowNode);
 
   auto layoutableShadowNode =
-      traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
+      dynamic_cast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
   facebook::react::Point originRelativeToParent =
       layoutableShadowNode != nullptr
       ? layoutableShadowNode->getLayoutMetrics().frame.origin

@@ -14,7 +14,8 @@ static jsi::Value SPEC_PREFIX(makeShareableClone)(
     const jsi::Value *args,
     size_t) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->makeShareableClone(rt, std::move(args[0]), std::move(args[1]));
+      ->makeShareableClone(
+          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
 }
 
 // scheduler
@@ -150,20 +151,6 @@ static jsi::Value SPEC_PREFIX(unsubscribeFromKeyboardEvents)(
   return jsi::Value::undefined();
 }
 
-static jsi::Value SPEC_PREFIX(configureLayoutAnimation)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->configureLayoutAnimation(
-          rt,
-          std::move(args[0]),
-          std::move(args[1]),
-          std::move(args[2]),
-          std::move(args[3]));
-}
-
 static jsi::Value SPEC_PREFIX(configureLayoutAnimationBatch)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -214,8 +201,6 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
   methodMap_["unsubscribeFromKeyboardEvents"] =
       MethodMetadata{1, SPEC_PREFIX(unsubscribeFromKeyboardEvents)};
 
-  methodMap_["configureLayoutAnimation"] =
-      MethodMetadata{4, SPEC_PREFIX(configureLayoutAnimation)};
   methodMap_["configureLayoutAnimationBatch"] =
       MethodMetadata{1, SPEC_PREFIX(configureLayoutAnimationBatch)};
   methodMap_["setShouldAnimateExitingForTag"] =

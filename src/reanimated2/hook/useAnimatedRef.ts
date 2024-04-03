@@ -32,10 +32,6 @@ function getComponentOrScrollable(component: MaybeScrollableComponent) {
   return component;
 }
 
-const getTagValueFunction = isFabric()
-  ? getShadowNodeWrapperFromRef
-  : findNodeHandle;
-
 /**
  * Lets you get a reference of a view that you can use inside a worklet.
  *
@@ -56,6 +52,10 @@ export function useAnimatedRef<
     ) => {
       // enters when ref is set by attaching to a component
       if (component) {
+        const getTagValueFunction = isFabric()
+          ? getShadowNodeWrapperFromRef
+          : findNodeHandle;
+
         fun.getTag = () => {
           return IS_WEB
             ? getComponentOrScrollable(component)
