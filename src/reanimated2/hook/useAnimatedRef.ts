@@ -55,9 +55,20 @@ export function useAnimatedRef<
         const getTagValueFunction = isFabric()
           ? getShadowNodeWrapperFromRef
           : findNodeHandle;
-        tag.value = IS_WEB
-          ? getComponentOrScrollable(component)
-          : getTagValueFunction(getComponentOrScrollable(component));
+
+        const getTagOrShadowNodeWrapper = () => {
+          return IS_WEB
+            ? getComponentOrScrollable(component)
+            : getTagValueFunction(getComponentOrScrollable(component));
+        };
+
+        tag.value = getTagOrShadowNodeWrapper();
+
+        // On Fabric we have to unwrap the tag from the shadow node wrapper
+        fun.getTag = isFabric()
+          ? () => findNodeHandle(getComponentOrScrollable(component))
+          : getTagOrShadowNodeWrapper;
+
         fun.current = component;
         // viewName is required only on iOS with Paper
         if (Platform.OS === 'ios' && !isFabric()) {

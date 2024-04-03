@@ -1,7 +1,6 @@
 'use strict';
 import { useEffect, useRef, useCallback } from 'react';
 import type { SharedValue } from '../commonTypes';
-import { findNodeHandle } from 'react-native';
 import type { EventHandlerInternal } from './useEvent';
 import { useEvent } from './useEvent';
 import { useSharedValue } from './useSharedValue';
@@ -103,9 +102,8 @@ function useScrollViewOffsetNative(
     }
     scrollRef.current = animatedRef.current;
 
-    const component = animatedRef.current;
-    const viewTag = findNodeHandle(component);
-    eventHandler.workletEventHandler.registerForEvents(viewTag as number);
+    const viewTag = animatedRef.getTag();
+    eventHandler.workletEventHandler.registerForEvents(viewTag);
     return () => {
       eventHandler.workletEventHandler.unregisterFromEvents();
     };
