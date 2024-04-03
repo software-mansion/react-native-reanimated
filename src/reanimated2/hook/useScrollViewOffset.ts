@@ -90,9 +90,9 @@ function useScrollViewOffsetNative(
 
   useEffect(() => {
     // We need to make sure that listener for old animatedRef value is removed
-    if (scrollRef.current !== null) {
+    if (scrollRef.current !== null && scrollRefTag.current !== null) {
       eventHandler.workletEventHandler.unregisterFromEvents(
-        scrollRefTag.current as number
+        scrollRefTag.current
       );
     }
 
@@ -100,13 +100,13 @@ function useScrollViewOffsetNative(
     scrollRef.current = animatedRef.current;
     scrollRefTag.current = animatedRef.getTag();
 
-    eventHandler.workletEventHandler.registerForEvents(
-      scrollRefTag.current as number
-    );
+    eventHandler.workletEventHandler.registerForEvents(scrollRefTag.current);
     return () => {
-      eventHandler.workletEventHandler.unregisterFromEvents(
-        scrollRefTag.current as number
-      );
+      if (scrollRefTag.current !== null) {
+        eventHandler.workletEventHandler.unregisterFromEvents(
+          scrollRefTag.current
+        );
+      }
     };
     // React here has a problem with `animatedRef.current` since a Ref .current
     // field shouldn't be used as a dependency. However, in this case we have
