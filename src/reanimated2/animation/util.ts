@@ -58,6 +58,11 @@ export function assertEasingIsWorklet(
     // It is possible to run reanimated on web without plugin, so let's skip this check on web
     return;
   }
+  // @ts-ignore typescript wants us to use `in` instead, which doesn't work with host objects
+  if (easing?.factory) {
+    return;
+  }
+
   if (!isWorkletFunction(easing)) {
     throw new Error(
       '[Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.'
