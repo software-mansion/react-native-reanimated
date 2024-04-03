@@ -21,7 +21,7 @@ const COMPARATORS: {
       return false;
     }
     const expectedUnified = expected.toLowerCase();
-    const colorRegex = new RegExp('^#?([a-f0-9]{6}|[a-f0-9]{3})$');
+    const colorRegex = new RegExp('^#?([a-f0-9]{6})$');
     if (!colorRegex.test(expectedUnified)) {
       throw Error(
         `Invalid color format "${expectedUnified}", please use hex color (like #123abc)`
