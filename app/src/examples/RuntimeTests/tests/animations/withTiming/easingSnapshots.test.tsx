@@ -70,68 +70,67 @@ describe('withTiming snapshots 📸, test EASING', () => {
 
   (
     [
-      ['back', [[0], [4.75]]],
-      [
-        'bezier',
-        [
-          [0.25, 0.1, 0.25, 1],
-          [0.93, 2, 0.08, -0.96],
-        ],
-      ],
-      ['elastic', [[0], [10]]],
-      ['poly', [[1.5], [10], [5.5], [4]]],
-      [
-        'steps',
-        [
-          [7, true],
-          [1.5, true],
-          [1.5, false],
-        ],
-      ],
+      [Easing.back, [0]],
+      [Easing.back, [4.75]],
+      [Easing.bezier, [0.25, 0.1, 0.25, 1]],
+      [Easing.bezier, [0.93, 2, 0.08, -0.96]],
+      [Easing.elastic, [0]],
+      [Easing.elastic, [10]],
+      [Easing.poly, [1.5]],
+      [Easing.poly, [10]],
+      [Easing.poly, [5.5]],
+      [Easing.poly, [4]],
+      [Easing.steps, [7, true]],
+      [Easing.steps, [1.5, true]],
+      [Easing.steps, [1.5, false]],
     ] as const
   ).forEach((testArray) => {
-    const [easingName, argumentSets] = testArray;
+    const [easing, argumentSet] = testArray;
+    const message = `Easing.${easing.name}(${argumentSet.join(', ')})`;
+    const snapshotName = `${easing.name}_${argumentSet
+      .join('_')
+      .replace(/\./g, '$')
+      .replace(/-/g, '$$')}`;
 
-    argumentSets.forEach((argumentSet, idx: number) => {
-      //@ts-ignore This error is because various easing functions accept different number of arguments
-      const easing = Easing[easingName](...argumentSet);
-      const message = `Easing.${easingName}(${argumentSet.join(',')})`;
-      const snapshotName = `${easingName}${idx}` as keyof typeof Snapshots;
-
-      test(message, async () => {
-        const [updates, nativeUpdates] = await getSnaphotUpdates(easing);
-        expect(updates).toMatchSnapshots(Snapshots[snapshotName]);
-        expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
-      });
-    });
-  });
-
-  (
-    [
-      'bounce',
-      'circle',
-      'cubic',
-      'ease',
-      'exp',
-      'linear',
-      'quad',
-      'sin',
-    ] as const
-  ).forEach((easingName) => {
-    test(`Easing.${easingName}`, async () => {
+    test(message, async () => {
       const [updates, nativeUpdates] = await getSnaphotUpdates(
-        Easing[easingName]
+        //@ts-ignore This error is because various easing functions accept different number of arguments
+        easing(...argumentSet)
       );
-      expect(updates).toMatchSnapshots(Snapshots[easingName]);
+      expect(updates).toMatchSnapshots(
+        Snapshots[snapshotName as keyof typeof Snapshots]
+      );
       expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
     });
   });
 
-  (['in', 'inOut'] as const).forEach((easingName) => {
-    test(`Easing.${easingName}(Easing.elastic(10))`, async () => {
-      const easing = Easing[easingName](Easing.elastic(10));
+  [
+    Easing.bounce,
+    Easing.circle,
+    Easing.cubic,
+    Easing.ease,
+    Easing.exp,
+    Easing.linear,
+    Easing.quad,
+    Easing.sin,
+  ].forEach((easing) => {
+    test(`easing.${easing.name}`, async () => {
       const [updates, nativeUpdates] = await getSnaphotUpdates(easing);
-      expect(updates).toMatchSnapshots(Snapshots[easingName]);
+      expect(updates).toMatchSnapshots(
+        Snapshots[easing.name as keyof typeof Snapshots]
+      );
+      expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
+    });
+  });
+
+  [Easing.in, Easing.out, Easing.inOut].forEach((easing) => {
+    test(`Easing.${easing.name}(Easing.elastic(10))`, async () => {
+      const [updates, nativeUpdates] = await getSnaphotUpdates(
+        easing(Easing.elastic(10))
+      );
+      expect(updates).toMatchSnapshots(
+        Snapshots[easing.name as keyof typeof Snapshots]
+      );
       expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
     });
   });
