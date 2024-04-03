@@ -89,7 +89,7 @@ public class WindowsInsetsManager {
     FrameLayout.LayoutParams params =
         new FrameLayout.LayoutParams(matchParentFlag, matchParentFlag);
     if (mIsStatusBarTranslucent) {
-      params.setMargins(0, 0, 0, 0);
+      params.setMargins(0, 0, 0, paddingBottom);
     } else {
       params.setMargins(0, paddingTop, 0, paddingBottom);
     }
