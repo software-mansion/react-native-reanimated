@@ -90,7 +90,7 @@ describe('withTiming snapshots 📸, test EASING', () => {
     const snapshotName = `${easing.name}_${argumentSet
       .join('_')
       .replace(/\./g, '$')
-      .replace(/-/g, '$$')}`;
+      .replace(/-/g, '$')}`;
 
     test(message, async () => {
       const [updates, nativeUpdates] = await getSnaphotUpdates(
@@ -114,7 +114,7 @@ describe('withTiming snapshots 📸, test EASING', () => {
     Easing.quad,
     Easing.sin,
   ].forEach((easing) => {
-    test(`easing.${easing.name}`, async () => {
+    test(`Easing.${easing.name}`, async () => {
       const [updates, nativeUpdates] = await getSnaphotUpdates(easing);
       expect(updates).toMatchSnapshots(
         Snapshots[easing.name as keyof typeof Snapshots]
