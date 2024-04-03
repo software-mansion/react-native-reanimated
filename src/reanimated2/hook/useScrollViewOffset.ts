@@ -26,15 +26,6 @@ export const useScrollViewOffset = IS_WEB
   ? useScrollViewOffsetWeb
   : useScrollViewOffsetNative;
 
-function getWebScrollableElement(
-  scrollComponent: AnimatedScrollView | null
-): HTMLElement {
-  return (
-    (scrollComponent?.getScrollableNode() as unknown as HTMLElement) ??
-    scrollComponent
-  );
-}
-
 function useScrollViewOffsetWeb(
   animatedRef: AnimatedRef<AnimatedScrollView>,
   providedOffset?: SharedValue<number>
@@ -75,14 +66,6 @@ function useScrollViewOffsetWeb(
 
   return offset;
 }
-
-const scrollNativeEventNames = [
-  'onScroll',
-  'onScrollBeginDrag',
-  'onScrollEndDrag',
-  'onMomentumScrollBegin',
-  'onMomentumScrollEnd',
-];
 
 function useScrollViewOffsetNative(
   animatedRef: AnimatedRef<AnimatedScrollView>,
@@ -126,3 +109,20 @@ function useScrollViewOffsetNative(
 
   return offset;
 }
+
+function getWebScrollableElement(
+  scrollComponent: AnimatedScrollView | null
+): HTMLElement {
+  return (
+    (scrollComponent?.getScrollableNode() as unknown as HTMLElement) ??
+    scrollComponent
+  );
+}
+
+const scrollNativeEventNames = [
+  'onScroll',
+  'onScrollBeginDrag',
+  'onScrollEndDrag',
+  'onMomentumScrollBegin',
+  'onMomentumScrollEnd',
+];
