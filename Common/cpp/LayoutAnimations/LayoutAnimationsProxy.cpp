@@ -157,13 +157,14 @@ void LayoutAnimationsProxy::endAnimationsRecursively(std::shared_ptr<MutationNod
   cleanupMutations.push_back(node->mutation);
   dropIndex(node->mutation.parentShadowView.tag, node->mutation.index);
   updateIndices(node->mutation);
+  nodeForTag.erase(node->tag);
   cleanupMutations.push_back(ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
 }
 
 void LayoutAnimationsProxy::maybeDropAncestors(std::shared_ptr<MutationNode> node, std::shared_ptr<MutationNode> child) const{
   node->animatedChildrenCount--;
   node->removeChild(child);
-  if (!node -> animatedChildrenCount){
+  if (!node -> animatedChildrenCount && !node->isAnimatingExit){
     nodeForTag.erase(node->tag);
     cleanupMutations.push_back(node->mutation);
     dropIndex(node->mutation.parentShadowView.tag, node->mutation.index);
@@ -311,11 +312,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   //  std::unordered_map<Tag, const RawProps*> propsMap =
   //  layoutAnimationsRegistry_.props_;
   ShadowViewMutationList filteredMutations;
-  std::unordered_map<Tag, Tag> descendantToAnimated;
 
-  std::unordered_set<std::shared_ptr<MutationNode>> roots;
+  std::vector<std::shared_ptr<MutationNode>> roots;
 
-  std::unordered_set<Tag> removedTags;
+  std::set<Tag> removedTags;
 
   // TODO: filter reparentings
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
@@ -356,7 +356,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
         auto rootNode = rootNodeForTag.at(parentTag);
         rootNode->children.push_back(node);
         node->root = rootNode;
-        roots.insert(node);
+        roots.push_back(node);
       }
     }
   }
@@ -365,19 +365,23 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
   // filter DELETE+CREATE -- (ignore - reparent) (probably view flattening?) |
   // keep mutations
-  std::unordered_set<Tag> reparentedTags;
+  std::set<Tag> reparentedTags;
 
   // filter REMOVE+INSERT -- treat as update (probably reordering) | keep
   // mutations and animate update
-  std::unordered_set<Tag> reorderedTags;
+  std::set<Tag> reorderedTags;
 
-  for (auto &node : roots) {
+      for (auto it= roots.rbegin(); it != roots.rend(); it++) {
+        auto &node = *it;
       if (node->mutation.oldChildShadowView.traits.check(facebook::react::ShadowNodeTraits::RootNodeKind)) {
 //        removeRecursively(node, filteredMutations);
         endAnimationsRecursively(node);
+        node->root->removeChild(node);
       } else if (!startAnimationsRecursively(node, true, true, filteredMutations)) {
         filteredMutations.push_back(node->mutation);
         updateIndices(node->mutation);
+        nodeForTag.erase(node->tag);
+        node->root->removeChild(node);
         filteredMutations.push_back(ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
       }
   }
@@ -497,21 +501,21 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
       surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 
-void LayoutAnimationsProxy::removeRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList &mutations) const{
-  for (auto it = node->children.rbegin(); it != node->children.rend(); it++){
-    auto &subNode = *it;
-    removeRecursively(subNode, mutations);
-  }
-
-  if (!node->isDone && node->isExiting) {
-    layoutAnimationsManager_->cancelLayoutAnimation(nativeReanimatedModule_->getUIRuntime(), node->tag);
-  }
-
-  mutations.push_back(node->mutation);
-  updateIndices(node->mutation);
-  mutations.push_back(ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
-  nodeForTag.erase(node->tag);
-}
+//void LayoutAnimationsProxy::removeRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList &mutations) const{
+//  for (auto it = node->children.rbegin(); it != node->children.rend(); it++){
+//    auto &subNode = *it;
+//    removeRecursively(subNode, mutations);
+//  }
+//
+//  if (!node->isDone && node->isExiting) {
+//    layoutAnimationsManager_->cancelLayoutAnimation(nativeReanimatedModule_->getUIRuntime(), node->tag);
+//  }
+//
+//  mutations.push_back(node->mutation);
+//  updateIndices(node->mutation);
+//  mutations.push_back(ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
+//  nodeForTag.erase(node->tag);
+//}
 
 bool LayoutAnimationsProxy::startAnimationsRecursively(std::shared_ptr<MutationNode> node, bool shouldRemoveSubviewsWithoutAnimations, bool shouldAnimate, ShadowViewMutationList& mutations) const{
   if (!std::strcmp(node->mutation.oldChildShadowView.componentName, "RNSScreenStack") || !std::strcmp(node->mutation.oldChildShadowView.componentName, "RNSScreen")){
@@ -530,6 +534,8 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(std::shared_ptr<MutationN
     } else if (shouldRemoveSubviewsWithoutAnimations) {
       mutations.push_back(subNode->mutation);
       updateIndices(subNode->mutation);
+      nodeForTag.erase(subNode->tag);
+      mutations.push_back(ShadowViewMutation::DeleteMutation(subNode->mutation.oldChildShadowView));
     }
   }
   
@@ -538,6 +544,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(std::shared_ptr<MutationN
   if (hasExitAnimation) {
     startExitingAnimation(node->tag, Values(node->mutation.oldChildShadowView));
     node->isExiting = true;
+    node->isAnimatingExit = true;
     auto &mutation = node->mutation;
     auto finalView = std::make_shared<ShadowView>(mutation.oldChildShadowView);
     auto current = std::make_shared<ShadowView>(mutation.oldChildShadowView);
@@ -566,7 +573,7 @@ void LayoutAnimationsProxy::updateIndexForMutation(
   }
   int k = mutation.index, i = 0;
       
-      int tag = mutation.type == ShadowViewMutation::Insert ? mutation.newChildShadowView.tag : mutation.oldChildShadowView.tag;
+  int tag = mutation.type == ShadowViewMutation::Insert ? mutation.newChildShadowView.tag : mutation.oldChildShadowView.tag;
 
   if (!indices.contains(mutation.parentShadowView.tag)) {
     return;
