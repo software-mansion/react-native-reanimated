@@ -45,6 +45,8 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
           operation.execute(nodesManager);
         }
       });
+    } else {
+      throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
     }
   }
 
@@ -69,6 +71,8 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
       UIManager uiManager = reactCtx.getFabricUIManager();
       if (uiManager instanceof FabricUIManager) {
         ((FabricUIManager)uiManager).addUIManagerEventListener(this);
+      } else {
+        throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
       }
     } else {
       UIManagerModule uiManager =
