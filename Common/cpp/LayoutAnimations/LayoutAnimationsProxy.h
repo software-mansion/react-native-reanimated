@@ -36,10 +36,10 @@ struct MutationNode{
   std::shared_ptr<RootNode> root = nullptr;
   Tag tag;
   ShadowViewMutation mutation;
-  int animatedChildrenCount = 0;
+  std::unordered_set<Tag> animatedChildren;
   bool isAnimatingExit = false;
   bool isDone = false;
-  bool isExiting = true;
+  bool isExiting = false;
   MutationNode(ShadowViewMutation& mutation): mutation(mutation){}
   MutationNode(ShadowViewMutation& mutation, RootNode& root);
   void removeChild(std::shared_ptr<MutationNode> child){
@@ -48,6 +48,19 @@ struct MutationNode{
         children.erase(children.begin()+i);
         break;
       }
+    }
+  }
+  void addChild(std::shared_ptr<MutationNode> child){
+    bool done = false;
+    for (auto it = children.begin(); it != children.end(); it++){
+      if ((*it)->mutation.index >child->mutation.index){
+        children.insert(it, child);
+        done = true;
+        break;
+      }
+    }
+    if (!done){
+      children.push_back(child);
     }
   }
 };
@@ -61,6 +74,19 @@ struct RootNode{
         children.erase(children.begin()+i);
         break;
       }
+    }
+  }
+  void addChild(std::shared_ptr<MutationNode> child){
+    bool done = false;
+    for (auto it = children.begin(); it != children.end(); it++){
+      if ((*it)->mutation.index >child->mutation.index){
+        children.insert(it, child);
+        done = true;
+        break;
+      }
+    }
+    if (!done){
+      children.push_back(child);
     }
   }
 };
@@ -85,6 +111,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   mutable ShadowViewMutationList cleanupMutations;
   mutable std::unordered_map<Tag, std::shared_ptr<std::unordered_set<int>>> indices;
   mutable std::unordered_map<Tag, X> props_;
+  mutable std::unordered_set<Tag> animatedTags;
   std::mutex mutex;
   std::shared_ptr<std::map<Tag, std::string>> tagToNativeID_ = std::make_shared<std::map<Tag, std::string>>();
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
@@ -108,7 +135,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   void dropIndex(Tag parentTag, int index) const;
   void removeRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList& mutations) const;
   bool startAnimationsRecursively(std::shared_ptr<MutationNode> node, bool shouldRemoveSubviewsWithoutAnimations, bool shouldAnimate, ShadowViewMutationList& mutations) const;
-  void endAnimationsRecursively(std::shared_ptr<MutationNode> node) const;
+  void endAnimationsRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList& mutations) const;
   void maybeDropAncestors(std::shared_ptr<MutationNode> node, std::shared_ptr<MutationNode> child) const;
   
   // MountingOverrideDelegate
