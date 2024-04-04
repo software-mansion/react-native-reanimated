@@ -100,7 +100,14 @@ function useScrollViewOffsetNative(
     scrollRef.current = animatedRef.current;
     scrollRefTag.current = animatedRef.getTag();
 
-    eventHandler.workletEventHandler.registerForEvents(scrollRefTag.current);
+    if (scrollRefTag === null) {
+      console.warn(
+        '[Reanimated] ScrollViewOffset failed to resolve the view tag from animated ref. Did you forget to attach the ref to a component?'
+      );
+    } else {
+      eventHandler.workletEventHandler.registerForEvents(scrollRefTag.current);
+    }
+
     return () => {
       if (scrollRefTag.current !== null) {
         eventHandler.workletEventHandler.unregisterFromEvents(
