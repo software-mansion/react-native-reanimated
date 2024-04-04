@@ -80,9 +80,9 @@ Hook `useAnimatedKeyboard` returns an object containing these fields:
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import AnimatedKeyboardSrc from '!!raw-loader!@site/src/examples/AnimatedKeyboard';
 
-<InteractiveExample 
+<InteractiveExample
   src={AnimatedKeyboardSrc}
-  component={(
+  component={
     <ThemedVideo
       center
       width={300}
@@ -91,16 +91,16 @@ import AnimatedKeyboardSrc from '!!raw-loader!@site/src/examples/AnimatedKeyboar
         dark: '/recordings/useAnimatedKeyboard_dark.mov',
       }}
     />
-  )}
+  }
 />
 
 ## Remarks
 
 - On Android, make sure to set `android:windowSoftInputMode` in your `AndroidManifest.xml` to `adjustResize`. Then, using the `useAnimatedKeyboard` hook disables
-the default Android behavior (resizing the view to accommodate keyboard) in the whole app. Using values from `useAnimatedKeyboard` hook you can handle the keyboard yourself. Unmounting all components that use `useAnimatedKeyboard` hook brings back the default Android behavior.
-- On Android using the `useAnimatedKeyboard` hook expands root view to full screen (immersive mode) and takes control over insets management. It applies the top and bottom margins according to the insets when `isStatusBarTranslucentAndroid` is false and sets top margin to 0 and bottom padding according to the navigation insets when `isStatusBarTranslucentAndroid` is true. 
+  the default Android behavior (resizing the view to accommodate keyboard) in the whole app. Using values from `useAnimatedKeyboard` hook you can handle the keyboard yourself. Unmounting all components that use `useAnimatedKeyboard` hook brings back the default Android behavior.
+- On Android using the `useAnimatedKeyboard` hook expands root view to full screen (immersive mode) and takes control over insets management. It applies the top and bottom margins according to the insets when `isStatusBarTranslucentAndroid` is false and sets top margin to 0 and bottom padding according to the navigation insets when `isStatusBarTranslucentAndroid` is true.
 - On Android, when using navigation with native header, `isStatusBarTranslucentAndroid` doesn't affect the top inset
-- On Android SDK < 30, when StatusBar is hidden keyboard reverts to default android behavior 
+- On Android SDK < 30, when StatusBar is hidden keyboard reverts to default android behavior
 
 ## Platform compatibility
 
@@ -111,4 +111,3 @@ the default Android behavior (resizing the view to accommodate keyboard) in the 
 | ✅      | ✅  | ❌  |
 
 </div>
-
