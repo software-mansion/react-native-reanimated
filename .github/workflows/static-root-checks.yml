@@ -21,8 +21,8 @@ jobs:
         uses: actions/setup-node@v4
       - name: Clear annotations
         run: scripts/clear-annotations.sh
-      # - name: Set up yarn
-      # run: yarn config set nodeLinker node-modules
+      - name: Set up yarn
+        run: yarn config set nodeLinker node-modules
       - name: Install node dependencies
         run: yarn
       - name: Check types
