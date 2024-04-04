@@ -1,33 +1,19 @@
 import React from 'react';
-import {
-  Image,
-  StyleSheet,
-  View,
-  ViewProps,
-  Button,
-  SafeAreaView,
-} from 'react-native';
+import { StyleSheet, View, Button, SafeAreaView } from 'react-native';
 import Animated, {
-  SharedValue,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 
-type AccordionProps = ViewProps & {
-  isExpanded: SharedValue<boolean>;
-  viewKey: number | string;
-  duration?: number;
-};
-
-const AccordionItem = ({
+function AccordionItem({
   isExpanded,
   children,
   viewKey,
   style,
   duration = 500,
-}: AccordionProps) => {
+}) {
   const height = useSharedValue(0);
 
   const derivedHeight = useDerivedValue(() =>
@@ -47,29 +33,18 @@ const AccordionItem = ({
         onLayout={(e) => {
           height.value = e.nativeEvent.layout.height;
         }}
-        style={styles.view}>
+        style={styles.wrapper}>
         {children}
       </View>
     </Animated.View>
   );
-};
+}
 
-const Item = () => {
-  return (
-    <Image
-      source={{
-        uri: 'https://upload.wikimedia.org/wikipedia/commons/8/8c/Manul_close.jpg',
-      }}
-      style={styles.image}
-    />
-  );
-};
+function Item() {
+  return <View style={styles.box} />;
+}
 
-type ParentProps = {
-  open: SharedValue<boolean>;
-};
-
-const Parent = ({ open }: ParentProps) => {
+function Parent({ open }) {
   return (
     <View style={styles.parent}>
       <AccordionItem isExpanded={open} viewKey="Accordion">
@@ -77,7 +52,7 @@ const Parent = ({ open }: ParentProps) => {
       </AccordionItem>
     </View>
   );
-};
+}
 
 export default function App() {
   const open = useSharedValue(false);
@@ -87,11 +62,11 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.topPart}>
+      <View style={styles.buttonContainer}>
         <Button onPress={onPress} title="Click me" />
       </View>
 
-      <View style={styles.bottomPart}>
+      <View style={styles.content}>
         <Parent open={open} />
       </View>
     </SafeAreaView>
@@ -104,27 +79,39 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop: 24,
   },
-  topPart: {
+  buttonContainer: {
     flex: 1,
+    paddingBottom: '1rem',
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  bottomPart: {
+  content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  image: {
-    width: 200,
-    height: 200,
-  },
   parent: {
     width: 200,
   },
-  view: {
+  wrapper: {
     width: '100%',
     position: 'absolute',
+    display: 'flex',
+    alignItems: 'center',
   },
   animatedView: {
     width: '100%',
     overflow: 'hidden',
+  },
+  box: {
+    height: 120,
+    width: 120,
+    color: 'var(--swm-off-white)',
+    backgroundColor: '#b58df1',
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

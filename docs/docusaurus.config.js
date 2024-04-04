@@ -22,6 +22,13 @@ const config = {
   organizationName: 'software-mansion', // Usually your GitHub org/user name.
   projectName: 'react-native-reanimated', // Usually your repo name.
 
+  scripts: [
+    {
+      src: '/react-native-reanimated/js/snack-helpers.js',
+      async: true,
+    },
+  ],
+
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
 

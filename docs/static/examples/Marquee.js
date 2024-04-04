@@ -1,18 +1,12 @@
 import React, { useState } from 'react';
-import { Button, Image, StyleSheet, View, ViewStyle } from 'react-native';
-import 'react-native-gesture-handler';
+import { Button, StyleSheet, View, Image } from 'react-native';
 import Animated, {
-  SharedValue,
   useAnimatedStyle,
   useFrameCallback,
   useSharedValue,
 } from 'react-native-reanimated';
 
-type MeasureProps = React.PropsWithChildren<{
-  onLayout: (width: number) => void;
-}>;
-
-const MeasureElement = ({ onLayout, children }: MeasureProps) => (
+const MeasureElement = ({ onLayout, children }) => (
   <Animated.ScrollView
     horizontal
     style={marqueeStyles.hidden}
@@ -23,18 +17,7 @@ const MeasureElement = ({ onLayout, children }: MeasureProps) => (
   </Animated.ScrollView>
 );
 
-type TranslatedElementProps = React.PropsWithChildren<{
-  index: number;
-  offset: SharedValue<number>;
-  childrenWidth: number;
-}>;
-
-const TranslatedElement = ({
-  index,
-  children,
-  offset,
-  childrenWidth,
-}: TranslatedElementProps) => {
+const TranslatedElement = ({ index, children, offset, childrenWidth }) => {
   const animatedStyle = useAnimatedStyle(() => {
     return {
       left: (index - 1) * childrenWidth,
@@ -52,23 +35,11 @@ const TranslatedElement = ({
   );
 };
 
-const getIndicesArray = (length: number) => Array.from({ length }, (_, i) => i);
+const getIndicesArray = (length) => Array.from({ length }, (_, i) => i);
 
-type ClonerProps = {
-  count: number;
-  renderChild: (index: number) => JSX.Element;
-};
-
-const Cloner = ({ count, renderChild }: ClonerProps): JSX.Element => (
+const Cloner = ({ count, renderChild }) => (
   <>{getIndicesArray(count).map(renderChild)}</>
 );
-
-type ScrollerProps = React.PropsWithChildren<{
-  duration: number;
-  childrenWidth: number;
-  parentWidth: number;
-  reverse: boolean;
-}>;
 
 const ChildrenScroller = ({
   duration,
@@ -76,7 +47,7 @@ const ChildrenScroller = ({
   parentWidth,
   reverse,
   children,
-}: ScrollerProps) => {
+}) => {
   const offset = useSharedValue(0);
   const coeff = useSharedValue(reverse ? 1 : -1);
 
@@ -92,7 +63,7 @@ const ChildrenScroller = ({
   }, true);
 
   const count = Math.round(parentWidth / childrenWidth) + 2;
-  const renderChild = (index: number) => (
+  const renderChild = (index) => (
     <TranslatedElement
       key={`clone-${index}`}
       index={index}
@@ -105,19 +76,7 @@ const ChildrenScroller = ({
   return <Cloner count={count} renderChild={renderChild} />;
 };
 
-export type MarqueeProps = React.PropsWithChildren<{
-  duration?: number;
-  spacing?: number;
-  style?: ViewStyle;
-  reverse?: boolean;
-}>;
-
-const Marquee = ({
-  duration = 2000,
-  reverse = false,
-  children,
-  style,
-}: MarqueeProps) => {
+const Marquee = ({ duration = 2000, reverse = false, children, style }) => {
   const [parentWidth, setParentWidth] = React.useState(0);
   const [childrenWidth, setChildrenWidth] = React.useState(0);
 
@@ -158,11 +117,12 @@ function MarqueeScreen() {
         <Button onPress={() => setReverse((v) => !v)} title="Reverse" />
         <Marquee reverse={reverse}>
           <Image
-            style={styles.image}
+            style={styles.horseImage}
             source={{
-              uri: 'https://upload.wikimedia.org/wikipedia/en/e/ed/Nyan_cat_250px_frame.PNG',
+              uri: 'https://docs.swmansion.com/react-native-reanimated/img/logo.svg',
             }}
           />
+          {/* <View style={styles.circle} /> */}
         </Marquee>
       </View>
     </View>
@@ -170,20 +130,33 @@ function MarqueeScreen() {
 }
 
 const styles = StyleSheet.create({
+  horseImage: {
+    width: 140,
+    height: 80,
+    marginRight: 80,
+  },
   container: {
     flex: 1,
   },
   safeArea: {
+    display: 'flex',
+    gap: '1rem',
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
   },
-  image: {
-    width: 200,
-    height: 200,
-  },
   animatedStyle: {
     position: 'absolute',
+  },
+  circle: {
+    marginTop: 4,
+    borderRadius: 100,
+    height: 120,
+    width: 160,
+    backgroundColor: '#b58df1',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

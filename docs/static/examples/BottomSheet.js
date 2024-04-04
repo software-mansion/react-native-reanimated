@@ -1,41 +1,31 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import 'react-native-gesture-handler';
-import { useSharedValue } from 'react-native-reanimated';
-import { PropsWithChildren } from 'react';
-import { TouchableOpacity } from 'react-native';
+import {
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+} from 'react-native';
 import Animated, {
-  SharedValue,
+  useSharedValue,
   useAnimatedStyle,
   useDerivedValue,
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
 
-type BottomSheetProps = PropsWithChildren<{
-  isOpen: SharedValue<boolean>;
-  toggleSheet: () => void;
-  duration?: number;
-}>;
-
-function BottomSheet({
-  isOpen,
-  toggleSheet,
-  duration = 500,
-  children,
-}: BottomSheetProps) {
+function BottomSheet({ isOpen, toggleSheet, duration = 500, children }) {
   const height = useSharedValue(0);
   const progress = useDerivedValue(() =>
     withTiming(isOpen.value ? 0 : 1, { duration })
   );
 
   const sheetStyle = useAnimatedStyle(() => ({
-    ...sheetStyles.sheet,
     transform: [{ translateY: progress.value * 2 * height.value }],
   }));
 
   const backdropStyle = useAnimatedStyle(() => ({
-    ...sheetStyles.backdrop,
     opacity: 1 - progress.value,
     zIndex: isOpen.value
       ? 1
@@ -44,14 +34,14 @@ function BottomSheet({
 
   return (
     <>
-      <Animated.View style={backdropStyle}>
+      <Animated.View style={[sheetStyle.backdrop, backdropStyle]}>
         <TouchableOpacity style={styles.flex} onPress={toggleSheet} />
       </Animated.View>
       <Animated.View
         onLayout={(e) => {
           height.value = e.nativeEvent.layout.height;
         }}
-        style={sheetStyle}>
+        style={[sheetStyles.sheet, sheetStyle]}>
         {children}
       </Animated.View>
     </>
@@ -60,9 +50,11 @@ function BottomSheet({
 
 const sheetStyles = StyleSheet.create({
   sheet: {
-    backgroundColor: 'white',
+    backgroundColor: 'var(--swm-off-white)',
     padding: 16,
-    height: 100,
+    paddingRight: '2rem',
+    paddingLeft: '2rem',
+    height: 150,
     width: '100%',
     position: 'absolute',
     bottom: 0,
@@ -86,18 +78,27 @@ export default function App() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.safeArea}>
         <View style={styles.flex} />
         <Pressable style={styles.toggleButton} onPress={toggleSheet}>
-          <Text>Toggle bottom sheet</Text>
+          <Text style={styles.toggleButtonText}>Toggle bottom sheet</Text>
         </Pressable>
         <View style={styles.flex} />
       </View>
       <BottomSheet isOpen={isOpen} toggleSheet={toggleSheet}>
-        <Text>Hello</Text>
+        <Text style={styles.bottomSheetContent}>
+          Discover the indispensable convenience of a bottom sheet in mobile
+          app. Seamlessly integrated, it provides quick access to supplementary
+          features and refined details.
+        </Text>
+        <View style={styles.buttonContainer}>
+          <Pressable style={styles.bottomSheetButton}>
+            <Text style={styles.bottomSheetButtonText}>Read more</Text>
+          </Pressable>
+        </View>
       </BottomSheet>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -107,16 +108,43 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    height: 500,
+    height: 250,
+  },
+  buttonContainer: {
+    marginTop: 16,
+    display: 'flex',
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-around',
   },
   toggleButton: {
-    backgroundColor: '#fac',
+    backgroundColor: '#b58df1',
     padding: 12,
     borderRadius: 48,
+  },
+  toggleButtonText: {
+    color: 'white',
+    padding: '0.5rem',
   },
   safeArea: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
+  },
+  bottomSheetButton: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'var(--swm-navy-light-100)',
+    paddingBottom: 2,
+  },
+  bottomSheetButtonText: {
+    fontWeight: 600,
+    color: 'var(--swm-navy-light-100)',
+  },
+  bottomSheetContent: {
+    color: 'var(--swm-navy-light-100)',
   },
 });
