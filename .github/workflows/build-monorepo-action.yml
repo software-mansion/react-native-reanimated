@@ -1,4 +1,7 @@
 name: Test build in monorepo
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+  REACT_NATIVE_TEMPLATE: ${{ inputs.react_native_version && '--version' || '' }} ${{ inputs.react_native_version }}
 on:
   workflow_call:
     inputs:
@@ -14,9 +17,6 @@ on:
       react_native_version:
         required: false
         type: string
-
-env:
-  REACT_NATIVE_TEMPLATE: ${{ inputs.react_native_version && '--version' || '' }} ${{ inputs.react_native_version }}
 
 jobs:
   build:

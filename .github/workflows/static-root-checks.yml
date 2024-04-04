@@ -1,4 +1,6 @@
 name: Test TypeScript and Lint
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
   merge_group:
@@ -7,6 +9,7 @@ on:
   push:
     branches:
       - main
+
 jobs:
   check:
     if: github.repository == 'software-mansion/react-native-reanimated'

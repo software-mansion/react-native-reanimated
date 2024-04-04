@@ -3167,7 +3167,7 @@ __metadata:
     react-native-pager-view: "npm:^6.2.3"
     react-native-reanimated: "link:../"
     react-native-safe-area-context: "npm:4.10.0-rc.1"
-    react-native-screens: "git+https://github.com/software-mansion/react-native-screens.git#ddf267a4ce157dc60fa0bb94e8096c4d99f7e878"
+    react-native-screens: "npm:3.31.0-rc.0"
     react-native-svg: "npm:^15.2.0-rc.0"
     react-test-renderer: "npm:18.2.0"
     typescript: "npm:5.0.4"
@@ -8416,16 +8416,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-screens@git+https://github.com/software-mansion/react-native-screens.git#ddf267a4ce157dc60fa0bb94e8096c4d99f7e878":
-  version: 3.29.0
-  resolution: "react-native-screens@https://github.com/software-mansion/react-native-screens.git#commit=ddf267a4ce157dc60fa0bb94e8096c4d99f7e878"
+"react-native-screens@npm:3.31.0-rc.0":
+  version: 3.31.0-rc.0
+  resolution: "react-native-screens@npm:3.31.0-rc.0"
   dependencies:
     react-freeze: "npm:^1.0.0"
     warn-once: "npm:^0.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/266d0cbcd5e4ad3a86735dd9045db9188bc4fca0c2a4b01ce748c1e0ea093a9acfbaeaf9c9ac15df3c6318ae8dd21437d07ce3a9bd058e688d12f56b24888c55
+  checksum: 10/e45c245c25f495b199cc501851f689cc644cf3da9d05c18d518c0cf6ea3b09fda19888adc049892017d03432a33c0fafc3e26acb80563dc1b8ad3776c53cc2d5
   languageName: node
   linkType: hard
 

@@ -1,4 +1,7 @@
 name: Check Expo dev-client nightly build
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+  SCRIPT_PATH: reanimated_repo/.github/workflows/helper/configureDevClient.js
 on:
   pull_request:
     paths:
@@ -6,9 +9,6 @@ on:
   schedule:
     - cron: '0 0 * * *' # after publishing new nightly version on NPM
   workflow_dispatch:
-
-env:
-  SCRIPT_PATH: reanimated_repo/.github/workflows/helper/configureDevClient.js
 
 jobs:
   build_ios:

@@ -1,4 +1,6 @@
 name: Validate plugin
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     paths:
@@ -13,6 +15,7 @@ on:
     paths:
       - '.github/workflows/validate-plugin.yml'
       - 'plugin/**'
+
 jobs:
   check:
     if: github.repository == 'software-mansion/react-native-reanimated'

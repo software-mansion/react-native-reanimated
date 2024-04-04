@@ -1,4 +1,6 @@
 name: Check TypeScript with different React Native versions
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     paths:

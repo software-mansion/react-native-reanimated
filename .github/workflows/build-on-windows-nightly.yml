@@ -1,4 +1,6 @@
 name: Test build on Windows nightly
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     paths:
