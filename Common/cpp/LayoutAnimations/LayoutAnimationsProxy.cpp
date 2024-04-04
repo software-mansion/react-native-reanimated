@@ -94,8 +94,12 @@ void LayoutAnimationsProxy::progressLayoutAnimation(
     int tag,
     const jsi::Object &newStyle) {
   printf("progress layout animation for tag %d\n", tag);
-  //  auto newProps = RawProps(nativeReanimatedModule_->getUIRuntime(),
-  //  jsi::Value(nativeReanimatedModule_->getUIRuntime(), newStyle));
+  
+  // opacity was set to 0 on insert, so we restore it here (hopefully there will be a better place to do it)
+  // TODO: restore the original opacity instead of 1
+  if (!newStyle.hasProperty(nativeReanimatedModule_->getUIRuntime(), "opacity")){
+    newStyle.setProperty(nativeReanimatedModule_->getUIRuntime(), "opacity", jsi::Value(1));
+  }
   auto newProps = std::make_shared<RawProps>(
       nativeReanimatedModule_->getUIRuntime(),
       jsi::Value(nativeReanimatedModule_->getUIRuntime(), newStyle));
@@ -316,6 +320,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     const TransactionTelemetry &telemetry,
     ShadowViewMutationList mutations) const {
       printf("\n pullTransaction\n");
+  PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   //  std::unordered_map<Tag, const RawProps*> propsMap =
   //  layoutAnimationsRegistry_.props_;
   ShadowViewMutationList filteredMutations;
@@ -414,8 +419,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
           filteredMutations.push_back(mutation);
           continue;
         }
-        const auto &viewProps = static_cast<const ViewProps &>(*mutation.newChildShadowView.props);
-        const_cast<ViewProps &>(viewProps).opacity = 0;
         filteredMutations.push_back(mutation);
         break;
       }
@@ -443,11 +446,14 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
             {},
             {}};
         layoutAnimations_.insert_or_assign(mutation.newChildShadowView.tag, la);
-        //        auto newView =
-        //            std::make_shared<ShadowView>(mutation.newChildShadowView);
-        const auto &viewProps = static_cast<const ViewProps &>(*mutation.newChildShadowView.props);
-        const_cast<ViewProps &>(viewProps).opacity = 0;
         filteredMutations.push_back(mutation);
+        
+        // temporarily set opacity to 0 to prevent flickering on android
+        auto newView = std::make_shared<ShadowView>(*finalView);
+        folly::dynamic d = folly::dynamic::object("opacity", 0);
+        auto newProps = getComponentDescriptorForShadowView(*newView).cloneProps(propsParserContext, newView->props, RawProps(d));
+        newView->props = newProps;
+        filteredMutations.push_back(ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, *newView, mutation.parentShadowView));
         break;
       }
 
