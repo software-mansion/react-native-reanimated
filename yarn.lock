@@ -10062,9 +10062,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-gesture-handler@git+https://github.com/software-mansion/react-native-gesture-handler.git#6808ca355af71ca2f1f6653b50e389c8b564c8ba":
-  version: 2.15.0
-  resolution: "react-native-gesture-handler@https://github.com/software-mansion/react-native-gesture-handler.git#commit=6808ca355af71ca2f1f6653b50e389c8b564c8ba"
+"react-native-gesture-handler@npm:^2.16.0":
+  version: 2.16.0
+  resolution: "react-native-gesture-handler@npm:2.16.0"
   dependencies:
     "@egjs/hammerjs": "npm:^2.0.17"
     hoist-non-react-statics: "npm:^3.3.0"
@@ -10074,7 +10074,7 @@ __metadata:
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/a7a13dfb66eb9a6256145b4a2969c51625814daeb1b947d88bdf76c6ef14e3aebd3b5f0fdd32d466ac3602f74724773b3b4272ed36ae6ecee5a166a4a6a40d8c
+  checksum: 10/8eef04fcb15ae1ff1cd64642efc0783c081e982dc34af89af377dab233ad4e3197ea4d2bbc236655bbdb023d0a982de660a94cb3794b46de6d4a487a2c01dead
   languageName: node
   linkType: hard
 
@@ -10136,7 +10136,7 @@ __metadata:
     react: "npm:18.2.0"
     react-native: "npm:0.74.0-rc.4"
     react-native-builder-bob: "npm:^0.18.3"
-    react-native-gesture-handler: "git+https://github.com/software-mansion/react-native-gesture-handler.git#6808ca355af71ca2f1f6653b50e389c8b564c8ba"
+    react-native-gesture-handler: "npm:^2.16.0"
     react-native-web: "npm:~0.18.12"
     react-test-renderer: "npm:18.2.0"
     shelljs: "npm:^0.8.5"
