@@ -90,18 +90,31 @@ void LayoutAnimationsProxy::transferConfigFromNativeTag(const int tag) {
   }
 }
 
+void LayoutAnimationsProxy::cancelAnimation(const int tag) const{
+  bannedTags.insert(tag);
+  nativeReanimatedModule_->uiScheduler_->scheduleOnUI(
+                                                      [this, tag]() {
+                                                        jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
+                                                        nativeReanimatedModule_->layoutAnimationsManager().cancelLayoutAnimation(rt, tag);
+                                                      });
+}
+
+
 void LayoutAnimationsProxy::progressLayoutAnimation(
     int tag,
     const jsi::Object &newStyle) {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   LOG(ERROR)<<"progress layout animation for tag "<< tag<<std::endl;
+  if (bannedTags.contains(tag)){
+    return;
+  }
   PropsParserContext propsParserContext{1, *contextContainer_};
   
   // opacity was set to 0 on insert, so we restore it here (hopefully there will be a better place to do it)
   // TODO: restore the original opacity instead of 1
-//  if (!newStyle.hasProperty(nativeReanimatedModule_->getUIRuntime(), "opacity")){
-//    newStyle.setProperty(nativeReanimatedModule_->getUIRuntime(), "opacity", jsi::Value(1));
-//  }
+  if (!newStyle.hasProperty(nativeReanimatedModule_->getUIRuntime(), "opacity")){
+    newStyle.setProperty(nativeReanimatedModule_->getUIRuntime(), "opacity", jsi::Value(1));
+  }
   auto newProps = std::make_shared<RawProps>(
       nativeReanimatedModule_->getUIRuntime(),
       jsi::Value(nativeReanimatedModule_->getUIRuntime(), newStyle));
@@ -140,6 +153,9 @@ void LayoutAnimationsProxy::progressLayoutAnimation(
 void LayoutAnimationsProxy::endLayoutAniamtion(int tag, bool shouldRemove) {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   LOG(ERROR)<<"end layout animation for "<<tag<<" - should remove "<< shouldRemove<<std::endl;
+  if (bannedTags.contains(tag)){
+    return;
+  }
   if (shouldRemove) {
     if (nodeForTag.contains(tag)){
       auto node = nodeForTag.at(tag);
@@ -164,7 +180,7 @@ void LayoutAnimationsProxy::endAnimationsRecursively(std::shared_ptr<MutationNod
   for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
     auto &subNode = *it;
     if (!subNode->isDone) {
-      layoutAnimationsManager_->cancelLayoutAnimation(nativeReanimatedModule_->getUIRuntime(), subNode->tag);
+      cancelAnimation(subNode->tag);
       endAnimationsRecursively(subNode, mutations);
     }
   }
@@ -184,7 +200,7 @@ void LayoutAnimationsProxy::maybeDropAncestors(std::shared_ptr<MutationNode> nod
     nodeForTag.erase(node->tag);
     cleanupMutations.push_back(node->mutation);
     if (layoutAnimations_.contains(node->tag)){
-      layoutAnimationsManager_->cancelLayoutAnimation(nativeReanimatedModule_->getUIRuntime(), node->tag);
+      cancelAnimation(node->tag);
     }
     dropIndex(node->mutation.parentShadowView.tag, node->mutation.index);
     updateIndices(node->mutation);
@@ -401,7 +417,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 //      } else 
         if (!startAnimationsRecursively(node, true, true, filteredMutations)) {
           if (layoutAnimations_.contains(node->tag)){
-            layoutAnimationsManager_->cancelLayoutAnimation(nativeReanimatedModule_->getUIRuntime(), node->tag);
+            cancelAnimation(node->tag);
           }
         filteredMutations.push_back(node->mutation);
         updateIndices(node->mutation);
@@ -459,11 +475,11 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
             Values(mutation.newChildShadowView));
         
         // temporarily set opacity to 0 to prevent flickering on android
-//        auto newView = std::make_shared<ShadowView>(*finalView);
-//        folly::dynamic d = folly::dynamic::object("opacity", 0);
-//        auto newProps = getComponentDescriptorForShadowView(*newView).cloneProps(propsParserContext, newView->props, RawProps(d));
-//        newView->props = newProps;
-//        filteredMutations.push_back(ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, *newView, mutation.parentShadowView));
+        auto newView = std::make_shared<ShadowView>(*finalView);
+        folly::dynamic d = folly::dynamic::object("opacity", 0);
+        auto newProps = getComponentDescriptorForShadowView(*newView).cloneProps(propsParserContext, newView->props, RawProps(d));
+        newView->props = newProps;
+        filteredMutations.push_back(ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, *newView, mutation.parentShadowView));
         break;
       }
 
@@ -563,7 +579,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(std::shared_ptr<MutationN
         hasAnimatedChildren = true;
       }
       else {
-        layoutAnimationsManager_->cancelLayoutAnimation(nativeReanimatedModule_->getUIRuntime(), subNode->tag);
+        cancelAnimation(subNode->tag);
         endAnimationsRecursively(subNode, mutations);
       }
     } else if (startAnimationsRecursively(subNode, shouldRemoveSubviewsWithoutAnimations, shouldAnimate, mutations)) {
@@ -571,7 +587,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(std::shared_ptr<MutationN
       hasAnimatedChildren = true;
     } else if (shouldRemoveSubviewsWithoutAnimations) {
       if (layoutAnimations_.contains(subNode->tag)){
-        layoutAnimationsManager_->cancelLayoutAnimation(nativeReanimatedModule_->getUIRuntime(), subNode->tag);
+        cancelAnimation(subNode->tag);
       }
       mutations.push_back(subNode->mutation);
       toBeRemoved.push_back(subNode);

@@ -114,6 +114,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   mutable std::unordered_map<Tag, X> props_;
   mutable std::unordered_set<Tag> animatedTags;
   mutable std::recursive_mutex mutex;
+  mutable std::unordered_set<Tag> bannedTags;
   std::shared_ptr<std::map<Tag, std::string>> tagToNativeID_ = std::make_shared<std::map<Tag, std::string>>();
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   ContextContainer::Shared contextContainer_;
@@ -126,6 +127,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   void transferConfigFromNativeTag(const int tag);
   void progressLayoutAnimation(int tag, const jsi::Object &newStyle);
   void endLayoutAniamtion(int tag, bool shouldRemove);
+  void cancelAnimation(const int tag) const;
   const ComponentDescriptor& getComponentDescriptorForShadowView(const ShadowView& shadowView) const;
   
   void addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList& mutations) const;
