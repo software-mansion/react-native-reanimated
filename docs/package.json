@@ -5,7 +5,7 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
-    "build": "docusaurus build",
+    "build": "docusaurus build && node build-og-images.js",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
@@ -32,6 +32,7 @@
     "babel-polyfill": "^6.26.0",
     "babel-preset-expo": "^9.2.2",
     "babel-preset-react-native": "^4.0.1",
+    "canvas": "^2.11.2",
     "clsx": "^1.2.1",
     "raf": "^3.4.1",
     "raw-loader": "^4.0.2",
