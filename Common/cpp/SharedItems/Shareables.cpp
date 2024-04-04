@@ -265,7 +265,7 @@ jsi::Value ShareableWorklet::toJSValue(jsi::Runtime &rt) {
 
   const auto workletsCache = getWorkletsCache(rt);
   auto workletFun = workletsCache.getPropertyAsFunction(rt, "get").callWithThis(
-      rt, workletsCache, obj);
+      rt, workletsCache, workletHash);
   if (workletFun.isUndefined()) {
     const auto initData = obj.getPropertyAsObject(rt, "__initData");
 
