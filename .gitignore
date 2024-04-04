@@ -62,4 +62,9 @@ plugin/build/plugin.js.map
 plugin/types
 
 # yarn
-.yarn
+**/.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
