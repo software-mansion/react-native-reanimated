@@ -14,6 +14,7 @@ using namespace facebook;
 
 struct X{
   std::shared_ptr<RawProps> rawProps;
+  Props::Shared newProps;
   LayoutMetrics layoutMetrics;
 };
 
@@ -112,7 +113,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   mutable std::unordered_map<Tag, std::shared_ptr<std::unordered_set<int>>> indices;
   mutable std::unordered_map<Tag, X> props_;
   mutable std::unordered_set<Tag> animatedTags;
-  std::mutex mutex;
+  mutable std::recursive_mutex mutex;
   std::shared_ptr<std::map<Tag, std::string>> tagToNativeID_ = std::make_shared<std::map<Tag, std::string>>();
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   ContextContainer::Shared contextContainer_;
