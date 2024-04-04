@@ -186,5 +186,5 @@
     "./lib/reanimated2/core",
     "./lib/index"
   ],
-  "packageManager": "yarn@4.1.1"
+  "packageManager": "yarn@3.8.1"
 }

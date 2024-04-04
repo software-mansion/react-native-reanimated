@@ -62,4 +62,4 @@ plugin/build/plugin.js.map
 plugin/types
 
 # yarn
-install-state.gz
+.yarn
