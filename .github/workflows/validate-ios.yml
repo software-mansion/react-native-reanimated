@@ -26,5 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: yarn
       - name: Lint iOS
         run: yarn lint:ios
