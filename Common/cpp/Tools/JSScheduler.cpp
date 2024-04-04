@@ -1,12 +1,4 @@
-#pragma once
-
 #include <JSScheduler.h>
-#include <ReactCommon/CallInvoker.h>
-#include <ReactCommon/RuntimeExecutor.h>
-#include <jsi/jsi.h>
-
-#include <memory>
-#include <utility>
 
 using namespace facebook;
 using namespace react;

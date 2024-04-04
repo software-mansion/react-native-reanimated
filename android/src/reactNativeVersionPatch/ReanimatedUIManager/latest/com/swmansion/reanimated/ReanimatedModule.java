@@ -33,6 +33,8 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   }
 
   public void willDispatchViewUpdates(@NonNull UIManager uiManager) {
+    // This method is called for the interface of UIManagerListener on Fabric.
+    // The below function with the same name won't be called.
     if (mOperations.isEmpty()) {
       return;
     }
@@ -46,7 +48,8 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
         }
       });
     } else {
-      throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
+      throw new RuntimeException(
+          "[Reanimated] Failed to obtain instance of FabricUIManager.");
     }
   }
 
@@ -72,7 +75,8 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
       if (uiManager instanceof FabricUIManager) {
         ((FabricUIManager)uiManager).addUIManagerEventListener(this);
       } else {
-        throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
+        throw new RuntimeException(
+            "[Reanimated] Failed to obtain instance of FabricUIManager.");
       }
     } else {
       UIManagerModule uiManager =
@@ -103,6 +107,8 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
 
   @Override
   public void willDispatchViewUpdates(final UIManagerModule uiManager) {
+    // This method is called for the interface of UIManagerModuleListener on
+    // Paper. The below function with the same name won't be called.
     if (mOperations.isEmpty()) {
       return;
     }
@@ -134,10 +140,12 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   public boolean installTurboModule(String valueUnpackerCode) {
     // When debugging in chrome the JS context is not available.
     // https://github.com/facebook/react-native/blob/v0.67.0-rc.6/ReactAndroid/src/main/java/com/facebook/react/modules/blob/BlobCollector.java#L25
-    Utils.isChromeDebugger = getReactApplicationContext().getJavaScriptContextHolder().get() == 0;
+    Utils.isChromeDebugger =
+        getReactApplicationContext().getJavaScriptContextHolder().get() == 0;
 
     if (!Utils.isChromeDebugger) {
-      this.getNodesManager().initWithContext(getReactApplicationContext(), valueUnpackerCode);
+      this.getNodesManager().initWithContext(
+          getReactApplicationContext(), valueUnpackerCode);
       return true;
     } else {
       Log.w(

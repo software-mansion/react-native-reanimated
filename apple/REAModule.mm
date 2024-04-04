@@ -192,8 +192,8 @@ RCT_EXPORT_MODULE(ReanimatedModule);
                                              object:nil];
 
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
-  // TODO: it seems like it is not used on new arch anyway
-  //[bridge.uiManager.observerCoordinator addObserver:self];
+
+  [bridge.uiManager.observerCoordinator addObserver:self]; // TODO: Check if it's needed on new arch.
 #ifndef NDEBUG
   [self setReaSurfacePresenter];
 #endif // NDEBUG
