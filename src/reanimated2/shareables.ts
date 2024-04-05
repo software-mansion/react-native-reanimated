@@ -202,6 +202,20 @@ Offending code was: \`${getWorkletCode(value)}\``);
         });
         shareableMappingCache.set(value, handle);
         return handle as ShareableRef<T>;
+      } else if (value instanceof Error) {
+        const { name, message, stack } = value;
+        const handle = makeShareableCloneRecursive({
+          __init: () => {
+            'worklet';
+            const error = new Error();
+            error.name = name;
+            error.message = message;
+            error.stack = stack;
+            return error;
+          },
+        });
+        shareableMappingCache.set(value, handle);
+        return handle as ShareableRef<T>;
       } else if (value instanceof ArrayBuffer) {
         toAdapt = value;
       } else if (ArrayBuffer.isView(value)) {
