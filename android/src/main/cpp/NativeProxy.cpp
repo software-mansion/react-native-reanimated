@@ -49,7 +49,7 @@ NativeProxy::NativeProxy(
           uiScheduler,
           getPlatformDependentMethods(),
           valueUnpackerCode,
-          false)),
+          /* isBridgeless */ false)),
       layoutAnimations_(std::move(layoutAnimations)) {
 #ifdef RCT_NEW_ARCH_ENABLED
   commonInit(fabricUIManager);
@@ -76,7 +76,7 @@ NativeProxy::NativeProxy(
           uiScheduler,
           getPlatformDependentMethods(),
           valueUnpackerCode,
-          true)),
+          /* isBridgeless */ true)),
       layoutAnimations_(std::move(layoutAnimations)) {
   commonInit(fabricUIManager);
 }
