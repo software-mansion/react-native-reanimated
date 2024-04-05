@@ -11,6 +11,7 @@ import { shouldBeUseWeb } from './PlatformChecker';
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 type JSEvent<Event extends object> = NativeSyntheticEvent<EventPayload<Event>>;
+
 // In JS implementation (e.g. for web) we don't use Reanimated's
 // event emitter, therefore we have to handle here
 // the event that came from React Native and convert it.
@@ -32,7 +33,7 @@ class WorkletEventHandlerNative<Event extends object>
   #registrations: Map<number, number[]>; // keys are viewTags, values are arrays of registration ID's for each viewTag
   constructor(
     worklet: (event: ReanimatedEvent<Event>) => void,
-    eventNames: string[] = []
+    eventNames: string[]
   ) {
     this.worklet = worklet;
     this.eventNames = eventNames;
@@ -49,18 +50,16 @@ class WorkletEventHandlerNative<Event extends object>
     this.eventNames = newEvents;
 
     // Detach all events
-    this.#registrations.forEach((registrationIDs, _tag) => {
-      registrationIDs.forEach((id) => {
-        unregisterEventHandler(id);
-      });
+    this.#registrations.forEach((registrationIDs) => {
+      registrationIDs.forEach((id) => unregisterEventHandler(id));
       // No need to remove registrationIDs from map, since it gets overwritten when attaching
     });
 
     // Attach new events with new worklet
     Array.from(this.#viewTags).forEach((tag) => {
-      const newRegistrations = this.eventNames.map((eventName) => {
-        return registerEventHandler(this.worklet, eventName, tag);
-      });
+      const newRegistrations = this.eventNames.map((eventName) =>
+        registerEventHandler(this.worklet, eventName, tag)
+      );
       this.#registrations.set(tag, newRegistrations);
     });
   }
@@ -68,9 +67,9 @@ class WorkletEventHandlerNative<Event extends object>
   registerForEvents(viewTag: number, fallbackEventName?: string): void {
     this.#viewTags.add(viewTag);
 
-    const newRegistrations = this.eventNames.map((eventName) => {
-      return registerEventHandler(this.worklet, eventName, viewTag);
-    });
+    const newRegistrations = this.eventNames.map((eventName) =>
+      registerEventHandler(this.worklet, eventName, viewTag)
+    );
     this.#registrations.set(viewTag, newRegistrations);
 
     if (this.eventNames.length === 0 && fallbackEventName) {
