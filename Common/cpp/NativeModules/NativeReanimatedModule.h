@@ -31,6 +31,7 @@ namespace reanimated {
 
 class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  public:
+  // With `jsInvoker`.
   NativeReanimatedModule(
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<CallInvoker> &jsInvoker,
@@ -38,6 +39,17 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
       const std::string &valueUnpackerCode);
+
+#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+  // With `runtimeExecutor`.
+  NativeReanimatedModule(
+      jsi::Runtime &rnRuntime,
+      RuntimeExecutor runtimeExecutor,
+      const std::shared_ptr<MessageQueueThread> &jsQueue,
+      const std::shared_ptr<UIScheduler> &uiScheduler,
+      const PlatformDepMethodsHolder &platformDepMethodsHolder,
+      const std::string &valueUnpackerCode);
+#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
 
   ~NativeReanimatedModule();
 
@@ -172,6 +184,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   }
 
  private:
+  void commonInit(const PlatformDepMethodsHolder &platformDepMethodsHolder);
+
   void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
 
 #ifdef RCT_NEW_ARCH_ENABLED

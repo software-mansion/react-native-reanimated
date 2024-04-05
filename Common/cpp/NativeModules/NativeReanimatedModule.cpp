@@ -44,6 +44,7 @@ bool CoreFeatures::useNativeState;
 
 namespace reanimated {
 
+// With `jsInvoker`.
 NativeReanimatedModule::NativeReanimatedModule(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<CallInvoker> &jsInvoker,
@@ -86,7 +87,61 @@ NativeReanimatedModule::NativeReanimatedModule(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
           platformDepMethodsHolder.unsubscribeFromKeyboardEvents),
-      isBridgeless_(jsInvoker == nullptr) {
+      isBridgeless_(false) {
+  commonInit(platformDepMethodsHolder);
+}
+
+#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+// With `runtimeExecutor`.
+NativeReanimatedModule::NativeReanimatedModule(
+    jsi::Runtime &rnRuntime,
+    RuntimeExecutor runtimeExecutor,
+    const std::shared_ptr<MessageQueueThread> &jsQueue,
+    const std::shared_ptr<UIScheduler> &uiScheduler,
+    const PlatformDepMethodsHolder &platformDepMethodsHolder,
+    const std::string &valueUnpackerCode)
+    : NativeReanimatedModuleSpec(nullptr),
+      jsQueue_(jsQueue),
+      jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, runtimeExecutor)),
+      uiScheduler_(uiScheduler),
+      uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
+          rnRuntime,
+          jsQueue,
+          jsScheduler_,
+          "Reanimated UI runtime",
+          true /* supportsLocking */,
+          valueUnpackerCode)),
+      valueUnpackerCode_(valueUnpackerCode),
+      eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
+      requestRender_(platformDepMethodsHolder.requestRender),
+      onRenderCallback_([this](const double timestampMs) {
+        renderRequested_ = false;
+        onRender(timestampMs);
+      }),
+      animatedSensorModule_(platformDepMethodsHolder),
+      jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
+      layoutAnimationsManager_(jsLogger_),
+#ifdef RCT_NEW_ARCH_ENABLED
+      synchronouslyUpdateUIPropsFunction_(
+          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
+      propsRegistry_(std::make_shared<PropsRegistry>()),
+#else
+      obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
+      configurePropsPlatformFunction_(
+          platformDepMethodsHolder.configurePropsFunction),
+      updatePropsFunction_(platformDepMethodsHolder.updatePropsFunction),
+#endif
+      subscribeForKeyboardEventsFunction_(
+          platformDepMethodsHolder.subscribeForKeyboardEvents),
+      unsubscribeFromKeyboardEventsFunction_(
+          platformDepMethodsHolder.unsubscribeFromKeyboardEvents),
+      isBridgeless_(true) {
+  commonInit(platformDepMethodsHolder);
+}
+#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+
+void NativeReanimatedModule::commonInit(
+    const PlatformDepMethodsHolder &platformDepMethodsHolder) {
   auto requestAnimationFrame =
       [this](jsi::Runtime &rt, const jsi::Value &callback) {
         this->requestAnimationFrame(rt, callback);
