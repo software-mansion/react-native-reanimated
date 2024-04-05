@@ -101,7 +101,10 @@
     "@babel/core": "^7.20.0",
     "@babel/preset-env": "^7.20.0",
     "@babel/types": "^7.20.0",
-    "@react-native/eslint-config": "^0.72.2",
+    "@react-native/babel-preset": "0.74.77",
+    "@react-native/eslint-config": "0.74.77",
+    "@react-native/metro-config": "0.74.77",
+    "@react-native/typescript-config": "0.74.77",
     "@testing-library/jest-native": "^4.0.4",
     "@testing-library/react-hooks": "^8.0.0",
     "@testing-library/react-native": "^7.1.0",
@@ -141,9 +144,9 @@
     "madge": "^5.0.1",
     "prettier": "^2.5.1",
     "react": "18.2.0",
-    "react-native": "0.74.0-rc.4",
+    "react-native": "0.74.0-rc.6",
     "react-native-builder-bob": "^0.18.3",
-    "react-native-gesture-handler": "git+https://github.com/software-mansion/react-native-gesture-handler.git#6808ca355af71ca2f1f6653b50e389c8b564c8ba",
+    "react-native-gesture-handler": "^2.16.0",
     "react-native-web": "~0.18.12",
     "react-test-renderer": "18.2.0",
     "shelljs": "^0.8.5",
@@ -182,5 +185,6 @@
   "sideEffects": [
     "./lib/reanimated2/core",
     "./lib/index"
-  ]
+  ],
+  "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
 }
