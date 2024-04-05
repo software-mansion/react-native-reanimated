@@ -193,7 +193,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
 
-  [bridge.uiManager.observerCoordinator addObserver:self]; // TODO: Check if it's needed on new arch.
+//  [bridge.uiManager.observerCoordinator addObserver:self]; // TODO: Check if it's needed on new arch.
 #ifndef NDEBUG
   [self setReaSurfacePresenter];
 #endif // NDEBUG
