@@ -32,10 +32,10 @@ jobs:
         run: scripts/clear-annotations.sh
 
       - name: Install root node dependencies
-        run: yarn
+        run: yarn install
       - name: Install ${{ matrix.working-directory }} app node dependencies
         working-directory: ${{ matrix.working-directory }}
-        run: yarn
+        run: yarn install
       - name: Check types
         working-directory: ${{ matrix.working-directory }}
         run: yarn tsc --noEmit
