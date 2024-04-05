@@ -16,25 +16,16 @@ import {
   mockAnimationTimer,
   recordAnimationUpdates,
   render,
-  useTestRef,
   wait,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { Snapshots } from './withTiming.snapshot';
 
-const AnimatedComponent = ({
-  easing,
-}: {
-  easing: EasingFunction | EasingFunctionFactory | undefined;
-}) => {
+const AnimatedComponent = ({ easing }: { easing: EasingFunction | EasingFunctionFactory | undefined }) => {
   const widthSV = useSharedValue(0);
-  const ref = useTestRef('AnimatedComponent');
 
   const style = useAnimatedStyle(() => {
     return {
-      width: withTiming(
-        widthSV.value,
-        easing ? { duration: 1000, easing } : { duration: 1000 }
-      ),
+      width: withTiming(widthSV.value, easing ? { duration: 1000, easing } : { duration: 1000 }),
     };
   });
 
@@ -44,14 +35,12 @@ const AnimatedComponent = ({
 
   return (
     <View style={styles.container}>
-      <Animated.View ref={ref} style={[styles.animatedBox, style]} />
+      <Animated.View style={[styles.animatedBox, style]} />
     </View>
   );
 };
 
-async function getSnaphotUpdates(
-  easingFn: EasingFunction | EasingFunctionFactory | undefined
-) {
+async function getSnaphotUpdates(easingFn: EasingFunction | EasingFunctionFactory | undefined) {
   await mockAnimationTimer();
   const updatesContainer = await recordAnimationUpdates();
   await render(<AnimatedComponent easing={easingFn} />);
@@ -84,53 +73,35 @@ describe('withTiming snapshots 📸, test EASING', () => {
       [Easing.steps, [1.5, true]],
       [Easing.steps, [1.5, false]],
     ] as const
-  ).forEach((testArray) => {
+  ).forEach(testArray => {
     const [easing, argumentSet] = testArray;
     const message = `Easing.${easing.name}(${argumentSet.join(', ')})`;
-    const snapshotName = `${easing.name}_${argumentSet
-      .join('_')
-      .replace(/\./g, '$')
-      .replace(/-/g, '$')}`;
+    const snapshotName = `${easing.name}_${argumentSet.join('_').replace(/\./g, '$').replace(/-/g, '$')}`;
 
     test(message, async () => {
       const [updates, nativeUpdates] = await getSnaphotUpdates(
         //@ts-ignore This error is because various easing functions accept different number of arguments
-        easing(...argumentSet)
+        easing(...argumentSet),
       );
-      expect(updates).toMatchSnapshots(
-        Snapshots[snapshotName as keyof typeof Snapshots]
-      );
+      expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
       expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
     });
   });
 
-  [
-    Easing.bounce,
-    Easing.circle,
-    Easing.cubic,
-    Easing.ease,
-    Easing.exp,
-    Easing.linear,
-    Easing.quad,
-    Easing.sin,
-  ].forEach((easing) => {
-    test(`Easing.${easing.name}`, async () => {
-      const [updates, nativeUpdates] = await getSnaphotUpdates(easing);
-      expect(updates).toMatchSnapshots(
-        Snapshots[easing.name as keyof typeof Snapshots]
-      );
-      expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
-    });
-  });
+  [Easing.bounce, Easing.circle, Easing.cubic, Easing.ease, Easing.exp, Easing.linear, Easing.quad, Easing.sin].forEach(
+    easing => {
+      test(`Easing.${easing.name}`, async () => {
+        const [updates, nativeUpdates] = await getSnaphotUpdates(easing);
+        expect(updates).toMatchSnapshots(Snapshots[easing.name as keyof typeof Snapshots]);
+        expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
+      });
+    },
+  );
 
-  [Easing.in, Easing.out, Easing.inOut].forEach((easing) => {
+  [Easing.in, Easing.out, Easing.inOut].forEach(easing => {
     test(`Easing.${easing.name}(Easing.elastic(10))`, async () => {
-      const [updates, nativeUpdates] = await getSnaphotUpdates(
-        easing(Easing.elastic(10))
-      );
-      expect(updates).toMatchSnapshots(
-        Snapshots[easing.name as keyof typeof Snapshots]
-      );
+      const [updates, nativeUpdates] = await getSnaphotUpdates(easing(Easing.elastic(10)));
+      expect(updates).toMatchSnapshots(Snapshots[easing.name as keyof typeof Snapshots]);
       expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
     });
   });
