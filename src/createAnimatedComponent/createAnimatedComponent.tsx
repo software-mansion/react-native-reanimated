@@ -43,7 +43,7 @@ import {
   shouldBeUseWeb,
 } from '../reanimated2/PlatformChecker';
 import { InlinePropManager } from './InlinePropManager';
-import { PropsFilter } from './PropsFilter';
+import { PropsFilter, isPropValidHandlersArray } from './PropsFilter';
 import {
   startWebLayoutAnimation,
   tryActivateLayoutTransition,
@@ -143,6 +143,7 @@ export function createAnimatedComponent(
     }
 
     componentDidMount() {
+      this._viewTag = this._getViewInfo().viewTag as number;
       this._attachNativeEvents();
       this._jsPropsUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
@@ -228,21 +229,17 @@ export function createAnimatedComponent(
     }
 
     _attachNativeEvents() {
-      const node = this._getEventViewRef() as AnimatedComponentRef;
-      let viewTag = null; // We set it only if needed
-
       for (const key in this.props) {
         const prop = this.props[key];
         if (
           has('workletEventHandler', prop) &&
           prop.workletEventHandler instanceof WorkletEventHandler
         ) {
-          if (viewTag === null) {
-            viewTag = IS_WEB
-              ? this._component
-              : findNodeHandle(options?.setNativeProps ? this : node);
-          }
-          prop.workletEventHandler.registerForEvents(viewTag as number, key);
+          prop.workletEventHandler.registerForEvents(this._viewTag, key);
+        } else if (isPropValidHandlersArray(prop)) {
+          prop.forEach((handler) =>
+            handler.workletEventHandler.registerForEvents(this._viewTag, key)
+          );
         }
       }
     }
@@ -255,6 +252,10 @@ export function createAnimatedComponent(
           prop.workletEventHandler instanceof WorkletEventHandler
         ) {
           prop.workletEventHandler.unregisterFromEvents(this._viewTag);
+        } else if (isPropValidHandlersArray(prop)) {
+          prop.forEach((handler) =>
+            handler.workletEventHandler.unregisterFromEvents(this._viewTag)
+          );
         }
       }
     }
@@ -288,16 +289,37 @@ export function createAnimatedComponent(
         ) {
           const newProp = this.props[key];
           if (!newProp) {
-            // Prop got deleted
+            // Handler got deleted
             prevProp.workletEventHandler.unregisterFromEvents(this._viewTag);
           } else if (
             has('workletEventHandler', newProp) &&
             newProp.workletEventHandler instanceof WorkletEventHandler &&
             newProp.workletEventHandler !== prevProp.workletEventHandler
           ) {
-            // Prop got changed
+            // Handler got changed
             prevProp.workletEventHandler.unregisterFromEvents(this._viewTag);
             newProp.workletEventHandler.registerForEvents(this._viewTag);
+          }
+        } else if (isPropValidHandlersArray(prevProp)) {
+          const newProp = this.props[key];
+          if (!newProp) {
+            // Handlers array got deleted
+            prevProp.forEach((handler) =>
+              handler.workletEventHandler.unregisterFromEvents(this._viewTag)
+            );
+          } else if (
+            isPropValidHandlersArray(newProp) &&
+            newProp !== prevProp
+          ) {
+            // Handlers array got changed
+            // Unregister previous handlers
+            prevProp.forEach((handler) =>
+              handler.workletEventHandler.unregisterFromEvents(this._viewTag)
+            );
+            // Register new handlers
+            newProp.forEach((handler) =>
+              handler.workletEventHandler.registerForEvents(this._viewTag)
+            );
           }
         }
       }
@@ -309,8 +331,13 @@ export function createAnimatedComponent(
           newProp.workletEventHandler instanceof WorkletEventHandler &&
           !prevProps[key]
         ) {
-          // Prop got added
+          // Handler got added
           newProp.workletEventHandler.registerForEvents(this._viewTag);
+        } else if (isPropValidHandlersArray(newProp)) {
+          // Handlers array got added
+          newProp.forEach((handler) =>
+            handler.workletEventHandler.registerForEvents(this._viewTag)
+          );
         }
       }
     }

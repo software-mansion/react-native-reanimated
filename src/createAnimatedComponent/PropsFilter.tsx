@@ -16,6 +16,7 @@ import type {
 } from './commonTypes';
 import { flattenArray, has } from './utils';
 import { StyleSheet } from 'react-native';
+import type { IWorkletEventHandler } from '../reanimated2/hook/commonTypes';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -91,6 +92,51 @@ export class PropsFilter implements IPropsFilter {
         } else {
           props[key] = dummyListener;
         }
+      } else if (isPropValidHandlersArray(value)) {
+        // Map for keeping web listeners
+        const listenersMap = new Map<string, unknown[]>();
+
+        value.forEach((val) => {
+          if (
+            has('workletEventHandler', val) &&
+            val.workletEventHandler instanceof WorkletEventHandler &&
+            val.workletEventHandler.eventNames.length > 0
+          ) {
+            val.workletEventHandler.eventNames.forEach((eventName) => {
+              if (has('listeners', val.workletEventHandler)) {
+                // Made sure we are on web
+                const newListener = (
+                  val.workletEventHandler.listeners as Record<string, unknown>
+                )[eventName];
+
+                // Aggregate listeners for each event in listenersMap to compose them later
+                if (listenersMap.has(eventName)) {
+                  const arr = listenersMap.get(eventName);
+                  if (arr) {
+                    arr.push(newListener);
+                    listenersMap.set(eventName, arr);
+                  }
+                } else {
+                  listenersMap.set(eventName, [newListener]);
+                }
+              } else {
+                // Set dummy listener for native
+                props[eventName] = dummyListener;
+              }
+            });
+          }
+        });
+
+        // Compose listeners for each event and set as a proper prop
+        if (listenersMap.size > 0) {
+          listenersMap.forEach((listeners, event) => {
+            props[event] = (e: unknown) => {
+              listeners.forEach((listener) =>
+                (listener as (e: unknown) => void)(e)
+              );
+            };
+          });
+        }
       } else if (isSharedValue(value)) {
         if (this._requiresNewInitials) {
           props[key] = value.value;
@@ -114,4 +160,17 @@ export class PropsFilter implements IPropsFilter {
     }
     this._previousProps = inputProps;
   }
+}
+
+export function isPropValidHandlersArray(
+  value: unknown
+): value is { workletEventHandler: IWorkletEventHandler<object> }[] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (item) =>
+        has('workletEventHandler', item) &&
+        item.workletEventHandler instanceof WorkletEventHandler
+    )
+  );
 }
