@@ -33,7 +33,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  public:
   NativeReanimatedModule(
       jsi::Runtime &rnRuntime,
-      const JSScheduler &jsScheduler,
+      const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,

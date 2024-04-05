@@ -60,11 +60,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     throw error;
   });
 
-  std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
-
   PlatformDepMethodsHolder platformDepMethodsHolder = makePlatformDepMethodsHolder(bridge, nodesManager, reaModule);
 
-  JSScheduler jsScheduler(rnRuntime, jsInvoker);
+  std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
+  std::shared_ptr<JSScheduler> jsScheduler = std::make_shared<JSScheduler>(rnRuntime, jsInvoker);
   constexpr bool isBridgeless = false;
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
@@ -98,12 +97,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
     throw error;
   });
 
-  std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
-
   PlatformDepMethodsHolder platformDepMethodsHolder =
       makePlatformDepMethodsHolderBridgeless(moduleRegistry, nodesManager, reaModule);
 
-  JSScheduler jsScheduler(rnRuntime, runtimeExecutor);
+  auto uiScheduler = std::make_shared<REAIOSUIScheduler>();
+  auto jsScheduler = std::make_shared<JSScheduler>(runtime, runtimeExecutor);
   constexpr bool isBridgeless = true;
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(

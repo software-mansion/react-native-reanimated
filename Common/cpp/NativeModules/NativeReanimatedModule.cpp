@@ -46,14 +46,14 @@ namespace reanimated {
 
 NativeReanimatedModule::NativeReanimatedModule(
     jsi::Runtime &rnRuntime,
-    const JSScheduler &jsScheduler,
+    const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
     const std::string &valueUnpackerCode,
     const bool isBridgeless)
     : NativeReanimatedModuleSpec(
-          isBridgeless ? nullptr : jsScheduler.getJSInvoker()),
+          isBridgeless ? nullptr : jsScheduler->getJSCallInvoker()),
       isBridgeless_(isBridgeless),
       jsQueue_(jsQueue),
       jsScheduler_(jsScheduler),

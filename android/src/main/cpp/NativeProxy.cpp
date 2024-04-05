@@ -44,7 +44,7 @@ NativeProxy::NativeProxy(
       rnRuntime_(rnRuntime),
       nativeReanimatedModule_(std::make_shared<NativeReanimatedModule>(
           *rnRuntime,
-          JSSchedulerDependencyHolder(*rnRuntime, jsCallInvoker),
+          std::make_shared<JSScheduler>(*rnRuntime, jsCallInvoker),
           std::make_shared<JMessageQueueThread>(messageQueueThread),
           uiScheduler,
           getPlatformDependentMethods(),
@@ -71,7 +71,7 @@ NativeProxy::NativeProxy(
       rnRuntime_(rnRuntime),
       nativeReanimatedModule_(std::make_shared<NativeReanimatedModule>(
           *rnRuntime,
-          JSScheduler(*rnRuntime, runtimeExecutor),
+          std::make_shared<JSScheduler>(*rnRuntime, runtimeExecutor),
           std::make_shared<JMessageQueueThread>(messageQueueThread),
           uiScheduler,
           getPlatformDependentMethods(),

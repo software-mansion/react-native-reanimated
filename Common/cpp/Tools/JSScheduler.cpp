@@ -29,7 +29,7 @@ JSScheduler::JSScheduler(
 #endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
 
 // DO NOT USE OR YOU WILL BE PROMOTED
-const std::shared_ptr<CallInvoker> JSScheduler::getJSCallInvoker() {
+const std::shared_ptr<CallInvoker> JSScheduler::getJSCallInvoker() const {
   react_native_assert(jsCallInvoker_ != nullptr);
   return jsCallInvoker_;
 }
