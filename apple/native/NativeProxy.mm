@@ -64,8 +64,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   PlatformDepMethodsHolder platformDepMethodsHolder = makePlatformDepMethodsHolder(bridge, nodesManager, reaModule);
 
+  JSScheduler jsScheduler(rnRuntime, jsInvoker);
+  constexpr bool isBridgeless = false;
+
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
-      rnRuntime, jsInvoker, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode);
+      rnRuntime, jsScheduler, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode, isBridgeless);
 
   commonInit(reaModule, nativeReanimatedModule);
   // Layout Animation callbacks setup
@@ -100,8 +103,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
   PlatformDepMethodsHolder platformDepMethodsHolder =
       makePlatformDepMethodsHolderBridgeless(moduleRegistry, nodesManager, reaModule);
 
+  JSScheduler jsScheduler(rnRuntime, runtimeExecutor);
+  constexpr bool isBridgeless = true;
+
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
-      runtime, runtimeExecutor, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode);
+      runtime, jsScheduler, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode, isBridgeless);
 
   commonInit(reaModule, nativeReanimatedModule);
 

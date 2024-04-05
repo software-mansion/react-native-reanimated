@@ -37,6 +37,7 @@ class JSScheduler {
 
  public:
   const std::function<void(Job)> scheduleOnJS = nullptr;
+  const std::shared_ptr<CallInvoker> getJSCallInvoker();
 };
 
 } // namespace reanimated

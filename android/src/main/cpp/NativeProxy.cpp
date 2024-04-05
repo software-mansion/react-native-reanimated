@@ -44,11 +44,12 @@ NativeProxy::NativeProxy(
       rnRuntime_(rnRuntime),
       nativeReanimatedModule_(std::make_shared<NativeReanimatedModule>(
           *rnRuntime,
-          jsCallInvoker,
+          JSSchedulerDependencyHolder(*rnRuntime, jsCallInvoker),
           std::make_shared<JMessageQueueThread>(messageQueueThread),
           uiScheduler,
           getPlatformDependentMethods(),
-          valueUnpackerCode)),
+          valueUnpackerCode,
+          false)),
       layoutAnimations_(std::move(layoutAnimations)) {
 #ifdef RCT_NEW_ARCH_ENABLED
   commonInit(fabricUIManager);
@@ -65,17 +66,17 @@ NativeProxy::NativeProxy(
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager,
-
     const std::string &valueUnpackerCode)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       nativeReanimatedModule_(std::make_shared<NativeReanimatedModule>(
           *rnRuntime,
-          runtimeExecutor,
+          JSScheduler(*rnRuntime, runtimeExecutor),
           std::make_shared<JMessageQueueThread>(messageQueueThread),
           uiScheduler,
           getPlatformDependentMethods(),
-          valueUnpackerCode)),
+          valueUnpackerCode,
+          true)),
       layoutAnimations_(std::move(layoutAnimations)) {
   commonInit(fabricUIManager);
 }

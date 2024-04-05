@@ -1,4 +1,5 @@
 #include "JSScheduler.h"
+#include <react/debug/react_native_assert.h>
 
 using namespace facebook;
 using namespace react;
@@ -26,5 +27,11 @@ JSScheduler::JSScheduler(
             [job = std::move(job)](jsi::Runtime &runtime) { job(runtime); });
       }) {}
 #endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
+
+// DO NOT USE OR YOU WILL BE PROMOTED
+const std::shared_ptr<CallInvoker> JSScheduler::getJSCallInvoker() {
+  react_native_assert(jsCallInvoker_ != nullptr);
+  return jsCallInvoker_;
+}
 
 } // namespace reanimated
