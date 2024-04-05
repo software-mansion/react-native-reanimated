@@ -62,7 +62,34 @@ const buildOGImages = async () => {
         ctx.font = 'bold 72px "Aeonik Bold"';
         ctx.fillStyle = '#001A72';
         ctx.textAlign = 'left';
-        ctx.fillText(`${header}`, 67, 267);
+        if (ctx.measureText(`${header}`).width < 1200 - 2 * 67) {
+          ctx.fillText(`${header}`, 67, 267);
+        } else {
+          const words = header.split(' ');
+          let line = '';
+          const lines = [];
+          let y = 267;
+          for (let i = 0; i < words.length; i++) {
+            const newLine = `${line} ${words[i]}`.trim();
+            if (ctx.measureText(`${newLine}`).width < 1200 - 2 * 67) {
+              line = newLine;
+            } else {
+              lines.push({
+                line,
+                y,
+              });
+              y += 37;
+              line = `${words[i]}`;
+            }
+          }
+          lines.push({
+            line,
+            y,
+          });
+          lines.forEach(({ line, y }, index) => {
+            ctx.fillText(line, 67, y - (lines.length - index) * 37);
+          });
+        }
 
         ctx.font = 'bold 40px "Aeonik Bold"';
         ctx.fillText(
