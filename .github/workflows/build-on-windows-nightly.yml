@@ -24,6 +24,9 @@ jobs:
           java-version: '17'
       - name: Create React Native App
         run: npx react-native init App
+      - name: Install dependencies
+        working-directory: App
+        run: yarn
       - name: Install Reanimated
         working-directory: App
         run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}

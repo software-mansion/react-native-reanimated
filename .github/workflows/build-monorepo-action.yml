@@ -44,10 +44,18 @@ jobs:
         run: |
           echo '{"name":"rnos-monorepo-tester","version":"1.0.0","license":"MIT","private":true,"workspaces":{"packages":["RootApp","packages/PackageApp", "AppA", "AppB"],"nohoist":["**/react","**/react-dom","**/react-native","**/react-native/**","**/react-native-codegen","**/react-native-dev-menu"]}}' > package.json
           yarn
+
       - name: Install dependencies for RootApp
         working-directory: monorepo/RootApp
+        run: yarn install
+      - name: Install Reanimated for RootApp
+        working-directory: monorepo/RootApp
         run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
+
       - name: Install dependencies for PackageApp
+        working-directory: monorepo/packages/PackageApp
+        run: yarn install
+      - name: Install Reanimated for PackageApp
         working-directory: monorepo/packages/PackageApp
         run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
 

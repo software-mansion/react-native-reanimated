@@ -30,7 +30,7 @@ jobs:
         run: npx create-expo-app app
       - name: Install expo-dev-client
         working-directory: app
-        run: npm install expo-dev-client@next
+        run: npm install expo-dev-client@next || npm install expo-dev-client@latest
       - name: Setup configuration
         run: node ${{ env.SCRIPT_PATH }} setBundleIdentifier
       - name: Expo prebuild
