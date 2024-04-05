@@ -20,7 +20,11 @@ import {
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { Snapshots } from './withTiming.snapshot';
 
-const AnimatedComponent = ({ easing }: { easing: EasingFunction | EasingFunctionFactory | undefined }) => {
+const AnimatedComponent = ({
+  easing,
+}: {
+  easing: EasingFunction | EasingFunctionFactory | undefined;
+}) => {
   const widthSV = useSharedValue(0);
 
   const style = useAnimatedStyle(() => {
@@ -76,7 +80,10 @@ describe('withTiming snapshots 📸, test EASING', () => {
   ).forEach(testArray => {
     const [easing, argumentSet] = testArray;
     const message = `Easing.${easing.name}(${argumentSet.join(', ')})`;
-    const snapshotName = `${easing.name}_${argumentSet.join('_').replace(/\./g, '$').replace(/-/g, '$')}`;
+    const snapshotName = `${easing.name}_${argumentSet
+      .join('_')
+      .replace(/\./g, '$')
+      .replace(/-/g, '$')}`;
 
     test(message, async () => {
       const [updates, nativeUpdates] = await getSnaphotUpdates(
@@ -88,15 +95,22 @@ describe('withTiming snapshots 📸, test EASING', () => {
     });
   });
 
-  [Easing.bounce, Easing.circle, Easing.cubic, Easing.ease, Easing.exp, Easing.linear, Easing.quad, Easing.sin].forEach(
-    easing => {
-      test(`Easing.${easing.name}`, async () => {
-        const [updates, nativeUpdates] = await getSnaphotUpdates(easing);
-        expect(updates).toMatchSnapshots(Snapshots[easing.name as keyof typeof Snapshots]);
-        expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
-      });
-    },
-  );
+  [
+    Easing.bounce,
+    Easing.circle,
+    Easing.cubic,
+    Easing.ease,
+    Easing.exp,
+    Easing.linear,
+    Easing.quad,
+    Easing.sin,
+  ].forEach(easing => {
+    test(`Easing.${easing.name}`, async () => {
+      const [updates, nativeUpdates] = await getSnaphotUpdates(easing);
+      expect(updates).toMatchSnapshots(Snapshots[easing.name as keyof typeof Snapshots]);
+      expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
+    });
+  });
 
   [Easing.in, Easing.out, Easing.inOut].forEach(easing => {
     test(`Easing.${easing.name}(Easing.elastic(10))`, async () => {

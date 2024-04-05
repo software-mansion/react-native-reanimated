@@ -1,6 +1,11 @@
 import { useEffect } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+} from 'react-native-reanimated';
 import React from 'react';
 import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
 import {
@@ -81,7 +86,10 @@ describe('withTiming animation of WIDTH', () => {
       await render(<WidthComponent startWidth={startWidth} finalWidth={finalWidth} />);
       const component = getTestComponent(COMPONENT_REF);
       await wait(1000);
-      expect(await component.getAnimatedStyle('width')).toBe(finalWidthInPixels, ComparisonMode.DISTANCE);
+      expect(await component.getAnimatedStyle('width')).toBe(
+        finalWidthInPixels,
+        ComparisonMode.DISTANCE,
+      );
     });
   });
 
@@ -101,7 +109,10 @@ describe('withTiming, test CALLBACKS', () => {
       callTracker(Tracker.UseAnimatedStyle);
       return {
         width: withTiming(sv.value, { duration: 200 }, callTrackerFn(Tracker.Width)),
-        height: withDelay(10, withTiming(sv.value, { duration: 400 }, callTrackerFn(Tracker.Height))),
+        height: withDelay(
+          10,
+          withTiming(sv.value, { duration: 400 }, callTrackerFn(Tracker.Height)),
+        ),
         opacity: 1,
       };
     });

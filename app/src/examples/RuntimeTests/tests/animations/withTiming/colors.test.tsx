@@ -1,6 +1,11 @@
 import { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+} from 'react-native-reanimated';
 import React from 'react';
 import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
 import {
@@ -15,7 +20,13 @@ import {
 
 const COMPONENT_REF = 'ColorComponent';
 
-const ColorComponent = ({ color1, color2 }: { color1: string | number; color2: string | number }) => {
+const ColorComponent = ({
+  color1,
+  color2,
+}: {
+  color1: string | number;
+  color2: string | number;
+}) => {
   const colorSV = useSharedValue(color1);
   const ref = useTestRef(COMPONENT_REF);
 
@@ -54,10 +65,16 @@ describe('withTiming animation of COLOR 🎨', () => {
     test(`Animate FROM color as ${colorType} "${color}"`, async () => {
       await render(<ColorComponent color1={color} color2="coral" />);
       const component = getTestComponent(COMPONENT_REF);
-      expect(await component.getAnimatedStyle('backgroundColor')).toBe('#6495ed', ComparisonMode.COLOR);
+      expect(await component.getAnimatedStyle('backgroundColor')).toBe(
+        '#6495ed',
+        ComparisonMode.COLOR,
+      );
       await wait(1000);
 
-      expect(await component.getAnimatedStyle('backgroundColor')).toBe('#ff7f50', ComparisonMode.COLOR);
+      expect(await component.getAnimatedStyle('backgroundColor')).toBe(
+        '#ff7f50',
+        ComparisonMode.COLOR,
+      );
     });
   });
 
@@ -66,10 +83,16 @@ describe('withTiming animation of COLOR 🎨', () => {
     test(`Animate TO color as ${colorType} string "${color}"`, async () => {
       await render(<ColorComponent color1="coral" color2={color} />);
       const component = getTestComponent(COMPONENT_REF);
-      expect(await component.getAnimatedStyle('backgroundColor')).toBe('#ff7f50', ComparisonMode.COLOR);
+      expect(await component.getAnimatedStyle('backgroundColor')).toBe(
+        '#ff7f50',
+        ComparisonMode.COLOR,
+      );
       await wait(1000);
 
-      expect(await component.getAnimatedStyle('backgroundColor')).toBe('#6495ed', ComparisonMode.COLOR);
+      expect(await component.getAnimatedStyle('backgroundColor')).toBe(
+        '#6495ed',
+        ComparisonMode.COLOR,
+      );
     });
   });
 
@@ -83,7 +106,10 @@ describe('withTiming animation of COLOR 🎨', () => {
     test(`Animate from ${from} to ${to}"`, async () => {
       await render(<ColorComponent color1={from} color2={to} />);
       const component = getTestComponent(COMPONENT_REF);
-      expect(await component.getAnimatedStyle('backgroundColor')).toBe(fromHex, ComparisonMode.COLOR);
+      expect(await component.getAnimatedStyle('backgroundColor')).toBe(
+        fromHex,
+        ComparisonMode.COLOR,
+      );
       await wait(1000);
 
       expect(await component.getAnimatedStyle('backgroundColor')).toBe(toHex, ComparisonMode.COLOR);

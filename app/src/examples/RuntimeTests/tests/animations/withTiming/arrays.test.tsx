@@ -28,19 +28,13 @@ const IndependentComponents = ({
   const ref2 = useTestRef('IndependentComponent2');
 
   const style0 = useAnimatedStyle(() => {
-    return {
-      width: widths.value[0],
-    };
+    return { width: widths.value[0] };
   });
   const style1 = useAnimatedStyle(() => {
-    return {
-      width: widths.value[1],
-    };
+    return { width: widths.value[1] };
   });
   const style2 = useAnimatedStyle(() => {
-    return {
-      width: widths.value[2],
-    };
+    return { width: widths.value[2] };
   });
 
   useEffect(() => {
@@ -87,19 +81,31 @@ describe('withTiming animation of ARRAY', () => {
   ).forEach(({ startWidths, finalWidths, speed: speedName }) => {
     test(`Animate ${speedName} independent components FROM ${startWidths} TO ${finalWidths}`, async () => {
       await render(
-        <IndependentComponents startWidths={startWidths} finalWidths={finalWidths} duration={TestSpeed[speedName]} />,
+        <IndependentComponents
+          startWidths={startWidths}
+          finalWidths={finalWidths}
+          duration={TestSpeed[speedName]}
+        />,
       );
-      const independentComponents = ['IndependentComponent0', 'IndependentComponent1', 'IndependentComponent2'].map(
-        refName => getTestComponent(refName),
-      );
+      const independentComponents = [
+        'IndependentComponent0',
+        'IndependentComponent1',
+        'IndependentComponent2',
+      ].map(refName => getTestComponent(refName));
 
       independentComponents.forEach(async (component, index) => {
-        expect(await component.getAnimatedStyle('width')).toBe(startWidths[index], ComparisonMode.DISTANCE);
+        expect(await component.getAnimatedStyle('width')).toBe(
+          startWidths[index],
+          ComparisonMode.DISTANCE,
+        );
       });
       await wait(TestSpeed[speedName] + 200);
 
       independentComponents.forEach(async (component, index) => {
-        expect(await component.getAnimatedStyle('width')).toBe(finalWidths[index], ComparisonMode.DISTANCE);
+        expect(await component.getAnimatedStyle('width')).toBe(
+          finalWidths[index],
+          ComparisonMode.DISTANCE,
+        );
       });
     });
   });
