@@ -33,7 +33,6 @@
     "build": "yarn build:plugin && bob build && husky install && yarn build:app ",
     "build:app": "cd app && yarn install && yarn build && cd ..",
     "build:plugin": "cd plugin && yarn install && yarn build && cd ..",
-    "postinstall": "yarn build",
     "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular src lib",
     "use_strict_check": "node ./scripts/validate-use-strict.js",
     "plugin": "cd plugin && yarn && cd ..",
