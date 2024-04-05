@@ -1,6 +1,4 @@
 #include "JSScheduler.h"
-#include <react/debug/react_native_assert.h>
-
 using namespace facebook;
 using namespace react;
 
@@ -29,7 +27,9 @@ JSScheduler::JSScheduler(
 #endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
 
 const std::shared_ptr<CallInvoker> JSScheduler::getJSCallInvoker() const {
-  react_native_assert(jsCallInvoker_ != nullptr);
+  assert(
+      jsCallInvoker_ != nullptr &&
+      "[Reanimated] Expected jsCallInvoker, got nullptr instead.");
   return jsCallInvoker_;
 }
 
