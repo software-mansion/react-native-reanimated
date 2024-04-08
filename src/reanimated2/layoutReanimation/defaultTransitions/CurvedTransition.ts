@@ -7,6 +7,7 @@ import { BaseAnimationBuilder } from '../animationBuilder';
 import type { EasingFunction } from '../../Easing';
 import { Easing } from '../../Easing';
 import { withTiming } from '../../animation';
+import { assertEasingIsWorklet } from '../../animation/util';
 
 /**
  * Layout transitions with a curved animation. You can modify the behavior by chaining methods like `.duration(500)` or `.delay(500)`.
@@ -36,6 +37,9 @@ export class CurvedTransition
   }
 
   easingX(easing: EasingFunction): CurvedTransition {
+    if (__DEV__) {
+      assertEasingIsWorklet(easing);
+    }
     this.easingXV = easing;
     return this;
   }
@@ -46,6 +50,9 @@ export class CurvedTransition
   }
 
   easingY(easing: EasingFunction): CurvedTransition {
+    if (__DEV__) {
+      assertEasingIsWorklet(easing);
+    }
     this.easingYV = easing;
     return this;
   }
@@ -56,6 +63,9 @@ export class CurvedTransition
   }
 
   easingWidth(easing: EasingFunction): CurvedTransition {
+    if (__DEV__) {
+      assertEasingIsWorklet(easing);
+    }
     this.easingWidthV = easing;
     return this;
   }
@@ -66,6 +76,9 @@ export class CurvedTransition
   }
 
   easingHeight(easing: EasingFunction): CurvedTransition {
+    if (__DEV__) {
+      assertEasingIsWorklet(easing);
+    }
     this.easingHeightV = easing;
     return this;
   }

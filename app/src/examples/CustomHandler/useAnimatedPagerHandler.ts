@@ -1,6 +1,5 @@
-import { NativeSyntheticEvent } from 'react-native';
 import {
-  PageScrollStateChangedEvent,
+  PageScrollStateChangedNativeEvent,
   PagerViewOnPageScrollEvent,
   PagerViewOnPageSelectedEvent,
 } from 'react-native-pager-view';
@@ -42,18 +41,18 @@ export function useAnimatedPagerScrollStateHandler<
 >(
   handlers: {
     onPageScrollStateChanged: (
-      e: ReanimatedEvent<PageScrollStateChangedEvent>,
+      e: ReanimatedEvent<PageScrollStateChangedNativeEvent>,
       context: TContext
     ) => void;
   },
   dependencies?: Array<unknown>
-): (e: NativeSyntheticEvent<PageScrollStateChangedEvent>) => void {
+): (e: PageScrollStateChangedNativeEvent) => void {
   const { context, doDependenciesDiffer } = useHandler<
-    PageScrollStateChangedEvent,
+    PageScrollStateChangedNativeEvent,
     TContext
   >(handlers, dependencies);
 
-  return useEvent<NativeSyntheticEvent<PageScrollStateChangedEvent>>(
+  return useEvent<PageScrollStateChangedNativeEvent>(
     (event) => {
       'worklet';
       const { onPageScrollStateChanged } = handlers;

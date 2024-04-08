@@ -29,6 +29,9 @@ void RNRuntimeDecorator::decorate(
 #endif // RCT_NEW_ARCH_ENABLED
   rnRuntime.global().setProperty(rnRuntime, "_IS_FABRIC", isFabric);
 
+  rnRuntime.global().setProperty(
+      rnRuntime, "_IS_BRIDGELESS", nativeReanimatedModule->isBridgeless());
+
 #ifndef NDEBUG
   checkJSVersion(rnRuntime, nativeReanimatedModule->getJSLogger());
 #endif // NDEBUG

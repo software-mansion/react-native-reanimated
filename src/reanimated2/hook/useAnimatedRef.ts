@@ -32,10 +32,6 @@ function getComponentOrScrollable(component: MaybeScrollableComponent) {
   return component;
 }
 
-const getTagValueFunction = isFabric()
-  ? getShadowNodeWrapperFromRef
-  : findNodeHandle;
-
 /**
  * Lets you get a reference of a view that you can use inside a worklet.
  *
@@ -56,9 +52,23 @@ export function useAnimatedRef<
     ) => {
       // enters when ref is set by attaching to a component
       if (component) {
-        tag.value = IS_WEB
-          ? getComponentOrScrollable(component)
-          : getTagValueFunction(getComponentOrScrollable(component));
+        const getTagValueFunction = isFabric()
+          ? getShadowNodeWrapperFromRef
+          : findNodeHandle;
+
+        const getTagOrShadowNodeWrapper = () => {
+          return IS_WEB
+            ? getComponentOrScrollable(component)
+            : getTagValueFunction(getComponentOrScrollable(component));
+        };
+
+        tag.value = getTagOrShadowNodeWrapper();
+
+        // On Fabric we have to unwrap the tag from the shadow node wrapper
+        fun.getTag = isFabric()
+          ? () => findNodeHandle(getComponentOrScrollable(component))
+          : getTagOrShadowNodeWrapper;
+
         fun.current = component;
         // viewName is required only on iOS with Paper
         if (Platform.OS === 'ios' && !isFabric()) {
