@@ -298,7 +298,6 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
       }
     } else if (propName == "backgroundColor") {
       return intColorToHex(*viewProps->backgroundColor);
-      ;
     }
   }
 
