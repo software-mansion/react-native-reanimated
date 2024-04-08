@@ -9,7 +9,7 @@ export default function DocItemMetadata() {
     return null;
   }
 
-  const image = metadata.title
+  const ogImageName = metadata.title
     .replace(/ /g, '-')
     .replace('/', '-')
     .toLowerCase();
