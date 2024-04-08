@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TextInput, Button } from 'react-native';
 import Animated, {
-  AnimatedRef,
   SharedValue,
   useAnimatedProps,
   useAnimatedRef,
@@ -10,14 +9,14 @@ import Animated, {
 } from 'react-native-reanimated';
 
 export default function App() {
-  const animatedRef: AnimatedRef<Animated.ScrollView> = useAnimatedRef();
+  const animatedRef = useAnimatedRef<Animated.ScrollView>();
   // highlight-start
-  const offset: SharedValue<number> = useScrollViewOffset(animatedRef);
+  const offset = useScrollViewOffset(animatedRef);
   const text = useDerivedValue(
     () => `Scroll offset: ${offset.value.toFixed(1)}`
   );
   // highlight-end
-  const [isScrollHorizontal, setIsScrollHorizontal] = React.useState(false);
+  const [isScrollHorizontal, setIsScrollHorizontal] = React.useState<boolean>(false);
 
   return (
     <View style={styles.container}>

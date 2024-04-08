@@ -6,11 +6,10 @@ import Animated, {
   withTiming,
   withRepeat,
   interpolate,
-  SharedValue,
 } from 'react-native-reanimated';
 
 export default function App() {
-  const offset: SharedValue<number> = useSharedValue(200);
+  const offset = useSharedValue<number>(200);
 
   const animatedStyles = useAnimatedStyle(() => ({
     // highlight-next-line

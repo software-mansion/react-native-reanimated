@@ -39,13 +39,13 @@ const DEFAULT_HORSE = {
 };
 
 export default function FrameCallbackDino() {
-  const vx: SharedValue<number> = useSharedValue(DEFAULT_VELOCITY);
-  const width: SharedValue<number> = useSharedValue(0);
+  const vx = useSharedValue<number>(DEFAULT_VELOCITY);
+  const width = useSharedValue<number>(0);
 
-  const obstacleX: SharedValue<number> = useSharedValue(DEFAULT_X);
-  const horseY: SharedValue<number> = useSharedValue(DEFAULT_Y);
+  const obstacleX = useSharedValue<number>(DEFAULT_X);
+  const horseY = useSharedValue<number>(DEFAULT_Y);
 
-  const gameOver: SharedValue<boolean> = useSharedValue(false);
+  const gameOver = useSharedValue<boolean>(false);
 
   const getDimensions = (event: LayoutChangeEvent) => {
     width.value = event.nativeEvent.layout.width;

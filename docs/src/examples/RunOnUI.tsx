@@ -5,12 +5,11 @@ import Animated, {
   measure,
   useAnimatedRef,
   runOnUI,
-  AnimatedRef,
 } from 'react-native-reanimated';
 
 function MeasurableText(props: {children: any; onPress: (measurements: any) => void}) {
   const { children, onPress } = props;
-  const animatedRef: AnimatedRef<Animated.Text> = useAnimatedRef();
+  const animatedRef = useAnimatedRef<Animated.View>();
 
   const handleMeasure = () => {
     // highlight-next-line

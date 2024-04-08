@@ -1,10 +1,10 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { AnimatedRef, useAnimatedRef } from 'react-native-reanimated';
+import Animated, { useAnimatedRef } from 'react-native-reanimated';
 
 export default function App() {
   // highlight-next-line
-  const animatedRef: AnimatedRef<Animated.View> = useAnimatedRef();
+  const animatedRef = useAnimatedRef<Animated.View>();
 
   return (
     <View style={styles.container}>

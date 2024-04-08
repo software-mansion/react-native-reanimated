@@ -4,16 +4,11 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  withSequence,
-  Easing,
   withRepeat,
 } from 'react-native-reanimated';
 
-const initialOffset = 200;
-const duration = 800;
-
 export default function App() {
-  const offset = useSharedValue(initialOffset);
+  const offset = useSharedValue<number>(200);
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],
@@ -21,13 +16,8 @@ export default function App() {
 
   React.useEffect(() => {
     offset.value = withRepeat(
-      // highlight-start
-      withSequence(
-        withTiming(-initialOffset, { duration, easing: Easing.cubic }),
-        withTiming(0, { duration, easing: Easing.cubic }),
-        withTiming(initialOffset, { duration, easing: Easing.cubic })
-      ),
-      // highlight-end
+      // highlight-next-line
+      withTiming(-offset.value, { duration: 1500 }),
       -1,
       true
     );

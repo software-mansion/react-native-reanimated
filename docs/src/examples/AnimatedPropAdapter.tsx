@@ -1,7 +1,6 @@
 import React from 'react';
 import { Svg, Ellipse } from 'react-native-svg';
 import Animated, {
-  SharedValue,
   createAnimatedPropAdapter,
   processColor,
   useAnimatedProps,
@@ -27,7 +26,7 @@ const adapter = createAnimatedPropAdapter(
 );
 
 export default function App() {
-  const opacity: SharedValue<Number> = useSharedValue(0);
+  const opacity = useSharedValue<number>(0);
 
   React.useEffect(() => {
     opacity.value = withRepeat(withTiming(1), -1, true);

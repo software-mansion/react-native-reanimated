@@ -14,9 +14,10 @@ import {
 } from 'react-native-gesture-handler';
 
 export default function App() {
-  const pressed = useSharedValue(false);
+  const pressed = useSharedValue<boolean>(false);
   // highlight-next-line
-  const offset = useSharedValue(0);
+  
+  const offset = useSharedValue<number>(0);
 
   const pan = Gesture.Pan()
     .onBegin(() => {

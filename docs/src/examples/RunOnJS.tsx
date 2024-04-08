@@ -8,8 +8,8 @@ import Animated, {
 import { useAnimatedStyle } from 'react-native-reanimated';
 
 export default function App() {
-  const scale = useSharedValue(1);
-  const [finished, setFinished] = React.useState(false);
+  const scale = useSharedValue<number>(1);
+  const [finished, setFinished] = React.useState<boolean>(false);
 
   const handlePress = () => {
     scale.value = withSpring(2, {}, () => {

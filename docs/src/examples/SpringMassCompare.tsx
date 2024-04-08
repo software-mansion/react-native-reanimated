@@ -5,13 +5,14 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withRepeat,
+  SharedValue,
 } from 'react-native-reanimated';
 
 const duration = 1800;
 
 export default function App() {
-  const defaultAnim = useSharedValue(200);
-  const changedAnim = useSharedValue(200);
+  const defaultAnim = useSharedValue<number>(200);
+  const changedAnim = useSharedValue<number>(200);
 
   const animatedLinear = useAnimatedStyle(() => ({
     transform: [{ translateX: defaultAnim.value }],

@@ -14,7 +14,7 @@ const TIME = 100;
 const EASING = Easing.elastic(1.5);
 
 export default function App() {
-  const rotation = useSharedValue(0);
+  const rotation = useSharedValue<number>(0);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ rotateZ: `${rotation.value}deg` }],

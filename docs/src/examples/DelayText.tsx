@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
-  SharedValue,
   useSharedValue,
   withDelay,
   withTiming,
@@ -13,11 +12,11 @@ const DELAY = 500;
 const text = ['React', 'Native', 'Reanimated'];
 
 export default function App() {
-  const [isShown, setShown] = useState(false);
+  const [isShown, setShown] = useState<boolean>(false);
 
-  const opacity1: SharedValue<number> = useSharedValue(0);
-  const opacity2: SharedValue<number> = useSharedValue(0);
-  const opacity3: SharedValue<number> = useSharedValue(0);
+  const opacity1 = useSharedValue<number>(0);
+  const opacity2 = useSharedValue<number>(0);
+  const opacity3 = useSharedValue<number>(0);
 
   // prettier-ignore
   const show = () => {

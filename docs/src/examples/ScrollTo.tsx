@@ -5,7 +5,6 @@ import Animated, {
   useDerivedValue,
   useSharedValue,
   scrollTo,
-  AnimatedRef,
   SharedValue,
 } from 'react-native-reanimated';
 
@@ -14,8 +13,8 @@ const ITEM_SIZE = 100;
 const ITEM_MARGIN = 10;
 
 export default function App() {
-  const animatedRef: AnimatedRef<Animated.ScrollView> = useAnimatedRef();
-  const scroll: SharedValue<number> = useSharedValue(0);
+  const animatedRef = useAnimatedRef<Animated.ScrollView>();
+  const scroll = useSharedValue<number>(0);
 
   useDerivedValue(() => {
     // highlight-start

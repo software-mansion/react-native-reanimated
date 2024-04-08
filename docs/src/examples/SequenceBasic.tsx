@@ -3,22 +3,34 @@ import { StyleSheet, View } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
+  withTiming,
+  withSequence,
+  Easing,
   withRepeat,
 } from 'react-native-reanimated';
 
 const initialOffset = 200;
+const duration = 800;
 
 export default function App() {
-  const offset = useSharedValue(initialOffset);
+  const offset = useSharedValue<number>(initialOffset);
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],
   }));
 
   React.useEffect(() => {
-    // highlight-next-line
-    offset.value = withRepeat(withSpring(-offset.value), -1, true);
+    offset.value = withRepeat(
+      // highlight-start
+      withSequence(
+        withTiming(-initialOffset, { duration, easing: Easing.cubic }),
+        withTiming(0, { duration, easing: Easing.cubic }),
+        withTiming(initialOffset, { duration, easing: Easing.cubic })
+      ),
+      // highlight-end
+      -1,
+      true
+    );
   }, []);
 
   return (

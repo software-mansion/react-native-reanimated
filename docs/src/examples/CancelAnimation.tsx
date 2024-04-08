@@ -6,13 +6,12 @@ import Animated, {
   withTiming,
   withRepeat,
   cancelAnimation,
-  SharedValue,
 } from 'react-native-reanimated';
 
 const OFFSET = 200;
 
 export default function App() {
-  const offset: SharedValue<number> = useSharedValue(OFFSET);
+  const offset = useSharedValue<number>(OFFSET);
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],

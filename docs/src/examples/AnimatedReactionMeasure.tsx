@@ -1,9 +1,7 @@
 import React from 'react';
 import { Button, StyleSheet, View, Text } from 'react-native';
 import Animated, {
-  AnimatedRef,
   MeasuredDimensions,
-  SharedValue,
   measure,
   runOnJS,
   useAnimatedReaction,
@@ -13,8 +11,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 export default function App() {
-  const animatedRef: AnimatedRef<Animated.View> = useAnimatedRef();
-  const width: SharedValue<number> = useSharedValue(100);
+  const animatedRef = useAnimatedRef<Animated.View>();
+  const width = useSharedValue<number>(100);
   const [text, setText] = React.useState(width.value);
 
   const handlePress = () => {

@@ -7,7 +7,7 @@ import { View, Button, StyleSheet } from 'react-native';
 import React from 'react';
 
 export default function App() {
-  const offset = useSharedValue(0);
+  const offset = useSharedValue<number>(0);
 
   // highlight-start
   const style = useAnimatedStyle(() => ({

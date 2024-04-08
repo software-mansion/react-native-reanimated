@@ -1,35 +1,24 @@
 import Animated, {
   useSharedValue,
   withTiming,
-  Easing,
   useAnimatedStyle,
   withRepeat,
-  withSequence,
 } from 'react-native-reanimated';
 import { View, Button, StyleSheet } from 'react-native';
 import React from 'react';
 
 export default function App() {
-  const offset = useSharedValue(0);
+  const offset = useSharedValue<number>(0);
 
   const style = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],
   }));
 
   const OFFSET = 40;
-  const TIME = 250;
 
   const handlePress = () => {
     // highlight-next-line
-    offset.value = withSequence(
-      // start from -OFFSET
-      withTiming(-OFFSET, { duration: TIME / 2 }),
-      // shake between -OFFSET and OFFSET 5 times
-      withRepeat(withTiming(OFFSET, { duration: TIME }), 5, true),
-      // go back to 0 at the end
-      withTiming(0, { duration: TIME / 2 })
-      // highlight-next-line
-    );
+    offset.value = withRepeat(withTiming(OFFSET), 5, true);
   };
 
   return (

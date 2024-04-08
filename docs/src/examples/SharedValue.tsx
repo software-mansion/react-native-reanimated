@@ -4,7 +4,7 @@ import Animated, { useSharedValue } from 'react-native-reanimated';
 
 export default function App() {
   // highlight-next-line
-  const width = useSharedValue(100);
+  const width = useSharedValue<number>(100);
 
   const handlePress = () => {
     // highlight-next-line

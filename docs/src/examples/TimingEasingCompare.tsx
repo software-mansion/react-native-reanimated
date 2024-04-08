@@ -6,13 +6,14 @@ import Animated, {
   withTiming,
   Easing,
   withRepeat,
+  SharedValue,
 } from 'react-native-reanimated';
 
 const duration = 2000;
 
 export default function App() {
-  const defaultAnim = useSharedValue(200);
-  const linear = useSharedValue(200);
+  const defaultAnim = useSharedValue<number>(200);
+  const linear = useSharedValue<number>(200);
 
   const animatedDefault = useAnimatedStyle(() => ({
     transform: [{ translateX: defaultAnim.value }],

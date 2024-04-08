@@ -15,7 +15,7 @@ import {
 // highlight-end
 
 export default function App() {
-  const pressed = useSharedValue(false);
+  const pressed = useSharedValue<boolean>(false);
 
   const tap = Gesture.Tap()
     .onBegin(() => {

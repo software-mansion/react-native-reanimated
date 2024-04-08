@@ -10,13 +10,13 @@ const TAB_WIDTH = 150;
 const TABS = ['Home', 'Search', 'Profile'];
 
 export default function App() {
-  const offset = useSharedValue(-TAB_WIDTH);
+  const offset = useSharedValue<number>(-TAB_WIDTH);
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],
   }));
 
-  const handlePress = (tab) => {
+  const handlePress = (tab: string) => {
     const newOffset = (() => {
       switch (tab) {
         case 'Home':

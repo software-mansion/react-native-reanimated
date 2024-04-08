@@ -4,6 +4,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  SharedValue,
 } from 'react-native-reanimated';
 
 const INITIAL_OFFSET = 110;
@@ -20,13 +21,13 @@ const items = [
 ];
 
 export default function App() {
-  const offset = useSharedValue(INITIAL_OFFSET);
+  const offset = useSharedValue<number>(INITIAL_OFFSET);
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],
   }));
 
-  const advanceBy = (position) => {
+  const advanceBy = (position: number) => {
     const previousOffset = offset.value;
     if (
       (previousOffset < LEFT_BOUNDARY && position === -1) ||

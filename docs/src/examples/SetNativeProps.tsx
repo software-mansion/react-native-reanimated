@@ -9,7 +9,7 @@ import Animated, {
 const COLORS = ['#FFE780', '#87CCE8', '#FFA3A1', '#B1DFD0', '#B58DF1'];
 
 export default function Example() {
-  const animatedRef = useAnimatedRef();
+  const animatedRef = useAnimatedRef<Animated.View>();
 
   const handlePress = () => {
     runOnUI(() => {

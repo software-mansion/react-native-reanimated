@@ -3,7 +3,7 @@ import { Button, StyleSheet, View } from 'react-native';
 import Animated, { SharedValue, useSharedValue, withSpring } from 'react-native-reanimated';
 
 export default function App() {
-  const width: SharedValue<number> = useSharedValue(100);
+  const width = useSharedValue<number>(100);
 
   const handlePress = () => {
     width.value = withSpring(width.value + 50);

@@ -7,8 +7,8 @@ import Animated, {
 import { Button, StyleSheet, View } from 'react-native';
 
 export default function App() {
-  const [outer, setOuter] = React.useState(true);
-  const [inner, setInner] = React.useState(true);
+  const [outer, setOuter] = React.useState<boolean>(true);
+  const [inner, setInner] = React.useState<boolean>(true);
 
   return (
     <View style={styles.container}>

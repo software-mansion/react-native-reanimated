@@ -1,7 +1,6 @@
 import React from 'react';
 import Animated, {
   Easing,
-  SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -13,7 +12,7 @@ const duration = 2000;
 const easing = Easing.bezier(0.25, -0.5, 0.25, 1);
 
 export default function App() {
-  const sv: SharedValue<number> = useSharedValue(0);
+  const sv = useSharedValue<number>(0);
 
   React.useEffect(() => {
     // highlight-next-line

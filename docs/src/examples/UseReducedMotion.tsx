@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
+  SharedValue,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -9,7 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 export default function App() {
-  const sv = useSharedValue(-200);
+  const sv = useSharedValue<number>(-200);
   // highlight-next-line
   const reduceMotion = useReducedMotion();
 

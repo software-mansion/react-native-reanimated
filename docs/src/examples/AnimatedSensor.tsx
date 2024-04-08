@@ -11,7 +11,7 @@ import Animated, {
 
 export default function App() {
   // highlight-next-line
-  const gravity: AnimatedSensor<Value3D> = useAnimatedSensor(SensorType.GRAVITY);
+  const gravity = useAnimatedSensor(SensorType.GRAVITY);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
