@@ -431,7 +431,8 @@ public class NodesManager implements EventDispatcherListener {
           return "unable to resolve background color";
         }
         int actualColor = ((ReactViewBackgroundDrawable) background).getColor();
-        return String.format("#%06x", (0xFFFFFF & actualColor));
+        String invertedColor = String.format("%08x", (0xFFFFFFFF & actualColor));
+        return "#" + invertedColor.substring(2, 8) + invertedColor.substring(0, 2);
       default:
         throw new IllegalArgumentException(
             "[Reanimated] Attempted to get unsupported property"

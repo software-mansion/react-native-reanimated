@@ -16,18 +16,25 @@ const COMPARATORS: {
     return bothAreNaN || value === expected;
   },
 
-  [ComparisonMode.COLOR]: (expected, value) => {
-    if (typeof value !== 'string' || typeof expected !== 'string') {
+  [ComparisonMode.COLOR]: (expectedUnknown, value) => {
+    if (typeof value !== 'string' || typeof expectedUnknown !== 'string') {
       return false;
     }
-    const expectedUnified = expected.toLowerCase();
-    const colorRegex = new RegExp('^#?([a-f0-9]{6})$');
-    if (!colorRegex.test(expectedUnified)) {
+    const expected = expectedUnknown.toLowerCase();
+
+    const [opaqueColorRe, transparencyColorRe] = [6, 8].map(
+      (length) => new RegExp(`^#?([A-Fa-f0-9]{${length}})$`)
+    );
+
+    const addTransparency = opaqueColorRe.test(expected);
+    const expectedUnified = addTransparency ? `${expected}ff` : expected;
+
+    if (!transparencyColorRe.test(expectedUnified)) {
       throw Error(
         `Invalid color format "${expectedUnified}", please use hex color (like #123abc)`
       );
     }
-    return value === expected;
+    return value === expectedUnified;
   },
 
   [ComparisonMode.DISTANCE]: (expected, value) => {
