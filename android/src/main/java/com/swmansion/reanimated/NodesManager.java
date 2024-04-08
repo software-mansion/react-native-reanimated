@@ -432,6 +432,7 @@ public class NodesManager implements EventDispatcherListener {
         }
         int actualColor = ((ReactViewBackgroundDrawable) background).getColor();
         String invertedColor = String.format("%08x", (0xFFFFFFFF & actualColor));
+        // By default transparency is first, color second
         return "#" + invertedColor.substring(2, 8) + invertedColor.substring(0, 2);
       default:
         throw new IllegalArgumentException(

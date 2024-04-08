@@ -297,8 +297,8 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
         return std::to_string(*viewProps->zIndex);
       }
     } else if (propName == "backgroundColor") {
-      auto color = intColorToHex(*viewProps->backgroundColor);
-      return color;
+      return intColorToHex(*viewProps->backgroundColor);
+      ;
     }
   }
 
