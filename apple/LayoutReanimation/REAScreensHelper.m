@@ -159,6 +159,33 @@
   return false;
 }
 
++ (bool)isOnTop:(REAUIView *)view
+{
+  NSMutableArray<REAUIView *> *screens = [NSMutableArray new];
+  REAUIView *currentView = view;
+  while (currentView.reactSuperview != nil) {
+    if ([currentView isKindOfClass:[RNSScreenView class]]) {
+      [screens addObject:currentView];
+    }
+    currentView = currentView.reactSuperview;
+  }
+  for (int i = 0; i < [screens count]; i++) {
+    REAUIView *screen = screens[i];
+    REAUIView *container = screen.reactSuperview;
+    if ([container isKindOfClass:[RNSScreenStackView class]]) {
+      if (screen.reactSuperview.reactSubviews.lastObject != screen) {
+        return false;
+      }
+    }
+    if ([container isKindOfClass:[RNSScreenNavigationContainerView class]]) {
+      if ([REAScreensHelper getActiveTabForTabNavigator:container] != screen) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 #else
 
 + (REAUIView *)getScreenForView:(REAUIView *)view

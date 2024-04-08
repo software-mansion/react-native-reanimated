@@ -22,5 +22,6 @@
 + (REAUIView *)findTopScreenInChildren:(REAUIView *)screen;
 + (REAUIView *)getActiveTabForTabNavigator:(REAUIView *)tabNavigator;
 + (bool)isChild:(REAUIView *)child OfScreen:(REAUIView *)screen;
++ (bool)isOnTop:(REAUIView *)view;
 
 @end

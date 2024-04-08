@@ -350,6 +350,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   if ([sharedElements count] == 0) {
     return NO;
   }
+  [self resolveAnimationType:sharedElements isInteractive:isInteractive];
   [self configureTransitionContainer];
   [self reparentSharedViewsForCurrentTransition:sharedElements];
   [self startSharedTransition:sharedElements];
@@ -826,13 +827,12 @@ static REASharedTransitionManager *_sharedTransitionManager;
   bool isInteractive = [self getIsInteractive];
   if ((stack != nil || isModal) && !isRemovedInParentStack) {
     // screen is removed from React tree (navigation.navigate(<screenName>))
-    bool isScreenRemovedFromReactTree = [self isScreen:screen outsideStack:stack];
+    bool isScreenRemovedFromReactTree = screen.reactSuperview == nil;
     // click on button goBack on native header
-    bool isTriggeredByGoBackButton = [self isScreen:screen onTopOfStack:stack];
+    bool isTriggeredByGoBackButton = [REAScreensHelper isOnTop:screen];
     bool shouldRunTransition = (isScreenRemovedFromReactTree || isTriggeredByGoBackButton) &&
         !(isInteractive && [_currentSharedTransitionViews count] > 0);
-    bool isStackChanged = [REAScreensHelper isStackChanged:screen];
-    if (shouldRunTransition && !isStackChanged) {
+    if (shouldRunTransition) {
       [self runSharedTransitionForSharedViewsOnScreen:screen
                                         isInteractive:isInteractive
                                           withOffsetX:offsetX
@@ -882,22 +882,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
   for (REAUIView *screen in stack.reactSubviews) {
     [self clearConfigForScreen:screen];
   }
-}
-
-- (BOOL)isScreen:(REAUIView *)screen outsideStack:(REAUIView *)stack
-{
-  for (REAUIView *child in stack.reactSubviews) {
-    if ([child.reactTag isEqual:screen.reactTag]) {
-      return NO;
-    }
-  }
-  return YES;
-}
-
-- (BOOL)isScreen:(REAUIView *)screen onTopOfStack:(REAUIView *)stack
-{
-  int screenCount = stack.reactSubviews.count;
-  return screenCount > 0 && screen == stack.reactSubviews.lastObject;
 }
 
 - (BOOL)isRemovedFromHigherStack:(REAUIView *)screen
