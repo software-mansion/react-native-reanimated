@@ -91,7 +91,7 @@ const buildOGImages = async () => {
           });
         }
 
-        ctx.font = 'bold 40px "Aeonik Bold"';
+        ctx.font = 'normal 40px "Aeonik Regular"';
         ctx.fillText(
           'Check out the React Native Reanimated\ndocumentation.',
           67,
