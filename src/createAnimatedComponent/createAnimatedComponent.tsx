@@ -55,9 +55,9 @@ import { updateLayoutAnimations } from '../reanimated2/UpdateLayoutAnimations';
 import type { CustomConfig } from '../reanimated2/layoutReanimation/web/config';
 import type { FlatList, FlatListProps } from 'react-native';
 import { addHTMLMutationObserver } from '../reanimated2/layoutReanimation/web/domUtils';
+import { getViewInfo } from './getViewInfo';
 
 const IS_WEB = isWeb();
-const IS_FABRIC = isFabric();
 
 if (IS_WEB) {
   configureWebLayoutAnimations();
@@ -181,7 +181,10 @@ export function createAnimatedComponent(
       this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
       this._InlinePropManager.detachInlineProps();
-      this._sharedElementTransition?.unregisterTransition(this._viewTag);
+      if (this.props.sharedTransitionTag) {
+        this._configureSharedTransition(true);
+      }
+      this._sharedElementTransition?.unregisterTransition(this._viewTag, true);
 
       const exiting = this.props.exiting;
       if (
@@ -268,7 +271,7 @@ export function createAnimatedComponent(
         if (this.props.animatedProps?.viewDescriptors) {
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
-        if (IS_FABRIC) {
+        if (isFabric()) {
           removeFromPropsRegistry(this._viewTag);
         }
       }
@@ -349,19 +352,14 @@ export function createAnimatedComponent(
             '[Reanimated] Cannot find host instance for this component. Maybe it renders nothing?'
           );
         }
-        // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
-        viewTag = hostInstance?._nativeTag;
-        /**
-         * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/Components/ScrollView/ScrollViewNativeComponent.js#L24).
-         * The name we're looking for is in the field named uiViewClassName.
-         */
-        viewName = hostInstance?.viewConfig?.uiViewClassName;
 
-        viewConfig = hostInstance?.viewConfig;
-
-        if (IS_FABRIC) {
-          shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
-        }
+        const viewInfo = getViewInfo(hostInstance);
+        viewTag = viewInfo.viewTag;
+        viewName = viewInfo.viewName;
+        viewConfig = viewInfo.viewConfig;
+        shadowNodeWrapper = isFabric()
+          ? getShadowNodeWrapperFromRef(this)
+          : null;
       }
       this._viewInfo = { viewTag, viewName, shadowNodeWrapper, viewConfig };
       return this._viewInfo;
@@ -456,6 +454,12 @@ export function createAnimatedComponent(
       if (layout !== oldLayout) {
         this._configureLayoutTransition();
       }
+      if (
+        this.props.sharedTransitionTag !== undefined ||
+        prevProps.sharedTransitionTag !== undefined
+      ) {
+        this._configureSharedTransition();
+      }
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
@@ -490,6 +494,31 @@ export function createAnimatedComponent(
       updateLayoutAnimations(this._viewTag, LayoutAnimationType.LAYOUT, layout);
     }
 
+    _configureSharedTransition(isUnmounting = false) {
+      if (IS_WEB) {
+        return;
+      }
+      const { sharedTransitionTag } = this.props;
+      if (!sharedTransitionTag) {
+        this._sharedElementTransition?.unregisterTransition(
+          this._viewTag,
+          isUnmounting
+        );
+        this._sharedElementTransition = null;
+        return;
+      }
+      const sharedElementTransition =
+        this.props.sharedTransitionStyle ??
+        this._sharedElementTransition ??
+        new SharedTransition();
+      sharedElementTransition.registerTransition(
+        this._viewTag,
+        sharedTransitionTag,
+        isUnmounting
+      );
+      this._sharedElementTransition = sharedElementTransition;
+    }
+
     _setComponentRef = setAndForwardRef<Component | HTMLElement>({
       getForwardedRef: () =>
         this.props.forwardedRef as MutableRefObject<
@@ -502,6 +531,8 @@ export function createAnimatedComponent(
           ? (ref as HTMLElement)
           : findNodeHandle(ref as Component);
 
+        this._viewTag = tag as number;
+
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (
           (layout || entering || exiting || sharedTransitionTag) &&
@@ -509,6 +540,10 @@ export function createAnimatedComponent(
         ) {
           if (!shouldBeUseWeb()) {
             enableLayoutAnimations(true, false);
+          }
+
+          if (sharedTransitionTag) {
+            this._configureSharedTransition();
           }
 
           const skipEntering = this.context?.current;
@@ -522,20 +557,6 @@ export function createAnimatedComponent(
                 AnimatedComponent.displayName
               )
             );
-          }
-          if (sharedTransitionTag && !IS_WEB) {
-            const sharedElementTransition =
-              this.props.sharedTransitionStyle ?? new SharedTransition();
-            const reduceMotionInTransition = getReduceMotionFromConfig(
-              sharedElementTransition.getReduceMotion()
-            );
-            if (!reduceMotionInTransition) {
-              sharedElementTransition.registerTransition(
-                tag as number,
-                sharedTransitionTag
-              );
-              this._sharedElementTransition = sharedElementTransition;
-            }
           }
         }
 

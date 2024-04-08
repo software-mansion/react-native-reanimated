@@ -146,7 +146,8 @@ class ShareableJSRef : public jsi::HostObject {
 jsi::Value makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
-    const jsi::Value &shouldRetainRemote);
+    const jsi::Value &shouldRetainRemote,
+    const jsi::Value &nativeStateSource);
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
@@ -182,10 +183,18 @@ class ShareableObject : public Shareable {
  public:
   ShareableObject(jsi::Runtime &rt, const jsi::Object &object);
 
+  ShareableObject(
+      jsi::Runtime &rt,
+      const jsi::Object &object,
+      const jsi::Value &nativeStateSource);
+
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
   std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data_;
+#if REACT_NATIVE_MINOR_VERSION >= 71
+  std::shared_ptr<jsi::NativeState> nativeState_;
+#endif
 };
 
 class ShareableHostObject : public Shareable {
@@ -256,13 +265,20 @@ class ShareableRemoteFunction
       public std::enable_shared_from_this<ShareableRemoteFunction> {
  private:
   jsi::Runtime *runtime_;
+#ifndef NDEBUG
+  const std::string name_;
+#endif
   std::unique_ptr<jsi::Value> function_;
 
  public:
   ShareableRemoteFunction(jsi::Runtime &rt, jsi::Function &&function)
       : Shareable(RemoteFunctionType),
         runtime_(&rt),
-        function_(std::make_unique<jsi::Value>(rt, std::move(function))) {}
+#ifndef NDEBUG
+        name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
+#endif
+        function_(std::make_unique<jsi::Value>(rt, std::move(function))) {
+  }
 
   ~ShareableRemoteFunction() {
     cleanupIfRuntimeExists(runtime_, function_);

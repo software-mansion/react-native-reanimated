@@ -78,6 +78,7 @@ body:
       options:
         - Android
         - iOS
+        - macOS
         - Web
     validations:
       required: true

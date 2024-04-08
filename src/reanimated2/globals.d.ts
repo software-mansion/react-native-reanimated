@@ -18,6 +18,7 @@ import type { ProgressTransitionRegister } from './layoutReanimation/sharedTrans
 import type { UpdatePropsManager } from './UpdateProps';
 import type { callGuardDEV } from './initializers';
 import type { WorkletRuntime } from './runtimes';
+import type { RNScreensTurboModuleType } from './screenTransition/commonTypes';
 
 declare global {
   var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
@@ -39,7 +40,10 @@ declare global {
   ) => void;
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
-  var _makeShareableClone: <T>(value: T) => FlatShareableRef<T>;
+  var _makeShareableClone: <T>(
+    value: T,
+    nativeStateSource?: object
+  ) => FlatShareableRef<T>;
   var _scheduleOnJS: (fun: (...args: A) => R, args?: A) => void;
   var _scheduleOnRuntime: (
     runtime: WorkletRuntime,
@@ -102,4 +106,10 @@ declare global {
   var UpdatePropsManager: UpdatePropsManager;
   var ProgressTransitionRegister: ProgressTransitionRegister;
   var updateJSProps: (viewTag: number, props: Record<string, unknown>) => void;
+  var RNScreensTurboModule: RNScreensTurboModuleType | undefined;
+  var _obtainPropPaper: (viewTag: number, propName: string) => string;
+  var _obtainPropFabric: (
+    shadowNodeWrapper: ShadowNodeWrapper,
+    propName: string
+  ) => string;
 }
