@@ -1,4 +1,4 @@
-name: Test TypeScript and Lint
+name: Test TypeScript and Lint in examples
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
@@ -32,7 +32,7 @@ jobs:
         run: scripts/clear-annotations.sh
 
       - name: Install root node dependencies
-        run: yarn && yarn build
+        run: yarn install && yarn build
       - name: Install ${{ matrix.working-directory }} app node dependencies
         working-directory: ${{ matrix.working-directory }}
         run: yarn

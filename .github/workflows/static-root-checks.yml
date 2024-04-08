@@ -1,4 +1,4 @@
-name: Test TypeScript and Lint
+name: Test TypeScript and Lint in root
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
@@ -27,7 +27,7 @@ jobs:
       - name: Clear annotations
         run: scripts/clear-annotations.sh
       - name: Install node dependencies
-        run: yarn
+        run: yarn && yarn build
       - name: Check types
         run: yarn type:check:all
       - name: Lint
