@@ -70,20 +70,21 @@ function HomeScreen({ navigation }: HomeScreenProps) {
   const [search, setSearch] = React.useState('');
 
   React.useLayoutEffect(() => {
-    navigation.setOptions({
-      headerSearchBarOptions: {
-        onChangeText: (event) => {
-          setSearch(event.nativeEvent.text);
-        },
-        onSearchButtonPress: (event) => {
-          const results = findExamples(event.nativeEvent.text);
-          if (results.length >= 1) {
-            navigation.navigate(results[0]);
-          }
-        },
-      },
-      headerTransparent: false,
-    });
+    // TODO: Currently it breaks on @react-navigation
+    // navigation.setOptions({
+    //   headerSearchBarOptions: {
+    //     onChangeText: (event) => {
+    //       setSearch(event.nativeEvent.text);
+    //     },
+    //     onSearchButtonPress: (event) => {
+    //       const results = findExamples(event.nativeEvent.text);
+    //       if (results.length >= 1) {
+    //         navigation.navigate(results[0]);
+    //       }
+    //     },
+    //   },
+    //   headerTransparent: false,
+    // });
   }, [navigation]);
 
   return (
