@@ -4,10 +4,11 @@ import Animated, {
   useFrameCallback,
   useSharedValue,
   useAnimatedStyle,
+  SharedValue,
 } from 'react-native-reanimated';
 
 export default function App() {
-  const t = useSharedValue(0);
+  const t: SharedValue<number> = useSharedValue(0);
 
   // highlight-start
   useFrameCallback((frameInfo) => {

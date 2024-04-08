@@ -5,6 +5,8 @@ import Animated, {
   useDerivedValue,
   useSharedValue,
   scrollTo,
+  AnimatedRef,
+  SharedValue,
 } from 'react-native-reanimated';
 
 const ITEM_COUNT = 10;
@@ -12,8 +14,8 @@ const ITEM_SIZE = 100;
 const ITEM_MARGIN = 10;
 
 export default function App() {
-  const animatedRef = useAnimatedRef();
-  const scroll = useSharedValue(0);
+  const animatedRef: AnimatedRef<Animated.ScrollView> = useAnimatedRef();
+  const scroll: SharedValue<number> = useSharedValue(0);
 
   useDerivedValue(() => {
     // highlight-start
@@ -45,7 +47,7 @@ export default function App() {
   );
 }
 
-const Incrementor = ({ increment, scroll }) => (
+const Incrementor = ({ increment, scroll }: { increment: number, scroll: SharedValue<number> }) => (
   <View style={styles.buttonWrapper}>
     <Button
       onPress={() => {

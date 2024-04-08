@@ -5,9 +5,18 @@ import Animated, {
   withSequence,
   withTiming,
   Easing,
+  SharedValue,
+  FrameInfo,
 } from 'react-native-reanimated';
-import { View, StyleSheet, Pressable, Text } from 'react-native';
+import { View, StyleSheet, Pressable, Text, LayoutChangeEvent } from 'react-native';
 import React from 'react';
+
+interface CollisionObject {
+  height: number;
+  width: number;
+  x: number;
+  y: number;
+}
 
 const HEIGHT = 200;
 const DEFAULT_VELOCITY = 0.6;
@@ -30,27 +39,29 @@ const DEFAULT_HORSE = {
 };
 
 export default function FrameCallbackDino() {
-  const vx = useSharedValue(DEFAULT_VELOCITY);
-  const width = useSharedValue(0);
+  const vx: SharedValue<number> = useSharedValue(DEFAULT_VELOCITY);
+  const width: SharedValue<number> = useSharedValue(0);
 
-  const obstacleX = useSharedValue(DEFAULT_X);
-  const horseY = useSharedValue(DEFAULT_Y);
+  const obstacleX: SharedValue<number> = useSharedValue(DEFAULT_X);
+  const horseY: SharedValue<number> = useSharedValue(DEFAULT_Y);
 
-  const gameOver = useSharedValue(false);
+  const gameOver: SharedValue<boolean> = useSharedValue(false);
 
-  const getDimensions = (event) => {
+  const getDimensions = (event: LayoutChangeEvent) => {
     width.value = event.nativeEvent.layout.width;
   };
 
   // highlight-next-line
-  useFrameCallback((frameInfo) => {
+  useFrameCallback((frameInfo: FrameInfo) => {
     const { timeSincePreviousFrame: dt } = frameInfo;
     if (dt == null) {
       return;
     }
 
-    const horse = { ...DEFAULT_HORSE, y: horseY.value };
-    const obstacle = { ...DEFAULT_OBSTACLE, x: obstacleX.value };
+    const horse: CollisionObject = { ...DEFAULT_HORSE, y: horseY.value };
+    const obstacle: CollisionObject = { ...DEFAULT_OBSTACLE, x: obstacleX.value };
+
+    console.log(horse, obstacle);
 
     if (isColliding(horse, obstacle) || gameOver.value) {
       gameOver.value = true;
@@ -164,7 +175,7 @@ const styles = StyleSheet.create({
   },
 });
 
-function isColliding(obj1, obj2) {
+function isColliding(obj1: CollisionObject, obj2: CollisionObject) {
   'worklet';
   return (
     obj1.x < obj2.x + obj2.width &&

@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TextInput, Button } from 'react-native';
 import Animated, {
+  AnimatedRef,
+  SharedValue,
   useAnimatedProps,
   useAnimatedRef,
   useDerivedValue,
@@ -8,9 +10,9 @@ import Animated, {
 } from 'react-native-reanimated';
 
 export default function App() {
-  const animatedRef = useAnimatedRef();
+  const animatedRef: AnimatedRef<Animated.ScrollView> = useAnimatedRef();
   // highlight-start
-  const offset = useScrollViewOffset(animatedRef);
+  const offset: SharedValue<number> = useScrollViewOffset(animatedRef);
   const text = useDerivedValue(
     () => `Scroll offset: ${offset.value.toFixed(1)}`
   );
@@ -72,8 +74,8 @@ const styles = StyleSheet.create({
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 Animated.addWhitelistedNativeProps({ text: true });
 
-function AnimatedText({ text, ...props }) {
-  const animatedProps = useAnimatedProps(() => ({ text: text.value }));
+function AnimatedText({ text, ...props } : { text: SharedValue<string> }) {
+  const animatedProps: any = useAnimatedProps(() => ({ text: text.value }));
   return (
     <AnimatedTextInput
       editable={false}

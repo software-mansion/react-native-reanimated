@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import Animated, {
+  SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withDecay,
@@ -14,10 +15,10 @@ import {
 const SIZE = 120;
 
 export default function App() {
-  const offset = useSharedValue(0);
-  const width = useSharedValue(0);
+  const offset: SharedValue<number> = useSharedValue(0);
+  const width: SharedValue<number> = useSharedValue(0);
 
-  const onLayout = (event) => {
+  const onLayout = (event: LayoutChangeEvent) => {
     width.value = event.nativeEvent.layout.width;
   };
 

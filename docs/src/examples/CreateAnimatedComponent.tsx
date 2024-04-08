@@ -1,8 +1,17 @@
-import React from 'react';
-import { Button, StyleSheet, View } from 'react-native';
+import React, { useRef } from 'react';
+import { StyleSheet, View, Button } from 'react-native';
 import Animated, { useSharedValue, withSpring } from 'react-native-reanimated';
 
+const MyView = React.forwardRef((props: {style: Object}, ref: any) => {
+  // some additional logic
+  return <View ref={ref} {...props} />;
+});
+
+// highlight-next-line
+const MyAnimatedView = Animated.createAnimatedComponent(MyView);
+
 export default function App() {
+  const ref = useRef<View | null>(null);
   const width = useSharedValue(100);
 
   const handlePress = () => {
@@ -11,7 +20,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Animated.View style={{ ...styles.box, width }} />
+      <MyAnimatedView style={{ ...styles.box, width }} />
       <Button onPress={handlePress} title="Click me" />
     </View>
   );

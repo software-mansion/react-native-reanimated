@@ -1,15 +1,16 @@
 import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
-import {
+import Animated, {
   runOnJS,
   measure,
   useAnimatedRef,
   runOnUI,
+  AnimatedRef,
 } from 'react-native-reanimated';
 
-function MeasurableText(props) {
+function MeasurableText(props: {children: any; onPress: (measurements: any) => void}) {
   const { children, onPress } = props;
-  const animatedRef = useAnimatedRef();
+  const animatedRef: AnimatedRef<Animated.Text> = useAnimatedRef();
 
   const handleMeasure = () => {
     // highlight-next-line
@@ -21,16 +22,16 @@ function MeasurableText(props) {
   };
 
   return (
-    <Text style={styles.title} onPress={handleMeasure} ref={animatedRef}>
+    <Animated.Text style={styles.title} onPress={handleMeasure} ref={animatedRef}>
       {children}
-    </Text>
+    </Animated.Text>
   );
 }
 
 export default function App() {
   const [text, setText] = React.useState(0);
 
-  const handlePress = (measurements) => {
+  const handlePress = (measurements: any) => {
     setText(Math.floor(measurements.width));
   };
 

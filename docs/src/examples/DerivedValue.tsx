@@ -6,13 +6,14 @@ import Animated, {
   withTiming,
   withRepeat,
   useDerivedValue,
+  SharedValue,
 } from 'react-native-reanimated';
 
 export default function App() {
-  const scale = useSharedValue(1);
+  const scale: SharedValue<number> = useSharedValue(1);
 
   // highlight-start
-  const rotate = useDerivedValue(() => {
+  const rotate: Readonly<SharedValue<string>> = useDerivedValue(() => {
     return `${scale.value * 2}rad`;
   });
   // highlight-end

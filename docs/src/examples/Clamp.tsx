@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
+  SharedValue,
   clamp,
   useAnimatedStyle,
   useSharedValue,
@@ -9,12 +10,13 @@ import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
+  PanGesture,
 } from 'react-native-gesture-handler';
 
 export default function App() {
-  const offset = useSharedValue(0);
+  const offset: SharedValue<number> = useSharedValue(0);
 
-  const pan = Gesture.Pan().onChange((event) => {
+  const pan: PanGesture = Gesture.Pan().onChange((event) => {
     // highlight-next-line
     offset.value += clamp(event.changeX, -5, 5);
   });

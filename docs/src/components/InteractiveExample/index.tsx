@@ -68,7 +68,15 @@ export default function InteractiveExample({
                   !showPreview ? styles.actionButtonActive : ''
                 )}
                 onClick={() => setShowPreview(false)}>
-                Code
+                TypeScript
+              </button>
+              <button
+                className={clsx(
+                  styles.actionButton,
+                  !showPreview ? styles.actionButtonActive : ''
+                )}
+                onClick={() => setShowPreview(false)}>
+                JavaScript
               </button>
             </div>
             <AnimableIcon

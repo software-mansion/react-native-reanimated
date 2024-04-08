@@ -1,33 +1,47 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Button } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   withRepeat,
-  interpolate,
+  cancelAnimation,
+  SharedValue,
 } from 'react-native-reanimated';
 
+const OFFSET = 200;
+
 export default function App() {
-  const offset = useSharedValue(200);
+  const offset: SharedValue<number> = useSharedValue(OFFSET);
 
   const animatedStyles = useAnimatedStyle(() => ({
-    // highlight-next-line
-    opacity: interpolate(offset.value, [-200, 200], [1, 0]),
     transform: [{ translateX: offset.value }],
   }));
 
-  React.useEffect(() => {
+  const startAnimation = () => {
     offset.value = withRepeat(
-      withTiming(-offset.value, { duration: 1500 }),
+      withTiming(offset.value > 0 ? -OFFSET : OFFSET, { duration: 1500 }),
       -1,
       true
     );
+  };
+
+  React.useEffect(() => {
+    startAnimation();
   }, []);
+
+  const handleCancelAnimation = () => {
+    // highlight-next-line
+    cancelAnimation(offset);
+  };
 
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.box, animatedStyles]} />
+      <View style={styles.row}>
+        <Button title="Cancel animation" onPress={handleCancelAnimation} />
+        <Button title="Start animation" onPress={startAnimation} />
+      </View>
     </View>
   );
 }
@@ -44,5 +58,10 @@ const styles = StyleSheet.create({
     width: 120,
     backgroundColor: '#b58df1',
     borderRadius: 20,
+    marginBottom: 30,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 10,
   },
 });

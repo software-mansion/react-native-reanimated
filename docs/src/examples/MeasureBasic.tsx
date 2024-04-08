@@ -1,6 +1,8 @@
 import React from 'react';
 import { Button, StyleSheet, View, Text } from 'react-native';
 import Animated, {
+  MeasuredDimensions,
+  SharedValue,
   measure,
   runOnJS,
   useAnimatedRef,
@@ -10,16 +12,16 @@ import Animated, {
 
 export default function App() {
   const animatedRef = useAnimatedRef();
-  const width = useSharedValue(100);
+  const width: SharedValue<number> = useSharedValue(100);
   const [text, setText] = React.useState(width.value);
 
   const handlePress = () => {
     width.value = withTiming(width.value + 50, {}, () => {
       // highlight-next-line
-      const measurement = measure(animatedRef);
-      if (measurement === null) {
+      const measurement: MeasuredDimensions | null = measure(animatedRef);
+      
+      if (measurement === null)
         return;
-      }
 
       runOnJS(setText)(Math.floor(measurement.width));
     });

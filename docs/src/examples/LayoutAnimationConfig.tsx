@@ -49,7 +49,7 @@ export default function App() {
   );
 }
 
-function toggleString(value) {
+function toggleString(value: boolean) {
   return value ? 'Hide' : 'Show';
 }
 

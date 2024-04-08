@@ -4,10 +4,11 @@ import Animated, {
   useSharedValue,
   withSpring,
   useAnimatedStyle,
+  SharedValue,
 } from 'react-native-reanimated';
 
 export default function App() {
-  const translateX = useSharedValue(0);
+  const translateX: SharedValue<number> = useSharedValue(0);
 
   const handlePress = () => {
     translateX.value += 50;

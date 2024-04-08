@@ -4,13 +4,14 @@ import Animated, {
   useSharedValue,
   useAnimatedProps,
   withTiming,
+  SharedValue,
 } from 'react-native-reanimated';
 import { Svg, Circle } from 'react-native-svg';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 export default function App() {
-  const r = useSharedValue(20);
+  const r: SharedValue<number> = useSharedValue(20);
 
   const handlePress = () => {
     r.value += 10;

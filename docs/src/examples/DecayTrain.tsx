@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import Animated, {
+  SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withDecay,
@@ -9,19 +10,20 @@ import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
+  PanGesture,
 } from 'react-native-gesture-handler';
 
 const SIZE = 180;
 
 export default function App() {
-  const offset = useSharedValue(0);
-  const width = useSharedValue(0);
+  const offset: SharedValue<number> = useSharedValue(0);
+  const width: SharedValue<number> = useSharedValue(0);
 
-  const onLayout = (event) => {
+  const onLayout = (event: LayoutChangeEvent) => {
     width.value = event.nativeEvent.layout.width;
   };
 
-  const pan = Gesture.Pan()
+  const pan: PanGesture = Gesture.Pan()
     .onChange((event) => {
       offset.value += event.changeX;
     })

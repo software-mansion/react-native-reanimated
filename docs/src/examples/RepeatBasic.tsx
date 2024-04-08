@@ -1,26 +1,28 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
 import Animated, {
+  Easing,
+  SharedValue,
   useAnimatedStyle,
-  useAnimatedSensor,
-  SensorType,
-  withSpring,
+  useSharedValue,
+  withRepeat,
+  withTiming,
 } from 'react-native-reanimated';
+import { StyleSheet, View } from 'react-native';
+
+const duration = 2000;
+const easing = Easing.bezier(0.25, -0.5, 0.25, 1);
 
 export default function App() {
-  // highlight-next-line
-  const gravity = useAnimatedSensor(SensorType.GRAVITY);
+  const sv: SharedValue<number> = useSharedValue(0);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        // highlight-next-line
-        { translateX: withSpring(gravity.sensor.value.x * 20) },
-        // highlight-next-line
-        { translateY: withSpring(gravity.sensor.value.y * 20) },
-      ],
-    };
-  });
+  React.useEffect(() => {
+    // highlight-next-line
+    sv.value = withRepeat(withTiming(1, { duration, easing }), -1);
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${sv.value * 360}deg` }],
+  }));
 
   return (
     <View style={styles.container}>
