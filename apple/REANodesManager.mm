@@ -550,10 +550,11 @@ using namespace facebook::react;
     }
     const size_t totalComponents = CGColorGetNumberOfComponents(color.CGColor);
     const CGFloat *components = CGColorGetComponents(color.CGColor);
-    int r = 255 * components[MIN(0, totalComponents - 2)];
-    int g = 255 * components[MIN(1, totalComponents - 2)];
-    int b = 255 * components[MIN(2, totalComponents - 2)];
-    return [NSString stringWithFormat:@"#%02x%02x%02x", r, g, b];
+    int r = 255 * components[MIN(0, totalComponents - 1)];
+    int g = 255 * components[MIN(1, totalComponents - 1)];
+    int b = 255 * components[MIN(2, totalComponents - 1)];
+    int alpha = 255 * components[MIN(3, totalComponents - 1)];
+    return [NSString stringWithFormat:@"#%02x%02x%02x%02x", r, g, b, alpha];
   }
 
   return [NSString

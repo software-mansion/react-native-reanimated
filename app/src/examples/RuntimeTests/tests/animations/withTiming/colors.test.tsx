@@ -99,6 +99,12 @@ describe('withTiming animation of COLOR 🎨', () => {
 
   (
     [
+      {
+        from: '#6495edab',
+        fromHex: '#6495edab',
+        to: '#ff7f50ab',
+        toHex: '#ff7f50ab',
+      },
       { from: '#6495ed', fromHex: '#6495ed', to: '#1b1', toHex: '#11bb11' },
       { from: '#5bc', fromHex: '#55bbcc', to: '#ff7f50', toHex: '#ff7f50' },
       { from: '#5bc', fromHex: '#55bbcc', to: '#1b1', toHex: '#11bb11' },
