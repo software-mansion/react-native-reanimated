@@ -57,7 +57,7 @@ const buildOGImages = async () => {
 
         let header = getMarkdownHeader(path.resolve(baseDocsPath, dir, file));
 
-        if (header === '') header = 'unnamed';
+        if (header === '') header = 'React Native Reanimated';
 
         ctx.font = 'bold 72px "Aeonik Bold"';
         ctx.fillStyle = '#001A72';
