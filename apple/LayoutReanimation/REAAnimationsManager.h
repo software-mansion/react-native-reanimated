@@ -26,6 +26,7 @@ typedef void (^REACheckDuplicateSharedTagBlock)(REAUIView *view, NSNumber *_Nonn
 #endif
 typedef void (^REACancelAnimationBlock)(NSNumber *_Nonnull tag);
 typedef NSNumber *_Nullable (^REAFindPrecedingViewTagForTransitionBlock)(NSNumber *_Nonnull tag);
+typedef NSArray<NSNumber *> *_Nullable (^REAGetSharedGroupBlock)(NSNumber *_Nonnull tag);
 typedef int (^REATreeVisitor)(id<RCTComponent>);
 BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
 
@@ -45,6 +46,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
                       isSharedTransition:(BOOL)isSharedTransition;
 - (void)setFindPrecedingViewTagForTransitionBlock:
     (REAFindPrecedingViewTagForTransitionBlock)findPrecedingViewTagForTransition;
+- (void)setGetSharedGroupBlock:(REAGetSharedGroupBlock)getSharedGroupBlock;
 - (void)setCancelAnimationBlock:(REACancelAnimationBlock)animationCancellingBlock;
 - (void)endLayoutAnimationForTag:(NSNumber *_Nonnull)tag removeView:(BOOL)removeView;
 - (void)endAnimationsRecursive:(REAUIView *)view;

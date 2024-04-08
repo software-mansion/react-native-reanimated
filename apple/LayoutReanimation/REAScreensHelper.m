@@ -1,4 +1,5 @@
 #import <RNReanimated/REAScreensHelper.h>
+#import <RNScreens/RNSScreenNavigationContainer.h>
 
 @implementation REAScreensHelper
 
@@ -18,6 +19,9 @@
 
 + (REAUIView *)getStackForView:(REAUIView *)view
 {
+  if (view == nil) {
+    return nil;
+  }
   if ([view isKindOfClass:[RNSScreenView class]]) {
     if (view.reactSuperview != nil) {
       if ([view.reactSuperview isKindOfClass:[RNSScreenStackView class]]) {
@@ -25,11 +29,19 @@
       }
     }
   }
-  while (view != nil && ![view isKindOfClass:[RNSScreenStackView class]] && view.superview != nil) {
-    view = view.superview;
+  REAUIView *currentView = view;
+  while (currentView.reactSuperview != nil) {
+    if ([currentView isKindOfClass:[RNSScreenStackView class]]) {
+      return currentView;
+    }
+    currentView = currentView.reactSuperview;
   }
-  if ([view isKindOfClass:[RNSScreenStackView class]]) {
-    return view;
+  currentView = view;
+  while (currentView.superview != nil) {
+    if ([currentView isKindOfClass:[RNSScreenStackView class]]) {
+      return currentView;
+    }
+    currentView = currentView.superview;
   }
   return nil;
 }
@@ -87,6 +99,41 @@
     }
   }
   return false;
+}
+
++ (REAUIView *)getActiveTab:(REAUIView *)screen
+{
+  NSArray<REAUIView *> *screenTabs = screen.reactSuperview.reactSubviews;
+  for (RNSScreenView *tab in screenTabs) {
+    if (tab.activityState == 2) {
+      return tab;
+    }
+  }
+  return nil;
+}
+
++ (REAUIView *)findTopScreenInChildren:(REAUIView *)view
+{
+  for (REAUIView *child in view.reactSubviews) {
+    if ([child isKindOfClass:[RNSScreenStackView class]]) {
+      int screenCount = [child.reactSubviews count];
+      if (screenCount != 0) {
+        REAUIView *topScreen = child.reactSubviews[[child.reactSubviews count] - 1];
+        REAUIView *maybeChildScreen = [REAScreensHelper findTopScreenInChildren:topScreen];
+        if (maybeChildScreen) {
+          return maybeChildScreen;
+        }
+        if (topScreen) {
+          return topScreen;
+        }
+      }
+    }
+    REAUIView *topScreen = [REAScreensHelper findTopScreenInChildren:child];
+    if (topScreen != nil) {
+      return topScreen;
+    }
+  }
+  return nil;
 }
 
 #else

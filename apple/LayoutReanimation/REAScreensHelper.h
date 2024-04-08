@@ -18,5 +18,7 @@
 + (int)getScreenType:(REAUIView *)screen;
 + (bool)isRNSScreenType:(REAUIView *)screen;
 + (bool)isStackChanged:(REAUIView *)view;
++ (REAUIView *)getActiveTab:(REAUIView *)screen;
++ (REAUIView *)findTopScreenInChildren:(REAUIView *)screen;
 
 @end
