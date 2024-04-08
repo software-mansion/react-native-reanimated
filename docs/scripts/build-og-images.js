@@ -21,7 +21,7 @@ const getMarkdownHeader = (path) => {
 };
 
 const buildOGImages = async () => {
-  const baseDocsPath = path.resolve(__dirname, 'docs');
+  const baseDocsPath = path.resolve(__dirname, '../docs');
   const docs = await Promise.all(
     (
       await fs.promises.readdir(baseDocsPath)
@@ -36,7 +36,7 @@ const buildOGImages = async () => {
     })
   );
 
-  const targetDocs = path.resolve(__dirname, 'build/img/og');
+  const targetDocs = path.resolve(__dirname, '../build/img/og');
 
   if (fs.existsSync(targetDocs)) fs.rmSync(targetDocs, { recursive: true });
 
@@ -45,7 +45,7 @@ const buildOGImages = async () => {
   console.log('Generating OG images for docs...');
 
   const image = await loadImage(
-    path.resolve(__dirname, 'unproccessed/og-image.png')
+    path.resolve(__dirname, '../unproccessed/og-image.png')
   );
   const canvas = createCanvas(1200, 630);
   const ctx = canvas.getContext('2d');

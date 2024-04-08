@@ -19,7 +19,7 @@ export default function DocItemMetadata() {
       title={metadata.title}
       description={metadata.description}
       keywords={frontMatter.keywords}
-      image={`docs/og/${image === '' || !image ? 'unnamed' : image}.png`}
+      image={`img/og/${ogImageName === '' || !ogImageName ? 'React Native Reanimated' : ogImageName}.png`}
     />
   );
 }
