@@ -251,9 +251,16 @@ void NativeReanimatedModule::unregisterEventHandler(
 
 #ifdef RCT_NEW_ARCH_ENABLED
 static inline std::string intColorToHex(const int val) {
-  std::stringstream ss;
-  ss << '#' << std::setfill('0') << std::setw(6) << std::hex << (val);
-  return ss.str();
+  std::stringstream
+      invertedHexColorStream; // By default transparency is first, color second
+  invertedHexColorStream << std::setfill('0') << std::setw(8) << std::hex
+                         << val;
+
+  auto invertedHexColor = invertedHexColorStream.str();
+  auto hexColor =
+      "#" + invertedHexColor.substr(2, 6) + invertedHexColor.substr(0, 2);
+
+  return hexColor;
 }
 
 std::string NativeReanimatedModule::obtainPropFromShadowNode(
@@ -290,7 +297,8 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
         return std::to_string(*viewProps->zIndex);
       }
     } else if (propName == "backgroundColor") {
-      return intColorToHex(*viewProps->backgroundColor);
+      auto color = intColorToHex(*viewProps->backgroundColor);
+      return color;
     }
   }
 
