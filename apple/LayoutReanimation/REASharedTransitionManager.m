@@ -36,6 +36,7 @@
   NSMutableSet<NSNumber *> *_affectedSharedViewTags;
   NSMutableArray<REASharedElement *> *_sharedTransitionsOnLayoutQueue;
   BOOL _isTabNavigator;
+  REAUIView *_lastTopScreen;
 }
 
 /*
@@ -385,7 +386,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
     // find sibling for shared view
     NSNumber *siblingViewTag = _findPrecedingViewTagForTransition(sharedView.reactTag);
-    // tutaj będzie trzeba użyć _getSharedGroupBlock
     REAUIView *siblingView = nil;
     do {
       siblingView = [_animationManager viewForTag:siblingViewTag];
@@ -394,6 +394,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
         siblingViewTag = _findPrecedingViewTagForTransition(sharedView.reactTag);
       }
     } while (siblingView == nil && siblingViewTag != nil);
+    
+    siblingView = [self tabNavigatorWorkaround:sharedView siblingView:siblingView];
 
     if (siblingView == nil) {
       // the sibling of shared view doesn't exist yet
@@ -515,6 +517,51 @@ static REASharedTransitionManager *_sharedTransitionManager;
     }
   }
   return newSharedElements;
+}
+
+- (REAUIView *)tabNavigatorWorkaround:(REAUIView *)sharedView siblingView:(REAUIView *)siblingView
+{
+  REAUIView *maybeTabNavigatorForSharedView = [self getTabNavigator:sharedView];
+  REAUIView *maybeTabNavigatorForSiblingView = [self getTabNavigator:siblingView];
+  
+  if (
+    !(maybeTabNavigatorForSharedView && maybeTabNavigatorForSiblingView)
+    || maybeTabNavigatorForSharedView != maybeTabNavigatorForSiblingView
+  ) {
+    return siblingView;
+  }
+    
+  NSArray<NSNumber *> *sharedGroup = _getSharedGroupBlock(sharedView.reactTag);
+  int siblingIndex = [sharedGroup indexOfObject:siblingView.reactTag];
+  REAUIView *activeTab = [REAScreensHelper getActiveTabForTabNavigator:maybeTabNavigatorForSharedView];
+  for (int i = siblingIndex; i >= 0; i--) {
+    NSNumber *viewTag = sharedGroup[i];
+    REAUIView *view = [_animationManager viewForTag:viewTag];
+    if ([REAScreensHelper isChild:view OfScreen:activeTab]) {
+      return view;
+    }
+  }
+  return nil;
+}
+
+- (REAUIView *)getTabNavigator:(REAUIView *)view
+{
+  REAUIView *currentView = view;
+  while (currentView.superview) {
+    if ([currentView isKindOfClass:NSClassFromString(@"RNSScreenNavigationContainerView")]) {
+      return currentView;
+    }
+    currentView = (REAUIView *)currentView.superview;
+  }
+  
+  currentView = view;
+  while (currentView.reactSuperview) {
+    if ([currentView isKindOfClass:NSClassFromString(@"RNSScreenNavigationContainerView")]) {
+      return currentView;
+    }
+    currentView = (REAUIView *)currentView.reactSuperview;
+  }
+  return nil;
 }
 
 /*
@@ -701,6 +748,10 @@ static REASharedTransitionManager *_sharedTransitionManager;
       }
     }
 
+    if (siblingView == nil) {
+      return;
+    }
+    
     REAUIView *viewSource = sharedView;
     REAUIView *viewTarget = siblingView;
     REASnapshot *sourceViewSnapshot = _snapshotRegistry[viewSource.reactTag];
@@ -955,7 +1006,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)startSharedTransition:(NSArray *)sharedElements
 {
-  for (REASharedElement *sharedElement in sharedElements) {
+  NSArray *sharedElementCopy = [sharedElements copy];
+  for (REASharedElement *sharedElement in sharedElementCopy) {
     sharedElement.targetView.hidden = YES;
     LayoutAnimationType type = sharedElement.animationType;
     [self onViewTransition:sharedElement.sourceView

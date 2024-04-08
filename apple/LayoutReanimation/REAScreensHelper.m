@@ -112,6 +112,17 @@
   return nil;
 }
 
++ (REAUIView *)getActiveTabForTabNavigator:(REAUIView *)tabNavigator
+{
+  NSArray<REAUIView *> *screenTabs = tabNavigator.reactSubviews;
+  for (RNSScreenView *tab in screenTabs) {
+    if (tab.activityState == 2) {
+      return tab;
+    }
+  }
+  return nil;
+}
+
 + (REAUIView *)findTopScreenInChildren:(REAUIView *)view
 {
   for (REAUIView *child in view.reactSubviews) {
@@ -134,6 +145,18 @@
     }
   }
   return nil;
+}
+
++ (bool)isChild:(REAUIView *)child OfScreen:(REAUIView *)screen
+{
+  REAUIView *currentView = child;
+  while (currentView.reactSuperview) {
+    if (currentView == screen) {
+      return true;
+    }
+    currentView = currentView.reactSuperview;
+  }
+  return false;
 }
 
 #else

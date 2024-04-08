@@ -20,5 +20,7 @@
 + (bool)isStackChanged:(REAUIView *)view;
 + (REAUIView *)getActiveTab:(REAUIView *)screen;
 + (REAUIView *)findTopScreenInChildren:(REAUIView *)screen;
++ (REAUIView *)getActiveTabForTabNavigator:(REAUIView *)tabNavigator;
++ (bool)isChild:(REAUIView *)child OfScreen:(REAUIView *)screen;
 
 @end
