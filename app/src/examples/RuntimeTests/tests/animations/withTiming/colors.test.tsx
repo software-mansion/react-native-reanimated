@@ -106,6 +106,18 @@ describe('withTiming animation of COLOR 🎨', () => {
         toHex: '#ff7f50ab',
       },
       { from: '#6495ed', fromHex: '#6495ed', to: '#1b1', toHex: '#11bb11' },
+      {
+        from: 'rgba(100,149,237,0.67)',
+        fromHex: '#6495edab',
+        to: '#1b1',
+        toHex: '#11bb11',
+      },
+      {
+        from: '#1b1',
+        fromHex: '#11bb11',
+        to: 'rgba(100,149,237,0.67)',
+        toHex: '#6495edab',
+      },
       { from: '#5bc', fromHex: '#55bbcc', to: '#ff7f50', toHex: '#ff7f50' },
       { from: '#5bc', fromHex: '#55bbcc', to: '#1b1', toHex: '#11bb11' },
     ] as const
