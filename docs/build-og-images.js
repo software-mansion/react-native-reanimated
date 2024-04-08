@@ -36,7 +36,7 @@ const buildOGImages = async () => {
     })
   );
 
-  const targetDocs = path.resolve(__dirname, 'build/docs/og');
+  const targetDocs = path.resolve(__dirname, 'build/img/og');
 
   if (fs.existsSync(targetDocs)) fs.rmSync(targetDocs, { recursive: true });
 
