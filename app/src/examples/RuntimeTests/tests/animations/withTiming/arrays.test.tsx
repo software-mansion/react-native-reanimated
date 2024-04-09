@@ -65,8 +65,6 @@ const IndependentComponents = ({
 describe('withTiming animation of ARRAY', () => {
   //We should test different speeds, since it may affect the performance
   const TestSpeed = {
-    'very slow': 10000,
-    slow: 5000,
     medium: 1000,
     fast: 500,
     'very fast': 10,
@@ -78,84 +76,84 @@ describe('withTiming animation of ARRAY', () => {
       {
         startWidths: [20, 20, 20],
         finalWidths: [300, 300, 300],
-        speed: 'very slow',
+        speed: 10000,
       },
       {
         startWidths: [20, 300, 20],
         finalWidths: [200, 30, 200],
-        speed: 'slow',
+        speed: 5000,
       },
       {
         startWidths: [20, 20, 20],
         finalWidths: [20, 200, 100],
-        speed: 'medium',
+        speed: 1000,
       },
       {
         startWidths: [20, 20, 20],
         finalWidths: [130, 140, 150],
-        speed: 'medium',
+        speed: 1000,
       },
       {
         startWidths: [20, 20, 20],
         finalWidths: [130, 140, 150],
-        speed: 'fast',
+        speed: 500,
       },
       { startWidths: [20, 20, 20], finalWidths: [20, 140, 150], speed: 'fast' },
       { startWidths: [20, 20, 20], finalWidths: [20, 20, 150], speed: 'fast' },
       {
         startWidths: [20, 20, 20],
         finalWidths: [130, 140, 150],
-        speed: 'very fast',
+        speed: 10,
       },
       {
         startWidths: [200, 200, 200],
         finalWidths: [130, 140, 150],
-        speed: 'very fast',
+        speed: 10,
       },
       {
         startWidths: [200, 200, 200],
         finalWidths: [200, 140, 150],
-        speed: 'very fast',
+        speed: 10,
       },
       {
         startWidths: [20, 20, 20],
         finalWidths: [130, 140, 150],
-        speed: 'immediately',
+        speed: 0,
       },
       {
         startWidths: [20, 20, 20],
         finalWidths: [130, 14.3, 150],
-        speed: 'medium',
+        speed: 500,
       },
       {
         startWidths: [2e-4, 20, 20],
         finalWidths: [13.78e-4, 200, 20],
         scalars: [1e5, 1, 1],
-        speed: 'medium',
+        speed: 500,
       },
       {
         startWidths: [2e-9, 20, 20],
         finalWidths: [13.78e-9, 200, 20],
         scalars: [1e10, 1, 1],
-        speed: 'medium',
+        speed: 500,
       },
       {
         startWidths: [2e-17, 20, 20],
         finalWidths: [13.78e-17, 200, 20],
         scalars: [1e18, 1, 1],
-        speed: 'medium',
+        speed: 500,
       },
       {
         startWidths: [2e-125, 1e20, 20],
         finalWidths: [13.78e-125, 1e20, 20],
         scalars: [1e126, 1e-19, 1],
-        speed: 'medium',
+        speed: 500,
       },
       {
         startWidths: [2e-130, 1e-20, 20],
         finalWidths: [13.78e-125, 15e20, 20],
         scalars: [1e126, 1e-19, 1],
-        speed: 'medium',
+        speed: 50,
       },
     ] as Array<{
       startWidths: [number, number, number];
