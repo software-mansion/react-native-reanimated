@@ -27,6 +27,8 @@ enum Tracker {
   Width = 'widthTracker',
 }
 
+const WIDTH_COMPONENT_REF = 'WidthComponent';
+
 describe('withTiming animation of WIDTH', () => {
   const WidthComponent = ({
     startWidth,
@@ -36,7 +38,7 @@ describe('withTiming animation of WIDTH', () => {
     finalWidth: number | `${number}%` | 'auto';
   }) => {
     const widthSV = useSharedValue(startWidth);
-    const ref = useTestRef('WidthComponent');
+    const ref = useTestRef(WIDTH_COMPONENT_REF);
 
     const style = useAnimatedStyle(() => {
       return {
@@ -91,7 +93,7 @@ describe('withTiming animation of WIDTH', () => {
       await render(
         <WidthComponent startWidth={startWidth} finalWidth={finalWidth} />
       );
-      const component = getTestComponent('WidthComponent');
+      const component = getTestComponent(WIDTH_COMPONENT_REF);
       await wait(1000);
       expect(await component.getAnimatedStyle('width')).toBe(
         finalWidthInPixels,
@@ -102,7 +104,7 @@ describe('withTiming animation of WIDTH', () => {
 
   test('Width from percent to pixels is NOT handled correctly', async () => {
     await render(<WidthComponent startWidth={'20%'} finalWidth={100} />);
-    const component = getTestComponent('WidthComponent');
+    const component = getTestComponent(WIDTH_COMPONENT_REF);
     await wait(1000);
     expect(await component.getAnimatedStyle('width')).not.toBe(
       100,
@@ -114,7 +116,6 @@ describe('withTiming animation of WIDTH', () => {
 describe('withTiming, test CALLBACKS', () => {
   const CallbackComponent = () => {
     const sv = useSharedValue(0);
-    const ref = useTestRef('AnimatedComponent');
 
     const style = useAnimatedStyle(() => {
       callTracker(Tracker.UseAnimatedStyle);
@@ -138,7 +139,7 @@ describe('withTiming, test CALLBACKS', () => {
 
     return (
       <View style={styles.container}>
-        <Animated.View ref={ref} style={[styles.animatedBox, style]} />
+        <Animated.View style={[styles.animatedBox, style]} />
       </View>
     );
   };

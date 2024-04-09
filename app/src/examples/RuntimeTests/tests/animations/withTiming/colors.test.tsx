@@ -18,6 +18,8 @@ import {
   wait,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 
+const COMPONENT_REF = 'ColorComponent';
+
 const ColorComponent = ({
   color1,
   color2,
@@ -26,7 +28,7 @@ const ColorComponent = ({
   color2: string | number;
 }) => {
   const colorSV = useSharedValue(color1);
-  const ref = useTestRef('ColorComponent');
+  const ref = useTestRef(COMPONENT_REF);
 
   // @ts-ignore number is not a valid color
   const style = useAnimatedStyle(() => {
@@ -65,7 +67,7 @@ describe('withTiming animation of COLOR 🎨', () => {
     const [color, colorType] = testCase;
     test(`Animate FROM color as ${colorType} "${color}"`, async () => {
       await render(<ColorComponent color1={color} color2="coral" />);
-      const component = getTestComponent('ColorComponent');
+      const component = getTestComponent(COMPONENT_REF);
       expect(await component.getAnimatedStyle('backgroundColor')).toBe(
         '#6495ed',
         ComparisonMode.COLOR
@@ -83,7 +85,7 @@ describe('withTiming animation of COLOR 🎨', () => {
     const [color, colorType] = testCase;
     test(`Animate TO color as ${colorType} string "${color}"`, async () => {
       await render(<ColorComponent color1="coral" color2={color} />);
-      const component = getTestComponent('ColorComponent');
+      const component = getTestComponent(COMPONENT_REF);
       expect(await component.getAnimatedStyle('backgroundColor')).toBe(
         '#ff7f50',
         ComparisonMode.COLOR
@@ -99,14 +101,32 @@ describe('withTiming animation of COLOR 🎨', () => {
 
   (
     [
+      {
+        from: '#6495edab',
+        fromHex: '#6495edab',
+        to: '#ff7f50ab',
+        toHex: '#ff7f50ab',
+      },
       { from: '#6495ed', fromHex: '#6495ed', to: '#1b1', toHex: '#11bb11' },
+      {
+        from: 'rgba(100,149,237,0.67)',
+        fromHex: '#6495edab',
+        to: '#1b1',
+        toHex: '#11bb11',
+      },
+      {
+        from: '#1b1',
+        fromHex: '#11bb11',
+        to: 'rgba(100,149,237,0.67)',
+        toHex: '#6495edab',
+      },
       { from: '#5bc', fromHex: '#55bbcc', to: '#ff7f50', toHex: '#ff7f50' },
       { from: '#5bc', fromHex: '#55bbcc', to: '#1b1', toHex: '#11bb11' },
     ] as const
   ).forEach(({ from, to, fromHex, toHex }) => {
     test(`Animate from ${from} to ${to}"`, async () => {
       await render(<ColorComponent color1={from} color2={to} />);
-      const component = getTestComponent('ColorComponent');
+      const component = getTestComponent(COMPONENT_REF);
       expect(await component.getAnimatedStyle('backgroundColor')).toBe(
         fromHex,
         ComparisonMode.COLOR
