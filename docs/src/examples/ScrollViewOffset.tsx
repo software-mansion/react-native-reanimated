@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TextInput, Button } from 'react-native';
 import Animated, {
-  SharedValue,
+  DerivedValue,
   useAnimatedProps,
   useAnimatedRef,
   useDerivedValue,
@@ -74,8 +74,11 @@ const styles = StyleSheet.create({
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 Animated.addWhitelistedNativeProps({ text: true });
 
-function AnimatedText({ text, ...props }: { text: SharedValue<string> }) {
-  const animatedProps: any = useAnimatedProps(() => ({ text: text.value }));
+function AnimatedText({ text, ...props }: { text: DerivedValue<string> }) {
+  const animatedProps = useAnimatedProps(() => ({
+    text: text.value,
+    defaultValue: text.value,
+  }));
   return (
     <AnimatedTextInput
       editable={false}
