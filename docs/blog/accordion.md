@@ -1,5 +1,5 @@
 ---
-id: accordion
+slug: accordion
 title: Accordion
 ---
 

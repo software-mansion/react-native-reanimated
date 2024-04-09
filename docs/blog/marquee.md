@@ -1,5 +1,5 @@
 ---
-id: marquee
+slug: marquee
 title: Marquee
 ---
 
@@ -7,6 +7,7 @@ A marquee is an element used to display scrolling content horizontally within a 
 
 import Marquee from '@site/static/examples/Marquee';
 import MarqueeSrc from '!!raw-loader!@site/static/examples/Marquee';
+import ExampleVideo from '@site/src/components/ExampleVideo';
 
 <InteractiveExample src={MarqueeSrc} component={<Marquee />} />
 
@@ -28,6 +29,13 @@ const MeasureElement = ({ onLayout, children }) => (
   </Animated.ScrollView>
 );
 ```
+
+<ExampleVideo
+sources={{
+    android: "/react-native-reanimated/recordings/examples/marquee_android.mov",
+    ios: "/react-native-reanimated/recordings/examples/marquee_ios.mov"
+  }}
+/>
 
 The `useFrameCallback` hook is utilized in this code to execute animation logic on each frame. It is located inside **ChildrenScroller** component that manages the scrolling animation by updating the offset value. It determines the horizontal translation of the child components, creates clones of the children and animates them horizontally based on the specified duration.
 

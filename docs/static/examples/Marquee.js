@@ -122,7 +122,6 @@ function MarqueeScreen() {
               uri: 'https://docs.swmansion.com/react-native-reanimated/img/logo.svg',
             }}
           />
-          {/* <View style={styles.circle} /> */}
         </Marquee>
       </View>
     </View>

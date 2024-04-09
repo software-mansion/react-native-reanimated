@@ -1,5 +1,5 @@
 ---
-id: sectionlist
+slug: sectionlist
 title: Section List
 ---
 
@@ -75,7 +75,7 @@ const TableOfContents = ({
 };
 ```
 
-**SectionCards**, on the other hand, manages the rendering of individual sections and their corresponding content. It receives props such as `sections`, `visibleIndex`, `sectionCardsRef`, and `tableOfContentsRef` to render the content sections and handle scrolling interactions.
+**SectionCards**, on the other hand, manages the rendering of individual sections and their corresponding content. It receives props: `sections`, `visibleIndex`, `sectionCardsRef`, and `tableOfContentsRef` to render the content sections and handle scrolling interactions.
 
 <samp id="SectionList">Section List</samp>
 
@@ -103,6 +103,7 @@ const SectionCards = ({
   return (
     <View style={sectionListStyles.flex}>
       <FlashList
+        estimatedItemSize={52}
         ref={sectionCardsRef}
         estimatedFirstItemOffset={0}
         renderItem={renderItem}

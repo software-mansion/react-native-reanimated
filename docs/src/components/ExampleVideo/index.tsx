@@ -1,7 +1,4 @@
 import React from 'react';
-import styles from './styles.module.css';
-import useBaseUrl from '@docusaurus/useBaseUrl';
-import clsx from 'clsx';
 
 interface Props {
   sources: {

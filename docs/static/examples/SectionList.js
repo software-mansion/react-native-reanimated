@@ -242,6 +242,7 @@ const SectionCards = ({
     <View style={sectionListStyles.flex}>
       <FlashList
         ref={sectionCardsRef}
+        estimatedItemSize={52}
         estimatedFirstItemOffset={0}
         renderItem={renderItem}
         data={sections}

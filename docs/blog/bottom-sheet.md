@@ -1,5 +1,5 @@
 ---
-id: bottomsheet
+slug: bottomsheet
 title: Bottom Sheet
 ---
 
