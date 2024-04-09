@@ -16,7 +16,8 @@ export default function App() {
     () => `Scroll offset: ${offset.value.toFixed(1)}`
   );
   // highlight-end
-  const [isScrollHorizontal, setIsScrollHorizontal] = React.useState<boolean>(false);
+  const [isScrollHorizontal, setIsScrollHorizontal] =
+    React.useState<boolean>(false);
 
   return (
     <View style={styles.container}>
@@ -73,7 +74,7 @@ const styles = StyleSheet.create({
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 Animated.addWhitelistedNativeProps({ text: true });
 
-function AnimatedText({ text, ...props } : { text: SharedValue<string> }) {
+function AnimatedText({ text, ...props }: { text: SharedValue<string> }) {
   const animatedProps: any = useAnimatedProps(() => ({ text: text.value }));
   return (
     <AnimatedTextInput

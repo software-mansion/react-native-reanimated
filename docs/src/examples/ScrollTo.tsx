@@ -46,7 +46,13 @@ export default function App() {
   );
 }
 
-const Incrementor = ({ increment, scroll }: { increment: number, scroll: SharedValue<number> }) => (
+const Incrementor = ({
+  increment,
+  scroll,
+}: {
+  increment: number;
+  scroll: SharedValue<number>;
+}) => (
   <View style={styles.buttonWrapper}>
     <Button
       onPress={() => {

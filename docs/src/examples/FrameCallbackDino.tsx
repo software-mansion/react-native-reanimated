@@ -7,7 +7,13 @@ import Animated, {
   Easing,
   FrameInfo,
 } from 'react-native-reanimated';
-import { View, StyleSheet, Pressable, Text, LayoutChangeEvent } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  Text,
+  LayoutChangeEvent,
+} from 'react-native';
 import React from 'react';
 
 interface CollisionObject {
@@ -58,7 +64,10 @@ export default function FrameCallbackDino() {
     }
 
     const horse: CollisionObject = { ...DEFAULT_HORSE, y: horseY.value };
-    const obstacle: CollisionObject = { ...DEFAULT_OBSTACLE, x: obstacleX.value };
+    const obstacle: CollisionObject = {
+      ...DEFAULT_OBSTACLE,
+      x: obstacleX.value,
+    };
 
     if (isColliding(horse, obstacle) || gameOver.value) {
       gameOver.value = true;

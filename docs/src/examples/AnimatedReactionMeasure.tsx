@@ -24,8 +24,7 @@ export default function App() {
     () => {
       const measurement = measure(animatedRef);
 
-      if (measurement !== null)
-        runOnJS(setText)(measurement.width);
+      if (measurement !== null) runOnJS(setText)(measurement.width);
     }
   );
   // highlight-end

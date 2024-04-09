@@ -7,9 +7,11 @@ import Animated, {
   runOnUI,
 } from 'react-native-reanimated';
 
-type MeasurableTextProps = React.PropsWithChildren<{ onPress: (measurements: any) => void }>
+type MeasurableTextProps = React.PropsWithChildren<{
+  onPress: (measurements: any) => void;
+}>;
 
-function MeasurableText(props: MeasurableTextProps){
+function MeasurableText(props: MeasurableTextProps) {
   const { children, onPress } = props;
   const animatedRef = useAnimatedRef<Animated.View>();
 
@@ -23,7 +25,10 @@ function MeasurableText(props: MeasurableTextProps){
   };
 
   return (
-    <Animated.Text style={styles.title} onPress={handleMeasure} ref={animatedRef}>
+    <Animated.Text
+      style={styles.title}
+      onPress={handleMeasure}
+      ref={animatedRef}>
       {children}
     </Animated.Text>
   );

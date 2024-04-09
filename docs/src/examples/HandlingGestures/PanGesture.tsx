@@ -16,7 +16,7 @@ import {
 export default function App() {
   const pressed = useSharedValue<boolean>(false);
   // highlight-next-line
-  
+
   const offset = useSharedValue<number>(0);
 
   const pan = Gesture.Pan()
