@@ -1,6 +1,11 @@
 import { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+} from 'react-native-reanimated';
 import React from 'react';
 import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
 import {
@@ -38,9 +43,12 @@ const IndependentComponents = ({
   });
 
   useEffect(() => {
-    widths.value = withTiming(finalWidths, {
-      duration,
-    });
+    widths.value = withDelay(
+      100,
+      withTiming(finalWidths, {
+        duration,
+      }),
+    );
   }, [widths, finalWidths, duration]);
 
   return (
@@ -70,7 +78,11 @@ describe('withTiming animation of ARRAY', () => {
       { startWidths: [20, 20, 20], finalWidths: [20, 200, 100], speed: 'medium' },
       { startWidths: [20, 20, 20], finalWidths: [130, 140, 150], speed: 'medium' },
       { startWidths: [20, 20, 20], finalWidths: [130, 140, 150], speed: 'fast' },
+      { startWidths: [20, 20, 20], finalWidths: [20, 140, 150], speed: 'fast' },
+      { startWidths: [20, 20, 20], finalWidths: [20, 20, 150], speed: 'fast' },
       { startWidths: [20, 20, 20], finalWidths: [130, 140, 150], speed: 'very fast' },
+      { startWidths: [200, 200, 200], finalWidths: [130, 140, 150], speed: 'very fast' },
+      { startWidths: [200, 200, 200], finalWidths: [200, 140, 150], speed: 'very fast' },
       { startWidths: [20, 20, 20], finalWidths: [130, 140, 150], speed: 'immediately' },
       { startWidths: [20, 20, 20], finalWidths: [130, 14.3, 150], speed: 'medium' },
     ] as Array<{
@@ -79,7 +91,7 @@ describe('withTiming animation of ARRAY', () => {
       speed: keyof typeof TestSpeed;
     }>
   ).forEach(({ startWidths, finalWidths, speed: speedName }) => {
-    test(`Animate ${speedName} independent components FROM ${startWidths} TO ${finalWidths}`, async () => {
+    test(`Animate independent components ${speedName} FROM ${startWidths} TO ${finalWidths}`, async () => {
       await render(
         <IndependentComponents
           startWidths={startWidths}
