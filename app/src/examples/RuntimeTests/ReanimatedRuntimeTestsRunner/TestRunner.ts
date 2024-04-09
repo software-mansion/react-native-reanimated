@@ -11,25 +11,12 @@ import type {
   TrackerCallCount,
 } from './types';
 import { TestComponent } from './TestComponent';
-import {
-  render,
-  stopRecordingAnimationUpdates,
-  unmockAnimationTimer,
-} from './RuntimeTestsApi';
-import {
-  makeMutable,
-  runOnUI,
-  runOnJS,
-  SharedValue,
-} from 'react-native-reanimated';
+import { render, stopRecordingAnimationUpdates, unmockAnimationTimer } from './RuntimeTestsApi';
+import { makeMutable, runOnUI, runOnJS, SharedValue } from 'react-native-reanimated';
 import { color, logInFrame } from './LogMessageUtils';
 import { createUpdatesContainer } from './UpdatesContainer';
 import { Matchers } from './Matchers';
-import {
-  assertMockedAnimationTimestamp,
-  assertTestCase,
-  assertTestSuite,
-} from './Asserts';
+import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
 
 let callTrackerRegistryJS: Record<string, number> = {};
 const callTrackerRegistryUI = makeMutable<Record<string, number>>({});
@@ -49,8 +36,7 @@ export class TestRunner {
   private _testSuites: TestSuite[] = [];
   private _currentTestSuite: TestSuite | null = null;
   private _currentTestCase: TestCase | null = null;
-  private _renderHook: (component: ReactElement<Component> | null) => void =
-    () => {};
+  private _renderHook: (component: ReactElement<Component> | null) => void = () => {};
   private _renderLock: LockObject = { lock: false };
   private _valueRegistry: Record<string, SharedValue> = {};
   private _wasRenderedNull: boolean = false;
@@ -68,7 +54,7 @@ export class TestRunner {
   }
 
   public async waitForNotify(name: string) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const interval = setInterval(() => {
         if (notificationRegistry[name]) {
           clearInterval(interval);
@@ -210,11 +196,7 @@ export class TestRunner {
     this._currentTestSuite = null;
   }
 
-  private async runTestCase(
-    testSuite: TestSuite,
-    testCase: TestCase,
-    summary: TestSummary
-  ) {
+  private async runTestCase(testSuite: TestSuite, testCase: TestCase, summary: TestSummary) {
     callTrackerRegistryUI.value = {};
     callTrackerRegistryJS = {};
     this._currentTestCase = testCase;
@@ -277,12 +259,8 @@ export class TestRunner {
     this._currentTestSuite.afterEach = job;
   }
 
-  private waitForPropertyValueChange(
-    targetObject: LockObject,
-    targetProperty: 'lock',
-    initialValue = true
-  ) {
-    return new Promise((resolve) => {
+  private waitForPropertyValueChange(targetObject: LockObject, targetProperty: 'lock', initialValue = true) {
+    return new Promise(resolve => {
       const interval = setInterval(() => {
         if (targetObject[targetProperty] !== initialValue) {
           clearInterval(interval);
@@ -306,14 +284,11 @@ export class TestRunner {
   public async recordAnimationUpdates() {
     const updatesContainer = createUpdatesContainer(this);
     const recordAnimationUpdates = updatesContainer.pushAnimationUpdates;
-    const recordLayoutAnimationUpdates =
-      updatesContainer.pushLayoutAnimationUpdates;
+    const recordLayoutAnimationUpdates = updatesContainer.pushLayoutAnimationUpdates;
 
     await this.runOnUIBlocking(() => {
       'worklet';
-      const originalUpdateProps = global._IS_FABRIC
-        ? global._updatePropsFabric
-        : global._updatePropsPaper;
+      const originalUpdateProps = global._IS_FABRIC ? global._updatePropsFabric : global._updatePropsPaper;
       global.originalUpdateProps = originalUpdateProps;
 
       const mockedUpdateProps = (operations: Operation[]) => {
@@ -329,11 +304,7 @@ export class TestRunner {
 
       const originalNotifyAboutProgress = global._notifyAboutProgress;
       global.originalNotifyAboutProgress = originalNotifyAboutProgress;
-      global._notifyAboutProgress = (
-        tag: number,
-        value: Record<string, unknown>,
-        isSharedTransition: boolean
-      ) => {
+      global._notifyAboutProgress = (tag: number, value: Record<string, unknown>, isSharedTransition: boolean) => {
         recordLayoutAnimationUpdates(tag, value);
         originalNotifyAboutProgress(tag, value, isSharedTransition);
       };
@@ -420,8 +391,7 @@ export class TestRunner {
         global.originalGetAnimationTimestamp = undefined;
       }
       if (global.originalRequestAnimationFrame) {
-        (global.requestAnimationFrame as any) =
-          global.originalRequestAnimationFrame;
+        (global.requestAnimationFrame as any) = global.originalRequestAnimationFrame;
         global.originalRequestAnimationFrame = undefined;
       }
       if (global.originalFlushAnimationFrame) {
@@ -435,7 +405,7 @@ export class TestRunner {
   }
 
   public wait(delay: number) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       setTimeout(resolve, delay);
     });
   }
@@ -448,17 +418,8 @@ export class TestRunner {
     endTime: number;
   }) {
     console.log('\n');
-    console.log(
-      `🧮 Tests summary: ${color(summary.passed, 'green')} passed, ${color(
-        summary.failed,
-        'red'
-      )} failed`
-    );
-    console.log(
-      `⏱️  Total time: ${
-        Math.round(((summary.endTime - summary.startTime) / 1000) * 100) / 100
-      }s`
-    );
+    console.log(`🧮 Tests summary: ${color(summary.passed, 'green')} passed, ${color(summary.failed, 'red')} failed`);
+    console.log(`⏱️  Total time: ${Math.round(((summary.endTime - summary.startTime) / 1000) * 100) / 100}s`);
     if (summary.failed > 0) {
       console.log('❌ Failed tests:');
       for (const failedTest of summary.failedTests) {

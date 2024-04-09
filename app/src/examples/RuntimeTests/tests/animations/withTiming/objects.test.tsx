@@ -58,34 +58,31 @@ describe('withTiming animation of WIDTH', () => {
     backgroundColor: ComparisonMode.COLOR,
   };
 
-  (
-    [
-      {
-        startStyle: { width: 10 },
-        finalStyle: { width: 100 },
-      },
-      {
-        startStyle: { width: 10, height: 10, backgroundColor: 'orange' },
-        finalStyle: { width: 100, height: 100, backgroundColor: 'peru' },
-      },
-      {
-        startStyle: { width: 10, left: 10, top: 10, backgroundColor: 'aqua' },
-        finalStyle: { width: 100, left: 100, top: 100, backgroundColor: 'teal' },
-      },
-      {
-        startStyle: { opacity: 1, backgroundColor: '#AA3456' },
-        finalStyle: { opacity: 0.1, backgroundColor: '#AAAAFF' },
-      },
-      {
-        startStyle: { opacity: 1, backgroundColor: '#AA3456AB' },
-        finalStyle: { opacity: 0.1, backgroundColor: '#AAAAFFFD' },
-      },
-    ] as const
-  ).forEach(testCase => {
-    const { startStyle, finalStyle }: { startStyle: any; finalStyle: any } = testCase;
-    test(`Animate\tfrom \t${JSON.stringify(startStyle)}\n\t\tto\t${JSON.stringify(finalStyle)}`, async () => {
+  test.each([
+    {
+      startStyle: { width: 10 },
+      finalStyle: { width: 100 },
+    },
+    {
+      startStyle: { width: 10, height: 10, backgroundColor: 'orange' },
+      finalStyle: { width: 100, height: 100, backgroundColor: 'peru' },
+    },
+    {
+      startStyle: { width: 10, left: 10, top: 10, backgroundColor: 'aqua' },
+      finalStyle: { width: 100, left: 100, top: 100, backgroundColor: 'teal' },
+    },
+    {
+      startStyle: { opacity: 1, backgroundColor: '#AA3456' },
+      finalStyle: { opacity: 0.1, backgroundColor: '#AAAAFF' },
+    },
+    {
+      startStyle: { opacity: 1, backgroundColor: '#AA3456AB' },
+      finalStyle: { opacity: 0.1, backgroundColor: '#AAAAFFFD' },
+    },
+  ])(
+    'Animate\tfrom \t${startStyle}\n\t\tto\t${finalStyle}',
+    async ({ startStyle, finalStyle }: { startStyle: any; finalStyle: any }) => {
       await render(<AnimatedComponent startStyle={startStyle} finalStyle={finalStyle} />);
-
       const component = getTestComponent(COMPONENT_REF);
       await wait(1000);
       Object.keys(finalStyle).forEach(async key => {
@@ -94,8 +91,8 @@ describe('withTiming animation of WIDTH', () => {
           comparisonModes[key as keyof typeof comparisonModes],
         );
       });
-    });
-  });
+    },
+  );
 });
 
 const styles = StyleSheet.create({

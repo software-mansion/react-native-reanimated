@@ -28,9 +28,57 @@ export function afterAll(job: () => void) {
   testRunner.afterAll(job);
 }
 
-export function test(name: string, testCase: () => void) {
+export const test = (name: string, testCase: () => void) => {
   testRunner.test(name, testCase);
+};
+
+function formatString(template: string, variableObject: unknown, index: number) {
+  const valueToString: (arg0: unknown) => string = (value: unknown) => {
+    if (typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+    if (typeof value === 'function') {
+      return value.name;
+    }
+    return value?.toString() || '';
+  };
+  let testName = template;
+
+  testName = testName.replace(/%#/g, index.toString());
+
+  if (variableObject === null) {
+    return testName;
+  }
+  if (Array.isArray(variableObject)) {
+    variableObject.forEach((value, index) => {
+      // python-like syntax ${1} {2}
+      testName = testName.replace('${' + index + '}', valueToString(value));
+    });
+  }
+  if (typeof variableObject === 'object') {
+    const keys = Object.keys(variableObject);
+    keys.forEach(k => {
+      // Typical object literal syntax
+      testName = testName.replace('${' + k + '}', valueToString(variableObject[k as keyof typeof variableObject]));
+    });
+  }
+
+  // Allow printf formatting used in jest
+  testName = testName.replace(/%(p|s|i|f)/, valueToString(variableObject));
+
+  return testName;
 }
+
+test.each = <T>(examples: Array<T>) => {
+  return (name: string, testCase: (example: T) => void) => {
+    examples.forEach((example, index) => {
+      const currentTestCase = async () => {
+        await testCase(example);
+      };
+      testRunner.test(formatString(name, example, index), currentTestCase);
+    });
+  };
+};
 
 export async function render(component: ReactElement<Component> | null) {
   return testRunner.render(component);

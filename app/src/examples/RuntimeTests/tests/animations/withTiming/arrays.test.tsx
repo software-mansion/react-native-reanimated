@@ -88,9 +88,10 @@ describe('withTiming animation of ARRAY', () => {
     { startWidths: [2e-130, 1e-20, 20], finalWidths: [13.78e-125, 15e20, 20], scalars: [1e126, 1e-19, 1], speed: 50 },
   ];
 
-  TEST_CASES.forEach(({ startWidths, finalWidths, scalars: passedScalars, speed }) => {
-    const scalars: [number, number, number] = passedScalars ? passedScalars : [1, 1, 1];
-    test(`Animate independent components ${speed}ms FROM ${startWidths} TO ${finalWidths}`, async () => {
+  test.each(TEST_CASES)(
+    'Animate independent components ${speed}ms FROM ${startWidths} TO ${finalWidths}',
+    async ({ startWidths, finalWidths, scalars: passedScalars, speed }) => {
+      const scalars: [number, number, number] = passedScalars ? passedScalars : [1, 1, 1];
       await render(
         <IndependentComponents
           startWidths={startWidths}
@@ -112,8 +113,8 @@ describe('withTiming animation of ARRAY', () => {
       components.forEach(async (component, index) => {
         expect(await component.getAnimatedStyle('width')).toBe(finalWidths[index], ComparisonMode.DISTANCE);
       });
-    });
-  });
+    },
+  );
 });
 
 const styles = StyleSheet.create({
