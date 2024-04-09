@@ -19,9 +19,6 @@ import ts from 'typescript';
 import prettier from 'prettier/standalone';
 import babelParser from 'prettier/parser-babel';
 
-import { lightGreen } from '@mui/material/colors';
-import { plugins } from '@site/babel.config';
-
 function compileTSXtoJSX(tsxCode: string) {
   const TEXT_TO_REPLACE_1 = '// 1-COMMENT-TO-REPLACE';
   const TEXT_TO_REPLACE_2 = '// 2-COMMENT-TO-REPLACE';
@@ -47,22 +44,13 @@ function compileTSXtoJSX(tsxCode: string) {
 
   const output = result.outputText
     .split('\n')
-    .map((line, index) => {
-      if (line.trim() === TEXT_TO_REPLACE_1) {
-        return '';
-      } else if (line.includes(TEXT_TO_REPLACE_2)) {
-        line = line.slice(0, line.indexOf(TEXT_TO_REPLACE_2)).trimEnd();
-
-        if (line === '') {
-          return null;
-        }
-
-        return line;
-      } else {
-        return line;
-      }
-    })
-    .filter((line) => line !== null)
+    .map((l) =>
+      l.trim() === TEXT_TO_REPLACE_1
+        ? ''
+        : l.trim().endsWith(TEXT_TO_REPLACE_2)
+        ? l.slice(0, l.indexOf(TEXT_TO_REPLACE_2)).trimEnd()
+        : l
+    )
     .join('\n');
 
   return prettier.format(output, {
