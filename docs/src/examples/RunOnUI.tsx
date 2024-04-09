@@ -5,10 +5,11 @@ import Animated, {
   measure,
   useAnimatedRef,
   runOnUI,
+  MeasuredDimensions,
 } from 'react-native-reanimated';
 
 type MeasurableTextProps = React.PropsWithChildren<{
-  onPress: (measurements: any) => void;
+  onPress: (measurements: MeasuredDimensions) => void;
 }>;
 
 function MeasurableText(props: MeasurableTextProps) {
@@ -37,7 +38,7 @@ function MeasurableText(props: MeasurableTextProps) {
 export default function App() {
   const [text, setText] = React.useState(0);
 
-  const handlePress = (measurements: any) => {
+  const handlePress = (measurements: MeasuredDimensions) => {
     setText(Math.floor(measurements.width));
   };
 
