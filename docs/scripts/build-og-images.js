@@ -69,8 +69,8 @@ const buildOGImages = async () => {
           let line = '';
           const lines = [];
           let y = 267;
-          for (let i = 0; i < words.length; i++) {
-            const newLine = `${line} ${words[i]}`.trim();
+          words.forEach((word, i) => {
+            const newLine = `${line} ${word}`.trim();
             if (ctx.measureText(`${newLine}`).width < 1200 - 2 * 67) {
               line = newLine;
             } else {
@@ -79,9 +79,9 @@ const buildOGImages = async () => {
                 y,
               });
               y += 37;
-              line = `${words[i]}`;
+              line = `${word}`;
             }
-          }
+          });
           lines.push({
             line,
             y,
