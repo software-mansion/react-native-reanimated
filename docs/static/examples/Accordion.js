@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   box: {
     height: 120,
     width: 120,
-    color: 'var(--swm-off-white)',
+    color: '#f8f9ff',
     backgroundColor: '#b58df1',
     borderRadius: 20,
     alignItems: 'center',

@@ -7,10 +7,9 @@ Bottom sheets are surfaces containing supplementary content, anchored to the bot
 
 import BottomSheet from '@site/static/examples/BottomSheet';
 import BottomSheetSrc from '!!raw-loader!@site/static/examples/BottomSheet';
+import ExampleVideo from '@site/src/components/ExampleVideo';
 
 <InteractiveExample src={BottomSheetSrc} component={<BottomSheet />} />
-
-Now, let's delve into the provided code:
 
 The **BottomSheet** component accepts props such as `isOpen` - a [shared value](/docs/fundamentals/glossary#shared-value) indicating whether the bottom sheet is open or closed, `toggleSheet` - a function to toggle the visibility of the bottom sheet, and an optional `duration` for animation.
 
@@ -39,6 +38,13 @@ function BottomSheet({ isOpen, toggleSheet, duration = 500, children }) {
 ```
 
 The `height` shared value is used to track the height of the bottom sheet, while the `progress` derived value interpolates between 0 and 1 based on the state of `isOpen`, controlling the animation of the bottom sheet.
+
+<ExampleVideo
+sources={{
+    android: "/react-native-reanimated/recordings/examples/bottom_sheet_android.mov",
+    ios: "/react-native-reanimated/recordings/examples/bottom_sheet_ios.mov"
+  }}
+/>
 
 ```js
 const height = useSharedValue(0);

@@ -18,34 +18,31 @@ const exampleStyles = StyleSheet.create({
     alignItems: 'center',
     width: 100,
     height: 100,
-    backgroundColor: 'var(--swm-off-white)',
+    backgroundColor: '#f8f9ff',
     borderRadius: 20,
   },
-  aboutContainer: {
+  listContainer: {
     display: 'flex',
     flexDirection: 'column',
     gap: 6,
   },
-  aboutItem: {
-    backgroundColor: 'var(--swm-off-white)',
+  listWrapper: {
+    borderRadius: 16,
+    backgroundColor: '#f8f9ff',
+  },
+  listItem: {
     display: 'flex',
     alignItems: 'center',
     flexDirection: 'row',
     gap: 2,
     padding: 8,
     paddingHorizontal: 32,
-    borderRadius: 16,
   },
 });
 
 const SECTION_HEIGHT = 350;
 
-const BRAND_COLORS = [
-  'var(--swm-red-light-80)',
-  'var(--swm-purple-light-80)',
-  'var(--swm-yellow-light-60)',
-  'var(--swm-green-light-80)',
-];
+const BRAND_COLORS = ['#fa7f7c', '#b58df1', '#ffe780', '#82cab2'];
 
 const SECTIONS = [
   {
@@ -71,10 +68,16 @@ const SECTIONS = [
   {
     name: 'Shopping list',
     content: (
-      <View style={exampleStyles.aboutContainer}>
-        <Text style={exampleStyles.aboutItem}>🍎 Apple </Text>
-        <Text style={exampleStyles.aboutItem}>🍌 Banana</Text>
-        <Text style={exampleStyles.aboutItem}>🥖 Bread</Text>
+      <View style={exampleStyles.listContainer}>
+        <View style={exampleStyles.listWrapper}>
+          <Text style={exampleStyles.listItem}>🍎 Apple </Text>
+        </View>
+        <View style={exampleStyles.listWrapper}>
+          <Text style={exampleStyles.listItem}>🍌 Banana</Text>
+        </View>
+        <View style={exampleStyles.listWrapper}>
+          <Text style={exampleStyles.listItem}>🥖 Bread</Text>
+        </View>
       </View>
     ),
   },
@@ -92,8 +95,8 @@ function debounce(func, timeout = 100) {
 
 const useSelectedStyle = (selectedItem, item) =>
   useAnimatedStyle(() => ({
-    fontWeight: selectedItem.value === item ? 600 : 400,
-    borderBottomWidth: selectedItem.value === item ? '1px' : '0',
+    fontWeight: selectedItem.value === item ? '600' : '400',
+    borderBottomWidth: selectedItem.value === item ? 1 : 0,
   }));
 
 const TableOfContentsElement = ({
@@ -182,9 +185,9 @@ const sectionListStyles = StyleSheet.create({
   },
   tableOfContentsElement: {
     padding: 4,
-    color: 'var(--swm-navy-light-100)',
+    color: '#001a72',
     marginHorizontal: 4,
-    borderBottomColor: 'var(--swm-navy-light-100)',
+    borderBottomColor: '#001a72',
     margin: 8,
     overflow: 'hidden',
   },
@@ -192,9 +195,6 @@ const sectionListStyles = StyleSheet.create({
     top: 0,
   },
 });
-
-// TODO: add react-native to xcode
-// TODO: change way of defining in what sections we are -> like in landing page
 
 const SectionCards = ({
   sections,
@@ -287,21 +287,21 @@ const sectionCardStyles = StyleSheet.create({
     borderRadius: 24,
   },
   header: {
-    color: 'var(--swm-navy-light-100)',
+    color: '#001a72',
     textAlign: 'center',
     fontSize: 24,
     fontWeight: 'bold',
   },
   content: {
-    color: 'var(--swm-navy-light-100)',
+    color: '#001a72',
   },
   button: {
-    backgroundColor: 'var(--swm-off-white)',
+    backgroundColor: '#f8f9ff',
     padding: 12,
     borderRadius: 48,
   },
   buttonText: {
-    color: 'var(--swm-navy-light-100)',
+    color: '#001a72',
     padding: '0.5rem',
   },
 });

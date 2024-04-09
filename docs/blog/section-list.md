@@ -5,6 +5,7 @@ title: Section List
 
 import SectionList from '@site/static/examples/SectionList';
 import SectionListSrc from '!!raw-loader!@site/static/examples/SectionList';
+import ExampleVideo from '@site/src/components/ExampleVideo';
 
 Section Lists are essential in mobile app development, organizing content with sleek headers and intuitive navigation for seamless user experience. They streamline browsing through news categories or recipe collections, offering effortless scrolling and clear organization, making content discovery a delightful journey.
 
@@ -116,6 +117,13 @@ const SectionCards = ({
   );
 };
 ```
+
+<ExampleVideo
+sources={{
+    android: "/react-native-reanimated/recordings/examples/section_list_android.mov",
+    ios: "/react-native-reanimated/recordings/examples/section_list_ios.mov"
+  }}
+/>
 
 The `onScroll` in **SectionCards** calculates the offset as the user scrolls through the content and determines which section is currently most visible on the screen. It is done by comparing the distance of each section from the top of the screen - it identifies the section closest to the viewport's top edge.
 

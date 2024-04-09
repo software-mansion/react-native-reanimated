@@ -34,7 +34,7 @@ function BottomSheet({ isOpen, toggleSheet, duration = 500, children }) {
 
   return (
     <>
-      <Animated.View style={[sheetStyle.backdrop, backdropStyle]}>
+      <Animated.View style={[sheetStyles.backdrop, backdropStyle]}>
         <TouchableOpacity style={styles.flex} onPress={toggleSheet} />
       </Animated.View>
       <Animated.View
@@ -50,7 +50,7 @@ function BottomSheet({ isOpen, toggleSheet, duration = 500, children }) {
 
 const sheetStyles = StyleSheet.create({
   sheet: {
-    backgroundColor: 'var(--swm-off-white)',
+    backgroundColor: '#f8f9ff',
     padding: 16,
     paddingRight: '2rem',
     paddingLeft: '2rem',
@@ -137,14 +137,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     borderBottomWidth: 1,
-    borderBottomColor: 'var(--swm-navy-light-100)',
+    borderBottomColor: '#001a72',
     paddingBottom: 2,
   },
   bottomSheetButtonText: {
     fontWeight: 600,
-    color: 'var(--swm-navy-light-100)',
+    color: '#001a72',
   },
   bottomSheetContent: {
-    color: 'var(--swm-navy-light-100)',
+    color: '#001a72',
   },
 });
