@@ -92,7 +92,7 @@ enum Tab {
 }
 
 export default function InteractiveExample({
-  src,
+  src: tsxCode,
   component,
   label,
   showCode = false,
@@ -101,7 +101,7 @@ export default function InteractiveExample({
   const [_, copy] = useCopyToClipboard();
   const [key, setKey] = React.useState(0);
   const [tab, setTab] = React.useState<Tab>(Tab.PREVIEW);
-  const [jsxCode, setJsxCode] = React.useState(() => compileTSXtoJSX(src));
+  const [jsxCode, setJsxCode] = React.useState(() => compileTSXtoJSX(tsxCode));
 
   const resetExample = () => {
     setKey(key + 1);
@@ -156,7 +156,7 @@ export default function InteractiveExample({
               animation={Animation.FADE_IN_OUT}
               onClick={(actionPerformed, setActionPerformed) => {
                 if (!actionPerformed) {
-                  copy(tab === Tab.JAVASCRIPT ? jsxCode : src);
+                  copy(tab === Tab.JAVASCRIPT ? jsxCode : tsxCode);
                   setActionPerformed(true);
                 }
               }}
@@ -189,7 +189,7 @@ export default function InteractiveExample({
               </>
             ) : tab === Tab.TYPESCRIPT ? (
               <div className={styles.interactiveCodeBlock}>
-                <CodeBlock language="tsx">{src}</CodeBlock>
+                <CodeBlock language="tsx">{tsxCode}</CodeBlock>
               </div>
             ) : (
               <div className={styles.interactiveCodeBlock}>
