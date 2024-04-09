@@ -6,9 +6,11 @@ function patchFile(path, find, replace) {
   fs.writeFileSync(path, data);
 }
 
-const buildGradle = 'app/android/app/build.gradle';
+const gradleProperties = 'app/android/gradle.properties';
 
-patchFile(buildGradle, 'enableHermes: true,', 'enableHermes: false,');
+patchFile(gradleProperties, 'enableHermes: true,', 'enableHermes: false,');
+
+const buildGradle = 'app/android/app/build.gradle';
 
 patchFile(
   buildGradle,
