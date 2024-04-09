@@ -189,6 +189,7 @@ export function createAnimatedComponent(
       const exiting = this.props.exiting;
       if (
         IS_WEB &&
+        this._component &&
         this.props.exiting &&
         !getReducedMotionFromConfig(this.props.exiting as CustomConfig)
       ) {
