@@ -1,11 +1,6 @@
 import { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withDelay,
-} from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
 import React from 'react';
 import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
 import {
@@ -54,7 +49,7 @@ const IndependentComponents = ({
       100,
       withTiming(finalWidths, {
         duration,
-      })
+      }),
     );
   }, [widths, finalWidths, duration]);
 
@@ -68,61 +63,33 @@ const IndependentComponents = ({
 };
 
 describe('withTiming animation of ARRAY', () => {
-  //We should test different speeds, since it may affect the performance
-  (
-    [
-      { startWidths: [20, 20, 20], finalWidths: [300, 300, 300], speed: 10000 },
-      { startWidths: [20, 300, 20], finalWidths: [200, 30, 200], speed: 5000 },
-      { startWidths: [20, 20, 20], finalWidths: [20, 200, 100], speed: 1000 },
-      { startWidths: [20, 20, 20], finalWidths: [130, 140, 150], speed: 1000 },
-      { startWidths: [20, 20, 20], finalWidths: [130, 140, 150], speed: 500 },
-      { startWidths: [20, 20, 20], finalWidths: [20, 140, 150], speed: 500 },
-      { startWidths: [20, 20, 20], finalWidths: [20, 20, 150], speed: 500 },
-      { startWidths: [20, 20, 20], finalWidths: [130, 140, 150], speed: 10 },
-      { startWidths: [200, 200, 200], finalWidths: [130, 140, 150], speed: 10 },
-      { startWidths: [200, 200, 200], finalWidths: [200, 140, 150], speed: 10 },
-      { startWidths: [20, 20, 20], finalWidths: [130, 140, 150], speed: 0 },
-      { startWidths: [20, 20, 20], finalWidths: [130, 14.3, 150], speed: 500 },
-      {
-        startWidths: [2e-4, 20, 20],
-        finalWidths: [13.78e-4, 200, 20],
-        scalars: [1e5, 1, 1],
-        speed: 500,
-      },
-      {
-        startWidths: [2e-9, 20, 20],
-        finalWidths: [13.78e-9, 200, 20],
-        scalars: [1e10, 1, 1],
-        speed: 500,
-      },
-      {
-        startWidths: [2e-17, 20, 20],
-        finalWidths: [13.78e-17, 200, 20],
-        scalars: [1e18, 1, 1],
-        speed: 500,
-      },
-      {
-        startWidths: [2e-125, 1e20, 20],
-        finalWidths: [13.78e-125, 1e20, 20],
-        scalars: [1e126, 1e-19, 1],
-        speed: 500,
-      },
-      {
-        startWidths: [2e-130, 1e-20, 20],
-        finalWidths: [13.78e-125, 15e20, 20],
-        scalars: [1e126, 1e-19, 1],
-        speed: 50,
-      },
-    ] as Array<{
-      startWidths: [number, number, number];
-      finalWidths: [number, number, number];
-      scalars?: [number, number, number];
-      speed: number;
-    }>
-  ).forEach(({ startWidths, finalWidths, scalars: passedScalars, speed }) => {
-    const scalars: [number, number, number] = passedScalars
-      ? passedScalars
-      : [1, 1, 1];
+  const TEST_CASES: Array<{
+    startWidths: [number, number, number];
+    finalWidths: [number, number, number];
+    scalars?: [number, number, number];
+    speed: number;
+  }> = [
+    { startWidths: [20, 20, 20], finalWidths: [300, 300, 300], speed: 10000 },
+    { startWidths: [20, 300, 20], finalWidths: [200, 30, 200], speed: 5000 },
+    { startWidths: [20, 20, 20], finalWidths: [20, 200, 100], speed: 1000 },
+    { startWidths: [20, 20, 20], finalWidths: [130, 140, 150], speed: 1000 },
+    { startWidths: [20, 20, 20], finalWidths: [130, 140, 150], speed: 500 },
+    { startWidths: [20, 20, 20], finalWidths: [20, 140, 150], speed: 500 },
+    { startWidths: [20, 20, 20], finalWidths: [20, 20, 150], speed: 500 },
+    { startWidths: [20, 20, 20], finalWidths: [130, 140, 150], speed: 10 },
+    { startWidths: [200, 200, 200], finalWidths: [130, 140, 150], speed: 10 },
+    { startWidths: [200, 200, 200], finalWidths: [200, 140, 150], speed: 10 },
+    { startWidths: [20, 20, 20], finalWidths: [130, 140, 150], speed: 0 },
+    { startWidths: [20, 20, 20], finalWidths: [130, 14.3, 150], speed: 500 },
+    { startWidths: [2e-4, 20, 20], finalWidths: [13.78e-4, 200, 20], scalars: [1e5, 1, 1], speed: 500 },
+    { startWidths: [2e-9, 20, 20], finalWidths: [13.78e-9, 200, 20], scalars: [1e10, 1, 1], speed: 500 },
+    { startWidths: [2e-17, 20, 20], finalWidths: [13.78e-17, 200, 20], scalars: [1e18, 1, 1], speed: 500 },
+    { startWidths: [2e-125, 1e20, 20], finalWidths: [13.78e-125, 1e20, 20], scalars: [1e126, 1e-19, 1], speed: 500 },
+    { startWidths: [2e-130, 1e-20, 20], finalWidths: [13.78e-125, 15e20, 20], scalars: [1e126, 1e-19, 1], speed: 50 },
+  ];
+
+  TEST_CASES.forEach(({ startWidths, finalWidths, scalars: passedScalars, speed }) => {
+    const scalars: [number, number, number] = passedScalars ? passedScalars : [1, 1, 1];
     test(`Animate independent components ${speed}ms FROM ${startWidths} TO ${finalWidths}`, async () => {
       await render(
         <IndependentComponents
@@ -130,25 +97,20 @@ describe('withTiming animation of ARRAY', () => {
           finalWidths={finalWidths}
           duration={speed}
           scalars={scalars}
-        />
+        />,
       );
-      const components = Object.values(COMPONENT_REF).map((refName) =>
-        getTestComponent(refName)
-      );
+      const components = Object.values(COMPONENT_REF).map(refName => getTestComponent(refName));
 
       components.forEach(async (component, index) => {
         expect(await component.getAnimatedStyle('width')).toBe(
           startWidths[index] * scalars[index],
-          ComparisonMode.DISTANCE
+          ComparisonMode.DISTANCE,
         );
       });
       await wait(speed + 200);
 
       components.forEach(async (component, index) => {
-        expect(await component.getAnimatedStyle('width')).toBe(
-          finalWidths[index],
-          ComparisonMode.DISTANCE
-        );
+        expect(await component.getAnimatedStyle('width')).toBe(finalWidths[index], ComparisonMode.DISTANCE);
       });
     });
   });

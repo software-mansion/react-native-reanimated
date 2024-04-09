@@ -1,11 +1,6 @@
 import { useEffect } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withDelay,
-} from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
 import React from 'react';
 import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
 import {
@@ -59,12 +54,7 @@ describe('withTiming animation of WIDTH', () => {
 
   (
     [
-      {
-        startWidth: 0,
-        finalWidth: 100,
-        finalWidthInPixels: 100,
-        description: 'width in pixels',
-      },
+      { startWidth: 0, finalWidth: 100, finalWidthInPixels: 100, description: 'width in pixels' },
       {
         startWidth: '0%',
         finalWidth: '100%',
@@ -84,21 +74,15 @@ describe('withTiming animation of WIDTH', () => {
         description: 'width from pixels to percents',
       },
     ] as const
-  ).forEach((testCase) => {
-    const { startWidth, finalWidth, finalWidthInPixels, description } =
-      testCase;
+  ).forEach(testCase => {
+    const { startWidth, finalWidth, finalWidthInPixels, description } = testCase;
 
     const fullDescription = `${description}, from ${startWidth} to ${finalWidth}`;
     test(fullDescription, async () => {
-      await render(
-        <WidthComponent startWidth={startWidth} finalWidth={finalWidth} />
-      );
+      await render(<WidthComponent startWidth={startWidth} finalWidth={finalWidth} />);
       const component = getTestComponent(WIDTH_COMPONENT_REF);
       await wait(1000);
-      expect(await component.getAnimatedStyle('width')).toBe(
-        finalWidthInPixels,
-        ComparisonMode.DISTANCE
-      );
+      expect(await component.getAnimatedStyle('width')).toBe(finalWidthInPixels, ComparisonMode.DISTANCE);
     });
   });
 
@@ -106,10 +90,7 @@ describe('withTiming animation of WIDTH', () => {
     await render(<WidthComponent startWidth={'20%'} finalWidth={100} />);
     const component = getTestComponent(WIDTH_COMPONENT_REF);
     await wait(1000);
-    expect(await component.getAnimatedStyle('width')).not.toBe(
-      100,
-      ComparisonMode.DISTANCE
-    );
+    expect(await component.getAnimatedStyle('width')).not.toBe(100, ComparisonMode.DISTANCE);
   });
 });
 
@@ -120,15 +101,8 @@ describe('withTiming, test CALLBACKS', () => {
     const style = useAnimatedStyle(() => {
       callTracker(Tracker.UseAnimatedStyle);
       return {
-        width: withTiming(
-          sv.value,
-          { duration: 200 },
-          callTrackerFn(Tracker.Width)
-        ),
-        height: withDelay(
-          10,
-          withTiming(sv.value, { duration: 400 }, callTrackerFn(Tracker.Height))
-        ),
+        width: withTiming(sv.value, { duration: 200 }, callTrackerFn(Tracker.Width)),
+        height: withDelay(10, withTiming(sv.value, { duration: 400 }, callTrackerFn(Tracker.Height))),
         opacity: 1,
       };
     });

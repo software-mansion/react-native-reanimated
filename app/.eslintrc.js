@@ -1,6 +1,6 @@
 module.exports = {
   root: true,
-  extends: '@react-native',
+  extends: ['@react-native', 'prettier'],
   plugins: ['eslint-plugin-no-inline-styles', 'reanimated'],
   ignorePatterns: ['**/*.snapshot.ts'],
   rules: {

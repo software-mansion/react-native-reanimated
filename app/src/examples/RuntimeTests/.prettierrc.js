@@ -3,5 +3,5 @@ module.exports = {
   bracketSameLine: true,
   singleQuote: true,
   trailingComma: 'all',
-  printWidth: 100, // Increase line width to make test cases more compact
+  printWidth: 120, // Increase line width to make test cases more compact
 };
