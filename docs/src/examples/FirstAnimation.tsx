@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
-import Animated, { SharedValue, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useSharedValue, withSpring } from 'react-native-reanimated';
 
 export default function App() {
   const width = useSharedValue<number>(100);

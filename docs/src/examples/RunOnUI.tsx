@@ -7,7 +7,9 @@ import Animated, {
   runOnUI,
 } from 'react-native-reanimated';
 
-function MeasurableText(props: {children: any; onPress: (measurements: any) => void}) {
+type MeasurableTextProps = React.PropsWithChildren<{ onPress: (measurements: any) => void }>
+
+function MeasurableText(props: MeasurableTextProps){
   const { children, onPress } = props;
   const animatedRef = useAnimatedRef<Animated.View>();
 

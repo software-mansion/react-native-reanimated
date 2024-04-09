@@ -4,7 +4,6 @@ import Animated, {
   useFrameCallback,
   useSharedValue,
   useAnimatedStyle,
-  SharedValue,
 } from 'react-native-reanimated';
 
 export default function App() {

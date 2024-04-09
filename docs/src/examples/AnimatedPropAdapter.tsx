@@ -32,7 +32,7 @@ export default function App() {
     opacity.value = withRepeat(withTiming(1), -1, true);
   }, []);
 
-  const ellipseAnimatedProps: any = useAnimatedProps(
+  const ellipseAnimatedProps = useAnimatedProps(
     () => {
       const coordinates = { cx: 50, cy: 50, rx: 40, ry: 40 };
 

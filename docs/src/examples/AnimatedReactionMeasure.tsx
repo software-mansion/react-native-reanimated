@@ -1,7 +1,6 @@
 import React from 'react';
 import { Button, StyleSheet, View, Text } from 'react-native';
 import Animated, {
-  MeasuredDimensions,
   measure,
   runOnJS,
   useAnimatedReaction,
@@ -23,7 +22,7 @@ export default function App() {
   useAnimatedReaction(
     () => width.value,
     () => {
-      const measurement: MeasuredDimensions | null = measure(animatedRef);
+      const measurement = measure(animatedRef);
 
       if (measurement !== null)
         runOnJS(setText)(measurement.width);

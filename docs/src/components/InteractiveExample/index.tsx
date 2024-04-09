@@ -15,46 +15,55 @@ import ResetDark from '@site/static/img/reset-dark.svg';
 
 import styles from './styles.module.css';
 
-import ts from "typescript";
-import prettier from "prettier/standalone";
+import ts from 'typescript';
+import prettier from 'prettier/standalone';
 import babelParser from 'prettier/parser-babel';
 
 import { lightGreen } from '@mui/material/colors';
 import { plugins } from '@site/babel.config';
 
-function compileTSXtoJSX(tsxCode) {
-  const TEXT_TO_REPLACE_1 = "// 1-COMMENT-TO-REPLACE";
-  const TEXT_TO_REPLACE_2 = "// 2-COMMENT-TO-REPLACE";
+function compileTSXtoJSX(tsxCode: string) {
+  const TEXT_TO_REPLACE_1 = '// 1-COMMENT-TO-REPLACE';
+  const TEXT_TO_REPLACE_2 = '// 2-COMMENT-TO-REPLACE';
 
-  tsxCode = tsxCode.split("\n").map((line) => line.trim() === "" ? TEXT_TO_REPLACE_1 : line + TEXT_TO_REPLACE_2).join("\n");
+  // Adding comments to the end of each line to avoid vanishing empty lines
+  tsxCode = tsxCode
+    .split('\n')
+    .map((line) =>
+      line.trim() === '' ? TEXT_TO_REPLACE_1 : line + TEXT_TO_REPLACE_2
+    )
+    .join('\n');
   const result = ts.transpileModule(tsxCode, {
-      compilerOptions: {
-          module: ts.ModuleKind.ESNext,
-          jsx: ts.JsxEmit.Preserve,
-          pretty: true,
-          target: ts.ScriptTarget.ES2015,
-          removeComments: false,
-          noEmit: false,
-          indentSize: 2
-      }
+    compilerOptions: {
+      module: ts.ModuleKind.ESNext,
+      jsx: ts.JsxEmit.Preserve,
+      pretty: true,
+      target: ts.ScriptTarget.ES2015,
+      removeComments: false,
+      noEmit: false,
+      indentSize: 2,
+    },
   });
 
-  const output = result.outputText.split("\n").map((line, index) => {
-    // line.trim() === TEXT_TO_REPLACE ? "" : line.endsWith("// test cmd") ? line.slice(0, line.indexOf("// test cmd")) + '\n' : line;
+  const output = result.outputText
+    .split('\n')
+    .map((line, index) => {
+      if (line.trim() === TEXT_TO_REPLACE_1) {
+        return '';
+      } else if (line.includes(TEXT_TO_REPLACE_2)) {
+        line = line.slice(0, line.indexOf(TEXT_TO_REPLACE_2)).trimEnd();
 
-    if (line.trim() === TEXT_TO_REPLACE_1) {
-      return "";
-    } else if (line.includes(TEXT_TO_REPLACE_2)) {
-      line = line.slice(0, line.indexOf(TEXT_TO_REPLACE_2)).trimEnd();
+        if (line === '') {
+          return null;
+        }
 
-      if (line === '')
-        return null;
-
-      return line;
-    } else {
-      return line;
-    }
-  }).filter(line => line !== null).join("\n");
+        return line;
+      } else {
+        return line;
+      }
+    })
+    .filter((line) => line !== null)
+    .join('\n');
 
   return prettier.format(output, {
     parser: 'babel',
@@ -64,17 +73,8 @@ function compileTSXtoJSX(tsxCode) {
     trailingComma: 'es5',
     tabWidth: 2,
     arrowParens: 'always',
-    plugins: [babelParser]
+    plugins: [babelParser],
   });
-
-  // return output.split('\n').map(line => {
-  //   const n = (line.length - line.trimStart().length);
-
-  //   if (n === 0)
-  //     return line;
-
-  //   return line.slice(Math.floor(n / 2));
-  // }).join('\n');
 }
 
 interface Props {
@@ -88,7 +88,7 @@ interface Props {
 enum Tab {
   PREVIEW,
   TYPESCRIPT,
-  JAVASCRIPT
+  JAVASCRIPT,
 }
 
 export default function InteractiveExample({
@@ -101,7 +101,7 @@ export default function InteractiveExample({
   const [_, copy] = useCopyToClipboard();
   const [key, setKey] = React.useState(0);
   const [tab, setTab] = React.useState<Tab>(Tab.PREVIEW);
-  const [jsxCode, setJsxCode] = React.useState(compileTSXtoJSX(src));
+  const [jsxCode, setJsxCode] = React.useState(() => compileTSXtoJSX(src));
 
   const resetExample = () => {
     setKey(key + 1);
@@ -116,7 +116,9 @@ export default function InteractiveExample({
           className={`${styles.container} ${larger && styles.largerContainer} 
           ${tab !== Tab.PREVIEW ? styles.code : ''}`}
           data-ispreview={tab === Tab.PREVIEW}>
-          {tab === Tab.PREVIEW && prefersReducedMotion && <ReducedMotionWarning />}
+          {tab === Tab.PREVIEW && prefersReducedMotion && (
+            <ReducedMotionWarning />
+          )}
           <div
             className={clsx(
               styles.buttonsContainer,

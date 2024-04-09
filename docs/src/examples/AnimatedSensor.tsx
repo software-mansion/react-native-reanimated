@@ -5,8 +5,6 @@ import Animated, {
   useAnimatedSensor,
   SensorType,
   withSpring,
-  AnimatedSensor,
-  Value3D,
 } from 'react-native-reanimated';
 
 export default function App() {
