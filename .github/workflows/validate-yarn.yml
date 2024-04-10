@@ -47,6 +47,7 @@ jobs:
       - name: Get list of changed directories
         id: changed-dirs
         run: |
+          echo "changed files: ${{ steps.changed-files.outputs.all_changed_files }}"
           ECHOLIST=()
           for CHANGE in ${{ steps.changed-files.outputs.all_changed_files }}
           do
