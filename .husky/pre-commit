@@ -11,7 +11,7 @@ yarn find-unused-code:js
 ! git diff-index HEAD --name-only |\
 grep -E '^plugin/' > /dev/null
 if [ $? -eq 1 ]; then
-  (cd plugin && yarn build)
+  yarn build:plugin
   ! git status -u |\
   grep -E 'plugin/build/plugin\.js' > /dev/null
   if [ $? -eq 1 ]; then
