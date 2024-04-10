@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        react-native-version: ['0.71', '0.72', '0.73', nightly]
+        react-native-version: ['0.71', '0.72', '0.73', '0.74.0-rc.6', nightly]
       fail-fast: false
     concurrency:
       group: TS-react-native-nightly-${{ matrix.react-native-version }}-${{ github.ref }}
@@ -34,7 +34,7 @@ jobs:
       - name: Build repo
         run: yarn build
       - name: Install react-native ${{ matrix.react-native-version }}
-        run: yarn add -D react-native@${{ matrix.react-native-version }}
+        run: yarn add --dev react-native@${{ matrix.react-native-version }}
       - name: Check source types
         run: yarn type:check:src
       - name: Check plugin types

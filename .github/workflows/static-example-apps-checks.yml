@@ -32,7 +32,9 @@ jobs:
         run: scripts/clear-annotations.sh
 
       - name: Install root node dependencies
-        run: yarn install && yarn build
+        run: yarn install
+      - name: Build package
+        run: yarn build
       - name: Install ${{ matrix.working-directory }} app node dependencies
         working-directory: ${{ matrix.working-directory }}
         run: yarn
