@@ -40,12 +40,11 @@ jobs:
         id: updated_dirs
         run: |
           ECHOLIST=()
-          for CHANGE in $(git diff --name-only main | grep -E '(package.json|yarn.lock)'); do
+          for CHANGE in $(git diff --name-only origin/main | grep -E '(package.json|yarn.lock)'); do
             DIR=$(dirname "$CHANGE")
             ECHOLIST+=("$DIR")
           done
           echo "::set-output name=dirList::$(printf '%s\n' "${ECHOLIST[@]}" | sort -u)"
-
       - name: Perform yarn install in changed directories
         run: |
           for directory in ${{ steps.updated_dirs.outputs.dirList }}
