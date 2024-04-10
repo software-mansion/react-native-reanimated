@@ -54,8 +54,10 @@ jobs:
             DIR=$(dirname "$CHANGE")
             ECHOLIST+=("$DIR")
           done
-          echo "::set-output name=dirList::$(printf '%s\n' "${ECHOLIST[@]}" | sort -u)"
-          echo "dirList: ${ECHOLIST[@]}"
+          # Remove duplicates
+          ECHOLIST=($(echo "${ECHOLIST[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
+          echo "dirList: ${ECHOLIST[*]}"
+          echo "dirList=${ECHOLIST[*]}" >> $GITHUB_OUTPUT
 
       - name: Perform yarn install in changed directories
         run: |
