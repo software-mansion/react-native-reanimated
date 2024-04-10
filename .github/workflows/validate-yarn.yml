@@ -41,8 +41,8 @@ jobs:
         uses: tj-actions/changed-files@v35
         with:
           files: |
-            package.json
-            yarn.lock
+            **/package.json
+            **/yarn.lock
 
       - name: Get list of changed directories
         id: changed-dirs
