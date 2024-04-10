@@ -1,7 +1,6 @@
 'use strict';
 import { useEffect, useRef, useCallback } from 'react';
 import type { SharedValue } from '../commonTypes';
-import { findNodeHandle } from 'react-native';
 import type { EventHandlerInternal } from './useEvent';
 import { useEvent } from './useEvent';
 import { useSharedValue } from './useSharedValue';
@@ -36,7 +35,7 @@ function useScrollViewOffsetWeb(
 
   const eventHandler = useCallback(() => {
     'worklet';
-    const element = animatedRef.current as unknown as HTMLElement;
+    const element = getWebScrollableElement(animatedRef.current);
     // scrollLeft is the X axis scrolled offset, works properly also with RTL layout
     offset.value =
       element.scrollLeft === 0 ? element.scrollTop : element.scrollLeft;
@@ -46,14 +45,14 @@ function useScrollViewOffsetWeb(
   useEffect(() => {
     // We need to make sure that listener for old animatedRef value is removed
     if (scrollRef.current !== null) {
-      (scrollRef.current as unknown as HTMLElement).removeEventListener(
+      getWebScrollableElement(scrollRef.current).removeEventListener(
         'scroll',
         eventHandler
       );
     }
     scrollRef.current = animatedRef.current;
 
-    const element = animatedRef.current as unknown as HTMLElement;
+    const element = getWebScrollableElement(animatedRef.current);
     element.addEventListener('scroll', eventHandler);
     return () => {
       element.removeEventListener('scroll', eventHandler);
@@ -66,14 +65,6 @@ function useScrollViewOffsetWeb(
 
   return offset;
 }
-
-const scrollNativeEventNames = [
-  'onScroll',
-  'onScrollBeginDrag',
-  'onScrollEndDrag',
-  'onMomentumScrollBegin',
-  'onMomentumScrollEnd',
-];
 
 function useScrollViewOffsetNative(
   animatedRef: AnimatedRef<AnimatedScrollView>,
@@ -103,9 +94,8 @@ function useScrollViewOffsetNative(
     }
     scrollRef.current = animatedRef.current;
 
-    const component = animatedRef.current;
-    const viewTag = findNodeHandle(component);
-    eventHandler.workletEventHandler.registerForEvents(viewTag as number);
+    const viewTag = animatedRef.getTag();
+    eventHandler.workletEventHandler.registerForEvents(viewTag);
     return () => {
       eventHandler.workletEventHandler.unregisterFromEvents();
     };
@@ -117,3 +107,20 @@ function useScrollViewOffsetNative(
 
   return offset;
 }
+
+function getWebScrollableElement(
+  scrollComponent: AnimatedScrollView | null
+): HTMLElement {
+  return (
+    (scrollComponent?.getScrollableNode() as unknown as HTMLElement) ??
+    scrollComponent
+  );
+}
+
+const scrollNativeEventNames = [
+  'onScroll',
+  'onScrollBeginDrag',
+  'onScrollEndDrag',
+  'onMomentumScrollBegin',
+  'onMomentumScrollEnd',
+];
