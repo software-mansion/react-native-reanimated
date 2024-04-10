@@ -40,7 +40,7 @@ jobs:
         id: updated_dirs
         run: |
           ECHOLIST=()
-          DIFF=$(git diff --name-only)
+          DIFF=$(git diff --name-only main)
           echo "DIFF: $DIFF"
           FILES=$(echo "$DIFF" | grep -E '(package.json|yarn.lock)')
           echo "FILES: $FILES"
