@@ -27,7 +27,9 @@ jobs:
       - name: Clear annotations
         run: scripts/clear-annotations.sh
       - name: Install node dependencies
-        run: yarn && yarn build
+        run: yarn
+      - name: Build package
+        run: yarn build
       - name: Check types
         run: yarn type:check:all
       - name: Lint

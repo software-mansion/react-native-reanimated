@@ -34,7 +34,9 @@ jobs:
         run: scripts/clear-annotations.sh
 
       - name: Install node dependencies
-        run: yarn install && yarn build
+        run: yarn install
+      - name: Build package
+        run: yarn build
       - name: Check types
         working-directory: plugin
         run: yarn type:check:src
