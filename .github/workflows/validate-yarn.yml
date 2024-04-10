@@ -40,7 +40,7 @@ jobs:
         id: updated_dirs
         run: |
           ECHOLIST=()
-          for CHANGE in $(git diff --name-only origin/main | grep -E '(package.json|yarn.lock)'); do
+          for CHANGE in $(git diff --name-only | grep -E '(package.json|yarn.lock)'); do
             DIR=$(dirname "$CHANGE")
             ECHOLIST+=("$DIR")
           done
