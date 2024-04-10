@@ -57,8 +57,9 @@ jobs:
       - name: Perform yarn install in changed directories
         working-directory: ${{ github.workspace }}
         run: |
-          for directory in ${{ steps.changed-dirs.outputs.dirList }}
+          for DIR in ${{ steps.changed-dirs.outputs.dirList }}
           do
-            echo "Yarn install in $directory"
-            cd "$directory" && yarn install --immutable --immutable-cache && cd ${{ github.workspace }}
+            echo "Yarn install in $DIR"
+            echo $(pwd)
+            cd "$DIR" && yarn install --immutable && cd ${{ github.workspace }}
           done
