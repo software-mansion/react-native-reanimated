@@ -23,15 +23,10 @@ enum Tracker {
 }
 
 const WIDTH_COMPONENT_REF = 'WidthComponent';
+type Width = number | `${number}%` | 'auto';
 
 describe('withTiming animation of WIDTH', () => {
-  const WidthComponent = ({
-    startWidth,
-    finalWidth,
-  }: {
-    startWidth: number | `${number}%` | 'auto';
-    finalWidth: number | `${number}%` | 'auto';
-  }) => {
+  const WidthComponent = ({ startWidth, finalWidth }: { startWidth: Width; finalWidth: Width }) => {
     const widthSV = useSharedValue(startWidth);
     const ref = useTestRef(WIDTH_COMPONENT_REF);
 
@@ -52,6 +47,12 @@ describe('withTiming animation of WIDTH', () => {
     );
   };
 
+  interface TestCase {
+    startWidth: Width;
+    finalWidth: Width;
+    finalWidthInPixels: number;
+    description: string;
+  }
   test.each([
     { startWidth: 0, finalWidth: 100, finalWidthInPixels: 100, description: 'width in pixels' },
     {
@@ -72,12 +73,15 @@ describe('withTiming animation of WIDTH', () => {
       finalWidthInPixels: Dimensions.get('window').width * 0.4,
       description: 'width from pixels to percents',
     },
-  ])('${description}, from ${startWidth} to ${finalWidth}', async ({ startWidth, finalWidth, finalWidthInPixels }) => {
-    await render(<WidthComponent startWidth={startWidth} finalWidth={finalWidth} />);
-    const component = getTestComponent(WIDTH_COMPONENT_REF);
-    await wait(1000);
-    expect(await component.getAnimatedStyle('width')).toBe(finalWidthInPixels, ComparisonMode.DISTANCE);
-  });
+  ] as Array<TestCase>)(
+    '${description}, from ${startWidth} to ${finalWidth}',
+    async ({ startWidth, finalWidth, finalWidthInPixels }: TestCase) => {
+      await render(<WidthComponent startWidth={startWidth} finalWidth={finalWidth} />);
+      const component = getTestComponent(WIDTH_COMPONENT_REF);
+      await wait(1000);
+      expect(await component.getAnimatedStyle('width')).toBe(finalWidthInPixels, ComparisonMode.DISTANCE);
+    },
+  );
 
   test('Width from percent to pixels is NOT handled correctly', async () => {
     await render(<WidthComponent startWidth={'20%'} finalWidth={100} />);

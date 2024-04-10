@@ -10,8 +10,7 @@ const COMPARATORS: {
   },
 
   [ComparisonMode.NUMBER]: (expected, value) => {
-    const bothAreNumbers =
-      typeof value === 'number' && typeof expected === 'number';
+    const bothAreNumbers = typeof value === 'number' && typeof expected === 'number';
     const bothAreNaN = bothAreNumbers && isNaN(value) && isNaN(expected);
     return bothAreNaN || value === expected;
   },
@@ -23,19 +22,14 @@ const COMPARATORS: {
     const expectedUnified = expected.toLowerCase();
     const colorRegex = new RegExp('^#?([a-f0-9]{6})$');
     if (!colorRegex.test(expectedUnified)) {
-      throw Error(
-        `Invalid color format "${expectedUnified}", please use hex color (like #123abc)`
-      );
+      throw Error(`Invalid color format "${expectedUnified}", please use hex color (like #123abc)`);
     }
     return value === expected;
   },
 
   [ComparisonMode.DISTANCE]: (expected, value) => {
     const valueAsNumber = Number(value);
-    return (
-      !isNaN(valueAsNumber) &&
-      Math.abs(valueAsNumber - Number(expected)) < DISTANCE_TOLERANCE
-    );
+    return !isNaN(valueAsNumber) && Math.abs(valueAsNumber - Number(expected)) < DISTANCE_TOLERANCE;
   },
 
   [ComparisonMode.ARRAY]: (expected, value) => {
@@ -46,12 +40,7 @@ const COMPARATORS: {
       return false;
     }
     for (let i = 0; i < expected.length; i++) {
-      if (
-        !COMPARATORS[ComparisonMode.AUTO](
-          expected[i] as TestValue,
-          value[i] as TestValue
-        )
-      ) {
+      if (!COMPARATORS[ComparisonMode.AUTO](expected[i] as TestValue, value[i] as TestValue)) {
         return false;
       }
     }
@@ -68,12 +57,7 @@ const COMPARATORS: {
       return false;
     }
     for (const key of expectedKeys) {
-      if (
-        !COMPARATORS[ComparisonMode.AUTO](
-          expected[key as keyof typeof expected],
-          value[key as keyof typeof value]
-        )
-      ) {
+      if (!COMPARATORS[ComparisonMode.AUTO](expected[key as keyof typeof expected], value[key as keyof typeof value])) {
         return false;
       }
     }

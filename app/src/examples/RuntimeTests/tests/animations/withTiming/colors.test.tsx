@@ -76,7 +76,7 @@ describe('withTiming animation of COLOR 🎨', () => {
     { from: '#5bc', fromHex: '#55bbcc', to: '#1b1', toHex: '#11bb11' },
   ])('Animate from ${from} to ${to}', async ({ from, to, fromHex, toHex }) => {
     await render(<ColorComponent color1={from} color2={to} />);
-    component = getTestComponent(COMPONENT_REF);
+    const component = getTestComponent(COMPONENT_REF);
 
     expect(await component.getAnimatedStyle('backgroundColor')).toBe(fromHex, ComparisonMode.COLOR);
     await wait(1000);

@@ -13,7 +13,7 @@ import type {
 import { TestComponent } from './TestComponent';
 import { render, stopRecordingAnimationUpdates, unmockAnimationTimer } from './RuntimeTestsApi';
 import { makeMutable, runOnUI, runOnJS, SharedValue } from 'react-native-reanimated';
-import { color, logInFrame } from './LogMessageUtils';
+import { color, formatString, logInFrame } from './stringFormatUtils';
 import { createUpdatesContainer } from './UpdatesContainer';
 import { Matchers } from './Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
@@ -100,6 +100,17 @@ export class TestRunner {
       callsRegistry: {},
       errors: [],
     });
+  }
+
+  public testEach<T>(examples: Array<T>) {
+    return (name: string, testCase: (example: T) => void) => {
+      examples.forEach((example, index) => {
+        const currentTestCase = async () => {
+          await testCase(example);
+        };
+        this.test(formatString(name, example, index), currentTestCase);
+      });
+    };
   }
 
   public useTestRef(name: string): MutableRefObject<Component | null> {
