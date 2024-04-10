@@ -40,7 +40,12 @@ jobs:
         id: updated_dirs
         run: |
           ECHOLIST=()
-          for CHANGE in $(git diff --name-only | grep -E '(package.json|yarn.lock)'); do
+          DIFF=$(git diff --name-only)
+          echo "DIFF: $DIFF"
+          FILES=$(echo "$DIFF" | grep -E '(package.json|yarn.lock)')
+          echo "FILES: $FILES"
+          for CHANGE in $FILES
+          do
             DIR=$(dirname "$CHANGE")
             ECHOLIST+=("$DIR")
           done
