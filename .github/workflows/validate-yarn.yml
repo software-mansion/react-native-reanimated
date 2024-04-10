@@ -5,7 +5,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/validate-yarn.yml'
-      - 'package.json'
+      - '**/package.json'
       - '**/yarn.lock'
   merge_group:
     branches:
@@ -14,8 +14,9 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/validate-plugin.yml'
-      - 'plugin/**'
+      - '.github/workflows/validate-yarn.yml'
+      - '**/package.json'
+      - '**/yarn.lock'
 
 jobs:
   check:
@@ -30,5 +31,25 @@ jobs:
         with:
           cache: 'yarn'
 
-      - name: Install node dependencies
+      - name: Install dependencies
         run: yarn
+      - name: Build package
+        run: yarn build
+
+      - name: Get list of updated directories with package.json or yarn.lock
+        id: updated_dirs
+        run: |
+          ECHOLIST=()
+          for CHANGE in $(git diff --name-only main | grep -E '(package.json|yarn.lock)'); do
+            DIR=$(dirname "$CHANGE")
+            ECHOLIST+=("$DIR")
+          done
+          echo "::set-output name=dirList::$(printf '%s\n' "${ECHOLIST[@]}" | sort -u)"
+
+      - name: Perform yarn install in changed directories
+        run: |
+          for directory in ${{ steps.updated_dirs.outputs.dirList }}
+          do
+            echo "Yarn install in $directory"
+            cd "$directory" && yarn
+          done
