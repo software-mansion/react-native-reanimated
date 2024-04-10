@@ -36,22 +36,26 @@ jobs:
       - name: Build package
         run: yarn build
 
-      - name: Get list of updated directories with package.json or yarn.lock
-        id: updated_dirs
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v35
+        with:
+          files: |
+            package.json
+            yarn.lock
+
+      - name: Get list of changed directories
+        id: changed-dirs
         run: |
           ECHOLIST=()
-          DIFF=$(git diff --name-only main)
-          echo "DIFF: $DIFF"
-          FILES=$(echo "$DIFF" | grep -E '(package.json|yarn.lock)')
-          echo "FILES: $FILES"
-          for CHANGE in $FILES
+          for CHANGE in ${{ steps.changed-files.outputs.all_changed_files }}
           do
             DIR=$(dirname "$CHANGE")
             ECHOLIST+=("$DIR")
           done
           echo "::set-output name=dirList::$(printf '%s\n' "${ECHOLIST[@]}" | sort -u)"
-          # print echolist
           echo "dirList: ${ECHOLIST[@]}"
+
       - name: Perform yarn install in changed directories
         run: |
           for directory in ${{ steps.updated_dirs.outputs.dirList }}
