@@ -25,13 +25,10 @@ export function createUpdatesContainer(testRunner: TestRunner) {
     }>
   >([]);
 
-  function _makeNativeSnapshot(
-    updateInfos: UpdateInfo[],
-    jsUpdateIndex: number
-  ) {
+  function _makeNativeSnapshot(updateInfos: UpdateInfo[], jsUpdateIndex: number) {
     'worklet';
     const isFabric = global._IS_FABRIC;
-    nativeSnapshots.modify((value) => {
+    nativeSnapshots.modify(value => {
       'worklet';
       for (const updateInfo of updateInfos) {
         const snapshot: Record<string, unknown> = {};
@@ -71,11 +68,8 @@ export function createUpdatesContainer(testRunner: TestRunner) {
 
   function pushAnimationUpdates(operations: Operation[]) {
     'worklet';
-    _makeNativeSnapshot(
-      _extractInfoFromUpdates(operations),
-      jsUpdates.value.length - 1
-    );
-    jsUpdates.modify((updates) => {
+    _makeNativeSnapshot(_extractInfoFromUpdates(operations), jsUpdates.value.length - 1);
+    jsUpdates.modify(updates => {
       for (const operation of operations) {
         updates.push({
           tag: operation.tag ?? -1,
@@ -87,17 +81,14 @@ export function createUpdatesContainer(testRunner: TestRunner) {
     });
   }
 
-  function pushLayoutAnimationUpdates(
-    tag: number,
-    update: Record<string, unknown>
-  ) {
+  function pushLayoutAnimationUpdates(tag: number, update: Record<string, unknown>) {
     'worklet';
     if (global._IS_FABRIC) {
       // layout animation doesn't work on Fabric yet
       return;
     }
     _makeNativeSnapshot([{ tag, update }], jsUpdates.value.length - 1);
-    jsUpdates.modify((updates) => {
+    jsUpdates.modify(updates => {
       updates.push({
         tag,
         update: { ...update },
@@ -116,8 +107,7 @@ export function createUpdatesContainer(testRunner: TestRunner) {
       for (const updateRequest of jsUpdates.value) {
         const filteredUpdate: Record<string, OperationUpdate> = {};
         for (const prop of propsNames) {
-          filteredUpdate[prop] =
-            updateRequest.update[prop as keyof OperationUpdate];
+          filteredUpdate[prop] = updateRequest.update[prop as keyof OperationUpdate];
         }
         updates.push(filteredUpdate);
       }
@@ -140,7 +130,7 @@ export function createUpdatesContainer(testRunner: TestRunner) {
               update: lastSnapshot.snapshot,
             },
           ],
-          jsUpdatesCount - 1
+          jsUpdatesCount - 1,
         );
       });
     }
