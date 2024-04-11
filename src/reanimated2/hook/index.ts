@@ -39,3 +39,4 @@ export type {
 export { useEvent } from './useEvent';
 export type { UseHandlerContext } from './useHandler';
 export { useHandler } from './useHandler';
+export { useComposedEventHandler } from './useComposedEventHandler';

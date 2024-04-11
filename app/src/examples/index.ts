@@ -124,6 +124,7 @@ import HabitsExample from './LayoutAnimations/HabitsExample';
 import MemoExample from './MemoExample';
 import PerformanceMonitorExample from './PerfomanceMonitorExample';
 import ScreenTransitionExample from './ScreenTransitionExample';
+import ComposedHandlerExample from './ComposedHandlerExample';
 
 interface Example {
   icon?: string;
@@ -498,6 +499,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⏱️',
     title: 'Performance monitor',
     screen: PerformanceMonitorExample,
+  },
+  ComposedHandlerExample: {
+    icon: '🪢',
+    title: 'useComposedEventHandler',
+    screen: ComposedHandlerExample,
   },
 
   // Old examples
