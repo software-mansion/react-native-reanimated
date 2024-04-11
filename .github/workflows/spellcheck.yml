@@ -16,6 +16,6 @@ jobs:
               with:
                 files: '**/*.{md,mdx,js,ts,tsx,jsx,json}'
                 root: '.'
-                config: '.'
+                config: './cspell.json'
                 strict: false
                 use_cspell_files: false
