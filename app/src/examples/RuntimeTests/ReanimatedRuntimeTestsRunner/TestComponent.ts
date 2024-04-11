@@ -3,14 +3,7 @@ import { findNodeHandle } from 'react-native';
 import { getViewProp } from 'react-native-reanimated';
 import { ComponentRef } from './types';
 
-type ValidPropNames =
-  | 'zIndex'
-  | 'opacity'
-  | 'width'
-  | 'height'
-  | 'top'
-  | 'left'
-  | 'backgroundColor';
+export type ValidPropNames = 'zIndex' | 'opacity' | 'width' | 'height' | 'top' | 'left' | 'backgroundColor';
 
 export class TestComponent {
   constructor(private ref: ComponentRef) {}
