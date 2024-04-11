@@ -7,7 +7,7 @@ const items = [
   {
     author: 'Marc Rousavy',
     company: 'Margelo',
-    body: 'We’ve used Reanimated and Gesture Handler for a ton of apps already - it’s amazingly simple yet poweful! 😍',
+    body: 'We’ve used Reanimated and Gesture Handler for a ton of apps already - it’s amazingly simple yet powerful! 😍',
     link: 'https://twitter.com/mrousavy/status/1754909520571019756',
     image: {
       alt: 'marc rousavy',
