@@ -1,8 +1,10 @@
 package com.swmansion.reanimated.keyboard;
 
+import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.widget.FrameLayout;
 import androidx.core.view.ViewCompat;
@@ -14,9 +16,31 @@ import java.lang.ref.WeakReference;
 public class WindowsInsetsManager {
 
   private boolean mIsStatusBarTranslucent = false;
+
+  private int statusBarHeight = 0;
+  private int paddingTop = 0;
+
+  private int paddingBottom = 0;
   private final WeakReference<ReactApplicationContext> mReactContext;
   private final Keyboard mKeyboard;
   private final NotifyAboutKeyboardChangeFunction mNotifyAboutKeyboardChange;
+
+  private final ViewTreeObserver.OnDrawListener statusBarChangeListener =
+      new ViewTreeObserver.OnDrawListener() {
+        @Override
+        public void onDraw() {
+          View statusBar = getStatusBarView();
+          int currentStatusBarHeight = statusBar.getHeight();
+          boolean isStatusBarTranslucent = getWindow().getStatusBarColor() == Color.TRANSPARENT;
+
+          if (isStatusBarTranslucent != mIsStatusBarTranslucent
+              || currentStatusBarHeight != statusBarHeight) {
+            mIsStatusBarTranslucent = isStatusBarTranslucent;
+            statusBarHeight = currentStatusBarHeight;
+            updateInsets(paddingTop, paddingBottom);
+          }
+        }
+      };
 
   public WindowsInsetsManager(
       WeakReference<ReactApplicationContext> reactContext,
@@ -35,10 +59,16 @@ public class WindowsInsetsManager {
     return getWindow().getDecorView();
   }
 
+  private View getStatusBarView() {
+    return getWindow().findViewById(android.R.id.statusBarBackground);
+  }
+
   public void startObservingChanges(
       KeyboardAnimationCallback keyboardAnimationCallback, boolean isStatusBarTranslucent) {
     mIsStatusBarTranslucent = isStatusBarTranslucent;
     updateWindowDecor(false);
+
+    getStatusBarView().getViewTreeObserver().addOnDrawListener(statusBarChangeListener);
     ViewCompat.setOnApplyWindowInsetsListener(getRootView(), this::onApplyWindowInsetsListener);
     ViewCompat.setWindowInsetsAnimationCallback(getRootView(), keyboardAnimationCallback);
   }
@@ -46,9 +76,10 @@ public class WindowsInsetsManager {
   public void stopObservingChanges() {
     updateWindowDecor(!mIsStatusBarTranslucent);
     updateInsets(0, 0);
-    View rootView = getRootView();
-    ViewCompat.setWindowInsetsAnimationCallback(rootView, null);
-    ViewCompat.setOnApplyWindowInsetsListener(rootView, null);
+
+    getStatusBarView().getViewTreeObserver().removeOnDrawListener(statusBarChangeListener);
+    ViewCompat.setWindowInsetsAnimationCallback(getRootView(), null);
+    ViewCompat.setOnApplyWindowInsetsListener(getRootView(), null);
   }
 
   private void updateWindowDecor(boolean decorFitsSystemWindow) {
@@ -68,8 +99,8 @@ public class WindowsInsetsManager {
 
   private void setWindowInsets(WindowInsetsCompat insets) {
     int systemBarsTypeMask = WindowInsetsCompat.Type.systemBars();
-    int paddingTop = insets.getInsets(systemBarsTypeMask).top;
-    int paddingBottom = insets.getInsets(systemBarsTypeMask).bottom;
+    paddingTop = insets.getInsets(systemBarsTypeMask).top;
+    paddingBottom = insets.getInsets(systemBarsTypeMask).bottom;
     updateInsets(paddingTop, paddingBottom);
   }
 
@@ -88,7 +119,7 @@ public class WindowsInsetsManager {
     int matchParentFlag = FrameLayout.LayoutParams.MATCH_PARENT;
     FrameLayout.LayoutParams params =
         new FrameLayout.LayoutParams(matchParentFlag, matchParentFlag);
-    if (mIsStatusBarTranslucent) {
+    if (mIsStatusBarTranslucent || statusBarHeight == 0) {
       params.setMargins(0, 0, 0, paddingBottom);
     } else {
       params.setMargins(0, paddingTop, 0, paddingBottom);
