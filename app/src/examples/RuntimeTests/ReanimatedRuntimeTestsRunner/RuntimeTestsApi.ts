@@ -28,9 +28,13 @@ export function afterAll(job: () => void) {
   testRunner.afterAll(job);
 }
 
-export function test(name: string, testCase: () => void) {
+export const test = (name: string, testCase: () => void) => {
   testRunner.test(name, testCase);
-}
+};
+
+test.each = <T>(examples: Array<T>) => {
+  return testRunner.testEach(examples);
+};
 
 export async function render(component: ReactElement<Component> | null) {
   return testRunner.render(component);
