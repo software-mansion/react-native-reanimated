@@ -13,26 +13,42 @@ import {
   wait,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 
-const COMPONENT_REF = 'ColorComponent';
+const COMPONENT_REF_ACTIVE = 'ColorComponentPassive';
+const COMPONENT_REF_PASSIVE = 'ColorComponentPassive';
 
 const ColorComponent = ({ color1, color2 }: { color1: string | number; color2: string | number }) => {
-  const colorSV = useSharedValue(color1);
-  const ref = useTestRef(COMPONENT_REF);
+  const colorActiveSV = useSharedValue(color1);
+  const colorPassiveSV = useSharedValue(color1);
+
+  const refActive = useTestRef(COMPONENT_REF_ACTIVE);
+  const refPassive = useTestRef(COMPONENT_REF_PASSIVE);
 
   // @ts-ignore number is not a valid color
-  const style = useAnimatedStyle(() => {
+  const styleActive = useAnimatedStyle(() => {
     return {
-      backgroundColor: withDelay(100, withTiming(colorSV.value, { duration: 400 })),
+      backgroundColor: withDelay(100, withTiming(colorActiveSV.value, { duration: 400 })),
+    };
+  });
+
+  // @ts-ignore number is not a valid color
+  const stylePassive = useAnimatedStyle(() => {
+    return {
+      backgroundColor: colorPassiveSV.value,
     };
   });
 
   useEffect(() => {
-    colorSV.value = color2;
-  }, [colorSV, color2]);
+    colorActiveSV.value = color2;
+  }, [colorActiveSV, color2]);
+
+  useEffect(() => {
+    colorPassiveSV.value = withDelay(100, withTiming(color2, { duration: 400 }));
+  }, [colorPassiveSV, color2]);
 
   return (
     <View style={styles.container}>
-      <Animated.View ref={ref} style={[styles.animatedBox, style]} />
+      <Animated.View ref={refActive} style={[styles.animatedBox, styleActive]} />
+      <Animated.View ref={refPassive} style={[styles.animatedBox, stylePassive]} />
     </View>
   );
 };
@@ -51,18 +67,26 @@ describe('withTiming animation of COLOR 🎨', () => {
 
   test.each(OPAQUE_COLORS)('Animate FROM color as %s', async color => {
     await render(<ColorComponent color1={color} color2="coral" />);
-    const component = getTestComponent(COMPONENT_REF);
-    expect(await component.getAnimatedStyle('backgroundColor')).toBe('#6495ed', ComparisonMode.COLOR);
+    const componentActive = getTestComponent(COMPONENT_REF_ACTIVE);
+    const componentPassive = getTestComponent(COMPONENT_REF_PASSIVE);
+
+    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe('#6495ed', ComparisonMode.COLOR);
+    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe('#6495ed', ComparisonMode.COLOR);
     await wait(1000);
-    expect(await component.getAnimatedStyle('backgroundColor')).toBe('#ff7f50', ComparisonMode.COLOR);
+    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe('#ff7f50', ComparisonMode.COLOR);
+    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe('#ff7f50', ComparisonMode.COLOR);
   });
 
   test.each(OPAQUE_COLORS)('Animate TO color as %s', async color => {
     await render(<ColorComponent color1="coral" color2={color} />);
-    const component = getTestComponent(COMPONENT_REF);
-    expect(await component.getAnimatedStyle('backgroundColor')).toBe('#ff7f50', ComparisonMode.COLOR);
+    const componentActive = getTestComponent(COMPONENT_REF_ACTIVE);
+    const componentPassive = getTestComponent(COMPONENT_REF_PASSIVE);
+
+    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe('#ff7f50', ComparisonMode.COLOR);
+    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe('#ff7f50', ComparisonMode.COLOR);
     await wait(1000);
-    expect(await component.getAnimatedStyle('backgroundColor')).toBe('#6495ed', ComparisonMode.COLOR);
+    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe('#6495ed', ComparisonMode.COLOR);
+    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe('#6495ed', ComparisonMode.COLOR);
   });
 
   // TODO Uncomment test cases with transparency once the other PR gets merged
@@ -76,12 +100,14 @@ describe('withTiming animation of COLOR 🎨', () => {
     { from: '#5bc', fromHex: '#55bbcc', to: '#1b1', toHex: '#11bb11' },
   ])('Animate from ${from} to ${to}', async ({ from, to, fromHex, toHex }) => {
     await render(<ColorComponent color1={from} color2={to} />);
-    const component = getTestComponent(COMPONENT_REF);
+    const componentActive = getTestComponent(COMPONENT_REF_ACTIVE);
+    const componentPassive = getTestComponent(COMPONENT_REF_PASSIVE);
 
-    expect(await component.getAnimatedStyle('backgroundColor')).toBe(fromHex, ComparisonMode.COLOR);
+    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(fromHex, ComparisonMode.COLOR);
+    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(fromHex, ComparisonMode.COLOR);
     await wait(1000);
-
-    expect(await component.getAnimatedStyle('backgroundColor')).toBe(toHex, ComparisonMode.COLOR);
+    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(toHex, ComparisonMode.COLOR);
+    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(toHex, ComparisonMode.COLOR);
   });
 });
 
