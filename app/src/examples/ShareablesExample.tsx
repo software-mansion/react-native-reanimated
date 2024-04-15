@@ -1,52 +1,21 @@
-import { Button, StyleSheet, View, TurboModuleRegistry } from 'react-native';
+import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
-import {
-  makeShareableCloneRecursive,
-  runOnJS,
-  runOnUI,
-} from 'react-native-reanimated';
-import { NavigationContainer, useNavigation } from '@react-navigation/native';
-import {
-  NativeStackNavigationProp,
-  createNativeStackNavigator,
-} from '@react-navigation/native-stack';
-
-type StackParams = {
-  Creating: undefined;
-  Freezing: undefined;
-};
-
-const Stack = createNativeStackNavigator<StackParams>();
+import { runOnJS, runOnUI } from 'react-native-reanimated';
 
 export default function ShareablesExample() {
-  return (
-    <NavigationContainer independent={true}>
-      <Stack.Navigator>
-        <Stack.Screen name="Creating" component={CreatingShareables} />
-        <Stack.Screen name="Freezing" component={FreezingShareables} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-}
-
-function CreatingShareables() {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<StackParams, 'Creating'>>();
   return (
     <View style={styles.container}>
       <CyclicObjectDemo />
       <InaccessibleObjectDemo />
+      <RemoteNamedFunctionSyncCallDemo />
+      <RemoteAnonymousFunctionSyncCallDemo />
       <BigIntDemo />
       <ArrayBufferDemo />
       <TypedArrayDemo />
       <BigIntTypedArrayDemo />
       <DataViewDemo />
-      <View style={styles.bar} />
-      <Button
-        title="Go to freezing"
-        onPress={() => navigation.navigate('Freezing')}
-      />
+      <ErrorDemo />
     </View>
   );
 }
@@ -76,6 +45,32 @@ function InaccessibleObjectDemo() {
   };
 
   return <Button title="Inaccessible object" onPress={handlePress} />;
+}
+
+function RemoteNamedFunctionSyncCallDemo() {
+  const handlePress = () => {
+    function foo() {}
+    runOnUI(() => {
+      foo();
+    })();
+  };
+
+  return (
+    <Button title="Remote named function sync call" onPress={handlePress} />
+  );
+}
+
+function RemoteAnonymousFunctionSyncCallDemo() {
+  const handlePress = () => {
+    const foo = true ? () => {} : () => {};
+    runOnUI(() => {
+      foo();
+    })();
+  };
+
+  return (
+    <Button title="Remote anonymous function sync call" onPress={handlePress} />
+  );
 }
 
 function BigIntDemo() {
@@ -193,107 +188,20 @@ function DataViewDemo() {
   return <Button title="DataView" onPress={handlePress} />;
 }
 
-function FreezingShareables() {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<StackParams, 'Freezing'>>();
-
-  return (
-    <View style={styles.container}>
-      <Button
-        title="Try modify converted array"
-        onPress={tryModifyConvertedArray}
-      />
-      <Button
-        title="Try modify converted remote function"
-        onPress={tryModifyConvertedRemoteFunction}
-      />
-      <Button
-        title="Try modify converted host object"
-        onPress={tryModifyConvertedHostObject}
-      />
-      <Button
-        title="Try modify converted plain object"
-        onPress={tryModifyConvertedPlainObject}
-      />
-      <Button
-        title="Try modify converted regex literal"
-        onPress={tryModifyConvertedRegexLiteral}
-      />
-      <Button
-        title="Try modify converted RegExp instance"
-        onPress={tryModifyConvertedRegexInstance}
-      />
-      <Button
-        title="Try modify converted ArrayBuffer"
-        onPress={tryModifyConvertedArrayBuffer}
-      />
-      <Button
-        title="Try modify converted Int32Array"
-        onPress={tryModifyConvertedInt32Array}
-      />
-      <View style={styles.bar} />
-      <Button title="Go to creating" onPress={() => navigation.goBack()} />
-    </View>
-  );
-}
-
-function tryModifyConvertedArray() {
-  const arr = [1, 2, 3];
-  makeShareableCloneRecursive(arr);
-  arr[0] = 2; // should warn beacuse it's frozen
-}
-
-function tryModifyConvertedRemoteFunction() {
-  const foo = () => {};
-  foo.bar = 1;
-  makeShareableCloneRecursive(foo);
-  foo.bar = 2; // should warn because it's frozen
-}
-
-function tryModifyConvertedHostObject() {
-  const hostObject = TurboModuleRegistry.get('Clipboard');
-  if (!hostObject) {
-    console.warn('No host object found.');
-    return;
-  }
-  makeShareableCloneRecursive(hostObject);
-  // @ts-expect-error
-  hostObject.prop = 2; // shouldn't warn because it's not frozen
-}
-
-function tryModifyConvertedPlainObject() {
-  const obj = {
-    a: 1,
+function ErrorDemo() {
+  const handlePress = () => {
+    const e = new Error('error message');
+    console.log(_WORKLET ? 'UI' : 'RN', e instanceof Error);
+    console.log(_WORKLET ? 'UI' : 'RN', String(e));
+    console.log(_WORKLET ? 'UI' : 'RN', e.stack?.length);
+    runOnUI(() => {
+      console.log(_WORKLET ? 'UI' : 'RN', e instanceof Error);
+      console.log(_WORKLET ? 'UI' : 'RN', String(e));
+      console.log(_WORKLET ? 'UI' : 'RN', e.stack?.length);
+    })();
   };
-  makeShareableCloneRecursive(obj);
-  obj.a = 2; // should warn because it's frozen
-}
 
-function tryModifyConvertedRegexLiteral() {
-  const regexLiteral = /a/;
-  makeShareableCloneRecursive(regexLiteral);
-  // @ts-expect-error
-  regexLiteral.regexProp = 2; // shouldn't warn because it's not frozen
-}
-
-function tryModifyConvertedRegexInstance() {
-  const regexInstance = new RegExp('a');
-  makeShareableCloneRecursive(regexInstance);
-  // @ts-expect-error
-  regexInstance.regexProp = 2; // shouldn't warn because it's not frozen
-}
-
-function tryModifyConvertedArrayBuffer() {
-  const arrayBuffer = new ArrayBuffer(8);
-  makeShareableCloneRecursive(arrayBuffer);
-  // @ts-expect-error
-  arrayBuffer.arrayBufferProp = 2; // shouldn't warn because it's not frozen
-}
-
-function tryModifyConvertedInt32Array() {
-  const int32Array = new Int32Array(2);
-  makeShareableCloneRecursive(int32Array);
-  int32Array[1] = 2; // shouldn't warn because it's not frozen
+  return <Button title="Error" onPress={handlePress} />;
 }
 
 const styles = StyleSheet.create({
@@ -301,10 +209,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  bar: {
-    width: '50%',
-    height: 2,
-    backgroundColor: 'black',
   },
 });

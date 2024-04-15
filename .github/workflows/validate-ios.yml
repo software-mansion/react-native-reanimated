@@ -1,5 +1,6 @@
 name: Validate iOS
-
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   push:
     branches:
@@ -26,5 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: yarn
       - name: Lint iOS
         run: yarn lint:ios

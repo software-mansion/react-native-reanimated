@@ -130,6 +130,10 @@ def toPlatformFileString(String path) {
   return path
 }
 
+if (isNewArchitectureEnabled()) {
+    apply plugin: "com.facebook.react"
+}
+
 def reactNativeRootDir = resolveReactNativeDirectory()
 
 def reactProperties = new Properties()
@@ -362,9 +366,7 @@ android {
 
             // messageQueueThread
             if (REANIMATED_MAJOR_VERSION > 2) {
-                if (REACT_NATIVE_MINOR_VERSION <= 67) {
-                    srcDirs += "src/reactNativeVersionPatch/messageQueueThread/67"
-                } else if (REACT_NATIVE_MINOR_VERSION <= 72) {
+                if (REACT_NATIVE_MINOR_VERSION <= 72) {
                     srcDirs += "src/reactNativeVersionPatch/messageQueueThread/72"
                 } else {
                     srcDirs += "src/reactNativeVersionPatch/messageQueueThread/latest"
@@ -372,8 +374,8 @@ android {
             }
 
             // ReanimatedUIManager & ReanimatedUIImplementation 
-            if (REACT_NATIVE_MINOR_VERSION <= 70) {
-                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/70"
+            if (REACT_NATIVE_MINOR_VERSION <= 73) {
+                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/73"
             } else {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest"
             }
@@ -386,6 +388,16 @@ android {
                     srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/latest"
                 }
             }
+
+            // RuntimeExecutor
+            if (IS_NEW_ARCHITECTURE_ENABLED) {
+                if (REACT_NATIVE_MINOR_VERSION <= 73) {
+                    srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/73"
+                } else {
+                    srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/latest"
+                }
+            }
+
         }
     }
 }

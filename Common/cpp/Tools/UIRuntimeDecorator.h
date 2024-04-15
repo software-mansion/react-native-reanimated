@@ -20,6 +20,7 @@ class UIRuntimeDecorator {
 #else
       const ScrollToFunction scrollTo,
 #endif
+      const ObtainPropFunction obtainPropFunction,
       const UpdatePropsFunction updateProps,
       const MeasureFunction measure,
       const DispatchCommandFunction dispatchCommand,

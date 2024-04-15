@@ -3,6 +3,9 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/fabric/JFabricUIManager.h>
 #include <react/renderer/scheduler/Scheduler.h>
+#if REACT_NATIVE_MINOR_VERSION >= 74
+#include <react/jni/JRuntimeExecutor.h>
+#endif // REACT_NATIVE_MINOR_VERSION >= 74
 #endif
 
 #include <ReactCommon/CallInvokerHolder.h>
@@ -117,27 +120,25 @@ class SensorSetter : public HybridClass<SensorSetter> {
   std::function<void(double[], int)> callback_;
 };
 
-class KeyboardEventDataUpdater : public HybridClass<KeyboardEventDataUpdater> {
+class KeyboardWorkletWrapper : public HybridClass<KeyboardWorkletWrapper> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/nativeProxy/KeyboardEventDataUpdater;";
+      "Lcom/swmansion/reanimated/keyboard/KeyboardWorkletWrapper;";
 
-  void keyboardEventDataUpdater(int keyboardState, int height) {
+  void invoke(int keyboardState, int height) {
     callback_(keyboardState, height);
   }
 
   static void registerNatives() {
     javaClassStatic()->registerNatives({
-        makeNativeMethod(
-            "keyboardEventDataUpdater",
-            KeyboardEventDataUpdater::keyboardEventDataUpdater),
+        makeNativeMethod("invoke", KeyboardWorkletWrapper::invoke),
     });
   }
 
  private:
   friend HybridBase;
 
-  explicit KeyboardEventDataUpdater(std::function<void(int, int)> callback)
+  explicit KeyboardWorkletWrapper(std::function<void(int, int)> callback)
       : callback_(std::move(callback)) {}
 
   std::function<void(int, int)> callback_;
@@ -160,6 +161,19 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
           fabricUIManager,
 #endif
       const std::string &valueUnpackerCode);
+
+#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+  static jni::local_ref<jhybriddata> initHybridBridgeless(
+      jni::alias_ref<jhybridobject> jThis,
+      jlong jsContext,
+      jni::alias_ref<react::JRuntimeExecutor::javaobject> runtimeExecutorHolder,
+      jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
+      jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
+      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+          fabricUIManager,
+      const std::string &valueUnpackerCode);
+#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
   static void registerNatives();
 
   ~NativeProxy();
@@ -206,14 +220,14 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       std::function<void(double[], int)> setter);
   void unregisterSensor(int sensorId);
   int subscribeForKeyboardEvents(
-      std::function<void(int, int)> keyboardEventDataUpdater,
+      std::function<void(int, int)> callback,
       bool isStatusBarTranslucent);
   void unsubscribeFromKeyboardEvents(int listenerId);
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
   jsi::Value
-  obtainProp(jsi::Runtime &rt, const int viewTag, const jsi::String &propName);
+  obtainProp(jsi::Runtime &rt, const int viewTag, const jsi::Value &propName);
   void configureProps(
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
@@ -271,6 +285,24 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
           fabricUIManager,
 #endif
       const std::string &valueUnpackerCode);
+
+#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+  explicit NativeProxy(
+      jni::alias_ref<NativeProxy::jhybridobject> jThis,
+      jsi::Runtime *rnRuntime,
+      RuntimeExecutor runtimeExecutor,
+      const std::shared_ptr<UIScheduler> &uiScheduler,
+      jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
+      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+          fabricUIManager,
+      const std::string &valueUnpackerCode);
+#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
+
+#ifdef RCT_NEW_ARCH_ENABLED
+  void commonInit(jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+                      &fabricUIManager);
+#endif // RCT_NEW_ARCH_ENABLED
 };
 
 } // namespace reanimated

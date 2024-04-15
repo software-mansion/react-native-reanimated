@@ -9,7 +9,7 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-import { ReduceMotion } from '../commonTypes';
+import { ReduceMotion, isWorkletFunction } from '../commonTypes';
 import type {
   SharedValue,
   AnimatableValue,
@@ -33,14 +33,41 @@ import {
   getRotationMatrix,
 } from './transformationMatrix/matrixUtils';
 import { isReducedMotion, shouldBeUseWeb } from '../PlatformChecker';
+import type { EasingFunction, EasingFunctionFactory } from '../Easing';
 
 let IN_STYLE_UPDATER = false;
 const IS_REDUCED_MOTION = isReducedMotion();
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 if (__DEV__ && IS_REDUCED_MOTION) {
   console.warn(
     `[Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device.`
   );
+}
+
+export function assertEasingIsWorklet(
+  easing: EasingFunction | EasingFunctionFactory
+): void {
+  'worklet';
+  if (_WORKLET) {
+    // If this is called on UI (for example from gesture handler with worklets), we don't get easing,
+    // but its bound copy, which is not a worklet. We don't want to throw any error then.
+    return;
+  }
+  if (SHOULD_BE_USE_WEB) {
+    // It is possible to run reanimated on web without plugin, so let's skip this check on web
+    return;
+  }
+  // @ts-ignore typescript wants us to use `in` instead, which doesn't work with host objects
+  if (easing?.factory) {
+    return;
+  }
+
+  if (!isWorkletFunction(easing)) {
+    throw new Error(
+      '[Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.'
+    );
+  }
 }
 
 export function initialUpdaterRun<T>(updater: () => T) {
@@ -477,8 +504,6 @@ type AnimationToDecoration<
 > = T extends StyleLayoutAnimation
   ? Record<string, unknown>
   : U | (() => U) | AnimatableValue;
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 export function defineAnimation<
   T extends AnimationObject | StyleLayoutAnimation, // type that's supposed to be returned

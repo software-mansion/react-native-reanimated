@@ -1,13 +1,16 @@
 name: Test tvOS build
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     paths:
-      - '.github/workflows/tvos-build.yml'
-      - 'RNReanimated.podspec'
-      - 'apple/**'
-      - 'Common/**'
-      - 'TVOSExample/package.json'
-      - 'TVOSExample/ios/**'
+      - .github/workflows/tvos-build.yml
+      - RNReanimated.podspec
+      - scripts/reanimated_utils.rb
+      - apple/**
+      - Common/**
+      - TVOSExample/package.json
+      - TVOSExample/ios/**
   merge_group:
     branches:
       - main
@@ -15,12 +18,13 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/tvos-build.yml'
-      - 'RNReanimated.podspec'
-      - 'apple/**'
-      - 'Common/**'
-      - 'TVOSExample/package.json'
-      - 'TVOSExample/ios/**'
+      - .github/workflows/tvos-build.yml
+      - RNReanimated.podspec
+      - scripts/reanimated_utils.rb
+      - apple/**
+      - Common/**
+      - TVOSExample/package.json
+      - TVOSExample/ios/**
 
 jobs:
   build:
@@ -39,22 +43,22 @@ jobs:
         uses: actions/cache@v3
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-modules-reanimated-${{ hashFiles('yarn.lock') }}
-          restore-keys: ${{ runner.os }}-node-modules-reanimated-
+          key: ${{ runner.os }}-tvos-node-modules-reanimated-${{ hashFiles('yarn.lock') }}
+          restore-keys: ${{ runner.os }}-tvos-node-modules-reanimated-
 
       - name: Install Reanimated node_modules
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Restore app node_modules from cache
         uses: actions/cache@v3
         with:
           path: ${{ env.WORKING_DIRECTORY }}/node_modules
-          key: ${{ runner.os }}-node-modules-${{ env.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/yarn.lock', env.WORKING_DIRECTORY)) }}
-          restore-keys: ${{ runner.os }}-node-modules-${{ env.WORKING_DIRECTORY }}-
+          key: ${{ runner.os }}-tvos-node-modules-${{ env.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/yarn.lock', env.WORKING_DIRECTORY)) }}
+          restore-keys: ${{ runner.os }}-tvos-node-modules-${{ env.WORKING_DIRECTORY }}-
 
       - name: Install app node_modules
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Restore Pods from cache
         uses: actions/cache@v3
@@ -63,11 +67,13 @@ jobs:
             ${{ env.WORKING_DIRECTORY }}/ios/Pods
             ~/Library/Caches/CocoaPods
             ~/.cocoapods
-          key: ${{ runner.os }}-pods-${{ env.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/ios/Podfile.lock', env.WORKING_DIRECTORY)) }}
+          key: ${{ runner.os }}-tvos-pods-${{ env.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/ios/Podfile.lock', env.WORKING_DIRECTORY)) }}
 
       - name: Install Pods
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios
-        run: pod install
+        run: |
+          bundler install
+          bundler exec pod install
 
       - name: Restore build artifacts from cache
         uses: actions/cache@v3
@@ -79,4 +85,4 @@ jobs:
 
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn tvos
+        run: yarn react-native-tvos run-ios --no-packager --scheme TVOSExample-tvOS --simulator "Apple TV"

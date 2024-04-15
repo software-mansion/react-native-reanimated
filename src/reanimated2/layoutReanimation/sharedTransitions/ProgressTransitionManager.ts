@@ -39,14 +39,18 @@ export class ProgressTransitionManager {
         progressAnimation
       );
     })();
+
     this.registerEventHandlers();
   }
 
-  public removeProgressAnimation(viewTag: number) {
+  public removeProgressAnimation(viewTag: number, isUnmounting = true) {
     this.unregisterEventHandlers();
     runOnUIImmediately(() => {
       'worklet';
-      global.ProgressTransitionRegister.removeProgressAnimation(viewTag);
+      global.ProgressTransitionRegister.removeProgressAnimation(
+        viewTag,
+        isUnmounting
+      );
     })();
   }
 
@@ -141,19 +145,24 @@ function createProgressTransitionRegister() {
       viewTag: number,
       progressAnimation: ProgressAnimation
     ) => {
-      if (currentTransitions.size > 0) {
+      if (currentTransitions.size > 0 && !progressAnimations.has(viewTag)) {
         // there is no need to prevent cleaning on android
         isTransitionRestart = !IS_ANDROID;
       }
       progressAnimations.set(viewTag, progressAnimation);
     },
-    removeProgressAnimation: (viewTag: number) => {
+    removeProgressAnimation: (viewTag: number, isUnmounting: boolean) => {
       if (currentTransitions.size > 0) {
         // there is no need to prevent cleaning on android
         isTransitionRestart = !IS_ANDROID;
       }
-      // Remove the animation config after the transition is finished
-      toRemove.add(viewTag);
+      if (isUnmounting) {
+        // Remove the animation config after the transition is finished
+        toRemove.add(viewTag);
+      } else {
+        // if the animation is removed, without ever being started, it can be removed immediately
+        progressAnimations.delete(viewTag);
+      }
     },
     onTransitionStart: (
       viewTag: number,

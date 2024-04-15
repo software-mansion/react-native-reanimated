@@ -8,8 +8,12 @@ import android.view.ViewParent;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.PixelUtil;
+import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
+import com.facebook.react.uimanager.events.Event;
+import com.facebook.react.uimanager.events.EventDispatcher;
+import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.views.view.ReactViewGroup;
 import com.swmansion.reanimated.Utils;
 import java.util.ArrayList;
@@ -19,6 +23,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 public class SharedTransitionManager {
@@ -29,6 +35,7 @@ public class SharedTransitionManager {
   private final Map<Integer, Integer> mSharedTransitionInParentIndex = new HashMap<>();
   private final Map<Integer, Snapshot> mSnapshotRegistry = new HashMap<>();
   private final Map<Integer, View> mCurrentSharedTransitionViews = new HashMap<>();
+  private final Map<Integer, SortedSet<Integer>> mSharedViewChildrenIndices = new HashMap<>();
   private View mTransitionContainer;
   private final List<View> mRemovedSharedViews = new ArrayList<>();
   private final Set<Integer> mViewTagsToHide = new HashSet<>();
@@ -38,6 +45,25 @@ public class SharedTransitionManager {
   private final List<SharedElement> mSharedElementsWithProgress = new ArrayList<>();
   private final List<SharedElement> mSharedElementsWithAnimation = new ArrayList<>();
   private final Set<View> mReattachedViews = new HashSet<>();
+  private boolean mIsTransitionPrepared = false;
+  private final Set<Integer> mTagsToCleanup = new HashSet<>();
+
+  class TopWillAppearListener implements EventDispatcherListener {
+    private final EventDispatcher mEventDispatcher;
+
+    public TopWillAppearListener(EventDispatcher eventDispatcher) {
+      mEventDispatcher = eventDispatcher;
+    }
+
+    @Override
+    public void onEventDispatch(Event event) {
+      if (event.getEventName().equals("topWillAppear")) {
+        tryStartSharedTransitionForViews(mAddedSharedViews, true);
+        mAddedSharedViews.clear();
+        mEventDispatcher.removeListener(this);
+      }
+    }
+  }
 
   public SharedTransitionManager(AnimationsManager animationsManager) {
     mAnimationsManager = animationsManager;
@@ -56,13 +82,22 @@ public class SharedTransitionManager {
     return mCurrentSharedTransitionViews.get(tag);
   }
 
-  protected void screenDidLayout() {
-    tryStartSharedTransitionForViews(mAddedSharedViews, true);
-    mAddedSharedViews.clear();
+  protected void screenDidLayout(View view) {
+    if (mAddedSharedViews.isEmpty()) {
+      return;
+    }
+    EventDispatcher eventDispatcher =
+        UIManagerHelper.getEventDispatcherForReactTag(
+            (ReactContext) view.getContext(), view.getId());
+    if (eventDispatcher != null) {
+      eventDispatcher.addListener(new TopWillAppearListener(eventDispatcher));
+    }
   }
 
   protected void viewDidLayout(View view) {
-    maybeRestartAnimationWithNewLayout(view);
+    // this was causing problems when I moved the start of transition to the willAppear event
+    // handler
+    //    maybeRestartAnimationWithNewLayout(view);
   }
 
   protected void onViewsRemoval(int[] tagsToDelete) {
@@ -72,11 +107,11 @@ public class SharedTransitionManager {
     visitTreeForTags(tagsToDelete, new SnapshotTreeVisitor());
     if (mRemovedSharedViews.size() > 0) {
       // this happens when navigation goes back
-      boolean animationStarted = tryStartSharedTransitionForViews(mRemovedSharedViews, false);
-      if (!animationStarted) {
+      mIsTransitionPrepared = prepareSharedTransition(mRemovedSharedViews, false);
+      if (!mIsTransitionPrepared) {
         mRemovedSharedViews.clear();
       }
-      visitTreeForTags(tagsToDelete, new ConfigCleanerTreeVisitor());
+      visitTreeForTags(tagsToDelete, new PrepareConfigCleanupTreeVisitor());
     }
   }
 
@@ -141,8 +176,7 @@ public class SharedTransitionManager {
         sharedElementsToRestart, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION);
   }
 
-  private boolean tryStartSharedTransitionForViews(
-      List<View> sharedViews, boolean withNewElements) {
+  protected boolean prepareSharedTransition(List<View> sharedViews, boolean withNewElements) {
     if (sharedViews.isEmpty()) {
       return false;
     }
@@ -155,11 +189,43 @@ public class SharedTransitionManager {
     setupTransitionContainer();
     reparentSharedViewsForCurrentTransition(sharedElements);
     orderByAnimationTypes(sharedElements);
+    return true;
+  }
+
+  protected void onScreenWillDisappear() {
+    if (!mIsTransitionPrepared) {
+      return;
+    }
+    mIsTransitionPrepared = false;
+    for (SharedElement sharedElement : mSharedElementsWithAnimation) {
+      sharedElement.targetViewSnapshot = new Snapshot(sharedElement.targetView);
+    }
+    for (SharedElement sharedElement : mSharedElementsWithProgress) {
+      sharedElement.targetViewSnapshot = new Snapshot(sharedElement.targetView);
+    }
+
+    startPreparedTransitions();
+
+    for (Integer tag : mTagsToCleanup) {
+      mNativeMethodsHolder.clearAnimationConfig(tag);
+    }
+    mTagsToCleanup.clear();
+  }
+
+  private boolean tryStartSharedTransitionForViews(
+      List<View> sharedViews, boolean withNewElements) {
+    if (!prepareSharedTransition(sharedViews, withNewElements)) {
+      return false;
+    }
+    startPreparedTransitions();
+    return true;
+  }
+
+  private void startPreparedTransitions() {
     startSharedTransition(
         mSharedElementsWithAnimation, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION);
     startSharedTransition(
         mSharedElementsWithProgress, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION_PROGRESS);
-    return true;
   }
 
   private void sortViewsByTags(List<View> views) {
@@ -334,13 +400,26 @@ public class SharedTransitionManager {
     for (SharedElement sharedElement : sharedElements) {
       View viewSource = sharedElement.sourceView;
       if (!mSharedTransitionParent.containsKey(viewSource.getId())) {
+        ViewGroup parent = (ViewGroup) viewSource.getParent();
+        int parentTag = parent.getId();
+        int childIndex = parent.indexOfChild(viewSource);
         mSharedTransitionParent.put(viewSource.getId(), (View) viewSource.getParent());
-        mSharedTransitionInParentIndex.put(
-            viewSource.getId(), ((ViewGroup) viewSource.getParent()).indexOfChild(viewSource));
-        ((ViewGroup) viewSource.getParent()).removeView(viewSource);
-        ((ViewGroup) mTransitionContainer).addView(viewSource);
-        mReattachedViews.add(viewSource);
+        mSharedTransitionInParentIndex.put(viewSource.getId(), childIndex);
+        SortedSet<Integer> childrenIndicesSet = mSharedViewChildrenIndices.get(parentTag);
+        if (childrenIndicesSet == null) {
+          mSharedViewChildrenIndices.put(
+              parentTag, new TreeSet<>(Collections.singleton(childIndex)));
+        } else {
+          childrenIndicesSet.add(childIndex);
+        }
       }
+    }
+
+    for (SharedElement sharedElement : sharedElements) {
+      View viewSource = sharedElement.sourceView;
+      ((ViewGroup) viewSource.getParent()).removeView(viewSource);
+      ((ViewGroup) mTransitionContainer).addView(viewSource);
+      mReattachedViews.add(viewSource);
     }
   }
 
@@ -388,6 +467,15 @@ public class SharedTransitionManager {
       View parentView = mSharedTransitionParent.get(viewTag);
       int childIndex = mSharedTransitionInParentIndex.get(viewTag);
       ViewGroup parentViewGroup = ((ViewGroup) parentView);
+      int parentTag = parentViewGroup.getId();
+      SortedSet<Integer> childIndicesSet = mSharedViewChildrenIndices.get(parentTag);
+      // here we calculate how many children with smaller indices have not been reinserted yet
+      int childIndexOffset = childIndicesSet.headSet(childIndex).size();
+      childIndicesSet.remove(childIndex);
+      if (childIndicesSet.isEmpty()) {
+        mSharedViewChildrenIndices.remove(parentTag);
+      }
+      childIndex -= childIndexOffset;
       if (childIndex <= parentViewGroup.getChildCount()) {
         parentViewGroup.addView(view, childIndex);
       } else {
@@ -498,9 +586,9 @@ public class SharedTransitionManager {
     }
   }
 
-  class ConfigCleanerTreeVisitor implements TreeVisitor {
+  class PrepareConfigCleanupTreeVisitor implements TreeVisitor {
     public void run(View view) {
-      mNativeMethodsHolder.clearAnimationConfig(view.getId());
+      mTagsToCleanup.add(view.getId());
     }
   }
 

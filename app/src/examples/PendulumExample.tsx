@@ -19,8 +19,8 @@ const LIGHT_NAVY = '#C1C6E5';
 
 interface FieldDefinition {
   fieldName: string;
-  value: number;
-  setValue: Dispatch<SetStateAction<number>>;
+  value: string;
+  setValue: Dispatch<SetStateAction<string>>;
 }
 
 function InputField({ fieldName, value, setValue }: FieldDefinition) {
@@ -30,13 +30,10 @@ function InputField({ fieldName, value, setValue }: FieldDefinition) {
       <TextInput
         key={fieldName}
         value={`${value}`}
-        onChangeText={(s) => {
-          const parsedInput = Number.parseFloat(s);
-          if (parsedInput) {
-            setValue(parsedInput);
-          } else {
-            setValue(0);
-          }
+        onChangeText={(str) => {
+          str = str.replace(/[^0-9.]/g, ''); // Remove everything except for dots and digits
+          str = str.replace(/(?<=\..*)\./g, ''); // Remove all the dots except for the first one
+          setValue(str);
         }}
         autoCapitalize="none"
         inputMode="numeric"
@@ -51,21 +48,21 @@ export default function SpringExample() {
   const offset = useSharedValue({ x: 0, y: 0 });
   const [useConfigWithDuration, setUseConfigWithDuration] = useState(true);
 
-  const [stiffness, setStiffness] = useState(100);
-  const [duration, setDuration] = useState(5000);
-  const [dampingRatio, setDampingRatio] = useState(0.5);
-  const [mass, setMass] = useState(1);
-  const [damping, setDamping] = useState(1);
+  const [stiffness, setStiffness] = useState('100');
+  const [duration, setDuration] = useState('5000');
+  const [dampingRatio, setDampingRatio] = useState('0.5');
+  const [mass, setMass] = useState('1');
+  const [damping, setDamping] = useState('1');
 
   const config = {
-    stiffness: stiffness,
+    stiffness: Number.parseFloat(stiffness),
     ...(useConfigWithDuration
       ? {
-          duration: duration,
-          dampingRatio: dampingRatio,
+          duration: Number.parseFloat(duration),
+          dampingRatio: Number.parseFloat(dampingRatio),
         }
-      : { mass: mass, damping: damping }),
-  };
+      : { mass: Number.parseFloat(mass), damping: Number.parseFloat(damping) }),
+  } as const;
 
   const style = useAnimatedStyle(() => {
     return {
@@ -157,7 +154,7 @@ export default function SpringExample() {
                 {
                   fontSize: useConfigWithDuration
                     ? 50
-                    : Math.min(0.75 * mass, 40) + 10,
+                    : Math.min(0.75 * Number.parseFloat(mass), 40) + 10,
                 },
               ]}>
               {/* Using here view with border radius would be more natural, but views with border radius and rotation are bugged on android */}

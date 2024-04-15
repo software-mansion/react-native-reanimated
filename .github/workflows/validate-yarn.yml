@@ -1,0 +1,65 @@
+name: Validate yarn
+env:
+  YARN_ENABLE_HARDENED_MODE: 1
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/validate-yarn.yml'
+      - '**/package.json'
+      - '**/yarn.lock'
+  merge_group:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/validate-yarn.yml'
+      - '**/package.json'
+      - '**/yarn.lock'
+
+jobs:
+  check:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+
+      - name: Install dependencies
+        run: yarn
+      - name: Build package
+        run: yarn build
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v41
+        with:
+          files: |
+            **/package.json
+            **/yarn.lock
+
+      - name: Get list of changed directories
+        id: changed-dirs
+        run: |
+          ECHOLIST=()
+          for CHANGE in ${{ steps.changed-files.outputs.all_changed_files }}
+          do
+            DIR=$(dirname "$CHANGE")
+            ECHOLIST+=("$DIR")
+          done
+          ECHOLIST=($(echo "${ECHOLIST[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
+          echo "dirList=${ECHOLIST[*]}" >> $GITHUB_OUTPUT
+
+      - name: Perform yarn install in changed directories
+        working-directory: ${{ github.workspace }}
+        run: |
+          for DIR in ${{ steps.changed-dirs.outputs.dirList }}
+          do
+            echo "Yarn install in $DIR"
+            echo $(pwd)
+            cd "$DIR" && yarn install --immutable && cd ${{ github.workspace }}
+          done
