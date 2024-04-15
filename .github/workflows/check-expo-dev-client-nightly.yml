@@ -1,7 +1,7 @@
 name: Check Expo dev-client nightly build
 env:
   YARN_ENABLE_HARDENED_MODE: 0
-  SCRIPT_PATH: /react-native-reanimated/.github/workflows/helper/configureDevClient.js
+  SCRIPT_PATH: ${{ github.workspace }}/.github/workflows/helper/configureDevClient.js
 on:
   pull_request:
     paths:
@@ -47,7 +47,7 @@ jobs:
         run: npm install react-native-reanimated@nightly
       - name: Set Fabric
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
-        run: node ${{ env.SCRIPT_PATH }} setupFabricIOS
+        run: echo ${{env.SCRIPT_PATH}} && pwd && echo ${{ github.workspace }} && node ${{ env.SCRIPT_PATH }} setupFabricIOS
       - name: Install Pods
         working-directory: ExpoApp/ios
         run: pod install
