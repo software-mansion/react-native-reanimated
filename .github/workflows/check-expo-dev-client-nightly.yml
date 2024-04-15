@@ -46,6 +46,7 @@ jobs:
         working-directory: ExpoApp
         run: npm install react-native-reanimated@nightly
       - name: Set Fabric
+        working-directory: ExpoApp
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
         run: node ${{ env.SCRIPT_PATH }} setupFabricIOS
       - name: Install Pods
