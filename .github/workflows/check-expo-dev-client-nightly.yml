@@ -1,7 +1,7 @@
 name: Check Expo dev-client nightly build
 env:
   YARN_ENABLE_HARDENED_MODE: 0
-  SCRIPT_PATH: ${{ github.workspace }}/.github/workflows/helper/configureDevClient.js
+  SCRIPT_PATH: ${{github.workspace}}/reanimated_repo/.github/workflows/helper/configureDevClient.js
 on:
   pull_request:
     paths:
@@ -38,7 +38,7 @@ jobs:
           fi
       - name: Setup configuration
         working-directory: ExpoApp
-        run: echo ${{env.SCRIPT_PATH}} && pwd && echo ${{ github.workspace }} && node ${{ env.SCRIPT_PATH }} setBundleIdentifier
+        run: ls ${{github.workspace}} ${{env.SCRIPT_PATH}} && pwd && echo ${{ github.workspace }} && node ${{ env.SCRIPT_PATH }} setBundleIdentifier
       - name: Expo prebuild
         working-directory: ExpoApp
         run: npx expo prebuild
