@@ -38,7 +38,7 @@ jobs:
           fi
       - name: Setup configuration
         working-directory: ExpoApp
-        run: ls ${{github.workspace}} ${{env.SCRIPT_PATH}} && pwd && echo ${{ github.workspace }} && node ${{ env.SCRIPT_PATH }} setBundleIdentifier
+        run: node ${{ env.SCRIPT_PATH }} setBundleIdentifier
       - name: Expo prebuild
         working-directory: ExpoApp
         run: npx expo prebuild
@@ -53,7 +53,7 @@ jobs:
         run: pod install
       - name: Build app
         working-directory: ExpoApp
-        run: npx react-native run-ios --simulator='iPhone 14'
+        run: npx react-native run-ios --simulator='iPhone 14' --terminal='Terminal'
 
   build_android:
     if: github.repository == 'software-mansion/react-native-reanimated'
@@ -86,6 +86,7 @@ jobs:
             npm install expo@latest
           fi
       - name: Setup configuration
+        working-directory: ExpoApp
         run: node ${{ env.SCRIPT_PATH }} setBundleIdentifier
       - name: Expo prebuild
         working-directory: ExpoApp
@@ -94,8 +95,9 @@ jobs:
         working-directory: ExpoApp
         run: npm install react-native-reanimated@nightly
       - name: Set Fabric
+        working-directory: ExpoApp
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
         run: node ${{ env.SCRIPT_PATH }} setupFabricAndroid
       - name: Build app
-        working-directory: app/android
+        working-directory: ExpoApp/android
         run: ./gradlew assembleDebug --console=plain
