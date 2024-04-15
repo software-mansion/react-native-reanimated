@@ -1,8 +1,8 @@
 {
   "private": true,
   "scripts": {
-    "lint": "eslint --max-warnings=0 .",
-    "postinstall": "patch-package"
+    "build": "yarn patch-package",
+    "lint": "eslint --max-warnings=0 ."
   },
   "peerDependencies": {
     "react": "*",

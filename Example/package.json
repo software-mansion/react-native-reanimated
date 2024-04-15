@@ -3,12 +3,12 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "build": "yarn patch-package",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "lint": "eslint --max-warnings=0 .",
     "start": "react-native start",
-    "test": "jest",
-    "postinstall": "patch-package"
+    "test": "jest"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.21.0",

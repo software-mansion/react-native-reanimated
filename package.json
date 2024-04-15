@@ -18,7 +18,7 @@
     "format:js": "prettier --write --list-different src __tests__ __typetests__",
     "format:plugin": "cd plugin && yarn format && cd ..",
     "format:java": "node ./scripts/format-java.js",
-    "format:ios": "find apple/ -iname *.h -o -iname *.m -o -iname *.mm -o -iname *.cpp | xargs clang-format -i --Werror",
+    "format:ios": "find apple/ -iname \"*.h\" -o -iname \"*.m\" -o -iname \"*.mm\" -o -iname \"*.cpp\" | xargs clang-format -i --Werror",
     "format:android": "find android/src/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
     "format:common": "find Common/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
     "format:docs": "cd docs && yarn format && cd ..",
@@ -30,11 +30,11 @@
     "type:check:tests:0.72+": "./scripts/test-ts.sh __typetests__/0.72+",
     "type:check:tests:legacy": "./scripts/test-ts.sh __typetests__/legacy",
     "type:check:all": "yarn type:check:src && yarn type:check:plugin && ./scripts/test-ts.sh app/src/App.tsx __typetests__/common __typetests__/0.72+ __typetests__/legacy",
-    "prepare": "yarn plugin && bob build && husky install && yarn app",
+    "build": "yarn build:plugin && bob build && husky install && yarn build:app",
+    "build:app": "cd app && yarn install && yarn build",
+    "build:plugin": "cd plugin && yarn install && yarn build",
     "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular src lib",
-    "use_strict_check": "node ./scripts/validate-use-strict.js",
-    "plugin": "cd plugin && yarn && cd ..",
-    "app": "cd app && yarn && cd .."
+    "use_strict_check": "node ./scripts/validate-use-strict.js"
   },
   "main": "lib/module/index",
   "module": "lib/module/index",
@@ -185,5 +185,6 @@
   "sideEffects": [
     "./lib/reanimated2/core",
     "./lib/index"
-  ]
+  ],
+  "packageManager": "yarn@4.1.1"
 }

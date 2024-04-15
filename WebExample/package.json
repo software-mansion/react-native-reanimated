@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
+    "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
     "@babel/preset-env": "^7.19.4",
     "@react-native/babel-preset": "0.74.77",
     "@react-native/eslint-config": "0.74.77",
