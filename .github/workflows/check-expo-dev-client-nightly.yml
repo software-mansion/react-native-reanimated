@@ -38,7 +38,7 @@ jobs:
           fi
       - name: Setup configuration
         working-directory: ExpoApp
-        run: node ${{ env.SCRIPT_PATH }} setBundleIdentifier
+        run: echo ${{env.SCRIPT_PATH}} && pwd && echo ${{ github.workspace }} && node ${{ env.SCRIPT_PATH }} setBundleIdentifier
       - name: Expo prebuild
         working-directory: ExpoApp
         run: npx expo prebuild
@@ -47,7 +47,7 @@ jobs:
         run: npm install react-native-reanimated@nightly
       - name: Set Fabric
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
-        run: echo ${{env.SCRIPT_PATH}} && pwd && echo ${{ github.workspace }} && node ${{ env.SCRIPT_PATH }} setupFabricIOS
+        run: node ${{ env.SCRIPT_PATH }} setupFabricIOS
       - name: Install Pods
         working-directory: ExpoApp/ios
         run: pod install
