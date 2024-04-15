@@ -36,6 +36,7 @@ export type TestSuite = {
   name: string;
   buildSuite: () => void;
   testCases: TestCase[];
+  nestingLevel: number;
   beforeAll?: () => void | Promise<void>;
   afterAll?: () => void | Promise<void>;
   beforeEach?: () => void | Promise<void>;
