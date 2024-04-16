@@ -7,8 +7,9 @@ import type { WorkletFunction } from '../commonTypes';
 /**
  * Lets you compose multiple event handlers based on [useEvent](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useEvent) hook.
  *
- * @param handlers - A list of event handlers created using [useEvent](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useEvent) hook.
+ * @param handlers - An array of event handlers created using [useEvent](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useEvent) hook.
  * @returns An object you need to pass to any "onEvent" prop on an `Animated` component.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/useComposedEventHandler
  */
 export function useComposedEventHandler<
   Context extends Record<string, unknown>

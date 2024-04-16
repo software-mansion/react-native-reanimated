@@ -81,7 +81,7 @@ export default function ComposedHandlerExample() {
     },
   });
 
-  const composedHandlers = useComposedEventHandler([
+  const composedHandler = useComposedEventHandler([
     toggleScroll ? onScrollHandler : {},
     toggleDrag ? onDragHandler : {},
     toggleMomentum ? onMomentumHandler : {},
@@ -123,8 +123,8 @@ export default function ComposedHandlerExample() {
         onPressFunc={() => setToggleAll(!toggleAll)}
       />
       <Animated.FlatList
-        onScroll={composedHandlers}
-        style={styles.listA}
+        onScroll={composedHandler}
+        style={styles.list}
         data={items}
         renderItem={({ item }) => <Item title={item.title} />}
         keyExtractor={(item) => `A:${item.title}`}
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
   },
-  listA: {
+  list: {
     flex: 1,
   },
   item: {
