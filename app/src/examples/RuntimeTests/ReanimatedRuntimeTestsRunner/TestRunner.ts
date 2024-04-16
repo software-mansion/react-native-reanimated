@@ -40,11 +40,10 @@ export class TestRunner {
   private _renderLock: LockObject = { lock: false };
   private _valueRegistry: Record<string, SharedValue> = {};
   private _wasRenderedNull: boolean = false;
+  private _nestingLevel = -1;
   private _threadLock: LockObject = {
     lock: false,
   };
-
-  private _nestingLevel = -1;
 
   public notify(name: string) {
     'worklet';
