@@ -16,14 +16,12 @@ import {
   mockAnimationTimer,
   recordAnimationUpdates,
   render,
-  useTestRef,
   wait,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { Snapshots } from './withTiming.snapshot';
 
 const AnimatedComponent = ({ easing }: { easing: EasingFunction | EasingFunctionFactory | undefined }) => {
   const widthSV = useSharedValue(0);
-  const ref = useTestRef('AnimatedComponent');
 
   const style = useAnimatedStyle(() => {
     return {
@@ -37,7 +35,7 @@ const AnimatedComponent = ({ easing }: { easing: EasingFunction | EasingFunction
 
   return (
     <View style={styles.container}>
-      <Animated.View ref={ref} style={[styles.animatedBox, style]} />
+      <Animated.View style={[styles.animatedBox, style]} />
     </View>
   );
 };
