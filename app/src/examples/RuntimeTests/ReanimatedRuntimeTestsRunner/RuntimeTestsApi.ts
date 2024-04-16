@@ -28,12 +28,31 @@ export function afterAll(job: () => void) {
   testRunner.afterAll(job);
 }
 
-export const test = (name: string, testCase: () => void) => {
-  testRunner.test(name, testCase);
-};
-
-test.each = <T>(examples: Array<T>) => {
-  return testRunner.testEach(examples);
+export const test = {
+  call: (name: string, testCase: () => void) => {
+    testRunner.test(name, testCase);
+  },
+  each: <T>(examples: Array<T>) => {
+    return testRunner.testEach(examples);
+  },
+  only: {
+    call: (name: string, testCase: () => void) => {
+      testRunner.test(name, testCase, true);
+    },
+    each: <T>(examples: Array<T>) => {
+      return testRunner.testEach(examples, true);
+    },
+  },
+  skip: {
+    call: (_name: string, _testCase: () => void) => {
+      // Do nothing
+    },
+    each: <T>(_examples: Array<T>) => {
+      return (_name: string, _testCase: (example: T) => void) => {
+        // Do nothing
+      };
+    },
+  },
 };
 
 export async function render(component: ReactElement<Component> | null) {

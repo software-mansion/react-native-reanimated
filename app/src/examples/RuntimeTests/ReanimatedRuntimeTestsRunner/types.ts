@@ -30,6 +30,7 @@ export type TestCase = {
   componentsRefs: Record<string, ComponentRef>;
   callsRegistry: Record<string, CallTrucker>;
   errors: string[];
+  only: boolean;
 };
 
 export type TestSuite = {

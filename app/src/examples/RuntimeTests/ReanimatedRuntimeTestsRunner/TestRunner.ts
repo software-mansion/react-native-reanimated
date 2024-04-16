@@ -40,6 +40,7 @@ export class TestRunner {
   private _renderLock: LockObject = { lock: false };
   private _valueRegistry: Record<string, SharedValue> = {};
   private _wasRenderedNull: boolean = false;
+  private _includesOnly: boolean = false;
   private _threadLock: LockObject = {
     lock: false,
   };
@@ -84,6 +85,7 @@ export class TestRunner {
   }
 
   public describe(name: string, buildSuite: () => void) {
+    console.log('Push suite ', name);
     this._testSuites.push({
       name,
       buildSuite,
@@ -91,24 +93,30 @@ export class TestRunner {
     });
   }
 
-  public test(name: string, run: () => void) {
+  public test(name: string, run: () => void, only = false) {
+    console.log('Push test ', name);
     assertTestSuite(this._currentTestSuite);
+    if (only) {
+      this._includesOnly = true;
+      console.log('SET ONLY');
+    }
     this._currentTestSuite.testCases.push({
       name,
       run,
       componentsRefs: {},
       callsRegistry: {},
       errors: [],
+      only: only,
     });
   }
 
-  public testEach<T>(examples: Array<T>) {
+  public testEach<T>(examples: Array<T>, only = false) {
     return (name: string, testCase: (example: T) => void) => {
       examples.forEach((example, index) => {
         const currentTestCase = async () => {
           await testCase(example);
         };
-        this.test(formatString(name, example, index), currentTestCase);
+        this.test(formatString(name, example, index), currentTestCase, only);
       });
     };
   }
@@ -170,6 +178,8 @@ export class TestRunner {
   }
 
   public async runTests() {
+    console.log('runTests');
+
     const summary: TestSummary = {
       passed: 0,
       failed: 0,
@@ -177,6 +187,11 @@ export class TestRunner {
       startTime: Date.now(),
       endTime: 0,
     };
+
+    for (const testSuite of this._testSuites) {
+      this._currentTestSuite = testSuite;
+      await testSuite.buildSuite();
+    }
     for (const testSuite of this._testSuites) {
       await this.runTestSuite(testSuite, summary);
     }
@@ -191,13 +206,15 @@ export class TestRunner {
 
     logInFrame(`Running test suite: ${testSuite.name}`);
 
-    testSuite.buildSuite();
+    // testSuite.buildSuite();
     if (testSuite.beforeAll) {
       await testSuite.beforeAll();
     }
 
     for (const testCase of testSuite.testCases) {
-      await this.runTestCase(testSuite, testCase, summary);
+      if (!this._includesOnly || testCase.only) {
+        await this.runTestCase(testSuite, testCase, summary);
+      }
     }
 
     if (testSuite.afterAll) {
