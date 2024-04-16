@@ -13,14 +13,17 @@ import type { WorkletFunction } from '../commonTypes';
 export function useComposedEventHandler<
   Context extends Record<string, unknown>
 >(handlers: { workletEventHandler: typeof WorkletEventHandler }[]) {
+  // Record of handlers' worklets to calculate deps diffs. We use the record type to match the useHandler API requirements
   const workletsRecord: Record<string, WorkletFunction> = {};
+  // Summed event names for registration
   const composedEventNames = new Set<string>();
+  // Map that holds worklets for specific handled events
   const workletsMap: {
     [key: string]: ((event: ReanimatedEvent<Event>) => void)[];
   } = {};
 
   handlers.forEach((handler) => {
-    const workletEventHandler = handler.workletEventHandler;
+    const { workletEventHandler } = handler;
     if (workletEventHandler instanceof WorkletEventHandler) {
       workletEventHandler.eventNames.forEach((event) => {
         composedEventNames.add(event);
@@ -31,7 +34,8 @@ export function useComposedEventHandler<
           workletsMap[event] = [workletEventHandler.worklet];
         }
 
-        workletsRecord[event + `${workletsMap[event].length}`] =
+        const handlerName = event + `${workletsMap[event].length}`;
+        workletsRecord[handlerName] =
           workletEventHandler.worklet as WorkletFunction;
       });
     }
