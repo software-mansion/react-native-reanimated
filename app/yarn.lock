@@ -1570,16 +1570,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-box2d@npm:^0.2.5":
-  version: 0.2.5
-  resolution: "react-native-box2d@npm:0.2.5"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 10/84547e8914bfe177b68eee3cc5b9593b563488cfbbcab112115e6dc151c53b779c3d4fb2b864566866fbc187c7ebafe51ac56b516fde947a1617b40e4dd702ef
-  languageName: node
-  linkType: hard
-
 "react-native-gesture-handler@npm:^2.16.0":
   version: 2.16.0
   resolution: "react-native-gesture-handler@npm:2.16.0"
@@ -1731,7 +1721,6 @@ __metadata:
     patch-package: "npm:^7.0.0"
     prettier: "npm:^2.8.7"
     react-dom: "npm:18.0.0"
-    react-native-box2d: "npm:^0.2.5"
     react-native-gesture-handler: "npm:^2.16.0"
     react-native-pager-view: "npm:^6.2.3"
     react-native-reanimated: "link:../"
