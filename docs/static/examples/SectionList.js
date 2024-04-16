@@ -158,7 +158,6 @@ const SectionList = () => {
   return (
     <SafeAreaView style={sectionListStyles.cardsContainer}>
       <TableOfContents
-        selectedItem={selectedItem}
         data={sectionNames}
         visibleIndex={visibleIndex}
         sectionCardsRef={sectionCardsRef}
