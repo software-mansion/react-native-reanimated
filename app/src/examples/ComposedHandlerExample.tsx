@@ -92,78 +92,36 @@ export default function ComposedHandlerExample() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.toggleContainer}>
-        <View
-          style={[
-            styles.toggleIcon,
-            toggleScroll ? styles.toggleON : styles.toggleOFF,
-          ]}
-        />
-        <Button
-          title={`Toggle scroll handler ${toggleScroll ? 'OFF' : 'ON'}`}
-          onPress={() => setToggleScroll(!toggleScroll)}
-        />
-      </View>
-      <View style={styles.toggleContainer}>
-        <View
-          style={[
-            styles.toggleIcon,
-            toggleDrag ? styles.toggleON : styles.toggleOFF,
-          ]}
-        />
-        <Button
-          title={`Toggle drag handler ${toggleDrag ? 'OFF' : 'ON'}`}
-          onPress={() => setToggleDrag(!toggleDrag)}
-        />
-      </View>
-      <View style={styles.toggleContainer}>
-        <View
-          style={[
-            styles.toggleIcon,
-            toggleMomentum ? styles.toggleON : styles.toggleOFF,
-          ]}
-        />
-        <Button
-          title={`Toggle momentum handler ${toggleMomentum ? 'OFF' : 'ON'}`}
-          onPress={() => setToggleMomentum(!toggleMomentum)}
-        />
-      </View>
-      <View style={styles.toggleContainer}>
-        <View
-          style={[
-            styles.toggleIcon,
-            toggleBegin ? styles.toggleON : styles.toggleOFF,
-          ]}
-        />
-        <Button
-          title={`Toggle begin handler ${toggleBegin ? 'OFF' : 'ON'}`}
-          onPress={() => setToggleBegin(!toggleBegin)}
-        />
-      </View>
-      <View style={styles.toggleContainer}>
-        <View
-          style={[
-            styles.toggleIcon,
-            toggleEnd ? styles.toggleON : styles.toggleOFF,
-          ]}
-        />
-        <Button
-          title={`Toggle end handler ${toggleEnd ? 'OFF' : 'ON'}`}
-          onPress={() => setToggleEnd(!toggleEnd)}
-        />
-      </View>
-      <View style={styles.toggleContainer}>
-        <View
-          style={[
-            styles.toggleIcon,
-            toggleAll ? styles.toggleON : styles.toggleOFF,
-          ]}
-        />
-        <Button
-          title={`Toggle all handler ${toggleAll ? 'OFF' : 'ON'}`}
-          onPress={() => setToggleAll(!toggleAll)}
-        />
-      </View>
+      <ToggleButton
+        name={'scroll'}
+        isToggled={toggleScroll}
+        onPressFunc={() => setToggleScroll(!toggleScroll)}
+      />
+      <ToggleButton
+        name={'drag'}
+        isToggled={toggleDrag}
+        onPressFunc={() => setToggleDrag(!toggleDrag)}
+      />
+      <ToggleButton
+        name={'momentum'}
+        isToggled={toggleMomentum}
+        onPressFunc={() => setToggleMomentum(!toggleMomentum)}
+      />
+      <ToggleButton
+        name={'begin'}
+        isToggled={toggleBegin}
+        onPressFunc={() => setToggleBegin(!toggleBegin)}
+      />
+      <ToggleButton
+        name={'end'}
+        isToggled={toggleEnd}
+        onPressFunc={() => setToggleEnd(!toggleEnd)}
+      />
+      <ToggleButton
+        name={'all'}
+        isToggled={toggleAll}
+        onPressFunc={() => setToggleAll(!toggleAll)}
+      />
       <Animated.FlatList
         onScroll={composedHandlers}
         style={styles.listA}
@@ -174,6 +132,26 @@ export default function ComposedHandlerExample() {
     </View>
   );
 }
+
+type ToggleProps = {
+  name: string;
+  isToggled: boolean;
+  onPressFunc: () => void;
+};
+const ToggleButton = ({ name, isToggled, onPressFunc }: ToggleProps) => (
+  <View style={styles.toggleContainer}>
+    <View
+      style={[
+        styles.toggleIcon,
+        isToggled ? styles.toggleON : styles.toggleOFF,
+      ]}
+    />
+    <Button
+      title={`Toggle ${name} handler ${isToggled ? 'OFF' : 'ON'}`}
+      onPress={onPressFunc}
+    />
+  </View>
+);
 
 type ItemValue = { title: string };
 const items: ItemValue[] = [...new Array(101)].map((_each, index) => {
