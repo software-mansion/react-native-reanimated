@@ -4,7 +4,7 @@ sidebar_position: 6
 
 # useComposedEventHandler
 
-This is a hook that lets you compose [useEvent](/docs/advanced/useEvent)-based event handlers (such as [useAnimatedScrollHandler](/docs/scroll/useAnimatedScrollHandler) or your own custom ones) into a single, combined event handler.   
+This is a hook that lets you compose [useEvent](/docs/advanced/useEvent)-based event handlers (such as [useAnimatedScrollHandler](/docs/scroll/useAnimatedScrollHandler) or your own custom ones) into a single, combined event handler.
 
 ### Arguments
 
@@ -25,7 +25,7 @@ Now, each dispatched `onScroll` event gets handled by both of handlers, as well 
 ```jsx {29-32,36}
 import Animated, {
   useAnimatedScrollHandler,
-  useComposedEventHandler
+  useComposedEventHandler,
 } from 'react-native-reanimated';
 
 function ComposedEventHandlerExample() {
