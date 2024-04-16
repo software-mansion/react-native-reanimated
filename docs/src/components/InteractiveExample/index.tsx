@@ -17,7 +17,7 @@ import styles from './styles.module.css';
 
 interface Props {
   src: string;
-  component: React.ReactNode;
+  component: React.FC<{ width?: number }>;
   label?: string;
   showCode?: boolean; // whether to show code by default
   larger?: boolean; // should the view be enlarged?
@@ -25,18 +25,27 @@ interface Props {
 
 export default function InteractiveExample({
   src,
-  component,
+  component: Component,
   label,
   showCode = false,
   larger = false,
 }: Props) {
   const [_, copy] = useCopyToClipboard();
   const [key, setKey] = React.useState(0);
+  const [width, setWidth] = React.useState<number | null>(null);
   const [showPreview, setShowPreview] = React.useState(!showCode);
+
+  const intectiveExampleRef = React.useRef<HTMLDivElement>(null);
 
   const resetExample = () => {
     setKey(key + 1);
   };
+
+  React.useEffect(() => {
+    if (intectiveExampleRef.current) {
+      setWidth(intectiveExampleRef.current.offsetWidth);
+    }
+  }, [intectiveExampleRef.current]);
 
   const prefersReducedMotion = useReducedMotion();
 
@@ -44,6 +53,7 @@ export default function InteractiveExample({
     <BrowserOnly fallback={<div>Loading...</div>}>
       {() => (
         <div
+          ref={intectiveExampleRef}
           className={`${styles.container} ${larger && styles.largerContainer} 
           ${!showPreview ? styles.code : ''}`}
           data-ispreview={showPreview}>
@@ -86,7 +96,9 @@ export default function InteractiveExample({
           <div className={styles.previewContainer}>
             {showPreview ? (
               <>
-                <React.Fragment key={key}>{component}</React.Fragment>
+                <React.Fragment key={key}>
+                  {width !== null && <Component width={width} />}
+                </React.Fragment>
 
                 <div
                   className={clsx(

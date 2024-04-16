@@ -7,7 +7,7 @@ import Animated, {
   withRepeat,
 } from 'react-native-reanimated';
 
-export default function App() {
+export default function App({width}) {
   const viewRef = useRef(null);
 
   const offset = useSharedValue(100);
