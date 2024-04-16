@@ -13,9 +13,7 @@ import ExampleVideo from '@site/src/components/ExampleVideo';
 
 One notable aspect of this implementation is the use of [shared values](/docs/fundamentals/glossary#shared-value) with the `useSharedValue` hook. Leveraging shared values helps to prevent unnecessary re-renders.
 
-```js
-const height = useSharedValue(0);
-```
+<CollapsibleCode src={AccordionSrc} showLines={[16,16]}/>
 
 <ExampleVideo
 sources={{
@@ -30,37 +28,4 @@ Inside the **AccordionItem**, the children represent the content section. It's f
 
 <samp id="Accordion">Accordion</samp>
 
-```js
-function AccordionItem({
-  isExpanded,
-  children,
-  viewKey,
-  style,
-  duration = 500,
-}) {
-  const height = useSharedValue(0);
-
-  const derivedHeight = useDerivedValue(() =>
-    withTiming(height.value * Number(isExpanded.value), {
-      duration,
-    })
-  );
-  const bodyStyle = useAnimatedStyle(() => ({
-    height: derivedHeight.value,
-  }));
-
-  return (
-    <Animated.View
-      key={`accordionItem_${viewKey}`}
-      style={[styles.animatedView, bodyStyle, style]}>
-      <View
-        onLayout={(e) => {
-          height.value = e.nativeEvent.layout.height;
-        }}
-        style={styles.wrapper}>
-        {children}
-      </View>
-    </Animated.View>
-  );
-}
-```
+<CollapsibleCode src={AccordionSrc} showLines={[9,41]}/>

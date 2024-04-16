@@ -150,8 +150,8 @@ const TableOfContents = ({
 
 const SectionList = () => {
   const selectedItem = useSharedValue('');
-  const sectionNames = SECTIONS.map((s) => s.name);
   const visibleIndex = useSharedValue(0);
+  const sectionNames = SECTIONS.map((s) => s.name);
   const sectionCardsRef = useRef(null);
   const tableOfContentsRef = useRef(null);
 

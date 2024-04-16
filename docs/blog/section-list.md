@@ -6,6 +6,7 @@ title: Section List
 import SectionList from '@site/static/examples/SectionList';
 import SectionListSrc from '!!raw-loader!@site/static/examples/SectionList';
 import ExampleVideo from '@site/src/components/ExampleVideo';
+import CollapsibleCode from '@site/src/components/CollapsibleCode';
 
 Section Lists are essential in mobile app development, organizing content with sleek headers and intuitive navigation for seamless user experience. They streamline browsing through news categories or recipe collections, offering effortless scrolling and clear organization, making content discovery a delightful journey.
 
@@ -15,30 +16,7 @@ The primary component, **SectionList**, acts as the main orchestrator of the ent
 
 <samp id="SectionList">Section List</samp>
 
-```js
-const SectionList = () => {
-  /*
-  /* content
-  */
-  return (
-    <View style={sectionListStyles.cardsContainer}>
-      <TableOfContents
-        selectedItem={selectedItem}
-        data={sectionNames}
-        visibleIndex={visibleIndex}
-        sectionCardsRef={sectionCardsRef}
-        tableOfContentsRef={tableOfContentsRef}
-      />
-      <SectionCards
-        sections={SECTIONS}
-        visibleIndex={visibleIndex}
-        tableOfContentsRef={tableOfContentsRef}
-        sectionCardsRef={sectionCardsRef}
-      />
-    </View>
-  );
-};
-```
+<CollapsibleCode src={SectionListSrc} showLines={[150,174]}/>
 
 Within **SectionList**, there are two key components: **TableOfContents** and **SectionCards**.
 
@@ -46,78 +24,13 @@ Within **SectionList**, there are two key components: **TableOfContents** and **
 
 <samp id="SectionList">Section List</samp>
 
-```js
-const TableOfContents = ({
-  data,
-  visibleIndex,
-  sectionCardsRef,
-  tableOfContentsRef,
-}) => {
-  return (
-    <View style={sectionListStyles.tableOfContents}>
-      <FlashList
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        renderItem={({ item, index }) => (
-          <TableOfContentsElement
-            item={item}
-            visibleIndex={visibleIndex}
-            index={index}
-            sectionCardsRef={sectionCardsRef}
-          />
-        )}
-        data={data}
-        estimatedItemSize={52}
-        ref={tableOfContentsRef}
-      />
-    </View>
-  );
-};
-```
+<CollapsibleCode src={SectionListSrc} showLines={[123,148]}/>
 
 **SectionCards**, on the other hand, manages the rendering of individual sections and their corresponding content. It receives props: `sections`, `visibleIndex`, `sectionCardsRef`, and `tableOfContentsRef` to render the content sections and handle scrolling interactions.
 
 <samp id="SectionList">Section List</samp>
 
-```js
-const SectionCards = ({
-  sections,
-  visibleIndex,
-  sectionCardsRef,
-  tableOfContentsRef,
-}) => {
-  /*
-  /* content 
-  */
-  const renderItem = ({ item }) => {
-    return (
-      <View>
-        <Text style={sectionCardStyles.header}> {item.name}</Text>
-        <SectionCardsElement>
-          <Text style={sectionCardStyles.content}>{item.content}</Text>
-        </SectionCardsElement>
-      </View>
-    );
-  };
-
-  return (
-    <View style={sectionListStyles.flex}>
-      <FlashList
-        estimatedItemSize={52}
-        ref={sectionCardsRef}
-        estimatedFirstItemOffset={0}
-        renderItem={renderItem}
-        data={sections}
-        onScrollBeginDrag={onScroll}
-        onScrollEndDrag={onScroll}
-        onScroll={debounce(onScroll)}
-        onMomentumScrollBegin={onScroll}
-        onMomentumScrollEnd={onScroll}
-      />
-    </View>
-  );
-};
-```
+<CollapsibleCode src={SectionListSrc} showLines={[198,256]}/>
 
 <ExampleVideo
 sources={{
@@ -128,62 +41,20 @@ sources={{
 
 The `onScroll` in **SectionCards** calculates the offset as the user scrolls through the content and determines which section is currently most visible on the screen. It is done by comparing the distance of each section from the top of the screen - it identifies the section closest to the viewport's top edge.
 
-```js
-const heights = sections.map((_) => SECTION_HEIGHT);
-
-const getOffsetStarts = () =>
-  heights.map((v, i) => heights.slice(0, i).reduce((x, acc) => x + acc, 0));
-
-const onScroll = (event) => {
-  const offset = event.nativeEvent.contentOffset.y;
-
-  const distancesFromTop = getOffsetStarts().map((v) => Math.abs(v - offset));
-  const newIndex = distancesFromTop.indexOf(
-    Math.min.apply(null, distancesFromTop)
-  );
-  if (visibleIndex.value !== newIndex) {
-    tableOfContentsRef.current?.scrollToIndex({
-      index: newIndex,
-      animated: true,
-    });
-  }
-  visibleIndex.value = newIndex;
-};
-```
+<CollapsibleCode src={SectionListSrc} showLines={[204,227]}/>
 
 The `useSharedValue` hook is utilized to create shared mutable values across different components. For instance, `selectedItem` and `visibleIndex` are [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) used to manage the currently selected section and its visibility index.
 
-```js
-const selectedItem = useSharedValue('');
-const visibleIndex = useSharedValue(0);
-```
+<CollapsibleCode src={SectionListSrc} showLines={[151,152]}/>
 
 Additionally, `useAnimatedStyle` is employed to define [animated styles](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle/) based on the shared values. These animated styles are then applied to components to create dynamic visual effects, such as changing font weights and adding bottom borders.
 
-```js
-useAnimatedStyle(() => ({
-  fontWeight: selectedItem.value === item ? 600 : 400,
-  borderBottomWidth: selectedItem.value === item ? '1px' : '0',
-}));
-```
+<CollapsibleCode src={SectionListSrc} showLines={[96,99]}/>
 
 To enable interaction with the FlashList component - such as scrolling to specific sections, the code utilizes variables created using `useRef` such as `sectionCardsRef` and `tableContentsRef`
 
-```js
-const sectionCardsRef = useRef(null);
-const tableOfContentsRef = useRef(null);
-```
+<CollapsibleCode src={SectionListSrc} showLines={[154,155]}/>
 
 Reducing the frequency of calls and by this enhancing performance was done by implementation of the `debounce` function to throttle the `onScroll` event handler.
 
-```js
-function debounce(func, timeout = 100) {
-  let timer;
-  return (...args) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      func(...args);
-    }, timeout);
-  };
-}
-```
+<CollapsibleCode src={SectionListSrc} showLines={[85,93]}/>
