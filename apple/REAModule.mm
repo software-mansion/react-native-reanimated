@@ -176,9 +176,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
     _surfacePresenter = self.bridge.surfacePresenter;
   }
 
-#ifndef NDEBUG
   [self setReaSurfacePresenter];
-#endif // NDEBUG
 
   _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:bridge surfacePresenter:_surfacePresenter];
 
