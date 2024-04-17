@@ -21,7 +21,6 @@
     "@react-navigation/stack": "^6.3.18",
     "d3-shape": "^3.2.0",
     "react-dom": "18.0.0",
-    "react-native-box2d": "^0.2.5",
     "react-native-gesture-handler": "^2.16.0",
     "react-native-pager-view": "^6.2.3",
     "react-native-reanimated": "link:../",
