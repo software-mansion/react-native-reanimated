@@ -41,7 +41,8 @@ export class TestRunner {
   private _valueRegistry: Record<string, SharedValue> = {};
   private _wasRenderedNull: boolean = false;
   private _includesOnly: boolean = false;
-  private _nestingLevel = -1;
+  private _nestingLevel = 0;
+  private _inheritNestedOnly: boolean = false;
   private _threadLock: LockObject = {
     lock: false,
   };
@@ -85,22 +86,40 @@ export class TestRunner {
     return await this.render(null);
   }
 
-  public describe(name: string, buildSuite: () => void) {
-    console.log('Push suite ', name);
-    this._testSuites.push({
+  public describe(name: string, buildSuite: () => void, only = false) {
+    if (only) {
+      this._includesOnly = true;
+    }
+
+    let index; // We have to manage the order of the nested describes
+    if (this._currentTestSuite === null) {
+      index = this._testSuites.length; // If we have no parent describe, we append at the end
+    } else {
+      const parentIndex = this._testSuites.findIndex(testSuite => {
+        return testSuite === this._currentTestSuite;
+      });
+      const parentNesting = this._currentTestSuite.nestingLevel;
+      index = parentIndex + 1;
+      while (index < this._testSuites.length && this._testSuites[index].nestingLevel > parentNesting) {
+        // Append after last child of the paren describe
+        // The children have bigger nesting level
+        index += 1;
+      }
+    }
+
+    this._testSuites.splice(index, 0, {
       name,
       buildSuite,
       testCases: [],
-      nestingLevel: this._nestingLevel + 1,
+      nestingLevel: this._nestingLevel,
+      only: only || this._inheritNestedOnly,
     });
   }
 
   public test(name: string, run: () => void, only = false) {
-    console.log('Push test ', name);
     assertTestSuite(this._currentTestSuite);
     if (only) {
       this._includesOnly = true;
-      console.log('SET ONLY');
     }
     this._currentTestSuite.testCases.push({
       name,
@@ -180,7 +199,7 @@ export class TestRunner {
   }
 
   public async runTests() {
-    console.log('runTests');
+    console.log('\n');
 
     const summary: TestSummary = {
       passed: 0,
@@ -190,15 +209,21 @@ export class TestRunner {
       endTime: 0,
     };
 
-    const previousNestingLevel = this._nestingLevel;
     for (const testSuite of this._testSuites) {
       this._currentTestSuite = testSuite;
+      const previousNestedOnly = this._inheritNestedOnly;
+      this._inheritNestedOnly = testSuite.only;
+      this._nestingLevel = testSuite.nestingLevel + 1;
+
       await testSuite.buildSuite();
+
+      this._nestingLevel -= testSuite.nestingLevel;
+      this._inheritNestedOnly = previousNestedOnly;
+      this._currentTestSuite = testSuite;
     }
     for (const testSuite of this._testSuites) {
       await this.runTestSuite(testSuite, summary);
     }
-    this._nestingLevel = previousNestingLevel;
 
     this._testSuites = [];
     console.log('End of tests run 🏁');
@@ -210,15 +235,26 @@ export class TestRunner {
     this._currentTestSuite = testSuite;
     this._nestingLevel = testSuite.nestingLevel;
 
+    if (this._includesOnly) {
+      let skipTestSuite = !testSuite.only;
+      for (const testCase of testSuite.testCases) {
+        if (testCase.only) {
+          skipTestSuite = false;
+        }
+      }
+      if (skipTestSuite) {
+        return;
+      }
+    }
+
     console.log(`${indentNestingLevel(this._nestingLevel)} ${testSuite.name}`);
 
-    // testSuite.buildSuite();
     if (testSuite.beforeAll) {
       await testSuite.beforeAll();
     }
 
     for (const testCase of testSuite.testCases) {
-      if (!this._includesOnly || testCase.only) {
+      if (!this._includesOnly || testSuite.only || testCase.only) {
         await this.runTestCase(testSuite, testCase, summary);
       }
     }

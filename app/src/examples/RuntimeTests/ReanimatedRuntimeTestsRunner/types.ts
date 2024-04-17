@@ -42,6 +42,7 @@ export type TestSuite = {
   afterAll?: () => void | Promise<void>;
   beforeEach?: () => void | Promise<void>;
   afterEach?: () => void | Promise<void>;
+  only: boolean;
 };
 
 export enum ComparisonMode {

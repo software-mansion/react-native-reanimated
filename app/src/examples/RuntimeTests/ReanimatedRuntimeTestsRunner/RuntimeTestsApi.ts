@@ -8,9 +8,15 @@ export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
 
-export function describe(name: string, buildSuite: () => void) {
+export const describe = (name: string, buildSuite: () => void) => {
   testRunner.describe(name, buildSuite);
-}
+};
+describe.skip = (_name: string, _buildSuite: () => void) => {
+  // Do nothing
+};
+describe.only = (name: string, buildSuite: () => void) => {
+  testRunner.describe(name, buildSuite, true);
+};
 
 export function beforeAll(job: () => void) {
   testRunner.beforeAll(job);
@@ -28,32 +34,29 @@ export function afterAll(job: () => void) {
   testRunner.afterAll(job);
 }
 
-export const test = {
-  call: (name: string, testCase: () => void) => {
-    testRunner.test(name, testCase);
-  },
-  each: <T>(examples: Array<T>) => {
-    return testRunner.testEach(examples);
-  },
-  only: {
-    call: (name: string, testCase: () => void) => {
-      testRunner.test(name, testCase, true);
-    },
-    each: <T>(examples: Array<T>) => {
-      return testRunner.testEach(examples, true);
-    },
-  },
-  skip: {
-    call: (_name: string, _testCase: () => void) => {
-      // Do nothing
-    },
-    each: <T>(_examples: Array<T>) => {
-      return (_name: string, _testCase: (example: T) => void) => {
-        // Do nothing
-      };
-    },
-  },
+export const test = (name: string, testCase: () => void) => {
+  testRunner.test(name, testCase);
 };
+
+test.each = <T>(examples: Array<T>) => {
+  return testRunner.testEach(examples);
+};
+const onlyDecorator = (name: string, testCase: () => void) => {
+  testRunner.test(name, testCase, true);
+};
+onlyDecorator.each = <T>(examples: Array<T>) => {
+  return testRunner.testEach(examples, true);
+};
+test.only = onlyDecorator;
+const skipDecorator = (_name: string, _testCase: () => void) => {
+  // Do nothing
+};
+skipDecorator.each = <T>(_examples: Array<T>) => {
+  return (_name: string, _testCase: (example: T) => void) => {
+    // Do nothing
+  };
+};
+test.skip = skipDecorator;
 
 export async function render(component: ReactElement<Component> | null) {
   return testRunner.render(component);
