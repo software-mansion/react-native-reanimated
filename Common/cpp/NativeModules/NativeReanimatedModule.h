@@ -33,11 +33,12 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  public:
   NativeReanimatedModule(
       jsi::Runtime &rnRuntime,
-      const std::shared_ptr<CallInvoker> &jsInvoker,
+      const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
-      const std::string &valueUnpackerCode);
+      const std::string &valueUnpackerCode,
+      const bool isBridgeless);
 
   ~NativeReanimatedModule();
 
@@ -172,6 +173,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   }
 
  private:
+  void commonInit(const PlatformDepMethodsHolder &platformDepMethodsHolder);
+
   void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -181,6 +184,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
+  const bool isBridgeless_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
@@ -230,7 +234,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 #ifndef NDEBUG
   SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;
 #endif
-  const bool isBridgeless_;
 };
 
 } // namespace reanimated

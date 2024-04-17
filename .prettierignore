@@ -1,2 +1,3 @@
 plugin/**/*.js
 !plugin/**/*.json
+app/**/*.snapshot.ts

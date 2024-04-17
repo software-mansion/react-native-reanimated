@@ -18,7 +18,7 @@
     "format:js": "prettier --write --list-different src __tests__ __typetests__",
     "format:plugin": "cd plugin && yarn format && cd ..",
     "format:java": "node ./scripts/format-java.js",
-    "format:ios": "find apple/ -iname *.h -o -iname *.m -o -iname *.mm -o -iname *.cpp | xargs clang-format -i --Werror",
+    "format:ios": "find apple/ -iname \"*.h\" -o -iname \"*.m\" -o -iname \"*.mm\" -o -iname \"*.cpp\" | xargs clang-format -i --Werror",
     "format:android": "find android/src/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
     "format:common": "find Common/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
     "format:docs": "cd docs && yarn format && cd ..",
@@ -30,11 +30,11 @@
     "type:check:tests:0.72+": "./scripts/test-ts.sh __typetests__/0.72+",
     "type:check:tests:legacy": "./scripts/test-ts.sh __typetests__/legacy",
     "type:check:all": "yarn type:check:src && yarn type:check:plugin && ./scripts/test-ts.sh app/src/App.tsx __typetests__/common __typetests__/0.72+ __typetests__/legacy",
-    "prepare": "yarn plugin && bob build && husky install && yarn app",
+    "build": "yarn build:plugin && bob build && husky install && yarn build:app",
+    "build:app": "cd app && yarn install && yarn build",
+    "build:plugin": "cd plugin && yarn install && yarn build",
     "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular src lib",
-    "use_strict_check": "node ./scripts/validate-use-strict.js",
-    "plugin": "cd plugin && yarn && cd ..",
-    "app": "cd app && yarn && cd .."
+    "use_strict_check": "node ./scripts/validate-use-strict.js"
   },
   "main": "lib/module/index",
   "module": "lib/module/index",
@@ -101,7 +101,10 @@
     "@babel/core": "^7.20.0",
     "@babel/preset-env": "^7.20.0",
     "@babel/types": "^7.20.0",
-    "@react-native/eslint-config": "^0.72.2",
+    "@react-native/babel-preset": "0.74.77",
+    "@react-native/eslint-config": "0.74.77",
+    "@react-native/metro-config": "0.74.77",
+    "@react-native/typescript-config": "0.74.77",
     "@testing-library/jest-native": "^4.0.4",
     "@testing-library/react-hooks": "^8.0.0",
     "@testing-library/react-native": "^7.1.0",
@@ -137,13 +140,13 @@
     "eslint-plugin-tsdoc": "^0.2.17",
     "husky": "^7.0.4",
     "jest": "^29.0.0",
-    "lint-staged": "^11.2.0",
+    "lint-staged": "^15.2.2",
     "madge": "^5.0.1",
     "prettier": "^2.5.1",
     "react": "18.2.0",
-    "react-native": "0.74.0-rc.4",
+    "react-native": "0.74.0-rc.6",
     "react-native-builder-bob": "^0.18.3",
-    "react-native-gesture-handler": "git+https://github.com/software-mansion/react-native-gesture-handler.git#6808ca355af71ca2f1f6653b50e389c8b564c8ba",
+    "react-native-gesture-handler": "^2.16.0",
     "react-native-web": "~0.18.12",
     "react-test-renderer": "18.2.0",
     "shelljs": "^0.8.5",
@@ -152,9 +155,9 @@
   },
   "lint-staged": {
     "*.(js|ts|tsx)": [
-      "eslint",
-      "eslint --quiet --ext '.js,.ts,.tsx' src/",
-      "prettier --write"
+      "yarn eslint",
+      "yarn eslint --quiet --ext '.js,.ts,.tsx' src/",
+      "yarn prettier --write"
     ],
     "plugin/**/*.ts": "yarn lint:plugin",
     "**/*.{h,cpp}": "yarn lint:cpp",
@@ -182,5 +185,6 @@
   "sideEffects": [
     "./lib/reanimated2/core",
     "./lib/index"
-  ]
+  ],
+  "packageManager": "yarn@4.1.1"
 }

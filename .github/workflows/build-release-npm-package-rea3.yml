@@ -1,5 +1,6 @@
 name: Build release npm package, Reanimated 3
-
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   workflow_dispatch:
 

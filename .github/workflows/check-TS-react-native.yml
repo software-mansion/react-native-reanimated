@@ -1,4 +1,6 @@
 name: Check TypeScript with different React Native versions
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     paths:
@@ -13,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        react-native-version: ['0.71', '0.72', nightly]
+        react-native-version: ['0.71', '0.72', '0.73', '0.74.0-rc.6', nightly]
       fail-fast: false
     concurrency:
       group: TS-react-native-nightly-${{ matrix.react-native-version }}-${{ github.ref }}
@@ -27,8 +29,12 @@ jobs:
           cache: 'yarn'
       - name: Clear annotations
         run: scripts/clear-annotations.sh
+      - name: Install dependencies
+        run: yarn install
+      - name: Build repo
+        run: yarn build
       - name: Install react-native ${{ matrix.react-native-version }}
-        run: yarn add react-native@${{ matrix.react-native-version }}
+        run: yarn add --dev react-native@${{ matrix.react-native-version }}
       - name: Check source types
         run: yarn type:check:src
       - name: Check plugin types

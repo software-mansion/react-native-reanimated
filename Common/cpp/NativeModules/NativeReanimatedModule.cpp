@@ -46,14 +46,17 @@ namespace reanimated {
 
 NativeReanimatedModule::NativeReanimatedModule(
     jsi::Runtime &rnRuntime,
-    const std::shared_ptr<CallInvoker> &jsInvoker,
+    const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
-    const std::string &valueUnpackerCode)
-    : NativeReanimatedModuleSpec(jsInvoker),
+    const std::string &valueUnpackerCode,
+    const bool isBridgeless)
+    : NativeReanimatedModuleSpec(
+          isBridgeless ? nullptr : jsScheduler->getJSCallInvoker()),
+      isBridgeless_(isBridgeless),
       jsQueue_(jsQueue),
-      jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsInvoker)),
+      jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
       uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
           rnRuntime,
@@ -85,8 +88,12 @@ NativeReanimatedModule::NativeReanimatedModule(
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
-          platformDepMethodsHolder.unsubscribeFromKeyboardEvents),
-      isBridgeless_(jsInvoker == nullptr) {
+          platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
+  commonInit(platformDepMethodsHolder);
+}
+
+void NativeReanimatedModule::commonInit(
+    const PlatformDepMethodsHolder &platformDepMethodsHolder) {
   auto requestAnimationFrame =
       [this](jsi::Runtime &rt, const jsi::Value &callback) {
         this->requestAnimationFrame(rt, callback);
