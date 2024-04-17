@@ -3,6 +3,12 @@ import { useHandler } from './useHandler';
 import { WorkletEventHandler } from '../WorkletEventHandler';
 import type { ReanimatedEvent } from './commonTypes';
 import type { WorkletFunction } from '../commonTypes';
+import type { EventHandlerProcessed, EventHandlerInternal } from './useEvent';
+
+export type ComposedHandlerProcessed<
+  Event extends object,
+  Context extends Record<string, unknown> = Record<string, unknown>
+> = EventHandlerProcessed<Event, Context>;
 
 /**
  * Lets you compose multiple event handlers based on [useEvent](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useEvent) hook.
@@ -12,8 +18,16 @@ import type { WorkletFunction } from '../commonTypes';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/useComposedEventHandler
  */
 export function useComposedEventHandler<
+  Event extends object,
   Context extends Record<string, unknown>
->(handlers: { workletEventHandler: typeof WorkletEventHandler }[]) {
+>(
+  handlers: (EventHandlerProcessed<Event, Context> | null)[]
+): ComposedHandlerProcessed<Event, Context>;
+
+export function useComposedEventHandler<
+  Event extends object,
+  Context extends Record<string, unknown>
+>(handlers: (EventHandlerProcessed<Event, Context> | null)[]) {
   // Record of handlers' worklets to calculate deps diffs. We use the record type to match the useHandler API requirements
   const workletsRecord: Record<string, WorkletFunction> = {};
   // Summed event names for registration
@@ -23,28 +37,32 @@ export function useComposedEventHandler<
     [key: string]: ((event: ReanimatedEvent<Event>) => void)[];
   } = {};
 
-  handlers.forEach((handler) => {
-    const { workletEventHandler } = handler;
-    if (workletEventHandler instanceof WorkletEventHandler) {
-      workletEventHandler.eventNames.forEach((event) => {
-        composedEventNames.add(event);
+  handlers
+    .filter((h) => h !== null)
+    .forEach((handler) => {
+      // EventHandlerProcessed is the return type of useEvent and has to be force casted to EventHandlerInternal, because we need WorkletEventHandler object
+      const { workletEventHandler } =
+        handler as unknown as EventHandlerInternal<Context>;
+      if (workletEventHandler instanceof WorkletEventHandler) {
+        workletEventHandler.eventNames.forEach((event) => {
+          composedEventNames.add(event);
 
-        if (workletsMap[event]) {
-          workletsMap[event].push(workletEventHandler.worklet);
-        } else {
-          workletsMap[event] = [workletEventHandler.worklet];
-        }
+          if (workletsMap[event]) {
+            workletsMap[event].push(workletEventHandler.worklet);
+          } else {
+            workletsMap[event] = [workletEventHandler.worklet];
+          }
 
-        const handlerName = event + `${workletsMap[event].length}`;
-        workletsRecord[handlerName] =
-          workletEventHandler.worklet as WorkletFunction;
-      });
-    }
-  });
+          const handlerName = event + `${workletsMap[event].length}`;
+          workletsRecord[handlerName] =
+            workletEventHandler.worklet as WorkletFunction;
+        });
+      }
+    });
 
   const { doDependenciesDiffer } = useHandler(workletsRecord);
 
-  return useEvent<ReanimatedEvent<Event>, Context>(
+  return useEvent<Event, Context>(
     (event) => {
       'worklet';
       if (workletsMap[event.eventName]) {

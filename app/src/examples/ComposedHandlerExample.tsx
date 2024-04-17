@@ -82,12 +82,12 @@ export default function ComposedHandlerExample() {
   });
 
   const composedHandler = useComposedEventHandler([
-    toggleScroll ? onScrollHandler : {},
-    toggleDrag ? onDragHandler : {},
-    toggleMomentum ? onMomentumHandler : {},
-    toggleBegin ? onBeginHandler : {},
-    toggleEnd ? onEndHandler : {},
-    toggleAll ? onAllHandler : {},
+    toggleScroll ? onScrollHandler : null,
+    toggleDrag ? onDragHandler : null,
+    toggleMomentum ? onMomentumHandler : null,
+    toggleBegin ? onBeginHandler : null,
+    toggleEnd ? onEndHandler : null,
+    toggleAll ? onAllHandler : null,
   ]);
 
   return (
