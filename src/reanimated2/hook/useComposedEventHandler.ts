@@ -10,6 +10,9 @@ export type ComposedHandlerProcessed<
   Context extends Record<string, unknown> = Record<string, unknown>
 > = EventHandlerProcessed<Event, Context>;
 
+export type ComposedHandlerInternal<Event extends object> =
+  EventHandlerInternal<Event>;
+
 /**
  * Lets you compose multiple event handlers based on [useEvent](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useEvent) hook.
  *
@@ -17,6 +20,7 @@ export type ComposedHandlerProcessed<
  * @returns An object you need to pass to any "onEvent" prop on an `Animated` component.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/useComposedEventHandler
  */
+// @ts-expect-error This overload is required by our API.
 export function useComposedEventHandler<
   Event extends object,
   Context extends Record<string, unknown>
@@ -71,5 +75,5 @@ export function useComposedEventHandler<
     },
     Array.from(composedEventNames),
     doDependenciesDiffer
-  );
+  ) as unknown as ComposedHandlerInternal<Event>;
 }
