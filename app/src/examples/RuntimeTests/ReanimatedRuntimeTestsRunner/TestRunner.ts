@@ -41,8 +41,15 @@ export class TestRunner {
   private _valueRegistry: Record<string, SharedValue> = {};
   private _wasRenderedNull: boolean = false;
   private _includesOnly: boolean = false;
-  private _nestingLevel = 0;
-  private _inheritNestedOnly: boolean = false;
+  private _summary: TestSummary = {
+    passed: 0,
+    failed: 0,
+    skipped: 0,
+    failedTests: [] as Array<string>,
+    startTime: Date.now(),
+    endTime: 0,
+  };
+
   private _threadLock: LockObject = {
     lock: false,
   };
@@ -86,7 +93,7 @@ export class TestRunner {
     return await this.render(null);
   }
 
-  public describe(name: string, buildSuite: () => void, only = false) {
+  public describe(name: string, buildSuite: () => void, only = false, skip = false) {
     if (only) {
       this._includesOnly = true;
     }
@@ -111,12 +118,13 @@ export class TestRunner {
       name,
       buildSuite,
       testCases: [],
-      nestingLevel: this._nestingLevel,
-      only: only || this._inheritNestedOnly,
+      nestingLevel: (this._currentTestSuite?.nestingLevel || 0) + 1,
+      only: !!(only || this._currentTestSuite?.only),
+      skip: !!(skip || this._currentTestSuite?.skip),
     });
   }
 
-  public test(name: string, run: () => void, only = false) {
+  public test(name: string, run: () => void, only = false, skip = false) {
     assertTestSuite(this._currentTestSuite);
     if (only) {
       this._includesOnly = true;
@@ -128,16 +136,17 @@ export class TestRunner {
       callsRegistry: {},
       errors: [],
       only: only,
+      skip: skip,
     });
   }
 
-  public testEach<T>(examples: Array<T>, only = false) {
+  public testEach<T>(examples: Array<T>, only = false, skip = false) {
     return (name: string, testCase: (example: T) => void) => {
       examples.forEach((example, index) => {
         const currentTestCase = async () => {
           await testCase(example);
         };
-        this.test(formatString(name, example, index), currentTestCase, only);
+        this.test(formatString(name, example, index), currentTestCase, only, skip);
       });
     };
   }
@@ -201,39 +210,26 @@ export class TestRunner {
   public async runTests() {
     console.log('\n');
 
-    const summary: TestSummary = {
-      passed: 0,
-      failed: 0,
-      failedTests: [] as Array<string>,
-      startTime: Date.now(),
-      endTime: 0,
-    };
-
     for (const testSuite of this._testSuites) {
       this._currentTestSuite = testSuite;
-      const previousNestedOnly = this._inheritNestedOnly;
-      this._inheritNestedOnly = testSuite.only;
-      this._nestingLevel = testSuite.nestingLevel + 1;
-
       await testSuite.buildSuite();
-
-      this._nestingLevel -= testSuite.nestingLevel;
-      this._inheritNestedOnly = previousNestedOnly;
-      this._currentTestSuite = testSuite;
+      this._currentTestSuite = null;
     }
     for (const testSuite of this._testSuites) {
-      await this.runTestSuite(testSuite, summary);
+      await this.runTestSuite(testSuite);
     }
 
     this._testSuites = [];
     console.log('End of tests run 🏁');
-    summary.endTime = Date.now();
-    this.printSummary(summary);
+    this._summary.endTime = Date.now();
+    this.printSummary();
   }
 
-  private async runTestSuite(testSuite: TestSuite, summary: TestSummary) {
-    this._currentTestSuite = testSuite;
-    this._nestingLevel = testSuite.nestingLevel;
+  private async runTestSuite(testSuite: TestSuite) {
+    if (testSuite.skip) {
+      this._summary.skipped += testSuite.testCases.length;
+      return;
+    }
 
     if (this._includesOnly) {
       let skipTestSuite = !testSuite.only;
@@ -243,19 +239,24 @@ export class TestRunner {
         }
       }
       if (skipTestSuite) {
+        this._summary.skipped += testSuite.testCases.length;
         return;
       }
     }
 
-    console.log(`${indentNestingLevel(this._nestingLevel)} ${testSuite.name}`);
+    this._currentTestSuite = testSuite;
+
+    console.log(`${indentNestingLevel(testSuite.nestingLevel)} ${testSuite.name}`);
 
     if (testSuite.beforeAll) {
       await testSuite.beforeAll();
     }
 
     for (const testCase of testSuite.testCases) {
-      if (!this._includesOnly || testSuite.only || testCase.only) {
-        await this.runTestCase(testSuite, testCase, summary);
+      if ((!this._includesOnly || testSuite.only || testCase.only) && !testCase.skip) {
+        await this.runTestCase(testSuite, testCase);
+      } else {
+        this._summary.skipped++;
       }
     }
 
@@ -265,7 +266,7 @@ export class TestRunner {
     this._currentTestSuite = null;
   }
 
-  private async runTestCase(testSuite: TestSuite, testCase: TestCase, summary: TestSummary) {
+  private async runTestCase(testSuite: TestSuite, testCase: TestCase) {
     callTrackerRegistryUI.value = {};
     callTrackerRegistryJS = {};
     this._currentTestCase = testCase;
@@ -275,7 +276,7 @@ export class TestRunner {
     }
 
     await testCase.run();
-    this.showTestCaseSummary(testCase, summary);
+    this.showTestCaseSummary(testCase, testSuite.nestingLevel);
 
     if (testSuite.afterEach) {
       await testSuite.afterEach();
@@ -287,20 +288,20 @@ export class TestRunner {
     await stopRecordingAnimationUpdates();
   }
 
-  private showTestCaseSummary(testCase: TestCase, summary: TestSummary) {
+  private showTestCaseSummary(testCase: TestCase, nestingLevel: number) {
     let mark;
     if (testCase.errors.length > 0) {
-      summary.failed++;
-      summary.failedTests.push(testCase.name);
+      this._summary.failed++;
+      this._summary.failedTests.push(testCase.name);
       mark = color('✖', 'red');
     } else {
-      summary.passed++;
+      this._summary.passed++;
       mark = color('✔', 'green');
     }
-    console.log(`${indentNestingLevel(this._nestingLevel)} ${mark} ${color(testCase.name, 'gray')}`);
+    console.log(`${indentNestingLevel(nestingLevel)} ${mark} ${color(testCase.name, 'gray')}`);
 
     for (const error of testCase.errors) {
-      console.log(`${indentNestingLevel(this._nestingLevel)}\t${error}`);
+      console.log(`${indentNestingLevel(nestingLevel)}\t${error}`);
     }
   }
 
@@ -480,19 +481,20 @@ export class TestRunner {
     });
   }
 
-  private printSummary(summary: {
-    passed: number;
-    failed: number;
-    failedTests: Array<string>;
-    startTime: number;
-    endTime: number;
-  }) {
+  private printSummary() {
+    const { passed, failed, failedTests, startTime, endTime, skipped } = this._summary;
+
     console.log('\n');
-    console.log(`🧮 Tests summary: ${color(summary.passed, 'green')} passed, ${color(summary.failed, 'red')} failed`);
-    console.log(`⏱️  Total time: ${Math.round(((summary.endTime - summary.startTime) / 1000) * 100) / 100}s`);
-    if (summary.failed > 0) {
+    console.log(
+      `🧮 Tests summary: ${color(passed, 'green')} passed, ${color(failed, 'red')} failed, ${color(
+        skipped,
+        'red',
+      )} skipped`,
+    );
+    console.log(`⏱️  Total time: ${Math.round(((endTime - startTime) / 1000) * 100) / 100}s`);
+    if (failed > 0) {
       console.log('❌ Failed tests:');
-      for (const failedTest of summary.failedTests) {
+      for (const failedTest of failedTests) {
         console.log(`\t- ${failedTest}`);
       }
     } else {
