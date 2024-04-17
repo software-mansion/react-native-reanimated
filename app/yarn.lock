@@ -1570,16 +1570,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-box2d@npm:^0.2.5":
-  version: 0.2.5
-  resolution: "react-native-box2d@npm:0.2.5"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 10/84547e8914bfe177b68eee3cc5b9593b563488cfbbcab112115e6dc151c53b779c3d4fb2b864566866fbc187c7ebafe51ac56b516fde947a1617b40e4dd702ef
-  languageName: node
-  linkType: hard
-
 "react-native-gesture-handler@npm:^2.16.0":
   version: 2.16.0
   resolution: "react-native-gesture-handler@npm:2.16.0"
@@ -1622,16 +1612,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-screens@npm:3.31.0-rc.0":
-  version: 3.31.0-rc.0
-  resolution: "react-native-screens@npm:3.31.0-rc.0"
+"react-native-screens@npm:3.31.0-rc.1":
+  version: 3.31.0-rc.1
+  resolution: "react-native-screens@npm:3.31.0-rc.1"
   dependencies:
     react-freeze: "npm:^1.0.0"
     warn-once: "npm:^0.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/e45c245c25f495b199cc501851f689cc644cf3da9d05c18d518c0cf6ea3b09fda19888adc049892017d03432a33c0fafc3e26acb80563dc1b8ad3776c53cc2d5
+  checksum: 10/c3b1f0c51fcb697829dc7f2898a982e078d4f66005540d77f505bd14cc107b8173e62e055e6c73f2e26df9b8b9d6c259bee3296ed8a90583f9dc2011a792ecb6
   languageName: node
   linkType: hard
 
@@ -1731,12 +1721,11 @@ __metadata:
     patch-package: "npm:^7.0.0"
     prettier: "npm:^2.8.7"
     react-dom: "npm:18.0.0"
-    react-native-box2d: "npm:^0.2.5"
     react-native-gesture-handler: "npm:^2.16.0"
     react-native-pager-view: "npm:^6.2.3"
     react-native-reanimated: "link:../"
     react-native-safe-area-context: "npm:4.10.0-rc.1"
-    react-native-screens: "npm:3.31.0-rc.0"
+    react-native-screens: "npm:3.31.0-rc.1"
     react-native-svg: "npm:^15.2.0-rc.0"
     react-native-web: "npm:~0.18.12"
     typescript: "npm:^5.0.2"
