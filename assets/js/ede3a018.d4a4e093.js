@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkreact_native_reanimated_docs=self.webpackChunkreact_native_reanimated_docs||[]).push([[6123],{11641:(e,t,a)=>{a.r(t),a.d(t,{default:()=>s});var n=a(96540),c=a(66588),l=a(35435),r=a(21441);function s(){const e=(0,c.Ay)();return n.createElement(l.A,null,n.createElement("h2",null,"Global data"),n.createElement(r.A,{src:e,collapseDepth:3}))}}}]);
