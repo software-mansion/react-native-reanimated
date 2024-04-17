@@ -1,7 +1,7 @@
 name: Check Expo dev-client nightly build
 env:
   YARN_ENABLE_HARDENED_MODE: 0
-  SCRIPT_PATH: reanimated_repo/.github/workflows/helper/configureDevClient.js
+  SCRIPT_PATH: ${{github.workspace}}/reanimated_repo/.github/workflows/helper/configureDevClient.js
 on:
   pull_request:
     paths:
@@ -27,9 +27,9 @@ jobs:
         with:
           path: 'reanimated_repo'
       - name: Create Expo app
-        run: npx create-expo-app app
+        run: npx create-expo-app ExpoApp
       - name: Install expo-dev-client
-        working-directory: app
+        working-directory: ExpoApp
         run: |
           if npm view expo dist-tags | grep -q 'next:' ; then 
             npm install expo@next
@@ -37,22 +37,24 @@ jobs:
             npm install expo@latest
           fi
       - name: Setup configuration
+        working-directory: ExpoApp
         run: node ${{ env.SCRIPT_PATH }} setBundleIdentifier
       - name: Expo prebuild
-        working-directory: app
+        working-directory: ExpoApp
         run: npx expo prebuild
       - name: Install Reanimated
-        working-directory: app
+        working-directory: ExpoApp
         run: npm install react-native-reanimated@nightly
       - name: Set Fabric
+        working-directory: ExpoApp
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
         run: node ${{ env.SCRIPT_PATH }} setupFabricIOS
       - name: Install Pods
-        working-directory: app/ios
+        working-directory: ExpoApp/ios
         run: pod install
       - name: Build app
-        working-directory: app
-        run: yarn react-native run-ios --simulator='iPhone 14'
+        working-directory: ExpoApp
+        run: npx react-native run-ios --simulator='iPhone 14' --terminal='Terminal'
 
   build_android:
     if: github.repository == 'software-mansion/react-native-reanimated'
@@ -70,9 +72,14 @@ jobs:
         with:
           path: 'reanimated_repo'
       - name: Create Expo app
-        run: npx create-expo-app app
+        run: npx create-expo-app ExpoApp
+      - name: Setup Java 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: 17
       - name: Install expo-dev-client
-        working-directory: app
+        working-directory: ExpoApp
         run: |
           if npm view expo dist-tags | grep -q 'next:' ; then 
             npm install expo@next
@@ -80,16 +87,18 @@ jobs:
             npm install expo@latest
           fi
       - name: Setup configuration
+        working-directory: ExpoApp
         run: node ${{ env.SCRIPT_PATH }} setBundleIdentifier
       - name: Expo prebuild
-        working-directory: app
+        working-directory: ExpoApp
         run: npx expo prebuild
       - name: Install Reanimated
-        working-directory: app
+        working-directory: ExpoApp
         run: npm install react-native-reanimated@nightly
       - name: Set Fabric
+        working-directory: ExpoApp
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
         run: node ${{ env.SCRIPT_PATH }} setupFabricAndroid
       - name: Build app
-        working-directory: app/android
+        working-directory: ExpoApp/android
         run: ./gradlew assembleDebug --console=plain
