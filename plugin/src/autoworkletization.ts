@@ -7,6 +7,7 @@ import { strict as assert } from 'assert';
 import { processWorklet } from './workletSubstitution';
 import { isGestureHandlerEventCallback } from './gestureHandlerAutoworkletization';
 import { isLayoutAnimationCallback } from './layoutAnimationAutoworkletization';
+import { processReferencedWorklet } from './referencedWorklets';
 
 const functionArgsToWorkletize = new Map([
   ['useFrameCallback', [0]],
@@ -123,6 +124,9 @@ function processArguments(
     if (!maybeWorklet) {
       // workletizable argument doesn't always have to be specified
       return;
+    }
+    if (maybeWorklet.isReferencedIdentifier() && maybeWorklet.isIdentifier()) {
+      processReferencedWorklet(maybeWorklet, state);
     }
     if (isWorkletizableFunctionType(maybeWorklet)) {
       processWorklet(maybeWorklet, state);

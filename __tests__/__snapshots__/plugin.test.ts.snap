@@ -926,6 +926,30 @@ var animatedStyle = useAnimatedStyle(function () {
 }());"
 `;
 
+exports[`babel plugin for function hooks workletizes hook wrapped worklet reference automatically 1`] = `
+"var _worklet_377598887181_init_data = {
+  code: "function style(){return{color:'red',backgroundColor:'blue'};}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var style = function () {
+  const _e = [new global.Error(), 1, -27];
+  const style = function () {
+    return {
+      color: 'red',
+      backgroundColor: 'blue'
+    };
+  };
+  style.__closure = {};
+  style.__workletHash = 377598887181;
+  style.__initData = _worklet_377598887181_init_data;
+  style.__stackDetails = _e;
+  return style;
+}();
+var animatedStyle = useAnimatedStyle(style);"
+`;
+
 exports[`babel plugin for generators makes a generator worklet factory 1`] = `
 "var _worklet_4939499253486_init_data = {
   code: "function*foo(){yield'hello';yield'world';}",
@@ -1573,64 +1597,211 @@ var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
 }());"
 `;
 
-exports[`babel plugin for runOnUI workletizes ArrowFunctionExpression inside runOnUI automatically 1`] = `
-"var _worklet_15854903236968_init_data = {
-  code: "function anonymous(){console.log('Hello from the UI thread!');}",
+exports[`babel plugin for referenced worklets prefers AssignmentExpression over VariableDeclarator 1`] = `
+"var style = function style() {
+  return 1;
+};
+var _worklet_2702612302885_init_data = {
+  code: "function style(){return'AssignmentExpression';}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-runOnUI(function () {
-  var _e = [new global.Error(), 1, -27];
-  var anonymous = function anonymous() {
-    console.log('Hello from the UI thread!');
+style = function () {
+  const _e = [new global.Error(), 1, -27];
+  const style = function () {
+    return 'AssignmentExpression';
   };
-  anonymous.__closure = {};
-  anonymous.__workletHash = 15854903236968;
-  anonymous.__initData = _worklet_15854903236968_init_data;
-  anonymous.__stackDetails = _e;
-  return anonymous;
-}())();"
+  style.__closure = {};
+  style.__workletHash = 2702612302885;
+  style.__initData = _worklet_2702612302885_init_data;
+  style.__stackDetails = _e;
+  return style;
+}();
+animatedStyle = useAnimatedStyle(style);"
 `;
 
-exports[`babel plugin for runOnUI workletizes named FunctionExpression inside runOnUI automatically 1`] = `
-"var _worklet_5662051517689_init_data = {
-  code: "function hello(){console.log('Hello from the UI thread!');}",
+exports[`babel plugin for referenced worklets prefers FunctionDeclaration over AssignmentExpression 1`] = `
+"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _readOnlyError2 = _interopRequireDefault(require("@babel/runtime/helpers/readOnlyError"));
+var _worklet_1685592196934_init_data = {
+  code: "function style(){return'FunctionDeclaration';}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-runOnUI(function () {
+var style = function () {
   var _e = [new global.Error(), 1, -27];
-  var hello = function hello() {
-    console.log('Hello from the UI thread!');
+  var style = function style() {
+    return 'FunctionDeclaration';
   };
-  hello.__closure = {};
-  hello.__workletHash = 5662051517689;
-  hello.__initData = _worklet_5662051517689_init_data;
-  hello.__stackDetails = _e;
-  return hello;
-}())();"
+  style.__closure = {};
+  style.__workletHash = 1685592196934;
+  style.__initData = _worklet_1685592196934_init_data;
+  style.__stackDetails = _e;
+  return style;
+}();
+(function style() {
+  return 'AssignmentExpression';
+}), (0, _readOnlyError2.default)("style");
+animatedStyle = useAnimatedStyle(style);"
 `;
 
-exports[`babel plugin for runOnUI workletizes unnamed FunctionExpression inside runOnUI automatically 1`] = `
-"var _worklet_15854903236968_init_data = {
-  code: "function anonymous(){console.log('Hello from the UI thread!');}",
+exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression on its AssignmentExpression 1`] = `
+"var style;
+var _worklet_11844349717570_init_data = {
+  code: "function style(){return{};}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-runOnUI(function () {
-  var _e = [new global.Error(), 1, -27];
-  var anonymous = function anonymous() {
-    console.log('Hello from the UI thread!');
+style = function () {
+  const _e = [new global.Error(), 1, -27];
+  const style = function () {
+    return {};
   };
-  anonymous.__closure = {};
-  anonymous.__workletHash = 15854903236968;
-  anonymous.__initData = _worklet_15854903236968_init_data;
-  anonymous.__stackDetails = _e;
-  return anonymous;
-}())();"
+  style.__closure = {};
+  style.__workletHash = 11844349717570;
+  style.__initData = _worklet_11844349717570_init_data;
+  style.__stackDetails = _e;
+  return style;
+}();
+animatedStyle = useAnimatedStyle(style);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression on its VariableDeclarator 1`] = `
+"var _worklet_11844349717570_init_data = {
+  code: "function style(){return{};}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var style = function () {
+  const _e = [new global.Error(), 1, -27];
+  const style = function () {
+    return {};
+  };
+  style.__closure = {};
+  style.__workletHash = 11844349717570;
+  style.__initData = _worklet_11844349717570_init_data;
+  style.__stackDetails = _e;
+  return style;
+}();
+var animatedStyle = useAnimatedStyle(style);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression only on last AssignmentExpression 1`] = `
+"var style;
+style = function style() {
+  return 1;
+};
+var _worklet_2702612302885_init_data = {
+  code: "function style(){return'AssignmentExpression';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+style = function () {
+  const _e = [new global.Error(), 1, -27];
+  const style = function () {
+    return 'AssignmentExpression';
+  };
+  style.__closure = {};
+  style.__workletHash = 2702612302885;
+  style.__initData = _worklet_2702612302885_init_data;
+  style.__stackDetails = _e;
+  return style;
+}();
+animatedStyle = useAnimatedStyle(style);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes FunctionDeclaration 1`] = `
+"var _worklet_11844349717570_init_data = {
+  code: "function style(){return{};}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var style = function () {
+  var _e = [new global.Error(), 1, -27];
+  var style = function style() {
+    return {};
+  };
+  style.__closure = {};
+  style.__workletHash = 11844349717570;
+  style.__initData = _worklet_11844349717570_init_data;
+  style.__stackDetails = _e;
+  return style;
+}();
+var animatedStyle = useAnimatedStyle(style);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes FunctionExpression on its AssignmentExpression 1`] = `
+"var style;
+var _worklet_11844349717570_init_data = {
+  code: "function style(){return{};}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+style = function () {
+  const _e = [new global.Error(), 1, -27];
+  const style = function () {
+    return {};
+  };
+  style.__closure = {};
+  style.__workletHash = 11844349717570;
+  style.__initData = _worklet_11844349717570_init_data;
+  style.__stackDetails = _e;
+  return style;
+}();
+animatedStyle = useAnimatedStyle(style);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes FunctionExpression on its VariableDeclarator 1`] = `
+"var _worklet_11844349717570_init_data = {
+  code: "function style(){return{};}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var style = function () {
+  const _e = [new global.Error(), 1, -27];
+  const style = function () {
+    return {};
+  };
+  style.__closure = {};
+  style.__workletHash = 11844349717570;
+  style.__initData = _worklet_11844349717570_init_data;
+  style.__stackDetails = _e;
+  return style;
+}();
+var animatedStyle = useAnimatedStyle(style);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes FunctionExpression only on last AssignmentExpression 1`] = `
+"var style;
+style = function style() {
+  return 1;
+};
+var _worklet_2702612302885_init_data = {
+  code: "function style(){return'AssignmentExpression';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+style = function () {
+  const _e = [new global.Error(), 1, -27];
+  const style = function () {
+    return 'AssignmentExpression';
+  };
+  style.__closure = {};
+  style.__workletHash = 2702612302885;
+  style.__initData = _worklet_2702612302885_init_data;
+  style.__stackDetails = _e;
+  return style;
+}();
+animatedStyle = useAnimatedStyle(style);"
 `;
 
 exports[`babel plugin for sequence expressions supports SequenceExpression 1`] = `

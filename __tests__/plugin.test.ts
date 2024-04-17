@@ -533,38 +533,16 @@ describe('babel plugin', () => {
       expect(code).toHaveWorkletData();
       expect(code).toMatchSnapshot();
     });
-  });
 
-  describe('for runOnUI', () => {
-    it('workletizes ArrowFunctionExpression inside runOnUI automatically', () => {
+    it('workletizes hook wrapped worklet reference automatically', () => {
       const input = html`<script>
-        runOnUI(() => {
-          console.log('Hello from the UI thread!');
-        })();
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    it('workletizes unnamed FunctionExpression inside runOnUI automatically', () => {
-      const input = html`<script>
-        runOnUI(function () {
-          console.log('Hello from the UI thread!');
-        })();
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    it('workletizes named FunctionExpression inside runOnUI automatically', () => {
-      const input = html`<script>
-        runOnUI(function hello() {
-          console.log('Hello from the UI thread!');
-        })();
+        const style = () => {
+          return {
+            color: 'red',
+            backgroundColor: 'blue',
+          };
+        };
+        const animatedStyle = useAnimatedStyle(style);
       </script>`;
 
       const { code } = runPlugin(input);
@@ -1764,6 +1742,134 @@ describe('babel plugin', () => {
       expect(code).toContain(
         `code: "async function foo(){await Promise.resolve();}"`
       );
+      expect(code).toMatchSnapshot();
+    });
+  });
+
+  describe('for referenced worklets', () => {
+    it('workletizes ArrowFunctionExpression on its VariableDeclarator', () => {
+      const input = html`<script>
+        let style = () => ({});
+        const animatedStyle = useAnimatedStyle(style);
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ArrowFunctionExpression on its AssignmentExpression', () => {
+      const input = html`<script>
+        let style;
+        style = () => ({});
+        animatedStyle = useAnimatedStyle(style);
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ArrowFunctionExpression only on last AssignmentExpression', () => {
+      const input = html`<script>
+        let style;
+        style = () => 1;
+        style = () => 'AssignmentExpression';
+        animatedStyle = useAnimatedStyle(style);
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toIncludeInWorkletString('AssignmentExpression');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes FunctionExpression on its VariableDeclarator', () => {
+      const input = html`<script>
+        let style = function () {
+          return {};
+        };
+        const animatedStyle = useAnimatedStyle(style);
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes FunctionExpression on its AssignmentExpression', () => {
+      const input = html`<script>
+        let style;
+        style = function () {
+          return {};
+        };
+        animatedStyle = useAnimatedStyle(style);
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes FunctionExpression only on last AssignmentExpression', () => {
+      const input = html`<script>
+        let style;
+        style = function () {
+          return 1;
+        };
+        style = function () {
+          return 'AssignmentExpression';
+        };
+        animatedStyle = useAnimatedStyle(style);
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toIncludeInWorkletString('AssignmentExpression');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes FunctionDeclaration', () => {
+      const input = html`<script>
+        function style() {
+          return {};
+        }
+        const animatedStyle = useAnimatedStyle(style);
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('prefers FunctionDeclaration over AssignmentExpression', () => {
+      const input = html`<script>
+        function style() {
+          return 'FunctionDeclaration';
+        }
+        style = () => 'AssignmentExpression';
+        animatedStyle = useAnimatedStyle(style);
+      </script>`;
+      console.log(input);
+      const { code } = runPlugin(input);
+      console.log(code);
+
+      expect(code).toHaveWorkletData(1);
+      expect(code).toIncludeInWorkletString('FunctionDeclaration');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('prefers AssignmentExpression over VariableDeclarator', () => {
+      // This is an anti-pattern, but let's at least have a defined behavior here.
+      const input = html`<script>
+        let style = () => 1;
+        style = () => 'AssignmentExpression';
+        animatedStyle = useAnimatedStyle(style);
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toIncludeInWorkletString('AssignmentExpression');
       expect(code).toMatchSnapshot();
     });
   });
