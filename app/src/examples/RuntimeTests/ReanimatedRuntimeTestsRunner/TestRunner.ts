@@ -245,7 +245,6 @@ export class TestRunner {
     }
 
     this._currentTestSuite = testSuite;
-
     console.log(`${indentNestingLevel(testSuite.nestingLevel)} ${testSuite.name}`);
 
     if (testSuite.beforeAll) {
@@ -488,7 +487,7 @@ export class TestRunner {
     console.log(
       `🧮 Tests summary: ${color(passed, 'green')} passed, ${color(failed, 'red')} failed, ${color(
         skipped,
-        'red',
+        'orange',
       )} skipped`,
     );
     console.log(`⏱️  Total time: ${Math.round(((endTime - startTime) / 1000) * 100) / 100}s`);
