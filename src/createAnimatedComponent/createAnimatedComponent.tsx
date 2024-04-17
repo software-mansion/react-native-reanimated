@@ -143,6 +143,7 @@ export function createAnimatedComponent(
     }
 
     componentDidMount() {
+      this._viewTag = this._getViewInfo().viewTag as number;
       this._attachNativeEvents();
       this._jsPropsUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
@@ -228,21 +229,13 @@ export function createAnimatedComponent(
     }
 
     _attachNativeEvents() {
-      const node = this._getEventViewRef() as AnimatedComponentRef;
-      let viewTag = null; // We set it only if needed
-
       for (const key in this.props) {
         const prop = this.props[key];
         if (
           has('workletEventHandler', prop) &&
           prop.workletEventHandler instanceof WorkletEventHandler
         ) {
-          if (viewTag === null) {
-            viewTag = IS_WEB
-              ? this._component
-              : findNodeHandle(options?.setNativeProps ? this : node);
-          }
-          prop.workletEventHandler.registerForEvents(viewTag as number, key);
+          prop.workletEventHandler.registerForEvents(this._viewTag, key);
         }
       }
     }
