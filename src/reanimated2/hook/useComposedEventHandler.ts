@@ -1,3 +1,4 @@
+'use strict';
 import { useEvent } from './useEvent';
 import { useHandler } from './useHandler';
 import { WorkletEventHandler } from '../WorkletEventHandler';
