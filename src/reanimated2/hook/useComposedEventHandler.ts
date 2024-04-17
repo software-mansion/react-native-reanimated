@@ -5,12 +5,12 @@ import type { ReanimatedEvent } from './commonTypes';
 import type { WorkletFunction } from '../commonTypes';
 import type { EventHandlerProcessed, EventHandlerInternal } from './useEvent';
 
-export type ComposedHandlerProcessed<
+type ComposedHandlerProcessed<
   Event extends object,
   Context extends Record<string, unknown> = Record<string, unknown>
 > = EventHandlerProcessed<Event, Context>;
 
-export type ComposedHandlerInternal<Event extends object> =
+type ComposedHandlerInternal<Event extends object> =
   EventHandlerInternal<Event>;
 
 /**
