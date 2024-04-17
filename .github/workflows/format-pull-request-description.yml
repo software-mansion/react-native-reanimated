@@ -1,5 +1,4 @@
 name: Format Pull Request Description
-
 on:
   pull_request:
     types:
@@ -12,7 +11,7 @@ jobs:
       - name: Update PR Description
         uses: software-mansion-labs/pr-description@main
         with:
-          content: ""
+          content: ''
           regex: "<!-- .* -->\n"
           regexFlags: img
           token: ${{ secrets.GITHUB_TOKEN }}

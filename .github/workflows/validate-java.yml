@@ -1,4 +1,6 @@
 name: Java Lint
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     paths:
@@ -15,6 +17,7 @@ on:
       - '.github/workflows/validate-java.yml'
       - 'android/src/main/java/**'
       - 'android/build.gradle'
+
 jobs:
   check:
     if: github.repository == 'software-mansion/react-native-reanimated'

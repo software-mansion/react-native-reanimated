@@ -143,6 +143,9 @@ const config = {
                   test: /\.txt/,
                   type: 'asset/source',
                 },
+                {
+                  test: /\.tsx?$/
+                }
               ],
             },
             resolve: {
