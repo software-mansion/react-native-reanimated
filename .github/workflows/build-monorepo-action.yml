@@ -21,7 +21,7 @@ on:
 jobs:
   build:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: ${{ inputs.platform == 'iOS' && 'macos-13' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.platform == 'iOS' && 'macos-14' || 'ubuntu-latest' }}
     concurrency:
       group: ${{ inputs.concurrency_group }}
       cancel-in-progress: true
