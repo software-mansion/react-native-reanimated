@@ -1,4 +1,3 @@
-import { ImageResponse } from '@vercel/og';
 import { createWriteStream } from 'fs';
 import { pipeline } from 'stream';
 import { promisify } from 'util';
@@ -48,7 +47,7 @@ const buildOGImages = async () => {
 
   if (fs.existsSync(targetDocs)) fs.rmSync(targetDocs, { recursive: true });
 
-  fs.mkdirSync(targetDocs);
+  fs.mkdirSync(targetDocs, {recursive: true});
 
   console.log('Generating OG images for docs...');
 
@@ -63,7 +62,7 @@ const buildOGImages = async () => {
       const ogImageStream = OGImageStream(header, base64Image);
 
       await saveStreamToFile(
-        ogImageStream,
+        await ogImageStream,
         path.resolve(
           targetDocs,
           `${header.replace(/ /g, '-').replace('/', '-').toLowerCase()}.png`
