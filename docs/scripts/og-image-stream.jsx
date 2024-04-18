@@ -1,6 +1,7 @@
 import React from 'react';
 import { ImageResponse } from '@vercel/og';
 import fs from 'fs';
+import path from 'path';
 
 export default async function OGImageStream(header, base64Image) {
   return new ImageResponse(
