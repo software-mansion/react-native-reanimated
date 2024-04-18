@@ -14,8 +14,6 @@ interface AppProps {
 export default function App({ width }: AppProps) {
   const offset = useSharedValue(width / 2 - 80);
 
-  console.log('timing ', width);
-
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],
   }));
