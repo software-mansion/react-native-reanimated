@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -7,12 +7,27 @@ import Animated, {
   withRepeat,
 } from 'react-native-reanimated';
 
-export default function App() {
-  const offset = useSharedValue<number>(200);
+interface AppProps {
+  width: number;
+}
+
+export default function App({ width }: AppProps) {
+  const offset = useSharedValue(width / 2 - 80);
+
+  console.log('timing ', width);
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],
   }));
+
+  React.useEffect(() => {
+    offset.value = withRepeat(
+      // highlight-next-line
+      withTiming(-offset.value, { duration: 1500 }),
+      -1,
+      true
+    );
+  }, []);
 
   return (
     <View style={styles.container}>

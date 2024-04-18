@@ -106,21 +106,18 @@ export default function useDecayPlayground() {
     </>
   );
 
-  const example = (
-    <Example
-      options={{
+  return {
+    example: Example,
+    props: {
+      options: {
         deceleration,
         clamp: [clampMin, clampMax],
         velocityFactor,
         rubberBandEffect,
         rubberBandFactor,
         reduceMotion,
-      }}
-    />
-  );
-
-  return {
-    example,
+      },
+    },
     controls,
     code,
     resetOptions,

@@ -93,17 +93,20 @@ export default function InteractiveExample({
   const [width, setWidth] = React.useState<number | null>(null);
   const [showPreview, setShowPreview] = React.useState(!showCode);
 
-  const intectiveExampleRef = React.useRef<HTMLDivElement>(null);
+  const interactiveExampleRef = React.useRef<HTMLDivElement>(null);
 
   const resetExample = () => {
+    if (interactiveExampleRef.current) {
+      setWidth(interactiveExampleRef.current.offsetWidth);
+    }
     setKey(key + 1);
   };
 
   React.useEffect(() => {
-    if (intectiveExampleRef.current) {
-      setWidth(intectiveExampleRef.current.offsetWidth);
+    if (interactiveExampleRef.current) {
+      setWidth(interactiveExampleRef.current.offsetWidth);
     }
-  }, [intectiveExampleRef.current]);
+  }, [interactiveExampleRef.current]);
 
   const prefersReducedMotion = useReducedMotion();
 
@@ -111,7 +114,7 @@ export default function InteractiveExample({
     <BrowserOnly fallback={<div>Loading...</div>}>
       {() => (
         <div
-          ref={intectiveExampleRef}
+          ref={interactiveExampleRef}
           className={`${styles.container} ${larger && styles.largerContainer} 
           ${tab !== Tab.PREVIEW ? styles.code : ''}`}
           data-ispreview={tab === Tab.PREVIEW}>

@@ -8,12 +8,20 @@ import Animated, {
   interpolate,
 } from 'react-native-reanimated';
 
-export default function App() {
-  const offset = useSharedValue<number>(200);
+interface AppProps {
+  width: number;
+}
+
+export default function App({ width }: AppProps) {
+  const offset = useSharedValue<number>(width / 2 - 80);
 
   const animatedStyles = useAnimatedStyle(() => ({
     // highlight-next-line
-    opacity: interpolate(offset.value, [-200, 200], [1, 0]),
+    opacity: interpolate(
+      offset.value,
+      [-width / 2 + 80, width / 2 - 80],
+      [1, 0]
+    ),
     transform: [{ translateX: offset.value }],
   }));
 

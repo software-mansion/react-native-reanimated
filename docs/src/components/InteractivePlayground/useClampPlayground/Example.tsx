@@ -14,7 +14,6 @@ const BOX_START = 0;
 const BOX_STOP = 200;
 const BOX_SIZE = 80;
 
-const FRAME_WIDTH = 400;
 const FRAME_HEIGHT = 100;
 const CLAMP_MARKER_HEIGHT = 40;
 
@@ -25,18 +24,24 @@ interface ClampPlaygroundOptions {
 
 interface Props {
   options: ClampPlaygroundOptions;
+  width: number;
 }
-export default function App({ options }: Props) {
+export default function App({ width: FRAME_WIDTH, options }: Props) {
   const config = {
     damping: 3,
   };
+
+  options.upperBound -= BOX_SIZE;
 
   const clampedStyle = useAnimatedStyle(() => {
     return {
       transform: [
         {
           translateX: withClamp(
-            { min: options.lowerBound, max: options.upperBound },
+            {
+              min: (options.lowerBound / 400) * FRAME_WIDTH,
+              max: (options.upperBound / 400) * FRAME_WIDTH,
+            },
             withRepeat(
               withSequence(
                 withDelay(2000, withSpring(BOX_STOP, config)),
@@ -90,7 +95,7 @@ export default function App({ options }: Props) {
                 {
                   marginTop: (BOX_SIZE - FRAME_HEIGHT) / 2,
                   borderRightWidth: 2,
-                  width: options.lowerBound,
+                  width: (options.lowerBound / 400) * FRAME_WIDTH,
                 },
               ]}
             />
@@ -107,7 +112,10 @@ export default function App({ options }: Props) {
                 {
                   borderLeftWidth: 2,
                   marginTop: -(BOX_SIZE + FRAME_HEIGHT) / 2,
-                  width: FRAME_WIDTH - options.upperBound - BOX_SIZE,
+                  width:
+                    FRAME_WIDTH -
+                    (options.upperBound / 400) * FRAME_WIDTH -
+                    BOX_SIZE,
                   alignSelf: 'flex-end',
                 },
               ]}
