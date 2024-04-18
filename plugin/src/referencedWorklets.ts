@@ -1,36 +1,46 @@
 import type { NodePath } from '@babel/core';
-import type { FunctionDeclaration, Identifier } from '@babel/types';
-import { isWorkletizableFunctionType } from './types';
-import type { ReanimatedPluginPass } from './types';
-import { processWorklet } from './workletSubstitution';
+import type { Identifier } from '@babel/types';
+import {
+  isWorkletizableFunctionType,
+  isWorkletizableObjectType,
+} from './types';
+import type { WorkletizableFunction, WorkletizableObject } from './types';
+import type { Binding } from '@babel/traverse';
 
-export function processReferencedWorklet(
+export function findReferencedWorklet(
   maybeWorklet: NodePath<Identifier>,
-  state: ReanimatedPluginPass
-): void {
+  acceptWorkletizableFunction: boolean,
+  acceptObject: boolean
+): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
   const workletName = maybeWorklet.node.name;
   const workletReference = maybeWorklet.scope.bindings[workletName];
   const isConstant = workletReference.constant;
-  if (workletReference.path.isFunctionDeclaration()) {
-    processReferencedWorkletFunctionDeclaration(workletReference.path, state);
-  } else if (isConstant) {
-    processConstantReferencedWorklet(maybeWorklet, state);
-  } else {
-    processReferencedWorkletConstantViolation(maybeWorklet, state);
+
+  if (
+    acceptWorkletizableFunction &&
+    workletReference.path.isFunctionDeclaration()
+  ) {
+    return workletReference.path;
   }
+  if (isConstant) {
+    return findReferencedWorklerFromVariableDeclarator(
+      workletReference,
+      acceptWorkletizableFunction,
+      acceptObject
+    );
+  }
+  return findReferencedWorkletFromAssignmentExpression(
+    maybeWorklet,
+    acceptWorkletizableFunction,
+    acceptObject
+  );
 }
 
-function processReferencedWorkletFunctionDeclaration(
-  worklet: NodePath<FunctionDeclaration>,
-  state: ReanimatedPluginPass
-) {
-  processWorklet(worklet, state);
-}
-
-function processReferencedWorkletConstantViolation(
+function findReferencedWorkletFromAssignmentExpression(
   maybeWorklet: NodePath<Identifier>,
-  state: ReanimatedPluginPass
-) {
+  acceptWorkletizableFunction: boolean,
+  acceptObject: boolean
+): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
   const workletName = maybeWorklet.node.name;
   const workletDeclaration = maybeWorklet.scope.bindings[
     workletName
@@ -39,33 +49,49 @@ function processReferencedWorkletConstantViolation(
     .find(
       (constantViolation) =>
         constantViolation.isAssignmentExpression() &&
-        isWorkletizableFunctionType(constantViolation.get('right'))
+        ((acceptWorkletizableFunction &&
+          isWorkletizableFunctionType(constantViolation.get('right'))) ||
+          (acceptObject &&
+            isWorkletizableObjectType(constantViolation.get('right'))))
     );
 
-  if (workletDeclaration) {
-    const workletDefinition = workletDeclaration.get('right');
-    if (
-      !Array.isArray(workletDefinition) &&
-      isWorkletizableFunctionType(workletDefinition)
-    ) {
-      processWorklet(workletDefinition, state);
-    }
+  if (!workletDeclaration) {
+    return undefined;
   }
+
+  const workletDefinition = workletDeclaration.get('right');
+
+  if (Array.isArray(workletDefinition)) {
+    return undefined;
+  }
+  if (
+    acceptWorkletizableFunction &&
+    isWorkletizableFunctionType(workletDefinition)
+  ) {
+    return workletDefinition;
+  }
+  if (acceptObject && isWorkletizableObjectType(workletDefinition)) {
+    return workletDefinition;
+  }
+  return undefined;
 }
 
-function processConstantReferencedWorklet(
-  maybeWorklet: NodePath<Identifier>,
-  state: ReanimatedPluginPass
-) {
-  const workletName = maybeWorklet.node.name;
-  const workletDeclaration = maybeWorklet.scope.bindings[workletName].path;
+function findReferencedWorklerFromVariableDeclarator(
+  workletReference: Binding,
+  acceptWorkletizableFunction: boolean,
+  acceptObject: boolean
+): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
+  const workletDeclaration = workletReference.path;
+  const worklet = workletDeclaration.get('init');
 
-  if (!workletDeclaration) {
+  if (Array.isArray(worklet)) {
     return;
   }
-
-  const worklet = workletDeclaration.get('init');
-  if (!Array.isArray(worklet) && isWorkletizableFunctionType(worklet)) {
-    processWorklet(worklet, state);
+  if (acceptWorkletizableFunction && isWorkletizableFunctionType(worklet)) {
+    return worklet;
   }
+  if (acceptObject && isWorkletizableObjectType(worklet)) {
+    return worklet;
+  }
+  return undefined;
 }

@@ -1804,6 +1804,78 @@ style = function () {
 animatedStyle = useAnimatedStyle(style);"
 `;
 
+exports[`babel plugin for referenced worklets workletizes ObjectExpression on its AssignmentExpression 1`] = `
+"var handler;
+var _worklet_16988157363598_init_data = {
+  code: "function onScroll(){}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+handler = {
+  onScroll: function () {
+    const _e = [new global.Error(), 1, -27];
+    const onScroll = function () {};
+    onScroll.__closure = {};
+    onScroll.__workletHash = 16988157363598;
+    onScroll.__initData = _worklet_16988157363598_init_data;
+    onScroll.__stackDetails = _e;
+    return onScroll;
+  }()
+};
+var scrollHandler = useAnimatedScrollHandler(handler);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ObjectExpression on its VariableDeclarator 1`] = `
+"var _worklet_16988157363598_init_data = {
+  code: "function onScroll(){}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var handler = {
+  onScroll: function () {
+    const _e = [new global.Error(), 1, -27];
+    const onScroll = function () {};
+    onScroll.__closure = {};
+    onScroll.__workletHash = 16988157363598;
+    onScroll.__initData = _worklet_16988157363598_init_data;
+    onScroll.__stackDetails = _e;
+    return onScroll;
+  }()
+};
+var scrollHandler = useAnimatedScrollHandler(handler);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ObjectExpression only on last AssignmentExpression 1`] = `
+"var handler;
+handler = {
+  onScroll: function onScroll() {
+    return 1;
+  }
+};
+var _worklet_9384619123806_init_data = {
+  code: "function onScroll(){return'AssignmentExpression';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+handler = {
+  onScroll: function () {
+    const _e = [new global.Error(), 1, -27];
+    const onScroll = function () {
+      return 'AssignmentExpression';
+    };
+    onScroll.__closure = {};
+    onScroll.__workletHash = 9384619123806;
+    onScroll.__initData = _worklet_9384619123806_init_data;
+    onScroll.__stackDetails = _e;
+    return onScroll;
+  }()
+};
+var scrollHandler = useAnimatedScrollHandler(handler);"
+`;
+
 exports[`babel plugin for sequence expressions supports SequenceExpression 1`] = `
 "function App() {
   (0, fun)({

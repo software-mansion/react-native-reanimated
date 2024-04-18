@@ -4,6 +4,7 @@ import type {
   FunctionExpression,
   ObjectMethod,
   ArrowFunctionExpression,
+  ObjectExpression,
 } from '@babel/types';
 
 export interface ReanimatedPluginOptions {
@@ -35,6 +36,10 @@ export type WorkletizableFunction =
 export const WorkletizableFunction =
   'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod';
 
+export type WorkletizableObject = ObjectExpression;
+
+export const WorkletizableObject = 'ObjectExpression';
+
 export function isWorkletizableFunctionType(
   path: NodePath
 ): path is NodePath<WorkletizableFunction> {
@@ -44,4 +49,10 @@ export function isWorkletizableFunctionType(
     path.isArrowFunctionExpression() ||
     path.isObjectMethod()
   );
+}
+
+export function isWorkletizableObjectType(
+  path: NodePath
+): path is NodePath<WorkletizableObject> {
+  return path.isObjectExpression();
 }

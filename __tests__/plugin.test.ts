@@ -1842,6 +1842,51 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
+    it('workletizes ObjectExpression on its VariableDeclarator', () => {
+      const input = html`<script>
+        let handler = {
+          onScroll: () => {},
+        };
+        const scrollHandler = useAnimatedScrollHandler(handler);
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ObjectExpression on its AssignmentExpression', () => {
+      const input = html`<script>
+        let handler;
+        handler = {
+          onScroll: () => {},
+        };
+        const scrollHandler = useAnimatedScrollHandler(handler);
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ObjectExpression only on last AssignmentExpression', () => {
+      const input = html`<script>
+        let handler;
+        handler = {
+          onScroll: () => 1,
+        };
+        handler = {
+          onScroll: () => 'AssignmentExpression',
+        };
+        const scrollHandler = useAnimatedScrollHandler(handler);
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toIncludeInWorkletString('AssignmentExpression');
+      expect(code).toMatchSnapshot();
+    });
+
     it('prefers FunctionDeclaration over AssignmentExpression', () => {
       const input = html`<script>
         function style() {
