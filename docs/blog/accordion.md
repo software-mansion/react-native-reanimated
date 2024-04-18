@@ -22,7 +22,7 @@ sources={{
   }}
 />
 
-The **AccordionItem** component encapsulates each item in the accordion. Item's height is managed by `useSharedValue` hook. The height dynamically adjusts based on the `isExpanded` prop, resulting in smooth expansion and collapse animations. The duration of these animations is controlled by the `duration` prop.
+The **AccordionItem** component encapsulates each item in the accordion. A `height` shared value manages the height of the item. The height dynamically adjusts based on the `isExpanded` prop, resulting in smooth expansion and collapse animations. The `duration` prop controls the duration of the animation.
 
 Inside the **AccordionItem**, the children represent the content section. It can accommodate various types of content.
 
