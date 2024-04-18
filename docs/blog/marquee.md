@@ -27,7 +27,7 @@ sources={{
   }}
 />
 
-The `useFrameCallback` hook is utilized in this code to execute animation logic on each frame.
+We use the `useFrameCallback` hook to execute the animation logic on each frame.
 
 <CollapsibleCode src={MarqueeSrc} showLines={[57,62]}/>
 

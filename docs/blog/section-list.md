@@ -8,7 +8,7 @@ import SectionListSrc from '!!raw-loader!@site/static/examples/SectionList';
 import ExampleVideo from '@site/src/components/ExampleVideo';
 import CollapsibleCode from '@site/src/components/CollapsibleCode';
 
-Section Lists are essential in mobile app development, organizing content with sleek headers and intuitive navigation for seamless user experience. They streamline browsing through news categories or recipe collections, offering effortless scrolling and clear organization, making content discovery a delightful journey.
+Section lists allow you to organize long lists of content by dividing them with headings.
 
 <InteractiveExample src={SectionListSrc} component={<SectionList />} />
 
@@ -43,11 +43,11 @@ The `onScroll` in **SectionCards** calculates the offset as the user scrolls thr
 
 <CollapsibleCode src={SectionListSrc} showLines={[204,227]}/>
 
-The `useSharedValue` hook is utilized to create shared mutable values across different components. For instance, `selectedItem` and `visibleIndex` are [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) used to manage the currently selected section and its visibility index.
+We use the `useSharedValue` hook to create mutable shared values across different components. For instance, `selectedItem` and `visibleIndex` are [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) used to manage the currently selected section and its visibility index.
 
 <CollapsibleCode src={SectionListSrc} showLines={[151,152]}/>
 
-Additionally, `useAnimatedStyle` is employed to define [animated styles](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle/) based on the shared values. These animated styles are then applied to components to create dynamic visual effects, such as changing font weights and adding bottom borders.
+Additionally, we use `useAnimatedStyle` hook to define [animated styles](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle/) based on the shared values. Then, we apply these animated styles to components to create dynamic visual effects, such as changing font weights and adding bottom borders.
 
 <CollapsibleCode src={SectionListSrc} showLines={[96,99]}/>
 
@@ -55,6 +55,6 @@ To enable interaction with the FlashList component - such as scrolling to specif
 
 <CollapsibleCode src={SectionListSrc} showLines={[154,155]}/>
 
-Reducing the frequency of calls and by this enhancing performance was done by implementation of the `debounce` function to throttle the `onScroll` event handler.
+Here, the `debounce` function throttles the invocations of `onScroll` event handler which improves the perfomrance.
 
 <CollapsibleCode src={SectionListSrc} showLines={[85,93]}/>

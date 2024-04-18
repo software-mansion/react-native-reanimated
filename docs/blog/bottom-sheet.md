@@ -3,7 +3,7 @@ slug: bottomsheet
 title: Bottom Sheet
 ---
 
-Bottom sheets are surfaces containing supplementary content, anchored to the bottom of the screen. The purpose of them in mobile application is to provide users with quick access to contextual information, actions, or settings without interrupting their current workflow.
+Bottom sheets are surfaces containing supplementary content, anchored to the bottom of the screen. They can provide users with quick access to contextual information, actions, or settings without interrupting their current workflow.
 
 import BottomSheet from '@site/static/examples/BottomSheet';
 import BottomSheetSrc from '!!raw-loader!@site/static/examples/BottomSheet';
