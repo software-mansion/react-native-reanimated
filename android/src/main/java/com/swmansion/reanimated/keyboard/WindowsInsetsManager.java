@@ -42,12 +42,14 @@ public class WindowsInsetsManager {
     return isObservingChanges;
   }
 
-  public void startObservingChanges(NotifyAboutKeyboardChangeFunction notifyAboutKeyboardChange, boolean isStatusBarTranslucent) {
+  public void startObservingChanges(
+      NotifyAboutKeyboardChangeFunction notifyAboutKeyboardChange, boolean isStatusBarTranslucent) {
     isObservingChanges = true;
     mIsStatusBarTranslucent = isStatusBarTranslucent;
     updateWindowDecor(false);
     View rootView = getRootView();
-    KeyboardAnimationCallback mKeyboardAnimationCallback = new KeyboardAnimationCallback(mKeyboard, notifyAboutKeyboardChange);
+    KeyboardAnimationCallback mKeyboardAnimationCallback =
+        new KeyboardAnimationCallback(mKeyboard, notifyAboutKeyboardChange);
     ViewCompat.setOnApplyWindowInsetsListener(rootView, this::onApplyWindowInsetsListener);
     ViewCompat.setWindowInsetsAnimationCallback(rootView, mKeyboardAnimationCallback);
   }

@@ -1,9 +1,7 @@
 package com.swmansion.reanimated.keyboard;
 
 import android.app.Dialog;
-
 import com.facebook.react.bridge.ReactApplicationContext;
-
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 
@@ -19,7 +17,8 @@ public class KeyboardAnimationManager {
   private final ModalActivityManager mModalActivityManager;
 
   public KeyboardAnimationManager(WeakReference<ReactApplicationContext> reactContext) {
-    mModalActivityManager = new ModalActivityManager(reactContext, mKeyboard, this::notifyAboutKeyboardChange);
+    mModalActivityManager =
+        new ModalActivityManager(reactContext, mKeyboard, this::notifyAboutKeyboardChange);
   }
 
   public int subscribeForKeyboardUpdates(

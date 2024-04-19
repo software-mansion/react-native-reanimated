@@ -45,9 +45,9 @@ public class Keyboard {
 
   public void onAnimationEnd() {
     /*
-     When opening modal the keyboard goes straight to the onAnimationEnd,
-     so we want to set set the state properly
-     */
+    When opening modal the keyboard goes straight to the onAnimationEnd,
+    so we want to set set the state properly
+    */
     if (mActiveTransitionCounter > 0) {
       mActiveTransitionCounter--;
       if (mActiveTransitionCounter == 0) {
