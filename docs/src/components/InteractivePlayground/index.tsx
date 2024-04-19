@@ -10,6 +10,7 @@ import ReducedMotionWarning from '../ReducedMotionWarning';
 import useClampPlayground from './useClampPlayground';
 import useSpringPlayground from './useSpringPlayground';
 import useTimingPlayground from './useTimingPlayground';
+import useRepeatPlayground from './useRepeatPlayground';
 import useInterpolateColorPlayground from './useInterpolateColorPlayground';
 import useAnimatedSensorPlayground from './useAnimatedSensorPlayground';
 import useDecayPlayground from './useDecayPlayground';
@@ -30,6 +31,7 @@ export {
   useClampPlayground,
   useSpringPlayground,
   useTimingPlayground,
+  useRepeatPlayground,
   useInterpolateColorPlayground,
   useAnimatedSensorPlayground,
   useDecayPlayground,
@@ -136,6 +138,7 @@ interface RangeProps {
   step?: number;
   value: number;
   onChange: Dispatch<number>;
+  disabled?: boolean;
   label: string;
 }
 
@@ -153,6 +156,18 @@ const RangeStyling = {
   color: 'var(--swm-interactive-slider)', // color of the main path of slider
   '& .MuiSlider-thumb': {
     backgroundColor: 'var(--swm-interactive-slider)', //color of thumb
+    transform: 'translate(-50%, -40%)',
+  },
+  '& .MuiSlider-rail': {
+    color: 'var(--swm-interactive-slider-rail)', //color of the rail (remaining area of slider)
+    opacity: 1,
+  },
+};
+
+const DisabledRangeStyling = {
+  color: 'var(--swm-interactive-slider)', // color of the main path of slider
+  '& .MuiSlider-thumb': {
+    backgroundColor: '#ccc', //color of thumb
     transform: 'translate(-50%, -40%)',
   },
   '& .MuiSlider-rail': {
@@ -179,16 +194,18 @@ export function Range({
   max,
   value,
   onChange,
+  disabled,
   label,
   step = 1,
 }: RangeProps) {
   return (
     <>
       <div className={styles.row}>
-        <label>{label}</label>
+        <label style={{color: disabled ? '#aaa' : 'black'}}>{label}</label>
         <TextField
           type="number"
           hiddenLabel
+          disabled={disabled}
           size="small"
           inputProps={{ min: min, max: max, step: step }}
           sx={TextFieldStyling}
@@ -204,7 +221,8 @@ export function Range({
         max={max}
         step={step}
         value={value}
-        sx={RangeStyling}
+        disabled={disabled}
+        sx={disabled ? DisabledRangeStyling : RangeStyling}
         onChange={(e: Event & { target: HTMLInputElement }) =>
           onChange(parseFloat(e.target.value))
         }
