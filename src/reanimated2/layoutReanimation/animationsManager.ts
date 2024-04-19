@@ -1,6 +1,6 @@
 'use strict';
 import { withStyleAnimation } from '../animation/styleAnimation';
-import type { ShadowNodeWrapper, SharedValue } from '../commonTypes';
+import type { SharedValue } from '../commonTypes';
 import { makeUIMutable } from '../mutables';
 import { LayoutAnimationType } from './animationBuilder';
 import { runOnUIImmediately } from '../threads';
@@ -23,8 +23,7 @@ function startObservingProgress(
   const isSharedTransition =
     animationType === LayoutAnimationType.SHARED_ELEMENT_TRANSITION;
   sharedValue.addListener(tag + TAG_OFFSET, () => {
-    // console.log(sharedValue.value);
-    _notifyAboutProgress(tag, sharedValue.value, isSharedTransition);
+    global._notifyAboutProgress(tag, sharedValue.value, isSharedTransition);
   });
 }
 
@@ -35,7 +34,7 @@ function stopObservingProgress(
 ): void {
   'worklet';
   sharedValue.removeListener(tag + TAG_OFFSET);
-  _notifyAboutEnd(tag, removeView);
+  global._notifyAboutEnd(tag, removeView);
 }
 
 function createLayoutAnimationManager() {

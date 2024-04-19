@@ -1,9 +1,10 @@
 'use strict';
 import NativeReanimatedModule from './NativeReanimated';
+import { isWorkletFunction } from './commonTypes';
 import type {
   ShareableRef,
   FlatShareableRef,
-  __WorkletFunction,
+  WorkletFunction,
 } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
 import { registerWorkletStackDetails } from './errors';
@@ -30,7 +31,7 @@ function isHostObject(value: NonNullable<object>) {
   return MAGIC_KEY in value;
 }
 
-function isPlainJSObject(object: object): object is object {
+function isPlainJSObject(object: object) {
   return Object.getPrototypeOf(object) === Object.prototype;
 }
 
@@ -138,7 +139,7 @@ export function makeShareableCloneRecursive<T>(
         toAdapt = value.map((element) =>
           makeShareableCloneRecursive(element, shouldPersistRemote, depth + 1)
         );
-      } else if (isTypeFunction && value.__workletHash === undefined) {
+      } else if (isTypeFunction && !isWorkletFunction(value)) {
         // this is a remote function
         toAdapt = value;
       } else if (isHostObject(value)) {
@@ -148,8 +149,7 @@ export function makeShareableCloneRecursive<T>(
         toAdapt = value;
       } else if (isPlainJSObject(value) || isTypeFunction) {
         toAdapt = {};
-        if (value.__workletHash !== undefined) {
-          // we are converting a worklet
+        if (isWorkletFunction(value)) {
           if (__DEV__) {
             const babelVersion = value.__initData.version;
             if (babelVersion !== undefined && babelVersion !== jsVersion) {
@@ -159,7 +159,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
             }
             registerWorkletStackDetails(
               value.__workletHash,
-              value.__stackDetails
+              value.__stackDetails!
             );
           }
           if (value.__stackDetails) {
@@ -198,6 +198,20 @@ Offending code was: \`${getWorkletCode(value)}\``);
           __init: () => {
             'worklet';
             return new RegExp(pattern, flags);
+          },
+        });
+        shareableMappingCache.set(value, handle);
+        return handle as ShareableRef<T>;
+      } else if (value instanceof Error) {
+        const { name, message, stack } = value;
+        const handle = makeShareableCloneRecursive({
+          __init: () => {
+            'worklet';
+            const error = new Error();
+            error.name = name;
+            error.message = message;
+            error.stack = stack;
+            return error;
           },
         });
         shareableMappingCache.set(value, handle);
@@ -252,19 +266,24 @@ Offending code was: \`${getWorkletCode(value)}\``);
       }
       const adopted = NativeReanimatedModule.makeShareableClone(
         toAdapt,
-        shouldPersistRemote
+        shouldPersistRemote,
+        value
       );
       shareableMappingCache.set(value, adopted);
       shareableMappingCache.set(adopted);
       return adopted;
     }
   }
-  return NativeReanimatedModule.makeShareableClone(value, shouldPersistRemote);
+  return NativeReanimatedModule.makeShareableClone(
+    value,
+    shouldPersistRemote,
+    undefined
+  );
 }
 
 const WORKLET_CODE_THRESHOLD = 255;
 
-function getWorkletCode(value: __WorkletFunction) {
+function getWorkletCode(value: WorkletFunction) {
   // @ts-ignore this is fine
   const code = value?.__initData?.code;
   if (!code) {
@@ -305,7 +324,10 @@ export function makeShareableCloneOnUIRecursive<T>(
       if (isHostObject(value)) {
         // We call `_makeShareableClone` to wrap the provided HostObject
         // inside ShareableJSRef.
-        return _makeShareableClone(value) as FlatShareableRef<T>;
+        return global._makeShareableClone(
+          value,
+          undefined
+        ) as FlatShareableRef<T>;
       }
       if (isRemoteFunction<T>(value)) {
         // RemoteFunctions are created by us therefore they are
@@ -314,17 +336,18 @@ export function makeShareableCloneOnUIRecursive<T>(
         return value.__remoteFunction;
       }
       if (Array.isArray(value)) {
-        return _makeShareableClone(
-          value.map(cloneRecursive)
+        return global._makeShareableClone(
+          value.map(cloneRecursive),
+          undefined
         ) as FlatShareableRef<T>;
       }
       const toAdapt: Record<string, FlatShareableRef<T>> = {};
       for (const [key, element] of Object.entries(value)) {
         toAdapt[key] = cloneRecursive(element);
       }
-      return _makeShareableClone(toAdapt) as FlatShareableRef<T>;
+      return global._makeShareableClone(toAdapt, value) as FlatShareableRef<T>;
     }
-    return _makeShareableClone(value);
+    return global._makeShareableClone(value, undefined);
   }
   return cloneRecursive(value);
 }

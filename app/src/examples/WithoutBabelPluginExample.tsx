@@ -1,4 +1,5 @@
 import Animated, {
+  isWorkletFunction,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -14,9 +15,10 @@ import { StyleSheet, Text, View } from 'react-native';
 enableExperimentalWebImplementation(true);
 
 function isBabelPluginEnabled() {
-  'inject Reanimated Babel plugin version';
-  // @ts-ignore
-  return global._REANIMATED_VERSION_BABEL_PLUGIN !== undefined;
+  function worklet() {
+    'worklet';
+  }
+  return isWorkletFunction(worklet);
 }
 
 export default function WithoutBabelPluginExample() {
@@ -40,7 +42,6 @@ function WithBabel() {
         { scale: withSpring(isPressed.value ? 1.2 : 1) },
       ],
       backgroundColor: isPressed.value ? 'blue' : 'navy',
-      cursor: isPressed.value ? 'grabbing' : 'grab',
     };
   });
 
@@ -100,7 +101,6 @@ export function WithoutBabel() {
         { scale: withSpring(isPressed.value ? 1.2 : 1) },
       ],
       backgroundColor: isPressed.value ? 'pink' : 'hotpink',
-      cursor: isPressed.value ? 'grabbing' : 'grab',
     };
   }, [isPressed, offset, stateObject, stateBoolean, stateNumber]);
 

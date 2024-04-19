@@ -1,6 +1,11 @@
 'use strict';
 import type { Component, MutableRefObject } from 'react';
-import type { ShadowNodeWrapper, SharedValue } from '../commonTypes';
+import type {
+  AnimatedPropsAdapterFunction,
+  ShadowNodeWrapper,
+  SharedValue,
+  WorkletFunction,
+} from '../commonTypes';
 import type {
   ImageStyle,
   NativeSyntheticEvent,
@@ -25,6 +30,7 @@ export interface AnimatedRef<T extends Component> {
     | ShadowNodeWrapper // Fabric
     | HTMLElement; // web
   current: T | null;
+  getTag: () => number;
 }
 
 // Might make that type generic if it's ever needed.
@@ -73,6 +79,15 @@ export type RNNativeScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
 
 export type ReanimatedScrollEvent = ReanimatedEvent<RNNativeScrollEvent>;
 
+export interface IWorkletEventHandler<Event extends object> {
+  updateEventHandler: (
+    newWorklet: (event: ReanimatedEvent<Event>) => void,
+    newEvents: string[]
+  ) => void;
+  registerForEvents: (viewTag: number, fallbackEventName?: string) => void;
+  unregisterFromEvents: (viewTag: number) => void;
+}
+
 export interface AnimatedStyleHandle<
   Style extends DefaultStyle = DefaultStyle
 > {
@@ -92,3 +107,13 @@ export interface JestAnimatedStyleHandle<
 > extends AnimatedStyleHandle<Style> {
   jestAnimatedStyle: MutableRefObject<AnimatedStyle<Style>>;
 }
+
+export type UseAnimatedStyleInternal<Style extends DefaultStyle> = (
+  updater: WorkletFunction<[], Style> | (() => Style),
+  dependencies?: DependencyList | null,
+  adapters?:
+    | AnimatedPropsAdapterFunction
+    | AnimatedPropsAdapterFunction[]
+    | null,
+  isAnimatedProps?: boolean
+) => AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style>;

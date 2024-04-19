@@ -1,22 +1,24 @@
 'use strict';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
-import type { __AdapterWorkletFunction } from './commonTypes';
-import type { AnimatedPropsAdapterFunction } from './helperTypes';
+import type {
+  AnimatedPropsAdapterFunction,
+  AnimatedPropsAdapterWorklet,
+} from './commonTypes';
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type createAnimatedPropAdapterType = (
+// @ts-expect-error This overload is required by our API.
+export function createAnimatedPropAdapter(
   adapter: AnimatedPropsAdapterFunction,
   nativeProps?: string[]
-) => AnimatedPropsAdapterFunction;
+): AnimatedPropsAdapterFunction;
 
-export const createAnimatedPropAdapter = ((
-  adapter: __AdapterWorkletFunction,
+export function createAnimatedPropAdapter(
+  adapter: AnimatedPropsAdapterWorklet,
   nativeProps?: string[]
-): __AdapterWorkletFunction => {
+): AnimatedPropsAdapterWorklet {
   const nativePropsToAdd: { [key: string]: boolean } = {};
   nativeProps?.forEach((prop) => {
     nativePropsToAdd[prop] = true;
   });
   addWhitelistedNativeProps(nativePropsToAdd);
   return adapter;
-}) as createAnimatedPropAdapterType;
+}

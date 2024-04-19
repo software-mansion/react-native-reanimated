@@ -1,11 +1,11 @@
 'use strict';
-type StackDetails = [Error, number, number];
+import type { WorkletStackDetails } from './commonTypes';
 
-const _workletStackDetails = new Map<number, StackDetails>();
+const _workletStackDetails = new Map<number, WorkletStackDetails>();
 
 export function registerWorkletStackDetails(
   hash: number,
-  stackDetails: StackDetails
+  stackDetails: WorkletStackDetails
 ) {
   _workletStackDetails.set(hash, stackDetails);
 }

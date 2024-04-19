@@ -5,6 +5,7 @@
   --swm-navy-light-40: #919fcf;
   --swm-navy-light-20: #c1c6e5;
   --swm-navy-light-10: #eef0ff;
+  --swm-navy-light-transparent: #33488e40;
 
   --swm-navy-dark-140: #1b2445;
   --swm-navy-dark-120: #122154;
@@ -40,7 +41,7 @@
   --swm-blue-dark-120: #126893;
   --swm-blue-dark-100: #00a9f0;
   --swm-blue-dark-80: #6fcef5;
-  --swm-blue-dark-60: #00a9f0;
+  --swm-blue-dark-60: #a8dbf0;
   --swm-blue-dark-40: #d7f0fa;
 
   --swm-green-light-100: #57b495;
@@ -64,6 +65,7 @@
 
   --swm-red-dark-140: #5a3b46;
   --swm-red-dark-120: #914f55;
+  --swm-red-dark-110: #c86364;
   --swm-red-dark-100: #ff7774;
   --swm-red-dark-80: #ff8b88;
   --swm-red-dark-60: #ffb4b2;

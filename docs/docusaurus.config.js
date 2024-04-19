@@ -22,6 +22,13 @@ const config = {
   organizationName: 'software-mansion', // Usually your GitHub org/user name.
   projectName: 'react-native-reanimated', // Usually your repo name.
 
+  scripts: [
+    {
+      src: '/react-native-reanimated/js/snack-helpers.js',
+      async: true,
+    },
+  ],
+
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
 
@@ -58,10 +65,15 @@ const config = {
           trackingID: 'UA-41044622-6',
           anonymizeIP: true,
         },
+        blog: {
+          routeBasePath: '/examples',
+          blogSidebarTitle: 'Examples',
+          blogSidebarCount: 'ALL',
+          showReadingTime: false,
+        },
       }),
     ],
   ],
-
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
@@ -80,6 +92,13 @@ const config = {
         },
         items: [
           {
+            to: 'docs/fundamentals/getting-started',
+            activeBasePath: 'docs',
+            label: 'Docs',
+            position: 'left',
+          },
+          { to: 'examples/accordion', label: 'Examples', position: 'left' },
+          {
             type: 'docsVersionDropdown',
             position: 'right',
             dropdownActiveClassDisabled: true,
@@ -91,6 +110,11 @@ const config = {
             'aria-label': 'GitHub repository',
           },
         ],
+      },
+      announcementBar: {
+        content: ' ',
+        backgroundColor: '#03c',
+        textColor: '#fff',
       },
       footer: {
         style: 'light',
