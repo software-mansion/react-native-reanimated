@@ -8,7 +8,7 @@ import type {
 } from 'react';
 import React from 'react';
 import { findNodeHandle, Platform } from 'react-native';
-import WorkletEventHandler from '../reanimated2/WorkletEventHandler';
+import { WorkletEventHandler } from '../reanimated2/WorkletEventHandler';
 import '../reanimated2/layoutReanimation/animationsManager';
 import invariant from 'invariant';
 import { adaptViewConfig } from '../ConfigHelper';
@@ -143,6 +143,7 @@ export function createAnimatedComponent(
     }
 
     componentDidMount() {
+      this._viewTag = this._getViewInfo().viewTag as number;
       this._attachNativeEvents();
       this._jsPropsUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
@@ -228,21 +229,13 @@ export function createAnimatedComponent(
     }
 
     _attachNativeEvents() {
-      const node = this._getEventViewRef() as AnimatedComponentRef;
-      let viewTag = null; // We set it only if needed
-
       for (const key in this.props) {
         const prop = this.props[key];
         if (
           has('workletEventHandler', prop) &&
           prop.workletEventHandler instanceof WorkletEventHandler
         ) {
-          if (viewTag === null) {
-            viewTag = IS_WEB
-              ? this._component
-              : findNodeHandle(options?.setNativeProps ? this : node);
-          }
-          prop.workletEventHandler.registerForEvents(viewTag as number, key);
+          prop.workletEventHandler.registerForEvents(this._viewTag, key);
         }
       }
     }
@@ -254,7 +247,7 @@ export function createAnimatedComponent(
           has('workletEventHandler', prop) &&
           prop.workletEventHandler instanceof WorkletEventHandler
         ) {
-          prop.workletEventHandler.unregisterFromEvents();
+          prop.workletEventHandler.unregisterFromEvents(this._viewTag);
         }
       }
     }
@@ -277,38 +270,40 @@ export function createAnimatedComponent(
       }
     }
 
-    _reattachNativeEvents(
+    _updateNativeEvents(
       prevProps: AnimatedComponentProps<InitialComponentProps>
     ) {
       for (const key in prevProps) {
-        const prop = this.props[key];
+        const prevProp = prevProps[key];
         if (
-          has('workletEventHandler', prop) &&
-          prop.workletEventHandler instanceof WorkletEventHandler &&
-          prop.workletEventHandler.reattachNeeded
+          has('workletEventHandler', prevProp) &&
+          prevProp.workletEventHandler instanceof WorkletEventHandler
         ) {
-          prop.workletEventHandler.unregisterFromEvents();
+          const newProp = this.props[key];
+          if (!newProp) {
+            // Prop got deleted
+            prevProp.workletEventHandler.unregisterFromEvents(this._viewTag);
+          } else if (
+            has('workletEventHandler', newProp) &&
+            newProp.workletEventHandler instanceof WorkletEventHandler &&
+            newProp.workletEventHandler !== prevProp.workletEventHandler
+          ) {
+            // Prop got changed
+            prevProp.workletEventHandler.unregisterFromEvents(this._viewTag);
+            newProp.workletEventHandler.registerForEvents(this._viewTag);
+          }
         }
       }
 
-      let viewTag = null;
-
       for (const key in this.props) {
-        const prop = this.props[key];
+        const newProp = this.props[key];
         if (
-          has('workletEventHandler', prop) &&
-          prop.workletEventHandler instanceof WorkletEventHandler &&
-          prop.workletEventHandler.reattachNeeded
+          has('workletEventHandler', newProp) &&
+          newProp.workletEventHandler instanceof WorkletEventHandler &&
+          !prevProps[key]
         ) {
-          if (viewTag === null) {
-            const node = this._getEventViewRef() as AnimatedComponentRef;
-
-            viewTag = IS_WEB
-              ? this._component
-              : findNodeHandle(options?.setNativeProps ? this : node);
-          }
-          prop.workletEventHandler.registerForEvents(viewTag as number, key);
-          prop.workletEventHandler.reattachNeeded = false;
+          // Prop got added
+          newProp.workletEventHandler.registerForEvents(this._viewTag);
         }
       }
     }
@@ -460,7 +455,7 @@ export function createAnimatedComponent(
       ) {
         this._configureSharedTransition();
       }
-      this._reattachNativeEvents(prevProps);
+      this._updateNativeEvents(prevProps);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 

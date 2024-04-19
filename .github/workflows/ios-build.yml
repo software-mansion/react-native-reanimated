@@ -1,4 +1,6 @@
 name: Test iOS build
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     paths:
@@ -31,7 +33,7 @@ on:
 jobs:
   build:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: macos-13
+    runs-on: macos-14
     strategy:
       matrix:
         working-directory: [Example, FabricExample]
