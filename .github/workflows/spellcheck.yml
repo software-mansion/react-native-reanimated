@@ -1,3 +1,4 @@
+# checks the spelling of code in all files
 name: 'Check spelling'
 on:
   merge_group:
