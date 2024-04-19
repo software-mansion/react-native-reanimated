@@ -56,9 +56,8 @@ const ChildrenScroller = ({
   }, [reverse]);
 
   useFrameCallback((i) => {
-    offset.value +=
-      (coeff.value * ((i.timeSincePreviousFrame ?? 1) * childrenWidth)) /
-      duration;
+    // prettier-ignore
+    offset.value += (coeff.value * ((i.timeSincePreviousFrame ?? 1) * childrenWidth)) / duration;
     offset.value = offset.value % childrenWidth;
   }, true);
 
