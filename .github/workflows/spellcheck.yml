@@ -1,5 +1,8 @@
 name: 'Check spelling'
 on:
+  merge_group:
+    branches:
+      - main
   push:
     branches:
       - main
