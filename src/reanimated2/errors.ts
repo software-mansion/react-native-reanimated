@@ -56,4 +56,5 @@ export function reportFatalErrorOnJS({
   error.jsEngine = 'reanimated';
   // @ts-ignore the reportFatalError method is an internal method of ErrorUtils not exposed in the type definitions
   global.ErrorUtils.reportFatalError(error);
+  console.error(error.stack);
 }

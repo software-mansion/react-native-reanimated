@@ -117,6 +117,7 @@ import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimatio
 import WithClampExample from './WithClampExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import HabitsExample from './LayoutAnimations/HabitsExample';
+import BBExample from './LayoutAnimations/BBExample';
 
 interface Example {
   icon?: string;
@@ -124,9 +125,21 @@ interface Example {
   screen: React.FC;
 }
 
+// export const EXAMPLES: Record<string, Example> = {
+//   EmptyExample: {
+//     icon: '👻',
+//     title: 'Empty',
+//     screen: ChangeThemeExample,
+//   },
+// };
+
 export const EXAMPLES: Record<string, Example> = {
   // Empty example for test purposes
-
+  BBExample: {
+    icon: '💀',
+    title: 'BB',
+    screen: BBExample,
+  },
   EmptyExample: {
     icon: '👻',
     title: 'Empty',

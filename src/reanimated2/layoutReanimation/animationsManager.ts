@@ -8,8 +8,11 @@ import type {
   SharedTransitionAnimationsValues,
   LayoutAnimation,
 } from './animationBuilder/commonTypes';
+import { isFabric } from '../PlatformChecker';
 
 const TAG_OFFSET = 1e9;
+
+const IS_FABRIC = isFabric();
 
 function startObservingProgress(
   tag: number,
@@ -75,7 +78,9 @@ function createLayoutAnimationManager() {
         value = makeUIMutable(style.initialValues);
         mutableValuesForTag.set(tag, value);
       } else {
-        stopObservingProgress(tag, value);
+        if (!IS_FABRIC) {
+          stopObservingProgress(tag, value);
+        }
         value._value = style.initialValues;
       }
 

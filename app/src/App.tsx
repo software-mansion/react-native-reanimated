@@ -38,7 +38,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXAMPLES } from './examples';
 import React from 'react';
 import { useReducedMotion } from 'react-native-reanimated';
-import EmptyExample from './examples/EmptyExample';
 
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
   Home: undefined;
@@ -203,41 +202,39 @@ export default function App() {
   }
 
   return (
-    <EmptyExample />
-    // <GestureHandlerRootView style={styles.container}>
-    //   <NavigationContainer
-    //     linking={linking}
-    //     initialState={initialState}
-    //     onStateChange={(state) =>
-    //       AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state))
-    //     }>
-    //     <Stack.Navigator>
-    //       <Stack.Screen
-    //         name="Home"
-    //         component={HomeScreen}
-    //         options={{
-    //           headerTitle: '🐎 Reanimated examples',
-    //           title: 'Reanimated examples',
-    //           headerLeft: Platform.OS === 'web' ? () => null : undefined,
-    //         }}
-    //       />
-    //       {EXAMPLES_NAMES.map((name) => (
-    //         <Stack.Screen
-    //           key={name}
-    //           name={name}
-    //           component={EXAMPLES[name].screen}
-    //           options={{
-    //             animation: shouldReduceMotion ? 'fade' : 'default',
-    //             headerShown: false,
-    //             // headerTitle: EXAMPLES[name].title,
-    //             title: EXAMPLES[name].title,
-    //             headerLeft: Platform.OS === 'web' ? BackButton : undefined,
-    //           }}
-    //         />
-    //       ))}
-    //     </Stack.Navigator>
-    //   </NavigationContainer>
-    // </GestureHandlerRootView>
+    <GestureHandlerRootView style={styles.container}>
+      <NavigationContainer
+        linking={linking}
+        initialState={initialState}
+        onStateChange={(state) =>
+          AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state))
+        }>
+        <Stack.Navigator>
+          <Stack.Screen
+            name="Home"
+            component={HomeScreen}
+            options={{
+              headerTitle: '🐎 Reanimated examples',
+              title: 'Reanimated examples',
+              headerLeft: Platform.OS === 'web' ? () => null : undefined,
+            }}
+          />
+          {EXAMPLES_NAMES.map((name) => (
+            <Stack.Screen
+              key={name}
+              name={name}
+              component={EXAMPLES[name].screen}
+              options={{
+                animation: shouldReduceMotion ? 'fade' : 'default',
+                headerTitle: EXAMPLES[name].title,
+                title: EXAMPLES[name].title,
+                headerLeft: Platform.OS === 'web' ? BackButton : undefined,
+              }}
+            />
+          ))}
+        </Stack.Navigator>
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }
 
