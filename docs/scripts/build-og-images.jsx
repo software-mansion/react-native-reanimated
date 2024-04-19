@@ -27,13 +27,13 @@ async function saveStreamToFile(stream, path) {
   await promisify(pipeline)(stream, writeStream);
 }
 
-const buildOGImages = async () => {
-  const baseDocsPath = path.resolve(__dirname, '../docs');
-  const docs = await Promise.all(
+async function buildOGImages() {
+  const baseDirPath = path.resolve(__dirname, '../docs');
+  const dirs = await Promise.all(
     (
-      await fs.promises.readdir(baseDocsPath)
+      await fs.promises.readdir(baseDirPath)
     ).map(async (dir) => {
-      const files = await fs.promises.readdir(path.resolve(baseDocsPath, dir));
+      const files = await fs.promises.readdir(path.resolve(baseDirPath, dir));
       return {
         dir,
         files: files.filter(
@@ -43,11 +43,13 @@ const buildOGImages = async () => {
     })
   );
 
-  const targetDocs = path.resolve(__dirname, '../build/img/og');
+  const ogImageTargets = path.resolve(__dirname, '../build/img/og');
 
-  if (fs.existsSync(targetDocs)) fs.rmSync(targetDocs, { recursive: true });
+  if (fs.existsSync(ogImageTargets)) {
+    fs.rmSync(ogImageTargets, { recursive: true });
+  }
 
-  fs.mkdirSync(targetDocs, {recursive: true});
+  fs.mkdirSync(ogImageTargets, { recursive: true });
 
   console.log('Generating OG images for docs...');
 
@@ -55,21 +57,21 @@ const buildOGImages = async () => {
   const imageBuffer = fs.readFileSync(imagePath);
   const base64Image = `data:image/png;base64,${imageBuffer.toString('base64')}`;
 
-  docs.map(async ({ dir, files }) => {
+  dirs.map(async ({ dir, files }) => {
     files.map(async (file) => {
-      const header = getMarkdownHeader(path.resolve(baseDocsPath, dir, file));
+      const header = getMarkdownHeader(path.resolve(baseDirPath, dir, file));
 
       const ogImageStream = OGImageStream(header, base64Image);
 
       await saveStreamToFile(
         await ogImageStream,
         path.resolve(
-          targetDocs,
+          ogImageTargets,
           `${header.replace(/ /g, '-').replace('/', '-').toLowerCase()}.png`
         )
       );
     });
   });
-};
+}
 
 buildOGImages();
