@@ -77,7 +77,6 @@ const switchStyles = StyleSheet.create({
   thumb: {
     height: '100%',
     aspectRatio: 1,
-    borderRadius: '100%',
     backgroundColor: 'white',
   },
 });
