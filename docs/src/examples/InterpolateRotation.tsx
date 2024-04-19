@@ -16,7 +16,7 @@ import {
 } from 'react-native-gesture-handler';
 
 export default function App() {
-  const offset = useSharedValue(0);
+  const offset = useSharedValue<number>(0);
 
   return (
     <GestureHandlerRootView style={styles.container}>
