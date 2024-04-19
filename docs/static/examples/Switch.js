@@ -48,6 +48,7 @@ const Switch = ({
 
     return {
       transform: [{ translateX: translateValue }],
+      borderRadius: height.value / 2,
     };
   });
 

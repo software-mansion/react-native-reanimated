@@ -16,13 +16,20 @@ The following implementation of a switch relies on [animatable values](/docs/fun
 
 <CollapsibleCode src={SwitchSrc} showLines={[26,52]}/>
 
+<ExampleVideo
+sources={{
+    android: "/react-native-reanimated/recordings/examples/switch_android.mp4",
+    ios: "/react-native-reanimated/recordings/examples/switch_ios.mov"
+  }}
+/>
+
 We use the `useSharedValue` hook to store the dimensions of the element, which allows for precise calculation of position changes during the animation. The hook is there to prevent unnecessary re-renders.
 
 <CollapsibleCode src={SwitchSrc} showLines={[23,25]}/>
 
 The values are updated during the **onLayout** event of the element.
 
-<CollapsibleCode src={SwitchSrc} showLines={[55,60]}/>
+<CollapsibleCode src={SwitchSrc} showLines={[56,61]}/>
 
 The **Switch** component can represent any boolean value passed as a prop. The state dynamically adjusts based on the `value` prop resulting in smooth transition animations. It enables passing any function using the `onPress` prop. The `duration` prop controls the duration of the animation. The `style` and `trackColors` props enable personalization.
 
