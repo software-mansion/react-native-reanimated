@@ -44,9 +44,18 @@ public class Keyboard {
   }
 
   public void onAnimationEnd() {
-    mActiveTransitionCounter--;
-    if (mActiveTransitionCounter == 0) {
-      mState = mHeight == 0 ? KeyboardState.CLOSED : KeyboardState.OPEN;
+    /*
+     When opening modal the keyboard goes straight to the onAnimationEnd,
+     so we want to set set the state properly
+     */
+    if (mActiveTransitionCounter > 0) {
+      mActiveTransitionCounter--;
+      if (mActiveTransitionCounter == 0) {
+        mState = mHeight == 0 ? KeyboardState.CLOSED : KeyboardState.OPEN;
+      }
+    } else {
+      mState = KeyboardState.CLOSED;
+      mHeight = 0;
     }
   }
 }

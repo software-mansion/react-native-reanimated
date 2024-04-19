@@ -1,6 +1,9 @@
 package com.swmansion.reanimated.keyboard;
 
+import android.app.Dialog;
+
 import com.facebook.react.bridge.ReactApplicationContext;
+
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 
@@ -13,21 +16,17 @@ public class KeyboardAnimationManager {
   private int mNextListenerId = 0;
   private final HashMap<Integer, KeyboardWorkletWrapper> mListeners = new HashMap<>();
   private final Keyboard mKeyboard = new Keyboard();
-  private final WindowsInsetsManager mWindowsInsetsManager;
+  private final ModalActivityManager mModalActivityManager;
 
   public KeyboardAnimationManager(WeakReference<ReactApplicationContext> reactContext) {
-    mWindowsInsetsManager =
-        new WindowsInsetsManager(reactContext, mKeyboard, this::notifyAboutKeyboardChange);
+    mModalActivityManager = new ModalActivityManager(reactContext, mKeyboard, this::notifyAboutKeyboardChange);
   }
 
   public int subscribeForKeyboardUpdates(
       KeyboardWorkletWrapper callback, boolean isStatusBarTranslucent) {
     int listenerId = mNextListenerId++;
     if (mListeners.isEmpty()) {
-      KeyboardAnimationCallback keyboardAnimationCallback =
-          new KeyboardAnimationCallback(mKeyboard, this::notifyAboutKeyboardChange);
-      mWindowsInsetsManager.startObservingChanges(
-          keyboardAnimationCallback, isStatusBarTranslucent);
+      mModalActivityManager.startObservingChanges(isStatusBarTranslucent);
     }
     mListeners.put(listenerId, callback);
     return listenerId;
@@ -36,7 +35,7 @@ public class KeyboardAnimationManager {
   public void unsubscribeFromKeyboardUpdates(int listenerId) {
     mListeners.remove(listenerId);
     if (mListeners.isEmpty()) {
-      mWindowsInsetsManager.stopObservingChanges();
+      mModalActivityManager.stopObservingChanges();
     }
   }
 
@@ -44,5 +43,9 @@ public class KeyboardAnimationManager {
     for (KeyboardWorkletWrapper listener : mListeners.values()) {
       listener.invoke(mKeyboard.getState().asInt(), mKeyboard.getHeight());
     }
+  }
+
+  public void registerNewDialog(Dialog dialog) {
+    mModalActivityManager.registerNewDialog(dialog);
   }
 }

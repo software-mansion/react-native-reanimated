@@ -1,5 +1,6 @@
 package com.swmansion.reanimated.nativeProxy;
 
+import android.app.Dialog;
 import android.content.ContentResolver;
 import android.os.SystemClock;
 import android.provider.Settings;
@@ -261,5 +262,9 @@ public abstract class NativeProxyCommon {
     if (!mNodesManager.isAnimationRunning()) {
       mNodesManager.performOperations();
     }
+  }
+
+  public void registerNewDialog(Dialog dialog) {
+    keyboardAnimationManager.registerNewDialog(dialog);
   }
 }

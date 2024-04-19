@@ -8,42 +8,52 @@ import android.widget.FrameLayout;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
-import com.facebook.react.bridge.ReactApplicationContext;
-import java.lang.ref.WeakReference;
 
 public class WindowsInsetsManager {
 
   private boolean mIsStatusBarTranslucent = false;
-  private final WeakReference<ReactApplicationContext> mReactContext;
+
   private final Keyboard mKeyboard;
+
   private final NotifyAboutKeyboardChangeFunction mNotifyAboutKeyboardChange;
 
+  private final ModalActivityManager mModalActivityManager;
+
+  private boolean isObservingChanges = false;
+
   public WindowsInsetsManager(
-      WeakReference<ReactApplicationContext> reactContext,
+      ModalActivityManager modalActivityManager,
       Keyboard keyboard,
       NotifyAboutKeyboardChangeFunction notifyAboutKeyboardChange) {
-    mReactContext = reactContext;
     mKeyboard = keyboard;
+    mModalActivityManager = modalActivityManager;
     mNotifyAboutKeyboardChange = notifyAboutKeyboardChange;
   }
 
   private Window getWindow() {
-    return mReactContext.get().getCurrentActivity().getWindow();
+    return mModalActivityManager.getCurrentWindow();
   }
 
   private View getRootView() {
     return getWindow().getDecorView();
   }
 
-  public void startObservingChanges(
-      KeyboardAnimationCallback keyboardAnimationCallback, boolean isStatusBarTranslucent) {
+  public boolean getIsObservingChanges() {
+    return isObservingChanges;
+  }
+
+  public void startObservingChanges(NotifyAboutKeyboardChangeFunction notifyAboutKeyboardChange, boolean isStatusBarTranslucent) {
+    isObservingChanges = true;
     mIsStatusBarTranslucent = isStatusBarTranslucent;
     updateWindowDecor(false);
-    ViewCompat.setOnApplyWindowInsetsListener(getRootView(), this::onApplyWindowInsetsListener);
-    ViewCompat.setWindowInsetsAnimationCallback(getRootView(), keyboardAnimationCallback);
+    View rootView = getRootView();
+    KeyboardAnimationCallback mKeyboardAnimationCallback = new KeyboardAnimationCallback(mKeyboard, notifyAboutKeyboardChange);
+    ViewCompat.setOnApplyWindowInsetsListener(rootView, this::onApplyWindowInsetsListener);
+    ViewCompat.setWindowInsetsAnimationCallback(rootView, mKeyboardAnimationCallback);
   }
 
   public void stopObservingChanges() {
+    isObservingChanges = false;
     updateWindowDecor(!mIsStatusBarTranslucent);
     updateInsets(0, 0);
     View rootView = getRootView();
@@ -80,7 +90,9 @@ public class WindowsInsetsManager {
               FrameLayout.LayoutParams params = getLayoutParams(paddingTop, paddingBottom);
               int actionBarId = androidx.appcompat.R.id.action_bar_root;
               View actionBarRootView = getRootView().findViewById(actionBarId);
-              actionBarRootView.setLayoutParams(params);
+              if (actionBarRootView != null) {
+                actionBarRootView.setLayoutParams(params);
+              }
             });
   }
 
