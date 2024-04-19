@@ -46,9 +46,9 @@ export default function App({ options }: Props) {
       options.numberOfReps,
       options.reverse,
       () => setRunning(false),
-      options.reduceMotion,
-    )
-  }
+      options.reduceMotion
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -56,10 +56,7 @@ export default function App({ options }: Props) {
         <Animated.View style={[styles.box, animatedStyles]} />
       </View>
       <View style={styles.buttonWrapper}>
-        <Button
-          onPress={handlePress}
-          title={running ? 'Stop' : 'Start'}
-        />
+        <Button onPress={handlePress} title={running ? 'Stop' : 'Start'} />
       </View>
     </View>
   );
@@ -76,7 +73,7 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     flex: 1,
-    width: 300
+    width: 300,
   },
   box: {
     height: 100,
@@ -91,6 +88,6 @@ const styles = StyleSheet.create({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 16
-  }
+    marginTop: 16,
+  },
 });

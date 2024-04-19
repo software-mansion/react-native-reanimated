@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
 import Example from './Example';
 
-import {
-  Range,
-  CheckboxOption,
-  SelectOption,
-  formatReduceMotion,
-} from '..';
+import { Range, CheckboxOption, SelectOption, formatReduceMotion } from '..';
 import { ReduceMotion } from 'react-native-reanimated';
 
 const defaultConfig = {
@@ -55,11 +50,7 @@ export default function useRepeatPlayground() {
         value={numberOfReps}
         onChange={setNumberOfReps}
       />
-      <CheckboxOption
-        label="Reverse"
-        value={reverse}
-        onChange={setReverse}
-      />
+      <CheckboxOption label="Reverse" value={reverse} onChange={setReverse} />
       <SelectOption
         label="Reduce motion"
         value={reduceMotion}

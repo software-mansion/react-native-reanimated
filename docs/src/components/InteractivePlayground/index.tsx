@@ -201,7 +201,7 @@ export function Range({
   return (
     <>
       <div className={styles.row}>
-        <label style={{color: disabled ? '#aaa' : 'black'}}>{label}</label>
+        <label style={{ color: disabled ? '#aaa' : 'black' }}>{label}</label>
         <TextField
           type="number"
           hiddenLabel
