@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import React, { Dispatch, useMemo } from 'react';
+import React, { Dispatch } from 'react';
 import styles from './styles.module.css';
 
 import BrowserOnly from '@docusaurus/BrowserOnly';
@@ -12,7 +12,6 @@ import useSpringPlayground from './useSpringPlayground';
 import useTimingPlayground from './useTimingPlayground';
 import useInterpolateColorPlayground from './useInterpolateColorPlayground';
 import useAnimatedSensorPlayground from './useAnimatedSensorPlayground';
-import useDecayPlayground from './useDecayPlayground';
 
 import Reset from '@site/static/img/reset.svg';
 import ResetDark from '@site/static/img/reset-dark.svg';
@@ -32,14 +31,11 @@ export {
   useTimingPlayground,
   useInterpolateColorPlayground,
   useAnimatedSensorPlayground,
-  useDecayPlayground,
 };
 
 interface InteractivePlaygroundProps {
   usePlayground: () => {
-    example: React.FC<{ width?: number }>;
-    props?: Record<string, any>;
-    memo?: any[];
+    example: JSX.Element;
     code: string;
     controls: string;
     resetOptions: () => {};
@@ -51,40 +47,21 @@ export default function InteractivePlayground(
   props: InteractivePlaygroundProps
 ) {
   const [key, setKey] = React.useState(0);
-  const [width, setWidth] = React.useState<number | null>(null);
 
-  const interactiveExampleRef = React.useRef<HTMLDivElement>(null);
-
-  const {
-    example: Example,
-    props: exampleProps,
-    memo,
-    code,
-    controls,
-    resetOptions,
-    additionalComponents,
-  } = props.usePlayground();
+  const { example, code, controls, resetOptions, additionalComponents } =
+    props.usePlayground();
 
   const resetExample = () => {
-    if (interactiveExampleRef.current) {
-      setWidth(interactiveExampleRef.current.offsetWidth);
-    }
     setKey(key + 1);
     resetOptions();
   };
 
   const prefersReducedMotion = useReducedMotion();
 
-  React.useEffect(() => {
-    if (interactiveExampleRef.current) {
-      setWidth(interactiveExampleRef.current.offsetWidth);
-    }
-  }, [interactiveExampleRef.current]);
-
   return (
     <BrowserOnly fallback={<div>Loading...</div>}>
       {() => (
-        <div ref={interactiveExampleRef} className={styles.container}>
+        <div className={styles.container}>
           {prefersReducedMotion && <ReducedMotionWarning />}
           <div className={styles.buttonContainer}>
             <AnimableIcon
@@ -100,17 +77,7 @@ export default function InteractivePlayground(
             />
           </div>
           <div className={styles.previewWrapper}>
-            <React.Fragment key={key}>
-              {width !== null &&
-                ((memo ?? []).length > 0 ? (
-                  useMemo(
-                    () => <Example {...exampleProps} width={width} />,
-                    [...memo, width]
-                  )
-                ) : (
-                  <Example {...exampleProps} width={width} />
-                ))}
-            </React.Fragment>
+            <React.Fragment key={key}>{example}</React.Fragment>
           </div>
           {additionalComponents?.section}
           <div className={styles.wrapper}>
@@ -153,7 +120,6 @@ const RangeStyling = {
   color: 'var(--swm-interactive-slider)', // color of the main path of slider
   '& .MuiSlider-thumb': {
     backgroundColor: 'var(--swm-interactive-slider)', //color of thumb
-    transform: 'translate(-50%, -40%)',
   },
   '& .MuiSlider-rail': {
     color: 'var(--swm-interactive-slider-rail)', //color of the rail (remaining area of slider)

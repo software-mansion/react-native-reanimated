@@ -11,11 +11,7 @@ const DELAY = 500;
 
 const text = ['React', 'Native', 'Reanimated'];
 
-interface AppProps {
-  width: number;
-}
-
-export default function App({ width }: AppProps) {
+export default function App() {
   const [isShown, setShown] = useState<boolean>(false);
 
   const opacity1 = useSharedValue<number>(0);
@@ -46,17 +42,10 @@ export default function App({ width }: AppProps) {
         <Animated.Text style={{ ...styles.label, opacity: opacity2 }}>
           {text[1]}
         </Animated.Text>
-        {width > 450 && (
-          <Animated.Text style={{ ...styles.label, opacity: opacity3 }}>
-            {text[2]}
-          </Animated.Text>
-        )}
-      </View>
-      {width <= 450 && (
         <Animated.Text style={{ ...styles.label, opacity: opacity3 }}>
           {text[2]}
         </Animated.Text>
-      )}
+      </View>
       <Button title={isShown ? 'Hide' : 'Show'} onPress={show} />
     </View>
   );

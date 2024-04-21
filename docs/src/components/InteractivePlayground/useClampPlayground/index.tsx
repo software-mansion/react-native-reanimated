@@ -11,6 +11,15 @@ export default function useClampPlayground() {
   const [lowerBound, setLowerBound] = useState(initialState.lowerBound);
   const [upperBound, setUpperBound] = useState(initialState.upperBound);
 
+  const example = (
+    <Example
+      options={{
+        lowerBound: lowerBound,
+        upperBound: upperBound,
+      }}
+    />
+  );
+
   const controls = (
     <DoubleRange
       label="Clamp limits"
@@ -38,13 +47,7 @@ export default function useClampPlayground() {
   return {
     code,
     controls,
-    example: Example,
-    props: {
-      options: {
-        lowerBound: lowerBound,
-        upperBound: upperBound,
-      },
-    },
+    example,
     resetOptions,
   };
 }

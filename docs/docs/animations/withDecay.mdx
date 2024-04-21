@@ -11,7 +11,7 @@ import DecayBasicSrc from '!!raw-loader!@site/src/examples/DecayBasic';
 
 <InteractiveExample
   src={DecayBasicSrc}
-  component={DecayBasic}
+  component={<DecayBasic />}
   label="Grab and drag the square"
 />
 
@@ -62,10 +62,6 @@ enum ReduceMotion {
 
 The decay animation configuration.
 
-import { useDecayPlayground } from '@site/src/components/InteractivePlayground';
-
-<InteractivePlayground usePlayground={useDecayPlayground} />
-
 Available properties:
 
 | Name                          | Type               | Default               | Description                                                                                                                                                                                                             |
@@ -93,7 +89,7 @@ import DecayTrainSrc from '!!raw-loader!@site/src/examples/DecayTrain';
 
 <InteractiveExample
   src={DecayTrainSrc}
-  component={DecayTrain}
+  component={<DecayTrain />}
   label="Grab and drag the train"
 />
 

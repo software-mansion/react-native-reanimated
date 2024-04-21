@@ -9,14 +9,11 @@ import Animated, {
   withRepeat,
 } from 'react-native-reanimated';
 
+const initialOffset = 200;
 const duration = 800;
 
-interface AppProps {
-  width: number;
-}
-
-export default function App({ width }: AppProps) {
-  const offset = useSharedValue<number>(width / 2 - 80);
+export default function App() {
+  const offset = useSharedValue<number>(initialOffset);
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],
@@ -26,9 +23,9 @@ export default function App({ width }: AppProps) {
     offset.value = withRepeat(
       // highlight-start
       withSequence(
-        withTiming(-width / 2 + 80, { duration, easing: Easing.cubic }),
+        withTiming(-initialOffset, { duration, easing: Easing.cubic }),
         withTiming(0, { duration, easing: Easing.cubic }),
-        withTiming(width / 2 - 80, { duration, easing: Easing.cubic })
+        withTiming(initialOffset, { duration, easing: Easing.cubic })
       ),
       // highlight-end
       -1,

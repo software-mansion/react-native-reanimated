@@ -9,12 +9,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-interface AppProps {
-  width: number;
-}
-
-export default function App({ width }: AppProps) {
-  const sv = useSharedValue<number>(-width / 2 + 80);
+export default function App() {
+  const sv = useSharedValue<number>(-200);
   // highlight-next-line
   const reduceMotion = useReducedMotion();
 
@@ -24,11 +20,7 @@ export default function App({ width }: AppProps) {
   }));
 
   React.useEffect(() => {
-    sv.value = withRepeat(
-      withTiming(width / 2 - 80, { duration: 2000 }),
-      -1,
-      true
-    );
+    sv.value = withRepeat(withTiming(200, { duration: 2000 }), -1, true);
   });
 
   return (

@@ -224,12 +224,12 @@ export default function useAnimatedSensorPlayground() {
     GYROSCOPE: gyroscopeCode,
   }[sensorType];
 
+  const example = useMemo(() => <Example values={{ x, y, z }} />, [x, y, z]);
+
   return {
     code,
     controls,
-    example: Example,
-    props: { values: { x, y, z } },
-    memo: [x, y, z],
+    example,
     resetOptions,
   };
 }

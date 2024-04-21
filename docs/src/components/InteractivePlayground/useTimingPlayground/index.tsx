@@ -357,6 +357,16 @@ export default function useTimingPlayground() {
     setY2(() => preparePointTransformY(y, canvasSize));
   };
 
+  const example = (
+    <Example
+      options={{
+        duration,
+        easing: formatEasing(easing).fn,
+        reduceMotion,
+      }}
+    />
+  );
+
   const functionName = canNestEasing(easing) ? nestedEasing : easing;
   const overflowingEasings = ['back', 'bezier', 'bezierFn'];
 
@@ -386,14 +396,7 @@ export default function useTimingPlayground() {
   return {
     code,
     controls,
-    example: Example,
-    props: {
-      options: {
-        duration,
-        easing: formatEasing(easing).fn,
-        reduceMotion,
-      },
-    },
+    example,
     resetOptions,
     additionalComponents: { chart },
   };

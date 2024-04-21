@@ -13,11 +13,10 @@ import Animated, {
 const initialOffset = -200;
 
 interface Props {
-  width: number;
   options: WithTimingConfig;
 }
 
-export default function App({ width, options }: Props) {
+export default function App({ options }: Props) {
   const offset = useSharedValue(initialOffset);
   const reduceMotion = useReducedMotion();
   const shouldReduceMotion =
@@ -38,7 +37,7 @@ export default function App({ width, options }: Props) {
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: (offset.value / 400) * (width - 160) }],
+      transform: [{ translateX: offset.value }],
     };
   });
 
@@ -62,15 +61,7 @@ export default function App({ width, options }: Props) {
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.box, animatedStyles]}> </Animated.View>
-      <View
-        style={[
-          styles.box,
-          styles.ghost,
-          {
-            transform: [{ translateX: (initialOffset / 400) * (width - 160) }],
-          },
-        ]}
-      />
+      <View style={[styles.box, styles.ghost]} />
       {shouldReduceMotion && (
         <Button
           disabled={buttonDisabled}
@@ -102,5 +93,6 @@ const styles = StyleSheet.create({
   ghost: {
     opacity: 0.3,
     position: 'absolute',
+    transform: [{ translateX: initialOffset }],
   },
 });
