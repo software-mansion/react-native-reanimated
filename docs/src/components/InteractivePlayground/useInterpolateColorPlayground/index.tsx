@@ -112,25 +112,6 @@ export default function useInterpolateColorPlayground() {
     />
   );
 
-  const example = (
-    <div className={styles.example}>
-      <ColorPicker
-        color={colorLeftBoundary}
-        setColor={setColorLeftBoundary}
-        defaultValue={initialState.color.leftBoundary}
-        refreshKey={key}
-      />
-      {!isMobile && colorBox}
-      <ColorPicker
-        color={colorRightBoundary}
-        setColor={setColorRightBoundary}
-        defaultValue={initialState.color.rightBoundary}
-        refreshKey={key}
-      />
-      {isMobile && colorBox}
-    </div>
-  );
-
   const section = (
     <>
       <CollapseButton
@@ -156,7 +137,24 @@ export default function useInterpolateColorPlayground() {
   );
 
   return {
-    example,
+    example: (props: React.HTMLProps<HTMLDivElement>) => (
+      <div {...props} className={styles.example}>
+        <ColorPicker
+          color={colorLeftBoundary}
+          setColor={setColorLeftBoundary}
+          defaultValue={initialState.color.leftBoundary}
+          refreshKey={key}
+        />
+        {!isMobile && colorBox}
+        <ColorPicker
+          color={colorRightBoundary}
+          setColor={setColorRightBoundary}
+          defaultValue={initialState.color.rightBoundary}
+          refreshKey={key}
+        />
+        {isMobile && colorBox}
+      </div>
+    ),
     controls,
     code,
     resetOptions,

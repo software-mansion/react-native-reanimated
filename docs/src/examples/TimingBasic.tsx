@@ -7,8 +7,12 @@ import Animated, {
   withRepeat,
 } from 'react-native-reanimated';
 
-export default function App() {
-  const offset = useSharedValue<number>(200);
+interface AppProps {
+  width: number;
+}
+
+export default function App({ width }: AppProps) {
+  const offset = useSharedValue(width / 2 - 80);
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],

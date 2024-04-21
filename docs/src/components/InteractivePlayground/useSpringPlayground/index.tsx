@@ -182,10 +182,14 @@ export default function useSpringPlayground() {
     reduceMotion,
   };
 
-  const example = <Example options={{ ...options, ...restOptions }} />;
-
   return {
-    example,
+    example: Example,
+    props: {
+      options: {
+        ...options,
+        ...restOptions,
+      },
+    },
     controls,
     code,
     resetOptions,
