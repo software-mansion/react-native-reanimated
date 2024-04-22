@@ -1876,6 +1876,52 @@ handler = {
 var scrollHandler = useAnimatedScrollHandler(handler);"
 `;
 
+exports[`babel plugin for referenced worklets workletizes in immediate scope 1`] = `
+"var _worklet_11844349717570_init_data = {
+  code: "function style(){return{};}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var style = function () {
+  const _e = [new global.Error(), 1, -27];
+  const style = function () {
+    return {};
+  };
+  style.__closure = {};
+  style.__workletHash = 11844349717570;
+  style.__initData = _worklet_11844349717570_init_data;
+  style.__stackDetails = _e;
+  return style;
+}();
+animatedStyle = useAnimatedStyle(style);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes in nested scope 1`] = `
+"var _worklet_11844349717570_init_data = {
+  code: "function style(){return{};}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+function outerScope() {
+  var style = function () {
+    const _e = [new global.Error(), 1, -27];
+    const style = function () {
+      return {};
+    };
+    style.__closure = {};
+    style.__workletHash = 11844349717570;
+    style.__initData = _worklet_11844349717570_init_data;
+    style.__stackDetails = _e;
+    return style;
+  }();
+  function innerScope() {
+    animatedStyle = useAnimatedStyle(style);
+  }
+}"
+`;
+
 exports[`babel plugin for sequence expressions supports SequenceExpression 1`] = `
 "function App() {
   (0, fun)({

@@ -1917,5 +1917,31 @@ describe('babel plugin', () => {
       expect(code).toIncludeInWorkletString('AssignmentExpression');
       expect(code).toMatchSnapshot();
     });
+
+    it('workletizes in immediate scope', () => {
+      const input = html`<script>
+        let style = () => ({});
+        animatedStyle = useAnimatedStyle(style);
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes in nested scope', () => {
+      const input = html`<script>
+        function outerScope() {
+          let style = () => ({});
+          function innerScope() {
+            animatedStyle = useAnimatedStyle(style);
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
   });
 });
