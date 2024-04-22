@@ -1,17 +1,18 @@
 import { Component, MutableRefObject, ReactElement, useRef } from 'react';
-import type {
-  LockObject,
-  Operation,
-  SharedValueSnapshot,
-  TestCase,
-  TestConfiguration,
-  TestSuite,
-  TestSummary,
-  TestValue,
-  TrackerCallCount,
+import {
+  ComparisonMode,
+  type LockObject,
+  type Operation,
+  type SharedValueSnapshot,
+  type TestCase,
+  type TestConfiguration,
+  type TestSuite,
+  type TestSummary,
+  type TestValue,
+  type TrackerCallCount,
 } from './types';
 import { TestComponent } from './TestComponent';
-import { render, stopRecordingAnimationUpdates, unmockAnimationTimer } from './RuntimeTestsApi';
+import { getTrackerCallCount, render, stopRecordingAnimationUpdates, unmockAnimationTimer } from './RuntimeTestsApi';
 import { makeMutable, runOnUI, runOnJS, SharedValue } from 'react-native-reanimated';
 import { color, formatString, indentNestingLevel } from './stringFormatUtils';
 import { createUpdatesContainer } from './UpdatesContainer';
@@ -124,7 +125,15 @@ export class TestRunner {
     });
   }
 
-  public test(name: string, run: () => void, only = false, skip = false) {
+  public test(
+    name: string,
+    run: () => void,
+    only = false,
+    skip = false,
+    failing = false,
+    warn = false,
+    expectedWarning = '',
+  ) {
     assertTestSuite(this._currentTestSuite);
     if (only) {
       this._includesOnly = true;
@@ -137,16 +146,37 @@ export class TestRunner {
       errors: [],
       only: only,
       skip: skip,
+      failing: failing,
+      warn: warn,
+      expectedWarning,
     });
   }
 
-  public testEach<T>(examples: Array<T>, only = false, skip = false) {
+  public testEachWarn<T>(examples: Array<T>, only = false, skip = false, failing = false, warn = false) {
+    return (name: string, expectedWarning: string, testCase: (example: T) => void) => {
+      examples.forEach((example, index) => {
+        const currentTestCase = async () => {
+          await testCase(example);
+        };
+        this.test(
+          formatString(name, example, index),
+          currentTestCase,
+          only,
+          skip,
+          failing,
+          warn,
+          formatString(expectedWarning, example, index),
+        );
+      });
+    };
+  }
+  public testEach<T>(examples: Array<T>, only = false, skip = false, failing = false, warn = false) {
     return (name: string, testCase: (example: T) => void) => {
       examples.forEach((example, index) => {
         const currentTestCase = async () => {
           await testCase(example);
         };
-        this.test(formatString(name, example, index), currentTestCase, only, skip);
+        this.test(formatString(name, example, index), currentTestCase, only, skip, failing, warn);
       });
     };
   }
@@ -274,7 +304,29 @@ export class TestRunner {
       await testSuite.beforeEach();
     }
 
-    await testCase.run();
+    if (testCase.failing) {
+      await testCase.run();
+    } else if (testCase.warn) {
+      const consoleTrackerRef = 'console.warn';
+      const callTrackerCopy = this.callTracker;
+
+      const message = makeMutable('');
+
+      runOnUI(() => {
+        'worklet';
+        console.warn = (warning: string) => {
+          callTrackerCopy(consoleTrackerRef);
+          message.value = warning;
+        };
+      })();
+      await testCase.run();
+      this.expect(getTrackerCallCount(consoleTrackerRef)).toBeCalled(1);
+      if (testCase.expectedWarning) {
+        this.expect(message.value).toBe(testCase.expectedWarning, ComparisonMode.STRING);
+      }
+    } else {
+      await testCase.run();
+    }
     this.showTestCaseSummary(testCase, testSuite.nestingLevel);
 
     if (testSuite.afterEach) {

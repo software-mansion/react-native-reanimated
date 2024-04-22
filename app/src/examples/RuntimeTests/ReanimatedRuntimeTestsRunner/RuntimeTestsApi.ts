@@ -40,6 +40,20 @@ export const test = (name: string, testCase: () => void) => {
   testRunner.test(name, testCase);
 };
 
+test.failing = (name: string, testCase: () => void) => {
+  testRunner.test(name, testCase, false, false, true);
+};
+
+const warnDecorator = (name: string, expectedWarning: string, testCase: () => void) => {
+  testRunner.test(name, testCase, false, false, false, true, expectedWarning);
+};
+
+warnDecorator.each = <T>(examples: Array<T>) => {
+  return testRunner.testEachWarn(examples, false, false, false, true);
+};
+
+test.warn = warnDecorator;
+
 test.each = <T>(examples: Array<T>) => {
   return testRunner.testEach(examples);
 };

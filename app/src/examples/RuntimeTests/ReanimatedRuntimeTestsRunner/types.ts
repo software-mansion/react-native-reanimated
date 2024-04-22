@@ -32,6 +32,9 @@ export type TestCase = {
   errors: string[];
   only: boolean;
   skip: boolean;
+  failing: boolean;
+  warn: boolean;
+  expectedWarning?: string;
 };
 
 export type TestSuite = {
