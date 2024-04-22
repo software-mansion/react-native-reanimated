@@ -55,12 +55,15 @@ export default class JSReanimated {
     _eventName: string,
     _emitterReactTag: number
   ): number {
-    // noop
-    return -1;
+    throw new Error(
+      '[Reanimated] registerEventHandler is not available in JSReanimated.'
+    );
   }
 
   unregisterEventHandler(_: number): void {
-    // noop
+    throw new Error(
+      '[Reanimated] unregisterEventHandler is not available in JSReanimated.'
+    );
   }
 
   enableLayoutAnimations() {
