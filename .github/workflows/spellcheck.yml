@@ -26,8 +26,8 @@ jobs:
           use_cspell_files: false
       - name: 'If there are errors'
         run: |
-          echo "\n################### ERROR ###################"
-          echo "\n"
+          echo "################### ERROR ###################"
+          echo " "
           echo "If there are errors and you think they should not be there, add them to the cspell.json file:"
           echo ""
           echo "{"
@@ -43,7 +43,7 @@ jobs:
           echo "  ],"
           echo "  "useGitignore": true"
           echo "}"
-          echo "\n"
-          echo "################### ERROR ###################\n"
+          echo " "
+          echo "################### ERROR ###################"
         if: ${{ failure() }}
 
