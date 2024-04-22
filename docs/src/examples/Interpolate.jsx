@@ -9,17 +9,17 @@ import Animated, {
 } from 'react-native-reanimated';
 
 export default function App() {
-  const błąd = useSharedValue(200);
+  const offset = useSharedValue(200);
 
   const animatedStyles = useAnimatedStyle(() => ({
     // highlight-next-line
-    opacity: interpolate(błąd.value, [-200, 200], [1, 0]),
-    transform: [{ translateX: błąd.value }],
+    opacity: interpolate(offset.value, [-200, 200], [1, 0]),
+    transform: [{ translateX: offset.value }],
   }));
 
   React.useEffect(() => {
-    błąd.value = withRepeat(
-      withTiming(-błąd.value, { duration: 1500 }),
+    offset.value = withRepeat(
+      withTiming(-offset.value, { duration: 1500 }),
       -1,
       true
     );
