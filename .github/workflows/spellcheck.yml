@@ -27,7 +27,6 @@ jobs:
       - name: 'If there are errors'
         run: |
           echo "If there are errors and you think they should not be there, add them to the cspell.json file:"
-          echo " "
           echo "{"
           echo "  \"words\": ["
           echo "    \"worklets\","
