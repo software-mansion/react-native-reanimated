@@ -221,7 +221,7 @@ export default function App() {
     <GestureHandlerRootView style={styles.container}>
       <NavigationContainer
         linking={linking}
-        initialState={initialState}
+        // initialState={initialState}
         onStateChange={(state) =>
           AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state))
         }>

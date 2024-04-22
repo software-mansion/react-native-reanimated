@@ -5,7 +5,7 @@ GEM
       base64
       nkf
       rexml
-    activesupport (7.0.8.1)
+    activesupport (6.1.7.7)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (>= 1.6, < 2)
       minitest (>= 5.1)
@@ -102,4 +102,4 @@ RUBY VERSION
    ruby 3.2.2p53
 
 BUNDLED WITH
-   2.4.15
+   2.4.6

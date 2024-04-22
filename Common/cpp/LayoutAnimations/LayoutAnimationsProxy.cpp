@@ -79,14 +79,18 @@ void LayoutAnimationsProxy::transferConfigFromNativeTag(const int tag) {
   auto nativeID = stoi(nativeIDString);
   std::shared_ptr<Shareable> config = nullptr;
   {
-    auto lock = std::unique_lock<std::mutex>(
+    auto lock = std::unique_lock<std::recursive_mutex>(
         nativeReanimatedModule_->layoutAnimationsManager_->animationsMutex_);
     config = layoutAnimationsManager_->enteringAnimations_[nativeID];
   }
   auto s = "";
+  LayoutAnimationConfig la;
+  la.tag = tag;
+  la.type = LayoutAnimationType::ENTERING;
+  la.sharedTransitionTag = s;
+  la.config = config;
   if (config) {
-    nativeReanimatedModule_->layoutAnimationsManager_->configureAnimation(
-        tag, LayoutAnimationType::ENTERING, s, config);
+    nativeReanimatedModule_->layoutAnimationsManager_->configureAnimationBatch({la});
   }
 }
 
@@ -149,7 +153,7 @@ void LayoutAnimationsProxy::progressLayoutAnimation(
   if (!layoutAnimations_.contains(tag)){
     return;
   }
-  x.newProps = getComponentDescriptorForShadowView(*layoutAnimations_.at(tag).end).cloneProps(propsParserContext, layoutAnimations_.at(tag).end->props, *newProps);
+  x.newProps = getComponentDescriptorForShadowView(*layoutAnimations_.at(tag).end).cloneProps(propsParserContext, layoutAnimations_.at(tag).end->props, std::move(*newProps));
   props_.insert_or_assign(tag, x);
   
   LOG(INFO)<< "free lock" <<std::endl;
@@ -353,7 +357,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     MountingTransaction::Number transactionNumber,
     const TransactionTelemetry &telemetry,
     ShadowViewMutationList mutations) const {
-      LOG(INFO)<<"\n pullTransaction "<< std::this_thread::get_id()<<std::endl;
+      LOG(INFO)<<"\n pullTransaction "<< std::this_thread::get_id()<<" "<<surfaceId<<std::endl;
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   //  std::unordered_map<Tag, const RawProps*> propsMap =

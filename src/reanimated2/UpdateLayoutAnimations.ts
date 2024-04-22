@@ -29,7 +29,8 @@ function createUpdateManager() {
         animations.push(batchItem);
       }
       if (animations.length + deferredAnimations.length === 1) {
-        setImmediate(this.flush);
+        // setImmediate(this.flush);
+        this.flush();
       }
     },
     flush(this: void) {
