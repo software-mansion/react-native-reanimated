@@ -18,7 +18,7 @@ const Switch = ({
   value,
   onPress,
   style,
-  duration = 500,
+  duration = 400,
   trackColors = { on: '#82cab2', off: '#fa7f7c' },
 }) => {
   const height = useSharedValue(0);

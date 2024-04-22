@@ -14,6 +14,8 @@ import CollapsibleCode from '@site/src/components/CollapsibleCode';
 
 The following implementation of a switch relies on [animatable values](/docs/fundamentals/glossary#animatable-value). Leveraging animatable values of color and position enables smooth transition between the two states.
 
+<samp id="Switch">Switch</samp>
+
 <CollapsibleCode src={SwitchSrc} showLines={[26,52]}/>
 
 <ExampleVideo
@@ -27,7 +29,7 @@ We use the `useSharedValue` hook to store the dimensions of the element, which a
 
 <CollapsibleCode src={SwitchSrc} showLines={[23,25]}/>
 
-The values are updated during the **onLayout** event of the element.
+The values are updated during the `onLayout` event of the element.
 
 <CollapsibleCode src={SwitchSrc} showLines={[56,61]}/>
 
