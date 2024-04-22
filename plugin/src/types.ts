@@ -41,7 +41,7 @@ export type WorkletizableObject = ObjectExpression;
 export const WorkletizableObject = 'ObjectExpression';
 
 export function isWorkletizableFunctionType(
-  path: NodePath
+  path: NodePath<unknown>
 ): path is NodePath<WorkletizableFunction> {
   return (
     path.isFunctionDeclaration() ||
@@ -52,7 +52,7 @@ export function isWorkletizableFunctionType(
 }
 
 export function isWorkletizableObjectType(
-  path: NodePath
+  path: NodePath<unknown>
 ): path is NodePath<WorkletizableObject> {
   return path.isObjectExpression();
 }

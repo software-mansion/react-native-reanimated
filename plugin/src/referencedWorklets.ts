@@ -1,5 +1,5 @@
 import type { NodePath } from '@babel/core';
-import type { Identifier } from '@babel/types';
+import type { AssignmentExpression, Identifier } from '@babel/types';
 import {
   isWorkletizableFunctionType,
   isWorkletizableObjectType,
@@ -13,38 +13,61 @@ export function findReferencedWorklet(
   acceptObject: boolean
 ): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
   const workletName = maybeWorklet.node.name;
-  const workletReference = maybeWorklet.scope.bindings[workletName];
-  const isConstant = workletReference.constant;
+  const scope = maybeWorklet.scope;
+
+  const workletBinding = scope.getBinding(workletName);
+  if (!workletBinding) {
+    return undefined;
+  }
 
   if (
     acceptWorkletizableFunction &&
-    workletReference.path.isFunctionDeclaration()
+    workletBinding.path.isFunctionDeclaration()
   ) {
-    return workletReference.path;
+    return workletBinding.path;
   }
+
+  const isConstant = workletBinding.constant;
   if (isConstant) {
-    return findReferencedWorklerFromVariableDeclarator(
-      workletReference,
+    return findReferencedWorkletFromVariableDeclarator(
+      workletBinding,
       acceptWorkletizableFunction,
       acceptObject
     );
   }
   return findReferencedWorkletFromAssignmentExpression(
-    maybeWorklet,
+    workletBinding,
     acceptWorkletizableFunction,
     acceptObject
   );
 }
 
-function findReferencedWorkletFromAssignmentExpression(
-  maybeWorklet: NodePath<Identifier>,
+function findReferencedWorkletFromVariableDeclarator(
+  workletBinding: Binding,
   acceptWorkletizableFunction: boolean,
   acceptObject: boolean
 ): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
-  const workletName = maybeWorklet.node.name;
-  const workletDeclaration = maybeWorklet.scope.bindings[
-    workletName
-  ].constantViolations
+  const workletDeclaration = workletBinding.path;
+  if (!workletDeclaration.isVariableDeclarator()) {
+    return undefined;
+  }
+  const worklet = workletDeclaration.get('init');
+
+  if (acceptWorkletizableFunction && isWorkletizableFunctionType(worklet)) {
+    return worklet;
+  }
+  if (acceptObject && isWorkletizableObjectType(worklet)) {
+    return worklet;
+  }
+  return undefined;
+}
+
+function findReferencedWorkletFromAssignmentExpression(
+  workletBinding: Binding,
+  acceptWorkletizableFunction: boolean,
+  acceptObject: boolean
+): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
+  const workletDeclaration = workletBinding.constantViolations
     .reverse()
     .find(
       (constantViolation) =>
@@ -53,17 +76,14 @@ function findReferencedWorkletFromAssignmentExpression(
           isWorkletizableFunctionType(constantViolation.get('right'))) ||
           (acceptObject &&
             isWorkletizableObjectType(constantViolation.get('right'))))
-    );
+    ) as NodePath<AssignmentExpression> | undefined;
 
-  if (!workletDeclaration) {
+  if (!workletDeclaration || !workletDeclaration.isAssignmentExpression()) {
     return undefined;
   }
 
   const workletDefinition = workletDeclaration.get('right');
 
-  if (Array.isArray(workletDefinition)) {
-    return undefined;
-  }
   if (
     acceptWorkletizableFunction &&
     isWorkletizableFunctionType(workletDefinition)
@@ -72,26 +92,6 @@ function findReferencedWorkletFromAssignmentExpression(
   }
   if (acceptObject && isWorkletizableObjectType(workletDefinition)) {
     return workletDefinition;
-  }
-  return undefined;
-}
-
-function findReferencedWorklerFromVariableDeclarator(
-  workletReference: Binding,
-  acceptWorkletizableFunction: boolean,
-  acceptObject: boolean
-): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
-  const workletDeclaration = workletReference.path;
-  const worklet = workletDeclaration.get('init');
-
-  if (Array.isArray(worklet)) {
-    return;
-  }
-  if (acceptWorkletizableFunction && isWorkletizableFunctionType(worklet)) {
-    return worklet;
-  }
-  if (acceptObject && isWorkletizableObjectType(worklet)) {
-    return worklet;
   }
   return undefined;
 }

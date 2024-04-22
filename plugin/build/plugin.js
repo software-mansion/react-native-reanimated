@@ -831,46 +831,46 @@ var require_referencedWorklets = __commonJS({
     var types_12 = require_types();
     function findReferencedWorklet(maybeWorklet, acceptWorkletizableFunction, acceptObject) {
       const workletName = maybeWorklet.node.name;
-      const workletReference = maybeWorklet.scope.bindings[workletName];
-      const isConstant = workletReference.constant;
-      if (acceptWorkletizableFunction && workletReference.path.isFunctionDeclaration()) {
-        return workletReference.path;
+      const scope = maybeWorklet.scope;
+      const workletBinding = scope.getBinding(workletName);
+      if (!workletBinding) {
+        return void 0;
       }
+      if (acceptWorkletizableFunction && workletBinding.path.isFunctionDeclaration()) {
+        return workletBinding.path;
+      }
+      const isConstant = workletBinding.constant;
       if (isConstant) {
-        return findReferencedWorklerFromVariableDeclarator(workletReference, acceptWorkletizableFunction, acceptObject);
+        return findReferencedWorkletFromVariableDeclarator(workletBinding, acceptWorkletizableFunction, acceptObject);
       }
-      return findReferencedWorkletFromAssignmentExpression(maybeWorklet, acceptWorkletizableFunction, acceptObject);
+      return findReferencedWorkletFromAssignmentExpression(workletBinding, acceptWorkletizableFunction, acceptObject);
     }
     exports2.findReferencedWorklet = findReferencedWorklet;
-    function findReferencedWorkletFromAssignmentExpression(maybeWorklet, acceptWorkletizableFunction, acceptObject) {
-      const workletName = maybeWorklet.node.name;
-      const workletDeclaration = maybeWorklet.scope.bindings[workletName].constantViolations.reverse().find((constantViolation) => constantViolation.isAssignmentExpression() && (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionType)(constantViolation.get("right")) || acceptObject && (0, types_12.isWorkletizableObjectType)(constantViolation.get("right"))));
-      if (!workletDeclaration) {
+    function findReferencedWorkletFromVariableDeclarator(workletBinding, acceptWorkletizableFunction, acceptObject) {
+      const workletDeclaration = workletBinding.path;
+      if (!workletDeclaration.isVariableDeclarator()) {
         return void 0;
       }
-      const workletDefinition = workletDeclaration.get("right");
-      if (Array.isArray(workletDefinition)) {
-        return void 0;
-      }
-      if (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionType)(workletDefinition)) {
-        return workletDefinition;
-      }
-      if (acceptObject && (0, types_12.isWorkletizableObjectType)(workletDefinition)) {
-        return workletDefinition;
-      }
-      return void 0;
-    }
-    function findReferencedWorklerFromVariableDeclarator(workletReference, acceptWorkletizableFunction, acceptObject) {
-      const workletDeclaration = workletReference.path;
       const worklet = workletDeclaration.get("init");
-      if (Array.isArray(worklet)) {
-        return;
-      }
       if (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionType)(worklet)) {
         return worklet;
       }
       if (acceptObject && (0, types_12.isWorkletizableObjectType)(worklet)) {
         return worklet;
+      }
+      return void 0;
+    }
+    function findReferencedWorkletFromAssignmentExpression(workletBinding, acceptWorkletizableFunction, acceptObject) {
+      const workletDeclaration = workletBinding.constantViolations.reverse().find((constantViolation) => constantViolation.isAssignmentExpression() && (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionType)(constantViolation.get("right")) || acceptObject && (0, types_12.isWorkletizableObjectType)(constantViolation.get("right"))));
+      if (!workletDeclaration || !workletDeclaration.isAssignmentExpression()) {
+        return void 0;
+      }
+      const workletDefinition = workletDeclaration.get("right");
+      if (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionType)(workletDefinition)) {
+        return workletDefinition;
+      }
+      if (acceptObject && (0, types_12.isWorkletizableObjectType)(workletDefinition)) {
+        return workletDefinition;
       }
       return void 0;
     }
