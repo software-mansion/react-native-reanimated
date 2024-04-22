@@ -24,3 +24,26 @@ jobs:
           inline: warning
           strict: true
           use_cspell_files: false
+      - name: 'If there are errors'
+        run: |
+          echo "################### ERROR ###################"
+          echo ""
+          echo "If there are errors and you think they should not be there, add them to the cspell.json file:"
+          echo ""
+          echo "{"
+          echo "  \"language\": \"en\","
+          echo "  \"words\": ["
+          echo "    \"worklets\","
+          echo "    \"worklet\","
+          echo "    ... // add your words here"
+          echo "  ],"
+          echo "  \"ignorePaths\": ["
+          echo "    \"node_modules\","
+          echo "    \"docs/src/components/Testimonials\""
+          echo "  ],"
+          echo "  "useGitignore": true"
+          echo "}"
+          echo ""
+          echo "################### ERROR ###################"
+        if: ${{ failure() }}
+
