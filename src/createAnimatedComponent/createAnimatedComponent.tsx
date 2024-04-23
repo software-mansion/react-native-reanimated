@@ -145,11 +145,6 @@ export function createAnimatedComponent(
       }
       const entering = this.props.entering;
       if (entering) {
-        // configureLayoutAnimations(
-        //   this.nativeID,
-        //   LayoutAnimationType.ENTERING,
-        //   maybeBuild(entering, this.props?.style, AnimatedComponent.displayName)
-        // );
         updateLayoutAnimations(
           this.nativeID,
           LayoutAnimationType.ENTERING,
@@ -164,16 +159,6 @@ export function createAnimatedComponent(
       this._jsPropsUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
-
-      // const entering = this.props.entering;
-
-      // if (entering) {
-      //   updateLayoutAnimations(
-      //     this._viewTag,
-      //     LayoutAnimationType.ENTERING,
-      //     maybeBuild(entering, this.props?.style, AnimatedComponent.displayName)
-      //   );
-      // }
 
       const layout = this.props.layout;
       if (layout) {
@@ -566,19 +551,6 @@ export function createAnimatedComponent(
           if (sharedTransitionTag) {
             this._configureSharedTransition();
           }
-          // console.log(tag);
-          // const skipEntering = this.context?.current;
-          // if (entering && !skipEntering) {
-          //   updateLayoutAnimations(
-          //     tag as number,
-          //     LayoutAnimationType.ENTERING,
-          //     maybeBuild(
-          //       entering,
-          //       this.props?.style,
-          //       AnimatedComponent.displayName
-          //     )
-          //   );
-          // }
           if (sharedTransitionTag && !IS_WEB) {
             const sharedElementTransition =
               this.props.sharedTransitionStyle ?? new SharedTransition();
@@ -594,7 +566,6 @@ export function createAnimatedComponent(
             }
           }
           if (exiting) {
-            // console.log(tag);
             const reduceMotionInExiting =
               'getReduceMotion' in exiting &&
               typeof exiting.getReduceMotion === 'function'

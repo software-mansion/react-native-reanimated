@@ -850,7 +850,7 @@ void NativeReanimatedModule::initializeFabric(
         });
 
     commitHook_ = std::make_shared<ReanimatedCommitHook>(
-        propsRegistry_, uiManager_, layoutAnimationsProxy_);
+        propsRegistry_, uiManager_);
 #if REACT_NATIVE_MINOR_VERSION >= 73
   mountHook_ =
       std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);

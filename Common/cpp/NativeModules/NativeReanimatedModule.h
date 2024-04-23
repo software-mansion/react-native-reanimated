@@ -20,6 +20,7 @@
 #include "UIScheduler.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
+#include "LayoutAnimationsProxy.h"
 #include "PropsRegistry.h"
 #include "ReanimatedCommitHook.h"
 #if REACT_NATIVE_MINOR_VERSION >= 73
@@ -185,7 +186,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
-public:
+ public:
   const bool isBridgeless_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;

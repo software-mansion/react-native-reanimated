@@ -12,9 +12,8 @@ namespace reanimated {
 
 ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<PropsRegistry> &propsRegistry,
-    const std::shared_ptr<UIManager> &uiManager,
-    std::shared_ptr<LayoutAnimationsProxy> lap)
-    : propsRegistry_(propsRegistry), uiManager_(uiManager), lap_(lap) {
+    const std::shared_ptr<UIManager> &uiManager)
+    : propsRegistry_(propsRegistry), uiManager_(uiManager) {
   uiManager_->registerCommitHook(*this);
 }
 
@@ -22,51 +21,23 @@ ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
   uiManager_->unregisterCommitHook(*this);
 }
 
-ShadowNode::Shared findChild(ShadowNode::Shared root, Tag tag){
-  if (root->getTag() == tag){
-    return root;
-  }
-  for (ShadowNode::Shared child: root->getChildren()){
-    auto res = findChild(child, tag);
-    if (res != nullptr){
-      return res;
-    }
-  }
-  return nullptr;
-}
-
-ShadowNode::Shared findParent(ShadowNode::Shared root, Tag tag){
-  if (root->getTag() == tag){
-    return nullptr;
-  }
-  for (ShadowNode::Shared child: root->getChildren()){
-    if (child->getTag() == tag){
-      return root;
-    }
-    auto res = findParent(child, tag);
-    if (res != nullptr){
-      return res;
-    }
-  }
-  return nullptr;
-}
-
 RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &,
-    RootShadowNode::Shared const &oldRootShadowNode,
+    RootShadowNode::Shared const &,
 #if REACT_NATIVE_MINOR_VERSION >= 73
     RootShadowNode::Unshared const &newRootShadowNode) noexcept {
 #else
     RootShadowNode::Unshared const &newRootShadowNode) const noexcept {
 #endif
-  auto rootNode = newRootShadowNode->ShadowNode::clone(ShadowNodeFragment{});
   if (ReanimatedCommitMarker::isReanimatedCommit()) {
     // ShadowTree commited by Reanimated, no need to apply updates from
     // PropsRegistry
-    return std::static_pointer_cast<RootShadowNode>(rootNode);
+    return newRootShadowNode;
   }
 
   // ShadowTree not commited by Reanimated, apply updates from PropsRegistry
+
+  auto rootNode = newRootShadowNode->ShadowNode::clone(ShadowNodeFragment{});
 
   {
     auto lock = propsRegistry_->createLock();

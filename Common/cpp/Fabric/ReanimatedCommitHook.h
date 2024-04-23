@@ -6,8 +6,6 @@
 #include <memory>
 
 #include "PropsRegistry.h"
-#include <react/renderer/mounting/ShadowView.h>
-#include "LayoutAnimationsProxy.h"
 
 using namespace facebook::react;
 
@@ -17,8 +15,7 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
  public:
   ReanimatedCommitHook(
       const std::shared_ptr<PropsRegistry> &propsRegistry,
-      const std::shared_ptr<UIManager> &uiManager,
-      std::shared_ptr<LayoutAnimationsProxy> lap);
+      const std::shared_ptr<UIManager> &uiManager);
 
   ~ReanimatedCommitHook() noexcept override;
 
@@ -47,8 +44,6 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
   std::shared_ptr<PropsRegistry> propsRegistry_;
 
   std::shared_ptr<UIManager> uiManager_;
-  
-  std::shared_ptr<LayoutAnimationsProxy> lap_;
 };
 
 } // namespace reanimated

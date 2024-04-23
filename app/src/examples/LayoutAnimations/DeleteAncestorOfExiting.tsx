@@ -1,8 +1,4 @@
-import Animated, {
-  PinwheelIn,
-  PinwheelOut,
-  SlideOutRight,
-} from 'react-native-reanimated';
+import Animated, { PinwheelOut } from 'react-native-reanimated';
 import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
@@ -23,19 +19,12 @@ export default function DeleteAncestorOfExiting() {
       <Button onPress={() => setInner(!inner)} title="Toggle Inner" />
       {outer && (
         <View style={styles.outerBox}>
-          <Animated.View
-            style={styles.box}
-            exiting={PinwheelOut.duration(2000)}
-          />
+          <Animated.View style={styles.box} exiting={PinwheelOut} />
           {inner && (
             <Animated.View
               style={styles.box}
-              entering={PinwheelIn.duration(5000)}
-              exiting={SlideOutRight.duration(5000)}>
-              <View style={styles.innerBox}>
-                <View style={styles.box2} />
-              </View>
-            </Animated.View>
+              exiting={PinwheelOut.duration(5000)}
+            />
           )}
         </View>
       )}
@@ -61,15 +50,5 @@ const styles = StyleSheet.create({
     height: 100,
     marginLeft: 20,
     backgroundColor: 'red',
-  },
-  innerBox: {
-    width: 80,
-    height: 80,
-    backgroundColor: 'green',
-  },
-  box2: {
-    width: 40,
-    height: 40,
-    backgroundColor: 'yellow',
   },
 });
