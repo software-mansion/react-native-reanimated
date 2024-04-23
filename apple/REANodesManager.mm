@@ -109,7 +109,7 @@ using namespace facebook::react;
 
 - (void)dealloc
 {
-  RCTAssert(_mounting == nil, @"Mouting block was set but never executed. This may lead to UI inconsistencies");
+  RCTAssert(_mounting == nil, @"Mounting block was set but never executed. This may lead to UI inconsistencies");
 }
 
 - (void)unblockUIThread
