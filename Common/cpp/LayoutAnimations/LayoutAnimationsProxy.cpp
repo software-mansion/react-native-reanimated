@@ -116,28 +116,20 @@ void LayoutAnimationsProxy::progressLayoutAnimation(
   auto rawProps = std::make_shared<RawProps>(
       nativeReanimatedModule_->getUIRuntime(),
       jsi::Value(nativeReanimatedModule_->getUIRuntime(), newStyle));
-  LayoutMetrics lm;
+  Frame frame;
 
-  lm.frame.origin.x =
-      newStyle.hasProperty(nativeReanimatedModule_->getUIRuntime(), "originX")
-      ? newStyle.getProperty(nativeReanimatedModule_->getUIRuntime(), "originX")
-            .asNumber()
-      : -1;
-  lm.frame.origin.y =
-      newStyle.hasProperty(nativeReanimatedModule_->getUIRuntime(), "originY")
-      ? newStyle.getProperty(nativeReanimatedModule_->getUIRuntime(), "originY")
-            .asNumber()
-      : -1;
-  lm.frame.size.width =
-      newStyle.hasProperty(nativeReanimatedModule_->getUIRuntime(), "width")
-      ? newStyle.getProperty(nativeReanimatedModule_->getUIRuntime(), "width")
-            .asNumber()
-      : -1;
-  lm.frame.size.height =
-      newStyle.hasProperty(nativeReanimatedModule_->getUIRuntime(), "height")
-      ? newStyle.getProperty(nativeReanimatedModule_->getUIRuntime(), "height")
-            .asNumber()
-      : -1;
+  if (newStyle.hasProperty(nativeReanimatedModule_->getUIRuntime(), "originX")){
+    frame.x = newStyle.getProperty(nativeReanimatedModule_->getUIRuntime(), "originX").asNumber();
+  }
+  if (newStyle.hasProperty(nativeReanimatedModule_->getUIRuntime(), "originY")){
+    frame.y = newStyle.getProperty(nativeReanimatedModule_->getUIRuntime(), "originY").asNumber();
+  }
+  if (newStyle.hasProperty(nativeReanimatedModule_->getUIRuntime(), "width")){
+    frame.width = newStyle.getProperty(nativeReanimatedModule_->getUIRuntime(), "width").asNumber();
+  }
+  if (newStyle.hasProperty(nativeReanimatedModule_->getUIRuntime(), "height")){
+    frame.height = newStyle.getProperty(nativeReanimatedModule_->getUIRuntime(), "height").asNumber();
+  }
 
   //TODO: investigate
   if (!layoutAnimations_.contains(tag)){
@@ -145,8 +137,8 @@ void LayoutAnimationsProxy::progressLayoutAnimation(
   }
   PropsParserContext propsParserContext{layoutAnimations_.at(tag).end->surfaceId, *contextContainer_};
   auto newProps = getComponentDescriptorForShadowView(*layoutAnimations_.at(tag).end).cloneProps(propsParserContext, layoutAnimations_.at(tag).end->props, std::move(*rawProps));
-  auto& props = surfaceManager.getProps(layoutAnimations_.at(tag).end->surfaceId);
-  props.insert_or_assign(tag, UpdateValues{newProps, lm});
+  auto& updateMap = surfaceManager.getUpdateMap(layoutAnimations_.at(tag).end->surfaceId);
+  updateMap.insert_or_assign(tag, UpdateValues{newProps, frame});
   
   LOG(INFO)<< "free lock" <<std::endl;
 }
@@ -169,9 +161,9 @@ void LayoutAnimationsProxy::endLayoutAnimation(int tag, bool shouldRemove) {
       }
     }
   }
-  auto& props = surfaceManager.getProps(layoutAnimations_.at(tag).end->surfaceId);
+  auto& updateMap = surfaceManager.getUpdateMap(layoutAnimations_.at(tag).end->surfaceId);
   layoutAnimations_.erase(tag);
-  props.erase(tag);
+  updateMap.erase(tag);
   
   LOG(INFO)<< "free lock" <<std::endl;
 }
@@ -230,8 +222,8 @@ LayoutAnimationsProxy::getComponentDescriptorForShadowView(
 void LayoutAnimationsProxy::addOngoingAnimations(
     SurfaceId surfaceId,
     ShadowViewMutationList &mutations) const {
-    auto& props = surfaceManager.getProps(surfaceId);
-  for (auto &[tag, x] : props) {
+    auto& updateMap = surfaceManager.getUpdateMap(surfaceId);
+  for (auto &[tag, updateValues] : updateMap) {
     if (!layoutAnimations_.contains(tag)) {
       continue;
     }
@@ -240,19 +232,19 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     auto &finalView = la.end;
     auto parent = la.parent;
     auto newView = std::make_shared<ShadowView>(*finalView);
-    newView->props = x.newProps;
-    auto f = x.layoutMetrics.frame;
-    if (f.size.width != -1) {
-      newView->layoutMetrics.frame.size.width = f.size.width;
+    newView->props = updateValues.newProps;
+    auto frame = updateValues.frame;
+    if (frame.width) {
+      newView->layoutMetrics.frame.size.width = *frame.width;
     }
-    if (f.size.height != -1) {
-      newView->layoutMetrics.frame.size.height = f.size.height;
+    if (frame.height) {
+      newView->layoutMetrics.frame.size.height = *frame.height;
     }
-    if (f.origin.x != -1) {
-      newView->layoutMetrics.frame.origin.x = f.origin.x;
+    if (frame.x) {
+      newView->layoutMetrics.frame.origin.x = *frame.x;
     }
-    if (f.origin.y != -1) {
-      newView->layoutMetrics.frame.origin.y = f.origin.y;
+    if (frame.y) {
+      newView->layoutMetrics.frame.origin.y = *frame.y;
     }
 
     if (!la.initialMutations.empty()) {
@@ -267,7 +259,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     }
     la.current = newView;
   }
-  props.clear();
+  updateMap.clear();
   mutations.insert(
       mutations.end(), cleanupMutations.begin(), cleanupMutations.end());
   cleanupMutations.clear();

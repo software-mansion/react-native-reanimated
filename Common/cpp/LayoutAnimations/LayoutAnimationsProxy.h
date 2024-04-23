@@ -16,6 +16,15 @@ struct Window{
   double width, height;
 };
 
+struct Frame{
+  std::optional<double> x, y, width, height;
+};
+
+struct UpdateValues{
+  Props::Shared newProps;
+  Frame frame;
+};
+
 struct Snapshot{
   double x, y, width, height, windowWidth, windowHeight;
   Snapshot(ShadowView& shadowView, Window window){
@@ -27,11 +36,6 @@ struct Snapshot{
     windowWidth = window.width;
     windowHeight = window.height;
   }
-};
-
-struct UpdateValues{
-  Props::Shared newProps;
-  LayoutMetrics layoutMetrics;
 };
 
 struct RootNode;
@@ -112,7 +116,7 @@ struct LayoutAnimation {
 struct SurfaceManager {
   mutable std::unordered_map<SurfaceId, std::shared_ptr<std::unordered_map<Tag, UpdateValues>>> props_;
   mutable std::unordered_map<SurfaceId, Window> windows_;
-  std::unordered_map<Tag, UpdateValues>& getProps(SurfaceId surfaceId){
+  std::unordered_map<Tag, UpdateValues>& getUpdateMap(SurfaceId surfaceId){
     auto props = props_.find(surfaceId);
     if (props != props_.end()){
       return *props->second;
