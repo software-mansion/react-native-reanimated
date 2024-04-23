@@ -26,7 +26,26 @@ export function color(value: TestValue, color: 'yellow' | 'cyan' | 'green' | 're
     orange: '\x1b[38;5;208m',
   };
 
-  return `${COLOR_CODES[color]}${value}\x1b[0m`;
+  return `${COLOR_CODES[color]}${value}`;
+}
+
+export function applyMarkdown(template: string) {
+  const ANSI_CODES = {
+    bold: '\x1b[1m',
+    resetBold: '\x1b[22m',
+    italic: '\x1b[3m',
+    resetItalic: '\x1b[23m',
+    reverse: '\x1b[7m',
+    resetReverse: '\x1b[27m',
+    underline: '\x1b[4m',
+    resetUnderline: '\x1b[24m',
+  };
+  template = template.replace(/\*{3}(.+?)\*{3}(?!\*)/g, `${ANSI_CODES.reverse} $1 ${ANSI_CODES.resetReverse}`);
+  template = template.replace(/\*{2}(.+?)\*{2}(?!\*)/g, `${ANSI_CODES.bold}$1${ANSI_CODES.resetBold}`);
+  template = template.replace(/\*{1}(.+?)\*{1}(?!\*)/g, `${ANSI_CODES.italic}$1${ANSI_CODES.resetItalic}`);
+  template = template.replace(/_(.+?)_(?!_)/g, `${ANSI_CODES.underline}$1${ANSI_CODES.resetUnderline}`);
+
+  return template;
 }
 
 export function formatString(template: string, variableObject: unknown, index: number) {

@@ -40,8 +40,12 @@ export const test = (name: string, testCase: () => void) => {
   testRunner.test(name, testCase);
 };
 
-test.failing = (name: string, testCase: () => void) => {
-  testRunner.test(name, testCase, false, false, true);
+const failingDecorator = (name: string, expectedWarning: string, testCase: () => void) => {
+  testRunner.test(name, testCase, false, false, true, false, expectedWarning);
+};
+
+failingDecorator.each = <T>(examples: Array<T>) => {
+  return testRunner.testEachErrorMsg(examples, false, false, true, false);
 };
 
 const warnDecorator = (name: string, expectedWarning: string, testCase: () => void) => {
@@ -49,10 +53,12 @@ const warnDecorator = (name: string, expectedWarning: string, testCase: () => vo
 };
 
 warnDecorator.each = <T>(examples: Array<T>) => {
-  return testRunner.testEachWarn(examples, false, false, false, true);
+  return testRunner.testEachErrorMsg(examples, false, false, false, true);
 };
 
 test.warn = warnDecorator;
+
+test.failing = failingDecorator;
 
 test.each = <T>(examples: Array<T>) => {
   return testRunner.testEach(examples);

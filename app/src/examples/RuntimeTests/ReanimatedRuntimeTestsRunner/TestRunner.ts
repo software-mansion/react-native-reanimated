@@ -14,7 +14,7 @@ import {
 import { TestComponent } from './TestComponent';
 import { getTrackerCallCount, render, stopRecordingAnimationUpdates, unmockAnimationTimer } from './RuntimeTestsApi';
 import { makeMutable, runOnUI, runOnJS, SharedValue } from 'react-native-reanimated';
-import { color, formatString, indentNestingLevel } from './stringFormatUtils';
+import { applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
 import { createUpdatesContainer } from './UpdatesContainer';
 import { Matchers } from './Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
@@ -86,7 +86,11 @@ export class TestRunner {
     }
     this._wasRenderedNull = !component;
     this._renderLock.lock = true;
-    this._renderHook(component);
+    try {
+      this._renderHook(component);
+    } catch (e) {
+      console.log(e);
+    }
     return this.waitForPropertyValueChange(this._renderLock, 'lock');
   }
 
@@ -116,7 +120,7 @@ export class TestRunner {
     }
 
     this._testSuites.splice(index, 0, {
-      name,
+      name: applyMarkdown(name),
       buildSuite,
       testCases: [],
       nestingLevel: (this._currentTestSuite?.nestingLevel || 0) + 1,
@@ -139,7 +143,7 @@ export class TestRunner {
       this._includesOnly = true;
     }
     this._currentTestSuite.testCases.push({
-      name,
+      name: applyMarkdown(name),
       run,
       componentsRefs: {},
       callsRegistry: {},
@@ -152,7 +156,7 @@ export class TestRunner {
     });
   }
 
-  public testEachWarn<T>(examples: Array<T>, only = false, skip = false, failing = false, warn = false) {
+  public testEachErrorMsg<T>(examples: Array<T>, only = false, skip = false, failing = false, warn = false) {
     return (name: string, expectedWarning: string, testCase: (example: T) => void) => {
       examples.forEach((example, index) => {
         const currentTestCase = async () => {
@@ -304,22 +308,31 @@ export class TestRunner {
       await testSuite.beforeEach();
     }
 
-    if (testCase.failing) {
-      await testCase.run();
-    } else if (testCase.warn) {
-      const consoleTrackerRef = 'console.warn';
-      const callTrackerCopy = this.callTracker;
-
+    if (testCase.failing || testCase.warn) {
+      const consoleTrackerRef = testCase.failing ? 'console.error' : 'console.warn';
       const message = makeMutable('');
+
+      const newConsoleFuncJS = (warning: string) => {
+        this.callTracker(consoleTrackerRef);
+        message.value = warning.split('\n\nThis error is located at:')[0];
+      };
+      console.error = newConsoleFuncJS;
+      console.warn = newConsoleFuncJS;
+
+      const callTrackerCopy = this.callTracker;
 
       runOnUI(() => {
         'worklet';
-        console.warn = (warning: string) => {
+        const newConsoleFuncUI = (warning: string) => {
           callTrackerCopy(consoleTrackerRef);
-          message.value = warning;
+          message.value = warning.split('\n\nThis error is located at:')[0];
         };
+        console.error = newConsoleFuncUI;
+        console.warn = newConsoleFuncUI;
       })();
+
       await testCase.run();
+
       this.expect(getTrackerCallCount(consoleTrackerRef)).toBeCalled(1);
       if (testCase.expectedWarning) {
         this.expect(message.value).toBe(testCase.expectedWarning, ComparisonMode.STRING);
@@ -327,6 +340,7 @@ export class TestRunner {
     } else {
       await testCase.run();
     }
+
     this.showTestCaseSummary(testCase, testSuite.nestingLevel);
 
     if (testSuite.afterEach) {
