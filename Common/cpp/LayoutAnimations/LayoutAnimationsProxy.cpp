@@ -15,22 +15,22 @@ void LayoutAnimationsProxy::progressLayoutAnimation(
     return;
   }
   auto& runtime = nativeReanimatedModule_->getUIRuntime();
+  auto layoutAnimationIt = layoutAnimations_.find(tag);
   
-  // opacity was set to 0 on insert, so we restore it here (hopefully there will be a better place to do it)
-  // TODO: restore the original opacity instead of 1
-  if (!newStyle.hasProperty(runtime, "opacity")){
-    newStyle.setProperty(runtime, "opacity", jsi::Value(1));
-  }
-  auto rawProps = std::make_shared<RawProps>(runtime, jsi::Value(runtime, newStyle));
-
   //TODO: investigate
-  if (!layoutAnimations_.contains(tag)){
+  if (layoutAnimationIt == layoutAnimations_.end()){
     return;
   }
+  auto& layoutAnimation = layoutAnimationIt->second;
   
-  PropsParserContext propsParserContext{layoutAnimations_.at(tag).end->surfaceId, *contextContainer_};
-  auto newProps = getComponentDescriptorForShadowView(*layoutAnimations_.at(tag).end).cloneProps(propsParserContext, layoutAnimations_.at(tag).end->props, std::move(*rawProps));
-  auto& updateMap = surfaceManager.getUpdateMap(layoutAnimations_.at(tag).end->surfaceId);
+  if (layoutAnimation.opacity && !newStyle.hasProperty(runtime, "opacity")){
+    newStyle.setProperty(runtime, "opacity", jsi::Value(*layoutAnimation.opacity));
+  }
+  auto rawProps = std::make_shared<RawProps>(runtime, jsi::Value(runtime, newStyle));
+  
+  PropsParserContext propsParserContext{layoutAnimation.end->surfaceId, *contextContainer_};
+  auto newProps = getComponentDescriptorForShadowView(*layoutAnimation.end).cloneProps(propsParserContext, layoutAnimations_.at(tag).end->props, std::move(*rawProps));
+  auto& updateMap = surfaceManager.getUpdateMap(layoutAnimation.end->surfaceId);
   updateMap.insert_or_assign(tag, UpdateValues{newProps, Frame(runtime, newStyle)});
   
   LOG(INFO)<< "free lock" <<std::endl;
@@ -221,8 +221,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
         : mutation.oldChildShadowView.tag;
     
     switch (mutation.type) {
-        // INSERT (w/o REMOVE) -- animate entering | override mutation - opacity
-        // 0
       case ShadowViewMutation::Type::Create:{
         filteredMutations.push_back(mutation);
         break;
@@ -239,11 +237,13 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
         
         auto finalView = std::make_shared<ShadowView>(mutation.newChildShadowView);
         auto current = std::make_shared<ShadowView>(mutation.oldChildShadowView);
+        auto& viewProps = static_cast<const ViewProps&>(*mutation.newChildShadowView.props);
         LayoutAnimation la{
           finalView,
           current,
           mutation.oldChildShadowView,
-          mutation.parentShadowView
+          mutation.parentShadowView,
+          viewProps.opacity
         };
         layoutAnimations_.insert_or_assign(tag, la);
         filteredMutations.push_back(mutation);

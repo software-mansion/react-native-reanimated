@@ -118,6 +118,7 @@ struct RootNode{
 struct LayoutAnimation {
   std::shared_ptr<ShadowView> end, current;
   ShadowView start, parent;
+  std::optional<double> opacity;
   LayoutAnimation& operator=(const LayoutAnimation& other){
     this->end = other.end;
     return *this;
