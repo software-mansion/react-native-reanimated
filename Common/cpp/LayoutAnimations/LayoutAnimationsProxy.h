@@ -18,14 +18,20 @@ struct X{
   LayoutMetrics layoutMetrics;
 };
 
+struct Window{
+  double windowWidth, windowHeight;
+};
+
 struct Values{
-  float width, x, y, height;
-  Values(ShadowView& shadowView){
+  double width, x, y, height, windowWidth, windowHeight;
+  Values(ShadowView& shadowView, Window window){
     auto& frame = shadowView.layoutMetrics.frame;
     x = frame.origin.x;
     y = frame.origin.y;
     width = frame.size.width;
     height = frame.size.height;
+    windowWidth = window.windowWidth;
+    windowHeight = window.windowHeight;
   }
 };
 
@@ -106,6 +112,7 @@ struct LayoutAnimation {
 
 struct SurfaceManager {
   mutable std::unordered_map<SurfaceId, std::shared_ptr<std::unordered_map<Tag, X>>> props_;
+  mutable std::unordered_map<SurfaceId, Window> windows_;
   std::unordered_map<Tag, X>& getProps(SurfaceId surfaceId){
     auto props = props_.find(surfaceId);
     if (props != props_.end()){
@@ -116,10 +123,19 @@ struct SurfaceManager {
     props_.insert_or_assign(surfaceId, newProps);
     return *newProps;
   }
+  void updateWindow(SurfaceId surfaceId, double windowWidth, double windowHeight){
+    windows_.insert_or_assign(surfaceId, Window{windowWidth, windowHeight});
+  }
+  Window getWindow(SurfaceId surfaceId){
+    auto windowIt = windows_.find(surfaceId);
+    if (windowIt != windows_.end()){
+      return windowIt->second;
+    }
+    return Window{0,0};
+  }
 };
 
 struct LayoutAnimationsProxy : public MountingOverrideDelegate{
-  mutable double windowWidth, windowHeight;
   mutable std::unordered_map<Tag, std::shared_ptr<RootNode>> rootNodeForTag;
   mutable std::unordered_map<Tag, std::shared_ptr<MutationNode>> nodeForTag;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;

@@ -566,7 +566,7 @@ export function createAnimatedComponent(
           if (sharedTransitionTag) {
             this._configureSharedTransition();
           }
-          console.log(tag);
+          // console.log(tag);
           // const skipEntering = this.context?.current;
           // if (entering && !skipEntering) {
           //   updateLayoutAnimations(

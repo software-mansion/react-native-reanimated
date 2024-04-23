@@ -17,8 +17,8 @@ void LayoutAnimationsProxy::startEnteringAnimation(
         yogaValues.setProperty(rt, "targetOriginY", values.y);
         yogaValues.setProperty(rt, "targetWidth", values.width);
         yogaValues.setProperty(rt, "targetHeight", values.height);
-        yogaValues.setProperty(rt, "windowWidth", windowWidth);
-        yogaValues.setProperty(rt, "windowHeight", windowHeight);
+        yogaValues.setProperty(rt, "windowWidth", values.windowWidth);
+        yogaValues.setProperty(rt, "windowHeight", values.windowHeight);
         nativeReanimatedModule_->layoutAnimationsManager().startLayoutAnimation(
             rt, tag, LayoutAnimationType::ENTERING, yogaValues);
       });
@@ -36,8 +36,8 @@ void LayoutAnimationsProxy::startExitingAnimation(
         yogaValues.setProperty(rt, "currentOriginY", values.y);
         yogaValues.setProperty(rt, "currentWidth", values.width);
         yogaValues.setProperty(rt, "currentHeight", values.height);
-        yogaValues.setProperty(rt, "windowWidth", windowWidth);
-        yogaValues.setProperty(rt, "windowHeight", windowHeight);
+        yogaValues.setProperty(rt, "windowWidth", values.windowWidth);
+        yogaValues.setProperty(rt, "windowHeight", values.windowHeight);
         nativeReanimatedModule_->layoutAnimationsManager().startLayoutAnimation(
             rt, tag, LayoutAnimationType::EXITING, yogaValues);
           layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
@@ -61,8 +61,8 @@ void LayoutAnimationsProxy::startLayoutLayoutAnimation(
         yogaValues.setProperty(rt, "targetOriginY", targetValues.y);
         yogaValues.setProperty(rt, "targetWidth", targetValues.width);
         yogaValues.setProperty(rt, "targetHeight", targetValues.height);
-        yogaValues.setProperty(rt, "windowWidth", windowWidth);
-        yogaValues.setProperty(rt, "windowHeight", windowHeight);
+        yogaValues.setProperty(rt, "windowWidth", targetValues.windowWidth);
+        yogaValues.setProperty(rt, "windowHeight", targetValues.windowHeight);
         nativeReanimatedModule_->layoutAnimationsManager().startLayoutAnimation(
             rt, tag, LayoutAnimationType::LAYOUT, yogaValues);
       });
@@ -437,9 +437,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
   // loop
   for (auto &mutation : mutations) {
-    if (mutation.parentShadowView.tag == 1){
-      windowWidth = mutation.parentShadowView.layoutMetrics.frame.size.width;
-      windowHeight = mutation.parentShadowView.layoutMetrics.frame.size.height;
+    if (mutation.parentShadowView.tag == surfaceId){
+      surfaceManager.updateWindow(surfaceId, mutation.parentShadowView.layoutMetrics.frame.size.width, mutation.parentShadowView.layoutMetrics.frame.size.height);
     }
     
     switch (mutation.type) {
@@ -481,7 +480,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
         filteredMutations.push_back(mutation);
         startEnteringAnimation(
             mutation.newChildShadowView.tag,
-            Values(mutation.newChildShadowView));
+            Values(mutation.newChildShadowView, surfaceManager.getWindow(surfaceId)));
         
         // temporarily set opacity to 0 to prevent flickering on android
         auto newView = std::make_shared<ShadowView>(*finalView);
@@ -512,8 +511,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
         layoutAnimations_.insert_or_assign(mutation.newChildShadowView.tag, la);
         startLayoutLayoutAnimation(
             mutation.newChildShadowView.tag,
-            Values(oldChild),
-            Values(mutation.newChildShadowView));
+            Values(oldChild, surfaceManager.getWindow(surfaceId)),
+            Values(mutation.newChildShadowView, surfaceManager.getWindow(surfaceId)));
         break;
       }
 
@@ -643,7 +642,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(std::shared_ptr<MutationN
         {},
         {}};
     layoutAnimations_.insert_or_assign(mutation.oldChildShadowView.tag, la);
-    startExitingAnimation(node->tag, Values(node->mutation.oldChildShadowView));
+    startExitingAnimation(node->tag, Values(node->mutation.oldChildShadowView, surfaceManager.getWindow(node->mutation.oldChildShadowView.surfaceId)));
   }
 
   if (!wantAnimateExit) {
