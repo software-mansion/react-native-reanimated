@@ -18,6 +18,20 @@ struct Window{
 
 struct Frame{
   std::optional<double> x, y, width, height;
+  Frame(jsi::Runtime& runtime, const jsi::Object &newStyle){
+    if (newStyle.hasProperty(runtime, "originX")){
+      x = newStyle.getProperty(runtime, "originX").asNumber();
+    }
+    if (newStyle.hasProperty(runtime, "originY")){
+      y = newStyle.getProperty(runtime, "originY").asNumber();
+    }
+    if (newStyle.hasProperty(runtime, "width")){
+      width = newStyle.getProperty(runtime, "width").asNumber();
+    }
+    if (newStyle.hasProperty(runtime, "height")){
+      height = newStyle.getProperty(runtime, "height").asNumber();
+    }
+  }
 };
 
 struct UpdateValues{
@@ -104,9 +118,6 @@ struct RootNode{
 struct LayoutAnimation {
   std::shared_ptr<ShadowView> end, current;
   ShadowView start, parent;
-  ShadowViewMutationList initialMutations;
-  ShadowViewMutationList cleanupMutations;
-  LayoutAnimation(std::shared_ptr<ShadowView> end, std::shared_ptr<ShadowView> current, ShadowView& start, ShadowView parent, ShadowViewMutationList initialMutations, ShadowViewMutationList cleanupMutations):end(end), current(current), start(start), parent(parent), initialMutations(initialMutations), cleanupMutations(cleanupMutations){}
   LayoutAnimation& operator=(const LayoutAnimation& other){
     this->end = other.end;
     return *this;
@@ -188,5 +199,20 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
       const TransactionTelemetry& telemetry,
       ShadowViewMutationList mutations) const override;
 };
+
+static inline void updateLayoutMetrics(LayoutMetrics& layoutMetrics, Frame& frame){
+  if (frame.width) {
+    layoutMetrics.frame.size.width = *frame.width;
+  }
+  if (frame.height) {
+    layoutMetrics.frame.size.height = *frame.height;
+  }
+  if (frame.x) {
+    layoutMetrics.frame.origin.x = *frame.x;
+  }
+  if (frame.y) {
+    layoutMetrics.frame.origin.y = *frame.y;
+  }
+}
 
 }
