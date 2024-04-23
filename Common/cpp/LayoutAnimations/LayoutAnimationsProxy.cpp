@@ -14,7 +14,9 @@ void LayoutAnimationsProxy::startEnteringAnimation(
         jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
         jsi::Object yogaValues(rt);
         yogaValues.setProperty(rt, "targetOriginX", values.x);
+        yogaValues.setProperty(rt, "targetGlobalOriginX", values.x);
         yogaValues.setProperty(rt, "targetOriginY", values.y);
+        yogaValues.setProperty(rt, "targetGlobalOriginY", values.y);
         yogaValues.setProperty(rt, "targetWidth", values.width);
         yogaValues.setProperty(rt, "targetHeight", values.height);
         yogaValues.setProperty(rt, "windowWidth", values.windowWidth);
@@ -33,7 +35,9 @@ void LayoutAnimationsProxy::startExitingAnimation(
         jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
         jsi::Object yogaValues(rt);
         yogaValues.setProperty(rt, "currentOriginX", values.x);
+        yogaValues.setProperty(rt, "currentGlobalOriginX", values.x);
         yogaValues.setProperty(rt, "currentOriginY", values.y);
+        yogaValues.setProperty(rt, "currentGlobalOriginY", values.y);
         yogaValues.setProperty(rt, "currentWidth", values.width);
         yogaValues.setProperty(rt, "currentHeight", values.height);
         yogaValues.setProperty(rt, "windowWidth", values.windowWidth);
@@ -54,11 +58,15 @@ void LayoutAnimationsProxy::startLayoutLayoutAnimation(
         jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
         jsi::Object yogaValues(rt);
         yogaValues.setProperty(rt, "currentOriginX", currentValues.x);
+        yogaValues.setProperty(rt, "currentGlobalOriginX", currentValues.x);
         yogaValues.setProperty(rt, "currentOriginY", currentValues.y);
+        yogaValues.setProperty(rt, "currentGlobalOriginY", currentValues.y);
         yogaValues.setProperty(rt, "currentWidth", currentValues.width);
         yogaValues.setProperty(rt, "currentHeight", currentValues.height);
         yogaValues.setProperty(rt, "targetOriginX", targetValues.x);
+        yogaValues.setProperty(rt, "targetGlobalOriginX", targetValues.x);
         yogaValues.setProperty(rt, "targetOriginY", targetValues.y);
+        yogaValues.setProperty(rt, "targetGlobalOriginY", targetValues.y);
         yogaValues.setProperty(rt, "targetWidth", targetValues.width);
         yogaValues.setProperty(rt, "targetHeight", targetValues.height);
         yogaValues.setProperty(rt, "windowWidth", targetValues.windowWidth);

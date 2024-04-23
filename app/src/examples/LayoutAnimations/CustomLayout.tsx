@@ -34,7 +34,7 @@ function CustomLayoutTransition(): LayoutAnimationFunction {
       },
       initialValues: {
         originX: values.currentOriginX,
-        originY: values.currentOriginY,
+        originY: values.currentGlobalOriginY,
         width: values.currentWidth,
         height: values.currentHeight,
         backgroundColor: 'red',
