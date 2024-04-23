@@ -136,7 +136,7 @@ ProgressLayoutAnimationFunction progressLayoutAnimation =
       };
   EndLayoutAnimationFunction endLayoutAnimation =
   [this](int tag, bool shouldRemove) {
-    layoutAnimationsProxy_->endLayoutAniamtion(tag, shouldRemove);
+    layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
     uiManager_->getShadowTreeRegistry().enumerate(
                                                   [](const ShadowTree &shadowTree, bool &) {
                                                     shadowTree.notifyDelegatesOfUpdates();

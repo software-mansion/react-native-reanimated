@@ -12,27 +12,26 @@ class NativeReanimatedModule;
 
 using namespace facebook;
 
-struct X{
-  std::shared_ptr<RawProps> rawProps;
-  Props::Shared newProps;
-  LayoutMetrics layoutMetrics;
-};
-
 struct Window{
-  double windowWidth, windowHeight;
+  double width, height;
 };
 
-struct Values{
-  double width, x, y, height, windowWidth, windowHeight;
-  Values(ShadowView& shadowView, Window window){
+struct Snapshot{
+  double x, y, width, height, windowWidth, windowHeight;
+  Snapshot(ShadowView& shadowView, Window window){
     auto& frame = shadowView.layoutMetrics.frame;
     x = frame.origin.x;
     y = frame.origin.y;
     width = frame.size.width;
     height = frame.size.height;
-    windowWidth = window.windowWidth;
-    windowHeight = window.windowHeight;
+    windowWidth = window.width;
+    windowHeight = window.height;
   }
+};
+
+struct UpdateValues{
+  Props::Shared newProps;
+  LayoutMetrics layoutMetrics;
 };
 
 struct RootNode;
@@ -111,15 +110,15 @@ struct LayoutAnimation {
 };
 
 struct SurfaceManager {
-  mutable std::unordered_map<SurfaceId, std::shared_ptr<std::unordered_map<Tag, X>>> props_;
+  mutable std::unordered_map<SurfaceId, std::shared_ptr<std::unordered_map<Tag, UpdateValues>>> props_;
   mutable std::unordered_map<SurfaceId, Window> windows_;
-  std::unordered_map<Tag, X>& getProps(SurfaceId surfaceId){
+  std::unordered_map<Tag, UpdateValues>& getProps(SurfaceId surfaceId){
     auto props = props_.find(surfaceId);
     if (props != props_.end()){
       return *props->second;
     }
     
-    auto newProps = std::make_shared<std::unordered_map<Tag, X>>();
+    auto newProps = std::make_shared<std::unordered_map<Tag, UpdateValues>>();
     props_.insert_or_assign(surfaceId, newProps);
     return *newProps;
   }
@@ -151,30 +150,34 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   NativeReanimatedModule* nativeReanimatedModule_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
   LayoutAnimationsProxy(std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_, NativeReanimatedModule* n, SharedComponentDescriptorRegistry componentDescriptorRegistry_, ContextContainer::Shared contextContainer_): layoutAnimationsManager_(layoutAnimationsManager_), contextContainer_(contextContainer_), nativeReanimatedModule_(n),  componentDescriptorRegistry_(componentDescriptorRegistry_){}
-  void startEnteringAnimation(const int tag, Values values) const;
-  void startExitingAnimation(const int tag, Values values) const;
-  void startLayoutLayoutAnimation(const int tag, Values currentValues, Values targetValues) const;
+  
+  void startEnteringAnimation(const int tag, Snapshot values) const;
+  void startExitingAnimation(const int tag, Snapshot values) const;
+  void startLayoutAnimation(const int tag, Snapshot currentValues, Snapshot targetValues) const;
+  
   void transferConfigFromNativeTag(const std::string nativeId, const int tag) const;
   void progressLayoutAnimation(int tag, const jsi::Object &newStyle);
-  void endLayoutAniamtion(int tag, bool shouldRemove);
+  void endLayoutAnimation(int tag, bool shouldRemove);
   void cancelAnimation(const int tag) const;
-  const ComponentDescriptor& getComponentDescriptorForShadowView(const ShadowView& shadowView) const;
   
   void addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList& mutations) const;
+  
+  
   void updateIndexForMutation(ShadowViewMutation &mutation) const;
   void updateIndices(ShadowViewMutation &mutation) const;
-  
   void takeIndex(Tag parentTag, int index) const;
   void dropIndex(Tag parentTag, int index) const;
+  
   void removeRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList& mutations) const;
   bool startAnimationsRecursively(std::shared_ptr<MutationNode> node, bool shouldRemoveSubviewsWithoutAnimations, bool shouldAnimate, ShadowViewMutationList& mutations) const;
   void endAnimationsRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList& mutations) const;
   void maybeDropAncestors(std::shared_ptr<MutationNode> node, std::shared_ptr<MutationNode> child) const;
   
+  const ComponentDescriptor& getComponentDescriptorForShadowView(const ShadowView& shadowView) const;
+  
   // MountingOverrideDelegate
   
   bool shouldOverridePullTransaction() const override;
-
   std::optional<MountingTransaction> pullTransaction(
       SurfaceId surfaceId,
       MountingTransaction::Number number,
