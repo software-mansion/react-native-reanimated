@@ -104,6 +104,20 @@ struct LayoutAnimation {
   }
 };
 
+struct SurfaceManager {
+  mutable std::unordered_map<SurfaceId, std::shared_ptr<std::unordered_map<Tag, X>>> props_;
+  std::unordered_map<Tag, X>& getProps(SurfaceId surfaceId){
+    auto props = props_.find(surfaceId);
+    if (props != props_.end()){
+      return *props->second;
+    }
+    
+    auto newProps = std::make_shared<std::unordered_map<Tag, X>>();
+    props_.insert_or_assign(surfaceId, newProps);
+    return *newProps;
+  }
+};
+
 struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   mutable double windowWidth, windowHeight;
   mutable std::unordered_map<Tag, std::shared_ptr<RootNode>> rootNodeForTag;
@@ -111,10 +125,10 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   mutable ShadowViewMutationList cleanupMutations;
   mutable std::unordered_map<Tag, std::shared_ptr<std::unordered_set<int>>> indices;
-  mutable std::unordered_map<Tag, X> props_;
   mutable std::unordered_set<Tag> animatedTags;
   mutable std::recursive_mutex mutex;
   mutable std::unordered_set<Tag> bannedTags;
+  mutable SurfaceManager surfaceManager;
   std::shared_ptr<std::map<Tag, std::string>> tagToNativeID_ = std::make_shared<std::map<Tag, std::string>>();
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   ContextContainer::Shared contextContainer_;
@@ -124,7 +138,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   void startEnteringAnimation(const int tag, Values values) const;
   void startExitingAnimation(const int tag, Values values) const;
   void startLayoutLayoutAnimation(const int tag, Values currentValues, Values targetValues) const;
-  void transferConfigFromNativeTag(const int tag);
+  void transferConfigFromNativeTag(const std::string nativeId, const int tag) const;
   void progressLayoutAnimation(int tag, const jsi::Object &newStyle);
   void endLayoutAniamtion(int tag, bool shouldRemove);
   void cancelAnimation(const int tag) const;

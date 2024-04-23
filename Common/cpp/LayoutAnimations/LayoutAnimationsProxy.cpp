@@ -68,30 +68,21 @@ void LayoutAnimationsProxy::startLayoutLayoutAnimation(
       });
 }
 
-void LayoutAnimationsProxy::transferConfigFromNativeTag(const int tag) {
-  if (!tagToNativeID_->contains(tag)) {
+void LayoutAnimationsProxy::transferConfigFromNativeTag(const std::string nativeIdString, const int tag) const{
+  if (nativeIdString.empty()){
     return;
   }
-  auto nativeIDString = tagToNativeID_->at(tag);
-  if (nativeIDString.empty()) {
-    return;
-  }
-  auto nativeID = stoi(nativeIDString);
+  auto nativeId = stoi(nativeIdString);
   std::shared_ptr<Shareable> config = nullptr;
-  {
-    auto lock = std::unique_lock<std::recursive_mutex>(
-        nativeReanimatedModule_->layoutAnimationsManager_->animationsMutex_);
-    config = layoutAnimationsManager_->enteringAnimations_[nativeID];
-  }
-  auto s = "";
-  LayoutAnimationConfig la;
-  la.tag = tag;
-  la.type = LayoutAnimationType::ENTERING;
-  la.sharedTransitionTag = s;
-  la.config = config;
-  if (config) {
-    nativeReanimatedModule_->layoutAnimationsManager_->configureAnimationBatch({la});
-  }
+    {
+        auto lock = std::unique_lock<std::recursive_mutex>(
+                nativeReanimatedModule_->layoutAnimationsManager_->animationsMutex_);
+        config = layoutAnimationsManager_->enteringAnimations_[nativeId];
+        if (config) {
+            layoutAnimationsManager_->enteringAnimations_.insert_or_assign(tag, config);
+        }
+        layoutAnimationsManager_->enteringAnimations_.erase(nativeId);
+    }
 }
 
 void LayoutAnimationsProxy::cancelAnimation(const int tag) const{
@@ -112,9 +103,6 @@ void LayoutAnimationsProxy::progressLayoutAnimation(
   if (bannedTags.contains(tag)){
     return;
   }
-  // TODO: use surfaceId instead of hard coding 1
-  PropsParserContext propsParserContext{1, *contextContainer_};
-  
   // opacity was set to 0 on insert, so we restore it here (hopefully there will be a better place to do it)
   // TODO: restore the original opacity instead of 1
   if (!newStyle.hasProperty(nativeReanimatedModule_->getUIRuntime(), "opacity")){
@@ -153,8 +141,10 @@ void LayoutAnimationsProxy::progressLayoutAnimation(
   if (!layoutAnimations_.contains(tag)){
     return;
   }
+  PropsParserContext propsParserContext{layoutAnimations_.at(tag).end->surfaceId, *contextContainer_};
   x.newProps = getComponentDescriptorForShadowView(*layoutAnimations_.at(tag).end).cloneProps(propsParserContext, layoutAnimations_.at(tag).end->props, std::move(*newProps));
-  props_.insert_or_assign(tag, x);
+  auto& props = surfaceManager.getProps(layoutAnimations_.at(tag).end->surfaceId);
+  props.insert_or_assign(tag, x);
   
   LOG(INFO)<< "free lock" <<std::endl;
 }
@@ -177,8 +167,9 @@ void LayoutAnimationsProxy::endLayoutAniamtion(int tag, bool shouldRemove) {
       }
     }
   }
+  auto& props = surfaceManager.getProps(layoutAnimations_.at(tag).end->surfaceId);
   layoutAnimations_.erase(tag);
-  props_.erase(tag);
+  props.erase(tag);
   
   LOG(INFO)<< "free lock" <<std::endl;
 }
@@ -303,7 +294,8 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     SurfaceId surfaceId,
     ShadowViewMutationList &mutations) const {
 //  PropsParserContext propsParserContext{surfaceId, *contextContainer_};
-  for (auto &[tag, x] : props_) {
+    auto& props = surfaceManager.getProps(surfaceId);
+  for (auto &[tag, x] : props) {
     auto rawProps = x.rawProps;
     if (!layoutAnimations_.contains(tag)) {
       continue;
@@ -344,7 +336,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     }
     la.current = newView;
   }
-  props_.clear();
+  props.clear();
   mutations.insert(
       mutations.end(), cleanupMutations.begin(), cleanupMutations.end());
   cleanupMutations.clear();
@@ -466,6 +458,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
       case ShadowViewMutation::Type::Insert: {
         updateIndexForMutation(mutation);
         updateIndices(mutation);
+        transferConfigFromNativeTag(mutation.newChildShadowView.props->nativeId, mutation.newChildShadowView.tag);
         if (!layoutAnimationsManager_->hasLayoutAnimation(
                 mutation.newChildShadowView.tag,
                 LayoutAnimationType::ENTERING)) {

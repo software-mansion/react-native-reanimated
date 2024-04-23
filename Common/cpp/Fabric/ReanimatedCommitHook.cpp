@@ -59,16 +59,6 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 #else
     RootShadowNode::Unshared const &newRootShadowNode) const noexcept {
 #endif
-  auto mutations = calculateShadowViewMutations(*oldRootShadowNode, *newRootShadowNode);
-      
-      
-  for (auto &mutation: mutations){
-    if (mutation.type == ShadowViewMutation::Create){
-      lap_->tagToNativeID_->insert_or_assign(mutation.newChildShadowView.tag, mutation.newChildShadowView.props->nativeId);
-      lap_->transferConfigFromNativeTag(mutation.newChildShadowView.tag);
-    }
-  }
-
   auto rootNode = newRootShadowNode->ShadowNode::clone(ShadowNodeFragment{});
   if (ReanimatedCommitMarker::isReanimatedCommit()) {
     // ShadowTree commited by Reanimated, no need to apply updates from

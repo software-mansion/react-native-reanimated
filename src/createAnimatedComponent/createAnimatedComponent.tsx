@@ -150,7 +150,6 @@ export function createAnimatedComponent(
         //   LayoutAnimationType.ENTERING,
         //   maybeBuild(entering, this.props?.style, AnimatedComponent.displayName)
         // );
-
         updateLayoutAnimations(
           this.nativeID,
           LayoutAnimationType.ENTERING,
@@ -166,15 +165,15 @@ export function createAnimatedComponent(
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
-      const entering = this.props.entering;
+      // const entering = this.props.entering;
 
-      if (entering) {
-        updateLayoutAnimations(
-          this._viewTag,
-          LayoutAnimationType.ENTERING,
-          maybeBuild(entering, this.props?.style, AnimatedComponent.displayName)
-        );
-      }
+      // if (entering) {
+      //   updateLayoutAnimations(
+      //     this._viewTag,
+      //     LayoutAnimationType.ENTERING,
+      //     maybeBuild(entering, this.props?.style, AnimatedComponent.displayName)
+      //   );
+      // }
 
       const layout = this.props.layout;
       if (layout) {
@@ -567,19 +566,19 @@ export function createAnimatedComponent(
           if (sharedTransitionTag) {
             this._configureSharedTransition();
           }
-
-          const skipEntering = this.context?.current;
-          if (entering && !skipEntering) {
-            updateLayoutAnimations(
-              tag as number,
-              LayoutAnimationType.ENTERING,
-              maybeBuild(
-                entering,
-                this.props?.style,
-                AnimatedComponent.displayName
-              )
-            );
-          }
+          console.log(tag);
+          // const skipEntering = this.context?.current;
+          // if (entering && !skipEntering) {
+          //   updateLayoutAnimations(
+          //     tag as number,
+          //     LayoutAnimationType.ENTERING,
+          //     maybeBuild(
+          //       entering,
+          //       this.props?.style,
+          //       AnimatedComponent.displayName
+          //     )
+          //   );
+          // }
           if (sharedTransitionTag && !IS_WEB) {
             const sharedElementTransition =
               this.props.sharedTransitionStyle ?? new SharedTransition();
@@ -666,7 +665,6 @@ export function createAnimatedComponent(
       return (
         <Component
           nativeID={`${this.nativeID}`}
-          onLayout={() => {}}
           {...filteredProps}
           // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
           // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
