@@ -8,12 +8,10 @@
     "workletizes",
     "workletized",
     "barfoo",
-    "devs"
+    "devs",
+    "lightspeed",
+    "easings"
   ],
-  "ignorePaths": [
-    "node_modules",
-    "docs/src/components/Testimonials"
-  ],
+  "ignorePaths": ["node_modules", "docs/src/components/Testimonials"],
   "useGitignore": true
 }
-
