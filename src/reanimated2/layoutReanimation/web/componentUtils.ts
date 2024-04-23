@@ -276,7 +276,7 @@ export function handleExitingAnimation(
 
   const scrollOffsets = getElementScrollValue(element);
 
-  // Scroll does not trigger snapshoting, therefore if we start exiting animation after
+  // Scroll does not trigger snapshotting, therefore if we start exiting animation after
   // scrolling through parent component, dummy will end up in wrong place. In order to fix that
   // we keep last known scroll position in snapshot and then adjust dummy position based on
   // last known scroll offset and current scroll offset
