@@ -1,4 +1,4 @@
-import { View, Button, StyleSheet, Text } from 'react-native';
+import { View, Button, StyleSheet } from 'react-native';
 import React, { ReactNode, useEffect, useState } from 'react';
 import { runTests, configure } from './RuntimeTestsApi';
 import { LockObject } from './types';
@@ -21,7 +21,8 @@ export default function RuntimeTestsRunner() {
           await runTests();
         }}
       />
-      {component || <Text> Press "Run tests" button to start tests </Text>}
+      {/* Don't render anything if component is undefined to prevent blinking */}
+      {component || null}
     </View>
   );
 }

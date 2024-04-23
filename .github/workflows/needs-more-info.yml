@@ -1,4 +1,6 @@
 name: Check issue template
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   issues:
     types: [opened, edited]

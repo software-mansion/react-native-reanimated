@@ -176,35 +176,6 @@ It's simple. After compilation we have generated `.js.map` file. We strongly rec
 
 This flowchart represents the high-level logic of our plugin's control flow. It's not perfect at the moment and one of our goals is to make this graph more understandable and fix all the gaps and remove unnecessary steps in its logic through meticulous refactoring of the code, but hey, at least it's planar!
 
-```mermaid
-flowchart TB
-node([ASTnode])
-pw([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processForCalleesWorklets.ts'>processForCalleesWorklets</a>])
-pwsbw{{should be workletized?}}
-pwgwa([get workletizable arguments])
-pwn([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processIfWorkletNode.ts'>processIfWorkletNode</a>])
-pwnsbw{{should be workletized?}}
-pgh([<a href='https://github.com/software-mansion/react-native-reanimated/blob/main/plugin/src/processIfCallback.ts'>processIfCallback</a>])
-pghsbw{{should be workletized?}}
-pwf([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processIfWorkletFunction.ts'>processIfWorkletFunction</a>])
-pwom([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processWorkletObjectMethod.ts'>processWorkletObjectMethod</a>])
-pisw([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processInlineStylesWarning.ts'>processInlineStylesWarning</a>])
-node-->|isCallExpression|pw
-node-->|isArrowFunctionExpression|pwn
-node-->|isFunctionDeclaration|pwn
-node-->|isFunctionExpression|pwn
-node-->|isJSXAttribute|pisw
-pwn-->pwnsbw
-pwnsbw-->|yes|pwf
-pwnsbw-->|no|pgh
-pgh-->pghsbw
-pghsbw-->|yes|pwf
-pw-->pwsbw
-pwsbw-->|yes|pwgwa
-pwgwa-->|others|pwf
-pwgwa-->|objectMethods|pwom
-```
-
 ### Dependencies of Reanimated Babel plugin
 
 This topic is a bit difficult. Our philosophy at the moment is to keep everything required to _build_ plugin in `plugin/package.json` as _devDependencies_ and everything that is needed to _run_ plugin in main `package.json`, mostly as _devDependencies_.

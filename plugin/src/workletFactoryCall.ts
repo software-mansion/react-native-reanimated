@@ -42,6 +42,8 @@ function addStackTraceDataToWorkletFactory(
   const originalWorkletLocation = path.node.loc;
   if (originalWorkletLocation) {
     workletFactoryCall.callee.loc = {
+      filename: originalWorkletLocation.filename,
+      identifierName: originalWorkletLocation.identifierName,
       start: originalWorkletLocation.start,
       end: originalWorkletLocation.start,
     };
