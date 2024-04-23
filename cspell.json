@@ -1,0 +1,18 @@
+{
+  "language": "en",
+  "words": [
+    "worklets",
+    "worklet",
+    "workletization",
+    "workletize",
+    "workletizes",
+    "workletized",
+    "barfoo",
+    "devs",
+    "lightspeed",
+    "easings",
+    "snapshotting"
+  ],
+  "ignorePaths": ["node_modules", "docs/src/components/Testimonials"],
+  "useGitignore": true
+}

@@ -101,7 +101,10 @@
     "@babel/core": "^7.20.0",
     "@babel/preset-env": "^7.20.0",
     "@babel/types": "^7.20.0",
-    "@react-native/eslint-config": "^0.72.2",
+    "@react-native/babel-preset": "0.74.80",
+    "@react-native/eslint-config": "0.74.80",
+    "@react-native/metro-config": "0.74.80",
+    "@react-native/typescript-config": "0.74.80",
     "@testing-library/jest-native": "^4.0.4",
     "@testing-library/react-hooks": "^8.0.0",
     "@testing-library/react-native": "^7.1.0",
@@ -137,11 +140,11 @@
     "eslint-plugin-tsdoc": "^0.2.17",
     "husky": "^7.0.4",
     "jest": "^29.0.0",
-    "lint-staged": "^11.2.0",
+    "lint-staged": "^15.2.2",
     "madge": "^5.0.1",
     "prettier": "^2.5.1",
     "react": "18.2.0",
-    "react-native": "0.74.0-rc.4",
+    "react-native": "0.74.0-rc.9",
     "react-native-builder-bob": "^0.18.3",
     "react-native-gesture-handler": "^2.16.0",
     "react-native-web": "~0.18.12",
@@ -152,9 +155,9 @@
   },
   "lint-staged": {
     "*.(js|ts|tsx)": [
-      "eslint",
-      "eslint --quiet --ext '.js,.ts,.tsx' src/",
-      "prettier --write"
+      "yarn eslint",
+      "yarn eslint --quiet --ext '.js,.ts,.tsx' src/",
+      "yarn prettier --write"
     ],
     "plugin/**/*.ts": "yarn lint:plugin",
     "**/*.{h,cpp}": "yarn lint:cpp",
