@@ -167,9 +167,9 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
   LayoutAnimationsProxy(std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_, NativeReanimatedModule* n, SharedComponentDescriptorRegistry componentDescriptorRegistry_, ContextContainer::Shared contextContainer_): layoutAnimationsManager_(layoutAnimationsManager_), contextContainer_(contextContainer_), nativeReanimatedModule_(n),  componentDescriptorRegistry_(componentDescriptorRegistry_){}
   
-  void startEnteringAnimation(const int tag, Snapshot values) const;
-  void startExitingAnimation(const int tag, Snapshot values) const;
-  void startLayoutAnimation(const int tag, Snapshot currentValues, Snapshot targetValues) const;
+  void startEnteringAnimation(const int tag, ShadowViewMutation& mutation) const;
+  void startExitingAnimation(const int tag, ShadowViewMutation& mutation) const;
+  void startLayoutAnimation(const int tag, ShadowViewMutation& mutation) const;
   
   void transferConfigFromNativeTag(const std::string nativeId, const int tag) const;
   void progressLayoutAnimation(int tag, const jsi::Object &newStyle);
