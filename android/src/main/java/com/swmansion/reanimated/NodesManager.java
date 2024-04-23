@@ -172,7 +172,7 @@ public class NodesManager implements EventDispatcherListener {
         };
 
     // We register as event listener at the end, because we pass `this` and we haven't finished
-    // contructing an object yet.
+    // constructing an object yet.
     // This lead to a crash described in
     // https://github.com/software-mansion/react-native-reanimated/issues/604 which was caused by
     // Nodes Manager being constructed on UI thread and registering for events.
@@ -257,7 +257,7 @@ public class NodesManager implements EventDispatcherListener {
         try {
           semaphore.tryAcquire(16, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
-          // if the thread is interruped we just continue and let the layout update happen
+          // if the thread is interrupted we just continue and let the layout update happen
           // asynchronously
         }
       }

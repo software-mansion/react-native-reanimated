@@ -71,7 +71,7 @@ using namespace facebook::react;
   // store reference to the observers array
   id oldObservers = [self.observerCoordinator valueForKey:@"_observers"];
 
-  // temporarily replace observers with a table conatining just nodesmanager (we need
+  // temporarily replace observers with a table containing just nodesManager (we need
   // this to capture mounting block)
   NSHashTable<id<RCTUIManagerObserver>> *soleObserver = [NSHashTable new];
   [soleObserver addObject:observer];
