@@ -108,7 +108,7 @@ export class TestRunner {
       const parentNesting = this._currentTestSuite.nestingLevel;
       index = parentIndex + 1;
       while (index < this._testSuites.length && this._testSuites[index].nestingLevel > parentNesting) {
-        // Append after last child of the paren describe
+        // Append after last child of the parent describe
         // The children have bigger nesting level
         index += 1;
       }
@@ -215,6 +215,24 @@ export class TestRunner {
       await testSuite.buildSuite();
       this._currentTestSuite = null;
     }
+
+    for (const testSuite of this._testSuites) {
+      let skipTestSuite = testSuite.skip;
+
+      if (this._includesOnly) {
+        skipTestSuite = skipTestSuite || !testSuite.only;
+
+        for (const testCase of testSuite.testCases) {
+          if (testCase.only) {
+            skipTestSuite = false;
+          } else testCase.skip = testCase.skip || !testSuite.only;
+          delete testCase.only;
+        }
+      }
+      delete testSuite.only;
+      testSuite.skip = skipTestSuite;
+    }
+
     for (const testSuite of this._testSuites) {
       await this.runTestSuite(testSuite);
     }
@@ -231,19 +249,6 @@ export class TestRunner {
       return;
     }
 
-    if (this._includesOnly) {
-      let skipTestSuite = !testSuite.only;
-      for (const testCase of testSuite.testCases) {
-        if (testCase.only) {
-          skipTestSuite = false;
-        }
-      }
-      if (skipTestSuite) {
-        this._summary.skipped += testSuite.testCases.length;
-        return;
-      }
-    }
-
     this._currentTestSuite = testSuite;
     console.log(`${indentNestingLevel(testSuite.nestingLevel)} ${testSuite.name}`);
 
@@ -252,7 +257,7 @@ export class TestRunner {
     }
 
     for (const testCase of testSuite.testCases) {
-      if ((!this._includesOnly || testSuite.only || testCase.only) && !testCase.skip) {
+      if (!testCase.skip) {
         await this.runTestCase(testSuite, testCase);
       } else {
         this._summary.skipped++;
