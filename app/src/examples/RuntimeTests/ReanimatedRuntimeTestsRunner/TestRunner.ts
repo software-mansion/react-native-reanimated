@@ -1,5 +1,6 @@
 import { Component, MutableRefObject, ReactElement, useRef } from 'react';
 import type {
+  NullableTestValue,
   LockObject,
   Operation,
   SharedValueSnapshot,
@@ -16,6 +17,7 @@ import { makeMutable, runOnUI, runOnJS, SharedValue } from 'react-native-reanima
 import { color, formatString, indentNestingLevel } from './stringFormatUtils';
 import { createUpdatesContainer } from './UpdatesContainer';
 import { Matchers } from './Matchers';
+import { nullableMatch } from './NullableMatch';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
 
 let callTrackerRegistryJS: Record<string, number> = {};
@@ -256,6 +258,16 @@ export class TestRunner {
   public expect(currentValue: TestValue): Matchers {
     assertTestCase(this._currentTestCase);
     return new Matchers(currentValue, this._currentTestCase);
+  }
+
+  public expectNullable(currentValue: NullableTestValue) {
+    assertTestCase(this._currentTestCase);
+    nullableMatch(currentValue, this._currentTestCase);
+  }
+
+  public expectNotNullable(currentValue: NullableTestValue) {
+    assertTestCase(this._currentTestCase);
+    nullableMatch(currentValue, this._currentTestCase, true);
   }
 
   public beforeAll(job: () => void) {
