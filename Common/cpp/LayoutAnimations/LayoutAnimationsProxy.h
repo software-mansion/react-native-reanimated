@@ -127,7 +127,9 @@ struct LayoutAnimation {
 
 struct SurfaceManager {
   mutable std::unordered_map<SurfaceId, std::shared_ptr<std::unordered_map<Tag, UpdateValues>>> props_;
+  mutable std::unordered_map<SurfaceId, ShadowViewMutationList> cleanups_;
   mutable std::unordered_map<SurfaceId, Window> windows_;
+  
   std::unordered_map<Tag, UpdateValues>& getUpdateMap(SurfaceId surfaceId){
     auto props = props_.find(surfaceId);
     if (props != props_.end()){
@@ -138,9 +140,11 @@ struct SurfaceManager {
     props_.insert_or_assign(surfaceId, newProps);
     return *newProps;
   }
+  
   void updateWindow(SurfaceId surfaceId, double windowWidth, double windowHeight){
     windows_.insert_or_assign(surfaceId, Window{windowWidth, windowHeight});
   }
+  
   Window getWindow(SurfaceId surfaceId){
     auto windowIt = windows_.find(surfaceId);
     if (windowIt != windows_.end()){
@@ -148,13 +152,23 @@ struct SurfaceManager {
     }
     return Window{0,0};
   }
+  
+  void consumeCleanupMutations(SurfaceId surfaceId, ShadowViewMutationList& mutations){
+    for (auto& mutation: cleanups_[surfaceId]){
+      mutations.push_back(mutation);
+    }
+    cleanups_.erase(surfaceId);
+  }
+  
+  ShadowViewMutationList& getCleanupMutations(SurfaceId surfaceId){
+    return cleanups_[surfaceId];
+  }
 };
 
 struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   mutable std::unordered_map<Tag, std::shared_ptr<RootNode>> rootNodeForTag;
   mutable std::unordered_map<Tag, std::shared_ptr<MutationNode>> nodeForTag;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
-  mutable ShadowViewMutationList cleanupMutations;
   mutable std::unordered_map<Tag, std::shared_ptr<std::unordered_set<int>>> indices;
   mutable std::unordered_set<Tag> animatedTags;
   mutable std::recursive_mutex mutex;
@@ -178,7 +192,6 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   
   void addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList& mutations) const;
   
-  
   void updateIndexForMutation(ShadowViewMutation &mutation) const;
   void updateIndices(ShadowViewMutation &mutation) const;
   void takeIndex(Tag parentTag, int index) const;
@@ -187,7 +200,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   void removeRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList& mutations) const;
   bool startAnimationsRecursively(std::shared_ptr<MutationNode> node, bool shouldRemoveSubviewsWithoutAnimations, bool shouldAnimate, ShadowViewMutationList& mutations) const;
   void endAnimationsRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList& mutations) const;
-  void maybeDropAncestors(std::shared_ptr<MutationNode> node, std::shared_ptr<MutationNode> child) const;
+  void maybeDropAncestors(std::shared_ptr<MutationNode> node, std::shared_ptr<MutationNode> child, ShadowViewMutationList& cleanupMutations) const;
   
   const ComponentDescriptor& getComponentDescriptorForShadowView(const ShadowView& shadowView) const;
   

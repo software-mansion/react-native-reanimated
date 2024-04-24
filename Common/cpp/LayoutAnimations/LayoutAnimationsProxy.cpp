@@ -49,13 +49,14 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
   }
 
   auto &layoutAnimation = layoutAnimationIt->second;
+  auto &cleanupMutations = surfaceManager.getCleanupMutations(layoutAnimation.end->surfaceId);
 
   if (shouldRemove) {
     if (nodeForTag.contains(tag)){
       auto node = nodeForTag.at(tag);
       endAnimationsRecursively(node, cleanupMutations);
       if (node->parent){
-        maybeDropAncestors(node->parent, node);
+        maybeDropAncestors(node->parent, node, cleanupMutations);
       }
       if (node->root){
         node->root->removeChild(node);
@@ -91,7 +92,7 @@ void LayoutAnimationsProxy::endAnimationsRecursively(std::shared_ptr<MutationNod
   mutations.push_back(ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
 }
 
-void LayoutAnimationsProxy::maybeDropAncestors(std::shared_ptr<MutationNode> node, std::shared_ptr<MutationNode> child) const{
+void LayoutAnimationsProxy::maybeDropAncestors(std::shared_ptr<MutationNode> node, std::shared_ptr<MutationNode> child, ShadowViewMutationList& cleanupMutations) const{
   node->animatedChildren.erase(child->tag);
   node->removeChild(child);
   if (node->animatedChildren.empty() && !node->isAnimatingExit){
@@ -108,7 +109,7 @@ void LayoutAnimationsProxy::maybeDropAncestors(std::shared_ptr<MutationNode> nod
     LOG(INFO) << "delete "<<node->tag<<std::endl;
     cleanupMutations.push_back(ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
     if (node->parent){
-      maybeDropAncestors(node->parent, node);
+      maybeDropAncestors(node->parent, node, cleanupMutations);
     }
     if (node->root){
       node->root->removeChild(node);
@@ -141,8 +142,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     la.current = newView;
   }
   updateMap.clear();
-  mutations.insert(mutations.end(), cleanupMutations.begin(), cleanupMutations.end());
-  cleanupMutations.clear();
+  surfaceManager.consumeCleanupMutations(surfaceId, mutations);
   std::stable_sort(mutations.begin(), mutations.end(), &shouldFirstComeBeforeSecondMutation);
 }
 
