@@ -188,7 +188,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
 }
 
-#ifndef NDEBUG
 - (void)setReaSurfacePresenter
 {
   if (reaSurface == nil) {
@@ -198,7 +197,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   }
   reaSurface.reaModule = self;
 }
-#endif // NDEBUG
 
 #else // RCT_NEW_ARCH_ENABLED
 
