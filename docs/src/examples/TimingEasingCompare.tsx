@@ -6,7 +6,6 @@ import Animated, {
   withTiming,
   Easing,
   withRepeat,
-  SharedValue,
 } from 'react-native-reanimated';
 
 const duration = 2000;

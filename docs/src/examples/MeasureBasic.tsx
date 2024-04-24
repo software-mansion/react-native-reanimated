@@ -19,7 +19,9 @@ export default function App() {
       // highlight-next-line
       const measurement: MeasuredDimensions | null = measure(animatedRef);
 
-      if (measurement === null) return;
+      if (measurement === null) {
+        return;
+      }
 
       runOnJS(setText)(Math.floor(measurement.width));
     });

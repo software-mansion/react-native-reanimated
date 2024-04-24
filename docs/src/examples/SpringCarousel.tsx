@@ -4,7 +4,6 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  SharedValue,
 } from 'react-native-reanimated';
 
 const INITIAL_OFFSET = 110;

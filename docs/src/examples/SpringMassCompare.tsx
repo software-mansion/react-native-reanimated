@@ -5,7 +5,6 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withRepeat,
-  SharedValue,
 } from 'react-native-reanimated';
 
 const duration = 1800;
