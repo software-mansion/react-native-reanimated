@@ -172,8 +172,8 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   void startLayoutAnimation(const int tag, ShadowViewMutation& mutation) const;
   
   void transferConfigFromNativeTag(const std::string nativeId, const int tag) const;
-  void progressLayoutAnimation(int tag, const jsi::Object &newStyle);
-  void endLayoutAnimation(int tag, bool shouldRemove);
+  std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);
+  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove);
   void cancelAnimation(const int tag) const;
   
   void addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList& mutations) const;

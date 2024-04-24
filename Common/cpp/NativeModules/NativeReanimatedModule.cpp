@@ -123,24 +123,32 @@ void NativeReanimatedModule::commonInit(
     this->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
   };
 ProgressLayoutAnimationFunction progressLayoutAnimation =
-      [this](
-          jsi::Runtime &rt,
-          int tag,
-          const jsi::Object &newStyle,
-          bool isSharedTransition) {
-        layoutAnimationsProxy_->progressLayoutAnimation(tag, newStyle);
-        uiManager_->getShadowTreeRegistry().enumerate(
-            [](const ShadowTree &shadowTree, bool &) {
-              shadowTree.notifyDelegatesOfUpdates();
-            });
-      };
-  EndLayoutAnimationFunction endLayoutAnimation =
-  [this](int tag, bool shouldRemove) {
-    layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
+  [this](jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool) {
+    
+    auto surfaceId = layoutAnimationsProxy_->progressLayoutAnimation(tag, newStyle);
+    if (!surfaceId){
+      return;
+    }
+    
     uiManager_->getShadowTreeRegistry().enumerate(
-                                                  [](const ShadowTree &shadowTree, bool &) {
-                                                    shadowTree.notifyDelegatesOfUpdates();
-                                                  });
+      [surfaceId](const ShadowTree &shadowTree, bool &stop) {
+        if (shadowTree.getSurfaceId() == surfaceId){
+          shadowTree.notifyDelegatesOfUpdates();
+          stop = true;
+        }
+      });
+  };
+  
+EndLayoutAnimationFunction endLayoutAnimation =
+  [this](int tag, bool shouldRemove) {
+    auto surfaceId = layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
+    uiManager_->getShadowTreeRegistry().enumerate(
+      [surfaceId](const ShadowTree &shadowTree, bool &stop) {
+        if (shadowTree.getSurfaceId() == surfaceId){
+          shadowTree.notifyDelegatesOfUpdates();
+          stop = true;
+        }
+      });
   };
         
 
