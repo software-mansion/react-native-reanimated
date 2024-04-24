@@ -8,7 +8,15 @@
     "workletizes",
     "workletized",
     "barfoo",
-    "devs"
+    "devs",
+    "chlgm",
+    "bfrg",
+    "typecheck",
+    "usehooks",
+    "animable",
+    "ispreview",
+    "pressable",
+    "inout"
   ],
   "ignorePaths": [
     "node_modules",
