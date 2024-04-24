@@ -16,8 +16,7 @@ import { render, stopRecordingAnimationUpdates, unmockAnimationTimer } from './R
 import { makeMutable, runOnUI, runOnJS, SharedValue } from 'react-native-reanimated';
 import { color, formatString, indentNestingLevel } from './stringFormatUtils';
 import { createUpdatesContainer } from './UpdatesContainer';
-import { Matchers } from './Matchers';
-import { nullableMatch } from './NullableMatch';
+import { Matchers, nullableMatch } from './Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
 
 let callTrackerRegistryJS: Record<string, number> = {};
