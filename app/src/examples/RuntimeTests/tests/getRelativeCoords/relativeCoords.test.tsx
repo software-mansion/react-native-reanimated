@@ -12,6 +12,7 @@ import {
   describe,
   test,
   expect,
+  expectNotNullable,
   render,
   wait,
   registerValue,
@@ -49,7 +50,7 @@ describe('getRelativeCoords', () => {
     await render(<CoordsComponent testStyle={style} />);
     await wait(300);
     const coords = (await getRegisteredValue(REGISTERED_VALUE_KEY)).onUI;
-    expect(coords != null ? 1 : 0).toBe(1); // makeshift nullcheck
+    expectNotNullable(coords);
     if (coords) {
       expect(Math.floor((coords as unknown as ComponentCoords).x)).toBe(expectedValueX);
       expect(Math.floor((coords as unknown as ComponentCoords).y)).toBe(expectedValueY);
