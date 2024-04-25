@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, ViewStyle } from 'react-native';
+import { FlexStyle, StyleSheet, ViewStyle } from 'react-native';
 import Animated, {
   runOnUI,
   measure,
@@ -21,7 +21,13 @@ import {
 
 const REGISTERED_VALUE_KEY = 'sv';
 
-const CoordsComponent = ({ justifyContent, alignItems }: { justifyContent: string; alignItems: string }) => {
+const CoordsComponent = ({
+  justifyContent,
+  alignItems,
+}: {
+  justifyContent: FlexStyle['justifyContent'];
+  alignItems: FlexStyle['alignItems'];
+}) => {
   const coordsSv = useSharedValue<ComponentCoords | null>(null);
   registerValue(REGISTERED_VALUE_KEY, coordsSv);
   const bRef = useAnimatedRef();
@@ -37,8 +43,8 @@ const CoordsComponent = ({ justifyContent, alignItems }: { justifyContent: strin
   };
 
   const testStyles: ViewStyle = {
-    justifyContent: justifyContent as ViewStyle['justifyContent'],
-    alignItems: alignItems as ViewStyle['alignItems'],
+    justifyContent,
+    alignItems,
   };
 
   return (
@@ -61,16 +67,19 @@ describe('getRelativeCoords', () => {
     ['flex-end', 'flex-start', 0, 100],
     ['flex-end', 'center', 50, 100],
     ['flex-end', 'flex-end', 100, 100],
-  ])('getCoords with style: ${style}', async ([justifyContent, alignItems, expectedValueX, expectedValueY]) => {
-    await render(<CoordsComponent justifyContent={justifyContent as string} alignItems={alignItems as string} />);
-    await wait(300);
-    const coords = (await getRegisteredValue(REGISTERED_VALUE_KEY)).onUI;
-    expectNotNullable(coords);
-    if (coords) {
-      expect(Math.floor((coords as unknown as ComponentCoords).x)).toBe(expectedValueX);
-      expect(Math.floor((coords as unknown as ComponentCoords).y)).toBe(expectedValueY);
-    }
-  });
+  ] as Array<[FlexStyle['justifyContent'], FlexStyle['alignItems'], number, number]>)(
+    'getCoords %s',
+    async ([justifyContent, alignItems, expectedValueX, expectedValueY]) => {
+      await render(<CoordsComponent justifyContent={justifyContent} alignItems={alignItems} />);
+      await wait(300);
+      const coords = (await getRegisteredValue(REGISTERED_VALUE_KEY)).onUI;
+      expectNotNullable(coords);
+      if (coords) {
+        expect(Math.floor((coords as unknown as ComponentCoords).x)).toBe(expectedValueX);
+        expect(Math.floor((coords as unknown as ComponentCoords).y)).toBe(expectedValueY);
+      }
+    },
+  );
 });
 
 const styles = StyleSheet.create({
