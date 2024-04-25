@@ -51,8 +51,8 @@ describe('entering with custom animation (withDelay + withTiming color changes) 
     const [updates, nativeUpdates] = await getSnaphotUpdates(fromColor, toColor);
     const snapshotName = (fromColor + toColor)
       .replace(/\s/g, '')
-      .replace(/[()]/g, '$')
-      .replace(/,/g, '$')
+      .replace(/[()]/g, '_')
+      .replace(/,/g, '_')
       .replace(/rgba/g, '');
     const nativeSnapshotName = snapshotName + 'native';
     expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
