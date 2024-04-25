@@ -125,16 +125,18 @@ export function withStyleAnimation(
             stillGoing = true;
           }
 
-          if (ColorProperties.includes(currentEntry.path[0] as string)) {
-            currentStyleAnimation.current = processColor(
-              currentStyleAnimation.current
-            ) as number;
-          }
+          // When working with animations changing colors, we need to make sure that each one of them begins with a rgba, not a processed number.
+          // Thus, we only set the path to a processed color, but currentStyleAnimation.current stays as rgba.
+          const isAnimatingColorProp = ColorProperties.includes(
+            currentEntry.path[0] as string
+          );
 
           setPath(
             animation.current,
             currentEntry.path,
-            currentStyleAnimation.current
+            isAnimatingColorProp
+              ? processColor(currentStyleAnimation.current)
+              : currentStyleAnimation.current
           );
         }
       }
