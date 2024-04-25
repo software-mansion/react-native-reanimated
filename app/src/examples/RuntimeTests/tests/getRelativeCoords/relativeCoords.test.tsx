@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, ViewStyle } from 'react-native';
 import Animated, {
   runOnUI,
   measure,
@@ -21,7 +21,7 @@ import {
 
 const REGISTERED_VALUE_KEY = 'sv';
 
-const CoordsComponent = ({ testStyle }: { testStyle: object }) => {
+const CoordsComponent = ({ justifyContent, alignItems }: { justifyContent: string; alignItems: string }) => {
   const coordsSv = useSharedValue<ComponentCoords | null>(null);
   registerValue(REGISTERED_VALUE_KEY, coordsSv);
   const bRef = useAnimatedRef();
@@ -36,9 +36,14 @@ const CoordsComponent = ({ testStyle }: { testStyle: object }) => {
     })();
   };
 
+  const testStyles: ViewStyle = {
+    justifyContent: justifyContent as ViewStyle['justifyContent'],
+    alignItems: alignItems as ViewStyle['alignItems'],
+  };
+
   return (
     <Animated.View style={styles.container}>
-      <Animated.View ref={bRef} style={[styles.bigBox, testStyle]}>
+      <Animated.View ref={bRef} style={[styles.bigBox, testStyles]}>
         <Animated.View ref={sRef} style={styles.smallBox} onLayout={onLayoutMeasure} />
       </Animated.View>
     </Animated.View>
@@ -46,8 +51,18 @@ const CoordsComponent = ({ testStyle }: { testStyle: object }) => {
 };
 
 describe('getRelativeCoords', () => {
-  test.each(TEST_CASES)('getCoords with style: ${style}', async ({ style, expectedValueX, expectedValueY }) => {
-    await render(<CoordsComponent testStyle={style} />);
+  test.each([
+    ['flex-start', 'flex-start', 0, 0],
+    ['flex-start', 'center', 50, 0],
+    ['flex-start', 'flex-end', 100, 0],
+    ['center', 'flex-start', 0, 50],
+    ['center', 'center', 50, 50],
+    ['center', 'flex-end', 100, 50],
+    ['flex-end', 'flex-start', 0, 100],
+    ['flex-end', 'center', 50, 100],
+    ['flex-end', 'flex-end', 100, 100],
+  ])('getCoords with style: ${style}', async ([justifyContent, alignItems, expectedValueX, expectedValueY]) => {
+    await render(<CoordsComponent justifyContent={justifyContent as string} alignItems={alignItems as string} />);
     await wait(300);
     const coords = (await getRegisteredValue(REGISTERED_VALUE_KEY)).onUI;
     expectNotNullable(coords);
@@ -57,81 +72,6 @@ describe('getRelativeCoords', () => {
     }
   });
 });
-
-const TEST_CASES = [
-  {
-    style: {
-      justifyContent: 'flex-start',
-      alignItems: 'flex-start',
-    },
-    expectedValueX: 0,
-    expectedValueY: 0,
-  },
-  {
-    style: {
-      justifyContent: 'flex-start',
-      alignItems: 'center',
-    },
-    expectedValueX: 50,
-    expectedValueY: 0,
-  },
-  {
-    style: {
-      justifyContent: 'flex-start',
-      alignItems: 'flex-end',
-    },
-    expectedValueX: 100,
-    expectedValueY: 0,
-  },
-  {
-    style: {
-      justifyContent: 'center',
-      alignItems: 'flex-start',
-    },
-    expectedValueX: 0,
-    expectedValueY: 50,
-  },
-  {
-    style: {
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    expectedValueX: 50,
-    expectedValueY: 50,
-  },
-  {
-    style: {
-      justifyContent: 'center',
-      alignItems: 'flex-end',
-    },
-    expectedValueX: 100,
-    expectedValueY: 50,
-  },
-  {
-    style: {
-      justifyContent: 'flex-end',
-      alignItems: 'flex-start',
-    },
-    expectedValueX: 0,
-    expectedValueY: 100,
-  },
-  {
-    style: {
-      justifyContent: 'flex-end',
-      alignItems: 'center',
-    },
-    expectedValueX: 50,
-    expectedValueY: 100,
-  },
-  {
-    style: {
-      justifyContent: 'flex-end',
-      alignItems: 'flex-end',
-    },
-    expectedValueX: 100,
-    expectedValueY: 100,
-  },
-];
 
 const styles = StyleSheet.create({
   container: {
