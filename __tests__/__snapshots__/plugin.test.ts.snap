@@ -1876,6 +1876,30 @@ handler = {
 var scrollHandler = useAnimatedScrollHandler(handler);"
 `;
 
+exports[`babel plugin for referenced worklets workletizes assigments that appear after the worklet is used 1`] = `
+"var style = function style() {
+  return {};
+};
+animatedStyle = useAnimatedStyle(style);
+var _worklet_12348123604788_init_data = {
+  code: "function anonymous(){return'AssignmentAfterUse';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+style = function () {
+  var _e = [new global.Error(), 1, -27];
+  var anonymous = function anonymous() {
+    return 'AssignmentAfterUse';
+  };
+  anonymous.__closure = {};
+  anonymous.__workletHash = 12348123604788;
+  anonymous.__initData = _worklet_12348123604788_init_data;
+  anonymous.__stackDetails = _e;
+  return anonymous;
+}();"
+`;
+
 exports[`babel plugin for referenced worklets workletizes in immediate scope 1`] = `
 "var _worklet_11844349717570_init_data = {
   code: "function style(){return{};}",

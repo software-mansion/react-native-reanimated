@@ -1943,5 +1943,20 @@ describe('babel plugin', () => {
       expect(code).toHaveWorkletData(1);
       expect(code).toMatchSnapshot();
     });
+
+    it('workletizes assigments that appear after the worklet is used', () => {
+      const input = html`<script>
+        let style = () => ({});
+        animatedStyle = useAnimatedStyle(style);
+        style = () => {
+          return 'AssignmentAfterUse';
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toIncludeInWorkletString('AssignmentAfterUse');
+      expect(code).toMatchSnapshot();
+    });
   });
 });
