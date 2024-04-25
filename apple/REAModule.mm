@@ -59,6 +59,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
   SingleInstanceChecker<REAModule> singleInstanceChecker_;
 #endif // NDEBUG
   bool hasListeners;
+  bool _isBridgeless;
 }
 
 @synthesize moduleRegistry = _moduleRegistry;
@@ -158,50 +159,35 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 /*
  * Taken from RCTNativeAnimatedTurboModule:
- * In bridgeless mode, `setBridge` is never called during initialization. Instead this selector is invoked via
- * BridgelessTurboModuleSetup.
+ * This selector is invoked via BridgelessTurboModuleSetup.
  */
 - (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
 {
   _surfacePresenter = surfacePresenter;
+  _isBridgeless = true;
 }
 
 - (void)setBridge:(RCTBridge *)bridge
 {
-  // This method isn't called on Bridgeless mode.
   [super setBridge:bridge];
-
-  [bridge.uiManager.observerCoordinator addObserver:self];
-
   // only within the first loading `self.bridge.surfacePresenter` exists
   // during the reload `self.bridge.surfacePresenter` is null
-  _surfacePresenter = self.bridge.surfacePresenter;
+  if (self.bridge.surfacePresenter) {
+    _surfacePresenter = self.bridge.surfacePresenter;
+  }
 
-#ifndef NDEBUG
   [self setReaSurfacePresenter];
-#endif // NDEBUG
 
-  [self setNodesManager:self.bridge];
-}
+  _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:bridge surfacePresenter:_surfacePresenter];
 
-- (void)initialize
-{
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(handleJavaScriptDidLoadNotification:)
                                                name:RCTJavaScriptDidLoadNotification
                                              object:nil];
 
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
-
-//  [bridge.uiManager.observerCoordinator addObserver:self]; // TODO: Check if it's needed on new arch.
-#ifndef NDEBUG
-  [self setReaSurfacePresenter];
-#endif // NDEBUG
-
-  [self setNodesManager:nil];
 }
 
-#ifndef NDEBUG
 - (void)setReaSurfacePresenter
 {
   if (reaSurface == nil) {
@@ -210,12 +196,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
     [_surfacePresenter registerSurface:reaSurface];
   }
   reaSurface.reaModule = self;
-}
-#endif // NDEBUG
-
-- (void)setNodesManager:(RCTBridge *)bridge
-{
-  _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:bridge surfacePresenter:_surfacePresenter];
 }
 
 #else // RCT_NEW_ARCH_ENABLED
@@ -295,7 +275,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)valueUnpackerCode)
 {
-  if (!self.bridge) {
+  if (_isBridgeless) {
 #if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
     RCTCxxBridge *cxxBridge = (RCTCxxBridge *)[RCTBridge currentBridge];
     auto &rnRuntime = *(jsi::Runtime *)cxxBridge.runtime;
