@@ -11,6 +11,8 @@ import {
   type TestValue,
   type TrackerCallCount,
   ComparisonMode,
+  DescribeDecorator,
+  TestDecorator,
 } from './types';
 import { TestComponent } from './TestComponent';
 import { getTrackerCallCount, render, stopRecordingAnimationUpdates, unmockAnimationTimer } from './RuntimeTestsApi';
@@ -99,8 +101,8 @@ export class TestRunner {
     return await this.render(null);
   }
 
-  public describe(name: string, buildSuite: () => void, only = false, skip = false) {
-    if (only) {
+  public describe(name: string, buildSuite: () => void, decorator: DescribeDecorator | null) {
+    if (decorator === DescribeDecorator.ONLY) {
       this._includesOnly = true;
     }
 
@@ -125,39 +127,38 @@ export class TestRunner {
       buildSuite,
       testCases: [],
       nestingLevel: (this._currentTestSuite?.nestingLevel || 0) + 1,
-      only: !!(only || this._currentTestSuite?.only),
-      skip: !!(skip || this._currentTestSuite?.skip),
+      decorator: decorator ? decorator : this._currentTestSuite?.decorator ? this._currentTestSuite?.decorator : null,
     });
   }
 
-  public test(
-    name: string,
-    run: () => void,
-    only = false,
-    skip = false,
-    failing = false,
-    warn = false,
-    expectedWarning = '',
-  ) {
+  public test(name: string, run: () => void, decorator: TestDecorator | null, warningMessage = '') {
     assertTestSuite(this._currentTestSuite);
-    if (only) {
+    if (decorator === TestDecorator.ONLY) {
       this._includesOnly = true;
     }
-    this._currentTestSuite.testCases.push({
-      name: applyMarkdown(name),
-      run,
-      componentsRefs: {},
-      callsRegistry: {},
-      errors: [],
-      only: only,
-      skip: skip,
-      failing: failing,
-      warn: warn,
-      expectedWarning,
-    });
+    this._currentTestSuite.testCases.push(
+      decorator === TestDecorator.WARN || decorator === TestDecorator.FAILING
+        ? {
+            name: applyMarkdown(name),
+            run,
+            componentsRefs: {},
+            callsRegistry: {},
+            errors: [],
+            decorator,
+            warningMessage: warningMessage,
+          }
+        : {
+            name: applyMarkdown(name),
+            run,
+            componentsRefs: {},
+            callsRegistry: {},
+            errors: [],
+            decorator,
+          },
+    );
   }
 
-  public testEachErrorMsg<T>(examples: Array<T>, only = false, skip = false, failing = false, warn = false) {
+  public testEachErrorMsg<T>(examples: Array<T>, decorator: TestDecorator) {
     return (name: string, expectedWarning: string, testCase: (example: T) => void) => {
       examples.forEach((example, index) => {
         const currentTestCase = async () => {
@@ -166,22 +167,19 @@ export class TestRunner {
         this.test(
           formatString(name, example, index),
           currentTestCase,
-          only,
-          skip,
-          failing,
-          warn,
+          decorator,
           formatString(expectedWarning, example, index),
         );
       });
     };
   }
-  public testEach<T>(examples: Array<T>, only = false, skip = false, failing = false, warn = false) {
+  public testEach<T>(examples: Array<T>, decorator: TestDecorator | null) {
     return (name: string, testCase: (example: T) => void) => {
       examples.forEach((example, index) => {
         const currentTestCase = async () => {
           await testCase(example);
         };
-        this.test(formatString(name, example, index), currentTestCase, only, skip, failing, warn);
+        this.test(formatString(name, example, index), currentTestCase, decorator);
       });
     };
   }
@@ -255,16 +253,14 @@ export class TestRunner {
       let skipTestSuite = testSuite.skip;
 
       if (this._includesOnly) {
-        skipTestSuite = skipTestSuite || !testSuite.only;
+        skipTestSuite = skipTestSuite || !(testSuite.decorator === DescribeDecorator.ONLY);
 
         for (const testCase of testSuite.testCases) {
-          if (testCase.only) {
+          if (testCase.decorator === TestDecorator.ONLY) {
             skipTestSuite = false;
-          } else testCase.skip = testCase.skip || !testSuite.only;
-          delete testCase.only;
+          } else testCase.skip = testCase.skip || !(testSuite.decorator === DescribeDecorator.ONLY);
         }
       }
-      delete testSuite.only;
       testSuite.skip = skipTestSuite;
     }
 
@@ -314,8 +310,8 @@ export class TestRunner {
       await testSuite.beforeEach();
     }
 
-    if (testCase.failing || testCase.warn) {
-      const consoleTrackerRef = testCase.failing ? 'console.error' : 'console.warn';
+    if (testCase.decorator === TestDecorator.FAILING || testCase.decorator === TestDecorator.WARN) {
+      const consoleTrackerRef = testCase.decorator === TestDecorator.FAILING ? 'console.error' : 'console.warn';
       const message = makeMutable('');
 
       const newConsoleFuncJS = (warning: string) => {
@@ -340,8 +336,8 @@ export class TestRunner {
       await testCase.run();
 
       this.expect(getTrackerCallCount(consoleTrackerRef)).toBeCalled(1);
-      if (testCase.expectedWarning) {
-        this.expect(message.value).toBe(testCase.expectedWarning, ComparisonMode.STRING);
+      if (testCase.warningMessage) {
+        this.expect(message.value).toBe(testCase.warningMessage, ComparisonMode.STRING);
       }
     } else {
       await testCase.run();

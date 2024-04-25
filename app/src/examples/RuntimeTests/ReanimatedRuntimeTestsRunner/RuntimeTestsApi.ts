@@ -2,22 +2,22 @@ import { Component, ReactElement } from 'react';
 import { TestRunner } from './TestRunner';
 import { TestComponent } from './TestComponent';
 import type { SharedValue } from 'react-native-reanimated';
-import { TestConfiguration, TestValue, NullableTestValue } from './types';
+import { TestConfiguration, TestValue, NullableTestValue, DescribeDecorator, TestDecorator } from './types';
 
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
 
 export const describe = (name: string, buildSuite: () => void) => {
-  testRunner.describe(name, buildSuite);
+  testRunner.describe(name, buildSuite, null);
 };
 
 describe.skip = (name: string, buildSuite: () => void) => {
-  testRunner.describe(name, buildSuite, false, true);
+  testRunner.describe(name, buildSuite, DescribeDecorator.SKIP);
 };
 
 describe.only = (name: string, buildSuite: () => void) => {
-  testRunner.describe(name, buildSuite, true);
+  testRunner.describe(name, buildSuite, DescribeDecorator.ONLY);
 };
 
 export function beforeAll(job: () => void) {
@@ -37,23 +37,23 @@ export function afterAll(job: () => void) {
 }
 
 export const test = (name: string, testCase: () => void) => {
-  testRunner.test(name, testCase);
+  testRunner.test(name, testCase, null);
 };
 
-const failingDecorator = (name: string, expectedWarning: string, testCase: () => void) => {
-  testRunner.test(name, testCase, false, false, true, false, expectedWarning);
+const failingDecorator = (name: string, warningMessage: string, testCase: () => void) => {
+  testRunner.test(name, testCase, TestDecorator.FAILING, warningMessage);
 };
 
 failingDecorator.each = <T>(examples: Array<T>) => {
-  return testRunner.testEachErrorMsg(examples, false, false, true, false);
+  return testRunner.testEachErrorMsg(examples, TestDecorator.FAILING);
 };
 
 const warnDecorator = (name: string, expectedWarning: string, testCase: () => void) => {
-  testRunner.test(name, testCase, false, false, false, true, expectedWarning);
+  testRunner.test(name, testCase, TestDecorator.WARN);
 };
 
 warnDecorator.each = <T>(examples: Array<T>) => {
-  return testRunner.testEachErrorMsg(examples, false, false, false, true);
+  return testRunner.testEachErrorMsg(examples, TestDecorator.WARN);
 };
 
 test.warn = warnDecorator;
@@ -61,24 +61,24 @@ test.warn = warnDecorator;
 test.failing = failingDecorator;
 
 test.each = <T>(examples: Array<T>) => {
-  return testRunner.testEach(examples);
+  return testRunner.testEach(examples, null);
 };
 
 const onlyDecorator = (name: string, testCase: () => void) => {
-  testRunner.test(name, testCase, true);
+  testRunner.test(name, testCase, TestDecorator.ONLY);
 };
 
 onlyDecorator.each = <T>(examples: Array<T>) => {
-  return testRunner.testEach(examples, true);
+  return testRunner.testEach(examples, null);
 };
 test.only = onlyDecorator;
 
 const skipDecorator = (name: string, testCase: () => void) => {
-  testRunner.test(name, testCase, false, true);
+  testRunner.test(name, testCase, TestDecorator.SKIP);
 };
 
 skipDecorator.each = <T>(examples: Array<T>) => {
-  return testRunner.testEach(examples, false, true);
+  return testRunner.testEach(examples, TestDecorator.SKIP);
 };
 
 test.skip = skipDecorator;

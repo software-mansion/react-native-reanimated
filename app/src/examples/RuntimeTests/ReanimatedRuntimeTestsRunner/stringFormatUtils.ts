@@ -24,9 +24,10 @@ export function color(value: NullableTestValue, color: 'yellow' | 'cyan' | 'gree
     cyan: '\x1b[36m',
     gray: '\x1b[38;5;242m',
     orange: '\x1b[38;5;208m',
+    reset: '\x1b[0m',
   };
 
-  return `${COLOR_CODES[color]}${value}`;
+  return `${COLOR_CODES[color]}${value}${COLOR_CODES.reset}`;
 }
 
 export function applyMarkdown(template: string) {
