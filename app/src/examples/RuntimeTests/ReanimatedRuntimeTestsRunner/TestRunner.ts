@@ -1,5 +1,6 @@
 import { Component, MutableRefObject, ReactElement, useRef } from 'react';
 import type {
+  NullableTestValue,
   LockObject,
   Operation,
   SharedValueSnapshot,
@@ -13,9 +14,9 @@ import type {
 import { TestComponent } from './TestComponent';
 import { render, stopRecordingAnimationUpdates, unmockAnimationTimer } from './RuntimeTestsApi';
 import { makeMutable, runOnUI, runOnJS, SharedValue } from 'react-native-reanimated';
-import { color, formatString, logInFrame } from './stringFormatUtils';
+import { color, formatString, indentNestingLevel } from './stringFormatUtils';
 import { createUpdatesContainer } from './UpdatesContainer';
-import { Matchers } from './Matchers';
+import { Matchers, nullableMatch } from './Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
 
 let callTrackerRegistryJS: Record<string, number> = {};
@@ -40,6 +41,7 @@ export class TestRunner {
   private _renderLock: LockObject = { lock: false };
   private _valueRegistry: Record<string, SharedValue> = {};
   private _wasRenderedNull: boolean = false;
+  private _nestingLevel = -1;
   private _threadLock: LockObject = {
     lock: false,
   };
@@ -88,6 +90,7 @@ export class TestRunner {
       name,
       buildSuite,
       testCases: [],
+      nestingLevel: this._nestingLevel + 1,
     });
   }
 
@@ -177,9 +180,14 @@ export class TestRunner {
       startTime: Date.now(),
       endTime: 0,
     };
+
+    const previousNestingLevel = this._nestingLevel;
+
     for (const testSuite of this._testSuites) {
       await this.runTestSuite(testSuite, summary);
     }
+    this._nestingLevel = previousNestingLevel;
+
     this._testSuites = [];
     console.log('End of tests run 🏁');
     summary.endTime = Date.now();
@@ -188,8 +196,9 @@ export class TestRunner {
 
   private async runTestSuite(testSuite: TestSuite, summary: TestSummary) {
     this._currentTestSuite = testSuite;
+    this._nestingLevel = testSuite.nestingLevel;
 
-    logInFrame(`Running test suite: ${testSuite.name}`);
+    console.log(`${indentNestingLevel(this._nestingLevel)} ${testSuite.name}`);
 
     testSuite.buildSuite();
     if (testSuite.beforeAll) {
@@ -203,7 +212,6 @@ export class TestRunner {
     if (testSuite.afterAll) {
       await testSuite.afterAll();
     }
-    console.log('\n\n');
     this._currentTestSuite = null;
   }
 
@@ -230,24 +238,35 @@ export class TestRunner {
   }
 
   private showTestCaseSummary(testCase: TestCase, summary: TestSummary) {
+    let mark;
     if (testCase.errors.length > 0) {
       summary.failed++;
       summary.failedTests.push(testCase.name);
-      const mark = color('✖', 'red');
-      console.log(`${mark} ${testCase.name} `);
-      for (const error of testCase.errors) {
-        console.log(`\t${error}`);
-      }
+      mark = color('✖', 'red');
     } else {
       summary.passed++;
-      const mark = color('✔', 'green');
-      console.log(`${mark} ${testCase.name}`);
+      mark = color('✔', 'green');
+    }
+    console.log(`${indentNestingLevel(this._nestingLevel)} ${mark} ${color(testCase.name, 'gray')}`);
+
+    for (const error of testCase.errors) {
+      console.log(`${indentNestingLevel(this._nestingLevel)}\t${error}`);
     }
   }
 
   public expect(currentValue: TestValue): Matchers {
     assertTestCase(this._currentTestCase);
     return new Matchers(currentValue, this._currentTestCase);
+  }
+
+  public expectNullable(currentValue: NullableTestValue) {
+    assertTestCase(this._currentTestCase);
+    nullableMatch(currentValue, this._currentTestCase);
+  }
+
+  public expectNotNullable(currentValue: NullableTestValue) {
+    assertTestCase(this._currentTestCase);
+    nullableMatch(currentValue, this._currentTestCase, true);
   }
 
   public beforeAll(job: () => void) {

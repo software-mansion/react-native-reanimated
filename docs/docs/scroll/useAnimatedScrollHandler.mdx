@@ -68,7 +68,7 @@ The handler should be passed under `onScroll` parameter regardless of whether it
 
 ### Remarks
 
-The hook returns a handler that is not supposed to be passed to multiple components. You need a separate handler for each scrollable container.
+- The hook returns a handler that may be passed to multiple components. In such situation, the handler will invoke for the given events each time any of the components dispatches them.
 
 ## Example
 

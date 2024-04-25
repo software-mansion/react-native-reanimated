@@ -36,6 +36,7 @@ export type TestSuite = {
   name: string;
   buildSuite: () => void;
   testCases: TestCase[];
+  nestingLevel: number;
   beforeAll?: () => void | Promise<void>;
   afterAll?: () => void | Promise<void>;
   beforeEach?: () => void | Promise<void>;
@@ -64,6 +65,7 @@ export interface Operation {
 }
 
 export type TestValue = TrackerCallCount | string | Array<unknown> | number | bigint | Record<string, unknown>;
+export type NullableTestValue = TestValue | null | undefined;
 
 export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;
