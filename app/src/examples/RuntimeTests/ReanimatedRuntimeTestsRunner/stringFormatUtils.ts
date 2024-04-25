@@ -1,4 +1,4 @@
-import { TestValue } from './types';
+import { NullableTestValue } from './types';
 
 export const RUNTIME_TEST_ERRORS = {
   UNDEFINED_TEST_SUITE: 'Undefined test suite context',
@@ -16,7 +16,7 @@ export function appendWhiteSpaceToMatchLength(message: string | number, length: 
   return `${messageStr}${' '.repeat(length - messageLen)}`;
 }
 
-export function color(value: TestValue, color: 'yellow' | 'cyan' | 'green' | 'red' | 'gray' | 'orange') {
+export function color(value: NullableTestValue, color: 'yellow' | 'cyan' | 'green' | 'red' | 'gray' | 'orange') {
   const COLOR_CODES = {
     red: '\x1b[91m',
     green: '\x1b[92m',

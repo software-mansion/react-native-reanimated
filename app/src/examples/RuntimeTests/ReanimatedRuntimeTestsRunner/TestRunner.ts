@@ -1,6 +1,6 @@
 import { Component, MutableRefObject, ReactElement, useRef } from 'react';
 import {
-  ComparisonMode,
+  type NullableTestValue,
   type LockObject,
   type Operation,
   type SharedValueSnapshot,
@@ -10,13 +10,14 @@ import {
   type TestSummary,
   type TestValue,
   type TrackerCallCount,
+  ComparisonMode,
 } from './types';
 import { TestComponent } from './TestComponent';
 import { getTrackerCallCount, render, stopRecordingAnimationUpdates, unmockAnimationTimer } from './RuntimeTestsApi';
 import { makeMutable, runOnUI, runOnJS, SharedValue } from 'react-native-reanimated';
 import { applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
 import { createUpdatesContainer } from './UpdatesContainer';
-import { Matchers } from './Matchers';
+import { Matchers, nullableMatch } from './Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
 
 let callTrackerRegistryJS: Record<string, number> = {};
@@ -113,7 +114,7 @@ export class TestRunner {
       const parentNesting = this._currentTestSuite.nestingLevel;
       index = parentIndex + 1;
       while (index < this._testSuites.length && this._testSuites[index].nestingLevel > parentNesting) {
-        // Append after last child of the paren describe
+        // Append after last child of the parent describe
         // The children have bigger nesting level
         index += 1;
       }
@@ -249,6 +250,24 @@ export class TestRunner {
       await testSuite.buildSuite();
       this._currentTestSuite = null;
     }
+
+    for (const testSuite of this._testSuites) {
+      let skipTestSuite = testSuite.skip;
+
+      if (this._includesOnly) {
+        skipTestSuite = skipTestSuite || !testSuite.only;
+
+        for (const testCase of testSuite.testCases) {
+          if (testCase.only) {
+            skipTestSuite = false;
+          } else testCase.skip = testCase.skip || !testSuite.only;
+          delete testCase.only;
+        }
+      }
+      delete testSuite.only;
+      testSuite.skip = skipTestSuite;
+    }
+
     for (const testSuite of this._testSuites) {
       await this.runTestSuite(testSuite);
     }
@@ -265,19 +284,6 @@ export class TestRunner {
       return;
     }
 
-    if (this._includesOnly) {
-      let skipTestSuite = !testSuite.only;
-      for (const testCase of testSuite.testCases) {
-        if (testCase.only) {
-          skipTestSuite = false;
-        }
-      }
-      if (skipTestSuite) {
-        this._summary.skipped += testSuite.testCases.length;
-        return;
-      }
-    }
-
     this._currentTestSuite = testSuite;
     console.log(`${indentNestingLevel(testSuite.nestingLevel)} ${testSuite.name}`);
 
@@ -286,7 +292,7 @@ export class TestRunner {
     }
 
     for (const testCase of testSuite.testCases) {
-      if ((!this._includesOnly || testSuite.only || testCase.only) && !testCase.skip) {
+      if (!testCase.skip) {
         await this.runTestCase(testSuite, testCase);
       } else {
         this._summary.skipped++;
@@ -373,6 +379,16 @@ export class TestRunner {
   public expect(currentValue: TestValue): Matchers {
     assertTestCase(this._currentTestCase);
     return new Matchers(currentValue, this._currentTestCase);
+  }
+
+  public expectNullable(currentValue: NullableTestValue) {
+    assertTestCase(this._currentTestCase);
+    nullableMatch(currentValue, this._currentTestCase);
+  }
+
+  public expectNotNullable(currentValue: NullableTestValue) {
+    assertTestCase(this._currentTestCase);
+    nullableMatch(currentValue, this._currentTestCase, true);
   }
 
   public beforeAll(job: () => void) {

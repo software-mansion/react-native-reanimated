@@ -1,0 +1,30 @@
+{
+  "language": "en",
+  "words": [
+    "animatable",
+    "barfoo",
+    "bridgeless",
+    "devs",
+    "easings",
+    "layoutable",
+    "lightspeed",
+    "RCTUI",
+    "REAUI",
+    "relayout",
+    "snapshotting",
+    "superview",
+    "swmansion",
+    "systrace",
+    "uimanager",
+    "uimodule",
+    "unmock",
+    "worklet",
+    "workletization",
+    "workletize",
+    "workletized",
+    "workletizes",
+    "worklets"
+  ],
+  "ignorePaths": ["node_modules", "docs/src/components/Testimonials"],
+  "useGitignore": true
+}

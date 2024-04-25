@@ -30,11 +30,11 @@ export type TestCase = {
   componentsRefs: Record<string, ComponentRef>;
   callsRegistry: Record<string, CallTrucker>;
   errors: string[];
-  only: boolean;
   skip: boolean;
   failing: boolean;
   warn: boolean;
   expectedWarning?: string;
+  only?: boolean;
 };
 
 export type TestSuite = {
@@ -46,8 +46,8 @@ export type TestSuite = {
   afterAll?: () => void | Promise<void>;
   beforeEach?: () => void | Promise<void>;
   afterEach?: () => void | Promise<void>;
-  only: boolean;
   skip: boolean;
+  only?: boolean;
 };
 
 export enum ComparisonMode {
@@ -72,6 +72,7 @@ export interface Operation {
 }
 
 export type TestValue = TrackerCallCount | string | Array<unknown> | number | bigint | Record<string, unknown>;
+export type NullableTestValue = TestValue | null | undefined;
 
 export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;
