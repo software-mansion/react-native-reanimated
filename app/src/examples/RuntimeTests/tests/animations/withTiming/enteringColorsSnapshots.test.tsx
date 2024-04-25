@@ -25,7 +25,7 @@ const AnimatedComponent = ({ fromColor, toColor }: { fromColor: string; toColor:
   return <Animated.View style={styles.colorBox} entering={customAnim} />;
 };
 
-async function getSnaphotUpdates(fromColor: string, toColor: string) {
+async function getSnapshotUpdates(fromColor: string, toColor: string) {
   await mockAnimationTimer();
   const updatesContainer = await recordAnimationUpdates();
   await render(<AnimatedComponent fromColor={fromColor} toColor={toColor} />);
@@ -48,7 +48,7 @@ describe('entering with custom animation (withDelay + withTiming color changes) 
     ['rgba(116, 58, 155, 1)', 'rgba(161, 66, 77, 1)'],
     ['rgba(232, 113, 116, 1)', 'rgba(158, 201, 27, 1)'],
   ])('Entering color from ${0} to ${1}', async ([fromColor, toColor]) => {
-    const [updates, nativeUpdates] = await getSnaphotUpdates(fromColor, toColor);
+    const [updates, nativeUpdates] = await getSnapshotUpdates(fromColor, toColor);
     const snapshotName = (fromColor + toColor)
       .replace(/\s/g, '')
       .replace(/[()]/g, '_')
