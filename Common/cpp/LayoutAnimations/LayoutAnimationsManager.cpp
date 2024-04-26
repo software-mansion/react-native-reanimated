@@ -1,7 +1,6 @@
 #include "LayoutAnimationsManager.h"
 #include "CollectionUtils.h"
 #include "Shareables.h"
-#include <react/renderer/uimanager/primitives.h>
 
 #ifndef NDEBUG
 #include <utility>
@@ -133,7 +132,6 @@ void LayoutAnimationsManager::startLayoutAnimation(
 void LayoutAnimationsManager::cancelLayoutAnimation(
     jsi::Runtime &rt,
     const int tag) const {
-      LOG(ERROR)<<"trying to cancel animation for "<<tag<<std::endl;
   jsi::Value layoutAnimationRepositoryAsValue =
       rt.global()
           .getPropertyAsObject(rt, "global")
@@ -159,6 +157,15 @@ int LayoutAnimationsManager::findPrecedingViewTagForTransition(const int tag) {
     return *std::prev(position);
   }
   return -1;
+}
+
+void LayoutAnimationsManager::transferConfigFromNativeTag(const int nativeId, const int tag){
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  auto config = enteringAnimations_[nativeId];
+  if (config) {
+    enteringAnimations_.insert_or_assign(tag, config);
+  }
+  enteringAnimations_.erase(nativeId);
 }
 
 #ifndef NDEBUG

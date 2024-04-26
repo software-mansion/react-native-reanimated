@@ -58,10 +58,8 @@ function createLayoutAnimationManager() {
         global.ProgressTransitionRegister.onTransitionStart(tag, yogaValues);
         return;
       }
-      // console.log('start', tag, type, yogaValues, config);
 
       const style = config(yogaValues);
-      // console.log(style);
       let currentAnimation = style.animations;
 
       // When layout animation is requested, but a previous one is still running, we merge
@@ -105,8 +103,11 @@ function createLayoutAnimationManager() {
       if (!value) {
         return;
       }
-      value.removeListener(tag + TAG_OFFSET);
-      // stopObservingProgress(tag, value);
+      if (IS_FABRIC) {
+        value.removeListener(tag + TAG_OFFSET);
+      } else {
+        stopObservingProgress(tag, value);
+      }
     },
   };
 }

@@ -1,5 +1,5 @@
 'use strict';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { isFabric, shouldBeUseWeb } from './PlatformChecker';
 import {
   configureLayoutAnimationBatch,
   makeShareableCloneRecursive,
@@ -13,6 +13,8 @@ import type {
   ProgressAnimationCallback,
   SharedTransitionAnimationsFunction,
 } from './layoutReanimation/animationBuilder/commonTypes';
+
+const IS_FABRIC = isFabric();
 
 function createUpdateManager() {
   const animations: LayoutAnimationBatchItem[] = [];
@@ -29,8 +31,7 @@ function createUpdateManager() {
         animations.push(batchItem);
       }
       if (animations.length + deferredAnimations.length === 1) {
-        // setImmediate(this.flush);
-        this.flush();
+        IS_FABRIC ? this.flush() : setImmediate(this.flush);
       }
     },
     flush(this: void) {

@@ -13,7 +13,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-//#include "ShadowNode.h"
 
 namespace reanimated {
 
@@ -43,6 +42,7 @@ class LayoutAnimationsManager {
   void clearLayoutAnimationConfig(const int tag);
   void clearSharedTransitionConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
+  void transferConfigFromNativeTag(const int nativeId, const int tag);
   int findPrecedingViewTagForTransition(const int tag);
 #ifndef NDEBUG
   std::string getScreenSharedTagPairString(
@@ -51,7 +51,7 @@ class LayoutAnimationsManager {
   void checkDuplicateSharedTag(const int viewTag, const int screenTag);
 #endif
 
-// private:
+ private:
   std::unordered_map<int, std::shared_ptr<Shareable>> &getConfigsForType(
       const LayoutAnimationType type);
 

@@ -1,5 +1,7 @@
 #pragma once
 
+namespace reanimated {
+
 struct Window{
   double width, height;
 };
@@ -58,31 +60,9 @@ struct MutationNode: public Node{
   bool isAnimatingExit = false;
   bool isDone = false;
   bool isExiting = false;
-  MutationNode(ShadowViewMutation& mutation): mutation(mutation), Node(mutation.oldChildShadowView.tag){}
-  MutationNode(ShadowViewMutation& mutation, Node&& node): mutation(mutation), Node(std::move(node)){}
+  MutationNode(ShadowViewMutation& mutation): Node(mutation.oldChildShadowView.tag),  mutation(mutation){}
+  MutationNode(ShadowViewMutation& mutation, Node&& node): Node(std::move(node)), mutation(mutation){}
 };
-
-void Node::removeChild(std::shared_ptr<MutationNode> child){
-  for (int i=0; i<children.size(); i++){
-    if (children[i]->tag == child->tag){
-      children.erase(children.begin()+i);
-      break;
-    }
-  }
-}
-void Node::addChild(std::shared_ptr<MutationNode> child){
-  bool done = false;
-  for (auto it = children.begin(); it != children.end(); it++){
-    if ((*it)->mutation.index >child->mutation.index){
-      children.insert(it, child);
-      done = true;
-      break;
-    }
-  }
-  if (!done){
-    children.push_back(child);
-  }
-}
 
 struct SurfaceManager {
   mutable std::unordered_map<SurfaceId, std::shared_ptr<std::unordered_map<Tag, UpdateValues>>> props_;
@@ -137,4 +117,5 @@ static inline void updateLayoutMetrics(LayoutMetrics& layoutMetrics, Frame& fram
   if (frame.y) {
     layoutMetrics.frame.origin.y = *frame.y;
   }
+}
 }

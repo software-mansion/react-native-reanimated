@@ -1,7 +1,7 @@
-#include "LayoutAnimationsProxy.h"
 #include <react/renderer/animations/utils.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include "NativeReanimatedModule.h"
+#include "LayoutAnimationsProxy.h"
 
 namespace reanimated {
 
@@ -451,7 +451,6 @@ void LayoutAnimationsProxy::startEnteringAnimation(const int tag, ShadowViewMuta
   layoutAnimations_.insert_or_assign(tag, la);
 
   Snapshot values(mutation.newChildShadowView, surfaceManager.getWindow(mutation.newChildShadowView.surfaceId));
-
   nativeReanimatedModule_->uiScheduler_->scheduleOnUI(
       [values, this, tag]() {
     jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
@@ -551,14 +550,30 @@ void LayoutAnimationsProxy::transferConfigFromNativeTag(const std::string native
   }
   // TODO: handle exception
   auto nativeId = stoi(nativeIdString);
+  layoutAnimationsManager_->transferConfigFromNativeTag(nativeId, tag);
   std::shared_ptr<Shareable> config = nullptr;
-  {
-    auto lock = std::unique_lock<std::recursive_mutex>(nativeReanimatedModule_->layoutAnimationsManager_->animationsMutex_);
-    config = layoutAnimationsManager_->enteringAnimations_[nativeId];
-    if (config) {
-      layoutAnimationsManager_->enteringAnimations_.insert_or_assign(tag, config);
+}
+
+void Node::removeChild(std::shared_ptr<MutationNode> child){
+  for (int i=0; i<children.size(); i++){
+    if (children[i]->tag == child->tag){
+      children.erase(children.begin()+i);
+      break;
     }
-    layoutAnimationsManager_->enteringAnimations_.erase(nativeId);
+  }
+}
+
+void Node::addChild(std::shared_ptr<MutationNode> child){
+  bool done = false;
+  for (auto it = children.begin(); it != children.end(); it++){
+    if ((*it)->mutation.index >child->mutation.index){
+      children.insert(it, child);
+      done = true;
+      break;
+    }
+  }
+  if (!done){
+    children.push_back(child);
   }
 }
 

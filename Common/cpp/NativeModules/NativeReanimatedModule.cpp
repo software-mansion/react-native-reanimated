@@ -842,23 +842,24 @@ void NativeReanimatedModule::initializeFabric(
   uiManager_ = uiManager;
   uiManager->setAnimationDelegate(nullptr);
     Scheduler *scheduler = (Scheduler *)uiManager->getDelegate();
-    auto cdr = scheduler->getContextContainer()
+    auto componentDescriptorRegistry = scheduler->getContextContainer()
                    ->at<std::weak_ptr<const ComponentDescriptorRegistry>>(
-                       "ComponentDescriptorRegistry_DO_NOT_USE_PRETTY_PLEASE");
-
+                       "ComponentDescriptorRegistry_DO_NOT_USE_PRETTY_PLEASE").lock();
+    
+  if (componentDescriptorRegistry){
     layoutAnimationsProxy_ = std::make_shared<LayoutAnimationsProxy>(
         layoutAnimationsManager_,
         this,
-        cdr.lock(),
+        componentDescriptorRegistry,
         scheduler->getContextContainer());
     uiManager->getShadowTreeRegistry().enumerate(
         [this](const ShadowTree &shadowTree, bool &stop) {
           shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
               layoutAnimationsProxy_);
         });
+  }
 
-    commitHook_ = std::make_shared<ReanimatedCommitHook>(
-        propsRegistry_, uiManager_);
+    commitHook_ = std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
 #if REACT_NATIVE_MINOR_VERSION >= 73
   mountHook_ =
       std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);

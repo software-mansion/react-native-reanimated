@@ -132,14 +132,6 @@ interface Example {
   missingOnFabric?: boolean;
 }
 
-// export const EXAMPLES: Record<string, Example> = {
-//   EmptyExample: {
-//     icon: '👻',
-//     title: 'Empty',
-//     screen: ChangeThemeExample,
-//   },
-// };
-
 export const EXAMPLES: Record<string, Example> = {
   BBExample: {
     icon: '💀',
