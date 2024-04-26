@@ -20,8 +20,8 @@ import prettier from 'prettier/standalone';
 import babelParser from 'prettier/parser-babel';
 
 function compileTSXtoJSX(tsxCode: string) {
-  const TEXT_TO_REPLACE_1 = '// 1-COMMENT-TO-REPLACE';
-  const TEXT_TO_REPLACE_2 = '// 2-COMMENT-TO-REPLACE';
+  const TEXT_TO_REPLACE_1 = '// COMMENT-TO-REPLACE-FOR-EMPTY-LINES';
+  const TEXT_TO_REPLACE_2 = '// COMMENT-TO-REPLACE-FOR-NON-EMPTY-LINES';
 
   // Adding comments to the end of each line to avoid vanishing empty lines
   tsxCode = tsxCode
