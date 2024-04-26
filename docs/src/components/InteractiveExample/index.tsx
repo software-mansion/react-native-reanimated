@@ -27,7 +27,9 @@ function compileTSXtoJSX(tsxCode: string) {
   tsxCode = tsxCode
     .split('\n')
     .map((line) =>
-      line.trim() === '' ? PLACEHOLDER_FOR_EMPTY_LINES : line + PLACEHOLDER_FOR_BREAKING_LINES
+      line.trim() === ''
+        ? PLACEHOLDER_FOR_EMPTY_LINES
+        : line + PLACEHOLDER_FOR_BREAKING_LINES
     )
     .join('\n');
   const result = ts.transpileModule(tsxCode, {
