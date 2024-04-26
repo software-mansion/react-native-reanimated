@@ -32,7 +32,12 @@
     "pressable",
     "inout",
     "workletizes",
-    "worklets"
+    "worklets",
+    "runtimes",
+    "overdamped",
+    "automagically",
+    "threejs",
+    "nomalized"
   ],
   "ignorePaths": ["node_modules", "docs/src/components/Testimonials"],
   "useGitignore": true
