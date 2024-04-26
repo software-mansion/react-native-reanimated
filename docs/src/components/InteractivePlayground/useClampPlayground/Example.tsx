@@ -41,7 +41,10 @@ export default function App({ width: FRAME_WIDTH, options }: Props) {
             },
             withRepeat(
               withSequence(
-                withDelay(2000, withSpring((options.upperBound / 400) * FRAME_WIDTH, config)),
+                withDelay(
+                  2000,
+                  withSpring((options.upperBound / 400) * FRAME_WIDTH, config)
+                ),
                 withTiming(BOX_START, { duration: 0 })
               ),
               -1,
@@ -58,7 +61,10 @@ export default function App({ width: FRAME_WIDTH, options }: Props) {
         {
           translateX: withRepeat(
             withSequence(
-              withDelay(2000, withSpring((options.upperBound / 400) * FRAME_WIDTH, config)),
+              withDelay(
+                2000,
+                withSpring((options.upperBound / 400) * FRAME_WIDTH, config)
+              ),
               withTiming(0, { duration: 0 })
             ),
             -1,
@@ -109,9 +115,7 @@ export default function App({ width: FRAME_WIDTH, options }: Props) {
                 {
                   borderLeftWidth: 2,
                   marginTop: -(BOX_SIZE + FRAME_HEIGHT) / 2,
-                  width:
-                    FRAME_WIDTH -
-                    (options.upperBound / 400) * FRAME_WIDTH,
+                  width: FRAME_WIDTH - (options.upperBound / 400) * FRAME_WIDTH,
                   alignSelf: 'flex-end',
                 },
               ]}
