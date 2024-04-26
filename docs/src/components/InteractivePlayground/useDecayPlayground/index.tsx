@@ -52,7 +52,7 @@ export default function useDecayPlayground() {
       clamp: [${clampMin}, ${clampMax}],
       velocityFactor: ${velocityFactor},
       rubberBandEffect: ${rubberBandEffect},
-      ${rubberBandEffect ? '// ' : ''}rubberBandFactor: ${rubberBandFactor},
+      ${rubberBandEffect ? '' : '// '}rubberBandFactor: ${rubberBandFactor},
       reduceMotion: ${formatReduceMotion(reduceMotion)},
     })
   `;
