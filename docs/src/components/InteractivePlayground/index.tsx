@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import React, { Dispatch, useMemo } from 'react';
+import React, { Dispatch } from 'react';
 import styles from './styles.module.css';
 
 import BrowserOnly from '@docusaurus/BrowserOnly';
@@ -37,7 +37,6 @@ interface InteractivePlaygroundProps {
   usePlayground: () => {
     example: React.FC<{ width?: number }>;
     props?: Record<string, any>;
-    memo?: any[];
     code: string;
     controls: string;
     resetOptions: () => {};
@@ -56,7 +55,6 @@ export default function InteractivePlayground(
   const {
     example: Example,
     props: exampleProps,
-    memo,
     code,
     controls,
     resetOptions,
@@ -99,15 +97,7 @@ export default function InteractivePlayground(
           </div>
           <div className={styles.previewWrapper}>
             <React.Fragment key={key}>
-              {width !== null &&
-                ((memo ?? []).length > 0 ? (
-                  useMemo(
-                    () => <Example {...exampleProps} width={width} />,
-                    [...memo, width]
-                  )
-                ) : (
-                  <Example {...exampleProps} width={width} />
-                ))}
+              <Example {...exampleProps} width={width} />
             </React.Fragment>
           </div>
           {additionalComponents?.section}

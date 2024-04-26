@@ -229,7 +229,6 @@ export default function useAnimatedSensorPlayground() {
     controls,
     example: Example,
     props: { values: { x, y, z } },
-    memo: [x, y, z],
     resetOptions,
   };
 }
