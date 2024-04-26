@@ -1,11 +1,25 @@
 {
   "language": "en",
   "words": [
-    "worklets",
+    "animatable",
+    "barfoo",
+    "bridgeless",
+    "devs",
+    "easings",
+    "layoutable",
+    "lightspeed",
+    "RCTUI",
+    "REAUI",
+    "relayout",
+    "snapshotting",
+    "superview",
+    "swmansion",
+    "systrace",
+    "uimanager",
+    "uimodule",
     "worklet",
     "workletization",
     "workletize",
-    "workletizes",
     "workletized",
     "barfoo",
     "devs",
@@ -16,12 +30,10 @@
     "animable",
     "ispreview",
     "pressable",
-    "inout"
+    "inout",
+    "workletizes",
+    "worklets"
   ],
-  "ignorePaths": [
-    "node_modules",
-    "docs/src/components/Testimonials"
-  ],
+  "ignorePaths": ["node_modules", "docs/src/components/Testimonials"],
   "useGitignore": true
 }
-

@@ -14,7 +14,7 @@ import { FadingTransition } from './transition/Fading.web';
 import { insertWebAnimation } from './domUtils';
 
 // Translate values are passed as numbers. However, if `translate` property receives number, it will not automatically
-// convert it to `px`. Therefore if we want to keep exisitng transform we have to add 'px' suffix to each of translate values
+// convert it to `px`. Therefore if we want to keep existing transform we have to add 'px' suffix to each of translate values
 // that are present inside transform.
 function addPxToTranslate(
   existingTransform: NonNullable<TransformsStyle['transform']>
@@ -43,7 +43,7 @@ function addPxToTranslate(
   return newTransform;
 }
 
-// In order to keep exisitng transform throughout animation, we have to add it to each of keyframe step.
+// In order to keep existing transform throughout animation, we have to add it to each of keyframe step.
 function addExistingTransform(
   newAnimationData: AnimationData,
   newTransform: ReanimatedWebTransformProperties[]
