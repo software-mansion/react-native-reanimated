@@ -42,7 +42,7 @@ const AnimatedComponent = ({ easing }: { easing: EasingFunction | EasingFunction
   );
 };
 
-async function getSnaphotUpdates(easingFn: EasingFunction | EasingFunctionFactory | undefined) {
+async function getSnapshotUpdates(easingFn: EasingFunction | EasingFunctionFactory | undefined) {
   await mockAnimationTimer();
   const updatesContainer = await recordAnimationUpdates();
   await render(<AnimatedComponent easing={easingFn} />);
@@ -54,7 +54,7 @@ async function getSnaphotUpdates(easingFn: EasingFunction | EasingFunctionFactor
 
 describe('withTiming snapshots 📸, test EASING', () => {
   test('No easing function', async () => {
-    const [updates, nativeUpdates] = await getSnaphotUpdates(undefined);
+    const [updates, nativeUpdates] = await getSnapshotUpdates(undefined);
     expect(updates).toMatchSnapshots(Snapshots.noEasing);
     expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
   });
@@ -79,7 +79,7 @@ describe('withTiming snapshots 📸, test EASING', () => {
       .replace(/\./g, '$')
       .replace(/-/g, '$')}`;
 
-    const [updates, nativeUpdates] = await getSnaphotUpdates(
+    const [updates, nativeUpdates] = await getSnapshotUpdates(
       //@ts-ignore This error is because various easing functions accept different number of arguments
       easing(...argumentSet),
     );
@@ -97,13 +97,13 @@ describe('withTiming snapshots 📸, test EASING', () => {
     Easing.quad,
     Easing.sin,
   ])('Easing.%p', async easing => {
-    const [updates, nativeUpdates] = await getSnaphotUpdates(easing);
+    const [updates, nativeUpdates] = await getSnapshotUpdates(easing);
     expect(updates).toMatchSnapshots(Snapshots[easing.name as keyof typeof Snapshots]);
     expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
   });
 
   test.each([(Easing.in, Easing.out, Easing.inOut)])('Easing.%p(Easing.elastic(10))', async easing => {
-    const [updates, nativeUpdates] = await getSnaphotUpdates(easing(Easing.elastic(10)));
+    const [updates, nativeUpdates] = await getSnapshotUpdates(easing(Easing.elastic(10)));
     expect(updates).toMatchSnapshots(Snapshots[easing.name as keyof typeof Snapshots]);
     expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
   });
