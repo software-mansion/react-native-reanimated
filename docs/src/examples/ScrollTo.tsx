@@ -5,8 +5,8 @@ import Animated, {
   useDerivedValue,
   useSharedValue,
   scrollTo,
-  SharedValue,
 } from 'react-native-reanimated';
+import type { SharedValue } from 'react-native-reanimated';
 
 const ITEM_COUNT = 10;
 const ITEM_SIZE = 100;

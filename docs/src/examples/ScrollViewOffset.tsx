@@ -1,12 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, TextInput, Button } from 'react-native';
 import Animated, {
-  DerivedValue,
   useAnimatedProps,
   useAnimatedRef,
   useDerivedValue,
   useScrollViewOffset,
 } from 'react-native-reanimated';
+import type { DerivedValue } from 'react-native-reanimated';
 
 export default function App() {
   const animatedRef = useAnimatedRef<Animated.ScrollView>();

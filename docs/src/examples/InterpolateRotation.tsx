@@ -7,13 +7,13 @@ import Animated, {
   withTiming,
   interpolate,
   Extrapolation,
-  SharedValue,
 } from 'react-native-reanimated';
 import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
+import type { SharedValue } from 'react-native-reanimated';
 
 export default function App() {
   const offset = useSharedValue<number>(0);
