@@ -12,7 +12,6 @@ import useSpringPlayground from './useSpringPlayground';
 import useTimingPlayground from './useTimingPlayground';
 import useInterpolateColorPlayground from './useInterpolateColorPlayground';
 import useAnimatedSensorPlayground from './useAnimatedSensorPlayground';
-import useDecayPlayground from './useDecayPlayground';
 
 import Reset from '@site/static/img/reset.svg';
 import ResetDark from '@site/static/img/reset-dark.svg';
@@ -32,7 +31,6 @@ export {
   useTimingPlayground,
   useInterpolateColorPlayground,
   useAnimatedSensorPlayground,
-  useDecayPlayground,
 };
 
 interface InteractivePlaygroundProps {
