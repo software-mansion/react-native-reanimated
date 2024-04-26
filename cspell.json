@@ -34,6 +34,12 @@
     "workletizes",
     "worklets"
   ],
-  "ignorePaths": ["node_modules", "docs/src/components/Testimonials"],
+  "ignorePaths": [
+    "node_modules",
+    "docs/src/components/Testimonials",
+    "MacOSExample/macos/MacOSExample.xcodeproj",
+    "cspell.json",
+    "package.json"
+  ],
   "useGitignore": true
 }
