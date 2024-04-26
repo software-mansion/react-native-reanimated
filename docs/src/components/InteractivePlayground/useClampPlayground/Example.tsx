@@ -11,7 +11,6 @@ import Animated, {
 } from 'react-native-reanimated';
 
 const BOX_START = 0;
-const BOX_STOP = 200;
 const BOX_SIZE = 80;
 
 const FRAME_HEIGHT = 100;
@@ -31,8 +30,6 @@ export default function App({ width: FRAME_WIDTH, options }: Props) {
     damping: 3,
   };
 
-  options.upperBound -= BOX_SIZE;
-
   const clampedStyle = useAnimatedStyle(() => {
     return {
       transform: [
@@ -40,11 +37,11 @@ export default function App({ width: FRAME_WIDTH, options }: Props) {
           translateX: withClamp(
             {
               min: (options.lowerBound / 400) * FRAME_WIDTH,
-              max: (options.upperBound / 400) * FRAME_WIDTH,
+              max: (options.upperBound / 400) * FRAME_WIDTH - BOX_SIZE,
             },
             withRepeat(
               withSequence(
-                withDelay(2000, withSpring(BOX_STOP, config)),
+                withDelay(2000, withSpring((options.upperBound / 400) * FRAME_WIDTH, config)),
                 withTiming(BOX_START, { duration: 0 })
               ),
               -1,
@@ -61,7 +58,7 @@ export default function App({ width: FRAME_WIDTH, options }: Props) {
         {
           translateX: withRepeat(
             withSequence(
-              withDelay(2000, withSpring(200, config)),
+              withDelay(2000, withSpring((options.upperBound / 400) * FRAME_WIDTH, config)),
               withTiming(0, { duration: 0 })
             ),
             -1,
@@ -114,8 +111,7 @@ export default function App({ width: FRAME_WIDTH, options }: Props) {
                   marginTop: -(BOX_SIZE + FRAME_HEIGHT) / 2,
                   width:
                     FRAME_WIDTH -
-                    (options.upperBound / 400) * FRAME_WIDTH -
-                    BOX_SIZE,
+                    (options.upperBound / 400) * FRAME_WIDTH,
                   alignSelf: 'flex-end',
                 },
               ]}

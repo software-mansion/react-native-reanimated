@@ -78,5 +78,7 @@ export function setDummyPosition(
   dummy.style.height = `${snapshot.height}px`;
   dummy.style.margin = '0px'; // tmpElement has absolute position, so margin is not necessary
 
-  fixElementPosition(dummy, dummy.parentElement!, snapshot);
+  if (dummy.parentElement) {
+    fixElementPosition(dummy, dummy.parentElement, snapshot);
+  }
 }

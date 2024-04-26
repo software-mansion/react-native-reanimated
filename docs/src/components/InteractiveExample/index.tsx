@@ -20,14 +20,16 @@ import prettier from 'prettier/standalone';
 import babelParser from 'prettier/parser-babel';
 
 function compileTSXtoJSX(tsxCode: string) {
-  const TEXT_TO_REPLACE_1 = '// 1-COMMENT-TO-REPLACE';
-  const TEXT_TO_REPLACE_2 = '// 2-COMMENT-TO-REPLACE';
+  const PLACEHOLDER_FOR_EMPTY_LINES = '// PLACEHOLDER-FOR-EMPTY-LINES';
+  const PLACEHOLDER_FOR_BREAKING_LINES = '// PLACEHOLDER-FOR-BREAKING-LINES';
 
   // Adding comments to the end of each line to avoid vanishing empty lines
   tsxCode = tsxCode
     .split('\n')
     .map((line) =>
-      line.trim() === '' ? TEXT_TO_REPLACE_1 : line + TEXT_TO_REPLACE_2
+      line.trim() === ''
+        ? PLACEHOLDER_FOR_EMPTY_LINES
+        : line + PLACEHOLDER_FOR_BREAKING_LINES
     )
     .join('\n');
   const result = ts.transpileModule(tsxCode, {
@@ -45,10 +47,10 @@ function compileTSXtoJSX(tsxCode: string) {
   const output = result.outputText
     .split('\n')
     .map((l) =>
-      l.trim() === TEXT_TO_REPLACE_1
+      l.trim() === PLACEHOLDER_FOR_EMPTY_LINES
         ? ''
-        : l.trim().endsWith(TEXT_TO_REPLACE_2)
-        ? l.slice(0, l.indexOf(TEXT_TO_REPLACE_2)).trimEnd()
+        : l.trim().endsWith(PLACEHOLDER_FOR_BREAKING_LINES)
+        ? l.slice(0, l.indexOf(PLACEHOLDER_FOR_BREAKING_LINES)).trimEnd()
         : l
     )
     .join('\n');
