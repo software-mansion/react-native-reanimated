@@ -13,69 +13,6 @@ class NativeReanimatedModule;
 
 using namespace facebook;
 
-struct RootNode;
-
-struct MutationNode{
-  std::vector<std::shared_ptr<MutationNode>> children;
-  std::shared_ptr<MutationNode> parent;
-  std::shared_ptr<RootNode> root = nullptr;
-  Tag tag;
-  ShadowViewMutation mutation;
-  std::unordered_set<Tag> animatedChildren;
-  bool isAnimatingExit = false;
-  bool isDone = false;
-  bool isExiting = false;
-  MutationNode(ShadowViewMutation& mutation): mutation(mutation){}
-  MutationNode(ShadowViewMutation& mutation, RootNode& root);
-  void removeChild(std::shared_ptr<MutationNode> child){
-    for (int i=0; i<children.size(); i++){
-      if (children[i]->tag == child->tag){
-        children.erase(children.begin()+i);
-        break;
-      }
-    }
-  }
-  void addChild(std::shared_ptr<MutationNode> child){
-    bool done = false;
-    for (auto it = children.begin(); it != children.end(); it++){
-      if ((*it)->mutation.index >child->mutation.index){
-        children.insert(it, child);
-        done = true;
-        break;
-      }
-    }
-    if (!done){
-      children.push_back(child);
-    }
-  }
-};
-
-struct RootNode{
-  std::vector<std::shared_ptr<MutationNode>> children;
-  Tag tag;
-  void removeChild(std::shared_ptr<MutationNode> child){
-    for (int i=0; i<children.size(); i++){
-      if (children[i]->tag == child->tag){
-        children.erase(children.begin()+i);
-        break;
-      }
-    }
-  }
-  void addChild(std::shared_ptr<MutationNode> child){
-    bool done = false;
-    for (auto it = children.begin(); it != children.end(); it++){
-      if ((*it)->mutation.index >child->mutation.index){
-        children.insert(it, child);
-        done = true;
-        break;
-      }
-    }
-    if (!done){
-      children.push_back(child);
-    }
-  }
-};
-
 struct LayoutAnimation {
   std::shared_ptr<ShadowView> end, current;
   ShadowView start, parent;
@@ -87,8 +24,7 @@ struct LayoutAnimation {
 };
 
 struct LayoutAnimationsProxy : public MountingOverrideDelegate{
-  mutable std::unordered_map<Tag, std::shared_ptr<RootNode>> rootNodeForTag;
-  mutable std::unordered_map<Tag, std::shared_ptr<MutationNode>> nodeForTag;
+  mutable std::unordered_map<Tag, std::shared_ptr<Node>> nodeForTag;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   mutable std::unordered_map<Tag, std::shared_ptr<std::unordered_set<int>>> indices;
   mutable std::unordered_set<Tag> animatedTags;
@@ -121,7 +57,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   void removeRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList& mutations) const;
   bool startAnimationsRecursively(std::shared_ptr<MutationNode> node, bool shouldRemoveSubviewsWithoutAnimations, bool shouldAnimate, ShadowViewMutationList& mutations) const;
   void endAnimationsRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList& mutations) const;
-  void maybeDropAncestors(std::shared_ptr<MutationNode> node, std::shared_ptr<MutationNode> child, ShadowViewMutationList& cleanupMutations) const;
+  void maybeDropAncestors(std::shared_ptr<Node> node, std::shared_ptr<MutationNode> child, ShadowViewMutationList& cleanupMutations) const;
   
   const ComponentDescriptor& getComponentDescriptorForShadowView(const ShadowView& shadowView) const;
   

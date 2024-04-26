@@ -4,7 +4,6 @@
 #include "NativeReanimatedModule.h"
 
 namespace reanimated {
-MutationNode::MutationNode(ShadowViewMutation& mutation, RootNode& root): children(std::move(root.children)), tag(root.tag), mutation(mutation){}
 
 std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(int tag, const jsi::Object &newStyle) {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
@@ -53,13 +52,11 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
 
   if (shouldRemove) {
     if (nodeForTag.contains(tag)){
-      auto node = nodeForTag.at(tag);
-      endAnimationsRecursively(node, cleanupMutations);
+      auto node = nodeForTag[tag];
+      auto mutationNode = std::static_pointer_cast<MutationNode>(node);
+      endAnimationsRecursively(mutationNode, cleanupMutations);
       if (node->parent){
-        maybeDropAncestors(node->parent, node, cleanupMutations);
-      }
-      if (node->root){
-        node->root->removeChild(node);
+        maybeDropAncestors(node->parent, mutationNode, cleanupMutations);
       }
     }
   }
@@ -92,9 +89,15 @@ void LayoutAnimationsProxy::endAnimationsRecursively(std::shared_ptr<MutationNod
   mutations.push_back(ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
 }
 
-void LayoutAnimationsProxy::maybeDropAncestors(std::shared_ptr<MutationNode> node, std::shared_ptr<MutationNode> child, ShadowViewMutationList& cleanupMutations) const{
+void LayoutAnimationsProxy::maybeDropAncestors(std::shared_ptr<Node> parent, std::shared_ptr<MutationNode> child, ShadowViewMutationList& cleanupMutations) const{
+  parent->removeChild(child);
+  if (parent->parent == nullptr){
+    return;
+  }
+  
+  auto node = std::static_pointer_cast<MutationNode>(parent);
   node->animatedChildren.erase(child->tag);
-  node->removeChild(child);
+  
   if (node->animatedChildren.empty() && !node->isAnimatingExit){
     for (auto subNode: node->children){
       endAnimationsRecursively(subNode, cleanupMutations);
@@ -108,12 +111,7 @@ void LayoutAnimationsProxy::maybeDropAncestors(std::shared_ptr<MutationNode> nod
     updateIndices(node->mutation);
     LOG(INFO) << "delete "<<node->tag<<std::endl;
     cleanupMutations.push_back(ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
-    if (node->parent){
-      maybeDropAncestors(node->parent, node, cleanupMutations);
-    }
-    if (node->root){
-      node->root->removeChild(node);
-    }
+    maybeDropAncestors(node->parent, node, cleanupMutations);
   }
 }
 
@@ -171,37 +169,31 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
       auto tag = mutation.oldChildShadowView.tag;
       auto parentTag = mutation.parentShadowView.tag;
       //      auto parentTag = mutation.parentTag; TODO: uncomment
-      if (!nodeForTag.contains(tag)) {
-        if (rootNodeForTag.contains(tag)){
-          auto rootNode = rootNodeForTag.at(tag);
-          rootNodeForTag.erase(tag);
-          auto node = std::make_shared<MutationNode>(mutation, *rootNode);
-          for (auto subNode: node->children){
-            subNode->parent = node;
-          }
-          nodeForTag.insert_or_assign(tag, node);
-        } else {
-          nodeForTag.insert_or_assign(tag, std::make_shared<MutationNode>(mutation));
-        }
-      }
-      auto &node = nodeForTag.at(tag);
-      node->tag = tag;
-
-      if (nodeForTag.contains(parentTag)){
-        auto &parent = nodeForTag.at(parentTag);
-        parent->addChild(node);
-        node->parent = parent;
+      
+      std::shared_ptr<MutationNode> mutationNode;
+      std::shared_ptr<Node> node = nodeForTag[tag], parent = nodeForTag[parentTag];
+      
+      if (!node){
+        mutationNode = std::make_shared<MutationNode>(mutation);
       } else {
-        if (!rootNodeForTag.contains(parentTag)){
-          auto rootNode = std::make_shared<RootNode>();
-          rootNode->tag = parentTag;
-          rootNodeForTag.insert_or_assign(parentTag, rootNode);
+        mutationNode = std::make_shared<MutationNode>(mutation, std::move(*node));
+        for (auto subNode: mutationNode->children){
+          subNode->parent = mutationNode;
         }
-        auto rootNode = rootNodeForTag.at(parentTag);
-        rootNode->addChild(node);
-        node->root = rootNode;
-        roots.push_back(node);
       }
+      nodeForTag[tag] = mutationNode;
+      
+      if (!parent){
+        parent = std::make_shared<Node>(parentTag);
+        nodeForTag[parentTag] = parent;
+      }
+      
+      if (!parent->parent){
+        roots.push_back(mutationNode);
+      }
+      
+      parent->addChild(mutationNode);
+      mutationNode->parent = parent;
     }
   }
 
@@ -214,7 +206,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
       filteredMutations.push_back(node->mutation);
       updateIndices(node->mutation);
       nodeForTag.erase(node->tag);
-      node->root->removeChild(node);
+      node->parent->removeChild(node);
       LOG(INFO) << "delete "<<node->tag<<std::endl;
       filteredMutations.push_back(ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
     }
@@ -401,9 +393,13 @@ void LayoutAnimationsProxy::updateIndices(ShadowViewMutation &mutation) const {
       newS->insert(i);
     } else {
       for (auto &[tag, node] : nodeForTag) {
-        if (node->mutation.parentShadowView.tag == mutation.parentShadowView.tag && node->mutation.index == i) {
+        if (!node->parent){
+          continue;
+        }
+        auto mutationNode = std::static_pointer_cast<MutationNode>(node);
+        if (mutationNode->mutation.parentShadowView.tag == mutation.parentShadowView.tag && mutationNode->mutation.index == i) {
           // !!!
-          nodesToFix.push_back(node);
+          nodesToFix.push_back(mutationNode);
           break;
         }
       }
