@@ -53,6 +53,6 @@ export function useAnimatedKeyboard(
       unsubscribeFromKeyboardEvents(listenerId.current);
       isSubscribed.current = false;
     };
-  }, []);
+  }, [options]);
   return ref.current;
 }

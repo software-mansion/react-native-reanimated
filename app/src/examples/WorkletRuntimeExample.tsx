@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
@@ -169,15 +169,14 @@ function RunOnRuntimeArgsDemo() {
   return <Button title="runOnRuntime with args" onPress={handlePress} />;
 }
 
-let runtime: WorkletRuntime | undefined;
-
 function RunOnRuntimeLongRunningTasksDemo() {
+  const runtime = useRef<WorkletRuntime | undefined>();
   const handlePress = () => {
-    if (runtime === undefined) {
-      runtime = createWorkletRuntime('foo');
+    if (runtime.current === undefined) {
+      runtime.current = createWorkletRuntime('foo');
     }
     for (let i = 0; i < 3; i++) {
-      runOnRuntime(runtime, () => {
+      runOnRuntime(runtime.current, () => {
         'worklet';
         const until = performance.now() + 500;
         while (performance.now() < until) {}

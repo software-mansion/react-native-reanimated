@@ -75,8 +75,9 @@ const FlatListForwardRefRender = function <Item = any>(
   // react-native defaults it to 50 for FlatLists.
   // We set it to 1, so we have peace until
   // there are 960 fps screens.
-  if (!('scrollEventThrottle' in restProps)) {
-    restProps.scrollEventThrottle = 1;
+  const copiedProps = { ...restProps };
+  if (!('scrollEventThrottle' in copiedProps)) {
+    copiedProps.scrollEventThrottle = 1;
   }
 
   const itemLayoutAnimationRef = useRef(itemLayoutAnimation);
@@ -91,7 +92,7 @@ const FlatListForwardRefRender = function <Item = any>(
     // @ts-expect-error In its current type state, createAnimatedComponent cannot create generic components.
     <AnimatedFlatList
       ref={ref}
-      {...restProps}
+      {...copiedProps}
       CellRendererComponent={CellRendererComponent}
     />
   );

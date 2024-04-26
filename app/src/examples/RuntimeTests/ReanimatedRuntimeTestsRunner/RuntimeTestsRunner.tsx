@@ -1,15 +1,13 @@
 import { View, Button, StyleSheet } from 'react-native';
-import React, { ReactNode, useEffect, useState } from 'react';
+import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { runTests, configure } from './RuntimeTestsApi';
-import { LockObject } from './types';
-
-let renderLock: LockObject = { lock: false };
 
 export default function RuntimeTestsRunner() {
+  const isRenderLocked = useRef<boolean>(false);
   const [component, setComponent] = useState<ReactNode | null>(null);
   useEffect(() => {
-    if (renderLock) {
-      renderLock.lock = false;
+    if (isRenderLocked.current) {
+      isRenderLocked.current = false;
     }
   }, [component]);
   return (
@@ -17,7 +15,7 @@ export default function RuntimeTestsRunner() {
       <Button
         title="Run tests"
         onPress={async () => {
-          renderLock = configure({ render: setComponent });
+          isRenderLocked.current = configure({ render: setComponent }).lock;
           await runTests();
         }}
       />

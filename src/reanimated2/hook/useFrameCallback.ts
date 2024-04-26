@@ -41,13 +41,16 @@ export function useFrameCallback(
   });
 
   useEffect(() => {
+    // Unregister previous callback.
+    frameCallbackRegistry.unregisterFrameCallback(ref.current.callbackId);
     ref.current.callbackId =
       frameCallbackRegistry.registerFrameCallback(callback);
     ref.current.setActive(ref.current.isActive);
 
+    const currentId = ref.current.callbackId;
+
     return () => {
-      frameCallbackRegistry.unregisterFrameCallback(ref.current.callbackId);
-      ref.current.callbackId = -1;
+      frameCallbackRegistry.unregisterFrameCallback(currentId);
     };
   }, [callback, autostart]);
 

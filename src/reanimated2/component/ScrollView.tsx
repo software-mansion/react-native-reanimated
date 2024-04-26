@@ -5,7 +5,6 @@ import type { ScrollViewProps } from 'react-native';
 import { ScrollView } from 'react-native';
 import { createAnimatedComponent } from '../../createAnimatedComponent';
 import type { SharedValue } from '../commonTypes';
-import type { AnimatedRef } from '../hook';
 import { useAnimatedRef, useScrollViewOffset } from '../hook';
 import type { AnimatedProps } from '../helperTypes';
 
@@ -25,27 +24,22 @@ const AnimatedScrollViewComponent = createAnimatedComponent(ScrollView);
 export const AnimatedScrollView = forwardRef(
   (props: AnimatedScrollViewProps, ref: ForwardedRef<AnimatedScrollView>) => {
     const { scrollViewOffset, ...restProps } = props;
-    const animatedRef = (
-      ref === null
-        ? // eslint-disable-next-line react-hooks/rules-of-hooks
-          useAnimatedRef<ScrollView>()
-        : ref
-    ) as AnimatedRef<AnimatedScrollView>;
+    const animatedRef = useAnimatedRef<AnimatedScrollView>();
+    const outRef = ref ?? animatedRef;
 
-    if (scrollViewOffset) {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      useScrollViewOffset(animatedRef, scrollViewOffset);
-    }
+    // @ts-expect-error TODO: Allow null as `useScrollViewOffset` ref argument.
+    useScrollViewOffset(null, scrollViewOffset);
 
     // Set default scrollEventThrottle, because user expects
     // to have continuous scroll events.
     // We set it to 1 so we have peace until
     // there are 960 fps screens.
-    if (!('scrollEventThrottle' in restProps)) {
-      restProps.scrollEventThrottle = 1;
+    const newRestProps = { ...restProps };
+    if (!('scrollEventThrottle' in newRestProps)) {
+      newRestProps.scrollEventThrottle = 1;
     }
 
-    return <AnimatedScrollViewComponent ref={animatedRef} {...restProps} />;
+    return <AnimatedScrollViewComponent ref={outRef} {...newRestProps} />;
   }
 );
 

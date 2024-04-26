@@ -1,5 +1,5 @@
 'use strict';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { initializeSensor, registerSensor, unregisterSensor } from '../core';
 import type {
   SensorConfig,
@@ -95,6 +95,12 @@ export function useAnimatedSensor(
   userConfig?: Partial<SensorConfig>
 ): AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D> {
   const userConfigRef = useRef(userConfig);
+  const config = useRef<SensorConfig>({
+    interval: 'auto',
+    adjustToInterfaceOrientation: true,
+    iosReferenceFrame: IOSReferenceFrame.Auto,
+    ...userConfigRef.current,
+  });
 
   const hasConfigChanged =
     userConfigRef.current?.adjustToInterfaceOrientation !==
@@ -103,43 +109,38 @@ export function useAnimatedSensor(
     userConfigRef.current?.iosReferenceFrame !== userConfig?.iosReferenceFrame;
 
   if (hasConfigChanged) {
-    userConfigRef.current = { ...userConfig };
-  }
-
-  const config: SensorConfig = useMemo(
-    () => ({
+    config.current = {
       interval: 'auto',
       adjustToInterfaceOrientation: true,
       iosReferenceFrame: IOSReferenceFrame.Auto,
       ...userConfigRef.current,
-    }),
-    [userConfigRef.current]
-  );
+    };
+  }
 
   const ref = useRef<AnimatedSensor<Value3D | ValueRotation>>({
-    sensor: initializeSensor(sensorType, config),
+    sensor: initializeSensor(sensorType, config.current),
     unregister: () => {
       // NOOP
     },
     isAvailable: false,
-    config,
+    config: config.current,
   });
 
   useEffect(() => {
     ref.current = {
-      sensor: initializeSensor(sensorType, config),
+      sensor: initializeSensor(sensorType, config.current),
       unregister: () => {
         // NOOP
       },
       isAvailable: false,
-      config,
+      config: config.current,
     };
 
     const sensorData = ref.current.sensor;
     const adjustToInterfaceOrientation =
       ref.current.config.adjustToInterfaceOrientation;
 
-    const id = registerSensor(sensorType, config, (data) => {
+    const id = registerSensor(sensorType, config.current, (data) => {
       'worklet';
       if (adjustToInterfaceOrientation) {
         if (sensorType === SensorType.ROTATION) {
@@ -167,7 +168,7 @@ export function useAnimatedSensor(
     return () => {
       ref.current.unregister();
     };
-  }, [sensorType, config]);
+  }, [sensorType]);
 
   return ref.current as AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D>;
 }

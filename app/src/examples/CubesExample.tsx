@@ -5,6 +5,7 @@ import Animated, {
   SensorType,
   IOSReferenceFrame,
 } from 'react-native-reanimated';
+import type { AnimatedSensor, ValueRotation } from 'react-native-reanimated';
 import { View, Button, StyleSheet, Text } from 'react-native';
 
 // euler angles are in order ZXY, z = yaw, x = pitch, y = roll
@@ -206,37 +207,55 @@ function CubeWithEulerAngles() {
     adjustToInterfaceOrientation: true,
   });
 
-  const sidesStyles = sidesRotations.map((rotation, i) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useAnimatedStyle(() => {
-      const pitch = animatedSensor.sensor.value.pitch;
-      const roll = animatedSensor.sensor.value.roll;
-      const yaw = animatedSensor.sensor.value.yaw;
-
-      const sideLength = 100;
-      const origin = { x: 0, y: 0, z: -sideLength / 2 };
-
-      const it = eulerToMatrix(rotation[0], rotation[1], rotation[2]);
-      const matrix = eulerToMatrix(pitch, -roll, yaw);
-      multiplyInto(matrix, matrix, it);
-      transformOrigin(matrix, origin);
-
-      return {
-        transform: [{ perspective: 1000 }, { matrix: matrix }],
-        backgroundColor: sidesColors[i],
-      };
-    })
-  );
-
   return (
     <View style={componentStyle.boxContainer}>
-      {sidesStyles.map((style, i) => (
-        <Animated.View style={[componentStyle.box, style]} key={i}>
-          <Text>EULER</Text>
-        </Animated.View>
+      {sidesRotations.map((rotation, i) => (
+        <EulerElement
+          animatedSensor={animatedSensor}
+          rotation={rotation}
+          backgroundColor={sidesColors[i]}
+          key={i}
+        />
       ))}
     </View>
   );
+}
+
+function EulerElement({
+  animatedSensor,
+  rotation,
+  backgroundColor,
+}: SideElementProps) {
+  const animatedStyle = useAnimatedStyle(() => {
+    const pitch = animatedSensor.sensor.value.pitch;
+    const roll = animatedSensor.sensor.value.roll;
+    const yaw = animatedSensor.sensor.value.yaw;
+
+    const sideLength = 100;
+    const origin = { x: 0, y: 0, z: -sideLength / 2 };
+
+    const it = eulerToMatrix(rotation[0], rotation[1], rotation[2]);
+    const matrix = eulerToMatrix(pitch, -roll, yaw);
+    multiplyInto(matrix, matrix, it);
+    transformOrigin(matrix, origin);
+
+    return {
+      transform: [{ perspective: 1000 }, { matrix: matrix }],
+      backgroundColor,
+    };
+  });
+
+  return (
+    <Animated.View style={[componentStyle.box, animatedStyle]}>
+      <Text>EULER</Text>
+    </Animated.View>
+  );
+}
+
+interface SideElementProps {
+  animatedSensor: AnimatedSensor<ValueRotation>;
+  rotation: number[];
+  backgroundColor: string;
 }
 
 function CubeWithQuaternions() {
@@ -244,37 +263,49 @@ function CubeWithQuaternions() {
     adjustToInterfaceOrientation: true,
   });
 
-  const sidesStyles = sidesRotations.map((rotation, i) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useAnimatedStyle(() => {
-      const sideLength = 100;
-      const origin = { x: 0, y: 0, z: -sideLength / 2 };
-
-      const q0 = eulerToQuaternion(-rotation[0], -rotation[1], rotation[2]);
-
-      const { qx, qy, qz, qw } = animatedSensor.sensor.value;
-      const q1 = [-qx, qy, -qz, qw];
-
-      const q = multiplyQuaternions(q0, q1);
-
-      const matrix = quaternionToMatrix(q);
-      transformOrigin(matrix, origin);
-
-      return {
-        transform: [{ perspective: 1000 }, { matrix: matrix }],
-        backgroundColor: sidesColors[i],
-      };
-    })
-  );
-
   return (
     <View style={componentStyle.boxContainer}>
-      {sidesStyles.map((style, i) => (
-        <Animated.View style={[componentStyle.box, style]} key={i}>
-          <Text>QUATERNIONS</Text>
-        </Animated.View>
+      {sidesRotations.map((rotation, i) => (
+        <QuaternionElement
+          animatedSensor={animatedSensor}
+          rotation={rotation}
+          backgroundColor={sidesColors[i]}
+          key={i}
+        />
       ))}
     </View>
+  );
+}
+
+function QuaternionElement({
+  animatedSensor,
+  rotation,
+  backgroundColor,
+}: SideElementProps) {
+  const animatedStyle = useAnimatedStyle(() => {
+    const sideLength = 100;
+    const origin = { x: 0, y: 0, z: -sideLength / 2 };
+
+    const q0 = eulerToQuaternion(-rotation[0], -rotation[1], rotation[2]);
+
+    const { qx, qy, qz, qw } = animatedSensor.sensor.value;
+    const q1 = [-qx, qy, -qz, qw];
+
+    const q = multiplyQuaternions(q0, q1);
+
+    const matrix = quaternionToMatrix(q);
+    transformOrigin(matrix, origin);
+
+    return {
+      transform: [{ perspective: 1000 }, { matrix: matrix }],
+      backgroundColor,
+    };
+  });
+
+  return (
+    <Animated.View style={[componentStyle.box, animatedStyle]}>
+      <Text>QUATERNIONS</Text>
+    </Animated.View>
   );
 }
 

@@ -137,15 +137,13 @@ export function useAnimatedGestureHandler<
     }
   };
 
-  if (useWeb) {
-    return handler;
-  }
-
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  return useEvent<Event>(
+  const webHandler = handler;
+  const nativeHandler = useEvent<Event>(
     handler,
     ['onGestureHandlerStateChange', 'onGestureHandlerEvent'],
     doDependenciesDiffer
     // This is not correct but we want to make GH think it receives a function.
   ) as unknown as (e: Event) => void;
+
+  return useWeb ? webHandler : nativeHandler;
 }
