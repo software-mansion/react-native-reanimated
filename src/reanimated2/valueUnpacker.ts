@@ -3,7 +3,11 @@ import { shouldBeUseWeb } from './PlatformChecker';
 import { isWorkletFunction } from './commonTypes';
 import type { WorkletFunction } from './commonTypes';
 
-function valueUnpacker(objectToUnpack: any, category?: string): any {
+function valueUnpacker(
+  objectToUnpack: any,
+  category?: string,
+  remoteFunctionName?: string
+): any {
   'worklet';
   let workletsCache = global.__workletsCache;
   let handleCache = global.__handleCache;
@@ -48,7 +52,7 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
     const functionInstance = workletFun.bind(objectToUnpack);
     objectToUnpack._recur = functionInstance;
     return functionInstance;
-  } else if (objectToUnpack.__init) {
+  } else if (objectToUnpack.__init !== undefined) {
     let value = handleCache.get(objectToUnpack);
     if (value === undefined) {
       value = objectToUnpack.__init();
@@ -57,13 +61,20 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
     return value;
   } else if (category === 'RemoteFunction') {
     const fun = () => {
-      throw new Error(`[Reanimated] Tried to synchronously call a non-worklet function on the UI thread.
-See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread\` for more details.`);
+      const label = remoteFunctionName
+        ? `function \`${remoteFunctionName}\``
+        : 'anonymous function';
+      throw new Error(`[Reanimated] Tried to synchronously call a non-worklet ${label} on the UI thread.
+See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
     };
     fun.__remoteFunction = objectToUnpack;
     return fun;
   } else {
-    throw new Error('[Reanimated] Data type not recognized by value unpacker.');
+    throw new Error(
+      `[Reanimated] Data type in category "${category}" not recognized by value unpacker: "${_toString(
+        objectToUnpack
+      )}".`
+    );
   }
 }
 

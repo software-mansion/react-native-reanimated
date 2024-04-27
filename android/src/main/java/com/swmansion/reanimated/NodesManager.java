@@ -2,6 +2,7 @@ package com.swmansion.reanimated;
 
 import static java.lang.Float.NaN;
 
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.GuardedRunnable;
@@ -11,6 +12,7 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.UIManager;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
@@ -18,14 +20,18 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.modules.core.ReactChoreographer;
 import com.facebook.react.uimanager.GuardedFrameCallback;
 import com.facebook.react.uimanager.IllegalViewOperationException;
+import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.ReactShadowNode;
 import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.UIImplementation;
+import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerReanimatedHelper;
+import com.facebook.react.uimanager.common.UIManagerType;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.facebook.react.views.view.ReactViewBackgroundDrawable;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
 import java.util.ArrayList;
@@ -33,6 +39,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -81,7 +88,7 @@ public class NodesManager implements EventDispatcherListener {
     void onAnimationFrame(double timestampMs);
   }
 
-  private AnimationsManager mAnimationManager;
+  private final AnimationsManager mAnimationManager;
   private final UIImplementation mUIImplementation;
   private final DeviceEventManagerModule.RCTDeviceEventEmitter mEventEmitter;
   private final ReactChoreographer mReactChoreographer;
@@ -89,7 +96,7 @@ public class NodesManager implements EventDispatcherListener {
   protected final UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
   private final AtomicBoolean mCallbackPosted = new AtomicBoolean();
   private final ReactContext mContext;
-  private final UIManagerModule mUIManager;
+  private final UIManager mUIManager;
   private ReactApplicationContext mReactApplicationContext;
   private RCTEventEmitter mCustomEventHandler = new NoopEventHandler();
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
@@ -109,13 +116,13 @@ public class NodesManager implements EventDispatcherListener {
     return mAnimationManager;
   }
 
-  public void onCatalystInstanceDestroy() {
+  public void invalidate() {
     if (mAnimationManager != null) {
-      mAnimationManager.onCatalystInstanceDestroy();
+      mAnimationManager.invalidate();
     }
 
     if (mNativeProxy != null) {
-      mNativeProxy.onCatalystInstanceDestroy();
+      mNativeProxy.invalidate();
       mNativeProxy = null;
     }
   }
@@ -144,9 +151,15 @@ public class NodesManager implements EventDispatcherListener {
 
   public NodesManager(ReactContext context) {
     mContext = context;
-    mUIManager = context.getNativeModule(UIManagerModule.class);
-    mUIImplementation = mUIManager.getUIImplementation();
-    mCustomEventNamesResolver = mUIManager.getDirectEventNamesResolver();
+    int uiManagerType =
+        BuildConfig.IS_NEW_ARCHITECTURE_ENABLED ? UIManagerType.FABRIC : UIManagerType.DEFAULT;
+    mUIManager = UIManagerHelper.getUIManager(context, uiManagerType);
+    assert mUIManager != null;
+    mUIImplementation =
+        mUIManager instanceof UIManagerModule
+            ? ((UIManagerModule) mUIManager).getUIImplementation()
+            : null;
+    mCustomEventNamesResolver = mUIManager::resolveCustomDirectEventName;
     mEventEmitter = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
 
     mReactChoreographer = ReactChoreographer.getInstance();
@@ -159,14 +172,15 @@ public class NodesManager implements EventDispatcherListener {
         };
 
     // We register as event listener at the end, because we pass `this` and we haven't finished
-    // contructing an object yet.
+    // constructing an object yet.
     // This lead to a crash described in
     // https://github.com/software-mansion/react-native-reanimated/issues/604 which was caused by
     // Nodes Manager being constructed on UI thread and registering for events.
     // Events are handled in the native modules thread in the `onEventDispatch()` method.
     // This method indirectly uses `mChoreographerCallback` which was created after event
     // registration, creating race condition
-    mUIManager.getEventDispatcher().addListener(this);
+    Objects.requireNonNull(UIManagerHelper.getEventDispatcher(context, uiManagerType))
+        .addListener(this);
 
     mAnimationManager = new AnimationsManager(mContext, mUIManager);
   }
@@ -227,7 +241,8 @@ public class NodesManager implements EventDispatcherListener {
                 NativeUpdateOperation op = copiedOperationsQueue.remove();
                 ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
                 if (shadowNode != null) {
-                  mUIManager.updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
+                  ((UIManagerModule) mUIManager)
+                      .updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
                 }
               }
               if (queueWasEmpty) {
@@ -242,7 +257,7 @@ public class NodesManager implements EventDispatcherListener {
         try {
           semaphore.tryAcquire(16, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
-          // if the thread is interruped we just continue and let the layout update happen
+          // if the thread is interrupted we just continue and let the layout update happen
           // asynchronously
         }
       }
@@ -390,17 +405,41 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public String obtainProp(int viewTag, String propName) {
-    View view = mUIManager.resolveView(viewTag);
-    String result =
-        "error: unknown propName " + propName + ", currently supported: opacity, zIndex";
-    if (propName.equals("opacity")) {
-      Float opacity = view.getAlpha();
-      result = Float.toString(opacity);
-    } else if (propName.equals("zIndex")) {
-      Float zIndex = view.getElevation();
-      result = Float.toString(zIndex);
+    View view;
+    try {
+      view = mUIManager.resolveView(viewTag);
+    } catch (Exception e) {
+      throw new IllegalStateException("[Reanimated] Unable to resolve view");
     }
-    return result;
+
+    switch (propName) {
+      case "opacity":
+        return Float.toString(view.getAlpha());
+      case "zIndex":
+        return Float.toString(view.getElevation());
+      case "width":
+        return Float.toString(PixelUtil.toDIPFromPixel(view.getWidth()));
+      case "height":
+        return Float.toString(PixelUtil.toDIPFromPixel(view.getHeight()));
+      case "top":
+        return Float.toString(PixelUtil.toDIPFromPixel(view.getTop()));
+      case "left":
+        return Float.toString(PixelUtil.toDIPFromPixel(view.getLeft()));
+      case "backgroundColor":
+        Drawable background = view.getBackground();
+        if (!(background instanceof ReactViewBackgroundDrawable)) {
+          return "unable to resolve background color";
+        }
+        int actualColor = ((ReactViewBackgroundDrawable) background).getColor();
+        String invertedColor = String.format("%08x", (0xFFFFFFFF & actualColor));
+        // By default transparency is first, color second
+        return "#" + invertedColor.substring(2, 8) + invertedColor.substring(0, 2);
+      default:
+        throw new IllegalArgumentException(
+            "[Reanimated] Attempted to get unsupported property"
+                + propName
+                + " with function `getViewProp`");
+    }
   }
 
   private static WritableMap copyReadableMap(ReadableMap map) {

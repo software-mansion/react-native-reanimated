@@ -7,7 +7,7 @@ const items = [
   {
     author: 'Marc Rousavy',
     company: 'Margelo',
-    body: 'We’ve used Reanimated and Gesture Handler for a ton of apps already - it’s amazingly simple yet poweful! 😍',
+    body: 'We’ve used Reanimated and Gesture Handler for a ton of apps already - it’s amazingly simple yet powerful! 😍',
     link: 'https://twitter.com/mrousavy/status/1754909520571019756',
     image: {
       alt: 'marc rousavy',
@@ -39,7 +39,7 @@ const items = [
     link: 'https://twitter.com/bran_aust/status/1754907731536863670',
     image: {
       alt: 'brandon austin',
-      src: 'https://pbs.twimg.com/profile_images/1757102996654043136/zwiTEFm8_400x400.jpg',
+      src: 'https://pbs.twimg.com/profile_images/1764586254145130496/gb774OEv_400x400.jpg',
     },
   },
   {

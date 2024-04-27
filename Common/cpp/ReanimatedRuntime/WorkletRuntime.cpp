@@ -75,10 +75,9 @@ WorkletRuntime::WorkletRuntime(
 
   auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
       "(" + valueUnpackerCode + "\n)");
-  auto valueUnpacker =
-      rt.evaluateJavaScript(codeBuffer, "WorkletRuntime::WorkletRuntime")
-          .asObject(rt)
-          .asFunction(rt);
+  auto valueUnpacker = rt.evaluateJavaScript(codeBuffer, "valueUnpacker")
+                           .asObject(rt)
+                           .asFunction(rt);
   rt.global().setProperty(rt, "__valueUnpacker", valueUnpacker);
 }
 

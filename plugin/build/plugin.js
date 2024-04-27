@@ -324,6 +324,19 @@ var require_workletFactory = __commonJS({
     var utils_12 = require_utils();
     var REAL_VERSION = require("../../package.json").version;
     var MOCK_VERSION = "x.y.z";
+    var workletStringTransformPresets = [
+      require.resolve("@babel/preset-typescript")
+    ];
+    var workletStringTransformPlugins = [
+      require.resolve("@babel/plugin-transform-shorthand-properties"),
+      require.resolve("@babel/plugin-transform-arrow-functions"),
+      require.resolve("@babel/plugin-transform-optional-chaining"),
+      require.resolve("@babel/plugin-transform-nullish-coalescing-operator"),
+      [
+        require.resolve("@babel/plugin-transform-template-literals"),
+        { loose: true }
+      ]
+    ];
     function makeWorkletFactory(fun, state) {
       removeWorkletDirective(fun);
       (0, assert_1.strict)(state.file.opts.filename, "[Reanimated] `state.file.opts.filename` is undefined.");
@@ -331,20 +344,11 @@ var require_workletFactory = __commonJS({
         sourceMaps: true,
         sourceFileName: state.file.opts.filename
       });
-      codeObject.code = "(" + ((0, types_12.isObjectMethod)(fun) ? "function " : "") + codeObject.code + "\n)";
+      codeObject.code = "(" + (fun.isObjectMethod() ? "function " : "") + codeObject.code + "\n)";
       const transformed = (0, core_1.transformSync)(codeObject.code, {
         filename: state.file.opts.filename,
-        presets: [require.resolve("@babel/preset-typescript")],
-        plugins: [
-          require.resolve("@babel/plugin-transform-shorthand-properties"),
-          require.resolve("@babel/plugin-transform-arrow-functions"),
-          require.resolve("@babel/plugin-proposal-optional-chaining"),
-          require.resolve("@babel/plugin-proposal-nullish-coalescing-operator"),
-          [
-            require.resolve("@babel/plugin-transform-template-literals"),
-            { loose: true }
-          ]
-        ],
+        presets: workletStringTransformPresets,
+        plugins: workletStringTransformPlugins,
         ast: true,
         babelrc: false,
         configFile: false,
@@ -364,7 +368,10 @@ var require_workletFactory = __commonJS({
       if (variables.length > 0) {
         lineOffset -= variables.length + 2;
       }
-      const pathForStringDefinitions = fun.parentPath.isProgram() ? fun : fun.findParent((path) => (0, types_12.isProgram)(path.parentPath));
+      const pathForStringDefinitions = fun.parentPath.isProgram() ? fun : fun.findParent((path) => {
+        var _a, _b;
+        return (_b = (_a = path.parentPath) === null || _a === void 0 ? void 0 : _a.isProgram()) !== null && _b !== void 0 ? _b : false;
+      });
       (0, assert_1.strict)(pathForStringDefinitions, "[Reanimated] `pathForStringDefinitions` is null.");
       (0, assert_1.strict)(pathForStringDefinitions.parentPath, "[Reanimated] `pathForStringDefinitions.parentPath` is null.");
       const initDataId = pathForStringDefinitions.parentPath.scope.generateUidIdentifier(`worklet_${workletHash}_init_data`);
@@ -526,6 +533,8 @@ var require_workletFactoryCall = __commonJS({
       const originalWorkletLocation = path.node.loc;
       if (originalWorkletLocation) {
         workletFactoryCall.callee.loc = {
+          filename: originalWorkletLocation.filename,
+          identifierName: originalWorkletLocation.identifierName,
           start: originalWorkletLocation.start,
           end: originalWorkletLocation.start
         };
