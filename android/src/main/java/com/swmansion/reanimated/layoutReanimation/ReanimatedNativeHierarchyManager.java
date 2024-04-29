@@ -1,10 +1,19 @@
 package com.swmansion.reanimated.layoutReanimation;
 
+import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleObserver;
+import androidx.lifecycle.OnLifecycleEvent;
+
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.UiThreadUtil;
@@ -21,10 +30,15 @@ import com.facebook.react.uimanager.layoutanimation.LayoutAnimationListener;
 import com.swmansion.reanimated.ReanimatedModule;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 class ReaLayoutAnimator extends LayoutAnimationController {
@@ -204,12 +218,14 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
   private final ReaLayoutAnimator mReaLayoutAnimator;
   private final HashMap<Integer, Set<Integer>> mPendingDeletionsForTag = new HashMap<>();
   private boolean initOk = true;
+  private final TabNavigatorObserver tabNavigatorObserver;
 
   public ReanimatedNativeHierarchyManager(
       ViewManagerRegistry viewManagers, ReactApplicationContext reactContext) {
     super(viewManagers);
 
     mReaLayoutAnimator = new ReaLayoutAnimator(reactContext, this);
+    tabNavigatorObserver = new TabNavigatorObserver(mReaLayoutAnimator);
 
     Class<?> clazz = this.getClass().getSuperclass();
     if (clazz == null) {
@@ -283,6 +299,14 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         if (!hasHeader || !container.isLayoutRequested()) {
           mReaLayoutAnimator.getAnimationsManager().screenDidLayout(container);
         }
+        View screen = resolveView(tag);
+        View screenFragmentManager = (View) screen.getParent();
+        if (screenFragmentManager != null) {
+          View screenHolder = (View) screenFragmentManager.getParent();
+          if (screenHolder.getClass().getSimpleName().equals("ScreenContainer")) {
+            tabNavigatorObserver.handleScreenContainerUpdate(screen);
+          }
+        }
       }
       View view = resolveView(tag);
       if (view != null && mReaLayoutAnimator != null) {
@@ -291,6 +315,8 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
     } catch (IllegalViewOperationException e) {
       // (IllegalViewOperationException) == (vm == null)
       e.printStackTrace();
+    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+      throw new RuntimeException(e);
     }
   }
 

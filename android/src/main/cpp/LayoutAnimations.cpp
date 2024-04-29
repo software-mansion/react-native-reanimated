@@ -100,8 +100,21 @@ void LayoutAnimations::setFindPrecedingViewTagForTransition(
       findPrecedingViewTagForTransitionBlock;
 }
 
+void LayoutAnimations::setGetSharedGroupBlock(GetSharedGroupBlock getSharedGroupBlock) {
+  getSharedGroupBlock_ = getSharedGroupBlock;
+}
+
 int LayoutAnimations::findPrecedingViewTagForTransition(int tag) {
   return findPrecedingViewTagForTransitionBlock_(tag);
+}
+
+jni::local_ref<JArrayInt> LayoutAnimations::getSharedGroup(int tag) {
+  std::vector<int> group = getSharedGroupBlock_(tag);
+  auto jGroup = JArrayInt::newArray(group.size());
+  for (int i = 0; i < group.size(); i++) {
+    jGroup->setRegion(0, group.size(), group.data());
+  }
+  return jGroup;
 }
 
 void LayoutAnimations::registerNatives() {
@@ -124,6 +137,9 @@ void LayoutAnimations::registerNatives() {
       makeNativeMethod(
           "findPrecedingViewTagForTransition",
           LayoutAnimations::findPrecedingViewTagForTransition),
+      makeNativeMethod(
+        "getSharedGroup",
+        LayoutAnimations::getSharedGroup),
 #ifndef NDEBUG
       makeNativeMethod(
           "checkDuplicateSharedTag", LayoutAnimations::checkDuplicateSharedTag),

@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -700,5 +701,69 @@ public class SharedTransitionManager {
         mSharedElementsWithAnimation.add(sharedElement);
       }
     }
+  }
+
+  public void navigationTabChanged(View previousTab, View newTab) {
+    List<SharedElement> sharedElements = new ArrayList<>();
+    List<View> sharedViews = new ArrayList<>();
+    findSharedViewsForScreen(previousTab, sharedViews);
+    sortViewsByTags(sharedViews);
+    for (View sharedView : sharedViews) {
+      int[] sharedGroup = mNativeMethodsHolder.getSharedGroup(sharedView.getId());
+      for (int i = sharedGroup.length - 1; i >= 0; i--) {
+        View targetView = mAnimationsManager.resolveView(sharedGroup[i]);
+        if (isChildOfScreen(targetView, newTab)) {
+          SharedElement sharedElement = new SharedElement(
+            sharedView,
+            mSnapshotRegistry.get(sharedView.getId()),
+            targetView,
+            new Snapshot(targetView)
+          );
+          sharedElements.add(sharedElement);
+          break;
+        }
+      }
+    }
+    if (sharedElements.isEmpty()) {
+      return;
+    }
+    mSharedElements = sharedElements;
+    mSharedElementsWithAnimation.clear();
+    for (SharedElement sharedElement : sharedElements) {
+      mSharedElementsLookup.put(sharedElement.sourceView.getId(), sharedElement);
+      mSharedElementsWithAnimation.add(sharedElement);
+    }
+    setupTransitionContainer();
+    reparentSharedViewsForCurrentTransition(sharedElements);
+    startSharedTransition(mSharedElementsWithAnimation, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION);
+  }
+
+  private void findSharedViewsForScreen(View view, List<View> sharedViews) {
+    if (!(view instanceof ViewGroup)) {
+      return;
+    }
+    ViewGroup viewGroup = (ViewGroup) view;
+    if (mAnimationsManager.hasAnimationForTag(
+            view.getId(), LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION)) {
+      sharedViews.add(view);
+    }
+    for (int i = 0; i < viewGroup.getChildCount(); i++) {
+      View child = viewGroup.getChildAt(i);
+      findSharedViewsForScreen(child, sharedViews);
+    }
+  }
+
+  private boolean isChildOfScreen(View view, View screen) {
+    View currentView = view;
+    while (currentView != null) {
+      if (currentView == screen) {
+        return true;
+      }
+      if (!(currentView.getParent() instanceof View)) {
+        return false;
+      }
+      currentView = (View) currentView.getParent();
+    }
+    return false;
   }
 }

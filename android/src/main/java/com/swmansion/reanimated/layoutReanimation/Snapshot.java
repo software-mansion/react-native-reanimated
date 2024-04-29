@@ -96,9 +96,23 @@ public class Snapshot {
     globalOriginY = location[1];
   }
 
+  private int[] tryToFixLocation(View view) {
+    int[] location = new int[2];
+    View currentView = view;
+    while (currentView != null && currentView.getParent() instanceof View) {
+      location[0] += currentView.getX();
+      location[1] += currentView.getY();
+      currentView = (View) currentView.getParent();
+    }
+    return location;
+  }
+
   public Snapshot(View view) {
     int[] location = new int[2];
     view.getLocationOnScreen(location);
+    if (location[0] == 0 && location[1] == 0) {
+      location = tryToFixLocation(view);
+    }
     originX = location[0];
     originY = location[1];
     width = view.getWidth();

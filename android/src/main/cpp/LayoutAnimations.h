@@ -22,6 +22,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   using ClearAnimationConfigBlock = std::function<void(int)>;
   using CancelAnimationBlock = std::function<void(int)>;
   using FindPrecedingViewTagForTransitionBlock = std::function<int(int)>;
+  using GetSharedGroupBlock = std::function<std::vector<int>(int)>;
 
  public:
   static auto constexpr kJavaDescriptor =
@@ -53,6 +54,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   void setFindPrecedingViewTagForTransition(
       FindPrecedingViewTagForTransitionBlock
           findPrecedingViewTagForTransitionBlock);
+  void setGetSharedGroupBlock(GetSharedGroupBlock getSharedGroupBlock);
 
   void progressLayoutAnimation(
       int tag,
@@ -62,6 +64,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   void clearAnimationConfigForTag(int tag);
   void cancelAnimationForTag(int tag);
   int findPrecedingViewTagForTransition(int tag);
+  jni::local_ref<JArrayInt> getSharedGroup(int tag);
 
  private:
   friend HybridBase;
@@ -73,6 +76,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   CancelAnimationBlock cancelAnimationBlock_;
   FindPrecedingViewTagForTransitionBlock
       findPrecedingViewTagForTransitionBlock_;
+  GetSharedGroupBlock getSharedGroupBlock_;
 #ifndef NDEBUG
   CheckDuplicateSharedTag checkDuplicateSharedTag_;
 #endif
