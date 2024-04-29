@@ -8,6 +8,9 @@ import './tests/animations/withTiming/easingSnapshots.test';
 import './tests/animations/withTiming/colors.test';
 // import './tests/animations/withTiming/arrays.test';
 import './tests/animations/withSpring/variousConfig.test';
+import './tests/animations/withTiming/arrays.test';
+import './tests/animations/withTiming/enteringColorsSnapshots.test';
+import './tests/getRelativeCoords/relativeCoords.test';
 
 export default function RuntimeTestsExample() {
   return <RuntimeTestsRunner />;
