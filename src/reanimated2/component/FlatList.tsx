@@ -42,7 +42,7 @@ const createCellRendererComponent = (
 };
 
 interface ReanimatedFlatListPropsWithLayout<T>
-  extends AnimatedProps<FlatListProps<T>> {
+  extends Omit<AnimatedProps<FlatListProps<T>>, 'CellRendererComponent'> {
   /**
    * Lets you pass layout animation directly to the FlatList item.
    */
