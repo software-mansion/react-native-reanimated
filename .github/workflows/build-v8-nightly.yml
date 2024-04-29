@@ -1,8 +1,11 @@
 name: Test V8 on Android nightly
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     paths:
       - .github/workflows/build-v8-nightly.yml
+      - .github/workflows/helper/configureV8.js
   schedule:
     - cron: '37 19 * * *'
   workflow_dispatch:
@@ -19,9 +22,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: 'reanimated_repo'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
       - name: Create React Native app
         run: npx react-native init app
       - name: Install dependencies
+        working-directory: app
+        run: yarn install
+      - name: Install test dependencies
         working-directory: app
         run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }} react-native-v8 v8-android-jit
       - name: Configure V8

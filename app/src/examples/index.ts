@@ -16,7 +16,6 @@ import BabelVersionCheckExample from './BabelVersionCheckExample';
 import BasicLayoutAnimation from './LayoutAnimations/BasicLayoutAnimation';
 import BasicNestedAnimation from './LayoutAnimations/BasicNestedAnimation';
 import BasicNestedLayoutAnimation from './LayoutAnimations/BasicNestedLayoutAnimation';
-import BilliardExample from './BilliardExample';
 import BokehExample from './BokehExample';
 import BouncingBoxExample from './BouncingBoxExample';
 import BubblesExample from './BubblesExample';
@@ -204,12 +203,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎧',
     title: 'iPod',
     screen: IPodExample,
-  },
-  BilliardExample: {
-    icon: '🎱',
-    title: 'Billiard',
-    screen: BilliardExample,
-    missingOnFabric: true,
   },
   EmojiWaterfallExample: {
     icon: '💸',

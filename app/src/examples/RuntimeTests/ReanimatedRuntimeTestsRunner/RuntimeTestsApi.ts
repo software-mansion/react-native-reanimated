@@ -2,7 +2,7 @@ import { Component, ReactElement } from 'react';
 import { TestRunner } from './TestRunner';
 import { TestComponent } from './TestComponent';
 import type { SharedValue } from 'react-native-reanimated';
-import { TestConfiguration, TestValue } from './types';
+import { TestConfiguration, TestValue, NullableTestValue } from './types';
 
 export { Presets } from './Presets';
 
@@ -28,9 +28,13 @@ export function afterAll(job: () => void) {
   testRunner.afterAll(job);
 }
 
-export function test(name: string, testCase: () => void) {
+export const test = (name: string, testCase: () => void) => {
   testRunner.test(name, testCase);
-}
+};
+
+test.each = <T>(examples: Array<T>) => {
+  return testRunner.testEach(examples);
+};
 
 export async function render(component: ReactElement<Component> | null) {
   return testRunner.render(component);
@@ -94,6 +98,14 @@ export async function waitForNotify(name: string) {
 
 export function expect(value: TestValue) {
   return testRunner.expect(value);
+}
+
+export function expectNullable(currentValue: NullableTestValue) {
+  return testRunner.expectNullable(currentValue);
+}
+
+export function expectNotNullable(currentValue: NullableTestValue) {
+  return testRunner.expectNotNullable(currentValue);
 }
 
 export function configure(config: TestConfiguration) {
