@@ -5,6 +5,9 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+
+import androidx.fragment.app.Fragment;
+
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.PixelUtil;
@@ -16,11 +19,13 @@ import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.views.view.ReactViewGroup;
 import com.swmansion.reanimated.Utils;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -266,17 +271,22 @@ public class SharedTransitionManager {
               mNativeMethodsHolder.findPrecedingViewTagForTransition(sharedView.getId());
         }
       }
+
       boolean bothAreRemoved = !addedNewScreen && viewTags.contains(targetViewTag);
       if (targetViewTag < 0) {
         continue;
       }
+
+      View siblingView = reanimatedNativeHierarchyManager.resolveView(targetViewTag);
+      siblingView = tabNavigatorWorkaround(sharedView, siblingView);
+
       View viewSource, viewTarget;
       if (addedNewScreen) {
-        viewSource = reanimatedNativeHierarchyManager.resolveView(targetViewTag);
+        viewSource = siblingView;
         viewTarget = sharedView;
       } else {
         viewSource = sharedView;
-        viewTarget = reanimatedNativeHierarchyManager.resolveView(targetViewTag);
+        viewTarget = siblingView;
       }
       if (bothAreRemoved) {
         // case for nested stack
@@ -386,6 +396,57 @@ public class SharedTransitionManager {
       mSharedElementsLookup.put(sharedElement.sourceView.getId(), sharedElement);
     }
     return sharedElements;
+  }
+
+  View tabNavigatorWorkaround(View sharedView, View siblingView) {
+    View maybeTabNavigatorForSharedView = getTabNavigator(sharedView);
+
+    if (maybeTabNavigatorForSharedView == null) {
+      return siblingView;
+    }
+
+    int siblingTag = siblingView.getId();
+    int[] sharedGroup = mNativeMethodsHolder.getSharedGroup(sharedView.getId());
+    int siblingIndex = -1;
+    for (int i = 0; i < sharedGroup.length; i++) {
+      if (sharedGroup[i] == siblingTag) {
+        siblingIndex = i;
+      }
+    }
+
+    for (int i = siblingIndex; i >= 0; i--) {
+      int viewTag = sharedGroup[i];
+      View view = mAnimationsManager.resolveView(viewTag);
+      if (maybeTabNavigatorForSharedView == getTabNavigator(view)) {
+        return view;
+      }
+    }
+
+    return siblingView;
+  }
+
+  View getTabNavigator(View view) {
+    View currentView = view;
+    while (currentView != null) {
+      if (currentView.getClass().getSimpleName().equals("ScreenContainer")) {
+        return currentView;
+      }
+      if (currentView.getClass().getSimpleName().equals("Screen")
+          && currentView.getParent() != null
+          && currentView.getParent().getClass().getSimpleName().equals("ScreensCoordinatorLayout")) {
+        View screen = currentView;
+        Class<?> screenClass = screen.getClass();
+        try {
+          Method getContainer = screenClass.getMethod("getContainer");
+          currentView = (View)getContainer.invoke(screen);
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {}
+      } else if (currentView.getParent() instanceof View) {
+        currentView = (View) currentView.getParent();
+      } else {
+        break;
+      }
+    }
+    return null;
   }
 
   private void setupTransitionContainer() {
@@ -646,6 +707,14 @@ public class SharedTransitionManager {
   }
 
   void visitNativeTreeAndMakeSnapshot(View view) {
+    if (view.getClass().getSimpleName().equals("ScreenStack")) {
+      View screen = view;
+      Class<?> screenClass = screen.getClass();
+      try {
+        Method getTopScreen = screenClass.getMethod("getTopScreen");
+        view = (View)getTopScreen.invoke(screen);
+      } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {}
+    }
     if (!(view instanceof ViewGroup)) {
       return;
     }
@@ -704,6 +773,7 @@ public class SharedTransitionManager {
   }
 
   public void navigationTabChanged(View previousTab, View newTab) {
+    mAddedSharedViews.clear();
     List<SharedElement> sharedElements = new ArrayList<>();
     List<View> sharedViews = new ArrayList<>();
     findSharedViewsForScreen(previousTab, sharedViews);
@@ -713,9 +783,13 @@ public class SharedTransitionManager {
       for (int i = sharedGroup.length - 1; i >= 0; i--) {
         View targetView = mAnimationsManager.resolveView(sharedGroup[i]);
         if (isChildOfScreen(targetView, newTab)) {
+          Snapshot sourceViewSnapshot = mSnapshotRegistry.get(sharedView.getId());
+          if (sourceViewSnapshot == null) {
+            continue;
+          }
           SharedElement sharedElement = new SharedElement(
             sharedView,
-            mSnapshotRegistry.get(sharedView.getId()),
+            sourceViewSnapshot,
             targetView,
             new Snapshot(targetView)
           );
@@ -739,6 +813,14 @@ public class SharedTransitionManager {
   }
 
   private void findSharedViewsForScreen(View view, List<View> sharedViews) {
+    if (view.getClass().getSimpleName().equals("ScreenStack")) {
+      View screen = view;
+      Class<?> screenClass = screen.getClass();
+      try {
+        Method getTopScreen = screenClass.getMethod("getTopScreen");
+        view = (View)getTopScreen.invoke(screen);
+      } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {}
+    }
     if (!(view instanceof ViewGroup)) {
       return;
     }
@@ -766,4 +848,5 @@ public class SharedTransitionManager {
     }
     return false;
   }
+
 }

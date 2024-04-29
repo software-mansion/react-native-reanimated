@@ -6,6 +6,9 @@ import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.ViewManager;
 import com.swmansion.reanimated.ReactNativeUtils;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -99,10 +102,23 @@ public class Snapshot {
   private int[] tryToFixLocation(View view) {
     int[] location = new int[2];
     View currentView = view;
-    while (currentView != null && currentView.getParent() instanceof View) {
+    while (currentView != null) {
       location[0] += currentView.getX();
       location[1] += currentView.getY();
-      currentView = (View) currentView.getParent();
+      if (currentView.getParent() != null
+          && currentView.getParent().getClass().getSimpleName().equals("ScreensCoordinatorLayout")
+          && currentView.getClass().getSimpleName().equals("Screen")) {
+        View screen = currentView;
+        Class<?> screenClass = screen.getClass();
+        try {
+          Method getContainer = screenClass.getMethod("getContainer");
+          currentView = (View)getContainer.invoke(screen);
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {}
+      } else if (currentView.getParent() instanceof View) {
+        currentView = (View) currentView.getParent();
+      } else {
+        break;
+      }
     }
     return location;
   }
