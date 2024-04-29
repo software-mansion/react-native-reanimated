@@ -3,7 +3,7 @@ import { StyleSheet, View, Button, LogBox } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {
   createNativeStackNavigator,
-} from '@react-navigation/native-stack';
+} from 'react-native-screens/native-stack';
 import Animated from 'react-native-reanimated';
 
 LogBox.ignoreLogs(['']);
