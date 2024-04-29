@@ -70,6 +70,7 @@ function HomeScreen({ navigation }: HomeScreenProps) {
   // TODO: Currently it breaks on @react-navigation
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [search, setSearch] = React.useState('');
+  const [wasClicked, setWasClicked] = React.useState<string[]>([]);
 
   React.useLayoutEffect(() => {
     // TODO: Currently it breaks on @react-navigation
@@ -97,8 +98,14 @@ function HomeScreen({ navigation }: HomeScreenProps) {
         <Item
           icon={EXAMPLES[name].icon}
           title={EXAMPLES[name].title}
-          onPress={() => navigation.navigate(name)}
+          onPress={() => {
+            navigation.navigate(name);
+            if (!wasClicked.includes(name)) {
+              setTimeout(() => setWasClicked([...wasClicked, name]), 500);
+            }
+          }}
           missingOnFabric={EXAMPLES[name].missingOnFabric}
+          wasClicked={wasClicked.includes(name)}
         />
       )}
       renderScrollComponent={(props) => <ScrollView {...props} />}
@@ -113,30 +120,30 @@ interface ItemProps {
   title: string;
   onPress: () => void;
   missingOnFabric?: boolean;
+  wasClicked?: boolean;
 }
 
-function Item({ icon, title, onPress, missingOnFabric }: ItemProps) {
+function Item({
+  icon,
+  title,
+  onPress,
+  missingOnFabric,
+  wasClicked,
+}: ItemProps) {
   const isDisabled = missingOnFabric && isFabric();
-  if (Platform.OS === 'macos') {
-    return (
-      <Pressable
-        style={[styles.button, isDisabled && styles.disabledButton]}
-        onPress={onPress}
-        disabled={isDisabled}>
-        {icon && <Text style={styles.title}>{icon + '  '}</Text>}
-        <Text style={styles.title}>{title}</Text>
-      </Pressable>
-    );
-  }
-
+  const Button = Platform.OS === 'macos' ? Pressable : RectButton;
   return (
-    <RectButton
-      style={[styles.button, isDisabled && styles.disabledButton]}
+    <Button
+      style={[
+        styles.button,
+        isDisabled && styles.disabledButton,
+        wasClicked && styles.visitedItem,
+      ]}
       onPress={onPress}
       enabled={!isDisabled}>
       {icon && <Text style={styles.title}>{icon + '  '}</Text>}
       <Text style={styles.title}>{title}</Text>
-    </RectButton>
+    </Button>
   );
 }
 
@@ -284,5 +291,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     color: 'black',
+  },
+  visitedItem: {
+    backgroundColor: '#e6f0f7',
   },
 });
