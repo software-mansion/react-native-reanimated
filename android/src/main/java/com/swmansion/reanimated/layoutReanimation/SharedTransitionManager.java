@@ -293,33 +293,41 @@ public class SharedTransitionManager {
           continue;
         }
 
-        ViewGroup stack = (ViewGroup) findStack(viewSourceScreen);
-        if (stack == null) {
+        ViewGroup sourceStack = (ViewGroup) findStack(viewSourceScreen);
+        if (sourceStack == null) {
           continue;
         }
-
-        ViewGroupManager stackViewGroupManager =
-            (ViewGroupManager) reanimatedNativeHierarchyManager.resolveViewManager(stack.getId());
-        int screensCount = stackViewGroupManager.getChildCount(stack);
-
-        if (screensCount < 2) {
-          continue;
+        int stackId = sourceStack.getId();
+        ViewGroupManager stackViewManager = (ViewGroupManager)reanimatedNativeHierarchyManager.resolveViewManager(stackId);
+        boolean isInSameStack = false;
+        for (int i = 0; i < stackViewManager.getChildCount(sourceStack); i++) {
+          if (stackViewManager.getChildAt(sourceStack, i) == viewTargetScreen) {
+            isInSameStack = true;
+          }
         }
+        if (isInSameStack) {
+          ViewGroupManager stackViewGroupManager =
+                  (ViewGroupManager) reanimatedNativeHierarchyManager.resolveViewManager(sourceStack.getId());
+          int screensCount = stackViewGroupManager.getChildCount(sourceStack);
+          if (screensCount < 2) {
+            continue;
+          }
 
-        View topScreen = stackViewGroupManager.getChildAt(stack, screensCount - 1);
-        View secondScreen = stackViewGroupManager.getChildAt(stack, screensCount - 2);
-        boolean isValidConfiguration;
-        if (addedNewScreen) {
-          isValidConfiguration =
-              secondScreen.getId() == viewSourceScreen.getId()
-                  && topScreen.getId() == viewTargetScreen.getId();
-        } else {
-          isValidConfiguration =
-              topScreen.getId() == viewSourceScreen.getId()
-                  && secondScreen.getId() == viewTargetScreen.getId();
-        }
-        if (!isValidConfiguration) {
-          continue;
+          View topScreen = stackViewGroupManager.getChildAt(sourceStack, screensCount - 1);
+          View secondScreen = stackViewGroupManager.getChildAt(sourceStack, screensCount - 2);
+          boolean isValidConfiguration;
+          if (addedNewScreen) {
+            isValidConfiguration =
+                    secondScreen.getId() == viewSourceScreen.getId()
+                            && topScreen.getId() == viewTargetScreen.getId();
+          } else {
+            isValidConfiguration =
+                    topScreen.getId() == viewSourceScreen.getId()
+                            && secondScreen.getId() == viewTargetScreen.getId();
+          }
+          if (!isValidConfiguration) {
+            continue;
+          }
         }
       }
 
