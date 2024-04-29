@@ -42,7 +42,7 @@ const createCellRendererComponent = (
 };
 
 interface ReanimatedFlatListPropsWithLayout<T>
-  extends Omit<AnimatedProps<FlatListProps<T>>, 'CellRendererComponent'> {
+  extends AnimatedProps<FlatListProps<T>> {
   /**
    * Lets you pass layout animation directly to the FlatList item.
    */
@@ -51,6 +51,10 @@ interface ReanimatedFlatListPropsWithLayout<T>
    * Lets you skip entering and exiting animations of FlatList items when on FlatList mount or unmount.
    */
   skipEnteringExitingAnimations?: boolean;
+  /**
+   * CellRendererComponent is not supported in Animated.FlatList
+   */
+  CellRendererComponent?: never;
 }
 
 export type FlatListPropsWithLayout<T> = ReanimatedFlatListPropsWithLayout<T>;
