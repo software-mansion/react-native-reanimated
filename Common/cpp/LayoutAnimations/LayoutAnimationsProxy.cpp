@@ -586,10 +586,11 @@ void LayoutAnimationsProxy::transferConfigFromNativeTag(const std::string native
   if (nativeIdString.empty()){
     return;
   }
-  // TODO: handle exception
-  auto nativeId = stoi(nativeIdString);
-  layoutAnimationsManager_->transferConfigFromNativeTag(nativeId, tag);
-  std::shared_ptr<Shareable> config = nullptr;
+  try {
+    auto nativeId = stoi(nativeIdString);
+    layoutAnimationsManager_->transferConfigFromNativeTag(nativeId, tag);
+    std::shared_ptr<Shareable> config = nullptr;
+  } catch (std::invalid_argument) {}
 }
 
 void Node::removeChild(std::shared_ptr<MutationNode> child){
