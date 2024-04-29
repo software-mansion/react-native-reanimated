@@ -32,18 +32,16 @@ std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(int tag,
   auto newProps = getComponentDescriptorForShadowView(*layoutAnimation.end).cloneProps(propsParserContext, layoutAnimations_.at(tag).end->props, std::move(*rawProps));
   auto &updateMap = surfaceManager.getUpdateMap(layoutAnimation.end->surfaceId);
   updateMap.insert_or_assign(tag, UpdateValues{newProps, Frame(runtime, newStyle)});
-#ifdef LAYOUT_ANIMATIONS_LOGS
-  LOG(INFO) << "free lock" << std::endl;
-#endif
+
   return layoutAnimation.end->surfaceId;
 }
 
 std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool shouldRemove) {
-  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "end layout animation for " << tag << " - should remove "
             << shouldRemove << std::endl;
 #endif
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   auto layoutAnimationIt = layoutAnimations_.find(tag);
 
   // TODO: investigate
@@ -70,9 +68,6 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
   layoutAnimations_.erase(tag);
   updateMap.erase(tag);
 
-#ifdef LAYOUT_ANIMATIONS_LOGS
-  LOG(INFO) << "free lock" << std::endl;
-#endif
   return surfaceId;
 }
 
@@ -161,7 +156,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     const TransactionTelemetry &telemetry,
     ShadowViewMutationList mutations) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
-  LOG(INFO)<<"\n pullTransaction "<< std::this_thread::get_id()<<" "<<surfaceId<<std::endl;
+  LOG(INFO)<<"\npullTransaction "<< std::this_thread::get_id()<<" "<<surfaceId<<std::endl;
 #endif
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
@@ -298,9 +293,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
   addOngoingAnimations(surfaceId, filteredMutations);
 
-#ifdef LAYOUT_ANIMATIONS_LOGS
-  LOG(INFO)<< "free lock" <<std::endl;
-#endif
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 
