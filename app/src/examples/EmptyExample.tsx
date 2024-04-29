@@ -97,14 +97,14 @@ const DStack = createStack();
 const Tab = createBottomTabNavigator();
 
 const NavigationTabsAndStack = (): JSX.Element => (
-  <Tab.Navigator>
+  <Tab.Navigator screenOptions={{ headerShown: false }} >
     <Tab.Screen
       name="A"
-      component={AStack}
+      component={DetailsScreen}
     />
     <Tab.Screen
       name="B"
-      component={BStack}
+      component={DetailsScreen2}
     />
     <Tab.Screen name="C" component={CStack} />
     <Tab.Screen name="D" component={DStack} />
