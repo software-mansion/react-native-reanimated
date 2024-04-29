@@ -28,8 +28,7 @@ export class ErrorBoundary extends React.Component<
   }
 }
 
-export default RuntimeTestsRunner;
-function RuntimeTestsRunner() {
+export default function RuntimeTestsRunner() {
   const [component, setComponent] = useState<ReactNode | null>(null);
   useEffect(() => {
     if (renderLock) {
