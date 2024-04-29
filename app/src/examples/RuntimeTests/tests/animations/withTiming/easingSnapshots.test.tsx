@@ -53,9 +53,9 @@ async function getSnapshotUpdates(easingFn: EasingFunction | EasingFunctionFacto
   return [updates, nativeUpdates];
 }
 
-describe.only('withTiming, *****test***** invalid _easing_', async () => {
+describe('*****withTiming*****, test invalid easing', async () => {
   test.failing(
-    'Easing imported from react-native *throws* an error',
+    'Easing imported from react-native throws an error',
     'Error: [Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.',
     async () => {
       await render(
@@ -85,7 +85,7 @@ describe.only('withTiming, *****test***** invalid _easing_', async () => {
   );
 });
 
-describe('withTiming snapshots 📸, test EASING', () => {
+describe('*****withTiming***** snapshots 📸, test *****easing*****', () => {
   test('No easing function', async () => {
     const [updates, nativeUpdates] = await getSnapshotUpdates(undefined);
     expect(updates).toMatchSnapshots(Snapshots.noEasing);
@@ -106,24 +106,21 @@ describe('withTiming snapshots 📸, test EASING', () => {
     [Easing.steps, [7, true]],
     [Easing.steps, [1.5, true]],
     [Easing.steps, [1.5, false]],
-  ])(
-    '**LOL** Easing.${0}(${1}) **X** and & ***X*** ijin ****qwerty**** aefsd *****676767***** ijin **D*',
-    async ([easing, argumentSet]) => {
-      const snapshotName = `${(easing as Function).name}_${(argumentSet as any)
-        .join('_')
-        .replace(/\./g, '$')
-        .replace(/-/g, '$')}`;
+  ])('Easing.${0}(${1})', async ([easing, argumentSet]) => {
+    const snapshotName = `${(easing as Function).name}_${(argumentSet as any)
+      .join('_')
+      .replace(/\./g, '$')
+      .replace(/-/g, '$')}`;
 
-      const [updates, nativeUpdates] = await getSnapshotUpdates(
-        //@ts-ignore This error is because various easing functions accept different number of arguments
-        easing(...argumentSet),
-      );
-      expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
-      expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
-    },
-  );
+    const [updates, nativeUpdates] = await getSnapshotUpdates(
+      //@ts-ignore This error is because various easing functions accept different number of arguments
+      easing(...argumentSet),
+    );
+    expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
+    expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
+  });
 
-  test.skip.each([
+  test.each([
     Easing.bounce,
     Easing.circle,
     Easing.cubic,
