@@ -42,7 +42,7 @@ const AnimatedComponent = ({
   );
 };
 
-async function getSnaphotUpdates(animateFrom: number, animateTo: number, config: SpringConfig, waitTime = 2000) {
+async function getSnapshotUpdates(animateFrom: number, animateTo: number, config: SpringConfig, waitTime = 2000) {
   await mockAnimationTimer();
   const updatesContainer = await recordAnimationUpdates();
   await render(<AnimatedComponent animateFrom={animateFrom} animateTo={animateTo} config={config} />);
@@ -64,7 +64,7 @@ describe('WithSpring snapshots 📸, test various configs', () => {
     ] as Array<[number, number]>)(
       'Empty config, from ${0} to ${1}',
       async ([animateFrom, animateTo]: [number, number]) => {
-        const [updates, nativeUpdates] = await getSnaphotUpdates(animateFrom, animateTo, {});
+        const [updates, nativeUpdates] = await getSnapshotUpdates(animateFrom, animateTo, {});
         const snapshotName = `empty_${animateFrom}_${animateTo}`;
         expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
         expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
