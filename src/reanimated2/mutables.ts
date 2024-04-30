@@ -75,7 +75,7 @@ export function makeMutable<Value>(initial: Value): Mutable<Value> {
         valueSetter(mutable, newValue);
       } else {
         runOnUI(() => {
-          mutable.value = newValue;
+          if (typeof mutable !== "undefined") mutable.value = newValue;
         })();
       }
     },
@@ -84,7 +84,7 @@ export function makeMutable<Value>(initial: Value): Mutable<Value> {
         return value;
       }
       const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
-        return sv.value;
+    if (typeof sv !== "undefined") return sv.value;
       });
       return uiValueGetter(mutable);
     },
