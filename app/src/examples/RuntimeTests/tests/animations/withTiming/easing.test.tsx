@@ -135,10 +135,16 @@ describe('withTiming snapshots 📸, test EASING', () => {
     Easing.sin,
   ])('Easing.%p', async easing => {
     const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnaphotUpdates(easing);
-
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
     expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
+    expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
+  });
 
+  test('Easing.exp', async () => {
+    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnaphotUpdates(Easing.exp);
+
+    expect(activeUpdates).toMatchSnapshots(EasingSnapshots.exp);
+    expect(passiveUpdates).toMatchSnapshots([{ width: 0 }, ...EasingSnapshots.exp]);
     expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
   });
 
@@ -146,7 +152,6 @@ describe('withTiming snapshots 📸, test EASING', () => {
     const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnaphotUpdates(easing(Easing.elastic(10)));
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
     expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
-
     expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
   });
 });

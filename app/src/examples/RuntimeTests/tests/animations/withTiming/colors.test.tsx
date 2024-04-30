@@ -55,7 +55,6 @@ const ColorComponent = ({ color1, color2 }: { color1: string | number; color2: s
 
 describe('withTiming animation of COLOR 🎨', () => {
   const OPAQUE_COLORS = [
-    0x6495ed,
     'rgb(100,149,237)',
     'rgba(100,149,237,1)',
     '#6495ed',
@@ -87,6 +86,18 @@ describe('withTiming animation of COLOR 🎨', () => {
     await wait(1000);
     expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe('#6495ed', ComparisonMode.COLOR);
     expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe('#6495ed', ComparisonMode.COLOR);
+  });
+
+  test("Animating colors as number doesn't work and doesn't crash", async () => {
+    await render(<ColorComponent color1="coral" color2={0x6495ed} />);
+    const componentActive = getTestComponent(COMPONENT_REF_ACTIVE);
+    const componentPassive = getTestComponent(COMPONENT_REF_PASSIVE);
+
+    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe('#ff7f50', ComparisonMode.COLOR);
+    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe('#ff7f50', ComparisonMode.COLOR);
+    await wait(1000);
+    expect(await componentActive.getAnimatedStyle('backgroundColor')).not.toBe('#6495ed', ComparisonMode.COLOR);
+    expect(await componentPassive.getAnimatedStyle('backgroundColor')).not.toBe('#6495ed', ComparisonMode.COLOR);
   });
 
   test.each([
