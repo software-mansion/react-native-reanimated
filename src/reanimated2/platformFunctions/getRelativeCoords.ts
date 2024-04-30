@@ -31,7 +31,7 @@ export function getRelativeCoords(
     return null;
   }
   return {
-    x: absoluteX - parentCoords.x,
-    y: absoluteY - parentCoords.y,
+    x: absoluteX - parentCoords.pageX,
+    y: absoluteY - parentCoords.pageY,
   };
 }

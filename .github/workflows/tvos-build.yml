@@ -29,7 +29,7 @@ on:
 jobs:
   build:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: macos-13
+    runs-on: macos-14
     env:
       WORKING_DIRECTORY: TVOSExample
     concurrency:
