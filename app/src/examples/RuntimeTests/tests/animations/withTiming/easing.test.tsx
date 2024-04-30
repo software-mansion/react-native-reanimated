@@ -18,7 +18,7 @@ import {
   render,
   wait,
   unmockAnimationTimer,
-} from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { EasingSnapshots } from './withTiming.snapshot';
 
 const ActiveAnimatedComponent = ({ easing }: { easing: EasingFunction | EasingFunctionFactory | undefined }) => {

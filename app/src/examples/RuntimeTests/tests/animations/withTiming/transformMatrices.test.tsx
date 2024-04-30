@@ -10,7 +10,7 @@ import {
   recordAnimationUpdates,
   render,
   wait,
-} from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { MatrixSnapshots } from './withTiming.snapshot';
 
 const AnimatedComponent = ({
