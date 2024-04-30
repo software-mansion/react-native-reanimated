@@ -39,7 +39,7 @@ const AnimatedComponent = ({
   );
 };
 
-async function getSnaphotUpdates(initialTransform: Array<number>, finalTransform: Array<number>) {
+async function getSnapshotUpdates(initialTransform: Array<number>, finalTransform: Array<number>) {
   await mockAnimationTimer();
   const updatesContainer = await recordAnimationUpdates();
   await render(<AnimatedComponent initialTransform={initialTransform} finalTransform={finalTransform} />);
@@ -71,7 +71,7 @@ describe('withTiming snapshots 📸, test TRANSFORM MATRIX', () => {
       finalTransform: [1, 1, 100, 1, 0, 2, 0, 0.5, 30, 0, 10, 0, 30, 0, 0, 2],
     },
   ])('From ${initialTransform} to ${finalTransform}', async ({ initialTransform, finalTransform }, index) => {
-    const updates = await getSnaphotUpdates(initialTransform, finalTransform);
+    const updates = await getSnapshotUpdates(initialTransform, finalTransform);
     expect(updates).toMatchSnapshots(MatrixSnapshots[`matrix_${index}` as keyof typeof MatrixSnapshots]);
   });
 });

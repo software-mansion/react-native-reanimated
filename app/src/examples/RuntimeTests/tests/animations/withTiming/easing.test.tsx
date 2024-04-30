@@ -61,7 +61,7 @@ const PassiveAnimatedComponent = ({ easing }: { easing: EasingFunction | EasingF
   );
 };
 
-async function getSnaphotUpdates(easingFn: EasingFunction | EasingFunctionFactory | undefined) {
+async function getSnapshotUpdates(easingFn: EasingFunction | EasingFunctionFactory | undefined) {
   await mockAnimationTimer();
   const updatesContainerActive = await recordAnimationUpdates();
   await render(<ActiveAnimatedComponent easing={easingFn} />);
@@ -83,7 +83,7 @@ async function getSnaphotUpdates(easingFn: EasingFunction | EasingFunctionFactor
 
 describe('withTiming snapshots 📸, test EASING', () => {
   test('No easing function', async () => {
-    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnaphotUpdates(undefined);
+    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(undefined);
 
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots.noEasing);
     expect(passiveUpdates).toMatchSnapshots(EasingSnapshots.noEasing);
@@ -111,7 +111,7 @@ describe('withTiming snapshots 📸, test EASING', () => {
       .replace(/\./g, '$')
       .replace(/-/g, '$')}`;
 
-    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnaphotUpdates(
+    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(
       //@ts-ignore This error is because various easing functions accept different number of arguments
       easing(...argumentSet),
     );
@@ -134,14 +134,14 @@ describe('withTiming snapshots 📸, test EASING', () => {
     Easing.quad,
     Easing.sin,
   ])('Easing.%p', async easing => {
-    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnaphotUpdates(easing);
+    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(easing);
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
     expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
     expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
   });
 
   test('Easing.exp', async () => {
-    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnaphotUpdates(Easing.exp);
+    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(Easing.exp);
 
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots.exp);
     expect(passiveUpdates).toMatchSnapshots([{ width: 0 }, ...EasingSnapshots.exp]);
@@ -149,7 +149,7 @@ describe('withTiming snapshots 📸, test EASING', () => {
   });
 
   test.each([(Easing.in, Easing.out, Easing.inOut)])('Easing.%p(Easing.elastic(10))', async easing => {
-    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnaphotUpdates(easing(Easing.elastic(10)));
+    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(easing(Easing.elastic(10)));
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
     expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
     expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
