@@ -189,6 +189,14 @@ class ReaLayoutAnimator extends LayoutAnimationController {
   }
 
   public boolean isLayoutAnimationEnabled() {
+    // In case the user rapidly reloads the app, there is a possibility that the active instance may not be available.
+    // However, the code will still attempt to trigger the layout animation of views that are going to be dropped.
+    // This is required as without it, the `mAnimationsManager.isLayoutAnimationEnabled` 
+    // would crash when trying to get the uiManager from the context.
+    if (!mContext.hasActiveReactInstance()) {
+      return false;
+    }
+    
     maybeInit();
     return mAnimationsManager.isLayoutAnimationEnabled();
   }
