@@ -116,9 +116,12 @@ describe('withTiming snapshots 📸, test EASING', () => {
       easing(...argumentSet),
     );
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots[snapshotName as keyof typeof EasingSnapshots]);
-    expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[snapshotName as keyof typeof EasingSnapshots]);
-
     expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
+
+    if (easing !== Easing.steps) {
+      // passiveUpdates of steps don't record duplicated frames, so we execute this test only for constant motion, not for the quantified one
+      expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[snapshotName as keyof typeof EasingSnapshots]);
+    }
   });
 
   test.each([
