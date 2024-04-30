@@ -16,13 +16,14 @@ export function appendWhiteSpaceToMatchLength(message: string | number, length: 
   return `${messageStr}${' '.repeat(length - messageLen)}`;
 }
 
-export function color(value: NullableTestValue, color: 'yellow' | 'cyan' | 'green' | 'red' | 'gray') {
+export function color(value: NullableTestValue, color: 'yellow' | 'cyan' | 'green' | 'red' | 'gray' | 'orange') {
   const COLOR_CODES = {
-    red: '\x1b[31m',
-    green: '\x1b[32m',
-    yellow: '\x1b[33m',
+    red: '\x1b[91m',
+    green: '\x1b[92m',
+    yellow: '\x1b[93m',
     cyan: '\x1b[36m',
     gray: '\x1b[38;5;242m',
+    orange: '\x1b[38;5;208m',
   };
 
   return `${COLOR_CODES[color]}${value}\x1b[0m`;

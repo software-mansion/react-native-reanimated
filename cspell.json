@@ -17,6 +17,7 @@
     "systrace",
     "uimanager",
     "uimodule",
+    "unmock",
     "worklet",
     "workletization",
     "workletize",

@@ -30,6 +30,8 @@ export type TestCase = {
   componentsRefs: Record<string, ComponentRef>;
   callsRegistry: Record<string, CallTrucker>;
   errors: string[];
+  skip: boolean;
+  only?: boolean;
 };
 
 export type TestSuite = {
@@ -41,6 +43,8 @@ export type TestSuite = {
   afterAll?: () => void | Promise<void>;
   beforeEach?: () => void | Promise<void>;
   afterEach?: () => void | Promise<void>;
+  skip: boolean;
+  only?: boolean;
 };
 
 export enum ComparisonMode {
@@ -94,6 +98,7 @@ declare global {
 export type TestSummary = {
   passed: number;
   failed: number;
+  skipped: number;
   failedTests: Array<string>;
   startTime: number;
   endTime: number;
