@@ -8,8 +8,8 @@ import './tests/animations/withTiming/basic.test';
 import './tests/animations/withTiming/colors.test';
 import './tests/animations/withTiming/arrays.test';
 import './tests/snapshotTests/transformMatrices.test';
-import './tests/animations/withTiming/enteringColorsSnapshots.test';
-import './tests/getRelativeCoords/relativeCoords.test';
+import './tests/layoutAnimations/entering/enteringColors.test';
+import './tests/utilities/relativeCoords.test';
 
 export default function RuntimeTestsExample() {
   return <RuntimeTestsRunner />;
