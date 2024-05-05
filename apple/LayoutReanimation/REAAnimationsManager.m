@@ -94,6 +94,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     _clearAnimationConfigForTag = ^(NSNumber *tag) {
       // default implementation, this block will be replaced by a setter
     };
+    _clearSharedTransitionConfigForTag = ^(NSNumber *tag) {
+      // default implementation, this block will be replaced by a setter
+    };
 #ifndef NDEBUG
     _checkDuplicateSharedTag = ^(REAUIView *view, NSNumber *viewTag) {
       // default implementation, this block will be replaced by a setter
@@ -619,10 +622,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)clearSharedTransitionConfigForTag:(NSNumber *)tag
 {
-  if (!_clearSharedTransitionConfigForTag) {
-    // TODO: find out why this method gets called but LayoutAnimationsManager is not initialized
-    return;
-  }
   _clearSharedTransitionConfigForTag(tag);
 }
 
