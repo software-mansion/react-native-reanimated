@@ -619,6 +619,10 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)clearSharedTransitionConfigForTag:(NSNumber *)tag
 {
+  if (!_clearSharedTransitionConfigForTag) {
+    // TODO: find out why this method gets called but LayoutAnimationsManager is not initialized
+    return;
+  }
   _clearSharedTransitionConfigForTag(tag);
 }
 
