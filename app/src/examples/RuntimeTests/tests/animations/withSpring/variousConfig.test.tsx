@@ -72,7 +72,7 @@ describe('WithSpring snapshots 📸, test various configs', () => {
     );
   });
 
-  describe.only('Invalid configuration, test warning', () => {
+  describe('Invalid configuration, test warning', () => {
     test.warn(
       'Invalid mass and stiffness, config is { mass: -40, stiffness: -400 }',
       '[Reanimated] Invalid spring config, stiffness must be grater than zero but got -400, mass must be grater than zero but got -40',
