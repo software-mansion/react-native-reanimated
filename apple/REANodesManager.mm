@@ -410,7 +410,7 @@ using namespace facebook::react;
 
 - (BOOL)isNativeViewMounted:(NSNumber *)viewTag
 {
-  REAUIView *view = _viewRegistry[viewTag];
+  REAUIView *view = [_uiManager viewForReactTag:(NSNumber *)viewTag];
   if (view.superview != nil) {
     return YES;
   }

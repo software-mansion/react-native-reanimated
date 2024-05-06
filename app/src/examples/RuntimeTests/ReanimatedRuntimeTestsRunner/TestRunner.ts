@@ -174,10 +174,10 @@ export class TestRunner {
     };
   }
   public testEach<T>(examples: Array<T>, decorator: TestDecorator | null) {
-    return (name: string, testCase: (example: T) => void) => {
+    return (name: string, testCase: (example: T, index?: number) => void) => {
       examples.forEach((example, index) => {
         const currentTestCase = async () => {
-          await testCase(example);
+          await testCase(example, index);
         };
         this.test(formatString(name, example, index), currentTestCase, decorator);
       });
