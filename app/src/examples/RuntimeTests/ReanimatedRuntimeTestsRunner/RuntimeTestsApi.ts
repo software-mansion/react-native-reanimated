@@ -27,7 +27,9 @@ export const describe: {
   },
 );
 
-type TestEachFunction = <T>(examples: Array<T>) => (name: string, testCase: (example: T) => void) => void;
+type TestEachFunction = <T>(
+  examples: Array<T>,
+) => (name: string, testCase: (example: T, index?: number) => void) => void;
 type TestEachFunctionWithWarning = <T>(
   examples: Array<T>,
 ) => (name: string, expectedWarning: string, testCase: (example: T, index?: number) => void) => void;
