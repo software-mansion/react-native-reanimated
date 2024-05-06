@@ -1,7 +1,7 @@
 #import <RNReanimated/REASlowAnimations.h>
+#import <QuartzCore/QuartzCore.h>
 #if TARGET_IPHONE_SIMULATOR
 #import <dlfcn.h>
-#import <QuartzCore/QuartzCore.h>
 #endif
 
 namespace reanimated {
