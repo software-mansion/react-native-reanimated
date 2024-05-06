@@ -2,7 +2,7 @@ package com.swmansion.reanimated.keyboard;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 @FunctionalInterface
 interface NotifyAboutKeyboardChangeFunction {
@@ -11,7 +11,8 @@ interface NotifyAboutKeyboardChangeFunction {
 
 public class KeyboardAnimationManager {
   private int mNextListenerId = 0;
-  private final HashMap<Integer, KeyboardWorkletWrapper> mListeners = new HashMap<>();
+  private final ConcurrentHashMap<Integer, KeyboardWorkletWrapper> mListeners =
+      new ConcurrentHashMap<>();
   private final Keyboard mKeyboard = new Keyboard();
   private final WindowsInsetsManager mWindowsInsetsManager;
 
