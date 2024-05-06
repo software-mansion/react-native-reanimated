@@ -123,7 +123,9 @@ import HabitsExample from './LayoutAnimations/HabitsExample';
 import MemoExample from './MemoExample';
 import PerformanceMonitorExample from './PerfomanceMonitorExample';
 import ScreenTransitionExample from './ScreenTransitionExample';
-import ComposedHandlerExample from './ComposedHandlerExample';
+import ComposedHandlerConditionalExample from './ComposedHandlerConditionalExample';
+import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEventsExample';
+import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMergingExample';
 
 interface Example {
   icon?: string;
@@ -493,10 +495,20 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Performance monitor',
     screen: PerformanceMonitorExample,
   },
-  ComposedHandlerExample: {
+  ComposedHandlerConditionalExample: {
+    icon: '🎛️',
+    title: 'Composed handler conditional compose',
+    screen: ComposedHandlerConditionalExample,
+  },
+  ComposedHandlerDifferentEventsExample: {
+    icon: '📣',
+    title: 'Composed handler different events',
+    screen: ComposedHandlerDifferentEventsExample,
+  },
+  ComposedHandlerInternalMergingExample: {
     icon: '🪢',
-    title: 'useComposedEventHandler',
-    screen: ComposedHandlerExample,
+    title: 'Composed handler internal merging',
+    screen: ComposedHandlerInternalMergingExample,
   },
 
   // Old examples
