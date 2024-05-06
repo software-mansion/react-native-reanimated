@@ -5,7 +5,7 @@ import SidebarLabel from '@site/src/components/SidebarLabel';
 import styles from './styles.module.css';
 
 const EXPERIMENTAL_APIs = ['shared-element-transitions/overview'];
-const NEW_APIS = ['animations/withClamp', 'advanced/useComposedEventHandler'];
+const NEW_APIS = ['advanced/useComposedEventHandler'];
 
 // TODO this item should probably not receive the "activePath" props
 // TODO this triggers whole sidebar re-renders on navigation
