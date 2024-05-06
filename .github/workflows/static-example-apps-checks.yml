@@ -1,4 +1,6 @@
-name: Test TypeScript and Lint
+name: Test TypeScript and Lint in examples
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
   merge_group:
@@ -7,6 +9,7 @@ on:
   push:
     branches:
       - main
+
 jobs:
   check:
     if: github.repository == 'software-mansion/react-native-reanimated'
@@ -35,7 +38,9 @@ jobs:
         run: scripts/clear-annotations.sh
 
       - name: Install root node dependencies
-        run: yarn
+        run: yarn install
+      - name: Build package
+        run: yarn build
       - name: Install ${{ matrix.working-directory }} app node dependencies
         working-directory: ${{ matrix.working-directory }}
         run: yarn

@@ -46,14 +46,17 @@ namespace reanimated {
 
 NativeReanimatedModule::NativeReanimatedModule(
     jsi::Runtime &rnRuntime,
-    const std::shared_ptr<CallInvoker> &jsInvoker,
+    const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
-    const std::string &valueUnpackerCode)
-    : NativeReanimatedModuleSpec(jsInvoker),
+    const std::string &valueUnpackerCode,
+    const bool isBridgeless)
+    : NativeReanimatedModuleSpec(
+          isBridgeless ? nullptr : jsScheduler->getJSCallInvoker()),
+      isBridgeless_(isBridgeless),
       jsQueue_(jsQueue),
-      jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsInvoker)),
+      jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
       uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
           rnRuntime,
@@ -85,8 +88,12 @@ NativeReanimatedModule::NativeReanimatedModule(
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
-          platformDepMethodsHolder.unsubscribeFromKeyboardEvents),
-      isBridgeless_(jsInvoker == nullptr) {
+          platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
+  commonInit(platformDepMethodsHolder);
+}
+
+void NativeReanimatedModule::commonInit(
+    const PlatformDepMethodsHolder &platformDepMethodsHolder) {
   auto requestAnimationFrame =
       [this](jsi::Runtime &rt, const jsi::Value &callback) {
         this->requestAnimationFrame(rt, callback);
@@ -244,9 +251,16 @@ void NativeReanimatedModule::unregisterEventHandler(
 
 #ifdef RCT_NEW_ARCH_ENABLED
 static inline std::string intColorToHex(const int val) {
-  std::stringstream ss;
-  ss << '#' << std::setfill('0') << std::setw(6) << std::hex << (val);
-  return ss.str();
+  std::stringstream
+      invertedHexColorStream; // By default transparency is first, color second
+  invertedHexColorStream << std::setfill('0') << std::setw(8) << std::hex
+                         << val;
+
+  auto invertedHexColor = invertedHexColorStream.str();
+  auto hexColor =
+      "#" + invertedHexColor.substr(2, 6) + invertedHexColor.substr(0, 2);
+
+  return hexColor;
 }
 
 std::string NativeReanimatedModule::obtainPropFromShadowNode(
@@ -538,7 +552,7 @@ bool NativeReanimatedModule::handleRawEvent(
     double currentTime) {
   const EventTarget *eventTarget = rawEvent.eventTarget.get();
   if (eventTarget == nullptr) {
-    // after app reload scrollview is unmounted and its content offset is set
+    // after app reload scrollView is unmounted and its content offset is set
     // to 0 and view is thrown into recycle pool setting content offset
     // triggers scroll event eventTarget is null though, because it's
     // unmounting we can just ignore this event, because it's an event on

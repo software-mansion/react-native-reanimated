@@ -1,13 +1,7 @@
 /* eslint-disable no-inline-styles/no-inline-styles */
 import React, { useEffect } from 'react';
 import { View, Text } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  FadeIn,
-  runOnUI,
-} from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, FadeIn, runOnUI } from 'react-native-reanimated';
 import {
   describe,
   test,
@@ -38,11 +32,7 @@ const AnimatedComponent = () => {
   const animatedStyle = useAnimatedStyle(() => {
     callTracker('useAnimatedStyleTracker');
     return {
-      width: withTiming(
-        widthSV.value,
-        { duration: 500 },
-        callTrackerFn('withTimingTracker')
-      ),
+      width: withTiming(widthSV.value, { duration: 500 }, callTrackerFn('withTimingTracker')),
     };
   });
 
@@ -51,8 +41,7 @@ const AnimatedComponent = () => {
   }, [widthSV]);
 
   return (
-    <View
-      style={{ flex: 1, flexDirection: 'column', backgroundColor: 'beige' }}>
+    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: 'beige' }}>
       <Animated.View
         ref={ref}
         style={[
@@ -91,8 +80,7 @@ const AnimatedComponentWithNotify = () => {
   }, [widthSV]);
 
   return (
-    <View
-      style={{ flex: 1, flexDirection: 'column', backgroundColor: 'beige' }}>
+    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: 'beige' }}>
       <Animated.View
         ref={ref}
         style={[
@@ -122,8 +110,7 @@ const LayoutAnimation = () => {
   const ref = useTestRef('AnimatedComponent');
 
   return (
-    <View
-      style={{ flex: 1, flexDirection: 'column', backgroundColor: 'beige' }}>
+    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: 'beige' }}>
       <Animated.View
         ref={ref}
         entering={FadeIn}
@@ -214,12 +201,8 @@ describe('Tests of animations', () => {
     const updatesContainer = await recordAnimationUpdates();
     await render(<AnimatedComponent />);
     await wait(1000);
-    expect(updatesContainer.getUpdates()).toMatchSnapshots(
-      Snapshots.animation3
-    );
-    expect(updatesContainer.getUpdates()).toMatchNativeSnapshots(
-      await updatesContainer.getNativeSnapshots()
-    );
+    expect(updatesContainer.getUpdates()).toMatchSnapshots(Snapshots.animation3);
+    expect(updatesContainer.getUpdates()).toMatchNativeSnapshots(await updatesContainer.getNativeSnapshots());
   });
 
   test('layoutAnimation - entering', async () => {
@@ -227,9 +210,7 @@ describe('Tests of animations', () => {
     const updatesContainer = await recordAnimationUpdates();
     await render(<LayoutAnimation />);
     await wait(600);
-    expect(updatesContainer.getUpdates()).toMatchSnapshots(
-      Snapshots.layoutAnimation
-    );
+    expect(updatesContainer.getUpdates()).toMatchSnapshots(Snapshots.layoutAnimation);
   });
 
   test('withTiming - notify', async () => {
