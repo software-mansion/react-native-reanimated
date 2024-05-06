@@ -22,7 +22,7 @@ import {
   waitForNotify,
   clearRenderOutput,
 } from '../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { Snapshots } from './snapshots/Animations.snapshot';
+import { Snapshots } from './Animations.snapshot';
 import { ComparisonMode } from '../ReanimatedRuntimeTestsRunner/types';
 
 const AnimatedComponent = () => {

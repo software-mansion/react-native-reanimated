@@ -3,12 +3,15 @@ import RuntimeTestsRunner from './ReanimatedRuntimeTestsRunner/RuntimeTestsRunne
 
 // load tests
 import './tests/Animations.test';
-import './tests/animations/withTiming/easingSnapshots.test';
+
+import './tests/animations/withTiming/easing.test';
 import './tests/animations/withTiming/basic.test';
 import './tests/animations/withTiming/colors.test';
 import './tests/animations/withTiming/arrays.test';
-import './tests/animations/withTiming/enteringColorsSnapshots.test';
-import './tests/getRelativeCoords/relativeCoords.test';
+import './tests/animations/withTiming/transformMatrices.test';
+
+import './tests/layoutAnimations/entering/enteringColors.test';
+import './tests/utilities/relativeCoords.test';
 
 import './tests/core/useSharedValue.test';
 

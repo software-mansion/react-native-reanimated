@@ -220,8 +220,7 @@ std::atomic<bool> hasPendingBlocks;
       CGSize contentSize = shadowView.layoutMetrics.frame.size;
 
       RCTExecuteOnMainQueue(^{
-        NSMutableDictionary<NSNumber *, REAUIView *> *viewRegistry = [self valueForKey:@"_viewRegistry"];
-        REAUIView *view = viewRegistry[reactTag];
+        REAUIView *view = [originalSelf viewForReactTag:(NSNumber *)reactTag];
         RCTAssert(view != nil, @"view (for ID %@) not found", reactTag);
 
         RCTRootView *rootView = (RCTRootView *)[view superview];
@@ -245,7 +244,7 @@ std::atomic<bool> hasPendingBlocks;
     for (NSNumber *reactTag in reactTags) {
       RCTFrameData frameData = frameDataArray[index++];
 
-      REAUIView *view = viewRegistry[reactTag];
+      REAUIView *view = [originalSelf viewForReactTag:(NSNumber *)reactTag];
       CGRect frame = frameData.frame;
 
       UIUserInterfaceLayoutDirection layoutDirection = frameData.layoutDirection;
@@ -331,7 +330,7 @@ std::atomic<bool> hasPendingBlocks;
     index = 0;
     for (NSNumber *reactTag in reactTags) {
       RCTFrameData frameData = frameDataArray[index++];
-      REAUIView *view = viewRegistry[reactTag];
+      REAUIView *view = [originalSelf viewForReactTag:(NSNumber *)reactTag];
       BOOL isNew = frameData.isNew;
       CGRect frame = frameData.frame;
 
