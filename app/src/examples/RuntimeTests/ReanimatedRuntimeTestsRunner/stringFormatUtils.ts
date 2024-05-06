@@ -26,7 +26,9 @@ export function color(value: NullableTestValue, color: 'yellow' | 'cyan' | 'gree
     orange: '\x1b[38;5;208m',
   };
 
-  return `${COLOR_CODES[color]}${value}\x1b[0m`;
+  const stringValue = typeof value === 'object' ? JSON.stringify(value) : value?.toString();
+
+  return `${COLOR_CODES[color]}${stringValue}\x1b[0m`;
 }
 
 export function formatString(template: string, variableObject: unknown, index: number) {

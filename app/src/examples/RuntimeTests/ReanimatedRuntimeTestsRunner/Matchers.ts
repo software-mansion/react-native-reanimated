@@ -16,7 +16,7 @@ export class Matchers {
   constructor(private _currentValue: TestValue, private _testCase: TestCase) {}
 
   private static _assertValueIsCallTracker(value: TrackerCallCount | TestValue): asserts value is TrackerCallCount {
-    if (typeof value !== 'object' || !('name' in value && 'onJS' in value && 'onUI' in value)) {
+    if (typeof value !== 'object' || !(value !== null && 'name' in value && 'onJS' in value && 'onUI' in value)) {
       throw Error('Invalid value');
     }
   }

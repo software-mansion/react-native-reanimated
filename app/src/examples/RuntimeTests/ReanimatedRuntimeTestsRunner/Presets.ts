@@ -1,3 +1,4 @@
+// #region numbers
 const INTEGERS = [
   -1000000000, -1234567, -1000000, -1000, -10, -5, -3, -2, -1, -0, 0, +0, 1, 2, 3, 5, 10, 1000, 1000000, -1234567,
   1000000000,
@@ -21,7 +22,18 @@ const BINARY_NOTATION = [0b1111111, 0b101010, 0b0001, 0b11001, 0b111111111111111
 
 const OCTADECIMAL_NOTATION = [0o123456, 0o111111112];
 
-const BIG_INTS = [BigInt(123456789123456789), BigInt(Number.MAX_VALUE)];
+const BIG_INTS = [
+  BigInt(123456789123456789),
+  BigInt(Number.MAX_VALUE),
+  BigInt('0'),
+  BigInt('1'),
+  BigInt(-1),
+  BigInt(-123456789),
+  BigInt('9007199254740991'),
+  BigInt('0x1fffffffffffff'),
+  BigInt('0o377777777777777777'),
+  BigInt('0b11111111111111111111111111111111111111111111111111111'),
+];
 
 const UNDERSCORE_SEPARATED_NUMBES = [
   0b00_000_000_000_000_000_000_000_000_000_001, -1.07808734473_36499e-3_9, 1_0_00000000.1234567,
@@ -36,13 +48,15 @@ const EXTREME_NUMBERS = [
   Number.EPSILON,
 ];
 
-const TYPICAL_STRINGS = [
-  'Aaaaaaa\n \t\t \v aaaaaa',
-  'Super long'.repeat(10000000),
+const NOT_NUMBERS = [Infinity, -Infinity, NaN];
+// #endregion
+
+// #region strings
+const TYPICAL_STRINGS = ['Aaaaaaa\n \t\t \v aaaaaa', 'Super long'.repeat(10000000), '', 'A string primitive'];
+
+const STRING_OBJECTS = [
   // eslint-disable-next-line no-new-wrappers
   new String('A String object'),
-  '',
-  'A string primitive',
 ];
 
 const EMOJI_STRINGS = ['Emoji consisting of multiple sub-emojis 👨‍👨‍👧‍👦', '👨‍👨‍👧‍👦', '😎', '👩🏽‍🏫'];
@@ -72,30 +86,9 @@ const MISC_CHARACTERS = [
   '🅷🅴🅻🅻🅾 🆆🅾🆁🅳',
   '🅗🅔🅛🅛🅞 🅦🅞🅡🅓',
 ];
-const NOT_NUMBERS = [Infinity, -Infinity, NaN];
+// #endregion
 
-const EMPTIES = [[], null, undefined, {}, [[]], [{}], [null]];
-
-const FANCY_OBJECTS = [globalThis];
-
-const SYMBOLS = [Symbol('Hello!'), Symbol(123), Symbol()];
-
-const DATES = [
-  new Date('2012-05-24'),
-  Intl.DateTimeFormat(navigator.language),
-  new Date('December 17, 1995 03:24:00'),
-  new Date(),
-  new Date(1999, 11),
-  new Date(1999, 11, 24),
-  new Date(1999, 11, 17),
-  new Date(1999, 11, 17, 33),
-  new Date(1999, 11, 17, 33, 54),
-  new Date(1999, 11, 17, 33, 54, 12),
-  new Date(1999, 120, 17, 33, 54, 12),
-];
-
-const REGEXPS = [/ab+c/i, new RegExp('ab+c', 'i'), new RegExp(/ab+c/, 'i'), /\d/y];
-
+// #region bufferArrays
 const iterable = (function* () {
   yield* [1, 2, 3];
 })();
@@ -142,14 +135,46 @@ const FLOAT_ARRAYS = [
   new Float64Array(iterable),
 ];
 
+const BUFFER_ARRAYS = [new ArrayBuffer(8), new ArrayBuffer(0)];
+// #endregion
+
+const EMPTIES = [[], null, undefined, {}, [[]], [{}], [null]];
+
+const FANCY_OBJECTS = [globalThis];
+
+const SYMBOLS = [Symbol('Hello!'), Symbol(123), Symbol()];
+
+const DATES = [
+  new Date('2012-05-24'),
+  Intl.DateTimeFormat(navigator.language),
+  new Date('December 17, 1995 03:24:00'),
+  new Date(),
+  new Date(1999, 11),
+  new Date(1999, 11, 24),
+  new Date(1999, 11, 17),
+  new Date(1999, 11, 17, 33),
+  new Date(1999, 11, 17, 33, 54),
+  new Date(1999, 11, 17, 33, 54, 12),
+  new Date(1999, 120, 17, 33, 54, 12),
+];
+
+const REGEXPS = [/ab+c/i, new RegExp('ab+c', 'i'), new RegExp(/ab+c/, 'i'), /\d/y];
+
+// const MAX_SIZE_OF_ARRAY = Math.pow(2, 31) - 1;
 const MAX_SIZE_OF_ARRAY = 1000;
 
-const ARRAYS = [
+const NUMERICAL_ARRAYS = [
   Array.from(Array(MAX_SIZE_OF_ARRAY).keys()),
   [[[[[[[[[[[[[[[[[[1], 2], 3], 4], 5], 6], 7], 8], 9], [[[[], 10]]]]]]]]]]]],
-
-  new ArrayBuffer(8),
-  new ArrayBuffer(0),
+];
+const VARIOUS_TYPE_ARRAYS = [
+  ['a', 123],
+  [1, 2, 3, ['A', 'B', 'C', 'D']],
+  [1, 2, 3, [{ A: 'A' }, 'B', 'C', 'D']],
+  [1, 2, 3, [{ A: ['A'] }, 'B', 'C', 'D']],
+  [null, 2, 3, ['A', [[[null]]], 'B', 'C', 'D']],
+  [null, undefined, [undefined, [[[null]]], undefined], [[], []]],
+  [null, undefined, [{}, [[[null]]], undefined], [[], []]],
 ];
 
 const OBJECTS = [
@@ -181,9 +206,9 @@ export const Presets = {
     ...HEXADECIMAL_NOTATION,
     ...BINARY_NOTATION,
     ...OCTADECIMAL_NOTATION,
-    ...BIG_INTS,
     ...UNDERSCORE_SEPARATED_NUMBES,
   ],
+  bigInts: BIG_INTS,
   strings: [
     ...TYPICAL_STRINGS,
     ...EMOJI_STRINGS,
@@ -191,9 +216,12 @@ export const Presets = {
     ...NON_DEFAULT_ALPHABETS,
     ...MISC_CHARACTERS,
   ],
+  stringObjects: [...STRING_OBJECTS],
   symbols: SYMBOLS,
   regexps: REGEXPS,
   dates: DATES,
-  objects: [...MAPS, ...SETS, ...OBJECTS, ...EMPTIES, ...FANCY_OBJECTS],
-  arrays: [...INT_ARRAYS, ...UINT_ARRAYS, ...FLOAT_ARRAYS, ...ARRAYS],
+  serializableObjects: [...OBJECTS, ...EMPTIES],
+  objects: [...OBJECTS, ...MAPS, ...SETS, ...EMPTIES, ...FANCY_OBJECTS],
+  serializableArrays: [...NUMERICAL_ARRAYS, ...VARIOUS_TYPE_ARRAYS],
+  arrays: [...INT_ARRAYS, ...UINT_ARRAYS, ...FLOAT_ARRAYS, ...NUMERICAL_ARRAYS, ...BUFFER_ARRAYS],
 };

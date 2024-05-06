@@ -54,6 +54,13 @@ const COMPARATORS: {
   },
 
   [ComparisonMode.OBJECT]: (expected, value) => {
+    if (expected === null || value === null) {
+      return expected === null && value === null;
+    }
+    if (expected === undefined || value === undefined) {
+      return expected === undefined && value === undefined;
+    }
+
     if (typeof expected !== 'object' || typeof value !== 'object') {
       return false;
     }
