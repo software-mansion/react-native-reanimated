@@ -8,9 +8,17 @@ export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
 
-export function describe(name: string, buildSuite: () => void) {
+export const describe = (name: string, buildSuite: () => void) => {
   testRunner.describe(name, buildSuite);
-}
+};
+
+describe.skip = (name: string, buildSuite: () => void) => {
+  testRunner.describe(name, buildSuite, false, true);
+};
+
+describe.only = (name: string, buildSuite: () => void) => {
+  testRunner.describe(name, buildSuite, true);
+};
 
 export function beforeAll(job: () => void) {
   testRunner.beforeAll(job);
@@ -35,6 +43,25 @@ export const test = (name: string, testCase: () => void) => {
 test.each = <T>(examples: Array<T>) => {
   return testRunner.testEach(examples);
 };
+
+const onlyDecorator = (name: string, testCase: () => void) => {
+  testRunner.test(name, testCase, true);
+};
+
+onlyDecorator.each = <T>(examples: Array<T>) => {
+  return testRunner.testEach(examples, true);
+};
+test.only = onlyDecorator;
+
+const skipDecorator = (name: string, testCase: () => void) => {
+  testRunner.test(name, testCase, false, true);
+};
+
+skipDecorator.each = <T>(examples: Array<T>) => {
+  return testRunner.testEach(examples, false, true);
+};
+
+test.skip = skipDecorator;
 
 export async function render(component: ReactElement<Component> | null) {
   return testRunner.render(component);

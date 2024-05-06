@@ -41,7 +41,16 @@ export class TestRunner {
   private _renderLock: LockObject = { lock: false };
   private _valueRegistry: Record<string, SharedValue> = {};
   private _wasRenderedNull: boolean = false;
-  private _nestingLevel = -1;
+  private _includesOnly: boolean = false;
+  private _summary: TestSummary = {
+    passed: 0,
+    failed: 0,
+    skipped: 0,
+    failedTests: [] as Array<string>,
+    startTime: Date.now(),
+    endTime: 0,
+  };
+
   private _threadLock: LockObject = {
     lock: false,
   };
@@ -85,33 +94,60 @@ export class TestRunner {
     return await this.render(null);
   }
 
-  public describe(name: string, buildSuite: () => void) {
-    this._testSuites.push({
+  public describe(name: string, buildSuite: () => void, only = false, skip = false) {
+    if (only) {
+      this._includesOnly = true;
+    }
+
+    let index; // We have to manage the order of the nested describes
+    if (this._currentTestSuite === null) {
+      index = this._testSuites.length; // If we have no parent describe, we append at the end
+    } else {
+      const parentIndex = this._testSuites.findIndex(testSuite => {
+        return testSuite === this._currentTestSuite;
+      });
+      const parentNesting = this._currentTestSuite.nestingLevel;
+      index = parentIndex + 1;
+      while (index < this._testSuites.length && this._testSuites[index].nestingLevel > parentNesting) {
+        // Append after last child of the parent describe
+        // The children have bigger nesting level
+        index += 1;
+      }
+    }
+
+    this._testSuites.splice(index, 0, {
       name,
       buildSuite,
       testCases: [],
-      nestingLevel: this._nestingLevel + 1,
+      nestingLevel: (this._currentTestSuite?.nestingLevel || 0) + 1,
+      only: !!(only || this._currentTestSuite?.only),
+      skip: !!(skip || this._currentTestSuite?.skip),
     });
   }
 
-  public test(name: string, run: () => void) {
+  public test(name: string, run: () => void, only = false, skip = false) {
     assertTestSuite(this._currentTestSuite);
+    if (only) {
+      this._includesOnly = true;
+    }
     this._currentTestSuite.testCases.push({
       name,
       run,
       componentsRefs: {},
       callsRegistry: {},
       errors: [],
+      only: only,
+      skip: skip,
     });
   }
 
-  public testEach<T>(examples: Array<T>) {
-    return (name: string, testCase: (example: T) => void) => {
+  public testEach<T>(examples: Array<T>, only = false, skip = false) {
+    return (name: string, testCase: (example: T, index?: number) => void) => {
       examples.forEach((example, index) => {
         const currentTestCase = async () => {
-          await testCase(example);
+          await testCase(example, index);
         };
-        this.test(formatString(name, example, index), currentTestCase);
+        this.test(formatString(name, example, index), currentTestCase, only, skip);
       });
     };
   }
@@ -173,40 +209,60 @@ export class TestRunner {
   }
 
   public async runTests() {
-    const summary: TestSummary = {
-      passed: 0,
-      failed: 0,
-      failedTests: [] as Array<string>,
-      startTime: Date.now(),
-      endTime: 0,
-    };
-
-    const previousNestingLevel = this._nestingLevel;
+    console.log('\n');
 
     for (const testSuite of this._testSuites) {
-      await this.runTestSuite(testSuite, summary);
+      this._currentTestSuite = testSuite;
+      await testSuite.buildSuite();
+      this._currentTestSuite = null;
     }
-    this._nestingLevel = previousNestingLevel;
+
+    for (const testSuite of this._testSuites) {
+      let skipTestSuite = testSuite.skip;
+
+      if (this._includesOnly) {
+        skipTestSuite = skipTestSuite || !testSuite.only;
+
+        for (const testCase of testSuite.testCases) {
+          if (testCase.only) {
+            skipTestSuite = false;
+          } else testCase.skip = testCase.skip || !testSuite.only;
+          delete testCase.only;
+        }
+      }
+      delete testSuite.only;
+      testSuite.skip = skipTestSuite;
+    }
+
+    for (const testSuite of this._testSuites) {
+      await this.runTestSuite(testSuite);
+    }
 
     this._testSuites = [];
     console.log('End of tests run 🏁');
-    summary.endTime = Date.now();
-    this.printSummary(summary);
+    this._summary.endTime = Date.now();
+    this.printSummary();
   }
 
-  private async runTestSuite(testSuite: TestSuite, summary: TestSummary) {
+  private async runTestSuite(testSuite: TestSuite) {
+    if (testSuite.skip) {
+      this._summary.skipped += testSuite.testCases.length;
+      return;
+    }
+
     this._currentTestSuite = testSuite;
-    this._nestingLevel = testSuite.nestingLevel;
+    console.log(`${indentNestingLevel(testSuite.nestingLevel)} ${testSuite.name}`);
 
-    console.log(`${indentNestingLevel(this._nestingLevel)} ${testSuite.name}`);
-
-    testSuite.buildSuite();
     if (testSuite.beforeAll) {
       await testSuite.beforeAll();
     }
 
     for (const testCase of testSuite.testCases) {
-      await this.runTestCase(testSuite, testCase, summary);
+      if (!testCase.skip) {
+        await this.runTestCase(testSuite, testCase);
+      } else {
+        this._summary.skipped++;
+      }
     }
 
     if (testSuite.afterAll) {
@@ -215,7 +271,7 @@ export class TestRunner {
     this._currentTestSuite = null;
   }
 
-  private async runTestCase(testSuite: TestSuite, testCase: TestCase, summary: TestSummary) {
+  private async runTestCase(testSuite: TestSuite, testCase: TestCase) {
     callTrackerRegistryUI.value = {};
     callTrackerRegistryJS = {};
     this._currentTestCase = testCase;
@@ -225,7 +281,7 @@ export class TestRunner {
     }
 
     await testCase.run();
-    this.showTestCaseSummary(testCase, summary);
+    this.showTestCaseSummary(testCase, testSuite.nestingLevel);
 
     if (testSuite.afterEach) {
       await testSuite.afterEach();
@@ -237,20 +293,20 @@ export class TestRunner {
     await stopRecordingAnimationUpdates();
   }
 
-  private showTestCaseSummary(testCase: TestCase, summary: TestSummary) {
+  private showTestCaseSummary(testCase: TestCase, nestingLevel: number) {
     let mark;
     if (testCase.errors.length > 0) {
-      summary.failed++;
-      summary.failedTests.push(testCase.name);
+      this._summary.failed++;
+      this._summary.failedTests.push(testCase.name);
       mark = color('✖', 'red');
     } else {
-      summary.passed++;
+      this._summary.passed++;
       mark = color('✔', 'green');
     }
-    console.log(`${indentNestingLevel(this._nestingLevel)} ${mark} ${color(testCase.name, 'gray')}`);
+    console.log(`${indentNestingLevel(nestingLevel)} ${mark} ${color(testCase.name, 'gray')}`);
 
     for (const error of testCase.errors) {
-      console.log(`${indentNestingLevel(this._nestingLevel)}\t${error}`);
+      console.log(`${indentNestingLevel(nestingLevel)}\t${error}`);
     }
   }
 
@@ -440,19 +496,20 @@ export class TestRunner {
     });
   }
 
-  private printSummary(summary: {
-    passed: number;
-    failed: number;
-    failedTests: Array<string>;
-    startTime: number;
-    endTime: number;
-  }) {
+  private printSummary() {
+    const { passed, failed, failedTests, startTime, endTime, skipped } = this._summary;
+
     console.log('\n');
-    console.log(`🧮 Tests summary: ${color(summary.passed, 'green')} passed, ${color(summary.failed, 'red')} failed`);
-    console.log(`⏱️  Total time: ${Math.round(((summary.endTime - summary.startTime) / 1000) * 100) / 100}s`);
-    if (summary.failed > 0) {
+    console.log(
+      `🧮 Tests summary: ${color(passed, 'green')} passed, ${color(failed, 'red')} failed, ${color(
+        skipped,
+        'orange',
+      )} skipped`,
+    );
+    console.log(`⏱️  Total time: ${Math.round(((endTime - startTime) / 1000) * 100) / 100}s`);
+    if (failed > 0) {
       console.log('❌ Failed tests:');
-      for (const failedTest of summary.failedTests) {
+      for (const failedTest of failedTests) {
         console.log(`\t- ${failedTest}`);
       }
     } else {

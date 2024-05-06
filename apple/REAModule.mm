@@ -281,7 +281,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 {
   if (_isBridgeless) {
 #if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
-    RCTCxxBridge *cxxBridge = (RCTCxxBridge *)[RCTBridge currentBridge];
+    RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
     auto &rnRuntime = *(jsi::Runtime *)cxxBridge.runtime;
     auto executorFunction = ([executor = _runtimeExecutor](std::function<void(jsi::Runtime & runtime)> &&callback) {
       // Convert to Objective-C block so it can be captured properly.
