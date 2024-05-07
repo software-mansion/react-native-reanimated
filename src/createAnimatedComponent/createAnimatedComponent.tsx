@@ -233,9 +233,14 @@ export function createAnimatedComponent(
     _setEventViewTag() {
       // Setting the tag for registering events - since the event emitting view can be nested inside the main component
       const componentAnimatedRef = this._component as AnimatedComponentRef;
-      if (componentAnimatedRef && componentAnimatedRef.getScrollableNode) {
+      if (componentAnimatedRef.getScrollableNode) {
         const scrollableNode = componentAnimatedRef.getScrollableNode();
         this._eventViewTag = findNodeHandle(scrollableNode) ?? -1;
+      } else {
+        this._eventViewTag =
+          findNodeHandle(
+            options?.setNativeProps ? this : componentAnimatedRef
+          ) ?? -1;
       }
     }
 
