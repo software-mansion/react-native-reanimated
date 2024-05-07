@@ -47,6 +47,8 @@ export type TestSuite = {
   only?: boolean;
 };
 
+export type ValidPropNames = 'zIndex' | 'opacity' | 'width' | 'height' | 'top' | 'left' | 'backgroundColor';
+
 export enum ComparisonMode {
   STRING = 'STRING',
   DISTANCE = 'DISTANCE',
