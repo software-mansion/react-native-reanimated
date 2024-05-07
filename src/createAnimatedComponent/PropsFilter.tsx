@@ -10,9 +10,9 @@ import { hasInlineStyles, getInlineStyle } from './InlinePropManager';
 import type {
   AnimatedComponentProps,
   AnimatedProps,
-  InitialComponentProps,
   IAnimatedComponentInternal,
   IPropsFilter,
+  InitialComponentProps,
 } from './commonTypes';
 import { flattenArray, has } from './utils';
 import { StyleSheet } from 'react-native';
@@ -65,7 +65,7 @@ export class PropsFilter implements IPropsFilter {
         });
         props[key] = StyleSheet.flatten(processedStyle);
       } else if (key === 'animatedProps') {
-        const animatedProp = inputProps.animatedProps as Partial<
+        const animatedProp = component.safeProps.animatedProps as Partial<
           AnimatedComponentProps<AnimatedProps>
         >;
         if (animatedProp.initial !== undefined) {

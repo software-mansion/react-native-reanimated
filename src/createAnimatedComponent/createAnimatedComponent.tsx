@@ -135,8 +135,20 @@ export function createAnimatedComponent(
     static contextType = SkipEnteringContext;
     context!: React.ContextType<typeof SkipEnteringContext>;
 
+    safeProps: {
+      animatedProps: Partial<AnimatedComponentProps<AnimatedProps>>;
+    };
+
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
+
+      const animatedProps = this.props.animatedProps;
+
+      this.safeProps =
+        animatedProps === null || animatedProps === undefined
+          ? { animatedProps: {} }
+          : { animatedProps };
+
       if (isJest()) {
         this.jestAnimatedStyle = { value: {} };
       }
@@ -262,8 +274,8 @@ export function createAnimatedComponent(
         for (const style of this._styles) {
           style.viewDescriptors.remove(this._viewTag);
         }
-        if (this.props.animatedProps?.viewDescriptors) {
-          this.props.animatedProps.viewDescriptors.remove(this._viewTag);
+        if (this.safeProps.animatedProps?.viewDescriptors) {
+          this.safeProps.animatedProps.viewDescriptors.remove(this._viewTag);
         }
         if (isFabric()) {
           removeFromPropsRegistry(this._viewTag);
@@ -369,14 +381,14 @@ export function createAnimatedComponent(
       this._styles = styles;
 
       const prevAnimatedProps = this._animatedProps;
-      this._animatedProps = this.props.animatedProps;
+      this._animatedProps = this.safeProps.animatedProps;
 
       const { viewTag, viewName, shadowNodeWrapper, viewConfig } =
         this._getViewInfo();
 
       // update UI props whitelist for this view
       const hasReanimated2Props =
-        this.props.animatedProps?.viewDescriptors || styles.length;
+        this.safeProps.animatedProps?.viewDescriptors || styles.length;
       if (hasReanimated2Props && viewConfig) {
         adaptViewConfig(viewConfig);
       }
@@ -424,13 +436,16 @@ export function createAnimatedComponent(
       });
 
       // detach old animatedProps
-      if (prevAnimatedProps && prevAnimatedProps !== this.props.animatedProps) {
+      if (
+        prevAnimatedProps &&
+        prevAnimatedProps !== this.safeProps.animatedProps
+      ) {
         prevAnimatedProps.viewDescriptors!.remove(viewTag as number);
       }
 
       // attach animatedProps property
-      if (this.props.animatedProps?.viewDescriptors) {
-        this.props.animatedProps.viewDescriptors.add({
+      if (this.safeProps.animatedProps?.viewDescriptors) {
+        this.safeProps.animatedProps.viewDescriptors.add({
           tag: viewTag as number,
           name: viewName!,
           shadowNodeWrapper: shadowNodeWrapper!,
