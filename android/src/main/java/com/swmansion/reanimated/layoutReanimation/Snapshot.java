@@ -81,8 +81,7 @@ public class Snapshot {
               Snapshot.TARGET_BORDER_TOP_LEFT_RADIUS,
               Snapshot.TARGET_BORDER_TOP_RIGHT_RADIUS,
               Snapshot.TARGET_BORDER_BOTTOM_LEFT_RADIUS,
-              Snapshot.TARGET_BORDER_BOTTOM_RIGHT_RADIUS
-              ));
+              Snapshot.TARGET_BORDER_BOTTOM_RIGHT_RADIUS));
   public static ArrayList<String> currentKeysToTransform =
       new ArrayList<>(
           Arrays.asList(
@@ -96,8 +95,7 @@ public class Snapshot {
               Snapshot.CURRENT_BORDER_TOP_LEFT_RADIUS,
               Snapshot.CURRENT_BORDER_TOP_RIGHT_RADIUS,
               Snapshot.CURRENT_BORDER_BOTTOM_LEFT_RADIUS,
-              Snapshot.CURRENT_BORDER_BOTTOM_RIGHT_RADIUS
-              ));
+              Snapshot.CURRENT_BORDER_BOTTOM_RIGHT_RADIUS));
 
   Snapshot(View view, NativeViewHierarchyManager viewHierarchyManager) {
     parent = (ViewGroup) view.getParent();
