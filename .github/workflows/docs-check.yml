@@ -4,8 +4,8 @@ env:
 on:
   pull_request:
     paths:
-      - '.github/workflows/docs-check.yml'
-      - 'docs/**'
+      - ".github/workflows/docs-check.yml"
+      - "docs/**"
   merge_group:
     branches:
       - main
@@ -22,9 +22,9 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          cache: 'yarn'
+          cache: "yarn"
       - name: Clear annotations
-        run: scripts/clear-annotations.sh
+        run: .github/workflows/helper/clear-annotations.sh
 
       - name: Install node dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}

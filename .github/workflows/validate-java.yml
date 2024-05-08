@@ -33,7 +33,7 @@ jobs:
         with:
           cache: "yarn"
       - name: Clear annotations
-        run: .github/helper/clear-annotations.sh
+        run: .github/workflows/helper/clear-annotations.sh
 
       - name: Install monorepo node dependencies
         run: yarn install
