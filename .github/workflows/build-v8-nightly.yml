@@ -1,4 +1,6 @@
 name: Test V8 on Android nightly
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     paths:
