@@ -14,7 +14,7 @@ import {
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { getComparisonModeForProp } from '../../../ReanimatedRuntimeTestsRunner/Comparators';
 
-describe.only('Test reusing animatedStyles', () => {
+describe('Test reusing animatedStyles', () => {
   const COMPONENT_REF = {
     ONE: 'ONE',
     TWO: 'TWO',

@@ -75,7 +75,12 @@ async function getSnapshotUpdates(easingFn: EasingFunction | EasingFunctionFacto
   const updatesContainerPassive = await recordAnimationUpdates();
   await render(<PassiveAnimatedComponent easing={easingFn} />);
   await wait(1200);
-  //We have to hardcode the first frame, since it doesn't get recorded
+
+  // For passive updates we have the following order of operations:
+  // 1. Slightly increase sharedValue
+  // 2. Once the sharedValue changed update the style
+  // Therefore the first frame is not recorded and we have to hardcode it
+
   const passiveUpdates = [{ width: 0 }, ...updatesContainerPassive.getUpdates()];
 
   return [activeUpdates, activeNaiveUpdates, passiveUpdates];
