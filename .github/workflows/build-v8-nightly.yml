@@ -1,13 +1,11 @@
 name: Test V8 on Android nightly
-env:
-  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     paths:
       - .github/workflows/build-v8-nightly.yml
       - .github/workflows/helper/configureV8.js
   schedule:
-    - cron: '37 19 * * *'
+    - cron: "37 19 * * *"
   workflow_dispatch:
 
 jobs:
@@ -21,12 +19,12 @@ jobs:
       - name: Check out
         uses: actions/checkout@v4
         with:
-          path: 'reanimated_repo'
+          path: "reanimated_repo"
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          distribution: "zulu"
+          java-version: "17"
       - name: Create React Native app
         run: npx react-native init app
       - name: Install dependencies
