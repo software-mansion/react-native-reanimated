@@ -31,8 +31,8 @@ jobs:
         with:
           distribution: "zulu"
           java-version: "17"
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
           cache: "yarn"
       - name: Create directories
