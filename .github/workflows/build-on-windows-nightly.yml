@@ -37,6 +37,9 @@ jobs:
       - name: Echo yarn version
         working-directory: App
         run: yarn --version
+      - name: Echo yarn config
+        working-directory: App
+        run: yarn config
       - name: Install dependencies
         working-directory: App
         run: yarn install
