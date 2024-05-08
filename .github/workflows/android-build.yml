@@ -5,12 +5,12 @@ on:
   pull_request:
     paths:
       - .github/workflows/android-build.yml
-      - android/**
-      - Common/**
-      - Example/package.json
-      - Example/android/**
-      - FabricExample/package.json
-      - FabricExample/android/**
+      - packages/react-native-reanimated/android/**
+      - packages/react-native-reanimated/Common/**
+      - packages/react-native-reanimated/Example/package.json
+      - packages/react-native-reanimated/Example/android/**
+      - packages/react-native-reanimated/FabricExample/package.json
+      - packages/react-native-reanimated/FabricExample/android/**
   merge_group:
     branches:
       - main
@@ -19,12 +19,12 @@ on:
       - main
     paths:
       - .github/workflows/android-build.yml
-      - android/**
-      - Common/**
-      - Example/package.json
-      - Example/android/**
-      - FabricExample/package.json
-      - FabricExample/android/**
+      - packages/react-native-reanimated/android/**
+      - packages/react-native-reanimated/Common/**
+      - packages/react-native-reanimated/Example/package.json
+      - packages/react-native-reanimated/Example/android/**
+      - packages/react-native-reanimated/FabricExample/package.json
+      - packages/react-native-reanimated/FabricExample/android/**
 
 jobs:
   build:
@@ -32,7 +32,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        working-directory: [Example, FabricExample]
+        working-directory:
+          [
+            packages/react-native-reanimated/Example,
+            packages/react-native-reanimated/FabricExample,
+          ]
       fail-fast: false
     concurrency:
       group: android-${{ matrix.working-directory }}-${{ github.ref }}
@@ -41,20 +45,24 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4
 
+      - name: Install dependencies in root
+        run: yarn install --immutable
+
       - name: Setup Java 17
         uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
+          distribution: "zulu"
           java-version: 17
 
       - name: Restore Reanimated node_modules from cache
         uses: actions/cache@v3
         with:
-          path: node_modules
-          key: ${{ runner.os }}-android-node-modules-reanimated-${{ hashFiles('yarn.lock') }}
+          path: packages/react-native-reanimated/node_modules
+          key: ${{ runner.os }}-android-node-modules-reanimated-${{ hashFiles('packages/react-native-reanimated/yarn.lock') }}
           restore-keys: ${{ runner.os }}-android-node-modules-reanimated-
 
       - name: Install Reanimated node_modules
+        working-directory: packages/react-native-reanimated
         run: yarn install --immutable
 
       - name: Restore app node_modules from cache

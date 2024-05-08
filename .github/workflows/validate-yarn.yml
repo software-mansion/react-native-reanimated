@@ -4,9 +4,9 @@ env:
 on:
   pull_request:
     paths:
-      - '.github/workflows/validate-yarn.yml'
-      - '**/package.json'
-      - '**/yarn.lock'
+      - ".github/workflows/validate-yarn.yml"
+      - "**/package.json"
+      - "**/yarn.lock"
   merge_group:
     branches:
       - main
@@ -14,9 +14,9 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/validate-yarn.yml'
-      - '**/package.json'
-      - '**/yarn.lock'
+      - ".github/workflows/validate-yarn.yml"
+      - "**/package.json"
+      - "**/yarn.lock"
 
 jobs:
   check:
@@ -30,9 +30,7 @@ jobs:
         uses: actions/setup-node@v4
 
       - name: Install dependencies
-        run: yarn
-      - name: Build package
-        run: yarn build
+        run: yarn install
 
       - name: Get changed files
         id: changed-files
