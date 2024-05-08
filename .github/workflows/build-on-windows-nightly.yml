@@ -22,12 +22,10 @@ jobs:
         with:
           distribution: "zulu"
           java-version: "17"
-      - name: pwd
-        run: pwd
-      - name: ls
-        run: ls -la
       - name: Set up Node.js
         uses: actions/setup-node@v4
+      - name: Enable corepack
+        run: corepack enable
       - name: Create React Native App
         run: npx react-native init App
       - name: Setup Yarn

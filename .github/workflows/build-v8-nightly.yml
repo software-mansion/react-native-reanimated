@@ -24,15 +24,13 @@ jobs:
           path: "reanimated_repo"
       - name: Use Node.js
         uses: actions/setup-node@v4
+      - name: Enable corepack
+        run: corepack enable
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: "zulu"
           java-version: "17"
-      - name: pwd
-        run: pwd
-      - name: ls
-        run: ls -la
       - name: Create React Native app
         run: npx react-native init app
       - name: Setup Yarn

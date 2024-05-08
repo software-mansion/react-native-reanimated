@@ -31,12 +31,10 @@ jobs:
         with:
           distribution: "zulu"
           java-version: "17"
-      - name: pwd
-        run: pwd
-      - name: ls
-        run: ls -la
       - name: Use Node.js
         uses: actions/setup-node@v4
+      - name: Enable corepack
+        run: corepack enable
       - name: Create directories
         run: mkdir -p monorepo/packages
       - name: Setup monorepo
