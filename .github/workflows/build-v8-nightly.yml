@@ -29,6 +29,9 @@ jobs:
           java-version: "17"
       - name: Create React Native app
         run: npx react-native init app
+      - name: Setup Yarn
+        working-directory: app
+        run: yarn set version 4.1.1 --yarn-path
       - name: Setup Yarn lockfile
         working-directory: app
         run: touch yarn.lock
