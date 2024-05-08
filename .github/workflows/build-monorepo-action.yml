@@ -45,6 +45,7 @@ jobs:
           yarn
 
       - name: Echo yarn version
+        working-directory: monorepo/RootApp
         run: yarn --version
       - name: Install dependencies for RootApp
         working-directory: monorepo/RootApp

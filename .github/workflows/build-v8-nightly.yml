@@ -32,6 +32,9 @@ jobs:
       - name: Setup Yarn lockfile
         working-directory: app
         run: touch yarn.lock
+      - name: Echo yarn version
+        working-directory: app
+        run: yarn --version
       - name: Install dependencies
         working-directory: app
         run: yarn install
