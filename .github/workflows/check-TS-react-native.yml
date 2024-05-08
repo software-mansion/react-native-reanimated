@@ -43,13 +43,18 @@ jobs:
         run: yarn add --dev react-native@${{ matrix.react-native-version }}
 
       - name: Check source types
+        working-directory: packages/react-native-reanimated
         run: yarn type:check:src
       - name: Check plugin types
+        working-directory: packages/react-native-reanimated
         run: yarn type:check:plugin
       - name: Check API
+        working-directory: packages/react-native-reanimated
         run: yarn type:check:app
       - name: Run common type tests
+        working-directory: packages/react-native-reanimated
         run: yarn type:check:tests:common
       - name: Run 0.72+ type tests
+        working-directory: packages/react-native-reanimated
         if: matrix.react-native-version != '0.71'
         run: yarn type:check:tests:0.72+
