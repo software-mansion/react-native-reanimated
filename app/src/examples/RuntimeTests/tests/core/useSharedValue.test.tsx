@@ -11,7 +11,6 @@ import {
   getRegisteredValue,
   Presets,
   clearRenderOutput,
-  wait,
 } from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { ComparisonMode } from '../../ReanimatedRuntimeTestsRunner/types';
 
@@ -121,7 +120,7 @@ describe('Tests of sharedValue', () => {
     );
   });
 
-  describe('Tests of arrays as sharedValue', () => {
+  describe(`Tests of arrays as sharedValue, preset size: ${Presets.serializableArrays.length}`, () => {
     const AppendToArrayComponent = ({
       initialValue,
       append,
@@ -182,7 +181,6 @@ describe('Tests of sharedValue', () => {
           />,
         );
         const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-        await wait(100); // We have to wait 100ms because of our 1000 element array, operations on it are very slow
         expect(sharedValue.onJS).toBe([...preset, 1, 'string', [], { A: 1 }], ComparisonMode.ARRAY);
         expect(sharedValue.onUI).toBe([...preset, 1, 'string', [], { A: 1 }], ComparisonMode.ARRAY);
         await render(<ProgressBar progress={index / Presets.serializableArrays.length} />);
