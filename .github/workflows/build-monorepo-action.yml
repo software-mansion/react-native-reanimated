@@ -1,6 +1,5 @@
 name: Test build in monorepo
 env:
-  YARN_ENABLE_HARDENED_MODE: 0
   REACT_NATIVE_TEMPLATE: ${{ inputs.react_native_version && '--version' || '' }} ${{ inputs.react_native_version }}
 on:
   workflow_call:
@@ -29,8 +28,8 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          distribution: "zulu"
+          java-version: "17"
       - name: Create directories
         run: mkdir -p monorepo/packages
       - name: Create RootApp
