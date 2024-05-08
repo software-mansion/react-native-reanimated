@@ -6178,7 +6178,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^8.19.0":
+"eslint@npm:^8.0.0-0":
   version: 8.57.0
   resolution: "eslint@npm:8.57.0"
   dependencies:
@@ -13267,7 +13267,7 @@ __metadata:
     "@react-native/metro-config": "npm:0.74.81"
     "@react-native/typescript-config": "npm:0.74.81"
     "@types/react": "npm:~18.0.14"
-    eslint: "npm:^8.19.0"
+    eslint: "npm:^8.0.0-0"
     expo: "npm:~48.0.10"
     expo-status-bar: "npm:~1.4.0"
     prettier: "npm:^2.4.1"
