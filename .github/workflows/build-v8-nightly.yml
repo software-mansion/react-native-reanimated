@@ -27,7 +27,12 @@ jobs:
         with:
           distribution: "zulu"
           java-version: "17"
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          cache: "yarn"
       - name: Create React Native app
+        working-directory:
         run: npx react-native init app
       - name: Setup Yarn
         working-directory: app

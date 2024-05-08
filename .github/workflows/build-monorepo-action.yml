@@ -31,6 +31,10 @@ jobs:
         with:
           distribution: "zulu"
           java-version: "17"
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          cache: "yarn"
       - name: Create directories
         run: mkdir -p monorepo/packages
       - name: Setup monorepo
