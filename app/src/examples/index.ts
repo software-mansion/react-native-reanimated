@@ -123,6 +123,7 @@ import HabitsExample from './LayoutAnimations/HabitsExample';
 import MemoExample from './MemoExample';
 import PerformanceMonitorExample from './PerfomanceMonitorExample';
 import ScreenTransitionExample from './ScreenTransitionExample';
+import AnimatedTextExample from './AnimatedTextExample';
 
 interface Example {
   icon?: string;
@@ -137,6 +138,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
+  },
+  AnimatedTextExample: {
+    icon: '📝',
+    title: 'AnimatedTextExample',
+    screen: AnimatedTextExample,
   },
   RuntimeTests: {
     icon: '⚙️',
