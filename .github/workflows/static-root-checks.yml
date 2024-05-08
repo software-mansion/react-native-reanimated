@@ -23,22 +23,34 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          cache: 'yarn'
+          cache: "yarn"
       - name: Clear annotations
         run: scripts/clear-annotations.sh
-      - name: Install node dependencies
-        run: yarn
-      - name: Build package
+
+      - name: Install monorepo node dependencies
+        run: yarn install
+      - name: Install Reanimated node dependencies
+        working-directory: packages/react-native-reanimated
+        run: yarn install
+      - name: Build Reanimated package
+        working-directory: packages/react-native-reanimated
         run: yarn build
+
       - name: Check types
+        working-directory: packages/react-native-reanimated
         run: yarn type:check:all
       - name: Lint
+        working-directory: packages/react-native-reanimated
         run: yarn lint:js
       - name: Find unused code
+        working-directory: packages/react-native-reanimated
         run: yarn find-unused-code:js
       - name: Find circular dependencies
+        working-directory: packages/react-native-reanimated
         run: yarn circular_dependency_check
       - name: Check use strict
+        working-directory: packages/react-native-reanimated
         run: yarn use_strict_check
       - name: Run jest unit tests
+        working-directory: packages/react-native-reanimated
         run: yarn test:unit
