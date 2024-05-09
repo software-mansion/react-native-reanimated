@@ -28,7 +28,7 @@ jobs:
         run: curl -LJO https://codeload.github.com/software-mansion/react-native-reanimated/tar.gz/${{ github.sha }}
       - name: Install Reanimated
         working-directory: app
-        run: yarn add file:./react-native-reanimated-${{ github.sha }}.tar.gz
+        run: yarn add react-native-reanimated@file:./react-native-reanimated-${{ github.sha }}.tar.gz
       - name: Install Paper Pods
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         working-directory: app/ios

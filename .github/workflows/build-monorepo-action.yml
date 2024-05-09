@@ -54,19 +54,19 @@ jobs:
         run: yarn install
       - name: Install Reanimated for RootApp
         working-directory: monorepo/packages/RootApp
-        run: yarn add file:../../react-native-reanimated-${{ github.sha }}.tar.gz
+        run: yarn add react-native-reanimated@file:../../react-native-reanimated-${{ github.sha }}.tar.gz
 
       - name: Install dependencies for PackageApp
         working-directory: monorepo/packages/PackageApp
         run: yarn install
       - name: Install Reanimated for PackageApp
         working-directory: monorepo/packages/PackageApp
-        run: yarn add file:../../react-native-reanimated-${{ github.sha }}.tar.gz
+        run: yarn add react-native-reanimated@file:../../react-native-reanimated-${{ github.sha }}.tar.gz
 
       - name: Setup hoisted Reanimated
         if: ${{ inputs.is_hoisted }}
         working-directory: monorepo
-        run: yarn add file:./react-native-reanimated-${{ github.sha }}.tar.gz -W
+        run: yarn add react-native-reanimated@file:./react-native-reanimated-${{ github.sha }}.tar.gz -W
 
       - name: Install Pods for RootApp
         if: ${{ inputs.platform == 'iOS' }}
