@@ -1,6 +1,6 @@
 name: Check static framework nightly build
 env:
-  YARN_ENABLE_IMMUTABLE_INSTALLS: false
+  YARN_ENABLE_IMMUTABLE_INSTALLS: 0
 on:
   pull_request:
     paths:
@@ -25,7 +25,7 @@ jobs:
         run: npx react-native init app
       - name: Install dependencies
         working-directory: app
-        run: yarn add github:software-mansion/react-native-reanimated
+        run: yarn add react-native-reanimated@github:software-mansion/react-native-reanimated
       - name: Install Paper Pods
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         working-directory: app/ios

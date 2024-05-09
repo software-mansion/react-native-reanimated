@@ -34,7 +34,7 @@ jobs:
         run: yarn install
       - name: Install test dependencies
         working-directory: app
-        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }} react-native-v8 v8-android-jit
+        run: yarn add react-native-reanimated@github:software-mansion/react-native-reanimated#${{ github.ref }} react-native-v8 v8-android-jit
       - name: Configure V8
         run: node reanimated_repo/.github/workflows/helper/configureV8.js
       - name: Build Android app
