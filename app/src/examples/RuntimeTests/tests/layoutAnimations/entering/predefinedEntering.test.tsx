@@ -108,7 +108,7 @@ async function getSnapshotUpdates(entering: any, duration?: number, springify = 
   return updates;
 }
 
-describe('Test predefined entering', () => {
+describe.only('Test predefined entering', () => {
   describe('Entering on mount, no modifiers', async () => {
     test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet]) => {
       for (const entering of enteringSet) {
@@ -130,7 +130,7 @@ describe('Test predefined entering', () => {
   });
 
   describe('Entering on mount, springify', async () => {
-    test.each(ENTERING_SETS)('Test suite of ${0}', async ([_setName, enteringSet]) => {
+    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet]) => {
       for (const entering of enteringSet) {
         const snapshotName = entering.name + '_springify';
         const updates = await getSnapshotUpdates(entering, undefined, true);
@@ -140,11 +140,10 @@ describe('Test predefined entering', () => {
   });
 
   describe('Entering on mount, springify, duration 100', async () => {
-    test.each(ENTERING_SETS)('Test suite of ${0}', async ([_setName, enteringSet]) => {
+    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet]) => {
       for (const entering of enteringSet) {
         const snapshotName = entering.name + '_springify_100';
         const updates = await getSnapshotUpdates(entering, 100, true);
-        // console.log(`${snapshotName}: ${JSON.stringify(updates)},`);
         expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
       }
     });
