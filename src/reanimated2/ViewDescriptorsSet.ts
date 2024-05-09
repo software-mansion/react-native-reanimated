@@ -70,7 +70,9 @@ function useViewRefSetJS<T>(): ViewRefSet<T> {
       items: new Set(),
 
       add: (item: T) => {
-        if (data.items.has(item)) return;
+        if (data.items.has(item)) {
+          return;
+        }
         data.items.add(item);
       },
 
