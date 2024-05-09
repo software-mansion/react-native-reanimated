@@ -11,6 +11,9 @@ import './tests/animations/withTiming/arrays.test';
 import './tests/animations/withTiming/transformMatrices.test';
 
 import './tests/layoutAnimations/entering/enteringColors.test';
+
+import './tests/layoutAnimations/entering/predefinedEntering.test';
+
 import './tests/utilities/relativeCoords.test';
 
 export default function RuntimeTestsExample() {

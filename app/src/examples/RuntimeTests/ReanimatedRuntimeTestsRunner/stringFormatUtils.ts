@@ -13,7 +13,8 @@ export function indentNestingLevel(nestingLevel: number) {
 export function appendWhiteSpaceToMatchLength(message: string | number, length: number) {
   const messageStr = message.toString();
   const messageLen = messageStr.length;
-  return `${messageStr}${' '.repeat(length - messageLen)}`;
+  const indentSize = Math.max(0, length - messageLen);
+  return `${messageStr}${' '.repeat(indentSize)}`;
 }
 
 export function color(value: NullableTestValue, color: 'yellow' | 'cyan' | 'green' | 'red' | 'gray' | 'orange') {
