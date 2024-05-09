@@ -2,23 +2,95 @@ import { Component, ReactElement } from 'react';
 import { TestRunner } from './TestRunner';
 import { TestComponent } from './TestComponent';
 import type { SharedValue } from 'react-native-reanimated';
-import { TestConfiguration, TestValue, NullableTestValue } from './types';
+import { TestConfiguration, TestValue, NullableTestValue, DescribeDecorator, TestDecorator } from './types';
 
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
 
-export const describe = (name: string, buildSuite: () => void) => {
-  testRunner.describe(name, buildSuite);
-};
+type DescribeFunction = (name: string, buildSuite: () => void) => void;
+export const describe: {
+  (name: string, buildSuite: () => void): void;
+  skip: DescribeFunction;
+  only: DescribeFunction;
+} = Object.assign(
+  (name: string, buildSuite: () => void) => {
+    testRunner.describe(name, buildSuite, null);
+  },
+  {
+    skip: (name: string, buildSuite: () => void) => {
+      testRunner.describe(name, buildSuite, DescribeDecorator.SKIP);
+    },
+    only: (name: string, buildSuite: () => void) => {
+      testRunner.describe(name, buildSuite, DescribeDecorator.SKIP);
+    },
+  },
+);
 
-describe.skip = (name: string, buildSuite: () => void) => {
-  testRunner.describe(name, buildSuite, false, true);
-};
+type TestEachFunction = <T>(
+  examples: Array<T>,
+) => (name: string, testCase: (example: T, index?: number) => void) => void;
+type TestEachFunctionWithWarning = <T>(
+  examples: Array<T>,
+) => (name: string, expectedWarning: string, testCase: (example: T, index?: number) => void) => void;
 
-describe.only = (name: string, buildSuite: () => void) => {
-  testRunner.describe(name, buildSuite, true);
-};
+export const test: {
+  (name: string, testCase: () => void): void;
+  each: TestEachFunction;
+  skip: { (name: string, testCase: () => void): void; each: TestEachFunction };
+  only: { (name: string, testCase: () => void): void; each: TestEachFunction };
+  failing: { (name: string, warningMessage: string, testCase: () => void): void; each: TestEachFunctionWithWarning };
+  warn: { (name: string, warningMessage: string, testCase: () => void): void; each: TestEachFunctionWithWarning };
+} = Object.assign(
+  (name: string, testCase: () => void) => {
+    testRunner.test(name, testCase, null);
+  },
+  {
+    each: <T>(examples: Array<T>) => {
+      return testRunner.testEach(examples, null);
+    },
+    skip: Object.assign(
+      (name: string, testCase: () => void) => {
+        testRunner.test(name, testCase, TestDecorator.SKIP);
+      },
+      {
+        each: <T>(examples: Array<T>) => {
+          return testRunner.testEach(examples, TestDecorator.SKIP);
+        },
+      },
+    ),
+    only: Object.assign(
+      (name: string, testCase: () => void) => {
+        testRunner.test(name, testCase, TestDecorator.ONLY);
+      },
+      {
+        each: <T>(examples: Array<T>) => {
+          return testRunner.testEach(examples, null);
+        },
+      },
+    ),
+    failing: Object.assign(
+      (name: string, warningMessage: string, testCase: () => void) => {
+        testRunner.test(name, testCase, TestDecorator.FAILING, warningMessage);
+      },
+      {
+        each: <T>(examples: Array<T>) => {
+          return testRunner.testEachErrorMsg(examples, TestDecorator.FAILING);
+        },
+      },
+    ),
+    warn: Object.assign(
+      (name: string, expectedWarning: string, testCase: () => void) => {
+        testRunner.test(name, testCase, TestDecorator.WARN);
+      },
+      {
+        each: <T>(examples: Array<T>) => {
+          return testRunner.testEachErrorMsg(examples, TestDecorator.WARN);
+        },
+      },
+    ),
+  },
+);
 
 export function beforeAll(job: () => void) {
   testRunner.beforeAll(job);
@@ -35,33 +107,6 @@ export function afterEach(job: () => void) {
 export function afterAll(job: () => void) {
   testRunner.afterAll(job);
 }
-
-export const test = (name: string, testCase: () => void) => {
-  testRunner.test(name, testCase);
-};
-
-test.each = <T>(examples: Array<T>) => {
-  return testRunner.testEach(examples);
-};
-
-const onlyDecorator = (name: string, testCase: () => void) => {
-  testRunner.test(name, testCase, true);
-};
-
-onlyDecorator.each = <T>(examples: Array<T>) => {
-  return testRunner.testEach(examples, true);
-};
-test.only = onlyDecorator;
-
-const skipDecorator = (name: string, testCase: () => void) => {
-  testRunner.test(name, testCase, false, true);
-};
-
-skipDecorator.each = <T>(examples: Array<T>) => {
-  return testRunner.testEach(examples, false, true);
-};
-
-test.skip = skipDecorator;
 
 export async function render(component: ReactElement<Component> | null) {
   return testRunner.render(component);
