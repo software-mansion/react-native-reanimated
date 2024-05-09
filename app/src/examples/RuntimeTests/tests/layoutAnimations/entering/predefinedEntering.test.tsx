@@ -78,9 +78,11 @@ const ENTERING_SETS = [
   ['Fade', FADE_ENTERING],
   ['Bounce', BOUNCE_ENTERING],
   ['Flip', FLIP_ENTERING],
+
   ['LightSpeed', LIGHTSPEED_ENTERING],
   ['Pinwheel', PINWHEEL_ENTERING],
   ['Rotate', ROTATE_ENTERING],
+
   ['Slide', SLIDE_ENTERING],
   ['Stretch', STRETCH_ENTERING],
   ['Zoom', ZOOM_ENTERING],
@@ -112,40 +114,37 @@ async function getSnapshotUpdates(entering: any, duration?: number, springify = 
 
 describe('Test predefined entering', () => {
   describe('Entering on mount, no modifiers', async () => {
-    test.only.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet]) => {
+    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet]) => {
       for (const entering of enteringSet) {
         const snapshotName = entering.name;
         const updates = await getSnapshotUpdates(entering, undefined);
-        // console.log(snapshotName, ':', JSON.stringify(updates), ',');
         expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
       }
     });
   });
 
   describe('Entering on mount, duration 100', async () => {
-    test.each(ENTERING_SETS)('Test set of ${0}In ${1}', async ([_setName, enteringSet]) => {
+    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet]) => {
       for (const entering of enteringSet) {
         const snapshotName = entering.name + '_100';
         const updates = await getSnapshotUpdates(entering, 100);
-        // console.log(`${snapshotName}: ${JSON.stringify(updates)},`);
         expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
       }
     });
   });
 
   describe('Entering on mount, springify', async () => {
-    test.each(ENTERING_SETS)('Test set ${0}', async ([_setName, enteringSet]) => {
+    test.each(ENTERING_SETS)('Test suite of ${0}', async ([_setName, enteringSet]) => {
       for (const entering of enteringSet) {
         const snapshotName = entering.name + '_springify';
         const updates = await getSnapshotUpdates(entering, undefined, true);
-        // console.log(`${snapshotName}: ${JSON.stringify(updates)},`);
         expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
       }
     });
   });
 
   describe('Entering on mount, springify, duration 100', async () => {
-    test.each(ENTERING_SETS)('Test set ${0}', async ([_setName, enteringSet]) => {
+    test.each(ENTERING_SETS)('Test suite of ${0}', async ([_setName, enteringSet]) => {
       for (const entering of enteringSet) {
         const snapshotName = entering.name + '_springify_100';
         const updates = await getSnapshotUpdates(entering, 100, true);
