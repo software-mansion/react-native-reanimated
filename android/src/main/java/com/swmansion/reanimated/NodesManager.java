@@ -1,6 +1,8 @@
 package com.swmansion.reanimated;
 
 import static java.lang.Float.NaN;
+
+import android.app.Dialog;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 import com.facebook.react.bridge.Arguments;
@@ -31,8 +33,8 @@ import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.facebook.react.views.modal.ReactModalHostView;
-import com.swmansion.reanimated.keyboard.ModalActivityManager;
 import com.facebook.react.views.view.ReactViewBackgroundDrawable;
+import com.swmansion.reanimated.keyboard.ModalActivityManager;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
 import java.util.ArrayList;
