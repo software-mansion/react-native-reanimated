@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Easing as EasingRN } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -20,6 +20,7 @@ import {
   unmockAnimationTimer,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { EasingSnapshots } from './withTiming.snapshot';
+import { ErrorBoundary } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsRunner';
 
 const ActiveAnimatedComponent = ({ easing }: { easing: EasingFunction | EasingFunctionFactory | undefined }) => {
   const widthSV = useSharedValue(0);
@@ -82,6 +83,38 @@ async function getSnapshotUpdates(easingFn: EasingFunction | EasingFunctionFacto
 }
 
 describe('withTiming snapshots 📸, test EASING', () => {
+  describe('Invalid easing', async () => {
+    test.failing(
+      'Easing imported from react-native throws an error',
+      'Error: [Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.',
+      async () => {
+        await render(
+          <ErrorBoundary>
+            <ActiveAnimatedComponent easing={EasingRN.linear} />
+          </ErrorBoundary>,
+        );
+        await wait(1200);
+      },
+    );
+
+    test.failing(
+      'Easing must be a worklet, otherwise it throws an error',
+      'Error: [Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.',
+      async () => {
+        await render(
+          <ErrorBoundary>
+            <ActiveAnimatedComponent
+              easing={() => {
+                return 42;
+              }}
+            />
+          </ErrorBoundary>,
+        );
+        await wait(1200);
+      },
+    );
+  });
+
   test('No easing function', async () => {
     const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(undefined);
 
