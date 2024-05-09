@@ -380,6 +380,13 @@ android {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest"
             }
 
+            // ReactHost
+            if (REACT_NATIVE_MINOR_VERSION <= 72) {
+                srcDirs += "src/reactNativeVersionPatch/ReactHost/72"
+            } else {
+                srcDirs += "src/reactNativeVersionPatch/ReactHost/latest"
+            }
+
             // ReactFeatureFlags 
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 if (REACT_NATIVE_MINOR_VERSION <= 72) {
