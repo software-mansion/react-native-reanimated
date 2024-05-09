@@ -36,12 +36,11 @@
     "workletizes",
     "worklets"
   ],
-  // ban common types, producing existing words:
   "flagWords": [
-    "ere", // are
-    "hte", // the
-    "truck", // track
-    "trucker" // tracker
+    "ere",
+    "hte",
+    "truck",
+    "trucker"
   ],
   "ignorePaths": [
     "node_modules",
