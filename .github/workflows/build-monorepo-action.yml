@@ -48,9 +48,14 @@ jobs:
       - name: Install dependencies for RootApp
         working-directory: monorepo/RootApp
         run: yarn install
+      - name: Echo different stuff
+        run: |
+          echo ${{github.ref}}
+          echo ${{github.ref_name}}
+          echo ${{github.head_ref}}
       - name: Install Reanimated for RootApp
         working-directory: monorepo/RootApp
-        run: yarn add react-native-reanimated@github:software-mansion/react-native-reanimated#${{ github.ref }}
+        run: yarn add react-native-reanimated@github:software-mansion/react-native-reanimated#${{ github.ref}}
 
       - name: Install dependencies for PackageApp
         working-directory: monorepo/packages/PackageApp
