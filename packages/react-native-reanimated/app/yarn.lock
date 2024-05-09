@@ -693,7 +693,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^8.36.0":
+"eslint@npm:^8.0.0-0":
   version: 8.57.0
   resolution: "eslint@npm:8.57.0"
   dependencies:
@@ -1716,7 +1716,7 @@ __metadata:
     "@tsconfig/react-native": "npm:^3.0.0"
     "@types/d3-shape": "npm:^3.1.1"
     d3-shape: "npm:^3.2.0"
-    eslint: "npm:^8.36.0"
+    eslint: "npm:^8.0.0-0"
     eslint-plugin-reanimated: "link:../eslintPlugin"
     patch-package: "npm:^7.0.0"
     prettier: "npm:^2.8.7"
