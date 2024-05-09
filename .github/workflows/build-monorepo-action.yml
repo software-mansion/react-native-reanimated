@@ -50,11 +50,11 @@ jobs:
         run: curl -LJO https://codeload.github.com/software-mansion/react-native-reanimated/tar.gz/${{ github.sha }}
 
       - name: Install dependencies for RootApp
-        working-directory: monorepo/packages/RootApp
+        working-directory: monorepo/RootApp
         run: yarn install
       - name: Install Reanimated for RootApp
-        working-directory: monorepo/packages/RootApp
-        run: yarn add react-native-reanimated@file:../../react-native-reanimated-${{ github.sha }}.tar.gz
+        working-directory: monorepo/RootApp
+        run: yarn add react-native-reanimated@file:../react-native-reanimated-${{ github.sha }}.tar.gz
 
       - name: Install dependencies for PackageApp
         working-directory: monorepo/packages/PackageApp
