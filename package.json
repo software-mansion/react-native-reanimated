@@ -1,5 +1,9 @@
 {
   "name": "react-native-reanimated-monorepo",
   "packageManager": "yarn@4.1.1",
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2"
+  }
 }

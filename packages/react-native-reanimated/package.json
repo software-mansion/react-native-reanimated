@@ -153,19 +153,6 @@
     "ts-prune": "^0.10.3",
     "typescript": "^4.1.3"
   },
-  "lint-staged": {
-    "*.(js|ts|tsx)": [
-      "yarn eslint",
-      "yarn eslint --quiet --ext '.js,.ts,.tsx' src/",
-      "yarn prettier --write"
-    ],
-    "plugin/**/*.ts": "yarn lint:plugin",
-    "**/*.{h,cpp}": "yarn lint:cpp",
-    "android/src/**/*.java": "yarn format:java",
-    "android/src/**/*.{h,cpp}": "yarn format:android",
-    "apple/**/*.{h,m,mm,cpp}": "yarn format:ios",
-    "Common/**/*.{h,cpp}": "yarn format:common"
-  },
   "react-native-builder-bob": {
     "source": "src",
     "output": "lib",
