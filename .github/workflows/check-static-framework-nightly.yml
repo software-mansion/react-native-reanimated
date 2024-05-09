@@ -23,11 +23,14 @@ jobs:
     steps:
       - name: Create React Native app
         run: npx react-native init app
-      - name: Append react-native-reanimated to package.json manually and install it
+      # - name: Append react-native-reanimated to package.json manually and install it
+      #   working-directory: app
+      #   run: |
+      #     jq '.dependencies += {"react-native-reanimated": "github:software-mansion/react-native-reanimated#${{ github.ref }}"}' package.json > temp.json && mv temp.json package.json
+      #     yarn
+      - name: Install Reanimated
         working-directory: app
-        run: |
-          jq '.dependencies += {"react-native-reanimated": "github:software-mansion/react-native-reanimated#${{ github.ref }}"}' package.json > temp.json && mv temp.json package.json
-          yarn
+        run: yarn add react-native-reanimated@https://codeload.github.com/software-mansion/react-native-reanimated/tar.gz/${{ github.sha }}
       - name: Install Paper Pods
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         working-directory: app/ios
