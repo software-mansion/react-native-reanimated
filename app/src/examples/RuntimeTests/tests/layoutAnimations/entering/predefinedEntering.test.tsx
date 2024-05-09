@@ -19,8 +19,6 @@ import Animated, {
   LightSpeedInRight,
   LightSpeedInLeft,
   PinwheelIn,
-  RollInRight,
-  RollInLeft,
   RotateInDownLeft,
   RotateInDownRight,
   RotateInUpLeft,
@@ -59,7 +57,7 @@ const BOUNCE_ENTERING = [BounceIn, BounceInRight, BounceInLeft, BounceInUp, Boun
 const FLIP_ENTERING = [FlipInEasyX, FlipInEasyY, FlipInXDown, FlipInXUp, FlipInYLeft, FlipInYRight];
 const LIGHTSPEED_ENTERING = [LightSpeedInRight, LightSpeedInLeft];
 const PINWHEEL_ENTERING = [PinwheelIn];
-const ROLL_ENTERING = [RollInRight, RollInLeft];
+// const ROLL_ENTERING = [RollInRight, RollInLeft]; Don't test RollIn, until recording rotation snapshot gets fixed
 const ROTATE_ENTERING = [RotateInDownLeft, RotateInDownRight, RotateInUpLeft, RotateInUpRight];
 const SLIDE_ENTERING = [SlideInRight, SlideInLeft, SlideInUp, SlideInDown];
 const STRETCH_ENTERING = [StretchInX, StretchInY];
