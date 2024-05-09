@@ -12,15 +12,15 @@
 #import <react/renderer/uimanager/UIManager.h>
 #else
 #import <stdatomic.h>
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 #if __has_include(<RNScreens/RNSScreenStackHeaderConfig.h>)
 #import <RNScreens/RNSScreenStackHeaderConfig.h>
-#endif
+#endif // __has_include(<RNScreens/RNSScreenStackHeaderConfig.h>)
 
 #ifdef RCT_NEW_ARCH_ENABLED
 using namespace facebook::react;
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 // Interface below has been added in order to use private methods of RCTUIManager,
 // RCTUIManager#UpdateView is a React Method which is exported to JS but in
@@ -71,7 +71,7 @@ using namespace facebook::react;
   // store reference to the observers array
   id oldObservers = [self.observerCoordinator valueForKey:@"_observers"];
 
-  // temporarily replace observers with a table conatining just nodesmanager (we need
+  // temporarily replace observers with a table containing just nodesManager (we need
   // this to capture mounting block)
   NSHashTable<id<RCTUIManagerObserver>> *soleObserver = [NSHashTable new];
   [soleObserver addObject:observer];
@@ -109,7 +109,7 @@ using namespace facebook::react;
 
 - (void)dealloc
 {
-  RCTAssert(_mounting == nil, @"Mouting block was set but never executed. This may lead to UI inconsistencies");
+  RCTAssert(_mounting == nil, @"Mounting block was set but never executed. This may lead to UI inconsistencies");
 }
 
 - (void)unblockUIThread
@@ -148,7 +148,7 @@ using namespace facebook::react;
 
 @end
 
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 @implementation REANodesManager {
   READisplayLink *_displayLink;
@@ -166,7 +166,7 @@ using namespace facebook::react;
 #else
   NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
   volatile atomic_bool _shouldFlushUpdateBuffer;
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 }
 
 - (READisplayLink *)getDisplayLink
@@ -177,7 +177,7 @@ using namespace facebook::react;
     _displayLink = [READisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
 #if !TARGET_OS_OSX
     _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
-#endif
+#endif // TARGET_OS_OSX
     [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
   }
   return _displayLink;
@@ -226,7 +226,7 @@ using namespace facebook::react;
     _viewRegistry = [_uiManager valueForKey:@"_viewRegistry"];
     _shouldFlushUpdateBuffer = false;
   }
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
   [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) {
     [displayLink setPaused:YES];
   }];
@@ -247,7 +247,7 @@ using namespace facebook::react;
 {
   _surfacePresenter = surfacePresenter;
 }
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 - (void)operationsBatchDidComplete
 {
@@ -279,7 +279,7 @@ using namespace facebook::react;
 {
   _performOperations = performOperations;
 }
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 - (void)startUpdatingOnAnimationFrame
 {
@@ -360,7 +360,7 @@ using namespace facebook::react;
     }
   }
   _wantRunUpdates = NO;
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -378,7 +378,7 @@ using namespace facebook::react;
     [uiManager updateView:reactTag viewName:viewName props:nativeProps];
   }];
 }
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 - (void)dispatchEvent:(id<RCTEvent>)event
 {
@@ -406,11 +406,11 @@ using namespace facebook::react;
   _uiProps = uiPropsSet;
   _nativeProps = nativePropsSet;
 }
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 - (BOOL)isNativeViewMounted:(NSNumber *)viewTag
 {
-  REAUIView *view = _viewRegistry[viewTag];
+  REAUIView *view = [_uiManager viewForReactTag:(NSNumber *)viewTag];
   if (view.superview != nil) {
     return YES;
   }
@@ -418,7 +418,7 @@ using namespace facebook::react;
   if ([view isKindOfClass:[RNSScreenStackHeaderConfig class]]) {
     return ((RNSScreenStackHeaderConfig *)view).screenView != nil;
   }
-#endif
+#endif // __has_include(<RNScreens/RNSScreenStackHeaderConfig.h>)
   return NO;
 }
 
@@ -521,22 +521,46 @@ using namespace facebook::react;
 {
   REAUIView *view = [self.uiManager viewForReactTag:viewTag];
 
-  NSString *result =
-      [NSString stringWithFormat:@"error: unknown propName %@, currently supported: opacity, zIndex", propName];
-
   if ([propName isEqualToString:@"opacity"]) {
 #if !TARGET_OS_OSX
     CGFloat alpha = view.alpha;
 #else
     CGFloat alpha = view.alphaValue;
-#endif
-    result = [@(alpha) stringValue];
+#endif // TARGET_OS_OSX
+    return [@(alpha) stringValue];
   } else if ([propName isEqualToString:@"zIndex"]) {
     NSInteger zIndex = view.reactZIndex;
-    result = [@(zIndex) stringValue];
+    return [@(zIndex) stringValue];
+  } else if ([propName isEqualToString:@"width"]) {
+    return [@(view.frame.size.width) stringValue];
+  } else if ([propName isEqualToString:@"height"]) {
+    return [@(view.frame.size.height) stringValue];
+  } else if ([propName isEqualToString:@"top"]) {
+    return [@(view.frame.origin.y) stringValue];
+  } else if ([propName isEqualToString:@"left"]) {
+    return [@(view.frame.origin.x) stringValue];
+  } else if ([propName isEqualToString:@"backgroundColor"]) {
+#if !TARGET_OS_OSX
+    UIColor *color = view.backgroundColor;
+#else
+    NSColor *color = view.backgroundColor;
+#endif
+    if (color == nil) {
+      return @"nil";
+    }
+    const size_t totalComponents = CGColorGetNumberOfComponents(color.CGColor);
+    const CGFloat *components = CGColorGetComponents(color.CGColor);
+    int r = 255 * components[MIN(0, totalComponents - 1)];
+    int g = 255 * components[MIN(1, totalComponents - 1)];
+    int b = 255 * components[MIN(2, totalComponents - 1)];
+    int alpha = 255 * components[MIN(3, totalComponents - 1)];
+    return [NSString stringWithFormat:@"#%02x%02x%02x%02x", r, g, b, alpha];
   }
 
-  return result;
+  return [NSString
+      stringWithFormat:
+          @"error: unknown propName %@, currently supported: opacity, zIndex, width, height, top, left, backgroundColor",
+          propName];
 }
 
 - (void)maybeFlushUpdateBuffer

@@ -1,5 +1,6 @@
 name: Publish to GitHub Pages
-
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   push:
     branches:

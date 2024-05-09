@@ -3,6 +3,9 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/fabric/JFabricUIManager.h>
 #include <react/renderer/scheduler/Scheduler.h>
+#if REACT_NATIVE_MINOR_VERSION >= 74
+#include <react/jni/JRuntimeExecutor.h>
+#endif // REACT_NATIVE_MINOR_VERSION >= 74
 #endif
 
 #include <ReactCommon/CallInvokerHolder.h>
@@ -158,6 +161,19 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
           fabricUIManager,
 #endif
       const std::string &valueUnpackerCode);
+
+#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+  static jni::local_ref<jhybriddata> initHybridBridgeless(
+      jni::alias_ref<jhybridobject> jThis,
+      jlong jsContext,
+      jni::alias_ref<react::JRuntimeExecutor::javaobject> runtimeExecutorHolder,
+      jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
+      jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
+      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+          fabricUIManager,
+      const std::string &valueUnpackerCode);
+#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
   static void registerNatives();
 
   ~NativeProxy();
@@ -211,7 +227,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   // nothing
 #else
   jsi::Value
-  obtainProp(jsi::Runtime &rt, const int viewTag, const jsi::String &propName);
+  obtainProp(jsi::Runtime &rt, const int viewTag, const jsi::Value &propName);
   void configureProps(
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
@@ -269,6 +285,24 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
           fabricUIManager,
 #endif
       const std::string &valueUnpackerCode);
+
+#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+  explicit NativeProxy(
+      jni::alias_ref<NativeProxy::jhybridobject> jThis,
+      jsi::Runtime *rnRuntime,
+      RuntimeExecutor runtimeExecutor,
+      const std::shared_ptr<UIScheduler> &uiScheduler,
+      jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
+      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+          fabricUIManager,
+      const std::string &valueUnpackerCode);
+#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
+
+#ifdef RCT_NEW_ARCH_ENABLED
+  void commonInit(jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+                      &fabricUIManager);
+#endif // RCT_NEW_ARCH_ENABLED
 };
 
 } // namespace reanimated

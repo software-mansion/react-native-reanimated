@@ -8,11 +8,14 @@ export default function ShareablesExample() {
     <View style={styles.container}>
       <CyclicObjectDemo />
       <InaccessibleObjectDemo />
+      <RemoteNamedFunctionSyncCallDemo />
+      <RemoteAnonymousFunctionSyncCallDemo />
       <BigIntDemo />
       <ArrayBufferDemo />
       <TypedArrayDemo />
       <BigIntTypedArrayDemo />
       <DataViewDemo />
+      <ErrorDemo />
     </View>
   );
 }
@@ -42,6 +45,32 @@ function InaccessibleObjectDemo() {
   };
 
   return <Button title="Inaccessible object" onPress={handlePress} />;
+}
+
+function RemoteNamedFunctionSyncCallDemo() {
+  const handlePress = () => {
+    function foo() {}
+    runOnUI(() => {
+      foo();
+    })();
+  };
+
+  return (
+    <Button title="Remote named function sync call" onPress={handlePress} />
+  );
+}
+
+function RemoteAnonymousFunctionSyncCallDemo() {
+  const handlePress = () => {
+    const foo = true ? () => {} : () => {};
+    runOnUI(() => {
+      foo();
+    })();
+  };
+
+  return (
+    <Button title="Remote anonymous function sync call" onPress={handlePress} />
+  );
 }
 
 function BigIntDemo() {
@@ -157,6 +186,22 @@ function DataViewDemo() {
   };
 
   return <Button title="DataView" onPress={handlePress} />;
+}
+
+function ErrorDemo() {
+  const handlePress = () => {
+    const e = new Error('error message');
+    console.log(_WORKLET ? 'UI' : 'RN', e instanceof Error);
+    console.log(_WORKLET ? 'UI' : 'RN', String(e));
+    console.log(_WORKLET ? 'UI' : 'RN', e.stack?.length);
+    runOnUI(() => {
+      console.log(_WORKLET ? 'UI' : 'RN', e instanceof Error);
+      console.log(_WORKLET ? 'UI' : 'RN', String(e));
+      console.log(_WORKLET ? 'UI' : 'RN', e.stack?.length);
+    })();
+  };
+
+  return <Button title="Error" onPress={handlePress} />;
 }
 
 const styles = StyleSheet.create({

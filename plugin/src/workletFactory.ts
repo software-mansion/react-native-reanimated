@@ -26,7 +26,6 @@ import {
   isObjectExpression,
   isObjectMethod,
   isObjectProperty,
-  isProgram,
   memberExpression,
   newExpression,
   numericLiteral,
@@ -88,7 +87,7 @@ export function makeWorkletFactory(
   // bracket would become part of the comment thus resulting in an error, since
   // there is a missing closing bracket.
   codeObject.code =
-    '(' + (isObjectMethod(fun) ? 'function ' : '') + codeObject.code + '\n)';
+    '(' + (fun.isObjectMethod() ? 'function ' : '') + codeObject.code + '\n)';
 
   const transformed = transformSync(codeObject.code, {
     filename: state.file.opts.filename,
@@ -140,7 +139,7 @@ export function makeWorkletFactory(
 
   const pathForStringDefinitions = fun.parentPath.isProgram()
     ? fun
-    : fun.findParent((path) => isProgram(path.parentPath));
+    : fun.findParent((path) => path.parentPath?.isProgram() ?? false);
   assert(
     pathForStringDefinitions,
     '[Reanimated] `pathForStringDefinitions` is null.'

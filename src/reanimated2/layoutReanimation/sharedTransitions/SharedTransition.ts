@@ -13,8 +13,9 @@ import {
 } from '../animationBuilder/commonTypes';
 import type { StyleProps } from '../../commonTypes';
 import { ReduceMotion } from '../../commonTypes';
-import { configureLayoutAnimations } from '../../core';
 import { ProgressTransitionManager } from './ProgressTransitionManager';
+import { updateLayoutAnimations } from '../../UpdateLayoutAnimations';
+import { getReduceMotionFromConfig } from '../../animation/util';
 
 const SUPPORTED_PROPS = [
   'width',
@@ -80,8 +81,13 @@ export class SharedTransition {
 
   public registerTransition(
     viewTag: number,
-    sharedTransitionTag: string
-  ): void {
+    sharedTransitionTag: string,
+    isUnmounting = false
+  ) {
+    if (getReduceMotionFromConfig(this.getReduceMotion())) {
+      return;
+    }
+
     const transitionAnimation = this.getTransitionAnimation();
     const progressAnimation = this.getProgressAnimation();
     if (!this._defaultTransitionType) {
@@ -95,11 +101,12 @@ export class SharedTransition {
       this._defaultTransitionType === SharedTransitionType.ANIMATION
         ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION
         : LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS;
-    configureLayoutAnimations(
+    updateLayoutAnimations(
       viewTag,
       layoutAnimationType,
       transitionAnimation,
-      sharedTransitionTag
+      sharedTransitionTag,
+      isUnmounting
     );
     SharedTransition._progressTransitionManager.addProgressAnimation(
       viewTag,
@@ -107,9 +114,21 @@ export class SharedTransition {
     );
   }
 
-  public unregisterTransition(viewTag: number): void {
+  public unregisterTransition(viewTag: number, isUnmounting = false): void {
+    const layoutAnimationType =
+      this._defaultTransitionType === SharedTransitionType.ANIMATION
+        ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION
+        : LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS;
+    updateLayoutAnimations(
+      viewTag,
+      layoutAnimationType,
+      undefined,
+      undefined,
+      isUnmounting
+    );
     SharedTransition._progressTransitionManager.removeProgressAnimation(
-      viewTag
+      viewTag,
+      isUnmounting
     );
   }
 

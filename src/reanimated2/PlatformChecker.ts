@@ -12,8 +12,9 @@ export function isJest(): boolean {
 // `isChromeDebugger` also returns true in Jest environment, so `isJest()` check should always be performed first
 export function isChromeDebugger(): boolean {
   return (
-    !(global as localGlobal).nativeCallSyncHook ||
-    !!(global as localGlobal).__REMOTEDEV__
+    (!(global as localGlobal).nativeCallSyncHook ||
+      !!(global as localGlobal).__REMOTEDEV__) &&
+    !(global as localGlobal).RN$Bridgeless
   );
 }
 

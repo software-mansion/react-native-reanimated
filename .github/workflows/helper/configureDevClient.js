@@ -10,13 +10,13 @@ const command = process.argv[2];
 
 if (command === 'setBundleIdentifier') {
   patchFile(
-    'app/app.json',
+    'app.json',
     '"ios": {',
     '"ios": {"bundleIdentifier":"com.swmansion.app",'
   );
 
   patchFile(
-    'app/app.json',
+    'app.json',
     '"android": {',
     '"android": {"package": "com.swmansion.app",'
   );
@@ -24,7 +24,7 @@ if (command === 'setBundleIdentifier') {
 
 if (command === 'setupFabricIOS') {
   patchFile(
-    'app/ios/Podfile.properties.json',
+    'ios/Podfile.properties.json',
     '"expo.jsEngine"',
     '"newArchEnabled":"true","expo.jsEngine"'
   );
@@ -32,7 +32,7 @@ if (command === 'setupFabricIOS') {
 
 if (command === 'setupFabricAndroid') {
   patchFile(
-    'app/android/gradle.properties',
+    'android/gradle.properties',
     'newArchEnabled=false',
     'newArchEnabled=true'
   );

@@ -37,7 +37,9 @@ function inlinePropsHasChanged(
   }
 
   for (const key of Object.keys(styles1)) {
-    if (styles1[key] !== styles2[key]) return true;
+    if (styles1[key] !== styles2[key]) {
+      return true;
+    }
   }
 
   return false;
@@ -111,9 +113,9 @@ export function hasInlineStyles(style: StyleProps): boolean {
 
 export function getInlineStyle(
   style: Record<string, unknown>,
-  isFirstRender: boolean
+  shouldGetInitialStyle: boolean
 ) {
-  if (isFirstRender) {
+  if (shouldGetInitialStyle) {
     return getInlinePropsUpdate(style);
   }
   const newStyle: StyleProps = {};

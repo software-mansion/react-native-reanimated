@@ -1,0 +1,53 @@
+{
+  "language": "en",
+  "words": [
+    "animatable",
+    "barfoo",
+    "bridgeless",
+    "collapsable",
+    "devs",
+    "easings",
+    "layoutable",
+    "lightspeed",
+    "RCTUI",
+    "REAUI",
+    "relayout",
+    "snapshotting",
+    "superview",
+    "swmansion",
+    "systrace",
+    "uimanager",
+    "uimodule",
+    "unmock",
+    "worklet",
+    "workletization",
+    "workletize",
+    "workletized",
+    "barfoo",
+    "devs",
+    "chlgm",
+    "bfrg",
+    "typecheck",
+    "usehooks",
+    "animable",
+    "ispreview",
+    "pressable",
+    "inout",
+    "workletizes",
+    "worklets"
+  ],
+  "flagWords": [
+    "ere",
+    "hte",
+    "truck",
+    "trucker"
+  ],
+  "ignorePaths": [
+    "node_modules",
+    "docs/src/components/Testimonials",
+    "MacOSExample/macos/MacOSExample.xcodeproj",
+    "cspell.json",
+    "package.json"
+  ],
+  "useGitignore": true
+}

@@ -1,5 +1,6 @@
 name: Build npm package
-
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   workflow_call:
     inputs:

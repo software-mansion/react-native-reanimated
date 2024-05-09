@@ -6,13 +6,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import androidx.annotation.Nullable;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
+import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.ViewAtIndex;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.uimanager.ViewManagerRegistry;
+import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.uimanager.layoutanimation.LayoutAnimationController;
 import com.facebook.react.uimanager.layoutanimation.LayoutAnimationListener;
 import com.swmansion.reanimated.ReanimatedModule;
@@ -164,6 +167,20 @@ class ReaLayoutAnimator extends LayoutAnimationController {
       if (parentName.equals("RNSScreenStack")) {
         mAnimationsManager.cancelAnimationsInSubviews(view);
         super.deleteView(view, listener);
+        EventDispatcher eventDispatcher =
+            UIManagerHelper.getEventDispatcherForReactTag(
+                (ReactContext) view.getContext(), view.getId());
+        if (eventDispatcher != null) {
+          eventDispatcher.addListener(
+              event -> {
+                // we schedule the start of transition for the ScreenWilDisappear event, so that the
+                // layout of the target screen is already calculated
+                // this allows us to make snapshots on the go, so that they are always up-to-date
+                if (event.getEventName().equals("topWillDisappear")) {
+                  getAnimationsManager().notifyAboutScreenWillDisappear();
+                }
+              });
+        }
         return;
       }
     }
@@ -172,6 +189,16 @@ class ReaLayoutAnimator extends LayoutAnimationController {
   }
 
   public boolean isLayoutAnimationEnabled() {
+    // In case the user rapidly reloads the app, there is a possibility that the active instance may
+    // not be available.
+    // However, the code will still attempt to trigger the layout animation of views that are going
+    // to be dropped.
+    // This is required as without it, the `mAnimationsManager.isLayoutAnimationEnabled`
+    // would crash when trying to get the uiManager from the context.
+    if (!mContext.hasActiveReactInstance()) {
+      return false;
+    }
+
     maybeInit();
     return mAnimationsManager.isLayoutAnimationEnabled();
   }
@@ -264,7 +291,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       if (container != null && viewManagerName.equals("RNSScreen") && mReaLayoutAnimator != null) {
         boolean hasHeader = checkIfTopScreenHasHeader((ViewGroup) container);
         if (!hasHeader || !container.isLayoutRequested()) {
-          mReaLayoutAnimator.getAnimationsManager().screenDidLayout();
+          mReaLayoutAnimator.getAnimationsManager().screenDidLayout(container);
         }
       }
       View view = resolveView(tag);

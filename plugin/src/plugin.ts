@@ -17,7 +17,7 @@ module.exports = function (): PluginItem {
     try {
       fun();
     } catch (e) {
-      throw new Error('[Reanimated] Babel plugin exception: ' + e);
+      throw new Error(`[Reanimated] Babel plugin exception: ${e as string}`);
     }
   }
 
