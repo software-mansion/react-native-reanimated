@@ -76,11 +76,9 @@ const ENTERING_SETS = [
   ['Fade', FADE_ENTERING],
   ['Bounce', BOUNCE_ENTERING],
   ['Flip', FLIP_ENTERING],
-
   ['LightSpeed', LIGHTSPEED_ENTERING],
   ['Pinwheel', PINWHEEL_ENTERING],
   ['Rotate', ROTATE_ENTERING],
-
   ['Slide', SLIDE_ENTERING],
   ['Stretch', STRETCH_ENTERING],
   ['Zoom', ZOOM_ENTERING],
