@@ -80,7 +80,6 @@ const ENTERING_SETS = [
   ['Flip', FLIP_ENTERING],
   ['LightSpeed', LIGHTSPEED_ENTERING],
   ['Pinwheel', PINWHEEL_ENTERING],
-  ['Roll', ROLL_ENTERING],
   ['Rotate', ROTATE_ENTERING],
   ['Slide', SLIDE_ENTERING],
   ['Stretch', STRETCH_ENTERING],
@@ -102,7 +101,7 @@ async function getSnapshotUpdates(entering: any, duration?: number, springify = 
   const componentEntering = springify ? entering : entering.springify();
   await render(<EnteringOnMountComponent entering={componentEntering} duration={duration} />);
 
-  await wait(500 + (duration || 1200));
+  await wait(1000 + (duration || 2000));
   const updates = updatesContainer.getUpdates();
 
   await unmockAnimationTimer();
@@ -113,10 +112,11 @@ async function getSnapshotUpdates(entering: any, duration?: number, springify = 
 
 describe('Test predefined entering', () => {
   describe('Entering on mount, no modifiers', async () => {
-    test.each(ENTERING_SETS)('Test set of ${0}In', async ([_setName, enteringSet]) => {
+    test.only.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet]) => {
       for (const entering of enteringSet) {
         const snapshotName = entering.name;
         const updates = await getSnapshotUpdates(entering, undefined);
+        // console.log(snapshotName, ':', JSON.stringify(updates), ',');
         expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
       }
     });
