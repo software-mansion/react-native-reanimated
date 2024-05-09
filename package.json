@@ -1,6 +1,9 @@
 {
   "name": "react-native-reanimated-monorepo",
   "packageManager": "yarn@4.1.1",
+  "workspaces": [
+    "packages/*"
+  ],
   "private": true,
   "devDependencies": {
     "husky": "^9.0.11",
