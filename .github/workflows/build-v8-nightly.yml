@@ -32,9 +32,15 @@ jobs:
       - name: Install dependencies
         working-directory: app
         run: yarn install
+      - name: Download Reanimated from commit
+        working-directory: app
+        run: curl -LJO https://codeload.github.com/software-mansion/react-native-reanimated/tar.gz/${{ github.sha }}
+      - name: Install Reanimated
+        working-directory: app
+        run: yarn add file:./react-native-reanimated-${{ github.sha }}.tar.gz
       - name: Install test dependencies
         working-directory: app
-        run: yarn add react-native-reanimated@https://codeload.github.com/software-mansion/react-native-reanimated/tar.gz/${{ github.sha }} react-native-v8 v8-android-jit
+        run: yarn add react-native-v8 v8-android-jit
       - name: Configure V8
         run: node reanimated_repo/.github/workflows/helper/configureV8.js
       - name: Build Android app

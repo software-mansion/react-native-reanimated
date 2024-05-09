@@ -27,9 +27,12 @@ jobs:
       - name: Install dependencies
         working-directory: App
         run: yarn
+      - name: Download Reanimated from commit
+        working-directory: App
+        run: curl -LJO https://codeload.github.com/software-mansion/react-native-reanimated/tar.gz/${{ github.sha }}
       - name: Install Reanimated
         working-directory: App
-        run: yarn add react-native-reanimated@https://codeload.github.com/software-mansion/react-native-reanimated/tar.gz/${{ github.sha }}
+        run: yarn add file:./react-native-reanimated-${{ github.sha }}.tar.gz
       - name: Build Android App
         working-directory: App/android
         run: ./gradlew assembleDebug --console=plain
