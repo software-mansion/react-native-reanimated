@@ -75,7 +75,7 @@ const ZOOM_ENTERING = [
 ];
 
 const ENTERING_SETS = [
-  // ['Fade', FADE_ENTERING],
+  ['Fade', FADE_ENTERING],
   ['Bounce', BOUNCE_ENTERING],
   ['Flip', FLIP_ENTERING],
   ['LightSpeed', LIGHTSPEED_ENTERING],
@@ -112,12 +112,11 @@ async function getSnapshotUpdates(entering: any, duration?: number, springify = 
 }
 
 describe('Test predefined entering', () => {
-  describe.only('Entering on mount, no modifiers', async () => {
+  describe('Entering on mount, no modifiers', async () => {
     test.each(ENTERING_SETS)('Test set of ${0}In', async ([_setName, enteringSet]) => {
       for (const entering of enteringSet) {
         const snapshotName = entering.name;
         const updates = await getSnapshotUpdates(entering, undefined);
-        // console.log(`${snapshotName}: ${JSON.stringify(updates)},`);
         expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
       }
     });
