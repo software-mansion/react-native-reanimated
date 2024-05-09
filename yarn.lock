@@ -6337,7 +6337,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^8.56.0":
+"eslint@npm:^8.0.0-0":
   version: 8.57.0
   resolution: "eslint@npm:8.57.0"
   dependencies:
@@ -10788,7 +10788,7 @@ __metadata:
     code-tag: "npm:^1.1.0"
     convert-source-map: "npm:^2.0.0"
     cspell: "npm:^8.8.0"
-    eslint: "npm:^8.56.0"
+    eslint: "npm:^8.0.0-0"
     eslint-config-prettier: "npm:^8.3.0"
     eslint-config-standard: "npm:^17.1.0"
     eslint-import-resolver-babel-module: "npm:^5.3.1"
