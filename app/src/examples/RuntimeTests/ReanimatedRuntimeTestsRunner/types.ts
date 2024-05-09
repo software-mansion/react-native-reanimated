@@ -1,7 +1,7 @@
 import { Component, Dispatch, MutableRefObject, ReactNode, SetStateAction } from 'react';
 import { AnimatedStyle, StyleProps } from 'react-native-reanimated';
 
-export type CallTrucker = {
+export type CallTracker = {
   UICallsCount: number;
   JSCallsCount: number;
 };
@@ -42,7 +42,7 @@ export type TestCase = {
   name: string;
   run: () => void | Promise<void>;
   componentsRefs: Record<string, ComponentRef>;
-  callsRegistry: Record<string, CallTrucker>;
+  callsRegistry: Record<string, CallTracker>;
   errors: string[];
   skip?: boolean;
 } & (
