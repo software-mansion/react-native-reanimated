@@ -29,7 +29,7 @@ jobs:
         run: yarn
       - name: Install Reanimated
         working-directory: App
-        run: yarn add react-native-reanimated@github:software-mansion/react-native-reanimated#${{ github.ref }}
+        run: yarn add react-native-reanimated@github:software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
       - name: Build Android App
         working-directory: App/android
         run: ./gradlew assembleDebug --console=plain

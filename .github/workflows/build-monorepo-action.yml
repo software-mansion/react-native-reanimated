@@ -48,26 +48,21 @@ jobs:
       - name: Install dependencies for RootApp
         working-directory: monorepo/RootApp
         run: yarn install
-      - name: Echo different stuff
-        run: |
-          echo ${{github.ref}}
-          echo ${{github.ref_name}}
-          echo ${{github.head_ref}}
       - name: Install Reanimated for RootApp
         working-directory: monorepo/RootApp
-        run: yarn add react-native-reanimated@github:software-mansion/react-native-reanimated#${{ github.ref}}
+        run: yarn add react-native-reanimated@github:software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
 
       - name: Install dependencies for PackageApp
         working-directory: monorepo/packages/PackageApp
         run: yarn install
       - name: Install Reanimated for PackageApp
         working-directory: monorepo/packages/PackageApp
-        run: yarn add react-native-reanimated@github:software-mansion/react-native-reanimated#${{ github.ref }}
+        run: yarn add react-native-reanimated@github:software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
 
       - name: Setup hoisted Reanimated
         if: ${{ inputs.is_hoisted }}
         working-directory: monorepo
-        run: yarn add react-native-reanimated@github:software-mansion/react-native-reanimated#${{ github.ref }} -W
+        run: yarn add react-native-reanimated@github:software-mansion/react-native-reanimated.git#commit=${{ github.sha }} -W
 
       - name: Install Pods for RootApp
         if: ${{ inputs.platform == 'iOS' }}
