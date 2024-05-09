@@ -112,7 +112,7 @@ describe.only('Test predefined entering', () => {
   describe('Entering on mount, no modifiers', async () => {
     test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet]) => {
       for (const entering of enteringSet) {
-        const snapshotName = entering.name;
+        const snapshotName = (entering as any).name;
         const updates = await getSnapshotUpdates(entering, undefined);
         expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
       }
@@ -122,7 +122,7 @@ describe.only('Test predefined entering', () => {
   describe('Entering on mount, duration 100', async () => {
     test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet]) => {
       for (const entering of enteringSet) {
-        const snapshotName = entering.name + '_100';
+        const snapshotName = (entering as any).name + '_100';
         const updates = await getSnapshotUpdates(entering, 100);
         expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
       }
@@ -132,7 +132,7 @@ describe.only('Test predefined entering', () => {
   describe('Entering on mount, springify', async () => {
     test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet]) => {
       for (const entering of enteringSet) {
-        const snapshotName = entering.name + '_springify';
+        const snapshotName = (entering as any).name + '_springify';
         const updates = await getSnapshotUpdates(entering, undefined, true);
         expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
       }
@@ -142,7 +142,7 @@ describe.only('Test predefined entering', () => {
   describe('Entering on mount, springify, duration 100', async () => {
     test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet]) => {
       for (const entering of enteringSet) {
-        const snapshotName = entering.name + '_springify_100';
+        const snapshotName = (entering as any).name + '_springify_100';
         const updates = await getSnapshotUpdates(entering, 100, true);
         expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
       }
