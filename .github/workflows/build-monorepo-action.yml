@@ -29,43 +29,22 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: "zulu"
-          java-version: "17"
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-      - name: Enable corepack
-        run: corepack enable
+          distribution: 'zulu'
+          java-version: '17'
       - name: Create directories
         run: mkdir -p monorepo/packages
-      - name: Setup monorepo
-        working-directory: monorepo
-        run: |
-          echo '{"name":"rnos-monorepo-tester","version":"1.0.0","license":"MIT","private":true,"workspaces":{"packages":["RootApp","packages/PackageApp", "AppA", "AppB"],"nohoist":["**/react","**/react-dom","**/react-native","**/react-native/**","**/react-native-codegen","**/react-native-dev-menu"]}}' > package.json
-          yarn set version 4.1.1 --yarn-path
-          touch yarn.lock
-          yarn
-      - name: Setup yarn
-        working-directory: monorepo
-        run: yarn set version 4.1.1 --yarn-path
-      - name: Setup yarn lockfile
-        working-directory: monorepo
-        run: touch yarn.lock
-      - name: Echo yarn version
-        working-directory: monorepo
-        run: yarn --version
-      - name: Echo yarn config
-        working-directory: monorepo
-        run: yarn config
       - name: Create RootApp
         working-directory: monorepo
         run: npx react-native init RootApp --skip-install ${{ env.REACT_NATIVE_TEMPLATE }}
       - name: Create PackageApp
         working-directory: monorepo/packages
         run: npx react-native init PackageApp --skip-install ${{ env.REACT_NATIVE_TEMPLATE }}
+      - name: Setup monorepo
+        working-directory: monorepo
+        run: |
+          echo '{"name":"rnos-monorepo-tester","version":"1.0.0","license":"MIT","private":true,"workspaces":{"packages":["RootApp","packages/PackageApp", "AppA", "AppB"],"nohoist":["**/react","**/react-dom","**/react-native","**/react-native/**","**/react-native-codegen","**/react-native-dev-menu"]}}' > package.json
+          yarn
 
-      - name: Echo yarn version
-        working-directory: monorepo/RootApp
-        run: yarn --version
       - name: Install dependencies for RootApp
         working-directory: monorepo/RootApp
         run: yarn install
