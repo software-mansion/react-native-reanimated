@@ -7426,15 +7426,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"husky@npm:^7.0.4":
-  version: 7.0.4
-  resolution: "husky@npm:7.0.4"
-  bin:
-    husky: lib/bin.js
-  checksum: 10/8fecb619ab924bd99b2c9ce494bff88e45369c1125e07a603dfacb4bd60ef86840e08c689794c476189183e6223f0ea93aadebf78e3508479453c219358ca787
-  languageName: node
-  linkType: hard
-
 "husky@npm:^9.0.11":
   version: 9.0.11
   resolution: "husky@npm:9.0.11"
@@ -10839,10 +10830,8 @@ __metadata:
     eslint-plugin-react-hooks: "npm:^4.6.0"
     eslint-plugin-standard: "npm:^5.0.0"
     eslint-plugin-tsdoc: "npm:^0.2.17"
-    husky: "npm:^7.0.4"
     invariant: "npm:^2.2.4"
     jest: "npm:^29.0.0"
-    lint-staged: "npm:^15.2.2"
     madge: "npm:^5.0.1"
     prettier: "npm:^2.5.1"
     react: "npm:18.2.0"
