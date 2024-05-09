@@ -1,6 +1,6 @@
 name: Test build in monorepo
 env:
-  YARN_ENABLE_HARDENED_MODE: 0
+  YARN_ENABLE_IMMUTABLE_INSTALLS: 0
   REACT_NATIVE_TEMPLATE: ${{ inputs.react_native_version && '--version' || '' }} ${{ inputs.react_native_version }}
 on:
   workflow_call:
@@ -33,17 +33,17 @@ jobs:
           java-version: '17'
       - name: Create directories
         run: mkdir -p monorepo/packages
+      - name: Setup monorepo
+        working-directory: monorepo
+        run: |
+          echo '{"name":"rnos-monorepo-tester","version":"1.0.0","license":"MIT","private":true,"workspaces":{"packages":["RootApp","packages/PackageApp", "AppA", "AppB"],"nohoist":["**/react","**/react-dom","**/react-native","**/react-native/**","**/react-native-codegen","**/react-native-dev-menu"]}}' > package.json
+          yarn
       - name: Create RootApp
         working-directory: monorepo
         run: npx react-native init RootApp --skip-install ${{ env.REACT_NATIVE_TEMPLATE }}
       - name: Create PackageApp
         working-directory: monorepo/packages
         run: npx react-native init PackageApp --skip-install ${{ env.REACT_NATIVE_TEMPLATE }}
-      - name: Setup monorepo
-        working-directory: monorepo
-        run: |
-          echo '{"name":"rnos-monorepo-tester","version":"1.0.0","license":"MIT","private":true,"workspaces":{"packages":["RootApp","packages/PackageApp", "AppA", "AppB"],"nohoist":["**/react","**/react-dom","**/react-native","**/react-native/**","**/react-native-codegen","**/react-native-dev-menu"]}}' > package.json
-          yarn
 
       - name: Install dependencies for RootApp
         working-directory: monorepo/RootApp

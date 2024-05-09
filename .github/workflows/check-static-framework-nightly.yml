@@ -1,6 +1,6 @@
 name: Check static framework nightly build
 env:
-  YARN_ENABLE_HARDENED_MODE: 0
+  YARN_ENABLE_IMMUTABLE_INSTALLS: false
 on:
   pull_request:
     paths:
