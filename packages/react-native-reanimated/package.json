@@ -126,7 +126,8 @@
     "babel-plugin-module-resolver": "^5.0.0",
     "clang-format": "^1.6.0",
     "code-tag": "^1.1.0",
-    "eslint": "^8.56.0",
+    "cspell": "^8.8.0",
+    "eslint": "^8.0.0-0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-import-resolver-babel-module": "^5.3.1",
@@ -154,6 +155,9 @@
     "typescript": "^4.1.3"
   },
   "lint-staged": {
+    "*.(js|jsx|ts|tsx|h|cpp|m|mm|java|kt|swift|md|mdx)": [
+      "yarn cspell"
+    ],
     "*.(js|ts|tsx)": [
       "yarn eslint",
       "yarn eslint --quiet --ext '.js,.ts,.tsx' src/",

@@ -37,7 +37,9 @@ function inlinePropsHasChanged(
   }
 
   for (const key of Object.keys(styles1)) {
-    if (styles1[key] !== styles2[key]) return true;
+    if (styles1[key] !== styles2[key]) {
+      return true;
+    }
   }
 
   return false;
