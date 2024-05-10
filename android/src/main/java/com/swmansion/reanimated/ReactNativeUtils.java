@@ -18,11 +18,11 @@ public class ReactNativeUtils {
 
     public BorderRadii(
         float full, float topLeft, float topRight, float bottomLeft, float bottomRight) {
-      this.full = full;
-      this.topLeft = Float.isNaN(topLeft) ? full : topLeft;
-      this.topRight = Float.isNaN(topRight) ? full : topRight;
-      this.bottomLeft = Float.isNaN(bottomLeft) ? full : bottomLeft;
-      this.bottomRight = Float.isNaN(bottomRight) ? full : bottomRight;
+      this.full = Float.isNaN(full) ? 0 : full;
+      this.topLeft = Float.isNaN(topLeft) ? this.full : topLeft;
+      this.topRight = Float.isNaN(topRight) ? this.full : topRight;
+      this.bottomLeft = Float.isNaN(bottomLeft) ? this.full : bottomLeft;
+      this.bottomRight = Float.isNaN(bottomRight) ? this.full : bottomRight;
     }
   }
 
