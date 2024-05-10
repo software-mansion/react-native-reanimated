@@ -5,7 +5,8 @@
     "packages": [
       "packages/react-native-reanimated",
       "packages/reanimated-app",
-      "packages/reanimated-paper-example"
+      "packages/reanimated-paper-example",
+      "packages/my-package"
     ]
   },
   "private": true,

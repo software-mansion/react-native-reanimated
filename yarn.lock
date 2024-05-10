@@ -4407,7 +4407,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.4.0":
+"axios@npm:^1.4.0, axios@npm:^1.6.8":
   version: 1.6.8
   resolution: "axios@npm:1.6.8"
   dependencies:
@@ -10198,6 +10198,14 @@ __metadata:
   checksum: 10/aa92de608021b242401676e35cfa5aa42dd70cbdc082b916da7fb925c542173e36bce97ea3e804923fe92c0ad991434e4a38327e15a1b5b5f945d66df615ae6d
   languageName: node
   linkType: hard
+
+"my-package@workspace:packages/my-package":
+  version: 0.0.0-use.local
+  resolution: "my-package@workspace:packages/my-package"
+  dependencies:
+    axios: "npm:^1.6.8"
+  languageName: unknown
+  linkType: soft
 
 "nanoid@npm:^3.1.23, nanoid@npm:^3.3.7":
   version: 3.3.7

@@ -7,8 +7,8 @@ on:
       - .github/workflows/android-build.yml
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
-      - packages/react-native-reanimated/Example/package.json
-      - packages/react-native-reanimated/Example/android/**
+      - packages/reanimated-paper-example/package.json
+      - packages/reanimated-paper-example/android/**
       - packages/react-native-reanimated/FabricExample/package.json
       - packages/react-native-reanimated/FabricExample/android/**
   merge_group:
@@ -21,8 +21,8 @@ on:
       - .github/workflows/android-build.yml
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
-      - packages/react-native-reanimated/Example/package.json
-      - packages/react-native-reanimated/Example/android/**
+      - packages/reanimated-paper-example/package.json
+      - packages/reanimated-paper-example/android/**
       - packages/react-native-reanimated/FabricExample/package.json
       - packages/react-native-reanimated/FabricExample/android/**
 
@@ -34,7 +34,7 @@ jobs:
       matrix:
         working-directory:
           [
-            packages/react-native-reanimated/Example,
+            packages/reanimated-paper-example,
             packages/react-native-reanimated/FabricExample,
           ]
       fail-fast: false
@@ -46,7 +46,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies in root
-        run: yarn install --immutable
+        run: yarn install
 
       - name: Setup Java 17
         uses: actions/setup-java@v3
@@ -63,7 +63,7 @@ jobs:
 
       - name: Install Reanimated node_modules
         working-directory: packages/react-native-reanimated
-        run: yarn install --immutable
+        run: yarn install
 
       - name: Restore app node_modules from cache
         uses: actions/cache@v3
@@ -74,7 +74,7 @@ jobs:
 
       - name: Install app node_modules
         working-directory: ${{ matrix.working-directory }}
-        run: yarn install --immutable
+        run: yarn install
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}/android

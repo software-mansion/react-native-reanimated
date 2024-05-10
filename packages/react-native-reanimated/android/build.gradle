@@ -81,6 +81,11 @@ def resolveReactNativeDirectory() {
     if (reactNativeFromProjectNodeModules.exists()) {
         return reactNativeFromProjectNodeModules
     }
+
+    def reactNativeFromReanimatedMonorepo = file("${projectDir}/../../../node_modules/react-native")
+    if (reactNativeFromReanimatedMonorepo.exists()) {
+        return reactNativeFromReanimatedMonorepo
+    }
     
     def reactNativeFromNodeModulesWithReanimated = file("${projectDir}/../../react-native")
     if (reactNativeFromNodeModulesWithReanimated.exists()) {
