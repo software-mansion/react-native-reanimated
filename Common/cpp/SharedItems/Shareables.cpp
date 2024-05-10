@@ -94,10 +94,8 @@ jsi::Value makeShareableClone(
     shareable = std::make_shared<ShareableScalar>(value.getBool());
   } else if (value.isNumber()) {
     shareable = std::make_shared<ShareableScalar>(value.getNumber());
-#if REACT_NATIVE_MINOR_VERSION >= 71
   } else if (value.isBigInt()) {
     shareable = std::make_shared<ShareableBigInt>(rt, value.getBigInt(rt));
-#endif
   } else if (value.isSymbol()) {
     // TODO: this is only a placeholder implementation, here we replace symbols
     // with strings in order to make certain objects to be captured. There isn't
@@ -200,11 +198,9 @@ ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
     auto value = extractShareableOrThrow(rt, object.getProperty(rt, key));
     data_.emplace_back(key.utf8(rt), value);
   }
-#if REACT_NATIVE_MINOR_VERSION >= 71
   if (object.hasNativeState(rt)) {
     nativeState_ = object.getNativeState(rt);
   }
-#endif
 }
 
 ShareableObject::ShareableObject(
@@ -212,12 +208,10 @@ ShareableObject::ShareableObject(
     const jsi::Object &object,
     const jsi::Value &nativeStateSource)
     : ShareableObject(rt, object) {
-#if REACT_NATIVE_MINOR_VERSION >= 71
   if (nativeStateSource.isObject() &&
       nativeStateSource.asObject(rt).hasNativeState(rt)) {
     nativeState_ = nativeStateSource.asObject(rt).getNativeState(rt);
   }
-#endif
 }
 
 jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
@@ -226,11 +220,9 @@ jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
     obj.setProperty(
         rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
   }
-#if REACT_NATIVE_MINOR_VERSION >= 71
   if (nativeState_ != nullptr) {
     obj.setNativeState(rt, nativeState_);
   }
-#endif
   return obj;
 }
 
@@ -297,13 +289,11 @@ jsi::Value ShareableString::toJSValue(jsi::Runtime &rt) {
   return jsi::String::createFromUtf8(rt, data_);
 }
 
-#if REACT_NATIVE_MINOR_VERSION >= 71
 jsi::Value ShareableBigInt::toJSValue(jsi::Runtime &rt) {
   return rt.global()
       .getPropertyAsFunction(rt, "BigInt")
       .call(rt, jsi::String::createFromUtf8(rt, string_));
 }
-#endif
 
 jsi::Value ShareableScalar::toJSValue(jsi::Runtime &) {
   switch (valueType_) {
