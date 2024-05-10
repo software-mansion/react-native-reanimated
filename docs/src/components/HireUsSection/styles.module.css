@@ -5,7 +5,7 @@
   align-items: center;
   gap: 2.5rem;
   width: 60%;
-  margin: 9.5rem auto;
+  margin: 16rem auto 12rem auto;
   padding-bottom: 2rem;
 }
 @media (max-width: 1440px) {
