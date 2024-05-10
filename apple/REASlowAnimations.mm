@@ -1,3 +1,4 @@
+#import <QuartzCore/QuartzCore.h>
 #import <RNReanimated/REASlowAnimations.h>
 #if TARGET_IPHONE_SIMULATOR
 #import <dlfcn.h>

@@ -22,27 +22,45 @@ enum Tracker {
   Width = 'widthTracker',
 }
 
-const WIDTH_COMPONENT_REF = 'WidthComponent';
+const WIDTH_COMPONENT_ACTIVE_REF = 'WidthComponentActive';
+const WIDTH_COMPONENT_PASSIVE_REF = 'WidthComponentPassive';
+
 type Width = number | `${number}%` | 'auto';
 
 describe('withTiming animation of WIDTH', () => {
   const WidthComponent = ({ startWidth, finalWidth }: { startWidth: Width; finalWidth: Width }) => {
-    const widthSV = useSharedValue(startWidth);
-    const ref = useTestRef(WIDTH_COMPONENT_REF);
+    const widthActiveSV = useSharedValue(startWidth);
+    const widthPassiveSV = useSharedValue(startWidth);
 
-    const style = useAnimatedStyle(() => {
+    const refActive = useTestRef(WIDTH_COMPONENT_ACTIVE_REF);
+    const refPassive = useTestRef(WIDTH_COMPONENT_PASSIVE_REF);
+
+    const styleActive = useAnimatedStyle(() => {
       return {
-        width: withTiming(widthSV.value, { duration: 500 }),
+        width: withTiming(widthActiveSV.value, { duration: 500 }),
+      };
+    });
+    const stylePassive = useAnimatedStyle(() => {
+      return {
+        width: withTiming(widthActiveSV.value, { duration: 500 }),
       };
     });
 
     useEffect(() => {
-      widthSV.value = finalWidth;
-    }, [widthSV, finalWidth]);
+      widthActiveSV.value = finalWidth;
+    }, [widthActiveSV, finalWidth]);
+
+    useEffect(() => {
+      widthPassiveSV.value = withTiming(finalWidth, { duration: 500 });
+    }, [widthPassiveSV, finalWidth]);
 
     return (
       <View style={styles.container}>
-        <Animated.View ref={ref} style={[styles.animatedBox, style]} />
+        <Animated.View
+          ref={refActive}
+          style={[styles.animatedBox, { backgroundColor: 'palevioletred' }, styleActive]}
+        />
+        <Animated.View ref={refPassive} style={[styles.animatedBox, { backgroundColor: 'royalblue' }, stylePassive]} />
       </View>
     );
   };
@@ -71,23 +89,27 @@ describe('withTiming animation of WIDTH', () => {
       startWidth: 20,
       finalWidth: '40%',
       finalWidthInPixels: Dimensions.get('window').width * 0.4,
-      description: 'width from pixels to percents',
+      description: 'width from pixels to percents (not supported)',
     },
   ] as Array<TestCase>)(
     '${description}, from ${startWidth} to ${finalWidth}',
     async ({ startWidth, finalWidth, finalWidthInPixels }: TestCase) => {
       await render(<WidthComponent startWidth={startWidth} finalWidth={finalWidth} />);
-      const component = getTestComponent(WIDTH_COMPONENT_REF);
+      const componentActive = getTestComponent(WIDTH_COMPONENT_ACTIVE_REF);
+      const WidthComponentPassive = getTestComponent(WIDTH_COMPONENT_PASSIVE_REF);
       await wait(1000);
-      expect(await component.getAnimatedStyle('width')).toBe(finalWidthInPixels, ComparisonMode.DISTANCE);
+      expect(await componentActive.getAnimatedStyle('width')).toBe(finalWidthInPixels, ComparisonMode.DISTANCE);
+      expect(await WidthComponentPassive.getAnimatedStyle('width')).toBe(finalWidthInPixels, ComparisonMode.DISTANCE);
     },
   );
 
   test('Width from percent to pixels is NOT handled correctly', async () => {
     await render(<WidthComponent startWidth={'20%'} finalWidth={100} />);
-    const component = getTestComponent(WIDTH_COMPONENT_REF);
+    const componentActive = getTestComponent(WIDTH_COMPONENT_ACTIVE_REF);
+    const WidthComponentPassive = getTestComponent(WIDTH_COMPONENT_PASSIVE_REF);
     await wait(1000);
-    expect(await component.getAnimatedStyle('width')).not.toBe(100, ComparisonMode.DISTANCE);
+    expect(await componentActive.getAnimatedStyle('width')).not.toBe(100, ComparisonMode.DISTANCE);
+    expect(await WidthComponentPassive.getAnimatedStyle('width')).not.toBe(100, ComparisonMode.DISTANCE);
   });
 });
 
@@ -138,7 +160,6 @@ const styles = StyleSheet.create({
   },
   animatedBox: {
     width: 0,
-    opacity: 0,
     height: 80,
     margin: 30,
   },

@@ -1,14 +1,14 @@
 module.exports = {
   root: true,
-  extends: '../.eslintrc.js',
-  extends: [
-    'standard',
-    'plugin:@typescript-eslint/recommended', //We overwrite this not to use type-checked rules in plugin
-    'prettier',
-    'plugin:import/typescript',
-    'plugin:react-hooks/recommended',
+  overrides: [
+    {
+      files: ['*.ts'],
+      parser: '@typescript-eslint/parser',
+      parserOptions: {
+        project: true,
+        tsconfigRootDir: __dirname,
+      },
+    },
   ],
-  rules: {
-    'curly': 'error',
-  },
-  ignorePatterns: ['**/*.d.ts','jestUtils.ts']};
+  extends: ['../.eslintrc.js'],
+};
