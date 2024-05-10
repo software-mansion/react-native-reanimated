@@ -3,6 +3,11 @@
   margin: '16px 0';
 }
 
+.center {
+  display: flex;
+  justify-content: center;
+}
+
 .themedVideo {
   display: none;
 }

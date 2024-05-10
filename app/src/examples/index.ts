@@ -124,6 +124,7 @@ import MemoExample from './MemoExample';
 import PerformanceMonitorExample from './PerfomanceMonitorExample';
 import ScreenTransitionExample from './ScreenTransitionExample';
 import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
+import FreezingShareablesExample from './ShareableFreezingExample';
 
 interface Example {
   icon?: string;
@@ -168,6 +169,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🧠',
     title: 'Memo',
     screen: MemoExample,
+  },
+  FreezingShareablesExample: {
+    icon: '🥶',
+    title: 'Freezing shareables',
+    screen: FreezingShareablesExample,
   },
 
   // About
