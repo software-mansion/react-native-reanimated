@@ -8,8 +8,6 @@ import android.widget.FrameLayout;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
-import com.facebook.react.bridge.ReactApplicationContext;
-import java.lang.ref.WeakReference;
 
 public class WindowsInsetsManager {
 
