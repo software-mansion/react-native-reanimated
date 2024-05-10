@@ -15,7 +15,7 @@ An array of event handlers created using [useEvent](/docs/advanced/useEvent) hoo
 ### Returns
 
 The hook returns a handler object that can be hooked into any [`Animated component`](/docs/fundamentals/glossary#animated-component).
-The handler should be passed to any `onEvent` (e.g. `onScroll`) parameter regardless of what events it handles.
+The handler should be passed to a corresponding `onEvent` prop (e.g. `onScroll` when working with scroll-related handlers). In reality, the composed handler can be hooked into virtually any prop thanks to the way it is detected. Nevertheless, we strongly recommend setting the handler on the prop it belongs to.
 
 ## Example
 
@@ -29,31 +29,23 @@ import Animated, {
 } from 'react-native-reanimated';
 
 function ComposedEventHandlerExample() {
-  const onScrollHandler = useAnimatedScrollHandler({
+  const onScrollHandler1 = useAnimatedScrollHandler({
     onScroll(e) {
       'worklet';
-      console.log('Scroll handler scroll event');
+      console.log('Scroll handler 1 onScroll event');
     },
   });
 
-  const onScrollAndDragHandler = useAnimatedScrollHandler({
+  const onScrollHandler2 = useAnimatedScrollHandler({
     onScroll(e) {
       'worklet';
-      console.log('Scroll and drag handler scroll event');
-    },
-    onBeginDrag(e) {
-      'worklet';
-      console.log('Scroll and drag handler begin drag event');
-    },
-    onEndDrag(e) {
-      'worklet';
-      console.log('Scroll and drag handler end drag event');
+      console.log('Scroll handler 2 onScroll event');
     },
   });
 
   const composedHandler = useComposedEventHandler([
-    onScrollHandler,
-    onScrollAndDragHandler,
+    onScrollHandler1,
+    onScrollHandler2,
   ]);
 
   return (
