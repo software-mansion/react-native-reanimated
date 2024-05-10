@@ -96,7 +96,8 @@ export interface AnimatedComponentRef extends Component {
 export interface IAnimatedComponentInternal {
   _styles: StyleProps[] | null;
   _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
-  _viewTag: number;
+  _componentViewTag: number;
+  _eventViewTag: number;
   _isFirstRender: boolean;
   jestAnimatedStyle: { value: StyleProps };
   _component: AnimatedComponentRef | HTMLElement | null;
