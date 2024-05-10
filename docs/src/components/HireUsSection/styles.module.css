@@ -44,6 +44,7 @@
 .hireUsSectionBody {
   font-size: 24px;
   text-align: center;
+  text-wrap: balance;
   font-weight: 400;
 }
 
