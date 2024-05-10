@@ -123,6 +123,7 @@ import HabitsExample from './LayoutAnimations/HabitsExample';
 import MemoExample from './MemoExample';
 import PerformanceMonitorExample from './PerfomanceMonitorExample';
 import ScreenTransitionExample from './ScreenTransitionExample';
+import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
 import FreezingShareablesExample from './ShareableFreezingExample';
 
 interface Example {
@@ -769,5 +770,9 @@ export const EXAMPLES: Record<string, Example> = {
   NestedRotationSharedExample: {
     title: '[SET] Nested Transforms',
     screen: NestedRotationExample,
+  },
+  BorderRadiiExample: {
+    title: '[SET] Border Radii',
+    screen: BorderRadiiExample,
   },
 } as const;

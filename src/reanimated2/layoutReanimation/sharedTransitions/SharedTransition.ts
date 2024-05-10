@@ -24,6 +24,10 @@ const SUPPORTED_PROPS = [
   'originY',
   'transform',
   'borderRadius',
+  'borderTopLeftRadius',
+  'borderTopRightRadius',
+  'borderBottomLeftRadius',
+  'borderBottomRightRadius',
 ] as const;
 
 type AnimationFactory = (
