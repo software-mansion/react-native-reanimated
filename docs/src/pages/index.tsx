@@ -7,6 +7,7 @@ import ReanimatedFeatures from '@site/src/components/ReanimatedFeatures';
 import Animations from '@site/src/components/Animations';
 import Testimonials from '@site/src/components/Testimonials';
 import Sponsors from '@site/src/components/Sponsors';
+import HireUsSection from '../components/HireUsSection';
 
 export default function Home(): JSX.Element {
   return (
@@ -17,6 +18,7 @@ export default function Home(): JSX.Element {
         <Animations />
         <Testimonials />
         <Sponsors />
+        <HireUsSection />
       </div>
     </Layout>
   );
