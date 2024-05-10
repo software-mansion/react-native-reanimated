@@ -5,7 +5,7 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
-    "build": "docusaurus build",
+    "build": "docusaurus build && node -r esbuild-register scripts/build-og-images.jsx",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
@@ -19,9 +19,7 @@
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.18.6",
     "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
-    "@babel/preset-env": "^7.20.2",
-    "@babel/preset-react": "^7.18.6",
-    "@babel/preset-typescript": "^7.21.0",
+    "@babel/preset-env": "^7.24.4",
     "@docusaurus/core": "^2.4.3",
     "@docusaurus/plugin-debug": "^2.4.3",
     "@docusaurus/preset-classic": "^2.4.3",
@@ -29,6 +27,8 @@
     "@emotion/styled": "^11.10.6",
     "@mdx-js/react": "^1.6.22",
     "@mui/material": "^5.12.0",
+    "@vercel/og": "^0.6.2",
+    "@shopify/flash-list": "^1.6.3",
     "babel-polyfill": "^6.26.0",
     "babel-preset-expo": "^9.2.2",
     "babel-preset-react-native": "^4.0.1",
@@ -52,6 +52,8 @@
     "@docusaurus/module-type-aliases": "^2.4.3",
     "@tsconfig/docusaurus": "^1.0.7",
     "copy-webpack-plugin": "^11.0.0",
+    "esbuild": "^0.20.2",
+    "esbuild-register": "^3.5.0",
     "eslint-plugin-mdx": "^2.2.0",
     "prettier": "^2.8.4",
     "typescript": "^4.7.4",
@@ -71,5 +73,6 @@
   },
   "engines": {
     "node": ">=16.14"
-  }
+  },
+  "packageManager": "yarn@1.22.22"
 }

@@ -1,6 +1,6 @@
 import { getComparator } from './Comparators';
 import { appendWhiteSpaceToMatchLength, color } from './stringFormatUtils';
-import { ComparisonMode, OperationUpdate, TestCase, TestValue, TrackerCallCount } from './types';
+import { ComparisonMode, OperationUpdate, TestCase, TestValue, NullableTestValue, TrackerCallCount } from './types';
 
 type MatcherFunction = (
   currentValue: TestValue,
@@ -208,5 +208,17 @@ export class Matchers {
     const expected = color(expectedLength, 'green');
     const received = color(receivedLength, 'red');
     return `Expected ${expected} snapshots, but received ${received} snapshots\n`;
+  }
+}
+
+export function nullableMatch(currentValue: NullableTestValue, testCase: TestCase, negation: boolean = false) {
+  const pass = currentValue === null || currentValue === undefined;
+
+  const coloredExpected = color('nullable', 'green');
+  const coloredReceived = color(currentValue, 'red');
+  const message = `Expected${negation ? ' NOT' : ''} ${coloredExpected} received ${coloredReceived}`;
+
+  if ((!pass && !negation) || (pass && negation)) {
+    testCase.errors.push(message);
   }
 }
