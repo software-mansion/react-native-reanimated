@@ -8,7 +8,7 @@ import type {
 } from 'react';
 import React from 'react';
 import { findNodeHandle, Platform } from 'react-native';
-import WorkletEventHandler from '../reanimated2/WorkletEventHandler';
+import { WorkletEventHandler } from '../reanimated2/WorkletEventHandler';
 import '../reanimated2/layoutReanimation/animationsManager';
 import invariant from 'invariant';
 import { adaptViewConfig } from '../ConfigHelper';
@@ -122,7 +122,8 @@ export function createAnimatedComponent(
   {
     _styles: StyleProps[] | null = null;
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
-    _viewTag = -1;
+    _componentViewTag = -1;
+    _eventViewTag = -1;
     _isFirstRender = true;
     jestAnimatedStyle: { value: StyleProps } = { value: {} };
     _component: AnimatedComponentRef | HTMLElement | null = null;
@@ -143,6 +144,8 @@ export function createAnimatedComponent(
     }
 
     componentDidMount() {
+      this._setComponentViewTag();
+      this._setEventViewTag();
       this._attachNativeEvents();
       this._jsPropsUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
@@ -184,11 +187,15 @@ export function createAnimatedComponent(
       if (this.props.sharedTransitionTag) {
         this._configureSharedTransition(true);
       }
-      this._sharedElementTransition?.unregisterTransition(this._viewTag, true);
+      this._sharedElementTransition?.unregisterTransition(
+        this._componentViewTag,
+        true
+      );
 
       const exiting = this.props.exiting;
       if (
         IS_WEB &&
+        this._component &&
         this.props.exiting &&
         !getReducedMotionFromConfig(this.props.exiting as CustomConfig)
       ) {
@@ -207,7 +214,7 @@ export function createAnimatedComponent(
             : getReduceMotionFromConfig();
         if (!reduceMotionInExiting) {
           updateLayoutAnimations(
-            this._viewTag,
+            this._componentViewTag,
             LayoutAnimationType.EXITING,
             maybeBuild(
               exiting,
@@ -219,30 +226,32 @@ export function createAnimatedComponent(
       }
     }
 
-    _getEventViewRef() {
-      // Make sure to get the scrollable node for components that implement
-      // `ScrollResponder.Mixin`.
-      return (this._component as AnimatedComponentRef)?.getScrollableNode
-        ? (this._component as AnimatedComponentRef).getScrollableNode?.()
-        : this._component;
+    _setComponentViewTag() {
+      this._componentViewTag = this._getViewInfo().viewTag as number;
+    }
+
+    _setEventViewTag() {
+      // Setting the tag for registering events - since the event emitting view can be nested inside the main component
+      const componentAnimatedRef = this._component as AnimatedComponentRef;
+      if (componentAnimatedRef.getScrollableNode) {
+        const scrollableNode = componentAnimatedRef.getScrollableNode();
+        this._eventViewTag = findNodeHandle(scrollableNode) ?? -1;
+      } else {
+        this._eventViewTag =
+          findNodeHandle(
+            options?.setNativeProps ? this : componentAnimatedRef
+          ) ?? -1;
+      }
     }
 
     _attachNativeEvents() {
-      const node = this._getEventViewRef() as AnimatedComponentRef;
-      let viewTag = null; // We set it only if needed
-
       for (const key in this.props) {
         const prop = this.props[key];
         if (
           has('workletEventHandler', prop) &&
           prop.workletEventHandler instanceof WorkletEventHandler
         ) {
-          if (viewTag === null) {
-            viewTag = IS_WEB
-              ? this._component
-              : findNodeHandle(options?.setNativeProps ? this : node);
-          }
-          prop.workletEventHandler.registerForEvents(viewTag as number, key);
+          prop.workletEventHandler.registerForEvents(this._eventViewTag, key);
         }
       }
     }
@@ -254,7 +263,7 @@ export function createAnimatedComponent(
           has('workletEventHandler', prop) &&
           prop.workletEventHandler instanceof WorkletEventHandler
         ) {
-          prop.workletEventHandler.unregisterFromEvents();
+          prop.workletEventHandler.unregisterFromEvents(this._eventViewTag);
         }
       }
     }
@@ -264,51 +273,59 @@ export function createAnimatedComponent(
         for (const style of this._styles) {
           style.viewsRef.remove(this);
         }
-      } else if (this._viewTag !== -1 && this._styles !== null) {
+      } else if (this._componentViewTag !== -1 && this._styles !== null) {
         for (const style of this._styles) {
-          style.viewDescriptors.remove(this._viewTag);
+          style.viewDescriptors.remove(this._componentViewTag);
         }
         if (this.props.animatedProps?.viewDescriptors) {
-          this.props.animatedProps.viewDescriptors.remove(this._viewTag);
+          this.props.animatedProps.viewDescriptors.remove(
+            this._componentViewTag
+          );
         }
         if (isFabric()) {
-          removeFromPropsRegistry(this._viewTag);
+          removeFromPropsRegistry(this._componentViewTag);
         }
       }
     }
 
-    _reattachNativeEvents(
+    _updateNativeEvents(
       prevProps: AnimatedComponentProps<InitialComponentProps>
     ) {
       for (const key in prevProps) {
-        const prop = this.props[key];
+        const prevProp = prevProps[key];
         if (
-          has('workletEventHandler', prop) &&
-          prop.workletEventHandler instanceof WorkletEventHandler &&
-          prop.workletEventHandler.reattachNeeded
+          has('workletEventHandler', prevProp) &&
+          prevProp.workletEventHandler instanceof WorkletEventHandler
         ) {
-          prop.workletEventHandler.unregisterFromEvents();
+          const newProp = this.props[key];
+          if (!newProp) {
+            // Prop got deleted
+            prevProp.workletEventHandler.unregisterFromEvents(
+              this._eventViewTag
+            );
+          } else if (
+            has('workletEventHandler', newProp) &&
+            newProp.workletEventHandler instanceof WorkletEventHandler &&
+            newProp.workletEventHandler !== prevProp.workletEventHandler
+          ) {
+            // Prop got changed
+            prevProp.workletEventHandler.unregisterFromEvents(
+              this._eventViewTag
+            );
+            newProp.workletEventHandler.registerForEvents(this._eventViewTag);
+          }
         }
       }
 
-      let viewTag = null;
-
       for (const key in this.props) {
-        const prop = this.props[key];
+        const newProp = this.props[key];
         if (
-          has('workletEventHandler', prop) &&
-          prop.workletEventHandler instanceof WorkletEventHandler &&
-          prop.workletEventHandler.reattachNeeded
+          has('workletEventHandler', newProp) &&
+          newProp.workletEventHandler instanceof WorkletEventHandler &&
+          !prevProps[key]
         ) {
-          if (viewTag === null) {
-            const node = this._getEventViewRef() as AnimatedComponentRef;
-
-            viewTag = IS_WEB
-              ? this._component
-              : findNodeHandle(options?.setNativeProps ? this : node);
-          }
-          prop.workletEventHandler.registerForEvents(viewTag as number, key);
-          prop.workletEventHandler.reattachNeeded = false;
+          // Prop got added
+          newProp.workletEventHandler.registerForEvents(this._eventViewTag);
         }
       }
     }
@@ -385,7 +402,7 @@ export function createAnimatedComponent(
         adaptViewConfig(viewConfig);
       }
 
-      this._viewTag = viewTag as number;
+      this._componentViewTag = viewTag as number;
 
       // remove old styles
       if (prevStyles) {
@@ -460,7 +477,7 @@ export function createAnimatedComponent(
       ) {
         this._configureSharedTransition();
       }
-      this._reattachNativeEvents(prevProps);
+      this._updateNativeEvents(prevProps);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
@@ -491,7 +508,11 @@ export function createAnimatedComponent(
             AnimatedComponent.displayName
           )
         : undefined;
-      updateLayoutAnimations(this._viewTag, LayoutAnimationType.LAYOUT, layout);
+      updateLayoutAnimations(
+        this._componentViewTag,
+        LayoutAnimationType.LAYOUT,
+        layout
+      );
     }
 
     _configureSharedTransition(isUnmounting = false) {
@@ -501,7 +522,7 @@ export function createAnimatedComponent(
       const { sharedTransitionTag } = this.props;
       if (!sharedTransitionTag) {
         this._sharedElementTransition?.unregisterTransition(
-          this._viewTag,
+          this._componentViewTag,
           isUnmounting
         );
         this._sharedElementTransition = null;
@@ -512,7 +533,7 @@ export function createAnimatedComponent(
         this._sharedElementTransition ??
         new SharedTransition();
       sharedElementTransition.registerTransition(
-        this._viewTag,
+        this._componentViewTag,
         sharedTransitionTag,
         isUnmounting
       );
@@ -531,7 +552,7 @@ export function createAnimatedComponent(
           ? (ref as HTMLElement)
           : findNodeHandle(ref as Component);
 
-        this._viewTag = tag as number;
+        this._componentViewTag = tag as number;
 
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (

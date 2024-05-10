@@ -16,7 +16,6 @@ import BabelVersionCheckExample from './BabelVersionCheckExample';
 import BasicLayoutAnimation from './LayoutAnimations/BasicLayoutAnimation';
 import BasicNestedAnimation from './LayoutAnimations/BasicNestedAnimation';
 import BasicNestedLayoutAnimation from './LayoutAnimations/BasicNestedLayoutAnimation';
-import BilliardExample from './BilliardExample';
 import BokehExample from './BokehExample';
 import BouncingBoxExample from './BouncingBoxExample';
 import BubblesExample from './BubblesExample';
@@ -124,6 +123,8 @@ import HabitsExample from './LayoutAnimations/HabitsExample';
 import MemoExample from './MemoExample';
 import PerformanceMonitorExample from './PerfomanceMonitorExample';
 import ScreenTransitionExample from './ScreenTransitionExample';
+import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
+import FreezingShareablesExample from './ShareableFreezingExample';
 
 interface Example {
   icon?: string;
@@ -169,6 +170,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Memo',
     screen: MemoExample,
   },
+  FreezingShareablesExample: {
+    icon: '🥶',
+    title: 'Freezing shareables',
+    screen: FreezingShareablesExample,
+  },
 
   // About
 
@@ -194,12 +200,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎧',
     title: 'iPod',
     screen: IPodExample,
-  },
-  BilliardExample: {
-    icon: '🎱',
-    title: 'Billiard',
-    screen: BilliardExample,
-    missingOnFabric: true,
   },
   EmojiWaterfallExample: {
     icon: '💸',
@@ -770,5 +770,9 @@ export const EXAMPLES: Record<string, Example> = {
   NestedRotationSharedExample: {
     title: '[SET] Nested Transforms',
     screen: NestedRotationExample,
+  },
+  BorderRadiiExample: {
+    title: '[SET] Border Radii',
+    screen: BorderRadiiExample,
   },
 } as const;

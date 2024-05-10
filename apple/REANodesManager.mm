@@ -71,7 +71,7 @@ using namespace facebook::react;
   // store reference to the observers array
   id oldObservers = [self.observerCoordinator valueForKey:@"_observers"];
 
-  // temporarily replace observers with a table conatining just nodesmanager (we need
+  // temporarily replace observers with a table containing just nodesManager (we need
   // this to capture mounting block)
   NSHashTable<id<RCTUIManagerObserver>> *soleObserver = [NSHashTable new];
   [soleObserver addObject:observer];
@@ -109,7 +109,7 @@ using namespace facebook::react;
 
 - (void)dealloc
 {
-  RCTAssert(_mounting == nil, @"Mouting block was set but never executed. This may lead to UI inconsistencies");
+  RCTAssert(_mounting == nil, @"Mounting block was set but never executed. This may lead to UI inconsistencies");
 }
 
 - (void)unblockUIThread
@@ -410,7 +410,7 @@ using namespace facebook::react;
 
 - (BOOL)isNativeViewMounted:(NSNumber *)viewTag
 {
-  REAUIView *view = _viewRegistry[viewTag];
+  REAUIView *view = [_uiManager viewForReactTag:(NSNumber *)viewTag];
   if (view.superview != nil) {
     return YES;
   }
@@ -550,10 +550,11 @@ using namespace facebook::react;
     }
     const size_t totalComponents = CGColorGetNumberOfComponents(color.CGColor);
     const CGFloat *components = CGColorGetComponents(color.CGColor);
-    int r = 255 * components[MIN(0, totalComponents - 2)];
-    int g = 255 * components[MIN(1, totalComponents - 2)];
-    int b = 255 * components[MIN(2, totalComponents - 2)];
-    return [NSString stringWithFormat:@"#%02x%02x%02x", r, g, b];
+    int r = 255 * components[MIN(0, totalComponents - 1)];
+    int g = 255 * components[MIN(1, totalComponents - 1)];
+    int b = 255 * components[MIN(2, totalComponents - 1)];
+    int alpha = 255 * components[MIN(3, totalComponents - 1)];
+    return [NSString stringWithFormat:@"#%02x%02x%02x%02x", r, g, b, alpha];
   }
 
   return [NSString
