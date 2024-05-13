@@ -16,6 +16,7 @@
     "@react-native-community/slider": "^4.5.0",
     "@react-native-masked-view/masked-view": "^0.3.1",
     "@react-native-picker/picker": "^2.5.1",
+    "@react-navigation/bottom-tabs": "^6.5.20",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
     "@react-navigation/stack": "^6.3.18",
