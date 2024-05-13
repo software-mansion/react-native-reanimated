@@ -110,7 +110,7 @@ async function getSnapshotUpdates(entering: any, waitTime: number, duration: num
   return updates;
 }
 
-describe('Test predefined entering', () => {
+describe.only('Test predefined entering', () => {
   describe('Entering on mount, no modifiers', async () => {
     test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet, waitTime]) => {
       for (const entering of enteringSet) {
@@ -131,7 +131,7 @@ describe('Test predefined entering', () => {
     });
   });
 
-  describe.only('Entering on mount, springify', async () => {
+  describe('Entering on mount, springify', async () => {
     test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet, waitTime]) => {
       const timeToWait = _setName === 'Bounce' ? 650 : waitTime * 0.3;
       for (const entering of enteringSet) {
