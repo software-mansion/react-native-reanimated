@@ -91,11 +91,6 @@
     "convert-source-map": "^2.0.0",
     "invariant": "^2.2.4"
   },
-  "peerDependencies": {
-    "@babel/core": "^7.0.0-0",
-    "react": "*",
-    "react-native": "*"
-  },
   "devDependencies": {
     "@babel/cli": "^7.20.0",
     "@babel/core": "^7.20.0",
@@ -106,7 +101,6 @@
     "@react-native/metro-config": "0.74.81",
     "@react-native/typescript-config": "0.74.81",
     "@testing-library/jest-native": "^4.0.4",
-    "@testing-library/react-hooks": "^8.0.0",
     "@testing-library/react-native": "^7.1.0",
     "@types/babel__core": "^7.20.0",
     "@types/babel__generator": "^7.6.4",
@@ -146,7 +140,6 @@
     "react-native": "0.74.0",
     "react-native-builder-bob": "^0.18.3",
     "react-native-gesture-handler": "^2.16.0",
-    "react-native-web": "~0.18.12",
     "react-test-renderer": "18.2.0",
     "shelljs": "^0.8.5",
     "ts-prune": "^0.10.3",

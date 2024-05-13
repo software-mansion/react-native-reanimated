@@ -1,4 +1,4 @@
-import './types';
+import "./types";
 
 import {
   ActivityIndicator,
@@ -10,34 +10,34 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
+} from "react-native";
 import {
   GestureHandlerRootView,
   RectButton,
-} from 'react-native-gesture-handler';
+} from "react-native-gesture-handler";
 import {
   HeaderBackButton,
   HeaderBackButtonProps,
-} from '@react-navigation/elements';
+} from "@react-navigation/elements";
 import {
   NativeStackNavigationProp,
   createNativeStackNavigator,
-} from '@react-navigation/native-stack';
+} from "@react-navigation/native-stack";
 import {
   NavigationContainer,
   NavigationProp,
   PathConfigMap,
   useNavigation,
-} from '@react-navigation/native';
+} from "@react-navigation/native";
 import {
   StackNavigationProp,
   createStackNavigator,
-} from '@react-navigation/stack';
+} from "@react-navigation/stack";
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { EXAMPLES } from './examples';
-import React from 'react';
-import { useReducedMotion } from 'react-native-reanimated';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { EXAMPLES } from "./examples";
+import React from "react";
+import { useReducedMotion } from "react-native-reanimated";
 
 function isFabric(): boolean {
   return !!(global as Record<string, unknown>)._IS_FABRIC;
@@ -49,14 +49,14 @@ type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
 
 interface HomeScreenProps {
   navigation:
-    | StackNavigationProp<RootStackParamList, 'Home'>
-    | NativeStackNavigationProp<RootStackParamList, 'Home'>;
+    | StackNavigationProp<RootStackParamList, "Home">
+    | NativeStackNavigationProp<RootStackParamList, "Home">;
 }
 
 const EXAMPLES_NAMES = Object.keys(EXAMPLES) as (keyof typeof EXAMPLES)[];
 
 function findExamples(search: string) {
-  if (search === '') {
+  if (search === "") {
     return EXAMPLES_NAMES;
   }
   return EXAMPLES_NAMES.filter((name) =>
@@ -69,7 +69,7 @@ function findExamples(search: string) {
 function HomeScreen({ navigation }: HomeScreenProps) {
   // TODO: Currently it breaks on @react-navigation
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [search, setSearch] = React.useState('');
+  const [search, setSearch] = React.useState("");
   const [wasClicked, setWasClicked] = React.useState<string[]>([]);
 
   React.useLayoutEffect(() => {
@@ -131,7 +131,7 @@ function Item({
   wasClicked,
 }: ItemProps) {
   const isDisabled = missingOnFabric && isFabric();
-  const Button = Platform.OS === 'macos' ? Pressable : RectButton;
+  const Button = Platform.OS === "macos" ? Pressable : RectButton;
   return (
     <Button
       style={[
@@ -140,8 +140,9 @@ function Item({
         wasClicked && styles.visitedItem,
       ]}
       onPress={onPress}
-      enabled={!isDisabled}>
-      {icon && <Text style={styles.title}>{icon + '  '}</Text>}
+      enabled={!isDisabled}
+    >
+      {icon && <Text style={styles.title}>{icon + "  "}</Text>}
       <Text style={styles.title}>{title}</Text>
     </Button>
   );
@@ -152,7 +153,7 @@ function ItemSeparator() {
 }
 
 const Stack =
-  Platform.OS === 'macos'
+  Platform.OS === "macos"
     ? createStackNavigator<RootStackParamList>()
     : createNativeStackNavigator<RootStackParamList>();
 
@@ -164,7 +165,7 @@ const linking = {
         acc[name] = name;
         return acc;
       },
-      { Home: '' }
+      { Home: "" }
     ),
   },
 };
@@ -173,12 +174,12 @@ function BackButton(props: HeaderBackButtonProps) {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   return (
-    <HeaderBackButton {...props} onPress={() => navigation.navigate('Home')} />
+    <HeaderBackButton {...props} onPress={() => navigation.navigate("Home")} />
   );
 }
 
 // copied from https://reactnavigation.org/docs/state-persistence/
-const PERSISTENCE_KEY = 'NAVIGATION_STATE_V1';
+const PERSISTENCE_KEY = "NAVIGATION_STATE_V1";
 
 export default function App() {
   const [isReady, setIsReady] = React.useState(__DEV__ ? false : true);
@@ -190,8 +191,8 @@ export default function App() {
         const initialUrl = await Linking.getInitialURL();
 
         if (
-          Platform.OS !== 'web' &&
-          Platform.OS !== 'macos' &&
+          Platform.OS !== "web" &&
+          Platform.OS !== "macos" &&
           initialUrl == null
         ) {
           // Only restore state if there's no deep link and we're not on web
@@ -231,15 +232,16 @@ export default function App() {
         initialState={initialState}
         onStateChange={(state) =>
           AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state))
-        }>
+        }
+      >
         <Stack.Navigator>
           <Stack.Screen
             name="Home"
             component={HomeScreen}
             options={{
-              headerTitle: '🐎 Reanimated examples',
-              title: 'Reanimated examples',
-              headerLeft: Platform.OS === 'web' ? () => null : undefined,
+              headerTitle: "🐎 Reanimated examples",
+              title: "Reanimated examples",
+              headerLeft: Platform.OS === "web" ? () => null : undefined,
             }}
           />
           {EXAMPLES_NAMES.map((name) => (
@@ -248,10 +250,10 @@ export default function App() {
               name={name}
               component={EXAMPLES[name].screen}
               options={{
-                animation: shouldReduceMotion ? 'fade' : 'default',
+                animation: shouldReduceMotion ? "fade" : "default",
                 headerTitle: EXAMPLES[name].title,
                 title: EXAMPLES[name].title,
-                headerLeft: Platform.OS === 'web' ? BackButton : undefined,
+                headerLeft: Platform.OS === "web" ? BackButton : undefined,
               }}
             />
           ))}
@@ -266,33 +268,33 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   center: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   list: {
-    backgroundColor: '#EFEFF4',
+    backgroundColor: "#EFEFF4",
   },
   separator: {
     height: 1,
-    backgroundColor: '#DBDBE0',
+    backgroundColor: "#DBDBE0",
   },
   button: {
     flex: 1,
     height: 60,
     padding: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "white",
   },
   disabledButton: {
-    backgroundColor: 'grey',
+    backgroundColor: "grey",
     opacity: 0.5,
   },
   title: {
     fontSize: 16,
-    color: 'black',
+    color: "black",
   },
   visitedItem: {
-    backgroundColor: '#e6f0f7',
+    backgroundColor: "#e6f0f7",
   },
 });

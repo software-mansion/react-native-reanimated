@@ -6,7 +6,7 @@
       "packages/react-native-reanimated",
       "packages/reanimated-app",
       "packages/reanimated-paper-example",
-      "packages/my-package"
+      "packages/reanimated-web-example"
     ]
   },
   "private": true,
