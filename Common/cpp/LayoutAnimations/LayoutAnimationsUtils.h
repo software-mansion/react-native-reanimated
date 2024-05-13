@@ -62,13 +62,13 @@ struct MutationNode: public Node{
   bool isAnimatingExit = false;
   bool isDone = false;
   bool isExiting = false;
+  bool isDead = false;
   MutationNode(ShadowViewMutation& mutation): Node(mutation.oldChildShadowView.tag),  mutation(mutation){}
   MutationNode(ShadowViewMutation& mutation, Node&& node): Node(std::move(node)), mutation(mutation){}
 };
 
 struct SurfaceManager {
   mutable std::unordered_map<SurfaceId, std::shared_ptr<std::unordered_map<Tag, UpdateValues>>> props_;
-  mutable std::unordered_map<SurfaceId, ShadowViewMutationList> cleanups_;
   mutable std::unordered_map<SurfaceId, Window> windows_;
   
   std::unordered_map<Tag, UpdateValues>& getUpdateMap(SurfaceId surfaceId){
@@ -92,17 +92,6 @@ struct SurfaceManager {
       return windowIt->second;
     }
     return Window{0,0};
-  }
-  
-  void consumeCleanupMutations(SurfaceId surfaceId, ShadowViewMutationList& mutations){
-    for (auto& mutation: cleanups_[surfaceId]){
-      mutations.push_back(mutation);
-    }
-    cleanups_.erase(surfaceId);
-  }
-  
-  ShadowViewMutationList& getCleanupMutations(SurfaceId surfaceId){
-    return cleanups_[surfaceId];
   }
 };
 

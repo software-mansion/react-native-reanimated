@@ -2,7 +2,7 @@
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include "NativeReanimatedModule.h"
 #include "LayoutAnimationsProxy.h"
-#define LAYOUT_ANIMATIONS_LOGS
+
 namespace reanimated {
 
 std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(int tag, const jsi::Object &newStyle) {
@@ -61,13 +61,10 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
     return {};
   }
   
-  auto &cleanupMutations = surfaceManager.getCleanupMutations(surfaceId);
   auto node = nodeForTag[tag];
   auto mutationNode = std::static_pointer_cast<MutationNode>(node);
-  endAnimationsRecursively(mutationNode, cleanupMutations);
-  if (node->parent){
-    maybeDropAncestors(node->parent, mutationNode, cleanupMutations);
-  }
+  mutationNode->isDead = true;
+  deadNodes.insert(mutationNode);
   
   return surfaceId;
 }
@@ -137,7 +134,6 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     la.current = newView;
   }
   updateMap.clear();
-  surfaceManager.consumeCleanupMutations(surfaceId, mutations);
   std::stable_sort(mutations.begin(), mutations.end(), &shouldFirstComeBeforeSecondMutation);
 }
 
@@ -215,6 +211,14 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
       filteredMutations.push_back(ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
     }
   }
+      
+  for (auto node: deadNodes){
+    if (!node->isDone){
+      endAnimationsRecursively(node, filteredMutations);
+      maybeDropAncestors(node->parent, node, filteredMutations);
+    }
+  }
+  deadNodes.clear();
 
   for (auto &mutation : mutations) {
     if (mutation.parentShadowView.tag == surfaceId){
@@ -309,7 +313,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(std::shared_ptr<MutationN
     LOG(INFO) << "child "<<subNode->tag<< " "<<subNode->isExiting<<" "<<shouldAnimate<<" "<<shouldRemoveSubviewsWithoutAnimations<< std::endl;
 #endif
     if (subNode->isExiting){
-      if (shouldAnimate){
+      if (shouldAnimate && !subNode->isDead){
         node->animatedChildren.insert(subNode->tag);
         hasAnimatedChildren = true;
       }

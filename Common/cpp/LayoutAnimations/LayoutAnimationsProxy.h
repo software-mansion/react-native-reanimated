@@ -31,6 +31,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   mutable std::recursive_mutex mutex;
   mutable std::unordered_set<Tag> bannedTags;
   mutable SurfaceManager surfaceManager;
+  mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
   std::shared_ptr<std::map<Tag, std::string>> tagToNativeID_ = std::make_shared<std::map<Tag, std::string>>();
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   ContextContainer::Shared contextContainer_;
