@@ -1,129 +1,129 @@
-import AboutExample from "./AboutExample";
-import AmountExample from "./AmountExample";
-import AnimatableRefExample from "./AnimatableRefExample";
-import AnimatedKeyboardExample from "./AnimatedKeyboardExample";
-import AnimatedListExample from "./LayoutAnimations/AnimatedList";
-import AnimatedSensorAccelerometerExample from "./AnimatedSensorAccelerometerExample";
-import AnimatedSensorGravityExample from "./AnimatedSensorGravityExample";
-import AnimatedSensorGyroscopeExample from "./AnimatedSensorGyroscopeExample";
-import AnimatedSensorMagneticFieldExample from "./AnimatedSensorMagneticFieldExample";
-import AnimatedSensorRotationExample from "./AnimatedSensorRotationExample";
-import AnimatedStyleUpdateExample from "./AnimatedStyleUpdateExample";
-import AnimatedTabBarExample from "./AnimatedTabBarExample";
-import AnimatedTextWidthExample from "./AnimatedTextWidthExample";
-import ArticleProgressExample from "./ArticleProgressExample";
-import BabelVersionCheckExample from "./BabelVersionCheckExample";
-import BasicLayoutAnimation from "./LayoutAnimations/BasicLayoutAnimation";
-import BasicNestedAnimation from "./LayoutAnimations/BasicNestedAnimation";
-import BasicNestedLayoutAnimation from "./LayoutAnimations/BasicNestedLayoutAnimation";
-import BokehExample from "./BokehExample";
-import BouncingBoxExample from "./BouncingBoxExample";
-import BubblesExample from "./BubblesExample";
-import CardExample from "./SharedElementTransitions/Card";
-import Carousel from "./LayoutAnimations/Carousel";
-import ChangeThemeExample from "./LayoutAnimations/ChangeTheme";
-import ChangeThemeSharedExample from "./SharedElementTransitions/ChangeTheme";
-import ChatHeadsExample from "./ChatHeadsExample";
-import ChessExample from "./ChessExample";
-import ChessboardExample from "./ChessboardExample";
-import ColorExample from "./ColorExample";
-import ColorInterpolationExample from "./ColorInterpolationExample";
-import CombinedTest from "./LayoutAnimations/Combined";
-import CounterExample from "./CounterExample";
-import CubesExample from "./CubesExample";
-import CustomLayoutAnimationScreen from "./LayoutAnimations/CustomLayout";
-import CustomTransitionExample from "./SharedElementTransitions/CustomTransition";
-import DefaultAnimations from "./LayoutAnimations/DefaultAnimations";
-import DeleteAncestorOfExiting from "./LayoutAnimations/DeleteAncestorOfExiting";
-import DispatchCommandExample from "./DispatchCommandExample";
-import DragAndSnapExample from "./DragAndSnapExample";
-import DuplicateTagsExample from "./SharedElementTransitions/DuplicateTags";
-import EmojiWaterfallExample from "./EmojiWaterfallExample";
-import EmptyExample from "./EmptyExample";
-import ExtrapolationExample from "./ExtrapolationExample";
-import FlatListExample from "./SharedElementTransitions/FlatList";
-import FlatListSkipEnteringExiting from "./LayoutAnimations/FlatListSkipEnteringExiting";
-import FrameCallbackExample from "./FrameCallbackExample";
-import GalleryExample from "./SharedElementTransitions/Gallery";
-import GestureHandlerExample from "./GestureHandlerExample";
-import GetViewPropExample from "./GetViewPropExample";
-import IPodExample from "./IPodExample";
-import ImageStackExample from "./SharedElementTransitions/ImageStack";
-import InvertedFlatListExample from "./InvertedFlatListExample";
-import JSPropsExample from "./JSPropsExample";
-import KeyframeAnimation from "./LayoutAnimations/KeyframeAnimation";
-import LayoutAnimationExample from "./SharedElementTransitions/LayoutAnimation";
-import LettersExample from "./LettersExample";
-import LightBoxExample from "./LightBoxExample";
-import LiquidSwipe from "./LiquidSwipe/LiquidSwipe";
-import LogExample from "./LogExample";
-import ManyScreensExample from "./SharedElementTransitions/ManyScreens";
-import ManyTagsExample from "./SharedElementTransitions/ManyTags";
-import MatrixTransform from "./MatrixTransform";
-import MeasureExample from "./MeasureExample";
-import Modal from "./LayoutAnimations/Modal";
-import ModalNewAPI from "./LayoutAnimations/ModalNewAPI";
-import ModalsExample from "./SharedElementTransitions/Modals";
-import ModifyExample from "./ModifyExample";
-import MountingUnmounting from "./LayoutAnimations/MountingUnmounting";
-import NativeModals from "./LayoutAnimations/NativeModals";
-import NestedNativeStacksWithLayout from "./LayoutAnimations/NestedNativeStacksWithLayout";
-import NestedRotationExample from "./SharedElementTransitions/NestedRotation";
-import NestedStacksExample from "./SharedElementTransitions/NestedStacks";
-import NestedTest from "./LayoutAnimations/Nested";
-import NewestShadowNodesRegistryRemoveExample from "./NewestShadowNodesRegistryRemoveExample";
-import NonLayoutPropAndRenderExample from "./NonLayoutPropAndRenderExample";
-import OldAnimatedSensorExample from "./OldAnimatedSensorExample";
-import OldMeasureExample from "./OldMeasureExample";
-import OlympicAnimation from "./LayoutAnimations/OlympicAnimation";
-import OverlappingBoxesExample from "./OverlappingBoxesExample";
-import PagerExample from "./CustomHandler/PagerExample";
-import PendulumExample from "./PendulumExample";
-import PinExample from "./PinExample";
-import PlanetsExample from "./PlanetsExample";
-import ProfilesExample from "./SharedElementTransitions/Profiles";
-import ProgressTransitionExample from "./SharedElementTransitions/ProgressTransition";
-import RainbowExample from "./RainbowExample";
-import ReactionsCounterExample from "./LayoutAnimations/ReactionsCounterExample";
-import ReducedMotionExample from "./ReducedMotionExample";
-import ReducedMotionLayoutExample from "./LayoutAnimations/ReducedMotionLayoutExample";
-import ReducedMotionSharedExample from "./SharedElementTransitions/ReducedMotionSharedExample";
-import RefExample from "./RefExample";
-import RestoreStateExample from "./SharedElementTransitions/RestoreState";
-import TransitionRestartExample from "./SharedElementTransitions/TransitionRestart";
-import ScreenStackExample from "./ScreenStackExample";
-import ScreenStackHeaderConfigBackgroundColorExample from "./ScreenStackHeaderConfigBackgroundColorExample";
-import ScrollEventExample from "./ScrollEventExample";
-import ScrollToExample from "./ScrollToExample";
-import ScrollViewExample from "./ScrollViewExample";
-import ScrollViewOffsetExample from "./ScrollViewOffsetExample";
-import ScrollableViewExample from "./ScrollableViewExample";
-import SetNativePropsExample from "./SetNativePropsExample";
-import ShareablesExample from "./ShareablesExample";
-import SharedStyleExample from "./SharedStyleExample";
-import SpringLayoutAnimation from "./LayoutAnimations/SpringLayoutAnimation";
-import SvgExample from "./SvgExample";
-import SwipeableList from "./LayoutAnimations/SwipeableList";
-import SwipeableListExample from "./SwipeableListExample";
-import TransformExample from "./TransformExample";
-import UpdatePropsPerfExample from "./UpdatePropsPerfExample";
-import VolumeExample from "./VolumeExample";
-import WaterfallGridExample from "./LayoutAnimations/WaterfallGridExample";
-import WidthExample from "./WidthExample";
-import WithoutBabelPluginExample from "./WithoutBabelPluginExample";
-import WobbleExample from "./WobbleExample";
-import WorkletExample from "./WorkletExample";
-import WorkletRuntimeExample from "./WorkletRuntimeExample";
-import NestedLayoutAnimationConfig from "./LayoutAnimations/NestedLayoutAnimationConfig";
-import DynamicStylesExample from "./DynamicStylesExample";
-import WithClampExample from "./WithClampExample";
-import WorkletFactoryCrash from "./WorkletFactoryCrashExample";
-import RuntimeTestsExample from "./RuntimeTests/RuntimeTestsExample";
-import HabitsExample from "./LayoutAnimations/HabitsExample";
-import MemoExample from "./MemoExample";
-import PerformanceMonitorExample from "./PerfomanceMonitorExample";
-import ScreenTransitionExample from "./ScreenTransitionExample";
-import FreezingShareablesExample from "./ShareableFreezingExample";
+import AboutExample from './AboutExample';
+import AmountExample from './AmountExample';
+import AnimatableRefExample from './AnimatableRefExample';
+import AnimatedKeyboardExample from './AnimatedKeyboardExample';
+import AnimatedListExample from './LayoutAnimations/AnimatedList';
+import AnimatedSensorAccelerometerExample from './AnimatedSensorAccelerometerExample';
+import AnimatedSensorGravityExample from './AnimatedSensorGravityExample';
+import AnimatedSensorGyroscopeExample from './AnimatedSensorGyroscopeExample';
+import AnimatedSensorMagneticFieldExample from './AnimatedSensorMagneticFieldExample';
+import AnimatedSensorRotationExample from './AnimatedSensorRotationExample';
+import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
+import AnimatedTabBarExample from './AnimatedTabBarExample';
+import AnimatedTextWidthExample from './AnimatedTextWidthExample';
+import ArticleProgressExample from './ArticleProgressExample';
+import BabelVersionCheckExample from './BabelVersionCheckExample';
+import BasicLayoutAnimation from './LayoutAnimations/BasicLayoutAnimation';
+import BasicNestedAnimation from './LayoutAnimations/BasicNestedAnimation';
+import BasicNestedLayoutAnimation from './LayoutAnimations/BasicNestedLayoutAnimation';
+import BokehExample from './BokehExample';
+import BouncingBoxExample from './BouncingBoxExample';
+import BubblesExample from './BubblesExample';
+import CardExample from './SharedElementTransitions/Card';
+import Carousel from './LayoutAnimations/Carousel';
+import ChangeThemeExample from './LayoutAnimations/ChangeTheme';
+import ChangeThemeSharedExample from './SharedElementTransitions/ChangeTheme';
+import ChatHeadsExample from './ChatHeadsExample';
+import ChessExample from './ChessExample';
+import ChessboardExample from './ChessboardExample';
+import ColorExample from './ColorExample';
+import ColorInterpolationExample from './ColorInterpolationExample';
+import CombinedTest from './LayoutAnimations/Combined';
+import CounterExample from './CounterExample';
+import CubesExample from './CubesExample';
+import CustomLayoutAnimationScreen from './LayoutAnimations/CustomLayout';
+import CustomTransitionExample from './SharedElementTransitions/CustomTransition';
+import DefaultAnimations from './LayoutAnimations/DefaultAnimations';
+import DeleteAncestorOfExiting from './LayoutAnimations/DeleteAncestorOfExiting';
+import DispatchCommandExample from './DispatchCommandExample';
+import DragAndSnapExample from './DragAndSnapExample';
+import DuplicateTagsExample from './SharedElementTransitions/DuplicateTags';
+import EmojiWaterfallExample from './EmojiWaterfallExample';
+import EmptyExample from './EmptyExample';
+import ExtrapolationExample from './ExtrapolationExample';
+import FlatListExample from './SharedElementTransitions/FlatList';
+import FlatListSkipEnteringExiting from './LayoutAnimations/FlatListSkipEnteringExiting';
+import FrameCallbackExample from './FrameCallbackExample';
+import GalleryExample from './SharedElementTransitions/Gallery';
+import GestureHandlerExample from './GestureHandlerExample';
+import GetViewPropExample from './GetViewPropExample';
+import IPodExample from './IPodExample';
+import ImageStackExample from './SharedElementTransitions/ImageStack';
+import InvertedFlatListExample from './InvertedFlatListExample';
+import JSPropsExample from './JSPropsExample';
+import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
+import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
+import LettersExample from './LettersExample';
+import LightBoxExample from './LightBoxExample';
+import LiquidSwipe from './LiquidSwipe/LiquidSwipe';
+import LogExample from './LogExample';
+import ManyScreensExample from './SharedElementTransitions/ManyScreens';
+import ManyTagsExample from './SharedElementTransitions/ManyTags';
+import MatrixTransform from './MatrixTransform';
+import MeasureExample from './MeasureExample';
+import Modal from './LayoutAnimations/Modal';
+import ModalNewAPI from './LayoutAnimations/ModalNewAPI';
+import ModalsExample from './SharedElementTransitions/Modals';
+import ModifyExample from './ModifyExample';
+import MountingUnmounting from './LayoutAnimations/MountingUnmounting';
+import NativeModals from './LayoutAnimations/NativeModals';
+import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksWithLayout';
+import NestedRotationExample from './SharedElementTransitions/NestedRotation';
+import NestedStacksExample from './SharedElementTransitions/NestedStacks';
+import NestedTest from './LayoutAnimations/Nested';
+import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
+import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
+import OldAnimatedSensorExample from './OldAnimatedSensorExample';
+import OldMeasureExample from './OldMeasureExample';
+import OlympicAnimation from './LayoutAnimations/OlympicAnimation';
+import OverlappingBoxesExample from './OverlappingBoxesExample';
+import PagerExample from './CustomHandler/PagerExample';
+import PendulumExample from './PendulumExample';
+import PinExample from './PinExample';
+import PlanetsExample from './PlanetsExample';
+import ProfilesExample from './SharedElementTransitions/Profiles';
+import ProgressTransitionExample from './SharedElementTransitions/ProgressTransition';
+import RainbowExample from './RainbowExample';
+import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
+import ReducedMotionExample from './ReducedMotionExample';
+import ReducedMotionLayoutExample from './LayoutAnimations/ReducedMotionLayoutExample';
+import ReducedMotionSharedExample from './SharedElementTransitions/ReducedMotionSharedExample';
+import RefExample from './RefExample';
+import RestoreStateExample from './SharedElementTransitions/RestoreState';
+import TransitionRestartExample from './SharedElementTransitions/TransitionRestart';
+import ScreenStackExample from './ScreenStackExample';
+import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderConfigBackgroundColorExample';
+import ScrollEventExample from './ScrollEventExample';
+import ScrollToExample from './ScrollToExample';
+import ScrollViewExample from './ScrollViewExample';
+import ScrollViewOffsetExample from './ScrollViewOffsetExample';
+import ScrollableViewExample from './ScrollableViewExample';
+import SetNativePropsExample from './SetNativePropsExample';
+import ShareablesExample from './ShareablesExample';
+import SharedStyleExample from './SharedStyleExample';
+import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
+import SvgExample from './SvgExample';
+import SwipeableList from './LayoutAnimations/SwipeableList';
+import SwipeableListExample from './SwipeableListExample';
+import TransformExample from './TransformExample';
+import UpdatePropsPerfExample from './UpdatePropsPerfExample';
+import VolumeExample from './VolumeExample';
+import WaterfallGridExample from './LayoutAnimations/WaterfallGridExample';
+import WidthExample from './WidthExample';
+import WithoutBabelPluginExample from './WithoutBabelPluginExample';
+import WobbleExample from './WobbleExample';
+import WorkletExample from './WorkletExample';
+import WorkletRuntimeExample from './WorkletRuntimeExample';
+import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
+import DynamicStylesExample from './DynamicStylesExample';
+import WithClampExample from './WithClampExample';
+import WorkletFactoryCrash from './WorkletFactoryCrashExample';
+import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
+import HabitsExample from './LayoutAnimations/HabitsExample';
+import MemoExample from './MemoExample';
+import PerformanceMonitorExample from './PerfomanceMonitorExample';
+import ScreenTransitionExample from './ScreenTransitionExample';
+import FreezingShareablesExample from './ShareableFreezingExample';
 
 interface Example {
   icon?: string;
@@ -135,562 +135,562 @@ interface Example {
 export const EXAMPLES: Record<string, Example> = {
   // Empty example for test purposes
   EmptyExample: {
-    icon: "👻",
-    title: "Empty",
+    icon: '👻',
+    title: 'Empty',
     screen: EmptyExample,
   },
   RuntimeTests: {
-    icon: "⚙️",
-    title: "RuntimeTestsExample",
+    icon: '⚙️',
+    title: 'RuntimeTestsExample',
     screen: RuntimeTestsExample,
   },
   WorkletRuntimeExample: {
-    icon: "🏃‍♂️",
-    title: "Worklet runtime",
+    icon: '🏃‍♂️',
+    title: 'Worklet runtime',
     screen: WorkletRuntimeExample,
   },
   ShareablesExample: {
-    icon: "🖇",
-    title: "Shareables",
+    icon: '🖇',
+    title: 'Shareables',
     screen: ShareablesExample,
   },
   ModifyExample: {
-    icon: "🪛",
-    title: "Modify",
+    icon: '🪛',
+    title: 'Modify',
     screen: ModifyExample,
   },
   JSPropsExample: {
-    icon: "🟨",
-    title: "JS props",
+    icon: '🟨',
+    title: 'JS props',
     screen: JSPropsExample,
   },
   MemoExample: {
-    icon: "🧠",
-    title: "Memo",
+    icon: '🧠',
+    title: 'Memo',
     screen: MemoExample,
   },
   FreezingShareablesExample: {
-    icon: "🥶",
-    title: "Freezing shareables",
+    icon: '🥶',
+    title: 'Freezing shareables',
     screen: FreezingShareablesExample,
   },
 
   // About
 
   AboutExample: {
-    icon: "ℹ️",
-    title: "About",
+    icon: 'ℹ️',
+    title: 'About',
     screen: AboutExample,
   },
 
   // Showcase
 
   BokehExample: {
-    icon: "✨",
-    title: "Bokeh",
+    icon: '✨',
+    title: 'Bokeh',
     screen: BokehExample,
   },
   BubblesExample: {
-    icon: "🫧",
-    title: "Bubbles",
+    icon: '🫧',
+    title: 'Bubbles',
     screen: BubblesExample,
   },
   IPodExample: {
-    icon: "🎧",
-    title: "iPod",
+    icon: '🎧',
+    title: 'iPod',
     screen: IPodExample,
   },
   EmojiWaterfallExample: {
-    icon: "💸",
-    title: "Emoji waterfall",
+    icon: '💸',
+    title: 'Emoji waterfall',
     screen: EmojiWaterfallExample,
   },
   LightBoxExample: {
-    icon: "📷",
-    title: "Camera roll",
+    icon: '📷',
+    title: 'Camera roll',
     screen: LightBoxExample,
   },
   LiquidSwipe: {
-    icon: "♠️",
-    title: "Liquid swipe",
+    icon: '♠️',
+    title: 'Liquid swipe',
     screen: LiquidSwipe,
   },
   SwipeableListExample: {
-    icon: "📞",
-    title: "Swipeable list",
+    icon: '📞',
+    title: 'Swipeable list',
     screen: SwipeableListExample,
   },
   ArticleProgressExample: {
-    icon: "📰",
-    title: "Article progress",
+    icon: '📰',
+    title: 'Article progress',
     screen: ArticleProgressExample,
   },
   LettersExample: {
-    icon: "📖",
-    title: "Letters",
+    icon: '📖',
+    title: 'Letters',
     screen: LettersExample,
     missingOnFabric: true,
   },
   SetNativePropsExample: {
-    icon: "🪄",
-    title: "setNativeProps",
+    icon: '🪄',
+    title: 'setNativeProps',
     screen: SetNativePropsExample,
   },
   UpdatePropsPerfExample: {
-    icon: "🏎️",
-    title: "Update props performance",
+    icon: '🏎️',
+    title: 'Update props performance',
     screen: UpdatePropsPerfExample,
   },
   ScreenTransitionExample: {
-    icon: "📺",
-    title: "Screen transition",
+    icon: '📺',
+    title: 'Screen transition',
     screen: ScreenTransitionExample,
   },
 
   // Basic examples
 
   AnimatableRefExample: {
-    icon: "⏬",
-    title: "Animate inner component",
+    icon: '⏬',
+    title: 'Animate inner component',
     screen: AnimatableRefExample,
     missingOnFabric: true,
   },
   AmountExample: {
-    icon: "📈",
-    title: "Amount",
+    icon: '📈',
+    title: 'Amount',
     screen: AmountExample,
   },
   CounterExample: {
-    icon: "🎰",
-    title: "Counter",
+    icon: '🎰',
+    title: 'Counter',
     screen: CounterExample,
   },
   AnimatedTextWidthExample: {
-    icon: "✂️",
-    title: "Animate text width",
+    icon: '✂️',
+    title: 'Animate text width',
     screen: AnimatedTextWidthExample,
   },
   ColorExample: {
-    icon: "🌈",
-    title: "Animate colors",
+    icon: '🌈',
+    title: 'Animate colors',
     screen: ColorExample,
   },
   ScreenStackHeaderConfigBackgroundColorExample: {
-    icon: "🎨",
-    title: "Screen header background color",
+    icon: '🎨',
+    title: 'Screen header background color',
     screen: ScreenStackHeaderConfigBackgroundColorExample,
   },
   ScreenStackExample: {
-    icon: "🥞",
-    title: "Screen stack",
+    icon: '🥞',
+    title: 'Screen stack',
     screen: ScreenStackExample,
   },
   GestureHandlerExample: {
-    icon: "👌",
-    title: "Draggable circle",
+    icon: '👌',
+    title: 'Draggable circle',
     screen: GestureHandlerExample,
   },
   SvgExample: {
-    icon: "🟢",
-    title: "Animated SVG circle",
+    icon: '🟢',
+    title: 'Animated SVG circle',
     screen: SvgExample,
   },
   PlanetsExample: {
-    icon: "🪐",
-    title: "Planets",
+    icon: '🪐',
+    title: 'Planets',
     screen: PlanetsExample,
   },
   BouncingBoxExample: {
-    icon: "📦",
-    title: "Bouncing box",
+    icon: '📦',
+    title: 'Bouncing box',
     screen: BouncingBoxExample,
   },
   AnimatedKeyboardExample: {
-    icon: "⌨️",
-    title: "useAnimatedKeyboard",
+    icon: '⌨️',
+    title: 'useAnimatedKeyboard',
     screen: AnimatedKeyboardExample,
   },
   AnimatedSensorAccelerometerExample: {
-    icon: "🚀",
-    title: "useAnimatedSensor - accelerometer",
+    icon: '🚀',
+    title: 'useAnimatedSensor - accelerometer',
     screen: AnimatedSensorAccelerometerExample,
   },
   AnimatedSensorGyroscopeExample: {
-    icon: "⚖️",
-    title: "useAnimatedSensor - gyroscope",
+    icon: '⚖️',
+    title: 'useAnimatedSensor - gyroscope',
     screen: AnimatedSensorGyroscopeExample,
   },
   AnimatedSensorGravityExample: {
-    icon: "🌎",
-    title: "useAnimatedSensor - gravity",
+    icon: '🌎',
+    title: 'useAnimatedSensor - gravity',
     screen: AnimatedSensorGravityExample,
   },
   AnimatedSensorMagneticFieldExample: {
-    icon: "🧲",
-    title: "useAnimatedSensor - magnetic field",
+    icon: '🧲',
+    title: 'useAnimatedSensor - magnetic field',
     screen: AnimatedSensorMagneticFieldExample,
   },
   AnimatedSensorRotationExample: {
-    icon: "🔄",
-    title: "useAnimatedSensor - rotation",
+    icon: '🔄',
+    title: 'useAnimatedSensor - rotation',
     screen: AnimatedSensorRotationExample,
   },
   FrameCallbackExample: {
-    icon: "🗣",
-    title: "useFrameCallback",
+    icon: '🗣',
+    title: 'useFrameCallback',
     screen: FrameCallbackExample,
   },
   ScrollViewExample: {
-    icon: "📜",
-    title: "useAnimatedScrollHandler",
+    icon: '📜',
+    title: 'useAnimatedScrollHandler',
     screen: ScrollViewExample,
   },
   ScrollToExample: {
-    icon: "🦘",
-    title: "scrollTo",
+    icon: '🦘',
+    title: 'scrollTo',
     screen: ScrollToExample,
   },
   ScrollViewOffsetExample: {
-    icon: "𝌍",
-    title: "useScrollViewOffset",
+    icon: '𝌍',
+    title: 'useScrollViewOffset',
     screen: ScrollViewOffsetExample,
   },
   DispatchCommandExample: {
-    icon: "🫡",
-    title: "Dispatch command",
+    icon: '🫡',
+    title: 'Dispatch command',
     screen: DispatchCommandExample,
   },
   MeasureExample: {
-    icon: "📐",
-    title: "measure",
+    icon: '📐',
+    title: 'measure',
     screen: MeasureExample,
   },
   WorkletExample: {
-    icon: "🧵",
-    title: "runOnJS / runOnUI",
+    icon: '🧵',
+    title: 'runOnJS / runOnUI',
     screen: WorkletExample,
   },
   BabelVersionCheckExample: {
-    icon: "📦",
-    title: "Babel version check",
+    icon: '📦',
+    title: 'Babel version check',
     screen: BabelVersionCheckExample,
   },
   TransformExample: {
-    icon: "🔄",
-    title: "Transform",
+    icon: '🔄',
+    title: 'Transform',
     screen: TransformExample,
   },
   WidthExample: {
-    icon: "🌲",
-    title: "Layout props",
+    icon: '🌲',
+    title: 'Layout props',
     screen: WidthExample,
   },
   NonLayoutPropAndRenderExample: {
-    icon: "🎭",
-    title: "Non-layout prop and render example",
+    icon: '🎭',
+    title: 'Non-layout prop and render example',
     screen: NonLayoutPropAndRenderExample,
   },
   RefExample: {
-    icon: "🦑",
-    title: "forwardRef & useImperativeHandle",
+    icon: '🦑',
+    title: 'forwardRef & useImperativeHandle',
     screen: RefExample,
   },
   ChessExample: {
-    icon: "♟️",
-    title: "Chess",
+    icon: '♟️',
+    title: 'Chess',
     screen: ChessExample,
   },
   ChessboardExample: {
-    icon: "♟️",
-    title: "Chessboard",
+    icon: '♟️',
+    title: 'Chessboard',
     screen: ChessboardExample,
   },
   OverlappingBoxesExample: {
-    icon: "🔝",
-    title: "z-index & elevation",
+    icon: '🔝',
+    title: 'z-index & elevation',
     screen: OverlappingBoxesExample,
   },
   NewestShadowNodesRegistryRemoveExample: {
-    icon: "🌓",
-    title: "Conditional",
+    icon: '🌓',
+    title: 'Conditional',
     screen: NewestShadowNodesRegistryRemoveExample,
   },
   RainbowExample: {
-    icon: "🌈",
-    title: "Rainbow",
+    icon: '🌈',
+    title: 'Rainbow',
     screen: RainbowExample,
   },
   WithoutBabelPluginExample: {
-    icon: "🔌",
-    title: "Without Babel plugin",
+    icon: '🔌',
+    title: 'Without Babel plugin',
     screen: WithoutBabelPluginExample,
   },
   GalleryExample: {
-    icon: "🇮🇹",
-    title: "Gallery",
+    icon: '🇮🇹',
+    title: 'Gallery',
     screen: GalleryExample,
   },
   ProfilesExample: {
-    icon: "🙆‍♂️",
-    title: "Profiles",
+    icon: '🙆‍♂️',
+    title: 'Profiles',
     screen: ProfilesExample,
   },
   VolumeExample: {
-    icon: "🎧",
-    title: "Volume slider & sensor",
+    icon: '🎧',
+    title: 'Volume slider & sensor',
     screen: VolumeExample,
   },
   ProgressTransitionExample: {
-    icon: "☕",
-    title: "Progress transition",
+    icon: '☕',
+    title: 'Progress transition',
     screen: ProgressTransitionExample,
     missingOnFabric: true,
   },
   MatrixExample: {
-    icon: "🧮",
-    title: "useAnimatedStyle with matrix",
+    icon: '🧮',
+    title: 'useAnimatedStyle with matrix',
     screen: MatrixTransform,
   },
   SpringExample: {
-    icon: "🕰",
-    title: "Pendulum example",
+    icon: '🕰',
+    title: 'Pendulum example',
     screen: PendulumExample,
   },
   SpringClampExample: {
-    icon: "🗜",
-    title: "Spring with Clamp",
+    icon: '🗜',
+    title: 'Spring with Clamp',
     screen: WithClampExample,
   },
   ReducedMotionExample: {
-    icon: "⏸️",
-    title: "Reduced Motion",
+    icon: '⏸️',
+    title: 'Reduced Motion',
     screen: ReducedMotionExample,
   },
   GetViewPropExample: {
-    icon: "🔎",
-    title: "getViewProp",
+    icon: '🔎',
+    title: 'getViewProp',
     screen: GetViewPropExample,
     missingOnFabric: true,
   },
   LogExample: {
-    icon: "⌨",
-    title: "Log test",
+    icon: '⌨',
+    title: 'Log test',
     screen: LogExample,
   },
   DynamicStylesExample: {
-    icon: "🧨",
-    title: "Dynamically appending/removing styles",
+    icon: '🧨',
+    title: 'Dynamically appending/removing styles',
     screen: DynamicStylesExample,
   },
   WorkletFactoryCrash: {
-    icon: "🏭",
-    title: "Worklet factory crash",
+    icon: '🏭',
+    title: 'Worklet factory crash',
     screen: WorkletFactoryCrash,
   },
   HabitsExample: {
-    icon: "🧑‍💻",
-    title: "Habits",
+    icon: '🧑‍💻',
+    title: 'Habits',
     screen: HabitsExample,
     missingOnFabric: true,
   },
   PerformanceMonitorExample: {
-    icon: "⏱️",
-    title: "Performance monitor",
+    icon: '⏱️',
+    title: 'Performance monitor',
     screen: PerformanceMonitorExample,
   },
 
   // Old examples
 
   AnimatedStyleUpdateExample: {
-    title: "Animated style update",
+    title: 'Animated style update',
     screen: AnimatedStyleUpdateExample,
   },
   SharedStyleExample: {
-    title: "Shared style",
+    title: 'Shared style',
     screen: SharedStyleExample,
   },
   AnimatedTabBarExample: {
-    title: "Tab bar",
+    title: 'Tab bar',
     screen: AnimatedTabBarExample,
     missingOnFabric: true,
   },
   ChatHeadsExample: {
-    title: "Chat heads",
+    title: 'Chat heads',
     screen: ChatHeadsExample,
   },
   CubesExample: {
-    title: "Cubes",
+    title: 'Cubes',
     screen: CubesExample,
   },
   DragAndSnapExample: {
-    title: "Drag and snap",
+    title: 'Drag and snap',
     screen: DragAndSnapExample,
   },
   ColorInterpolationExample: {
-    title: "Color interpolation",
+    title: 'Color interpolation',
     screen: ColorInterpolationExample,
   },
   ExtrapolationExample: {
-    title: "Extrapolation example",
+    title: 'Extrapolation example',
     screen: ExtrapolationExample,
   },
   InvertedFlatListExample: {
-    title: "Inverted FlatList example",
+    title: 'Inverted FlatList example',
     screen: InvertedFlatListExample,
   },
   OldAnimatedSensorExample: {
-    title: "Old animated sensor example",
+    title: 'Old animated sensor example',
     screen: OldAnimatedSensorExample,
   },
   OldMeasureExample: {
-    title: "Accordion",
+    title: 'Accordion',
     screen: OldMeasureExample,
   },
   PinExample: {
-    title: "PIN example",
+    title: 'PIN example',
     screen: PinExample,
   },
   ScrollableViewExample: {
-    title: "Scrollable view example",
+    title: 'Scrollable view example',
     screen: ScrollableViewExample,
   },
   ScrollEventExample: {
-    title: "Scroll event example",
+    title: 'Scroll event example',
     screen: ScrollEventExample,
   },
   WobbleExample: {
-    title: "Wobble example",
+    title: 'Wobble example',
     screen: WobbleExample,
   },
   PagerExample: {
-    title: "Pager example",
+    title: 'Pager example',
     screen: PagerExample,
   },
 
   // Layout Animations
 
   DeleteAncestorOfExiting: {
-    title: "[LA] Deleting view with an exiting animation",
+    title: '[LA] Deleting view with an exiting animation',
     screen: DeleteAncestorOfExiting,
     missingOnFabric: true,
   },
   NestedNativeStacksWithLayout: {
-    title: "[LA] Nested NativeStacks with layout",
+    title: '[LA] Nested NativeStacks with layout',
     screen: NestedNativeStacksWithLayout,
     missingOnFabric: true,
   },
   BasicLayoutAnimation: {
-    title: "[LA] Basic layout animation",
+    title: '[LA] Basic layout animation',
     screen: BasicLayoutAnimation,
     missingOnFabric: true,
   },
   BasicNestedAnimation: {
-    title: "[LA] Basic nested animation",
+    title: '[LA] Basic nested animation',
     screen: BasicNestedAnimation,
     missingOnFabric: true,
   },
   BasicNestedLayoutAnimation: {
-    title: "[LA] Basic nested layout animation",
+    title: '[LA] Basic nested layout animation',
     screen: BasicNestedLayoutAnimation,
     missingOnFabric: true,
   },
   NestedLayoutAnimations: {
-    title: "[LA] Nested layout animations",
+    title: '[LA] Nested layout animations',
     screen: NestedTest,
     missingOnFabric: true,
   },
   CombinedLayoutAnimations: {
-    title: "[LA] Entering and Exiting with Layout",
+    title: '[LA] Entering and Exiting with Layout',
     screen: CombinedTest,
     missingOnFabric: true,
   },
   DefaultAnimations: {
-    title: "[LA] Default layout animations",
+    title: '[LA] Default layout animations',
     screen: DefaultAnimations,
     missingOnFabric: true,
   },
   DefaultTransitions: {
-    title: "[LA] Default layout transitions",
+    title: '[LA] Default layout transitions',
     screen: WaterfallGridExample,
     missingOnFabric: true,
   },
   KeyframeAnimation: {
-    title: "[LA] Keyframe animation",
+    title: '[LA] Keyframe animation',
     screen: KeyframeAnimation,
     missingOnFabric: true,
   },
   ParticipantList: {
-    title: "[LA] Participant List",
+    title: '[LA] Participant List',
     screen: AnimatedListExample,
     missingOnFabric: true,
   },
   OlympicAnimation: {
-    title: "[LA] Olympic animation",
+    title: '[LA] Olympic animation',
     screen: OlympicAnimation,
     missingOnFabric: true,
   },
   CustomLayoutAnimation: {
-    title: "[LA] Custom layout animation",
+    title: '[LA] Custom layout animation',
     screen: CustomLayoutAnimationScreen,
     missingOnFabric: true,
   },
   ModalNewAPI: {
-    title: "[LA] ModalNewAPI",
+    title: '[LA] ModalNewAPI',
     screen: ModalNewAPI,
     missingOnFabric: true,
   },
   SpringLayoutAnimation: {
-    title: "[LA] Spring Layout Animation",
+    title: '[LA] Spring Layout Animation',
     screen: SpringLayoutAnimation,
     missingOnFabric: true,
   },
   MountingUnmounting: {
-    title: "[LA] Mounting Unmounting",
+    title: '[LA] Mounting Unmounting',
     screen: MountingUnmounting,
     missingOnFabric: true,
   },
   ReactionsCounterExample: {
-    title: "[LA] Reactions counter",
+    title: '[LA] Reactions counter',
     screen: ReactionsCounterExample,
     missingOnFabric: true,
   },
   SwipeableList: {
-    title: "[LA] Swipeable list",
+    title: '[LA] Swipeable list',
     screen: SwipeableList,
     missingOnFabric: true,
   },
   Modal: {
-    title: "[LA] Modal",
+    title: '[LA] Modal',
     screen: Modal,
     missingOnFabric: true,
   },
   NativeModals: {
-    title: "[LA] Native modals (RN and Screens)",
+    title: '[LA] Native modals (RN and Screens)',
     screen: NativeModals,
     missingOnFabric: true,
   },
   Carousel: {
-    title: "[LA] Carousel",
+    title: '[LA] Carousel',
     screen: Carousel,
     missingOnFabric: true,
   },
   ReducedMotionLayoutExample: {
-    title: "[LA] Reduced Motion",
+    title: '[LA] Reduced Motion',
     screen: ReducedMotionLayoutExample,
     missingOnFabric: true,
   },
   NestedLayoutAnimationConfig: {
-    title: "[LA] Nested LayoutAnimationConfig",
+    title: '[LA] Nested LayoutAnimationConfig',
     screen: NestedLayoutAnimationConfig,
     missingOnFabric: true,
   },
   FlatListSkipEnteringExiting: {
-    title: "[LA] FlatList skip entering & exiting",
+    title: '[LA] FlatList skip entering & exiting',
     screen: FlatListSkipEnteringExiting,
     missingOnFabric: true,
   },
   ChangeTheme: {
-    title: "[LA] Change theme",
+    title: '[LA] Change theme',
     screen: ChangeThemeExample,
     missingOnFabric: true,
   },
@@ -698,76 +698,76 @@ export const EXAMPLES: Record<string, Example> = {
   // Shared Element Transitions
 
   CardExample: {
-    title: "[SET] Card",
+    title: '[SET] Card',
     screen: CardExample,
     missingOnFabric: true,
   },
   CustomTransitionExample: {
-    title: "[SET] Custom transition",
+    title: '[SET] Custom transition',
     screen: CustomTransitionExample,
     missingOnFabric: true,
   },
   LayoutAnimationExample: {
-    title: "[SET] Layout Animation",
+    title: '[SET] Layout Animation',
     screen: LayoutAnimationExample,
     missingOnFabric: true,
   },
   ManyScreensExample: {
-    title: "[SET] Many screens",
+    title: '[SET] Many screens',
     screen: ManyScreensExample,
     missingOnFabric: true,
   },
   ManyTagsExample: {
-    title: "[SET] Many tags",
+    title: '[SET] Many tags',
     screen: ManyTagsExample,
     missingOnFabric: true,
   },
   NestedStacksExample: {
-    title: "[SET] Nested stacks",
+    title: '[SET] Nested stacks',
     screen: NestedStacksExample,
     missingOnFabric: true,
   },
   ModalsExample: {
-    title: "[SET] Modals",
+    title: '[SET] Modals',
     screen: ModalsExample,
     missingOnFabric: true,
   },
   FlatListExample: {
-    title: "[SET] FlatList",
+    title: '[SET] FlatList',
     screen: FlatListExample,
     missingOnFabric: true,
   },
   ImageStackExample: {
-    title: "[SET] Image Stack",
+    title: '[SET] Image Stack',
     screen: ImageStackExample,
     missingOnFabric: true,
   },
   RestoreStateExample: {
-    title: "[SET] Restore State",
+    title: '[SET] Restore State',
     screen: RestoreStateExample,
     missingOnFabric: true,
   },
   DuplicateTagsExample: {
-    title: "[SET] Duplicate Tags",
+    title: '[SET] Duplicate Tags',
     screen: DuplicateTagsExample,
     missingOnFabric: true,
   },
   ReducedMotionSharedExample: {
-    title: "[SET] Reduced Motion",
+    title: '[SET] Reduced Motion',
     screen: ReducedMotionSharedExample,
     missingOnFabric: true,
   },
   TransitionRestartExample: {
-    title: "[SET] Transition Restart",
+    title: '[SET] Transition Restart',
     screen: TransitionRestartExample,
     missingOnFabric: true,
   },
   ChangeThemeSharedExample: {
-    title: "[SET] Change theme",
+    title: '[SET] Change theme',
     screen: ChangeThemeSharedExample,
   },
   NestedRotationSharedExample: {
-    title: "[SET] Nested Transforms",
+    title: '[SET] Nested Transforms',
     screen: NestedRotationExample,
   },
 } as const;
