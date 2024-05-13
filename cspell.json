@@ -36,6 +36,12 @@
     "workletizes",
     "worklets"
   ],
+  "flagWords": [
+    "ere",
+    "hte",
+    "truck",
+    "trucker"
+  ],
   "ignorePaths": [
     "node_modules",
     "docs/src/components/Testimonials",
