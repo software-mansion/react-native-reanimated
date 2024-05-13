@@ -107,11 +107,9 @@ describe('Test reusing animatedStyles', () => {
 
       await wait(300);
 
-      const finalStyleFull = { height: 80, top: 0, margin: 0, ...finalStyle };
-
       // Check the distance from the top
+      const finalStyleFull = { height: 80, top: 0, margin: 0, ...finalStyle };
       const { height, margin, top } = finalStyleFull;
-
       expect(await componentOne.getAnimatedStyle('top')).toBe(top + margin, ComparisonMode.DISTANCE);
       expect(await componentTwo.getAnimatedStyle('top')).toBe(top + 3 * margin + height, ComparisonMode.DISTANCE);
       expect(await componentThree.getAnimatedStyle('top')).toBe(top + 5 * margin + 2 * height, ComparisonMode.DISTANCE);
