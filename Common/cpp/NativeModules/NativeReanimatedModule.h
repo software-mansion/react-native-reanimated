@@ -33,18 +33,20 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  public:
   NativeReanimatedModule(
       jsi::Runtime &rnRuntime,
-      const std::shared_ptr<CallInvoker> &jsInvoker,
+      const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
-      const std::string &valueUnpackerCode);
+      const std::string &valueUnpackerCode,
+      const bool isBridgeless);
 
   ~NativeReanimatedModule();
 
   jsi::Value makeShareableClone(
       jsi::Runtime &rt,
       const jsi::Value &value,
-      const jsi::Value &shouldRetainRemote) override;
+      const jsi::Value &shouldRetainRemote,
+      const jsi::Value &nativeStateSource) override;
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
   jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
@@ -70,7 +72,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   jsi::Value getViewProp(
       jsi::Runtime &rt,
+#ifdef RCT_NEW_ARCH_ENABLED
+      const jsi::Value &shadowNodeWrapper,
+#else
       const jsi::Value &viewTag,
+#endif
       const jsi::Value &propName,
       const jsi::Value &callback) override;
 
@@ -80,12 +86,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps) override;
-  jsi::Value configureLayoutAnimation(
-      jsi::Runtime &rt,
-      const jsi::Value &viewTag,
-      const jsi::Value &type,
-      const jsi::Value &sharedTransitionTag,
-      const jsi::Value &config) override;
   jsi::Value configureLayoutAnimationBatch(
       jsi::Runtime &rt,
       const jsi::Value &layoutAnimationsBatch) override;
@@ -127,9 +127,19 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &commandNameValue,
       const jsi::Value &argsValue);
 
+  jsi::String obtainProp(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &propName);
+
   jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue);
 
   void initializeFabric(const std::shared_ptr<UIManager> &uiManager);
+
+  std::string obtainPropFromShadowNode(
+      jsi::Runtime &rt,
+      const std::string &propName,
+      const ShadowNode::Shared &shadowNode);
 #endif
 
   jsi::Value registerSensor(
@@ -158,7 +168,13 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     return uiWorkletRuntime_->getJSIRuntime();
   }
 
+  inline bool isBridgeless() const {
+    return isBridgeless_;
+  }
+
  private:
+  void commonInit(const PlatformDepMethodsHolder &platformDepMethodsHolder);
+
   void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -168,6 +184,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
+  const bool isBridgeless_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;

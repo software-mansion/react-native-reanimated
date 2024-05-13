@@ -100,3 +100,8 @@ table thead tr {
   border: none;
   margin-bottom: 8px;
 }
+
+.snack-link {
+  display: inline-block;
+  margin-bottom: 25px;
+}

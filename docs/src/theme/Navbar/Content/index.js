@@ -74,7 +74,7 @@ export default function NavbarContent() {
           <div className={styles.logoWrapper}>
             <NavbarLogo />
           </div>
-          <NavbarItems items={leftItems} />
+          {!isLanding && <NavbarItems items={leftItems} />}
           {!searchBarItem && !isMobile && !isLanding && <AlgoliaSearchBar />}
           {!isMobile && isDocumentation && (
             <NavbarColorModeToggle className={styles.colorModeToggle} />

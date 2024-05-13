@@ -41,7 +41,8 @@ jsi::Function getCallGuard(jsi::Runtime &rt) {
 jsi::Value makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
-    const jsi::Value &shouldRetainRemote) {
+    const jsi::Value &shouldRetainRemote,
+    const jsi::Value &nativeStateSource) {
   std::shared_ptr<Shareable> shareable;
   if (value.isObject()) {
     auto object = value.asObject(rt);
@@ -76,10 +77,11 @@ jsi::Value makeShareableClone(
           std::make_shared<ShareableHostObject>(rt, object.getHostObject(rt));
     } else {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
-        shareable =
-            std::make_shared<RetainingShareable<ShareableObject>>(rt, object);
+        shareable = std::make_shared<RetainingShareable<ShareableObject>>(
+            rt, object, nativeStateSource);
       } else {
-        shareable = std::make_shared<ShareableObject>(rt, object);
+        shareable =
+            std::make_shared<ShareableObject>(rt, object, nativeStateSource);
       }
     }
   } else if (value.isString()) {
@@ -92,10 +94,8 @@ jsi::Value makeShareableClone(
     shareable = std::make_shared<ShareableScalar>(value.getBool());
   } else if (value.isNumber()) {
     shareable = std::make_shared<ShareableScalar>(value.getNumber());
-#if REACT_NATIVE_MINOR_VERSION >= 71
   } else if (value.isBigInt()) {
     shareable = std::make_shared<ShareableBigInt>(rt, value.getBigInt(rt));
-#endif
   } else if (value.isSymbol()) {
     // TODO: this is only a placeholder implementation, here we replace symbols
     // with strings in order to make certain objects to be captured. There isn't
@@ -198,6 +198,20 @@ ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
     auto value = extractShareableOrThrow(rt, object.getProperty(rt, key));
     data_.emplace_back(key.utf8(rt), value);
   }
+  if (object.hasNativeState(rt)) {
+    nativeState_ = object.getNativeState(rt);
+  }
+}
+
+ShareableObject::ShareableObject(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const jsi::Value &nativeStateSource)
+    : ShareableObject(rt, object) {
+  if (nativeStateSource.isObject() &&
+      nativeStateSource.asObject(rt).hasNativeState(rt)) {
+    nativeState_ = nativeStateSource.asObject(rt).getNativeState(rt);
+  }
 }
 
 jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
@@ -205,6 +219,9 @@ jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
   for (size_t i = 0, size = data_.size(); i < size; i++) {
     obj.setProperty(
         rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
+  }
+  if (nativeState_ != nullptr) {
+    obj.setNativeState(rt, nativeState_);
   }
   return obj;
 }
@@ -238,7 +255,8 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
     return getValueUnpacker(rt).call(
         rt,
         ShareableJSRef::newHostObject(rt, shared_from_this()),
-        jsi::String::createFromAscii(rt, "RemoteFunction"));
+        jsi::String::createFromAscii(rt, "RemoteFunction"),
+        jsi::String::createFromUtf8(rt, name_));
 #else
     return ShareableJSRef::newHostObject(rt, shared_from_this());
 #endif
@@ -271,13 +289,11 @@ jsi::Value ShareableString::toJSValue(jsi::Runtime &rt) {
   return jsi::String::createFromUtf8(rt, data_);
 }
 
-#if REACT_NATIVE_MINOR_VERSION >= 71
 jsi::Value ShareableBigInt::toJSValue(jsi::Runtime &rt) {
   return rt.global()
       .getPropertyAsFunction(rt, "BigInt")
       .call(rt, jsi::String::createFromUtf8(rt, string_));
 }
-#endif
 
 jsi::Value ShareableScalar::toJSValue(jsi::Runtime &) {
   switch (valueType_) {

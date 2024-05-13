@@ -39,6 +39,10 @@ import { EXAMPLES } from './examples';
 import React from 'react';
 import { useReducedMotion } from 'react-native-reanimated';
 
+function isFabric(): boolean {
+  return !!(global as Record<string, unknown>)._IS_FABRIC;
+}
+
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
   Home: undefined;
 };
@@ -63,23 +67,27 @@ function findExamples(search: string) {
 }
 
 function HomeScreen({ navigation }: HomeScreenProps) {
+  // TODO: Currently it breaks on @react-navigation
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [search, setSearch] = React.useState('');
+  const [wasClicked, setWasClicked] = React.useState<string[]>([]);
 
   React.useLayoutEffect(() => {
-    navigation.setOptions({
-      headerSearchBarOptions: {
-        onChangeText: (event) => {
-          setSearch(event.nativeEvent.text);
-        },
-        onSearchButtonPress: (event) => {
-          const results = findExamples(event.nativeEvent.text);
-          if (results.length >= 1) {
-            navigation.navigate(results[0]);
-          }
-        },
-      },
-      headerTransparent: false,
-    });
+    // TODO: Currently it breaks on @react-navigation
+    // navigation.setOptions({
+    //   headerSearchBarOptions: {
+    //     onChangeText: (event) => {
+    //       setSearch(event.nativeEvent.text);
+    //     },
+    //     onSearchButtonPress: (event) => {
+    //       const results = findExamples(event.nativeEvent.text);
+    //       if (results.length >= 1) {
+    //         navigation.navigate(results[0]);
+    //       }
+    //     },
+    //   },
+    //   headerTransparent: false,
+    // });
   }, [navigation]);
 
   return (
@@ -90,7 +98,14 @@ function HomeScreen({ navigation }: HomeScreenProps) {
         <Item
           icon={EXAMPLES[name].icon}
           title={EXAMPLES[name].title}
-          onPress={() => navigation.navigate(name)}
+          onPress={() => {
+            navigation.navigate(name);
+            if (!wasClicked.includes(name)) {
+              setTimeout(() => setWasClicked([...wasClicked, name]), 500);
+            }
+          }}
+          missingOnFabric={EXAMPLES[name].missingOnFabric}
+          wasClicked={wasClicked.includes(name)}
         />
       )}
       renderScrollComponent={(props) => <ScrollView {...props} />}
@@ -104,23 +119,31 @@ interface ItemProps {
   icon?: string;
   title: string;
   onPress: () => void;
+  missingOnFabric?: boolean;
+  wasClicked?: boolean;
 }
 
-function Item({ icon, title, onPress }: ItemProps) {
-  if (Platform.OS === 'macos') {
-    return (
-      <Pressable style={styles.button} onPress={onPress}>
-        {icon && <Text style={styles.title}>{icon + '  '}</Text>}
-        <Text style={styles.title}>{title}</Text>
-      </Pressable>
-    );
-  }
-
+function Item({
+  icon,
+  title,
+  onPress,
+  missingOnFabric,
+  wasClicked,
+}: ItemProps) {
+  const isDisabled = missingOnFabric && isFabric();
+  const Button = Platform.OS === 'macos' ? Pressable : RectButton;
   return (
-    <RectButton style={styles.button} onPress={onPress}>
+    <Button
+      style={[
+        styles.button,
+        isDisabled && styles.disabledButton,
+        wasClicked && styles.visitedItem,
+      ]}
+      onPress={onPress}
+      enabled={!isDisabled}>
       {icon && <Text style={styles.title}>{icon + '  '}</Text>}
       <Text style={styles.title}>{title}</Text>
-    </RectButton>
+    </Button>
   );
 }
 
@@ -261,8 +284,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'white',
   },
+  disabledButton: {
+    backgroundColor: 'grey',
+    opacity: 0.5,
+  },
   title: {
     fontSize: 16,
     color: 'black',
+  },
+  visitedItem: {
+    backgroundColor: '#e6f0f7',
   },
 });
