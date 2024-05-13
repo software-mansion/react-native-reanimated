@@ -277,7 +277,14 @@ public class SharedTransitionManager {
         continue;
       }
 
-      View siblingView = reanimatedNativeHierarchyManager.resolveView(targetViewTag);
+      View siblingView = null;
+      try {
+        siblingView = reanimatedNativeHierarchyManager.resolveView(targetViewTag);
+      } catch (IllegalViewOperationException e){
+        // TODO: figure out why this happens
+        continue;
+      }
+
       siblingView = tabNavigatorWorkaround(sharedView, siblingView);
 
       View viewSource, viewTarget;
@@ -359,7 +366,7 @@ public class SharedTransitionManager {
       }
       Snapshot targetViewSnapshot = mSnapshotRegistry.get(viewTarget.getId());
       if (targetViewSnapshot == null) {
-        continue;
+        makeSnapshot(viewTarget);
       }
 
       newTransitionViews.add(viewSource);
