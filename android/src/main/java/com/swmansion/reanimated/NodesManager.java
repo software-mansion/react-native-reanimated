@@ -369,9 +369,11 @@ public class NodesManager implements EventDispatcherListener {
      */
     try {
       View view = mUIManager.resolveView(viewTag);
-      if (view == null) return;
-    } catch (IllegalViewOperationException e) {
+      if (view == null) {
         return;
+      }
+    } catch (IllegalViewOperationException e) {
+      return;
     }
 
     // TODO: update PropsNode to use this method instead of its own way of updating props
