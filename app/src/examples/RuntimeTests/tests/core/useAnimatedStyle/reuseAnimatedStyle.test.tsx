@@ -50,7 +50,7 @@ describe('Test reusing animatedStyles', () => {
       if (!animate) {
         toggle.value = false;
       } else {
-        svStyle.value = withTiming(finalStyle, { duration: 900 });
+        svStyle.value = withTiming(finalStyle, { duration: 300 });
       }
     });
 
@@ -105,22 +105,16 @@ describe('Test reusing animatedStyles', () => {
       const componentTwo = getTestComponent(COMPONENT_REF.TWO);
       const componentThree = getTestComponent(COMPONENT_REF.THREE);
 
-      await wait(1000);
+      await wait(300);
+
+      const finalStyleFull = { height: 80, top: 0, margin: 0, ...finalStyle };
 
       // Check the distance from the top
-      const componentHeight = 'height' in finalStyle ? (finalStyle.height as number) : 80;
-      const componentMargin = 'margin' in finalStyle ? (finalStyle.margin as number) : 0;
-      const componentTop = 'top' in finalStyle ? (finalStyle.top as number) : 0;
+      const { height, margin, top } = finalStyleFull;
 
-      expect(await componentOne.getAnimatedStyle('top')).toBe(componentTop + componentMargin, ComparisonMode.DISTANCE);
-      expect(await componentTwo.getAnimatedStyle('top')).toBe(
-        componentTop + 3 * componentMargin + componentHeight,
-        ComparisonMode.DISTANCE,
-      );
-      expect(await componentThree.getAnimatedStyle('top')).toBe(
-        componentTop + 5 * componentMargin + 2 * componentHeight,
-        ComparisonMode.DISTANCE,
-      );
+      expect(await componentOne.getAnimatedStyle('top')).toBe(top + margin, ComparisonMode.DISTANCE);
+      expect(await componentTwo.getAnimatedStyle('top')).toBe(top + 3 * margin + height, ComparisonMode.DISTANCE);
+      expect(await componentThree.getAnimatedStyle('top')).toBe(top + 5 * margin + 2 * height, ComparisonMode.DISTANCE);
 
       // Check the remaining props
       for (let key of ['width', 'height', 'left', 'opacity', 'backgroundColor'] as const) {

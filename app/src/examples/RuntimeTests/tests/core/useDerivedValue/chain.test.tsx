@@ -104,7 +104,7 @@ const ChainComponent = () => {
   });
 
   useEffect(() => {
-    basicValue.value = withTiming(100, { duration: 4500 });
+    basicValue.value = withTiming(100, { duration: 900 });
   }, [basicValue]);
 
   const componentRef0 = useTestRef(COMPONENT_REF_ARRAY[0]);
@@ -134,16 +134,18 @@ const ChainComponent = () => {
   );
 };
 
-describe.only('Test chained useDerivedValue', () => {
+describe('Test chained useDerivedValue', () => {
   test('Test chain of 10 components', async () => {
     await render(<ChainComponent />);
-    await wait(5000);
+    await wait(1000);
     const components = COMPONENT_REF_ARRAY.map(refString => getTestComponent(refString));
 
-    const expectedValues = Array.from(Array(10).keys()).map(idx => {
-      return allDerivedFunctions
-        .slice(0, idx + 1)
-        .reduce((accumulator, currentValue) => currentValue(accumulator), 100);
+    const expectedValues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(idx => {
+      const functionsToApply = allDerivedFunctions.slice(0, idx + 1);
+      return functionsToApply.reduce(
+        (currentValOfFunctionComposition, currentFunction) => currentFunction(currentValOfFunctionComposition),
+        100,
+      );
     });
 
     for (let i = 0; i < 10; i++) {
