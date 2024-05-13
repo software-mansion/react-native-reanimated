@@ -30,6 +30,12 @@ jobs:
       - name: Create directories
         run: mkdir -p monorepo/packages
 
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Set Yarn1
+        run: corepack prepare yarn@1.22.19
+
       - name: Setup monorepo
         working-directory: monorepo
         run: |
