@@ -2,11 +2,11 @@ package com.swmansion.reanimated;
 
 public class DevMenuUtils {
 
-    private void addDevMenuOption(ReactApplicationContext context, , DevOptionHandler handler) {
+    private void addDevMenuOption(ReactApplicationContext context, DevOptionHandler handler) {
     // In Expo, `ApplicationContext` is not an instance of `ReactApplication`
-    if (context.get().getApplicationContext() instanceof ReactApplication) {
+    if (context.getApplicationContext() instanceof ReactApplication) {
       final DevSupportManager devSupportManager =
-          ((ReactApplication) context.get().getApplicationContext())
+          ((ReactApplication) context.getApplicationContext())
               .getReactNativeHost()
               .getReactInstanceManager()
               .getDevSupportManager();
