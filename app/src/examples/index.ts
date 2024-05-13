@@ -123,6 +123,7 @@ import HabitsExample from './LayoutAnimations/HabitsExample';
 import MemoExample from './MemoExample';
 import PerformanceMonitorExample from './PerfomanceMonitorExample';
 import ScreenTransitionExample from './ScreenTransitionExample';
+import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
 import FreezingShareablesExample from './ShareableFreezingExample';
 
 interface Example {
@@ -707,16 +708,6 @@ export const EXAMPLES: Record<string, Example> = {
 
   // Shared Element Transitions
 
-  CardExample: {
-    title: '[SET] Card',
-    screen: CardExample,
-    missingOnFabric: true,
-  },
-  CustomTransitionExample: {
-    title: '[SET] Custom transition',
-    screen: CustomTransitionExample,
-    missingOnFabric: true,
-  },
   LayoutAnimationExample: {
     title: '[SET] Layout Animation',
     screen: LayoutAnimationExample,
@@ -780,12 +771,8 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[SET] Nested Transforms',
     screen: NestedRotationExample,
   },
-  ChangeThemeSharedExample: {
-    title: '[SET] Change theme',
-    screen: ChangeThemeSharedExample,
-  },
-  NestedRotationSharedExample: {
-    title: '[SET] Nested Transforms',
-    screen: NestedRotationExample,
+  BorderRadiiExample: {
+    title: '[SET] Border Radii',
+    screen: BorderRadiiExample,
   },
 } as const;

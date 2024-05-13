@@ -1,0 +1,72 @@
+.hireUsSectionWrapper {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;
+  width: 60%;
+  margin: 16rem auto 12rem auto;
+  padding-bottom: 2rem;
+}
+@media (max-width: 1440px) {
+  .hireUsSectionWrapper {
+    width: 75%;
+  }
+}
+
+@media (max-width: 768px) {
+  .hireUsSectionWrapper {
+    width: 80%;
+    gap: 1.5rem;
+  }
+  .hireUsTitleContainer h2 {
+    font-size: 42px !important;
+  }
+  .hireUsSectionBody {
+    font-size: 20px !important;
+  }
+}
+
+.hireUsTitleContainer {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.hireUsTitleContainer h2 {
+  text-align: center;
+  font-size: 64px;
+  font-weight: 500;
+}
+
+.hireUsSectionBody {
+  font-size: 24px;
+  text-align: center;
+  text-wrap: balance;
+  font-weight: 400;
+}
+
+.buttonNavyStyling {
+  background-color: var(--swm-navy-light-100);
+  padding: 20px 50px;
+  color: var(--swm-off-white);
+}
+
+.buttonNavyStyling svg {
+  stroke: var(--swm-off-white);
+}
+
+.buttonNavyStyling:hover {
+  background-color: transparent;
+  color: var(--swm-navy-light-100);
+}
+
+.buttonNavyStyling:hover svg {
+  stroke: var(--swm-navy-light-100);
+}
+
+.buttonNavyBorderStyling {
+  border: 1px solid var(--swm-navy-light-100);
+}

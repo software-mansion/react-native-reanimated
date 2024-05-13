@@ -560,8 +560,10 @@ public class SharedTransitionManager {
       }
       Snapshot viewSourcePreviousSnapshot = mSnapshotRegistry.get(viewTag);
       if (viewSourcePreviousSnapshot != null) {
+        int originX = viewSourcePreviousSnapshot.originX;
         int originY = viewSourcePreviousSnapshot.originY;
         if (findStack(view) == null) {
+          viewSourcePreviousSnapshot.originX = viewSourcePreviousSnapshot.originXByParent;
           viewSourcePreviousSnapshot.originY = viewSourcePreviousSnapshot.originYByParent;
         }
         Map<String, Object> snapshotMap = viewSourcePreviousSnapshot.toBasicMap();
@@ -577,6 +579,7 @@ public class SharedTransitionManager {
           }
         }
         mAnimationsManager.progressLayoutAnimation(viewTag, preparedValues, true);
+        viewSourcePreviousSnapshot.originX = originX;
         viewSourcePreviousSnapshot.originY = originY;
       }
       if (mViewTagsToHide.contains(tag)) {
