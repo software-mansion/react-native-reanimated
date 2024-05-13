@@ -61,6 +61,7 @@ const PINWHEEL_ENTERING = [PinwheelIn];
 const ROTATE_ENTERING = [RotateInDownLeft, RotateInDownRight, RotateInUpLeft, RotateInUpRight];
 const SLIDE_ENTERING = [SlideInRight, SlideInLeft, SlideInUp, SlideInDown];
 const STRETCH_ENTERING = [StretchInX, StretchInY];
+
 const ZOOM_ENTERING = [
   ZoomIn,
   ZoomInDown,
@@ -72,17 +73,18 @@ const ZOOM_ENTERING = [
   ZoomInUp,
 ];
 
-const ENTERING_SETS = [
-  ['Fade', FADE_ENTERING],
-  ['Bounce', BOUNCE_ENTERING],
-  ['Flip', FLIP_ENTERING],
-  ['LightSpeed', LIGHTSPEED_ENTERING],
-  ['Pinwheel', PINWHEEL_ENTERING],
-  ['Rotate', ROTATE_ENTERING],
-  ['Slide', SLIDE_ENTERING],
-  ['Stretch', STRETCH_ENTERING],
-  ['Zoom', ZOOM_ENTERING],
+const ENTERING_SETS: Array<[string, unknown[], number]> = [
+  ['Fade', FADE_ENTERING, 1350],
+  ['Bounce', BOUNCE_ENTERING, 650],
+  ['Flip', FLIP_ENTERING, 1750],
+  ['LightSpeed', LIGHTSPEED_ENTERING, 1600],
+  ['Pinwheel', PINWHEEL_ENTERING, 1000],
+  ['Rotate', ROTATE_ENTERING, 1400],
+  ['Slide', SLIDE_ENTERING, 1800],
+  ['Stretch', STRETCH_ENTERING, 1000],
+  ['Zoom', ZOOM_ENTERING, 1800],
 ];
+
 const EnteringOnMountComponent = ({ entering, duration }: { entering: any; duration?: number }) => {
   const enteringAnimation = duration ? entering.duration(duration) : entering;
   return (
@@ -92,14 +94,14 @@ const EnteringOnMountComponent = ({ entering, duration }: { entering: any; durat
   );
 };
 
-async function getSnapshotUpdates(entering: any, duration?: number, springify = false) {
+async function getSnapshotUpdates(entering: any, waitTime: number, duration: number | undefined, springify = false) {
   await mockAnimationTimer();
 
   const updatesContainer = await recordAnimationUpdates();
   const componentEntering = springify ? entering : entering.springify();
   await render(<EnteringOnMountComponent entering={componentEntering} duration={duration} />);
 
-  await wait(1000 + (duration || 2000));
+  await wait(waitTime);
   const updates = updatesContainer.getUpdates();
 
   await unmockAnimationTimer();
@@ -108,42 +110,43 @@ async function getSnapshotUpdates(entering: any, duration?: number, springify = 
   return updates;
 }
 
-describe.only('Test predefined entering', () => {
+describe('Test predefined entering', () => {
   describe('Entering on mount, no modifiers', async () => {
-    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet]) => {
+    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet, waitTime]) => {
       for (const entering of enteringSet) {
         const snapshotName = (entering as any).name;
-        const updates = await getSnapshotUpdates(entering, undefined);
+        const updates = await getSnapshotUpdates(entering, waitTime, undefined);
         expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
       }
     });
   });
 
   describe('Entering on mount, duration 100', async () => {
-    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet]) => {
+    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet, _waitTime]) => {
       for (const entering of enteringSet) {
         const snapshotName = (entering as any).name + '_100';
-        const updates = await getSnapshotUpdates(entering, 100);
+        const updates = await getSnapshotUpdates(entering, 100, 100);
         expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
       }
     });
   });
 
-  describe('Entering on mount, springify', async () => {
-    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet]) => {
+  describe.only('Entering on mount, springify', async () => {
+    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet, waitTime]) => {
+      const timeToWait = _setName === 'Bounce' ? 650 : waitTime * 0.3;
       for (const entering of enteringSet) {
         const snapshotName = (entering as any).name + '_springify';
-        const updates = await getSnapshotUpdates(entering, undefined, true);
+        const updates = await getSnapshotUpdates(entering, timeToWait, undefined, true);
         expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
       }
     });
   });
 
   describe('Entering on mount, springify, duration 100', async () => {
-    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet]) => {
+    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet, _waitTime]) => {
       for (const entering of enteringSet) {
         const snapshotName = (entering as any).name + '_springify_100';
-        const updates = await getSnapshotUpdates(entering, 100, true);
+        const updates = await getSnapshotUpdates(entering, 100, 100, true);
         expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
       }
     });
