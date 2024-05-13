@@ -4,10 +4,9 @@ title: Contributing
 sidebar_label: Contributing
 ---
 
-Thank you for your interest in contributing to Reanimated. 
+// TODO: Linki przy wszystkich legacy do contributing guide
 
-
-
+Thank you for your interest in contributing to Reanimated. From commenting on and traiging issues, through extending the documentation, to reviewing in sending Pull Requests, all contributions are more then welcome. 
 
 ## Ways to Contribute
 
@@ -25,6 +24,21 @@ Thank you for your interest in contributing to Reanimated.
 
 ### Repository overview 
 
+- `android` &ndash; source code of Android native implementation
+- `app` &ndash; shared source code of Example app
+- `apple` &ndash; source code of iOS native implementation
+- `Common` &ndash; shared C++ code
+- `docs` &ndash; documentation described further in [docs section](#helping-with-documentation)
+- `eslintPlugin` &ndash; source of of eslint plugin
+- `Example` &ndash; paper version of React Native mobile app wrapper for shared example code
+- `FabricExample` &ndash; fabric version of React Native mobile app wrapper for shared example code
+- `MacOSExample` &ndash; React Native MacOS app wrapper for shared example code
+- `NextExample` &ndash; // TODO: ??
+- `plugin` &ndash; source code of a babel plugin
+- `scripts` &ndash; pipeline scripts // TODO: ??
+- `src` &ndash; reanimated source code
+- `TVOSExample` &ndash; React Native for TVOS app wrapper for shared example code
+- `WebExample` &ndash; React Native for Web app wrapper for shared example code
 
 
 ## Handling open issues 
@@ -32,7 +46,6 @@ Thank you for your interest in contributing to Reanimated.
 ## Helping with documentation 
 
 One of many ways you can contribute to this project is by extending documentation. We try to keep it up to date, but there is still plenty room for improvement. It is also important to update the docs whenever you introduce changes to the API or you discover any inconsistency in current API or behavior. This is also one of the simplest way to contribute, as some of our docs are still in v2 format, so you can help us convert them to Reanimated 3 page structure.
-
 
 The Reanimated documentation is hosted using docusaurus and GitHub Pages. The easiest way to start adding your changes it by clicking "Edit this page" at the bottom of each page.
 
@@ -62,13 +75,13 @@ Here you can find the most important parts of the `react-native-reanimated/docs`
 
 It is important to keep the page structure consistant, this help developers easly navigate and quickly find what they are looking for. In the v3 of documentation, we assume given structure:
 
-1. `Introduction` - short introduction what given feature does.
-2. `Reference` - simplest possible usage showcase and type definitions, make sure that example code runs when someone copies it to quickly prototype.
-3. `Arguments` - details about the arguments that given method accepts.
-4. `Returns` - details of retunred values.
-5. `Example` - video, gif or interacive demo with source code. It is good practice to provide resoruces in both light and dark mode. 
-6. `Remarks` - make sure to highlight everything that might not be obvious i.e. platform specififc quirks, compatibility issues, additional setup required. 
-7. `Platform compatibility` - information about platforms that given feature supports.
+1. **Introduction** &ndash; short introduction what given feature does.
+2. **Reference** &ndash; simplest possible usage showcase and type definitions, make sure that example code runs when someone copies it to quickly prototype.
+3. **Arguments** &ndash; details about the arguments that given method accepts.
+4. **Returns** &ndash; details of retunred values.
+5. **Example** &ndash; video, gif or interacive demo with source code. It is good practice to provide resoruces in both light and dark mode. 
+6. **Remarks** &ndash; make sure to highlight everything that might not be obvious i.e. platform specififc quirks, compatibility issues, additional setup required. 
+7. **Platform compatibility** &ndash; information about platforms that given feature supports.
 
 The structure may vary depending on given feature. If the one above doesn't seem to be good fit for you, try to find similar feature and see how it is documented. 
 
@@ -109,14 +122,34 @@ import DecayTrainSrc from '!!raw-loader!@site/src/examples/DecayTrain';
 />
 ```
 
-## Reviewing pull requests 
+## Reviewing Pull Requests 
 
-## Fixing bugs 
+## Contributing to Code
 
-## Additional materials 
+Posting Pull Requests to the issues is great way to contribute to Reanimated. If you eager to start contributing right away, we have list of good first issues (// TODO: Add) that contain bugs which have limited scope. In this section we'll describe in more details how to play around with Reanimated setup. 
 
-### How to Open a Pull Request
+:::caution
 
+Make sure that you have [React Native setup](https://reactnative.dev/docs/environment-setup)  properly and you got familiar with [How to Open a Pull Request](https://reactnative.dev/contributing/how-to-open-a-pull-request) before reading this section further. 
+
+:::
+
+When workin on an issue the most important destinations will be:
+
+- `src/reanimated2` &ndash; containing source code related to JS part of Reanimated features
+- `android/src/main/java/com/swmansion/reanimated` &ndash; containing source code related to Android native part of Reanimated features
+- `apple` &ndash; containing source code related to iOS native part of Reanimated features
+
+Our workflow usually starts from editing `app/src/examples/EmptyExample.tsx` with testing example for our new feature or a bug. This is the part that we often attach to PR so other developers can test the same usecase. Next we run the `Example` (or `FabricExample` depending on the architecture) app and start development. 
+
+### Working on Android
+
+
+
+
+### Working on iOS
+
+### Testing changes in your project
 
 
 See you on GitHub! 🎉
