@@ -129,26 +129,25 @@ ProgressLayoutAnimationFunction progressLayoutAnimation =
     if (!surfaceId){
       return;
     }
-    
-    uiManager_->getShadowTreeRegistry().enumerate(
-      [surfaceId](const ShadowTree &shadowTree, bool &stop) {
-        if (shadowTree.getSurfaceId() == surfaceId){
+    uiManager_->getShadowTreeRegistry().visit(*surfaceId,
+      [](const ShadowTree &shadowTree) {
           shadowTree.notifyDelegatesOfUpdates();
-          stop = true;
-        }
-      });
+      }
+    );
   };
   
 EndLayoutAnimationFunction endLayoutAnimation =
   [this](int tag, bool shouldRemove) {
     auto surfaceId = layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
-    uiManager_->getShadowTreeRegistry().enumerate(
-      [surfaceId](const ShadowTree &shadowTree, bool &stop) {
-        if (shadowTree.getSurfaceId() == surfaceId){
+    if (!surfaceId){
+      return;
+    }
+    
+    uiManager_->getShadowTreeRegistry().visit(*surfaceId,
+      [](const ShadowTree &shadowTree) {
           shadowTree.notifyDelegatesOfUpdates();
-          stop = true;
-        }
-      });
+      }
+    );
   };
         
 

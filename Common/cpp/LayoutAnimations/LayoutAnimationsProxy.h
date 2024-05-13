@@ -27,7 +27,6 @@ struct LayoutAnimation {
 struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   mutable std::unordered_map<Tag, std::shared_ptr<Node>> nodeForTag;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
-  mutable std::unordered_map<Tag, std::shared_ptr<std::unordered_set<int>>> indices;
   mutable std::unordered_set<Tag> animatedTags;
   mutable std::recursive_mutex mutex;
   mutable std::unordered_set<Tag> bannedTags;
@@ -51,9 +50,6 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   void addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList& mutations) const;
   
   void updateIndexForMutation(ShadowViewMutation &mutation) const;
-  void updateIndices(ShadowViewMutation &mutation) const;
-  void takeIndex(Tag parentTag, int index) const;
-  void dropIndex(Tag parentTag, int index) const;
   
   void removeRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList& mutations) const;
   bool startAnimationsRecursively(std::shared_ptr<MutationNode> node, bool shouldRemoveSubviewsWithoutAnimations, bool shouldAnimate, ShadowViewMutationList& mutations) const;
