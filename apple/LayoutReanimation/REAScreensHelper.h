@@ -5,6 +5,7 @@
 #if LOAD_SCREENS_HEADERS
 #import <RNScreens/RNSScreen.h>
 #import <RNScreens/RNSScreenStack.h>
+#import <RNScreens/RNSScreenNavigationContainer.h>
 #endif
 
 #import <RNReanimated/REAUIKit.h>

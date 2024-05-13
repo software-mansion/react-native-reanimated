@@ -1,5 +1,4 @@
 #import <RNReanimated/REAScreensHelper.h>
-#import <RNScreens/RNSScreenNavigationContainer.h>
 
 @implementation REAScreensHelper
 
