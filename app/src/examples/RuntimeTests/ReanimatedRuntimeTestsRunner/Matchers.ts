@@ -45,6 +45,26 @@ export class Matchers {
     };
   };
 
+  private _toBeWithinRangeMatcher: MatcherFunction = (
+    currentValue: TestValue,
+    minimumValue: unknown,
+    maximumValue: unknown,
+  ) => {
+    const currentValueAsNumber = Number(Number(currentValue));
+    const validInputTypes = typeof minimumValue === 'number' && typeof maximumValue === 'number';
+    const isWithinRange = Number(minimumValue) <= currentValueAsNumber && currentValueAsNumber <= Number(maximumValue);
+
+    const coloredExpected = color(`[${minimumValue}, ${maximumValue}]`, 'green');
+    const coloredReceived = color(currentValue, 'red');
+
+    return {
+      pass: isWithinRange && validInputTypes,
+      message: `Expected the value ${
+        this._negation ? ' NOT' : ''
+      }to be in range ${coloredExpected} received ${coloredReceived}`,
+    };
+  };
+
   private _toBeCalledMatcher: MatcherFunction = (currentValue: TestValue, times = 1) => {
     Matchers._assertValueIsCallTracker(currentValue);
     const callsCount = currentValue.onUI + currentValue.onJS;
@@ -101,6 +121,7 @@ export class Matchers {
   }
 
   public toBe = this.decorateMatcher(this._toBeMatcher);
+  public toBeWithinRange = this.decorateMatcher(this._toBeWithinRangeMatcher);
   public toBeCalled = this.decorateMatcher(this._toBeCalledMatcher);
   public toBeCalledUI = this.decorateMatcher(this._toBeCalledUIMatcher);
   public toBeCalledJS = this.decorateMatcher(this._toBeCalledJSMatcher);

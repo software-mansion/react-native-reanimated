@@ -22,7 +22,7 @@ export const describe: {
       testRunner.describe(name, buildSuite, DescribeDecorator.SKIP);
     },
     only: (name: string, buildSuite: () => void) => {
-      testRunner.describe(name, buildSuite, DescribeDecorator.SKIP);
+      testRunner.describe(name, buildSuite, DescribeDecorator.ONLY);
     },
   },
 );
@@ -65,7 +65,7 @@ export const test: {
       },
       {
         each: <T>(examples: Array<T>) => {
-          return testRunner.testEach(examples, null);
+          return testRunner.testEach(examples, TestDecorator.ONLY);
         },
       },
     ),

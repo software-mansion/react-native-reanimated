@@ -14,6 +14,8 @@ import './tests/animations/withSpring/variousConfig.test';
 
 import './tests/layoutAnimations/entering/enteringColors.test';
 
+import './tests/core/cancelAnimation.test';
+
 import './tests/utilities/relativeCoords.test';
 
 export default function RuntimeTestsExample() {
