@@ -53,6 +53,7 @@ public class NodesManager implements EventDispatcherListener {
 
   private Long mFirstUptime = SystemClock.uptimeMillis();
   private boolean mSlowAnimationsEnabled = false;
+  private long mAnimationsDragFactor;
 
   public void scrollTo(int viewTag, double x, double y, boolean animated) {
     View view;
@@ -273,9 +274,8 @@ public class NodesManager implements EventDispatcherListener {
 
     double currentFrameTimeMs = frameTimeNanos / 1000000.;
     if (mSlowAnimationsEnabled) {
-      final long ANIMATIONS_DRAG_FACTOR = 10;
       currentFrameTimeMs =
-          mFirstUptime + (currentFrameTimeMs - mFirstUptime) / ANIMATIONS_DRAG_FACTOR;
+          mFirstUptime + (currentFrameTimeMs - mFirstUptime) / mAnimationsDragFactor;
     }
 
     if (currentFrameTimeMs > lastFrameTimeMs) {
@@ -517,8 +517,9 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
-  public void setSlowAnimations(boolean slowAnimationsEnabled) {
+  public void setSlowAnimations(boolean slowAnimationsEnabled, long animationsDragFactor) {
     mSlowAnimationsEnabled = slowAnimationsEnabled;
+    mAnimationsDragFactor = animationsDragFactor;
     if (slowAnimationsEnabled) {
       mFirstUptime = SystemClock.uptimeMillis();
     }

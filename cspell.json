@@ -13,6 +13,7 @@
     "devs",
     "devs",
     "easings",
+    "gesturehandler",
     "inout",
     "ispreview",
     "layoutable",
@@ -36,8 +37,7 @@
     "workletize",
     "workletized",
     "workletizes",
-    "worklets",
-    "gesturehandler"
+    "worklets"
   ],
   "flagWords": [
     "ere",
