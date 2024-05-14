@@ -52,7 +52,7 @@ interface ReanimatedFlatListPropsWithLayout<T>
    */
   skipEnteringExitingAnimations?: boolean;
   /**
-   * CellRendererComponent is not supported in Animated.FlatList
+   * Property `CellRendererComponent` is not supported in `Animated.FlatList`.
    */
   CellRendererComponent?: never;
 }
