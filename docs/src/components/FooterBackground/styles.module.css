@@ -1,18 +1,3 @@
-footer {
-  position: relative;
-}
-
-.footerLanding {
-  --ifm-footer-background-color: transparent;
-  --ifm-footer-padding-horizontal: 0;
-}
-
-@media (min-width: 996px) and (max-width: 1280px) {
-  .footerLanding [class*='footer__copyright'] {
-    padding: 0 2rem;
-  }
-}
-
 .sponsorsBackground {
   position: absolute;
   bottom: 0;
@@ -92,5 +77,47 @@ footer {
 
   100% {
     opacity: 1;
+  }
+}
+
+.starsContainer {
+  position: relative;
+  margin-top: 106px;
+}
+
+[class*='footerLanding'] {
+  margin-top: -106px;
+}
+
+@media (max-width: 996px) {
+  .starsContainer {
+    position: relative;
+    margin-top: 120px;
+  }
+
+  [class*='footerLanding'] {
+    margin-top: -120px;
+  }
+}
+
+@media (max-width: 700px) {
+  .starsContainer {
+    position: relative;
+    margin-top: 146px;
+  }
+
+  [class*='footerLanding'] {
+    margin-top: -146px;
+  }
+}
+
+@media (max-width: 375px) {
+  .starsContainer {
+    position: relative;
+    margin-top: 172px;
+  }
+
+  [class*='footerLanding'] {
+    margin-top: -172px;
   }
 }
