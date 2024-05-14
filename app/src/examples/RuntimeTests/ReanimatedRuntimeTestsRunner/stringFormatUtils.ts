@@ -51,12 +51,16 @@ export function applyMarkdown(template: string) {
 
 export function formatString(template: string, variableObject: unknown, index: number) {
   const valueToString: (arg0: unknown) => string = (value: unknown) => {
+    if (value instanceof Error) {
+      return `**${value.name}** "${value.message}"`;
+    }
     if (typeof value === 'object') {
       return JSON.stringify(value);
     }
     if (typeof value === 'function') {
       return value.name;
     }
+
     return value?.toString() || '';
   };
   let testName = template;

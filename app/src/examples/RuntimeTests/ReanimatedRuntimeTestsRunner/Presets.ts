@@ -220,7 +220,7 @@ export const Presets = {
   symbols: SYMBOLS,
   regexps: REGEXPS,
   dates: DATES,
-  serializableObjects: [...OBJECTS, ...EMPTIES],
+  serializableObjects: [...OBJECTS, ...EMPTIES, ...REGEXPS],
   objects: [...OBJECTS, ...MAPS, ...SETS, ...EMPTIES, ...FANCY_OBJECTS],
   serializableArrays: [...NUMERICAL_ARRAYS, ...VARIOUS_TYPE_ARRAYS],
   arrays: [...INT_ARRAYS, ...UINT_ARRAYS, ...FLOAT_ARRAYS, ...NUMERICAL_ARRAYS, ...BUFFER_ARRAYS],

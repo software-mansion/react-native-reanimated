@@ -6,6 +6,7 @@ import {
   describe,
   test,
   expect,
+  wait,
   render,
   registerValue,
   getRegisteredValue,
@@ -31,7 +32,7 @@ const ProgressBar = ({ progress }: { progress: number }) => {
   );
 };
 
-describe('Tests of sharedValue', () => {
+describe.only('Tests of *****sharedValue*****', () => {
   describe('Test setting different values as sharedValue', () => {
     const SharedValueComponent = ({ initialValue, progress }: { initialValue: unknown; progress: number }) => {
       const sharedValue = useSharedValue(initialValue);
@@ -42,10 +43,11 @@ describe('Tests of sharedValue', () => {
       { presetName: 'numbers', comparisonMode: ComparisonMode.NUMBER },
       { presetName: 'bigInts', comparisonMode: ComparisonMode.NUMBER },
       { presetName: 'serializableArrays', comparisonMode: ComparisonMode.ARRAY },
+      { presetName: 'arrays', comparisonMode: ComparisonMode.OBJECT },
       { presetName: 'strings', comparisonMode: ComparisonMode.STRING },
       { presetName: 'serializableObjects', comparisonMode: ComparisonMode.OBJECT },
     ] as Array<{ presetName: keyof typeof Presets; comparisonMode: ComparisonMode }>)(
-      'Test Presets.${presetName}',
+      'Test Presets.**${presetName}**',
       async ({ presetName, comparisonMode }: { presetName: keyof typeof Presets; comparisonMode: ComparisonMode }) => {
         for (const [index, preset] of Presets[presetName].entries()) {
           await render(<SharedValueComponent initialValue={preset} progress={index / Presets[presetName].length} />);
@@ -61,9 +63,29 @@ describe('Tests of sharedValue', () => {
         }
       },
     );
+
+    describe('Test setting _Error types_ as sharedValue', () => {
+      test.each([
+        new TypeError('Example TypeError'),
+        new Error('Example Error'),
+        new EvalError('Example EvalError'),
+        new RangeError('Example RangeError'),
+        new ReferenceError('Example ReferenceError'),
+        new SyntaxError('Example SyntaxError'),
+        new TypeError('Example TypeError'),
+        new URIError('Example URIError'),
+      ])('Test %p', async error => {
+        await render(<SharedValueComponent initialValue={error} progress={0} />);
+        const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
+
+        const errorObject = { name: error.name, message: error.message };
+        expect(sharedValue.onJS).toBe(errorObject, ComparisonMode.OBJECT);
+        expect(sharedValue.onUI).toBe(errorObject, ComparisonMode.OBJECT);
+      });
+    });
   });
 
-  describe('Test mathematical operations on sharedValue', () => {
+  describe('Test _mathematical operations_ on sharedValue', () => {
     const MultiplySharedValueComponent = <T extends number | bigint>({
       initialValue,
       factor,
@@ -120,7 +142,7 @@ describe('Tests of sharedValue', () => {
     );
   });
 
-  describe(`Tests of arrays as sharedValue, preset size: ${Presets.serializableArrays.length}`, () => {
+  describe(`Test _array operations_ on sharedValue`, () => {
     const AppendToArrayComponent = ({
       initialValue,
       append,
@@ -148,6 +170,7 @@ describe('Tests of sharedValue', () => {
             progress={index / Presets.serializableArrays.length}
           />,
         );
+
         const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
         expect(sharedValue.onJS).toBe(preset, ComparisonMode.ARRAY);
         expect(sharedValue.onUI).toBe(preset, ComparisonMode.ARRAY);
@@ -180,6 +203,10 @@ describe('Tests of sharedValue', () => {
             progress={index / Presets.serializableArrays.length}
           />,
         );
+        if (preset.length > 500) {
+          await wait(3000);
+        }
+
         const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
         expect(sharedValue.onJS).toBe([...preset, 1, 'string', [], { A: 1 }], ComparisonMode.ARRAY);
         expect(sharedValue.onUI).toBe([...preset, 1, 'string', [], { A: 1 }], ComparisonMode.ARRAY);
