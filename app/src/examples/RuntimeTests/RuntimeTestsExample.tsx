@@ -18,6 +18,8 @@ import './tests/core/cancelAnimation.test';
 
 import './tests/utilities/relativeCoords.test';
 
+import './tests/advancedAPI/useFrameCallback.test';
+
 export default function RuntimeTestsExample() {
   return <RuntimeTestsRunner />;
 }
