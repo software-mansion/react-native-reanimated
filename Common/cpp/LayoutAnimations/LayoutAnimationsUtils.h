@@ -56,13 +56,18 @@ struct Node {
   Node(Node&& node):children(std::move(node.children)), tag(node.tag){}
 };
 
+typedef enum ExitingState{
+  UNDEFINED = 1,
+  WAITING = 2,
+  ANIMATING = 4,
+  DEAD = 8,
+  DELETED = 16,
+} ExitingState;
+
 struct MutationNode: public Node{
   ShadowViewMutation mutation;
   std::unordered_set<Tag> animatedChildren;
-  bool isAnimatingExit = false;
-  bool isDone = false;
-  bool isExiting = false;
-  bool isDead = false;
+  ExitingState state = UNDEFINED;
   MutationNode(ShadowViewMutation& mutation): Node(mutation.oldChildShadowView.tag),  mutation(mutation){}
   MutationNode(ShadowViewMutation& mutation, Node&& node): Node(std::move(node)), mutation(mutation){}
 };

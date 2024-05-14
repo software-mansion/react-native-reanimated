@@ -12,9 +12,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(int tag,
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   auto layoutAnimationIt = layoutAnimations_.find(tag);
 
-//  // TODO: investigate
-  if (layoutAnimationIt == layoutAnimations_.end() ||
-      bannedTags.contains(tag)) {
+  if (layoutAnimationIt == layoutAnimations_.end()) {
     return {};
   }
 
@@ -44,9 +42,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   auto layoutAnimationIt = layoutAnimations_.find(tag);
 
-  // TODO: investigate
-  if (layoutAnimationIt == layoutAnimations_.end() ||
-      bannedTags.contains(tag)) {
+  if (layoutAnimationIt == layoutAnimations_.end()) {
     return {};
   }
 
@@ -63,18 +59,19 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
   
   auto node = nodeForTag[tag];
   auto mutationNode = std::static_pointer_cast<MutationNode>(node);
-  mutationNode->isDead = true;
+  maybeCancelAnimation(tag);
+  mutationNode->state = DEAD;
   deadNodes.insert(mutationNode);
   
   return surfaceId;
 }
 
 void LayoutAnimationsProxy::endAnimationsRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList& mutations) const{
-  node->isDone = true;
+  maybeCancelAnimation(node->tag);
+  node->state = DELETED;
   for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
     auto &subNode = *it;
-    if (!subNode->isDone) {
-      cancelAnimation(subNode->tag);
+    if (subNode->state != DELETED) {
       endAnimationsRecursively(subNode, mutations);
     }
   }
@@ -94,13 +91,11 @@ void LayoutAnimationsProxy::maybeDropAncestors(std::shared_ptr<Node> parent, std
   
   auto node = std::static_pointer_cast<MutationNode>(parent);
   node->animatedChildren.erase(child->tag);
-  
-  if (node->animatedChildren.empty() && !node->isAnimatingExit){
+
+  if (node->animatedChildren.empty() && node->state != ANIMATING) {
     nodeForTag.erase(node->tag);
     cleanupMutations.push_back(node->mutation);
-    if (layoutAnimations_.contains(node->tag)){
-      cancelAnimation(node->tag);
-    }
+    maybeCancelAnimation(node->tag);
 #ifdef LAYOUT_ANIMATIONS_LOGS
     LOG(INFO) << "delete "<<node->tag<<std::endl;
 #endif
@@ -199,9 +194,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   for (auto it = roots.rbegin(); it != roots.rend(); it++) {
     auto &node = *it;
     if (!startAnimationsRecursively(node, true, true, filteredMutations)) {
-      if (layoutAnimations_.contains(node->tag)){
-        cancelAnimation(node->tag);
-      }
+      maybeCancelAnimation(node->tag);
       filteredMutations.push_back(node->mutation);
       nodeForTag.erase(node->tag);
       node->parent->removeChild(node);
@@ -213,7 +206,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   }
       
   for (auto node: deadNodes){
-    if (!node->isDone){
+    if (node->state != DELETED) {
       endAnimationsRecursively(node, filteredMutations);
       maybeDropAncestors(node->parent, node, filteredMutations);
     }
@@ -285,7 +278,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
         break;
       }
 
-        // REMOVEDRELETETREE
       default:
         filteredMutations.push_back(mutation);
     }
@@ -312,13 +304,11 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(std::shared_ptr<MutationN
 #ifdef LAYOUT_ANIMATIONS_LOGS
     LOG(INFO) << "child "<<subNode->tag<< " "<<subNode->isExiting<<" "<<shouldAnimate<<" "<<shouldRemoveSubviewsWithoutAnimations<< std::endl;
 #endif
-    if (subNode->isExiting){
-      if (shouldAnimate && !subNode->isDead){
+    if (subNode->state != UNDEFINED) {
+      if (shouldAnimate && subNode->state != DEAD) {
         node->animatedChildren.insert(subNode->tag);
         hasAnimatedChildren = true;
-      }
-      else {
-        cancelAnimation(subNode->tag);
+      } else {
         endAnimationsRecursively(subNode, mutations);
       }
     } else if (startAnimationsRecursively(subNode, shouldRemoveSubviewsWithoutAnimations, shouldAnimate, mutations)) {
@@ -328,16 +318,17 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(std::shared_ptr<MutationN
       node->animatedChildren.insert(subNode->tag);
       hasAnimatedChildren = true;
     } else if (shouldRemoveSubviewsWithoutAnimations) {
-      if (layoutAnimations_.contains(subNode->tag)){
-        cancelAnimation(subNode->tag);
-      }
+      maybeCancelAnimation(subNode->tag);
       mutations.push_back(subNode->mutation);
       toBeRemoved.push_back(subNode);
+      subNode->state = DELETED;
       nodeForTag.erase(subNode->tag);
 #ifdef LAYOUT_ANIMATIONS_LOGS
       LOG(INFO) << "delete "<<subNode->tag<<std::endl;
 #endif
       mutations.push_back(ShadowViewMutation::DeleteMutation(subNode->mutation.oldChildShadowView));
+    } else {
+      subNode->state = WAITING;
     }
   }
 
@@ -348,7 +339,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(std::shared_ptr<MutationN
   bool wantAnimateExit = hasExitAnimation || hasAnimatedChildren;
 
   if (hasExitAnimation) {
-    node->isAnimatingExit = true;
+    node->state = ANIMATING;
     startExitingAnimation(node->tag, node->mutation);
   }
 
@@ -356,7 +347,6 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(std::shared_ptr<MutationN
     return false;
   }
 
-  node->isExiting = true;
   return true;
 }
 
@@ -498,8 +488,11 @@ void LayoutAnimationsProxy::startLayoutAnimation(const int tag, ShadowViewMutati
       });
 }
 
-void LayoutAnimationsProxy::cancelAnimation(const int tag) const{
-  bannedTags.insert(tag);
+void LayoutAnimationsProxy::maybeCancelAnimation(const int tag) const{
+  if (!layoutAnimations_.contains(tag)){
+    return;
+  }
+  layoutAnimations_.erase(tag);
   nativeReanimatedModule_->uiScheduler_->scheduleOnUI(
     [this, tag]() {
     jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
