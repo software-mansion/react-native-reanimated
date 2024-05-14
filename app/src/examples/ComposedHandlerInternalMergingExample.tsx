@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import Animated, {
   EventHandlerProcessed,
@@ -6,8 +6,8 @@ import Animated, {
   useAnimatedStyle,
   useComposedEventHandler,
   useSharedValue,
+  RNNativeScrollEvent,
 } from 'react-native-reanimated';
-import { RNNativeScrollEvent } from '../../../lib/typescript/reanimated2/hook/commonTypes';
 
 export default function ComposedHandlerInternalMergingExample() {
   const sv = useSharedValue(0);

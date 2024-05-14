@@ -15,12 +15,12 @@ An array of event handlers created using [useEvent](/docs/advanced/useEvent) hoo
 ### Returns
 
 The hook returns a handler object that can be hooked into any [`Animated component`](/docs/fundamentals/glossary#animated-component).
-The handler should be passed to a corresponding `onEvent` prop (e.g. `onScroll` when working with scroll-related handlers). In reality, the composed handler can be hooked into virtually any prop thanks to the way it is detected. Nevertheless, we strongly recommend setting the handler on the prop it belongs to.
+The handler should be passed to a corresponding `onEvent` prop (e.g. `onScroll` when working with scroll-related handlers). If your composed handler aggregates multiple events that have little in common, put it into a new property, e.g. "composedHandler". It will still work, but the best practice here would be to use several composed handlers for code clarity.
 
 ## Example
 
 In the below example we define two different scroll handlers using `useAnimatedScrollHandler`. Then, they are combined by `useComposedEventHandler` hook and passed to `Animated.ScrollView` component.
-Now, each dispatched `onScroll` event gets handled by both of handlers, as well as `onBeginDrag` and `onEndDrag` events are handled by the second one.
+Now, each dispatched `onScroll` event gets handled by both merged handlers.
 
 ```jsx {29-32,36}
 import Animated, {

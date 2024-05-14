@@ -78,7 +78,7 @@ function useComposedEventHandlerTest() {
     return (
       <>
         <Animated.ScrollView
-          // this wil work well thanks to the way it is filtered in PropsFilter
+          // This will work well thanks to the way it is filtered in `PropsFilter`.
           onMomentumScrollBegin={composedHandler1}
           // same as above
           onMomentumScrollEnd={composedHandler2}>

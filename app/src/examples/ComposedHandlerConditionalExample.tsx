@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import { Text, View, StyleSheet, Button } from 'react-native';
 import Animated, {
   useAnimatedScrollHandler,

@@ -30,6 +30,7 @@ export type {
   UseHandlerContext,
   ReanimatedEvent,
 } from './hook';
+export type { RNNativeScrollEvent } from './hook/commonTypes';
 export {
   useAnimatedProps,
   useEvent,
