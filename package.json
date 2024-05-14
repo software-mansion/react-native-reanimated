@@ -11,7 +11,9 @@
   },
   "private": true,
   "devDependencies": {
+    "eslint": "^8.0.0",
     "husky": "^9.0.11",
-    "lint-staged": "^15.2.2"
+    "lint-staged": "^15.2.2",
+    "typescript": "^4.0.0"
   }
 }

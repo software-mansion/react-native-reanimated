@@ -1,6 +1,8 @@
-import {
+import type {
   AffineMatrix,
   AffineMatrixFlat,
+} from '../src/reanimated2/animation/transformationMatrix/matrixUtils';
+import {
   addMatrices,
   decomposeMatrix,
   flatten,
