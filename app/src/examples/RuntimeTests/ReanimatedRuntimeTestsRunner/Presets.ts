@@ -219,7 +219,7 @@ export const Presets = {
   regexps: REGEXPS,
   dates: DATES,
   serializableObjects: [...OBJECTS, ...EMPTIES, ...REGEXPS],
-  objects: [...MAPS, ...SETS],
+  unserializableObjects: [...MAPS, ...SETS],
   serializableArrays: [...NUMERICAL_ARRAYS, ...VARIOUS_TYPE_ARRAYS],
   arrays: [...INT_ARRAYS, ...UINT_ARRAYS, ...FLOAT_ARRAYS, ...NUMERICAL_ARRAYS, ...BUFFER_ARRAYS],
 };

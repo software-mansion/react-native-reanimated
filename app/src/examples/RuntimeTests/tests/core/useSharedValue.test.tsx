@@ -66,7 +66,7 @@ describe('Tests of *****sharedValue*****', () => {
       },
     );
 
-    test.failing.each([...Presets.stringObjects, ...Presets.dates, ...Presets.objects])(
+    test.failing.each([...Presets.stringObjects, ...Presets.dates, ...Presets.unserializableObjects])(
       'Test object %p causes an error',
       'ReanimatedError: [Reanimated] Trying to access property `onFrame` of an object which cannot be sent to the UI runtime., js engine: reanimated',
       async testedValue => {
