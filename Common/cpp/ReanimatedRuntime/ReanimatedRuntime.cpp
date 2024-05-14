@@ -11,11 +11,7 @@
 #elif JS_RUNTIME_V8
 #include <v8runtime/V8RuntimeFactory.h>
 #else
-#if REACT_NATIVE_MINOR_VERSION >= 71
 #include <jsc/JSCRuntime.h>
-#else
-#include <jsi/JSCRuntime.h>
-#endif // REACT_NATIVE_MINOR_VERSION
 #endif // JS_RUNTIME
 
 namespace reanimated {

@@ -286,9 +286,16 @@ void NativeReanimatedModule::unregisterEventHandler(
 
 #ifdef RCT_NEW_ARCH_ENABLED
 static inline std::string intColorToHex(const int val) {
-  std::stringstream ss;
-  ss << '#' << std::setfill('0') << std::setw(6) << std::hex << (val);
-  return ss.str();
+  std::stringstream
+      invertedHexColorStream; // By default transparency is first, color second
+  invertedHexColorStream << std::setfill('0') << std::setw(8) << std::hex
+                         << val;
+
+  auto invertedHexColor = invertedHexColorStream.str();
+  auto hexColor =
+      "#" + invertedHexColor.substr(2, 6) + invertedHexColor.substr(0, 2);
+
+  return hexColor;
 }
 
 std::string NativeReanimatedModule::obtainPropFromShadowNode(
@@ -580,7 +587,7 @@ bool NativeReanimatedModule::handleRawEvent(
     double currentTime) {
   const EventTarget *eventTarget = rawEvent.eventTarget.get();
   if (eventTarget == nullptr) {
-    // after app reload scrollview is unmounted and its content offset is set
+    // after app reload scrollView is unmounted and its content offset is set
     // to 0 and view is thrown into recycle pool setting content offset
     // triggers scroll event eventTarget is null though, because it's
     // unmounting we can just ignore this event, because it's an event on

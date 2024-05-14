@@ -3,7 +3,7 @@ import plugin from '../plugin';
 import { TransformOptions, transformSync } from '@babel/core';
 import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
-import '../plugin/jestUtils';
+import '../plugin/src/jestMatchers';
 import { version as packageVersion } from '../package.json';
 import { ReanimatedPluginOptions } from '../plugin/src/types';
 
