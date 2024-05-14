@@ -49,16 +49,16 @@ export function useComposedEventHandler<
       const { workletEventHandler } =
         handler as unknown as EventHandlerInternal<Context>;
       if (workletEventHandler instanceof WorkletEventHandler) {
-        workletEventHandler.eventNames.forEach((event) => {
-          composedEventNames.add(event);
+        workletEventHandler.eventNames.forEach((eventName) => {
+          composedEventNames.add(eventName);
 
-          if (workletsMap[event]) {
-            workletsMap[event].push(workletEventHandler.worklet);
+          if (workletsMap[eventName]) {
+            workletsMap[eventName].push(workletEventHandler.worklet);
           } else {
-            workletsMap[event] = [workletEventHandler.worklet];
+            workletsMap[eventName] = [workletEventHandler.worklet];
           }
 
-          const handlerName = event + `${workletsMap[event].length}`;
+          const handlerName = eventName + `${workletsMap[eventName].length}`;
           workletsRecord[handlerName] =
             workletEventHandler.worklet as WorkletFunction;
         });
