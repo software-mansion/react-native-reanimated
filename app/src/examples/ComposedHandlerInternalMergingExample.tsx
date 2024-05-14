@@ -1,12 +1,12 @@
 import React from 'react';
 import { Text, View, StyleSheet } from 'react-native';
+import type { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import Animated, {
   EventHandlerProcessed,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useComposedEventHandler,
   useSharedValue,
-  RNNativeScrollEvent,
 } from 'react-native-reanimated';
 
 export default function ComposedHandlerInternalMergingExample() {
@@ -31,7 +31,9 @@ export default function ComposedHandlerInternalMergingExample() {
 const ColorChangingList = ({
   additionalHandler,
 }: {
-  additionalHandler: EventHandlerProcessed<RNNativeScrollEvent>;
+  additionalHandler: EventHandlerProcessed<
+    NativeSyntheticEvent<NativeScrollEvent>
+  >;
 }) => {
   const offsetSv = useSharedValue(0);
 
