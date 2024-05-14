@@ -140,8 +140,6 @@ const BUFFER_ARRAYS = [new ArrayBuffer(8), new ArrayBuffer(0)];
 
 const EMPTIES = [[], null, undefined, {}, [[]], [{}], [null]];
 
-const FANCY_OBJECTS = [globalThis];
-
 const SYMBOLS = [Symbol('Hello!'), Symbol(123), Symbol()];
 
 const DATES = [
@@ -221,7 +219,7 @@ export const Presets = {
   regexps: REGEXPS,
   dates: DATES,
   serializableObjects: [...OBJECTS, ...EMPTIES, ...REGEXPS],
-  objects: [...OBJECTS, ...MAPS, ...SETS, ...EMPTIES, ...FANCY_OBJECTS],
+  objects: [...MAPS, ...SETS],
   serializableArrays: [...NUMERICAL_ARRAYS, ...VARIOUS_TYPE_ARRAYS],
   arrays: [...INT_ARRAYS, ...UINT_ARRAYS, ...FLOAT_ARRAYS, ...NUMERICAL_ARRAYS, ...BUFFER_ARRAYS],
 };

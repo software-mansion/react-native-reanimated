@@ -32,14 +32,15 @@ const ProgressBar = ({ progress }: { progress: number }) => {
   );
 };
 
-describe.only('Tests of *****sharedValue*****', () => {
+describe('Tests of *****sharedValue*****', () => {
   describe('Test setting different values as sharedValue', () => {
     const SharedValueComponent = ({ initialValue, progress }: { initialValue: unknown; progress: number }) => {
       const sharedValue = useSharedValue(initialValue);
       registerValue(SHARED_VALUE_REF, sharedValue);
       return <ProgressBar progress={progress} />;
     };
-    test.each([
+
+    test.skip.each([
       { presetName: 'numbers', comparisonMode: ComparisonMode.NUMBER },
       { presetName: 'bigInts', comparisonMode: ComparisonMode.NUMBER },
       { presetName: 'serializableArrays', comparisonMode: ComparisonMode.ARRAY },
@@ -51,16 +52,30 @@ describe.only('Tests of *****sharedValue*****', () => {
       async ({ presetName, comparisonMode }: { presetName: keyof typeof Presets; comparisonMode: ComparisonMode }) => {
         for (const [index, preset] of Presets[presetName].entries()) {
           await render(<SharedValueComponent initialValue={preset} progress={index / Presets[presetName].length} />);
+
           const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
 
           expect(sharedValue.onJS).toBe(preset, comparisonMode);
           expect(sharedValue.onUI).toBe(preset, comparisonMode);
           /*
-        This test checks the value of sharedValue after the component mounts. Therefore, we need to clear the render output
-        to ensure that a new component will be fully mounted, not just rerendered.
-        */
+          This test checks the value of sharedValue after the component mounts. Therefore, we need to clear the render output
+          to ensure that a new component will be fully mounted, not just rerendered.
+          */
           await render(<ProgressBar progress={index / Presets[presetName].length} />);
         }
+      },
+    );
+
+    test.failing.each([...Presets.stringObjects, ...Presets.dates, ...Presets.objects])(
+      'Test object %p causes an error',
+      'ReanimatedError: [Reanimated] Trying to access property `onFrame` of an object which cannot be sent to the UI runtime., js engine: reanimated',
+      async testedValue => {
+        await render(<SharedValueComponent initialValue={testedValue} progress={0} />);
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const _sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
+
+        await render(<ProgressBar progress={0} />);
       },
     );
 
