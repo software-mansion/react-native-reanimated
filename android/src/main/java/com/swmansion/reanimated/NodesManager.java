@@ -3,6 +3,7 @@ package com.swmansion.reanimated;
 import static java.lang.Float.NaN;
 
 import android.graphics.drawable.Drawable;
+import android.os.SystemClock;
 import android.view.View;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.GuardedRunnable;
@@ -49,6 +50,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 public class NodesManager implements EventDispatcherListener {
+
+  private Long mFirstUptime = SystemClock.uptimeMillis();
+  private boolean mSlowAnimationsEnabled = false;
 
   public void scrollTo(int viewTag, double x, double y, boolean animated) {
     View view;
@@ -268,6 +272,11 @@ public class NodesManager implements EventDispatcherListener {
     // Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onAnimationFrame");
 
     double currentFrameTimeMs = frameTimeNanos / 1000000.;
+    if (mSlowAnimationsEnabled) {
+      final long ANIMATIONS_DRAG_FACTOR = 10;
+      currentFrameTimeMs =
+          mFirstUptime + (currentFrameTimeMs - mFirstUptime) / ANIMATIONS_DRAG_FACTOR;
+    }
 
     if (currentFrameTimeMs > lastFrameTimeMs) {
       // It is possible for ChoreographerCallback to be executed twice within the same frame
@@ -505,6 +514,13 @@ public class NodesManager implements EventDispatcherListener {
       }
     } else {
       throw new IllegalStateException("[Reanimated] Unknown type of animated value.");
+    }
+  }
+
+  public void setSlowAnimations(boolean slowAnimationsEnabled) {
+    mSlowAnimationsEnabled = slowAnimationsEnabled;
+    if (slowAnimationsEnabled) {
+      mFirstUptime = SystemClock.uptimeMillis();
     }
   }
 }
