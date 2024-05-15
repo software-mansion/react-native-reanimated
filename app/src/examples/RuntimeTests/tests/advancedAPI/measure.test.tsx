@@ -22,6 +22,7 @@ import {
   registerValue,
   getRegisteredValue,
 } from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+import { ComparisonMode } from '../../ReanimatedRuntimeTestsRunner/types';
 
 describe('Test measuring component before nad after animation', () => {
   const INITIAL_MEASURE = 'INITIAL_MEASURE';
@@ -140,13 +141,16 @@ describe('Test measuring component during the animation', () => {
     registerValue(OBSERVED_WIDTHS_REF, observedWidths);
     const ref = useAnimatedRef();
 
-    useFrameCallback(({ timeSinceFirstFrame }) => {
-      const observedWidth = measure(ref)?.width;
-      observedWidths.value = [...observedWidths.value, [observedWidth || 0, timeSinceFirstFrame]];
-    });
-
-    useEffect(() => {
-      width.value = withTiming(FINAL_WIDTH, { easing: Easing.linear, duration: DURATION });
+    useFrameCallback(({ timeSinceFirstFrame, timeSincePreviousFrame }) => {
+      if (timeSinceFirstFrame === 0) {
+        width.value = withTiming(FINAL_WIDTH, { easing: Easing.linear, duration: DURATION });
+      } else if (timeSinceFirstFrame !== timeSincePreviousFrame) {
+        const observedWidth = measure(ref)?.width;
+        observedWidths.value = [
+          ...observedWidths.value,
+          [observedWidth || 0, timeSinceFirstFrame - (timeSincePreviousFrame || 0)],
+        ];
+      }
     });
 
     const animatedStyle = useAnimatedStyle(() => {
@@ -166,7 +170,7 @@ describe('Test measuring component during the animation', () => {
     const observedWidths = (await getRegisteredValue(OBSERVED_WIDTHS_REF)).onJS as Array<[number, number]>;
     observedWidths.forEach(([width, timeSinceFirstFrame]) => {
       const expectedWidth = Math.min(FINAL_WIDTH, (timeSinceFirstFrame * FINAL_WIDTH) / DURATION);
-      expect(width).toBeWithinRange(expectedWidth - 4, expectedWidth + 4);
+      expect(width).toBe(expectedWidth, ComparisonMode.DISTANCE);
     });
   });
 });

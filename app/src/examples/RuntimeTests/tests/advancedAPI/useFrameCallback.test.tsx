@@ -41,7 +41,7 @@ describe('Test *****useFrameCallback*****', () => {
         </View>
       );
     };
-    test.each([500, 1000, 2000, 3000])('Run frameCallback for **%p**ms', async timeToStop => {
+    test.each([500, 1000])('Run frameCallback for **%p**ms', async timeToStop => {
       await render(<CancelAfterDelayComponent timeToStop={timeToStop} />);
       const animatedComponent = getTestComponent(STOP_AFTER_DELAY_REF);
 

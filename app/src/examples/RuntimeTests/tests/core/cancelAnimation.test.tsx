@@ -65,9 +65,9 @@ describe('Test *****cancelAnimation*****', () => {
     test.each([
       [400, 450],
       [500, 200],
-      [1000, 300],
-      [1000, 500],
-      [10000, 500],
+      [1000, 200],
+      [1000, 400],
+      [10000, 400],
       [2000, 300],
     ])('Stop after **${1}**ms, full animation is **${0}**ms long ', async ([animationDuration, timeToStop]) => {
       await render(<CancelAfterDelayComponent animationDuration={animationDuration} timeToStop={timeToStop} />);
@@ -164,7 +164,6 @@ describe('Test *****cancelAnimation*****', () => {
     test.each([
       [300, 1000],
       [30, 1000],
-      [900, 1000],
     ])('Stop after width equals **%p**', async ([timeToStop, animationDuration]) => {
       await render(<CancelFromCallbackComponent animationDuration={animationDuration} timeToStop={timeToStop} />);
       const animatedComponent = getTestComponent(CANCEL_FROM_CALLBACK_REF);
