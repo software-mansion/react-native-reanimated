@@ -349,9 +349,12 @@ public class NodesManager implements EventDispatcherListener {
     String eventName = event.getEventName();
 
     if (eventName.equals(ModalActivityManager.OPEN_MODAL_EVENT_NAME)) {
-      View view = mUIManager.resolveView(event.getViewTag());
-      Dialog dialog = ((ReactModalHostView) view).getDialog();
-      mNativeProxy.registerNewDialog(dialog);
+      try {
+        View view = mUIManager.resolveView(event.getViewTag());
+        Dialog dialog = ((ReactModalHostView) view).getDialog();
+        mNativeProxy.registerNewDialog(dialog);
+      } catch (Error ignored) {
+      }
     }
 
     event.dispatch(mCustomEventHandler);
