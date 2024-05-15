@@ -105,3 +105,40 @@ table thead tr {
   display: inline-block;
   margin-bottom: 25px;
 }
+
+[class*='DocCategoryGeneratedIndexPage'][class*='title'] {
+  font-size: var(--swm-h1-font-size);
+}
+
+/* TODO: Remove after @swmansion/t-rex-ui 0.0.4 patch */
+
+[class*='sidebarLogo'] {
+  min-height: 0 !important;
+  margin: 0 !important;
+}
+
+[class*='sidebar'] [class*='logoWrapper'] a {
+  align-items: center;
+}
+
+@media (min-width: 996px) {
+  [class*='logoWrapper'] a {
+    padding-left: 1.5rem;
+  }
+  [class*='colorModeToggle'] {
+    margin: 0 1.5em !important;
+  }
+}
+@media (max-width: 996px) {
+  [class*='colorModeToggle'] {
+    margin: 0 0 !important;
+  }
+}
+
+[class*='navbar__logo'] img {
+  margin-right: 0.5rem;
+}
+
+[class*='logoWrapper'] {
+  justify-content: flex-start !important;
+}
