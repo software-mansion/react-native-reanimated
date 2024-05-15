@@ -6,7 +6,8 @@
       "packages/react-native-reanimated",
       "packages/reanimated-app",
       "packages/reanimated-paper-example",
-      "packages/reanimated-web-example"
+      "packages/reanimated-web-example",
+      "packages/eslint-plugin-reanimated"
     ]
   },
   "private": true,

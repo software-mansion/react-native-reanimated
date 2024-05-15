@@ -42,6 +42,9 @@ module.exports = {
       },
     },
   ],
+  parserOptions: {
+    requireConfigFile: false,
+  },
   extends: [
     'standard',
     'prettier',

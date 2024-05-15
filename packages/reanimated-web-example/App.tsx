@@ -1,4 +1,4 @@
-import Apps from "reanimated-app";
+import Apps from 'reanimated-app';
 
 export default function App() {
   return <Apps />;
