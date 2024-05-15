@@ -13465,16 +13465,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-pager-view@npm:^6.2.3":
-  version: 6.3.1
-  resolution: "react-native-pager-view@npm:6.3.1"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 10/c6b2f068856c5dae2c809287edbf4664ccea727139a254c1aa3ca8ec0c8de5e034241b3b9c86b3abb47f03cb37453b9b73d8cc310cba8b260c766af4a46ebe8c
-  languageName: node
-  linkType: hard
-
 "react-native-reanimated-monorepo@workspace:.":
   version: 0.0.0-use.local
   resolution: "react-native-reanimated-monorepo@workspace:."
@@ -13484,12 +13474,6 @@ __metadata:
     lint-staged: "npm:^15.2.2"
     typescript: "npm:^5.4.5"
   languageName: unknown
-  linkType: soft
-
-"react-native-reanimated@link:../::locator=reanimated-fabric-example%40workspace%3Apackages%2Freanimated-fabric-example":
-  version: 0.0.0-use.local
-  resolution: "react-native-reanimated@link:../::locator=reanimated-fabric-example%40workspace%3Apackages%2Freanimated-fabric-example"
-  languageName: node
   linkType: soft
 
 "react-native-reanimated@workspace:*, react-native-reanimated@workspace:packages/react-native-reanimated":
@@ -13799,7 +13783,7 @@ __metadata:
     react: "npm:18.2.0"
     react-native: "npm:0.74.0"
     react-native-gesture-handler: "npm:^2.16.0"
-    react-native-pager-view: "npm:^6.2.3"
+    react-native-pager-view: "npm:6.3.0"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:4.10.0-rc.1"
     react-native-screens: "npm:3.31.0-rc.1"
@@ -13838,7 +13822,7 @@ __metadata:
     react-native: "npm:0.74.0"
     react-native-gesture-handler: "npm:^2.16.0"
     react-native-pager-view: "npm:6.3.0"
-    react-native-reanimated: "link:../"
+    react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:4.10.0-rc.1"
     react-native-screens: "npm:3.31.0-rc.1"
     react-native-svg: "npm:^15.2.0-rc.0"
@@ -13876,7 +13860,7 @@ __metadata:
     react: "npm:18.2.0"
     react-native: "npm:0.74.0"
     react-native-gesture-handler: "npm:^2.16.0"
-    react-native-pager-view: "npm:^6.2.3"
+    react-native-pager-view: "npm:6.3.0"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:4.10.0-rc.1"
     react-native-screens: "npm:3.31.0-rc.1"
