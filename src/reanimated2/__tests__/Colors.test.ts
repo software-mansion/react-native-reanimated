@@ -76,6 +76,7 @@ it('handles rgb properly', () => {
 });
 
 it('handles rgba properly', () => {
+  expect(normalizeColor('rgba(0, 0, 0, .5)')).toBe(0x00000080);
   expect(normalizeColor('rgba(0, 0, 0, 0.0)')).toBe(0x00000000);
   expect(normalizeColor('rgba(0, 0, 0, 0)')).toBe(0x00000000);
   expect(normalizeColor('rgba(0, 0, 0, -0.5)')).toBe(0x00000000);
