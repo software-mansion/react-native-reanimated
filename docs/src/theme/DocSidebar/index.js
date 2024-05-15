@@ -1,20 +1,24 @@
 import React from 'react';
-import { useWindowSize } from '@docusaurus/theme-common';
-import DocSidebarDesktop from '@theme/DocSidebar/Desktop';
-import DocSidebarMobile from '@theme/DocSidebar/Mobile';
-import styles from './styles.module.css';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import { DocSidebar } from '@swmansion/t-rex-ui';
 
-export default function DocSidebar(props) {
-  const windowSize = useWindowSize();
-  // Desktop sidebar visible on hydration: need SSR rendering
-  const shouldRenderSidebarDesktop =
-    windowSize === 'desktop' || windowSize === 'ssr';
-  // Mobile sidebar not visible on hydration: can avoid SSR rendering
-  const shouldRenderSidebarMobile = windowSize === 'mobile';
+export default function DocSidebarWrapper(props) {
+  const titleImages = {
+    light: useBaseUrl('/img/title.svg'),
+    dark: useBaseUrl('/img/title-dark.svg'),
+  };
+
+  const heroImages = {
+    logo: useBaseUrl('/img/logo-hero.svg'),
+    title: useBaseUrl('/img/title-hero.svg'),
+  };
   return (
     <>
-      {shouldRenderSidebarDesktop && <DocSidebarDesktop {...props} />}
-      {shouldRenderSidebarMobile && <DocSidebarMobile {...props} />}
+      <DocSidebar
+        heroImages={heroImages}
+        titleImages={titleImages}
+        {...props}
+      />
     </>
   );
 }
