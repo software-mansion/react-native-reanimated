@@ -30,13 +30,13 @@ jobs:
       - name: Create directories
         run: mkdir -p monorepo/packages
 
-      - name: Enable corepack
-        run: corepack enable
+      # - name: Enable corepack
+      #   run: corepack enable
       - name: Setup monorepo
         working-directory: monorepo
         run: echo '{"name":"rnos-monorepo-tester","version":"1.0.0","license":"MIT","private":true,"workspaces":{"packages":["RootApp","packages/PackageApp", "AppA", "AppB"],"nohoist":["**/react","**/react-dom","**/react-native","**/react-native/**","**/react-native-codegen","**/react-native-dev-menu"]}}' > package.json
-      - name: Set Yarn1
-        run: yarn set version yarn@1.22.19
+      # - name: Set Yarn1
+      #   run: yarn set version yarn@1.22.19
       - name: Install dependencies
         run: yarn install
       - name: Create RootApp
