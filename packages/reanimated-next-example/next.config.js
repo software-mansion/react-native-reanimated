@@ -9,7 +9,6 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 // this can be used to obtain a more readable bundle for debugging
 const disableMinification = process.env.DISABLE_MINIFICATION === '1';
 
-/** @type {import('next').NextConfig} */
 module.exports = withPlugins([withBundleAnalyzer, withExpo], {
   // transpilePackages is a Next.js +13.1 feature.
   // older versions can use next-transpile-modules

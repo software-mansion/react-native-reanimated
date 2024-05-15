@@ -1,4 +1,6 @@
 {
+  "name": "reanimated-next-example",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "dev": "next",
@@ -14,7 +16,7 @@
     "next": "latest",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-native-reanimated": "link:../",
+    "react-native-reanimated": "workspace:*",
     "react-native-web": "^0.18.9"
   },
   "devDependencies": {

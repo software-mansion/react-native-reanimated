@@ -1,0 +1,7 @@
+{
+  "extends": ["../../tsconfig.json", "expo/tsconfig.base"],
+  "compilerOptions": {
+    "module": "esnext"
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.js"]
+}
