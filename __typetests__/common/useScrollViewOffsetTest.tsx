@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useRef } from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, Button } from 'react-native';
 import Animated, { useAnimatedRef, useScrollViewOffset } from '../..';
 
 function UseScrollViewOffsetTest() {
@@ -51,6 +51,23 @@ function UseScrollViewOffsetTest() {
 
     return (
       <ScrollView ref={scrollViewRef}>
+        <Animated.View style={{ opacity: offset.value }} />
+      </ScrollView>
+    );
+  }
+
+  function UseScrollViewOffsetTest5() {
+    const [connectRef, setConnectRef] = React.useState(false);
+    const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
+    // this will work because the ref is nullable
+    const offset = useScrollViewOffset(connectRef ? scrollViewRef : null);
+
+    return (
+      <ScrollView ref={scrollViewRef}>
+        <Button
+          title={`${connectRef ? 'Disconnect' : 'Connect'} ref`}
+          onPress={() => setConnectRef(!connectRef)}
+        />
         <Animated.View style={{ opacity: offset.value }} />
       </ScrollView>
     );
