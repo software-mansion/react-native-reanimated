@@ -22,6 +22,8 @@
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@expo/metro-runtime": "^3.2.1",
+    "@types/eslint": "^8",
+    "eslint": "^8.57.0",
     "serve": "^14.2.3",
     "typescript": "~5.3.3"
   },
