@@ -3630,7 +3630,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-picker/picker@npm:^2.5.1, @react-native-picker/picker@npm:^2.6.1":
+"@react-native-picker/picker@npm:^2.5.1, @react-native-picker/picker@npm:^2.6.1, @react-native-picker/picker@npm:^2.7.0":
   version: 2.7.5
   resolution: "@react-native-picker/picker@npm:2.7.5"
   peerDependencies:
@@ -4828,6 +4828,31 @@ __metadata:
   checksum: 10/0d6e2ecf57f0e12c2b17dbdfa2f06f88519c1241275b5b8a1679dd591ee72fe45f5d87ef6ab35e068b07554b768c824dce3e2536f29d03c77cff4259209903e0
   languageName: node
   linkType: hard
+
+"App74@workspace:packages/App74":
+  version: 0.0.0-use.local
+  resolution: "App74@workspace:packages/App74"
+  dependencies:
+    "@babel/core": "npm:^7.20.0"
+    "@babel/preset-env": "npm:^7.20.0"
+    "@babel/runtime": "npm:^7.20.0"
+    "@react-native/babel-preset": "npm:0.74.81"
+    "@react-native/eslint-config": "npm:0.74.81"
+    "@react-native/metro-config": "npm:0.74.81"
+    "@react-native/typescript-config": "npm:0.74.81"
+    "@types/react": "npm:^18.2.6"
+    "@types/react-test-renderer": "npm:^18.0.0"
+    babel-jest: "npm:^29.6.3"
+    eslint: "npm:^8.19.0"
+    jest: "npm:^29.6.3"
+    prettier: "npm:2.8.8"
+    react: "npm:18.2.0"
+    react-native: "npm:0.74.0"
+    react-native-reanimated: "workspace:*"
+    react-test-renderer: "npm:18.2.0"
+    typescript: "npm:5.0.4"
+  languageName: unknown
+  linkType: soft
 
 "abbrev@npm:^2.0.0":
   version: 2.0.0
@@ -7963,7 +7988,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^8.57.0":
+"eslint@npm:^8.19.0, eslint@npm:^8.57.0":
   version: 8.57.0
   resolution: "eslint@npm:8.57.0"
   dependencies:
@@ -13430,6 +13455,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-pager-view@npm:6.3.0":
+  version: 6.3.0
+  resolution: "react-native-pager-view@npm:6.3.0"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10/1e89986ad5e603a1d9eb76de5d2945eb681758f553082cd811d82cb05036a47af1a1da3bfdce1d0b0ce74156945d8dca1a940a648851fa4cfa4dc721d0322b44
+  languageName: node
+  linkType: hard
+
 "react-native-pager-view@npm:^6.2.3":
   version: 6.3.1
   resolution: "react-native-pager-view@npm:6.3.1"
@@ -13449,6 +13484,12 @@ __metadata:
     lint-staged: "npm:^15.2.2"
     typescript: "npm:^5.4.5"
   languageName: unknown
+  linkType: soft
+
+"react-native-reanimated@link:../::locator=reanimated-fabric-example%40workspace%3Apackages%2Freanimated-fabric-example":
+  version: 0.0.0-use.local
+  resolution: "react-native-reanimated@link:../::locator=reanimated-fabric-example%40workspace%3Apackages%2Freanimated-fabric-example"
+  languageName: node
   linkType: soft
 
 "react-native-reanimated@workspace:*, react-native-reanimated@workspace:packages/react-native-reanimated":
@@ -13767,6 +13808,43 @@ __metadata:
   peerDependencies:
     react: "*"
     react-native: "*"
+  languageName: unknown
+  linkType: soft
+
+"reanimated-fabric-example@workspace:packages/reanimated-fabric-example":
+  version: 0.0.0-use.local
+  resolution: "reanimated-fabric-example@workspace:packages/reanimated-fabric-example"
+  dependencies:
+    "@babel/core": "npm:^7.20.0"
+    "@babel/preset-env": "npm:^7.20.0"
+    "@babel/runtime": "npm:^7.20.0"
+    "@react-native-async-storage/async-storage": "npm:^1.22.3"
+    "@react-native-community/slider": "npm:^4.5.0"
+    "@react-native-masked-view/masked-view": "npm:^0.3.1"
+    "@react-native-picker/picker": "npm:^2.7.0"
+    "@react-native/babel-preset": "npm:0.74.81"
+    "@react-native/eslint-config": "npm:0.74.81"
+    "@react-native/metro-config": "npm:0.74.81"
+    "@react-native/typescript-config": "npm:0.74.81"
+    "@react-navigation/native": "npm:^6.1.9"
+    "@react-navigation/native-stack": "npm:^6.9.17"
+    "@types/react": "npm:^18.2.6"
+    "@types/react-test-renderer": "npm:^18.0.0"
+    babel-jest: "npm:^29.6.3"
+    eslint: "npm:^8.57.0"
+    jest: "npm:^29.6.3"
+    prettier: "npm:2.8.8"
+    react: "npm:18.2.0"
+    react-native: "npm:0.74.0"
+    react-native-gesture-handler: "npm:^2.16.0"
+    react-native-pager-view: "npm:6.3.0"
+    react-native-reanimated: "link:../"
+    react-native-safe-area-context: "npm:4.10.0-rc.1"
+    react-native-screens: "npm:3.31.0-rc.1"
+    react-native-svg: "npm:^15.2.0-rc.0"
+    react-test-renderer: "npm:18.2.0"
+    reanimated-app: "workspace:*"
+    typescript: "npm:^5.4.5"
   languageName: unknown
   linkType: soft
 
@@ -15697,6 +15775,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"typescript@npm:5.0.4":
+  version: 5.0.4
+  resolution: "typescript@npm:5.0.4"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 10/e5c3adff09a138c0e27d13b5bb2b106ca17a162ffa945d66161669c265c65436309c5817358a2af1abb69d07440d358f8c1ed7cbb63a2c8680e19b9c268fe4ef
+  languageName: node
+  linkType: hard
+
 "typescript@npm:^3.9.10, typescript@npm:^3.9.5, typescript@npm:^3.9.7":
   version: 3.9.10
   resolution: "typescript@npm:3.9.10"
@@ -15724,6 +15812,16 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 10/6e4e6a14a50c222b3d14d4ea2f729e79f972fa536ac1522b91202a9a65af3605c2928c4a790a4a50aa13694d461c479ba92cedaeb1e7b190aadaa4e4b96b8e18
+  languageName: node
+  linkType: hard
+
+"typescript@patch:typescript@npm%3A5.0.4#optional!builtin<compat/typescript>":
+  version: 5.0.4
+  resolution: "typescript@patch:typescript@npm%3A5.0.4#optional!builtin<compat/typescript>::version=5.0.4&hash=b5f058"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 10/b1b62606c7ec75efe9edc61e195d9e69f0440cac1bcd111dfa864f839255f0d9a7b79869f2823559c608826fc0c9894d2917ae4063e0aa06f5d0784a35170497
   languageName: node
   linkType: hard
 
