@@ -12,7 +12,7 @@ import {
   useTestRef,
 } from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 
-describe.only('Test *****useFrameCallback*****', () => {
+describe('Test *****useFrameCallback*****', () => {
   describe('Test _canceling frameCallback_ after predefined time', () => {
     const STOP_AFTER_DELAY_REF = 'CancelAfterDelayComponent';
     const CancelAfterDelayComponent = ({ timeToStop }: { timeToStop: number }) => {
@@ -52,7 +52,7 @@ describe.only('Test *****useFrameCallback*****', () => {
     });
   });
 
-  describe.only('Test _canceling frameCallback_ after predefined time', () => {
+  describe('Test _canceling frameCallback_ after predefined time', () => {
     const InvalidFrameCallback = () => {
       const imNotAWorklet = () => {
         console.log('I am not a worklet');
