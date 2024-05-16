@@ -1,8 +1,10 @@
 {
   "language": "en",
   "words": [
+    "androidx",
     "animable",
     "animatable",
+    "appcompat",
     "barfoo",
     "barfoo",
     "bfrg",
@@ -36,9 +38,7 @@
     "workletize",
     "workletized",
     "workletizes",
-    "worklets",
-    "androidx",
-    "appcompat"
+    "worklets"
   ],
   "flagWords": [
     "ere",
