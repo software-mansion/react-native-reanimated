@@ -15,25 +15,18 @@ class NativeReanimatedModule;
 using namespace facebook;
 
 struct LayoutAnimation {
-  std::shared_ptr<ShadowView> end, current;
-  ShadowView start, parent;
+  std::shared_ptr<ShadowView> finalView, currentView, parentView;
   std::optional<double> opacity;
   int count = 1;
-  LayoutAnimation& operator=(const LayoutAnimation& other){
-    this->end = other.end;
-    this->count = other.count;
-    return *this;
-  }
+  LayoutAnimation& operator=(const LayoutAnimation& other) = default;
 };
 
 struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   mutable std::unordered_map<Tag, std::shared_ptr<Node>> nodeForTag;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
-  mutable std::unordered_set<Tag> animatedTags;
   mutable std::recursive_mutex mutex;
   mutable SurfaceManager surfaceManager;
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
-  std::shared_ptr<std::map<Tag, std::string>> tagToNativeID_ = std::make_shared<std::map<Tag, std::string>>();
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   ContextContainer::Shared contextContainer_;
   NativeReanimatedModule* nativeReanimatedModule_;

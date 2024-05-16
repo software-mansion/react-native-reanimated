@@ -26,12 +26,12 @@ std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(int tag,
   auto rawProps =
       std::make_shared<RawProps>(runtime, jsi::Value(runtime, newStyle));
 
-  PropsParserContext propsParserContext{layoutAnimation.end->surfaceId, *contextContainer_};
-  auto newProps = getComponentDescriptorForShadowView(*layoutAnimation.end).cloneProps(propsParserContext, layoutAnimations_.at(tag).end->props, std::move(*rawProps));
-  auto &updateMap = surfaceManager.getUpdateMap(layoutAnimation.end->surfaceId);
+  PropsParserContext propsParserContext{layoutAnimation.finalView->surfaceId, *contextContainer_};
+  auto newProps = getComponentDescriptorForShadowView(*layoutAnimation.finalView).cloneProps(propsParserContext, layoutAnimation.finalView->props, std::move(*rawProps));
+  auto &updateMap = surfaceManager.getUpdateMap(layoutAnimation.finalView->surfaceId);
   updateMap.insert_or_assign(tag, UpdateValues{newProps, Frame(runtime, newStyle)});
 
-  return layoutAnimation.end->surfaceId;
+  return layoutAnimation.finalView->surfaceId;
 }
 
 std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool shouldRemove) {
@@ -53,7 +53,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
     return {};
   }
   
-  auto surfaceId = layoutAnimation.end->surfaceId;
+  auto surfaceId = layoutAnimation.finalView->surfaceId;
   auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
   layoutAnimations_.erase(tag);
   updateMap.erase(tag);
@@ -117,20 +117,20 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     ShadowViewMutationList &mutations) const {
   auto& updateMap = surfaceManager.getUpdateMap(surfaceId);
   for (auto &[tag, updateValues] : updateMap) {
-    if (!layoutAnimations_.contains(tag)) {
+    auto layoutAnimationIt = layoutAnimations_.find(tag);
+
+    if (layoutAnimationIt == layoutAnimations_.end()) {
       continue;
     }
-    auto &la = layoutAnimations_.at(tag);
-    auto &previous = la.current;
-    auto &finalView = la.end;
-    auto parent = la.parent;
-    auto newView = std::make_shared<ShadowView>(*finalView);
-    newView->props = updateValues.newProps;
-    auto frame = updateValues.frame;
-    updateLayoutMetrics(newView->layoutMetrics, frame);
 
-    mutations.push_back(ShadowViewMutation::UpdateMutation(*previous, *newView, parent));
-    la.current = newView;
+    auto &layoutAnimation = layoutAnimationIt->second;
+
+    auto newView = std::make_shared<ShadowView>(*layoutAnimation.finalView);
+    newView->props = updateValues.newProps;
+    updateLayoutMetrics(newView->layoutMetrics, updateValues.frame);
+
+    mutations.push_back(ShadowViewMutation::UpdateMutation(*layoutAnimation.currentView, *newView, *layoutAnimation.parentView));
+    layoutAnimation.currentView = newView;
   }
   updateMap.clear();
   std::stable_sort(mutations.begin(), mutations.end(), &shouldFirstComeBeforeSecondMutation);
@@ -393,12 +393,13 @@ void LayoutAnimationsProxy::startEnteringAnimation(const int tag, ShadowViewMuta
 #endif
   auto finalView = std::make_shared<ShadowView>(mutation.newChildShadowView);
   auto current = std::make_shared<ShadowView>(mutation.oldChildShadowView);
+  auto parent = std::make_shared<ShadowView>(mutation.parentShadowView);
+  
   auto& viewProps = static_cast<const ViewProps&>(*mutation.newChildShadowView.props);
   LayoutAnimation la{
       finalView,
       current,
-      mutation.oldChildShadowView,
-      mutation.parentShadowView,
+      parent,
       viewProps.opacity
   };
   layoutAnimations_.insert_or_assign(tag, la);
@@ -424,25 +425,30 @@ void LayoutAnimationsProxy::startExitingAnimation(const int tag, ShadowViewMutat
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO)<<"start exiting animation for tag "<<tag<<std::endl;
 #endif
-  auto &oldChild = mutation.oldChildShadowView;
+  auto surfaceId = mutation.oldChildShadowView.surfaceId;
+  auto &oldView = mutation.oldChildShadowView;
   int count = 1;
-  if (layoutAnimations_.contains(tag)) {
-    oldChild = *layoutAnimations_.at(tag).current;
-    count = layoutAnimations_.at(tag).count + 1;
+  auto layoutAnimationIt = layoutAnimations_.find(tag);
+
+  if (layoutAnimationIt != layoutAnimations_.end()) {
+    auto &layoutAnimation = layoutAnimationIt->second;
+    oldView = *layoutAnimation.currentView;
+    count = layoutAnimation.count + 1;
   }
+  
   auto finalView = std::make_shared<ShadowView>(mutation.oldChildShadowView);
-  auto current = std::make_shared<ShadowView>(oldChild);
+  auto currentView = std::make_shared<ShadowView>(oldView);
+  auto parentView = std::make_shared<ShadowView>(mutation.parentShadowView);
   LayoutAnimation la{
       finalView,
-      current,
-      mutation.oldChildShadowView,
-      mutation.parentShadowView,
+      currentView,
+      parentView,
       {},
       count
   };
   layoutAnimations_.insert_or_assign(tag, la);
 
-  Snapshot values(oldChild, surfaceManager.getWindow(mutation.oldChildShadowView.surfaceId));
+  Snapshot values(oldView, surfaceManager.getWindow(surfaceId));
 
   nativeReanimatedModule_->uiScheduler_->scheduleOnUI(
       [values, this, tag]() {
@@ -465,19 +471,30 @@ void LayoutAnimationsProxy::startLayoutAnimation(const int tag, ShadowViewMutati
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO)<<"start layout animation for tag "<<tag<<std::endl;
 #endif
-  auto &oldChild = mutation.oldChildShadowView;
   auto surfaceId = mutation.newChildShadowView.surfaceId;
+  auto &oldView = mutation.oldChildShadowView;
   int count = 1;
-  if (layoutAnimations_.contains(tag)) {
-    oldChild = *layoutAnimations_.at(tag).current;
-    count = layoutAnimations_.at(tag).count + 1;
+  auto layoutAnimationIt = layoutAnimations_.find(tag);
+
+  if (layoutAnimationIt != layoutAnimations_.end()) {
+    auto &layoutAnimation = layoutAnimationIt->second;
+    oldView = *layoutAnimation.currentView;
+    count = layoutAnimation.count + 1;
   }
+  
   auto finalView = std::make_shared<ShadowView>(mutation.newChildShadowView);
-  auto current = std::make_shared<ShadowView>(oldChild);
-  LayoutAnimation la{finalView, current, oldChild, mutation.parentShadowView, {}, count};
+  auto current = std::make_shared<ShadowView>(oldView);
+  auto parent = std::make_shared<ShadowView>(mutation.parentShadowView);
+  LayoutAnimation la{
+    finalView,
+    current,
+    parent,
+    {},
+    count
+  };
   layoutAnimations_.insert_or_assign(tag, la);
 
-  Snapshot currentValues(oldChild, surfaceManager.getWindow(surfaceId));
+  Snapshot currentValues(oldView, surfaceManager.getWindow(surfaceId));
   Snapshot targetValues(mutation.newChildShadowView, surfaceManager.getWindow(surfaceId));
 
   nativeReanimatedModule_->uiScheduler_->scheduleOnUI(
@@ -521,7 +538,6 @@ void LayoutAnimationsProxy::transferConfigFromNativeTag(const std::string native
   try {
     auto nativeId = stoi(nativeIdString);
     layoutAnimationsManager_->transferConfigFromNativeTag(nativeId, tag);
-    std::shared_ptr<Shareable> config = nullptr;
   } catch (std::invalid_argument) {}
 }
 
