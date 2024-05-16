@@ -18,8 +18,10 @@ struct LayoutAnimation {
   std::shared_ptr<ShadowView> end, current;
   ShadowView start, parent;
   std::optional<double> opacity;
+  int count = 1;
   LayoutAnimation& operator=(const LayoutAnimation& other){
     this->end = other.end;
+    this->count = other.count;
     return *this;
   }
 };

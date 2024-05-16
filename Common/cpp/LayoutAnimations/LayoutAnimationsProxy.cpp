@@ -48,6 +48,11 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
 
   auto &layoutAnimation = layoutAnimationIt->second;
   
+  if (layoutAnimation.count > 1){
+    layoutAnimation.count--;
+    return {};
+  }
+  
   auto surfaceId = layoutAnimation.end->surfaceId;
   auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
   layoutAnimations_.erase(tag);
@@ -59,7 +64,6 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
   
   auto node = nodeForTag[tag];
   auto mutationNode = std::static_pointer_cast<MutationNode>(node);
-  maybeCancelAnimation(tag);
   mutationNode->state = DEAD;
   deadNodes.insert(mutationNode);
   
@@ -302,7 +306,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(std::shared_ptr<MutationN
   for (auto it = node->children.rbegin(); it != node->children.rend(); it++){
     auto &subNode = *it;
 #ifdef LAYOUT_ANIMATIONS_LOGS
-    LOG(INFO) << "child "<<subNode->tag<< " "<<subNode->isExiting<<" "<<shouldAnimate<<" "<<shouldRemoveSubviewsWithoutAnimations<< std::endl;
+    LOG(INFO) << "child "<<subNode->tag<< " "<<" "<<shouldAnimate<<" "<<shouldRemoveSubviewsWithoutAnimations<< std::endl;
 #endif
     if (subNode->state != UNDEFINED) {
       if (shouldAnimate && subNode->state != DEAD) {
@@ -420,17 +424,25 @@ void LayoutAnimationsProxy::startExitingAnimation(const int tag, ShadowViewMutat
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO)<<"start exiting animation for tag "<<tag<<std::endl;
 #endif
+  auto &oldChild = mutation.oldChildShadowView;
+  int count = 1;
+  if (layoutAnimations_.contains(tag)) {
+    oldChild = *layoutAnimations_.at(tag).current;
+    count = layoutAnimations_.at(tag).count + 1;
+  }
   auto finalView = std::make_shared<ShadowView>(mutation.oldChildShadowView);
-  auto current = std::make_shared<ShadowView>(mutation.oldChildShadowView);
+  auto current = std::make_shared<ShadowView>(oldChild);
   LayoutAnimation la{
       finalView,
       current,
       mutation.oldChildShadowView,
       mutation.parentShadowView,
+      {},
+      count
   };
-  layoutAnimations_.insert_or_assign(mutation.oldChildShadowView.tag, la);
+  layoutAnimations_.insert_or_assign(tag, la);
 
-  Snapshot values(mutation.oldChildShadowView, surfaceManager.getWindow(mutation.oldChildShadowView.surfaceId));
+  Snapshot values(oldChild, surfaceManager.getWindow(mutation.oldChildShadowView.surfaceId));
 
   nativeReanimatedModule_->uiScheduler_->scheduleOnUI(
       [values, this, tag]() {
@@ -455,12 +467,14 @@ void LayoutAnimationsProxy::startLayoutAnimation(const int tag, ShadowViewMutati
 #endif
   auto &oldChild = mutation.oldChildShadowView;
   auto surfaceId = mutation.newChildShadowView.surfaceId;
+  int count = 1;
   if (layoutAnimations_.contains(tag)) {
     oldChild = *layoutAnimations_.at(tag).current;
+    count = layoutAnimations_.at(tag).count + 1;
   }
   auto finalView = std::make_shared<ShadowView>(mutation.newChildShadowView);
   auto current = std::make_shared<ShadowView>(oldChild);
-  LayoutAnimation la{finalView, current, oldChild, mutation.parentShadowView};
+  LayoutAnimation la{finalView, current, oldChild, mutation.parentShadowView, {}, count};
   layoutAnimations_.insert_or_assign(tag, la);
 
   Snapshot currentValues(oldChild, surfaceManager.getWindow(surfaceId));

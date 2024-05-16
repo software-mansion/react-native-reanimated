@@ -75,9 +75,7 @@ function createLayoutAnimationManager() {
         value = makeUIMutable(style.initialValues);
         mutableValuesForTag.set(tag, value);
       } else {
-        if (!IS_FABRIC) {
-          stopObservingProgress(tag, value);
-        }
+        stopObservingProgress(tag, value);
         value._value = style.initialValues;
       }
 
