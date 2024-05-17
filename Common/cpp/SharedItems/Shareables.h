@@ -179,6 +179,12 @@ class ShareableArray : public Shareable {
   std::vector<std::shared_ptr<Shareable>> data_;
 };
 
+enum class NativeStateAccess {
+  Unknown,
+  Safe,
+  Unsafe,
+};
+
 class ShareableObject : public Shareable {
  public:
   ShareableObject(jsi::Runtime &rt, const jsi::Object &object);
@@ -191,8 +197,19 @@ class ShareableObject : public Shareable {
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
+  void makeNativeStateFromObject(jsi::Runtime &rt, const jsi::Object &object);
+  void makeNativeStateFromNativeStateSource(
+      jsi::Runtime &rt,
+      const jsi::Value &nativeStateSource);
+
   std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data_;
   std::shared_ptr<jsi::NativeState> nativeState_;
+
+  // In some implementations of JSC - namely, macOS
+  // the methods that refer to the native state of an object
+  // are not implemented and they throw the error. Therefore
+  // we need to keep track of the access mode to the native state.
+  static std::atomic<NativeStateAccess> nativeStateAccess_;
 };
 
 class ShareableHostObject : public Shareable {

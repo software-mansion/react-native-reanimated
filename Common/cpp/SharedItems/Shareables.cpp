@@ -4,6 +4,9 @@ using namespace facebook;
 
 namespace reanimated {
 
+std::atomic<NativeStateAccess> ShareableObject::nativeStateAccess_ =
+    NativeStateAccess::Unknown;
+
 jsi::Function getValueUnpacker(jsi::Runtime &rt) {
   auto valueUnpacker = rt.global().getProperty(rt, "__valueUnpacker");
   assert(valueUnpacker.isObject() && "valueUnpacker not found");
@@ -99,8 +102,8 @@ jsi::Value makeShareableClone(
   } else if (value.isSymbol()) {
     // TODO: this is only a placeholder implementation, here we replace symbols
     // with strings in order to make certain objects to be captured. There isn't
-    // yet any usecase for using symbols on the UI runtime so it is fine to keep
-    // it like this for now.
+    // yet any use case for using symbols on the UI runtime so it is fine to
+    // keep it like this for now.
     shareable =
         std::make_shared<ShareableString>(value.getSymbol(rt).toString(rt));
   } else {
@@ -198,8 +201,15 @@ ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
     auto value = extractShareableOrThrow(rt, object.getProperty(rt, key));
     data_.emplace_back(key.utf8(rt), value);
   }
-  if (object.hasNativeState(rt)) {
-    nativeState_ = object.getNativeState(rt);
+  if (nativeStateAccess_ == NativeStateAccess::Safe) {
+    makeNativeStateFromObject(rt, object);
+  } else if (nativeStateAccess_ == NativeStateAccess::Unknown) {
+    try {
+      makeNativeStateFromObject(rt, object);
+      nativeStateAccess_ = NativeStateAccess::Safe;
+    } catch (...) {
+      nativeStateAccess_ = NativeStateAccess::Unsafe;
+    }
   }
 }
 
@@ -208,9 +218,15 @@ ShareableObject::ShareableObject(
     const jsi::Object &object,
     const jsi::Value &nativeStateSource)
     : ShareableObject(rt, object) {
-  if (nativeStateSource.isObject() &&
-      nativeStateSource.asObject(rt).hasNativeState(rt)) {
-    nativeState_ = nativeStateSource.asObject(rt).getNativeState(rt);
+  if (nativeStateAccess_ == NativeStateAccess::Safe) {
+    makeNativeStateFromNativeStateSource(rt, nativeStateSource);
+  } else if (nativeStateAccess_ == NativeStateAccess::Unknown) {
+    try {
+      makeNativeStateFromNativeStateSource(rt, nativeStateSource);
+      nativeStateAccess_ = NativeStateAccess::Safe;
+    } catch (...) {
+      nativeStateAccess_ = NativeStateAccess::Unsafe;
+    }
   }
 }
 
@@ -224,6 +240,25 @@ jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
     obj.setNativeState(rt, nativeState_);
   }
   return obj;
+}
+
+void ShareableObject::makeNativeStateFromObject(
+    jsi::Runtime &rt,
+    const jsi::Object &object) {
+  if (object.hasNativeState(rt)) {
+    nativeState_ = object.getNativeState(rt);
+    nativeStateAccess_ = NativeStateAccess::Safe;
+  }
+}
+
+void ShareableObject::makeNativeStateFromNativeStateSource(
+    jsi::Runtime &rt,
+    const jsi::Value &nativeStateSource) {
+  if (nativeStateSource.isObject() &&
+      nativeStateSource.asObject(rt).hasNativeState(rt)) {
+    nativeState_ = nativeStateSource.asObject(rt).getNativeState(rt);
+    nativeStateAccess_ = NativeStateAccess::Safe;
+  }
 }
 
 jsi::Value ShareableHostObject::toJSValue(jsi::Runtime &rt) {
@@ -270,12 +305,12 @@ jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
         rt, initObj, jsi::String::createFromAscii(rt, "Handle")));
 
     // We are locking the initialization here since the thread that is
-    // initalizing can be pre-empted on runtime lock. E.g.
-    // UI thread can be pre-empted on initialization of a shared value and then
-    // JS thread can try to access the shared value, locking the whole runtime.
-    // If we put the lock on `getValueUnpacker` part (basically any part that
-    // requires runtime) we would get a deadlock since UI thread would never
-    // release it.
+    // initializing can be preempted on runtime lock. E.g.
+    // UI thread can be preempted on initialization of a shared value and
+    // then JS thread can try to access the shared value, locking the whole
+    // runtime. If we put the lock on `getValueUnpacker` part (basically any
+    // part that requires runtime) we would get a deadlock since UI thread
+    // would never release it.
     std::unique_lock<std::mutex> lock(initializationMutex_);
     if (remoteValue_ == nullptr) {
       remoteValue_ = std::move(value);
