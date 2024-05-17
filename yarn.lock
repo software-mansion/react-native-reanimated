@@ -5219,9 +5219,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"common-app@workspace:*, common-app@workspace:packages/common-app":
+"common-app@workspace:*, common-app@workspace:apps/common-app":
   version: 0.0.0-use.local
-  resolution: "common-app@workspace:packages/common-app"
+  resolution: "common-app@workspace:apps/common-app"
   dependencies:
     "@fortawesome/fontawesome-svg-core": "npm:^6.4.0"
     "@fortawesome/free-solid-svg-icons": "npm:^6.4.0"
@@ -10683,9 +10683,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"paper-example@workspace:packages/paper-example":
+"paper-example@workspace:apps/paper-example":
   version: 0.0.0-use.local
-  resolution: "paper-example@workspace:packages/paper-example"
+  resolution: "paper-example@workspace:apps/paper-example"
   dependencies:
     "@babel/core": "npm:^7.20.0"
     "@babel/preset-env": "npm:^7.20.0"
