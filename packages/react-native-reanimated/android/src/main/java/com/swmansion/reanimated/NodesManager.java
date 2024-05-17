@@ -360,6 +360,22 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void updateProps(int viewTag, Map<String, Object> props) {
+    /*
+     * This is a temporary fix intended to address an issue where updates to properties
+     * are attempted on views that may not exist or have been removed. This scenario can
+     * occur in fast-changing UI environments where components are frequently added or
+     * removed, leading to potential inconsistencies or errors when attempting to update
+     * views based on outdated references
+     */
+    try {
+      View view = mUIManager.resolveView(viewTag);
+      if (view == null) {
+        return;
+      }
+    } catch (IllegalViewOperationException e) {
+      return;
+    }
+
     // TODO: update PropsNode to use this method instead of its own way of updating props
     boolean hasUIProps = false;
     boolean hasNativeProps = false;
