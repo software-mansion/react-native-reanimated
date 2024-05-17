@@ -144,8 +144,8 @@ export function createAnimatedComponent(
     }
 
     componentDidMount() {
-      this._setComponentViewTag();
-      this._setEventViewTag();
+      this._componentViewTag = this._getComponentViewTag();
+      this._eventViewTag = this._getEventViewTag();
       this._attachNativeEvents();
       this._jsPropsUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
@@ -226,22 +226,24 @@ export function createAnimatedComponent(
       }
     }
 
-    _setComponentViewTag() {
-      this._componentViewTag = this._getViewInfo().viewTag as number;
+    _getComponentViewTag() {
+      return this._getViewInfo().viewTag as number;
     }
 
-    _setEventViewTag() {
-      // Setting the tag for registering events - since the event emitting view can be nested inside the main component
+    _getEventViewTag() {
+      // Get the tag for registering events - since the event emitting view can be nested inside the main component
       const componentAnimatedRef = this._component as AnimatedComponentRef;
+      let newTag: number;
       if (componentAnimatedRef.getScrollableNode) {
         const scrollableNode = componentAnimatedRef.getScrollableNode();
-        this._eventViewTag = findNodeHandle(scrollableNode) ?? -1;
+        newTag = findNodeHandle(scrollableNode) ?? -1;
       } else {
-        this._eventViewTag =
+        newTag =
           findNodeHandle(
             options?.setNativeProps ? this : componentAnimatedRef
           ) ?? -1;
       }
+      return newTag;
     }
 
     _attachNativeEvents() {
@@ -291,6 +293,29 @@ export function createAnimatedComponent(
     _updateNativeEvents(
       prevProps: AnimatedComponentProps<InitialComponentProps>
     ) {
+      // If the event view tag changes, we need to completely re-mount all events
+      const computedEventTag = this._getEventViewTag();
+      if (this._eventViewTag !== computedEventTag) {
+        // Remove all bindings from previous props that ran on the old viewTag
+        for (const key in prevProps) {
+          const prevProp = prevProps[key];
+          if (
+            has('workletEventHandler', prevProp) &&
+            prevProp.workletEventHandler instanceof WorkletEventHandler
+          ) {
+            prevProp.workletEventHandler.unregisterFromEvents(
+              this._eventViewTag
+            );
+          }
+        }
+        // We don't need to unregister from current (new) props, because their events weren't registered yet
+        // Replace the view tag
+        this._eventViewTag = computedEventTag;
+        // Attach the events with a new viewTag
+        this._attachNativeEvents();
+        return;
+      }
+
       for (const key in prevProps) {
         const prevProp = prevProps[key];
         if (
