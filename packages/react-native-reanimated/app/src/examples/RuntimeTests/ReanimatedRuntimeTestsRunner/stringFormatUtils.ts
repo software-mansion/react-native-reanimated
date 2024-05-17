@@ -26,8 +26,8 @@ export function color(value: NullableTestValue, color: 'yellow' | 'cyan' | 'gree
     orange: '\x1b[38;5;208m',
     reset: '\x1b[0m',
   };
-
-  return `${COLOR_CODES[color]}${value}${COLOR_CODES.reset}`;
+  const stringValue = typeof value === 'object' ? JSON.stringify(value) : value?.toString();
+  return `${COLOR_CODES[color]}${stringValue}${COLOR_CODES.reset}`;
 }
 
 export function applyMarkdown(template: string) {
@@ -51,12 +51,16 @@ export function applyMarkdown(template: string) {
 
 export function formatString(template: string, variableObject: unknown, index: number) {
   const valueToString: (arg0: unknown) => string = (value: unknown) => {
+    if (value instanceof Error) {
+      return `**${value.name}** "${value.message}"`;
+    }
     if (typeof value === 'object') {
       return JSON.stringify(value);
     }
     if (typeof value === 'function') {
       return value.name;
     }
+
     return value?.toString() || '';
   };
   let testName = template;

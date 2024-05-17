@@ -11,13 +11,13 @@
   "dependencies": {
     "@expo/vector-icons": "^14.0.0",
     "@react-navigation/native": "^6.0.2",
+    "common-app": "workspace:*",
     "expo": "~51.0.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-native": "0.74.0",
     "react-native-reanimated": "workspace:*",
-    "react-native-web": "~0.19.10",
-    "reanimated-app": "workspace:*"
+    "react-native-web": "~0.19.10"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
