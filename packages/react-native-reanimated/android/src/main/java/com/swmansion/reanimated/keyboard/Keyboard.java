@@ -23,7 +23,7 @@ public class Keyboard {
     int systemBarBottomInset = insets.getInsets(SYSTEM_BAR_TYPE_MASK).bottom;
     int keyboardHeightDip = contentBottomInset - systemBarBottomInset;
     int keyboardHeight = (int) PixelUtil.toDIPFromPixel(Math.max(0, keyboardHeightDip));
-    if (keyboardHeight == 0 && mState == KeyboardState.OPEN) {
+    if (keyboardHeight <= 0 && mState == KeyboardState.OPEN) {
       /*
       When the keyboard is being canceling, for one frame the insets show a keyboard height of 0,
       causing a jump of the keyboard. We can avoid it by ignoring that frame and calling
@@ -38,7 +38,7 @@ public class Keyboard {
     if (mActiveTransitionCounter > 0) {
       mState = mState == KeyboardState.OPENING ? KeyboardState.CLOSING : KeyboardState.OPENING;
     } else {
-      mState = mHeight == 0 ? KeyboardState.OPENING : KeyboardState.CLOSING;
+      mState = mHeight <= 0 ? KeyboardState.OPENING : KeyboardState.CLOSING;
     }
     mActiveTransitionCounter++;
   }
@@ -46,7 +46,7 @@ public class Keyboard {
   public void onAnimationEnd() {
     mActiveTransitionCounter--;
     if (mActiveTransitionCounter == 0) {
-      mState = mHeight == 0 ? KeyboardState.CLOSED : KeyboardState.OPEN;
+      mState = mHeight <= 0 ? KeyboardState.CLOSED : KeyboardState.OPEN;
     }
   }
 }

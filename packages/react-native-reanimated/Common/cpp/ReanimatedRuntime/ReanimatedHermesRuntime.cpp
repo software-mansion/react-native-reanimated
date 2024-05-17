@@ -45,19 +45,9 @@ class HermesExecutorRuntimeAdapter : public RuntimeAdapter {
     thread_->quitSynchronous();
   }
 
-#if REACT_NATIVE_MINOR_VERSION >= 71
   facebook::hermes::HermesRuntime &getRuntime() override {
     return hermesRuntime_;
   }
-#else
-  facebook::jsi::Runtime &getRuntime() override {
-    return hermesRuntime_;
-  }
-
-  facebook::hermes::debugger::Debugger &getDebugger() override {
-    return hermesRuntime_.getDebugger();
-  }
-#endif // REACT_NATIVE_MINOR_VERSION
 
   // This is not empty in the original implementation, but we decided to tickle
   // the runtime by running a small piece of code on every frame as using this
@@ -83,11 +73,7 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
 #if HERMES_ENABLE_DEBUGGER
   auto adapter =
       std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_, jsQueue);
-#if REACT_NATIVE_MINOR_VERSION >= 71
   debugToken_ = chrome::enableDebugging(std::move(adapter), name);
-#else
-  chrome::enableDebugging(std::move(adapter), name);
-#endif // REACT_NATIVE_MINOR_VERSION
 #else
   // This is required by iOS, because there is an assertion in the destructor
   // that the thread was indeed `quit` before
@@ -127,11 +113,7 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
 ReanimatedHermesRuntime::~ReanimatedHermesRuntime() {
 #if HERMES_ENABLE_DEBUGGER
   // We have to disable debugging before the runtime is destroyed.
-#if REACT_NATIVE_MINOR_VERSION >= 71
   chrome::disableDebugging(debugToken_);
-#else
-  chrome::disableDebugging(*runtime_);
-#endif // REACT_NATIVE_MINOR_VERSION
 #endif // HERMES_ENABLE_DEBUGGER
 }
 
