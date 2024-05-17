@@ -6134,14 +6134,14 @@ __metadata:
     eslint: "npm:^8.0.0-0"
     patch-package: "npm:^7.0.0"
     prettier: "npm:^2.8.7"
-    react-dom: "npm:18.0.0"
+    react: "npm:18.2.0"
+    react-native: "npm:0.74.0"
     react-native-gesture-handler: "npm:^2.16.0"
     react-native-pager-view: "npm:^6.2.3"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:4.10.0-rc.1"
     react-native-screens: "npm:3.31.0-rc.1"
     react-native-svg: "npm:^15.2.0-rc.0"
-    react-native-web: "npm:~0.18.12"
     typescript: "npm:^5.0.2"
   peerDependencies:
     react: "*"
@@ -11831,6 +11831,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mv@npm:~2":
+  version: 2.1.1
+  resolution: "mv@npm:2.1.1"
+  dependencies:
+    mkdirp: "npm:~0.5.1"
+    ncp: "npm:~2.0.0"
+    rimraf: "npm:~2.4.0"
+  checksum: 10/59d4b5ebff6c265b452d6630ae8873d573c82e36fdc1ed9c34c7901a0bf2d3d357022f49db8e9bded127b743f709c7ef7befec249a2b3967578d649a8029aa06
+  languageName: node
+  linkType: hard
+
+"mz@npm:^2.7.0":
+  version: 2.7.0
+  resolution: "mz@npm:2.7.0"
+  dependencies:
+    any-promise: "npm:^1.0.0"
+    object-assign: "npm:^4.0.1"
+    thenify-all: "npm:^1.0.0"
+  checksum: 10/8427de0ece99a07e9faed3c0c6778820d7543e3776f9a84d22cf0ec0a8eb65f6e9aee9c9d353ff9a105ff62d33a9463c6ca638974cc652ee8140cd1e35951c87
+  languageName: node
+  linkType: hard
+
 "nanoid@npm:^3.1.23, nanoid@npm:^3.3.7":
   version: 3.3.7
   resolution: "nanoid@npm:3.3.7"
@@ -15738,6 +15760,26 @@ __metadata:
   checksum: 10/182ebac8ca0b96845fae6ef44afd4619df6987fe5cf552fdee8396d3daa1fb9b8ec5c6c69855acb7b3c1231571393bd1f0a4cdc4028d421575348f64bb0a8817
   languageName: node
   linkType: hard
+
+"web-example@workspace:apps/web-example":
+  version: 0.0.0-use.local
+  resolution: "web-example@workspace:apps/web-example"
+  dependencies:
+    "@babel/core": "npm:^7.20.0"
+    "@expo/metro-runtime": "npm:^3.2.1"
+    "@expo/vector-icons": "npm:^14.0.0"
+    "@react-navigation/native": "npm:^6.0.2"
+    common-app: "workspace:*"
+    expo: "npm:~51.0.2"
+    react: "npm:18.2.0"
+    react-dom: "npm:18.2.0"
+    react-native: "npm:0.74.0"
+    react-native-reanimated: "workspace:*"
+    react-native-web: "npm:~0.19.10"
+    serve: "npm:^14.2.3"
+    typescript: "npm:~5.3.3"
+  languageName: unknown
+  linkType: soft
 
 "webidl-conversions@npm:^3.0.0":
   version: 3.0.1
