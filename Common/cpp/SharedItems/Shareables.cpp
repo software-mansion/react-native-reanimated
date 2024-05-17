@@ -204,12 +204,8 @@ ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
   if (nativeStateAccess_ == NativeStateAccess::Safe) {
     makeNativeStateFromObject(rt, object);
   } else if (nativeStateAccess_ == NativeStateAccess::Unknown) {
-    try {
-      makeNativeStateFromObject(rt, object);
-      nativeStateAccess_ = NativeStateAccess::Safe;
-    } catch (...) {
-      nativeStateAccess_ = NativeStateAccess::Unsafe;
-    }
+    runWithNativeStateAccessProbe(
+        [&]() { makeNativeStateFromObject(rt, object); });
   }
 }
 
@@ -221,12 +217,8 @@ ShareableObject::ShareableObject(
   if (nativeStateAccess_ == NativeStateAccess::Safe) {
     makeNativeStateFromNativeStateSource(rt, nativeStateSource);
   } else if (nativeStateAccess_ == NativeStateAccess::Unknown) {
-    try {
-      makeNativeStateFromNativeStateSource(rt, nativeStateSource);
-      nativeStateAccess_ = NativeStateAccess::Safe;
-    } catch (...) {
-      nativeStateAccess_ = NativeStateAccess::Unsafe;
-    }
+    runWithNativeStateAccessProbe(
+        [&]() { makeNativeStateFromNativeStateSource(rt, nativeStateSource); });
   }
 }
 
@@ -240,12 +232,8 @@ jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
     if (nativeStateAccess_ == NativeStateAccess::Safe) {
       obj.setNativeState(rt, nativeState_);
     } else if (nativeStateAccess_ == NativeStateAccess::Unknown) {
-      try {
-        obj.setNativeState(rt, nativeState_);
-        nativeStateAccess_ = NativeStateAccess::Safe;
-      } catch (...) {
-        nativeStateAccess_ = NativeStateAccess::Unsafe;
-      }
+      runWithNativeStateAccessProbe(
+          [&]() { obj.setNativeState(rt, nativeState_); });
     }
   }
   return obj;
@@ -267,6 +255,16 @@ void ShareableObject::makeNativeStateFromNativeStateSource(
       nativeStateSource.asObject(rt).hasNativeState(rt)) {
     nativeState_ = nativeStateSource.asObject(rt).getNativeState(rt);
     nativeStateAccess_ = NativeStateAccess::Safe;
+  }
+}
+
+void ShareableObject::runWithNativeStateAccessProbe(
+    std::function<void()> block) {
+  try {
+    block();
+    nativeStateAccess_ = NativeStateAccess::Safe;
+  } catch (...) {
+    nativeStateAccess_ = NativeStateAccess::Unsafe;
   }
 }
 

@@ -210,6 +210,7 @@ class ShareableObject : public Shareable {
   // are not implemented and they throw the error. Therefore
   // we need to keep track of the access mode to the native state.
   static std::atomic<NativeStateAccess> nativeStateAccess_;
+  static void runWithNativeStateAccessProbe(std::function<void()> &&block);
 };
 
 class ShareableHostObject : public Shareable {
