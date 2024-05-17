@@ -16,6 +16,11 @@ import './tests/layoutAnimations/entering/enteringColors.test';
 
 import './tests/utilities/relativeCoords.test';
 
+import './tests/core/useSharedValue.test';
+import './tests/core/useAnimatedStyle/reuseAnimatedStyle.test';
+import './tests/core/useDerivedValue/basic.test';
+import './tests/core/useDerivedValue/chain.test';
+
 export default function RuntimeTestsExample() {
   return <RuntimeTestsRunner />;
 }
