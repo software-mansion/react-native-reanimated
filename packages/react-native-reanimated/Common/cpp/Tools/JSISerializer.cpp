@@ -275,11 +275,9 @@ std::string JSISerializer::stringifyJSIValueRecursively(
   if (value.isSymbol()) {
     return value.getSymbol(rt_).toString(rt_);
   }
-#if REACT_NATIVE_MINOR_VERSION >= 71
   if (value.isBigInt()) {
     return value.getBigInt(rt_).toString(rt_).utf8(rt_) + 'n';
   }
-#endif
   if (value.isUndefined()) {
     return "undefined";
   }

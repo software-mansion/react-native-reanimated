@@ -23,6 +23,15 @@ function AnimatedComponentPropsTest() {
         <MyAnimatedScrollView style={RNStyle} />
         <Animated.FlatList
           style={RNStyle}
+          // @ts-expect-error
+          CellRendererComponent={() => {
+            return <View />;
+          }}
+          data={[]}
+          renderItem={() => <View />}
+        />
+        <Animated.FlatList
+          style={RNStyle}
           data={[]}
           renderItem={() => <View />}
         />
