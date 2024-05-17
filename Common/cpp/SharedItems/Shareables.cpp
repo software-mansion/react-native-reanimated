@@ -237,7 +237,16 @@ jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
         rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
   }
   if (nativeState_ != nullptr) {
-    obj.setNativeState(rt, nativeState_);
+    if (nativeStateAccess_ == NativeStateAccess::Safe) {
+      obj.setNativeState(rt, nativeState_);
+    } else if (nativeStateAccess_ == NativeStateAccess::Unknown) {
+      try {
+        obj.setNativeState(rt, nativeState_);
+        nativeStateAccess_ = NativeStateAccess::Safe;
+      } catch (...) {
+        nativeStateAccess_ = NativeStateAccess::Unsafe;
+      }
+    }
   }
   return obj;
 }
