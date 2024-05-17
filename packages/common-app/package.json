@@ -1,5 +1,5 @@
 {
-  "name": "reanimated-app",
+  "name": "common-app",
   "private": true,
   "scripts": {
     "build": "yarn patch-package",

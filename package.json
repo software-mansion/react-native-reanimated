@@ -3,10 +3,7 @@
   "packageManager": "yarn@4.1.1",
   "workspaces": {
     "packages": [
-      "packages/react-native-reanimated",
-      "packages/reanimated-app",
-      "packages/reanimated-paper-example",
-      "packages/my-package"
+      "packages/*"
     ]
   },
   "private": true,
