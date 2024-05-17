@@ -9,7 +9,8 @@
       "packages/reanimated-web-example",
       "packages/eslint-plugin-reanimated",
       "packages/reanimated-fabric-example",
-      "packages/reanimated-next-example"
+      "packages/reanimated-next-example",
+      "packages/reanimated-macos-example"
     ]
   },
   "private": true,

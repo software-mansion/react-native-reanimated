@@ -201,8 +201,12 @@ ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
     data_.emplace_back(key.utf8(rt), value);
   }
 #if REACT_NATIVE_MINOR_VERSION >= 71
-  if (object.hasNativeState(rt)) {
-    nativeState_ = object.getNativeState(rt);
+  try {
+    if (object.hasNativeState(rt)) {
+      nativeState_ = object.getNativeState(rt);
+    }
+  } catch (...) {
+    // Temporary workaround until upstream fix is merged.
   }
 #endif
 }
@@ -213,9 +217,13 @@ ShareableObject::ShareableObject(
     const jsi::Value &nativeStateSource)
     : ShareableObject(rt, object) {
 #if REACT_NATIVE_MINOR_VERSION >= 71
-  if (nativeStateSource.isObject() &&
-      nativeStateSource.asObject(rt).hasNativeState(rt)) {
-    nativeState_ = nativeStateSource.asObject(rt).getNativeState(rt);
+  try {
+    if (nativeStateSource.isObject() &&
+        nativeStateSource.asObject(rt).hasNativeState(rt)) {
+      nativeState_ = nativeStateSource.asObject(rt).getNativeState(rt);
+    }
+  } catch (...) {
+    // Temporary workaround until upstream fix is merged.
   }
 #endif
 }
@@ -227,8 +235,12 @@ jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
         rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
   }
 #if REACT_NATIVE_MINOR_VERSION >= 71
-  if (nativeState_ != nullptr) {
-    obj.setNativeState(rt, nativeState_);
+  try {
+    if (nativeState_ != nullptr) {
+      obj.setNativeState(rt, nativeState_);
+    }
+  } catch (...) {
+    // Temporary workaround until upstream fix is merged.
   }
 #endif
   return obj;

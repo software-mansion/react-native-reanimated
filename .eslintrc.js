@@ -9,7 +9,9 @@ module.exports = {
         tsconfigRootDir: __dirname,
       },
       extends: ['plugin:@typescript-eslint/recommended-type-checked'],
+      plugins: ['eslint-plugin-tsdoc'],
       rules: {
+        'tsdoc/syntax': 'error',
         '@typescript-eslint/no-unsafe-call': 'off',
         '@typescript-eslint/no-unsafe-member-access': 'off',
         '@typescript-eslint/no-unsafe-return': 'off',
@@ -51,14 +53,7 @@ module.exports = {
     'plugin:import/typescript',
     'plugin:react-hooks/recommended',
   ],
-  plugins: [
-    'react',
-    'react-native',
-    'import',
-    'jest',
-    '@typescript-eslint',
-    'eslint-plugin-tsdoc',
-  ],
+  plugins: ['react', 'react-native', 'import', 'jest', '@typescript-eslint'],
   env: {
     'react-native/react-native': true,
     'jest/globals': true,
@@ -81,7 +76,6 @@ module.exports = {
     'no-use-before-define': 'off',
     eqeqeq: 'error',
     'no-unreachable': 'error',
-    'tsdoc/syntax': 'error',
     'jest/no-disabled-tests': 'warn',
     'jest/no-focused-tests': 'error',
     'jest/no-identical-title': 'error',

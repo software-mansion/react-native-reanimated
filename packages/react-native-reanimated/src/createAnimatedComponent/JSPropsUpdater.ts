@@ -25,8 +25,8 @@ class JSPropsUpdaterPaper implements IJSPropsUpdater {
 
   constructor() {
     this._reanimatedEventEmitter = new NativeEventEmitter(
-      // NativeEventEmitter only uses this parameter on iOS.
-      Platform.OS === 'ios'
+      // NativeEventEmitter only uses this parameter on iOS and macOS.
+      Platform.OS === 'ios' || Platform.OS === 'macos'
         ? (NativeReanimatedModule as unknown as NativeModule)
         : undefined
     );
