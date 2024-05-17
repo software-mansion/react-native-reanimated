@@ -259,7 +259,7 @@ void ShareableObject::makeNativeStateFromNativeStateSource(
 }
 
 void ShareableObject::runWithNativeStateAccessProbe(
-    std::function<void()> block) {
+    std::function<void()> &&block) {
   try {
     block();
     nativeStateAccess_ = NativeStateAccess::Safe;
