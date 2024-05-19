@@ -91,6 +91,7 @@ import ReducedMotionSharedExample from './SharedElementTransitions/ReducedMotion
 import RefExample from './RefExample';
 import RestoreStateExample from './SharedElementTransitions/RestoreState';
 import TransitionRestartExample from './SharedElementTransitions/TransitionRestart';
+import TwoThousandFortyEightExample from './TwoThousandFortyEightExample';
 import ScreenStackExample from './ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderConfigBackgroundColorExample';
 import ScrollEventExample from './ScrollEventExample';
@@ -408,6 +409,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '♟️',
     title: 'Chessboard',
     screen: ChessboardExample,
+  },
+  TwoThousandFortyEightExample: {
+    icon: '🕹️',
+    title: '2048',
+    screen: TwoThousandFortyEightExample,
   },
   OverlappingBoxesExample: {
     icon: '🔝',
