@@ -201,7 +201,7 @@ function getPoints(tiles: Tile[]): number {
   return filterOutZombieTiles(tiles).reduce((acc, tile) => acc + tile.value, 0);
 }
 
-export default function TwoThousandFortyEightExample() {
+export default function Game2048Example() {
   const [tiles, setTiles] = React.useState(makeInitialBoard);
   const [gameOver, setGameOver] = React.useState(false);
 

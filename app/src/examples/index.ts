@@ -45,6 +45,7 @@ import FlatListExample from './SharedElementTransitions/FlatList';
 import FlatListSkipEnteringExiting from './LayoutAnimations/FlatListSkipEnteringExiting';
 import FrameCallbackExample from './FrameCallbackExample';
 import GalleryExample from './SharedElementTransitions/Gallery';
+import Game2048Example from './Game2048Example';
 import GestureHandlerExample from './GestureHandlerExample';
 import GetViewPropExample from './GetViewPropExample';
 import IPodExample from './IPodExample';
@@ -91,7 +92,6 @@ import ReducedMotionSharedExample from './SharedElementTransitions/ReducedMotion
 import RefExample from './RefExample';
 import RestoreStateExample from './SharedElementTransitions/RestoreState';
 import TransitionRestartExample from './SharedElementTransitions/TransitionRestart';
-import TwoThousandFortyEightExample from './TwoThousandFortyEightExample';
 import ScreenStackExample from './ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderConfigBackgroundColorExample';
 import ScrollEventExample from './ScrollEventExample';
@@ -410,10 +410,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Chessboard',
     screen: ChessboardExample,
   },
-  TwoThousandFortyEightExample: {
+  Game2048Example: {
     icon: '🕹️',
     title: '2048',
-    screen: TwoThousandFortyEightExample,
+    screen: Game2048Example,
   },
   OverlappingBoxesExample: {
     icon: '🔝',
