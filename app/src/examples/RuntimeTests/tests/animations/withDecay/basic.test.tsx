@@ -1,9 +1,19 @@
 import { View, StyleSheet } from 'react-native';
 import Animated, { useAnimatedStyle, withDecay, WithDecayConfig } from 'react-native-reanimated';
 import React from 'react';
-import { describe, test, render, wait } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+import {
+  describe,
+  test,
+  render,
+  wait,
+  mockAnimationTimer,
+  recordAnimationUpdates,
+  unmockAnimationTimer,
+  expect,
+} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+import { Snapshots } from './basic.snapshot';
 
-describe.only('withDecay animation, test various config', () => {
+describe('withDecay animation, test various config', () => {
   const DecayComponent = ({ config }: { config: WithDecayConfig }) => {
     const animatedStyle = useAnimatedStyle(() => {
       return {
@@ -18,6 +28,19 @@ describe.only('withDecay animation, test various config', () => {
     );
   };
 
+  async function getSnapshotUpdates(config: WithDecayConfig) {
+    await mockAnimationTimer();
+    const updatesContainer = await recordAnimationUpdates();
+    await render(<DecayComponent config={config} />);
+    await wait(1200);
+
+    const updates = updatesContainer.getUpdates();
+    const nativeUpdates = await updatesContainer.getNativeSnapshots();
+    await unmockAnimationTimer();
+
+    return [updates, nativeUpdates];
+  }
+
   test.each([
     { velocity: 900 },
     { velocity: 9, velocityFactor: 100 },
@@ -27,8 +50,17 @@ describe.only('withDecay animation, test various config', () => {
     { velocity: 2000, clamp: [0, 150], rubberBandEffect: true },
     { velocity: 2000, clamp: [0, 150], rubberBandEffect: true, rubberBandFactor: 2 },
   ] as Array<WithDecayConfig>)('Config %p', async config => {
-    await render(<DecayComponent config={config} />);
-    await wait(3000);
+    const snapshotName =
+      'decay_' +
+      Object.entries(config)
+        .map(([key, val]) => {
+          return `${key}_${val.toString().replace(/\./g, '_').replace(/,/g, '_')}`;
+        })
+        .join('$');
+
+    const [updates, nativeUpdates] = await getSnapshotUpdates(config);
+    expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
+    expect(updates).toMatchNativeSnapshots(nativeUpdates);
   });
 });
 
