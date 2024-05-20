@@ -19,6 +19,20 @@ on:
     secrets:
       NODE_AUTH_TOKEN:
         required: false
+  workflow_dispatch:
+    inputs:
+      option:
+        required: false
+        type: string
+      ref:
+        required: false
+        type: string
+      upload_binaries:
+        required: false
+        type: boolean
+      publish_on_npm:
+        required: false
+        type: boolean
 
 jobs:
   build:
