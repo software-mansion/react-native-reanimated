@@ -30,9 +30,6 @@ on:
       upload_binaries:
         required: false
         type: boolean
-      publish_on_npm:
-        required: false
-        type: boolean
 
 jobs:
   build:
@@ -56,7 +53,7 @@ jobs:
         working-directory: packages/react-native-reanimated
         id: build
         run: >-
-          ./createNPMPackage.sh ${{ inputs.option }} 2> build.log
+          ./createNPMPackage.sh ${{ inputs.option }}
 
       - name: Check if any node_modules were packed
         working-directory: packages/react-native-reanimated
@@ -80,6 +77,10 @@ jobs:
         working-directory: packages/react-native-reanimated
         run: echo "PACKAGE_NAME=$(ls -l | egrep -o "react-native-reanimated-(.*)(=?\.tgz)")" >> $GITHUB_ENV
 
+      - name: Move package to root
+        working-directory: packages/react-native-reanimated
+        run: mv ${{ env.PACKAGE_NAME }} ../..
+
       - name: Upload npm package
         uses: actions/upload-artifact@v4
         with:
@@ -89,7 +90,7 @@ jobs:
       - name: Compress Android build output
         working-directory: packages/react-native-reanimated
         if: ${{ inputs.upload_binaries }}
-        run: zip -r android-build-output.zip build_output
+        run: zip -r android-build-output.zip build_output && mv android-build-output.zip ../../
 
       - name: Upload Android build folder
         if: ${{ inputs.upload_binaries }}
