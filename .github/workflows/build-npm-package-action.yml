@@ -10,9 +10,6 @@ on:
       ref:
         required: false
         type: string
-      upload_binaries:
-        required: false
-        type: boolean
       publish_on_npm:
         required: false
         type: boolean
@@ -27,9 +24,6 @@ on:
       ref:
         required: false
         type: string
-      upload_binaries:
-        required: false
-        type: boolean
 
 jobs:
   build:
@@ -77,28 +71,11 @@ jobs:
         working-directory: packages/react-native-reanimated
         run: echo "PACKAGE_NAME=$(ls -l | egrep -o "react-native-reanimated-(.*)(=?\.tgz)")" >> $GITHUB_ENV
 
-      - name: Move package to root
-        working-directory: packages/react-native-reanimated
-        run: mv ${{ env.PACKAGE_NAME }} ../..
-
       - name: Upload npm package
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }}
-          path: "*.tgz"
-
-      - name: Compress Android build output
-        working-directory: packages/react-native-reanimated
-        if: ${{ inputs.upload_binaries }}
-        run: zip -r android-build-output.zip build_output && mv android-build-output.zip ../../
-
-      - name: Upload Android build folder
-        if: ${{ inputs.upload_binaries }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-build-output
-          path: android-build-output.zip
-          retention-days: 5
+          path: "packages/react-native-reanimated/${{ env.PACKAGE_NAME }}"
 
       - run: npm publish $PACKAGE_NAME --tag nightly
         if: ${{ inputs.publish_on_npm }}
