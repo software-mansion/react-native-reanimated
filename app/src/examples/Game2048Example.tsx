@@ -226,7 +226,7 @@ export default function Game2048Example() {
 
   const handleReset = React.useCallback(() => {
     setTiles(makeInitialBoard());
-    setGameOver(true);
+    setGameOver(false);
   }, []);
 
   return (
