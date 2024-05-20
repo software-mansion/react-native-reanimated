@@ -87,7 +87,7 @@ function hue2rgb(p: number, q: number, t: number): number {
   }
   return p;
 }
-
+// HERE
 function hslToRgb(h: number, s: number, l: number): number {
   'worklet';
   const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
