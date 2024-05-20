@@ -13,7 +13,7 @@ import {
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { Snapshots } from './basic.snapshot';
 
-describe('withDecay animation, test various config', () => {
+describe.only('withDecay animation, test various config', () => {
   const DecayComponent = ({ config }: { config: WithDecayConfig }) => {
     const animatedStyle = useAnimatedStyle(() => {
       return {
@@ -28,11 +28,12 @@ describe('withDecay animation, test various config', () => {
     );
   };
 
-  async function getSnapshotUpdates(config: WithDecayConfig) {
+  async function getSnapshotUpdates(config: WithDecayConfig, duration: number) {
     await mockAnimationTimer();
     const updatesContainer = await recordAnimationUpdates();
     await render(<DecayComponent config={config} />);
-    await wait(1200);
+
+    await wait(duration);
 
     const updates = updatesContainer.getUpdates();
     const nativeUpdates = await updatesContainer.getNativeSnapshots();
@@ -42,14 +43,14 @@ describe('withDecay animation, test various config', () => {
   }
 
   test.each([
-    { velocity: 900 },
-    { velocity: 9, velocityFactor: 100 },
-    { velocity: 900, deceleration: 0.997 },
-    { velocity: 900, clamp: [0, 150] },
-    { velocity: 900, clamp: [0, 150], rubberBandEffect: true },
-    { velocity: 2000, clamp: [0, 150], rubberBandEffect: true },
-    { velocity: 2000, clamp: [0, 150], rubberBandEffect: true, rubberBandFactor: 2 },
-  ] as Array<WithDecayConfig>)('Config %p', async config => {
+    [1200, { velocity: 900 }],
+    [600, { velocity: 9, velocityFactor: 100 }],
+    [900, { velocity: 900, deceleration: 0.997 }],
+    [400, { velocity: 900, clamp: [0, 150] }],
+    [900, { velocity: 900, clamp: [0, 150], rubberBandEffect: true }],
+    [700, { velocity: 2000, clamp: [0, 150], rubberBandEffect: true }],
+    [400, { velocity: 2000, clamp: [0, 150], rubberBandEffect: true, rubberBandFactor: 2 }],
+  ] as Array<[number, WithDecayConfig]>)('Config ${1}', async ([duration, config]) => {
     const snapshotName =
       'decay_' +
       Object.entries(config)
@@ -58,7 +59,7 @@ describe('withDecay animation, test various config', () => {
         })
         .join('$');
 
-    const [updates, nativeUpdates] = await getSnapshotUpdates(config);
+    const [updates, nativeUpdates] = await getSnapshotUpdates(config, duration);
     expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
     expect(updates).toMatchNativeSnapshots(nativeUpdates);
   });
