@@ -345,6 +345,8 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(std::shared_ptr<MutationN
   if (hasExitAnimation) {
     node->state = ANIMATING;
     startExitingAnimation(node->tag, node->mutation);
+  } else {
+    layoutAnimationsManager_->clearLayoutAnimationConfig(node->tag);
   }
 
   if (!wantAnimateExit) {
