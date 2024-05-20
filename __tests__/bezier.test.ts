@@ -7,20 +7,21 @@ import { Bezier } from '../src/reanimated2/Bezier';
  */
 
 function repeat(n: number) {
-  return function (f: () => void) {
+  return (f: () => void) => {
     for (let i = 0; i < n; ++i) f();
   };
 }
 
 function functionsAreEqual(
   fun1: (x: number) => number,
-  fun2: (x: number) => number
+  fun2: (x: number) => number,
+  maxError = 0
 ) {
   let allPointsAreEqual = true;
 
   const points = Array.from(Array(100).keys()).map((x) => x / 100);
   points.forEach((point) => {
-    if (fun1(point) !== fun2(point)) {
+    if (Math.abs(fun1(point) - fun2(point)) > maxError) {
       allPointsAreEqual = false;
     }
   });
@@ -28,10 +29,10 @@ function functionsAreEqual(
 }
 
 describe('Test `Bezier` function', () => {
-  it('Should be a function', function () {
+  it('Should be a function', () => {
     expect(typeof Bezier === 'function').toBeTruthy();
   });
-  it('Should create a function', function () {
+  it('Should create a function', () => {
     expect(typeof Bezier(0, 0, 1, 1) === 'function').toBeTruthy();
     expect(typeof Bezier(0, 0, 1, 1)(0.5) === 'number').toBeTruthy();
   });
@@ -70,7 +71,7 @@ describe('Test `Bezier` function', () => {
 
   describe('Function bezier(a,a,b,b) is alway linear', () => {
     let allTestPass = true;
-    repeat(1000)(function () {
+    repeat(1000)(() => {
       const a = Math.random();
       const b = Math.random();
 
@@ -88,13 +89,13 @@ describe('Test `Bezier` function', () => {
     });
   });
 
-  describe('Should satisfy that bezier(0) = 0 and bezier(1)=1', function () {
+  describe('Should satisfy that bezier(0) = 0 and bezier(1)=1', () => {
     let allTestPass = true;
-    repeat(1000)(function () {
+    repeat(1000)(() => {
       const a = Math.random();
-      const b = 2 * Math.random() - 0.5;
+      const b = 3 * Math.random() - 1;
       const c = Math.random();
-      const d = 2 * Math.random() - 0.5;
+      const d = 3 * Math.random() - 1;
 
       const easing = Bezier(a, b, c, d);
 
@@ -111,4 +112,35 @@ describe('Test `Bezier` function', () => {
       expect(allTestPass).toBeTruthy();
     });
   });
+
+  describe('Composite of a bezier curve and its reflection relative to line f(x)=x is close to identity', () => {
+    // The b1 = bezier(a,b,c,d) curve is defined through four points: (0,0), (a,b), (c,d) and (1,1)
+    // The b2 = bezier(b,a,d,c) curve is defined through four points: (0,0), (b,a), (d,c) and (1,1)
+    // These two bezier curves are each others reflection relative to line f(x)=x
+    // So if b1(x) = y, then b2(y) = x and b2(b1(x)) = x
+
+    let allTestPass = true;
+    repeat(1000)(() => {
+      const a = Math.random();
+      const b = Math.random();
+      const c = Math.random();
+      const d = Math.random();
+
+      const easing1 = Bezier(a, b, c, d);
+      const easing2 = Bezier(b, a, d, c);
+
+      const almostIdentity = (x: number) => easing1(easing2(x));
+      if (!functionsAreEqual(almostIdentity, (x: number) => x, 0.001)) {
+        allTestPass = false;
+        test(`Bezier(${a},${b}, ${c}, ${d}) is symmetric to its reflection about the axis f(x)=x`, () => {
+          expect(false).toBeTruthy();
+        });
+      }
+    });
+    test('All monkey tests pass', () => {
+      expect(allTestPass).toBeTruthy();
+    });
+  });
+
+  describe('Bezier(a,b,(1-a),(1-b)) should have point symmetry at point (0.5, 0.5)', () => {});
 });
