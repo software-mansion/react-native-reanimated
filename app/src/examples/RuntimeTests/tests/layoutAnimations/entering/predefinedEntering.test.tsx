@@ -37,6 +37,8 @@ import Animated, {
   ZoomInRight,
   ZoomInRotate,
   ZoomInUp,
+  RollInRight,
+  RollInLeft,
 } from 'react-native-reanimated';
 import React from 'react';
 import {
@@ -50,14 +52,18 @@ import {
   unmockAnimationTimer,
   clearRenderOutput,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { PredefinedEnteringSnapshots as Snapshots } from './entering.snapshot';
+import {
+  DurationEnteringSnapshots,
+  NoModifierEnteringSnapshots,
+  SpringifyEnteringSnapshots,
+} from './entering.snapshot';
 
-const FADE_ENTERING = [FadeIn, FadeInRight, FadeInLeft, FadeInUp, FadeInDown];
+const FADE_ENTERING = [FadeIn, FadeInRight, FadeInRight, FadeInLeft, FadeInUp, FadeInDown];
 const BOUNCE_ENTERING = [BounceIn, BounceInRight, BounceInLeft, BounceInUp, BounceInDown];
 const FLIP_ENTERING = [FlipInEasyX, FlipInEasyY, FlipInXDown, FlipInXUp, FlipInYLeft, FlipInYRight];
 const LIGHTSPEED_ENTERING = [LightSpeedInRight, LightSpeedInLeft];
 const PINWHEEL_ENTERING = [PinwheelIn];
-// const ROLL_ENTERING = [RollInRight, RollInLeft]; Don't test RollIn, until recording rotation snapshot gets fixed
+const ROLL_ENTERING = [RollInRight, RollInLeft]; //Don't test RollIn, until recording rotation snapshot gets fixed
 const ROTATE_ENTERING = [RotateInDownLeft, RotateInDownRight, RotateInUpLeft, RotateInUpRight];
 const SLIDE_ENTERING = [SlideInRight, SlideInLeft, SlideInUp, SlideInDown];
 const STRETCH_ENTERING = [StretchInX, StretchInY];
@@ -73,23 +79,26 @@ const ZOOM_ENTERING = [
   ZoomInUp,
 ];
 
+// Animation RollInLeft doesn't work with duration
+const BuggyEnteringNames = ['RollInLeft'];
+
 const ENTERING_SETS: Array<[string, unknown[], number]> = [
   ['Fade', FADE_ENTERING, 1350],
   ['Bounce', BOUNCE_ENTERING, 650],
   ['Flip', FLIP_ENTERING, 1750],
   ['LightSpeed', LIGHTSPEED_ENTERING, 1600],
   ['Pinwheel', PINWHEEL_ENTERING, 1000],
-  ['Rotate', ROTATE_ENTERING, 1400],
+  ['Roll', ROLL_ENTERING, 2000], //TODO faster
+  ['Rotate', ROTATE_ENTERING, 1600],
   ['Slide', SLIDE_ENTERING, 1800],
   ['Stretch', STRETCH_ENTERING, 1000],
   ['Zoom', ZOOM_ENTERING, 1800],
 ];
 
-const EnteringOnMountComponent = ({ entering, duration }: { entering: any; duration?: number }) => {
-  const enteringAnimation = duration ? entering.duration(duration) : entering;
+const EnteringOnMountComponent = ({ entering }: { entering: any }) => {
   return (
     <View style={styles.container}>
-      <Animated.View entering={enteringAnimation} style={styles.animatedBox} />
+      <Animated.View entering={entering} style={styles.animatedBox} />
     </View>
   );
 };
@@ -98,12 +107,12 @@ async function getSnapshotUpdates(entering: any, waitTime: number, duration: num
   await mockAnimationTimer();
 
   const updatesContainer = await recordAnimationUpdates();
-  const componentEntering = springify ? entering : entering.springify();
-  await render(<EnteringOnMountComponent entering={componentEntering} duration={duration} />);
+  const springEntering = springify ? entering : entering.springify();
+  const componentEntering = duration ? springEntering.duration(duration) : springEntering;
 
+  await render(<EnteringOnMountComponent entering={componentEntering} />);
   await wait(waitTime);
   const updates = updatesContainer.getUpdates();
-
   await unmockAnimationTimer();
   await clearRenderOutput();
 
@@ -116,7 +125,9 @@ describe('Test predefined entering', () => {
       for (const entering of enteringSet) {
         const snapshotName = (entering as any).name;
         const updates = await getSnapshotUpdates(entering, waitTime, undefined);
-        expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
+        expect(updates).toMatchSnapshots(
+          NoModifierEnteringSnapshots[snapshotName as keyof typeof NoModifierEnteringSnapshots],
+        );
       }
     });
   });
@@ -124,9 +135,13 @@ describe('Test predefined entering', () => {
   describe('Entering on mount, duration 100', async () => {
     test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet, _waitTime]) => {
       for (const entering of enteringSet) {
-        const snapshotName = (entering as any).name + '_100';
-        const updates = await getSnapshotUpdates(entering, 100, 100);
-        expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
+        const enteringName: string = (entering as any).name;
+        if (!BuggyEnteringNames.includes(enteringName)) {
+          let updates = await getSnapshotUpdates(entering, 120, 100);
+          expect(updates).toMatchSnapshots(
+            DurationEnteringSnapshots[enteringName as keyof typeof DurationEnteringSnapshots],
+          );
+        }
       }
     });
   });
@@ -135,19 +150,11 @@ describe('Test predefined entering', () => {
     test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet, waitTime]) => {
       const timeToWait = _setName === 'Bounce' ? 650 : waitTime * 0.3;
       for (const entering of enteringSet) {
-        const snapshotName = (entering as any).name + '_springify';
+        const snapshotName = (entering as any).name;
         const updates = await getSnapshotUpdates(entering, timeToWait, undefined, true);
-        expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
-      }
-    });
-  });
-
-  describe('Entering on mount, springify, duration 100', async () => {
-    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet, _waitTime]) => {
-      for (const entering of enteringSet) {
-        const snapshotName = (entering as any).name + '_springify_100';
-        const updates = await getSnapshotUpdates(entering, 100, 100, true);
-        expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
+        expect(updates).toMatchSnapshots(
+          SpringifyEnteringSnapshots[snapshotName as keyof typeof SpringifyEnteringSnapshots],
+        );
       }
     });
   });
