@@ -54,6 +54,15 @@ export interface IJSPropsUpdater {
   ): void;
 }
 
+export interface INativeEventsManager {
+  attachNativeEvents(): void;
+  detachNativeEvents(): void;
+  updateNativeEvents(
+    prevProps: AnimatedComponentProps<InitialComponentProps>,
+    computedEventTag: number
+  ): void;
+}
+
 export type LayoutAnimationStaticContext = {
   presetName: string;
 };
@@ -105,6 +114,7 @@ export interface IAnimatedComponentInternal {
   _jsPropsUpdater: IJSPropsUpdater;
   _InlinePropManager: IInlinePropManager;
   _PropsFilter: IPropsFilter;
+  _NativeEventsManager: INativeEventsManager;
   _viewInfo?: ViewInfo;
   context: React.ContextType<typeof SkipEnteringContext>;
 }

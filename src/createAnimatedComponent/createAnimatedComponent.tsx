@@ -8,7 +8,6 @@ import type {
 } from 'react';
 import React from 'react';
 import { findNodeHandle, Platform } from 'react-native';
-import { WorkletEventHandler } from '../reanimated2/WorkletEventHandler';
 import '../reanimated2/layoutReanimation/animationsManager';
 import invariant from 'invariant';
 import { adaptViewConfig } from '../ConfigHelper';
@@ -33,8 +32,9 @@ import type {
   AnimatedComponentRef,
   IAnimatedComponentInternal,
   ViewInfo,
+  INativeEventsManager,
 } from './commonTypes';
-import { has, flattenArray } from './utils';
+import { flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
 import {
   isFabric,
@@ -56,6 +56,7 @@ import type { CustomConfig } from '../reanimated2/layoutReanimation/web/config';
 import type { FlatList, FlatListProps } from 'react-native';
 import { addHTMLMutationObserver } from '../reanimated2/layoutReanimation/web/domUtils';
 import { getViewInfo } from './getViewInfo';
+import { NativeEventsManager } from './NativeEventsManager';
 
 const IS_WEB = isWeb();
 
@@ -131,6 +132,7 @@ export function createAnimatedComponent(
     _jsPropsUpdater = new JSPropsUpdater();
     _InlinePropManager = new InlinePropManager();
     _PropsFilter = new PropsFilter();
+    _NativeEventsManager: INativeEventsManager;
     _viewInfo?: ViewInfo;
     static displayName: string;
     static contextType = SkipEnteringContext;
@@ -141,12 +143,13 @@ export function createAnimatedComponent(
       if (isJest()) {
         this.jestAnimatedStyle = { value: {} };
       }
+      this._NativeEventsManager = new NativeEventsManager(this);
     }
 
     componentDidMount() {
       this._componentViewTag = this._getComponentViewTag();
       this._eventViewTag = this._getEventViewTag();
-      this._attachNativeEvents();
+      this._NativeEventsManager.attachNativeEvents();
       this._jsPropsUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
@@ -180,7 +183,7 @@ export function createAnimatedComponent(
     }
 
     componentWillUnmount() {
-      this._detachNativeEvents();
+      this._NativeEventsManager.detachNativeEvents();
       this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
       this._InlinePropManager.detachInlineProps();
@@ -246,30 +249,6 @@ export function createAnimatedComponent(
       return newTag;
     }
 
-    _attachNativeEvents() {
-      for (const key in this.props) {
-        const prop = this.props[key];
-        if (
-          has('workletEventHandler', prop) &&
-          prop.workletEventHandler instanceof WorkletEventHandler
-        ) {
-          prop.workletEventHandler.registerForEvents(this._eventViewTag, key);
-        }
-      }
-    }
-
-    _detachNativeEvents() {
-      for (const key in this.props) {
-        const prop = this.props[key];
-        if (
-          has('workletEventHandler', prop) &&
-          prop.workletEventHandler instanceof WorkletEventHandler
-        ) {
-          prop.workletEventHandler.unregisterFromEvents(this._eventViewTag);
-        }
-      }
-    }
-
     _detachStyles() {
       if (IS_WEB && this._styles !== null) {
         for (const style of this._styles) {
@@ -286,71 +265,6 @@ export function createAnimatedComponent(
         }
         if (isFabric()) {
           removeFromPropsRegistry(this._componentViewTag);
-        }
-      }
-    }
-
-    _updateNativeEvents(
-      prevProps: AnimatedComponentProps<InitialComponentProps>
-    ) {
-      // If the event view tag changes, we need to completely re-mount all events
-      const computedEventTag = this._getEventViewTag();
-      if (this._eventViewTag !== computedEventTag) {
-        // Remove all bindings from previous props that ran on the old viewTag
-        for (const key in prevProps) {
-          const prevProp = prevProps[key];
-          if (
-            has('workletEventHandler', prevProp) &&
-            prevProp.workletEventHandler instanceof WorkletEventHandler
-          ) {
-            prevProp.workletEventHandler.unregisterFromEvents(
-              this._eventViewTag
-            );
-          }
-        }
-        // We don't need to unregister from current (new) props, because their events weren't registered yet
-        // Replace the view tag
-        this._eventViewTag = computedEventTag;
-        // Attach the events with a new viewTag
-        this._attachNativeEvents();
-        return;
-      }
-
-      for (const key in prevProps) {
-        const prevProp = prevProps[key];
-        if (
-          has('workletEventHandler', prevProp) &&
-          prevProp.workletEventHandler instanceof WorkletEventHandler
-        ) {
-          const newProp = this.props[key];
-          if (!newProp) {
-            // Prop got deleted
-            prevProp.workletEventHandler.unregisterFromEvents(
-              this._eventViewTag
-            );
-          } else if (
-            has('workletEventHandler', newProp) &&
-            newProp.workletEventHandler instanceof WorkletEventHandler &&
-            newProp.workletEventHandler !== prevProp.workletEventHandler
-          ) {
-            // Prop got changed
-            prevProp.workletEventHandler.unregisterFromEvents(
-              this._eventViewTag
-            );
-            newProp.workletEventHandler.registerForEvents(this._eventViewTag);
-          }
-        }
-      }
-
-      for (const key in this.props) {
-        const newProp = this.props[key];
-        if (
-          has('workletEventHandler', newProp) &&
-          newProp.workletEventHandler instanceof WorkletEventHandler &&
-          !prevProps[key]
-        ) {
-          // Prop got added
-          newProp.workletEventHandler.registerForEvents(this._eventViewTag);
         }
       }
     }
@@ -502,7 +416,10 @@ export function createAnimatedComponent(
       ) {
         this._configureSharedTransition();
       }
-      this._updateNativeEvents(prevProps);
+      this._NativeEventsManager.updateNativeEvents(
+        prevProps,
+        this._getEventViewTag()
+      );
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
