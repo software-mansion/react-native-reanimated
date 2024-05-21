@@ -13,7 +13,7 @@ import {
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { Snapshots } from './basic.snapshot';
 
-describe.only('withDecay animation, test various config', () => {
+describe('withDecay animation, test various config', () => {
   const DecayComponent = ({ config }: { config: WithDecayConfig }) => {
     const animatedStyle = useAnimatedStyle(() => {
       return {
