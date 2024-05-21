@@ -3905,10 +3905,10 @@
     "@svgr/plugin-jsx" "^6.5.1"
     "@svgr/plugin-svgo" "^6.5.1"
 
-"@swmansion/t-rex-ui@^0.0.6":
-  version "0.0.6"
-  resolved "https://registry.npmjs.org/@swmansion/t-rex-ui/-/t-rex-ui-0.0.6.tgz#48b7f438da9f5b3069950271e6bb61dc98f681fc"
-  integrity sha512-vv127WbSKWuae9dEu5hFaOg3kgXhKZDXUN6JxqAXsXJD8nn6rFw6Ogm4CzNWrzRw5jljEDRAjIH3eyjSGkKg/A==
+"@swmansion/t-rex-ui@^0.0.7":
+  version "0.0.7"
+  resolved "https://registry.npmjs.org/@swmansion/t-rex-ui/-/t-rex-ui-0.0.7.tgz#3dfa27860f702841ee7d883d2bf1f49ace14c0c8"
+  integrity sha512-l7dBUzjD1waOJYakm1y1Na7N5KaDSEqA9SkcC/x7LCuVXn6hlxBpyRqriSRPXL34QH2bRYt2qtKzVqa93dfSMQ==
   dependencies:
     "@docsearch/react" "^3.6.0"
     "@docusaurus/core" "^2.4.3"
