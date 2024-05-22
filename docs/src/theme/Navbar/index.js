@@ -1,8 +1,8 @@
 import React from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
-import { DocSidebar } from '@swmansion/t-rex-ui';
+import { Navbar } from '@swmansion/t-rex-ui';
 
-export default function DocSidebarWrapper(props) {
+export default function NavbarWrapper(props) {
   const titleImages = {
     light: useBaseUrl('/img/title.svg'),
     dark: useBaseUrl('/img/title-dark.svg'),
@@ -13,6 +13,6 @@ export default function DocSidebarWrapper(props) {
     title: useBaseUrl('/img/title-hero.svg'),
   };
   return (
-    <DocSidebar heroImages={heroImages} titleImages={titleImages} {...props} />
+    <Navbar heroImages={heroImages} titleImages={titleImages} {...props} />
   );
 }
