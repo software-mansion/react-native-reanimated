@@ -9,9 +9,9 @@ import Animated, {
 
 const RegularContent = () => {
   return (
-      <View style={regularContentStyles.card}>
-        <Text>Regular content ✨</Text>
-      </View>
+    <View style={regularContentStyles.card}>
+      <Text style={regularContentStyles.text}>Regular content ✨</Text>
+    </View>
   );
 };
 
@@ -23,13 +23,16 @@ const regularContentStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  text: {
+    color: '#001a72',
+  },
 });
 
 const FlippedContent = () => {
   return (
-      <View style={flippedContentStyles.card}>
-        <Text>Flipped content 🚀</Text>
-      </View>
+    <View style={flippedContentStyles.card}>
+      <Text style={flippedContentStyles.text}>Flipped content 🚀</Text>
+    </View>
   );
 };
 
@@ -41,16 +44,19 @@ const flippedContentStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  text: {
+    color: '#001a72',
+  },
 });
 
 const FlipCard = ({
-                    isFlipped,
-                    cardStyle,
-                    direction = 'y',
-                    duration = 500,
-                    RegularContent,
-                    FlippedContent,
-                  }) => {
+  isFlipped,
+  cardStyle,
+  direction = 'y',
+  duration = 500,
+  RegularContent,
+  FlippedContent,
+}) => {
   const isDirectionX = direction === 'x';
 
   const regularCardAnimatedStyle = useAnimatedStyle(() => {
@@ -76,24 +82,24 @@ const FlipCard = ({
   });
 
   return (
-      <View>
-        <Animated.View
-            style={[
-              flipCardStyles.regularCard,
-              cardStyle,
-              regularCardAnimatedStyle,
-            ]}>
-          {RegularContent}
-        </Animated.View>
-        <Animated.View
-            style={[
-              flipCardStyles.flippedCard,
-              cardStyle,
-              flippedCardAnimatedStyle,
-            ]}>
-          {FlippedContent}
-        </Animated.View>
-      </View>
+    <View>
+      <Animated.View
+        style={[
+          flipCardStyles.regularCard,
+          cardStyle,
+          regularCardAnimatedStyle,
+        ]}>
+        {RegularContent}
+      </Animated.View>
+      <Animated.View
+        style={[
+          flipCardStyles.flippedCard,
+          cardStyle,
+          flippedCardAnimatedStyle,
+        ]}>
+        {FlippedContent}
+      </Animated.View>
+    </View>
   );
 };
 
@@ -116,19 +122,19 @@ export default function App() {
   };
 
   return (
-      <SafeAreaView style={styles.container}>
-        <FlipCard
-            isFlipped={isFlipped}
-            cardStyle={styles.flipCard}
-            FlippedContent={<FlippedContent />}
-            RegularContent={<RegularContent />}
-        />
-        <View style={styles.buttonContainer}>
-          <Pressable style={styles.toggleButton} onPress={handlePress}>
-            <Text style={styles.toggleButtonText}>Toggle card</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
+    <SafeAreaView style={styles.container}>
+      <FlipCard
+        isFlipped={isFlipped}
+        cardStyle={styles.flipCard}
+        FlippedContent={<FlippedContent />}
+        RegularContent={<RegularContent />}
+      />
+      <View style={styles.buttonContainer}>
+        <Pressable style={styles.toggleButton} onPress={handlePress}>
+          <Text style={styles.toggleButtonText}>Toggle card</Text>
+        </Pressable>
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -154,7 +160,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   flipCard: {
-    width: 150,
+    width: 170,
     height: 200,
   },
 });

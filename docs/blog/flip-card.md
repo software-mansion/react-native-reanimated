@@ -3,7 +3,7 @@ slug: flipCard
 title: Flip Card
 ---
 
-Flip card component is a component that allows you to display different content depending on whether the card is flipped or not. It can be especially useful when you do not want to display some data immediately after entering the screen (e.g. secure data) and only after fulfilling a certain condition or performing an action.
+Flip card allows you to display different content depending on whether the card is flipped or not. It can be especially useful when you do not want to display some data immediately after entering the screen (e.g. secure data) and only after fulfilling a certain condition or performing an action.
 
 import FlipCard from '@site/static/examples/FlipCard';
 import FlipCardSrc from '!!raw-loader!@site/static/examples/FlipCard';
@@ -26,7 +26,7 @@ This allows us to [interpolate](/docs/utilities/interpolate) values between 0-18
     }}
 />
 
-The **FlipCard** component accepts several props: `duration` allows you to change the duration of the animation, setting `direction` to the value `x` allows you to change the direction of our animation, `RegularContent` and `FlippedContent` give ability to display different content for flipped and non flipped variants.
+The **FlipCard** component accepts several props: `duration` allows you to change the duration of the animation, setting `direction` to the value `x` allows you to change the direction of our animation, **RegularContent** and **FlippedContent** give ability to display different content for flipped and non flipped variants.
 
 <CollapsibleCode src={FlipCardSrc} showLines={[45,96]} />
 
