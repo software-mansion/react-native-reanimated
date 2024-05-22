@@ -28,5 +28,7 @@ This allows us to [interpolate](/docs/utilities/interpolate) values between 0-18
 
 The **FlipCard** component accepts several props: `duration` allows you to change the duration of the animation, setting `direction` to the value `x` allows you to change the direction of our animation, **RegularContent** and **FlippedContent** give ability to display different content for flipped and non flipped variants.
 
+<samp id="FlipCard">Flip Card</samp>
+
 <CollapsibleCode src={FlipCardSrc} showLines={[45,96]} />
 
