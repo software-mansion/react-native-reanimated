@@ -16,7 +16,7 @@ interface AppProps {
 }
 
 export default function App({ width }: AppProps) {
-  const offset = useSharedValue<number>(width / 2 - 80);
+  const offset = useSharedValue<number>(width / 2 - 240);
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],
@@ -26,9 +26,9 @@ export default function App({ width }: AppProps) {
     offset.value = withRepeat(
       // highlight-start
       withSequence(
-        withTiming(-width / 2 + 80, { duration, easing: Easing.cubic }),
+        withTiming(-width / 2 + 240, { duration, easing: Easing.cubic }),
         withTiming(0, { duration, easing: Easing.cubic }),
-        withTiming(width / 2 - 80, { duration, easing: Easing.cubic })
+        withTiming(width / 2 - 240, { duration, easing: Easing.cubic })
       ),
       // highlight-end
       -1,

@@ -13,13 +13,13 @@ interface AppProps {
 }
 
 export default function App({ width }: AppProps) {
-  const offset = useSharedValue<number>(width / 2 - 80);
+  const offset = useSharedValue<number>(width / 2 - 160);
 
   const animatedStyles = useAnimatedStyle(() => ({
     // highlight-next-line
     opacity: interpolate(
       offset.value,
-      [-width / 2 + 80, width / 2 - 80],
+      [-width / 2 + 160, width / 2 - 160],
       [1, 0]
     ),
     transform: [{ translateX: offset.value }],
@@ -27,7 +27,7 @@ export default function App({ width }: AppProps) {
 
   React.useEffect(() => {
     offset.value = withRepeat(
-      withTiming(-offset.value, { duration: 1500 }),
+      withTiming(-offset.value, { duration: 1750 }),
       -1,
       true
     );

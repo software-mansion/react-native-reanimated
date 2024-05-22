@@ -38,7 +38,7 @@ export default function App({ width, options }: Props) {
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: (offset.value / 400) * (width - 160) }],
+      transform: [{ translateX: (offset.value / 400) * (width - 480) }],
     };
   });
 
@@ -67,7 +67,7 @@ export default function App({ width, options }: Props) {
           styles.box,
           styles.ghost,
           {
-            transform: [{ translateX: (initialOffset / 400) * (width - 160) }],
+            transform: [{ translateX: (initialOffset / 400) * (width - 480) }],
           },
         ]}
       />

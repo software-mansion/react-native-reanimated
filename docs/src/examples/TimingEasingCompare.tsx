@@ -15,8 +15,8 @@ interface AppProps {
 }
 
 export default function App({ width }: AppProps) {
-  const defaultAnim = useSharedValue<number>(width / 2 - 80);
-  const linear = useSharedValue<number>(width / 2 - 80);
+  const defaultAnim = useSharedValue<number>(width / 2 - 160);
+  const linear = useSharedValue<number>(width / 2 - 160);
 
   const animatedDefault = useAnimatedStyle(() => ({
     transform: [{ translateX: defaultAnim.value }],

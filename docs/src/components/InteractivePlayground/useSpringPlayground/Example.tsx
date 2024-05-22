@@ -10,7 +10,7 @@ import Animated, {
   ReduceMotion,
 } from 'react-native-reanimated';
 
-const initialOffset = -200;
+const initialOffset = -100;
 
 interface Props {
   width: number;

@@ -24,7 +24,8 @@ export default function App({ width }: AppProps) {
     return {
       transform: [
         {
-          translateX: scale * Math.cos(t.value) * Math.min(width / 2 - 80, 200),
+          translateX:
+            scale * Math.cos(t.value) * Math.min(width / 2 - 120, 200),
         },
         { translateY: scale * (Math.sin(2 * t.value) / 2) * 200 },
       ],
