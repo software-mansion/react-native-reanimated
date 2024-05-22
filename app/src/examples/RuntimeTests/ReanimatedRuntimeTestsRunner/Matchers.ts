@@ -21,7 +21,7 @@ export class Matchers {
   constructor(private _currentValue: TestValue, private _testCase: TestCase) {}
 
   private static _assertValueIsCallTracker(value: TrackerCallCount | TestValue): asserts value is TrackerCallCount {
-    if (typeof value !== 'object' || !('name' in value && 'onJS' in value && 'onUI' in value)) {
+    if (typeof value !== 'object' || !(value !== null && 'name' in value && 'onJS' in value && 'onUI' in value)) {
       throw Error('Invalid value');
     }
   }
@@ -163,13 +163,15 @@ export class Matchers {
   public toMatchNativeSnapshots(nativeSnapshots: Array<OperationUpdate>, expectNegativeMismatch = false) {
     let errorString = '';
     const jsUpdates = this._currentValue as Array<OperationUpdate>;
-    for (let i = 0; i < jsUpdates.length; i++) {
-      errorString += this.compareJsAndNativeSnapshot(jsUpdates, nativeSnapshots, i, expectNegativeMismatch);
-    }
 
     if (jsUpdates.length !== nativeSnapshots.length - 1) {
       errorString += `Expected ${jsUpdates.length} snapshots, but received ${nativeSnapshots.length - 1} snapshots\n`;
+    } else {
+      for (let i = 0; i < jsUpdates.length; i++) {
+        errorString += this.compareJsAndNativeSnapshot(jsUpdates, nativeSnapshots, i, expectNegativeMismatch);
+      }
     }
+
     if (errorString !== '') {
       this._testCase.errors.push('Native snapshot mismatch: \n' + errorString);
     }

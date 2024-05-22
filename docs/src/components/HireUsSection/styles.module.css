@@ -70,3 +70,19 @@
 .buttonNavyBorderStyling {
   border: 1px solid var(--swm-navy-light-100);
 }
+
+[data-theme='dark'] .buttonNavyStyling {
+  background-color: var(--swm-landing-button-purple);
+}
+
+[data-theme='dark'] .buttonNavyBorderStyling {
+  border: 1px solid var(--swm-landing-button-purple);
+}
+[data-theme='dark'] .buttonNavyStyling:hover {
+  background-color: transparent;
+  color: var(--swm-landing-button-purple);
+}
+
+[data-theme='dark'] .buttonNavyStyling:hover svg {
+  stroke: var(--swm-landing-button-purple);
+}
