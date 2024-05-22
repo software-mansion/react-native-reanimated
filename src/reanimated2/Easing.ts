@@ -1,6 +1,5 @@
 'use strict';
 import { Bezier } from './Bezier';
-// HERE
 /**
  * The `Easing` module implements common easing functions. This module is used
  * by [Animate.timing()](docs/animate.html#timing) to convey physically

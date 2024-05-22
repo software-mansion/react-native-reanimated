@@ -40,7 +40,6 @@ function getSlope(aT: number, aA1: number, aA2: number): number {
   return 3.0 * A(aA1, aA2) * aT * aT + 2.0 * B(aA1, aA2) * aT + C(aA1);
 }
 
-// HERE
 function binarySubdivide(
   aX: number,
   aA: number,
@@ -113,7 +112,7 @@ export function Bezier(
   // ? new Float32Array(kSplineTableSize)
   // : new Array(kSplineTableSize);
 
-  // Pre-compute samples table
+  // Precompute samples table
   const sampleValues = new Array(kSplineTableSize);
 
   for (let i = 0; i < kSplineTableSize; ++i) {

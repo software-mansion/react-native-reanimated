@@ -2,7 +2,6 @@
 import { SLOPE_FACTOR, VELOCITY_EPS } from './utils';
 import type { DefaultDecayConfig, InnerDecayAnimation } from './utils';
 
-// HERE
 export function rigidDecay(
   animation: InnerDecayAnimation,
   now: number,
