@@ -71,6 +71,7 @@ describe('Test `normalizeColor` function', () => {
       ['#abcdef', 0xabcdefff],
       ['#abcdeff', null],
       ['#abcdefff', 0xabcdefff],
+      ['#abcdef32', 0xabcdef32],
       ['#ABC', 0xaabbccff],
       ['#ABCD', 0xaabbccdd],
       ['#abcde', null],
@@ -83,6 +84,90 @@ describe('Test `normalizeColor` function', () => {
       ['#AbCdEf', 0xabcdefff],
       ['#abcdeff', null],
       ['#AbcDEfFF', 0xabcdefff],
+    ])('normalizeColor(%s) = %p', (color, expectedColor) => {
+      expect(normalizeColor(color)).toBe(expectedColor);
+    });
+  });
+  describe('Test colors being a rgb string', () => {
+    // HEX 65 = DEC 101
+    // HEX 64 = DEC 100
+    // HEX 63 = DEC 99
+
+    test.each([
+      ['rgb (0,0,0)', null],
+      ['rgb(50,200,150, 45)', null],
+      ['RGB(50,200,150)', null],
+      ['rgb(50,200,150, 0.45)', null],
+
+      ['rgb(0,0,0)', 0x000000ff],
+      ['rgb(0 ,0 ,0 )', 0x000000ff],
+      ['rgb( 0,0,0 )', 0x000000ff],
+      ['rgb(101,255,50)', 0x65ff32ff],
+      ['rgb(100.99999,255,50)', 0x64ff32ff], // Should be 0x65ff00ff
+      ['rgb(100.75,255,50)', 0x64ff32ff], // Should be 0x65ff00ff
+      ['rgb(100.5,255,50)', 0x64ff32ff], // Should be 0x65ff00ff
+      ['rgb(100.25,255,50)', 0x64ff32ff],
+      ['rgb(100,255,50)', 0x64ff32ff],
+      ['rgb(99,255,50)', 0x63ff32ff],
+    ])('normalizeColor(%s) = %p', (color, expectedColor) => {
+      expect(normalizeColor(color)).toBe(expectedColor);
+    });
+  });
+
+  describe('Test colors being a rgba string', () => {
+    test.each([
+      ['RGBA(100 ,255 ,50 ,50 )', null],
+      ['rgba (100,255,50,.5)', null],
+      ['    rgba(100,255,50,    50)', 0x64ff32ff],
+      ['rgba(100 ,255 ,50 ,50 )', 0x64ff32ff],
+      ['rgba(100,255,50,0.5)', 0x64ff3280],
+      ['rgba(100,255,50,.5)', 0x64ff3280],
+      ['rgba(50,50,50,.5)', 0x32323280],
+      ['rgba(50,50,50,1)', 0x323232ff],
+      ['rgba(50,50,50,0)', 0x32323200],
+    ])('normalizeColor(%s) = %p', (color, expectedColor) => {
+      expect(normalizeColor(color)).toBe(expectedColor);
+    });
+  });
+
+  describe('Test colors being a hsl string', () => {
+    test.each([
+      ['HSL(0,100%,50%)', null],
+      ['hsl(120 ,0.99, 0.1 )', null],
+      ['hsl(0,100,50)', null],
+      ['hsl(0,100%,50%, 0.5)', null],
+      ['hsl(0,100%,50%)', 0xff0000ff],
+      ['hsl(0,100%,50%)', 0xff0000ff],
+      ['hsl(120,100%,50%)', 0x00ff00ff],
+      ['hsl(120.5,100%,50%)', 0x00ff02ff],
+      ['hsl(120.999,100%,50%)', 0x00ff04ff],
+      ['hsl(120,50%,50%)', 0x40bf40ff],
+      ['hsl(120 ,50%, 50% )', 0x40bf40ff],
+      ['hsl(130 ,13.33%, 100% )', 0xffffffff],
+    ])('normalizeColor(%s) = %p', (color, expectedColor) => {
+      expect(normalizeColor(color)).toBe(expectedColor);
+    });
+  });
+
+  describe('Test colors being a hsla string', () => {
+    test.each([
+      ['HSLA(0,100%,50%,0.5)', null],
+      ['hsla(0,100%,50%,0.5)', 0xff000080],
+      ['hsla(120,100%,50%, 0.5)', 0x00ff0080],
+      ['hsla(120,100%,50%, 1)', 0x00ff00ff],
+      ['hsla(120,100%,50%, 0)', 0x00ff0000],
+      ['   hsla( 120 , 100% , 50%, 0.5 ) ', 0x00ff0080],
+    ])('normalizeColor(%s) = %p', (color, expectedColor) => {
+      expect(normalizeColor(color)).toBe(expectedColor);
+    });
+  });
+
+  describe('Test colors being a hwb string', () => {
+    test.each([
+      ['HWB(0,100%,50%)', null],
+      ['hwb(0,67%, 33%)', 0xabababff],
+      ['hwb(0,67% , 33%)', 0xabababff],
+      ['hwb(48, 38%, 6%)', 0xf0d361ff],
     ])('normalizeColor(%s) = %p', (color, expectedColor) => {
       expect(normalizeColor(color)).toBe(expectedColor);
     });

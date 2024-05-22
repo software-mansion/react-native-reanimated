@@ -1,7 +1,7 @@
 import { Extrapolation, interpolate } from '../src/reanimated2/interpolation';
 
 describe('Test `interpolate` function', () => {
-  describe('The provided range is ordered ([0,1] - good, [1,0] - bad)', () => {
+  describe('The provided range is ordered ([0,1] - ordered, [1,0] - unordered)', () => {
     describe('Interpolation within input range', () => {
       const BIG_NUM = 123456789.12345678;
       test.each([
