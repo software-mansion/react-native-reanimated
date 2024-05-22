@@ -13,7 +13,7 @@ interface AppProps {
 }
 
 export default function App({ width }: AppProps) {
-  const sv = useSharedValue<number>(-width / 2 + 80);
+  const sv = useSharedValue<number>(-width / 2 + 120);
   // highlight-next-line
   const reduceMotion = useReducedMotion();
 
@@ -24,7 +24,7 @@ export default function App({ width }: AppProps) {
 
   React.useEffect(() => {
     sv.value = withRepeat(
-      withTiming(width / 2 - 80, { duration: 2000 }),
+      withTiming(width / 2 - 120, { duration: 2000 }),
       -1,
       true
     );
