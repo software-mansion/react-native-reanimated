@@ -70,8 +70,8 @@ export const test: {
       },
     ),
     failing: Object.assign(
-      (name: string, warningMessage: string, testCase: () => void) => {
-        testRunner.test(name, testCase, TestDecorator.FAILING, warningMessage);
+      (name: string, expectedWarning: string, testCase: () => void) => {
+        testRunner.test(name, testCase, TestDecorator.FAILING, expectedWarning);
       },
       {
         each: <T>(examples: Array<T>) => {
@@ -81,7 +81,7 @@ export const test: {
     ),
     warn: Object.assign(
       (name: string, expectedWarning: string, testCase: () => void) => {
-        testRunner.test(name, testCase, TestDecorator.WARN);
+        testRunner.test(name, testCase, TestDecorator.WARN, expectedWarning);
       },
       {
         each: <T>(examples: Array<T>) => {

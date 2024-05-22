@@ -38,9 +38,7 @@ export class RollInLeft
       return {
         animations: {
           transform: [
-            { translateX: delayFunction(delay, animation(0), config) },
-            // FIXME SHOULD BE
-            // { translateX: delayFunction(delay, animation(0, config)) },
+            { translateX: delayFunction(delay, animation(0, config)) },
             { rotate: delayFunction(delay, animation('0deg', config)) },
           ],
         },
