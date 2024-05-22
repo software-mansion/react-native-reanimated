@@ -79,16 +79,13 @@ const ZOOM_ENTERING = [
   ZoomInUp,
 ];
 
-// Animation RollInLeft doesn't work with duration
-const BuggyEnteringNames = ['RollInLeft'];
-
 const ENTERING_SETS: Array<[string, unknown[], number]> = [
   ['Fade', FADE_ENTERING, 1350],
   ['Bounce', BOUNCE_ENTERING, 650],
   ['Flip', FLIP_ENTERING, 1750],
   ['LightSpeed', LIGHTSPEED_ENTERING, 1600],
   ['Pinwheel', PINWHEEL_ENTERING, 1000],
-  ['Roll', ROLL_ENTERING, 2000], //TODO faster
+  ['Roll', ROLL_ENTERING, 1750],
   ['Rotate', ROTATE_ENTERING, 1600],
   ['Slide', SLIDE_ENTERING, 1800],
   ['Stretch', STRETCH_ENTERING, 1000],
@@ -136,12 +133,10 @@ describe('Test predefined entering', () => {
     test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet, _waitTime]) => {
       for (const entering of enteringSet) {
         const enteringName: string = (entering as any).name;
-        if (!BuggyEnteringNames.includes(enteringName)) {
-          let updates = await getSnapshotUpdates(entering, 120, 100);
-          expect(updates).toMatchSnapshots(
-            DurationEnteringSnapshots[enteringName as keyof typeof DurationEnteringSnapshots],
-          );
-        }
+        let updates = await getSnapshotUpdates(entering, 105, 100);
+        expect(updates).toMatchSnapshots(
+          DurationEnteringSnapshots[enteringName as keyof typeof DurationEnteringSnapshots],
+        );
       }
     });
   });
