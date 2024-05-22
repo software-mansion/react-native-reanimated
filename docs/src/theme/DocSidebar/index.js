@@ -13,12 +13,6 @@ export default function DocSidebarWrapper(props) {
     title: useBaseUrl('/img/title-hero.svg'),
   };
   return (
-    <>
-      <DocSidebar
-        heroImages={heroImages}
-        titleImages={titleImages}
-        {...props}
-      />
-    </>
+    <DocSidebar heroImages={heroImages} titleImages={titleImages} {...props} />
   );
 }
