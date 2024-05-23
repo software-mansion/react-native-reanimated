@@ -97,7 +97,9 @@ export type TestValue =
   | bigint
   | Record<string, unknown>
   | null
-  | undefined;
+  | undefined
+  | boolean;
+
 export type NullableTestValue = TestValue | null | undefined;
 
 export type TestConfiguration = {

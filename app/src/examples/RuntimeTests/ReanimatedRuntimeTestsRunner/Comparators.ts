@@ -6,13 +6,13 @@ const COMPARATORS: {
   [Key: string]: (expected: TestValue, value: TestValue) => boolean;
 } = {
   [ComparisonMode.STRING]: (expected, value) => {
-    return value === expected;
+    return typeof value === typeof expected && value === expected;
   },
 
   [ComparisonMode.NUMBER]: (expected, value) => {
     const bothAreNumbers = typeof value === 'number' && typeof expected === 'number';
     const bothAreNaN = bothAreNumbers && isNaN(value) && isNaN(expected);
-    return bothAreNaN || value === expected;
+    return bothAreNaN || (value === expected && typeof value === typeof expected);
   },
 
   [ComparisonMode.COLOR]: (expected, value) => {
@@ -90,7 +90,7 @@ const COMPARATORS: {
     if (typeof expected === 'object') {
       return COMPARATORS[ComparisonMode.OBJECT](expected, value);
     }
-    return expected === value;
+    return typeof expected === typeof value && expected === value;
   },
 };
 
