@@ -2,7 +2,7 @@ time {
   display: none;
 }
 
-.pagination-nav {
+[aria-label='Blog post page navigation'].pagination-nav {
   display: none;
 }
 

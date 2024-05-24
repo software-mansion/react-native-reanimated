@@ -1,4 +1,4 @@
-import { TestValue } from './types';
+import { NullableTestValue } from './types';
 
 export const RUNTIME_TEST_ERRORS = {
   UNDEFINED_TEST_SUITE: 'Undefined test suite context',
@@ -16,26 +16,51 @@ export function appendWhiteSpaceToMatchLength(message: string | number, length: 
   return `${messageStr}${' '.repeat(length - messageLen)}`;
 }
 
-export function color(value: TestValue, color: 'yellow' | 'cyan' | 'green' | 'red' | 'gray') {
+export function color(value: NullableTestValue, color: 'yellow' | 'cyan' | 'green' | 'red' | 'gray' | 'orange') {
   const COLOR_CODES = {
-    red: '\x1b[31m',
-    green: '\x1b[32m',
-    yellow: '\x1b[33m',
+    red: '\x1b[91m',
+    green: '\x1b[92m',
+    yellow: '\x1b[93m',
     cyan: '\x1b[36m',
     gray: '\x1b[38;5;242m',
+    orange: '\x1b[38;5;208m',
+    reset: '\x1b[0m',
   };
+  const stringValue = typeof value === 'object' ? JSON.stringify(value) : value?.toString();
+  return `${COLOR_CODES[color]}${stringValue}${COLOR_CODES.reset}`;
+}
 
-  return `${COLOR_CODES[color]}${value}\x1b[0m`;
+export function applyMarkdown(template: string) {
+  const ANSI_CODES = {
+    bold: '\x1b[1m',
+    resetBold: '\x1b[22m',
+    italic: '\x1b[3m',
+    resetItalic: '\x1b[23m',
+    reverse: '\x1b[7m',
+    resetReverse: '\x1b[27m',
+    underline: '\x1b[4m',
+    resetUnderline: '\x1b[24m',
+  };
+  template = template.replace(/\*{3}(.+?)\*{3}(?!\*)/g, `${ANSI_CODES.reverse} $1 ${ANSI_CODES.resetReverse}`);
+  template = template.replace(/\*{2}(.+?)\*{2}(?!\*)/g, `${ANSI_CODES.bold}$1${ANSI_CODES.resetBold}`);
+  template = template.replace(/\*{1}(.+?)\*{1}(?!\*)/g, `${ANSI_CODES.italic}$1${ANSI_CODES.resetItalic}`);
+  template = template.replace(/_(.+?)_(?!_)/g, `${ANSI_CODES.underline}$1${ANSI_CODES.resetUnderline}`);
+
+  return template;
 }
 
 export function formatString(template: string, variableObject: unknown, index: number) {
   const valueToString: (arg0: unknown) => string = (value: unknown) => {
+    if (value instanceof Error) {
+      return `**${value.name}** "${value.message}"`;
+    }
     if (typeof value === 'object') {
       return JSON.stringify(value);
     }
     if (typeof value === 'function') {
       return value.name;
     }
+
     return value?.toString() || '';
   };
   let testName = template;

@@ -123,6 +123,11 @@ import HabitsExample from './LayoutAnimations/HabitsExample';
 import MemoExample from './MemoExample';
 import PerformanceMonitorExample from './PerfomanceMonitorExample';
 import ScreenTransitionExample from './ScreenTransitionExample';
+import ComposedHandlerConditionalExample from './ComposedHandlerConditionalExample';
+import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEventsExample';
+import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMergingExample';
+import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
+import FreezingShareablesExample from './ShareableFreezingExample';
 
 interface Example {
   icon?: string;
@@ -167,6 +172,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🧠',
     title: 'Memo',
     screen: MemoExample,
+  },
+  FreezingShareablesExample: {
+    icon: '🥶',
+    title: 'Freezing shareables',
+    screen: FreezingShareablesExample,
   },
 
   // About
@@ -492,6 +502,21 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Performance monitor',
     screen: PerformanceMonitorExample,
   },
+  ComposedHandlerConditionalExample: {
+    icon: '🎛️',
+    title: 'Composed handler conditional compose',
+    screen: ComposedHandlerConditionalExample,
+  },
+  ComposedHandlerDifferentEventsExample: {
+    icon: '📣',
+    title: 'Composed handler different events',
+    screen: ComposedHandlerDifferentEventsExample,
+  },
+  ComposedHandlerInternalMergingExample: {
+    icon: '🪢',
+    title: 'Composed handler internal merging',
+    screen: ComposedHandlerInternalMergingExample,
+  },
 
   // Old examples
 
@@ -763,5 +788,9 @@ export const EXAMPLES: Record<string, Example> = {
   NestedRotationSharedExample: {
     title: '[SET] Nested Transforms',
     screen: NestedRotationExample,
+  },
+  BorderRadiiExample: {
+    title: '[SET] Border Radii',
+    screen: BorderRadiiExample,
   },
 } as const;

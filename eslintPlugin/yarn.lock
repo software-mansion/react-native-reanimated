@@ -2025,7 +2025,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^8.56.0":
+"eslint@npm:^8.0.0-0":
   version: 8.57.0
   resolution: "eslint@npm:8.57.0"
   dependencies:
@@ -2083,7 +2083,7 @@ __metadata:
     "@typescript-eslint/rule-tester": "npm:^6.19.1"
     "@typescript-eslint/utils": "npm:^6.19.1"
     esbuild: "npm:^0.20.0"
-    eslint: "npm:^8.56.0"
+    eslint: "npm:^8.0.0-0"
     jest: "npm:^29.7.0"
     ts-jest: "npm:^29.1.2"
     typescript: "npm:^5.3.3"

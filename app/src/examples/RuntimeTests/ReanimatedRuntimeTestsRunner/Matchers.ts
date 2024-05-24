@@ -1,6 +1,6 @@
 import { getComparator } from './Comparators';
 import { appendWhiteSpaceToMatchLength, color } from './stringFormatUtils';
-import { ComparisonMode, OperationUpdate, TestCase, TestValue, TrackerCallCount } from './types';
+import { ComparisonMode, OperationUpdate, TestCase, TestValue, NullableTestValue, TrackerCallCount } from './types';
 
 type MatcherFunction = (
   currentValue: TestValue,
@@ -16,7 +16,7 @@ export class Matchers {
   constructor(private _currentValue: TestValue, private _testCase: TestCase) {}
 
   private static _assertValueIsCallTracker(value: TrackerCallCount | TestValue): asserts value is TrackerCallCount {
-    if (typeof value !== 'object' || !('name' in value && 'onJS' in value && 'onUI' in value)) {
+    if (typeof value !== 'object' || !(value !== null && 'name' in value && 'onJS' in value && 'onUI' in value)) {
       throw Error('Invalid value');
     }
   }
@@ -145,13 +145,15 @@ export class Matchers {
   public toMatchNativeSnapshots(nativeSnapshots: Array<OperationUpdate>, expectNegativeMismatch = false) {
     let errorString = '';
     const jsUpdates = this._currentValue as Array<OperationUpdate>;
-    for (let i = 0; i < jsUpdates.length; i++) {
-      errorString += this.compareJsAndNativeSnapshot(jsUpdates, nativeSnapshots, i, expectNegativeMismatch);
-    }
 
     if (jsUpdates.length !== nativeSnapshots.length - 1) {
       errorString += `Expected ${jsUpdates.length} snapshots, but received ${nativeSnapshots.length - 1} snapshots\n`;
+    } else {
+      for (let i = 0; i < jsUpdates.length; i++) {
+        errorString += this.compareJsAndNativeSnapshot(jsUpdates, nativeSnapshots, i, expectNegativeMismatch);
+      }
     }
+
     if (errorString !== '') {
       this._testCase.errors.push('Native snapshot mismatch: \n' + errorString);
     }
@@ -208,5 +210,17 @@ export class Matchers {
     const expected = color(expectedLength, 'green');
     const received = color(receivedLength, 'red');
     return `Expected ${expected} snapshots, but received ${received} snapshots\n`;
+  }
+}
+
+export function nullableMatch(currentValue: NullableTestValue, testCase: TestCase, negation: boolean = false) {
+  const pass = currentValue === null || currentValue === undefined;
+
+  const coloredExpected = color('nullable', 'green');
+  const coloredReceived = color(currentValue, 'red');
+  const message = `Expected${negation ? ' NOT' : ''} ${coloredExpected} received ${coloredReceived}`;
+
+  if ((!pass && !negation) || (pass && negation)) {
+    testCase.errors.push(message);
   }
 }

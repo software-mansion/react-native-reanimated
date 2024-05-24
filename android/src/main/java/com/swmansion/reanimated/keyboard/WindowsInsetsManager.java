@@ -9,7 +9,6 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.swmansion.reanimated.BuildConfig;
 import java.lang.ref.WeakReference;
 
 public class WindowsInsetsManager {
@@ -58,24 +57,19 @@ public class WindowsInsetsManager {
   }
 
   private WindowInsetsCompat onApplyWindowInsetsListener(View view, WindowInsetsCompat insets) {
+    WindowInsetsCompat defaultInsets = ViewCompat.onApplyWindowInsets(view, insets);
     if (mKeyboard.getState() == KeyboardState.OPEN) {
       mKeyboard.updateHeight(insets);
       mNotifyAboutKeyboardChange.call();
     }
-    setWindowInsets(insets);
-    return insets;
+    setWindowInsets(defaultInsets);
+    return defaultInsets;
   }
 
   private void setWindowInsets(WindowInsetsCompat insets) {
-    int paddingBottom = 0;
-    boolean isOldPaperImplementation =
-        !BuildConfig.IS_NEW_ARCHITECTURE_ENABLED && BuildConfig.REACT_NATIVE_MINOR_VERSION < 70;
-    if (isOldPaperImplementation) {
-      int navigationBarTypeMask = WindowInsetsCompat.Type.navigationBars();
-      paddingBottom = insets.getInsets(navigationBarTypeMask).bottom;
-    }
     int systemBarsTypeMask = WindowInsetsCompat.Type.systemBars();
     int paddingTop = insets.getInsets(systemBarsTypeMask).top;
+    int paddingBottom = insets.getInsets(systemBarsTypeMask).bottom;
     updateInsets(paddingTop, paddingBottom);
   }
 
@@ -95,7 +89,7 @@ public class WindowsInsetsManager {
     FrameLayout.LayoutParams params =
         new FrameLayout.LayoutParams(matchParentFlag, matchParentFlag);
     if (mIsStatusBarTranslucent) {
-      params.setMargins(0, 0, 0, 0);
+      params.setMargins(0, 0, 0, paddingBottom);
     } else {
       params.setMargins(0, paddingTop, 0, paddingBottom);
     }

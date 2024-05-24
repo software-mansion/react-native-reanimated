@@ -1,4 +1,4 @@
-import { ComparisonMode, TestValue } from './types';
+import { ComparisonMode, TestValue, ValidPropNames } from './types';
 
 const DISTANCE_TOLERANCE = 0.5;
 
@@ -19,12 +19,18 @@ const COMPARATORS: {
     if (typeof value !== 'string' || typeof expected !== 'string') {
       return false;
     }
-    const expectedUnified = expected.toLowerCase();
-    const colorRegex = new RegExp('^#?([a-f0-9]{6})$');
-    if (!colorRegex.test(expectedUnified)) {
+
+    const expectedLowerCase = expected.toLowerCase();
+
+    const [opaqueColorRe, transparencyColorRe] = [6, 8].map(length => new RegExp(`^#?([A-Fa-f0-9]{${length}})$`));
+
+    const addTransparency = opaqueColorRe.test(expectedLowerCase);
+    const expectedUnified = addTransparency ? `${expectedLowerCase}ff` : expectedLowerCase;
+
+    if (!transparencyColorRe.test(expectedUnified)) {
       throw Error(`Invalid color format "${expectedUnified}", please use hex color (like #123abc)`);
     }
-    return value === expected;
+    return value === expectedUnified;
   },
 
   [ComparisonMode.DISTANCE]: (expected, value) => {
@@ -48,6 +54,13 @@ const COMPARATORS: {
   },
 
   [ComparisonMode.OBJECT]: (expected, value) => {
+    if (expected === null || value === null) {
+      return expected === null && value === null;
+    }
+    if (expected === undefined || value === undefined) {
+      return expected === undefined && value === undefined;
+    }
+
     if (typeof expected !== 'object' || typeof value !== 'object') {
       return false;
     }
@@ -83,4 +96,17 @@ const COMPARATORS: {
 
 export function getComparator(mode: ComparisonMode) {
   return COMPARATORS[mode];
+}
+
+export function getComparisonModeForProp(prop: ValidPropNames): ComparisonMode {
+  const propToComparisonModeDict = {
+    zIndex: ComparisonMode.NUMBER,
+    opacity: ComparisonMode.NUMBER,
+    width: ComparisonMode.DISTANCE,
+    height: ComparisonMode.DISTANCE,
+    top: ComparisonMode.DISTANCE,
+    left: ComparisonMode.DISTANCE,
+    backgroundColor: ComparisonMode.COLOR,
+  };
+  return propToComparisonModeDict[prop];
 }

@@ -693,7 +693,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^8.36.0":
+"eslint@npm:^8.0.0-0":
   version: 8.57.0
   resolution: "eslint@npm:8.57.0"
   dependencies:
@@ -1570,9 +1570,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-gesture-handler@npm:^2.16.0":
-  version: 2.16.0
-  resolution: "react-native-gesture-handler@npm:2.16.0"
+"react-native-gesture-handler@npm:^2.16.2":
+  version: 2.16.2
+  resolution: "react-native-gesture-handler@npm:2.16.2"
   dependencies:
     "@egjs/hammerjs": "npm:^2.0.17"
     hoist-non-react-statics: "npm:^3.3.0"
@@ -1582,7 +1582,7 @@ __metadata:
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/8eef04fcb15ae1ff1cd64642efc0783c081e982dc34af89af377dab233ad4e3197ea4d2bbc236655bbdb023d0a982de660a94cb3794b46de6d4a487a2c01dead
+  checksum: 10/227799f5e16f9725d81db524fc06c1fbef226835a5ee989642d132748832f7543ebc750d4309e49bcaa0fb6d1e7dd6b74028785e4b755978ab7f66f05b414c18
   languageName: node
   linkType: hard
 
@@ -1716,12 +1716,12 @@ __metadata:
     "@tsconfig/react-native": "npm:^3.0.0"
     "@types/d3-shape": "npm:^3.1.1"
     d3-shape: "npm:^3.2.0"
-    eslint: "npm:^8.36.0"
+    eslint: "npm:^8.0.0-0"
     eslint-plugin-reanimated: "link:../eslintPlugin"
     patch-package: "npm:^7.0.0"
     prettier: "npm:^2.8.7"
     react-dom: "npm:18.0.0"
-    react-native-gesture-handler: "npm:^2.16.0"
+    react-native-gesture-handler: "npm:^2.16.2"
     react-native-pager-view: "npm:^6.2.3"
     react-native-reanimated: "link:../"
     react-native-safe-area-context: "npm:4.10.0-rc.1"

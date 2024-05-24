@@ -1,7 +1,7 @@
 import { Component, Dispatch, MutableRefObject, ReactNode, SetStateAction } from 'react';
 import { AnimatedStyle, StyleProps } from 'react-native-reanimated';
 
-type CallTrucker = {
+export type CallTracker = {
   UICallsCount: number;
   JSCallsCount: number;
 };
@@ -24,13 +24,34 @@ export type SharedValueSnapshot = {
 
 export type ComponentRef = MutableRefObject<(Component & { props: { style: Record<string, unknown> } }) | null>;
 
+export enum DescribeDecorator {
+  ONLY = 'ONLY',
+  SKIP = 'SKIP',
+  NONE = 'NONE',
+}
+
+export enum TestDecorator {
+  ONLY = 'ONLY',
+  SKIP = 'SKIP',
+  FAILING = 'FAILING',
+  WARN = 'WARN',
+  NONE = 'NONE',
+}
+
 export type TestCase = {
   name: string;
   run: () => void | Promise<void>;
   componentsRefs: Record<string, ComponentRef>;
-  callsRegistry: Record<string, CallTrucker>;
+  callsRegistry: Record<string, CallTracker>;
   errors: string[];
-};
+  skip?: boolean;
+} & (
+  | {
+      decorator: TestDecorator.WARN | TestDecorator.FAILING;
+      warningMessage: string;
+    }
+  | { decorator: Exclude<TestDecorator, TestDecorator.WARN | TestDecorator.FAILING> | null }
+);
 
 export type TestSuite = {
   name: string;
@@ -41,7 +62,11 @@ export type TestSuite = {
   afterAll?: () => void | Promise<void>;
   beforeEach?: () => void | Promise<void>;
   afterEach?: () => void | Promise<void>;
+  skip?: boolean;
+  decorator?: DescribeDecorator | null;
 };
+
+export type ValidPropNames = 'zIndex' | 'opacity' | 'width' | 'height' | 'top' | 'left' | 'backgroundColor';
 
 export enum ComparisonMode {
   STRING = 'STRING',
@@ -64,7 +89,16 @@ export interface Operation {
   updates: OperationUpdate;
 }
 
-export type TestValue = TrackerCallCount | string | Array<unknown> | number | bigint | Record<string, unknown>;
+export type TestValue =
+  | TrackerCallCount
+  | string
+  | Array<unknown>
+  | number
+  | bigint
+  | Record<string, unknown>
+  | null
+  | undefined;
+export type NullableTestValue = TestValue | null | undefined;
 
 export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;
@@ -93,6 +127,7 @@ declare global {
 export type TestSummary = {
   passed: number;
   failed: number;
+  skipped: number;
   failedTests: Array<string>;
   startTime: number;
   endTime: number;

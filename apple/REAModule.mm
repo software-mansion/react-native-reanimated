@@ -131,7 +131,11 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 - (void)handleJavaScriptDidLoadNotification:(NSNotification *)notification
 {
-  _surfacePresenter = self.bridge.surfacePresenter;
+  [self attachReactEventListener];
+}
+
+- (void)attachReactEventListener
+{
   RCTScheduler *scheduler = [_surfacePresenter scheduler];
   __weak __typeof__(self) weakSelf = self;
   _surfacePresenter.runtimeExecutor(^(jsi::Runtime &runtime) {
@@ -277,7 +281,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 {
   if (_isBridgeless) {
 #if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
-    RCTCxxBridge *cxxBridge = (RCTCxxBridge *)[RCTBridge currentBridge];
+    RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
     auto &rnRuntime = *(jsi::Runtime *)cxxBridge.runtime;
     auto executorFunction = ([executor = _runtimeExecutor](std::function<void(jsi::Runtime & runtime)> &&callback) {
       // Convert to Objective-C block so it can be captured properly.
@@ -289,6 +293,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
     });
     auto nativeReanimatedModule = reanimated::createReanimatedModuleBridgeless(
         _moduleRegistry, rnRuntime, std::string([valueUnpackerCode UTF8String]), executorFunction);
+    [self attachReactEventListener];
     [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];
 #else // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
     [NSException raise:@"Missing bridge" format:@"[Reanimated] Failed to obtain the bridge."];
