@@ -31,10 +31,7 @@ export default function App() {
       offset.value = withDecay({
         velocity: event.velocityX,
         rubberBandEffect: true,
-        clamp: [
-          -(width.value / 2) + SIZE / 2 + 50,
-          width.value / 2 - SIZE / 2 - 50,
-        ],
+        clamp: [-(width.value / 2) + SIZE / 2, width.value / 2 - SIZE / 2],
       });
       // highlight-end
     });
