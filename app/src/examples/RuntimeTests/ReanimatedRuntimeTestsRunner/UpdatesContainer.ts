@@ -97,22 +97,49 @@ export function createUpdatesContainer(testRunner: TestRunner) {
     });
   }
 
-  function getUpdates(propsNames: string[] = []) {
-    const updates: OperationUpdate[] = [];
-    if (propsNames.length === 0) {
-      for (const updateRequest of jsUpdates.value) {
-        updates.push(updateRequest.update);
-      }
-    } else {
-      for (const updateRequest of jsUpdates.value) {
-        const filteredUpdate: Record<string, OperationUpdate> = {};
+  function sortUpdatesByTag(
+    updates: Array<{ tag: number; update: OperationUpdate } | { tag: number; snapshot: Record<string, unknown> }>,
+    propsNames: string[],
+  ) {
+    const updatesForTag = {};
+
+    for (const updateRequest of updates) {
+      const { tag } = updateRequest;
+
+      let update: OperationUpdate = [];
+      if (propsNames.length !== 0) {
+        update = 'update' in updateRequest ? updateRequest.update : updateRequest.snapshot;
+      } else {
         for (const prop of propsNames) {
-          filteredUpdate[prop] = updateRequest.update[prop as keyof OperationUpdate];
+          update[prop] =
+            'update' in updateRequest
+              ? updateRequest.update[prop as keyof OperationUpdate]
+              : updateRequest.snapshot[prop as keyof OperationUpdate];
         }
-        updates.push(filteredUpdate);
       }
+
+      if (!(tag in updatesForTag)) {
+        updatesForTag[tag] = [];
+      }
+      updatesForTag[tag].push('update' in updateRequest ? updateRequest.update : updateRequest.snapshot);
     }
-    return updates;
+
+    const recordedMultipleViews = Object.keys(updatesForTag).length > 1;
+    let index = -1;
+    const updatesForTagUnified = recordedMultipleViews
+      ? Object.fromEntries(
+          Object.entries(updatesForTag).map(([_key, value]) => {
+            index += 1;
+            return [index, value];
+          }),
+        )
+      : updatesForTag[Object.keys(updatesForTag)[0]]; // In case of recording only one view return an array
+
+    return updatesForTagUnified;
+  }
+
+  function getUpdates(propsNames: string[] = []) {
+    return sortUpdatesByTag(jsUpdates.value, propsNames);
   }
 
   async function getNativeSnapshots(propsNames: string[] = []) {
@@ -134,22 +161,22 @@ export function createUpdatesContainer(testRunner: TestRunner) {
         );
       });
     }
-
-    const snapshots: OperationUpdate[] = [];
-    if (propsNames.length === 0) {
-      for (const nativeSnapshot of nativeSnapshots.value) {
-        snapshots.push(nativeSnapshot.snapshot);
-      }
-    } else {
-      for (const nativeSnapshot of nativeSnapshots.value) {
-        const filteredSnapshot: Record<string, unknown> = {};
-        for (const prop of propsNames) {
-          filteredSnapshot[prop] = nativeSnapshot.snapshot[prop];
-        }
-        snapshots.push(filteredSnapshot);
-      }
-    }
-    return snapshots;
+    return sortUpdatesByTag(nativeSnapshots.value, propsNames);
+    // const snapshots: OperationUpdate[] = [];
+    // if (propsNames.length === 0) {
+    //   for (const nativeSnapshot of nativeSnapshots.value) {
+    //     snapshots.push(nativeSnapshot.snapshot);
+    //   }
+    // } else {
+    //   for (const nativeSnapshot of nativeSnapshots.value) {
+    //     const filteredSnapshot: Record<string, unknown> = {};
+    //     for (const prop of propsNames) {
+    //       filteredSnapshot[prop] = nativeSnapshot.snapshot[prop];
+    //     }
+    //     snapshots.push(filteredSnapshot);
+    //   }
+    // }
+    // return snapshots;
   }
 
   return {

@@ -122,6 +122,106 @@ describe(`Cascade of callbacks`, () => {
   });
 });
 
+describe(`Order of callbacks in cascade`, () => {
+  const SV_REF = 'SV_REF';
+
+  const CallbackComponent = () => {
+    const callback_array = useSharedValue<Array<string>>([]);
+    registerValue(SV_REF, callback_array);
+
+    const sv0 = useSharedValue(0);
+    const sv1 = useSharedValue(0);
+    const sv2 = useSharedValue(0);
+
+    useEffect(() => {
+      sv0.value = withSequence(
+        // finishes at 100
+        withTiming(200, { duration: 100 }, () => {
+          callback_array.value = [...callback_array.value, 'ONE'];
+
+          sv1.value = withSequence(
+            //finishes at 200
+            withTiming(100, { duration: 100 }, () => {
+              callback_array.value = [...callback_array.value, 'TWO'];
+            }),
+
+            // cancelled at 600
+            withTiming(50, { duration: 600 }, () => {
+              callback_array.value = [...callback_array.value, 'SIX'];
+            }),
+            // cancelled at 600
+            withTiming(100, { duration: 600 }, () => {
+              callback_array.value = [...callback_array.value, 'SEVEN'];
+            }),
+          );
+        }),
+        // finishes at 300
+        withTiming(100, { duration: 200 }, () => {
+          callback_array.value = [...callback_array.value, 'THREE'];
+
+          // finishes at 450
+          sv2.value = withSequence(
+            withTiming(150, { duration: 150 }, () => {
+              callback_array.value = [...callback_array.value, 'FOUR'];
+            }),
+
+            // finishes at 600
+            withTiming(150, { duration: 100 }, () => {
+              callback_array.value = [...callback_array.value];
+
+              //cancels all sv1 animations at 600, finishes at 800
+              sv1.value = withTiming(200, { duration: 100 }, () => {
+                callback_array.value = [...callback_array.value, 'EIGHT'];
+              });
+            }),
+          );
+        }),
+        // finishes at 500
+        withTiming(200, { duration: 200 }, () => {
+          callback_array.value = [...callback_array.value, 'FIVE'];
+        }),
+        // finishes at 900
+        withTiming(200, { duration: 400 }, () => {
+          callback_array.value = [...callback_array.value, 'NINE'];
+        }),
+      );
+    });
+
+    const animatedStyle = useAnimatedStyle(() => {
+      return { height: 20 + sv0.value, width: 20 + sv1.value, top: sv2.value };
+    });
+
+    return (
+      <View style={styles.container}>
+        <Animated.View style={[styles.animatedBox, animatedStyle]} />
+      </View>
+    );
+  };
+
+  test('Test order of cascade of callback (no direct nesting nesting)', async () => {
+    await mockAnimationTimer();
+    const updatesContainerActive = await recordAnimationUpdates();
+    await render(<CallbackComponent />);
+    await wait(1400);
+    const updates = updatesContainerActive.getUpdates();
+    const nativeUpdates = await updatesContainerActive.getNativeSnapshots();
+    expect(updates).toMatchSnapshots(Snapshots.CallbackOrder);
+    expect(updates).toMatchNativeSnapshots(nativeUpdates);
+
+    expect((await getRegisteredValue(SV_REF)).onJS).toBe([
+      'ONE',
+      'TWO',
+      'THREE',
+      'FOUR',
+      'FIVE',
+      'SIX',
+      'SEVEN',
+      'EIGHT',
+      'NINE',
+    ]);
+  });
+});
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
