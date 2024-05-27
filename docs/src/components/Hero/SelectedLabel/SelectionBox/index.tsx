@@ -53,6 +53,8 @@ const SelectionBox: React.FC<{
   children,
   isInteractive,
 }) => {
+  const touchPosition = { x: 0, y: 0 };
+
   const classList = getClassListByIdentifier(
     draggableIdentifier,
     isInteractive
@@ -60,11 +62,33 @@ const SelectionBox: React.FC<{
 
   return (
     <Draggable
+      onStart={(event: any) => {
+        if (
+          typeof event.movementX === 'number' &&
+          typeof event.movementY === 'number'
+        )
+          return;
+
+        touchPosition.x = event.touches[0].clientX;
+        touchPosition.y = event.touches[0].clientY;
+      }}
       onDrag={(event: any) => {
         propagationFunction(
-          { x: event.movementX, y: event.movementY },
+          {
+            x: event.movementX ?? event.touches[0].clientX - touchPosition.x,
+            y: event.movementY ?? event.touches[0].clientY - touchPosition.y,
+          },
           draggableIdentifier
         );
+
+        if (
+          typeof event.movementX === 'number' &&
+          typeof event.movementY === 'number'
+        )
+          return;
+
+        touchPosition.x = event.touches[0].clientX;
+        touchPosition.y = event.touches[0].clientY;
       }}
       allowAnyClick={false}
       axis={'none'}>
