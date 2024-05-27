@@ -8,7 +8,7 @@ import type {
 } from 'react-native';
 import { FlatList } from 'react-native';
 import { AnimatedView } from './View';
-import { createAnimatedComponent } from '../../createAnimatedComponent';
+import { createAnimatedComponent } from '../createAnimatedComponent';
 import type { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
 import { LayoutAnimationConfig } from './LayoutAnimationConfig';
 import type { AnimatedProps, AnimatedStyle } from '../helperTypes';

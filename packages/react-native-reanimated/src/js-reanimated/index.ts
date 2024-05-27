@@ -3,7 +3,7 @@ import JSReanimated from './JSReanimated';
 import type { StyleProps } from '../commonTypes';
 import type { AnimatedStyle } from '../helperTypes';
 import { isWeb } from '../PlatformChecker';
-import { PropsAllowlists } from '../../propsAllowlists';
+import { PropsAllowlists } from '../propsAllowlists';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let createReactDOMStyle: (style: any) => any;

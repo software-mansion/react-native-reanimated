@@ -1,9 +1,9 @@
 'use strict';
 import { NativeEventEmitter, Platform, findNodeHandle } from 'react-native';
 import type { NativeModule } from 'react-native';
-import { shouldBeUseWeb } from '../reanimated2/PlatformChecker';
-import type { StyleProps } from '../reanimated2';
-import { runOnJS, runOnUIImmediately } from '../reanimated2/threads';
+import { shouldBeUseWeb } from '../PlatformChecker';
+import type { StyleProps } from '../commonTypes';
+import { runOnJS, runOnUIImmediately } from '../threads';
 import type {
   AnimatedComponentProps,
   IAnimatedComponentInternal,

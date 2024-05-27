@@ -6,7 +6,7 @@ import type {
   AnimatedComponentProps,
   IAnimatedComponentInternal,
   InitialComponentProps,
-} from '../createAnimatedComponent/commonTypes';
+} from './createAnimatedComponent/commonTypes';
 import { isJest } from './PlatformChecker';
 import type { DefaultStyle } from './hook/commonTypes';
 

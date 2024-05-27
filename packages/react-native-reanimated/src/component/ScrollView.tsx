@@ -3,7 +3,7 @@ import type { ForwardedRef } from 'react';
 import React, { forwardRef } from 'react';
 import type { ScrollViewProps } from 'react-native';
 import { ScrollView } from 'react-native';
-import { createAnimatedComponent } from '../../createAnimatedComponent';
+import { createAnimatedComponent } from '../createAnimatedComponent';
 import type { SharedValue } from '../commonTypes';
 import type { AnimatedRef } from '../hook';
 import { useAnimatedRef, useScrollViewOffset } from '../hook';

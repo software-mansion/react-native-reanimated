@@ -3,8 +3,8 @@ import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
   LayoutAnimationsValues,
-} from './reanimated2/layoutReanimation';
-import type { StyleProps } from './reanimated2/commonTypes';
+} from './layoutReanimation';
+import type { StyleProps } from './commonTypes';
 import type { NestedArray } from './createAnimatedComponent/commonTypes';
 
 const mockTargetValues: LayoutAnimationsValues = {

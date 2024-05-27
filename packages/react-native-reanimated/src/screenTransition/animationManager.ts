@@ -1,7 +1,7 @@
 'use strict';
 
 import type { LockAxis, ScreenTransitionConfig } from './commonTypes';
-import { configureProps } from '../../ConfigHelper';
+import { configureProps } from '../ConfigHelper';
 import { applyStyle } from './styleUpdater';
 import { getSwipeSimulator } from './swipeSimulator';
 

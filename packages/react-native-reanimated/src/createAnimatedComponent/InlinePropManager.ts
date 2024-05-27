@@ -1,5 +1,5 @@
 'use strict';
-import type { StyleProps } from '../reanimated2';
+import type { StyleProps } from '../commonTypes';
 import type {
   IAnimatedComponentInternal,
   AnimatedComponentProps,
@@ -7,16 +7,13 @@ import type {
   ViewInfo,
 } from './commonTypes';
 import { flattenArray } from './utils';
-import { makeViewDescriptorsSet } from '../reanimated2/ViewDescriptorsSet';
-import type {
-  ViewDescriptorsSet,
-  ViewRefSet,
-} from '../reanimated2/ViewDescriptorsSet';
+import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
+import type { ViewDescriptorsSet, ViewRefSet } from '../ViewDescriptorsSet';
 import { adaptViewConfig } from '../ConfigHelper';
-import updateProps from '../reanimated2/UpdateProps';
-import { stopMapper, startMapper } from '../reanimated2/mappers';
-import { isSharedValue } from '../reanimated2/isSharedValue';
-import { shouldBeUseWeb } from '../reanimated2/PlatformChecker';
+import updateProps from '../UpdateProps';
+import { stopMapper, startMapper } from '../mappers';
+import { isSharedValue } from '../isSharedValue';
+import { shouldBeUseWeb } from '../PlatformChecker';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 

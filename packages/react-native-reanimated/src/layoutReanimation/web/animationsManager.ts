@@ -5,7 +5,7 @@ import { Animations } from './config';
 import type {
   AnimatedComponentProps,
   LayoutAnimationStaticContext,
-} from '../../../createAnimatedComponent/commonTypes';
+} from '../../createAnimatedComponent/commonTypes';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { StyleProps } from '../../commonTypes';
 import { createAnimationWithExistingTransform } from './createAnimation';

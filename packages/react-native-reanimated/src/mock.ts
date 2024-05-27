@@ -7,7 +7,7 @@ import type {
   WithDecayConfig,
   AnimatableValue,
   AnimationCallback,
-} from './reanimated2';
+} from './index';
 import {
   IOSReferenceFrame,
   InterfaceOrientation,
@@ -22,7 +22,7 @@ import {
   advanceAnimationByFrame,
   setUpTests,
   getAnimatedStyle,
-} from './reanimated2';
+} from './index';
 import {
   View as ViewRN,
   Text as TextRN,

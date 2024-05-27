@@ -6,7 +6,7 @@ import type {
   ReduceMotion,
   Timestamp,
   RequiredKeys,
-} from '../../../reanimated2/commonTypes';
+} from '../../commonTypes';
 import { isWeb } from '../../PlatformChecker';
 
 const IS_WEB = isWeb();

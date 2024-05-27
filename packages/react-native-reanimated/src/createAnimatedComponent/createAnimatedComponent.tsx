@@ -8,23 +8,20 @@ import type {
 } from 'react';
 import React from 'react';
 import { findNodeHandle, Platform } from 'react-native';
-import { WorkletEventHandler } from '../reanimated2/WorkletEventHandler';
-import '../reanimated2/layoutReanimation/animationsManager';
+import { WorkletEventHandler } from '../WorkletEventHandler';
+import '../layoutReanimation/animationsManager';
 import invariant from 'invariant';
 import { adaptViewConfig } from '../ConfigHelper';
-import { RNRenderer } from '../reanimated2/platform-specific/RNRenderer';
-import { enableLayoutAnimations } from '../reanimated2/core';
-import {
-  SharedTransition,
-  LayoutAnimationType,
-} from '../reanimated2/layoutReanimation';
-import type { StyleProps, ShadowNodeWrapper } from '../reanimated2/commonTypes';
-import { getShadowNodeWrapperFromRef } from '../reanimated2/fabricUtils';
-import { removeFromPropsRegistry } from '../reanimated2/PropsRegistry';
-import { getReduceMotionFromConfig } from '../reanimated2/animation/util';
+import { RNRenderer } from '../platform-specific/RNRenderer';
+import { enableLayoutAnimations } from '../core';
+import { SharedTransition, LayoutAnimationType } from '../layoutReanimation';
+import type { StyleProps, ShadowNodeWrapper } from '../commonTypes';
+import { getShadowNodeWrapperFromRef } from '../fabricUtils';
+import { removeFromPropsRegistry } from '../PropsRegistry';
+import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
-import { SkipEnteringContext } from '../reanimated2/component/LayoutAnimationConfig';
-import type { AnimateProps } from '../reanimated2';
+import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
+import type { AnimateProps } from '../helperTypes';
 import JSPropsUpdater from './JSPropsUpdater';
 import type {
   AnimatedComponentProps,
@@ -36,12 +33,7 @@ import type {
 } from './commonTypes';
 import { has, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
-import {
-  isFabric,
-  isJest,
-  isWeb,
-  shouldBeUseWeb,
-} from '../reanimated2/PlatformChecker';
+import { isFabric, isJest, isWeb, shouldBeUseWeb } from '../PlatformChecker';
 import { InlinePropManager } from './InlinePropManager';
 import { PropsFilter } from './PropsFilter';
 import {
@@ -50,11 +42,11 @@ import {
   configureWebLayoutAnimations,
   getReducedMotionFromConfig,
   saveSnapshot,
-} from '../reanimated2/layoutReanimation/web';
-import { updateLayoutAnimations } from '../reanimated2/UpdateLayoutAnimations';
-import type { CustomConfig } from '../reanimated2/layoutReanimation/web/config';
+} from '../layoutReanimation/web';
+import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
+import type { CustomConfig } from '../layoutReanimation/web/config';
 import type { FlatList, FlatListProps } from 'react-native';
-import { addHTMLMutationObserver } from '../reanimated2/layoutReanimation/web/domUtils';
+import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
 import { getViewInfo } from './getViewInfo';
 
 const IS_WEB = isWeb();
