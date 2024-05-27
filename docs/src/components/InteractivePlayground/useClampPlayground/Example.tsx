@@ -26,6 +26,8 @@ interface Props {
   width: number;
 }
 export default function App({ width: FRAME_WIDTH, options }: Props) {
+  FRAME_WIDTH = FRAME_WIDTH - 50;
+
   const config = {
     damping: 3,
   };
@@ -43,7 +45,7 @@ export default function App({ width: FRAME_WIDTH, options }: Props) {
               withSequence(
                 withDelay(
                   2000,
-                  withSpring((options.upperBound / 400) * FRAME_WIDTH, config)
+                  withSpring((options.upperBound / 600) * FRAME_WIDTH, config)
                 ),
                 withTiming(BOX_START, { duration: 0 })
               ),
@@ -63,7 +65,7 @@ export default function App({ width: FRAME_WIDTH, options }: Props) {
             withSequence(
               withDelay(
                 2000,
-                withSpring((options.upperBound / 400) * FRAME_WIDTH, config)
+                withSpring((options.upperBound / 600) * FRAME_WIDTH, config)
               ),
               withTiming(0, { duration: 0 })
             ),
@@ -149,6 +151,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: CLAMP_MARKER_HEIGHT,
+    paddingLeft: '2rem',
+    paddingRight: '2rem',
     paddingBottom: 0,
   },
   clampMarker: {
