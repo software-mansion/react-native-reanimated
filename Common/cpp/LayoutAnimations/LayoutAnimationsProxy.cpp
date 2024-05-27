@@ -252,25 +252,20 @@ LOG(INFO)<<"\npullTransaction "<< std::this_thread::get_id()<<" "<<surfaceId<<st
         if (nodeForTag.contains(mutation.parentShadowView.tag)){
           nodeForTag[mutation.parentShadowView.tag]->handleMutation(mutation);
         }
-        transferConfigFromNativeTag(mutation.newChildShadowView.props->nativeId, mutation.newChildShadowView.tag);
         
         if (movedViews.contains(tag)){
-          
-          if (!layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)){
+          auto layoutAnimationIt = layoutAnimations_.find(tag);
+          if (layoutAnimationIt == layoutAnimations_.end()){
             filteredMutations.push_back(mutation);
             continue;
           }
-          auto oldView = movedViews[tag];
-          auto layoutAnimationIt = layoutAnimations_.find(tag);
-
-          if (layoutAnimationIt != layoutAnimations_.end()) {
-            auto &layoutAnimation = layoutAnimationIt->second;
-            oldView = *layoutAnimation.currentView;
-          }
+          
+          auto oldView = *layoutAnimationIt->second.currentView;
           filteredMutations.push_back(ShadowViewMutation::InsertMutation(mutation.parentShadowView, oldView, mutation.index));
           continue;
         }
 
+        transferConfigFromNativeTag(mutation.newChildShadowView.props->nativeId, mutation.newChildShadowView.tag);
         if (!layoutAnimationsManager_->hasLayoutAnimation(tag, ENTERING)) {
           filteredMutations.push_back(mutation);
           continue;
