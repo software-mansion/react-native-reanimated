@@ -15,17 +15,22 @@ import {
 } from 'react-native-gesture-handler';
 
 interface Props {
+  width: number;
   options: Omit<WithDecayConfig, 'rubberBandFactor'> & {
     rubberBandFactor: number;
   };
 }
 
-export default function App({ options }: Props) {
+const CONTROL_TRANSFORM_VALUE = 1000;
+
+export default function App({ width: FRAME_WIDTH, options }: Props) {
   const offset = useSharedValue(0);
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: offset.value }],
+      transform: [
+        { translateX: (offset.value / CONTROL_TRANSFORM_VALUE) * FRAME_WIDTH },
+      ],
     };
   });
 

@@ -16,6 +16,9 @@ const BOX_SIZE = 80;
 const FRAME_HEIGHT = 100;
 const CLAMP_MARKER_HEIGHT = 40;
 
+const CONTROL_WIDTH_VALUE = 400;
+const CONTROL_SPRING_WIDTH_VALUE = 600;
+
 interface ClampPlaygroundOptions {
   lowerBound: number;
   upperBound: number;
@@ -38,14 +41,20 @@ export default function App({ width: FRAME_WIDTH, options }: Props) {
         {
           translateX: withClamp(
             {
-              min: (options.lowerBound / 400) * FRAME_WIDTH,
-              max: (options.upperBound / 400) * FRAME_WIDTH - BOX_SIZE,
+              min: (options.lowerBound / CONTROL_WIDTH_VALUE) * FRAME_WIDTH,
+              max:
+                (options.upperBound / CONTROL_WIDTH_VALUE) * FRAME_WIDTH -
+                BOX_SIZE,
             },
             withRepeat(
               withSequence(
                 withDelay(
                   2000,
-                  withSpring((options.upperBound / 600) * FRAME_WIDTH, config)
+                  withSpring(
+                    (options.upperBound / CONTROL_SPRING_WIDTH_VALUE) *
+                      FRAME_WIDTH,
+                    config
+                  )
                 ),
                 withTiming(BOX_START, { duration: 0 })
               ),
@@ -65,7 +74,11 @@ export default function App({ width: FRAME_WIDTH, options }: Props) {
             withSequence(
               withDelay(
                 2000,
-                withSpring((options.upperBound / 600) * FRAME_WIDTH, config)
+                withSpring(
+                  (options.upperBound / CONTROL_SPRING_WIDTH_VALUE) *
+                    FRAME_WIDTH,
+                  config
+                )
               ),
               withTiming(0, { duration: 0 })
             ),
@@ -100,7 +113,8 @@ export default function App({ width: FRAME_WIDTH, options }: Props) {
                 {
                   marginTop: (BOX_SIZE - FRAME_HEIGHT) / 2,
                   borderRightWidth: 2,
-                  width: (options.lowerBound / 400) * FRAME_WIDTH,
+                  width:
+                    (options.lowerBound / CONTROL_WIDTH_VALUE) * FRAME_WIDTH,
                 },
               ]}
             />
@@ -117,7 +131,9 @@ export default function App({ width: FRAME_WIDTH, options }: Props) {
                 {
                   borderLeftWidth: 2,
                   marginTop: -(BOX_SIZE + FRAME_HEIGHT) / 2,
-                  width: FRAME_WIDTH - (options.upperBound / 400) * FRAME_WIDTH,
+                  width:
+                    FRAME_WIDTH -
+                    (options.upperBound / CONTROL_WIDTH_VALUE) * FRAME_WIDTH,
                   alignSelf: 'flex-end',
                 },
               ]}

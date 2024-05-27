@@ -12,6 +12,8 @@ import Animated, {
 
 const initialOffset = -100;
 
+const CONTROL_TRANSFORM_VALUE = 400;
+
 interface Props {
   width: number;
   options: WithSpringConfig;
@@ -35,7 +37,11 @@ export default function App({ width, options }: Props) {
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: (offset.value / 400) * (width - 160) }],
+      transform: [
+        {
+          translateX: (offset.value / CONTROL_TRANSFORM_VALUE) * (width - 160),
+        },
+      ],
     };
   });
 
@@ -64,7 +70,12 @@ export default function App({ width, options }: Props) {
           styles.box,
           styles.ghost,
           {
-            transform: [{ translateX: (initialOffset / 400) * (width - 160) }],
+            transform: [
+              {
+                translateX:
+                  (initialOffset / CONTROL_TRANSFORM_VALUE) * (width - 160),
+              },
+            ],
           },
         ]}
       />
@@ -75,7 +86,7 @@ export default function App({ width, options }: Props) {
           onPress={() => {
             setButtonDisabled(true);
             offset.value = withSpring(
-              (-initialOffset / 400) * (width - 160),
+              (-initialOffset / CONTROL_TRANSFORM_VALUE) * (width - 160),
               options,
               callback
             );
