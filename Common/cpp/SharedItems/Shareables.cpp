@@ -4,8 +4,8 @@ using namespace facebook;
 
 namespace reanimated {
 
-std::atomic<HasNativeState> ShareableObject::hasNativeState_ =
-    NativeStateAccess::Unknown;
+std::atomic<IsNativeStateImplemented> ShareableObject::isNativeStateImplemented_ =
+    IsNativeStateImplemented::Unknown;
 
 jsi::Function getValueUnpacker(jsi::Runtime &rt) {
   auto valueUnpacker = rt.global().getProperty(rt, "__valueUnpacker");
@@ -201,10 +201,10 @@ ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
     auto value = extractShareableOrThrow(rt, object.getProperty(rt, key));
     data_.emplace_back(key.utf8(rt), value);
   }
-  if (hasNativeState_ == HasNativeState::Yes) {
+  if (isNativeStateImplemented_ == IsNativeStateImplemented::Yes) {
     makeNativeStateFromObject(rt, object);
-  } else if (hasNativeState_ == HasNativeState::Unknown) {
-    runWithNativeStateAccessProbe(
+  } else if (isNativeStateImplemented_ == IsNativeStateImplemented::Unknown) {
+    runWithNativeStateProbe(
         [&]() { makeNativeStateFromObject(rt, object); });
   }
 }
@@ -214,10 +214,10 @@ ShareableObject::ShareableObject(
     const jsi::Object &object,
     const jsi::Value &nativeStateSource)
     : ShareableObject(rt, object) {
-  if (hasNativeState_ == HasNativeState::Yes) {
+  if (isNativeStateImplemented_ == IsNativeStateImplemented::Yes) {
     makeNativeStateFromNativeStateSource(rt, nativeStateSource);
-  } else if (hasNativeState_ == HasNativeState::Unknown) {
-    runWithNativeStateAccessProbe(
+  } else if (isNativeStateImplemented_ == IsNativeStateImplemented::Unknown) {
+    runWithNativeStateProbe(
         [&]() { makeNativeStateFromNativeStateSource(rt, nativeStateSource); });
   }
 }
@@ -229,10 +229,10 @@ jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
         rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
   }
   if (nativeState_ != nullptr) {
-    if (hasNativeState_ == HasNativeState::Yes) {
+    if (isNativeStateImplemented_ == IsNativeStateImplemented::Yes) {
       obj.setNativeState(rt, nativeState_);
-    } else if (hasNativeState_ == HasNativeState::Unknown) {
-      runWithNativeStateAccessProbe(
+    } else if (isNativeStateImplemented_ == IsNativeStateImplemented::Unknown) {
+      runWithNativeStateProbe(
           [&]() { obj.setNativeState(rt, nativeState_); });
     }
   }
@@ -244,7 +244,7 @@ void ShareableObject::makeNativeStateFromObject(
     const jsi::Object &object) {
   if (object.hasNativeState(rt)) {
     nativeState_ = object.getNativeState(rt);
-    hasNativeState_ = HasNativeState::Yes;
+    isNativeStateImplemented_ = IsNativeStateImplemented::Yes;
   }
 }
 
@@ -254,17 +254,17 @@ void ShareableObject::makeNativeStateFromNativeStateSource(
   if (nativeStateSource.isObject() &&
       nativeStateSource.asObject(rt).hasNativeState(rt)) {
     nativeState_ = nativeStateSource.asObject(rt).getNativeState(rt);
-    hasNativeState_ = HasNativeState::Yes;
+    isNativeStateImplemented_ = IsNativeStateImplemented::Yes;
   }
 }
 
-void ShareableObject::runWithNativeStateAccessProbe(
+void ShareableObject::runWithNativeStateProbe(
     std::function<void()> &&block) {
   try {
     block();
-    hasNativeState_ = HasNativeState::Yes;
+    isNativeStateImplemented_ = IsNativeStateImplemented::Yes;
   } catch (...) {
-    hasNativeState_ = HasNativeState::No;
+    isNativeStateImplemented_ = IsNativeStateImplemented::No;
   }
 }
 

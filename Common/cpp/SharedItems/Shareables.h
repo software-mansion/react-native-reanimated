@@ -179,7 +179,7 @@ class ShareableArray : public Shareable {
   std::vector<std::shared_ptr<Shareable>> data_;
 };
 
-enum class HasNativeState {
+enum class IsNativeStateImplemented {
   Unknown,
   Yes,
   No,
@@ -209,7 +209,7 @@ class ShareableObject : public Shareable {
   // the methods that refer to the native state of an object
   // are not implemented and they throw the error. Therefore
   // we need to keep track of the access mode to the native state.
-  static std::atomic<HasNativeState> hasNativeState_;
+  static std::atomic<IsNativeStateImplemented> isNativeStateImplemented_;
   static void runWithNativeStateProbe(std::function<void()> &&block);
 };
 
