@@ -183,7 +183,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   jsi::Value filterNonAnimatableProps(
       jsi::Runtime &rt,
       const jsi::Value &props);
-  friend class LayoutAnimationsProxy;
 #endif // RCT_NEW_ARCH_ENABLED
 
   const bool isBridgeless_;

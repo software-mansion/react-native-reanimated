@@ -857,7 +857,8 @@ void NativeReanimatedModule::initializeFabric(
         layoutAnimationsManager_,
         this,
         componentDescriptorRegistry,
-        scheduler->getContextContainer());
+        scheduler->getContextContainer(),
+        uiScheduler_);
     uiManager->getShadowTreeRegistry().enumerate(
         [this](const ShadowTree &shadowTree, bool &stop) {
           shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(layoutAnimationsProxy_);

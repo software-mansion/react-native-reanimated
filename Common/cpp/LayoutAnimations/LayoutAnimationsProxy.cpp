@@ -431,7 +431,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(const int tag, ShadowViewMuta
   layoutAnimations_.insert_or_assign(tag, la);
 
   Snapshot values(mutation.newChildShadowView, surfaceManager.getWindow(mutation.newChildShadowView.surfaceId));
-  nativeReanimatedModule_->uiScheduler_->scheduleOnUI(
+  uiScheduler_->scheduleOnUI(
       [values, this, tag]() {
     jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
     jsi::Object yogaValues(rt);
@@ -476,7 +476,7 @@ void LayoutAnimationsProxy::startExitingAnimation(const int tag, ShadowViewMutat
 
   Snapshot values(oldView, surfaceManager.getWindow(surfaceId));
 
-  nativeReanimatedModule_->uiScheduler_->scheduleOnUI(
+  uiScheduler_->scheduleOnUI(
       [values, this, tag]() {
     jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
     jsi::Object yogaValues(rt);
@@ -523,7 +523,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(const int tag, const ShadowView
   Snapshot currentValues(oldView, surfaceManager.getWindow(surfaceId));
   Snapshot targetValues(mutation.newChildShadowView, surfaceManager.getWindow(surfaceId));
 
-  nativeReanimatedModule_->uiScheduler_->scheduleOnUI(
+  uiScheduler_->scheduleOnUI(
       [currentValues, targetValues, this, tag]() {
         jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
         jsi::Object yogaValues(rt);
@@ -550,7 +550,7 @@ void LayoutAnimationsProxy::maybeCancelAnimation(const int tag) const{
     return;
   }
   layoutAnimations_.erase(tag);
-  nativeReanimatedModule_->uiScheduler_->scheduleOnUI(
+  uiScheduler_->scheduleOnUI(
     [this, tag]() {
     jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
     nativeReanimatedModule_->layoutAnimationsManager().cancelLayoutAnimation(rt, tag);

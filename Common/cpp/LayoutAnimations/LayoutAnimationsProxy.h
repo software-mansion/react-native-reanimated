@@ -32,7 +32,8 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   ContextContainer::Shared contextContainer_;
   NativeReanimatedModule* nativeReanimatedModule_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
-  LayoutAnimationsProxy(std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_, NativeReanimatedModule* n, SharedComponentDescriptorRegistry componentDescriptorRegistry_, ContextContainer::Shared contextContainer_): layoutAnimationsManager_(layoutAnimationsManager_), contextContainer_(contextContainer_), nativeReanimatedModule_(n),  componentDescriptorRegistry_(componentDescriptorRegistry_){}
+  const std::shared_ptr<UIScheduler> uiScheduler_;
+  LayoutAnimationsProxy(std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_, NativeReanimatedModule* n, SharedComponentDescriptorRegistry componentDescriptorRegistry_, ContextContainer::Shared contextContainer_, const std::shared_ptr<UIScheduler> uiScheduler_): layoutAnimationsManager_(layoutAnimationsManager_), contextContainer_(contextContainer_), nativeReanimatedModule_(n),  componentDescriptorRegistry_(componentDescriptorRegistry_), uiScheduler_(uiScheduler_){}
   
   void startEnteringAnimation(const int tag, ShadowViewMutation& mutation) const;
   void startExitingAnimation(const int tag, ShadowViewMutation& mutation) const;
