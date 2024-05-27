@@ -4,7 +4,7 @@ using namespace facebook;
 
 namespace reanimated {
 
-std::atomic<NativeStateAccess> ShareableObject::nativeStateAccess_ =
+std::atomic<HasNativeState> ShareableObject::hasNativeState_ =
     NativeStateAccess::Unknown;
 
 jsi::Function getValueUnpacker(jsi::Runtime &rt) {
@@ -201,9 +201,9 @@ ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
     auto value = extractShareableOrThrow(rt, object.getProperty(rt, key));
     data_.emplace_back(key.utf8(rt), value);
   }
-  if (nativeStateAccess_ == NativeStateAccess::Safe) {
+  if (hasNativeState_ == HasNativeState::Yes) {
     makeNativeStateFromObject(rt, object);
-  } else if (nativeStateAccess_ == NativeStateAccess::Unknown) {
+  } else if (hasNativeState_ == HasNativeState::Unknown) {
     runWithNativeStateAccessProbe(
         [&]() { makeNativeStateFromObject(rt, object); });
   }
@@ -214,9 +214,9 @@ ShareableObject::ShareableObject(
     const jsi::Object &object,
     const jsi::Value &nativeStateSource)
     : ShareableObject(rt, object) {
-  if (nativeStateAccess_ == NativeStateAccess::Safe) {
+  if (hasNativeState_ == HasNativeState::Yes) {
     makeNativeStateFromNativeStateSource(rt, nativeStateSource);
-  } else if (nativeStateAccess_ == NativeStateAccess::Unknown) {
+  } else if (hasNativeState_ == HasNativeState::Unknown) {
     runWithNativeStateAccessProbe(
         [&]() { makeNativeStateFromNativeStateSource(rt, nativeStateSource); });
   }
@@ -229,9 +229,9 @@ jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
         rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
   }
   if (nativeState_ != nullptr) {
-    if (nativeStateAccess_ == NativeStateAccess::Safe) {
+    if (hasNativeState_ == HasNativeState::Yes) {
       obj.setNativeState(rt, nativeState_);
-    } else if (nativeStateAccess_ == NativeStateAccess::Unknown) {
+    } else if (hasNativeState_ == HasNativeState::Unknown) {
       runWithNativeStateAccessProbe(
           [&]() { obj.setNativeState(rt, nativeState_); });
     }
@@ -244,7 +244,7 @@ void ShareableObject::makeNativeStateFromObject(
     const jsi::Object &object) {
   if (object.hasNativeState(rt)) {
     nativeState_ = object.getNativeState(rt);
-    nativeStateAccess_ = NativeStateAccess::Safe;
+    hasNativeState_ = HasNativeState::Yes;
   }
 }
 
@@ -254,7 +254,7 @@ void ShareableObject::makeNativeStateFromNativeStateSource(
   if (nativeStateSource.isObject() &&
       nativeStateSource.asObject(rt).hasNativeState(rt)) {
     nativeState_ = nativeStateSource.asObject(rt).getNativeState(rt);
-    nativeStateAccess_ = NativeStateAccess::Safe;
+    hasNativeState_ = HasNativeState::Yes;
   }
 }
 
@@ -262,9 +262,9 @@ void ShareableObject::runWithNativeStateAccessProbe(
     std::function<void()> &&block) {
   try {
     block();
-    nativeStateAccess_ = NativeStateAccess::Safe;
+    hasNativeState_ = HasNativeState::Yes;
   } catch (...) {
-    nativeStateAccess_ = NativeStateAccess::Unsafe;
+    hasNativeState_ = HasNativeState::No;
   }
 }
 

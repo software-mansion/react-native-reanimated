@@ -179,10 +179,10 @@ class ShareableArray : public Shareable {
   std::vector<std::shared_ptr<Shareable>> data_;
 };
 
-enum class NativeStateAccess {
+enum class HasNativeState {
   Unknown,
-  Safe,
-  Unsafe,
+  Yes,
+  No,
 };
 
 class ShareableObject : public Shareable {
@@ -209,8 +209,8 @@ class ShareableObject : public Shareable {
   // the methods that refer to the native state of an object
   // are not implemented and they throw the error. Therefore
   // we need to keep track of the access mode to the native state.
-  static std::atomic<NativeStateAccess> nativeStateAccess_;
-  static void runWithNativeStateAccessProbe(std::function<void()> &&block);
+  static std::atomic<HasNativeState> hasNativeState_;
+  static void runWithNativeStateProbe(std::function<void()> &&block);
 };
 
 class ShareableHostObject : public Shareable {

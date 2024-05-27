@@ -26,10 +26,7 @@ ShadowNode::Unshared cloneShadowTreeWithNewProps(
   const auto props = source->getComponentDescriptor().cloneProps(
       propsParserContext, source->getProps(), std::move(rawProps));
 
-  auto newChildNode = source->clone(
-      {/* .props = */ props,
-       ShadowNodeFragment::childrenPlaceholder(),
-       source->getState()});
+  auto newChildNode = source->clone({/* .props = */ props, ShadowNodeFragment::childrenPlaceholder(), source->getState()});
 
   for (auto it = ancestors.rbegin(); it != ancestors.rend(); ++it) {
     auto &parentNode = it->first.get();
@@ -53,10 +50,11 @@ ShadowNode::Unshared cloneShadowTreeWithNewProps(
 
     children[childIndex] = newChildNode;
 
-    newChildNode = parentNode.clone(
-        {ShadowNodeFragment::propsPlaceholder(),
-         std::make_shared<ShadowNode::ListOfShared>(children),
-         parentNode.getState()});
+    newChildNode = parentNode.clone({
+        ShadowNodeFragment::propsPlaceholder(),
+        std::make_shared<ShadowNode::ListOfShared>(children),
+        parentNode.getState()
+    });
   }
 
   return std::const_pointer_cast<ShadowNode>(newChildNode);
