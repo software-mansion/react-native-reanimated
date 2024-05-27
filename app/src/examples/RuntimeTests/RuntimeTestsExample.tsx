@@ -12,8 +12,6 @@ import './tests/animations/withTiming/transformMatrices.test';
 
 import './tests/animations/withSpring/variousConfig.test';
 
-import './tests/animations/withSequence';
-
 import './tests/layoutAnimations/entering/enteringColors.test';
 import './tests/layoutAnimations/entering/predefinedEntering.test';
 
