@@ -3,6 +3,7 @@
 #import <RNReanimated/REASharedTransitionManager.h>
 #import <RNReanimated/REASwizzledUIManager.h>
 #import <React/RCTComponentData.h>
+#import <React/RCTLog.h>
 #import <React/RCTTextView.h>
 #import <React/UIView+Private.h>
 #import <React/UIView+React.h>
@@ -47,6 +48,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   REASharedTransitionManager *_sharedTransitionManager;
 #ifndef NDEBUG
   REACheckDuplicateSharedTagBlock _checkDuplicateSharedTag;
+  REACheckIsRenderedDirectlyInsideSafeArea _checkIsRenderedDirectlyInsideSafeArea;
 #endif
 }
 
@@ -100,6 +102,15 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 #ifndef NDEBUG
     _checkDuplicateSharedTag = ^(REAUIView *view, NSNumber *viewTag) {
       // default implementation, this block will be replaced by a setter
+    };
+    _checkIsRenderedDirectlyInsideSafeArea = ^(REAUIView *view) {
+      NSString *parentClassName = NSStringFromClass(view.superview.class);
+
+      if ([parentClassName isEqualToString:@"RCTSafeAreaView"] ||
+          [parentClassName isEqualToString:@"RNCSafeAreaView"]) {
+        RCTLogWarn(
+            @"Animated components shouldn't be rendered directly inside <SafeAreaView />, consider wrapping it with additional <View />");
+      }
     };
 #endif
   }
@@ -566,6 +577,10 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   LayoutAnimationType type = before == nil ? ENTERING : LAYOUT;
   NSNumber *viewTag = view.reactTag;
   if (_hasAnimationForTag(viewTag, type)) {
+#ifndef NDEBUG
+    _checkIsRenderedDirectlyInsideSafeArea(view);
+#endif
+
     REASnapshot *after = [[REASnapshot alloc] init:view];
     if (before == nil) {
       [self onViewCreate:view after:after];

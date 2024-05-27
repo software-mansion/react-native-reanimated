@@ -23,6 +23,7 @@ typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
 typedef void (^REASharedTransitionRemovingBlock)(NSNumber *_Nonnull tag);
 #ifndef NDEBUG
 typedef void (^REACheckDuplicateSharedTagBlock)(REAUIView *view, NSNumber *_Nonnull viewTag);
+typedef void (^REACheckIsRenderedDirectlyInsideSafeArea)(REAUIView *view);
 #endif
 typedef void (^REACancelAnimationBlock)(NSNumber *_Nonnull tag);
 typedef NSNumber *_Nullable (^REAFindPrecedingViewTagForTransitionBlock)(NSNumber *_Nonnull tag);
