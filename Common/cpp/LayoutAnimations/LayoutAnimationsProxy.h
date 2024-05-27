@@ -27,6 +27,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   mutable std::recursive_mutex mutex;
   mutable SurfaceManager surfaceManager;
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
+  mutable std::unordered_map<Tag, int> leastRemoved;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   ContextContainer::Shared contextContainer_;
   NativeReanimatedModule* nativeReanimatedModule_;
@@ -35,7 +36,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate{
   
   void startEnteringAnimation(const int tag, ShadowViewMutation& mutation) const;
   void startExitingAnimation(const int tag, ShadowViewMutation& mutation) const;
-  void startLayoutAnimation(const int tag, ShadowViewMutation& mutation) const;
+  void startLayoutAnimation(const int tag, const ShadowViewMutation& mutation) const;
   
   void transferConfigFromNativeTag(const std::string nativeId, const int tag) const;
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);

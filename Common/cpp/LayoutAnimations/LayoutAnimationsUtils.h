@@ -31,7 +31,7 @@ struct UpdateValues{
 
 struct Snapshot{
   double x, y, width, height, windowWidth, windowHeight;
-  Snapshot(ShadowView& shadowView, Window window){
+  Snapshot(const ShadowView& shadowView, Window window){
     auto& frame = shadowView.layoutMetrics.frame;
     x = frame.origin.x;
     y = frame.origin.y;
@@ -61,7 +61,8 @@ typedef enum ExitingState{
   WAITING = 2,
   ANIMATING = 4,
   DEAD = 8,
-  DELETED = 16,
+  MOVED = 16,
+  DELETED = 32,
 } ExitingState;
 
 struct MutationNode: public Node{
