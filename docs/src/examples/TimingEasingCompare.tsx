@@ -10,9 +10,13 @@ import Animated, {
 
 const duration = 2000;
 
-export default function App() {
-  const defaultAnim = useSharedValue<number>(200);
-  const linear = useSharedValue<number>(200);
+interface AppProps {
+  width: number;
+}
+
+export default function App({ width }: AppProps) {
+  const defaultAnim = useSharedValue<number>(width / 2 - 160);
+  const linear = useSharedValue<number>(width / 2 - 160);
 
   const animatedDefault = useAnimatedStyle(() => ({
     transform: [{ translateX: defaultAnim.value }],
