@@ -109,7 +109,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       if ([parentClassName isEqualToString:@"RCTSafeAreaView"] ||
           [parentClassName isEqualToString:@"RNCSafeAreaView"]) {
         RCTLogWarn(
-            @"Animated components shouldn't be rendered directly inside <SafeAreaView />, consider wrapping it with additional <View />");
+            @"Animated components shouldn't be rendered directly inside <SafeAreaView />, consider wrapping your content with additional <View />");
       }
     };
 #endif
