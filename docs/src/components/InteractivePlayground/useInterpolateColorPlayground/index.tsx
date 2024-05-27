@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { CheckboxOption, Range, SelectOption } from '../';
 import Example from './Example';
 import styles from './styles.module.css';
@@ -32,6 +32,8 @@ export default function useInterpolateColorPlayground() {
   const isMobile = windowWidth < 600;
 
   const [key, setKey] = useState(0);
+  const prevRefreshKeyLeft = useRef(key);
+  const prevRefreshKeyRight = useRef(key);
 
   const [colorBarsSectionCollapsed, setColorBarsSectionCollapsed] =
     useState(true);
@@ -136,13 +138,14 @@ export default function useInterpolateColorPlayground() {
     </>
   );
 
-  return {
-    example: (props: React.HTMLProps<HTMLDivElement>) => (
-      <div {...props} className={styles.example}>
+  function ExampleFC() {
+    return (
+      <div className={styles.example}>
         <ColorPicker
           color={colorLeftBoundary}
           setColor={setColorLeftBoundary}
           defaultValue={initialState.color.leftBoundary}
+          prevKeyRef={prevRefreshKeyLeft}
           refreshKey={key}
         />
         {!isMobile && colorBox}
@@ -150,11 +153,16 @@ export default function useInterpolateColorPlayground() {
           color={colorRightBoundary}
           setColor={setColorRightBoundary}
           defaultValue={initialState.color.rightBoundary}
+          prevKeyRef={prevRefreshKeyRight}
           refreshKey={key}
         />
         {isMobile && colorBox}
       </div>
-    ),
+    );
+  }
+
+  return {
+    example: ExampleFC,
     controls,
     code,
     resetOptions,
