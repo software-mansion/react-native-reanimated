@@ -10,7 +10,7 @@ import BottomSheetSrc from '!!raw-loader!@site/static/examples/BottomSheet';
 import ExampleVideo from '@site/src/components/ExampleVideo';
 import CollapsibleCode from '@site/src/components/CollapsibleCode';
 
-<InteractiveExample src={BottomSheetSrc} component={<BottomSheet />} />
+<InteractiveExample src={BottomSheetSrc} component={BottomSheet} />
 
 The **BottomSheet** component accepts props such as `isOpen` - a [shared value](/docs/fundamentals/glossary#shared-value) indicating whether the bottom sheet is open or closed, `toggleSheet` - a function to toggle the visibility of the bottom sheet, and an optional `duration` for animation.
 

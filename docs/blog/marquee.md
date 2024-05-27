@@ -10,7 +10,7 @@ import MarqueeSrc from '!!raw-loader!@site/static/examples/Marquee';
 import ExampleVideo from '@site/src/components/ExampleVideo';
 import CollapsibleCode from '@site/src/components/CollapsibleCode';
 
-<InteractiveExample src={MarqueeSrc} component={<Marquee />} />
+<InteractiveExample src={MarqueeSrc} component={Marquee} />
 
 Now, let's understand how this example works:
 
