@@ -169,7 +169,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     return uiWorkletRuntime_->getJSIRuntime();
   }
 
- public:
   inline bool isBridgeless() const {
     return isBridgeless_;
   }
@@ -184,9 +183,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   jsi::Value filterNonAnimatableProps(
       jsi::Runtime &rt,
       const jsi::Value &props);
+  friend class LayoutAnimationsProxy;
 #endif // RCT_NEW_ARCH_ENABLED
 
- public:
   const bool isBridgeless_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
