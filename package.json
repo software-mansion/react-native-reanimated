@@ -10,7 +10,8 @@
       "packages/eslint-plugin-reanimated",
       "packages/reanimated-fabric-example",
       "packages/reanimated-next-example",
-      "packages/reanimated-macos-example"
+      "packages/reanimated-macos-example",
+      "packages/reanimated-tvos-example"
     ]
   },
   "private": true,
