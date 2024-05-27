@@ -23,11 +23,7 @@ export default function App({ width }: AppProps) {
   }));
 
   React.useEffect(() => {
-    sv.value = withRepeat(
-      withTiming(width / 2 - 160, { duration: 2000 }),
-      -1,
-      true
-    );
+    sv.value = withRepeat(withTiming(width / 2, { duration: 2000 }), -1, true);
   });
 
   return (
@@ -46,6 +42,5 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    alignItems: 'center',
   },
 });
