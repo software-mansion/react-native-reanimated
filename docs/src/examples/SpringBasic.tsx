@@ -12,7 +12,7 @@ interface AppProps {
 }
 
 export default function App({ width }: AppProps) {
-  const offset = useSharedValue<number>(width / 2 - 240);
+  const offset = useSharedValue<number>(width / 2 - 120);
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],
