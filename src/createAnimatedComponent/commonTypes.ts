@@ -58,8 +58,7 @@ export interface INativeEventsManager {
   attachNativeEvents(): void;
   detachNativeEvents(): void;
   updateNativeEvents(
-    prevProps: AnimatedComponentProps<InitialComponentProps>,
-    computedEventTag: number
+    prevProps: AnimatedComponentProps<InitialComponentProps>
   ): void;
 }
 
@@ -106,7 +105,6 @@ export interface IAnimatedComponentInternal {
   _styles: StyleProps[] | null;
   _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
   _componentViewTag: number;
-  _eventViewTag: number;
   _isFirstRender: boolean;
   jestAnimatedStyle: { value: StyleProps };
   _component: AnimatedComponentRef | HTMLElement | null;
@@ -114,7 +112,7 @@ export interface IAnimatedComponentInternal {
   _jsPropsUpdater: IJSPropsUpdater;
   _InlinePropManager: IInlinePropManager;
   _PropsFilter: IPropsFilter;
-  _NativeEventsManager: INativeEventsManager;
+  _NativeEventsManager?: INativeEventsManager;
   _viewInfo?: ViewInfo;
   context: React.ContextType<typeof SkipEnteringContext>;
 }

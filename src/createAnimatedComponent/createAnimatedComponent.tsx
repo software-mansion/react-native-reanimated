@@ -124,7 +124,6 @@ export function createAnimatedComponent(
     _styles: StyleProps[] | null = null;
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _componentViewTag = -1;
-    _eventViewTag = -1;
     _isFirstRender = true;
     jestAnimatedStyle: { value: StyleProps } = { value: {} };
     _component: AnimatedComponentRef | HTMLElement | null = null;
@@ -132,7 +131,7 @@ export function createAnimatedComponent(
     _jsPropsUpdater = new JSPropsUpdater();
     _InlinePropManager = new InlinePropManager();
     _PropsFilter = new PropsFilter();
-    _NativeEventsManager: INativeEventsManager;
+    _NativeEventsManager?: INativeEventsManager;
     _viewInfo?: ViewInfo;
     static displayName: string;
     static contextType = SkipEnteringContext;
@@ -143,13 +142,14 @@ export function createAnimatedComponent(
       if (isJest()) {
         this.jestAnimatedStyle = { value: {} };
       }
-      this._NativeEventsManager = new NativeEventsManager(this);
     }
 
     componentDidMount() {
       this._componentViewTag = this._getComponentViewTag();
-      this._eventViewTag = this._getEventViewTag();
-      this._NativeEventsManager.attachNativeEvents();
+      if (!IS_WEB) {
+        this._NativeEventsManager = new NativeEventsManager(this, options);
+      }
+      this._NativeEventsManager?.attachNativeEvents();
       this._jsPropsUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
@@ -183,7 +183,7 @@ export function createAnimatedComponent(
     }
 
     componentWillUnmount() {
-      this._NativeEventsManager.detachNativeEvents();
+      this._NativeEventsManager?.detachNativeEvents();
       this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
       this._InlinePropManager.detachInlineProps();
@@ -231,22 +231,6 @@ export function createAnimatedComponent(
 
     _getComponentViewTag() {
       return this._getViewInfo().viewTag as number;
-    }
-
-    _getEventViewTag() {
-      // Get the tag for registering events - since the event emitting view can be nested inside the main component
-      const componentAnimatedRef = this._component as AnimatedComponentRef;
-      let newTag: number;
-      if (componentAnimatedRef.getScrollableNode) {
-        const scrollableNode = componentAnimatedRef.getScrollableNode();
-        newTag = findNodeHandle(scrollableNode) ?? -1;
-      } else {
-        newTag =
-          findNodeHandle(
-            options?.setNativeProps ? this : componentAnimatedRef
-          ) ?? -1;
-      }
-      return newTag;
     }
 
     _detachStyles() {
@@ -416,10 +400,7 @@ export function createAnimatedComponent(
       ) {
         this._configureSharedTransition();
       }
-      this._NativeEventsManager.updateNativeEvents(
-        prevProps,
-        this._getEventViewTag()
-      );
+      this._NativeEventsManager?.updateNativeEvents(prevProps);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
