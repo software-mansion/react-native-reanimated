@@ -37,7 +37,12 @@
     "workletize",
     "workletized",
     "workletizes",
-    "worklets"
+    "worklets",
+    "runtimes",
+    "overdamped",
+    "automagically",
+    "threejs",
+    "nomalized"
   ],
   "flagWords": [
     "ere",
@@ -49,6 +54,7 @@
     "node_modules",
     "docs/src/components/Testimonials",
     "MacOSExample/macos/MacOSExample.xcodeproj",
+    "app/src/examples/RuntimeTests/ReanimatedRuntimeTestsRunner/Presets.ts",
     "cspell.json",
     "package.json"
   ],

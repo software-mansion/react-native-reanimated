@@ -22,7 +22,7 @@ export const describe: {
       testRunner.describe(name, buildSuite, DescribeDecorator.SKIP);
     },
     only: (name: string, buildSuite: () => void) => {
-      testRunner.describe(name, buildSuite, DescribeDecorator.SKIP);
+      testRunner.describe(name, buildSuite, DescribeDecorator.ONLY);
     },
   },
 );
@@ -65,13 +65,13 @@ export const test: {
       },
       {
         each: <T>(examples: Array<T>) => {
-          return testRunner.testEach(examples, null);
+          return testRunner.testEach(examples, TestDecorator.ONLY);
         },
       },
     ),
     failing: Object.assign(
-      (name: string, warningMessage: string, testCase: () => void) => {
-        testRunner.test(name, testCase, TestDecorator.FAILING, warningMessage);
+      (name: string, expectedWarning: string, testCase: () => void) => {
+        testRunner.test(name, testCase, TestDecorator.FAILING, expectedWarning);
       },
       {
         each: <T>(examples: Array<T>) => {
@@ -81,7 +81,7 @@ export const test: {
     ),
     warn: Object.assign(
       (name: string, expectedWarning: string, testCase: () => void) => {
-        testRunner.test(name, testCase, TestDecorator.WARN);
+        testRunner.test(name, testCase, TestDecorator.WARN, expectedWarning);
       },
       {
         each: <T>(examples: Array<T>) => {

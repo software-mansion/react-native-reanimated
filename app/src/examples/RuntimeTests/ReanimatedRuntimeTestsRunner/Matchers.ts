@@ -2,10 +2,15 @@ import { getComparator } from './Comparators';
 import { appendWhiteSpaceToMatchLength, color } from './stringFormatUtils';
 import { ComparisonMode, OperationUpdate, TestCase, TestValue, NullableTestValue, TrackerCallCount } from './types';
 
-type MatcherFunction = (
+type ToBeArgs = [TestValue, ComparisonMode?];
+type ToBeWithinRangeArgs = [number, number];
+type ToBeCalledArgs = [number];
+
+type MatcherArguments = ToBeArgs | ToBeCalledArgs | ToBeWithinRangeArgs;
+
+type Matcher<Args extends MatcherArguments> = (
   currentValue: TestValue,
-  expectedValue: TestValue,
-  ...additionalArgs: Array<unknown>
+  ...args: Args
 ) => {
   pass: boolean;
   message: string;
@@ -16,16 +21,12 @@ export class Matchers {
   constructor(private _currentValue: TestValue, private _testCase: TestCase) {}
 
   private static _assertValueIsCallTracker(value: TrackerCallCount | TestValue): asserts value is TrackerCallCount {
-    if (typeof value !== 'object' || !('name' in value && 'onJS' in value && 'onUI' in value)) {
+    if (typeof value !== 'object' || !(value !== null && 'name' in value && 'onJS' in value && 'onUI' in value)) {
       throw Error('Invalid value');
     }
   }
 
-  private _toBeMatcher: MatcherFunction = (
-    currentValue: TestValue,
-    expectedValue: TestValue,
-    comparisonModeUnknown: unknown,
-  ) => {
+  private _toBeMatcher: Matcher<ToBeArgs> = (currentValue, expectedValue, comparisonModeUnknown) => {
     const comparisonMode: ComparisonMode =
       typeof comparisonModeUnknown === 'string' && comparisonModeUnknown in ComparisonMode
         ? (comparisonModeUnknown as ComparisonMode)
@@ -45,7 +46,23 @@ export class Matchers {
     };
   };
 
-  private _toBeCalledMatcher: MatcherFunction = (currentValue: TestValue, times = 1) => {
+  private _toBeWithinRangeMatcher: Matcher<ToBeWithinRangeArgs> = (currentValue, minimumValue, maximumValue) => {
+    const currentValueAsNumber = Number(Number(currentValue));
+    const validInputTypes = typeof minimumValue === 'number' && typeof maximumValue === 'number';
+    const isWithinRange = Number(minimumValue) <= currentValueAsNumber && currentValueAsNumber <= Number(maximumValue);
+
+    const coloredExpected = color(`[${minimumValue}, ${maximumValue}]`, 'green');
+    const coloredReceived = color(currentValue, 'red');
+
+    return {
+      pass: isWithinRange && validInputTypes,
+      message: `Expected the value ${
+        this._negation ? ' NOT' : ''
+      }to be in range ${coloredExpected} received ${coloredReceived}`,
+    };
+  };
+
+  private _toBeCalledMatcher: Matcher<ToBeCalledArgs> = (currentValue, times) => {
     Matchers._assertValueIsCallTracker(currentValue);
     const callsCount = currentValue.onUI + currentValue.onJS;
     const name = color(currentValue.name, 'green');
@@ -59,7 +76,7 @@ export class Matchers {
     };
   };
 
-  private _toBeCalledUIMatcher: MatcherFunction = (currentValue: TestValue, times = 1) => {
+  private _toBeCalledUIMatcher: Matcher<ToBeCalledArgs> = (currentValue, times) => {
     Matchers._assertValueIsCallTracker(currentValue);
     const callsCount = currentValue.onUI;
     const name = color(currentValue.name, 'green');
@@ -75,7 +92,7 @@ export class Matchers {
     };
   };
 
-  private _toBeCalledJSMatcher: MatcherFunction = (currentValue: TestValue, times = 1) => {
+  private _toBeCalledJSMatcher: Matcher<ToBeCalledArgs> = (currentValue, times) => {
     Matchers._assertValueIsCallTracker(currentValue);
     const callsCount = currentValue.onJS;
     const name = color(currentValue.name, 'green');
@@ -91,9 +108,9 @@ export class Matchers {
     };
   };
 
-  private decorateMatcher(matcher: MatcherFunction) {
-    return (expectedValue: TestValue, ...args: Array<unknown>) => {
-      const { pass, message } = matcher(this._currentValue, expectedValue, ...args);
+  private decorateMatcher<MatcherArgs extends MatcherArguments>(matcher: Matcher<MatcherArgs>) {
+    return (...args: MatcherArgs) => {
+      const { pass, message } = matcher(this._currentValue, ...args);
       if ((!pass && !this._negation) || (pass && this._negation)) {
         this._testCase.errors.push(message);
       }
@@ -101,6 +118,7 @@ export class Matchers {
   }
 
   public toBe = this.decorateMatcher(this._toBeMatcher);
+  public toBeWithinRange = this.decorateMatcher(this._toBeWithinRangeMatcher);
   public toBeCalled = this.decorateMatcher(this._toBeCalledMatcher);
   public toBeCalledUI = this.decorateMatcher(this._toBeCalledUIMatcher);
   public toBeCalledJS = this.decorateMatcher(this._toBeCalledJSMatcher);
@@ -145,13 +163,15 @@ export class Matchers {
   public toMatchNativeSnapshots(nativeSnapshots: Array<OperationUpdate>, expectNegativeMismatch = false) {
     let errorString = '';
     const jsUpdates = this._currentValue as Array<OperationUpdate>;
-    for (let i = 0; i < jsUpdates.length; i++) {
-      errorString += this.compareJsAndNativeSnapshot(jsUpdates, nativeSnapshots, i, expectNegativeMismatch);
-    }
 
     if (jsUpdates.length !== nativeSnapshots.length - 1) {
       errorString += `Expected ${jsUpdates.length} snapshots, but received ${nativeSnapshots.length - 1} snapshots\n`;
+    } else {
+      for (let i = 0; i < jsUpdates.length; i++) {
+        errorString += this.compareJsAndNativeSnapshot(jsUpdates, nativeSnapshots, i, expectNegativeMismatch);
+      }
     }
+
     if (errorString !== '') {
       this._testCase.errors.push('Native snapshot mismatch: \n' + errorString);
     }
