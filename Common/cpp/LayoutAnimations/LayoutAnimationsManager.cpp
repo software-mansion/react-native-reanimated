@@ -159,7 +159,9 @@ int LayoutAnimationsManager::findPrecedingViewTagForTransition(const int tag) {
   return -1;
 }
 
-void LayoutAnimationsManager::transferConfigFromNativeTag(const int nativeId, const int tag){
+void LayoutAnimationsManager::transferConfigFromNativeTag(
+    const int nativeId,
+    const int tag) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   auto config = enteringAnimations_[nativeId];
   if (config) {

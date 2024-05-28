@@ -2,37 +2,37 @@
 
 namespace reanimated {
 
-struct Window{
+struct Window {
   double width, height;
 };
 
-struct Frame{
+struct Frame {
   std::optional<double> x, y, width, height;
-  Frame(jsi::Runtime& runtime, const jsi::Object &newStyle){
-    if (newStyle.hasProperty(runtime, "originX")){
+  Frame(jsi::Runtime &runtime, const jsi::Object &newStyle) {
+    if (newStyle.hasProperty(runtime, "originX")) {
       x = newStyle.getProperty(runtime, "originX").asNumber();
     }
-    if (newStyle.hasProperty(runtime, "originY")){
+    if (newStyle.hasProperty(runtime, "originY")) {
       y = newStyle.getProperty(runtime, "originY").asNumber();
     }
-    if (newStyle.hasProperty(runtime, "width")){
+    if (newStyle.hasProperty(runtime, "width")) {
       width = newStyle.getProperty(runtime, "width").asNumber();
     }
-    if (newStyle.hasProperty(runtime, "height")){
+    if (newStyle.hasProperty(runtime, "height")) {
       height = newStyle.getProperty(runtime, "height").asNumber();
     }
   }
 };
 
-struct UpdateValues{
+struct UpdateValues {
   Props::Shared newProps;
   Frame frame;
 };
 
-struct Snapshot{
+struct Snapshot {
   double x, y, width, height, windowWidth, windowHeight;
-  Snapshot(const ShadowView& shadowView, Window window){
-    auto& frame = shadowView.layoutMetrics.frame;
+  Snapshot(const ShadowView &shadowView, Window window) {
+    auto &frame = shadowView.layoutMetrics.frame;
     x = frame.origin.x;
     y = frame.origin.y;
     width = frame.size.width;
@@ -52,11 +52,11 @@ struct Node {
   void addChild(std::shared_ptr<MutationNode> child);
   void handleMutation(ShadowViewMutation mutation);
   void insertChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
-  Node(Tag tag): tag(tag){}
-  Node(Node&& node):children(std::move(node.children)), tag(node.tag){}
+  Node(Tag tag) : tag(tag) {}
+  Node(Node &&node) : children(std::move(node.children)), tag(node.tag) {}
 };
 
-typedef enum ExitingState{
+typedef enum ExitingState {
   UNDEFINED = 1,
   WAITING = 2,
   ANIMATING = 4,
@@ -65,43 +65,51 @@ typedef enum ExitingState{
   DELETED = 32,
 } ExitingState;
 
-struct MutationNode: public Node{
+struct MutationNode : public Node {
   ShadowViewMutation mutation;
   std::unordered_set<Tag> animatedChildren;
   ExitingState state = UNDEFINED;
-  MutationNode(ShadowViewMutation& mutation): Node(mutation.oldChildShadowView.tag),  mutation(mutation){}
-  MutationNode(ShadowViewMutation& mutation, Node&& node): Node(std::move(node)), mutation(mutation){}
+  MutationNode(ShadowViewMutation &mutation)
+      : Node(mutation.oldChildShadowView.tag), mutation(mutation) {}
+  MutationNode(ShadowViewMutation &mutation, Node &&node)
+      : Node(std::move(node)), mutation(mutation) {}
 };
 
 struct SurfaceManager {
-  mutable std::unordered_map<SurfaceId, std::shared_ptr<std::unordered_map<Tag, UpdateValues>>> props_;
+  mutable std::unordered_map<
+      SurfaceId,
+      std::shared_ptr<std::unordered_map<Tag, UpdateValues>>>
+      props_;
   mutable std::unordered_map<SurfaceId, Window> windows_;
-  
-  std::unordered_map<Tag, UpdateValues>& getUpdateMap(SurfaceId surfaceId){
+
+  std::unordered_map<Tag, UpdateValues> &getUpdateMap(SurfaceId surfaceId) {
     auto props = props_.find(surfaceId);
-    if (props != props_.end()){
+    if (props != props_.end()) {
       return *props->second;
     }
-    
+
     auto newProps = std::make_shared<std::unordered_map<Tag, UpdateValues>>();
     props_.insert_or_assign(surfaceId, newProps);
     return *newProps;
   }
-  
-  void updateWindow(SurfaceId surfaceId, double windowWidth, double windowHeight){
+
+  void
+  updateWindow(SurfaceId surfaceId, double windowWidth, double windowHeight) {
     windows_.insert_or_assign(surfaceId, Window{windowWidth, windowHeight});
   }
-  
-  Window getWindow(SurfaceId surfaceId){
+
+  Window getWindow(SurfaceId surfaceId) {
     auto windowIt = windows_.find(surfaceId);
-    if (windowIt != windows_.end()){
+    if (windowIt != windows_.end()) {
       return windowIt->second;
     }
-    return Window{0,0};
+    return Window{0, 0};
   }
 };
 
-static inline void updateLayoutMetrics(LayoutMetrics& layoutMetrics, Frame& frame){
+static inline void updateLayoutMetrics(
+    LayoutMetrics &layoutMetrics,
+    Frame &frame) {
   if (frame.width) {
     layoutMetrics.frame.size.width = *frame.width;
   }
@@ -115,4 +123,4 @@ static inline void updateLayoutMetrics(LayoutMetrics& layoutMetrics, Frame& fram
     layoutMetrics.frame.origin.y = *frame.y;
   }
 }
-}
+} // namespace reanimated

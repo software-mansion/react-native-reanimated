@@ -76,7 +76,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       }),
       animatedSensorModule_(platformDepMethodsHolder),
       jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
-      layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>(jsLogger_)),
+      layoutAnimationsManager_(
+          std::make_shared<LayoutAnimationsManager>(jsLogger_)),
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
@@ -122,34 +123,32 @@ void NativeReanimatedModule::commonInit(
                              const jsi::Value &argsValue) {
     this->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
   };
-ProgressLayoutAnimationFunction progressLayoutAnimation =
-  [this](jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool) {
-    
-    auto surfaceId = layoutAnimationsProxy_->progressLayoutAnimation(tag, newStyle);
-    if (!surfaceId){
-      return;
-    }
-    uiManager_->getShadowTreeRegistry().visit(*surfaceId,
-      [](const ShadowTree &shadowTree) {
-          shadowTree.notifyDelegatesOfUpdates();
-      }
-    );
-  };
-  
-EndLayoutAnimationFunction endLayoutAnimation =
-  [this](int tag, bool shouldRemove) {
-    auto surfaceId = layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
-    if (!surfaceId){
-      return;
-    }
-    
-    uiManager_->getShadowTreeRegistry().visit(*surfaceId,
-      [](const ShadowTree &shadowTree) {
-          shadowTree.notifyDelegatesOfUpdates();
-      }
-    );
-  };
-        
+  ProgressLayoutAnimationFunction progressLayoutAnimation =
+      [this](jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool) {
+        auto surfaceId =
+            layoutAnimationsProxy_->progressLayoutAnimation(tag, newStyle);
+        if (!surfaceId) {
+          return;
+        }
+        uiManager_->getShadowTreeRegistry().visit(
+            *surfaceId, [](const ShadowTree &shadowTree) {
+              shadowTree.notifyDelegatesOfUpdates();
+            });
+      };
+
+  EndLayoutAnimationFunction endLayoutAnimation =
+      [this](int tag, bool shouldRemove) {
+        auto surfaceId =
+            layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
+        if (!surfaceId) {
+          return;
+        }
+
+        uiManager_->getShadowTreeRegistry().visit(
+            *surfaceId, [](const ShadowTree &shadowTree) {
+              shadowTree.notifyDelegatesOfUpdates();
+            });
+      };
 
   auto obtainProp = [this](
                         jsi::Runtime &rt,
@@ -179,8 +178,8 @@ EndLayoutAnimationFunction endLayoutAnimation =
       platformDepMethodsHolder.getAnimationTimestamp,
       platformDepMethodsHolder.setGestureStateFunction,
 #ifdef RCT_NEW_ARCH_ENABLED
-            progressLayoutAnimation,
-            endLayoutAnimation,
+      progressLayoutAnimation,
+      endLayoutAnimation,
 #else
       platformDepMethodsHolder.progressLayoutAnimation,
       platformDepMethodsHolder.endLayoutAnimation,
@@ -847,12 +846,14 @@ void NativeReanimatedModule::initializeFabric(
     const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
   uiManager->setAnimationDelegate(nullptr);
-    Scheduler *scheduler = (Scheduler *)uiManager->getDelegate();
-    auto componentDescriptorRegistry = scheduler->getContextContainer()
-                   ->at<std::weak_ptr<const ComponentDescriptorRegistry>>(
-                       "ComponentDescriptorRegistry_DO_NOT_USE_PRETTY_PLEASE").lock();
-    
-  if (componentDescriptorRegistry){
+  Scheduler *scheduler = (Scheduler *)uiManager->getDelegate();
+  auto componentDescriptorRegistry =
+      scheduler->getContextContainer()
+          ->at<std::weak_ptr<const ComponentDescriptorRegistry>>(
+              "ComponentDescriptorRegistry_DO_NOT_USE_PRETTY_PLEASE")
+          .lock();
+
+  if (componentDescriptorRegistry) {
     layoutAnimationsProxy_ = std::make_shared<LayoutAnimationsProxy>(
         layoutAnimationsManager_,
         this,
@@ -861,11 +862,13 @@ void NativeReanimatedModule::initializeFabric(
         uiScheduler_);
     uiManager->getShadowTreeRegistry().enumerate(
         [this](const ShadowTree &shadowTree, bool &stop) {
-          shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(layoutAnimationsProxy_);
+          shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
+              layoutAnimationsProxy_);
         });
   }
 
-    commitHook_ = std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
+  commitHook_ =
+      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
 #if REACT_NATIVE_MINOR_VERSION >= 73
   mountHook_ =
       std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
