@@ -79,20 +79,9 @@ Hook `useAnimatedKeyboard` returns an object containing these fields:
 
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import AnimatedKeyboardSrc from '!!raw-loader!@site/src/examples/AnimatedKeyboard';
+import AnimatedKeyboard from '@site/src/examples/AnimatedKeyboardVideoComponent';
 
-<InteractiveExample
-  src={AnimatedKeyboardSrc}
-  component={
-    <ThemedVideo
-      center
-      width={300}
-      sources={{
-        light: '/recordings/useAnimatedKeyboard_light.mov',
-        dark: '/recordings/useAnimatedKeyboard_dark.mov',
-      }}
-    />
-  }
-/>
+<InteractiveExample src={AnimatedKeyboardSrc} component={AnimatedKeyboard} />
 
 ## Remarks
 
