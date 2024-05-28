@@ -1,5 +1,6 @@
 import { FlashList } from '@shopify/flash-list';
 import React, { useRef, useState } from 'react';
+import { useColorScheme } from '@mui/material';
 import { Pressable, StyleSheet, Text, View, SafeAreaView } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -105,7 +106,16 @@ const TableOfContentsElement = ({
   visibleIndex,
   sectionCardsRef,
 }) => {
+  const { colorScheme } = useColorScheme();
   const style = useSelectedStyle(visibleIndex, index);
+
+  const tableOfContentsElementTextStyle = useAnimatedStyle(() => ({
+    color: colorScheme === 'light' ? '#001a72' : '#f8f9ff',
+  }));
+
+  const tableOfContentsElementStyle = useAnimatedStyle(() => ({
+    borderBottomColor: colorScheme === 'light' ? '#001a72' : '#f8f9ff',
+  }));
 
   return (
     <Pressable
@@ -113,8 +123,13 @@ const TableOfContentsElement = ({
         sectionCardsRef.current?.scrollToIndex({ index, animated: true });
         visibleIndex.value = index;
       }}
-      style={sectionListStyles.tableOfContentsElement}>
-      <Animated.Text style={[style, sectionListStyles.tableOfContentsElement]}>
+      style={[sectionListStyles.tableOfContentsElement]}>
+      <Animated.Text
+        style={[
+          style,
+          sectionListStyles.tableOfContentsElement,
+          tableOfContentsElementTextStyle,
+        ]}>
         {item}
       </Animated.Text>
     </Pressable>
@@ -184,10 +199,9 @@ const sectionListStyles = StyleSheet.create({
   },
   tableOfContentsElement: {
     padding: 4,
-    color: '#001a72',
     marginHorizontal: 4,
-    borderBottomColor: '#001a72',
     margin: 8,
+    borderBottomColor: '#001a72',
     overflow: 'hidden',
   },
   tableOfContents: {
@@ -201,6 +215,7 @@ const SectionCards = ({
   sectionCardsRef,
   tableOfContentsRef,
 }) => {
+  const { colorScheme } = useColorScheme();
   const heights = sections.map((_) => SECTION_HEIGHT);
 
   const getOffsetStarts = () =>
@@ -226,10 +241,16 @@ const SectionCards = ({
     }
   };
 
+  const sectionNameStyle = useAnimatedStyle(() => ({
+    color: colorScheme === 'light' ? '#001a72' : '#f8f9ff',
+  }));
+
   const renderItem = ({ item }) => {
     return (
       <View>
-        <Text style={sectionCardStyles.header}> {item.name}</Text>
+        <Animated.Text style={[sectionCardStyles.header, sectionNameStyle]}>
+          {item.name}
+        </Animated.Text>
         <SectionCardsElement>
           <Text style={sectionCardStyles.content}>{item.content}</Text>
         </SectionCardsElement>
@@ -287,7 +308,6 @@ const sectionCardStyles = StyleSheet.create({
     borderRadius: 24,
   },
   header: {
-    color: '#001a72',
     textAlign: 'center',
     fontSize: 24,
     fontWeight: 'bold',

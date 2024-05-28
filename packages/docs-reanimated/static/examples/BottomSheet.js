@@ -1,4 +1,5 @@
 import React from 'react';
+import { useColorScheme } from '@mui/material';
 import {
   Pressable,
   SafeAreaView,
@@ -16,6 +17,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 function BottomSheet({ isOpen, toggleSheet, duration = 500, children }) {
+  const { colorScheme } = useColorScheme();
   const height = useSharedValue(0);
   const progress = useDerivedValue(() =>
     withTiming(isOpen.value ? 0 : 1, { duration })
@@ -23,6 +25,7 @@ function BottomSheet({ isOpen, toggleSheet, duration = 500, children }) {
 
   const sheetStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: progress.value * 2 * height.value }],
+    backgroundColor: colorScheme === 'light' ? '#f8f9ff' : '#272B3C',
   }));
 
   const backdropStyle = useAnimatedStyle(() => ({
@@ -50,7 +53,6 @@ function BottomSheet({ isOpen, toggleSheet, duration = 500, children }) {
 
 const sheetStyles = StyleSheet.create({
   sheet: {
-    backgroundColor: '#f8f9ff',
     padding: 16,
     paddingRight: '2rem',
     paddingLeft: '2rem',
@@ -71,11 +73,17 @@ const sheetStyles = StyleSheet.create({
 });
 
 export default function App() {
+  const { colorScheme } = useColorScheme();
   const isOpen = useSharedValue(false);
 
   const toggleSheet = () => {
     isOpen.value = !isOpen.value;
   };
+
+  const contentStyle = useAnimatedStyle(() => ({
+    color: colorScheme === 'light' ? '#001a72' : '#f8f9ff',
+    textDecorationColor: colorScheme === 'light' ? '#001a72' : '#f8f9ff',
+  }));
 
   return (
     <SafeAreaView style={styles.container}>
@@ -87,14 +95,16 @@ export default function App() {
         <View style={styles.flex} />
       </View>
       <BottomSheet isOpen={isOpen} toggleSheet={toggleSheet}>
-        <Text style={styles.bottomSheetContent}>
+        <Animated.Text style={contentStyle}>
           Discover the indispensable convenience of a bottom sheet in mobile
           app. Seamlessly integrated, it provides quick access to supplementary
           features and refined details.
-        </Text>
+        </Animated.Text>
         <View style={styles.buttonContainer}>
-          <Pressable style={styles.bottomSheetButton}>
-            <Text style={styles.bottomSheetButtonText}>Read more</Text>
+          <Pressable style={[styles.bottomSheetButton]}>
+            <Animated.Text style={[styles.bottomSheetButtonText, contentStyle]}>
+              Read more
+            </Animated.Text>
           </Pressable>
         </View>
       </BottomSheet>
@@ -136,15 +146,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#001a72',
     paddingBottom: 2,
   },
   bottomSheetButtonText: {
     fontWeight: 600,
-    color: '#001a72',
-  },
-  bottomSheetContent: {
-    color: '#001a72',
+    textDecorationLine: 'underline',
   },
 });
