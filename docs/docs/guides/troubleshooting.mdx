@@ -235,6 +235,36 @@ Assign accessed properties to variables beforehand and use those in the worklet:
 +obj.propNotAccessedInWorklet = 3; // Everything is fine here.
 ```
 
+### Animated components shouldn't be rendered directly inside SafeAreaView, consider wrapping your content with additional View
+
+**Problem:** This warning is displayed to inform the user that Animated component is rendered directly inside SafeAreaView, which can break entering and layout animations.
+
+In the example below `Animated.View` is placed directly inside `SafeAreaView`:
+
+```jsx
+<SafeAreaView>
+  <View />
+  <Animated.View entering={FadeIn}>
+    <View />
+  </Animated.View>
+</SafeAreaView>
+```
+
+**Solution:**
+
+Wrapping your content with additional view container.
+
+```diff
+<SafeAreaView>
++ <View style={{flex: 1}}>
+    <View />
+    <Animated.View entering={FadeIn}>
+      <View />
+    </Animated.View>
++ </View>
+</SafeAreaView>
+```
+
 ## Threading issues
 
 ### Tried to synchronously call a non-worklet function on the UI thread
