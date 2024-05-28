@@ -109,6 +109,12 @@ export default function InteractiveExample({
     }
   }, [interactiveExampleRef.current]);
 
+  React.useEffect(() => {
+    if (width !== null) {
+      setKey(key + 1);
+    }
+  }, [width]);
+
   const prefersReducedMotion = useReducedMotion();
 
   return (
