@@ -3,6 +3,7 @@ import { Text, View, StyleSheet } from 'react-native';
 import type { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import Animated, {
   EventHandlerProcessed,
+  interpolateColor,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useComposedEventHandler,
@@ -40,16 +41,17 @@ const ColorChangingList = ({
   const internalHandler = useAnimatedScrollHandler({
     onScroll(e) {
       const scaledValue = e.contentOffset.y % 600;
-      offsetSv.value =
-        scaledValue <= 300
-          ? (scaledValue / 600) * 255
-          : ((600 - scaledValue) / 600) * 255;
+      offsetSv.value = scaledValue <= 300 ? scaledValue : 600 - scaledValue;
     },
   });
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      backgroundColor: `rgb(${offsetSv.value},30,${255 - offsetSv.value})`,
+      backgroundColor: interpolateColor(
+        offsetSv.value,
+        [0, 300],
+        ['blue', 'purple']
+      ),
     };
   });
 
@@ -59,27 +61,17 @@ const ColorChangingList = ({
   ]);
 
   return (
-    <Animated.FlatList
+    <Animated.ScrollView
       onScroll={composedHandler}
-      style={[styles.list, animatedStyle]}
-      data={items}
-      renderItem={({ item }) => <Item title={item.title} />}
-      keyExtractor={(item) => `A:${item.title}`}
-    />
+      style={[styles.list, animatedStyle]}>
+      {[...Array(100)].map((_, num: number) => (
+        <View key={`${num}`} style={styles.item}>
+          <Text>{`${num}`}</Text>
+        </View>
+      ))}
+    </Animated.ScrollView>
   );
 };
-
-type ItemProps = { title: string };
-const Item = ({ title }: ItemProps) => (
-  <View style={styles.item}>
-    <Text style={styles.title}>{title}</Text>
-  </View>
-);
-
-type ItemValue = { title: string };
-const items: ItemValue[] = [...new Array(101)].map((_each, index) => {
-  return { title: `${index}` };
-});
 
 const styles = StyleSheet.create({
   container: {
@@ -100,8 +92,5 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     marginHorizontal: 16,
     borderRadius: 20,
-  },
-  title: {
-    fontSize: 32,
   },
 });
