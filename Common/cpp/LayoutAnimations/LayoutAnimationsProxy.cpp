@@ -333,7 +333,13 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
       case ShadowViewMutation::Type::Update: {
         if (!layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
-          maybeCancelAnimation(tag);
+          // We should cancel any ongoing animation here to ensure that the
+          // proper final state is reached for this view However, due to how
+          // RNSScreens handle adding headers (a second commit is triggered to
+          // offset all the elements by the header height) this would lead to
+          // all entering animations being cancelled when a screen with a header
+          // is pushed onto a stack
+          // TODO: find a better solution for this problem
           filteredMutations.push_back(mutation);
           continue;
         }
