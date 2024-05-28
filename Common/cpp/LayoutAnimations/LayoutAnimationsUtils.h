@@ -1,5 +1,11 @@
 #pragma once
 
+#include <vector>
+#include <unordered_set>
+#include <utility>
+#include <memory>
+#include <unordered_map>
+
 namespace reanimated {
 
 struct Window {
@@ -52,7 +58,7 @@ struct Node {
   void addChild(std::shared_ptr<MutationNode> child);
   void handleMutation(ShadowViewMutation mutation);
   void insertChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
-  Node(Tag tag) : tag(tag) {}
+  explicit Node(Tag tag) : tag(tag) {}
   Node(Node &&node) : children(std::move(node.children)), tag(node.tag) {}
 };
 
@@ -69,7 +75,7 @@ struct MutationNode : public Node {
   ShadowViewMutation mutation;
   std::unordered_set<Tag> animatedChildren;
   ExitingState state = UNDEFINED;
-  MutationNode(ShadowViewMutation &mutation)
+  explicit MutationNode(ShadowViewMutation &mutation)
       : Node(mutation.oldChildShadowView.tag), mutation(mutation) {}
   MutationNode(ShadowViewMutation &mutation, Node &&node)
       : Node(std::move(node)), mutation(mutation) {}

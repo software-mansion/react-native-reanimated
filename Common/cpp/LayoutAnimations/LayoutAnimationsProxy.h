@@ -7,7 +7,12 @@
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
+#include <unordered_set>
+#include <unordered_map>
+#include <string>
+#include <memory>
 #include "LayoutAnimationsUtils.h"
+#include "UIScheduler.h"
 
 namespace reanimated {
 
@@ -35,16 +40,16 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate {
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   LayoutAnimationsProxy(
-      std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_,
-      NativeReanimatedModule *n,
-      SharedComponentDescriptorRegistry componentDescriptorRegistry_,
-      ContextContainer::Shared contextContainer_,
-      const std::shared_ptr<UIScheduler> uiScheduler_)
-      : layoutAnimationsManager_(layoutAnimationsManager_),
-        contextContainer_(contextContainer_),
-        nativeReanimatedModule_(n),
-        componentDescriptorRegistry_(componentDescriptorRegistry_),
-        uiScheduler_(uiScheduler_) {}
+      std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
+      NativeReanimatedModule *nativeReanimatedModule,
+      SharedComponentDescriptorRegistry componentDescriptorRegistry,
+      ContextContainer::Shared contextContainer,
+      const std::shared_ptr<UIScheduler> uiScheduler)
+      : layoutAnimationsManager_(layoutAnimationsManager),
+        contextContainer_(contextContainer),
+        nativeReanimatedModule_(nativeReanimatedModule),
+        componentDescriptorRegistry_(componentDescriptorRegistry),
+        uiScheduler_(uiScheduler) {}
 
   void startEnteringAnimation(const int tag, ShadowViewMutation &mutation)
       const;

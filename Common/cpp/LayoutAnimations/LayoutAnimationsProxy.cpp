@@ -3,6 +3,9 @@
 #include "LayoutAnimationsProxy.h"
 #include <react/renderer/animations/utils.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
+#include <set>
+#include <utility>
+#include <vector>
 #include "NativeReanimatedModule.h"
 
 namespace reanimated {

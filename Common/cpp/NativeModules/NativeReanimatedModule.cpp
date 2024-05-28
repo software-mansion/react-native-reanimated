@@ -27,7 +27,6 @@
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
 #include "JSScheduler.h"
-#include "NativeReanimatedModule.h"
 #include "ReanimatedHiddenHeaders.h"
 #include "Shareables.h"
 #include "UIRuntimeDecorator.h"
@@ -846,7 +845,7 @@ void NativeReanimatedModule::initializeFabric(
     const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
   uiManager->setAnimationDelegate(nullptr);
-  Scheduler *scheduler = (Scheduler *)uiManager->getDelegate();
+  auto scheduler = reinterpret_cast<Scheduler *>(uiManager->getDelegate());
   auto componentDescriptorRegistry =
       scheduler->getContextContainer()
           ->at<std::weak_ptr<const ComponentDescriptorRegistry>>(
