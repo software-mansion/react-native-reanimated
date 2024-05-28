@@ -8,13 +8,12 @@ import type {
 } from './commonTypes';
 import { has } from './utils';
 import { WorkletEventHandler } from '../reanimated2/WorkletEventHandler';
-import { isWeb } from '../reanimated2/PlatformChecker';
 import { findNodeHandle } from 'react-native';
 
 export class NativeEventsManager implements INativeEventsManager {
   _managedComponent: ManagedAnimatedComponent;
   _componentOptions?: ComponentOptions;
-  _eventViewTag = 1;
+  _eventViewTag = -1;
 
   constructor(component: ManagedAnimatedComponent, options?: ComponentOptions) {
     this._managedComponent = component;
