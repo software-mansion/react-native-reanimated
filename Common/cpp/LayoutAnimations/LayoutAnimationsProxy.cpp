@@ -1,3 +1,5 @@
+#ifdef RCT_NEW_ARCH_ENABLED
+
 #include <react/renderer/animations/utils.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include "NativeReanimatedModule.h"
@@ -629,3 +631,5 @@ void Node::insertChildren(std::vector<std::shared_ptr<MutationNode>> &newChildre
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED
