@@ -109,10 +109,10 @@ const TableOfContentsElement = ({
   const { colorScheme } = useColorScheme();
   const style = useSelectedStyle(visibleIndex, index);
 
-  const tableOfContentsElementTextStyle = useAnimatedStyle(() => ({
+  const tableOfContentsElementTextStyle = {
     color: colorScheme === 'light' ? '#001a72' : '#f8f9ff',
     borderBottomColor: colorScheme === 'light' ? '#001a72' : '#f8f9ff',
-  }));
+  };
 
   return (
     <Pressable

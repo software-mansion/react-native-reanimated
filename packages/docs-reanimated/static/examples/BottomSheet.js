@@ -25,8 +25,11 @@ function BottomSheet({ isOpen, toggleSheet, duration = 500, children }) {
 
   const sheetStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: progress.value * 2 * height.value }],
-    backgroundColor: colorScheme === 'light' ? '#f8f9ff' : '#272B3C',
   }));
+
+  const backgroundColorSheetStyle = {
+    backgroundColor: colorScheme === 'light' ? '#f8f9ff' : '#272B3C',
+  };
 
   const backdropStyle = useAnimatedStyle(() => ({
     opacity: 1 - progress.value,
@@ -44,7 +47,7 @@ function BottomSheet({ isOpen, toggleSheet, duration = 500, children }) {
         onLayout={(e) => {
           height.value = e.nativeEvent.layout.height;
         }}
-        style={[sheetStyles.sheet, sheetStyle]}>
+        style={[sheetStyles.sheet, sheetStyle, backgroundColorSheetStyle]}>
         {children}
       </Animated.View>
     </>
@@ -80,10 +83,10 @@ export default function App() {
     isOpen.value = !isOpen.value;
   };
 
-  const contentStyle = useAnimatedStyle(() => ({
+  const contentStyle = {
     color: colorScheme === 'light' ? '#001a72' : '#f8f9ff',
     textDecorationColor: colorScheme === 'light' ? '#001a72' : '#f8f9ff',
-  }));
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -102,9 +105,9 @@ export default function App() {
         </Animated.Text>
         <View style={styles.buttonContainer}>
           <Pressable style={[styles.bottomSheetButton]}>
-            <Animated.Text style={[styles.bottomSheetButtonText, contentStyle]}>
+            <Text style={[styles.bottomSheetButtonText, contentStyle]}>
               Read more
-            </Animated.Text>
+            </Text>
           </Pressable>
         </View>
       </BottomSheet>
