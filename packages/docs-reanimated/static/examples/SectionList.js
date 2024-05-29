@@ -198,7 +198,6 @@ const sectionListStyles = StyleSheet.create({
     padding: 4,
     marginHorizontal: 4,
     margin: 8,
-    borderBottomColor: '#001a72',
     overflow: 'hidden',
   },
   tableOfContents: {
