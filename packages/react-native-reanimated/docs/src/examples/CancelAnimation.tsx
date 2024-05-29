@@ -8,10 +8,12 @@ import Animated, {
   cancelAnimation,
 } from 'react-native-reanimated';
 
-const OFFSET = 200;
+interface AppProps {
+  width: number;
+}
 
-export default function App() {
-  const offset = useSharedValue<number>(OFFSET);
+export default function App({ width }: AppProps) {
+  const offset = useSharedValue<number>(width / 2 - 160);
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],
@@ -19,7 +21,9 @@ export default function App() {
 
   const startAnimation = () => {
     offset.value = withRepeat(
-      withTiming(offset.value > 0 ? -OFFSET : OFFSET, { duration: 1500 }),
+      withTiming(offset.value > 0 ? -width / 2 + 160 : width / 2 - 160, {
+        duration: 1500,
+      }),
       -1,
       true
     );

@@ -10,7 +10,7 @@ import {
   render,
   wait,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { Snapshots } from './entering.snapshot';
+import { ColorSnapshots as Snapshots } from './entering.snapshot';
 
 const AnimatedComponent = ({ fromColor, toColor }: { fromColor: string; toColor: string }) => {
   const customAnim = () => {

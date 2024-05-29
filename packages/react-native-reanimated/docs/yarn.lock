@@ -3905,10 +3905,10 @@
     "@svgr/plugin-jsx" "^6.5.1"
     "@svgr/plugin-svgo" "^6.5.1"
 
-"@swmansion/t-rex-ui@^0.0.3":
-  version "0.0.3"
-  resolved "https://registry.npmjs.org/@swmansion/t-rex-ui/-/t-rex-ui-0.0.3.tgz#d672fdb98081392a213db4e814b822cd1633e09d"
-  integrity sha512-K6uhhF404lRawaf5LBfBPv9yVX4Ld4g+s7rNw+Ggzirp2/i7wNS1lWhm0aK8jM59luBX3NcGUc3UWXC7GaTi0A==
+"@swmansion/t-rex-ui@^0.0.9":
+  version "0.0.9"
+  resolved "https://registry.npmjs.org/@swmansion/t-rex-ui/-/t-rex-ui-0.0.9.tgz#192c8e6beabcbb885b37e485157b610e2b8599b9"
+  integrity sha512-4FoJP/7RFeDB36YEvRd0dvqZ7jbq9xipbyOFk0uM7Dpc9xgkO3ZVhPuS6lbHOvN3L8/rvBE/d6nDRZH3yd8Y9g==
   dependencies:
     "@docsearch/react" "^3.6.0"
     "@docusaurus/core" "^2.4.3"
@@ -13086,20 +13086,6 @@ text-table@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/text-table/-/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
   integrity sha512-N+8UisAXDGk8PFXP4HAzVR9nbfmVJ3zYLAWiTIoqC5v5isinhr+r5uaO8+7r3BMfuNIufIsA7RdpVgacC2cSpw==
-
-"theme-rex@file:./swmansion-t-rex-ui-0.0.2.tgz":
-  version "0.0.2"
-  resolved "file:./swmansion-t-rex-ui-0.0.2.tgz#9b3ba78590550625dcffc1a004c7b49316964d1a"
-  dependencies:
-    "@docsearch/react" "^3.6.0"
-    "@docusaurus/core" "^2.4.3"
-    "@docusaurus/module-type-aliases" "^2.4.3"
-    "@docusaurus/plugin-content-docs" "^2.4.3"
-    "@docusaurus/theme-classic" "^2.4.3"
-    "@docusaurus/theme-common" "^2.4.3"
-    "@docusaurus/theme-search-algolia" "^2.4.3"
-    algoliasearch "^4.23.3"
-    algoliasearch-helper "^3.19.0"
 
 throat@^5.0.0:
   version "5.0.0"

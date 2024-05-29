@@ -19,7 +19,13 @@ const TextFieldStyling = {
   },
 };
 
-const ColorPicker = ({ color, setColor, defaultValue, refreshKey }) => {
+const ColorPicker = ({
+  color,
+  setColor,
+  defaultValue,
+  refreshKey,
+  prevKeyRef,
+}) => {
   const [inputColor, setInputColor] = useState(color);
 
   const resetOptionsHandler = () => {
@@ -28,7 +34,10 @@ const ColorPicker = ({ color, setColor, defaultValue, refreshKey }) => {
   };
 
   useEffect(() => {
-    resetOptionsHandler();
+    if (prevKeyRef.current !== refreshKey) {
+      prevKeyRef.current = refreshKey;
+      resetOptionsHandler();
+    }
   }, [refreshKey]);
 
   return (
