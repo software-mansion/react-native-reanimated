@@ -57,9 +57,7 @@ export interface IJSPropsUpdater {
 export interface INativeEventsManager {
   attachEvents(): void;
   detachEvents(): void;
-  updateEvents(
-    prevProps: AnimatedComponentProps<InitialComponentProps>
-  ): void;
+  updateEvents(prevProps: AnimatedComponentProps<InitialComponentProps>): void;
 }
 
 export type LayoutAnimationStaticContext = {
