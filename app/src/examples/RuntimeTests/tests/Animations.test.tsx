@@ -29,10 +29,17 @@ const AnimatedComponent = () => {
   const widthSV = useSharedValue(0);
   const ref = useTestRef('AnimatedComponent');
 
-  const animatedStyle = useAnimatedStyle(() => {
+  const animatedStyle1 = useAnimatedStyle(() => {
     callTracker('useAnimatedStyleTracker');
     return {
       width: withTiming(widthSV.value, { duration: 500 }, callTrackerFn('withTimingTracker')),
+    };
+  });
+
+  const animatedStyle2 = useAnimatedStyle(() => {
+    callTracker('useAnimatedStyleTracker');
+    return {
+      height: withTiming(widthSV.value, { duration: 500 }, callTrackerFn('withTimingTracker')),
     };
   });
 
@@ -51,7 +58,18 @@ const AnimatedComponent = () => {
             backgroundColor: 'chocolate',
             margin: 30,
           },
-          animatedStyle,
+          animatedStyle1,
+        ]}
+      />
+      <Animated.View
+        style={[
+          {
+            width: 80,
+            height: 0,
+            backgroundColor: 'teal',
+            margin: 30,
+          },
+          animatedStyle2,
         ]}
       />
     </View>
@@ -128,28 +146,28 @@ const LayoutAnimation = () => {
 };
 
 describe('Tests of animations', () => {
-  test('withTiming - expect error', async () => {
+  test.only('withTiming - expect error', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('AnimatedComponent');
     await wait(600);
     expect(await component.getAnimatedStyle('width')).toBe('123');
   });
 
-  test('withTiming - not - expect error', async () => {
+  test.only('withTiming - not - expect error', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('AnimatedComponent');
     await wait(600);
     expect(await component.getAnimatedStyle('width')).not.toBe('100');
   });
 
-  test('withTiming - with not', async () => {
+  test.only('withTiming - with not', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('AnimatedComponent');
     await wait(600);
     expect(await component.getAnimatedStyle('width')).not.toBe('123');
   });
 
-  test('withTiming - expect pass', async () => {
+  test.only('withTiming - expect pass', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('AnimatedComponent');
     await wait(600);
@@ -196,20 +214,25 @@ describe('Tests of animations', () => {
     expect(await component.getAnimatedStyle('opacity')).toBe('1');
   });
 
-  test('withTiming - match snapshot', async () => {
+  test.only('withTiming - match snapshot', async () => {
     await mockAnimationTimer();
     const updatesContainer = await recordAnimationUpdates();
     await render(<AnimatedComponent />);
     await wait(1000);
+    console.log(updatesContainer.getUpdates());
+    console.log(await updatesContainer.getNativeSnapshots());
+
     expect(updatesContainer.getUpdates()).toMatchSnapshots(Snapshots.animation3);
+    // @ts-ignore TEMP
     expect(updatesContainer.getUpdates()).toMatchNativeSnapshots(await updatesContainer.getNativeSnapshots());
   });
 
-  test('layoutAnimation - entering', async () => {
+  test.only('layoutAnimation - entering', async () => {
     await mockAnimationTimer();
     const updatesContainer = await recordAnimationUpdates();
     await render(<LayoutAnimation />);
     await wait(600);
+    console.log(await updatesContainer.getNativeSnapshots());
     expect(updatesContainer.getUpdates()).toMatchSnapshots(Snapshots.layoutAnimation);
   });
 

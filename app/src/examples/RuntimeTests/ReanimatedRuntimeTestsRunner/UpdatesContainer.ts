@@ -102,7 +102,7 @@ export function createUpdatesContainer(testRunner: TestRunner) {
     updates: Array<{ tag: number; update: OperationUpdate } | { tag: number; snapshot: Record<string, unknown> }>,
     propsNames: string[],
   ) {
-    const updatesForTag = {};
+    const updatesForTag: Record<number, Array<OperationUpdate>> = {};
 
     for (const updateRequest of updates) {
       const { tag } = updateRequest;
@@ -134,7 +134,7 @@ export function createUpdatesContainer(testRunner: TestRunner) {
             return [index, value];
           }),
         )
-      : updatesForTag[Object.keys(updatesForTag)[0]]; // In case of recording only one view return an array
+      : updatesForTag[0]; // In case of recording only one view return an array
 
     return updatesForTagUnified;
   }

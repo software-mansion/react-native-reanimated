@@ -1,133 +1,41 @@
 import { getComparator } from './Comparators';
-import { appendWhiteSpaceToMatchLength, color } from './stringFormatUtils';
-import { ComparisonMode, OperationUpdate, TestCase, TestValue, NullableTestValue, TrackerCallCount } from './types';
+import { appendWhiteSpaceToMatchLength, color } from '../stringFormatUtils';
+import { ComparisonMode, OperationUpdate, TestCase, TestValue, NullableTestValue } from '../types';
+import {
+  toBeMatcher,
+  toBeWithinRangeMatcher,
+  toBeCalledMatcher,
+  toBeCalledUIMatcher,
+  toBeCalledJSMatcher,
+  Matcher,
+  MatcherArguments,
+} from './rawMatchers';
 
-type ToBeArgs = [TestValue, ComparisonMode?];
-type ToBeWithinRangeArgs = [number, number];
-type ToBeCalledArgs = [number];
-
-type MatcherArguments = ToBeArgs | ToBeCalledArgs | ToBeWithinRangeArgs;
-
-type Matcher<Args extends MatcherArguments> = (
-  currentValue: TestValue,
-  ...args: Args
-) => {
-  pass: boolean;
-  message: string;
-};
 type Snapshot = Array<Record<string, unknown>>;
 
 export class Matchers {
   private _negation = false;
   constructor(private _currentValue: TestValue, private _testCase: TestCase) {}
 
-  private static _assertValueIsCallTracker(value: TrackerCallCount | TestValue): asserts value is TrackerCallCount {
-    if (typeof value !== 'object' || !(value !== null && 'name' in value && 'onJS' in value && 'onUI' in value)) {
-      throw Error('Invalid value');
-    }
+  get not() {
+    this._negation = true;
+    return this;
   }
-
-  private _toBeMatcher: Matcher<ToBeArgs> = (currentValue, expectedValue, comparisonModeUnknown) => {
-    const comparisonMode: ComparisonMode =
-      typeof comparisonModeUnknown === 'string' && comparisonModeUnknown in ComparisonMode
-        ? (comparisonModeUnknown as ComparisonMode)
-        : ComparisonMode.AUTO;
-
-    const isEqual = getComparator(comparisonMode);
-
-    const coloredExpected = color(expectedValue, 'green');
-    const coloredReceived = color(currentValue, 'red');
-    const coloredMode = color(comparisonMode, 'yellow');
-
-    return {
-      pass: isEqual(expectedValue, currentValue),
-      message: `Expected${
-        this._negation ? ' NOT' : ''
-      } ${coloredExpected} received ${coloredReceived}, mode: ${coloredMode}`,
-    };
-  };
-
-  private _toBeWithinRangeMatcher: Matcher<ToBeWithinRangeArgs> = (currentValue, minimumValue, maximumValue) => {
-    const currentValueAsNumber = Number(Number(currentValue));
-    const validInputTypes = typeof minimumValue === 'number' && typeof maximumValue === 'number';
-    const isWithinRange = Number(minimumValue) <= currentValueAsNumber && currentValueAsNumber <= Number(maximumValue);
-
-    const coloredExpected = color(`[${minimumValue}, ${maximumValue}]`, 'green');
-    const coloredReceived = color(currentValue, 'red');
-
-    return {
-      pass: isWithinRange && validInputTypes,
-      message: `Expected the value ${
-        this._negation ? ' NOT' : ''
-      }to be in range ${coloredExpected} received ${coloredReceived}`,
-    };
-  };
-
-  private _toBeCalledMatcher: Matcher<ToBeCalledArgs> = (currentValue, times) => {
-    Matchers._assertValueIsCallTracker(currentValue);
-    const callsCount = currentValue.onUI + currentValue.onJS;
-    const name = color(currentValue.name, 'green');
-    const expected = color(times, 'green');
-    const received = color(callsCount, 'red');
-    return {
-      pass: callsCount === times,
-      message: `Expected ${name}${
-        this._negation ? ' NOT' : ''
-      } to be called ${expected} times, but was called ${received} times`,
-    };
-  };
-
-  private _toBeCalledUIMatcher: Matcher<ToBeCalledArgs> = (currentValue, times) => {
-    Matchers._assertValueIsCallTracker(currentValue);
-    const callsCount = currentValue.onUI;
-    const name = color(currentValue.name, 'green');
-    const threadName = color('UI thread', 'cyan');
-    const expected = color(times, 'green');
-    const received = color(callsCount, 'red');
-
-    return {
-      pass: callsCount === times,
-      message: `Expected ${name}${
-        this._negation ? ' NOT' : ''
-      } to be called ${expected} times on ${threadName}, but was called ${received} times`,
-    };
-  };
-
-  private _toBeCalledJSMatcher: Matcher<ToBeCalledArgs> = (currentValue, times) => {
-    Matchers._assertValueIsCallTracker(currentValue);
-    const callsCount = currentValue.onJS;
-    const name = color(currentValue.name, 'green');
-    const threadName = color('JS thread', 'cyan');
-    const expected = color(times, 'green');
-    const received = color(callsCount, 'red');
-
-    return {
-      pass: callsCount === times,
-      message: `Expected ${name}${
-        this._negation ? ' NOT' : ''
-      } to be called ${expected} times on ${threadName}, but was called ${received} times`,
-    };
-  };
 
   private decorateMatcher<MatcherArgs extends MatcherArguments>(matcher: Matcher<MatcherArgs>) {
     return (...args: MatcherArgs) => {
-      const { pass, message } = matcher(this._currentValue, ...args);
+      const { pass, message } = matcher(this._currentValue, this._negation, ...args);
       if ((!pass && !this._negation) || (pass && this._negation)) {
         this._testCase.errors.push(message);
       }
     };
   }
 
-  public toBe = this.decorateMatcher(this._toBeMatcher);
-  public toBeWithinRange = this.decorateMatcher(this._toBeWithinRangeMatcher);
-  public toBeCalled = this.decorateMatcher(this._toBeCalledMatcher);
-  public toBeCalledUI = this.decorateMatcher(this._toBeCalledUIMatcher);
-  public toBeCalledJS = this.decorateMatcher(this._toBeCalledJSMatcher);
-
-  get not() {
-    this._negation = true;
-    return this;
-  }
+  public toBe = this.decorateMatcher(toBeMatcher);
+  public toBeWithinRange = this.decorateMatcher(toBeWithinRangeMatcher);
+  public toBeCalled = this.decorateMatcher(toBeCalledMatcher);
+  public toBeCalledUI = this.decorateMatcher(toBeCalledUIMatcher);
+  public toBeCalledJS = this.decorateMatcher(toBeCalledJSMatcher);
 
   private compareJsAndNativeSnapshot(
     jsSnapshots: Array<OperationUpdate>,

@@ -1,4 +1,4 @@
-import { ComparisonMode, TestValue, ValidPropNames } from './types';
+import { ComparisonMode, TestValue, ValidPropNames } from '../types';
 
 const DISTANCE_TOLERANCE = 0.5;
 

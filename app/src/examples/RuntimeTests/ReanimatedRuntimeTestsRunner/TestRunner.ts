@@ -19,7 +19,7 @@ import { getTrackerCallCount, render, stopRecordingAnimationUpdates, unmockAnima
 import { makeMutable, runOnUI, runOnJS, SharedValue } from 'react-native-reanimated';
 import { applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
 import { createUpdatesContainer } from './UpdatesContainer';
-import { Matchers, nullableMatch } from './Matchers';
+import { Matchers, nullableMatch } from './matchers/Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
 
 let callTrackerRegistryJS: Record<string, number> = {};
@@ -122,12 +122,14 @@ export class TestRunner {
       }
     }
 
+    const testDecorator = decorator || this._currentTestSuite?.decorator;
+
     this._testSuites.splice(index, 0, {
       name: applyMarkdown(name),
       buildSuite,
       testCases: [],
       nestingLevel: (this._currentTestSuite?.nestingLevel || 0) + 1,
-      decorator: decorator ? decorator : this._currentTestSuite?.decorator ? this._currentTestSuite?.decorator : null,
+      decorator: testDecorator ? testDecorator : null,
     });
   }
 
@@ -136,28 +138,16 @@ export class TestRunner {
     if (decorator === TestDecorator.ONLY) {
       this._includesOnly = true;
     }
-    this._currentTestSuite.testCases.push(
-      decorator === TestDecorator.WARN || decorator === TestDecorator.FAILING
-        ? {
-            name: applyMarkdown(name),
-            run,
-            componentsRefs: {},
-            callsRegistry: {},
-            errors: [],
-            decorator,
-            warningMessage: warningMessage,
-            skip: false,
-          }
-        : {
-            name: applyMarkdown(name),
-            run,
-            componentsRefs: {},
-            callsRegistry: {},
-            errors: [],
-            decorator,
-            skip: decorator === TestDecorator.SKIP,
-          },
-    );
+    this._currentTestSuite.testCases.push({
+      name: applyMarkdown(name),
+      run,
+      componentsRefs: {},
+      callsRegistry: {},
+      errors: [],
+      skip: decorator === TestDecorator.SKIP,
+      decorator,
+      warningMessage: warningMessage,
+    });
   }
 
   public testEachErrorMsg<T>(examples: Array<T>, decorator: TestDecorator) {

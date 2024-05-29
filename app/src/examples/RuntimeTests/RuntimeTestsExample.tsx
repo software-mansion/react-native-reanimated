@@ -2,7 +2,7 @@ import React from 'react';
 import RuntimeTestsRunner from './ReanimatedRuntimeTestsRunner/RuntimeTestsRunner';
 
 // load tests
-// import './tests/Animations.test';
+import './tests/Animations.test';
 
 import './tests/animations/withTiming/arrays.test';
 import './tests/animations/withTiming/basic.test';
