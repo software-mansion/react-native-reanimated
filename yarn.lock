@@ -6327,7 +6327,8 @@ __metadata:
     "@tsconfig/react-native": "npm:^3.0.0"
     "@types/d3-shape": "npm:^3.1.1"
     d3-shape: "npm:^3.2.0"
-    eslint: "npm:^8.0.0-0"
+    eslint: "npm:^8.57.0"
+    eslint-plugin-reanimated: "workspace:*"
     patch-package: "npm:^7.0.0"
     prettier: "npm:^2.8.7"
     react: "npm:18.2.0"
@@ -6338,7 +6339,7 @@ __metadata:
     react-native-safe-area-context: "npm:4.10.0-rc.1"
     react-native-screens: "npm:3.31.0-rc.1"
     react-native-svg: "npm:^15.2.0-rc.0"
-    typescript: "npm:^5.0.2"
+    typescript: "npm:^5.4.5"
   peerDependencies:
     "@fortawesome/fontawesome-svg-core": "*"
     "@fortawesome/free-solid-svg-icons": "*"
@@ -12752,7 +12753,7 @@ __metadata:
     "@types/react-test-renderer": "npm:^18.0.0"
     babel-jest: "npm:^29.6.3"
     common-app: "workspace:*"
-    eslint: "npm:^8.0.0-0"
+    eslint: "npm:^8.57.0"
     jest: "npm:^29.6.3"
     patch-package: "npm:^8.0.0"
     prettier: "npm:2.8.8"
@@ -12765,7 +12766,7 @@ __metadata:
     react-native-screens: "npm:3.31.0-rc.1"
     react-native-svg: "npm:^15.2.0-rc.0"
     react-test-renderer: "npm:18.2.0"
-    typescript: "npm:5.0.4"
+    typescript: "npm:^5.4.5"
   languageName: unknown
   linkType: soft
 
@@ -16091,7 +16092,9 @@ __metadata:
     "@expo/metro-runtime": "npm:^3.2.1"
     "@expo/vector-icons": "npm:^14.0.0"
     "@react-navigation/native": "npm:^6.0.2"
+    "@types/eslint": "npm:^8"
     common-app: "workspace:*"
+    eslint: "npm:^8.57.0"
     expo: "npm:~51.0.2"
     react: "npm:18.2.0"
     react-dom: "npm:18.2.0"
