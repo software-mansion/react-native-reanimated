@@ -9,7 +9,7 @@ import FlipCard from '@site/static/examples/FlipCard';
 import FlipCardSrc from '!!raw-loader!@site/static/examples/FlipCard';
 import ExampleVideo from '@site/src/components/ExampleVideo';
 
-<InteractiveExample src={FlipCardSrc} component={<FlipCard />} />
+<InteractiveExample src={FlipCardSrc} component={FlipCard} />
 
 For storing information about whether the card is flipped or not we use [shared value](/docs/fundamentals/glossary#shared-value) with the `useSharedValue` hook. Using shared values helps to prevent unnecessary re-renders.
 
@@ -19,8 +19,8 @@ This allows us to [interpolate](/docs/utilities/interpolate) values between 0-18
 
 <CollapsibleCode src={FlipCardSrc} showLines={[62,64]} />
 
-<ExampleVideo 
-    sources={{ 
+<ExampleVideo
+sources={{
         android: "/react-native-reanimated/recordings/examples/flip_card_android.mov",
         ios: "/react-native-reanimated/recordings/examples/flip_card_ios.mov"
     }}
@@ -31,4 +31,3 @@ The **FlipCard** component accepts several props: `duration` allows you to chang
 <samp id="FlipCard">Flip Card</samp>
 
 <CollapsibleCode src={FlipCardSrc} showLines={[51,103]} />
-

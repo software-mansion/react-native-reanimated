@@ -93,7 +93,6 @@ export default function InteractiveExample({
   const [tab, setTab] = React.useState<Tab>(Tab.PREVIEW);
   const [jsxCode, setJsxCode] = React.useState(() => compileTSXtoJSX(tsxCode));
   const [width, setWidth] = React.useState<number | null>(null);
-  const [showPreview, setShowPreview] = React.useState(!showCode);
 
   const interactiveExampleRef = React.useRef<HTMLDivElement>(null);
 
@@ -109,6 +108,12 @@ export default function InteractiveExample({
       setWidth(interactiveExampleRef.current.offsetWidth);
     }
   }, [interactiveExampleRef.current]);
+
+  React.useEffect(() => {
+    if (width !== null) {
+      setKey(key + 1);
+    }
+  }, [width]);
 
   const prefersReducedMotion = useReducedMotion();
 
@@ -170,7 +175,7 @@ export default function InteractiveExample({
             {tab === Tab.PREVIEW ? (
               <>
                 <React.Fragment key={key}>
-                  {width !== null && <Component width={width} />}
+                  <Component width={width !== null ? width : 0} />
                 </React.Fragment>
 
                 <div

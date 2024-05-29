@@ -10,7 +10,7 @@ import SwitchSrc from '!!raw-loader!@site/static/examples/Switch';
 import ExampleVideo from '@site/src/components/ExampleVideo';
 import CollapsibleCode from '@site/src/components/CollapsibleCode';
 
-<InteractiveExample src={SwitchSrc} component={<Switch />} />
+<InteractiveExample src={SwitchSrc} component={Switch} />
 
 The following implementation of a switch relies on [animatable values](/docs/fundamentals/glossary#animatable-value). Leveraging animatable values of color and position enables smooth transition between the two states.
 
