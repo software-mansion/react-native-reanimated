@@ -69,7 +69,7 @@ function compileTSXtoJSX(tsxCode: string) {
 
 interface Props {
   src: string;
-  component: React.ReactNode;
+  component: React.FC<{ width?: number }>;
   label?: string;
   showCode?: boolean; // whether to show code by default
   larger?: boolean; // should the view be enlarged?
@@ -83,7 +83,7 @@ enum Tab {
 
 export default function InteractiveExample({
   src: tsxCode,
-  component,
+  component: Component,
   label,
   showCode = false,
   larger = false,
@@ -92,10 +92,28 @@ export default function InteractiveExample({
   const [key, setKey] = React.useState(0);
   const [tab, setTab] = React.useState<Tab>(Tab.PREVIEW);
   const [jsxCode, setJsxCode] = React.useState(() => compileTSXtoJSX(tsxCode));
+  const [width, setWidth] = React.useState<number | null>(null);
+
+  const interactiveExampleRef = React.useRef<HTMLDivElement>(null);
 
   const resetExample = () => {
+    if (interactiveExampleRef.current) {
+      setWidth(interactiveExampleRef.current.offsetWidth);
+    }
     setKey(key + 1);
   };
+
+  React.useEffect(() => {
+    if (interactiveExampleRef.current) {
+      setWidth(interactiveExampleRef.current.offsetWidth);
+    }
+  }, [interactiveExampleRef.current]);
+
+  React.useEffect(() => {
+    if (width !== null) {
+      setKey(key + 1);
+    }
+  }, [width]);
 
   const prefersReducedMotion = useReducedMotion();
 
@@ -103,6 +121,7 @@ export default function InteractiveExample({
     <BrowserOnly fallback={<div>Loading...</div>}>
       {() => (
         <div
+          ref={interactiveExampleRef}
           className={`${styles.container} ${larger && styles.largerContainer} 
           ${tab !== Tab.PREVIEW ? styles.code : ''}`}
           data-ispreview={tab === Tab.PREVIEW}>
@@ -155,7 +174,9 @@ export default function InteractiveExample({
           <div className={styles.previewContainer}>
             {tab === Tab.PREVIEW ? (
               <>
-                <React.Fragment key={key}>{component}</React.Fragment>
+                <React.Fragment key={key}>
+                  <Component width={width !== null ? width : 0} />
+                </React.Fragment>
 
                 <div
                   className={clsx(

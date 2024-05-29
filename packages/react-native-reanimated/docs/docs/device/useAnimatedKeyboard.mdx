@@ -82,7 +82,7 @@ import AnimatedKeyboardSrc from '!!raw-loader!@site/src/examples/AnimatedKeyboar
 
 <InteractiveExample
   src={AnimatedKeyboardSrc}
-  component={
+  component={() => (
     <ThemedVideo
       center
       width={300}
@@ -91,7 +91,7 @@ import AnimatedKeyboardSrc from '!!raw-loader!@site/src/examples/AnimatedKeyboar
         dark: '/recordings/useAnimatedKeyboard_dark.mov',
       }}
     />
-  }
+  )}
 />
 
 ## Remarks

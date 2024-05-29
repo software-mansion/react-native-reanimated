@@ -91,7 +91,8 @@ export function createUpdatesContainer(testRunner: TestRunner) {
     jsUpdates.modify(updates => {
       updates.push({
         tag,
-        update: { ...update },
+        // Deep Copy, works with nested objects, but doesn't copy functions (which should be fine here)
+        update: JSON.parse(JSON.stringify(update)),
       });
       return updates;
     });
