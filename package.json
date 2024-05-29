@@ -1,5 +1,6 @@
 {
   "name": "react-native-reanimated-monorepo",
+  "version": "0.0.0",
   "packageManager": "yarn@4.1.1",
   "workspaces": {
     "packages": [
@@ -9,7 +10,7 @@
   },
   "private": true,
   "scripts": {
-    "build": "yarn workspaces foreach -A -p run build"
+    "build": "husky && yarn workspaces foreach -A -p run build"
   },
   "devDependencies": {
     "husky": "^9.0.11",

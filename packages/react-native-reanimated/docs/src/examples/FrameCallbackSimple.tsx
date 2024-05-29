@@ -6,7 +6,11 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 
-export default function App() {
+interface AppProps {
+  width: number;
+}
+
+export default function App({ width }: AppProps) {
   const t = useSharedValue<number>(0);
 
   // highlight-start
@@ -16,11 +20,14 @@ export default function App() {
   // highlight-end
 
   const infinityStyle = useAnimatedStyle(() => {
-    const scale = (2 / (3 - Math.cos(2 * t.value))) * 200;
+    const scale = 2 / (3 - Math.cos(2 * t.value));
     return {
       transform: [
-        { translateX: scale * Math.cos(t.value) },
-        { translateY: scale * (Math.sin(2 * t.value) / 2) },
+        {
+          translateX:
+            scale * Math.cos(t.value) * Math.min(width / 2 - 120, 200),
+        },
+        { translateY: scale * (Math.sin(2 * t.value) / 2) * 200 },
       ],
     };
   });
