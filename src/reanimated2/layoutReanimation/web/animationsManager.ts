@@ -115,6 +115,12 @@ export function startWebLayoutAnimation<
   animationType: LayoutAnimationType,
   transitionData?: TransitionData
 ) {
+  if (element.style.transform !== '') {
+    console.warn(
+      `[Reanimated] Property "transform" will not be included in layout animation. Please wrap your component with an animated view and apply the layout animation on the wrapper.`
+    );
+  }
+
   const animationConfig = tryGetAnimationConfig(props, animationType);
 
   if (animationConfig) {

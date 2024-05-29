@@ -6,6 +6,7 @@ import type {
 } from './reanimated2/layoutReanimation';
 import type { StyleProps } from './reanimated2/commonTypes';
 import type { NestedArray } from './createAnimatedComponent/commonTypes';
+import { isWeb } from './reanimated2/PlatformChecker';
 
 const mockTargetValues: LayoutAnimationsValues = {
   targetOriginX: 0,
@@ -60,7 +61,7 @@ function maybeReportOverwrittenProperties(
 ) {
   const commonProperties = getCommonProperties(layoutAnimationStyle, style);
 
-  if (commonProperties.length > 0) {
+  if (commonProperties.length > 0 && !isWeb()) {
     console.warn(
       `[Reanimated] ${
         commonProperties.length === 1 ? 'Property' : 'Properties'
