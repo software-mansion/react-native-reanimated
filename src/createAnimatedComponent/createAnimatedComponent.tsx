@@ -147,9 +147,10 @@ export function createAnimatedComponent(
     componentDidMount() {
       this._componentViewTag = this._getComponentViewTag();
       if (!IS_WEB) {
+        // It exists only on native platforms. We initialize it here because the ref to the animated component is available only post-mount
         this._NativeEventsManager = new NativeEventsManager(this, options);
       }
-      this._NativeEventsManager?.attachNativeEvents();
+      this._NativeEventsManager?.attachEvents();
       this._jsPropsUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
@@ -183,7 +184,7 @@ export function createAnimatedComponent(
     }
 
     componentWillUnmount() {
-      this._NativeEventsManager?.detachNativeEvents();
+      this._NativeEventsManager?.detachEvents();
       this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
       this._InlinePropManager.detachInlineProps();
@@ -400,7 +401,7 @@ export function createAnimatedComponent(
       ) {
         this._configureSharedTransition();
       }
-      this._NativeEventsManager?.updateNativeEvents(prevProps);
+      this._NativeEventsManager?.updateEvents(prevProps);
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 

@@ -55,9 +55,9 @@ export interface IJSPropsUpdater {
 }
 
 export interface INativeEventsManager {
-  attachNativeEvents(): void;
-  detachNativeEvents(): void;
-  updateNativeEvents(
+  attachEvents(): void;
+  detachEvents(): void;
+  updateEvents(
     prevProps: AnimatedComponentProps<InitialComponentProps>
   ): void;
 }
@@ -104,6 +104,9 @@ export interface AnimatedComponentRef extends Component {
 export interface IAnimatedComponentInternal {
   _styles: StyleProps[] | null;
   _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
+  /**
+   * Used for Shared Element Transitions, Layout Animations and Animated Styles. It is not related to event handling.
+   */
   _componentViewTag: number;
   _isFirstRender: boolean;
   jestAnimatedStyle: { value: StyleProps };
@@ -112,6 +115,9 @@ export interface IAnimatedComponentInternal {
   _jsPropsUpdater: IJSPropsUpdater;
   _InlinePropManager: IInlinePropManager;
   _PropsFilter: IPropsFilter;
+  /**
+   * Doesn't exist on web.
+   */
   _NativeEventsManager?: INativeEventsManager;
   _viewInfo?: ViewInfo;
   context: React.ContextType<typeof SkipEnteringContext>;
