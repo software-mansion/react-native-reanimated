@@ -111,9 +111,6 @@ const TableOfContentsElement = ({
 
   const tableOfContentsElementTextStyle = useAnimatedStyle(() => ({
     color: colorScheme === 'light' ? '#001a72' : '#f8f9ff',
-  }));
-
-  const tableOfContentsElementStyle = useAnimatedStyle(() => ({
     borderBottomColor: colorScheme === 'light' ? '#001a72' : '#f8f9ff',
   }));
 
