@@ -258,7 +258,7 @@
 
   /* Versions dropdown */
   --swm-dropdown-versions-background: var(--swm-off-white);
-  --swm-dropdown-versions-item: var(--swm-off-white);
+  --swm-dropdown-versions-item: var(--swm-navy-light-100);
   --swm-dropdown-versions-item-border: var(--swm-purple-light-40);
   --swm-dropdown-versions-item-background: var(--swm-purple-light-20);
 
