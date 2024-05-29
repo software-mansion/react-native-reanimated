@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "3.11.0",
+  "version": "3.12.0",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "test": "yarn run format:js && yarn run lint:js && yarn run test:unit",
@@ -19,8 +19,8 @@
     "format:plugin": "cd plugin && yarn format && cd ..",
     "format:java": "node ./scripts/format-java.js",
     "format:ios": "find apple/ -iname \"*.h\" -o -iname \"*.m\" -o -iname \"*.mm\" -o -iname \"*.cpp\" | xargs clang-format -i --Werror",
-    "format:android": "find android/src/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
-    "format:common": "find Common/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
+    "format:android": "find android/src/ -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
+    "format:common": "find Common/ -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "format:docs": "cd docs && yarn format && cd ..",
     "find-unused-code:js": "yarn ts-prune --ignore \"index|.web.\" --error  ",
     "type:check:src": "yarn tsc --noEmit",
