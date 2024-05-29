@@ -11,6 +11,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 #include "LayoutAnimationsUtils.h"
 #include "UIScheduler.h"
 
@@ -65,6 +66,19 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate {
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove);
   void maybeCancelAnimation(const int tag) const;
 
+  void parseRemoveMutations(
+      std::unordered_map<Tag, ShadowView> &movedViews,
+      ShadowViewMutationList &mutations,
+      std::vector<std::shared_ptr<MutationNode>> &roots) const;
+  void handleRemovals(
+      ShadowViewMutationList &filteredMutations,
+      std::vector<std::shared_ptr<MutationNode>> &roots) const;
+  void handleUpdatesAndEnterings(
+      ShadowViewMutationList &filteredMutations,
+      const std::unordered_map<Tag, ShadowView> &movedViews,
+      ShadowViewMutationList &mutations,
+      const PropsParserContext &propsParserContext,
+      SurfaceId surfaceId) const;
   void addOngoingAnimations(
       SurfaceId surfaceId,
       ShadowViewMutationList &mutations) const;

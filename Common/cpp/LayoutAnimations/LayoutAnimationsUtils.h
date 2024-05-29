@@ -48,8 +48,21 @@ struct Snapshot {
   }
 };
 
+typedef enum ExitingState {
+  UNDEFINED = 1,
+  WAITING = 2,
+  ANIMATING = 4,
+  DEAD = 8,
+  MOVED = 16,
+  DELETED = 32,
+} ExitingState;
+
 struct MutationNode;
 
+/**
+ Represents a view that was either removed or had a child removed from the
+ ShadowTree
+ */
 struct Node {
   std::vector<std::shared_ptr<MutationNode>> children;
   std::shared_ptr<Node> parent;
@@ -62,15 +75,9 @@ struct Node {
   Node(Node &&node) : children(std::move(node.children)), tag(node.tag) {}
 };
 
-typedef enum ExitingState {
-  UNDEFINED = 1,
-  WAITING = 2,
-  ANIMATING = 4,
-  DEAD = 8,
-  MOVED = 16,
-  DELETED = 32,
-} ExitingState;
-
+/**
+ Represents a view that was removed from the ShadowTree
+ */
 struct MutationNode : public Node {
   ShadowViewMutation mutation;
   std::unordered_set<Tag> animatedChildren;
@@ -128,5 +135,13 @@ static inline void updateLayoutMetrics(
   if (frame.y) {
     layoutMetrics.frame.origin.y = *frame.y;
   }
+}
+
+static inline bool isRNSScreen(std::shared_ptr<MutationNode> node) {
+  return !std::strcmp(
+             node->mutation.oldChildShadowView.componentName,
+             "RNSScreenStack") ||
+      !std::strcmp(
+          node->mutation.oldChildShadowView.componentName, "RNSScreen");
 }
 } // namespace reanimated

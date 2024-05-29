@@ -5,10 +5,42 @@
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include <set>
 #include <utility>
-#include <vector>
 #include "NativeReanimatedModule.h"
 
 namespace reanimated {
+
+// We never modify the Shadow Tree, we just send some additional
+// mutations to the mounting layer.
+// When animations finish, the Host Tree will represent the most recent Shadow
+// Tree
+std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
+    SurfaceId surfaceId,
+    MountingTransaction::Number transactionNumber,
+    const TransactionTelemetry &telemetry,
+    ShadowViewMutationList mutations) const {
+#ifdef LAYOUT_ANIMATIONS_LOGS
+  LOG(INFO) << "\npullTransaction " << std::this_thread::get_id() << " "
+            << surfaceId << std::endl;
+#endif
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  PropsParserContext propsParserContext{surfaceId, *contextContainer_};
+  ShadowViewMutationList filteredMutations;
+
+  std::vector<std::shared_ptr<MutationNode>> roots;
+  std::unordered_map<Tag, ShadowView> movedViews;
+
+  parseRemoveMutations(movedViews, mutations, roots);
+
+  handleRemovals(filteredMutations, roots);
+
+  handleUpdatesAndEnterings(
+      filteredMutations, movedViews, mutations, propsParserContext, surfaceId);
+
+  addOngoingAnimations(surfaceId, filteredMutations);
+
+  return MountingTransaction{
+      surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
+}
 
 std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
     int tag,
@@ -93,98 +125,15 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
   return surfaceId;
 }
 
-void LayoutAnimationsProxy::endAnimationsRecursively(
-    std::shared_ptr<MutationNode> node,
-    ShadowViewMutationList &mutations) const {
-  maybeCancelAnimation(node->tag);
-  node->state = DELETED;
-  for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
-    auto &subNode = *it;
-    if (subNode->state != DELETED) {
-      endAnimationsRecursively(subNode, mutations);
-    }
-  }
-  mutations.push_back(node->mutation);
-  nodeForTag.erase(node->tag);
-#ifdef LAYOUT_ANIMATIONS_LOGS
-  LOG(INFO) << "delete " << node->tag << std::endl;
-#endif
-  mutations.push_back(
-      ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
-}
-
-void LayoutAnimationsProxy::maybeDropAncestors(
-    std::shared_ptr<Node> parent,
-    std::shared_ptr<MutationNode> child,
-    ShadowViewMutationList &cleanupMutations) const {
-  parent->removeChild(child);
-  if (parent->parent == nullptr) {
-    return;
-  }
-
-  auto node = std::static_pointer_cast<MutationNode>(parent);
-  node->animatedChildren.erase(child->tag);
-
-  if (node->animatedChildren.empty() && node->state != ANIMATING) {
-    nodeForTag.erase(node->tag);
-    cleanupMutations.push_back(node->mutation);
-    maybeCancelAnimation(node->tag);
-#ifdef LAYOUT_ANIMATIONS_LOGS
-    LOG(INFO) << "delete " << node->tag << std::endl;
-#endif
-    cleanupMutations.push_back(
-        ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
-    maybeDropAncestors(node->parent, node, cleanupMutations);
-  }
-}
-
-const ComponentDescriptor &
-LayoutAnimationsProxy::getComponentDescriptorForShadowView(
-    const ShadowView &shadowView) const {
-  return componentDescriptorRegistry_->at(shadowView.componentHandle);
-}
-
-void LayoutAnimationsProxy::addOngoingAnimations(
-    SurfaceId surfaceId,
-    ShadowViewMutationList &mutations) const {
-  auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
-  for (auto &[tag, updateValues] : updateMap) {
-    auto layoutAnimationIt = layoutAnimations_.find(tag);
-
-    if (layoutAnimationIt == layoutAnimations_.end()) {
-      continue;
-    }
-
-    auto &layoutAnimation = layoutAnimationIt->second;
-
-    auto newView = std::make_shared<ShadowView>(*layoutAnimation.finalView);
-    newView->props = updateValues.newProps;
-    updateLayoutMetrics(newView->layoutMetrics, updateValues.frame);
-
-    mutations.push_back(ShadowViewMutation::UpdateMutation(
-        *layoutAnimation.currentView, *newView, *layoutAnimation.parentView));
-    layoutAnimation.currentView = newView;
-  }
-  updateMap.clear();
-}
-
-std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
-    SurfaceId surfaceId,
-    MountingTransaction::Number transactionNumber,
-    const TransactionTelemetry &telemetry,
-    ShadowViewMutationList mutations) const {
-#ifdef LAYOUT_ANIMATIONS_LOGS
-  LOG(INFO) << "\npullTransaction " << std::this_thread::get_id() << " "
-            << surfaceId << std::endl;
-#endif
-  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  PropsParserContext propsParserContext{surfaceId, *contextContainer_};
-  ShadowViewMutationList filteredMutations;
-
-  std::vector<std::shared_ptr<MutationNode>> roots;
-
+/**
+ Organizes removed views into a tree structure, allowing for convenient
+ traversals and index maintenance
+ */
+void LayoutAnimationsProxy::parseRemoveMutations(
+    std::unordered_map<Tag, ShadowView> &movedViews,
+    ShadowViewMutationList &mutations,
+    std::vector<std::shared_ptr<MutationNode>> &roots) const {
   std::set<Tag> deletedViews;
-  std::unordered_map<Tag, ShadowView> movedViews;
   std::unordered_map<Tag, std::vector<std::shared_ptr<MutationNode>>>
       childrenForTag;
 
@@ -243,7 +192,11 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   for (auto &[parentTag, children] : childrenForTag) {
     nodeForTag[parentTag]->insertChildren(children);
   }
+}
 
+void LayoutAnimationsProxy::handleRemovals(
+    ShadowViewMutationList &filteredMutations,
+    std::vector<std::shared_ptr<MutationNode>> &roots) const {
   for (auto it = roots.rbegin(); it != roots.rend(); it++) {
     auto &node = *it;
     if (!startAnimationsRecursively(node, true, true, filteredMutations)) {
@@ -268,7 +221,14 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     }
   }
   deadNodes.clear();
+}
 
+void LayoutAnimationsProxy::handleUpdatesAndEnterings(
+    ShadowViewMutationList &filteredMutations,
+    const std::unordered_map<Tag, ShadowView> &movedViews,
+    ShadowViewMutationList &mutations,
+    const PropsParserContext &propsParserContext,
+    SurfaceId surfaceId) const {
   for (auto &mutation : mutations) {
     if (mutation.parentShadowView.tag == surfaceId) {
       surfaceManager.updateWindow(
@@ -356,11 +316,81 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
         filteredMutations.push_back(mutation);
     }
   }
+}
 
-  addOngoingAnimations(surfaceId, filteredMutations);
+void LayoutAnimationsProxy::addOngoingAnimations(
+    SurfaceId surfaceId,
+    ShadowViewMutationList &mutations) const {
+  auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+  for (auto &[tag, updateValues] : updateMap) {
+    auto layoutAnimationIt = layoutAnimations_.find(tag);
 
-  return MountingTransaction{
-      surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
+    if (layoutAnimationIt == layoutAnimations_.end()) {
+      continue;
+    }
+
+    auto &layoutAnimation = layoutAnimationIt->second;
+
+    auto newView = std::make_shared<ShadowView>(*layoutAnimation.finalView);
+    newView->props = updateValues.newProps;
+    updateLayoutMetrics(newView->layoutMetrics, updateValues.frame);
+
+    mutations.push_back(ShadowViewMutation::UpdateMutation(
+        *layoutAnimation.currentView, *newView, *layoutAnimation.parentView));
+    layoutAnimation.currentView = newView;
+  }
+  updateMap.clear();
+}
+
+void LayoutAnimationsProxy::endAnimationsRecursively(
+    std::shared_ptr<MutationNode> node,
+    ShadowViewMutationList &mutations) const {
+  maybeCancelAnimation(node->tag);
+  node->state = DELETED;
+  for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
+    auto &subNode = *it;
+    if (subNode->state != DELETED) {
+      endAnimationsRecursively(subNode, mutations);
+    }
+  }
+  mutations.push_back(node->mutation);
+  nodeForTag.erase(node->tag);
+#ifdef LAYOUT_ANIMATIONS_LOGS
+  LOG(INFO) << "delete " << node->tag << std::endl;
+#endif
+  mutations.push_back(
+      ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
+}
+
+void LayoutAnimationsProxy::maybeDropAncestors(
+    std::shared_ptr<Node> parent,
+    std::shared_ptr<MutationNode> child,
+    ShadowViewMutationList &cleanupMutations) const {
+  parent->removeChild(child);
+  if (parent->parent == nullptr) {
+    return;
+  }
+
+  auto node = std::static_pointer_cast<MutationNode>(parent);
+  node->animatedChildren.erase(child->tag);
+
+  if (node->animatedChildren.empty() && node->state != ANIMATING) {
+    nodeForTag.erase(node->tag);
+    cleanupMutations.push_back(node->mutation);
+    maybeCancelAnimation(node->tag);
+#ifdef LAYOUT_ANIMATIONS_LOGS
+    LOG(INFO) << "delete " << node->tag << std::endl;
+#endif
+    cleanupMutations.push_back(
+        ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
+    maybeDropAncestors(node->parent, node, cleanupMutations);
+  }
+}
+
+const ComponentDescriptor &
+LayoutAnimationsProxy::getComponentDescriptorForShadowView(
+    const ShadowView &shadowView) const {
+  return componentDescriptorRegistry_->at(shadowView.componentHandle);
 }
 
 bool LayoutAnimationsProxy::startAnimationsRecursively(
@@ -370,10 +400,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
     ShadowViewMutationList &mutations) const {
   shouldAnimate =
       layoutAnimationsManager_->shouldAnimateExiting(node->tag, shouldAnimate);
-  if (!std::strcmp(
-          node->mutation.oldChildShadowView.componentName, "RNSScreenStack") ||
-      !std::strcmp(
-          node->mutation.oldChildShadowView.componentName, "RNSScreen")) {
+  if (isRNSScreen(node)) {
     shouldAnimate = false;
   }
   bool hasExitAnimation = shouldAnimate &&
@@ -501,8 +528,8 @@ void LayoutAnimationsProxy::startEnteringAnimation(
 
   auto &viewProps =
       static_cast<const ViewProps &>(*mutation.newChildShadowView.props);
-  LayoutAnimation la{finalView, current, parent, viewProps.opacity};
-  layoutAnimations_.insert_or_assign(tag, la);
+  layoutAnimations_.insert_or_assign(
+      tag, LayoutAnimation{finalView, current, parent, viewProps.opacity});
 
   Snapshot values(
       mutation.newChildShadowView,
@@ -543,8 +570,8 @@ void LayoutAnimationsProxy::startExitingAnimation(
   auto finalView = std::make_shared<ShadowView>(mutation.oldChildShadowView);
   auto currentView = std::make_shared<ShadowView>(oldView);
   auto parentView = std::make_shared<ShadowView>(mutation.parentShadowView);
-  LayoutAnimation la{finalView, currentView, parentView, {}, count};
-  layoutAnimations_.insert_or_assign(tag, la);
+  layoutAnimations_.insert_or_assign(
+      tag, LayoutAnimation{finalView, currentView, parentView, {}, count});
 
   Snapshot values(oldView, surfaceManager.getWindow(surfaceId));
 
@@ -583,10 +610,10 @@ void LayoutAnimationsProxy::startLayoutAnimation(
   }
 
   auto finalView = std::make_shared<ShadowView>(mutation.newChildShadowView);
-  auto current = std::make_shared<ShadowView>(oldView);
-  auto parent = std::make_shared<ShadowView>(mutation.parentShadowView);
-  LayoutAnimation la{finalView, current, parent, {}, count};
-  layoutAnimations_.insert_or_assign(tag, la);
+  auto currentView = std::make_shared<ShadowView>(oldView);
+  auto parentView = std::make_shared<ShadowView>(mutation.parentShadowView);
+  layoutAnimations_.insert_or_assign(
+      tag, LayoutAnimation{finalView, currentView, parentView, {}, count});
 
   Snapshot currentValues(oldView, surfaceManager.getWindow(surfaceId));
   Snapshot targetValues(
