@@ -1,13 +1,3 @@
-import React from 'react';
-import Mobile from '@theme-original/DocItem/TOC/Mobile';
-import styles from './styles.module.css';
+import { DocItemTOCMobile } from '@swmansion/t-rex-ui';
 
-export default function TOCMobileWrapper(props) {
-  return (
-    <>
-      <div className={styles.toc_mobile__wrapper}>
-        <Mobile {...props} />
-      </div>
-    </>
-  );
-}
+export default DocItemTOCMobile;

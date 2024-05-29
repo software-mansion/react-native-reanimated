@@ -1,16 +1,17 @@
 {
   "name": "react-native-reanimated-monorepo",
+  "version": "0.0.0",
   "packageManager": "yarn@4.1.1",
   "workspaces": {
     "packages": [
-      "packages/react-native-reanimated",
-      "packages/reanimated-app",
-      "packages/reanimated-paper-example",
-      "packages/reanimated-web-example",
-      "packages/eslint-plugin-reanimated"
+      "packages/*",
+      "apps/*"
     ]
   },
   "private": true,
+  "scripts": {
+    "build": "husky && yarn workspaces foreach -A -p run build"
+  },
   "devDependencies": {
     "eslint": "^8.57.0",
     "husky": "^9.0.11",

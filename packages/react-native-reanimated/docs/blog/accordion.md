@@ -9,7 +9,7 @@ import Accordion from '@site/static/examples/Accordion';
 import AccordionSrc from '!!raw-loader!@site/static/examples/Accordion';
 import ExampleVideo from '@site/src/components/ExampleVideo';
 
-<InteractiveExample src={AccordionSrc} component={<Accordion />} />
+<InteractiveExample src={AccordionSrc} component={Accordion} />
 
 The following implementation of an accordion relies on [shared values](/docs/fundamentals/glossary#shared-value). Leveraging shared values helps to prevent unnecessary re-renders. We define shared values using the useSharedValue hook.
 

@@ -138,9 +138,7 @@ class ReanimatedHermesRuntime
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime_;
   ReanimatedReentrancyCheck reentrancyCheck_;
 #if HERMES_ENABLE_DEBUGGER
-#if REACT_NATIVE_MINOR_VERSION >= 71
   chrome::DebugSessionToken debugToken_;
-#endif // REACT_NATIVE_MINOR_VERSION >= 71
 #endif // HERMES_ENABLE_DEBUGGER
 };
 

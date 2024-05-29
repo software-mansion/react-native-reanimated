@@ -1,6 +1,6 @@
 name: Test build on Windows nightly
 env:
-  YARN_ENABLE_HARDENED_MODE: 0
+  YARN_ENABLE_IMMUTABLE_INSTALLS: 0
 on:
   pull_request:
     paths:
@@ -27,9 +27,12 @@ jobs:
       - name: Install dependencies
         working-directory: App
         run: yarn
+      - name: Download Reanimated from commit
+        working-directory: App
+        run: curl -LJO https://codeload.github.com/software-mansion/react-native-reanimated/tar.gz/${{ github.sha }}
       - name: Install Reanimated
         working-directory: App
-        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
+        run: yarn add react-native-reanimated@file:./react-native-reanimated-${{ github.sha }}.tar.gz
       - name: Build Android App
         working-directory: App/android
         run: ./gradlew assembleDebug --console=plain
