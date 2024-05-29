@@ -6144,8 +6144,27 @@ __metadata:
     react-native-svg: "npm:^15.2.0-rc.0"
     typescript: "npm:^5.0.2"
   peerDependencies:
+    "@fortawesome/fontawesome-svg-core": "*"
+    "@fortawesome/free-solid-svg-icons": "*"
+    "@fortawesome/react-native-fontawesome": "*"
+    "@react-native-async-storage/async-storage": "*"
+    "@react-native-community/slider": "*"
+    "@react-native-masked-view/masked-view": "*"
+    "@react-native-picker/picker": "*"
+    "@react-navigation/native": "*"
+    "@react-navigation/native-stack": "*"
+    "@react-navigation/stack": "*"
+    d3-shape: "*"
     react: "*"
+    react-dom: "*"
     react-native: "*"
+    react-native-gesture-handler: "*"
+    react-native-pager-view: "*"
+    react-native-reanimated: "*"
+    react-native-safe-area-context: "*"
+    react-native-screens: "*"
+    react-native-svg: "*"
+    react-native-web: "*"
   languageName: unknown
   linkType: soft
 

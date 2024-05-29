@@ -1,7 +1,5 @@
 'use strict';
 
-import type { TransformsStyle } from 'react-native';
-
 export interface ReanimatedWebTransformProperties {
   translateX?: string;
   translateY?: string;
@@ -66,34 +64,4 @@ export function convertAnimationObjectToKeyframes(
   keyframe += `} `; // Keyframe end
 
   return keyframe;
-}
-
-export function convertTransformToString(
-  transform: NonNullable<TransformsStyle['transform']> | undefined
-) {
-  if (!transform) {
-    return '';
-  }
-
-  type RNTransformProp = (typeof transform)[number];
-
-  let transformString = '';
-
-  // @ts-ignore `transform` cannot be string because in that case
-  // we throw error in `extractTransformFromStyle`
-  transform.forEach((transformObject: RNTransformProp) => {
-    for (const [key, value] of Object.entries(transformObject)) {
-      if (key === 'reversed') {
-        continue;
-      }
-
-      if (key.indexOf('translate') < 0) {
-        transformString += `${key}(${value}) `;
-      } else {
-        transformString += `${key}(${value}px) `;
-      }
-    }
-  });
-
-  return transformString;
 }

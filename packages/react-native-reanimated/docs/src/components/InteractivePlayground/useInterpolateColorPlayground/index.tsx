@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { CheckboxOption, Range, SelectOption } from '../';
 import Example from './Example';
 import styles from './styles.module.css';
@@ -32,6 +32,8 @@ export default function useInterpolateColorPlayground() {
   const isMobile = windowWidth < 600;
 
   const [key, setKey] = useState(0);
+  const prevRefreshKeyLeft = useRef(key);
+  const prevRefreshKeyRight = useRef(key);
 
   const [colorBarsSectionCollapsed, setColorBarsSectionCollapsed] =
     useState(true);
@@ -112,25 +114,6 @@ export default function useInterpolateColorPlayground() {
     />
   );
 
-  const example = (
-    <div className={styles.example}>
-      <ColorPicker
-        color={colorLeftBoundary}
-        setColor={setColorLeftBoundary}
-        defaultValue={initialState.color.leftBoundary}
-        refreshKey={key}
-      />
-      {!isMobile && colorBox}
-      <ColorPicker
-        color={colorRightBoundary}
-        setColor={setColorRightBoundary}
-        defaultValue={initialState.color.rightBoundary}
-        refreshKey={key}
-      />
-      {isMobile && colorBox}
-    </div>
-  );
-
   const section = (
     <>
       <CollapseButton
@@ -155,8 +138,31 @@ export default function useInterpolateColorPlayground() {
     </>
   );
 
+  function ExampleFC() {
+    return (
+      <div className={styles.example}>
+        <ColorPicker
+          color={colorLeftBoundary}
+          setColor={setColorLeftBoundary}
+          defaultValue={initialState.color.leftBoundary}
+          prevKeyRef={prevRefreshKeyLeft}
+          refreshKey={key}
+        />
+        {!isMobile && colorBox}
+        <ColorPicker
+          color={colorRightBoundary}
+          setColor={setColorRightBoundary}
+          defaultValue={initialState.color.rightBoundary}
+          prevKeyRef={prevRefreshKeyRight}
+          refreshKey={key}
+        />
+        {isMobile && colorBox}
+      </div>
+    );
+  }
+
   return {
-    example,
+    example: ExampleFC,
     controls,
     code,
     resetOptions,
