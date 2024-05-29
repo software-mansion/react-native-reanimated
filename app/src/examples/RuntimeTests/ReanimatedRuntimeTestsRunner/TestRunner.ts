@@ -146,6 +146,7 @@ export class TestRunner {
             errors: [],
             decorator,
             warningMessage: warningMessage,
+            skip: false,
           }
         : {
             name: applyMarkdown(name),
@@ -154,6 +155,7 @@ export class TestRunner {
             callsRegistry: {},
             errors: [],
             decorator,
+            skip: decorator === TestDecorator.SKIP,
           },
     );
   }
@@ -217,7 +219,7 @@ export class TestRunner {
     await this.runOnUIBlocking(() => {
       'worklet';
       valueContainer.value = sharedValue.value;
-    });
+    }, 1000);
     const uiValue = valueContainer.value;
     return {
       name,
@@ -407,10 +409,18 @@ export class TestRunner {
     this._currentTestSuite.afterEach = job;
   }
 
-  private waitForPropertyValueChange(targetObject: LockObject, targetProperty: 'lock', initialValue = true) {
+  private waitForPropertyValueChange(
+    targetObject: LockObject,
+    targetProperty: 'lock',
+    initialValue = true,
+    maxWaitTime?: number,
+  ) {
     return new Promise(resolve => {
+      const startTime = performance.now();
       const interval = setInterval(() => {
-        if (targetObject[targetProperty] !== initialValue) {
+        const currentTime = performance.now();
+        const waitTimeExceeded = maxWaitTime && maxWaitTime < currentTime - startTime;
+        if (targetObject[targetProperty] !== initialValue || waitTimeExceeded) {
           clearInterval(interval);
           resolve(targetObject[targetProperty]);
         }
@@ -418,7 +428,7 @@ export class TestRunner {
     });
   }
 
-  public async runOnUIBlocking(worklet: () => void) {
+  public async runOnUIBlocking(worklet: () => void, maxWaitTime?: number) {
     const unlock = () => (this._threadLock.lock = false);
     this._threadLock.lock = true;
     runOnUI(() => {
@@ -426,7 +436,7 @@ export class TestRunner {
       worklet();
       runOnJS(unlock)();
     })();
-    await this.waitForPropertyValueChange(this._threadLock, 'lock', true);
+    await this.waitForPropertyValueChange(this._threadLock, 'lock', true, maxWaitTime);
   }
 
   public async recordAnimationUpdates() {
