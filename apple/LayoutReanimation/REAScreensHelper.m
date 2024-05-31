@@ -143,6 +143,9 @@
       return topScreen;
     }
   }
+  if ([view isKindOfClass:[RNSScreenView class]]) {
+    return view;
+  }
   return nil;
 }
 

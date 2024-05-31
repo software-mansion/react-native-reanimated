@@ -130,6 +130,7 @@ const styles = StyleSheet.create({
     width: 150,
     height: 250,
     backgroundColor: 'red',
+    marginLeft: 50,
   },
   box4: {
     width: 200,
