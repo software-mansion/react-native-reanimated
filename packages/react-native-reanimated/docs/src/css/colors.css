@@ -211,6 +211,8 @@
   --swm-search-hit-border-hover: var(--swm-purple-light-100);
   --swm-search-hit-active-color: var(--swm-off-white);
 
+  --swm-docsearch-hit-source-color: var(--swm-navy-light-100);
+
   --swm-search-hit-results-color: var(--swm-navy-light-40);
 
   --swm-search-page-query-text-color: var(--swm-navy-light-100);
@@ -256,7 +258,7 @@
 
   /* Versions dropdown */
   --swm-dropdown-versions-background: var(--swm-off-white);
-  --swm-dropdown-versions-item: var(--swm-navy-light-100);
+  --swm-dropdown-versions-item: var(--swm-off-white);
   --swm-dropdown-versions-item-border: var(--swm-purple-light-40);
   --swm-dropdown-versions-item-background: var(--swm-purple-light-20);
 
@@ -374,6 +376,8 @@
   --swm-search-hit-border: var(--swm-purple-dark-120);
   --swm-search-hit-border-hover: var(--swm-purple-dark-40);
   --swm-search-hit-active-color: var(--swm-navy-light-100);
+
+  --swm-docsearch-hit-source-color: var(--swm-navy-light-10);
 
   --swm-search-hit-results-color: var(--swm-navy-light-20);
 

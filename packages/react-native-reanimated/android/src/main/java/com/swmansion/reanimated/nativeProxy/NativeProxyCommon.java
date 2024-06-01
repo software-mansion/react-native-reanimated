@@ -6,17 +6,16 @@ import android.provider.Settings;
 import android.util.Log;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
-import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
-import com.facebook.react.devsupport.interfaces.DevSupportManager;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
 import com.swmansion.reanimated.AndroidUIScheduler;
 import com.swmansion.reanimated.BuildConfig;
+import com.swmansion.reanimated.DevMenuUtils;
 import com.swmansion.reanimated.NativeProxy;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.ReanimatedModule;
@@ -83,16 +82,7 @@ public abstract class NativeProxyCommon {
 
   private void addDevMenuOption() {
     // In Expo, `ApplicationContext` is not an instance of `ReactApplication`
-    if (mContext.get().getApplicationContext() instanceof ReactApplication) {
-      final DevSupportManager devSupportManager =
-          ((ReactApplication) mContext.get().getApplicationContext())
-              .getReactNativeHost()
-              .getReactInstanceManager()
-              .getDevSupportManager();
-
-      devSupportManager.addCustomDevOption(
-          "Toggle slow animations (Reanimated)", this::toggleSlowAnimations);
-    }
+    DevMenuUtils.addDevMenuOption(mContext.get(), this::toggleSlowAnimations);
   }
 
   @DoNotStrip

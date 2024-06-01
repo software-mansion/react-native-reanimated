@@ -135,10 +135,21 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
 #else
     if ([view respondsToSelector:@selector(borderRadius)]) {
       // For example `RCTTextView` doesn't have `borderRadius` selector
-      _values[@"borderRadius"] = @(((RCTView *)view).borderRadius);
+      RCTView *rctView = ((RCTView *)view);
+      CGFloat borderRadius = ((RCTView *)view).borderRadius;
+      _values[@"borderRadius"] = @(borderRadius);
+      _values[@"borderTopLeftRadius"] = @([self get:rctView.borderTopLeftRadius orDefault:borderRadius]);
+      _values[@"borderTopRightRadius"] = @([self get:rctView.borderTopRightRadius orDefault:borderRadius]);
+      _values[@"borderBottomLeftRadius"] = @([self get:rctView.borderBottomLeftRadius orDefault:borderRadius]);
+      _values[@"borderBottomRightRadius"] = @([self get:rctView.borderBottomRightRadius orDefault:borderRadius]);
     } else {
       _values[@"borderRadius"] = @(0);
+      _values[@"borderTopLeftRadius"] = @(0);
+      _values[@"borderTopRightRadius"] = @(0);
+      _values[@"borderBottomLeftRadius"] = @(0);
+      _values[@"borderBottomRightRadius"] = @(0);
     }
+
 #endif
   } else {
     _values[@"originX"] = @(view.center.x - view.bounds.size.width / 2.0);
@@ -173,6 +184,11 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
     view = view.superview;
   }
   return nil;
+}
+
+- (CGFloat)get:(CGFloat)value orDefault:(CGFloat)def
+{
+  return value == -1 ? def : value;
 }
 
 @end

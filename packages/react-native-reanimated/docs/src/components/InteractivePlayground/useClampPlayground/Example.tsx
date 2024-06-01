@@ -11,10 +11,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 const BOX_START = 0;
-const BOX_STOP = 200;
 const BOX_SIZE = 80;
 
-const FRAME_WIDTH = 400;
 const FRAME_HEIGHT = 100;
 const CLAMP_MARKER_HEIGHT = 40;
 
@@ -25,8 +23,11 @@ interface ClampPlaygroundOptions {
 
 interface Props {
   options: ClampPlaygroundOptions;
+  width: number;
 }
-export default function App({ options }: Props) {
+export default function App({ width: FRAME_WIDTH, options }: Props) {
+  FRAME_WIDTH = FRAME_WIDTH - 50;
+
   const config = {
     damping: 3,
   };
@@ -36,10 +37,16 @@ export default function App({ options }: Props) {
       transform: [
         {
           translateX: withClamp(
-            { min: options.lowerBound, max: options.upperBound },
+            {
+              min: (options.lowerBound / 400) * FRAME_WIDTH,
+              max: (options.upperBound / 400) * FRAME_WIDTH - BOX_SIZE,
+            },
             withRepeat(
               withSequence(
-                withDelay(2000, withSpring(BOX_STOP, config)),
+                withDelay(
+                  2000,
+                  withSpring((options.upperBound / 600) * FRAME_WIDTH, config)
+                ),
                 withTiming(BOX_START, { duration: 0 })
               ),
               -1,
@@ -56,7 +63,10 @@ export default function App({ options }: Props) {
         {
           translateX: withRepeat(
             withSequence(
-              withDelay(2000, withSpring(200, config)),
+              withDelay(
+                2000,
+                withSpring((options.upperBound / 600) * FRAME_WIDTH, config)
+              ),
               withTiming(0, { duration: 0 })
             ),
             -1,
@@ -90,7 +100,7 @@ export default function App({ options }: Props) {
                 {
                   marginTop: (BOX_SIZE - FRAME_HEIGHT) / 2,
                   borderRightWidth: 2,
-                  width: options.lowerBound,
+                  width: (options.lowerBound / 400) * FRAME_WIDTH,
                 },
               ]}
             />
@@ -107,7 +117,7 @@ export default function App({ options }: Props) {
                 {
                   borderLeftWidth: 2,
                   marginTop: -(BOX_SIZE + FRAME_HEIGHT) / 2,
-                  width: FRAME_WIDTH - options.upperBound - BOX_SIZE,
+                  width: FRAME_WIDTH - (options.upperBound / 400) * FRAME_WIDTH,
                   alignSelf: 'flex-end',
                 },
               ]}
@@ -141,6 +151,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: CLAMP_MARKER_HEIGHT,
+    paddingLeft: '2rem',
+    paddingRight: '2rem',
     paddingBottom: 0,
   },
   clampMarker: {
