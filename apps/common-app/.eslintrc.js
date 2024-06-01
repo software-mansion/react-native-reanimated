@@ -1,7 +1,7 @@
 module.exports = {
   root: true,
-  extends: ['@react-native', 'prettier'],
-  plugins: ['eslint-plugin-no-inline-styles', 'reanimated'],
+  extends: ['@react-native', 'prettier', '../../.eslintrc.js'],
+  plugins: ['eslint-plugin-no-inline-styles', 'eslint-plugin-reanimated'],
   ignorePatterns: ['**/*.snapshot.ts'],
   rules: {
     '@typescript-eslint/no-use-before-define': 'off',
