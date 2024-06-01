@@ -20,6 +20,10 @@ public class Snapshot {
   public static final String GLOBAL_ORIGIN_X = "globalOriginX";
   public static final String GLOBAL_ORIGIN_Y = "globalOriginY";
   public static final String BORDER_RADIUS = "borderRadius";
+  public static final String BORDER_TOP_LEFT_RADIUS = "borderTopLeftRadius";
+  public static final String BORDER_TOP_RIGHT_RADIUS = "borderTopRightRadius";
+  public static final String BORDER_BOTTOM_LEFT_RADIUS = "borderBottomLeftRadius";
+  public static final String BORDER_BOTTOM_RIGHT_RADIUS = "borderBottomRightRadius";
 
   public static final String CURRENT_WIDTH = "currentWidth";
   public static final String CURRENT_HEIGHT = "currentHeight";
@@ -29,6 +33,10 @@ public class Snapshot {
   public static final String CURRENT_GLOBAL_ORIGIN_X = "currentGlobalOriginX";
   public static final String CURRENT_GLOBAL_ORIGIN_Y = "currentGlobalOriginY";
   public static final String CURRENT_BORDER_RADIUS = "currentBorderRadius";
+  public static final String CURRENT_BORDER_TOP_LEFT_RADIUS = "currentBorderTopLeftRadius";
+  public static final String CURRENT_BORDER_TOP_RIGHT_RADIUS = "currentBorderTopRightRadius";
+  public static final String CURRENT_BORDER_BOTTOM_LEFT_RADIUS = "currentBorderBottomLeftRadius";
+  public static final String CURRENT_BORDER_BOTTOM_RIGHT_RADIUS = "currentBorderBottomRightRadius";
 
   public static final String TARGET_WIDTH = "targetWidth";
   public static final String TARGET_HEIGHT = "targetHeight";
@@ -38,6 +46,10 @@ public class Snapshot {
   public static final String TARGET_GLOBAL_ORIGIN_X = "targetGlobalOriginX";
   public static final String TARGET_GLOBAL_ORIGIN_Y = "targetGlobalOriginY";
   public static final String TARGET_BORDER_RADIUS = "targetBorderRadius";
+  public static final String TARGET_BORDER_TOP_LEFT_RADIUS = "targetBorderTopLeftRadius";
+  public static final String TARGET_BORDER_TOP_RIGHT_RADIUS = "targetBorderTopRightRadius";
+  public static final String TARGET_BORDER_BOTTOM_LEFT_RADIUS = "targetBorderBottomLeftRadius";
+  public static final String TARGET_BORDER_BOTTOM_RIGHT_RADIUS = "targetBorderBottomRightRadius";
 
   public View view;
   public ViewGroup parent;
@@ -53,7 +65,7 @@ public class Snapshot {
       new ArrayList<>(Arrays.asList(1f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f));
   public int originXByParent;
   public int originYByParent;
-  public float borderRadius;
+  public ReactNativeUtils.BorderRadii borderRadii;
   private float[] identityMatrix = {1, 0, 0, 0, 1, 0, 0, 0, 1};
 
   public static ArrayList<String> targetKeysToTransform =
@@ -65,7 +77,11 @@ public class Snapshot {
               Snapshot.TARGET_ORIGIN_Y,
               Snapshot.TARGET_GLOBAL_ORIGIN_X,
               Snapshot.TARGET_GLOBAL_ORIGIN_Y,
-              Snapshot.TARGET_BORDER_RADIUS));
+              Snapshot.TARGET_BORDER_RADIUS,
+              Snapshot.TARGET_BORDER_TOP_LEFT_RADIUS,
+              Snapshot.TARGET_BORDER_TOP_RIGHT_RADIUS,
+              Snapshot.TARGET_BORDER_BOTTOM_LEFT_RADIUS,
+              Snapshot.TARGET_BORDER_BOTTOM_RIGHT_RADIUS));
   public static ArrayList<String> currentKeysToTransform =
       new ArrayList<>(
           Arrays.asList(
@@ -75,7 +91,11 @@ public class Snapshot {
               Snapshot.CURRENT_ORIGIN_Y,
               Snapshot.CURRENT_GLOBAL_ORIGIN_X,
               Snapshot.CURRENT_GLOBAL_ORIGIN_Y,
-              Snapshot.CURRENT_BORDER_RADIUS));
+              Snapshot.CURRENT_BORDER_RADIUS,
+              Snapshot.CURRENT_BORDER_TOP_LEFT_RADIUS,
+              Snapshot.CURRENT_BORDER_TOP_RIGHT_RADIUS,
+              Snapshot.CURRENT_BORDER_BOTTOM_LEFT_RADIUS,
+              Snapshot.CURRENT_BORDER_BOTTOM_RIGHT_RADIUS));
 
   Snapshot(View view, NativeViewHierarchyManager viewHierarchyManager) {
     parent = (ViewGroup) view.getParent();
@@ -94,6 +114,7 @@ public class Snapshot {
     view.getLocationOnScreen(location);
     globalOriginX = location[0];
     globalOriginY = location[1];
+    borderRadii = new ReactNativeUtils.BorderRadii(0, 0, 0, 0, 0);
   }
 
   public Snapshot(View view) {
@@ -122,7 +143,7 @@ public class Snapshot {
     }
     originXByParent = view.getLeft();
     originYByParent = view.getTop();
-    borderRadius = ReactNativeUtils.getBorderRadius(view);
+    borderRadii = ReactNativeUtils.getBorderRadii(view);
   }
 
   private void addTargetConfig(HashMap<String, Object> data) {
@@ -133,7 +154,11 @@ public class Snapshot {
     data.put(Snapshot.TARGET_HEIGHT, height);
     data.put(Snapshot.TARGET_WIDTH, width);
     data.put(Snapshot.TARGET_TRANSFORM_MATRIX, transformMatrix);
-    data.put(Snapshot.TARGET_BORDER_RADIUS, borderRadius);
+    data.put(Snapshot.TARGET_BORDER_RADIUS, borderRadii.full);
+    data.put(Snapshot.TARGET_BORDER_TOP_LEFT_RADIUS, borderRadii.topLeft);
+    data.put(Snapshot.TARGET_BORDER_TOP_RIGHT_RADIUS, borderRadii.topRight);
+    data.put(Snapshot.TARGET_BORDER_BOTTOM_LEFT_RADIUS, borderRadii.bottomLeft);
+    data.put(Snapshot.TARGET_BORDER_BOTTOM_RIGHT_RADIUS, borderRadii.bottomRight);
   }
 
   private void addCurrentConfig(HashMap<String, Object> data) {
@@ -144,7 +169,11 @@ public class Snapshot {
     data.put(Snapshot.CURRENT_HEIGHT, height);
     data.put(Snapshot.CURRENT_WIDTH, width);
     data.put(Snapshot.CURRENT_TRANSFORM_MATRIX, transformMatrix);
-    data.put(Snapshot.CURRENT_BORDER_RADIUS, borderRadius);
+    data.put(Snapshot.CURRENT_BORDER_RADIUS, borderRadii.full);
+    data.put(Snapshot.CURRENT_BORDER_TOP_LEFT_RADIUS, borderRadii.topLeft);
+    data.put(Snapshot.CURRENT_BORDER_TOP_RIGHT_RADIUS, borderRadii.topRight);
+    data.put(Snapshot.CURRENT_BORDER_BOTTOM_LEFT_RADIUS, borderRadii.bottomLeft);
+    data.put(Snapshot.CURRENT_BORDER_BOTTOM_RIGHT_RADIUS, borderRadii.bottomRight);
   }
 
   private void addBasicConfig(HashMap<String, Object> data) {
@@ -155,7 +184,11 @@ public class Snapshot {
     data.put(Snapshot.HEIGHT, height);
     data.put(Snapshot.WIDTH, width);
     data.put(Snapshot.TRANSFORM_MATRIX, transformMatrix);
-    data.put(Snapshot.BORDER_RADIUS, borderRadius);
+    data.put(Snapshot.BORDER_RADIUS, borderRadii.full);
+    data.put(Snapshot.BORDER_TOP_LEFT_RADIUS, borderRadii.topLeft);
+    data.put(Snapshot.BORDER_TOP_RIGHT_RADIUS, borderRadii.topRight);
+    data.put(Snapshot.BORDER_BOTTOM_LEFT_RADIUS, borderRadii.bottomLeft);
+    data.put(Snapshot.BORDER_BOTTOM_RIGHT_RADIUS, borderRadii.bottomRight);
   }
 
   public HashMap<String, Object> toTargetMap() {

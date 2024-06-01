@@ -192,9 +192,7 @@ class ShareableObject : public Shareable {
 
  protected:
   std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data_;
-#if REACT_NATIVE_MINOR_VERSION >= 71
   std::shared_ptr<jsi::NativeState> nativeState_;
-#endif
 };
 
 class ShareableHostObject : public Shareable {
@@ -322,7 +320,6 @@ class ShareableString : public Shareable {
   const std::string data_;
 };
 
-#if REACT_NATIVE_MINOR_VERSION >= 71
 class ShareableBigInt : public Shareable {
  public:
   explicit ShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint)
@@ -333,7 +330,6 @@ class ShareableBigInt : public Shareable {
  protected:
   const std::string string_;
 };
-#endif
 
 class ShareableScalar : public Shareable {
  public:
