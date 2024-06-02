@@ -1,0 +1,34 @@
+{
+  "name": "web-example",
+  "main": "index.js",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "expo start --web",
+    "start:noplugin": "DISABLE_BABEL_PLUGIN=1 yarn start",
+    "lint": "eslint --max-warnings=0 .",
+    "format": "prettier --write --list-different .",
+    "production": "yarn expo export -p web && yarn serve dist --single",
+    "build": ""
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^14.0.0",
+    "@react-navigation/native": "^6.0.2",
+    "common-app": "workspace:*",
+    "expo": "~51.0.2",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-native": "0.74.0",
+    "react-native-reanimated": "workspace:*",
+    "react-native-web": "~0.19.10"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "@expo/metro-runtime": "^3.2.1",
+    "@types/eslint": "^8",
+    "eslint": "^8.57.0",
+    "prettier": "2.8.8",
+    "serve": "^14.2.3",
+    "typescript": "~5.3.0"
+  },
+  "private": true
+}

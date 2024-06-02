@@ -794,8 +794,21 @@ static REASharedTransitionManager *_sharedTransitionManager;
                                                                                   targetValues:targetValues];
   workletValues[@"currentTransformMatrix"] = currentValues[@"combinedTransformMatrix"];
   workletValues[@"targetTransformMatrix"] = targetValues[@"combinedTransformMatrix"];
+
   workletValues[@"currentBorderRadius"] = currentValues[@"borderRadius"];
   workletValues[@"targetBorderRadius"] = targetValues[@"borderRadius"];
+
+  workletValues[@"currentBorderTopLeftRadius"] = currentValues[@"borderTopLeftRadius"];
+  workletValues[@"targetBorderTopLeftRadius"] = targetValues[@"borderTopLeftRadius"];
+
+  workletValues[@"currentBorderTopRightRadius"] = currentValues[@"borderTopRightRadius"];
+  workletValues[@"targetBorderTopRightRadius"] = targetValues[@"borderTopRightRadius"];
+
+  workletValues[@"currentBorderBottomLeftRadius"] = currentValues[@"borderBottomLeftRadius"];
+  workletValues[@"targetBorderBottomLeftRadius"] = targetValues[@"borderBottomLeftRadius"];
+
+  workletValues[@"currentBorderBottomRightRadius"] = currentValues[@"borderBottomRightRadius"];
+  workletValues[@"targetBorderBottomRightRadius"] = targetValues[@"borderBottomRightRadius"];
   return workletValues;
 }
 
