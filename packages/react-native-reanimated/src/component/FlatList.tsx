@@ -51,6 +51,10 @@ interface ReanimatedFlatListPropsWithLayout<T>
    * Lets you skip entering and exiting animations of FlatList items when on FlatList mount or unmount.
    */
   skipEnteringExitingAnimations?: boolean;
+  /**
+   * Property `CellRendererComponent` is not supported in `Animated.FlatList`.
+   */
+  CellRendererComponent?: never;
 }
 
 export type FlatListPropsWithLayout<T> = ReanimatedFlatListPropsWithLayout<T>;

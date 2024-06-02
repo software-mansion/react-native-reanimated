@@ -21,9 +21,12 @@ jobs:
     steps:
       - name: Create app
         run: npx react-native init app --skip-install --version nightly
+      - name: Download Reanimated from commit
+        working-directory: app
+        run: curl -LJO https://codeload.github.com/software-mansion/react-native-reanimated/tar.gz/${{ github.sha }}
       - name: Install Reanimated
         working-directory: app
-        run: yarn add react-native-reanimated@github:software-mansion/react-native-reanimated
+        run: yarn add react-native-reanimated@file:./react-native-reanimated-${{ github.sha }}.tar.gz
       - name: Install Paper Pods
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         working-directory: app/ios
@@ -54,9 +57,12 @@ jobs:
           java-version: "18"
       - name: Create app
         run: npx react-native init app --skip-install --version nightly
+      - name: Download Reanimated from commit
+        working-directory: app
+        run: curl -LJO https://codeload.github.com/software-mansion/react-native-reanimated/tar.gz/${{ github.sha }}
       - name: Install Reanimated
         working-directory: app
-        run: yarn add react-native-reanimated@github:software-mansion/react-native-reanimated
+        run: yarn add react-native-reanimated@file:./react-native-reanimated-${{ github.sha }}.tar.gz
       - name: Setup Fabric
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
         working-directory: app/android

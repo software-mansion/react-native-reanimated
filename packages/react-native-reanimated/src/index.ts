@@ -50,6 +50,7 @@ export {
   useFrameCallback,
   useAnimatedKeyboard,
   useScrollViewOffset,
+  useComposedEventHandler,
 } from './hook';
 export type {
   DelayAnimation,

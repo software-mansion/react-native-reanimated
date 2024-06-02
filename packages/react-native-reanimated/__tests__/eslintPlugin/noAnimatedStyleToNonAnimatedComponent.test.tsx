@@ -2,7 +2,7 @@
 // eslint-disable-next-line import/no-unresolved
 import { RuleTester } from '@typescript-eslint/rule-tester';
 // @ts-expect-error FIX ME
-import { rules } from 'reanimated-eslint-plugin';
+import { rules } from 'eslint-plugin-reanimated';
 
 const ruleTester = new RuleTester({
   parserOptions: {
