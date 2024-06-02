@@ -4,7 +4,8 @@
   "packageManager": "yarn@4.1.1",
   "workspaces": {
     "packages": [
-      "packages/*",
+      "packages/react-native-reanimated",
+      "packages/eslint-plugin-reanimated",
       "apps/*"
     ]
   },
