@@ -10,15 +10,20 @@ on:
       ref:
         required: false
         type: string
-      upload_binaries:
-        required: false
-        type: boolean
       publish_on_npm:
         required: false
         type: boolean
     secrets:
       NODE_AUTH_TOKEN:
         required: false
+  workflow_dispatch:
+    inputs:
+      option:
+        required: false
+        type: string
+      ref:
+        required: false
+        type: string
 
 jobs:
   build:
@@ -38,70 +43,39 @@ jobs:
       - name: Clear annotations
         run: .github/workflows/helper/clear-annotations.sh
 
-      - name: Set up JDK 11
-        if: ${{ inputs.ref == 'Reanimated2' }}
-        uses: actions/setup-java@v3
-        with:
-          distribution: "zulu"
-          java-version: "11"
-
-      - name: Install NDK
-        if: ${{ inputs.ref == 'Reanimated2' }}
-        uses: nttld/setup-ndk@v1
-        id: setup-ndk
-        with:
-          ndk-version: r21d
-
       - name: Build package
+        working-directory: packages/react-native-reanimated
         id: build
-        env:
-          ANDROID_NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: >-
-          ./createNPMPackage.sh ${{ inputs.option }} 2> build.log
+          ./createNPMPackage.sh ${{ inputs.option }}
 
       - name: Check if any node_modules were packed
+        working-directory: packages/react-native-reanimated
         id: node_modules
         run: >-
-          ! grep --silent -E "node_modules/.+"
-
-      - name: Check if size is over 1MB
-        if: ${{ inputs.ref != 'Reanimated2' }}
-        id: size
-        run: grep --silent -E "npm notice package size:\s*[0-9][0-9]?[0-9]?(\.[0-9]*)?\s*kB" build.log
+          ! grep --silent -E "node_modules/.+" build.log
 
       - name: Show build log
+        working-directory: packages/react-native-reanimated
         if: failure() && steps.build.outcome == 'failure'
         run: >-
           cat build.log
 
       - name: Show packed node_modules
+        working-directory: packages/react-native-reanimated
         if: failure() && steps.node_modules.outcome == 'failure'
         run: >-
-          ! grep -E "node_modules/.+"
+          ! grep -E "node_modules/.+" build.log
 
-      - name: Show exceeded package size
-        if: failure() && steps.size.outcome == 'failure'
-        run: grep -E "npm notice package size:" build.log
-
-      - run: echo "PACKAGE_NAME=$(ls -l | egrep -o "react-native-reanimated-(.*)(=?\.tgz)")" >> $GITHUB_ENV
+      - name: Add package name to env
+        working-directory: packages/react-native-reanimated
+        run: echo "PACKAGE_NAME=$(ls -l | egrep -o "react-native-reanimated-(.*)(=?\.tgz)")" >> $GITHUB_ENV
 
       - name: Upload npm package
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }}
-          path: "*.tgz"
-
-      - name: Compress Android build output
-        if: ${{ inputs.upload_binaries }}
-        run: zip -r android-build-output.zip build_output
-
-      - name: Upload Android build folder
-        if: ${{ inputs.upload_binaries }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-build-output
-          path: android-build-output.zip
-          retention-days: 5
+          path: "packages/react-native-reanimated/${{ env.PACKAGE_NAME }}"
 
       - run: npm publish $PACKAGE_NAME --tag nightly
         if: ${{ inputs.publish_on_npm }}

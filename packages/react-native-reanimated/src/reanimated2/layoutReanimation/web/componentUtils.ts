@@ -1,6 +1,5 @@
 'use strict';
 
-import type { TransformsStyle } from 'react-native';
 import { Animations, TransitionType, WebEasings } from './config';
 import type {
   AnimationCallback,
@@ -9,14 +8,12 @@ import type {
   CustomConfig,
   WebEasingsNames,
 } from './config';
-import { convertTransformToString } from './animationParser';
 import type { TransitionData } from './animationParser';
 import { TransitionGenerator } from './createAnimation';
 import { scheduleAnimationCleanup } from './domUtils';
 import { _updatePropsJS } from '../../js-reanimated';
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { ReduceMotion } from '../../commonTypes';
-import type { StyleProps } from '../../commonTypes';
 import { isReducedMotion } from '../../PlatformChecker';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
@@ -86,27 +83,6 @@ function getReversedFromConfig(config: CustomConfig) {
   return !!config.reversed;
 }
 
-export function extractTransformFromStyle(style: StyleProps) {
-  if (!style) {
-    return;
-  }
-
-  if (typeof style.transform === 'string') {
-    throw new Error('[Reanimated] String transform is currently unsupported.');
-  }
-
-  if (!Array.isArray(style)) {
-    return style.transform;
-  }
-
-  // Only last transform should be considered
-  for (let i = style.length - 1; i >= 0; --i) {
-    if (style[i]?.transform) {
-      return style[i].transform;
-    }
-  }
-}
-
 export function getProcessedConfig(
   animationName: string,
   animationType: LayoutAnimationType,
@@ -144,8 +120,7 @@ export function saveSnapshot(element: HTMLElement) {
 
 export function setElementAnimation(
   element: HTMLElement,
-  animationConfig: AnimationConfig,
-  existingTransform?: TransformsStyle['transform']
+  animationConfig: AnimationConfig
 ) {
   const { animationName, duration, delay, easing } = animationConfig;
 
@@ -174,7 +149,6 @@ export function setElementAnimation(
     }
 
     element.addEventListener('animationcancel', animationCancelHandler);
-    element.style.transform = convertTransformToString(existingTransform);
   };
 
   if (!(animationName in Animations)) {
@@ -185,8 +159,7 @@ export function setElementAnimation(
 export function handleLayoutTransition(
   element: HTMLElement,
   animationConfig: AnimationConfig,
-  transitionData: TransitionData,
-  existingTransform: TransformsStyle['transform'] | undefined
+  transitionData: TransitionData
 ) {
   const { animationName } = animationConfig;
 
@@ -209,20 +182,10 @@ export function handleLayoutTransition(
 
   animationConfig.animationName = TransitionGenerator(
     animationType,
-    transitionData,
-    existingTransform
+    transitionData
   );
 
-  const transformCopy = existingTransform
-    ? structuredClone(existingTransform)
-    : [];
-
-  // @ts-ignore `existingTransform` cannot be string because in that case
-  // we throw error in `extractTransformFromStyle`
-  transformCopy.push(transitionData);
-  element.style.transform = convertTransformToString(transformCopy);
-
-  setElementAnimation(element, animationConfig, existingTransform);
+  setElementAnimation(element, animationConfig);
 }
 
 function getElementScrollValue(element: HTMLElement): ScrollOffsets {
