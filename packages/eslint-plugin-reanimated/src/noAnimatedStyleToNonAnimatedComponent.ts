@@ -1,4 +1,6 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+// TODO: FIX ME
+// eslint-disable-next-line import/no-unresolved
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
@@ -43,13 +45,14 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
             styleValue === null ||
             styleValue.type === AST_NODE_TYPES.Literal
           ) {
-            return; //incorrect styles
+            return; // incorrect styles
           }
 
           if (styleValue.type === AST_NODE_TYPES.JSXSpreadChild) {
             return; // Ignore this for now (and maybe forever, since its not a common use case)
           }
 
+          // @ts-expect-error TODO: FIX ME
           const styleExpression = styleValue.expression;
           switch (styleExpression.type) {
             case AST_NODE_TYPES.Identifier: // style={myVariable}
@@ -118,10 +121,10 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
           const properties = styleExpression.properties;
           properties.forEach((property) => {
             if (property.type === AST_NODE_TYPES.SpreadElement) {
-              return; //Ignore spread elements
+              return; // Ignore spread elements
             }
 
-            if (property.value.type === 'Identifier') {
+            if (property.value.type === AST_NODE_TYPES.Identifier) {
               const variableName = property.value.name;
               if (isVariableDefinedAs(variableName, 'useSharedValue')) {
                 const propertyName =
@@ -144,13 +147,13 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
           styleExpression: TSESTree.ArrayExpression
         ) {
           const arrayNodes = styleExpression.elements;
-          arrayNodes.forEach((node) => {
-            if (node?.type === 'Identifier') {
-              checkIdentifierNodeForBeingAnimated(node);
-            } else if (node?.type === 'ArrayExpression') {
-              checkArrayNodeForBeingAnimated(node);
-            } else if (node?.type === 'ObjectExpression') {
-              checkObjectNodeForBeingAnimated(node);
+          arrayNodes.forEach((arrayNode) => {
+            if (arrayNode?.type === AST_NODE_TYPES.Identifier) {
+              checkIdentifierNodeForBeingAnimated(arrayNode);
+            } else if (arrayNode?.type === AST_NODE_TYPES.ArrayExpression) {
+              checkArrayNodeForBeingAnimated(arrayNode);
+            } else if (arrayNode?.type === AST_NODE_TYPES.ObjectExpression) {
+              checkObjectNodeForBeingAnimated(arrayNode);
             }
           });
         }

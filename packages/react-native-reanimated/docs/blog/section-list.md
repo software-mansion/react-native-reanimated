@@ -10,7 +10,7 @@ import CollapsibleCode from '@site/src/components/CollapsibleCode';
 
 Section lists allow you to organize long lists of content by dividing them with headings.
 
-<InteractiveExample src={SectionListSrc} component={<SectionList />} />
+<InteractiveExample src={SectionListSrc} component={SectionList} />
 
 The primary component, **SectionList**, acts as the main orchestrator of the entire Section List interface. It coordinates the rendering of the table of contents and individual content sections.
 
