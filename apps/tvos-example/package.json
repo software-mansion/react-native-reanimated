@@ -1,12 +1,13 @@
 {
-  "name": "reanimated-tvos-example",
+  "name": "tvos-example",
   "version": "0.0.1",
   "private": true,
   "scripts": {
     "android": "expo run:android",
     "ios": "expo run:ios",
     "tvos": "expo run:ios --scheme TVOSExample-tvOS --device \"Apple TV\"",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write --list-different .",
     "start": "expo start",
     "test": "jest"
   },
