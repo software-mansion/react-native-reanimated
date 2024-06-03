@@ -121,7 +121,7 @@ import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
 import HabitsExample from './LayoutAnimations/HabitsExample';
 import MemoExample from './MemoExample';
-import PerformanceMonitorExample from './PerfomanceMonitorExample';
+import PerformanceMonitorExample from './PerformanceMonitorExample';
 import ScreenTransitionExample from './ScreenTransitionExample';
 import ComposedHandlerConditionalExample from './ComposedHandlerConditionalExample';
 import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEventsExample';
@@ -249,6 +249,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📺',
     title: 'Screen transition',
     screen: ScreenTransitionExample,
+    missingOnFabric: true,
   },
 
   // Basic examples
