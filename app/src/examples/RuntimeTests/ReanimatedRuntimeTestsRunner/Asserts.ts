@@ -1,5 +1,10 @@
-import { RUNTIME_TEST_ERRORS } from './stringFormatUtils';
 import { TestCase, TestSuite } from './types';
+
+const RUNTIME_TEST_ERRORS = {
+  UNDEFINED_TEST_SUITE: 'Undefined test suite context',
+  UNDEFINED_TEST_CASE: 'Undefined test case context',
+  NO_MOCKED_TIMESTAMP: "Seems that you've forgot to call `mockAnimationTimer()`",
+};
 
 export function assertMockedAnimationTimestamp(timestamp: number | undefined): asserts timestamp is number {
   'worklet';

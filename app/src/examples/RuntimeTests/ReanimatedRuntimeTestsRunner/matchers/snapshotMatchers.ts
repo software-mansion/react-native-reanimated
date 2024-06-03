@@ -1,4 +1,4 @@
-import { appendWhiteSpaceToMatchLength, color } from '../stringFormatUtils';
+import { appendWhiteSpaceToMatchLength, green, red } from '../stringFormatUtils';
 import { OperationUpdate, ComparisonMode, TestValue } from '../types';
 import { getComparator } from './Comparators';
 
@@ -7,12 +7,9 @@ export type MultiViewSnapshot = Record<number, SingleViewSnapshot>;
 export type Snapshot = SingleViewSnapshot | MultiViewSnapshot;
 
 function formatSnapshotErrorMessage(jsValue: TestValue, nativeValue: TestValue, propName: string, index: number) {
-  const expected = color(jsValue, 'green');
-  const received = color(nativeValue, 'red');
-  return `\tIndex ${index} ${propName}\t expected: ${appendWhiteSpaceToMatchLength(
-    expected,
-    30,
-  )} received: ${appendWhiteSpaceToMatchLength(received, 30)}\n`;
+  return `\tIndex ${index} ${propName}\t expected: ${appendWhiteSpaceToMatchLength(green(jsValue), 30)} received: ${red(
+    appendWhiteSpaceToMatchLength(JSON.stringify(nativeValue), 30),
+  )}\n`;
 }
 
 function compareJsAndNativeSnapshot(
@@ -37,13 +34,11 @@ function compareJsAndNativeSnapshot(
   let errorString = '';
   const jsSnapshot = jsSnapshots[i];
   const nativeSnapshot = nativeSnapshots[i + 1];
-  const keys = Object.keys(jsSnapshot);
+  const keys = Object.keys(jsSnapshot) as Array<keyof OperationUpdate>;
   for (const key of keys) {
-    const typedKey = key as keyof OperationUpdate;
-    const jsValue = jsSnapshot[typedKey];
-    const nativeValue = nativeSnapshot[typedKey];
+    const jsValue = jsSnapshot[key];
+    const nativeValue = nativeSnapshot[key];
     const isEqual = getComparator(ComparisonMode.AUTO);
-
     const expectMismatch = jsValue < 0 && expectNegativeMismatch;
     const valuesAreMatching = isEqual(jsValue, nativeValue);
     if ((!valuesAreMatching && !expectMismatch) || (valuesAreMatching && expectMismatch)) {
@@ -64,40 +59,38 @@ function compareJsAndNativeSnapshot(
       It means that JS snapshot is negative and the native one is positive, which is a valid behavior.
       Set this property to true to expect all comparisons with negative value of JS snapshot **NOT** to match.
    */
-function compareNativeSnapshotArraysAndGetErrorMessage(
+function compareSingleViewNativeSnapshots(
   nativeSnapshots: SingleViewSnapshot,
   jsUpdates: Array<OperationUpdate>,
   expectNegativeMismatch = false,
 ): string | undefined {
   if (jsUpdates.length !== nativeSnapshots.length - 1 && jsUpdates.length !== nativeSnapshots.length) {
-    return `Expected ${jsUpdates.length} snapshots, but received ${nativeSnapshots.length - 1} snapshots\n`;
+    return `Expected ${green(jsUpdates.length)} snapshots, but received ${red(nativeSnapshots.length - 1)} snapshots\n`;
   }
   let errorString = '';
-
   for (let i = 0; i < jsUpdates.length - 1; i++) {
     errorString += compareJsAndNativeSnapshot(jsUpdates, nativeSnapshots, i, expectNegativeMismatch);
   }
   return errorString === '' ? undefined : errorString;
 }
 
-function compareSnapshotArraysAndGetErrorMessage(
+function compareSingleViewJsSnapshots(
   expectedSnapshots: SingleViewSnapshot,
   capturedSnapshots: SingleViewSnapshot,
 ): string | undefined {
   if (expectedSnapshots.length !== capturedSnapshots.length) {
-    const greenExpected = color(expectedSnapshots.length, 'green');
-    const redCaptured = color(expectedSnapshots.length, 'red');
-    return `Expected ${greenExpected} snapshots, but received ${redCaptured} snapshots\n`;
+    return `Expected ${green(expectedSnapshots.length)} snapshots, but received ${red(
+      expectedSnapshots.length,
+    )} snapshots\n`;
   }
-
   let errorString = '';
   expectedSnapshots.forEach((expectedSnapshots: OperationUpdate, index: number) => {
     const capturedSnapshot = capturedSnapshots[index];
     const isEquals = getComparator(ComparisonMode.AUTO);
     if (!isEquals(expectedSnapshots, capturedSnapshot)) {
-      const expected = color(`${JSON.stringify(expectedSnapshots)}`, 'green');
-      const received = color(`${JSON.stringify(capturedSnapshot)}`, 'red');
-      errorString += `\tAt index ${index}:\n\t\texpected: ${expected}\n\t\treceived: ${received}\n`;
+      errorString += `\tAt index ${index}:\n\t\texpected: ${green(expectedSnapshots)}\n\t\treceived: ${red(
+        capturedSnapshot,
+      )}\n`;
     }
   });
   if (errorString !== '') {
@@ -106,7 +99,7 @@ function compareSnapshotArraysAndGetErrorMessage(
   return;
 }
 
-export function getSnapshotMismatchError(
+export function compareSnapshots(
   expectedSnapshots: SingleViewSnapshot | Record<number, SingleViewSnapshot>,
   capturedSnapshots: SingleViewSnapshot | Record<number, SingleViewSnapshot>,
   native: boolean,
@@ -114,16 +107,19 @@ export function getSnapshotMismatchError(
 ): string | null {
   let errorMessage = '';
 
-  const compareSingleViewSnapshot = (expected: SingleViewSnapshot, captured: SingleViewSnapshot) => {
+  const compareSingleViewSnapshots = (expected: SingleViewSnapshot, captured: SingleViewSnapshot) => {
     return native
-      ? compareNativeSnapshotArraysAndGetErrorMessage(expected, captured, expectNegativeMismatch)
-      : compareSnapshotArraysAndGetErrorMessage(expected, captured);
+      ? compareSingleViewNativeSnapshots(expected, captured, expectNegativeMismatch)
+      : compareSingleViewJsSnapshots(expected, captured);
   };
+
   if (Array.isArray(expectedSnapshots)) {
     if (!Array.isArray(capturedSnapshots)) {
-      return `Expected snapshots of only one view, received snapshots of ${Object.keys(capturedSnapshots).length}`;
+      return `Expected snapshots of ${green('only one')} view, received snapshots of ${red(
+        Object.keys(capturedSnapshots).length,
+      )}`;
     } else {
-      const err = compareSingleViewSnapshot(expectedSnapshots, capturedSnapshots);
+      const err = compareSingleViewSnapshots(expectedSnapshots, capturedSnapshots);
       if (err) {
         errorMessage = 'Snapshot mismatch: \n' + err;
       }
@@ -135,14 +131,14 @@ export function getSnapshotMismatchError(
     const capturedViewNum = Object.keys(capturedSnapshots).length;
 
     if (Array.isArray(capturedSnapshots)) {
-      return `Expected snapshots of ${expectedViewNum} views, received only one`;
+      return `Expected snapshots of ${green(expectedViewNum)} views, received only ${red('one')}`;
     } else {
       if (expectedViewNum !== capturedViewNum) {
-        return `Expected snapshots of ${expectedViewNum} views, received ${capturedViewNum}`;
+        return `Expected snapshots of ${green(expectedViewNum)} views, received ${red(capturedViewNum)}`;
       }
       //order of view in snapshots is constant, so we can compare them one by one
       for (let i = 0; i < expectedViewNum; i++) {
-        const viewErrorMessage = compareSingleViewSnapshot(expectedSnapshots[i], capturedSnapshots[i]);
+        const viewErrorMessage = compareSingleViewSnapshots(expectedSnapshots[i], capturedSnapshots[i]);
         if (viewErrorMessage) {
           errorMessage += `Snapshot mismatch for view ${i}: \n` + viewErrorMessage;
         }

@@ -1,4 +1,4 @@
-import { color } from '../stringFormatUtils';
+import { cyan, green, red, yellow } from '../stringFormatUtils';
 import { ComparisonMode, TestValue, TrackerCallCount } from '../types';
 import { getComparator } from './Comparators';
 
@@ -30,14 +30,11 @@ export const toBeMatcher: Matcher<ToBeArgs> = (currentValue, negation, expectedV
       : ComparisonMode.AUTO;
 
   const isEqual = getComparator(comparisonMode);
-
-  const coloredExpected = color(expectedValue, 'green');
-  const coloredReceived = color(currentValue, 'red');
-  const coloredMode = color(comparisonMode, 'yellow');
-
   return {
     pass: isEqual(expectedValue, currentValue),
-    message: `Expected${negation ? ' NOT' : ''} ${coloredExpected} received ${coloredReceived}, mode: ${coloredMode}`,
+    message: `Expected${negation ? ' NOT' : ''} ${green(expectedValue)} received ${red(currentValue)}, mode: ${yellow(
+      comparisonMode,
+    )}`,
   };
 };
 
@@ -51,59 +48,44 @@ export const toBeWithinRangeMatcher: Matcher<ToBeWithinRangeArgs> = (
   const validInputTypes = typeof minimumValue === 'number' && typeof maximumValue === 'number';
   const isWithinRange = Number(minimumValue) <= currentValueAsNumber && currentValueAsNumber <= Number(maximumValue);
 
-  const coloredExpected = color(`[${minimumValue}, ${maximumValue}]`, 'green');
-  const coloredReceived = color(currentValue, 'red');
-
   return {
     pass: isWithinRange && validInputTypes,
-    message: `Expected the value ${
-      negation ? ' NOT' : ''
-    }to be in range ${coloredExpected} received ${coloredReceived}`,
+    message: `Expected the value ${negation ? ' NOT' : ''}to be in range ${green(
+      `[${minimumValue}, ${maximumValue}]`,
+    )} received ${red(currentValue)}`,
+  };
+};
+
+const toBeCalledOnThreadMatcher = (
+  currentValue: TestValue,
+  negation: boolean,
+  times: number,
+  thread: 'ALL' | 'JS' | 'UI',
+) => {
+  assertValueIsCallTracker(currentValue);
+  const { onUI, onJS } = currentValue;
+  const callsCount = {
+    ALL: onUI + onJS,
+    JS: onJS,
+    UI: onUI,
+  }[thread];
+
+  return {
+    pass: callsCount === times,
+    message: `Expected ${cyan(currentValue.name)}${negation ? ' NOT' : ''} to be called ${green(times)} times${
+      thread === 'ALL' ? '' : cyan(`on ${thread} thread`)
+    }, but was called ${red(callsCount)} times`,
   };
 };
 
 export const toBeCalledMatcher: Matcher<ToBeCalledArgs> = (currentValue, negation, times) => {
-  assertValueIsCallTracker(currentValue);
-  const callsCount = currentValue.onUI + currentValue.onJS;
-  const name = color(currentValue.name, 'cyan');
-  const expected = color(times, 'green');
-  const received = color(callsCount, 'red');
-  return {
-    pass: callsCount === times,
-    message: `Expected ${name}${
-      negation ? ' NOT' : ''
-    } to be called ${expected} times, but was called ${received} times`,
-  };
+  return toBeCalledOnThreadMatcher(currentValue, negation, times, 'ALL');
 };
 
 export const toBeCalledUIMatcher: Matcher<ToBeCalledArgs> = (currentValue, negation, times) => {
-  assertValueIsCallTracker(currentValue);
-  const callsCount = currentValue.onUI;
-  const name = color(currentValue.name, 'cyan');
-  const threadName = color('UI thread', 'cyan');
-  const expected = color(times, 'green');
-  const received = color(callsCount, 'red');
-
-  return {
-    pass: callsCount === times,
-    message: `Expected ${name}${
-      negation ? ' NOT' : ''
-    } to be called ${expected} times on ${threadName}, but was called ${received} times`,
-  };
+  return toBeCalledOnThreadMatcher(currentValue, negation, times, 'UI');
 };
 
 export const toBeCalledJSMatcher: Matcher<ToBeCalledArgs> = (currentValue, negation, times) => {
-  assertValueIsCallTracker(currentValue);
-  const callsCount = currentValue.onJS;
-  const name = color(currentValue.name, 'cyan');
-  const threadName = color('JS thread', 'cyan');
-  const expected = color(times, 'green');
-  const received = color(callsCount, 'red');
-
-  return {
-    pass: callsCount === times,
-    message: `Expected ${name}${
-      negation ? ' NOT' : ''
-    } to be called ${expected} times on ${threadName}, but was called ${received} times`,
-  };
+  return toBeCalledOnThreadMatcher(currentValue, negation, times, 'JS');
 };

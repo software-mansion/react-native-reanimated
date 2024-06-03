@@ -1,11 +1,5 @@
 import { NullableTestValue } from './types';
 
-export const RUNTIME_TEST_ERRORS = {
-  UNDEFINED_TEST_SUITE: 'Undefined test suite context',
-  UNDEFINED_TEST_CASE: 'Undefined test case context',
-  NO_MOCKED_TIMESTAMP: "Seems that you've forgot to call `mockAnimationTimer()`",
-};
-
 export function indentNestingLevel(nestingLevel: number) {
   return `  ${'   '.repeat(nestingLevel)}`;
 }
@@ -17,18 +11,37 @@ export function appendWhiteSpaceToMatchLength(message: string | number, length: 
   return `${messageStr}${' '.repeat(indentSize)}`;
 }
 
-export function color(value: NullableTestValue, color: 'yellow' | 'cyan' | 'green' | 'red' | 'gray' | 'orange') {
+export function color(value: NullableTestValue, color: 'cyan' | 'gray' | 'green' | 'yellow' | 'red' | 'orange') {
   const COLOR_CODES = {
-    red: '\x1b[91m',
-    green: '\x1b[92m',
-    yellow: '\x1b[93m',
     cyan: '\x1b[36m',
     gray: '\x1b[38;5;242m',
+    green: '\x1b[92m',
+    yellow: '\x1b[93m',
+    red: '\x1b[91m',
     orange: '\x1b[38;5;208m',
     reset: '\x1b[0m',
   };
   const stringValue = typeof value === 'object' ? JSON.stringify(value) : value?.toString();
   return `${COLOR_CODES[color]}${stringValue}${COLOR_CODES.reset}`;
+}
+
+export function cyan(x: NullableTestValue) {
+  return color(x, 'cyan');
+}
+export function gray(x: NullableTestValue) {
+  return color(x, 'gray');
+}
+export function green(x: NullableTestValue) {
+  return color(x, 'green');
+}
+export function yellow(x: NullableTestValue) {
+  return color(x, 'yellow');
+}
+export function red(x: NullableTestValue) {
+  return color(x, 'red');
+}
+export function orange(x: NullableTestValue) {
+  return color(x, 'orange');
 }
 
 export function applyMarkdown(template: string) {

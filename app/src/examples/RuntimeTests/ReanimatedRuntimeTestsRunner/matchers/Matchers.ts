@@ -9,7 +9,7 @@ import {
   Matcher,
   MatcherArguments,
 } from './rawMatchers';
-import { SingleViewSnapshot, getSnapshotMismatchError } from './snapshotMatchers';
+import { SingleViewSnapshot, compareSnapshots } from './snapshotMatchers';
 
 export class Matchers {
   private _negation = false;
@@ -37,7 +37,7 @@ export class Matchers {
 
   public toMatchSnapshots(expectedSnapshots: SingleViewSnapshot | Record<number, SingleViewSnapshot>) {
     const capturedSnapshots = this._currentValue as SingleViewSnapshot | Record<number, SingleViewSnapshot>;
-    const mismatchError = getSnapshotMismatchError(expectedSnapshots, capturedSnapshots, false);
+    const mismatchError = compareSnapshots(expectedSnapshots, capturedSnapshots, false);
     if (mismatchError) {
       this._testCase.errors.push(mismatchError);
     }
@@ -47,7 +47,7 @@ export class Matchers {
     expectNegativeMismatch = false,
   ) {
     const capturedSnapshots = this._currentValue as SingleViewSnapshot | Record<number, SingleViewSnapshot>;
-    const mismatchError = getSnapshotMismatchError(expectedSnapshots, capturedSnapshots, true, expectNegativeMismatch);
+    const mismatchError = compareSnapshots(expectedSnapshots, capturedSnapshots, true, expectNegativeMismatch);
     if (mismatchError) {
       this._testCase.errors.push(mismatchError);
     }
