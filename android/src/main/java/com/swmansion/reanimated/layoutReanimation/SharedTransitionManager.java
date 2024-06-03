@@ -6,8 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 
-import androidx.fragment.app.Fragment;
-
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.PixelUtil;
@@ -199,6 +197,13 @@ public class SharedTransitionManager {
   }
 
   protected void onScreenWillDisappear() {
+    if (!mTagsToCleanup.isEmpty()) {
+      for (Integer tag : mTagsToCleanup) {
+        mNativeMethodsHolder.clearAnimationConfig(tag);
+      }
+      mTagsToCleanup.clear();
+    }
+
     if (!mIsTransitionPrepared) {
       return;
     }
@@ -211,11 +216,6 @@ public class SharedTransitionManager {
     }
 
     startPreparedTransitions();
-
-    for (Integer tag : mTagsToCleanup) {
-      mNativeMethodsHolder.clearAnimationConfig(tag);
-    }
-    mTagsToCleanup.clear();
   }
 
   private boolean tryStartSharedTransitionForViews(
@@ -277,15 +277,8 @@ public class SharedTransitionManager {
         continue;
       }
 
-      View siblingView = null;
-      try {
-        siblingView = reanimatedNativeHierarchyManager.resolveView(targetViewTag);
-      } catch (IllegalViewOperationException e){
-        // TODO: figure out why this happens
-        continue;
-      }
-
-      siblingView = tabNavigatorWorkaround(sharedView, siblingView);
+      View siblingView = reanimatedNativeHierarchyManager.resolveView(targetViewTag);
+      siblingView = maybeOverrideSiblingForTabNavigator(sharedView, siblingView);
 
       View viewSource, viewTarget;
       if (addedNewScreen) {
@@ -405,7 +398,7 @@ public class SharedTransitionManager {
     return sharedElements;
   }
 
-  View tabNavigatorWorkaround(View sharedView, View siblingView) {
+  View maybeOverrideSiblingForTabNavigator(View sharedView, View siblingView) {
     View maybeTabNavigatorForSharedView = getTabNavigator(sharedView);
 
     if (maybeTabNavigatorForSharedView == null) {

@@ -1,6 +1,7 @@
 package com.swmansion.reanimated.layoutReanimation;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class TabNavigatorObserver {
@@ -23,14 +25,19 @@ public class TabNavigatorObserver {
     mReaLayoutAnimator = reaLayoutAnimator;
   }
 
-  public void handleScreenContainerUpdate(View screen) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-    Class<?> screenClass = screen.getClass();
-    Method getScreenFragment = screenClass.getMethod("getFragment");
-    Fragment fragment = (Fragment)getScreenFragment.invoke(screen);
-    int fragmentTag = fragment.getId();
-    if (!mFragmentsWithListenerRegistry.contains(fragmentTag)) {
-      mFragmentsWithListenerRegistry.add(fragmentTag);
-      fragment.getParentFragmentManager().registerFragmentLifecycleCallbacks(new FragmentLifecycleCallbacks(fragment), true);
+  public void handleScreenContainerUpdate(View screen) {
+    try {
+      Class<?> screenClass = screen.getClass();
+      Method getScreenFragment = screenClass.getMethod("getFragment");
+      Fragment fragment = (Fragment) getScreenFragment.invoke(screen);
+      int fragmentTag = fragment.getId();
+      if (!mFragmentsWithListenerRegistry.contains(fragmentTag)) {
+        mFragmentsWithListenerRegistry.add(fragmentTag);
+        fragment.getParentFragmentManager().registerFragmentLifecycleCallbacks(new FragmentLifecycleCallbacks(fragment), true);
+      }
+    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+      String message = e.getMessage() != null ? e.getMessage() : "Unable to get screen fragment";
+      Log.e("[Reanimated]", message);
     }
   }
 
