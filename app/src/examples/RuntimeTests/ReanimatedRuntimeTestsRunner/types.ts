@@ -98,7 +98,8 @@ export type TestValue =
   | Record<string, unknown>
   | null
   | undefined
-  | boolean;
+  | boolean
+  | OperationUpdate;
 
 export type NullableTestValue = TestValue | null | undefined;
 

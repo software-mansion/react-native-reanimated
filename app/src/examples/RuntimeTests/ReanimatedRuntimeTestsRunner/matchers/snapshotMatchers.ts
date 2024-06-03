@@ -2,13 +2,9 @@ import { appendWhiteSpaceToMatchLength, color } from '../stringFormatUtils';
 import { OperationUpdate, ComparisonMode, TestValue } from '../types';
 import { getComparator } from './Comparators';
 
-export type SingleViewSnapshot = Array<Record<string, unknown>>;
-
-// function formatMismatchLengthErrorMessage(expectedLength: number, receivedLength: number) {
-//   const expected = color(expectedLength, 'green');
-//   const received = color(receivedLength, 'red');
-//   return `Expected ${expected} snapshots, but received ${received} snapshots\n`;
-// }
+export type SingleViewSnapshot = Array<OperationUpdate>;
+export type MultiViewSnapshot = Record<number, SingleViewSnapshot>;
+export type Snapshot = SingleViewSnapshot | MultiViewSnapshot;
 
 function formatSnapshotErrorMessage(jsValue: TestValue, nativeValue: TestValue, propName: string, index: number) {
   const expected = color(jsValue, 'green');
@@ -95,7 +91,7 @@ function compareSnapshotArraysAndGetErrorMessage(
   }
 
   let errorString = '';
-  expectedSnapshots.forEach((expectedSnapshots: Record<string, unknown>, index: number) => {
+  expectedSnapshots.forEach((expectedSnapshots: OperationUpdate, index: number) => {
     const capturedSnapshot = capturedSnapshots[index];
     const isEquals = getComparator(ComparisonMode.AUTO);
     if (!isEquals(expectedSnapshots, capturedSnapshot)) {

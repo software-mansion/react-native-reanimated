@@ -65,7 +65,7 @@ export const toBeWithinRangeMatcher: Matcher<ToBeWithinRangeArgs> = (
 export const toBeCalledMatcher: Matcher<ToBeCalledArgs> = (currentValue, negation, times) => {
   assertValueIsCallTracker(currentValue);
   const callsCount = currentValue.onUI + currentValue.onJS;
-  const name = color(currentValue.name, 'green');
+  const name = color(currentValue.name, 'cyan');
   const expected = color(times, 'green');
   const received = color(callsCount, 'red');
   return {
@@ -79,7 +79,7 @@ export const toBeCalledMatcher: Matcher<ToBeCalledArgs> = (currentValue, negatio
 export const toBeCalledUIMatcher: Matcher<ToBeCalledArgs> = (currentValue, negation, times) => {
   assertValueIsCallTracker(currentValue);
   const callsCount = currentValue.onUI;
-  const name = color(currentValue.name, 'green');
+  const name = color(currentValue.name, 'cyan');
   const threadName = color('UI thread', 'cyan');
   const expected = color(times, 'green');
   const received = color(callsCount, 'red');
@@ -95,7 +95,7 @@ export const toBeCalledUIMatcher: Matcher<ToBeCalledArgs> = (currentValue, negat
 export const toBeCalledJSMatcher: Matcher<ToBeCalledArgs> = (currentValue, negation, times) => {
   assertValueIsCallTracker(currentValue);
   const callsCount = currentValue.onJS;
-  const name = color(currentValue.name, 'green');
+  const name = color(currentValue.name, 'cyan');
   const threadName = color('JS thread', 'cyan');
   const expected = color(times, 'green');
   const received = color(callsCount, 'red');

@@ -21,6 +21,7 @@ import {
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { EasingSnapshots } from './withTiming.snapshot';
 import { ErrorBoundary } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsRunner';
+import { SingleViewSnapshot } from '../../../ReanimatedRuntimeTestsRunner/matchers/snapshotMatchers';
 
 const ActiveAnimatedComponent = ({ easing }: { easing: EasingFunction | EasingFunctionFactory | undefined }) => {
   const widthSV = useSharedValue(0);
@@ -81,7 +82,7 @@ async function getSnapshotUpdates(easingFn: EasingFunction | EasingFunctionFacto
   // 1. Slightly increase sharedValue
   // 2. Once the sharedValue changed update the style
   // Therefore the first frame is not recorded and we have to hardcode it
-  const passiveUpdates = [{ width: 0 }, ...updatesContainerPassive.getUpdates()];
+  const passiveUpdates = [{ width: 0 }, ...(updatesContainerPassive.getUpdates() as SingleViewSnapshot)];
 
   return [activeUpdates, activeNaiveUpdates, passiveUpdates];
 }
