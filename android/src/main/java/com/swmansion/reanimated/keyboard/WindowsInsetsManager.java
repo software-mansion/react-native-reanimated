@@ -45,10 +45,9 @@ public class WindowsInsetsManager {
       return;
     }
 
-    ViewCompat.setOnApplyWindowInsetsListener(
-        currentActivity.getWindow().getDecorView(), this::onApplyWindowInsetsListener);
-    ViewCompat.setWindowInsetsAnimationCallback(
-        currentActivity.getWindow().getDecorView(), keyboardAnimationCallback);
+    View rootView = currentActivity.getWindow().getDecorView();
+    ViewCompat.setOnApplyWindowInsetsListener(rootView, this::onApplyWindowInsetsListener);
+    ViewCompat.setWindowInsetsAnimationCallback(rootView, keyboardAnimationCallback);
   }
 
   public void stopObservingChanges() {
