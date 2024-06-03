@@ -199,7 +199,8 @@ void LayoutAnimationsProxy::handleRemovals(
     std::vector<std::shared_ptr<MutationNode>> &roots) const {
   for (auto it = roots.rbegin(); it != roots.rend(); it++) {
     auto &node = *it;
-    if (!startAnimationsRecursively(node, true, true, filteredMutations)) {
+    if (!startAnimationsRecursively(
+            node, true, true, false, filteredMutations)) {
       filteredMutations.push_back(node->mutation);
       nodeForTag.erase(node->tag);
       node->parent->removeChild(node);
@@ -397,12 +398,15 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
     std::shared_ptr<MutationNode> node,
     bool shouldRemoveSubviewsWithoutAnimations,
     bool shouldAnimate,
+    bool isScreenPop,
     ShadowViewMutationList &mutations) const {
-  shouldAnimate =
-      layoutAnimationsManager_->shouldAnimateExiting(node->tag, shouldAnimate);
   if (isRNSScreen(node)) {
-    shouldAnimate = false;
+    isScreenPop = true;
   }
+
+  shouldAnimate = !isScreenPop &&
+      layoutAnimationsManager_->shouldAnimateExiting(node->tag, shouldAnimate);
+
   bool hasExitAnimation = shouldAnimate &&
       layoutAnimationsManager_->hasLayoutAnimation(
           node->tag, LayoutAnimationType::EXITING);
@@ -430,6 +434,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
                    subNode,
                    shouldRemoveSubviewsWithoutAnimations,
                    shouldAnimate,
+                   isScreenPop,
                    mutations)) {
 #ifdef LAYOUT_ANIMATIONS_LOGS
       LOG(INFO) << "child " << subNode->tag
