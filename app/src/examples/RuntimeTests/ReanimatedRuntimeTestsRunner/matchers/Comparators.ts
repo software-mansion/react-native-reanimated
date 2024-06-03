@@ -6,26 +6,22 @@ const COMPARATORS: {
   [Key: string]: (expected: TestValue, value: TestValue) => boolean;
 } = {
   [ComparisonMode.STRING]: (expected, value) => {
-    return typeof value === typeof expected && value === expected;
+    return typeof expected === 'string' && typeof value === 'string' && value === expected;
   },
 
   [ComparisonMode.NUMBER]: (expected, value) => {
     const bothAreNumbers = typeof value === 'number' && typeof expected === 'number';
-    const bothAreNaN = bothAreNumbers && isNaN(value) && isNaN(expected);
-    return bothAreNaN || (value === expected && typeof value === typeof expected);
+    return bothAreNumbers && (value === expected || (isNaN(value) && isNaN(expected)));
   },
 
   [ComparisonMode.COLOR]: (expected, value) => {
     if (typeof value !== 'string' || typeof expected !== 'string') {
       return false;
     }
-
     const expectedLowerCase = expected.toLowerCase();
-
     const [opaqueColorRe, transparencyColorRe] = [6, 8].map(length => new RegExp(`^#?([A-Fa-f0-9]{${length}})$`));
-
-    const addTransparency = opaqueColorRe.test(expectedLowerCase);
-    const expectedUnified = addTransparency ? `${expectedLowerCase}ff` : expectedLowerCase;
+    const shouldAddTransparency = opaqueColorRe.test(expectedLowerCase);
+    const expectedUnified = shouldAddTransparency ? `${expectedLowerCase}ff` : expectedLowerCase;
 
     if (!transparencyColorRe.test(expectedUnified)) {
       throw Error(`Invalid color format "${expectedUnified}", please use hex color (like #123abc)`);
@@ -60,20 +56,22 @@ const COMPARATORS: {
     if (expected === undefined || value === undefined) {
       return expected === undefined && value === undefined;
     }
-
     if (typeof expected !== 'object' || typeof value !== 'object') {
       return false;
     }
+
     const expectedKeys = Object.keys(expected);
     const valueKeys = Object.keys(value);
     if (expectedKeys.length !== valueKeys.length) {
       return false;
     }
+
     for (const key of expectedKeys) {
       if (!COMPARATORS[ComparisonMode.AUTO](expected[key as keyof typeof expected], value[key as keyof typeof value])) {
         return false;
       }
     }
+
     return true;
   },
 

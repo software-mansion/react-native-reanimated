@@ -134,7 +134,7 @@ export function createUpdatesContainer(testRunner: TestRunner) {
             return [index, value];
           }),
         )
-      : updatesForTag[0]; // In case of recording only one view return an array
+      : updatesForTag[Number(Object.keys(updatesForTag)[0])]; // In case of recording only one view return an array
 
     return updatesForTagUnified;
   }

@@ -1,6 +1,5 @@
-import { getComparator } from './Comparators';
-import { appendWhiteSpaceToMatchLength, color } from '../stringFormatUtils';
-import { ComparisonMode, OperationUpdate, TestCase, TestValue, NullableTestValue } from '../types';
+import { color } from '../stringFormatUtils';
+import { TestCase, TestValue, NullableTestValue } from '../types';
 import {
   toBeMatcher,
   toBeWithinRangeMatcher,
@@ -10,8 +9,7 @@ import {
   Matcher,
   MatcherArguments,
 } from './rawMatchers';
-
-type Snapshot = Array<Record<string, unknown>>;
+import { SingleViewSnapshot, getSnapshotMismatchError } from './snapshotMatchers';
 
 export class Matchers {
   private _negation = false;
@@ -37,176 +35,22 @@ export class Matchers {
   public toBeCalledUI = this.decorateMatcher(toBeCalledUIMatcher);
   public toBeCalledJS = this.decorateMatcher(toBeCalledJSMatcher);
 
-  private compareJsAndNativeSnapshot(
-    jsSnapshots: Array<OperationUpdate>,
-    nativeSnapshots: Array<OperationUpdate>,
-    i: number,
-    expectNegativeMismatch: Boolean,
-  ) {
-    /**
-      The TestRunner can collect two types of snapshots:
-      - JS snapshots: animation updates sent via `_updateProps`
-      - Native snapshots: snapshots obtained from the native side via `getViewProp`
-
-      Updates applied through `_updateProps` are not synchronously applied to the native side.
-      Instead, they are batched and applied at the end of each frame. Therefore, it is not allowed
-      to take a native snapshot immediately after the `_updateProps` call. To address this issue,
-      we need to wait for the next frame before capturing the native snapshot.
-      That's why native snapshots are one frame behind JS snapshots. To account for this delay,
-      one additional native snapshot is taken during the execution of the `getNativeSnapshots` function.
-   */
-
-    let errorString = '';
-    const jsSnapshot = jsSnapshots[i];
-    const nativeSnapshot = nativeSnapshots[i + 1];
-    const keys = Object.keys(jsSnapshot);
-    for (const key of keys) {
-      const typedKey = key as keyof OperationUpdate;
-      const jsValue = jsSnapshot[typedKey];
-      const nativeValue = nativeSnapshot[typedKey];
-      const isEqual = getComparator(ComparisonMode.AUTO);
-
-      const expectMismatch = jsValue < 0 && expectNegativeMismatch;
-      const valuesAreMatching = isEqual(jsValue, nativeValue);
-      if ((!valuesAreMatching && !expectMismatch) || (valuesAreMatching && expectMismatch)) {
-        errorString += this.formatSnapshotErrorMessage(jsValue, nativeValue, key, i);
-      }
+  public toMatchSnapshots(expectedSnapshots: SingleViewSnapshot | Record<number, SingleViewSnapshot>) {
+    const capturedSnapshots = this._currentValue as SingleViewSnapshot | Record<number, SingleViewSnapshot>;
+    const mismatchError = getSnapshotMismatchError(expectedSnapshots, capturedSnapshots, false);
+    if (mismatchError) {
+      this._testCase.errors.push(mismatchError);
     }
-    return errorString;
-  }
-
-  private compareNativeSnapshotArraysAndGetErrorMessage(
-    nativeSnapshots: Snapshot,
-    jsUpdates: Array<OperationUpdate>,
-    expectNegativeMismatch = false,
-  ) {
-    let errorString = '';
-
-    if (jsUpdates.length !== nativeSnapshots.length - 1 && jsUpdates.length !== nativeSnapshots.length) {
-      errorString += `Expected ${jsUpdates.length} snapshots, but received ${nativeSnapshots.length - 1} snapshots\n`;
-    } else {
-      for (let i = 0; i < jsUpdates.length - 1; i++) {
-        errorString += this.compareJsAndNativeSnapshot(jsUpdates, nativeSnapshots, i, expectNegativeMismatch);
-      }
-    }
-
-    if (errorString !== '') {
-      this._testCase.errors.push('Native snapshot mismatch: \n' + errorString);
-    }
-  }
-
-  /**
-      The TestRunner can collect two types of snapshots:
-      - **JS snapshots:** animation updates sent via `_updateProps`
-      - **Native snapshots:** snapshots obtained from the native side via `getViewProp`
-      The purpose of this function is to compare this two suits of snapshots.
-
-      @param expectNegativeMismatch - Some props expose unexpected behavior, when negative.
-      For example negative `width` may render a full-width component.
-      It means that JS snapshot is negative and the native one is positive, which is a valid behavior.
-      Set this property to true to expect all comparisons with negative value of JS snapshot **NOT** to match.
-   */
-  private compareSnapshotArraysAndGetErrorMessage(
-    expectedSnapshots: Snapshot,
-    capturedSnapshots: Snapshot,
-  ): string | undefined {
-    if (expectedSnapshots.length !== capturedSnapshots.length) {
-      return this.formatMismatchLengthErrorMessage(expectedSnapshots.length, capturedSnapshots.length);
-    }
-
-    let errorString = '';
-    expectedSnapshots.forEach((expectedSnapshots: Record<string, unknown>, index: number) => {
-      const capturedSnapshot = capturedSnapshots[index];
-      const isEquals = getComparator(ComparisonMode.AUTO);
-      if (!isEquals(expectedSnapshots, capturedSnapshot)) {
-        const expected = color(`${JSON.stringify(expectedSnapshots)}`, 'green');
-        const received = color(`${JSON.stringify(capturedSnapshot)}`, 'red');
-        errorString += `\tAt index ${index}:\n\t\texpected: ${expected}\n\t\treceived: ${received}\n`;
-      }
-    });
-    if (errorString !== '') {
-      return errorString;
-    }
-    return;
-  }
-
-  private toMatchSnapshotsCommon(
-    expectedSnapshots: Snapshot | Record<number, Snapshot>,
-    native: boolean,
-    expectNegativeMismatch = false,
-  ) {
-    const capturedSnapshots = this._currentValue as Snapshot | Record<number, Snapshot>;
-    let errorMessage = '';
-
-    if (!Array.isArray(expectedSnapshots) && typeof expectedSnapshots === 'object') {
-      const expectedViewNum = Object.keys(expectedSnapshots).length;
-      const capturedViewNum = Object.keys(capturedSnapshots).length;
-
-      if (Array.isArray(capturedSnapshots)) {
-        errorMessage = `Expected snapshots of ${expectedViewNum} views, received only one`;
-      } else {
-        if (expectedViewNum !== capturedViewNum) {
-          errorMessage = `Expected snapshots of ${expectedViewNum} views, received ${capturedViewNum}`;
-        }
-        for (let i = 0; i < expectedViewNum; i++) {
-          const viewErrorMessage = native
-            ? this.compareNativeSnapshotArraysAndGetErrorMessage(
-                expectedSnapshots[i],
-                capturedSnapshots[i],
-                expectNegativeMismatch,
-              )
-            : this.compareSnapshotArraysAndGetErrorMessage(expectedSnapshots[i], capturedSnapshots[i]);
-          //order of view in snapshots is constant, so we can compare them one by one
-          if (viewErrorMessage) {
-            errorMessage += `Snapshot mismatch for view ${i}: \n` + viewErrorMessage;
-          }
-        }
-      }
-    }
-
-    if (Array.isArray(expectedSnapshots)) {
-      if (!Array.isArray(capturedSnapshots) && typeof capturedSnapshots === 'object') {
-        errorMessage = `Expected snapshots of only one view, received snapshots of ${
-          Object.keys(capturedSnapshots).length
-        }`;
-      } else if (Array.isArray(capturedSnapshots)) {
-        const err = native
-          ? this.compareNativeSnapshotArraysAndGetErrorMessage(expectedSnapshots, capturedSnapshots)
-          : this.compareSnapshotArraysAndGetErrorMessage(expectedSnapshots, capturedSnapshots);
-        if (err) {
-          errorMessage = 'Snapshot mismatch: \n' + err;
-        }
-      }
-    }
-
-    if (errorMessage) {
-      this._testCase.errors.push(errorMessage);
-    }
-  }
-
-  public toMatchSnapshots(expectedSnapshots: Snapshot | Record<number, Snapshot>) {
-    this.toMatchSnapshotsCommon(expectedSnapshots, false);
   }
   public toMatchNativeSnapshots(
-    expectedSnapshots: Snapshot | Record<number, Snapshot>,
+    expectedSnapshots: SingleViewSnapshot | Record<number, SingleViewSnapshot>,
     expectNegativeMismatch = false,
   ) {
-    this.toMatchSnapshotsCommon(expectedSnapshots, true, expectNegativeMismatch);
-  }
-
-  private formatSnapshotErrorMessage(jsValue: TestValue, nativeValue: TestValue, propName: string, index: number) {
-    const expected = color(jsValue, 'green');
-    const received = color(nativeValue, 'red');
-    return `\tIndex ${index} ${propName}\t expected: ${appendWhiteSpaceToMatchLength(
-      expected,
-      30,
-    )} received: ${appendWhiteSpaceToMatchLength(received, 30)}\n`;
-  }
-
-  private formatMismatchLengthErrorMessage(expectedLength: number, receivedLength: number) {
-    const expected = color(expectedLength, 'green');
-    const received = color(receivedLength, 'red');
-    return `Expected ${expected} snapshots, but received ${received} snapshots\n`;
+    const capturedSnapshots = this._currentValue as SingleViewSnapshot | Record<number, SingleViewSnapshot>;
+    const mismatchError = getSnapshotMismatchError(expectedSnapshots, capturedSnapshots, true, expectNegativeMismatch);
+    if (mismatchError) {
+      this._testCase.errors.push(mismatchError);
+    }
   }
 }
 

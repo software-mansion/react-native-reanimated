@@ -81,13 +81,12 @@ async function getSnapshotUpdates(easingFn: EasingFunction | EasingFunctionFacto
   // 1. Slightly increase sharedValue
   // 2. Once the sharedValue changed update the style
   // Therefore the first frame is not recorded and we have to hardcode it
-
   const passiveUpdates = [{ width: 0 }, ...updatesContainerPassive.getUpdates()];
 
   return [activeUpdates, activeNaiveUpdates, passiveUpdates];
 }
 
-describe('withTiming snapshots 📸, test EASING', () => {
+describe.only('withTiming snapshots 📸, test EASING', () => {
   describe('Invalid easing', async () => {
     test.failing(
       'Easing imported from react-native throws an error',

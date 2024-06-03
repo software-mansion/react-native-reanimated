@@ -219,12 +219,21 @@ describe('Tests of animations', () => {
     const updatesContainer = await recordAnimationUpdates();
     await render(<AnimatedComponent />);
     await wait(1000);
-    console.log(updatesContainer.getUpdates());
-    console.log(await updatesContainer.getNativeSnapshots());
 
     expect(updatesContainer.getUpdates()).toMatchSnapshots(Snapshots.animation3);
     // @ts-ignore TEMP
     expect(updatesContainer.getUpdates()).toMatchNativeSnapshots(await updatesContainer.getNativeSnapshots());
+  });
+
+  test.only('withTiming - match snapshot- expect error', async () => {
+    await mockAnimationTimer();
+    const updatesContainer = await recordAnimationUpdates();
+    await render(<AnimatedComponent />);
+    await wait(1000);
+
+    expect(updatesContainer.getUpdates()).toMatchSnapshots(Snapshots.animation3[0]);
+    // @ts-ignore TEMP
+    expect(updatesContainer.getUpdates()).toMatchNativeSnapshots(await updatesContainer.getNativeSnapshots()[0]);
   });
 
   test.only('layoutAnimation - entering', async () => {
