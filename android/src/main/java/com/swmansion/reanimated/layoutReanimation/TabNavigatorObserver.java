@@ -11,10 +11,8 @@ import androidx.fragment.app.FragmentManager;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 public class TabNavigatorObserver {
@@ -46,7 +44,7 @@ public class TabNavigatorObserver {
     private final Method getScreen;
     private final Method getActivityState;
     private final Set<Integer> screenTagsWithListener = new HashSet<>();
-    private final List<View> transitionToTrigger = new ArrayList<>();
+    private final List<View> nextTransition = new ArrayList<>();
 
     public FragmentLifecycleCallbacks(Fragment fragment) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
       Class<?> screenFragmentClass = fragment.getClass();
@@ -61,10 +59,10 @@ public class TabNavigatorObserver {
         screenTagsWithListener.add(screen.getId());
         screen.addOnAttachStateChangeListener(new OnAttachStateChangeListener());
         screen.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
-          if (!transitionToTrigger.isEmpty()) {
+          if (!nextTransition.isEmpty()) {
             AnimationsManager animationsManager = mReaLayoutAnimator.getAnimationsManager();
-            animationsManager.navigationTabChanged(transitionToTrigger.get(0), transitionToTrigger.get(1));
-            transitionToTrigger.clear();
+            animationsManager.navigationTabChanged(nextTransition.get(0), nextTransition.get(1));
+            nextTransition.clear();
           }
         });
       }
@@ -92,15 +90,16 @@ public class TabNavigatorObserver {
         }
 
         if (isAttaching) {
-          transitionToTrigger.add(firstScreen);
-          transitionToTrigger.add(screen);
+          nextTransition.add(firstScreen);
+          nextTransition.add(screen);
         } else {
-          transitionToTrigger.add(screen);
-          transitionToTrigger.add(firstScreen);
+          nextTransition.add(screen);
+          nextTransition.add(firstScreen);
         }
         firstScreen = null;
       } catch (IllegalAccessException | InvocationTargetException e) {
-        throw new RuntimeException(e);
+        String message = e.getMessage() != null ? e.getMessage() : "Unable to get screen view";
+        Log.e("[Reanimated]", message);
       }
     }
   }

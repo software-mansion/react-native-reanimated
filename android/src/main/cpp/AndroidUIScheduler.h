@@ -33,7 +33,7 @@ class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
 
   void triggerUI();
 
-  jni::weak_ref<AndroidUIScheduler::javaobject> javaPart_;
+  jni::global_ref<AndroidUIScheduler::javaobject> javaPart_;
   std::shared_ptr<UIScheduler> uiScheduler_;
 
   explicit AndroidUIScheduler(

@@ -34,7 +34,7 @@ class UISchedulerWrapper : public UIScheduler {
 
 AndroidUIScheduler::AndroidUIScheduler(
     jni::alias_ref<AndroidUIScheduler::javaobject> jThis)
-    : javaPart_(jni::make_weak(jThis)),
+    : javaPart_(jni::make_global(jThis)),
       uiScheduler_(
           std::make_shared<UISchedulerWrapper>(jni::make_global(jThis))) {}
 
@@ -49,8 +49,8 @@ void AndroidUIScheduler::triggerUI() {
 
 void AndroidUIScheduler::scheduleTriggerOnUI() {
   static const auto method =
-      javaPart_.lockLocal()->getClass()->getMethod<void()>("scheduleTriggerOnUI");
-  method(javaPart_.lockLocal());
+    javaPart_->getClass()->getMethod<void()>("scheduleTriggerOnUI");
+  method(javaPart_.get());
 }
 
 void AndroidUIScheduler::registerNatives() {
