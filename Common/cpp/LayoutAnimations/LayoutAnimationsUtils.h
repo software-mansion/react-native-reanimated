@@ -68,7 +68,6 @@ struct Node {
   std::shared_ptr<Node> parent;
   Tag tag;
   void removeChild(std::shared_ptr<MutationNode> child);
-  void addChild(std::shared_ptr<MutationNode> child);
   void handleMutation(ShadowViewMutation mutation);
   void insertChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
   explicit Node(Tag tag) : tag(tag) {}

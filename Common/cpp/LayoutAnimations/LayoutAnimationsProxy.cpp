@@ -137,6 +137,7 @@ void LayoutAnimationsProxy::parseRemoveMutations(
   std::unordered_map<Tag, std::vector<std::shared_ptr<MutationNode>>>
       childrenForTag;
 
+  // iterate from the end, so that parents appear before children
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
     auto &mutation = *it;
     if (mutation.type == ShadowViewMutation::Delete) {
@@ -197,6 +198,8 @@ void LayoutAnimationsProxy::parseRemoveMutations(
 void LayoutAnimationsProxy::handleRemovals(
     ShadowViewMutationList &filteredMutations,
     std::vector<std::shared_ptr<MutationNode>> &roots) const {
+  // iterate from the end, so that children
+  // with higher indices appear first in the mutations list
   for (auto it = roots.rbegin(); it != roots.rend(); it++) {
     auto &node = *it;
     if (!startAnimationsRecursively(
@@ -348,6 +351,8 @@ void LayoutAnimationsProxy::endAnimationsRecursively(
     ShadowViewMutationList &mutations) const {
   maybeCancelAnimation(node->tag);
   node->state = DELETED;
+  // iterate from the end, so that children
+  // with higher indices appear first in the mutations list
   for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
     auto &subNode = *it;
     if (subNode->state != DELETED) {
@@ -416,6 +421,8 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
       shouldRemoveSubviewsWithoutAnimations && !hasExitAnimation;
   std::vector<std::shared_ptr<MutationNode>> toBeRemoved;
 
+  // iterate from the end, so that children
+  // with higher indices appear first in the mutations list
   for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
     auto &subNode = *it;
 #ifdef LAYOUT_ANIMATIONS_LOGS
@@ -692,20 +699,6 @@ void Node::removeChild(std::shared_ptr<MutationNode> child) {
       return;
     }
     children[i]->mutation.index--;
-  }
-}
-
-void Node::addChild(std::shared_ptr<MutationNode> child) {
-  bool done = false;
-  for (auto it = children.begin(); it != children.end(); it++) {
-    if ((*it)->mutation.index > child->mutation.index) {
-      children.insert(it, child);
-      done = true;
-      break;
-    }
-  }
-  if (!done) {
-    children.push_back(child);
   }
 }
 
