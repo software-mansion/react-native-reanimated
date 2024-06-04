@@ -54,14 +54,10 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     if (!isLayoutAnimationEnabled()) {
       return super.shouldAnimateLayout(viewToAnimate);
     }
-    // if view parent is null, skip animation: view have been clipped, we don't want animation to
-    // resume when view is re-attached to parent, which is the standard android animation behavior.
+
     // If there's a layout handling animation going on, it should be animated nonetheless since the
     // ongoing animation needs to be updated.
-    if (viewToAnimate == null) {
-      return false;
-    }
-    return (viewToAnimate.getParent() != null);
+    return viewToAnimate != null;
   }
 
   @Override
