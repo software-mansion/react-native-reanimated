@@ -104,7 +104,6 @@ std::atomic<bool> hasPendingBlocks;
       UIViewController *controller = ((REAUIView *)container).reactViewController;
       UIViewController *parentController = ((REAUIView *)container).superview.reactViewController;
       containerIsRootOfViewController = controller != parentController;
-      [originalSelf.animationsManager viewsWillRemove:(NSArray<REAUIView *> *)permanentlyRemovedChildren];
     }
 
     // we check if the container we`re removing from is a root view
@@ -232,14 +231,6 @@ std::atomic<bool> hasPendingBlocks;
       });
     }
   }
-
-  NSMutableArray *affectedViewTags = [NSMutableArray new];
-  for (RCTShadowView *shadowView in affectedShadowViews) {
-    [affectedViewTags addObject:shadowView.reactTag];
-  }
-  RCTExecuteOnMainQueue(^{
-    [originalSelf.animationsManager notifyAboutAffectedViewTags:affectedViewTags];
-  });
 
   // Perform layout (possibly animated)
   return ^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, REAUIView *> *viewRegistry) {

@@ -4,8 +4,8 @@
 
 #if LOAD_SCREENS_HEADERS
 #import <RNScreens/RNSScreen.h>
-#import <RNScreens/RNSScreenStack.h>
 #import <RNScreens/RNSScreenNavigationContainer.h>
+#import <RNScreens/RNSScreenStack.h>
 #endif
 
 #import <RNReanimated/REAUIKit.h>
@@ -19,7 +19,6 @@
 + (int)getScreenType:(REAUIView *)screen;
 + (bool)isRNSScreenType:(REAUIView *)screen;
 + (bool)isStackChanged:(REAUIView *)view;
-+ (REAUIView *)getActiveTab:(REAUIView *)screen;
 + (REAUIView *)findTopScreenInChildren:(REAUIView *)screen;
 + (REAUIView *)getActiveTabForTabNavigator:(REAUIView *)tabNavigator;
 + (bool)isChild:(REAUIView *)child OfScreen:(REAUIView *)screen;

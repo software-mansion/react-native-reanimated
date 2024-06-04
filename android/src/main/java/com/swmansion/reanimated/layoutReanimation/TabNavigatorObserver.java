@@ -3,11 +3,9 @@ package com.swmansion.reanimated.layoutReanimation;
 import android.content.Context;
 import android.util.Log;
 import android.view.View;
-
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -31,7 +29,9 @@ public class TabNavigatorObserver {
       int fragmentTag = fragment.getId();
       if (!mFragmentsWithListenerRegistry.contains(fragmentTag)) {
         mFragmentsWithListenerRegistry.add(fragmentTag);
-        fragment.getParentFragmentManager().registerFragmentLifecycleCallbacks(new FragmentLifecycleCallbacks(fragment), true);
+        fragment
+            .getParentFragmentManager()
+            .registerFragmentLifecycleCallbacks(new FragmentLifecycleCallbacks(fragment), true);
       }
     } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
       String message = e.getMessage() != null ? e.getMessage() : "Unable to get screen fragment";
@@ -46,29 +46,34 @@ public class TabNavigatorObserver {
     private final Set<Integer> screenTagsWithListener = new HashSet<>();
     private final List<View> nextTransition = new ArrayList<>();
 
-    public FragmentLifecycleCallbacks(Fragment fragment) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    public FragmentLifecycleCallbacks(Fragment fragment)
+        throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
       Class<?> screenFragmentClass = fragment.getClass();
       getScreen = screenFragmentClass.getMethod("getScreen");
-      View screen = (View)getScreen.invoke(fragment);
+      View screen = (View) getScreen.invoke(fragment);
       getActivityState = screen.getClass().getMethod("getActivityState");
       addScreenListener(screen);
     }
 
-    private void addScreenListener(View screen) throws InvocationTargetException, IllegalAccessException {
+    private void addScreenListener(View screen)
+        throws InvocationTargetException, IllegalAccessException {
       if (!screenTagsWithListener.contains(screen.getId())) {
         screenTagsWithListener.add(screen.getId());
         screen.addOnAttachStateChangeListener(new OnAttachStateChangeListener());
-        screen.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
-          if (!nextTransition.isEmpty()) {
-            AnimationsManager animationsManager = mReaLayoutAnimator.getAnimationsManager();
-            animationsManager.navigationTabChanged(nextTransition.get(0), nextTransition.get(1));
-            nextTransition.clear();
-          }
-        });
+        screen.addOnLayoutChangeListener(
+            (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+              if (!nextTransition.isEmpty()) {
+                AnimationsManager animationsManager = mReaLayoutAnimator.getAnimationsManager();
+                animationsManager.navigationTabChanged(
+                    nextTransition.get(0), nextTransition.get(1));
+                nextTransition.clear();
+              }
+            });
       }
     }
 
-    public void onFragmentAttached(FragmentManager fragmentManager, Fragment fragment, Context context) {
+    public void onFragmentAttached(
+        FragmentManager fragmentManager, Fragment fragment, Context context) {
       onFragmentUpdate(fragment, true);
     }
 
@@ -78,7 +83,7 @@ public class TabNavigatorObserver {
 
     private void onFragmentUpdate(Fragment fragment, boolean isAttaching) {
       try {
-        View screen = (View)getScreen.invoke(fragment);
+        View screen = (View) getScreen.invoke(fragment);
         if (getActivityState.invoke(screen) == null) {
           return;
         }
@@ -114,5 +119,4 @@ public class TabNavigatorObserver {
       animationsManager.visitNativeTreeAndMakeSnapshot(screen);
     }
   }
-
 }

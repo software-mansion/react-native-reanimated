@@ -6,7 +6,6 @@ import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.ViewManager;
 import com.swmansion.reanimated.ReactNativeUtils;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -133,8 +132,11 @@ public class Snapshot {
         Class<?> screenClass = screen.getClass();
         try {
           Method getContainer = screenClass.getMethod("getContainer");
-          currentView = (View)getContainer.invoke(screen);
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {}
+          currentView = (View) getContainer.invoke(screen);
+        } catch (NoSuchMethodException
+            | InvocationTargetException
+            | IllegalAccessException ignored) {
+        }
       } else if (currentView.getParent() instanceof View) {
         currentView = (View) currentView.getParent();
       } else {

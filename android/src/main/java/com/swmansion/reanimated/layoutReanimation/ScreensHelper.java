@@ -1,7 +1,6 @@
 package com.swmansion.reanimated.layoutReanimation;
 
 import android.view.View;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -14,14 +13,21 @@ public class ScreensHelper {
         return currentView;
       }
       if (currentView.getClass().getSimpleName().equals("Screen")
-              && currentView.getParent() != null
-              && currentView.getParent().getClass().getSimpleName().equals("ScreensCoordinatorLayout")) {
+          && currentView.getParent() != null
+          && currentView
+              .getParent()
+              .getClass()
+              .getSimpleName()
+              .equals("ScreensCoordinatorLayout")) {
         View screen = currentView;
         Class<?> screenClass = screen.getClass();
         try {
           Method getContainer = screenClass.getMethod("getContainer");
-          currentView = (View)getContainer.invoke(screen);
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {}
+          currentView = (View) getContainer.invoke(screen);
+        } catch (NoSuchMethodException
+            | InvocationTargetException
+            | IllegalAccessException ignored) {
+        }
       } else if (currentView.getParent() instanceof View) {
         currentView = (View) currentView.getParent();
       } else {
@@ -51,10 +57,10 @@ public class ScreensHelper {
       Class<?> screenStackClass = stack.getClass();
       try {
         Method getTopScreen = screenStackClass.getMethod("getTopScreen");
-        return (View)getTopScreen.invoke(stack);
-      } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {}
+        return (View) getTopScreen.invoke(stack);
+      } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {
+      }
     }
     return view;
   }
-
 }

@@ -100,17 +100,6 @@
   return false;
 }
 
-+ (REAUIView *)getActiveTab:(REAUIView *)screen
-{
-  NSArray<REAUIView *> *screenTabs = screen.reactSuperview.reactSubviews;
-  for (RNSScreenView *tab in screenTabs) {
-    if (tab.activityState == 2) {
-      return tab;
-    }
-  }
-  return nil;
-}
-
 + (REAUIView *)getActiveTabForTabNavigator:(REAUIView *)tabNavigator
 {
   NSArray<REAUIView *> *screenTabs = tabNavigator.reactSubviews;

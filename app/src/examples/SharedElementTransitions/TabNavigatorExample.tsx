@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, View, Button, Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {
+  NativeStackScreenProps,
   createNativeStackNavigator,
 } from '@react-navigation/native-stack';
 import Animated from 'react-native-reanimated';
@@ -15,13 +16,19 @@ function getStyle(index: number) {
   return styles.box3;
 }
 
-const Screen = ({ navigation, route }) => {
+type ScreenProps = {
+  [key: string]: {
+    id?: number;
+    showButtons?: boolean;
+  };
+};
+const Screen = ({ navigation, route }: NativeStackScreenProps<ScreenProps>) => {
   const id = route.params?.id ?? 0;
   const showButtons = !!route.params?.showButtons;
   return (
     <View style={{ ...styles.container }}>
       <Text>Current id: {id}</Text>
-      {showButtons && id < 3 && (
+      {showButtons && id < 2 && (
         <Button
           title={`Go next ${id + 1}`}
           onPress={() => navigation.push('Details', { id: id + 1 })}
@@ -38,34 +45,34 @@ const Screen = ({ navigation, route }) => {
   );
 };
 
-const createStack = (name: string) => {
+const createStack = () => {
   const Stack = createNativeStackNavigator();
   return () => (
     <Stack.Navigator>
-      <Stack.Screen 
-        name={"Details"}
+      <Stack.Screen
+        name={'Details'}
         initialParams={{ showButtons: true }}
-        component={Screen}
+        component={Screen as React.ComponentType}
       />
     </Stack.Navigator>
   );
 };
 
 const Tab = createBottomTabNavigator();
-const StackA = createStack("Stack A");
-const StackB = createStack("Stack B");
+const StackA = createStack();
+const StackB = createStack();
 
-const TabNavigatorExample = (): JSX.Element => (
-  <Tab.Navigator screenOptions={{ headerShown: false }} >
+const TabNavigatorExample = () => (
+  <Tab.Navigator screenOptions={{ headerShown: false }}>
     <Tab.Screen
       name="A"
       initialParams={{ id: 0 }}
-      component={Screen}
+      component={Screen as React.ComponentType}
     />
     <Tab.Screen
       name="B"
       initialParams={{ id: 1 }}
-      component={Screen}
+      component={Screen as React.ComponentType}
     />
     <Tab.Screen name="C" component={StackA} />
     <Tab.Screen name="D" component={StackB} />
@@ -92,11 +99,6 @@ const styles = StyleSheet.create({
     height: 250,
     backgroundColor: 'red',
     marginLeft: 50,
-  },
-  box4: {
-    width: 200,
-    height: 300,
-    backgroundColor: 'black',
   },
 });
 

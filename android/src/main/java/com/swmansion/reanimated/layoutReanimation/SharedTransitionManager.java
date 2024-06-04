@@ -16,8 +16,6 @@ import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.views.view.ReactViewGroup;
 import com.swmansion.reanimated.Utils;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -307,7 +305,8 @@ public class SharedTransitionManager {
           continue;
         }
         int stackId = sourceStack.getId();
-        ViewGroupManager stackViewManager = (ViewGroupManager)reanimatedNativeHierarchyManager.resolveViewManager(stackId);
+        ViewGroupManager stackViewManager =
+            (ViewGroupManager) reanimatedNativeHierarchyManager.resolveViewManager(stackId);
         boolean isInSameStack = false;
         for (int i = 0; i < stackViewManager.getChildCount(sourceStack); i++) {
           if (stackViewManager.getChildAt(sourceStack, i) == viewTargetScreen) {
@@ -316,7 +315,8 @@ public class SharedTransitionManager {
         }
         if (isInSameStack) {
           ViewGroupManager stackViewGroupManager =
-                  (ViewGroupManager) reanimatedNativeHierarchyManager.resolveViewManager(sourceStack.getId());
+              (ViewGroupManager)
+                  reanimatedNativeHierarchyManager.resolveViewManager(sourceStack.getId());
           int screensCount = stackViewGroupManager.getChildCount(sourceStack);
           if (screensCount < 2) {
             continue;
@@ -327,12 +327,12 @@ public class SharedTransitionManager {
           boolean isValidConfiguration;
           if (addedNewScreen) {
             isValidConfiguration =
-                    secondScreen.getId() == viewSourceScreen.getId()
-                            && topScreen.getId() == viewTargetScreen.getId();
+                secondScreen.getId() == viewSourceScreen.getId()
+                    && topScreen.getId() == viewTargetScreen.getId();
           } else {
             isValidConfiguration =
-                    topScreen.getId() == viewSourceScreen.getId()
-                            && secondScreen.getId() == viewTargetScreen.getId();
+                topScreen.getId() == viewSourceScreen.getId()
+                    && secondScreen.getId() == viewTargetScreen.getId();
           }
           if (!isValidConfiguration) {
             continue;
@@ -752,20 +752,17 @@ public class SharedTransitionManager {
       int[] sharedGroup = mNativeMethodsHolder.getSharedGroup(sharedView.getId());
       for (int i = sharedGroup.length - 1; i >= 0; i--) {
         View targetView = mAnimationsManager.resolveView(sharedGroup[i]);
-        if (ScreensHelper.isChildOfScreen(targetView, newTab)) {
-          Snapshot sourceViewSnapshot = mSnapshotRegistry.get(sharedView.getId());
-          if (sourceViewSnapshot == null) {
-            continue;
-          }
-          SharedElement sharedElement = new SharedElement(
-            sharedView,
-            sourceViewSnapshot,
-            targetView,
-            new Snapshot(targetView)
-          );
-          sharedElements.add(sharedElement);
-          break;
+        if (!ScreensHelper.isChildOfScreen(targetView, newTab)) {
+          continue;
         }
+        Snapshot sourceViewSnapshot = mSnapshotRegistry.get(sharedView.getId());
+        if (sourceViewSnapshot == null) {
+          continue;
+        }
+        SharedElement sharedElement =
+            new SharedElement(sharedView, sourceViewSnapshot, targetView, new Snapshot(targetView));
+        sharedElements.add(sharedElement);
+        break;
       }
     }
     if (sharedElements.isEmpty()) {
@@ -779,7 +776,8 @@ public class SharedTransitionManager {
     }
     setupTransitionContainer();
     reparentSharedViewsForCurrentTransition(sharedElements);
-    startSharedTransition(mSharedElementsWithAnimation, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION);
+    startSharedTransition(
+        mSharedElementsWithAnimation, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION);
   }
 
   private void findSharedViewsForScreen(View view, List<View> sharedViews) {
@@ -789,7 +787,7 @@ public class SharedTransitionManager {
     }
     ViewGroup viewGroup = (ViewGroup) view;
     if (mAnimationsManager.hasAnimationForTag(
-            view.getId(), LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION)) {
+        view.getId(), LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION)) {
       sharedViews.add(view);
     }
     for (int i = 0; i < viewGroup.getChildCount(); i++) {
@@ -797,5 +795,4 @@ public class SharedTransitionManager {
       findSharedViewsForScreen(child, sharedViews);
     }
   }
-
 }

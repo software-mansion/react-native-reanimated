@@ -654,14 +654,14 @@ void NativeProxy::setupLayoutAnimations() {
       });
 
   layoutAnimations_->cthis()->setGetSharedGroupBlock(
-    [weakNativeReanimatedModule](int tag) -> std::vector<int> {
-      if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-        return nativeReanimatedModule->layoutAnimationsManager()
-          .getSharedGroup(tag);
-      } else {
-        return {};
-      }
-    });
+      [weakNativeReanimatedModule](int tag) -> std::vector<int> {
+        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+          return nativeReanimatedModule->layoutAnimationsManager()
+              .getSharedGroup(tag);
+        } else {
+          return {};
+        }
+      });
 }
 
 } // namespace reanimated
