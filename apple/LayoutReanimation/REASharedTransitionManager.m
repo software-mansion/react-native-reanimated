@@ -32,9 +32,7 @@
   BOOL _clearScreen;
   BOOL _isInteractive;
   NSMutableArray<REAUIView *> *_disappearingScreens;
-  NSMutableArray<REASharedElement *> *_sharedTransitionsOnLayoutQueue;
   BOOL _isTabNavigator;
-  REAUIView *_lastTopScreen;
 }
 
 /*
@@ -66,7 +64,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _isAsyncSharedTransitionConfigured = NO;
     _isConfigured = NO;
     _disappearingScreens = [NSMutableArray new];
-    _sharedTransitionsOnLayoutQueue = [NSMutableArray new];
     _isTabNavigator = NO;
     [self swizzleScreensMethods];
   }
@@ -124,7 +121,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
   [self maybeRestartAnimationWithNewLayout];
   [_layoutedSharedViewsTags removeAllObjects];
   [_layoutedSharedViewsFrame removeAllObjects];
-  return;
 }
 
 - (void)configureAsyncSharedTransitionForViews:(NSArray<REAUIView *> *)views
@@ -241,7 +237,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
       }
     } while (siblingView == nil && siblingViewTag != nil);
 
-    siblingView = [self tabNavigatorWorkaround:sharedView siblingView:siblingView];
+    siblingView = [self maybeOverrideSiblingForTabNavigator:sharedView siblingView:siblingView];
 
     if (siblingView == nil) {
       // the sibling of shared view doesn't exist yet
@@ -365,7 +361,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   return newSharedElements;
 }
 
-- (REAUIView *)tabNavigatorWorkaround:(REAUIView *)sharedView siblingView:(REAUIView *)siblingView
+- (REAUIView *)maybeOverrideSiblingForTabNavigator:(REAUIView *)sharedView siblingView:(REAUIView *)siblingView
 {
   REAUIView *maybeTabNavigatorForSharedView = [self getTabNavigator:sharedView];
   REAUIView *maybeTabNavigatorForSiblingView = [self getTabNavigator:siblingView];

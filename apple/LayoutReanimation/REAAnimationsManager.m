@@ -551,11 +551,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   return [[REASnapshot alloc] init:view];
 }
 
-- (REASnapshot *)prepareSnapshotWithAbsolutPositionForView:(REAUIView *)view
-{
-  return [[REASnapshot alloc] initWithAbsolutePosition:view];
-}
-
 - (void)removeAnimationsFromSubtree:(REAUIView *)view
 {
   REANodeFind(view, ^int(id<RCTComponent> view) {
@@ -581,6 +576,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     _enteringViewTargetValues[[view reactTag]] = [[REASnapshot alloc] init:view];
     [self setNewProps:before.values forView:view];
   }
+
   if (_hasAnimationForTag(viewTag, SHARED_ELEMENT_TRANSITION)) {
     if (type == ENTERING) {
       [_sharedTransitionManager notifyAboutNewView:view];

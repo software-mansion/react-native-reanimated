@@ -16,6 +16,5 @@
 - (NSDictionary *)prepareDataForWorklet:(NSMutableDictionary *)currentValues
                            targetValues:(NSMutableDictionary *)targetValues;
 - (void)onScreenRemoval:(REAUIView *)screen stack:(REAUIView *)stack;
-- (void)notifyAboutNewScreenAddedInUIManager;
 
 @end

@@ -1,5 +1,4 @@
 #import <RNReanimated/FeaturesConfig.h>
-#import <RNReanimated/REASharedTransitionManager.h>
 #import <RNReanimated/REASwizzledUIManager.h>
 #import <RNReanimated/REAUIKit.h>
 #import <RNReanimated/REAUtils.h>
