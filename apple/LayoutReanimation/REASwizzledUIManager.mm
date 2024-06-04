@@ -134,9 +134,6 @@ std::atomic<bool> hasPendingBlocks;
   if (!isLayoutAnimationEnabled) {
     return;
   }
-  if ([container isKindOfClass:[REAUIView class]]) {
-    [originalSelf.animationsManager viewsDidRemoved:(NSArray<REAUIView *> *)permanentlyRemovedChildren];
-  }
 
   if (containerIsRootOfViewController) {
     return;

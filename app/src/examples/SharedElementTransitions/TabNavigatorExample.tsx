@@ -16,7 +16,6 @@ function getStyle(index: number) {
 }
 
 const Screen = ({ navigation, route }) => {
-  console.log('Screen', route);
   const id = route.params?.id ?? 0;
   const showButtons = !!route.params?.showButtons;
   return (

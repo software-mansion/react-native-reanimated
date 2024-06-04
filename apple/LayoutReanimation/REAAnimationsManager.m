@@ -583,9 +583,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     _enteringViewTargetValues[[view reactTag]] = [[REASnapshot alloc] init:view];
     [self setNewProps:before.values forView:view];
   }
-  if ([NSStringFromClass([view class]) isEqual:@"RNSScreenView"]) {
-    [_sharedTransitionManager notifyAboutNewScreenAddedInUIManager];
-  }
   if (_hasAnimationForTag(viewTag, SHARED_ELEMENT_TRANSITION)) {
     if (type == ENTERING) {
       [_sharedTransitionManager notifyAboutNewView:view];
@@ -606,11 +603,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)viewsWillRemove:(NSArray<REAUIView *> *)viewsToRemove
 {
   [_sharedTransitionManager viewsWillRemove:viewsToRemove];
-}
-
-- (void)viewsDidRemoved:(NSArray<REAUIView *> *)removedViews
-{
-  [_sharedTransitionManager viewsDidRemoved:removedViews];
 }
 
 - (void)notifyAboutAffectedViewTags:(NSArray<NSNumber *> *)affectedViewTags
