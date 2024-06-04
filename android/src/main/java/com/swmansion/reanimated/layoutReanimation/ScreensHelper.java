@@ -45,15 +45,16 @@ public class ScreensHelper {
     return false;
   }
 
-  public static View getTopScreenForStack(View stack) {
-    if (stack.getClass().getSimpleName().equals("ScreenStack")) {
+  public static View getTopScreenForStack(View view) {
+    if (view.getClass().getSimpleName().equals("ScreenStack")) {
+      View stack = view;
       Class<?> screenStackClass = stack.getClass();
       try {
         Method getTopScreen = screenStackClass.getMethod("getTopScreen");
         return (View)getTopScreen.invoke(stack);
       } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {}
     }
-    return null;
+    return view;
   }
 
 }

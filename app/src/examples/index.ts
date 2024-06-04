@@ -128,6 +128,7 @@ import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEve
 import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMergingExample';
 import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
 import FreezingShareablesExample from './ShareableFreezingExample';
+import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
 
 interface Example {
   icon?: string;
@@ -143,16 +144,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Empty',
     screen: EmptyExample,
   },
-  
-  CardExample: {
-    title: '[SET] Card',
-    screen: CardExample,
-  },
-  CustomTransitionExample: {
-    title: '[SET] Custom transition',
-    screen: CustomTransitionExample,
-  },
-  
   RuntimeTests: {
     icon: '⚙️',
     title: 'RuntimeTestsExample',
@@ -726,6 +717,14 @@ export const EXAMPLES: Record<string, Example> = {
 
   // Shared Element Transitions
 
+  CardExample: {
+    title: '[SET] Card',
+    screen: CardExample,
+  },
+  CustomTransitionExample: {
+    title: '[SET] Custom transition',
+    screen: CustomTransitionExample,
+  },
   LayoutAnimationExample: {
     title: '[SET] Layout Animation',
     screen: LayoutAnimationExample,
@@ -793,4 +792,8 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[SET] Border Radii',
     screen: BorderRadiiExample,
   },
+  TabNavigatorExample: {
+    title: '[SET] Tab Navigator',
+    screen: TabNavigatorExample,
+  }
 } as const;
