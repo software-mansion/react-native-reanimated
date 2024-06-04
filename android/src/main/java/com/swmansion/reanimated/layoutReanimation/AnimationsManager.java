@@ -346,10 +346,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public void setNewProps(
-          Map<String, Object> props,
-          View view,
-          ViewManager viewManager,
-          boolean isPositionAbsolute) {
+      Map<String, Object> props, View view, ViewManager viewManager, boolean isPositionAbsolute) {
     HashMap<String, Float> viewSize = getViewSize(props, view);
     float x = viewSize.get("x");
     float y = viewSize.get("y");
@@ -364,26 +361,25 @@ public class AnimationsManager implements ViewHierarchyObserver {
     updateProps(props, view, viewManager);
   }
 
-  private static HashMap<String, Float> getViewSize(Map<String, Object> props,
-                                                    View view) {
+  private static HashMap<String, Float> getViewSize(Map<String, Object> props, View view) {
     HashMap<String, Float> map = new HashMap<>();
 
     float x =
-            (props.get(Snapshot.ORIGIN_X) != null)
-                    ? ((Double) props.get(Snapshot.ORIGIN_X)).floatValue()
-                    : PixelUtil.toDIPFromPixel(view.getLeft());
+        (props.get(Snapshot.ORIGIN_X) != null)
+            ? ((Double) props.get(Snapshot.ORIGIN_X)).floatValue()
+            : PixelUtil.toDIPFromPixel(view.getLeft());
     float y =
-            (props.get(Snapshot.ORIGIN_Y) != null)
-                    ? ((Double) props.get(Snapshot.ORIGIN_Y)).floatValue()
-                    : PixelUtil.toDIPFromPixel(view.getTop());
+        (props.get(Snapshot.ORIGIN_Y) != null)
+            ? ((Double) props.get(Snapshot.ORIGIN_Y)).floatValue()
+            : PixelUtil.toDIPFromPixel(view.getTop());
     float width =
-            (props.get(Snapshot.WIDTH) != null)
-                    ? ((Double) props.get(Snapshot.WIDTH)).floatValue()
-                    : PixelUtil.toDIPFromPixel(view.getWidth());
+        (props.get(Snapshot.WIDTH) != null)
+            ? ((Double) props.get(Snapshot.WIDTH)).floatValue()
+            : PixelUtil.toDIPFromPixel(view.getWidth());
     float height =
-            (props.get(Snapshot.HEIGHT) != null)
-                    ? ((Double) props.get(Snapshot.HEIGHT)).floatValue()
-                    : PixelUtil.toDIPFromPixel(view.getHeight());
+        (props.get(Snapshot.HEIGHT) != null)
+            ? ((Double) props.get(Snapshot.HEIGHT)).floatValue()
+            : PixelUtil.toDIPFromPixel(view.getHeight());
 
     map.put("x", x);
     map.put("y", y);
@@ -393,13 +389,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
     return map;
   }
 
-  private static void performTransformMatrixUpdate(Map<String, Object> props,
-                                 View view) {
+  private static void performTransformMatrixUpdate(Map<String, Object> props, View view) {
     float[] matrixValues = new float[9];
     if (props.get(Snapshot.TRANSFORM_MATRIX) instanceof ReadableNativeArray) {
       // this array comes from JavaScript
-      ReadableNativeArray matrixArray =
-              (ReadableNativeArray) props.get(Snapshot.TRANSFORM_MATRIX);
+      ReadableNativeArray matrixArray = (ReadableNativeArray) props.get(Snapshot.TRANSFORM_MATRIX);
       for (int i = 0; i < 9; i++) {
         matrixValues[i] = ((Double) matrixArray.getDouble(i)).floatValue();
       }
@@ -418,9 +412,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     props.remove(Snapshot.TRANSFORM_MATRIX);
   }
 
-  private static void updateProps(Map<String, Object> props,
-                                  View view,
-                                  ViewManager viewManager) {
+  private static void updateProps(Map<String, Object> props, View view, ViewManager viewManager) {
     props.remove(Snapshot.ORIGIN_X);
     props.remove(Snapshot.ORIGIN_Y);
     props.remove(Snapshot.GLOBAL_ORIGIN_X);
@@ -538,12 +530,12 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public void updateLayout(
-          View viewToUpdate,
-          float xf,
-          float yf,
-          float widthf,
-          float heightf,
-          boolean isPositionAbsolute) {
+      View viewToUpdate,
+      float xf,
+      float yf,
+      float widthf,
+      float heightf,
+      boolean isPositionAbsolute) {
 
     int x = Math.round(PixelUtil.toPixelFromDIP(xf));
     int y = Math.round(PixelUtil.toPixelFromDIP(yf));
@@ -551,8 +543,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     int height = Math.round(PixelUtil.toPixelFromDIP(heightf));
 
     viewToUpdate.measure(
-            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY));
+        View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+        View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY));
 
     if (isPositionAbsolute) {
       Point newPoint = new Point(x, y);
