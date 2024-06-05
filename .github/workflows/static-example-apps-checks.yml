@@ -17,7 +17,13 @@ jobs:
     strategy:
       matrix:
         working-directory:
-          [app, Example, FabricExample, WebExample, TVOSExample]
+          - app
+          - Example
+          - FabricExample
+          - WebExample
+          - MacOSExample
+          - TVOSExample
+          - VisionOSExample
     concurrency:
       group: typescript-${{ matrix.working-directory }}-${{ github.ref }}
       cancel-in-progress: true
