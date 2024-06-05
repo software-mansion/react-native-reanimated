@@ -1,11 +1,19 @@
+allprojects {
+    project.pluginManager.withPlugin("com.facebook.react") {
+        react {
+            reactNativeDir = rootProject.file("../../../node_modules/react-native/")
+            // codegenDir = rootProject.file("../../../node_modules/react-native-codegen/")
+        }
+    }
+}
 buildscript {
     ext {
         buildToolsVersion = "34.0.0"
-        minSdkVersion = 23
+        minSdkVersion = 21
         compileSdkVersion = 34
         targetSdkVersion = 34
-        ndkVersion = "26.1.10909125"
-        kotlinVersion = "1.9.22"
+        ndkVersion = "25.1.8937393"
+        kotlinVersion = "1.8.0"
     }
     repositories {
         google()

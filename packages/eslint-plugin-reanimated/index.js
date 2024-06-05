@@ -19,30 +19,81 @@ var require_noAnimatedStyleToNonAnimatedComponent = __commonJS({
       create: function (context) {
         return {
           JSXOpeningElement(node) {
-            if (node.name.type === utils_1.AST_NODE_TYPES.JSXMemberExpression)
+            if (node.name.type === utils_1.AST_NODE_TYPES.JSXMemberExpression) {
               return;
-            if (node.name.type === utils_1.AST_NODE_TYPES.JSXNamespacedName)
+            }
+            if (node.name.type === utils_1.AST_NODE_TYPES.JSXNamespacedName) {
               return;
+            }
             const sourceCode = context.getSourceCode();
             const tokensBefore = sourceCode.getTokensBefore(node);
             const componentName = node?.name?.name;
+            main();
+            function main() {
+              if (
+                isVariableDefinedAs(componentName, 'Animated') || // People tend to import `Animated` as `Reanimated`.
+                // TODO parse imports to detect actual import name
+                isVariableDefinedAs(componentName, 'Reanimated') ||
+                isVariableDefinedAs(componentName, 'createAnimatedComponent')
+              ) {
+                return;
+              }
+              const styleAttribute = node.attributes.find((attribute) => {
+                return (
+                  attribute.type === utils_1.AST_NODE_TYPES.JSXAttribute &&
+                  attribute.name.name === 'style'
+                );
+              });
+              if (styleAttribute === void 0) {
+                return;
+              }
+              const styleValue = styleAttribute.value;
+              if (
+                styleValue === null ||
+                styleValue.type === utils_1.AST_NODE_TYPES.Literal
+              ) {
+                return;
+              }
+              if (styleValue.type === utils_1.AST_NODE_TYPES.JSXSpreadChild) {
+                return;
+              }
+              const styleExpression = styleValue.expression;
+              switch (styleExpression.type) {
+                case utils_1.AST_NODE_TYPES.Identifier:
+                  checkIdentifierNodeForBeingAnimated(styleExpression);
+                  break;
+                case utils_1.AST_NODE_TYPES.ArrayExpression:
+                  checkArrayNodeForBeingAnimated(styleExpression);
+                  break;
+                case utils_1.AST_NODE_TYPES.ObjectExpression:
+                  checkObjectNodeForBeingAnimated(styleExpression);
+                  break;
+                case utils_1.AST_NODE_TYPES.MemberExpression:
+                  break;
+              }
+            }
             function isVariableDefinedAs(variableName, expectedToken) {
-              let isAnimated = false;
               const variableNameTokenIds = [];
               tokensBefore.forEach((token, idx) => {
                 if (token.value === variableName) {
                   variableNameTokenIds.push(idx);
                 }
               });
-              variableNameTokenIds.forEach((idx) => {
-                if (tokensBefore[idx + 2].value === expectedToken) {
-                  isAnimated = true;
-                }
-              });
-              return isAnimated;
+              return variableNameTokenIds.some(
+                (idx) =>
+                  /*
+                 Lets count tokens from variable name to its definition, e.g.:
+                 ╭───────────┬───────┬───────┬───────┬────────────────╮
+                 │ Code      │ const │  sv   │   =   │ useSharedValue │
+                 ├───────────┼───────┼───────┼───────┼────────────────┤
+                 │ Token     │ idx-1 │ idx   │ idx+1 │      idx+2     │
+                 ╰───────────┴───────┴───────┴───────┴────────────────╯
+                */
+                  tokensBefore[idx + 2].value === expectedToken
+              );
             }
-            function checkIdentifierNode(styleExpression2) {
-              const variableName = styleExpression2.name;
+            function checkIdentifierNodeForBeingAnimated(styleExpression) {
+              const variableName = styleExpression.name;
               const isAnimatedStyle = isVariableDefinedAs(
                 variableName,
                 'useAnimatedStyle'
@@ -55,13 +106,13 @@ var require_noAnimatedStyleToNonAnimatedComponent = __commonJS({
                 });
               }
             }
-            function checkObjectNode(styleExpression2) {
-              const properties = styleExpression2.properties;
+            function checkObjectNodeForBeingAnimated(styleExpression) {
+              const properties = styleExpression.properties;
               properties.forEach((property) => {
                 if (property.type === utils_1.AST_NODE_TYPES.SpreadElement) {
                   return;
                 }
-                if (property.value.type === 'Identifier') {
+                if (property.value.type === utils_1.AST_NODE_TYPES.Identifier) {
                   const variableName = property.value.name;
                   if (isVariableDefinedAs(variableName, 'useSharedValue')) {
                     const propertyName =
@@ -79,57 +130,21 @@ var require_noAnimatedStyleToNonAnimatedComponent = __commonJS({
                 }
               });
             }
-            function checkArrayNode(styleExpression2) {
-              const arrayNodes = styleExpression2.elements;
-              arrayNodes.forEach((node2) => {
-                if (node2?.type === 'Identifier') {
-                  checkIdentifierNode(node2);
-                } else if (node2?.type === 'ArrayExpression') {
-                  checkArrayNode(node2);
-                } else if (node2?.type === 'ObjectExpression') {
-                  checkObjectNode(node2);
+            function checkArrayNodeForBeingAnimated(styleExpression) {
+              const arrayNodes = styleExpression.elements;
+              arrayNodes.forEach((arrayNode) => {
+                if (arrayNode?.type === utils_1.AST_NODE_TYPES.Identifier) {
+                  checkIdentifierNodeForBeingAnimated(arrayNode);
+                } else if (
+                  arrayNode?.type === utils_1.AST_NODE_TYPES.ArrayExpression
+                ) {
+                  checkArrayNodeForBeingAnimated(arrayNode);
+                } else if (
+                  arrayNode?.type === utils_1.AST_NODE_TYPES.ObjectExpression
+                ) {
+                  checkObjectNodeForBeingAnimated(arrayNode);
                 }
               });
-            }
-            if (
-              isVariableDefinedAs(componentName, 'Animated') ||
-              isVariableDefinedAs(componentName, 'createAnimatedComponent')
-            ) {
-              return;
-            }
-            const styleAttribute = node.attributes
-              .map((attribute) => {
-                return attribute.type === utils_1.AST_NODE_TYPES.JSXAttribute &&
-                  attribute.name.name === 'style'
-                  ? [attribute]
-                  : [];
-              })
-              .flat();
-            if (styleAttribute.length == 0) {
-              return;
-            }
-            const styleValue = styleAttribute[0].value;
-            if (
-              styleValue === null ||
-              styleValue.type === utils_1.AST_NODE_TYPES.Literal
-            ) {
-              return;
-            }
-            if (styleValue.type === utils_1.AST_NODE_TYPES.JSXSpreadChild) {
-              return;
-            }
-            const styleExpression = styleValue.expression;
-            switch (styleExpression.type) {
-              case utils_1.AST_NODE_TYPES.Identifier:
-                checkIdentifierNode(styleExpression);
-                break;
-              case utils_1.AST_NODE_TYPES.ArrayExpression:
-                checkArrayNode(styleExpression);
-                break;
-              case utils_1.AST_NODE_TYPES.ObjectExpression:
-                checkObjectNode(styleExpression);
-                break;
-              case utils_1.AST_NODE_TYPES.MemberExpression:
             }
           },
         };
@@ -137,13 +152,14 @@ var require_noAnimatedStyleToNonAnimatedComponent = __commonJS({
       meta: {
         docs: {
           recommended: 'recommended',
-          description: 'Avoid looping over enums.',
+          description:
+            "Don't pass a reanimated animated style into a non-animated component.",
         },
         messages: {
           sharedValue:
-            "Property  '{{propertyName}}: {{propertyValue}}' is using a sharedValue '{{propertyValue}}', but was used in a default component. Replace your {{componentName}} with an Animated.{{componentName}}",
+            "Property  '{{propertyName}}: {{propertyValue}}' is using a shared value '{{propertyValue}}', but was used in a default component. Replace {{componentName}} with an animated component from Reanimated.",
           animatedStyle:
-            "Style '{{variableName}}' is an animated style, but was used in a default component. Replace your '{{componentName}}' with an Animated.{{componentName}}",
+            "Style '{{variableName}}' is an animated style, but was used in a default component. Replace your '{{componentName}}' with an animated component from Reanimated.",
         },
         type: 'suggestion',
         schema: [],

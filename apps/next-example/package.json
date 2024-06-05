@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next",
-    "build": "next build",
+    "build": "",
+    "build:next": "next build",
     "build:analyze": "ANALYZE_BUNDLE=1 next build",
     "build:disable-minification": "DISABLE_MINIFICATION=1 next build",
     "start": "next start",
