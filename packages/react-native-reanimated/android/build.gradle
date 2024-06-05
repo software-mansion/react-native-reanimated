@@ -75,15 +75,16 @@ def resolveReactNativeDirectory() {
         return file(reactNativeLocation)
     }
 
-    if (isReanimatedExampleApp()) {
-        return file("$projectDir/../${getPlaygroundAppName()}/node_modules/react-native")
-    }
-
     // monorepo workaround
     // react-native can be hoisted or in project's own node_modules
     def reactNativeFromProjectNodeModules = file("${rootProject.projectDir}/../node_modules/react-native")
     if (reactNativeFromProjectNodeModules.exists()) {
         return reactNativeFromProjectNodeModules
+    }
+
+    def reactNativeFromReanimatedMonorepo = file("${projectDir}/../../../node_modules/react-native")
+    if (reactNativeFromReanimatedMonorepo.exists()) {
+        return reactNativeFromReanimatedMonorepo
     }
     
     def reactNativeFromNodeModulesWithReanimated = file("${projectDir}/../../react-native")

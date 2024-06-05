@@ -1,5 +1,5 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "../react-native-reanimated/tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
