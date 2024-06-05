@@ -37,9 +37,13 @@ export class Matchers {
 
   public toMatchSnapshots(expectedSnapshots: SingleViewSnapshot | Record<number, SingleViewSnapshot>) {
     const capturedSnapshots = this._currentValue as SingleViewSnapshot | Record<number, SingleViewSnapshot>;
-    const mismatchError = compareSnapshots(expectedSnapshots, capturedSnapshots, false);
-    if (mismatchError) {
-      this._testCase.errors.push(mismatchError);
+    if (capturedSnapshots) {
+      const mismatchError = compareSnapshots(expectedSnapshots, capturedSnapshots, false);
+      if (mismatchError) {
+        this._testCase.errors.push(mismatchError);
+      }
+    } else {
+      this._testCase.errors.push('Could not capture snapshot');
     }
   }
   public toMatchNativeSnapshots(

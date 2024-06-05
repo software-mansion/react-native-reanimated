@@ -1,15 +1,17 @@
-import { appendWhiteSpaceToMatchLength, green, red } from '../stringFormatUtils';
-import { OperationUpdate, ComparisonMode, TestValue } from '../types';
-import { getComparator } from './Comparators';
+import { appendWhiteSpaceToMatchLength, green, red, yellow } from '../stringFormatUtils';
+import { OperationUpdate, ComparisonMode, TestValue, isValidPropName } from '../types';
+import { getComparator, getComparisonModeForProp } from './Comparators';
 
 export type SingleViewSnapshot = Array<OperationUpdate>;
 export type MultiViewSnapshot = Record<number, SingleViewSnapshot>;
 export type Snapshot = SingleViewSnapshot | MultiViewSnapshot;
 
 function formatSnapshotErrorMessage(jsValue: TestValue, nativeValue: TestValue, propName: string, index: number) {
-  return `\tIndex ${index} ${propName}\t expected: ${appendWhiteSpaceToMatchLength(green(jsValue), 30)} received: ${red(
-    appendWhiteSpaceToMatchLength(JSON.stringify(nativeValue), 30),
-  )}\n`;
+  const preIndexSpace = (index < 100 ? ' ' : '') + (index < 10 ? ' ' : '');
+  return `\tIndex ${preIndexSpace}${index} ${propName}\t expected: ${appendWhiteSpaceToMatchLength(
+    green(jsValue),
+    30,
+  )} received: ${red(appendWhiteSpaceToMatchLength(JSON.stringify(nativeValue), 30))}\n`;
 }
 
 function compareJsAndNativeSnapshot(
@@ -38,7 +40,8 @@ function compareJsAndNativeSnapshot(
   for (const key of keys) {
     const jsValue = jsSnapshot[key];
     const nativeValue = nativeSnapshot[key];
-    const isEqual = getComparator(ComparisonMode.AUTO);
+    const comparisonMode = isValidPropName(key) ? getComparisonModeForProp(key) : ComparisonMode.AUTO;
+    const isEqual = getComparator(comparisonMode);
     const expectMismatch = jsValue < 0 && expectNegativeMismatch;
     const valuesAreMatching = isEqual(jsValue, nativeValue);
     if ((!valuesAreMatching && !expectMismatch) || (valuesAreMatching && expectMismatch)) {
@@ -80,7 +83,7 @@ function compareSingleViewJsSnapshots(
 ): string | undefined {
   if (expectedSnapshots.length !== capturedSnapshots.length) {
     return `Expected ${green(expectedSnapshots.length)} snapshots, but received ${red(
-      expectedSnapshots.length,
+      capturedSnapshots.length,
     )} snapshots\n`;
   }
   let errorString = '';
@@ -145,5 +148,13 @@ export function compareSnapshots(
       }
     }
   }
-  return errorMessage !== '' ? errorMessage : null;
+
+  if (!Array.isArray(expectedSnapshots) && typeof expectedSnapshots !== 'object') {
+    errorMessage = `Unexpected type of the ${native ? 'JS' : 'expected'} snapshot ` + red(typeof expectedSnapshots);
+  }
+  if (!Array.isArray(capturedSnapshots) && typeof capturedSnapshots !== 'object') {
+    errorMessage = `Unexpected type of snapshot ` + red(typeof expectedSnapshots);
+  }
+
+  return errorMessage !== '' ? `${native ? yellow('Native Snapshot: ') : ''}${errorMessage}` : null;
 }

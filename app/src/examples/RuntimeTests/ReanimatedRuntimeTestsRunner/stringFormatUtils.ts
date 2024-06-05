@@ -4,8 +4,8 @@ export function indentNestingLevel(nestingLevel: number) {
   return `  ${'   '.repeat(nestingLevel)}`;
 }
 
-export function appendWhiteSpaceToMatchLength(message: string | number, length: number) {
-  const messageStr = message.toString();
+export function appendWhiteSpaceToMatchLength(message: undefined | string | number, length: number) {
+  const messageStr = message ? message.toString() : '';
   const messageLen = messageStr.length;
   const indentSize = Math.max(0, length - messageLen);
   return `${messageStr}${' '.repeat(indentSize)}`;

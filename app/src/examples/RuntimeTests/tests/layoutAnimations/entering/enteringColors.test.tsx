@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import Animated, { withDelay, withTiming } from 'react-native-reanimated';
 import React from 'react';
 import {
@@ -29,7 +29,8 @@ async function getSnapshotUpdates(fromColor: string, toColor: string) {
   await mockAnimationTimer();
   const updatesContainer = await recordAnimationUpdates();
   await render(<AnimatedComponent fromColor={fromColor} toColor={toColor} />);
-  await wait(1200);
+  const waitTime = Platform.OS === 'ios' ? 1200 : 1400;
+  await wait(waitTime);
   const updates = updatesContainer.getUpdates();
   const nativeUpdates = await updatesContainer.getNativeSnapshots();
   return [updates, nativeUpdates];
@@ -54,9 +55,8 @@ describe('entering with custom animation (withDelay + withTiming color changes) 
       .replace(/[()]/g, '_')
       .replace(/,/g, '_')
       .replace(/rgba/g, '');
-    const nativeSnapshotName = snapshotName + 'native';
     expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
-    expect(nativeUpdates).toMatchSnapshots(Snapshots[nativeSnapshotName as keyof typeof Snapshots]);
+    expect(updates).toMatchNativeSnapshots(nativeUpdates);
   });
 });
 

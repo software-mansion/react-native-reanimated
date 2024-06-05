@@ -18,6 +18,7 @@ import {
   registerValue,
   getRegisteredValue,
 } from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+import { ComparisonMode } from '../../ReanimatedRuntimeTestsRunner/types';
 
 const REGISTERED_VALUE_KEY = 'sv';
 
@@ -75,8 +76,8 @@ describe('getRelativeCoords', () => {
       const coords = (await getRegisteredValue(REGISTERED_VALUE_KEY)).onUI;
       expectNotNullable(coords);
       if (coords) {
-        expect(Math.floor((coords as unknown as ComponentCoords).x)).toBe(expectedValueX);
-        expect(Math.floor((coords as unknown as ComponentCoords).y)).toBe(expectedValueY);
+        expect((coords as unknown as ComponentCoords).x).toBe(expectedValueX, ComparisonMode.DISTANCE);
+        expect((coords as unknown as ComponentCoords).y).toBe(expectedValueY, ComparisonMode.DISTANCE);
       }
     },
   );

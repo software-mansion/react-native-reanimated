@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, AnimatableValueObject } from 'react-native-reanimated';
 import React from 'react';
 import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
@@ -97,32 +97,38 @@ describe('Test reusing animatedStyles', () => {
       },
     ];
 
-  test.each(TEST_CASES)(
-    'Animate 3 components from ${startStyle} to ${finalStyle}, animate=${animate}',
-    async ({ startStyle, finalStyle, animate }) => {
-      await render(<TripleComponent startStyle={startStyle} finalStyle={finalStyle} animate={animate} />);
-      const componentOne = getTestComponent(COMPONENT_REF.ONE);
-      const componentTwo = getTestComponent(COMPONENT_REF.TWO);
-      const componentThree = getTestComponent(COMPONENT_REF.THREE);
+  //TODO On Android this test depends on the height of the status bar
+  if (Platform.OS === 'ios') {
+    test.each(TEST_CASES)(
+      'Animate 3 components from ${startStyle} to ${finalStyle}, animate=${animate}',
+      async ({ startStyle, finalStyle, animate }) => {
+        await render(<TripleComponent startStyle={startStyle} finalStyle={finalStyle} animate={animate} />);
+        const componentOne = getTestComponent(COMPONENT_REF.ONE);
+        const componentTwo = getTestComponent(COMPONENT_REF.TWO);
+        const componentThree = getTestComponent(COMPONENT_REF.THREE);
 
-      await wait(300);
+        await wait(300);
 
-      // Check the distance from the top
-      const finalStyleFull = { height: 80, top: 0, margin: 0, ...finalStyle };
-      const { height, margin, top } = finalStyleFull;
-      expect(await componentOne.getAnimatedStyle('top')).toBe(top + margin, ComparisonMode.DISTANCE);
-      expect(await componentTwo.getAnimatedStyle('top')).toBe(top + 3 * margin + height, ComparisonMode.DISTANCE);
-      expect(await componentThree.getAnimatedStyle('top')).toBe(top + 5 * margin + 2 * height, ComparisonMode.DISTANCE);
+        // Check the distance from the top
+        const finalStyleFull = { height: 80, top: 0, margin: 0, ...finalStyle };
+        const { height, margin, top } = finalStyleFull;
+        expect(await componentOne.getAnimatedStyle('top')).toBe(top + margin, ComparisonMode.DISTANCE);
+        expect(await componentTwo.getAnimatedStyle('top')).toBe(top + 3 * margin + height, ComparisonMode.DISTANCE);
+        expect(await componentThree.getAnimatedStyle('top')).toBe(
+          top + 5 * margin + 2 * height,
+          ComparisonMode.DISTANCE,
+        );
 
-      // Check the remaining props
-      for (let key of ['width', 'height', 'left', 'opacity', 'backgroundColor'] as const) {
-        if (key in Object.keys(finalStyle)) {
-          const currentVal = await componentOne.getAnimatedStyle(key);
-          expect(currentVal).toBe(finalStyle[key], getComparisonModeForProp(key));
+        // Check the remaining props
+        for (let key of ['width', 'height', 'left', 'opacity', 'backgroundColor'] as const) {
+          if (key in Object.keys(finalStyle)) {
+            const currentVal = await componentOne.getAnimatedStyle(key);
+            expect(currentVal).toBe(finalStyle[key], getComparisonModeForProp(key));
+          }
         }
-      }
-    },
-  );
+      },
+    );
+  }
 });
 
 const styles = StyleSheet.create({

@@ -1,6 +1,35 @@
-import { ComparisonMode, TestValue, ValidPropNames } from '../types';
+import { ComparisonMode, TestValue, ValidPropNames, isValidPropName } from '../types';
 
 const DISTANCE_TOLERANCE = 0.5;
+
+//TODO TEMP
+function decimalHexTwosComplement(decimal: number): string {
+  var size = 8;
+
+  if (decimal >= 0) {
+    var hexadecimal = decimal.toString(16);
+
+    while (hexadecimal.length % size !== 0) {
+      hexadecimal = '' + 0 + hexadecimal;
+    }
+
+    return hexadecimal;
+  } else {
+    var hexadecimal = Math.abs(decimal).toString(16);
+    while (hexadecimal.length % size !== 0) {
+      hexadecimal = '' + 0 + hexadecimal;
+    }
+
+    var output = '';
+    for (let i = 0; i < hexadecimal.length; i++) {
+      output += (0x0f - parseInt(hexadecimal[i], 16)).toString(16);
+    }
+
+    output = (0x01 + parseInt(output, 16)).toString(16);
+
+    return '#' + output.slice(2) + output.slice(0, 2);
+  }
+}
 
 const COMPARATORS: {
   [Key: string]: (expected: TestValue, value: TestValue) => boolean;
@@ -11,13 +40,20 @@ const COMPARATORS: {
 
   [ComparisonMode.NUMBER]: (expected, value) => {
     const bothAreNumbers = typeof value === 'number' && typeof expected === 'number';
-    return bothAreNumbers && (value === expected || (isNaN(value) && isNaN(expected)));
+    const bothAreBigInts = typeof value === 'bigint' && typeof expected === 'bigint';
+    const bothAreNaNs = bothAreNumbers && isNaN(value) && isNaN(expected);
+    return bothAreNaNs || ((bothAreNumbers || bothAreBigInts) && value === expected);
   },
 
-  [ComparisonMode.COLOR]: (expected, value) => {
+  [ComparisonMode.COLOR]: (_expected, _value) => {
+    const expected =
+      Number(_expected) && Number(_expected) < 0 ? decimalHexTwosComplement(Number(_expected)) : _expected;
+    const value = Number(_value) && Number(_value) < 0 ? decimalHexTwosComplement(Number(_value)) : _value;
+
     if (typeof value !== 'string' || typeof expected !== 'string') {
       return false;
     }
+
     const expectedLowerCase = expected.toLowerCase();
     const [opaqueColorRe, transparencyColorRe] = [6, 8].map(length => new RegExp(`^#?([A-Fa-f0-9]{${length}})$`));
     const shouldAddTransparency = opaqueColorRe.test(expectedLowerCase);
@@ -65,9 +101,9 @@ const COMPARATORS: {
     if (expectedKeys.length !== valueKeys.length) {
       return false;
     }
-
     for (const key of expectedKeys) {
-      if (!COMPARATORS[ComparisonMode.AUTO](expected[key as keyof typeof expected], value[key as keyof typeof value])) {
+      const comparisonMode = isValidPropName(key) ? getComparisonModeForProp(key) : ComparisonMode.AUTO;
+      if (!COMPARATORS[comparisonMode](expected[key as keyof typeof expected], value[key as keyof typeof value])) {
         return false;
       }
     }

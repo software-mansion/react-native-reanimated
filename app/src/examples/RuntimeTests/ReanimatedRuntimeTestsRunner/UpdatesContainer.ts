@@ -1,5 +1,5 @@
 import { makeMutable } from 'react-native-reanimated';
-import { Operation, OperationUpdate } from './types';
+import { Operation, OperationUpdate, isValidPropName } from './types';
 import { TestRunner } from './TestRunner';
 import { MultiViewSnapshot, SingleViewSnapshot, Snapshot } from './matchers/snapshotMatchers';
 
@@ -26,7 +26,8 @@ export function createUpdatesContainer(testRunner: TestRunner) {
       'worklet';
       for (const updateInfo of updateInfos) {
         const snapshot: OperationUpdate = {};
-        const propsToUpdate = Object.keys(updateInfo.update);
+        const updatedProps = Object.keys(updateInfo.update);
+        const propsToUpdate = updatedProps.filter(propName => isValidPropName(propName));
         for (const prop of propsToUpdate) {
           snapshot[prop] = isFabric
             ? global._obtainPropFabric(updateInfo?.shadowNodeWrapper, prop)
@@ -57,10 +58,14 @@ export function createUpdatesContainer(testRunner: TestRunner) {
     'worklet';
     const jsUpdates: Array<Required<JsUpdate>> = [];
     for (const operation of operations) {
+      const { updates } = operation;
+      if ('backgroundColor' in updates) {
+        console.log(updates.backgroundColor);
+      }
       jsUpdates.push({
         tag: operation.tag ?? -1,
         shadowNodeWrapper: operation.shadowNodeWrapper,
-        update: operation.updates,
+        update: updates,
       });
     }
     return jsUpdates;
@@ -141,16 +146,18 @@ export function createUpdatesContainer(testRunner: TestRunner) {
       await testRunner.runOnUIBlocking(() => {
         'worklet';
         const lastSnapshot = nativeSnapshots.value[nativeSnapshotsCount - 1];
-        _updateNativeSnapshot(
-          [
-            {
-              tag: lastSnapshot.tag,
-              shadowNodeWrapper: lastSnapshot.shadowNodeWrapper,
-              update: lastSnapshot.snapshot,
-            },
-          ],
-          jsUpdatesCount - 1,
-        );
+        if (lastSnapshot) {
+          _updateNativeSnapshot(
+            [
+              {
+                tag: lastSnapshot.tag,
+                shadowNodeWrapper: lastSnapshot.shadowNodeWrapper,
+                update: lastSnapshot.snapshot,
+              },
+            ],
+            jsUpdatesCount - 1,
+          );
+        }
       });
     }
     return _sortUpdatesByViewTag(nativeSnapshots.value, propsNames);
