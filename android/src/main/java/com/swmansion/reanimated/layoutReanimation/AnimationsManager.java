@@ -210,18 +210,18 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
 
     ViewGroup parent = (ViewGroup) view.getParent();
-
-    if (parent == null) {
-      return;
-    }
-
     ViewManager viewManager = resolveViewManager(tag);
-    ViewManager parentViewManager = resolveViewManager(parent.getId());
 
     if (viewManager == null) {
       return;
     }
 
+    if (parent == null) {
+      setNewProps(newStyle, view, viewManager, isSharedTransition);
+      return;
+    }
+
+    ViewManager parentViewManager = resolveViewManager(parent.getId());
     setNewProps(newStyle, view, viewManager, parentViewManager, parent.getId(), isSharedTransition);
   }
 
@@ -331,6 +331,39 @@ public class AnimationsManager implements ViewHierarchyObserver {
       ViewManager parentViewManager,
       Integer parentTag,
       boolean isPositionAbsolute) {
+    HashMap<String, Float> viewSize = getViewSize(props, view);
+    float x = viewSize.get("x");
+    float y = viewSize.get("y");
+    float width = viewSize.get("width");
+    float height = viewSize.get("height");
+
+    if (props.containsKey(Snapshot.TRANSFORM_MATRIX)) {
+      performTransformMatrixUpdate(props, view);
+    }
+
+    updateLayout(view, parentViewManager, parentTag, x, y, width, height, isPositionAbsolute);
+    updateProps(props, view, viewManager);
+  }
+
+  public void setNewProps(
+      Map<String, Object> props, View view, ViewManager viewManager, boolean isPositionAbsolute) {
+    HashMap<String, Float> viewSize = getViewSize(props, view);
+    float x = viewSize.get("x");
+    float y = viewSize.get("y");
+    float width = viewSize.get("width");
+    float height = viewSize.get("height");
+
+    if (props.containsKey(Snapshot.TRANSFORM_MATRIX)) {
+      performTransformMatrixUpdate(props, view);
+    }
+
+    updateLayout(view, x, y, width, height, isPositionAbsolute);
+    updateProps(props, view, viewManager);
+  }
+
+  private static HashMap<String, Float> getViewSize(Map<String, Object> props, View view) {
+    HashMap<String, Float> map = new HashMap<>();
+
     float x =
         (props.get(Snapshot.ORIGIN_X) != null)
             ? ((Double) props.get(Snapshot.ORIGIN_X)).floatValue()
@@ -348,31 +381,38 @@ public class AnimationsManager implements ViewHierarchyObserver {
             ? ((Double) props.get(Snapshot.HEIGHT)).floatValue()
             : PixelUtil.toDIPFromPixel(view.getHeight());
 
-    if (props.containsKey(Snapshot.TRANSFORM_MATRIX)) {
-      float[] matrixValues = new float[9];
-      if (props.get(Snapshot.TRANSFORM_MATRIX) instanceof ReadableNativeArray) {
-        // this array comes from JavaScript
-        ReadableNativeArray matrixArray =
-            (ReadableNativeArray) props.get(Snapshot.TRANSFORM_MATRIX);
-        for (int i = 0; i < 9; i++) {
-          matrixValues[i] = ((Double) matrixArray.getDouble(i)).floatValue();
-        }
-      } else {
-        // this array comes from Java
-        ArrayList<Float> casted = (ArrayList<Float>) props.get(Snapshot.TRANSFORM_MATRIX);
-        for (int i = 0; i < 9; i++) {
-          matrixValues[i] = casted.get(i);
-        }
+    map.put("x", x);
+    map.put("y", y);
+    map.put("width", width);
+    map.put("height", height);
+
+    return map;
+  }
+
+  private static void performTransformMatrixUpdate(Map<String, Object> props, View view) {
+    float[] matrixValues = new float[9];
+    if (props.get(Snapshot.TRANSFORM_MATRIX) instanceof ReadableNativeArray) {
+      // this array comes from JavaScript
+      ReadableNativeArray matrixArray = (ReadableNativeArray) props.get(Snapshot.TRANSFORM_MATRIX);
+      for (int i = 0; i < 9; i++) {
+        matrixValues[i] = ((Double) matrixArray.getDouble(i)).floatValue();
       }
-      view.setScaleX(matrixValues[0]);
-      view.setScaleY(matrixValues[4]);
-      // as far, let's support only scale and translation. Rotation maybe the future feature
-      // http://eecs.qmul.ac.uk/~gslabaugh/publications/euler.pdf
-
-      props.remove(Snapshot.TRANSFORM_MATRIX);
+    } else {
+      // this array comes from Java
+      ArrayList<Float> casted = (ArrayList<Float>) props.get(Snapshot.TRANSFORM_MATRIX);
+      for (int i = 0; i < 9; i++) {
+        matrixValues[i] = casted.get(i);
+      }
     }
+    view.setScaleX(matrixValues[0]);
+    view.setScaleY(matrixValues[4]);
+    // as far, let's support only scale and translation. Rotation maybe the future feature
+    // http://eecs.qmul.ac.uk/~gslabaugh/publications/euler.pdf
 
-    updateLayout(view, parentViewManager, parentTag, x, y, width, height, isPositionAbsolute);
+    props.remove(Snapshot.TRANSFORM_MATRIX);
+  }
+
+  private static void updateProps(Map<String, Object> props, View view, ViewManager viewManager) {
     props.remove(Snapshot.ORIGIN_X);
     props.remove(Snapshot.ORIGIN_Y);
     props.remove(Snapshot.GLOBAL_ORIGIN_X);
@@ -380,7 +420,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     props.remove(Snapshot.WIDTH);
     props.remove(Snapshot.HEIGHT);
 
-    if (props.size() == 0) {
+    if (props.isEmpty()) {
       return;
     }
 
@@ -487,6 +527,34 @@ public class AnimationsManager implements ViewHierarchyObserver {
       }
       viewToUpdate.layout(x, y, x + width, y + height);
     }
+  }
+
+  public void updateLayout(
+      View viewToUpdate,
+      float xf,
+      float yf,
+      float widthf,
+      float heightf,
+      boolean isPositionAbsolute) {
+
+    int x = Math.round(PixelUtil.toPixelFromDIP(xf));
+    int y = Math.round(PixelUtil.toPixelFromDIP(yf));
+    int width = Math.round(PixelUtil.toPixelFromDIP(widthf));
+    int height = Math.round(PixelUtil.toPixelFromDIP(heightf));
+
+    viewToUpdate.measure(
+        View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+        View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY));
+
+    if (isPositionAbsolute) {
+      Point newPoint = new Point(x, y);
+      View viewToUpdateParent = (View) viewToUpdate.getParent();
+      Point convertedPoint = convertScreenLocationToViewCoordinates(newPoint, viewToUpdateParent);
+      x = convertedPoint.x;
+      y = convertedPoint.y;
+    }
+
+    viewToUpdate.layout(x, y, x + width, y + height);
   }
 
   public boolean shouldAnimateExiting(int tag, boolean shouldAnimate) {

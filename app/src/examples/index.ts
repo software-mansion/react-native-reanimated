@@ -128,6 +128,7 @@ import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEve
 import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMergingExample';
 import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
 import FreezingShareablesExample from './ShareableFreezingExample';
+import ListItemLayoutAnimation from './LayoutAnimations/ListItemLayoutAnimation';
 
 interface Example {
   icon?: string;
@@ -711,6 +712,11 @@ export const EXAMPLES: Record<string, Example> = {
   ChangeTheme: {
     title: '[LA] Change theme',
     screen: ChangeThemeExample,
+    missingOnFabric: true,
+  },
+  ListItemLayoutAnimation: {
+    title: '[LA] List item layout animation',
+    screen: ListItemLayoutAnimation,
     missingOnFabric: true,
   },
 
