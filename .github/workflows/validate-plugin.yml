@@ -4,8 +4,8 @@ env:
 on:
   pull_request:
     paths:
-      - '.github/workflows/validate-plugin.yml'
-      - 'plugin/**'
+      - ".github/workflows/validate-plugin.yml"
+      - "packages/react-native-reanimated/plugin/**"
   merge_group:
     branches:
       - main
@@ -13,8 +13,8 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/validate-plugin.yml'
-      - 'plugin/**'
+      - ".github/workflows/validate-plugin.yml"
+      - "packages/react-native-reanimated/plugin/**"
 
 jobs:
   check:
@@ -29,29 +29,34 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          cache: 'yarn'
+          cache: "yarn"
       - name: Clear annotations
-        run: scripts/clear-annotations.sh
+        run: .github/workflows/helper/clear-annotations.sh
 
-      - name: Install node dependencies
+      - name: Install monorepo dependencies
+        run: yarn install --immutable
+      - name: Install Reanimated node dependencies
+        working-directory: packages/react-native-reanimated
         run: yarn install
       - name: Build package
+        working-directory: packages/react-native-reanimated
         run: yarn build
-      - name: Check types
-        working-directory: plugin
-        run: yarn type:check:src
-      - name: Lint and format
-        working-directory: plugin
-        run: yarn lint
+
       - name: Diff
         id: diff
         run: git update-index --refresh && git diff-index --quiet HEAD --
       - name: Show diff
         if: failure() && steps.diff.outcome == 'failure'
         run: git diff
+      - name: Check types
+        working-directory: packages/react-native-reanimated
+        run: yarn type:check:plugin
+      - name: Lint and format
+        working-directory: packages/react-native-reanimated
+        run: yarn lint:plugin
       - name: Test
+        working-directory: packages/react-native-reanimated
         run: yarn jest plugin
-
       - name: Check Example App bundling
-        working-directory: Example
+        working-directory: packages/react-native-reanimated/Example
         run: yarn && yarn react-native bundle --reset-cache --entry-file='App.tsx' --bundle-output='/dev/null' --dev=true --platform='ios'

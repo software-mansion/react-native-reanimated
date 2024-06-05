@@ -5,14 +5,14 @@ on:
   pull_request:
     paths:
       - .github/workflows/ios-build.yml
-      - RNReanimated.podspec
-      - scripts/reanimated_utils.rb
-      - apple/**
-      - Common/**
-      - Example/package.json
-      - Example/ios/**
-      - FabricExample/package.json
-      - FabricExample/ios/**
+      - packages/react-native-reanimated/RNReanimated.podspec
+      - packages/react-native-reanimated/scripts/reanimated_utils.rb
+      - packages/react-native-reanimated/apple/**
+      - packages/react-native-reanimated/Common/**
+      - packages/react-native-reanimated/Example/package.json
+      - packages/react-native-reanimated/Example/ios/**
+      - packages/react-native-reanimated/FabricExample/package.json
+      - packages/react-native-reanimated/FabricExample/ios/**
   merge_group:
     branches:
       - main
@@ -21,14 +21,14 @@ on:
       - main
     paths:
       - .github/workflows/ios-build.yml
-      - RNReanimated.podspec
-      - scripts/reanimated_utils.rb
-      - apple/**
-      - Common/**
-      - Example/package.json
-      - Example/ios/**
-      - FabricExample/package.json
-      - FabricExample/ios/**
+      - packages/react-native-reanimated/RNReanimated.podspec
+      - packages/react-native-reanimated/scripts/reanimated_utils.rb
+      - packages/react-native-reanimated/apple/**
+      - packages/react-native-reanimated/Common/**
+      - packages/react-native-reanimated/Example/package.json
+      - packages/react-native-reanimated/Example/ios/**
+      - packages/react-native-reanimated/FabricExample/package.json
+      - packages/react-native-reanimated/FabricExample/ios/**
 
 jobs:
   build:
@@ -36,7 +36,11 @@ jobs:
     runs-on: macos-14
     strategy:
       matrix:
-        working-directory: [Example, FabricExample]
+        working-directory:
+          [
+            packages/react-native-reanimated/Example,
+            packages/react-native-reanimated/FabricExample,
+          ]
       fail-fast: false
     concurrency:
       group: ios-${{ matrix.working-directory }}-${{ github.ref }}
@@ -45,15 +49,18 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4
 
+      - name: Install monorepo node dependencies
+        run: yarn install
       - name: Restore Reanimated node_modules from cache
         uses: actions/cache@v3
         with:
-          path: node_modules
-          key: ${{ runner.os }}-node-modules-reanimated-${{ hashFiles('yarn.lock') }}
+          path: packages/react-native-reanimated/node_modules
+          key: ${{ runner.os }}-node-modules-reanimated-${{ hashFiles('packages/react-native-reanimated/yarn.lock') }}
           restore-keys: ${{ runner.os }}-node-modules-reanimated-
 
-      - name: Install Reanimated node_modules
-        run: yarn install --immutable
+      - name: Install Reanimated node dependencies
+        working-directory: packages/react-native-reanimated
+        run: yarn install
 
       - name: Restore app node_modules from cache
         uses: actions/cache@v3
@@ -64,7 +71,7 @@ jobs:
 
       - name: Install app node_modules
         working-directory: ${{ matrix.working-directory }}
-        run: yarn install --immutable
+        run: yarn install
 
       - name: Restore Pods from cache
         uses: actions/cache@v3
