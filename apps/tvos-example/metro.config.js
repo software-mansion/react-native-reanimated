@@ -3,11 +3,8 @@ const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const path = require('path');
 const exclusionList = require('metro-config/src/defaults/exclusionList');
 const escape = require('escape-string-regexp');
-const pack = require('../react-native-reanimated/package.json');
 
 const root = path.resolve(__dirname, '../..');
-
-// const modules = Object.keys(pack.peerDependencies);
 
 const modules = ['react-native'];
 
@@ -39,15 +36,3 @@ const config = {
 };
 
 module.exports = mergeConfig(getDefaultConfig(__dirname), config);
-
-// const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
-
-// const path = require('path');
-
-// const root = path.resolve(__dirname, '../..');
-
-// const config = {
-//   watchFolders: [root],
-// };
-
-// module.exports = mergeConfig(getDefaultConfig(__dirname), config);
