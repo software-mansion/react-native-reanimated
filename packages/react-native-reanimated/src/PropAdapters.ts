@@ -1,5 +1,5 @@
 'use strict';
-import { addWhitelistedNativeProps } from '../ConfigHelper';
+import { addWhitelistedNativeProps } from './ConfigHelper';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,

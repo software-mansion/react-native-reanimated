@@ -1,7 +1,7 @@
 'use strict';
-import type { Extrapolate as _Extrapolate } from './reanimated2/interpolateColor';
-import type { SharedValue as _SharedValue } from './reanimated2/commonTypes';
-import type { DerivedValue as _DerivedValue } from './reanimated2/hook/useDerivedValue';
+import type { Extrapolate as _Extrapolate } from './interpolateColor';
+import type { SharedValue as _SharedValue } from './commonTypes';
+import type { DerivedValue as _DerivedValue } from './hook/useDerivedValue';
 import type {
   TransformStyleTypes as _TransformStyleTypes,
   Adaptable as _Adaptable,
@@ -10,18 +10,18 @@ import type {
   AnimateStyle as _AnimateStyle,
   StylesOrDefault as _StylesOrDefault,
   AnimateProps as _AnimateProps,
-} from './reanimated2/helperTypes';
-import type { EasingFunction as _EasingFunction } from './reanimated2/Easing';
+} from './helperTypes';
+import type { EasingFunction as _EasingFunction } from './Easing';
 
-import type { AnimatedScrollViewProps as _AnimatedScrollViewProps } from './reanimated2/component/ScrollView';
-import type { FlatListPropsWithLayout as _FlatListPropsWithLayout } from './reanimated2/component/FlatList';
+import type { AnimatedScrollViewProps as _AnimatedScrollViewProps } from './component/ScrollView';
+import type { FlatListPropsWithLayout as _FlatListPropsWithLayout } from './component/FlatList';
 
 export { createAnimatedComponent } from './createAnimatedComponent';
-export { AnimatedText as Text } from './reanimated2/component/Text';
-export { AnimatedView as View } from './reanimated2/component/View';
-export { AnimatedScrollView as ScrollView } from './reanimated2/component/ScrollView';
-export { AnimatedImage as Image } from './reanimated2/component/Image';
-export { ReanimatedFlatList as FlatList } from './reanimated2/component/FlatList';
+export { AnimatedText as Text } from './component/Text';
+export { AnimatedView as View } from './component/View';
+export { AnimatedScrollView as ScrollView } from './component/ScrollView';
+export { AnimatedImage as Image } from './component/Image';
+export { ReanimatedFlatList as FlatList } from './component/FlatList';
 export {
   addWhitelistedNativeProps,
   addWhitelistedUIProps,

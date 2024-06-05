@@ -935,7 +935,7 @@ PODS:
   - React-Mapbuffer (0.74.0):
     - glog
     - React-debug
-  - react-native-pager-view (6.3.1):
+  - react-native-pager-view (6.3.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1515,7 +1515,7 @@ SPEC CHECKSUMS:
   React-jsitracing: 36a2bbc272300313653d980de5ab700ec86c534a
   React-logger: 03f2f7b955cfe24593a2b8c9705c23e142d1ad24
   React-Mapbuffer: 5e05d78fe6505f4a054b86f415733d4ad02dd314
-  react-native-pager-view: e2b7c31147cdc1750cb3867d37a145e487653c34
+  react-native-pager-view: c1e29e1a6105a02807392ba822ad322447a72f55
   react-native-safe-area-context: 71e343069c879133ea9c194097261830f6d23478
   react-native-slider: ce295d2bf830a7990af05b0bd70ab28c133e230c
   React-nativeconfig: 951ec32f632e81cbd7d40aebb3211313251c092e

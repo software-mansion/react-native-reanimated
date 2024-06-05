@@ -1,11 +1,11 @@
 'use strict';
 
-import { shallowEqual } from '../reanimated2/hook/utils';
-import type { StyleProps } from '../reanimated2/commonTypes';
-import { isSharedValue } from '../reanimated2/isSharedValue';
-import { isChromeDebugger } from '../reanimated2/PlatformChecker';
-import { WorkletEventHandler } from '../reanimated2/WorkletEventHandler';
-import { initialUpdaterRun } from '../reanimated2/animation';
+import { shallowEqual } from '../hook/utils';
+import type { StyleProps } from '../commonTypes';
+import { isSharedValue } from '../isSharedValue';
+import { isChromeDebugger } from '../PlatformChecker';
+import { WorkletEventHandler } from '../WorkletEventHandler';
+import { initialUpdaterRun } from '../animation';
 import { hasInlineStyles, getInlineStyle } from './InlinePropManager';
 import type {
   AnimatedComponentProps,

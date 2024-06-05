@@ -6,8 +6,8 @@ import { TextInput, StyleSheet, View } from 'react-native';
 import type { FrameInfo } from '../frameCallback';
 import type { SharedValue } from '../commonTypes';
 import { useSharedValue, useAnimatedProps, useFrameCallback } from '../hook';
-import { createAnimatedComponent } from '../../createAnimatedComponent';
-import { addWhitelistedNativeProps } from '../../ConfigHelper';
+import { createAnimatedComponent } from '../createAnimatedComponent';
+import { addWhitelistedNativeProps } from '../ConfigHelper';
 
 type CircularBuffer = ReturnType<typeof createCircularDoublesBuffer>;
 function createCircularDoublesBuffer(size: number) {

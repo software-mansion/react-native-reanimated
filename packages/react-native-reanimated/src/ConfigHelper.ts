@@ -1,6 +1,6 @@
 'use strict';
 import { PropsAllowlists } from './propsAllowlists';
-import { jsiConfigureProps } from './reanimated2/core';
+import { jsiConfigureProps } from './core';
 function assertNoOverlapInLists() {
   for (const key in PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST) {
     if (key in PropsAllowlists.UI_THREAD_PROPS_WHITELIST) {

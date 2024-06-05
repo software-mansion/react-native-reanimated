@@ -1,20 +1,19 @@
 'use strict';
 import type { Ref, Component } from 'react';
 import type {
-  StyleProps,
-  BaseAnimationBuilder,
-  ILayoutAnimationBuilder,
-  EntryExitAnimationFunction,
-  SharedTransition,
+  ShadowNodeWrapper,
   SharedValue,
-} from '../reanimated2';
-import type {
-  ViewDescriptorsSet,
-  ViewRefSet,
-} from '../reanimated2/ViewDescriptorsSet';
-import type { SkipEnteringContext } from '../reanimated2/component/LayoutAnimationConfig';
-import type { ShadowNodeWrapper } from '../reanimated2/commonTypes';
+  StyleProps,
+} from '../commonTypes';
 import type { ViewConfig } from '../ConfigHelper';
+import type { ViewDescriptorsSet, ViewRefSet } from '../ViewDescriptorsSet';
+import type {
+  BaseAnimationBuilder,
+  EntryExitAnimationFunction,
+  ILayoutAnimationBuilder,
+  SharedTransition,
+} from '../layoutReanimation';
+import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 
 export interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;

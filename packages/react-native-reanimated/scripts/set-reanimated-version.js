@@ -75,7 +75,7 @@ fs.writeFileSync(
   'utf-8'
 );
 
-const jsVersionPath = 'src/reanimated2/platform-specific/jsVersion.ts';
+const jsVersionPath = 'src/platform-specific/jsVersion.ts';
 const before = cat(jsVersionPath);
 const after = before.replace(
   /jsVersion = '(.*)';/g,
