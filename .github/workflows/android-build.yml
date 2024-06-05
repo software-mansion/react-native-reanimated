@@ -43,7 +43,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies in root
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Setup Java 17
         uses: actions/setup-java@v3
@@ -60,7 +60,7 @@ jobs:
 
       - name: Install Reanimated node_modules
         working-directory: packages/react-native-reanimated
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Restore app node_modules from cache
         uses: actions/cache@v3
