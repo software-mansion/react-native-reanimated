@@ -4054,13 +4054,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-picker/picker@npm:^2.5.1, @react-native-picker/picker@npm:^2.6.1, @react-native-picker/picker@npm:^2.7.0":
+"@react-native-picker/picker@npm:^2.5.1, @react-native-picker/picker@npm:^2.6.1":
   version: 2.7.5
   resolution: "@react-native-picker/picker@npm:2.7.5"
   peerDependencies:
     react: "*"
     react-native: "*"
   checksum: 10/fb2111753ef46365799e5a7ef0f4a542244788054de4145cb982bd2b15a86daf4e0794503fb69918d7cbcb67e2f9719f984143764ae79d858f6bee9bd6cad473
+  languageName: node
+  linkType: hard
+
+"@react-native-picker/picker@npm:^2.7.0":
+  version: 2.7.6
+  resolution: "@react-native-picker/picker@npm:2.7.6"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10/fb8fb159cbc3737fac4cb85616e2f4c03aaccf9eff0f9b9ee4e303ecdd792a829e3340d6af95d672791a2eb3943073444a7760a3972d9b3dbb07d6ee48b67e32
   languageName: node
   linkType: hard
 
@@ -6909,16 +6919,6 @@ __metadata:
   bin:
     create-jest: bin/create-jest.js
   checksum: 10/847b4764451672b4174be4d5c6d7d63442ec3aa5f3de52af924e4d996d87d7801c18e125504f25232fc75840f6625b3ac85860fac6ce799b5efae7bdcaf4a2b7
-  languageName: node
-  linkType: hard
-
-"create-react-class@npm:^15.7.0":
-  version: 15.7.0
-  resolution: "create-react-class@npm:15.7.0"
-  dependencies:
-    loose-envify: "npm:^1.3.1"
-    object-assign: "npm:^4.1.1"
-  checksum: 10/e845cb275c6b59c1fc4c4037e3d5caf4f42a258ef21f5cd9c86cd7ef476f933998f5c363a9e4b36970f682c30b122637d41474742abc85d8b931aef8041da8a3
   languageName: node
   linkType: hard
 
@@ -11842,7 +11842,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"loose-envify@npm:^1.0.0, loose-envify@npm:^1.1.0, loose-envify@npm:^1.3.1, loose-envify@npm:^1.4.0":
+"loose-envify@npm:^1.0.0, loose-envify@npm:^1.1.0, loose-envify@npm:^1.4.0":
   version: 1.4.0
   resolution: "loose-envify@npm:1.4.0"
   dependencies:
@@ -12757,13 +12757,6 @@ __metadata:
   bin:
     nopt: bin/nopt.js
   checksum: 10/95a1f6dec8a81cd18cdc2fed93e6f0b4e02cf6bdb4501c848752c6e34f9883d9942f036a5e3b21a699047d8a448562d891e67492df68ec9c373e6198133337ae
-  languageName: node
-  linkType: hard
-
-"normalize-css-color@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "normalize-css-color@npm:1.0.2"
-  checksum: 10/7c1c435dbfda7abe3f306d5bb2dbf8b1bb7bbe4f6ec53cbc2b95f4514061d9441c082dd31abda7857d98956b40e24845284319b0c57c3883d245b71b70d3aeda
   languageName: node
   linkType: hard
 
@@ -13999,7 +13992,7 @@ __metadata:
     react-native: "npm:0.74.0"
     react-native-builder-bob: "npm:^0.18.3"
     react-native-gesture-handler: "npm:^2.16.2"
-    react-native-web: "npm:~0.18.12"
+    react-native-web: "npm:0.19.11"
     react-test-renderer: "npm:18.2.0"
     shelljs: "npm:^0.8.5"
     ts-prune: "npm:^0.10.3"
@@ -14047,27 +14040,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-web@npm:~0.18.12":
-  version: 0.18.12
-  resolution: "react-native-web@npm:0.18.12"
-  dependencies:
-    "@babel/runtime": "npm:^7.18.6"
-    create-react-class: "npm:^15.7.0"
-    fbjs: "npm:^3.0.4"
-    inline-style-prefixer: "npm:^6.0.1"
-    normalize-css-color: "npm:^1.0.2"
-    postcss-value-parser: "npm:^4.2.0"
-    styleq: "npm:^0.1.2"
-  peerDependencies:
-    react: ^17.0.2 || ^18.0.0
-    react-dom: ^17.0.2 || ^18.0.0
-  checksum: 10/f3d36363026dd8e21cb4c794b2bffa92590c815a246c7f2682d4692c9e4a7e625effe04134d68b8ca202cc85a8c19444e1a17dcb53278ef73425e162fcd58eed
-  languageName: node
-  linkType: hard
-
-"react-native-web@npm:~0.19.10":
-  version: 0.19.12
-  resolution: "react-native-web@npm:0.19.12"
+"react-native-web@npm:0.19.11":
+  version: 0.19.11
+  resolution: "react-native-web@npm:0.19.11"
   dependencies:
     "@babel/runtime": "npm:^7.18.6"
     "@react-native/normalize-colors": "npm:^0.74.1"
@@ -14080,7 +14055,7 @@ __metadata:
   peerDependencies:
     react: ^18.0.0
     react-dom: ^18.0.0
-  checksum: 10/6c326cc2fa07abcabfffcb99ea6df921c405402ead895ee4a142e8fdf55deda504fc4ce392bf50de9e6fe141a446ec2a93d8b872fcf079f10b92799fa9021732
+  checksum: 10/b0cb78af7bea4891a4766dde7a83a056aa27320d0be9d844a05d06b554e5457ff97b060e7eec7bd7e7510df9c98a1c0208148ea6de99c572749aab1327f9932b
   languageName: node
   linkType: hard
 
@@ -15500,7 +15475,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"styleq@npm:^0.1.2, styleq@npm:^0.1.3":
+"styleq@npm:^0.1.3":
   version: 0.1.3
   resolution: "styleq@npm:0.1.3"
   checksum: 10/9a75a1b635f8ebf5c0fdc3ffb56f466254f29aa1b2962ab2af776015d3b3bb1732a53edcda0c9ac9b97be96c22459db768feac0d61c1a319cc3954011ca9dcd8
@@ -16446,7 +16421,7 @@ __metadata:
     react-dom: "npm:18.2.0"
     react-native: "npm:0.74.0"
     react-native-reanimated: "workspace:*"
-    react-native-web: "npm:~0.19.10"
+    react-native-web: "npm:0.19.11"
     serve: "npm:^14.2.3"
     typescript: "npm:~5.3.0"
   languageName: unknown
