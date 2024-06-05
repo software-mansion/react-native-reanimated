@@ -2,6 +2,8 @@ import { makeMutable } from 'react-native-reanimated';
 import { Operation, OperationUpdate, isValidPropName } from './types';
 import { TestRunner } from './TestRunner';
 import { MultiViewSnapshot, SingleViewSnapshot, Snapshot } from './matchers/snapshotMatchers';
+import { Platform } from 'react-native';
+import { convertNegativeNumericColor } from './util';
 
 type JsUpdate = {
   tag: number;
@@ -59,9 +61,6 @@ export function createUpdatesContainer(testRunner: TestRunner) {
     const jsUpdates: Array<Required<JsUpdate>> = [];
     for (const operation of operations) {
       const { updates } = operation;
-      if ('backgroundColor' in updates) {
-        console.log(updates.backgroundColor);
-      }
       jsUpdates.push({
         tag: operation.tag ?? -1,
         shadowNodeWrapper: operation.shadowNodeWrapper,
@@ -84,12 +83,16 @@ export function createUpdatesContainer(testRunner: TestRunner) {
       // layout animation doesn't work on Fabric yet
       return;
     }
+    const updatesCopy = JSON.parse(JSON.stringify(update));
+    if (Platform.OS === 'android' && 'backgroundColor' in updatesCopy) {
+      updatesCopy.backgroundColor = convertNegativeNumericColor(updatesCopy.backgroundColor);
+    }
     _updateNativeSnapshot([{ tag, update }], jsUpdates.value.length - 1);
     jsUpdates.modify(updates => {
       updates.push({
         tag,
         // Deep Copy, works with nested objects, but doesn't copy functions (which should be fine here)
-        update: JSON.parse(JSON.stringify(update)),
+        update: updatesCopy,
       });
       return updates;
     });

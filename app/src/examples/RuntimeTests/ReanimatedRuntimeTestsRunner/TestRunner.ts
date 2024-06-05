@@ -15,7 +15,6 @@ import {
   TestDecorator,
 } from './types';
 import { TestComponent } from './TestComponent';
-import { getTrackerCallCount, render, stopRecordingAnimationUpdates, unmockAnimationTimer } from './RuntimeTestsApi';
 import { makeMutable, runOnUI, runOnJS, SharedValue } from 'react-native-reanimated';
 import { applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
 import { createUpdatesContainer } from './UpdatesContainer';
@@ -327,7 +326,7 @@ export class TestRunner {
 
       await testCase.run();
 
-      this.expect(getTrackerCallCount(consoleTrackerRef)).toBeCalled(1);
+      this.expect(this.getTrackerCallCount(consoleTrackerRef)).toBeCalled(1);
       if (testCase.warningMessage) {
         this.expect(message.value).toBe(testCase.warningMessage, ComparisonMode.STRING);
       }
@@ -342,9 +341,9 @@ export class TestRunner {
     }
 
     this._currentTestCase = null;
-    await render(null);
-    await unmockAnimationTimer();
-    await stopRecordingAnimationUpdates();
+    await this.render(null);
+    await this.unmockAnimationTimer();
+    await this.stopRecordingAnimationUpdates();
   }
 
   private showTestCaseSummary(testCase: TestCase, nestingLevel: number) {

@@ -2,35 +2,6 @@ import { ComparisonMode, TestValue, ValidPropNames, isValidPropName } from '../t
 
 const DISTANCE_TOLERANCE = 0.5;
 
-//TODO TEMP
-function decimalHexTwosComplement(decimal: number): string {
-  var size = 8;
-
-  if (decimal >= 0) {
-    var hexadecimal = decimal.toString(16);
-
-    while (hexadecimal.length % size !== 0) {
-      hexadecimal = '' + 0 + hexadecimal;
-    }
-
-    return hexadecimal;
-  } else {
-    var hexadecimal = Math.abs(decimal).toString(16);
-    while (hexadecimal.length % size !== 0) {
-      hexadecimal = '' + 0 + hexadecimal;
-    }
-
-    var output = '';
-    for (let i = 0; i < hexadecimal.length; i++) {
-      output += (0x0f - parseInt(hexadecimal[i], 16)).toString(16);
-    }
-
-    output = (0x01 + parseInt(output, 16)).toString(16);
-
-    return '#' + output.slice(2) + output.slice(0, 2);
-  }
-}
-
 const COMPARATORS: {
   [Key: string]: (expected: TestValue, value: TestValue) => boolean;
 } = {
@@ -45,11 +16,7 @@ const COMPARATORS: {
     return bothAreNaNs || ((bothAreNumbers || bothAreBigInts) && value === expected);
   },
 
-  [ComparisonMode.COLOR]: (_expected, _value) => {
-    const expected =
-      Number(_expected) && Number(_expected) < 0 ? decimalHexTwosComplement(Number(_expected)) : _expected;
-    const value = Number(_value) && Number(_value) < 0 ? decimalHexTwosComplement(Number(_value)) : _value;
-
+  [ComparisonMode.COLOR]: (expected, value) => {
     if (typeof value !== 'string' || typeof expected !== 'string') {
       return false;
     }
