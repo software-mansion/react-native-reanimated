@@ -6727,7 +6727,7 @@ __metadata:
     d3-shape: "npm:^3.2.0"
     eslint: "npm:^8.57.0"
     eslint-plugin-reanimated: "workspace:*"
-    patch-package: "npm:^7.0.0"
+    patch-package: "npm:^8.0.0"
     prettier: "npm:2.8.8"
     react: "npm:18.2.0"
     react-native: "npm:0.74.0"
@@ -8773,11 +8773,12 @@ __metadata:
     common-app: "workspace:*"
     eslint: "npm:^8.57.0"
     jest: "npm:^29.6.3"
+    patch-package: "npm:^8.0.0"
     prettier: "npm:2.8.8"
     react: "npm:18.2.0"
     react-native: "npm:0.74.0"
     react-native-gesture-handler: "npm:^2.16.2"
-    react-native-pager-view: "npm:^6.2.3"
+    react-native-pager-view: "npm:6.3.0"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:4.10.0-rc.1"
     react-native-screens: "npm:3.31.0-rc.1"
@@ -13181,7 +13182,7 @@ __metadata:
     react: "npm:18.2.0"
     react-native: "npm:0.74.0"
     react-native-gesture-handler: "npm:^2.16.2"
-    react-native-pager-view: "npm:^6.2.3"
+    react-native-pager-view: "npm:6.3.0"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:4.10.0-rc.1"
     react-native-screens: "npm:3.31.0-rc.1"
@@ -13261,30 +13262,6 @@ __metadata:
     ansi-escapes: "npm:^4.3.2"
     cross-spawn: "npm:^7.0.3"
   checksum: 10/1cf7001e66868b2ed7a03e036bc2f1dd45eb6dc8fee7e3e2056370057c484be25e7468fee00a1378e1ee8eca77ba79f48bee5ce15dcb464413987ace63c68b35
-  languageName: node
-  linkType: hard
-
-"patch-package@npm:^7.0.0":
-  version: 7.0.2
-  resolution: "patch-package@npm:7.0.2"
-  dependencies:
-    "@yarnpkg/lockfile": "npm:^1.1.0"
-    chalk: "npm:^4.1.2"
-    ci-info: "npm:^3.7.0"
-    cross-spawn: "npm:^7.0.3"
-    find-yarn-workspace-root: "npm:^2.0.0"
-    fs-extra: "npm:^9.0.0"
-    klaw-sync: "npm:^6.0.0"
-    minimist: "npm:^1.2.6"
-    open: "npm:^7.4.2"
-    rimraf: "npm:^2.6.3"
-    semver: "npm:^7.5.3"
-    slash: "npm:^2.0.0"
-    tmp: "npm:^0.0.33"
-    yaml: "npm:^2.2.2"
-  bin:
-    patch-package: index.js
-  checksum: 10/6aacba5e9a68ed4ae81eae2d656f916be4e007ad8cabb683e7286b0b0a01b3c79d862098425576a929d0dfca28a8e89cf55939c1c933c5b9245704da28993df9
   languageName: node
   linkType: hard
 
@@ -13945,16 +13922,6 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10/1e89986ad5e603a1d9eb76de5d2945eb681758f553082cd811d82cb05036a47af1a1da3bfdce1d0b0ce74156945d8dca1a940a648851fa4cfa4dc721d0322b44
-  languageName: node
-  linkType: hard
-
-"react-native-pager-view@npm:^6.2.3":
-  version: 6.3.1
-  resolution: "react-native-pager-view@npm:6.3.1"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 10/c6b2f068856c5dae2c809287edbf4664ccea727139a254c1aa3ca8ec0c8de5e034241b3b9c86b3abb47f03cb37453b9b73d8cc310cba8b260c766af4a46ebe8c
   languageName: node
   linkType: hard
 
