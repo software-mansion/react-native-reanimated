@@ -1,12 +1,13 @@
 {
-  "name": "TVOSExample",
+  "name": "tvos-example",
   "version": "0.0.1",
   "private": true,
   "scripts": {
     "android": "expo run:android",
     "ios": "expo run:ios",
     "tvos": "expo run:ios --scheme TVOSExample-tvOS --device \"Apple TV\"",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write --list-different .",
     "start": "expo start",
     "test": "jest"
   },
@@ -14,7 +15,7 @@
     "expo": "^50.0.2",
     "react": "18.2.0",
     "react-native": "npm:react-native-tvos@0.73.4-0",
-    "react-native-reanimated": "link:../"
+    "react-native-reanimated": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
