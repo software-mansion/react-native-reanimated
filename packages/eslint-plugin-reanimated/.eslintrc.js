@@ -1,4 +1,4 @@
 module.exports = {
   extends: ['../../.eslintrc.js'],
-  ignorePatterns: ['lib'],
+  ignorePatterns: ['index.js', 'types', 'public'],
 };

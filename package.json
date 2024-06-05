@@ -10,10 +10,15 @@
   },
   "private": true,
   "scripts": {
-    "build": "husky && yarn workspaces foreach -A -p run build"
+    "build": "husky && yarn workspaces foreach -A -p run build",
+    "lint": "yarn workspaces foreach -A -p run lint",
+    "format": "yarn workspaces foreach -A -p run format"
   },
   "devDependencies": {
+    "eslint": "^8.57.0",
     "husky": "^9.0.11",
-    "lint-staged": "^15.2.2"
+    "lint-staged": "^15.2.2",
+    "prettier": "2.8.8",
+    "typescript": "~5.3.0"
   }
 }

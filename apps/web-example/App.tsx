@@ -1,4 +1,4 @@
-import Apps from "common-app";
+import Apps from 'common-app';
 
 export default function App() {
   return <Apps />;

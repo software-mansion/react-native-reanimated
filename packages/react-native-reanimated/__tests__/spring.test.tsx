@@ -1,5 +1,5 @@
+import type { SpringAnimation } from '../src/reanimated2/animation/springUtils';
 import {
-  SpringAnimation,
   bisectRoot,
   scaleZetaToMatchClamps,
 } from '../src/reanimated2/animation/springUtils';
