@@ -106,7 +106,7 @@ export class TestRunner {
       this._includesOnly = true;
     }
 
-    let index; // We have to manage the order of the nested describes
+    let index: number; // We have to manage the order of the nested describes
     if (this._currentTestSuite === null) {
       index = this._testSuites.length; // If we have no parent describe, we append at the end
     } else {
@@ -144,7 +144,7 @@ export class TestRunner {
       componentsRefs: {},
       callsRegistry: {},
       errors: [],
-      skip: decorator === TestDecorator.SKIP,
+      skip: decorator === TestDecorator.SKIP || this._currentTestSuite.decorator === DescribeDecorator.SKIP,
       decorator,
       warningMessage: warningMessage,
     });
@@ -360,7 +360,8 @@ export class TestRunner {
     console.log(`${indentNestingLevel(nestingLevel)} ${mark} ${color(testCase.name, 'gray')}`);
 
     for (const error of testCase.errors) {
-      console.log(`${indentNestingLevel(nestingLevel)}\t${error}`);
+      const indentedError = error.replace(/\n/g, '\n' + indentNestingLevel(nestingLevel));
+      console.log(`${indentNestingLevel(nestingLevel)}\t${indentedError}`);
     }
   }
 

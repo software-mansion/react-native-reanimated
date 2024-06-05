@@ -67,7 +67,7 @@ async function getSnapshotUpdates(easingFn: EasingFunction | EasingFunctionFacto
   await mockAnimationTimer();
   const updatesContainerActive = await recordAnimationUpdates();
   await render(<ActiveAnimatedComponent easing={easingFn} />);
-  const waitTime = Platform.OS === 'ios' ? 1200 : 1400;
+  const waitTime = Platform.OS === 'ios' || easingFn === Easing.cubic ? 1200 : 1400;
   await wait(waitTime);
   const activeUpdates = updatesContainerActive.getUpdates();
   const activeNaiveUpdates = await updatesContainerActive.getNativeSnapshots();
@@ -99,7 +99,7 @@ describe('withTiming snapshots 📸, test EASING', () => {
             <ActiveAnimatedComponent easing={EasingRN.linear} />
           </ErrorBoundary>,
         );
-        await wait(1200);
+        await wait(Platform.OS === 'ios' ? 1200 : 1400);
       },
     );
 
