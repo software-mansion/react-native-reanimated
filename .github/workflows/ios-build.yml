@@ -9,8 +9,8 @@ on:
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
       - packages/react-native-reanimated/Common/**
-      - packages/reanimated-paper-example/package.json
-      - packages/reanimated-paper-example/ios/**
+      - apps/paper-example/package.json
+      - apps/paper-example/ios/**
       - packages/react-native-reanimated/FabricExample/package.json
       - packages/react-native-reanimated/FabricExample/ios/**
   merge_group:
@@ -25,8 +25,8 @@ on:
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
       - packages/react-native-reanimated/Common/**
-      - packages/reanimated-paper-example/package.json
-      - packages/reanimated-paper-example/ios/**
+      - apps/paper-example/package.json
+      - apps/paper-example/ios/**
       - packages/react-native-reanimated/FabricExample/package.json
       - packages/react-native-reanimated/FabricExample/ios/**
 
@@ -37,10 +37,7 @@ jobs:
     strategy:
       matrix:
         working-directory:
-          [
-            packages/reanimated-paper-example,
-            packages/react-native-reanimated/FabricExample,
-          ]
+          [apps/paper-example, packages/react-native-reanimated/FabricExample]
       fail-fast: false
     concurrency:
       group: ios-${{ matrix.working-directory }}-${{ github.ref }}
