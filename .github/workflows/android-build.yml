@@ -7,8 +7,8 @@ on:
       - .github/workflows/android-build.yml
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
-      - packages/reanimated-paper-example/package.json
-      - packages/reanimated-paper-example/android/**
+      - apps/paper-example/package.json
+      - apps/paper-example/android/**
       - packages/react-native-reanimated/FabricExample/package.json
       - packages/react-native-reanimated/FabricExample/android/**
   merge_group:
@@ -21,8 +21,8 @@ on:
       - .github/workflows/android-build.yml
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
-      - packages/reanimated-paper-example/package.json
-      - packages/reanimated-paper-example/android/**
+      - apps/paper-example/package.json
+      - apps/paper-example/android/**
       - packages/react-native-reanimated/FabricExample/package.json
       - packages/react-native-reanimated/FabricExample/android/**
 
@@ -33,10 +33,7 @@ jobs:
     strategy:
       matrix:
         working-directory:
-          [
-            packages/reanimated-paper-example,
-            packages/react-native-reanimated/FabricExample,
-          ]
+          [apps/paper-example, packages/react-native-reanimated/FabricExample]
       fail-fast: false
     concurrency:
       group: android-${{ matrix.working-directory }}-${{ github.ref }}
