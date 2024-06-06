@@ -1,2 +1,2 @@
 delete global.MessageChannel;
-require('./src/reanimated2/jestUtils').setUpTests();
+require('./src/jestUtils').setUpTests();
