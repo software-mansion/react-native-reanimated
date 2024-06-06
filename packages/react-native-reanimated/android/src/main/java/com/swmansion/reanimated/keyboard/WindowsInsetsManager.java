@@ -1,9 +1,10 @@
 package com.swmansion.reanimated.keyboard;
 
+import android.app.Activity;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
-import android.view.Window;
 import android.widget.FrameLayout;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -18,6 +19,8 @@ public class WindowsInsetsManager {
   private final Keyboard mKeyboard;
   private final NotifyAboutKeyboardChangeFunction mNotifyAboutKeyboardChange;
 
+  private final String MissingContextErrorMsg = "Unable to get reference to react activity";
+
   public WindowsInsetsManager(
       WeakReference<ReactApplicationContext> reactContext,
       Keyboard keyboard,
@@ -27,33 +30,54 @@ public class WindowsInsetsManager {
     mNotifyAboutKeyboardChange = notifyAboutKeyboardChange;
   }
 
-  private Window getWindow() {
-    return mReactContext.get().getCurrentActivity().getWindow();
-  }
-
-  private View getRootView() {
-    return getWindow().getDecorView();
+  private Activity getCurrentActivity() {
+    return mReactContext.get().getCurrentActivity();
   }
 
   public void startObservingChanges(
       KeyboardAnimationCallback keyboardAnimationCallback, boolean isStatusBarTranslucent) {
     mIsStatusBarTranslucent = isStatusBarTranslucent;
     updateWindowDecor(false);
-    ViewCompat.setOnApplyWindowInsetsListener(getRootView(), this::onApplyWindowInsetsListener);
-    ViewCompat.setWindowInsetsAnimationCallback(getRootView(), keyboardAnimationCallback);
+
+    Activity currentActivity = getCurrentActivity();
+    if (currentActivity == null) {
+      Log.e("Reanimated", MissingContextErrorMsg);
+      return;
+    }
+
+    View rootView = currentActivity.getWindow().getDecorView();
+    ViewCompat.setOnApplyWindowInsetsListener(rootView, this::onApplyWindowInsetsListener);
+    ViewCompat.setWindowInsetsAnimationCallback(rootView, keyboardAnimationCallback);
   }
 
   public void stopObservingChanges() {
     updateWindowDecor(!mIsStatusBarTranslucent);
     updateInsets(0, 0);
-    View rootView = getRootView();
+
+    Activity currentActivity = getCurrentActivity();
+    if (currentActivity == null) {
+      Log.e("Reanimated", MissingContextErrorMsg);
+      return;
+    }
+
+    View rootView = currentActivity.getWindow().getDecorView();
     ViewCompat.setWindowInsetsAnimationCallback(rootView, null);
     ViewCompat.setOnApplyWindowInsetsListener(rootView, null);
   }
 
   private void updateWindowDecor(boolean decorFitsSystemWindow) {
     new Handler(Looper.getMainLooper())
-        .post(() -> WindowCompat.setDecorFitsSystemWindows(getWindow(), decorFitsSystemWindow));
+        .post(
+            () -> {
+              Activity currentActivity = getCurrentActivity();
+              if (currentActivity == null) {
+                Log.e("Reanimated", MissingContextErrorMsg);
+                return;
+              }
+
+              WindowCompat.setDecorFitsSystemWindows(
+                  currentActivity.getWindow(), decorFitsSystemWindow);
+            });
   }
 
   private WindowInsetsCompat onApplyWindowInsetsListener(View view, WindowInsetsCompat insets) {
@@ -79,7 +103,15 @@ public class WindowsInsetsManager {
             () -> {
               FrameLayout.LayoutParams params = getLayoutParams(paddingTop, paddingBottom);
               int actionBarId = androidx.appcompat.R.id.action_bar_root;
-              View actionBarRootView = getRootView().findViewById(actionBarId);
+
+              Activity currentActivity = getCurrentActivity();
+              if (currentActivity == null) {
+                Log.e("Reanimated", MissingContextErrorMsg);
+                return;
+              }
+
+              View actionBarRootView =
+                  currentActivity.getWindow().getDecorView().findViewById(actionBarId);
               actionBarRootView.setLayoutParams(params);
             });
   }
