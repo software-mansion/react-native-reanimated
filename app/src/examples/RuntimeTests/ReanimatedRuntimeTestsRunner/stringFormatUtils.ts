@@ -1,14 +1,18 @@
-import { NullableTestValue } from './types';
+import { Mismatch, NullableTestValue } from './types';
 
 export function indentNestingLevel(nestingLevel: number) {
   return `  ${'   '.repeat(nestingLevel)}`;
 }
 
-export function appendWhiteSpaceToMatchLength(message: undefined | string | number, length: number) {
+export function adjustStringToLength(message: undefined | string | number, length: number) {
   const messageStr = message ? message.toString() : '';
   const messageLen = messageStr.length;
-  const indentSize = Math.max(0, length - messageLen);
-  return `${messageStr}${' '.repeat(indentSize)}`;
+  if (length > messageLen) {
+    const indentSize = length - messageLen;
+    return `${messageStr}${' '.repeat(indentSize)}`;
+  } else {
+    return messageStr.slice(0, length);
+  }
 }
 
 export function color(
@@ -106,6 +110,66 @@ export function formatString(template: string, variableObject: unknown, index: n
   testName = testName.replace(/%(p|s|i|f)/, valueToString(variableObject));
 
   return testName;
+}
+
+export function formatSnapshotMismatch(mismatches: Array<Mismatch>, native: boolean) {
+  /**      | HEIGHT             | WIDTH              |
+   index | EXPECTED | ACTUAL  | EXPECTED | ACTUAL  |
+   */
+
+  const keysToPrint: Array<string> = [];
+  mismatches.forEach(({ expectedSnapshot, capturedSnapshot }) => {
+    Object.keys(expectedSnapshot).forEach(key => {
+      if (!keysToPrint.includes(key)) {
+        keysToPrint.push(key);
+      }
+    });
+    Object.keys(capturedSnapshot).forEach(key => {
+      if (!keysToPrint.includes(key)) {
+        keysToPrint.push(key);
+      }
+    });
+  });
+
+  const valueColumnWidth = 15;
+  const indexColumnWidth = 7;
+
+  const row1 =
+    ' '.repeat(indexColumnWidth) +
+    '|' +
+    keysToPrint.map(key => adjustStringToLength(key, 2 * valueColumnWidth + 1)).join('|');
+
+  const row2 =
+    adjustStringToLength('index', indexColumnWidth) +
+    '|' +
+    keysToPrint
+      .map(
+        _ =>
+          adjustStringToLength(native ? 'native' : 'expected', valueColumnWidth) +
+          '|' +
+          adjustStringToLength(native ? 'js' : 'captured', valueColumnWidth),
+      )
+      .join('|');
+
+  const emptyRow =
+    '-'.repeat(indexColumnWidth) +
+    ('+' + '-'.repeat(valueColumnWidth) + '+' + '-'.repeat(valueColumnWidth)).repeat(keysToPrint.length);
+
+  const remainingRows = mismatches.map(
+    ({ index, expectedSnapshot, capturedSnapshot }) =>
+      adjustStringToLength(index.toString(), indexColumnWidth) +
+      '|' +
+      keysToPrint
+        .map(
+          key =>
+            green(adjustStringToLength(expectedSnapshot[key as keyof typeof expectedSnapshot], valueColumnWidth)) +
+            '|' +
+            red(adjustStringToLength(capturedSnapshot[key as keyof typeof capturedSnapshot], valueColumnWidth)),
+        )
+        .join('|'),
+  );
+
+  return [row1, row2, emptyRow, ...remainingRows].join('\n');
 }
 
 export const EMPTY_LOG_PLACEHOLDER = color(applyMarkdown('***   ***'), 'lightGray');

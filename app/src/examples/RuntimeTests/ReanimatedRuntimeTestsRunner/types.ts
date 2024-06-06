@@ -112,6 +112,12 @@ export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;
 };
 
+export type Mismatch = {
+  index: number;
+  expectedSnapshot: OperationUpdate;
+  capturedSnapshot: OperationUpdate;
+};
+
 declare global {
   var mockedAnimationTimestamp: number | undefined;
   var originalRequestAnimationFrame: ((callback: (timestamp: number) => void) => void) | undefined;

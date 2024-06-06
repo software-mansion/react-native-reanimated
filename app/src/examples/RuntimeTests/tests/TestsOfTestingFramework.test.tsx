@@ -22,7 +22,7 @@ import {
   waitForNotify,
   clearRenderOutput,
 } from '../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { Snapshots } from './Animations.snapshot';
+import { Snapshots } from './TestsOfTestingFramework.snapshot';
 import { ComparisonMode } from '../ReanimatedRuntimeTestsRunner/types';
 
 const AnimatedComponent = () => {
@@ -147,7 +147,7 @@ const LayoutAnimation = () => {
   );
 };
 
-describe.skip('Tests of Test Framework', () => {
+describe('Tests of Test Framework', () => {
   test('withTiming - expect error', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('BrownComponent');
@@ -240,7 +240,12 @@ describe.skip('Tests of Test Framework', () => {
     await wait(1000);
 
     const brownComponent = getTestComponent('BrownComponent');
+    const greenComponent = getTestComponent('GreenComponent');
+
     expect(updatesContainer.getUpdates(brownComponent)).toMatchSnapshots(Snapshots.greenComponent);
+
+    const greenNative = await updatesContainer.getNativeSnapshots(greenComponent);
+    expect(updatesContainer.getUpdates(brownComponent)).toMatchNativeSnapshots(greenNative);
   });
 
   test('layoutAnimation - entering', async () => {

@@ -1,25 +1,17 @@
-import { appendWhiteSpaceToMatchLength, green, red, yellow } from '../stringFormatUtils';
-import { OperationUpdate, ComparisonMode, TestValue, isValidPropName } from '../types';
+import { formatSnapshotMismatch, green, red, yellow } from '../stringFormatUtils';
+import { OperationUpdate, ComparisonMode, isValidPropName, Mismatch } from '../types';
 import { getComparator, getComparisonModeForProp } from './Comparators';
 
 export type SingleViewSnapshot = Array<OperationUpdate>;
 export type MultiViewSnapshot = Record<number, SingleViewSnapshot>;
 export type Snapshot = SingleViewSnapshot | MultiViewSnapshot;
 
-function formatSnapshotErrorMessage(jsValue: TestValue, nativeValue: TestValue, propName: string, index: number) {
-  const preIndexSpace = (index < 100 ? ' ' : '') + (index < 10 ? ' ' : '');
-  return `\tIndex ${preIndexSpace}${index} ${propName}\t expected: ${appendWhiteSpaceToMatchLength(
-    green(jsValue),
-    30,
-  )} received: ${red(appendWhiteSpaceToMatchLength(JSON.stringify(nativeValue), 30))}\n`;
-}
-
-function compareJsAndNativeSnapshot(
+function isJsAndNativeSnapshotsEqual(
   jsSnapshots: Array<OperationUpdate>,
   nativeSnapshots: Array<OperationUpdate>,
   i: number,
   expectNegativeMismatch: Boolean,
-) {
+): Boolean {
   /**
       The TestRunner can collect two types of snapshots:
       - JS snapshots: animation updates sent via `_updateProps`
@@ -33,9 +25,9 @@ function compareJsAndNativeSnapshot(
       one additional native snapshot is taken during the execution of the `getNativeSnapshots` function.
    */
 
-  let errorString = '';
   const jsSnapshot = jsSnapshots[i];
   const nativeSnapshot = nativeSnapshots[i + 1];
+
   const keys = Object.keys(jsSnapshot) as Array<keyof OperationUpdate>;
   for (const key of keys) {
     const jsValue = jsSnapshot[key];
@@ -45,10 +37,10 @@ function compareJsAndNativeSnapshot(
     const expectMismatch = jsValue < 0 && expectNegativeMismatch;
     const valuesAreMatching = isEqual(jsValue, nativeValue);
     if ((!valuesAreMatching && !expectMismatch) || (valuesAreMatching && expectMismatch)) {
-      errorString += formatSnapshotErrorMessage(jsValue, nativeValue, key, i);
+      return false;
     }
   }
-  return errorString;
+  return true;
 }
 
 /**
@@ -73,34 +65,34 @@ function compareSingleViewNativeSnapshots(
   if (jsUpdates.length !== nativeSnapshots.length - 1 && jsUpdates.length !== nativeSnapshots.length) {
     return `Expected ${green(jsUpdates.length)} snapshots, but received ${red(nativeSnapshots.length - 1)} snapshots\n`;
   }
-  let errorString = '';
+  const mismatchedSnapshots: Array<Mismatch> = [];
   for (let i = 0; i < jsUpdates.length - 1; i++) {
-    errorString += compareJsAndNativeSnapshot(jsUpdates, nativeSnapshots, i, expectNegativeMismatch);
+    if (!isJsAndNativeSnapshotsEqual(jsUpdates, nativeSnapshots, i, expectNegativeMismatch)) {
+      mismatchedSnapshots.push({ index: i, expectedSnapshot: nativeSnapshots[i + 1], capturedSnapshot: jsUpdates[i] });
+    }
   }
-  return errorString === '' ? undefined : errorString;
+  return mismatchedSnapshots.length === 0 ? undefined : formatSnapshotMismatch(mismatchedSnapshots, true);
 }
 
 function compareSingleViewJsSnapshots(
   expectedSnapshots: SingleViewSnapshot,
   capturedSnapshots: SingleViewSnapshot,
 ): string | undefined {
+  const mismatchedSnapshots: Array<Mismatch> = [];
   if (expectedSnapshots.length !== capturedSnapshots.length) {
     return `Expected ${green(expectedSnapshots.length)} snapshots, but received ${red(
       capturedSnapshots.length,
     )} snapshots\n`;
   }
-  let errorString = '';
-  expectedSnapshots.forEach((expectedSnapshots: OperationUpdate, index: number) => {
+  expectedSnapshots.forEach((expectedSnapshot: OperationUpdate, index: number) => {
     const capturedSnapshot = capturedSnapshots[index];
     const isEquals = getComparator(ComparisonMode.AUTO);
-    if (!isEquals(expectedSnapshots, capturedSnapshot)) {
-      errorString += `\tAt index ${index}:\n\t\texpected: ${green(expectedSnapshots)}\n\t\treceived: ${red(
-        capturedSnapshot,
-      )}\n`;
+    if (!isEquals(expectedSnapshot, capturedSnapshot)) {
+      mismatchedSnapshots.push({ index, expectedSnapshot, capturedSnapshot });
     }
   });
-  if (errorString !== '') {
-    return errorString;
+  if (mismatchedSnapshots.length > 0) {
+    return formatSnapshotMismatch(mismatchedSnapshots, false);
   }
   return;
 }
