@@ -23,8 +23,8 @@ on:
       - packages/react-native-reanimated/Common/**
       - apps/paper-example/package.json
       - apps/paper-example/android/**
-      - packages/react-native-reanimated/FabricExample/package.json
-      - packages/react-native-reanimated/FabricExample/android/**
+      - apps/fabric-example/package.json
+      - apps/fabric-example/android/**
 
 jobs:
   build:
@@ -32,8 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        working-directory:
-          [apps/paper-example, packages/react-native-reanimated/FabricExample]
+        working-directory: [apps/paper-example, apps/fabric-example]
       fail-fast: false
     concurrency:
       group: android-${{ matrix.working-directory }}-${{ github.ref }}
