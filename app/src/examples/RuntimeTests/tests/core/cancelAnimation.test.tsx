@@ -63,6 +63,7 @@ describe('Test *****cancelAnimation*****', () => {
       );
     };
     test.each([
+      [400, 450],
       [500, 200],
       [1000, 200],
       [1000, 400],
@@ -78,21 +79,6 @@ describe('Test *****cancelAnimation*****', () => {
       const expectedWidth = 300 * (timeElapsed / animationDuration);
       expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(expectedWidth - 4, expectedWidth + 4);
     });
-
-    test.each([
-      [400, 450],
-      [200, 400],
-    ])(
-      'Stop after **${1}**ms, after animation finishes, full animation is **${0}**ms long ',
-      async ([animationDuration, timeToStop]) => {
-        await render(<CancelAfterDelayComponent animationDuration={animationDuration} timeToStop={timeToStop} />);
-        const animatedComponent = getTestComponent(CANCEL_AFTER_DELAY_REF);
-        await wait(timeToStop + 200);
-
-        const expectedWidth = 300;
-        expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(expectedWidth - 4, expectedWidth + 4);
-      },
-    );
   });
 
   describe('Test canceling animation _after fulfilling condition_ of reaching a predefined value', () => {

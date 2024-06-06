@@ -1,4 +1,4 @@
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import Animated, {
   FadeIn,
   FadeInRight,
@@ -116,14 +116,12 @@ async function getSnapshotUpdates(entering: any, waitTime: number, duration: num
   return updates;
 }
 
-// TODO We should mock window height, update the snapshots and enable these back
-describe.skip('Test predefined entering', () => {
+describe('Test predefined entering', () => {
   describe('Entering on mount, no modifiers', async () => {
     test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet, waitTime]) => {
       for (const entering of enteringSet) {
         const snapshotName = (entering as any).name;
-        const additionalWait = Platform.OS === 'ios' ? 0 : 200;
-        const updates = await getSnapshotUpdates(entering, waitTime + additionalWait, undefined);
+        const updates = await getSnapshotUpdates(entering, waitTime, undefined);
         expect(updates).toMatchSnapshots(
           NoModifierEnteringSnapshots[snapshotName as keyof typeof NoModifierEnteringSnapshots],
         );
