@@ -1,7 +1,7 @@
 import {
   checkCppVersion,
   matchVersion,
-} from '../src/reanimated2/platform-specific/checkCppVersion';
+} from '../src/platform-specific/checkCppVersion';
 import { version as packageVersion } from '../package.json';
 
 describe('checkCppVersion', () => {

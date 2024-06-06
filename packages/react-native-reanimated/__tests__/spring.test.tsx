@@ -1,8 +1,8 @@
-import type { SpringAnimation } from '../src/reanimated2/animation/springUtils';
+import type { SpringAnimation } from '../src/animation/springUtils';
 import {
   bisectRoot,
   scaleZetaToMatchClamps,
-} from '../src/reanimated2/animation/springUtils';
+} from '../src/animation/springUtils';
 
 describe('Spring utils', () => {
   test.each([
