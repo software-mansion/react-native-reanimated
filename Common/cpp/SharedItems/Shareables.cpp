@@ -1,5 +1,7 @@
 #include "Shareables.h"
 
+#include <sstream>
+
 using namespace facebook;
 
 namespace reanimated {
@@ -235,16 +237,80 @@ jsi::Value ShareableHostFunction::toJSValue(jsi::Runtime &rt) {
       rt, jsi::PropNameID::forUtf8(rt, name_), paramCount_, hostFunction_);
 }
 
+static inline jsi::Object getWorkletsCache(jsi::Runtime &rt) {
+  constexpr auto key = "__workletsCache";
+  auto value = rt.global().getProperty(rt, key);
+  if (value.isUndefined()) {
+    value = rt.global().getPropertyAsFunction(rt, "Map").callAsConstructor(rt);
+    rt.global().setProperty(rt, key, value);
+  }
+  return value.asObject(rt);
+}
+
 jsi::Value ShareableWorklet::toJSValue(jsi::Runtime &rt) {
+  const auto obj = ShareableObject::toJSValue(rt).asObject(rt);
+
+  const auto workletHash = obj.getProperty(rt, "__workletHash");
   assert(
-      std::any_of(
-          data_.cbegin(),
-          data_.cend(),
-          [](const auto &item) { return item.first == "__workletHash"; }) &&
-      "ShareableWorklet doesn't have `__workletHash` property");
-  jsi::Value obj = ShareableObject::toJSValue(rt);
-  return getValueUnpacker(rt).call(
-      rt, obj, jsi::String::createFromAscii(rt, "Worklet"));
+      !workletHash.isUndefined() &&
+      "[Reanimated] `__workletHash` property not found");
+
+  const auto workletsCache = getWorkletsCache(rt);
+  auto workletFun = workletsCache.getPropertyAsFunction(rt, "get").callWithThis(
+      rt, workletsCache, workletHash);
+  if (workletFun.isUndefined()) {
+    const auto initData = obj.getPropertyAsObject(rt, "__initData");
+
+    const auto code = initData.getProperty(rt, "code");
+    std::stringstream ss;
+    ss << '(' << code.asString(rt).utf8(rt) << "\n)";
+    const auto wrappedCode = jsi::String::createFromUtf8(rt, ss.str());
+
+    const auto location = initData.getProperty(rt, "location");
+    const auto sourceMap = initData.getProperty(rt, "sourceMap");
+
+    const auto evalWithSourceMap =
+        rt.global().getProperty(rt, "evalWithSourceMap");
+    if (!evalWithSourceMap.isUndefined()) {
+      // if the runtime (hermes only for now) supports loading source maps
+      // we want to use the proper filename for the location as it guarantees
+      // that debugger understands and loads the source code of the file where
+      // the worklet is defined.
+      // TODO: call HermesRuntime::evaluateJavaScriptWithSourceMap directly
+      workletFun = evalWithSourceMap.asObject(rt).asFunction(rt).call(
+          rt, wrappedCode, location, sourceMap);
+    } else {
+      const auto evalWithSourceUrl =
+          rt.global().getProperty(rt, "evalWithSourceUrl");
+      if (!evalWithSourceUrl.isUndefined()) {
+        // if the runtime doesn't support loading source maps, in dev mode we
+        // can pass source url when evaluating the worklet. Now, instead of
+        // using the actual file location we use worklet hash, as it the allows
+        // us to properly symbolicate traces (see errors.ts for details)
+        // TODO: call jsi::Runtime::evaluateJavaScript directly
+        std::stringstream sourceURL;
+        sourceURL << "worklet_"
+                  << static_cast<uint64_t>(workletHash.asNumber());
+        workletFun = evalWithSourceUrl.asObject(rt).asFunction(rt).call(
+            rt, wrappedCode, sourceURL.str());
+      } else {
+        // in release we use the regular eval to save on JSI calls
+        // TODO: call jsi::Runtime::evaluateJavaScript directly
+        workletFun =
+            rt.global().getPropertyAsFunction(rt, "eval").call(rt, wrappedCode);
+      }
+    }
+
+    workletsCache.getPropertyAsFunction(rt, "set").callWithThis(
+        rt, workletsCache, workletHash, workletFun);
+  }
+
+  const auto workletFunObj = workletFun.asObject(rt);
+  auto functionInstance = workletFunObj.getPropertyAsFunction(rt, "bind")
+                              .callWithThis(rt, workletFunObj, obj);
+  obj.setProperty(rt, "_recur", functionInstance);
+
+  return functionInstance;
 }
 
 jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
