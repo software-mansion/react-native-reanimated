@@ -253,7 +253,6 @@ describe('Tests of Test Framework', () => {
     const updatesContainer = await recordAnimationUpdates();
     await render(<LayoutAnimation />);
     await wait(600);
-    console.log(await updatesContainer.getNativeSnapshots());
     expect(updatesContainer.getUpdates()).toMatchSnapshots(Snapshots.brownComponent);
   });
 
