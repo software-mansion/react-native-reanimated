@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+// TODO
 export default function DynamicStylesExample() {
   const [extraStyle, setExtraStyle] = React.useState(false);
   const [rerender, setRerender] = React.useState(false);

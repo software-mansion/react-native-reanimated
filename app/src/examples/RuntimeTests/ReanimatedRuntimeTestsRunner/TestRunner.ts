@@ -16,7 +16,7 @@ import {
 } from './types';
 import { TestComponent } from './TestComponent';
 import { makeMutable, runOnUI, runOnJS, SharedValue } from 'react-native-reanimated';
-import { applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
+import { EMPTY_LOG_PLACEHOLDER, applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
 import { createUpdatesContainer } from './UpdatesContainer';
 import { Matchers, nullableMatch } from './matchers/Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
@@ -359,7 +359,7 @@ export class TestRunner {
     console.log(`${indentNestingLevel(nestingLevel)} ${mark} ${color(testCase.name, 'gray')}`);
 
     for (const error of testCase.errors) {
-      const indentedError = error.replace(/\n/g, '\n' + indentNestingLevel(nestingLevel));
+      const indentedError = error.replace(/\n/g, '\n' + EMPTY_LOG_PLACEHOLDER + indentNestingLevel(nestingLevel + 2));
       console.log(`${indentNestingLevel(nestingLevel)}\t${indentedError}`);
     }
   }

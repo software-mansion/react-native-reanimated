@@ -11,10 +11,14 @@ export function appendWhiteSpaceToMatchLength(message: undefined | string | numb
   return `${messageStr}${' '.repeat(indentSize)}`;
 }
 
-export function color(value: NullableTestValue, color: 'cyan' | 'gray' | 'green' | 'yellow' | 'red' | 'orange') {
+export function color(
+  value: NullableTestValue,
+  color: 'cyan' | 'gray' | 'green' | 'yellow' | 'red' | 'lightGray' | 'orange',
+) {
   const COLOR_CODES = {
     cyan: '\x1b[36m',
     gray: '\x1b[38;5;242m',
+    lightGray: '\x1b[37m',
     green: '\x1b[92m',
     yellow: '\x1b[93m',
     red: '\x1b[91m',
@@ -103,3 +107,5 @@ export function formatString(template: string, variableObject: unknown, index: n
 
   return testName;
 }
+
+export const EMPTY_LOG_PLACEHOLDER = color(applyMarkdown('***   ***'), 'lightGray');

@@ -73,7 +73,7 @@ const toBeCalledOnThreadMatcher = (
   return {
     pass: callsCount === times,
     message: `Expected ${cyan(currentValue.name)}${negation ? ' NOT' : ''} to be called ${green(times)} times${
-      thread === 'ALL' ? '' : cyan(`on ${thread} thread`)
+      thread === 'ALL' ? '' : cyan(` on ${thread} thread`)
     }, but was called ${red(callsCount)} times`,
   };
 };

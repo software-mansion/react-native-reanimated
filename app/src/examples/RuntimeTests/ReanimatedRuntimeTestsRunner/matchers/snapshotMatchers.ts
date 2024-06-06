@@ -67,6 +67,9 @@ function compareSingleViewNativeSnapshots(
   jsUpdates: Array<OperationUpdate>,
   expectNegativeMismatch = false,
 ): string | undefined {
+  if (!nativeSnapshots || !jsUpdates) {
+    return `Missing snapshot`;
+  }
   if (jsUpdates.length !== nativeSnapshots.length - 1 && jsUpdates.length !== nativeSnapshots.length) {
     return `Expected ${green(jsUpdates.length)} snapshots, but received ${red(nativeSnapshots.length - 1)} snapshots\n`;
   }
@@ -122,6 +125,9 @@ export function compareSnapshots(
         Object.keys(capturedSnapshots).length,
       )}`;
     } else {
+      if (!Array.isArray(capturedSnapshots)) {
+        return `Unexpected type of captured snapshots: ${typeof capturedSnapshots}`;
+      }
       const err = compareSingleViewSnapshots(expectedSnapshots, capturedSnapshots);
       if (err) {
         errorMessage = 'Snapshot mismatch: \n' + err;
@@ -130,12 +136,15 @@ export function compareSnapshots(
   }
 
   if (!Array.isArray(expectedSnapshots) && typeof expectedSnapshots === 'object') {
-    const expectedViewNum = Object.keys(expectedSnapshots).length;
-    const capturedViewNum = Object.keys(capturedSnapshots).length;
+    const expectedViewNum = Object.keys(expectedSnapshots)?.length;
+    const capturedViewNum = Object.keys(capturedSnapshots)?.length;
 
     if (Array.isArray(capturedSnapshots)) {
       return `Expected snapshots of ${green(expectedViewNum)} views, received only ${red('one')}`;
     } else {
+      if (!capturedSnapshots || typeof capturedSnapshots !== 'object') {
+        return `Unexpected type of captured snapshots: ${typeof capturedSnapshots}`;
+      }
       if (expectedViewNum !== capturedViewNum) {
         return `Expected snapshots of ${green(expectedViewNum)} views, received ${red(capturedViewNum)}`;
       }
