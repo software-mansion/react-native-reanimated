@@ -25,7 +25,7 @@
     "find-unused-code:js": "yarn ts-prune --ignore \"index|.web.\" --error  ",
     "type:check:src": "yarn tsc --noEmit",
     "type:check:plugin": "cd plugin && yarn type:check:src && cd ..",
-    "type:check:app": "./scripts/test-ts.sh app/src/App.tsx",
+    "type:check:app": "./scripts/test-ts.sh ../../apps/common-app/src/App.tsx",
     "type:check:tests:common": "./scripts/test-ts.sh __typetests__/common",
     "type:check:tests:0.72+": "./scripts/test-ts.sh __typetests__/0.72+",
     "type:check:tests:legacy": "./scripts/test-ts.sh __typetests__/legacy",

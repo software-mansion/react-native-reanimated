@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, WithSpringConfig } from 'react-native-reanimated';
 import React from 'react';
 import {
   describe,
@@ -12,7 +12,6 @@ import {
   wait,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { Snapshots } from './withSpring.snapshot';
-import { SpringConfig } from '../../../../../../../lib/typescript/reanimated2/animation/springUtils';
 
 const AnimatedComponent = ({
   animateFrom,
@@ -21,7 +20,7 @@ const AnimatedComponent = ({
 }: {
   animateFrom: number;
   animateTo: number;
-  config: SpringConfig;
+  config: WithSpringConfig;
 }) => {
   const widthSV = useSharedValue(animateFrom);
 
@@ -42,7 +41,7 @@ const AnimatedComponent = ({
   );
 };
 
-async function getSnapshotUpdates(animateFrom: number, animateTo: number, config: SpringConfig, waitTime = 2000) {
+async function getSnapshotUpdates(animateFrom: number, animateTo: number, config: WithSpringConfig, waitTime = 2000) {
   await mockAnimationTimer();
   const updatesContainer = await recordAnimationUpdates();
   await render(<AnimatedComponent animateFrom={animateFrom} animateTo={animateTo} config={config} />);
