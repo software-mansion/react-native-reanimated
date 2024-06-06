@@ -67,6 +67,7 @@ function findExamples(search: string) {
 }
 
 function HomeScreen({ navigation }: HomeScreenProps) {
+  console.log('Let the fun begin');
   // TODO: Currently it breaks on @react-navigation
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [search, setSearch] = React.useState('');
