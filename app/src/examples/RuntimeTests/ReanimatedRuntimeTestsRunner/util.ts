@@ -1,5 +1,6 @@
-/** On Android the color passed to _updatePropsPaper is a decimal, making HEX color after conversion into two's complement */
-export function convertNegativeNumericColor(color: unknown): string {
+// export function convertIosColor(color: unknown): string {}
+
+export function convertDecimalColor(color: unknown): string {
   'worklet';
 
   if (typeof color !== 'number') {
@@ -8,28 +9,26 @@ export function convertNegativeNumericColor(color: unknown): string {
   }
 
   var size = 8;
+  let hexColor = '';
 
   if (color >= 0) {
-    var hexadecimal = color.toString(16);
+    hexColor = color.toString(16);
 
-    while (hexadecimal.length % size !== 0) {
-      hexadecimal = '' + 0 + hexadecimal;
+    while (hexColor.length % size !== 0) {
+      hexColor = '' + 0 + hexColor;
     }
-
-    return hexadecimal;
   } else {
-    var hexadecimal = Math.abs(color).toString(16);
-    while (hexadecimal.length % size !== 0) {
+    let hexadecimal = Math.abs(color).toString(16);
+    while (hexColor.length % size !== 0) {
       hexadecimal = '' + 0 + hexadecimal;
     }
 
-    var output = '';
-    for (let i = 0; i < hexadecimal.length; i++) {
-      output += (0x0f - parseInt(hexadecimal[i], 16)).toString(16);
+    hexColor = '';
+    for (let i = 0; i < hexColor.length; i++) {
+      hexColor += (0x0f - parseInt(hexColor[i], 16)).toString(16);
     }
 
-    output = (0x01 + parseInt(output, 16)).toString(16);
-
-    return '#' + output.slice(2) + output.slice(0, 2);
+    hexColor = (0x01 + parseInt(hexColor, 16)).toString(16);
   }
+  return '#' + hexColor.slice(2) + hexColor.slice(0, 2);
 }

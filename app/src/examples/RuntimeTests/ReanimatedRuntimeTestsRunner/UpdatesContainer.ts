@@ -2,8 +2,7 @@ import { makeMutable } from 'react-native-reanimated';
 import { Operation, OperationUpdate, isValidPropName } from './types';
 import { TestRunner } from './TestRunner';
 import { MultiViewSnapshot, SingleViewSnapshot } from './matchers/snapshotMatchers';
-import { Platform } from 'react-native';
-import { convertNegativeNumericColor } from './util';
+import { convertDecimalColor } from './util';
 import { TestComponent } from './TestComponent';
 
 type JsUpdate = {
@@ -85,8 +84,8 @@ export function createUpdatesContainer(testRunner: TestRunner) {
       return;
     }
     const updatesCopy = JSON.parse(JSON.stringify(update));
-    if (Platform.OS === 'android' && 'backgroundColor' in updatesCopy) {
-      updatesCopy.backgroundColor = convertNegativeNumericColor(updatesCopy.backgroundColor);
+    if ('backgroundColor' in updatesCopy) {
+      updatesCopy.backgroundColor = convertDecimalColor(updatesCopy.backgroundColor);
     }
     _updateNativeSnapshot([{ tag, update }], jsUpdates.value.length - 1);
     jsUpdates.modify(updates => {
