@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { View, StyleSheet, Easing as EasingRN } from 'react-native';
+import { View, StyleSheet, Easing as EasingRN, Platform } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -66,7 +66,8 @@ async function getSnapshotUpdates(easingFn: EasingFunction | EasingFunctionFacto
   await mockAnimationTimer();
   const updatesContainerActive = await recordAnimationUpdates();
   await render(<ActiveAnimatedComponent easing={easingFn} />);
-  await wait(1200);
+  const waitTime = Platform.OS === 'ios' || easingFn === Easing.cubic ? 1200 : 1400;
+  await wait(waitTime);
   const activeUpdates = updatesContainerActive.getUpdates();
   const activeNaiveUpdates = await updatesContainerActive.getNativeSnapshots();
 
@@ -75,13 +76,12 @@ async function getSnapshotUpdates(easingFn: EasingFunction | EasingFunctionFacto
 
   const updatesContainerPassive = await recordAnimationUpdates();
   await render(<PassiveAnimatedComponent easing={easingFn} />);
-  await wait(1200);
+  await wait(waitTime);
 
   // For passive updates we have the following order of operations:
   // 1. Slightly increase sharedValue
   // 2. Once the sharedValue changed update the style
   // Therefore the first frame is not recorded and we have to hardcode it
-
   const passiveUpdates = [{ width: 0 }, ...updatesContainerPassive.getUpdates()];
 
   return [activeUpdates, activeNaiveUpdates, passiveUpdates];
@@ -98,7 +98,7 @@ describe('withTiming snapshots 📸, test EASING', () => {
             <ActiveAnimatedComponent easing={EasingRN.linear} />
           </ErrorBoundary>,
         );
-        await wait(1200);
+        await wait(Platform.OS === 'ios' ? 1200 : 1400);
       },
     );
 
@@ -125,7 +125,6 @@ describe('withTiming snapshots 📸, test EASING', () => {
 
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots.noEasing);
     expect(passiveUpdates).toMatchSnapshots(EasingSnapshots.noEasing);
-
     expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
   });
 
@@ -162,21 +161,15 @@ describe('withTiming snapshots 📸, test EASING', () => {
     }
   });
 
-  test.each([
-    Easing.bounce,
-    Easing.circle,
-    Easing.cubic,
-    Easing.ease,
-    Easing.exp,
-    Easing.linear,
-    Easing.quad,
-    Easing.sin,
-  ])('Easing.%p', async easing => {
-    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(easing);
-    expect(activeUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
-    expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
-    expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
-  });
+  test.each([Easing.bounce, Easing.circle, Easing.cubic, Easing.ease, Easing.linear, Easing.quad, Easing.sin])(
+    'Easing.%p',
+    async easing => {
+      const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(easing);
+      expect(activeUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
+      expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
+      expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
+    },
+  );
 
   test('Easing.exp', async () => {
     const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(Easing.exp);

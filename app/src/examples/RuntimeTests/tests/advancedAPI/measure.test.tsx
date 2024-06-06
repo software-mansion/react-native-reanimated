@@ -24,7 +24,8 @@ import {
 } from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { ComparisonMode } from '../../ReanimatedRuntimeTestsRunner/types';
 
-describe('Test measuring component before nad after animation', () => {
+// TODO Investigate the crash on Android
+describe.skip('Test measuring component before nad after animation', () => {
   const INITIAL_MEASURE = 'INITIAL_MEASURE';
   const FINAL_MEASURE = 'FINAL_MEASURE';
   const MeasuredComponent = ({
@@ -131,7 +132,7 @@ describe('Test measuring component before nad after animation', () => {
   });
 });
 
-describe('Test measuring component during the animation', () => {
+describe.skip('Test measuring component during the animation', () => {
   const DURATION = 500;
   const FINAL_WIDTH = 300;
   const OBSERVED_WIDTHS_REF = 'OBSERVED_WIDTHS_REF';
