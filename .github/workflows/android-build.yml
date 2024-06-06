@@ -9,8 +9,8 @@ on:
       - packages/react-native-reanimated/Common/**
       - apps/paper-example/package.json
       - apps/paper-example/android/**
-      - packages/react-native-reanimated/FabricExample/package.json
-      - packages/react-native-reanimated/FabricExample/android/**
+      - apps/fabric-example/package.json
+      - apps/fabric-example/android/**
   merge_group:
     branches:
       - main
