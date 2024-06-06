@@ -35,7 +35,7 @@ jobs:
 
       - name: Compile production build
         working-directory: apps/next-example
-        run: yarn build
+        run: yarn build:next
 
       - name: Run e2e tests
         working-directory: apps/next-example
