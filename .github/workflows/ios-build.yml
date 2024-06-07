@@ -11,8 +11,8 @@ on:
       - packages/react-native-reanimated/Common/**
       - apps/paper-example/package.json
       - apps/paper-example/ios/**
-      - packages/react-native-reanimated/FabricExample/package.json
-      - packages/react-native-reanimated/FabricExample/ios/**
+      - apps/fabric-example/package.json
+      - apps/fabric-example/ios/**
   merge_group:
     branches:
       - main
@@ -27,8 +27,8 @@ on:
       - packages/react-native-reanimated/Common/**
       - apps/paper-example/package.json
       - apps/paper-example/ios/**
-      - packages/react-native-reanimated/FabricExample/package.json
-      - packages/react-native-reanimated/FabricExample/ios/**
+      - apps/fabric-example/package.json
+      - apps/fabric-example/ios/**
 
 jobs:
   build:
