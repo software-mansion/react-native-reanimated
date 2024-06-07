@@ -50,7 +50,7 @@ jobs:
         run: yarn circular-dependency-check
       - name: Check use strict
         working-directory: packages/react-native-reanimated
-        run: yarn use_strict_check
+        run: yarn use-strict-check
       - name: Run jest unit tests
         working-directory: packages/react-native-reanimated
         run: yarn test:unit
