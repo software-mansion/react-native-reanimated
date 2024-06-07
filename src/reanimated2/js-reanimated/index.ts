@@ -4,6 +4,7 @@ import type { StyleProps } from '../commonTypes';
 import type { AnimatedStyle } from '../helperTypes';
 import { isWeb } from '../PlatformChecker';
 import { PropsAllowlists } from '../../propsAllowlists';
+import { AnimatedComponentRef } from '../../createAnimatedComponent/commonTypes';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let createReactDOMStyle: (style: any) => any;
@@ -81,7 +82,9 @@ export const _updatePropsJS = (
   isAnimatedProps?: boolean
 ): void => {
   if (viewRef._component) {
-    const component = viewRef._component;
+    const component = ((viewRef._component as AnimatedComponentRef).getAnimatableRef 
+      ? (viewRef._component as AnimatedComponentRef).getAnimatableRef?.() 
+      : viewRef._component) as JSReanimatedComponent | ReanimatedHTMLElement;
     const [rawStyles] = Object.keys(updates).reduce(
       (acc: [StyleProps, AnimatedStyle<any>], key) => {
         const value = updates[key];
