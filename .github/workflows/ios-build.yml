@@ -36,8 +36,7 @@ jobs:
     runs-on: macos-14
     strategy:
       matrix:
-        working-directory:
-          [apps/paper-example, packages/react-native-reanimated/FabricExample]
+        working-directory: [apps/paper-example, apps/fabric-example]
       fail-fast: false
     concurrency:
       group: ios-${{ matrix.working-directory }}-${{ github.ref }}
