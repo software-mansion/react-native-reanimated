@@ -56,5 +56,5 @@ jobs:
         run: yarn lint
       - name: Build WebExample
         working-directory: ${{ matrix.working-directory }}
-        if: ${{ matrix.working-directory == 'WebExample' }}
+        if: ${{ matrix.working-directory == 'apps/web-example' }}
         run: yarn build

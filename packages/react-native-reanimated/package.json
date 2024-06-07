@@ -27,7 +27,7 @@
     "type:check:plugin": "cd plugin && yarn type:check:src && cd ..",
     "type:check:app": "./scripts/test-ts.sh ../../apps/common-app/src/App.tsx",
     "type:check:tests:common": "./scripts/test-ts.sh __typetests__/common",
-    "type:check:tests:0.72+": "./scripts/test-ts.sh __typetests__/0.72+",
+    "type:check:tests:0.72+": "./scripts/test-ts.sh __typetests__/72plus",
     "type:check:tests:legacy": "./scripts/test-ts.sh __typetests__/legacy",
     "type:check:all": "yarn type:check:src && yarn type:check:plugin && ./scripts/test-ts.sh ../../apps/common-app/src/App.tsx __typetests__/common __typetests__/72plus __typetests__/legacy",
     "build": "yarn build:plugin && bob build",
