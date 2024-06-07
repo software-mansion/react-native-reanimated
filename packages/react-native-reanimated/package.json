@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "3.12.0",
+  "version": "3.13.0-rc.0",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "test": "yarn format:js && yarn lint:js && yarn test:unit",
