@@ -23,7 +23,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          cache: "yarn"
+          cache: 'yarn'
       - name: Clear annotations
         run: .github/workflows/helper/clear-annotations.sh
 
@@ -47,7 +47,7 @@ jobs:
         run: yarn find-unused-code:js
       - name: Find circular dependencies
         working-directory: packages/react-native-reanimated
-        run: yarn circular_dependency_check
+        run: yarn circular-dependency-check
       - name: Check use strict
         working-directory: packages/react-native-reanimated
         run: yarn use_strict_check
