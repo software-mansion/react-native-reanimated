@@ -7,17 +7,13 @@ import type {
   LayoutAnimationStaticContext,
 } from '../../../createAnimatedComponent/commonTypes';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
-import type { StyleProps } from '../../commonTypes';
-import { createAnimationWithExistingTransform } from './createAnimation';
 import {
-  extractTransformFromStyle,
   getProcessedConfig,
   handleExitingAnimation,
   handleLayoutTransition,
   setElementAnimation,
 } from './componentUtils';
 import { areDOMRectsEqual } from './domUtils';
-import type { TransformsStyle } from 'react-native';
 import type { TransitionData } from './animationParser';
 import { makeElementVisible } from './componentStyle';
 
@@ -58,22 +54,15 @@ function chooseAction(
   animationType: LayoutAnimationType,
   animationConfig: AnimationConfig,
   element: HTMLElement,
-  transitionData: TransitionData,
-  transform: TransformsStyle['transform'] | undefined
+  transitionData: TransitionData
 ) {
   switch (animationType) {
     case LayoutAnimationType.ENTERING:
-      setElementAnimation(element, animationConfig, transform);
+      setElementAnimation(element, animationConfig);
       break;
     case LayoutAnimationType.LAYOUT:
       transitionData.reversed = animationConfig.reversed;
-
-      handleLayoutTransition(
-        element,
-        animationConfig,
-        transitionData,
-        transform
-      );
+      handleLayoutTransition(element, animationConfig, transitionData);
       break;
     case LayoutAnimationType.EXITING:
       handleExitingAnimation(element, animationConfig);
@@ -81,9 +70,7 @@ function chooseAction(
   }
 }
 
-function tryGetAnimationConfigWithTransform<
-  ComponentProps extends Record<string, unknown>
->(
+function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
   props: Readonly<AnimatedComponentProps<ComponentProps>>,
   animationType: LayoutAnimationType
 ) {
@@ -96,13 +83,13 @@ function tryGetAnimationConfigWithTransform<
     typeof config.constructor;
 
   const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
-  const initialAnimationName =
+  const animationName =
     typeof config === 'function'
       ? config.presetName
       : (config.constructor as ConstructorWithStaticContext).presetName;
 
   const shouldFail = checkUndefinedAnimationFail(
-    initialAnimationName,
+    animationName,
     isLayoutTransition
   );
 
@@ -110,21 +97,14 @@ function tryGetAnimationConfigWithTransform<
     return null;
   }
 
-  const transform = extractTransformFromStyle(props.style as StyleProps);
-
-  const animationName =
-    transform && animationType !== LayoutAnimationType.EXITING
-      ? createAnimationWithExistingTransform(initialAnimationName, transform)
-      : initialAnimationName;
-
   const animationConfig = getProcessedConfig(
     animationName,
     animationType,
     config as CustomConfig,
-    initialAnimationName as AnimationNames
+    animationName as AnimationNames
   );
 
-  return { animationConfig, transform };
+  return animationConfig;
 }
 
 export function startWebLayoutAnimation<
@@ -135,20 +115,14 @@ export function startWebLayoutAnimation<
   animationType: LayoutAnimationType,
   transitionData?: TransitionData
 ) {
-  const maybeAnimationConfigWithTransform = tryGetAnimationConfigWithTransform(
-    props,
-    animationType
-  );
+  const animationConfig = tryGetAnimationConfig(props, animationType);
 
-  if (maybeAnimationConfigWithTransform) {
-    const { animationConfig, transform } = maybeAnimationConfigWithTransform;
-
+  if (animationConfig) {
     chooseAction(
       animationType,
       animationConfig,
       element,
-      transitionData as TransitionData,
-      transform
+      transitionData as TransitionData
     );
   } else {
     makeElementVisible(element, 0);

@@ -66,6 +66,8 @@ export type TestSuite = {
   decorator?: DescribeDecorator | null;
 };
 
+export type ValidPropNames = 'zIndex' | 'opacity' | 'width' | 'height' | 'top' | 'left' | 'backgroundColor';
+
 export enum ComparisonMode {
   STRING = 'STRING',
   DISTANCE = 'DISTANCE',
@@ -87,7 +89,15 @@ export interface Operation {
   updates: OperationUpdate;
 }
 
-export type TestValue = TrackerCallCount | string | Array<unknown> | number | bigint | Record<string, unknown>;
+export type TestValue =
+  | TrackerCallCount
+  | string
+  | Array<unknown>
+  | number
+  | bigint
+  | Record<string, unknown>
+  | null
+  | undefined;
 export type NullableTestValue = TestValue | null | undefined;
 
 export type TestConfiguration = {

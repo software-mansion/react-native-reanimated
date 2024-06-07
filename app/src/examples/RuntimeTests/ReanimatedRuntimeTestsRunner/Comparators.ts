@@ -1,4 +1,4 @@
-import { ComparisonMode, TestValue } from './types';
+import { ComparisonMode, TestValue, ValidPropNames } from './types';
 
 const DISTANCE_TOLERANCE = 0.5;
 
@@ -54,6 +54,13 @@ const COMPARATORS: {
   },
 
   [ComparisonMode.OBJECT]: (expected, value) => {
+    if (expected === null || value === null) {
+      return expected === null && value === null;
+    }
+    if (expected === undefined || value === undefined) {
+      return expected === undefined && value === undefined;
+    }
+
     if (typeof expected !== 'object' || typeof value !== 'object') {
       return false;
     }
@@ -89,4 +96,17 @@ const COMPARATORS: {
 
 export function getComparator(mode: ComparisonMode) {
   return COMPARATORS[mode];
+}
+
+export function getComparisonModeForProp(prop: ValidPropNames): ComparisonMode {
+  const propToComparisonModeDict = {
+    zIndex: ComparisonMode.NUMBER,
+    opacity: ComparisonMode.NUMBER,
+    width: ComparisonMode.DISTANCE,
+    height: ComparisonMode.DISTANCE,
+    top: ComparisonMode.DISTANCE,
+    left: ComparisonMode.DISTANCE,
+    backgroundColor: ComparisonMode.COLOR,
+  };
+  return propToComparisonModeDict[prop];
 }
