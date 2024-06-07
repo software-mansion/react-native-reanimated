@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.22.3",
+    "@react-native-community/cli": "13.6.4",
+    "@react-native-community/cli-platform-android": "13.6.4",
     "@react-native-community/slider": "^4.5.0",
     "@react-native-masked-view/masked-view": "^0.3.1",
     "@react-native-picker/picker": "^2.7.0",
@@ -45,6 +47,10 @@
     "prettier": "2.8.8",
     "react-test-renderer": "18.2.0",
     "typescript": "~5.3.0"
+  },
+  "resolutions": {
+    "@react-native-community/cli": "13.6.4",
+    "@react-native-community/cli-platform-android": "13.6.4"
   },
   "engines": {
     "node": ">=18"
