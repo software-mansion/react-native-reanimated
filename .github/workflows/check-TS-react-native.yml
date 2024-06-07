@@ -6,7 +6,7 @@ on:
     paths:
       - .github/workflows/check-TS-react-native.yml
   schedule:
-    - cron: "37 19 * * *"
+    - cron: '37 19 * * *'
   workflow_dispatch:
 
 jobs:
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        react-native-version: ["0.71", "0.72", "0.73", "0.74", nightly]
+        react-native-version: ['0.71', '0.72', '0.73', '0.74', nightly]
       fail-fast: false
     concurrency:
       group: TS-react-native-nightly-${{ matrix.react-native-version }}-${{ github.ref }}
@@ -26,7 +26,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          cache: "yarn"
+          cache: 'yarn'
       - name: Clear annotations
         run: .github/workflows/helper/clear-annotations.sh
 
@@ -39,7 +39,7 @@ jobs:
         working-directory: packages/react-native-reanimated
         run: yarn build
       - name: Install react-native ${{ matrix.react-native-version }}
-        working-directory: packages/react-native-reanimated
+        working-directory: apps/common-app
         run: yarn add --dev react-native@${{ matrix.react-native-version }}
 
       - name: Check source types
