@@ -38,8 +38,11 @@ jobs:
       - name: Build Reanimated node dependencies
         working-directory: packages/react-native-reanimated
         run: yarn build
-      - name: Install react-native ${{ matrix.react-native-version }}
+      - name: Install react-native ${{ matrix.react-native-version }} in common-app directory
         working-directory: apps/common-app
+        run: yarn add --dev react-native@${{ matrix.react-native-version }}
+      - name: Install react-native ${{ matrix.react-native-version }} in Reanimated directory
+        working-directory: packages/react-native-reanimated
         run: yarn add --dev react-native@${{ matrix.react-native-version }}
 
       - name: Check source types
