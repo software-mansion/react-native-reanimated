@@ -48,10 +48,6 @@
     "react-test-renderer": "18.2.0",
     "typescript": "~5.3.0"
   },
-  "resolutions": {
-    "@react-native-community/cli": "13.6.4",
-    "@react-native-community/cli-platform-android": "13.6.4"
-  },
   "engines": {
     "node": ">=18"
   }
