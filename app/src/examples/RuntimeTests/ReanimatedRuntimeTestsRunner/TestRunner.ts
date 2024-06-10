@@ -1,19 +1,17 @@
 import { Component, MutableRefObject, ReactElement, useRef } from 'react';
-import {
-  type NullableTestValue,
-  type LockObject,
-  type Operation,
-  type SharedValueSnapshot,
-  type TestCase,
-  type TestConfiguration,
-  type TestSuite,
-  type TestSummary,
-  type TestValue,
-  type TrackerCallCount,
-  ComparisonMode,
-  DescribeDecorator,
-  TestDecorator,
+import type {
+  NullableTestValue,
+  LockObject,
+  Operation,
+  SharedValueSnapshot,
+  TestCase,
+  TestConfiguration,
+  TestSuite,
+  TestSummary,
+  TestValue,
+  TrackerCallCount,
 } from './types';
+import { ComparisonMode, DescribeDecorator, TestDecorator } from './types';
 import { TestComponent } from './TestComponent';
 import { makeMutable, runOnUI, runOnJS, SharedValue } from 'react-native-reanimated';
 import { EMPTY_LOG_PLACEHOLDER, applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
