@@ -64,14 +64,15 @@ struct MutationNode;
  ShadowTree
  */
 struct Node {
-  std::vector<std::shared_ptr<MutationNode>> children;
-  std::shared_ptr<Node> parent;
+  std::vector<std::shared_ptr<MutationNode>> children, unflattenedChildren;
+  std::shared_ptr<Node> parent, unflattenedParent;
   Tag tag;
   void removeChild(std::shared_ptr<MutationNode> child);
   void handleMutation(ShadowViewMutation mutation);
   void insertChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
+  void insertUnflattenedChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
   explicit Node(Tag tag) : tag(tag) {}
-  Node(Node &&node) : children(std::move(node.children)), tag(node.tag) {}
+  Node(Node &&node) : children(std::move(node.children)), unflattenedChildren(std::move(node.unflattenedChildren)), tag(node.tag) {}
 };
 
 /**
@@ -142,5 +143,28 @@ static inline bool isRNSScreen(std::shared_ptr<MutationNode> node) {
              "RNSScreenStack") ||
       !std::strcmp(
           node->mutation.oldChildShadowView.componentName, "RNSScreen");
+}
+
+static inline void mergeAndSwap(std::vector<std::shared_ptr<MutationNode>>& A, std::vector<std::shared_ptr<MutationNode>>& B){
+  std::vector<std::shared_ptr<MutationNode>> merged;
+  auto it1 = A.begin(), it2 = B.begin();
+  while (it1 != A.end() && it2 != B.end()) {
+    if ((*it1)->mutation.index < (*it2)->mutation.index) {
+      merged.push_back(*it1);
+      it1++;
+    } else {
+      merged.push_back(*it2);
+      it2++;
+    }
+  }
+  while (it1 != A.end()) {
+    merged.push_back(*it1);
+    it1++;
+  }
+  while (it2 != B.end()) {
+    merged.push_back(*it2);
+    it2++;
+  }
+  std::swap(A, merged);
 }
 } // namespace reanimated

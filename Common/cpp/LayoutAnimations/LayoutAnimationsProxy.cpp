@@ -135,7 +135,7 @@ void LayoutAnimationsProxy::parseRemoveMutations(
     std::vector<std::shared_ptr<MutationNode>> &roots) const {
   std::set<Tag> deletedViews;
   std::unordered_map<Tag, std::vector<std::shared_ptr<MutationNode>>>
-      childrenForTag;
+      childrenForTag, unflattenedChildrenForTag;
 
   // iterate from the end, so that parents appear before children
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
@@ -147,11 +147,12 @@ void LayoutAnimationsProxy::parseRemoveMutations(
       updateIndexForMutation(mutation);
       auto tag = mutation.oldChildShadowView.tag;
       auto parentTag = mutation.parentShadowView.tag;
-      // auto parentTag = mutation.parentTag; TODO: uncomment
+      auto unflattenedParentTag = parentTag; // temporary
 
       std::shared_ptr<MutationNode> mutationNode;
       std::shared_ptr<Node> node = nodeForTag[tag],
-                            parent = nodeForTag[parentTag];
+                            parent = nodeForTag[parentTag],
+                            unflattenedParent = nodeForTag[unflattenedParentTag];
 
       if (!node) {
         mutationNode = std::make_shared<MutationNode>(mutation);
@@ -161,6 +162,9 @@ void LayoutAnimationsProxy::parseRemoveMutations(
         for (auto subNode : mutationNode->children) {
           subNode->parent = mutationNode;
         }
+        for (auto subNode : mutationNode->unflattenedChildren) {
+                        subNode->unflattenedParent = mutationNode;
+                    }
       }
       if (!deletedViews.contains(mutation.oldChildShadowView.tag)) {
         mutationNode->state = MOVED;
@@ -173,13 +177,24 @@ void LayoutAnimationsProxy::parseRemoveMutations(
         parent = std::make_shared<Node>(parentTag);
         nodeForTag[parentTag] = parent;
       }
+      
+      if (!unflattenedParent){
+        if (parentTag == unflattenedParentTag){
+          unflattenedParent = parent;
+        } else {
+          unflattenedParent = std::make_shared<Node>(unflattenedParentTag);
+          nodeForTag[unflattenedParentTag] = unflattenedParent;
+        }
+      }
 
-      if (!parent->parent) {
+      if (!unflattenedParent->parent) {
         roots.push_back(mutationNode);
       }
 
       childrenForTag[parentTag].push_back(mutationNode);
+      unflattenedChildrenForTag[unflattenedParentTag].push_back(mutationNode);
       mutationNode->parent = parent;
+      mutationNode->unflattenedParent = unflattenedParent;
     }
     if (mutation.type == ShadowViewMutation::Update &&
         movedViews.contains(mutation.newChildShadowView.tag)) {
@@ -192,6 +207,9 @@ void LayoutAnimationsProxy::parseRemoveMutations(
 
   for (auto &[parentTag, children] : childrenForTag) {
     nodeForTag[parentTag]->insertChildren(children);
+  }
+  for (auto &[unflattenedParentTag, children] : unflattenedChildrenForTag) {
+    nodeForTag[unflattenedParentTag]->insertUnflattenedChildren(children);
   }
 }
 
@@ -206,7 +224,7 @@ void LayoutAnimationsProxy::handleRemovals(
             node, true, true, false, filteredMutations)) {
       filteredMutations.push_back(node->mutation);
       nodeForTag.erase(node->tag);
-      node->parent->removeChild(node);
+      node->unflattenedParent->removeChild(node);//???
 #ifdef LAYOUT_ANIMATIONS_LOGS
       LOG(INFO) << "delete " << node->tag << std::endl;
 #endif
@@ -221,7 +239,7 @@ void LayoutAnimationsProxy::handleRemovals(
   for (auto node : deadNodes) {
     if (node->state != DELETED) {
       endAnimationsRecursively(node, filteredMutations);
-      maybeDropAncestors(node->parent, node, filteredMutations);
+      maybeDropAncestors(node->unflattenedParent, node, filteredMutations);
     }
   }
   deadNodes.clear();
@@ -353,7 +371,7 @@ void LayoutAnimationsProxy::endAnimationsRecursively(
   node->state = DELETED;
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
-  for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
+  for (auto it = node->unflattenedChildren.rbegin(); it != node->unflattenedChildren.rend(); it++) {
     auto &subNode = *it;
     if (subNode->state != DELETED) {
       endAnimationsRecursively(subNode, mutations);
@@ -373,7 +391,7 @@ void LayoutAnimationsProxy::maybeDropAncestors(
     std::shared_ptr<MutationNode> child,
     ShadowViewMutationList &cleanupMutations) const {
   parent->removeChild(child);
-  if (parent->parent == nullptr) {
+  if (parent->unflattenedParent == nullptr) {
     return;
   }
 
@@ -389,7 +407,7 @@ void LayoutAnimationsProxy::maybeDropAncestors(
 #endif
     cleanupMutations.push_back(
         ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
-    maybeDropAncestors(node->parent, node, cleanupMutations);
+    maybeDropAncestors(node->unflattenedParent, node, cleanupMutations);
   }
 }
 
@@ -423,7 +441,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
 
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
-  for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
+  for (auto it = node->unflattenedChildren.rbegin(); it != node->unflattenedChildren.rend(); it++) {
     auto &subNode = *it;
 #ifdef LAYOUT_ANIMATIONS_LOGS
     LOG(INFO) << "child " << subNode->tag << " "
@@ -692,38 +710,33 @@ void Node::handleMutation(ShadowViewMutation mutation) {
   }
 }
 
+// Should only be called on unflattened parents
 void Node::removeChild(std::shared_ptr<MutationNode> child) {
-  for (int i = children.size() - 1; i >= 0; i--) {
-    if (children[i]->tag == child->tag) {
-      children.erase(children.begin() + i);
+  for (int i = unflattenedChildren.size() - 1; i >= 0; i--) {
+    if (unflattenedChildren[i]->tag == child->tag) {
+      unflattenedChildren.erase(unflattenedChildren.begin() + i);
+      break;
+    }
+  }
+  
+  auto& flattenedChildren = child->parent->children;
+  for (int i = flattenedChildren.size() - 1; i >= 0; i--) {
+    if (flattenedChildren[i]->tag == child->tag) {
+      flattenedChildren.erase(flattenedChildren.begin() + i);
       return;
     }
-    children[i]->mutation.index--;
+    flattenedChildren[i]->mutation.index--;
   }
 }
 
 void Node::insertChildren(
     std::vector<std::shared_ptr<MutationNode>> &newChildren) {
-  std::vector<std::shared_ptr<MutationNode>> mergedChildren;
-  auto it1 = children.begin(), it2 = newChildren.begin();
-  while (it1 != children.end() && it2 != newChildren.end()) {
-    if ((*it1)->mutation.index < (*it2)->mutation.index) {
-      mergedChildren.push_back(*it1);
-      it1++;
-    } else {
-      mergedChildren.push_back(*it2);
-      it2++;
-    }
-  }
-  while (it1 != children.end()) {
-    mergedChildren.push_back(*it1);
-    it1++;
-  }
-  while (it2 != newChildren.end()) {
-    mergedChildren.push_back(*it2);
-    it2++;
-  }
-  std::swap(children, mergedChildren);
+  mergeAndSwap(children, newChildren);
+}
+
+void Node::insertUnflattenedChildren(
+    std::vector<std::shared_ptr<MutationNode>> &newChildren) {
+  mergeAndSwap(unflattenedChildren, newChildren);
 }
 
 } // namespace reanimated
