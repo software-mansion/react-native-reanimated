@@ -20,14 +20,14 @@ export default function FreezingShareables() {
         />
       </View>
       <View style={styles.textAndButton}>
-        <Text style={styles.text}>🤫</Text>
+        <Text style={styles.text}>⚠️</Text>
         <Button
           title="Modify converted remote function"
           onPress={tryModifyConvertedRemoteFunction}
         />
       </View>
       <View style={styles.textAndButton}>
-        <Text style={styles.text}>⚠️</Text>
+        <Text style={styles.text}>🤫</Text>
         <Button
           title="Modify converted host object"
           onPress={tryModifyConvertedHostObject}
@@ -82,7 +82,7 @@ export default function FreezingShareables() {
 function tryModifyConvertedArray() {
   const obj = [1, 2, 3];
   makeShareableCloneRecursive(obj);
-  obj[0] = 2; // should warn beacuse it's frozen
+  obj[0] = 2; // should warn because it's frozen
 }
 
 function tryModifyConvertedRemoteFunction() {
