@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { TextInput } from 'react-native-gesture-handler';
 import {
   GestureHandlerRootView,
   GestureDetector,
@@ -8,23 +9,21 @@ import {
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  useDerivedValue,
+  useAnimatedProps,
   runOnJS,
 } from 'react-native-reanimated';
 
 const INITIAL_BOX_SIZE = 50;
 const SLIDER_WIDTH = 300;
 
+Animated.addWhitelistedNativeProps({ text: true });
+
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+
 const Slider = () => {
   const offset = useSharedValue(0);
-  const [boxWidth, setBoxWidth] = useState(INITIAL_BOX_SIZE);
+  const boxWidth = useSharedValue(INITIAL_BOX_SIZE);
   const MAX_VALUE = SLIDER_WIDTH - INITIAL_BOX_SIZE;
-
-  const updateBoxWidth = (width) => {
-    'worklet';
-    //highlight-next-line
-    runOnJS(setBoxWidth)(width);
-  };
 
   const pan = Gesture.Pan().onChange((event) => {
     offset.value =
@@ -37,7 +36,7 @@ const Slider = () => {
         : offset.value;
 
     const newWidth = INITIAL_BOX_SIZE + offset.value;
-    updateBoxWidth(newWidth);
+    boxWidth.value = newWidth;
   });
 
   const boxStyle = useAnimatedStyle(() => {
@@ -52,11 +51,20 @@ const Slider = () => {
     };
   });
 
+  const animatedProps = useAnimatedProps(() => {
+    return {
+      text: `Box width: ${Math.round(boxWidth.value)}`,
+      defaultValue: `Box width: ${boxWidth.value}`,
+    };
+  });
+
   return (
     <GestureHandlerRootView style={styles.container}>
-      <Text style={styles.boxWidthText}>
-        Box width: {Math.round(boxWidth)}px
-      </Text>
+      <AnimatedTextInput
+        animatedProps={animatedProps}
+        style={styles.boxWidthText}
+        editable={false}
+      />
       <Animated.View style={[styles.box, boxStyle]} />
       <View style={styles.sliderTrack}>
         <GestureDetector gesture={pan}>
@@ -96,6 +104,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   boxWidthText: {
+    textAlign: 'center',
     fontSize: 18,
     color: '#001a72',
   },
