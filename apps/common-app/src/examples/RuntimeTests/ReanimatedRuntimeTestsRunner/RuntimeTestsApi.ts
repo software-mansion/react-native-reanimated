@@ -1,27 +1,28 @@
-import { Component, ReactElement } from 'react';
+import type { Component, ReactElement } from 'react';
 import { TestRunner } from './TestRunner';
-import { TestComponent } from './TestComponent';
+import type { TestComponent } from './TestComponent';
 import type { SharedValue } from 'react-native-reanimated';
-import { TestConfiguration, TestValue, NullableTestValue, DescribeDecorator, TestDecorator } from './types';
+import type { TestConfiguration, TestValue, NullableTestValue, BuildFunction } from './types';
+import { DescribeDecorator, TestDecorator } from './types';
 
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
 
-type DescribeFunction = (name: string, buildSuite: () => void) => void;
+type DescribeFunction = (name: string, buildSuite: BuildFunction) => void;
 export const describe: {
-  (name: string, buildSuite: () => void): void;
+  (name: string, buildSuite: BuildFunction): void;
   skip: DescribeFunction;
   only: DescribeFunction;
 } = Object.assign(
-  (name: string, buildSuite: () => void) => {
+  (name: string, buildSuite: BuildFunction) => {
     testRunner.describe(name, buildSuite, null);
   },
   {
-    skip: (name: string, buildSuite: () => void) => {
+    skip: (name: string, buildSuite: BuildFunction) => {
       testRunner.describe(name, buildSuite, DescribeDecorator.SKIP);
     },
-    only: (name: string, buildSuite: () => void) => {
+    only: (name: string, buildSuite: BuildFunction) => {
       testRunner.describe(name, buildSuite, DescribeDecorator.ONLY);
     },
   },
@@ -29,20 +30,27 @@ export const describe: {
 
 type TestEachFunction = <T>(
   examples: Array<T>,
-) => (name: string, testCase: (example: T, index?: number) => void) => void;
+) => (name: string, testCase: (example: T, index?: number) => Promise<void>) => void;
+
 type TestEachFunctionWithWarning = <T>(
   examples: Array<T>,
-) => (name: string, expectedWarning: string, testCase: (example: T, index?: number) => void) => void;
+) => (name: string, expectedWarning: string, testCase: (example: T, index?: number) => Promise<void>) => void;
 
 export const test: {
-  (name: string, testCase: () => void): void;
+  (name: string, testCase: BuildFunction): void;
   each: TestEachFunction;
-  skip: { (name: string, testCase: () => void): void; each: TestEachFunction };
-  only: { (name: string, testCase: () => void): void; each: TestEachFunction };
-  failing: { (name: string, warningMessage: string, testCase: () => void): void; each: TestEachFunctionWithWarning };
-  warn: { (name: string, warningMessage: string, testCase: () => void): void; each: TestEachFunctionWithWarning };
+  skip: { (name: string, testCase: BuildFunction): void; each: TestEachFunction };
+  only: { (name: string, testCase: BuildFunction): void; each: TestEachFunction };
+  failing: {
+    (name: string, warningMessage: string, testCase: BuildFunction): void;
+    each: TestEachFunctionWithWarning;
+  };
+  warn: {
+    (name: string, warningMessage: string, testCase: BuildFunction): void;
+    each: TestEachFunctionWithWarning;
+  };
 } = Object.assign(
-  (name: string, testCase: () => void) => {
+  (name: string, testCase: BuildFunction) => {
     testRunner.test(name, testCase, null);
   },
   {
@@ -50,7 +58,7 @@ export const test: {
       return testRunner.testEach(examples, null);
     },
     skip: Object.assign(
-      (name: string, testCase: () => void) => {
+      (name: string, testCase: BuildFunction) => {
         testRunner.test(name, testCase, TestDecorator.SKIP);
       },
       {
@@ -60,7 +68,7 @@ export const test: {
       },
     ),
     only: Object.assign(
-      (name: string, testCase: () => void) => {
+      (name: string, testCase: BuildFunction) => {
         testRunner.test(name, testCase, TestDecorator.ONLY);
       },
       {
@@ -70,7 +78,7 @@ export const test: {
       },
     ),
     failing: Object.assign(
-      (name: string, expectedWarning: string, testCase: () => void) => {
+      (name: string, expectedWarning: string, testCase: BuildFunction) => {
         testRunner.test(name, testCase, TestDecorator.FAILING, expectedWarning);
       },
       {
@@ -80,7 +88,7 @@ export const test: {
       },
     ),
     warn: Object.assign(
-      (name: string, expectedWarning: string, testCase: () => void) => {
+      (name: string, expectedWarning: string, testCase: BuildFunction) => {
         testRunner.test(name, testCase, TestDecorator.WARN, expectedWarning);
       },
       {
@@ -120,6 +128,7 @@ export function useTestRef(name: string) {
   return testRunner.useTestRef(name);
 }
 
+// eslint-disable-next-line @typescript-eslint/unbound-method
 const testRunnerCallTrackerFn = testRunner.callTracker;
 export function callTracker(name: string) {
   'worklet';
@@ -158,8 +167,9 @@ export async function wait(delay: number) {
   return testRunner.wait(delay);
 }
 
+// eslint-disable-next-line @typescript-eslint/unbound-method
 const testRunnerNotifyFn = testRunner.notify;
-export async function notify(name: string) {
+export function notify(name: string) {
   'worklet';
   return testRunnerNotifyFn(name);
 }
@@ -209,5 +219,5 @@ export async function recordAnimationUpdates() {
 }
 
 export async function stopRecordingAnimationUpdates() {
-  testRunner.stopRecordingAnimationUpdates();
+  await testRunner.stopRecordingAnimationUpdates();
 }

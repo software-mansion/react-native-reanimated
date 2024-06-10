@@ -1,9 +1,10 @@
 import { makeMutable } from 'react-native-reanimated';
-import { Operation, OperationUpdate, isValidPropName } from './types';
-import { TestRunner } from './TestRunner';
-import { MultiViewSnapshot, SingleViewSnapshot } from './matchers/snapshotMatchers';
+import type { Operation, OperationUpdate } from './types';
+import { isValidPropName } from './types';
+import type { TestRunner } from './TestRunner';
+import type { MultiViewSnapshot, SingleViewSnapshot } from './matchers/snapshotMatchers';
 import { convertDecimalColor } from './util';
-import { TestComponent } from './TestComponent';
+import type { TestComponent } from './TestComponent';
 
 type JsUpdate = {
   tag: number;
@@ -38,7 +39,7 @@ export function createUpdatesContainer(testRunner: TestRunner) {
         values.push({
           tag: updateInfo.tag,
           shadowNodeWrapper: updateInfo.shadowNodeWrapper,
-          snapshot: snapshot,
+          snapshot,
           jsUpdateIndex,
         });
       }

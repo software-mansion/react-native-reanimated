@@ -1,4 +1,4 @@
-import { Mismatch, NullableTestValue } from './types';
+import type { Mismatch, NullableTestValue } from './types';
 
 export function indentNestingLevel(nestingLevel: number) {
   return `  ${'   '.repeat(nestingLevel)}`;

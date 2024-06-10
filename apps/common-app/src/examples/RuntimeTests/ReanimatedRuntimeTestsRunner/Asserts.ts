@@ -1,4 +1,4 @@
-import { TestCase, TestSuite } from './types';
+import type { TestCase, TestSuite } from './types';
 
 export function assertMockedAnimationTimestamp(timestamp: number | undefined): asserts timestamp is number {
   'worklet';
