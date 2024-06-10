@@ -42,6 +42,9 @@ module.exports = {
       },
     },
   ],
+  parserOptions: {
+    requireConfigFile: false,
+  },
   extends: [
     'standard',
     'prettier',
@@ -79,5 +82,10 @@ module.exports = {
     eqeqeq: 'error',
     'no-unreachable': 'error',
     'tsdoc/syntax': 'error',
+    'jest/no-disabled-tests': 'warn',
+    'jest/no-focused-tests': 'error',
+    'jest/no-identical-title': 'error',
+    'jest/prefer-to-have-length': 'warn',
+    'jest/valid-expect': 'error',
   },
 };

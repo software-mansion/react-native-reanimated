@@ -1,0 +1,81 @@
+nav {
+  --ifm-navbar-padding-vertical: 0 1.25rem;
+  --ifm-navbar-padding-horizontal: 0 0;
+  --ifm-navbar-height: 60px;
+
+  --ifm-navbar-shadow: none;
+}
+
+@media (max-height: 768px) {
+  nav {
+    --ifm-navbar-height: 56px;
+  }
+}
+
+@media (max-width: 996px) {
+  nav {
+    --ifm-navbar-padding-vertical: 0;
+    --ifm-navbar-padding-horizontal: 1.5em;
+  }
+}
+
+@media (min-width: 996px) {
+  .logoWrapper {
+    display: flex;
+    justify-content: center;
+    width: 300px;
+  }
+}
+
+.colorModeToggle {
+  margin: 0 1.5em;
+}
+
+/* In other pages than documentation, Docusaurus disables margin-right for the last element on the right side.
+ * This block disables this behavior.
+ */
+[class*='navbar__items--right'] > :last-child {
+  padding: var(--ifm-navbar-item-padding-vertical)
+    var(--ifm-navbar-item-padding-horizontal);
+}
+
+[class*='dropdown__menu'] {
+  background-color: var(--swm-dropdown-versions-background);
+  border-radius: 4px;
+  margin-top: 0;
+  padding: 8px;
+  width: 100%;
+}
+
+.navbarItemsLanding [class*='dropdown--right'] a {
+  color: var(--swm-off-white);
+}
+
+.navbarItemsLanding [class*='dropdown__menu'] a,
+[class*='dropdown__menu'] a {
+  color: var(--swm-dropdown-versions-item);
+  border: 1px solid transparent;
+}
+
+.navbarItemsLanding [class*='dropdown__menu'] a:hover,
+[class*='dropdown__menu'] a:hover {
+  color: var(--swm-dropdown-versions-item-hover);
+  border: 1px solid var(--swm-dropdown-versions-item-border);
+  background-color: var(--swm-dropdown-versions-item-background);
+}
+
+[class*='dropdown__link--active'] {
+  color: var(--swm-dropdown-versions-item-active) !important;
+  background-color: var(--swm-dropdown-versions-item-background-active);
+}
+
+[class*='dropdown__link--active']:hover {
+  color: var(--swm-dropdown-versions-item-active-hover) !important;
+}
+
+@media (min-width: 996px) {
+  [class*='navbar__items--left'] {
+    flex: 1;
+    width: 100%;
+  }
+}
