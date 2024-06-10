@@ -6,7 +6,6 @@
     "test": "yarn format:js && yarn lint:js && yarn test:unit",
     "test:unit": "jest",
     "test:update-snapshot": "jest --updateSnapshot",
-    "test:eslint-plugin": "jest __tests__/eslintPlugin/",
     "lint": "yarn lint:js && yarn lint:plugin && yarn lint:cpp && yarn lint:java && yarn lint:ios",
     "lint:js": "eslint --ext '.js,.ts,.tsx' src __tests__ __typetests__ && yarn prettier --check src __tests__ __typetests__",
     "lint:plugin": "cd plugin && yarn lint && cd ..",

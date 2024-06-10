@@ -4,8 +4,8 @@ import { SensorType, useAnimatedSensor } from '../src/';
 
 let eventHandler: (data: Value3D | ValueRotation) => void;
 
-jest.mock('../src/reanimated2/core', () => {
-  const originalModule = jest.requireActual('../src/reanimated2/core');
+jest.mock('../src/core', () => {
+  const originalModule = jest.requireActual('../src/core');
 
   return {
     __esModule: true,
