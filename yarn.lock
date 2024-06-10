@@ -11083,6 +11083,8 @@ __metadata:
     "@babel/preset-env": "npm:^7.20.0"
     "@babel/runtime": "npm:^7.20.0"
     "@react-native-async-storage/async-storage": "npm:^1.22.3"
+    "@react-native-community/cli": "npm:13.6.4"
+    "@react-native-community/cli-platform-android": "npm:13.6.4"
     "@react-native-community/slider": "npm:^4.5.0"
     "@react-native-masked-view/masked-view": "npm:^0.3.1"
     "@react-native-picker/picker": "npm:^2.7.0"
