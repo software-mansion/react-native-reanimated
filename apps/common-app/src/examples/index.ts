@@ -249,6 +249,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📺',
     title: 'Screen transition',
     screen: ScreenTransitionExample,
+    missingOnFabric: true,
   },
 
   // Basic examples
