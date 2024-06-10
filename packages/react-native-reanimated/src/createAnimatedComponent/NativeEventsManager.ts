@@ -11,30 +11,27 @@ import { WorkletEventHandler } from '../WorkletEventHandler';
 import { findNodeHandle } from 'react-native';
 
 export class NativeEventsManager implements INativeEventsManager {
-  private _managedComponent: ManagedAnimatedComponent;
-  private _componentOptions?: ComponentOptions;
-  private _eventViewTag = -1;
+  #managedComponent: ManagedAnimatedComponent;
+  #componentOptions?: ComponentOptions;
+  #eventViewTag = -1;
 
   constructor(component: ManagedAnimatedComponent, options?: ComponentOptions) {
-    this._managedComponent = component;
-    this._componentOptions = options;
-    this._eventViewTag = this.getEventViewTag();
+    this.#managedComponent = component;
+    this.#componentOptions = options;
+    this.#eventViewTag = this.getEventViewTag();
   }
 
   public attachEvents() {
-    this.executeForEachEventHandler(
-      this._managedComponent.props,
-      (key, handler) => {
-        handler.registerForEvents(this._eventViewTag, key);
-      }
-    );
+    executeForEachEventHandler(this.#managedComponent.props, (key, handler) => {
+      handler.registerForEvents(this.#eventViewTag, key);
+    });
   }
 
   public detachEvents() {
-    this.executeForEachEventHandler(
-      this._managedComponent.props,
+    executeForEachEventHandler(
+      this.#managedComponent.props,
       (_key, handler) => {
-        handler.unregisterFromEvents(this._eventViewTag);
+        handler.unregisterFromEvents(this.#eventViewTag);
       }
     );
   }
@@ -44,72 +41,45 @@ export class NativeEventsManager implements INativeEventsManager {
   ) {
     const computedEventTag = this.getEventViewTag();
     // If the event view tag changes, we need to completely re-mount all events
-    if (this._eventViewTag !== computedEventTag) {
+    if (this.#eventViewTag !== computedEventTag) {
       // Remove all bindings from previous props that ran on the old viewTag
-      this.executeForEachEventHandler(prevProps, (_key, handler) => {
-        handler.unregisterFromEvents(this._eventViewTag);
+      executeForEachEventHandler(prevProps, (_key, handler) => {
+        handler.unregisterFromEvents(this.#eventViewTag);
       });
       // We don't need to unregister from current (new) props, because their events weren't registered yet
       // Replace the view tag
-      this._eventViewTag = computedEventTag;
+      this.#eventViewTag = computedEventTag;
       // Attach the events with a new viewTag
       this.attachEvents();
       return;
     }
 
-    this.executeForEachEventHandler(prevProps, (key, prevHandler) => {
-      const newProp = this._managedComponent.props[key];
+    executeForEachEventHandler(prevProps, (key, prevHandler) => {
+      const newProp = this.#managedComponent.props[key];
       if (!newProp) {
         // Prop got deleted
-        prevHandler.unregisterFromEvents(this._eventViewTag);
+        prevHandler.unregisterFromEvents(this.#eventViewTag);
       } else if (
-        this.isWorkletEventHandler(newProp) &&
+        isWorkletEventHandler(newProp) &&
         newProp.workletEventHandler !== prevHandler
       ) {
         // Prop got changed
-        prevHandler.unregisterFromEvents(this._eventViewTag);
-        newProp.workletEventHandler.registerForEvents(this._eventViewTag);
+        prevHandler.unregisterFromEvents(this.#eventViewTag);
+        newProp.workletEventHandler.registerForEvents(this.#eventViewTag);
       }
     });
 
-    this.executeForEachEventHandler(
-      this._managedComponent.props,
-      (key, handler) => {
-        if (!prevProps[key]) {
-          // Prop got added
-          handler.registerForEvents(this._eventViewTag);
-        }
+    executeForEachEventHandler(this.#managedComponent.props, (key, handler) => {
+      if (!prevProps[key]) {
+        // Prop got added
+        handler.registerForEvents(this.#eventViewTag);
       }
-    );
-  }
-
-  private isWorkletEventHandler(
-    prop: unknown
-  ): prop is WorkletEventHandlerHolder {
-    return (
-      has('workletEventHandler', prop) &&
-      prop.workletEventHandler instanceof WorkletEventHandler
-    );
-  }
-
-  private executeForEachEventHandler(
-    props: AnimatedComponentProps<InitialComponentProps>,
-    callback: (
-      key: string,
-      handler: InstanceType<typeof WorkletEventHandler>
-    ) => void
-  ) {
-    for (const key in props) {
-      const prop = props[key];
-      if (this.isWorkletEventHandler(prop)) {
-        callback(key, prop.workletEventHandler);
-      }
-    }
+    });
   }
 
   private getEventViewTag() {
     // Get the tag for registering events - since the event emitting view can be nested inside the main component
-    const componentAnimatedRef = this._managedComponent
+    const componentAnimatedRef = this.#managedComponent
       ._component as AnimatedComponentRef;
     let newTag: number;
     if (componentAnimatedRef.getScrollableNode) {
@@ -118,12 +88,36 @@ export class NativeEventsManager implements INativeEventsManager {
     } else {
       newTag =
         findNodeHandle(
-          this._componentOptions?.setNativeProps
-            ? this._managedComponent
+          this.#componentOptions?.setNativeProps
+            ? this.#managedComponent
             : componentAnimatedRef
         ) ?? -1;
     }
     return newTag;
+  }
+}
+
+function isWorkletEventHandler(
+  prop: unknown
+): prop is WorkletEventHandlerHolder {
+  return (
+    has('workletEventHandler', prop) &&
+    prop.workletEventHandler instanceof WorkletEventHandler
+  );
+}
+
+function executeForEachEventHandler(
+  props: AnimatedComponentProps<InitialComponentProps>,
+  callback: (
+    key: string,
+    handler: InstanceType<typeof WorkletEventHandler>
+  ) => void
+) {
+  for (const key in props) {
+    const prop = props[key];
+    if (isWorkletEventHandler(prop)) {
+      callback(key, prop.workletEventHandler);
+    }
   }
 }
 
