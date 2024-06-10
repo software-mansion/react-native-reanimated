@@ -35,10 +35,11 @@ The `useAnimatedStyle` hook is used to create animated styles for both the box a
 
 <CollapsibleCode src={SliderSrc} showLines={[40,50]}/>
 
-Leveraging animated props lets us run it on UI thread instead of JS thread.
-We used `useAnimatedProps` hook to avoid unneccessary re-renders when **text** with current width of the box is changing.
+Leveraging animated props allows us to run them on the UI thread instead of the JS thread. To prevent unnecessary re-renders when the text displaying the current width of the box changes, we used the `useAnimatedProps` hook.
 
-It also helped us animate `TextInput` using [shared values](fundamentals/glossary#shared-value).
+Additionally, we opted for **TextInput** instead of **Text** because **TextInput** has a `value` property that can be animated, whereas **Text** only has children.
+
+This approach also enabled us to animate **TextInput** using [shared values](fundamentals/glossary#shared-value).
 
 <samp id="Slider">Slider</samp>
 
