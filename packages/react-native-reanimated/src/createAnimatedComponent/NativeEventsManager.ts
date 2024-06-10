@@ -11,8 +11,8 @@ import { WorkletEventHandler } from '../WorkletEventHandler';
 import { findNodeHandle } from 'react-native';
 
 export class NativeEventsManager implements INativeEventsManager {
-  #managedComponent: ManagedAnimatedComponent;
-  #componentOptions?: ComponentOptions;
+  readonly #managedComponent: ManagedAnimatedComponent;
+  readonly #componentOptions?: ComponentOptions;
   #eventViewTag = -1;
 
   constructor(component: ManagedAnimatedComponent, options?: ComponentOptions) {
