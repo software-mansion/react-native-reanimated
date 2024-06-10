@@ -2,7 +2,7 @@ import React from 'react';
 import renderer from 'react-test-renderer';
 import Animated, { useSharedValue } from '../src';
 
-jest.mock('../src/reanimated2/NativeReanimated/NativeReanimated');
+jest.mock('../src/NativeReanimated/NativeReanimated');
 
 describe('useSharedValue', () => {
   it('retains value on rerender', () => {

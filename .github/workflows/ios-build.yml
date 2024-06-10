@@ -11,8 +11,8 @@ on:
       - packages/react-native-reanimated/Common/**
       - apps/paper-example/package.json
       - apps/paper-example/ios/**
-      - packages/react-native-reanimated/FabricExample/package.json
-      - packages/react-native-reanimated/FabricExample/ios/**
+      - apps/fabric-example/package.json
+      - apps/fabric-example/ios/**
   merge_group:
     branches:
       - main
@@ -27,8 +27,8 @@ on:
       - packages/react-native-reanimated/Common/**
       - apps/paper-example/package.json
       - apps/paper-example/ios/**
-      - packages/react-native-reanimated/FabricExample/package.json
-      - packages/react-native-reanimated/FabricExample/ios/**
+      - apps/fabric-example/package.json
+      - apps/fabric-example/ios/**
 
 jobs:
   build:
@@ -36,8 +36,7 @@ jobs:
     runs-on: macos-14
     strategy:
       matrix:
-        working-directory:
-          [apps/paper-example, packages/react-native-reanimated/FabricExample]
+        working-directory: [apps/paper-example, apps/fabric-example]
       fail-fast: false
     concurrency:
       group: ios-${{ matrix.working-directory }}-${{ github.ref }}

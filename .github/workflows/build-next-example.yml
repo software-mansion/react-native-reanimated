@@ -5,8 +5,8 @@ on:
   pull_request:
     paths:
       - .github/workflows/build-next-example.yml
-      - "packages/react-native-reanimated/src/**"
-      - "packages/react-native-reanimated/NextExample/**"
+      - 'packages/react-native-reanimated/src/**'
+      - 'packages/react-native-reanimated/NextExample/**'
   push:
     branches:
       - main
@@ -30,13 +30,13 @@ jobs:
         run: yarn build
 
       - name: Install NextExample node_modules
-        working-directory: packages/react-native-reanimated/NextExample
+        working-directory: apps/next-example
         run: yarn install --immutable
 
       - name: Compile production build
-        working-directory: packages/react-native-reanimated/NextExample
-        run: yarn build
+        working-directory: apps/next-example
+        run: yarn build:next
 
       - name: Run e2e tests
-        working-directory: packages/react-native-reanimated/NextExample
+        working-directory: apps/next-example
         run: yarn e2e:headless

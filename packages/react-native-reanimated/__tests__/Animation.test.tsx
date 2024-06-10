@@ -4,7 +4,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { renderHook } from '@testing-library/react-hooks';
 import type { SharedValue } from '../src';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from '../src';
-import { getAnimatedStyle } from '../src/reanimated2/jestUtils';
+import { getAnimatedStyle } from '../src/jestUtils';
 
 interface Props {
   sharedValue: SharedValue<number>;
