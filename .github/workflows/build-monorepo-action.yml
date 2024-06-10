@@ -1,7 +1,6 @@
 name: Test build in monorepo
 env:
-  YARN_ENABLE_HARDENED_MODE: 0
-  REACT_NATIVE_TEMPLATE: ${{ inputs.react_native_version && '--version' || '' }} ${{ inputs.react_native_version }}
+  YARN_ENABLE_IMMUTABLE_INSTALLS: 0
 on:
   workflow_call:
     inputs:
@@ -14,9 +13,6 @@ on:
       is_hoisted:
         required: true
         type: boolean
-      react_native_version:
-        required: false
-        type: string
 
 jobs:
   build:
@@ -33,17 +29,18 @@ jobs:
           java-version: '17'
       - name: Create directories
         run: mkdir -p monorepo/packages
-      - name: Create RootApp
-        working-directory: monorepo
-        run: npx react-native init RootApp --skip-install ${{ env.REACT_NATIVE_TEMPLATE }}
-      - name: Create PackageApp
-        working-directory: monorepo/packages
-        run: npx react-native init PackageApp --skip-install ${{ env.REACT_NATIVE_TEMPLATE }}
+
       - name: Setup monorepo
         working-directory: monorepo
-        run: |
-          echo '{"name":"rnos-monorepo-tester","version":"1.0.0","license":"MIT","private":true,"workspaces":{"packages":["RootApp","packages/PackageApp", "AppA", "AppB"],"nohoist":["**/react","**/react-dom","**/react-native","**/react-native/**","**/react-native-codegen","**/react-native-dev-menu"]}}' > package.json
-          yarn
+        run: echo '{"name":"rnos-monorepo-tester","version":"1.0.0","license":"MIT","private":true,"workspaces":{"packages":["RootApp","packages/PackageApp", "AppA", "AppB"],"nohoist":["**/react","**/react-dom","**/react-native","**/react-native/**","**/react-native-codegen","**/react-native-dev-menu"]}}' > package.json
+      - name: Install dependencies
+        run: yarn install
+      - name: Create RootApp
+        working-directory: monorepo
+        run: npx react-native@0.73 init RootApp --skip-install --version 0.73
+      - name: Create PackageApp
+        working-directory: monorepo/packages
+        run: npx react-native@0.73 init PackageApp --skip-install --version 0.73
 
       - name: Install dependencies for RootApp
         working-directory: monorepo/RootApp
@@ -72,7 +69,6 @@ jobs:
         if: ${{ inputs.platform == 'iOS' }}
         working-directory: monorepo/packages/PackageApp/ios
         run: pod install
-
       - name: Build iOS app RootApp
         if: ${{ inputs.platform == 'iOS' }}
         working-directory: monorepo/RootApp
@@ -81,7 +77,6 @@ jobs:
         if: ${{ inputs.platform == 'iOS' }}
         working-directory: monorepo/packages/PackageApp
         run: yarn react-native run-ios --simulator='iPhone 14' --no-packager
-
       - name: Build Android RootApp
         if: ${{ inputs.platform == 'Android' }}
         working-directory: monorepo/RootApp/android
