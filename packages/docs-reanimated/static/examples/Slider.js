@@ -10,7 +10,6 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   useAnimatedProps,
-  runOnJS,
 } from 'react-native-reanimated';
 
 const INITIAL_BOX_SIZE = 50;
