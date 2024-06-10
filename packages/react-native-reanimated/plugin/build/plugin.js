@@ -829,9 +829,9 @@ var require_referencedWorklets = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.findReferencedWorklet = void 0;
     var types_12 = require_types();
-    function findReferencedWorklet(maybeWorklet, acceptWorkletizableFunction, acceptObject) {
-      const workletName = maybeWorklet.node.name;
-      const scope = maybeWorklet.scope;
+    function findReferencedWorklet(workletIdentifier, acceptWorkletizableFunction, acceptObject) {
+      const workletName = workletIdentifier.node.name;
+      const scope = workletIdentifier.scope;
       const workletBinding = scope.getBinding(workletName);
       if (!workletBinding) {
         return void 0;
@@ -922,20 +922,20 @@ var require_autoworkletization = __commonJS({
       "useAnimatedScrollHandler"
     ]);
     var functionHooks = /* @__PURE__ */ new Set([
-      `useFrameCallback`,
-      `useAnimatedStyle`,
-      `useAnimatedProps`,
-      `createAnimatedPropAdapter`,
-      `useDerivedValue`,
-      `useAnimatedScrollHandler`,
-      `useAnimatedReaction`,
-      `useWorkletCallback`,
-      `withTiming`,
-      `withSpring`,
-      `withDecay`,
-      `withRepeat`,
-      `runOnUI`,
-      `executeOnUIRuntimeSync`
+      "useFrameCallback",
+      "useAnimatedStyle",
+      "useAnimatedProps",
+      "createAnimatedPropAdapter",
+      "useDerivedValue",
+      "useAnimatedScrollHandler",
+      "useAnimatedReaction",
+      "useWorkletCallback",
+      "withTiming",
+      "withSpring",
+      "withDecay",
+      "withRepeat",
+      "runOnUI",
+      "executeOnUIRuntimeSync"
     ]);
     var functionArgsToWorkletize = /* @__PURE__ */ new Map([
       ["useAnimatedGestureHandler", [0]],

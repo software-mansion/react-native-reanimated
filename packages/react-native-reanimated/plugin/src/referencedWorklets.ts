@@ -8,12 +8,12 @@ import type { WorkletizableFunction, WorkletizableObject } from './types';
 import type { Binding } from '@babel/traverse';
 
 export function findReferencedWorklet(
-  maybeWorklet: NodePath<Identifier>,
+  workletIdentifier: NodePath<Identifier>,
   acceptWorkletizableFunction: boolean,
   acceptObject: boolean
 ): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
-  const workletName = maybeWorklet.node.name;
-  const scope = maybeWorklet.scope;
+  const workletName = workletIdentifier.node.name;
+  const scope = workletIdentifier.scope;
 
   const workletBinding = scope.getBinding(workletName);
   if (!workletBinding) {

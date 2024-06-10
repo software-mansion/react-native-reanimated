@@ -4,9 +4,12 @@ import { isSequenceExpression } from '@babel/types';
 import {
   isWorkletizableFunctionType,
   isWorkletizableObjectType,
+} from './types';
+import type {
+  WorkletizableFunction,
+  WorkletizableObject,
   ReanimatedPluginPass,
 } from './types';
-import type { WorkletizableFunction, WorkletizableObject } from './types';
 import { processWorklet } from './workletSubstitution';
 import { isGestureHandlerEventCallback } from './gestureHandlerAutoworkletization';
 import { isLayoutAnimationCallback } from './layoutAnimationAutoworkletization';
@@ -19,22 +22,22 @@ const objectHooks = new Set([
 ]);
 
 const functionHooks = new Set([
-  `useFrameCallback`,
-  `useAnimatedStyle`,
-  `useAnimatedProps`,
-  `createAnimatedPropAdapter`,
-  `useDerivedValue`,
-  `useAnimatedScrollHandler`,
-  `useAnimatedReaction`,
-  `useWorkletCallback`,
+  'useFrameCallback',
+  'useAnimatedStyle',
+  'useAnimatedProps',
+  'createAnimatedPropAdapter',
+  'useDerivedValue',
+  'useAnimatedScrollHandler',
+  'useAnimatedReaction',
+  'useWorkletCallback',
   // animations' callbacks
-  `withTiming`,
-  `withSpring`,
-  `withDecay`,
-  `withRepeat`,
+  'withTiming',
+  'withSpring',
+  'withDecay',
+  'withRepeat',
   // scheduling functions
-  `runOnUI`,
-  `executeOnUIRuntimeSync`,
+  'runOnUI',
+  'executeOnUIRuntimeSync',
 ]);
 
 const functionArgsToWorkletize = new Map([
