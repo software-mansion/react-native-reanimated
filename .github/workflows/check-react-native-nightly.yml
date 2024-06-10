@@ -1,12 +1,10 @@
 name: Check React Native nightly build
-env:
-  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     paths:
       - .github/workflows/check-react-native-nightly.yml
   schedule:
-    - cron: '37 19 * * *'
+    - cron: "37 19 * * *"
   workflow_dispatch:
 
 jobs:
@@ -15,7 +13,7 @@ jobs:
     runs-on: macos-14
     strategy:
       matrix:
-        react-native-architecture: ['Paper', 'Fabric']
+        react-native-architecture: ["Paper", "Fabric"]
       fail-fast: false
     concurrency:
       group: ios-react-native-nightly-${{ matrix.react-native-architecture }}-${{ github.ref }}
@@ -23,9 +21,12 @@ jobs:
     steps:
       - name: Create app
         run: npx react-native init app --skip-install --version nightly
+      - name: Download Reanimated from commit
+        working-directory: app
+        run: curl -LJO https://codeload.github.com/software-mansion/react-native-reanimated/tar.gz/${{ github.sha }}
       - name: Install Reanimated
         working-directory: app
-        run: yarn add github:software-mansion/react-native-reanimated
+        run: yarn add react-native-reanimated@file:./react-native-reanimated-${{ github.sha }}.tar.gz
       - name: Install Paper Pods
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         working-directory: app/ios
@@ -43,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        react-native-architecture: ['Paper', 'Fabric']
+        react-native-architecture: ["Paper", "Fabric"]
       fail-fast: false
     concurrency:
       group: android-react-native-nightly-${{ matrix.react-native-architecture }}-${{ github.ref }}
@@ -52,13 +53,16 @@ jobs:
       - name: Set up JDK 18
         uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
-          java-version: '18'
+          distribution: "zulu"
+          java-version: "18"
       - name: Create app
         run: npx react-native init app --skip-install --version nightly
+      - name: Download Reanimated from commit
+        working-directory: app
+        run: curl -LJO https://codeload.github.com/software-mansion/react-native-reanimated/tar.gz/${{ github.sha }}
       - name: Install Reanimated
         working-directory: app
-        run: yarn add github:software-mansion/react-native-reanimated
+        run: yarn add react-native-reanimated@file:./react-native-reanimated-${{ github.sha }}.tar.gz
       - name: Setup Fabric
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
         working-directory: app/android

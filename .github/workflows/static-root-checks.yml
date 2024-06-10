@@ -25,20 +25,32 @@ jobs:
         with:
           cache: 'yarn'
       - name: Clear annotations
-        run: scripts/clear-annotations.sh
-      - name: Install node dependencies
-        run: yarn
-      - name: Build package
+        run: .github/workflows/helper/clear-annotations.sh
+
+      - name: Install monorepo node dependencies
+        run: yarn install
+      - name: Install Reanimated node dependencies
+        working-directory: packages/react-native-reanimated
+        run: yarn install
+      - name: Build Reanimated package
+        working-directory: packages/react-native-reanimated
         run: yarn build
+
       - name: Check types
+        working-directory: packages/react-native-reanimated
         run: yarn type:check:all
       - name: Lint
+        working-directory: packages/react-native-reanimated
         run: yarn lint:js
       - name: Find unused code
+        working-directory: packages/react-native-reanimated
         run: yarn find-unused-code:js
       - name: Find circular dependencies
-        run: yarn circular_dependency_check
+        working-directory: packages/react-native-reanimated
+        run: yarn circular-dependency-check
       - name: Check use strict
-        run: yarn use_strict_check
+        working-directory: packages/react-native-reanimated
+        run: yarn use-strict-check
       - name: Run jest unit tests
+        working-directory: packages/react-native-reanimated
         run: yarn test:unit

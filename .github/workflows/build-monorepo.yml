@@ -1,14 +1,12 @@
 name: Test monorepo build
-env:
-  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     paths:
       - .github/workflows/build-monorepo.yml
       - .github/workflows/build-monorepo-action.yml
       - RNReanimated.podspec
-      - scripts/reanimated_utils.rb
-      - android/build.gradle
+      - packages/react-native-reanimated/scripts/reanimated_utils.rb
+      - packages/react-native-reanimated/android/build.gradle
   merge_group:
     branches:
       - main
@@ -18,9 +16,9 @@ on:
     paths:
       - .github/workflows/build-monorepo.yml
       - .github/workflows/build-monorepo-action.yml
-      - RNReanimated.podspec
-      - scripts/reanimated_utils.rb
-      - android/build.gradle
+      - packages/react-native-reanimated/RNReanimated.podspec
+      - packages/react-native-reanimated/scripts/reanimated_utils.rb
+      - packages/react-native-reanimated/android/build.gradle
   workflow_call:
 
 jobs:
