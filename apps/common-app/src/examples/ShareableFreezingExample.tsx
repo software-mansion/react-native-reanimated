@@ -68,6 +68,13 @@ export default function FreezingShareables() {
           onPress={tryModifyConvertedInt32Array}
         />
       </View>
+      <View style={styles.textAndButton}>
+        <Text style={styles.text}>🤫</Text>
+        <Button
+          title="Modify unconfigurable object"
+          onPress={tryModifyUnconfigurableObject}
+        />
+      </View>
     </View>
   );
 }
@@ -92,7 +99,7 @@ function tryModifyConvertedHostObject() {
     return;
   }
   makeShareableCloneRecursive(obj);
-  // @ts-expect-error
+  // @ts-expect-error It's ok
   obj.prop = 2; // shouldn't warn because it's not frozen
 }
 
@@ -107,21 +114,22 @@ function tryModifyConvertedPlainObject() {
 function tryModifyConvertedRegExpLiteral() {
   const obj = /a/;
   makeShareableCloneRecursive(obj);
-  // @ts-expect-error
+  // @ts-expect-error It's ok
   obj.prop = 2; // shouldn't warn because it's not frozen
 }
 
 function tryModifyConvertedRegExpInstance() {
+  // eslint-disable-next-line prefer-regex-literals
   const obj = new RegExp('a');
   makeShareableCloneRecursive(obj);
-  // @ts-expect-error
+  // @ts-expect-error It's ok
   obj.prop = 2; // shouldn't warn because it's not frozen
 }
 
 function tryModifyConvertedArrayBuffer() {
   const obj = new ArrayBuffer(8);
   makeShareableCloneRecursive(obj);
-  // @ts-expect-error
+  // @ts-expect-error It's ok
   obj.prop = 2; // shouldn't warn because it's not frozen
 }
 
@@ -129,6 +137,17 @@ function tryModifyConvertedInt32Array() {
   const obj = new Int32Array(2);
   makeShareableCloneRecursive(obj);
   obj[1] = 2; // shouldn't warn because it's not frozen
+}
+
+function tryModifyUnconfigurableObject() {
+  const obj = {};
+  Object.defineProperty(obj, 'prop', {
+    value: 1,
+    writable: false,
+    enumerable: true,
+    configurable: false,
+  });
+  makeShareableCloneRecursive(obj);
 }
 
 const styles = StyleSheet.create({

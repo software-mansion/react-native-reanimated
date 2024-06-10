@@ -318,6 +318,10 @@ function freezeObjectIfDev<T extends object>(value: T) {
     return;
   }
   Object.entries(value).forEach(([key, element]) => {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key)!;
+    if (!descriptor.configurable) {
+      return;
+    }
     Object.defineProperty(value, key, {
       get() {
         return element;
