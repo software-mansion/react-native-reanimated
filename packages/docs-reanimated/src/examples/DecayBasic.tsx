@@ -12,6 +12,7 @@ import {
 } from 'react-native-gesture-handler';
 
 const SIZE = 120;
+const BOUNDARY_OFFSET = 50;
 
 export default function App() {
   const offset = useSharedValue<number>(0);
@@ -31,7 +32,10 @@ export default function App() {
       offset.value = withDecay({
         velocity: event.velocityX,
         rubberBandEffect: true,
-        clamp: [-(width.value / 2) + SIZE / 2, width.value / 2 - SIZE / 2],
+        clamp: [
+          -(width.value / 2) + SIZE / 2 + BOUNDARY_OFFSET,
+          width.value / 2 - SIZE / 2 - BOUNDARY_OFFSET,
+        ],
       });
       // highlight-end
     });
