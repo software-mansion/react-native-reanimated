@@ -41,6 +41,18 @@ function extractRow(tiles: Tile[], row: number): Tile[] {
   return tiles.filter((tile) => tile.row === row);
 }
 
+function areRowsEqual(row1: Tile[], row2: Tile[]): boolean {
+  if (row1.length !== row2.length) {
+    return false;
+  }
+  for (let i = 0; i < row1.length; i++) {
+    if (row1[i].id !== row2[i].id || row1[i].column !== row2[i].column) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function moveRowLeft(oldTiles: Tile[]): Tile[] {
   if (oldTiles.some((tile) => tile.zombie)) {
     throw new Error('Unexpected zombie tile');
@@ -134,12 +146,16 @@ function makeMove(oldTiles: Tile[], direction: Directions): Tile[] {
   oldTiles = transformTiles(oldTiles, direction, false);
   let newTiles: Tile[] = [];
   const aliveTiles = filterOutZombieTiles(oldTiles);
+  let changed = false;
   for (let row = 0; row < 4; row++) {
     const oldRow = extractRow(aliveTiles, row);
     const newRow = moveRowLeft(oldRow);
+    changed = changed || !areRowsEqual(oldRow, newRow);
     newTiles = newTiles.concat(newRow);
   }
-  newTiles = addRandomTile(newTiles);
+  if (changed) {
+    newTiles = addRandomTile(newTiles);
+  }
   newTiles = transformTiles(newTiles, direction, true);
   return sortTiles(newTiles);
 }
