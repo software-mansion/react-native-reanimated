@@ -41,12 +41,18 @@ function extractRow(tiles: Tile[], row: number): Tile[] {
   return tiles.filter((tile) => tile.row === row);
 }
 
-function areRowsEqual(row1: Tile[], row2: Tile[]): boolean {
-  if (row1.length !== row2.length) {
+function areTilesEqual(tiles1: Tile[], tiles2: Tile[]): boolean {
+  if (tiles1.length !== tiles2.length) {
     return false;
   }
-  for (let i = 0; i < row1.length; i++) {
-    if (row1[i].id !== row2[i].id || row1[i].column !== row2[i].column) {
+  sortTiles(tiles1);
+  sortTiles(tiles2);
+  for (let i = 0; i < tiles1.length; i++) {
+    if (
+      tiles1[i].id !== tiles2[i].id ||
+      tiles1[i].column !== tiles2[i].column ||
+      tiles1[i].row !== tiles2[i].row
+    ) {
       return false;
     }
   }
@@ -146,14 +152,12 @@ function makeMove(oldTiles: Tile[], direction: Directions): Tile[] {
   oldTiles = transformTiles(oldTiles, direction, false);
   let newTiles: Tile[] = [];
   const aliveTiles = filterOutZombieTiles(oldTiles);
-  let changed = false;
   for (let row = 0; row < 4; row++) {
     const oldRow = extractRow(aliveTiles, row);
     const newRow = moveRowLeft(oldRow);
-    changed = changed || !areRowsEqual(oldRow, newRow);
     newTiles = newTiles.concat(newRow);
   }
-  if (changed) {
+  if (!areTilesEqual(aliveTiles, newTiles)) {
     newTiles = addRandomTile(newTiles);
   }
   newTiles = transformTiles(newTiles, direction, true);
