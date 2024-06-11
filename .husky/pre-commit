@@ -1,7 +1,10 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
+REANIMATED_PATH=packages/react-native-reanimated
+
 yarn lint-staged
+cd $REANIMATED_PATH
 yarn type:check:all
 yarn find-unused-code:js
 

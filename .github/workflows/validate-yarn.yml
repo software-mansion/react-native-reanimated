@@ -4,9 +4,9 @@ env:
 on:
   pull_request:
     paths:
-      - '.github/workflows/validate-yarn.yml'
-      - '**/package.json'
-      - '**/yarn.lock'
+      - ".github/workflows/validate-yarn.yml"
+      - "**/package.json"
+      - "**/yarn.lock"
   merge_group:
     branches:
       - main
@@ -14,9 +14,9 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/validate-yarn.yml'
-      - '**/package.json'
-      - '**/yarn.lock'
+      - ".github/workflows/validate-yarn.yml"
+      - "**/package.json"
+      - "**/yarn.lock"
 
 jobs:
   check:
@@ -25,14 +25,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Use Node.js
         uses: actions/setup-node@v4
 
-      - name: Install dependencies
-        run: yarn
-      - name: Build package
-        run: yarn build
+      - name: Install monorepo dependencies
+        run: yarn install
 
       - name: Get changed files
         id: changed-files
@@ -41,7 +38,6 @@ jobs:
           files: |
             **/package.json
             **/yarn.lock
-
       - name: Get list of changed directories
         id: changed-dirs
         run: |
@@ -53,7 +49,6 @@ jobs:
           done
           ECHOLIST=($(echo "${ECHOLIST[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
           echo "dirList=${ECHOLIST[*]}" >> $GITHUB_OUTPUT
-
       - name: Perform yarn install in changed directories
         working-directory: ${{ github.workspace }}
         run: |
