@@ -1,0 +1,164 @@
+.searchContainer {
+  width: 60%;
+}
+
+.searchQueryLabel {
+  margin-bottom: 21px;
+}
+
+.searchQueryInput,
+.searchVersionInput {
+  border-radius: 0;
+  border: 1px solid var(--swm-searchbar-border);
+  font: var(--ifm-font-size-base) var(--ifm-font-family-base);
+  padding: 1rem 20px;
+  width: 100%;
+  background: var(--swm-searchbar-background);
+  color: var(--swm-search-page-query-text-color);
+  margin-bottom: 0.5rem;
+  transition: border var(--ifm-transition-fast) ease;
+}
+
+.searchQueryInput:focus,
+.searchVersionInput:focus {
+  border-color: var(--swm-searchbar-border-hover);
+  outline: none;
+}
+
+.searchQueryInput::placeholder {
+  color: var(--docsearch-muted-color);
+}
+
+.searchResultsRow {
+  margin: 46px 0 51px 0;
+}
+
+.searchResultsColumn {
+  font-size: 18px;
+  padding: 0;
+}
+
+.searchLogoColumn {
+  padding: 0;
+}
+
+.algoliaLogo {
+  max-width: 150px;
+}
+
+.algoliaLogoPathFill {
+  fill: var(--ifm-font-color-base);
+}
+
+.searchResultItem {
+  padding: 1rem 0;
+}
+
+.searchResultItem:not(:last-child) {
+  border-bottom: 1px solid var(--swm-searchbar-border);
+}
+
+.searchResultItemHeading {
+  margin-bottom: 0;
+
+  color: var(--ifm-font-color-base);
+  font-weight: var(--swm-search-page-heading-font-weight);
+  font-size: var(--swm-h3-font-size);
+}
+
+.searchResultItem [class*='breadcrumbs__item'] {
+  color: var(--ifm-font-color-base);
+  font-size: 16px;
+}
+
+.searchResultItem [class*='breadcrumbs__item']::after {
+  display: none;
+}
+
+.breadcrumbArrow {
+  margin: 0 var(--ifm-breadcrumb-spacing);
+}
+
+.searchResultItemPath {
+  --ifm-breadcrumb-separator-size-multiplier: 1;
+  margin-top: 0.5rem;
+
+  color: var(--ifm-color-content-secondary);
+  font-size: 0.8rem;
+}
+
+.searchResultItemSummary {
+  margin: 0.5rem 0 0;
+  font-size: 14px;
+}
+
+.searchResultItemSeparator {
+  --ifm-hr-background-color: var(--swm-navy-light-20);
+  margin: 0;
+}
+
+@media only screen and (max-width: 996px) {
+  .searchContainer {
+    width: 100%;
+  }
+
+  .searchVersionColumn {
+    max-width: 40% !important;
+  }
+
+  .searchResultsColumn {
+    max-width: 60% !important;
+  }
+
+  .searchLogoColumn {
+    max-width: 40% !important;
+    padding-left: 0 !important;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .searchQueryColumn {
+    max-width: 100% !important;
+  }
+
+  .searchVersionColumn {
+    max-width: 100% !important;
+    padding-left: var(--ifm-spacing-horizontal) !important;
+  }
+}
+
+.loadingSpinner {
+  width: 3rem;
+  height: 3rem;
+  border: 0.4em solid var(--swm-navy-light-10);
+  border-top-color: var(--swm-navy-light-80);
+  border-radius: 50%;
+  animation: loading-spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes loading-spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loader {
+  margin-top: 2rem;
+}
+
+:global(.search-result-match) {
+  padding: 0.09em 0;
+
+  font-style: inherit;
+  text-decoration: underline;
+  text-decoration-skip-ink: none;
+  text-underline-offset: 2px;
+}
+
+/* Larger underline offset in headings */
+[class*='searchResultItemHeading'] [class*='search-result-match'],
+[class*='searchResultItemHeading']:hover {
+  text-underline-offset: 4px;
+  text-decoration-skip-ink: none;
+}
