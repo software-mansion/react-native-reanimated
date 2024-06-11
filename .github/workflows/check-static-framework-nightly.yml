@@ -1,6 +1,6 @@
 name: Check static framework nightly build
 env:
-  YARN_ENABLE_HARDENED_MODE: 0
+  YARN_ENABLE_IMMUTABLE_INSTALLS: 0
 on:
   pull_request:
     paths:
@@ -23,9 +23,12 @@ jobs:
     steps:
       - name: Create React Native app
         run: npx react-native init app
-      - name: Install dependencies
+      - name: Download Reanimated from commit
         working-directory: app
-        run: yarn add github:software-mansion/react-native-reanimated
+        run: curl -LJO https://codeload.github.com/software-mansion/react-native-reanimated/tar.gz/${{ github.sha }}
+      - name: Install Reanimated
+        working-directory: app
+        run: yarn add react-native-reanimated@file:./react-native-reanimated-${{ github.sha }}.tar.gz
       - name: Install Paper Pods
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         working-directory: app/ios
