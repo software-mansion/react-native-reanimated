@@ -43,15 +43,14 @@ export default function App() {
       const translateValue = withSpring(-moveValue, SPRING_CONFIG);
       //highlight-next-line
       const delay = index * 100;
+
+      const scaleValue = isExpanded.value ? 1 : 0;
+
       return {
         transform: [
           { translateY: translateValue },
           {
-            scale: withDelay(
-              delay,
-              //highlight-next-line
-              withTiming(interpolate(moveValue, [OFFSET * index, 0], [1, 0]))
-            ),
+            scale: withDelay(delay, withTiming(scaleValue)),
           },
         ],
       };

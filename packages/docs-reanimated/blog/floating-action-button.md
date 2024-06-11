@@ -29,7 +29,7 @@ It also relies on [animatable values](/docs/fundamentals/glossary#animatable-val
 
 <samp id="FABButton">Floating Action Button</samp>
 
-<CollapsibleCode src={FABButtonSrc} showLines={[56,67]}/>
+<CollapsibleCode src={FABButtonSrc} showLines={[62,73]}/>
 
 The **FABButton** is a reusable component that manages button styles, content and animations. For this we use props: `buttonLetter` and `animatedStyles`.
 
@@ -39,4 +39,4 @@ We dynamically generate animated styles for the buttons. The delay in their appe
 
 <samp id="FABButton">Floating Action Button</samp>
 
-<CollapsibleCode src={FABButtonSrc} showLines={[34,55]}/>
+<CollapsibleCode src={FABButtonSrc} showLines={[34,59]}/>
