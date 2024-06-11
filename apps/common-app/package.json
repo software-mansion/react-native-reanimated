@@ -57,5 +57,8 @@
     "react-native-screens": "3.31.0-rc.1",
     "react-native-svg": "^15.2.0-rc.0",
     "typescript": "~5.3.0"
+  },
+  "dependencies": {
+    "@react-navigation/bottom-tabs": "^6.5.20"
   }
 }
