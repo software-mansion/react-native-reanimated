@@ -18,7 +18,7 @@ const HireUsSection = () => {
         <HomepageButton
           backgroundStyling={styles.buttonNavyStyling}
           borderStyling={styles.buttonNavyBorderStyling}
-          href="https://swmansion.com/contact/projects?utm_source=reanimated"
+          href="https://swmansion.com/contact/projects?utm_source=reanimated&utm_medium=landing-page"
           title="Hire us"
         />
       </div>
