@@ -1,5 +1,6 @@
 package com.swmansion.reanimated.layoutReanimation;
 
+import android.util.Log;
 import android.view.View;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -9,24 +10,20 @@ public class ScreensHelper {
   public static View getTabNavigator(View view) {
     View currentView = view;
     while (currentView != null) {
-      if (currentView.getClass().getSimpleName().equals("ScreenContainer")) {
+      if (isScreenContainer(currentView)) {
         return currentView;
       }
-      if (currentView.getClass().getSimpleName().equals("Screen")
-          && currentView.getParent() != null
-          && currentView
-              .getParent()
-              .getClass()
-              .getSimpleName()
-              .equals("ScreensCoordinatorLayout")) {
+      if (isScreen(currentView) && isScreensCoordinatorLayout(currentView.getParent())) {
         View screen = currentView;
         Class<?> screenClass = screen.getClass();
         try {
           Method getContainer = screenClass.getMethod("getContainer");
           currentView = (View) getContainer.invoke(screen);
-        } catch (NoSuchMethodException
-            | InvocationTargetException
-            | IllegalAccessException ignored) {
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+          String message =
+              e.getMessage() != null ? e.getMessage() : "Unable to invoke the getContainer method";
+          Log.e("Reanimated", message);
+          break;
         }
       } else if (currentView.getParent() instanceof View) {
         currentView = (View) currentView.getParent();
@@ -37,7 +34,7 @@ public class ScreensHelper {
     return null;
   }
 
-  public static boolean isChildOfScreen(View view, View screen) {
+  public static boolean isViewChildOfScreen(View view, View screen) {
     View currentView = view;
     while (currentView != null) {
       if (currentView == screen) {
@@ -52,7 +49,7 @@ public class ScreensHelper {
   }
 
   public static View getTopScreenForStack(View view) {
-    if (view.getClass().getSimpleName().equals("ScreenStack")) {
+    if (isScreenStack(view)) {
       View stack = view;
       Class<?> screenStackClass = stack.getClass();
       try {
@@ -62,5 +59,25 @@ public class ScreensHelper {
       }
     }
     return view;
+  }
+
+  public static boolean isScreen(Object maybeView) {
+    return isInstanceOf(maybeView, "Screen");
+  }
+
+  public static boolean isScreenStack(Object maybeView) {
+    return isInstanceOf(maybeView, "ScreenStack");
+  }
+
+  public static boolean isScreenContainer(Object maybeView) {
+    return isInstanceOf(maybeView, "ScreenContainer");
+  }
+
+  public static boolean isScreensCoordinatorLayout(Object maybeView) {
+    return isInstanceOf(maybeView, "ScreensCoordinatorLayout");
+  }
+
+  private static boolean isInstanceOf(Object maybeView, String className) {
+    return maybeView != null && maybeView.getClass().getSimpleName().equals(className);
   }
 }

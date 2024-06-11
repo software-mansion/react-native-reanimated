@@ -119,15 +119,14 @@ public class Snapshot {
     borderRadii = new ReactNativeUtils.BorderRadii(0, 0, 0, 0, 0);
   }
 
-  private int[] tryToFixLocation(View view) {
+  private int[] tryToComputeRealPosition(View view) {
     int[] location = new int[2];
     View currentView = view;
     while (currentView != null) {
       location[0] += currentView.getX();
       location[1] += currentView.getY();
-      if (currentView.getParent() != null
-          && currentView.getParent().getClass().getSimpleName().equals("ScreensCoordinatorLayout")
-          && currentView.getClass().getSimpleName().equals("Screen")) {
+      if (ScreensHelper.isScreen(currentView)
+          && ScreensHelper.isScreensCoordinatorLayout(currentView.getParent())) {
         View screen = currentView;
         Class<?> screenClass = screen.getClass();
         try {
@@ -150,7 +149,7 @@ public class Snapshot {
     int[] location = new int[2];
     view.getLocationOnScreen(location);
     if (location[0] == 0 && location[1] == 0) {
-      location = tryToFixLocation(view);
+      location = tryToComputeRealPosition(view);
     }
     originX = location[0];
     originY = location[1];

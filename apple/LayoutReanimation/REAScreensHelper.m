@@ -80,26 +80,6 @@
   return [view isKindOfClass:[RNSScreen class]] == YES;
 }
 
-+ (bool)isStackChanged:(REAUIView *)view
-{
-  NSMutableArray<REAUIView *> *screens = [NSMutableArray new];
-  REAUIView *currentView = view;
-  while (currentView.reactSuperview != nil) {
-    if ([currentView isKindOfClass:[RNSScreenView class]]) {
-      [screens addObject:currentView];
-    }
-    currentView = currentView.reactSuperview;
-  }
-  for (int i = 1; i < [screens count]; i++) {
-    REAUIView *screen = screens[i];
-    REAUIView *topViewController = screen.reactViewController.navigationController.topViewController.view;
-    if (topViewController != screen) {
-      return true;
-    }
-  }
-  return false;
-}
-
 + (REAUIView *)getActiveTabForTabNavigator:(REAUIView *)tabNavigator
 {
   NSArray<REAUIView *> *screenTabs = tabNavigator.reactSubviews;
@@ -138,9 +118,9 @@
   return nil;
 }
 
-+ (bool)isChild:(REAUIView *)child OfScreen:(REAUIView *)screen
++ (bool)isView:(REAUIView *)view ChildOfScreen:(REAUIView *)screen
 {
-  REAUIView *currentView = child;
+  REAUIView *currentView = view;
   while (currentView.reactSuperview) {
     if (currentView == screen) {
       return true;
@@ -150,7 +130,7 @@
   return false;
 }
 
-+ (bool)isOnTop:(REAUIView *)view
++ (bool)isViewOnTopOfScreenStack:(REAUIView *)view
 {
   NSMutableArray<REAUIView *> *screens = [NSMutableArray new];
   REAUIView *currentView = view;
@@ -205,11 +185,6 @@
 }
 
 + (bool)isRNSScreenType:(REAUIView *)screen
-{
-  return false;
-}
-
-+ (bool)isStackChanged:(REAUIView *)view
 {
   return false;
 }

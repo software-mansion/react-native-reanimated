@@ -214,7 +214,7 @@ void setupLayoutAnimationCallbacks(
 
   [animationsManager setGetSharedGroupBlock:^NSArray<NSNumber *> *_Nullable(NSNumber *_Nonnull tag) {
     if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      std::vector<int> results = nativeReanimatedModule->layoutAnimationsManager().getSharedGroup([tag intValue]);
+      const auto &results = nativeReanimatedModule->layoutAnimationsManager().getSharedGroup([tag intValue]);
       NSMutableArray<NSNumber *> *convertedResult = [NSMutableArray new];
       for (const int tag : results) {
         [convertedResult addObject:@(tag)];

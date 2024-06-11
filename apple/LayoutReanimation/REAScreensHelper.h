@@ -18,10 +18,9 @@
 + (REAUIView *)getScreenWrapper:(REAUIView *)view;
 + (int)getScreenType:(REAUIView *)screen;
 + (bool)isRNSScreenType:(REAUIView *)screen;
-+ (bool)isStackChanged:(REAUIView *)view;
 + (REAUIView *)findTopScreenInChildren:(REAUIView *)screen;
 + (REAUIView *)getActiveTabForTabNavigator:(REAUIView *)tabNavigator;
-+ (bool)isChild:(REAUIView *)child OfScreen:(REAUIView *)screen;
-+ (bool)isOnTop:(REAUIView *)view;
++ (bool)isView:(REAUIView *)view ChildOfScreen:(REAUIView *)screen;
++ (bool)isViewOnTopOfScreenStack:(REAUIView *)view;
 
 @end

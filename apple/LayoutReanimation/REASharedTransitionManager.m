@@ -377,7 +377,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   for (int i = siblingIndex; i >= 0; i--) {
     NSNumber *viewTag = sharedGroup[i];
     REAUIView *view = [_animationManager viewForTag:viewTag];
-    if ([REAScreensHelper isChild:view OfScreen:activeTab]) {
+    if ([REAScreensHelper isView:view ChildOfScreen:activeTab]) {
       return view;
     }
   }
@@ -668,7 +668,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     // screen is removed from React tree (navigation.navigate(<screenName>))
     bool isScreenRemovedFromReactTree = screen.reactSuperview == nil;
     // click on button goBack on native header
-    bool isTriggeredByGoBackButton = [REAScreensHelper isOnTop:screen];
+    bool isTriggeredByGoBackButton = [REAScreensHelper isViewOnTopOfScreenStack:screen];
     bool shouldRunTransition = (isScreenRemovedFromReactTree || isTriggeredByGoBackButton) &&
         !(isInteractive && [_currentSharedTransitionViews count] > 0);
     if (shouldRunTransition) {
@@ -829,8 +829,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)startSharedTransition:(NSArray *)sharedElements
 {
-  NSArray *sharedElementCopy = [sharedElements copy];
-  for (REASharedElement *sharedElement in sharedElementCopy) {
+  for (REASharedElement *sharedElement in sharedElements) {
     sharedElement.targetView.hidden = YES;
     LayoutAnimationType type = sharedElement.animationType;
     [self onViewTransition:sharedElement.sourceView

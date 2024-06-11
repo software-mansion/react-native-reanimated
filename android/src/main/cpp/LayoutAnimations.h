@@ -23,7 +23,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   using ClearAnimationConfigBlock = std::function<void(int)>;
   using CancelAnimationBlock = std::function<void(int)>;
   using FindPrecedingViewTagForTransitionBlock = std::function<int(int)>;
-  using GetSharedGroupBlock = std::function<std::vector<int>(int)>;
+  using GetSharedGroupBlock = std::function<std::vector<int>(const int)>;
 
  public:
   static auto constexpr kJavaDescriptor =
@@ -55,7 +55,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   void setFindPrecedingViewTagForTransition(
       FindPrecedingViewTagForTransitionBlock
           findPrecedingViewTagForTransitionBlock);
-  void setGetSharedGroupBlock(GetSharedGroupBlock getSharedGroupBlock);
+  void setGetSharedGroupBlock(const GetSharedGroupBlock getSharedGroupBlock);
 
   void progressLayoutAnimation(
       int tag,
@@ -65,7 +65,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   void clearAnimationConfigForTag(int tag);
   void cancelAnimationForTag(int tag);
   int findPrecedingViewTagForTransition(int tag);
-  jni::local_ref<JArrayInt> getSharedGroup(int tag);
+  jni::local_ref<JArrayInt> getSharedGroup(const int tag);
 
  private:
   friend HybridBase;

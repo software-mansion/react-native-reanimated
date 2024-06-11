@@ -159,8 +159,8 @@ int LayoutAnimationsManager::findPrecedingViewTagForTransition(const int tag) {
   return -1;
 }
 
-const std::vector<int> LayoutAnimationsManager::getSharedGroup(const int tag) {
-  auto const &groupName = viewTagToSharedTag_[tag];
+const std::vector<int> &LayoutAnimationsManager::getSharedGroup(const int tag) {
+  const auto &groupName = viewTagToSharedTag_[tag];
   return sharedTransitionGroups_[groupName];
 }
 

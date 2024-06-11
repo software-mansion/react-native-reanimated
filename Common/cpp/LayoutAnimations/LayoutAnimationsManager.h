@@ -43,7 +43,7 @@ class LayoutAnimationsManager {
   void clearSharedTransitionConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   int findPrecedingViewTagForTransition(const int tag);
-  const std::vector<int> getSharedGroup(const int tag);
+  const std::vector<int> &getSharedGroup(const int tag);
 #ifndef NDEBUG
   std::string getScreenSharedTagPairString(
       const int screenTag,

@@ -110,8 +110,8 @@ int LayoutAnimations::findPrecedingViewTagForTransition(int tag) {
   return findPrecedingViewTagForTransitionBlock_(tag);
 }
 
-jni::local_ref<JArrayInt> LayoutAnimations::getSharedGroup(int tag) {
-  std::vector<int> group = getSharedGroupBlock_(tag);
+jni::local_ref<JArrayInt> LayoutAnimations::getSharedGroup(const int tag) {
+  const auto &group = getSharedGroupBlock_(tag);
   auto jGroup = JArrayInt::newArray(group.size());
   jGroup->setRegion(0, group.size(), group.data());
   return jGroup;

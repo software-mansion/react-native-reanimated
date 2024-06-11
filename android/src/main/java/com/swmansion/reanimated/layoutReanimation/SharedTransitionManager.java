@@ -752,7 +752,7 @@ public class SharedTransitionManager {
       int[] sharedGroup = mNativeMethodsHolder.getSharedGroup(sharedView.getId());
       for (int i = sharedGroup.length - 1; i >= 0; i--) {
         View targetView = mAnimationsManager.resolveView(sharedGroup[i]);
-        if (!ScreensHelper.isChildOfScreen(targetView, newTab)) {
+        if (!ScreensHelper.isViewChildOfScreen(targetView, newTab)) {
           continue;
         }
         Snapshot sourceViewSnapshot = mSnapshotRegistry.get(sharedView.getId());

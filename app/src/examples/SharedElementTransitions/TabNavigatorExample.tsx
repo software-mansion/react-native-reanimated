@@ -8,12 +8,14 @@ import {
 import Animated from 'react-native-reanimated';
 
 function getStyle(index: number) {
-  if (index === 0) {
-    return styles.box1;
-  } else if (index === 1) {
-    return styles.box2;
+  switch (index) {
+    case 0:
+      return styles.box1;
+    case 1:
+      return styles.box2;
+    default:
+      return styles.box3;
   }
-  return styles.box3;
 }
 
 type ScreenProps = {
@@ -26,7 +28,7 @@ const Screen = ({ navigation, route }: NativeStackScreenProps<ScreenProps>) => {
   const id = route.params?.id ?? 0;
   const showButtons = !!route.params?.showButtons;
   return (
-    <View style={{ ...styles.container }}>
+    <View style={styles.container}>
       <Text>Current id: {id}</Text>
       {showButtons && id < 2 && (
         <Button
@@ -50,7 +52,7 @@ const createStack = () => {
   return () => (
     <Stack.Navigator>
       <Stack.Screen
-        name={'Details'}
+        name="Details"
         initialParams={{ showButtons: true }}
         component={Screen as React.ComponentType}
       />
