@@ -77,7 +77,9 @@ jobs:
           name: ${{ env.PACKAGE_NAME }}
           path: "packages/react-native-reanimated/${{ env.PACKAGE_NAME }}"
 
-      - run: npm publish $PACKAGE_NAME --tag nightly
+      - name: Publish npm package
+        working-directory: packages/react-native-reanimated
+        run: npm publish $PACKAGE_NAME --tag nightly
         if: ${{ inputs.publish_on_npm }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
