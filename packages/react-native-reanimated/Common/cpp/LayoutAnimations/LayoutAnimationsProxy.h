@@ -82,6 +82,9 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate {
   void addOngoingAnimations(
       SurfaceId surfaceId,
       ShadowViewMutationList &mutations) const;
+  void updateOngoingAnimationTarget(
+      const int tag,
+      const ShadowViewMutation& mutation) const;
 
   void updateIndexForMutation(ShadowViewMutation &mutation) const;
 

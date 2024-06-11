@@ -314,7 +314,8 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
       }
 
       case ShadowViewMutation::Type::Update: {
-        if (!layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
+        auto shouldAnimate = hasLayoutChanged(mutation);
+        if (!layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT) || (!shouldAnimate && !layoutAnimations_.contains(tag))) {
           // We should cancel any ongoing animation here to ensure that the
           // proper final state is reached for this view However, due to how
           // RNSScreens handle adding headers (a second commit is triggered to
@@ -323,6 +324,9 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           // is pushed onto a stack
           // TODO: find a better solution for this problem
           filteredMutations.push_back(mutation);
+          continue;
+        } else if (!shouldAnimate){
+          updateOngoingAnimationTarget(tag, mutation);
           continue;
         }
         startLayoutAnimation(tag, mutation);
@@ -644,7 +648,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
   auto parentView = std::make_shared<ShadowView>(mutation.parentShadowView);
   layoutAnimations_.insert_or_assign(
       tag, LayoutAnimation{finalView, currentView, parentView, {}, count});
-
+      
   Snapshot currentValues(oldView, surfaceManager.getWindow(surfaceId));
   Snapshot targetValues(
       mutation.newChildShadowView, surfaceManager.getWindow(surfaceId));
@@ -669,6 +673,12 @@ void LayoutAnimationsProxy::startLayoutAnimation(
     nativeReanimatedModule_->layoutAnimationsManager().startLayoutAnimation(
         rt, tag, LayoutAnimationType::LAYOUT, yogaValues);
   });
+}
+
+void LayoutAnimationsProxy::updateOngoingAnimationTarget(
+  const int tag,
+  const ShadowViewMutation &mutation) const {
+  layoutAnimations_[tag].finalView = std::make_shared<ShadowView>(mutation.newChildShadowView);
 }
 
 void LayoutAnimationsProxy::maybeCancelAnimation(const int tag) const {

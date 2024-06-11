@@ -145,6 +145,10 @@ static inline bool isRNSScreen(std::shared_ptr<MutationNode> node) {
           node->mutation.oldChildShadowView.componentName, "RNSScreen");
 }
 
+static inline bool hasLayoutChanged(const ShadowViewMutation& mutation){
+  return mutation.oldChildShadowView.layoutMetrics.frame != mutation.newChildShadowView.layoutMetrics.frame;
+}
+
 static inline void mergeAndSwap(std::vector<std::shared_ptr<MutationNode>>& A, std::vector<std::shared_ptr<MutationNode>>& B){
   std::vector<std::shared_ptr<MutationNode>> merged;
   auto it1 = A.begin(), it2 = B.begin();
