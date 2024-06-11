@@ -102,7 +102,7 @@ export class TestRunner {
     return await this.render(null);
   }
 
-  public describe(name: string, buildSuite: () => void, decorator: DescribeDecorator | null) {
+  public describe(name: string, buildSuite: BuildFunction, decorator: DescribeDecorator | null) {
     if (decorator === DescribeDecorator.ONLY) {
       this._includesOnly = true;
     }

@@ -25,17 +25,15 @@ export type SharedValueSnapshot = {
 export type ComponentRef = MutableRefObject<(Component & { props: { style: Record<string, unknown> } }) | null>;
 
 export enum DescribeDecorator {
-  ONLY = 'ONLY',
-  SKIP = 'SKIP',
-  NONE = 'NONE',
+  ONLY = 'only',
+  SKIP = 'skip',
 }
 
 export enum TestDecorator {
-  ONLY = 'ONLY',
-  SKIP = 'SKIP',
-  FAILING = 'FAILING',
-  WARN = 'WARN',
-  NONE = 'NONE',
+  ONLY = 'only',
+  SKIP = 'skip',
+  FAILING = 'failing',
+  WARN = 'warn',
 }
 
 export type BuildFunction = () => void | Promise<void>;
