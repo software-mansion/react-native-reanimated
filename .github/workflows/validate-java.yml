@@ -4,9 +4,9 @@ env:
 on:
   pull_request:
     paths:
-      - '.github/workflows/validate-java.yml'
-      - 'android/src/main/java/**'
-      - 'android/build.gradle'
+      - ".github/workflows/validate-java.yml"
+      - "packages/react-native-reanimated/android/src/main/java/**"
+      - "packages/react-native-reanimated/android/build.gradle"
   merge_group:
     branches:
       - main
@@ -14,9 +14,9 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/validate-java.yml'
-      - 'android/src/main/java/**'
-      - 'android/build.gradle'
+      - ".github/workflows/validate-java.yml"
+      - "packages/react-native-reanimated/android/src/main/java/**"
+      - "packages/react-native-reanimated/android/build.gradle"
 
 jobs:
   check:
@@ -31,11 +31,16 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          cache: 'yarn'
+          cache: "yarn"
       - name: Clear annotations
-        run: scripts/clear-annotations.sh
+        run: .github/workflows/helper/clear-annotations.sh
 
-      - name: Install node dependencies
+      - name: Install monorepo node dependencies
+        run: yarn install
+      - name: Install Reanimated node dependencies
+        working-directory: packages/react-native-reanimated
         run: yarn
-      - name: Lint
+
+      - name: Lint Java
+        working-directory: packages/react-native-reanimated
         run: yarn lint:java
