@@ -14,4 +14,12 @@ module.exports = {
     'reanimated/animated-style-non-animated-component': 'error',
     'react/jsx-fragments': ['error', 'syntax'],
   },
+  overrides: [
+    {
+      files: ['./src/examples/RuntimeTests/tests/**'],
+      rules: {
+        'no-template-curly-in-string': 'off',
+      },
+    },
+  ],
 };

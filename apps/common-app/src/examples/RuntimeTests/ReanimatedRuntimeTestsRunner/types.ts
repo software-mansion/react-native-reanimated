@@ -1,5 +1,5 @@
-import { Component, Dispatch, MutableRefObject, ReactNode, SetStateAction } from 'react';
-import { AnimatedStyle, StyleProps } from 'react-native-reanimated';
+import type { Component, Dispatch, MutableRefObject, ReactNode, SetStateAction } from 'react';
+import type { AnimatedStyle, StyleProps } from 'react-native-reanimated';
 
 export type CallTracker = {
   UICallsCount: number;
@@ -38,9 +38,11 @@ export enum TestDecorator {
   NONE = 'NONE',
 }
 
+export type BuildFunction = () => void | Promise<void>;
+
 export type TestCase = {
   name: string;
-  run: () => void | Promise<void>;
+  run: BuildFunction;
   componentsRefs: Record<string, ComponentRef>;
   callsRegistry: Record<string, CallTracker>;
   errors: string[];
@@ -55,7 +57,7 @@ export type TestCase = {
 
 export type TestSuite = {
   name: string;
-  buildSuite: () => void;
+  buildSuite: BuildFunction;
   testCases: TestCase[];
   nestingLevel: number;
   beforeAll?: () => void | Promise<void>;
@@ -104,6 +106,7 @@ export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;
 };
 
+/* eslint-disable no-var */
 declare global {
   var mockedAnimationTimestamp: number | undefined;
   var originalRequestAnimationFrame: ((callback: (timestamp: number) => void) => void) | undefined;
@@ -123,6 +126,7 @@ declare global {
   var _obtainPropFabric: (shadowNodeWrapper: unknown, propName: string) => string;
   var __flushAnimationFrame: (frameTimestamp: number) => void;
 }
+/* eslint-enable no-var */
 
 export type TestSummary = {
   passed: number;

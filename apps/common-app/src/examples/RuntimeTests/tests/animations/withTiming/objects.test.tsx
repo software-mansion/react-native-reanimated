@@ -1,13 +1,8 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withDelay,
-  AnimatableValueObject,
-} from 'react-native-reanimated';
-import React from 'react';
+import type { AnimatableValueObject } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
+import type { ValidPropNames } from '../../../ReanimatedRuntimeTestsRunner/types';
 import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
 import {
   describe,
@@ -18,7 +13,6 @@ import {
   getTestComponent,
   wait,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { ValidPropNames } from '../../../ReanimatedRuntimeTestsRunner/TestComponent';
 
 const COMPONENT_REF = 'AnimatedComponent';
 
@@ -85,6 +79,7 @@ describe('withTiming animation of WIDTH', () => {
       await render(<AnimatedComponent startStyle={startStyle} finalStyle={finalStyle} />);
       const component = getTestComponent(COMPONENT_REF);
       await wait(1000);
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       Object.keys(finalStyle).forEach(async key => {
         expect(await component.getAnimatedStyle(key as ValidPropNames)).toBe(
           finalStyle[key],

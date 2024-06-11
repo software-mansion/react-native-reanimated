@@ -136,7 +136,7 @@ describe('Tests of *****sharedValue*****', () => {
         await render(<ProgressBar progress={index / Presets.numbers.length} />);
       }
     });
-    test.each([BigInt(2), BigInt(-2), BigInt(123456789), BigInt(123456789123456789123456789)])(
+    test.each([BigInt(2), BigInt(-2), BigInt(123456789), BigInt(1234567891234567)])(
       'Test bigInt multiplication  *=%p',
       async (factor: bigint) => {
         for (const [index, preset] of Presets.bigInts.entries()) {

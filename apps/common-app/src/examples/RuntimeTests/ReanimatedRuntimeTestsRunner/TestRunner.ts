@@ -1,22 +1,23 @@
-import { Component, MutableRefObject, ReactElement, useRef } from 'react';
-import {
-  type NullableTestValue,
-  type LockObject,
-  type Operation,
-  type SharedValueSnapshot,
-  type TestCase,
-  type TestConfiguration,
-  type TestSuite,
-  type TestSummary,
-  type TestValue,
-  type TrackerCallCount,
-  ComparisonMode,
-  DescribeDecorator,
-  TestDecorator,
+import type { Component, MutableRefObject, ReactElement } from 'react';
+import { useRef } from 'react';
+import type {
+  BuildFunction,
+  NullableTestValue,
+  LockObject,
+  Operation,
+  SharedValueSnapshot,
+  TestCase,
+  TestConfiguration,
+  TestSuite,
+  TestSummary,
+  TestValue,
+  TrackerCallCount,
 } from './types';
+import { ComparisonMode, DescribeDecorator, TestDecorator } from './types';
 import { TestComponent } from './TestComponent';
 import { getTrackerCallCount, render, stopRecordingAnimationUpdates, unmockAnimationTimer } from './RuntimeTestsApi';
-import { makeMutable, runOnUI, runOnJS, SharedValue } from 'react-native-reanimated';
+import type { SharedValue } from 'react-native-reanimated';
+import { makeMutable, runOnUI, runOnJS } from 'react-native-reanimated';
 import { applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
 import { createUpdatesContainer } from './UpdatesContainer';
 import { Matchers, nullableMatch } from './Matchers';
@@ -127,11 +128,12 @@ export class TestRunner {
       buildSuite,
       testCases: [],
       nestingLevel: (this._currentTestSuite?.nestingLevel || 0) + 1,
+      // eslint-disable-next-line no-unneeded-ternary
       decorator: decorator ? decorator : this._currentTestSuite?.decorator ? this._currentTestSuite?.decorator : null,
     });
   }
 
-  public test(name: string, run: () => void, decorator: TestDecorator | null, warningMessage = '') {
+  public test(name: string, run: BuildFunction, decorator: TestDecorator | null, warningMessage = '') {
     assertTestSuite(this._currentTestSuite);
     if (decorator === TestDecorator.ONLY) {
       this._includesOnly = true;
@@ -145,7 +147,7 @@ export class TestRunner {
             callsRegistry: {},
             errors: [],
             decorator,
-            warningMessage: warningMessage,
+            warningMessage,
             skip: false,
           }
         : {
@@ -161,7 +163,7 @@ export class TestRunner {
   }
 
   public testEachErrorMsg<T>(examples: Array<T>, decorator: TestDecorator) {
-    return (name: string, expectedWarning: string, testCase: (example: T) => void) => {
+    return (name: string, expectedWarning: string, testCase: (example: T) => void | Promise<void>) => {
       examples.forEach((example, index) => {
         const currentTestCase = async () => {
           await testCase(example);
@@ -175,8 +177,9 @@ export class TestRunner {
       });
     };
   }
+
   public testEach<T>(examples: Array<T>, decorator: TestDecorator | null) {
-    return (name: string, testCase: (example: T, index?: number) => void) => {
+    return (name: string, testCase: (example: T, index?: number) => void | Promise<void>) => {
       examples.forEach((example, index) => {
         const currentTestCase = async () => {
           await testCase(example, index);
@@ -260,7 +263,9 @@ export class TestRunner {
         for (const testCase of testSuite.testCases) {
           if (testCase.decorator === TestDecorator.ONLY) {
             skipTestSuite = false;
-          } else testCase.skip = testCase.skip || !(testSuite.decorator === DescribeDecorator.ONLY);
+          } else {
+            testCase.skip = testCase.skip || !(testSuite.decorator === DescribeDecorator.ONLY);
+          }
         }
       }
       testSuite.skip = skipTestSuite;
@@ -323,6 +328,7 @@ export class TestRunner {
       console.error = newConsoleFuncJS;
       console.warn = newConsoleFuncJS;
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       const callTrackerCopy = this.callTracker;
 
       runOnUI(() => {
@@ -500,12 +506,13 @@ export class TestRunner {
         return global.mockedAnimationTimestamp;
       };
 
-      let originalRequestAnimationFrame = global.requestAnimationFrame;
+      const originalRequestAnimationFrame = global.requestAnimationFrame;
       global.originalRequestAnimationFrame = originalRequestAnimationFrame;
-      (global as any).requestAnimationFrame = (callback: Function) => {
+      global.requestAnimationFrame = (callback: (time: number) => void) => {
         originalRequestAnimationFrame(() => {
           callback(global._getAnimationTimestamp());
         });
+        return 0;
       };
 
       global.originalFlushAnimationFrame = global.__flushAnimationFrame;
