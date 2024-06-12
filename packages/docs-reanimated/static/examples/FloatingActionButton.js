@@ -19,11 +19,36 @@ const SPRING_CONFIG = {
 
 const OFFSET = 60;
 
-const FABButton = ({ animatedStyles, buttonLetter }) => (
-  <AnimatedPressable style={[animatedStyles, styles.shadow, styles.button]}>
-    <Animated.Text style={styles.content}>{buttonLetter}</Animated.Text>
-  </AnimatedPressable>
-);
+const FloatingActionButton = ({ isExpanded, index, buttonLetter }) => {
+  const animatedStyles = useAnimatedStyle(() => {
+    const moveValue = interpolate(
+      Number(isExpanded.value),
+      [0, 1],
+      //highlight-next-line
+      [0, OFFSET * index]
+    );
+    const translateValue = withSpring(-moveValue, SPRING_CONFIG);
+    //highlight-next-line
+    const delay = index * 100;
+
+    const scaleValue = isExpanded.value ? 1 : 0;
+
+    return {
+      transform: [
+        { translateY: translateValue },
+        {
+          scale: withDelay(delay, withTiming(scaleValue)),
+        },
+      ],
+    };
+  });
+
+  return (
+    <AnimatedPressable style={[animatedStyles, styles.shadow, styles.button]}>
+      <Animated.Text style={styles.content}>{buttonLetter}</Animated.Text>
+    </AnimatedPressable>
+  );
+};
 
 export default function App() {
   const isExpanded = useSharedValue(false);
@@ -31,30 +56,6 @@ export default function App() {
   const handlePress = () => {
     isExpanded.value = !isExpanded.value;
   };
-
-  const generateButtonAnimatedStyle = (index) =>
-    useAnimatedStyle(() => {
-      const moveValue = interpolate(
-        Number(isExpanded.value),
-        [0, 1],
-        //highlight-next-line
-        [0, OFFSET * index]
-      );
-      const translateValue = withSpring(-moveValue, SPRING_CONFIG);
-      //highlight-next-line
-      const delay = index * 100;
-
-      const scaleValue = isExpanded.value ? 1 : 0;
-
-      return {
-        transform: [
-          { translateY: translateValue },
-          {
-            scale: withDelay(delay, withTiming(scaleValue)),
-          },
-        ],
-      };
-    });
 
   const plusIconStyle = useAnimatedStyle(() => {
     // highlight-next-line
@@ -81,16 +82,19 @@ export default function App() {
               +
             </Animated.Text>
           </AnimatedPressable>
-          <FABButton
-            animatedStyles={generateButtonAnimatedStyle(1)}
+          <FloatingActionButton
+            isExpanded={isExpanded}
+            index={1}
             buttonLetter={'M'}
           />
-          <FABButton
-            animatedStyles={generateButtonAnimatedStyle(2)}
+          <FloatingActionButton
+            isExpanded={isExpanded}
+            index={2}
             buttonLetter={'W'}
           />
-          <FABButton
-            animatedStyles={generateButtonAnimatedStyle(3)}
+          <FloatingActionButton
+            isExpanded={isExpanded}
+            index={3}
             buttonLetter={'S'}
           />
         </View>

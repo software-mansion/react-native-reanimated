@@ -5,16 +5,16 @@ title: Floating Action Button
 
 Floating Action Button provides user with easy-accessible panel with primary or most common actions on the screen.
 
-import FABButton from '@site/static/examples/FABButton';
-import FABButtonSrc from '!!raw-loader!@site/static/examples/FABButton';
+import FloatingActionButton from '@site/static/examples/FloatingActionButton';
+import FloatingActionButtonSrc from '!!raw-loader!@site/static/examples/FloatingActionButton';
 import ExampleVideo from '@site/src/components/ExampleVideo';
 import CollapsibleCode from '@site/src/components/CollapsibleCode';
 
-<InteractiveExample src={FABButtonSrc} component={FABButton} />
+<InteractiveExample src={FloatingActionButtonSrc} component={FloatingActionButton} />
 
 We use [shared values](/docs/fundamentals/glossary#shared-value) to monitor if the button is expanded. The `useSharedValue` hook helps prevent unnecessary re-renders during state changes.
 
-<CollapsibleCode src={FABButtonSrc} showLines={[28,32]}/>
+<CollapsibleCode src={FloatingActionButtonSrc} showLines={[53,57]}/>
 
 The state is toggled when the main _Actions_ button is pressed, which triggers animations for other secondary buttons.
 
@@ -27,16 +27,16 @@ sources={{
 
 It also relies on [animatable values](/docs/fundamentals/glossary#animatable-value). Leveraging animatable values of rotation and position enables smooth transition between the two states.
 
-<samp id="FABButton">Floating Action Button</samp>
+<samp id="FloatingActionButton">Floating Action Button</samp>
 
-<CollapsibleCode src={FABButtonSrc} showLines={[62,73]}/>
+<CollapsibleCode src={FloatingActionButtonSrc} showLines={[59,70]}/>
 
-The **FABButton** is a reusable component that manages button styles, content and animations. For this we use props: `buttonLetter` and `animatedStyles`.
+The **FloatingActionButton** is a reusable component that manages button styles, content and animations. For this we use props: `buttonLetter` and `animatedStyles`.
 
-<CollapsibleCode src={FABButtonSrc} showLines={[21,25]}/>
+<CollapsibleCode src={FloatingActionButtonSrc} showLines={[21,44]}/>
 
-We dynamically generate animated styles for the buttons. The delay in their appearance on the screen is calculated based on the button's index. Buttons with a higher index will appear later and be positioned higher in the "column" of buttons.
+We define the animated styles for the buttons within the FloatingActionButton component, passing the necessary values as props. The delay in their appearance on the screen is calculated based on the button's index. Buttons with a higher index will appear later and be positioned higher in the "column" of buttons.
 
-<samp id="FABButton">Floating Action Button</samp>
+<samp id="FloatingActionButton">Floating Action Button</samp>
 
-<CollapsibleCode src={FABButtonSrc} showLines={[34,59]}/>
+<CollapsibleCode src={FloatingActionButtonSrc} showLines={[22,43]}/>
