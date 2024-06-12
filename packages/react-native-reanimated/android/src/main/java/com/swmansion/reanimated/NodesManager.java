@@ -53,7 +53,7 @@ public class NodesManager implements EventDispatcherListener {
 
   private Long mFirstUptime = SystemClock.uptimeMillis();
   private boolean mSlowAnimationsEnabled = false;
-  private long mAnimationsDragFactor;
+  private int mAnimationsDragFactor;
 
   public void scrollTo(int viewTag, double x, double y, boolean animated) {
     View view;
@@ -533,7 +533,7 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
-  public void setSlowAnimations(boolean slowAnimationsEnabled, long animationsDragFactor) {
+  public void enableSlowAnimations(boolean slowAnimationsEnabled, int animationsDragFactor) {
     mSlowAnimationsEnabled = slowAnimationsEnabled;
     mAnimationsDragFactor = animationsDragFactor;
     if (slowAnimationsEnabled) {
