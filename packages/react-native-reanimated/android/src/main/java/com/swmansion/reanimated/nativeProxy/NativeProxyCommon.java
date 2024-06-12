@@ -45,6 +45,7 @@ public abstract class NativeProxyCommon {
   private KeyboardAnimationManager keyboardAnimationManager;
   private Long firstUptime = SystemClock.uptimeMillis();
   private boolean slowAnimationsEnabled = false;
+  private final int ANIMATIONS_DRAG_FACTOR = 10;
   protected String cppVersion = null;
 
   protected NativeProxyCommon(ReactApplicationContext context) {
@@ -78,6 +79,7 @@ public abstract class NativeProxyCommon {
     if (slowAnimationsEnabled) {
       firstUptime = SystemClock.uptimeMillis();
     }
+    mNodesManager.enableSlowAnimations(slowAnimationsEnabled, ANIMATIONS_DRAG_FACTOR);
   }
 
   private void addDevMenuOption() {
@@ -156,7 +158,6 @@ public abstract class NativeProxyCommon {
   @DoNotStrip
   public long getAnimationTimestamp() {
     if (slowAnimationsEnabled) {
-      final long ANIMATIONS_DRAG_FACTOR = 10;
       return this.firstUptime
           + (SystemClock.uptimeMillis() - this.firstUptime) / ANIMATIONS_DRAG_FACTOR;
     } else {
