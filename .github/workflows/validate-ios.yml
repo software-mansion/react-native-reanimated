@@ -6,16 +6,16 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/validate-ios.yml'
-      - 'apple/**'
-      - 'package.json'
-      - 'scripts/validate-ios.sh'
+      - ".github/workflows/validate-ios.yml"
+      - "packages/react-native-reanimated/apple/**"
+      - "packages/react-native-reanimated/package.json"
+      - "packages/react-native-reanimated/scripts/validate-ios.sh"
   pull_request:
     paths:
-      - '.github/workflows/validate-ios.yml'
-      - 'apple/**'
-      - 'package.json'
-      - 'scripts/validate-ios.sh'
+      - ".github/workflows/validate-ios.yml"
+      - "packages/react-native-reanimated/apple/**"
+      - "packages/react-native-reanimated/package.json"
+      - "packages/react-native-reanimated/scripts/validate-ios.sh"
   merge_group:
     branches:
       - main
@@ -27,7 +27,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: yarn
+      - name: Install monorepo nodedependencies
+        run: yarn install
+      - name: Install Reanimated node dependencies
+        working-directory: packages/react-native-reanimated
+        run: yarn install
       - name: Lint iOS
+        working-directory: packages/react-native-reanimated
         run: yarn lint:ios

@@ -5,11 +5,11 @@ on:
   pull_request:
     paths:
       - .github/workflows/build-next-example.yml
-      - 'src/**'
-      - 'NextExample/**'
+      - 'packages/react-native-reanimated/src/**'
+      - 'packages/react-native-reanimated/NextExample/**'
   push:
     branches:
-      - master
+      - main
 
 jobs:
   check:
@@ -20,21 +20,23 @@ jobs:
     steps:
       - name: Checkout Git repository
         uses: actions/checkout@v4
-
-      - name: Install Reanimated node_modules
+      - name: Install monorepo node dependencies
         run: yarn install --immutable
-
-      - name: Build package
+      - name: Install Reanimated node dependencies
+        working-directory: packages/react-native-reanimated
+        run: yarn install --immutable
+      - name: Build Reanimated package
+        working-directory: packages/react-native-reanimated
         run: yarn build
 
       - name: Install NextExample node_modules
-        working-directory: NextExample
+        working-directory: apps/next-example
         run: yarn install --immutable
 
       - name: Compile production build
-        working-directory: NextExample
-        run: yarn build
+        working-directory: apps/next-example
+        run: yarn build:next
 
       - name: Run e2e tests
-        working-directory: NextExample
+        working-directory: apps/next-example
         run: yarn e2e:headless
