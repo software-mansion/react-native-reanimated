@@ -20,21 +20,28 @@ Thank you for your interest in contributing to Reanimated! From commenting on an
 
 ### Repository overview
 
-- `android` &ndash; source code of Android native implementation
-- `app` &ndash; shared source code of example apps
-- `apple` &ndash; source code of iOS native implementation
-- `Common` &ndash; shared C++ code
-- `docs` &ndash; documentation described further in [docs section](#helping-with-documentation)
-- `eslintPlugin` &ndash; source of eslint plugin
-- `Example` &ndash; paper version of React Native mobile app wrapper for shared examples
-- `FabricExample` &ndash; fabric version of React Native mobile app wrapper for shared examples
-- `MacOSExample` &ndash; React Native for MacOS app wrapper for shared example code
-- `NextExample` &ndash; // TODO: ??
-- `plugin` &ndash; source code of the babel plugin
-- `scripts` &ndash; pipeline scripts // TODO: ??
-- `src` &ndash; reanimated source code
-- `TVOSExample` &ndash; React Native for TVOS app wrapper for shared examples
-- `WebExample` &ndash; React Native for Web app wrapper for shared examples
+The React Native Reanimated repository is a monorepo with the following structure:
+
+```
+├── apps
+│   ├── common-app // shared source code of example apps
+│   ├── paper-example // React Native app wrapper running the Old Architecture for shared examples
+│   ├── fabric-example // React Native app wrapper running the New Architecture for shared examples
+│   ├── macos-example // React Native for MacOS app wrapper for shared example code
+│   ├── next-example // Next.js wrapper for shared example code
+│   ├── tvos-example // React Native for TVOS app wrapper for shared examples
+│   └── web-example // React Native for Web app wrapper for shared examples
+└── packages
+    ├── docs-reanimated // documentation described further in [docs section](#helping-with-documentation)
+    ├── eslint-plugin-reanimated // source of eslint plugin
+    └── react-native-reanimated
+        ├── android // source code of Android native implementation
+        ├── apple // source code of iOS native implementation
+        ├── Common // shared C++ code
+        ├── scripts // JavaScript and bash scripts used in the CI pipeline
+        ├── src // reanimated source code
+        └── plugin // source code of the babel plugin
+```
 
 ## Handling open issues
 
@@ -200,22 +207,22 @@ Make sure that you have [React Native setup](https://reactnative.dev/docs/enviro
 
 We have shared code of example app, that is run on different platforms and architectures. When working on an issue the most important destinations will be:
 
-- `app` &ndash; shared source code with example app
-- `src/reanimated2` &ndash; containing source code related to JS part of Reanimated features
-- `android/src/main/java/com/swmansion/reanimated` &ndash; containing source code related to Android native part of Reanimated features
-- `apple` &ndash; containing source code related to iOS native part of Reanimated features
+- `apps/common-app` &ndash; shared source code with example app
+- `packages/react-native-reanimated/src/reanimated2` &ndash; containing source code related to JS part of Reanimated features
+- `packages/react-native-reanimated/android/src/main/java/com/swmansion/reanimated` &ndash; containing source code related to Android native part of Reanimated features
+- `packages/react-native-reanimated/apple` &ndash; containing source code related to iOS native part of Reanimated features
 
 Our workflow usually starts from editing `app/src/examples/EmptyExample.tsx` with testing example for our new feature or a bug. This is the part that we often attach to PR so other developers can test the same use-case. Next, we run the `Example` (or `FabricExample` depending on the architecture) app and start development.
 
 :::info
 
-If you want implement new feature or fix bug, but still feal uninformed, after reading through this section, or could use a guidance you can reach Reanimated Team on [discord](https://discord.com/channels/464786597288738816/1216675825584181330).
+If you want implement new feature or fix bug, but still feel uninformed, after reading through this section, or could use a guidance you can reach Reanimated Team on [discord](https://discord.com/channels/464786597288738816/1216675825584181330).
 
 :::
 
 ### Working on Android
 
-To start with, let install all dependencies:
+To start with, let's install all dependencies:
 
 1. `yarn`
 2. `(cd app && yarn)`
@@ -227,24 +234,26 @@ and open `react-native-reanimated/Example/android` with Android Studio.
 
 <img src={useBaseUrl('/img/contributing/android_studio.png')} />
 
-The native source code of Reanimated can be found in `react-native-reanimated` module, in `java/com/swmansion/reanimated`. Making sure metro builder is running. You can now build React Native app or debug native code.
+The native source code of Reanimated can be found in `react-native-reanimated` module, in `/packages/react-native-reanimated/android/src/main/java/com/swmansion/reanimated`. Making sure metro builder is running. You can now build React Native app or debug native code.
 
 Project structure overview:
 
-- `keyboard/`&ndash; source code related to `useAnimatedKeyboard` hook
-- `layoutReanimation/`&ndash; source code related
-- `nativeProxy/`&ndash; source code related
-- `sensors/`&ndash; source code related
-- `AndroidUIScheduler`&ndash; // TODO:
-- `CopiedEvent`&ndash;
-- `MapUtils`&ndash;
-- `NativeMethodsHelper`&ndash;
-- `NodesManager`&ndash;
-- `ReactNativeUtils`&ndash;
-- `ReanimatedMessageQueueThreadBase`&ndash;
-- `ReanimatedPackage`&ndash;
-- `ReanimatedUIManagerFactory`&ndash;
-- `Utils`&ndash;
+```
+├── AndroidUIScheduler.java
+├── CopiedEvent.java
+├── MapUtils.java
+├── NativeMethodsHelper.java
+├── NodesManager.java
+├── ReactNativeUtils.java
+├── ReanimatedMessageQueueThreadBase.java
+├── ReanimatedPackage.java
+├── ReanimatedUIManagerFactory.java
+├── Utils.java
+├── keyboard
+├── layoutReanimation
+├── nativeProxy
+└── sensor
+```
 
 ### Working on iOS
 
@@ -255,9 +264,9 @@ To start with, let install all dependencies:
 3. `cd Example`
 4. `yarn`
 5. `(cd ios && pod install)`
-6. `yarn start` &ndash; make sure to start metro bundler before building the app in XCode.
+6. `yarn start` &ndash; make sure to start metro bundler before building the app in Xcode.
 
-and open `react-native-reanimated/Example/ios/ReanimatedExample.xcworkspace` with XCode.
+and open `react-native-reanimated/Example/ios/ReanimatedExample.xcworkspace` with Xcode.
 
 <img src={useBaseUrl('/img/contributing/xcode.png')} />
 
@@ -265,20 +274,29 @@ To find the native source code of Reanimated navigate to `Pods > Development Pod
 
 Project structure overview:
 
-- `Fabric/`&ndash;
-- `keyboardObserver/`&ndash; source code related
-- `LayoutReanimation/`&ndash; source code related
-- `native/`&ndash; source code related
-- `sensor/`&ndash;
-- `RNGestureHandlerStateManager` &ndash;
-- `REAUtils` &ndash;
-- `REAUIKit` &ndash;
-- `REASlowAnimations` &ndash;
-- `REANodesManager` &ndash;
-- `REAModule` &ndash;
-- `READisplayLink` &ndash;
-- `RCTUIVIew+Reanimated` &ndash;
-- `RCTEventDispatcher+Reanimated` &ndash;
+```sh
+├── Fabric
+├── LayoutReanimation
+├── RCTEventDispatcher+Reanimated.h
+├── RCTEventDispatcher+Reanimated.m
+├── RCTUIView+Reanimated.h
+├── RCTUIView+Reanimated.m
+├── READisplayLink.h
+├── REAModule.h
+├── REAModule.mm
+├── REANodesManager.h
+├── REANodesManager.mm
+├── REASlowAnimations.h
+├── REASlowAnimations.mm
+├── REAUIKit.h
+├── REAUtils.h
+├── REAUtils.m
+├── RNGestureHandlerStateManager.h
+├── RNReanimated.xcodeproj
+├── keyboardObserver
+├── native
+└── sensor
+```
 
 ### Preparing Pull Request
 
@@ -288,7 +306,7 @@ When your code changes are ready, it is time to open your Pull Request. Github a
 
 - If you're solving specific issue, start with linking it.
 - Write what are your motivations, and how you solved the problem.
-- If applicable it's great idea to attach screen or video before and after changes.
+- If applicable it's a great idea to attach screen or video before and after the changes.
 
 2. **Test plan** &ndash; Describe how others can test your change, here we usually attach the code from your modified `EmptyExample`, that you used for testing.
 
