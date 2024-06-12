@@ -29,6 +29,6 @@ sources={{
 
 <CollapsibleCode src={BottomSheetSrc} showLines={[18,21]}/>
 
-The `useAnimatedStyle` hook helps in creating [animated styles](/docs/core/useAnimatedStyle/) based on shared values. These styles are then applied to **BottomSheet** to make it visually dynamic by adding backdrop and translating bottom sheet to the top.
+The `useAnimatedStyle` hook helps in creating [animated styles](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle/) based on shared values. These styles are then applied to **BottomSheet** to make it visually dynamic by adding backdrop and translating bottom sheet to the top.
 
 <CollapsibleCode src={BottomSheetSrc} showLines={[23,32]}/>

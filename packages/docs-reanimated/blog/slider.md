@@ -39,7 +39,7 @@ Leveraging animated props allows us to run them on the UI thread instead of the 
 
 Additionally, we opted for **TextInput** instead of **Text** because **TextInput** has a `value` property that can be animated, whereas **Text** only has children.
 
-This approach also enabled us to animate **TextInput** using [shared values](/docs/fundamentals/glossary#shared-value).
+This approach also enabled us to animate **TextInput** using [shared values](fundamentals/glossary#shared-value).
 
 <samp id="Slider">Slider</samp>
 
