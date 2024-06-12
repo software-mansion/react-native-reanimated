@@ -60,7 +60,7 @@ If you want to introduce more complicated changes it is worth to edit it locally
 1. Read [How to Open a Pull Request](https://reactnative.dev/contributing/how-to-open-a-pull-request)
 2. Clone [react-native-reanimated](https://github.com/software-mansion/react-native-reanimated/)
 3. `yarn`
-4. `cd docs`
+4. `cd packages/docs-reanimated`
 5. `yarn`
 6. `yarn start`
 
@@ -68,7 +68,7 @@ This will start your local docusaurus server hosting documentation.
 
 ### Project structure
 
-Here you can find the most important parts of the `react-native-reanimated/docs` project. Not all folders are listed, as most of them is not intended to be changed.
+Here you can find the most important parts of the `react-native-reanimated/packages/docs-reanimated` project. Not all folders are listed, as most of them is not intended to be changed.
 
 1. `docs/` - contains folder with md/mdx files, each folder is a section in the side navigation, and each file is documentation page
 2. `src/examples` - contains examples that are later presented in the documentation
@@ -92,8 +92,9 @@ The structure may vary depending on given feature. If the one above doesn't seem
 
 ### Documentation writing style guide
 
-more like guides than rules.
-The developers try find the solution to their problem as fast as possible. This is the reason we try to optimize the documentation for [skimming](https://www.linkedin.com/pulse/skimming-vs-speed-reading-whats-difference-paul-nowak#:~:text=Skimming%20is%20a%20method%20of,have%20to%20read%20every%20word.). making the documentation more developer friendly.
+The developers want to find the solution to their problems as fast as possible. The speed of finding answers is the reason we optimize the documentation for [skimming](https://www.linkedin.com/pulse/skimming-vs-speed-reading-whats-difference-paul-nowak#:~:text=Skimming%20is%20a%20method%20of,have%20to%20read%20every%20word.). We believe that improvements to documentation have direct impact on the overall developer experience. This section contains a couple of good practices when writing a technical documentation. Treat these rules more like guidelines than the source of absolute truth.
+
+If you have spare 2 hours, we highly recommend taking a free [Technical Writing One](https://developers.google.com/tech-writing/one/) course by Google.
 
 ##### Avoid passive voice
 
@@ -111,49 +112,43 @@ which if we rewrite these sentences to active voice become simpler:
 - The function **receives** the arguments.
 - Reanimated **runs** on the UI thread.
 
-We highly recommend reading a short tutorial in the Technical Writing One course by Google about [Active voice vs. passive voice](https://developers.google.com/tech-writing/one/active-voice). This article builds the intuition between the active and passive voice in a simple way.
-
 ##### Prefer short, clear sentences
 
-Write short
-don't worry about repeating
+When it comes to technical documentation, simplicity is key. Prefer writing short and simple sentences.
 
-sophisticated words
+Oftentimes you can split long sentences into shorter ones by repeating the sentence subject.
 
-choose to write a sentence shorter and simpler.
+Keep in mind that many readers aren't native English speakers.
 
-The technical documentation isn't a novel. Most of the readers are not english native speakers and it's not the best place to show off your english writing proficiency.
+##### Split paragraphs into organized lists
 
-#### Avoid ambiguous pronouns
+People tend to skip over long paragraphs of text. Organized lists are usually easier to read. They help developers get the information they are looking for faster.
 
-```
-Worklets using the Hermes JavaScript engine. This allow us to run code on the UI thread.
-```
-
-What does **this** stands for in the following example?
-
-You can avoid ambiguity by repeating the subject.
+Remember to introduce the list first.
 
 ```
+The Reanimated installation steps:
 
+- Add Reanimated package form npm
+- Add babel plugin to babel.config.js
+- Reset cache
 ```
-
-##### split paragraphs into bullet points
 
 ##### Avoid acronyms and abbreviations
 
 Acronyms can often lead to confusion.
 
-In context of libraries while REA, RNGH, RNS acronym like RN can mean both React Native and React Navigation.
+For example, in the context of libraries, abbreviations like `REA`, `RNGH`, `RNS`, may be obvious to developers proficient in the React Native open source space, but completely unknown to beginners.
 
-Domain specific acronyms like JSI, JNI, JSC should be first introduced. For example, JSC (JavaScriptCore)
+Some acronyms, such as RN, can mean both React Native and React Navigation.
+
+When explaining topics that often use domain-specific acronyms, such as `JSI`, `JNI`, `JSC`, you should first introduce them. For example, JavaScript Core (JSC) or JavaScript Interface (JSI).
 
 The following rule doesn't apply for a globally established abbreviation like `UI`, `API`, `HTML`, `TS` etc.
 
-##### limit technical jargon
+#### Use contractions
 
-.
-define it in glossary
+Prefer writing using contractions like `don't`, `doesn't`, `it's` instead of full forms like `do not`, `does not`, `it is`.
 
 ### Embedding interactive examples
 
