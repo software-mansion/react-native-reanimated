@@ -1,11 +1,11 @@
-name: Publish to GitHub Pages
+name: Publish Reanimated Docs
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   push:
     branches:
       - main
-    paths: docs/**
+    paths: packages/docs-reanimated/**
 
 jobs:
   publish:
@@ -19,7 +19,7 @@ jobs:
         run: >-
           git config --local user.email "action@github.com"
           && git config --local user.name "GitHub Action"
-          && cd docs
+          && cd packages/docs-reanimated
           && yarn
           && yarn build
 
