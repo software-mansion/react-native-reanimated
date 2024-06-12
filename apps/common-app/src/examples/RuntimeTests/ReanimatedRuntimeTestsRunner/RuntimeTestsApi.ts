@@ -21,41 +21,49 @@ type TestEachFunctionWithWarning = <T>(
 type DecoratedTestFunction = TestFunction & { each: TestEachFunction };
 type DecoratedTestFunctionWithWarning = TestFunctionWithWarning & { each: TestEachFunctionWithWarning };
 
-const [describeBasic, describeSkip, describeOnly]: Array<DescribeFunction> = [
-  null,
-  DescribeDecorator.SKIP,
-  DescribeDecorator.ONLY,
-].map(decorator => (name, buildSuite) => {
-  testRunner.describe(name, buildSuite, decorator);
-});
+const describeBasic = (name: string, buildSuite: BuildFunction) => {
+  testRunner.describe(name, buildSuite, null);
+};
 
 export const describe = <DescribeFunction & Record<DescribeDecorator, DescribeFunction>>describeBasic;
-describe.skip = describeSkip;
-describe.only = describeOnly;
+describe.skip = (name, buildSuite) => {
+  testRunner.describe(name, buildSuite, DescribeDecorator.SKIP);
+};
+describe.only = (name, buildSuite) => {
+  testRunner.describe(name, buildSuite, DescribeDecorator.ONLY);
+};
 
-const [testBasic, testSkip, testOnly] = [null, TestDecorator.SKIP, TestDecorator.ONLY].map(decorator => {
-  const testFunction: DecoratedTestFunction = (name: string, testCase: BuildFunction) => {
-    testRunner.test(name, testCase, decorator);
-  };
-  testFunction.each = <T>(examples: Array<T>) => {
-    return testRunner.testEach(examples, null);
-  };
-  return testFunction;
-});
+const testBasic: DecoratedTestFunction = (name: string, testCase: BuildFunction) => {
+  testRunner.test(name, testCase, null);
+};
+testBasic.each = <T>(examples: Array<T>) => {
+  return testRunner.testEach(examples, null);
+};
+const testSkip: DecoratedTestFunction = (name: string, testCase: BuildFunction) => {
+  testRunner.test(name, testCase, TestDecorator.SKIP);
+};
+testSkip.each = <T>(examples: Array<T>) => {
+  return testRunner.testEach(examples, TestDecorator.SKIP);
+};
+const testOnly: DecoratedTestFunction = (name: string, testCase: BuildFunction) => {
+  testRunner.test(name, testCase, TestDecorator.ONLY);
+};
+testOnly.each = <T>(examples: Array<T>) => {
+  return testRunner.testEach(examples, TestDecorator.ONLY);
+};
+const testFailing: DecoratedTestFunctionWithWarning = (name: string, expectedWarning: string, testCase: () => void) => {
+  testRunner.test(name, testCase, TestDecorator.FAILING, expectedWarning);
+};
+testFailing.each = <T>(examples: Array<T>) => {
+  return testRunner.testEachErrorMsg(examples, TestDecorator.FAILING);
+};
+const testWarn: DecoratedTestFunctionWithWarning = (name: string, expectedWarning: string, testCase: () => void) => {
+  testRunner.test(name, testCase, TestDecorator.WARN, expectedWarning);
+};
+testWarn.each = <T>(examples: Array<T>) => {
+  return testRunner.testEachErrorMsg(examples, TestDecorator.WARN);
+};
 
-const [testFailing, testWarn] = [TestDecorator.FAILING, TestDecorator.WARN].map(decorator => {
-  const testFunction: DecoratedTestFunctionWithWarning = (
-    name: string,
-    expectedWarning: string,
-    testCase: () => void,
-  ) => {
-    testRunner.test(name, testCase, decorator, expectedWarning);
-  };
-  testFunction.each = <T>(examples: Array<T>) => {
-    return testRunner.testEachErrorMsg(examples, decorator);
-  };
-  return testFunction;
-});
 export const test = <
   DecoratedTestFunction &
     Record<TestDecorator.SKIP | TestDecorator.ONLY, DecoratedTestFunction> &
