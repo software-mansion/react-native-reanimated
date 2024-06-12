@@ -3,9 +3,9 @@ env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   push:
-    branches:
-      - main
-    paths: packages/docs-reanimated/**
+    # branches:
+    #   - main
+    # paths: packages/docs-reanimated/**
   workflow_dispatch:
 
 jobs:
@@ -24,9 +24,9 @@ jobs:
           && yarn
           && yarn build
 
-      - name: Publish generated content to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@releases/v3
-        with:
-          FOLDER: docs/build
-          BRANCH: gh-pages
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Publish generated content to GitHub Pages
+      #   uses: JamesIves/github-pages-deploy-action@releases/v3
+      #   with:
+      #     FOLDER: docs/build
+      #     BRANCH: gh-pages
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
