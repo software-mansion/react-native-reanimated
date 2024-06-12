@@ -79,13 +79,12 @@ describe('withTiming animation of WIDTH', () => {
       await render(<AnimatedComponent startStyle={startStyle} finalStyle={finalStyle} />);
       const component = getTestComponent(COMPONENT_REF);
       await wait(1000);
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      Object.keys(finalStyle).forEach(async key => {
+      for (const key of Object.keys(finalStyle)) {
         expect(await component.getAnimatedStyle(key as ValidPropNames)).toBe(
           finalStyle[key],
           comparisonModes[key as keyof typeof comparisonModes],
         );
-      });
+      }
     },
   );
 });

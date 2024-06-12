@@ -109,11 +109,11 @@ describe('withTiming animation of ARRAY', () => {
         );
       });
       await wait(speed + 200);
-
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      components.forEach(async (component, index) => {
+      let index = 0;
+      for (const component of components) {
         expect(await component.getAnimatedStyle('width')).toBe(finalWidths[index], ComparisonMode.DISTANCE);
-      });
+        index += 1;
+      }
     },
   );
 });
