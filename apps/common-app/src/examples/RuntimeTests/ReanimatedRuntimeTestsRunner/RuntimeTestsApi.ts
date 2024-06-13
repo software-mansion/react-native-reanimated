@@ -51,24 +51,28 @@ const testOnly: DecoratedTestFunction = (name: string, testCase: BuildFunction) 
 testOnly.each = <T>(examples: Array<T>) => {
   return testRunner.testEach(examples, TestDecorator.ONLY);
 };
-const testFailing: DecoratedTestFunctionWithWarning = (name: string, expectedWarning: string, testCase: () => void) => {
+const testFailing: DecoratedTestFunctionWithWarning = (
+  name: string,
+  expectedWarning: string,
+  testCase: BuildFunction,
+) => {
   testRunner.test(name, testCase, TestDecorator.FAILING, expectedWarning);
 };
 testFailing.each = <T>(examples: Array<T>) => {
   return testRunner.testEachErrorMsg(examples, TestDecorator.FAILING);
 };
-const testWarn: DecoratedTestFunctionWithWarning = (name: string, expectedWarning: string, testCase: () => void) => {
+const testWarn: DecoratedTestFunctionWithWarning = (name: string, expectedWarning: string, testCase: BuildFunction) => {
   testRunner.test(name, testCase, TestDecorator.WARN, expectedWarning);
 };
 testWarn.each = <T>(examples: Array<T>) => {
   return testRunner.testEachErrorMsg(examples, TestDecorator.WARN);
 };
 
-export const test = <
-  DecoratedTestFunction &
-    Record<TestDecorator.SKIP | TestDecorator.ONLY, DecoratedTestFunction> &
-    Record<TestDecorator.FAILING | TestDecorator.WARN, DecoratedTestFunctionWithWarning>
->testBasic;
+type TestType = DecoratedTestFunction &
+  Record<TestDecorator.SKIP | TestDecorator.ONLY, DecoratedTestFunction> &
+  Record<TestDecorator.FAILING | TestDecorator.WARN, DecoratedTestFunctionWithWarning>;
+
+export const test = <TestType>testBasic;
 test.skip = testSkip;
 test.only = testOnly;
 test.failing = testFailing;
