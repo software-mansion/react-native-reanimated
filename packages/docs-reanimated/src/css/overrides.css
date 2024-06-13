@@ -130,3 +130,11 @@ button[class*='DocSearch-Button'] {
 [class*='plugin-blog'] [class*='sidebar'] {
   background-color: transparent;
 }
+
+@media (max-width: 996px) {
+  [class*='navbar__item']
+    [class*='navbar__link']:not([class*='header-github']) {
+    display: inline-block;
+    padding: 0 6px;
+  }
+}
