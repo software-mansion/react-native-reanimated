@@ -1,6 +1,7 @@
 import type { Component, MutableRefObject, ReactElement } from 'react';
 import { useRef } from 'react';
 import type {
+  BuildFunction,
   NullableTestValue,
   LockObject,
   Operation,
@@ -11,7 +12,6 @@ import type {
   TestSummary,
   TestValue,
   TrackerCallCount,
-  BuildFunction,
 } from './types';
 import { ComparisonMode, DescribeDecorator, TestDecorator } from './types';
 import { TestComponent } from './TestComponent';
@@ -151,7 +151,7 @@ export class TestRunner {
   }
 
   public testEachErrorMsg<T>(examples: Array<T>, decorator: TestDecorator) {
-    return (name: string, expectedWarning: string, testCase: (example: T) => Promise<void>) => {
+    return (name: string, expectedWarning: string, testCase: (example: T) => void | Promise<void>) => {
       examples.forEach((example, index) => {
         const currentTestCase = async () => {
           await testCase(example);
@@ -167,7 +167,7 @@ export class TestRunner {
   }
 
   public testEach<T>(examples: Array<T>, decorator: TestDecorator | null) {
-    return (name: string, testCase: (example: T, index?: number) => Promise<void>) => {
+    return (name: string, testCase: (example: T, index?: number) => void | Promise<void>) => {
       examples.forEach((example, index) => {
         const currentTestCase = async () => {
           await testCase(example, index);

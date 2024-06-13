@@ -1,5 +1,6 @@
 import { View, StyleSheet } from 'react-native';
-import Animated, { useAnimatedStyle, withDecay, WithDecayConfig } from 'react-native-reanimated';
+import type { WithDecayConfig } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, withDecay } from 'react-native-reanimated';
 import React from 'react';
 import {
   describe,
