@@ -127,6 +127,6 @@ button[class*='DocSearch-Button'] {
 
 /* examples sidebar */
 
-[class*='plugin-blog'] [class*='sidebar'] {
+[class*='plugin-blog'] [class*='sidebar']:not([class*='navbar-sidebar']) {
   background-color: transparent;
 }
