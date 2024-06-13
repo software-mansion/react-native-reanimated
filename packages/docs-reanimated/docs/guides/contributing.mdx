@@ -224,17 +224,16 @@ If you want implement new feature or fix bug, but still feel uninformed, after r
 
 To start with, let's install all dependencies:
 
-1. `yarn`
-2. `(cd app && yarn)`
-3. `cd Example`
-4. `yarn`
-5. `yarn start` &ndash; make sure to start metro bundler before building the app in Android Studio
+1. `yarn && yarn build`
+2. `cd apps/common-app && yarn && cd ..`
+3. `cd paper-example && yarn`
+4. `yarn start` &ndash; make sure to start metro bundler before building the app in Android Studio.
 
-and open `react-native-reanimated/Example/android` with Android Studio.
+and open `react-native-reanimated/apps/paper-example/android` with Android Studio.
 
 <img src={useBaseUrl('/img/contributing/android_studio.png')} />
 
-The native source code of Reanimated can be found in `react-native-reanimated` module, in `/packages/react-native-reanimated/android/src/main/java/com/swmansion/reanimated`. Making sure metro builder is running. You can now build React Native app or debug native code.
+The native source code of Reanimated can be found in `react-native-reanimated` module, in `/packages/react-native-reanimated/android/src/main/java/com/swmansion/reanimated`. Making sure the Metro builder is running. You can now build React Native app or debug native code.
 
 Project structure overview:
 
@@ -257,20 +256,18 @@ Project structure overview:
 
 ### Working on iOS
 
-To start with, let install all dependencies:
+To begin with, let's install all the necessary dependencies:
 
-1. `yarn`
-2. `(cd app && yarn)`
-3. `cd Example`
-4. `yarn`
-5. `(cd ios && pod install)`
-6. `yarn start` &ndash; make sure to start metro bundler before building the app in Xcode.
+1. `yarn && yarn build`
+2. `cd apps/common-app && yarn && cd ..`
+3. `cd paper-example && yarn`
+4. `yarn start` &ndash; make sure to start metro bundler before building the app in Xcode.
 
-and open `react-native-reanimated/Example/ios/ReanimatedExample.xcworkspace` with Xcode.
+and open `react-native-reanimated/apps/paper-example/ios/ReanimatedExample.xcworkspace` with Xcode.
 
 <img src={useBaseUrl('/img/contributing/xcode.png')} />
 
-To find the native source code of Reanimated navigate to `Pods > Development Pods >  RNReanimated > Example > node_modules > react-native-reanimated > apple`. Making sure metro builder is running, you can now build React Native app or debug native code.
+To find the native source code of Reanimated navigate to `Pods > Development Pods >  RNReanimated > Example > node_modules > react-native-reanimated > apple`. Making sure the Metro builder is running. You can now build React Native app or debug native code.
 
 Project structure overview:
 
@@ -300,18 +297,18 @@ Project structure overview:
 
 ### Preparing Pull Request
 
-When your code changes are ready, it is time to open your Pull Request. Github already has a template that helps you properly post your changes. The most crucial are:
+When the code changes are ready, it's time to open a Pull Request. We configured the repository to come with a template to help you post your changes properly. The most important of these are:
 
 1. **Summary**:
 
-- If you're solving specific issue, start with linking it.
-- Write what are your motivations, and how you solved the problem.
-- If applicable it's a great idea to attach screen or video before and after the changes.
+- If you're solving specific issue, start by linking it, for example: Fixes #2137.
+- Write what are your motivations and how you solved the problem.
+- If applicable, it's a good idea to include a screen or video before and after making changes.
 
 2. **Test plan** &ndash; Describe how others can test your change, here we usually attach the code from your modified `EmptyExample`, that you used for testing.
 
 ### Testing changes in your project
 
-If you want to test changes in your own project the best way is to create patch using `git diff` or pointing to specific commit in your `package.json`.
+If you want to test changes in your own project, the best way is to create a patch using `git diff` or by pointing to a specific commit in `package.json`.
 
 See you on GitHub! 🎉
