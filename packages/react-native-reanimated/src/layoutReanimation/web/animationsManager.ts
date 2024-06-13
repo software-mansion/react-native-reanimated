@@ -54,7 +54,7 @@ function maybeReportOverwrittenProperties(
   keyframe: string,
   styles: CSSStyleDeclaration
 ) {
-  const propertyRegex = /([a-zA-Z-]+)(?=\:)/g;
+  const propertyRegex = /([a-zA-Z-]+)(?=:)/g;
   const animationProperties = new Set();
 
   let match;
