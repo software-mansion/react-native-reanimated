@@ -193,12 +193,10 @@ public class SharedTransitionManager {
   }
 
   protected void onScreenWillDisappear() {
-    if (!mTagsToCleanup.isEmpty()) {
-      for (Integer tag : mTagsToCleanup) {
-        mNativeMethodsHolder.clearAnimationConfig(tag);
-      }
-      mTagsToCleanup.clear();
+    for (Integer tag : mTagsToCleanup) {
+      mNativeMethodsHolder.clearAnimationConfig(tag);
     }
+    mTagsToCleanup.clear();
 
     if (!mIsTransitionPrepared) {
       return;

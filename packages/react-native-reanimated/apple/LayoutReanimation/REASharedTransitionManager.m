@@ -467,7 +467,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   return _disappearingScreens;
 }
 
-- (void)dismissAssyncTransition
+- (void)dismissAsyncTransition
 {
   _isAsyncSharedTransitionConfigured = NO;
   [_sharedElements removeAllObjects];
@@ -494,7 +494,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   [self reanimated_viewDidLayoutSubviews];
   REAUIView *screen = [self valueForKey:@"screenView"];
   if ([_sharedTransitionManager isTabNavigator]) {
-    [_sharedTransitionManager dismissAssyncTransition];
+    [_sharedTransitionManager dismissAsyncTransition];
     [_sharedTransitionManager handleTabNavigatorChange:screen];
   } else {
     [_sharedTransitionManager screenAddedToStack:screen];

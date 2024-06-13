@@ -22,7 +22,7 @@ public class ScreensHelper {
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
           String message =
               e.getMessage() != null ? e.getMessage() : "Unable to invoke the getContainer method";
-          Log.e("Reanimated", message);
+          Log.e("[Reanimated]", message);
           break;
         }
       } else if (currentView.getParent() instanceof View) {

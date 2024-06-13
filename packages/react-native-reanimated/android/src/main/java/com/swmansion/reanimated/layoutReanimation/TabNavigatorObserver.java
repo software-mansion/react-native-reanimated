@@ -41,35 +41,39 @@ public class TabNavigatorObserver {
 
   class FragmentLifecycleCallbacks extends FragmentManager.FragmentLifecycleCallbacks {
     private View firstScreen;
-    private final Method getScreen;
-    private final Method getActivityState;
+    private Method getScreen;
+    private Method getActivityState;
     private final Set<Integer> screenTagsWithListener = new HashSet<>();
     private final List<View> nextTransition = new ArrayList<>();
 
-    public FragmentLifecycleCallbacks(Fragment fragment)
-        throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-      Class<?> screenFragmentClass = fragment.getClass();
-      getScreen = screenFragmentClass.getMethod("getScreen");
-      View screen = (View) getScreen.invoke(fragment);
-      getActivityState = screen.getClass().getMethod("getActivityState");
-      addScreenListener(screen);
+    public FragmentLifecycleCallbacks(Fragment fragment) {
+      try {
+        Class<?> screenFragmentClass = fragment.getClass();
+        getScreen = screenFragmentClass.getMethod("getScreen");
+        View screen = (View) getScreen.invoke(fragment);
+        getActivityState = screen.getClass().getMethod("getActivityState");
+        addScreenListener(screen);
+      } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+        String message = e.getMessage() != null ? e.getMessage() : "Unable to get screen activity state";
+        Log.e("[Reanimated]", message);
+      }
     }
 
     private void addScreenListener(View screen)
         throws InvocationTargetException, IllegalAccessException {
-      if (!screenTagsWithListener.contains(screen.getId())) {
-        screenTagsWithListener.add(screen.getId());
-        screen.addOnAttachStateChangeListener(new OnAttachStateChangeListener());
-        screen.addOnLayoutChangeListener(
-            (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
-              if (!nextTransition.isEmpty()) {
-                AnimationsManager animationsManager = mReaLayoutAnimator.getAnimationsManager();
-                animationsManager.navigationTabChanged(
-                    nextTransition.get(0), nextTransition.get(1));
-                nextTransition.clear();
-              }
-            });
+      if (screenTagsWithListener.contains(screen.getId())) {
+        return;
       }
+      screenTagsWithListener.add(screen.getId());
+      screen.addOnAttachStateChangeListener(new OnAttachStateChangeListener());
+      screen.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+        if (nextTransition.isEmpty()) {
+          return;
+        }
+        AnimationsManager animationsManager = mReaLayoutAnimator.getAnimationsManager();
+        animationsManager.navigationTabChanged(nextTransition.get(0), nextTransition.get(1));
+        nextTransition.clear();
+      });
     }
 
     public void onFragmentAttached(

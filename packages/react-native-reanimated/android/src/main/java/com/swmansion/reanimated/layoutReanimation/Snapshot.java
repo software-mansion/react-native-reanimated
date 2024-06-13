@@ -119,7 +119,7 @@ public class Snapshot {
     borderRadii = new ReactNativeUtils.BorderRadii(0, 0, 0, 0, 0);
   }
 
-  private int[] tryToComputeRealPosition(View view) {
+  private int[] tryGetRealPosition(View view) {
     int[] location = new int[2];
     View currentView = view;
     while (currentView != null) {
@@ -149,7 +149,7 @@ public class Snapshot {
     int[] location = new int[2];
     view.getLocationOnScreen(location);
     if (location[0] == 0 && location[1] == 0) {
-      location = tryToComputeRealPosition(view);
+      location = tryGetRealPosition(view);
     }
     originX = location[0];
     originY = location[1];

@@ -1,10 +1,8 @@
 import React from 'react';
 import { StyleSheet, View, Button, Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import {
-  NativeStackScreenProps,
-  createNativeStackNavigator,
-} from '@react-navigation/native-stack';
+import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Animated from 'react-native-reanimated';
 
 function getStyle(index: number) {
@@ -24,7 +22,7 @@ type ScreenProps = {
     showButtons?: boolean;
   };
 };
-const Screen = ({ navigation, route }: NativeStackScreenProps<ScreenProps>) => {
+function Screen({ navigation, route }: NativeStackScreenProps<ScreenProps>) {
   const id = route.params?.id ?? 0;
   const showButtons = !!route.params?.showButtons;
   return (
@@ -47,7 +45,7 @@ const Screen = ({ navigation, route }: NativeStackScreenProps<ScreenProps>) => {
   );
 };
 
-const createStack = () => {
+function createStack() {
   const Stack = createNativeStackNavigator();
   return () => (
     <Stack.Navigator>
@@ -64,22 +62,24 @@ const Tab = createBottomTabNavigator();
 const StackA = createStack();
 const StackB = createStack();
 
-const TabNavigatorExample = () => (
-  <Tab.Navigator screenOptions={{ headerShown: false }}>
-    <Tab.Screen
-      name="A"
-      initialParams={{ id: 0 }}
-      component={Screen as React.ComponentType}
-    />
-    <Tab.Screen
-      name="B"
-      initialParams={{ id: 1 }}
-      component={Screen as React.ComponentType}
-    />
-    <Tab.Screen name="C" component={StackA} />
-    <Tab.Screen name="D" component={StackB} />
-  </Tab.Navigator>
-);
+function TabNavigatorExample() {
+  return (
+    <Tab.Navigator screenOptions={{ headerShown: false }}>
+      <Tab.Screen
+        name="A"
+        initialParams={{ id: 0 }}
+        component={Screen as React.ComponentType}
+      />
+      <Tab.Screen
+        name="B"
+        initialParams={{ id: 1 }}
+        component={Screen as React.ComponentType}
+      />
+      <Tab.Screen name="C" component={StackA} />
+      <Tab.Screen name="D" component={StackB} />
+    </Tab.Navigator>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
