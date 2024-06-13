@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "reanimated-web-example",
+    "slug": "reanimated-web-example",
+    "version": "0.0.1",
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

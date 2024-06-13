@@ -27,7 +27,7 @@ Check out the [installation](https://docs.swmansion.com/react-native-reanimated/
 
 ## Fabric
 
-To learn how to use `react-native-reanimated` with Fabric architecture, head over to [Fabric README](README-Fabric.md). Instructions on how to run Fabric Example within this repo can be found in the [FabricExample README](FabricExample/README.md).
+'react-native-reanimated' works with Fabric (the New Architecture). Instructions on how to run Fabric Example within this repo can be found in the [FabricExample README](apps/fabric-example/README.md).
 
 ## Documentation
 
@@ -35,8 +35,8 @@ Check out our dedicated documentation page for info about this library, API refe
 
 ## Examples
 
-The source code for the example (showcase) app is under the [`Example/`](https://github.com/software-mansion/react-native-reanimated/blob/main/Example/) directory.
-If you want to play with the API but don't feel like trying it on a real app, you can run the example project. Check Example/ directory README for installation instructions.
+The source code for the example (showcase) app is under the [`apps/common-app`](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/) directory.
+If you want to play with the API but don't feel like trying it on a real app, you can run the example project. Check [Example README](apps/paper-example/README.md) for installation instructions.
 
 ## License
 
@@ -56,4 +56,4 @@ This project has been built and is maintained thanks to the support from [Shopif
 
 ## Reanimated is created by Software Mansion
 
-Since 2012 [Software Mansion](https://swmansion.com) is a software agency with experience in building web and mobile apps. We are Core React Native Contributors and experts in dealing with all kinds of React Native issues. We can help you build your next dream product – [Hire us](https://swmansion.com/contact#contact-form).
+Since 2012 [Software Mansion](https://swmansion.com) is a software agency with experience in building web and mobile apps. We are Core React Native Contributors and experts in dealing with all kinds of React Native issues. We can help you build your next dream product – [Hire us](https://swmansion.com/contact/projects?utm_source=reanimated&utm_medium=readme).
