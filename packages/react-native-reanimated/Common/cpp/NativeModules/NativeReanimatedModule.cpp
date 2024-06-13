@@ -509,6 +509,24 @@ bool NativeReanimatedModule::isThereAnyLayoutProp(
   return false;
 }
 
+jsi::Object NativeReanimatedModule::getUIProps(
+    jsi::Runtime &rt,
+    const jsi::Object &props) {
+  jsi::Object res = jsi::Object(rt);
+  const jsi::Array propNames = props.getPropertyNames(rt);
+  for (size_t i = 0; i < propNames.size(rt); ++i) {
+    const std::string propName =
+        propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    bool isLayoutProp =
+        nativePropNames_.find(propName) != nativePropNames_.end();
+    if (isLayoutProp) {
+      const jsi::Value &propValue = props.getProperty(rt, propName.c_str());
+      res.setProperty(rt, propName.c_str(), propValue);
+    }
+  }
+  return res;
+}
+
 jsi::Value NativeReanimatedModule::filterNonAnimatableProps(
     jsi::Runtime &rt,
     const jsi::Value &props) {
@@ -662,7 +680,8 @@ void NativeReanimatedModule::performOperations() {
     // directly onto the components and skip the commit.
     for (const auto &[shadowNode, props] : copiedOperationsQueue) {
       Tag tag = shadowNode->getTag();
-      synchronouslyUpdateUIPropsFunction_(rt, tag, props->asObject(rt));
+      jsi::Object uiProps = getUIProps(rt, props->asObject(rt));
+      synchronouslyUpdateUIPropsFunction_(rt, tag, uiProps);
     }
     return;
   }

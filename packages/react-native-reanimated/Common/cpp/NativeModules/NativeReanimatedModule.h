@@ -179,6 +179,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
 #ifdef RCT_NEW_ARCH_ENABLED
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Object &props);
+  jsi::Object getUIProps(jsi::Runtime &rt, const jsi::Object &props);
   jsi::Value filterNonAnimatableProps(
       jsi::Runtime &rt,
       const jsi::Value &props);
