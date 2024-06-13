@@ -432,9 +432,7 @@ using namespace facebook::react;
   REAUIView<RCTComponentViewProtocol> *componentView =
       [componentViewRegistry findComponentViewWithTag:[viewTag integerValue]];
 
-  NSSet<NSString *> *propKeysManagedByAnimated = [componentView propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN];
   [surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
-  [componentView setPropKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN:propKeysManagedByAnimated];
 
   // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
   // so that's why we need to call `finalizeUpdates` here.
