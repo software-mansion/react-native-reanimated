@@ -6,17 +6,17 @@ sidebar_label: Contributing
 
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-Thank you for your interest in contributing to Reanimated! From commenting on and triaging issues, through extending the documentation, to reviewing and sending Pull Requests, all contributions are more than welcome.
+Thank you for your interest in contributing to Reanimated! From triaging and commenting on issues, through extending the documentation, to reviewing and sending Pull Requests, all contributions are more than welcome.
 
 ## Ways to Contribute
 
-1. **Replying and handling open issues** &ndash; great way to contribute without writing a single line of code is triaging the issues. We often get issues that have generic errors, occur only in very specific cases, do not have proper example or reproducible repository. One of they way to help is preparing and filling those details, which will help other contributors get up to speed with the issue faster.
+1. **Answering and handling open issues** &ndash; great way to contribute without writing a single line of code is triaging the issues. We often get issues that have generic errors, occur only in very specific cases, do not have proper example or reproducible repository. One of the ways to help is by preparing and filling the details, which will help other contributors get up to speed with the issue faster.
 
 2. **Helping with documentation** &ndash; helping with the documentation can be as simple as checking for speling and grammer. If you encounter situations that can be explained better or in more details, click **Edit this page** at the bottom of most pages to get started with your own contribution. You can also help updating the page structures from old versions, as some of them are still ported from Reanimated v2 docs. Read more about [helping with documentation](#helping-with-documentation).
 
-3. **Reviewing pull requests** &ndash; reviewing Pull Requests is crucial as it may help catch the corner cases or bugs that the contributor didn't notice. Every review matters as it may help us polish quality of the library.
+3. **Reviewing Pull Requests** &ndash; reviewing Pull Requests is crucial as it may help catch corner cases or bugs that the contributor didn't notice. Every review matters as it may help us polish quality of the library.
 
-4. **Contributing to Code** &ndash; contributions to the source code generally come in the form of Pull Requests. By contributing to the code you help us with solving issues, fixing bugs or introducing new, amazing features. If you want to start your adventure with open source it's good idea to take a look at [good first issue](https://github.com/software-mansion/react-native-reanimated/pulls?q=is%3Apr+is%3Aopen+label%3A%22good+first+issue%22) on GitHub. Read more about [contributing to code here](#contributing-to-code).
+4. **Contributing to the Code** &ndash; contributions to the source code generally come in the form of Pull Requests. By contributing to the code you help us with solving issues, fixing bugs or introducing new, amazing features. If you want to start your adventure with open source it's good idea to take a look at [good first issue](https://github.com/software-mansion/react-native-reanimated/pulls?q=is%3Apr+is%3Aopen+label%3A%22good+first+issue%22) on GitHub. Read more about [contributing to code here](#contributing-to-code).
 
 ### Repository overview
 
@@ -45,24 +45,24 @@ The React Native Reanimated repository is a monorepo with the following structur
 
 ## Handling open issues
 
-Understanding and reproducing the problem can be a very time consuming task. The great way to help other contributors get up to the speed with solving an issue is providing detailed description and _reproducible_ example. The GitHub already has an template for creating issue, nevertheless we still encounter issues that don't have all the necessary details, like:
+Understanding and reproducing the problem can be a very time consuming task. The great way to help other contributors get up to the speed with solving an issue is providing detailed description and a _reproducible_ example. The GitHub already has a template for creating issues, nevertheless we still encounter ones that don't have all the necessary details, like:
 
 - repository that we can clone and quickly see the problem,
 - very generic reproduction steps,
 - missing description,
 - not related or truncated stack trace.
 
-What you can do is ask the owner for those details or try provide them by yourself - try to reproduce the problem and provide missing details, so other developer can work on solving the issue straight away! 🎉
+What you can do is ask the owner for those details or try providing them by yourself. You can try reproducing the issue and filling the description so that other developers can work on solving it straight away! 🎉
 
 ## Helping with documentation
 
-One of many ways you can contribute to this project is by improving the documentation. We try to keep it up to date, but there is still plenty room for improvement. It is also important to update the docs whenever you introduce changes to the API or you discover any inconsistency in the current API or behavior. This is also one of the most straightforward ways to contribute. Some of the page are still in old, v2 format. You can help us convert them to th Reanimated 3 structure.
+One of many ways you can contribute to this project is by improving the documentation. We try to keep it up to date, but there is still plenty of room for improvement. It is also important to update the docs whenever you introduce changes to the API or you discover any inconsistency in the current API or behaviour. This is also one of the most straightforward ways to contribute. Some of the pages are still in old, v2 format. You can help us convert them to the Reanimated 3 structure.
 
-The Reanimated documentation is using Docusaurus and hosted on GitHub Pages. The easiest way to start adding your changes it by clicking **Edit this page** located at the bottom of most pages.
+The Reanimated documentation is using Docusaurus and is hosted on GitHub Pages. The easiest way to start adding your changes is by clicking **Edit this page** located at the bottom of most pages.
 
 ### Editing source locally
 
-If you want to contribute more complicated changes, it's a good idea to edit locally. That way you can run the changes locally to make sure everything will look as expected to the end users. To get started, follow the steps below:
+If you want to contribute more complicated changes, it's a good idea to edit them locally. That way you can run the changes on your setup to make sure everything looks as expected. To get started, follow the steps below:
 
 1. Read [How to Open a Pull Request](https://reactnative.dev/contributing/how-to-open-a-pull-request)
 2. Clone [react-native-reanimated](https://github.com/software-mansion/react-native-reanimated/)
@@ -89,7 +89,7 @@ Here you can find the most important parts of the `react-native-reanimated/packa
 
 ### Documentation page structure
 
-It's important that the structure of the site be consistent, as this helps developers to navigate easily and quickly find what they are looking for. In v3 documentation, we assume a given page structure:
+It's important that the structure of the site be consistent, as this helps developers navigate easily and quickly find what they are looking for. In v3 documentation, we assume a given page structure:
 
 1. **Introduction** &ndash; short introduction what given feature does.
 2. **Reference** &ndash; simplest possible usage showcase and type definitions, make sure that example code runs when someone copies it to quickly prototype.
@@ -114,13 +114,13 @@ Most of the sentences in a technical documentation should be in active voice. Se
 See the following examples:
 
 - The arguments **are provided to** the function.
-- A worklet **are generated by** a babel plugin.
+- A worklet **is generated by** the babel plugin.
 - UI thread **is being used by** Reanimated.
 
 which if we rewrite these sentences to active voice become simpler:
 
-- A babel plugin **generates** worklet.
 - The function **receives** the arguments.
+- The babel plugin **generates** a worklet.
 - Reanimated **runs** on the UI thread.
 
 ##### Prefer short, clear sentences
@@ -199,13 +199,13 @@ import DecayTrainSrc from '!!raw-loader!@site/src/examples/DecayTrain';
 />;
 ```
 
-## Contributing to Code
+## Contributing to the Code
 
-Posting Pull Requests to the issues is great way to contribute to Reanimated. If you eager to start contributing right away, we have list of [good first issue](https://github.com/software-mansion/react-native-reanimated/pulls?q=is%3Apr+is%3Aopen+label%3A%22good+first+issue%22) that contain bugs which have limited scope. In this section we'll describe in more details how to play around with Reanimated setup.
+Posting Pull Requests to the issues is a great way to contribute to Reanimated. If you are eager to start contributing right away, we have a list of [good first issues](https://github.com/software-mansion/react-native-reanimated/pulls?q=is%3Apr+is%3Aopen+label%3A%22good+first+issue%22) that contain bugs which have limited scope. In this section we'll describe how to play around with Reanimated setup in more detail.
 
 :::caution
 
-Make sure that you have [React Native setup](https://reactnative.dev/docs/environment-setup) properly and you got familiar with [How to Open a Pull Request](https://reactnative.dev/contributing/how-to-open-a-pull-request) before reading this section further.
+Make sure that you have [React Native setup](https://reactnative.dev/docs/environment-setup) properly and you are familiar with [How to Open a Pull Request](https://reactnative.dev/contributing/how-to-open-a-pull-request) before reading this section further.
 
 :::
 
@@ -216,15 +216,15 @@ We have shared code of example app, that is run on different platforms and archi
 - `packages/react-native-reanimated/android/src/main/java/com/swmansion/reanimated` &ndash; containing source code related to Android native part of Reanimated features
 - `packages/react-native-reanimated/apple` &ndash; containing source code related to iOS native part of Reanimated features
 
-Our workflow usually starts from editing `app/src/examples/EmptyExample.tsx` with testing example for our new feature or a bug. This is the part that we often attach to PR so other developers can test the same use-case. Next, we run the `Example` (or `FabricExample` depending on the architecture) app and start development.
+Our workflow usually starts from editing `app/src/examples/EmptyExample.tsx` with testing example for our new feature or a bug. This testing code from `EmptyExample` is then often attached to the PR so other developers can test the same use-case (remember not to commit this code in the `EmptyExample` file!). Next, we run the `Example` (or `FabricExample` depending on the architecture) app and start development.
 
 :::info
 
-If you want implement new feature or fix bug, but still feel uninformed, after reading through this section, or could use a guidance you can reach Reanimated Team on [discord](https://discord.com/channels/464786597288738816/1216675825584181330).
+If you want to implement a new feature or fix a bug, but still are unsure after reading through this section or could use some guidance, you can reach Reanimated Team on [discord](https://discord.com/channels/464786597288738816/1216675825584181330).
 
 :::
 
-### Working on Android
+### Working with Android
 
 To start with, let's install all dependencies:
 
@@ -237,7 +237,7 @@ and open `react-native-reanimated/apps/paper-example/android` with Android Studi
 
 <img src={useBaseUrl('/img/contributing/android_studio.png')} />
 
-The native source code of Reanimated can be found in `react-native-reanimated` module, in `/packages/react-native-reanimated/android/src/main/java/com/swmansion/reanimated`. Making sure the Metro builder is running. You can now build React Native app or debug native code.
+The native source code of Reanimated can be found in `react-native-reanimated` module, in `/packages/react-native-reanimated/android/src/main/java/com/swmansion/reanimated`. Make sure the Metro bundler is running. You can now build React Native app or debug native code.
 
 Project structure overview:
 
@@ -258,20 +258,19 @@ Project structure overview:
 └── sensor
 ```
 
-### Working on iOS
+### Working with iOS
 
 To begin with, let's install all the necessary dependencies:
 
 1. `yarn && yarn build`
-2. `cd apps/common-app && yarn && cd ..`
-3. `cd paper-example && yarn`
-4. `yarn start` &ndash; make sure to start metro bundler before building the app in Xcode.
+2. `cd paper-example/ios && bundle install && bundle exec pod install` &ndash; install Pods for iOS
+3. `cd .. && yarn start` &ndash; make sure to start metro bundler before building the app in Xcode.
 
 and open `react-native-reanimated/apps/paper-example/ios/ReanimatedExample.xcworkspace` with Xcode.
 
 <img src={useBaseUrl('/img/contributing/xcode.png')} />
 
-To find the native source code of Reanimated navigate to `Pods > Development Pods >  RNReanimated > Example > node_modules > react-native-reanimated > apple`. Making sure the Metro builder is running. You can now build React Native app or debug native code.
+To find the native source code of Reanimated navigate to `Pods > Development Pods >  RNReanimated > Example > node_modules > react-native-reanimated > apple`. Make sure the Metro bundler is running. You can now build React Native app or debug native code.
 
 Project structure overview:
 
@@ -299,17 +298,17 @@ Project structure overview:
 └── sensor
 ```
 
-### Preparing Pull Request
+### Preparing a Pull Request
 
 When the code changes are ready, it's time to open a Pull Request. We configured the repository to come with a template to help you post your changes properly. The most important of these are:
 
 1. **Summary**:
 
-- If you're solving specific issue, start by linking it, for example: Fixes #2137.
+- If you're solving a specific issue, start by linking it, for example: Fixes #2137 (here goes a full link to an issue and GitHub shortens it into a #number format).
 - Write what are your motivations and how you solved the problem.
-- If applicable, it's a good idea to include a screen or video before and after making changes.
+- If applicable, it's a good idea to include a screenshot or a video of before and after making changes.
 
-2. **Test plan** &ndash; Describe how others can test your change, here we usually attach the code from your modified `EmptyExample`, that you used for testing.
+2. **Test plan** &ndash; Describe how others can test your changes, here we usually attach the code from your modified `EmptyExample`, that you used for testing.
 
 ### Testing changes in your project
 
