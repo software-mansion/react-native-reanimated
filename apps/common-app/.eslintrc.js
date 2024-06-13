@@ -19,6 +19,7 @@ module.exports = {
       files: ['./src/examples/RuntimeTests/tests/**'],
       rules: {
         'no-template-curly-in-string': 'off',
+        'no-inline-styles/no-inline-styles': 'off',
       },
     },
   ],
