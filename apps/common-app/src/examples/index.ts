@@ -138,11 +138,6 @@ interface Example {
 }
 
 export const EXAMPLES: Record<string, Example> = {
-  BBExample: {
-    icon: '💀',
-    title: 'BB',
-    screen: BBExample,
-  },
   // Empty example for test purposes
   EmptyExample: {
     icon: '👻',
@@ -522,6 +517,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🪢',
     title: 'Composed handler internal merging',
     screen: ComposedHandlerInternalMergingExample,
+  },
+  BBExample: {
+    icon: '💀',
+    title: 'BB',
+    screen: BBExample,
   },
 
   // Old examples

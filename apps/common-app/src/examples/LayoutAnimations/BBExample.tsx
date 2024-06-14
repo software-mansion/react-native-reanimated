@@ -7,12 +7,11 @@ import Animated, {
   LinearTransition,
   RotateOutDownLeft,
 } from 'react-native-reanimated';
-import React from 'react';
+import React, { useState } from 'react';
 
-export default function EmptyExample() {
-  const [show, setShow] = React.useState(true);
-  const [show2, setShow2] = React.useState(false);
-  const [refresher, setRefresher] = React.useState(false);
+export default function BBExample() {
+  const [show, setShow] = useState(true);
+  const [show2, setShow2] = useState(false);
 
   return (
     <View style={styles.container}>
@@ -37,7 +36,6 @@ export default function EmptyExample() {
           entering={FadeInUp}
           layout={LinearTransition.duration(2000)}
           exiting={RotateOutDownLeft}
-          onTouchStart={() => setRefresher(!refresher)}
           style={[styles.refresher, { width: show ? 200 : 100 }]}
         />
       )}
@@ -51,7 +49,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 200,
     backgroundColor: 'pink',
-    // justifyContent: 'center',
   },
   box: {
     marginTop: 10,
@@ -70,6 +67,5 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     backgroundColor: 'blue',
-    // opacity: 0.5,
   },
 });
