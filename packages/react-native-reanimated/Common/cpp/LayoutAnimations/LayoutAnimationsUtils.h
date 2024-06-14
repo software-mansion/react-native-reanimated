@@ -72,8 +72,8 @@ struct Node {
   std::vector<std::shared_ptr<MutationNode>> children, unflattenedChildren;
   std::shared_ptr<Node> parent, unflattenedParent;
   Tag tag;
-  void removeChild(std::shared_ptr<MutationNode> child);
-  void handleMutation(ShadowViewMutation mutation);
+  void removeChildFromUnflattenedTree(std::shared_ptr<MutationNode> child);
+  void applyMutationToIndices(ShadowViewMutation mutation);
   void insertChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
   void insertUnflattenedChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
   explicit Node(const Tag tag) : tag(tag) {}

@@ -26,7 +26,7 @@ Rect SurfaceManager::getWindow(SurfaceId surfaceId) {
   return Rect{0, 0};
 }
 
-void Node::handleMutation(ShadowViewMutation mutation) {
+void Node::applyMutationToIndices(ShadowViewMutation mutation) {
   if (tag != mutation.parentShadowView.tag) {
     return;
   }
@@ -41,7 +41,7 @@ void Node::handleMutation(ShadowViewMutation mutation) {
 }
 
 // Should only be called on unflattened parents
-void Node::removeChild(std::shared_ptr<MutationNode> child) {
+void Node::removeChildFromUnflattenedTree(std::shared_ptr<MutationNode> child) {
   for (int i = unflattenedChildren.size() - 1; i >= 0; i--) {
     if (unflattenedChildren[i]->tag == child->tag) {
       unflattenedChildren.erase(unflattenedChildren.begin() + i);

@@ -164,8 +164,8 @@ void LayoutAnimationsProxy::parseRemoveMutations(
           subNode->parent = mutationNode;
         }
         for (auto subNode : mutationNode->unflattenedChildren) {
-                        subNode->unflattenedParent = mutationNode;
-                    }
+          subNode->unflattenedParent = mutationNode;
+        }
       }
       if (!deletedViews.contains(mutation.oldChildShadowView.tag)) {
         mutationNode->state = MOVED;
@@ -225,7 +225,7 @@ void LayoutAnimationsProxy::handleRemovals(
             node, true, true, false, filteredMutations)) {
       filteredMutations.push_back(node->mutation);
       nodeForTag.erase(node->tag);
-      node->unflattenedParent->removeChild(node);//???
+      node->unflattenedParent->removeChildFromUnflattenedTree(node);//???
 #ifdef LAYOUT_ANIMATIONS_LOGS
       LOG(INFO) << "delete " << node->tag << std::endl;
 #endif
@@ -268,7 +268,7 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
       case ShadowViewMutation::Type::Insert: {
         updateIndexForMutation(mutation);
         if (nodeForTag.contains(mutation.parentShadowView.tag)) {
-          nodeForTag[mutation.parentShadowView.tag]->handleMutation(mutation);
+          nodeForTag[mutation.parentShadowView.tag]->applyMutationToIndices(mutation);
         }
 
         if (movedViews.contains(tag)) {
@@ -384,7 +384,7 @@ void LayoutAnimationsProxy::maybeDropAncestors(
     std::shared_ptr<Node> parent,
     std::shared_ptr<MutationNode> child,
     ShadowViewMutationList &cleanupMutations) const {
-  parent->removeChild(child);
+  parent->removeChildFromUnflattenedTree(child);
   if (parent->unflattenedParent == nullptr) {
     return;
   }
@@ -481,7 +481,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
   }
 
   for (auto &subNode : toBeRemoved) {
-    node->removeChild(subNode);
+    node->removeChildFromUnflattenedTree(subNode);
   }
 
   if (node->state == MOVED) {
