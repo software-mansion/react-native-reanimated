@@ -8,11 +8,8 @@ import type {
   SharedTransitionAnimationsValues,
   LayoutAnimation,
 } from './animationBuilder/commonTypes';
-import { isFabric } from '../PlatformChecker';
 
 const TAG_OFFSET = 1e9;
-
-const IS_FABRIC = isFabric();
 
 function startObservingProgress(
   tag: number,
@@ -101,11 +98,7 @@ function createLayoutAnimationManager() {
       if (!value) {
         return;
       }
-      if (IS_FABRIC) {
-        value.removeListener(tag + TAG_OFFSET);
-      } else {
-        stopObservingProgress(tag, value);
-      }
+      stopObservingProgress(tag, value);
     },
   };
 }

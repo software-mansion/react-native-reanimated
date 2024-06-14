@@ -14,8 +14,6 @@ import type {
   SharedTransitionAnimationsFunction,
 } from './layoutReanimation/animationBuilder/commonTypes';
 
-const IS_FABRIC = isFabric();
-
 function createUpdateManager() {
   const animations: LayoutAnimationBatchItem[] = [];
   // When a stack is rerendered we reconfigure all the shared elements.
@@ -31,7 +29,7 @@ function createUpdateManager() {
         animations.push(batchItem);
       }
       if (animations.length + deferredAnimations.length === 1) {
-        IS_FABRIC ? this.flush() : setImmediate(this.flush);
+        isFabric() ? this.flush() : setImmediate(this.flush);
       }
     },
     flush(this: void) {
