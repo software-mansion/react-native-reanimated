@@ -14,10 +14,10 @@ type TestFunction = (name: string, buildTest: BuildFunction) => void;
 type TestFunctionWithWarning = (name: string, warningMessage: string, buildTest: BuildFunction) => void;
 type TestEachFunction = <T>(
   examples: Array<T>,
-) => (name: string, testCase: (example: T, index?: number) => void | Promise<void>) => void;
+) => (name: string, testCase: (example: T, index: number) => void | Promise<void>) => void;
 type TestEachFunctionWithWarning = <T>(
   examples: Array<T>,
-) => (name: string, expectedWarning: string, testCase: (example: T, index?: number) => void | Promise<void>) => void;
+) => (name: string, expectedWarning: string, testCase: (example: T, index: number) => void | Promise<void>) => void;
 type DecoratedTestFunction = TestFunction & { each: TestEachFunction };
 type DecoratedTestFunctionWithWarning = TestFunctionWithWarning & { each: TestEachFunctionWithWarning };
 
