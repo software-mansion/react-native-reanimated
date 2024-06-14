@@ -13,6 +13,8 @@ namespace reanimated {
 // mutations to the mounting layer.
 // When animations finish, the Host Tree will represent the most recent Shadow
 // Tree
+// On android this code will be sometimes executed on the JS thread.
+// That's why we have to schedule some of animation manager function on the UI thread
 std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     SurfaceId surfaceId,
     MountingTransaction::Number transactionNumber,
