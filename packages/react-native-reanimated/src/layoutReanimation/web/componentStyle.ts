@@ -22,13 +22,13 @@ export function makeElementVisible(element: HTMLElement, delay: number) {
   if (delay === 0) {
     _updatePropsJS(
       { visibility: 'initial' },
-      { _component: element as ReanimatedHTMLElement }
+      element as ReanimatedHTMLElement
     );
   } else {
     setTimeout(() => {
       _updatePropsJS(
         { visibility: 'initial' },
-        { _component: element as ReanimatedHTMLElement }
+        element as ReanimatedHTMLElement
       );
     }, delay * 1000);
   }

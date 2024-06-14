@@ -19,8 +19,8 @@ import type {
   Descriptor,
   JestAnimatedStyleHandle,
 } from './commonTypes';
-import type { ViewDescriptorsSet, ViewRefSet } from '../ViewDescriptorsSet';
-import { makeViewDescriptorsSet, useViewRefSet } from '../ViewDescriptorsSet';
+import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
+import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import type {
   AnimationObject,
@@ -178,7 +178,6 @@ function styleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
   updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
-  maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
   isAnimatedProps = false
 ): void {
@@ -234,7 +233,7 @@ function styleUpdater(
       }
 
       if (updates) {
-        updateProps(viewDescriptors, updates, maybeViewRef);
+        updateProps(viewDescriptors, updates);
       }
 
       if (!allFinished) {
@@ -252,14 +251,14 @@ function styleUpdater(
     }
 
     if (hasNonAnimatedValues) {
-      updateProps(viewDescriptors, nonAnimatedNewValues, maybeViewRef);
+      updateProps(viewDescriptors, nonAnimatedNewValues);
     }
   } else {
     state.isAnimationCancelled = true;
     state.animations = [];
 
     if (!shallowEqual(oldValues, newValues)) {
-      updateProps(viewDescriptors, newValues, maybeViewRef, isAnimatedProps);
+      updateProps(viewDescriptors, newValues, isAnimatedProps);
     }
   }
   state.last = newValues;
@@ -269,7 +268,6 @@ function jestStyleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
   updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
-  maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
   animatedStyle: MutableRefObject<AnimatedStyle<any>>,
   adapters: AnimatedPropsAdapterFunction[]
@@ -329,7 +327,6 @@ function jestStyleUpdater(
       updatePropsJestWrapper(
         viewDescriptors,
         updates,
-        maybeViewRef,
         animatedStyle,
         adapters
       );
@@ -361,7 +358,6 @@ function jestStyleUpdater(
     updatePropsJestWrapper(
       viewDescriptors,
       newValues,
-      maybeViewRef,
       animatedStyle,
       adapters
     );
@@ -423,7 +419,6 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
   adapters?: AnimatedPropsAdapterWorklet | AnimatedPropsAdapterWorklet[] | null,
   isAnimatedProps = false
 ): AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style> {
-  const viewsRef: ViewRefSet<unknown> | undefined = useViewRefSet();
   const animatedUpdaterData = useRef<AnimatedUpdaterData>();
   let inputs = Object.values(updater.__closure ?? {});
   if (SHOULD_BE_USE_WEB) {
@@ -506,7 +501,6 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
           shareableViewDescriptors,
           updater,
           remoteState,
-          viewsRef,
           areAnimationsActive,
           jestAnimatedStyle,
           adaptersArray
@@ -519,7 +513,6 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
           shareableViewDescriptors,
           updaterFn,
           remoteState,
-          viewsRef,
           areAnimationsActive,
           isAnimatedProps
         );
@@ -547,8 +540,8 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
 
   if (!animatedStyleHandle.current) {
     animatedStyleHandle.current = isJest()
-      ? { viewDescriptors, initial, viewsRef, jestAnimatedStyle }
-      : { initial, viewsRef, viewDescriptors };
+      ? { viewDescriptors, initial, jestAnimatedStyle }
+      : { initial, viewDescriptors };
   }
 
   return animatedStyleHandle.current;

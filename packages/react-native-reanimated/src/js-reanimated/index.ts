@@ -77,17 +77,13 @@ export interface ReanimatedHTMLElement extends HTMLElement {
 export const _updatePropsJS = (
   // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   updates: StyleProps | AnimatedStyle<any>,
-  viewRef: {
-    _component?: (JSReanimatedComponent | ReanimatedHTMLElement) & {
-      getAnimatableRef?: () => JSReanimatedComponent | ReanimatedHTMLElement;
-    };
+  viewRef: (JSReanimatedComponent | ReanimatedHTMLElement) & {
+    getAnimatableRef?: () => JSReanimatedComponent | ReanimatedHTMLElement;
   },
   isAnimatedProps?: boolean
 ): void => {
-  if (viewRef._component) {
-    const component = viewRef._component.getAnimatableRef
-      ? viewRef._component.getAnimatableRef()
-      : viewRef._component;
+  if (viewRef) {
+    const component = viewRef.getAnimatableRef ? viewRef.getAnimatableRef() : viewRef;
     const [rawStyles] = Object.keys(updates).reduce(
       (acc: [StyleProps, AnimatedStyle<any>], key) => {
         const value = updates[key];

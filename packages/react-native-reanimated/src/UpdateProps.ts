@@ -5,24 +5,23 @@ import { processColorsInProps } from './Colors';
 import type { ShadowNodeWrapper, SharedValue, StyleProps } from './commonTypes';
 import type { AnimatedStyle } from './helperTypes';
 import type { Descriptor } from './hook/commonTypes';
-import { _updatePropsJS } from './js-reanimated';
+import { ReanimatedHTMLElement, _updatePropsJS } from './js-reanimated';
 import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
-import type { ViewRefSet } from './ViewDescriptorsSet';
 import { runOnUIImmediately } from './threads';
 
 let updateProps: (
   viewDescriptor: SharedValue<Descriptor[]>,
   updates: StyleProps | AnimatedStyle<any>,
-  maybeViewRef: ViewRefSet<any> | undefined,
   isAnimatedProps?: boolean
 ) => void;
 
 if (shouldBeUseWeb()) {
-  updateProps = (_, updates, maybeViewRef, isAnimatedProps) => {
+  updateProps = (viewDescriptors, updates, isAnimatedProps) => {
     'worklet';
-    if (maybeViewRef) {
-      maybeViewRef.items.forEach((item, _index) => {
-        _updatePropsJS(updates, item, isAnimatedProps);
+    if (viewDescriptors.value) {
+      viewDescriptors.value.forEach((viewDescriptor) => {
+        const component = viewDescriptor.tag as ReanimatedHTMLElement;
+        _updatePropsJS(updates, component, isAnimatedProps);
       });
     }
   };
@@ -37,7 +36,6 @@ if (shouldBeUseWeb()) {
 export const updatePropsJestWrapper = (
   viewDescriptors: SharedValue<Descriptor[]>,
   updates: AnimatedStyle<any>,
-  maybeViewRef: ViewRefSet<any> | undefined,
   animatedStyle: MutableRefObject<AnimatedStyle<any>>,
   adapters: ((updates: AnimatedStyle<any>) => void)[]
 ): void => {
@@ -49,7 +47,7 @@ export const updatePropsJestWrapper = (
     ...updates,
   };
 
-  updateProps(viewDescriptors, updates, maybeViewRef);
+  updateProps(viewDescriptors, updates);
 };
 
 export default updateProps;
@@ -98,7 +96,7 @@ const createUpdatePropsManager = isFabric()
         ) {
           viewDescriptors.value.forEach((viewDescriptor) => {
             operations.push({
-              tag: viewDescriptor.tag,
+              tag: viewDescriptor.tag as number,
               name: viewDescriptor.name || 'RCTView',
               updates,
             });
