@@ -57,10 +57,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
 
   auto &layoutAnimation = layoutAnimationIt->second;
 
-  if (layoutAnimation.opacity && !newStyle.hasProperty(uiRuntime_, "opacity")) {
-    newStyle.setProperty(uiRuntime_, "opacity", jsi::Value(*layoutAnimation.opacity));
-    layoutAnimation.opacity.reset();
-  }
+  maybeRestoreOpacity(layoutAnimation, newStyle);
 
   auto rawProps =
       std::make_shared<RawProps>(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
@@ -101,6 +98,10 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
 
   auto &layoutAnimation = layoutAnimationIt->second;
 
+  // multiple layout animations can be triggered for a view
+  // one after the other, so we need to keep count of how many
+  // were actually triggered, so that we don't cleanup necessary
+  // structures too early
   if (layoutAnimation.count > 1) {
     layoutAnimation.count--;
     return {};
@@ -250,12 +251,7 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
     const PropsParserContext &propsParserContext,
     SurfaceId surfaceId) const {
   for (auto &mutation : mutations) {
-    if (mutation.parentShadowView.tag == surfaceId) {
-      surfaceManager.updateWindow(
-          surfaceId,
-          mutation.parentShadowView.layoutMetrics.frame.size.width,
-          mutation.parentShadowView.layoutMetrics.frame.size.height);
-    }
+    maybeUpdateWindowDimensions(mutation, surfaceId);
 
     Tag tag = mutation.type == ShadowViewMutation::Type::Create ||
             mutation.type == ShadowViewMutation::Type::Insert
@@ -298,13 +294,7 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
         filteredMutations.push_back(mutation);
 
         // temporarily set opacity to 0 to prevent flickering on android
-        auto newView =
-            std::make_shared<ShadowView>(mutation.newChildShadowView);
-        folly::dynamic opacity = folly::dynamic::object("opacity", 0);
-        auto newProps =
-            getComponentDescriptorForShadowView(*newView).cloneProps(
-                propsParserContext, newView->props, RawProps(opacity));
-        newView->props = newProps;
+        std::shared_ptr<ShadowView> newView = cloneViewWithoutOpacity(mutation, propsParserContext);
 
         filteredMutations.push_back(ShadowViewMutation::UpdateMutation(
             mutation.newChildShadowView, *newView, mutation.parentShadowView));
@@ -696,6 +686,36 @@ void LayoutAnimationsProxy::transferConfigFromNativeID(
     auto nativeId = stoi(nativeIdString);
     layoutAnimationsManager_->transferConfigFromNativeID(nativeId, tag);
   } catch (std::invalid_argument) {
+  }
+}
+
+// When entering animations start, we temporarily set opacity to 0
+// so that we can immediately insert the view at the right position
+// and schedule the animation on the UI thread
+std::shared_ptr<ShadowView> LayoutAnimationsProxy::cloneViewWithoutOpacity(facebook::react::ShadowViewMutation &mutation, const PropsParserContext &propsParserContext) const {
+  auto newView =
+  std::make_shared<ShadowView>(mutation.newChildShadowView);
+  folly::dynamic opacity = folly::dynamic::object("opacity", 0);
+  auto newProps = getComponentDescriptorForShadowView(*newView).cloneProps(propsParserContext, newView->props, RawProps(opacity));
+  newView->props = newProps;
+  return newView;
+}
+
+void LayoutAnimationsProxy::maybeRestoreOpacity(LayoutAnimation &layoutAnimation, const jsi::Object &newStyle) const{
+  if (layoutAnimation.opacity && !newStyle.hasProperty(uiRuntime_, "opacity")) {
+    newStyle.setProperty(uiRuntime_, "opacity", jsi::Value(*layoutAnimation.opacity));
+    layoutAnimation.opacity.reset();
+  }
+}
+
+void LayoutAnimationsProxy::maybeUpdateWindowDimensions(facebook::react::ShadowViewMutation &mutation, SurfaceId surfaceId) const {
+  // This is a hacky way to obtain the window dimensions.
+  // We can identify the root, by checking if its tag is equal to the surfaceId
+  if (mutation.parentShadowView.tag == surfaceId) {
+    surfaceManager.updateWindow(
+                                surfaceId,
+                                mutation.parentShadowView.layoutMetrics.frame.size.width,
+                                mutation.parentShadowView.layoutMetrics.frame.size.height);
   }
 }
 

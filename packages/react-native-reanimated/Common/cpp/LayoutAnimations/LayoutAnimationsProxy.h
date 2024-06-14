@@ -73,6 +73,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate {
   void handleRemovals(
       ShadowViewMutationList &filteredMutations,
       std::vector<std::shared_ptr<MutationNode>> &roots) const;
+    
   void handleUpdatesAndEnterings(
       ShadowViewMutationList &filteredMutations,
       const std::unordered_map<Tag, ShadowView> &movedViews,
@@ -85,6 +86,9 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate {
   void updateOngoingAnimationTarget(
       const int tag,
       const ShadowViewMutation& mutation) const;
+  std::shared_ptr<ShadowView> cloneViewWithoutOpacity(facebook::react::ShadowViewMutation &mutation, const PropsParserContext &propsParserContext) const;
+  void maybeRestoreOpacity(LayoutAnimation& layoutAnimation, const jsi::Object &newStyle) const;
+  void maybeUpdateWindowDimensions(facebook::react::ShadowViewMutation &mutation, SurfaceId surfaceId) const;
 
   void updateIndexForMutation(ShadowViewMutation &mutation) const;
 
