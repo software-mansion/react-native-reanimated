@@ -699,49 +699,6 @@ void LayoutAnimationsProxy::transferConfigFromNativeID(
   }
 }
 
-void Node::handleMutation(ShadowViewMutation mutation) {
-  if (tag != mutation.parentShadowView.tag) {
-    return;
-  }
-
-  int delta = mutation.type == ShadowViewMutation::Insert ? 1 : -1;
-  for (int i = children.size() - 1; i >= 0; i--) {
-    if (children[i]->mutation.index < mutation.index) {
-      return;
-    }
-    children[i]->mutation.index += delta;
-  }
-}
-
-// Should only be called on unflattened parents
-void Node::removeChild(std::shared_ptr<MutationNode> child) {
-  for (int i = unflattenedChildren.size() - 1; i >= 0; i--) {
-    if (unflattenedChildren[i]->tag == child->tag) {
-      unflattenedChildren.erase(unflattenedChildren.begin() + i);
-      break;
-    }
-  }
-  
-  auto& flattenedChildren = child->parent->children;
-  for (int i = flattenedChildren.size() - 1; i >= 0; i--) {
-    if (flattenedChildren[i]->tag == child->tag) {
-      flattenedChildren.erase(flattenedChildren.begin() + i);
-      return;
-    }
-    flattenedChildren[i]->mutation.index--;
-  }
-}
-
-void Node::insertChildren(
-    std::vector<std::shared_ptr<MutationNode>> &newChildren) {
-  mergeAndSwap(children, newChildren);
-}
-
-void Node::insertUnflattenedChildren(
-    std::vector<std::shared_ptr<MutationNode>> &newChildren) {
-  mergeAndSwap(unflattenedChildren, newChildren);
-}
-
 } // namespace reanimated
 
 #endif // RCT_NEW_ARCH_ENABLED

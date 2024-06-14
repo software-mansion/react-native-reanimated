@@ -93,9 +93,9 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate {
       ShadowViewMutationList &mutations) const;
   bool startAnimationsRecursively(
       std::shared_ptr<MutationNode> node,
-      bool shouldRemoveSubviewsWithoutAnimations,
-      bool shouldAnimate,
-      bool isScreenPop,
+      const bool shouldRemoveSubviewsWithoutAnimations,
+      const bool shouldAnimate,
+      const bool isScreenPop,
       ShadowViewMutationList &mutations) const;
   void endAnimationsRecursively(
       std::shared_ptr<MutationNode> node,

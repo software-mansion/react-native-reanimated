@@ -1,5 +1,10 @@
 #pragma once
 
+#include "LayoutAnimationsManager.h"
+#include "PropsRegistry.h"
+
+#include <react/renderer/mounting/MountingOverrideDelegate.h>
+#include <react/renderer/mounting/ShadowView.h>
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
@@ -8,7 +13,7 @@
 
 namespace reanimated {
 
-struct Window {
+struct Rect {
   double width, height;
 };
 
@@ -37,8 +42,8 @@ struct UpdateValues {
 
 struct Snapshot {
   double x, y, width, height, windowWidth, windowHeight;
-  Snapshot(const ShadowView &shadowView, Window window) {
-    auto &frame = shadowView.layoutMetrics.frame;
+  Snapshot(const ShadowView &shadowView, Rect window) {
+    const auto &frame = shadowView.layoutMetrics.frame;
     x = frame.origin.x;
     y = frame.origin.y;
     width = frame.size.width;
@@ -71,7 +76,7 @@ struct Node {
   void handleMutation(ShadowViewMutation mutation);
   void insertChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
   void insertUnflattenedChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
-  explicit Node(Tag tag) : tag(tag) {}
+  explicit Node(const Tag tag) : tag(tag) {}
   Node(Node &&node) : children(std::move(node.children)), unflattenedChildren(std::move(node.unflattenedChildren)), tag(node.tag) {}
 };
 
@@ -93,31 +98,11 @@ struct SurfaceManager {
       SurfaceId,
       std::shared_ptr<std::unordered_map<Tag, UpdateValues>>>
       props_;
-  mutable std::unordered_map<SurfaceId, Window> windows_;
+  mutable std::unordered_map<SurfaceId, Rect> windows_;
 
-  std::unordered_map<Tag, UpdateValues> &getUpdateMap(SurfaceId surfaceId) {
-    auto props = props_.find(surfaceId);
-    if (props != props_.end()) {
-      return *props->second;
-    }
-
-    auto newProps = std::make_shared<std::unordered_map<Tag, UpdateValues>>();
-    props_.insert_or_assign(surfaceId, newProps);
-    return *newProps;
-  }
-
-  void
-  updateWindow(SurfaceId surfaceId, double windowWidth, double windowHeight) {
-    windows_.insert_or_assign(surfaceId, Window{windowWidth, windowHeight});
-  }
-
-  Window getWindow(SurfaceId surfaceId) {
-    auto windowIt = windows_.find(surfaceId);
-    if (windowIt != windows_.end()) {
-      return windowIt->second;
-    }
-    return Window{0, 0};
-  }
+  std::unordered_map<Tag, UpdateValues> &getUpdateMap(SurfaceId surfaceId);
+  void updateWindow(SurfaceId surfaceId, double windowWidth, double windowHeight);
+  Rect getWindow(SurfaceId surfaceId);
 };
 
 static inline void updateLayoutMetrics(
@@ -171,4 +156,5 @@ static inline void mergeAndSwap(std::vector<std::shared_ptr<MutationNode>>& A, s
   }
   std::swap(A, merged);
 }
+
 } // namespace reanimated
