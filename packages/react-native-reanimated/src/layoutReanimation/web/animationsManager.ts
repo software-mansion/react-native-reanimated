@@ -57,8 +57,7 @@ function maybeReportOverwrittenProperties(
   const propertyRegex = /([a-zA-Z-]+)(?=:)/g;
   const animationProperties = new Set();
 
-  let match;
-  while ((match = propertyRegex.exec(keyframe)) !== null) {
+  for (const match of keyframe.matchAll(propertyRegex)) {
     animationProperties.add(match[1]);
   }
 
