@@ -324,12 +324,7 @@ function jestStyleUpdater(
     });
 
     if (Object.keys(updates).length) {
-      updatePropsJestWrapper(
-        viewDescriptors,
-        updates,
-        animatedStyle,
-        adapters
-      );
+      updatePropsJestWrapper(viewDescriptors, updates, animatedStyle, adapters);
     }
 
     if (!allFinished) {
@@ -355,12 +350,7 @@ function jestStyleUpdater(
   state.last = newValues;
 
   if (!shallowEqual(oldValues, newValues)) {
-    updatePropsJestWrapper(
-      viewDescriptors,
-      newValues,
-      animatedStyle,
-      adapters
-    );
+    updatePropsJestWrapper(viewDescriptors, newValues, animatedStyle, adapters);
   }
 }
 

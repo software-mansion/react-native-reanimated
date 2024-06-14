@@ -83,7 +83,9 @@ export const _updatePropsJS = (
   isAnimatedProps?: boolean
 ): void => {
   if (viewRef) {
-    const component = viewRef.getAnimatableRef ? viewRef.getAnimatableRef() : viewRef;
+    const component = viewRef.getAnimatableRef
+      ? viewRef.getAnimatableRef()
+      : viewRef;
     const [rawStyles] = Object.keys(updates).reduce(
       (acc: [StyleProps, AnimatedStyle<any>], key) => {
         const value = updates[key];
