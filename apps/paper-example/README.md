@@ -13,21 +13,27 @@ cd react-native-reanimated
 yarn
 ```
 
-3. Install node_modules in `Example/` directory:
+3. Build the library
+
+```
+yarn build
+```
+
+4. Install node_modules in `Example/` directory:
 
 ```
 cd Example
 yarn
 ```
 
-4. Install Pods in `Example/ios/` directory:
+5. Install Pods in `Example/ios/` directory:
 
 ```
 cd ios
 pod install
 ```
 
-5. Start Metro bundler in `Example/` directory
+6. Start Metro bundler in `Example/` directory
 
 ```
 cd ..

@@ -5,7 +5,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/docs-check.yml'
-      - 'packages/react-native-reanimated/docs/**'
+      - packages/docs-reanimated/**
   merge_group:
     branches:
       - main

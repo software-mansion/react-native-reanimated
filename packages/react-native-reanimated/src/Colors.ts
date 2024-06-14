@@ -168,6 +168,7 @@ function parsePercentage(str: string): number {
 const names: Record<string, number> = makeShareable({
   transparent: 0x00000000,
 
+  /* spell-checker: disable */
   // http://www.w3.org/TR/css3-color/#svg-color
   aliceblue: 0xf0f8ffff,
   antiquewhite: 0xfaebd7ff,
@@ -318,6 +319,7 @@ const names: Record<string, number> = makeShareable({
   whitesmoke: 0xf5f5f5ff,
   yellow: 0xffff00ff,
   yellowgreen: 0x9acd32ff,
+  /* spell-checker: enable */
 });
 
 // copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
@@ -341,6 +343,7 @@ export const ColorProperties = makeShareable([
   'overlayColor',
 ]);
 
+// // ts-prune-ignore-next Exported for the purpose of tests only
 export function normalizeColor(color: unknown): number | null {
   'worklet';
 
@@ -641,7 +644,7 @@ function processColorInitially(color: unknown): number | null | undefined {
     return null;
   }
 
-  normalizedColor = ((normalizedColor << 24) | (normalizedColor >>> 8)) >>> 0; // argb
+  normalizedColor = ((normalizedColor << 24) | (normalizedColor >>> 8)) >>> 0; // alpha rgb
   return normalizedColor;
 }
 
@@ -688,7 +691,7 @@ export type ParsedColorArray = [number, number, number, number];
 
 export function convertToRGBA(color: unknown): ParsedColorArray {
   'worklet';
-  const processedColor = processColorInitially(color)!; // argb;
+  const processedColor = processColorInitially(color)!; // alpha rgb;
   const a = (processedColor >>> 24) / 255;
   const r = ((processedColor << 8) >>> 24) / 255;
   const g = ((processedColor << 16) >>> 24) / 255;

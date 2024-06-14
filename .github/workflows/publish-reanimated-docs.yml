@@ -1,11 +1,12 @@
-name: Publish to GitHub Pages
+name: Publish Reanimated Docs
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   push:
     branches:
       - main
-    paths: docs/**
+    paths: packages/docs-reanimated/**
+  workflow_dispatch:
 
 jobs:
   publish:
@@ -19,13 +20,13 @@ jobs:
         run: >-
           git config --local user.email "action@github.com"
           && git config --local user.name "GitHub Action"
-          && cd docs
+          && cd packages/docs-reanimated
           && yarn
           && yarn build
 
       - name: Publish generated content to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
-          FOLDER: docs/build
+          FOLDER: packages/docs-reanimated/build
           BRANCH: gh-pages
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
