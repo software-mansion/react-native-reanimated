@@ -15,6 +15,8 @@ export class EntryExitTransition
   extends BaseAnimationBuilder
   implements ILayoutAnimationBuilder
 {
+  static presetName = 'EntryExitTransition';
+
   enteringV: BaseAnimationBuilder | typeof BaseAnimationBuilder = FadeIn;
 
   exitingV: BaseAnimationBuilder | typeof BaseAnimationBuilder = FadeOut;
