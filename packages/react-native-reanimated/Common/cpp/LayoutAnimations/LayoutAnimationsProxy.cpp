@@ -56,16 +56,14 @@ std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
   }
 
   auto &layoutAnimation = layoutAnimationIt->second;
-  auto &runtime = nativeReanimatedModule_->getUIRuntime();
 
-  if (layoutAnimation.opacity && !newStyle.hasProperty(runtime, "opacity")) {
-    newStyle.setProperty(
-        runtime, "opacity", jsi::Value(*layoutAnimation.opacity));
+  if (layoutAnimation.opacity && !newStyle.hasProperty(uiRuntime_, "opacity")) {
+    newStyle.setProperty(uiRuntime_, "opacity", jsi::Value(*layoutAnimation.opacity));
     layoutAnimation.opacity.reset();
   }
 
   auto rawProps =
-      std::make_shared<RawProps>(runtime, jsi::Value(runtime, newStyle));
+      std::make_shared<RawProps>(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
 
   PropsParserContext propsParserContext{
       layoutAnimation.finalView->surfaceId, *contextContainer_};
@@ -82,7 +80,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
   auto &updateMap =
       surfaceManager.getUpdateMap(layoutAnimation.finalView->surfaceId);
   updateMap.insert_or_assign(
-      tag, UpdateValues{newProps, Frame(runtime, newStyle)});
+      tag, UpdateValues{newProps, Frame(uiRuntime_, newStyle)});
 
   return layoutAnimation.finalView->surfaceId;
 }
@@ -288,7 +286,7 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           continue;
         }
 
-        transferConfigFromNativeTag(
+        transferConfigFromNativeID(
             mutation.newChildShadowView.props->nativeId,
             mutation.newChildShadowView.tag);
         if (!layoutAnimationsManager_->hasLayoutAnimation(tag, ENTERING)) {
@@ -569,18 +567,17 @@ void LayoutAnimationsProxy::startEnteringAnimation(
       mutation.newChildShadowView,
       surfaceManager.getWindow(mutation.newChildShadowView.surfaceId));
   uiScheduler_->scheduleOnUI([values, this, tag]() {
-    jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
-    jsi::Object yogaValues(rt);
-    yogaValues.setProperty(rt, "targetOriginX", values.x);
-    yogaValues.setProperty(rt, "targetGlobalOriginX", values.x);
-    yogaValues.setProperty(rt, "targetOriginY", values.y);
-    yogaValues.setProperty(rt, "targetGlobalOriginY", values.y);
-    yogaValues.setProperty(rt, "targetWidth", values.width);
-    yogaValues.setProperty(rt, "targetHeight", values.height);
-    yogaValues.setProperty(rt, "windowWidth", values.windowWidth);
-    yogaValues.setProperty(rt, "windowHeight", values.windowHeight);
-    nativeReanimatedModule_->layoutAnimationsManager().startLayoutAnimation(
-        rt, tag, LayoutAnimationType::ENTERING, yogaValues);
+    jsi::Object yogaValues(uiRuntime_);
+    yogaValues.setProperty(uiRuntime_, "targetOriginX", values.x);
+    yogaValues.setProperty(uiRuntime_, "targetGlobalOriginX", values.x);
+    yogaValues.setProperty(uiRuntime_, "targetOriginY", values.y);
+    yogaValues.setProperty(uiRuntime_, "targetGlobalOriginY", values.y);
+    yogaValues.setProperty(uiRuntime_, "targetWidth", values.width);
+    yogaValues.setProperty(uiRuntime_, "targetHeight", values.height);
+    yogaValues.setProperty(uiRuntime_, "windowWidth", values.windowWidth);
+    yogaValues.setProperty(uiRuntime_, "windowHeight", values.windowHeight);
+    layoutAnimationsManager_->startLayoutAnimation(
+        uiRuntime_, tag, LayoutAnimationType::ENTERING, yogaValues);
   });
 }
 
@@ -610,18 +607,17 @@ void LayoutAnimationsProxy::startExitingAnimation(
   Snapshot values(oldView, surfaceManager.getWindow(surfaceId));
 
   uiScheduler_->scheduleOnUI([values, this, tag]() {
-    jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
-    jsi::Object yogaValues(rt);
-    yogaValues.setProperty(rt, "currentOriginX", values.x);
-    yogaValues.setProperty(rt, "currentGlobalOriginX", values.x);
-    yogaValues.setProperty(rt, "currentOriginY", values.y);
-    yogaValues.setProperty(rt, "currentGlobalOriginY", values.y);
-    yogaValues.setProperty(rt, "currentWidth", values.width);
-    yogaValues.setProperty(rt, "currentHeight", values.height);
-    yogaValues.setProperty(rt, "windowWidth", values.windowWidth);
-    yogaValues.setProperty(rt, "windowHeight", values.windowHeight);
-    nativeReanimatedModule_->layoutAnimationsManager().startLayoutAnimation(
-        rt, tag, LayoutAnimationType::EXITING, yogaValues);
+    jsi::Object yogaValues(uiRuntime_);
+    yogaValues.setProperty(uiRuntime_, "currentOriginX", values.x);
+    yogaValues.setProperty(uiRuntime_, "currentGlobalOriginX", values.x);
+    yogaValues.setProperty(uiRuntime_, "currentOriginY", values.y);
+    yogaValues.setProperty(uiRuntime_, "currentGlobalOriginY", values.y);
+    yogaValues.setProperty(uiRuntime_, "currentWidth", values.width);
+    yogaValues.setProperty(uiRuntime_, "currentHeight", values.height);
+    yogaValues.setProperty(uiRuntime_, "windowWidth", values.windowWidth);
+    yogaValues.setProperty(uiRuntime_, "windowHeight", values.windowHeight);
+    layoutAnimationsManager_->startLayoutAnimation(
+        uiRuntime_, tag, LayoutAnimationType::EXITING, yogaValues);
     layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
   });
 }
@@ -654,24 +650,23 @@ void LayoutAnimationsProxy::startLayoutAnimation(
       mutation.newChildShadowView, surfaceManager.getWindow(surfaceId));
 
   uiScheduler_->scheduleOnUI([currentValues, targetValues, this, tag]() {
-    jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
-    jsi::Object yogaValues(rt);
-    yogaValues.setProperty(rt, "currentOriginX", currentValues.x);
-    yogaValues.setProperty(rt, "currentGlobalOriginX", currentValues.x);
-    yogaValues.setProperty(rt, "currentOriginY", currentValues.y);
-    yogaValues.setProperty(rt, "currentGlobalOriginY", currentValues.y);
-    yogaValues.setProperty(rt, "currentWidth", currentValues.width);
-    yogaValues.setProperty(rt, "currentHeight", currentValues.height);
-    yogaValues.setProperty(rt, "targetOriginX", targetValues.x);
-    yogaValues.setProperty(rt, "targetGlobalOriginX", targetValues.x);
-    yogaValues.setProperty(rt, "targetOriginY", targetValues.y);
-    yogaValues.setProperty(rt, "targetGlobalOriginY", targetValues.y);
-    yogaValues.setProperty(rt, "targetWidth", targetValues.width);
-    yogaValues.setProperty(rt, "targetHeight", targetValues.height);
-    yogaValues.setProperty(rt, "windowWidth", targetValues.windowWidth);
-    yogaValues.setProperty(rt, "windowHeight", targetValues.windowHeight);
-    nativeReanimatedModule_->layoutAnimationsManager().startLayoutAnimation(
-        rt, tag, LayoutAnimationType::LAYOUT, yogaValues);
+    jsi::Object yogaValues(uiRuntime_);
+    yogaValues.setProperty(uiRuntime_, "currentOriginX", currentValues.x);
+    yogaValues.setProperty(uiRuntime_, "currentGlobalOriginX", currentValues.x);
+    yogaValues.setProperty(uiRuntime_, "currentOriginY", currentValues.y);
+    yogaValues.setProperty(uiRuntime_, "currentGlobalOriginY", currentValues.y);
+    yogaValues.setProperty(uiRuntime_, "currentWidth", currentValues.width);
+    yogaValues.setProperty(uiRuntime_, "currentHeight", currentValues.height);
+    yogaValues.setProperty(uiRuntime_, "targetOriginX", targetValues.x);
+    yogaValues.setProperty(uiRuntime_, "targetGlobalOriginX", targetValues.x);
+    yogaValues.setProperty(uiRuntime_, "targetOriginY", targetValues.y);
+    yogaValues.setProperty(uiRuntime_, "targetGlobalOriginY", targetValues.y);
+    yogaValues.setProperty(uiRuntime_, "targetWidth", targetValues.width);
+    yogaValues.setProperty(uiRuntime_, "targetHeight", targetValues.height);
+    yogaValues.setProperty(uiRuntime_, "windowWidth", targetValues.windowWidth);
+    yogaValues.setProperty(uiRuntime_, "windowHeight", targetValues.windowHeight);
+    layoutAnimationsManager_->startLayoutAnimation(
+        uiRuntime_, tag, LayoutAnimationType::LAYOUT, yogaValues);
   });
 }
 
@@ -687,13 +682,11 @@ void LayoutAnimationsProxy::maybeCancelAnimation(const int tag) const {
   }
   layoutAnimations_.erase(tag);
   uiScheduler_->scheduleOnUI([this, tag]() {
-    jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
-    nativeReanimatedModule_->layoutAnimationsManager().cancelLayoutAnimation(
-        rt, tag);
+    layoutAnimationsManager_->cancelLayoutAnimation(uiRuntime_, tag);
   });
 }
 
-void LayoutAnimationsProxy::transferConfigFromNativeTag(
+void LayoutAnimationsProxy::transferConfigFromNativeID(
     const std::string nativeIdString,
     const int tag) const {
   if (nativeIdString.empty()) {
@@ -701,7 +694,7 @@ void LayoutAnimationsProxy::transferConfigFromNativeTag(
   }
   try {
     auto nativeId = stoi(nativeIdString);
-    layoutAnimationsManager_->transferConfigFromNativeTag(nativeId, tag);
+    layoutAnimationsManager_->transferConfigFromNativeID(nativeId, tag);
   } catch (std::invalid_argument) {
   }
 }

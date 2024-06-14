@@ -37,19 +37,19 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate {
   mutable std::unordered_map<Tag, int> leastRemoved;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   ContextContainer::Shared contextContainer_;
-  NativeReanimatedModule *nativeReanimatedModule_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
+  jsi::Runtime& uiRuntime_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   LayoutAnimationsProxy(
       std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
-      NativeReanimatedModule *nativeReanimatedModule,
       SharedComponentDescriptorRegistry componentDescriptorRegistry,
       ContextContainer::Shared contextContainer,
+      jsi::Runtime& uiRuntime_,
       const std::shared_ptr<UIScheduler> uiScheduler)
       : layoutAnimationsManager_(layoutAnimationsManager),
         contextContainer_(contextContainer),
-        nativeReanimatedModule_(nativeReanimatedModule),
         componentDescriptorRegistry_(componentDescriptorRegistry),
+        uiRuntime_(uiRuntime_),
         uiScheduler_(uiScheduler) {}
 
   void startEnteringAnimation(const int tag, ShadowViewMutation &mutation)
@@ -58,7 +58,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate {
   void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation)
       const;
 
-  void transferConfigFromNativeTag(const std::string nativeId, const int tag)
+  void transferConfigFromNativeID(const std::string nativeId, const int tag)
       const;
   std::optional<SurfaceId> progressLayoutAnimation(
       int tag,

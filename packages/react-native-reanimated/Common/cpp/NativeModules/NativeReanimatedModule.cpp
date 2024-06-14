@@ -844,8 +844,20 @@ jsi::Value NativeReanimatedModule::measure(
 void NativeReanimatedModule::initializeFabric(
     const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
-  uiManager->setAnimationDelegate(nullptr);
-  auto scheduler = reinterpret_cast<Scheduler *>(uiManager->getDelegate());
+  
+  initializeLayoutAnimations();
+
+  commitHook_ =
+      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
+#if REACT_NATIVE_MINOR_VERSION >= 73
+  mountHook_ =
+      std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
+#endif
+}
+
+void NativeReanimatedModule::initializeLayoutAnimations() {
+  uiManager_->setAnimationDelegate(nullptr);
+  auto scheduler = reinterpret_cast<Scheduler *>(uiManager_->getDelegate());
   auto componentDescriptorRegistry =
       scheduler->getContextContainer()
           ->at<std::weak_ptr<const ComponentDescriptorRegistry>>(
@@ -855,23 +867,16 @@ void NativeReanimatedModule::initializeFabric(
   if (componentDescriptorRegistry) {
     layoutAnimationsProxy_ = std::make_shared<LayoutAnimationsProxy>(
         layoutAnimationsManager_,
-        this,
         componentDescriptorRegistry,
         scheduler->getContextContainer(),
+        uiWorkletRuntime_->getJSIRuntime(),
         uiScheduler_);
-    uiManager->getShadowTreeRegistry().enumerate(
+    uiManager_->getShadowTreeRegistry().enumerate(
         [this](const ShadowTree &shadowTree, bool &stop) {
           shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
               layoutAnimationsProxy_);
         });
   }
-
-  commitHook_ =
-      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
-#if REACT_NATIVE_MINOR_VERSION >= 73
-  mountHook_ =
-      std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
-#endif
 }
 #endif // RCT_NEW_ARCH_ENABLED
 

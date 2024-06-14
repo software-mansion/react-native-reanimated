@@ -42,7 +42,9 @@ class LayoutAnimationsManager {
   void clearLayoutAnimationConfig(const int tag);
   void clearSharedTransitionConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
-  void transferConfigFromNativeTag(const int nativeId, const int tag);
+#ifdef RCT_NEW_ARCH_ENABLED
+  void transferConfigFromNativeID(const int nativeId, const int tag);
+#endif
   int findPrecedingViewTagForTransition(const int tag);
 #ifndef NDEBUG
   std::string getScreenSharedTagPairString(
@@ -64,6 +66,9 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::string> viewsScreenSharedTagMap_;
 #endif
 
+#ifdef RCT_NEW_ARCH_ENABLED
+  std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimationsForNativeID_;
+#endif
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> layoutAnimations_;
