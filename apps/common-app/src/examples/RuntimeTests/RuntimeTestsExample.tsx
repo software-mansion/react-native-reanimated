@@ -4,13 +4,7 @@ import RuntimeTestsRunner from './ReanimatedRuntimeTestsRunner/RuntimeTestsRunne
 // load tests
 // import './tests/Animations.test';
 
-import './tests/animations/withTiming/arrays.test';
-import './tests/animations/withTiming/basic.test';
-import './tests/animations/withTiming/colors.test';
-import './tests/animations/withTiming/easing.test';
-import './tests/animations/withTiming/transformMatrices.test';
-import './tests/animations/withDecay/basic.test';
-import './tests/animations/withSpring/variousConfig.test';
+import './tests/animations';
 
 import './tests/core/cancelAnimation.test';
 

@@ -92,7 +92,7 @@ describe(`Cascade of callbacks`, () => {
     );
   };
 
-  test('Test cascade of callback (no self-modify)', async () => {
+  test('Test that all callbacks have been called a correct number of times', async () => {
     await mockAnimationTimer();
     const updatesContainerActive = await recordAnimationUpdates();
 
@@ -122,7 +122,7 @@ describe(`Cascade of callbacks`, () => {
   });
 });
 
-describe(`Order of callbacks in cascade`, () => {
+describe(`Test all callbacks have been called in valid order`, () => {
   const SV_REF = 'SV_REF';
 
   const CallbackComponent = () => {

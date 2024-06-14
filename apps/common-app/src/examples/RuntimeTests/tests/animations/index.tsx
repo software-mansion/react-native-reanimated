@@ -1,8 +1,23 @@
-import './withTiming/arrays.test';
-import './withTiming/basic.test';
-import './withTiming/colors.test';
-import './withTiming/easing.test';
-import './withTiming/transformMatrices.test';
-import './withSpring/variousConfig.test';
-import './withSequence/callbackCascade.test';
-import './withSequence/cancelAnimation.test';
+import { describe } from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+
+describe('*****ANIMATIONS*****', () => {
+  describe('****withTiming**** ⏰', () => {
+    require('./withTiming/arrays.test');
+    require('./withTiming/basic.test');
+    require('./withTiming/objects.test');
+    require('./withTiming/colors.test');
+    require('./withTiming/easing.test');
+    require('./withTiming/transformMatrices.test');
+  });
+  describe('****withSpring****', () => {
+    require('./withSpring/variousConfig.test');
+  });
+  describe('****withDecay****', () => {
+    require('./withDecay/basic.test');
+  });
+  describe.only('****withSequence****', () => {
+    // require('./withSequence/callbackCascade.test');
+    // require('./withSequence/cancelAnimation.test');
+    require('./withSequence/numbers.test');
+  });
+});

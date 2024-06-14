@@ -12,9 +12,15 @@ import {
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
 
-describe(`Test cancelAnimation `, () => {
+describe(`Test cancelling animation `, () => {
   const COMPONENT_REF = 'COMPONENT_REF';
-  const CancelComponent = ({ cancel }: { cancel?: boolean }) => {
+  const CancelComponent = ({
+    shouldCancelAnimation,
+    shouldStartNewAnimation,
+  }: {
+    shouldCancelAnimation?: boolean;
+    shouldStartNewAnimation?: boolean;
+  }) => {
     const width = useSharedValue(0);
     const ref = useTestRef(COMPONENT_REF);
     useEffect(() => {
@@ -26,8 +32,10 @@ describe(`Test cancelAnimation `, () => {
     });
     useEffect(() => {
       setTimeout(() => {
-        if (cancel) {
+        if (shouldCancelAnimation) {
           cancelAnimation(width);
+        } else if (shouldStartNewAnimation) {
+          width.value = 0;
         }
       }, 200);
     });
@@ -38,14 +46,20 @@ describe(`Test cancelAnimation `, () => {
     );
   };
 
-  test('Finishing sequence animation normally', async () => {
-    await render(<CancelComponent cancel={false} />);
+  test('Test animation running without interruption', async () => {
+    await render(<CancelComponent />);
     await wait(500);
     const component = getTestComponent(COMPONENT_REF);
     expect(await component.getAnimatedStyle('width')).toBe(50, ComparisonMode.DISTANCE);
   });
-  test('Cancelling animation finishes the whole sequence', async () => {
-    await render(<CancelComponent cancel={true} />);
+  test('Cancelling animation with *****cancelAnimation***** finishes the whole sequence', async () => {
+    await render(<CancelComponent shouldCancelAnimation />);
+    await wait(500);
+    const component = getTestComponent(COMPONENT_REF);
+    expect(await component.getAnimatedStyle('width')).not.toBe(50, ComparisonMode.DISTANCE);
+  });
+  test('Cancelling animation by *****starting new animation***** finishes the whole sequence', async () => {
+    await render(<CancelComponent shouldStartNewAnimation />);
     await wait(500);
     const component = getTestComponent(COMPONENT_REF);
     expect(await component.getAnimatedStyle('width')).not.toBe(50, ComparisonMode.DISTANCE);
