@@ -3,7 +3,8 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "react-native-reanimated": ["../../packages/react-native-reanimated/src"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"]
