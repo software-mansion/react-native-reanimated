@@ -15,12 +15,12 @@ import type {
 } from './types';
 import { ComparisonMode, DescribeDecorator, TestDecorator } from './types';
 import { TestComponent } from './TestComponent';
+import { EMPTY_LOG_PLACEHOLDER, applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
 import type { SharedValue } from 'react-native-reanimated';
 import { makeMutable, runOnUI, runOnJS } from 'react-native-reanimated';
-import { EMPTY_LOG_PLACEHOLDER, applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
-import { createUpdatesContainer } from './UpdatesContainer';
 import { Matchers, nullableMatch } from './matchers/Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
+import { createUpdatesContainer } from './UpdatesContainer';
 
 let callTrackerRegistryJS: Record<string, number> = {};
 const callTrackerRegistryUI = makeMutable<Record<string, number>>({});
