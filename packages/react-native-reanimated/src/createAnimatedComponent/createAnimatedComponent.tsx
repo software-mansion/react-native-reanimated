@@ -189,11 +189,12 @@ export function createAnimatedComponent(
       );
 
       const exiting = this.props.exiting;
+
       if (
         IS_WEB &&
         this._component &&
-        this.props.exiting &&
-        !getReducedMotionFromConfig(this.props.exiting as CustomConfig)
+        exiting &&
+        !getReducedMotionFromConfig(exiting as CustomConfig)
       ) {
         addHTMLMutationObserver();
 
@@ -202,7 +203,7 @@ export function createAnimatedComponent(
           this._component as HTMLElement,
           LayoutAnimationType.EXITING
         );
-      } else if (exiting) {
+      } else if (exiting && !IS_WEB) {
         const reduceMotionInExiting =
           'getReduceMotion' in exiting &&
           typeof exiting.getReduceMotion === 'function'
@@ -417,6 +418,10 @@ export function createAnimatedComponent(
     }
 
     _configureLayoutTransition() {
+      if (IS_WEB) {
+        return;
+      }
+
       const layout = this.props.layout
         ? maybeBuild(
             this.props.layout,
@@ -435,6 +440,7 @@ export function createAnimatedComponent(
       if (IS_WEB) {
         return;
       }
+
       const { sharedTransitionTag } = this.props;
       if (!sharedTransitionTag) {
         this._sharedElementTransition?.unregisterTransition(
@@ -484,7 +490,7 @@ export function createAnimatedComponent(
           }
 
           const skipEntering = this.context?.current;
-          if (entering && !skipEntering) {
+          if (entering && !skipEntering && !IS_WEB) {
             updateLayoutAnimations(
               tag as number,
               LayoutAnimationType.ENTERING,
