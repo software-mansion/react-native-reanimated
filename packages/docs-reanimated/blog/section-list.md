@@ -43,11 +43,11 @@ The `onScroll` in **SectionCards** calculates the offset as the user scrolls thr
 
 <CollapsibleCode src={SectionListSrc} showLines={[204,227]}/>
 
-We use the `useSharedValue` hook to create mutable shared values across different components. For instance, `selectedItem` and `visibleIndex` are [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) used to manage the currently selected section and its visibility index.
+We use the `useSharedValue` hook to create mutable shared values across different components. For instance, `selectedItem` and `visibleIndex` are [shared values](/docs/fundamentals/glossary#shared-value) used to manage the currently selected section and its visibility index.
 
 <CollapsibleCode src={SectionListSrc} showLines={[151,152]}/>
 
-Additionally, we use `useAnimatedStyle` hook to define [animated styles](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle/) based on the shared values. Then, we apply these animated styles to components to create dynamic visual effects, such as changing font weights and adding bottom borders.
+Additionally, we use `useAnimatedStyle` hook to define [animated styles](/docs/core/useAnimatedStyle/) based on the shared values. Then, we apply these animated styles to components to create dynamic visual effects, such as changing font weights and adding bottom borders.
 
 <CollapsibleCode src={SectionListSrc} showLines={[96,99]}/>
 

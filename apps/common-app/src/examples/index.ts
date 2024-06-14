@@ -45,6 +45,7 @@ import FlatListExample from './SharedElementTransitions/FlatList';
 import FlatListSkipEnteringExiting from './LayoutAnimations/FlatListSkipEnteringExiting';
 import FrameCallbackExample from './FrameCallbackExample';
 import GalleryExample from './SharedElementTransitions/Gallery';
+import Game2048Example from './Game2048Example';
 import GestureHandlerExample from './GestureHandlerExample';
 import GetViewPropExample from './GetViewPropExample';
 import IPodExample from './IPodExample';
@@ -249,6 +250,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📺',
     title: 'Screen transition',
     screen: ScreenTransitionExample,
+    missingOnFabric: true,
   },
 
   // Basic examples
@@ -408,6 +410,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '♟️',
     title: 'Chessboard',
     screen: ChessboardExample,
+  },
+  Game2048Example: {
+    icon: '🕹️',
+    title: '2048',
+    screen: Game2048Example,
   },
   OverlappingBoxesExample: {
     icon: '🔝',

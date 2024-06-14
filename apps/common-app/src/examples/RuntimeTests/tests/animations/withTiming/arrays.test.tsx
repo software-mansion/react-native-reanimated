@@ -100,16 +100,17 @@ describe('withTiming animation of ARRAY', () => {
         />,
       );
       const components = Object.values(COMPONENT_REF).map(refName => getTestComponent(refName));
-
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      components.forEach(async (component, index) => {
+      let index = 0;
+      index = 0;
+      for (const component of components) {
         expect(await component.getAnimatedStyle('width')).toBe(
           startWidths[index] * scalars[index],
           ComparisonMode.DISTANCE,
         );
-      });
+        index += 1;
+      }
       await wait(speed + 200);
-      let index = 0;
+      index = 0;
       for (const component of components) {
         expect(await component.getAnimatedStyle('width')).toBe(finalWidths[index], ComparisonMode.DISTANCE);
         index += 1;

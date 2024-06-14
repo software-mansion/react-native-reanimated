@@ -1,4 +1,3 @@
-/* eslint-disable no-inline-styles/no-inline-styles */
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
