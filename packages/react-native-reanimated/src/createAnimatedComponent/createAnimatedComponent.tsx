@@ -129,7 +129,7 @@ export function createAnimatedComponent(
     static displayName: string;
     static contextType = SkipEnteringContext;
     context!: React.ContextType<typeof SkipEnteringContext>;
-    nativeID = id++;
+    reanimatedID = id++;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
@@ -139,7 +139,7 @@ export function createAnimatedComponent(
       const entering = this.props.entering;
       if (entering) {
         updateLayoutAnimations(
-          this.nativeID,
+          this.reanimatedID,
           LayoutAnimationType.ENTERING,
           maybeBuild(entering, this.props?.style, AnimatedComponent.displayName)
         );
@@ -638,10 +638,11 @@ export function createAnimatedComponent(
       });
 
       const skipEntering = this.context?.current;
+      const nativeID = skipEntering ? undefined : `${this.reanimatedID}`;
 
       return (
         <Component
-          nativeID={skipEntering ? undefined : `${this.nativeID}`}
+          nativeID={nativeID}
           {...filteredProps}
           // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
           // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
