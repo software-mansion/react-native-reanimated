@@ -89,6 +89,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate {
   std::shared_ptr<ShadowView> cloneViewWithoutOpacity(facebook::react::ShadowViewMutation &mutation, const PropsParserContext &propsParserContext) const;
   void maybeRestoreOpacity(LayoutAnimation& layoutAnimation, const jsi::Object &newStyle) const;
   void maybeUpdateWindowDimensions(facebook::react::ShadowViewMutation &mutation, SurfaceId surfaceId) const;
+  void createLayoutAnimation(const ShadowViewMutation &mutation, ShadowView &oldView, const SurfaceId &surfaceId, const int tag) const;
 
   void updateIndexForMutation(ShadowViewMutation &mutation) const;
 
