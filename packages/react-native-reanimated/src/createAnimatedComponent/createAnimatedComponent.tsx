@@ -569,20 +569,6 @@ export function createAnimatedComponent(
           if (sharedTransitionTag) {
             this._configureSharedTransition();
           }
-          if (sharedTransitionTag && !IS_WEB) {
-            const sharedElementTransition =
-              this.props.sharedTransitionStyle ?? new SharedTransition();
-            const reduceMotionInTransition = getReduceMotionFromConfig(
-              sharedElementTransition.getReduceMotion()
-            );
-            if (!reduceMotionInTransition) {
-              sharedElementTransition.registerTransition(
-                tag as number,
-                sharedTransitionTag
-              );
-              this._sharedElementTransition = sharedElementTransition;
-            }
-          }
           if (exiting) {
             const reduceMotionInExiting =
               'getReduceMotion' in exiting &&
