@@ -29,7 +29,7 @@ struct LayoutAnimation {
 };
 
 struct LayoutAnimationsProxy : public MountingOverrideDelegate {
-  mutable std::unordered_map<Tag, std::shared_ptr<Node>> nodeForTag;
+  mutable std::unordered_map<Tag, std::shared_ptr<Node>> nodeForTag_;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   mutable std::recursive_mutex mutex;
   mutable SurfaceManager surfaceManager;

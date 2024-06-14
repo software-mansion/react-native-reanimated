@@ -68,6 +68,14 @@ void Node::insertUnflattenedChildren(
     std::vector<std::shared_ptr<MutationNode>> &newChildren) {
   mergeAndSwap(unflattenedChildren, newChildren);
 }
+
+bool Node::isMutationMode(){
+  return false;
+}
+
+bool MutationNode::isMutationMode(){
+  return true;
+}
 }
 
 #endif

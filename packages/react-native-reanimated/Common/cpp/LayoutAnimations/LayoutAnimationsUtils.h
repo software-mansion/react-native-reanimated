@@ -76,6 +76,7 @@ struct Node {
   void applyMutationToIndices(ShadowViewMutation mutation);
   void insertChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
   void insertUnflattenedChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
+  virtual bool isMutationMode();
   explicit Node(const Tag tag) : tag(tag) {}
   Node(Node &&node) : children(std::move(node.children)), unflattenedChildren(std::move(node.unflattenedChildren)), tag(node.tag) {}
 };
@@ -91,6 +92,7 @@ struct MutationNode : public Node {
       : Node(mutation.oldChildShadowView.tag), mutation(mutation) {}
   MutationNode(ShadowViewMutation &mutation, Node &&node)
       : Node(std::move(node)), mutation(mutation) {}
+  bool isMutationMode() override;
 };
 
 struct SurfaceManager {
