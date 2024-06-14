@@ -13,9 +13,6 @@ import { adaptViewConfig } from '../ConfigHelper';
 import updateProps from '../UpdateProps';
 import { stopMapper, startMapper } from '../mappers';
 import { isSharedValue } from '../isSharedValue';
-import { shouldBeUseWeb } from '../PlatformChecker';
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 function isInlineStyleTransform(transform: unknown): boolean {
   if (!Array.isArray(transform)) {

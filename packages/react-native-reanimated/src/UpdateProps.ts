@@ -5,7 +5,8 @@ import { processColorsInProps } from './Colors';
 import type { ShadowNodeWrapper, SharedValue, StyleProps } from './commonTypes';
 import type { AnimatedStyle } from './helperTypes';
 import type { Descriptor } from './hook/commonTypes';
-import { ReanimatedHTMLElement, _updatePropsJS } from './js-reanimated';
+import type { ReanimatedHTMLElement } from './js-reanimated';
+import { _updatePropsJS } from './js-reanimated';
 import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
 import { runOnUIImmediately } from './threads';
 

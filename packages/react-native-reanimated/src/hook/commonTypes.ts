@@ -15,7 +15,7 @@ import type {
 } from 'react-native';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type { AnimatedStyle } from '../helperTypes';
-import { ReanimatedHTMLElement } from '../js-reanimated';
+import type { ReanimatedHTMLElement } from '../js-reanimated';
 
 export type DependencyList = Array<unknown> | undefined;
 
