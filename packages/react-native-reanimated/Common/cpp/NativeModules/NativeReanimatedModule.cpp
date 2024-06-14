@@ -519,7 +519,7 @@ jsi::Object NativeReanimatedModule::getUIProps(
         propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
     bool isLayoutProp =
         nativePropNames_.find(propName) != nativePropNames_.end();
-    if (isLayoutProp) {
+    if (!isLayoutProp) {
       const jsi::Value &propValue = props.getProperty(rt, propName.c_str());
       res.setProperty(rt, propName.c_str(), propValue);
     }
@@ -675,14 +675,15 @@ void NativeReanimatedModule::performOperations() {
     }
   }
 
+  // If there's no layout props to be updated, we can apply the updates
+  // directly onto the components and skip the commit.
+  for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+    Tag tag = shadowNode->getTag();
+    jsi::Object uiProps = getUIProps(rt, props->asObject(rt));
+    synchronouslyUpdateUIPropsFunction_(rt, tag, uiProps);
+  }
+
   if (!hasLayoutUpdates) {
-    // If there's no layout props to be updated, we can apply the updates
-    // directly onto the components and skip the commit.
-    for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-      Tag tag = shadowNode->getTag();
-      jsi::Object uiProps = getUIProps(rt, props->asObject(rt));
-      synchronouslyUpdateUIPropsFunction_(rt, tag, uiProps);
-    }
     return;
   }
 
