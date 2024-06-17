@@ -105,7 +105,7 @@ const AnimatedBlock = ({
       {show ? (
         <TouchableWithoutFeedback onPress={() => setShow(!show)}>
           {/* Workaround for TouchableWithoutFeedback overwriting the nativeID */}
-          <View collapsable={false}>
+          <View>
             <Animated.View style={styles.animatedBlock} {...animatedStyle}>
               <Text style={styles.animatedText}>{name}</Text>
             </Animated.View>
