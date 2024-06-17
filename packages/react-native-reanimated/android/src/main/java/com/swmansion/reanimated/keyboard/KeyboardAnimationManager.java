@@ -15,18 +15,21 @@ public class KeyboardAnimationManager {
   private final ConcurrentHashMap<Integer, KeyboardWorkletWrapper> mListeners =
       new ConcurrentHashMap<>();
   private final Keyboard mKeyboard = new Keyboard();
-  private final ModalActivityManager mModalActivityManager;
+  private final ModalManager mModalManager;
+
+  private final WindowInsetsManager mWindowInsetsManager;
 
   public KeyboardAnimationManager(WeakReference<ReactApplicationContext> reactContext) {
-    mModalActivityManager =
-        new ModalActivityManager(reactContext, mKeyboard, this::notifyAboutKeyboardChange);
+    mWindowInsetsManager = new WindowInsetsManager(reactContext, mKeyboard, this::notifyAboutKeyboardChange);
+    mModalManager = new ModalManager(reactContext, mKeyboard, this::notifyAboutKeyboardChange);
   }
 
   public int subscribeForKeyboardUpdates(
       KeyboardWorkletWrapper callback, boolean isStatusBarTranslucent) {
     int listenerId = mNextListenerId++;
     if (mListeners.isEmpty()) {
-      mModalActivityManager.startObservingChanges(isStatusBarTranslucent);
+      mWindowInsetsManager.startObservingChanges(this::notifyAboutKeyboardChange, isStatusBarTranslucent);
+      mModalManager.startObservingChanges(isStatusBarTranslucent);
     }
     mListeners.put(listenerId, callback);
     return listenerId;
@@ -35,7 +38,8 @@ public class KeyboardAnimationManager {
   public void unsubscribeFromKeyboardUpdates(int listenerId) {
     mListeners.remove(listenerId);
     if (mListeners.isEmpty()) {
-      mModalActivityManager.stopObservingChanges();
+      mWindowInsetsManager.stopObservingChanges();
+      mModalManager.stopObservingChanges();
     }
   }
 
@@ -46,6 +50,6 @@ public class KeyboardAnimationManager {
   }
 
   public void registerNewDialog(Dialog dialog) {
-    mModalActivityManager.registerNewDialog(dialog);
+    mModalManager.registerNewDialog(dialog, !mListeners.isEmpty());
   }
 }

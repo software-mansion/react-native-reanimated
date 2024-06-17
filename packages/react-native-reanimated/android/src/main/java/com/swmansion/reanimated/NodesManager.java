@@ -35,7 +35,7 @@ import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.facebook.react.views.modal.ReactModalHostView;
 import com.facebook.react.views.view.ReactViewBackgroundDrawable;
-import com.swmansion.reanimated.keyboard.ModalActivityManager;
+import com.swmansion.reanimated.keyboard.ModalManager;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
 import java.util.ArrayList;
@@ -107,7 +107,7 @@ public class NodesManager implements EventDispatcherListener {
   private final UIManager mUIManager;
   private ReactApplicationContext mReactApplicationContext;
 
-  private ModalActivityManager mModalActivityManager;
+  private ModalManager mModalManager;
 
   private RCTEventEmitter mCustomEventHandler = new NoopEventHandler();
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
@@ -357,7 +357,7 @@ public class NodesManager implements EventDispatcherListener {
   private void handleEvent(Event event) {
     String eventName = event.getEventName();
 
-    if (eventName.equals(ModalActivityManager.OPEN_MODAL_EVENT_NAME)) {
+    if (eventName.equals(ModalManager.OPEN_MODAL_EVENT_NAME)) {
       try {
         View view = mUIManager.resolveView(event.getViewTag());
         Dialog dialog = ((ReactModalHostView) view).getDialog();
