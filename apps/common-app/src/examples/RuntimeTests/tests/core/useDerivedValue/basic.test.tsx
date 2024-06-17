@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -7,7 +7,6 @@ import Animated, {
   useDerivedValue,
   withSpring,
 } from 'react-native-reanimated';
-import React from 'react';
 import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
 import {
   describe,
@@ -204,7 +203,7 @@ describe('Test useDerivedValue changing width', () => {
           const snapshotName =
             `width_${animationType}_${snapshotIdPerType[animate]}_${startWidth}_${finalWidth}`.replace(/\./g, '$');
 
-          let [updates, nativeUpdates] = await getSnapshotUpdatesAndCheckFinalValue(
+          const [updates, nativeUpdates] = await getSnapshotUpdatesAndCheckFinalValue(
             startWidth,
             finalWidth,
             animate,

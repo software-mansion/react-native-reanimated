@@ -50,6 +50,34 @@ function checkUndefinedAnimationFail(
   return true;
 }
 
+function maybeReportOverwrittenProperties(
+  keyframe: string,
+  styles: CSSStyleDeclaration
+) {
+  const propertyRegex = /([a-zA-Z-]+)(?=:)/g;
+  const animationProperties = new Set();
+
+  for (const match of keyframe.matchAll(propertyRegex)) {
+    animationProperties.add(match[1]);
+  }
+
+  const commonProperties = Array.from(styles).filter((style) =>
+    animationProperties.has(style)
+  );
+
+  if (commonProperties.length === 0) {
+    return;
+  }
+
+  console.warn(
+    `[Reanimated] ${
+      commonProperties.length === 1 ? 'Property' : 'Properties'
+    } [${commonProperties.join(
+      ', '
+    )}] may be overwritten by a layout animation. Please wrap your component with an animated view and apply the layout animation on the wrapper.`
+  );
+}
+
 function chooseAction(
   animationType: LayoutAnimationType,
   animationConfig: AnimationConfig,
@@ -116,6 +144,13 @@ export function startWebLayoutAnimation<
   transitionData?: TransitionData
 ) {
   const animationConfig = tryGetAnimationConfig(props, animationType);
+
+  if ((animationConfig?.animationName as AnimationNames) in Animations) {
+    maybeReportOverwrittenProperties(
+      Animations[animationConfig?.animationName as AnimationNames].style,
+      element.style
+    );
+  }
 
   if (animationConfig) {
     chooseAction(

@@ -1,4 +1,3 @@
-// @ts-nocheck - It will be removed after release of react-native-screens, because currently 'react-native-screens/gesture-handler' import doesn't exist.
 import React from 'react';
 import { View, StyleSheet, Button } from 'react-native';
 import {
@@ -10,12 +9,7 @@ import {
   ScreenTransition,
   AnimatedScreenTransition,
 } from 'react-native-reanimated';
-
-// This is a temporary workaround until react-native-screens release with 'react-native-screens/gesture-handler' import.
-// import { GestureDetectorProvider } from 'react-native-screens/gesture-handler';
-function GestureDetectorProvider({ children }) {
-  return children;
-}
+import { GestureDetectorProvider } from 'react-native-screens/gesture-handler';
 
 function MainScreen({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (

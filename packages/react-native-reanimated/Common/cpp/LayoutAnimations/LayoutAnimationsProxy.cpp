@@ -551,7 +551,7 @@ void LayoutAnimationsProxy::createLayoutAnimation(const ShadowViewMutation &muta
     count = layoutAnimation.count + 1;
   }
   
-  auto finalView = std::make_shared<ShadowView>(mutation.oldChildShadowView);
+  auto finalView = std::make_shared<ShadowView>(mutation.type == ShadowViewMutation::Remove ? mutation.oldChildShadowView : mutation.newChildShadowView);
   auto currentView = std::make_shared<ShadowView>(oldView);
   auto parentView = std::make_shared<ShadowView>(mutation.parentShadowView);
   layoutAnimations_.insert_or_assign(tag, LayoutAnimation{finalView, currentView, parentView, {}, count});

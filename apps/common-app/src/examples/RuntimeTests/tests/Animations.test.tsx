@@ -1,4 +1,3 @@
-/* eslint-disable no-inline-styles/no-inline-styles */
 import React, { useEffect } from 'react';
 import { View, Text } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, FadeIn, runOnUI } from 'react-native-reanimated';

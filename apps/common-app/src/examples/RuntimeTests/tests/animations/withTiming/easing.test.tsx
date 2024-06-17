@@ -1,14 +1,7 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, Easing as EasingRN } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  Easing,
-  EasingFunction,
-  EasingFunctionFactory,
-} from 'react-native-reanimated';
-import React from 'react';
+import type { EasingFunction, EasingFunctionFactory } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import {
   describe,
   test,
@@ -88,7 +81,7 @@ async function getSnapshotUpdates(easingFn: EasingFunction | EasingFunctionFacto
 }
 
 describe('withTiming snapshots 📸, test EASING', () => {
-  describe('Invalid easing', async () => {
+  describe('Invalid easing', () => {
     test.failing(
       'Easing imported from react-native throws an error',
       'Error: [Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.',
@@ -144,13 +137,13 @@ describe('withTiming snapshots 📸, test EASING', () => {
     [Easing.steps, [1.5, true]],
     [Easing.steps, [1.5, false]],
   ])('Easing.${0}(${1})', async ([easing, argumentSet]) => {
-    const snapshotName = `${(easing as Function).name}_${(argumentSet as any)
+    const snapshotName = `${(easing as () => void).name}_${(argumentSet as Array<number | boolean>)
       .join('_')
       .replace(/\./g, '$')
       .replace(/-/g, '$')}`;
 
     const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(
-      //@ts-ignore This error is because various easing functions accept different number of arguments
+      // @ts-ignore This error is because various easing functions accept different number of arguments
       easing(...argumentSet),
     );
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots[snapshotName as keyof typeof EasingSnapshots]);

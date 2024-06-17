@@ -1,5 +1,8 @@
 const { getDefaultConfig } = require('expo/metro-config');
+
 const path = require('path');
+const exclusionList = require('metro-config/src/defaults/exclusionList');
+const escape = require('escape-string-regexp');
 
 // Find the project and workspace directories
 const projectRoot = __dirname;
@@ -14,5 +17,14 @@ config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(monorepoRoot, 'node_modules'),
 ];
+
+const modulesToBlock = ['@react-native'];
+
+config.resolver.blacklistRE = exclusionList(
+  modulesToBlock.map(
+    (m) =>
+      new RegExp(`^${escape(path.join(monorepoRoot, 'node_modules', m))}\\/.*$`)
+  )
+);
 
 module.exports = config;

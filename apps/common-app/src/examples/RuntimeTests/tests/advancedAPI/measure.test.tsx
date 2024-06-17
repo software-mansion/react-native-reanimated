@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
+import type { AnimatableValueObject, MeasuredDimensions } from 'react-native-reanimated';
 import Animated, {
   runOnUI,
   measure,
@@ -8,9 +9,7 @@ import Animated, {
   withDelay,
   withTiming,
   useAnimatedStyle,
-  AnimatableValueObject,
   Easing,
-  MeasuredDimensions,
   useFrameCallback,
 } from 'react-native-reanimated';
 import {

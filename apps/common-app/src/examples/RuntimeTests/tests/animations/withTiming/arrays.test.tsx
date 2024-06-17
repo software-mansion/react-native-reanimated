@@ -1,7 +1,6 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
-import React from 'react';
 import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
 import {
   describe,
@@ -91,7 +90,7 @@ describe('withTiming animation of ARRAY', () => {
   test.each(TEST_CASES)(
     'Animate independent components ${speed}ms FROM ${startWidths} TO ${finalWidths}',
     async ({ startWidths, finalWidths, scalars: passedScalars, speed }) => {
-      const scalars: [number, number, number] = passedScalars ? passedScalars : [1, 1, 1];
+      const scalars: [number, number, number] = passedScalars || [1, 1, 1];
       await render(
         <IndependentComponents
           startWidths={startWidths}
@@ -101,18 +100,21 @@ describe('withTiming animation of ARRAY', () => {
         />,
       );
       const components = Object.values(COMPONENT_REF).map(refName => getTestComponent(refName));
-
-      components.forEach(async (component, index) => {
+      let index = 0;
+      index = 0;
+      for (const component of components) {
         expect(await component.getAnimatedStyle('width')).toBe(
           startWidths[index] * scalars[index],
           ComparisonMode.DISTANCE,
         );
-      });
+        index += 1;
+      }
       await wait(speed + 200);
-
-      components.forEach(async (component, index) => {
+      index = 0;
+      for (const component of components) {
         expect(await component.getAnimatedStyle('width')).toBe(finalWidths[index], ComparisonMode.DISTANCE);
-      });
+        index += 1;
+      }
     },
   );
 });
