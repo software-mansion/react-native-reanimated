@@ -1,84 +1,81 @@
 import { makeMutable } from 'react-native-reanimated';
-import { Operation, OperationUpdate } from './types';
-import { TestRunner } from './TestRunner';
+import type { Operation, OperationUpdate } from './types';
+import { isValidPropName } from './types';
+import type { TestRunner } from './TestRunner';
+import type { MultiViewSnapshot, SingleViewSnapshot } from './matchers/snapshotMatchers';
+import { convertDecimalColor } from './util';
+import type { TestComponent } from './TestComponent';
 
-type UpdateInfo = {
+type JsUpdate = {
   tag: number;
   shadowNodeWrapper?: unknown;
   update: OperationUpdate;
 };
+type NativeUpdate = {
+  tag: number;
+  shadowNodeWrapper?: unknown;
+  snapshot: Record<string, unknown>;
+  jsUpdateIndex: number;
+};
 
 export function createUpdatesContainer(testRunner: TestRunner) {
-  const jsUpdates = makeMutable<
-    Array<{
-      tag: number;
-      shadowNodeWrapper?: unknown;
-      update: OperationUpdate;
-    }>
-  >([]);
-  const nativeSnapshots = makeMutable<
-    Array<{
-      tag: number;
-      shadowNodeWrapper?: unknown;
-      snapshot: Record<string, unknown>;
-      jsUpdateIndex: number;
-    }>
-  >([]);
+  const jsUpdates = makeMutable<Array<JsUpdate>>([]);
+  const nativeSnapshots = makeMutable<Array<NativeUpdate>>([]);
 
-  function _makeNativeSnapshot(updateInfos: UpdateInfo[], jsUpdateIndex: number) {
+  function _updateNativeSnapshot(updateInfos: JsUpdate[], jsUpdateIndex: number): void {
     'worklet';
     const isFabric = global._IS_FABRIC;
-    nativeSnapshots.modify(value => {
+    nativeSnapshots.modify(values => {
       'worklet';
       for (const updateInfo of updateInfos) {
-        const snapshot: Record<string, unknown> = {};
-        const propsToUpdate = Object.keys(updateInfo.update);
+        const snapshot: OperationUpdate = {};
+        const updatedProps = Object.keys(updateInfo.update);
+        const propsToUpdate = updatedProps.filter(propName => isValidPropName(propName));
         for (const prop of propsToUpdate) {
           snapshot[prop] = isFabric
             ? global._obtainPropFabric(updateInfo?.shadowNodeWrapper, prop)
             : global._obtainPropPaper(updateInfo?.tag, prop);
         }
-        value.push({
+        values.push({
           tag: updateInfo.tag,
           shadowNodeWrapper: updateInfo.shadowNodeWrapper,
-          snapshot: snapshot,
+          snapshot,
           jsUpdateIndex,
         });
       }
-      return value;
+      return values;
     });
   }
 
-  function _extractInfoFromUpdates(operations: Operation[]) {
+  function _updateJsSnapshot(newUpdates: JsUpdate[]): void {
     'worklet';
-    const info: {
-      tag: number;
-      shadowNodeWrapper: unknown;
-      update: OperationUpdate;
-    }[] = [];
+    jsUpdates.modify(updates => {
+      for (const update of newUpdates) {
+        updates.push(update);
+      }
+      return updates;
+    });
+  }
+
+  function _extractJSUpdatesUpdatesFromOperation(operations: Operation[]): Array<Required<JsUpdate>> {
+    'worklet';
+    const jsUpdates: Array<Required<JsUpdate>> = [];
     for (const operation of operations) {
-      info.push({
+      const { updates } = operation;
+      jsUpdates.push({
         tag: operation.tag ?? -1,
         shadowNodeWrapper: operation.shadowNodeWrapper,
-        update: operation.updates,
+        update: updates,
       });
     }
-    return info;
+    return jsUpdates;
   }
 
   function pushAnimationUpdates(operations: Operation[]) {
     'worklet';
-    _makeNativeSnapshot(_extractInfoFromUpdates(operations), jsUpdates.value.length - 1);
-    jsUpdates.modify(updates => {
-      for (const operation of operations) {
-        updates.push({
-          tag: operation.tag ?? -1,
-          shadowNodeWrapper: operation.shadowNodeWrapper,
-          update: operation.updates,
-        });
-      }
-      return updates;
-    });
+    const newUpdates = _extractJSUpdatesUpdatesFromOperation(operations);
+    _updateNativeSnapshot(newUpdates, jsUpdates.value.length - 1);
+    _updateJsSnapshot(newUpdates);
   }
 
   function pushLayoutAnimationUpdates(tag: number, update: Record<string, unknown>) {
@@ -87,70 +84,92 @@ export function createUpdatesContainer(testRunner: TestRunner) {
       // layout animation doesn't work on Fabric yet
       return;
     }
-    _makeNativeSnapshot([{ tag, update }], jsUpdates.value.length - 1);
+    // Deep Copy, works with nested objects, but doesn't copy functions (which should be fine here)
+    const updatesCopy = JSON.parse(JSON.stringify(update));
+    if ('backgroundColor' in updatesCopy) {
+      updatesCopy.backgroundColor = convertDecimalColor(updatesCopy.backgroundColor);
+    }
+    _updateNativeSnapshot([{ tag, update }], jsUpdates.value.length - 1);
     jsUpdates.modify(updates => {
       updates.push({
         tag,
-        // Deep Copy, works with nested objects, but doesn't copy functions (which should be fine here)
-        update: JSON.parse(JSON.stringify(update)),
+        update: updatesCopy,
       });
       return updates;
     });
   }
 
-  function getUpdates(propsNames: string[] = []) {
-    const updates: OperationUpdate[] = [];
-    if (propsNames.length === 0) {
-      for (const updateRequest of jsUpdates.value) {
-        updates.push(updateRequest.update);
+  function _sortUpdatesByViewTag(
+    updates: Array<JsUpdate> | Array<NativeUpdate>,
+    propsNames: string[],
+  ): MultiViewSnapshot {
+    const updatesForTag: Record<number, Array<OperationUpdate>> = {};
+    for (const updateRequest of updates) {
+      const { tag } = updateRequest;
+
+      if (!(tag in updatesForTag)) {
+        updatesForTag[tag] = [];
       }
-    } else {
-      for (const updateRequest of jsUpdates.value) {
-        const filteredUpdate: Record<string, OperationUpdate> = {};
+      let update: OperationUpdate = [];
+      if (propsNames.length === 0) {
+        update = 'update' in updateRequest ? updateRequest.update : updateRequest.snapshot;
+      } else {
         for (const prop of propsNames) {
-          filteredUpdate[prop] = updateRequest.update[prop as keyof OperationUpdate];
+          update[prop] =
+            'update' in updateRequest
+              ? updateRequest.update[prop as keyof OperationUpdate]
+              : updateRequest.snapshot[prop as keyof OperationUpdate];
         }
-        updates.push(filteredUpdate);
       }
+      updatesForTag[tag].push(update);
     }
-    return updates;
+    return updatesForTag;
   }
 
-  async function getNativeSnapshots(propsNames: string[] = []) {
+  function _getComponentFromSortedUpdates(sortedUpdates: MultiViewSnapshot, component?: TestComponent) {
+    if (component === undefined) {
+      const viewTags = Object.keys(sortedUpdates);
+      if (viewTags.length === 1) {
+        return sortedUpdates[Number(viewTags[0])];
+      }
+      throw new Error('Recorded snapshots of many views, specify component you want to get snapshot of');
+    }
+    const tag = component?.getTag();
+    if (!tag || !(tag in sortedUpdates)) {
+      throw new Error('Snapshot of given component not found');
+    } else {
+      return sortedUpdates[tag];
+    }
+  }
+
+  function getUpdates(component?: TestComponent, propsNames: string[] = []): SingleViewSnapshot {
+    const sortedUpdates = _sortUpdatesByViewTag(jsUpdates.value, propsNames);
+    return _getComponentFromSortedUpdates(sortedUpdates, component);
+  }
+
+  async function getNativeSnapshots(component?: TestComponent, propsNames: string[] = []): Promise<SingleViewSnapshot> {
     const nativeSnapshotsCount = nativeSnapshots.value.length;
     const jsUpdatesCount = jsUpdates.value.length;
     if (jsUpdatesCount === nativeSnapshotsCount) {
       await testRunner.runOnUIBlocking(() => {
         'worklet';
         const lastSnapshot = nativeSnapshots.value[nativeSnapshotsCount - 1];
-        _makeNativeSnapshot(
-          [
-            {
-              tag: lastSnapshot.tag,
-              shadowNodeWrapper: lastSnapshot.shadowNodeWrapper,
-              update: lastSnapshot.snapshot,
-            },
-          ],
-          jsUpdatesCount - 1,
-        );
+        if (lastSnapshot) {
+          _updateNativeSnapshot(
+            [
+              {
+                tag: lastSnapshot.tag,
+                shadowNodeWrapper: lastSnapshot.shadowNodeWrapper,
+                update: lastSnapshot.snapshot,
+              },
+            ],
+            jsUpdatesCount - 1,
+          );
+        }
       });
     }
-
-    const snapshots: OperationUpdate[] = [];
-    if (propsNames.length === 0) {
-      for (const nativeSnapshot of nativeSnapshots.value) {
-        snapshots.push(nativeSnapshot.snapshot);
-      }
-    } else {
-      for (const nativeSnapshot of nativeSnapshots.value) {
-        const filteredSnapshot: Record<string, unknown> = {};
-        for (const prop of propsNames) {
-          filteredSnapshot[prop] = nativeSnapshot.snapshot[prop];
-        }
-        snapshots.push(filteredSnapshot);
-      }
-    }
-    return snapshots;
+    const sortedUpdates = _sortUpdatesByViewTag(nativeSnapshots.value, propsNames);
+    return _getComponentFromSortedUpdates(sortedUpdates, component);
   }
 
   return {

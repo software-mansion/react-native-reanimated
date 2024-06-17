@@ -16,14 +16,14 @@ const ENGINEERING_NOTATION = [
   1000000000e-7, 9.275686287246587e38,
 ];
 
-const HEXADECIMAL_NOTATION = [0xff, 0xab1234, 0x123456, 0xffbbdd, 0x8989aaaa, 0x1234567890abcdef];
+const HEXADECIMAL_NOTATION = [0xff, 0xab1234, 0x123456, 0xffbbdd, 0x8989aaaa, 0x1234567890abcd];
 
 const BINARY_NOTATION = [0b1111111, 0b101010, 0b0001, 0b11001, 0b1111111111111111111111111111111111111111111111111111];
 
 const OCTADECIMAL_NOTATION = [0o123456, 0o111111112];
 
 const BIG_INTS = [
-  BigInt(123456789123456789),
+  BigInt(1234567891234567),
   BigInt(Number.MAX_VALUE),
   BigInt('0'),
   BigInt('1'),
@@ -140,6 +140,7 @@ const BUFFER_ARRAYS = [new ArrayBuffer(8), new ArrayBuffer(0)];
 
 const EMPTIES = [[], null, undefined, {}, [[]], [{}], [null]];
 
+// eslint-disable-next-line symbol-description
 const SYMBOLS = [Symbol('Hello!'), Symbol(123), Symbol()];
 
 const DATES = [
@@ -156,6 +157,7 @@ const DATES = [
   new Date(1999, 120, 17, 33, 54, 12),
 ];
 
+// eslint-disable-next-line prefer-regex-literals
 const REGEXPS = [/ab+c/i, new RegExp('ab+c', 'i'), new RegExp(/ab+c/, 'i'), /\d/y];
 
 // const MAX_SIZE_OF_ARRAY = Math.pow(2, 31) - 1;

@@ -434,7 +434,8 @@ public class NodesManager implements EventDispatcherListener {
     try {
       view = mUIManager.resolveView(viewTag);
     } catch (Exception e) {
-      throw new IllegalStateException("[Reanimated] Unable to resolve view");
+      // This happens when the view is not mounted yet
+      return "[Reanimated] Unable to resolve view";
     }
 
     switch (propName) {
@@ -461,7 +462,7 @@ public class NodesManager implements EventDispatcherListener {
         return "#" + invertedColor.substring(2, 8) + invertedColor.substring(0, 2);
       default:
         throw new IllegalArgumentException(
-            "[Reanimated] Attempted to get unsupported property"
+            "[Reanimated] Attempted to get unsupported property "
                 + propName
                 + " with function `getViewProp`");
     }
