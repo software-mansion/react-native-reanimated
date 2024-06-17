@@ -73,6 +73,12 @@ export default function useTimingPlayground() {
     }
   }, [isMobile]);
 
+  useEffect(() => {
+    if (!canNestEasing(easing)) {
+      setNestedEasing(initialState.nestedEasing);
+    }
+  }, [easing]);
+
   const resetOptions = () => {
     setDuration(initialState.duration);
 
@@ -154,6 +160,9 @@ export default function useTimingPlayground() {
       reduceMotion: ${formatReduceMotion(reduceMotion)},
     })
   `;
+
+  console.log('easing: ', easing);
+  console.log('nestedEasing: ', nestedEasing);
 
   const controls = (
     <>
