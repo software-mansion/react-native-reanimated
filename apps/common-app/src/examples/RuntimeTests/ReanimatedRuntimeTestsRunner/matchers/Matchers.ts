@@ -50,10 +50,10 @@ export class Matchers {
 
   public toMatchNativeSnapshots(
     expectedSnapshots: SingleViewSnapshot | Record<number, SingleViewSnapshot>,
-    expectNegativeMismatch = false,
+    expectNegativeValueMismatch = false,
   ) {
     const capturedSnapshots = this._currentValue as SingleViewSnapshot | Record<number, SingleViewSnapshot>;
-    const mismatchError = compareSnapshots(expectedSnapshots, capturedSnapshots, true, expectNegativeMismatch);
+    const mismatchError = compareSnapshots(expectedSnapshots, capturedSnapshots, true, expectNegativeValueMismatch);
     if (mismatchError) {
       this._testCase.errors.push(mismatchError);
     }

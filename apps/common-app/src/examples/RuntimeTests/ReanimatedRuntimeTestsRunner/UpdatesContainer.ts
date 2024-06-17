@@ -102,7 +102,7 @@ export function createUpdatesContainer(testRunner: TestRunner) {
   function _sortUpdatesByViewTag(
     updates: Array<JsUpdate> | Array<NativeUpdate>,
     propsNames: string[],
-  ): [MultiViewSnapshot, 'multiView'] | [SingleViewSnapshot, 'singleView'] {
+  ): MultiViewSnapshot {
     const updatesForTag: Record<number, Array<OperationUpdate>> = {};
     for (const updateRequest of updates) {
       const { tag } = updateRequest;
@@ -123,33 +123,28 @@ export function createUpdatesContainer(testRunner: TestRunner) {
       }
       updatesForTag[tag].push(update);
     }
+    return updatesForTag;
+  }
 
-    const recordedMultipleViews = Object.keys(updatesForTag).length > 1;
-
-    if (recordedMultipleViews) {
-      return [updatesForTag, 'multiView'];
+  function _getComponentFromSortedUpdates(sortedUpdates: MultiViewSnapshot, component?: TestComponent) {
+    if (component === undefined) {
+      const viewTags = Object.keys(sortedUpdates);
+      if (viewTags.length === 1) {
+        return sortedUpdates[Number(viewTags[0])];
+      }
+      throw new Error('Recorded snapshots of many views, specify component you want to get snapshot of');
+    }
+    const tag = component?.getTag();
+    if (!tag || !(tag in sortedUpdates)) {
+      throw new Error('Snapshot of given component not found');
     } else {
-      // In case of recording only one view return an array
-      const singleViewSnapshot: SingleViewSnapshot = updatesForTag[Number(Object.keys(updatesForTag)[0])];
-      return [singleViewSnapshot, 'singleView'];
+      return sortedUpdates[tag];
     }
   }
 
   function getUpdates(component?: TestComponent, propsNames: string[] = []): SingleViewSnapshot {
-    const [sortedUpdates, snapshotType] = _sortUpdatesByViewTag(jsUpdates.value, propsNames);
-    if (snapshotType === 'multiView') {
-      if (component === undefined) {
-        throw new Error('Recorded snapshots of many views, specify component you want to get snapshot of');
-      }
-      const tag = component?.getTag();
-      if (!tag || !(tag in sortedUpdates)) {
-        throw new Error('Snapshot of given component not found');
-      } else {
-        return sortedUpdates[tag];
-      }
-    } else {
-      return sortedUpdates;
-    }
+    const sortedUpdates = _sortUpdatesByViewTag(jsUpdates.value, propsNames);
+    return _getComponentFromSortedUpdates(sortedUpdates, component);
   }
 
   async function getNativeSnapshots(component?: TestComponent, propsNames: string[] = []): Promise<SingleViewSnapshot> {
@@ -173,21 +168,8 @@ export function createUpdatesContainer(testRunner: TestRunner) {
         }
       });
     }
-
-    const [sortedUpdates, snapshotType] = _sortUpdatesByViewTag(nativeSnapshots.value, propsNames);
-    if (snapshotType === 'multiView') {
-      if (component === undefined) {
-        throw new Error('Recorded snapshots of many views, specify component you want to get snapshot of');
-      }
-      const tag = component?.getTag();
-      if (!tag || !(tag in sortedUpdates)) {
-        throw new Error('Snapshot of given component not found');
-      } else {
-        return sortedUpdates[tag];
-      }
-    } else {
-      return sortedUpdates;
-    }
+    const sortedUpdates = _sortUpdatesByViewTag(nativeSnapshots.value, propsNames);
+    return _getComponentFromSortedUpdates(sortedUpdates, component);
   }
 
   return {

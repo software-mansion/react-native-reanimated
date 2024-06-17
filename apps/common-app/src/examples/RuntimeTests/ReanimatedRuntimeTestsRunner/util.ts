@@ -1,5 +1,3 @@
-// export function convertIosColor(color: unknown): string {}
-
 export function convertDecimalColor(color: unknown): string {
   'worklet';
 

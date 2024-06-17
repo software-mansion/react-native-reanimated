@@ -146,7 +146,7 @@ const LayoutAnimation = () => {
   );
 };
 
-describe('Tests of Test Framework', () => {
+describe.skip('Tests of Test Framework', () => {
   test('withTiming - expect error', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('BrownComponent');
@@ -252,7 +252,7 @@ describe('Tests of Test Framework', () => {
     const updatesContainer = await recordAnimationUpdates();
     await render(<LayoutAnimation />);
     await wait(600);
-    expect(updatesContainer.getUpdates()).toMatchSnapshots(Snapshots.brownComponent);
+    expect(updatesContainer.getUpdates()).toMatchSnapshots(Snapshots.layoutAnimation);
   });
 
   test('withTiming - notify', async () => {

@@ -11,7 +11,7 @@ function isJsAndNativeSnapshotsEqual(
   jsSnapshots: Array<OperationUpdate>,
   nativeSnapshots: Array<OperationUpdate>,
   i: number,
-  expectNegativeMismatch: boolean,
+  expectNegativeValueMismatch: boolean,
 ): boolean {
   /**
       The TestRunner can collect two types of snapshots:
@@ -35,7 +35,7 @@ function isJsAndNativeSnapshotsEqual(
     const nativeValue = nativeSnapshot[key];
     const comparisonMode = isValidPropName(key) ? getComparisonModeForProp(key) : ComparisonMode.AUTO;
     const isEqual = getComparator(comparisonMode);
-    const expectMismatch = jsValue < 0 && expectNegativeMismatch;
+    const expectMismatch = jsValue < 0 && expectNegativeValueMismatch;
     const valuesAreMatching = isEqual(jsValue, nativeValue);
     if ((!valuesAreMatching && !expectMismatch) || (valuesAreMatching && expectMismatch)) {
       return false;
@@ -50,7 +50,7 @@ function isJsAndNativeSnapshotsEqual(
       - **Native snapshots:** snapshots obtained from the native side via `getViewProp`
       The purpose of this function is to compare this two suits of snapshots.
 
-      @param expectNegativeMismatch - Some props expose unexpected behavior, when negative.
+      @param expectNegativeValueMismatch - Some props expose unexpected behavior, when negative.
       For example negative `width` may render a full-width component.
       It means that JS snapshot is negative and the native one is positive, which is a valid behavior.
       Set this property to true to expect all comparisons with negative value of JS snapshot **NOT** to match.
@@ -58,7 +58,7 @@ function isJsAndNativeSnapshotsEqual(
 function compareSingleViewNativeSnapshots(
   nativeSnapshots: SingleViewSnapshot,
   jsUpdates: Array<OperationUpdate>,
-  expectNegativeMismatch = false,
+  expectNegativeValueMismatch = false,
 ): string | undefined {
   if (!nativeSnapshots || !jsUpdates) {
     return `Missing snapshot`;
@@ -68,7 +68,7 @@ function compareSingleViewNativeSnapshots(
   }
   const mismatchedSnapshots: Array<Mismatch> = [];
   for (let i = 0; i < jsUpdates.length - 1; i++) {
-    if (!isJsAndNativeSnapshotsEqual(jsUpdates, nativeSnapshots, i, expectNegativeMismatch)) {
+    if (!isJsAndNativeSnapshotsEqual(jsUpdates, nativeSnapshots, i, expectNegativeValueMismatch)) {
       mismatchedSnapshots.push({ index: i, expectedSnapshot: nativeSnapshots[i + 1], capturedSnapshot: jsUpdates[i] });
     }
   }
@@ -101,13 +101,13 @@ export function compareSnapshots(
   expectedSnapshots: SingleViewSnapshot | Record<number, SingleViewSnapshot>,
   capturedSnapshots: SingleViewSnapshot | Record<number, SingleViewSnapshot>,
   native: boolean,
-  expectNegativeMismatch = false,
+  expectNegativeValueMismatch = false,
 ): string | null {
   let errorMessage = '';
 
   const compareSingleViewSnapshots = (expected: SingleViewSnapshot, captured: SingleViewSnapshot) => {
     return native
-      ? compareSingleViewNativeSnapshots(expected, captured, expectNegativeMismatch)
+      ? compareSingleViewNativeSnapshots(expected, captured, expectNegativeValueMismatch)
       : compareSingleViewJsSnapshots(expected, captured);
   };
 
