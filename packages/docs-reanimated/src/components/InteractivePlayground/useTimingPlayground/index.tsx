@@ -161,9 +161,6 @@ export default function useTimingPlayground() {
     })
   `;
 
-  console.log('easing: ', easing);
-  console.log('nestedEasing: ', nestedEasing);
-
   const controls = (
     <>
       <Range
