@@ -237,25 +237,6 @@ and open `react-native-reanimated/apps/paper-example/android` with Android Studi
 
 The native source code of Reanimated can be found in `react-native-reanimated` module, in `/packages/react-native-reanimated/android/src/main/java/com/swmansion/reanimated`. Make sure the Metro bundler is running. You can now build React Native app or debug native code.
 
-Project structure overview:
-
-```
-├── AndroidUIScheduler.java
-├── CopiedEvent.java
-├── MapUtils.java
-├── NativeMethodsHelper.java
-├── NodesManager.java
-├── ReactNativeUtils.java
-├── ReanimatedMessageQueueThreadBase.java
-├── ReanimatedPackage.java
-├── ReanimatedUIManagerFactory.java
-├── Utils.java
-├── keyboard
-├── layoutReanimation
-├── nativeProxy
-└── sensor
-```
-
 ### Working with iOS
 
 To begin with, let's install all the necessary dependencies:
@@ -269,32 +250,6 @@ and open `react-native-reanimated/apps/paper-example/ios/ReanimatedExample.xcwor
 <img src={useBaseUrl('/img/contributing/xcode.png')} />
 
 To find the native source code of Reanimated navigate to `Pods > Development Pods >  RNReanimated > Example > ... > ... > node_modules > react-native-reanimated > apple`. Make sure the Metro bundler is running. You can now build React Native app or debug native code.
-
-Project structure overview:
-
-```sh
-├── Fabric
-├── LayoutReanimation
-├── RCTEventDispatcher+Reanimated.h
-├── RCTEventDispatcher+Reanimated.m
-├── RCTUIView+Reanimated.h
-├── RCTUIView+Reanimated.m
-├── READisplayLink.h
-├── REAModule.h
-├── REAModule.mm
-├── REANodesManager.h
-├── REANodesManager.mm
-├── REASlowAnimations.h
-├── REASlowAnimations.mm
-├── REAUIKit.h
-├── REAUtils.h
-├── REAUtils.m
-├── RNGestureHandlerStateManager.h
-├── RNReanimated.xcodeproj
-├── keyboardObserver
-├── native
-└── sensor
-```
 
 ### Preparing a Pull Request
 
