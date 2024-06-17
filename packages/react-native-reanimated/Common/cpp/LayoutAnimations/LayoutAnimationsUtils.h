@@ -111,6 +111,7 @@ struct SurfaceManager {
 static inline void updateLayoutMetrics(
     LayoutMetrics &layoutMetrics,
     Frame &frame) {
+  // we use optional's here to avoid overwriting non-animated values
   if (frame.width) {
     layoutMetrics.frame.size.width = *frame.width;
   }
