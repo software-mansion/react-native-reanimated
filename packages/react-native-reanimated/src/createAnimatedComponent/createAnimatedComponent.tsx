@@ -214,7 +214,7 @@ export function createAnimatedComponent(
           this._component as HTMLElement,
           LayoutAnimationType.EXITING
         );
-      } else if (exiting && !IS_WEB) {
+      } else if (exiting && !IS_WEB && !isFabric()) {
         const reduceMotionInExiting =
           'getReduceMotion' in exiting &&
           typeof exiting.getReduceMotion === 'function'
@@ -499,7 +499,7 @@ export function createAnimatedComponent(
           if (sharedTransitionTag) {
             this._configureSharedTransition();
           }
-          if (exiting) {
+          if (exiting && isFabric()) {
             const reduceMotionInExiting =
               'getReduceMotion' in exiting &&
               typeof exiting.getReduceMotion === 'function'
