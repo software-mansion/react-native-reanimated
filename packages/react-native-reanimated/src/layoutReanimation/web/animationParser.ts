@@ -60,6 +60,16 @@ export function convertAnimationObjectToKeyframes(
         continue;
       }
 
+      if (property === 'originX') {
+        keyframe += `left: ${values}px; `;
+        continue;
+      }
+
+      if (property === 'originY') {
+        keyframe += `top: ${values}px; `;
+        continue;
+      }
+
       if (property !== 'transform') {
         keyframe += `${property}: ${values}; `;
         continue;
