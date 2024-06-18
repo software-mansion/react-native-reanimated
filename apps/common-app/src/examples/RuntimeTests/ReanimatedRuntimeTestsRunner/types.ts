@@ -68,6 +68,11 @@ export type TestSuite = {
 
 export type ValidPropNames = 'zIndex' | 'opacity' | 'width' | 'height' | 'top' | 'left' | 'backgroundColor';
 
+export function isValidPropName(propName: string): propName is ValidPropNames {
+  'worklet';
+  return ['zIndex', 'opacity', 'width', 'height', 'top', 'left', 'backgroundColor'].includes(propName);
+}
+
 export enum ComparisonMode {
   STRING = 'STRING',
   DISTANCE = 'DISTANCE',
@@ -97,11 +102,20 @@ export type TestValue =
   | bigint
   | Record<string, unknown>
   | null
-  | undefined;
+  | undefined
+  | boolean
+  | OperationUpdate;
+
 export type NullableTestValue = TestValue | null | undefined;
 
 export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;
+};
+
+export type Mismatch = {
+  index: number;
+  expectedSnapshot: OperationUpdate;
+  capturedSnapshot: OperationUpdate;
 };
 
 /* eslint-disable no-var */
