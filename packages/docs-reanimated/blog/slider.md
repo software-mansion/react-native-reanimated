@@ -14,7 +14,7 @@ import CollapsibleCode from '@site/src/components/CollapsibleCode';
 
 We use the `useSharedValue` hook to store the offset of the slider handle, allowing for smooth animation during sliding.
 
-<CollapsibleCode src={SliderSrc} showLines={[18,18]}/>
+<CollapsibleCode src={SliderSrc} showLines={[24,24]}/>
 
 This example is done using [Pan gesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pan-gesture) from `react-native-gesture-handler` library. It adjusts the handle's position and width of the box accordingly to the current offset. The offset is a [shared value](/docs/fundamentals/glossary#shared-value) and is updated during the `onChange` event of the pan gesture.
 
@@ -33,14 +33,14 @@ The `useAnimatedStyle` hook is used to create animated styles for both the box a
 
 <samp id="Slider">Slider</samp>
 
-<CollapsibleCode src={SliderSrc} showLines={[40,50]}/>
+<CollapsibleCode src={SliderSrc} showLines={[42,52]}/>
 
 Leveraging animated props allows us to run them on the UI thread instead of the JS thread. To prevent unnecessary re-renders when the text displaying the current width of the box changes, we used the `useAnimatedProps` hook.
 
-Additionally, we opted for **TextInput** instead of **Text** because **TextInput** has a `value` property that can be animated, whereas **Text** only has children.
+Additionally, we opted for **TextInput** instead of **Text** because **TextInput** has a `text` property that can be animated, whereas **Text** only has children.
 
 This approach also enabled us to animate **TextInput** using [shared values](/docs/fundamentals/glossary#shared-value).
 
 <samp id="Slider">Slider</samp>
 
-<CollapsibleCode src={SliderSrc} showLines={[53,59]}/>
+<CollapsibleCode src={SliderSrc} showLines={[58,63]}/>
