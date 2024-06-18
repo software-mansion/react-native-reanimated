@@ -99,6 +99,8 @@ export function createAnimatedComponent(
   options?: Options<any>
 ): ComponentClass<AnimateProps<FlatListProps<unknown>>>;
 
+let id = 0;
+
 export function createAnimatedComponent(
   Component: ComponentType<InitialComponentProps>,
   options?: Options<InitialComponentProps>
@@ -128,11 +130,20 @@ export function createAnimatedComponent(
     static displayName: string;
     static contextType = SkipEnteringContext;
     context!: React.ContextType<typeof SkipEnteringContext>;
+    reanimatedID = id++;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
       if (isJest()) {
         this.jestAnimatedStyle = { value: {} };
+      }
+      const entering = this.props.entering;
+      if (entering && isFabric()) {
+        updateLayoutAnimations(
+          this.reanimatedID,
+          LayoutAnimationType.ENTERING,
+          maybeBuild(entering, this.props?.style, AnimatedComponent.displayName)
+        );
       }
     }
 
@@ -203,7 +214,7 @@ export function createAnimatedComponent(
           this._component as HTMLElement,
           LayoutAnimationType.EXITING
         );
-      } else if (exiting && !IS_WEB) {
+      } else if (exiting && !IS_WEB && !isFabric()) {
         const reduceMotionInExiting =
           'getReduceMotion' in exiting &&
           typeof exiting.getReduceMotion === 'function'
@@ -488,6 +499,24 @@ export function createAnimatedComponent(
           if (sharedTransitionTag) {
             this._configureSharedTransition();
           }
+          if (exiting && isFabric()) {
+            const reduceMotionInExiting =
+              'getReduceMotion' in exiting &&
+              typeof exiting.getReduceMotion === 'function'
+                ? getReduceMotionFromConfig(exiting.getReduceMotion())
+                : getReduceMotionFromConfig();
+            if (!reduceMotionInExiting) {
+              updateLayoutAnimations(
+                tag as number,
+                LayoutAnimationType.EXITING,
+                maybeBuild(
+                  exiting,
+                  this.props?.style,
+                  AnimatedComponent.displayName
+                )
+              );
+            }
+          }
 
           const skipEntering = this.context?.current;
           if (entering && !skipEntering && !IS_WEB) {
@@ -551,8 +580,13 @@ export function createAnimatedComponent(
         default: { collapsable: false },
       });
 
+      const skipEntering = this.context?.current;
+      const nativeID =
+        skipEntering || !isFabric() ? undefined : `${this.reanimatedID}`;
+
       return (
         <Component
+          nativeID={nativeID}
           {...filteredProps}
           // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
           // After spending some time trying to figure out what to do with this problem, we decided to leave it this way

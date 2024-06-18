@@ -1,5 +1,5 @@
 'use strict';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { isFabric, shouldBeUseWeb } from './PlatformChecker';
 import {
   configureLayoutAnimationBatch,
   makeShareableCloneRecursive,
@@ -29,7 +29,7 @@ function createUpdateManager() {
         animations.push(batchItem);
       }
       if (animations.length + deferredAnimations.length === 1) {
-        setImmediate(this.flush);
+        isFabric() ? this.flush() : setImmediate(this.flush);
       }
     },
     flush(this: void) {
