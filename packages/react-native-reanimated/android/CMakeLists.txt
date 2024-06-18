@@ -82,6 +82,8 @@ target_include_directories(
     "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
     "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
     "${REACT_NATIVE_DIR}/ReactCommon/yoga"
+    "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/componentregistry"
+    "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/core"
 )
 
 # build shared lib
@@ -152,6 +154,7 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
         ReactAndroid::react_debug
         ReactAndroid::react_render_core
         ReactAndroid::react_render_mounting
+        ReactAndroid::react_render_componentregistry
         ReactAndroid::react_render_scheduler
         ReactAndroid::react_render_uimanager
         ReactAndroid::rrc_view

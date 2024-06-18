@@ -3,6 +3,7 @@ package com.swmansion.reanimated;
 import static java.lang.Float.NaN;
 
 import android.graphics.drawable.Drawable;
+import android.os.SystemClock;
 import android.view.View;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.GuardedRunnable;
@@ -49,6 +50,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 public class NodesManager implements EventDispatcherListener {
+
+  private Long mFirstUptime = SystemClock.uptimeMillis();
+  private boolean mSlowAnimationsEnabled = false;
+  private int mAnimationsDragFactor;
 
   public void scrollTo(int viewTag, double x, double y, boolean animated) {
     View view;
@@ -268,6 +273,10 @@ public class NodesManager implements EventDispatcherListener {
     // Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onAnimationFrame");
 
     double currentFrameTimeMs = frameTimeNanos / 1000000.;
+    if (mSlowAnimationsEnabled) {
+      currentFrameTimeMs =
+          mFirstUptime + (currentFrameTimeMs - mFirstUptime) / mAnimationsDragFactor;
+    }
 
     if (currentFrameTimeMs > lastFrameTimeMs) {
       // It is possible for ChoreographerCallback to be executed twice within the same frame
@@ -425,7 +434,8 @@ public class NodesManager implements EventDispatcherListener {
     try {
       view = mUIManager.resolveView(viewTag);
     } catch (Exception e) {
-      throw new IllegalStateException("[Reanimated] Unable to resolve view");
+      // This happens when the view is not mounted yet
+      return "[Reanimated] Unable to resolve view";
     }
 
     switch (propName) {
@@ -452,7 +462,7 @@ public class NodesManager implements EventDispatcherListener {
         return "#" + invertedColor.substring(2, 8) + invertedColor.substring(0, 2);
       default:
         throw new IllegalArgumentException(
-            "[Reanimated] Attempted to get unsupported property"
+            "[Reanimated] Attempted to get unsupported property "
                 + propName
                 + " with function `getViewProp`");
     }
@@ -521,6 +531,14 @@ public class NodesManager implements EventDispatcherListener {
       }
     } else {
       throw new IllegalStateException("[Reanimated] Unknown type of animated value.");
+    }
+  }
+
+  public void enableSlowAnimations(boolean slowAnimationsEnabled, int animationsDragFactor) {
+    mSlowAnimationsEnabled = slowAnimationsEnabled;
+    mAnimationsDragFactor = animationsDragFactor;
+    if (slowAnimationsEnabled) {
+      mFirstUptime = SystemClock.uptimeMillis();
     }
   }
 }

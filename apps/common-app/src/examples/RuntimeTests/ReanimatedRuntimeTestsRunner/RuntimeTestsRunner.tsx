@@ -1,7 +1,8 @@
 import { View, Button, StyleSheet, Text } from 'react-native';
-import React, { ReactNode, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
+import React, { useEffect, useState } from 'react';
 import { runTests, configure } from './RuntimeTestsApi';
-import { LockObject } from './types';
+import type { LockObject } from './types';
 
 let renderLock: LockObject = { lock: false };
 export class ErrorBoundary extends React.Component<
@@ -38,6 +39,7 @@ export default function RuntimeTestsRunner() {
     <View style={styles.container}>
       <Button
         title="Run tests"
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onPress={async () => {
           renderLock = configure({ render: setComponent });
           await runTests();

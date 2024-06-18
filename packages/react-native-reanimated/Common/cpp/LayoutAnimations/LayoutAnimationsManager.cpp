@@ -20,6 +20,12 @@ void LayoutAnimationsManager::configureAnimationBatch(
       clearSharedTransitionConfig(tag);
       sharedTransitionConfigs.push_back(std::move(layoutAnimationConfig));
     } else {
+#ifdef RCT_NEW_ARCH_ENABLED
+      if (type == ENTERING){
+        enteringAnimationsForNativeID_[tag] = config;
+        continue;
+      }
+#endif
       if (config == nullptr) {
         getConfigsForType(type).erase(tag);
       } else {
@@ -158,6 +164,19 @@ int LayoutAnimationsManager::findPrecedingViewTagForTransition(const int tag) {
   }
   return -1;
 }
+
+#ifdef RCT_NEW_ARCH_ENABLED
+void LayoutAnimationsManager::transferConfigFromNativeID(
+    const int nativeId,
+    const int tag) {
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  auto config = enteringAnimationsForNativeID_[nativeId];
+  if (config) {
+    enteringAnimations_.insert_or_assign(tag, config);
+  }
+  enteringAnimationsForNativeID_.erase(nativeId);
+}
+#endif
 
 #ifndef NDEBUG
 std::string LayoutAnimationsManager::getScreenSharedTagPairString(

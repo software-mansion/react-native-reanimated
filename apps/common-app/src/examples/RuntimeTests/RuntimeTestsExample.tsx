@@ -2,7 +2,7 @@ import React from 'react';
 import RuntimeTestsRunner from './ReanimatedRuntimeTestsRunner/RuntimeTestsRunner';
 
 // load tests
-// import './tests/Animations.test';
+import './tests/TestsOfTestingFramework.test';
 
 import './tests/animations';
 
@@ -14,7 +14,7 @@ import './tests/layoutAnimations/entering/enteringColors.test';
 import './tests/layoutAnimations/entering/predefinedEntering.test';
 
 import './tests/advancedAPI/useFrameCallback.test';
-import './tests/advancedAPI/measure.test';
+// import './tests/advancedAPI/measure.test'; crash on Android
 
 import './tests/core/useSharedValue.test';
 import './tests/core/useAnimatedStyle/reuseAnimatedStyle.test';

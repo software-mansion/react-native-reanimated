@@ -104,9 +104,12 @@ const AnimatedBlock = ({
     <View style={styles.animatedBox}>
       {show ? (
         <TouchableWithoutFeedback onPress={() => setShow(!show)}>
-          <Animated.View style={styles.animatedBlock} {...animatedStyle}>
-            <Text style={styles.animatedText}>{name}</Text>
-          </Animated.View>
+          {/* Workaround for TouchableWithoutFeedback overwriting the nativeID */}
+          <View>
+            <Animated.View style={styles.animatedBlock} {...animatedStyle}>
+              <Text style={styles.animatedText}>{name}</Text>
+            </Animated.View>
+          </View>
         </TouchableWithoutFeedback>
       ) : null}
       {!show ? (

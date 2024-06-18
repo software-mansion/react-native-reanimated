@@ -11,6 +11,9 @@ Reanimated comes with a bunch of predefined animations you can customize. For mo
 ## Remarks
 
 - We recommend using layout animation builders outside of components or with `useMemo` to ensure the best performance.
+- On the New Architecture:
+  - `nativeID` is used internally to configure entering animations, so overwriting it will result in entering animations not running. Some components (e.g. TouchableWithoutFeedback) overwrite `nativeID` of its children. To work around this issue wrap your animated children with a `View`.
+  - removing a non-animated view will trigger exiting animations in its children, but the non-animated view will not wait for the children's animations to finish. This is due to view flattening and can be mitigated by using `collapsable={false}`.
 
 ## Fade
 

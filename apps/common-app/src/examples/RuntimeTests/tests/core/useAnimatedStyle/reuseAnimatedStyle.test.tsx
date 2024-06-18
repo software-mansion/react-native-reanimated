@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, AnimatableValueObject } from 'react-native-reanimated';
-import React from 'react';
+import type { AnimatableValueObject } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
 import {
   describe,
@@ -12,7 +12,7 @@ import {
   getTestComponent,
   wait,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { getComparisonModeForProp } from '../../../ReanimatedRuntimeTestsRunner/Comparators';
+import { getComparisonModeForProp } from '../../../ReanimatedRuntimeTestsRunner/matchers/Comparators';
 
 describe('Test reusing animatedStyles', () => {
   const COMPONENT_REF = {
@@ -115,7 +115,7 @@ describe('Test reusing animatedStyles', () => {
       expect(await componentThree.getAnimatedStyle('top')).toBe(top + 5 * margin + 2 * height, ComparisonMode.DISTANCE);
 
       // Check the remaining props
-      for (let key of ['width', 'height', 'left', 'opacity', 'backgroundColor'] as const) {
+      for (const key of ['width', 'height', 'left', 'opacity', 'backgroundColor'] as const) {
         if (key in Object.keys(finalStyle)) {
           const currentVal = await componentOne.getAnimatedStyle(key);
           expect(currentVal).toBe(finalStyle[key], getComparisonModeForProp(key));

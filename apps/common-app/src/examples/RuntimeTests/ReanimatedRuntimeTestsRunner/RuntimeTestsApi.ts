@@ -1,96 +1,82 @@
-import { Component, ReactElement } from 'react';
+import type { Component, ReactElement } from 'react';
 import { TestRunner } from './TestRunner';
-import { TestComponent } from './TestComponent';
+import type { TestComponent } from './TestComponent';
 import type { SharedValue } from 'react-native-reanimated';
-import { TestConfiguration, TestValue, NullableTestValue, DescribeDecorator, TestDecorator } from './types';
+import type { TestConfiguration, TestValue, NullableTestValue, BuildFunction } from './types';
+import { DescribeDecorator, TestDecorator } from './types';
 
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
 
-type DescribeFunction = (name: string, buildSuite: () => void) => void;
-export const describe: {
-  (name: string, buildSuite: () => void): void;
-  skip: DescribeFunction;
-  only: DescribeFunction;
-} = Object.assign(
-  (name: string, buildSuite: () => void) => {
-    testRunner.describe(name, buildSuite, null);
-  },
-  {
-    skip: (name: string, buildSuite: () => void) => {
-      testRunner.describe(name, buildSuite, DescribeDecorator.SKIP);
-    },
-    only: (name: string, buildSuite: () => void) => {
-      testRunner.describe(name, buildSuite, DescribeDecorator.ONLY);
-    },
-  },
-);
-
+type DescribeFunction = (name: string, buildSuite: BuildFunction) => void;
+type TestFunction = (name: string, buildTest: BuildFunction) => void;
+type TestFunctionWithWarning = (name: string, warningMessage: string, buildTest: BuildFunction) => void;
 type TestEachFunction = <T>(
   examples: Array<T>,
-) => (name: string, testCase: (example: T, index?: number) => void) => void;
+) => (name: string, testCase: (example: T, index: number) => void | Promise<void>) => void;
 type TestEachFunctionWithWarning = <T>(
   examples: Array<T>,
-) => (name: string, expectedWarning: string, testCase: (example: T, index?: number) => void) => void;
+) => (name: string, expectedWarning: string, testCase: (example: T, index: number) => void | Promise<void>) => void;
+type DecoratedTestFunction = TestFunction & { each: TestEachFunction };
+type DecoratedTestFunctionWithWarning = TestFunctionWithWarning & { each: TestEachFunctionWithWarning };
 
-export const test: {
-  (name: string, testCase: () => void): void;
-  each: TestEachFunction;
-  skip: { (name: string, testCase: () => void): void; each: TestEachFunction };
-  only: { (name: string, testCase: () => void): void; each: TestEachFunction };
-  failing: { (name: string, warningMessage: string, testCase: () => void): void; each: TestEachFunctionWithWarning };
-  warn: { (name: string, warningMessage: string, testCase: () => void): void; each: TestEachFunctionWithWarning };
-} = Object.assign(
-  (name: string, testCase: () => void) => {
-    testRunner.test(name, testCase, null);
-  },
-  {
-    each: <T>(examples: Array<T>) => {
-      return testRunner.testEach(examples, null);
-    },
-    skip: Object.assign(
-      (name: string, testCase: () => void) => {
-        testRunner.test(name, testCase, TestDecorator.SKIP);
-      },
-      {
-        each: <T>(examples: Array<T>) => {
-          return testRunner.testEach(examples, TestDecorator.SKIP);
-        },
-      },
-    ),
-    only: Object.assign(
-      (name: string, testCase: () => void) => {
-        testRunner.test(name, testCase, TestDecorator.ONLY);
-      },
-      {
-        each: <T>(examples: Array<T>) => {
-          return testRunner.testEach(examples, TestDecorator.ONLY);
-        },
-      },
-    ),
-    failing: Object.assign(
-      (name: string, expectedWarning: string, testCase: () => void) => {
-        testRunner.test(name, testCase, TestDecorator.FAILING, expectedWarning);
-      },
-      {
-        each: <T>(examples: Array<T>) => {
-          return testRunner.testEachErrorMsg(examples, TestDecorator.FAILING);
-        },
-      },
-    ),
-    warn: Object.assign(
-      (name: string, expectedWarning: string, testCase: () => void) => {
-        testRunner.test(name, testCase, TestDecorator.WARN, expectedWarning);
-      },
-      {
-        each: <T>(examples: Array<T>) => {
-          return testRunner.testEachErrorMsg(examples, TestDecorator.WARN);
-        },
-      },
-    ),
-  },
-);
+const describeBasic = (name: string, buildSuite: BuildFunction) => {
+  testRunner.describe(name, buildSuite, null);
+};
+
+export const describe = <DescribeFunction & Record<DescribeDecorator, DescribeFunction>>describeBasic;
+describe.skip = (name, buildSuite) => {
+  testRunner.describe(name, buildSuite, DescribeDecorator.SKIP);
+};
+describe.only = (name, buildSuite) => {
+  testRunner.describe(name, buildSuite, DescribeDecorator.ONLY);
+};
+
+const testBasic: DecoratedTestFunction = (name: string, testCase: BuildFunction) => {
+  testRunner.test(name, testCase, null);
+};
+testBasic.each = <T>(examples: Array<T>) => {
+  return testRunner.testEach(examples, null);
+};
+const testSkip: DecoratedTestFunction = (name: string, testCase: BuildFunction) => {
+  testRunner.test(name, testCase, TestDecorator.SKIP);
+};
+testSkip.each = <T>(examples: Array<T>) => {
+  return testRunner.testEach(examples, TestDecorator.SKIP);
+};
+const testOnly: DecoratedTestFunction = (name: string, testCase: BuildFunction) => {
+  testRunner.test(name, testCase, TestDecorator.ONLY);
+};
+testOnly.each = <T>(examples: Array<T>) => {
+  return testRunner.testEach(examples, TestDecorator.ONLY);
+};
+const testFailing: DecoratedTestFunctionWithWarning = (
+  name: string,
+  expectedWarning: string,
+  testCase: BuildFunction,
+) => {
+  testRunner.test(name, testCase, TestDecorator.FAILING, expectedWarning);
+};
+testFailing.each = <T>(examples: Array<T>) => {
+  return testRunner.testEachErrorMsg(examples, TestDecorator.FAILING);
+};
+const testWarn: DecoratedTestFunctionWithWarning = (name: string, expectedWarning: string, testCase: BuildFunction) => {
+  testRunner.test(name, testCase, TestDecorator.WARN, expectedWarning);
+};
+testWarn.each = <T>(examples: Array<T>) => {
+  return testRunner.testEachErrorMsg(examples, TestDecorator.WARN);
+};
+
+type TestType = DecoratedTestFunction &
+  Record<TestDecorator.SKIP | TestDecorator.ONLY, DecoratedTestFunction> &
+  Record<TestDecorator.FAILING | TestDecorator.WARN, DecoratedTestFunctionWithWarning>;
+
+export const test = <TestType>testBasic;
+test.skip = testSkip;
+test.only = testOnly;
+test.failing = testFailing;
+test.warn = testWarn;
 
 export function beforeAll(job: () => void) {
   testRunner.beforeAll(job);
@@ -120,6 +106,7 @@ export function useTestRef(name: string) {
   return testRunner.useTestRef(name);
 }
 
+// eslint-disable-next-line @typescript-eslint/unbound-method
 const testRunnerCallTrackerFn = testRunner.callTracker;
 export function callTracker(name: string) {
   'worklet';
@@ -158,8 +145,9 @@ export async function wait(delay: number) {
   return testRunner.wait(delay);
 }
 
+// eslint-disable-next-line @typescript-eslint/unbound-method
 const testRunnerNotifyFn = testRunner.notify;
-export async function notify(name: string) {
+export function notify(name: string) {
   'worklet';
   return testRunnerNotifyFn(name);
 }
@@ -209,5 +197,5 @@ export async function recordAnimationUpdates() {
 }
 
 export async function stopRecordingAnimationUpdates() {
-  testRunner.stopRecordingAnimationUpdates();
+  await testRunner.stopRecordingAnimationUpdates();
 }
