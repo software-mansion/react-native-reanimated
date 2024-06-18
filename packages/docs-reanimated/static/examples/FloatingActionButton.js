@@ -21,12 +21,8 @@ const OFFSET = 60;
 
 const FloatingActionButton = ({ isExpanded, index, buttonLetter }) => {
   const animatedStyles = useAnimatedStyle(() => {
-    const moveValue = interpolate(
-      Number(isExpanded.value),
-      [0, 1],
-      //highlight-next-line
-      [0, OFFSET * index]
-    );
+    // highlight-next-line
+    const moveValue = isExpanded.value ? OFFSET * index : 0;
     const translateValue = withSpring(-moveValue, SPRING_CONFIG);
     //highlight-next-line
     const delay = index * 100;

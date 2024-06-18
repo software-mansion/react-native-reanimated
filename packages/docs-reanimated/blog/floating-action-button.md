@@ -14,7 +14,7 @@ import CollapsibleCode from '@site/src/components/CollapsibleCode';
 
 We use [shared values](/docs/fundamentals/glossary#shared-value) to monitor if the button is expanded. The `useSharedValue` hook helps prevent unnecessary re-renders during state changes.
 
-<CollapsibleCode src={FloatingActionButtonSrc} showLines={[53,57]}/>
+<CollapsibleCode src={FloatingActionButtonSrc} showLines={[49,52]}/>
 
 The state is toggled when the main _Actions_ button is pressed, which triggers animations for other secondary buttons.
 
@@ -29,14 +29,14 @@ It also relies on [animatable values](/docs/fundamentals/glossary#animatable-val
 
 <samp id="FloatingActionButton">Floating Action Button</samp>
 
-<CollapsibleCode src={FloatingActionButtonSrc} showLines={[59,70]}/>
+<CollapsibleCode src={FloatingActionButtonSrc} showLines={[55,67]}/>
 
-The **FloatingActionButton** is a reusable component that manages button styles, content and animations. For this we use props: `buttonLetter` and `animatedStyles`.
+The **FloatingActionButton** is a reusable component that manages button styles, content and animations. For this we use props: `buttonLetter`, `index` and `isExpanded`.
 
-<CollapsibleCode src={FloatingActionButtonSrc} showLines={[21,44]}/>
+<CollapsibleCode src={FloatingActionButtonSrc} showLines={[21,46]}/>
 
 We define the animated styles for the buttons within the FloatingActionButton component, passing the necessary values as props. The delay in their appearance on the screen is calculated based on the button's index. Buttons with a higher index will appear later and be positioned higher in the "column" of buttons.
 
 <samp id="FloatingActionButton">Floating Action Button</samp>
 
-<CollapsibleCode src={FloatingActionButtonSrc} showLines={[22,43]}/>
+<CollapsibleCode src={FloatingActionButtonSrc} showLines={[22,46]}/>
