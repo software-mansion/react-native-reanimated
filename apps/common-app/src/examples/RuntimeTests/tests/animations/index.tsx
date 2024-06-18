@@ -15,9 +15,11 @@ describe('*****ANIMATIONS*****', () => {
   describe('****withDecay****', () => {
     require('./withDecay/basic.test');
   });
-  describe.only('****withSequence****', () => {
-    // require('./withSequence/callbackCascade.test');
-    // require('./withSequence/cancelAnimation.test');
+  describe('****withSequence****', () => {
+    require('./withSequence/callbackCascade.test');
+    require('./withSequence/cancelAnimation.test');
     require('./withSequence/numbers.test');
+    require('./withSequence/arrays.test');
+    require('./withSequence/colors.test');
   });
 });
