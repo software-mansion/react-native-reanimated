@@ -1,13 +1,14 @@
 'use strict';
 
-import { Animations, TransitionType, WebEasings } from './config';
+import { Animations, TransitionType } from './config';
 import type {
   AnimationCallback,
   AnimationConfig,
   AnimationNames,
   CustomConfig,
-  WebEasingsNames,
 } from './config';
+import { WebEasings } from './Easing.web';
+import type { WebEasingsNames } from './Easing.web';
 import type { TransitionData } from './animationParser';
 import { TransitionGenerator } from './createAnimation';
 import { scheduleAnimationCleanup } from './domUtils';
@@ -63,12 +64,12 @@ export function getReducedMotionFromConfig(config: CustomConfig) {
 
 function getDurationFromConfig(
   config: CustomConfig,
-  isLayoutTransition: boolean,
-  animationName: AnimationNames
+  animationName: string
 ): number {
-  const defaultDuration = isLayoutTransition
-    ? 0.3
-    : Animations[animationName].duration;
+  const defaultDuration =
+    animationName in Animations
+      ? Animations[animationName as AnimationNames].duration
+      : 0.3;
 
   return config.durationV !== undefined
     ? config.durationV / 1000
@@ -86,17 +87,12 @@ function getReversedFromConfig(config: CustomConfig) {
 export function getProcessedConfig(
   animationName: string,
   animationType: LayoutAnimationType,
-  config: CustomConfig,
-  initialAnimationName: AnimationNames
+  config: CustomConfig
 ): AnimationConfig {
   return {
     animationName,
     animationType,
-    duration: getDurationFromConfig(
-      config,
-      animationType === LayoutAnimationType.LAYOUT,
-      initialAnimationName
-    ),
+    duration: getDurationFromConfig(config, animationName),
     delay: getDelayFromConfig(config),
     easing: getEasingFromConfig(config),
     callback: getCallbackFromConfig(config),

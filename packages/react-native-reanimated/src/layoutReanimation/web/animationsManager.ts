@@ -1,12 +1,18 @@
 'use strict';
 
-import type { AnimationConfig, AnimationNames, CustomConfig } from './config';
+import type {
+  AnimationConfig,
+  AnimationNames,
+  CustomConfig,
+  KeyframeDefinitions,
+} from './config';
 import { Animations } from './config';
 import type {
   AnimatedComponentProps,
   LayoutAnimationStaticContext,
 } from '../../createAnimatedComponent/commonTypes';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
+import { createCustomKeyFrameAnimation } from './createAnimation';
 import {
   getProcessedConfig,
   handleExitingAnimation,
@@ -15,6 +21,7 @@ import {
 } from './componentUtils';
 import { areDOMRectsEqual } from './domUtils';
 import type { TransitionData } from './animationParser';
+import { Keyframe } from '../animationBuilder';
 import { makeElementVisible } from './componentStyle';
 
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
@@ -35,11 +42,11 @@ function chooseConfig<ComponentProps extends Record<string, unknown>>(
 
 function checkUndefinedAnimationFail(
   initialAnimationName: string,
-  isLayoutTransition: boolean
+  needsCustomization: boolean
 ) {
   // This prevents crashes if we try to set animations that are not defined.
-  // We don't care about layout transitions since they're created dynamically
-  if (initialAnimationName in Animations || isLayoutTransition) {
+  // We don't care about layout transitions or custom keyframes since they're created dynamically
+  if (initialAnimationName in Animations || needsCustomization) {
     return false;
   }
 
@@ -111,14 +118,19 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
     typeof config.constructor;
 
   const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
-  const animationName =
-    typeof config === 'function'
-      ? config.presetName
-      : (config.constructor as ConstructorWithStaticContext).presetName;
+  const isCustomKeyframe = config instanceof Keyframe;
+
+  const animationName = isCustomKeyframe
+    ? createCustomKeyFrameAnimation(
+        (config as CustomConfig).definitions as KeyframeDefinitions
+      )
+    : typeof config === 'function'
+    ? config.presetName
+    : (config.constructor as ConstructorWithStaticContext).presetName;
 
   const shouldFail = checkUndefinedAnimationFail(
     animationName,
-    isLayoutTransition
+    isLayoutTransition || isCustomKeyframe
   );
 
   if (shouldFail) {
@@ -128,8 +140,7 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
   const animationConfig = getProcessedConfig(
     animationName,
     animationType,
-    config as CustomConfig,
-    animationName as AnimationNames
+    config as CustomConfig
   );
 
   return animationConfig;
