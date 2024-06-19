@@ -101,6 +101,29 @@ export function getProcessedConfig(
   };
 }
 
+export function maybeModifyStyleForKeyframe(
+  element: HTMLElement,
+  config: CustomConfig
+) {
+  if (!(config instanceof Keyframe)) {
+    return;
+  }
+
+  for (const timestampRules of Object.values(
+    config.definitions as KeyframeDefinitions
+  )) {
+    if ('originX' in timestampRules || 'originY' in timestampRules) {
+      element.style.position = 'absolute';
+
+      // We need to set `animationFillMode` to `forwards`, otherwise component will go back to its position.
+      // This will result in wrong snapshot
+      element.style.animationFillMode = 'forwards';
+
+      return;
+    }
+  }
+}
+
 export function saveSnapshot(element: HTMLElement) {
   const rect = element.getBoundingClientRect();
 

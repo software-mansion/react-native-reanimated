@@ -17,6 +17,7 @@ import {
   getProcessedConfig,
   handleExitingAnimation,
   handleLayoutTransition,
+  maybeModifyStyleForKeyframe,
   setElementAnimation,
 } from './componentUtils';
 import { areDOMRectsEqual } from './domUtils';
@@ -155,6 +156,8 @@ export function startWebLayoutAnimation<
   transitionData?: TransitionData
 ) {
   const animationConfig = tryGetAnimationConfig(props, animationType);
+
+  maybeModifyStyleForKeyframe(element, props.entering as CustomConfig);
 
   if ((animationConfig?.animationName as AnimationNames) in Animations) {
     maybeReportOverwrittenProperties(
