@@ -85,7 +85,10 @@ export function insertWebAnimation(animationName: string, keyframe: string) {
   }
 }
 
-function removeWebAnimation(animationName: string) {
+function removeWebAnimation(
+  animationName: string,
+  animationRemoveCallback: () => void
+) {
   // Without this check SSR crashes because document is undefined (NextExample on CI)
   if (!isWindowAvailable()) {
     return;
@@ -101,7 +104,10 @@ function removeWebAnimation(animationName: string) {
     throw new Error('[Reanimated] Failed to obtain animation index.');
   }
 
+  animationRemoveCallback();
+
   styleTag.sheet?.deleteRule(currentAnimationIndex);
+
   animationNameList.splice(currentAnimationIndex, 1);
   animationNameToIndex.delete(animationName);
 
@@ -123,7 +129,8 @@ const minimumFrames = 10;
 
 export function scheduleAnimationCleanup(
   animationName: string,
-  animationDuration: number
+  animationDuration: number,
+  animationRemoveCallback: () => void
 ) {
   // If duration is very short, we want to keep remove delay to at least 10 frames
   // In our case it is exactly 160/1099 s, which is approximately 0.15s
@@ -132,7 +139,10 @@ export function scheduleAnimationCleanup(
     animationDuration + frameDurationMs * minimumFrames
   );
 
-  setTimeout(() => removeWebAnimation(animationName), timeoutValue);
+  setTimeout(
+    () => removeWebAnimation(animationName, animationRemoveCallback),
+    timeoutValue
+  );
 }
 
 function reattachElementToAncestor(child: ReanimatedHTMLElement, parent: Node) {

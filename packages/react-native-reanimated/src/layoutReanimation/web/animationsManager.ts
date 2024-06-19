@@ -94,7 +94,7 @@ function chooseAction(
 ) {
   switch (animationType) {
     case LayoutAnimationType.ENTERING:
-      setElementAnimation(element, animationConfig);
+      setElementAnimation(element, animationConfig, true);
       break;
     case LayoutAnimationType.LAYOUT:
       transitionData.reversed = animationConfig.reversed;

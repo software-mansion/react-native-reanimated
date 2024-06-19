@@ -6,6 +6,7 @@ import type {
   AnimationConfig,
   AnimationNames,
   CustomConfig,
+  KeyframeDefinitions,
 } from './config';
 import { WebEasings } from './Easing.web';
 import type { WebEasingsNames } from './Easing.web';
@@ -19,7 +20,7 @@ import { isReducedMotion } from '../../PlatformChecker';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
 import { setElementPosition, snapshots } from './componentStyle';
-import { setDummyPosition, snapshots } from './componentStyle';
+import { Keyframe } from '../animationBuilder';
 
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName =
@@ -140,7 +141,8 @@ export function saveSnapshot(element: HTMLElement) {
 
 export function setElementAnimation(
   element: HTMLElement,
-  animationConfig: AnimationConfig
+  animationConfig: AnimationConfig,
+  shouldSavePosition = false
 ) {
   const { animationName, duration, delay, easing } = animationConfig;
 
@@ -150,11 +152,16 @@ export function setElementAnimation(
   element.style.animationTimingFunction = easing;
 
   element.onanimationend = () => {
+    if (shouldSavePosition) {
+      saveSnapshot(element);
+    }
+
     animationConfig.callback?.(true);
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
 
   const animationCancelHandler = () => {
+    console.log('eoeo');
     animationConfig.callback?.(false);
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
@@ -172,7 +179,11 @@ export function setElementAnimation(
   };
 
   if (!(animationName in Animations)) {
-    scheduleAnimationCleanup(animationName, duration + delay);
+    scheduleAnimationCleanup(animationName, duration + delay, () => {
+      if (shouldSavePosition) {
+        setElementPosition(element, snapshots.get(element)!);
+      }
+    });
   }
 }
 
