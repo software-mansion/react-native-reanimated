@@ -161,7 +161,6 @@ export function setElementAnimation(
   };
 
   const animationCancelHandler = () => {
-    console.log('eoeo');
     animationConfig.callback?.(false);
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
