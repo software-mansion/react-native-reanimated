@@ -18,6 +18,7 @@ import { ReduceMotion } from '../../commonTypes';
 import { isReducedMotion } from '../../PlatformChecker';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
+import { setElementPosition, snapshots } from './componentStyle';
 import { setDummyPosition, snapshots } from './componentStyle';
 
 function getEasingFromConfig(config: CustomConfig): string {
@@ -256,7 +257,7 @@ export function handleExitingAnimation(
 
   snapshots.set(dummy, snapshot);
 
-  setDummyPosition(dummy, snapshot);
+  setElementPosition(dummy, snapshot);
 
   const originalOnAnimationEnd = dummy.onanimationend;
 

@@ -2,7 +2,7 @@
 
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { isWindowAvailable } from '../../PlatformChecker';
-import { setDummyPosition, snapshots } from './componentStyle';
+import { setElementPosition, snapshots } from './componentStyle';
 import { Animations } from './config';
 import type { AnimationNames } from './config';
 
@@ -147,7 +147,7 @@ function reattachElementToAncestor(child: ReanimatedHTMLElement, parent: Node) {
   child.removedAfterAnimation = true;
   parent.appendChild(child);
 
-  setDummyPosition(child, childSnapshot);
+  setElementPosition(child, childSnapshot);
 
   const originalOnAnimationEnd = child.onanimationend;
 
