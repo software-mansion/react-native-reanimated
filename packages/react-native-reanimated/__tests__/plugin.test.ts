@@ -22,6 +22,8 @@ function runPlugin(
     filename: MOCK_LOCATION,
     compact: false,
     plugins: [[plugin, pluginOpts]],
+    babelrc: false,
+    configFile: './plugin/plugin-unit-test.babel.config.js',
     ...transformOpts,
   });
   assert(transformed);
@@ -1896,9 +1898,7 @@ describe('babel plugin', () => {
         styleFactory = () => 'AssignmentExpression';
         animatedStyle = useAnimatedStyle(styleFactory);
       </script>`;
-      console.log(input);
       const { code } = runPlugin(input);
-      console.log(code);
 
       expect(code).toHaveWorkletData(1);
       expect(code).toIncludeInWorkletString('FunctionDeclaration');
