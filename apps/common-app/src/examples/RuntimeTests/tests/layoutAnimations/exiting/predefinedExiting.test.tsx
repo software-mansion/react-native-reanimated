@@ -75,10 +75,10 @@ const ZOOM_EXITING = [
 ];
 
 const EXITING_SETS: Array<[string, unknown[], number]> = [
+  ['LightSpeed', LIGHTSPEED_EXITING, 1600],
   ['Fade', FADE_EXITING, 1400],
   ['Bounce', BOUNCE_EXITING, 650],
   ['Flip', FLIP_EXITING, 1750],
-  ['LightSpeed', LIGHTSPEED_EXITING, 1600],
   ['Pinwheel', PINWHEEL_EXITING, 1000],
   ['Roll', ROLL_EXITING, 1750],
   ['Rotate', ROTATE_EXITING, 1600],
