@@ -18,6 +18,8 @@ export class JumpingTransition
   extends BaseAnimationBuilder
   implements ILayoutAnimationBuilder
 {
+  static presetName = 'JumpingTransition';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {

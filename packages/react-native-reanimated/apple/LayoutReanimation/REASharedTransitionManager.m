@@ -28,7 +28,6 @@
   NSMutableSet<REAUIView *> *_reattachedViews;
   BOOL _isStackDropped;
   BOOL _isAsyncSharedTransitionConfigured;
-  BOOL _isConfigured;
   BOOL _clearScreen;
   BOOL _isInteractive;
   NSMutableArray<REAUIView *> *_disappearingScreens;
@@ -41,6 +40,14 @@
   different context of execution (self != REASharedTransitionManager)
 */
 static REASharedTransitionManager *_sharedTransitionManager;
+/*
+  It needs to be a static field because there is a possibility of instantiating
+  `REASharedTransitionManager` more than once, such as in Expo Go. Method swizzling
+  operates at the class level rather than the instance level, so `_isConfigured`
+  should also be a static field to inform every instance that the swizzling process
+  has occurred successfully.
+*/
+static BOOL _isConfigured = NO;
 
 - (instancetype)initWithAnimationsManager:(REAAnimationsManager *)animationManager
 {

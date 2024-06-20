@@ -1,34 +1,55 @@
-import { NullableTestValue } from './types';
-
-export const RUNTIME_TEST_ERRORS = {
-  UNDEFINED_TEST_SUITE: 'Undefined test suite context',
-  UNDEFINED_TEST_CASE: 'Undefined test case context',
-  NO_MOCKED_TIMESTAMP: "Seems that you've forgot to call `mockAnimationTimer()`",
-};
+import type { Mismatch, NullableTestValue } from './types';
 
 export function indentNestingLevel(nestingLevel: number) {
   return `  ${'   '.repeat(nestingLevel)}`;
 }
 
-export function appendWhiteSpaceToMatchLength(message: string | number, length: number) {
-  const messageStr = message.toString();
+export function adjustStringToLength(message: undefined | string | number, length: number) {
+  const messageStr = message ? message.toString() : '';
   const messageLen = messageStr.length;
-  const indentSize = Math.max(0, length - messageLen);
-  return `${messageStr}${' '.repeat(indentSize)}`;
+  if (length > messageLen) {
+    const indentSize = length - messageLen;
+    return `${messageStr}${' '.repeat(indentSize)}`;
+  } else {
+    return messageStr.slice(0, length);
+  }
 }
 
-export function color(value: NullableTestValue, color: 'yellow' | 'cyan' | 'green' | 'red' | 'gray' | 'orange') {
+export function color(
+  value: NullableTestValue,
+  color: 'cyan' | 'gray' | 'green' | 'yellow' | 'red' | 'lightGray' | 'orange',
+) {
   const COLOR_CODES = {
-    red: '\x1b[91m',
-    green: '\x1b[92m',
-    yellow: '\x1b[93m',
     cyan: '\x1b[36m',
     gray: '\x1b[38;5;242m',
+    lightGray: '\x1b[37m',
+    green: '\x1b[92m',
+    yellow: '\x1b[93m',
+    red: '\x1b[91m',
     orange: '\x1b[38;5;208m',
     reset: '\x1b[0m',
   };
   const stringValue = typeof value === 'object' ? JSON.stringify(value) : value?.toString();
   return `${COLOR_CODES[color]}${stringValue}${COLOR_CODES.reset}`;
+}
+
+export function cyan(x: NullableTestValue) {
+  return color(x, 'cyan');
+}
+export function gray(x: NullableTestValue) {
+  return color(x, 'gray');
+}
+export function green(x: NullableTestValue) {
+  return color(x, 'green');
+}
+export function yellow(x: NullableTestValue) {
+  return color(x, 'yellow');
+}
+export function red(x: NullableTestValue) {
+  return color(x, 'red');
+}
+export function orange(x: NullableTestValue) {
+  return color(x, 'orange');
 }
 
 export function applyMarkdown(template: string) {
@@ -90,3 +111,65 @@ export function formatString(template: string, variableObject: unknown, index: n
 
   return testName;
 }
+
+export function formatSnapshotMismatch(mismatches: Array<Mismatch>, native: boolean) {
+  /**      | HEIGHT             | WIDTH              |
+   index | EXPECTED | ACTUAL  | EXPECTED | ACTUAL  |
+   */
+
+  const keysToPrint: Array<string> = [];
+  mismatches.forEach(({ expectedSnapshot, capturedSnapshot }) => {
+    Object.keys(expectedSnapshot).forEach(key => {
+      if (!keysToPrint.includes(key)) {
+        keysToPrint.push(key);
+      }
+    });
+    Object.keys(capturedSnapshot).forEach(key => {
+      if (!keysToPrint.includes(key)) {
+        keysToPrint.push(key);
+      }
+    });
+  });
+
+  const valueColumnWidth = 15;
+  const indexColumnWidth = 7;
+
+  const row1 =
+    ' '.repeat(indexColumnWidth) +
+    '|' +
+    keysToPrint.map(key => adjustStringToLength(key, 2 * valueColumnWidth + 1)).join('|');
+
+  const row2 =
+    adjustStringToLength('index', indexColumnWidth) +
+    '|' +
+    keysToPrint
+      .map(
+        _ =>
+          adjustStringToLength(native ? 'native' : 'expected', valueColumnWidth) +
+          '|' +
+          adjustStringToLength(native ? 'js' : 'captured', valueColumnWidth),
+      )
+      .join('|');
+
+  const emptyRow =
+    '-'.repeat(indexColumnWidth) +
+    ('+' + '-'.repeat(valueColumnWidth) + '+' + '-'.repeat(valueColumnWidth)).repeat(keysToPrint.length);
+
+  const remainingRows = mismatches.map(
+    ({ index, expectedSnapshot, capturedSnapshot }) =>
+      adjustStringToLength(index.toString(), indexColumnWidth) +
+      '|' +
+      keysToPrint
+        .map(
+          key =>
+            green(adjustStringToLength(expectedSnapshot[key as keyof typeof expectedSnapshot], valueColumnWidth)) +
+            '|' +
+            red(adjustStringToLength(capturedSnapshot[key as keyof typeof capturedSnapshot], valueColumnWidth)),
+        )
+        .join('|'),
+  );
+
+  return [row1, row2, emptyRow, ...remainingRows].join('\n');
+}
+
+export const EMPTY_LOG_PLACEHOLDER = color(applyMarkdown('***   ***'), 'lightGray');

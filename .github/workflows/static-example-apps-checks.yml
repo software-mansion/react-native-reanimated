@@ -50,7 +50,12 @@ jobs:
 
       - name: Check types
         working-directory: ${{ matrix.working-directory }}
+        if: ${{ matrix.working-directory != 'apps/web-example' }}
         run: yarn tsc --noEmit
+      - name: Check types
+        working-directory: ${{ matrix.working-directory }}
+        if: ${{ matrix.working-directory == 'apps/web-example' }}
+        run: yarn tsc --noEmit --baseUrl ../..
       - name: Lint
         working-directory: ${{ matrix.working-directory }}
         run: yarn lint

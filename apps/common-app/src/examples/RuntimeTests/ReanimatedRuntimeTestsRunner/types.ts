@@ -1,5 +1,5 @@
-import { Component, Dispatch, MutableRefObject, ReactNode, SetStateAction } from 'react';
-import { AnimatedStyle, StyleProps } from 'react-native-reanimated';
+import type { Component, Dispatch, MutableRefObject, ReactNode, SetStateAction } from 'react';
+import type { AnimatedStyle, StyleProps } from 'react-native-reanimated';
 
 export type CallTracker = {
   UICallsCount: number;
@@ -25,22 +25,22 @@ export type SharedValueSnapshot = {
 export type ComponentRef = MutableRefObject<(Component & { props: { style: Record<string, unknown> } }) | null>;
 
 export enum DescribeDecorator {
-  ONLY = 'ONLY',
-  SKIP = 'SKIP',
-  NONE = 'NONE',
+  ONLY = 'only',
+  SKIP = 'skip',
 }
 
 export enum TestDecorator {
-  ONLY = 'ONLY',
-  SKIP = 'SKIP',
-  FAILING = 'FAILING',
-  WARN = 'WARN',
-  NONE = 'NONE',
+  ONLY = 'only',
+  SKIP = 'skip',
+  FAILING = 'failing',
+  WARN = 'warn',
 }
+
+export type BuildFunction = () => void | Promise<void>;
 
 export type TestCase = {
   name: string;
-  run: () => void | Promise<void>;
+  run: BuildFunction;
   componentsRefs: Record<string, ComponentRef>;
   callsRegistry: Record<string, CallTracker>;
   errors: string[];
@@ -55,7 +55,7 @@ export type TestCase = {
 
 export type TestSuite = {
   name: string;
-  buildSuite: () => void;
+  buildSuite: BuildFunction;
   testCases: TestCase[];
   nestingLevel: number;
   beforeAll?: () => void | Promise<void>;
@@ -67,6 +67,11 @@ export type TestSuite = {
 };
 
 export type ValidPropNames = 'zIndex' | 'opacity' | 'width' | 'height' | 'top' | 'left' | 'backgroundColor';
+
+export function isValidPropName(propName: string): propName is ValidPropNames {
+  'worklet';
+  return ['zIndex', 'opacity', 'width', 'height', 'top', 'left', 'backgroundColor'].includes(propName);
+}
 
 export enum ComparisonMode {
   STRING = 'STRING',
@@ -97,13 +102,23 @@ export type TestValue =
   | bigint
   | Record<string, unknown>
   | null
-  | undefined;
+  | undefined
+  | boolean
+  | OperationUpdate;
+
 export type NullableTestValue = TestValue | null | undefined;
 
 export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;
 };
 
+export type Mismatch = {
+  index: number;
+  expectedSnapshot: OperationUpdate;
+  capturedSnapshot: OperationUpdate;
+};
+
+/* eslint-disable no-var */
 declare global {
   var mockedAnimationTimestamp: number | undefined;
   var originalRequestAnimationFrame: ((callback: (timestamp: number) => void) => void) | undefined;
@@ -123,6 +138,7 @@ declare global {
   var _obtainPropFabric: (shadowNodeWrapper: unknown, propName: string) => string;
   var __flushAnimationFrame: (frameTimestamp: number) => void;
 }
+/* eslint-enable no-var */
 
 export type TestSummary = {
   passed: number;

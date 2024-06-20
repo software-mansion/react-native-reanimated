@@ -4,7 +4,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.facebook.react.uimanager.PixelUtil;
 
 public class Keyboard {
-  private KeyboardState mState;
+  private KeyboardState mState = KeyboardState.UNKNOWN;
   private int mHeight = 0;
   private int mActiveTransitionCounter = 0;
   private static final int CONTENT_TYPE_MASK = WindowInsetsCompat.Type.ime();

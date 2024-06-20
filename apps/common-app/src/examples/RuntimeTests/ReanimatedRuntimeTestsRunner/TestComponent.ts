@@ -1,10 +1,12 @@
-import { Component } from 'react';
+import type { Component } from 'react';
 import { findNodeHandle } from 'react-native';
 import { getViewProp } from 'react-native-reanimated';
-import { ComponentRef, ValidPropNames } from './types';
+import type { ComponentRef, ValidPropNames } from './types';
 
 export class TestComponent {
-  constructor(private ref: ComponentRef) {}
+  constructor(private ref: ComponentRef) {
+    this.ref = ref;
+  }
 
   public getStyle(propName: string) {
     return this.ref.current?.props.style[propName];

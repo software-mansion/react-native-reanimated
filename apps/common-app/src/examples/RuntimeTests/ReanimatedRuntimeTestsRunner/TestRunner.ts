@@ -1,26 +1,26 @@
-import { Component, MutableRefObject, ReactElement, useRef } from 'react';
-import {
-  type NullableTestValue,
-  type LockObject,
-  type Operation,
-  type SharedValueSnapshot,
-  type TestCase,
-  type TestConfiguration,
-  type TestSuite,
-  type TestSummary,
-  type TestValue,
-  type TrackerCallCount,
-  ComparisonMode,
-  DescribeDecorator,
-  TestDecorator,
+import type { Component, MutableRefObject, ReactElement } from 'react';
+import { useRef } from 'react';
+import type {
+  BuildFunction,
+  NullableTestValue,
+  LockObject,
+  Operation,
+  SharedValueSnapshot,
+  TestCase,
+  TestConfiguration,
+  TestSuite,
+  TestSummary,
+  TestValue,
+  TrackerCallCount,
 } from './types';
+import { ComparisonMode, DescribeDecorator, TestDecorator } from './types';
 import { TestComponent } from './TestComponent';
-import { getTrackerCallCount, render, stopRecordingAnimationUpdates, unmockAnimationTimer } from './RuntimeTestsApi';
-import { makeMutable, runOnUI, runOnJS, SharedValue } from 'react-native-reanimated';
-import { applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
-import { createUpdatesContainer } from './UpdatesContainer';
-import { Matchers, nullableMatch } from './Matchers';
+import { EMPTY_LOG_PLACEHOLDER, applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
+import type { SharedValue } from 'react-native-reanimated';
+import { makeMutable, runOnUI, runOnJS } from 'react-native-reanimated';
+import { Matchers, nullableMatch } from './matchers/Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
+import { createUpdatesContainer } from './UpdatesContainer';
 
 let callTrackerRegistryJS: Record<string, number> = {};
 const callTrackerRegistryUI = makeMutable<Record<string, number>>({});
@@ -101,12 +101,12 @@ export class TestRunner {
     return await this.render(null);
   }
 
-  public describe(name: string, buildSuite: () => void, decorator: DescribeDecorator | null) {
+  public describe(name: string, buildSuite: BuildFunction, decorator: DescribeDecorator | null) {
     if (decorator === DescribeDecorator.ONLY) {
       this._includesOnly = true;
     }
 
-    let index; // We have to manage the order of the nested describes
+    let index: number; // We have to manage the order of the nested describes
     if (this._currentTestSuite === null) {
       index = this._testSuites.length; // If we have no parent describe, we append at the end
     } else {
@@ -122,49 +122,39 @@ export class TestRunner {
       }
     }
 
+    const testDecorator = decorator || this._currentTestSuite?.decorator;
+
     this._testSuites.splice(index, 0, {
       name: applyMarkdown(name),
       buildSuite,
       testCases: [],
       nestingLevel: (this._currentTestSuite?.nestingLevel || 0) + 1,
-      decorator: decorator ? decorator : this._currentTestSuite?.decorator ? this._currentTestSuite?.decorator : null,
+      decorator: testDecorator || null,
     });
   }
 
-  public test(name: string, run: () => void, decorator: TestDecorator | null, warningMessage = '') {
+  public test(name: string, run: BuildFunction, decorator: TestDecorator | null, warningMessage = '') {
     assertTestSuite(this._currentTestSuite);
     if (decorator === TestDecorator.ONLY) {
       this._includesOnly = true;
     }
-    this._currentTestSuite.testCases.push(
-      decorator === TestDecorator.WARN || decorator === TestDecorator.FAILING
-        ? {
-            name: applyMarkdown(name),
-            run,
-            componentsRefs: {},
-            callsRegistry: {},
-            errors: [],
-            decorator,
-            warningMessage: warningMessage,
-            skip: false,
-          }
-        : {
-            name: applyMarkdown(name),
-            run,
-            componentsRefs: {},
-            callsRegistry: {},
-            errors: [],
-            decorator,
-            skip: decorator === TestDecorator.SKIP,
-          },
-    );
+    this._currentTestSuite.testCases.push({
+      name: applyMarkdown(name),
+      run,
+      componentsRefs: {},
+      callsRegistry: {},
+      errors: [],
+      skip: decorator === TestDecorator.SKIP || this._currentTestSuite.decorator === DescribeDecorator.SKIP,
+      decorator,
+      warningMessage,
+    });
   }
 
   public testEachErrorMsg<T>(examples: Array<T>, decorator: TestDecorator) {
-    return (name: string, expectedWarning: string, testCase: (example: T) => void) => {
+    return (name: string, expectedWarning: string, testCase: (example: T, index: number) => void | Promise<void>) => {
       examples.forEach((example, index) => {
         const currentTestCase = async () => {
-          await testCase(example);
+          await testCase(example, index);
         };
         this.test(
           formatString(name, example, index),
@@ -175,8 +165,9 @@ export class TestRunner {
       });
     };
   }
+
   public testEach<T>(examples: Array<T>, decorator: TestDecorator | null) {
-    return (name: string, testCase: (example: T, index?: number) => void) => {
+    return (name: string, testCase: (example: T, index: number) => void | Promise<void>) => {
       examples.forEach((example, index) => {
         const currentTestCase = async () => {
           await testCase(example, index);
@@ -260,7 +251,9 @@ export class TestRunner {
         for (const testCase of testSuite.testCases) {
           if (testCase.decorator === TestDecorator.ONLY) {
             skipTestSuite = false;
-          } else testCase.skip = testCase.skip || !(testSuite.decorator === DescribeDecorator.ONLY);
+          } else {
+            testCase.skip = testCase.skip || !(testSuite.decorator === DescribeDecorator.ONLY);
+          }
         }
       }
       testSuite.skip = skipTestSuite;
@@ -323,6 +316,7 @@ export class TestRunner {
       console.error = newConsoleFuncJS;
       console.warn = newConsoleFuncJS;
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       const callTrackerCopy = this.callTracker;
 
       runOnUI(() => {
@@ -337,7 +331,7 @@ export class TestRunner {
 
       await testCase.run();
 
-      this.expect(getTrackerCallCount(consoleTrackerRef)).toBeCalled(1);
+      this.expect(this.getTrackerCallCount(consoleTrackerRef)).toBeCalled(1);
       if (testCase.warningMessage) {
         this.expect(message.value).toBe(testCase.warningMessage, ComparisonMode.STRING);
       }
@@ -352,9 +346,9 @@ export class TestRunner {
     }
 
     this._currentTestCase = null;
-    await render(null);
-    await unmockAnimationTimer();
-    await stopRecordingAnimationUpdates();
+    await this.render(null);
+    await this.unmockAnimationTimer();
+    await this.stopRecordingAnimationUpdates();
   }
 
   private showTestCaseSummary(testCase: TestCase, nestingLevel: number) {
@@ -370,7 +364,8 @@ export class TestRunner {
     console.log(`${indentNestingLevel(nestingLevel)} ${mark} ${color(testCase.name, 'gray')}`);
 
     for (const error of testCase.errors) {
-      console.log(`${indentNestingLevel(nestingLevel)}\t${error}`);
+      const indentedError = error.replace(/\n/g, '\n' + EMPTY_LOG_PLACEHOLDER + indentNestingLevel(nestingLevel + 2));
+      console.log(`${indentNestingLevel(nestingLevel)}\t${indentedError}`);
     }
   }
 
@@ -500,12 +495,13 @@ export class TestRunner {
         return global.mockedAnimationTimestamp;
       };
 
-      let originalRequestAnimationFrame = global.requestAnimationFrame;
+      const originalRequestAnimationFrame = global.requestAnimationFrame;
       global.originalRequestAnimationFrame = originalRequestAnimationFrame;
-      (global as any).requestAnimationFrame = (callback: Function) => {
+      global.requestAnimationFrame = (callback: FrameRequestCallback) => {
         originalRequestAnimationFrame(() => {
           callback(global._getAnimationTimestamp());
         });
+        return 0;
       };
 
       global.originalFlushAnimationFrame = global.__flushAnimationFrame;
