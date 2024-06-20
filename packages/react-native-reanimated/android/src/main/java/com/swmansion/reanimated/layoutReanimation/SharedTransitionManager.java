@@ -755,6 +755,8 @@ public class SharedTransitionManager {
         }
         Snapshot sourceViewSnapshot = mSnapshotRegistry.get(sharedView.getId());
         if (sourceViewSnapshot == null) {
+          // This is just to ensure that we have a snapshot and to prevent
+          // a theoretically possible NullPointerException.
           continue;
         }
         SharedElement sharedElement =
