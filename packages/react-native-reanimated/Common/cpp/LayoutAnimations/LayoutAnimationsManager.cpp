@@ -132,7 +132,7 @@ void LayoutAnimationsManager::startLayoutAnimation(
       jsi::Value(tag),
       jsi::Value(static_cast<int>(type)),
       values,
-      config->getJSValue(rt));
+      config->toJSValue(rt));
 }
 
 void LayoutAnimationsManager::cancelLayoutAnimation(
