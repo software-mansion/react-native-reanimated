@@ -21,7 +21,7 @@ void LayoutAnimationsManager::configureAnimationBatch(
       sharedTransitionConfigs.push_back(std::move(layoutAnimationConfig));
     } else {
 #ifdef RCT_NEW_ARCH_ENABLED
-      if (type == ENTERING){
+      if (type == ENTERING) {
         enteringAnimationsForNativeID_[tag] = config;
         continue;
       }
