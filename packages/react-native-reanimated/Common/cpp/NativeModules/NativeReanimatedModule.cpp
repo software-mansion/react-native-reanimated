@@ -844,7 +844,7 @@ jsi::Value NativeReanimatedModule::measure(
 void NativeReanimatedModule::initializeFabric(
     const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
-  
+
   initializeLayoutAnimations();
 
   commitHook_ =
