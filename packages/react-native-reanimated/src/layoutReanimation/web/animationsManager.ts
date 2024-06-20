@@ -138,6 +138,20 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
     return null;
   }
 
+  if (isCustomKeyframe) {
+    const keyframeTimestamps = Object.keys(
+      (config as CustomConfig).definitions as KeyframeDefinitions
+    );
+
+    if (
+      !(keyframeTimestamps.includes('100') || keyframeTimestamps.includes('to'))
+    ) {
+      console.warn(
+        `[Reanimated] Neither '100' nor 'to' was specified in Keyframe definition. This may result in wrong final position of your component. One possible solution is to duplicate last timestamp in definition as '100' (or 'to')`
+      );
+    }
+  }
+
   const animationConfig = getProcessedConfig(
     animationName,
     animationType,
