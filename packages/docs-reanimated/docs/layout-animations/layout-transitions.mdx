@@ -43,7 +43,7 @@ LinearTransition.duration(500).easing(Easing.ease);
 - `.easing(easingFunction: EasingFunction)` is an easing function which defines the animation curve. Defaults to `Easing.inOut(Easing.quad)`
 
 :::note
-Time-based modifiers have no effect when `.springify()` is used. DOUBLE CHECK
+Time-based modifiers have no effect when `.springify()` is used.
 :::
 
 #### Spring-based <Optional/>
@@ -56,7 +56,7 @@ LinearTransition.springify()
   .mass(5)
   .rotate(20)
   .stiffness(10)
-  .overshootClamping(false) - NUMBER CZY BOOLEAN
+  .overshootClamping(false)
   .restDisplacementThreshold(0.1)
   .restSpeedThreshold(5);
 ```
@@ -239,10 +239,10 @@ function App() {
 ```javascript
 CurvedTransiton.duration(1000)
   .delay(500)
-  .easingX(Easing.in(Easing.poly))
+  .easingX(Easing.in(Easing.exp))
   .easingY(Easing.out(Easing.quad))
   .easingWidth(Easing.in(Easing.ease))
-  .easingHeight(Easing.out(Easing.poly))
+  .easingHeight(Easing.out(Easing.exp))
   .reduceMotion(ReduceMotion.Never)
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
