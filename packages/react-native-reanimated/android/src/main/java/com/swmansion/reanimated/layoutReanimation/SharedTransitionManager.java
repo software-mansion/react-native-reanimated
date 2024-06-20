@@ -336,8 +336,6 @@ public class SharedTransitionManager {
         makeSnapshot(viewSource);
       }
       if (sourceViewSnapshot == null) {
-        // This is just to ensure that we have a snapshot and to prevent
-        // a theoretically possible NullPointerException.
         sourceViewSnapshot = mSnapshotRegistry.get(viewSource.getId());
       }
       Snapshot targetViewSnapshot = mSnapshotRegistry.get(viewTarget.getId());
