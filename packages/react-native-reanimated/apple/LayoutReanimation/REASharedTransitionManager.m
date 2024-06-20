@@ -533,7 +533,7 @@ static BOOL _isConfigured = NO;
     [_sharedTransitionManager setDisappearingScreen:nil];
     return;
   }
-  
+
   NSArray *disappearingScreens = [_sharedTransitionManager getDisappearingScreens];
   REAUIView *firstScreen = disappearingScreens[0];
   if ([firstScreen.reactSuperview isKindOfClass:NSClassFromString(@"RNSScreenNavigationContainerView")]) {
@@ -584,7 +584,6 @@ static BOOL _isConfigured = NO;
     REAUIView *siblingView;
     for (NSNumber *tag in groupTags) {
       REAUIView *currentView = [_animationManager viewForTag:tag];
-//      if ([self isView:currentView ChildOfParent:targetScreen]) {
       if ([REAScreensHelper isView:currentView DescendantOfScreen:targetScreen]) {
         siblingView = currentView;
         REAUIView *siblingScreen = [REAScreensHelper getScreenForView:siblingView];

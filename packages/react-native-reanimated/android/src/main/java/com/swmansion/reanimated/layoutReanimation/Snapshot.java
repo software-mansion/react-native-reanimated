@@ -150,10 +150,10 @@ public class Snapshot {
     view.getLocationOnScreen(location);
     if (location[0] == 0 && location[1] == 0) {
       /*
-        In certain cases, when a view is correctly attached to the screen and has computed
-        the correct layout, but is not visible on the screen, `getLocationOnScreen` may return
-        incorrect values [0, 0]. This behavior can occur during tab changes in bottom tabs.
-       */
+       In certain cases, when a view is correctly attached to the screen and has computed
+       the correct layout, but is not visible on the screen, `getLocationOnScreen` may return
+       incorrect values [0, 0]. This behavior can occur during tab changes in bottom tabs.
+      */
       location = tryGetRealPosition(view);
     }
     originX = location[0];
