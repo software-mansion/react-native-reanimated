@@ -6,6 +6,7 @@
 #import <RNScreens/RNSScreen.h>
 #import <RNScreens/RNSScreenNavigationContainer.h>
 #import <RNScreens/RNSScreenStack.h>
+#import <RNScreens/RNSEnums.h>
 #endif
 
 #import <RNReanimated/REAUIKit.h>
@@ -20,7 +21,7 @@
 + (bool)isRNSScreenType:(REAUIView *)screen;
 + (REAUIView *)findTopScreenInChildren:(REAUIView *)screen;
 + (REAUIView *)getActiveTabForTabNavigator:(REAUIView *)tabNavigator;
-+ (bool)isView:(REAUIView *)view ChildOfScreen:(REAUIView *)screen;
++ (bool)isView:(REAUIView *)view DescendantOfScreen:(REAUIView *)screen;
 + (bool)isViewOnTopOfScreenStack:(REAUIView *)view;
 
 @end

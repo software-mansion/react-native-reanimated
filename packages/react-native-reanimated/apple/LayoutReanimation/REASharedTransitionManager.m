@@ -384,7 +384,7 @@ static BOOL _isConfigured = NO;
   for (int i = siblingIndex; i >= 0; i--) {
     NSNumber *viewTag = sharedGroup[i];
     REAUIView *view = [_animationManager viewForTag:viewTag];
-    if ([REAScreensHelper isView:view ChildOfScreen:activeTab]) {
+    if ([REAScreensHelper isView:view DescendantOfScreen:activeTab]) {
       return view;
     }
   }
@@ -529,24 +529,24 @@ static BOOL _isConfigured = NO;
   REAUIView *disappearingScreen = [_sharedTransitionManager getLastDisappearingScreen];
   REAUIView *targetScreen = [self valueForKey:@"screenView"];
 
-  if (disappearingScreen != nil) {
-    NSArray *disappearingScreens = [_sharedTransitionManager getDisappearingScreens];
-    REAUIView *firstScreen = disappearingScreens[0];
-    if ([firstScreen.reactSuperview isKindOfClass:NSClassFromString(@"RNSScreenNavigationContainerView")]) {
-      [_sharedTransitionManager handleTabNavigatorChange:nil];
-      return;
-    }
+  if (disappearingScreen == nil) {
+    [_sharedTransitionManager setDisappearingScreen:nil];
+    return;
   }
-
-  if (disappearingScreen != nil) {
-    float transitionViewOffsetX = 0;
-    if ([REAScreensHelper getStackForView:disappearingScreen] != [REAScreensHelper getStackForView:targetScreen]) {
-      transitionViewOffsetX = [_sharedTransitionManager getTransitionViewOffset:targetScreen];
-    }
-    [_sharedTransitionManager screenRemovedFromStack:disappearingScreen
-                                         withOffsetX:-(targetScreen.superview.frame.origin.x + transitionViewOffsetX)
-                                         withOffsetY:-(targetScreen.superview.frame.origin.y)];
+  
+  NSArray *disappearingScreens = [_sharedTransitionManager getDisappearingScreens];
+  REAUIView *firstScreen = disappearingScreens[0];
+  if ([firstScreen.reactSuperview isKindOfClass:NSClassFromString(@"RNSScreenNavigationContainerView")]) {
+    [_sharedTransitionManager handleTabNavigatorChange:nil];
+    return;
   }
+  float transitionViewOffsetX = 0;
+  if ([REAScreensHelper getStackForView:disappearingScreen] != [REAScreensHelper getStackForView:targetScreen]) {
+    transitionViewOffsetX = [_sharedTransitionManager getTransitionViewOffset:targetScreen];
+  }
+  [_sharedTransitionManager screenRemovedFromStack:disappearingScreen
+                                       withOffsetX:-(targetScreen.superview.frame.origin.x + transitionViewOffsetX)
+                                       withOffsetY:-(targetScreen.superview.frame.origin.y)];
   [_sharedTransitionManager setDisappearingScreen:nil];
 }
 
@@ -584,7 +584,8 @@ static BOOL _isConfigured = NO;
     REAUIView *siblingView;
     for (NSNumber *tag in groupTags) {
       REAUIView *currentView = [_animationManager viewForTag:tag];
-      if ([self isView:currentView ChildOfParent:targetScreen]) {
+//      if ([self isView:currentView ChildOfParent:targetScreen]) {
+      if ([REAScreensHelper isView:currentView DescendantOfScreen:targetScreen]) {
         siblingView = currentView;
         REAUIView *siblingScreen = [REAScreensHelper getScreenForView:siblingView];
         if (layoutedScreen && siblingScreen != layoutedScreen) {
@@ -628,18 +629,6 @@ static BOOL _isConfigured = NO;
   [self configureTransitionContainer];
   [self reparentSharedViewsForCurrentTransition:_sharedElements];
   [self startSharedTransition:_sharedElements];
-}
-
-- (bool)isView:(REAUIView *)child ChildOfParent:(REAUIView *)parent
-{
-  REAUIView *currentView = child;
-  while (currentView.reactSuperview != nil) {
-    if (currentView.reactSuperview == parent) {
-      return true;
-    }
-    currentView = currentView.reactSuperview;
-  }
-  return false;
 }
 
 - (float)getTransitionViewOffset:(REAUIView *)screen

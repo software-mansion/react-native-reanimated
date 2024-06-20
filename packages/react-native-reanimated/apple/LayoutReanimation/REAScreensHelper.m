@@ -84,7 +84,7 @@
 {
   NSArray<REAUIView *> *screenTabs = tabNavigator.reactSubviews;
   for (RNSScreenView *tab in screenTabs) {
-    if (tab.activityState == 2) {
+    if (tab.activityState == RNSActivityStateOnTop) {
       return tab;
     }
   }
@@ -118,7 +118,7 @@
   return nil;
 }
 
-+ (bool)isView:(REAUIView *)view ChildOfScreen:(REAUIView *)screen
++ (bool)isView:(REAUIView *)view DescendantOfScreen:(REAUIView *)screen
 {
   REAUIView *currentView = view;
   while (currentView.reactSuperview) {
