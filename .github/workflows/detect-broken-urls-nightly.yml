@@ -5,9 +5,9 @@ on:
   pull_request:
     paths:
       - .github/workflows/detect-broken-urls-nightly.yml
-      - scripts/detect-broken-urls.js
+      - packages/react-native-reanimated/scripts/validate-urls.js
   schedule:
-    - cron: '37 19 * * *'
+    - cron: "37 19 * * *"
   workflow_dispatch:
 
 jobs:
@@ -17,7 +17,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Install dependencies
+      - name: Install monorepo node dependencies
+        run: yarn install
+      - name: Install Reanimated node dependencies
+        working-directory: packages/react-native-reanimated
+        run: yarn install
+      - name: Install node-fetch 2
+        working-directory: packages/react-native-reanimated
         run: yarn add node-fetch@2
+
       - name: Validate urls
+        working-directory: packages/react-native-reanimated
         run: node scripts/validate-urls.js
