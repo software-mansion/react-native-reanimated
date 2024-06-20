@@ -13,7 +13,6 @@ public class ModalManager {
 
   private boolean mIsStatusBarTranslucent = false;
 
-
   private final NotifyAboutKeyboardChangeFunction mNotifyAboutKeyboardChange;
 
   private final Keyboard mKeyboard;
@@ -33,7 +32,8 @@ public class ModalManager {
   public void registerNewDialog(Dialog dialog, Boolean shouldObserveChanges) {
     Window window = dialog.getWindow();
     window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
-    DialogInsetsManager insetsManager = new DialogInsetsManager(dialog, mKeyboard, mNotifyAboutKeyboardChange);
+    DialogInsetsManager insetsManager =
+        new DialogInsetsManager(dialog, mKeyboard, mNotifyAboutKeyboardChange);
     insetsManagersSet.add(insetsManager);
 
     if (shouldObserveChanges) {
@@ -54,13 +54,13 @@ public class ModalManager {
   public void startObservingChanges(boolean isStatusBarTranslucent) {
     mIsStatusBarTranslucent = isStatusBarTranslucent;
 
-    for (DialogInsetsManager insetsManager: insetsManagersSet) {
+    for (DialogInsetsManager insetsManager : insetsManagersSet) {
       insetsManager.startObservingChanges(mNotifyAboutKeyboardChange, isStatusBarTranslucent);
     }
   }
 
   public void stopObservingChanges() {
-      for (DialogInsetsManager insetsManager: insetsManagersSet) {
+    for (DialogInsetsManager insetsManager : insetsManagersSet) {
       insetsManager.stopObservingChanges();
     }
   }

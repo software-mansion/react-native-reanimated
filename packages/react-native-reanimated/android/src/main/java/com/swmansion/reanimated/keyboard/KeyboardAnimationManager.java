@@ -20,7 +20,8 @@ public class KeyboardAnimationManager {
   private final WindowInsetsManager mWindowInsetsManager;
 
   public KeyboardAnimationManager(WeakReference<ReactApplicationContext> reactContext) {
-    mWindowInsetsManager = new WindowInsetsManager(reactContext, mKeyboard, this::notifyAboutKeyboardChange);
+    mWindowInsetsManager =
+        new WindowInsetsManager(reactContext, mKeyboard, this::notifyAboutKeyboardChange);
     mModalManager = new ModalManager(reactContext, mKeyboard, this::notifyAboutKeyboardChange);
   }
 
@@ -28,7 +29,8 @@ public class KeyboardAnimationManager {
       KeyboardWorkletWrapper callback, boolean isStatusBarTranslucent) {
     int listenerId = mNextListenerId++;
     if (mListeners.isEmpty()) {
-      mWindowInsetsManager.startObservingChanges(this::notifyAboutKeyboardChange, isStatusBarTranslucent);
+      mWindowInsetsManager.startObservingChanges(
+          this::notifyAboutKeyboardChange, isStatusBarTranslucent);
       mModalManager.startObservingChanges(isStatusBarTranslucent);
     }
     mListeners.put(listenerId, callback);
