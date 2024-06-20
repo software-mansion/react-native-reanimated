@@ -107,7 +107,7 @@ export default function OlympicAnimation() {
       transform: [{ translateX: 1100 }, { translateY: 1100 }, { scale: 20 }],
       easing: Easing.quad,
     },
-    t0: {
+    to: {
       opacity: 0,
       transform: [{ translateX: 1100 }, { translateY: 1100 }, { scale: 20 }],
       easing: Easing.quad,
