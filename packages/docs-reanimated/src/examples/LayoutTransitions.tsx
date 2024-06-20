@@ -7,14 +7,10 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import Animated, {
-  CurvedTransition,
   LinearTransition,
   SequencedTransition,
   FadingTransition,
-  EntryExitTransition,
   FadeOut,
-  JumpingTransition,
-  FlipOutYLeft,
   useDerivedValue,
   withTiming,
   useSharedValue,
@@ -68,8 +64,6 @@ const DropdownItems = ({ isExpanded, selected, setSelected }) => {
     </View>
   );
 };
-
-LinearTransition.springify;
 
 const DropdownItem = ({ isExpanded, children }) => {
   const height = useSharedValue(0);
