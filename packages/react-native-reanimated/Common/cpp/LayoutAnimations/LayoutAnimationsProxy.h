@@ -44,12 +44,12 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate {
       std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
       SharedComponentDescriptorRegistry componentDescriptorRegistry,
       ContextContainer::Shared contextContainer,
-      jsi::Runtime &uiRuntime_,
+      jsi::Runtime &uiRuntime,
       const std::shared_ptr<UIScheduler> uiScheduler)
       : layoutAnimationsManager_(layoutAnimationsManager),
         contextContainer_(contextContainer),
         componentDescriptorRegistry_(componentDescriptorRegistry),
-        uiRuntime_(uiRuntime_),
+        uiRuntime_(uiRuntime),
         uiScheduler_(uiScheduler) {}
 
   void startEnteringAnimation(const int tag, ShadowViewMutation &mutation)
