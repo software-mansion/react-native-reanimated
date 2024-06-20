@@ -75,10 +75,14 @@ struct Node {
   void removeChildFromUnflattenedTree(std::shared_ptr<MutationNode> child);
   void applyMutationToIndices(ShadowViewMutation mutation);
   void insertChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
-  void insertUnflattenedChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
+  void insertUnflattenedChildren(
+      std::vector<std::shared_ptr<MutationNode>> &newChildren);
   virtual bool isMutationMode();
   explicit Node(const Tag tag) : tag(tag) {}
-  Node(Node &&node) : children(std::move(node.children)), unflattenedChildren(std::move(node.unflattenedChildren)), tag(node.tag) {}
+  Node(Node &&node)
+      : children(std::move(node.children)),
+        unflattenedChildren(std::move(node.unflattenedChildren)),
+        tag(node.tag) {}
   virtual ~Node() = default;
 };
 
@@ -104,7 +108,8 @@ struct SurfaceManager {
   mutable std::unordered_map<SurfaceId, Rect> windows_;
 
   std::unordered_map<Tag, UpdateValues> &getUpdateMap(SurfaceId surfaceId);
-  void updateWindow(SurfaceId surfaceId, double windowWidth, double windowHeight);
+  void
+  updateWindow(SurfaceId surfaceId, double windowWidth, double windowHeight);
   Rect getWindow(SurfaceId surfaceId);
 };
 
@@ -134,11 +139,14 @@ static inline bool isRNSScreen(std::shared_ptr<MutationNode> node) {
           node->mutation.oldChildShadowView.componentName, "RNSScreen");
 }
 
-static inline bool hasLayoutChanged(const ShadowViewMutation& mutation){
-  return mutation.oldChildShadowView.layoutMetrics.frame != mutation.newChildShadowView.layoutMetrics.frame;
+static inline bool hasLayoutChanged(const ShadowViewMutation &mutation) {
+  return mutation.oldChildShadowView.layoutMetrics.frame !=
+      mutation.newChildShadowView.layoutMetrics.frame;
 }
 
-static inline void mergeAndSwap(std::vector<std::shared_ptr<MutationNode>>& A, std::vector<std::shared_ptr<MutationNode>>& B){
+static inline void mergeAndSwap(
+    std::vector<std::shared_ptr<MutationNode>> &A,
+    std::vector<std::shared_ptr<MutationNode>> &B) {
   std::vector<std::shared_ptr<MutationNode>> merged;
   auto it1 = A.begin(), it2 = B.begin();
   while (it1 != A.end() && it2 != B.end()) {
