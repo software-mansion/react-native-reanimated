@@ -18,7 +18,7 @@ import Animated, {
   withDelay,
 } from 'react-native-reanimated';
 
-const DROPDOWN_OFFSET = 50;
+const DROPDOWN_OFFSET = 48;
 
 const INITIAL_LIST = [
   { id: 1, emoji: '🍌', color: '#b58df1' },
