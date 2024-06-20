@@ -114,7 +114,7 @@ async function getSnapshotUpdates(exiting: any, waitTime: number, duration: numb
   return updates;
 }
 
-describe.only('Test predefOuted exiting', () => {
+describe.only('Test predefined exiting', () => {
   describe('exiting on mount, no modifiers', () => {
     test.each(EXITING_SETS)('Test suite of ${0}Out', async ([_setName, exitingSet, waitTime]) => {
       for (const exiting of exitingSet) {
