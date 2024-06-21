@@ -295,8 +295,8 @@ EntryExitTransition.duration(1000)
 
 - `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '300'.
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
-- `.exiting(animation: EntryExitAnimationFunction)` determines animation shown when element is removed from position. Defaults to `FadeOut`.
-- `.entering(animation: EntryExitAnimationFunction)` determines animation shown when element is added to new position. Defaults to `FadeIn`.
+- `.exiting(animation)` determines animation shown when element is removed from position. Defaults to `FadeOut`.
+- `.entering(animation)` determines animation shown when element is added to new position. Defaults to `FadeIn`.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
