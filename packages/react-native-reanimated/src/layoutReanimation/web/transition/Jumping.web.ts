@@ -8,7 +8,8 @@ export function JumpingTransition(
 ) {
   const { translateX, translateY, scaleX, scaleY } = transitionData;
 
-  const d = Math.max(Math.abs(translateX), Math.max(translateY));
+  const d = Math.max(Math.abs(translateX), Math.abs(translateY)) / 2;
+  const peakTranslateY = translateY <= 0 ? translateY - d : -translateY + d;
 
   const jumpingTransition = {
     name,
@@ -27,7 +28,7 @@ export function JumpingTransition(
         transform: [
           {
             translateX: `${translateX / 2}px`,
-            translateY: `${translateY - d}px`,
+            translateY: `${peakTranslateY}px`,
             scale: `${scaleX},${scaleY}`,
           },
         ],
