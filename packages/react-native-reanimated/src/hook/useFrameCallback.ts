@@ -43,11 +43,11 @@ export function useFrameCallback(
   useEffect(() => {
     ref.current.callbackId =
       frameCallbackRegistry.registerFrameCallback(callback);
+    const memoizedId = ref.current.callbackId;
     ref.current.setActive(ref.current.isActive);
 
     return () => {
-      frameCallbackRegistry.unregisterFrameCallback(ref.current.callbackId);
-      ref.current.callbackId = -1;
+      frameCallbackRegistry.unregisterFrameCallback(memoizedId);
     };
   }, [callback, autostart]);
 

@@ -17,6 +17,8 @@ export class LinearTransition
   extends ComplexAnimationBuilder
   implements ILayoutAnimationBuilder
 {
+  static presetName = 'LinearTransition';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
