@@ -121,13 +121,18 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
   const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
   const isCustomKeyframe = config instanceof Keyframe;
 
-  const animationName = isCustomKeyframe
-    ? createCustomKeyFrameAnimation(
-        (config as CustomConfig).definitions as KeyframeDefinitions
-      )
-    : typeof config === 'function'
-    ? config.presetName
-    : (config.constructor as ConstructorWithStaticContext).presetName;
+  let animationName;
+
+  if (isCustomKeyframe) {
+    animationName = createCustomKeyFrameAnimation(
+      (config as CustomConfig).definitions as KeyframeDefinitions
+    );
+  } else if (typeof config === 'function') {
+    animationName = config.presetName;
+  } else {
+    animationName = (config.constructor as ConstructorWithStaticContext)
+      .presetName;
+  }
 
   const shouldFail = checkUndefinedAnimationFail(
     animationName,
