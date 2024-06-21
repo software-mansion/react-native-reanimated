@@ -19,6 +19,8 @@ import './tests/utilities/relativeCoords.test';
 import './tests/layoutAnimations/entering/enteringColors.test';
 import './tests/layoutAnimations/entering/predefinedEntering.test';
 
+import './tests/layoutAnimations/exiting/predefinedExiting.test';
+
 import './tests/advancedAPI/useFrameCallback.test';
 // import './tests/advancedAPI/measure.test'; crash on Android
 
