@@ -11574,10 +11574,10 @@ react-native-gradle-plugin@^0.71.16:
   resolved "https://registry.yarnpkg.com/react-native-gradle-plugin/-/react-native-gradle-plugin-0.71.16.tgz#822bb0c680e03b5df5aa65f2e5ffc2bc2930854a"
   integrity sha512-H2BjG2zk7B7Wii9sXvd9qhCVRQYDAHSWdMw9tscmZBqSP62DkIWEQSk4/B2GhQ4aK9ydVXgtqR6tBeg3yy8TSA==
 
-react-native-reanimated@^3.9.0-nightly-20240320-d6dab8f65:
-  version "3.9.0-nightly-20240320-d6dab8f65"
-  resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-3.9.0-nightly-20240320-d6dab8f65.tgz#a716e2c7b35b35b312fa557aa279fbf98ba509ad"
-  integrity sha512-3fStNbt4Hja58uQL/ZAkIexxroQSh56+mXMke2yJKCYTCMctT2Z0GsuJWrXeH+1T+XBwUG1NTVBUzQRRFm2kSQ==
+react-native-reanimated@^3.13.0-nightly-20240619-b81d3d322:
+  version "3.13.0-nightly-20240619-b81d3d322"
+  resolved "https://registry.npmjs.org/react-native-reanimated/-/react-native-reanimated-3.13.0-nightly-20240619-b81d3d322.tgz#d2441a227617a24b5f649d46dd9b049c4764b279"
+  integrity sha512-mSMhyLwgEd/aU5vhPJXkAAfRz5KQROKW7veSH2ok+stOvKCnkKbFdXDKSjYsgYlqIbdF1eSyxvq0ntTbyKkHBQ==
   dependencies:
     "@babel/plugin-transform-arrow-functions" "^7.0.0-0"
     "@babel/plugin-transform-nullish-coalescing-operator" "^7.0.0-0"
