@@ -38,18 +38,18 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate {
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   ContextContainer::Shared contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
-  jsi::Runtime& uiRuntime_;
+  jsi::Runtime &uiRuntime_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   LayoutAnimationsProxy(
       std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
       SharedComponentDescriptorRegistry componentDescriptorRegistry,
       ContextContainer::Shared contextContainer,
-      jsi::Runtime& uiRuntime_,
+      jsi::Runtime &uiRuntime,
       const std::shared_ptr<UIScheduler> uiScheduler)
       : layoutAnimationsManager_(layoutAnimationsManager),
         contextContainer_(contextContainer),
         componentDescriptorRegistry_(componentDescriptorRegistry),
-        uiRuntime_(uiRuntime_),
+        uiRuntime_(uiRuntime),
         uiScheduler_(uiScheduler) {}
 
   void startEnteringAnimation(const int tag, ShadowViewMutation &mutation)
@@ -73,7 +73,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate {
   void handleRemovals(
       ShadowViewMutationList &filteredMutations,
       std::vector<std::shared_ptr<MutationNode>> &roots) const;
-    
+
   void handleUpdatesAndEnterings(
       ShadowViewMutationList &filteredMutations,
       const std::unordered_map<Tag, ShadowView> &movedViews,
@@ -85,11 +85,21 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate {
       ShadowViewMutationList &mutations) const;
   void updateOngoingAnimationTarget(
       const int tag,
-      const ShadowViewMutation& mutation) const;
-  std::shared_ptr<ShadowView> cloneViewWithoutOpacity(facebook::react::ShadowViewMutation &mutation, const PropsParserContext &propsParserContext) const;
-  void maybeRestoreOpacity(LayoutAnimation& layoutAnimation, const jsi::Object &newStyle) const;
-  void maybeUpdateWindowDimensions(facebook::react::ShadowViewMutation &mutation, SurfaceId surfaceId) const;
-  void createLayoutAnimation(const ShadowViewMutation &mutation, ShadowView &oldView, const SurfaceId &surfaceId, const int tag) const;
+      const ShadowViewMutation &mutation) const;
+  std::shared_ptr<ShadowView> cloneViewWithoutOpacity(
+      facebook::react::ShadowViewMutation &mutation,
+      const PropsParserContext &propsParserContext) const;
+  void maybeRestoreOpacity(
+      LayoutAnimation &layoutAnimation,
+      const jsi::Object &newStyle) const;
+  void maybeUpdateWindowDimensions(
+      facebook::react::ShadowViewMutation &mutation,
+      SurfaceId surfaceId) const;
+  void createLayoutAnimation(
+      const ShadowViewMutation &mutation,
+      ShadowView &oldView,
+      const SurfaceId &surfaceId,
+      const int tag) const;
 
   void updateIndexForMutation(ShadowViewMutation &mutation) const;
 

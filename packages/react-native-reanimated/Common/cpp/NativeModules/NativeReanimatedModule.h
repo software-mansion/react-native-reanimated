@@ -136,7 +136,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue);
 
   void initializeFabric(const std::shared_ptr<UIManager> &uiManager);
-  
+
   void initializeLayoutAnimations();
 
   std::string obtainPropFromShadowNode(
