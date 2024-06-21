@@ -95,7 +95,9 @@ describe('withSequence animation of number', () => {
   test.each([
     { startValues: [0, 10, 20], middleValues: [0, 10, 20], finalValues: [20, 10, 30], animationNumber: 0 },
     { startValues: [0, 10, 20], middleValues: [0, 50, 60], finalValues: [40, 10, 30], animationNumber: 1 },
+    { startValues: [0, 10, 20], middleValues: [0, 50, 60], finalValues: [40, 10, 30], animationNumber: 2 },
     { startValues: [30, 10, 55], middleValues: [0, -10, 60], finalValues: [40, 10, 30], animationNumber: 1 },
+    { startValues: [30, 10, 55], middleValues: [0, -10, 60], finalValues: [40, 10, 30], animationNumber: 2 },
   ] as Array<TestCase>)(
     'Animate ${startValues} → ${finalValues} → ${middleValues} → ${finalValues}, animation nr ${animationNumber}',
     async ({ startValues, middleValues, finalValues, animationNumber }) => {

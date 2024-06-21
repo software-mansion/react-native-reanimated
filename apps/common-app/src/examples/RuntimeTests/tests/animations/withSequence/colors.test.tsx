@@ -26,16 +26,16 @@ type TestCase = {
 
 describe('withSequence animation of number', () => {
   enum Component {
-    ACTIVE = 'ONE',
-    PASSIVE = 'TWO',
+    ACTIVE = 'ACTIVE',
+    PASSIVE = 'PASSIVE',
   }
   const DELAY = 75;
   const WidthComponent = ({ startColor, middleColor, finalColor }: TestCase) => {
     const colorActiveSV = useSharedValue(startColor);
     const colorPassiveSV = useSharedValue(startColor);
 
-    const refOne = useTestRef(Component.ACTIVE);
-    const refTwo = useTestRef(Component.PASSIVE);
+    const refActive = useTestRef(Component.ACTIVE);
+    const refPassive = useTestRef(Component.PASSIVE);
 
     const styleActive = useAnimatedStyle(() => {
       return {
@@ -66,8 +66,8 @@ describe('withSequence animation of number', () => {
 
     return (
       <View style={styles.container}>
-        <Animated.View ref={refOne} style={[styles.animatedBox, styleActive]} />
-        <Animated.View ref={refTwo} style={[styles.animatedBox, stylePassive]} />
+        <Animated.View ref={refActive} style={[styles.animatedBox, styleActive]} />
+        <Animated.View ref={refPassive} style={[styles.animatedBox, stylePassive]} />
       </View>
     );
   };
