@@ -58,16 +58,15 @@ import {
   SpringifyEnteringSnapshots,
 } from './entering.snapshot';
 
-const FADE_ENTERING = [FadeIn, FadeInRight, FadeInRight, FadeInLeft, FadeInUp, FadeInDown];
+const FADE_ENTERING = [FadeIn, FadeInRight, FadeInLeft, FadeInUp, FadeInDown];
 const BOUNCE_ENTERING = [BounceIn, BounceInRight, BounceInLeft, BounceInUp, BounceInDown];
 const FLIP_ENTERING = [FlipInEasyX, FlipInEasyY, FlipInXDown, FlipInXUp, FlipInYLeft, FlipInYRight];
 const LIGHTSPEED_ENTERING = [LightSpeedInRight, LightSpeedInLeft];
 const PINWHEEL_ENTERING = [PinwheelIn];
-const ROLL_ENTERING = [RollInRight, RollInLeft]; //Don't test RollIn, until recording rotation snapshot gets fixed
+const ROLL_ENTERING = [RollInRight, RollInLeft];
 const ROTATE_ENTERING = [RotateInDownLeft, RotateInDownRight, RotateInUpLeft, RotateInUpRight];
 const SLIDE_ENTERING = [SlideInRight, SlideInLeft, SlideInUp, SlideInDown];
 const STRETCH_ENTERING = [StretchInX, StretchInY];
-
 const ZOOM_ENTERING = [
   ZoomIn,
   ZoomInDown,
@@ -117,7 +116,7 @@ async function getSnapshotUpdates(entering: any, waitTime: number, duration: num
 }
 
 describe('Test predefined entering', () => {
-  describe('Entering on mount, no modifiers', async () => {
+  describe('Entering on mount, no modifiers', () => {
     test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet, waitTime]) => {
       for (const entering of enteringSet) {
         const snapshotName = (entering as any).name;
@@ -129,11 +128,11 @@ describe('Test predefined entering', () => {
     });
   });
 
-  describe('Entering on mount, duration 100', async () => {
+  describe('Entering on mount, duration 100', () => {
     test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet, _waitTime]) => {
       for (const entering of enteringSet) {
         const enteringName: string = (entering as any).name;
-        let updates = await getSnapshotUpdates(entering, 105, 100);
+        const updates = await getSnapshotUpdates(entering, 105, 100);
         expect(updates).toMatchSnapshots(
           DurationEnteringSnapshots[enteringName as keyof typeof DurationEnteringSnapshots],
         );
@@ -141,7 +140,7 @@ describe('Test predefined entering', () => {
     });
   });
 
-  describe('Entering on mount, springify', async () => {
+  describe('Entering on mount, springify', () => {
     test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet, waitTime]) => {
       const timeToWait = _setName === 'Bounce' ? 650 : waitTime * 0.3;
       for (const entering of enteringSet) {
