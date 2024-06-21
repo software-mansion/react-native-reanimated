@@ -42,8 +42,9 @@ jobs:
           pip install cpplint
 
       - name: Run cpplint
+        working-directory: packages/react-native-reanimated
         run: |
-          packages/react-native-reanimated/scripts/cpplint.sh
+          scripts/cpplint.sh
 
       - name: Disallow DEBUG macros
         run: |
