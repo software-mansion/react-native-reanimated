@@ -12,6 +12,8 @@ import './tests/animations/withTiming/transformMatrices.test';
 import './tests/animations/withDecay/basic.test';
 import './tests/animations/withSpring/variousConfig.test';
 
+import './tests/animations/withDelay/basic.test';
+
 import './tests/core/cancelAnimation.test';
 
 import './tests/utilities/relativeCoords.test';
