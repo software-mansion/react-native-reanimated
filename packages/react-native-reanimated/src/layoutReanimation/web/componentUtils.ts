@@ -68,6 +68,9 @@ function getDurationFromConfig(
   config: CustomConfig,
   animationName: string
 ): number {
+  // Duration in keyframe has to be in seconds. However, when using `.duration()` modifier we pass it in miliseconds.
+  // If `duration` was specified in config, we have to divide it by `1000`, otherwise we return value that is already in seconds.
+
   const defaultDuration =
     animationName in Animations
       ? Animations[animationName as AnimationNames].duration
