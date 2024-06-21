@@ -175,6 +175,9 @@ export function handleLayoutTransition(
     case 'FadingTransition':
       animationType = TransitionType.FADING;
       break;
+    case 'JumpingTransition':
+      animationType = TransitionType.JUMPING;
+      break;
     default:
       animationType = TransitionType.LINEAR;
       break;
