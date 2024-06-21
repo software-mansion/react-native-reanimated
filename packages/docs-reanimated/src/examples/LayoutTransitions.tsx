@@ -14,6 +14,7 @@ import Animated, {
   useDerivedValue,
   withTiming,
   useSharedValue,
+  JumpingTransition,
   useAnimatedStyle,
   withDelay,
 } from 'react-native-reanimated';
@@ -36,13 +37,13 @@ const LAYOUT_TRANSITIONS = [
   { label: 'Linear Transition', value: LinearTransition },
   { label: 'Sequenced Transition', value: SequencedTransition },
   { label: 'Fading Transition', value: FadingTransition },
-  // { label: 'Jumping Transition', value: JumpingTransition },
+  { label: 'Jumping Transition', value: JumpingTransition },
   // { label: 'Curved Transition', value: CurvedTransition },
   // {
   //   label: 'Entry/Exit Transition',
   //   value: EntryExitTransition.exiting(FlipOutYLeft),
   // },
-  // TODO: in the future Jumping, Curved and Entry/Exit will be available on web, now they don't so we don't use them.
+  // TODO: in the future Curved and Entry/Exit will be available on web, now they don't so we don't use them.
 ];
 
 const DropdownItems = ({ isExpanded, selected, setSelected }) => {
@@ -107,9 +108,7 @@ const DropdownParent = ({ selected, setSelected, isExpanded }) => {
 const Dropdown = ({ selected, onSelect }) => {
   const isExpanded = useSharedValue(false);
   const onPress = () => {
-    console.log(isExpanded.value);
     isExpanded.value = !isExpanded.value;
-    console.log(isExpanded.value);
   };
   const labelRef = useRef();
 
