@@ -1,7 +1,6 @@
 'use strict';
 import type { TransitionData } from '../animationParser';
-
-const jumpHeight = 100;
+import { Easing } from '../../../Easing';
 
 export function JumpingTransition(
   name: string,
@@ -9,7 +8,7 @@ export function JumpingTransition(
 ) {
   const { translateX, translateY, scaleX, scaleY } = transitionData;
 
-  const dx = translateX / 3;
+  const d = Math.max(Math.abs(translateX), Math.max(translateY));
 
   const jumpingTransition = {
     name,
@@ -22,21 +21,14 @@ export function JumpingTransition(
             scale: `${scaleX},${scaleY}`,
           },
         ],
+        easing: Easing.exp,
       },
-      25: {
+      50: {
         transform: [
           {
-            translateX: `${translateX - dx}px`,
-            translateY: `${translateY - jumpHeight}px`,
+            translateX: `${translateX / 2}px`,
+            translateY: `${translateY - d}px`,
             scale: `${scaleX},${scaleY}`,
-          },
-        ],
-      },
-      75: {
-        transform: [
-          {
-            translateX: `${dx}px`,
-            translateY: `${translateY - jumpHeight}px`,
           },
         ],
       },
