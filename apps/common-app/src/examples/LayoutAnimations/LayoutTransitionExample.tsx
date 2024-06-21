@@ -54,9 +54,9 @@ type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;
 
 function HomeScreen({ navigation }: HomeScreenProps) {
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={styles.homeContainer}>
       <Button
-        title="Linear Transition"
+        title={'Linear Transition'}
         onPress={() =>
           navigation.navigate('linear', {
             title: 'LinearTransition',
@@ -192,6 +192,7 @@ function Transition({ route }: TransitionProps) {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>{title}</Text>
       <View>
         <Items selected={selected} items={items} onRemove={removeItem} />
       </View>
@@ -269,6 +270,12 @@ const styles = StyleSheet.create({
     color: '#f8f9ff',
     fontSize: 24,
   },
+  title: {
+    fontSize: 18,
+    color: '#001a72',
+    textAlign: 'center',
+    marginVertical: 16,
+  },
   wrapper: {
     width: '100%',
     position: 'absolute',
@@ -278,5 +285,11 @@ const styles = StyleSheet.create({
   animatedView: {
     width: '100%',
     overflow: 'hidden',
+  },
+  homeContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
   },
 });
