@@ -12,6 +12,7 @@ import type { TransformsStyle } from 'react-native';
 import { LinearTransition } from './transition/Linear.web';
 import { SequencedTransition } from './transition/Sequenced.web';
 import { FadingTransition } from './transition/Fading.web';
+import { JumpingTransition } from './transition/Jumping.web';
 import { insertWebAnimation } from './domUtils';
 
 type TransformType = NonNullable<TransformsStyle['transform']>;
@@ -103,6 +104,13 @@ export function TransitionGenerator(
       break;
     case TransitionType.FADING:
       transitionObject = FadingTransition(
+        transitionKeyframeName,
+        transitionData
+      );
+      break;
+
+    case TransitionType.JUMPING:
+      transitionObject = JumpingTransition(
         transitionKeyframeName,
         transitionData
       );
