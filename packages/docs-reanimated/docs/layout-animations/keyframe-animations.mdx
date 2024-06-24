@@ -4,18 +4,29 @@ sidebar_position: 2
 
 # Keyframe animations
 
-import DocsCompatibilityInfo from '../_shared/_docs_compatibility_info.mdx';
-
-<DocsCompatibilityInfo />
-
 The document explains how you can define complex animation using simple and popular animation definitions schema - Keyframes.
 
-## How to define Keyframe animation?
+## Reference
 
-### 1. Import Keyframe
-
-```js
+```javascript
 import { Keyframe } from 'react-native-reanimated';
+
+const keyframe = new Keyframe({
+  0: {
+    transform: [{ rotate: '0deg' }],
+  },
+  45: {
+    transform: [{ rotate: '100deg' }],
+    easing: Easing.exp,
+  },
+  100: {
+    transform: [{ rotate: '45deg' }],
+  },
+});
+
+function App() {
+  return <Animated.View entering={keyframe} />;
+}
 ```
 
 ### 2. Create Keyframe object, define initial and final state
@@ -98,25 +109,7 @@ const keyframe = new Keyframe({
 });
 ```
 
-## How to use keyframe animations?
-
-Currently, you can define animations using keyframes only for entry and exit animations.
-
-### 1. Choose Animated Component which entering or exiting you want to animate
-
-```js
-// AnimatedComponent - component created by createAnimatedComponent or imported from Reanimated
-// keyframe - Keyframe object
-<AnimatedComponent exiting={keyframe} />
-```
-
-### 2. Customize the animation
-
-```js
-<AnimatedComponent exiting={keyframe.duration(3000).delay(200)} />
-```
-
-### Modifiers
+## Modifiers
 
 ```javascript
 keyframe
