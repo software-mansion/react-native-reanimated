@@ -116,28 +116,22 @@ Currently, you can define animations using keyframes only for entry and exit ani
 <AnimatedComponent exiting={keyframe.duration(3000).delay(200)} />
 ```
 
-## Available modifiers
+### Modifiers
 
-The order of modifiers doesn't matter.
+```javascript
+keyframe
+  .duration(1000)
+  .delay(500)
+  .reduceMotion(ReduceMotion.Never)
+  .withCallback((finished) => {
+    console.log(`finished without interruptions: ${finished}`);
+  });
+```
 
-### duration
-
-default: 500
-How long the animation should last.
-
-### delay
-
-default: 0
-Allows to start with a specified delay.
-
-### reduceMotion
-
-default: ReduceMotion.System
-Determines how the animation responds to the device's reduced motion accessibility setting.
-
-### withCallback
-
-Allows to execute code when keyframe animation ends.
+- `.duration(durationMs: number)` is the length of the animation (in milliseconds). Defaults to `300`.
+- `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
+- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
+- `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Example
 
