@@ -10,6 +10,6 @@ module.exports = {
         },
       },
     ],
-    ['react-native-reanimated/plugin', {processNestedWorklets: true}],
+    ['react-native-reanimated/plugin', { processNestedWorklets: true }],
   ],
 };

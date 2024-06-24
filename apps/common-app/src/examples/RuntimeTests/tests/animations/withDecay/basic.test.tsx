@@ -49,8 +49,8 @@ describe('withDecay animation, test various config', () => {
     [900, { velocity: 900, deceleration: 0.997 }],
     [400, { velocity: 900, clamp: [0, 150] }],
     [900, { velocity: 900, clamp: [0, 150], rubberBandEffect: true }],
-    [700, { velocity: 2000, clamp: [0, 150], rubberBandEffect: true }],
-    [400, { velocity: 2000, clamp: [0, 150], rubberBandEffect: true, rubberBandFactor: 2 }],
+    [800, { velocity: 2000, clamp: [0, 150], rubberBandEffect: true }],
+    [500, { velocity: 2000, clamp: [0, 150], rubberBandEffect: true, rubberBandFactor: 2 }],
   ] as Array<[number, WithDecayConfig]>)('Config ${1}', async ([duration, config]) => {
     const snapshotName =
       'decay_' +

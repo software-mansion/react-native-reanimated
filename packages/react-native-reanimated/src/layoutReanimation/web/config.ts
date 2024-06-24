@@ -65,6 +65,7 @@ export enum TransitionType {
   LINEAR,
   SEQUENCED,
   FADING,
+  JUMPING,
 }
 
 export const AnimationsData: Record<string, AnimationData> = {

@@ -20,6 +20,8 @@ export class CurvedTransition
   extends BaseAnimationBuilder
   implements ILayoutAnimationBuilder
 {
+  static presetName = 'CurvedTransition';
+
   easingXV: EasingFunction = Easing.in(Easing.ease);
   easingYV: EasingFunction = Easing.out(Easing.ease);
   easingWidthV: EasingFunction = Easing.in(Easing.exp);

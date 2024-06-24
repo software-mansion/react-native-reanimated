@@ -17,6 +17,8 @@ export class FadingTransition
   extends BaseAnimationBuilder
   implements ILayoutAnimationBuilder
 {
+  static presetName = 'FadingTransition';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {

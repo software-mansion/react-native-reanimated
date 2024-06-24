@@ -135,7 +135,7 @@ std::shared_ptr<Shareable> Shareable::undefined() {
 }
 
 template <typename BaseClass>
-jsi::Value RetainingShareable<BaseClass>::getJSValue(jsi::Runtime &rt) {
+jsi::Value RetainingShareable<BaseClass>::toJSValue(jsi::Runtime &rt) {
   if (&rt == primaryRuntime_) {
     // TODO: it is suboptimal to generate new object every time getJS is
     // called on host runtime – the objects we are generating already exists
@@ -172,7 +172,7 @@ jsi::Value ShareableArray::toJSValue(jsi::Runtime &rt) {
   auto size = data_.size();
   auto ary = jsi::Array(rt, size);
   for (size_t i = 0; i < size; i++) {
-    ary.setValueAtIndex(rt, i, data_[i]->getJSValue(rt));
+    ary.setValueAtIndex(rt, i, data_[i]->toJSValue(rt));
   }
   return ary;
 }
@@ -218,7 +218,7 @@ jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
   auto obj = jsi::Object(rt);
   for (size_t i = 0, size = data_.size(); i < size; i++) {
     obj.setProperty(
-        rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
+        rt, data_[i].first.c_str(), data_[i].second->toJSValue(rt));
   }
   if (nativeState_ != nullptr) {
     obj.setNativeState(rt, nativeState_);
@@ -265,7 +265,7 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
 
 jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
   if (remoteValue_ == nullptr) {
-    auto initObj = initializer_->getJSValue(rt);
+    auto initObj = initializer_->toJSValue(rt);
     auto value = std::make_unique<jsi::Value>(getValueUnpacker(rt).call(
         rt, initObj, jsi::String::createFromAscii(rt, "Handle")));
 

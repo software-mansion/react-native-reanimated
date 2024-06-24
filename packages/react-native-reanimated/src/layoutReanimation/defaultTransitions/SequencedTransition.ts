@@ -17,6 +17,8 @@ export class SequencedTransition
   extends BaseAnimationBuilder
   implements ILayoutAnimationBuilder
 {
+  static presetName = 'SequencedTransition';
+
   reversed = false;
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
