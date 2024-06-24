@@ -8,10 +8,8 @@ import Animated, {
   withSpring,
   clamp,
 } from 'react-native-reanimated';
-import {
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent,
-} from 'react-native-gesture-handler';
+import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 
