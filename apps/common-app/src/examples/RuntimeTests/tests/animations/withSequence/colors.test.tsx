@@ -72,7 +72,7 @@ describe('withSequence animation of number', () => {
     );
   };
 
-  test.only.each([
+  test.each([
     {
       startColor: 'gold',
       startColorHex: '#ffd700ff',

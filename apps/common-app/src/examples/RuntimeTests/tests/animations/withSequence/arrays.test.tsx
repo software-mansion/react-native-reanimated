@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -41,34 +41,31 @@ describe('withSequence animation of number', () => {
     const ref1 = useTestRef(COMPONENT_REF.second);
     const ref2 = useTestRef(COMPONENT_REF.third);
 
-    const animateValueFn = useCallback(
-      function animateValue(finalValues: [number, number, number]) {
-        'worklet';
-        const finalValuesPlus20 = finalValues.map(val => val + 20);
-        switch (animationNumber) {
-          case 0:
-            return withSequence(
-              withTiming(finalValues, { duration: 200 }),
-              withDelay(DELAY, withTiming(middleValues, { duration: 300, easing: Easing.exp })),
-              withDelay(DELAY, withTiming(finalValuesPlus20, { duration: 200 })),
-            );
-          case 1:
-            return withSequence(
-              withSpring(finalValues, { duration: 200, dampingRatio: 1 }),
-              withDelay(DELAY, withSpring(middleValues, { duration: 300, dampingRatio: 1.5 })),
-              withDelay(DELAY, withSpring(finalValuesPlus20, { duration: 200, dampingRatio: 0.9 })),
-            );
-          case 2:
-            return withSequence(
-              withSpring(finalValues, { duration: 200, dampingRatio: 1 }),
-              withDelay(DELAY, withTiming(middleValues, { duration: 300 })),
-              withDelay(DELAY, withSpring(finalValuesPlus20, { duration: 200, dampingRatio: 1 })),
-            );
-        }
-        return [0, 0, 0];
-      },
-      [animationNumber, middleValues],
-    );
+    function animateValue(finalValues: [number, number, number]) {
+      'worklet';
+      const finalValuesPlus20 = finalValues.map(val => val + 20);
+      switch (animationNumber) {
+        case 0:
+          return withSequence(
+            withTiming(finalValues, { duration: 200 }),
+            withDelay(DELAY, withTiming(middleValues, { duration: 300, easing: Easing.exp })),
+            withDelay(DELAY, withTiming(finalValuesPlus20, { duration: 200 })),
+          );
+        case 1:
+          return withSequence(
+            withSpring(finalValues, { duration: 200, dampingRatio: 1 }),
+            withDelay(DELAY, withSpring(middleValues, { duration: 300, dampingRatio: 1.5 })),
+            withDelay(DELAY, withSpring(finalValuesPlus20, { duration: 200, dampingRatio: 0.9 })),
+          );
+        case 2:
+          return withSequence(
+            withSpring(finalValues, { duration: 200, dampingRatio: 1 }),
+            withDelay(DELAY, withTiming(middleValues, { duration: 300 })),
+            withDelay(DELAY, withSpring(finalValuesPlus20, { duration: 200, dampingRatio: 1 })),
+          );
+      }
+      return [0, 0, 0];
+    }
 
     const style0 = useAnimatedStyle(() => {
       return { left: lefts.value[0] };
@@ -81,7 +78,7 @@ describe('withSequence animation of number', () => {
     });
 
     useEffect(() => {
-      lefts.value = animateValueFn(finalValues) as [number, number, number];
+      lefts.value = animateValue(finalValues) as [number, number, number];
     });
     return (
       <View style={styles.container}>
@@ -93,9 +90,10 @@ describe('withSequence animation of number', () => {
   };
 
   test.each([
-    { startValues: [0, 10, 20], middleValues: [0, 10, 20], finalValues: [20, 10, 30], animationNumber: 0 },
-    { startValues: [0, 10, 20], middleValues: [0, 50, 60], finalValues: [40, 10, 30], animationNumber: 1 },
-    { startValues: [0, 10, 20], middleValues: [0, 50, 60], finalValues: [40, 10, 30], animationNumber: 2 },
+    { startValues: [0, 10, 20], middleValues: [0, 100, 210], finalValues: [20, 10, 30], animationNumber: 0 },
+    { startValues: [0, 10, 20], middleValues: [0, 150, 160], finalValues: [40, 10, 30], animationNumber: 1 },
+    { startValues: [0, 10, 20], middleValues: [0, 150, 160], finalValues: [40, 10, 30], animationNumber: 2 },
+    { startValues: [30, 10, 55], middleValues: [0, -10, 60], finalValues: [40, 10, 30], animationNumber: 0 },
     { startValues: [30, 10, 55], middleValues: [0, -10, 60], finalValues: [40, 10, 30], animationNumber: 1 },
     { startValues: [30, 10, 55], middleValues: [0, -10, 60], finalValues: [40, 10, 30], animationNumber: 2 },
   ] as Array<TestCase>)(
