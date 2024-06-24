@@ -6,9 +6,6 @@ import './tests/TestsOfTestingFramework.test';
 
 import './tests/animations';
 
-import './tests/animations/withDelay/keepSnapshot.test';
-import './tests/animations/withDelay/addDelays.test';
-
 import './tests/core/cancelAnimation.test';
 
 import './tests/utilities/relativeCoords.test';

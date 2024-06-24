@@ -22,4 +22,8 @@ describe('*****ANIMATIONS*****', () => {
     require('./withSequence/arrays.test');
     require('./withSequence/colors.test');
   });
+  describe('****withDelay****', () => {
+    require('./withDelay/keepSnapshot.test');
+    require('./withDelay/addDelays.test');
+  });
 });

@@ -20,68 +20,68 @@ const WIDTH_COMPONENT_PASSIVE_REF = 'WidthComponentPassive';
 const WIDTH_COMPONENT_INLINE_REF = 'WidthComponentInline';
 const COMPONENT_REFS = [WIDTH_COMPONENT_ACTIVE_REF, WIDTH_COMPONENT_PASSIVE_REF, WIDTH_COMPONENT_INLINE_REF];
 
-describe('Add three delays', () => {
-  const WidthComponent = ({ delays }: { delays: [number] | [number, number, number] }) => {
-    const widthActiveSV = useSharedValue(0);
-    const widthPassiveSV = useSharedValue(0);
+const WidthComponent = ({ delays }: { delays: [number] | [number, number, number] }) => {
+  const widthActiveSV = useSharedValue(0);
+  const widthPassiveSV = useSharedValue(0);
 
-    const refActive = useTestRef(WIDTH_COMPONENT_ACTIVE_REF);
-    const refPassive = useTestRef(WIDTH_COMPONENT_PASSIVE_REF);
-    const refInline = useTestRef(WIDTH_COMPONENT_INLINE_REF);
+  const refActive = useTestRef(WIDTH_COMPONENT_ACTIVE_REF);
+  const refPassive = useTestRef(WIDTH_COMPONENT_PASSIVE_REF);
+  const refInline = useTestRef(WIDTH_COMPONENT_INLINE_REF);
 
-    const styleActive = useAnimatedStyle(() => {
+  const stylePassive = useAnimatedStyle(() => {
+    return {
+      width: widthPassiveSV.value,
+    };
+  });
+  const styleActive = useAnimatedStyle(() => {
+    if (delays.length === 1) {
       return {
-        width: widthPassiveSV.value,
+        width: withDelay(delays[0], withTiming(widthActiveSV.value, { duration: 100 })),
       };
-    });
-    const stylePassive = useAnimatedStyle(() => {
-      if (delays.length === 1) {
-        return {
-          width: withDelay(delays[0], withTiming(widthActiveSV.value, { duration: 100 })),
-        };
-      }
-      if (delays.length === 3) {
-        return {
-          width: withDelay(
-            delays[0],
-            withDelay(delays[1], withDelay(delays[2], withTiming(widthActiveSV.value, { duration: 100 }))),
-          ),
-        };
-      }
-      return {};
-    });
-
-    useEffect(() => {
-      widthActiveSV.value = 300;
-    }, [widthActiveSV]);
-
-    useEffect(() => {
-      if (delays.length === 1) {
-        widthPassiveSV.value = withDelay(delays[0], withTiming(300, { duration: 100 }));
-      }
-      if (delays.length === 3) {
-        widthPassiveSV.value = withDelay(
+    }
+    if (delays.length === 3) {
+      return {
+        width: withDelay(
           delays[0],
-          withDelay(delays[1], withDelay(delays[2], withTiming(300, { duration: 100 }))),
-        );
-      }
-    }, [widthPassiveSV, delays]);
+          withDelay(delays[1], withDelay(delays[2], withTiming(widthActiveSV.value, { duration: 100 }))),
+        ),
+      };
+    }
+    return {};
+  });
 
-    return (
-      <View style={styles.container}>
-        <Animated.View ref={refActive} style={[styles.animatedBox, { backgroundColor: 'powderblue' }, styleActive]} />
-        <Animated.View
-          ref={refPassive}
-          style={[styles.animatedBox, { backgroundColor: 'cornflowerblue' }, stylePassive]}
-        />
-        <Animated.View
-          ref={refInline}
-          style={[styles.animatedBox, { backgroundColor: 'steelblue', width: widthPassiveSV }]}
-        />
-      </View>
-    );
-  };
+  useEffect(() => {
+    widthActiveSV.value = 300;
+  }, [widthActiveSV]);
 
+  useEffect(() => {
+    if (delays.length === 1) {
+      widthPassiveSV.value = withDelay(delays[0], withTiming(300, { duration: 100 }));
+    }
+    if (delays.length === 3) {
+      widthPassiveSV.value = withDelay(
+        delays[0],
+        withDelay(delays[1], withDelay(delays[2], withTiming(300, { duration: 100 }))),
+      );
+    }
+  }, [widthPassiveSV, delays]);
+
+  return (
+    <View style={styles.container}>
+      <Animated.View ref={refActive} style={[styles.animatedBox, { backgroundColor: 'powderblue' }, styleActive]} />
+      <Animated.View
+        ref={refPassive}
+        style={[styles.animatedBox, { backgroundColor: 'cornflowerblue' }, stylePassive]}
+      />
+      <Animated.View
+        ref={refInline}
+        style={[styles.animatedBox, { backgroundColor: 'steelblue', width: widthPassiveSV }]}
+      />
+    </View>
+  );
+};
+
+describe('Add three delays', () => {
   async function getSnapshotUpdates(delays: [number] | [number, number, number]) {
     await mockAnimationTimer();
     const updatesContainer = await recordAnimationUpdates();
