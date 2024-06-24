@@ -34,12 +34,14 @@ import {
 } from './transformationMatrix/matrixUtils';
 import { isReducedMotion, shouldBeUseWeb } from '../PlatformChecker';
 import type { EasingFunction, EasingFunctionFactory } from '../Easing';
+import { makeMutable } from '../mutables';
 
 let IN_STYLE_UPDATER = false;
-const IS_REDUCED_MOTION = isReducedMotion();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-if (__DEV__ && IS_REDUCED_MOTION) {
+export const IS_REDUCED_MOTION = makeMutable(isReducedMotion());
+
+if (__DEV__ && IS_REDUCED_MOTION.value) {
   console.warn(
     `[Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device.`
   );
@@ -111,7 +113,7 @@ export function recognizePrefixSuffix(
 export function getReduceMotionFromConfig(config?: ReduceMotion) {
   'worklet';
   return !config || config === ReduceMotion.System
-    ? IS_REDUCED_MOTION
+    ? IS_REDUCED_MOTION.value
     : config === ReduceMotion.Always;
 }
 
