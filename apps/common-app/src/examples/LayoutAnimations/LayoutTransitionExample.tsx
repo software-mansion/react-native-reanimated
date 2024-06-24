@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -42,74 +42,48 @@ const INITIAL_LIST = [
 
 type RootStackParamList = {
   Home: undefined;
-  linear: { title: string; transition: any };
-  fading: { title: string; transition: any };
-  sequenced: { title: string; transition: any };
-  jumping: { title: string; transition: any };
-  curved: { title: string; transition: any };
-  entryexit: { title: string; transition: any };
+  TransitionScreen: { title: string; transition: any };
 };
 
 type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;
 
+const TRANSITIONS = [
+  { name: 'Linear', title: 'Linear Transition', transition: LinearTransition },
+  {
+    name: 'Sequenced',
+    title: 'Sequenced Transition',
+    transition: SequencedTransition,
+  },
+  { name: 'Fading', title: 'Fading Transition', transition: FadingTransition },
+  {
+    name: 'Jumping',
+    title: 'Jumping Transition',
+    transition: JumpingTransition,
+  },
+  { name: 'Curved', title: 'Curved Transition', transition: CurvedTransition },
+  {
+    name: 'EntryExit',
+    title: 'Entry/Exit Transition',
+    transition:
+      EntryExitTransition.entering(FlipInEasyX).exiting(FlipOutYRight),
+  },
+];
+
 function HomeScreen({ navigation }: HomeScreenProps) {
   return (
     <View style={styles.homeContainer}>
-      <Button
-        title={'Linear Transition'}
-        onPress={() =>
-          navigation.navigate('linear', {
-            title: 'LinearTransition',
-            transition: LinearTransition,
-          })
-        }
-      />
-      <Button
-        title="Sequenced Transition"
-        onPress={() =>
-          navigation.navigate('sequenced', {
-            title: 'SequencedTransition',
-            transition: SequencedTransition,
-          })
-        }
-      />
-      <Button
-        title="Fading Transition"
-        onPress={() =>
-          navigation.navigate('fading', {
-            title: 'FadingTransition',
-            transition: FadingTransition,
-          })
-        }
-      />
-      <Button
-        title="Jumping Transition"
-        onPress={() =>
-          navigation.navigate('jumping', {
-            title: 'JumpingTransition',
-            transition: JumpingTransition,
-          })
-        }
-      />
-      <Button
-        title="Curved Transition"
-        onPress={() =>
-          navigation.navigate('curved', {
-            title: 'CurvedTransition',
-            transition: CurvedTransition,
-          })
-        }
-      />
-      <Button
-        title="Entry/Exit Transition"
-        onPress={() =>
-          navigation.navigate('entryexit', {
-            title: 'EntryExit',
-            transition:
-              EntryExitTransition.entering(FlipInEasyX).exiting(FlipOutYRight),
-          })
-        }
-      />
+      {TRANSITIONS.map(({ name, title, transition }) => (
+        <Button
+          key={name}
+          title={title}
+          onPress={() =>
+            navigation.navigate('TransitionScreen', {
+              title,
+              transition,
+            })
+          }
+        />
+      ))}
     </View>
   );
 }
@@ -121,69 +95,17 @@ export default function Layout() {
     <NavigationContainer independent={true}>
       <Stack.Navigator screenOptions={{ title: 'Layout Transitions 🔥' }}>
         <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen
-          name="linear"
-          component={Transition}
-          initialParams={{
-            title: 'LinearTransition',
-            transition: LinearTransition,
-          }}
-        />
-        <Stack.Screen
-          name="fading"
-          component={Transition}
-          initialParams={{
-            title: 'FadingTransition',
-            transition: FadingTransition,
-          }}
-        />
-        <Stack.Screen
-          name="sequenced"
-          component={Transition}
-          initialParams={{
-            title: 'SequencedTransition',
-            transition: SequencedTransition,
-          }}
-        />
-        <Stack.Screen
-          name="jumping"
-          component={Transition}
-          initialParams={{
-            title: 'JumpingTransition',
-            transition: JumpingTransition,
-          }}
-        />
-        <Stack.Screen
-          name="curved"
-          component={Transition}
-          initialParams={{
-            title: 'CurvedTransition',
-            transition: CurvedTransition,
-          }}
-        />
-        <Stack.Screen
-          name="entryexit"
-          component={Transition}
-          initialParams={{
-            title: 'EntryExit',
-            transition:
-              EntryExitTransition.entering(FlipInEasyX).exiting(FlipOutYRight),
-          }}
-        />
+        <Stack.Screen name="TransitionScreen" component={Transition} />
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
 
-type TransitionProps = StackScreenProps<
-  RootStackParamList,
-  'linear' | 'fading' | 'sequenced' | 'jumping' | 'curved' | 'entryexit'
->;
+type TransitionProps = StackScreenProps<RootStackParamList, 'TransitionScreen'>;
 
 function Transition({ route }: TransitionProps) {
   const { title, transition } = route.params;
   const [items, setItems] = useState(INITIAL_LIST);
-  const [selected, _] = useState({ label: title, value: transition });
 
   const removeItem = (idToRemove: number) => {
     const updatedItems = items.filter((item) => item.id !== idToRemove);
@@ -194,7 +116,11 @@ function Transition({ route }: TransitionProps) {
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>{title}</Text>
       <View>
-        <Items selected={selected} items={items} onRemove={removeItem} />
+        <Items
+          selected={{ label: title, value: transition }}
+          items={items}
+          onRemove={removeItem}
+        />
       </View>
     </SafeAreaView>
   );
