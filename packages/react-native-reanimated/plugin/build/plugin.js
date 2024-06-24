@@ -362,7 +362,7 @@ var require_workletFactory = __commonJS({
       (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is undefined.");
       (0, assert_1.strict)(transformed.ast, "[Reanimated] `transformed.ast` is undefined.");
       const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
-      const functionName = makeWorkletName(fun);
+      const functionName = makeWorkletName(fun, state);
       const functionIdentifier = (0, types_12.identifier)(functionName);
       const clone = (0, types_12.cloneNode)(fun.node);
       const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
@@ -455,17 +455,22 @@ var require_workletFactory = __commonJS({
       }
       return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
     }
-    function makeWorkletName(fun) {
+    var functionId = 1;
+    function makeWorkletName(fun, state) {
+      var _a;
+      const filepath = (_a = state.file.opts.filename) !== null && _a !== void 0 ? _a : "unknown_file";
+      const filename = (0, path_1.basename)(filepath).split(".")[0];
+      const suffix = "_" + filename + functionId++;
       if ((0, types_12.isObjectMethod)(fun.node) && (0, types_12.isIdentifier)(fun.node.key)) {
-        return fun.node.key.name;
+        return fun.node.key.name + suffix;
       }
       if ((0, types_12.isFunctionDeclaration)(fun.node) && (0, types_12.isIdentifier)(fun.node.id)) {
-        return fun.node.id.name;
+        return fun.node.id.name + suffix;
       }
       if ((0, types_12.isFunctionExpression)(fun.node) && (0, types_12.isIdentifier)(fun.node.id)) {
-        return fun.node.id.name;
+        return fun.node.id.name + suffix;
       }
-      return "anonymous";
+      return suffix;
     }
     function makeArrayFromCapturedBindings(ast, fun) {
       const closure = /* @__PURE__ */ new Map();

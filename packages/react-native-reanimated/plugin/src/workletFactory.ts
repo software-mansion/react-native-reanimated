@@ -37,7 +37,7 @@ import {
   variableDeclarator,
 } from '@babel/types';
 import { strict as assert } from 'assert';
-import { relative } from 'path';
+import { basename, relative } from 'path';
 import { buildWorkletString } from './workletStringCode';
 import { globals } from './globals';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
@@ -104,7 +104,7 @@ export function makeWorkletFactory(
 
   const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
 
-  const functionName = makeWorkletName(fun);
+  const functionName = makeWorkletName(fun, state);
   const functionIdentifier = identifier(functionName);
 
   const clone = cloneNode(fun.node);
@@ -325,17 +325,27 @@ function hash(str: string): number {
   return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
 }
 
-function makeWorkletName(fun: NodePath<WorkletizableFunction>): string {
+let functionId = 1;
+
+function makeWorkletName(
+  fun: NodePath<WorkletizableFunction>,
+  state: ReanimatedPluginPass
+): string {
+  const filepath = state.file.opts.filename ?? 'unknown_file';
+  const filename = basename(filepath).split('.')[0];
+  const suffix = '_' + filename + functionId++;
   if (isObjectMethod(fun.node) && isIdentifier(fun.node.key)) {
-    return fun.node.key.name;
+    return fun.node.key.name + suffix;
   }
   if (isFunctionDeclaration(fun.node) && isIdentifier(fun.node.id)) {
-    return fun.node.id.name;
+    return fun.node.id.name + suffix;
   }
   if (isFunctionExpression(fun.node) && isIdentifier(fun.node.id)) {
-    return fun.node.id.name;
+    return fun.node.id.name + suffix;
   }
-  return 'anonymous'; // fallback for ArrowFunctionExpression and unnamed FunctionExpression
+
+  // Fallback for ArrowFunctionExpression and unnamed FunctionExpression.
+  return suffix;
 }
 
 function makeArrayFromCapturedBindings(
