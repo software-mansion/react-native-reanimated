@@ -131,13 +131,17 @@ export default function ReducedMotionExample() {
   const { component, exampleList } = EXAMPLES[currentExample];
 
   function handleReduceMotionModeChange() {
-    setReduceMotion(reduceMotion === ReduceMotion.System ? ReduceMotion.Never : ReduceMotion.System);
+    setReduceMotion(
+      reduceMotion === ReduceMotion.System
+        ? ReduceMotion.Never
+        : ReduceMotion.System
+    );
   }
 
   return (
     <View style={styles.container}>
-      <Button 
-        onPress={handleReduceMotionModeChange} 
+      <Button
+        onPress={handleReduceMotionModeChange}
         title={`Overwrite reduce motion: ${reduceMotion}`}
       />
       {EXAMPLES.map((example, i) => (

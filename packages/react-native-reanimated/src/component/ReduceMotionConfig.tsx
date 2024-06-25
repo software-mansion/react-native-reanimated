@@ -1,5 +1,5 @@
 'use strict';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { ReduceMotion } from '../commonTypes';
 import { IS_REDUCED_MOTION } from '../hook/useReducedMotion';
 
@@ -10,13 +10,11 @@ import { IS_REDUCED_MOTION } from '../hook/useReducedMotion';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/components/ReduceMotionConfig
  */
 export function ReduceMotionConfig({ mode }: { mode: ReduceMotion }) {
-  const firstRender = useRef(true);
-  if (__DEV__ && firstRender.current) {
-    firstRender.current = false;
+  useEffect(() => {
     console.warn(
       `[Reanimated] Reduced motion setting is overwritten with mode '${mode}'.`
     );
-  }
+  }, []);
 
   useEffect(() => {
     const wasEnabled = IS_REDUCED_MOTION.value;
