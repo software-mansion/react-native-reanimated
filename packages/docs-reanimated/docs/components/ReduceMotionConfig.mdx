@@ -1,0 +1,64 @@
+---
+id: ReduceMotionConfig
+title: ReduceMotionConfig
+sidebar_label: ReduceMotionConfig
+sidebar_position: 1
+---
+
+The `ReduceMotionConfig` component determines the default animation behavior in response to the device's reduced motion accessibility setting. It affects your application globally. The default behavior disables all animation if reduced motion is enabled on a device. You can utilize this component to override that behavior. If you wish to fine-tune it for your specific case, learn more about [Accessibility](../guides/accessibility) and [`useReducedMotion`](../device/useReducedMotion) in Reanimated.
+
+## Reference
+
+```javascript
+import { ReduceMotionConfig, ReduceMotion } from 'react-native-reanimated';
+
+function App() {
+  
+  return (
+    // ...
+    // highlight-next-line
+    <ReduceMotionConfig mode={ReduceMotion.Never} />
+    // ...
+  );
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+interface ReduceMotionConfigProps {
+  mode: ReduceMotion;
+}
+
+enum ReduceMotion {
+  System = 'system',
+  Always = 'always',
+  Never = 'never',
+}
+```
+
+</details>
+
+### Arguments
+
+#### `mode`
+
+A parameter that determines what should be the default animation responds to the device's reduced motion accessibility setting.
+
+## Example
+
+import ReduceMotionConfig from '@site/src/examples/ReduceMotionConfig';
+import ReduceMotionConfigSrc from '!!raw-loader!@site/src/examples/ReduceMotionConfig';
+
+<InteractiveExample src={ReduceMotionConfigSrc} component={ReduceMotionConfig} />
+
+## Platform compatibility
+
+<div className="platform-compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>
