@@ -10,11 +10,12 @@ import { IS_REDUCED_MOTION } from '../hook/useReducedMotion';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/components/ReduceMotionConfig
  */
 export function ReduceMotionConfig({ mode }: { mode: ReduceMotion }) {
-
   const firstRender = useRef(true);
   if (__DEV__ && firstRender.current) {
     firstRender.current = false;
-    console.warn(`[Reanimated] Reduced motion setting is overwritten with mode '${mode}'.`);
+    console.warn(
+      `[Reanimated] Reduced motion setting is overwritten with mode '${mode}'.`
+    );
   }
 
   useEffect(() => {
@@ -24,7 +25,7 @@ export function ReduceMotionConfig({ mode }: { mode: ReduceMotion }) {
     }
     return () => {
       IS_REDUCED_MOTION.value = wasEnabled;
-    }
+    };
   }, [mode]);
 
   return null;
