@@ -1,8 +1,8 @@
 import React from 'react';
 import { StyleSheet, View, Button, Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import type {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated from 'react-native-reanimated';
 
 function getStyle(index: number) {
@@ -43,7 +43,7 @@ function Screen({ navigation, route }: NativeStackScreenProps<ScreenProps>) {
       <Animated.View style={getStyle(id)} sharedTransitionTag="test" />
     </View>
   );
-};
+}
 
 function createStack() {
   const Stack = createNativeStackNavigator();
@@ -56,7 +56,7 @@ function createStack() {
       />
     </Stack.Navigator>
   );
-};
+}
 
 const Tab = createBottomTabNavigator();
 const StackA = createStack();
@@ -79,7 +79,7 @@ function TabNavigatorExample() {
       <Tab.Screen name="D" component={StackB} />
     </Tab.Navigator>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
