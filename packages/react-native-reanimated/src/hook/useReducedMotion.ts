@@ -2,8 +2,15 @@
 import { isReducedMotion } from '../PlatformChecker';
 import { makeMutable } from '../core';
 
-export const IS_REDUCED_MOTION = makeMutable(isReducedMotion());
-
+const isReducedMotionEnabled = isReducedMotion();
+export const IsReduceMotion = {
+  jsValue: isReducedMotionEnabled,
+  uiValue: makeMutable(isReducedMotionEnabled),
+  setEnabled(value: boolean) {
+    IsReduceMotion.jsValue = value;
+    IsReduceMotion.uiValue.value = value;
+  }
+};
 /**
  * Lets you query the reduced motion system setting.
  *
@@ -13,5 +20,5 @@ export const IS_REDUCED_MOTION = makeMutable(isReducedMotion());
  * @see https://docs.swmansion.com/react-native-reanimated/docs/device/useReducedMotion
  */
 export function useReducedMotion() {
-  return IS_REDUCED_MOTION.value;
+  return IsReduceMotion.jsValue;
 }

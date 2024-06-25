@@ -1,7 +1,7 @@
 'use strict';
 import { useEffect } from 'react';
 import { ReduceMotion } from '../commonTypes';
-import { IS_REDUCED_MOTION } from '../hook/useReducedMotion';
+import { IsReduceMotion } from '../hook/useReducedMotion';
 
 /**
  * A component that lets you overwrite default reduce motion behavior globally in your application.
@@ -20,12 +20,12 @@ export function ReduceMotionConfig({ mode }: { mode: ReduceMotion }) {
   }, []);
 
   useEffect(() => {
-    const wasEnabled = IS_REDUCED_MOTION.value;
+    const wasEnabled = IsReduceMotion.jsValue;
     if (mode === ReduceMotion.Never) {
-      IS_REDUCED_MOTION.value = false;
+      IsReduceMotion.setEnabled(false);
     }
     return () => {
-      IS_REDUCED_MOTION.value = wasEnabled;
+      IsReduceMotion.setEnabled(wasEnabled);
     };
   }, [mode]);
 

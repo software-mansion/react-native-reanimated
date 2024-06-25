@@ -17,7 +17,7 @@ import { ReduceMotion } from '../../commonTypes';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
 import { setDummyPosition, snapshots } from './componentStyle';
-import { IS_REDUCED_MOTION } from '../../hook/useReducedMotion';
+import { IsReduceMotion } from '../../hook/useReducedMotion';
 
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName =
@@ -48,7 +48,7 @@ function getDelayFromConfig(config: CustomConfig): number {
 
 export function getReducedMotionFromConfig(config: CustomConfig) {
   if (!config.reduceMotionV) {
-    return IS_REDUCED_MOTION.value;
+    return IsReduceMotion.jsValue;
   }
 
   switch (config.reduceMotionV) {
@@ -57,7 +57,7 @@ export function getReducedMotionFromConfig(config: CustomConfig) {
     case ReduceMotion.Always:
       return true;
     default:
-      return IS_REDUCED_MOTION.value;
+      return IsReduceMotion.jsValue;
   }
 }
 
