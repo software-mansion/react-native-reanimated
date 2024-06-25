@@ -68,7 +68,8 @@ class LayoutAnimationsManager {
 #endif
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimationsForNativeID_;
+  std::unordered_map<int, std::shared_ptr<Shareable>>
+      enteringAnimationsForNativeID_;
 #endif
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> exitingAnimations_;

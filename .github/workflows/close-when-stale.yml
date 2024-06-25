@@ -31,4 +31,4 @@ jobs:
         uses: ./close-when-stale
         with:
           close-when-stale-label: "Close when stale"
-          days-to-close: 20
+          days-to-close: 14

@@ -175,6 +175,9 @@ export function handleLayoutTransition(
     case 'FadingTransition':
       animationType = TransitionType.FADING;
       break;
+    case 'JumpingTransition':
+      animationType = TransitionType.JUMPING;
+      break;
     default:
       animationType = TransitionType.LINEAR;
       break;
@@ -220,8 +223,6 @@ export function handleExitingAnimation(
   dummy.reanimatedDummy = true;
 
   element.style.animationName = '';
-  // We hide current element so only its copy with proper animation will be displayed
-  element.style.visibility = 'hidden';
 
   // After cloning the element, we want to move all children from original element to its clone. This is because original element
   // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
