@@ -1,4 +1,5 @@
 #include "LayoutAnimations.h"
+#include <vector>
 #include "FeaturesConfig.h"
 #include "Logger.h"
 
@@ -100,8 +101,20 @@ void LayoutAnimations::setFindPrecedingViewTagForTransition(
       findPrecedingViewTagForTransitionBlock;
 }
 
+void LayoutAnimations::setGetSharedGroupBlock(
+    GetSharedGroupBlock getSharedGroupBlock) {
+  getSharedGroupBlock_ = getSharedGroupBlock;
+}
+
 int LayoutAnimations::findPrecedingViewTagForTransition(int tag) {
   return findPrecedingViewTagForTransitionBlock_(tag);
+}
+
+jni::local_ref<JArrayInt> LayoutAnimations::getSharedGroup(const int tag) {
+  const auto &group = getSharedGroupBlock_(tag);
+  auto jGroup = JArrayInt::newArray(group.size());
+  jGroup->setRegion(0, group.size(), group.data());
+  return jGroup;
 }
 
 void LayoutAnimations::registerNatives() {
@@ -124,6 +137,7 @@ void LayoutAnimations::registerNatives() {
       makeNativeMethod(
           "findPrecedingViewTagForTransition",
           LayoutAnimations::findPrecedingViewTagForTransition),
+      makeNativeMethod("getSharedGroup", LayoutAnimations::getSharedGroup),
 #ifndef NDEBUG
       makeNativeMethod(
           "checkDuplicateSharedTag", LayoutAnimations::checkDuplicateSharedTag),
