@@ -18,7 +18,6 @@ import {
 const WIDTH_COMPONENT_ACTIVE_REF = 'WidthComponentActive';
 const WIDTH_COMPONENT_PASSIVE_REF = 'WidthComponentPassive';
 const WIDTH_COMPONENT_INLINE_REF = 'WidthComponentInline';
-const COMPONENT_REFS = [WIDTH_COMPONENT_ACTIVE_REF, WIDTH_COMPONENT_PASSIVE_REF, WIDTH_COMPONENT_INLINE_REF];
 
 enum ComponentType {
   'ACTIVE' = WIDTH_COMPONENT_ACTIVE_REF,
@@ -86,6 +85,11 @@ const NonActiveWidthComponents = ({ delays }: { delays: [number] | [number, numb
   );
 };
 
+/**
+    Make sure that
+    withDelay( A, withDelay( B, withDelay( C, some_animation) and
+    withDelay( A + B + C, some_animation) are equal.
+ */
 describe('Add three delays', () => {
   async function getSnapshotUpdates(delays: [number] | [number, number, number], componentType: ComponentType) {
     await mockAnimationTimer();
