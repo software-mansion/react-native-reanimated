@@ -11,6 +11,9 @@ import { IS_REDUCED_MOTION } from '../hook/useReducedMotion';
  */
 export function ReduceMotionConfig({ mode }: { mode: ReduceMotion }) {
   useEffect(() => {
+    if (!__DEV__) {
+      return;
+    }
     console.warn(
       `[Reanimated] Reduced motion setting is overwritten with mode '${mode}'.`
     );
