@@ -2,10 +2,10 @@
 import { isReducedMotion } from '../PlatformChecker';
 import { makeMutable } from '../core';
 
-const isReducedMotionEnabled = isReducedMotion();
+const isReducedMotionEnabledBySystem = isReducedMotion();
 export const IsReduceMotion = {
-  jsValue: isReducedMotionEnabled,
-  uiValue: makeMutable(isReducedMotionEnabled),
+  jsValue: isReducedMotionEnabledBySystem,
+  uiValue: makeMutable(isReducedMotionEnabledBySystem),
   setEnabled(value: boolean) {
     IsReduceMotion.jsValue = value;
     IsReduceMotion.uiValue.value = value;
@@ -20,5 +20,5 @@ export const IsReduceMotion = {
  * @see https://docs.swmansion.com/react-native-reanimated/docs/device/useReducedMotion
  */
 export function useReducedMotion() {
-  return IsReduceMotion.jsValue;
+  return isReducedMotionEnabledBySystem;
 }
