@@ -87,7 +87,7 @@ const EXITING_SETS: Array<[string, unknown[], number]> = [
   ['Zoom', ZOOM_EXITING, 1800],
 ];
 
-const ExitingOnMountComponent = ({ exiting }: { exiting: any }) => {
+const ExitingComponent = ({ exiting }: { exiting: any }) => {
   const [show, setShow] = useState(true);
   useEffect(() => {
     setShow(false);
@@ -104,7 +104,7 @@ async function getSnapshotUpdates(exiting: any, waitTime: number, duration: numb
   const springExiting = springify ? exiting : exiting.springify();
   const componentExiting = duration ? springExiting.duration(duration) : springExiting;
 
-  await render(<ExitingOnMountComponent exiting={componentExiting} />);
+  await render(<ExitingComponent exiting={componentExiting} />);
 
   await wait(waitTime);
   const updates = updatesContainer.getUpdates();
