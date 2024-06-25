@@ -1,7 +1,7 @@
 'use strict';
 import { useEffect, useRef } from 'react';
 import { ReduceMotion } from '../commonTypes';
-import { IS_REDUCED_MOTION } from '../animation/util';
+import { IS_REDUCED_MOTION } from '../hook/useReducedMotion';
 
 /**
  * A component that lets you overwrite default reduce motion behavior globally in your application.

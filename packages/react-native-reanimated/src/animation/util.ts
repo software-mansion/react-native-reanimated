@@ -32,14 +32,12 @@ import {
   subtractMatrices,
   getRotationMatrix,
 } from './transformationMatrix/matrixUtils';
-import { isReducedMotion, shouldBeUseWeb } from '../PlatformChecker';
+import { shouldBeUseWeb } from '../PlatformChecker';
 import type { EasingFunction, EasingFunctionFactory } from '../Easing';
-import { makeMutable } from '../mutables';
+import { IS_REDUCED_MOTION } from '../hook/useReducedMotion';
 
 let IN_STYLE_UPDATER = false;
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
-
-export const IS_REDUCED_MOTION = makeMutable(isReducedMotion());
 
 if (__DEV__ && IS_REDUCED_MOTION.value) {
   console.warn(
