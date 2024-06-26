@@ -148,10 +148,12 @@ export function setElementAnimation(
 ) {
   const { animationName, duration, delay, easing } = animationConfig;
 
-  element.style.animationName = animationName;
-  element.style.animationDuration = `${duration}s`;
-  element.style.animationDelay = `${delay}s`;
-  element.style.animationTimingFunction = easing;
+  requestAnimationFrame(() => {
+    element.style.animationName = animationName;
+    element.style.animationDuration = `${duration}s`;
+    element.style.animationDelay = `${delay}s`;
+    element.style.animationTimingFunction = easing;
+  });
 
   element.onanimationend = () => {
     if (shouldSavePosition) {
