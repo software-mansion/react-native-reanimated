@@ -19,7 +19,15 @@ import {
   clearRenderOutput,
   getTestComponent,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { TransitionSnapshot200ms, TransitionSnapshotNoModifiers } from './layoutTransition.snapshot';
+import {
+  CurvedSnapshot,
+  FadingSnapshot,
+  JumpingSnapshot,
+  LinearSnapshot,
+  SequencedSnapshot,
+  TransitionSnapshot200ms,
+  TransitionSnapshotNoModifiers,
+} from './layoutTransition.snapshot';
 import { Direction, TransitionUpOrDown, TransitionLeftOrRight, TRANSITION_REF } from './testComponents.test';
 
 async function getSnapshotUpdates(layout: any, direction: Direction, waitTime: number) {
@@ -87,54 +95,50 @@ describe('Test LINEAR transition modifiers', () => {
     for (const direction of Object.values(Direction)) {
       const snapshotName = `LINEAR_${modifierName}_${direction}`;
       const updates = await getSnapshotUpdates(transition, direction, waitTime);
-      console.log(snapshotName, updates.length);
-      //   expect(updates).toMatchSnapshots(TransitionSnapshot[snapshotName as keyof typeof TransitionSnapshot]);
+      expect(updates).toMatchSnapshots(LinearSnapshot[snapshotName as keyof typeof LinearSnapshot]);
     }
   });
 });
 
 describe('Test SEQUENCED transition modifiers', () => {
   test.each([
-    [SequencedTransition, 'default', 350],
-    [SequencedTransition.duration(300), 'default', 350], // the default duration is 300
+    [SequencedTransition, 'default', 550],
+    [SequencedTransition.duration(500), 'default', 550], // the default duration is 500
     [SequencedTransition.duration(400), 'duration_400', 450],
     [SequencedTransition.duration(400).reverse(), 'duration_400_reverse', 450],
   ] as Array<[any, string, number]>)('Modifiers: ${1}', async ([transition, modifierName, waitTime]) => {
     for (const direction of Object.values(Direction)) {
       const snapshotName = `SEQUENCED_${modifierName}_${direction}`;
       const updates = await getSnapshotUpdates(transition, direction, waitTime);
-      console.log(snapshotName, updates.length);
-      //   expect(updates).toMatchSnapshots(TransitionSnapshot[snapshotName as keyof typeof TransitionSnapshot]);
+      expect(updates).toMatchSnapshots(SequencedSnapshot[snapshotName as keyof typeof SequencedSnapshot]);
     }
   });
 });
 
 describe('Test FADING transition modifiers', () => {
   test.each([
-    [FadingTransition, 'default', 350],
-    [FadingTransition.duration(300), 'default', 350], // the default duration is 300
+    [FadingTransition, 'default', 550],
+    [FadingTransition.duration(500), 'default', 550], // the default duration is 500
     [FadingTransition.duration(400), 'duration_400', 450],
   ] as Array<[any, string, number]>)('Modifiers: ${1}', async ([transition, modifierName, waitTime]) => {
     for (const direction of Object.values(Direction)) {
       const snapshotName = `FADING_${modifierName}_${direction}`;
       const updates = await getSnapshotUpdates(transition, direction, waitTime);
-      console.log(snapshotName, updates.length);
-      //   expect(updates).toMatchSnapshots(TransitionSnapshot[snapshotName as keyof typeof TransitionSnapshot]);
+      expect(updates).toMatchSnapshots(FadingSnapshot[snapshotName as keyof typeof FadingSnapshot]);
     }
   });
 });
 
 describe('Test JUMPING transition modifiers', () => {
   test.each([
-    [FadingTransition, 'default', 350],
-    [FadingTransition.duration(300), 'default', 350], // the default duration is 300
-    [FadingTransition.duration(400), 'duration_400', 450],
+    [JumpingTransition, 'default', 350],
+    [JumpingTransition.duration(300), 'default', 350], // the default duration is 300
+    [JumpingTransition.duration(400), 'duration_400', 450],
   ] as Array<[any, string, number]>)('Modifiers: ${1}', async ([transition, modifierName, waitTime]) => {
     for (const direction of Object.values(Direction)) {
       const snapshotName = `JUMPING_${modifierName}_${direction}`;
       const updates = await getSnapshotUpdates(transition, direction, waitTime);
-      console.log(snapshotName, updates.length);
-      //   expect(updates).toMatchSnapshots(TransitionSnapshot[snapshotName as keyof typeof TransitionSnapshot]);
+      expect(updates).toMatchSnapshots(JumpingSnapshot[snapshotName as keyof typeof JumpingSnapshot]);
     }
   });
 });
@@ -153,8 +157,7 @@ describe('Test CURVED transition modifiers', () => {
     for (const direction of Object.values(Direction)) {
       const snapshotName = `CURVED_${modifierName}_${direction}`;
       const updates = await getSnapshotUpdates(transition, direction, waitTime);
-      console.log(snapshotName, updates.length);
-      //   expect(updates).toMatchSnapshots(TransitionSnapshot[snapshotName as keyof typeof TransitionSnapshot]);
+      expect(updates).toMatchSnapshots(CurvedSnapshot[snapshotName as keyof typeof CurvedSnapshot]);
     }
   });
 });
