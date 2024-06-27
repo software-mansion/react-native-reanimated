@@ -59,7 +59,6 @@ describe('Test predefined layout transitions', () => {
     for (const direction of Object.values(Direction)) {
       const snapshotName = `${transition.name}_${direction}`;
       const updates = await getSnapshotUpdates(transition, direction, waitTime);
-      //   console.log(`${snapshotName}: ${JSON.stringify(updates)}`);
       expect(updates).toMatchSnapshots(
         TransitionSnapshotNoModifiers[snapshotName as keyof typeof TransitionSnapshotNoModifiers],
       );
