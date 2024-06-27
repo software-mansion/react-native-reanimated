@@ -42,7 +42,7 @@ const INITIAL_LIST = [
 
 type RootStackParamList = {
   Home: undefined;
-  TransitionScreen: { title: string; transition: any };
+  TransitionScreen: { title: string; transitionName: string };
 };
 
 type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;
@@ -79,7 +79,7 @@ function HomeScreen({ navigation }: HomeScreenProps) {
           onPress={() =>
             navigation.navigate('TransitionScreen', {
               title,
-              transition,
+              transitionName: name,
             })
           }
         />
@@ -104,8 +104,12 @@ export default function Layout() {
 type TransitionProps = StackScreenProps<RootStackParamList, 'TransitionScreen'>;
 
 function Transition({ route }: TransitionProps) {
-  const { title, transition } = route.params;
+  const { title, transitionName } = route.params;
   const [items, setItems] = useState(INITIAL_LIST);
+
+  const transition =
+    TRANSITIONS.find((t) => t.name === transitionName)?.transition ||
+    LinearTransition;
 
   const removeItem = (idToRemove: number) => {
     const updatedItems = items.filter((item) => item.id !== idToRemove);
