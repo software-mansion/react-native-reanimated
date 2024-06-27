@@ -72,6 +72,9 @@ export default function OlympicAnimation() {
     60: {
       transform: [{ translateX: -13 }, { translateY: 0 }],
     },
+    to: {
+      transform: [{ translateX: -13 }, { translateY: 0 }],
+    },
   }).duration(3000);
   const blueRingExitAnimation = new Keyframe({
     from: {
@@ -100,6 +103,11 @@ export default function OlympicAnimation() {
       transform: [{ translateX: 70 }, { translateY: 0 }, { scale: 1 }],
     },
     60: {
+      opacity: 0,
+      transform: [{ translateX: 1100 }, { translateY: 1100 }, { scale: 20 }],
+      easing: Easing.quad,
+    },
+    to: {
       opacity: 0,
       transform: [{ translateX: 1100 }, { translateY: 1100 }, { scale: 20 }],
       easing: Easing.quad,

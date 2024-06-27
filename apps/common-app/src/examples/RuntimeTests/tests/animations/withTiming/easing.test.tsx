@@ -155,26 +155,19 @@ describe('withTiming snapshots 📸, test EASING', () => {
     }
   });
 
-  test.each([
-    Easing.bounce,
-    Easing.circle,
-    Easing.cubic,
-    Easing.ease,
-    Easing.exp,
-    Easing.linear,
-    Easing.quad,
-    Easing.sin,
-  ])('Easing.%p', async easing => {
-    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(easing);
-    expect(activeUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
-    expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
-    expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
-  });
-
+  test.each([Easing.bounce, Easing.circle, Easing.cubic, Easing.ease, Easing.linear, Easing.quad, Easing.sin])(
+    'Easing.%p',
+    async easing => {
+      const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(easing);
+      expect(activeUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
+      expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
+      expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
+    },
+  );
   test('Easing.exp', async () => {
     const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(Easing.exp);
-
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots.exp);
+    // TODO Investigate why easing.exp works different than other easings
     expect(passiveUpdates).toMatchSnapshots([{ width: 0 }, ...EasingSnapshots.exp]);
     expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
   });

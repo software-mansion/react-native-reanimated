@@ -66,19 +66,19 @@ function fixElementPosition(
   }
 }
 
-export function setDummyPosition(
-  dummy: HTMLElement,
+export function setElementPosition(
+  element: HTMLElement,
   snapshot: ReanimatedSnapshot
 ) {
-  dummy.style.transform = '';
-  dummy.style.position = 'absolute';
-  dummy.style.top = `${snapshot.top}px`;
-  dummy.style.left = `${snapshot.left}px`;
-  dummy.style.width = `${snapshot.width}px`;
-  dummy.style.height = `${snapshot.height}px`;
-  dummy.style.margin = '0px'; // tmpElement has absolute position, so margin is not necessary
+  element.style.transform = '';
+  element.style.position = 'absolute';
+  element.style.top = `${snapshot.top}px`;
+  element.style.left = `${snapshot.left}px`;
+  element.style.width = `${snapshot.width}px`;
+  element.style.height = `${snapshot.height}px`;
+  element.style.margin = '0px'; // tmpElement has absolute position, so margin is not necessary
 
-  if (dummy.parentElement) {
-    fixElementPosition(dummy, dummy.parentElement, snapshot);
+  if (element.parentElement) {
+    fixElementPosition(element, element.parentElement, snapshot);
   }
 }

@@ -600,6 +600,11 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   [_sharedTransitionManager setFindPrecedingViewTagForTransitionBlock:findPrecedingViewTagForTransition];
 }
 
+- (void)setGetSharedGroupBlock:(REAGetSharedGroupBlock)getSharedGroupBlock
+{
+  [_sharedTransitionManager setGetSharedGroupBlock:getSharedGroupBlock];
+}
+
 - (void)setCancelAnimationBlock:(REACancelAnimationBlock)animationCancellingBlock
 {
   [_sharedTransitionManager setCancelAnimationBlock:animationCancellingBlock];

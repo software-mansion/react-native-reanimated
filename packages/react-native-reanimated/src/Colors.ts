@@ -522,7 +522,9 @@ export const rgbaColor = (
 ): number | string => {
   'worklet';
   if (IS_WEB || !_WORKLET) {
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    // Replace tiny values like 1.234e-11 with 0:
+    const safeAlpha = alpha < 0.001 ? 0 : alpha;
+    return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
   }
 
   const c =
@@ -701,9 +703,10 @@ export function convertToRGBA(color: unknown): ParsedColorArray {
 
 export function rgbaArrayToRGBAColor(RGBA: ParsedColorArray): string {
   'worklet';
+  const alpha = RGBA[3] < 0.001 ? 0 : RGBA[3];
   return `rgba(${Math.round(RGBA[0] * 255)}, ${Math.round(
     RGBA[1] * 255
-  )}, ${Math.round(RGBA[2] * 255)}, ${RGBA[3]})`;
+  )}, ${Math.round(RGBA[2] * 255)}, ${alpha})`;
 }
 
 export function toLinearSpace(
