@@ -11,7 +11,7 @@ import Animated, {
   withSpring,
   withSequence,
   ReduceMotion,
-  ReduceMotionConfig,
+  ReducedMotionConfig,
 } from 'react-native-reanimated';
 import {
   Gesture,
@@ -151,7 +151,7 @@ export default function ReducedMotionExample() {
           title={example.title}
         />
       ))}
-      <ReduceMotionConfig mode={reduceMotion} />
+      <ReducedMotionConfig mode={reduceMotion} />
       {component}
       <View key={currentExample}>
         {exampleList.map((example, i) => {
