@@ -9,7 +9,7 @@ export const IsReduceMotion = {
   setEnabled(value: boolean) {
     IsReduceMotion.jsValue = value;
     IsReduceMotion.uiValue.value = value;
-  }
+  },
 };
 /**
  * Lets you query the reduced motion system setting.
