@@ -52,6 +52,8 @@ public class LayoutAnimations {
 
   public native int findPrecedingViewTagForTransition(int tag);
 
+  public native int[] getSharedGroup(int tag);
+
   private void endLayoutAnimation(int tag, boolean removeView) {
     AnimationsManager animationsManager = getAnimationsManager();
     if (animationsManager == null) {

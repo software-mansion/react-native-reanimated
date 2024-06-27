@@ -214,12 +214,14 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
   private final ReaLayoutAnimator mReaLayoutAnimator;
   private final HashMap<Integer, Set<Integer>> mPendingDeletionsForTag = new HashMap<>();
   private boolean initOk = true;
+  private final TabNavigatorObserver mTabNavigatorObserver;
 
   public ReanimatedNativeHierarchyManager(
       ViewManagerRegistry viewManagers, ReactApplicationContext reactContext) {
     super(viewManagers);
 
     mReaLayoutAnimator = new ReaLayoutAnimator(reactContext, this);
+    mTabNavigatorObserver = new TabNavigatorObserver(mReaLayoutAnimator);
 
     Class<?> clazz = this.getClass().getSuperclass();
     if (clazz == null) {
@@ -292,6 +294,14 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         boolean hasHeader = checkIfTopScreenHasHeader((ViewGroup) container);
         if (!hasHeader || !container.isLayoutRequested()) {
           mReaLayoutAnimator.getAnimationsManager().screenDidLayout(container);
+        }
+        View screen = resolveView(tag);
+        View screenFragmentManager = (View) screen.getParent();
+        if (screenFragmentManager != null) {
+          View screenHolder = (View) screenFragmentManager.getParent();
+          if (ScreensHelper.isScreenContainer(screenHolder)) {
+            mTabNavigatorObserver.handleScreenContainerUpdate(screen);
+          }
         }
       }
       View view = resolveView(tag);
