@@ -53,7 +53,6 @@ Spring-based modifiers relay on [`withSpring`](/docs/animations/withSpring) func
 ```javascript
 LinearTransition.springify()
   .damping(30)
-  .dampingRatio(1)
   .mass(5)
   .rotate(20)
   .stiffness(10)
@@ -88,6 +87,10 @@ LinearTransition.delay(500)
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
+
+### Remarks
+
+- Just as in [withSpring](/docs/animations/withSpring/) config, spring-based modifiers can be physics-based (has `mass` and `damping` modifiers) or duration-based (has `duration` and `dampingRatio` modifiers). You need to decide whether you want to use physics or duration based animation.
 
 ### Example
 
@@ -353,7 +356,6 @@ EntryExitTransition.duration(1000)
 ### Remarks
 
 - Duration equals sum of entering and exiting durations.
-- You cannot use spring animations as entering/exiting as they don't have a fixed duration.
 
 ### Example
 
