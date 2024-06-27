@@ -1,8 +1,10 @@
 'use strict';
 import { useEffect } from 'react';
 import { ReduceMotion } from '../commonTypes';
-import { IsReduceMotion } from '../hook/useReducedMotion';
-import { isReducedMotion } from '../PlatformChecker';
+import {
+  ReducedMotionManager,
+  isReducedMotionEnabledInSystem,
+} from '../ReducedMotion';
 
 /**
  * A component that lets you overwrite default reduce motion behavior globally in your application.
@@ -10,7 +12,7 @@ import { isReducedMotion } from '../PlatformChecker';
  * @param mode - Determines default reduce motion behavior globally in your application. Configured with {@link ReduceMotion} enum.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/components/ReduceMotionConfig
  */
-export function ReduceMotionConfig({ mode }: { mode: ReduceMotion }) {
+export function ReducedMotionConfig({ mode }: { mode: ReduceMotion }) {
   useEffect(() => {
     if (!__DEV__) {
       return;
@@ -21,21 +23,21 @@ export function ReduceMotionConfig({ mode }: { mode: ReduceMotion }) {
   }, []);
 
   useEffect(() => {
-    const wasEnabled = IsReduceMotion.jsValue;
+    const wasEnabled = ReducedMotionManager.jsValue;
     switch (mode) {
       case ReduceMotion.System:
-        const isReducedMotionEnabledBySystem = isReducedMotion();
-        IsReduceMotion.setEnabled(isReducedMotionEnabledBySystem);
+        const enabled = isReducedMotionEnabledInSystem();
+        ReducedMotionManager.setEnabled(enabled);
         break;
       case ReduceMotion.Always:
-        IsReduceMotion.setEnabled(true);
+        ReducedMotionManager.setEnabled(true);
         break;
       case ReduceMotion.Never:
-        IsReduceMotion.setEnabled(false);
+        ReducedMotionManager.setEnabled(false);
         break;
     }
     return () => {
-      IsReduceMotion.setEnabled(wasEnabled);
+      ReducedMotionManager.setEnabled(wasEnabled);
     };
   }, [mode]);
 
