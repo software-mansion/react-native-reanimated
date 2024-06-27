@@ -29,7 +29,7 @@ export class FadingTransition
     const delayFunction = this.getDelayFunction();
     const callback = this.callbackV;
     const delay = this.getDelay();
-    const duration = this.durationV ?? 500;
+    const duration = (this.durationV ?? 500) / 2;
 
     return (values) => {
       'worklet';
