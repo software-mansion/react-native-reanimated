@@ -15,7 +15,7 @@ import './tests/layoutAnimations/entering/predefinedEntering.test';
 
 import './tests/layoutAnimations/exiting/predefinedExiting.test';
 
-import './tests/layoutAnimations/layout/predefinedLayoutPosition';
+import './tests/layoutAnimations/layout/predefinedLayoutPosition.test';
 
 import './tests/advancedAPI/useFrameCallback.test';
 // import './tests/advancedAPI/measure.test'; crash on Android

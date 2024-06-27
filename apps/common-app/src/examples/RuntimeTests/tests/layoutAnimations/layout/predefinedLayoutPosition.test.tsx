@@ -28,7 +28,7 @@ import {
   TransitionSnapshot200ms,
   TransitionSnapshotNoModifiers,
 } from './layoutTransition.snapshot';
-import { Direction, TransitionUpOrDown, TransitionLeftOrRight, TRANSITION_REF } from './testComponents.test';
+import { Direction, TransitionUpOrDown, TransitionLeftOrRight, TRANSITION_REF } from './TestComponents';
 
 async function getSnapshotUpdates(layout: any, direction: Direction, waitTime: number) {
   await mockAnimationTimer();
