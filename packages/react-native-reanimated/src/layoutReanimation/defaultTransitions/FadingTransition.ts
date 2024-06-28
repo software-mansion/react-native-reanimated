@@ -17,6 +17,8 @@ export class FadingTransition
   extends BaseAnimationBuilder
   implements ILayoutAnimationBuilder
 {
+  static presetName = 'FadingTransition';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -27,7 +29,7 @@ export class FadingTransition
     const delayFunction = this.getDelayFunction();
     const callback = this.callbackV;
     const delay = this.getDelay();
-    const duration = this.durationV ?? 500;
+    const duration = (this.durationV ?? 500) / 2;
 
     return (values) => {
       'worklet';

@@ -1,13 +1,8 @@
 import React from 'react';
-import { FlexStyle, StyleSheet, ViewStyle } from 'react-native';
-import Animated, {
-  runOnUI,
-  measure,
-  getRelativeCoords,
-  ComponentCoords,
-  useAnimatedRef,
-  useSharedValue,
-} from 'react-native-reanimated';
+import type { FlexStyle, ViewStyle } from 'react-native';
+import { StyleSheet } from 'react-native';
+import type { ComponentCoords } from 'react-native-reanimated';
+import Animated, { runOnUI, measure, getRelativeCoords, useAnimatedRef, useSharedValue } from 'react-native-reanimated';
 import {
   describe,
   test,

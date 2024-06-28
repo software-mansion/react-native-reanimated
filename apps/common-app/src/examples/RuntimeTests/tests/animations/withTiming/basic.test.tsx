@@ -41,7 +41,7 @@ describe('withTiming animation of WIDTH', () => {
     });
     const stylePassive = useAnimatedStyle(() => {
       return {
-        width: withTiming(widthActiveSV.value, { duration: 500 }),
+        width: widthPassiveSV.value,
       };
     });
 

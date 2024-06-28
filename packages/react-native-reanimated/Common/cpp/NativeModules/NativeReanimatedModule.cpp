@@ -17,6 +17,7 @@
 #include <unordered_map>
 
 #ifdef RCT_NEW_ARCH_ENABLED
+#include <react/renderer/scheduler/Scheduler.h>
 #include "ReanimatedCommitMarker.h"
 #include "ShadowTreeCloner.h"
 #endif
@@ -74,7 +75,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       }),
       animatedSensorModule_(platformDepMethodsHolder),
       jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
-      layoutAnimationsManager_(jsLogger_),
+      layoutAnimationsManager_(
+          std::make_shared<LayoutAnimationsManager>(jsLogger_)),
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
@@ -120,6 +122,32 @@ void NativeReanimatedModule::commonInit(
                              const jsi::Value &argsValue) {
     this->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
   };
+  ProgressLayoutAnimationFunction progressLayoutAnimation =
+      [this](jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool) {
+        auto surfaceId =
+            layoutAnimationsProxy_->progressLayoutAnimation(tag, newStyle);
+        if (!surfaceId) {
+          return;
+        }
+        uiManager_->getShadowTreeRegistry().visit(
+            *surfaceId, [](const ShadowTree &shadowTree) {
+              shadowTree.notifyDelegatesOfUpdates();
+            });
+      };
+
+  EndLayoutAnimationFunction endLayoutAnimation =
+      [this](int tag, bool shouldRemove) {
+        auto surfaceId =
+            layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
+        if (!surfaceId) {
+          return;
+        }
+
+        uiManager_->getShadowTreeRegistry().visit(
+            *surfaceId, [](const ShadowTree &shadowTree) {
+              shadowTree.notifyDelegatesOfUpdates();
+            });
+      };
 
   auto obtainProp = [this](
                         jsi::Runtime &rt,
@@ -148,8 +176,13 @@ void NativeReanimatedModule::commonInit(
       requestAnimationFrame,
       platformDepMethodsHolder.getAnimationTimestamp,
       platformDepMethodsHolder.setGestureStateFunction,
+#ifdef RCT_NEW_ARCH_ENABLED
+      progressLayoutAnimation,
+      endLayoutAnimation,
+#else
       platformDepMethodsHolder.progressLayoutAnimation,
       platformDepMethodsHolder.endLayoutAnimation,
+#endif
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction);
 }
 
@@ -423,7 +456,7 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimationBatch(
       batch[i].sharedTransitionTag = sharedTransitionTag.asString(rt).utf8(rt);
     }
   }
-  layoutAnimationsManager_.configureAnimationBatch(batch);
+  layoutAnimationsManager_->configureAnimationBatch(batch);
   return jsi::Value::undefined();
 }
 
@@ -431,7 +464,7 @@ void NativeReanimatedModule::setShouldAnimateExiting(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
     const jsi::Value &shouldAnimate) {
-  layoutAnimationsManager_.setShouldAnimateExiting(
+  layoutAnimationsManager_->setShouldAnimateExiting(
       viewTag.asNumber(), shouldAnimate.getBool());
 }
 
@@ -811,12 +844,39 @@ jsi::Value NativeReanimatedModule::measure(
 void NativeReanimatedModule::initializeFabric(
     const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
+
+  initializeLayoutAnimations();
+
   commitHook_ =
       std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
 #if REACT_NATIVE_MINOR_VERSION >= 73
   mountHook_ =
       std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
 #endif
+}
+
+void NativeReanimatedModule::initializeLayoutAnimations() {
+  uiManager_->setAnimationDelegate(nullptr);
+  auto scheduler = reinterpret_cast<Scheduler *>(uiManager_->getDelegate());
+  auto componentDescriptorRegistry =
+      scheduler->getContextContainer()
+          ->at<std::weak_ptr<const ComponentDescriptorRegistry>>(
+              "ComponentDescriptorRegistry_DO_NOT_USE_PRETTY_PLEASE")
+          .lock();
+
+  if (componentDescriptorRegistry) {
+    layoutAnimationsProxy_ = std::make_shared<LayoutAnimationsProxy>(
+        layoutAnimationsManager_,
+        componentDescriptorRegistry,
+        scheduler->getContextContainer(),
+        uiWorkletRuntime_->getJSIRuntime(),
+        uiScheduler_);
+    uiManager_->getShadowTreeRegistry().enumerate(
+        [this](const ShadowTree &shadowTree, bool &stop) {
+          shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
+              layoutAnimationsProxy_);
+        });
+  }
 }
 #endif // RCT_NEW_ARCH_ENABLED
 

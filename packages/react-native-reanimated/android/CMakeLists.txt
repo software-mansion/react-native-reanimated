@@ -15,7 +15,7 @@ add_compile_options(${folly_FLAGS})
 
 string(APPEND CMAKE_CXX_FLAGS " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION} -DREANIMATED_VERSION=${REANIMATED_VERSION} -DHERMES_ENABLE_DEBUGGER=${HERMES_ENABLE_DEBUGGER}")
 
-string(APPEND CMAKE_CXX_FLAGS " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
+string(APPEND CMAKE_CXX_FLAGS " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all -std=c++${CMAKE_CXX_STANDARD} -Wall -Wpedantic -Werror")
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     string(APPEND CMAKE_CXX_FLAGS " -DRCT_NEW_ARCH_ENABLED")
@@ -82,6 +82,8 @@ target_include_directories(
     "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
     "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
     "${REACT_NATIVE_DIR}/ReactCommon/yoga"
+    "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/componentregistry"
+    "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/core"
 )
 
 # build shared lib
@@ -152,6 +154,7 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
         ReactAndroid::react_debug
         ReactAndroid::react_render_core
         ReactAndroid::react_render_mounting
+        ReactAndroid::react_render_componentregistry
         ReactAndroid::react_render_scheduler
         ReactAndroid::react_render_uimanager
         ReactAndroid::rrc_view

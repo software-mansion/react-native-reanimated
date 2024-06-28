@@ -12,7 +12,7 @@ import {
   getTestComponent,
   wait,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { getComparisonModeForProp } from '../../../ReanimatedRuntimeTestsRunner/Comparators';
+import { getComparisonModeForProp } from '../../../ReanimatedRuntimeTestsRunner/matchers/Comparators';
 
 describe('Test reusing animatedStyles', () => {
   const COMPONENT_REF = {

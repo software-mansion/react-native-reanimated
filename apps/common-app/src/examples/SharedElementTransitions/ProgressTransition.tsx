@@ -7,10 +7,8 @@ import {
   Dimensions,
   StatusBar,
 } from 'react-native';
-import {
-  createNativeStackNavigator,
-  NativeStackScreenProps,
-} from '@react-navigation/native-stack';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated, {
   FadeInDown,
   FadeInLeft,

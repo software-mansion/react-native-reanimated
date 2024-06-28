@@ -20,6 +20,7 @@
 #include "UIScheduler.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
+#include "LayoutAnimationsProxy.h"
 #include "PropsRegistry.h"
 #include "ReanimatedCommitHook.h"
 #if REACT_NATIVE_MINOR_VERSION >= 73
@@ -136,6 +137,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void initializeFabric(const std::shared_ptr<UIManager> &uiManager);
 
+  void initializeLayoutAnimations();
+
   std::string obtainPropFromShadowNode(
       jsi::Runtime &rt,
       const std::string &propName,
@@ -161,7 +164,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &listenerId) override;
 
   inline LayoutAnimationsManager &layoutAnimationsManager() {
-    return layoutAnimationsManager_;
+    return *layoutAnimationsManager_;
   }
 
   inline jsi::Runtime &getUIRuntime() {
@@ -198,7 +201,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   const std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
   const std::shared_ptr<JSLogger> jsLogger_;
-  LayoutAnimationsManager layoutAnimationsManager_;
+  std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
 
 #ifdef RCT_NEW_ARCH_ENABLED
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
@@ -207,6 +210,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   std::unordered_set<std::string>
       animatablePropNames_; // filled by configureProps
   std::shared_ptr<UIManager> uiManager_;
+  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
 
   // After app reload, surfaceId on iOS is still 1 but on Android it's 11.
   // We can store surfaceId of the most recent ShadowNode as a workaround.

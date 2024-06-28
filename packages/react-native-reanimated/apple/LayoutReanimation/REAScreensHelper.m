@@ -18,6 +18,9 @@
 
 + (REAUIView *)getStackForView:(REAUIView *)view
 {
+  if (view == nil) {
+    return nil;
+  }
   if ([view isKindOfClass:[RNSScreenView class]]) {
     if (view.reactSuperview != nil) {
       if ([view.reactSuperview isKindOfClass:[RNSScreenStackView class]]) {
@@ -25,11 +28,19 @@
       }
     }
   }
-  while (view != nil && ![view isKindOfClass:[RNSScreenStackView class]] && view.superview != nil) {
-    view = view.superview;
+  REAUIView *currentView = view;
+  while (currentView.reactSuperview != nil) {
+    if ([currentView isKindOfClass:[RNSScreenStackView class]]) {
+      return currentView;
+    }
+    currentView = currentView.reactSuperview;
   }
-  if ([view isKindOfClass:[RNSScreenStackView class]]) {
-    return view;
+  currentView = view;
+  while (currentView.superview != nil) {
+    if ([currentView isKindOfClass:[RNSScreenStackView class]]) {
+      return currentView;
+    }
+    currentView = currentView.superview;
   }
   return nil;
 }
@@ -67,6 +78,83 @@
 + (bool)isRNSScreenType:(REAUIView *)view
 {
   return [view isKindOfClass:[RNSScreen class]] == YES;
+}
+
++ (REAUIView *)getActiveTabForTabNavigator:(REAUIView *)tabNavigator
+{
+  NSArray<REAUIView *> *screenTabs = tabNavigator.reactSubviews;
+  for (RNSScreenView *tab in screenTabs) {
+    if (tab.activityState == RNSActivityStateOnTop) {
+      return tab;
+    }
+  }
+  return nil;
+}
+
++ (REAUIView *)findTopScreenInChildren:(REAUIView *)view
+{
+  for (REAUIView *child in view.reactSubviews) {
+    if ([child isKindOfClass:[RNSScreenStackView class]]) {
+      int screenCount = [child.reactSubviews count];
+      if (screenCount != 0) {
+        REAUIView *topScreen = child.reactSubviews[[child.reactSubviews count] - 1];
+        REAUIView *maybeChildScreen = [REAScreensHelper findTopScreenInChildren:topScreen];
+        if (maybeChildScreen) {
+          return maybeChildScreen;
+        }
+        if (topScreen) {
+          return topScreen;
+        }
+      }
+    }
+    REAUIView *topScreen = [REAScreensHelper findTopScreenInChildren:child];
+    if (topScreen != nil) {
+      return topScreen;
+    }
+  }
+  if ([view isKindOfClass:[RNSScreenView class]]) {
+    return view;
+  }
+  return nil;
+}
+
++ (bool)isView:(REAUIView *)view DescendantOfScreen:(REAUIView *)screen
+{
+  REAUIView *currentView = view;
+  while (currentView.reactSuperview) {
+    if (currentView == screen) {
+      return true;
+    }
+    currentView = currentView.reactSuperview;
+  }
+  return false;
+}
+
++ (bool)isViewOnTopOfScreenStack:(REAUIView *)view
+{
+  NSMutableArray<REAUIView *> *screens = [NSMutableArray new];
+  REAUIView *currentView = view;
+  while (currentView.reactSuperview != nil) {
+    if ([currentView isKindOfClass:[RNSScreenView class]]) {
+      [screens addObject:currentView];
+    }
+    currentView = currentView.reactSuperview;
+  }
+  for (int i = 0; i < [screens count]; i++) {
+    REAUIView *screen = screens[i];
+    REAUIView *container = screen.reactSuperview;
+    if ([container isKindOfClass:[RNSScreenStackView class]]) {
+      if (screen.reactSuperview.reactSubviews.lastObject != screen) {
+        return false;
+      }
+    }
+    if ([container isKindOfClass:[RNSScreenNavigationContainerView class]]) {
+      if ([REAScreensHelper getActiveTabForTabNavigator:container] != screen) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 #else

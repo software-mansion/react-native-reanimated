@@ -15,13 +15,12 @@ import type {
 } from './types';
 import { ComparisonMode, DescribeDecorator, TestDecorator } from './types';
 import { TestComponent } from './TestComponent';
-import { getTrackerCallCount, render, stopRecordingAnimationUpdates, unmockAnimationTimer } from './RuntimeTestsApi';
+import { EMPTY_LOG_PLACEHOLDER, applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
 import type { SharedValue } from 'react-native-reanimated';
 import { makeMutable, runOnUI, runOnJS } from 'react-native-reanimated';
-import { applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
-import { createUpdatesContainer } from './UpdatesContainer';
-import { Matchers, nullableMatch } from './Matchers';
+import { Matchers, nullableMatch } from './matchers/Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
+import { createUpdatesContainer } from './UpdatesContainer';
 
 let callTrackerRegistryJS: Record<string, number> = {};
 const callTrackerRegistryUI = makeMutable<Record<string, number>>({});
@@ -107,7 +106,7 @@ export class TestRunner {
       this._includesOnly = true;
     }
 
-    let index; // We have to manage the order of the nested describes
+    let index: number; // We have to manage the order of the nested describes
     if (this._currentTestSuite === null) {
       index = this._testSuites.length; // If we have no parent describe, we append at the end
     } else {
@@ -123,13 +122,14 @@ export class TestRunner {
       }
     }
 
+    const testDecorator = decorator || this._currentTestSuite?.decorator;
+
     this._testSuites.splice(index, 0, {
       name: applyMarkdown(name),
       buildSuite,
       testCases: [],
       nestingLevel: (this._currentTestSuite?.nestingLevel || 0) + 1,
-      // eslint-disable-next-line no-unneeded-ternary
-      decorator: decorator ? decorator : this._currentTestSuite?.decorator ? this._currentTestSuite?.decorator : null,
+      decorator: testDecorator || null,
     });
   }
 
@@ -138,35 +138,23 @@ export class TestRunner {
     if (decorator === TestDecorator.ONLY) {
       this._includesOnly = true;
     }
-    this._currentTestSuite.testCases.push(
-      decorator === TestDecorator.WARN || decorator === TestDecorator.FAILING
-        ? {
-            name: applyMarkdown(name),
-            run,
-            componentsRefs: {},
-            callsRegistry: {},
-            errors: [],
-            decorator,
-            warningMessage,
-            skip: false,
-          }
-        : {
-            name: applyMarkdown(name),
-            run,
-            componentsRefs: {},
-            callsRegistry: {},
-            errors: [],
-            decorator,
-            skip: decorator === TestDecorator.SKIP,
-          },
-    );
+    this._currentTestSuite.testCases.push({
+      name: applyMarkdown(name),
+      run,
+      componentsRefs: {},
+      callsRegistry: {},
+      errors: [],
+      skip: decorator === TestDecorator.SKIP || this._currentTestSuite.decorator === DescribeDecorator.SKIP,
+      decorator,
+      warningMessage,
+    });
   }
 
   public testEachErrorMsg<T>(examples: Array<T>, decorator: TestDecorator) {
-    return (name: string, expectedWarning: string, testCase: (example: T) => void | Promise<void>) => {
+    return (name: string, expectedWarning: string, testCase: (example: T, index: number) => void | Promise<void>) => {
       examples.forEach((example, index) => {
         const currentTestCase = async () => {
-          await testCase(example);
+          await testCase(example, index);
         };
         this.test(
           formatString(name, example, index),
@@ -179,7 +167,7 @@ export class TestRunner {
   }
 
   public testEach<T>(examples: Array<T>, decorator: TestDecorator | null) {
-    return (name: string, testCase: (example: T, index?: number) => void | Promise<void>) => {
+    return (name: string, testCase: (example: T, index: number) => void | Promise<void>) => {
       examples.forEach((example, index) => {
         const currentTestCase = async () => {
           await testCase(example, index);
@@ -343,7 +331,7 @@ export class TestRunner {
 
       await testCase.run();
 
-      this.expect(getTrackerCallCount(consoleTrackerRef)).toBeCalled(1);
+      this.expect(this.getTrackerCallCount(consoleTrackerRef)).toBeCalled(1);
       if (testCase.warningMessage) {
         this.expect(message.value).toBe(testCase.warningMessage, ComparisonMode.STRING);
       }
@@ -358,9 +346,9 @@ export class TestRunner {
     }
 
     this._currentTestCase = null;
-    await render(null);
-    await unmockAnimationTimer();
-    await stopRecordingAnimationUpdates();
+    await this.render(null);
+    await this.unmockAnimationTimer();
+    await this.stopRecordingAnimationUpdates();
   }
 
   private showTestCaseSummary(testCase: TestCase, nestingLevel: number) {
@@ -376,7 +364,8 @@ export class TestRunner {
     console.log(`${indentNestingLevel(nestingLevel)} ${mark} ${color(testCase.name, 'gray')}`);
 
     for (const error of testCase.errors) {
-      console.log(`${indentNestingLevel(nestingLevel)}\t${error}`);
+      const indentedError = error.replace(/\n/g, '\n' + EMPTY_LOG_PLACEHOLDER + indentNestingLevel(nestingLevel + 2));
+      console.log(`${indentNestingLevel(nestingLevel)}\t${indentedError}`);
     }
   }
 
@@ -508,7 +497,7 @@ export class TestRunner {
 
       const originalRequestAnimationFrame = global.requestAnimationFrame;
       global.originalRequestAnimationFrame = originalRequestAnimationFrame;
-      global.requestAnimationFrame = (callback: (time: number) => void) => {
+      global.requestAnimationFrame = (callback: FrameRequestCallback) => {
         originalRequestAnimationFrame(() => {
           callback(global._getAnimationTimestamp());
         });

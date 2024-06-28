@@ -97,7 +97,7 @@ jsi::Value WorkletRuntime::executeSync(
   auto result = runGuarded(shareableWorklet);
   auto shareableResult = extractShareableOrThrow(uiRuntime, result);
   lock.unlock();
-  return shareableResult->getJSValue(rt);
+  return shareableResult->toJSValue(rt);
 }
 
 jsi::Value WorkletRuntime::get(

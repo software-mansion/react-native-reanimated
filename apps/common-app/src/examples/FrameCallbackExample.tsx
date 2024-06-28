@@ -1,5 +1,5 @@
+import type { FrameInfo } from 'react-native-reanimated';
 import Animated, {
-  FrameInfo,
   useAnimatedStyle,
   useFrameCallback,
   useSharedValue,

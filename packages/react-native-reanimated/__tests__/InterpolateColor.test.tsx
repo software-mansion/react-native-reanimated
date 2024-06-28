@@ -123,6 +123,14 @@ describe('colors interpolation', () => {
     expect(interpolatedColor).toBe(`rgba(96, 144, 32, ${112 / 255})`);
   });
 
+  it('handles tiny values', () => {
+    const colors = ['#00000000', '#ff802001'];
+
+    // We don't want output like "rgba(4, 2, 0, 3.921568627450981e-7)":
+    const interpolatedColor = interpolateColor(0.0001, [0, 1], colors);
+    expect(interpolatedColor).toBe(`rgba(4, 2, 0, 0)`);
+  });
+
   function TestComponent() {
     const color = useSharedValue('#105060');
 

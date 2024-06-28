@@ -121,6 +121,7 @@ import WithClampExample from './WithClampExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
 import HabitsExample from './LayoutAnimations/HabitsExample';
+import BBExample from './LayoutAnimations/BBExample';
 import MemoExample from './MemoExample';
 import PerformanceMonitorExample from './PerfomanceMonitorExample';
 import ScreenTransitionExample from './ScreenTransitionExample';
@@ -129,6 +130,8 @@ import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEve
 import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMergingExample';
 import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
 import FreezingShareablesExample from './ShareableFreezingExample';
+import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
+import StrictDOMExample from './StrictDOMExample';
 
 interface Example {
   icon?: string;
@@ -502,7 +505,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🧑‍💻',
     title: 'Habits',
     screen: HabitsExample,
-    missingOnFabric: true,
   },
   PerformanceMonitorExample: {
     icon: '⏱️',
@@ -523,6 +525,16 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🪢',
     title: 'Composed handler internal merging',
     screen: ComposedHandlerInternalMergingExample,
+  },
+  BBExample: {
+    icon: '💀',
+    title: 'BB',
+    screen: BBExample,
+  },
+  StrictDOMExample: {
+    icon: '👮‍♂️',
+    title: 'React Strict DOM',
+    screen: StrictDOMExample,
   },
 
   // Old examples
@@ -598,127 +610,102 @@ export const EXAMPLES: Record<string, Example> = {
   DeleteAncestorOfExiting: {
     title: '[LA] Deleting view with an exiting animation',
     screen: DeleteAncestorOfExiting,
-    missingOnFabric: true,
   },
   NestedNativeStacksWithLayout: {
     title: '[LA] Nested NativeStacks with layout',
     screen: NestedNativeStacksWithLayout,
-    missingOnFabric: true,
   },
   BasicLayoutAnimation: {
     title: '[LA] Basic layout animation',
     screen: BasicLayoutAnimation,
-    missingOnFabric: true,
   },
   BasicNestedAnimation: {
     title: '[LA] Basic nested animation',
     screen: BasicNestedAnimation,
-    missingOnFabric: true,
   },
   BasicNestedLayoutAnimation: {
     title: '[LA] Basic nested layout animation',
     screen: BasicNestedLayoutAnimation,
-    missingOnFabric: true,
   },
   NestedLayoutAnimations: {
     title: '[LA] Nested layout animations',
     screen: NestedTest,
-    missingOnFabric: true,
   },
   CombinedLayoutAnimations: {
     title: '[LA] Entering and Exiting with Layout',
     screen: CombinedTest,
-    missingOnFabric: true,
   },
   DefaultAnimations: {
     title: '[LA] Default layout animations',
     screen: DefaultAnimations,
-    missingOnFabric: true,
   },
   DefaultTransitions: {
     title: '[LA] Default layout transitions',
     screen: WaterfallGridExample,
-    missingOnFabric: true,
   },
   KeyframeAnimation: {
     title: '[LA] Keyframe animation',
     screen: KeyframeAnimation,
-    missingOnFabric: true,
   },
   ParticipantList: {
     title: '[LA] Participant List',
     screen: AnimatedListExample,
-    missingOnFabric: true,
   },
   OlympicAnimation: {
     title: '[LA] Olympic animation',
     screen: OlympicAnimation,
-    missingOnFabric: true,
   },
   CustomLayoutAnimation: {
     title: '[LA] Custom layout animation',
     screen: CustomLayoutAnimationScreen,
-    missingOnFabric: true,
   },
   ModalNewAPI: {
     title: '[LA] ModalNewAPI',
     screen: ModalNewAPI,
-    missingOnFabric: true,
   },
   SpringLayoutAnimation: {
     title: '[LA] Spring Layout Animation',
     screen: SpringLayoutAnimation,
-    missingOnFabric: true,
   },
   MountingUnmounting: {
     title: '[LA] Mounting Unmounting',
     screen: MountingUnmounting,
-    missingOnFabric: true,
   },
   ReactionsCounterExample: {
     title: '[LA] Reactions counter',
     screen: ReactionsCounterExample,
-    missingOnFabric: true,
   },
   SwipeableList: {
     title: '[LA] Swipeable list',
     screen: SwipeableList,
-    missingOnFabric: true,
   },
   Modal: {
     title: '[LA] Modal',
     screen: Modal,
-    missingOnFabric: true,
   },
   NativeModals: {
     title: '[LA] Native modals (RN and Screens)',
     screen: NativeModals,
-    missingOnFabric: true,
   },
   Carousel: {
     title: '[LA] Carousel',
     screen: Carousel,
-    missingOnFabric: true,
   },
   ReducedMotionLayoutExample: {
     title: '[LA] Reduced Motion',
     screen: ReducedMotionLayoutExample,
-    missingOnFabric: true,
   },
   NestedLayoutAnimationConfig: {
     title: '[LA] Nested LayoutAnimationConfig',
     screen: NestedLayoutAnimationConfig,
-    missingOnFabric: true,
   },
   FlatListSkipEnteringExiting: {
     title: '[LA] FlatList skip entering & exiting',
     screen: FlatListSkipEnteringExiting,
-    missingOnFabric: true,
   },
   ChangeTheme: {
     title: '[LA] Change theme',
     screen: ChangeThemeExample,
-    missingOnFabric: true,
   },
 
   // Shared Element Transitions
@@ -791,13 +778,21 @@ export const EXAMPLES: Record<string, Example> = {
   ChangeThemeSharedExample: {
     title: '[SET] Change theme',
     screen: ChangeThemeSharedExample,
+    missingOnFabric: true,
   },
   NestedRotationSharedExample: {
     title: '[SET] Nested Transforms',
     screen: NestedRotationExample,
+    missingOnFabric: true,
   },
   BorderRadiiExample: {
     title: '[SET] Border Radii',
     screen: BorderRadiiExample,
+    missingOnFabric: true,
+  },
+  TabNavigatorExample: {
+    title: '[SET] Tab Navigator',
+    screen: TabNavigatorExample,
+    missingOnFabric: true,
   },
 } as const;

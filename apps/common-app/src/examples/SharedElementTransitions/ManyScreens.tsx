@@ -1,10 +1,8 @@
 import * as React from 'react';
 import { View, Button, StyleSheet } from 'react-native';
-import { ParamListBase } from '@react-navigation/native';
-import {
-  createNativeStackNavigator,
-  NativeStackScreenProps,
-} from '@react-navigation/native-stack';
+import type { ParamListBase } from '@react-navigation/native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated from 'react-native-reanimated';
 
 const Stack = createNativeStackNavigator();
