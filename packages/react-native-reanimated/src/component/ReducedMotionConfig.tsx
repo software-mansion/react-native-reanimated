@@ -26,8 +26,7 @@ export function ReducedMotionConfig({ mode }: { mode: ReduceMotion }) {
     const wasEnabled = ReducedMotionManager.jsValue;
     switch (mode) {
       case ReduceMotion.System:
-        const enabled = isReducedMotionEnabledInSystem();
-        ReducedMotionManager.setEnabled(enabled);
+        ReducedMotionManager.setEnabled(isReducedMotionEnabledInSystem());
         break;
       case ReduceMotion.Always:
         ReducedMotionManager.setEnabled(true);
