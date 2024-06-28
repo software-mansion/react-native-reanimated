@@ -17,7 +17,9 @@ const animated = {
 
 const styles = css.create({
   container: {
-    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
