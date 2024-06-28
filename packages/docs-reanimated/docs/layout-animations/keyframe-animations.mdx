@@ -2,6 +2,8 @@
 sidebar_position: 2
 ---
 
+import ExampleVideo from '@site/src/components/ExampleVideo';
+
 # Keyframe animations
 
 The document explains how you can define complex animation using simple and popular animation definitions schema - Keyframes.
@@ -47,7 +49,7 @@ To `0` assign the style, you want for your object at the beginning of the animat
 
 - Providing keyframe `0` or `from` is required as it contains the initial state of the object you want to animate.
 - Ensure you provide the initial value for all style properties you want to animate in other keyframes.
-- Do not provide both 0 and from, or 100 and to keyframes, as it will result in a parsing conflict.
+- Do not provide both `0` and `from`, or `100` and `to` keyframes, as it will result in a parsing conflict.
 - If you want to animate transform style, make sure that all properties in the transformation array are in the same order in all keyframes.
 - If easing property is not provided, it defaults to `Easing.linear`.
 
@@ -69,3 +71,11 @@ keyframe
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Example
+
+<ExampleVideo
+  sources={{
+    android:
+      '/react-native-reanimated/recordings/layout-animations/keyframe_android.mov',
+    ios: '/react-native-reanimated/recordings/layout-animations/keyframe_ios.mov',
+  }}
+/>
