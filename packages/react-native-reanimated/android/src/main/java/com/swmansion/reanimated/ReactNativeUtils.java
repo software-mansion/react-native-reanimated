@@ -2,6 +2,9 @@ package com.swmansion.reanimated;
 
 import android.graphics.drawable.Drawable;
 import android.view.View;
+import com.facebook.react.uimanager.drawable.CSSBackgroundDrawable;
+import com.facebook.react.uimanager.style.BorderRadiusProp;
+import com.facebook.react.uimanager.style.ComputedBorderRadius;
 import com.facebook.react.views.image.ReactImageView;
 import com.facebook.react.views.view.ReactViewBackgroundDrawable;
 import java.lang.reflect.Field;
@@ -29,15 +32,15 @@ public class ReactNativeUtils {
   public static BorderRadii getBorderRadii(View view) {
     if (view.getBackground() != null) {
       Drawable background = view.getBackground();
-      if (background instanceof ReactViewBackgroundDrawable) {
-        ReactViewBackgroundDrawable drawable = (ReactViewBackgroundDrawable) background;
+      if (background instanceof CSSBackgroundDrawable drawable) {
+        ComputedBorderRadius computedBorderRadius = drawable.getComputedBorderRadius();
         return new BorderRadii(
-            drawable.getFullBorderRadius(),
-            drawable.getBorderRadius(ReactViewBackgroundDrawable.BorderRadiusLocation.TOP_LEFT),
-            drawable.getBorderRadius(ReactViewBackgroundDrawable.BorderRadiusLocation.TOP_RIGHT),
-            drawable.getBorderRadius(ReactViewBackgroundDrawable.BorderRadiusLocation.BOTTOM_LEFT),
-            drawable.getBorderRadius(
-                ReactViewBackgroundDrawable.BorderRadiusLocation.BOTTOM_RIGHT));
+                // TODO: get full border radius
+                computedBorderRadius.getTopLeft(),
+                computedBorderRadius.getTopLeft(),
+                computedBorderRadius.getTopRight(),
+                computedBorderRadius.getBottomLeft(),
+                computedBorderRadius.getBottomRight());
       }
     } else if (view instanceof ReactImageView) {
       try {

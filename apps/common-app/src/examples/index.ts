@@ -131,7 +131,7 @@ import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMerg
 import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
 import FreezingShareablesExample from './ShareableFreezingExample';
 import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
-import StrictDOMExample from './StrictDOMExample';
+// import StrictDOMExample from './StrictDOMExample';
 
 interface Example {
   icon?: string;
@@ -531,11 +531,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'BB',
     screen: BBExample,
   },
-  StrictDOMExample: {
-    icon: '👮‍♂️',
-    title: 'React Strict DOM',
-    screen: StrictDOMExample,
-  },
+  // StrictDOMExample: {
+  //   icon: '👮‍♂️',
+  //   title: 'React Strict DOM',
+  //   screen: StrictDOMExample,
+  // },
 
   // Old examples
 
