@@ -46,6 +46,7 @@ class LayoutAnimationsManager {
   void transferConfigFromNativeID(const int nativeId, const int tag);
 #endif
   int findPrecedingViewTagForTransition(const int tag);
+  const std::vector<int> &getSharedGroup(const int viewTag);
 #ifndef NDEBUG
   std::string getScreenSharedTagPairString(
       const int screenTag,

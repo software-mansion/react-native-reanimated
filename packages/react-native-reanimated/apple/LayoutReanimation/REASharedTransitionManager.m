@@ -11,6 +11,7 @@
   NSMutableDictionary<NSNumber *, REAUIView *> *_currentSharedTransitionViews;
   REAFindPrecedingViewTagForTransitionBlock _findPrecedingViewTagForTransition;
   REACancelAnimationBlock _cancelLayoutAnimation;
+  REAGetSharedGroupBlock _getSharedGroupBlock;
   REAUIView *_transitionContainer;
   NSMutableArray<REAUIView *> *_addedSharedViews;
   BOOL _isSharedTransitionActive;
@@ -29,7 +30,8 @@
   BOOL _isAsyncSharedTransitionConfigured;
   BOOL _clearScreen;
   BOOL _isInteractive;
-  REAUIView *_disappearingScreen;
+  NSMutableArray<REAUIView *> *_disappearingScreens;
+  BOOL _isTabNavigator;
 }
 
 /*
@@ -68,6 +70,21 @@ static BOOL _isConfigured = NO;
     _reattachedViews = [NSMutableSet new];
     _isAsyncSharedTransitionConfigured = NO;
     _isConfigured = NO;
+    _disappearingScreens = [NSMutableArray new];
+    _isTabNavigator = NO;
+    _findPrecedingViewTagForTransition = ^NSNumber *(NSNumber *tag)
+    {
+      // default implementation, this block will be replaced by a setter
+      return nil;
+    };
+    _cancelLayoutAnimation = ^(NSNumber *tag) {
+      // default implementation, this block will be replaced by a setter
+    };
+    _getSharedGroupBlock = ^NSArray<NSNumber *> *(NSNumber *tag)
+    {
+      // default implementation, this block will be replaced by a setter
+      return nil;
+    };
     [self swizzleScreensMethods];
   }
   return self;
@@ -240,6 +257,8 @@ static BOOL _isConfigured = NO;
       }
     } while (siblingView == nil && siblingViewTag != nil);
 
+    siblingView = [self maybeOverrideSiblingForTabNavigator:sharedView siblingView:siblingView];
+
     if (siblingView == nil) {
       // the sibling of shared view doesn't exist yet
       continue;
@@ -276,14 +295,18 @@ static BOOL _isConfigured = NO;
     // check valid target screen configuration
     int screensCount = [stack.reactSubviews count];
     if (addedNewScreen && !isModal) {
-      // is under top
-      if (screensCount < 2) {
-        continue;
-      }
-      REAUIView *viewSourceParentScreen = [REAScreensHelper getScreenForView:viewSource];
-      REAUIView *screenUnderStackTop = stack.reactSubviews[screensCount - 2];
-      if (![screenUnderStackTop.reactTag isEqual:viewSourceParentScreen.reactTag] && !isInCurrentTransition) {
-        continue;
+      REAUIView *sourceStack = [REAScreensHelper getStackForView:viewSource];
+      REAUIView *targetStack = [REAScreensHelper getStackForView:viewTarget];
+      if (sourceStack == targetStack) {
+        // is under top
+        if (screensCount < 2) {
+          continue;
+        }
+        REAUIView *viewSourceParentScreen = [REAScreensHelper getScreenForView:viewSource];
+        REAUIView *screenUnderStackTop = stack.reactSubviews[screensCount - 2];
+        if (![screenUnderStackTop.reactTag isEqual:viewSourceParentScreen.reactTag] && !isInCurrentTransition) {
+          continue;
+        }
       }
     } else if (!addedNewScreen && !isModal) {
       // is on top
@@ -358,6 +381,49 @@ static BOOL _isConfigured = NO;
   return newSharedElements;
 }
 
+- (REAUIView *)maybeOverrideSiblingForTabNavigator:(REAUIView *)sharedView siblingView:(REAUIView *)siblingView
+{
+  REAUIView *maybeTabNavigatorForSharedView = [self getTabNavigator:sharedView];
+  REAUIView *maybeTabNavigatorForSiblingView = [self getTabNavigator:siblingView];
+
+  if (!(maybeTabNavigatorForSharedView && maybeTabNavigatorForSiblingView) ||
+      maybeTabNavigatorForSharedView != maybeTabNavigatorForSiblingView) {
+    return siblingView;
+  }
+
+  NSArray<NSNumber *> *sharedGroup = _getSharedGroupBlock(sharedView.reactTag);
+  int siblingIndex = [sharedGroup indexOfObject:siblingView.reactTag];
+  REAUIView *activeTab = [REAScreensHelper getActiveTabForTabNavigator:maybeTabNavigatorForSharedView];
+  for (int i = siblingIndex; i >= 0; i--) {
+    NSNumber *viewTag = sharedGroup[i];
+    REAUIView *view = [_animationManager viewForTag:viewTag];
+    if ([REAScreensHelper isView:view DescendantOfScreen:activeTab]) {
+      return view;
+    }
+  }
+  return nil;
+}
+
+- (REAUIView *)getTabNavigator:(REAUIView *)view
+{
+  REAUIView *currentView = view;
+  while (currentView.superview) {
+    if ([currentView isKindOfClass:NSClassFromString(@"RNSScreenNavigationContainerView")]) {
+      return currentView;
+    }
+    currentView = (REAUIView *)currentView.superview;
+  }
+
+  currentView = view;
+  while (currentView.reactSuperview) {
+    if ([currentView isKindOfClass:NSClassFromString(@"RNSScreenNavigationContainerView")]) {
+      return currentView;
+    }
+    currentView = (REAUIView *)currentView.reactSuperview;
+  }
+  return nil;
+}
+
 /*
   Method swizzling is used to get notification from react-native-screens
   about push or pop screen from stack.
@@ -365,19 +431,19 @@ static BOOL _isConfigured = NO;
 - (void)swizzleScreensMethods
 {
 #if LOAD_SCREENS_HEADERS
-  static dispatch_once_t onceToken;
-  dispatch_once(&onceToken, ^{
-    SEL viewDidLayoutSubviewsSelector = @selector(viewDidLayoutSubviews);
-    SEL notifyWillDisappearSelector = @selector(notifyWillDisappear);
-    SEL viewIsAppearingSelector = @selector(viewIsAppearing:);
-    Class screenClass = [RNSScreen class];
-    Class screenViewClass = [RNSScreenView class];
-    BOOL allSelectorsAreAvailable = [RNSScreen instancesRespondToSelector:viewDidLayoutSubviewsSelector] &&
-        [RNSScreenView instancesRespondToSelector:notifyWillDisappearSelector] &&
-        [RNSScreen instancesRespondToSelector:viewIsAppearingSelector] &&
-        [RNSScreenView instancesRespondToSelector:@selector(isModal)]; // used by REAScreenHelper
+  SEL viewDidLayoutSubviewsSelector = @selector(viewDidLayoutSubviews);
+  SEL notifyWillDisappearSelector = @selector(notifyWillDisappear);
+  SEL viewIsAppearingSelector = @selector(viewIsAppearing:);
+  Class screenClass = [RNSScreen class];
+  Class screenViewClass = [RNSScreenView class];
+  BOOL allSelectorsAreAvailable = [RNSScreen instancesRespondToSelector:viewDidLayoutSubviewsSelector] &&
+      [RNSScreenView instancesRespondToSelector:notifyWillDisappearSelector] &&
+      [RNSScreen instancesRespondToSelector:viewIsAppearingSelector] &&
+      [RNSScreenView instancesRespondToSelector:@selector(isModal)]; // used by REAScreenHelper
 
-    if (allSelectorsAreAvailable) {
+  if (allSelectorsAreAvailable) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
       [REAUtils swizzleMethod:viewDidLayoutSubviewsSelector
                      forClass:screenClass
                          with:@selector(reanimated_viewDidLayoutSubviews)
@@ -390,21 +456,46 @@ static BOOL _isConfigured = NO;
                      forClass:screenClass
                          with:@selector(reanimated_viewIsAppearing:)
                     fromClass:[self class]];
-      _isConfigured = YES;
-    }
-  });
+    });
+    _isConfigured = YES;
+  }
 #endif
 }
 
 - (void)setDisappearingScreen:(REAUIView *)view
 {
-  _disappearingScreen = view;
+  if (view == nil) {
+    [_disappearingScreens removeAllObjects];
+  } else {
+    [_disappearingScreens addObject:view];
+  }
   _isInteractive = [_sharedTransitionManager isInteractiveScreenChange:view];
 }
 
-- (REAUIView *)getDisappearingScreen
+- (REAUIView *)getLastDisappearingScreen
 {
-  return _disappearingScreen;
+  int count = [_disappearingScreens count];
+  if (count == 0) {
+    return nil;
+  } else {
+    return _disappearingScreens[count - 1];
+  }
+}
+
+- (NSMutableArray<REAUIView *> *)getDisappearingScreens
+{
+  return _disappearingScreens;
+}
+
+- (void)dismissAsyncTransition
+{
+  _isAsyncSharedTransitionConfigured = NO;
+  [_sharedElements removeAllObjects];
+}
+
+- (BOOL)isTabNavigator
+{
+  return _isTabNavigator;
 }
 
 - (void)setIsInteractive:(BOOL)isInteractive
@@ -422,7 +513,12 @@ static BOOL _isConfigured = NO;
   // call original method from react-native-screens, self == RNScreen
   [self reanimated_viewDidLayoutSubviews];
   REAUIView *screen = [self valueForKey:@"screenView"];
-  [_sharedTransitionManager screenAddedToStack:screen];
+  if ([_sharedTransitionManager isTabNavigator]) {
+    [_sharedTransitionManager dismissAsyncTransition];
+    [_sharedTransitionManager handleTabNavigatorChange:screen];
+  } else {
+    [_sharedTransitionManager screenAddedToStack:screen];
+  }
 }
 
 - (void)reanimated_notifyWillDisappear
@@ -443,20 +539,129 @@ static BOOL _isConfigured = NO;
 {
   // call original method from react-native-screens, self == RNSScreen
   [self reanimated_viewIsAppearing:animated];
-  REAUIView *disappearingScreen = [_sharedTransitionManager getDisappearingScreen];
+  REAUIView *disappearingScreen = [_sharedTransitionManager getLastDisappearingScreen];
   REAUIView *targetScreen = [self valueForKey:@"screenView"];
-  if (disappearingScreen != NULL) {
-    [_sharedTransitionManager screenRemovedFromStack:disappearingScreen
-                                         withOffsetX:-targetScreen.superview.frame.origin.x
-                                         withOffsetY:-targetScreen.superview.frame.origin.y];
+
+  if (disappearingScreen == nil) {
+    [_sharedTransitionManager setDisappearingScreen:nil];
+    return;
   }
-  [_sharedTransitionManager setDisappearingScreen:NULL];
+
+  NSArray *disappearingScreens = [_sharedTransitionManager getDisappearingScreens];
+  REAUIView *firstScreen = disappearingScreens[0];
+  if ([firstScreen.reactSuperview isKindOfClass:NSClassFromString(@"RNSScreenNavigationContainerView")]) {
+    [_sharedTransitionManager handleTabNavigatorChange:nil];
+    return;
+  }
+  float transitionViewOffsetX = 0;
+  if ([REAScreensHelper getStackForView:disappearingScreen] != [REAScreensHelper getStackForView:targetScreen]) {
+    transitionViewOffsetX = [_sharedTransitionManager getTransitionViewOffset:targetScreen];
+  }
+  [_sharedTransitionManager screenRemovedFromStack:disappearingScreen
+                                       withOffsetX:-(targetScreen.superview.frame.origin.x + transitionViewOffsetX)
+                                       withOffsetY:-(targetScreen.superview.frame.origin.y)];
+  [_sharedTransitionManager setDisappearingScreen:nil];
+}
+
+- (void)handleTabNavigatorChange:(REAUIView *)layoutedScreen
+{
+  if (_isAsyncSharedTransitionConfigured) {
+    // this is a new screen, let wait until header will be attached to a screen to make a proper snapshots
+    _isTabNavigator = YES;
+    return;
+  }
+
+  REAUIView *navTabScreen = _disappearingScreens[0];
+  REAUIView *sourceScreen = _disappearingScreens[[_disappearingScreens count] - 1];
+  REAUIView *targetTabScreen = [REAScreensHelper getActiveTabForTabNavigator:navTabScreen.reactSuperview];
+  REAUIView *targetScreen = [REAScreensHelper findTopScreenInChildren:targetTabScreen];
+  if (!layoutedScreen && _isTabNavigator) {
+    // just wait for the next layout computation for your screen
+    return;
+  }
+
+  NSMutableArray<REAUIView *> *sharedViews = [NSMutableArray new];
+  REANodeFind(sourceScreen, ^int(id<RCTComponent> view) {
+    if ([self->_animationManager hasAnimationForTag:view.reactTag type:SHARED_ELEMENT_TRANSITION]) {
+      [sharedViews addObject:(REAUIView *)view];
+    }
+    return false;
+  });
+  sharedViews = (NSMutableArray<REAUIView *> *)[self sortViewsByTags:sharedViews];
+
+  for (REAUIView *sharedView in sharedViews) {
+    NSArray<NSNumber *> *groupTags = _getSharedGroupBlock(sharedView.reactTag);
+    if (![groupTags containsObject:sharedView.reactTag]) {
+      continue;
+    }
+    REAUIView *siblingView;
+    for (NSNumber *tag in groupTags) {
+      REAUIView *currentView = [_animationManager viewForTag:tag];
+      if ([REAScreensHelper isView:currentView DescendantOfScreen:targetScreen]) {
+        siblingView = currentView;
+        REAUIView *siblingScreen = [REAScreensHelper getScreenForView:siblingView];
+        if (layoutedScreen && siblingScreen != layoutedScreen) {
+          // just wait for the next layout computation for your screen
+          return;
+        }
+        break;
+      }
+    }
+
+    if (siblingView == nil) {
+      return;
+    }
+
+    REAUIView *viewSource = sharedView;
+    REAUIView *viewTarget = siblingView;
+    REASnapshot *sourceViewSnapshot = _snapshotRegistry[viewSource.reactTag];
+    if (navTabScreen.superview) {
+      sourceViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewSource];
+    }
+    REASnapshot *targetViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewTarget];
+    REASharedElement *sharedElement = [[REASharedElement alloc] initWithSourceView:viewSource
+                                                                sourceViewSnapshot:sourceViewSnapshot
+                                                                        targetView:viewTarget
+                                                                targetViewSnapshot:targetViewSnapshot];
+    sharedElement.animationType = SHARED_ELEMENT_TRANSITION;
+    [_sharedElements addObject:sharedElement];
+
+    _snapshotRegistry[viewSource.reactTag] = sourceViewSnapshot;
+    _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
+    _sharedElementsLookup[viewSource.reactTag] = sharedElement;
+  }
+
+  [self setDisappearingScreen:nil];
+  _isTabNavigator = NO;
+
+  if ([_sharedElements count] == 0) {
+    return;
+  }
+
+  [self configureTransitionContainer];
+  [self reparentSharedViewsForCurrentTransition:_sharedElements];
+  [self startSharedTransition:_sharedElements];
+}
+
+- (float)getTransitionViewOffset:(REAUIView *)screen
+{
+  float x = 0;
+  REAUIView *currentView = screen;
+  while (currentView.superview != nil) {
+    REAUIView *maybeView = (REAUIView *)currentView.superview.superview;
+    if ([maybeView isKindOfClass:NSClassFromString(@"UINavigationTransitionView")]) {
+      CGPoint transitionViewOffset = currentView.frame.origin;
+      x += transitionViewOffset.x;
+    }
+    currentView = currentView.superview;
+  }
+  return x;
 }
 
 - (void)screenAddedToStack:(REAUIView *)screen
 {
   if (screen.superview != nil) {
-    [self runAsyncSharedTransition];
+    [self runAsyncSharedTransition:screen];
   }
 }
 
@@ -469,9 +674,9 @@ static BOOL _isConfigured = NO;
   bool isInteractive = [self getIsInteractive];
   if ((stack != nil || isModal) && !isRemovedInParentStack) {
     // screen is removed from React tree (navigation.navigate(<screenName>))
-    bool isScreenRemovedFromReactTree = [self isScreen:screen outsideStack:stack];
+    bool isScreenRemovedFromReactTree = screen.reactSuperview == nil;
     // click on button goBack on native header
-    bool isTriggeredByGoBackButton = [self isScreen:screen onTopOfStack:stack];
+    bool isTriggeredByGoBackButton = [REAScreensHelper isViewOnTopOfScreenStack:screen];
     bool shouldRunTransition = (isScreenRemovedFromReactTree || isTriggeredByGoBackButton) &&
         !(isInteractive && [_currentSharedTransitionViews count] > 0);
     if (shouldRunTransition) {
@@ -526,22 +731,6 @@ static BOOL _isConfigured = NO;
   }
 }
 
-- (BOOL)isScreen:(REAUIView *)screen outsideStack:(REAUIView *)stack
-{
-  for (REAUIView *child in stack.reactSubviews) {
-    if ([child.reactTag isEqual:screen.reactTag]) {
-      return NO;
-    }
-  }
-  return YES;
-}
-
-- (BOOL)isScreen:(REAUIView *)screen onTopOfStack:(REAUIView *)stack
-{
-  int screenCount = stack.reactSubviews.count;
-  return screenCount > 0 && screen == stack.reactSubviews.lastObject;
-}
-
 - (BOOL)isRemovedFromHigherStack:(REAUIView *)screen
 {
   REAUIView *stack = screen.reactSuperview;
@@ -588,13 +777,18 @@ static BOOL _isConfigured = NO;
   }
 }
 
-- (void)runAsyncSharedTransition
+- (void)runAsyncSharedTransition:(REAUIView *)screen
 {
   if ([_sharedElements count] == 0 || !_isAsyncSharedTransitionConfigured) {
     return;
   }
   for (REASharedElement *sharedElement in _sharedElements) {
     REAUIView *viewTarget = sharedElement.targetView;
+    REAUIView *viewScreen = [REAScreensHelper getScreenForView:viewTarget];
+    if (viewScreen != screen) {
+      // just wait for the next layout computation for your screen
+      return;
+    }
     REASnapshot *targetViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewTarget];
     _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
     sharedElement.targetViewSnapshot = targetViewSnapshot;
@@ -741,6 +935,11 @@ static BOOL _isConfigured = NO;
 - (void)setCancelAnimationBlock:(REACancelAnimationBlock)cancelAnimationBlock
 {
   _cancelLayoutAnimation = cancelAnimationBlock;
+}
+
+- (void)setGetSharedGroupBlock:(REAGetSharedGroupBlock)getSharedGroupBlock
+{
+  _getSharedGroupBlock = getSharedGroupBlock;
 }
 
 - (void)clearAllSharedConfigsForViewTag:(NSNumber *)viewTag

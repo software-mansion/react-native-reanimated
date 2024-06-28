@@ -1,4 +1,5 @@
-import React, { ReactElement, ReactNode, useRef } from 'react';
+import type { ReactElement, ReactNode } from 'react';
+import React, { useRef } from 'react';
 import { StyleSheet, View, Text, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -12,10 +13,8 @@ import Animated, {
   useAnimatedRef,
 } from 'react-native-reanimated';
 import type { AnimatedRef } from 'react-native-reanimated';
-import {
-  TapGestureHandler,
-  TapGestureHandlerGestureEvent,
-} from 'react-native-gesture-handler';
+import type { TapGestureHandlerGestureEvent } from 'react-native-gesture-handler';
+import { TapGestureHandler } from 'react-native-gesture-handler';
 import '../types';
 
 const labels = ['apple', 'banana', 'kiwi', 'milk', 'water'];

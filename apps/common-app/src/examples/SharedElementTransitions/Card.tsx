@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { View, TouchableNativeFeedback, StyleSheet } from 'react-native';
-import {
-  createNativeStackNavigator,
+import type {
   NativeStackNavigationProp,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated from 'react-native-reanimated';
 
 type ParamList = {
@@ -36,7 +36,7 @@ function Card({
 }: CardProps) {
   const goNext = (screenName: keyof ParamList) => {
     navigation.navigate(screenName, {
-      title: title,
+      title,
       sharedTransitionTag: transitionTag,
     });
   };

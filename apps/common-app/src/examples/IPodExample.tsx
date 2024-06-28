@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Dimensions, Text } from 'react-native';
+import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -9,12 +10,9 @@ import Animated, {
   useAnimatedGestureHandler,
   Extrapolation,
   interpolate,
-  SharedValue,
 } from 'react-native-reanimated';
-import {
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent,
-} from 'react-native-gesture-handler';
+import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 
 const data = [
   { artist: 'Nirvana', song: 'Smells Like Teen Spirit' },

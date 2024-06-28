@@ -1,9 +1,7 @@
 import * as React from 'react';
 import { View, Text, StyleSheet, Pressable, Dimensions } from 'react-native';
-import {
-  createNativeStackNavigator,
-  NativeStackScreenProps,
-} from '@react-navigation/native-stack';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 const florence = require('./assets/florence.jpg');

@@ -1,9 +1,9 @@
 import { Text, StyleSheet, View, Button } from 'react-native';
 
 import React, { useEffect } from 'react';
+import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
-  SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
