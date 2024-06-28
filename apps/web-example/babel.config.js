@@ -26,7 +26,7 @@ module.exports = function (api) {
   }
 
   return {
-    plugins,
     presets: ['babel-preset-expo'],
+    plugins,
   };
 };
