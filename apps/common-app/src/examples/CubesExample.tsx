@@ -222,7 +222,7 @@ function CubeWithEulerAngles() {
       transformOrigin(matrix, origin);
 
       return {
-        transform: [{ perspective: 1000 }, { matrix: matrix }],
+        transform: [{ perspective: 1000 }, { matrix }],
         backgroundColor: sidesColors[i],
       };
     })
@@ -261,7 +261,7 @@ function CubeWithQuaternions() {
       transformOrigin(matrix, origin);
 
       return {
-        transform: [{ perspective: 1000 }, { matrix: matrix }],
+        transform: [{ perspective: 1000 }, { matrix }],
         backgroundColor: sidesColors[i],
       };
     })

@@ -58,7 +58,7 @@ export default function LogExample() {
           bar?: string;
         };
 
-        let a: RecursiveObject = {};
+        const a: RecursiveObject = {};
         a.foo = a;
         a.bar = 'bar';
         test(a, '{"foo": {...}, "bar": "bar"}');
@@ -66,7 +66,7 @@ export default function LogExample() {
       {
         type RecursiveArray = (number | RecursiveArray)[];
 
-        let b: RecursiveArray = [];
+        const b: RecursiveArray = [];
         b.push(1);
         b.push(b);
         test(b, '[1, [...]]');
