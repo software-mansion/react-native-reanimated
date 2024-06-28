@@ -29,7 +29,7 @@ export class FadingTransition
     const delayFunction = this.getDelayFunction();
     const callback = this.callbackV;
     const delay = this.getDelay();
-    const duration = (this.durationV ?? 500) / 2;
+    const halfDuration = (this.durationV ?? 500) / 2; // The minimal duration is 100ms, otherwise the animation will be halfDuration + 50ms long
 
     return (values) => {
       'worklet';
@@ -45,24 +45,24 @@ export class FadingTransition
           opacity: delayFunction(
             delay,
             withSequence(
-              withTiming(0, { duration }),
-              withTiming(1, { duration })
+              withTiming(0, { duration: halfDuration }),
+              withTiming(1, { duration: halfDuration })
             )
           ),
           originX: delayFunction(
-            delay + duration,
+            delay + halfDuration,
             withTiming(values.targetOriginX, { duration: 50 })
           ),
           originY: delayFunction(
-            delay + duration,
+            delay + halfDuration,
             withTiming(values.targetOriginY, { duration: 50 })
           ),
           width: delayFunction(
-            delay + duration,
+            delay + halfDuration,
             withTiming(values.targetWidth, { duration: 50 })
           ),
           height: delayFunction(
-            delay + duration,
+            delay + halfDuration,
             withTiming(values.targetHeight, { duration: 50 })
           ),
         },
