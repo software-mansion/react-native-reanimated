@@ -6303,18 +6303,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@stylexjs/stylex@npm:0.6.0":
-  version: 0.6.0
-  resolution: "@stylexjs/stylex@npm:0.6.0"
-  dependencies:
-    css-mediaquery: "npm:^0.1.2"
-    invariant: "npm:^2.2.4"
-    styleq: "npm:0.1.3"
-  checksum: 10/9cefaea6a7f4efac98984bbe18ab4bc42b23a3f11fefc7f7c37567205548d10a84ffa0723ac1b26c5c39237ce06e33126ca36e5485843b26c3b8e7261f3bcece
-  languageName: node
-  linkType: hard
-
-"@stylexjs/stylex@npm:0.7.0":
+"@stylexjs/stylex@npm:0.7.0, @stylexjs/stylex@npm:^0.7.0":
   version: 0.7.0
   resolution: "@stylexjs/stylex@npm:0.7.0"
   dependencies:
@@ -8908,7 +8897,7 @@ __metadata:
     react-native-safe-area-context: "npm:4.10.0-rc.1"
     react-native-screens: "npm:3.31.0-rc.1"
     react-native-svg: "npm:^15.2.0-rc.0"
-    react-strict-dom: "npm:^0.0.16"
+    react-strict-dom: "npm:^0.0.17"
     typescript: "npm:~5.3.0"
   peerDependencies:
     "@fortawesome/fontawesome-svg-core": "*"
@@ -17626,18 +17615,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-strict-dom@npm:^0.0.16":
-  version: 0.0.16
-  resolution: "react-strict-dom@npm:0.0.16"
+"react-strict-dom@npm:^0.0.17":
+  version: 0.0.17
+  resolution: "react-strict-dom@npm:0.0.17"
   dependencies:
-    "@stylexjs/stylex": "npm:0.6.0"
+    "@stylexjs/stylex": "npm:^0.7.0"
     css-mediaquery: "npm:0.1.2"
     postcss-value-parser: "npm:^4.1.0"
   peerDependencies:
-    react: ">=18.2.0"
-    react-dom: ">=18.2.0"
-    react-native: ">=0.71.0"
-  checksum: 10/81a658598c886b0821e2f0fa0b8f83fa8ac5f138d3058301745df785d6ae759e0fe470154a96674ada211983b843445620a1ded681e4f5d812e13aecbe4edd97
+    react: ^18.2.0
+    react-dom: ^18.2.0
+    react-native: ^0.73.2
+  checksum: 10/80750fcef76c351eb1aa476d0e85bc5bc3fc20994911d9d869736c04cda8a7f86175a0c41daabfe5346c5ca545c3de16ffd301288c9d2f7fd7e0374ff90f0555
   languageName: node
   linkType: hard
 
