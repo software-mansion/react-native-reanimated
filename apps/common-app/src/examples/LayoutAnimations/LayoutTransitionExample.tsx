@@ -121,7 +121,7 @@ function Transition({ route }: TransitionProps) {
       <Text style={styles.title}>{title}</Text>
       <View>
         <Items
-          selected={{ label: title, value: transition }}
+          selected={{ label: title, transition }}
           items={items}
           onRemove={removeItem}
         />
@@ -131,7 +131,7 @@ function Transition({ route }: TransitionProps) {
 }
 
 interface ItemsProps {
-  selected: { label: string; value: any };
+  selected: { label: string; transition: any };
   items: Item[];
   onRemove: (id: number) => void;
 }
@@ -139,10 +139,10 @@ interface ItemsProps {
 function Items({ selected, items, onRemove }: ItemsProps) {
   return (
     <View style={styles.gridContainer}>
-      {items.map((item: { id: number; content: string; color: string }) => (
+      {items.map((item: Item) => (
         <Animated.View
           key={item.id}
-          layout={selected.value}
+          layout={selected.transition}
           exiting={FadeOut}
           style={[styles.tileContainer, { backgroundColor: item.color }]}>
           <Tile content={item.content} onRemove={() => onRemove(item.id)} />
