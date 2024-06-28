@@ -3,14 +3,16 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
+import type {
   GestureStateManager,
   GestureTouchEvent,
   GestureUpdateEvent,
   PanGestureChangeEventPayload,
+} from 'react-native-gesture-handler';
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
 } from 'react-native-gesture-handler';
 
 import React from 'react';

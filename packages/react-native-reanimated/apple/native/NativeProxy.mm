@@ -211,6 +211,18 @@ void setupLayoutAnimationCallbacks(
     }
     return nil;
   }];
+
+  [animationsManager setGetSharedGroupBlock:^NSArray<NSNumber *> *_Nullable(NSNumber *_Nonnull tag) {
+    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+      const auto &results = nativeReanimatedModule->layoutAnimationsManager().getSharedGroup([tag intValue]);
+      NSMutableArray<NSNumber *> *convertedResult = [NSMutableArray new];
+      for (const int tag : results) {
+        [convertedResult addObject:@(tag)];
+      }
+      return convertedResult;
+    }
+    return nil;
+  }];
 #ifndef NDEBUG
   [animationsManager setCheckDuplicateSharedTagBlock:^(REAUIView *view, NSNumber *_Nonnull viewTag) {
     if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {

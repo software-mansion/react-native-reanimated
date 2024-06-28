@@ -1,8 +1,8 @@
 import React from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import type { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import type { EventHandlerProcessed } from 'react-native-reanimated';
 import Animated, {
-  EventHandlerProcessed,
   interpolateColor,
   useAnimatedScrollHandler,
   useAnimatedStyle,

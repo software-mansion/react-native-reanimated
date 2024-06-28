@@ -1,4 +1,5 @@
-import { Text, StyleSheet, View, ColorValue, Alert } from 'react-native';
+import type { ColorValue } from 'react-native';
+import { Text, StyleSheet, View, Alert } from 'react-native';
 import Animated, { LinearTransition, ZoomIn } from 'react-native-reanimated';
 
 import React from 'react';

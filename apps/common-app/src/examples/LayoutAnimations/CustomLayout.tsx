@@ -1,5 +1,5 @@
+import type { LayoutAnimationFunction } from 'react-native-reanimated';
 import Animated, {
-  LayoutAnimationFunction,
   makeMutable,
   withDelay,
   withSequence,

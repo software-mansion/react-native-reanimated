@@ -1,6 +1,6 @@
+import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
-  SharedValue,
   interpolate,
   useAnimatedStyle,
   useSharedValue,

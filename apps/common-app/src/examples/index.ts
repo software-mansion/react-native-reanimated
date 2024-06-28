@@ -130,6 +130,8 @@ import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEve
 import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMergingExample';
 import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
 import FreezingShareablesExample from './ShareableFreezingExample';
+import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
+import StrictDOMExample from './StrictDOMExample';
 
 interface Example {
   icon?: string;
@@ -529,6 +531,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'BB',
     screen: BBExample,
   },
+  StrictDOMExample: {
+    icon: '👮‍♂️',
+    title: 'React Strict DOM',
+    screen: StrictDOMExample,
+  },
 
   // Old examples
 
@@ -771,13 +778,21 @@ export const EXAMPLES: Record<string, Example> = {
   ChangeThemeSharedExample: {
     title: '[SET] Change theme',
     screen: ChangeThemeSharedExample,
+    missingOnFabric: true,
   },
   NestedRotationSharedExample: {
     title: '[SET] Nested Transforms',
     screen: NestedRotationExample,
+    missingOnFabric: true,
   },
   BorderRadiiExample: {
     title: '[SET] Border Radii',
     screen: BorderRadiiExample,
+    missingOnFabric: true,
+  },
+  TabNavigatorExample: {
+    title: '[SET] Tab Navigator',
+    screen: TabNavigatorExample,
+    missingOnFabric: true,
   },
 } as const;

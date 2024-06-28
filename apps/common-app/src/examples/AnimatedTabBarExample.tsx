@@ -24,7 +24,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import Svg, { Path } from 'react-native-svg';
 import * as shape from 'd3-shape';
-import { IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 
 const { width, height } = Dimensions.get('window');
 

@@ -1,4 +1,5 @@
-import { GestureResponderEvent, StyleSheet, View } from 'react-native';
+import type { GestureResponderEvent } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import React from 'react';
 import Animated, {
