@@ -19,12 +19,10 @@ let updateProps: (
 if (shouldBeUseWeb()) {
   updateProps = (viewDescriptors, updates, isAnimatedProps) => {
     'worklet';
-    if (viewDescriptors.value) {
-      viewDescriptors.value.forEach((viewDescriptor) => {
-        const component = viewDescriptor.tag as ReanimatedHTMLElement;
-        _updatePropsJS(updates, component, isAnimatedProps);
-      });
-    }
+    viewDescriptors.value?.forEach((viewDescriptor) => {
+      const component = viewDescriptor.tag as ReanimatedHTMLElement;
+      _updatePropsJS(updates, component, isAnimatedProps);
+    });
   };
 } else {
   updateProps = (viewDescriptors, updates) => {

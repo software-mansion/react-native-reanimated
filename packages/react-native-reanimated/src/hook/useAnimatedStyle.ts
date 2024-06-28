@@ -531,7 +531,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   if (!animatedStyleHandle.current) {
     animatedStyleHandle.current = isJest()
       ? { viewDescriptors, initial, jestAnimatedStyle }
-      : { initial, viewDescriptors };
+      : { viewDescriptors, initial };
   }
 
   return animatedStyleHandle.current;
