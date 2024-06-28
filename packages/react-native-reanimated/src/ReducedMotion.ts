@@ -1,3 +1,4 @@
+'use strict';
 import { isWeb, isWindowAvailable } from './PlatformChecker';
 import { makeMutable } from './mutables';
 
