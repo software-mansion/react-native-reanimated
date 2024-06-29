@@ -168,6 +168,7 @@
     }
   },
   "sideEffects": [
+    "./lib/module/reanimated2/layoutReanimation/animationsManager.js",
     "./lib/reanimated2/core",
     "./lib/index"
   ],
