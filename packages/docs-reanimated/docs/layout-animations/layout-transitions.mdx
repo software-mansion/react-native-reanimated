@@ -4,7 +4,7 @@ sidebar_position: 3
 
 # Layout transitions
 
-Layout transition allows you to animate changes in the layout of elements.
+Providing a layout transition into an UI element alters each layout change into a smooth transition. A layout change may consist of both changes of size and position and both of them can be animated with layout transition.
 
 import LayoutTransitions from '@site/src/examples/LayoutTransitions';
 import LayoutTransitionsSrc from '!!raw-loader!@site/src/examples/LayoutTransitions';
@@ -32,23 +32,24 @@ function App() {
 
 ### Modifiers
 
-#### Time-based <Optional/>
+#### Easing <Optional/>
 
 Time-based modifiers relay on [`withTiming`](/docs/animations/withTiming) function.
 
 ```javascript
-LinearTransition.duration(500).easing(Easing.ease);
+LinearTransition.easing(Easing.ease);
 ```
 
 - `.easing(easingFunction: EasingFunction)` is an easing function which defines the animation curve. Defaults to `Easing.inOut(Easing.quad)`
 
 :::note
-Time-based modifiers have no effect when `.springify()` is used.
+The `.easing( ... )` modifier have no effect when `.springify()` is used.
 :::
 
 #### Spring-based <Optional/>
 
 Spring-based modifiers relay on [`withSpring`](/docs/animations/withSpring) function.
+Just as in withSpring config, spring-based modifiers can be physics-based (has `mass` and `damping` modifiers) or duration-based (has `duration` and `dampingRatio` modifiers). Usage of any time-based spring modifiers erases the effect of any physics-based spring modifier.
 
 ```javascript
 LinearTransition.springify()
