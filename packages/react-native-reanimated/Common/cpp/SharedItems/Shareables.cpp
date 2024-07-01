@@ -80,19 +80,19 @@ jsi::Value makeShareableClone(
         shareable = std::make_shared<RetainingShareable<ShareableObject>>(
             rt,
             object
-#if defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74
+#if SUPPORTS_NATIVE_STATE
             ,
             nativeStateSource
-#endif // defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74
+#endif // SUPPORTS_NATIVE_STATE
         );
       } else {
         shareable = std::make_shared<ShareableObject>(
             rt,
             object
-#if defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74
+#if SUPPORTS_NATIVE_STATE
             ,
             nativeStateSource
-#endif // defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74
+#endif // SUPPORTS_NATIVE_STATE
         );
       }
     }
@@ -210,14 +210,14 @@ ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
     auto value = extractShareableOrThrow(rt, object.getProperty(rt, key));
     data_.emplace_back(key.utf8(rt), value);
   }
-#if defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74
+#if SUPPORTS_NATIVE_STATE
   if (object.hasNativeState(rt)) {
     nativeState_ = object.getNativeState(rt);
   }
-#endif // defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74
+#endif // SUPPORTS_NATIVE_STATE
 }
 
-#if defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74
+#if SUPPORTS_NATIVE_STATE
 ShareableObject::ShareableObject(
     jsi::Runtime &rt,
     const jsi::Object &object,
@@ -228,7 +228,7 @@ ShareableObject::ShareableObject(
     nativeState_ = nativeStateSource.asObject(rt).getNativeState(rt);
   }
 }
-#endif // defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74
+#endif // SUPPORTS_NATIVE_STATE
 
 jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
   auto obj = jsi::Object(rt);
@@ -236,11 +236,11 @@ jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
     obj.setProperty(
         rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
   }
-#if defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74
+#if SUPPORTS_NATIVE_STATE
   if (nativeState_ != nullptr) {
     obj.setNativeState(rt, nativeState_);
   }
-#endif // defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74
+#endif // SUPPORTS_NATIVE_STATE
   return obj;
 }
 

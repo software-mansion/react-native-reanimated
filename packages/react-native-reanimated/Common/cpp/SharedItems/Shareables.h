@@ -183,20 +183,22 @@ class ShareableObject : public Shareable {
  public:
   ShareableObject(jsi::Runtime &rt, const jsi::Object &object);
 
-#if defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74
+#define SUPPORTS_NATIVE_STATE \
+  (defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74)
+#if SUPPORTS_NATIVE_STATE
   ShareableObject(
       jsi::Runtime &rt,
       const jsi::Object &object,
       const jsi::Value &nativeStateSource);
-#endif // defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74
+#endif // SUPPORTS_NATIVE_STATE
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
   std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data_;
-#if defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74
+#if SUPPORTS_NATIVE_STATE
   std::shared_ptr<jsi::NativeState> nativeState_;
-#endif // defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74
+#endif // SUPPORTS_NATIVE_STATE
 };
 
 class ShareableHostObject : public Shareable {
