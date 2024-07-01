@@ -331,9 +331,24 @@ function makeWorkletName(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
 ): string {
-  const filepath = state.file.opts.filename ?? 'unknown_file';
-  const filename = basename(filepath).split('.')[0];
-  const suffix = '_' + filename + functionId++;
+  let source = 'unknown_file';
+  if (state.file.opts.filename) {
+    const filepath = state.file.opts.filename;
+    // Take the file name without extension.
+    source = basename(filepath).split('.')[0];
+    const splitFilepath = filepath.split('/');
+    // Get the library name from the path.
+    const nodeModulesIndex = splitFilepath.indexOf('node_modules');
+    // Remove all non-alphanumeric characters.
+    const libraryName = splitFilepath[nodeModulesIndex + 1].replace(/\W/g, '');
+    if (nodeModulesIndex !== -1) {
+      source = libraryName + '_' + source;
+    }
+  }
+
+  // TODO: MAKE SURE RECURSIVE CALLS WORK
+
+  const suffix = '_' + source + functionId++;
   if (isObjectMethod(fun.node) && isIdentifier(fun.node.key)) {
     return fun.node.key.name + suffix;
   }
