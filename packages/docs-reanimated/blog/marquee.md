@@ -7,7 +7,6 @@ A marquee is an element used to display scrolling content horizontally within a 
 
 import Marquee from '@site/static/examples/Marquee';
 import MarqueeSrc from '!!raw-loader!@site/static/examples/Marquee';
-import ExampleVideo from '@site/src/components/ExampleVideo';
 import CollapsibleCode from '@site/src/components/CollapsibleCode';
 
 <InteractiveExample src={MarqueeSrc} component={Marquee} />

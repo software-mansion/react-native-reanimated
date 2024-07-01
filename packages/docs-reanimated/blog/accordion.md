@@ -7,7 +7,6 @@ An accordion allows to show and hide a piece of content with a smooth animation.
 
 import Accordion from '@site/static/examples/Accordion';
 import AccordionSrc from '!!raw-loader!@site/static/examples/Accordion';
-import ExampleVideo from '@site/src/components/ExampleVideo';
 
 <InteractiveExample src={AccordionSrc} component={Accordion} />
 

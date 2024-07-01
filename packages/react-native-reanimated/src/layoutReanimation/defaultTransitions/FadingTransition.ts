@@ -1,5 +1,5 @@
 'use strict';
-import { withSequence, withTiming } from '../../animation';
+import { withDelay, withSequence, withTiming } from '../../animation';
 import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
@@ -29,7 +29,7 @@ export class FadingTransition
     const delayFunction = this.getDelayFunction();
     const callback = this.callbackV;
     const delay = this.getDelay();
-    const halfDuration = (this.durationV ?? 500) / 2; // The minimal duration is 100ms, otherwise the animation will be halfDuration + 50ms long
+    const duration = (this.durationV ?? 500) / 2; // The minimal duration is 100ms, otherwise the animation will be halfDuration + 50ms long
 
     return (values) => {
       'worklet';
@@ -45,25 +45,25 @@ export class FadingTransition
           opacity: delayFunction(
             delay,
             withSequence(
-              withTiming(0, { duration: halfDuration }),
-              withTiming(1, { duration: halfDuration })
+              withTiming(0, { duration: duration / 2 }),
+              withTiming(1, { duration: duration / 2 })
             )
           ),
-          originX: delayFunction(
-            delay + halfDuration,
-            withTiming(values.targetOriginX, { duration: 50 })
+          originX: withDelay(
+            delay + duration,
+            withTiming(values.targetOriginX, { duration: 0 })
           ),
-          originY: delayFunction(
-            delay + halfDuration,
-            withTiming(values.targetOriginY, { duration: 50 })
+          originY: withDelay(
+            delay + duration,
+            withTiming(values.targetOriginY, { duration: 0 })
           ),
-          width: delayFunction(
-            delay + halfDuration,
-            withTiming(values.targetWidth, { duration: 50 })
+          width: withDelay(
+            delay + duration,
+            withTiming(values.targetWidth, { duration: 0 })
           ),
-          height: delayFunction(
-            delay + halfDuration,
-            withTiming(values.targetHeight, { duration: 50 })
+          height: withDelay(
+            delay + duration,
+            withTiming(values.targetHeight, { duration: 0 })
           ),
         },
         callback,
