@@ -457,10 +457,18 @@ var require_workletFactory = __commonJS({
     }
     var functionId = 1;
     function makeWorkletName(fun, state) {
-      var _a;
-      const filepath = (_a = state.file.opts.filename) !== null && _a !== void 0 ? _a : "unknown_file";
-      const filename = (0, path_1.basename)(filepath).split(".")[0];
-      const suffix = "_" + filename + functionId++;
+      let source = "unknown_file";
+      if (state.file.opts.filename) {
+        const filepath = state.file.opts.filename;
+        source = (0, path_1.basename)(filepath).split(".")[0];
+        const splitFilepath = filepath.split("/");
+        const nodeModulesIndex = splitFilepath.indexOf("node_modules");
+        const libraryName = splitFilepath[nodeModulesIndex + 1].replace(/\W/g, "");
+        if (nodeModulesIndex !== -1) {
+          source = libraryName + "_" + source;
+        }
+      }
+      const suffix = "_" + source + functionId++;
       if ((0, types_12.isObjectMethod)(fun.node) && (0, types_12.isIdentifier)(fun.node.key)) {
         return fun.node.key.name + suffix;
       }
