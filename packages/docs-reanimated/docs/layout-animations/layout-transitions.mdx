@@ -48,7 +48,7 @@ The `.easing( ... )` modifier have no effect when `.springify()` is used.
 #### Spring-based <Optional/>
 
 Spring-based modifiers relay on [`withSpring`](/docs/animations/withSpring) function.
-Just as in withSpring config, spring-based modifiers can be physics-based (has `mass` and `damping` modifiers) or duration-based (has `duration` and `dampingRatio` modifiers). Usage of any time-based spring modifiers erases the effect of any physics-based spring modifier.
+Just as in withSpring config, spring-based modifiers can be physics-based (has `mass` and `damping` modifiers) or duration-based (has `duration` and `dampingRatio` modifiers). Usage of any time-based spring modifiers erases the effect of any physics-based spring modifier. Defaults to physics-based.
 
 ```javascript
 LinearTransition.springify()
