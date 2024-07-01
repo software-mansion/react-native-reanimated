@@ -178,8 +178,12 @@ class ShareableObject : public Shareable {
  public:
   ShareableObject(jsi::Runtime &rt, const jsi::Object &object);
 
-#define SUPPORTS_NATIVE_STATE \
-  (defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74)
+#if defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74
+#define SUPPORTS_NATIVE_STATE 1
+#else
+#define SUPPORTS_NATIVE_STATE 0
+#endif
+
 #if SUPPORTS_NATIVE_STATE
   ShareableObject(
       jsi::Runtime &rt,
