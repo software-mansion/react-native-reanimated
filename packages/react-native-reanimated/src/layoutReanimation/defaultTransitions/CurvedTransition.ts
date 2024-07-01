@@ -89,7 +89,7 @@ export class CurvedTransition
     const delayFunction = this.getDelayFunction();
     const callback = this.callbackV;
     const delay = this.getDelay();
-    const halfDuration = this.durationV ?? 300;
+    const duration = this.durationV ?? 300;
     const easing = {
       easingX: this.easingXV,
       easingY: this.easingYV,
@@ -111,28 +111,28 @@ export class CurvedTransition
           originX: delayFunction(
             delay,
             withTiming(values.targetOriginX, {
-              duration: halfDuration,
+              duration,
               easing: easing.easingX,
             })
           ),
           originY: delayFunction(
             delay,
             withTiming(values.targetOriginY, {
-              duration: halfDuration,
+              duration,
               easing: easing.easingY,
             })
           ),
           width: delayFunction(
             delay,
             withTiming(values.targetWidth, {
-              duration: halfDuration,
+              duration,
               easing: easing.easingWidth,
             })
           ),
           height: delayFunction(
             delay,
             withTiming(values.targetHeight, {
-              duration: halfDuration,
+              duration,
               easing: easing.easingHeight,
             })
           ),

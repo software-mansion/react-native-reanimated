@@ -30,7 +30,7 @@ export class JumpingTransition
     const delayFunction = this.getDelayFunction();
     const callback = this.callbackV;
     const delay = this.getDelay();
-    const duration = (this.durationV ?? 300) / 2;
+    const duration = this.durationV ?? 300;
     const halfDuration = duration / 2;
     const config = { duration };
 
