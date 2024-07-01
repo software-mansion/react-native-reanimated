@@ -109,7 +109,7 @@ import SwipeableListExample from './SwipeableListExample';
 import TransformExample from './TransformExample';
 import UpdatePropsPerfExample from './UpdatePropsPerfExample';
 import VolumeExample from './VolumeExample';
-import WaterfallGridExample from './LayoutAnimations/WaterfallGridExample';
+import LayoutTransitionExample from './LayoutAnimations/LayoutTransitionExample';
 import WidthExample from './WidthExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
@@ -641,7 +641,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   DefaultTransitions: {
     title: '[LA] Default layout transitions',
-    screen: WaterfallGridExample,
+    screen: LayoutTransitionExample,
   },
   KeyframeAnimation: {
     title: '[LA] Keyframe animation',
