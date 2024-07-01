@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, Dispatch } from 'react';
 import {
   View,
   Text,
@@ -11,15 +11,9 @@ import Animated, {
   SequencedTransition,
   FadingTransition,
   FadeOut,
-  useDerivedValue,
-  withTiming,
-  useSharedValue,
   JumpingTransition,
-  useAnimatedStyle,
-  withDelay,
 } from 'react-native-reanimated';
-
-const DROPDOWN_OFFSET = 48;
+import { FormControl, MenuItem, Select } from '@mui/material';
 
 const INITIAL_LIST = [
   { id: 1, emoji: '🍌', color: '#b58df1' },
@@ -32,6 +26,11 @@ const INITIAL_LIST = [
   { id: 8, emoji: '🍟', color: '#b58df1' },
   { id: 9, emoji: '🍩', color: '#82cab2' },
 ];
+
+interface TRANSITION {
+  label: string;
+  value: any;
+}
 
 const LAYOUT_TRANSITIONS = [
   { label: 'Linear Transition', value: LinearTransition },
@@ -46,150 +45,53 @@ const LAYOUT_TRANSITIONS = [
   // TODO: in the future Curved and Entry/Exit will be available on web, now they don't so we don't use them.
 ];
 
-const DropdownItems = ({ isExpanded, selected, setSelected }) => {
-  const selectItem = (item) => {
-    setSelected(item);
-    isExpanded.value = !isExpanded.value;
-  };
+interface SelectProps {
+  value: string;
+  onChange: any;
+  options: TRANSITION[];
+  disabled?: boolean;
+  disabledOptions?: string[];
+}
+
+const SelectStyling = {
+  fontSize: 14,
+  color: 'text.secondary',
+  backgroundColor: 'background.default',
+  borderRadius: 0,
+  '& fieldset': {
+    borderColor: 'text.secondary',
+  },
+};
+
+export function SelectOption({
+  value,
+  onChange,
+  options,
+  disabled,
+  disabledOptions,
+}: SelectProps) {
   return (
-    <View>
-      {LAYOUT_TRANSITIONS.filter((item) => item.label != selected.label).map(
-        (transition) => (
-          <TouchableOpacity
-            style={dropdownStyles.item}
-            onPress={() => selectItem(transition)}>
-            <Text style={dropdownStyles.label}>{transition.label}</Text>
-          </TouchableOpacity>
-        )
-      )}
+    <View style={{ width: '30%' }}>
+      <FormControl sx={{ minWidth: 85 }} size="small">
+        <Select
+          value={value}
+          sx={SelectStyling}
+          onChange={(e) => onChange(e.target)}
+          disabled={disabled}>
+          {options.map((option) => (
+            <MenuItem
+              key={option.label}
+              value={option.value}
+              disabled={disabledOptions?.includes(option.label)}
+              sx={{ color: 'text.secondary' }}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
     </View>
   );
-};
-
-const DropdownItem = ({ isExpanded, children }) => {
-  const height = useSharedValue(0);
-
-  const derivedHeight = useDerivedValue(() =>
-    withTiming(height.value * Number(isExpanded.value), {
-      duration: 500,
-    })
-  );
-  const bodyStyle = useAnimatedStyle(() => ({
-    height: derivedHeight.value,
-  }));
-
-  return (
-    <Animated.View style={[styles.animatedView, bodyStyle]}>
-      <View
-        onLayout={(e) => {
-          height.value = e.nativeEvent.layout.height;
-        }}
-        style={styles.wrapper}>
-        {children}
-      </View>
-    </Animated.View>
-  );
-};
-
-const DropdownParent = ({ selected, setSelected, isExpanded }) => {
-  return (
-    <View>
-      <DropdownItem isExpanded={isExpanded}>
-        <DropdownItems
-          setSelected={setSelected}
-          selected={selected}
-          isExpanded={isExpanded}
-        />
-      </DropdownItem>
-    </View>
-  );
-};
-
-const Dropdown = ({ selected, onSelect }) => {
-  const isExpanded = useSharedValue(false);
-  const onPress = () => {
-    isExpanded.value = !isExpanded.value;
-  };
-  const labelRef = useRef();
-
-  const dropdownBackgroundAnimatedStyles = useAnimatedStyle(() => {
-    const colorValue = isExpanded.value ? '#c1c6e5' : '#eef0ff';
-    return {
-      backgroundColor: withDelay(50, withTiming(colorValue)),
-    };
-  });
-
-  const dropdownListAnimatedStyles = useAnimatedStyle(() => {
-    const paddingValue = isExpanded.value ? 8 : 0;
-    return {
-      paddingBottom: withDelay(50, withTiming(paddingValue)),
-    };
-  });
-
-  return (
-    <View style={dropdownStyles.container}>
-      <TouchableOpacity ref={labelRef} onPress={onPress}>
-        <Animated.Text
-          style={[
-            dropdownBackgroundAnimatedStyles,
-            dropdownStyles.selectedLabel,
-            dropdownStyles.label,
-          ]}>
-          {selected.label}
-        </Animated.Text>
-      </TouchableOpacity>
-
-      <Animated.View
-        style={[
-          {
-            top: labelRef.current
-              ? labelRef.current.offsetHeight
-              : DROPDOWN_OFFSET,
-          },
-          dropdownStyles.items,
-          dropdownBackgroundAnimatedStyles,
-          dropdownListAnimatedStyles,
-        ]}>
-        <DropdownParent
-          selected={selected}
-          isExpanded={isExpanded}
-          setSelected={onSelect}
-        />
-      </Animated.View>
-    </View>
-  );
-};
-
-const dropdownStyles = StyleSheet.create({
-  container: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    zIndex: 2,
-    position: 'relative',
-    marginBottom: 8,
-  },
-  items: {
-    flexDirection: 'column',
-    position: 'absolute',
-    minWidth: 300,
-    zIndex: -1,
-  },
-  item: {
-    margin: 8,
-  },
-  label: {
-    fontFamily: 'Aeonik',
-    color: '#001a72',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  selectedLabel: {
-    fontWeight: '500',
-    padding: 16,
-    minWidth: 300,
-  },
-});
+}
 
 export default function App() {
   const [items, setItems] = useState(INITIAL_LIST);
@@ -207,7 +109,13 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Dropdown selected={selected} onSelect={onSelect} />
+      <View style={styles.dropdownContainer}>
+        <SelectOption
+          value={selected.value}
+          onChange={onSelect}
+          options={LAYOUT_TRANSITIONS}
+        />
+      </View>
       <View>
         <Items selected={selected} items={items} onRemove={removeItem} />
       </View>
@@ -253,6 +161,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'center',
     paddingHorizontal: 32,
+  },
+  dropdownContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   tileContainer: {
     width: '20%',
