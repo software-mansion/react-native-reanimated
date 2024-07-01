@@ -148,12 +148,18 @@ export function setElementAnimation(
 ) {
   const { animationName, duration, delay, easing } = animationConfig;
 
-  requestAnimationFrame(() => {
+  const configureAnimation = () => {
     element.style.animationName = animationName;
     element.style.animationDuration = `${duration}s`;
     element.style.animationDelay = `${delay}s`;
     element.style.animationTimingFunction = easing;
-  });
+  };
+
+  if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
+    requestAnimationFrame(configureAnimation);
+  } else {
+    configureAnimation();
+  }
 
   element.onanimationend = () => {
     if (shouldSavePosition) {
