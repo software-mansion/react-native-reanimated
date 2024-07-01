@@ -7,7 +7,6 @@ Bottom sheets are surfaces containing supplementary content, anchored to the bot
 
 import BottomSheet from '@site/static/examples/BottomSheet';
 import BottomSheetSrc from '!!raw-loader!@site/static/examples/BottomSheet';
-import CollapsibleCode from '@site/src/components/CollapsibleCode';
 
 <InteractiveExample src={BottomSheetSrc} component={BottomSheet} />
 

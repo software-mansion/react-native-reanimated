@@ -7,7 +7,6 @@ Slider allows users to adjust a value or control a setting by sliding a handle a
 
 import Slider from '@site/static/examples/Slider';
 import SliderSrc from '!!raw-loader!@site/static/examples/Slider';
-import CollapsibleCode from '@site/src/components/CollapsibleCode';
 
 <InteractiveExample src={SliderSrc} component={Slider} />
 
