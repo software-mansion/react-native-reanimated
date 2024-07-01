@@ -39,9 +39,12 @@ jobs:
       - name: Check types
         working-directory: packages/react-native-reanimated
         run: yarn type:check:all
-      - name: Lint
+      - name: Lint reanimated
         working-directory: packages/react-native-reanimated
         run: yarn lint:js
+      - name: Lint app-common
+        working-directory: packages/react-native-reanimated
+        run: yarn lint:app
       - name: Find unused code
         working-directory: packages/react-native-reanimated
         run: yarn find-unused-code:js

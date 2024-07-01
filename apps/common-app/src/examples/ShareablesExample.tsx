@@ -62,6 +62,7 @@ function RemoteNamedFunctionSyncCallDemo() {
 
 function RemoteAnonymousFunctionSyncCallDemo() {
   const handlePress = () => {
+    // eslint-disable-next-line no-constant-condition
     const foo = true ? () => {} : () => {};
     runOnUI(() => {
       foo();

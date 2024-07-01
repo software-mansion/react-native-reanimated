@@ -102,6 +102,7 @@ export default function LogExample() {
       test(new Date(0), 'Thu Jan 01 1970 01:00:00 GMT+0100');
       test(new Error('foo'), '[Error: foo]');
       test(new TypeError('foo'), '[TypeError: foo]');
+      // eslint-disable-next-line prefer-regex-literals
       test(new RegExp('foo'), '/foo/');
       test(String('foo'), 'foo');
 
