@@ -10,7 +10,6 @@
     "lint:js": "eslint --ext '.js,.ts,.tsx' src __tests__ __typetests__ && yarn prettier --check src __tests__ __typetests__",
     "lint:plugin": "cd plugin && yarn lint && cd ..",
     "lint:docs": "cd docs && yarn lint && cd ..",
-    "lint:app": "cd ../../apps/common-app && yarn lint && cd ../..",
     "lint:java": "./android/gradlew -p android spotlessCheck -q",
     "lint:cpp": "./scripts/cpplint.sh",
     "lint:ios": "./scripts/validate-ios.sh && yarn format:ios --dry-run",
