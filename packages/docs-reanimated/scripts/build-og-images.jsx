@@ -6,7 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import OGImageStream from './og-image-stream';
 
-const getMarkdownHeader = (path) => {
+const getDocsMarkdownHeader = (path) => {
   const content = fs.readFileSync(path, 'utf-8');
   const headers = content
     .split('\n')
@@ -22,18 +22,30 @@ const getMarkdownHeader = (path) => {
   return headers[0]?.title || 'React Native Reanimated';
 };
 
-async function saveStreamToFile(stream, path) {
-  const writeStream = createWriteStream(path);
+const getExampleMardownHeader = (path) => {
+  const content = fs.readFileSync(path, 'utf-8');
+  const headers = content
+    .split('\n')
+    .filter((line) => line.startsWith('title:'))
+    .map((line) => line.replace('title:', '').trim());
+
+  return headers[0] || 'React Native Reanimated';
+};
+
+async function saveStreamToFile(stream, filePath) {
+  const writeStream = createWriteStream(filePath);
   await promisify(pipeline)(stream, writeStream);
 }
 
 async function buildOGImages() {
-  const baseDirPath = path.resolve(__dirname, '../docs');
-  const dirs = await Promise.all(
+  const docsDirPath = path.resolve(__dirname, '../docs');
+  const blogDirPath = path.resolve(__dirname, '../blog');
+
+  const docsDirs = await Promise.all(
     (
-      await fs.promises.readdir(baseDirPath)
+      await fs.promises.readdir(docsDirPath)
     ).map(async (dir) => {
-      const files = await fs.promises.readdir(path.resolve(baseDirPath, dir));
+      const files = await fs.promises.readdir(path.resolve(docsDirPath, dir));
       return {
         dir,
         files: files.filter(
@@ -57,9 +69,25 @@ async function buildOGImages() {
   const imageBuffer = fs.readFileSync(imagePath);
   const base64Image = `data:image/png;base64,${imageBuffer.toString('base64')}`;
 
-  dirs.map(async ({ dir, files }) => {
-    files.map(async (file) => {
-      const header = getMarkdownHeader(path.resolve(baseDirPath, dir, file));
+  const blogFiles = await fs.promises.readdir(blogDirPath);
+  const blogFilesFiltered = blogFiles
+    .filter((file) => file.endsWith('.md') || file.endsWith('.mdx'))
+    .map((file) => ({
+      dir: '',
+      files: [file],
+    }));
+
+  const allFiles = [...docsDirs, ...blogFilesFiltered];
+
+  allFiles.forEach(({ dir, files }) => {
+    files.forEach(async (file) => {
+      const filePath = dir
+        ? path.resolve(docsDirPath, dir, file)
+        : path.resolve(blogDirPath, file);
+
+      const header = dir
+        ? getDocsMarkdownHeader(filePath)
+        : getExampleMardownHeader(filePath);
 
       const ogImageStream = OGImageStream(header, base64Image);
 
