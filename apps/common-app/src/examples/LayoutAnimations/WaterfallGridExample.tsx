@@ -1,5 +1,5 @@
+import type { BaseAnimationBuilder } from 'react-native-reanimated';
 import Animated, {
-  BaseAnimationBuilder,
   BounceOut,
   CurvedTransition,
   FadingTransition,
@@ -11,7 +11,8 @@ import Animated, {
   SequencedTransition,
   combineTransition,
 } from 'react-native-reanimated';
-import { Image, LayoutChangeEvent, Text, View, StyleSheet } from 'react-native';
+import type { LayoutChangeEvent } from 'react-native';
+import { Image, Text, View, StyleSheet } from 'react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, TapGestureHandler } from 'react-native-gesture-handler';
 
@@ -120,7 +121,7 @@ export function WaterfallGrid({
           key={pok.address}
           style={[
             {
-              width: width,
+              width,
               height: pokHeight,
               backgroundColor: pok.color,
               left: cur * width + (cur + 1) * margin,
@@ -135,7 +136,7 @@ export function WaterfallGrid({
             <AnimatedImage
               layout={layoutTransition}
               source={{ uri: pok.address }}
-              style={{ width: width, height: width }}
+              style={{ width, height: width }}
             />
           </TapGestureHandler>
         </Animated.View>
@@ -148,7 +149,7 @@ export function WaterfallGrid({
       {cardsMemo.length === 0 && <Text> Loading </Text>}
       {cardsMemo.length !== 0 && (
         <ScrollView>
-          <View style={{ height: height }}>{cardsMemo}</View>
+          <View style={{ height }}>{cardsMemo}</View>
         </ScrollView>
       )}
     </View>
@@ -167,7 +168,7 @@ export default function WaterfallGridExample() {
           style={styles.picker}
           itemStyle={{ height: 50 }}
           onValueChange={(itemValue) => {
-            setSelectedTransition(itemValue as string);
+            setSelectedTransition(itemValue);
           }}>
           <Picker.Item label="LinearTransition" value="LinearTransition" />
           <Picker.Item

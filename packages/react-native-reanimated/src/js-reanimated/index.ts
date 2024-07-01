@@ -2,36 +2,12 @@
 import JSReanimated from './JSReanimated';
 import type { StyleProps } from '../commonTypes';
 import type { AnimatedStyle } from '../helperTypes';
-import { isWeb } from '../PlatformChecker';
+import {
+  createReactDOMStyle,
+  createTransformValue,
+  createTextShadowValue,
+} from './webUtils';
 import { PropsAllowlists } from '../propsAllowlists';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let createReactDOMStyle: (style: any) => any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let createTransformValue: (transform: any) => any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let createTextShadowValue: (style: any) => void | string;
-
-if (isWeb()) {
-  try {
-    createReactDOMStyle =
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      require('react-native-web/dist/exports/StyleSheet/compiler/createReactDOMStyle').default;
-  } catch (e) {}
-
-  try {
-    // React Native Web 0.19+
-    createTransformValue =
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      require('react-native-web/dist/exports/StyleSheet/preprocess').createTransformValue;
-  } catch (e) {}
-
-  try {
-    createTextShadowValue =
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      require('react-native-web/dist/exports/StyleSheet/preprocess').createTextShadowValue;
-  } catch (e) {}
-}
 
 const reanimatedJS = new JSReanimated();
 

@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect, Component } from 'react';
+import type { Component } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,

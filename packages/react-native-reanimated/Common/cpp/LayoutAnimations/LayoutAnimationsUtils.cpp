@@ -3,7 +3,8 @@
 
 namespace reanimated {
 
-std::unordered_map<Tag, UpdateValues> &SurfaceManager::getUpdateMap(SurfaceId surfaceId) {
+std::unordered_map<Tag, UpdateValues> &SurfaceManager::getUpdateMap(
+    SurfaceId surfaceId) {
   auto props = props_.find(surfaceId);
   if (props != props_.end()) {
     return *props->second;
@@ -14,7 +15,10 @@ std::unordered_map<Tag, UpdateValues> &SurfaceManager::getUpdateMap(SurfaceId su
   return *newProps;
 }
 
-void SurfaceManager::updateWindow(const SurfaceId surfaceId, const double windowWidth, const double windowHeight) {
+void SurfaceManager::updateWindow(
+    const SurfaceId surfaceId,
+    const double windowWidth,
+    const double windowHeight) {
   windows_.insert_or_assign(surfaceId, Rect{windowWidth, windowHeight});
 }
 
@@ -48,8 +52,8 @@ void Node::removeChildFromUnflattenedTree(std::shared_ptr<MutationNode> child) {
       break;
     }
   }
-  
-  auto& flattenedChildren = child->parent->children;
+
+  auto &flattenedChildren = child->parent->children;
   for (int i = flattenedChildren.size() - 1; i >= 0; i--) {
     if (flattenedChildren[i]->tag == child->tag) {
       flattenedChildren.erase(flattenedChildren.begin() + i);
@@ -69,13 +73,13 @@ void Node::insertUnflattenedChildren(
   mergeAndSwap(unflattenedChildren, newChildren);
 }
 
-bool Node::isMutationMode(){
+bool Node::isMutationMode() {
   return false;
 }
 
-bool MutationNode::isMutationMode(){
+bool MutationNode::isMutationMode() {
   return true;
 }
-}
+} // namespace reanimated
 
 #endif

@@ -62,10 +62,9 @@ inline void cleanupIfRuntimeExists(
 }
 
 class Shareable {
- protected:
+ public:
   virtual jsi::Value toJSValue(jsi::Runtime &rt) = 0;
 
- public:
   virtual ~Shareable();
 
   enum ValueType {
@@ -87,10 +86,6 @@ class Shareable {
   };
 
   explicit Shareable(ValueType valueType) : valueType_(valueType) {}
-
-  virtual jsi::Value getJSValue(jsi::Runtime &rt) {
-    return toJSValue(rt);
-  }
 
   inline ValueType valueType() const {
     return valueType_;
@@ -114,7 +109,7 @@ class RetainingShareable : virtual public BaseClass {
   explicit RetainingShareable(jsi::Runtime &rt, Args &&...args)
       : BaseClass(rt, std::forward<Args>(args)...), primaryRuntime_(&rt) {}
 
-  jsi::Value getJSValue(jsi::Runtime &rt);
+  jsi::Value toJSValue(jsi::Runtime &rt);
 
   ~RetainingShareable() {
     cleanupIfRuntimeExists(secondaryRuntime_, secondaryValue_);

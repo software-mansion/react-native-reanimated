@@ -1,4 +1,5 @@
 import * as React from 'react';
+import type { ImageSourcePropType } from 'react-native';
 import {
   View,
   Text,
@@ -9,12 +10,9 @@ import {
   FlatList,
   StatusBar,
   Platform,
-  ImageSourcePropType,
 } from 'react-native';
-import {
-  createNativeStackNavigator,
-  NativeStackScreenProps,
-} from '@react-navigation/native-stack';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated, {
   FadeIn,
   runOnJS,

@@ -1,13 +1,15 @@
 'use strict';
 
-import { Animations, TransitionType, WebEasings } from './config';
+import { Animations, TransitionType } from './config';
 import type {
   AnimationCallback,
   AnimationConfig,
   AnimationNames,
   CustomConfig,
-  WebEasingsNames,
+  KeyframeDefinitions,
 } from './config';
+import { WebEasings } from './Easing.web';
+import type { WebEasingsNames } from './Easing.web';
 import type { TransitionData } from './animationParser';
 import { TransitionGenerator } from './createAnimation';
 import { scheduleAnimationCleanup } from './domUtils';
@@ -17,7 +19,8 @@ import { ReduceMotion } from '../../commonTypes';
 import { isReducedMotion } from '../../PlatformChecker';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
-import { setDummyPosition, snapshots } from './componentStyle';
+import { setElementPosition, snapshots } from './componentStyle';
+import { Keyframe } from '../animationBuilder';
 
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName =
@@ -63,12 +66,15 @@ export function getReducedMotionFromConfig(config: CustomConfig) {
 
 function getDurationFromConfig(
   config: CustomConfig,
-  isLayoutTransition: boolean,
-  animationName: AnimationNames
+  animationName: string
 ): number {
-  const defaultDuration = isLayoutTransition
-    ? 0.3
-    : Animations[animationName].duration;
+  // Duration in keyframe has to be in seconds. However, when using `.duration()` modifier we pass it in miliseconds.
+  // If `duration` was specified in config, we have to divide it by `1000`, otherwise we return value that is already in seconds.
+
+  const defaultDuration =
+    animationName in Animations
+      ? Animations[animationName as AnimationNames].duration
+      : 0.3;
 
   return config.durationV !== undefined
     ? config.durationV / 1000
@@ -86,22 +92,39 @@ function getReversedFromConfig(config: CustomConfig) {
 export function getProcessedConfig(
   animationName: string,
   animationType: LayoutAnimationType,
-  config: CustomConfig,
-  initialAnimationName: AnimationNames
+  config: CustomConfig
 ): AnimationConfig {
   return {
     animationName,
     animationType,
-    duration: getDurationFromConfig(
-      config,
-      animationType === LayoutAnimationType.LAYOUT,
-      initialAnimationName
-    ),
+    duration: getDurationFromConfig(config, animationName),
     delay: getDelayFromConfig(config),
     easing: getEasingFromConfig(config),
     callback: getCallbackFromConfig(config),
     reversed: getReversedFromConfig(config),
   };
+}
+
+export function maybeModifyStyleForKeyframe(
+  element: HTMLElement,
+  config: CustomConfig
+) {
+  if (!(config instanceof Keyframe)) {
+    return;
+  }
+
+  // We need to set `animationFillMode` to `forwards`, otherwise component will go back to its position.
+  // This will result in wrong snapshot
+  element.style.animationFillMode = 'forwards';
+
+  for (const timestampRules of Object.values(
+    config.definitions as KeyframeDefinitions
+  )) {
+    if ('originX' in timestampRules || 'originY' in timestampRules) {
+      element.style.position = 'absolute';
+      return;
+    }
+  }
 }
 
 export function saveSnapshot(element: HTMLElement) {
@@ -120,7 +143,8 @@ export function saveSnapshot(element: HTMLElement) {
 
 export function setElementAnimation(
   element: HTMLElement,
-  animationConfig: AnimationConfig
+  animationConfig: AnimationConfig,
+  shouldSavePosition = false
 ) {
   const { animationName, duration, delay, easing } = animationConfig;
 
@@ -130,6 +154,10 @@ export function setElementAnimation(
   element.style.animationTimingFunction = easing;
 
   element.onanimationend = () => {
+    if (shouldSavePosition) {
+      saveSnapshot(element);
+    }
+
     animationConfig.callback?.(true);
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
@@ -152,7 +180,11 @@ export function setElementAnimation(
   };
 
   if (!(animationName in Animations)) {
-    scheduleAnimationCleanup(animationName, duration + delay);
+    scheduleAnimationCleanup(animationName, duration + delay, () => {
+      if (shouldSavePosition) {
+        setElementPosition(element, snapshots.get(element)!);
+      }
+    });
   }
 }
 
@@ -174,6 +206,9 @@ export function handleLayoutTransition(
       break;
     case 'FadingTransition':
       animationType = TransitionType.FADING;
+      break;
+    case 'JumpingTransition':
+      animationType = TransitionType.JUMPING;
       break;
     default:
       animationType = TransitionType.LINEAR;
@@ -220,8 +255,6 @@ export function handleExitingAnimation(
   dummy.reanimatedDummy = true;
 
   element.style.animationName = '';
-  // We hide current element so only its copy with proper animation will be displayed
-  element.style.visibility = 'hidden';
 
   // After cloning the element, we want to move all children from original element to its clone. This is because original element
   // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
@@ -260,7 +293,7 @@ export function handleExitingAnimation(
 
   snapshots.set(dummy, snapshot);
 
-  setDummyPosition(dummy, snapshot);
+  setElementPosition(dummy, snapshot);
 
   const originalOnAnimationEnd = dummy.onanimationend;
 

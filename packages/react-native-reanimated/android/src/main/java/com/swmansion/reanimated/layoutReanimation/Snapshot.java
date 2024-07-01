@@ -6,6 +6,8 @@ import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.ViewManager;
 import com.swmansion.reanimated.ReactNativeUtils;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -117,9 +119,43 @@ public class Snapshot {
     borderRadii = new ReactNativeUtils.BorderRadii(0, 0, 0, 0, 0);
   }
 
+  private int[] tryGetRealPosition(View view) {
+    int[] location = new int[2];
+    View currentView = view;
+    while (currentView != null) {
+      location[0] += currentView.getX();
+      location[1] += currentView.getY();
+      if (ScreensHelper.isScreen(currentView)
+          && ScreensHelper.isScreensCoordinatorLayout(currentView.getParent())) {
+        View screen = currentView;
+        Class<?> screenClass = screen.getClass();
+        try {
+          Method getContainer = screenClass.getMethod("getContainer");
+          currentView = (View) getContainer.invoke(screen);
+        } catch (NoSuchMethodException
+            | InvocationTargetException
+            | IllegalAccessException ignored) {
+        }
+      } else if (currentView.getParent() instanceof View) {
+        currentView = (View) currentView.getParent();
+      } else {
+        break;
+      }
+    }
+    return location;
+  }
+
   public Snapshot(View view) {
     int[] location = new int[2];
     view.getLocationOnScreen(location);
+    if (location[0] == 0 && location[1] == 0) {
+      /*
+       In certain cases, when a view is correctly attached to the screen and has computed
+       the correct layout, but is not visible on the screen, `getLocationOnScreen` may return
+       incorrect values [0, 0]. This behavior can occur during tab changes in bottom tabs.
+      */
+      location = tryGetRealPosition(view);
+    }
     originX = location[0];
     originY = location[1];
     width = view.getWidth();

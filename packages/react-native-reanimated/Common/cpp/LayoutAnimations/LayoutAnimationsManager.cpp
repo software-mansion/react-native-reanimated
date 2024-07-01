@@ -21,7 +21,7 @@ void LayoutAnimationsManager::configureAnimationBatch(
       sharedTransitionConfigs.push_back(std::move(layoutAnimationConfig));
     } else {
 #ifdef RCT_NEW_ARCH_ENABLED
-      if (type == ENTERING){
+      if (type == ENTERING) {
         enteringAnimationsForNativeID_[tag] = config;
         continue;
       }
@@ -132,7 +132,7 @@ void LayoutAnimationsManager::startLayoutAnimation(
       jsi::Value(tag),
       jsi::Value(static_cast<int>(type)),
       values,
-      config->getJSValue(rt));
+      config->toJSValue(rt));
 }
 
 void LayoutAnimationsManager::cancelLayoutAnimation(
@@ -163,6 +163,12 @@ int LayoutAnimationsManager::findPrecedingViewTagForTransition(const int tag) {
     return *std::prev(position);
   }
   return -1;
+}
+
+const std::vector<int> &LayoutAnimationsManager::getSharedGroup(
+    const int viewTag) {
+  const auto &groupSharedTag = viewTagToSharedTag_[viewTag];
+  return sharedTransitionGroups_[groupSharedTag];
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED

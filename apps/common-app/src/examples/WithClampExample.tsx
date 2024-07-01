@@ -4,7 +4,8 @@ import Animated, {
   withSpring,
   withClamp,
 } from 'react-native-reanimated';
-import { View, Text, Button, StyleSheet, ViewStyle } from 'react-native';
+import type { ViewStyle } from 'react-native';
+import { View, Text, Button, StyleSheet } from 'react-native';
 import React, { useState } from 'react';
 
 const VIOLET = '#b58df1';

@@ -46,6 +46,7 @@ class LayoutAnimationsManager {
   void transferConfigFromNativeID(const int nativeId, const int tag);
 #endif
   int findPrecedingViewTagForTransition(const int tag);
+  const std::vector<int> &getSharedGroup(const int viewTag);
 #ifndef NDEBUG
   std::string getScreenSharedTagPairString(
       const int screenTag,
@@ -67,7 +68,8 @@ class LayoutAnimationsManager {
 #endif
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimationsForNativeID_;
+  std::unordered_map<int, std::shared_ptr<Shareable>>
+      enteringAnimationsForNativeID_;
 #endif
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> exitingAnimations_;

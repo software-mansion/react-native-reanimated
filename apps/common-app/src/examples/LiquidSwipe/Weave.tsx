@@ -1,5 +1,5 @@
+import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
-  SharedValue,
   useAnimatedProps,
   useDerivedValue,
 } from 'react-native-reanimated';
@@ -14,7 +14,8 @@ import {
 } from './WeaveHelpers';
 
 import MaskedView from '@react-native-masked-view/masked-view';
-import React, { PropsWithChildren } from 'react';
+import type { PropsWithChildren } from 'react';
+import React from 'react';
 
 const { width, height } = Dimensions.get('window');
 const AnimatedPath = Animated.createAnimatedComponent(Path);

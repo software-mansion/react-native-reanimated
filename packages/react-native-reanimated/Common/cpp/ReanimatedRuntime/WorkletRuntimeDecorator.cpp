@@ -4,6 +4,8 @@
 #include "Shareables.h"
 #include "WorkletRuntime.h"
 
+#include <vector>
+
 #ifdef ANDROID
 #include "Logger.h"
 #else
@@ -102,21 +104,19 @@ void WorkletRuntimeDecorator::decorate(
             : extractShareableOrThrow<ShareableArray>(
                   rt, argsValue, "[Reanimated] Args must be an array.");
         jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
-          auto remoteFun = shareableRemoteFun->getJSValue(rt);
+          auto remoteFun = shareableRemoteFun->toJSValue(rt);
           if (shareableArgs == nullptr) {
             // fast path for remote function w/o arguments
             remoteFun.asObject(rt).asFunction(rt).call(rt);
           } else {
             auto argsArray =
-                shareableArgs->getJSValue(rt).asObject(rt).asArray(rt);
+                shareableArgs->toJSValue(rt).asObject(rt).asArray(rt);
             auto argsSize = argsArray.size(rt);
-            // number of arguments is typically relatively small so it is ok to
-            // to use VLAs here, hence disabling the lint rule
-            jsi::Value args[argsSize]; // NOLINT(runtime/arrays)
+            std::vector<jsi::Value> args(argsSize);
             for (size_t i = 0; i < argsSize; i++) {
               args[i] = argsArray.getValueAtIndex(rt, i);
             }
-            remoteFun.asObject(rt).asFunction(rt).call(rt, args, argsSize);
+            remoteFun.asObject(rt).asFunction(rt).call(rt, const_cast<const jsi::Value *>(args.data()), args.size());
           }
         });
       });

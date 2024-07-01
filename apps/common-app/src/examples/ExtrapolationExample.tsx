@@ -8,10 +8,8 @@ import Animated, {
   withTiming,
   Extrapolation,
 } from 'react-native-reanimated';
-import {
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent,
-} from 'react-native-gesture-handler';
+import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 
 export default function ExtrapolationExample() {
   const translation = {
