@@ -156,6 +156,8 @@ export function setElementAnimation(
   };
 
   if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
+    // On chrome sometimes entering animations flicker. This is most likely caused by animation being interrupted
+    // by already started tasks. To avoid flickering, we use `requestAnimationFrame`, which will run callback right before repaint.
     requestAnimationFrame(configureAnimation);
   } else {
     configureAnimation();
