@@ -169,8 +169,8 @@
   },
   "sideEffects": [
     "./lib/module/reanimated2/layoutReanimation/animationsManager.js",
-    "./lib/reanimated2/core",
-    "./lib/index"
+    "./lib/module/reanimated2/core.js",
+    "./lib/module/index.js"
   ],
   "packageManager": "yarn@4.1.1"
 }
