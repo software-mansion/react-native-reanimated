@@ -64,8 +64,6 @@ var require_globals = __commonJS({
       "decodeURIComponent",
       "encodeURI",
       "encodeURIComponent",
-      "escape",
-      "unescape",
       "Object",
       "Function",
       "Boolean",
@@ -122,6 +120,8 @@ var require_globals = __commonJS({
       "null",
       "this",
       "global",
+      "window",
+      "globalThis",
       "console",
       "performance",
       "queueMicrotask",
@@ -239,6 +239,22 @@ var require_workletStringCode = __commonJS({
       const expression = (0, types_12.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
       (0, assert_1.strict)("params" in expression, "'params' property is undefined in 'expression'");
       (0, assert_1.strict)((0, types_12.isBlockStatement)(expression.body), "[Reanimated] `expression.body` is not a `BlockStatement`");
+      const parsedClasses = /* @__PURE__ */ new Set();
+      (0, core_1.traverse)(fun, {
+        NewExpression(path) {
+          const constructorName = path.node.callee.name;
+          if (!closureVariables.some((variable) => variable.name === constructorName) || parsedClasses.has(constructorName)) {
+            return;
+          }
+          const index = closureVariables.findIndex((variable) => variable.name === constructorName);
+          closureVariables.splice(index, 1);
+          closureVariables.push((0, types_12.identifier)(constructorName + "ClassFactory"));
+          expression.body.body.unshift((0, types_12.variableDeclaration)("const", [
+            (0, types_12.variableDeclarator)((0, types_12.identifier)(constructorName), (0, types_12.callExpression)((0, types_12.identifier)(constructorName + "ClassFactory"), []))
+          ]));
+          parsedClasses.add(constructorName);
+        }
+      });
       const workletFunction = (0, types_12.functionExpression)((0, types_12.identifier)(name), expression.params, expression.body, expression.generator, expression.async);
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "[Reanimated] `inputMap` is undefined.");
@@ -411,7 +427,7 @@ var require_workletFactory = __commonJS({
         (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)(functionIdentifier, funExpression)
         ]),
-        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)(functionIdentifier, (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(variables.map((variable) => (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), variable, false, true))))),
+        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)(functionIdentifier, (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(variables.map((variable) => variable.name.endsWith("ClassFactory") ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, "ClassFactory".length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), variable, false, true))))),
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)(functionIdentifier, (0, types_12.identifier)("__workletHash"), false), (0, types_12.numericLiteral)(workletHash)))
       ];
       if (shouldIncludeInitData) {
@@ -1106,6 +1122,58 @@ var require_webOptimization = __commonJS({
   }
 });
 
+// lib/file.js
+var require_file = __commonJS({
+  "lib/file.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.processIfWorkletFile = void 0;
+    var types_12 = require("@babel/types");
+    function processIfWorkletFile(path, state) {
+      if (path.node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {
+        processWorkletFile(path, state);
+        path.node.directives = path.node.directives.filter((functionDirective) => functionDirective.value.value !== "worklet");
+      }
+    }
+    exports2.processIfWorkletFile = processIfWorkletFile;
+    function processWorkletFile(path, _state) {
+      path.get("body").forEach((bodyPath) => {
+        if (bodyPath.isVariableDeclaration()) {
+          processVariableDeclaration(bodyPath);
+        }
+        if (bodyPath.isFunctionDeclaration()) {
+          appendWorkletDirective(bodyPath.node.body);
+        }
+      });
+    }
+    function processVariableDeclaration(path) {
+      path.get("declarations").forEach((declaration) => {
+        const initPath = declaration.get("init");
+        if (initPath.isFunctionExpression()) {
+          appendWorkletDirective(initPath.node.body);
+        } else if (initPath.isArrowFunctionExpression()) {
+          const bodyPath = initPath.get("body");
+          if (!bodyPath.isBlockStatement()) {
+            bodyPath.replaceWith((0, types_12.blockStatement)([(0, types_12.returnStatement)(bodyPath.node)]));
+          }
+          appendWorkletDirective(bodyPath.node);
+        } else if (initPath.isObjectExpression()) {
+          initPath.node.properties.forEach((property) => {
+            if (property.type === "ObjectMethod") {
+              appendWorkletDirective(property.body);
+            }
+          });
+        }
+      });
+    }
+    function appendWorkletDirective(node) {
+      if (!node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {
+        node.directives.push((0, types_12.directive)((0, types_12.directiveLiteral)("worklet")));
+      }
+    }
+  }
+});
+
 // lib/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
 var autoworkletization_1 = require_autoworkletization();
@@ -1115,6 +1183,7 @@ var inlineStylesWarning_1 = require_inlineStylesWarning();
 var utils_1 = require_utils();
 var globals_1 = require_globals();
 var webOptimization_1 = require_webOptimization();
+var file_1 = require_file();
 module.exports = function() {
   function runWithTaggedExceptions(fun) {
     try {
@@ -1145,6 +1214,13 @@ module.exports = function() {
         enter(path, state) {
           runWithTaggedExceptions(() => {
             (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state) || (0, autoworkletization_1.processIfAutoworkletizableCallback)(path, state);
+          });
+        }
+      },
+      Program: {
+        enter(path, state) {
+          runWithTaggedExceptions(() => {
+            (0, file_1.processIfWorkletFile)(path, state);
           });
         }
       },
