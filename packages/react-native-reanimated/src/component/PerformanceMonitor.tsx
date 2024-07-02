@@ -9,24 +9,61 @@ import { useSharedValue, useAnimatedProps, useFrameCallback } from '../hook';
 import { createAnimatedComponent } from '../createAnimatedComponent';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
 
-class PersistantAccumulator {
-  // issue:
-  // any issues which occured with CircularBuffer's frame summing, persisted over the entire runtime
-  // these issues were frequent due to frequent frame drops
-  // ---
-  // solution:
-  // remove persistency by quietly resetting the accumulator every X frames
-  // ---
-  // complete mechanism which avoids jumpiness:
-  // go through buffer i=0 -> X, at X save acc to mem, set acc to 0.
-  // framerate = (acc + mem) / 2*X
-  // error rate can be measured by reading mem before overwriting it with acc.
+class CircularAccumulator {
+  previousTimestamp: number = 0;
+
+  mainAccumulator: number = 0;
+  memoryAccumulator: number = 0;
+
+  iterator: number = 0;
+  circularArray: Float32Array;
+  arrayLength: number;
+
+  // fixme: may be negatively influenced by the first empty run
+  // definietely a flawed system, remove or find a different error source
+  errorRateAccumulator: number = 0;
+
+  constructor(length: number) {
+    this.arrayLength = length;
+    this.circularArray = new Float32Array(length);
+  }
+
+  private arrayEndHandler() {
+    this.errorRateAccumulator += this.memoryAccumulator;
+    this.memoryAccumulator = this.mainAccumulator;
+    this.mainAccumulator = 0;
+    this.iterator = 0;
+  }
+
+  pushTimeDelta(timeDelta: number) {
+    if (this.iterator === this.arrayLength) {
+      this.arrayEndHandler();
+    }
+
+    this.mainAccumulator += timeDelta;
+    this.memoryAccumulator -= this.circularArray[this.iterator];
+    this.circularArray[this.iterator] = timeDelta;
+
+    this.iterator += 1;
+  }
+
+  pushTimestamp(time: number) {
+    const timeDifference = time - this.previousTimestamp;
+    this.previousTimestamp = time;
+    this.pushTimeDelta(timeDifference);
+  }
+
+  getCurrentFramerate() {
+    return (this.mainAccumulator + this.memoryAccumulator) / this.arrayLength;
+  }
+
+  getErrorRate() {
+    return this.errorRateAccumulator;
+  }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const pa = new PersistantAccumulator();
+const DEFAULT_BUFFER_SIZE = 20;
 
-const DEFAULT_BUFFER_SIZE = 60;
 addWhitelistedNativeProps({ text: true });
 const AnimatedTextInput = createAnimatedComponent(TextInput);
 
