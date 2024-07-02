@@ -1,10 +1,10 @@
 import { createWriteStream } from 'fs';
 import { pipeline } from 'stream';
 import { promisify } from 'util';
-import React from 'react';
 import path from 'path';
 import fs from 'fs';
 import OGImageStream from './og-image-stream';
+const { globSync } = require('glob');
 
 const getDocsMarkdownHeader = (path) => {
   const content = fs.readFileSync(path, 'utf-8');
@@ -41,19 +41,8 @@ async function buildOGImages() {
   const docsDirPath = path.resolve(__dirname, '../docs');
   const blogDirPath = path.resolve(__dirname, '../blog');
 
-  const docsDirs = await Promise.all(
-    (
-      await fs.promises.readdir(docsDirPath)
-    ).map(async (dir) => {
-      const files = await fs.promises.readdir(path.resolve(docsDirPath, dir));
-      return {
-        dir,
-        files: files.filter(
-          (file) => file.endsWith('.md') || file.endsWith('.mdx')
-        ),
-      };
-    })
-  );
+  const docsFiles = globSync(`${docsDirPath}/*/*.{md,mdx}`);
+  const blogFiles = globSync(`${blogDirPath}/*.{md,mdx}`);
 
   const ogImageTargets = path.resolve(__dirname, '../build/img/og');
 
@@ -69,37 +58,23 @@ async function buildOGImages() {
   const imageBuffer = fs.readFileSync(imagePath);
   const base64Image = `data:image/png;base64,${imageBuffer.toString('base64')}`;
 
-  const blogFiles = await fs.promises.readdir(blogDirPath);
-  const blogFilesFiltered = blogFiles
-    .filter((file) => file.endsWith('.md') || file.endsWith('.mdx'))
-    .map((file) => ({
-      dir: '',
-      files: [file],
-    }));
+  const allFiles = [...docsFiles, ...blogFiles];
 
-  const allFiles = [...docsDirs, ...blogFilesFiltered];
+  for (const filePath of allFiles) {
+    const header = filePath.startsWith(docsDirPath)
+      ? getDocsMarkdownHeader(filePath)
+      : getExampleMardownHeader(filePath);
 
-  allFiles.forEach(({ dir, files }) => {
-    files.forEach(async (file) => {
-      const filePath = dir
-        ? path.resolve(docsDirPath, dir, file)
-        : path.resolve(blogDirPath, file);
+    const ogImageStream = OGImageStream(header, base64Image);
 
-      const header = dir
-        ? getDocsMarkdownHeader(filePath)
-        : getExampleMardownHeader(filePath);
-
-      const ogImageStream = OGImageStream(header, base64Image);
-
-      await saveStreamToFile(
-        await ogImageStream,
-        path.resolve(
-          ogImageTargets,
-          `${header.replace(/ /g, '-').replace('/', '-').toLowerCase()}.png`
-        )
-      );
-    });
-  });
+    await saveStreamToFile(
+      await ogImageStream,
+      path.resolve(
+        ogImageTargets,
+        `${header.replace(/ /g, '-').replace('/', '-').toLowerCase()}.png`
+      )
+    );
+  }
 }
 
 buildOGImages();
