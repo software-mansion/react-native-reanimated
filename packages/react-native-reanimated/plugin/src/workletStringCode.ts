@@ -1,5 +1,5 @@
 import type { BabelFileResult, NodePath, PluginItem } from '@babel/core';
-import { transformSync } from '@babel/core';
+import { transformSync, traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
   File as BabelFile,
@@ -36,9 +36,22 @@ const MOCK_SOURCE_MAP = 'mock source map';
 export function buildWorkletString(
   fun: BabelFile,
   closureVariables: Array<Identifier>,
-  name: string,
+  newName: string,
   inputMap: BabelFileResult['map']
 ): Array<string | null | undefined> {
+  traverse(fun, {
+    FunctionExpression(path) {
+      if (!path.node.id) {
+        path.stop();
+        return;
+      }
+      const name = path.node.id.name;
+      const scope = path.scope;
+      scope.rename(name, newName);
+      assert(scope);
+    },
+  });
+
   const draftExpression = (fun.program.body.find((obj) =>
     isFunctionDeclaration(obj)
   ) ||
@@ -61,7 +74,7 @@ export function buildWorkletString(
   );
 
   const workletFunction = functionExpression(
-    identifier(name),
+    identifier(newName),
     expression.params,
     expression.body,
     expression.generator,

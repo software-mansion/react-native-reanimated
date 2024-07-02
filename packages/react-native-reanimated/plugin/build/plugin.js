@@ -233,13 +233,25 @@ var require_workletStringCode = __commonJS({
     var fs = __importStar(require("fs"));
     var utils_12 = require_utils();
     var MOCK_SOURCE_MAP = "mock source map";
-    function buildWorkletString(fun, closureVariables, name, inputMap) {
+    function buildWorkletString(fun, closureVariables, newName, inputMap) {
+      (0, core_1.traverse)(fun, {
+        FunctionExpression(path) {
+          if (!path.node.id) {
+            path.stop();
+            return;
+          }
+          const name = path.node.id.name;
+          const scope = path.scope;
+          scope.rename(name, newName);
+          (0, assert_1.strict)(scope);
+        }
+      });
       const draftExpression = fun.program.body.find((obj) => (0, types_12.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_12.isExpressionStatement)(obj)) || void 0;
       (0, assert_1.strict)(draftExpression, "[Reanimated] `draftExpression` is undefined.");
       const expression = (0, types_12.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
       (0, assert_1.strict)("params" in expression, "'params' property is undefined in 'expression'");
       (0, assert_1.strict)((0, types_12.isBlockStatement)(expression.body), "[Reanimated] `expression.body` is not a `BlockStatement`");
-      const workletFunction = (0, types_12.functionExpression)((0, types_12.identifier)(name), expression.params, expression.body, expression.generator, expression.async);
+      const workletFunction = (0, types_12.functionExpression)((0, types_12.identifier)(newName), expression.params, expression.body, expression.generator, expression.async);
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "[Reanimated] `inputMap` is undefined.");
       const includeSourceMap = !(0, utils_12.isRelease)();

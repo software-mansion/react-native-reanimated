@@ -97,7 +97,7 @@ describe('babel plugin', () => {
       expect(code).toMatch(/sourceMap: /gm);
       // this non-mocked source map is hard-coded, feel free to update it accordingly
       expect(code).toContain(
-        '\\"mappings\\":\\"AACQ,SAAAA,SAAeA,CAAA,EAEb,GAAI,CAAAC,GAAG,CAAG,KAAK,CACjB\\"'
+        'AACQ,SAAAA,SAAeA,CAAA,EAEb,GAAI,CAAAA,SAAM,CAAK,MACjB'
       );
     });
 
@@ -148,7 +148,8 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('const foo=this._recur');
+      // expect(code).toContain('const foo=this._recur');
+      expect(code).toMatch(/const foo_null[0-9]*=this._recur;/gm);
       expect(code).toMatchSnapshot();
     });
   });

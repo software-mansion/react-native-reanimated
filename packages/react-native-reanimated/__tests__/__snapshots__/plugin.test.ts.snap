@@ -419,8 +419,8 @@ exports[`babel plugin for class worklets workletizes constructor 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
 var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var _worklet_2087405287032_init_data = {
-  code: "function Foo_null26(x){const{_classCallCheck}=this.__closure;_classCallCheck(this,Foo);this.x=x;}",
+var _worklet_16983517082425_init_data = {
+  code: "function Foo_null26(x){const Foo_null26=this._recur;const{_classCallCheck}=this.__closure;_classCallCheck(this,Foo_null26);this.x=x;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -434,8 +434,8 @@ var Foo = (0, _createClass2.default)(function () {
   Foo_null26.__closure = {
     _classCallCheck: _classCallCheck2.default
   };
-  Foo_null26.__workletHash = 2087405287032;
-  Foo_null26.__initData = _worklet_2087405287032_init_data;
+  Foo_null26.__workletHash = 16983517082425;
+  Foo_null26.__initData = _worklet_16983517082425_init_data;
   Foo_null26.__stackDetails = _e;
   return Foo_null26;
 }());"
@@ -2085,8 +2085,8 @@ var y = shouldBeUseWeb();"
 `;
 
 exports[`babel plugin for web configuration includes initData when omitNativeOnlyData option is set to false 1`] = `
-"var _worklet_11201956162818_init_data = {
-  code: "function foo_null107(){var foo='bar';}",
+"var _worklet_4811362207856_init_data = {
+  code: "function foo_null107(){var foo_null107='bar';}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -2097,8 +2097,8 @@ var foo = function () {
     var foo = 'bar';
   };
   foo_null107.__closure = {};
-  foo_null107.__workletHash = 11201956162818;
-  foo_null107.__initData = _worklet_11201956162818_init_data;
+  foo_null107.__workletHash = 4811362207856;
+  foo_null107.__initData = _worklet_4811362207856_init_data;
   foo_null107.__stackDetails = _e;
   return foo_null107;
 }();"
@@ -2111,7 +2111,7 @@ exports[`babel plugin for web configuration skips initData when omitNativeOnlyDa
     var foo = 'bar';
   };
   foo_null106.__closure = {};
-  foo_null106.__workletHash = 15996691994659;
+  foo_null106.__workletHash = 16267808771056;
   foo_null106.__stackDetails = _e;
   return foo_null106;
 }();"
@@ -2437,26 +2437,26 @@ var f = function () {
 
 exports[`babel plugin generally supports recursive calls 1`] = `
 "var a = 1;
-var _worklet_210900050506_init_data = {
-  code: "function foo(t){const foo=this._recur;const{a}=this.__closure;if(t>0){return a+foo(t-1);}}",
+var _worklet_6107791632120_init_data = {
+  code: "function foo_null6(t){const foo_null6=this._recur;const{a}=this.__closure;if(t>0){return a+foo_null6(t-1);}}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), -2, -27];
-  var foo = function foo(t) {
+  var foo_null6 = function foo_null6(t) {
     if (t > 0) {
       return a + foo(t - 1);
     }
   };
-  foo.__closure = {
+  foo_null6.__closure = {
     a: a
   };
-  foo.__workletHash = 210900050506;
-  foo.__initData = _worklet_210900050506_init_data;
-  foo.__stackDetails = _e;
-  return foo;
+  foo_null6.__workletHash = 6107791632120;
+  foo_null6.__initData = _worklet_6107791632120_init_data;
+  foo_null6.__stackDetails = _e;
+  return foo_null6;
 }();"
 `;
 
