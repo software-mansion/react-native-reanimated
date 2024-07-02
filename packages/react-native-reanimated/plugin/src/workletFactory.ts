@@ -350,15 +350,15 @@ function makeWorkletName(
     }
   }
 
-  const suffix = '_' + source + functionId++;
+  const suffix = source + functionId++;
   if (isObjectMethod(fun.node) && isIdentifier(fun.node.key)) {
-    return fun.node.key.name + suffix;
+    return fun.node.key.name + '_' + suffix;
   }
   if (isFunctionDeclaration(fun.node) && isIdentifier(fun.node.id)) {
-    return fun.node.id.name + suffix;
+    return fun.node.id.name + '_' + suffix;
   }
   if (isFunctionExpression(fun.node) && isIdentifier(fun.node.id)) {
-    return fun.node.id.name + suffix;
+    return fun.node.id.name + '_' + suffix;
   }
 
   // Fallback for ArrowFunctionExpression and unnamed FunctionExpression.

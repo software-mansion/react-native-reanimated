@@ -148,7 +148,6 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      // expect(code).toContain('const foo=this._recur');
       expect(code).toMatch(/const foo_null[0-9]*=this._recur;/gm);
       expect(code).toMatchSnapshot();
     });
@@ -1066,7 +1065,6 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input);
       expect(code).not.toHaveInlineStyleWarning();
       expect(code).toMatchSnapshot();
-      // });
     });
   });
 
@@ -1703,7 +1701,7 @@ describe('babel plugin', () => {
       expect(code).toMatch(
         /var foo_null[0-9]* = function\* foo_null[0-9]*\(\) {/gm
       );
-      // expect(code).toContain('var foo = function* foo() {');
+
       expect(code).toMatchSnapshot();
     });
 

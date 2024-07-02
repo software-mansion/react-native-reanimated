@@ -482,15 +482,15 @@ var require_workletFactory = __commonJS({
           source = libraryName + "_" + source;
         }
       }
-      const suffix = "_" + source + functionId++;
+      const suffix = source + functionId++;
       if ((0, types_12.isObjectMethod)(fun.node) && (0, types_12.isIdentifier)(fun.node.key)) {
-        return fun.node.key.name + suffix;
+        return fun.node.key.name + "_" + suffix;
       }
       if ((0, types_12.isFunctionDeclaration)(fun.node) && (0, types_12.isIdentifier)(fun.node.id)) {
-        return fun.node.id.name + suffix;
+        return fun.node.id.name + "_" + suffix;
       }
       if ((0, types_12.isFunctionExpression)(fun.node) && (0, types_12.isIdentifier)(fun.node.id)) {
-        return fun.node.id.name + suffix;
+        return fun.node.id.name + "_" + suffix;
       }
       return suffix;
     }
