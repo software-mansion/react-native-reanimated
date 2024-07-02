@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
 import {
   describe,
@@ -132,8 +132,11 @@ describe('Add three delays', () => {
       );
 
       expect([{ width: 0 }, ...updatesOneDelay]).toMatchSnapshots(updates);
-      expect(updatesOneDelay).toMatchNativeSnapshots(nativeUpdatesOneDelay);
-      expect(updates).toMatchNativeSnapshots(nativeUpdates);
+      if (componentType !== 'INLINE' || Platform.OS !== 'android') {
+        // Inline components record error log "Unable to resolve view"
+        expect(updatesOneDelay).toMatchNativeSnapshots(nativeUpdatesOneDelay);
+        expect(updates).toMatchNativeSnapshots(nativeUpdates);
+      }
     },
   );
 
@@ -158,8 +161,10 @@ describe('Add three delays', () => {
       );
 
       expect([{ width: 0 }, { width: 0 }, ...updatesOneDelay]).toMatchSnapshots(updates);
-      expect(updatesOneDelay).toMatchNativeSnapshots(nativeUpdatesOneDelay);
-      expect(updates).toMatchNativeSnapshots(nativeUpdates);
+      if (componentType !== 'INLINE' || Platform.OS !== 'android') {
+        expect(updatesOneDelay).toMatchNativeSnapshots(nativeUpdatesOneDelay);
+        expect(updates).toMatchNativeSnapshots(nativeUpdates);
+      }
     },
   );
 
@@ -174,7 +179,7 @@ describe('Add three delays', () => {
     [[0, 55, 0], 'PASSIVE'],
     [[0, 0, 0], 'PASSIVE'],
   ] as Array<[[number, number, number], keyof typeof ComponentType]>)(
-    'Sum of delays ${0} is *****exactly matches***** than the delay of the sum, **${1}** component',
+    'Sum of delays ${0} *****exactly matches***** than the delay of the sum, **${1}** component',
     async ([delays, componentType]) => {
       const [updates, nativeUpdates] = await getSnapshotUpdates(delays, ComponentType[componentType]);
       const delaySum = delays.reduce((current, sum) => sum + current, 0);

@@ -24,7 +24,7 @@ type TestCase = {
   finalColor: string;
 };
 
-describe('withSequence animation of number', () => {
+describe('withSequence animation of color', () => {
   enum Component {
     ACTIVE = 'ACTIVE',
     PASSIVE = 'PASSIVE',
