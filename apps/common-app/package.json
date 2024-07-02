@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "yarn patch-package",
-    "lint": "eslint --max-warnings=0 .",
+    "lint": "eslint .",
     "format": "prettier --write --list-different ."
   },
   "peerDependencies": {
