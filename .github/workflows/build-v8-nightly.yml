@@ -34,7 +34,7 @@ jobs:
         working-directory: app
         run: yarn install
       - name: Install Reanimated
-        working-directory: App
+        working-directory: app
         run: yarn add react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
       - name: Install test dependencies
         working-directory: app
