@@ -4,27 +4,26 @@ import React, { useEffect, useRef } from 'react';
 import { TextInput, StyleSheet, View } from 'react-native';
 
 import type { FrameInfo } from '../frameCallback';
-import type { SharedValue } from '../commonTypes';
 import { useSharedValue, useAnimatedProps, useFrameCallback } from '../hook';
 import { createAnimatedComponent } from '../createAnimatedComponent';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
 
 class CircularAccumulator {
-  previousTimestamp: number = 0;
+  private mainAccumulator: number = 0;
+  private memoryAccumulator: number = 0;
 
-  mainAccumulator: number = 0;
-  memoryAccumulator: number = 0;
-
-  iterator: number = 0;
-  circularArray: Float32Array;
-  arrayLength: number;
+  private iterator: number = 0;
+  private circularArray: Float32Array;
 
   // fixme: may be negatively influenced by the first empty run
   // definietely a flawed system, remove or find a different error source
-  errorRateAccumulator: number = 0;
+  private errorRateAccumulator: number = 0;
+
+  length: number;
+  previousTimestamp: number = 0;
 
   constructor(length: number) {
-    this.arrayLength = length;
+    this.length = length;
     this.circularArray = new Float32Array(length);
   }
 
@@ -36,7 +35,7 @@ class CircularAccumulator {
   }
 
   pushTimeDelta(timeDelta: number) {
-    if (this.iterator === this.arrayLength) {
+    if (this.iterator === this.length) {
       this.arrayEndHandler();
     }
 
@@ -54,7 +53,9 @@ class CircularAccumulator {
   }
 
   getCurrentFramerate() {
-    return (this.mainAccumulator + this.memoryAccumulator) / this.arrayLength;
+    const averageRenderTime =
+      (this.mainAccumulator + this.memoryAccumulator) / this.length;
+    return 1000 / averageRenderTime;
   }
 
   getErrorRate() {
@@ -83,64 +84,23 @@ function loopAnimationFrame(fn: (lastTime: number, time: number) => void) {
   loop();
 }
 
-function getFps(renderTimeInMs: number): number {
-  'worklet';
-  return 1000 / renderTimeInMs;
-}
-
-function getTimeDelta(
-  timestamp: number,
-  previousTimestamp: number | null
-): number {
-  'worklet';
-  return previousTimestamp !== null ? timestamp - previousTimestamp : 0;
-}
-
-function completeBufferRoutine(
-  buffer: CircularBuffer,
-  timestamp: number,
-  previousTimestamp: number,
-  totalRenderTime: SharedValue<number>
-): number {
-  'worklet';
-  timestamp = Math.round(timestamp);
-  previousTimestamp = Math.round(previousTimestamp) ?? timestamp;
-
-  const droppedTimestamp = buffer.push(timestamp);
-  const nextToDrop = buffer.back()!;
-
-  const delta = getTimeDelta(timestamp, previousTimestamp);
-  const droppedDelta = getTimeDelta(nextToDrop, droppedTimestamp);
-
-  totalRenderTime.value += delta - droppedDelta;
-
-  return getFps(totalRenderTime.value / buffer.count);
-}
-
 function JsPerformance() {
   const jsFps = useSharedValue<string | null>(null);
-  const totalRenderTime = useSharedValue(0);
-  const circularBuffer = useRef<CircularBuffer>(
-    createCircularDoublesBuffer(DEFAULT_BUFFER_SIZE)
+  const circularAccumulator = useRef<CircularAccumulator>(
+    new CircularAccumulator(DEFAULT_BUFFER_SIZE)
   );
 
   useEffect(() => {
     loopAnimationFrame((_, timestamp) => {
       timestamp = Math.round(timestamp);
-      const previousTimestamp = circularBuffer.current.front() ?? timestamp;
 
-      const currentFps = completeBufferRoutine(
-        circularBuffer.current,
-        timestamp,
-        previousTimestamp,
-        totalRenderTime
-      );
+      circularAccumulator.current.pushTimestamp(timestamp);
 
-      // JS fps have to be measured every 2nd frame,
-      // thus 2x multiplication has to occur here
-      jsFps.value = (currentFps * 2).toFixed(0);
+      jsFps.value = circularAccumulator.current
+        .getCurrentFramerate()
+        .toFixed(0);
     });
-  }, []);
+  }, [jsFps]);
 
   const animatedProps = useAnimatedProps(() => {
     const text = 'JS: ' + jsFps.value ?? 'N/A';
@@ -160,23 +120,21 @@ function JsPerformance() {
 
 function UiPerformance() {
   const uiFps = useSharedValue<string | null>(null);
-  const totalRenderTime = useSharedValue(0);
-  const circularBuffer = useSharedValue<CircularBuffer | null>(null);
+  const circularAccumulator = useSharedValue<CircularAccumulator | null>(null);
 
-  useFrameCallback(({ timestamp }: FrameInfo) => {
-    if (circularBuffer.value === null) {
-      circularBuffer.value = createCircularDoublesBuffer(DEFAULT_BUFFER_SIZE);
+  useFrameCallback(({ timeSincePreviousFrame }: FrameInfo) => {
+    'worklet';
+    if (circularAccumulator.value === null) {
+      circularAccumulator.value = new CircularAccumulator(DEFAULT_BUFFER_SIZE);
+    }
+    if (!timeSincePreviousFrame) {
+      return;
     }
 
-    timestamp = Math.round(timestamp);
-    const previousTimestamp = circularBuffer.value.front() ?? timestamp;
+    timeSincePreviousFrame = Math.round(timeSincePreviousFrame);
+    circularAccumulator.value.pushTimeDelta(timeSincePreviousFrame);
 
-    const currentFps = completeBufferRoutine(
-      circularBuffer.value,
-      timestamp,
-      previousTimestamp,
-      totalRenderTime
-    );
+    const currentFps = circularAccumulator.value.getCurrentFramerate();
 
     uiFps.value = currentFps.toFixed(0);
   });
