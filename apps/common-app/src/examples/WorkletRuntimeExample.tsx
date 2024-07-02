@@ -74,7 +74,7 @@ function CreateWorkletRuntimeDemo() {
     const runtime = createWorkletRuntime('foo');
     console.log(runtime);
     console.log(runtime.name);
-    console.log(`${runtime}`);
+    console.log(`${runtime.name}`);
     console.log(String(runtime));
   };
 
@@ -180,7 +180,9 @@ function RunOnRuntimeLongRunningTasksDemo() {
       runOnRuntime(runtime, () => {
         'worklet';
         const until = performance.now() + 500;
-        while (performance.now() < until) {}
+        while (performance.now() < until) {
+          // do nothing
+        }
         console.log('Hello from background!', performance.now());
       })();
     }

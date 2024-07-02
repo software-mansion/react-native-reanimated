@@ -200,6 +200,7 @@ export default function App() {
     };
 
     if (!isReady) {
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       restoreState();
     }
   }, [isReady]);
@@ -219,6 +220,7 @@ export default function App() {
       <NavigationContainer
         linking={linking}
         initialState={initialState}
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onStateChange={(state) =>
           AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state))
         }>

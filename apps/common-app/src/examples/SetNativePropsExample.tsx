@@ -17,7 +17,9 @@ const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 function delay(ms: number) {
   const start = performance.now();
-  while (performance.now() - start < ms) {}
+  while (performance.now() - start < ms) {
+    // do nothing
+  }
 }
 
 export default function SetNativePropsExample() {

@@ -189,7 +189,7 @@ function SectionHeader({
         applyMeasure(await asyncMeasure(animatedRef));
       } catch (e) {
         console.log(e);
-        throw new Error('measure failed: ' + e);
+        throw new Error('measure failed: ' + e?.toString());
       }
     };
   } else {

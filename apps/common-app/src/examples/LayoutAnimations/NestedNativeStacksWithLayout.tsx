@@ -6,8 +6,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 type ParamList = {
-  First?: {};
-  Second?: {};
+  First?: React.Component;
+  Second?: React.Component;
 };
 
 const Stack = createNativeStackNavigator<ParamList>();
