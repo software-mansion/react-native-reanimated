@@ -9,42 +9,22 @@ import { useSharedValue, useAnimatedProps, useFrameCallback } from '../hook';
 import { createAnimatedComponent } from '../createAnimatedComponent';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
 
-type CircularBuffer = ReturnType<typeof createCircularDoublesBuffer>;
-function createCircularDoublesBuffer(size: number) {
-  'worklet';
-
-  return {
-    next: 0 as number,
-    buffer: new Float32Array(size),
-    size,
-    count: 0 as number,
-
-    push(value: number): number | null {
-      const oldValue = this.buffer[this.next];
-      const oldCount = this.count;
-      this.buffer[this.next] = value;
-
-      this.next = (this.next + 1) % this.size;
-      this.count = Math.min(this.size, this.count + 1);
-      return oldCount === this.size ? oldValue : null;
-    },
-
-    front(): number | null {
-      const notEmpty = this.count > 0;
-      if (notEmpty) {
-        const current = this.next - 1;
-        const index = current < 0 ? this.size - 1 : current;
-        return this.buffer[index];
-      }
-      return null;
-    },
-
-    back(): number | null {
-      const notEmpty = this.count > 0;
-      return notEmpty ? this.buffer[this.next] : null;
-    },
-  };
+class PersistantAccumulator {
+  // issue:
+  // any issues which occured with CircularBuffer's frame summing, persisted over the entire runtime
+  // these issues were frequent due to frequent frame drops
+  // ---
+  // solution:
+  // remove persistency by quietly resetting the accumulator every X frames
+  // ---
+  // complete mechanism which avoids jumpiness:
+  // go through buffer i=0 -> X, at X save acc to mem, set acc to 0.
+  // framerate = (acc + mem) / 2*X
+  // error rate can be measured by reading mem before overwriting it with acc.
 }
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const pa = new PersistantAccumulator();
 
 const DEFAULT_BUFFER_SIZE = 60;
 addWhitelistedNativeProps({ text: true });
