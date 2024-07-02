@@ -29,7 +29,8 @@ export class FadingTransition
     const delayFunction = this.getDelayFunction();
     const callback = this.callbackV;
     const delay = this.getDelay();
-    const duration = (this.durationV ?? 500) / 2;
+    const duration = this.durationV ?? 500;
+    const halfDuration = duration / 2;
 
     return (values) => {
       'worklet';
@@ -45,8 +46,8 @@ export class FadingTransition
           opacity: delayFunction(
             delay,
             withSequence(
-              withTiming(0, { duration: duration / 2 }),
-              withTiming(1, { duration: duration / 2 })
+              withTiming(0, { duration: halfDuration }),
+              withTiming(1, { duration: halfDuration })
             )
           ),
           originX: withDelay(
