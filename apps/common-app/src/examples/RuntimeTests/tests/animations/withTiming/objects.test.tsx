@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import type { AnimatableValueObject } from 'react-native-reanimated';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
+import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
 import type { ValidPropNames } from '../../../ReanimatedRuntimeTestsRunner/types';
 import {
   describe,
@@ -41,7 +42,7 @@ const AnimatedComponent = ({
   );
 };
 
-describe('withTiming animation of WIDTH', () => {
+describe('withTiming animation of style object', () => {
   test.each([
     {
       startStyle: { width: 10 },
@@ -68,12 +69,24 @@ describe('withTiming animation of WIDTH', () => {
     async ({ startStyle, finalStyle }: { startStyle: any; finalStyle: any }) => {
       await render(<AnimatedComponent startStyle={startStyle} finalStyle={finalStyle} />);
       const component = getTestComponent(COMPONENT_REF);
+      const startTopValue = await component.getAnimatedStyle('top');
+
       await wait(1000);
       for (const key of Object.keys(finalStyle)) {
-        expect(await component.getAnimatedStyle(key as ValidPropNames)).toBe(
-          finalStyle[key],
-          getComparisonModeForProp(key as ValidPropNames),
-        );
+        // This value may rely on height of the header, depending on the platform
+        // Therefore we want to check that the difference between final and start values of "top" property
+        // match our expectations
+        if (key === 'top') {
+          expect((await component.getAnimatedStyle('top')) - startTopValue).toBe(
+            finalStyle.top - startStyle.top,
+            ComparisonMode.DISTANCE,
+          );
+        } else {
+          expect(await component.getAnimatedStyle(key as ValidPropNames)).toBe(
+            finalStyle[key],
+            getComparisonModeForProp(key as ValidPropNames),
+          );
+        }
       }
     },
   );

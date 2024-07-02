@@ -12,9 +12,18 @@ export class TestComponent {
     return this.ref.current?.props.style[propName];
   }
 
-  public async getAnimatedStyle(propName: ValidPropNames): Promise<string> {
+  // This type makes getAnimatedStyle deduce output type depending on the prop Name
+  public async getAnimatedStyle<PropName extends ValidPropNames>(
+    propName: PropName,
+  ): Promise<PropName extends 'backgroundColor' ? string : number> {
     const tag = findNodeHandle(this.ref.current) ?? -1;
-    return getViewProp(tag, propName, this.ref.current as Component);
+    const propValue = await getViewProp(tag, propName, this.ref.current as Component);
+
+    if (propName === 'backgroundColor') {
+      // To create the deduction of the output type we need a typecast here
+      return propValue as PropName extends 'backgroundColor' ? string : number;
+    }
+    return Number(propValue) as PropName extends 'backgroundColor' ? string : number;
   }
 
   public getTag() {

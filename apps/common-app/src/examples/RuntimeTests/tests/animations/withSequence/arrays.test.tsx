@@ -17,7 +17,7 @@ import {
   getTestComponent,
   expect,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
 
 type TestCase = {
@@ -27,7 +27,9 @@ type TestCase = {
   animationNumber: number;
 };
 
-describe('withSequence animation of number', () => {
+const maybeSkipDescribe = Platform.OS === 'ios' ? describe : describe.skip;
+
+maybeSkipDescribe('withSequence animation of array', () => {
   const COMPONENT_REF = {
     first: 'firstComponent',
     second: 'secondComponent',

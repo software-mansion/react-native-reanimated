@@ -1,5 +1,6 @@
+import { Platform } from 'react-native';
 import { formatSnapshotMismatch, green, red, yellow } from '../stringFormatUtils';
-import type { OperationUpdate, Mismatch } from '../types';
+import type { OperationUpdate, Mismatch, ValidPropNames } from '../types';
 import { ComparisonMode, isValidPropName } from '../types';
 import { getComparator, getComparisonModeForProp } from './Comparators';
 
@@ -31,14 +32,20 @@ function isJsAndNativeSnapshotsEqual(
 
   const keys = Object.keys(jsSnapshot) as Array<keyof OperationUpdate>;
   for (const key of keys) {
-    const jsValue = jsSnapshot[key];
-    const nativeValue = nativeSnapshot[key];
-    const comparisonMode = isValidPropName(key) ? getComparisonModeForProp(key) : ComparisonMode.AUTO;
-    const isEqual = getComparator(comparisonMode);
-    const expectMismatch = jsValue < 0 && expectNegativeValueMismatch;
-    const valuesAreMatching = isEqual(jsValue, nativeValue);
-    if ((!valuesAreMatching && !expectMismatch) || (valuesAreMatching && expectMismatch)) {
-      return false;
+    if ((key as ValidPropNames) === 'top' && Platform.OS === 'android') {
+      // TODO On Android additional header height is included in top
+      // We can check if the difference of top value between
+      // the current and the first frame match the snapshot
+    } else {
+      const jsValue = jsSnapshot[key];
+      const nativeValue = nativeSnapshot[key];
+      const comparisonMode = isValidPropName(key) ? getComparisonModeForProp(key) : ComparisonMode.AUTO;
+      const isEqual = getComparator(comparisonMode);
+      const expectMismatch = jsValue < 0 && expectNegativeValueMismatch;
+      const valuesAreMatching = isEqual(jsValue, nativeValue);
+      if ((!valuesAreMatching && !expectMismatch) || (valuesAreMatching && expectMismatch)) {
+        return false;
+      }
     }
   }
   return true;

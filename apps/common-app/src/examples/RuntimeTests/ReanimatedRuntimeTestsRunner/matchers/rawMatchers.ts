@@ -45,7 +45,7 @@ export const toBeWithinRangeMatcher: Matcher<ToBeWithinRangeArgs> = (
   minimumValue,
   maximumValue,
 ) => {
-  const currentValueAsNumber = Number(Number(currentValue));
+  const currentValueAsNumber = Number(currentValue);
   const validInputTypes = typeof minimumValue === 'number' && typeof maximumValue === 'number';
   const isWithinRange = Number(minimumValue) <= currentValueAsNumber && currentValueAsNumber <= Number(maximumValue);
 

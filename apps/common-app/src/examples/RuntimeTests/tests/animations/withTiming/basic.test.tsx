@@ -160,6 +160,5 @@ const styles = StyleSheet.create({
   animatedBox: {
     width: 0,
     height: 80,
-    margin: 30,
   },
 });
