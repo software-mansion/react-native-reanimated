@@ -30,8 +30,9 @@ export class JumpingTransition
     const delayFunction = this.getDelayFunction();
     const callback = this.callbackV;
     const delay = this.getDelay();
-    const duration = (this.durationV ?? 300) / 2;
-    const config = { duration: duration * 2 };
+    const duration = this.durationV ?? 300;
+    const halfDuration = duration / 2;
+    const config = { duration };
 
     return (values) => {
       'worklet';
@@ -57,13 +58,13 @@ export class JumpingTransition
               withTiming(
                 Math.min(values.targetOriginY, values.currentOriginY) - d,
                 {
-                  duration,
+                  duration: halfDuration,
                   easing: Easing.out(Easing.exp),
                 }
               ),
               withTiming(values.targetOriginY, {
                 ...config,
-                duration,
+                duration: halfDuration,
                 easing: Easing.bounce,
               })
             )
