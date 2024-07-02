@@ -4,49 +4,67 @@ import React, { useEffect, useRef } from 'react';
 import { TextInput, StyleSheet, View } from 'react-native';
 
 import type { FrameInfo } from '../frameCallback';
-import type { SharedValue } from '../commonTypes';
 import { useSharedValue, useAnimatedProps, useFrameCallback } from '../hook';
 import { createAnimatedComponent } from '../createAnimatedComponent';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
 
-type CircularBuffer = ReturnType<typeof createCircularDoublesBuffer>;
-function createCircularDoublesBuffer(size: number) {
-  'worklet';
+class CircularAccumulator {
+  private mainAccumulator: number = 0;
+  private memoryAccumulator: number = 0;
 
-  return {
-    next: 0 as number,
-    buffer: new Float32Array(size),
-    size,
-    count: 0 as number,
+  private iterator: number = 0;
+  private circularArray: Float32Array;
 
-    push(value: number): number | null {
-      const oldValue = this.buffer[this.next];
-      const oldCount = this.count;
-      this.buffer[this.next] = value;
+  // fixme: may be negatively influenced by the first empty run
+  // definietely a flawed system, remove or find a different error source
+  private errorRateAccumulator: number = 0;
 
-      this.next = (this.next + 1) % this.size;
-      this.count = Math.min(this.size, this.count + 1);
-      return oldCount === this.size ? oldValue : null;
-    },
+  length: number;
+  previousTimestamp: number = 0;
 
-    front(): number | null {
-      const notEmpty = this.count > 0;
-      if (notEmpty) {
-        const current = this.next - 1;
-        const index = current < 0 ? this.size - 1 : current;
-        return this.buffer[index];
-      }
-      return null;
-    },
+  constructor(length: number) {
+    this.length = length;
+    this.circularArray = new Float32Array(length);
+  }
 
-    back(): number | null {
-      const notEmpty = this.count > 0;
-      return notEmpty ? this.buffer[this.next] : null;
-    },
-  };
+  private arrayEndHandler() {
+    this.errorRateAccumulator += this.memoryAccumulator;
+    this.memoryAccumulator = this.mainAccumulator;
+    this.mainAccumulator = 0;
+    this.iterator = 0;
+  }
+
+  pushTimeDelta(timeDelta: number) {
+    if (this.iterator === this.length) {
+      this.arrayEndHandler();
+    }
+
+    this.mainAccumulator += timeDelta;
+    this.memoryAccumulator -= this.circularArray[this.iterator];
+    this.circularArray[this.iterator] = timeDelta;
+
+    this.iterator += 1;
+  }
+
+  pushTimestamp(time: number) {
+    const timeDifference = time - this.previousTimestamp;
+    this.previousTimestamp = time;
+    this.pushTimeDelta(timeDifference);
+  }
+
+  getCurrentFramerate() {
+    const averageRenderTime =
+      (this.mainAccumulator + this.memoryAccumulator) / this.length;
+    return 1000 / averageRenderTime;
+  }
+
+  getErrorRate() {
+    return this.errorRateAccumulator;
+  }
 }
 
-const DEFAULT_BUFFER_SIZE = 60;
+const DEFAULT_BUFFER_SIZE = 20;
+
 addWhitelistedNativeProps({ text: true });
 const AnimatedTextInput = createAnimatedComponent(TextInput);
 
@@ -66,64 +84,23 @@ function loopAnimationFrame(fn: (lastTime: number, time: number) => void) {
   loop();
 }
 
-function getFps(renderTimeInMs: number): number {
-  'worklet';
-  return 1000 / renderTimeInMs;
-}
-
-function getTimeDelta(
-  timestamp: number,
-  previousTimestamp: number | null
-): number {
-  'worklet';
-  return previousTimestamp !== null ? timestamp - previousTimestamp : 0;
-}
-
-function completeBufferRoutine(
-  buffer: CircularBuffer,
-  timestamp: number,
-  previousTimestamp: number,
-  totalRenderTime: SharedValue<number>
-): number {
-  'worklet';
-  timestamp = Math.round(timestamp);
-  previousTimestamp = Math.round(previousTimestamp) ?? timestamp;
-
-  const droppedTimestamp = buffer.push(timestamp);
-  const nextToDrop = buffer.back()!;
-
-  const delta = getTimeDelta(timestamp, previousTimestamp);
-  const droppedDelta = getTimeDelta(nextToDrop, droppedTimestamp);
-
-  totalRenderTime.value += delta - droppedDelta;
-
-  return getFps(totalRenderTime.value / buffer.count);
-}
-
 function JsPerformance() {
   const jsFps = useSharedValue<string | null>(null);
-  const totalRenderTime = useSharedValue(0);
-  const circularBuffer = useRef<CircularBuffer>(
-    createCircularDoublesBuffer(DEFAULT_BUFFER_SIZE)
+  const circularAccumulator = useRef<CircularAccumulator>(
+    new CircularAccumulator(DEFAULT_BUFFER_SIZE)
   );
 
   useEffect(() => {
     loopAnimationFrame((_, timestamp) => {
       timestamp = Math.round(timestamp);
-      const previousTimestamp = circularBuffer.current.front() ?? timestamp;
 
-      const currentFps = completeBufferRoutine(
-        circularBuffer.current,
-        timestamp,
-        previousTimestamp,
-        totalRenderTime
-      );
+      circularAccumulator.current.pushTimestamp(timestamp);
 
-      // JS fps have to be measured every 2nd frame,
-      // thus 2x multiplication has to occur here
-      jsFps.value = (currentFps * 2).toFixed(0);
+      jsFps.value = circularAccumulator.current
+        .getCurrentFramerate()
+        .toFixed(0);
     });
-  }, []);
+  }, [jsFps]);
 
   const animatedProps = useAnimatedProps(() => {
     const text = 'JS: ' + jsFps.value ?? 'N/A';
@@ -143,23 +120,21 @@ function JsPerformance() {
 
 function UiPerformance() {
   const uiFps = useSharedValue<string | null>(null);
-  const totalRenderTime = useSharedValue(0);
-  const circularBuffer = useSharedValue<CircularBuffer | null>(null);
+  const circularAccumulator = useSharedValue<CircularAccumulator | null>(null);
 
-  useFrameCallback(({ timestamp }: FrameInfo) => {
-    if (circularBuffer.value === null) {
-      circularBuffer.value = createCircularDoublesBuffer(DEFAULT_BUFFER_SIZE);
+  useFrameCallback(({ timeSincePreviousFrame }: FrameInfo) => {
+    'worklet';
+    if (circularAccumulator.value === null) {
+      circularAccumulator.value = new CircularAccumulator(DEFAULT_BUFFER_SIZE);
+    }
+    if (!timeSincePreviousFrame) {
+      return;
     }
 
-    timestamp = Math.round(timestamp);
-    const previousTimestamp = circularBuffer.value.front() ?? timestamp;
+    timeSincePreviousFrame = Math.round(timeSincePreviousFrame);
+    circularAccumulator.value.pushTimeDelta(timeSincePreviousFrame);
 
-    const currentFps = completeBufferRoutine(
-      circularBuffer.value,
-      timestamp,
-      previousTimestamp,
-      totalRenderTime
-    );
+    const currentFps = circularAccumulator.value.getCurrentFramerate();
 
     uiFps.value = currentFps.toFixed(0);
   });
