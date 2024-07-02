@@ -234,18 +234,7 @@ var require_workletStringCode = __commonJS({
     var utils_12 = require_utils();
     var MOCK_SOURCE_MAP = "mock source map";
     function buildWorkletString(fun, closureVariables, newName, inputMap) {
-      (0, core_1.traverse)(fun, {
-        FunctionExpression(path) {
-          if (!path.node.id) {
-            path.stop();
-            return;
-          }
-          const name = path.node.id.name;
-          const scope = path.scope;
-          scope.rename(name, newName);
-          (0, assert_1.strict)(scope);
-        }
-      });
+      restoreRecursiveCalls(fun, newName);
       const draftExpression = fun.program.body.find((obj) => (0, types_12.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_12.isExpressionStatement)(obj)) || void 0;
       (0, assert_1.strict)(draftExpression, "[Reanimated] `draftExpression` is undefined.");
       const expression = (0, types_12.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
@@ -284,6 +273,19 @@ var require_workletStringCode = __commonJS({
       return [transformed.code, JSON.stringify(sourceMap)];
     }
     exports2.buildWorkletString = buildWorkletString;
+    function restoreRecursiveCalls(file, newName) {
+      (0, core_1.traverse)(file, {
+        FunctionExpression(path) {
+          if (!path.node.id) {
+            path.stop();
+            return;
+          }
+          const oldName = path.node.id.name;
+          const scope = path.scope;
+          scope.rename(oldName, newName);
+        }
+      });
+    }
     function shouldMockSourceMap() {
       return process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP === "1";
     }
@@ -475,8 +477,8 @@ var require_workletFactory = __commonJS({
         source = (0, path_1.basename)(filepath).split(".")[0];
         const splitFilepath = filepath.split("/");
         const nodeModulesIndex = splitFilepath.indexOf("node_modules");
-        const libraryName = splitFilepath[nodeModulesIndex + 1].replace(/\W/g, "");
         if (nodeModulesIndex !== -1) {
+          const libraryName = splitFilepath[nodeModulesIndex + 1].replace(/\W/g, "");
           source = libraryName + "_" + source;
         }
       }

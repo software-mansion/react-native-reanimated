@@ -332,6 +332,7 @@ function makeWorkletName(
   state: ReanimatedPluginPass
 ): string {
   let source = 'unknown_file';
+
   if (state.file.opts.filename) {
     const filepath = state.file.opts.filename;
     // Take the file name without extension.
@@ -339,14 +340,15 @@ function makeWorkletName(
     const splitFilepath = filepath.split('/');
     // Get the library name from the path.
     const nodeModulesIndex = splitFilepath.indexOf('node_modules');
-    // Remove all non-alphanumeric characters.
-    const libraryName = splitFilepath[nodeModulesIndex + 1].replace(/\W/g, '');
     if (nodeModulesIndex !== -1) {
+      // Remove all non-alphanumeric characters.
+      const libraryName = splitFilepath[nodeModulesIndex + 1].replace(
+        /\W/g,
+        ''
+      );
       source = libraryName + '_' + source;
     }
   }
-
-  // TODO: MAKE SURE RECURSIVE CALLS WORK
 
   const suffix = '_' + source + functionId++;
   if (isObjectMethod(fun.node) && isIdentifier(fun.node.key)) {

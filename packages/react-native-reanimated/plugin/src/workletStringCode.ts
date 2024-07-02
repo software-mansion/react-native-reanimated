@@ -39,18 +39,7 @@ export function buildWorkletString(
   newName: string,
   inputMap: BabelFileResult['map']
 ): Array<string | null | undefined> {
-  traverse(fun, {
-    FunctionExpression(path) {
-      if (!path.node.id) {
-        path.stop();
-        return;
-      }
-      const name = path.node.id.name;
-      const scope = path.scope;
-      scope.rename(name, newName);
-      assert(scope);
-    },
-  });
+  restoreRecursiveCalls(fun, newName);
 
   const draftExpression = (fun.program.body.find((obj) =>
     isFunctionDeclaration(obj)
@@ -127,6 +116,24 @@ export function buildWorkletString(
   }
 
   return [transformed.code, JSON.stringify(sourceMap)];
+}
+
+/**
+ * Function that restores recursive calls after the name of the worklet has changed.
+ */
+function restoreRecursiveCalls(file: BabelFile, newName: string): void {
+  traverse(file, {
+    FunctionExpression(path) {
+      if (!path.node.id) {
+        // Function wasn't named, hence it couldn't have had recursive calls by its name.
+        path.stop();
+        return;
+      }
+      const oldName = path.node.id.name;
+      const scope = path.scope;
+      scope.rename(oldName, newName);
+    },
+  });
 }
 
 function shouldMockSourceMap() {
