@@ -75,112 +75,79 @@ describe('withSequence animation of number', () => {
   test.each([
     {
       startColor: 'gold',
-      startColorHex: '#ffd700ff',
       middleColor: 'forestgreen',
-      middleColorHex: '#228b22ff',
       finalColor: 'darkblue',
-      finalColorHex: '#00008bff',
     },
     {
       startColor: '#ffd700ab',
-      startColorHex: '#ffd700ab',
       middleColor: 'forestgreen',
-      middleColorHex: '#228b22ff',
       finalColor: 'darkblue',
-      finalColorHex: '#00008bff',
     },
     {
       startColor: '#ffd700ab',
-      startColorHex: '#ffd700ab',
       middleColor: 'forestgreen',
-      middleColorHex: '#228b22',
       finalColor: '#88bbcc44',
-      finalColorHex: '#88bbcc44',
     },
     {
       startColor: 'gold',
-      startColorHex: '#ffd700ff',
       middleColor: 'hsl(180, 50%, 50%)',
-      middleColorHex: '#40bfbfff',
       finalColor: 'hsl(120,100%,50%)',
-      finalColorHex: '#00ff00ff',
     },
     {
       startColor: 'gold',
-      startColorHex: '#ffd700ff',
       middleColor: 'hsl(70, 100%, 75%)',
-      middleColorHex: '#eaff80ff',
       finalColor: 'hsl(120,100%,50%)',
-      finalColorHex: '#00ff00ff',
     },
     {
       startColor: 'hwb(70, 50%, 0%)',
-      startColorHex: '#eaff80ff',
       middleColor: 'hsl(180, 50%, 50%)',
-      middleColorHex: '#40bfbfff',
       finalColor: 'hsl(120,100%,50%)',
-      finalColorHex: '#00ff00ff',
     },
     {
       startColor: 'hwb(70, 50%, 0%)',
-      startColorHex: '#eaff80ff',
       middleColor: 'hsl(180, 50%, 50%)',
-      middleColorHex: '#40bfbfff',
       finalColor: 'hsl(120,100%,50%)',
-      finalColorHex: '#00ff00ff',
     },
     {
       startColor: 'hwb(70, 50%, 0%)',
-      startColorHex: '#eaff80ff',
       middleColor: 'hsl(180, 50%, 50%)',
-      middleColorHex: '#40bfbfff',
       finalColor: 'rgb(101,255,50)',
-      finalColorHex: '#65ff32ff',
     },
     {
       startColor: 'hwb(70, 50%, 0%)',
-      startColorHex: '#eaff80ff',
       middleColor: 'hsl(180, 50%, 50%)',
-      middleColorHex: '#40bfbfff',
       finalColor: 'hsla( 120 , 100% , 50%, 0.5 )',
-      finalColorHex: '#00ff0080',
     },
     {
       startColor: 'hwb(70, 50%, 0%)',
-      startColorHex: '#eaff80ff',
       middleColor: 'hsl(180, 50%, 50%)',
-      middleColorHex: '#40bfbfff',
       finalColor: 'rgb(101,255,50)',
-      finalColorHex: '#65ff32ff',
     },
     {
       startColor: 'hwb(70, 50%, 0%)',
-      startColorHex: '#eaff80ff',
       middleColor: 'hsl(180, 50%, 50%)',
-      middleColorHex: '#40bfbfff',
       finalColor: 'rgba(100,255,50,0.5)',
-      finalColorHex: '#64ff3280',
     },
   ])(
     'Animate ${startColor} → ${finalColor} → ${middleColor} → ${finalColor}',
-    async ({ startColor, startColorHex, middleColor, middleColorHex, finalColor, finalColorHex }) => {
+    async ({ startColor, middleColor, finalColor }) => {
       await render(<WidthComponent startColor={startColor} middleColor={middleColor} finalColor={finalColor} />);
       const activeComponent = getTestComponent(Component.ACTIVE);
       const passiveComponent = getTestComponent(Component.PASSIVE);
 
       await wait(DELAY / 2);
       // TODO Decide what should be the starting value of activeComponent
-      expect(await activeComponent.getAnimatedStyle('backgroundColor')).not.toBe(startColorHex, ComparisonMode.COLOR);
-      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(startColorHex, ComparisonMode.COLOR);
+      expect(await activeComponent.getAnimatedStyle('backgroundColor')).not.toBe(startColor, ComparisonMode.COLOR);
+      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(startColor, ComparisonMode.COLOR);
       await wait(200 + DELAY);
-      expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(finalColorHex, ComparisonMode.COLOR);
-      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(finalColorHex, ComparisonMode.COLOR);
+      expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(finalColor, ComparisonMode.COLOR);
+      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(finalColor, ComparisonMode.COLOR);
       await wait(300 + DELAY);
-      expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(middleColorHex, ComparisonMode.COLOR);
-      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(middleColorHex, ComparisonMode.COLOR);
+      expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(middleColor, ComparisonMode.COLOR);
+      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(middleColor, ComparisonMode.COLOR);
       await wait(200 + DELAY);
-      expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(finalColorHex, ComparisonMode.COLOR);
-      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(finalColorHex, ComparisonMode.COLOR);
+      expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(finalColor, ComparisonMode.COLOR);
+      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(finalColor, ComparisonMode.COLOR);
     },
   );
 });

@@ -100,23 +100,23 @@ describe('withTiming animation of COLOR 🎨', () => {
   });
 
   test.each([
-    { from: '#6495ed', fromHex: '#6495ed', to: '#ff7f50', toHex: '#ff7f50' },
-    { from: '#6495edab', fromHex: '#6495edab', to: '#ff7f50ab', toHex: '#ff7f50ab' },
-    { from: '#6495ed', fromHex: '#6495ed', to: '#1b1', toHex: '#11bb11' },
-    { from: 'rgba(100,149,237,0.67)', fromHex: '#6495edab', to: '#1b1', toHex: '#11bb11' },
-    { from: '#1b1', fromHex: '#11bb11', to: 'rgba(100,149,237,0.67)', toHex: '#6495edab' },
-    { from: '#5bc', fromHex: '#55bbcc', to: '#ff7f50', toHex: '#ff7f50' },
-    { from: '#5bc', fromHex: '#55bbcc', to: '#1b1', toHex: '#11bb11' },
-  ])('Animate from ${from} to ${to}', async ({ from, to, fromHex, toHex }) => {
+    { from: '#6495ed', to: '#ff7f50' },
+    { from: '#6495edab', to: '#ff7f50ab' },
+    { from: '#6495ed', to: '#1b1' },
+    { from: 'rgba(100,149,237,0.67)', to: '#1b1' },
+    { from: '#1b1', to: 'rgba(100,149,237,0.67)' },
+    { from: '#5bc', to: '#ff7f50' },
+    { from: '#5bc', to: '#1b1' },
+  ])('Animate from ${from} to ${to}', async ({ from, to }) => {
     await render(<ColorComponent color1={from} color2={to} />);
     const componentActive = getTestComponent(COMPONENT_REF_ACTIVE);
     const componentPassive = getTestComponent(COMPONENT_REF_PASSIVE);
 
-    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(fromHex, ComparisonMode.COLOR);
-    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(fromHex, ComparisonMode.COLOR);
+    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(from, ComparisonMode.COLOR);
+    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(from, ComparisonMode.COLOR);
     await wait(1000);
-    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(toHex, ComparisonMode.COLOR);
-    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(toHex, ComparisonMode.COLOR);
+    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(to, ComparisonMode.COLOR);
+    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(to, ComparisonMode.COLOR);
   });
 });
 
