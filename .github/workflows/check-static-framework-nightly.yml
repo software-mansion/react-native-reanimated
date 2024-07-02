@@ -23,12 +23,9 @@ jobs:
     steps:
       - name: Create React Native app
         run: npx react-native init app
-      - name: Download Reanimated from commit
-        working-directory: app
-        run: curl -LJO https://codeload.github.com/software-mansion/react-native-reanimated/tar.gz/${{ github.sha }}
       - name: Install Reanimated
-        working-directory: app
-        run: yarn add react-native-reanimated@file:./react-native-reanimated-${{ github.sha }}.tar.gz
+        working-directory: App
+        run: yarn add react-native-reanimated@git@github.com:software-mansion/react-native-reanimated.git#commit-${{ github.sha }}
       - name: Install Paper Pods
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         working-directory: app/ios
