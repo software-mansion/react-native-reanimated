@@ -47,8 +47,6 @@ export class PropsFilter implements IPropsFilter {
         const processedStyle: StyleProps = styles.map((style) => {
           if (style && style.viewDescriptors) {
             // this is how we recognize styles returned by useAnimatedStyle
-            // TODO - refactor, since `viewsRef` is only present on Web
-            style.viewsRef?.add(component);
             if (this._requiresNewInitials) {
               this._initialStyle = {
                 ...style.initial.value,
@@ -72,8 +70,6 @@ export class PropsFilter implements IPropsFilter {
           Object.keys(animatedProp.initial.value).forEach((initialValueKey) => {
             props[initialValueKey] =
               animatedProp.initial?.value[initialValueKey];
-            // TODO - refacotr, since `viewsRef` is only present on Web
-            animatedProp.viewsRef?.add(component);
           });
         }
       } else if (

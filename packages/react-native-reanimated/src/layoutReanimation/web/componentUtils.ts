@@ -182,7 +182,7 @@ export function setElementAnimation(
     if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
       _updatePropsJS(
         { visibility: 'initial' },
-        { _component: element as ReanimatedHTMLElement }
+        element as ReanimatedHTMLElement
       );
     }
 
