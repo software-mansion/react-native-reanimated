@@ -25,7 +25,7 @@ jobs:
         run: npx react-native init app
       - name: Install Reanimated
         working-directory: App
-        run: yarn add react-native-reanimated@git@github.com:software-mansion/react-native-reanimated.git#commit-${{ github.sha }}
+        run: yarn add react-native-reanimated@${{secrets.GITHUB_TOKEN}}@github.com:software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
       - name: Install Paper Pods
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         working-directory: app/ios
