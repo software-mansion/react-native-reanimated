@@ -233,13 +233,14 @@ var require_workletStringCode = __commonJS({
     var fs = __importStar(require("fs"));
     var utils_12 = require_utils();
     var MOCK_SOURCE_MAP = "mock source map";
-    function buildWorkletString(fun, closureVariables, name, inputMap) {
+    function buildWorkletString(fun, closureVariables, newName, inputMap) {
+      restoreRecursiveCalls(fun, newName);
       const draftExpression = fun.program.body.find((obj) => (0, types_12.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_12.isExpressionStatement)(obj)) || void 0;
       (0, assert_1.strict)(draftExpression, "[Reanimated] `draftExpression` is undefined.");
       const expression = (0, types_12.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
       (0, assert_1.strict)("params" in expression, "'params' property is undefined in 'expression'");
       (0, assert_1.strict)((0, types_12.isBlockStatement)(expression.body), "[Reanimated] `expression.body` is not a `BlockStatement`");
-      const workletFunction = (0, types_12.functionExpression)((0, types_12.identifier)(name), expression.params, expression.body, expression.generator, expression.async);
+      const workletFunction = (0, types_12.functionExpression)((0, types_12.identifier)(newName), expression.params, expression.body, expression.generator, expression.async);
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "[Reanimated] `inputMap` is undefined.");
       const includeSourceMap = !(0, utils_12.isRelease)();
@@ -272,6 +273,19 @@ var require_workletStringCode = __commonJS({
       return [transformed.code, JSON.stringify(sourceMap)];
     }
     exports2.buildWorkletString = buildWorkletString;
+    function restoreRecursiveCalls(file, newName) {
+      (0, core_1.traverse)(file, {
+        FunctionExpression(path) {
+          if (!path.node.id) {
+            path.stop();
+            return;
+          }
+          const oldName = path.node.id.name;
+          const scope = path.scope;
+          scope.rename(oldName, newName);
+        }
+      });
+    }
     function shouldMockSourceMap() {
       return process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP === "1";
     }
@@ -362,7 +376,7 @@ var require_workletFactory = __commonJS({
       (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is undefined.");
       (0, assert_1.strict)(transformed.ast, "[Reanimated] `transformed.ast` is undefined.");
       const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
-      const functionName = makeWorkletName(fun);
+      const functionName = makeWorkletName(fun, state);
       const functionIdentifier = (0, types_12.identifier)(functionName);
       const clone = (0, types_12.cloneNode)(fun.node);
       const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
@@ -455,17 +469,30 @@ var require_workletFactory = __commonJS({
       }
       return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
     }
-    function makeWorkletName(fun) {
+    var functionId = 1;
+    function makeWorkletName(fun, state) {
+      let source = "unknown_file";
+      if (state.file.opts.filename) {
+        const filepath = state.file.opts.filename;
+        source = (0, path_1.basename)(filepath).split(".")[0];
+        const splitFilepath = filepath.split("/");
+        const nodeModulesIndex = splitFilepath.indexOf("node_modules");
+        if (nodeModulesIndex !== -1) {
+          const libraryName = splitFilepath[nodeModulesIndex + 1].replace(/\W/g, "");
+          source = libraryName + "_" + source;
+        }
+      }
+      const suffix = source + functionId++;
       if ((0, types_12.isObjectMethod)(fun.node) && (0, types_12.isIdentifier)(fun.node.key)) {
-        return fun.node.key.name;
+        return fun.node.key.name + "_" + suffix;
       }
       if ((0, types_12.isFunctionDeclaration)(fun.node) && (0, types_12.isIdentifier)(fun.node.id)) {
-        return fun.node.id.name;
+        return fun.node.id.name + "_" + suffix;
       }
       if ((0, types_12.isFunctionExpression)(fun.node) && (0, types_12.isIdentifier)(fun.node.id)) {
-        return fun.node.id.name;
+        return fun.node.id.name + "_" + suffix;
       }
-      return "anonymous";
+      return suffix;
     }
     function makeArrayFromCapturedBindings(ast, fun) {
       const closure = /* @__PURE__ */ new Map();

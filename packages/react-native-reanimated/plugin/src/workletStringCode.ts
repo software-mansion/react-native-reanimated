@@ -1,5 +1,5 @@
 import type { BabelFileResult, NodePath, PluginItem } from '@babel/core';
-import { transformSync } from '@babel/core';
+import { transformSync, traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
   File as BabelFile,
@@ -36,9 +36,11 @@ const MOCK_SOURCE_MAP = 'mock source map';
 export function buildWorkletString(
   fun: BabelFile,
   closureVariables: Array<Identifier>,
-  name: string,
+  newName: string,
   inputMap: BabelFileResult['map']
 ): Array<string | null | undefined> {
+  restoreRecursiveCalls(fun, newName);
+
   const draftExpression = (fun.program.body.find((obj) =>
     isFunctionDeclaration(obj)
   ) ||
@@ -61,7 +63,7 @@ export function buildWorkletString(
   );
 
   const workletFunction = functionExpression(
-    identifier(name),
+    identifier(newName),
     expression.params,
     expression.body,
     expression.generator,
@@ -114,6 +116,24 @@ export function buildWorkletString(
   }
 
   return [transformed.code, JSON.stringify(sourceMap)];
+}
+
+/**
+ * Function that restores recursive calls after the name of the worklet has changed.
+ */
+function restoreRecursiveCalls(file: BabelFile, newName: string): void {
+  traverse(file, {
+    FunctionExpression(path) {
+      if (!path.node.id) {
+        // Function wasn't named, hence it couldn't have had recursive calls by its name.
+        path.stop();
+        return;
+      }
+      const oldName = path.node.id.name;
+      const scope = path.scope;
+      scope.rename(oldName, newName);
+    },
+  });
 }
 
 function shouldMockSourceMap() {
