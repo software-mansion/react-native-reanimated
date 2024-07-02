@@ -5,7 +5,6 @@ title: Section List
 
 import SectionList from '@site/static/examples/SectionList';
 import SectionListSrc from '!!raw-loader!@site/static/examples/SectionList';
-import ExampleVideo from '@site/src/components/ExampleVideo';
 import CollapsibleCode from '@site/src/components/CollapsibleCode';
 
 Section lists allow you to organize long lists of content by dividing them with headings.

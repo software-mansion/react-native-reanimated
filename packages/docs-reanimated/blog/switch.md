@@ -7,7 +7,6 @@ A switch element is a user interface component that allows users to toggle betwe
 
 import Switch from '@site/static/examples/Switch';
 import SwitchSrc from '!!raw-loader!@site/static/examples/Switch';
-import ExampleVideo from '@site/src/components/ExampleVideo';
 import CollapsibleCode from '@site/src/components/CollapsibleCode';
 
 <InteractiveExample src={SwitchSrc} component={Switch} />

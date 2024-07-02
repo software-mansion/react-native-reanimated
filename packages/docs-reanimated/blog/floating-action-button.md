@@ -7,7 +7,6 @@ Floating Action Button provides user with easy-accessible panel with primary or 
 
 import FloatingActionButton from '@site/static/examples/FloatingActionButton';
 import FloatingActionButtonSrc from '!!raw-loader!@site/static/examples/FloatingActionButton';
-import ExampleVideo from '@site/src/components/ExampleVideo';
 import CollapsibleCode from '@site/src/components/CollapsibleCode';
 
 <InteractiveExample src={FloatingActionButtonSrc} component={FloatingActionButton} />

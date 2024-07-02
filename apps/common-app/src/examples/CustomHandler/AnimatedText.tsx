@@ -1,16 +1,8 @@
 import React from 'react';
-import {
-  StyleProp,
-  StyleSheet,
-  TextInput,
-  TextInputProps,
-  TextStyle,
-} from 'react-native';
-import Animated, {
-  SharedValue,
-  useAnimatedProps,
-} from 'react-native-reanimated';
-import type { AnimatedStyle } from 'react-native-reanimated';
+import type { StyleProp, TextInputProps, TextStyle } from 'react-native';
+import { StyleSheet, TextInput } from 'react-native';
+import Animated, { useAnimatedProps } from 'react-native-reanimated';
+import type { AnimatedStyle, SharedValue } from 'react-native-reanimated';
 
 Animated.addWhitelistedNativeProps({ text: true });
 

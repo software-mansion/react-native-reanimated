@@ -1,5 +1,5 @@
 'use strict';
-import { withSequence, withTiming } from '../../animation';
+import { withDelay, withSequence, withTiming } from '../../animation';
 import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
@@ -29,7 +29,7 @@ export class FadingTransition
     const delayFunction = this.getDelayFunction();
     const callback = this.callbackV;
     const delay = this.getDelay();
-    const duration = this.durationV ?? 500;
+    const duration = (this.durationV ?? 500) / 2;
 
     return (values) => {
       'worklet';
@@ -49,21 +49,21 @@ export class FadingTransition
               withTiming(1, { duration })
             )
           ),
-          originX: delayFunction(
+          originX: withDelay(
             delay + duration,
-            withTiming(values.targetOriginX, { duration: 50 })
+            withTiming(values.targetOriginX, { duration: 0 })
           ),
-          originY: delayFunction(
+          originY: withDelay(
             delay + duration,
-            withTiming(values.targetOriginY, { duration: 50 })
+            withTiming(values.targetOriginY, { duration: 0 })
           ),
-          width: delayFunction(
+          width: withDelay(
             delay + duration,
-            withTiming(values.targetWidth, { duration: 50 })
+            withTiming(values.targetWidth, { duration: 0 })
           ),
-          height: delayFunction(
+          height: withDelay(
             delay + duration,
-            withTiming(values.targetHeight, { duration: 50 })
+            withTiming(values.targetHeight, { duration: 0 })
           ),
         },
         callback,

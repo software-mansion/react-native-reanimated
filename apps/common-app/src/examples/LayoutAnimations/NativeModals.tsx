@@ -1,11 +1,9 @@
 import { Alert, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import {
-  NativeStackNavigationProp,
-  createNativeStackNavigator,
-} from '@react-navigation/native-stack';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 
-import { ParamListBase } from '@react-navigation/native';
+import type { ParamListBase } from '@react-navigation/native';
 
 // import { createStackNavigator } from "@react-navigation/stack";
 

@@ -14,12 +14,10 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { Button, StyleSheet, View, Text } from 'react-native';
-import {
-  NativeStackScreenProps,
-  createNativeStackNavigator,
-} from '@react-navigation/native-stack';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { ParamListBase } from '@react-navigation/native';
+import type { ParamListBase } from '@react-navigation/native';
 
 const Stack = createNativeStackNavigator();
 const Context = createContext({
