@@ -17,20 +17,26 @@ import type { ReanimatedPluginPass } from './types';
 export function processIfWorkletFile(
   path: NodePath<Program>,
   state: ReanimatedPluginPass
-) {
+): boolean {
   if (
-    path.node.directives.some(
+    !path.node.directives.some(
       (functionDirective) => functionDirective.value.value === 'worklet'
     )
   ) {
-    processWorkletFile(path, state);
-    // Remove 'worklet' directive from the file afterwards.
-    path.node.directives = path.node.directives.filter(
-      (functionDirective) => functionDirective.value.value !== 'worklet'
-    );
+    return false;
   }
+
+  processWorkletFile(path, state);
+  // Remove 'worklet' directive from the file afterwards.
+  path.node.directives = path.node.directives.filter(
+    (functionDirective) => functionDirective.value.value !== 'worklet'
+  );
+  return true;
 }
 
+/**
+ * Adds a worklet directive to each top-level function in the file.
+ */
 function processWorkletFile(
   path: NodePath<Program>,
   _state: ReanimatedPluginPass
@@ -52,7 +58,6 @@ function processVariableDeclaration(path: NodePath<VariableDeclaration>) {
       appendWorkletDirective(initPath.node.body);
     } else if (initPath.isArrowFunctionExpression()) {
       const bodyPath = initPath.get('body');
-
       // In case of arrow function with no body, i.e. () => 1.
       if (!bodyPath.isBlockStatement()) {
         bodyPath.replaceWith(
