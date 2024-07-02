@@ -5,6 +5,8 @@ title: Marquee
 
 A marquee is an element used to display scrolling content horizontally within a confined space. It's commonly seen in applications to information such as news tickers, advertisements, or any content that needs continuous display within a limited area.
 
+Looking for a ready-to-use solution? We recommend [@animatereactnative/marquee](https://www.npmjs.com/package/@animatereactnative/marquee).
+
 import Marquee from '@site/static/examples/Marquee';
 import MarqueeSrc from '!!raw-loader!@site/static/examples/Marquee';
 import CollapsibleCode from '@site/src/components/CollapsibleCode';
