@@ -8,73 +8,96 @@ import { useSharedValue, useAnimatedProps, useFrameCallback } from '../hook';
 import { createAnimatedComponent } from '../createAnimatedComponent';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
 
-class CircularAccumulator {
-  mainAccumulator: number = 0;
-  memoryAccumulator: number = 0;
-
-  iterator: number = 0;
-  circularArray: Float32Array | null = null;
-  length: number = 0;
-
-  // fixme: may be negatively influenced by the first empty run
-  // definietely a flawed system, remove or find a different error source
-  errorRateAccumulator: number = 0;
-
-  previousTimestamp: number = 0;
-
-  arrayEndHandler() {
-    'worklet';
-    this.errorRateAccumulator += this.memoryAccumulator;
-    this.memoryAccumulator = this.mainAccumulator;
-    this.mainAccumulator = 0;
-    this.iterator = 0;
-  }
-
-  pushTimeDelta(timeDelta: number) {
-    'worklet';
-    if (this.iterator === this.length) {
-      this.arrayEndHandler();
-    }
-
-    if (this.circularArray === null) {
-      return;
-    }
-
-    this.mainAccumulator += timeDelta;
-    this.memoryAccumulator -= this.circularArray[this.iterator];
-    this.circularArray[this.iterator] = timeDelta;
-
-    this.iterator += 1;
-  }
-
-  pushTimestamp(time: number) {
-    'worklet';
-    const timeDifference = time - this.previousTimestamp;
-    this.previousTimestamp = time;
-    this.pushTimeDelta(timeDifference);
-  }
-
-  getCurrentFramerate() {
-    'worklet';
-    const averageRenderTime =
-      (this.mainAccumulator + this.memoryAccumulator) / this.length;
-    return 1000 / averageRenderTime;
-  }
-
-  getErrorRate() {
-    'worklet';
-    return this.errorRateAccumulator;
-  }
-}
-
+type CircularAccumulator = ReturnType<typeof contructCircularAccumulator>;
 const contructCircularAccumulator = (length: number) => {
   'worklet';
-  const newCircularAccumulator = new CircularAccumulator();
+  return {
+    mainAccumulator: 0 as number,
+    memoryAccumulator: 0 as number,
+    errorRateAccumulator: 0 as number,
 
-  newCircularAccumulator.length = length;
-  newCircularAccumulator.circularArray = new Float32Array(length);
+    iterator: 0 as number,
+    circularArray: new Float32Array(length),
+    length,
 
-  return newCircularAccumulator;
+    previousTimestamp: 0 as number,
+
+    arrayEndHandler() {
+      this.errorRateAccumulator += this.memoryAccumulator;
+
+      console.log(
+        '[MEM=] mem:',
+        this.memoryAccumulator,
+        '=',
+        this.mainAccumulator
+      );
+      this.memoryAccumulator = this.mainAccumulator;
+
+      console.log('[ACC=] acc:', this.mainAccumulator, '=', 0);
+      this.mainAccumulator = 0;
+
+      console.log('[IT=] it:', this.iterator, '=', 0);
+      this.iterator = 0;
+    },
+
+    pushTimeDelta(timeDelta: number) {
+      console.log('[IT??] it:', this.iterator, '===', this.length);
+      if (this.iterator === this.length) {
+        this.arrayEndHandler();
+      }
+
+      if (this.circularArray === null) {
+        return;
+      }
+
+      console.log('[ACC++] acc:', this.mainAccumulator, '+=', timeDelta);
+      this.mainAccumulator += timeDelta;
+
+      console.log(
+        '[MEM--] mem:',
+        this.memoryAccumulator,
+        '-=',
+        this.circularArray[this.iterator]
+      );
+      this.memoryAccumulator -= this.circularArray[this.iterator];
+
+      console.log(
+        `[CA[${this.iterator}]]=:`,
+        this.circularArray[this.iterator],
+        '-=',
+        timeDelta
+      );
+      this.circularArray[this.iterator] = timeDelta;
+
+      console.log('[IT++] it:', this.iterator, '+=', 1);
+      this.iterator += 1;
+    },
+
+    pushTimestamp(time: number) {
+      const timeDifference =
+        this.previousTimestamp !== 0 ? time - this.previousTimestamp : 0;
+      this.previousTimestamp = time;
+      this.pushTimeDelta(timeDifference);
+    },
+
+    getCurrentFramerate(_info: string) {
+      // console.log(
+      //   '[',
+      //   info,
+      //   '] acc:',
+      //   this.mainAccumulator,
+      //   'mem:',
+      //   this.memoryAccumulator
+      // );
+      const averageRenderTime =
+        (this.mainAccumulator + this.memoryAccumulator) / this.length;
+      return 1000 / averageRenderTime;
+    },
+
+    getErrorRate() {
+      return this.errorRateAccumulator;
+    },
+  };
 };
 
 const DEFAULT_BUFFER_SIZE = 20;
@@ -112,9 +135,8 @@ function JsPerformance() {
 
       circularAccumulator.current.pushTimestamp(timestamp);
 
-      jsFps.value = circularAccumulator.current
-        .getCurrentFramerate()
-        .toFixed(0);
+      jsFps.value = // JS is sampled every 2nd frame, thus * 2
+        (circularAccumulator.current.getCurrentFramerate('JS') * 2).toFixed(0);
     });
   }, [jsFps]);
 
@@ -152,7 +174,7 @@ function UiPerformance() {
     timeSincePreviousFrame = Math.round(timeSincePreviousFrame);
     circularAccumulator.value.pushTimeDelta(timeSincePreviousFrame);
 
-    const currentFps = circularAccumulator.value.getCurrentFramerate();
+    const currentFps = circularAccumulator.value.getCurrentFramerate('UI');
 
     uiFps.value = currentFps.toFixed(0);
   });
