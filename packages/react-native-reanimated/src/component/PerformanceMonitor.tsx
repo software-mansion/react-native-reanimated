@@ -9,25 +9,21 @@ import { createAnimatedComponent } from '../createAnimatedComponent';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
 
 class CircularAccumulator {
-  private mainAccumulator: number = 0;
-  private memoryAccumulator: number = 0;
+  mainAccumulator: number = 0;
+  memoryAccumulator: number = 0;
 
-  private iterator: number = 0;
-  private circularArray: Float32Array;
+  iterator: number = 0;
+  circularArray: Float32Array | null = null;
+  length: number = 0;
 
   // fixme: may be negatively influenced by the first empty run
   // definietely a flawed system, remove or find a different error source
-  private errorRateAccumulator: number = 0;
+  errorRateAccumulator: number = 0;
 
-  length: number;
   previousTimestamp: number = 0;
 
-  constructor(length: number) {
-    this.length = length;
-    this.circularArray = new Float32Array(length);
-  }
-
-  private arrayEndHandler() {
+  arrayEndHandler() {
+    'worklet';
     this.errorRateAccumulator += this.memoryAccumulator;
     this.memoryAccumulator = this.mainAccumulator;
     this.mainAccumulator = 0;
@@ -35,8 +31,13 @@ class CircularAccumulator {
   }
 
   pushTimeDelta(timeDelta: number) {
+    'worklet';
     if (this.iterator === this.length) {
       this.arrayEndHandler();
+    }
+
+    if (this.circularArray === null) {
+      return;
     }
 
     this.mainAccumulator += timeDelta;
@@ -47,21 +48,34 @@ class CircularAccumulator {
   }
 
   pushTimestamp(time: number) {
+    'worklet';
     const timeDifference = time - this.previousTimestamp;
     this.previousTimestamp = time;
     this.pushTimeDelta(timeDifference);
   }
 
   getCurrentFramerate() {
+    'worklet';
     const averageRenderTime =
       (this.mainAccumulator + this.memoryAccumulator) / this.length;
     return 1000 / averageRenderTime;
   }
 
   getErrorRate() {
+    'worklet';
     return this.errorRateAccumulator;
   }
 }
+
+const contructCircularAccumulator = (length: number) => {
+  'worklet';
+  const newCircularAccumulator = new CircularAccumulator();
+
+  newCircularAccumulator.length = length;
+  newCircularAccumulator.circularArray = new Float32Array(length);
+
+  return newCircularAccumulator;
+};
 
 const DEFAULT_BUFFER_SIZE = 20;
 
@@ -72,6 +86,7 @@ function loopAnimationFrame(fn: (lastTime: number, time: number) => void) {
   let lastTime = 0;
 
   function loop() {
+    'worklet';
     requestAnimationFrame((time) => {
       if (lastTime > 0) {
         fn(lastTime, time);
@@ -87,11 +102,12 @@ function loopAnimationFrame(fn: (lastTime: number, time: number) => void) {
 function JsPerformance() {
   const jsFps = useSharedValue<string | null>(null);
   const circularAccumulator = useRef<CircularAccumulator>(
-    new CircularAccumulator(DEFAULT_BUFFER_SIZE)
+    contructCircularAccumulator(DEFAULT_BUFFER_SIZE)
   );
 
   useEffect(() => {
     loopAnimationFrame((_, timestamp) => {
+      'worklet';
       timestamp = Math.round(timestamp);
 
       circularAccumulator.current.pushTimestamp(timestamp);
@@ -103,6 +119,7 @@ function JsPerformance() {
   }, [jsFps]);
 
   const animatedProps = useAnimatedProps(() => {
+    'worklet';
     const text = 'JS: ' + jsFps.value ?? 'N/A';
     return { text, defaultValue: text };
   });
@@ -125,7 +142,8 @@ function UiPerformance() {
   useFrameCallback(({ timeSincePreviousFrame }: FrameInfo) => {
     'worklet';
     if (circularAccumulator.value === null) {
-      circularAccumulator.value = new CircularAccumulator(DEFAULT_BUFFER_SIZE);
+      circularAccumulator.value =
+        contructCircularAccumulator(DEFAULT_BUFFER_SIZE);
     }
     if (!timeSincePreviousFrame) {
       return;
@@ -140,6 +158,7 @@ function UiPerformance() {
   });
 
   const animatedProps = useAnimatedProps(() => {
+    'worklet';
     const text = 'UI: ' + uiFps.value ?? 'N/A';
     return { text, defaultValue: text };
   });
