@@ -14,7 +14,6 @@ const contructCircularAccumulator = (length: number, expectedFps: number) => {
   return {
     mainAccumulator: 0 as number,
     memoryAccumulator: 0 as number,
-    errorRateAccumulator: 0 as number,
 
     iterator: 0 as number,
     circularArray: new Float32Array(length),
@@ -29,7 +28,6 @@ const contructCircularAccumulator = (length: number, expectedFps: number) => {
     expectedFps,
 
     arrayEndHandler() {
-      this.errorRateAccumulator += this.memoryAccumulator;
       this.memoryAccumulator = this.mainAccumulator;
       this.mainAccumulator = 0;
       this.iterator = 0;
@@ -133,10 +131,6 @@ const contructCircularAccumulator = (length: number, expectedFps: number) => {
       const averageRenderTime =
         (this.mainAccumulator + this.memoryAccumulator) / this.length;
       return 1000 / averageRenderTime;
-    },
-
-    getErrorRate() {
-      return this.errorRateAccumulator;
     },
   };
 };
