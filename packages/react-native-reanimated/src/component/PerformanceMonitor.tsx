@@ -30,7 +30,7 @@ const contructCircularAccumulator = (length: number) => {
     },
 
     pushTimeDelta(timeDelta: number) {
-      if (this.iterator === this.length) {
+      if (this.iterator >= this.length) {
         this.arrayEndHandler();
       }
 
@@ -51,7 +51,7 @@ const contructCircularAccumulator = (length: number) => {
       this.pushTimeDelta(timeDifference);
     },
 
-    getCurrentFramerate(_info: string) {
+    getCurrentFramerate() {
       const averageRenderTime =
         (this.mainAccumulator + this.memoryAccumulator) / this.length;
       return 1000 / averageRenderTime;
@@ -99,13 +99,13 @@ function JsPerformance() {
       circularAccumulator.current.pushTimestamp(timestamp);
 
       jsFps.value = // JS is sampled every 2nd frame, thus * 2
-        (circularAccumulator.current.getCurrentFramerate('JS') * 2).toFixed(0);
+        (circularAccumulator.current.getCurrentFramerate() * 2).toFixed(0);
     });
   }, [jsFps]);
 
   const animatedProps = useAnimatedProps(() => {
     'worklet';
-    const text = 'JS: ' + jsFps.value ?? 'N/A';
+    const text = 'JS: ' + jsFps.value ?? 'N/A' + ' ';
     return { text, defaultValue: text };
   });
 
@@ -137,14 +137,14 @@ function UiPerformance() {
     timeSincePreviousFrame = Math.round(timeSincePreviousFrame);
     circularAccumulator.value.pushTimeDelta(timeSincePreviousFrame);
 
-    const currentFps = circularAccumulator.value.getCurrentFramerate('UI');
+    const currentFps = circularAccumulator.value.getCurrentFramerate();
 
     uiFps.value = currentFps.toFixed(0);
   });
 
   const animatedProps = useAnimatedProps(() => {
     'worklet';
-    const text = 'UI: ' + uiFps.value ?? 'N/A';
+    const text = 'UI: ' + uiFps.value ?? 'N/A' + ' ';
     return { text, defaultValue: text };
   });
 
