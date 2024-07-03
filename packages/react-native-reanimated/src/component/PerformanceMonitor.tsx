@@ -24,24 +24,12 @@ const contructCircularAccumulator = (length: number) => {
 
     arrayEndHandler() {
       this.errorRateAccumulator += this.memoryAccumulator;
-
-      console.log(
-        '[MEM=] mem:',
-        this.memoryAccumulator,
-        '=',
-        this.mainAccumulator
-      );
       this.memoryAccumulator = this.mainAccumulator;
-
-      console.log('[ACC=] acc:', this.mainAccumulator, '=', 0);
       this.mainAccumulator = 0;
-
-      console.log('[IT=] it:', this.iterator, '=', 0);
       this.iterator = 0;
     },
 
     pushTimeDelta(timeDelta: number) {
-      console.log('[IT??] it:', this.iterator, '===', this.length);
       if (this.iterator === this.length) {
         this.arrayEndHandler();
       }
@@ -50,26 +38,9 @@ const contructCircularAccumulator = (length: number) => {
         return;
       }
 
-      console.log('[ACC++] acc:', this.mainAccumulator, '+=', timeDelta);
       this.mainAccumulator += timeDelta;
-
-      console.log(
-        '[MEM--] mem:',
-        this.memoryAccumulator,
-        '-=',
-        this.circularArray[this.iterator]
-      );
       this.memoryAccumulator -= this.circularArray[this.iterator];
-
-      console.log(
-        `[CA[${this.iterator}]]=:`,
-        this.circularArray[this.iterator],
-        '-=',
-        timeDelta
-      );
       this.circularArray[this.iterator] = timeDelta;
-
-      console.log('[IT++] it:', this.iterator, '+=', 1);
       this.iterator += 1;
     },
 
@@ -81,14 +52,6 @@ const contructCircularAccumulator = (length: number) => {
     },
 
     getCurrentFramerate(_info: string) {
-      // console.log(
-      //   '[',
-      //   info,
-      //   '] acc:',
-      //   this.mainAccumulator,
-      //   'mem:',
-      //   this.memoryAccumulator
-      // );
       const averageRenderTime =
         (this.mainAccumulator + this.memoryAccumulator) / this.length;
       return 1000 / averageRenderTime;
