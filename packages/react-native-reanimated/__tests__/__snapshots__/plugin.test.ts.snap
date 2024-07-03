@@ -2506,7 +2506,7 @@ function Box() {
 exports[`babel plugin names appends file name to function name 1`] = `
 "var _worklet_3008648901742_init_data = {
   code: "function foo_sourceJs1(){return 1;}",
-  location: "/Users/bigpoppe/swmansion/reanimated/main/react-native-reanimated/packages/react-native-reanimated/source.js",
+  location: "/source.js",
   version: "x.y.z"
 };
 var foo = function () {
@@ -2525,7 +2525,7 @@ var foo = function () {
 exports[`babel plugin names appends library name to function name 1`] = `
 "var _worklet_1237424241422_init_data = {
   code: "function foo_library_sourceJs1(){return 1;}",
-  location: "/Users/bigpoppe/swmansion/reanimated/main/react-native-reanimated/packages/react-native-reanimated/node_modules/library/source.js",
+  location: "/node_modules/library/source.js",
   version: "x.y.z"
 };
 var foo = function () {
@@ -2544,7 +2544,7 @@ var foo = function () {
 exports[`babel plugin names handles names with illegal characters 1`] = `
 "var _worklet_16115589986830_init_data = {
   code: "function foo_SourceJs1(){return 1;}",
-  location: "/Users/bigpoppe/swmansion/reanimated/main/react-native-reanimated/packages/react-native-reanimated/-source.js",
+  location: "/-source.js",
   version: "x.y.z"
 };
 var foo = function () {
