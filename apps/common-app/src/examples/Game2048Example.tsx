@@ -226,6 +226,11 @@ export default function Game2048Example() {
   const [tiles, setTiles] = React.useState(makeInitialBoard);
   const [gameOver, setGameOver] = React.useState(false);
 
+  const handleReset = React.useCallback(() => {
+    setTiles(makeInitialBoard());
+    setGameOver(false);
+  }, []);
+
   const fling = Gesture.Pan()
     .runOnJS(true)
     .onEnd((e) => {
@@ -244,11 +249,6 @@ export default function Game2048Example() {
         }, 500);
       }
     });
-
-  const handleReset = React.useCallback(() => {
-    setTiles(makeInitialBoard());
-    setGameOver(false);
-  }, []);
 
   return (
     <GestureHandlerRootView style={styles.container}>
