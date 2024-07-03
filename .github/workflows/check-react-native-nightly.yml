@@ -19,8 +19,18 @@ jobs:
       group: ios-react-native-nightly-${{ matrix.react-native-architecture }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
+      # Sometimes `npx react-native init` fails due to dependency mismatches or other
+      # rather vague errors. This is a workaround for that.
+      - name: Setup Yarn
+        run: yarn init
       - name: Create app
-        run: npx react-native init app --skip-install --version nightly
+        working-directory: ExpoApp
+        run: |
+          if npm view expo dist-tags | grep -q 'next:' ; then 
+            yarn install react-native@next && yarn react-native init app --skip-install --version next
+          else 
+            yarn install react-native@nightly && yarn react-native init app --skip-install --version nightly
+          fi
       - name: Install Reanimated
         working-directory: app
         run: yarn add react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
