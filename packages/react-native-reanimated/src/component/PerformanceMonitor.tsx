@@ -21,6 +21,11 @@ const contructCircularAccumulator = (length: number, expectedFps: number) => {
     length,
 
     previousTimestamp: 0 as number,
+
+    // divisions are expensive, use lookup tables for them
+    frameWeightScalingTable: [] as { time: number; weight: number }[],
+    frameWeightScalingLookupSteps: [] as number[],
+    previousWeightScalingIndex: 0 as number, // optimalisation - previous weight most likely to be the current one as well.
     expectedFps,
 
     arrayEndHandler() {
@@ -28,6 +33,69 @@ const contructCircularAccumulator = (length: number, expectedFps: number) => {
       this.memoryAccumulator = this.mainAccumulator;
       this.mainAccumulator = 0;
       this.iterator = 0;
+    },
+
+    fillDynamicIterationWeights() {
+      // issue: at 60fps, 20 smoothing, one complete buffer fill takes 0.33s
+      //        at 10fps, 20 smoothing, one complete buffer fill takes 2s
+      // solution: scale frame weight on smoothing linearly to how much it takes.
+      //        at 60fps, 20 smoothing, 1 frame will fill 1 element - 0.33s per fill
+      //        at 10fps, 20 smoothing, 1 frame will fill 6 elements - 0.33s per fill
+      // fill lookup table from weights 1 to 'length'
+      for (let weight = 1; weight < this.length; weight++) {
+        const minActivationTime = (1000 / this.expectedFps) * weight;
+        this.frameWeightScalingTable.push({ weight, time: minActivationTime });
+      }
+
+      for (
+        let step = this.frameWeightScalingTable.length / 2;
+        step > 1;
+        step = Math.floor(step / 2)
+      ) {
+        console.log('STEP:', step, 'LEN:', this.frameWeightScalingTable.length);
+        this.frameWeightScalingLookupSteps.push(step);
+      }
+    },
+
+    getDynamicIterationWeight(timeDelta: number) {
+      // binary search - find fitting iteration weight
+      if (this.frameWeightScalingTable.length === 0) {
+        this.fillDynamicIterationWeights();
+        return 1;
+      }
+
+      let previousIndex = 0;
+      let bestWeightValue = this.frameWeightScalingTable[0].weight;
+      let bestWeightMinTime = this.frameWeightScalingTable[0].time;
+      for (let i = 0; i < this.frameWeightScalingLookupSteps.length; i++) {
+        const step = this.frameWeightScalingLookupSteps[i];
+        const checkedIndex =
+          bestWeightMinTime < timeDelta
+            ? previousIndex + step
+            : previousIndex - step;
+
+        previousIndex = checkedIndex;
+
+        if (
+          checkedIndex > this.frameWeightScalingTable.length ||
+          checkedIndex < 0
+        ) {
+          break;
+        }
+
+        const currentWeightScalingObject =
+          this.frameWeightScalingTable[checkedIndex];
+
+        if (
+          currentWeightScalingObject.time < timeDelta &&
+          currentWeightScalingObject.weight > bestWeightValue
+        ) {
+          bestWeightValue = currentWeightScalingObject.weight;
+          bestWeightMinTime = currentWeightScalingObject.time;
+        }
+      }
+
+      return bestWeightValue;
     },
 
     pushTimeDelta(timeDelta: number) {
