@@ -211,7 +211,7 @@ describe('babel plugin', () => {
         input,
         {},
         { disableSourceMaps: true },
-        'source.js'
+        '/source.js'
       );
       expect(code).toMatch(/function foo_sourceJs[0-9]+\(\)/gm);
       expect(code).toMatchSnapshot();
@@ -229,7 +229,7 @@ describe('babel plugin', () => {
         input,
         {},
         { disableSourceMaps: true },
-        'node_modules/library/source.js'
+        '/node_modules/library/source.js'
       );
       expect(code).toMatch(/function foo_library_sourceJs[0-9]+\(\)/gm);
       expect(code).toMatchSnapshot();
@@ -249,7 +249,7 @@ describe('babel plugin', () => {
         {
           disableSourceMaps: true,
         },
-        '-source.js'
+        '/-source.js'
       );
       expect(code).toMatch(/function foo_SourceJs[0-9]+\(\)/gm);
       expect(code).toMatchSnapshot();
